@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import { CHARACTER_ART, elementArt, type CharacterUiElement } from './characterUi'
-defineProps<{ elements: readonly CharacterUiElement[]; selected: string | null }>()
-const emit = defineEmits<{ select: [id: string] }>()
-const { t } = useI18n()
+import { CHARACTER_ART } from './characterUi'
 </script>
 <template>
   <div class="cf-figure">
     <div class="cf-aura" aria-hidden="true"><i /><i /></div>
     <img class="cf-person" :src="CHARACTER_ART.figure" alt="" draggable="false">
-    <button v-for="element in elements" :key="element.id" class="cf-element" :class="{ 'is-selected': selected === element.id }" :style="{ left: `${element.x}px`, top: `${element.y}px` }" :aria-pressed="selected === element.id" :title="element.name" @click="emit('select', element.id)">
-      <img :src="elementArt(element.id)" alt=""><span>{{ element.name }}</span>
-    </button>
+    <!-- Effect slot: the single kept position on the character's hand
+         (the old he-kim spot). Stays as a visible empty socket - a
+         pathway-specific effect visual lands here later. -->
+    <span class="cf-effect-slot" aria-hidden="true" />
   </div>
 </template>
 <style scoped>
@@ -20,8 +17,14 @@ const { t } = useI18n()
 .cf-aura { position: absolute; left: 438px; top: 185px; width: 420px; height: 375px; border: 1px solid #b8893d; border-radius: 50%; box-shadow: 0 0 22px #ffd98f88, inset 0 0 25px #ffe5a277; background: radial-gradient(ellipse,#e6c26d33,transparent 68%); }
 .cf-aura i { position: absolute; inset: 25px; border: 1px solid #d6a95a; border-radius: 50%; transform: rotate(-25deg) scaleY(.65); box-shadow: 0 0 7px #ffe8a7; }
 .cf-aura i + i { inset: 44px; transform: rotate(32deg) scaleY(.8); border-style: dashed; }
-.cf-element { position: absolute; width: 84px; height: 99px; transform: translate(-50%,-50%); border: 0; background: none; padding: 0; cursor: pointer; pointer-events: auto; display: grid; justify-items: center; align-content: start; }
-.cf-element img { width: 80px; height: 80px; object-fit: cover; border-radius: 50%; filter: drop-shadow(0 0 6px #fbd680); }
-.cf-element span { position: relative; margin-top: -2px; padding: 0 8px; color: #fff0c5; background: #443719dc; font-size: 16px; line-height: 22px; }
-.cf-element.is-selected img, .cf-element:hover img { filter: drop-shadow(0 0 11px #ffd875) brightness(1.15); outline: 2px solid #ffe9ab; outline-offset: 2px; }
+/* Empty socket on the hand - etched dashed ring, same gold/parchment
+   palette as the scene chrome. Non-interactive until a real effect
+   visual replaces it. */
+.cf-effect-slot {
+  position: absolute; left: 803px; top: 411px; width: 66px; height: 66px;
+  transform: translate(-50%,-50%);
+  border: 2px dashed #b8893dcc; border-radius: 50%;
+  background: radial-gradient(circle, #1d151022, #1d15104d 75%);
+  box-shadow: inset 0 0 12px #b8893d40, 0 0 9px #ffd98f33;
+}
 </style>

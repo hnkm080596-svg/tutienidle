@@ -1952,10 +1952,25 @@
     "details": "Chi Tiết",
     "combat": "Chiến Đấu",
     "other": "Khác",
-    "close": "Thu gọn chi tiết",
-    "open": "Mở chi tiết",
     "statNotice": "{name}: {value}",
-    "elementNotice": "{name} · Lực {power} · Kháng {resistance} · Xuyên {penetration}"
+    "elementNotice": "{name} · Lực {power} · Kháng {resistance} · Xuyên {penetration}",
+    "sources": {
+      "title": "Thành Phần",
+      "base": "Cơ Bản",
+      "bodyDelta": "Luyện Thể",
+      "realm": "Cảnh Giới",
+      "technique": "Tâm Pháp",
+      "skill": "Kỹ Năng",
+      "buff": "Buff",
+      "debuff": "Debuff",
+      "equipment": "Trang Bị",
+      "talent": "Thiên Phú",
+      "reincarnation": "Luân Hồi",
+      "pill": "Đan Dược",
+      "formation": "Trận Pháp",
+      "talisman": "Phù",
+      "attribute": "Thuộc Tính"
+    }
   },
   "realm": {
     "title": "ĐƯỜNG ĐĂNG TIÊN",

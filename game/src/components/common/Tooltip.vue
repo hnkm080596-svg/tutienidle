@@ -6,7 +6,7 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import ItemCardBody from '@/components/common/ItemCardBody.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
+import type { EquipmentTooltipContent, GradedItemTooltipContent, StatBreakdownTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
 import { i18n } from '@/i18n'
 
 const { content, reference } = useTooltip()
@@ -48,7 +48,13 @@ const comparePair = computed(() => {
 const techniqueContent = computed<TechniqueTooltipContent | null>(() =>
   content.value?.kind === 'technique' ? content.value : null,
 )
-const visibleSections = computed(() => techniqueContent.value?.sections ?? [])
+// Stat-breakdown kind (character board) shares the flat section loop.
+const statContent = computed<StatBreakdownTooltipContent | null>(() =>
+  content.value?.kind === 'stat' ? content.value : null,
+)
+const visibleSections = computed(
+  () => techniqueContent.value?.sections ?? statContent.value?.sections ?? [],
+)
 
 // Cap density theo tung loai tooltip (muc 5 tooltip-revamp-plan.md) -
 // khop voi .tooltip/--rich/--detailed o CSS ben duoi. size() chi
@@ -192,13 +198,18 @@ function hideBrokenImage(event: Event) {
           <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
         </template>
 
+        <template v-else-if="statContent">
+          <p class="tooltip__title tooltip__stat-head">{{ statContent.name }}<span v-if="statContent.total" class="tooltip__stat-total">{{ statContent.total }}</span></p>
+          <p v-if="statContent.description" class="tooltip__description">{{ statContent.description }}</p>
+        </template>
+
         <template v-else-if="content.kind === undefined || content.kind === 'plain'">
           <p v-if="content.title" class="tooltip__title">{{ content.title }}</p>
           <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
         </template>
 
-        <template v-if="techniqueContent">
-          <p v-if="techniqueContent.description" class="tooltip__description tooltip__description--rich">{{ techniqueContent.description }}</p>
+        <p v-if="techniqueContent?.description" class="tooltip__description tooltip__description--rich">{{ techniqueContent.description }}</p>
+        <template v-if="visibleSections.length">
           <section v-for="section in visibleSections" :key="section.label" class="tooltip__section">
             <p class="tooltip__section-label">{{ section.label }}</p>
             <div v-for="row in section.rows" :key="row.label" class="tooltip__section-row" :class="[row.tone ? `tooltip__section-row--${row.tone}` : '', row.tier ? `tooltip__section-row--tier-${row.tier}` : '']" :aria-label="row.tier ? `${row.label}, bậc ${row.tier}: ${row.value}` : undefined">
@@ -249,6 +260,9 @@ function hideBrokenImage(event: Event) {
    design pass: tieu de tooltip can tach bac ro khoi noi dung). */
 .tooltip__title { margin: 0 0 3px; color: var(--hk-text-primary); font-family: var(--hk-font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
 .tooltip__meta { margin: 0; color: var(--hk-text-muted); font-size: var(--text-xs); }
+/* Stat-breakdown title: aggregate value sits right of the stat name. */
+.tooltip__stat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.tooltip__stat-total { color: var(--hk-gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* pre-line: authored multi-line descriptions (Phap Tu Reimagine special
    previews -- cost %MaxLL + duration + effect + consequence) render as
    lines; single-line descriptions are unaffected. */

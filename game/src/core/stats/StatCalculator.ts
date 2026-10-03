@@ -300,6 +300,114 @@ export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]):
   return runPipeline(baseStats, [...accepted, ...attributeModifiers])
 }
 
+// ---------- per-source attribution (character stat board read-model) ----------
+
+/**
+ * One contributing source's fold for a single stat: the SAME modifier
+ * set calculateStats() consumes, grouped by (sourceType, sourceId) so a
+ * UI can show WHERE a stat's value comes from. `percents` keeps the
+ * Increased pool tag (the group runPipeline() multiplies separately);
+ * `modifierIds` preserves raw ids so callers can resolve names that
+ * live inside modifier.id (e.g. 'buff:<definitionId>:<caster>:<stat>').
+ */
+export interface StatSourceContribution {
+  sourceType: ModifierSourceType
+  sourceId: string
+
+  // flat * stacks summed over the group's modifiers.
+  flat: number
+
+  // percent * stacks summed per Increased pool tag (tag absent =
+  // untagged pool, same semantics as StatModifier.tag).
+  percents: { tag?: string; amount: number }[]
+
+  // product of multiplier^stacks over the group (1 = no multiplier).
+  multiplier: number
+
+  modifierIds: string[]
+}
+
+export interface StatBreakdown {
+  // The stat's pre-modifier base exactly as fed to the pipeline.
+  base: number
+
+  contributions: StatSourceContribution[]
+}
+
+/**
+ * Replays the 2-pass calculateStats() assembly for ONE stat and reports
+ * contributions instead of a number: domain gate -> pass-1 pipeline ->
+ * attribute derivation -> per-source grouping. The reported set is
+ * identical to what folded the final value, so the breakdown is the
+ * truth of the aggregate (base + flat Added + per-tag Increased pools +
+ * multiplier factors), not an approximation of it.
+ */
+export function explainStatBreakdown(
+  baseStats: BaseStats,
+  modifiers: StatModifier[],
+  stat: StatType,
+): StatBreakdown {
+  const accepted = applyDomainGate(modifiers)
+
+  const attributeModifiers = deriveAttributeModifiers(runPipeline(baseStats, accepted))
+
+  const groups = new Map<string, StatSourceContribution>()
+
+  for (const modifier of [...accepted, ...attributeModifiers]) {
+    if (modifier.stat !== stat) {
+      continue
+    }
+
+    const key = `${modifier.sourceType} ${modifier.sourceId}`
+    const stacks = modifier.stacks ?? 1
+    const group =
+      groups.get(key) ??
+      ({
+        sourceType: modifier.sourceType,
+        sourceId: modifier.sourceId,
+        flat: 0,
+        percents: [],
+        multiplier: 1,
+        modifierIds: [],
+      } satisfies StatSourceContribution)
+
+    if (modifier.flat !== undefined) {
+      group.flat += modifier.flat * stacks
+    }
+
+    if (modifier.percent !== undefined) {
+      const entry = group.percents.find((pool) => pool.tag === modifier.tag)
+      if (entry !== undefined) {
+        entry.amount += modifier.percent * stacks
+      } else {
+        group.percents.push({ tag: modifier.tag, amount: modifier.percent * stacks })
+      }
+    }
+
+    if (modifier.multiplier !== undefined) {
+      group.multiplier *= Math.pow(modifier.multiplier, stacks)
+    }
+
+    group.modifierIds.push(modifier.id)
+    groups.set(key, group)
+  }
+
+  // Prune no-ops: a source whose fold nets to nothing (flat 0, every
+  // Increased pool 0, multiplier 1) moved no number -- listing it would
+  // be noise, not attribution (e.g. attribute derivation emits a 0
+  // entry for every stat an attribute could touch).
+  const contributions = [...groups.values()]
+    .map((group) => ({
+      ...group,
+      percents: group.percents.filter((pool) => pool.amount !== 0),
+    }))
+    .filter(
+      (group) => group.flat !== 0 || group.percents.length > 0 || group.multiplier !== 1,
+    )
+
+  return { base: baseStats[stat], contributions }
+}
+
 /**
  * D12 ordering contract (stat-system-reimagined spec section 5): runs ONE
  * runPipeline pass over base + persistent modifiers and returns the 5

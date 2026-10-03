@@ -1,9 +1,8 @@
 <script setup lang="ts">
 // Nhan Vat paper surface (fidelity) - rendered inside the host's design
 // canvas above the Dong Fu vista. Pure surface: model/notice/selection
-// in, intent events out. `detailsOpen` is controlled (preview owns a
-// local ref; production binds ui.characterDetailOpen). `preview` renders
-// the BAN DUYET stamp for the standalone page only.
+// in, intent events out. The Chi Tiet dock is always rendered open.
+// `preview` renders the BAN DUYET stamp for the standalone page only.
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
@@ -15,18 +14,14 @@ import { CHARACTER_ART, type CharacterUiModel } from './characterUi'
 import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 withDefaults(defineProps<{
   model: CharacterUiModel
-  selectedElement: string | null
   notice: string
   navigation: readonly PaperNavigationItem[]
-  detailsOpen: boolean
   preview?: boolean
 }>(), { preview: false })
 const emit = defineEmits<{
   select: [id: string]
-  element: [id: string]
   navigate: [id: string]
   allocate: [id: string]
-  toggleDetails: []
   back: []
 }>()
 const { t } = useI18n()
@@ -40,9 +35,9 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <div class="cf-paper" :style="{ borderImageSource: `url('${CHARACTER_ART.paper}')` }" aria-hidden="true" />
     <PaperPanelNavigation :items="navigation" active="character" :label="t('panels.wheel.slots.character')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <CharacterFidelityIdentity :model="model" />
-    <CharacterFidelityFigure :elements="model.elements" :selected="selectedElement" @select="emit('element', $event)" />
+    <CharacterFidelityFigure />
     <CharacterFidelityStats :model="model" @select="emit('select', $event)" @allocate="emit('allocate', $event)" />
-    <CharacterFidelityDetails :model="model" :open="detailsOpen" @toggle="emit('toggleDetails')" />
+    <CharacterFidelityDetails :model="model" />
     <p v-if="preview" class="cf-preview">{{ t('preview') }}</p>
     <div class="cf-notice" role="status" aria-live="polite">{{ notice }}</div>
   </section>
