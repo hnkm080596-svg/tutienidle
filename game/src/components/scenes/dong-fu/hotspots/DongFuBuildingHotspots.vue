@@ -161,6 +161,7 @@ onBeforeUnmount(() => {
         :reduced-motion="reducedMotion"
         :anchor-style="anchorStyle(scene.art)"
         @open="navigation.openBuilding"
+        @upgrade="navigation.upgradeBuilding"
         @asset-error="markAssetError"
       />
 

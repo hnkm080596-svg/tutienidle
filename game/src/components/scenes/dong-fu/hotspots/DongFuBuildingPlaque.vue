@@ -3,6 +3,10 @@
 // always-visible vertical hanging tag under each Dong Fu hotspot - name
 // runs top-to-bottom, level sits under the tag, status is the dot at the
 // tag top. Pure presentation; all resolved values arrive via props.
+// Status 'upgradeable' renders the dot as a BUTTON (cong 1 nang cap -
+// badge/dot chuyen thanh nut bam duoc); click emits 'upgrade', panel
+// trong mo cung dong. Plaque khong tu resolve domain state.
+import { useI18n } from 'vue-i18n'
 import type { BuildingBadgeStatus } from '@/composables/useBuildingNavigation'
 
 defineProps<{
@@ -13,6 +17,12 @@ defineProps<{
   /** Resolved `building-plaque` chrome URL; empty/undefined keeps the CSS tag. */
   plaqueUrl?: string
 }>()
+
+const emit = defineEmits<{
+  upgrade: [buildingId: string]
+}>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -20,22 +30,31 @@ defineProps<{
     class="building-nameplate"
     :class="`building-nameplate--${status}`"
     :data-hk-region="`hotspot-${buildingId}`"
-    aria-hidden="true"
   >
-    <span v-if="status === 'locked'" class="building-nameplate__lock" />
-    <span v-else-if="status === 'ready'" class="building-nameplate__ready" />
-    <span v-else-if="status === 'active'" class="building-nameplate__active" />
-    <span v-else-if="status === 'upgradeable'" class="building-nameplate__upgradeable" />
+    <span v-if="status === 'locked'" class="building-nameplate__lock" aria-hidden="true" />
+    <span v-else-if="status === 'ready'" class="building-nameplate__ready" aria-hidden="true" />
+    <span v-else-if="status === 'active'" class="building-nameplate__active" aria-hidden="true" />
+    <button
+      v-else-if="status === 'upgradeable'"
+      type="button"
+      class="building-hotspot__upgrade building-nameplate__upgradeable"
+      :title="t('layout.functionOverlay.upgrade')"
+      :aria-label="t('layout.functionOverlay.upgrade')"
+      @click.stop="emit('upgrade', buildingId)"
+    >
+      <span class="building-nameplate__upgrade-glyph" aria-hidden="true">↑</span>
+    </button>
     <span
       class="building-nameplate__tag"
       :class="{ 'building-nameplate__tag--art': Boolean(plaqueUrl) }"
       :art-needed="!plaqueUrl"
       data-art-id="building-plaque"
+      aria-hidden="true"
     >
       <img v-if="plaqueUrl" class="building-nameplate__plaque" :src="plaqueUrl" alt="" aria-hidden="true" />
       <span class="building-nameplate__text">{{ name }}</span>
     </span>
-    <small class="building-nameplate__level">{{ levelText }}</small>
+    <small class="building-nameplate__level" aria-hidden="true">{{ levelText }}</small>
   </span>
 </template>
 
@@ -133,12 +152,49 @@ defineProps<{
   transform: translateX(-50%);
 }
 .building-nameplate__ready,
-.building-nameplate__active,
-.building-nameplate__upgradeable {
+.building-nameplate__active {
   flex: 0 0 auto;
   width: 7px;
   height: 7px;
   border-radius: 50%;
+}
+
+/* Upgrade affordance: cham vang dot cu thanh nut tron bam duoc -
+   van giu ve 'dot sang' (nen vang + glow) nhung du lon de click
+   (22px hit area) va co mui ten len bao hieu nang cap. pointer-events
+   re-enable vi .building-nameplate goc tat pointer events. */
+.building-nameplate__upgradeable {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--gold-500) 80%, var(--surface-text));
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, var(--gold-500), color-mix(in srgb, var(--gold-500) 72%, var(--ink-950)));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gold-500) 85%, transparent);
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.building-nameplate__upgradeable:hover {
+  filter: brightness(1.12);
+  box-shadow: 0 0 12px var(--gold-500);
+}
+
+.building-nameplate__upgradeable:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
+
+.building-nameplate__upgrade-glyph {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink-950);
+  transform: translateY(-0.5px);
 }
 .building-nameplate--locked { color: var(--paper-text-muted); opacity: 0.85; }
 .building-nameplate--locked .building-nameplate__lock { border-color: var(--paper-text-muted); }
@@ -147,5 +203,4 @@ defineProps<{
 .building-nameplate--active { color: var(--el-fire); }
 .building-nameplate--active .building-nameplate__active { background: var(--el-fire); box-shadow: 0 0 6px var(--el-fire); }
 .building-nameplate--upgradeable { color: var(--gold-700-on-paper, var(--mineral-gold)); }
-.building-nameplate--upgradeable .building-nameplate__upgradeable { background: var(--gold-500); box-shadow: 0 0 6px var(--gold-500); }
 </style>

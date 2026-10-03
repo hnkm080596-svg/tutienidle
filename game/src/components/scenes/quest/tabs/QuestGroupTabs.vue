@@ -4,7 +4,9 @@
 // The model only carries cadence - beta admits 'once' alone, so the
 // strip renders Tat Ca + one pill per cadence actually emitted; the
 // ref's category pills (main/side/achievement) have no model source and
-// stay RESERVED (audit - not rendered). tab-seal chrome per spec.
+// stay RESERVED (audit - not rendered). seal-chip chrome (flat pill
+// edges) - tab-seal's beveled seal silhouette rendered as clipped/vat
+// corners when squashed to pill height (QA flag: mep pill bi cut).
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -18,7 +20,7 @@ defineProps<{
 }>()
 
 const { t } = useI18n()
-const tabSlice = computed(() => chromeSlice('tab-seal'))
+const tabSlice = computed(() => chromeSlice('seal-chip'))
 </script>
 
 <template>
@@ -31,11 +33,11 @@ const tabSlice = computed(() => chromeSlice('tab-seal'))
       @click="onSelect('all')"
     >
       <InkNineSlice
-        chrome-id="tab-seal"
+        chrome-id="seal-chip"
         layer="surface"
         class="quest-group-tabs__chrome"
         :art-needed="!tabSlice || undefined"
-        data-art-id="tab-seal"
+        data-art-id="seal-chip"
       />
       <span class="quest-group-tabs__label">{{ t('panels.quest.tabs.all') }}</span>
     </button>
@@ -50,11 +52,11 @@ const tabSlice = computed(() => chromeSlice('tab-seal'))
       @click="onSelect(cadence)"
     >
       <InkNineSlice
-        chrome-id="tab-seal"
+        chrome-id="seal-chip"
         layer="surface"
         class="quest-group-tabs__chrome"
         :art-needed="!tabSlice || undefined"
-        data-art-id="tab-seal"
+        data-art-id="seal-chip"
       />
       <span class="quest-group-tabs__label">{{ t(`panels.quest.cadence.${cadence}`) }}</span>
     </button>

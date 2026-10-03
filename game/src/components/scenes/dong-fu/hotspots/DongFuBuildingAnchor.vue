@@ -30,6 +30,7 @@ defineProps<{
 
 const emit = defineEmits<{
   open: [buildingId: string]
+  upgrade: [buildingId: string]
   assetError: [buildingId: DongFuBuildingId]
 }>()
 </script>
@@ -72,6 +73,7 @@ const emit = defineEmits<{
       :status="status"
       :level-text="levelText"
       :plaque-url="plaqueUrl"
+      @upgrade="emit('upgrade', $event)"
     />
   </div>
 </template>

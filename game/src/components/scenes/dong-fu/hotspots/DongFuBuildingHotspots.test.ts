@@ -4,8 +4,9 @@
 // (entry kia = command wheel ring 3); ca hai di qua
 // composables/useBuildingNavigation.ts.
 //
-// Building da xay mo LeftPanel; nut nang cap song trong header panel,
-// khong con chip noi tren world hotspot.
+// Building da xay mo LeftPanel qua click hotspot; nang cap co 2 cong
+// giong nhau - nut mui ten tren nameplate (status 'upgradeable') va nut trong
+// panel, ca hai di qua useBuildingNavigation().upgradeBuilding().
 import { beforeEach, describe, expect, it } from 'vitest'
 import { computed, nextTick } from 'vue'
 import { createApp, h, ref } from 'vue'
@@ -187,7 +188,7 @@ describe('DongFuBuildingHotspots — building navigation không dùng chip nổi
     mounted.unmount()
   })
 
-  it('chưa xây → KHÔNG có chip (popover xây mới mở qua click chính)', () => {
+  it('chưa xây → KHÔNG có nút nâng cấp (popover xây mới mở qua click chính)', () => {
     const mounted = mountHomeBuildings(gameManager)
 
     expect(mounted.upgradeChips()).toHaveLength(0)
@@ -196,7 +197,7 @@ describe('DongFuBuildingHotspots — building navigation không dùng chip nổi
     mounted.unmount()
   })
 
-  it('đã xây chưa max → không còn chip nổi; click hotspot mở LeftPanel', async () => {
+  it('đã xây + THIẾU nguyên liệu nâng → không có nút nâng cấp; click hotspot mở LeftPanel', async () => {
     gameManager.buildingManager.add({
       instanceId: 'inst_pill_1',
 
@@ -222,7 +223,48 @@ describe('DongFuBuildingHotspots — building navigation không dùng chip nổi
     mounted.unmount()
   })
 
-  it('đã xây ĐẠT max → không còn chip', () => {
+  it('đã xây + ĐỦ nguyên liệu → nút ↑ trên nameplate, click nâng trực tiếp level (cong 1)', async () => {
+    gameManager.buildingManager.add({
+      instanceId: 'inst_pill_up',
+
+      buildingId: 'pill_room',
+
+      level: 1,
+
+      lastCollectedAt: 0,
+    })
+
+    // upgradeCost[1] = 10 Go Linh Moc - cap dung muc.
+    gameManager.materialBag.add(UPGRADE_MATERIAL, 10)
+
+    const mounted = mountHomeBuildings(gameManager)
+
+    const chips = mounted.upgradeChips()
+
+    expect(chips).toHaveLength(1)
+    // Nut mui ten song ngay tren nameplate (cong 1), khong mo panel.
+    expect(
+      mounted.nameplate('pill_room')!.contains(chips[0]!),
+    ).toBe(true)
+
+    chips[0]!.click()
+    await nextTick()
+
+    // upgrade() chay qua navigation.upgradeBuilding: level tang + bag
+    // tru cost + khong mo panel nao.
+    expect(gameManager.buildingManager.getByBuildingId('pill_room')?.level).toBe(2)
+    expect(gameManager.materialBag.getAmount('go_linh_moc')).toBe(0)
+    expect(useUiStore().leftPanelMode).toBeNull()
+
+    // Cost ke tiep (20 go) khong con du -> nut an han sau upgrade.
+    await mounted.bump()
+
+    expect(mounted.upgradeChips()).toHaveLength(0)
+
+    mounted.unmount()
+  })
+
+  it('đã xây ĐẠT max → không có nút nâng cấp', () => {
     gameManager.buildingManager.add({
       instanceId: 'inst_pill_max',
 

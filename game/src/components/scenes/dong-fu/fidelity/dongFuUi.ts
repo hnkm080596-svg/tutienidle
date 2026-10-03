@@ -18,8 +18,9 @@ export interface DongFuUiAction {
   symbol: string
   /** Resolved disabled hint (tooltip); suppresses activation when set. */
   disabledReason?: string | null
-  /** 'alert' = urgent seal (breakthrough), 'dot' = upgrade-ready dot. */
-  badge?: 'alert' | 'dot' | null
+  /** 'alert' = urgent seal (breakthrough), 'dot' = ready dot,
+      'upgrade' = clickable upgrade affordance (building plaques only). */
+  badge?: 'alert' | 'dot' | 'upgrade' | null
   /** True while this slot's surface is already open. */
   active?: boolean
 }
