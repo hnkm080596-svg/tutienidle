@@ -148,7 +148,6 @@ function slotAction(slot: CommandWheelSlot): DongFuUiAction {
     id: slot.id,
     labelKey: slot.labelKey,
     symbol: SLOT_SYMBOL[slot.id] ?? 'home',
-    ring: slot.ring,
     disabledReason: slotDisabledReason(slot),
     badge: slotBadge(slot),
     active: slotActive(slot),

@@ -5,28 +5,25 @@ import { symbolUrl, type DongFuUiAction } from './dongFuUi'
 const props = defineProps<{ actions: readonly DongFuUiAction[]; selected: string | null; open: boolean }>()
 const emit = defineEmits<{ action: [id: string] }>()
 const { t } = useI18n()
-// 420px wheel box, center at (210,210): nodes land ON the two painted
-// orbit rings (inner inset 67 -> r143, outer inset 23 -> r187). Catalog
-// ring 1 (cultivation core) rides the inner orbit like the spec wheel.
-const INNER_RADIUS = 143
-const OUTER_RADIUS = 187
+// Single-ring wheel: every action rides the SAME painted orbit (r187 in
+// the 420px box, center 210,210). The old two-ring layout let outer orbs
+// overlap inner ones and steal their clicks; one ring with even 360/N
+// spacing makes orb overlap impossible (adjacent chord >= 83px > 73px
+// orb for the max 14 renderable slots). All coords are design-canvas px
+// (SceneDesignCanvas scales 1440x810 uniformly to the viewport).
+const RING_RADIUS = 187
+const RING_CENTER = 210
+const ORB_HALF = 36.5
 const nodes = computed(() => {
-  const inner = props.actions.filter((action) => action.ring === 1)
-  const outer = props.actions.filter((action) => action.ring !== 1)
-  const outerStep = 360 / Math.max(outer.length, 1)
-  const toPoint = (action: DongFuUiAction, radius: number, angleDeg: number) => {
-    const angle = (angleDeg * Math.PI) / 180
-    return { ...action, x: 210 + Math.cos(angle) * radius, y: 210 + Math.sin(angle) * radius }
-  }
-  // Inner orbs ride the midpoints of outer-ring gaps: with both rings on
-  // one phase grid no two orbs can share a ray, which previously let an
-  // outer slot cover (and steal clicks from) an inner slot.
-  const innerNodes = inner.map((action, index) => {
-    const gap = Math.floor((index * outer.length) / Math.max(inner.length, 1)) % Math.max(outer.length, 1)
-    return toPoint(action, INNER_RADIUS, -90 + (gap + 0.5) * outerStep)
+  const step = 360 / Math.max(props.actions.length, 1)
+  return props.actions.map((action, index) => {
+    const angle = ((-90 + index * step) * Math.PI) / 180
+    return {
+      ...action,
+      x: RING_CENTER + Math.cos(angle) * RING_RADIUS,
+      y: RING_CENTER + Math.sin(angle) * RING_RADIUS,
+    }
   })
-  const outerNodes = outer.map((action, index) => toPoint(action, OUTER_RADIUS, -90 + index * outerStep))
-  return [...innerNodes, ...outerNodes]
 })
 function activate(node: DongFuUiAction) {
   if (node.disabledReason) return
@@ -35,13 +32,13 @@ function activate(node: DongFuUiAction) {
 </script>
 <template>
   <nav v-show="open" class="df-wheel" :aria-label="t('dongFu.aria')">
-    <div class="df-wheel__orbit df-wheel__orbit--outer" aria-hidden="true" /><div class="df-wheel__orbit df-wheel__orbit--inner" aria-hidden="true" />
+    <div class="df-wheel__orbit" aria-hidden="true" />
     <span
       v-for="node in nodes"
       :key="node.id"
       class="df-node"
       :class="{ 'is-selected': selected === node.id, 'is-active': node.active, 'is-disabled': node.disabledReason }"
-      :style="{ left: `${node.x - 52}px`, top: `${node.y - 49}px` }"
+      :style="{ left: `${node.x - 52}px`, top: `${node.y - ORB_HALF}px` }"
     >
       <button
         class="df-node__orb"
@@ -59,10 +56,8 @@ function activate(node: DongFuUiAction) {
 </template>
 <style scoped>
 .df-wheel { position: absolute; left: 490px; top: 275px; width: 420px; height: 420px; z-index: 3; pointer-events: none; }
-.df-wheel__orbit { position: absolute; border-radius: 50%; border: 1px solid #ffe6a1b0; box-shadow: 0 0 8px #eabc624d, inset 0 0 8px #ffefb929; }
-.df-wheel__orbit--outer { inset: 23px; }
-.df-wheel__orbit--inner { inset: 67px; border-color: #ecd18b8c; }
-.df-wheel__orbit--inner::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 1px dashed #e6c77970; }
+.df-wheel__orbit { position: absolute; inset: 23px; border-radius: 50%; border: 1px solid #ffe6a1b0; box-shadow: 0 0 8px #eabc624d, inset 0 0 8px #ffefb929; }
+.df-wheel__orbit::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 1px dashed #e6c77970; }
 /* Position anchor only: no transform (transforms create a stacking
    context that would trap the orb's z-index) and no pointer-events -
    the orb disc is the sole click target for its slot. */
