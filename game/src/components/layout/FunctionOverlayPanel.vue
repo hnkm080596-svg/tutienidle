@@ -6,7 +6,7 @@ import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
 import ProductionPanel from '@/components/panels/ProductionPanel.vue'
-import SettingsPanel from '@/components/panels/SettingsPanel.vue'
+import SettingsSurface from '@/components/scenes/settings/SettingsSurface.vue'
 import PillRoomPanel from '@/components/panels/PillRoomPanel.vue'
 import EquipmentHallPanel from '@/components/panels/EquipmentHallPanel.vue'
 import ScripturePavilionPanel from '@/components/panels/ScripturePavilionPanel.vue'
@@ -34,13 +34,26 @@ const TITLE_KEYS: Record<FunctionMode, string> = {
 }
 
 // Huyen Kim rebuild: these left-panel modes are imperial-scroll scenes
-// (layout spec scenes 10/11/12/17). Vendor + scripture pavilion stay on
-// the legacy micro-overlay shell until their own redesign lands.
+// (layout spec scenes 10/11/12/17) - except most now own their paper
+// chrome and mount outside the scroll (see PAPER_MODES). Vendor +
+// scripture pavilion stay on the legacy micro-overlay shell until
+// their own redesign lands.
 const IMPERIAL_MODES: ReadonlySet<FunctionMode> = new Set([
   'stage_select',
   'pill_room',
   'equipment_hall',
   'exploration',
+  'settings',
+])
+
+// Modes whose fidelity surface owns the shared paper chrome on its own
+// overlay design canvas - mounted outside the scroll like the other
+// migrated tabs. 'exploration' is the last mode still on the scroll
+// (its production outpost has no approved paper surface yet).
+const PAPER_MODES: ReadonlySet<FunctionMode> = new Set([
+  'stage_select',
+  'pill_room',
+  'equipment_hall',
   'settings',
 ])
 
@@ -63,8 +76,11 @@ const mode = computed<FunctionMode | null>(() => {
     : null
 })
 
-const imperialMode = computed<FunctionMode | null>(() =>
-  mode.value && IMPERIAL_MODES.has(mode.value) ? mode.value : null,
+const paperMode = computed<FunctionMode | null>(() =>
+  mode.value && PAPER_MODES.has(mode.value) ? mode.value : null,
+)
+const scrollMode = computed<FunctionMode | null>(() =>
+  mode.value && IMPERIAL_MODES.has(mode.value) && !PAPER_MODES.has(mode.value) ? mode.value : null,
 )
 const legacyMode = computed<FunctionMode | null>(() =>
   mode.value && !IMPERIAL_MODES.has(mode.value) ? mode.value : null,
@@ -89,19 +105,22 @@ function close() {
 </script>
 
 <template>
-  <!-- Scene 10/11/12 fidelity: stage_select + pill_room + equipment_hall
-       own their paper chrome (Son Ha Do / Luyen Dan / Khi Duong scene) -
-       they mount outside the imperial scroll while keeping the same
-       mode/beta-gate/close contract. -->
-  <StageSelectPanel v-if="imperialMode === 'stage_select'" />
-  <PillRoomPanel v-else-if="imperialMode === 'pill_room'" />
-  <EquipmentHallPanel v-else-if="imperialMode === 'equipment_hall'" />
+  <!-- Scene 10/11/12/17 fidelity: stage_select + pill_room +
+       equipment_hall + settings own their paper chrome (Son Ha Do /
+       Luyen Dan / Khi Duong / Cai Dat scene) - they mount outside the
+       imperial scroll while keeping the same mode/beta-gate/close
+       contract. -->
+  <StageSelectPanel v-if="paperMode === 'stage_select'" />
+  <PillRoomPanel v-else-if="paperMode === 'pill_room'" />
+  <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
+  <SettingsSurface v-else-if="paperMode === 'settings'" />
 
-  <!-- Imperial scroll scenes: Cai Dat. -->
+  <!-- Imperial scroll scenes: San Xuat (production outpost) is the
+       last surface still on the shared scroll shell. -->
   <ImperialScrollScene
-    :open="imperialMode !== null && imperialMode !== 'stage_select' && imperialMode !== 'pill_room' && imperialMode !== 'equipment_hall'"
-    :title="imperialMode && imperialMode !== 'stage_select' && imperialMode !== 'pill_room' && imperialMode !== 'equipment_hall' ? t(TITLE_KEYS[imperialMode]) : ''"
-    :scene="imperialMode ?? undefined"
+    :open="scrollMode !== null"
+    :title="scrollMode ? t(TITLE_KEYS[scrollMode]) : ''"
+    :scene="scrollMode ?? undefined"
     data-testid="function-overlay-panel"
     @close="close"
   >
@@ -140,9 +159,8 @@ function close() {
       </div>
     </template>
 
-    <div v-if="imperialMode" class="function-overlay">
-      <SettingsPanel v-if="imperialMode === 'settings'" />
-      <ProductionPanel v-else-if="imperialMode === 'exploration'" />
+    <div v-if="scrollMode" class="function-overlay">
+      <ProductionPanel v-if="scrollMode === 'exploration'" />
     </div>
   </ImperialScrollScene>
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-// Scene 09 (Tui Do) production adapter -- fidelity scroll-content
-// composition with the canonical bag contract:
+// Scene 09 (Kho Vat) production adapter -- the fidelity composition
+// with the canonical bag contract, now mounted on the shared paper
+// chrome inside an overlay design canvas (same chrome as the other
+// migrated tabs):
 //   toolbar -> the 3 canonical tabs driving ui.activeBagTab
 //   grid    -> the real section for the active tab (sections own their
 //              own search/group chips/sort/pagination verbatim)
@@ -11,6 +13,8 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore, type BagTab } from '@/stores/ui'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
+import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { betaMaterialStackVisible, scopeHiddenPillFamilyOfId } from '@/core/betaScope'
@@ -21,6 +25,7 @@ import PillBagSection from '@/components/panels/bag-sections/PillBagSection.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
+const { items: navItems, navigate } = usePaperNavigation()
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
@@ -58,17 +63,25 @@ function selectTab(id: BagTab) {
 </script>
 
 <template>
-  <InventoryFidelityScene :items="[]" :selected="undefined" filter="equipment" query="">
+  <SceneDesignCanvas overlay>
+  <InventoryFidelityScene :items="[]" :selected="undefined" filter="equipment" query="" :navigation="navItems" notice="" @navigate="navigate" @back="ui.closeHomeOverlays()">
     <template #toolbar>
       <div class="toolbar"><nav><button v-for="tab in bagTabs" :key="tab.id" :aria-pressed="activeTab === tab.id" @click="selectTab(tab.id)">{{ t(tab.labelKey) }}</button></nav></div>
     </template>
     <template #grid>
-      <EquipmentBagSection v-if="activeTab === 'equipment'" />
-      <MaterialBagSection v-else-if="activeTab === 'material'" />
-      <PillBagSection v-else-if="activeTab === 'pill'" />
+      <!-- The bag-panel container anchor lives here (inside the grid
+           region), NOT on a wrapper around the canvas: container-type
+           implies contain:layout, which would make the scaled design
+           canvas resolve against it instead of the viewport. -->
+      <div class="bag-anchor">
+        <EquipmentBagSection v-if="activeTab === 'equipment'" />
+        <MaterialBagSection v-else-if="activeTab === 'material'" />
+        <PillBagSection v-else-if="activeTab === 'pill'" />
+      </div>
     </template>
     <template #count>{{ activeTabCount }} {{ t('panels.bag.countSuffix') }}</template>
   </InventoryFidelityScene>
+  </SceneDesignCanvas>
 </template>
 
 <style scoped>
@@ -105,9 +118,15 @@ function selectTab(id: BagTab) {
   outline-offset: 3px;
 }
 
-/* The canonical sections fill the fidelity bag column. */
-:deep(.bag) {
+/* The canonical sections fill the fidelity bag column; the anchor also
+   carries the container name BagPaginationControls queries
+   (@container bag-panel). */
+.bag-anchor {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  container-type: inline-size;
+  container-name: bag-panel;
 }
 </style>

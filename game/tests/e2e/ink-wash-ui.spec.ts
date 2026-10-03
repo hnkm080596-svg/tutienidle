@@ -68,44 +68,31 @@ test.describe('ink-wash UI visual smoke', () => {
       await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
       await settingsSlot.click()
 
-      // Huyen Kim rebuild: settings rides the imperial scroll shell -
-      // envelope + body/frame slices replace the old overlay card.
-      const panel = page.locator('.hk-scroll__envelope').first()
+      // Huyen Kim rebuild: settings owns the shared paper chrome -
+      // nine-slice sheet + nav rail + title on the overlay canvas.
+      const panel = page.locator('.settings-scene').first()
       await expect(panel).toBeVisible()
-      await expect(panel.locator('[data-hk-slice="imperial-scroll-body"]').first()).toBeVisible()
-      await expect(panel.locator('[data-hk-slice="frame-xl-ceremony"]').first()).toBeVisible()
+      await expect(panel.locator('.settings-paper')).toBeVisible()
+      const paperBox = await panel.locator('.settings-paper').boundingBox()
 
-      // The scroll's reveal is clip-path (paper) + opacity (chrome), not
-      // transform - wait for the unfold signature to land before measuring.
-      // String-based evaluate (no DOM ambient types in e2e tsconfig).
-      await page.waitForFunction(
-        `(() => {
-          const clip = document.querySelector('.hk-scroll__clip')
-          if (!clip) return false
-          return window.getComputedStyle(clip).clipPath === 'inset(0px)'
-        })()`,
-        undefined,
-        { timeout: 5_000 },
-      )
-
-      const panelBox = await panel.boundingBox()
-      const headingBox = await panel.locator('.hk-scroll__title').boundingBox()
+      const headingBox = await panel.locator('.settings-title').boundingBox()
       const settingsBox = await panel.locator('.settings-panel').boundingBox()
-      expect(panelBox).not.toBeNull()
+      expect(paperBox).not.toBeNull()
       expect(headingBox).not.toBeNull()
       expect(settingsBox).not.toBeNull()
-      // The title plaque rides the envelope's top band - its text must be
-      // horizontally centered inside the envelope and the settings
-      // workspace must clear the nav-rail column on the left.
-      expect(headingBox!.x).toBeGreaterThanOrEqual(panelBox!.x)
-      expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(panelBox!.x + panelBox!.width)
-      expect(settingsBox!.x - panelBox!.x).toBeGreaterThanOrEqual(28)
+      // The title rides the paper's top band - it must sit inside the
+      // sheet and the settings workspace must clear the nav-rail column
+      // on the left (rail occupies the first ~200 design px).
+      expect(headingBox!.x).toBeGreaterThanOrEqual(paperBox!.x)
+      expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(paperBox!.x + paperBox!.width)
+      expect(settingsBox!.x - paperBox!.x).toBeGreaterThanOrEqual(200)
       // Sectioned workspace: the autosave warning lives on the default
       // 'general' section; the ui-scale heading is behind 'display'.
       const settingsColors = await page.evaluate<{ warning: string }>(
         `({ warning: getComputedStyle(document.querySelector('.settings-panel__warning')).color })`,
       )
       await panel.locator('.settings-panel__nav-seal[data-section="display"]').click()
+      await expect(panel.locator('.settings-panel__ui-scale h4')).toBeVisible()
       const headingColor = await page.evaluate<string>(
         `getComputedStyle(document.querySelector('.settings-panel__ui-scale h4')).color`,
       )

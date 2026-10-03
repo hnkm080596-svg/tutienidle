@@ -476,8 +476,8 @@ test.describe('Huyen Kim stable scene art', () => {
       expect(mask).toContain('huyen-kim/symbols/')
     }
 
-    // Imperial-scroll close glyph.
-    await openStandalone(page, 'realm')
+    // Imperial-scroll close glyph (San Xuat is the last scroll shell).
+    await openLeftMode(page, 'exploration')
     const close = page.locator('.hk-scroll__close .hk-symbol')
     await expect(close).toBeVisible({ timeout: 10_000 })
     expect(await close.evaluate((el) => getComputedStyle(el).maskImage)).toContain(
