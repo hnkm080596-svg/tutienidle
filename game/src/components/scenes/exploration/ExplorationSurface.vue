@@ -291,15 +291,20 @@ const paperChapters = computed<ExplorationChapter[]>(() =>
     const nodes: ExplorationNode[] = stages.map((stage, index) => {
       const model = modelById.value.get(stage.id)
       const { x, y } = nodePosition(index)
+      const state = nodeState(stage.id)
       return {
         id: stage.id,
         label: String(model?.floor ?? stage.floor ?? stage.requiredRealmLevel ?? index + 1),
         x,
         y,
-        state: nodeState(stage.id),
+        state,
         boss: model?.isBossFloor ?? false,
         perfect: model?.state === 'perfect',
         enemy: model?.displayEnemy?.name,
+        // Locked nodes no longer select, so the unlock reason must live
+        // on the node itself (hover title) - otherwise disabledReason
+        // is unreachable for exactly the stages it describes.
+        lockedHint: state === 'locked' ? disabledReasonLabel(model?.disabledReason, t) : undefined,
       }
     })
     return {

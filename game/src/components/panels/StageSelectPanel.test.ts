@@ -56,6 +56,22 @@ afterEach(() => { document.body.innerHTML = '' })
 describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
   it('hiện tên quái trên tuyến ải và đội hình của stage đang chọn', async () => {
     const mounted = mountStageSelect()
+    const bossPlayer = usePlayerStore(mounted.pinia)
+    // Locked nodes no longer select: the boss floor must be genuinely
+    // unlocked for its detail to render - floor N needs realmLevel >= N
+    // plus the previous floor completed (isStageUnlocked).
+    bossPlayer.realmLevel = 10
+    bossPlayer.completedStageIds = [
+      'mortal_dong_1',
+      'mortal_dong_2',
+      'mortal_dong_3',
+      'mortal_dong_4',
+      'mortal_dong_5',
+      'mortal_dong_6',
+      'mortal_dong_7',
+      'mortal_dong_8',
+      'mortal_dong_9',
+    ]
     await nextTick()
     await nextTick()
 
@@ -136,7 +152,8 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
   it('armed mode resets to manual when a different stage node is clicked', async () => {
     const { container, pinia, unmount } = mountStageSelect()
     const player = usePlayerStore(pinia)
-    player.completedStageIds = ['mortal_dong_1'] // unlock stage 2
+    player.completedStageIds = ['mortal_dong_1'] // chain requirement
+    player.realmLevel = 2 // floor 2 needs realmLevel >= 2 to unlock
     await nextTick()
     await nextTick()
 
@@ -159,7 +176,13 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
   })
 
   it('armed mode also disarms when a cross-chapter node is picked', async () => {
-    const { container, unmount } = mountStageSelect()
+    const { container, pinia, unmount } = mountStageSelect()
+    const crossPlayer = usePlayerStore(pinia)
+    // qi_refining_forest unlocks when the previous floor (mortal_dong_10)
+    // is completed and the player is in qi_refining realm level >= 1.
+    crossPlayer.realmId = 'qi_refining'
+    crossPlayer.realmLevel = 1
+    crossPlayer.completedStageIds = ['mortal_dong_10']
     await nextTick()
     await nextTick()
 

@@ -11,6 +11,10 @@ export interface ExplorationNode {
   perfect: boolean
   // displayEnemy.name - which species guards this ai at a glance.
   enemy?: string
+  // For 'locked' nodes: why the stage is sealed (required realm/floor).
+  // Rendered as the node title so the reason stays reachable now that a
+  // locked node can no longer be selected for its detail pane.
+  lockedHint?: string
 }
 export interface ExplorationChapter {
   id: string

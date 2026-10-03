@@ -74,3 +74,33 @@ preview pages).
   pattern); production resolves registry data + i18n keys.
 
 Verdict label: PASS WITH EVIDENCE.
+
+---
+
+## Clean round 2 (2026-10-03, post external-CI + final adversarial pass)
+
+Reviewers (passes 1-4) flagged: shared tier-lead constant needed (fixed:
+PRODUCIBLE_REALM_TIER_LEAD); bag tooltip duplicated instead of reused
+(fixed: extracted useMaterialTooltip composable); StageSelectPanel tests
+still asserting the old selectable-locked contract (fixed: fixtures now
+satisfy the real isStageUnlocked gate - realmLevel plus previous floor);
+architecture registries stale after the tooltip extraction (fixed:
+exposure exception list gained useMaterialTooltip.ts, renderedTokens
+benign entry removed since the tokens left the .vue corpus); locked
+node reason unreachable after the click guard (fixed: lockedHint on
+ExplorationNode carries disabledReasonLabel into the node title).
+
+Final verification on this state: npm run verify - type-check clean,
+build clean, 8635 tests green (921 files).
+
+Deferred Lows (recorded, non-blocking):
+
+- Hidden-channel mint path (grotto): the new collection cap does not
+  guard grotto channels; latent only - zero grotto material channels
+  are authored today.
+- equipment_any unequipped high-grade loot at mortal remains loadable
+  by design (validator pins equipped grade only); out of scope, noted.
+- Currency drop cells render monogram fallbacks (no item art for
+  currency) - sanctioned pattern.
+- Preview fixtures use literal tooltip text; production resolves
+  registry + i18n.
