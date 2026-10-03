@@ -107,7 +107,7 @@ import {
   getRealmIndex,
   getRequiredCultivation,
 } from '../../core/realm/realmSystem'
-import { getRealmTier } from '../../core/realm/RealmTierMap'
+import { getRealmTier, PRODUCIBLE_REALM_TIER_LEAD } from '../../core/realm/RealmTierMap'
 import {
   isBeyondReleaseCeiling,
   isBreakthroughAcquisitionEnabled,
@@ -4670,7 +4670,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
           })
         } else if (
           claimedRealmTier !== undefined &&
-          getRealmTier(domainUnlockRealmId) > claimedRealmTier + 1
+          getRealmTier(domainUnlockRealmId) > claimedRealmTier + PRODUCIBLE_REALM_TIER_LEAD
         ) {
           issues.push({
             path: `materials[${i}]`,
@@ -4705,7 +4705,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
         if (
           professionRealmTier !== undefined &&
-          professionRealmTier > claimedRealmTier + 1
+          professionRealmTier > claimedRealmTier + PRODUCIBLE_REALM_TIER_LEAD
         ) {
           issues.push({
             path: `materials[${i}]`,

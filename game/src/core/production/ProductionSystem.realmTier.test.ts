@@ -109,4 +109,50 @@ describe('clamp applied at every production entry point (T3-17)', () => {
     }
     expect(highTierPicks).toBeGreaterThan(250) // high profile 20/40/40 -> ~40%
   })
+
+  it('rollRewards never mints materials more than one realm tier above the collector (F-MAT-REALM ceiling)', () => {
+    const system = createSystem()
+    const sites = ['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien']
+
+    for (const siteId of sites) {
+      for (let seed = 0; seed < 1000; seed++) {
+        const cycle = {
+          cycleId: `t${seed}`,
+          siteId,
+          collectionRealmId: 'mortal',
+          siteLevelAtStart: 1,
+          rewardTableVersion: 1,
+          rollSeed: seed * 48271,
+          startedAtMs: 0,
+          completesAtMs: 1,
+        }
+        for (const reward of system.rollRewards(cycle)) {
+          expect(reward.materialId).not.toContain('foundation_establishment')
+        }
+      }
+    }
+  })
+
+  it('rollRewards still reaches one tier above the collector - qi_refining stays droppable for mortal cycles', () => {
+    const system = createSystem()
+    let qiTierPicks = 0
+    for (let seed = 0; seed < 1000; seed++) {
+      const cycle = {
+        cycleId: `t${seed}`,
+        siteId: 'thanh_van_lam',
+        collectionRealmId: 'mortal',
+        siteLevelAtStart: 1,
+        rewardTableVersion: 1,
+        rollSeed: seed * 48271,
+        startedAtMs: 0,
+        completesAtMs: 1,
+      }
+      for (const reward of system.rollRewards(cycle)) {
+        if (reward.materialId.startsWith('qi_refining_wood_')) {
+          qiTierPicks += 1
+        }
+      }
+    }
+    expect(qiTierPicks).toBeGreaterThan(150) // capped low profile 60/20/0 -> ~25%
+  })
 })

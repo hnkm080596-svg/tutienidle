@@ -16,10 +16,16 @@ import { ASSET_BUNDLE_MANAGER_KEY } from '@/presentation/PresentationContracts'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { useAudioStore } from '@/stores/audio'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { formatNumber } from '@/core/format/NumberFormatter'
-import type { AmountRange, DropEntry } from '@/core/drop/DropTable'
-import { materials } from '@/data/materials/materials'
-import { equipment } from '@/data/equipment/equipment'
+import type { DropEntry } from '@/core/drop/DropTable'
+import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
+import {
+  EQUIPMENT_ANY_ICON,
+  dropAmountText,
+  dropKindLabel,
+  extraDropRows,
+  plainRewardTooltip,
+  rangeLabel,
+} from './fidelity/explorationRewards'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import ExplorationFidelityScene from './fidelity/ExplorationFidelityScene.vue'
 import type {
@@ -27,6 +33,7 @@ import type {
   ExplorationDetail,
   ExplorationNode,
   ExplorationPaperModel,
+  ExplorationReward,
 } from './fidelity/explorationUi'
 import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { disabledReasonLabel } from './disabledReasonLabel'
@@ -51,13 +58,6 @@ const ARCHETYPE_LABEL_KEYS: Record<string, string> = {
   caster: 'panels.stageSelect.archetypes.caster',
   tank: 'panels.stageSelect.archetypes.tank',
 }
-const KIND_LABEL_KEYS: Record<string, string> = {
-  material: 'panels.stageSelect.rewards.kinds.material',
-  equipment: 'panels.stageSelect.rewards.kinds.equipment',
-  equipment_any: 'panels.stageSelect.rewards.kinds.equipmentAny',
-  pill: 'panels.stageSelect.rewards.kinds.pill',
-}
-
 const { t } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -290,15 +290,20 @@ const paperChapters = computed<ExplorationChapter[]>(() =>
     const nodes: ExplorationNode[] = stages.map((stage, index) => {
       const model = modelById.value.get(stage.id)
       const { x, y } = nodePosition(index)
+      const state = nodeState(stage.id)
       return {
         id: stage.id,
         label: String(model?.floor ?? stage.floor ?? stage.requiredRealmLevel ?? index + 1),
         x,
         y,
-        state: nodeState(stage.id),
+        state,
         boss: model?.isBossFloor ?? false,
         perfect: model?.state === 'perfect',
         enemy: model?.displayEnemy?.name,
+        // Locked nodes no longer select, so the unlock reason must live
+        // on the node itself (hover title) - otherwise disabledReason
+        // is unreachable for exactly the stages it describes.
+        lockedHint: state === 'locked' ? disabledReasonLabel(model?.disabledReason, t) : undefined,
       }
     })
     return {
@@ -311,27 +316,55 @@ const paperChapters = computed<ExplorationChapter[]>(() =>
   }),
 )
 
-const itemNames = new Map<string, string>()
-for (const item of materials) {
-  itemNames.set(item.id, item.name)
-}
-for (const item of equipment) {
-  itemNames.set(item.id, item.name)
-}
+// Reward cells render like bag cells - the item's own art in the slot
+// frame (registry icon; the equipment_any pool uses the shared gear
+// glyph), the drop range under the cell, and the canonical item-info
+// card on hover (graded card for materials, plain card elsewhere).
+const buildMaterialTooltip = createMaterialTooltipBuilder(t)
 
-function rangeLabel(range: AmountRange): string {
-  return range.min === range.max
-    ? formatNumber(range.min)
-    : `${formatNumber(range.min)}–${formatNumber(range.max)}`
-}
-
-function dropEntryLabel(entry: DropEntry): string {
+function dropEntryReward(entry: DropEntry, chance: number | undefined): ExplorationReward {
+  const rows = extraDropRows(entry, chance, t)
   if (entry.kind === 'equipment_any') {
-    return t(KIND_LABEL_KEYS['equipment_any'] ?? 'panels.stageSelect.rewards.kinds.equipmentAny')
+    const label = dropKindLabel(entry, t)
+    return {
+      label,
+      amount: dropAmountText(entry),
+      icon: EQUIPMENT_ANY_ICON,
+      tooltip: plainRewardTooltip(label, undefined, rows),
+    }
   }
-  const name = entry.itemId ? itemNames.get(entry.itemId) : undefined
-  const label = name ?? t(KIND_LABEL_KEYS[entry.kind] ?? 'panels.stageSelect.rewards.kinds.material')
-  return entry.amount ? `${label} ×${rangeLabel(entry.amount)}` : label
+  const id = entry.itemId
+  // entry.kind owns the registry choice - an id that somehow also
+  // exists in another catalog still renders the declared kind's card.
+  if (id && entry.kind === 'material' && gameManager.materialRegistry.has(id)) {
+    const material = gameManager.materialRegistry.get(id)
+    return {
+      label: material.name,
+      amount: dropAmountText(entry),
+      icon: material.icon,
+      tooltip: buildMaterialTooltip(material, { extraRows: rows }),
+    }
+  }
+  if (id && entry.kind === 'equipment' && gameManager.equipmentRegistry.has(id)) {
+    const item = gameManager.equipmentRegistry.get(id)
+    return {
+      label: item.name,
+      amount: dropAmountText(entry),
+      icon: item.icon,
+      tooltip: plainRewardTooltip(item.name, item.description, rows),
+    }
+  }
+  if (id && entry.kind === 'pill' && gameManager.pillRegistry.has(id)) {
+    const pill = gameManager.pillRegistry.get(id)
+    return {
+      label: pill.name,
+      amount: dropAmountText(entry),
+      icon: pill.icon,
+      tooltip: plainRewardTooltip(pill.name, pill.description, rows),
+    }
+  }
+  // Unknown/unresolvable id - generic kind label, no icon (monogram).
+  return { label: dropKindLabel(entry, t), amount: dropAmountText(entry) }
 }
 
 const paperStage = computed<ExplorationDetail | null>(() => {
@@ -343,17 +376,17 @@ const paperStage = computed<ExplorationDetail | null>(() => {
   const enemy = model?.displayEnemy
   const preview = model?.rewardPreview
 
-  const rewards: { label: string; amount: string }[] = []
+  const rewards: ExplorationReward[] = []
   if (preview) {
     rewards.push(
-      { label: t('combat.rewards.spiritStone'), amount: rangeLabel(preview.spiritStone) },
-      { label: t('combat.rewards.techniqueMastery'), amount: rangeLabel(preview.techniqueMastery) },
+      { label: t('combat.rewards.spiritStone'), amount: `×${rangeLabel(preview.spiritStone)}`, tooltip: plainRewardTooltip(t('combat.rewards.spiritStone'), undefined, []) },
+      { label: t('combat.rewards.techniqueMastery'), amount: `×${rangeLabel(preview.techniqueMastery)}`, tooltip: plainRewardTooltip(t('combat.rewards.techniqueMastery'), undefined, []) },
     )
     for (const entry of preview.guaranteed) {
-      rewards.push({ label: dropEntryLabel(entry), amount: '' })
+      rewards.push(dropEntryReward(entry, entry.chance))
     }
     for (const entry of preview.poolItems) {
-      rewards.push({ label: dropEntryLabel(entry), amount: '' })
+      rewards.push(dropEntryReward(entry, undefined))
     }
   }
 

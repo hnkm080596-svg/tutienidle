@@ -435,6 +435,8 @@
         "title": "Tiến Độ Thám Hiểm: {zone}"
       },
       "rewards": {
+        "dropAmount": "Số lượng rơi",
+        "dropChance": "Tỉ lệ rơi",
         "kinds": {
           "material": "Vật Liệu",
           "equipment": "Trang Bị",

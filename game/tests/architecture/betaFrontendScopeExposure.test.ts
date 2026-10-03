@@ -116,6 +116,10 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // call to action.
       const list = offenders(/golden_core|goldenCore|kim_dan|kimDan/, [
         'components/panels/bag-sections/MaterialBagSection.vue',
+        // Realm label key map lives in the shared material tooltip
+        // builder (extracted from MaterialBagSection) - same provenance
+        // display vocabulary, never a next-realm CTA.
+        'composables/useMaterialTooltip.ts',
       ])
 
       expect(list).toEqual([])

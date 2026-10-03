@@ -23,17 +23,17 @@ import {
   type FilteredMaterial,
   type MaterialGroup,
 } from '@/composables/useBagFilter'
-import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
-import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
-import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
-import { professionGradeRank } from '@/core/profession/slotRank'
 import { betaMaterialStackVisible } from '@/core/betaScope'
 import { usePlayerStore } from '@/stores/player'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
-import type { GradedItemTooltipContent } from '@/composables/useTooltip'
+import { createMaterialTooltipBuilder, materialRealmLabel, professionRankOfMaterial } from '@/composables/useMaterialTooltip'
 
 const { t } = useI18n()
+
+// Canonical material item-info card - shared with drop previews
+// (exploration reward cells) via the extracted builder factory.
+const buildTooltip = createMaterialTooltipBuilder(t)
 
 // Thu tu co dinh cho sort theo Phan loai/Nguon (asc).
 const CATEGORY_ORDER: MaterialCategory[] = [
@@ -64,24 +64,6 @@ function accentFor(material: Material): string | undefined {
 
 const SOURCE_ORDER: Material['sourceType'][] = ['boss', 'monster', 'building', 'exploration']
 
-const SOURCE_LABELS = computed<Record<Material['sourceType'], string>>(() => ({
-  boss: t('panels.bag.tooltip.sourceTypes.boss'),
-  monster: t('panels.bag.tooltip.sourceTypes.monster'),
-  building: t('panels.bag.tooltip.sourceTypes.building'),
-  exploration: t('panels.bag.tooltip.sourceTypes.exploration'),
-}))
-
-const CATEGORY_LABELS = computed<Record<MaterialCategory, string>>(() => ({
-  herb: t('panels.bag.tooltip.categories.herb'),
-  wood: t('panels.bag.tooltip.categories.wood'),
-  ore: t('panels.bag.tooltip.categories.ore'),
-  monster_core: t('panels.bag.tooltip.categories.monsterCore'),
-  spirit_stone: SPIRIT_STONE_LABEL,
-  essence: t('panels.bag.tooltip.categories.essence'),
-  byproduct: t('panels.bag.tooltip.categories.byproduct'),
-  other: t('panels.bag.tooltip.categories.other'),
-}))
-
 const SORT_OPTIONS = computed<Array<BagSortOption & { value: MaterialSortMode }>>(() => [
   { value: 'category', label: t('panels.bag.sort.category') },
   { value: 'years', label: t('panels.bag.sort.years') },
@@ -95,84 +77,8 @@ const SORT_OPTIONS = computed<Array<BagSortOption & { value: MaterialSortMode }>
   { value: 'source', label: t('panels.bag.sort.source') },
 ])
 
-// Nhan canh gioi cho tooltip - nguoi choi khong phan biet duoc mau
-// (color-blind) van doc duoc realm tren tooltip (spec sec"Canh gioi").
-const REALM_LABELS = computed<Record<string, string>>(() => ({
-  mortal: t('panels.bag.tooltip.realms.mortal'),
-  qi_refining: t('panels.bag.tooltip.realms.qiRefining'),
-  foundation_establishment: t('panels.bag.tooltip.realms.foundationEstablishment'),
-  golden_core: t('panels.bag.tooltip.realms.goldenCore'),
-  nascent_soul: t('panels.bag.tooltip.realms.nascentSoul'),
-  soul_transformation: t('panels.bag.tooltip.realms.soulTransformation'),
-  void_refinement: t('panels.bag.tooltip.realms.voidRefinement'),
-  body_integration: t('panels.bag.tooltip.realms.bodyIntegration'),
-  mahayana: t('panels.bag.tooltip.realms.mahayana'),
-  tribulation: t('panels.bag.tooltip.realms.tribulation'),
-}))
-
-const AGE_LABELS = computed<Record<string, string>>(() => ({
-  decade: t('panels.bag.tooltip.ages.decade'),
-  century: t('panels.bag.tooltip.ages.century'),
-  millennium: t('panels.bag.tooltip.ages.millennium'),
-  myriad_year: t('panels.bag.tooltip.ages.myriadYear'),
-  thuong_co: t('panels.bag.tooltip.ages.thuongCo'),
-}))
-
-function buildTooltip(material: Material, owned: number): GradedItemTooltipContent {
-  const realmId = material.profession?.realmId
-  const realmText = realmId ? REALM_LABELS.value[realmId] : undefined
-  const rank = professionRankOf(material)
-
-  const rows = [
-    { label: t('panels.bag.tooltip.category'), value: CATEGORY_LABELS.value[material.category] },
-    { label: t('panels.bag.tooltip.source'), value: SOURCE_LABELS.value[material.sourceType] },
-    // Realm text IS the material's Pham axis - carry its rank color
-    // (user ruling: every Pham/Chat text shows in its set color).
-    ...(realmText ? [{ label: t('panels.bag.tooltip.realm'), value: realmText, colorVar: rank !== undefined ? `--rank-color-${rank}` : undefined }] : []),
-  ]
-
-  if (material.profession?.age) {
-    rows.push({
-      label: t('panels.bag.tooltip.age'),
-      value: AGE_LABELS.value[material.profession.age] ?? t('panels.bag.tooltip.yearsSuffix', { count: material.years ?? 0 }),
-    })
-  } else if (material.years !== undefined) {
-    rows.push({ label: t('panels.bag.tooltip.age'), value: t('panels.bag.tooltip.yearsSuffix', { count: material.years }) })
-  }
-  if (material.element !== undefined)
-    rows.push({ label: t('panels.bag.tooltip.element'), value: ELEMENT_LABELS[material.element] })
-
-  return {
-    kind: 'material',
-    name: material.name,
-
-    // Single title color = the material's Pham rank color (spec
-    // section 2) - materials have no Chat axis so the Pham ramp is the
-    // name color.
-    nameColorVar: rank !== undefined ? `--rank-color-${rank}` : undefined,
-
-    // Static SlotView header (spec section 3): same signals the bag
-    // cell binds - Pham seal via the 10-step rarity scale, realm in
-    // aria.
-    slotPreview: {
-      icon: material.icon,
-      label: material.name,
-      accessibleLabel: realmText ? `${material.name}, ${realmText}` : material.name,
-      rarityRank: rank,
-      rarityRankScale: 10,
-    },
-
-    imagePath: material.icon,
-    // Pham rank (10-step ramp) - feeds the tooltip aura color; materials
-    // have no Chat axis so gradeKey stays unset (2026-09-14 ruling).
-    gradeRank: rank,
-    // Spec: "So huu: N" renders only when the player owns at least one -
-    // never emit a zero count.
-    ownedCount: owned > 0 ? owned : undefined,
-    description: material.description,
-    sections: [{ label: t('panels.bag.tooltip.section'), rows }],
-  }
-}
+// Material item-info card builder now lives in useMaterialTooltip.ts -
+// see createMaterialTooltipBuilder above.
 
 const ui = useUiStore()
 
@@ -195,22 +101,6 @@ interface MaterialEntry {
   amount: number
 }
 
-// Mau theo pham nghe canh gioi (spec 2026-08-30-unify-material-quality-
-// names-design.md): nhin TEN biet tuoi/chat, nhin MAU (ten + khung) biet
-// realm. Material khong co profession meta (linh thach, legacy...) khong
-// to - undefined = mau mac dinh.
-function professionRankOf(material: Material): number | undefined {
-  const realmId = material.profession?.realmId
-
-  if (!realmId) {
-    return undefined
-  }
-
-  const grade = getProfessionGradeForRealm(realmId)
-
-  return grade ? professionGradeRank(grade) : undefined
-}
-
 // Material name segments - text structure only (item-info-card spec
 // 2026-09-14); display color lives on the tooltip payload. Used for
 // every material cell (single + family).
@@ -225,7 +115,7 @@ function materialNameSegments(material: Material, trailing?: { text: string }) {
 // Pham axis.
 function materialAccessibleLabel(name: string, material: Material): string {
   const realmId = material.profession?.realmId
-  const realmText = realmId ? REALM_LABELS.value[realmId] : undefined
+  const realmText = materialRealmLabel(realmId, t)
 
   return realmText ? `${name}, ${realmText}` : name
 }
@@ -262,9 +152,9 @@ const entries = computed<MaterialEntry[]>(() => {
 
       icon: stack.material.icon,
 
-      tooltip: buildTooltip(stack.material, stack.amount),
+      tooltip: buildTooltip(stack.material, { owned: stack.amount }),
 
-      rarityRank: professionRankOf(stack.material),
+      rarityRank: professionRankOfMaterial(stack.material),
 
       // Material chi co 1 truc rank (Pham Nghe, 1-10) - feed vao prop
       // rarityRank (mac dinh tran 5, thang itemQualityRank equipment)
@@ -326,7 +216,7 @@ function familyCell(item: FilteredMaterial): MaterialBagCell {
   // realm * bac cao nhat, tranh lap tuoi hai lan tren cung o).
   const baseLabel = baseNameFor(material)
 
-  const baseRank = professionRankOf(material)
+  const baseRank = professionRankOfMaterial(material)
 
   const badge = familyBadgeLabel(item)
 
@@ -345,7 +235,7 @@ function familyCell(item: FilteredMaterial): MaterialBagCell {
 
     accentVar: accentFor(material),
 
-    tooltip: buildTooltip(material, item.amount),
+    tooltip: buildTooltip(material, { owned: item.amount }),
 
     rarityRank: baseRank,
 
@@ -420,8 +310,8 @@ const cells = computed<MaterialBagCell[]>(() => {
           amount: item.amount,
           icon: item.material.icon,
           accentVar: accentFor(item.material),
-          tooltip: buildTooltip(item.material, item.amount),
-          rarityRank: professionRankOf(item.material),
+          tooltip: buildTooltip(item.material, { owned: item.amount }),
+          rarityRank: professionRankOfMaterial(item.material),
           rarityRankScale: 10,
           nameSegments: materialNameSegments(item.material),
         },

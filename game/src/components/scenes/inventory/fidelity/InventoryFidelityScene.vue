@@ -26,14 +26,18 @@ function search(event: Event) { if (event.target instanceof HTMLInputElement) em
 .toolbar input{width:212px;height:36px;border:1px solid #8f744aaa;background:#f4e4bb66;padding:0 12px;color:#433421;font-size:13px}
 .toolbar .sort{border:1px solid #8f744a;height:36px;padding:0 17px;font-size:14px}
 .workspace{display:grid;grid-template-columns:1fr auto;gap:26px;flex:1;min-height:0}
-.bag{overflow:auto;padding:5px 9px 5px 3px;border-right:1px solid #97794655;min-height:0}
-.item-grid{display:grid;grid-template-columns:repeat(8,82px);gap:12px}
-.item-grid button{position:relative;width:82px;height:82px;border:1px solid #a59158;background:radial-gradient(ellipse at 50% 40%,#385442,#0f251c 83%);box-shadow:inset 0 0 0 3px #06160f,0 2px 4px #43341d44;cursor:pointer}
-.item-grid img{width:67px;height:67px;object-fit:contain;filter:drop-shadow(0 2px 5px #000)}
+/* No internal scrolling (BagGrid pattern: the grid must fit the
+   column, cells sized so 4 rows stay inside the workspace) - and the
+   count line keeps ~30px off the paper's bottom decorative edge so the
+   scene sits inside the sheet like the other tabs. */
+.bag{overflow:hidden;padding:5px 9px 5px 3px;border-right:1px solid #97794655;min-height:0}
+.item-grid{display:grid;grid-template-columns:repeat(8,76px);gap:10px}
+.item-grid button{position:relative;width:76px;height:76px;border:1px solid #a59158;background:radial-gradient(ellipse at 50% 40%,#385442,#0f251c 83%);box-shadow:inset 0 0 0 3px #06160f,0 2px 4px #43341d44;cursor:pointer}
+.item-grid img{width:62px;height:62px;object-fit:contain;filter:drop-shadow(0 2px 5px #000)}
 .item-grid b{position:absolute;bottom:3px;right:5px;color:#f7e9b9;font-size:12px;text-shadow:0 1px 3px #000}
 .corners{position:absolute;inset:4px;border:1px solid #d0b67388;clip-path:polygon(0 0,20% 0,20% 6%,6% 6%,6% 20%,0 20%,0 0,100% 0,100% 20%,94% 20%,94% 6%,80% 6%,80% 0,100% 0,100% 100%,80% 100%,80% 94%,94% 94%,94% 80%,100% 80%,100% 100%,0 100%,0 80%,6% 80%,6% 94%,20% 94%,20% 100%,0 100%)}
 .item-grid button[aria-pressed=true]{outline:2px solid #d3aa55;outline-offset:2px;filter:brightness(1.2)}
 .item-grid button:hover{filter:brightness(1.2)}
 .item-grid button:focus-visible,.toolbar button:focus-visible{outline:2px solid #806126;outline-offset:3px}
-.count{font-size:12px;margin:12px 0 0}
+.count{font-size:12px;margin:10px 0 30px}
 </style>

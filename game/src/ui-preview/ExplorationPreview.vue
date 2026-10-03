@@ -3,6 +3,7 @@ import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
+import Tooltip from '@/components/common/Tooltip.vue'
 import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
 import ExplorationFidelityScene from '@/components/scenes/exploration/fidelity/ExplorationFidelityScene.vue'
 import type { ExplorationPaperModel, ExplorationDetail, ExplorationChapter } from '@/components/scenes/exploration/fidelity/explorationUi'
@@ -35,6 +36,16 @@ const model = computed<ExplorationPaperModel>(() => ({
   armedFarm: null,
   stopLabel: t('autoFarm.stop'),
 }))
+// Fixture drop cells - mirrors what ExplorationSurface builds from the
+// registries: item art in the slot, drop range under the cell, item
+// info card on hover (drop amount is part of the card).
+const EQUIPMENT_ANY_ICON = resolveAssetUrl('/assets/ui/huyen-kim/symbols/equipment.svg')
+const rewards = [
+  { label: 'Linh thạch', amount: '×2.000', tooltip: { kind: 'plain', title: 'Linh Thạch', description: 'Tiền tệ tu luyện chung.' } },
+  { label: 'Tâm pháp tinh thông', amount: '×50', tooltip: { kind: 'plain', title: 'Tâm Pháp Tinh Thông', description: 'Điểm tinh thông tâm pháp.' } },
+  { label: 'Linh Mộc', amount: '×5–8', icon: resolveAssetUrl('/assets/materials/linh_moc.png'), tooltip: { kind: 'plain', title: 'Linh Mộc', description: 'Gỗ linh khí, nguyên liệu phổ biến của Thanh Vân.\nSố lượng rơi: ×5–8' } },
+  { label: 'Trang bị bất kỳ', amount: '×1', icon: EQUIPMENT_ANY_ICON, tooltip: { kind: 'plain', title: 'Trang Bị Bất Kỳ', description: 'Một món trang bị ngẫu nhiên từ kho chung.\nSố lượng rơi: ×1' } },
+] as const
 const stage = computed<ExplorationDetail>(() => {
   const chapter = chapters.value.find(entry => entry.nodes.some(node => node.id === selected.value)) ?? chapters.value[0]!
   const node = chapter.nodes.find(entry => entry.id === selected.value) ?? chapter.nodes[0]!
@@ -48,7 +59,7 @@ const stage = computed<ExplorationDetail>(() => {
     stateLabel: t(`exploration.state.${node.state}`),
     enemySummary: node.boss ? t('bossEnemySummary') : t('enemySummary'),
     enemyLabel: node.boss ? t('bossEnemyLabel') : t('enemyLabel'),
-    rewards: [{ label: t('stone'), amount: '2.000' }, { label: t('mastery'), amount: '50' }, { label: t('material'), amount: '8' }],
+    rewards,
     disabledLabel: locked ? t('disabled') : '',
     modes: ['manual', 'repeat', 'progress', 'perfect_farm'].map(id => ({ id, label: t(`panels.stageSelect.modes.${id === 'perfect_farm' ? 'perfectFarm' : id}`), active: mode.value === id, disabled: id === 'perfect_farm' })),
     modeHint: t(`panels.stageSelect.modeHints.${mode.value === 'perfect_farm' ? 'perfectFarm' : mode.value}`),
@@ -73,5 +84,5 @@ function move(event: PointerEvent) {
   pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) }
 }
 </script>
-<template><SceneDesignCanvas><div class="exploration-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><ExplorationFidelityScene :model="model" :stage="stage" :navigation="navigation" :notice="notice" preview @select="choose" @zone="chooseZone" @navigate="navigate" @mode="pickMode" @stop-farm="notice = t('notice')" @open-build="notice = t('navNotice', { name: t('nav.skill') })" @start="notice = t('notice')" @back="back" /></div></SceneDesignCanvas></template>
+<template><SceneDesignCanvas><div class="exploration-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><ExplorationFidelityScene :model="model" :stage="stage" :navigation="navigation" :notice="notice" preview @select="choose" @zone="chooseZone" @navigate="navigate" @mode="pickMode" @stop-farm="notice = t('notice')" @open-build="notice = t('navNotice', { name: t('nav.skill') })" @start="notice = t('notice')" @back="back" /></div></SceneDesignCanvas><Tooltip /></template>
 <style scoped>.exploration-preview { position:relative; width:100%; height:100%; }</style>

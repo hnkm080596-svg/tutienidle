@@ -38,10 +38,9 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
     // itself now resolves through the band authority (pham band, M-QI-10).
     guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.mortal],
     pool: [
-      // base_kiem is the only equipment id every mortal-realm enemy family
-      // (bandit, boar, dog, tiger, lynx, ox, fox, crocodile, wolf) actually
-      // drops in the current data.
-      { kind: 'equipment', itemId: 'base_kiem', weight: 15 },
+      // No fixed equipment entry: base_kiem already sits in the registry
+      // pool equipment_any draws from, so the mortal band keeps a single
+      // weighted entry (user ruling - kiem folds into the random pool).
       { kind: 'equipment_any', weight: 20 },
     ],
   },

@@ -435,6 +435,8 @@
         "title": "Exploration Progress: {zone}"
       },
       "rewards": {
+        "dropAmount": "Drop amount",
+        "dropChance": "Drop chance",
         "kinds": {
           "material": "Material",
           "equipment": "Equipment",
