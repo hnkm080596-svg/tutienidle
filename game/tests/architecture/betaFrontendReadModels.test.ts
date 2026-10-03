@@ -194,14 +194,11 @@ describe('beta FE-contract read-models - import guards', () => {
     'no panel imports ReleasePolicy or rebuilds reward admission',
     () => {
       // The ban covers the whole component tree (panels + scenes), not
-      // just panels/. DongFuCommandWheelLayer is a NAVIGATION surface
+      // just panels/. DongFuStage is a NAVIGATION surface
       // (hotspot wheel): its isRealmAvailable deep-link check is not
       // reward admission, so it is a recorded exception - every other
       // file under components/ is not.
       const EXCEPTIONS = new Set([
-        'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue',
-        // Scene 03 fidelity stage: same navigation-surface exception - it
-        // reuses the wheel's isRealmAvailable deep-link check verbatim.
         'components/scenes/dong-fu/DongFuStage.vue',
       ])
       const offenders = srcCorpus(SRC_DIR)

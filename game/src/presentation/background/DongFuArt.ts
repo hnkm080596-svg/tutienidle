@@ -3,7 +3,7 @@ import type { ThanhVanVariant } from './BackgroundVariant'
 // Canonical layer map per spec SS14.4: L0 sky, L1 high/far ambience,
 // L2 mid landscape + foreground occluder, L3 sect ground/buildings,
 // L5 atmospheric FX. L4 (player) and L8 (screen-space UI) are owned by
-// DongFuScene.vue / GameRoot.vue and are not image layers.
+// DongFuStage.vue / GameRoot.vue and are not image layers.
 const TIME_LAYERS = [
   { file: '00-sky', shiftX: 0, shiftY: 0, motion: 'static', canonical: 'L0' },
   { file: '01-high-clouds', shiftX: 1, shiftY: 1, motion: 'cloud-slow', canonical: 'L1' },

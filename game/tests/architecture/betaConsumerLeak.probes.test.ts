@@ -8,7 +8,7 @@
 // the Dong Thien can ever deliver. The count now derives from
 // betaRecipeFamilyOfId, the same authority the alchemy catalog reads.
 //
-// CONSUMER-02 (Low): DongFuCommandWheel's character-slot dot fired on
+// CONSUMER-02 (Low): the command wheel's character-slot dot fired on
 // raw cultivationProgress >= 1, a false positive at the TC ceiling
 // (full bar, chapter stage uncleared -> breakthrough still blocked).
 // The badge now asks the canonical gate
@@ -18,7 +18,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { computed, createApp, defineComponent, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import ProductionPanel from '@/components/panels/ProductionPanel.vue'
-import DongFuCommandWheel from '@/components/game/DongFuCommandWheel.vue'
+import DongFuStage from '@/components/scenes/dong-fu/DongFuStage.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { VUE_ROUTE_ADAPTER_KEY, type Route } from '@/presentation/PresentationContracts'
@@ -104,7 +104,7 @@ function mountWheel() {
   document.body.appendChild(container)
 
   const RootStub = defineComponent({
-    render: () => h('div', [h(DongFuCommandWheel)]),
+    render: () => h('div', [h(DongFuStage)]),
   })
 
   const app = createApp({ render: () => h(RootStub) })
@@ -124,7 +124,7 @@ function mountWheel() {
 }
 
 describe('CONSUMER-02: the character-slot dot asks the canonical breakthrough gate', () => {
-  const badgeSelector = '[data-wheel-slot="character"] .notification-badge'
+  const badgeSelector = '[data-wheel-slot="character"] .df-node__badge'
 
   it('no dot at the TC ceiling when the chapter stage is uncleared, even with a full bar', async () => {
     const { container, app, pinia } = mountWheel()

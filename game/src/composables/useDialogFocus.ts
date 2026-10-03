@@ -43,7 +43,7 @@ export function useDialogFocus(
         if (event.key !== 'Tab') return
         // Tab luon bi chan native truoc early-return: dialog khong co focusable
         // cung KHONG cho Tab thoat containment (focus giu nguyen tai cho).
-        // stopPropagation: window-level listeners (DongFuCommandWheel Tab
+        // stopPropagation: window-level listeners (DongFuStage Tab
         // toggle) must not see a Tab consumed by dialog containment.
         event.preventDefault()
         event.stopPropagation()

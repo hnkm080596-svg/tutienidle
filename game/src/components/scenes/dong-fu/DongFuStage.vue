@@ -2,8 +2,7 @@
 // Dong Phu home stage (production host for the approved dong-fu-v2
 // fidelity surface): SceneDesignCanvas 1440x810 + two-plane vista +
 // shared DongFuHomeContent driven by REAL read-models. Replaces the old
-// hotspot scene + GlobalTopBar/ThienCoRail/wheel/quest-tracker chrome -
-// one surface, no stacked HUDs. All actions route to the existing
+// stacked HUD chrome (hotspot scene + top bar + rails) - one surface. All actions route to the existing
 // owners: commandWheelCatalog slots, useBuildingNavigation, ui store
 // panels, ThienCoEntry.run(), FeedbackDialog. Nothing here owns domain
 // state (A7).
@@ -67,7 +66,7 @@ const homeOverlayOpen = computed(
   () => Boolean(ui.leftPanelMode) || ui.characterOverlayOpen || Boolean(ui.standalonePanel),
 )
 const notice = ref('')
-let noticeTimer: ReturnType<typeof setTimeout> | undefined
+let noticeTimer: number | undefined
 
 function flashNotice(text: string) {
   notice.value = text

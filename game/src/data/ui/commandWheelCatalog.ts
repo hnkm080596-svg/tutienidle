@@ -33,7 +33,7 @@ export interface CommandWheelSlot {
    * khong bam duoc (vd nghe chua co definition), khac han `available`
    * (ton tai tinh nang hay chua). Nhan `context` lam THAM SO thay vi tu
    * doc store/GameManager ben trong catalog - giu dung quy uoc "catalog
-   * thuan data, khong import runtime" o dau file; DongFuCommandWheel.vue
+   * thuan data, khong import runtime" o dau file; DongFuStage.vue
    * tu build context roi truyen vao. Tra ve chuoi ly do (hien tooltip) hoac
    * null neu khong bi disable.
    */
@@ -43,7 +43,7 @@ export interface CommandWheelSlot {
 /** Context runtime toi thieu cho disabledReason() - mo rong dan khi co slot moi can. */
 export interface CommandWheelDisabledContext {
   // P7-M9 + M-F-CEILING: per-domain unlock booleans resolved in
-  // DongFuCommandWheel.vue from the AUTHORITATIVE domain predicates
+  // DongFuStage.vue from the AUTHORITATIVE domain predicates
   // (isArtifactDomainUnlocked / isCompanionDomainUnlocked /
   // isFormationUnlocked) - the slots must not key off raw realm presence
   // or the wheel drifts from the domain gate when a threshold (or the
