@@ -16,12 +16,14 @@ import { BETA_CREATION_TALENT_IDS } from '@/core/betaScope'
 
 const MIGRATIONS_DIR = 'supabase/migrations'
 
-// A real redefinition - `create or replace function ...create_talent_roll`
-// (whitespace/comments between tokens tolerated). Mention-only files
-// (grants, comments) must not count, and a redefinition that drops the
-// allow-list clause must still be selected so the pin fails on it.
+// A real redefinition - `create or replace function create_talent_roll(`
+// (optional `public.` schema prefix; whitespace between tokens tolerated).
+// The name is anchored immediately after `function` so call-sites,
+// mention-only files (grants, comments) and lookalikes such as
+// `create_talent_roll_v2` cannot enter the set. A redefinition that drops
+// the allow-list clause must still be selected so the pin fails on it.
 const REDEFINITION_PATTERN =
-  /create\s+or\s+replace\s+function[\s\S]{0,200}?create_talent_roll/i
+  /create\s+or\s+replace\s+function\s+(?:[\w]+\s*\.\s*)?create_talent_roll\s*\(/i
 
 // Matches the roll's `... and id = any(array['id1','id2',...])` offer
 // filter - deliberately NOT `id = any(rolled_ids)` (no `array[`).
