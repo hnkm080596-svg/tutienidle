@@ -92,8 +92,7 @@ function statusFor(buildingId: string) {
 }
 
 function isSelected(building: Building): boolean {
-  return ui.activeBuildingPopoverId === building.id
-    || (building.functionType !== undefined && ui.leftPanelMode === building.functionType)
+  return building.functionType !== undefined && ui.leftPanelMode === building.functionType
 }
 
 function tooltipFor(building: Building): BuildingTooltipContent {

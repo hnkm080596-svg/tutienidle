@@ -9,12 +9,11 @@
 //   * GameRoot defends ui.standalonePanel at the MOUNT seam ("a
 //     scope-hidden panel can never mount even when a caller bypasses
 //     ui.openStandalonePanel and assigns the state field directly").
-//     The sibling seams - ui.activeBuildingPopoverId and
-//     ui.leftPanelMode - must defend identically: a scope-hidden
-//     building popover or left-panel mode can never render, because
-//     downstream commands (buildBuilding/upgradeBuilding) are live
+//     The sibling seam - ui.leftPanelMode - must defend identically: a
+//     scope-hidden left-panel mode can never render, because
+//     downstream commands (upgradeBuilding) are live
 //     economy writes.
-//   * Build/upgrade of the scope-hidden building (chi_hien_quan) is a
+//   * Upgrade of the scope-hidden building (chi_hien_quan) is a
 //     live-material spend plus a dormant-field write - the domain
 //     command must fail closed the same way consumePill/assignWorkers
 //     do.
@@ -42,7 +41,6 @@ import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { vTooltip } from '@/directives/tooltip'
 import FunctionOverlayPanel from '@/components/layout/FunctionOverlayPanel.vue'
-import BuildingDetailPopover from '@/components/game/BuildingDetailPopover.vue'
 import AutoFarmIndicator from '@/components/game/AutoFarmIndicator.vue'
 import { buildings } from '@/data/building/buildings'
 import { materials } from '@/data/materials/materials'
@@ -183,42 +181,6 @@ describe('consumer seam: worker_lodge left-panel mode (contract sec.G + sec.F)',
     // spent and the dormant autoWorkerCapacity field is written.
     expect(upgraded).toBe(false)
     expect(gameManager.materialBag.getAmount('mortal_ore_decade')).toBe(oreBefore)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// F-B-CONS-2: the building popover mount seam trusts
-// ui.activeBuildingPopoverId - a direct write renders the chi_hien_quan
-// build card and its Build button runs the ungated domain command.
-// ---------------------------------------------------------------------------
-describe('consumer seam: chi_hien_quan building popover (contract sec.G)', () => {
-  it('a direct ui.activeBuildingPopoverId write can never render the scope-hidden build card', async () => {
-    const gameManager = realGameManager()
-    const p = player({ realmId: 'mortal' })
-    gameManager.setActivePlayer(p)
-
-    const view = mountPanel(BuildingDetailPopover, { buildingId: 'chi_hien_quan' }, gameManager)
-
-    await nextTick()
-
-    // DEFECT evidence: the scope-hidden building renders its full build
-    // surface (name + cost rows + actionable Build button).
-    expect(view.container.querySelector('.building-popover')).toBeNull()
-    expect(view.container.textContent).not.toContain('Chiêu Hiền Quán')
-
-    view.unmount()
-  })
-
-  it('the popover Build path constructs the scope-hidden building and writes dormant capacity', () => {
-    const gameManager = realGameManager()
-    const p = player({ realmId: 'mortal' })
-    gameManager.setActivePlayer(p)
-
-    const built = gameManager.buildingOps.buildBuilding('chi_hien_quan', p, Date.now() / 1000)
-
-    // DEFECT evidence: ungated build - instance created, dormant field set.
-    expect(built).toBeNull()
-    expect(gameManager.buildingManager.getByBuildingId('chi_hien_quan')).toBeUndefined()
   })
 })
 

@@ -60,11 +60,11 @@ const feedbackOpen = ref(false)
 const boardOpen = ref(true)
 
 // Any mounted home overlay (left panel, character sheet, standalone
-// paper, building popover) sits in the same stacking context as the
+// paper) sits in the same stacking context as the
 // home chrome but paints its paper around it - hide the board/quest
 // chip instead of letting them float on top of the overlay's rim.
 const homeOverlayOpen = computed(
-  () => Boolean(ui.leftPanelMode) || ui.characterOverlayOpen || Boolean(ui.standalonePanel) || Boolean(ui.activeBuildingPopoverId),
+  () => Boolean(ui.leftPanelMode) || ui.characterOverlayOpen || Boolean(ui.standalonePanel),
 )
 const notice = ref('')
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
@@ -124,10 +124,7 @@ function slotActive(slot: CommandWheelSlot): boolean {
   if (target?.kind === 'standalone') return ui.standalonePanel === target.panel
   if (slot.buildingId) {
     const { template } = navigation.getBuildingPresentation(slot.buildingId)
-    return (
-      ui.activeBuildingPopoverId === slot.buildingId ||
-      (template?.functionType !== undefined && ui.leftPanelMode === template.functionType)
-    )
+    return template?.functionType !== undefined && ui.leftPanelMode === template.functionType
   }
   return false
 }

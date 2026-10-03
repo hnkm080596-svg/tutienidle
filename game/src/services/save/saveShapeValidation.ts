@@ -3115,11 +3115,12 @@ function validateBuildingsSave(
   playerRealmIndex?: number,
   claimedRealmTier?: number,
 ): void {
-  // F-BLD-DUP-1: instanceId comes from crypto.randomUUID() at build
-  // time - a duplicate is unproducible and breaks first-match
-  // get()/remove() consumers. buildingId duplicates are unproducible
-  // for 'crafting_station' templates (canBuildDetailed -> already_built);
-  // resource categories may legitimately hold several instances.
+  // F-BLD-DUP-1: instanceId comes from crypto.randomUUID() when an
+  // instance is created - a duplicate is unproducible and breaks
+  // first-match get()/remove() consumers. buildingId duplicates are
+  // unproducible for 'crafting_station' templates (a second instance is
+  // never created once one exists); resource categories may
+  // legitimately hold several instances.
   const seenInstanceIds = new Set<string>()
   const seenSingleInstanceBuildingIds = new Set<string>()
 

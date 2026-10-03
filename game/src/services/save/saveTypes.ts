@@ -89,8 +89,8 @@ export interface FormationStackSave {
 // luot/loai). buildings: BuildingInstance[] gio co the chua 4
 // building crafting_station moi (pill_room/formation_altar/
 // talisman_institute/equipment_hall - truoc day 4 panel nay KHONG
-// gan Building nao, gio bat buoc xay truoc khi dung, xem
-// BuildingConstructionGate.vue).
+// gan Building nao, luc do bat buoc xay truoc khi dung; co che xay
+// da bo 2026-10-03 - moi building mac dinh lv1).
 // version 15: Equipment Rework - equipment: EquipmentInstance[] doi
 // field: `rarity` gio la 1 trong 4 gia tri moi (vo_duyen/tieu_duyen/
 // ky_duyen/thien_duyen, bo han 'normal'/'magic'/'rare'/'exalted'/

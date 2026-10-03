@@ -111,9 +111,6 @@ function createManager(): GameManager {
   return gameManager
 }
 
-afterEach(() => {
-  window.localStorage.removeItem('dev.testModeUnlockAll')
-})
 
 describe('alchemy.reason.* key completeness (T4-32)', () => {
   it('every reason literal returned by startJob/startAlchemyJob has a locale key in both locales', () => {

@@ -6,7 +6,6 @@ import RouteMount from '../game/RouteMount.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
 import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
-import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
 import FunctionOverlayPanel from './FunctionOverlayPanel.vue'
 // Standalone overlay panels load lazily: the module is fetched on first
@@ -33,7 +32,7 @@ import TutorialOverlay from '../common/TutorialOverlay.vue'
 import { useOfflineSummaryStore } from '@/stores/offlineSummary'
 import { useUiStore } from '@/stores/ui'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
-import { betaAdmittedBuildingPopoverId, isBetaStandalonePanel } from '@/core/betaScopeSurface'
+import { isBetaStandalonePanel } from '@/core/betaScopeSurface'
 
 const offlineSummary = useOfflineSummaryStore()
 
@@ -81,14 +80,6 @@ watch(
   { immediate: true },
 )
 
-// BETA SCOPE LOCK: the popover mount seam carries the same chokepoint
-// defense as the standalone-panel watcher - a scope-hidden building's
-// card never renders even when ui.activeBuildingPopoverId is assigned
-// directly (e.g. by a surface that skipped openBuildingPopover).
-const admittedBuildingPopoverId = computed(() =>
-  betaAdmittedBuildingPopoverId(ui.activeBuildingPopoverId),
-)
-
 /** Which route this Vue tree is currently standing in for (mount witness). */
 const mountedGameRoute = computed<'home' | 'combat' | 'tribulation'>(() => {
   const route = routeAdapter?.activeRoute.value
@@ -111,12 +102,6 @@ function closeSidePanels() {
       <MainScene @click="closeSidePanels" />
 
       <template v-if="!isFullSceneActive">
-        <!-- Shared popover authority (plan Workstream C) - CHI MOT
-             BuildingDetailPopover cho CA hotspot lan command wheel,
-             dieu khien qua ui.activeBuildingPopoverId. -->
-        <div v-if="admittedBuildingPopoverId" class="game-root__building-popover-layer">
-          <BuildingDetailPopover :building-id="admittedBuildingPopoverId" />
-        </div>
 
         <!-- Spec SS11/SS12 home chrome (top bar, Thien Co rail, quest
              tracker, command wheel) moved INSIDE DongFuStage - the
@@ -202,17 +187,4 @@ function closeSidePanels() {
   background: var(--ink-950);
 }
 
-.game-root__building-popover-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-}
-
-.game-root__building-popover-layer :deep(.building-popover) {
-  pointer-events: auto;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.68);
-}
 </style>

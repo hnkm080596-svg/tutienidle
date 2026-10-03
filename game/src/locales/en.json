@@ -857,10 +857,6 @@
         "reasonIncomplete": "Objective incomplete."
       }
     },
-    "buildingPopover": {
-      "costTitle": "Build Cost",
-      "build": "Build"
-    },
     "common": {
       "close": "Close",
       "confirm": "Confirm",
@@ -883,7 +879,7 @@
       "estimate": "≈ {amount} essence / cycle",
       "matching": "Matching ore in bag: {count}",
       "hint": {
-        "noCapacity": "No decompose capacity — build or upgrade the Worker Lodge to free up workers.",
+        "noCapacity": "No decompose capacity — upgrade the Worker Lodge to free up workers.",
         "noWorkers": "No workers assigned — raise the Workers slider to start decomposing.",
         "noMatchingOres": "No ore in the bag matches the filters — gather ore from mining/exploration or loosen the filters."
       }
@@ -1609,11 +1605,6 @@
     },
     "level": "Level {level}",
     "notBuilt": "Locked"
-  },
-  "buildingGate": {
-    "free": "Free",
-    "confirmTitle": "Build {name}?",
-    "confirmMessage": "This will cost {cost}."
   },
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",

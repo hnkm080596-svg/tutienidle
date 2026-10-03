@@ -318,7 +318,7 @@ describe('DongFuCommandWheel', () => {
     expect(mounted.layer()!.classList.contains('is-visible')).toBe(false)
   })
 
-  it('building chưa xây → shortcut mở popover qua shared authority', async () => {
+  it('building có functionType → shortcut mở panel chức năng', async () => {
     gameManager.catalogOps.registerBuildings([
       {
         id: 'pill_room',
@@ -328,6 +328,7 @@ describe('DongFuCommandWheel', () => {
         maxLevel: 3,
         baseStorageCapacity: 0,
         upgradeCost: [[{ materialId: 'go', amount: 1 }]],
+        functionType: 'pill_room',
       },
     ])
 
@@ -336,7 +337,7 @@ describe('DongFuCommandWheel', () => {
     mounted.slot('pill_room')!.click()
     await nextTick()
 
-    expect(mounted.ui.activeBuildingPopoverId).toBe('pill_room')
+    expect(mounted.ui.leftPanelMode).toBe('pill_room')
     expect(mounted.ui.isCommandWheelOpen).toBe(false)
   })
 

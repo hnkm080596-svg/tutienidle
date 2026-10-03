@@ -159,7 +159,7 @@ export function clearDomainViolations(): void {
 }
 
 // Dev/test detection follows the codebase's import.meta.env.DEV guard
-// pattern (DevMode.ts), extended with MODE === 'test' so Vitest runs
+// pattern, extended with MODE === 'test' so Vitest runs
 // (where DEV semantics may vary) also fail fast.
 function isDevOrTestEnv(): boolean {
   return import.meta.env.DEV === true || import.meta.env.MODE === 'test'

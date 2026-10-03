@@ -34,14 +34,18 @@ function buildInstance(instanceId: string, buildingId: string, level: number) {
 }
 
 describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
-  it('build CHQ cấp 1 → capacity 3; upgrade cấp 2 → 5; cấp 9 → 19', () => {
+  it('CHQ cấp 1 → capacity 3; upgrade cấp 2 → 5; cấp 9 → 19', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
 
     manager.setActivePlayer(player)
 
-    // Xay CHQ level 1 (canBuild qua buildingSystem - chi phi [] band dau).
-    expect(manager.buildingOps.buildBuilding('chi_hien_quan', player)).not.toBe(false)
+    // Default-built - CHQ ton tai lv1 ngay tu reconcile.
+    manager.buildingManager.add(buildInstance('i1', 'chi_hien_quan', 1))
+    manager.buildingOps.refreshAutoWorkerCapacity(
+      player,
+      manager.buildingManager.getByBuildingId('chi_hien_quan')!,
+    )
 
     const instance = manager.buildingManager.getByBuildingId('chi_hien_quan')!
 
@@ -56,7 +60,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
     expect(player.autoWorkerCapacity).toBe(19)
   })
 
-  it('chưa xây CHQ → capacity 0 (công thức, không fallback outpost)', () => {
+  it('không có instance CHQ → capacity 0 (công thức, không fallback outpost)', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
 
@@ -104,6 +108,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
     }))
 
     expect(player.autoWorkerCapacity).toBe(5)
+    expect(manager.buildingManager.getByBuildingId('chi_hien_quan')!.level).toBe(2)
   })
 })
 

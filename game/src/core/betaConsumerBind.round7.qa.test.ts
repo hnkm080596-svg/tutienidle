@@ -31,7 +31,7 @@ import {
 } from './realm/hidden/NghichChuTian'
 import { isAncientBeastTrialEligible } from './realm/hidden/AncientBeastTrial'
 import { isBetaFeature, isScopeHidden, isBetaTalentId } from './betaScope'
-import { isBetaBuildingSurface, betaAdmittedBuildingPopoverId } from './betaScopeSurface'
+import { isBetaBuildingSurface } from './betaScopeSurface'
 import { isBreakthroughAcquisitionEnabled } from './realm/ReleasePolicy'
 import { BREAKTHROUGH_TALENT_POOLS } from '../data/talent/BreakthroughTalentPools'
 import {
@@ -234,9 +234,8 @@ describe('carried chi_hien_quan instance is inert', () => {
     ).toBe(false)
   })
 
-  it('the building id admits no surface (icon, popover, standalone panel)', () => {
+  it('the building id admits no surface (icon, standalone panel)', () => {
     expect(isBetaBuildingSurface('chi_hien_quan')).toBe(false)
-    expect(betaAdmittedBuildingPopoverId('chi_hien_quan')).toBeNull()
   })
 })
 

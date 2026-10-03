@@ -312,10 +312,12 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
         // FunctionOverlayPanel mounts worker_lodge unconditionally, but
         // the ui store fails closed on isBetaLeftPanelMode before any
         // mode reaches it - the store is the gate this pin guards.
+        // Default-built (2026-10-03): the building popover was removed
+        // with the build mechanic, so the isBetaBuildingSurface read
+        // left this file with it - the two panel gates remain the pins.
         'stores/ui.ts': [
           'isBetaStandalonePanel',
           'isBetaLeftPanelMode',
-          'isBetaBuildingSurface',
         ],
         'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue': ['betaWheelSlots'],
         'components/scenes/equipment/EquipmentSurface.vue': ['isBetaEquipmentTab'],
