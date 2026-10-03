@@ -779,7 +779,7 @@
       "lockedAfter": "Complete: {name}",
       "lockedRealm": "Reach realm: {realm}",
       "flags": {
-        "alchemyCrafted": "Craft Tu Linh Dan"
+        "alchemyCrafted": "Craft a pill"
       }
     },
     "buildingPopover": {

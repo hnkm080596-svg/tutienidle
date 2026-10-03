@@ -779,7 +779,7 @@
       "lockedAfter": "Hoàn thành: {name}",
       "lockedRealm": "Đạt cảnh giới: {realm}",
       "flags": {
-        "alchemyCrafted": "Luyện Tụ Linh Đan"
+        "alchemyCrafted": "Luyện chế đan dược"
       }
     },
     "buildingPopover": {
