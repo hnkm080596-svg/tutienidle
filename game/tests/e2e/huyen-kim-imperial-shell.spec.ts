@@ -163,17 +163,37 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     assertNoBrowserErrors(errors)
   })
 
-  test('scene 11 alchemy: imperial scroll + cauldron centerpiece', async ({ page }) => {
+  test('scene 11 alchemy: paper scene + cauldron centerpiece', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await openLeftMode(page, 'pill_room')
-    const scroll = page.getByTestId('function-overlay-panel')
-    await expect(scroll).toBeVisible({ timeout: 15_000 })
-    await expectImperialScroll(page)
-    const cauldron = scroll.locator('img[src*="alchemy-cauldron-prop"]')
+    const scene = page.locator('.alchemy-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    // The fidelity surface mounts outside the imperial scroll - the old
+    // chrome must not double-render.
+    await expect(page.getByTestId('function-overlay-panel')).toHaveCount(0)
+    const cauldron = scene.locator('img[src*="alchemy-cauldron-prop"]')
     await expect(cauldron).toBeVisible({ timeout: 10_000 })
-    await waitForScrollSettled(page)
     await shot(page, '11-alchemy')
+    assertNoBrowserErrors(errors)
+  })
+
+  test('scene 12 equipment: paper scene + workspace tabs + doll', async ({ page }) => {
+    const errors = collectBrowserErrors(page)
+    await bootFreshMortal(page)
+    await openLeftMode(page, 'equipment_hall')
+    const scene = page.locator('.equipment-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    // The fidelity surface mounts outside the imperial scroll - the old
+    // chrome must not double-render.
+    await expect(page.getByTestId('function-overlay-panel')).toHaveCount(0)
+    // Beta scope admits enhance + dissolve plus the view/bag tabs.
+    const tabs = scene.locator('.equipment-workspace nav button')
+    await expect(tabs).toHaveCount(4)
+    await expect(tabs.nth(0)).toHaveText(/Trang Bị|Gear/)
+    // Default workspace is the Trang Bi item detail.
+    await expect(scene.locator('.equipment-item-detail')).toBeVisible({ timeout: 10_000 })
+    await shot(page, '12-equipment')
     assertNoBrowserErrors(errors)
   })
 
@@ -198,7 +218,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     await openStandalone(page, 'quest')
     await expectImperialScroll(page)
     const scroll = page.locator('.hk-scroll')
-    await expect(scroll.locator('.quest-scene__rail')).toBeVisible({ timeout: 10_000 })
+    await expect(scroll.locator('[data-hk-region="quest-list"]')).toBeVisible({ timeout: 10_000 })
     await waitForScrollSettled(page)
     await shot(page, '18-quest')
     assertNoBrowserErrors(errors)
@@ -214,9 +234,9 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
-    const scroll = page.getByTestId('function-overlay-panel')
-    await expect(scroll).toBeVisible({ timeout: 15_000 })
-    const start = scroll.locator('.stage-start-button, [data-testid="stage-start-button"]').first()
+    const scene = page.locator('.exploration-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    const start = scene.getByTestId('stage-start-button')
     await expect(start).toBeEnabled({ timeout: 10_000 })
     await start.click()
 
@@ -269,9 +289,9 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
-    const scroll = page.getByTestId('function-overlay-panel')
-    await expect(scroll).toBeVisible({ timeout: 15_000 })
-    const start = scroll.locator('.stage-start-button, [data-testid="stage-start-button"]').first()
+    const scene = page.locator('.exploration-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    const start = scene.getByTestId('stage-start-button')
     await expect(start).toBeEnabled({ timeout: 10_000 })
     await start.click()
     await expect(page.locator('.combat-scene-overlay')).toBeVisible({ timeout: 20_000 })

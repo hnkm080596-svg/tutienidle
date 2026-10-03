@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // Scene 02 back affordance - top-left ghost button (region back-btn
 // 24/24/96/40 in design px) returning to the auth entry.
-import GameButton from '@/components/common/GameButton.vue'
 import { useI18n } from 'vue-i18n'
 
 defineProps<{ disabled?: boolean }>()
@@ -10,20 +9,24 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <GameButton
+  <button
     class="creation-back-button"
-    variant="ghost"
-    size="sm"
+    type="button"
     :disabled="disabled"
     @click="emit('back')"
   >
     {{ t('onboarding.creation.back') }}
-  </GameButton>
+  </button>
 </template>
 
 <style scoped>
 .creation-back-button {
-  /* keeps the ghost legible over the bright vista band at the top edge */
-  text-shadow: 0 1px 4px rgba(5, 8, 9, 0.65);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #786441;
+  font: 12px var(--hk-font-display, Georgia, serif);
+  cursor: pointer;
 }
+.creation-back-button:focus-visible { outline: 2px solid #315f55; outline-offset: 3px; }
 </style>

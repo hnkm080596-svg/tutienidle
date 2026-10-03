@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import BagGrid from './BagGrid.vue'
+// Scene 09 (Tui Do) mount seam: the panel keeps the bag-panel container
+// anchor (BagPaginationControls' @container query) and mounts the
+// fidelity production surface - canonical tabs + real sections.
+import InventorySurface from '@/components/scenes/inventory/InventorySurface.vue'
 </script>
 
 <template>
   <div class="inventory-panel">
-    <BagGrid />
+    <InventorySurface />
   </div>
 </template>
 

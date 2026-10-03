@@ -7,7 +7,6 @@ import type { TalentDefinition } from '@/core/talent/Talent'
 import type { RemoteCharacterMetadata } from '@/services/session/BackendStatus'
 import { useAudioStore } from '@/stores/audio'
 import CreationSceneLayout from '@/components/scenes/creation/CreationSceneLayout.vue'
-import CreationVista from '@/components/scenes/creation/CreationVista.vue'
 import CreationBackButton from '@/components/scenes/creation/CreationBackButton.vue'
 import CreationScrollShell from '@/components/scenes/creation/CreationScrollShell.vue'
 import CreationTitleBlock from '@/components/scenes/creation/CreationTitleBlock.vue'
@@ -15,13 +14,11 @@ import CreationNameSection from '@/components/scenes/creation/CreationNameSectio
 import CreationTalentSection from '@/components/scenes/creation/CreationTalentSection.vue'
 import CreationStarterSlot from '@/components/scenes/creation/CreationStarterSlot.vue'
 import CreationFooter from '@/components/scenes/creation/CreationFooter.vue'
-import '@/components/scenes/creation/art-needed.css'
+import { CREATION_SKILL_PREVIEW } from '@/components/scenes/creation/creationPreview'
 
-// BETA SCOPE LOCK v2 (phase-2) - the canonical creation surface is
-// Name + Talent only. The mortal starter pick is gone: every beta
-// character boots with 'linh_bao' (BETA_MORTAL_STARTER_SKILL_ID), and
-// the talent offer list arrives already beta-admitted from the service
-// - this screen never filters the registry itself.
+// The committed creation contract remains name + talent only.
+// Starter tiles are a local visual preview until the gameplay hookup.
+// The talent offer list still arrives from the existing service.
 export interface CharacterCreationPayload {
   name: string
   talentIds: string[]
@@ -39,6 +36,8 @@ const selectedTalentIds = ref<string[]>([])
 const rolling = ref(false)
 const error = ref('')
 const creating = ref(false)
+// Preview only: never added to CharacterCreationPayload or sent to the service.
+const previewSkillId = ref('linh_bao')
 
 const { t } = useI18n()
 
@@ -107,14 +106,9 @@ onMounted(() => { void reroll() })
 
 <template>
   <CreationSceneLayout>
-    <template #vista>
-      <CreationVista />
-    </template>
-    <template #back>
-      <CreationBackButton :disabled="creating" @back="emit('back')" />
-    </template>
     <template #scroll>
       <CreationScrollShell>
+        <template #back><CreationBackButton :disabled="creating" @back="emit('back')" /></template>
         <CreationTitleBlock />
         <CreationNameSection v-model="name" :valid-name="validName" :disabled="creating" />
         <CreationTalentSection
@@ -126,7 +120,7 @@ onMounted(() => { void reroll() })
           @toggle="toggleTalent"
           @reroll="reroll"
         />
-        <CreationStarterSlot :visible="false" />
+        <CreationStarterSlot v-model="previewSkillId" :options="CREATION_SKILL_PREVIEW" :disabled="creating" />
         <CreationFooter
           :ready="ready"
           :creating="creating"

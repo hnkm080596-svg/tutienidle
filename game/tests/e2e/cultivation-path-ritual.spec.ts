@@ -486,8 +486,8 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     const skillSlot = page.locator('[data-wheel-slot="skill"]')
     await expect(skillSlot).toBeVisible({ timeout: 10_000 })
     await skillSlot.click()
-    await expect(page.locator('.skill-path-panel')).toBeVisible({ timeout: 15_000 })
-    await expect(page.locator('.skill-path-panel__element-tab')).toHaveCount(1)
+    await expect(page.locator('.skill-paper-scene')).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('.skill-elements button')).toHaveCount(1)
 
     // M-F-ARTIFACT-DEFER oracle: the artifact domain is deferred to
     // Kim Dan+ (outside the release window) - at foundation_establishment
@@ -575,8 +575,8 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     const skillSlot = page.locator('[data-wheel-slot="skill"]')
     await expect(skillSlot).toBeVisible({ timeout: 10_000 })
     await skillSlot.click()
-    await expect(page.locator('.skill-path-panel')).toBeVisible({ timeout: 15_000 })
-    await expect(page.locator('.skill-path-panel__element-tabs')).toHaveCount(0)
+    await expect(page.locator('.skill-paper-scene')).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('.skill-elements')).toHaveCount(0)
 
     // F1 oracle (negative): at foundation_establishment the way grants
     // NO artifact - restore must not manufacture ngu_hanh_chau and the

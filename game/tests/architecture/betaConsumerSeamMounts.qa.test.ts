@@ -76,7 +76,9 @@ describe('mount seam: leftPanelMode raw write (F-B-CONS-1)', () => {
     const { container, app } = mountOverlay('pill_room')
     await Promise.resolve()
 
-    expect(container.querySelector('[data-testid="function-overlay-panel"]')).not.toBeNull()
+    // pill_room mounts its own paper scene (S11 fidelity) outside the
+    // imperial scroll - the seam admits it by mounting the surface.
+    expect(container.querySelector('.alchemy-scene')).not.toBeNull()
     app.unmount()
     container.remove()
   })

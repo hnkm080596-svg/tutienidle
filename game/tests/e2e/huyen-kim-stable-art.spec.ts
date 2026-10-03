@@ -259,36 +259,35 @@ test.describe('Huyen Kim stable scene art', () => {
     assertNoBrowserErrors(errors)
   })
 
-  test('scenes 05+08: realm ascent stack, then body figure/overlay', async ({ page }) => {
+  test('scenes 05+08: realm paper map, then body figure/overlay', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await openStandalone(page, 'realm')
-    const scroll = page.locator('.hk-scroll')
-    await expect(scroll).toBeVisible({ timeout: 15_000 })
+    const realm = page.locator('.realm-paper-scene')
+    await expect(realm).toBeVisible({ timeout: 15_000 })
 
-    const stack = scroll.locator(
-      '.realm-scene__ascent .hk-parallax-stack[data-stack="realm-ascent"]',
-    )
-    await expect(stack).toBeVisible()
-    await expect(stack.locator('.hk-parallax-stack__layer')).toHaveCount(5)
-    // Runtime-owned content stays dominant: realm rungs still render.
-    await expect(scroll.locator('.realm-node').first()).toBeVisible({ timeout: 10_000 })
+    // Scene 05 fidelity: the paper map art carries the 18-floor ascent;
+    // runtime-owned markers stay interactive on top of it.
+    const art = realm.locator('.realm-map-art')
+    await expect(art).toBeVisible()
+    expect(await art.getAttribute('src')).toContain('realm')
+    await expect(realm.locator('.realm-marker')).toHaveCount(18)
+    await expect(realm.locator('.realm-details')).toBeVisible()
     await waitForPresentationIdle(page)
-    await waitForScrollSettled(page)
     await shot(page, '05-realm')
 
     await page.keyboard.press('Escape')
     await openStandalone(page, 'body')
-    const body = page.locator('.body-scene')
+    const body = page.locator('.body-paper-scene')
     await expect(body).toBeVisible({ timeout: 15_000 })
-    const figure = body.locator('.body-scene__figure-img')
-    const meridian = body.locator('.body-scene__figure-overlay')
+    const figure = body.locator('.body-figure-art')
     await expect(figure).toBeVisible()
-    await expect(meridian).toBeVisible()
-    expect(await figure.getAttribute('src')).toContain('body-cultivation-figure')
-    expect(await meridian.getAttribute('src')).toContain('body-meridian-overlay')
+    // Mortal start: the refinement page mounts the horse-stance art.
+    expect(await figure.getAttribute('src')).toContain('body-v2')
+    expect(await figure.getAttribute('src')).toContain('mortal-horse-stance')
+    await expect(body.locator('.body-progress-track')).toBeVisible()
+    await expect(body.locator('.body-unit-rail button').first()).toBeVisible()
     await waitForPresentationIdle(page)
-    await waitForScrollSettled(page)
     await shot(page, '08-body')
     assertNoBrowserErrors(errors)
   })
@@ -317,32 +316,32 @@ test.describe('Huyen Kim stable scene art', () => {
     }, PLAYER_STORE_URL)
 
     await openStandalone(page, 'skill')
-    const treeViewport = page.locator('.node-tree__viewport')
-    await expect(treeViewport).toBeVisible({ timeout: 20_000 })
-    const substrate = treeViewport.locator('.hk-parallax-stack[data-stack="skill-tree"]')
-    await expect(substrate).toBeVisible()
-    await expect(substrate.locator('.hk-parallax-stack__layer')).toHaveCount(4)
-    // Runtime constellation nodes still own interactivity.
-    await expect(treeViewport.locator('.node-tree__node').first()).toBeVisible()
-    await waitForScrollSettled(page)
+    const skillScene = page.locator('.skill-paper-scene')
+    await expect(skillScene).toBeVisible({ timeout: 20_000 })
+    // Scene 07 fidelity: the paper constellation owns interactivity -
+    // committed fire renders its node on the graph.
+    await expect(skillScene.locator('.skill-node').first()).toBeVisible()
+    await waitForPresentationIdle(page)
     await shot(page, '07-skill')
 
-    // Scene 06 is its own imperial scene now — the plinth centerpiece
+    // Scene 06 is its own paper scene now — the artifact centerpiece
     // lives in TechniquePanel, not the skill tree.
     await page.keyboard.press('Escape')
     await openStandalone(page, 'technique')
-    const technique = page.locator('.technique-scene')
+    const technique = page.locator('.technique-paper-scene')
     await expect(technique).toBeVisible({ timeout: 15_000 })
-    const plinth = technique.locator('.technique-scene__plinth')
-    await expect(plinth).toBeVisible()
-    expect(await plinth.getAttribute('src')).toContain('technique-display-plinth')
+    const book = technique.locator('.technique-book')
+    await expect(book).toBeVisible()
+    // The initiation op equipped the way's technique - the artifact
+    // centerpiece renders its real icon, not the placeholder.
+    expect(await book.getAttribute('src')).toContain('/assets/techniques/')
+    await expect(technique.locator('.technique-art-caption')).toHaveCount(0)
     await waitForPresentationIdle(page)
-    await waitForScrollSettled(page)
     await shot(page, '06-technique')
     assertNoBrowserErrors(errors)
   })
 
-  test('scene 10 stage select: map frame + mask + chapter divider + lock symbol', async ({
+  test('scene 10 stage select: Son Ha Do terrain + chapter bands + live stage nodes', async ({
     page,
   }) => {
     const errors = collectBrowserErrors(page)
@@ -352,32 +351,32 @@ test.describe('Huyen Kim stable scene art', () => {
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
 
-    const overlay = page.getByTestId('function-overlay-panel')
-    await expect(overlay).toBeVisible({ timeout: 15_000 })
-    const stage = overlay.locator('.stage-select')
-    await expect(stage).toBeVisible({ timeout: 10_000 })
+    // S10 fidelity: the imperial scroll is gone - the exploration-v2
+    // paper surface mounts directly on the overlay canvas.
+    const scene = page.locator('.exploration-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
 
-    for (const [cls, asset] of [
-      ['__map-frame', 'exploration-map-frame'],
-      ['__chapter-divider', 'exploration-chapter-divider'],
-    ] as const) {
-      const img = stage.locator(`.stage-select${cls}`)
-      await expect(img).toBeVisible()
-      expect(await img.getAttribute('src')).toContain(asset)
-    }
-    // The painted-mask asset applies via the --map-mask CSS var on the map.
-    const mapMask = await stage.locator('.stage-map').evaluate(
-      (el) => getComputedStyle(el).maskImage,
-    )
-    expect(mapMask).toContain('exploration-map-mask')
+    // Stable terrain art behind the live Sơn Hà Đồ map.
+    const terrain = scene.locator('.terrain')
+    await expect(terrain).toBeVisible()
+    expect(await terrain.getAttribute('src')).toContain('exploration-v2/terrain-three-realms-v1')
 
-    // Locked stage symbols render via the stable `lock` SVG.
-    const locks = stage.locator('.stage-map__node.is-locked .stage-map__lock .hk-symbol')
-    if (await locks.count()) {
-      const mask = await locks.first().evaluate((el) => getComputedStyle(el).maskImage)
-      expect(mask).toContain('huyen-kim/symbols/lock.svg')
-    }
-    await waitForScrollSettled(page)
+    // All 3 chapter bands render - 30 canonical stage nodes.
+    await expect(scene.locator('.chapter')).toHaveCount(3)
+    await expect(scene.locator('.stage-node')).toHaveCount(30)
+    // Frontier + locked states come from the canonical surface model.
+    await expect(scene.locator('.stage-node.current')).toHaveCount(1)
+    expect(await scene.locator('.stage-node.locked').count()).toBeGreaterThan(0)
+
+    // Detail rail: 4 battle modes + enabled start on the auto-picked
+    // first stage.
+    await expect(scene.locator('.mode-chip')).toHaveCount(4)
+    await expect(page.getByTestId('stage-start-button')).toBeEnabled()
+
+    // No imperial scroll signature here - the paper scene mounts
+    // directly; idle + a beat lets the terrain art decode land.
+    await waitForPresentationIdle(page)
+    await page.waitForTimeout(400)
     await shot(page, '10-exploration')
     assertNoBrowserErrors(errors)
   })

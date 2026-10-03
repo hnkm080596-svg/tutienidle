@@ -1,51 +1,34 @@
 <script setup lang="ts">
-// Scene 02 Ky Nang Khoi Dau slot - RESERVED (audit R00 / spec
-// `starter-slot` 988/716/564/56): the full-product architecture keeps the
-// region, but beta renders nothing because the starter is fixed to
-// `linh_bao` (BETA_MORTAL_STARTER_SKILL_ID). `visible` stays false in beta;
-// flip it post-beta when a starter-skill read-model lands.
 import { useI18n } from 'vue-i18n'
 import CreationSectionHeader from './CreationSectionHeader.vue'
-
-withDefaults(defineProps<{ visible?: boolean }>(), { visible: false })
+import CreationChoicePager from './CreationChoicePager.vue'
+import CreationChoiceTile from './CreationChoiceTile.vue'
+import CreationSkillSymbol from './CreationSkillSymbol.vue'
+import type { CreationSkillOption } from './creationPreview'
+const selected = defineModel<string>({ required: true })
+defineProps<{ options: readonly CreationSkillOption[]; disabled?: boolean }>()
 const { t } = useI18n()
 </script>
 
 <template>
-  <section
-    v-if="visible"
-    class="creation-starter-slot"
-    data-hk-region="starter-slot"
-  >
-    <CreationSectionHeader icon="skill" :title="t('onboarding.creation.starterSlot.title')" />
-    <div
-      class="creation-starter-slot__banner art-needed"
-      data-art-id="starter-slot-banner"
-    >
-      <span>{{ t('onboarding.creation.starterSlot.pending') }}</span>
-    </div>
+  <section data-hk-region="starter-slot">
+    <CreationSectionHeader icon="skill" :title="t('onboarding.creation.starterSlot.title')">
+      <template #hint>{{ t('onboarding.creation.chooseOne') }}</template>
+    </CreationSectionHeader>
+    <CreationChoicePager :items="options" :busy="disabled" :label="t('onboarding.creation.starterSlot.title')">
+      <template #default="{ item }">
+        <CreationChoiceTile :name="item.name" :icon="item.icon" symbol="skill"
+          :tooltip="{ title: item.name, description: item.description }"
+          :selected="selected === item.id" :disabled="disabled"
+          :data-testid="`creation-skill-${item.id}`" @select="selected = item.id">
+          <template v-if="!item.icon" #icon><CreationSkillSymbol :motif="item.motif" /></template>
+        </CreationChoiceTile>
+      </template>
+      <template #action><span class="creation-starter-note">{{ t('onboarding.creation.hoverDetail') }}</span></template>
+    </CreationChoicePager>
   </section>
 </template>
 
 <style scoped>
-.creation-starter-slot {
-  flex: 0 0 auto;
-  margin-bottom: clamp(4px, 1vh, 8px);
-}
-
-/* Muted banner placeholder (ref: dim brush/mountain bar under the section
-   header while the pick is unavailable). */
-.creation-starter-slot__banner {
-  display: grid;
-  place-items: center;
-  min-height: 40px;
-  border: 1px solid var(--hk-border-muted, rgba(122, 98, 52, 0.42));
-  border-radius: 3px;
-  background:
-    radial-gradient(120% 160% at 88% 100%, rgba(185, 154, 85, 0.14), transparent 55%),
-    linear-gradient(170deg, #1b2621, #101718);
-  color: var(--hk-text-muted, #7a7260);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-}
+.creation-starter-note { color: #7c715c; font-size: 11px; }
 </style>

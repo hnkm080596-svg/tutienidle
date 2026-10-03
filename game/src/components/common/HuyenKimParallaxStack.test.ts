@@ -7,10 +7,10 @@ import HuyenKimParallaxStack from './HuyenKimParallaxStack.vue'
 
 const mounted: Array<{ app: App; container: HTMLElement }> = []
 
-function mountStack(stack: 'auth-creation' | 'realm-ascent' | 'skill-tree') {
+function mountStack(stack: 'auth-creation' | 'realm-ascent' | 'skill-tree', foreground = false) {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const app = createApp({ render: () => h(HuyenKimParallaxStack, { stack }) })
+  const app = createApp({ render: () => h(HuyenKimParallaxStack, { stack }, foreground ? { foreground: () => h('img', { alt: '', src: 'cultivator.png' }) } : undefined) })
   app.mount(container)
   mounted.push({ app, container })
   return container
@@ -53,6 +53,18 @@ describe('HuyenKimParallaxStack', () => {
   it('renders realm (5) and skill (4) stacks in order', () => {
     expect(mountStack('realm-ascent').querySelectorAll('.hk-parallax-stack__layer')).toHaveLength(5)
     expect(mountStack('skill-tree').querySelectorAll('.hk-parallax-stack__layer')).toHaveLength(4)
+  })
+
+  it('anchors a decorative foreground insert to the same geometry as the foreground landscape', async () => {
+    const container = mountStack('auth-creation', true)
+    await nextTick()
+    expect(container.querySelectorAll('.hk-parallax-stack__layer')).toHaveLength(6)
+    const insert = container.querySelector<HTMLElement>('.hk-parallax-stack__foreground')!
+    const landscape = container.querySelector<HTMLElement>('[data-depth="L5"]')!
+    expect(insert.style.cssText).toBe(landscape.style.cssText)
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 800, clientY: 200 }))
+    await nextTick()
+    expect(insert.style.cssText).toBe(landscape.style.cssText)
   })
 
   it('zeroes every layer offset when prefers-reduced-motion matches', async () => {

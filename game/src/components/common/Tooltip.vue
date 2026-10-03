@@ -10,6 +10,7 @@ import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueToolti
 import { i18n } from '@/i18n'
 
 const { content, reference } = useTooltip()
+const props = withDefaults(defineProps<{ contained?: boolean }>(), { contained: false })
 const floating = ref<HTMLElement | null>(null)
 const open = computed(() => content.value !== null)
 
@@ -71,8 +72,8 @@ const elementBannerUrl = computed(() =>
 
 const { floatingStyles } = useFloating(reference, floating, {
   open,
-  placement: 'right-start',
-  strategy: 'fixed',
+  placement: computed(() => props.contained ? 'left-start' : 'right-start'),
+  strategy: computed(() => props.contained ? 'absolute' : 'fixed'),
   whileElementsMounted: autoUpdate,
   middleware: [
     offset(10),
@@ -135,7 +136,7 @@ function hideBrokenImage(event: Event) {
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport to="body" :disabled="contained">
     <Transition name="tooltip-fade">
       <div
         v-if="content"
@@ -143,11 +144,12 @@ function hideBrokenImage(event: Event) {
         ref="floating"
         role="tooltip"
         class="tooltip"
+        :data-contained="contained || undefined"
         :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'element' ? `tooltip--element-${content.element}` : '', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', itemAuraColor ? 'tooltip--aura' : '']"
         :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor ?? itemAuraColor, '--tooltip-aura': itemAuraColor, zIndex: OVERLAY_LAYERS.tooltip }"
       >
         <img v-if="elementBannerUrl" class="tooltip__banner" :src="elementBannerUrl" alt="" aria-hidden="true" />
-        <InkNineSlice v-else chrome-id="frame-xs-tooltip" layer="surface" />
+        <InkNineSlice v-else-if="!contained" chrome-id="frame-xs-tooltip" layer="surface" />
         <div class="tooltip__content">
         <!-- Compare pair (spec section 4): equipped card LEFT, hovered card
              RIGHT; each is a role=group with its own aria-label so
@@ -228,6 +230,9 @@ function hideBrokenImage(event: Event) {
    tooltips only, see itemAuraColor). color-mix keeps it translucent. */
 .tooltip--aura { box-shadow: 0 0 20px color-mix(in srgb, var(--tooltip-aura) 38%, transparent), 0 0 6px color-mix(in srgb, var(--tooltip-aura) 26%, transparent); }
 .tooltip__content { position: relative; z-index: 3; }
+.tooltip[data-contained] { padding: 12px 15px; border: 1px solid #a58c53; border-radius: 3px; background: #172c25; box-shadow: inset 0 0 0 3px #a58c5326, 0 6px 20px #08181066; }
+.tooltip[data-contained] .tooltip__title { color: #e6d39f; font-size: 16px; }
+.tooltip[data-contained] .tooltip__description { color: #d3cbb4; font-size: 13px; }
 .tooltip--rich { max-width: min(320px, calc(100vw - 24px)); padding: 12px 14px; }
 .tooltip--detailed { max-width: min(380px, calc(100vw - 24px)); }
 .tooltip__header { display: flex; align-items: center; gap: 10px; }

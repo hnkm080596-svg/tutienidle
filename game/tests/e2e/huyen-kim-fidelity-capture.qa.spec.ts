@@ -98,33 +98,35 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     await shot(page, '03-dong-fu-open')
     await page.keyboard.press('Escape')
 
-    const leftModes: Array<[string, string]> = [
-      ['character', '04-character'],
-      ['inventory', '09-inventory'],
-      ['stage_select', '10-exploration'],
-      ['exploration', '11b-production-outpost'],
-      ['pill_room', '11-alchemy'],
-      ['equipment_hall', '12-equipment'],
-      ['settings', '17-settings'],
+    // Fidelity-migrated surfaces mount their own paper scene root; the
+    // unmigrated modes still open inside the imperial scroll.
+    const leftModes: Array<[string, string, string]> = [
+      ['character', '04-character', '.cf-scene'],
+      ['inventory', '09-inventory', '.hk-scroll'],
+      ['stage_select', '10-exploration', '.exploration-scene'],
+      ['exploration', '11b-production-outpost', '.hk-scroll'],
+      ['pill_room', '11-alchemy', '.alchemy-scene'],
+      ['equipment_hall', '12-equipment', '.equipment-scene'],
+      ['settings', '17-settings', '.hk-scroll'],
     ]
-    for (const [mode, name] of leftModes) {
+    for (const [mode, name, root] of leftModes) {
       await openLeftMode(page, mode)
-      await expect(page.locator('.hk-scroll')).toBeVisible({ timeout: 15_000 })
+      await expect(page.locator(root)).toBeVisible({ timeout: 15_000 })
       await settle(page)
       await shot(page, name)
       await closeAll(page)
     }
 
-    const standalones: Array<[string, string]> = [
-      ['realm', '05-realm'],
-      ['technique', '06-technique'],
-      ['skill', '07-skill'],
-      ['body', '08-body'],
-      ['quest', '18-quest'],
+    const standalones: Array<[string, string, string]> = [
+      ['realm', '05-realm', '.realm-paper-scene'],
+      ['technique', '06-technique', '.technique-paper-scene'],
+      ['skill', '07-skill', '.skill-paper-scene'],
+      ['body', '08-body', '.body-paper-scene'],
+      ['quest', '18-quest', '.hk-scroll'],
     ]
-    for (const [panel, name] of standalones) {
+    for (const [panel, name, root] of standalones) {
       await openStandalone(page, panel)
-      await expect(page.locator('.hk-scroll')).toBeVisible({ timeout: 15_000 })
+      await expect(page.locator(root)).toBeVisible({ timeout: 15_000 })
       await settle(page)
       await shot(page, name)
       await closeAll(page)
@@ -142,7 +144,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
-    const scroll = page.getByTestId('function-overlay-panel')
+    const scroll = page.locator('.exploration-scene')
     await expect(scroll).toBeVisible({ timeout: 15_000 })
     const start = scroll.locator('.stage-start-button, [data-testid="stage-start-button"]').first()
     await expect(start).toBeEnabled({ timeout: 10_000 })
@@ -252,9 +254,9 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
 
     // Real entry: realm panel -> breakthrough ritual -> tribulation route.
     await openStandalone(page, 'realm')
-    const realmDialog = page.getByRole('dialog', { name: 'Cảnh Giới' })
-    await expect(realmDialog).toBeVisible({ timeout: 15_000 })
-    const breakthroughButton = realmDialog.getByRole('button', { name: 'Quán Khí' })
+    const realmScene = page.locator('.realm-paper-scene')
+    await expect(realmScene).toBeVisible({ timeout: 15_000 })
+    const breakthroughButton = realmScene.getByRole('button', { name: 'Quán Khí' })
     await expect(breakthroughButton).toBeEnabled({ timeout: 10_000 })
     await breakthroughButton.click()
     const confirmDialog = page.getByRole('dialog', { name: /Độ kiếp cũng là độ thân/ })

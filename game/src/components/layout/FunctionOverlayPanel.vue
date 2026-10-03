@@ -89,10 +89,18 @@ function close() {
 </script>
 
 <template>
-  <!-- Imperial scroll scenes: Son Ha Do / Dan Phong / Khi Duong / Cai Dat. -->
+  <!-- Scene 10/11/12 fidelity: stage_select + pill_room + equipment_hall
+       own their paper chrome (Son Ha Do / Luyen Dan / Khi Duong scene) -
+       they mount outside the imperial scroll while keeping the same
+       mode/beta-gate/close contract. -->
+  <StageSelectPanel v-if="imperialMode === 'stage_select'" />
+  <PillRoomPanel v-else-if="imperialMode === 'pill_room'" />
+  <EquipmentHallPanel v-else-if="imperialMode === 'equipment_hall'" />
+
+  <!-- Imperial scroll scenes: Cai Dat. -->
   <ImperialScrollScene
-    :open="imperialMode !== null"
-    :title="imperialMode ? t(TITLE_KEYS[imperialMode]) : ''"
+    :open="imperialMode !== null && imperialMode !== 'stage_select' && imperialMode !== 'pill_room' && imperialMode !== 'equipment_hall'"
+    :title="imperialMode && imperialMode !== 'stage_select' && imperialMode !== 'pill_room' && imperialMode !== 'equipment_hall' ? t(TITLE_KEYS[imperialMode]) : ''"
     :scene="imperialMode ?? undefined"
     data-testid="function-overlay-panel"
     @close="close"
@@ -134,9 +142,6 @@ function close() {
 
     <div v-if="imperialMode" class="function-overlay">
       <SettingsPanel v-if="imperialMode === 'settings'" />
-      <PillRoomPanel v-else-if="imperialMode === 'pill_room'" />
-      <EquipmentHallPanel v-else-if="imperialMode === 'equipment_hall'" />
-      <StageSelectPanel v-else-if="imperialMode === 'stage_select'" />
       <ProductionPanel v-else-if="imperialMode === 'exploration'" />
     </div>
   </ImperialScrollScene>

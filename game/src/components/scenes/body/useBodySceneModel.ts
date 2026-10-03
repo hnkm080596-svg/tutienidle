@@ -405,7 +405,7 @@ export function useBodySceneModel() {
     selectedUnitId.value[chapterId] = unitId
   }
 
-  function investActive(chapterId: BodyChapterId): void {
+  function investActive(chapterId: BodyChapterId): number {
     const consumed = gameManager.realmAdvanceOps.investBodyChapter(
       player.$state,
       chapterId,
@@ -413,6 +413,7 @@ export function useBodySceneModel() {
     if (consumed > 0) {
       bumpState()
     }
+    return consumed
   }
 
   return { chapters, chapter, viewedUnit, selectUnit, investActive }

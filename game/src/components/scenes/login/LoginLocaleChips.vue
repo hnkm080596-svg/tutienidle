@@ -1,79 +1,25 @@
 <script setup lang="ts">
-// Scene 01 locale-chips region (spec: 1336/138/224/36, card-top-right,
-// z11, badge family, gap 8). Audit: chips, not a dropdown. Reachable
-// before auth; persists via composables/locale.
 import { useI18n } from 'vue-i18n'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { LOCALE_OPTIONS, saveLocale } from '@/composables/locale'
-
 const { t, locale } = useI18n()
 </script>
 
 <template>
-  <div class="login-locale" data-hk-region="locale-chips" :aria-label="t('onboarding.auth.language')">
-    <span class="login-locale__globe art-needed" data-art-id="login-icon-globe" aria-hidden="true" />
-    <button
-      v-for="option in LOCALE_OPTIONS"
-      :key="option"
-      type="button"
-      class="login-locale__option"
-      :class="{ active: locale === option }"
-      :data-testid="`auth-locale-${option}`"
-      @click="saveLocale(option)"
-    >
-      <InkNineSlice chrome-id="seal-chip" layer="surface" :tint-var="locale === option ? '--hk-jade' : undefined" />
-      <span class="login-locale__label">{{ t(`panels.settings.language.names.${option}`) }}</span>
+  <div class="login-locale" data-hk-region="locale-chips" role="group" :aria-label="t('onboarding.auth.language')">
+    <svg class="login-locale__globe" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><path d="M3 12h18M5 6.5h14M5 17.5h14" /></svg>
+    <button v-for="option in LOCALE_OPTIONS" :key="option" type="button"
+      class="login-locale__option" :class="{ active: locale === option }" :aria-pressed="locale === option"
+      :data-testid="`auth-locale-${option}`" @click="saveLocale(option)">
+      {{ t(`panels.settings.language.names.${option}`) }}
     </button>
   </div>
 </template>
 
 <style scoped>
-/* Spec slot: card-relative top-right (design 1336/138 -> rel (320,18)
-   inside the 560px card), hanging near the frame's top edge. */
-.login-locale {
-  position: absolute;
-  top: 18px;
-  right: 16px;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.login-locale__option {
-  position: relative;
-  isolation: isolate;
-  min-height: 32px;
-  padding: 4px 12px;
-  border: 0;
-  border-radius: var(--radius-sm, 2px);
-  background: transparent;
-  color: var(--paper-text-muted, #6b6860);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  cursor: pointer;
-}
-.login-locale__option.active {
-  color: var(--hk-ivory, #ede6d6);
-}
-.login-locale__option:hover {
-  color: var(--paper-text, #211f1a);
-}
-.login-locale__option.active:hover {
-  color: var(--hk-ivory, #ede6d6);
-}
-.login-locale__label {
-  position: relative;
-  z-index: 3;
-}
-/* Globe glyph placeholder - icon-set gap (no stable symbol yet). */
-.login-locale__globe {
-  width: 14px;
-  height: 14px;
-  border: 1.5px solid #b99a55;
-  border-radius: 50%;
-  background:
-    linear-gradient(90deg, transparent 45%, #b99a55 45%, #b99a55 55%, transparent 55%),
-    linear-gradient(0deg, transparent 45%, #b99a55 45%, #b99a55 55%, transparent 55%);
-  opacity: 0.85;
-}
+.login-locale { display: flex; justify-content: center; align-items: center; gap: 1cqw; margin-top: .5cqw; color: #5c5543; }
+.login-locale__globe { width: 3.5cqw; height: 3.5cqw; fill: none; stroke: currentColor; stroke-width: 1.3; }
+.login-locale__option { min-height: 6.5cqw; padding: .5cqw 1.5cqw; border: 0; border-bottom: 1px solid transparent; background: none; color: #6c614e; font: 2.5cqw var(--hk-font-display, Georgia, serif); cursor: pointer; }
+.login-locale__option.active { color: #254f43; border-bottom-color: #7c8460; font-weight: 700; }
+.login-locale__option:hover { color: #203a2f; }
+.login-locale__option:focus-visible { outline: 2px solid #315f55; outline-offset: 1px; }
 </style>

@@ -20,7 +20,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { i18n } from '@/i18n'
 import SkillPathPanel from '@/components/panels/SkillPathPanel.vue'
-import AlchemyView from '@/components/panels/AlchemyView.vue'
+import AlchemySurface from '@/components/scenes/alchemy/AlchemySurface.vue'
 import TurnCombatSkillBar from '@/components/game/combat/hud/TurnCombatSkillBar.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
@@ -273,13 +273,13 @@ describe('QA read-model honesty: alchemy recipe surface (contract sec.F)', () =>
     gameManager.catalogOps.registerBuildings([PILL_ROOM])
     gameManager.catalogOps.registerAlchemyRecipes([BETA_RECIPE, DORMANT_RECIPE])
 
-    const view = mountPanel(AlchemyView, gameManager, (player) => {
+    const view = mountPanel(AlchemySurface, gameManager, (player) => {
       player.$state.realmId = 'mortal'
     })
 
     await nextTick()
 
-    const rows = Array.from(view.container.querySelectorAll<HTMLElement>('.alchemy-row'))
+    const rows = Array.from(view.container.querySelectorAll<HTMLElement>('.recipe-row'))
     expect(rows.length).toBe(1)
     expect(rows[0]?.textContent).not.toContain('Dormant Pill')
 

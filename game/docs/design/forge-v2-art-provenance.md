@@ -1,0 +1,11 @@
+# Lò luyện khí và batch bag
+
+2026-10-03. Built-in ImageGen, new transparent raster, source retained at `C:\Users\hnkm0\.codex\generated_images\01a0f7b5-053f-71d0-a72c-75577519a956\exec-93bceb0f-733f-43dd-82b2-d3c46e61835f.png`. Project asset: `public/assets/ui/huyen-kim/scene/forge-v2/furnace-v1.png`. No background generated or altered.
+
+Prompt:
+
+> Use case: stylized-concept. Asset type: transparent xianxia crafting furnace cutout for parchment game UI. Primary request: one exquisite ancient Chinese spiritual weapon-forging furnace, compact vertical silhouette, entirely visible. Patinated dark bronze and deep jade metal, refined antique gold engraved cloud motifs, three sculptural feet, two elegant handles, small pagoda-shaped crown, clearly visible warm amber fire chamber with restrained sparks, thin curl of pale smoke. Hand-painted Chinese ink and watercolor illustration with crisp detailed metalwork and readable silhouette at160px tall. Slight three-quarter front view. Premium cultivation fantasy manuscript aesthetic, subtle ink-wash edges, warm paper-compatible contrast. Isolated object only, genuine transparent background, generous clear margin. No floor, no landscape, no paper, no UI frame, no text, no people, no sword or additional separate objects, no watermark. Not photorealistic, not cartoon, not sci-fi.
+
+Used in `ForgeFidelityWorkspace` as a decorative background illustration directly over parchment in the right region of Trang Bị, no card/frame. Comparison and actions remain foreground UI; Dong Fu background is untouched. Hóa Luyện/Phân Giải do not use a large focus item or furnace card: `ForgeBatchBag` renders18fixtureequipment with dynamic items/multi-select and reserved result/action region. Left character socket/6equipment sockets remain unchanged. Live main review URL: `/ui-equipment.html`; standalone forge is auxiliary only.
+
+Scoped evidence: typecheck passed; Edge1440×810 shows furnace and both bag modes,18items/0largecards for each. Console0errors/0warnings after reload. Screenshots under `docs/qa/huyen-kim-reference-fidelity/evidence/equipment-v5-*.png`. Full production QA and integration are implementer responsibilities; no fixed-point or merge-ready claim.

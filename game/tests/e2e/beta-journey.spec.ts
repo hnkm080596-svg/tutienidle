@@ -49,7 +49,7 @@ const COMING_SOON_LABEL = 'Sắp ra mắt'
 // ultimate role) must be absent, never rendered locked or empty.
 const ULTIMATE_LABEL = 'Tuyệt Kỹ'
 
-const ELEMENT_TABS = '.skill-path-panel__element-tab'
+const ELEMENT_TABS = '.skill-elements button'
 const FIVE_ELEMENTS = ['Hỏa', 'Thủy', 'Mộc', 'Kim', 'Thổ']
 
 // ---------------------------------------------------------------------------
@@ -127,8 +127,11 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     await expect(
       creation.locator('[data-testid^="creation-talent-"]').first(),
     ).toBeVisible({ timeout: 10_000 })
-    // The retired starting-skill / attribute picks must not exist at all.
-    await expect(creation.locator('[data-testid^="creation-skill-"]')).toHaveCount(0)
+    // The starter slot renders as a cosmetic preview strip (approved
+    // creation design) - it never enters the creation payload, which stays
+    // name + talent only (asserted by the unit suite).
+    await expect(creation.locator('[data-hk-region="starter-slot"]')).toBeVisible()
+    // The retired attribute pick must not exist at all.
     await expect(creation.locator('[data-testid^="creation-attribute-"]')).toHaveCount(0)
     // No sword/body/hidden way chooser.
     await expect(creation.getByText('Kiếm Tu')).toHaveCount(0)
@@ -202,16 +205,21 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     }
   })
 
-  test('skill role strip renders no ultimate card', async ({ page }) => {
+  test('skill surface renders no ultimate card', async ({ page }) => {
     await bootFreshMortal(page)
     await openStandalone(page, 'skill')
-    const strip = page.locator('.skill-role-strip')
-    await expect(strip).toBeVisible({ timeout: 10_000 })
-    // The strip renders the betaCombatRolesFor rail: the ultimate
-    // role is permanently scope-hidden, so no card carries the label.
+    const scene = page.locator('.skill-paper-scene')
+    await expect(scene).toBeVisible({ timeout: 10_000 })
+    // Scene 07 fidelity (user ruling): the role-strip surface is
+    // retired - skills auto-mount by pathway, so the ultimate label
+    // can never appear anywhere on the panel.
     await expect(
-      strip.locator('.skill-role__label').filter({ hasText: ULTIMATE_LABEL }),
-      'ultimate role card must not exist on the strip',
+      scene.locator('.skill-role-strip'),
+      'the retired role strip must not remount',
+    ).toHaveCount(0)
+    await expect(
+      scene.getByText(ULTIMATE_LABEL, { exact: true }),
+      'ultimate role label must not exist on the surface',
     ).toHaveCount(0)
   })
 

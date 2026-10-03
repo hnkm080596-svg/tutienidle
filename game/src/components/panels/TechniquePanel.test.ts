@@ -92,10 +92,10 @@ function mountPanel(options: MountOptions = {}) {
     container,
     tryAdvanceTechniqueGrade,
     bumpState,
-    gradeButton: () => container.querySelector<HTMLButtonElement>('.technique-scene__grade-btn'),
-    sectionRows: () => container.querySelectorAll('.technique-scene__rows li').length,
-    scene: () => container.querySelector('.technique-scene'),
-    emptyText: () => container.querySelector('.technique-scene__empty')?.textContent ?? null,
+    gradeButton: () => container.querySelector<HTMLButtonElement>('.technique-advance'),
+    sectionRows: () => container.querySelectorAll('.technique-section dl div').length,
+    scene: () => container.querySelector('.technique-paper-scene'),
+    noticeText: () => container.querySelector('.technique-notice')?.textContent ?? null,
     unmount: () => {
       app.unmount()
       container.remove()
@@ -164,14 +164,14 @@ describe('TechniquePanel (Huyen Kim scene 06)', () => {
     view.unmount()
   })
 
-  it('shows the empty state without the grade button when no technique is active', async () => {
+  it('shows the empty state with the grade CTA disabled when no technique is active', async () => {
     const view = mountPanel({ technique: undefined })
 
     await nextTick()
 
     const expected = i18n.global.t('panels.skillPath.technique.emptyNoTechnique')
     expect(view.container.textContent).toContain(expected)
-    expect(view.gradeButton()).toBeNull()
+    expect(view.gradeButton()!.disabled).toBe(true)
 
     view.unmount()
   })
@@ -193,8 +193,7 @@ describe('TechniquePanel (Huyen Kim scene 06)', () => {
     app.mount(container)
     await nextTick()
 
-    expect(container.querySelector('.hk-scroll')).toBeNull()
-    expect(container.querySelector('.technique-scene')).toBeNull()
+    expect(container.querySelector('.technique-paper-scene')).toBeNull()
 
     app.unmount()
     container.remove()

@@ -1,82 +1,27 @@
 <script setup lang="ts">
-// Scene 01 password field - same icon-field grammar as the id field.
-// Leading glyph = delivered `lock` stable symbol. The ref's eye-toggle
-// is an audit RESERVED detail: intentionally not scaffolded.
+import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-
 const password = defineModel<string>({ required: true })
+defineProps<{ mode: 'login' | 'register' }>()
 const { t } = useI18n()
+const visible = shallowRef(false)
 </script>
 
 <template>
-  <label class="auth-field-row" for="auth-input-password">
-    <span class="sr-only">{{ t('onboarding.auth.labels.password') }}</span>
-    <span class="auth-field">
-      <InkNineSlice chrome-id="text-field" layer="surface" />
-      <HuyenKimSymbol name="lock" class="auth-field__icon" />
-      <input
-        id="auth-input-password"
-        v-model="password"
-        autocomplete="current-password"
-        type="password"
-        :placeholder="t('onboarding.auth.placeholders.password')"
-      />
-    </span>
-  </label>
+  <div class="auth-field-row">
+    <label class="sr-only" for="auth-input-password">{{ t('onboarding.auth.labels.password') }}</label>
+    <div class="auth-field">
+      <svg class="auth-field__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="12" rx="1" fill="currentColor" /><path d="M8 10V6a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2" /><path d="M12 15v3" stroke="#ece1c9" stroke-width="2" /></svg>
+      <input id="auth-input-password" v-model="password"
+        :autocomplete="mode === 'register' ? 'new-password' : 'current-password'"
+        :type="visible ? 'text' : 'password'" class="auth-field__password"
+        :placeholder="t('onboarding.auth.labels.password')" :title="t('onboarding.auth.placeholders.password')" />
+      <button class="auth-field__reveal" type="button" :aria-pressed="visible"
+        :aria-label="t('onboarding.auth.showPassword')" @click="visible = !visible">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /><path v-if="visible" d="m4 3 16 18" /></svg>
+      </button>
+    </div>
+  </div>
 </template>
 
-<style scoped>
-.auth-field-row {
-  display: grid;
-  gap: 4px;
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-.auth-field {
-  position: relative;
-  display: block;
-  isolation: isolate;
-}
-.auth-field .ink-nine-slice {
-  z-index: 0;
-}
-.auth-field__icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  color: var(--hk-text-secondary, #b8ae97);
-  font-size: var(--text-sm);
-  pointer-events: none;
-}
-.auth-field input {
-  position: relative;
-  z-index: 1;
-  box-sizing: border-box;
-  width: 100%;
-  border: 0;
-  border-radius: 2px;
-  padding: 12px 16px 12px 40px;
-  outline: none;
-  background: transparent;
-  color: var(--hk-text-primary, #ede6d6);
-}
-.auth-field input::placeholder {
-  color: color-mix(in srgb, var(--hk-text-primary, #ede6d6) 42%, transparent);
-}
-.auth-field input:focus {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--hk-gold, #c99a4a) 45%, transparent);
-}
-</style>
+<style scoped src="./loginFields.css"></style>

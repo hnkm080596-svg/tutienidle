@@ -1,26 +1,15 @@
 <script setup lang="ts">
-// Huyen Kim scene 08 - Dao The / Kinh Mach dedicated imperial scroll.
-// Thin mount wrapper: the interior lives in components/scenes/body/*
-// (chapter rail, figure focus + meridian orb ring, tier chips, detail
-// card) - all reads go through the canonical body chapter seams.
-import { useI18n } from 'vue-i18n'
+// Scene 08 (Luyen The) fidelity integration: the imperial-scroll body
+// scene is replaced by the approved body-v2 paper surface (3-page flip)
+// mounted on an overlay design canvas above the Dong Fu vista. The store
+// contract is unchanged - ui.standalonePanel === 'body' is the open
+// authority and closeHomeOverlays() is the close command.
 import { useUiStore } from '@/stores/ui'
-import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
-import BodyScene from '@/components/scenes/body/BodyScene.vue'
+import BodySurface from '@/components/scenes/body/BodySurface.vue'
 
 const ui = useUiStore()
-const { t } = useI18n()
-
-function close() { ui.closeHomeOverlays() }
 </script>
 
 <template>
-  <ImperialScrollScene
-    scene="body"
-    :open="ui.standalonePanel === 'body'"
-    :title="t('panels.realm.body.title')"
-    @close="close"
-  >
-    <BodyScene />
-  </ImperialScrollScene>
+  <BodySurface v-if="ui.standalonePanel === 'body'" />
 </template>

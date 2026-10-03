@@ -1,94 +1,36 @@
 <script setup lang="ts">
-// Scene 02 footer - draft summary line, ceremonial finish CTA on
-// button-ceremonial chrome, gold flourishes flanking it, and the
-// post-submit error line (region footer 988/780/564/60).
-import GameButton from '@/components/common/GameButton.vue'
 import { useI18n } from 'vue-i18n'
-
-defineProps<{
-  ready: boolean
-  creating: boolean
-  summary: string
-  error: string
-}>()
-
-const emit = defineEmits<{ finish: [] }>()
+import { LOGIN_ART } from '../login/loginArt'
+defineProps<{ ready: boolean; creating: boolean; summary: string; error: string }>()
+defineEmits<{ finish: [] }>()
 const { t } = useI18n()
 </script>
 
 <template>
   <footer class="creation-footer" data-hk-region="footer">
-    <p v-if="error" class="creation-footer__error">{{ error }}</p>
-    <p v-if="ready" class="creation-footer__summary" data-testid="creation-summary">{{ summary }}</p>
-    <div class="creation-footer__cta">
-      <span
-        class="creation-footer__flourish creation-footer__flourish--left art-needed"
-        data-art-id="creation-cta-flourish"
-        aria-hidden="true"
-      />
-      <GameButton
-        variant="primary"
-        size="lg"
-        :disabled="!ready || creating"
-        data-testid="creation-finish"
-        data-hk-region="primary-action"
-        @click="emit('finish')"
-      >
-        {{ creating ? t('onboarding.creation.creating') : t('onboarding.creation.finish') }}
-      </GameButton>
-      <span
-        class="creation-footer__flourish creation-footer__flourish--right art-needed"
-        data-art-id="creation-cta-flourish"
-        aria-hidden="true"
-      />
+    <div class="creation-footer__notice" aria-live="polite" aria-atomic="true">
+      <p v-if="error" class="creation-footer__error">{{ error }}</p>
+      <p v-else-if="ready" data-testid="creation-summary">{{ summary }}</p>
     </div>
+    <button class="creation-footer__cta" type="button" :aria-disabled="!ready || creating"
+      data-testid="creation-finish" data-hk-region="primary-action" @click="$emit('finish')">
+      <img :src="LOGIN_ART.button" alt="" aria-hidden="true" draggable="false" />
+      <span>{{ creating ? t('onboarding.creation.creating') : t('onboarding.creation.finish') }}</span>
+    </button>
+    <p class="creation-footer__preview">{{ t('onboarding.creation.starterSlot.previewNote') }}</p>
   </footer>
 </template>
 
 <style scoped>
-.creation-footer {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin-top: auto;
-  padding-top: clamp(4px, 0.8vh, 8px);
-}
-
-.creation-footer__error {
-  margin: 0;
-  color: var(--hk-cinnabar, #b54432);
-  text-align: center;
-  font-size: var(--text-xs);
-}
-
-.creation-footer__summary {
-  margin: 0;
-  color: var(--hk-text-secondary, #b8ae97);
-  font-size: var(--text-xs);
-}
-
-.creation-footer__cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-}
-
-/* Gold leaf/lotus flourish flanking the CTA plaque in the ref. */
-.creation-footer__flourish {
-  width: clamp(30px, 4vw, 46px);
-  height: 14px;
-  background:
-    radial-gradient(60% 100% at 100% 50%, rgba(185, 154, 85, 0.9), transparent 72%),
-    linear-gradient(90deg, transparent, #b99a55);
-  clip-path: polygon(0 50%, 30% 18%, 66% 0, 100% 50%, 66% 100%, 30% 82%);
-  opacity: 0.85;
-}
-
-.creation-footer__flourish--right {
-  transform: scaleX(-1);
-}
+.creation-footer { margin-top: auto; text-align: center; }
+.creation-footer__notice { height: 25px; display: grid; align-items: start; overflow: auto; color: #4f6046; font-size: 11px; line-height: 1.25; }
+.creation-footer__notice p { margin: 0; }
+.creation-footer__notice .creation-footer__error { color: #943c2b; }
+.creation-footer__cta { position: relative; width: 104%; height: 53px; margin: 0 -2%; border: 0; background: none; color: #ffecaf; font: 500 22px var(--hk-font-display, Georgia, serif); text-shadow: 0 1px 3px #071d17; cursor: pointer; }
+.creation-footer__cta img { position: absolute; width: 104%; height: auto; left: -2%; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.creation-footer__cta span { position: relative; display: block; line-height: 1.2; transform: translateY(-5px); }
+.creation-footer__cta:hover { filter: brightness(1.12); }
+.creation-footer__cta[aria-disabled="true"] { filter: saturate(.65); cursor: default; }
+.creation-footer__cta:focus-visible { outline: 2px solid #557253; outline-offset: 1px; }
+.creation-footer__preview { height: 16px; margin: 0; color: #7b7059; font-size: 10px; }
 </style>

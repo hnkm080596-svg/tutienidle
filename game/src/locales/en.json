@@ -1183,6 +1183,7 @@
       "eyebrow": "ONE THOUGHT ENTERS THE DAO",
       "lead": "A lifetime of mortal toil, a single thought seeking immortality.",
       "wordmark": "Tu Tiên IDLE",
+      "showPassword": "Show password",
       "tabs": {
         "login": "Log In",
         "register": "Register"
@@ -1262,7 +1263,14 @@
       "vistaBanner": "UNSULLIED HEART",
       "starterSlot": {
         "title": "Starter Skill",
+        "previewNote": "UI preview · Skill selection is not applied in game yet",
         "pending": "Revealed after you choose a talent"
+      },
+      "chooseOne": "Choose one",
+      "hoverDetail": "Hover for details",
+      "pagination": {
+        "previous": "Previous page",
+        "next": "Next page"
       }
     }
   },
@@ -1510,7 +1518,17 @@
     "queueEmpty": "No cauldron is brewing yet.",
     "placeIngredients": "Place ingredients into the cauldron",
     "bannerLeft": "Dao of Alchemy Reaches Heaven",
-    "bannerRight": "Flame of the Cauldron, Pure Azure"
+    "bannerRight": "Flame of the Cauldron, Pure Azure",
+    "title": "Alchemy",
+    "subtitle": "Refine spirit herbs · Form the pill",
+    "navigation": "Functions",
+    "previewStamp": "UI PREVIEW · Sample data, not wired to gameplay",
+    "cauldron": "Cauldron",
+    "selectedHerb": "Selected herb",
+    "emptyRecipes": "No recipes available.",
+    "emptyDetail": "Select a recipe to view details.",
+    "emptySlot": "Empty cauldron",
+    "durationLabel": "Brew time"
   },
   "layout": {
     "functionOverlay": {
@@ -1724,7 +1742,8 @@
         "title": "{name} can be upgraded",
         "detail": "Materials ready for the next level.",
         "cta": "Upgrade"
-      }
+      },
+      "expand": "Expand Thien Co board"
     },
     "questTracker": {
       "aria": "Tracked quest: {name}"
@@ -1907,5 +1926,204 @@
     "title": "Beta Journey Complete",
     "body": "Hung Giao Sung has fallen — every piece of beta content has been conquered: Mortal, Qi Refining, Foundation Establishment. Thank you for playing.",
     "continue": "Continue Cultivating"
+  },
+  "dongFu": {
+    "aria": "Grotto-Heaven",
+    "toggleWheel": "Show / hide the command wheel",
+    "buildingHint": "Tap to view",
+    "sceneTitle": "AZURE CLOUD GROTTO-HEAVEN",
+    "sceneSubtitle": "A tranquil mind · All dharmas return to one",
+    "view": "View",
+    "unhandled": "This feature is not open yet."
+  },
+  "paperNav": {
+    "realm": "Realm",
+    "character": "Character",
+    "inventory": "Bag",
+    "skill": "Skills",
+    "technique": "Techniques",
+    "body": "Body",
+    "alchemy": "Pill Room",
+    "equipment": "Equipment Hall",
+    "exploration": "Expedition",
+    "quest": "Quests",
+    "settings": "Settings"
+  },
+  "character": {
+    "mainStats": "Main Attributes",
+    "points": "({count} points)",
+    "max": "MAX",
+    "allocate": "Allocate",
+    "talent": "Talents",
+    "elements": "Five Elements",
+    "path": "Path",
+    "power": "Combat Power",
+    "details": "Details",
+    "combat": "Combat",
+    "other": "Other",
+    "close": "Collapse details",
+    "open": "Expand details",
+    "statNotice": "{name}: {value}",
+    "elementNotice": "{name} · Power {power} · Resist {resistance} · Pierce {penetration}"
+  },
+  "realm": {
+    "title": "ASCENSION PATH",
+    "subtitle": "Eighteen floors\nOne road to immortality",
+    "floorLabel": "Floor {floor}",
+    "floorCount": "Floor {floor} / {total}",
+    "cultivation": "Cultivation",
+    "breakthroughTitle": "Breakthrough to {target}",
+    "viewing": "Viewing floor {floor}"
+  },
+  "technique": {
+    "title": "Technique",
+    "navigation": "Features",
+    "preview": "UI PREVIEW · Sample data, not wired to gameplay",
+    "active": "TECHNIQUE IN TRAINING",
+    "artifact": "Technique codex",
+    "artifactAlt": "Open codex drawn in ink with golden spirit lines",
+    "temporaryArt": "Temporary illustration · Replaceable per technique",
+    "training": "Technique Progress",
+    "mastery": "Mastery",
+    "advance": "Advance",
+    "current": "Current",
+    "target": "Next",
+    "upgradeHint": "Continue the cultivation path and open the technique's next grade.",
+    "materials": "Materials Needed",
+    "stageNotice": "Viewing: {name}. Cultivation progress unchanged.",
+    "advanceNotice": "Technique advanced to {grade}."
+  },
+  "skill": {
+    "title": "Skills",
+    "navigation": "Features",
+    "preview": "UI PREVIEW · Sample data, not wired to gameplay",
+    "elements": "Five Elements",
+    "tree": "Skill Meridians",
+    "levelLabel": "Level",
+    "grants": "Skill",
+    "effects": "Effects",
+    "conditions": "Requirements",
+    "noConditions": "No further requirements.",
+    "state": {
+      "learned": "Learned",
+      "available": "Available",
+      "locked": "Locked"
+    },
+    "actionDone": "{name} updated.",
+    "actionFailed": "Action unavailable — check requirements and Insight."
+  },
+  "body": {
+    "title": "Body Tempering",
+    "navigation": "Features",
+    "chapters": "Body chapters",
+    "units": "Cultivation milestones",
+    "progress": "Progress",
+    "gains": "Milestone Effects",
+    "material": "Materials Required",
+    "noGains": "No further effects.",
+    "noCost": "No materials required.",
+    "empty": "No milestones yet.",
+    "state": {
+      "done": "Done",
+      "current": "Current",
+      "locked": "Locked"
+    },
+    "investDone": "Tempering complete.",
+    "investUnavailable": "Tempering requirements unmet.",
+    "preview": "UI PREVIEW · Sample data, not wired to gameplay"
+  },
+  "exploration": {
+    "title": "Expedition",
+    "navigation": "Functions",
+    "zones": "Regions",
+    "progress": "Expedition Progress",
+    "preview": "UI PREVIEW · Sample data, not wired to gameplay",
+    "stageLabel": "{chapter} · Floor {stage} · {state}",
+    "boss": "BOSS",
+    "enemies": "Enemies",
+    "rewards": "Rewards",
+    "modes": "Mode",
+    "empty": "Select a stage on the map.",
+    "noEnemy": "No enemy intel.",
+    "startFailed": "Unable to start. Check the requirements.",
+    "armedFarm": "Auto-farming: {stage}",
+    "state": {
+      "cleared": "Cleared",
+      "current": "Frontier",
+      "available": "Available",
+      "locked": "Locked"
+    }
+  },
+  "equipment": {
+    "title": "Equipment",
+    "subtitle": "Spirit gear guards the body · Companions on the immortal road",
+    "navigation": "Functions",
+    "previewStamp": "UI PREVIEW · Sample data, not wired to gameplay",
+    "summary": "Equipment Attributes",
+    "bag": "Gear Stash",
+    "sort": "Sort",
+    "filter": "Filter",
+    "forgeTitle": "Forge",
+    "stats": {
+      "hp": "Health",
+      "attack": "Attack",
+      "defense": "Defense"
+    },
+    "bagTabs": {
+      "all": "All",
+      "weapons": "Weapons",
+      "armor": "Armor",
+      "accessories": "Accessories"
+    },
+    "workspace": {
+      "equip": "Gear",
+      "bag": "Stash"
+    }
+  },
+  "inventoryPreview": {
+    "all": "All",
+    "equipment": "Equipment",
+    "material": "Materials",
+    "pill": "Pills",
+    "search": "Search",
+    "searchLabel": "Search the bag",
+    "sort": "Sort",
+    "empty": "The bag is empty",
+    "count": "{n} items",
+    "details": "Details",
+    "quality": "Quality",
+    "amount": "Amount",
+    "use": "Use"
+  },
+  "questPreview": {
+    "all": "All",
+    "once": "One-Time",
+    "active": "Active",
+    "ready": "Ready",
+    "claimed": "Claimed",
+    "empty": "No quests yet",
+    "objectives": "Objectives",
+    "claim": "Claim Reward",
+    "follow": "Track"
+  },
+  "settingsPreview": {
+    "title": "Settings",
+    "group": {
+      "all": "All",
+      "audio": "Audio",
+      "display": "Display",
+      "storage": "Storage",
+      "support": "Support"
+    },
+    "storage": "Storage",
+    "storageHint": "Back up and restore your cultivation progress.",
+    "save": "Save Now",
+    "export": "Export Save",
+    "import": "Import Save",
+    "support": "Support",
+    "supportHint": "Found a bug or have feedback? Send us a note.",
+    "feedback": "Send Feedback",
+    "build": "Build",
+    "buildValue": "Current build"
   }
 }

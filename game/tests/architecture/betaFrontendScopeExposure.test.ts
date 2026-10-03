@@ -157,7 +157,14 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
         /\b(isCompanionDomainUnlocked|isArtifactDomainUnlocked|isFormationUnlocked)\b/,
         [
           'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue',
-          'components/game/CurrencyHud.vue',
+          // S03 fidelity: DongFuStage builds the wheel disabledContext
+          // from the same domain predicates the legacy layer used - dead
+          // contexts stay upstream of betaWheelSlots admission.
+          'components/scenes/dong-fu/DongFuStage.vue',
+          // S03 fidelity: the chip predicates live in useCurrencyChips -
+          // extracted from CurrencyHud so the fidelity HUD and the legacy
+          // pill strip share the same filtered model.
+          'composables/useCurrencyChips.ts',
         ],
       )
 
@@ -227,7 +234,7 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // dormant families.
       const list = offendersInCode(
         /\b(getAlchemyRecipes|jobSuccessPercent|alchemySecondsFor|isBreakthroughAcquisitionEnabled)\b/,
-        ['components/panels/AlchemyView.vue'],
+        ['components/scenes/alchemy/AlchemySurface.vue'],
       )
 
       expect(list).toEqual([])
@@ -311,8 +318,10 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
           'isBetaBuildingSurface',
         ],
         'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue': ['betaWheelSlots'],
-        'components/scenes/equipment/EquipmentScene.vue': ['isBetaEquipmentTab'],
-        'components/game/CurrencyHud.vue': ['isBetaFeature'],
+        'components/scenes/equipment/EquipmentSurface.vue': ['isBetaEquipmentTab'],
+        // S03 fidelity: the companion-currency gate moved into
+        // useCurrencyChips when the HUD strip was extracted.
+        'composables/useCurrencyChips.ts': ['isBetaFeature'],
         'components/panels/QuanKhiPanel.vue': ['isBetaWay'],
       }
 

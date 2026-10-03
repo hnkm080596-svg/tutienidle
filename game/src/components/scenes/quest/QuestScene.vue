@@ -1,14 +1,13 @@
 <script setup lang="ts">
-// Scene 17 quest scaffold (ref 17-quest.jpg; spec scene "18" Quest):
-// group-tabs | quest-list (620 col) beside detail-panel (608 col) on
-// the 1244 x 610 imperial-scroll content band.
-//
-// The panel wrapper (QuestPanel.vue) owns the canonical read
-// (getBetaQuestSurfaceModels - architecture contract) and the scroll
-// shell; this scene owns presentation: cadence tab filter, selection,
-// and the claim action against questOps.claimQuest.
+// Scene 18 quest production surface (ref 17-quest.jpg): the approved
+// fidelity composition - cadence tab bar | quest list rail | detail
+// panel - mounting the real QuestGroupTabs/QuestList/QuestDetailPanel
+// through the scene's slots. Cadence filter, selection fallback, and
+// claim are model-driven (getBetaQuestSurfaceModels rows from the
+// panel; claimQuest via questOps - contract DO-NOT-DERIVE kept).
 import { computed, ref, watch } from 'vue'
 import { useStateVersion, useGameManager } from '@/composables/useGameState'
+import QuestFidelityScene from './fidelity/QuestFidelityScene.vue'
 import QuestGroupTabs from './tabs/QuestGroupTabs.vue'
 import QuestList from './list/QuestList.vue'
 import QuestDetailPanel from './detail/QuestDetailPanel.vue'
@@ -73,48 +72,41 @@ function onClaim(questId: string) {
 </script>
 
 <template>
-  <div class="quest-scene">
-    <QuestGroupTabs
-      class="quest-scene__tabs"
-      :cadences="cadences"
-      :active="activeCadence"
-      :on-select="selectCadence"
-    />
-
-    <QuestList
-      class="quest-scene__list"
-      :rows="visibleRows"
-      :selected-id="selectedQuestId"
-      :on-select="(id: string) => { selectedQuestId = id }"
-    />
-
-    <QuestDetailPanel
-      class="quest-scene__detail"
-      :row="selectedRow"
-      :on-claim="onClaim"
-    />
-  </div>
+  <QuestFidelityScene :quests="[]" :selected="undefined" filter="all" :rewards="[]">
+    <template #tabs>
+      <QuestGroupTabs
+        class="quest-tabs-slot"
+        :cadences="cadences"
+        :active="activeCadence"
+        :on-select="selectCadence"
+      />
+    </template>
+    <template #list>
+      <QuestList
+        class="quest-list-slot"
+        :rows="visibleRows"
+        :selected-id="selectedQuestId"
+        :on-select="(id: string) => { selectedQuestId = id }"
+      />
+    </template>
+    <template #detail>
+      <QuestDetailPanel :row="selectedRow" :on-claim="onClaim" />
+    </template>
+  </QuestFidelityScene>
 </template>
 
 <style scoped>
-/* Spec scene "18" columns: tabs+list 620 | detail 608, 16px gap. */
-.quest-scene {
-  height: 100%;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 620fr) minmax(0, 608fr);
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px 16px;
-  padding: 6px 2px;
-  color: var(--hk-text-primary, var(--paper-text));
-  font-family: var(--hk-font-ui, var(--font-body));
+/* Slot content carries this scope id - rail/tab chrome is applied here
+   so the real components inherit the fidelity geometry. */
+.quest-tabs-slot {
+  margin-bottom: 17px;
+  border-bottom: 1px solid #81663a66;
+  flex: 0 0 auto;
 }
-
-.quest-scene > * { min-width: 0; min-height: 0; }
-.quest-scene__detail { grid-row: 1 / -1; grid-column: 2; }
-
-@container (max-width: 860px) {
-  .quest-scene { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 40%) minmax(0, 1fr); overflow-y: auto; }
-  .quest-scene__detail { grid-row: auto; grid-column: auto; }
+.quest-list-slot {
+  overflow: auto;
+  border-right: 1px solid #866b3b55;
+  padding-right: 21px;
+  min-height: 0;
 }
 </style>

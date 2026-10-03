@@ -6,10 +6,6 @@ import RouteMount from '../game/RouteMount.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
 import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
-import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
-import GlobalTopBar from '../game/GlobalTopBar.vue'
-import ThienCoRail from '../game/ThienCoRail.vue'
-import HuyenKimQuestTracker from '../game/HuyenKimQuestTracker.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
 import FunctionOverlayPanel from './FunctionOverlayPanel.vue'
@@ -122,16 +118,10 @@ function closeSidePanels() {
           <BuildingDetailPopover :building-id="admittedBuildingPopoverId" />
         </div>
 
-        <!-- Spec SS11 top bar (L8, screen-space) -- identity left /
-             global resources center / utilities right. CurrencyHud and
-             AutoFarmIndicator are docked inside it. -->
-        <GlobalTopBar />
-
-        <!-- Spec SS12 Thien Co Bang -- right-side opportunity surface,
-             collapsed chip + expandable drawer. The quest tracker chip
-             sits just above it, reading the canonical quest surface. -->
-        <HuyenKimQuestTracker />
-        <ThienCoRail />
+        <!-- Spec SS11/SS12 home chrome (top bar, Thien Co rail, quest
+             tracker, command wheel) moved INSIDE DongFuStage - the
+             approved dong-fu-v2 fidelity surface renders all of it in
+             the scaled design canvas above the vista. -->
 
         <!-- LeftPanel hosts the imperial scroll itself; the old
              drawer-width wrapper is gone (the scene owns its overlay). -->
@@ -161,10 +151,6 @@ function closeSidePanels() {
         <TechniquePanel v-if="mountedStandalone.has('technique')" />
 
         <BodyPanel v-if="mountedStandalone.has('body')" />
-
-        <!-- Command wheel nhieu tang - trigger la nhan vat tu luyen
-             giua dong Phu (DongFuScene.vue). -->
-        <DongFuCommandWheel />
       </template>
 
       <CombatSceneOverlay v-if="isCombatSceneActive" />

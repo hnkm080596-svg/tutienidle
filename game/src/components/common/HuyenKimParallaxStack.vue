@@ -126,6 +126,9 @@ onBeforeUnmount(() => {
       draggable="false"
       decoding="async"
     />
+    <div v-if="$slots.foreground" class="hk-parallax-stack__foreground" :style="layerStyle(layers.length - 1)">
+      <slot name="foreground" />
+    </div>
   </div>
 </template>
 
@@ -144,7 +147,8 @@ onBeforeUnmount(() => {
 
 /* Shared cover geometry: each layer is a fixed-size element centered in the
    container (frame already includes centered overscan), translated by drift. */
-.hk-parallax-stack__layer {
+.hk-parallax-stack__layer,
+.hk-parallax-stack__foreground {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -154,7 +158,8 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hk-parallax-stack__layer {
+  .hk-parallax-stack__layer,
+  .hk-parallax-stack__foreground {
     transition: none;
   }
 }

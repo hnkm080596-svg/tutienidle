@@ -1,11 +1,12 @@
 <script setup lang="ts">
-// Scene 01 form region (spec: 1048/352/496/240, form family, gap 16):
-// id field + password field + submit-level live error + ceremonial CTA.
+// Scene 01 form: real fields, a permanently reserved notice slot and CTA.
 // Owns only layout + the submit event; auth behavior stays in the
 // screen's composition root.
 import LoginIdField from './LoginIdField.vue'
 import LoginPasswordField from './LoginPasswordField.vue'
 import AuthSubmitButton from './AuthSubmitButton.vue'
+import LoginNoticeLines from './LoginNoticeLines.vue'
+import { isValidLoginId } from '@/services/auth/AuthService'
 
 const loginId = defineModel<string>('loginId', { required: true })
 const password = defineModel<string>('password', { required: true })
@@ -15,17 +16,19 @@ defineProps<{
   canSubmit: boolean
   submitting: boolean
   error: string
+  resetNotice: boolean
+  credentialError: boolean
 }>()
 
 const emit = defineEmits<{ submit: [] }>()
 </script>
 
 <template>
-  <form class="auth-form" data-hk-region="form" @submit.prevent="emit('submit')">
+  <form id="auth-credential-panel" class="auth-form" role="tabpanel" :aria-labelledby="`auth-tab-${mode}`" data-hk-region="form" @submit.prevent="emit('submit')">
     <LoginIdField v-model="loginId" />
-    <LoginPasswordField v-model="password" />
-    <!-- Submit-level error is a live region (screen reader announces it). -->
-    <p v-if="error" id="auth-error-submit" class="auth-form__hint is-error" role="alert">{{ error }}</p>
+    <LoginPasswordField v-model="password" :mode="mode" />
+    <LoginNoticeLines :invalid-id="Boolean(loginId && !isValidLoginId(loginId))" :error="error"
+      :reset-notice="resetNotice" :credential-error="credentialError" />
     <AuthSubmitButton :mode="mode" :can-submit="canSubmit" :submitting="submitting" />
   </form>
 </template>
@@ -33,14 +36,7 @@ const emit = defineEmits<{ submit: [] }>()
 <style scoped>
 .auth-form {
   display: grid;
-  gap: 16px;
+  gap: 1.5cqw;
   text-align: left;
-}
-.auth-form__hint {
-  margin: 0;
-  font-size: var(--text-xs);
-}
-.is-error {
-  color: var(--cinnabar, #b54432);
 }
 </style>

@@ -132,6 +132,10 @@ function build() {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Overlay-canvas mounts (exploration fidelity surface) are
+     click-through - the gate opts back into pointer interaction so the
+     construction screen stays usable there. */
+  pointer-events: auto;
 }
 
 .construction-gate__locked {

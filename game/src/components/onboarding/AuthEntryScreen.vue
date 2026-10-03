@@ -2,24 +2,19 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import LoginSceneVista from '@/components/scenes/login/LoginSceneVista.vue'
-import LoginAmbientStatus from '@/components/scenes/login/LoginAmbientStatus.vue'
 import LoginScrollCard from '@/components/scenes/login/LoginScrollCard.vue'
 import LoginLogoBlock from '@/components/scenes/login/LoginLogoBlock.vue'
 import LoginLocaleChips from '@/components/scenes/login/LoginLocaleChips.vue'
-import LoginNoticeLines from '@/components/scenes/login/LoginNoticeLines.vue'
 import AuthModeTabs from '@/components/scenes/login/AuthModeTabs.vue'
 import AuthCredentialForm from '@/components/scenes/login/AuthCredentialForm.vue'
 import LoginUpgradeSection from '@/components/scenes/login/LoginUpgradeSection.vue'
-import AuthDivider from '@/components/scenes/login/AuthDivider.vue'
 import AuthSecondaryActions from '@/components/scenes/login/AuthSecondaryActions.vue'
 import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
 import { readResumeCandidate, consumeResetNotice, type ResumeCandidate } from '@/composables/resumeSession'
 
-// Scene 01 composition root: owns the auth flow state and composes the
-// per-region scene components (game/src/components/scenes/login/) at the
-// layout spec's canonical slots. Presentation lives in the children;
+// Scene 01 composition root: owns auth flow state and composes the
+// reference-led scene regions. Presentation lives in the children;
 // every functional surface below comes from the existing read-models
 // (resumeSession / authService / locale composable) - no invented data.
 const emit = defineEmits<{ authenticated: [session: AuthSession] }>()
@@ -137,13 +132,8 @@ function startGuest() {
 
 <template>
   <main class="auth-screen" data-testid="auth-screen" data-hk-scene="login">
-    <LoginSceneVista />
-    <LoginAmbientStatus />
-
     <LoginScrollCard>
-      <LoginLocaleChips />
       <LoginLogoBlock />
-      <LoginNoticeLines :reset-notice="resetNotice" :credential-error="Boolean(resume?.durableError)" />
       <AuthModeTabs v-model="mode" />
       <AuthCredentialForm
         v-model:login-id="loginId"
@@ -152,10 +142,11 @@ function startGuest() {
         :can-submit="canSubmit"
         :submitting="submitting"
         :error="error"
+        :reset-notice="resetNotice"
+        :credential-error="Boolean(resume?.durableError)"
         @submit="submit"
       />
       <LoginUpgradeSection :resume-ready="resumeReady" :stored-guest-session="storedGuestSession" />
-      <AuthDivider />
       <AuthSecondaryActions
         :resume="resume"
         :resume-ready="resumeReady"
@@ -163,6 +154,7 @@ function startGuest() {
         @continue="continueSaved"
         @guest="startGuest"
       />
+      <template #footer><LoginLocaleChips /></template>
     </LoginScrollCard>
 
     <!-- B1.8 cross-account acknowledgement: leaving the stored guest
@@ -182,18 +174,12 @@ function startGuest() {
 /* Scene 01 spec: vista dominant; auth scroll card right-of-center. */
 .auth-screen {
   position: relative;
-  width: 100vw;
-  min-height: 100vh;
+  width: 100%;
+  min-height: 100%;
   display: grid;
   justify-items: end;
   align-items: center;
   overflow: hidden auto;
   color: var(--paper-text, #211f1a);
-  background: var(--hk-surface-base, #0b0f0d);
-}
-@media (max-width: 900px) {
-  .auth-screen {
-    justify-items: center;
-  }
 }
 </style>

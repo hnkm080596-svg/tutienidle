@@ -145,7 +145,7 @@ const MOUNT_GATES: MountGate[] = [
       'the only leftPanelMode writers (setLeftPanelMode/toggleLeftPanelMode) reject any mode isBetaLeftPanelMode denies - worker_lodge mode can never activate, so its title/map entries and the panel never render',
   },
   {
-    gateFile: 'src/components/scenes/equipment/EquipmentScene.vue',
+    gateFile: 'src/components/scenes/equipment/EquipmentSurface.vue',
     signatures: ['isBetaEquipmentTab(', 'visibleTabs'],
     protected: [
       'components/panels/equipment-hall/WashTab.vue',
@@ -174,6 +174,36 @@ const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: s
     tokens: ['coming-soon'],
     reason:
       'the node renders props only; betaRealmLadderNodes() (betaScopeSurface) flattens comingSoon to false for every emitted node, so the comingSoon branch is unreachable - BetaJourney pins the guarantee',
+  },
+  // Huyen Kim fidelity preview fixtures (S12 pending integration): the
+  // approved forge design is a 5-tab workspace, so the preview renders the
+  // full tab set for visual review. ui-preview entries are dev-only
+  // surfaces - never mounted in production - and the S12 production
+  // adapter must consume isBetaEquipmentTab (the EquipmentSurface pin above
+  // already guards that authority) before any of these mount.
+  {
+    file: 'components/scenes/equipment/fidelity/EquipmentFidelityScene.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason:
+      'preview fixture tabs only; S12 integration gates the mode list through isBetaEquipmentTab before production mount',
+  },
+  {
+    file: 'components/scenes/equipment/fidelity/ForgeFidelityScene.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason:
+      'preview fixture tabs only; S12 integration gates the mode list through isBetaEquipmentTab before production mount',
+  },
+  {
+    file: 'components/scenes/equipment/fidelity/ForgeFidelityWorkspace.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason:
+      'renders only the mode id the host passes in; production mode admission is isBetaEquipmentTab-gated at S12 integration',
+  },
+  {
+    file: 'ui-preview/ForgePreview.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason:
+      'ui-preview dev surface validating the approved 5-tab design; not mounted in production',
   },
 ]
 

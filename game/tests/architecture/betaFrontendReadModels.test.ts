@@ -200,6 +200,9 @@ describe('beta FE-contract read-models - import guards', () => {
       // file under components/ is not.
       const EXCEPTIONS = new Set([
         'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue',
+        // Scene 03 fidelity stage: same navigation-surface exception - it
+        // reuses the wheel's isRealmAvailable deep-link check verbatim.
+        'components/scenes/dong-fu/DongFuStage.vue',
       ])
       const offenders = srcCorpus(SRC_DIR)
         .filter(
@@ -278,11 +281,9 @@ describe('beta FE-contract read-models - import guards', () => {
     'the skill-path surfaces consume the canonical model',
     () => {
       const CONSUMERS: Record<string, string> = {
-        'components/panels/SkillPathPanel.vue': 'betaSkillTreeFor',
-        'components/panels/skill-path/NodeTreePanel.vue': 'betaSkillTreeFor',
-        'components/panels/skill-path/NodeInspector.vue': 'BetaSkillTreeNode',
-        'components/panels/skill-path/SkillRoleStrip.vue': 'betaSkillTreeFor',
-        'components/scenes/technique/TechniqueScrollScene.vue':
+        'components/panels/SkillPathPanel.vue': 'SkillSurface',
+        'components/scenes/skill/SkillSurface.vue': 'betaSkillTreeFor',
+        'components/scenes/technique/TechniqueSurface.vue':
           'getBetaTechniqueSurfaceModel',
         'components/panels/skill-path/TechniqueSlotCard.vue':
           'BetaTechniqueSurfaceModel',
