@@ -113,6 +113,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
       active: [{ questId: TEST_QUEST.id, progress: 2, claimed: false }],
       completedOnceIds: ['some_other_once_quest'],
       lastDailyResetAtMs: 0,
+      questFlags: [],
     })
   })
 

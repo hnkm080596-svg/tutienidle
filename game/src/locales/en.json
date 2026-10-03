@@ -820,6 +820,7 @@
     "quest": {
       "title": "Quests",
       "groups": {
+        "mainline": "Mainline",
         "daily": "Daily Quests",
         "once": "Quests"
       },
@@ -835,6 +836,11 @@
         "claim": "Claim Reward"
       },
       "empty": "No quests available yet.",
+      "lockedAfter": "Complete: {name}",
+      "lockedRealm": "Reach realm: {realm}",
+      "flags": {
+        "alchemyCrafted": "Craft a pill"
+      },
       "tabs": {
         "all": "All"
       },

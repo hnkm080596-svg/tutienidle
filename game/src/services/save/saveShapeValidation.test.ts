@@ -686,6 +686,20 @@ describe('validateGameSaveShape — quests slice (Mission A1)', () => {
     expect(pathsOf(result)).toContain('.quests.completedOnceIds')
   })
 
+  it('từ chối quests.completedOnceIds trùng lặp (markCompletedOnce dedupe - không sản xuất được)', () => {
+    const save = validSave()
+
+    save.quests = {
+      ...validQuests(),
+      completedOnceIds: ['once_quest_a', 'once_quest_a'],
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.quests.completedOnceIds')
+  })
+
   it.each([Number.NaN, -1, 'x'])(
     'từ chối quests.lastDailyResetAtMs = %s',
     (value) => {
@@ -697,6 +711,30 @@ describe('validateGameSaveShape — quests slice (Mission A1)', () => {
 
       expect(result.ok).toBe(false)
       expect(pathsOf(result)).toContain('.quests.lastDailyResetAtMs')
+    },
+  )
+
+  it('chấp nhận questFlags hợp lệ; thiếu key vẫn ok (optional slice)', () => {
+    const save = validSave()
+
+    save.quests = { ...validQuests(), questFlags: ['alchemy.crafted'] }
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    save.quests = validQuests()
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([[['a', 'a']], 'not-an-array', [['ok', 5]]])(
+    'từ chối quests.questFlags = %j',
+    (value) => {
+      const save = validSave()
+
+      save.quests = { ...validQuests(), questFlags: value }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('.quests.questFlags')
     },
   )
 })

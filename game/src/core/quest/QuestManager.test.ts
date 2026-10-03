@@ -70,6 +70,39 @@ describe('QuestManager.restore', () => {
   })
 })
 
+describe('QuestManager flag witnesses (mainline kind:flag quests)', () => {
+  it('markQuestFlag records the witness once and dedups repeated landings', () => {
+    const manager = new QuestManager()
+
+    manager.markQuestFlag('alchemy.crafted')
+    manager.markQuestFlag('alchemy.crafted')
+
+    expect(manager.hasQuestFlag('alchemy.crafted')).toBe(true)
+    expect(manager.hasQuestFlag('never.seen')).toBe(false)
+    expect(manager.getState().questFlags).toEqual(['alchemy.crafted'])
+  })
+
+  it('restore normalizes questFlags: non-array -> [], non-strings dropped, dupes collapsed', () => {
+    const manager = new QuestManager()
+
+    manager.restore({
+      active: [],
+      completedOnceIds: [],
+      lastDailyResetAtMs: 0,
+      questFlags: 'x' as never,
+    })
+    expect(manager.getState().questFlags).toEqual([])
+
+    manager.restore({
+      active: [],
+      completedOnceIds: [],
+      lastDailyResetAtMs: 0,
+      questFlags: ['a', 5, 'b', 'a', null] as never,
+    })
+    expect(manager.getState().questFlags).toEqual(['a', 'b'])
+  })
+})
+
 describe('QuestManager.restore — canonicalization (Mission A review)', () => {
   it('drops foreign fields and negative values on a bypassed payload', () => {
     const manager = new QuestManager()

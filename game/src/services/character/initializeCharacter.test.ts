@@ -70,9 +70,7 @@ function makeOwners() {
       getSiteDefinitions: () => [{ siteId: 'linh_tuyen' }, { siteId: 'khi_duong' }],
     },
     setActivePlayer: calls.setActivePlayer,
-    tickOps: {
-      reconcileQuestLifecycle: calls.reconcileQuestLifecycle,
-    },
+    tickOps: { reconcileQuestLifecycle: calls.reconcileQuestLifecycle },
   } as unknown as GameManager
 
   const owners: InitializeCharacterOwners = {
@@ -152,9 +150,13 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
 
     expect(calls.setActivePlayer).toHaveBeenCalledWith(player)
 
-    // Quest activation runs at init (not deferred to reload): without it
-    // a fresh character sees an empty Nhiem Vu board for the session.
+    // Mainline chain admission (AR-09): the quest lifecycle reconcile
+    // closes the creation snapshot - a fresh board shows main_01
+    // without waiting for a realm transition or a save restore.
     expect(calls.reconcileQuestLifecycle).toHaveBeenCalledTimes(1)
+    expect(calls.reconcileQuestLifecycle.mock.invocationCallOrder[0]).toBeGreaterThan(
+      calls.setActivePlayer.mock.invocationCallOrder[0]!,
+    )
   })
 
   it('a rejected starter write propagates (a boot that cannot pin linh_bao never defaults silently)', () => {

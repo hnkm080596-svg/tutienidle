@@ -97,8 +97,11 @@ export function initializeCharacter(
 
   gameManager.setActivePlayer(player)
 
-  // Activate eligible quests now - the tick path only reconciles on
-  // daily rollover / realm transitions / restore, so a fresh character
-  // would otherwise see an empty quest board until the first reload.
+  // Mainline chain admission (AR-09): creation ends with no save
+  // restore, so the quest lifecycle command must run here or a fresh
+  // character sees an empty quest board until a realm advance. Runs
+  // after setActivePlayer so reconcile resolves the new player; the
+  // call is idempotent and covers local creation, Supabase creation,
+  // and CHARACTER_UNINITIALIZED reconstruction alike.
   gameManager.tickOps.reconcileQuestLifecycle()
 }

@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager } from '@/composables/useGameState'
 import QuestSectionPlaque from './QuestSectionPlaque.vue'
+import { QUEST_FLAG_ALCHEMY_CRAFTED } from '@/core/quest/Quest'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 
 const props = defineProps<{ row: BetaQuestSurfaceModel }>()
@@ -13,8 +14,21 @@ const props = defineProps<{ row: BetaQuestSurfaceModel }>()
 const { t } = useI18n()
 const gameManager = useGameManager()
 
+// kind:'flag' targets have no material/enemy label - the flag id maps
+// to a short i18n label (fallback: the raw id, which never ships for
+// authored quests).
+const FLAG_LABEL_KEYS: Record<string, string> = {
+  [QUEST_FLAG_ALCHEMY_CRAFTED]: 'panels.quest.flags.alchemyCrafted',
+}
+
 const objectiveDone = computed(() => props.row.progress >= props.row.target)
-const targetLabel = computed(() => props.row.targetLabel ?? t('panels.quest.anyEnemy'))
+const targetLabel = computed(() => {
+  if (props.row.flagId) {
+    const key = FLAG_LABEL_KEYS[props.row.flagId]
+    return key ? t(key) : props.row.flagId
+  }
+  return props.row.targetLabel ?? t('panels.quest.anyEnemy')
+})
 
 // Turn-in material name resolves through the material registry the same
 // way other panels do (has() + get() - display only).

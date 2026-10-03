@@ -3074,11 +3074,29 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
     }
   }
 
+  // Same dedup-string rule as questFlags: the writer
+  // (QuestManager.markCompletedOnce) dedups at the seam, so a duplicated
+  // id is unproducible.
   if (
     !Array.isArray(value.completedOnceIds) ||
-    !value.completedOnceIds.every((id) => typeof id === 'string')
+    !value.completedOnceIds.every((id) => typeof id === 'string') ||
+    new Set(value.completedOnceIds).size !== value.completedOnceIds.length
   ) {
-    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[]' })
+    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[] không trùng lặp' })
+  }
+
+  // Mainline flag witness (kind:'flag' quests): optional slice - saves
+  // predating it carry none. Same dedup-string rule as active ids: the
+  // writer (QuestSystem.onFlag -> markQuestFlag) dedups at the seam, so
+  // a duplicated flag id is unproducible.
+  if (value.questFlags !== undefined) {
+    if (
+      !Array.isArray(value.questFlags) ||
+      !value.questFlags.every((id) => typeof id === 'string') ||
+      new Set(value.questFlags).size !== value.questFlags.length
+    ) {
+      issues.push({ path: `${path}.questFlags`, message: 'phải là string[] không trùng lặp' })
+    }
   }
 
   if (!isNonNegativeFiniteNumber(value.lastDailyResetAtMs)) {

@@ -69,14 +69,33 @@ export interface BetaQuestSurfaceModel {
   target: number
   /** Display label for the condition target (material or enemy name).
    *  null = unrestricted kill target - the UI renders its 'any enemy'
-   *  i18n label. */
+   *  i18n label. Flag conditions emit flagId instead (no entity
+   *  label exists). */
   targetLabel: string | null
+  /** Flag conditions only: the feature-witness id - the UI maps it to
+   *  its flag label key (flags.*). */
+  flagId?: string
   /** Admitted reward lines only - isQuestRewardDropAdmitted already
    *  applied; render verbatim, never re-filter. */
   rewards: readonly BetaQuestRewardEntry[]
   claim: BetaQuestClaim
   /** Collect quests only: the turn-in requirement vs live bag count. */
   turnIn?: BetaQuestTurnIn
+  /** Chain membership - 'mainline' rows render with the Chinh Tuyen
+   *  chip and sort before non-chain rows (getBetaQuestSurfaceModels
+   *  orders the walk). */
+  chainId?: 'mainline'
+  /** Locked-chain preview only: this row previews the next unmet
+   *  mainline step - read-only, no claim path. */
+  lockedPreview?: BetaQuestLockedPreview
+}
+
+/** Reasons the previewed chain step is still locked (both may apply). */
+export interface BetaQuestLockedPreview {
+  /** Display name of the unmet predecessor quest. */
+  afterQuestName?: string
+  /** Realm id the step requires (the UI resolves its display name). */
+  requiredRealmId?: string
 }
 
 export interface BetaQuestSurfaceDeps {
@@ -96,6 +115,10 @@ function targetLabelFor(quest: Quest, deps: BetaQuestSurfaceDeps): string | null
     return deps.materialRegistry.has(condition.materialId)
       ? deps.materialRegistry.get(condition.materialId).name
       : condition.materialId
+  }
+
+  if (condition.kind !== 'kill') {
+    return null
   }
 
   return condition.enemyId !== undefined
@@ -197,6 +220,7 @@ export function betaQuestSurfaceFor(
     progress: progress.progress,
     target: condition.amount,
     targetLabel: targetLabelFor(quest, deps),
+    flagId: condition.kind === 'flag' ? condition.flagId : undefined,
     rewards: rewardsFor(quest, deps, player.realmId),
     claim: claimFor(quest, progress, deps),
     turnIn:
@@ -207,5 +231,6 @@ export function betaQuestSurfaceFor(
             owned: deps.materialBag.getAmount(condition.materialId),
           }
         : undefined,
+    chainId: quest.chainId,
   }
 }

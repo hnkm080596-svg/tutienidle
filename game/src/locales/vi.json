@@ -820,6 +820,7 @@
     "quest": {
       "title": "Nhiệm Vụ",
       "groups": {
+        "mainline": "Chính Tuyến",
         "daily": "Nhiệm Vụ Hàng Ngày",
         "once": "Nhiệm Vụ"
       },
@@ -835,6 +836,11 @@
         "claim": "Nhận Thưởng"
       },
       "empty": "Chưa có nhiệm vụ nào khả dụng.",
+      "lockedAfter": "Hoàn thành: {name}",
+      "lockedRealm": "Đạt cảnh giới: {realm}",
+      "flags": {
+        "alchemyCrafted": "Luyện chế đan dược"
+      },
       "tabs": {
         "all": "Tất Cả"
       },

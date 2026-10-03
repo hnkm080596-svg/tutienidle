@@ -50,7 +50,10 @@ function buildSave(player: PlayerData, quests: GameSave['quests']): GameSave {
 }
 
 const DAILY_ID = 'daily_kill_bandit_15'
-const ONCE_ID = 'kill_wild_wolf_10'
+// main_01 (chain head) is the once quest that stays mortal-admissible;
+// kill_wild_wolf_10 moved behind requiredRealmId 'qi_refining' (F2),
+// so it can no longer serve as the eligible-at-mortal fixture.
+const ONCE_ID = 'main_01_da_san_dau_tien'
 
 // BETA SCOPE LOCK v2 sec.15 - authored dailies retired from the quest
 // set, so the rollover-rebuild test registers a fabricated daily: the

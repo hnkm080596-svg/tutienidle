@@ -198,7 +198,9 @@ export interface GameSave {
   /** v44: job luyen dan dang chay (plan sec.8.2). */
   alchemyJobs?: AlchemyJobSave[]
 
-  /** v51: state Quest System (active progress + completedOnceIds + daily reset moc). */
+  /** v51: state Quest System (active progress + completedOnceIds +
+   *  questFlags witness + daily reset moc). questFlags optional - saves
+   *  predating flag quests lack the slice. */
   quests?: QuestManagerState
 
   /** R7 (AR-08): decompose settings + cycle timer. Optional - old

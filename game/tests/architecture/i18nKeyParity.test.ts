@@ -62,6 +62,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 import { AUDIO_CUES, resolveAudioCue } from '../../src/core/audio/AudioCueManifest'
+import { QUEST_FLAG_IDS } from '../../src/core/quest/Quest'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const LOCALES_DIR = join(SRC_DIR, 'locales')
@@ -446,6 +447,12 @@ describe('i18n key parity (P16)', () => {
         'skill.test',
       ])
       const FIXTURE_ID_NAMESPACE = /^(skill|body)\./
+      // Quest feature-witness flag ids (`kind:'flag'` conditions) share
+      // the dotted domain.event convention (e.g. `alchemy.crafted`).
+      // Same manifest-verified exemption as audio cues: only literal
+      // membership in QUEST_FLAG_IDS exempts; any other dotted literal
+      // under a locale namespace is still checked as an i18n key.
+      const isQuestFlag = (literal: string): boolean => QUEST_FLAG_IDS.includes(literal)
       const violations: string[] = []
       for (const file of FILES) {
         for (const m of file.clean.matchAll(STRING_LITERAL)) {
@@ -454,6 +461,7 @@ describe('i18n key parity (P16)', () => {
           if (!KEY_SHAPE.test(literal)) continue
           if (NON_MESSAGE_IDS.has(literal)) continue
           if (isTestFile(file.fromSrc) && FIXTURE_ID_NAMESPACE.test(literal)) continue
+          if (isQuestFlag(literal)) continue
           // Manifest unit tests deliberately probe qualifier-strip
           // fallback with unknown qualifiers (`combat.cast.not_a_real_skill`)
           // - those literals resolve as cues by design, not as i18n keys.
