@@ -33,7 +33,7 @@ export class CombatSnapshotReconcile {
     const scene = this.scene
     const now = scene.time.now
 
-    // 6A-T5 — HUD HP fast-path từ positions (khi chưa có vitals event).
+    // 6A-T5 - HUD HP fast-path from positions (before any vitals event).
     scene.playerHud?.updateHp(event.playerCurrentHp, event.playerMaxHp)
 
     if (scene.lastSnapshotAt !== undefined) {
@@ -128,9 +128,10 @@ export class CombatSnapshotReconcile {
     this.reconcileCombatantSprites('player', event.players, PLAYER_COLOR)
     this.reconcileCombatantSprites('enemy', event.enemies, ENEMY_COLOR)
 
-    // 6A-T5 — HUD HP/MP fast-path tu entity snapshot (fast-path positions
-    // legacy da mang playerCurrentHp): seed gia tri ngay snapshot dau thay
-    // vi cho 'entity_vitals_changed' dau tien (HUD trong rong toi luc do).
+    // 6A-T5 - HUD HP/MP fast-path from entity snapshot (legacy fast-path
+    // positions already carry playerCurrentHp): seed values on the first
+    // snapshot instead of waiting for the first 'entity_vitals_changed'
+    // (HUD stays blank until then).
     // update* ghi object visibility truc tiep - chi feed khi phase song
     // so mot snapshot tre sau battle_end khong re-show layer da an.
     const playerState = event.players.find((state) => state.id === PLAYER_ID)

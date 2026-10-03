@@ -20,6 +20,7 @@ import { isBetaEquipmentTab } from '@/core/betaScope'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import { HALL_SELECTION_KEY } from '@/components/panels/equipment-hall/hallSelection'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import EquipmentFidelityScene from './fidelity/EquipmentFidelityScene.vue'
 import EquipmentPaperdollStage from './paperdoll/EquipmentPaperdollStage.vue'
@@ -32,6 +33,8 @@ import DissolveTab from '@/components/panels/equipment-hall/DissolveTab.vue'
 import DecomposeTab from '@/components/panels/equipment-hall/DecomposeTab.vue'
 import type { Stats } from '@/core/stats/StatBlock'
 
+
+const furnaceArtUrl = resolveAssetUrl('/assets/ui/huyen-kim/scene/forge-v2/furnace-v1.png')
 
 const { t } = useI18n()
 const player = usePlayerStore()
@@ -69,6 +72,10 @@ const activeWorkspace = ref<EquipmentWorkspaceId>('equip')
 function selectWorkspace(id: EquipmentWorkspaceId) {
   activeWorkspace.value = id
 }
+
+// The lò rèn hearth belongs to the forge op surfaces (enhance/wash/
+// refine/dissolve/decompose); equip detail + bag keep the plain slab.
+const showFurnaceArt = computed(() => activeWorkspace.value !== 'equip' && activeWorkspace.value !== 'bag')
 
 // Shared selection -- only Wash/Refine inject it (old shell note kept):
 // Enhance selects by SLOT; Dissolve/Decompose keep their own multi-select.
@@ -118,7 +125,10 @@ const summaryRows = computed(() => {
 </script>
 
 <template>
-  <SceneDesignCanvas mode="overlay">
+  <!-- `overlay` is the boolean prop - `mode="overlay"` is silently
+       ignored, which left this as the opaque base variant (dark void
+       behind the paper instead of the home vista). -->
+  <SceneDesignCanvas overlay>
     <EquipmentFidelityScene
       :navigation="navItems"
       notice=""
@@ -137,6 +147,15 @@ const summaryRows = computed(() => {
 
       <template #workspace>
         <section class="equipment-workspace" :aria-label="t('equipment.title')">
+          <!-- LO REN hearth backdrop (ref forge workspace): decorative
+               furnace art behind the op views only. -->
+          <img
+            v-if="showFurnaceArt"
+            class="furnace-art"
+            :src="furnaceArtUrl"
+            alt=""
+            aria-hidden="true"
+          />
           <nav>
             <button
               v-for="mode in workspaceModes"
@@ -185,9 +204,27 @@ const summaryRows = computed(() => {
   width: 620px;
   height: 507px;
   padding-left: 20px;
+  /* The workspace's right edge (x1378) sits ~33px onto the paper's 83px
+     border frame - without matching padding right-side content (bag
+     counts) renders under the torn rim. */
+  padding-right: 40px;
   border-left: 1px solid #a0875166;
   display: flex;
   flex-direction: column;
+}
+
+/* Decorative forge hearth behind the forge op views - same asset +
+   treatment the fidelity fixture uses (left, contained, dimmed). */
+.furnace-art {
+  position: absolute;
+  left: -6px;
+  bottom: 0;
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.45;
+  filter: drop-shadow(0 4px 7px #61451d33);
+  pointer-events: none;
 }
 .equipment-workspace nav {
   display: flex;

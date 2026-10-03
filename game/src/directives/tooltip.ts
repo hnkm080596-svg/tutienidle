@@ -24,6 +24,26 @@ interface TooltipBinding {
 // khi element bị tạo/huỷ liên tục (vd v-for của SlotView).
 const bindings = new WeakMap<HTMLElement, TooltipBinding>()
 
+// Pointer-vs-keyboard modality: focusin tooltips are a keyboard-nav aid,
+// so they only show after a Tab-initiated focus move. Programmatic focus
+// moves (e.g. a dialog/panel's focus-on-open landing on a v-tooltip
+// control) would otherwise mount an owner-less tooltip card that sits
+// visible until the next focus change.
+let keyboardModality = false
+let modalityBound = false
+
+function bindModalityTracking() {
+  if (modalityBound || typeof document === 'undefined') {
+    return
+  }
+  modalityBound = true
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Tab') keyboardModality = true
+  }, true)
+  document.addEventListener('pointerdown', () => { keyboardModality = false }, true)
+  document.addEventListener('mousedown', () => { keyboardModality = false }, true)
+}
+
 function normalize(value: TooltipDirectiveValue): TooltipContent {
   return typeof value === 'string' ? { description: value } : value
 }
@@ -36,6 +56,8 @@ function normalize(value: TooltipDirectiveValue): TooltipContent {
  */
 export const vTooltip: Directive<HTMLElement, TooltipDirectiveValue> = {
   mounted(el, binding) {
+    bindModalityTracking()
+
     const state: TooltipBinding = {
       value: binding.value,
 
@@ -52,7 +74,7 @@ export const vTooltip: Directive<HTMLElement, TooltipDirectiveValue> = {
       },
 
       onFocusIn() {
-        if (state.value) useTooltip().showTooltip(normalize(state.value), el, true)
+        if (state.value && keyboardModality) useTooltip().showTooltip(normalize(state.value), el, true)
       },
 
       onFocusOut() {

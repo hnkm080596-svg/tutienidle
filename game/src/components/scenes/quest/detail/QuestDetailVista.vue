@@ -4,6 +4,7 @@
 // per-quest vista art exists in the model - temp ink scene + the
 // cadence ribbon, both art-needed until Minh's quest art lands.
 import { useI18n } from 'vue-i18n'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 
 defineProps<{ row: BetaQuestSurfaceModel }>()
@@ -18,7 +19,7 @@ const { t } = useI18n()
       art-needed
       data-art-id="quest-vista"
       aria-hidden="true"
-    >山</span>
+    ><HuyenKimSymbol name="quest" class="quest-detail-vista__mark" /></span>
     <span
       class="quest-detail-vista__ribbon"
       art-needed
@@ -51,6 +52,11 @@ const { t } = useI18n()
   place-items: center;
   color: color-mix(in srgb, var(--paper-text, #f2ead8) 30%, transparent);
   font-size: 42px;
+}
+
+.quest-detail-vista__mark {
+  width: 52px;
+  height: 52px;
 }
 
 /* Hanging ribbon tag like the ref's red cadence banner: vertical text,

@@ -227,6 +227,10 @@ describe('SlotView — precedence (mục 17.2)', () => {
     // rule 1: locked chặn validation — không còn class validation-invalid
     expect(button.classList.contains('slot-view--validation-invalid')).toBe(false)
 
+    // Focus tooltips only appear for keyboard focus navigation - a bare
+    // focusin (e.g. programmatic focus-on-open) must not mount one, so
+    // the test models a real keyboard user with a Tab keydown first.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }))
     button.dispatchEvent(new Event('focusin'))
     expect(useTooltip().content.value).toEqual({ title: 'Khoá', description: 'Cần đạt Trúc Cơ' })
     unmount()

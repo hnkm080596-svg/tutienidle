@@ -581,8 +581,11 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   /* Seal-paste vermillion, lifted one step from the frame ink
      (#950100) so the thin strokes stay legible on the dark tile. */
   color: #d13a24;
-  font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', 'TW-Kai', 'DFKai-SB',
-    'AR PL KaitiM GB', 'Noto Serif CJK SC', var(--font-display);
+  /* Ma Shan Zheng / Noto Serif SC are loaded webfonts that cover the Han
+     seal numerals - the local Kai stacks below only render where a KaiTi
+     font is installed, otherwise the ordinals render as tofu boxes. */
+  font-family: 'Ma Shan Zheng', 'Kaiti SC', 'KaiTi', 'STKaiti', 'TW-Kai', 'DFKai-SB',
+    'AR PL KaitiM GB', 'Noto Serif CJK SC', 'Noto Serif SC', var(--font-display);
   font-weight: 700;
   font-size: 15cqw;
   line-height: 1;

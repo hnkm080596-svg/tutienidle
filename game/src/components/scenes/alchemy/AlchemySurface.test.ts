@@ -21,7 +21,6 @@ import {
   GAME_MANAGER_KEY,
   STATE_VERSION_KEY,
 } from '@/composables/useGameState'
-import { useNotificationStore } from '@/stores/notification'
 
 const TEST_RECIPE: AlchemyRecipe = {
   id: 'alchemy_tu_linh_dan_qi_refining',
@@ -90,6 +89,8 @@ function mountAlchemy(gameManager: GameManager) {
     pinia: pinia as Pinia,
     brewButton: () =>
       container.querySelector<HTMLButtonElement>('.brew-button'),
+    blockReasonText: () =>
+      container.querySelector<HTMLElement>('.block-reason')?.textContent ?? null,
     bump: async () => {
       stateVersion.value += 1
       await nextTick()
@@ -142,10 +143,10 @@ describe('alchemy.reason.* key completeness (T4-32)', () => {
 })
 
 describe('AlchemySurface - failure surface + disabled brew (T4-32)', () => {
-  it('failed brew pushes a localized notification instead of console.warn', async () => {
+  it('missing pill room disables brew and surfaces the localized room_not_built reason', async () => {
     const gameManager = createManager()
-    // All materials present so canBrew passes; no pill_room built so the
-    // domain rejects with 'room_not_built'.
+    // All materials present; no pill_room built - the surface must block
+    // brew the same way the domain does (fail closed) AND name why.
     gameManager.materialBag.add(HERB, 5)
     gameManager.materialBag.add(WOOD, 5)
 
@@ -153,12 +154,9 @@ describe('AlchemySurface - failure surface + disabled brew (T4-32)', () => {
     await nextTick()
 
     const button = mounted.brewButton()!
-    expect(button.disabled).toBe(false)
-    button.click()
-    await nextTick()
+    expect(button.disabled).toBe(true)
 
-    const notification = useNotificationStore(mounted.pinia)
-    expect(notification.toasts.map((toast) => toast.message)).toContain('Cần xây Đan Phòng trước')
+    expect(mounted.blockReasonText()).toContain('Cần xây Đan Phòng trước')
 
     mounted.unmount()
   })

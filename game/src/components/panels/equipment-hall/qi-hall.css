@@ -243,6 +243,12 @@
   gap: 8px;
 }
 
+/* The dissolve grid is auto-fill 64px columns - the empty-state note is a
+   grid item too, so without a span rule it wraps into one ~90px column. */
+.qi-hall__dissolve .qi-hall__empty {
+  grid-column: 1 / -1;
+}
+
 .qi-hall__decompose {
   gap: 8px;
 }

@@ -7,6 +7,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import { chromeSlice } from '@/ui/huyenKimChrome'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 
@@ -44,13 +45,14 @@ const claimable = computed(() => props.row.claim.available && !props.row.claim.c
     />
 
     <!-- Scenic thumb per row in the ref; per-quest art is unassigned, so
-         a jade ink tile stands in (art-needed). -->
+         a jade ink tile with the stable quest glyph stands in (the tile
+         itself is still art-needed). -->
     <span
       class="quest-row__thumb"
       art-needed
       data-art-id="quest-row-thumb"
       aria-hidden="true"
-    >山</span>
+    ><HuyenKimSymbol name="quest" class="quest-row__thumb-mark" /></span>
 
     <span class="quest-row__body">
       <span class="quest-row__topline">
@@ -121,6 +123,11 @@ const claimable = computed(() => props.row.claim.available && !props.row.claim.c
   font-size: 16px;
 }
 
+.quest-row__thumb-mark {
+  width: 20px;
+  height: 20px;
+}
+
 .quest-row__body {
   display: flex;
   flex-direction: column;
@@ -148,6 +155,11 @@ const claimable = computed(() => props.row.claim.available && !props.row.claim.c
   isolation: isolate;
   flex: 0 0 auto;
   padding: 0 10px;
+  /* The seal-chip slice's 14+14px border art is taller than this
+     topline box (18px): the abs nine-slice renders ~28px and paints
+     over the description line. Clip it to the slot. */
+  overflow: hidden;
+  border-radius: 7px;
 }
 .quest-row__cadence > :not(.ink-nine-slice) { position: relative; z-index: 1; }
 

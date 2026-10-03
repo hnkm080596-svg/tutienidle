@@ -204,13 +204,13 @@ describe('PlayerHudLayer — in-canvas HUD (6A-T4)', () => {
 
     hud.layout(800, 600)
 
-    // Spec anchor = tỉ lệ khung thiết kế (không cứng px): x = w*16/1672,
-    // stack treo từ y = h*72/941, label HP nằm trên bar.
+    // Spec anchor = design-frame ratio (not hard px): x = w*16/1672,
+    // stack hangs from y = h*72/941, HP label sits on the bar.
     expect(hud.hpFill.x).toBeCloseTo(800 * (16 / 1672), 5)
     expect(hud.hpFill.y).toBeGreaterThan(600 * (72 / 941))
     expect(hud.hpFill.y).toBeLessThanOrEqual(600 * (72 / 941) + 40)
 
-    // Resize nhỏ hơn → vị trí dời theo viewport mới (flexible rule).
+    // Smaller resize -> position shifts with the new viewport (flexible rule).
     hud.layout(600, 360)
 
     expect(hud.hpFill.x).toBeCloseTo(600 * (16 / 1672), 5)

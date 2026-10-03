@@ -263,8 +263,21 @@ const maxJobSlots = computed(() => {
   return gameManager.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
 })
 
+// Same admission the domain checks first (GameManagerAlchemyOps fails
+// closed with 'room_not_built'): without a pill-room instance there is
+// no furnace, so the surface must block brew the same way.
+const pillRoomBuilt = computed(() => {
+  stateVersion.value
+
+  return Boolean(gameManager.buildingManager.getByBuildingId('pill_room'))
+})
+
 const canBrew = computed(() => {
   stateVersion.value
+
+  if (!pillRoomBuilt.value) {
+    return false
+  }
 
   if (!selectedRecipe.value || !selectedHerbId.value) {
     return false
@@ -301,6 +314,12 @@ const brewBlockReason = computed<string | null>(() => {
 
   if (!selectedRecipe.value) {
     return null
+  }
+
+  // Room gate first - matches the domain's own startAlchemyJob order
+  // (no instance -> room_not_built beats every material check).
+  if (!pillRoomBuilt.value) {
+    return 'room_not_built'
   }
 
   if (!selectedHerbId.value || !variantRows.value.find((row) => row.materialId === selectedHerbId.value)?.enough) {

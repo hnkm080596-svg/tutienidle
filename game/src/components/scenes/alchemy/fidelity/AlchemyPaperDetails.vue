@@ -27,7 +27,10 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
 </template>
 
 <style scoped>
-.alchemy-details { position:absolute; left:970px; top:154px; width:418px; height:575px; border:0 solid transparent; border-image-slice:300 fill; border-image-width:35px; padding:24px 28px 12px; display:flex; flex-direction:column; }
+/* Bottom padding must clear the 35px frame band painted inside the
+   border box - the last cost rows otherwise render on the paper's torn
+   edge (audit: 'Linh Thach' +9px, 'Thoi gian luyen' +36px overflow). */
+.alchemy-details { position:absolute; left:970px; top:154px; width:418px; height:575px; border:0 solid transparent; border-image-slice:300 fill; border-image-width:35px; padding:24px 28px 34px; display:flex; flex-direction:column; }
 .recipe-header { display:flex; gap:15px; align-items:center; padding-bottom:14px; border-bottom:1px solid #b39a6066; }
 .recipe-icon { width:53px; height:53px; padding:6px; border:1px solid #a6894c; border-radius:5px; background:#e5d5af; object-fit:contain; }
 .recipe-name { margin:0 0 7px; font-size:26px; font-weight:500; }

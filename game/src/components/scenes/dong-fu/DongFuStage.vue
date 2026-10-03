@@ -58,6 +58,14 @@ const surfaceOpen = computed(
 
 const feedbackOpen = ref(false)
 const boardOpen = ref(true)
+
+// Any mounted home overlay (left panel, character sheet, standalone
+// paper, building popover) sits in the same stacking context as the
+// home chrome but paints its paper around it - hide the board/quest
+// chip instead of letting them float on top of the overlay's rim.
+const homeOverlayOpen = computed(
+  () => Boolean(ui.leftPanelMode) || ui.characterOverlayOpen || Boolean(ui.standalonePanel) || Boolean(ui.activeBuildingPopoverId),
+)
 const notice = ref('')
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -363,6 +371,7 @@ function move(event: PointerEvent) {
         :selected="null"
         :wheel-open="ui.isCommandWheelOpen"
         :board-open="boardOpen"
+        :occluded="homeOverlayOpen"
         @action="onAction"
         @toggle-wheel="ui.toggleCommandWheel()"
         @toggle-board="boardOpen = !boardOpen"

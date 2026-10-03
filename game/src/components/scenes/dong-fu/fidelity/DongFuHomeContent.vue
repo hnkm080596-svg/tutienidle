@@ -11,13 +11,17 @@ import DongFuBoard from './DongFuBoard.vue'
 import DongFuArtFrame from './DongFuArtFrame.vue'
 import { DONG_FU_ART, symbolUrl, type DongFuUiModel } from './dongFuUi'
 
-defineProps<{
+withDefaults(defineProps<{
   model: DongFuUiModel
   notice: string
   selected: string | null
   wheelOpen: boolean
   boardOpen: boolean
-}>()
+  // True while a scene/panel overlay covers the home view - the board
+  // + quest chip live in the scene's own stacking context, so they
+  // otherwise paint THROUGH the overlay's transparent margins.
+  occluded?: boolean
+}>(), { occluded: false })
 const emit = defineEmits<{
   action: [id: string]
   toggleWheel: []
@@ -60,6 +64,7 @@ const { t } = useI18n()
     <template #utilities-extra><slot name="utilities-extra" /></template>
   </DongFuHud>
   <DongFuBoard
+    v-show="!occluded"
     :entries="model.opportunities"
     :open="boardOpen"
     @toggle="emit('toggleBoard')"
@@ -71,6 +76,7 @@ const { t } = useI18n()
   </div>
   <button
     v-if="model.quest"
+    v-show="!occluded"
     class="df-quest"
     data-hk-region="quest-tracker"
     :class="{ 'is-claimable': model.quest.claimable }"

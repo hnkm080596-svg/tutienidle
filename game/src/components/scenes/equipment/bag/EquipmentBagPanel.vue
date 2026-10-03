@@ -42,8 +42,12 @@ const panelSlice = computed(() => chromeSlice('surface-m-panel'))
   z-index: 2;
 }
 
-.equipment-bag-panel__grid {
+.equipment-bag-panel .equipment-bag-panel__grid {
   height: 100%;
   min-height: 0;
+  /* surface-m-panel paints a 32px trim on the right edge; the bag's
+     own 8px padding left filter/header counts rendering on the rim.
+     Compound selector wins over BagGrid's padding shorthand. */
+  padding-right: 24px;
 }
 </style>
