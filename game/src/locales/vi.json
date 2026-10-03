@@ -480,12 +480,12 @@
       },
       "paperdoll": {
         "slots": {
-          "helmet": "Mũ",
-          "necklace": "Vòng cổ",
-          "ring": "Nhẫn",
-          "weapon": "Vũ khí",
-          "armor": "Giáp",
-          "boots": "Giày"
+          "helmet": "Đạo Quan",
+          "necklace": "Linh Châu",
+          "ring": "Linh Giới",
+          "weapon": "Vũ Khí",
+          "armor": "Đạo Bào",
+          "boots": "Đạo Hài"
         }
       },
       "search": {
@@ -1945,7 +1945,7 @@
     "technique": "Tâm Pháp",
     "body": "Luyện Thể",
     "alchemy": "Đan Phòng",
-    "equipment": "Khí Đường",
+    "equipment": "Trang Bị",
     "exploration": "Thám Hiểm",
     "quest": "Nhiệm Vụ",
     "settings": "Cài Đặt"
@@ -2064,7 +2064,7 @@
     "bag": "Túi Trang Bị",
     "sort": "Sắp Xếp",
     "filter": "Lọc",
-    "forgeTitle": "Lò Rèn",
+    "forgeTitle": "Khí Đường · Rèn Trang Bị",
     "stats": {
       "hp": "Khí Huyết",
       "attack": "Công Kích",

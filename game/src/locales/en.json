@@ -480,12 +480,12 @@
       },
       "paperdoll": {
         "slots": {
-          "helmet": "Helm",
-          "necklace": "Necklace",
-          "ring": "Ring",
+          "helmet": "Dao Crown",
+          "necklace": "Spirit Pearl",
+          "ring": "Spirit Ring",
           "weapon": "Weapon",
-          "armor": "Armor",
-          "boots": "Boots"
+          "armor": "Dao Robe",
+          "boots": "Dao Boots"
         }
       },
       "search": {
@@ -1945,7 +1945,7 @@
     "technique": "Techniques",
     "body": "Body",
     "alchemy": "Pill Room",
-    "equipment": "Equipment Hall",
+    "equipment": "Equipment",
     "exploration": "Expedition",
     "quest": "Quests",
     "settings": "Settings"
@@ -2064,7 +2064,7 @@
     "bag": "Gear Stash",
     "sort": "Sort",
     "filter": "Filter",
-    "forgeTitle": "Forge",
+    "forgeTitle": "Qi Forge · Gear Refining",
     "stats": {
       "hp": "Health",
       "attack": "Attack",
