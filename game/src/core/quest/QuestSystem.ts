@@ -52,17 +52,31 @@ function isUnlocked(quest: Quest, player: PlayerData, manager: QuestManager): bo
   // never activate, and the reconcile inverse pass deactivates stale
   // progress for them automatically.
   //
-  // Chain clause (mainline): a quest gated by unlocksAfterQuestId stays
-  // locked until its predecessor sits in completedOnceIds - the durable
-  // witness written exactly once at claim.
+  // Progression gates (requiredRealmId, unlocksAfterQuestId) gate NEW
+  // ADMISSION only - an entry already in `active` is judged by
+  // staysLive() instead. Chain clause (mainline): a quest gated by
+  // unlocksAfterQuestId stays locked until its predecessor sits in
+  // completedOnceIds - the durable witness written exactly once at claim.
   return (
-    isBetaQuestEnabled(quest) &&
+    staysLive(quest) &&
     (!quest.requiredRealmId ||
       getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)) &&
     (quest.unlocksAfterQuestId === undefined ||
-      manager.isCompletedOnce(quest.unlocksAfterQuestId)) &&
-    !questIsTokenOnlySource(quest)
+      manager.isCompletedOnce(quest.unlocksAfterQuestId))
   )
+}
+
+// Retention predicate for the reconcile inverse pass. An in-flight,
+// progress-bearing row is never evicted by a progression gate: the chain
+// gate guards admission only (a pre-fold carried save keeps its partial
+// collect progress until the chain reaches it), and a realm gate added
+// after a save was written must not wipe that save's in-flight work
+// either - the row stays and completes at the gated realm. Only
+// product-level retirement still evicts: scope-hidden quests (BETA
+// SCOPE LOCK v2 sec.15) and suppressed token-faucet quests have no live
+// counter left at all.
+function staysLive(quest: Quest): boolean {
+  return isBetaQuestEnabled(quest) && !questIsTokenOnlySource(quest)
 }
 
 // M-F-COMPANION-GIFT - a quest whose ENTIRE reward set is censused
@@ -117,15 +131,16 @@ export class QuestSystem {
       manager.ensureActive(quest)
     }
 
-    // P7-M9 - the inverse pass: a quest whose gate is no longer
-    // satisfied must not keep stale active progress (e.g. restored from
-    // a save written before its realm gate existed). Dropping it here -
-    // the same lifecycle seam that activates - keeps progress events and
-    // claims ineligible without touching their player-free signatures.
-    // Progress re-arms from zero if the quest ever becomes eligible
-    // again; 'once' completions are tracked separately and unaffected.
+    // P7-M9 - the inverse pass, narrowed to product retirement
+    // (QA-2026-10-03-1): only a quest the product itself no longer
+    // offers (scope-hidden or suppressed token faucet) loses its
+    // active row here. Progression gates no longer evict - an
+    // in-flight row stays live until claimed (e.g. a carried save's
+    // fold-in collect quest keeps its progress until the chain
+    // reaches it). 'once' completions are tracked separately in
+    // completedOnceIds and are unaffected.
     for (const progress of [...manager.getActive()]) {
-      if (registry.has(progress.questId) && !isUnlocked(registry.get(progress.questId), player, manager)) {
+      if (registry.has(progress.questId) && !staysLive(registry.get(progress.questId))) {
         manager.deactivate(progress.questId)
       }
     }

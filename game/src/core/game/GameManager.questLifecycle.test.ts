@@ -33,7 +33,13 @@ function makeManager(): { manager: GameManager; player: PlayerData } {
 
 describe('GameManager quest lifecycle wiring (AR-09)', () => {
   it('kill counts on a fresh session BEFORE any QuestPanel read', () => {
-    const { manager } = makeManager()
+    const { manager, player } = makeManager()
+
+    // kill_wild_wolf_10 is realm-gated to qi_refining (F2 fix - it
+    // auto-admitted at mortal creation as a dead 0/10 row while its
+    // target only spawns in the Quat stages); the fixture bumps the
+    // realm so the same no-UI counting seam stays exercised.
+    player.realmId = 'qi_refining'
 
     // No getActiveQuests() call anywhere in this test. The first update
     // tick is the boot-time reconciliation trigger.

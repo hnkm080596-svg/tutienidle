@@ -686,6 +686,20 @@ describe('validateGameSaveShape — quests slice (Mission A1)', () => {
     expect(pathsOf(result)).toContain('.quests.completedOnceIds')
   })
 
+  it('từ chối quests.completedOnceIds trùng lặp (markCompletedOnce dedupe - không sản xuất được)', () => {
+    const save = validSave()
+
+    save.quests = {
+      ...validQuests(),
+      completedOnceIds: ['once_quest_a', 'once_quest_a'],
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('.quests.completedOnceIds')
+  })
+
   it.each([Number.NaN, -1, 'x'])(
     'từ chối quests.lastDailyResetAtMs = %s',
     (value) => {

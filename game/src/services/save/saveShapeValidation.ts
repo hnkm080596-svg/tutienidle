@@ -3059,11 +3059,15 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
     }
   }
 
+  // Same dedup-string rule as questFlags: the writer
+  // (QuestManager.markCompletedOnce) dedups at the seam, so a duplicated
+  // id is unproducible.
   if (
     !Array.isArray(value.completedOnceIds) ||
-    !value.completedOnceIds.every((id) => typeof id === 'string')
+    !value.completedOnceIds.every((id) => typeof id === 'string') ||
+    new Set(value.completedOnceIds).size !== value.completedOnceIds.length
   ) {
-    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[]' })
+    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[] không trùng lặp' })
   }
 
   // Mainline flag witness (kind:'flag' quests): optional slice - saves

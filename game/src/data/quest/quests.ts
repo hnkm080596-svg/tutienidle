@@ -79,7 +79,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_07_ngu_hanh_nhap_mon',
     name: 'Ngũ Hành Nhập Môn',
-    description: 'Đạt Phàm Nhân tầng 12 rồi làm lễ Quán Khí chọn một hành. Sau khi nhập môn, săn 5 Dã Lang nơi Thanh Vân Lâm.',
+    description: 'Đạt Phàm Nhân tầng 12 rồi làm lễ Quán Khí chọn một hành. Sau khi nhập môn, săn 5 Dã Lang nơi Quật 1–3.',
     condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 5 },
     reward: { reward: { spiritStone: 30, cultivation: 150, skillInsight: 5 } },
     cadence: 'once',
@@ -114,9 +114,14 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_10_dan_lo_so_khai',
     name: 'Đan Lò Sơ Khai',
-    description: 'Vào Đan Phòng, luyện thành công 1 viên Tụ Linh Đan.',
+    description: 'Vào Đan Phòng, luyện chế thành công một viên đan dược bất kỳ.',
     condition: { kind: 'flag', flagId: QUEST_FLAG_ALCHEMY_CRAFTED, amount: 1 },
-    reward: { reward: { spiritStone: 30 } },
+    reward: {
+      reward: { spiritStone: 30 },
+      // Design sec.1 row 10: one qi-refining Tu Linh Dan lands as a pill
+      // itemDrop (claim() pill branch handles bag overflow).
+      itemDrops: [{ kind: 'pill', itemId: 'tu_linh_dan_qi_refining', amount: 1 }],
+    },
     cadence: 'once',
     chainId: 'mainline',
     unlocksAfterQuestId: 'collect_tu_linh_thao_1',
@@ -180,12 +185,18 @@ export const QUESTS: Quest[] = [
   // the entries are removed, not just scope-hidden, so saves holding
   // their progress simply find no active quest to resume.
   {
+    // wild_wolf only spawns in the qi_refining Quat stages - ungated,
+    // the quest auto-admitted at mortal creation as a dead 0/10 row.
+    // The realm gate keeps it admission-gated to Act II; a carried save
+    // that already holds it active retains the row (inverse pass only
+    // retires product-dead quests) so it stays finishable at qi_refining.
     id: 'kill_wild_wolf_10',
     name: 'Tiêu Diệt Dã Lang',
     description: 'Đánh bại 10 Dã Lang.',
     condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 10 },
     reward: { reward: { spiritStone: 25 } },
     cadence: 'once',
+    requiredRealmId: 'qi_refining',
   },
   // Trúc Cơ content pass M1 (2026-08-29) — 5 quest chuỗi Trúc Cơ,
   // tham chiếu quái `foundation_*` mới (data/enemy/Enemies.ts) + sink

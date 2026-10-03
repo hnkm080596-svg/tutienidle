@@ -170,8 +170,12 @@ export class QuestManager {
             }))
         : [],
 
+      // Same normalize contract as questFlags below - type-filter plus
+      // dedup (markCompletedOnce dedups at the seam, so a bypassed
+      // payload's duplicated id is unproducible and must not
+      // self-replicate into future saves).
       completedOnceIds: Array.isArray(state.completedOnceIds)
-        ? state.completedOnceIds.filter((id) => typeof id === 'string')
+        ? [...new Set(state.completedOnceIds.filter((id) => typeof id === 'string'))]
         : [],
 
       lastDailyResetAtMs:

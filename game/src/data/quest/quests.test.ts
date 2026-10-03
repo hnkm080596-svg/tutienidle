@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { QUESTS } from './quests'
 import { ENEMIES } from '../enemy/Enemies'
+import { pills } from '../pill/pills'
 import { QUEST_FLAG_IDS } from '../../core/quest/Quest'
 
 describe('foundation quests', () => {
@@ -127,5 +128,34 @@ describe('mainline (chính tuyến) chain data', () => {
         expect(knownFlags.has(quest.condition.flagId)).toBe(true)
       }
     }
+  })
+
+  // F3 - design sec.1 row 10: the claim pays SS 30 plus one qi-refining
+  // Tu Linh Dan as a pill itemDrop; the id must resolve in the catalog.
+  it('main_10 reward itemDrop resolves in the pill catalog', () => {
+    const pillIds = new Set(pills.map((pill) => pill.id))
+    const main10 = mainline.find((quest) => quest.id === 'main_10_dan_lo_so_khai')
+    const drops = main10?.reward.itemDrops ?? []
+    expect(drops).toContainEqual({
+      kind: 'pill',
+      itemId: 'tu_linh_dan_qi_refining',
+      amount: 1,
+    })
+    for (const drop of drops) {
+      if (drop.kind === 'pill') {
+        expect(pillIds.has(drop.itemId)).toBe(true)
+      }
+    }
+  })
+})
+
+describe('standalone once quests', () => {
+  // F2 - wild_wolf only spawns in the qi_refining Quat stages, so the
+  // quest is realm-gated: no more dead 0/10 row admitted at mortal
+  // creation. A carried mortal save keeps its in-flight row (the
+  // reconcile inverse pass never evicts on progression gates).
+  it('kill_wild_wolf_10 is realm-gated to qi_refining', () => {
+    const wolf = QUESTS.find((quest) => quest.id === 'kill_wild_wolf_10')
+    expect(wolf?.requiredRealmId).toBe('qi_refining')
   })
 })
