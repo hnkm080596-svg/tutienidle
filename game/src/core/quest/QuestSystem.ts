@@ -1,4 +1,4 @@
-import type { Quest, QuestCondition } from './Quest'
+import type { Quest, QuestCondition, QuestItemReward } from './Quest'
 import type { QuestRegistry } from './QuestRegistry'
 import type { QuestManager } from './QuestManager'
 import type { QuestProgress } from './QuestProgress'
@@ -77,6 +77,64 @@ function isUnlocked(quest: Quest, player: PlayerData, manager: QuestManager): bo
 // counter left at all.
 function staysLive(quest: Quest): boolean {
   return isBetaQuestEnabled(quest) && !questIsTokenOnlySource(quest)
+}
+
+/**
+ * BETA FE-CONTRACT (work-order sec.4B) - the ONE ReleasePolicy
+ * admission predicate for a quest item-drop reward line. claim()
+ * applies it before delivering a drop; the quest read-model emits only
+ * admitted lines as the reward preview. A line this rejects is never
+ * previewed and never delivered - the frontend never reconstructs
+ * admission itself (A9: same predicates, never a second copy).
+ * Unknown item ids fail closed.
+ */
+export function isQuestRewardDropAdmitted(
+  drop: QuestItemReward,
+  registries: Pick<QuestBagDeps, 'materialRegistry' | 'pillRegistry'>,
+  playerRealmId: string | undefined,
+): boolean {
+  if (drop.kind === 'material') {
+    if (!registries.materialRegistry.has(drop.itemId)) {
+      return false
+    }
+
+    const template = registries.materialRegistry.get(drop.itemId)
+
+    // M-F-CEILING - breakthrough-scoped reward stays dormant while
+    // release policy closes the transition into its tagged realm.
+    if (!isBreakthroughAcquisitionEnabled(template.breakthroughRealmId)) {
+      return false
+    }
+
+    // M-F-COMPANION-GIFT - censused pull-token reward lines stay dormant
+    // while the pull pool is closed; sibling lines still land.
+    if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
+      return false
+    }
+
+    // M-F-ARTIFACT-DEFER - domain-scoped reward materials
+    // (doan_bao_thach) compose the window+reach rule against the
+    // claiming player's realm - same gate as grantResolvedDrops.
+    if (!isDomainScopedAcquisitionEnabled(template.domainUnlockRealmId, playerRealmId)) {
+      return false
+    }
+
+    return true
+  }
+
+  if (drop.kind === 'pill') {
+    if (!registries.pillRegistry.has(drop.itemId)) {
+      return false
+    }
+
+    // M-F-CEILING - same release-policy suppression as the material
+    // branch above.
+    return isBreakthroughAcquisitionEnabled(
+      registries.pillRegistry.get(drop.itemId).breakthroughRealmId,
+    )
+  }
+
+  return false
 }
 
 // M-F-COMPANION-GIFT - a quest whose ENTIRE reward set is censused
@@ -258,28 +316,16 @@ export class QuestSystem {
     for (const drop of quest.reward.itemDrops ?? []) {
       const amount = drop.amount ?? 1
 
+      // sec.4B - ONE admission predicate shared with the quest surface
+      // read-model (release windows, pull-token suppression, domain
+      // scoping, unknown ids) - this loop never re-derives policy.
+      if (!isQuestRewardDropAdmitted(drop, bags, bags.playerRealmId)) {
+        continue
+      }
+
       if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
         // 9.8 — tràn túi: quest chỉ tính delivered; push toast khi có sink.
         const template: Material = bags.materialRegistry.get(drop.itemId)
-
-        // M-F-CEILING - a breakthrough-scoped reward stays dormant while
-        // release policy closes the transition into its tagged realm.
-        if (!isBreakthroughAcquisitionEnabled(template.breakthroughRealmId)) {
-          continue
-        }
-
-        // M-F-COMPANION-GIFT - censused pull-token reward lines stay
-        // dormant while the pull pool is closed; sibling lines still land.
-        if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
-          continue
-        }
-
-        // M-F-ARTIFACT-DEFER - domain-scoped reward materials (doan_bao_thach)
-        // additionally compose the window+reach rule against the claiming
-        // player's realm - same gate as grantResolvedDrops.
-        if (!isDomainScopedAcquisitionEnabled(template.domainUnlockRealmId, bags.playerRealmId)) {
-          continue
-        }
 
         const overflow = bags.materialBag.add(template, amount)
 
@@ -316,12 +362,6 @@ export class QuestSystem {
         // R9 (AR-34) - pill drops surface the delivery receipt too: quest
         // rewards must not silently lose pills to a full bag.
         const pillTemplate = bags.pillRegistry.get(drop.itemId)
-
-        // M-F-CEILING - same release-policy suppression as the material
-        // branch above.
-        if (!isBreakthroughAcquisitionEnabled(pillTemplate.breakthroughRealmId)) {
-          continue
-        }
 
         const pillOverflow = bags.pillBag.add(pillTemplate, amount)
 

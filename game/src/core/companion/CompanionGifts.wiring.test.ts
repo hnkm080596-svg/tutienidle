@@ -52,14 +52,19 @@ function makeActive(
   return {
     targetRealmId,
     grade,
+    breakthroughType: 'normal',
     chapterIndex: 0,
     chaptersTotal: 1,
     chapterName: '',
+    chapterNames: [''],
     state,
     currentQuestion: null,
     questionSecondsRemaining: 0,
     questionSecondsLimit: 0,
     secondsRemaining: 0,
+    lightningStrikesTaken: 0,
+    hp: 1,
+    maxHp: 1,
   } as ActiveTribulationState
 }
 

@@ -21,7 +21,7 @@ const isVisible = () => props.variant === 'dot' || (props.count ?? 0) > 0
 
 <template>
   <span v-if="isVisible()" class="notification-badge" :class="`notification-badge--${variant}`">
-    <InkNineSlice asset-id="frame-xs-ink-line" layer="frame" />
+    <InkNineSlice asset-id="frame-xs-ink-line" layer="frame" tint-var="--hk-cinnabar-bright" />
     <span v-if="variant === 'count'" class="notification-badge__count">{{ displayCount() }}</span>
   </span>
 </template>
@@ -33,11 +33,11 @@ const isVisible = () => props.variant === 'dot' || (props.count ?? 0) > 0
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--crimson);
+  background: var(--hk-cinnabar);
   border: 0;
-  border-radius: 999px;
-  color: #fff;
-  font-family: var(--font-body);
+  border-radius: var(--hk-radius-pill);
+  color: var(--hk-text-primary);
+  font-family: var(--hk-font-ui);
   font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1;

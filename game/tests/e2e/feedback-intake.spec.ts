@@ -27,6 +27,10 @@ test.describe('feedback intake dialog', () => {
     await enterHome(page)
 
     await openSettings(page)
+    // Scene 17 seal nav: the feedback entry lives in the support section.
+    const supportSeal = page.locator('.settings-panel__nav-seal[data-section="support"]')
+    await expect(supportSeal).toBeVisible({ timeout: 10_000 })
+    await supportSeal.click()
     const feedbackButton = page.getByTestId('settings-feedback-button')
     await expect(feedbackButton).toBeVisible({ timeout: 10_000 })
     await feedbackButton.click()

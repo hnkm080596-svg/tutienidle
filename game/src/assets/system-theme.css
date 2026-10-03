@@ -313,12 +313,6 @@ section.overlay-panel__card--system .realm-node__index {
   font-variant-numeric: tabular-nums;
 }
 
-/* Task 4 - ink-drawer surfaces opted into the sys recipe. .sys-surface already
-   outranks the global .ink-drawer on source order; this pins the ink frame
-   image off explicitly. The --paper-* remap stays authoritative for drawer
-   descendants (plan Task 4 constraint - interiors restyle via .sys-* only). */
-.sys-surface.ink-drawer { border-image: none; }
-
 /* CharacterDetailCard opted into sys-surface: its scoped card rules are
    (0,2,0), so this anchor carries the element for (0,2,1) to re-assert the
    recipe where the scoped class competes (background/border/shadow/color). */

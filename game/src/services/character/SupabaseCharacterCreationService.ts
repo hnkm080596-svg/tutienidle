@@ -5,6 +5,7 @@ import { resolveSupabaseSession, type StoredSupabaseSession } from '../supabase/
 import { requestSupabase, SupabaseHttpError } from '../supabase/SupabaseHttp'
 import { parseRemoteCharacterMetadata, type RemoteCharacterMetadata } from '../session/BackendStatus'
 import {
+  CHARACTER_CREATION_ROLL_SIZE,
   validateCharacterCreationDraft,
   type CharacterCreationDraft,
   type CharacterCreationResult,
@@ -66,11 +67,13 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
     // Beta scope: the server roll is the offer authority, but the
     // client boundary still admits only beta talents - a stale or
     // drifted server-side catalog can never surface an out-of-scope
-    // pick to the UI or to validateDraft.
-    this.availableTalentIds = new Set(
-      response.talents.filter(talent => isBetaCreationTalentId(talent.id)).map(talent => talent.id),
-    )
-    return response.talents.filter(talent => isBetaCreationTalentId(talent.id))
+    // pick to the UI or to validateDraft. Offer = first ROLL_SIZE of the
+    // admitted roll (same weighted-no-replacement semantics as a 3-roll).
+    const offered = response.talents
+      .filter(talent => isBetaCreationTalentId(talent.id))
+      .slice(0, CHARACTER_CREATION_ROLL_SIZE)
+    this.availableTalentIds = new Set(offered.map(talent => talent.id))
+    return offered
   }
 
   async checkNameAvailable(name: string): Promise<boolean> {

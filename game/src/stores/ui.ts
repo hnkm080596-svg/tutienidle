@@ -47,16 +47,16 @@ import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/pa
 // Phù/Trận legacy khai tử — bag chỉ còn 3 tab.
 export type BagTab = 'equipment' | 'material' | 'pill'
 // 'passive' đã gỡ (2026-08-20) — 9 ô Passive Cảnh Giới dời sang
-// CharacterPanel.vue (useRealmStatPassives.ts).
+// RealmPanel.vue (useRealmStatPassives.ts).
 
 // Ky Nang overlay dung DOC LAP voi LeftPanel (2026-08-20) -
 // SkillPathPanel.vue, cung pattern BreakthroughRequirementPanel.vue
 // (overlay toan man hinh, mount thang trong GameRoot.vue, KHONG qua
 // leftPanelMode). Union rieng (khong gop vao LeftPanelMode) vi panel
 // nay khong thuoc nhom "trang chuc nang chiem 100% panel trai" o dau
-// file. P7-M7 - 'technique'/'luyen_the' da go: canonical technique
-// hien thi trong SkillPathPanel's TechniqueBand, body progression
-// trong RealmPanel's body sections.
+// file. Huyen Kim P6 - 'technique' lai mo thanh standalone
+// (TechniquePanel.vue) cung 'body' (BodyPanel.vue); canonical
+// technique surface da roi SkillPathPanel sang scene rieng.
 //
 // Realm Passive & Pressure System (2026-08-20) — 'realm'
 // (RealmPanel.vue, kế thừa RealmPassivePanel.vue đã gỡ — tách khỏi
@@ -124,6 +124,11 @@ export const useUiStore = defineStore('ui', {
     leftPanelMode: null as LeftPanelMode,
 
     characterOverlayOpen: false,
+
+    // Which imperial scroll the home overlay currently shows:
+    // 'character' (scene 04) or 'inventory' (scene 09). The boolean above
+    // keeps governing whether the overlay is open at all.
+    characterSceneTab: 'character' as 'character' | 'inventory',
 
     // Detail stat card - small card docked at the right edge of the
     // Character drawer (LeftPanel), toggled by a button in
@@ -211,11 +216,14 @@ export const useUiStore = defineStore('ui', {
       }
 
       if (mode === 'character' || mode === 'inventory') {
-        const shouldClose = this.characterOverlayOpen
+        const shouldClose =
+          this.characterOverlayOpen && this.characterSceneTab === mode
         this.closeHomeOverlays()
         this.characterOverlayOpen = !shouldClose
-        if (this.characterOverlayOpen) this.activeBagTab = 'equipment'
-        else this.characterDetailOpen = false
+        if (this.characterOverlayOpen) {
+          this.characterSceneTab = mode
+          this.activeBagTab = 'equipment'
+        } else this.characterDetailOpen = false
         return
       }
       const shouldClose = this.leftPanelMode === mode
@@ -236,6 +244,7 @@ export const useUiStore = defineStore('ui', {
       if (mode === 'character' || mode === 'inventory') {
         this.closeHomeOverlays()
         this.characterOverlayOpen = true
+        this.characterSceneTab = mode
         this.activeBagTab = 'equipment'
         return
       }

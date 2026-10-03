@@ -32,12 +32,25 @@
   },
   "panels": {
     "equipmentHall": {
+      "bagRail": {
+        "title": "Túi Trang Bị",
+        "empty": "Chưa có trang bị dự trữ"
+      },
       "tabs": {
         "enhance": "Cường Hóa",
         "wash": "Tẩy Luyện",
         "refine": "Tinh Luyện",
         "dissolve": "Hóa Luyện",
         "decompose": "Phân Giải"
+      },
+      "rail": {
+        "aria": "Điều khiển trang bị"
+      },
+      "scene": {
+        "equip": "Trang Bị",
+        "unequip": "Tháo",
+        "equipped": "Đã Mặc",
+        "starsAria": "Phẩm chất {rank}/{total}"
       },
       "aria": {
         "enhanceSlots": "Chọn slot cường hóa",
@@ -182,7 +195,18 @@
         "heroLabel": "Tâm Pháp",
         "emptyNoBonus": "Không có thông tin bổ sung",
         "emptyNoTechnique": "Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận",
-        "gradeAction": "Nâng Cảnh"
+        "gradeAction": "Nâng Cảnh",
+        "gradeNode": "Phẩm {grade}",
+        "cardTitle": "Công Pháp",
+        "helpAria": "Trợ giúp công pháp",
+        "qualityLine": "Phẩm: {quality}",
+        "gradeTrackTitle": "Cảnh Giới Công Pháp",
+        "rankLine": "Cảnh {grade} · Cấp {rank}",
+        "materialsTitle": "Nguyên Liệu Cần",
+        "reasonGradeCeiling": "Đã đạt phẩm tối đa",
+        "reasonRealmGate": "Cần cảnh giới cao hơn",
+        "reasonInsufficientMaterial": "Không đủ nguyên liệu",
+        "reasonBusy": "Đang bận — thử lại sau"
       },
       "colTitles": {
         "activeArts": "Pháp Thuật Đang Vận Hành"
@@ -264,7 +288,10 @@
         "attribute": "Thuộc Tính",
         "defenseAdvanced": "Phòng Thủ Nâng Cao",
         "elements": "Ngũ Hành",
-        "talents": "Thiên Phú"
+        "talents": "Thiên Phú",
+        "mainStats": "Thuộc Tính Chính",
+        "elementSummary": "Ngũ Hành Tóm Tắt",
+        "derivedStats": "Thuộc Tính Phụ"
       },
       "actions": {
         "quanKhi": "Quán Khí",
@@ -280,7 +307,8 @@
       "tooltips": {
         "elementStat": "Power {power} · Kháng {resistance} · Xuyên {penetration}",
         "primordialTitle": "Hỗn Nguyên",
-        "primordialStat": "Power {power} · Bỏ qua mọi phòng thủ."
+        "primordialStat": "Power {power} · Bỏ qua mọi phòng thủ.",
+        "elementShare": "{share}% tổng ngũ hành lực."
       }
     },
     "quanKhi": {
@@ -368,7 +396,9 @@
         "eliteChance": "{percent}% Tinh Anh"
       },
       "sections": {
-        "selectFloor": "Chọn tầng"
+        "selectFloor": "Chọn tầng",
+        "enemies": "Địch Xuất Hiện",
+        "rewards": "Thưởng Vượt Ải"
       },
       "empty": {
         "noStages": "Khu vực này chưa có tầng chiến đấu.",
@@ -400,6 +430,17 @@
         "ranged": "Tầm xa",
         "caster": "Pháp thuật",
         "tank": "Hộ vệ"
+      },
+      "progress": {
+        "title": "Tiến Độ Thám Hiểm: {zone}"
+      },
+      "rewards": {
+        "kinds": {
+          "material": "Vật Liệu",
+          "equipment": "Trang Bị",
+          "equipmentAny": "Trang Bị Ngẫu Nhiên",
+          "pill": "Đan Dược"
+        }
       }
     },
     "wheel": {
@@ -585,6 +626,17 @@
       "tierLine": "{realm} · Tầng {level}",
       "cultivationUnit": "Tu Vi",
       "rateEta": "+{rate} {unit}/giây · còn ~{eta}",
+      "tierOf": "Tầng {level}/{max}",
+      "sections": {
+        "progress": "Tu Luyện Tiến Độ",
+        "passives": "Thiên Phú Cảnh Giới ({realm})",
+        "requirements": "Điều Kiện Đột Phá {target}"
+      },
+      "meta": {
+        "rateLabel": "Tốc Độ Tu Luyện",
+        "etaLabel": "Ước Tính Tầng Sau",
+        "rateValue": "{rate} {unit}/giây"
+      },
       "labels": {
         "quanKhi": "Quán Khí",
         "foundation": "Trúc Cơ",
@@ -595,7 +647,8 @@
         "comingSoon": "Sắp ra mắt",
         "current": "Đang tu hành",
         "unlocked": "Đã đạt",
-        "locked": "Chưa mở"
+        "locked": "Chưa mở",
+        "next": "Kế tiếp"
       },
       "requirements": {
         "level": "{realm} tầng {level}",
@@ -655,6 +708,10 @@
         "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
         "stepCost": "Giá bước kế: {cost}",
         "complete": "Đại Chu Thiên đã viên mãn."
+      },
+      "body": {
+        "title": "Đạo Thể — Kinh Mạch",
+        "navAria": "Chương Đạo Thể"
       }
     },
     "settings": {
@@ -718,7 +775,10 @@
         "account": "Tài Khoản",
         "accountAria": "Tài khoản",
         "feedback": "Phản Hồi",
-        "feedbackAria": "Phản hồi beta"
+        "feedbackAria": "Phản hồi beta",
+        "display": "Hiển Thị",
+        "support": "Hỗ Trợ",
+        "navAria": "Mục cài đặt"
       },
       "update": {
         "title": "Cập Nhật",
@@ -780,6 +840,21 @@
       "lockedRealm": "Đạt cảnh giới: {realm}",
       "flags": {
         "alchemyCrafted": "Luyện chế đan dược"
+      },
+      "tabs": {
+        "all": "Tất Cả"
+      },
+      "cadence": {
+        "once": "Một Lần"
+      },
+      "scene": {
+        "tabsAria": "Nhóm nhiệm vụ",
+        "railAria": "Danh sách nhiệm vụ",
+        "objectives": "Mục Tiêu Nhiệm Vụ",
+        "rewardsTitle": "Thưởng Nhiệm Vụ",
+        "turnIn": "Nộp {name}",
+        "done": "Đã hoàn thành",
+        "reasonIncomplete": "Chưa đủ tiến độ mục tiêu."
       }
     },
     "buildingPopover": {
@@ -790,6 +865,10 @@
       "close": "Đóng",
       "confirm": "Xác Nhận",
       "cancel": "Hủy"
+    },
+    "hkNav": {
+      "aria": "Điều hướng chức năng",
+      "body": "Đạo Thể"
     },
     "decompose": {
       "labels": {
@@ -812,6 +891,47 @@
     "scripture": {
       "empty": "Chưa tìm thấy manh mối nào.",
       "emptyHint": "Manh mối ghi lại những chuyện xưa — rơi ra khi thám hiểm và chiến đấu."
+    },
+    "body": {
+      "help": "Ba chương đạo thể: rèn thân thể, khai thông kinh mạch, vận chuyển chân khí.",
+      "tierRailAria": "Bộ chọn tầng",
+      "chapters": {
+        "bodyRefinement": {
+          "subtitle": "Cường Hóa Thân Thể"
+        },
+        "meridian": {
+          "subtitle": "Khai Thông Kinh Mạch"
+        },
+        "zhouTian": {
+          "subtitle": "Vận Chuyển Chân Khí"
+        }
+      },
+      "chips": {
+        "tier": "Tầng {n}",
+        "meridian": "Mạch {n}",
+        "step": "Bước {n}",
+        "milestone": "Cột mốc"
+      },
+      "states": {
+        "locked": "Chưa mở",
+        "active": "Đang luyện",
+        "done": "Hoàn thành",
+        "realmLocked": "Chưa tới cảnh giới"
+      },
+      "sections": {
+        "gains": "Thuộc Tính Tăng",
+        "requirements": "Điều Kiện Luyện Thể"
+      },
+      "actions": {
+        "investRefinement": "Luyện Thể"
+      },
+      "unit": {
+        "tierTitle": "Tầng {tier} · {name}",
+        "stepTitle": "Bước {n} / {total}"
+      },
+      "zhouTian": {
+        "description": "Vận chuyển chân khí qua chu thiên; mỗi bước củng cố nền tảng thân thể."
+      }
     }
   },
   "workerLodge": {
@@ -957,7 +1077,14 @@
       "title": "★ THẮNG ★",
       "retry": "Đánh Lại",
       "retryCountdown": "{duration}",
-      "continue": "Tiếp Tục"
+      "continue": "Tiếp Tục",
+      "subtitle": "Trận Chiến Viên Mãn",
+      "flavor": "Yêu Ma đã bị trừ, thiên địa lại thanh minh.",
+      "growthEmpty": "Chưa có thu hoạch tu hành",
+      "sections": {
+        "rewards": "Phần Thưởng Nhận Được",
+        "growth": "Tăng Trưởng"
+      }
     },
     "defeat": {
       "title": "☠ THẤT BẠI",
@@ -966,7 +1093,10 @@
       "returnHome": "Về Động Phủ",
       "returnCountdown": "({duration})",
       "hintCultivate": "Tu vi chưa đủ — tu luyện thêm tầng, rồi quay lại khi đã mạnh hơn.",
-      "hintGear": "Chưa đủ sức phá bí cảnh — cường hóa trang bị, dùng đan dược hoặc lĩnh ngộ thêm trước khi tái chiến."
+      "hintGear": "Chưa đủ sức phá bí cảnh — cường hóa trang bị, dùng đan dược hoặc lĩnh ngộ thêm trước khi tái chiến.",
+      "subtitle": "Đạo tâm chưa vững, tiếp tục rèn luyện.",
+      "reasonHeader": "Nguyên Nhân Thất Bại",
+      "rewardsHeader": "Thưởng Nhận Được"
     },
     "log": {
       "toggle": "Nhật ký",
@@ -1058,6 +1188,8 @@
     "auth": {
       "eyebrow": "NHẤT NIỆM NHẬP ĐẠO",
       "lead": "Một đời phàm tục, một niệm cầu tiên.",
+      "wordmark": "Tu Tiên IDLE",
+      "showPassword": "Hiện mật khẩu",
       "tabs": {
         "login": "Đăng nhập",
         "register": "Đăng ký"
@@ -1077,12 +1209,10 @@
         "login": "Vào động phủ",
         "register": "Lập đạo danh"
       },
-      "divider": "hoặc",
       "guest": {
-        "button": "Chơi ngay",
+        "button": "Chơi khách",
         "note": "Tiến trình khách dừng tại Trúc Cơ"
       },
-      "status": "Máy chủ thử nghiệm · UI prototype",
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
       "language": "Ngôn ngữ",
@@ -1101,6 +1231,7 @@
       "headerTitle": "Tạo Nhân Vật",
       "nameStep": {
         "kicker": "ĐẠO DANH",
+        "sectionTitle": "Đạo Danh",
         "title": "Danh xưng theo suốt tiên đồ",
         "description": "Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.",
         "label": "Tên nhân vật",
@@ -1109,10 +1240,12 @@
       },
       "talentStep": {
         "kicker": "THIÊN MỆNH",
+        "sectionTitle": "Thiên Phú",
         "title": "Chọn một Thiên Phú",
         "selected": "Đã chọn {count} / 1",
         "rolling": "Đang quan sát thiên cơ…",
-        "reroll": "↻ Reroll toàn bộ",
+        "reroll": "↻ Đổi thiên phú",
+        "hint": "Chọn 1 thiên phú khởi đầu",
         "tags": {
           "combat": "Chiến Đấu",
           "crafting": "Chế Tạo",
@@ -1129,7 +1262,16 @@
       "errors": {
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
       },
-      "summary": "Đạo danh {name} · {talent}"
+      "summary": "Đạo danh {name} · {talent}",
+      "headerSubtitle": "MỘT BƯỚC TU TIÊN · VẠN DẶM SƠN HÀ",
+      "vistaBanner": "ĐẠO TÂM BẤT NHIỄM",
+      "starterSlot": {
+        "title": "Kỹ Năng Khởi Đầu",
+        "previewNote": "Bản duyệt UI · Lựa chọn kỹ năng chưa áp dụng vào game",
+        "pending": "Sẽ hiển thị sau khi chọn Thiên Phú"
+      },
+      "chooseOne": "Chọn một",
+      "hoverDetail": "Di chuột để xem chi tiết"
     }
   },
   "skillResource": {
@@ -1278,7 +1420,11 @@
       "resultVictory": "VƯỢT KIẾP",
       "resultDefeat": "KIẾP THẤT BẠI",
       "resultVictoryText": "Thiên kiếp tan biến — đạo tâm thêm vững.",
-      "resultDefeatText": "Thân hoại đạo tiêu — dưỡng thương rồi thử lại."
+      "resultDefeatText": "Thân hoại đạo tiêu — dưỡng thương rồi thử lại.",
+      "timeLeft": "Thời gian còn lại",
+      "realmCardTitle": "Độ Kiếp {name}",
+      "progressLabel": "Tiến độ",
+      "resolve": "Giữ vững đạo tâm — vượt qua tâm ma"
     }
   },
   "actionFailure": {
@@ -1367,7 +1513,22 @@
       "fallback": "Không thể bắt đầu luyện",
       "scope_hidden": "Đan phương này nằm ngoài phạm vi beta — chưa mở trong bản này"
     },
-    "outcomeNone": "Lần này không nhận được đan nào."
+    "outcomeNone": "Lần này không nhận được đan nào.",
+    "queueTitle": "Hàng Chờ Luyện Đan",
+    "queueEmpty": "Chưa có lò nào đang luyện.",
+    "placeIngredients": "Đặt nguyên liệu vào đan lô",
+    "bannerLeft": "Đan Đạo Thông Thiên",
+    "bannerRight": "Lô Hỏa Thuần Thanh",
+    "title": "Luyện Đan",
+    "subtitle": "Luyện linh thảo · Kết linh đan",
+    "navigation": "Chức năng",
+    "previewStamp": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
+    "cauldron": "Đan Lô",
+    "selectedHerb": "Dược thảo đã chọn",
+    "emptyRecipes": "Chưa có đan phương nào.",
+    "emptyDetail": "Chọn đan phương để xem chi tiết.",
+    "emptySlot": "Lò trống",
+    "durationLabel": "Thời gian luyện"
   },
   "layout": {
     "functionOverlay": {
@@ -1536,6 +1697,56 @@
     "commandWheel": {
       "openAria": "Mở bảng lệnh Động Phủ",
       "hint": "Bảng Lệnh · Tab"
+    },
+    "daoLuan": {
+      "center": "Tu Luyện"
+    },
+    "topBar": {
+      "aria": "Thanh trạng thái Động Phủ",
+      "identityAria": "Mở bảng Nhân Vật",
+      "cultivation": "Tiến độ tu vi",
+      "realmLine": "{realm} · Tầng {level}",
+      "feedback": "Thư",
+      "feedbackAria": "Hộp thư / phản hồi",
+      "bag": "Túi",
+      "bagAria": "Mở Túi Đồ",
+      "settings": "Cài",
+      "settingsAria": "Mở Cài Đặt"
+    },
+    "thienCo": {
+      "title": "Thiên Cơ Bảng",
+      "aria": "Thiên Cơ Bảng — việc đáng làm lúc này",
+      "empty": "Đạo tâm an nhiên — chưa có việc gấp.",
+      "collapse": "Thu gọn Thiên Cơ Bảng",
+      "breakthrough": {
+        "title": "Đột phá sẵn sàng",
+        "detail": "Tu vi đã đủ — mở Cảnh Giới để đột phá.",
+        "cta": "Đột phá"
+      },
+      "quest": {
+        "title": "Nhiệm vụ hoàn thành",
+        "detail": "{count} nhiệm vụ chờ nhận thưởng.",
+        "cta": "Nhận thưởng"
+      },
+      "ready": {
+        "title": "{name} sẵn sàng thu hoạch",
+        "detail": "Sản lượng đã đầy kho.",
+        "cta": "Thu hoạch"
+      },
+      "active": {
+        "title": "Đan phòng đang luyện",
+        "detail": "{count} mẻ · sớm nhất còn {minutes} phút.",
+        "cta": "Xem lò đan"
+      },
+      "upgradeable": {
+        "title": "{name} có thể nâng cấp",
+        "detail": "Đủ nguyên liệu cho cấp kế tiếp.",
+        "cta": "Nâng cấp"
+      },
+      "expand": "Mở Thiên Cơ Bảng"
+    },
+    "questTracker": {
+      "aria": "Nhiệm vụ đang theo dõi: {name}"
     }
   },
   "tutorial": {
@@ -1715,5 +1926,205 @@
     "title": "Hành Trình Beta Hoàn Tất",
     "body": "Hung Giao Sung đã ngã xuống — đạo hữu đã chinh phục toàn bộ nội dung beta: Phàm Nhân, Luyện Khí, Trúc Cơ. Cảm ơn đã đồng hành.",
     "continue": "Tiếp Tục Tu Luyện"
+  },
+  "dongFu": {
+    "aria": "Động Phủ",
+    "toggleWheel": "Ẩn / hiện vòng chức năng",
+    "buildingHint": "Chạm để xem",
+    "sceneTitle": "THANH VÂN ĐỘNG THIÊN",
+    "sceneSubtitle": "Một niệm thanh tĩnh · Vạn pháp quy nguyên",
+    "view": "Xem",
+    "unhandled": "Chức năng này chưa mở."
+  },
+  "paperNav": {
+    "navigation": "Chức năng",
+    "realm": "Cảnh Giới",
+    "character": "Nhân Vật",
+    "inventory": "Kho Vật",
+    "skill": "Kỹ Năng",
+    "technique": "Tâm Pháp",
+    "body": "Luyện Thể",
+    "alchemy": "Đan Phòng",
+    "equipment": "Khí Đường",
+    "exploration": "Thám Hiểm",
+    "quest": "Nhiệm Vụ",
+    "settings": "Cài Đặt"
+  },
+  "character": {
+    "mainStats": "Thuộc Tính Chính",
+    "points": "({count} điểm)",
+    "max": "MAX",
+    "allocate": "Cộng điểm",
+    "talent": "Thiên Phú",
+    "elements": "Ngũ Hành",
+    "path": "Đạo lộ",
+    "power": "Chiến Lực",
+    "details": "Chi Tiết",
+    "combat": "Chiến Đấu",
+    "other": "Khác",
+    "close": "Thu gọn chi tiết",
+    "open": "Mở chi tiết",
+    "statNotice": "{name}: {value}",
+    "elementNotice": "{name} · Lực {power} · Kháng {resistance} · Xuyên {penetration}"
+  },
+  "realm": {
+    "title": "ĐƯỜNG ĐĂNG TIÊN",
+    "subtitle": "Mười tám tầng\nMột đường đăng tiên",
+    "floorLabel": "Tầng {floor}",
+    "floorCount": "Tầng {floor} / {total}",
+    "cultivation": "Tu vi",
+    "breakthroughTitle": "Đột Phá {target}",
+    "viewing": "Đang xem mốc tầng {floor}"
+  },
+  "technique": {
+    "title": "Tâm Pháp",
+    "navigation": "Chức năng",
+    "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
+    "active": "TÂM PHÁP ĐANG TU LUYỆN",
+    "artifact": "Bí kíp tâm pháp",
+    "artifactAlt": "Bí kíp mở với nét mực và đường linh khí vàng",
+    "temporaryArt": "Minh họa tạm · Có thể thay theo tâm pháp",
+    "training": "Tiến Cảnh Tâm Pháp",
+    "mastery": "Độ thuần thục",
+    "advance": "Nâng Cảnh",
+    "current": "Hiện tại",
+    "target": "Kế tiếp",
+    "upgradeHint": "Tiếp nối con đường tu luyện, mở cảnh tiếp theo của tâm pháp.",
+    "materials": "Nguyên Liệu Cần",
+    "stageNotice": "Đang xem: {name}. Không thay đổi tiến trình tu luyện.",
+    "advanceNotice": "Tâm pháp đã lên {grade}."
+  },
+  "skill": {
+    "title": "Kỹ Năng",
+    "navigation": "Chức năng",
+    "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
+    "elements": "Ngũ Hành",
+    "tree": "Linh Mạch Kỹ Năng",
+    "levelLabel": "Cấp",
+    "grants": "Kỹ năng",
+    "effects": "Hiệu Ứng",
+    "conditions": "Điều Kiện",
+    "noConditions": "Không có điều kiện bổ sung.",
+    "state": {
+      "learned": "Đã Lĩnh Ngộ",
+      "available": "Có Thể Lĩnh Ngộ",
+      "locked": "Chưa Đủ Điều Kiện"
+    },
+    "actionDone": "{name} đã cập nhật.",
+    "actionFailed": "Không thể thực hiện — kiểm tra điều kiện và Cảm Ngộ."
+  },
+  "body": {
+    "title": "Luyện Thể",
+    "navigation": "Chức năng",
+    "chapters": "Các chương đạo thể",
+    "units": "Các mốc tu luyện",
+    "progress": "Tiến độ",
+    "gains": "Thông Tin Mốc",
+    "material": "Nguyên Liệu Cần",
+    "noGains": "Không có hiệu ứng bổ sung.",
+    "noCost": "Không tốn nguyên liệu.",
+    "empty": "Chưa có mốc nào.",
+    "state": {
+      "done": "Đã Đạt",
+      "current": "Hiện Tại",
+      "locked": "Chưa Mở"
+    },
+    "investDone": "Tu luyện thành công.",
+    "investUnavailable": "Chưa đủ điều kiện tu luyện.",
+    "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay"
+  },
+  "exploration": {
+    "title": "Thám Hiểm",
+    "navigation": "Chức năng",
+    "zones": "Địa Giới",
+    "progress": "Tiến Độ Thám Hiểm",
+    "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
+    "stageLabel": "{chapter} · Tầng {stage} · {state}",
+    "boss": "BOSS",
+    "enemies": "Địch Nhân",
+    "rewards": "Phần Thưởng",
+    "modes": "Chế Độ",
+    "empty": "Chọn một ải trên bản đồ.",
+    "noEnemy": "Không có tin tức địch.",
+    "startFailed": "Không thể bắt đầu. Kiểm tra lại điều kiện.",
+    "armedFarm": "Đang tự động: {stage}",
+    "state": {
+      "cleared": "Đã Phá",
+      "current": "Tiền Tuyến",
+      "available": "Có Thể Khiêu Chiến",
+      "locked": "Chưa Mở"
+    }
+  },
+  "equipment": {
+    "title": "Trang Bị",
+    "subtitle": "Linh khí hộ thân · Tiên lộ đồng hành",
+    "navigation": "Chức năng",
+    "previewStamp": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
+    "summary": "Thuộc Tính Trang Bị",
+    "bag": "Túi Trang Bị",
+    "sort": "Sắp Xếp",
+    "filter": "Lọc",
+    "forgeTitle": "Lò Rèn",
+    "stats": {
+      "hp": "Khí Huyết",
+      "attack": "Công Kích",
+      "defense": "Phòng Ngự"
+    },
+    "bagTabs": {
+      "all": "Tất Cả",
+      "weapons": "Vũ Khí",
+      "armor": "Phòng Cụ",
+      "accessories": "Phụ Kiện"
+    },
+    "workspace": {
+      "equip": "Trang Bị",
+      "bag": "Túi Đồ"
+    }
+  },
+  "inventoryPreview": {
+    "all": "Tất Cả",
+    "equipment": "Trang Bị",
+    "material": "Nguyên Liệu",
+    "pill": "Đan Dược",
+    "search": "Tìm kiếm",
+    "searchLabel": "Tìm trong túi đồ",
+    "sort": "Sắp Xếp",
+    "empty": "Túi đồ trống",
+    "count": "{n} món",
+    "details": "Chi Tiết",
+    "quality": "Phẩm chất",
+    "amount": "Số lượng",
+    "use": "Sử Dụng"
+  },
+  "questPreview": {
+    "all": "Tất Cả",
+    "once": "Một Lần",
+    "active": "Đang Làm",
+    "ready": "Hoàn Thành",
+    "claimed": "Đã Nhận",
+    "empty": "Chưa có nhiệm vụ",
+    "objectives": "Mục Tiêu",
+    "claim": "Nhận Thưởng",
+    "follow": "Theo Dõi"
+  },
+  "settingsPreview": {
+    "title": "Cài Đặt",
+    "group": {
+      "all": "Tất Cả",
+      "audio": "Âm Thanh",
+      "display": "Hiển Thị",
+      "storage": "Lưu Trữ",
+      "support": "Hỗ Trợ"
+    },
+    "storage": "Lưu Trữ",
+    "storageHint": "Sao lưu và khôi phục tiến trình tu luyện.",
+    "save": "Lưu Ngay",
+    "export": "Xuất Save",
+    "import": "Nhập Save",
+    "support": "Hỗ Trợ",
+    "supportHint": "Gặp lỗi hoặc có ý kiến? Gửi phản hồi cho chúng tôi.",
+    "feedback": "Gửi Phản Hồi",
+    "build": "Phiên Bản",
+    "buildValue": "Bản dựng hiện tại"
   }
 }

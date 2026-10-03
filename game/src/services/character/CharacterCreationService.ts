@@ -2,10 +2,11 @@ import type { TalentDefinition } from '@/core/talent/Talent'
 import { isBetaCreationTalentId } from '@/core/betaScope'
 import type { RemoteCharacterMetadata } from '../session/BackendStatus'
 
-// Thiên Phú là quyết định chọn HƯỚNG ĐẠO duy nhất của nhân vật
-// (talent-direction-choice-plan.md): mỗi nhân vật chọn đúng 1 thiên phú
-// từ lượt roll 9. Save cũ còn 3 thiên phú vẫn chạy — mọi effect helper
-// lặp mảng và bỏ qua id lạ, không migration (development phase).
+// Thien Phu is the character's single DAO-direction choice
+// (talent-direction-choice-plan.md): each character picks exactly 1
+// talent from the 3-roll beta pool (reroll rolls a fresh 3). Old saves
+// with 3 talents still work - every effect helper iterates the array
+// and skips unknown ids, so no migration (development phase).
 //
 // BETA SCOPE LOCK v2 (phase-2): canonical beta creation is Name +
 // Talent only. The mortal starter pick is NOT part of the contract -
@@ -15,7 +16,8 @@ import type { RemoteCharacterMetadata } from '../session/BackendStatus'
 // carrying a mortalBasicSkillId field is simply ignored - nothing
 // downstream reads it.
 export const CHARACTER_CREATION_TALENT_COUNT = 1
-export const CHARACTER_CREATION_ROLL_SIZE = 9
+// How many talents one creation roll offers on screen.
+export const CHARACTER_CREATION_ROLL_SIZE = 3
 
 export interface CharacterCreationDraft {
   name: string

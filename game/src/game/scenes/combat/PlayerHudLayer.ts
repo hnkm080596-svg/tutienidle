@@ -7,7 +7,6 @@
 // qua layout() — resize gọi lại layout, KHÔNG hardcode px màn hình dev.
 import Phaser from 'phaser'
 import { DEPTH_OVERLAY_UI } from '@/game/support/BattleLayers'
-import { GOURD_PLACEHOLDER_SIZE, GOURD_SAFE_MARGIN_PX } from '@/game/support/RewardGourd'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 import {
@@ -29,6 +28,14 @@ export const HUD_HP_HEIGHT = 6
 export const HUD_SUB_WIDTH = 140
 export const HUD_SUB_HEIGHT = 4
 export const HUD_GAP = 8
+
+/** Spec scene 13 player-hud: canvas-left top anchor 16/72 on the
+ * 1672x941 design frame, kept as ratios so the canvas anchor scales
+ * with the live viewport like the DOM rails' vw/vh rules do. */
+const HUD_SPEC_LEFT = 16 / 1672
+const HUD_SPEC_TOP = 72 / 941
+/** Row budget for the top bar's label line inside the spec region. */
+const HUD_LABEL_ROW = 16
 
 const HUD_LABEL_FONT_SIZE = '12px'
 const HUD_SUB_LABEL_FONT_SIZE = '10px'
@@ -84,8 +91,8 @@ export class PlayerHudLayer {
   private theGroup!: TheBarGroup
 
   // The Tu Reimagined (T22) — Son Nhac Ho The external-ward layer: its
-  // own bar above the resource bar, never merged into the ward/resource
-  // pools (protection-only, not spendable).
+  // own bar alongside the resource bars, never merged into the
+  // ward/resource pools (protection-only, not spendable).
   private wardGroup!: HudRectGroup
 
   private destroyed = false
@@ -161,24 +168,24 @@ export class PlayerHudLayer {
   }
 
   /**
-   * Vị trí tính từ viewport: cụm HP neo góc trái-DƯỚI (cách HUD_MARGIN),
-   * MP ngay dưới HP (cách HUD_GAP), Kiếm dưới MP. bottom inset = 0 từ
-   * 6A-T3 nên không cần chừa chỗ bar DOM nào. Thế (Pháp Tu) shares the
-   * Kiếm slot — the two readers are mutually exclusive by path
-   * (sword vs spell), so a second slot would just be a gap.
+   * Spec 13 player-hud: anchored canvas-left top (16/72 of the 1672x941
+   * design frame), bars stacked HP -> MP -> Kiem/The -> ward downward in
+   * the spec's listing order. The old bottom-left anchor shared the
+   * corner with the reward gourd (FE-08); the spec region sits above
+   * the ai-panel, which is z-12 and wins any overlap by design.
+   * The (Phap Tu) shares the Kiem slot -- the two readers are mutually
+   * exclusive by path (sword vs spell), so a second slot would just be
+   * a gap.
    */
   layout(width: number, height: number): void {
     this.viewport = { width, height }
 
-    // FE-08 — the reward gourd anchors bottom-left (GOURD_SAFE_MARGIN
-    // + 52px wide, RewardGourd.ts §6.2) and collided with the label/bar
-    // column at HUD_MARGIN. The HUD stack starts right of the gourd's
-    // footprint so "102 / 108" never prints on top of the medallion.
-    const leftX = GOURD_SAFE_MARGIN_PX + GOURD_PLACEHOLDER_SIZE.w + HUD_GAP
-    const hpBarY = height - HUD_MARGIN - HUD_HP_HEIGHT
-    const sub1Y = hpBarY - HUD_GAP - HUD_SUB_HEIGHT
-    const sub2Y = sub1Y - HUD_GAP - HUD_SUB_HEIGHT
-    const sub3Y = sub2Y - HUD_GAP - HUD_SUB_HEIGHT
+    const leftX = width * HUD_SPEC_LEFT
+    const stackTop = height * HUD_SPEC_TOP
+    const hpBarY = stackTop + HUD_LABEL_ROW + HUD_HP_HEIGHT / 2
+    const sub1Y = hpBarY + HUD_GAP + HUD_SUB_HEIGHT
+    const sub2Y = sub1Y + HUD_GAP + HUD_SUB_HEIGHT
+    const sub3Y = sub2Y + HUD_GAP + HUD_SUB_HEIGHT
 
     this.positionGroup(this.hpGroup, leftX, hpBarY, HUD_HP_WIDTH, HUD_HP_HEIGHT)
     this.positionGroup(this.mpGroup, leftX, sub1Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)

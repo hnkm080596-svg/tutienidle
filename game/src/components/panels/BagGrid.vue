@@ -3,8 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore, type BagTab } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { scopeHiddenPillFamilyOfId } from '@/core/betaScope'
-import { isCompanionPullTokenSourceSuppressed, isDomainScopedAcquisitionEnabled } from '@/core/realm/ReleasePolicy'
+import { betaMaterialStackVisible, scopeHiddenPillFamilyOfId } from '@/core/betaScope'
 import { usePlayerStore } from '@/stores/player'
 import EquipmentBagSection from './bag-sections/EquipmentBagSection.vue'
 import MaterialBagSection from './bag-sections/MaterialBagSection.vue'
@@ -30,8 +29,7 @@ const BAG_COUNTS: Record<BagTab, () => number> = {
   material: () =>
     gameManager.materialBag
       .getAll()
-      .filter((stack) => !isCompanionPullTokenSourceSuppressed(stack.material.id))
-      .filter((stack) => isDomainScopedAcquisitionEnabled(stack.material.domainUnlockRealmId, player.realmId)).length,
+      .filter((stack) => betaMaterialStackVisible(stack.material, player.realmId)).length,
   // Same scope-hidden family filter as the section's entries - the tab
   // count must agree with what the grid can render.
   pill: () =>
@@ -56,13 +54,13 @@ const bagTabs = computed(() => [
 <template>
   <div class="bag-grid">
     <div class="bag-grid__header">
-      <span class="bag-grid__title">{{ t('panels.bag.title') }}</span>
       <span class="bag-grid__count">{{ activeTabCount }} {{ t('panels.bag.countSuffix') }}</span>
     </div>
 
     <TabBar
       :tabs="bagTabs"
       :model-value="ui.activeBagTab"
+      art-id="tab-pill"
       @update:model-value="ui.setActiveBagTab($event as BagTab)"
     />
 
@@ -93,17 +91,12 @@ const bagTabs = computed(() => [
   flex: 0 0 auto;
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-}
-
-.bag-grid__title {
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 700;
-  color: var(--paper-text);
+  justify-content: flex-end;
 }
 
 .bag-grid__count {
+  flex: 0 0 auto;
+  white-space: nowrap;
   font-size: var(--text-sm);
   color: var(--paper-text-muted);
 }

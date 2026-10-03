@@ -1,30 +1,47 @@
 <script setup lang="ts">
-// Slice 7 (2026-09-04) — 3 nút cố định basic/special/ultimate cho
-// turn-based manual cast. Entry thứ tự [basic, special, ultimate] từ
-// buildTurnSkillPresentation (slotList). Slot không sẵn sàng bị DISABLE
-// (chặn trước, spec Slice 7 §4). Targeting vẫn hoàn toàn tự động.
+// Slice 7 (2026-09-04) - role buttons for turn-based manual cast.
+// BETA FE-CONTRACT sec.3: the rail shape comes from the canonical
+// read-model progressionOps.betaCombatRolesFor - an entry with state
+// 'scope-hidden' is absent from the rail entirely (the ultimate role
+// is permanently scope-hidden in beta; never a locked or empty slot).
+// Live slot state (ready/cooldown/empty) still comes from
+// buildTurnSkillPresentation via slotList.
 //
-// Bảng 9.5 #5 (2026-09-07) — tên/tooltip skill thật: entry mang
-// skillName/skillDescription từ TurnSkillDisplayMeta (mapping skillId →
-// display metadata); fallback nhãn role (Thường/Đặc Biệt/Tuyệt Kỹ) khi
-// id không có trong map. Tooltip qua tooltipOverride của CombatSkillSlot.
+// Bang 9.5 #5 (2026-09-07) - real skill names/tooltips: entries carry
+// skillName/skillDescription from TurnSkillDisplayMeta; the role label
+// (Common/Special) is the empty-slot fallback. Tooltips go through
+// CombatSkillSlot's tooltipOverride.
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
-import { useGameManager } from '@/composables/useGameState'
-import { useUiStore } from '@/stores/ui'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
+import { useUiStore } from '@/stores/ui'
 
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
+import type { BetaPrecursorSurfaceId } from '@/core/betaScopeSkillDomain'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 import type { TooltipContent } from '@/composables/useTooltip'
 import { useAudioStore } from '@/stores/audio'
-
-const ROLE_ORDER: readonly TurnSkillSlotRole[] = ['basic', 'special', 'ultimate']
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 const { t } = useI18n()
+
+// Scene 13 spec: role orbs ride inside the skill-orb-frame chrome ring;
+// the auto/manual toggle wears the toggle-track + slider-thumb chrome.
+const skillOrbFrameUrl = hkChromeUrl('skill-orb-frame')
+const toggleTrackUrl = hkChromeUrl('toggle-track')
+const sliderThumbUrl = hkChromeUrl('slider-thumb')
+const toggleChromeStyle = computed<Record<string, string> | undefined>(() =>
+  toggleTrackUrl && sliderThumbUrl
+    ? {
+        '--hk-toggle-track': `url("${toggleTrackUrl}")`,
+        '--hk-slider-thumb': `url("${sliderThumbUrl}")`,
+      }
+    : undefined,
+)
 
 function roleLabel(role: TurnSkillSlotRole): string {
   return t(`combat.overlay.skillBar.roles.${role}`)
@@ -45,8 +62,9 @@ function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefin
 // (persist per-device), đồng bộ GameManager flag (plain class, không
 // import Pinia — UI layer gọi setter, cùng pattern battleRunMode).
 const ui = useUiStore()
-const player = usePlayerStore()
 const gameManager = useGameManager()
+const player = usePlayerStore()
+const { stateVersion } = useStateVersion()
 const {
   isAwaitingChoice,
   isBattleFighting,
@@ -57,16 +75,39 @@ const {
   chooseDynamicBasic,
 } = useTurnCombatManual()
 
-// Phap Tu An (Task 16) — the path owns no active ultimate: the slot is
-// the always-on dao passive ngo_dao_hon_don, rendered as a passive
-// emblem (spec §3.3 — "NOT a button"; its agency lives in the
-// multicast storm). The emblem tooltip explains basic-slot-only
-// multicast — the one place the rule surfaces in combat.
-// M4 (R6): the hidden way drives the emblem. P1 - the emblem IS the
-// aura indicator: it renders exactly when the 'spell.reaction_aura'
-// capability resolves (hidden_spell_pathway + the learned dao passive), via the
-// bound GameManager facade.
-const isAnPath = computed(() => gameManager.hasPathCapability('spell.reaction_aura'))
+// BETA FE-CONTRACT sec.3 - the combat rail read-model. Rendered only:
+// entries with state 'scope-hidden' never reach the DOM.
+const roleRail = computed(() => {
+  stateVersion.value
+
+  return gameManager.progressionOps.betaCombatRolesFor(player.$state)
+})
+
+// The two precursor combat surfaces (the sword orb picker and the An
+// dao emblem) are verdicts on betaCombatSurfacesFor: they render only
+// on an 'available' verdict and stay scope-hidden for every beta
+// player shape.
+const combatSurfaces = computed(() => {
+  stateVersion.value
+
+  return gameManager.progressionOps.betaCombatSurfacesFor(player.$state)
+})
+
+function surfaceAvailable(surface: BetaPrecursorSurfaceId): boolean {
+  return (
+    combatSurfaces.value.find((verdict) => verdict.surface === surface)?.state ===
+    'available'
+  )
+}
+
+const showOrbPicker = computed(
+  () => hasDynamicBasic.value && surfaceAvailable('sword-dynamic-basic'),
+)
+
+// Phap Tu An (Task 16) - the ngo_dao_hon_don passive emblem is its own
+// surface, not a role button; it renders only while its verdict is
+// 'available'.
+const showAnEmblem = computed(() => surfaceAvailable('an-ultimate-emblem'))
 
 const anEmblemMeta = computed(() => turnSkillDisplayMetaOf('ngo_dao_hon_don'))
 
@@ -104,29 +145,17 @@ function entryAt(index: number): TurnSkillPresentationEntry {
   return slotList.value[index] ?? SLOT_EMPTY
 }
 
-// BETA SCOPE LOCK v2 (frontend-contract sec.7/8) - the role rail
-// consumes betaCombatRolesFor: a 'scope-hidden' role renders no slot
-// at all (ultimate in beta; every role on an out-of-scope way save),
-// never an empty teaser button.
-const scopeHiddenRoles = computed(() => {
-  const hidden = new Set<TurnSkillSlotRole>()
-
-  for (const entry of gameManager.progressionOps.betaCombatRolesFor(player.$state)) {
-    if (entry.state === 'scope-hidden') {
-      hidden.add(entry.role)
-    }
-  }
-
-  return hidden
-})
-
-// Hien owns the basic slot via the orb picker — drop it from the role
-// row while keeping the original slotList indices for special/ultimate.
+// Each rail entry's index is its slotList index (the model always
+// emits [basic, special, ultimate] in order). Scope-hidden entries
+// render nothing; when the orb picker owns the basic slot the basic
+// role slot drops out of the row.
 const visibleSlots = computed(() =>
-  ROLE_ORDER.map((role, index) => ({ role, index })).filter(
-    ({ role }) =>
-      !(role === 'basic' && hasDynamicBasic.value) && !scopeHiddenRoles.value.has(role),
-  ),
+  roleRail.value
+    .map((entry, index) => ({ role: entry.role, index, state: entry.state }))
+    .filter(
+      (slot) =>
+        slot.state !== 'scope-hidden' && !(slot.role === 'basic' && showOrbPicker.value),
+    ),
 )
 
 // Kiem Tu Reimagined Task 7 — orb display names come from
@@ -166,9 +195,10 @@ function onDynamicBasicClick(defId: string): void {
 <template>
   <div v-if="visible" class="turn-combat-skill-bar">
     <div class="turn-combat-skill-bar__slots">
-      <!-- Kiem Tu Reimagined — the sword_pathway orb picker OWNS the basic slot:
-           provider.manualOptions() are the only legal manual picks. -->
-      <template v-if="hasDynamicBasic">
+      <!-- Kiem Tu Reimagined - the sword_pathway orb picker OWNS the basic slot:
+           provider.manualOptions() are the only legal manual picks. The
+           surface itself is verdict-gated (scope-hidden in beta). -->
+      <template v-if="showOrbPicker">
         <button
           v-for="orb in dynamicBasicOptions"
           :key="orb.id"
@@ -189,24 +219,12 @@ function onDynamicBasicClick(defId: string): void {
             :is-insufficient-resource="false"
             :tooltip-override="orbTooltip(orb)"
           />
+          <img v-if="skillOrbFrameUrl" class="turn-combat-skill-bar__orb-frame" :src="skillOrbFrameUrl" alt="" aria-hidden="true" />
         </button>
       </template>
 
       <template v-for="slot in visibleSlots" :key="slot.role">
-        <!-- Phap Tu An — ult slot is the dao passive emblem, never a
-             button (no dead ult control; spec §3.3). -->
-        <div
-          v-if="slot.role === 'ultimate' && isAnPath"
-          class="turn-combat-skill-bar__emblem"
-          :aria-label="anEmblemMeta?.name ?? 'Ngộ Đạo Hỗn Độn'"
-          v-tooltip="anEmblemTooltip"
-        >
-          <span class="turn-combat-skill-bar__emblem-name">{{ anEmblemMeta?.name ?? 'Ngộ Đạo Hỗn Độn' }}</span>
-          <span class="turn-combat-skill-bar__emblem-tag">{{ t('combat.overlay.skillBar.passiveTag') }}</span>
-        </div>
-
         <button
-          v-else
           type="button"
           class="turn-combat-skill-bar__slot-button"
           :class="{ 'is-tappable': isTappable(entryAt(slot.index)) }"
@@ -225,11 +243,24 @@ function onDynamicBasicClick(defId: string): void {
             :is-insufficient-resource="entryAt(slot.index).state === 'blocked_resource'"
             :tooltip-override="tooltipFor(entryAt(slot.index))"
           />
+          <img v-if="skillOrbFrameUrl" class="turn-combat-skill-bar__orb-frame" :src="skillOrbFrameUrl" alt="" aria-hidden="true" />
         </button>
       </template>
+
+      <!-- Phap Tu An - the dao passive emblem is a verdict-gated
+           surface, never a button (spec S3.3). -->
+      <div
+        v-if="showAnEmblem"
+        class="turn-combat-skill-bar__emblem"
+        :aria-label="anEmblemMeta?.name ?? 'Ngộ Đạo Hỗn Độn'"
+        v-tooltip="anEmblemTooltip"
+      >
+        <span class="turn-combat-skill-bar__emblem-name">{{ anEmblemMeta?.name ?? 'Ngộ Đạo Hỗn Độn' }}</span>
+        <span class="turn-combat-skill-bar__emblem-tag">{{ t('combat.overlay.skillBar.passiveTag') }}</span>
+      </div>
     </div>
 
-    <label class="turn-combat-skill-bar__mode-toggle">
+    <label class="turn-combat-skill-bar__mode-toggle" :class="{ 'has-hk-toggle': Boolean(toggleChromeStyle) }" :style="toggleChromeStyle">
       <input
         type="checkbox"
         :checked="isManualMode"
@@ -280,6 +311,18 @@ function onDynamicBasicClick(defId: string): void {
   outline-offset: 2px;
 }
 
+/* skill-orb-frame chrome ring -- slightly oversized so the ring hugs the
+   slot edge; purely decorative, never intercepts the button. */
+.turn-combat-skill-bar__orb-frame {
+  position: absolute;
+  inset: -7%;
+  width: 114%;
+  height: 114%;
+  object-fit: fill;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* Phap Tu An (Task 16) — passive emblem replaces the ult slot button:
    always-on dao passive, reads as an emblem not a disabled control. */
 .turn-combat-skill-bar__emblem {
@@ -318,6 +361,39 @@ function onDynamicBasicClick(defId: string): void {
   font-size: var(--text-xs, 12px);
   color: var(--text-muted, #999);
   cursor: pointer;
+}
+
+/* toggle-track + slider-thumb chrome (scene 13 / settings grammar). */
+.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  width: 46px;
+  height: 23px;
+  margin: 0;
+  background: var(--hk-toggle-track) center / 100% 100% no-repeat;
+  cursor: pointer;
+}
+
+.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+  transform: translateY(-50%);
+  background: var(--hk-slider-thumb) center / contain no-repeat;
+  transition: left 0.16s ease;
+}
+
+.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']:checked::after {
+  left: 24px;
+}
+
+.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--hk-gold, #d8b45a);
+  outline-offset: 2px;
 }
 
 .turn-combat-skill-bar__awaiting {

@@ -15,8 +15,9 @@
 // F-B8-2 PillBagSection: `entries` maps pillBag.getAll() verbatim -
 //   scope-hidden pill families render as cells and arm for drink;
 //   the second click hits usePillDetailed's 'scope_hidden' reject.
-// F-B8-3 TechniqueBand: renders techniqueManager.getActive() verbatim -
-//   a dormant way's canonical technique shows hero+sections and an
+// F-B8-3 TechniquePanel (the decomposed technique scene, formerly
+//   TechniqueBand): rendered techniqueManager.getActive() verbatim -
+//   a dormant way's canonical technique showed hero+sections and an
 //   enabled grade button (canAdvanceTechniqueGrade carries no
 //   betaTechniqueAdmitted check; tryAdvanceTechniqueGrade rejects).
 // F-B8-4 CharacterPanel: selectedTalents maps selectedTalentIds
@@ -30,7 +31,7 @@ import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import { i18n } from '@/i18n'
 import SkillPathPanel from '@/components/panels/SkillPathPanel.vue'
-import TechniqueBand from '@/components/panels/skill-path/TechniqueBand.vue'
+import TechniquePanel from '@/components/panels/TechniquePanel.vue'
 import PillBagSection from '@/components/panels/bag-sections/PillBagSection.vue'
 import BagGrid from '@/components/panels/BagGrid.vue'
 import BreakthroughRequirementPanel from '@/components/common/BreakthroughRequirementPanel.vue'
@@ -52,6 +53,8 @@ import { skillCoreNodeId } from '@/core/progression/SkillCoreLevel'
 import { ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { isBetaTalentId, scopeHiddenPillFamilyOfId } from '@/core/betaScope'
 import { betaSkillAdmitted, betaTechniqueAdmitted } from '@/core/betaScopeSkillDomain'
+import { betaTechniqueSurfaceFor } from '@/core/betaScopeTechniqueDomain'
+import type { PlayerData } from '@/core/player/Player'
 
 lockBetaFeaturesForTests()
 lockBetaWaysForTests()
@@ -236,7 +239,7 @@ describe('F-B8-2: PillBagSection must not render scope-hidden pill stacks', () =
 // F-B8-3 - technique band
 // ---------------------------------------------------------------------------
 
-describe('F-B8-3: TechniqueBand must not render a dormant way technique', () => {
+describe('F-B8-3: TechniquePanel must not render a dormant way technique', () => {
   it('a carried sword save shows no dormant technique hero or grade control', async () => {
     const swordArt = TECHNIQUES.find(t => t.id === 'sword_control_art')!
     expect(betaTechniqueAdmitted(swordArt.id)).toBe(false)
@@ -247,21 +250,33 @@ describe('F-B8-3: TechniqueBand must not render a dormant way technique', () => 
       materialRegistry: { get: () => ({ name: 'Linh Thạch' }) },
       // The write gate holds (betaTechniqueAdmitted reject inside
       // tryAdvanceTechniqueGrade); the seam here is the surface
-      // offering the action at all.
-      realmAdvanceOps: { tryAdvanceTechniqueGrade: () => false },
+      // offering the action at all. The model call delegates to the
+      // real domain verdict - same wiring as GameManagerRealmAdvanceOps.
+      realmAdvanceOps: {
+        tryAdvanceTechniqueGrade: () => false,
+        getBetaTechniqueSurfaceModel: (p: PlayerData) =>
+          betaTechniqueSurfaceFor(p, {
+            activeTechnique: swordArt,
+            materialAmount: () => 99999,
+            materialName: () => 'Linh Thạch',
+            turnBattleInProgress: false,
+          }),
+      },
     } as unknown as GameManager
 
-    const view = mountPanel(TechniqueBand, gameManager, (player) => {
+    const view = mountPanel(TechniquePanel, gameManager, (player, pinia) => {
       player.$state.realmId = 'qi_refining'
       player.$state.cultivationPath = 'sword'
       player.$state.cultivationWay = 'sword_pathway'
+      useUiStore(pinia).standalonePanel = 'technique'
     })
     await nextTick()
 
-    // Contract: the parked technique stays parked - no hero, no
-    // sections, no (dead) "Nang Canh" button on a beta surface.
-    expect(view.container.querySelector('.technique-band__hero')).toBeNull()
-    expect(view.container.querySelector('.technique-band__grade-btn')).toBeNull()
+    // Contract: the parked technique stays parked - no armed grade CTA
+    // on a beta surface (the scene renders the model's 'unavailable'
+    // state instead of the dormant hero).
+    expect(view.container.textContent).not.toContain(swordArt.name)
+    expect(view.container.querySelector('.technique-scene__grade-btn')).toBeNull()
 
     view.unmount()
   })
@@ -316,7 +331,7 @@ describe('F-B8-4: CharacterPanel must not render dormant talent/way identity', (
     })
     await nextTick()
 
-    const names = Array.from(view.container.querySelectorAll('.talent-block__name'))
+    const names = Array.from(view.container.querySelectorAll('.talent-seal__name'))
       .map(el => el.textContent?.trim() ?? '')
 
     expect(names).toContain('Linh Mạch')

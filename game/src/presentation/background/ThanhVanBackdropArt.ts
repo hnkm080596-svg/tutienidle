@@ -35,11 +35,13 @@ import {
 
 export const THANH_VAN_CANVAS = { w: 1672, h: 941 } as const
 
-/** Preset cố định dùng cho trận ĐẦU TIÊN của phiên (yêu cầu 2026-08-26). */
+/** Fixed preset for the session's FIRST battle (requirement 2026-08-26).
+ *  Huyen Kim S03 (2026-10-02): autumn/night = moonlit blue-gold reference
+ *  kit - still a deterministic boot preset; QA overrides unchanged. */
 export const DEFAULT_THANH_VAN_VARIANT: ThanhVanVariant = {
-  season: 'spring',
+  season: 'autumn',
 
-  time: 'morning',
+  time: 'night',
 }
 
 const SEASON_LAYERS = [

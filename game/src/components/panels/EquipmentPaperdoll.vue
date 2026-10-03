@@ -15,12 +15,22 @@ import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge } from '@/components/common/SlotTypes'
 import { useAudioStore } from '@/stores/audio'
+import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
+
+// equipment-paperdoll-base (stable art): neutral mannequin substrate under
+// the six runtime sockets - no gameplay identity, decorative alignment
+// only. Runtime keeps item/socket/rarity ownership.
+const PAPERDOLL_BASE_SRC = stableSceneArtUrl('equipment-paperdoll-base', '@2x')
 
 const { t } = useI18n()
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 const { unequip } = useEquipmentActions()
+
+// Scene 12 scaffold: the item-card detail view wants the clicked
+// instance; the unequip mutation below stays the slot's behavior.
+const emit = defineEmits<{ select: [instanceId: string] }>()
 
 // Lưới 3 cột × 2 hàng (thay lục giác quanh sprite cũ — khối Equipment
 // giờ chỉ chiếm 30% chiều cao panel, cố định cho Hành Trang/Tứ Nghệ,
@@ -193,6 +203,7 @@ const badgesBySlot = computed<Record<EquipmentSlot, SlotBadge[]>>(() => {
 
 function onSlotClick(instance: EquipmentInstance | undefined) {
   if (instance) {
+    emit('select', instance.instanceId)
     useAudioStore().cue('ui.equip')
     unequip(instance.instanceId)
   }
@@ -201,6 +212,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 
 <template>
   <div class="paperdoll">
+    <img class="paperdoll__base" :src="PAPERDOLL_BASE_SRC" alt="" aria-hidden="true" />
     <div v-for="entry in SLOT_LAYOUT" :key="entry.slot" class="paperdoll__cell">
       <div class="paperdoll__slot-wrap">
         <SlotView
@@ -227,6 +239,10 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 
 <style scoped>
 .paperdoll {
+  position: relative;
+  /* Own stacking context so the negative-z base stays between the
+     paperdoll background and the runtime socket cells. */
+  isolation: isolate;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: min-content;
@@ -237,6 +253,24 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   padding: 6px;
   box-sizing: border-box;
   font-family: var(--font-body);
+}
+
+/* Neutral mannequin substrate (stable art): centered behind the socket
+   grid; sockets keep full interaction above it. */
+.paperdoll__base {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* Substrate must paint under the static grid cells - positioned
+     elements at z:auto would otherwise cover the runtime sockets. */
+  z-index: -1;
+  height: 92%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .paperdoll__cell {

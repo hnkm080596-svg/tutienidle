@@ -10,7 +10,12 @@ import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
 import { PillBag } from '../pill/PillBag'
 import { NotificationQueue } from './NotificationQueue'
+import type { Enemy } from '../enemy/Enemy'
 import type { PlayerData } from '../player/Player'
+import {
+  betaQuestSurfaceFor,
+  type BetaQuestSurfaceModel,
+} from '../betaScopeQuestDomain'
 
 export interface GameManagerQuestOpsDeps {
   questSystem: QuestSystem
@@ -22,6 +27,10 @@ export interface GameManagerQuestOpsDeps {
   pillRegistry: PillRegistry
   pillBag: PillBag
   notifications: NotificationQueue
+  // sec.4B - enemy display names for kill-quest target labels
+  // (catalogOps owns the template lookup; injected to keep the ops
+  // deps explicit, same convention as HiddenBeastSystem's binding).
+  getEnemyTemplate: (enemyId: string) => Enemy | undefined
   // GameManager giu activePlayer nhu field mutable (setActivePlayer) - doc
   // LIVE qua closure thay vi snapshot tai constructor time, giong
   // GameManagerBuildingOps.
@@ -78,6 +87,36 @@ export class GameManagerQuestOps {
     }
 
     return this.deps.questSystem.getActiveQuests(this.deps.questRegistry, this.deps.questManager, player)
+  }
+
+  /**
+   * BETA FE-CONTRACT (work-order sec.4B) - canonical Quest surface
+   * read-model. The frontend renders these rows and never imports
+   * ReleasePolicy, never re-derives reward admission, target labels,
+   * the collect shortfall, or claimability. Pure query - questOps
+   * owns the material/enemy/bag reads; nothing here writes state.
+   * Beta admits once-quests only (getActiveQuests already filters
+   * isBetaQuestEnabled) - the cadence filter is a fail-closed pin, not
+   * a grouping rule.
+   */
+  getBetaQuestSurfaceModels(): BetaQuestSurfaceModel[] {
+    const player = this.deps.getActivePlayer()
+
+    if (!player) {
+      return []
+    }
+
+    return this.getActiveQuests()
+      .filter(({ quest }) => quest.cadence === 'once')
+      .map(({ quest, progress }) =>
+        betaQuestSurfaceFor(quest, progress, player, {
+          materialRegistry: this.deps.materialRegistry,
+          materialBag: this.deps.materialBag,
+          pillRegistry: this.deps.pillRegistry,
+          pillBag: this.deps.pillBag,
+          enemyName: (enemyId) => this.deps.getEnemyTemplate(enemyId)?.name,
+        }),
+      )
   }
 
   canClaimQuest(questId: string): boolean {

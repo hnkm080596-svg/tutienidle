@@ -96,6 +96,10 @@ export interface TurnBattleEntityVisualState {
   column: number
   currentHp: number
   maxHp: number
+  // MP cung la live vitals nhu HP - mang theo de presentation seed HUD
+  // ngay tu snapshot dau (truoc entity_vitals_changed dau tien).
+  currentMp: number
+  maxMp: number
   alive: boolean
   isBoss: boolean
 }
@@ -160,6 +164,8 @@ function toVisualState(participant: TurnBattleParticipant): TurnBattleEntityVisu
     column: position.column,
     currentHp: participant.entity.currentHp,
     maxHp: participant.entity.maxHp,
+    currentMp: participant.entity.currentMp,
+    maxMp: participant.entity.stats.maxMp,
     alive: participant.entity.alive,
     // Fix round 1 (Task 5 review) — CombatEntity.isBoss là optional (chỉ set
     // cho enemy spawn qua legacy spawner); mặc định false khớp với cách

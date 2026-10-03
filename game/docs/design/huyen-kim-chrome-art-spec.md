@@ -1,4 +1,6 @@
-# Huyền Kim Sơn Thủy — UI chrome drawing spec (cho Minh vẽ)
+# Huyền Kim Sơn Thủy — UI chrome drawing spec
+
+> **⟦OWNER: CODEX được gen / MINH vẽ cũng được⟧** Đây là LOẠI DUY NHẤT Codex được generate: chrome/static UI (frames, panels, buttons, dividers, decorative). Mọi art khác (enemy, icon, character, spritesheet, VFX) = Minh — xem `huyen-kim-art-master-list.md` §SCOPE BOUNDARY.
 
 Nguồn slot duy nhất: `game/src/ui/huyen-kim-chrome.json`. Mỗi slot cần **1 PNG sheet** (hoặc 2: `@1x` + `@2x` nếu muốn sắc nét retina). File đặt tại `game/public/assets/ui/huyen-kim/<id>@1x.png` và `<id>@2x.png` (2x gấp đôi kích thước 1x). Khi file vào, coordinator flip `status: pending → ready` trong manifest — không cần sửa code.
 
@@ -10,7 +12,7 @@ Nguồn slot duy nhất: `game/src/ui/huyen-kim-chrome.json`. Mỗi slot cần *
 - `edgeMode: stretch` → mép kéo dài theo trục; giữ họa tiết mép đều/kéo được.
 - States (hover/pressed/selected/disabled/locked) hiện do TOKEN điều khiển — không cần vẽ sheet cho từng state trừ khi muốn variant riêng (báo coordinator thêm slot).
 
-## Danh sách slot (18)
+## Danh sách slot (20)
 
 | id | Vai trò | 1x size | slices L/R/T/B | tint |
 |---|---|---|---|---|
@@ -23,17 +25,30 @@ Nguồn slot duy nhất: `game/src/ui/huyen-kim-chrome.json`. Mỗi slot cần *
 | frame-xl-ceremony | Khung lễ (đột phá/tribulation) | 512×512 | 72/72/72/72 | — |
 | button-compact | Nút compact (combat rail) | 160×56 | 28/28/16/16 | ✓ |
 | button-standard | Nút thường (Study) | 192×72 | 32/32/20/20 | ✓ |
-| button-ceremonial | CTA chính (Đột Phá/Nhập Trận) | 256×96 | 40/40/24/24 | — |
+| button-ceremonial | CTA chính (Đột Phá/Nhập Trận) | 256×96 | 40/40/24/24 | ✓ |
 | icon-button-utility | Nút tròn top-bar (mail/bag/settings) | 96×96 | 30/30/30/30 | ✓ |
 | seal-chip | Ấn nhỏ (talent/yêu cầu) | 128×48 | 24/24/14/14 | ✓ |
 | resource-pill | Viên đếm tài nguyên top-bar | 160×48 | 24/24/14/14 | — |
 | entity-bar | Thanh HP entity (tint jade/cinnabar) | 192×32 | 20/20/10/10 | ✓ |
-| divider-ornament | Gạch ngang có hoa văn giữa | 256×16 | 96/96/8/8 | ✓ |
+| divider-ornament | Gạch ngang có hoa văn giữa | 256×16 | 96/96/4/4 | ✓ |
 | scrollbar | Track+thumb scrollbar | 32×128 | 12/12/24/24 | ✓ |
 | dao-luan-center | Mặt huy chương trung tâm Đạo Luân | 192×192 | full-bleed | — |
 | dao-luan-node | Nút vòng Đạo Luân (inner/outer) | 96×96 | full-bleed | ✓ |
 | rune-node | Đỉnh đồ thị node (tint theo state) | 64×64 | full-bleed | ✓ |
 | tab-seal | Ấn tab/nav | 96×64 | 20/20/16/16 | ✓ |
+
+## HOLD — chưa vẽ
+
+| id | Lý do |
+|---|---|
+| frame-s-slot | `SlotView` cố tình KHÔNG dùng slice (họa tiết lặp trên lưới dày gây clutter). Chỉ vẽ khi có consumer chủ đích (icon cell combat/equipment) — coordinator sẽ báo. |
+| scrollbar | App đang ẩn scrollbar toàn cục (`scrollbar-width: none` trong theme.css). Chỉ vẽ khi một surface bật lại scrollbar có chủ đích. |
+
+## Wiring pending (slot đã spec, consumer chưa wire)
+
+- `icon-button-utility`: `GameButton` shape=`circle` hiện bypass chrome art — đang wire trong PR primitives.
+- `resource-pill`: `CurrencyHud` chưa dùng slot này — đang wire trong PR navigation.
+- `button-ceremonial`: `tintable: true` — vẽ **grayscale**, game tự tô gold/cinnabar theo variant (primary/danger). Đừng vẽ màu thật.
 
 ## Palette tham chiếu (token)
 
@@ -45,6 +60,6 @@ Nguồn slot duy nhất: `game/src/ui/huyen-kim-chrome.json`. Mỗi slot cần *
 ## Ưu tiên vẽ trước (master-screen gating)
 
 M1 Động Phủ: dao-luan-center, dao-luan-node, surface-l-drawer (Thiên Cơ Bảng), icon-button-utility, resource-pill.
-M2/M5: surface-m-panel, frame-s-slot, button-standard, frame-xs-tooltip, entity-bar.
-M8 combat: entity-bar, button-compact, frame-s-slot.
+M2/M5: surface-m-panel, button-standard, frame-xs-tooltip, entity-bar.
+M8 combat: entity-bar, button-compact.
 Còn lại theo sau.

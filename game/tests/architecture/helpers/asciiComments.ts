@@ -53,8 +53,28 @@ function normalize(text: string): string {
 /** Non-ASCII comment tokens inside a TS/JS source chunk. */
 function scanTsChunk(text: string, violations: string[]): void {
   const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.Standard, text)
+  // The raw scanner is context-free: a '}' closing a '${' template hole is
+  // emitted as CloseBraceToken, so the template tail re-tokenizes as a brand
+  // new template literal and swallows real code (and its comments) until the
+  // next backtick. Track which unclosed braces came from '${' so we can
+  // re-scan those '}' as TemplateMiddle/TemplateTail.
+  const braceStack: boolean[] = [] // true = opened by '${', false = plain '{'
   let kind = scanner.scan()
   while (kind !== ts.SyntaxKind.EndOfFileToken) {
+    if (kind === ts.SyntaxKind.OpenBraceToken) {
+      braceStack.push(false)
+    } else if (kind === ts.SyntaxKind.TemplateHead || kind === ts.SyntaxKind.TemplateMiddle) {
+      braceStack.push(true) // token ends with '${'
+    } else if (kind === ts.SyntaxKind.CloseBraceToken) {
+      if (braceStack[braceStack.length - 1] === true) {
+        braceStack.pop()
+        kind = scanner.reScanTemplateToken(false)
+        if (kind === ts.SyntaxKind.TemplateMiddle) braceStack.push(true)
+        if (kind === ts.SyntaxKind.EndOfFileToken) break
+      } else {
+        braceStack.pop()
+      }
+    }
     if (
       (kind === ts.SyntaxKind.SingleLineCommentTrivia ||
         kind === ts.SyntaxKind.MultiLineCommentTrivia) &&

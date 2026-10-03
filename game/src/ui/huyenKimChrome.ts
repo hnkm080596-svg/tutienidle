@@ -65,3 +65,14 @@ export function chromeSlice(id: string): { url1x: string; url2x: string; slices:
 export function pendingChromeIds(): string[] {
   return assets.filter((a) => a.status === 'pending').map((a) => a.id)
 }
+
+/**
+ * Direct URL for ready chrome art that is NOT nine-sliced (rollers,
+ * plaques, nodes, orbs, ribbons, prop pieces). Consumers render it as a
+ * plain <img>; the registry remains the only path source.
+ */
+export function hkChromeUrl(id: string, density: '1x' | '2x' = '2x'): string | null {
+  const a = HUYEN_KIM_CHROME[id]
+  if (!a || a.status !== 'ready') return null
+  return density === '1x' ? a.url1x : a.url2x
+}

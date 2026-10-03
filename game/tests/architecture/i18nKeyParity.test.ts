@@ -90,6 +90,37 @@ const TOP_NAMESPACES = [...new Set([...VI_PATHS, ...EN_PATHS].map((p) => p.split
 const NAMESPACE_RE = new RegExp(`^(?:${TOP_NAMESPACES.join('|')})$`)
 
 /**
+ * Preview-surface authority. `src/ui-preview/*.ts` entries mount dedicated
+ * `createI18n({ locale: 'vi', messages: <scene>Messages })` instances whose
+ * tables live in `src/ui-preview/*Messages.ts` (vi-only by design -- the
+ * preview harness is a vi screenshot tool, never shipped). Those entries are
+ * also the ONLY consumers that render the bare `t()` keys inside
+ * `src/ui-preview/**` and the preview/default-slot branches of
+ * `src/components/scenes/<scene>/fidelity/**`: production adapters either
+ * fill the slots or pass model props, and production-mounted fidelity
+ * scenes resolve every prod-rendered key against the global tables already.
+ * For those files a literal therefore resolves when it exists in BOTH
+ * global locales (normal parity) OR in the preview-vi union (preview-only
+ * copy). The union over all preview tables is a superset of any one mounted
+ * instance -- same "proves resolvable, not exact" coverage the dynamic-key
+ * note documents.
+ */
+const PREVIEW_VI_PATHS = new Set<string>()
+const PREVIEW_EN_PATHS = new Set<string>()
+const PREVIEW_MESSAGE_MODULES = import.meta.glob('../../src/ui-preview/*Messages.ts', {
+  eager: true,
+}) as Record<string, Record<string, unknown>>
+for (const mod of Object.values(PREVIEW_MESSAGE_MODULES)) {
+  for (const table of Object.values(mod)) {
+    const t = table as { vi?: unknown; en?: unknown }
+    if (!t || typeof t !== 'object') continue
+    if (t.vi) collectPaths(t.vi, '', PREVIEW_VI_PATHS)
+    if (t.en) collectPaths(t.en, '', PREVIEW_EN_PATHS)
+  }
+}
+const PREVIEW_SURFACE_RE = /^(?:ui-preview\/|components\/scenes\/[^/]+\/fidelity\/)/
+
+/**
  * Strip line/block/HTML comments while leaving string/template contents
  * alone, so a `//` inside a literal cannot eat the rest of the line and a
  * commented-out key cannot pass the scan.
@@ -335,10 +366,14 @@ describe('i18n key parity (P16)', () => {
           // Local-messages components: a key is covered when it exists in
           // both local tables OR both global tables (root fallback exists --
           // though the fallback still warns; the next test pins that).
-          const ok = globalCall || !file.i18n.local
+          let ok = globalCall || !file.i18n.local
             ? keyExists(key, VI_PATHS) && keyExists(key, EN_PATHS)
             : (keyExists(key, file.i18n.local.vi) || keyExists(key, VI_PATHS)) &&
               (keyExists(key, file.i18n.local.en) || keyExists(key, EN_PATHS))
+          if (!ok && PREVIEW_SURFACE_RE.test(file.fromSrc)) {
+            ok = keyExists(key, PREVIEW_VI_PATHS) &&
+              (PREVIEW_EN_PATHS.size === 0 || keyExists(key, PREVIEW_EN_PATHS))
+          }
           if (!ok) violations.push(`${file.fromSrc} -> ${key}`)
         }
       }
@@ -396,6 +431,22 @@ describe('i18n key parity (P16)', () => {
         // the `combat.victory` cue row).
         return Object.prototype.hasOwnProperty.call(AUDIO_CUES, literal)
       }
+      // Domain ids that share a locale namespace prefix by convention but
+      // are NOT i18n keys. `body.essence_economy` is a PathCapability union
+      // member in CultivationPathKit (capability id, never rendered via
+      // t()). `skill.*`/`body.*` literals inside TEST files are synthetic
+      // fixture ids (`skill.pick.a`, `skill.ult`, `body.essence_economy`
+      // assertions) - the `skill`/`body` locale namespaces landed after
+      // those fixtures existed, so the collision is accidental. Rule 1
+      // still validates every t() call in the same files; this exemption
+      // only skips bare-literal namespace hits, and only in tests.
+      const NON_MESSAGE_IDS = new Set([
+        'body.essence_economy',
+        // Synthetic SkillDef id in SkillExecutor.testkit.ts (a shared test
+        // helper, not a *.test.ts file, so the fixture rule above misses it).
+        'skill.test',
+      ])
+      const FIXTURE_ID_NAMESPACE = /^(skill|body)\./
       // Quest feature-witness flag ids (`kind:'flag'` conditions) share
       // the dotted domain.event convention (e.g. `alchemy.crafted`).
       // Same manifest-verified exemption as audio cues: only literal
@@ -408,15 +459,21 @@ describe('i18n key parity (P16)', () => {
           const literal = m[2]!
           if (!literal.includes('.') || !NAMESPACE_RE.test(literal.split('.')[0]!)) continue
           if (!KEY_SHAPE.test(literal)) continue
+          if (NON_MESSAGE_IDS.has(literal)) continue
+          if (isTestFile(file.fromSrc) && FIXTURE_ID_NAMESPACE.test(literal)) continue
           if (isQuestFlag(literal)) continue
           // Manifest unit tests deliberately probe qualifier-strip
           // fallback with unknown qualifiers (`combat.cast.not_a_real_skill`)
           // - those literals resolve as cues by design, not as i18n keys.
           if (isTestFile(file.fromSrc) && resolveAudioCue(literal) !== undefined) continue
           if (isAudioCue(literal)) continue
-          if (!keyExists(literal, VI_PATHS) || !keyExists(literal, EN_PATHS)) {
-            violations.push(`${file.fromSrc} -> ${literal}`)
-          }
+          if (keyExists(literal, VI_PATHS) && keyExists(literal, EN_PATHS)) continue
+          if (
+            PREVIEW_SURFACE_RE.test(file.fromSrc) &&
+            keyExists(literal, PREVIEW_VI_PATHS) &&
+            (PREVIEW_EN_PATHS.size === 0 || keyExists(literal, PREVIEW_EN_PATHS))
+          ) continue
+          violations.push(`${file.fromSrc} -> ${literal}`)
         }
       }
       expect(violations).toEqual([])

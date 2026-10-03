@@ -77,7 +77,7 @@ function makeSceneWithCountdown() {
 function snapshotWithProgress(countdownProgress: number): TurnBattleEntitySnapshotEvent {
   return {
     players: [
-      { id: 'player', name: 'Player', row: 4, column: 8, currentHp: 100, maxHp: 100, alive: true, isBoss: false },
+      { id: 'player', name: 'Player', row: 4, column: 8, currentHp: 100, maxHp: 100, currentMp: 0, maxMp: 0, alive: true, isBoss: false },
     ],
     enemies: [],
     pendingEnemySpawns: [],
@@ -128,7 +128,7 @@ describe('CombatScene party pre-spawn gating (2026-09-12 fix)', () => {
 
     scene.reconcileTurnCountdownSpawn({
       players: [
-        { id: 'player', name: 'Player', row: 4, column: 8, currentHp: 100, maxHp: 100, alive: true, isBoss: false },
+        { id: 'player', name: 'Player', row: 4, column: 8, currentHp: 100, maxHp: 100, currentMp: 0, maxMp: 0, alive: true, isBoss: false },
       ],
       enemies: [],
       pendingEnemySpawns: [],
@@ -181,7 +181,7 @@ describe('CombatScene party pre-spawn gating (2026-09-12 fix)', () => {
 
     scene.reconcileTurnCountdownSpawn({
       players: [
-        { id: 'companion_1', name: 'Companion', row: 3, column: 8, currentHp: 50, maxHp: 50, alive: true, isBoss: false },
+        { id: 'companion_1', name: 'Companion', row: 3, column: 8, currentHp: 50, maxHp: 50, currentMp: 0, maxMp: 0, alive: true, isBoss: false },
       ],
       enemies: [],
       pendingEnemySpawns: [],
@@ -212,10 +212,10 @@ describe('CombatScene party pre-spawn gating (2026-09-12 fix)', () => {
     // player is still telegraphing.
     scene.reconcileTurnCountdownSpawn({
       players: [
-        { id: 'player', name: 'Player', row: 4, column: 8, currentHp: 100, maxHp: 100, alive: true, isBoss: false },
+        { id: 'player', name: 'Player', row: 4, column: 8, currentHp: 100, maxHp: 100, currentMp: 0, maxMp: 0, alive: true, isBoss: false },
       ],
       enemies: [
-        { id: 'enemy_1', name: 'Enemy', row: 1, column: 2, currentHp: 50, maxHp: 50, alive: true, isBoss: false },
+        { id: 'enemy_1', name: 'Enemy', row: 1, column: 2, currentHp: 50, maxHp: 50, currentMp: 0, maxMp: 0, alive: true, isBoss: false },
       ],
       pendingEnemySpawns: [],
       phase: 'countdown',

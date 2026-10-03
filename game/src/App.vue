@@ -67,6 +67,7 @@ import UpdateBanner from './components/common/UpdateBanner.vue'
 import SaveIncompatibleScreen from './components/common/SaveIncompatibleScreen.vue'
 import BetaCompletionModal from './components/common/BetaCompletionModal.vue'
 import AuthEntryScreen from './components/onboarding/AuthEntryScreen.vue'
+import OnboardingStage from './components/onboarding/OnboardingStage.vue'
 import CharacterCreationScreen, {
   type CharacterCreationPayload,
 } from './components/onboarding/CharacterCreationScreen.vue'
@@ -213,11 +214,27 @@ const transitionOverlayRef = ref<{
   open: (id: number, signal: AbortSignal) => Promise<void>
 } | null>(null)
 
+const onboardingStageRef = ref<InstanceType<typeof OnboardingStage> | null>(null)
+const onboardingTransitionId = ref<number | null>(null)
 const curtainPort: CurtainPort = {
   close: async (id, signal) => {
+    const { currentRoute, targetRoute } = coordinator.getSnapshot()
+    const exchangesScroll = (currentRoute === 'auth' && targetRoute === 'character')
+      || (currentRoute === 'character' && targetRoute === 'auth')
+    if (exchangesScroll && onboardingStageRef.value) {
+      onboardingTransitionId.value = id
+      await onboardingStageRef.value.close(id, signal)
+      return
+    }
+    onboardingTransitionId.value = null
     await transitionOverlayRef.value?.close(id, signal)
   },
   open: async (id, signal) => {
+    if (onboardingTransitionId.value === id && onboardingStageRef.value) {
+      try { await onboardingStageRef.value.open(id, signal) }
+      finally { onboardingTransitionId.value = null }
+      return
+    }
     await transitionOverlayRef.value?.open(id, signal)
   },
 }
@@ -1080,15 +1097,19 @@ onUnmounted(() => {
     <LoadingScreen />
   </RouteMount>
 
-  <RouteMount v-else-if="entryStage === 'auth'" route="auth">
-    <AuthEntryScreen @authenticated="onAuthenticated" />
-  </RouteMount>
-
-  <RouteMount v-else-if="entryStage === 'character'" route="character">
-    <CharacterCreationScreen
-      @back="bootFlow.showAuth"
-      @complete="onCharacterCreated"
-    />
+  <!-- auth + character share ONE persistent OnboardingStage: the curtain
+       port exchanges the scroll inside a single backdrop (see
+       onboardingTransitionId). The RouteMount sits OUTSIDE that stage and
+       re-witnesses the active route via a bound :route - RouteMount's prop
+       watch re-marks auth->character without remounting the shared tree. -->
+  <RouteMount
+    v-else-if="entryStage === 'auth' || entryStage === 'character'"
+    :route="entryStage === 'auth' ? 'auth' : 'character'"
+  >
+    <OnboardingStage ref="onboardingStageRef">
+      <AuthEntryScreen v-if="entryStage === 'auth'" @authenticated="onAuthenticated" />
+      <CharacterCreationScreen v-else @back="bootFlow.showAuth" @complete="onCharacterCreated" />
+    </OnboardingStage>
   </RouteMount>
 
   <RouteMount v-else-if="entryStage === 'error'" route="error">
@@ -1141,6 +1162,7 @@ onUnmounted(() => {
     ref="transitionOverlayRef"
     :inert="authorityOverlayActive"
     :phase="routeAdapter.phase.value"
+    :paint-suppressed="onboardingTransitionId !== null"
     :is-locked="routeAdapter.isLocked.value"
     :error="routeAdapter.error.value"
     :can-return-home="canRecoverToHome"

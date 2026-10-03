@@ -62,11 +62,6 @@ test.describe('Keyboard accessibility journey', () => {
     await talentCard.focus()
     await page.keyboard.press('Enter')
 
-    // Starting-skill pick (BETA-CREATION): select tram via keyboard.
-    const skillCard = page.getByTestId('creation-skill-tram')
-    await skillCard.focus()
-    await page.keyboard.press('Enter')
-
     await expect(page.getByTestId('creation-finish')).toBeEnabled({ timeout: 5_000 })
     await page.getByTestId('creation-finish').focus()
     await page.keyboard.press('Enter')

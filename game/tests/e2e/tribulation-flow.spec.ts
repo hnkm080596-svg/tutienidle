@@ -110,7 +110,10 @@ function advanceTribulation(
 
 test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
   test('completed tribulation routes home and restores usable home chrome', async ({ page }) => {
-    test.setTimeout(210_000)
+    // End-to-end budget: guest boot + UI creation + save + reload + reauth +
+    // a full tribulation fast-forward + outcome surface teardown legitimately
+    // runs several minutes on slower machines.
+    test.setTimeout(420_000)
 
     const collected = collectBrowserErrors(page)
 
@@ -182,8 +185,12 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     // the oracle under test is the route-home wiring, not the survival
     // math. A fresh mortal at 'human' grade reliably survives the Quan Khi
     // lightning chapter, so this normally lands 'victory'.
+    let outcome = ''
     await expect
-      .poll(() => advanceTribulation(page), {
+      .poll(async () => {
+        outcome = await advanceTribulation(page)
+        return outcome
+      }, {
         timeout: 30_000,
         message: 'TribulationDirector should reach victory/defeat once the session hold releases',
       })
@@ -192,12 +199,15 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     // M-F-TALENT: a victorious breakthrough mints a mandatory talent
     // entitlement that LOCKS the transition until resolved - resolving it
     // is now part of the oracle path (drain cannot fire while the record
-    // stands). Defeat mints nothing, so only resolve when it appears.
+    // stands). Defeat mints nothing, so only resolve when it appears -
+    // skipping the wait entirely on defeat saves its full timeout.
     const entitlementModal = page.locator('[data-testid="talent-entitlement-modal"]')
-    const entitlementShown = await entitlementModal
-      .waitFor({ state: 'visible', timeout: 15_000 })
-      .then(() => true)
-      .catch(() => false)
+    const entitlementShown = outcome === 'defeat'
+      ? false
+      : await entitlementModal
+          .waitFor({ state: 'visible', timeout: 15_000 })
+          .then(() => true)
+          .catch(() => false)
     if (entitlementShown) {
       await entitlementModal.locator('button').first().click()
       await expect(entitlementModal).toHaveCount(0)
@@ -250,15 +260,25 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
 
     // Chrome is usable again, not just mounted. The outcome may have opened
     // a standalone panel over home (Quan Khi path-choice on victory;
-    // RealmPanel stays open on defeat). OverlayPanel closes on a scrim
-    // click (@click.self) — its Escape hook only fires while focus is
-    // inside the card, and QuanKhiPanel's choice buttons are disabled
-    // during the tribulation cooldown, so a corner click is reliable.
-    const openPanel = page.locator('.overlay-panel')
-    if (await openPanel.isVisible().catch(() => false)) {
-      await openPanel.click({ position: { x: 8, y: 8 } })
-      await expect(openPanel).toHaveCount(0, { timeout: 10_000 })
+    // RealmPanel stays open on defeat). Huyen Kim: the surface is
+    // .overlay-panel (micro-overlays) OR .hk-scroll (imperial scenes) -
+    // close whichever is standing via its own close button, re-resolving
+    // between attempts so a mid-leave element never stalls the click on
+    // a detached node.
+    for (let i = 0; i < 3; i += 1) {
+      const openPanel = page.locator('.overlay-panel, .hk-scroll').first()
+      if (!(await openPanel.isVisible().catch(() => false))) break
+      const closeButton = openPanel.locator('.overlay-panel__close, .hk-scroll__close').first()
+      if (await closeButton.isVisible().catch(() => false)) {
+        // Bounded click: a mid-leave surface can fail actionability retries
+        // and burn the whole default timeout per attempt.
+        await closeButton.click({ timeout: 4_000 }).catch(() => undefined)
+      } else {
+        await page.keyboard.press('Escape')
+      }
+      await page.waitForTimeout(400)
     }
+    await expect(page.locator('.overlay-panel, .hk-scroll')).toHaveCount(0, { timeout: 10_000 })
 
     await page.keyboard.press('Tab')
     const realmSlotAfter = page.locator('[data-wheel-slot="realm"]')

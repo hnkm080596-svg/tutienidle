@@ -30,5 +30,6 @@ test.describe('Boot fresh (no saved state)', () => {
     await expect(creation.getByText('Đạo danh', { exact: false })).toBeVisible()
     await expect(page.getByTestId('creation-name-input')).toBeVisible()
     await expect(creation.locator('[data-testid^="creation-talent-"]').first()).toBeVisible()
+    await expect(creation.locator('[data-testid^="creation-skill-"]')).toHaveCount(0)
   })
 })

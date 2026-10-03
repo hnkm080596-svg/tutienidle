@@ -20,7 +20,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { i18n } from '@/i18n'
 import SkillPathPanel from '@/components/panels/SkillPathPanel.vue'
-import AlchemyView from '@/components/panels/AlchemyView.vue'
+import AlchemySurface from '@/components/scenes/alchemy/AlchemySurface.vue'
 import TurnCombatSkillBar from '@/components/game/combat/hud/TurnCombatSkillBar.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
@@ -29,6 +29,13 @@ import { useUiStore } from '@/stores/ui'
 import { vTooltip } from '@/directives/tooltip'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
+import {
+  betaSkillTreeFor as betaSkillTreeForDomain,
+  betaCombatSurfacesFor as betaCombatSurfacesForDomain,
+} from '@/core/betaScopeSkillDomain'
+import { betaTechniqueSurfaceFor } from '@/core/betaScopeTechniqueDomain'
+import type { PlayerData } from '@/core/player/Player'
+import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import type { Material } from '@/core/material/Material'
 import type { Pill } from '@/core/pill/Pill'
@@ -107,7 +114,16 @@ function stubGameManager(): GameManager {
     nodeRegistry: { getAll: () => [], get: () => undefined },
     materialBag: { getAmount: () => 0 },
     materialRegistry: { get: () => undefined },
-    realmAdvanceOps: { tryAdvanceTechniqueGrade: () => false },
+    realmAdvanceOps: {
+      tryAdvanceTechniqueGrade: () => false,
+      getBetaTechniqueSurfaceModel: (p: PlayerData) =>
+        betaTechniqueSurfaceFor(p, {
+          activeTechnique: undefined,
+          materialAmount: () => 0,
+          materialName: (id: string) => id,
+          turnBattleInProgress: false,
+        }),
+    },
     hasPathCapability: () => false,
     setBattleManualMode: () => {},
     progressionOps: {
@@ -130,6 +146,12 @@ function stubGameManager(): GameManager {
         { role: 'special', state: 'progression-locked' },
         { role: 'ultimate', state: 'scope-hidden' },
       ],
+      // Model reads delegate to the real domain verdicts - same
+      // wiring as GameManagerProgressionOps.
+      betaSkillTreeFor: (p: PlayerData, tree: readonly ProgressionNode[] = []) =>
+        betaSkillTreeForDomain(p, tree),
+      betaCombatSurfacesFor: (p: PlayerData) =>
+        betaCombatSurfacesForDomain(p, { hasSkill: () => false }),
     },
   } as unknown as GameManager
 }
@@ -251,13 +273,13 @@ describe('QA read-model honesty: alchemy recipe surface (contract sec.F)', () =>
     gameManager.catalogOps.registerBuildings([PILL_ROOM])
     gameManager.catalogOps.registerAlchemyRecipes([BETA_RECIPE, DORMANT_RECIPE])
 
-    const view = mountPanel(AlchemyView, gameManager, (player) => {
+    const view = mountPanel(AlchemySurface, gameManager, (player) => {
       player.$state.realmId = 'mortal'
     })
 
     await nextTick()
 
-    const rows = Array.from(view.container.querySelectorAll<HTMLElement>('.alchemy-row'))
+    const rows = Array.from(view.container.querySelectorAll<HTMLElement>('.recipe-row'))
     expect(rows.length).toBe(1)
     expect(rows[0]?.textContent).not.toContain('Dormant Pill')
 

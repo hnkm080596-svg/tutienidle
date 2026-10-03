@@ -80,15 +80,15 @@ useDialogFocus(panelRef, computed(() => props.open), {
       <div v-if="open" class="confirm-modal" :style="{ zIndex: layer }">
         <section
           ref="panelRef"
-          class="confirm-modal__panel paper-on-dark"
+          class="confirm-modal__panel"
           tabindex="-1"
           role="alertdialog"
           aria-modal="true"
           :aria-labelledby="titleId"
           :aria-describedby="messageId"
         >
-          <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-          <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+          <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+          <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
           <h3 :id="titleId" class="confirm-modal__title" :class="{ 'is-danger': danger }">{{ title }}</h3>
           <p :id="messageId" class="confirm-modal__message">{{ message }}</p>
@@ -110,7 +110,7 @@ useDialogFocus(panelRef, computed(() => props.open), {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--scrim);
+  background: color-mix(in srgb, var(--hk-surface-base) 70%, transparent);
 }
 
 /* Same recipe as OfflineSummaryModal - M-tier slices + thin frame band
@@ -119,9 +119,11 @@ useDialogFocus(panelRef, computed(() => props.open), {
   position: relative;
   isolation: isolate;
   width: min(420px, 92vw);
-  padding: 40px 36px;
-  color: var(--paper-text);
-  font-family: var(--font-body);
+  padding: var(--hk-space-8) var(--hk-space-7);
+  border-radius: var(--hk-radius-md);
+  box-shadow: 0 8px 32px var(--hk-shadow-high);
+  color: var(--hk-text-primary);
+  font-family: var(--hk-font-ui);
   text-align: center;
 }
 
@@ -131,20 +133,20 @@ useDialogFocus(panelRef, computed(() => props.open), {
 }
 
 .confirm-modal__title {
-  margin: 0 0 10px;
-  font-family: var(--font-display);
+  margin: 0 0 var(--hk-space-3);
+  font-family: var(--hk-font-display);
   font-size: var(--text-title);
   letter-spacing: 0.06em;
-  color: var(--paper-text);
+  color: var(--hk-text-primary);
 }
 
 .confirm-modal__title.is-danger {
-  color: var(--crimson);
+  color: var(--hk-cinnabar-bright);
 }
 
 .confirm-modal__message {
-  margin: 0 0 18px;
-  color: var(--paper-text-soft);
+  margin: 0 0 var(--hk-space-5);
+  color: var(--hk-text-secondary);
   font-size: var(--text-sm);
   line-height: 1.55;
   word-break: break-word;
@@ -153,17 +155,24 @@ useDialogFocus(panelRef, computed(() => props.open), {
 
 .confirm-modal__actions {
   display: flex;
-  gap: 10px;
+  gap: var(--hk-space-3);
   justify-content: center;
 }
 
 .confirm-modal-enter-active,
 .confirm-modal-leave-active {
-  transition: opacity 0.16s ease;
+  transition: opacity var(--hk-motion-micro) var(--hk-ease-standard);
 }
 
 .confirm-modal-enter-from,
 .confirm-modal-leave-to {
   opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-modal-enter-active,
+  .confirm-modal-leave-active {
+    transition: none;
+  }
 }
 </style>

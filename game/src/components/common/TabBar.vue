@@ -15,8 +15,12 @@ const props = withDefaults(defineProps<{
   modelValue: string
   columns?: number
   layout?: 'grid' | 'row'
+  /** art-request inventory id stamped on every pill (data-art-id +
+     art-needed marker while the slot art is pending). */
+  artId?: string
 }>(), {
   layout: 'grid',
+  artId: undefined,
 })
 
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
@@ -67,6 +71,8 @@ function onKeydown(event: KeyboardEvent) {
       v-for="tab in tabs"
       :key="tab.id"
       class="tab-bar__item"
+      :class="{ 'art-needed': artId !== undefined }"
+      :data-art-id="artId"
       :active="modelValue === tab.id"
       role="tab"
       :aria-selected="modelValue === tab.id"
@@ -84,7 +90,7 @@ function onKeydown(event: KeyboardEvent) {
   display: grid;
   grid-template-columns: repeat(var(--tab-columns), 1fr);
   align-items: stretch;
-  gap: var(--space-1);
+  gap: var(--hk-space-2);
 }
 
 .tab-bar--row {
@@ -97,8 +103,19 @@ function onKeydown(event: KeyboardEvent) {
 
 .tab-bar__item {
   position: relative;
-  min-height: var(--tap-min);
+  min-width: 0;
+  min-height: var(--hk-density-compact-height);
   font-size: var(--text-xs);
+}
+
+/* Long tab labels ellipsize inside the pill instead of pushing past
+   the column (equipment-scene tabs at narrow widths). */
+.tab-bar__item :deep(.chip__content) {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tab-bar__badge {

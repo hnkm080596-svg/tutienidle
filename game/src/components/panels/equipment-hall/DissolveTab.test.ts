@@ -231,6 +231,89 @@ describe('DissolveTab — Hóa Luyện', () => {
     mounted.unmount()
   })
 
+  it('confirm đã gài bị hủy khi selection bị clear - chọn lại phải xác nhận 2 bước mới', async () => {
+    const mounted = mountTab((manager) => {
+      manager.equipmentBag.remove('in-bag')
+      manager.equipmentBag.add(equipmentInstanceWithQuality('q1', 'hoang'))
+      manager.equipmentBag.add(equipmentInstanceWithQuality('q2', 'hoang'))
+    })
+
+    const primary = () =>
+      mounted.container.querySelector<HTMLButtonElement>('.qi-hall__primary-action')!
+    const bulk = () =>
+      Array.from(mounted.container.querySelectorAll<HTMLButtonElement>('.dissolve-filters__bulk'))
+    const selectAll = () => bulk().find((b) => b.textContent?.includes('Chọn tất cả'))!
+    const clearAll = () => bulk().find((b) => b.textContent?.includes('Bỏ chọn hết'))!
+
+    // Arm the 2-step confirm on the full selection.
+    selectAll().click()
+    await nextTick()
+    primary().click()
+    await nextTick()
+
+    expect(primary().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
+
+    // Clearing the selection disarms the pending confirm.
+    clearAll().click()
+    await nextTick()
+    selectAll().click()
+    await nextTick()
+
+    // The first click on the re-selected set must arm again, not execute.
+    primary().click()
+    await nextTick()
+
+    expect(mounted.manager.equipmentBag.get('q1')).toBeDefined()
+    expect(primary().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
+
+    primary().click()
+    await nextTick()
+
+    expect(mounted.manager.equipmentBag.get('q1')).toBeUndefined()
+    expect(mounted.manager.equipmentBag.get('q2')).toBeUndefined()
+
+    mounted.unmount()
+  })
+
+  it('confirm đã gài bị hủy khi filter prune khỏi selection', async () => {
+    const mounted = mountTab((manager) => {
+      manager.equipmentBag.remove('in-bag')
+      manager.equipmentBag.add(equipmentInstanceWithProfessionGrade('d1', 'cuu_pham'))
+      manager.equipmentBag.add(equipmentInstanceWithProfessionGrade('d2', 'luc_pham'))
+    })
+
+    const primary = () =>
+      mounted.container.querySelector<HTMLButtonElement>('.qi-hall__primary-action')!
+    const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
+      '.dissolve-filters select:nth-of-type(1)',
+    )!
+    const selectAll = Array.from(
+      mounted.container.querySelectorAll<HTMLButtonElement>('.dissolve-filters__bulk'),
+    ).find((b) => b.textContent?.includes('Chọn tất cả'))!
+
+    // Select both candidates and arm the confirm.
+    selectAll.click()
+    await nextTick()
+    primary().click()
+    await nextTick()
+
+    expect(primary().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
+
+    // Filtering d1 out prunes it from the selection - the armed confirm
+    // must disarm, so the next click arms again instead of executing.
+    gradeSelect.value = 'luc_pham'
+    gradeSelect.dispatchEvent(new Event('change'))
+    await nextTick()
+
+    primary().click()
+    await nextTick()
+
+    expect(mounted.manager.equipmentBag.get('d2')).toBeDefined()
+    expect(primary().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
+
+    mounted.unmount()
+  })
+
   it('chọn tất cả / bỏ chọn hết theo filter hiện hành', async () => {
     const mounted = mountTab((manager) => {
       manager.equipmentBag.remove('in-bag')
