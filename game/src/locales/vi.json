@@ -1210,8 +1210,7 @@
         "register": "Lập đạo danh"
       },
       "guest": {
-        "button": "Chơi khách",
-        "note": "Tiến trình khách dừng tại Trúc Cơ"
+        "button": "Chơi khách"
       },
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
