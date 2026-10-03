@@ -20,7 +20,7 @@ export class BuildingManager {
   // talisman_institute/equipment_hall) chi xay duoc 1 lan/loai (khac
   // resource building nhu Herb Garden co the xay nhieu instance) -
   // tra theo buildingId de biet "da xay X chua" ma khong can giu
-  // instanceId o noi goi (Construction Gate/GameManager).
+  // instanceId o noi goi (vi du GameManager).
   getByBuildingId(buildingId: string): BuildingInstance | undefined {
     return this.instances.find((instance) => instance.buildingId === buildingId)
   }
