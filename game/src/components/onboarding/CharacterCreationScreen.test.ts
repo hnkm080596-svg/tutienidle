@@ -42,7 +42,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     document.body.innerHTML = ''
   })
 
-  it('renders name and talent sections on ONE screen with no skill, stepper or attribute step', async () => {
+  it('renders name + talent on ONE screen; the starter slot is a cosmetic preview, not a pick step', async () => {
     const mounted = mountScreen()
     await flushRoll()
 
@@ -50,9 +50,14 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     expect(container.querySelector('[data-testid="creation-name-input"]')).toBeTruthy()
     expect(container.querySelector('[data-testid^="creation-talent-"]')).toBeTruthy()
 
-    // BETA SCOPE LOCK v2 (phase-2): the mortal starter pick is gone
-    // entirely - no skill cards, no allocation, no stepper.
-    expect(container.querySelector('[data-testid^="creation-skill-"]')).toBeNull()
+    // BETA SCOPE LOCK v2 (phase-2): no allocation, no stepper. The starter
+    // slot renders as a cosmetic preview strip (CREATION_SKILL_PREVIEW) per
+    // the approved creation design - display-only tiles, no controls, and
+    // it never enters the payload (pinned by the emit test below).
+    const starter = container.querySelector('[data-hk-region="starter-slot"]')
+    expect(starter).toBeTruthy()
+    expect(starter!.querySelectorAll('.creation-choice-tile--display')).toHaveLength(3)
+    expect(starter!.querySelector('button')).toBeNull()
     expect(container.querySelector('[data-testid^="creation-attribute-"]')).toBeNull()
     expect(container.querySelector('.stepper')).toBeNull()
 
@@ -65,15 +70,15 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     const container = mounted.container
     const finish = () => container.querySelector<HTMLButtonElement>('[data-testid="creation-finish"]')!
 
-    expect(finish().disabled).toBe(true)
+    expect(finish().getAttribute('aria-disabled')).toBe('true')
 
     fillName(container)
     await nextTick()
-    expect(finish().disabled).toBe(true)
+    expect(finish().getAttribute('aria-disabled')).toBe('true')
 
     container.querySelector<HTMLButtonElement>('.talent-card')!.click()
     await nextTick()
-    expect(finish().disabled).toBe(false)
+    expect(finish().getAttribute('aria-disabled')).toBe('false')
 
     mounted.unmount()
   })

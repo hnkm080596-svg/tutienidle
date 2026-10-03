@@ -298,11 +298,11 @@ export class CombatVfxSpawner {
 
     if (isPlayer) {
       const height = this.scene.scale.height
-      // sub2Y = Y của sub-bar thấp nhất trong PlayerHudLayer.layout() —
-      // công thức mirror (HP bar cụm trái-dưới, MP/Kiếm xếp trên).
-      const sub2Y =
+      // Row anchored bottom-LEFT, independent, hugging the reward gourd
+      // edge - no longer mirrors PlayerHudLayer (HUD moved top-left per spec 13).
+      const statusRowBaseY =
         height - HUD_MARGIN - HUD_HP_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT
-      const temporaryRowY = sub2Y - STATUS_PLAYER_ROW_OFFSET_Y - STATUS_ICON_SIZE
+      const temporaryRowY = statusRowBaseY - STATUS_PLAYER_ROW_OFFSET_Y - STATUS_ICON_SIZE
 
       baseY = rowTier === 0 ? temporaryRowY : temporaryRowY - STATUS_ROW_GAP - STATUS_ICON_SIZE
       startX = HUD_MARGIN

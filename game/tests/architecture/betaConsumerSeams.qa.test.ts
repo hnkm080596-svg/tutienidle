@@ -363,12 +363,15 @@ describe('carried dormant records stay flagged/inert', () => {
     expect(betaHiddenRealmRecordFor(p, 'qi_refining')).toBeUndefined()
   })
 
-  it('worker lodge tab verdicts: nhan_cong available, companion tabs scope-hidden', () => {
+  it('worker lodge tab verdicts: every tab scope-hidden under beta, manual split never offered', () => {
     const gameManager = realGameManager()
-    const model = gameManager.buildingOps.getWorkerLodgeSurfaceModel()
+    const model = gameManager.buildingOps.getWorkerLodgeSurfaceModel(player())
 
     const byId = Object.fromEntries(model.tabs.map((tab) => [tab.id, tab]))
-    expect(byId.nhan_cong?.verdict).toBe('available')
+    // FE contract sec.4C: the whole lodge is out of scope - even the
+    // workforce tab stays scope-hidden so no consumer renders it, and
+    // the manual split write is never offered.
+    expect(byId.nhan_cong?.verdict).toBe('scope-hidden')
     expect(byId.nhan_cong?.manualAssignOffered).toBe(false)
     for (const tab of ['qua_tang', 'chieu_mo', 'duyen_phan'] as const) {
       expect(byId[tab]?.verdict).toBe('scope-hidden')

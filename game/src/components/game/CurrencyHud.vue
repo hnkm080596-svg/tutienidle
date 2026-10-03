@@ -9,87 +9,33 @@
 // Presentation only (A7): reads materialBag + player state through the
 // stateVersion bridge; mutating commands stay in the ops layer. The
 // 1-second App.vue tick keeps the counts live.
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { usePlayerStore } from '@/stores/player'
-import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
-import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
-import { COMPANION_PULL_TOKEN_ID } from '@/core/game/GameManagerCompanionOps'
-import { isBetaFeature } from '@/core/betaScope'
-import { materialLabel } from '@/core/presentation/labels'
+import { chromeSlice } from '@/ui/huyenKimChrome'
+import DongFuResourcePill from '@/components/scenes/dong-fu/hud/DongFuResourcePill.vue'
+import { useCurrencyChips } from '@/composables/useCurrencyChips'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 const { t } = useI18n()
-const player = usePlayerStore()
-const gameManager = useGameManager()
-const { stateVersion } = useStateVersion()
+const { chips } = useCurrencyChips()
 
-interface CurrencyChip {
-  id: string
-  label: string
-  amount: number
-}
-
-// Linh Thach is a per-realm-tier MATERIAL family (ha/trung/thuong pham),
-// not a scalar - show one chip per tier the player actually holds, plus
-// the current realm's tier even at 0 so "I have no money" is visible.
-const spiritStoneChips = computed<CurrencyChip[]>(() => {
-  stateVersion.value
-
-  const chips = SPIRIT_STONE_MATERIALS.map((stone) => ({
-    id: stone.id,
-    label: stone.name,
-    amount: gameManager.materialBag.getAmount(stone.id),
-  }))
-
-  const held = chips.filter((chip) => chip.amount > 0)
-
-  // Empty bag still needs a visible zero balance - fall back to the
-  // lowest tier so the strip is never empty.
-  return held.length > 0 ? held : chips.slice(0, 1)
-})
-
-// Gacha currencies only render once the companion domain is reachable
-// (realm-gated in WorkerLodgePanel too - showing them earlier would be a
-// promise of a feature the player cannot open yet).
-// BETA SCOPE LOCK v2 (Phase-6): the companion domain is scope-hidden -
-// its currencies never surface in the HUD at any realm.
-const companionChips = computed<CurrencyChip[]>(() => {
-  stateVersion.value
-
-  if (!isBetaFeature('companion') || !isCompanionDomainUnlocked(player.realmId)) {
-    return []
-  }
-
-  return [
-    {
-      id: COMPANION_PULL_TOKEN_ID,
-      label: materialLabel(COMPANION_PULL_TOKEN_ID, gameManager.materialRegistry),
-      amount: gameManager.materialBag.getAmount(COMPANION_PULL_TOKEN_ID),
-    },
-    {
-      id: 'duyen_phan',
-      label: t('duyenPhan.shortName'),
-      amount: player.duyenPhan,
-    },
-  ]
-})
-
-const chips = computed(() => [...spiritStoneChips.value, ...companionChips.value])
+// Huyen Kim chrome slot `resource-pill` (160x48, non-tintable) is spec'd
+// for these counters. While the manifest keeps the slot 'pending',
+// chromeSlice() returns null and the chips keep the CSS capsule below;
+// once 'ready', InkNineSlice (the ONE nine-slice owner) paints the PNG -
+// manifest-only change, no code edits (huyen-kim-chrome.json contract).
+const resourcePillSlice = chromeSlice('resource-pill')
 </script>
 
 <template>
-  <div class="currency-hud" :aria-label="t('currencyHud.aria')">
-    <span
+  <div class="currency-hud" :aria-label="t('currencyHud.aria')" data-hk-region="resource-cluster">
+    <DongFuResourcePill
       v-for="chip in chips"
       :key="chip.id"
-      class="currency-hud__chip"
-      :class="`currency-hud__chip--${chip.id}`"
-    >
-      <span class="currency-hud__label">{{ chip.label }}</span>
-      <strong class="currency-hud__amount">{{ formatNumber(chip.amount) }}</strong>
-    </span>
+      :chip-id="chip.id"
+      :label="chip.label"
+      :amount-text="formatNumber(chip.amount)"
+      :sliced="Boolean(resourcePillSlice)"
+    />
   </div>
 </template>
 
@@ -108,30 +54,6 @@ const chips = computed(() => [...spiritStoneChips.value, ...companionChips.value
   pointer-events: none;
 }
 
-.currency-hud__chip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 4px 10px;
-  background: color-mix(in srgb, var(--ink-950) 80%, transparent);
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  color: var(--surface-text-soft);
-}
-
-.currency-hud__label {
-  font-size: var(--text-xs);
-  white-space: nowrap;
-}
-
-.currency-hud__amount {
-  color: var(--surface-text);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.currency-hud__chip--duyen_phan .currency-hud__amount {
-  color: var(--mineral-gold);
-}
+/* Chip internals (pill surface, label, amount) live in
+   DongFuResourcePill - this block owns only the strip layout. */
 </style>

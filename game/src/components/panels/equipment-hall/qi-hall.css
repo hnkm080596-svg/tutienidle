@@ -243,11 +243,21 @@
   gap: 8px;
 }
 
+/* The dissolve grid is auto-fill 64px columns - the empty-state note is a
+   grid item too, so without a span rule it wraps into one ~90px column. */
+.qi-hall__dissolve .qi-hall__empty {
+  grid-column: 1 / -1;
+}
+
 .qi-hall__decompose {
   gap: 8px;
 }
 
-@container overlay-panel (max-width: 760px) {
+/* Unnamed container query: resolves against the imperial-scroll
+   envelope in scene mounts and the overlay-panel card in legacy
+   mounts - the named 'overlay-panel' container never exists inside
+   the scene shell, so the name would silently disable this block. */
+@container (max-width: 760px) {
   .qi-hall__split { flex-direction: column; }
   .qi-hall__split-left {
     flex: 0 0 auto;
@@ -258,4 +268,21 @@
     border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 22%, transparent);
   }
   .qi-hall__slot-grid { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); grid-template-rows: none; }
+}
+
+/* Scene-12 item-card region is ~330px: the same vertical stack fires
+   under the region's own `equipment-ops` container (the overlay-panel
+   container stays wider and never triggers inside it). */
+@container equipment-ops (max-width: 560px) {
+  .qi-hall__split { flex-direction: column; }
+  .qi-hall__split-left {
+    flex: 0 0 auto;
+    flex-direction: row;
+    padding-right: 0;
+    padding-bottom: 8px;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 22%, transparent);
+  }
+  .qi-hall__slot-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: none; }
+  .qi-hall__split-right { padding: 0; }
 }

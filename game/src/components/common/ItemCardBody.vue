@@ -102,16 +102,16 @@ function hideBrokenImage(event: Event) {
 </template>
 
 <style scoped>
-/* Dark-ink card body - inherits the .tooltip paper->surface var remap,
-   so the same tokens stay legible on the dark surface. */
+/* Huyen Kim card body on the tooltip's dark surface - text reads the
+   --hk-* ramp; --tooltip-accent stays the consumer accent channel. */
 .item-card {
-  color: var(--paper-text, #211f1a);
-  font: var(--text-xs) var(--font-body);
+  color: var(--hk-text-primary);
+  font: var(--text-xs) var(--hk-font-ui);
 }
 
 .item-card__eyebrow {
   margin: 0 0 6px;
-  color: var(--tooltip-accent, var(--chrome-300));
+  color: var(--tooltip-accent, var(--hk-gold-muted));
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: .14em;
@@ -128,23 +128,23 @@ function hideBrokenImage(event: Event) {
   place-items: center;
   width: 54px;
   height: 54px;
-  border: 1px solid color-mix(in srgb, var(--tooltip-accent, var(--chrome-300)) 42%, var(--paper-line, rgba(42,41,36,.42)));
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--paper-100, #ebe3d2) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tooltip-accent, var(--hk-gold-muted)) 42%, var(--hk-border-muted));
+  border-radius: var(--hk-radius-sm);
+  background: color-mix(in srgb, #ebe3d2 82%, transparent);
   overflow: hidden;
 }
 .item-card__icon, .item-card__icon-fallback { grid-area: 1 / 1; }
 .item-card__icon {
   width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box;
-  background: color-mix(in srgb, var(--paper-50, #f5f0e4) 84%, transparent);
+  background: color-mix(in srgb, #f5f0e4 84%, transparent);
 }
-.item-card__icon-fallback { color: var(--tooltip-accent, var(--chrome-300)); font: 700 var(--text-panel-title) var(--font-display); }
+.item-card__icon-fallback { color: var(--tooltip-accent, var(--hk-gold-muted)); font: 700 var(--text-panel-title) var(--hk-font-display); }
 
 .item-card__heading { min-width: 0; }
 .item-card__title {
   margin: 0 0 3px;
-  color: var(--paper-text, #211f1a);
-  font-family: var(--font-display);
+  color: var(--hk-text-primary);
+  font-family: var(--hk-font-display);
   font-size: var(--text-md);
   font-weight: 700;
   line-height: 1.25;
@@ -155,28 +155,28 @@ function hideBrokenImage(event: Event) {
   background-clip: text;
   -webkit-background-clip: text;
 }
-.item-card__meta { margin: 0; color: var(--paper-text-muted, #8f897c); font-size: var(--text-xs); }
+.item-card__meta { margin: 0; color: var(--hk-text-muted); font-size: var(--text-xs); }
 
 .item-card__badges { display: flex; flex-wrap: wrap; gap: 4px; }
 .item-card__badge {
   padding: 1px 5px;
-  border: 1px solid var(--paper-line, rgba(42,41,36,.42));
-  border-radius: 999px;
-  color: var(--paper-text-soft, #5e5a50);
+  border: 1px solid var(--hk-border-muted);
+  border-radius: var(--hk-radius-pill);
+  color: var(--hk-text-secondary);
   font-size: var(--text-xs);
 }
-.item-card__badge--muted { color: var(--paper-text-muted, #8f897c); }
+.item-card__badge--muted { color: var(--hk-text-muted); }
 
 /* Eyebrow section label + hairline divider (cultivation structure on
-   the dark ink skin - the divider IS the brush stroke, no extra art). */
+   the dark huyen skin - the divider IS the brush stroke, no extra art). */
 .item-card__section {
   margin-top: 10px;
   padding-top: 7px;
-  border-top: 1px solid color-mix(in srgb, var(--tooltip-accent, var(--chrome-300)) 18%, var(--paper-line, rgba(42,41,36,.42)));
+  border-top: 1px solid color-mix(in srgb, var(--tooltip-accent, var(--hk-gold-muted)) 24%, var(--hk-border-muted));
 }
 .item-card__section-label {
   margin: 0 0 5px;
-  color: color-mix(in srgb, var(--tooltip-accent, var(--chrome-300)) 76%, var(--paper-text, #211f1a));
+  color: color-mix(in srgb, var(--tooltip-accent, var(--hk-gold-muted)) 76%, var(--hk-text-primary));
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: .1em;
@@ -188,24 +188,24 @@ function hideBrokenImage(event: Event) {
   grid-template-columns: minmax(0,1fr) auto;
   column-gap: 14px;
   align-items: baseline;
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--hk-text-secondary);
   line-height: 1.55;
 }
-.item-card__gem { color: var(--tooltip-accent, var(--chrome-300)); margin-right: 4px; font-size: .8em; }
-.item-card__tier { margin-left: 5px; color: var(--paper-text-muted, #8f897c); }
-.item-card__row-value { color: var(--paper-text, #211f1a); font-variant-numeric: tabular-nums; text-align: right; }
-.item-card__range { margin-left: 6px; color: var(--paper-text-muted, #8f897c); }
+.item-card__gem { color: var(--tooltip-accent, var(--hk-gold-muted)); margin-right: 4px; font-size: .8em; }
+.item-card__tier { margin-left: 5px; color: var(--hk-text-muted); }
+.item-card__row-value { color: var(--hk-text-primary); font-variant-numeric: tabular-nums; text-align: right; }
+.item-card__range { margin-left: 6px; color: var(--hk-text-muted); }
 .item-card__delta { margin-left: 6px; }
-.item-card__delta--positive { color: var(--jade); }
-.item-card__delta--negative { color: var(--crimson); }
-.item-card__delta--muted { color: var(--paper-text-muted, #8f897c); }
-.item-card__row-detail { grid-column: 1/-1; color: var(--paper-text-muted, #8f897c); }
+.item-card__delta--positive { color: var(--hk-jade); }
+.item-card__delta--negative { color: var(--hk-cinnabar-bright); }
+.item-card__delta--muted { color: var(--hk-text-muted); }
+.item-card__row-detail { grid-column: 1/-1; color: var(--hk-text-muted); }
 
 /* Row tones - same palette the old flat tooltip rows used. */
-.item-card__row--positive .item-card__row-value { color: var(--jade); }
-.item-card__row--negative .item-card__row-value { color: var(--crimson); }
-.item-card__row--warning .item-card__row-value { color: var(--mineral-gold, #b79653); }
-.item-card__row--muted { color: var(--paper-text-muted, #8f897c); }
+.item-card__row--positive .item-card__row-value { color: var(--hk-jade); }
+.item-card__row--negative .item-card__row-value { color: var(--hk-cinnabar-bright); }
+.item-card__row--warning .item-card__row-value { color: var(--hk-gold); }
+.item-card__row--muted { color: var(--hk-text-muted); }
 .item-card__row--special .item-card__row-value { color: var(--affix-exalted); }
 
 /* Affix tier chips - the old tier colors move from the row label to
@@ -225,8 +225,8 @@ function hideBrokenImage(event: Event) {
 .item-card__description {
   margin: 10px 0 0;
   padding-top: 7px;
-  border-top: 1px dashed color-mix(in srgb, var(--tooltip-accent, var(--chrome-300)) 24%, var(--paper-line, rgba(42,41,36,.42)));
-  color: var(--paper-text-muted, #8f897c);
+  border-top: 1px dashed color-mix(in srgb, var(--tooltip-accent, var(--hk-gold-muted)) 24%, var(--hk-border-muted));
+  color: var(--hk-text-muted);
   font-style: italic;
   line-height: 1.45;
 }

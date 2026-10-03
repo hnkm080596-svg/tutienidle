@@ -42,4 +42,6 @@ export type StandalonePanel =
   | 'artifact'
   | 'tran_phap'
   | 'companion'
+  | 'technique'
+  | 'body'
   | null

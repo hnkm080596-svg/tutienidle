@@ -10,6 +10,8 @@ function state(overrides: Partial<TurnBattleEntityVisualState> = {}): TurnBattle
     column: 10,
     currentHp: 50,
     maxHp: 100,
+    currentMp: 0,
+    maxMp: 0,
     alive: true,
     isBoss: false,
     ...overrides,

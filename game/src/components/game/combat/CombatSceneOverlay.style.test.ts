@@ -68,8 +68,8 @@ describe('CombatSceneOverlay — style contract (T8.1)', () => {
     const rule = ruleOf('.combat-scene-overlay__ai-panel')
 
     expect(rule).toContain('position: absolute')
-    expect(rule).toContain('left: var(--space-3)')
-    expect(rule).toContain('top: var(--space-3)')
+    expect(rule).toContain('left: 0.96vw')
+    expect(rule).toContain('top: calc(14.88vh - var(--combat-topbar-h))')
     expect(rule).toContain('z-index: 12')
   })
 

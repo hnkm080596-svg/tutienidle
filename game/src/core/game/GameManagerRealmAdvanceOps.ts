@@ -80,6 +80,10 @@ import {
 } from '../talent/TalentEntitlement'
 import type { GameManagerProgressionOps } from './GameManagerProgressionOps'
 import type { TemplateRegistry } from './TemplateRegistry'
+import {
+  betaTechniqueSurfaceFor,
+  type BetaTechniqueSurfaceModel,
+} from '../betaScopeTechniqueDomain'
 
 /**
  * M-QI-03 - one row of the normal breakthrough requirement read-model.
@@ -859,6 +863,25 @@ export class GameManagerRealmAdvanceOps {
     this.deps.materialBag.remove(cost.materialId, cost.amount)
 
     return this.deps.techniqueSystem.advanceTechniqueGrade(player.realmId)
+  }
+
+  /**
+   * BETA FE-CONTRACT (work-order sec.4A) - canonical Technique surface
+   * read-model. The frontend renders this model and never calls
+   * canAdvanceTechniqueGrade / getTechniqueGradeUpgradeCost /
+   * materialBag.getAmount itself; the mutation above stays the domain
+   * authority. Pure query - no state touched.
+   */
+  getBetaTechniqueSurfaceModel(player: PlayerData): BetaTechniqueSurfaceModel {
+    return betaTechniqueSurfaceFor(player, {
+      activeTechnique: this.deps.techniqueManager.getActive(),
+      materialAmount: (materialId) => this.deps.materialBag.getAmount(materialId),
+      materialName: (materialId) =>
+        this.deps.materialRegistry.has(materialId)
+          ? this.deps.materialRegistry.get(materialId).name
+          : materialId,
+      turnBattleInProgress: this.deps.isTurnBattleInProgress(),
+    })
   }
 
   /**

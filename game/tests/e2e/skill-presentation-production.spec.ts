@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures'
+import { BETA_FEATURES } from '../../src/core/betaFeatureFlags'
 
 import {
   assertNoBrowserErrors,
@@ -436,6 +437,8 @@ test.describe('skill presentation runtime - production path (design section 11)'
   test('melee basic + ngu_kiem_thuat: cast -> impact once -> resolved -> complete', async ({
     page,
   }) => {
+    // ngu_kiem_thuat is a sword-path skill - scope-hidden under the beta lock.
+    test.skip(!BETA_FEATURES.swordPath, 'swordPath scope-hidden under the beta lock')
     test.setTimeout(600_000)
     const collected = collectBrowserErrors(page)
 

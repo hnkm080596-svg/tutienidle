@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import GameButton from '@/components/common/GameButton.vue'
-import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
 import { isValidCharacterName } from '@/services/character/CharacterCreationService'
+import type { TalentDefinition } from '@/core/talent/Talent'
 import type { RemoteCharacterMetadata } from '@/services/session/BackendStatus'
 import { useAudioStore } from '@/stores/audio'
+import CreationSceneLayout from '@/components/scenes/creation/CreationSceneLayout.vue'
+import CreationBackButton from '@/components/scenes/creation/CreationBackButton.vue'
+import CreationScrollShell from '@/components/scenes/creation/CreationScrollShell.vue'
+import CreationTitleBlock from '@/components/scenes/creation/CreationTitleBlock.vue'
+import CreationNameSection from '@/components/scenes/creation/CreationNameSection.vue'
+import CreationTalentSection from '@/components/scenes/creation/CreationTalentSection.vue'
+import CreationStarterSlot from '@/components/scenes/creation/CreationStarterSlot.vue'
+import CreationFooter from '@/components/scenes/creation/CreationFooter.vue'
+import { CREATION_SKILL_PREVIEW } from '@/components/scenes/creation/creationPreview'
 
-// BETA SCOPE LOCK v2 (phase-2) - the canonical creation surface is
-// Name + Talent only. The mortal starter pick is gone: every beta
-// character boots with 'linh_bao' (BETA_MORTAL_STARTER_SKILL_ID), and
-// the talent offer list arrives already beta-admitted from the service
-// - this screen never filters the registry itself.
+// The committed creation contract remains name + talent only.
+// Starter tiles are a read-only visual preview until the gameplay hookup.
+// The talent offer list still arrives from the existing service.
 export interface CharacterCreationPayload {
   name: string
   talentIds: string[]
@@ -33,21 +37,16 @@ const rolling = ref(false)
 const error = ref('')
 const creating = ref(false)
 
-const { t, te } = useI18n()
-
-// ui-audit creation-meta - talent tag chips rendered raw enum values
-// ('combat', 'risk_reward'); route through locale keys, fall back to the
-// raw tag only when a future tag ships without a label.
-function talentTagLabel(tag: string): string {
-  const key = `onboarding.creation.talentStep.tags.${tag}`
-  return te(key) ? t(key) : tag
-}
+const { t } = useI18n()
 
 const validName = computed(() => isValidCharacterName(name.value))
 const ready = computed(() => validName.value && selectedTalentIds.value.length === 1)
 
 const pickedTalentName = computed(
   () => talents.value.find((talent) => talent.id === selectedTalentIds.value[0])?.name ?? '',
+)
+const summary = computed(() =>
+  t('onboarding.creation.summary', { name: name.value.trim(), talent: pickedTalentName.value }),
 )
 function toggleTalent(talent: TalentDefinition) {
   if (rolling.value || creating.value) return
@@ -104,59 +103,30 @@ onMounted(() => { void reroll() })
 </script>
 
 <template>
-  <main class="creation-screen" data-testid="character-creation-screen">
-    <InkWashBackdrop left-mountain right-mountain bottom-mist />
-    <header class="creation-header">
-      <GameButton variant="ghost" size="sm" :disabled="creating" @click="emit('back')">{{ t('onboarding.creation.back') }}</GameButton>
-      <div><p>{{ t('onboarding.creation.headerKicker') }}</p><h1>{{ t('onboarding.creation.headerTitle') }}</h1></div>
-    </header>
-
-    <section class="creation-panel paper-on-dark">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-
-      <div class="creation-section name-section">
-        <p class="kicker">{{ t('onboarding.creation.nameStep.kicker') }}</p><h2>{{ t('onboarding.creation.nameStep.title') }}</h2>
-        <p>{{ t('onboarding.creation.nameStep.description') }}</p>
-        <label><span>{{ t('onboarding.creation.nameStep.label') }}</span><input v-model="name" maxlength="20" autofocus :disabled="creating" :placeholder="t('onboarding.creation.nameStep.placeholder')" data-testid="creation-name-input" /></label>
-        <small :class="{ valid: validName }">{{ t('onboarding.creation.nameStep.minLengthHint', { length: name.length }) }}</small>
-      </div>
-
-      <div class="creation-section talent-section">
-        <div class="panel-heading"><div><p class="kicker">{{ t('onboarding.creation.talentStep.kicker') }}</p><h2>{{ t('onboarding.creation.talentStep.title') }}</h2></div><strong>{{ t('onboarding.creation.talentStep.selected', { count: selectedTalentIds.length }) }}</strong></div>
-        <p v-if="rolling && talents.length === 0" class="loading-roll">{{ t('onboarding.creation.talentStep.rolling') }}</p>
-        <p v-else-if="error && talents.length === 0" class="loading-roll">{{ error }}</p>
-        <div v-else class="talent-grid" :class="{ 'is-rolling': rolling }" :aria-busy="rolling">
-          <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :data-testid="`creation-talent-${talent.id}`" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" :disabled="rolling || creating" @click="toggleTalent(talent)">
-            <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span><h3>{{ talent.name }}</h3><p>{{ talent.description }}</p><small>{{ talentTagLabel(talent.tags[0] ?? '') }}</small>
-          </button>
-        </div>
-        <div class="section-actions"><GameButton variant="secondary" :disabled="rolling || creating" @click="reroll">{{ t('onboarding.creation.talentStep.reroll') }}</GameButton></div>
-      </div>
-
-      <p v-if="error && talents.length > 0" class="creation-error">{{ error }}</p>
-      <footer class="panel-actions">
-        <p v-if="ready" class="creation-summary" data-testid="creation-summary">{{ t('onboarding.creation.summary', { name: name.trim(), talent: pickedTalentName }) }}</p>
-        <GameButton variant="primary" :disabled="!ready || creating" data-testid="creation-finish" @click="finish">{{ creating ? t('onboarding.creation.creating') : t('onboarding.creation.finish') }}</GameButton>
-      </footer>
-    </section>
-  </main>
+  <CreationSceneLayout>
+    <template #scroll>
+      <CreationScrollShell>
+        <template #back><CreationBackButton :disabled="creating" @back="emit('back')" /></template>
+        <CreationTitleBlock />
+        <CreationNameSection v-model="name" :valid-name="validName" :disabled="creating" />
+        <CreationTalentSection
+          :talents="talents"
+          :selected-ids="selectedTalentIds"
+          :rolling="rolling"
+          :error="error"
+          :creating="creating"
+          @toggle="toggleTalent"
+          @reroll="reroll"
+        />
+        <CreationStarterSlot :options="CREATION_SKILL_PREVIEW" />
+        <CreationFooter
+          :ready="ready"
+          :creating="creating"
+          :summary="summary"
+          :error="talents.length > 0 ? error : ''"
+          @finish="finish"
+        />
+      </CreationScrollShell>
+    </template>
+  </CreationSceneLayout>
 </template>
-
-<style scoped>
-.creation-screen { position: relative; width: 100vw; height: 100vh; box-sizing: border-box; overflow: auto; padding: 22px clamp(20px,5vw,72px) 34px; color: var(--paper-text, #211f1a); background: var(--paper-50, #f5f0e4); }
-.creation-header,.creation-panel { position: relative; z-index: 1; }
-.creation-header { max-width: 1120px; margin: 0 auto 18px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; }.creation-header button { justify-self: start; }.creation-header p,.kicker { margin: 0; color: var(--chrome-500); font-size: var(--text-xs); letter-spacing: .25em; }.creation-header h1 { margin: 4px 0; font: 700 var(--text-display) var(--font-display); }
-.creation-panel { position: relative; isolation: isolate; max-width: 1120px; margin: auto; box-sizing: border-box; border-radius: 0; padding: clamp(40px,4vw,56px) clamp(30px,5vw,64px); background: transparent; box-shadow: none; }
-.creation-panel > :not(.ink-nine-slice) { position: relative; z-index: 3; }
-.creation-section { margin-bottom: 28px; }.creation-section h2 { margin: 5px 0 8px; font: 600 var(--text-display) var(--font-display); }.creation-section>p:not(.kicker) { color: var(--paper-text-soft, #5e5a50); }
-.name-section label { display: grid; gap: 8px; margin: 16px 0 8px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }.name-section input { padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); font: 600 var(--text-panel-title) var(--font-display); text-align: center; outline: none; }.name-section input:focus { border-color: var(--cinnabar, #b54432); }.name-section small { display: block; color: var(--text-muted); }.name-section small.valid { color: var(--jade); }
-.panel-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 14px; }.panel-heading strong { color: var(--cinnabar, #b54432); font-size: var(--text-xs); }.section-description { color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); margin: 0 0 12px; }
-.talent-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }.talent-card { position: relative; min-height: 128px; padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); text-align: left; cursor: pointer; transition: transform .15s,border-color .15s; }.talent-card:hover { transform: translateY(-2px); }.talent-card.selected { border-color: var(--cinnabar, #b54432); box-shadow: inset 0 0 0 1px var(--cinnabar, #b54432); }.talent-card__rarity { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .13em; }.talent-card h3 { margin: 7px 0; font: 600 var(--text-md) var(--font-display); }.talent-card p { margin: 0 0 8px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); line-height: 1.5; }.talent-card small { color: var(--text-muted); }
-.talent-grid.is-rolling { opacity: .45; pointer-events: none; }.talent-tier-pham .talent-card__rarity{color:var(--rank-color-1)}.talent-tier-linh .talent-card__rarity{color:var(--rank-color-3)}.talent-tier-dia .talent-card__rarity{color:var(--rank-color-5)}.talent-tier-thien .talent-card__rarity{color:var(--rank-color-7)}.talent-tier-di .talent-card__rarity{color:var(--rank-color-8)}
-.section-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
-.loading-roll { min-height: min(220px, 30vh); display: grid; place-items: center; color: var(--cinnabar, #b54432); font-family: var(--font-display); }.creation-error { margin: 14px 0 0; color: var(--crimson); text-align: center; font-size: var(--text-xs); }
-.panel-actions { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 22px; }
-.creation-summary { margin: 0; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
-@media(max-width:760px){.talent-grid{grid-template-columns:1fr 1fr}.creation-header{grid-template-columns:1fr auto}.creation-header>div{grid-column:1/-1;grid-row:1}.creation-header button{grid-row:2}.panel-heading{align-items:start}}
-</style>

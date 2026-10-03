@@ -144,7 +144,7 @@ describe('combat build resolution on a carried way_out_of_scope save', () => {
       // A carried formation loadout + a survive-lethal talent claim ride
       // the same save - none of it may reach the build.
       formationLoadout: { formationId: 'tran_ngu_hanh', slots: [] } as never,
-      selectedTalentIds: ['pham_cot', 'pham_nhan_chi_cot'],
+      selectedTalentIds: ['tran_tam', 'pham_nhan_chi_cot'],
     })
 
     const build = resolveCombatBuild(p, resolveCultivationPathRuntime(p, runtimeDeps), deps)
@@ -159,14 +159,14 @@ describe('combat build resolution on a carried way_out_of_scope save', () => {
     expect(build.entryBuffs.map((entry) => entry.definitionId)).not.toContain(VAN_PHAP_THAN_HOA_ID)
     expect(build.survive.extraSources).toBeUndefined()
     // Raw ids pass through but re-gate at the effect reader (next probe).
-    expect(build.survive.talentIds).toEqual(['pham_cot', 'pham_nhan_chi_cot'])
+    expect(build.survive.talentIds).toEqual(['tran_tam', 'pham_nhan_chi_cot'])
   })
 })
 
 describe('survive-lethal charges minted from carried talent ids', () => {
   it('a forged non-beta talent list mints zero lethal-survival uses', () => {
     const guard = new SurviveLethalGuard()
-    guard.beginBattle(['pham_cot', 'pham_nhan_chi_cot', 'tran_tam'], {})
+    guard.beginBattle(['pham_nhan_chi_cot', 'tran_tam', 'phu_van'], {})
     expect(guard.getRemainingUses()).toBe(0)
     expect(guard.tryConsumeUse()).toBe(false)
   })
@@ -226,10 +226,10 @@ describe('persisted stat modifiers + main-stat cap', () => {
 
 describe('dormant talent effects', () => {
   it('a forged non-beta talent emits no effects', () => {
-    // pham_cot (-75% cultivation speed) and pham_nhan_chi_cot (+75%) are
-    // outside BETA_CREATION_TALENT_IDS - carried ids must mint nothing.
-    expect(collectTalentEffects(['pham_cot', 'pham_nhan_chi_cot'], {})).toEqual([])
-    expect(getTalentCombatPassiveSkillId(['pham_cot'], {})).toBeUndefined()
+    // pham_nhan_chi_cot (+75% cultivation speed) and tran_tam are
+    // outside the beta talent roster - carried ids must mint nothing.
+    expect(collectTalentEffects(['pham_nhan_chi_cot', 'tran_tam'], {})).toEqual([])
+    expect(getTalentCombatPassiveSkillId(['pham_nhan_chi_cot'], {})).toBeUndefined()
   })
 
   it('control: a beta talent still emits', () => {

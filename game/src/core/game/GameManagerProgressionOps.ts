@@ -1147,8 +1147,11 @@ export class GameManagerProgressionOps {
     })
   }
 
-  betaSkillTreeFor(player: PlayerData): BetaSkillTree {
-    return betaSkillTreeForDomain(player)
+  betaSkillTreeFor(
+    player: PlayerData,
+    tree?: readonly ProgressionNode[],
+  ): BetaSkillTree {
+    return betaSkillTreeForDomain(player, tree)
   }
 
   betaActiveElementTreeFor(player: PlayerData): BetaSkillTreeNode[] {

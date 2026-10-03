@@ -47,6 +47,12 @@ const gameManager = useGameManager()
 
 const { stateVersion, bumpState } = useStateVersion()
 
+// FINAL POLICY (sec.4C): the manual workforce surface is entirely
+// scope-hidden under beta - the allocation block AND the workers stat
+// are governed by the ONE flag read. Automatic production keeps
+// running; nothing workforce-related renders.
+const workerSurfaceVisible = betaSurfaceVisible('manualWorkforce')
+
 const nowMs = ref(Date.now())
 
 let timer: ReturnType<typeof setInterval> | undefined
@@ -218,7 +224,6 @@ function upgrade(siteId: string) {
 // under beta - the allocation block AND the workers stat are governed
 // by the ONE flag read. Automatic production keeps running in the
 // background on the flat auto pool (betaEffectiveWorkerCapacity).
-const workerSurfaceVisible = betaSurfaceVisible('manualWorkforce')
 
 // --- Workforce read model (Mission D / spec D1) ---
 // The panel renders the domain's WorkforceView verbatim - no local
@@ -326,6 +331,8 @@ function collectLinMach() {
       </p>
 
       <!-- Chiêu Hiền Quán — phân bổ nhân công (2026-09-02) -->
+      <!-- FINAL POLICY (sec.4C): the whole block is scope-hidden under
+           beta via manualWorkforce - hidden, not merely disabled. -->
       <div v-if="workerSurfaceVisible" class="worker-allocation">
         <header class="worker-allocation__header">
           <strong>{{ t('panels.production.workersHeader', { used: workerMode === 'manual' ? assignedTotal : effectiveTotal, total: workforce.available }) }}</strong>
@@ -432,7 +439,7 @@ function collectLinMach() {
               {{ t('panels.production.nextSpeedPrefix') }}{{ formatStat('productionSpeedMultiplier', row.nextProductionSpeedMultiplier) }}
             </span>
 
-            <span>{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>
+            <span v-if="workerSurfaceVisible">{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>
           </div>
 
           <!-- Bỏ dòng "Trọng số tier" (2026-08-30, bug report: thông tin

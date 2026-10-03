@@ -29,11 +29,11 @@ test.describe('Create character to combat', () => {
     await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
     await teleportSlot.click()
 
-    // Stage select overlay opens (functionType 'stage_select').
-    const overlay = page.getByTestId('function-overlay-panel')
+    // Son Ha Do exploration scene opens (functionType 'stage_select').
+    const overlay = page.locator('.exploration-scene')
     await expect(overlay).toBeVisible({ timeout: 10_000 })
 
-    // A stage is auto-selected (selectFirstStageInChapter). Bắt Đầu should enable.
+    // A stage is auto-selected (first unlocked in zone). Bat Dau should enable.
     const startButton = page.getByTestId('stage-start-button')
     await expect(startButton).toBeEnabled({ timeout: 10_000 })
     await startButton.click()

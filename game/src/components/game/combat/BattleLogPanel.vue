@@ -86,12 +86,14 @@ function describe(entry: BattleLogEntry): string {
 </template>
 
 <style scoped>
+/* Anchored inside the spec battle-log region (CombatLogFeed owns
+   the 1330/620/326/280 placement). */
 .battle-log-panel {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  max-width: 260px;
-  max-height: 200px;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;

@@ -32,7 +32,11 @@ import {
 import { LUYEN_KHI_TINH_HOA_ID } from './equipment/TinhHoaMaterial'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import { BREAKTHROUGH_TALENT_POOLS } from '@/data/talent/BreakthroughTalentPools'
-import { isBreakthroughAcquisitionEnabled } from './realm/ReleasePolicy'
+import {
+  isBreakthroughAcquisitionEnabled,
+  isCompanionPullTokenSourceSuppressed,
+  isDomainScopedAcquisitionEnabled,
+} from './realm/ReleasePolicy'
 
 // ---------------------------------------------------------------------------
 // Ways and elements
@@ -116,9 +120,11 @@ export const BETA_CREATION_TALENT_IDS: readonly string[] = [
   // Production (2)
   'hoa_hau_thong_than',
   'bach_luyen_thanh_khi',
-  // Excluded from the 19-entry creation catalog:
-  //   pham_cot  - hidden/perfection-lineage feeder (Dai Dao conversion
-  //             is out of beta scope; its only value is the hidden path)
+  // Easter egg (1) - 'pham_cot' stays rollable in the offer pool. The
+  // hidden Dai Dao conversion it feeds is out of beta scope, but the
+  // pick itself is allowed (its -75% effect must emit, so admission is
+  // required for a picked pham_cot to work at all).
+  'pham_cot',
   // PARKED_TALENTS (tran_tam, phu_van) are already outside the creation
   // pool - formation/talisman dependent, never admissible here.
 ]
@@ -168,41 +174,15 @@ export function isBetaTalentId(talentId: string): boolean {
 // Feature flags and lock classes
 // ---------------------------------------------------------------------------
 
-/**
- * Beta feature admission table. Every listed feature is OUT of beta
- * scope; the table exists so each removal is a deliberate named flag
- * and re-enable is a single flip. Features not listed here are still
- * not offered - the fail-closed rule covers anything unnamed.
- *
- *   hiddenContent          - hidden ways' content: hidden lineage
- *                            (discovery / Co Thu trial / Quan The
- *                            diversion / Nghich Chu Thien), hidden
- *                            beasts, hidden material emissions
- *   swordPath / bodyPath   - Kiem Tu / The Tu ritual offers and panels
- *   companion              - companion roster/acquisition/progression
- *   formation              - Tran Phap formation access
- *   artifact               - artifact system surfaces
- *   manualWorkforce        - Nhan Cong manual workforce surface
- *   equipmentWash          - equipment wash (affix reroll) tab
- *   equipmentRefine        - equipment refine tab
- *   equipmentOreDecompose  - ore decompose tab
- *   dailyQuest             - all daily-cadence quests
- */
-export const BETA_FEATURES = {
-  hiddenContent: false,
-  swordPath: false,
-  bodyPath: false,
-  companion: false,
-  formation: false,
-  artifact: false,
-  manualWorkforce: false,
-  equipmentWash: false,
-  equipmentRefine: false,
-  equipmentOreDecompose: false,
-  dailyQuest: false,
-} as const
+// The flag table lives in betaFeatureFlags.ts (zero-dependency leaf -
+// e2e specs import it under tsconfig.node without dragging this
+// module's graph along). Re-export keeps '@/core/betaScope' the
+// canonical import path.
+export { BETA_FEATURES } from './betaFeatureFlags'
+export type { BetaFeatureName } from './betaFeatureFlags'
 
-export type BetaFeatureName = keyof typeof BETA_FEATURES
+import { BETA_FEATURES } from './betaFeatureFlags'
+import type { BetaFeatureName } from './betaFeatureFlags'
 
 /** The two lock classes plus the open state a surface can resolve to. */
 export type BetaScopeVerdict = 'available' | 'progression-locked' | 'scope-hidden'
@@ -528,6 +508,23 @@ export function betaEconomyClassOf(materialId: string): BetaEconomyClass | undef
   return BETA_ECONOMY_EXEMPTIONS.get(materialId)
 }
 
+/**
+ * Whether a persisted material stack renders on a beta bag/lore surface:
+ * the companion pull token is permanently suppressed and domain-scoped
+ * materials (the artifact domain today) stay invisible while their
+ * domain unlock realm is unreachable. The ONE render verdict panels
+ * call - banked balances stay persisted, never deleted.
+ */
+export function betaMaterialStackVisible(
+  material: { id: string; domainUnlockRealmId?: string },
+  playerRealmId: string,
+): boolean {
+  return (
+    !isCompanionPullTokenSourceSuppressed(material.id) &&
+    isDomainScopedAcquisitionEnabled(material.domainUnlockRealmId, playerRealmId)
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Worker Lodge tabs (work-order sec.13)
 // ---------------------------------------------------------------------------
@@ -549,15 +546,17 @@ export const BETA_WORKER_LODGE_TABS = [
 export type BetaWorkerLodgeTabId = (typeof BETA_WORKER_LODGE_TABS)[number]
 
 /**
- * Which feature flag a Worker Lodge tab is gated on. nhan_cong is the
- * workforce surface itself (always offered; only its MANUAL assignment
- * controls are governed by manualWorkforce). The other three are
- * companion surfaces.
+ * Which feature flag a Worker Lodge tab is gated on. FINAL POLICY
+ * (sec.4C): the whole Worker Lodge surface is out of beta scope - the
+ * nhan_cong workforce tab is bound to 'manualWorkforce' the same as
+ * the building surface, wheel slot and left-panel mode; the other
+ * three are companion surfaces. Automatic production keeps running in
+ * the background with no UI.
  */
 export const WORKER_LODGE_TAB_FEATURE: Readonly<
-  Record<BetaWorkerLodgeTabId, BetaFeatureName | null>
+  Record<BetaWorkerLodgeTabId, BetaFeatureName>
 > = {
-  nhan_cong: null,
+  nhan_cong: 'manualWorkforce',
   qua_tang: 'companion',
   chieu_mo: 'companion',
   duyen_phan: 'companion',

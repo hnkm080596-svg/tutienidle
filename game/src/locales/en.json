@@ -32,12 +32,25 @@
   },
   "panels": {
     "equipmentHall": {
+      "bagRail": {
+        "title": "Gear Stash",
+        "empty": "No spare equipment"
+      },
       "tabs": {
         "enhance": "Enhance",
         "wash": "Wash",
         "refine": "Refine",
         "dissolve": "Dissolve",
         "decompose": "Decompose"
+      },
+      "rail": {
+        "aria": "Equipment operations"
+      },
+      "scene": {
+        "equip": "Equip",
+        "unequip": "Unequip",
+        "equipped": "Equipped",
+        "starsAria": "Quality {rank} of {total}"
       },
       "aria": {
         "enhanceSlots": "Select enhancement slot",
@@ -182,7 +195,18 @@
         "heroLabel": "Mental Method",
         "emptyNoBonus": "No additional information",
         "emptyNoTechnique": "No technique yet — complete the Entry Ceremony to receive one automatically",
-        "gradeAction": "Advance Grade"
+        "gradeAction": "Advance Grade",
+        "gradeNode": "Grade {grade}",
+        "cardTitle": "Technique",
+        "helpAria": "Technique help",
+        "qualityLine": "Grade: {quality}",
+        "gradeTrackTitle": "Technique Grade",
+        "rankLine": "Grade {grade} · Rank {rank}",
+        "materialsTitle": "Materials Needed",
+        "reasonGradeCeiling": "Grade ceiling reached",
+        "reasonRealmGate": "Requires a higher realm",
+        "reasonInsufficientMaterial": "Not enough materials",
+        "reasonBusy": "Busy — try again later"
       },
       "colTitles": {
         "activeArts": "Active Spell Arts"
@@ -264,7 +288,10 @@
         "attribute": "Attributes",
         "defenseAdvanced": "Advanced Defense",
         "elements": "Five Elements",
-        "talents": "Innate Talents"
+        "talents": "Innate Talents",
+        "mainStats": "Main Attributes",
+        "elementSummary": "Elements Summary",
+        "derivedStats": "Derived Attributes"
       },
       "actions": {
         "quanKhi": "Quán Khí",
@@ -280,7 +307,8 @@
       "tooltips": {
         "elementStat": "Power {power} · Resistance {resistance} · Penetration {penetration}",
         "primordialTitle": "Primordial",
-        "primordialStat": "Power {power} · Ignores all defenses."
+        "primordialStat": "Power {power} · Ignores all defenses.",
+        "elementShare": "{share}% of total elemental power."
       }
     },
     "quanKhi": {
@@ -368,7 +396,9 @@
         "eliteChance": "{percent}% Elite"
       },
       "sections": {
-        "selectFloor": "Select Floor"
+        "selectFloor": "Select Floor",
+        "enemies": "Enemies Appearing",
+        "rewards": "Stage Rewards"
       },
       "empty": {
         "noStages": "This region has no combat floors yet.",
@@ -400,6 +430,17 @@
         "ranged": "Ranged",
         "caster": "Caster",
         "tank": "Guardian"
+      },
+      "progress": {
+        "title": "Exploration Progress: {zone}"
+      },
+      "rewards": {
+        "kinds": {
+          "material": "Material",
+          "equipment": "Equipment",
+          "equipmentAny": "Any Equipment",
+          "pill": "Pill"
+        }
       }
     },
     "wheel": {
@@ -585,6 +626,17 @@
       "tierLine": "{realm} · Floor {level}",
       "cultivationUnit": "Cultivation",
       "rateEta": "+{rate} {unit}/s · ~{eta} left",
+      "tierOf": "Floor {level}/{max}",
+      "sections": {
+        "progress": "Cultivation Progress",
+        "passives": "Realm Talent ({realm})",
+        "requirements": "Breakthrough Conditions: {target}"
+      },
+      "meta": {
+        "rateLabel": "Cultivation Rate",
+        "etaLabel": "Next Floor ETA",
+        "rateValue": "{rate} {unit}/s"
+      },
       "labels": {
         "quanKhi": "Quán Khí",
         "foundation": "Foundation Establishment",
@@ -595,7 +647,8 @@
         "comingSoon": "Coming soon",
         "current": "Current",
         "unlocked": "Reached",
-        "locked": "Not unlocked"
+        "locked": "Not unlocked",
+        "next": "Next"
       },
       "requirements": {
         "level": "{realm} floor {level}",
@@ -655,6 +708,10 @@
         "owned": "Dharma Physique Essence owned {count}",
         "stepCost": "Next step cost: {cost}",
         "complete": "Dai Chu Thien circulation complete."
+      },
+      "body": {
+        "title": "Body — Meridians",
+        "navAria": "Body chapters"
       }
     },
     "settings": {
@@ -718,7 +775,10 @@
         "account": "Account",
         "accountAria": "Account",
         "feedback": "Feedback",
-        "feedbackAria": "Beta feedback"
+        "feedbackAria": "Beta feedback",
+        "display": "Display",
+        "support": "Support",
+        "navAria": "Settings sections"
       },
       "update": {
         "title": "Updates",
@@ -774,7 +834,22 @@
         "claimed": "Claimed",
         "claim": "Claim Reward"
       },
-      "empty": "No quests available yet."
+      "empty": "No quests available yet.",
+      "tabs": {
+        "all": "All"
+      },
+      "cadence": {
+        "once": "One-Time"
+      },
+      "scene": {
+        "tabsAria": "Quest groups",
+        "railAria": "Quest list",
+        "objectives": "Quest Objectives",
+        "rewardsTitle": "Quest Rewards",
+        "turnIn": "Hand in {name}",
+        "done": "Done",
+        "reasonIncomplete": "Objective incomplete."
+      }
     },
     "buildingPopover": {
       "costTitle": "Build Cost",
@@ -784,6 +859,10 @@
       "close": "Close",
       "confirm": "Confirm",
       "cancel": "Cancel"
+    },
+    "hkNav": {
+      "aria": "Feature navigation",
+      "body": "Dao Body"
     },
     "decompose": {
       "labels": {
@@ -806,6 +885,47 @@
     "scripture": {
       "empty": "No lore fragments found yet.",
       "emptyHint": "Fragments that record old tales — they drop from exploration and combat."
+    },
+    "body": {
+      "help": "Three body chapters: refine the vessel, open the vessels, circulate qi.",
+      "tierRailAria": "Unit selector",
+      "chapters": {
+        "bodyRefinement": {
+          "subtitle": "Body Strengthening"
+        },
+        "meridian": {
+          "subtitle": "Opening the Meridians"
+        },
+        "zhouTian": {
+          "subtitle": "Circulating True Qi"
+        }
+      },
+      "chips": {
+        "tier": "Tier {n}",
+        "meridian": "Vessel {n}",
+        "step": "Step {n}",
+        "milestone": "Lore milestone"
+      },
+      "states": {
+        "locked": "Locked",
+        "active": "Active",
+        "done": "Done",
+        "realmLocked": "Realm locked"
+      },
+      "sections": {
+        "gains": "Attribute Gains",
+        "requirements": "Requirements"
+      },
+      "actions": {
+        "investRefinement": "Refine"
+      },
+      "unit": {
+        "tierTitle": "Tier {tier} · {name}",
+        "stepTitle": "Step {n} of {total}"
+      },
+      "zhouTian": {
+        "description": "Circulate true qi through the heavenly circuit; each step advances the vessel's foundation."
+      }
     }
   },
   "workerLodge": {
@@ -951,7 +1071,14 @@
       "title": "★ VICTORY ★",
       "retry": "Refight",
       "retryCountdown": "{duration}",
-      "continue": "Continue"
+      "continue": "Continue",
+      "subtitle": "A Perfect Victory",
+      "flavor": "The demons are vanquished; heaven and earth are clear once more.",
+      "growthEmpty": "No cultivation gains this battle",
+      "sections": {
+        "rewards": "Rewards Received",
+        "growth": "Growth"
+      }
     },
     "defeat": {
       "title": "☠ DEFEAT",
@@ -960,7 +1087,10 @@
       "returnHome": "Return to Cave",
       "returnCountdown": "({duration})",
       "hintCultivate": "Your cultivation is still lacking — refine a few more levels, then return stronger.",
-      "hintGear": "Not enough power to breach this realm — enhance your gear, take pills, or gain insight before the rematch."
+      "hintGear": "Not enough power to breach this realm — enhance your gear, take pills, or gain insight before the rematch.",
+      "subtitle": "The dao heart is not yet steady — keep cultivating.",
+      "reasonHeader": "Cause of Defeat",
+      "rewardsHeader": "Rewards Earned"
     },
     "log": {
       "toggle": "Battle Log",
@@ -1052,6 +1182,8 @@
     "auth": {
       "eyebrow": "ONE THOUGHT ENTERS THE DAO",
       "lead": "A lifetime of mortal toil, a single thought seeking immortality.",
+      "wordmark": "Tu Tiên IDLE",
+      "showPassword": "Show password",
       "tabs": {
         "login": "Log In",
         "register": "Register"
@@ -1071,12 +1203,10 @@
         "login": "Enter Cave",
         "register": "Create Identity"
       },
-      "divider": "or",
       "guest": {
         "button": "Play Now",
         "note": "Guest progress stops at Foundation Establishment"
       },
-      "status": "Test server · UI prototype",
       "continue": "Continue — {name}",
       "continueNoName": "Continue",
       "language": "Language",
@@ -1095,6 +1225,7 @@
       "headerTitle": "Create Character",
       "nameStep": {
         "kicker": "DAO TITLE",
+        "sectionTitle": "Dao Name",
         "title": "A title carried through the immortal path",
         "description": "Character names are unique and cannot be changed in the early phase.",
         "label": "Character Name",
@@ -1103,10 +1234,12 @@
       },
       "talentStep": {
         "kicker": "DESTINY",
+        "sectionTitle": "Innate Talent",
         "title": "Choose One Innate Talent",
         "selected": "Selected {count} / 1",
         "rolling": "Observing the heavens…",
         "reroll": "↻ Reroll all",
+        "hint": "Choose 1 starting talent",
         "tags": {
           "combat": "Combat",
           "crafting": "Crafting",
@@ -1123,7 +1256,16 @@
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."
       },
-      "summary": "{name} · {talent}"
+      "summary": "{name} · {talent}",
+      "headerSubtitle": "ONE STEP ONTO THE IMMORTAL PATH · MYRIAD MILES OF MOUNTAINS AND RIVERS",
+      "vistaBanner": "UNSULLIED HEART",
+      "starterSlot": {
+        "title": "Starter Skill",
+        "previewNote": "UI preview · Skill selection is not applied in game yet",
+        "pending": "Revealed after you choose a talent"
+      },
+      "chooseOne": "Choose one",
+      "hoverDetail": "Hover for details"
     }
   },
   "skillResource": {
@@ -1272,7 +1414,11 @@
       "resultVictory": "TRIBULATION PASSED",
       "resultDefeat": "TRIBULATION FAILED",
       "resultVictoryText": "The heavenly tribulation dissolves — your dao heart stands firmer.",
-      "resultDefeatText": "Body broken, dao scattered — recover, then try again."
+      "resultDefeatText": "Body broken, dao scattered — recover, then try again.",
+      "timeLeft": "Time remaining",
+      "realmCardTitle": "Tribulation: {name}",
+      "progressLabel": "Progress",
+      "resolve": "Hold the dao heart — overcome the heart demon"
     }
   },
   "actionFailure": {
@@ -1361,7 +1507,22 @@
       "fallback": "Cannot start brewing",
       "scope_hidden": "This recipe is outside the beta scope"
     },
-    "outcomeNone": "This run yields no pills."
+    "outcomeNone": "This run yields no pills.",
+    "queueTitle": "Brewing Queue",
+    "queueEmpty": "No cauldron is brewing yet.",
+    "placeIngredients": "Place ingredients into the cauldron",
+    "bannerLeft": "Dao of Alchemy Reaches Heaven",
+    "bannerRight": "Flame of the Cauldron, Pure Azure",
+    "title": "Alchemy",
+    "subtitle": "Refine spirit herbs · Form the pill",
+    "navigation": "Functions",
+    "previewStamp": "UI PREVIEW · Sample data, not wired to gameplay",
+    "cauldron": "Cauldron",
+    "selectedHerb": "Selected herb",
+    "emptyRecipes": "No recipes available.",
+    "emptyDetail": "Select a recipe to view details.",
+    "emptySlot": "Empty cauldron",
+    "durationLabel": "Brew time"
   },
   "layout": {
     "functionOverlay": {
@@ -1530,6 +1691,56 @@
     "commandWheel": {
       "openAria": "Open the Cave Dwelling command wheel",
       "hint": "Command · Tab"
+    },
+    "daoLuan": {
+      "center": "Cultivate"
+    },
+    "topBar": {
+      "aria": "Cave Dwelling status bar",
+      "identityAria": "Open the Character panel",
+      "cultivation": "Cultivation progress",
+      "realmLine": "{realm} · Stage {level}",
+      "feedback": "Mail",
+      "feedbackAria": "Mailbox / feedback",
+      "bag": "Bag",
+      "bagAria": "Open the Bag",
+      "settings": "Set",
+      "settingsAria": "Open Settings"
+    },
+    "thienCo": {
+      "title": "Heaven's Insight",
+      "aria": "Heaven's Insight — what is worth doing now",
+      "empty": "A calm Dao heart — nothing urgent.",
+      "collapse": "Collapse Heaven's Insight",
+      "breakthrough": {
+        "title": "Breakthrough ready",
+        "detail": "Cultivation is full — open Realm to break through.",
+        "cta": "Break through"
+      },
+      "quest": {
+        "title": "Quests complete",
+        "detail": "{count} quest(s) await rewards.",
+        "cta": "Claim"
+      },
+      "ready": {
+        "title": "{name} ready to harvest",
+        "detail": "Storage is full.",
+        "cta": "Harvest"
+      },
+      "active": {
+        "title": "Pill Room is refining",
+        "detail": "{count} batch(es) · soonest in {minutes} min.",
+        "cta": "View furnace"
+      },
+      "upgradeable": {
+        "title": "{name} can be upgraded",
+        "detail": "Materials ready for the next level.",
+        "cta": "Upgrade"
+      },
+      "expand": "Expand Thien Co board"
+    },
+    "questTracker": {
+      "aria": "Tracked quest: {name}"
     }
   },
   "tutorial": {
@@ -1709,5 +1920,205 @@
     "title": "Beta Journey Complete",
     "body": "Hung Giao Sung has fallen — every piece of beta content has been conquered: Mortal, Qi Refining, Foundation Establishment. Thank you for playing.",
     "continue": "Continue Cultivating"
+  },
+  "dongFu": {
+    "aria": "Grotto-Heaven",
+    "toggleWheel": "Show / hide the command wheel",
+    "buildingHint": "Tap to view",
+    "sceneTitle": "AZURE CLOUD GROTTO-HEAVEN",
+    "sceneSubtitle": "A tranquil mind · All dharmas return to one",
+    "view": "View",
+    "unhandled": "This feature is not open yet."
+  },
+  "paperNav": {
+    "navigation": "Functions",
+    "realm": "Realm",
+    "character": "Character",
+    "inventory": "Bag",
+    "skill": "Skills",
+    "technique": "Techniques",
+    "body": "Body",
+    "alchemy": "Pill Room",
+    "equipment": "Equipment Hall",
+    "exploration": "Expedition",
+    "quest": "Quests",
+    "settings": "Settings"
+  },
+  "character": {
+    "mainStats": "Main Attributes",
+    "points": "({count} points)",
+    "max": "MAX",
+    "allocate": "Allocate",
+    "talent": "Talents",
+    "elements": "Five Elements",
+    "path": "Path",
+    "power": "Combat Power",
+    "details": "Details",
+    "combat": "Combat",
+    "other": "Other",
+    "close": "Collapse details",
+    "open": "Expand details",
+    "statNotice": "{name}: {value}",
+    "elementNotice": "{name} · Power {power} · Resist {resistance} · Pierce {penetration}"
+  },
+  "realm": {
+    "title": "ASCENSION PATH",
+    "subtitle": "Eighteen floors\nOne road to immortality",
+    "floorLabel": "Floor {floor}",
+    "floorCount": "Floor {floor} / {total}",
+    "cultivation": "Cultivation",
+    "breakthroughTitle": "Breakthrough to {target}",
+    "viewing": "Viewing floor {floor}"
+  },
+  "technique": {
+    "title": "Technique",
+    "navigation": "Features",
+    "preview": "UI PREVIEW · Sample data, not wired to gameplay",
+    "active": "TECHNIQUE IN TRAINING",
+    "artifact": "Technique codex",
+    "artifactAlt": "Open codex drawn in ink with golden spirit lines",
+    "temporaryArt": "Temporary illustration · Replaceable per technique",
+    "training": "Technique Progress",
+    "mastery": "Mastery",
+    "advance": "Advance",
+    "current": "Current",
+    "target": "Next",
+    "upgradeHint": "Continue the cultivation path and open the technique's next grade.",
+    "materials": "Materials Needed",
+    "stageNotice": "Viewing: {name}. Cultivation progress unchanged.",
+    "advanceNotice": "Technique advanced to {grade}."
+  },
+  "skill": {
+    "title": "Skills",
+    "navigation": "Features",
+    "preview": "UI PREVIEW · Sample data, not wired to gameplay",
+    "elements": "Five Elements",
+    "tree": "Skill Meridians",
+    "levelLabel": "Level",
+    "grants": "Skill",
+    "effects": "Effects",
+    "conditions": "Requirements",
+    "noConditions": "No further requirements.",
+    "state": {
+      "learned": "Learned",
+      "available": "Available",
+      "locked": "Locked"
+    },
+    "actionDone": "{name} updated.",
+    "actionFailed": "Action unavailable — check requirements and Insight."
+  },
+  "body": {
+    "title": "Body Tempering",
+    "navigation": "Features",
+    "chapters": "Body chapters",
+    "units": "Cultivation milestones",
+    "progress": "Progress",
+    "gains": "Milestone Effects",
+    "material": "Materials Required",
+    "noGains": "No further effects.",
+    "noCost": "No materials required.",
+    "empty": "No milestones yet.",
+    "state": {
+      "done": "Done",
+      "current": "Current",
+      "locked": "Locked"
+    },
+    "investDone": "Tempering complete.",
+    "investUnavailable": "Tempering requirements unmet.",
+    "preview": "UI PREVIEW · Sample data, not wired to gameplay"
+  },
+  "exploration": {
+    "title": "Expedition",
+    "navigation": "Functions",
+    "zones": "Regions",
+    "progress": "Expedition Progress",
+    "preview": "UI PREVIEW · Sample data, not wired to gameplay",
+    "stageLabel": "{chapter} · Floor {stage} · {state}",
+    "boss": "BOSS",
+    "enemies": "Enemies",
+    "rewards": "Rewards",
+    "modes": "Mode",
+    "empty": "Select a stage on the map.",
+    "noEnemy": "No enemy intel.",
+    "startFailed": "Unable to start. Check the requirements.",
+    "armedFarm": "Auto-farming: {stage}",
+    "state": {
+      "cleared": "Cleared",
+      "current": "Frontier",
+      "available": "Available",
+      "locked": "Locked"
+    }
+  },
+  "equipment": {
+    "title": "Equipment",
+    "subtitle": "Spirit gear guards the body · Companions on the immortal road",
+    "navigation": "Functions",
+    "previewStamp": "UI PREVIEW · Sample data, not wired to gameplay",
+    "summary": "Equipment Attributes",
+    "bag": "Gear Stash",
+    "sort": "Sort",
+    "filter": "Filter",
+    "forgeTitle": "Forge",
+    "stats": {
+      "hp": "Health",
+      "attack": "Attack",
+      "defense": "Defense"
+    },
+    "bagTabs": {
+      "all": "All",
+      "weapons": "Weapons",
+      "armor": "Armor",
+      "accessories": "Accessories"
+    },
+    "workspace": {
+      "equip": "Gear",
+      "bag": "Stash"
+    }
+  },
+  "inventoryPreview": {
+    "all": "All",
+    "equipment": "Equipment",
+    "material": "Materials",
+    "pill": "Pills",
+    "search": "Search",
+    "searchLabel": "Search the bag",
+    "sort": "Sort",
+    "empty": "The bag is empty",
+    "count": "{n} items",
+    "details": "Details",
+    "quality": "Quality",
+    "amount": "Amount",
+    "use": "Use"
+  },
+  "questPreview": {
+    "all": "All",
+    "once": "One-Time",
+    "active": "Active",
+    "ready": "Ready",
+    "claimed": "Claimed",
+    "empty": "No quests yet",
+    "objectives": "Objectives",
+    "claim": "Claim Reward",
+    "follow": "Track"
+  },
+  "settingsPreview": {
+    "title": "Settings",
+    "group": {
+      "all": "All",
+      "audio": "Audio",
+      "display": "Display",
+      "storage": "Storage",
+      "support": "Support"
+    },
+    "storage": "Storage",
+    "storageHint": "Back up and restore your cultivation progress.",
+    "save": "Save Now",
+    "export": "Export Save",
+    "import": "Import Save",
+    "support": "Support",
+    "supportHint": "Found a bug or have feedback? Send us a note.",
+    "feedback": "Send Feedback",
+    "build": "Build",
+    "buildValue": "Current build"
   }
 }
