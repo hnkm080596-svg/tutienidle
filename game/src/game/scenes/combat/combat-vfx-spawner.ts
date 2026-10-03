@@ -298,8 +298,8 @@ export class CombatVfxSpawner {
 
     if (isPlayer) {
       const height = this.scene.scale.height
-      // Row neo góc trái-DƯỚI độc lập kề mép hồ lô thưởng - KHÔNG còn
-      // mirror PlayerHudLayer (HUD đã chuyển lên trái-trên theo spec 13).
+      // Row anchored bottom-LEFT, independent, hugging the reward gourd
+      // edge - no longer mirrors PlayerHudLayer (HUD moved top-left per spec 13).
       const statusRowBaseY =
         height - HUD_MARGIN - HUD_HP_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT
       const temporaryRowY = statusRowBaseY - STATUS_PLAYER_ROW_OFFSET_Y - STATUS_ICON_SIZE

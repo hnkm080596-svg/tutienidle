@@ -73,7 +73,7 @@ function selectWorkspace(id: EquipmentWorkspaceId) {
   activeWorkspace.value = id
 }
 
-// The lò rèn hearth belongs to the forge op surfaces (enhance/wash/
+// The lo ren hearth belongs to the forge op surfaces (enhance/wash/
 // refine/dissolve/decompose); equip detail + bag keep the plain slab.
 const showFurnaceArt = computed(() => activeWorkspace.value !== 'equip' && activeWorkspace.value !== 'bag')
 

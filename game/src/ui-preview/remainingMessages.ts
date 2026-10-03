@@ -1,6 +1,6 @@
 import { bodyMessages } from './bodyMessages'
 export const remainingMessages = { vi: {
- ...bodyMessages.vi, nav:{...bodyMessages.vi.nav,settings:'Cài Đặt',quest:'Nhiệm Vụ'},
+ ...bodyMessages.vi,
  preview:'BẢN DUYỆT UI · Dữ liệu mẫu', notice:'Chỉ duyệt giao diện — thao tác chưa nối gameplay.', close:'Đóng bảng', home:'Động Phủ', navigation:'Chức năng',
  defeat:{title:'Thất Bại',caption:'Đạo tâm chưa vững · Tiếp tục rèn luyện',reason:'Nguyên Nhân Thất Bại',hint:'Lực chiến hiện tại chưa đủ. Bồi dưỡng căn cơ, lĩnh ngộ kỹ năng và cường hóa trang bị trước khi khiêu chiến lại.',retry:'Thử Lại',home:'Trở Về Động Phủ'},
  rewards:'Thưởng Nhận Được', emptyRewards:'Không có vật phẩm nhận thêm.',

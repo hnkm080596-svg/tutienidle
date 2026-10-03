@@ -14,7 +14,7 @@ export const characterMessages = { vi: {
   },
   panels: { wheel: { slots: { character: 'Nhân Vật' } } },
   dongFu: { aria: 'Về Động Phủ' },
-  nav: { realm: 'Cảnh Giới', character: 'Nhân Vật', inventory: 'Túi Đồ', skill: 'Kỹ Năng', alchemy: 'Luyện Đan', technique: 'Tâm Pháp', body: 'Luyện Thể', equipment: 'Trang Bị', exploration: 'Thám Hiểm' },
+  nav: { realm: 'Cảnh Giới', character: 'Nhân Vật', inventory: 'Túi Đồ', skill: 'Kỹ Năng', alchemy: 'Luyện Đan', technique: 'Tâm Pháp', body: 'Luyện Thể', equipment: 'Trang Bị', exploration: 'Thám Hiểm', quest: 'Nhiệm Vụ', settings: 'Cài Đặt' },
   stat: { vitality: 'Thể Chất', strength: 'Căn Cốt', dexterity: 'Thân Pháp', attunement: 'Linh Căn', intelligence: 'Thần Thức' },
   element: { fire: 'Hỏa', wood: 'Mộc', earth: 'Thổ', water: 'Thủy', metal: 'Kim' },
   detail: { maxHp: 'Khí huyết', maxMp: 'Linh lực', might: 'Sức mạnh', defense: 'Phòng ngự', criticalRate: 'Tỉ lệ bạo kích', criticalDamage: 'ST bạo kích', accuracyRating: 'Độ chính xác', evasionRate: 'Tỉ lệ né', speed: 'Thân pháp (tốc độ)', leechPercent: 'Hút máu', criticalAvoidance: 'Kháng bạo kích', skillDamagePercent: 'ST kỹ năng', finalDamageReductionPercent: 'Giảm ST cuối', primordialPower: 'Hỗn Nguyên Lực' },

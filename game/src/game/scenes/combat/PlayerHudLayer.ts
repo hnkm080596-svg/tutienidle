@@ -169,11 +169,11 @@ export class PlayerHudLayer {
 
   /**
    * Spec 13 player-hud: anchored canvas-left top (16/72 of the 1672x941
-   * design frame), bars stacked HP -> MP -> Kiếm/Thế -> ward downward in
+   * design frame), bars stacked HP -> MP -> Kiem/The -> ward downward in
    * the spec's listing order. The old bottom-left anchor shared the
    * corner with the reward gourd (FE-08); the spec region sits above
    * the ai-panel, which is z-12 and wins any overlap by design.
-   * Thế (Pháp Tu) shares the Kiếm slot — the two readers are mutually
+   * The (Phap Tu) shares the Kiem slot -- the two readers are mutually
    * exclusive by path (sword vs spell), so a second slot would just be
    * a gap.
    */

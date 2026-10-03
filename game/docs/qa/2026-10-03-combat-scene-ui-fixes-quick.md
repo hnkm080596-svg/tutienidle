@@ -3,7 +3,7 @@
 - Date: 2026-10-03
 - Mode: quick
 - Verdict: PASS WITH EVIDENCE
-- Task-owned paths: game/src/components/scenes/combat/CombatActionDock.vue, game/src/components/game/combat/CombatSkillDockPanel.vue, game/src/components/scenes/combat/CombatAiRail.vue, game/src/game/scenes/CombatScene.ts, game/src/game/scenes/combat/PlayerHudLayer.ts, game/src/game/scenes/combat/combat-snapshot-reconcile.ts, game/src/game/scenes/combat/combat-vfx-spawner.ts, game/src/core/battle/turn/TurnActionPresentationEvents.ts, game/src/components/scenes/victory/VictoryScene.vue, game/src/components/game/combat/CombatDefeatPanel.vue, game/src/components/scenes/dong-fu/DongFuStage.vue, game/tests/e2e/combat-overlay-layout.spec.ts + touched *.test.ts, game/verify-combat-scene-fixes.mjs (QA artifact)
+- Task-owned paths: game/src/components/scenes/combat/CombatActionDock.vue, game/src/components/game/combat/CombatSkillDockPanel.vue, game/src/components/scenes/combat/CombatAiRail.vue, game/src/game/scenes/CombatScene.ts, game/src/game/scenes/combat/PlayerHudLayer.ts, game/src/game/scenes/combat/combat-snapshot-reconcile.ts, game/src/game/scenes/combat/combat-vfx-spawner.ts, game/src/core/battle/turn/TurnActionPresentationEvents.ts, game/src/components/scenes/victory/VictoryScene.vue, game/src/components/game/combat/CombatDefeatPanel.vue, game/src/components/scenes/dong-fu/DongFuStage.vue, game/tests/e2e/combat-overlay-layout.spec.ts + touched *.test.ts
 
 ## Scope and Risk Map
 
@@ -29,7 +29,7 @@ Mapper: domains combat-and-tribulation + pinia-phaser-sync + ui-input-lifecycle;
 | --- | --- | --- |
 | `npm run type-check` (vue-tsc --build) | clean, exit 0 | |
 | `npx vitest run` scoped (combat scene dir + CombatScene* + core/battle/turn + dong-fu + scenes/combat) | 108 files / 884 tests PASS | |
-| `node verify-combat-scene-fixes.mjs` @1440×810, Playwright headless, fonts.googleapis stubbed | full pass: fighting rects, HUD poke, victory + defeat envelope, df-board hide | screenshots in /tmp/combat-fix-audit-v7/ |
+| Playwright headless runtime capture pass @1440×810, fonts.googleapis stubbed | full pass: fighting rects, HUD poke, victory + defeat envelope, df-board hide | screenshots in /tmp/combat-fix-audit-v7/ |
 | OCR delegate preview (workspace) | 17 reviewable, 17 reviewed, 0 skipped — coverage 100% | Delegation Mode; rules resolved from .opencodereview/rule.json |
 
 ## Findings
@@ -68,7 +68,7 @@ Mapper: domains combat-and-tribulation + pinia-phaser-sync + ui-input-lifecycle;
 - `PlayerHudLayer.test.ts` — layout spec rewritten to spec-13 top-left ratio assertions (proves proportional anchor, resize follows viewport)
 - `combat-entity-reconciliation.test.ts`, `CombatScene.turnCountdownSpawn.test.ts`, `TurnActionPresentationEvents.test.ts` — snapshot literals extended with `currentMp/maxMp` (shape contract)
 - `tests/e2e/combat-overlay-layout.spec.ts` — HUD zone guard moved to top-left band per spec 13
-- `game/verify-combat-scene-fixes.mjs` — committed QA artifact reproducing the full capture pass (guest boot → fighting rects → HUD poke → victory → natural defeat via hp=1 + `combatInputMode='auto'`)
+- Runtime capture pass (throwaway localhost probe, not committed) — reproduced the full flow (guest boot → fighting rects → HUD poke → victory → natural defeat via hp=1 + `combatInputMode='auto'`)
 
 ## Gaps and Residual Risk
 

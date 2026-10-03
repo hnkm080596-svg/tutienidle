@@ -248,6 +248,14 @@ const dissolvePreview = computed(() => {
 
 const dissolveConfirming = ref(false)
 
+// The armed confirm belongs to the selection it was raised on: any
+// churn (prune, clear, toggle, select-all, post-dissolve reset) makes
+// the confirmed set stale, so a re-selected item needs a fresh 2-step
+// confirm.
+watch(dissolveSelected, () => {
+  dissolveConfirming.value = false
+})
+
 function doDissolve() {
   if (dissolveSelected.value.size === 0) {
     return

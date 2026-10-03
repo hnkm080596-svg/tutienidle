@@ -2,7 +2,6 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { stableSymbolUrl } from '@/presentation/huyenKim/StableSceneArt'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import PaperPanelNavigation from '@/components/common/PaperPanelNavigation.vue'
 import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
@@ -12,7 +11,7 @@ defineProps<{ title:string; active:string; notice:string }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 const pointer = shallowRef({x:0,y:0})
-const navigation = computed(()=>[...previewPaperNavigation(t),{id:'quest',label:t('nav.quest'),icon:stableSymbolUrl('quest')},{id:'settings',label:t('nav.settings'),icon:stableSymbolUrl('settings')}])
+const navigation = computed(()=>previewPaperNavigation(t))
 function navigate(id:string) { const route=previewRoutes[id]; if(route)window.location.assign(route) }
 function back() { window.location.assign('/ui-dong-fu.html') }
 function move(event:PointerEvent) { const r=(event.currentTarget as HTMLElement).getBoundingClientRect(); pointer.value={x:Math.max(-1,Math.min(1,(event.clientX-r.left)/r.width*2-1)),y:Math.max(-1,Math.min(1,(event.clientY-r.top)/r.height*2-1))} }
