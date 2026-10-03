@@ -16,8 +16,6 @@ export interface DongFuUiAction {
   id: string
   labelKey: string
   symbol: string
-  /** Wheel orbit: 1 rides the inner ring, anything else the outer. */
-  ring?: number
   /** Resolved disabled hint (tooltip); suppresses activation when set. */
   disabledReason?: string | null
   /** 'alert' = urgent seal (breakthrough), 'dot' = upgrade-ready dot. */
