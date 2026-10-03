@@ -47,6 +47,7 @@ function makeOwners() {
     materialAdd: vi.fn(),
     setProductionAutoRestart: vi.fn(),
     setActivePlayer: vi.fn(),
+    reconcileQuestLifecycle: vi.fn(),
   }
 
   const gameManager = {
@@ -69,6 +70,7 @@ function makeOwners() {
       getSiteDefinitions: () => [{ siteId: 'linh_tuyen' }, { siteId: 'khi_duong' }],
     },
     setActivePlayer: calls.setActivePlayer,
+    tickOps: { reconcileQuestLifecycle: calls.reconcileQuestLifecycle },
   } as unknown as GameManager
 
   const owners: InitializeCharacterOwners = {
@@ -147,6 +149,14 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
     expect(calls.setProductionAutoRestart).toHaveBeenCalledWith('khi_duong', true)
 
     expect(calls.setActivePlayer).toHaveBeenCalledWith(player)
+
+    // Mainline chain admission (AR-09): the quest lifecycle reconcile
+    // closes the creation snapshot - a fresh board shows main_01
+    // without waiting for a realm transition or a save restore.
+    expect(calls.reconcileQuestLifecycle).toHaveBeenCalledTimes(1)
+    expect(calls.reconcileQuestLifecycle.mock.invocationCallOrder[0]).toBeGreaterThan(
+      calls.setActivePlayer.mock.invocationCallOrder[0]!,
+    )
   })
 
   it('a rejected starter write propagates (a boot that cannot pin linh_bao never defaults silently)', () => {

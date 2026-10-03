@@ -96,4 +96,12 @@ export function initializeCharacter(
   }
 
   gameManager.setActivePlayer(player)
+
+  // Mainline chain admission (AR-09): creation ends with no save
+  // restore, so the quest lifecycle command must run here or a fresh
+  // character sees an empty quest board until a realm advance. Runs
+  // after setActivePlayer so reconcile resolves the new player; the
+  // call is idempotent and covers local creation, Supabase creation,
+  // and CHARACTER_UNINITIALIZED reconstruction alike.
+  gameManager.tickOps.reconcileQuestLifecycle()
 }

@@ -12,6 +12,7 @@ import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '..
 import type { QuestManager } from '../quest/QuestManager'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
+import { QUEST_FLAG_ALCHEMY_CRAFTED } from '../quest/Quest'
 import type { PassiveSystem } from '../skill/PassiveSystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { TribulationDirector } from '../tribulation/TribulationDirector'
@@ -227,6 +228,15 @@ export class GameManagerTickOps {
         // clamp. Toast DELIVERED and surface the loss through bag.overflow;
         // a fully-overflowed success must not claim "x N" that never landed.
         if (event.success) {
+          // Mainline flag witness (kind:'flag' quests): a successful
+          // alchemy settle - online or drained from the offline settle
+          // through this same loop - emits the craft flag once.
+          this.deps.questSystem.onFlag(
+            this.deps.questRegistry,
+            this.deps.questManager,
+            QUEST_FLAG_ALCHEMY_CRAFTED,
+          )
+
           if (event.delivered > 0) {
             this.deps.notifications.push({
               kind: 'craft',

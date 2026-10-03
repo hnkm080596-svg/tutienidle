@@ -1,4 +1,4 @@
-import type { Quest } from '../../core/quest/Quest'
+import { QUEST_FLAG_ALCHEMY_CRAFTED, type Quest } from '../../core/quest/Quest'
 
 // Nội dung khởi tạo Quest System v1 — id material/enemy xác nhận thật
 // trong data/materials/materials.ts và data/enemy/Enemies.ts. Linh Chi/
@@ -8,25 +8,171 @@ import type { Quest } from '../../core/quest/Quest'
 // xem data/pill/PillFamilies.ts) thay thế. Số liệu thưởng chỉ ở mức
 // tham khảo, cân bằng kỹ hơn để sau.
 export const QUESTS: Quest[] = [
+  // ---------------------------------------------------------------
+  // MAINLINE (Chinh Tuyen) - tutorial -> feature intro -> realm push.
+  // 15 quests, 3 acts, chainId 'mainline'. Ordering derives from
+  // unlocksAfterQuestId (the head has none); admission flows through
+  // QuestSystem.reconcileActiveQuests only - creation reconciles
+  // (initializeCharacter), claims reconcile (GameManagerQuestOps), and
+  // realm transitions reconcile (markQuestRealmTransition) for the
+  // realm-gated members. Design: docs/design/mainline-quest-design.md.
+  // ---------------------------------------------------------------
   {
+    id: 'main_01_da_san_dau_tien',
+    name: 'Săn Mồi Đầu Tiên',
+    description: 'Vào Thanh Vân Động 1, đánh bại 3 Dã Trư.',
+    condition: { kind: 'kill', enemyId: 'mortal_wild_boar', amount: 3 },
+    reward: { reward: { spiritStone: 10 } },
+    cadence: 'once',
+    chainId: 'mainline',
+  },
+  {
+    id: 'main_02_lam_chi_san',
+    name: 'Lâm Chi Sản',
+    description: 'Mở Sản Xuất, để Thanh Vân Lâm tự khai thác — nộp 3 Thập Niên Linh Mộc Phàm Nhân.',
+    condition: { kind: 'collect', materialId: 'mortal_wood_decade', amount: 3 },
+    reward: { reward: { spiritStone: 10 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_01_da_san_dau_tien',
+  },
+  {
+    id: 'main_03_ho_khieu_lam_trung',
+    name: 'Hổ Khiếu Lâm Trung',
+    description: 'Man Hổ chiếm giữ Động 4–6 — đánh bại 5 con.',
+    condition: { kind: 'kill', enemyId: 'mortal_savage_tiger', amount: 5 },
+    reward: { reward: { spiritStone: 15, cultivation: 50 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_02_lam_chi_san',
+  },
+  {
+    id: 'main_04_quang_chi_nguyen',
+    name: 'Quáng Chi Nguyên',
+    description: 'Huyền Thiết Quảng chảy về Khí Đường — nộp 3 Thập Niên Linh Khoáng Phàm Nhân.',
+    condition: { kind: 'collect', materialId: 'mortal_ore_decade', amount: 3 },
+    reward: { reward: { spiritStone: 15 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_03_ho_khieu_lam_trung',
+  },
+  {
+    id: 'main_05_thuy_lang_dam',
+    name: 'Thủy Lang Ẩm Đàm',
+    description: 'Đoạn hang ngập nước là địa bàn Thủy Lang — diệt 5 con.',
+    condition: { kind: 'kill', enemyId: 'mortal_water_wolf', amount: 5 },
+    reward: { reward: { spiritStone: 20, cultivation: 80 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_04_quang_chi_nguyen',
+  },
+  {
+    id: 'main_06_vuong_gia_da_de',
+    name: 'Vương Giả Đá Đề',
+    description: 'Hung Cự Ngạc ngự trị đáy Động 10 — diệt 5 con, dọn đường tới Luyện Khí.',
+    condition: { kind: 'kill', enemyId: 'mortal_ferocious_giant_crocodile', amount: 5 },
+    reward: { reward: { spiritStone: 40, cultivation: 120 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_05_thuy_lang_dam',
+  },
+  {
+    id: 'main_07_ngu_hanh_nhap_mon',
+    name: 'Ngũ Hành Nhập Môn',
+    description: 'Đạt Phàm Nhân tầng 12 rồi làm lễ Quán Khí chọn một hành. Sau khi nhập môn, săn 5 Dã Lang nơi Thanh Vân Lâm.',
+    condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 5 },
+    reward: { reward: { spiritStone: 30, cultivation: 150, skillInsight: 5 } },
+    cadence: 'once',
+    requiredRealmId: 'qi_refining',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_06_vuong_gia_da_de',
+  },
+  {
+    id: 'main_08_viem_ho_coc',
+    name: 'Viêm Hồ Xích Cốc',
+    description: 'Quật 4–6 rực lửa, Viêm Hồ chặn đường — diệt 5 con.',
+    condition: { kind: 'kill', enemyId: 'flame_fox', amount: 5 },
+    reward: { reward: { spiritStone: 40, skillInsight: 10 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_07_ngu_hanh_nhap_mon',
+  },
+  {
+    // MAINLINE FOLD (keep id): the herb stockpile beat is chain step 9 -
+    // teaches Dong Thien production into alchemy. Id unchanged so save
+    // progress/completedOnceIds survives; admission now chains off
+    // main_08 instead of activating ungated at mortal.
     id: 'collect_tu_linh_thao_1',
-    // ui-audit economy M6: the once quest and the daily quest used to
-    // share the name "Thu Thap Tu Linh Thao" verbatim - two quests
-    // reading identically in the same panel. The once quest now reads
-    // as the one-off stockpile task.
-    name: 'Dự Trữ Tụ Linh Thảo',
-    description: 'Nộp 5 Tụ Linh Thảo để nhận thưởng.',
+    name: 'Động Thiên Dị Thảo',
+    description: 'Động Thiên nuôi linh thảo chủ dược — nộp 5 Tụ Linh Thảo.',
     condition: { kind: 'collect', materialId: 'tu_linh_thao_qi_refining_decade', amount: 5 },
     reward: { reward: { spiritStone: 20 } },
     cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_08_viem_ho_coc',
   },
   {
+    id: 'main_10_dan_lo_so_khai',
+    name: 'Đan Lò Sơ Khai',
+    description: 'Vào Đan Phòng, luyện thành công 1 viên Tụ Linh Đan.',
+    condition: { kind: 'flag', flagId: QUEST_FLAG_ALCHEMY_CRAFTED, amount: 1 },
+    reward: { reward: { spiritStone: 30 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'collect_tu_linh_thao_1',
+  },
+  {
+    // MAINLINE FOLD (keep id): the ore stockpile beat is chain step 11 -
+    // teaches ore -> Khi Duong enhance. Id preserved for carried saves.
     id: 'collect_qi_refining_ore_decade_1',
     name: 'Thu Thập Thập Niên Linh Khoáng',
     description: 'Nộp 3 Thập Niên Linh Khoáng để nhận thưởng.',
     condition: { kind: 'collect', materialId: 'qi_refining_ore_decade', amount: 3 },
     reward: { reward: { spiritStone: 30 } },
     cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_10_dan_lo_so_khai',
+  },
+  {
+    id: 'main_12_trun_don_khoang',
+    name: 'Trùn Đồn Khoáng',
+    description: 'Trùn Đất khổng lồ ngầm Quật 7–9 — diệt 5 con.',
+    condition: { kind: 'kill', enemyId: 'giant_earthworm', amount: 5 },
+    reward: { reward: { spiritStone: 45, cultivation: 200 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'collect_qi_refining_ore_decade_1',
+  },
+  {
+    id: 'main_13_giao_xa_uyen_dam',
+    name: 'Giao Xà Uyên Đàm',
+    description: 'Hung Giao Xà trấn Quật 10 — diệt 5 con. Đây là điều kiện độ kiếp Trúc Cơ.',
+    condition: { kind: 'kill', enemyId: 'ferocious_flood_serpent', amount: 5 },
+    reward: { reward: { spiritStone: 60, skillInsight: 10 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_12_trun_don_khoang',
+  },
+  {
+    id: 'main_14_do_kiep_truc_co',
+    name: 'Độ Kiếp Trúc Cơ',
+    description: 'Tầng 12 + vượt Quật 10 mở lôi kiếp — độ kiếp thành công, bước chân đầu vào hậu sơn: diệt 5 Dực Hỏa Khuyển.',
+    condition: { kind: 'kill', enemyId: 'foundation_lava_hound', amount: 5 },
+    reward: { reward: { spiritStone: 100, cultivation: 500 } },
+    cadence: 'once',
+    requiredRealmId: 'foundation_establishment',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_13_giao_xa_uyen_dam',
+  },
+  {
+    id: 'main_15_giao_sung_chung_cuc',
+    name: 'Giao Sủng Chung Cực',
+    description: 'Hung Giao Sủng cuồng nộ đáy hàn thạch đàm — diệt 5 con, khép lại chính tuyến beta.',
+    condition: { kind: 'kill', enemyId: 'foundation_ferocious_flood_dragon_whelp', amount: 5 },
+    reward: { reward: { spiritStone: 200, skillInsight: 30 } },
+    cadence: 'once',
+    chainId: 'mainline',
+    unlocksAfterQuestId: 'main_14_do_kiep_truc_co',
   },
   // BETA SCOPE LOCK v2 Phase-5 (sec.15): the daily cadence and its
   // three quests (daily_collect_hoi_xuan_thao, daily_kill_bandit_15,

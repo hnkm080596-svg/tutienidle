@@ -8,9 +8,11 @@ import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import type { Quest } from '@/core/quest/Quest'
+import { QUEST_FLAG_ALCHEMY_CRAFTED } from '@/core/quest/Quest'
 import type { QuestProgress } from '@/core/quest/QuestProgress'
 import { usePlayerStore } from '@/stores/player'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { getCurrentRealm, getRealmIndex } from '@/core/realm/realmSystem'
 import {
   isBreakthroughAcquisitionEnabled,
   isCompanionPullTokenSourceSuppressed,
@@ -91,6 +93,13 @@ function collectShortfall(quest: Quest, progress: QuestProgress): { have: number
   return have < quest.condition.amount ? { have, need: quest.condition.amount } : null
 }
 
+// kind:'flag' quest targets have no material/enemy id - the flag id
+// maps to a short i18n label (fallback: the raw id, which never ships
+// for authored quests).
+const FLAG_LABEL_KEYS: Record<string, string> = {
+  [QUEST_FLAG_ALCHEMY_CRAFTED]: 'panels.quest.flags.alchemyCrafted',
+}
+
 function targetLabel(quest: Quest): string {
   if (quest.condition.kind === 'collect') {
     const materialId = quest.condition.materialId
@@ -99,6 +108,11 @@ function targetLabel(quest: Quest): string {
       : materialId
 
     return name
+  }
+
+  if (quest.condition.kind === 'flag') {
+    const key = FLAG_LABEL_KEYS[quest.condition.flagId]
+    return key ? t(key) : quest.condition.flagId
   }
 
   const enemyId = quest.condition.enemyId
@@ -120,9 +134,111 @@ const rows = computed<QuestRow[]>(() => {
   }))
 })
 
+// Mainline (Chinh Tuyen) ordering: walk unlocksAfterQuestId links from
+// the one head member (no gate) - the chain is linear, so walk depth IS
+// the display order. Members unreachable from the head (broken data)
+// append in registration order instead of disappearing.
+const mainlineOrder = computed<Quest[]>(() => {
+  const members = gameManager.questRegistry
+    .getAll()
+    .filter((quest) => quest.chainId === 'mainline')
+
+  const byId = new Map(members.map((quest) => [quest.id, quest]))
+  const nextOf = new Map<string, string>()
+  let headId: string | undefined
+
+  for (const quest of members) {
+    if (quest.unlocksAfterQuestId === undefined) {
+      headId = quest.id
+    } else {
+      nextOf.set(quest.unlocksAfterQuestId, quest.id)
+    }
+  }
+
+  const ordered: Quest[] = []
+  const seen = new Set<string>()
+
+  for (let id = headId; id !== undefined && !seen.has(id); id = nextOf.get(id)) {
+    seen.add(id)
+    ordered.push(byId.get(id)!)
+  }
+
+  for (const quest of members) {
+    if (!seen.has(quest.id)) ordered.push(quest)
+  }
+
+  return ordered
+})
+
+const mainlineIndexById = computed(() =>
+  new Map(mainlineOrder.value.map((quest, index) => [quest.id, index])),
+)
+
+const mainlineRows = computed(() =>
+  rows.value
+    .filter((row) => row.quest.chainId === 'mainline')
+    .sort(
+      (a, b) =>
+        (mainlineIndexById.value.get(a.quest.id) ?? 0) -
+        (mainlineIndexById.value.get(b.quest.id) ?? 0),
+    ),
+)
+
+function realmDisplayName(realmId: string): string {
+  try {
+    return getCurrentRealm(realmId).name
+  } catch {
+    return realmId
+  }
+}
+
+// Greyed locked-preview of the NEXT unmet chain step (design sec.4):
+// the first chain member that is neither active nor completed, with a
+// plain-language requirement line (claim the predecessor and/or reach
+// the realm). Read-only - renders from registry + witnesses, activates
+// nothing.
+const lockedPreview = computed(() => {
+  stateVersion.value
+
+  const activeIds = new Set(rows.value.map((row) => row.quest.id))
+  const completed = new Set(gameManager.questManager.getState().completedOnceIds ?? [])
+
+  for (const quest of mainlineOrder.value) {
+    if (activeIds.has(quest.id) || completed.has(quest.id)) continue
+
+    const reasons: string[] = []
+
+    if (
+      quest.unlocksAfterQuestId !== undefined &&
+      !completed.has(quest.unlocksAfterQuestId) &&
+      gameManager.questRegistry.has(quest.unlocksAfterQuestId)
+    ) {
+      reasons.push(
+        t('panels.quest.lockedAfter', {
+          name: gameManager.questRegistry.get(quest.unlocksAfterQuestId).name,
+        }),
+      )
+    }
+
+    if (
+      quest.requiredRealmId !== undefined &&
+      getRealmIndex(player.realmId) < getRealmIndex(quest.requiredRealmId)
+    ) {
+      reasons.push(
+        t('panels.quest.lockedRealm', { realm: realmDisplayName(quest.requiredRealmId) }),
+      )
+    }
+
+    return { quest, reasons }
+  }
+
+  return null
+})
+
 const groups = computed(() => [
-  { title: t('panels.quest.groups.daily'), rows: rows.value.filter((row) => row.quest.cadence === 'daily') },
-  { title: t('panels.quest.groups.once'), rows: rows.value.filter((row) => row.quest.cadence === 'once') },
+  { key: 'mainline', title: t('panels.quest.groups.mainline'), rows: mainlineRows.value },
+  { key: 'daily', title: t('panels.quest.groups.daily'), rows: rows.value.filter((row) => row.quest.cadence === 'daily') },
+  { key: 'once', title: t('panels.quest.groups.once'), rows: rows.value.filter((row) => row.quest.cadence === 'once' && row.quest.chainId !== 'mainline') },
 ])
 
 function onClaim(questId: string) {
@@ -145,12 +261,18 @@ function close() {
     </template>
 
     <div class="quest-panel">
-      <section v-for="group in groups" v-show="group.rows.length" :key="group.title" class="quest-panel__section">
+      <section v-for="group in groups" v-show="group.rows.length || (group.key === 'mainline' && lockedPreview)" :key="group.key" class="quest-panel__section">
         <h4 class="quest-panel__section-title">{{ group.title }}</h4>
         <ul class="quest-panel__list">
           <li v-for="row in group.rows" :key="row.quest.id" class="quest-panel__card">
             <div class="quest-panel__info">
-              <div class="quest-panel__name">{{ row.quest.name }}</div>
+              <div class="quest-panel__name">
+                {{ row.quest.name }}
+                <span
+                  v-if="row.quest.chainId === 'mainline'"
+                  class="quest-panel__mainline-chip"
+                >{{ t('panels.quest.groups.mainline') }}</span>
+              </div>
               <div class="quest-panel__desc">{{ row.quest.description }}</div>
               <Bar
                 class="quest-panel__progress-bar"
@@ -179,6 +301,20 @@ function close() {
             </GameButton>
           </li>
         </ul>
+
+        <ul v-if="group.key === 'mainline' && lockedPreview" class="quest-panel__list">
+          <li class="quest-panel__card quest-panel__card--locked">
+            <div class="quest-panel__info">
+              <div class="quest-panel__name">
+                {{ lockedPreview.quest.name }}
+                <span class="quest-panel__mainline-chip">{{ t('panels.quest.groups.mainline') }}</span>
+              </div>
+              <div v-for="reason in lockedPreview.reasons" :key="reason" class="quest-panel__locked-hint">
+                {{ reason }}
+              </div>
+            </div>
+          </li>
+        </ul>
       </section>
 
       <EmptyState v-if="!rows.length">{{ t('panels.quest.empty') }}</EmptyState>
@@ -199,6 +335,9 @@ function close() {
 .quest-panel__rewards { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .quest-panel__reward { padding: 2px 8px; border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--mineral-gold) 12%, var(--ink-900)); color: var(--mineral-gold); font-size: var(--text-xs); }
 .quest-panel__shortfall { margin-top: 6px; color: var(--cinnabar); font-size: var(--text-xs); }
+.quest-panel__mainline-chip { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--mineral-gold); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--mineral-gold) 16%, var(--ink-900)); color: var(--mineral-gold); font-size: var(--text-xs); font-weight: 600; vertical-align: 1px; }
+.quest-panel__card--locked { opacity: .48; filter: grayscale(1); }
+.quest-panel__locked-hint { margin-top: 4px; color: var(--text-secondary); font-size: var(--text-xs); font-style: italic; }
 .quest-panel__claim { flex: 0 0 auto; }
 .quest-panel__claim:disabled { color: var(--text-secondary); background: var(--ink-700, var(--ink-800)); }
 </style>

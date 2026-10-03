@@ -122,6 +122,9 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
     expect(lockedBefore).toBeUndefined()
 
     player.realmId = 'foundation_establishment'
+    // main_14 is realm-gated AND chain-gated: the realm transition
+    // admits it only with its predecessor already witnessed complete.
+    manager.questManager.markCompletedOnce('main_13_giao_xa_uyen_dam')
     manager.tickOps.markQuestRealmTransition()
     manager.tickOps.update(1)
 

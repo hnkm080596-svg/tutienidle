@@ -760,6 +760,7 @@
     "quest": {
       "title": "Quests",
       "groups": {
+        "mainline": "Mainline",
         "daily": "Daily Quests",
         "once": "Quests"
       },
@@ -774,7 +775,12 @@
         "claimed": "Claimed",
         "claim": "Claim Reward"
       },
-      "empty": "No quests available yet."
+      "empty": "No quests available yet.",
+      "lockedAfter": "Complete: {name}",
+      "lockedRealm": "Reach realm: {realm}",
+      "flags": {
+        "alchemyCrafted": "Craft Tu Linh Dan"
+      }
     },
     "buildingPopover": {
       "costTitle": "Build Cost",

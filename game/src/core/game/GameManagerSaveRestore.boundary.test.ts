@@ -434,6 +434,7 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
       active: [],
       completedOnceIds: [],
       lastDailyResetAtMs: 0,
+      questFlags: [],
     })
   })
 

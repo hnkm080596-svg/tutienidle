@@ -128,6 +128,16 @@ export class GameManagerQuestOps {
     if (claimed) {
       const quest = this.deps.questRegistry.get(questId)
       this.deps.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
+
+      // Mainline chain admission (AR-09): the claim just wrote the
+      // completedOnceIds witness, so a chained successor is eligible
+      // NOW - reconcile inside the same gesture, same lifecycle seam
+      // as every other trigger (idempotent registry scan).
+      this.deps.questSystem.reconcileActiveQuests(
+        this.deps.questRegistry,
+        this.deps.questManager,
+        player,
+      )
     }
 
     return claimed

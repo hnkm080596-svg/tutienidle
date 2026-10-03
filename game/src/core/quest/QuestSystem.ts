@@ -46,15 +46,21 @@ export interface QuestBagDeps {
   playerRealmId?: string
 }
 
-function isUnlocked(quest: Quest, player: PlayerData): boolean {
+function isUnlocked(quest: Quest, player: PlayerData, manager: QuestManager): boolean {
   // BETA SCOPE LOCK v2 sec.15 - the beta admission predicate composes at
   // the single activation seam: daily cadence and off-roster kill quests
   // never activate, and the reconcile inverse pass deactivates stale
   // progress for them automatically.
+  //
+  // Chain clause (mainline): a quest gated by unlocksAfterQuestId stays
+  // locked until its predecessor sits in completedOnceIds - the durable
+  // witness written exactly once at claim.
   return (
     isBetaQuestEnabled(quest) &&
     (!quest.requiredRealmId ||
       getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)) &&
+    (quest.unlocksAfterQuestId === undefined ||
+      manager.isCompletedOnce(quest.unlocksAfterQuestId)) &&
     !questIsTokenOnlySource(quest)
   )
 }
@@ -100,7 +106,7 @@ export class QuestSystem {
     player: PlayerData,
   ): void {
     for (const quest of registry.getAll()) {
-      if (!isUnlocked(quest, player)) {
+      if (!isUnlocked(quest, player, manager)) {
         continue
       }
 
@@ -119,7 +125,7 @@ export class QuestSystem {
     // Progress re-arms from zero if the quest ever becomes eligible
     // again; 'once' completions are tracked separately and unaffected.
     for (const progress of [...manager.getActive()]) {
-      if (registry.has(progress.questId) && !isUnlocked(registry.get(progress.questId), player)) {
+      if (registry.has(progress.questId) && !isUnlocked(registry.get(progress.questId), player, manager)) {
         manager.deactivate(progress.questId)
       }
     }
@@ -347,7 +353,7 @@ export class QuestSystem {
 
     const dailyQuestIds = registry
       .getAll()
-      .filter((quest) => quest.cadence === 'daily' && isUnlocked(quest, player))
+      .filter((quest) => quest.cadence === 'daily' && isUnlocked(quest, player, manager))
       .map((quest) => quest.id)
 
     manager.resetDaily(dailyQuestIds, now)
@@ -424,6 +430,40 @@ export class QuestSystem {
       }
 
       manager.incrementProgress(progress.questId, amount)
+    }
+  }
+
+  /**
+   * Goi tu domain seam khi mot feature-witness xay ra (alchemy settle
+   * thanh cong -> QUEST_FLAG_ALCHEMY_CRAFTED). Records the durable
+   * witness (questFlags) and increments every ACTIVE, unclaimed
+   * flag-quest whose flagId matches - same activation-counts rule as
+   * onEnemyDefeated/onMaterialCollected: a flag landing before the
+   * quest activates earns no retroactive credit.
+   */
+  onFlag(
+    registry: QuestRegistry,
+    manager: QuestManager,
+    flagId: string,
+  ): void {
+    manager.markQuestFlag(flagId)
+
+    for (const progress of manager.getActive()) {
+      if (progress.claimed || !registry.has(progress.questId)) {
+        continue
+      }
+
+      const condition: QuestCondition = registry.get(progress.questId).condition
+
+      if (condition.kind !== 'flag') {
+        continue
+      }
+
+      if (condition.flagId !== flagId) {
+        continue
+      }
+
+      manager.incrementProgress(progress.questId, 1)
     }
   }
 }

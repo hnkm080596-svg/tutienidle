@@ -699,6 +699,30 @@ describe('validateGameSaveShape — quests slice (Mission A1)', () => {
       expect(pathsOf(result)).toContain('.quests.lastDailyResetAtMs')
     },
   )
+
+  it('chấp nhận questFlags hợp lệ; thiếu key vẫn ok (optional slice)', () => {
+    const save = validSave()
+
+    save.quests = { ...validQuests(), questFlags: ['alchemy.crafted'] }
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    save.quests = validQuests()
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([[['a', 'a']], 'not-an-array', [['ok', 5]]])(
+    'từ chối quests.questFlags = %j',
+    (value) => {
+      const save = validSave()
+
+      save.quests = { ...validQuests(), questFlags: value }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('.quests.questFlags')
+    },
+  )
 })
 
 describe('validateGameSaveShape — buildings slice (Mission A1)', () => {
