@@ -42,7 +42,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     document.body.innerHTML = ''
   })
 
-  it('renders name + talent on ONE screen; the starter slot is a cosmetic preview, not a pick step', async () => {
+  it('renders name + talent on ONE screen; the starter slot previews 3 skills with only linh_bao selectable', async () => {
     const mounted = mountScreen()
     await flushRoll()
 
@@ -51,13 +51,25 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     expect(container.querySelector('[data-testid^="creation-talent-"]')).toBeTruthy()
 
     // BETA SCOPE LOCK v2 (phase-2): no allocation, no stepper. The starter
-    // slot renders as a cosmetic preview strip (CREATION_SKILL_PREVIEW) per
-    // the approved creation design - display-only tiles, no controls, and
-    // it never enters the payload (pinned by the emit test below).
+    // slot previews all three mortal precursors (CREATION_SKILL_PREVIEW):
+    // tram + huy_quyen render as locked display cards (dimmed, no control
+    // semantics), and linh_bao - the fixed beta starter - is the single
+    // selectable radio. The pick is local UI state and never enters the
+    // payload (pinned by the emit test below).
     const starter = container.querySelector('[data-hk-region="starter-slot"]')
     expect(starter).toBeTruthy()
-    expect(starter!.querySelectorAll('.creation-choice-tile--display')).toHaveLength(3)
-    expect(starter!.querySelector('button')).toBeNull()
+    expect(starter!.querySelectorAll('.creation-choice-tile')).toHaveLength(3)
+    const locked = starter!.querySelectorAll('.creation-choice-tile--locked')
+    expect(locked).toHaveLength(2)
+    expect([...locked].map((el) => el.getAttribute('data-testid'))).toEqual([
+      'creation-starter-tram',
+      'creation-starter-huy_quyen',
+    ])
+    const starterPick = starter!.querySelector<HTMLElement>('[data-testid="creation-starter-linh_bao"]')
+    expect(starterPick!.tagName).toBe('BUTTON')
+    expect(starterPick!.getAttribute('role')).toBe('radio')
+    expect(starterPick!.getAttribute('aria-checked')).toBe('true')
+    expect(starter!.querySelectorAll('button')).toHaveLength(1)
     expect(container.querySelector('[data-testid^="creation-attribute-"]')).toBeNull()
     expect(container.querySelector('.stepper')).toBeNull()
 
