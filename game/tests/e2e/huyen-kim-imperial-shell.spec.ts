@@ -105,7 +105,9 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openStandalone(page, 'realm')
+    // San Xuat (exploration) is the last surface still on the shared
+    // scroll shell - it exercises the unfold + close contract here.
+    await openLeftMode(page, 'exploration')
     const scroll = page.locator('.hk-scroll')
     await expect(scroll).toBeVisible({ timeout: 15_000 })
     await expectImperialScroll(page)
@@ -116,7 +118,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     await expect(scroll).toHaveCount(0, { timeout: 10_000 })
 
     // Scrim click (envelope padding around the scroll) also closes.
-    await openStandalone(page, 'realm')
+    await openLeftMode(page, 'exploration')
     await expect(scroll).toBeVisible({ timeout: 15_000 })
     await waitForScrollSettled(page)
     await page.mouse.click(page.viewportSize()!.width / 2, 4)
@@ -134,31 +136,30 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     assertNoBrowserErrors(errors)
   })
 
-  test('scene 04 character: imperial scroll + hero/stats/element columns', async ({ page }) => {
+  test('scene 04 character: paper scene + figure/details dock', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await openLeftMode(page, 'character')
-    const scroll = page.locator('[data-testid="home-scroll-scene"]')
-    await expect(scroll).toBeVisible({ timeout: 15_000 })
-    await expectImperialScroll(page)
-    await expect(scroll.locator('.character-panel__figure')).toBeVisible({ timeout: 10_000 })
-    await expect(scroll.locator('.character-panel__stats')).toBeVisible()
-    await waitForScrollSettled(page)
+    const scene = page.locator('.cf-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    await expect(scene.locator('.cf-figure')).toBeVisible({ timeout: 10_000 })
+    await expect(scene.locator('.cf-details__body')).toBeVisible()
     await shot(page, '04-character')
     assertNoBrowserErrors(errors)
   })
 
-  test('scene 09 inventory: imperial scroll + tabs + bag grid', async ({ page }) => {
+  test('scene 09 inventory: paper scene + tabs + bag grid', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await openLeftMode(page, 'inventory')
-    const scroll = page.locator('[data-testid="home-scroll-scene"]')
-    await expect(scroll).toBeVisible({ timeout: 15_000 })
-    await expectImperialScroll(page)
-    await expect(scroll.locator('.bag-grid, .inventory-panel').first()).toBeVisible({
+    const scene = page.locator('.inventory-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    // The fidelity surface mounts outside the imperial scroll - the old
+    // chrome must not double-render.
+    await expect(page.locator('.hk-scroll')).toHaveCount(0)
+    await expect(page.locator('.bag-section, .inventory-panel').first()).toBeVisible({
       timeout: 10_000,
     })
-    await waitForScrollSettled(page)
     await shot(page, '09-inventory')
     assertNoBrowserErrors(errors)
   })
@@ -197,29 +198,30 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     assertNoBrowserErrors(errors)
   })
 
-  test('scene 17 settings: imperial scroll + seal nav + workspace', async ({ page }) => {
+  test('scene 17 settings: paper scene + seal nav + workspace', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await openLeftMode(page, 'settings')
-    const scroll = page.getByTestId('function-overlay-panel')
-    await expect(scroll).toBeVisible({ timeout: 15_000 })
-    await expectImperialScroll(page)
-    const nav = scroll.locator('.settings-panel__nav')
+    const scene = page.locator('.settings-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    // The fidelity surface mounts outside the imperial scroll - the old
+    // chrome must not double-render.
+    await expect(page.getByTestId('function-overlay-panel')).toHaveCount(0)
+    const nav = scene.locator('.settings-panel__nav')
     await expect(nav).toBeVisible({ timeout: 10_000 })
     expect(await nav.locator('.settings-panel__nav-seal').count()).toBeGreaterThan(3)
-    await waitForScrollSettled(page)
     await shot(page, '17-settings')
     assertNoBrowserErrors(errors)
   })
 
-  test('scene 18 quest: imperial scroll + list rail + detail', async ({ page }) => {
+  test('scene 18 quest: paper scene + list rail + detail', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await openStandalone(page, 'quest')
-    await expectImperialScroll(page)
-    const scroll = page.locator('.hk-scroll')
-    await expect(scroll.locator('[data-hk-region="quest-list"]')).toBeVisible({ timeout: 10_000 })
-    await waitForScrollSettled(page)
+    const scene = page.locator('.quest-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('.hk-scroll')).toHaveCount(0)
+    await expect(scene.locator('[data-hk-region="quest-list"]')).toBeVisible({ timeout: 10_000 })
     await shot(page, '18-quest')
     assertNoBrowserErrors(errors)
   })

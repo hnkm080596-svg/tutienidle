@@ -117,7 +117,7 @@ describe('AssetBundleCatalog', () => {
   })
 
   it('Phaser-backed routes require core-ui plus their own bundle', () => {
-    expect(getBundlesForRoute('home')).toEqual(['core-ui', 'home'])
+    expect(getBundlesForRoute('home')).toEqual(['core-ui', 'home', 'ui-chrome'])
     expect(getBundlesForRoute('combat')).toEqual(['core-ui', 'combat'])
     expect(getBundlesForRoute('tribulation')).toEqual(['core-ui', 'tribulation'])
   })

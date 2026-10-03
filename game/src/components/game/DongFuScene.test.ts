@@ -335,7 +335,7 @@ describe('DongFuScene seasonal parallax background', () => {
     ).toBe('L4')
     expect(mounted.root()!.classList.contains('is-focusing')).toBe(false)
 
-    mounted.ui.openBuildingPopover('pill_room')
+    mounted.ui.openLeftPanel('pill_room')
     await nextTick()
 
     expect(mounted.root()!.classList.contains('is-focusing')).toBe(true)

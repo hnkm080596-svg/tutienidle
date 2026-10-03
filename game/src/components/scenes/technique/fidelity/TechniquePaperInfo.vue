@@ -7,7 +7,7 @@ const { t } = useI18n()
 <template>
   <article class="technique-info">
     <p class="technique-eyebrow">{{ t('technique.active') }}</p>
-    <h1>{{ model.name }}</h1>
+    <h1 v-if="model.hasTechnique">{{ model.name }}</h1>
     <span v-if="model.quality" class="technique-quality">{{ model.quality }}</span>
     <p class="technique-description">{{ model.description }}</p>
     <section v-for="section in model.sections" :key="section.id" class="technique-section">

@@ -1,6 +1,6 @@
 // DEV ONLY debug helpers (spec v3 B5) - never part of the production
 // API surface. Registered on window during dev builds only, following
-// the DevMode.ts / import.meta.env.DEV guard pattern.
+// the import.meta.env.DEV guard pattern.
 //
 // window.__tutienEnemySpawnDebug.spawnEnemy(enemyId, tags?) - force-spawn
 //   an enemy through applyEnemyTags for manual tag-interaction testing.

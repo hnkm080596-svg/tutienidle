@@ -22,7 +22,7 @@ export interface CommandWheelSlot {
 
   target?: PanelTarget
 
-  /** Ring 3 - mo popover xay/nang cap hoac panel chuc nang qua controller. */
+  /** Ring 3 - mo panel chuc nang cua cong trinh qua controller. */
   buildingId?: string
 
   /** false = future slot, KHONG render nut. */

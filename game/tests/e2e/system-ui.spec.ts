@@ -24,15 +24,15 @@ test.describe('system UI skin - dialog containment', () => {
     await createCharacterThroughUi(page, 'Hệ Thống')
     await enterHome(page)
 
-    // Settings (imperial scroll) -> reload opens a nested ink ConfirmModal
-    // inside the scroll subtree. Clicking the modal scrim
-    // must not move focus to the background scroll: Escape then closes only
-    // the confirm, and the settings scroll stays open (QA regression -
+    // Settings (paper scene) -> reload opens a nested ink ConfirmModal
+    // teleported over the settings surface. Clicking the modal scrim
+    // must not move focus to the background scene: Escape then closes only
+    // the confirm, and the settings scene stays open (QA regression -
     // useDialogFocus pointer containment).
     await page.keyboard.press('Tab')
     await page.locator('[data-wheel-slot="settings"]').click()
-    const settingsScroll = page.locator('.hk-scroll__envelope').first()
-    await expect(settingsScroll).toBeVisible({ timeout: 10_000 })
+    const settingsScene = page.locator('.settings-scene').first()
+    await expect(settingsScene).toBeVisible({ timeout: 10_000 })
     await page.getByRole('button', { name: /Tải Lại|reload/i }).first().click()
     const confirmModal = page.locator('.confirm-modal')
     await expect(confirmModal).toBeVisible({ timeout: 10_000 })
@@ -40,7 +40,7 @@ test.describe('system UI skin - dialog containment', () => {
     await page.mouse.click(40, 400)
     await page.keyboard.press('Escape')
     await expect(confirmModal).toBeHidden({ timeout: 10_000 })
-    await expect(settingsScroll).toBeVisible({ timeout: 10_000 })
+    await expect(settingsScene).toBeVisible({ timeout: 10_000 })
     await page.keyboard.press('Escape')
   })
 })

@@ -26,8 +26,10 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <div class="technique-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
     <PaperPanelNavigation :items="navigation" active="technique" :label="t('technique.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <TechniquePaperInfo :model="model" />
-    <TechniquePaperArtifact :model="model" :selected="selected" @select="emit('select', $event)" />
-    <TechniquePaperUpgrade :model="model" :notice="notice" @advance="emit('advance')" />
+    <template v-if="model.hasTechnique">
+      <TechniquePaperArtifact :model="model" :selected="selected" @select="emit('select', $event)" />
+      <TechniquePaperUpgrade :model="model" :notice="notice" @advance="emit('advance')" />
+    </template>
     <p v-if="preview" class="technique-preview-label">{{ t('technique.preview') }}</p>
   </section>
 </template>

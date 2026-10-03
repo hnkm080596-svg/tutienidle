@@ -435,6 +435,8 @@
         "title": "Tiến Độ Thám Hiểm: {zone}"
       },
       "rewards": {
+        "dropAmount": "Số lượng rơi",
+        "dropChance": "Tỉ lệ rơi",
         "kinds": {
           "material": "Vật Liệu",
           "equipment": "Trang Bị",
@@ -480,12 +482,12 @@
       },
       "paperdoll": {
         "slots": {
-          "helmet": "Mũ",
-          "necklace": "Vòng cổ",
-          "ring": "Nhẫn",
-          "weapon": "Vũ khí",
-          "armor": "Giáp",
-          "boots": "Giày"
+          "helmet": "Đạo Quan",
+          "necklace": "Linh Châu",
+          "ring": "Linh Giới",
+          "weapon": "Vũ Khí",
+          "armor": "Đạo Bào",
+          "boots": "Đạo Hài"
         }
       },
       "search": {
@@ -857,10 +859,6 @@
         "reasonIncomplete": "Chưa đủ tiến độ mục tiêu."
       }
     },
-    "buildingPopover": {
-      "costTitle": "Chi phí xây dựng",
-      "build": "Xây dựng"
-    },
     "common": {
       "close": "Đóng",
       "confirm": "Xác Nhận",
@@ -883,7 +881,7 @@
       "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt",
       "matching": "Khoáng phù hợp trong túi: {count}",
       "hint": {
-        "noCapacity": "Chưa có chỗ phân giải — xây hoặc nâng cấp Chiêu Hiền Quán để có nhân công.",
+        "noCapacity": "Chưa có chỗ phân giải — nâng cấp Chiêu Hiền Quán để có nhân công.",
         "noWorkers": "Chưa phân công nhân công — kéo thanh Nhân công lên để bắt đầu phân giải.",
         "noMatchingOres": "Không có Linh Khoáng nào trong túi khớp bộ lọc — thu thập khoáng từ khai thác/thám hiểm hoặc nới bộ lọc."
       }
@@ -1210,8 +1208,7 @@
         "register": "Lập đạo danh"
       },
       "guest": {
-        "button": "Chơi khách",
-        "note": "Tiến trình khách dừng tại Trúc Cơ"
+        "button": "Chơi khách"
       },
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
@@ -1610,11 +1607,6 @@
     "level": "Cấp {level}",
     "notBuilt": "Chưa mở"
   },
-  "buildingGate": {
-    "free": "Miễn phí",
-    "confirmTitle": "Xây {name}?",
-    "confirmMessage": "Sẽ tốn {cost}."
-  },
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
     "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
@@ -1945,7 +1937,7 @@
     "technique": "Tâm Pháp",
     "body": "Luyện Thể",
     "alchemy": "Đan Phòng",
-    "equipment": "Khí Đường",
+    "equipment": "Trang Bị",
     "exploration": "Thám Hiểm",
     "quest": "Nhiệm Vụ",
     "settings": "Cài Đặt"
@@ -1962,10 +1954,25 @@
     "details": "Chi Tiết",
     "combat": "Chiến Đấu",
     "other": "Khác",
-    "close": "Thu gọn chi tiết",
-    "open": "Mở chi tiết",
     "statNotice": "{name}: {value}",
-    "elementNotice": "{name} · Lực {power} · Kháng {resistance} · Xuyên {penetration}"
+    "elementNotice": "{name} · Lực {power} · Kháng {resistance} · Xuyên {penetration}",
+    "sources": {
+      "title": "Thành Phần",
+      "base": "Cơ Bản",
+      "bodyDelta": "Luyện Thể",
+      "realm": "Cảnh Giới",
+      "technique": "Tâm Pháp",
+      "skill": "Kỹ Năng",
+      "buff": "Buff",
+      "debuff": "Debuff",
+      "equipment": "Trang Bị",
+      "talent": "Thiên Phú",
+      "reincarnation": "Luân Hồi",
+      "pill": "Đan Dược",
+      "formation": "Trận Pháp",
+      "talisman": "Phù",
+      "attribute": "Thuộc Tính"
+    }
   },
   "realm": {
     "title": "ĐƯỜNG ĐĂNG TIÊN",
@@ -2064,7 +2071,7 @@
     "bag": "Túi Trang Bị",
     "sort": "Sắp Xếp",
     "filter": "Lọc",
-    "forgeTitle": "Lò Rèn",
+    "forgeTitle": "Khí Đường · Rèn Trang Bị",
     "stats": {
       "hp": "Khí Huyết",
       "attack": "Công Kích",

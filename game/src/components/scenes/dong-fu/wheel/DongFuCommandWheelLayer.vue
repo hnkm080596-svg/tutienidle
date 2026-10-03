@@ -387,10 +387,7 @@ function isActive(slot: CommandWheelSlot): boolean {
   if (slot.buildingId) {
     const { template } = navigation.getBuildingPresentation(slot.buildingId)
 
-    return (
-      ui.activeBuildingPopoverId === slot.buildingId ||
-      (template?.functionType !== undefined && ui.leftPanelMode === template.functionType)
-    )
+    return template?.functionType !== undefined && ui.leftPanelMode === template.functionType
   }
 
   return false

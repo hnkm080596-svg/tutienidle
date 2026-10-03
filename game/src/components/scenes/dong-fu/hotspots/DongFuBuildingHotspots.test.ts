@@ -2,19 +2,16 @@
 //
 // Workstream C (dong-fu plan) - hotspot la MOT trong HAI entry point
 // (entry kia = command wheel ring 3); ca hai di qua
-// composables/useBuildingNavigation.ts va popover DUNG CHUNG duoc render
-// o tang GameRoot (ui.activeBuildingPopoverId). Test mount cung luc
-// hotspot layer + popover authority stub y het GameRoot.
+// composables/useBuildingNavigation.ts.
 //
 // Building da xay mo LeftPanel; nut nang cap song trong header panel,
 // khong con chip noi tren world hotspot.
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { computed, nextTick } from 'vue'
-import { createApp, defineComponent, h, ref } from 'vue'
+import { createApp, h, ref } from 'vue'
 import { createPinia } from 'pinia'
 import { i18n } from '@/i18n'
-import HomeBuildingIcons from './HomeBuildingIcons.vue'
-import BuildingDetailPopover from './BuildingDetailPopover.vue'
+import DongFuBuildingHotspots from './DongFuBuildingHotspots.vue'
 import { GameManager } from '@/core/game/GameManager'
 import type { Building } from '@/core/building/Building'
 import {
@@ -62,25 +59,9 @@ function mountHomeBuildings(
 
   document.body.appendChild(container)
 
-  // Stub tang GameRoot: hotspot layer + shared popover authority.
-  const RootStub = defineComponent({
-    setup() {
-      const ui = useUiStore()
-
-      return () =>
-        h('div', [
-          h(HomeBuildingIcons, { variant: renderedVariant.value }),
-          ui.activeBuildingPopoverId
-            ? h(BuildingDetailPopover, {
-                buildingId: ui.activeBuildingPopoverId,
-                onClose: () => ui.closeBuildingPopover(),
-              })
-            : null,
-        ])
-    },
+  const app = createApp({
+    render: () => h(DongFuBuildingHotspots, { variant: renderedVariant.value }),
   })
-
-  const app = createApp({ render: () => h(RootStub) })
 
   app.use(createPinia())
   app.use(i18n)
@@ -154,11 +135,7 @@ beforeEach(() => {
   )
 })
 
-afterEach(() => {
-  window.localStorage.removeItem('dev.testModeUnlockAll')
-})
-
-describe('HomeBuildingIcons — building navigation không dùng chip nổi', () => {
+describe('DongFuBuildingHotspots — building navigation không dùng chip nổi', () => {
   it('renders six manifest-ordered building sprites and one shared season overlay', () => {
     const mounted = mountHomeBuildings(gameManager)
 
@@ -241,7 +218,6 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     const ui = useUiStore()
 
     expect(ui.leftPanelMode).toBe('pill_room')
-    expect(ui.activeBuildingPopoverId).toBeNull()
 
     mounted.unmount()
   })
@@ -273,37 +249,7 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     mounted.unmount()
   })
 
-  it('chưa xây → click hotspot → popover Xây dựng → mở khóa building thật', async () => {
-    window.localStorage.setItem('dev.testModeUnlockAll', '1')
-
-    const mounted = mountHomeBuildings(gameManager)
-    const hotspot = mounted.buildingButton('pill_room')
-
-    expect(hotspot).not.toBeNull()
-    hotspot!.click()
-    await nextTick()
-    await nextTick()
-
-    const buildButton = mounted.container.querySelector<HTMLButtonElement>('.building-popover__action')
-
-    expect(buildButton).not.toBeNull()
-    expect(buildButton!.disabled).toBe(false)
-
-    buildButton!.click()
-    await nextTick()
-    await nextTick()
-
-    expect(gameManager.buildingManager.getByBuildingId('pill_room')).toBeDefined()
-
-    const ui = useUiStore()
-
-    expect(ui.leftPanelMode).toBe('pill_room')
-    expect(ui.activeBuildingPopoverId).toBeNull()
-
-    mounted.unmount()
-  })
-
-  it('đã xây + có functionType → click hotspot mở PANEL chức năng (không popover)', async () => {
+  it('đã xây + có functionType → click hotspot mở PANEL chức năng', async () => {
     gameManager.buildingManager.add({
       instanceId: 'inst_pill_fn',
 
@@ -323,7 +269,6 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     const ui = useUiStore()
 
     expect(ui.leftPanelMode).toBe('pill_room')
-    expect(ui.activeBuildingPopoverId).toBeNull()
 
     mounted.unmount()
   })
@@ -358,13 +303,12 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     const ui = useUiStore()
 
     expect(ui.leftPanelMode).toBe('worker_lodge')
-    expect(ui.activeBuildingPopoverId).toBeNull()
 
     mounted.unmount()
   })
 })
 
-describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', () => {
+describe('DongFuBuildingHotspots — nameplate + badge trạng thái (plan §3.1)', () => {
   it('uses the approved Khai Vật Đường display name for gathering_outpost', () => {
     const mounted = mountHomeBuildings(gameManager)
 
@@ -477,7 +421,7 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
     mounted.unmount()
   })
 
-  it('Linh Tuyền có sản lượng claim được → badge ready', () => {
+  it('Linh Tuyền đầy kho → badge ready', () => {
     const springManager = new GameManager()
 
     springManager.catalogOps.registerMaterials([UPGRADE_MATERIAL])
@@ -497,7 +441,7 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
       instanceId: 'inst_spring',
       buildingId: 'chi_hien_quan',
       level: 1,
-      // lastCollectedAt lui sau vao qua khu -> stored >= 1.
+      // lastCollectedAt lui sau vao qua khu -> stored cham tran (capacity).
       lastCollectedAt: Date.now() / 1000 - 3600,
     })
 
@@ -507,6 +451,43 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
 
     expect(nameplate.classList.contains('building-nameplate--ready')).toBe(true)
     expect(nameplate.querySelector('.building-nameplate__ready')).not.toBeNull()
+
+    mounted.unmount()
+  })
+
+  it('Linh Tuyền chưa đầy kho (stored < capacity) → không badge ready', () => {
+    const springManager = new GameManager()
+
+    springManager.catalogOps.registerMaterials([UPGRADE_MATERIAL])
+    springManager.catalogOps.registerBuildings([{
+      id: 'chi_hien_quan',
+      name: 'Linh Tuyền',
+      category: 'resource',
+      tier: 1,
+      maxLevel: 3,
+      baseStorageCapacity: 60,
+      baseProductionRate: 1,
+      producesMaterialId: 'spirit_stone',
+      upgradeCost: [[], [], []],
+      functionType: 'worker_lodge',
+    }])
+    springManager.buildingManager.add({
+      instanceId: 'inst_spring',
+      buildingId: 'chi_hien_quan',
+      // max level -> status khong the roi vao 'upgradeable', chi con
+      // 'ready' vs 'default' de co lap dieu kien day kho.
+      level: 3,
+      // level 3: rate 1.4x -> 30s troi qua = stored 42 < capacity 84
+      // -> chua the bao ready.
+      lastCollectedAt: Date.now() / 1000 - 30,
+    })
+
+    const mounted = mountHomeBuildings(springManager)
+
+    const nameplate = mounted.nameplate('chi_hien_quan')!
+
+    expect(nameplate.classList.contains('building-nameplate--ready')).toBe(false)
+    expect(nameplate.querySelector('.building-nameplate__ready')).toBeNull()
 
     mounted.unmount()
   })

@@ -146,12 +146,13 @@ describe('BodySurface (scene 08 fidelity)', () => {
     await nextTick()
     await selectChapter(view, 'meridian')
 
+    // Out-of-reach meridians are hidden, not drawn as locked orbs -
+    // only the opened two and the next sequential node render.
     const orbs = view.container.querySelectorAll('.body-orb')
-    expect(orbs.length).toBe(MERIDIANS.length)
+    expect(orbs.length).toBe(3)
     expect(orbs[0]!.classList.contains('done')).toBe(true)
     expect(orbs[1]!.classList.contains('done')).toBe(true)
     expect(orbs[2]!.classList.contains('current')).toBe(true)
-    expect(orbs[3]!.classList.contains('locked')).toBe(true)
 
     view.unmount()
   })
@@ -212,10 +213,11 @@ describe('BodySurface (scene 08 fidelity)', () => {
       })
       await nextTick()
 
+      // Unreached tiers hide entirely: only the done tier and the
+      // realm-gated next tier (which keeps its honest gate line) stay.
       const chips = unitChips(view)
-      expect(chips.length).toBe(BODY_REFINEMENT_TIERS.length)
+      expect(chips.length).toBe(2)
       expect(chips[0]!.classList.contains('done')).toBe(true)
-      // Tier 1 is realm-gated at mortal 3 - the chip renders locked.
       expect(chips[1]!.classList.contains('locked')).toBe(true)
 
       view.unmount()
@@ -225,15 +227,16 @@ describe('BodySurface (scene 08 fidelity)', () => {
       const view = mountBodyScene((player) => {
         player.$state.realmId = 'qi_refining'
         setBodyProgression(player, {
-          body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+          // Four tiers done: all five cards within reach stay viewable.
+          body_refinement: { completedTiers: 4, currentTierProgress: 0 },
         })
       })
       await nextTick()
 
-      // Default view = first actionable tier (index 0).
+      // Default view = first actionable tier (index 4).
       const gainLabels = [...view.container.querySelectorAll('.body-paper-details dl div dt')]
         .map(row => row.textContent ?? '')
-      const expected = baseGainKeys(BODY_REFINEMENT_TIERS[0]!.baseGains)
+      const expected = baseGainKeys(BODY_REFINEMENT_TIERS[4]!.baseGains)
         .map(stat => statLabel(stat))
       expect(gainLabels).toEqual(expected)
 
@@ -321,11 +324,11 @@ describe('BodySurface (scene 08 fidelity)', () => {
       // The next sequential node (am_kieu_mach) is the default card.
       expect(title?.textContent).toContain('Âm Kiều Mạch')
 
+      // Out-of-reach meridians hide: opened two + the next node only.
       const chips = unitChips(view)
-      expect(chips.length).toBe(MERIDIANS.length)
+      expect(chips.length).toBe(3)
       expect(chips[0]!.classList.contains('done')).toBe(true)
       expect(chips[2]!.classList.contains('current')).toBe(true)
-      expect(chips[3]!.classList.contains('locked')).toBe(true)
 
       view.unmount()
     })
@@ -343,15 +346,14 @@ describe('BodySurface (scene 08 fidelity)', () => {
 
       await selectChapter(view, 'meridian')
 
+      // The page realm is out of reach: no meridian rows render at
+      // all - the card shows only the real unlock condition.
       expect(view.container.textContent).toContain(
         i18n.global.t('panels.realm.meridian.pageLocked', { realm: 'Luyện Khí' }),
       )
       const chips = unitChips(view)
-      expect(chips.length).toBe(MERIDIANS.length)
-      for (const chip of chips) {
-        expect(chip.classList.contains('locked')).toBe(true)
-      }
-      expect(investButton(view)?.disabled ?? true).toBe(true)
+      expect(chips.length).toBe(0)
+      expect(investButton(view)).toBeNull()
 
       view.unmount()
     })
@@ -499,17 +501,19 @@ describe('BodySurface (scene 08 fidelity)', () => {
       })
     }
 
-    it('locked: sealed behind the sequential gate until the meridian chapter completes', async () => {
+    it('locked: the sealed tab refuses to open until the meridian chapter completes', async () => {
       const view = mountBodyScene((player) => {
         tcPlayer(player, 18, 0, { meridianComplete: false })
       })
       await nextTick()
       await selectChapter(view, 'zhou_tian')
 
-      expect(view.container.textContent).toContain(
-        i18n.global.t('panels.realm.zhouTian.locked'),
-      )
-      expect(investButton(view)?.disabled ?? true).toBe(true)
+      // The click is refused: the surface stays on the meridian
+      // chapter and the sealed page never renders.
+      const seals = chapterButtons(view)
+      expect(seals[UI_CHAPTER_INDEX['zhou_tian']!]!.classList.contains('is-locked')).toBe(true)
+      const title = view.container.querySelector('.body-paper-details h2')
+      expect(title?.textContent).toContain('Nhâm Mạch')
 
       view.unmount()
     })

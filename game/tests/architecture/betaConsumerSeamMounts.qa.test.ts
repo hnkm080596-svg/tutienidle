@@ -19,7 +19,6 @@ import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composabl
 import { useUiStore } from '@/stores/ui'
 import { i18n } from '@/i18n'
 import {
-  betaAdmittedBuildingPopoverId,
   isBetaBuildingSurface,
   isBetaLeftPanelMode,
 } from '@/core/betaScopeSurface'
@@ -84,16 +83,7 @@ describe('mount seam: leftPanelMode raw write (F-B-CONS-1)', () => {
   })
 })
 
-describe('mount seam: activeBuildingPopoverId raw write (F-B-CONS-2)', () => {
-  it('the chokepoint the popover template binds rejects chi_hien_quan', () => {
-    // The GameRoot template mounts BuildingDetailPopover only through
-    // betaAdmittedBuildingPopoverId - assert the seam contract directly.
-    expect(betaAdmittedBuildingPopoverId('chi_hien_quan')).toBeNull()
-    expect(betaAdmittedBuildingPopoverId(null)).toBeNull()
-    expect(betaAdmittedBuildingPopoverId('pill_room')).toBe('pill_room')
-    expect(betaAdmittedBuildingPopoverId('gathering_outpost')).toBe('gathering_outpost')
-  })
-
+describe('mount seam: building surface admission (F-B-CONS-2)', () => {
   it('isBetaBuildingSurface fails closed for every scope-hidden id', () => {
     expect(isBetaBuildingSurface('chi_hien_quan')).toBe(false)
     expect(isBetaBuildingSurface('nonexistent_building')).toBe(false)

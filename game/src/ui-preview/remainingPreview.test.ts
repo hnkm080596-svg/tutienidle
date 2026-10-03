@@ -19,7 +19,7 @@ function mount(component:Component,props:Record<string,unknown>){
 it('inventory emits item identity, filter and search without consuming displayed items',()=>{
  const items=Object.freeze(inventoryFixtures(key=>key).map(item=>Object.freeze(item)))
  const events:unknown[]=[]
- const view=mount(InventoryFidelityScene,{items,selected:items[0],filter:'all',query:'',onSelect:(id:string)=>events.push(id),onUse:(id:string)=>events.push(id),onQuery:(query:string)=>events.push(query)})
+ const view=mount(InventoryFidelityScene,{items,selected:items[0],filter:'all',query:'',navigation:[],notice:'',onSelect:(id:string)=>events.push(id),onUse:(id:string)=>events.push(id),onQuery:(query:string)=>events.push(query)})
  try {
   view.container.querySelector<HTMLButtonElement>('.item-grid button')!.click()
   view.container.querySelector<HTMLButtonElement>('.item-detail button')!.click()
@@ -33,7 +33,7 @@ it('inventory emits item identity, filter and search without consuming displayed
 it('quest requests a claim by identity without changing reward or completion state',()=>{
  const quests=questFixtures(key=>key),quest=Object.freeze(quests[1]!)
  const events:string[]=[]
- const view=mount(QuestFidelityScene,{quests,selected:quest,filter:'all',rewards:[],onAction:(id:string)=>events.push(id)})
+ const view=mount(QuestFidelityScene,{quests,selected:quest,filter:'all',rewards:[],navigation:[],notice:'',onAction:(id:string)=>events.push(id)})
  try{view.container.querySelector<HTMLButtonElement>('.action')!.click();expect(events).toEqual(['herb']);expect(quest.status).toBe('ready')}finally{view.close()}
 })
 

@@ -30,6 +30,7 @@ import { bindPresentationActive } from './presentation/bindPresentationActive'
 import { bindCombatAudio } from './presentation/audio/combatAudioBinding'
 import { bindUiAudio } from './presentation/audio/uiAudioBinding'
 import { bindAmbientAudio } from './presentation/audio/ambientAudioDriver'
+import { bindArtWarm } from './presentation/assets/artWarmWiring'
 import { AudioManager } from './core/audio/AudioManager'
 import { setReducedShakeEnabled } from './presentation/vfx/screenShakePolicy'
 import { useAudioStore } from './stores/audio'
@@ -294,6 +295,11 @@ const unbindUiAudio = bindUiAudio(ui)
 // W8: committed route -> music slot crossfade (silent until real assets);
 // W4: same route drives the lazy audio-* bundle fetch (unlock+enabled gated).
 const unbindAmbientAudio = bindAmbientAudio(coordinator, audioStore, assetBundleManager)
+
+// Committed route -> 'ui-scenes' art warm: fetches the panel/backdrop/icon
+// art once on the first 'home' commit so later panel switches paint from
+// cache. Fire-and-forget, deduped inside the bundle manager.
+const unbindArtWarm = bindArtWarm(coordinator, assetBundleManager)
 
 watch(
   () => audioStore.reducedShake,
@@ -1084,6 +1090,7 @@ onUnmounted(() => {
   unbindCombatAudio()
   unbindUiAudio()
   unbindAmbientAudio()
+  unbindArtWarm()
   disarmAudioUnlockListeners()
   disarmAudioUnlock?.()
   disarmAudioUnlock = undefined

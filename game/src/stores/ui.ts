@@ -4,7 +4,6 @@ import {
   savePersistedUiAutomationFlags,
 } from './uiFlagsPersistence'
 import {
-  isBetaBuildingSurface,
   isBetaLeftPanelMode,
   isBetaStandalonePanel,
 } from '@/core/betaScopeSurface'
@@ -24,7 +23,7 @@ import {
 // Tham Hiem rework (2026-08-14) - 'building' (Kien Truc, panel liet ke
 // phang moi Building) va 'asset_reference' (dev-only, khong thuoc nav
 // nguoi choi) bi GO KHOI union nay - Kien Truc bi thay hoan toan boi
-// icon Building dat trong Home Scene (xem HomeBuildingIcons.vue).
+// icon Building dat trong Home Scene (xem scenes/dong-fu/hotspots/DongFuBuildingHotspots.vue).
 // 'exploration' GIU NGUYEN key (label gio "San Xuat") - day la he Thu
 // Thap nguyen lieu tu dong cu, KHONG phai Tham Hiem moi.
 // 'stage_select' MOI - man hinh chon Dia Gioi -> Man -> che do truoc khi
@@ -130,21 +129,10 @@ export const useUiStore = defineStore('ui', {
     // keeps governing whether the overlay is open at all.
     characterSceneTab: 'character' as 'character' | 'inventory',
 
-    // Detail stat card - small card docked at the right edge of the
-    // Character drawer (LeftPanel), toggled by a button in
-    // CharacterPanel. Transient per session, NOT persisted to save.
-    characterDetailOpen: false,
-
     // Command wheel (dong-fu-command-wheel plan) - mo/dong bang click
     // nhan vat tu luyen giua Dong Phu; Escape/click vung trong dong.
     // Transient theo phien, KHONG luu save.
     isCommandWheelOpen: false,
-
-    // Shared popover authority (plan Workstream C) - CHI MOT
-    // BuildingDetailPopover o tang GameRoot, id building dang hien thi
-    // popover. null = dong. Ca hotspot lan command wheel cung ghi vao
-    // day qua composables/useBuildingNavigation.ts.
-    activeBuildingPopoverId: null as string | null,
 
     activeBagTab: 'material' as BagTab,
 
@@ -223,7 +211,7 @@ export const useUiStore = defineStore('ui', {
         if (this.characterOverlayOpen) {
           this.characterSceneTab = mode
           this.activeBagTab = 'equipment'
-        } else this.characterDetailOpen = false
+        }
         return
       }
       const shouldClose = this.leftPanelMode === mode
@@ -266,17 +254,11 @@ export const useUiStore = defineStore('ui', {
       this.standalonePanel = panel
     },
 
-    toggleCharacterDetail() {
-      this.characterDetailOpen = !this.characterDetailOpen
-    },
-
     /** Dong toan bo chrome/overlay cua Dong Phu khi click nen chinh. */
     closeHomeOverlays() {
       this.leftPanelMode = null
       this.characterOverlayOpen = false
-      this.characterDetailOpen = false
       this.standalonePanel = null
-      this.activeBuildingPopoverId = null
       this.isCommandWheelOpen = false
     },
 
@@ -293,22 +275,6 @@ export const useUiStore = defineStore('ui', {
 
     closeCommandWheel() {
       this.isCommandWheelOpen = false
-    },
-
-    openBuildingPopover(buildingId: string) {
-      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden buildings open no
-      // popover (chi_hien_quan deep-link fails closed).
-      if (!isBetaBuildingSurface(buildingId)) {
-        return
-      }
-
-      this.closeHomeOverlays()
-
-      this.activeBuildingPopoverId = buildingId
-    },
-
-    closeBuildingPopover() {
-      this.activeBuildingPopoverId = null
     },
 
     setActiveBagTab(tab: BagTab) {

@@ -24,6 +24,24 @@ import {
 import { statLabel } from './stats/StatLabels'
 import { betaTechniqueAdmitted } from './betaScopeSkillDomain'
 import { COMBAT_TECHNIQUE_TYPES } from '../data/technique/CombatTechniqueTypes'
+import { getRealmIndex } from './realm/realmSystem'
+import { getActiveWay } from './player/CultivationPathSystem'
+
+// ---------------------------------------------------------------------------
+// Tam Phap tab lock (task 2026-10-03) - the surface stays sealed until the
+// player has broken through to Luyen Khi AND committed a pathway (the
+// initiation ritual that grants the first technique). The nav rail dims the
+// item and the mount seam refuses the panel: below the gate there is no
+// technique state to show at all.
+// ---------------------------------------------------------------------------
+export function isBetaTechniqueSurfaceUnlocked(
+  player: Pick<PlayerData, 'realmId' | 'cultivationPath' | 'cultivationWay'>,
+): boolean {
+  return (
+    getRealmIndex(player.realmId) >= getRealmIndex('qi_refining') &&
+    getActiveWay(player) !== undefined
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Display sections - the 'Chien Dau' block the tooltip and the inline

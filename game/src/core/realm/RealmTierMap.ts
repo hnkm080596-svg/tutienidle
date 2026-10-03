@@ -24,3 +24,12 @@ export function getRealmIdForTier(tier: number): RealmTierId {
   const normalized = Math.min(REALM_TIERS.length, Math.max(1, Math.floor(tier)))
   return REALM_TIERS[normalized - 1]!
 }
+
+/**
+ * F-MAT-REALM producibility ceiling: a realm-bounded faucet may mint
+ * materials up to this many realm tiers above the claimer/collector
+ * tier (the lead authored no-gate collect quests tolerate). The save
+ * validator and the production reward roll both read this constant -
+ * one authority for the whole rule.
+ */
+export const PRODUCIBLE_REALM_TIER_LEAD = 1

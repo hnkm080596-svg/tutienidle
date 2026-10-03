@@ -51,7 +51,9 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openLeftMode(page, 'inventory')
+    // San Xuat (exploration) is the last surface still on the shared
+    // scroll shell - it keeps the unfold-interruption coverage alive.
+    await openLeftMode(page, 'exploration')
     // Do NOT wait for the unfold to settle - press Esc while the clip
     // is still opening.
     await expect(page.locator('.hk-scroll')).toBeVisible({ timeout: 10_000 })
@@ -69,7 +71,7 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openLeftMode(page, 'inventory')
+    await openLeftMode(page, 'exploration')
     const scroll = page.locator('.hk-scroll')
     await expect(scroll).toBeVisible({ timeout: 10_000 })
 
@@ -116,26 +118,27 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     assertNoBrowserErrors(collected)
   })
 
-  test('character detail dock cannot leak across nav swaps', async ({ page }) => {
+  test('character detail dock stays open across nav swaps', async ({ page }) => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
     await openLeftMode(page, 'character')
     const heading = page.locator('.cf-details__heading')
     await expect(heading).toBeVisible({ timeout: 10_000 })
-    await heading.click()
-    await expect(heading).toHaveAttribute('aria-expanded', 'true')
+    // The Chi Tiet dock is always rendered open - no toggle, so the
+    // body is visible immediately without a click.
+    await expect(page.locator('.cf-details__body')).toBeVisible()
 
     // Swap to inventory via the shared rail - the dock is a
     // character-surface overlay and must not render over the bag.
     await page.locator('.paper-navigation-item[data-nav-id="inventory"]').click()
-    await expect(page.locator('.inventory-panel')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('.inventory-scene')).toBeVisible({ timeout: 10_000 })
 
-    // Back to character: the dock stays closed (closeHomeOverlays reset
-    // it during the swap - it must not resurrect stale UI state).
+    // Back to character: the dock is still open - there is no dock
+    // state to reset or resurrect.
     await page.locator('.paper-navigation-item[data-nav-id="character"]').click()
     await expect(page.locator('.cf-scene')).toBeVisible({ timeout: 10_000 })
-    await expect(page.locator('.cf-details__heading')).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.locator('.cf-details__body')).toBeVisible()
 
     assertNoBrowserErrors(collected)
   })

@@ -445,11 +445,17 @@ describe('quest claim on a carried scope-hidden quest', () => {
 })
 
 describe('write seams on dormant domains', () => {
-  it('chi_hien_quan build fails closed at the ops gate', () => {
+  it('chi_hien_quan upgrade still fails closed at the ops gate', () => {
     const gameManager = realGameManager()
     const p = player({ realmId: 'foundation_establishment' })
-    expect(gameManager.buildingOps.canBuildBuilding('chi_hien_quan', p)).toBe(false)
-    expect(gameManager.buildingOps.buildBuilding('chi_hien_quan', p)).toBeNull()
+    gameManager.setActivePlayer(p)
+    gameManager.buildingManager.add({
+      instanceId: 'chq_1',
+      buildingId: 'chi_hien_quan',
+      level: 1,
+      lastCollectedAt: 0,
+    })
+    expect(gameManager.buildingOps.upgradeBuilding('chq_1')).toBe(false)
   })
 
   it('chooseCultivationPath rejects a dormant way', () => {

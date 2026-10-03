@@ -5,7 +5,9 @@
 //   summary slot   -> real HP / attack / defense from player.finalStats
 //   workspace slot -> Trang Bi detail + beta-admitted op tabs + Tui Do
 //                     (the ref's right region is ONE rect: bag OR forge)
-//   actions slot   -> quick-jump seals for the admitted ops
+//
+// The ref's bottom action seals are gone: ops are reached through the
+// workspace sub-tabs only.
 //
 // HALL_SELECTION_KEY provide + detailInstanceId fallback + tab ownership
 // (Enhance slot-based, Wash/Refine shared selection, Dissolve/Decompose
@@ -176,9 +178,6 @@ const summaryRows = computed(() => {
         </section>
       </template>
 
-      <template #actions>
-        <button v-for="tab in visibleTabs" :key="tab.id" @click="selectWorkspace(tab.id)">{{ t(`panels.equipmentHall.tabs.${tab.id}`) }}</button>
-      </template>
     </EquipmentFidelityScene>
   </SceneDesignCanvas>
 </template>
@@ -199,9 +198,9 @@ const summaryRows = computed(() => {
    bar mirrors the forge nav, the body mounts the real tabs verbatim. */
 .equipment-workspace {
   position: absolute;
-  left: 758px;
+  left: 700px;
   top: 178px;
-  width: 620px;
+  width: 678px;
   height: 507px;
   padding-left: 20px;
   /* The workspace's right edge (x1378) sits ~33px onto the paper's 83px
@@ -266,25 +265,4 @@ const summaryRows = computed(() => {
   min-height: 0;
 }
 
-/* The action seal buttons render inside the #actions slot (this file's
-   scope) - the scene only owns the .equipment-actions rect. */
-.equipment-actions button {
-  font-family: var(--font-display, Georgia, serif);
-  font-size: 15px;
-  font-weight: 700;
-  padding: 7px 25px;
-  border: 1px solid #a78745;
-  color: #f6dfa6;
-  background: linear-gradient(#3c5946, #173024);
-  border-radius: 3px;
-  cursor: pointer;
-  box-shadow: inset 0 0 0 2px #d3b57633, 0 2px 4px #3f2d1455;
-}
-.equipment-actions button:hover {
-  filter: brightness(1.15);
-}
-.equipment-actions button:focus-visible {
-  outline: 2px solid #47765f;
-  outline-offset: 3px;
-}
 </style>

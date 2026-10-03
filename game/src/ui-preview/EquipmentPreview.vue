@@ -2,6 +2,7 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
 import EquipmentFidelityScene from '@/components/scenes/equipment/fidelity/EquipmentFidelityScene.vue'
@@ -11,6 +12,9 @@ const { t } = useI18n()
 const notice = shallowRef('')
 const pointer = shallowRef({ x: 0, y: 0 })
 const navigation = computed(() => previewPaperNavigation(t))
+// Same mannequin art the production doll mounts - lets the preview
+// exercise the narrow art gap between the two socket columns.
+const characterImage = stableSceneArtUrl('equipment-paperdoll-base', '@1x')
 const kinds = ['kiem', 'bao', 'quan', 'hai', 'gioi', 'chau'] as const
 const items = computed<EquipmentDisplay[]>(() => Array.from({ length: 18 }, (_, i) => {
   const kind = kinds[i % kinds.length]!
@@ -33,5 +37,5 @@ function action(id:string) {
   else notice.value=t('notice')
 }
 </script>
-<template><SceneDesignCanvas><div class="equipment-preview-host" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><EquipmentFidelityScene :sockets="sockets" :items="items" :navigation="navigation" :notice="notice" preview @navigate="navigate" @back="back" @action="action" /></div></SceneDesignCanvas></template>
+<template><SceneDesignCanvas><div class="equipment-preview-host" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><EquipmentFidelityScene :sockets="sockets" :items="items" :navigation="navigation" :notice="notice" :character-image="characterImage" preview @navigate="navigate" @back="back" @action="action" /></div></SceneDesignCanvas></template>
 <style scoped>.equipment-preview-host { position:relative; width:100%; height:100%; }</style>

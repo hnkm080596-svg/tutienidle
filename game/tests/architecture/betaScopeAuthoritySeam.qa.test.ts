@@ -112,32 +112,40 @@ describe('talent roster: dormant golden_core pool must stay out of beta admissio
  })
 })
 
-describe('building write seam: scope-hidden chi_hien_quan must be unbuildable / unupgradable', () => {
- it('canBuildBuilding and buildBuilding refuse chi_hien_quan under the lock', () => {
+describe('building write seam: scope-hidden chi_hien_quan stays dormant (carried, never writable)', () => {
+ it('reconcileBuildings grants chi_hien_quan lv1 dormant - instance exists, surfaces stay hidden', () => {
  const gameManager = new GameManager()
  gameManager.catalogOps.registerBuildings(buildings)
  const p = player({ realmId: 'qi_refining' })
 
- // BETA_BUILDING_FEATURES maps chi_hien_quan -> manualWorkforce
- // (hidden). Every other domain write seam in the codebase returns
- // {ok:false,reason:'scope_hidden'} - the build/upgrade seam must
- // fail closed identically instead of minting a live instance and
- // writing player.autoWorkerCapacity.
- expect(gameManager.buildingOps.canBuildBuilding('chi_hien_quan', p)).toBe(false)
- expect(gameManager.buildingOps.buildBuilding('chi_hien_quan', p)).toBeNull()
- expect(gameManager.buildingManager.getAll()).toEqual([])
- expect(p.autoWorkerCapacity).toBe(0)
+ // Default-built (2026-10-03): the reconcile grants EVERY registered
+ // building at lv1 - the scope rule hides chi_hien_quan's surfaces, it
+ // never strips a carried instance (same treatment as a carried save).
+ gameManager.buildingOps.reconcileBuildings(p, 1_000)
+
+ const instance = gameManager.buildingManager.getByBuildingId('chi_hien_quan')
+
+ expect(instance?.level).toBe(1)
+ expect(p.autoWorkerCapacity).toBe(3)
  })
 
- it('control: a live (unmapped) building with an identical free cost still builds', () => {
+ it('control: reconcile is idempotent and leaves carried levels untouched', () => {
  const gameManager = new GameManager()
  gameManager.catalogOps.registerBuildings(buildings)
  const p = player({ realmId: 'qi_refining' })
 
- // Same tier-1 crafting_station shape, upgradeCost[0] === [] - the
- // only difference is the scope-feature mapping, so the contrast
- // isolates the missing gate.
- expect(gameManager.buildingOps.buildBuilding('gathering_outpost', p)).not.toBeNull()
+ gameManager.buildingManager.add({
+ instanceId: 'inst_chq',
+ buildingId: 'chi_hien_quan',
+ level: 4,
+ lastCollectedAt: 0,
+ })
+ gameManager.buildingOps.reconcileBuildings(p, 1_000)
+
+ expect(gameManager.buildingManager.get('inst_chq')?.level).toBe(4)
+ expect(
+   gameManager.buildingManager.getAll().filter((i) => i.buildingId === 'chi_hien_quan'),
+ ).toHaveLength(1)
  })
 
  it('upgradeBuilding refuses a carried chi_hien_quan instance and spends nothing', () => {

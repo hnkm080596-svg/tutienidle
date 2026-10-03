@@ -435,6 +435,8 @@
         "title": "Exploration Progress: {zone}"
       },
       "rewards": {
+        "dropAmount": "Drop amount",
+        "dropChance": "Drop chance",
         "kinds": {
           "material": "Material",
           "equipment": "Equipment",
@@ -480,12 +482,12 @@
       },
       "paperdoll": {
         "slots": {
-          "helmet": "Helm",
-          "necklace": "Necklace",
-          "ring": "Ring",
+          "helmet": "Dao Crown",
+          "necklace": "Spirit Pearl",
+          "ring": "Spirit Ring",
           "weapon": "Weapon",
-          "armor": "Armor",
-          "boots": "Boots"
+          "armor": "Dao Robe",
+          "boots": "Dao Boots"
         }
       },
       "search": {
@@ -857,10 +859,6 @@
         "reasonIncomplete": "Objective incomplete."
       }
     },
-    "buildingPopover": {
-      "costTitle": "Build Cost",
-      "build": "Build"
-    },
     "common": {
       "close": "Close",
       "confirm": "Confirm",
@@ -883,7 +881,7 @@
       "estimate": "≈ {amount} essence / cycle",
       "matching": "Matching ore in bag: {count}",
       "hint": {
-        "noCapacity": "No decompose capacity — build or upgrade the Worker Lodge to free up workers.",
+        "noCapacity": "No decompose capacity — upgrade the Worker Lodge to free up workers.",
         "noWorkers": "No workers assigned — raise the Workers slider to start decomposing.",
         "noMatchingOres": "No ore in the bag matches the filters — gather ore from mining/exploration or loosen the filters."
       }
@@ -1210,8 +1208,7 @@
         "register": "Create Identity"
       },
       "guest": {
-        "button": "Play Now",
-        "note": "Guest progress stops at Foundation Establishment"
+        "button": "Play Now"
       },
       "continue": "Continue — {name}",
       "continueNoName": "Continue",
@@ -1610,11 +1607,6 @@
     "level": "Level {level}",
     "notBuilt": "Locked"
   },
-  "buildingGate": {
-    "free": "Free",
-    "confirmTitle": "Build {name}?",
-    "confirmMessage": "This will cost {cost}."
-  },
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",
     "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
@@ -1945,7 +1937,7 @@
     "technique": "Techniques",
     "body": "Body",
     "alchemy": "Pill Room",
-    "equipment": "Equipment Hall",
+    "equipment": "Equipment",
     "exploration": "Expedition",
     "quest": "Quests",
     "settings": "Settings"
@@ -1962,10 +1954,25 @@
     "details": "Details",
     "combat": "Combat",
     "other": "Other",
-    "close": "Collapse details",
-    "open": "Expand details",
     "statNotice": "{name}: {value}",
-    "elementNotice": "{name} · Power {power} · Resist {resistance} · Pierce {penetration}"
+    "elementNotice": "{name} · Power {power} · Resist {resistance} · Pierce {penetration}",
+    "sources": {
+      "title": "Breakdown",
+      "base": "Base",
+      "bodyDelta": "Body Refinement",
+      "realm": "Realm",
+      "technique": "Technique",
+      "skill": "Skill",
+      "buff": "Buff",
+      "debuff": "Debuff",
+      "equipment": "Equipment",
+      "talent": "Talent",
+      "reincarnation": "Reincarnation",
+      "pill": "Pill",
+      "formation": "Formation",
+      "talisman": "Talisman",
+      "attribute": "Attribute"
+    }
   },
   "realm": {
     "title": "ASCENSION PATH",
@@ -2064,7 +2071,7 @@
     "bag": "Gear Stash",
     "sort": "Sort",
     "filter": "Filter",
-    "forgeTitle": "Forge",
+    "forgeTitle": "Qi Forge · Gear Refining",
     "stats": {
       "hp": "Health",
       "attack": "Attack",

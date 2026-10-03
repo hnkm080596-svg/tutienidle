@@ -197,7 +197,7 @@ describe('EquipmentBagSection - filter bar (search + slot chips + count)', () =>
   it('selecting a slot chip filters cells to that equipment slot', async () => {
     const mounted = mountTwoItems()
 
-    const armorChip = chipByLabel(mounted.container, 'Giáp')
+    const armorChip = chipByLabel(mounted.container, 'Đạo Bào')
 
     armorChip.dispatchEvent(new Event('click', { bubbles: true }))
     await nextTick()
@@ -215,7 +215,7 @@ describe('EquipmentBagSection - filter bar (search + slot chips + count)', () =>
   it("'Tất cả' chip restores the list; re-clicking the active chip toggles it off", async () => {
     const mounted = mountTwoItems()
 
-    const armorChip = chipByLabel(mounted.container, 'Giáp')
+    const armorChip = chipByLabel(mounted.container, 'Đạo Bào')
 
     armorChip.dispatchEvent(new Event('click', { bubbles: true }))
     await nextTick()

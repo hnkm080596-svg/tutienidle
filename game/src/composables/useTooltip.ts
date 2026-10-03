@@ -158,7 +158,7 @@ export interface EquipmentTooltipContent {
 }
 
 // Tooltip Building (Dong Phu UI redesign) - cong trinh trong Home
-// Scene gio la world object that (xem components/game/HomeBuildingIcons.vue),
+// Scene gio la world object that (xem scenes/dong-fu/hotspots/DongFuBuildingHotspots.vue),
 // tooltip can ten + chuc nang + trang thai xay/cap cung khuon voi
 // ItemTooltip/SkillTooltip thay vi {title, description} phang cu.
 export interface BuildingTooltipContent {
@@ -173,7 +173,7 @@ export interface BuildingTooltipContent {
   // 2026-08-30 frontend-design pass - statusLabel truoc day LUON to mau
   // jade du dang noi "Chua mo" (locked) hay "Da mo" (built), gay hieu
   // nham trang thai khoa trong nhu tich cuc. Optional de khong pha vo
-  // caller cu khac (khong caller nao khac ngoai HomeBuildingIcons.vue).
+  // caller cu khac (khong caller nao khac ngoai hotspot layer DongFuBuildingHotspots).
   isBuilt?: boolean
 }
 
@@ -198,6 +198,23 @@ export interface ElementTooltipContent {
   description?: string
 }
 
+// Aggregate-stat tooltip (character stat board source breakdown) - the
+// stat title + its resolved aggregate + the per-source fold (base row,
+// then each contributing source + its Added/Increased/More amounts).
+// Reuses the item-info-card section/row vocabulary.
+export interface StatBreakdownTooltipContent {
+  kind: 'stat'
+
+  name: string
+
+  /** Pre-formatted aggregate value shown beside the title. */
+  total?: string
+
+  description?: string
+
+  sections: TooltipSection[]
+}
+
 export type TooltipContent =
   | PlainTooltipContent
   | TechniqueTooltipContent
@@ -205,6 +222,7 @@ export type TooltipContent =
   | EquipmentTooltipContent
   | BuildingTooltipContent
   | ElementTooltipContent
+  | StatBreakdownTooltipContent
 
 // State module-level (khong phai Pinia) - chi 1 tooltip hien thi
 // tai 1 thoi diem trong toan game, khong can theo doi lich su/persist.

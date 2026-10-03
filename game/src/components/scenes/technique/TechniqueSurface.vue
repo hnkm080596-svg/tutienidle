@@ -66,7 +66,8 @@ const model = computed<TechniqueUiModel>(() => {
   const masteryMax = m.masteryForNextRank ?? 0
 
   return {
-    name: m.name ?? '—',
+    hasTechnique: m.state === 'available',
+    name: m.name ?? '',
     quality: m.quality !== undefined ? ITEM_QUALITY_LABELS[m.quality] : '',
     description: m.description ?? t('panels.skillPath.technique.emptyNoTechnique'),
     // Centerpiece is a 433x404 vista slot; m.icon is a 32px bag/spellbook

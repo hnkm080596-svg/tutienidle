@@ -11,8 +11,25 @@ const { t } = useI18n()
 const selected = shallowRef('major')
 const notice = shallowRef('')
 const pointer = shallowRef({ x: 0, y: 0 })
-const navigation = computed(() => previewPaperNavigation(t))
-const model = computed<TechniqueUiModel>(() => ({
+// ?empty shows the no-technique page (info card alone, no artifact
+// vista or upgrade rail); ?locked dims the Tam Phap rail item like the
+// production progression lock below Luyen Khi.
+const flags = new URLSearchParams(window.location.search)
+const emptyState = flags.has('empty')
+const navLocked = flags.has('locked')
+const navigation = computed(() => previewPaperNavigation(t, navLocked ? ['technique'] : []))
+const model = computed<TechniqueUiModel>(() => emptyState
+  ? {
+      hasTechnique: false,
+      name: '', quality: '', description: t('empty'), art: '',
+      sections: [], stages: [],
+      rankLabel: '', masteryLabel: '', masteryPercent: 0,
+      currentGrade: '', nextGrade: '',
+      material: { name: '', amountLabel: '' }, materialNote: '',
+      advanceDisabled: true, disabledReason: '', artTemporary: false,
+    }
+  : ({
+  hasTechnique: true,
   name: t('name'), quality: t('quality'), description: t('description'), art: resolveAssetUrl('/assets/ui/huyen-kim/scene/technique-v2/temporary-manual-v1.png'),
   sections: [{ id: 'combat', title: t('combat'), rows: [{ id: 'system', label: t('system'), value: t('systemValue') }, { id: 'might', label: t('might'), value: '+120' }, { id: 'defense', label: t('defense'), value: '+80' }, { id: 'mana', label: t('mana'), value: '+12%' }] }],
   stages: [{ id: 'entry', label: t('stage.entry'), state: 'reached' }, { id: 'minor', label: t('stage.minor'), state: 'reached' }, { id: 'major', label: t('stage.major'), state: 'current' }, { id: 'complete', label: t('stage.complete'), state: 'next' }],

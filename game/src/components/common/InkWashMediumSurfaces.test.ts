@@ -5,7 +5,6 @@ import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import Tooltip from '@/components/common/Tooltip.vue'
 import TechniqueSlotCard from '@/components/panels/skill-path/TechniqueSlotCard.vue'
-import buildingPopoverSource from '@/components/game/BuildingDetailPopover.vue?raw'
 import { useTooltip } from '@/composables/useTooltip'
 import { betaTechniqueSurfaceFor } from '@/core/betaScopeTechniqueDomain'
 import type { PlayerData } from '@/core/player/Player'
@@ -50,11 +49,6 @@ describe('ink-wash medium surfaces', () => {
     })
 
     expect(container.querySelector('[data-ink-slice="frame-m-seal-corner"]')).not.toBeNull()
-  })
-
-  it('keeps both paper surface and ink frame in the store-backed building popover', () => {
-    expect(buildingPopoverSource).toContain('asset-id="surface-m-paper"')
-    expect(buildingPopoverSource).toContain('asset-id="frame-m-seal-corner"')
   })
 
   it('renders the teleported tooltip inside the approved paper surface and ink frame', async () => {

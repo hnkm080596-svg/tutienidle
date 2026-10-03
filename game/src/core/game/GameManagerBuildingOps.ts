@@ -57,76 +57,23 @@ export class GameManagerBuildingOps {
     return this.deps.buildingRegistry.getAll()
   }
 
-  /** Gate UI xay moi - delegate BuildingSystem.canBuild (sec popover). */
-  canBuildBuilding(buildingId: string, player: PlayerData): boolean {
-    // BETA SCOPE LOCK - a scope-hidden building (chi_hien_quan ->
-    // manualWorkforce) fails closed at the write seam, not only at the
-    // surface read model; same rule as the {ok:false,'scope_hidden'}
-    // pattern in equipment/alchemy/workforce ops.
-    if (!isBetaBuildingSurface(buildingId)) {
-      return false
-    }
-    return this.deps.buildingSystem.canBuild(
-      buildingId,
+  /**
+   * Default-built reconcile (2026-10-03): grant every registered building
+   * at level 1 (no build action, no unbuilt state). Runs at character
+   * init and after each save restore so old saves gain missing buildings.
+   * Scope-hidden buildings are granted too - the scope rule hides their
+   * surfaces, it never strips a carried instance.
+   */
+  reconcileBuildings(player: PlayerData, currentTime: number): void {
+    const added = this.deps.buildingSystem.ensureAllBuilt(
       this.deps.buildingRegistry,
       this.deps.buildingManager,
-      player,
-      this.deps.materialBag,
-    )
-  }
-
-  buildBuilding(buildingId: string, player: PlayerData, currentTime = Date.now() / 1000) {
-    if (!isBetaBuildingSurface(buildingId)) {
-      return null
-    }
-    const instance = this.deps.buildingSystem.build(
-      buildingId,
-      this.deps.buildingRegistry,
-      this.deps.buildingManager,
-      player,
-      this.deps.materialBag,
       currentTime,
+      player.realmId,
     )
 
-    // Fix (review 2026-08-26) - build that bai truoc day IM LANG (null
-    // khong ai doc): gio push toast ly do cu the de nguoi choi biet phai
-    // lam gi tiep (thieu nguyen lieu/canh gioi...).
-    if (!instance) {
-      const check = this.deps.buildingSystem.canBuildDetailed(
-        buildingId,
-
-        this.deps.buildingRegistry,
-
-        this.deps.buildingManager,
-
-        player,
-
-        this.deps.materialBag,
-      )
-
-      this.deps.notifications.push({
-        kind: 'error',
-
-        message: `Xây ${this.buildingName(buildingId)} thất bại (${check.reason ?? 'unknown'})`,
-      })
-    } else {
+    for (const instance of added) {
       this.refreshAutoWorkerCapacity(player, instance)
-      this.deps.notifications.push({
-        kind: 'upgrade',
-
-        message: `Đã xây ${this.buildingName(buildingId)} · Cấp 1`,
-      })
-    }
-
-    return instance
-  }
-
-  /** Ten building hien thi cho toast - fallback id khi registry thieu. */
-  private buildingName(buildingId: string): string {
-    try {
-      return this.deps.buildingRegistry.get(buildingId).name
-    } catch {
-      return buildingId
     }
   }
 
@@ -377,6 +324,21 @@ export class GameManagerBuildingOps {
     return this.deps.buildingSystem.getRatePerMinute(
       instance,
       this.deps.buildingRegistry.get(instance.buildingId),
+      this.deps.getActivePlayer()?.realmId,
+    )
+  }
+
+  isBuildingStorageFull(instanceId: string, currentTime = Date.now() / 1000): boolean {
+    const instance = this.deps.buildingManager.get(instanceId)
+
+    if (!instance) {
+      return false
+    }
+
+    return this.deps.buildingSystem.isStorageFull(
+      instance,
+      this.deps.buildingRegistry.get(instance.buildingId),
+      currentTime,
       this.deps.getActivePlayer()?.realmId,
     )
   }

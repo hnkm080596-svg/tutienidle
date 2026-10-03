@@ -107,7 +107,7 @@ import {
   getRealmIndex,
   getRequiredCultivation,
 } from '../../core/realm/realmSystem'
-import { getRealmTier } from '../../core/realm/RealmTierMap'
+import { getRealmTier, PRODUCIBLE_REALM_TIER_LEAD } from '../../core/realm/RealmTierMap'
 import {
   isBeyondReleaseCeiling,
   isBreakthroughAcquisitionEnabled,
@@ -3115,11 +3115,12 @@ function validateBuildingsSave(
   playerRealmIndex?: number,
   claimedRealmTier?: number,
 ): void {
-  // F-BLD-DUP-1: instanceId comes from crypto.randomUUID() at build
-  // time - a duplicate is unproducible and breaks first-match
-  // get()/remove() consumers. buildingId duplicates are unproducible
-  // for 'crafting_station' templates (canBuildDetailed -> already_built);
-  // resource categories may legitimately hold several instances.
+  // F-BLD-DUP-1: instanceId comes from crypto.randomUUID() when an
+  // instance is created - a duplicate is unproducible and breaks
+  // first-match get()/remove() consumers. buildingId duplicates are
+  // unproducible for 'crafting_station' templates (a second instance is
+  // never created once one exists); resource categories may
+  // legitimately hold several instances.
   const seenInstanceIds = new Set<string>()
   const seenSingleInstanceBuildingIds = new Set<string>()
 
@@ -4669,7 +4670,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
           })
         } else if (
           claimedRealmTier !== undefined &&
-          getRealmTier(domainUnlockRealmId) > claimedRealmTier + 1
+          getRealmTier(domainUnlockRealmId) > claimedRealmTier + PRODUCIBLE_REALM_TIER_LEAD
         ) {
           issues.push({
             path: `materials[${i}]`,
@@ -4704,7 +4705,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
         if (
           professionRealmTier !== undefined &&
-          professionRealmTier > claimedRealmTier + 1
+          professionRealmTier > claimedRealmTier + PRODUCIBLE_REALM_TIER_LEAD
         ) {
           issues.push({
             path: `materials[${i}]`,

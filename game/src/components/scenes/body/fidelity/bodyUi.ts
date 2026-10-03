@@ -63,6 +63,9 @@ export interface BodyPaperModel {
   /** Identity line under the title (physique grade / chapter subtitle). */
   identity: string
   extra: BodyPaperExtra | null
+  /** Unlock condition shown when every unit of the chapter is out of
+   *  reach (hidden content never renders - only its real gate line). */
+  lockHint?: string
   progressLabel: string
   progress: number
 }

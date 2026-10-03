@@ -164,12 +164,6 @@ const MOUNT_GATES: MountGate[] = [
 
 const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: string }> = [
   {
-    file: 'components/panels/bag-sections/MaterialBagSection.vue',
-    tokens: ['post-beta-realm'],
-    reason:
-      'REALM_LABELS is a provenance tooltip lookup keyed by material.realmId - a label renders only for a material the player owns, and no post-ceiling material is obtainable in beta',
-  },
-  {
     file: 'components/scenes/realm/RealmAscentNode.vue',
     tokens: ['coming-soon'],
     reason:

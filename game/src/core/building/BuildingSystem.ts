@@ -3,21 +3,11 @@ import type { BuildingInstance } from './BuildingInstance'
 import { BuildingRegistry } from './BuildingRegistry'
 import { BuildingManager } from './BuildingManager'
 import type { MaterialBag } from '../material/MaterialBag'
-import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { CraftModifiers } from './BuildingLevelEffect'
-import { isTestModeUnlockAll } from '../dev/DevMode'
 import { getRealmIdForTier, getRealmTier } from '../realm/RealmTierMap'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { PRODUCTION_OFFLINE_CAP_SECONDS } from '../production/ProductionBalance'
-
-// Ly do tu choi xay - UI (popover/toast) dung de bao nguoi choi thay vi
-// im lang (fix "khong the xay dung" khong ro nguyen nhan, 2026-08-26).
-export type BuildRejectReason =
-  | 'unknown_building'
-  | 'already_built'
-  | 'realm_locked'
-  | 'missing_materials'
 
 const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
   timeReductionPercent: 0,
@@ -86,7 +76,7 @@ function getSpiritSpringTargetRatePerMinute(realmId: string | undefined): number
  */
 /**
  * F-TC5-1: the accrual realm pin is only ever written from the player's
- * realm at build/claim time (EM-01). A pin that resolves above the
+ * realm when an instance is created (EM-01). A pin that resolves above the
  * current realm - or to no known realm - is a forged accrual window;
  * clamp it to the current realm instead of minting the fabricated
  * window's tier and rate.
@@ -112,95 +102,45 @@ function resolveAccrualRealmId(
 
 export class BuildingSystem {
   /**
-   * Check chi tiet kem ly do - UI/toast bao dung nguyen nhan thay vi
-   * im lang; canBuild() boolean wrapper giu cho caller cu.
+   * Default-built reconcile (2026-10-03): every registered building
+   * exists at level 1 by default - there is no build action and no
+   * 'unbuilt' state. Called once after character init and after each
+   * save restore so old saves gain any missing building. Idempotent:
+   * skips buildings that already own an instance. Returns the newly
+   * added instances so callers can run side-effects (CHQ capacity).
    */
-  canBuildDetailed(
-    buildingId: string,
+  ensureAllBuilt(
     registry: BuildingRegistry,
     manager: BuildingManager,
-    player: PlayerData,
-    materialBag: MaterialBag,
-  ): { ok: boolean; reason?: BuildRejectReason } {
-    if (!registry.has(buildingId)) {
-      return { ok: false, reason: 'unknown_building' }
-    }
-
-    const template = registry.get(buildingId)
-
-    // Crafting-station (BUILDing spec) chi xay duoc 1 lan/loai.
-    if (template.category === 'crafting_station' && manager.getByBuildingId(buildingId)) {
-      return { ok: false, reason: 'already_built' }
-    }
-
-    // Co test (2026-08-20, override qua localStorage tu 2026-08-26) -
-    // bo qua gate canh gioi/nguyen lieu de test chuc nang.
-    if (isTestModeUnlockAll()) {
-      return { ok: true }
-    }
-
-    if (
-      template.requiredRealmId &&
-      getRealmIndex(player.realmId) < getRealmIndex(template.requiredRealmId)
-    ) {
-      return { ok: false, reason: 'realm_locked' }
-    }
-
-    const cost = template.upgradeCost[0] ?? []
-
-    if (!cost.every((entry) => materialBag.has(entry.materialId, entry.amount))) {
-      return { ok: false, reason: 'missing_materials' }
-    }
-
-    return { ok: true }
-  }
-
-  canBuild(
-    buildingId: string,
-    registry: BuildingRegistry,
-    manager: BuildingManager,
-    player: PlayerData,
-    materialBag: MaterialBag,
-  ): boolean {
-    return this.canBuildDetailed(buildingId, registry, manager, player, materialBag).ok
-  }
-
-  build(
-    buildingId: string,
-    registry: BuildingRegistry,
-    manager: BuildingManager,
-    player: PlayerData,
-    materialBag: MaterialBag,
     currentTime: number,
-  ): BuildingInstance | null {
-    if (!this.canBuild(buildingId, registry, manager, player, materialBag)) {
-      return null
+    realmId?: string,
+  ): BuildingInstance[] {
+    const added: BuildingInstance[] = []
+
+    for (const template of registry.getAll()) {
+      if (manager.getByBuildingId(template.id)) {
+        continue
+      }
+
+      const instance: BuildingInstance = {
+        instanceId: crypto.randomUUID(),
+
+        buildingId: template.id,
+
+        level: 1,
+
+        lastCollectedAt: currentTime,
+
+        // EM-01 - the first accrual window runs under the current realm.
+        accrualRealmId: realmId,
+      }
+
+      manager.add(instance)
+
+      added.push(instance)
     }
 
-    const template = registry.get(buildingId)
-
-    const cost = template.upgradeCost[0] ?? []
-
-    for (const entry of cost) {
-      materialBag.remove(entry.materialId, entry.amount)
-    }
-
-    const instance: BuildingInstance = {
-      instanceId: crypto.randomUUID(),
-
-      buildingId,
-
-      level: 1,
-
-      lastCollectedAt: currentTime,
-
-      // EM-01 - the first accrual window runs under the build-time realm.
-      accrualRealmId: player.realmId,
-    }
-
-    manager.add(instance)
-
-    return instance
+    return added
   }
 
   upgrade(
@@ -228,8 +168,9 @@ export class BuildingSystem {
       return false
     }
 
-    // upgradeCost[0] = chi phi xay (level 0->1, da tra luc build()),
-    // upgradeCost[level] = chi phi nang tu level hien tai len level+1.
+    // upgradeCost index = level hien tai (row 0 tro thanh du lieu thua
+    // tu khi co che xay bi bo - building mac dinh lv1); cost tra cho
+    // level -> level+1.
     const cost = template.upgradeCost[instance.level] ?? []
 
     if (!cost.every((entry) => materialBag.has(entry.materialId, entry.amount))) {
@@ -415,6 +356,32 @@ export class BuildingSystem {
 
   getRatePerMinute(instance: BuildingInstance, template: Building, realmId?: string): number {
     return this.getEffectiveRate(template, instance.level, resolveAccrualRealmId(instance, realmId)) * 60
+  }
+
+  /**
+   * "Day kho" cho resource building = san luong cham tran TICH LUY THUC
+   * TE - muc toi da la min(capacity, capOffline * rate). Linh mach
+   * gathering_outpost duoc thiet ke capacity = ceil(10h yield) nen luon
+   * con ~1 don vi headroom so voi muc tich luy toi da: so sanh thang
+   * voi capacity se khong bao gio dat "day". Non-producer tra false.
+   */
+  isStorageFull(
+    instance: BuildingInstance,
+    template: Building,
+    currentTime: number,
+    realmId?: string,
+  ): boolean {
+    const accrualRealmId = resolveAccrualRealmId(instance, realmId)
+    const attainable = Math.min(
+      this.getEffectiveCapacity(template, instance.level, accrualRealmId),
+      PRODUCTION_OFFLINE_CAP_SECONDS * this.getEffectiveRate(template, instance.level, accrualRealmId),
+    )
+
+    if (attainable <= 0) {
+      return false
+    }
+
+    return this.getStoredAmount(instance, template, currentTime, accrualRealmId) >= attainable
   }
 
   /**

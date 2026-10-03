@@ -239,13 +239,14 @@ async function saveAndRead(page: import('@playwright/test').Page): Promise<SaveS
   const save = await readSave(page)
   expect(save).not.toBeNull()
 
-  // Huyen Kim: the open surface is an imperial scroll (.hk-scroll) or a
-  // legacy micro-overlay (.overlay-panel) - a scrim corner click closes
-  // either shell via its @click.self handler.
-  const openPanel = page.locator('.overlay-panel, .hk-scroll').first()
+  // Huyen Kim: the open surface is an imperial scroll (.hk-scroll), a
+  // legacy micro-overlay (.overlay-panel), or a migrated paper scene
+  // (.settings-scene) - a scrim corner click closes any of them via its
+  // @click.self handler.
+  const openPanel = page.locator('.overlay-panel, .hk-scroll, .settings-scene').first()
   if (await openPanel.isVisible().catch(() => false)) {
     await openPanel.click({ position: { x: 8, y: 8 } })
-    await expect(page.locator('.overlay-panel, .hk-scroll')).toHaveCount(0, { timeout: 10_000 })
+    await expect(page.locator('.overlay-panel, .hk-scroll, .settings-scene')).toHaveCount(0, { timeout: 10_000 })
   }
 
   return save!

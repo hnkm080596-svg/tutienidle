@@ -66,17 +66,9 @@ export function initializeCharacter(
 
   bootstrapEarlyGamePlayer(gameManager, player)
 
-  for (const buildingId of ['teleport_array', 'gathering_outpost']) {
-    const instance = {
-      instanceId: crypto.randomUUID(),
-      buildingId,
-      level: 1,
-      lastCollectedAt: nowSeconds(),
-    }
-
-    gameManager.buildingManager.add(instance)
-    gameManager.buildingOps.refreshAutoWorkerCapacity(player, instance)
-  }
+  // Default-built (2026-10-03): every registered building starts at
+  // level 1 - no build action, no unbuilt state.
+  gameManager.buildingOps.reconcileBuildings(player, nowSeconds())
 
   // Starter pack covers the 3 base buildings (Linh Tuyen/Khi Duong/Dan
   // Phong) - ids follow the unified age axis (gp123 6E C2).
