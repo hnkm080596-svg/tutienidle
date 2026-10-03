@@ -16,7 +16,7 @@ export const equipmentMessages = { vi: {
     previewStamp: 'BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay',
     stats: { hp: 'Khí Huyết', attack: 'Công Kích', defense: 'Phòng Ngự' },
     bagTabs: { all: 'Tất Cả', weapons: 'Vũ Khí', armor: 'Phòng Cụ', accessories: 'Phụ Kiện' },
-    workspace: { equip: 'Trang Bị', bag: 'Túi Trang Bị' },
+    workspace: { equip: 'Trang Bị', bag: 'Túi Đồ' },
   },
   panels: {
     equipmentHall: { tabs: { enhance: 'Cường Hóa', wash: 'Tẩy Luyện', refine: 'Tinh Luyện', dissolve: 'Hóa Luyện', decompose: 'Phân Giải' } },
