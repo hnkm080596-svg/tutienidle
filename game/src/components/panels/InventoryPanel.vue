@@ -1,7 +1,9 @@
 <script setup lang="ts">
-// Scene 09 (Tui Do) mount seam: the panel keeps the bag-panel container
-// anchor (BagPaginationControls' @container query) and mounts the
-// fidelity production surface - canonical tabs + real sections.
+// Scene 09 (Kho Vat) mount seam: the imperial-scroll shell is retired -
+// the production surface owns the shared paper chrome on an overlay
+// design canvas. The bag-panel container anchor moved inside the
+// surface's #grid region (the anchor's contain:layout must not wrap the
+// scaled canvas - see InventorySurface).
 import InventorySurface from '@/components/scenes/inventory/InventorySurface.vue'
 </script>
 
@@ -13,11 +15,7 @@ import InventorySurface from '@/components/scenes/inventory/InventorySurface.vue
 
 <style scoped>
 .inventory-panel {
-  height: 100%;
-  min-height: 0;
-  /* Container anchor for the bag's narrow-width pagination rule
-     (BagPaginationControls queries @container bag-panel). */
-  container-type: inline-size;
-  container-name: bag-panel;
+  position: fixed;
+  inset: 0;
 }
 </style>

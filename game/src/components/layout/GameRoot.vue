@@ -120,8 +120,8 @@ function closeSidePanels() {
              approved dong-fu-v2 fidelity surface renders all of it in
              the scaled design canvas above the vista. -->
 
-        <!-- LeftPanel hosts the imperial scroll itself; the old
-             drawer-width wrapper is gone (the scene owns its overlay). -->
+        <!-- LeftPanel hosts the character/inventory paper surfaces; the
+             old drawer-width wrapper is gone (each scene owns its overlay). -->
         <LeftPanel />
         <FunctionOverlayPanel />
 

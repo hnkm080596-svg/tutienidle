@@ -51,7 +51,9 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openLeftMode(page, 'inventory')
+    // San Xuat (exploration) is the last surface still on the shared
+    // scroll shell - it keeps the unfold-interruption coverage alive.
+    await openLeftMode(page, 'exploration')
     // Do NOT wait for the unfold to settle - press Esc while the clip
     // is still opening.
     await expect(page.locator('.hk-scroll')).toBeVisible({ timeout: 10_000 })
@@ -69,7 +71,7 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openLeftMode(page, 'inventory')
+    await openLeftMode(page, 'exploration')
     const scroll = page.locator('.hk-scroll')
     await expect(scroll).toBeVisible({ timeout: 10_000 })
 
@@ -130,7 +132,7 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     // Swap to inventory via the shared rail - the dock is a
     // character-surface overlay and must not render over the bag.
     await page.locator('.paper-navigation-item[data-nav-id="inventory"]').click()
-    await expect(page.locator('.inventory-panel')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('.inventory-scene')).toBeVisible({ timeout: 10_000 })
 
     // Back to character: the dock is still open - there is no dock
     // state to reset or resurrect.

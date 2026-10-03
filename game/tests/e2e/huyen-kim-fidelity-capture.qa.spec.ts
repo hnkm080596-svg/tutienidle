@@ -102,12 +102,12 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     // unmigrated modes still open inside the imperial scroll.
     const leftModes: Array<[string, string, string]> = [
       ['character', '04-character', '.cf-scene'],
-      ['inventory', '09-inventory', '.hk-scroll'],
+      ['inventory', '09-inventory', '.inventory-scene'],
       ['stage_select', '10-exploration', '.exploration-scene'],
       ['exploration', '11b-production-outpost', '.hk-scroll'],
       ['pill_room', '11-alchemy', '.alchemy-scene'],
       ['equipment_hall', '12-equipment', '.equipment-scene'],
-      ['settings', '17-settings', '.hk-scroll'],
+      ['settings', '17-settings', '.settings-scene'],
     ]
     for (const [mode, name, root] of leftModes) {
       await openLeftMode(page, mode)
@@ -122,7 +122,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
       ['technique', '06-technique', '.technique-paper-scene'],
       ['skill', '07-skill', '.skill-paper-scene'],
       ['body', '08-body', '.body-paper-scene'],
-      ['quest', '18-quest', '.hk-scroll'],
+      ['quest', '18-quest', '.quest-scene'],
     ]
     for (const [panel, name, root] of standalones) {
       await openStandalone(page, panel)

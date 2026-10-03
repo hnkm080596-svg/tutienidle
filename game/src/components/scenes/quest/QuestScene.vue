@@ -1,12 +1,17 @@
 <script setup lang="ts">
 // Scene 18 quest production surface (ref 17-quest.jpg): the approved
 // fidelity composition - cadence tab bar | quest list rail | detail
-// panel - mounting the real QuestGroupTabs/QuestList/QuestDetailPanel
-// through the scene's slots. Cadence filter, selection fallback, and
-// claim are model-driven (getBetaQuestSurfaceModels rows from the
-// panel; claimQuest via questOps - contract DO-NOT-DERIVE kept).
+// panel - now mounted on the shared paper chrome inside an overlay
+// design canvas, like every other migrated tab. The real
+// QuestGroupTabs/QuestList/QuestDetailPanel mount through the scene's
+// slots. Cadence filter, selection fallback, and claim are model-driven
+// (getBetaQuestSurfaceModels rows from the panel; claimQuest via
+// questOps - contract DO-NOT-DERIVE kept).
 import { computed, ref, watch } from 'vue'
 import { useStateVersion, useGameManager } from '@/composables/useGameState'
+import { useUiStore } from '@/stores/ui'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
+import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import QuestFidelityScene from './fidelity/QuestFidelityScene.vue'
 import QuestGroupTabs from './tabs/QuestGroupTabs.vue'
 import QuestList from './list/QuestList.vue'
@@ -17,8 +22,10 @@ const props = defineProps<{
   rows: readonly BetaQuestSurfaceModel[]
 }>()
 
+const ui = useUiStore()
 const gameManager = useGameManager()
 const { bumpState } = useStateVersion()
+const { items: navItems, navigate } = usePaperNavigation()
 
 // Cadence filter is model-driven: beta admits 'once' only, so the tab
 // strip renders Tat Ca + one tab per cadence actually present (other
@@ -72,7 +79,8 @@ function onClaim(questId: string) {
 </script>
 
 <template>
-  <QuestFidelityScene :quests="[]" :selected="undefined" filter="all" :rewards="[]">
+  <SceneDesignCanvas overlay>
+  <QuestFidelityScene :quests="[]" :selected="undefined" filter="all" :rewards="[]" :navigation="navItems" notice="" @navigate="navigate" @back="ui.closeHomeOverlays()">
     <template #tabs>
       <QuestGroupTabs
         class="quest-tabs-slot"
@@ -93,6 +101,7 @@ function onClaim(questId: string) {
       <QuestDetailPanel :row="selectedRow" :on-claim="onClaim" />
     </template>
   </QuestFidelityScene>
+  </SceneDesignCanvas>
 </template>
 
 <style scoped>
