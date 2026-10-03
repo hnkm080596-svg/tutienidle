@@ -1,4 +1,4 @@
-// ProjectionBridge — spec §4.4. Pure maths, no Phaser, no DOM.
+// ProjectionBridge - spec sec4.4. Pure maths, no Phaser, no DOM.
 //
 // The bridge adds no geometry, so what is worth testing is not the projection's
 // arithmetic (BattleGridProjection.test.ts already owns that) but the three
@@ -92,7 +92,7 @@ describe('ProjectionBridge', () => {
   })
 
   it('exposes no way for the static layer to mutate the projection', () => {
-    // The point of the bridge (spec §4.4): resize() is the projection's only
+    // The point of the bridge (spec sec4.4): resize() is the projection's only
     // mutator, and the DOM must not reach it. If this ever passes with
     // 'resize' present, the bridge has stopped being read-only.
     const bridge = createProjectionBridge(

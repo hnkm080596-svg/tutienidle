@@ -28,7 +28,7 @@ export const FAMILY_DROP_TABLES: FamilyDropTable[] = [
     guaranteed: [],
     // van_kiem_quyet is NOT here on purpose: it is the Ngu Kiem Dao
     // signature technique now (granted by the ngu way ritual kit), never
-    // a drop — the legacy elite/boss signatureDrops lines were removed
+    // a drop - the legacy elite/boss signatureDrops lines were removed
     // in the same teardown.
     pool: [],
   },

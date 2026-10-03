@@ -23,7 +23,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
     lifetime: { clock: 'holder_turns', duration: 6, scaling: 'ailment_scaled' },
-    // Task 3 (D17): the bespoke manaRegenPercent stat retired — the +10%
+    // Task 3 (D17): the bespoke manaRegenPercent stat retired - the +10%
     // is now a percent modifier on the live manaRegenPerTurn stat, and
     // both MP-pool grants carry domain:'spell' for the Task-7 gate.
     statModifiers: [
@@ -35,7 +35,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
 
   // Kim B "Thu Giap Kim Than" - tu hoa thep. Now authored only for the
   // companion kit (Companions.ts). The Tu Reimagined (spec
-  // 2026-09-15 T12): generic thorns stat retired — defense is the payload.
+  // 2026-09-15 T12): generic thorns stat retired - defense is the payload.
   {
     id: 'kim_giap',
     name: 'Kim Giáp',

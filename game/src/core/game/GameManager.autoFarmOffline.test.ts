@@ -3,9 +3,9 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 
-// Auto-farm spec Task 5 — offline catch-up: sau restore, auto-farm đang
-// chạy roll reward cho SỐ CYCLES đã trôi offline (dùng cùng chu kỳ online),
-// lastCheckedMs tiến đúng phần đã settle (leftover giữ lại).
+// Auto-farm spec Task 5 - offline catch-up: sau restore, auto-farm dang
+// chay roll reward cho SO CYCLES da troi offline (dung cung chu ky online),
+// lastCheckedMs tien dung phan da settle (leftover giu lai).
 
 const OFFLINE_DUMMY = defineEnemy({
   id: 'offline_dummy',
@@ -51,8 +51,8 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
     player.perfectClearStageIds.push('farm_stage')
     player.perfectClearSeconds['farm_stage'] = 100 // cycle = 50s
 
-    // Mô phỏng: auto-farm bật lúc T, offline trôi 120s = 2 cycles (50s mỗi
-    // cycle) + 20s dư.
+    // Mo phong: auto-farm bat luc T, offline troi 120s = 2 cycles (50s moi
+    // cycle) + 20s du.
     player.autoFarmStage = {
       stageId: 'farm_stage',
       lastCheckedMs: Date.now() - 120_000,
@@ -76,7 +76,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
 
     player.perfectClearStageIds.push('farm_stage')
     player.perfectClearSeconds['farm_stage'] = 100
-    // Bắt mốc 1 LẦN — so sánh Date.now() 2 lần bị race vài ms (flaky).
+    // Bat moc 1 LAN - so sanh Date.now() 2 lan bi race vai ms (flaky).
     const lastCheckedMs = Date.now() - 10_000
     player.autoFarmStage = {
       stageId: 'farm_stage',
@@ -88,9 +88,9 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
     expect(player.autoFarmStage?.lastCheckedMs).toBe(lastCheckedMs)
   })
 
-  // Remediation Task 3 (2026-09-05) — unbounded offline settlement: settle
-  // nhiều ngày offline với cycle ngắn phải CHẬN theo DEFAULT_MAX_OFFLINE_
-  // SECONDS (24h — cùng nguồn GameClock), không roll hàng nghìn cycles.
+  // Remediation Task 3 (2026-09-05) - unbounded offline settlement: settle
+  // nhieu ngay offline voi cycle ngan phai CHAN theo DEFAULT_MAX_OFFLINE_
+  // SECONDS (24h - cung nguon GameClock), khong roll hang nghin cycles.
   describe('Remediation Task 3 — bounded offline settlement', () => {
     it('elapsed nhiều ngày → roll CHỈ đúng số cycles trong cap 24h', () => {
       const { gameManager, player } = harnessWithFarm()
@@ -98,18 +98,18 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       player.perfectClearStageIds.push('farm_stage')
       player.perfectClearSeconds['farm_stage'] = 100 // cycle = 50s online
 
-      const startMs = Date.now() - 3 * 24 * 60 * 60 * 1000 // 3 ngày trước
+      const startMs = Date.now() - 3 * 24 * 60 * 60 * 1000 // 3 ngay truoc
 
       player.autoFarmStage = {
         stageId: 'farm_stage',
         lastCheckedMs: startMs,
       }
 
-      gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 3 * 24 * 60 * 60) // 3 ngày
+      gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 3 * 24 * 60 * 60) // 3 ngay
 
-      // Cap 24h / 50s = 1728 cycles — KHÔNG phải 3 ngày/50s = 5184.
+      // Cap 24h / 50s = 1728 cycles - KHONG phai 3 ngay/50s = 5184.
       // B5 (T1-12): the anchor rebases to now minus the UNSETTLED
-      // remainder — the whole capped window settled, so the anchor sits
+      // remainder - the whole capped window settled, so the anchor sits
       // at ~now, NOT startMs + cap (the old encoding left it days stale
       // and let the next online tick re-pay the same window).
       expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThan(Date.now() - 50_000)
@@ -122,8 +122,8 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       player.perfectClearStageIds.push('farm_stage')
       player.perfectClearSeconds['farm_stage'] = 1 // cycle = 0.5s online
 
-      // Bắt mốc 1 LẦN — tránh race Date.now() giữa setup và assert.
-      const startMs = Date.now() - 24 * 60 * 60 * 1000 // đúng 24h trước
+      // Bat moc 1 LAN - tranh race Date.now() giua setup va assert.
+      const startMs = Date.now() - 24 * 60 * 60 * 1000 // dung 24h truoc
       player.autoFarmStage = {
         stageId: 'farm_stage',
         lastCheckedMs: startMs,
@@ -131,9 +131,9 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
 
       gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 24 * 60 * 60)
 
-      // 24h / 0.5s = 172_800 cycles vẫn roll. B5 (T1-12): anchor rebase
-      // về now - remainder (remainder = 0 vì 24h chia hết 0.5s) nên mốc
-      // nằm ~now — không phải startMs + 24h như encoding cũ.
+      // 24h / 0.5s = 172_800 cycles van roll. B5 (T1-12): anchor rebase
+      // ve now - remainder (remainder = 0 vi 24h chia het 0.5s) nen moc
+      // nam ~now - khong phai startMs + 24h nhu encoding cu.
       expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThan(Date.now() - 1000)
       expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(Date.now())
     })
@@ -142,9 +142,9 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       const { gameManager, player } = harnessWithFarm()
 
       player.perfectClearStageIds.push('farm_stage')
-      // Save hỏng/malformed: perfectClearSeconds có thể 0 hoặc NaN.
+      // Save hong/malformed: perfectClearSeconds co the 0 hoac NaN.
       player.perfectClearSeconds['farm_stage'] = 0
-      // Bắt mốc 1 LẦN — so sánh Date.now() 2 lần bị race vài ms (flaky).
+      // Bat moc 1 LAN - so sanh Date.now() 2 lan bi race vai ms (flaky).
       const lastCheckedMs = Date.now() - 120_000
       player.autoFarmStage = {
         stageId: 'farm_stage',
@@ -160,13 +160,13 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       try {
         const { gameManager, player } = harnessWithFarm()
 
-        // tickAutoFarm reads activePlayer via tickOps.update — harnessWithFarm
+        // tickAutoFarm reads activePlayer via tickOps.update - harnessWithFarm
         // does NOT set it (unlike GameManager.autoFarm.test.ts:53), so set it.
         gameManager.setActivePlayer(player)
         player.perfectClearStageIds.push('farm_stage')
         player.perfectClearSeconds['farm_stage'] = 100 // cycle = 50s
 
-        // Arm through the real entry point — the Mission B tick gate pays
+        // Arm through the real entry point - the Mission B tick gate pays
         // only while the ops' lease marker still owns the slot object.
         expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, 'farm_stage')).toBe(true)
 
@@ -181,7 +181,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
         gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 24 * 60 * 60)
 
         // The settle covered the whole capped window, so the anchor must sit
-        // INSIDE it — not still at epoch.
+        // INSIDE it - not still at epoch.
         const anchor = player.autoFarmStage!.lastCheckedMs
         expect(anchor).toBeGreaterThan(Date.now() - 24 * 60 * 60 * 1000)
         expect(Number.isFinite(anchor)).toBe(true)
@@ -189,7 +189,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
         const afterSettle = gameManager.getBattleRewardSummary().spiritStone
         expect(afterSettle).toBeGreaterThan(before)
 
-        // One online tick at most pays the sub-cycle remainder — never another
+        // One online tick at most pays the sub-cycle remainder - never another
         // 24h batch (1728 cycles x 2 enemies x 5 stone).
         gameManager.tickOps.update(0.1)
 

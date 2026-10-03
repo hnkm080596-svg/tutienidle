@@ -13,8 +13,8 @@ import {
   isInCellArea,
 } from './BattleGrid'
 
-// Combat Grid Rework — acceptance criteria mục 12: "AOE chọn đúng
-// row/column ở cả bốn cạnh grid", "lane suy ra thống nhất từ grid row".
+// Combat Grid Rework - acceptance criteria muc 12: "AOE chon dung
+// row/column o ca bon canh grid", "lane suy ra thong nhat tu grid row".
 describe('BattleGrid — chuyển đổi tọa độ', () => {
   it('getLaneFromWorldY: floor + clamp hai biên', () => {
     expect(getLaneFromWorldY(0)).toBe(0)
@@ -103,11 +103,11 @@ describe('getCellsInArea — clamp ĐÚNG ở cả bốn cạnh (acceptance)', (
   it('isInCellArea: entity x liên tục quy về column rồi xét vùng', () => {
     const area = getCellsInArea({ row: 2, column: 8 }, 1, 1)
 
-    // x=8.9 → col 9, row 2: trong vùng (col 7..9, row 1..3).
+    // x=8.9 -> col 9, row 2: trong vung (col 7..9, row 1..3).
     expect(isInCellArea(8.9, 2, area)).toBe(true)
-    // col 10 ngoài.
+    // col 10 ngoai.
     expect(isInCellArea(10.2, 2, area)).toBe(false)
-    // row 4 ngoài.
+    // row 4 ngoai.
     expect(isInCellArea(8, 4, area)).toBe(false)
   })
 })

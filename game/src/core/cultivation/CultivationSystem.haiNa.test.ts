@@ -3,7 +3,7 @@ import { addCultivation, breakthrough, canBreakthrough } from './CultivationSyst
 import { createDefaultPlayer } from '../player/Player'
 import { getRequiredCultivation } from '../realm/realmSystem'
 
-// Talent v4 M2 — Hai Nap (spec §4.3 row 19): cultivation that would
+// Talent v4 M2 - Hai Nap (spec sec4.3 row 19): cultivation that would
 // overflow past the level cap banks into cultivationOvercharge and pours
 // into the next tier on breakthrough. Without the talent the existing
 // clamp-at-required behavior is preserved.

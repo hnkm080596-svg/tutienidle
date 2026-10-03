@@ -6,17 +6,17 @@ import { ITEM_QUALITY_ESSENCE_RANGE } from './ItemQualityBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
 /**
- * Cap mềm túi trang bị (audit 2026-08-31) — túi từng KHÔNG giới hạn: mọi
- * equipment drop đều add() và không gì tự remove, save phình dần vượt
- * localStorage quota (~5MB) khiến autosave chết im lặng. 500 đủ thoải
- * mái chơi tay (đồ cần giữ đều lock/favorite) mà giữ save < ~2MB.
+ * Cap mem tui trang bi (audit 2026-08-31) - tui tung KHONG gioi han: moi
+ * equipment drop deu add() va khong gi tu remove, save phinh dan vuot
+ * localStorage quota (~5MB) khien autosave chet im lang. 500 du thoai
+ * mai choi tay (do can giu deu lock/favorite) ma giu save < ~2MB.
  */
 export const EQUIPMENT_BAG_SOFT_CAP = 500
 
 /**
- * Reward Tinh Hoa khi auto-dissolve vượt cap — bag KHÔNG tự cộng vào
- * material system (tránh circular dependency với GameManager): add()
- * trả rewards, CALLER cộng bag + toast.
+ * Reward Tinh Hoa khi auto-dissolve vuot cap - bag KHONG tu cong vao
+ * material system (tranh circular dependency voi GameManager): add()
+ * tra rewards, CALLER cong bag + toast.
  */
 export interface AutoDissolveReward {
   materialId: string
@@ -30,17 +30,17 @@ export class EquipmentBag {
 
   private nextMembershipGeneration = 1
 
-  // OPT-04 — index O(1) cho equipped lookups. Bất biến: với mọi instance
-  // đang ở trong bag, slotIndex.get(slot) === instance khi và chỉ khi
-  // instance.equipped === true (và là instance equipped duy nhất của
-  // slot). MỌI flip của `equipped` phải đi qua setEquippedInternal() —
-  // EquipmentSystem.equip/unequip là writer duy nhất trong production.
+  // OPT-04 - index O(1) cho equipped lookups. Bat bien: voi moi instance
+  // dang o trong bag, slotIndex.get(slot) === instance khi va chi khi
+  // instance.equipped === true (va la instance equipped duy nhat cua
+  // slot). MOI flip cua `equipped` phai di qua setEquippedInternal() -
+  // EquipmentSystem.equip/unequip la writer duy nhat trong production.
   private readonly slotIndex = new Map<EquipmentSlot, EquipmentInstance>()
 
   add(instance: EquipmentInstance): AutoDissolveReward[] {
-    // Dedupe theo instanceId — save import/hand-edit chứa trùng instanceId
-    // từng gây nhân bản trang bị + double stat modifier sau
-    // refreshModifiers() (review 2026-08-28). Bản ghi đầu thắng.
+    // Dedupe theo instanceId - save import/hand-edit chua trung instanceId
+    // tung gay nhan ban trang bi + double stat modifier sau
+    // refreshModifiers() (review 2026-08-28). Ban ghi dau thang.
     if (this.has(instance.instanceId)) {
       return []
     }
@@ -57,21 +57,21 @@ export class EquipmentBag {
       return []
     }
 
-    // Cap mềm (audit 2026-08-31): vượt ngưỡng → tự động Hóa Luyện item
-    // "rác" nhất — không trang bị/lock/favorite, phẩm chất thấp trước.
-    // Rewards trả về cho CALLER cộng (bag không biết material system —
-    // tránh circular dependency với GameManager).
+    // Cap mem (audit 2026-08-31): vuot nguong -> tu dong Hoa Luyen item
+    // "rac" nhat - khong trang bi/lock/favorite, pham chat thap truoc.
+    // Rewards tra ve cho CALLER cong (bag khong biet material system -
+    // tranh circular dependency voi GameManager).
     return this.autoDissolveOverflow()
   }
 
   /**
-   * Auto Hóa Luyện đúng số lượng vượt cap. Candidate KHÔNG được
-   * equipped/locked/favorite (đồ người chơi chủ động giữ). Item không
-   * có rule chuyển đổi Tinh Hoa (range missing) → KHÔNG
-   * dissolve mù — bỏ qua, giữ item (túi được vượt cap trong case bệnh
-   * hoạn thay vì mất đồ oan). Amount dùng range.min CỐ ĐỊNH —
-   * deterministic; người chơi muốn roll random (range.min..max) phải
-   * Hóa Luyện tay qua EquipmentSystem.dissolveInstances().
+   * Auto Hoa Luyen dung so luong vuot cap. Candidate KHONG duoc
+   * equipped/locked/favorite (do nguoi choi chu dong giu). Item khong
+   * co rule chuyen doi Tinh Hoa (range missing) -> KHONG
+   * dissolve mu - bo qua, giu item (tui duoc vuot cap trong case benh
+   * hoan thay vi mat do oan). Amount dung range.min CO DINH -
+   * deterministic; nguoi choi muon roll random (range.min..max) phai
+   * Hoa Luyen tay qua EquipmentSystem.dissolveInstances().
    */
   private autoDissolveOverflow(): AutoDissolveReward[] {
     const overflowCount = this.instances.length - EQUIPMENT_BAG_SOFT_CAP
@@ -95,7 +95,7 @@ export class EquipmentBag {
       const range = ITEM_QUALITY_ESSENCE_RANGE[candidate.quality]
 
       if (!range) {
-        continue // không có rule chuyển đổi → giữ item, không dissolve mù
+        continue // khong co rule chuyen doi -> giu item, khong dissolve mu
       }
 
       this.remove(candidate.instanceId)
@@ -121,9 +121,9 @@ export class EquipmentBag {
   }
 
   /**
-   * Capability vòng đời của exact object trong bag. Cùng object remove/add lại
-   * nhận generation mới; object thay thế cùng instanceId cũng không thể dùng
-   * generation của bản cũ.
+   * Capability vong doi cua exact object trong bag. Cung object remove/add lai
+   * nhan generation moi; object thay the cung instanceId cung khong the dung
+   * generation cua ban cu.
    */
   getMembershipGeneration(instance: EquipmentInstance): number | undefined {
     if (this.get(instance.instanceId) !== instance) {
@@ -150,8 +150,8 @@ export class EquipmentBag {
   }
 
   /**
-   * OPT-04 — writer DUY NHẤT của `instance.equipped` cho instance đang
-   * trong bag: flip flag + giữ slotIndex nhất quán. Idempotent.
+   * OPT-04 - writer DUY NHAT cua `instance.equipped` cho instance dang
+   * trong bag: flip flag + giu slotIndex nhat quan. Idempotent.
    */
   setEquippedInternal(instanceId: string, equipped: boolean): boolean {
     const instance = this.get(instanceId)
@@ -179,8 +179,8 @@ export class EquipmentBag {
     const current = this.slotIndex.get(instance.slot)
 
     if (current && current !== instance && current.equipped) {
-      // Không bao giờ xảy ra qua API chuẩn (equip luôn unequip đồ cũ
-      // trước) — phòng hờ writer ngoài luồng, giữ index đúng 1 mục/slot.
+      // Khong bao gio xay ra qua API chuan (equip luon unequip do cu
+      // truoc) - phong ho writer ngoai luong, giu index dung 1 muc/slot.
       current.equipped = false
     }
 
@@ -188,11 +188,11 @@ export class EquipmentBag {
   }
 
   /**
-   * M1 (ARCH-001) — session-restore boundary: drop every live instance so
+   * M1 (ARCH-001) - session-restore boundary: drop every live instance so
    * the payload's item set REPLACES the bag instead of merging into it.
    * Membership generations die with their objects (WeakMap self-collects);
    * pending paid-op tickets bound to the removed set are the caller's
-   * concern — GameManagerSaveRestore invalidates them via
+   * concern - GameManagerSaveRestore invalidates them via
    * EquipmentSystem.invalidatePendingOperationTickets().
    */
   clear(): void {

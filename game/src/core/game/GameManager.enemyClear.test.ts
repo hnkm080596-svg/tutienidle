@@ -11,17 +11,17 @@ import { SKILLS } from '../../data/skill/Skills'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 
-// Audit 2026-08-31 (M1) — EnemyManager.add() chỉ push, remove duy nhất
-// qua despawn (quái CHẾT trong processDefeatedEnemies). Trận bị BỎ
-// (abandonBattle) không bao giờ đi qua victory flow → living enemies +
-// pending spawns (telegraph) bị bỏ lại orphan VỊNH VIỄN trong
-// EnemyManager — mỗi lần bỏ trận leak trọn một handful enemy object đầy
-// đủ (stats, rewards, phases). EnemyManager.clear() có sẵn nhưng 0
-// caller trước fix này.
+// Audit 2026-08-31 (M1) - EnemyManager.add() chi push, remove duy nhat
+// qua despawn (quai CHET trong processDefeatedEnemies). Tran bi BO
+// (abandonBattle) khong bao gio di qua victory flow -> living enemies +
+// pending spawns (telegraph) bi bo lai orphan VINH VIEN trong
+// EnemyManager - moi lan bo tran leak tron mot handful enemy object day
+// du (stats, rewards, phases). EnemyManager.clear() co san nhung 0
+// caller truoc fix nay.
 //
-// NGUYÊN TẮC: KHÔNG clear trong victory path — StageWave auto-repeat
-// spawn quái MỚI qua enemySystem.spawn NGAY sau victory (battle vẫn giữ
-// nguyên khi restartCycle); clear sai chỗ sẽ xóa quái của trận kế.
+// NGUYEN TAC: KHONG clear trong victory path - StageWave auto-repeat
+// spawn quai MOI qua enemySystem.spawn NGAY sau victory (battle van giu
+// nguyen khi restartCycle); clear sai cho se xoa quai cua tran ke.
 
 const MINIMAL_STATS_INPUT = {
   maxHp: 100,
@@ -74,14 +74,14 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
 
     gameManager.startBattle(player, enemy)
 
-    // Quái đầu spawn NGAY trong startBattle (enemySystem.spawn trước khi
-    // queue telegraph) — đã nằm trong EnemyManager với alive=true.
+    // Quai dau spawn NGAY trong startBattle (enemySystem.spawn truoc khi
+    // queue telegraph) - da nam trong EnemyManager voi alive=true.
     expect(gameManager.enemySystem.getAliveEnemies().length).toBeGreaterThan(0)
 
     expect(gameManager.abandonBattle()).toBe(true)
 
-    // Sau fix: living enemies + pending spawns của trận bị bỏ KHÔNG còn
-    // sót lại orphan trong EnemyManager.
+    // Sau fix: living enemies + pending spawns cua tran bi bo KHONG con
+    // sot lai orphan trong EnemyManager.
     expect(gameManager.enemySystem.getAliveEnemies()).toHaveLength(0)
     expect(gameManager.enemyManager.getAll()).toHaveLength(0)
   })
@@ -91,8 +91,8 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
 
-    // Pattern GameManager.repeatStage.test.ts — Linh Thạch credit vào
-    // MaterialBag cần registry; skill Trảm chiếm slot 0 để player đánh.
+    // Pattern GameManager.repeatStage.test.ts - Linh Thach credit vao
+    // MaterialBag can registry; skill Tram chiem slot 0 de player danh.
     gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL])
     const enemy = defineEnemy({
       id: 'victory_dummy',
@@ -129,14 +129,14 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     expect(gameManager.progressionOps.learnSkill('linh_bao', player)).toBe(true)
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(true)
 
-    // KHÔNG auto-repeat — mục tiêu là state 'victory' cuối cùng.
+    // KHONG auto-repeat - muc tieu la state 'victory' cuoi cung.
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
-    // Turn-Based Wave Redesign (2026-09-06) — bootstrap enemy bị discard
-    // (spawn đồng loạt qua telegraph): ngay sau startStage CHƯA có enemy
-    // sống — pending telegraph materialize ở các tick kế tiếp.
+    // Turn-Based Wave Redesign (2026-09-06) - bootstrap enemy bi discard
+    // (spawn dong loat qua telegraph): ngay sau startStage CHUA co enemy
+    // song - pending telegraph materialize o cac tick ke tiep.
     expect(gameManager.enemySystem.getAliveEnemies().length).toBe(0)
 
-    // Đập quái tới victory (pattern update loop của repeatStage test).
+    // Dap quai toi victory (pattern update loop cua repeatStage test).
     let reachedVictory = false
 
     for (let index = 0; index < 300; index++) {
@@ -151,9 +151,9 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
 
     expect(reachedVictory).toBe(true)
 
-    // Enemy TỰ NHIÊN trống qua despawn flow (processDefeatedEnemies cấp
-    // thưởng rồi despawn TỪNG quái chết) — victory path không cần và
-    // không được clear đột ngột (auto-repeat spawn trận mới ngay sau).
+    // Enemy TU NHIEN trong qua despawn flow (processDefeatedEnemies cap
+    // thuong roi despawn TUNG quai chet) - victory path khong can va
+    // khong duoc clear dot ngot (auto-repeat spawn tran moi ngay sau).
     expect(gameManager.enemySystem.getAliveEnemies()).toHaveLength(0)
     expect(gameManager.enemyManager.getAll()).toHaveLength(0)
   })

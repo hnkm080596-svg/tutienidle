@@ -4,13 +4,13 @@ export interface OfflineResult {
 }
 
 /**
- * Quy đổi thời gian offline (đã được GameClock tính và clamp sẵn)
- * thành tu vi nhận được.
+ * Quy doi thoi gian offline (da duoc GameClock tinh va clamp san)
+ * thanh tu vi nhan duoc.
  *
- * KHÔNG tự tính elapsed time ở đây — offlineSeconds phải lấy từ
- * GameClock.calculateOfflineTime() (hoặc hàm thuần cùng tên trong
- * core/idle/GameClock.ts) để toàn bộ game chỉ có một nguồn tính
- * thời gian offline duy nhất.
+ * KHONG tu tinh elapsed time o day - offlineSeconds phai lay tu
+ * GameClock.calculateOfflineTime() (hoac ham thuan cung ten trong
+ * core/idle/GameClock.ts) de toan bo game chi co mot nguon tinh
+ * thoi gian offline duy nhat.
  */
 export function calculateOfflineProgress(
   offlineSeconds: number,
@@ -21,10 +21,10 @@ export function calculateOfflineProgress(
   return {
     elapsedSeconds,
 
-    // QA-007 belt-and-suspenders — save validator (v55) đã chặn NaN/±Infinity
-    // cultivationPerSecond ở boot; guard này bảo vệ consumer hiện tại + future
-    // caller khỏi giá trị non-finite từ path khác. NaN * n = NaN, và clamp
-    // Math.min(NaN, x) = NaN ở player.ts không chứa được — chặn ở nguồn.
+    // QA-007 belt-and-suspenders - save validator (v55) da chan NaN/+/-Infinity
+    // cultivationPerSecond o boot; guard nay bao ve consumer hien tai + future
+    // caller khoi gia tri non-finite tu path khac. NaN * n = NaN, va clamp
+    // Math.min(NaN, x) = NaN o player.ts khong chua duoc - chan o nguon.
     cultivation: Number.isFinite(cultivationPerSecond)
       ? cultivationPerSecond * elapsedSeconds
       : 0,

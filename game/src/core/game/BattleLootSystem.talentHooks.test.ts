@@ -2,14 +2,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
 
-// Talent catalog v4 (spec 2026-09-03 §4.4) — 4 hook loot của v3 (Tụ
-// Bảo/Đại Trí Nhược Ngu/Cơ Duyên/Huyết Chiến) đã RETIRED: id vẫn
-// resolve cho save cũ nhưng effects rỗng → mọi multiplier loot về
-// mặc định. File này khóa: (1) pipeline loot nền không talent, (2)
-// id retired KHÔNG còn bonus (hành vi "save cũ an toàn").
-// Drop-system (2026-09-12): currency giờ từ stage table qua resolveDrops,
-// enemy.rewards không còn là bảng loot; 'Cơ Duyên' từng nhân chance rơi
-// equipment — cơ chế chance-per-enemy đã bị xoá hẳn cùng itemDrops.
+// Talent catalog v4 (spec 2026-09-03 sec4.4) - 4 hook loot cua v3 (Tu
+// Bao/Dai Tri Nhuoc Ngu/Co Duyen/Huyet Chien) da RETIRED: id van
+// resolve cho save cu nhung effects rong -> moi multiplier loot ve
+// mac dinh. File nay khoa: (1) pipeline loot nen khong talent, (2)
+// id retired KHONG con bonus (hanh vi "save cu an toan").
+// Drop-system (2026-09-12): currency gio tu stage table qua resolveDrops,
+// enemy.rewards khong con la bang loot; 'Co Duyen' tung nhan chance roi
+// equipment - co che chance-per-enemy da bi xoa han cung itemDrops.
 const QI_REFINING_STAGE = { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 }
 
 describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
@@ -40,7 +40,7 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
     killEnemy()
 
     // qi_refining techniqueMastery min 35 -> round(35 * 0.6) = 21
-    // (M2 baseline cut, spec §4.3 row 18).
+    // (M2 baseline cut, spec sec4.3 row 18).
     expect(player.skillInsight).toBe(21)
     expect(loot.getSummary().skillInsight).toBe(21)
   })
@@ -70,7 +70,7 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
   })
 
   it('pool draw vào material — equipment không rơi', () => {
-    // rng 0.5 -> roll 25/50 -> entry đầu = qi_refining_ore_decade (w30).
+    // rng 0.5 -> roll 25/50 -> entry dau = qi_refining_ore_decade (w30).
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
     const { killEnemy, equipmentBag, materialBag } = createLootTestSetup({
       realmId: 'qi_refining',
@@ -86,7 +86,7 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
   })
 
   it('pool draw vào equipment_any — material không vào túi', () => {
-    // rng 0.999 -> roll ~50/50 -> entry cuối = equipment_any.
+    // rng 0.999 -> roll ~50/50 -> entry cuoi = equipment_any.
     vi.spyOn(Math, 'random').mockReturnValue(0.999)
     const { killEnemy, equipmentBag, materialBag } = createLootTestSetup({
       realmId: 'qi_refining',
@@ -135,7 +135,7 @@ describe('BattleLootSystem — talent v3 retired KHÔNG còn bonus (spec v4 §4.
   })
 
   it('co_duyen (Cơ Duyên) — equipment KHÔNG có đường rớt riêng nào cả (pool draw như thường)', () => {
-    // rng 0.5 -> pool draw trúng material — Cơ Duyên không đẩy thêm đồ nào.
+    // rng 0.5 -> pool draw trung material - Co Duyen khong day them do nao.
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
     const { killEnemy, equipmentBag } = createLootTestSetup({
       realmId: 'qi_refining',

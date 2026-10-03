@@ -1,10 +1,10 @@
 // 6A-T4 (2026-09-01, spec docs/superpowers/specs/2026-09-01-combat-scene-
-// ui-redesign-design.md §3) — HP/MP/Kiếm player vẽ TRONG canvas Phaser,
-// thay 3 DOM bars (Status/Event/Control). Minimalism/Swiss: không khung
-// nền, bar mảnh 2 lớp Rectangle theo pattern enemy HP bar, ink tokens.
+// ui-redesign-design.md sec3) - HP/MP/Kiem player ve TRONG canvas Phaser,
+// thay 3 DOM bars (Status/Event/Control). Minimalism/Swiss: khong khung
+// nen, bar manh 2 lop Rectangle theo pattern enemy HP bar, ink tokens.
 //
-// Flexible rule (AGENTS.md): mọi vị trí tính từ viewport width/height
-// qua layout() — resize gọi lại layout, KHÔNG hardcode px màn hình dev.
+// Flexible rule (AGENTS.md): moi vi tri tinh tu viewport width/height
+// qua layout() - resize goi lai layout, KHONG hardcode px man hinh dev.
 import Phaser from 'phaser'
 import { DEPTH_OVERLAY_UI } from '@/game/support/BattleLayers'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -90,7 +90,7 @@ export class PlayerHudLayer {
 
   private theGroup!: TheBarGroup
 
-  // The Tu Reimagined (T22) — Son Nhac Ho The external-ward layer: its
+  // The Tu Reimagined (T22) - Son Nhac Ho The external-ward layer: its
   // own bar alongside the resource bars, never merged into the
   // ward/resource pools (protection-only, not spendable).
   private wardGroup!: HudRectGroup
@@ -110,7 +110,7 @@ export class PlayerHudLayer {
     this.layout(viewport.width, viewport.height)
   }
 
-  /** Test accessors — vị trí/kích thước hiện tại (flexible assertions). */
+  /** Test accessors - vi tri/kich thuoc hien tai (flexible assertions). */
   get hpFill(): Phaser.GameObjects.Rectangle {
     return this.hpGroup.fill
   }
@@ -467,7 +467,7 @@ export class PlayerHudLayer {
   }
 }
 
-// Re-export cho constants import ở test.
+// Re-export cho constants import o test.
 export {
   PLAYER_HUD_BG_COLOR,
   PLAYER_HUD_HP_COLOR,

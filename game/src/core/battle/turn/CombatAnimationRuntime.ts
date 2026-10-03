@@ -12,7 +12,7 @@ export type ResumePlayback =
   | Readonly<{ phase: 'manual'; actorId: string }>
 
 /**
- * Combat Runtime Separation (2026-09-07, AGENTS.md P17) — owns the
+ * Combat Runtime Separation (2026-09-07, AGENTS.md P17) - owns the
  * presentation-ack timing state that used to live directly as loose private
  * fields on GameManager: 5-phase state machine (ready -> cast -> impact ->
  * complete) and the manual-mode pause.
@@ -21,31 +21,31 @@ export type ResumePlayback =
  * session by the presentation coordinator) is the single readiness
  * authority; this runtime only asks it via deps.isSessionBlocking().
  *
- * This class's only job is TIMING — advance/hold the phase, pick the
+ * This class's only job is TIMING - advance/hold the phase, pick the
  * current animation state, and signal Phaser via the event bus. It owns
- * NONE of the actual combat logic (targeting, damage, wave triggers) —
+ * NONE of the actual combat logic (targeting, damage, wave triggers) -
  * every mutation still routes through the injected TurnBattleSystem, whose
  * business-logic methods this class merely calls at the same points the
  * original inline GameManager code did. Ack contract (the public methods
- * CombatScene.ts calls) is unchanged — only ownership moved.
+ * CombatScene.ts calls) is unchanged - only ownership moved.
  */
 export class CombatAnimationRuntime {
   constructor(
     private readonly deps: {
-      // Live getter, NOT a captured value — GameManager reassigns its
+      // Live getter, NOT a captured value - GameManager reassigns its
       // this.turnBattleSystem field wholesale on every restartTurnBattleCycle()/
       // startStage() (new instance carries the live buff registry +
       // spawnEnemy factory). Capturing the instance by value at
       // construction time would silently freeze every acknowledge*/
       // submitTurnChoice call onto the FIRST (registry-less) instance
-      // forever — same live-reference requirement as getTurnBattle() below.
+      // forever - same live-reference requirement as getTurnBattle() below.
       getTurnBattleSystem: () => TurnBattleSystem
       eventBus: EventBus
       getTurnBattle: () => TurnBattle | null
       isSessionBlocking?: () => boolean
       getSessionId?: () => number
       /**
-       * Combat Turn Mechanism (2026-09-10 spec section 4.1a) — the runtime
+       * Combat Turn Mechanism (2026-09-10 spec section 4.1a) - the runtime
        * reports that an asynchronous step FINISHED without knowing what a
        * pipeline is. Each hook fires as the last statement of its ack body,
        * so battle state is already applied when the pipeline advances.
@@ -54,18 +54,18 @@ export class CombatAnimationRuntime {
     },
   ) {}
 
-  // --- Slice 7 (Completion Task 10) — manual mode --------------------------
+  // --- Slice 7 (Completion Task 10) - manual mode --------------------------
 
   private battleManualMode = false
 
   /**
-   * Actor phe player đang bị PAUSE chờ manual choice (manual mode), hoặc
-   * null khi không pause (auto mode, lượt enemy, hoặc chưa tới lượt).
-   * Reset khi battle kết thúc/restart.
+   * Actor phe player dang bi PAUSE cho manual choice (manual mode), hoac
+   * null khi khong pause (auto mode, luot enemy, hoac chua toi luot).
+   * Reset khi battle ket thuc/restart.
    */
   private awaitedManualActor: TurnBattleParticipant | null = null
 
-  /** Bật/tắt manual mode. Tắt giữa lúc đang chờ choice → hủy pause, engine tự chạy tiếp. */
+  /** Bat/tat manual mode. Tat giua luc dang cho choice -> huy pause, engine tu chay tiep. */
   setBattleManualMode(enabled: boolean): void {
     this.battleManualMode = enabled
 
@@ -95,23 +95,23 @@ export class CombatAnimationRuntime {
     return this.awaitedManualActor
   }
 
-  // --- Action Playback Task 6 (2026-09-05) — presentation orchestration ---
+  // --- Action Playback Task 6 (2026-09-05) - presentation orchestration ---
 
   /**
-   * false (mặc định): fixed-step tick resolve turn ngay lập tức (mọi
-   * headless test không đổi). true (CombatScene mount): engine chạy 5-phase
-   * state machine — ready → cast → impact → complete — chờ Phaser
-   * acknowledge qua 3 method dưới trước khi sang bước kế.
+   * false (mac dinh): fixed-step tick resolve turn ngay lap tuc (moi
+   * headless test khong doi). true (CombatScene mount): engine chay 5-phase
+   * state machine - ready -> cast -> impact -> complete - cho Phaser
+   * acknowledge qua 3 method duoi truoc khi sang buoc ke.
    */
   private presentationActive = false
 
-  /** Tick đã peek actor ready, chờ acknowledgeTurnReady(). */
+  /** Tick da peek actor ready, cho acknowledgeTurnReady(). */
   private pendingReadyActor: TurnBattleParticipant | null = null
 
-  /** Đã declare action, chờ acknowledgeActionImpact(). */
+  /** Da declare action, cho acknowledgeActionImpact(). */
   private pendingDeclaredAction: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; cast: SkillCastPresentation } | null = null
 
-  /** Đã áp damage, chờ acknowledgeActionComplete(). */
+  /** Da ap damage, cho acknowledgeActionComplete(). */
   private pendingImpact: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; targetIds: string[]; resolved: SkillPresentationResolved } | null = null
   /** Cast object already emitted via publishPendingCast - dedupe guard. */
   private publishedCast: SkillCastPresentation | null = null
@@ -123,9 +123,9 @@ export class CombatAnimationRuntime {
     return buildSkillCastPresentation({ sessionId: this.deps.getSessionId?.() ?? 0, requestId: `skill-request-${++this.requestSequence}`, token: this.playbackToken }, actor, declared)
   }
 
-  // Remediation Task 1 (2026-09-05) — playback token: mỗi lần phase tiến
-  // tới 'ready' sinh 1 token mới; stale ack (token cũ) là no-op, chặn
-  // callback Phaser muộn đụng action/battle khác (cross-battle mutation).
+  // Remediation Task 1 (2026-09-05) - playback token: moi lan phase tien
+  // toi 'ready' sinh 1 token moi; stale ack (token cu) la no-op, chan
+  // callback Phaser muon dung action/battle khac (cross-battle mutation).
   private playbackToken = ''
   private playbackTokenSeq = 0
 
@@ -136,7 +136,7 @@ export class CombatAnimationRuntime {
     return this.playbackToken
   }
 
-  /** Test/UI đọc token hiện tại của phase đang chờ (null nếu không pending). */
+  /** Test/UI doc token hien tai cua phase dang cho (null neu khong pending). */
   getPendingPlaybackToken(): string | null {
     return this.pendingReadyActor !== null || this.pendingDeclaredAction !== null || this.pendingImpact !== null
       ? this.playbackToken
@@ -161,8 +161,8 @@ export class CombatAnimationRuntime {
     }
   }
 
-  /** Rời CombatScene giữa chừng — hoàn tất pending phases ngay lập tức
-   * (headless path) để trận không bị treo. */
+  /** Roi CombatScene giua chung - hoan tat pending phases ngay lap tuc
+   * (headless path) de tran khong bi treo. */
   handlePresentationDeactivated(): void {
     this.drainPendingPlayback()
   }
@@ -190,10 +190,10 @@ export class CombatAnimationRuntime {
       const actor = this.pendingReadyActor
       this.pendingReadyActor = null
 
-      // Defect Task 4 (2026-09-05) — manual player ở ready-phase KHÔNG
-      // được auto-resolve bằng AI khi rời scene: chuyển vào
-      // awaitedManualActor giữ choice chờ submitTurnChoice (cùng nhánh
-      // với acknowledgeTurnReady()).
+      // Defect Task 4 (2026-09-05) - manual player o ready-phase KHONG
+      // duoc auto-resolve bang AI khi roi scene: chuyen vao
+      // awaitedManualActor giu choice cho submitTurnChoice (cung nhanh
+      // voi acknowledgeTurnReady()).
       //
       // Manual-vs-auto was decided at CLAIM time, though - a committed
       // lane (queued repeat/multicast execution, committed reactive
@@ -267,7 +267,7 @@ export class CombatAnimationRuntime {
       return
     }
 
-    // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
+    // R5 (AR-20) - require identity at public boundary; reject missing, empty, or mismatched token.
     if (!token || token !== this.playbackToken) {
       return
     }
@@ -285,7 +285,7 @@ export class CombatAnimationRuntime {
     // token at CLAIM time (spec section 3.2), before any ready phase exists,
     // so a ready phase always belongs to an auto turn. Flipping the manual
     // toggle mid-turn is an external command and takes effect at the next turn
-    // boundary (spec section 9.1) — it must not strand the turn in flight.
+    // boundary (spec section 9.1) - it must not strand the turn in flight.
     const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor)
     const cast = this.declarePresentation(actor, declared)
     this.pendingDeclaredAction = { actor, declared, cast }
@@ -318,13 +318,13 @@ export class CombatAnimationRuntime {
     return true
   }
 
-  /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
+  /** Phaser goi tai impact frame (lunge tween xong) -> ap damage, phat VFX. */
   acknowledgeActionImpact(token?: string): void {
     if (this.deps.isSessionBlocking?.()) {
       return
     }
 
-    // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
+    // R5 (AR-20) - require identity at public boundary; reject missing, empty, or mismatched token.
     if (!token || token !== this.playbackToken) {
       return
     }
@@ -375,7 +375,7 @@ export class CombatAnimationRuntime {
       presetId: declared.execution?.resolvedSkill?.presetId ?? declared.action?.skill?.presetId,
     })
 
-    // Kiem Tu Reimagined Task 6 — each provider-returned extra impact
+    // Kiem Tu Reimagined Task 6 - each provider-returned extra impact
     // (combo payload) emits its OWN action_impact with its own preset,
     // so the fired combo is a distinct presentation event (K11).
     for (const extra of extraImpacts) {
@@ -414,7 +414,7 @@ export class CombatAnimationRuntime {
     if (completeToken) this.acknowledgeActionComplete(completeToken)
   }
 
-  /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
+  /** Phaser goi khi VFX tween xong -> turn cleanup, phat standby tail. */
   acknowledgeActionComplete(token?: string): void {
     if (this.publishingImpact) {
       if (token === this.playbackToken) this.deferredCompleteToken = token
@@ -424,7 +424,7 @@ export class CombatAnimationRuntime {
       return
     }
 
-    // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
+    // R5 (AR-20) - require identity at public boundary; reject missing, empty, or mismatched token.
     if (!token || token !== this.playbackToken) {
       return
     }
@@ -446,8 +446,8 @@ export class CombatAnimationRuntime {
   }
 
   /**
-   * UI submit choice cho lượt đang pause. Trả false nếu không có pause
-   * (no-op an toàn — choice bị bỏ, không crash).
+   * UI submit choice cho luot dang pause. Tra false neu khong co pause
+   * (no-op an toan - choice bi bo, khong crash).
    */
   submitTurnChoice(choice: ForcedTurnChoice): boolean {
     if (this.deps.isSessionBlocking?.()) {
@@ -478,7 +478,7 @@ export class CombatAnimationRuntime {
   }
 
   /** Called by GameManager's tick loop when tickPacing() returns a ready
-   * actor while presentationActive is true — replaces the inline block
+   * actor while presentationActive is true - replaces the inline block
    * previously at GameManager.ts:3659-3668. */
   notifyReadyActor(actor: TurnBattleParticipant): void {
     this.pendingReadyActor = actor

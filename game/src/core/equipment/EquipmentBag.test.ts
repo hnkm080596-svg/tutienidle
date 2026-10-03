@@ -3,8 +3,8 @@ import { EquipmentBag } from './EquipmentBag'
 import { makeInstance } from './EquipmentInstance.fixture'
 import type { EquipmentInstance } from './EquipmentInstance'
 
-// OPT-04 — slotIndex phải luôn khớp ground truth (filter trực tiếp
-// mảng instances) sau mọi chu trình add/equip/swap/unequip/remove.
+// OPT-04 - slotIndex phai luon khop ground truth (filter truc tiep
+// mang instances) sau moi chu trinh add/equip/swap/unequip/remove.
 
 function groundTruthEquipped(bag: EquipmentBag): EquipmentInstance[] {
   return bag.getAll().filter((instance) => instance.equipped)

@@ -1,7 +1,7 @@
 ﻿// @vitest-environment jsdom
-// 6A-T5 (2026-09-01) â€” CombatScene wiring PlayerHudLayer: HUD hiá»‡n khi
-// battle, vitals/positions events update HP/MP, exit zone click phÃ¡t
-// 'combat_exit_request' qua eventBus, shutdown dá»n sáº¡ch (khÃ´ng leak).
+// 6A-T5 (2026-09-01) - CombatScene wiring PlayerHudLayer: HUD hien khi
+// battle, vitals/positions events update HP/MP, exit zone click phat
+// 'combat_exit_request' qua eventBus, shutdown don sach (khong leak).
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
@@ -248,7 +248,7 @@ describe('CombatScene — Kiếm bar poll per-tick (9.4)', () => {
     expect(hud.kiemCalls[0]).toEqual({ current: 0, max: 0, label: '' })
   })
 
-  // The Tu Reimagined (Task 22, P1.2) — externalWard is a SEPARATE shield
+  // The Tu Reimagined (Task 22, P1.2) - externalWard is a SEPARATE shield
   // layer driven by the same poll; it never merges into the resource bar.
   it('snapshot.externalWard → updateExternalWard mỗi poll (lớp riêng)', () => {
     const reader = vi.fn((): ReturnType<KiemBarReader> => ({

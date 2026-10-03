@@ -148,7 +148,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
   })
 
   // PLAYTEST DEBT (2026-09-14, user-locked): the solo/basic-attack-only
-  // fixture cannot perfect-clear floors 1/5/9/10 within the fixed limits —
+  // fixture cannot perfect-clear floors 1/5/9/10 within the fixed limits -
   // pinned-seed measurements: floor 1 needs 21 rounds vs limit 20, floor 5
   // 24 vs 24 (not recorded), floor 9 does not reach victory inside 5000
   // steps, floor 10 needs 16 vs 15. Conditions stay unchanged pending

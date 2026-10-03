@@ -1,11 +1,11 @@
 /**
- * R14.6a guard — asset containment (roadmap R14 "asset destination must
+ * R14.6a guard - asset containment (roadmap R14 "asset destination must
  * remain under asset root", A10 canonical catalog).
  *
  * Regression classes protected:
  * - A runtime asset URL that escapes `assets/` (path traversal, absolute
  *   filesystem path, URL scheme, or a `public/` prefix that 404s at serve
- *   time) — checked across every AssetBundleCatalog descriptor AND every
+ *   time) - checked across every AssetBundleCatalog descriptor AND every
  *   literal `load.*` URL argument in production source.
  * - `scripts/route-assets.mjs` derives destinations from EXTERNAL filenames
  *   (`name__sub.png` -> `public/assets/name/sub.png`). A `..` segment (or a
@@ -67,7 +67,7 @@ describe('R14.6a — runtime asset URLs stay under assets/', () => {
   it('every literal load.* URL argument in production source stays under assets/', { timeout: SCAN_TIMEOUT }, () => {
     const corpus = srcCorpus(join(GAME_ROOT, 'src'))
     // Matches scene.load.image('key', 'url'...) style calls; only the
-    // STRING-LITERAL url-ish arguments are checked — identifier args are
+    // STRING-LITERAL url-ish arguments are checked - identifier args are
     // covered by the catalog-parity guard.
     const loadCall = /\.load\.(?:image|atlas|spritesheet|multiatlas|audio|json)\s*\(([^)]*)\)/g
     const literalArg = /'([^']+)'|"([^"]+)"/g
@@ -79,7 +79,7 @@ describe('R14.6a — runtime asset URLs stay under assets/', () => {
         for (const literal of args.matchAll(literalArg)) {
           const value = literal[1] ?? literal[2]!
 
-          // First arg is the texture KEY, not a path — only inspect args
+          // First arg is the texture KEY, not a path - only inspect args
           // that look like paths (contain a slash).
           if (!value.includes('/')) {
             continue
@@ -124,7 +124,7 @@ describe('R14.6a — asset-pipeline scripts cannot write outside declared roots'
   }
 
   // A quoted `..` segment in the expr means "anchor up from the base
-  // constant" — that escapes game/ and must not count as grounded.
+  // constant" - that escapes game/ and must not count as grounded.
   const DOTDOT_SEGMENT = /['"`]\.\./
 
   /** True when `expr` reaches an asset marker or a base constant. */
@@ -185,7 +185,7 @@ describe('R14.6a — asset-pipeline scripts cannot write outside declared roots'
   it('route-assets.mjs verifies each externally-derived destination stays under DEST_ROOT', () => {
     const text = readTs(join(SCRIPTS_DIR, 'route-assets.mjs'))
 
-    // relParts comes from the asset-drop FILENAME — `..__x.png` would
+    // relParts comes from the asset-drop FILENAME - `..__x.png` would
     // otherwise escape public/assets. Pin that a resolved containment check
     // guards the rename (reject `..`/absolute escapes before moving).
     expect(text).toMatch(/resolve\(DEST_ROOT/)

@@ -9,15 +9,15 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // Roadmap 9.5 #12 follow-up (flagged 2026-09-07, activated 2026-09-14):
-// TurnBattleSystem reads CONTENT-DERIVED ids — skill.appliesBuff.definitionId
-// and appliesAilments[].buffDefinitionId — and BuffRegistry.get THROWS on an
+// TurnBattleSystem reads CONTENT-DERIVED ids - skill.appliesBuff.definitionId
+// and appliesAilments[].buffDefinitionId - and BuffRegistry.get THROWS on an
 // unknown id, so a renamed/drifted buff id would crash every fixed-step tick
 // with no error isolation upstream in GameManager's updateBattleFixedStep.
 //
 // Expected: the tick skips the unresolvable buff/ailment gracefully (same
 // try/catch pattern as the bossTrigger block, Phase A2), the rest of the
 // action still commits, and resolveNextStep does NOT throw.
-// M4: applies ride apply_buff ops through the shared runtime — the guard
+// M4: applies ride apply_buff ops through the shared runtime - the guard
 // lives at the op-minting lanes (an unknown id never reaches the resolver).
 
 function createCombatant(id: string): CombatEntity {

@@ -67,7 +67,7 @@ describe('GameManager continuous repeat stage', () => {
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
 
-    // Plan Workstream F — Linh Thạch credit vào MaterialBag, cần registry.
+    // Plan Workstream F - Linh Thach credit vao MaterialBag, can registry.
     gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL])
     const enemy = defineEnemy({
       id: 'repeat_dummy',
@@ -107,13 +107,13 @@ describe('GameManager continuous repeat stage', () => {
     const rewardParticles: BattleRewardParticleEvent[] = []
     gameManager.eventBus.on<BattleRewardParticleEvent>('reward_particle', event => rewardParticles.push(event))
 
-    // Slice 6 cutover: turn engine pacing đọc battle-context qua activePlayer
-    // — tương đương boot flow thật.
+    // Slice 6 cutover: turn engine pacing doc battle-context qua activePlayer
+    // - tuong duong boot flow that.
     gameManager.setActivePlayer(player)
 
     expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
 
-    // Plan Workstream F — Linh Thạch credit vào MaterialBag.
+    // Plan Workstream F - Linh Thach credit vao MaterialBag.
     const spiritStoneBalance = () => gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL.id)
 
     for (let index = 0; index < 300 && spiritStoneBalance() < 2; index++) {
@@ -125,7 +125,7 @@ describe('GameManager continuous repeat stage', () => {
     expect(gameManager.turnBattleOps.getStageProgress()).not.toBeNull()
     expect(player.completedStageIds).toContain(stage.id)
     // Drop-system (2026-09-12): mortal table pays 1-2 stone per kill, so
-    // kill count no longer equals particle count — >=1 proves the
+    // kill count no longer equals particle count - >=1 proves the
     // currency flow still fires inside the repeated cycle.
     expect(rewardParticles.filter(event => event.kind === 'currency').length).toBeGreaterThanOrEqual(1)
   })

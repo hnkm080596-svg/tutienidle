@@ -33,7 +33,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentWard: 0, turnsSinceLastHitLanded: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
-    // ARCH-002 (M7): entity.stats is derived from baseStats every refresh —
+    // ARCH-002 (M7): entity.stats is derived from baseStats every refresh -
     // an injected `stats` override must become the resolved base as well.
     baseStats: overrides.baseStats ?? overrides.stats ?? stats,
   } as CombatEntity
@@ -102,7 +102,7 @@ describe('TurnBattleSystem — queuedFollowUps headless lane (dequeueNextActorFo
     expect(actor?.id).toBe('player')
     expect(battle.followUpChainDepth).toBe(0)
 
-    // The queue is still honored after the natural pick — an entry
+    // The queue is still honored after the natural pick - an entry
     // queued now dequeues instead of being dropped at the stale cap.
     battle.queuedFollowUps = [
       { actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' },
@@ -117,7 +117,7 @@ describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (t
     const { battle, system, enemyParticipant } = fixture()
 
     // Player's gauge-ready turn resolves via tickPacing (the real game-loop
-    // entry point) — advance gauges to ready first (speed 100 → 10 ticks),
+    // entry point) - advance gauges to ready first (speed 100 -> 10 ticks),
     // then the ready tick resolves: hits enemy, enemy's counter fires,
     // queues itself.
     for (let i = 0; i < 9; i++) {
@@ -129,7 +129,7 @@ describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (t
     expect(battle.queuedFollowUps?.map((entry) => entry.actorId)).toEqual(['enemy'])
 
     // Enemy's own gauge is nowhere near ready yet (fresh actionGauge=0,
-    // needs many ticks) — the ONLY way it can act next is the bypass queue.
+    // needs many ticks) - the ONLY way it can act next is the bypass queue.
     expect(enemyParticipant.actionGauge).toBeLessThan(1000)
 
     const secondActor = system.tickPacing(battle)
@@ -211,14 +211,14 @@ describe('TurnBattleSystem — queuedExecutions drain order and dead actors (Mis
     expect(actor?.id).toBe('player')
     // The committed execution drains even though no gauge is full.
     expect(battle.queuedExecutions).toBeUndefined()
-    // Enemy gauge untouched — the exec bypassed normal order.
+    // Enemy gauge untouched - the exec bypassed normal order.
     expect(enemyParticipant.actionGauge).toBeLessThan(1000)
   })
 
   it('a queued execution for a dead actor drops silently — it never resolves', () => {
     const { battle, system, enemyParticipant } = fixture()
 
-    // A second live enemy keeps the battle in 'fighting' — killing the
+    // A second live enemy keeps the battle in 'fighting' - killing the
     // queued actor outright would flip the battle to victory before the
     // queue drains, which is a different contract.
     const survivor = createCombatant({ id: 'enemy2', stats: createBaseStats({ speed: 10, might: 0 }) })
@@ -246,14 +246,14 @@ describe('TurnBattleSystem — follow-up reciprocity guard', () => {
     const { battle, system } = fixture()
 
     // Manually simulate a long chain having already happened (rather than
-    // building a full ping-pong buff setup) — verify the guard itself.
+    // building a full ping-pong buff setup) - verify the guard itself.
     battle.queuedFollowUps = [{ actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' }]
     battle.followUpChainDepth = 4 // MAX_FOLLOW_UP_CHAIN_DEPTH
 
     const result = system.tickPacing(battle, false)
 
     // Guard tripped: queue dropped, falls through to normal (gauge not
-    // ready yet for either side at actionGauge=0) → no actor this tick.
+    // ready yet for either side at actionGauge=0) -> no actor this tick.
     expect(battle.queuedFollowUps).toBeUndefined()
     expect(battle.followUpChainDepth).toBe(0)
     expect(result).toBeNull()
@@ -311,7 +311,7 @@ describe('TurnBattleSystem — declareReactiveBypass payload contract (cleanA11 
   it('a NAMED-but-unregistered payload fizzles instead of substituting the basic attack', () => {
     const { battle, system, playerParticipant, enemyParticipant } = fixture()
 
-    // Actor owns authored payloads — a named miss must fizzle, not borrow
+    // Actor owns authored payloads - a named miss must fizzle, not borrow
     // the basic swing (the basic fallback is only for actors with no
     // authored payloads at all / unnamed entries).
     playerParticipant.reactivePayloads = { phan_kich: playerSkill() }
@@ -332,7 +332,7 @@ describe('TurnBattleSystem — declareReactiveBypass payload contract (cleanA11 
 
     const declared = system.declareActorAction(battle, actor!)
 
-    // No-op shape: no skill payload — captured targets alone cannot mint
+    // No-op shape: no skill payload - captured targets alone cannot mint
     // an attack (no scaled damage, impact resolves nothing).
     expect(declared.action).toBeNull()
     expect(declared.scaledDamage).toBeNull()

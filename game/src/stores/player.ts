@@ -31,27 +31,27 @@ import {
 } from '@/core/player/PlayerVisualForm'
 
 // Dirty-check cho setExternalModifiers (perf-optimize-pass Task 5).
-// App.vue gọi setExternalModifiers() MỖI TICK (10Hz) với mảng MỚI do
-// GameManager.getAggregatedModifiers() dựng lại; gán reference mới làm
-// getter `finalStats` invalidate mỗi tick dù nội dung buff/technique
-// không đổi -> mọi consumer tính lại vô ích. Ở đây giữ lại "chữ ký" nội
-// dung của lần gán gần nhất để bỏ qua các lần gán trùng nội dung.
+// App.vue goi setExternalModifiers() MOI TICK (10Hz) voi mang MOI do
+// GameManager.getAggregatedModifiers() dung lai; gan reference moi lam
+// getter `finalStats` invalidate moi tick du noi dung buff/technique
+// khong doi -> moi consumer tinh lai vo ich. O day giu lai "chu ky" noi
+// dung cua lan gan gan nhat de bo qua cac lan gan trung noi dung.
 //
-// Vì sao SNAPSHOT theo GIÁ TRỊ (string) chứ không deep-compare với
-// `this.externalModifiers`: nguồn modifier (BuffSystem/SkillSystem) có
-// thể trả về CHÍNH object cũ và mutate tại chỗ (vd stacks đổi). Khi đó
-// hai bên của phép so sánh trỏ cùng object nên deep-compare luôn thấy
-// "giống nhau" và ta sẽ bỏ sót thay đổi thật. Chữ ký copy giá trị ra
-// string nên bắt được đúng trường hợp này.
+// Vi sao SNAPSHOT theo GIA TRI (string) chu khong deep-compare voi
+// `this.externalModifiers`: nguon modifier (BuffSystem/SkillSystem) co
+// the tra ve CHINH object cu va mutate tai cho (vd stacks doi). Khi do
+// hai ben cua phep so sanh tro cung object nen deep-compare luon thay
+// "giong nhau" va ta se bo sot thay doi that. Chu ky copy gia tri ra
+// string nen bat duoc dung truong hop nay.
 //
-// WeakMap theo store instance (KHÔNG phải biến module dùng chung) để
+// WeakMap theo store instance (KHONG phai bien module dung chung) de
 // m-i pinia instance - nh-t l- trong test, m-i test t-o pinia m-i - c-
-// snapshot riêng, và snapshot tự thu hồi cùng store. Không đụng vào
+// snapshot rieng, va snapshot tu thu hoi cung store. Khong dung vao
 // state/save shape.
 interface ExternalModifierSnapshot {
-  // Đúng giá trị mà state đang giữ sau lần gán gần nhất (proxy reactive
-  // của Pinia). Nếu nơi khác thay mảng này (load save, $reset, $patch)
-  // thì reference lệch -> ta gán lại thay vì tin vào chữ ký cũ.
+  // Dung gia tri ma state dang giu sau lan gan gan nhat (proxy reactive
+  // cua Pinia). Neu noi khac thay mang nay (load save, $reset, $patch)
+  // thi reference lech -> ta gan lai thay vi tin vao chu ky cu.
   applied: StatModifier[]
 
   signature: string
@@ -60,15 +60,15 @@ interface ExternalModifierSnapshot {
 const lastExternalModifiers = new WeakMap<object, ExternalModifierSnapshot>()
 
 // QA-002 idempotency (Task 9.2) - payload-identity guard cho
-// restoreFromSave(), cùng pattern lastExternalModifiers phía trên:
-// WeakMap theo store instance, non-reactive, không persist vào save
-// (dev phase — không migration). Lưu kết quả OfflineResult của lần
-// restore gần nhất; cùng payload gọi lại = no-op trả Y HỆT kết quả đó
-// (chống double-credit offline cultivation + double Object.assign khi
-// boot flow bị retry/recovery chạy 2 lần), payload KHÁC = áp đầy đủ
-// (boot lại với save mới hơn vẫn hoạt động). Identity là
-// `lastSavedAt|cultivation` từ save — cặp giá trị này khác hàm ý save
-// đã đổi (lần save sau luôn có lastSavedAt mới hơn).
+// restoreFromSave(), cung pattern lastExternalModifiers phia tren:
+// WeakMap theo store instance, non-reactive, khong persist vao save
+// (dev phase - khong migration). Luu ket qua OfflineResult cua lan
+// restore gan nhat; cung payload goi lai = no-op tra Y HET ket qua do
+// (chong double-credit offline cultivation + double Object.assign khi
+// boot flow bi retry/recovery chay 2 lan), payload KHAC = ap day du
+// (boot lai voi save moi hon van hoat dong). Identity la
+// `lastSavedAt|cultivation` tu save - cap gia tri nay khac ham y save
+// da doi (lan save sau luon co lastSavedAt moi hon).
 interface RestoredPayloadSnapshot {
   identity: string
 
@@ -77,17 +77,17 @@ interface RestoredPayloadSnapshot {
 
 const lastRestoredPayloads = new WeakMap<object, RestoredPayloadSnapshot>()
 
-// Ký tự điều khiển làm dấu phân cách — không bao giờ xuất hiện trong
-// id/sourceId/stat/tag (toàn chuỗi định danh do code sinh), nên hai mảng
-// khác nội dung không thể vô tình trùng chữ ký vì ghép chuỗi.
+// Ky tu dieu khien lam dau phan cach - khong bao gio xuat hien trong
+// id/sourceId/stat/tag (toan chuoi dinh danh do code sinh), nen hai mang
+// khac noi dung khong the vo tinh trung chu ky vi ghep chuoi.
 const SIGNATURE_SEPARATOR = '\u0001'
 
-// "Nội dung giống hệt" = cùng số lượng, cùng THỨ TỰ, và từng entry khớp
-// TOÀN BỘ field của StatModifier có ảnh hưởng tới calculateStats
-// (id/sourceId/sourceType/stat/tag + 7 field số). Thứ tự được tính vào
-// vì mảng này được spread thẳng vào pipeline; giữ chặt hơn cần thiết ở
-// chỗ này chỉ khiến ta gán lại thừa (an toàn), không bao giờ bỏ sót.
-// `?? ''` phân biệt được 0 ("0") với undefined ("").
+// "Noi dung giong het" = cung so luong, cung THU TU, va tung entry khop
+// TOAN BO field cua StatModifier co anh huong toi calculateStats
+// (id/sourceId/sourceType/stat/tag + 7 field so). Thu tu duoc tinh vao
+// vi mang nay duoc spread thang vao pipeline; giu chat hon can thiet o
+// cho nay chi khien ta gan lai thua (an toan), khong bao gio bo sot.
+// `?? ''` phan biet duoc 0 ("0") voi undefined ("").
 function externalModifierSignature(modifiers: StatModifier[]): string {
   const parts: (string | number)[] = [modifiers.length]
 
@@ -123,16 +123,16 @@ export const usePlayerStore = defineStore('player', {
       return getRequiredCultivation(state.realmId, state.realmLevel)
     },
 
-    // Dùng lại đúng công thức cultivationRequired — trước đây tự tính
-    // "realmLevel * 100" (sai, không khớp getRequiredCultivation thật
-    // sự dùng ở nơi khác), nay chỉ còn 1 nguồn công thức duy nhất.
+    // Dung lai dung cong thuc cultivationRequired - truoc day tu tinh
+    // "realmLevel * 100" (sai, khong khop getRequiredCultivation that
+    // su dung o noi khac), nay chi con 1 nguon cong thuc duy nhat.
     cultivationProgress(): number {
       return Math.min(this.cultivation / this.cultivationRequired, 1)
     },
 
-    // Stats cuối cùng = baseStats + modifiers (equipment/talent, tĩnh)
-    // + externalModifiers (buff/technique, do GameManager gộp mỗi tick).
-    // Đây là nguồn duy nhất UI/CombatEntity nên đọc.
+    // Stats cuoi cung = baseStats + modifiers (equipment/talent, tinh)
+    // + externalModifiers (buff/technique, do GameManager gop moi tick).
+    // Day la nguon duy nhat UI/CombatEntity nen doc.
     // ARCH-002 (M7): formula lives in resolvePlayerFinalStats() - the same
     // owner the battle entry path resolves through (post-reset, fresh
     // aggregation instead of this mirror field).
@@ -189,22 +189,22 @@ export const usePlayerStore = defineStore('player', {
       return breakthroughSystem(this)
     },
 
-    // Gọi bởi App.vue mỗi tick với kết quả từ
-    // GameManager.getAggregatedModifiers(). Store không tự tính
-    // buff/technique modifier, chỉ lưu lại để finalStats dùng.
-    // Dirty-check (perf-optimize-pass Task 5, xem ghi chú đầu file):
-    // KHÔNG gán reference mới nếu nội dung y hệt lần gán trước — giữ
-    // nguyên object cũ để getter `finalStats` (và mọi computed phái
-    // sinh) không invalidate 10 lần/giây khi buff/technique không đổi.
+    // Goi boi App.vue moi tick voi ket qua tu
+    // GameManager.getAggregatedModifiers(). Store khong tu tinh
+    // buff/technique modifier, chi luu lai de finalStats dung.
+    // Dirty-check (perf-optimize-pass Task 5, xem ghi chu dau file):
+    // KHONG gan reference moi neu noi dung y het lan gan truoc - giu
+    // nguyen object cu de getter `finalStats` (va moi computed phai
+    // sinh) khong invalidate 10 lan/giay khi buff/technique khong doi.
     setExternalModifiers(modifiers: StatModifier[]) {
       const previous = lastExternalModifiers.get(this)
 
       const signature = externalModifierSignature(modifiers)
 
-      // `previous.applied === this.externalModifiers` bảo đảm chỉ bỏ qua
-      // khi state VẪN đang giữ đúng mảng ta gán lần trước — nếu load
-      // save/$reset/$patch đã thay mảng khác thì chữ ký cũ vô nghĩa,
-      // phải gán lại.
+      // `previous.applied === this.externalModifiers` bao dam chi bo qua
+      // khi state VAN dang giu dung mang ta gan lan truoc - neu load
+      // save/$reset/$patch da thay mang khac thi chu ky cu vo nghia,
+      // phai gan lai.
       if (
         previous !== undefined &&
         previous.signature === signature &&
@@ -215,20 +215,20 @@ export const usePlayerStore = defineStore('player', {
 
       this.externalModifiers = modifiers
 
-      // Lưu lại ĐÚNG giá trị state trả về (proxy reactive của Pinia),
-      // không phải `modifiers` thô, để phép so sánh reference ở trên
-      // đúng ở tick sau.
+      // Luu lai DUNG gia tri state tra ve (proxy reactive cua Pinia),
+      // khong phai `modifiers` tho, de phep so sanh reference o tren
+      // dung o tick sau.
       lastExternalModifiers.set(this, { applied: this.externalModifiers, signature })
     },
 
-    // Modifier "tĩnh" từ equipment (xem ghi chú kiểu PlayerData).
-    // Gọi ngay sau equip/unequip/enhance, không phải mỗi tick —
+    // Modifier "tinh" tu equipment (xem ghi chu kieu PlayerData).
+    // Goi ngay sau equip/unequip/enhance, khong phai moi tick -
     // khac setExternalModifiers o tren. player.modifiers is the SHARED
     // bucket for many static sources (realm passive, Luyen The -
     // distinguished by sourceType/id prefix; permanent pills now write
     // baseStats directly, no longer a modifier bucket), so it may only
-    // được thay THẾ phần sourceType 'equipment', không được gán đè cả
-    // mảng — gán đè từng xoá sạch mọi nguồn khác mỗi lần equip/reload.
+    // duoc thay THE phan sourceType 'equipment', khong duoc gan de ca
+    // mang - gan de tung xoa sach moi nguon khac moi lan equip/reload.
     setEquipmentModifiers(modifiers: StatModifier[]) {
       this.modifiers = [
         ...this.modifiers.filter(modifier => modifier.sourceType !== 'equipment'),
@@ -236,13 +236,13 @@ export const usePlayerStore = defineStore('player', {
       ]
     },
 
-    // Nhận gameManager từ App.vue thay vì tự giữ instance trong
-    // store — GameManager không phải reactive state của Vue (xem
-    // ghi chú trong GameManager.ts/App.vue), store chỉ pass-through.
+    // Nhan gameManager tu App.vue thay vi tu giu instance trong
+    // store - GameManager khong phai reactive state cua Vue (xem
+    // ghi chu trong GameManager.ts/App.vue), store chi pass-through.
     save(gameManager: GameManager) {
-      // lastSavedAt phải được cập nhật TRƯỚC khi ghi file,
-      // nếu không offline progress lần sau sẽ bị tính dư
-      // (vì file lưu mốc thời gian cũ hơn thời điểm save thật).
+      // lastSavedAt phai duoc cap nhat TRUOC khi ghi file,
+      // neu khong offline progress lan sau se bi tinh du
+      // (vi file luu moc thoi gian cu hon thoi diem save that).
       this.lastSavedAt = Date.now()
 
    // R10 (AR-12): this.$state is a live reactive Pinia proxy -
@@ -255,18 +255,18 @@ export const usePlayerStore = defineStore('player', {
 
     restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority) {
       // R10 (AR-12) - payload-identity guard: WHOLE-payload hash (qua
-      // computeRestoreIdentity — exclude lastSavedAt), không còn
-      // fingerprint 2-field. Cùng save gọi lại = no-op; save KHÁC (dù
-      // cùng lastSavedAt|cultivation) áp đầy đủ.
+      // computeRestoreIdentity - exclude lastSavedAt), khong con
+      // fingerprint 2-field. Cung save goi lai = no-op; save KHAC (du
+      // cung lastSavedAt|cultivation) ap day du.
       const payloadIdentity = computeRestoreIdentity(save)
       const previousRestore = lastRestoredPayloads.get(this)
 
       if (previousRestore !== undefined && previousRestore.identity === payloadIdentity) {
-        return previousRestore.offline // elapsed 0 — no-op đúng nghĩa, trả lại kết quả lần trước
+        return previousRestore.offline // elapsed 0 - no-op dung nghia, tra lai ket qua lan truoc
       }
 
-      // GameClock là nguồn duy nhất tính thời gian offline.
-      // lastSavedAt của save file chính là lastOnlineAt của GameClockState.
+      // GameClock la nguon duy nhat tinh thoi gian offline.
+      // lastSavedAt cua save file chinh la lastOnlineAt cua GameClockState.
       // B1-D - under remote authority the accrual bound is the SERVER
       // window (progression_cutoff_at -> serverNowUtc), never the client
       // clock or the editable payload marker; a live replacement accrues
@@ -474,16 +474,16 @@ export const usePlayerStore = defineStore('player', {
 
       Object.assign(this, restoredPlayer)
 
-      // Node level (plan §6.1) — save cũ giữa v46 thiếu object này;
-      // thiếu = chưa lĩnh ngộ node nào, KHÔNG được để undefined kẹo
-      // getNodeLevel/aggregate crash toàn UI (nguyên nhân "không xóa
-      // được save" — app chết trước khi tới được Settings).
+      // Node level (plan sec6.1) - save cu giua v46 thieu object nay;
+      // thieu = chua linh ngo node nao, KHONG duoc de undefined keo
+      // getNodeLevel/aggregate crash toan UI (nguyen nhan "khong xoa
+      // duoc save" - app chet truoc khi toi duoc Settings).
       this.nodeLevels ??= {}
       this.purchasedNodeIds ??= []
 
-      // Combat AI strategy (plan §10.2) — save không có field hoặc giá
-      // trị sai dùng default 'nearest'. Không migration (development
-      // build), fallback đủ cho development save.
+      // Combat AI strategy (plan sec10.2) - save khong co field hoac gia
+      // tri sai dung default 'nearest'. Khong migration (development
+      // build), fallback du cho development save.
       this.combatAiStrategy = isCombatAiStrategy(save.player.combatAiStrategy)
         ? save.player.combatAiStrategy
         : DEFAULT_COMBAT_AI_STRATEGY
@@ -505,14 +505,14 @@ export const usePlayerStore = defineStore('player', {
       // wrong whenever the cap binds. Store and return the real delta.
       const offlineResult = { ...offline, cultivation: offlineGained }
 
-      // M2 — Ngo Dao (spec §4.3 row 20): the insight_per_cultivation
+      // M2 - Ngo Dao (spec sec4.3 row 20): the insight_per_cultivation
       // accumulator settles the offline grant too, through the SAME
       // threshold/counters as the online cultivate() path.
       accrueCultivationInsight(this, offlineGained)
 
-      // Bản Mệnh Pháp Bảo (doc §10.2) — sửa mọi invariant sai ngay sau
-      // blind Object.assign() ở trên: nghề không khớp, thiếu state dù
-      // đủ gate, grade/path sai enum, realm/level/EXP vượt trần.
+      // Ban Menh Phap Bao (doc sec10.2) - sua moi invariant sai ngay sau
+      // blind Object.assign() o tren: nghe khong khop, thieu state du
+      // du gate, grade/path sai enum, realm/level/EXP vuot tran.
       normalizeArtifactProgress(this)
 
       // Value-domain coherence on the persisted pool: the base-stat
@@ -539,7 +539,7 @@ export const usePlayerStore = defineStore('player', {
           : authoredBaseStats[key]
       }
 
-      // M1 (ARCH-001) — commit the payload identity only AFTER the whole
+      // M1 (ARCH-001) - commit the payload identity only AFTER the whole
       // apply succeeded: a mid-restore throw leaves it uncommitted so a
       // retry with the same payload re-applies instead of being skipped
       // by the guard above.

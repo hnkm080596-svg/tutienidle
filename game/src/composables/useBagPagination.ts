@@ -2,27 +2,27 @@ import { type ComputedRef, computed, ref, watch } from 'vue'
 import type { BagCell } from '@/components/panels/bag-sections/BagCell'
 
 /**
- * Trích từ BagGrid.vue (Home Hub Phase 2) — mỗi bag-section (Equipment/
- * Material/Pill/Talisman/Formation) tự phân trang riêng, không còn 1
- * state pagination DÙNG CHUNG cho cả 5 loại như bản BagGrid.vue cũ
- * (đổi tab hồi đó reset trang vì chỉ có 1 currentPage; giờ mỗi section
- * là 1 component riêng, currentPage tự nhiên tách theo instance, khỏi
- * cần watch(tab) để reset).
+ * Trich tu BagGrid.vue (Home Hub Phase 2) - moi bag-section (Equipment/
+ * Material/Pill/Talisman/Formation) tu phan trang rieng, khong con 1
+ * state pagination DUNG CHUNG cho ca 5 loai nhu ban BagGrid.vue cu
+ * (doi tab hoi do reset trang vi chi co 1 currentPage; gio moi section
+ * la 1 component rieng, currentPage tu nhien tach theo instance, khoi
+ * can watch(tab) de reset).
  *
- * pageSize giờ REACTIVE (columns * rows đo THẬT từ
- * useBagGridLayout.ts, không còn hằng số cố định) — cột/hàng đổi lúc
- * resize (responsive width-first grid) khiến pageSize đổi theo, watch
- * totalPages bên dưới tự lùi currentPage nếu trang hiện tại vượt quá
- * số trang mới, không mất/lệch item.
+ * pageSize gio REACTIVE (columns * rows do THAT tu
+ * useBagGridLayout.ts, khong con hang so co dinh) - cot/hang doi luc
+ * resize (responsive width-first grid) khien pageSize doi theo, watch
+ * totalPages ben duoi tu lui currentPage neu trang hien tai vuot qua
+ * so trang moi, khong mat/lech item.
  */
 export function useBagPagination<T extends BagCell>(cells: ComputedRef<T[]>, pageSize: ComputedRef<number>) {
   const currentPage = ref(0)
 
   const totalPages = computed(() => Math.max(1, Math.ceil(cells.value.length / pageSize.value)))
 
-  // Item bị tiêu hao khiến trang hiện tại vượt quá tổng số trang mới
-  // (vd đang ở trang cuối rồi dùng hết item) thì lùi về trang hợp lệ
-  // gần nhất thay vì hiện trang trắng.
+  // Item bi tieu hao khien trang hien tai vuot qua tong so trang moi
+  // (vd dang o trang cuoi roi dung het item) thi lui ve trang hop le
+  // gan nhat thay vi hien trang trang.
   watch(totalPages, pages => {
     if (currentPage.value > pages - 1) {
       currentPage.value = pages - 1
@@ -33,12 +33,12 @@ export function useBagPagination<T extends BagCell>(cells: ComputedRef<T[]>, pag
     currentPage.value = Math.min(Math.max(0, page), totalPages.value - 1)
   }
 
-  // Sort (plan Workstream E) — đổi mode/direction quay về trang đầu.
+  // Sort (plan Workstream E) - doi mode/direction quay ve trang dau.
   function resetPage() {
     currentPage.value = 0
   }
 
-  // Luôn đủ pageSize ô — ô thừa hiển thị rỗng.
+  // Luon du pageSize o - o thua hien thi rong.
   const gridCells = computed<(T | null)[]>(() => {
     const size = pageSize.value
     const start = currentPage.value * size

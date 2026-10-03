@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 //
-// Ui automation flags persistence (2026-08-26) — người chơi yêu cầu
-// "lưu lại flag của các trạng thái tự động". Test roundtrip qua
-// localStorage + các đường fallback (JSON hỏng/giá trị sai kiểu).
-// (2026-08-30) isAutoConsumeTinhHoa đã GỠ — snapshot chỉ còn battleRunMode.
+// Ui automation flags persistence (2026-08-26) - nguoi choi yeu cau
+// "luu lai flag cua cac trang thai tu dong". Test roundtrip qua
+// localStorage + cac duong fallback (JSON hong/gia tri sai kieu).
+// (2026-08-30) isAutoConsumeTinhHoa da GO - snapshot chi con battleRunMode.
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useUiStore } from './ui'
@@ -44,7 +44,7 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     ui.setBattleRunMode('repeat')
 
-    // Mô phỏng dữ liệu rác ghi đè trực tiếp.
+    // Mo phong du lieu rac ghi de truc tiep.
     localStorage.setItem(
       UI_AUTOMATION_STORAGE_KEY,
 
@@ -55,8 +55,8 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     expect(loaded.battleRunMode).toBeUndefined()
 
-    // Store mới đọc snapshot sạch còn lại trước đó? Không — key đã bị
-    // ghi đè, nên hydrate về defaults an toàn.
+    // Store moi doc snapshot sach con lai truoc do? Khong - key da bi
+    // ghi de, nen hydrate ve defaults an toan.
     setActivePinia(createPinia())
 
     const fresh = useUiStore()
@@ -86,24 +86,24 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     expect(ui.battleRunMode).toBe('manual')
 
-    // Helper load cũng không throw.
+    // Helper load cung khong throw.
     expect(loadPersistedUiAutomationFlags()).toEqual({})
   })
 
   it('mutation TRỰC TIẾP từ panel (battleRunMode = ...) được $subscribe bắt và lưu', async () => {
-    // Wiring production thật — App.vue gọi đúng hàm này.
+    // Wiring production that - App.vue goi dung ham nay.
     const ui = useUiStore()
 
     const unsubscribe = installAutomationFlagsPersistence(ui)
 
-    // CombatVictoryPanel/StageSelectPanel gán thẳng thế này.
+    // CombatVictoryPanel/StageSelectPanel gan thang the nay.
     ui.battleRunMode = 'progress'
 
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(loadPersistedUiAutomationFlags().battleRunMode).toBe('progress')
 
-    // Gán cùng giá trị lần nữa → snapshot trùng, KHÔNG ghi lặp (skip).
+    // Gan cung gia tri lan nua -> snapshot trung, KHONG ghi lap (skip).
     const persistedModeBefore = JSON.parse(localStorage.getItem(UI_AUTOMATION_STORAGE_KEY)!).battleRunMode
 
     ui.battleRunMode = 'progress'
@@ -127,8 +127,8 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    // Giờ chỉ đổi combatInputMode — dirty check cũ so sánh một mình
-    // battleRunMode nên sẽ bỏ qua mutation này.
+    // Gio chi doi combatInputMode - dirty check cu so sanh mot minh
+    // battleRunMode nen se bo qua mutation nay.
     ui.combatInputMode = 'manual'
 
     await new Promise((resolve) => setTimeout(resolve, 0))

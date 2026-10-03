@@ -1,21 +1,21 @@
-// RefinementBalance (2026-08-25, resource-professions-rework plan §7.2/
-// §7.3/§7.4) — toàn bộ balance của Khí Đường mới nằm tại ĐÂY (balance
-// data, chưa phải số cuối — playtest chỉnh tại đây).
-// Rework 2026-08-30: Điểm Rèn KHÔNG còn random lúc sinh (bỏ
-// forgePotential roll) — mỗi item có đúng trần theo quality của nó;
-// cost Tẩy/Tinh Luyện leo thang theo quality thay vì phẳng.
+// RefinementBalance (2026-08-25, resource-professions-rework plan sec7.2/
+// sec7.3/sec7.4) - toan bo balance cua Khi Duong moi nam tai DAY (balance
+// data, chua phai so cuoi - playtest chinh tai day).
+// Rework 2026-08-30: Diem Ren KHONG con random luc sinh (bo
+// forgePotential roll) - moi item co dung tran theo quality cua no;
+// cost Tay/Tinh Luyen leo thang theo quality thay vi phang.
 import type { ItemQuality } from '../item/ItemQuality'
 
 // =========================
-// Điểm Rèn — PER-ITEM (rework 2026-08-26: điểm rèn là asset của
-// equipment; rework 2026-08-30: xác định bằng PHẨM, không random)
+// Diem Ren - PER-ITEM (rework 2026-08-26: diem ren la asset cua
+// equipment; rework 2026-08-30: xac dinh bang PHAM, khong random)
 // =========================
-// MỖI món trang bị mang ĐIỂM RÈN RIÊNG (EquipmentInstance.forgePoints,
-// khởi tạo full-cap lúc rớt/tạo đồ). Tẩy Luyện/Tinh Luyện tiêu vào ĐÚNG
-// món đó; cạn điểm = món không phát triển được nữa. KHÔNG còn pool chung
-// người chơi, KHÔNG còn hồi theo thời gian thực.
+// MOI mon trang bi mang DIEM REN RIENG (EquipmentInstance.forgePoints,
+// khoi tao full-cap luc rot/tao do). Tay Luyen/Tinh Luyen tieu vao DUNG
+// mon do; can diem = mon khong phat trien duoc nua. KHONG con pool chung
+// nguoi choi, KHONG con hoi theo thoi gian thuc.
 
-/** Luyện Khí Tinh Hoa tiêu hao khi Tẩy Luyện theo Chất. */
+/** Luyen Khi Tinh Hoa tieu hao khi Tay Luyen theo Chat. */
 export const WASH_TINH_HOA_COST_BY_QUALITY: Record<ItemQuality, number> = {
   hoang: 2,
   huyen: 5,
@@ -24,7 +24,7 @@ export const WASH_TINH_HOA_COST_BY_QUALITY: Record<ItemQuality, number> = {
   tien: 18,
 }
 
-/** Luyện Khí Tinh Hoa tiêu hao khi Tinh Luyện theo Chất. */
+/** Luyen Khi Tinh Hoa tieu hao khi Tinh Luyen theo Chat. */
 export const REFINE_TINH_HOA_COST_BY_QUALITY: Record<ItemQuality, number> = {
   hoang: 1,
   huyen: 3,
@@ -34,10 +34,10 @@ export const REFINE_TINH_HOA_COST_BY_QUALITY: Record<ItemQuality, number> = {
 }
 
 // =========================
-// Tẩy Luyện: Chất của item quyết định trần dòng và trọng số tier.
+// Tay Luyen: Chat cua item quyet dinh tran dong va trong so tier.
 // =========================
 
-/** Trọng weight roll TIER BAN ĐẦU của từng dòng (index 0 → tier 1 ...). */
+/** Trong weight roll TIER BAN DAU cua tung dong (index 0 -> tier 1 ...). */
 export const WASH_TIER_WEIGHTS_BY_QUALITY: Record<ItemQuality, readonly number[]> = {
   hoang: [70, 25, 5],
   huyen: [50, 35, 15],
@@ -46,13 +46,13 @@ export const WASH_TIER_WEIGHTS_BY_QUALITY: Record<ItemQuality, readonly number[]
   tien: [10, 35, 55],
 }
 
-/** Linh Thạch mỗi lần Tẩy Luyện. */
+/** Linh Thach moi lan Tay Luyen. */
 export const WASH_SPIRIT_STONE_COST = 100
 
 // =========================
-// Tinh Luyện (§7.4): giữ identity, mỗi dòng eligible chỉ tăng 5–20%
-// giá trị hiện tại rồi clamp theo range tier. Khóa L dòng chỉ
-// làm tăng chi phí Linh Thạch theo N + L; KHÔNG cho khóa toàn bộ.
+// Tinh Luyen (sec7.4): giu identity, moi dong eligible chi tang 5-20%
+// gia tri hien tai roi clamp theo range tier. Khoa L dong chi
+// lam tang chi phi Linh Thach theo N + L; KHONG cho khoa toan bo.
 // =========================
 
 export const REFINE_INCREASE_MIN = 0.05
@@ -61,5 +61,5 @@ export const REFINE_INCREASE_MAX = 0.2
 
 export const REFINE_MAX_LOCKS = 3
 
-/** Linh Thạch đơn giá mỗi đơn vị (N + L) của Tinh Luyện. */
+/** Linh Thach don gia moi don vi (N + L) cua Tinh Luyen. */
 export const REFINE_SPIRIT_STONE_PER_UNIT = 50

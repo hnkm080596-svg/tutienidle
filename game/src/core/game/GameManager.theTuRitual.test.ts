@@ -8,7 +8,7 @@ import { CAST_LEVELING_THRESHOLDS, HUY_QUYEN_L3_CASTS } from '../skill/SkillSyst
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { skillCoreNodeId } from '../progression/SkillCoreLevel'
 
-// The Tu Reimagined (spec 2026-09-15, T6 + section 2.3) — Task 2:
+// The Tu Reimagined (spec 2026-09-15, T6 + section 2.3) - Task 2:
 // 1. huy_quyen is a mortal cast-leveled basic (Lv2@1k, Lv3@10k casts),
 //    learned wherever tram is granted, NOT insight-upgradeable.
 // 2. hidden_body is offered at the Initiation Ritual iff huy_quyen is Lv3

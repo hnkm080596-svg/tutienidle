@@ -1,8 +1,8 @@
-﻿// OPT-09 (roadmap.md Â§8.3) â€” subscribeCombatEvents/unsubscribeCombatEvents
-// tá»«ng liá»‡t kÃª 10 entry trong `boundHandlers` + 14 dÃ²ng eventBus.on/off thá»§
-// cÃ´ng song song. Rá»§i ro: thÃªm event vÃ o on() mÃ  quÃªn off() (hoáº·c ngÆ°á»£c
-// láº¡i) khÃ´ng cÃ³ gÃ¬ bÃ¡o lá»—i. Test nÃ y khÃ³a báº¥t biáº¿n "má»i event subscribe
-// pháº£i Ä‘Æ°á»£c unsubscribe Ä‘á»‘i xá»©ng" Ä‘á»™c láº­p vá»›i cÃ¡ch cÃ i Ä‘áº·t bÃªn trong.
+﻿// OPT-09 (roadmap.md sec8.3) - subscribeCombatEvents/unsubscribeCombatEvents
+// tung liet ke 10 entry trong `boundHandlers` + 14 dong eventBus.on/off thu
+// cong song song. Rui ro: them event vao on() ma quen off() (hoac nguoc
+// lai) khong co gi bao loi. Test nay khoa bat bien "moi event subscribe
+// phai duoc unsubscribe doi xung" doc lap vOi cach cai dat ben trong.
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'

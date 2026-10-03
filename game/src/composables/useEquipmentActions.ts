@@ -7,15 +7,15 @@ import type { RolledAffix } from '../core/equipment/RolledAffix'
 import type { RefineValueEntry } from '../core/equipment/EquipmentSystem'
 
 /**
- * Modifier equipment là "tĩnh" (xem ghi chú trong Player.ts/
- * EquipmentSystem.ts) — chỉ đổi khi có hành động rõ ràng, KHÔNG tự
- * gộp mỗi tick. Mọi nơi trong UI gọi equip/unequip/enhance/Tẩy/Tinh/
- * Hóa đều phải qua đây để đồng bộ player.modifiers ngay sau đó.
+ * Modifier equipment la "tinh" (xem ghi chu trong Player.ts/
+ * EquipmentSystem.ts) - chi doi khi co hanh dong ro rang, KHONG tu
+ * gop moi tick. Moi noi trong UI goi equip/unequip/enhance/Tay/Tinh/
+ * Hoa deu phai qua day de dong bo player.modifiers ngay sau do.
  *
- * (2026-08-25, resource-professions-rework plan §7) — Khí Đường chỉ còn
- * bốn operation: Cường Hóa (slot), Tẩy Luyện (identity), Tinh Luyện
- * (dòng đủ điều kiện tăng 5–20%, clamp trần tier + khóa), Hóa Luyện
- * (destructive → Tinh Hoa).
+ * (2026-08-25, resource-professions-rework plan sec7) - Khi Duong chi con
+ * bon operation: Cuong Hoa (slot), Tay Luyen (identity), Tinh Luyen
+ * (dong du dieu kien tang 5-20%, clamp tran tier + khoa), Hoa Luyen
+ * (destructive -> Tinh Hoa).
  */
 export function useEquipmentActions() {
   const gameManager = useGameManager()
@@ -26,9 +26,9 @@ export function useEquipmentActions() {
 
   const feedback = useActionFeedbackStore()
 
-  // i18n (task 2.2 lô 1) — composable KHÔNG import i18n: chỉ đẩy locale key
-  // vào feedback store, ActionFeedbackLog t() tại điểm render. successKey/
-  // errorKey gửi messageKey + params (giá trị param cũng là locale key).
+  // i18n (task 2.2 lo 1) - composable KHONG import i18n: chi day locale key
+  // vao feedback store, ActionFeedbackLog t() tai diem render. successKey/
+  // errorKey gui messageKey + params (gia tri param cung la locale key).
   const OP_LABEL_KEYS = {
     equip: 'actionFeedback.ops.equip.label',
     enhance: 'actionFeedback.ops.enhance.label',
@@ -60,8 +60,8 @@ export function useEquipmentActions() {
     return ok
   }
 
-  // Workstream A §3.3 — thất bại KHÔNG mutate state, thành công/thất bại
-  // đều báo qua "Nhật ký thao tác" với lý do đã dịch cụ thể (key + t()).
+  // Workstream A sec3.3 - that bai KHONG mutate state, thanh cong/that bai
+  // deu bao qua "Nhat ky thao tac" voi ly do da dich cu the (key + t()).
   function withSyncAndResult(result: { ok: boolean; reason?: string }, op: OpId): boolean {
     if (withSync(result.ok)) {
       feedback.successKey('actionFeedback.success', { label: OP_LABEL_KEYS[op] })
@@ -81,7 +81,7 @@ export function useEquipmentActions() {
           ? gameManager.materialRegistry.get(reward.materialId)
           : undefined
 
-        // Tên nguyên liệu là data-layer (loạt 2.7) — đẩy chuỗi thường.
+        // Ten nguyen lieu la data-layer (loat 2.7) - day chuoi thuong.
         feedback.success(`Hóa Luyện: ${material?.name ?? 'Nguyên liệu không xác định'} ×${reward.amount}`)
       }
 
@@ -101,26 +101,26 @@ export function useEquipmentActions() {
 
     unequip: (instanceId: string) => withSync(gameManager.equipmentOps.unequipItem(instanceId)),
 
-    // Cường Hóa gắn SLOT (slot-level rework) — slot trống vẫn nâng được.
+    // Cuong Hoa gan SLOT (slot-level rework) - slot trong van nang duoc.
     enhance: (slot: EquipmentSlot) =>
       withSyncAndResult(gameManager.equipmentOps.enhanceSlot(slot, player.$state), 'enhance'),
 
-    /** Tẩy Luyện — tiêu Tinh Hoa, Linh Thạch và một lượt Rèn. */
+    /** Tay Luyen - tieu Tinh Hoa, Linh Thach va mot luot Ren. */
     wash: (instanceId: string) =>
       withSyncAndResult(gameManager.equipmentOps.washItem(instanceId, player.$state), 'wash'),
 
-    /** Tinh Luyện — lockedIndices là các dòng giữ nguyên (§7.4). */
+    /** Tinh Luyen - lockedIndices la cac dong giu nguyen (sec7.4). */
     refine: (instanceId: string, lockedIndices: readonly number[]) =>
       withSyncAndResult(gameManager.equipmentOps.refineItem(instanceId, lockedIndices, player.$state), 'refine'),
 
     /**
-     * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + TRỪ COST NGAY
-     * nhưng KHÔNG ghi vào instance. R9 (AR-21): trả một-use TICKET —
-     * affixes hiển thị đọc qua washPreviewAffixes(ticketId); UI giữ
-     * ticketId ở state tạm rồi gọi washCommit(ticketId) khi bấm "Giữ".
-     * Thất bại (thiếu nguyên liệu...) báo qua Nhật ký thao tác giống mọi
-     * action khác — KHÔNG bumpState vì chưa mutate gì nếu fail, có
-     * bumpState nếu thành công (cost đã trừ).
+     * Xem truoc Tay Luyen (2026-08-30, UI "giu/bo") - roll + TRU COST NGAY
+     * nhung KHONG ghi vao instance. R9 (AR-21): tra mot-use TICKET -
+     * affixes hien thi doc qua washPreviewAffixes(ticketId); UI giu
+     * ticketId o state tam roi goi washCommit(ticketId) khi bam "Giu".
+     * That bai (thieu nguyen lieu...) bao qua Nhat ky thao tac giong moi
+     * action khac - KHONG bumpState vi chua mutate gi neu fail, co
+     * bumpState neu thanh cong (cost da tru).
      */
     washPreview: (instanceId: string): string | null => {
       const result = gameManager.equipmentOps.previewWashItem(instanceId)
@@ -138,23 +138,23 @@ export function useEquipmentActions() {
       return result.ticketId
     },
 
-    /** R9 (AR-21) — display copy of the pending wash roll by ticket. */
+    /** R9 (AR-21) - display copy of the pending wash roll by ticket. */
     washPreviewAffixes: (ticketId: string): RolledAffix[] | null =>
       gameManager.equipmentOps.getWashPreviewAffixes(ticketId)?.affixes ?? null,
 
-    /** R9 (AR-21) — drop the pending wash ticket (UI re-roll/cancel). */
+    /** R9 (AR-21) - drop the pending wash ticket (UI re-roll/cancel). */
     washDiscard: (ticketId: string): void => {
       gameManager.equipmentOps.discardWashTicket(ticketId)
     },
 
     /**
-     * Chốt kết quả đã washPreview() — không trừ cost lần nữa. R9 (AR-21):
-     * commit nhận TICKET ID; affixes áp là bản domain-owned.
+     * Chot ket qua da washPreview() - khong tru cost lan nua. R9 (AR-21):
+     * commit nhan TICKET ID; affixes ap la ban domain-owned.
      */
     washCommit: (instanceId: string, ticketId: string) =>
       withSyncAndResult(gameManager.equipmentOps.commitWashItem(instanceId, ticketId), 'wash'),
 
-    /** Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế washPreview. */
+    /** Xem truoc Tinh Luyen (2026-08-30, UI "giu/bo") - cung co che washPreview. */
     refinePreview: (instanceId: string, lockedIndices: readonly number[]): RefineValueEntry[] | null => {
       const result = gameManager.equipmentOps.previewRefineItem(instanceId, lockedIndices)
 
@@ -171,14 +171,14 @@ export function useEquipmentActions() {
       return result.values
     },
 
-    /** Chốt values đã refinePreview() — không trừ cost lần nữa. */
+    /** Chot values da refinePreview() - khong tru cost lan nua. */
     refineCommit: (instanceId: string, values: RefineValueEntry[]) =>
       withSyncAndResult(gameManager.equipmentOps.commitRefineItem(instanceId, values), 'refine'),
 
-    /** Bỏ preview Refine ở cả UI lẫn capability core; không hoàn lại cost đã roll. */
+    /** Bo preview Refine o ca UI lan capability core; khong hoan lai cost da roll. */
     refineDiscard: (instanceId?: string) => gameManager.equipmentOps.discardRefinePreview(instanceId),
 
-    /** Hóa Luyện batch all-or-nothing (§7.5). */
+    /** Hoa Luyen batch all-or-nothing (sec7.5). */
     dissolve,
   }
 }

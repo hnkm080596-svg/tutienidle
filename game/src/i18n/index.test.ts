@@ -64,10 +64,10 @@ describe('i18n', () => {
   })
 })
 
-// Task 21 (item-grade-quality-rework, rework P6) — vi.json/en.json phải
-// khớp CẤU TRÚC KEY tuyệt đối (không lệch nhánh nào lệch bên kia), tránh
-// treo missing-key âm thầm khi đổi locale sang en. Không so sánh GIÁ TRỊ
-// (bản dịch dĩ nhiên khác chữ), chỉ so cây key.
+// Task 21 (item-grade-quality-rework, rework P6) - vi.json/en.json phai
+// khop CAU TRUC KEY tuyet doi (khong lech nhanh nao lech ben kia), tranh
+// treo missing-key am tham khi doi locale sang en. Khong so sanh GIA TRI
+// (ban dich di nhien khac chu), chi so cay key.
 function collectLeafPaths(node: unknown, prefix = ''): string[] {
   if (node === null || typeof node !== 'object') {
     return [prefix]

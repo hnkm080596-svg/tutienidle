@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 //
 // Development-phase save policy (dong-fu-command-wheel-inventory-spirit-
-// stone-plan.md §"Chính sách migration và an toàn ghi đè") — auto-
-// migrate v42/v43 đã retire: MỌI version cũ hơn CURRENT_SAVE_VERSION
-// trả về 'incompatible' và KHÔNG ĐƯỢC phát sinh bất kỳ write nào vào
-// localStorage (không ghi đè save gốc, không tạo backup, không đụng
-// revision key). Người chơi xử lý qua SaveIncompatibleScreen
-// (Export/Xoá) thay vì bị migrate âm thầm.
+// stone-plan.md sec"Chinh sach migration va an toan ghi de") - auto-
+// migrate v42/v43 da retire: MOI version cu hon CURRENT_SAVE_VERSION
+// tra ve 'incompatible' va KHONG DUOC phat sinh bat ky write nao vao
+// localStorage (khong ghi de save goc, khong tao backup, khong dung
+// revision key). Nguoi choi xu ly qua SaveIncompatibleScreen
+// (Export/Xoa) thay vi bi migrate am tham.
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CURRENT_SAVE_VERSION, loadGame } from './SaveSystem'
 import { resolveBackupKey, resolveRevisionKey, resolveSaveKey } from './saveKeys'
@@ -26,9 +26,9 @@ function writeRawSave(version: number): string {
   return raw
 }
 
-// Save version hiện hành phải nguyên shape theo validateGameSaveShape —
-// fixture tối thiểu như writeRawSave không còn qua cửa load (đúng thiết
-// kế mới của save-shape-validation-plan.md).
+// Save version hien hanh phai nguyen shape theo validateGameSaveShape -
+// fixture toi thieu nhu writeRawSave khong con qua cua load (dung thiet
+// ke moi cua save-shape-validation-plan.md).
 function writeValidCurrentSave(): string {
   const raw = JSON.stringify({
     version: CURRENT_SAVE_VERSION,
@@ -64,10 +64,10 @@ describe('loadGame — retirement của auto-migration (v42–v46)', () => {
 
       expect(outcome).toEqual({ status: 'incompatible', foundVersion: version, raw })
 
-      // Save gốc KHÔNG bị ghi đè/migrate.
+      // Save goc KHONG bi ghi de/migrate.
       expect(localStorage.getItem(resolveSaveKey())).toBe(raw)
 
-      // Không backup/revision nào được tạo từ đường load.
+      // Khong backup/revision nao duoc tao tu duong load.
       expect(localStorage.getItem(resolveBackupKey())).toBeNull()
       expect(localStorage.getItem(resolveRevisionKey())).toBeNull()
     })

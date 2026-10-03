@@ -13,33 +13,33 @@ import { i18n } from '@/i18n'
 import { recordSaveOutcome } from '../services/diagnostics/recordSaveOutcome'
 
 /**
- * Remediation Task 5 (2026-09-05) — App boot/tick/listener lifecycle
- * IDEMPOTENT, extract từ App.vue <script setup> để test được (script
- * setup không test trực tiếp; toàn bộ dependency inject qua options).
+ * Remediation Task 5 (2026-09-05) - App boot/tick/listener lifecycle
+ * IDEMPOTENT, extract tu App.vue <script setup> de test duoc (script
+ * setup khong test truc tiep; toan bo dependency inject qua options).
  *
- * Bất biến:
- * 1. startTickLoop()/startAutosave() gọi nhiều lần → đúng 1 interval
- *    (trước đây setInterval đè handle — interval cũ leak, tick 2×/giây).
- * 2. bootGame() 2 lần khi boot đầu còn pending → boot flow chỉ chạy 1
- *    lần (bootInFlight guard; reset khi fail để retry còn đường).
- * 3. persistProgress() gọi dồn trong khi save chưa xong → 1 lần save
- *    (saveInFlight — đã có trước đây, giữ nguyên contract).
- * 4. stopAll()/unmount: MỌI event-bus handler + DOM listener gỡ
- *    symmetric với đăng ký; gọi lại là no-op (idempotent teardown).
- * 5. ARCH-013/L04 — stopAll() là terminal: bump `lifecycleGeneration` để
- *    mọi continuation còn pending qua await (boot load) trở thành stale —
- *    không restore, không start interval, không route request nào được
- *    ghi vào App đã teardown; và chặn luôn boot/timer/listener MỚI sau đó
- *    (cùng idiom generation fence của useDynamicRegion/PhaserSceneAdapter).
- *    persistProgress là ngoại lệ CỐ Ý: flush cuối của App.vue's onUnmounted
- *    chạy SAU onBeforeUnmount(stopAll) — listener-driven callers thì đã bị
- *    gỡ hết rồi nên không có stale persist nào tới được đó.
+ * Bat bien:
+ * 1. startTickLoop()/startAutosave() goi nhieu lan -> dung 1 interval
+ *    (truoc day setInterval de handle - interval cu leak, tick 2x/giay).
+ * 2. bootGame() 2 lan khi boot dau con pending -> boot flow chi chay 1
+ *    lan (bootInFlight guard; reset khi fail de retry con duong).
+ * 3. persistProgress() goi don trong khi save chua xong -> 1 lan save
+ *    (saveInFlight - da co truoc day, giu nguyen contract).
+ * 4. stopAll()/unmount: MOI event-bus handler + DOM listener go
+ *    symmetric voi dang ky; goi lai la no-op (idempotent teardown).
+ * 5. ARCH-013/L04 - stopAll() la terminal: bump `lifecycleGeneration` de
+ *    moi continuation con pending qua await (boot load) tro thanh stale -
+ *    khong restore, khong start interval, khong route request nao duoc
+ *    ghi vao App da teardown; va chan luon boot/timer/listener MOI sau do
+ *    (cung idiom generation fence cua useDynamicRegion/PhaserSceneAdapter).
+ *    persistProgress la ngoai le CO Y: flush cuoi cua App.vue's onUnmounted
+ *    chay SAU onBeforeUnmount(stopAll) - listener-driven callers thi da bi
+ *    go het roi nen khong co stale persist nao toi duoc do.
  */
 export interface UseAppLifecycleDeps {
   clock: { start: () => void; stop: () => void; nowSeconds: () => number }
-  /** Tương thích window.setInterval — inject để test kiểm soát timer. */
+  /** Tuong thich window.setInterval - inject de test kiem soat timer. */
   scheduleInterval: (callback: () => void, timeoutMs: number) => number
-  /** Tương thích window.clearInterval — inject để test assert. */
+  /** Tuong thich window.clearInterval - inject de test assert. */
   clearHandle: (handle: number) => void
   addEventListener: (type: string, handler: EventListenerOrEventListenerObject) => void
   removeEventListener: (type: string, handler: EventListenerOrEventListenerObject) => void
@@ -68,13 +68,13 @@ export interface UseAppLifecycleDeps {
   }
   gameManager: GameManager
   /**
-   * Callback tick mỗi giây (deltaSeconds, cultivate, bumpState... — phụ
-   * thuộc UI nên vẫn sống ở App.vue). bootGame() TỰ khởi động interval
-   * này khi boot thành công (xem bootGame() bên dưới) — composable đã sở
-   * hữu clock.start()/startAutosave() nên gộp luôn startTickLoop() vào
-   * cùng một chỗ, tránh lặp lại đúng lớp bug đã gây freeze toàn bộ game
-   * (extract composable nhưng quên rewire lời gọi startTickLoop() ở nơi
-   * gọi — xem freeze-rootcause.md 2026-09-06).
+   * Callback tick moi giay (deltaSeconds, cultivate, bumpState... - phu
+   * thuoc UI nen van song o App.vue). bootGame() TU khoi dong interval
+   * nay khi boot thanh cong (xem bootGame() ben duoi) - composable da so
+   * huu clock.start()/startAutosave() nen gop luon startTickLoop() vao
+   * cung mot cho, tranh lap lai dung lop bug da gay freeze toan bo game
+   * (extract composable nhung quen rewire loi goi startTickLoop() o noi
+   * goi - xem freeze-rootcause.md 2026-09-06).
    */
   tick: () => void
   offlineSummary: { show: (summary: { elapsedSeconds: number; cultivation: number }) => void }
@@ -113,7 +113,7 @@ export interface BootOutcome {
 
 export interface BootOptions {
   createNewCharacter: boolean
-  /** Chạy khi restore save ok — grant skill/init UI phụ thuộc App (offline modal đã show trong composable). */
+  /** Chay khi restore save ok - grant skill/init UI phu thuoc App (offline modal da show trong composable). */
   onRestoreOk?: (offline: { elapsedSeconds: number; cultivation: number }) => void
   /** Runs when a new character enters - the starter grants owned by App.
    *  Remote-authoritative CHARACTER_UNINITIALIZED carries the canonical
@@ -169,9 +169,9 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
   const AUTOSAVE_INTERVAL_MS = 15_000
 
-  // --- Event-bus handlers: đăng ký một lần, gỡ symmetric khi teardown ---
+  // --- Event-bus handlers: dang ky mot lan, go symmetric khi teardown ---
 
-  // Tinh hoa tuôn chảy (2026-08-30) — state machine essence stream.
+  // Tinh hoa tuon chay (2026-08-30) - state machine essence stream.
   let essenceEmitted = false
   let essenceArrivalSeen = false
   let lastEssenceEmitTime = 0
@@ -203,15 +203,15 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     void persistProgress()
   }
 
-  // --- Tick loop (App.vue đăng ký callback tick có phụ thuộc UI) ---
+  // --- Tick loop (App.vue dang ky callback tick co phu thuoc UI) ---
 
   let onTick: (() => void) | undefined
   let tickHandle: number | undefined
 
   /**
-   * Đăng ký callback tick. Gọi lại khi interval đã chạy là NO-OP —
-   * interval cũ KHÔNG bị đè (fix leak: trước đây setInterval gán thẳng
-   * tickHandle, interval trước đó thành rác chạy mãi mãi).
+   * Dang ky callback tick. Goi lai khi interval da chay la NO-OP -
+   * interval cu KHONG bi de (fix leak: truoc day setInterval gan thang
+   * tickHandle, interval truoc do thanh rac chay mai mai).
    */
   function startTickLoop(tick: () => void): void {
     if (tickHandle !== undefined || stopped) {
@@ -290,13 +290,13 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   // --- Persistence ---
 
   async function persistProgress(): Promise<void> {
-    // `stopped` CỐ Ý không nằm trong gate này: mọi caller do listener/interval
-    // điều khiển đã bị stopAll() gỡ (visibilitychange/pagehide off, autosave
-    // cleared), nên không còn stale caller nào tới được đây. Caller duy nhất
-    // còn lại sau stopAll là flush TẬN CÙNG chủ đích trong App.vue's
-    // onUnmounted — và nó BẮT BUỘC phải chạy: Vue gọi onBeforeUnmount(stopAll)
-    // TRƯỚC onUnmounted, nếu stopped chặn save thì "persist first so a
-    // development reload cannot roll the player back" là dead code
+    // `stopped` CO Y khong nam trong gate nay: moi caller do listener/interval
+    // dieu khien da bi stopAll() go (visibilitychange/pagehide off, autosave
+    // cleared), nen khong con stale caller nao toi duoc day. Caller duy nhat
+    // con lai sau stopAll la flush TAN CUNG chu dich trong App.vue's
+    // onUnmounted - va no BAT BUOC phai chay: Vue goi onBeforeUnmount(stopAll)
+    // TRUOC onUnmounted, neu stopped chan save thi "persist first so a
+    // development reload cannot roll the player back" la dead code
     // (review round 1 - ARCH-013/L04).
     if (persistenceSuppressed || entryStage.value !== 'game' || saveInFlight || !authority.canMutate()) {
       return
@@ -475,8 +475,8 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           unsupportedSaveNotice?.(unsupportedReason)
         }
 
-        // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài
-        // (>60s, tránh phiền khi refresh nhanh).
+        // Beta Phase 4 (muc XIV) - chi hien modal neu offline du dai
+        // (>60s, tranh phien khi refresh nhanh).
         if (offline.elapsedSeconds > 60) {
           offlineSummary.show({
             elapsedSeconds: offline.elapsedSeconds,
@@ -622,27 +622,27 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
       clock.start()
 
-      // Fix (2026-09-06) — bootGame() TỰ start tick loop thay vì nhờ
-      // caller nhớ gọi startTickLoop() sau khi boot xong. Đây chính là
-      // lời gọi từng bị rớt khi Task 5 extract inline boot logic của
-      // App.vue sang composable này (commit d6d9a1d) — kết quả:
-      // GameManager.update() không bao giờ chạy trong browser thật, toàn
-      // bộ game (combat/tu luyện/sản xuất...) đứng hình vô thời hạn dù
-      // 2651 unit test vẫn xanh (test gọi thẳng gameManager.tickOps.update(), bỏ
-      // qua đúng lớp wiring này). Gộp vào bootGame() — nơi đã sở hữu
-      // clock.start()/startAutosave() — để "extract composable, quên
-      // rewire" không còn khả năng lặp lại được nữa.
+      // Fix (2026-09-06) - bootGame() TU start tick loop thay vi nho
+      // caller nho goi startTickLoop() sau khi boot xong. Day chinh la
+      // loi goi tung bi rot khi Task 5 extract inline boot logic cua
+      // App.vue sang composable nay (commit d6d9a1d) - ket qua:
+      // GameManager.update() khong bao gio chay trong browser that, toan
+      // bo game (combat/tu luyen/san xuat...) dung hinh vo thoi han du
+      // 2651 unit test van xanh (test goi thang gameManager.tickOps.update(), bo
+      // qua dung lop wiring nay). Gop vao bootGame() - noi da so huu
+      // clock.start()/startAutosave() - de "extract composable, quen
+      // rewire" khong con kha nang lap lai duoc nua.
       startTickLoop(tick)
       boot.enterGame()
 
       return { status: 'entered' }
     } finally {
-      // Reset guard KỂ CẢ khi fail — boot lại (auth retry) vẫn chạy được.
+      // Reset guard KE CA khi fail - boot lai (auth retry) van chay duoc.
       bootInFlight = false
     }
   }
 
-  /** Reset-save flow: chặn autosave/save flush trước khi xoá save + reload. */
+  /** Reset-save flow: chan autosave/save flush truoc khi xoa save + reload. */
   function suppressPersistence(): void {
     persistenceSuppressed = true
     stopAll()
@@ -652,7 +652,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     return persistenceSuppressed
   }
 
-  // --- Essence stream state (tick đọc qua getters, không giữ state local) ---
+  // --- Essence stream state (tick doc qua getters, khong giu state local) ---
 
   function consumeEssenceArrival(): boolean {
     if (!essenceArrivalSeen) {
@@ -675,14 +675,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   }
 
   /**
-   * Teardown TERMINAL: gỡ mọi listener + interval VÀ vô hiệu mọi async
-   * continuation còn pending (boot generation bump — ARCH-013/L04). Sau
-   * stopAll không còn boot/timer/listener mới được đăng ký: composable
-   * này thuộc 1 mount, mount mới dựng instance mới. persistProgress() vẫn
-   * được phép — caller post-stop duy nhất là flush tận cùng trong App.vue's
-   * onUnmounted (beforeUnmount đã gỡ mọi listener-driven caller). Idempotent
-   * — gọi nhiều lần an toàn (guard `stopped` cho unsubscribe; clearHandle
-   * chỉ chạy khi handle còn tồn tại; generation cứ bump — inequality là đủ).
+   * Teardown TERMINAL: go moi listener + interval VA vo hieu moi async
+   * continuation con pending (boot generation bump - ARCH-013/L04). Sau
+   * stopAll khong con boot/timer/listener moi duoc dang ky: composable
+   * nay thuoc 1 mount, mount moi dung instance moi. persistProgress() van
+   * duoc phep - caller post-stop duy nhat la flush tan cung trong App.vue's
+   * onUnmounted (beforeUnmount da go moi listener-driven caller). Idempotent
+   * - goi nhieu lan an toan (guard `stopped` cho unsubscribe; clearHandle
+   * chi chay khi handle con ton tai; generation cu bump - inequality la du).
    */
   function stopAll(): void {
     lifecycleGeneration += 1
@@ -707,7 +707,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     }
   }
 
-  /** Hook Vue — tự teardown khi component unmount (HMR/reload an toàn). */
+  /** Hook Vue - tu teardown khi component unmount (HMR/reload an toan). */
   onBeforeUnmount(stopAll)
 
   return {
@@ -726,7 +726,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     consumeEssenceArrival,
     isEssenceHeadlessTimedOut,
     clearEssenceEmitted,
-    /** Test/mount-tracing — handle hiện hành (undefined = không interval). */
+    /** Test/mount-tracing - handle hien hanh (undefined = khong interval). */
     getTickHandle: () => tickHandle,
     getAutosaveHandle: () => autosaveHandle,
   }

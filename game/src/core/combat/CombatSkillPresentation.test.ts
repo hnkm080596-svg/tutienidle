@@ -6,7 +6,7 @@ import type { TurnBattle, TurnBattleParticipant } from '../battle/turn/TurnBattl
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-// Slice 7 plan Task 4 — rewrite CombatSkillPresentation against the REAL
+// Slice 7 plan Task 4 - rewrite CombatSkillPresentation against the REAL
 // TurnBattle shape (the old real-time implementation was dead code since
 // the Slice 6 cutover: it read fields that never existed on
 // TurnBattleParticipant and drove the 6 pre-existing test failures).
@@ -140,8 +140,8 @@ describe('buildTurnSkillPresentation (Slice 7 Task 4)', () => {
   })
 })
 
-// Bảng 9.5 #5 (2026-09-07) — display metadata (name/description) đi kèm
-// presentation entry, lookup theo skillId từ TurnSkillDisplayMeta.
+// Bang 9.5 #5 (2026-09-07) - display metadata (name/description) di kem
+// presentation entry, lookup theo skillId tu TurnSkillDisplayMeta.
 describe('buildTurnSkillPresentation — skillName/skillDescription (9.5 #5)', () => {
   it('id có trong TurnSkillDisplayMeta → entry mang name/description thật', () => {
     const b = battle()

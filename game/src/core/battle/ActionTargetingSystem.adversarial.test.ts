@@ -3,7 +3,7 @@ import { areaFor } from './ActionTargetingSystem'
 import { targetingForSkill } from './CombatAction'
 import { GRID_ROW_COUNT, GRID_COLUMN_COUNT } from './BattleGrid'
 
-// QA adversarial probes (2026-09-04 quick review) — AOE Shape Extension.
+// QA adversarial probes (2026-09-04 quick review) - AOE Shape Extension.
 // The collectAffected probes (INV-AOE-1/2/3/5) retired with that helper in
 // Mission G; the live shape-filter consumer is TurnSkillAction.collectTurnTargets.
 

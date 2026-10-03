@@ -20,27 +20,27 @@
 //   - Strong synth engines (FMSynth, AMSynth, MetalSynth, MembraneSynth)
 //     produce quality cultivation-genre sounds that plain oscillators
 //     cannot (gong strikes, wooden bells, ringing with natural tails).
-//   - Built-in Filter + Reverb — lowpass cuts harsh harmonics, reverb
+//   - Built-in Filter + Reverb - lowpass cuts harsh harmonics, reverb
 //     adds the "ethereal" tail.
 //   - 0 asset bundles, 0 external audio files, 0 downloads.
 //
 // API:
-//   - getInstance()       → singleton
-//   - unlock()            → calls Tone.start() (autoplay policy); idempotent
+//   - getInstance()       -> singleton
+//   - unlock()            -> calls Tone.start() (autoplay policy); idempotent
 //   - playCue(id)         -> plays one manifest cue (per-id cooldown anti-spam)
 //   - playMusic/stopMusic/crossfadeMusic -> the single music slot
-//   - setEnabled(false)   → mutes everything
-//   - setMasterVolume(v)  → 0..1
+//   - setEnabled(false)   -> mutes everything
+//   - setMasterVolume(v)  -> 0..1
 //   - setChannelVolume(ch,v) -> per-bus volume (music/sfx/ui)
 //
 // Bug-fix pass 2026-09-06 (systematic debugging):
-//   B1  NoiseSynth.triggerAttackRelease does NOT take a note — signature is
+//   B1  NoiseSynth.triggerAttackRelease does NOT take a note - signature is
 //       (duration, time?, velocity?). Old code passed recipe.note ("16n")
-//       as arg 1 → duration shifted wrong. Now split per engine.
+//       as arg 1 -> duration shifted wrong. Now split per engine.
 //   B2  Reverb needs await .ready (offline IR generation) before the first
-//       sound; old code set unlocked synchronously → first sound had no
-//       tail. Now unlock() async-chains: start → init → ready.
-//   B3  Combat events (hit/damage) fire many times per tick → same sound
+//       sound; old code set unlocked synchronously -> first sound had no
+//       tail. Now unlock() async-chains: start -> init -> ready.
+//   B3  Combat events (hit/damage) fire many times per tick -> same sound
 //       id stacking into a "noise wall". Now per-id 60ms cooldown.
 //   B4  Suspended tab (autoplay policy re-engaged) -> playback went silent.
 //       Now playback checks ctx.state and resume()s when suspended.
@@ -61,14 +61,14 @@ import { resolveAudioCue, type AudioCueDef, type SynthSoundId } from './AudioCue
 
 export type { SynthSoundId }
 
-// Recipe per sound — engine kind + note + duration.
+// Recipe per sound - engine kind + note + duration.
 type SynthEngine = 'metal' | 'fm' | 'am' | 'membrane' | 'noise'
 
 interface SoundRecipe {
   engine: SynthEngine
   // Tone.js note notation: "C4", "A3", etc. Ignored for engine 'noise'.
   note: string
-  duration: string // "8n" "16n" "0.05" — Tone.js time notation
+  duration: string // "8n" "16n" "0.05" - Tone.js time notation
   // velocity 0..1 (default 1)
   velocity?: number
   params?: {
@@ -84,7 +84,7 @@ interface SoundRecipe {
 }
 
 export const SOUND_LIBRARY: Record<SynthSoundId, SoundRecipe> = {
-  // UI — cultivation-genre gong taps: MetalSynth, low pitch, short decay.
+  // UI - cultivation-genre gong taps: MetalSynth, low pitch, short decay.
   uiClick: {
     engine: 'metal',
     note: 'A3',
@@ -113,7 +113,7 @@ export const SOUND_LIBRARY: Record<SynthSoundId, SoundRecipe> = {
     },
   },
 
-  // Toast — cultivation bells: FMSynth with high harmonicity (3-5).
+  // Toast - cultivation bells: FMSynth with high harmonicity (3-5).
   toastLoot: {
     engine: 'fm',
     note: 'E5',
@@ -157,7 +157,7 @@ export const SOUND_LIBRARY: Record<SynthSoundId, SoundRecipe> = {
     params: { harmonicity: 3, modulationIndex: 5, envelope: { attack: 0.005, decay: 0.15, release: 0.2 } },
   },
 
-  // Combat — quick action sounds
+  // Combat - quick action sounds
   combatAttack: {
     engine: 'noise',
     note: '32n',
@@ -209,7 +209,7 @@ export const SOUND_LIBRARY: Record<SynthSoundId, SoundRecipe> = {
     },
   },
 
-  // Battle — horn/fanfare (low bell + long tail)
+  // Battle - horn/fanfare (low bell + long tail)
   battleStart: {
     engine: 'fm',
     note: 'A3',
@@ -237,7 +237,7 @@ export const SOUND_LIBRARY: Record<SynthSoundId, SoundRecipe> = {
 
 /**
  * Per-id cooldown (ms). Combat events (hit/damage) can fire many times
- * per tick — stacking the same sound makes a "noise wall". 60ms merges
+ * per tick - stacking the same sound makes a "noise wall". 60ms merges
  * same-frame events while keeping distinct hits audible.
  */
 const MIN_GAP_MS = 60
@@ -307,7 +307,7 @@ const DECODE_RETRY_LIMIT = 3
 class AudioManagerImpl {
   private enabled = true
   private masterVolume = 0.7
-  /** 'idle' | 'pending' | 'ready' — unlock() only runs while idle; unlocked ≡ (state==='ready'). */
+  /** 'idle' | 'pending' | 'ready' - unlock() only runs while idle; unlocked == (state==='ready'). */
   private unlockState: 'idle' | 'pending' | 'ready' = 'idle'
 
   private synthCache = new Map<string, AnySynth>() // key `${channel}:${id}` - a recipe can back cues on different channels
@@ -346,9 +346,9 @@ class AudioManagerImpl {
   }
 
   /**
-   * Generation counter — incremented on every dispose(). unlock()'s async
+   * Generation counter - incremented on every dispose(). unlock()'s async
    * continuation compares the generation captured at start vs after await:
-   * a mismatch means the instance was disposed mid-flight → the chain just
+   * a mismatch means the instance was disposed mid-flight -> the chain just
    * built is GARBAGE, dispose it immediately and do NOT set 'ready'
    * (dispose-vs-pending-unlock race guard).
    */
@@ -388,7 +388,7 @@ class AudioManagerImpl {
         try {
           await this.buildChain()
           // Race guard: if dispose() ran while buildChain awaited (gen
-          // bumped), the chain just built is GARBAGE — dispose now, do NOT
+          // bumped), the chain just built is GARBAGE - dispose now, do NOT
           // set 'ready' on a dead instance.
           if (this.generation !== gen) {
             this.disposeChain()
@@ -407,7 +407,7 @@ class AudioManagerImpl {
           }
         } catch {
           // B5: dispose the partial chain (e.g. Reverb threw after
-          // Gain+Filter were created) — no leaked nodes.
+          // Gain+Filter were created) - no leaked nodes.
           this.disposeChain()
           // B6: back to idle so the user can retry (unless disposed).
           if (this.generation === gen) {
@@ -416,7 +416,7 @@ class AudioManagerImpl {
         }
       },
       () => {
-        // Tone.start() rejected (e.g. no user gesture) — allow retry.
+        // Tone.start() rejected (e.g. no user gesture) - allow retry.
         if (this.generation === gen) {
           this.unlockState = 'idle'
         }
@@ -425,10 +425,10 @@ class AudioManagerImpl {
   }
 
   /**
-   * Builds the Gain → Filter → Reverb chain. Each node is assigned to its
+   * Builds the Gain -> Filter -> Reverb chain. Each node is assigned to its
    * field right after construction so a later throw still lets
    * disposeChain() clean up the earlier nodes (B5). Awaits Reverb.ready
-   * (B2 — offline IR generation).
+   * (B2 - offline IR generation).
    */
   private async buildChain(): Promise<void> {
     const master = new Tone.Gain(this.masterVolume).toDestination()
@@ -549,7 +549,7 @@ class AudioManagerImpl {
     if (now - last < gap) return
 
     try {
-      // B4: suspended tab → resume before playing (no throw on failure).
+      // B4: suspended tab -> resume before playing (no throw on failure).
       const ctx = Tone.getContext()
       if (ctx.state === 'suspended') {
         // resume() can reject (e.g. context closed) - swallow so no
@@ -599,8 +599,8 @@ class AudioManagerImpl {
   }
 
   /**
-   * Picks a decoded src for a cue. `''` → undefined; string → itself when
-   * decoded; string[] → round-robin across the decoded subset.
+   * Picks a decoded src for a cue. `''` -> undefined; string -> itself when
+   * decoded; string[] -> round-robin across the decoded subset.
    */
   private pickDecodedSrc(id: string, src: AudioCueDef['src']): string | undefined {
     if (src === '') return undefined
@@ -677,7 +677,7 @@ class AudioManagerImpl {
   }
 
   /**
-   * Fades the music slot out and lets the player's onstop dispose it —
+   * Fades the music slot out and lets the player's onstop dispose it -
    * disposing immediately would cut the fade. Falls back to immediate
    * dispose when stop() throws (player never started).
    */
@@ -799,7 +799,7 @@ class AudioManagerImpl {
   /**
    * Ducks the music bus by `amount` (0..1) for `durationMs`. Max-active
    * semantics: a new duck raises/extends the active duck, never sums; the
-   * bus restores to channel volume once the last window expires (spec §2).
+   * bus restores to channel volume once the last window expires (spec sec2).
    */
   applyDuck(amount: number, durationMs: number): void {
     const now = Date.now()
@@ -931,7 +931,7 @@ class AudioManagerImpl {
 
   /**
    * B1: NoiseSynth.triggerAttackRelease signature is (duration, time?,
-   * velocity?) — NO note. Monophonic synths (metal/fm/am/membrane) take
+   * velocity?) - NO note. Monophonic synths (metal/fm/am/membrane) take
    * (note, duration, time?, velocity?). Wrong args shift the duration.
    */
   private triggerSynth(synth: AnySynth, recipe: SoundRecipe): void {
@@ -964,14 +964,14 @@ class AudioManagerImpl {
 
     const synth = createSynth(recipe)
 
-    // Route: synth → channelGain → reverb → lowpass → master → destination
+    // Route: synth -> channelGain -> reverb -> lowpass -> master -> destination
     synth.connect(bus)
 
     this.synthCache.set(cacheKey, synth)
     return synth
   }
 
-  /** Disposes all Tone nodes + caches — called on reset/test teardown. */
+  /** Disposes all Tone nodes + caches - called on reset/test teardown. */
   dispose(): void {
     // Bump generation BEFORE cleanup: any pending unlock() sees the gen
     // mismatch in its continuation and self-disposes the garbage chain

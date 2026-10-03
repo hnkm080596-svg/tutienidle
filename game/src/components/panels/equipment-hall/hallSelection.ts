@@ -1,7 +1,7 @@
-// Task 19 (item-grade-quality-rework, rework P6) — typed provide/inject
+// Task 19 (item-grade-quality-rework, rework P6) - typed provide/inject
 // key for the equipped-instance selection shared ONLY by Wash/Refine tabs
 // (Enhance selects by SLOT, not instance; Dissolve has its own independent
-// multi-select — neither needs this). Shell provides it; children inject.
+// multi-select - neither needs this). Shell provides it; children inject.
 import type { InjectionKey, Ref } from 'vue'
 
 export interface HallSelection {

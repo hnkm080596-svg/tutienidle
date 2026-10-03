@@ -2,10 +2,10 @@ import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
 
-// Shape dùng chung cho mọi bag-section (tách từ BagGrid.vue, xem
-// composables/useBagPagination.ts) — mỗi section tự map dữ liệu bag
-// riêng (equipment/material/pill/talisman/formation) về shape này để
-// SlotView render đồng nhất.
+// Shape dung chung cho moi bag-section (tach tu BagGrid.vue, xem
+// composables/useBagPagination.ts) - moi section tu map du lieu bag
+// rieng (equipment/material/pill/talisman/formation) ve shape nay de
+// SlotView render dong nhat.
 export interface BagCell {
   key: string
 
@@ -22,31 +22,31 @@ export interface BagCell {
 
   selected?: boolean
 
-  // Rank chuẩn hoá 1-9 (xem core/profession/slotRank.ts) —
-  // truyền thẳng vào SlotView.vue's prop `equipmentQualityRank`/`rarityRank`.
+  // Rank chuan hoa 1-9 (xem core/profession/slotRank.ts) -
+  // truyen thang vao SlotView.vue's prop `equipmentQualityRank`/`rarityRank`.
   equipmentQualityRank?: number
 
   rarityRank?: number
 
-  // Trần của thang `rarityRank` — CHỈ MaterialBagSection.vue truyền
-  // (10, vì material feed professionRankOf 1-10 vào rarityRank thay vì
-  // itemQualityRank 1-5); mọi section khác bỏ trống = mặc định 5 ở
+  // Tran cua thang `rarityRank` - CHI MaterialBagSection.vue truyen
+  // (10, vi material feed professionRankOf 1-10 vao rarityRank thay vi
+  // itemQualityRank 1-5); moi section khac bo trong = mac dinh 5 o
   // SlotView.vue (Fix 1, final review item-grade-quality-rework).
   rarityRankScale?: 5 | 10
 
-  // Marker/comparison (equipped, upgrade/downgrade) — chỉ Equipment
-  // bag section dùng, xem SlotView.vue's prop `state`.
+  // Marker/comparison (equipped, upgrade/downgrade) - chi Equipment
+  // bag section dung, xem SlotView.vue's prop `state`.
   state?: SlotPresentationState
 
   onClick?: () => void
 
-  // Tooltip có cấu trúc (2026-08-15) — ưu tiên hơn label/description
-  // nếu có, xem SlotView.vue's prop `tooltip`.
+  // Tooltip co cau truc (2026-08-15) - uu tien hon label/description
+  // neu co, xem SlotView.vue's prop `tooltip`.
   tooltip?: TooltipContent
 
-  // Ảnh riêng của item — đọc từ field `icon` khai NGAY TRÊN data item
+  // Anh rieng cua item - doc tu field `icon` khai NGAY TREN data item
   // (Equipment/Pill/Talisman/Formation/Technique, xem core/assets/
-  // AssetPaths.ts's ghi chú), truyền thẳng vào SlotView.vue's prop
+  // AssetPaths.ts's ghi chu), truyen thang vao SlotView.vue's prop
   // `icon`.
   icon?: string
 

@@ -13,10 +13,10 @@ import { ITEM_QUALITY_ORDER } from './ItemQuality'
 import { ITEM_QUALITY_FORGE_USES } from '../equipment/ItemQualityBalance'
 import { affixes } from '@/data/equipment/affixes'
 
-// Roll logic phẩm chất/độ hiếm sống ở EquipmentSystem (thư mục
-// equipment), không phải src/core/item/ — src/core/item chỉ giữ type
-// chung (Item/ItemGrade/ItemRegistry). Test này phủ đúng phần roll
-// quality/rarity/forgePotential mà task yêu cầu.
+// Roll logic pham chat/do hiem song o EquipmentSystem (thu muc
+// equipment), khong phai src/core/item/ - src/core/item chi giu type
+// chung (Item/ItemGrade/ItemRegistry). Test nay phu dung phan roll
+// quality/rarity/forgePotential ma task yeu cau.
 
 const TEMPLATE: Equipment = {
   id: 'item_roll_test_sword',
@@ -84,7 +84,7 @@ describe('Item roll — quality bridge theo roll rarity cũ', () => {
     const hoang = counts.get('hoang') ?? 0
     const tien = counts.get('tien') ?? 0
 
-    // Trọng số 55/100 vs 1/100 — biên đủ rộng để không flaky.
+    // Trong so 55/100 vs 1/100 - bien du rong de khong flaky.
     expect(hoang).toBeGreaterThan(2000 * 0.35)
     expect(tien).toBeLessThan(2000 * 0.05)
   })

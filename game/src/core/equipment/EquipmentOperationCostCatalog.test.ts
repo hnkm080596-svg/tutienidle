@@ -1,6 +1,6 @@
-// EquipmentOperationCostCatalog (2026-08-25, plan §7): sau rework chỉ
-// còn 'enhance' dùng cost catalog — Tẩy/Tinh/Hóa có cost riêng theo
-// RefinementBalance; data-integrity cho material id mới.
+// EquipmentOperationCostCatalog (2026-08-25, plan sec7): sau rework chi
+// con 'enhance' dung cost catalog - Tay/Tinh/Hoa co cost rieng theo
+// RefinementBalance; data-integrity cho material id moi.
 import { describe, expect, it } from 'vitest'
 import {
   createDefaultEquipmentOperationCostCatalog,

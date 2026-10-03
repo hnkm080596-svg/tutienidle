@@ -1,11 +1,11 @@
 ﻿// @vitest-environment jsdom
 //
-// Reward stream integration (player-body-anchor-reward-gourd-plan Â§9):
-// - Äiá»ƒm phÃ¡t theo priority chest-anchor â†’ screen cache â†’ grid cache.
-// - Äiá»ƒm hÃºt LUÃ”N lÃ  miá»‡ng há»“ lÃ´, KHÃ”NG pháº£i Player â€” teleport Player
-//   giá»¯a tween khÃ´ng Ä‘á»•i Ä‘Ã­ch.
-// - Pulse há»“ lÃ´ Ä‘Ãºng Má»˜T nhá»‹p má»—i reward event.
-// - clearSceneState dá»n sáº¡ch gourd + caches (khÃ´ng rÃ² rá»‰ qua shutdown).
+// Reward stream integration (player-body-anchor-reward-gourd-plan sec9):
+// - Diem phat theo priority chest-anchor -> screen cache -> grid cache.
+// - Diem hut LUON la mieng ho lo, KHONG phai Player - teleport Player
+//   giua tween khong doi dich.
+// - Pulse ho lo dung MOT nhIp moi reward event.
+// - clearSceneState don sach gourd + caches (khong ro ri qua shutdown).
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
@@ -87,7 +87,7 @@ function createScene() {
   scene.playerSpawnHandle = undefined
   scene.entityVisual = new CombatEntityVisualLifecycle(scene as unknown as CombatScene)
 
-  // Task 9 fix round (Finding 1) — clearSceneState() now also tears down the
+  // Task 9 fix round (Finding 1) - clearSceneState() now also tears down the
   // party countdown telegraph; bare-mode scenes don't get the class-field
   // initializers construct mode gives, so this file needs the same explicit
   // stub already given to spawnVfxHandles/entityVisual above.
@@ -166,7 +166,7 @@ describe('CombatScene â€” reward stream Ä‘iá»ƒm phÃ¡t (plan Â§7.1
   it('má»©c 1: enemy dÃ¹ng anchor thÃ¢n trung tÃ­nh tá»« bounds sprite, KHÃ”NG mÆ°á»£n anchor Player', () => {
     const { scene } = createScene()
 
-    // rect(500,400) h=64 â†’ neutral y=0.4: start = (500, 400+(0.4-0.5)*64).
+    // rect(500,400) h=64 -> neutral y=0.4: start = (500, 400+(0.4-0.5)*64).
     scene.sprites.set('enemy_1', makeEntitySprite(500, 400))
 
     const point = scene.resolveRewardSourcePoint('enemy_1')
@@ -184,7 +184,7 @@ describe('CombatScene â€” reward stream Ä‘iá»ƒm phÃ¡t (plan Â§7.1
 
     const before = scene.resolveRewardSourcePoint('enemy_1')!
 
-    // Äá»•i Player sang profile khÃ¡c â€” enemy particle pháº£i giá»¯ nguyÃªn.
+    // Doi Player sang profile khac - enemy particle phai giu nguyen.
     scene.playerProfile = PLAYER_VISUAL_PROFILES.phap_tu
     scene.playerProfileId = 'phap_tu'
 
@@ -216,7 +216,7 @@ describe('CombatScene â€” reward stream Ä‘iá»ƒm phÃ¡t (plan Â§7.1
 
     scene.lastKnownGridPositions.set('enemy_1', { row: 2, column: 3 })
 
-    // ChÆ°a cÃ³ projection â†’ khÃ´ng táº¡o Ä‘Æ°á»£c nguá»“n (bail an toÃ n).
+    // Chua co projection -> khong tao duoc nguon (bail an toan).
     expect(scene.resolveRewardSourcePoint('enemy_1')).toBeUndefined()
 
     scene.projection = {
@@ -258,13 +258,13 @@ describe('CombatScene â€” reward stream hÃºt vá» há»“ lÃ´ (plan
 
     const state = flightTween!.targets as { progress: number }
 
-    // Player "teleport" tá»›i vá»‹ trÃ­ khÃ¡c giá»¯a lÃºc bay.
+    // Player "teleport" tOi vI tri khac giua luc bay.
     const playerSprite = scene.sprites.get('player')
 
     playerSprite.rect.x = 50
     playerSprite.rect.y = 60
 
-    // Cháº¡y onUpdate tá»›i cuá»‘i quá»¹ Ä‘áº¡o.
+    // Chay onUpdate tOi cuoi quy dao.
     state.progress = 1
 
     ;(flightTween!.onUpdate as () => void)()
@@ -313,7 +313,7 @@ describe('CombatScene â€” essence stream (2026-08-30, tinh hoa tuÃ´n chá
 
     scene.onRewardParticle(ESSENCE_EVENT)
 
-    // Gourd pulse chá»‰ dÃ¹ng cho item/insight/currency â€” essence khÃ´ng pulse.
+    // Gourd pulse chi dung cho item/insight/currency - essence khong pulse.
     expect(delayedCalls).toHaveLength(0)
   })
 
@@ -335,7 +335,7 @@ describe('CombatScene â€” essence stream (2026-08-30, tinh hoa tuÃ´n chá
 
     const state = flightTween!.targets as { progress: number }
 
-    // Player "teleport" giá»¯a lÃºc bay â€” Ä‘Ã­ch live-resolve váº«n theo player.
+    // Player "teleport" giua luc bay - dich live-resolve van theo player.
     const playerSprite = scene.sprites.get('player')
 
     playerSprite.rect.x = 50

@@ -1,5 +1,5 @@
 /**
- * Mission C Task 9 guard (spec C4, audit T5-44) — the battle orchestrator
+ * Mission C Task 9 guard (spec C4, audit T5-44) - the battle orchestrator
  * never dispatches on cultivation-path identity. All path predicates and
  * path-module imports funnel through the CultivationPathRuntime boundary
  * (core/player/CultivationPathRegistry is the single dispatch site, per

@@ -1,8 +1,8 @@
-// CombatGridViewHost (Battlefield Slot spec, 2026-09-06) — bề mặt API mà
-// CombatGridView cần từ scene chủ của nó. Tách ra để CombatScene (combat
-// thật) VÀ TranPhapCombatPreviewScene (panel Trận Pháp) có thể dùng chung
-// đúng 1 class CombatGridView thay vì mỗi bên tự viết lại logic sprite/
-// animation — xem spec §1.
+// CombatGridViewHost (Battlefield Slot spec, 2026-09-06) - be mat API ma
+// CombatGridView can tu scene chu cua no. Tach ra de CombatScene (combat
+// that) VA TranPhapCombatPreviewScene (panel Tran Phap) co the dung chung
+// dung 1 class CombatGridView thay vi moi ben tu viet lai logic sprite/
+// animation - xem spec sec1.
 import type Phaser from 'phaser'
 import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import type { EntitySprite } from './combatTypes'
@@ -11,7 +11,7 @@ export interface CombatGridViewHost {
   readonly add: Phaser.GameObjects.GameObjectFactory
   readonly physics: Phaser.Physics.Arcade.ArcadePhysics
   readonly textures: Phaser.Textures.TextureManager
-  // resetVisual() only — Phaser.Scene subclass đã có sẵn `tweens`.
+  // resetVisual() only - Phaser.Scene subclass da co san `tweens`.
   readonly tweens: Phaser.Tweens.TweenManager
 
   readonly isPerspective: boolean
@@ -27,9 +27,9 @@ export interface CombatGridViewHost {
   // 2026-09-29): undefined resolves the canonical armed default.
   readonly playerArmed?: boolean
   readonly sprites: Map<string, EntitySprite>
-  // resetVisual() only — host không cần interpolate thật vẫn thoả type
-  // bằng 1 Map rỗng (xem TranPhapCombatPreviewScene, Task 4).
-  // S3 (AR-29): read-only view — hosts must not mutate interpolation state.
+  // resetVisual() only - host khong can interpolate that van thoa type
+  // bang 1 Map rong (xem TranPhapCombatPreviewScene, Task 4).
+  // S3 (AR-29): read-only view - hosts must not mutate interpolation state.
   readonly interpolations: ReadonlyMap<string, unknown>
   entityFootMinY: number
   entityFootMaxY: number

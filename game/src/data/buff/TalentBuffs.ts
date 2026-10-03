@@ -4,12 +4,12 @@ import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
 
 export const TALENT_BUFFS: BuffDefinition[] = [
   // --- Talent v4 combat (spec 2026-09-03-talent-catalog-v4-design.md
-  // §4.1) — buff "bùng nổ" của nhịp tích → ngưỡng → bùng (E1
-  // convert-on-max + passiveConvertsTo). Số liệu first-pass, chờ
-  // playtest (spec §5). ---
+  // sec4.1) - buff "bung no" cua nhip tich -> nguong -> bung (E1
+  // convert-on-max + passiveConvertsTo). So lieu first-pass, cho
+  // playtest (spec sec5). ---
 
-  // Kiếm Quang — Kiếm Vực 8s: đòn đánh gần như chắc chắn chí mạng
-  // (criticalRate flat lớn vượt trần mọi avoidance hợp lý).
+  // Kiem Quang - Kiem Vuc 8s: don danh gan nhu chac chan chi mang
+  // (criticalRate flat lon vuot tran moi avoidance hop ly).
   {
     id: 'kiem_vuc',
     name: 'Kiếm Vực',
@@ -22,7 +22,7 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     statModifiers: [{ stat: 'criticalRate', flat: 1 }],
     dispellable: false,
   },
-  // Trọng Kích — bùng nổ chuỗi crit: +30% sát thương cuối 8s.
+  // Trong Kich - bung no chuoi crit: +30% sat thuong cuoi 8s.
   {
     id: 'trong_kich_burst',
     name: 'Trọng Kích Bùng Nổ',
@@ -38,7 +38,7 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     statModifiers: [{ stat: 'finalDamagePercent', flat: 0.3 }],
     dispellable: false,
   },
-  // Thạch Giáp — Thạch Nham 5s: −50% sát thương nhận vào.
+  // Thach Giap - Thach Nham 5s: -50% sat thuong nhan vao.
   {
     id: 'thach_nham',
     name: 'Thạch Nham',
@@ -51,7 +51,7 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     statModifiers: [{ stat: 'finalDamageReductionPercent', flat: 0.5 }],
     dispellable: false,
   },
-  // Vô Ảnh — Sát Na 6s: +30% chí mạng + 20% tốc đánh.
+  // Vo Anh - Sat Na 6s: +30% chi mang + 20% toc danh.
   {
     id: 'sat_na',
     name: 'Sát Na',
@@ -67,8 +67,8 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     ],
     dispellable: false,
   },
-  // Bất Tử Thể v4 — Tử Sinh Ngộ 10s sau khi guard cứu sống:
-  // +30% sát thương cuối + 20% né chí mạng.
+  // Bat Tu The v4 - Tu Sinh Ngo 10s sau khi guard cuu song:
+  // +30% sat thuong cuoi + 20% ne chi mang.
   {
     id: 'tu_sinh_ngo',
     name: 'Tử Sinh Ngộ',

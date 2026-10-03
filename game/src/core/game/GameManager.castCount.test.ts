@@ -8,7 +8,7 @@ import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
 import { getCastLeveledSkillLevel } from '../skill/CastLeveling'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 
-// 9.5 #9 — production wiring regression: turn-engine casts of the
+// 9.5 #9 - production wiring regression: turn-engine casts of the
 // primary player feed player.skillCastCounts + the canonical Core Node
 // level (nodeLevels[core_<id>] - M-QI-05; NodeSystem `skillCastCount`
 // prerequisites + the offer gates read it) through
@@ -52,7 +52,7 @@ describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
 
     gameManager.startBattleWithPlayer(player, makeDummyEnemy())
 
-    // intro + countdown + vài lượt fighting — tram là basic của sword.
+    // intro + countdown + vai luot fighting - tram la basic cua sword.
     // Advance until the player's first cast lands (gauge fill depends on
     // attackSpeed; the cap keeps a broken wiring from hanging the test).
     for (let i = 0; i < 200 && !player.skillCastCounts?.['tram']; i++) {
@@ -66,8 +66,8 @@ describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
     expect(tram.totalExperience).toBe(tramCasts)
     expect(getSkillCoreLevel(player, 'tram')).toBe(getCastLeveledSkillLevel('tram', tramCasts))
 
-    // Chỉ cast của player chính được mirror — enemy 'generic_physical'
-    // (và mọi actor khác) không bao giờ ghi vào đây.
+    // Chi cast cua player chinh duoc mirror - enemy 'generic_physical'
+    // (va moi actor khac) khong bao gio ghi vao day.
     expect(Object.keys(player.skillCastCounts ?? {})).toEqual(['tram'])
   })
 })

@@ -1,14 +1,14 @@
 /**
- * Guard (V4) — a Phaser.Game is constructed in exactly one place.
+ * Guard (V4) - a Phaser.Game is constructed in exactly one place.
  *
  * Spec: docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md
- * §5 and §7.
+ * sec5 and sec7.
  *
  * Two shells used to hand-roll construction, dynamic import, resize
  * observation, teardown and error handling, in two different bodies of code.
- * Neither was wrong — but under §2 a static shell hosting a dynamic region is
+ * Neither was wrong - but under sec2 a static shell hosting a dynamic region is
  * the STANDARD composition, so region three and region four would each have
- * been another copy, and Mission 0 §13 warns that reusing a renderer does not
+ * been another copy, and Mission 0 sec13 warns that reusing a renderer does not
  * make a hosting lifecycle correct.
  *
  * Scope limit: source-shaped. A construction through an aliased constructor
@@ -29,12 +29,12 @@ const CONSTRUCTS_GAME = /\bnew\s+(?:\w+\s*\.\s*)?Game\s*\(/
 
 /**
  * Comments removed. Both shells
- * TALK about `new Phaser.Game()` in their comments — PhaserCanvas.vue and
- * AssetLoaderScene.ts each describe the bootstrap they take part in — and a
+ * TALK about `new Phaser.Game()` in their comments - PhaserCanvas.vue and
+ * AssetLoaderScene.ts each describe the bootstrap they take part in - and a
  * guard that cannot tell prose from code reports the wrong two files and
  * teaches everyone to ignore it. String literals are deliberately KEPT: the
  * import-path check below reads them, and stripping them made that check
- * silently unfalsifiable — caught by probing it.
+ * silently unfalsifiable - caught by probing it.
  */
 function code(text: string): string {
   return text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')

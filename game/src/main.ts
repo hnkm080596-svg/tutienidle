@@ -17,7 +17,7 @@ import {
 import { LocalBundleCrashReporter } from './services/diagnostics/CrashReporter'
 import type { DiagnosticEvent } from './shared/diagnostics/DiagnosticEvent'
 
-// WS8 — áp UI scale người chơi chọn TRƯỚC mount để không nhấp nháy font.
+// WS8 - ap UI scale nguoi choi chon TRUOC mount de khong nhap nhay font.
 initUiScale()
 // Saved locale applies before mount - no VI flash before hydration.
 initLocale()
@@ -58,13 +58,13 @@ app.use(pinia)
 app.use(i18n)
 app.directive('tooltip', vTooltip)
 
-// Beta Phase 4 (Global Error Boundary, mục XVIII) — bắt lỗi NGOÀI
-// vòng render component (event handler, timer, promise reject không
-// await...). Lỗi TRONG render/setup/watcher của cây component con bắt
-// riêng qua ErrorBoundary.vue's onErrorCaptured(). Truyền thẳng
-// instance `pinia` (không gọi useErrorStore() không tham số) vì
-// errorHandler chạy NGOÀI context setup() của bất kỳ component nào —
-// không có "active pinia" ngầm định để dựa vào.
+// Beta Phase 4 (Global Error Boundary, muc XVIII) - bat loi NGOAI
+// vong render component (event handler, timer, promise reject khong
+// await...). Loi TRONG render/setup/watcher cua cay component con bat
+// rieng qua ErrorBoundary.vue's onErrorCaptured(). Truyen thang
+// instance `pinia` (khong goi useErrorStore() khong tham so) vi
+// errorHandler chay NGOAI context setup() cua bat ky component nao -
+// khong co "active pinia" ngam dinh de dua vao.
 app.config.errorHandler = err => {
   useErrorStore(pinia).report(err instanceof Error ? err.message : String(err), {
     error: err,

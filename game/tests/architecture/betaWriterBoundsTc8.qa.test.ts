@@ -901,7 +901,7 @@ describe('F-TC9-4: cultivationPerSecond derived-snapshot bound', () => {
   })
 })
 
-// ==================== F-A11-x — authority-seam coverage bounds (wave 3) ====================
+// ==================== F-A11-x - authority-seam coverage bounds (wave 3) ====================
 
 describe('F-A11-1: cultivationOvercharge requires the bank talent', () => {
   it('a positive overcharge with no overflow-bank talent is rejected', () => {

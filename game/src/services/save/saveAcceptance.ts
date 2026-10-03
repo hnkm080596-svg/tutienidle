@@ -317,7 +317,7 @@ let staticCatalogs: SaveAcceptanceCatalogs | undefined
 
 /**
  * Catalog id lookups built from the same data arrays App.vue registers
- * into the live registries at boot — the remote gate's acceptance
+ * into the live registries at boot - the remote gate's acceptance
  * surface must mirror the boot gate's, so a poisoned remote payload is
  * classified 'no remote' for EVERY preflight class, not just the ones
  * that need no lookup. Lazy singleton: read-only id sets.

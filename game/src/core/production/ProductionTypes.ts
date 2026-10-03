@@ -1,11 +1,11 @@
-// ProductionTypes (resource-professions-rework plan §3/§4/§5/§6) —
-// contract của vòng kinh tế mới: Địa Giới → Lâm/Quáng/Động Thiên →
-// MaterialBag → Khí Đường/Đan Phòng. Không còn chuỗi raw→processed,
-// không còn building trung gian.
+// ProductionTypes (resource-professions-rework plan sec3/sec4/sec5/sec6) -
+// contract cua vong kinh te moi: Dia Gioi -> Lam/Quang/Dong Thien ->
+// MaterialBag -> Khi Duong/Dan Phong. Khong con chuoi raw->processed,
+// khong con building trung gian.
 //
-// Quy ước tọa độ: realm tier trong Địa Giới dùng TRỰC TIẾP RealmId
-// (mortal/qi_refining/foundation_establishment cho Thanh Vân). Trọng số
-// profile theo "collectionRealmId" snapshot lúc bắt đầu cycle.
+// Quy uoc toa do: realm tier trong Dia Gioi dung TRUC TIEP RealmId
+// (mortal/qi_refining/foundation_establishment cho Thanh Van). Trong so
+// profile theo "collectionRealmId" snapshot luc bat dau cycle.
 
 export type ProductionSiteKind = 'forest' | 'mine' | 'grotto'
 
@@ -16,11 +16,11 @@ export function isProductionSiteKind(value: unknown): value is ProductionSiteKin
 }
 
 /**
- * Niên đại Linh Thảo (plan §6.1 + gp123 6E task C1) — trục tuổi 5 bậc:
- * thuong_co là bậc trên cùng, trùng nhãn "Thượng Cổ" của hệ chất thống nhất.
- * gp123 6E (task C2): trục tuổi 5 bậc (decade..thuong_co) giờ DÙNG CHUNG
- * cho Linh Thảo, Gỗ và Khoáng — hậu tố phẩm cũ (hoang..tien) và plain
- * wood `<realm>_wood` đã bị xóa khỏi material catalog (save bump v57).
+ * Nien dai Linh Thao (plan sec6.1 + gp123 6E task C1) - truc tuoi 5 bac:
+ * thuong_co la bac tren cung, trung nhan "Thuong Co" cua he chat thong nhat.
+ * gp123 6E (task C2): truc tuoi 5 bac (decade..thuong_co) gio DUNG CHUNG
+ * cho Linh Thao, Go va Khoang - hau to pham cu (hoang..tien) va plain
+ * wood `<realm>_wood` da bi xoa khoi material catalog (save bump v57).
  */
 export type HerbAge = 'decade' | 'century' | 'millennium' | 'myriad_year' | 'thuong_co'
 
@@ -42,21 +42,21 @@ export function isHerbAge(value: unknown): value is HerbAge {
   )
 }
 
-/** Cycle đang chạy — mọi kết quả reward CHƯA roll, chỉ snapshot điều kiện (§4.1). */
+/** Cycle dang chay - moi ket qua reward CHUA roll, chi snapshot dieu kien (sec4.1). */
 export interface ProductionCycle {
   cycleId: string
 
   siteId: string
 
-  /** Cảnh giới ĐANG THU THẬP snapshot lúc start — quyết định deadline + profile trọng số. */
+  /** Canh gioi DANG THU THAP snapshot luc start - quyet dinh deadline + profile trong so. */
   collectionRealmId: string
 
   siteLevelAtStart: number
 
-  /** Version bảng reward — bump khi balance data đổi để cycle cũ roll theo bảng cũ. */
+  /** Version bang reward - bump khi balance data doi de cycle cu roll theo bang cu. */
   rewardTableVersion: number
 
-  /** RNG seed — roll toàn bộ reward SAU KHI hoàn thành bằng seed này (§4.1). */
+  /** RNG seed - roll toan bo reward SAU KHI hoan thanh bang seed nay (sec4.1). */
   rollSeed: number
 
   startedAtMs: number
@@ -87,7 +87,7 @@ export interface ProductionSiteState {
   hiddenChannelCycles?: Record<string, number>
 }
 
-/** Một Lâm/Quáng/Động Thiên của Địa Giới (§3.1). */
+/** Mot Lam/Quang/Dong Thien cua Dia Gioi (sec3.1). */
 export interface ProductionSiteDefinition {
   siteId: string
 
@@ -101,17 +101,17 @@ export interface ProductionSiteDefinition {
 
   maxLevel: number
 
-  /** Chi phí nâng level N → N+1, index = level hiện tại - 1. Gỗ + Linh Thạch. */
+  /** Chi phi nang level N -> N+1, index = level hien tai - 1. Go + Linh Thach. */
   upgradeCosts: Array<{ woodMaterialId: string; woodAmount: number; spiritStone: number }>
 }
 
-/** Địa Giới (§3.1): đúng một Lâm, một Quáng, một Động Thiên. */
+/** Dia Gioi (sec3.1): dung mot Lam, mot Quang, mot Dong Thien. */
 export interface TerritoryDefinition {
   id: string
 
   name: string
 
-  /** Đúng 3 cảnh giới, thứ tự thấp → cao (local tier low/middle/high). */
+  /** Dung 3 canh gioi, thu tu thap -> cao (local tier low/middle/high). */
   realmIds: readonly [string, string, string]
 
   productionSiteIds: {
@@ -124,16 +124,16 @@ export interface TerritoryDefinition {
 }
 
 // =========================
-// Reward definitions (§5.2/§5.3/§6.1)
+// Reward definitions (sec5.2/sec5.3/sec6.1)
 // =========================
 
 export interface ForestRewardDefinition {
   materialId: string
 
-  /** Realm tier mà loại gỗ này thuộc về trong Địa Giới. */
+  /** Realm tier ma loai go nay thuoc ve trong Dia Gioi. */
   realmId: string
 
-  /** gp123 6E C2: biến thể tuổi của gỗ (thay vì amount cố định 3/2/1). */
+  /** gp123 6E C2: bien the tuoi cua go (thay vi amount co dinh 3/2/1). */
   age: HerbAge
 
   amount: number
@@ -144,7 +144,7 @@ export interface MineRewardDefinition {
 
   realmId: string
 
-  /** gp123 6E C2: trục tuổi thống nhất (trước đây `quality: OreQuality`). */
+  /** gp123 6E C2: truc tuoi thong nhat (truoc day `quality: OreQuality`). */
   age: HerbAge
 
   amount: number
@@ -155,7 +155,7 @@ export interface GrottoHerbDefinition {
 
   realmId: string
 
-  /** Đan phương duy nhất mà thảo này nuôi (§6.1 — mỗi recipe 1 thảo riêng). */
+  /** Dan phuong duy nhat ma thao nay nuoi (sec6.1 - moi recipe 1 thao rieng). */
   pillRecipeId: string
 
   age: HerbAge

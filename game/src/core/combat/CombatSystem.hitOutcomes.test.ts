@@ -4,10 +4,10 @@ import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 
-// stat-system-reimagined Task 5 (D5/D6/D11, INV-3) — three hit outcomes:
-//   miss     — accuracy/dodge roll fails; nothing lands
-//   absorbed — lands, ward + MP shield absorb everything (hpDamage == 0)
-//   taken    — hpDamage > 0
+// stat-system-reimagined Task 5 (D5/D6/D11, INV-3) - three hit outcomes:
+//   miss     - accuracy/dodge roll fails; nothing lands
+//   absorbed - lands, ward + MP shield absorb everything (hpDamage == 0)
+//   taken    - hpDamage > 0
 // Only `taken` fires damage-proportional triggers: leechPercent reads
 // hpDamage (post-absorb HP loss), never finalDamage.
 // Landed (absorbed OR taken) still resets turnsSinceLastHitLanded and
@@ -86,7 +86,7 @@ describe('hit outcome semantics (INV-3)', () => {
     expect(result.hpDamage).toBe(0)
     expect(result.outcome).toBe('absorbed')
     expect(result.wardAbsorbed).toBeCloseTo(result.finalDamage, 5)
-    // D11: damage-proportional triggers read hpDamage — fully absorbed
+    // D11: damage-proportional triggers read hpDamage - fully absorbed
     // means NOTHING for the attacker, even with nonzero leech.
     expect(source.currentHp).toBe(500)
     // Landed (not dodged) still delays ward regen.
@@ -109,7 +109,7 @@ describe('hit outcome semantics (INV-3)', () => {
     expect(hpDamage).toBeGreaterThan(0)
     expect(hpDamage).toBeCloseTo(result.finalDamage - 4, 5)
 
-    // Leech heals 20% of hpDamage — the POST-absorb number, never
+    // Leech heals 20% of hpDamage - the POST-absorb number, never
     // finalDamage.
     expect(source.currentHp).toBeCloseTo(500 + hpDamage * 0.2, 5)
     expect(target.currentHp).toBeCloseTo(1000 - hpDamage, 5)
@@ -118,7 +118,7 @@ describe('hit outcome semantics (INV-3)', () => {
   it('overkill: hpDamage is the ACTUAL HP lost (clamped at 0), not the post-absorb amount', () => {
     const combat = new CombatSystem(new EventBus())
     const source = attacker({ stats: createBaseStats({ might: 100, accuracyRating: 1000, criticalRate: 0, leechPercent: 0.2 }) })
-    // 10 HP left, no ward — post-absorb damage (~27+) far overkills.
+    // 10 HP left, no ward - post-absorb damage (~27+) far overkills.
     // D11: leech scales on the 10 HP the target REALLY lost.
     const target = defender({ currentHp: 10 })
 
@@ -127,7 +127,7 @@ describe('hit outcome semantics (INV-3)', () => {
     expect(result.outcome).toBe('taken')
     expect(result.hpDamage).toBe(10)
     expect(result.targetKilled).toBe(true)
-    // leech +2 (0.2 x 10) — NOT ~27-scaled.
+    // leech +2 (0.2 x 10) - NOT ~27-scaled.
     expect(source.currentHp).toBeCloseTo(500 + 10 * 0.2, 5)
   })
 
@@ -158,7 +158,7 @@ describe('hit outcome semantics (INV-3)', () => {
 
     expect(events).toHaveLength(1)
     // `value` stays the pre-absorb impact; hpDamage reports the truth
-    // (0 — fully absorbed) so presentation can tell them apart.
+    // (0 - fully absorbed) so presentation can tell them apart.
     expect(events[0]?.value).toBeCloseTo(result.finalDamage, 5)
     expect(events[0]?.hpDamage).toBe(0)
     expect(events[0]?.wardAbsorbed).toBeCloseTo(result.finalDamage, 5)
@@ -167,7 +167,7 @@ describe('hit outcome semantics (INV-3)', () => {
   it('mp shield after ward: manaShieldPercent caps at 0.8 so the remainder is hpDamage (taken)', () => {
     const combat = new CombatSystem(new EventBus())
     const source = attacker()
-    // manaShieldPercent hard-caps at 0.8 (StatMetadata) — an MP shield
+    // manaShieldPercent hard-caps at 0.8 (StatMetadata) - an MP shield
     // alone can never fully absorb a hit; the 20% overflow lands on HP.
     const stats = createBaseStats({ evasionRate: 0, blockChance: 0, manaShieldPercent: 1 })
     const target = createCombatant({
@@ -190,9 +190,9 @@ describe('hit outcome semantics (INV-3)', () => {
   })
 })
 
-// stat-system-reimagined Task 6 (D13, INV-4) — DoT is a CLOSED economy:
+// stat-system-reimagined Task 6 (D13, INV-4) - DoT is a CLOSED economy:
 // rawDamage -> dotResistancePercent (with penetration) -> HP. Nothing
-// else applies — no finalDamagePercent/finalDamageReductionPercent, no
+// else applies - no finalDamagePercent/finalDamageReductionPercent, no
 // ward/MP shield, no leech/thorns, no turnsSinceLastHitLanded touch.
 describe('DoT closed economy (D13/INV-4)', () => {
   function dotTarget(statOverrides: Parameters<typeof createBaseStats>[0] = {}) {
@@ -228,7 +228,7 @@ describe('DoT closed economy (D13/INV-4)', () => {
     combat.applyDotDamage({ sourceId: source.id, source, target: resisted, rawDamage: 100, element: 'fire', effectId: 'qa' })
     combat.applyDotDamage({ sourceId: source.id, source, target: plain, rawDamage: 100, element: 'fire', effectId: 'qa' })
 
-    // finalDamageReductionPercent is a HIT layer — worthless vs DoT.
+    // finalDamageReductionPercent is a HIT layer - worthless vs DoT.
     expect(reduced.currentHp).toBeCloseTo(plain.currentHp, 5)
     // dotResistancePercent is the ONLY DoT mitigation.
     expect(resisted.currentHp).toBeCloseTo(10_000 - 75, 5)

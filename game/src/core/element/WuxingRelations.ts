@@ -1,12 +1,12 @@
 import type { ElementType } from './ElementType'
 
-// Phap Tu Reimagined Task 5 — the ONE authority for Ngũ Hành pair
-// relations. Sinh (generating) and Khắc (overcoming) are DIRECTIONAL
+// Phap Tu Reimagined Task 5 - the ONE authority for Ngu Hanh pair
+// relations. Sinh (generating) and Khac (overcoming) are DIRECTIONAL
 // tables: which side benefits or wins is read from the cycle, never
-// from which ailment was applied first (spec §6).
+// from which ailment was applied first (spec sec6).
 //
-//   SINH_CYCLE[A] === B    → A generates/feeds B (B is the beneficiary)
-//   KHAC_OVERCOMES[A] === B → A overcomes B  (A is the overcomer)
+//   SINH_CYCLE[A] === B    -> A generates/feeds B (B is the beneficiary)
+//   KHAC_OVERCOMES[A] === B -> A overcomes B  (A is the overcomer)
 
 export const SINH_CYCLE: Record<ElementType, ElementType> = {
   wood: 'fire',
@@ -30,7 +30,7 @@ export type WuxingRelation = 'sinh' | 'khac' | null
  * The relation between two elements, order-insensitive: 'sinh' when one
  * generates the other, 'khac' when one overcomes the other, null for
  * identical elements (every element pair over 5 elements is exactly one
- * of sinh/khac — the null case is only a === b).
+ * of sinh/khac - the null case is only a === b).
  */
 export function relationOf(a: ElementType, b: ElementType): WuxingRelation {
   if (a === b) {
@@ -45,7 +45,7 @@ export function relationOf(a: ElementType, b: ElementType): WuxingRelation {
 }
 
 /**
- * Which of a/b overcomes the other — the DIRECTIONAL winner read from
+ * Which of a/b overcomes the other - the DIRECTIONAL winner read from
  * KHAC_OVERCOMES, not from call order. Callers must only invoke this on
  * a pair relationOf() reports as 'khac'.
  */
@@ -54,7 +54,7 @@ export function khacOvercomer(a: ElementType, b: ElementType): ElementType {
 }
 
 /**
- * The Sinh beneficiary — when SINH_CYCLE[a] === b, b is the child
+ * The Sinh beneficiary - when SINH_CYCLE[a] === b, b is the child
  * (beneficiary) regardless of application order. Callers must only
  * invoke this on a pair relationOf() reports as 'sinh'.
  */

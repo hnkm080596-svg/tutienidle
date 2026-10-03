@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
 import type { CultivationPathId } from '../core/player/CultivationPathKit'
 
-// visualProfileId is the entity-derived visual form — the single source every
+// visualProfileId is the entity-derived visual form - the single source every
 // surface (CombatScene gate, MainScene, Tran Phap preview payload) reads.
 describe('player store — visualProfileId', () => {
   beforeEach(() => {

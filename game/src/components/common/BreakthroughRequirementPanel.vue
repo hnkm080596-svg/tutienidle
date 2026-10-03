@@ -10,8 +10,8 @@ import { betaTechniqueAdmitted } from '@/core/betaScopeSkillDomain'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import GameButton from '@/components/common/GameButton.vue'
 
-// Task 9.1 — panel xác nhận đơn giản: cảnh báo "không thể mặc trang bị
-// khi độ kiếp" + 2 nút. Auto-unequip do triggerBreakthrough() lo.
+// Task 9.1 - panel xac nhan don gian: canh bao "khong the mac trang bi
+// khi do kiep" + 2 nut. Auto-unequip do triggerBreakthrough() lo.
 const { t } = useI18n()
 const store = useBreakthroughRequirementStore()
 const player = usePlayerStore()

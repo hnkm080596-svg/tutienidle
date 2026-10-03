@@ -6,7 +6,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillManager } from '../skill/SkillManager'
 
-// Phase A3 (2026-09-07) — Skill → TurnSkillDefinition converter tests.
+// Phase A3 (2026-09-07) - Skill -> TurnSkillDefinition converter tests.
 // The converter is a pure field mapper over an ALREADY-RESOLVED
 // EffectiveSkill (produced by SkillSystem.getEffectiveSkill(), which
 // applies the selected specialization's effectsOverride/targeting).
@@ -33,7 +33,7 @@ describe('toTurnSkillDefinition', () => {
       expect(turnSkill.damage.components).toEqual([{ kind: 'element', element: 'fire', ratio: 1 }])
       expect(turnSkill.damage.multiplier).toBeCloseTo(1, 5)
     }
-    // R3 re-audit (AR-03 gap) — authored manaScalingRatio/attributeScaling
+    // R3 re-audit (AR-03 gap) - authored manaScalingRatio/attributeScaling
     // must survive conversion (previously silently dropped).
     expect(turnSkill.damage?.scaling).toEqual({
       attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
@@ -82,7 +82,7 @@ describe('toTurnSkillDefinition', () => {
   })
 
   it('maps an ultimate with consume-for-damage fields (Detonate/ward-burst)', () => {
-    // Find an ultimate in SPELL_KIT_IDS with consumesAilmentId — fall back
+    // Find an ultimate in SPELL_KIT_IDS with consumesAilmentId - fall back
     // to a synthetic skill if none carries it, so this test proves the
     // mapping itself regardless of content drift.
     const manager = new SkillManager()
@@ -262,7 +262,7 @@ describe('toTurnSkillDefinition', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
       const skill = structuredClone(SKILLS.find((s) => s.id === 'tram')!)
-      skill.totalExperience = 10_000 // L3 — flat bonus floor(10000/10) = 1000
+      skill.totalExperience = 10_000 // L3 - flat bonus floor(10000/10) = 1000
       manager.add(skill)
 
       const effective = skillSystem.getEffectiveSkill(skill)
@@ -347,7 +347,7 @@ describe('toTurnSkillDefinition', () => {
 
       expect(turnSkill.id).toBe('da_phap_lien_tuyen')
       expect(turnSkill.cooldownTurns).toBe(4)
-      // Placeholder only — the composite pick + repeatCasts authored by
+      // Placeholder only - the composite pick + repeatCasts authored by
       // applyAnKitToSpecial replace the payload at declare time.
       expect(turnSkill.damage?.kind).toBe('primordial')
     })

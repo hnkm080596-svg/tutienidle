@@ -1,9 +1,9 @@
-// 6A-T3 (2026-09-01) — insets TOP-ONLY: bottom bars (Status/Event/Control)
-// rời DOM để vào canvas (PlayerHudLayer) — bottom inset luôn 0.
+// 6A-T3 (2026-09-01) - insets TOP-ONLY: bottom bars (Status/Event/Control)
+// roi DOM de vao canvas (PlayerHudLayer) - bottom inset luon 0.
 //
-// Combat Art Pipeline Task 7 (2026-09-05, spec §7.5) — thêm 2 publisher
-// chuyên biệt: TopBar (overlay) chỉ ghi `top`, skill dock panel chỉ ghi
-// `right` — mỗi publisher GIỮ NGUYÊN trường của publisher còn lại.
+// Combat Art Pipeline Task 7 (2026-09-05, spec sec7.5) - them 2 publisher
+// chuyen biet: TopBar (overlay) chi ghi `top`, skill dock panel chi ghi
+// `right` - moi publisher GIU NGUYEN truong cua publisher con lai.
 import { describe, expect, it, afterEach } from 'vitest'
 import {
   clearSkillDockWidth,

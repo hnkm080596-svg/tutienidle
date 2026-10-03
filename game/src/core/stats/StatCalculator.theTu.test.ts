@@ -15,7 +15,7 @@ import {
 import { createDefaultPlayer, resolvePlayerFinalStats } from '../player/Player'
 import { REACTIVE_CHANCE_CAP } from './TheTuStatChannels'
 
-// The Tu Reimagined (spec 2026-09-15 section 3) — Task 3:
+// The Tu Reimagined (spec 2026-09-15 section 3) - Task 3:
 //  - three new derived chance stats live in the hidden_body domain,
 //    emitted by BOTH channels (assembly emitter + domain delta deriver).
 //  - emitters emit RAW uncapped values; REACTIVE_CHANCE_CAP applies only
@@ -35,7 +35,7 @@ function statMod(overrides: Partial<StatModifier>): StatModifier {
   }
 }
 
-// M7 — the persisted pair: a path id alone is corrupt (way-less saves
+// M7 - the persisted pair: a path id alone is corrupt (way-less saves
 // resolve nothing), so the helper always stamps an atomic (path, way)
 // pair. 'hidden_body_pathway' selects the body's hidden way.
 const BASE_WAY = {
@@ -70,7 +70,7 @@ describe('hidden_body reactive chance stats — assembly emission', () => {
       [],
     )
 
-    // M5 — the emitter is totals-driven (facet internals); the way gate
+    // M5 - the emitter is totals-driven (facet internals); the way gate
     // is the facet resolution below.
     const mods = hiddenBodyReactiveModifiers(totals, 'hidden_body:attributes')
 
@@ -147,7 +147,7 @@ describe('hidden_body reactive chance stats — cap at consumption', () => {
       { activeDomains: new Set(['hidden_body']) },
     )
 
-    // raw effective = 0.75 — over the cap, so the roll still clamps 0.60.
+    // raw effective = 0.75 - over the cap, so the roll still clamps 0.60.
     expect(effective.counterChance).toBeCloseTo(0.75, 5)
     expect(clampStatValue('counterChance', effective.counterChance)).toBeCloseTo(0.6, 5)
   })
@@ -267,10 +267,10 @@ describe('body domain gate — four defensive stats', () => {
 })
 
 // INV-13: the attribute->chance derivation is the ONLY source of the
-// three chance stats — no node/buff/technique/kit may author a modifier
+// three chance stats - no node/buff/technique/kit may author a modifier
 // for them. The whitelist gate alone cannot catch a hidden_body-tagged
 // modifier inside a whitelisted Body* file, so this scan asserts the
-// authoring rule directly (files may not exist yet — the guard is for
+// authoring rule directly (files may not exist yet - the guard is for
 // the tasks that add them).
 describe('INV-13 — no authored chance-stat modifiers', () => {
   const CHANCE_STATS = new Set(['counterChance', 'protectChance', 'followUpChance'])

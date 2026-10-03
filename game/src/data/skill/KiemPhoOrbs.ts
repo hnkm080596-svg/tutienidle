@@ -2,11 +2,11 @@ import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction
 import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 import { GRID_COLUMN_COUNT } from '../../core/battle/BattleGrid'
 
-// Kiem Tu Reimagined Task 3 (spec 2026-09-15 §3) — the five Kiem Pho
+// Kiem Tu Reimagined Task 3 (spec 2026-09-15 sec3) - the five Kiem Pho
 // orbs. OrbId is canonically declared in KiemTuState.ts (Task 1) and
 // re-exported here so data consumers import from the data layer.
-// Orbs are kind:'physical' damage scaled off might — no cooldowns, no
-// resource: the preset loop IS the pacing mechanism (spec §4.1).
+// Orbs are kind:'physical' damage scaled off might - no cooldowns, no
+// resource: the preset loop IS the pacing mechanism (spec sec4.1).
 //
 // presetId choice (Kiem Pho Beta, design sec.3): the two beta orbs
 // carry their authored stroke-identity presets (point->line->converge
@@ -16,7 +16,7 @@ import { GRID_COLUMN_COUNT } from '../../core/battle/BattleGrid'
 export type { OrbId }
 
 export const ORB_UNLOCK_REALM: Record<OrbId, number> = {
-  orb_dam: 1,   // qi_refining — path start
+  orb_dam: 1,   // qi_refining - path start
   orb_chem: 2,  // foundation_establishment
   orb_bo: 3,    // golden_core
   orb_hat: 4,   // nascent_soul
@@ -52,8 +52,8 @@ export const KIEM_PHO_ORBS: Record<OrbId, TurnSkillDefinition> = {
     cooldownTurns: 0,
     damage: { kind: 'physical', multiplier: 1.8, levelScaling: 0.05 },
     targeting: { shape: 'single' },
-    // Simplest existing defense-down lever (spec §3: reuse, no new
-    // mechanic) — suy_nhuoc: defense -25%, 5 turns, refresh.
+    // Simplest existing defense-down lever (spec sec3: reuse, no new
+    // mechanic) - suy_nhuoc: defense -25%, 5 turns, refresh.
     appliesAilments: [{ buffDefinitionId: 'suy_nhuoc', chance: 1, stacks: 1 }],
     presetId: 'slash',
   },
@@ -62,14 +62,14 @@ export const KIEM_PHO_ORBS: Record<OrbId, TurnSkillDefinition> = {
     cooldownTurns: 0,
     damage: { kind: 'physical', multiplier: 0.6, levelScaling: 0.05 },
     targeting: { shape: 'single' },
-    // Authored chance ~0.2 (spec §3, balance-tunable).
+    // Authored chance ~0.2 (spec sec3, balance-tunable).
     appliesAilments: [{ buffDefinitionId: 'choang', chance: 0.2, stacks: 1 }],
     presetId: 'slash',
   },
   orb_quet: {
     id: 'orb_quet',
     cooldownTurns: 0,
-    // ×0.8 per target — full AoE, no split (spec §3).
+    // x0.8 per target - full AoE, no split (spec sec3).
     damage: { kind: 'physical', multiplier: 0.8, levelScaling: 0.05 },
     targeting: { shape: 'all_lanes', columnRadius: GRID_COLUMN_COUNT },
     presetId: 'slash',

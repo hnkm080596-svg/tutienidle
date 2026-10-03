@@ -1,16 +1,16 @@
 <script setup lang="ts">
 /**
- * A11 (spec §6.1) — the pause overlay is NOT the curtain. The curtain
+ * A11 (spec sec6.1) - the pause overlay is NOT the curtain. The curtain
  * belongs to the presentation coordinator and covers route transitions
  * (App.vue's <PresentationTransitionOverlay>, position:fixed,
  * OVERLAY_LAYERS.curtain); this belongs to the battle and covers a
  * stopped CombatClock. Separate owners, separate state, separate
- * z-layers — neither may drive the other.
+ * z-layers - neither may drive the other.
  * Conflating them would recreate the dead-control defect the coordinator
  * design already had to fix once.
  *
- * A7 — it dims and blocks input. It does NOT stop the scene: units keep
- * animating behind it (Phaser's own render loop is untouched — no
+ * A7 - it dims and blocks input. It does NOT stop the scene: units keep
+ * animating behind it (Phaser's own render loop is untouched - no
  * scene.pause(), no anims.pauseAll()). The dim is light enough that a
  * paused battle still looks like a battle waiting, not a screenshot.
  */
@@ -46,10 +46,10 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-/* position:fixed (not absolute) — mounted at App.vue's template top level,
+/* position:fixed (not absolute) - mounted at App.vue's template top level,
    which has no positioned ancestor, same reasoning as the curtain's own
    .transition-overlay rule. Layer is OVERLAY_LAYERS.combatPause (inline
-   style) — deliberately BELOW the curtain: the curtain must always be
+   style) - deliberately BELOW the curtain: the curtain must always be
    able to cover this, never the reverse. */
 .combat-pause {
   position: fixed;
@@ -57,7 +57,7 @@ const { t } = useI18n()
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Light dim on purpose (A7) — units must stay visible animating behind it. */
+  /* Light dim on purpose (A7) - units must stay visible animating behind it. */
   background: rgba(0, 0, 0, 0.45);
 }
 

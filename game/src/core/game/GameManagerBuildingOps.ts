@@ -33,8 +33,8 @@ export interface GameManagerBuildingOpsDeps {
   materialBag: MaterialBag
   materialRegistry: MaterialRegistry
   notifications: NotificationQueue
-  // GameManager giữ activePlayer như field mutable (setActivePlayer) — đọc
-  // LIVE qua closure thay vì snapshot tại constructor time.
+  // GameManager giu activePlayer nhu field mutable (setActivePlayer) - doc
+  // LIVE qua closure thay vi snapshot tai constructor time.
   getActivePlayer: () => PlayerData | undefined
   // Collect-quest + perfection-discovery hook (see GameManager.notifyMaterialGained) -
   // GameManager supplies a closure because the real hook needs
@@ -43,12 +43,12 @@ export interface GameManagerBuildingOpsDeps {
 }
 
 /**
- * Tách khỏi GameManager (2026-09-03, task 2 — GameManager split) — toàn bộ
- * thao tác Building (xây/nâng cấp/thu hoạch/query) và Production
- * (cycle/upgrade/query), gộp 1 file vì Production nhỏ và share worker
- * capacity state với Building (Chiêu Hiền Quán). Cùng pattern DI với
- * EquipmentOpsSystem: constructor nhận dependency tường minh qua object
- * `deps`, KHÔNG tự import ngược GameManager.
+ * Tach khoi GameManager (2026-09-03, task 2 - GameManager split) - toan bo
+ * thao tac Building (xay/nang cap/thu hoach/query) va Production
+ * (cycle/upgrade/query), gop 1 file vi Production nho va share worker
+ * capacity state voi Building (Chieu Hien Quan). Cung pattern DI voi
+ * EquipmentOpsSystem: constructor nhan dependency tuong minh qua object
+ * `deps`, KHONG tu import nguoc GameManager.
  */
 export class GameManagerBuildingOps {
   constructor(private readonly deps: GameManagerBuildingOpsDeps) {}
@@ -57,7 +57,7 @@ export class GameManagerBuildingOps {
     return this.deps.buildingRegistry.getAll()
   }
 
-  /** Gate UI xây mới — delegate BuildingSystem.canBuild (§ popover). */
+  /** Gate UI xay moi - delegate BuildingSystem.canBuild (sec popover). */
   canBuildBuilding(buildingId: string, player: PlayerData): boolean {
     // BETA SCOPE LOCK - a scope-hidden building (chi_hien_quan ->
     // manualWorkforce) fails closed at the write seam, not only at the
@@ -88,9 +88,9 @@ export class GameManagerBuildingOps {
       currentTime,
     )
 
-    // Fix (review 2026-08-26) — build thất bại trước đây IM LẶNG (null
-    // không ai đọc): giờ push toast lý do cụ thể để người chơi biết phải
-    // làm gì tiếp (thiếu nguyên liệu/cảnh giới...).
+    // Fix (review 2026-08-26) - build that bai truoc day IM LANG (null
+    // khong ai doc): gio push toast ly do cu the de nguoi choi biet phai
+    // lam gi tiep (thieu nguyen lieu/canh gioi...).
     if (!instance) {
       const check = this.deps.buildingSystem.canBuildDetailed(
         buildingId,
@@ -121,7 +121,7 @@ export class GameManagerBuildingOps {
     return instance
   }
 
-  /** Tên building hiển thị cho toast — fallback id khi registry thiếu. */
+  /** Ten building hien thi cho toast - fallback id khi registry thieu. */
   private buildingName(buildingId: string): string {
     try {
       return this.deps.buildingRegistry.get(buildingId).name
@@ -131,10 +131,10 @@ export class GameManagerBuildingOps {
   }
 
   /**
-   * Chiêu Hiền Quán (chi-hien-quan spec 2026-09-02) - NGUỒN NHÂN CÔNG
-   * DUY NHẤT: capacity = 1 + level*2 (getWorkerCapacityForLevel). Gọi
-   * lại sau mỗi lần build/upgrade CHQ. gathering_outpost KHÔNG còn cấp
-   * capacity (nguồn cũ đã gỡ — outpost chỉ còn gate Sản Xuất + linh mạch).
+   * Chieu Hien Quan (chi-hien-quan spec 2026-09-02) - NGUON NHAN CONG
+   * DUY NHAT: capacity = 1 + level*2 (getWorkerCapacityForLevel). Goi
+   * lai sau moi lan build/upgrade CHQ. gathering_outpost KHONG con cap
+   * capacity (nguon cu da go - outpost chi con gate San Xuat + linh mach).
    */
   refreshAutoWorkerCapacity(player: PlayerData, instance: BuildingInstance): void {
     if (instance.buildingId !== 'chi_hien_quan') {
@@ -145,9 +145,9 @@ export class GameManagerBuildingOps {
   }
 
   /**
-   * Chi-hien-quan (2026-09-02) — assignments snapshot từ production states
-   * (assignedWorkers persist trong save) — truyền vào tickWorkers/
-   * settleOffline để OFFLINE KHỚP ONLINE.
+   * Chi-hien-quan (2026-09-02) - assignments snapshot tu production states
+   * (assignedWorkers persist trong save) - truyen vao tickWorkers/
+   * settleOffline de OFFLINE KHOP ONLINE.
    */
   getWorkerAssignments(): Map<string, number> {
     const assignments = new Map<string, number>()
@@ -234,9 +234,9 @@ export class GameManagerBuildingOps {
   }
 
   /**
-   * Chi-hien-quan (2026-09-02) — UI phân bổ: gán/xóa số slot manual của
-   * 1 site. `count === undefined` = về AUTO (xóa assignedWorkers).
-   * Clamp [0, capacity] phòng UI gửi sai; không đổi nếu site không tồn tại.
+   * Chi-hien-quan (2026-09-02) - UI phan bo: gan/xoa so slot manual cua
+   * 1 site. `count === undefined` = ve AUTO (xoa assignedWorkers).
+   * Clamp [0, capacity] phong UI gui sai; khong doi neu site khong ton tai.
    */
   assignWorkers(siteId: string, count: number | undefined): void {
     // BETA SCOPE LOCK v2 sec.13 - manualWorkforce is scope-hidden:
@@ -258,7 +258,7 @@ export class GameManagerBuildingOps {
 
   /**
    * Authoritative upgrade quote for the building header (Mission G Task
-   * 36) — the SAME rules upgradeBuilding enforces, read-side only.
+   * 36) - the SAME rules upgradeBuilding enforces, read-side only.
    * Mirrors quoteProductionUpgrade.
    */
   quoteBuildingUpgrade(instanceId: string) {
@@ -294,13 +294,13 @@ export class GameManagerBuildingOps {
     return upgraded
   }
 
-  // Linh Tuyền (producesMaterialId) — thu hoạch đổ vào MaterialBag như
-  // material bình thường (plan Workstream F); claim() trả amount +
-  // materialId, GameManager resolve template và cộng bag.
+  // Linh Tuyen (producesMaterialId) - thu hoach do vao MaterialBag nhu
+  // material binh thuong (plan Workstream F); claim() tra amount +
+  // materialId, GameManager resolve template va cong bag.
   collectBuilding(instanceId: string, player: PlayerData, currentTime = Date.now() / 1000): number {
-    // Pre-check registry TRƯỚC khi claim reset mốc thời gian (review
-    // 2026-08-28): nếu materialId không resolve được mà vẫn claim, sản
-    // lượng bị mất trắng (mốc đã reset, bag không được cộng).
+    // Pre-check registry TRUOC khi claim reset moc thoi gian (review
+    // 2026-08-28): neu materialId khong resolve duoc ma van claim, san
+    // luong bi mat trang (moc da reset, bag khong duoc cong).
     const instance = this.deps.buildingManager.get(instanceId)
 
     const template = instance ? this.deps.buildingRegistry.get(instance.buildingId) : undefined
@@ -322,8 +322,8 @@ export class GameManagerBuildingOps {
     )
 
     if (claimed.amount > 0 && claimed.materialId && this.deps.materialRegistry.has(claimed.materialId)) {
-      // 9.8 — bag clamp tại stackLimit; quest chỉ tính delivered, tràn
-      // đẩy toast thay vì mất lặng lẽ.
+      // 9.8 - bag clamp tai stackLimit; quest chi tinh delivered, tran
+      // day toast thay vi mat lang le.
       const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(claimed.materialId), claimed.amount)
 
       this.deps.notifyMaterialGained(claimed.materialId, claimed.amount - overflow)
@@ -382,7 +382,7 @@ export class GameManagerBuildingOps {
   }
 
   // =========================
-  // PRODUCTION (2026-08-25 — Lâm/Quáng/Động Thiên, plan §4/§9)
+  // PRODUCTION (2026-08-25 - Lam/Quang/Dong Thien, plan sec4/sec9)
   // =========================
 
   getProductionViews(nowMs = Date.now()) {
@@ -409,9 +409,9 @@ export class GameManagerBuildingOps {
     return this.deps.productionSystem.setAutoRestart(siteId, enabled)
   }
 
-  /** Nâng level nguồn — cost Gỗ + Linh Thạch (sink chính của Lâm, §5.2). */
+  /** Nang level nguon - cost Go + Linh Thach (sink chinh cua Lam, sec5.2). */
   upgradeProductionSite(siteId: string, player: PlayerData): boolean {
-    // Plan Workstream F — Linh Thạch check/trừ trực tiếp trên MaterialBag.
+    // Plan Workstream F - Linh Thach check/tru truc tiep tren MaterialBag.
     return this.deps.productionSystem.upgradeSite(siteId, this.deps.materialBag, getRealmTier(player.realmId))
   }
 

@@ -1,11 +1,11 @@
-// combatEntityScale — how big a combat entity is drawn.
+// combatEntityScale - how big a combat entity is drawn.
 //
-// Spec C §3.2/§4.3
+// Spec C sec3.2/sec4.3
 // (docs/superpowers/specs/2026-09-12-combat-anchor-scale-geometry-design.md).
 //
 // A pure module: no Phaser, no GameObject, no scene. It lives beside
-// BattleGridProjection for the same reason that one does — it is arithmetic, and
-// arithmetic should be testable without a canvas (Spec A §3.6).
+// BattleGridProjection for the same reason that one does - it is arithmetic, and
+// arithmetic should be testable without a canvas (Spec A sec3.6).
 //
 // THE CLAIM THIS FILE MAKES, and the reason it exists: what gets specified is
 // the size of the CHARACTER, and the sprite's box is whatever it has to be to
@@ -17,7 +17,7 @@ import type { ArtExtent } from '@/presentation/art/CombatEntityPresentation'
  * An adult person stands this many near-row cell widths tall.
  *
  * The near cell's WIDTH is the ruler because the cell's HEIGHT is
- * perspective-compressed and is not a ruler for anything upright — a reason the
+ * perspective-compressed and is not a ruler for anything upright - a reason the
  * tree already carried in a comment and never turned into a number.
  *
  * 1.84 is not a new guess: it is 0.92 (the old `characterHeight` factor) times 2
@@ -30,10 +30,10 @@ export const PERSON_HEIGHT_IN_CELLS = 1.84
 /**
  * And this many across. Used ONLY by the front/back body anchors.
  *
- * This one has no anchor in the existing code — nothing ever expressed a
+ * This one has no anchor in the existing code - nothing ever expressed a
  * person's width for a Sprite (`CHARACTER_WIDTH_RATIO` is a health-bar
  * measurement). 0.42 is a judgement from looking at the enemy art, and Spec C
- * §8 records that it is the weakest number in the design.
+ * sec8 records that it is the weakest number in the design.
  */
 export const PERSON_WIDTH_IN_CELLS = 0.42
 
@@ -55,7 +55,7 @@ export interface EntityScaleInput {
 }
 
 export interface EntityDisplaySize {
-  /** What to pass to setDisplaySize — the whole authored box. */
+  /** What to pass to setDisplaySize - the whole authored box. */
   boxWidth: number
   boxHeight: number
 

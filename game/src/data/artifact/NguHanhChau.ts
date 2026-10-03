@@ -1,7 +1,7 @@
-// Ngũ Hành Châu — Bản Mệnh Pháp Bảo của Pháp Tu (doc §8). Đây là data
-// MÔ TẢ (tên/mô tả milestone cho UI Phase 4) — số liệu THI HÀNH thật
-// (coefficient/chu kỳ/ICD...) nằm trong core/artifact/ArtifactSystem.ts,
-// không lặp lại ở đây để tránh 2 nguồn sự thật lệch nhau.
+// Ngu Hanh Chau - Ban Menh Phap Bao cua Phap Tu (doc sec8). Day la data
+// MO TA (ten/mo ta milestone cho UI Phase 4) - so lieu THI HANH that
+// (coefficient/chu ky/ICD...) nam trong core/artifact/ArtifactSystem.ts,
+// khong lap lai o day de tranh 2 nguon su that lech nhau.
 import type { ArtifactDefinition } from '../../core/artifact/Artifact'
 import { ARTIFACT_UNLOCK_REALM_ID } from '../../core/artifact/ArtifactDomain'
 

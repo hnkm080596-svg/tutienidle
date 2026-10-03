@@ -1,12 +1,12 @@
 import type { StatType } from '@/core/stats/StatTypes'
 
 /**
- * "Database" cấu hình Type cho Tâm Pháp Chiến Đấu — Type quyết định
- * pool stat mà tâm pháp CÓ THỂ nhận, giúp hệ thống dễ mở rộng mà
- * không cần hard-code từng quyển (đúng yêu cầu). Technique tự khai
- * `modifiers` thật (giống Equipment không random-roll) — config này
- * chỉ mang tính tổ chức nội dung/hiển thị UI ("Type: Phòng Ngự"),
- * KHÔNG ràng buộc runtime cứng nhắc.
+ * "Database" cau hinh Type cho Tam Phap Chien Dau - Type quyet dinh
+ * pool stat ma tam phap CO THE nhan, giup he thong de mo rong ma
+ * khong can hard-code tung quyen (dung yeu cau). Technique tu khai
+ * `modifiers` that (giong Equipment khong random-roll) - config nay
+ * chi mang tinh to chuc noi dung/hien thi UI ("Type: Phong Ngu"),
+ * KHONG rang buoc runtime cung nhac.
  */
 export interface CombatTechniqueTypeConfig {
   id: string

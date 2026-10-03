@@ -35,7 +35,7 @@ import type { GradedItemTooltipContent } from '@/composables/useTooltip'
 
 const { t } = useI18n()
 
-// Thứ tự cố định cho sort theo Phân loại/Nguồn (asc).
+// Thu tu co dinh cho sort theo Phan loai/Nguon (asc).
 const CATEGORY_ORDER: MaterialCategory[] = [
   'herb', 'wood', 'ore', 'monster_core', 'spirit_stone', 'essence', 'byproduct', 'other',
 ]
@@ -95,8 +95,8 @@ const SORT_OPTIONS = computed<Array<BagSortOption & { value: MaterialSortMode }>
   { value: 'source', label: t('panels.bag.sort.source') },
 ])
 
-// Nhãn cảnh giới cho tooltip — người chơi không phân biệt được màu
-// (color-blind) vẫn đọc được realm trên tooltip (spec §"Cảnh giới").
+// Nhan canh gioi cho tooltip - nguoi choi khong phan biet duoc mau
+// (color-blind) van doc duoc realm tren tooltip (spec sec"Canh gioi").
 const REALM_LABELS = computed<Record<string, string>>(() => ({
   mortal: t('panels.bag.tooltip.realms.mortal'),
   qi_refining: t('panels.bag.tooltip.realms.qiRefining'),
@@ -181,10 +181,10 @@ const player = usePlayerStore()
 
 const { stateVersion } = useStateVersion()
 
-// Grid responsive theo CHIỀU RỘNG THẬT của .bag-section__grid (đo qua
-// ResizeObserver, xem useBagGridLayout.ts) — cột/kích thước ô tự tính
-// lại mỗi khi container resize, KHÔNG còn 1 slotPx cố định suy từ %
-// chiều cao panel như bản cũ.
+// Grid responsive theo CHIEU RONG THAT cua .bag-section__grid (do qua
+// ResizeObserver, xem useBagGridLayout.ts) - cot/kich thuoc o tu tinh
+// lai moi khi container resize, KHONG con 1 slotPx co dinh suy tu %
+// chieu cao panel nhu ban cu.
 const { gridRef, pageSize, gridStyle } = useBagGridLayout()
 
 interface MaterialEntry {
@@ -195,10 +195,10 @@ interface MaterialEntry {
   amount: number
 }
 
-// Màu theo phẩm nghề cảnh giới (spec 2026-08-30-unify-material-quality-
-// names-design.md): nhìn TÊN biết tuổi/chất, nhìn MÀU (tên + khung) biết
-// realm. Material không có profession meta (linh thạch, legacy...) không
-// tô — undefined = màu mặc định.
+// Mau theo pham nghe canh gioi (spec 2026-08-30-unify-material-quality-
+// names-design.md): nhin TEN biet tuoi/chat, nhin MAU (ten + khung) biet
+// realm. Material khong co profession meta (linh thach, legacy...) khong
+// to - undefined = mau mac dinh.
 function professionRankOf(material: Material): number | undefined {
   const realmId = material.profession?.realmId
 
@@ -266,10 +266,10 @@ const entries = computed<MaterialEntry[]>(() => {
 
       rarityRank: professionRankOf(stack.material),
 
-      // Material chỉ có 1 trục rank (Phẩm Nghề, 1-10) — feed vào prop
-      // rarityRank (mặc định trần 5, thang itemQualityRank equipment)
-      // nên PHẢI kèm rarityRankScale: 10, nếu không rank 5 (Ngũ Phẩm,
-      // giữa thang) bị hiểu nhầm là kịch trần (Fix 1, final review).
+      // Material chi co 1 truc rank (Pham Nghe, 1-10) - feed vao prop
+      // rarityRank (mac dinh tran 5, thang itemQualityRank equipment)
+      // nen PHAI kem rarityRankScale: 10, neu khong rank 5 (Ngu Pham,
+      // giua thang) bi hieu nham la kich tran (Fix 1, final review).
       rarityRankScale: 10,
 
       nameSegments: materialNameSegments(stack.material),
@@ -277,22 +277,22 @@ const entries = computed<MaterialEntry[]>(() => {
   }))
 })
 
-// ================= Filter/search/gộp họ (plan §3.2 B4) =================
-// State filter sống trong phiên (cùng nhóm transient với bagSorts,
-// KHÔNG ghi save). Filter chạy TRƯỚC sort + pagination.
+// ================= Filter/search/gop ho (plan sec3.2 B4) =================
+// State filter song trong phien (cung nhom transient voi bagSorts,
+// KHONG ghi save). Filter chay TRUOC sort + pagination.
 const searchQuery = ref('')
 
 const activeGroup = ref<MaterialGroup | 'all'>('all')
 
-// entries map về shape {material, amount} — composable không biết BagCell.
+// entries map ve shape {material, amount} - composable khong biet BagCell.
 const filterInput = computed(() =>
   entries.value.map((entry) => ({ material: entry.material, amount: entry.amount })),
 )
 
 const { filtered, visibleCount } = useBagFilter(filterInput, { searchQuery, activeGroup })
 
-// Material của 1 ô họ thảo: biến thể niên đại CAO NHẤT làm đại diện
-// tooltip/icon (badge đã hiện realm + niên đại rộng nhất trên ô).
+// Material cua 1 o ho thao: bien the nien dai CAO NHAT lam dai dien
+// tooltip/icon (badge da hien realm + nien dai rong nhat tren o).
 function representativeMaterial(item: FilteredMaterial): Material {
   const variants = item.family?.variants
 
@@ -307,9 +307,9 @@ function representativeMaterial(item: FilteredMaterial): Material {
   { material: variants[0]!.material, amount: 0 }).material
 }
 
-// Badge họ: composable ghép sẵn "{realmVi} · {badgeKey}" — tách lấy KEY
-// bậc tuổi rồi t() (realm ghép sẵn là tên data vi; các realm đã có đủ
-// nhãn trong locale nếu cần tách sau).
+// Badge ho: composable ghep san "{realmVi} * {badgeKey}" - tach lay KEY
+// bac tuoi roi t() (realm ghep san la ten data vi; cac realm da co du
+// nhan trong locale neu can tach sau).
 function familyBadgeLabel(item: FilteredMaterial): string {
   const badge = item.family?.badgeLabel ?? ''
   const separator = badge.indexOf(' · ')
@@ -322,8 +322,8 @@ function familyBadgeLabel(item: FilteredMaterial): string {
 function familyCell(item: FilteredMaterial): MaterialBagCell {
   const material = representativeMaterial(item)
 
-  // Ô họ hiển thị TÊN GỐC (không prefix tuổi — badge đã ghi
-  // realm · bậc cao nhất, tránh lặp tuổi hai lần trên cùng ô).
+  // O ho hien thi TEN GOC (khong prefix tuoi - badge da ghi
+  // realm * bac cao nhat, tranh lap tuoi hai lan tren cung o).
   const baseLabel = baseNameFor(material)
 
   const baseRank = professionRankOf(material)
@@ -355,9 +355,9 @@ function familyCell(item: FilteredMaterial): MaterialBagCell {
   }
 }
 
-// Ô filter bar: tìm kiếm theo tên + chip nhóm (bấm lại chip đang chọn
-// để bỏ filter nhóm). Nhãn chip qua key-mapping composable (useBagFilter
-// không import i18n) → t(key).
+// O filter bar: tim kiem theo ten + chip nhom (bam lai chip dang chon
+// de bo filter nhom). Nhan chip qua key-mapping composable (useBagFilter
+// khong import i18n) -> t(key).
 const GROUP_CHIPS = computed<Array<{ value: MaterialGroup | 'all'; label: string }>>(() => [
   { value: 'all', label: t('panels.bag.groups.all') },
   ...MATERIAL_GROUPS.map((group) => ({ value: group, label: t(groupLabelKey(group)) })),
@@ -367,9 +367,9 @@ function toggleGroup(value: MaterialGroup | 'all') {
   activeGroup.value = activeGroup.value === value ? 'all' : value
 }
 
-// ================= Sort (giữ nguyên hành vi Workstream E) =================
-// Filter chạy TRƯỚC sort; sort trên MỘT BẢN COPY (stableSort) rồi mới
-// pagination. Họ thảo đã gộp sort theo tên họ.
+// ================= Sort (giu nguyen hanh vi Workstream E) =================
+// Filter chay TRUOC sort; sort tren MOT BAN COPY (stableSort) roi moi
+// pagination. Ho thao da gop sort theo ten ho.
 const MATERIAL_COMPARATORS: Record<Exclude<MaterialSortMode, 'default'>, (a: FilteredMaterial, b: FilteredMaterial) => number> = {
   category: (a, b) =>
     CATEGORY_ORDER.indexOf(a.material.category) - CATEGORY_ORDER.indexOf(b.material.category),
@@ -384,9 +384,9 @@ const MATERIAL_COMPARATORS: Record<Exclude<MaterialSortMode, 'default'>, (a: Fil
     SOURCE_ORDER.indexOf(a.material.sourceType) - SOURCE_ORDER.indexOf(b.material.sourceType),
 }
 
-// Ghim Linh Thạch ở ô đầu (plan Workstream D) — chạy TRƯỚC comparator
-// sort thường, KHÔNG qua withDirection(), áp dụng ở MỌI mode (kể cả
-// default) và cả hai direction.
+// Ghim Linh Thach o o dau (plan Workstream D) - chay TRUOC comparator
+// sort thuong, KHONG qua withDirection(), ap dung o MOI mode (ke ca
+// default) va ca hai direction.
 function comparePinned(a: FilteredMaterial, b: FilteredMaterial): number {
   const aPinned = a.material.category === 'spirit_stone'
   const bPinned = b.material.category === 'spirit_stone'
@@ -430,7 +430,7 @@ const cells = computed<MaterialBagCell[]>(() => {
 
 const { currentPage, totalPages, goToPage, resetPage, gridCells } = useBagPagination(cells, pageSize)
 
-// Đổi mode/direction/filter → quay về trang đầu.
+// Doi mode/direction/filter -> quay ve trang dau.
 watch(
   () => ({ ...ui.bagSorts.material }),
   () => resetPage(),

@@ -23,17 +23,17 @@ import {
 } from '../src/main-process/GuestCredentialStore'
 import { BUILD_IDENTITY, shortGitSha } from '../src/shared/build/BuildIdentity'
 
-// Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
-// (2026-08-24) — main process cho bản desktop. Hai mục đích:
-// 1) backgroundThrottling:false bên dưới, giữ nhịp setInterval(tick, 200) của
-//    App.vue mượt khi cửa sổ bị ẩn/minimize/mất focus thay vì Chromium tự
-//    throttle. Correctness của combat/GameClock KHÔNG phụ thuộc file này —
-//    GameManager.updateBattleFixedStep()/GameClock đã tự đúng với
-//    deltaSeconds bất kỳ độ lớn nào từ trước (xem core/game/GameManager.ts).
-// 2) (Task 7, 2026-09-10) host combatClockHost bên dưới — nguồn ClockSource
-//    "honest" hơn nữa cho renderer dưới Electron: main-process setInterval
-//    không bị Chromium throttle giống rAF, kể cả khi backgroundThrottling
-//    có lỡ bị bật lại. Xem src/main-process/combatClockHost.ts.
+// Uncommitted audit followup plan, Uu tien 2 "xu ly khi dong goi Electron"
+// (2026-08-24) - main process cho ban desktop. Hai muc dich:
+// 1) backgroundThrottling:false ben duoi, giu nhip setInterval(tick, 200) cua
+//    App.vue muot khi cua so bi an/minimize/mat focus thay vi Chromium tu
+//    throttle. Correctness cua combat/GameClock KHONG phu thuoc file nay -
+//    GameManager.updateBattleFixedStep()/GameClock da tu dung voi
+//    deltaSeconds bat ky do lon nao tu truoc (xem core/game/GameManager.ts).
+// 2) (Task 7, 2026-09-10) host combatClockHost ben duoi - nguon ClockSource
+//    "honest" hon nua cho renderer duoi Electron: main-process setInterval
+//    khong bi Chromium throttle giong rAF, ke ca khi backgroundThrottling
+//    co lo bi bat lai. Xem src/main-process/combatClockHost.ts.
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // B1.8 test accommodation: headless/CI boxes ship no OS keyring
@@ -57,8 +57,8 @@ const e2eCipher = process.env.TUTIEN_E2E_CREDENTIAL_CIPHER === 'e2e'
     }
   : null
 
-// Save (SaveSystem.ts) là localStorage đồng bộ, không có coordination giữa
-// nhiều tiến trình — 2 cửa sổ cùng ghi sẽ đè lẫn nhau.
+// Save (SaveSystem.ts) la localStorage dong bo, khong co coordination giua
+// nhieu tien trinh - 2 cua so cung ghi se de lan nhau.
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
 
 if (!gotSingleInstanceLock) {
@@ -403,8 +403,8 @@ function main() {
         // BETA-FINAL PR8 - dev tooling ships OFF in the packaged build.
         devTools: !app.isPackaged,
 
-        // Fix chính của toàn bộ file này — không cho Chromium throttle
-        // timer/rAF của cửa sổ này khi bị ẩn/minimize/mất focus.
+        // Fix chinh cua toan bo file nay - khong cho Chromium throttle
+        // timer/rAF cua cua so nay khi bi an/minimize/mat focus.
         backgroundThrottling: false,
       },
     })

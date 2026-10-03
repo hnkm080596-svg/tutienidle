@@ -7,8 +7,8 @@ import type { Skill } from './Skill'
 import type { SkillEffect } from './SkillEffect'
 import { makeTestBuffRegistry } from '../battle/turn/testing/TurnRuntimeFixtures'
 
-// Task 12 (plan 2026-09-03-thuan-he) — tooltip mechanic lines: mỗi field
-// engine mới (E-1..E-5) phải có dòng mô tả; skill cũ không field → [].
+// Task 12 (plan 2026-09-03-thuan-he) - tooltip mechanic lines: moi field
+// engine moi (E-1..E-5) phai co dong mo ta; skill cu khong field -> [].
 function skillWith(effects: SkillEffect[]): Skill {
   return {
     id: 'test_skill',

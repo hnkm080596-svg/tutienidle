@@ -1,6 +1,6 @@
-// Data-integrity gate (2026-08-25, plan §3/§5/§6): dữ liệu nghề THẬT
-// trong repo (materials.ts + ProductionCatalog + alchemyRecipes) phải
-// khớp nhau — lỗi authoring bị bắt ngay tại test.
+// Data-integrity gate (2026-08-25, plan sec3/sec5/sec6): du lieu nghe THAT
+// trong repo (materials.ts + ProductionCatalog + alchemyRecipes) phai
+// khop nhau - loi authoring bi bat ngay tai test.
 import { describe, expect, it } from 'vitest'
 import { materials } from '../../data/materials/materials'
 import { HERB_AGE_WEIGHTS } from '../production/ProductionBalance'
@@ -42,8 +42,8 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
     expect(result.errors).toEqual([])
   })
 
-  // gp123 6E (task C1): trục tuổi thống nhất 5 bậc — thuong_co là bậc
-  // trên cùng của Linh Thảo, dùng chung bảng nhãn chất (Thượng Cổ).
+  // gp123 6E (task C1): truc tuoi thong nhat 5 bac - thuong_co la bac
+  // tren cung cua Linh Thao, dung chung bang nhan chat (Thuong Co).
   it('HERB_AGES du 5 bac ket thuc bang thuong_co', () => {
     expect(HERB_AGES).toEqual(['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'])
   })
@@ -79,8 +79,8 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
 
     const herbName = PILL_FAMILIES[0]!.herbName
 
-    // Nhãn tuổi theo bảng nhãn chất thống nhất (Thập Niên..Thượng Cổ) —
-    // không nhãn nào được tra ra undefined (regression guard).
+    // Nhan tuoi theo bang nhan chat thong nhat (Thap Nien..Thuong Co) -
+    // khong nhan nao duoc tra ra undefined (regression guard).
     const expectedNames: Record<string, string> = {
       decade: 'Thập Niên',
       century: 'Bách Niên',
@@ -100,9 +100,9 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
     expect(thuongCo!.icon).toBe(`/assets/materials/herbs/${herbId}/thuong_co.png`)
   })
 
-  // gp123 6E (task C2): trục tuổi thống nhất MỞ RỘNG cho gỗ/khoáng —
-  // id `<realm>_wood_<age>` / `<realm>_ore_<age>`; plain wood và hậu tố
-  // phẩm cũ (hoang..tien) KHÔNG TỒN TẠI nữa.
+  // gp123 6E (task C2): truc tuoi thong nhat MO RONG cho go/khoang -
+  // id `<realm>_wood_<age>` / `<realm>_ore_<age>`; plain wood va hau to
+  // pham cu (hoang..tien) KHONG TON TAI nua.
   it('wood/ore chi dung hau to _<age>; khong con id pham cu', () => {
     const ageSuffix = new RegExp(`_(${HERB_AGES.join('|')})$`)
 
@@ -162,8 +162,8 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
         `${material.id}: age ${meta.age}`,
       ).toContain(meta.age as (typeof HERB_AGES)[number])
 
-      // gp123 6E C2: field quality đã bị XÓA khỏi ProfessionMaterialMeta —
-      // material data mới không được còn nhái field này.
+      // gp123 6E C2: field quality da bi XOA khoi ProfessionMaterialMeta -
+      // material data moi khong duoc con nhai field nay.
       expect(
         'quality' in meta,
         `${material.id} còn quality`,
@@ -211,19 +211,19 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
       byRecipe.set(base.pillRecipeId, identities)
     }
 
-    // Mỗi đan phương đúng một identity thảo.
+    // Moi dan phuong dung mot identity thao.
     for (const [, identities] of byRecipe) {
       expect(identities.size).toBe(1)
     }
 
-    // Mọi recipeId catalog khai báo đều tồn tại trong data alchemy.
+    // Moi recipeId catalog khai bao deu ton tai trong data alchemy.
     const recipeIds = new Set(alchemyRecipes.map((recipe) => recipe.id))
 
     for (const [recipeId] of byRecipe) {
       expect(recipeIds.has(recipeId), `catalog khai bao ${recipeId} nhung data thieu`).toBe(true)
     }
 
-    // Data alchemy recipe herbVariants khớp material id sinh ở generator.
+    // Data alchemy recipe herbVariants khop material id sinh o generator.
     for (const base of THANH_VAN_GROTTO_HERB_BASES) {
       const recipe = alchemyRecipes.find((candidate) => candidate.id === base.pillRecipeId)
 

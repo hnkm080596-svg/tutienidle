@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 //
-// Remediation Task 6 (2026-09-05) — dialog labeling: title/description
-// phải được tham chiếu qua aria-labelledby/aria-describedby (screen
-// reader đọc đúng tên + mô tả dialog) thay vì chỉ aria-label. ConfirmModal
-// expose thêm description qua aria-describedby; OverlayPanel gắn
-// aria-labelledby tới heading h3. Stable per-instance ID (useId) — nhiều
-// dialog đồng thời không trùng ID tĩnh.
+// Remediation Task 6 (2026-09-05) - dialog labeling: title/description
+// phai duoc tham chieu qua aria-labelledby/aria-describedby (screen
+// reader doc dung ten + mo ta dialog) thay vi chi aria-label. ConfirmModal
+// expose them description qua aria-describedby; OverlayPanel gan
+// aria-labelledby toi heading h3. Stable per-instance ID (useId) - nhieu
+// dialog dong thoi khong trung ID tinh.
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, h, nextTick, ref, type App } from 'vue'
 import ConfirmModal from './ConfirmModal.vue'

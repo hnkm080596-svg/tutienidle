@@ -1,5 +1,5 @@
 /**
- * R14.6c guard — presentation ACKs require a generation token (roadmap R14
+ * R14.6c guard - presentation ACKs require a generation token (roadmap R14
  * "all presentation ACKs require generation token"; R5/AR-20 runtime
  * contract in CombatAnimationRuntime).
  *

@@ -3,20 +3,20 @@ import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
 import type { Building } from '@/core/building/Building'
 
-// Building navigation controller (plan Workstream C) — logic điều hướng
-// DUY NHẤT dùng chung cho HAI entry point của building thật: hotspot
-// trên background và shortcut ring 3 của command wheel. Không entry nào
-// tự giữ navigation riêng.
+// Building navigation controller (plan Workstream C) - logic dieu huong
+// DUY NHAT dung chung cho HAI entry point cua building that: hotspot
+// tren background va shortcut ring 3 cua command wheel. Khong entry nao
+// tu giu navigation rieng.
 //
-// Quy tắc:
-// - Chưa xây → mở popover xây dựng (shared popover authority).
-// - Đã xây + functionType → mở panel chức năng (leftPanelMode).
-// - Đã xây + functionType (bao gồm Linh Tuyền) → LeftPanel.
-// - Resource building tương lai không có functionType → popover fallback.
-// - CHỈ MỘT BuildingDetailPopover ở GameRoot, điều khiển qua
+// Quy tac:
+// - Chua xay -> mo popover xay dung (shared popover authority).
+// - Da xay + functionType -> mo panel chuc nang (leftPanelMode).
+// - Da xay + functionType (bao gom Linh Tuyen) -> LeftPanel.
+// - Resource building tuong lai khong co functionType -> popover fallback.
+// - CHI MOT BuildingDetailPopover o GameRoot, dieu khien qua
 //   ui.activeBuildingPopoverId.
 
-/** Trình bày building cho hotspot/wheel — suy ra từ state hiện hành. */
+/** Trinh bay building cho hotspot/wheel - suy ra tu state hien hanh. */
 export interface BuildingPresentation {
   template: Building | undefined
 
@@ -28,9 +28,9 @@ export interface BuildingPresentation {
 }
 
 /**
- * Trạng thái badge nameplate (plan ui-discoverability §3.1) — suy ra THUẦN
- * từ BuildingSystem/ProductionSystem state hiện hành, không có store mới.
- * Ưu tiên: locked > ready > active > upgradeable > default.
+ * Trang thai badge nameplate (plan ui-discoverability sec3.1) - suy ra THUAN
+ * tu BuildingSystem/ProductionSystem state hien hanh, khong co store moi.
+ * Uu tien: locked > ready > active > upgradeable > default.
  */
 export type BuildingBadgeStatus =
   | 'locked'
@@ -67,15 +67,15 @@ export function useBuildingNavigation() {
   }
 
   /**
-   * Badge trạng thái nameplate (plan ui-discoverability §3.1) — ĐỌC THUẦN
-   * từ system hiện có qua GameManager facade, không mutate gì:
-   * - locked: chưa có instance (canBuild ĐÚNG nguồn sự thật với popover).
-   * - ready: resource building (Linh Tuyền) có sản lượng claim được
-   *   (getStoredAmount ≥ 1, cùng nguồn với nút thu hoạch popover).
-   * - active: đang có job chạy — vòng job DUY NHẤT của building là luyện
-   *   đan pill_room (AlchemySystem qua getAlchemyJobs()).
-   * - upgradeable: built + chưa max + đủ nguyên liệu nâng KẾ TIẾP
-   *   (upgradeCost[level], cùng luật cost index với BuildingSystem.upgrade()).
+   * Badge trang thai nameplate (plan ui-discoverability sec3.1) - DOC THUAN
+   * tu system hien co qua GameManager facade, khong mutate gi:
+   * - locked: chua co instance (canBuild DUNG nguon su that voi popover).
+   * - ready: resource building (Linh Tuyen) co san luong claim duoc
+   *   (getStoredAmount >= 1, cung nguon voi nut thu hoach popover).
+   * - active: dang co job chay - vong job DUY NHAT cua building la luyen
+   *   dan pill_room (AlchemySystem qua getAlchemyJobs()).
+   * - upgradeable: built + chua max + du nguyen lieu nang KE TIEP
+   *   (upgradeCost[level], cung luat cost index voi BuildingSystem.upgrade()).
    */
   function getBuildingStatus(buildingId: string): BuildingBadgeStatus {
     const template = gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === buildingId)
@@ -124,21 +124,21 @@ export function useBuildingNavigation() {
       return
     }
 
-    // Chưa xây → popover xây dựng.
+    // Chua xay -> popover xay dung.
     if (!presentation.isBuilt) {
       ui.openBuildingPopover(buildingId)
 
       return
     }
 
-    // Đã xây + functionType → mở thẳng panel chức năng.
+    // Da xay + functionType -> mo thang panel chuc nang.
     if (presentation.template.functionType) {
       ui.openLeftPanel(presentation.template.functionType as Exclude<LeftPanelMode, null>)
 
       return
     }
 
-    // Resource building (Linh Tuyền) → popover thu hoạch/nâng cấp.
+    // Resource building (Linh Tuyen) -> popover thu hoach/nang cap.
     ui.openBuildingPopover(buildingId)
   }
 

@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 //
-// Result lifecycle (2026-08-26) — khi thắng/thua, StageWaveSystem gọi
-// stageManager.stop() nhưng CombatScene vẫn đang hiển thị kết quả:
-// Home/DongFu CHỈ được hiện lại khi route coordinator đã rời 'combat'
-// (bấm "Tiếp Tục"/"Về Động Phủ" → request({target:'home'})). Regression
-// gốc: victory → useStageActive trả false → DongFuScene che canvas dù
-// modal kết quả đang hiện.
+// Result lifecycle (2026-08-26) - khi thang/thua, StageWaveSystem goi
+// stageManager.stop() nhung CombatScene van dang hien thi ket qua:
+// Home/DongFu CHI duoc hien lai khi route coordinator da roi 'combat'
+// (bam "Tiep Tuc"/"Ve Dong Phu" -> request({target:'home'})). Regression
+// goc: victory -> useStageActive tra false -> DongFuScene che canvas du
+// modal ket qua dang hien.
 //
-// R12 cleanup: visibility authority is the coordinator's activeRoute —
+// R12 cleanup: visibility authority is the coordinator's activeRoute -
 // the ui-store flags (combatSceneDismissed / isTribulationSceneActive)
 // that used to drive these tests are gone; the route ref plays that role.
 import { describe, expect, it } from 'vitest'
@@ -94,11 +94,11 @@ describe('useStageActive / useCombatSceneActive — result lifecycle', () => {
 
     expect(harness.read().combatSceneActive).toBe(true)
 
-    // Thắng: battle.state='victory' + stageManager.stop() phía domain —
-    // route không đổi, CombatScene vẫn mount đến khi player bấm tiếp.
+    // Thang: battle.state='victory' + stageManager.stop() phia domain -
+    // route khong doi, CombatScene van mount den khi player bam tiep.
     const view = harness.read()
 
-    // Trước fix: stageActive=false tại đây khiến DongFuScene che canvas.
+    // Truoc fix: stageActive=false tai day khien DongFuScene che canvas.
     expect(view.stageActive).toBe(true)
     expect(view.combatSceneActive).toBe(true)
 

@@ -1,8 +1,8 @@
-// CompanionCombat (Companion Roster spec §5-§6, 2026-09-05) - dựng CombatEntity/
-// TurnBattleParticipant TƯƠI MỚI mỗi trận từ 1 CompanionInstance (dữ liệu sở hữu,
-// persist) + CompanionDefinition tĩnh của nó, cùng pattern "combat state ephemeral"
-// đã dùng cho enemy. Companion KHÔNG BAO GIỜ được thêm vào GameManager.activePlayer
-// hay struct nhân vật phức tạp của PlayerData - đây là toàn bộ bề mặt tích hợp.
+// CompanionCombat (Companion Roster spec sec5-sec6, 2026-09-05) - dung CombatEntity/
+// TurnBattleParticipant TUOI MOI moi tran tu 1 CompanionInstance (du lieu so huu,
+// persist) + CompanionDefinition tinh cua no, cung pattern "combat state ephemeral"
+// da dung cho enemy. Companion KHONG BAO GIO duoc them vao GameManager.activePlayer
+// hay struct nhan vat phuc tap cua PlayerData - day la toan bo be mat tich hop.
 import { createBaseStats } from '@/core/stats/StatBlock'
 import type { CombatEntity } from '@/core/combat/CombatEntity'
 import type { CompanionDefinition, CompanionInstance } from '@/data/companion/Companions'
@@ -27,7 +27,7 @@ export function companionToCombatEntity(instance: CompanionInstance, definition:
     currentWard: 0,
     turnsSinceLastHitLanded: Infinity,
     realmIndex: getRealmIndex(instance.realmId),
-    x: 0, // sẽ bị ghi đè bởi vị trí ô mà FormationLoadout/DEFAULT resolve cho companion này (Part C)
+    x: 0, // se bi ghi de boi vi tri o ma FormationLoadout/DEFAULT resolve cho companion nay (Part C)
     row: 4,
     alive: true,
   }

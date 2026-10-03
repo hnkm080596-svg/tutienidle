@@ -106,7 +106,7 @@ test('progression slice fixed screens', async ({ page }) => {
   await createCharacterThroughUi(page, 'AuditFix')
   await enterHome(page)
 
-  // ---- RealmPanel (mortal) — requirement row + rate/ETA + mortal home node
+  // ---- RealmPanel (mortal) - requirement row + rate/ETA + mortal home node
   // Let one cultivation tick pass so the rate readout is populated.
   await page.waitForTimeout(1_500)
   await openWheelSlot(page, 'realm')
@@ -125,7 +125,7 @@ test('progression slice fixed screens', async ({ page }) => {
   await expect(realmDialog.locator('.realm-requirement--met')).toContainText('Phàm Nhân tầng 12')
   await shot(page, '06-realm-lv12-ready')
 
-  // ---- BreakthroughRequirementPanel — no gear equipped -> no equipment warning
+  // ---- BreakthroughRequirementPanel - no gear equipped -> no equipment warning
   await realmDialog.getByRole('button', { name: 'Quán Khí' }).click()
   const confirmDialog = page.getByRole('dialog', { name: /Độ kiếp cũng là độ thân/ })
   await expect(confirmDialog).toBeVisible({ timeout: 10_000 })
@@ -149,7 +149,7 @@ test('progression slice fixed screens', async ({ page }) => {
   await expect(page.locator('.tribulation-ui__mind')).toBeVisible({ timeout: 15_000 })
   await shot(page, '12-tribulation-mind')
 
-  // ---- Drive the tribulation to victory (answer via director — the
+  // ---- Drive the tribulation to victory (answer via director - the
   // answer buttons re-render per tick, so DOM clicks race detach).
   for (let i = 0; i < 120; i += 1) {
     const answered = await page.evaluate(() => {
@@ -169,7 +169,7 @@ test('progression slice fixed screens', async ({ page }) => {
     .poll(() => advanceTribulation(page, 10), { timeout: 30_000 })
     .toMatch(/victory|defeat|cleared/)
 
-  // Mandatory talent entitlement on victory — waitFor (not isVisible):
+  // Mandatory talent entitlement on victory - waitFor (not isVisible):
   // the modal mounts after the outcome commits.
   const entitlementModal = page.locator('[data-testid="talent-entitlement-modal"]')
   const entitlementShown = await entitlementModal
@@ -184,9 +184,9 @@ test('progression slice fixed screens', async ({ page }) => {
   await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
   await waitForPresentationIdle(page)
 
-  // ---- QuanKhiPanel — the three path choices now carry descriptions + kit
+  // ---- QuanKhiPanel - the three path choices now carry descriptions + kit
   await expect(page.locator('.quan-khi-panel__choices')).toBeVisible({ timeout: 15_000 })
-  // The "QUÁN KHÍ THÀNH CÔNG" world announcement overlays the panel.
+  // The "QUAN KHI THANH CONG" world announcement overlays the panel.
   const outcomeAnnouncement = page.locator('.world-announcement')
   if (await outcomeAnnouncement.isVisible().catch(() => false)) {
     await outcomeAnnouncement.click()
@@ -195,7 +195,7 @@ test('progression slice fixed screens', async ({ page }) => {
   await expect(page.locator('.quan-khi-panel__choice-desc').first()).toBeVisible()
   await shot(page, '13-quankhi-path-panel')
 
-  // Choose Kiem Tu (sword) — same path the audit walked.
+  // Choose Kiem Tu (sword) - same path the audit walked.
   const swordChoice = page.locator('.quan-khi-panel__choice', { hasText: 'Kiếm Tu' })
   await swordChoice.click()
   const confirm = page.locator('.confirm-modal__confirm')
@@ -208,16 +208,16 @@ test('progression slice fixed screens', async ({ page }) => {
     await expect(announcement).toHaveCount(0, { timeout: 15_000 })
   }
 
-  // ---- RealmPanel at qi_refining — live node reads "Đang tu hành"
+  // ---- RealmPanel at qi_refining - live node reads "Dang tu hanh"
   await openWheelSlot(page, 'realm')
   await expect(realmDialog).toBeVisible({ timeout: 15_000 })
   await expect(realmDialog.locator('.realm-node.is-current small')).toHaveText('Đang tu hành')
-  // Panel mounts with a fade — let it settle so the shot isn't mid-transition.
+  // Panel mounts with a fade - let it settle so the shot isn't mid-transition.
   await page.waitForTimeout(800)
   await shot(page, '18-realm-panel-qi')
   await page.keyboard.press('Escape')
 
-  // ---- Node tree — the fidelity constellation renders readable nodes
+  // ---- Node tree - the fidelity constellation renders readable nodes
   await openWheelSlot(page, 'skill')
   const skillPanel = page.locator('.skill-paper-scene')
   await expect(skillPanel).toBeVisible({ timeout: 15_000 })
@@ -225,7 +225,7 @@ test('progression slice fixed screens', async ({ page }) => {
   await shot(page, '21-tree-default-zoom')
   await page.keyboard.press('Escape')
 
-  // ---- StageSelectPanel — lock badge + reason on the floor tile and detail
+  // ---- StageSelectPanel - lock badge + reason on the floor tile and detail
   await openWheelSlot(page, 'teleport_array')
   const stageOverlay = page.locator('.exploration-scene')
   await expect(stageOverlay).toBeVisible({ timeout: 10_000 })
@@ -236,7 +236,7 @@ test('progression slice fixed screens', async ({ page }) => {
   await expect(stageOverlay.locator('.disabled-line')).toBeVisible()
   await shot(page, '23-stage-locked-detail')
 
-  // ---- Combat top bar — formatted HP, no raw float leak
+  // ---- Combat top bar - formatted HP, no raw float leak
   const startButton = page.getByTestId('stage-start-button')
   const unlockedNode = stageOverlay.locator('.stage-node:not(.locked)').first()
   await unlockedNode.click()

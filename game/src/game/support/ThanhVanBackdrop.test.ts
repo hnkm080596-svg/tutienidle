@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 //
-// Depth layer tường minh cho background (yêu cầu 2026-08-26): xác nhận
-// depth GẮN CHO TỪNG TEXTURE KEY (không chỉ thứ tự mảng add):
+// Depth layer tuong minh cho background (yeu cau 2026-08-26): xac nhan
+// depth GAN CHO TUNG TEXTURE KEY (khong chi thu tu mang add):
 //   sky < far mountains < midground < atmosphere < battle ground
-//     < foreground left/right < time grading, và tất cả < DEPTH_GROUND_GRID.
+//     < foreground left/right < time grading, va tat ca < DEPTH_GROUND_GRID.
 import { describe, expect, it } from 'vitest'
 import { DEPTH_GROUND_GRID, DEPTH_THANH_VAN_TIME_GRADE } from './BattleLayers'
 import { attachThanhVanBackdrop } from './ThanhVanBackdrop'
@@ -123,7 +123,7 @@ describe('ThanhVanBackdrop — depth theo texture key', () => {
 
     expect(byKey.get('tv-spring-03-battle-ground')).toBe(5)
 
-    // Lỗi thật đã gặp: atmosphere từng đè lên battle ground vì cùng depth.
+    // Loi that da gap: atmosphere tung de len battle ground vi cung depth.
     expect(byKey.get('tv-spring-06-atmosphere')).toBeLessThan(
       byKey.get('tv-spring-03-battle-ground')!,
     )
@@ -166,7 +166,7 @@ describe('ThanhVanBackdrop — depth theo texture key', () => {
 
         expect(ground).toBeLessThan(fgRight)
 
-        // Mọi depth background vẫn NHỎ HƠN lớp grid mặt đất.
+        // Moi depth background van NHO HON lop grid mat dat.
         expect(Math.max(sky, far, mid, atmosphere, ground, fgLeft, fgRight)).toBeLessThan(
           DEPTH_GROUND_GRID,
         )
@@ -206,7 +206,7 @@ describe('ThanhVanBackdrop — neo horizonY (Workstream H, unit foot alignment)'
   it('neo đường chân trời của art đúng vào horizonY thật ở màn thấp (800×600)', () => {
     const { scene, images } = createFakeScene()
 
-    const horizonY = 180 // ví dụ: road lớn hơn scenery do PERSPECTIVE_MIN_ROAD_HEIGHT clamp
+    const horizonY = 180 // vi du: road lon hon scenery do PERSPECTIVE_MIN_ROAD_HEIGHT clamp
 
     attachThanhVanBackdrop(scene as never, variant, 800, 600, horizonY)
 

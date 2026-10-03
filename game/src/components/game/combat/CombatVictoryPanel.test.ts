@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-// B4 (audit T1-5) — a Promise<boolean> is truthy, so the countdown's
+// B4 (audit T1-5) - a Promise<boolean> is truthy, so the countdown's
 // `if (!refight())` rollback never ran when a refight failed
 // asynchronously: battleRunMode stayed armed and selectedStageId kept
 // the advanced value. Mount harness mirrors CombatDefeatPanel.test.ts
-// (createApp + h + provide — no @vue/test-utils).
+// (createApp + h + provide - no @vue/test-utils).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -66,7 +66,7 @@ function mountPanel(gm: MockGameManager, battleRunMode: 'manual' | 'repeat' | 'p
   app.provide(STATE_VERSION_KEY, ref(0))
   app.provide(BUMP_STATE_KEY, () => {})
 
-  // battleRunMode must be armed BEFORE mount — onMounted reads it to
+  // battleRunMode must be armed BEFORE mount - onMounted reads it to
   // decide whether the 3s auto-refight countdown starts (B4).
   const ui = useUiStore(pinia)
 

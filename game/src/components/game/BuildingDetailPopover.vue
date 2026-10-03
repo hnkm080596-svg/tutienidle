@@ -38,9 +38,9 @@ const instance = computed(() => {
   const manager = gameManager.buildingManager
   const current = manager.getByBuildingId(props.buildingId)
 
-  // BuildingManager mutate level tại chỗ. Trả cùng object reference khiến
-  // computed không phát update dù stateVersion đã bump, nên popover vẫn hiện
-  // cấp/cost cũ sau khi nâng. Snapshot mới buộc Vue render lại đúng state.
+  // BuildingManager mutate level tai cho. Tra cung object reference khien
+  // computed khong phat update du stateVersion da bump, nen popover van hien
+  // cap/cost cu sau khi nang. Snapshot moi buoc Vue render lai dung state.
   return current ? { ...current } : undefined
 })
 
@@ -117,9 +117,9 @@ async function build() {
       </div>
     </div>
 
-    <!-- Nút hành động cố định NGOÀI vùng scroll (2026-08-30, bug report:
-         popup nhiều chi phí đẩy nút "Xây dựng" xuống dưới, phải cuộn mới
-         bấm được) — luôn hiện dù nội dung chi phí dài cỡ nào. -->
+    <!-- Nut hanh dong co dinh NGOAI vung scroll (2026-08-30, bug report:
+         popup nhieu chi phi day nut "Xay dung" xuong duoi, phai cuon moi
+         bam duoc) - luon hien du noi dung chi phi dai co nao. -->
     <GameButton class="building-popover__action" variant="primary" :disabled="!canBuild" @click="build">{{ t('panels.buildingPopover.build') }}</GameButton>
   </div>
 </template>

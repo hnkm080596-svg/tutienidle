@@ -1,17 +1,17 @@
-// Turn-Based Combat Completion (Task 8) — cầu nối GameManager ↔ TurnBattle.
-// Adapter chuyển CombatEntity (đã có từ playerToCombatEntity/
-// enemyToCombatEntity) thành TurnBattleParticipant, đọc speed THẬT từ
-// Stat System (stats.speed, đã rename ở conversion trước).
+// Turn-Based Combat Completion (Task 8) - cau noi GameManager <-> TurnBattle.
+// Adapter chuyen CombatEntity (da co tu playerToCombatEntity/
+// enemyToCombatEntity) thanh TurnBattleParticipant, doc speed THAT tu
+// Stat System (stats.speed, da rename o conversion truoc).
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
 import type { StatDomain } from '../stats/StatDomain'
 
 /**
- * Kiem Tu Reimagined (Task 6) — the buildId special/ultimate maps were
+ * Kiem Tu Reimagined (Task 6) - the buildId special/ultimate maps were
  * removed: sword_pathway Kiem Pho has no special/ult (the preset IS the kit) and
  * hidden_sword_pathway emblems arrive via resolvedSpecialUltimate (Task 9). The legacy
- * Bạt Kiếm/Kiếm Trận kit they pointed at retires in Task 12.
+ * Bat Kiem/Kiem Tran kit they pointed at retires in Task 12.
  */
 
 export function toTurnBattleParticipant(
@@ -23,8 +23,8 @@ export function toTurnBattleParticipant(
     special?: TurnSkillDefinition
     ultimate?: TurnSkillDefinition
     reactivePayloads?: Record<string, TurnSkillDefinition>
-    /** Task 20 — hidden_body proc-fuel cap (MAX_THE + node bonus); stamped
-     * onto the entity here so every Thế transaction clamps via
+    /** Task 20 - hidden_body proc-fuel cap (MAX_THE + node bonus); stamped
+     * onto the entity here so every The transaction clamps via
      * `entity.maxThe ?? MAX_THE` (TheEconomy.theCap). */
     maxThe?: number
   },
@@ -33,7 +33,7 @@ export function toTurnBattleParticipant(
     id: entity.id,
     entity,
     // R2 (AR-05): participant.speed starts as a copy of effective speed
-    // and is a READ-ONLY CACHE — the engine re-syncs it from
+    // and is a READ-ONLY CACHE - the engine re-syncs it from
     // entity.stats.speed at every recompute/pacing step. Never write it
     // independently; effective combat stats own the speed value.
     speed: entity.stats.speed,
@@ -42,9 +42,9 @@ export function toTurnBattleParticipant(
     alive: entity.alive,
     consecutiveHardCcTurns: 0,
     basic,
-    // stat-system-reimagined review fix (2026-09-15) — the caller
+    // stat-system-reimagined review fix (2026-09-15) - the caller
     // resolves which stat domains the participant owns (M5: via
-    // resolveActiveWayStatDomains so the WAY — not the raw path id —
+    // resolveActiveWayStatDomains so the WAY - not the raw path id -
     // decides), scoping domain deltaDerivers (spell attunement->MP,
     // hidden_body reactive chances) in calculateEffectiveStats.
     // Enemies/companions pass no domains -> no domain derivers ever run
@@ -72,7 +72,7 @@ export function toTurnBattleParticipant(
     } satisfies TurnSkillSlot
   }
 
-  // The Tu An (plan Task 16) — participant-local payload clones the
+  // The Tu An (plan Task 16) - participant-local payload clones the
   // typed follow-up queue resolves for counter/follow-up procs.
   // CONTRACT: these payloads are raw TurnSkillDefinitions that bypass the
   // registry/adapter validation lane entirely. Several authored fields
@@ -86,7 +86,7 @@ export function toTurnBattleParticipant(
     participant.reactivePayloads = resolvedSpecialUltimate.reactivePayloads
   }
 
-  // Task 20 — participant-build cap authority: entity.maxThe persists
+  // Task 20 - participant-build cap authority: entity.maxThe persists
   // across auto-repeat resets (battle-scoped currentThe zeroes, the cap
   // is configuration, not battle state). Shared-surface stamp: the build
   // already wrote entity.maxThe for build-path callers; a non-build

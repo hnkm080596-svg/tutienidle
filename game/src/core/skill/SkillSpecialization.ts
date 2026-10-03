@@ -4,11 +4,11 @@ import type { PassiveTrigger } from './SkillTypes'
 import type { ActionTargeting } from '../battle/CombatAction'
 
 /**
- * Core Loop Foundation checklist (Mục SKILL) — "behavior-changing
- * node": chọn 1 Specialization đổi HẲN cách skill hoạt động (effect
- * khác, trigger khác), không chỉ đổi số như level-up thường. Mỗi field
- * *Override có mặt thì THAY THẾ HOÀN TOÀN field gốc tương ứng trên
- * Skill (không merge) — xem SkillSystem.getEffectiveSkill().
+ * Core Loop Foundation checklist (Muc SKILL) - "behavior-changing
+ * node": chon 1 Specialization doi HAN cach skill hoat dong (effect
+ * khac, trigger khac), khong chi doi so nhu level-up thuong. Moi field
+ * *Override co mat thi THAY THE HOAN TOAN field goc tuong ung tren
+ * Skill (khong merge) - xem SkillSystem.getEffectiveSkill().
  */
 export interface SkillSpecialization {
   id: string
@@ -23,10 +23,10 @@ export interface SkillSpecialization {
 
   passiveTriggerOverride?: PassiveTrigger
 
-  // Pháp Tu Thuần Hệ (Task 10, spec 2026-09-03 §2) — biến thể C/D đổi
-  // VÙNG tác động (Tụ ↔ Tán, single ↔ line, area ↔ all_lanes). Có mặt
-  // thì THAY targeting gốc của skill (cùng tinh thần effectsOverride);
-  // không có = giữ targeting skill. BattleSystem.resolveSkillEffects
-  // đọc qua getEffectiveSkill().
+  // Phap Tu Thuan He (Task 10, spec 2026-09-03 sec2) - bien the C/D doi
+  // VUNG tac dong (Tu <-> Tan, single <-> line, area <-> all_lanes). Co mat
+  // thi THAY targeting goc cua skill (cung tinh than effectsOverride);
+  // khong co = giu targeting skill. BattleSystem.resolveSkillEffects
+  // doc qua getEffectiveSkill().
   targeting?: ActionTargeting
 }

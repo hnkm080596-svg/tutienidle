@@ -17,7 +17,7 @@
  * that compete in the app root stacking context.
  */
 export const OVERLAY_LAYERS = {
-  /** CombatPauseOverlay — deliberately below the curtain: a route transition always covers the pause prompt. */
+  /** CombatPauseOverlay - deliberately below the curtain: a route transition always covers the pause prompt. */
   combatPause: 900,
 /** ActionFeedbackLog - bottom-right action history. */
   feedback: 1200,
@@ -34,14 +34,14 @@ export const OVERLAY_LAYERS = {
       is also inert while up); below appError/saveGate/curtain, which are
       boot/fatal-level owners and outrank admission by contract. */
   authority: 1950,
-  /** Tooltip — floating contextual info. */
+  /** Tooltip - floating contextual info. */
   tooltip: 2200,
-  /** ErrorScreen — app-level error surface. */
+  /** ErrorScreen - app-level error surface. */
   appError: 3000,
-  /** SaveIncompatibleScreen — boot save gate. */
+  /** SaveIncompatibleScreen - boot save gate. */
   saveGate: 4000,
   /** Modals spawned BY the save gate (its ConfirmModal) - above the gate so the confirm is clickable; still under the curtain. */
   saveGateModal: 4100,
-  /** PresentationTransitionOverlay curtain — TOPMOST, covers everything while closed. */
+  /** PresentationTransitionOverlay curtain - TOPMOST, covers everything while closed. */
   curtain: 5000,
 } as const

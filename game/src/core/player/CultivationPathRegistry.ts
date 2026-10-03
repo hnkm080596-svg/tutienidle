@@ -74,10 +74,10 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Review round-4 (MEDIUM) — the hidden_spell_pathway kit is a fixed three-skill
+ * Review round-4 (MEDIUM) - the hidden_spell_pathway kit is a fixed three-skill
  * set granted atomically at the ritual (HIDDEN_SPELL_REQUIRED_SKILLS is
  * the single authority). A save/registry missing ANY member is corrupt
- * progression state — fail loudly at battle build instead of silently
+ * progression state - fail loudly at battle build instead of silently
  * dropping the special button or the dao multicast. Called from both
  * battle-build resolvers so each enforces the contract independently.
  */
@@ -98,10 +98,10 @@ function assertNgoDaoKitLearned(deps: CultivationPathRuntimeDeps, player: Player
 }
 
 /**
- * Review fix (HIGH-1) — the An composite pool is the CANONICAL
+ * Review fix (HIGH-1) - the An composite pool is the CANONICAL
  * conversion of the five authored element basics (SPELL_KIT_IDS[el][0]
  * templates through getEffectiveSkill + toTurnSkillDefinition), not a
- * static duplicate table. A missing/invalid template throws here —
+ * static duplicate table. A missing/invalid template throws here -
  * authoring errors must surface loudly at battle build, never silently
  * shrink the pick pool.
  */
@@ -122,7 +122,7 @@ function resolveAnElementBasicPool(deps: CultivationPathRuntimeDeps): TurnSkillD
  * The canonical authored-Skill -> TurnSkillDefinition basic pipeline
  * (moved from GameManager.resolvePlayerBasicAttack). `strict` paths
  * (spell ways) fail loudly on a missing required basic or a converter
- * rejection — authored-data defects must surface, never silently degrade.
+ * rejection - authored-data defects must surface, never silently degrade.
  */
 function resolveAuthoredBasic(
   deps: CultivationPathRuntimeDeps,
@@ -134,7 +134,7 @@ function resolveAuthoredBasic(
 
   // Review round-3 (MEDIUM): a REQUIRED phap basic that isn't learned
   // is corrupt progression state (the element commit / An ritual grants
-  // it atomically). Fail loudly — degrading to generic melee would
+  // it atomically). Fail loudly - degrading to generic melee would
   // silently strip the path's kit.
   if (skill === undefined && authoredBasicId !== undefined && strict) {
     throw new Error(
@@ -159,7 +159,7 @@ function resolveAuthoredBasic(
   try {
     const converted = toTurnSkillDefinition(skill, effective)
 
-    // Task 11 — the An basic carries its composite pick (uniform
+    // Task 11 - the An basic carries its composite pick (uniform
     // element_basic pool) plus `multicast` when the player owns the
     // ngo_dao_hon_don dao passive (granted at the ritual).
     const resolved = isHiddenSpellPathway(player)
@@ -177,7 +177,7 @@ function resolveAuthoredBasic(
       resourceCost: undefined,
     }
   } catch (error) {
-    // Review round-2 (LOW): phap paths have no static fallback — the
+    // Review round-2 (LOW): phap paths have no static fallback - the
     // SPELL_BASICS table was a second authority that drifted from
     // authored skills. A converter rejection is an authored-data
     // defect; fail loudly instead of silently running wrong gameplay.
@@ -223,7 +223,7 @@ function resolveBodyKit(
 }
 
 /**
- * Ung The beta — the An kit is the basic Tham The at path choice (Phan
+ * Ung The beta - the An kit is the basic Tham The at path choice (Phan
  * rides it baseline); the major_quan_the node's granted skill core is
  * the ONLY special gate, opening the Ho/Tro markers with it. Node
  * consequence riders ride the one locked channel and bake into
@@ -257,17 +257,17 @@ function sharedMembers() {
 }
 
 /**
- * Mortal / pham_nhan — the persisted mortalBasicSkillId pick is the
+ * Mortal / pham_nhan - the persisted mortalBasicSkillId pick is the
  * player's chosen basic-tier skill (spec 2026-09-15 section 2.3:
  * huy_quyen is cast as a basic while mortal, its casts feeding the
- * hidden_body_pathway offer gate). Restricted to the precursor family —
+ * hidden_body_pathway offer gate). Restricted to the precursor family -
  * an absent/illegal/unlearned pick resolves the tram default.
  */
 function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
     ...sharedMembers(),
     resolveBasic(player) {
-      // P7-M4 — the persisted pick is the mortal basic; the precursor
+      // P7-M4 - the persisted pick is the mortal basic; the precursor
       // whitelist + learned membership guard it. Save v82 contract: a
       // mortal SAVE must carry the pick (preflight rejects otherwise);
       // this fallback is the defensive runtime default for in-memory /
@@ -280,7 +280,7 @@ function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathR
 
       return (
         resolveAuthoredBasic(deps, player, authoredBasicId, false) ??
-        // M9 — content-map lookup keyed on the path id, not a literal
+        // M9 - content-map lookup keyed on the path id, not a literal
         // branch: builds with a static authored basic resolve here.
         (player.cultivationPath ? BASIC_ATTACKS_BY_BUILD[player.cultivationPath] : undefined) ??
         GENERIC_PHYSICAL_BASIC
@@ -294,7 +294,7 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
   return {
     ...sharedMembers(),
     resolveBasic(player) {
-      // Spec 2026-09-15 K3 — tram is a MORTAL precursor: once a path is
+      // Spec 2026-09-15 K3 - tram is a MORTAL precursor: once a path is
       // chosen it is no longer the basic. Kiem Tu basics resolve through
       // the dynamicBasic orb provider; the static authored def is the
       // inert slot filler.
@@ -310,8 +310,8 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
             collectKiemPhoComboModifiers(player, nodes),
             collectKiemPhoSkillDefinitionModifiers(player, nodes),
           ),
-    // P7-M4 — display label for the provider-backed basic (Kiếm Phổ orb
-    // machinery / Ngự Kiếm — Ngu Kiem Beta: ONE evolving skill), matching
+    // P7-M4 - display label for the provider-backed basic (Kiem Pho orb
+    // machinery / Ngu Kiem - Ngu Kiem Beta: ONE evolving skill), matching
     // kiemBarBridge's wording.
     describeDynamicBasic: () => ({ name: hidden ? NGU_KIEM_BASE_NAME : 'Kiếm Phổ' }),
   }
@@ -327,7 +327,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       const resolved =
         resolveAuthoredBasic(deps, player, authoredBasicId, true) ??
         // P7-M4 - way-authored starter fallback: linh_bao fights as the
-        // basic until the element kit supersedes (authored-read — the
+        // basic until the element kit supersedes (authored-read - the
         // starter comes off the committed way definition, no literal).
         resolveAuthoredBasic(
           deps,
@@ -338,12 +338,12 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
         (player.cultivationPath ? BASIC_ATTACKS_BY_BUILD[player.cultivationPath] : undefined) ??
         GENERIC_PHYSICAL_BASIC
 
-      // Phap Tu Reimagined (spec D1/D2) — the basic's LANDED primary
+      // Phap Tu Reimagined (spec D1/D2) - the basic's LANDED primary
       // grants +1 The (cap 5 battle-scoped); at 5 the empowered element
       // variant resolves (checked before cast, no consume). Hidden way
       // basics never reach this runtime (F11).
       //
-      // Spec D11/D8 seam attach — the KIT basic (never the starter
+      // Spec D11/D8 seam attach - the KIT basic (never the starter
       // fallback) carries its element's WINDOW landed lane (inert unless
       // the caster holds the Trang buff) and, for metal, the Kim Liet
       // per-stack pierce (spec D7/D11). Stamped BEFORE
@@ -378,7 +378,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       // The +1 The gain applies to the element basic AND the pre-element
       // starter phase (spec D2 mints The on a landed basic cast to fuel the
       // Phap The empowerment): pre-commit whatever basic resolved IS the
-      // legitimate starter; post-commit only a legit resolution mints — the
+      // legitimate starter; post-commit only a legit resolution mints - the
       // corrupt-state GENERIC_PHYSICAL_BASIC fallback never does. Stamped on
       // `stamped` (not the return wrapper) so the empowered variant inherits
       // it through {...base}.
@@ -406,7 +406,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
         return {}
       }
 
-      // Spec D8 — kits resolve to {special} only; the legacy ultimate
+      // Spec D8 - kits resolve to {special} only; the legacy ultimate
       // (empowerment@100 chain-E god-ult) is retired.
       const [, specialId] = SPELL_KIT_IDS[element]
       const specialSkill = deps.skillManager.get(specialId)
@@ -414,7 +414,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       return {
         special: specialSkill
           ? {
-              // Spec D8/F10 — the five Trang casts pay 30% of LIVE max
+              // Spec D8/F10 - the five Trang casts pay 30% of LIVE max
               // Linh Luc (evaluated at gate/consume time, never frozen);
               // the authored records carry no flat cost.
               ...toTurnSkillDefinition(
@@ -439,7 +439,7 @@ function createHiddenSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cult
       )
     },
     resolveSpecialUltimate(player) {
-      // Phap Tu An (Task 7) — the special is the repeat-cast skill
+      // Phap Tu An (Task 7) - the special is the repeat-cast skill
       // granted at the ritual; the ult slot is a passive
       // (ngo_dao_hon_don), no ultimate TurnSkillDefinition.
       assertNgoDaoKitLearned(deps, player)
@@ -474,7 +474,7 @@ function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivation
   return {
     ...sharedMembers(),
     resolveBasic(player) {
-      // The Tu Reimagined (spec section 5, INV-3) — root-owned kit;
+      // The Tu Reimagined (spec section 5, INV-3) - root-owned kit;
       // P7-M4 way-authored starter fallback (huy_quyen) sits between the
       // kit and the generic melee fallback.
       return (
@@ -501,7 +501,7 @@ function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivation
 function createHiddenBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   // resolveBasic + resolveSpecialUltimate run back-to-back inside one
   // participant build (resolveCombatRoleComposition); the kit build
-  // structuredClones every def, so memoize on the fingerprint — every
+  // structuredClones every def, so memoize on the fingerprint - every
   // kit input (hidden-body mods, skill-core levels incl. the quan_the
   // gate) derives from nodeLevels, and nodePathApplies/nodeWayApplies
   // read cultivationPath/way too, so all three join the fingerprint.
@@ -520,7 +520,7 @@ function createHiddenBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Culti
   return {
     ...sharedMembers(),
     resolveBasic(player) {
-      // Spec section 6.1 — fixed kit granted at path choice; the built
+      // Spec section 6.1 - fixed kit granted at path choice; the built
       // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.
       return kitFor(player).basic
     },
@@ -537,7 +537,7 @@ function createHiddenBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Culti
 }
 
 // ---------------------------------------------------------------------------
-// The dispatch table — the ONLY place path:way identity selects behavior.
+// The dispatch table - the ONLY place path:way identity selects behavior.
 // ---------------------------------------------------------------------------
 
 export type CultivationPathRuntimeFactory = (

@@ -9,16 +9,16 @@ import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// Phap Tu Reimagined Task 13 — spec §4: the empowered ult's two route
+// Phap Tu Reimagined Task 13 - spec sec4: the empowered ult's two route
 // expressions. `detonate` (dot route): direct + normal application
 // first, then consume every live DoT ailment for remaining-tick x
 // stacks x DETONATE_AMP and re-seed a FIXED 1 stack at AUTHORED
-// duration with potency recomputed vs the caster's CURRENT stats —
+// duration with potency recomputed vs the caster's CURRENT stats -
 // reaction-silent (O2/R2: re-seed ops carry 'suppressed' eligibility).
 // `nuke` (no route): damage x (1 + theBurned/100 x NUKE_THE_COEFF),
 // linear in the whole pool.
 // buff2 M4: the burst resolves vs the CONSUMED INSTANCE's source stats
-// (statSourceId) — a third-party DoT pays its own owner's per-tick.
+// (statSourceId) - a third-party DoT pays its own owner's per-tick.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, ...(overrides.stats ?? {}) })
@@ -171,7 +171,7 @@ describe('Detonate (dot-route empowered ult)', () => {
 
     // Pre-seed: doc_can (wood DoT) x3 from a THIRD source with
     // woodPower 10 -> per-tick resolves vs the minion, NOT the caster;
-    // choang (stun — controls, no damage periodic) is a pure-utility
+    // choang (stun - controls, no damage periodic) is a pure-utility
     // ailment the detonate must leave alone.
     const minion = addRosterParticipant(
       makeParticipant('minion', createCombatant({ id: 'minion', stats: createBaseStats({ might: 0, woodPower: 10 }) }), 1, 2),
@@ -192,7 +192,7 @@ describe('Detonate (dot-route empowered ult)', () => {
     // Direct packet floors at min-1.
     expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 27 - 101.25 - 1, 0)
 
-    // Utility ailment untouched — same instance, same remaining life.
+    // Utility ailment untouched - same instance, same remaining life.
     const choangAfter = buffsOf(runtime, enemy, 'choang')[0]
     expect(choangAfter?.instanceId).toBe(choangBefore?.instanceId)
     expect(choangAfter!.remaining).toBe(choangBefore!.remaining)
@@ -227,7 +227,7 @@ describe('Detonate (dot-route empowered ult)', () => {
     expect(reseeded[0]!.stacks).toBe(1)
     expect(reseeded[0]!.remaining).toBe(3)
 
-    // Potency recomputed vs the caster's CURRENT stats — the enemy's
+    // Potency recomputed vs the caster's CURRENT stats - the enemy's
     // own turn end ticks BOTH re-seeded ailments at caster power:
     // doc_can 130 wood x 0.2 = 26 (never the consumed snapshot's
     // stale 2/tick) + hoa_an 150 fire x 0.15 = 22.5.
@@ -241,7 +241,7 @@ describe('Detonate (dot-route empowered ult)', () => {
 
     // doc_can (wood) incumbent + the cast's hoa_an (fire): with the
     // legacy manager deleted (M-INT) there is no reaction listener at
-    // all — both ailments are DoT so the detonate consumes them, and
+    // all - both ailments are DoT so the detonate consumes them, and
     // the re-seeded pair rides 'suppressed' eligibility by contract.
     runtime.applyBuff('doc_can', enemy, player)
 

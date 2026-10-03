@@ -4,21 +4,21 @@ export type BattleState =
   // reveal BEFORE the countdown (turn-based flow only). Same "wait phase"
   // contract as countdown: no combat logic, battle is still in progress.
   | 'intro'
-  // Countdown 3 giây trước trận (2026-08-22) — quái đầu tiên đã spawn +
-  // vị trí đã emit (xem BattleSystem.start()), nhưng movement/attack/
-  // spawn-tiếp-theo bị đóng băng cho tới khi đếm về 0 (xem
+  // Countdown 3 giay truoc tran (2026-08-22) - quai dau tien da spawn +
+  // vi tri da emit (xem BattleSystem.start()), nhung movement/attack/
+  // spawn-tiep-theo bi dong bang cho toi khi dem ve 0 (xem
   // BattleSystem.update()'s countdown branch).
   | 'countdown'
   | 'fighting'
   | 'victory'
   | 'defeat'
 
-// Coi CẢ 'countdown' lẫn 'fighting' là "trận đang thật sự diễn ra" —
-// dùng ở mọi nơi cần biết "có đang trong 1 trận" theo nghĩa rộng (ẩn UI
-// Động Phủ, chặn mở Tribulation mới trong lúc đang có 1 cái đang chạy,
-// không cộng tu vi passive...), khác hẳn việc kiểm tra riêng
-// 'fighting' để gate combat logic thật (xem BattleSystem.update()).
-// undefined (chưa có Battle nào) coi như KHÔNG đang diễn ra.
+// Coi CA 'countdown' lan 'fighting' la "tran dang that su dien ra" -
+// dung o moi noi can biet "co dang trong 1 tran" theo nghia rong (an UI
+// Dong Phu, chan mo Tribulation moi trong luc dang co 1 cai dang chay,
+// khong cong tu vi passive...), khac han viec kiem tra rieng
+// 'fighting' de gate combat logic that (xem BattleSystem.update()).
+// undefined (chua co Battle nao) coi nhu KHONG dang dien ra.
 // 'intro' (2026-09-07 plan Task 4) is a wait phase in the same sense -
 // same in-progress contract as countdown.
 export function isBattleInProgress(state: BattleState | undefined): boolean {

@@ -1,4 +1,4 @@
-// Route-witness guard — the test that would have caught the
+// Route-witness guard - the test that would have caught the
 // "Renderer readiness timed out" boot regression (error route, 2026-09-16).
 //
 // Root cause that prompted this file: App.vue's entry-stage if-chain had
@@ -6,7 +6,7 @@
 // `<RouteMount v-else-if="entryStage === 'error'" route="error">` in the same
 // sibling chain. With an incompatible/corrupted save, `entryStage === 'error'`
 // and `saveIssue.status` were both true, so the SaveIncompatibleScreen branch
-// matched first — and the RouteMount('error') witness never mounted.
+// matched first - and the RouteMount('error') witness never mounted.
 // CompositeRenderer.prepare() waits on markRouteMounted('error') for the
 // readiness contract, so the transition sat until the prepareReady deadline
 // and the error card read "Renderer readiness timed out" - forever, because
@@ -39,7 +39,7 @@ const APP_VUE_PATH = fileURLToPath(new URL('./App.vue', import.meta.url))
 
 interface Branch {
   tag: string
-  /** 'if' | 'else-if' | 'else' — 'else' marks the chain's catch-all. */
+  /** 'if' | 'else-if' | 'else' - 'else' marks the chain's catch-all. */
   kind: 'if' | 'else-if' | 'else'
   /** Raw condition expression for if/else-if branches (e.g. "entryStage === 'auth'"). */
   condition?: string

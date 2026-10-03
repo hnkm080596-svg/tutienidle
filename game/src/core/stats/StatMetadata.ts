@@ -9,8 +9,8 @@ export interface StatMetadata {
   max?: number
 }
 
-// Nguồn chuẩn cho đơn vị và giới hạn semantic. Những stat không khai ở
-// đây là số flat không có trần cứng ở tầng dữ liệu.
+// Nguon chuan cho don vi va gioi han semantic. Nhung stat khong khai o
+// day la so flat khong co tran cung o tang du lieu.
 export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   accuracyRating: { unit: 'rating', min: 0 },
   evasionRate: { unit: 'rating', min: 0 },
@@ -40,7 +40,7 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   wardBreakDamagePercent: { unit: 'percent', min: 0 },
   // generic thorns stat retired (spec 2026-09-15 T12).
   healingEffectivenessPercent: { unit: 'percent', min: 0 },
-  // The Tu An reactive chances — hard cap REACTIVE_CHANCE_CAP applied
+  // The Tu An reactive chances - hard cap REACTIVE_CHANCE_CAP applied
   // ONLY at consumption (clampStatValue). Stored values may exceed it;
   // never clamp inside an emitter/deriver (StatCalculator.body.test).
   counterChance: { unit: 'percent', min: 0, max: REACTIVE_CHANCE_CAP },

@@ -1,9 +1,9 @@
 // Phap Tu Reimagine (spec D17) -- The bar HUD for the normal Phap Tu
 // path, updated EVERY FRAME via CombatScene.update() (poll, NOT event
-// emit — same contract as kiemBarBridge.ts).
+// emit - same contract as kiemBarBridge.ts).
 //
 // Architecture: CombatScene (Phaser) only talks to the core through the
-// registry — it never holds GameManager. The reader is registered from
+// registry - it never holds GameManager. The reader is registered from
 // PhaserCanvas (which already has gameManager + player store); the
 // scene calls it through the registry key each frame.
 //
@@ -14,7 +14,7 @@
 // consuming the pool.
 //
 // Reader returns null when there is no live battle, the way is not
-// spell_pathway (hidden_spell_pathway owns NO The pool — spec P6), or no element has
+// spell_pathway (hidden_spell_pathway owns NO The pool - spec P6), or no element has
 // been committed -> CombatScene hides the bar.
 
 import { MAX_THE } from '@/core/combat/CombatTypes'
@@ -75,7 +75,7 @@ export type TheBarReader = () => TheBarSnapshot | null
 
 export const THE_BAR_READER_KEY = 'theBarReader' as const
 
-/** Structural slice of the player store this reader needs — the bridge
+/** Structural slice of the player store this reader needs - the bridge
  * stays free of Vue/Pinia imports so scenes never drag the store in. */
 export interface TheBarPlayerState {
   cultivationPath?: CultivationPathId | null
@@ -123,7 +123,7 @@ export function makeTheBarReader(
       }
     }
 
-    // TurnBattle participant shape — the human player's CombatEntity is
+    // TurnBattle participant shape - the human player's CombatEntity is
     // players[0].entity (The pool lives on CombatEntity, battle-scoped).
     const battleParticipant = battle.players[0]
     const battleEntity = battleParticipant?.entity

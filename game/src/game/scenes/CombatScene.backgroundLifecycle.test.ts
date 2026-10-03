@@ -1,15 +1,15 @@
 ﻿// @vitest-environment jsdom
 //
-// VÃ²ng Ä‘á»i background má»›i (yÃªu cáº§u 2026-08-26):
-// - Boot/tráº­n Äáº¦U dÃ¹ng preset cá»‘ Ä‘á»‹nh (peekThanhVanVariant â€” máº·c Ä‘á»‹nh
-//   spring/morning, override QA cá»¥ thá»ƒ váº«n khÃ³a): MainScene.preload()
-//   eager-load ÄÃšNG preset Ä‘Ã³ qua queueCombatAssets().
-// - KHÃ”NG cÃ²n rotate á»Ÿ create()/onBattleStart().
-// - battle_end: chá»n variant Káº¾ TIáº¾P khÃ¡c hiá»‡n táº¡i â†’ thiáº¿u texture thÃ¬
-//   queue load NGAY (Ä‘Ãºng lÃºc overlay káº¿t quáº£ Ä‘ang hiá»‡n) â†’ chá»‰ swap sau
-//   COMPLETE, giá»¯ ná»n cÅ© trong lÃºc táº£i (khÃ´ng flash).
-// - Tráº­n má»›i báº¯t Ä‘áº§u trÆ°á»›c khi load xong â†’ KHÃ”NG swap giá»¯a tráº­n
-//   (generation token vÃ´ hiá»‡u callback cÅ©).
+// Vong doi background mOi (yeu cau 2026-08-26):
+// - Boot/tran DAU dung preset co dInh (peekThanhVanVariant - mac dInh
+//   spring/morning, override QA cu the van khoa): MainScene.preload()
+//   eager-load AAsNG preset A'A3 qua queueCombatAssets().
+// - KHONG con rotate o create()/onBattleStart().
+// - battle_end: chon variant KE TIEP khac hien tai -> thieu texture thi
+//   queue load NGAY (dung luc overlay ket qua dang hien) -> chi swap sau
+//   COMPLETE, giu nen cu trong luc tai (khong flash).
+// - Tran mOi bat dau truOc khi load xong -> KHONG swap giua tran
+//   (generation token vo hieu callback cu).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
@@ -51,8 +51,8 @@ function chainableView() {
 }
 
 /**
- * @param textureExists â€” true: má»i texture cÃ³ sáºµn (nhÃ¡nh swap tá»©c thá»i);
- *   Set: chá»‰ cÃ¡c key trong Set tá»“n táº¡i (má»i key khÃ¡c Ä‘á»u thiáº¿u).
+ * @param textureExists - true: moi texture co san (nhanh swap tuc thoi);
+ *   Set: chi cac key trong Set ton tai (moi key khac deu thieu).
  */
 function createPerspectiveScene(textureExists: true | Set<string>) {
   const scene = createTestScene('bare')
@@ -62,8 +62,8 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
 
   scene.renderMode = 'perspective'
   scene.inBattle = true
-  // Object.create bá» qua class field initializers â€” pháº£i tá»± khá»Ÿi táº¡o
-  // token generation Ä‘á»ƒ ++ hoáº¡t Ä‘á»™ng Ä‘Ãºng.
+  // Object.create bo qua class field initializers - phai tu khoi tao
+  // token generation de ++ hoat dong dung.
   scene.backdropGeneration = 0
   scene.thanhVanVariant = { season: 'spring', time: 'morning' }
   scene.canvasWidth = 1600
@@ -111,8 +111,8 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
     },
 
     start() {
-      // Loader tháº­t báº¯n COMPLETE báº¥t Ä‘á»“ng bá»™ â€” test tá»± quyáº¿t thá»i Ä‘iá»ƒm
-      // qua flushComplete() Ä‘á»ƒ mÃ´ phá»ng "load xong trÆ°á»›c/sau tráº­n má»›i".
+      // Loader that ban COMPLETE bat dong bo - test tu quyet thoi diem
+      // qua flushComplete() de mo phong "load xong truOc/sau tran mOi".
     },
 
     flushComplete() {
@@ -122,14 +122,14 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
     },
   }
 
-  // Stubs tá»‘i thiá»ƒu cho onBattleEnd/onBattleStart.
+  // Stubs toi thieu cho onBattleEnd/onBattleStart.
   scene.dotAccumulators = new Map()
-  // Audit fix 2026-08-31 â€” onBattleStart giá» cÃ²n dá»n status VFX icons.
+  // Audit fix 2026-08-31 - onBattleStart gio con don status VFX icons.
   scene.statuses = new Map()
   scene.sprites = new Map()
   scene.spawnVfxHandles = new Map()
   // R14.4 (QA Task 9 follow-up): onBattleStart now clears the countdown
-  // telegraph maps too — stub the minimum shape the method reads.
+  // telegraph maps too - stub the minimum shape the method reads.
   scene.turnCountdownSpawnVfxHandles = new Map()
   scene.entityVisual = new CombatEntityVisualLifecycle(scene as unknown as CombatScene)
   scene._telegraph = { reset: () => {} }
@@ -157,8 +157,8 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
         image(key: string) {
           queued.push(key)
         },
-        // Task 9 (2026-09-05) — queueCombatAssets giờ CŨNG load atlas
-        // placeholder cho từng entity; stub no-op để không throw.
+        // Task 9 (2026-09-05) - queueCombatAssets gio CUNG load atlas
+        // placeholder cho tung entity; stub no-op de khong throw.
         atlas() {},
       },
     } as never
@@ -171,10 +171,10 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
       expect(queued).toContain(key)
     }
 
-    // Player/enemy/gourd/profile váº«n Ä‘Æ°á»£c queue cÃ¹ng lÆ°á»£t.
+    // Player/enemy/gourd/profile van duoc queue cung luot.
     expect(queued).toContain(PLAYER_TEXTURE_KEY)
 
-    // KhÃ´ng queue key tv-* nÃ o ngoÃ i preset peek.
+    // Khong queue key tv-* nao ngoai preset peek.
     expect(queued.filter((key) => key.startsWith('tv-'))).toEqual(expected)
   })
 
@@ -185,10 +185,10 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
 
     expect(scene.inBattle).toBe(false)
 
-    // Variant má»›i KHÃC variant cÅ© (selectNext trÃ¡nh trÃ¹ng tá»«ng chiá»u).
+    // Variant mOi KHAC variant cu (selectNext tranh trung tung chieu).
     expect(scene.thanhVanVariant).not.toEqual({ season: 'spring', time: 'morning' })
 
-    // Backdrop cÅ© bá»‹ huá»·, áº£nh cá»§a variant Má»šI gáº¯n Ä‘á»§ 7 key.
+    // Backdrop cA(c) ba"< hua"*, aoGBPnh ca"seca variant Ma"sI gao-n A'a"sec 7 key.
     expect(destroyedHandles).toHaveLength(1)
 
     expect(addedImages).toHaveLength(7)
@@ -197,8 +197,8 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
 
     expect(addedImages).toEqual(newKeys)
 
-    // Cache phiÃªn cáº­p nháº­t theo variant vá»«a swap â€” láº§n vÃ o combat káº¿
-    // preload Ä‘Ãºng bá»™ Ä‘ang hiá»ƒn thá»‹.
+    // Cache phien cap nhat theo variant vua swap - lan vao combat ke
+    // preload dung bo dang hien thI.
     expect(peekThanhVanVariant()).toEqual(scene.thanhVanVariant)
 
     expect(scene.usingArtBackdrop).toBe(true)
@@ -209,14 +209,14 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
 
     scene.onBattleEnd()
 
-    // 7 key cá»§a variant káº¿ Ä‘Æ°á»£c queue â€” ná»n cÅ© GIá»® NGUYÃŠN trong lÃºc táº£i.
+    // 7 key ca"seca variant kao? A'AEdega"GBPc queue aEUR" na"n cA(c) GIa"(R) NGUYASN trong lAoc taoGBPi.
     expect(scene.load.queued).toHaveLength(7)
 
     expect(addedImages).toHaveLength(0)
 
     expect(scene.thanhVanVariant).toEqual({ season: 'spring', time: 'morning' })
 
-    // Load xong khi CHÆ¯A cÃ³ tráº­n má»›i â†’ swap nguyÃªn khá»‘i, khÃ´ng flash.
+    // Load xong khi CHUA co tran mOi -> swap nguyen khoi, khong flash.
     scene.load.flushComplete()
 
     expect(scene.thanhVanVariant).not.toEqual({ season: 'spring', time: 'morning' })
@@ -231,19 +231,19 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
 
     expect(scene.load.queued).toHaveLength(7)
 
-    // Auto-refight báº¯t Ä‘áº§u tráº­n káº¿ khi táº£i chÆ°a xong.
+    // Auto-refight bat dau tran ke khi tai chua xong.
     scene.onBattleStart()
 
     expect(scene.inBattle).toBe(true)
 
     scene.load.flushComplete()
 
-    // Callback cÅ© bá»‹ generation token vÃ´ hiá»‡u â€” ná»n giá»¯ nguyÃªn.
+    // Callback cu bI generation token vo hieu - nen giu nguyen.
     expect(scene.thanhVanVariant).toEqual({ season: 'spring', time: 'morning' })
 
     expect(addedImages).toHaveLength(0)
 
-    // battle_end Káº¾ TIáº¾P chá»n láº¡i variant vÃ  swap bÃ¬nh thÆ°á»ng.
+    // battle_end KE TIEP chon lai variant va swap binh thuong.
     scene.onBattleEnd()
 
     scene.load.flushComplete()
@@ -266,8 +266,8 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
   })
 
   it('create() vÃ  onBattleStart() KHÃ”NG cÃ²n rotate background', () => {
-    // KhÃ³a báº±ng source assertion â€” Ä‘iá»ƒm rotate cÅ© pháº£i biáº¿n máº¥t háº³n;
-    // prepareThanhVanBackdropForNextBattle chá»‰ Ä‘Æ°á»£c gá»i tá»« onBattleEnd.
+    // Khoa bang source assertion - diem rotate cu phai bien mat han;
+    // prepareThanhVanBackdropForNextBattle chi duoc goi tu onBattleEnd.
     expect(combatSceneSource).not.toContain('refreshThanhVanBackdropForBattle')
 
     expect(combatSceneSource).toContain('prepareThanhVanBackdropForNextBattle')

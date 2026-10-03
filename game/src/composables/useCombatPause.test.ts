@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// Task 8 (A11) — the unwatched pause. A hidden tab freezes combat with
+// Task 8 (A11) - the unwatched pause. A hidden tab freezes combat with
 // reason 'tab-hidden'; becoming visible again must NOT resume it (spec
-// §6.1: "Returning attention is not consent to resume"). Only
+// sec6.1: "Returning attention is not consent to resume"). Only
 // continueBattle() (wired to the player's Continue button) may resume.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useCombatPause } from './useCombatPause'

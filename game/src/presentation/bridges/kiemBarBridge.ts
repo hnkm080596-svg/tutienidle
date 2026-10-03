@@ -1,17 +1,17 @@
-// Kiem Tu Reimagined Task 7 — Kiếm bar HUD bridge. Reads the CANONICAL
+// Kiem Tu Reimagined Task 7 - Kiem bar HUD bridge. Reads the CANONICAL
 // PlayerData.swordPath state (K1), not the retired swordPathRoute pools.
-// Updated EVERY FRAME via CombatScene.update() polling (no event emit —
+// Updated EVERY FRAME via CombatScene.update() polling (no event emit -
 // CombatDefeatPanel/CombatVictoryPanel unchanged).
 //
 // Architecture: CombatScene (Phaser) talks to core only through the
-// registry gate (see PhaserCanvas.vue) — the reader is registered by
+// registry gate (see PhaserCanvas.vue) - the reader is registered by
 // PhaserCanvas (which owns gameManager + the player store) and polled
 // per frame, same pattern as 'eventBus' / 'lastBattlePositionsSnapshot'.
 //
 // Reader returns null when there is no in-progress battle or the player
-// is not on the Kiem Tu path → CombatScene hides the bar.
+// is not on the Kiem Tu path -> CombatScene hides the bar.
 //
-// sword_pathway (Kiem Pho): the bar shows preset-strip progress — `current` is
+// sword_pathway (Kiem Pho): the bar shows preset-strip progress - `current` is
 // the auto cursor position, `max` the preset length, plus the orb strip
 // + cast log for presentation layers that render richer HUD.
 // hidden_sword_pathway (Ngu Kiem Dao): the bar shows persisted Kiem Y progress toward
@@ -51,10 +51,10 @@ export interface KiemBarSnapshot {
   /** Ngu readout: live flying swords + permanent base multiplier. */
   kiemDaoCount?: number
   kiemDaoBase?: number
-  // The Tu Reimagined (T22) — Son Nhac Ho The external-ward layer: a
+  // The Tu Reimagined (T22) - Son Nhac Ho The external-ward layer: a
   // SEPARATE protection-only shield, never merged into the resource bar
   // or the native ward pool. Rendered on any path when the player
-  // entity carries a pool (max = holder maxHp — shield fraction of HP).
+  // entity carries a pool (max = holder maxHp - shield fraction of HP).
   externalWard?: { current: number; max: number }
 }
 
@@ -62,8 +62,8 @@ export type KiemBarReader = () => KiemBarSnapshot | null
 
 export const KIEM_BAR_READER_KEY = 'kiemBarReader' as const
 
-/** Phần state player mà reader cần — structural, không import Pinia store
- * (bridge tách khỏi Vue để CombatScene/PhaserCanvas không kéo store). */
+/** Phan state player ma reader can - structural, khong import Pinia store
+ * (bridge tach khoi Vue de CombatScene/PhaserCanvas khong keo store). */
 export interface KiemBarPlayerState {
   swordPath?: SwordPathState
   realmId: string
@@ -76,8 +76,8 @@ export interface KiemBarPlayerState {
 }
 
 /**
- * Đọc snapshot Kiếm bar HIỆN TẠI từ battle đang chạy. null = ẩn bar.
- * Way xác định từ player.cultivationWay (M6 — the retired
+ * Doc snapshot Kiem bar HIEN TAI tu battle dang chay. null = an bar.
+ * Way xac dinh tu player.cultivationWay (M6 - the retired
  * swordPath.mode discriminator); the battle-scoped provider snapshot
  * supplies cursor/log (runtime, never persisted).
  */
@@ -95,7 +95,7 @@ export function makeKiemBarReader(
     const player = getPlayer()
     const swordPath = player.swordPath
 
-    // TurnBattle participant shape — the human player's CombatEntity is
+    // TurnBattle participant shape - the human player's CombatEntity is
     // players[0].entity; the external-ward pool lives on the entity (T22).
     const battleEntity = battle.players[0]?.entity
     const externalWard = battleEntity?.externalWard
@@ -114,7 +114,7 @@ export function makeKiemBarReader(
     }
 
     if (swordPath && hasStaticPathCapability(player, 'sword.sword_scroll')) {
-      // The participant's provider owns the live cursor/log — the
+      // The participant's provider owns the live cursor/log - the
       // persisted preset is the fallback when no provider is attached
       // (e.g. mid-migration battles built before the sword_pathway wiring). The
       // preset reaches the HUD through the canonical subpath read.
@@ -137,7 +137,7 @@ export function makeKiemBarReader(
     }
 
     if (swordPath && hasStaticPathCapability(player, 'sword.sword_riding')) {
-      // hidden_sword_pathway — bar = Kiem Y progress toward the next forge at the
+      // hidden_sword_pathway - bar = Kiem Y progress toward the next forge at the
       // CURRENT realm's forgeCost; label carries the live sword count.
       const realmIndex = getRealmIndex(player.realmId)
 

@@ -27,9 +27,9 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   }
 }
 
-// Floor "tối thiểu 1" phải áp SAU finalDamageMultiplier — đòn bị affix
-// giảm sát thương cuối cùng kéo xuống dưới 1 vẫn luôn gây đúng 1 sát
-// thương (trước đây floor áp trước multiplier nên kết quả có thể < 1).
+// Floor "toi thieu 1" phai ap SAU finalDamageMultiplier - don bi affix
+// giam sat thuong cuoi cung keo xuong duoi 1 van luon gay dung 1 sat
+// thuong (truoc day floor ap truoc multiplier nen ket qua co the < 1).
 describe('CombatSystem — damage floor sau finalDamageMultiplier', () => {
   it('finalDamagePercent âm kéo damage dưới 1 — floor kéo lại đúng 1', () => {
     const combat = new CombatSystem(new EventBus())

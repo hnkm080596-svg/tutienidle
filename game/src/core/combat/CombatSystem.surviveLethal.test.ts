@@ -5,7 +5,7 @@ import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 import type { EntityVitalsChangedEvent } from './EntityVitalsSystem'
-// buff2 M4 — the survive-lethal session binds the battle's buff
+// buff2 M4 - the survive-lethal session binds the battle's buff
 // authority through SurviveEffectsPolicy.apply (mid-settlement ctx or
 // quiescent op mint). The v4 describe block below exercises that lane
 // through a shared TurnRuntimeFixture.
@@ -22,8 +22,8 @@ import {
   type TurnRuntimeFixture,
 } from '../battle/turn/testing/TurnRuntimeFixtures'
 
-// Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — hook tại
-// CombatSystem.killIfDead(), điểm DUY NHẤT tuyên bố chết của mọi đường
+// Thien phu Bat Tu The (talent-direction-choice-plan sec6) - hook tai
+// CombatSystem.killIfDead(), diem DUY NHAT tuyen bo chet cua moi duong
 // damage. Entity pattern mirror CombatSystem.manaShield.test.ts.
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -167,8 +167,8 @@ describe('CombatSystem — Bất Tử Thể (survive_lethal)', () => {
 
     combat.applyDirectDamage(player, 9999, 'enemy_1')
 
-    // Event damage ban đầu mang killed=true (HP chạm 0), event hiệu chỉnh
-    // 'survive_lethal' phát SAU guard phải là trạng thái cuối: còn sống.
+    // Event damage ban dau mang killed=true (HP cham 0), event hieu chinh
+    // 'survive_lethal' phat SAU guard phai la trang thai cuoi: con song.
     expect(vitalsEvents.length).toBeGreaterThanOrEqual(2)
     expect(vitalsEvents[0]?.killed).toBe(true)
 
@@ -177,11 +177,11 @@ describe('CombatSystem — Bất Tử Thể (survive_lethal)', () => {
   })
 })
 
-// Bất Tử Th thể v4 (spec 2026-09-03-talent-catalog-v4-design.md §4.1
-// hàng 11) — guard cứu sống ngoài ra: tẩy TOÀN BỘ debuff trên player +
-// áp Tử Sinh Ngộ 10s (+30% sát thương cuối, +20% né chí mạng). Session
-// mở rộng trường surviveEffects — GameManager wiring set từ battle.
-// buff2 M4 — surviveEffects.apply is the composition-root-bound lane:
+// Bat Tu Th the v4 (spec 2026-09-03-talent-catalog-v4-design.md sec4.1
+// hang 11) - guard cuu song ngoai ra: tay TOAN BO debuff tren player +
+// ap Tu Sinh Ngo 10s (+30% sat thuong cuoi, +20% ne chi mang). Session
+// mo rong truong surviveEffects - GameManager wiring set tu battle.
+// buff2 M4 - surviveEffects.apply is the composition-root-bound lane:
 // mid-settlement reuses the frame ctx; quiescent mints authored ops
 // (same shape GameManagerTurnBattleOps binds).
 describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh Ngộ)', () => {
@@ -297,7 +297,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     })
     combat.setSurviveLethalSession(session)
 
-    // Player mang 2 debuff trước đòn chí mạng (ailment + debuff kinds —
+    // Player mang 2 debuff truoc don chi mang (ailment + debuff kinds -
     // the cleanse lane filters on polarity, not literal kind).
     runtime.applyBuff('doc_can', playerP, enemyP)
     runtime.applyBuff('kiep_thuong', playerP, enemyP)
@@ -309,7 +309,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     expect(player.alive).toBe(true)
     expect(player.currentHp).toBe(1)
 
-    // Debuff sạch, Tử Sinh Ngộ active (stacks 1).
+    // Debuff sach, Tu Sinh Ngo active (stacks 1).
     expect(buffsOn(runtime, 'player', 'doc_can')).toHaveLength(0)
     expect(buffsOn(runtime, 'player', 'kiep_thuong')).toHaveLength(0)
     const granted = buffsOn(runtime, 'player', 'tu_sinh_ngo')
@@ -346,11 +346,11 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
 
     runtime.applyBuff('doc_can', playerP, enemyP)
 
-    // Lần 1: guard cứu (tẩy debuff).
+    // Lan 1: guard cuu (tay debuff).
     combat.applyDirectDamage(player, 9999, 'enemy_1')
     expect(player.alive).toBe(true)
 
-    // Gây lại debuff + HP về 1 lần nữa → chết thật, debuff GIỮ NGUYÊN.
+    // Gay lai debuff + HP ve 1 lan nua -> chet that, debuff GIU NGUYEN.
     runtime.applyBuff('doc_can', playerP, enemyP)
     player.currentHp = 10
     combat.applyDirectDamage(player, 9999, 'enemy_1')

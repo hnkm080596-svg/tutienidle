@@ -1,7 +1,7 @@
-// Battlefield region redesign (spec §6) — hai hộp 6×6 (nhân vật/quái)
-// chia sẻ hàng 3-8, ngăn cách bằng cột divider trung lập không bên nào
-// được chiếm. Math về khoảng cách/targeting/AoE KHÔNG ĐỔI — chỉ ràng buộc
-// NƠI entity được đặt.
+// Battlefield region redesign (spec sec6) - hai hop 6x6 (nhan vat/quai)
+// chia se hang 3-8, ngan cach bang cot divider trung lap khong ben nao
+// duoc chiem. Math ve khoang cach/targeting/AoE KHONG DOI - chi rang buoc
+// NOI entity duoc dat.
 import type { GridPosition, LaneIndex } from './BattleGrid'
 
 export interface BattlefieldUsableRegion {
@@ -27,7 +27,7 @@ export const ENEMY_SIDE_REGION: BattlefieldUsableRegion = {
   columnMax: 12,
 }
 
-/** Bounding box (hộp giới hạn) của cả hai bên + divider — dùng cho camera/projection fit, KHÔNG phải entity placement. */
+/** Bounding box (hop gioi han) cua ca hai ben + divider - dung cho camera/projection fit, KHONG phai entity placement. */
 export const DEFAULT_BATTLEFIELD_USABLE_REGION: BattlefieldUsableRegion = {
   ...BATTLEFIELD_ROW_RANGE,
   columnMin: 0,

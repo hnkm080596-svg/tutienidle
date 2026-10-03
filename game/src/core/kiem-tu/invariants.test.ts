@@ -350,7 +350,7 @@ describe('INV-7 — hardcore discovery', () => {
       'src/core/audio/AudioCueManifest.ts',
     ]
     const violations: string[] = []
-    // A hardcoded literal bypasses the import scan — quote-delimited
+    // A hardcoded literal bypasses the import scan - quote-delimited
     // matching keeps presetId strings ('kiem_combo_nhat_tuyen', the
     // LEGITIMATE discovery signal in VFX/impact types) distinct from
     // the bare combo id ('nhat_tuyen') or name, which must never leak.

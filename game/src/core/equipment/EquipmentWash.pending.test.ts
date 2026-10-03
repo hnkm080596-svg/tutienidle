@@ -295,7 +295,7 @@ describe('M2 (ARCH-011 / AUD-E02) - ticket binds the exact item lifetime', () =>
     expect(commit.reason).toBe('locked')
     expect(replacement.affixes).toEqual(replacementAffixes)
 
-    // The attempt consumed the ticket — replay cannot reach the replacement.
+    // The attempt consumed the ticket - replay cannot reach the replacement.
     expect(commitOn(ctx, original.instanceId, preview.ticketId).ok).toBe(false)
   })
 

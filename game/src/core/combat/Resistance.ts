@@ -1,20 +1,20 @@
-// % giảm dame PHẲNG có trần (khác Armor.ts — Armor giảm dần theo
-// đường cong, Resistance là % tuyến tính có trần cứng) — đúng cách
-// Last Epoch phân biệt 2 trục phòng thủ Vật Lý (Armor) và Elemental
-// (Resistance). Dùng cho 5 hành Hỏa/Thủy/Kim/Mộc/Thổ — mỗi hành độc
-// lập, KHÔNG còn chu kỳ sinh/khắc như trước.
+// % giam dame PHANG co tran (khac Armor.ts - Armor giam dan theo
+// duong cong, Resistance la % tuyen tinh co tran cung) - dung cach
+// Last Epoch phan biet 2 truc phong thu Vat Ly (Armor) va Elemental
+// (Resistance). Dung cho 5 hanh Hoa/Thuy/Kim/Moc/Tho - moi hanh doc
+// lap, KHONG con chu ky sinh/khac nhu truoc.
 import { clamp } from '../math/clamp'
 
 const RESISTANCE_CAP = 0.75
 
-// Resistance âm (bị debuff/xuyên quá tay) khuếch đại damage, trần ở
-// -100% (tối đa nhận gấp đôi) — tránh chia cho 0/âm vô hạn.
+// Resistance am (bi debuff/xuyen qua tay) khuech dai damage, tran o
+// -100% (toi da nhan gap doi) - tranh chia cho 0/am vo han.
 const RESISTANCE_FLOOR = -1.0
 
 /**
- * 1 điểm resistance ròng (resistance - penetration) = 1% giảm dame —
- * giữ nguyên thang đo dữ liệu hiện có (enemy resistance 5-45 hôm nay
- * vẫn có ý nghĩa tương tự, không cần rescale lại toàn bộ Enemies.ts).
+ * 1 diem resistance rong (resistance - penetration) = 1% giam dame -
+ * giu nguyen thang do du lieu hien co (enemy resistance 5-45 hom nay
+ * van co y nghia tuong tu, khong can rescale lai toan bo Enemies.ts).
  */
 export function getResistanceMitigationPercent(resistance: number, penetration: number): number {
   const net = resistance - penetration

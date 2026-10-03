@@ -28,9 +28,9 @@ function setup() {
   return { affixRegistry }
 }
 
-// Slot Revamp (mục 17.7) — tone hiện NGAY trên SlotView (state.comparison),
-// không chỉ trong tooltip — cùng nguồn tính delta với buildEquipmentTooltip
-// (computeEquipmentStatDeltas), test riêng phần tổng hợp tone.
+// Slot Revamp (muc 17.7) - tone hien NGAY tren SlotView (state.comparison),
+// khong chi trong tooltip - cung nguon tinh delta voi buildEquipmentTooltip
+// (computeEquipmentStatDeltas), test rieng phan tong hop tone.
 describe('getEquipmentComparisonTone', () => {
   it('neutral khi không có đồ đang mặc để so sánh', () => {
     const { affixRegistry } = setup()

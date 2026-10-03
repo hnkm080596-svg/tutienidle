@@ -7,7 +7,7 @@ export type CloudSaveLoadResult =
       status: 'ok'
       save: GameSave
       revision: number
-      /** Luôn có; 0 khi load không loại equipment legacy. */
+      /** Luon co; 0 khi load khong loai equipment legacy. */
       discardedEquipmentCount: number
       /** Stored bytes - mirrors LoadOutcome.ok so a rejected-after-shape
        * save exports byte-identically at the recovery surface. */

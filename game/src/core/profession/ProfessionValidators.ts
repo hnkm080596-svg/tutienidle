@@ -1,9 +1,9 @@
 // ProfessionValidators (2026-08-25, resource-professions-rework plan
-// §5/§6) — validate metadata nghề TRÊN TỪNG material (boot validator)
-// và toàn catalog (data-integrity test). KHÔNG còn cặp raw|processed.
-// gp123 6E task C2: gỗ/khoáng dùng trục tuổi thống nhất — id
-// `<realm>_wood_<age>` / `<realm>_ore_<age>` (plain wood + phẩm
-// hoang..tien đã xóa).
+// sec5/sec6) - validate metadata nghe TREN TUNG material (boot validator)
+// va toan catalog (data-integrity test). KHONG con cap raw|processed.
+// gp123 6E task C2: go/khoang dung truc tuoi thong nhat - id
+// `<realm>_wood_<age>` / `<realm>_ore_<age>` (plain wood + pham
+// hoang..tien da xoa).
 import { HERB_AGES } from '../production/ProductionTypes'
 import { isHerbProfessionMeta, isProfessionResourceMeta } from './ProfessionMaterial'
 import { SUPPORTED_PROFESSION_REALMS, type ProfessionMaterialMeta } from './ProfessionMaterial'
@@ -16,9 +16,9 @@ export interface ValidationResult {
 }
 
 /**
- * Validate MỘT entry — dùng ở GameManager.registerMaterials: lỗi
- * authoring fail NGAY lúc boot, không âm thầm tạo kinh tế hỏng. Trả về
- * chuỗi lỗi đầu tiên hoặc null nếu hợp lệ.
+ * Validate MOT entry - dung o GameManager.registerMaterials: loi
+ * authoring fail NGAY luc boot, khong am tham tao kinh te hong. Tra ve
+ * chuoi loi dau tien hoac null neu hop le.
  */
 export function validateProfessionMaterialEntry(
   materialId: string,
@@ -68,10 +68,10 @@ export function validateProfessionMaterialEntry(
 }
 
 /**
- * Validate TOÀN BỘ catalog nghề — data-integrity test:
- * - Đủ gỗ + đủ khoáng (mọi realm × 5 tuổi), đủ thảo cho mọi đan phương.
- * - Thảo cùng đan phương có ĐỦ 5 tuổi, mỗi cặp (recipe, age) duy nhất.
- * - Thứ tự xác suất tuổi giảm dần được enforce ở ProductionCatalog.
+ * Validate TOAN BO catalog nghe - data-integrity test:
+ * - Du go + du khoang (moi realm x 5 tuoi), du thao cho moi dan phuong.
+ * - Thao cung dan phuong co DU 5 tuoi, moi cap (recipe, age) duy nhat.
+ * - Thu tu xac suat tuoi giam dan duoc enforce o ProductionCatalog.
  */
 export function validateProfessionMaterialCatalog(
   entries: Array<{ id: string; profession?: ProfessionMaterialMeta }>,

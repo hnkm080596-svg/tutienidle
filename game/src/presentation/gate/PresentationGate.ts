@@ -1,11 +1,11 @@
 // The typed presentation gate.
 //
 // Mechanism 1 of
-// docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md §4.
+// docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md sec4.
 //
 // Phaser's `registry` stays the transport. What changes is that the keys and
 // their types are declared ONCE, here, instead of being restated as an
-// `as { … }` cast at each of the reads. Measured before this module existed:
+// `as { ... }` cast at each of the reads. Measured before this module existed:
 // 22 reads across 8 keys, 11 of them carrying a cast. A rename on the domain
 // side produced no type error anywhere; it failed at runtime, inside a scene,
 // usually as a silently missing visual.
@@ -21,12 +21,12 @@ import type { TheBarReader } from '@/presentation/bridges/theBarBridge'
 import type { HoTheReader } from '@/presentation/bridges/hoTheBridge'
 
 /**
- * What the dynamic layer may ask of the domain. Under §3.4 this list is
+ * What the dynamic layer may ask of the domain. Under sec3.4 this list is
  * CLOSED: five members, three of which are the R5 acknowledgment triple.
  *
  * Adding a member is a three-part edit, deliberately inconvenient in proportion
- * to what it permits — see §4.3 of the spec. In short: edit this interface,
- * record the addition in §4.3 with the reason the existing members could not
+ * to what it permits - see sec4.3 of the spec. In short: edit this interface,
+ * record the addition in sec4.3 with the reason the existing members could not
  * carry it, and confirm the new member REPORTS rather than decides. A member
  * that selects an outcome, picks a target, or gates progression is refused.
  */
@@ -47,13 +47,13 @@ export interface DomainCommandPort {
 
 /**
  * Queries a scene makes to rebuild its own view after attaching late or
- * resuming — distinct from `DomainCommandPort` on purpose.
+ * resuming - distinct from `DomainCommandPort` on purpose.
  *
- * Found by measurement, not by design: §4.1 of the spec listed `gameManager` as
+ * Found by measurement, not by design: sec4.1 of the spec listed `gameManager` as
  * carrying `DomainCommandPort` alone, and the tree disagreed. `CombatScene`
  * also reads `getCombatPresentationSnapshot` and `preparePresentationResume`.
- * Rather than widen a port whose name says "command" — and quietly reopen the
- * closed list — the queries are named separately. The gate key carries both.
+ * Rather than widen a port whose name says "command" - and quietly reopen the
+ * closed list - the queries are named separately. The gate key carries both.
  */
 export interface DomainSnapshotPort {
   getCombatPresentationSnapshot?(sessionId: number): {
@@ -72,7 +72,7 @@ export interface DomainSnapshotPort {
 /**
  * The half of `PhaserSceneAdapter` a scene actually calls.
  *
- * Also a correction to §4.1, which said this key carries `RendererPort`. It
+ * Also a correction to sec4.1, which said this key carries `RendererPort`. It
  * does not: `RendererPort` is `{ prepare, deactivate }` and a scene calls
  * neither. What the registry holds is the adapter itself; what a scene uses of
  * it is the one method below.
@@ -89,7 +89,7 @@ export interface SceneReadyPort {
 
 /**
  * The half of the bundle manager `AssetLoaderScene` calls. Same correction as
- * above: §4.1 said `AssetPort` (`{ ensureFor }`), which no scene calls.
+ * above: sec4.1 said `AssetPort` (`{ ensureFor }`), which no scene calls.
  */
 export interface AssetLoaderHostPort {
   setLoaderScene(scene: unknown): void
@@ -130,7 +130,7 @@ export type GateKey = keyof PresentationGateContents
 /**
  * Keys whose absence is a WIRING BUG rather than a runtime condition.
  *
- * Narrower than §4.1's table, and the difference is measured rather than
+ * Narrower than sec4.1's table, and the difference is measured rather than
  * chosen: the host seeds `sceneAdapter` and `bundleManager` conditionally
  * (`if (sceneAdapter)` at PhaserCanvas.vue), so a region can legitimately run
  * without them and demanding them would turn a supported configuration into a
@@ -161,9 +161,9 @@ export class GateNotSeededError extends Error {
 /**
  * Read a key whose absence means the region was never wired. Throws.
  *
- * Throwing is the point (§4.2): a single accessor returning `T | undefined`
+ * Throwing is the point (sec4.2): a single accessor returning `T | undefined`
  * forces every caller to handle absence, which converts a seed-time wiring bug
- * into a slow, silent read-time failure — the exact class of defect this gate
+ * into a slow, silent read-time failure - the exact class of defect this gate
  * exists to kill.
  */
 export function readRequiredGate<K extends RequiredGateKey>(
@@ -183,15 +183,15 @@ export function readRequiredGate<K extends RequiredGateKey>(
  * Read a key tolerantly. `undefined` when it is absent.
  *
  * Accepts EVERY key, including the required ones, and that is an amendment to
- * §4.2 forced by measurement rather than a softening of it. §4.2 read as though
- * the required/optional split partitioned *readers*. It does not — it partitions
+ * sec4.2 forced by measurement rather than a softening of it. sec4.2 read as though
+ * the required/optional split partitioned *readers*. It does not - it partitions
  * what the HOST must seed. Scenes in this tree are deliberately written to
  * degrade instead of crash when a key is missing, and that tolerance is itself a
  * guarded regression: `CombatScene.hudWiring.test.ts` has a test named "scene
- * KHÔNG có registry (stub) → ẩn bar, không throw". Forcing those reads to throw
+ * KHONG co registry (stub) -> an bar, khong throw". Forcing those reads to throw
  * would trade a supported configuration for a crash.
  *
- * The wiring bug §4.2 wanted to catch is still caught, once, at the host —
+ * The wiring bug sec4.2 wanted to catch is still caught, once, at the host -
  * see `assertGateSeeded`. That is a better place for it than a read three
  * frames into a battle.
  */
@@ -214,7 +214,7 @@ export function writeGate<K extends GateKey>(
  * Assert every required key is present, at the moment the host finishes
  * seeding.
  *
- * This is where §4.2's "seed-time validation" actually happens, and it is why
+ * This is where sec4.2's "seed-time validation" actually happens, and it is why
  * `readRequiredGate` exists even though every read site downstream tolerates
  * absence: the failure surfaces at the host, naming the key, rather than three
  * frames later as a missing sprite.

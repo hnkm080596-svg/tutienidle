@@ -1,24 +1,24 @@
-// Ui automation flags persistence (2026-08-26) — người chơi yêu cầu
-// "lưu lại flag của các trạng thái tự động" (chế độ auto-refight) nên
-// chúng SỐNG qua reload. (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện
-// Thể tự đầu tư qua essence stream nên không còn là tuỳ chọn người chơi.
+// Ui automation flags persistence (2026-08-26) - nguoi choi yeu cau
+// "luu lai flag cua cac trang thai tu dong" (che do auto-refight) nen
+// chung SONG qua reload. (2026-08-30) isAutoConsumeTinhHoa da GO - Luyen
+// The tu dau tu qua essence stream nen khong con la tuy chon nguoi choi.
 //
-// Lựa chọn storage: localStorage RIÊNG thay vì PlayerData/save chính vì
-// đây là tuỳ chọn THIẾT BỊ (per-device convenience), không thuộc tiến
-// trình nhân vật — không bump CURRENT_SAVE_VERSION, không đụng cloud
-// save. Development build: hỏng/quota → fallback giá trị mặc định, không
+// Lua chon storage: localStorage RIENG thay vi PlayerData/save chinh vi
+// day la tuy chon THIET BI (per-device convenience), khong thuoc tien
+// trinh nhan vat - khong bump CURRENT_SAVE_VERSION, khong dung cloud
+// save. Development build: hong/quota -> fallback gia tri mac dinh, khong
 // throw.
 
 import type { BattleRunMode, CombatInputMode } from './ui'
 
 export const UI_AUTOMATION_STORAGE_KEY = 'tien-hiep-idle-ui-automation'
 
-/** Nhóm flag tự động được lưu — CHỈ gồm các trạng thái có ý nghĩa dài hạn. */
+/** Nhom flag tu dong duoc luu - CHI gom cac trang thai co y nghia dai han. */
 export interface UiAutomationFlagSnapshot {
-  /** Chế độ auto-refight đang chọn ở Stage Select (manual/repeat/progress). */
+  /** Che do auto-refight dang chon o Stage Select (manual/repeat/progress). */
   battleRunMode: BattleRunMode
 
-  /** Slice 7 (2026-09-04) — chế độ input combat (auto = engine không pause; manual = pause chờ chọn skill tại lượt player). Trục RIÊNG khỏi battleRunMode. */
+  /** Slice 7 (2026-09-04) - che do input combat (auto = engine khong pause; manual = pause cho chon skill tai luot player). Truc RIENG khoi battleRunMode. */
   combatInputMode: CombatInputMode
 }
 
@@ -35,8 +35,8 @@ export function isCombatInputMode(value: unknown): value is CombatInputMode {
 }
 
 /**
- * Đọc snapshot đã lưu — giá trị thiếu/sai kiểu bị BỎ (caller dùng
- * `?? default`), JSON hỏng trả về rỗng hoàn toàn, không bao giờ throw.
+ * Doc snapshot da luu - gia tri thieu/sai kieu bi BO (caller dung
+ * `?? default`), JSON hong tra ve rong hoan toan, khong bao gio throw.
  */
 export function loadPersistedUiAutomationFlags(): Partial<UiAutomationFlagSnapshot> {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
@@ -76,13 +76,13 @@ export function savePersistedUiAutomationFlags(snapshot: UiAutomationFlagSnapsho
   try {
     localStorage.setItem(UI_AUTOMATION_STORAGE_KEY, JSON.stringify(snapshot))
   } catch {
-    // Private mode/quota exceeded — bỏ qua, flags vẫn chạy trong phiên.
+    // Private mode/quota exceeded - bo qua, flags van chay trong phien.
   }
 }
 
 /**
  * Minimal structural contract for a Pinia store carrying the two
- * automation flags — lets this module own the subscribe wiring without
+ * automation flags - lets this module own the subscribe wiring without
  * importing the ui store (which already imports this module).
  */
 interface AutomationFlagsSource {
@@ -100,11 +100,11 @@ interface AutomationFlagsSource {
 }
 
 /**
- * Mission A4 — persist automation flags on ANY store mutation, including
+ * Mission A4 - persist automation flags on ANY store mutation, including
  * direct `ui.battleRunMode = ...` / `ui.combatInputMode = ...` writes from
  * panels that bypass the setter actions. The dirty check compares the
  * composite signature so a combatInputMode-only change still writes.
- * Returns the Pinia unsubscribe — the caller owns the lifecycle.
+ * Returns the Pinia unsubscribe - the caller owns the lifecycle.
  */
 export function installAutomationFlagsPersistence(
   store: AutomationFlagsSource,

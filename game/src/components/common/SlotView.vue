@@ -22,12 +22,12 @@ import type { SlotBadge, SlotPresentationState, SlotVariant } from './SlotTypes'
 // frame's original purpose (a decorative border for a LARGE panel, not
 // a repeated per-cell ornament).
 const props = defineProps<{
-  /** Item mà Slot đang chứa. null = slot trống — filled/empty suy trực
-   * tiếp từ đây, KHÔNG có prop `hasItem` riêng. */
+  /** Item ma Slot dang chua. null = slot trong - filled/empty suy truc
+   * tiep tu day, KHONG co prop `hasItem` rieng. */
   item: T | null
 
-  /** PNG icon trong suốt của item — không có/lỗi tải thì rơi về
-   * monogram CSS (chữ cái đầu `label`). */
+  /** PNG icon trong suot cua item - khong co/loi tai thi roi ve
+   * monogram CSS (chu cai dau `label`). */
   icon?: string
 
   label?: string
@@ -54,13 +54,13 @@ const props = defineProps<{
    * match the item name color. */
   rarityRank?: number
 
-  /** Trần (max) của thang `rarityRank` — mặc định 5 (itemQualityRank,
-   * Hoàng→Tiên) cho MỌI caller equipment hiện có. Material chỉ có 1 trục
-   * rank (professionRankOf, 1-10) nên khi feed rank đó vào `rarityRank`
-   * phải truyền kèm `rarityRankScale: 10`, nếu không rank=5 (Ngũ Phẩm,
-   * giữa thang) sẽ bị hiểu nhầm là kịch trần (Fix 1, final review
-   * item-grade-quality-rework — MaterialBagSection.vue từng feed rank
-   * 1-10 vào prop 1-5 này). */
+  /** Tran (max) cua thang `rarityRank` - mac dinh 5 (itemQualityRank,
+   * Hoang->Tien) cho MOI caller equipment hien co. Material chi co 1 truc
+   * rank (professionRankOf, 1-10) nen khi feed rank do vao `rarityRank`
+   * phai truyen kem `rarityRankScale: 10`, neu khong rank=5 (Ngu Pham,
+   * giua thang) se bi hieu nham la kich tran (Fix 1, final review
+   * item-grade-quality-rework - MaterialBagSection.vue tung feed rank
+   * 1-10 vao prop 1-5 nay). */
   rarityRankScale?: 5 | 10
 
   state?: SlotPresentationState
@@ -69,7 +69,7 @@ const props = defineProps<{
 
   tooltip?: TooltipContent
 
-  /** Tên truy cập — mặc định dùng `label` nếu không truyền riêng. */
+  /** Ten truy cap - mac dinh dung `label` neu khong truyen rieng. */
   accessibleLabel?: string
 
   /** Show the name caption under the cell - OFF by default (2026-09-15
@@ -98,8 +98,8 @@ function monogram(label?: string): string {
   return label?.trim().charAt(0).toUpperCase() ?? ''
 }
 
-// Icon lỗi tải (404/hỏng) — ẩn hẳn <img>, để monogram fallback hiện
-// qua. Reset lại mỗi khi đổi sang icon khác (đổi item trong cùng ô).
+// Icon loi tai (404/hong) - an han <img>, de monogram fallback hien
+// qua. Reset lai moi khi doi sang icon khac (doi item trong cung o).
 const failedIconSrc = ref<string | null>(null)
 
 watch(() => props.icon, () => {
@@ -147,11 +147,11 @@ const sealRank = computed(() => {
   return undefined
 })
 const sealOrdinal = computed(() => (sealRank.value ? PROFESSION_GRADE_SEAL_ORDINALS[sealRank.value - 1] : undefined))
-// Trần itemQualityRank = 5 (Tiên Chất) — KHÔNG còn 9 (model cũ rải
-// 1-3-5-7-9 đã bỏ, xem normalizeSlotRank.ts). rarityRankScale cho phép
-// caller feed 1 thang rank KHÁC (vd Material professionRankOf 1-10) vào
-// cùng prop `rarityRank` mà vẫn so đúng trần của thang đó — mặc định 5
-// giữ nguyên hành vi mọi caller equipment hiện có (Fix 1, final review).
+// Tran itemQualityRank = 5 (Tien Chat) - KHONG con 9 (model cu rai
+// 1-3-5-7-9 da bo, xem normalizeSlotRank.ts). rarityRankScale cho phep
+// caller feed 1 thang rank KHAC (vd Material professionRankOf 1-10) vao
+// cung prop `rarityRank` ma van so dung tran cua thang do - mac dinh 5
+// giu nguyen hanh vi moi caller equipment hien co (Fix 1, final review).
 const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === (props.rarityRankScale ?? 5))
 
 // Quality aura (user art pass 2026-09): the repurposed border-beam is no
@@ -171,9 +171,9 @@ const qualityAuraTier = computed(() => {
 })
 
 // ============================================================
-// PRECEDENCE (mục 17.2) — locked chặn interaction+validation; disabled
-// chặn click nhưng KHÔNG chặn validation; processing chặn click,
-// giữ nguyên Quality/Rarity; selected không che validation.
+// PRECEDENCE (muc 17.2) - locked chan interaction+validation; disabled
+// chan click nhung KHONG chan validation; processing chan click,
+// giu nguyen Quality/Rarity; selected khong che validation.
 // ============================================================
 
 const availability = computed(() => props.state?.availability ?? 'available')
@@ -205,9 +205,9 @@ const validationGlyph = computed(() => {
   }
 })
 
-// aria-disabled + click-guard THAY vì `disabled` thật — locked/disabled
-// vẫn phải giữ được focus/hover để tooltip giải thích điều kiện (mục
-// 17.4/17.5), native `disabled` sẽ chặn luôn cả việc đó.
+// aria-disabled + click-guard THAY vi `disabled` that - locked/disabled
+// van phai giu duoc focus/hover de tooltip giai thich dieu kien (muc
+// 17.4/17.5), native `disabled` se chan luon ca viec do.
 function handleClick() {
   if (props.static) return
   if (isBlocked.value) return
@@ -256,7 +256,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       <span v-else-if="filled" class="slot-view__monogram" aria-hidden="true">{{ monogram(label) }}</span>
     </span>
 
-    <!-- layer 4: validation glyph (màu KHÔNG phải tín hiệu duy nhất) -->
+    <!-- layer 4: validation glyph (mau KHONG phai tin hieu duy nhat) -->
     <span v-if="validation !== 'neutral'" class="slot-view__validation-glyph" aria-hidden="true">{{ validationGlyph }}</span>
 
     <!-- layer 6: marker + comparison + custom badges -->
@@ -373,9 +373,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   box-shadow: var(--slot-shadow), 0 0 12px var(--slot-rarity-color, var(--rank-color-5));
 }
 
-/* Bậc cao nhất (rarityRank = 5, Tiên Chất) — gradient bảy màu ở viền
-   TRÊN (mục 17.4 "solid fallback + gradient"), border-color solid ở
-   trên vẫn là fallback chính. */
+/* Bac cao nhat (rarityRank = 5, Tien Chat) - gradient bay mau o vien
+   TREN (muc 17.4 "solid fallback + gradient"), border-color solid o
+   tren van la fallback chinh. */
 .slot-view--filled.slot-view--max-rank::before {
   content: '';
   position: absolute;
@@ -434,7 +434,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 /* ============================================================
-   4. VALIDATION OVERLAY — ring + glyph, KHÔNG chỉ dựa vào màu.
+   4. VALIDATION OVERLAY - ring + glyph, KHONG chi dua vao mau.
    ============================================================ */
 
 .slot-view--validation-valid {
@@ -500,9 +500,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 /* ============================================================
-   5. HOVER / FOCUS / SELECTED — selected thắng hover nhưng không
-   che validation (ring validation ở trên là box-shadow riêng, ring
-   selected bên dưới là outline riêng — 2 kênh khác nhau, không đè).
+   5. HOVER / FOCUS / SELECTED - selected thang hover nhung khong
+   che validation (ring validation o tren la box-shadow rieng, ring
+   selected ben duoi la outline rieng - 2 kenh khac nhau, khong de).
    ============================================================ */
 
 .slot-view:hover:not([aria-disabled='true']) .slot-view__item-icon,

@@ -5,8 +5,8 @@ import { i18n } from '@/i18n'
 import RewardList from './RewardList.vue'
 import type { BattleRewardSummary } from '@/core/reward/BattleRewardSummary'
 
-// i18n (2.5 task 8) — assert qua i18n.global.t(key) thay vì raw vi string
-// (pattern HomeResourceStrip). Tên item thưởng từ dữ liệu summary, không locale.
+// i18n (2.5 task 8) - assert qua i18n.global.t(key) thay vi raw vi string
+// (pattern HomeResourceStrip). Ten item thuong tu du lieu summary, khong locale.
 function t(key: string): string {
   return (i18n.global as unknown as { t: (k: string) => string }).t(key)
 }

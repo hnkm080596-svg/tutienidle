@@ -1,5 +1,5 @@
 /**
- * R14.2 guard (R1 / AR-01) — combat vitals may only be written by the
+ * R14.2 guard (R1 / AR-01) - combat vitals may only be written by the
  * vitals authority and the damage pipeline it hands off to.
  *
  * R1 (2026-09-08) made EntityVitalsSystem the single authority for
@@ -8,20 +8,20 @@
  * exactly this class of defect: callers wrote `target.currentHp -= ...`
  * directly and split the hit contract.
  *
- * Allowlist policy (evidence-based, not aspirational — R14 charter):
+ * Allowlist policy (evidence-based, not aspirational - R14 charter):
  * every allowed production file must own a distinct vitals contract that
  * R1 explicitly left in place. Anything NOT on the list must go through
  * CombatSystem/EntityVitalsSystem. New entries require a roadmap note with
  * the owning contract, not a silent add.
  *
  * Explicitly OUT of this guard's scope:
- * - Test files — fixtures may set up vitals directly; they are not
+ * - Test files - fixtures may set up vitals directly; they are not
  *   production authority.
  *
  * Merge note (2026-09-11): the combat-turn-mechanism branch merged
  * (5718137e); its regions (`core/battle/turn/**`, `core/game/**`,
  * `presentation/**`) are now scanned like everything else. Post-merge
- * classification found exactly ONE unclassified writer — the wave-spawn
+ * classification found exactly ONE unclassified writer - the wave-spawn
  * dead-spawn in GameManagerTurnBattleOps (allowlisted below with its
  * contract). CombatScene.ts and all of src/game/scenes are clean (only
  * the health-bar display mirror, exempted receiver-narrow below).
@@ -141,7 +141,7 @@ describe('R14.2 — R1/AR-01: vitals writes only inside the vitals authority all
 
   it('every allowlisted writer is still present in the codebase (no stale allowlist entries)', { timeout: SCAN_TIMEOUT }, () => {
     // A stale entry hides future files that might reuse the same path with a
-    // DIFFERENT contract — force allowlist hygiene.
+    // DIFFERENT contract - force allowlist hygiene.
     const stale = ALLOWED.filter(
       (a) => !violations.some((v) => v.file.replaceAll('\\', '/') === a.path),
     )

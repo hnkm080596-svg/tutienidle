@@ -74,7 +74,7 @@ describe('restore identity (AR-12)', () => {
     expect(computeRestoreIdentity(saveA)).not.toBe(computeRestoreIdentity(saveB))
   })
 
-  // M1 (ARCH-001) — every meaningful GameSave slice must contribute to
+  // M1 (ARCH-001) - every meaningful GameSave slice must contribute to
   // the restore identity: a payload that differs ONLY in one slice is a
   // different payload and must not be skipped by the idempotency guard.
   it.each([
@@ -172,7 +172,7 @@ describe('restore identity (AR-12)', () => {
     // as save.player.baseStats). A later in-place store mutation
     // (attackRange normalization) would then corrupt the caller's `save`
     // object, changing what a second restoreFromSave(save) call with the
-    // SAME reference computes as its identity — silently defeating the
+    // SAME reference computes as its identity - silently defeating the
     // payload-identity guard itself. Restore input must be a value.
     const { usePlayerStore } = await import('../../stores/player')
     const { createPinia, setActivePinia } = await import('pinia')
@@ -186,7 +186,7 @@ describe('restore identity (AR-12)', () => {
     const first = store.restoreFromSave(save)
 
     // The restore's own normalization step mutates store.baseStats.attackRange
-    // — this must not be visible through save.player.baseStats afterward.
+    // - this must not be visible through save.player.baseStats afterward.
     expect(save.player.baseStats).toEqual(baseStatsSnapshot)
 
     const second = store.restoreFromSave(save)

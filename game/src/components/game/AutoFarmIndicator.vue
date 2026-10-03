@@ -5,7 +5,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
 
-// Audit T1-6 fix — auto-farm holds the single StageManager slot while
+// Audit T1-6 fix - auto-farm holds the single StageManager slot while
 // armed, so no combat can be mounted at the same time; the indicator must
 // live in the home chrome (GameRoot), not the combat HUD. Stop is a
 // domain command (A7): the component never mutates farm state itself.

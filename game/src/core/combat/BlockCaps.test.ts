@@ -1,6 +1,6 @@
 // @vitest-environment node
-// T5.5 (2026-09-01) — Block 2 chiều: player base 5%, soft cap 75% (stat
-// cộng dồn), hard cap 90% (điểm roll — buff tạm không vượt).
+// T5.5 (2026-09-01) - Block 2 chieu: player base 5%, soft cap 75% (stat
+// cong don), hard cap 90% (diem roll - buff tam khong vuot).
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { createBaseStats } from '../stats/StatBlock'
 import { clampStatValue } from '../stats/StatMetadata'
@@ -49,14 +49,14 @@ describe('Block 3-layer caps (T5.5)', () => {
 
   it('hard cap 90%: buff tạm vượt soft cap vẫn bị chặn tại rollBlock', () => {
     const system = new CombatSystem({ on: () => {}, off: () => {}, emit: () => {} } as unknown as EventBus)
-    const target = makeEntity(0.99) // giả định buff tạm đã vượt 0.75
+    const target = makeEntity(0.99) // gia dinh buff tam da vuot 0.75
 
-    // Chặn 10 000 lần roll với random luôn thành công — không roll nào
-    // được blocked khi giá trị sau soft-clamp (0.75) < hard cap 0.9... Ở
-    // đây muốn verify hard cap phải bỏ qua soft clamp — nhưng spec chốt:
-    // soft cap chặn stat THUẦN, hard cap chỉ có ý nghĩa khi nguồn không
-    // qua clampStatValue. rollBlock áp cả 2: min(0.9, clamp(0.99)) = 0.75.
-    // Test này khóa CHUỖI clamp: value thô 0.99 → roll rate 0.75.
+    // Chan 10 000 lan roll voi random luon thanh cong - khong roll nao
+    // duoc blocked khi gia tri sau soft-clamp (0.75) < hard cap 0.9... O
+    // day muon verify hard cap phai bo qua soft clamp - nhung spec chot:
+    // soft cap chan stat THUAN, hard cap chi co y nghia khi nguon khong
+    // qua clampStatValue. rollBlock ap ca 2: min(0.9, clamp(0.99)) = 0.75.
+    // Test nay khoa CHUOI clamp: value tho 0.99 -> roll rate 0.75.
     const spy = vi.spyOn(Math, 'random').mockReturnValue(0.74)
 
     let blocked = 0
@@ -72,13 +72,13 @@ describe('Block 3-layer caps (T5.5)', () => {
   })
 
   it('hard cap chặn trên 0.9 khi nguồn raw vượt (nếu có đường không qua soft clamp)', () => {
-    // Direct verify công thức roll: min(0.9, raw sau soft clamp).
-    // Điểm roll dùng raw stats.blockChance qua clampStatValue rồi min hard.
+    // Direct verify cong thuc roll: min(0.9, raw sau soft clamp).
+    // Diem roll dung raw stats.blockChance qua clampStatValue roi min hard.
     const raw = 0.95
 
     const effective = Math.min(0.9, clampStatValue('blockChance', raw))
 
-    expect(effective).toBe(0.75) // soft chặn trước hard trong setup hiện tại
+    expect(effective).toBe(0.75) // soft chan truoc hard trong setup hien tai
   })
 
   it('base 5%: 100 rolls với random < 0.05 đều blocked, random >= 0.05 đều không', () => {

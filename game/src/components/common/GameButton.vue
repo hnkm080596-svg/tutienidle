@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { AudioManager } from '@/core/audio/AudioManager'
-// Shared chrome primitive (UI/UX rework phase A) — replaces hand-rolled
+// Shared chrome primitive (UI/UX rework phase A) - replaces hand-rolled
 // buttons (each panel declaring its own background/color/border) with one
 // component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
 //
@@ -129,7 +129,7 @@ const sliceTint = computed(() => {
   font-size: var(--text-body);
 }
 
-/* DARK MODE (2026-08-31) — nút trên nền tối */
+/* DARK MODE (2026-08-31) - nut tren nen toi */
 .game-button--primary {
   color: var(--hk-text-primary);
 }
@@ -166,8 +166,8 @@ const sliceTint = computed(() => {
 }
 
 .game-button:focus-visible {
-  /* UI-001 (Task 1, 2026-09-07) — fallback ring khi token thiếu: không
-     còn `outline: none` trần (mất focus indication hoàn toàn nếu
+  /* UI-001 (Task 1, 2026-09-07) - fallback ring khi token thieu: khong
+     con `outline: none` tran (mat focus indication hoan toan neu
      --focus-ring-chrome undefined). */
   outline: 2px solid rgba(217, 212, 199, 0.65);
   outline-offset: 2px;
@@ -211,8 +211,8 @@ const sliceTint = computed(() => {
   opacity: 0.82 !important;
 }
 
-/* Accent động theo scene — fill đổ gradient từ 1 CSS var của nơi dùng
-   (ví dụ accentVar="--scene-fire-text" cho lò đan). */
+/* Accent dong theo scene - fill do gradient tu 1 CSS var cua noi dung
+   (vi du accentVar="--scene-fire-text" cho lo dan). */
 .game-button--primary.has-accent {
   color: var(--button-accent);
 }
@@ -232,7 +232,7 @@ const sliceTint = computed(() => {
   animation: game-button-spin 0.6s linear infinite;
 }
 
-/* UI-006 (Task 1) — reduced motion: spinner đứng yên, không quay. */
+/* UI-006 (Task 1) - reduced motion: spinner dung yen, khong quay. */
 @media (prefers-reduced-motion: reduce) {
   .game-button,
   .game-button--ghost {

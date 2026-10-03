@@ -1204,10 +1204,10 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   if (grantedRealmPassiveIds) {
     validateStringEntries(grantedRealmPassiveIds, 'player.grantedRealmPassiveIds', issues)
 
-    // F-W-9 (v82): marker/payload two-slice authority — mỗi id đã grant
-    // phải resolve trong REALM_PASSIVES VÀ còn ít nhất một modifier sống
-    // phát từ definition đó; trường hợp grantRealmPassive() chỉ push
-    // marker sau khi đã push modifiers nên marker-mồ-côi là corrupt.
+    // F-W-9 (v82): marker/payload two-slice authority - moi id da grant
+    // phai resolve trong REALM_PASSIVES VA con it nhat mot modifier song
+    // phat tu definition do; truong hop grantRealmPassive() chi push
+    // marker sau khi da push modifiers nen marker-mo-coi la corrupt.
     for (let i = 0; i < grantedRealmPassiveIds.length; i += 1) {
       const grantedId = grantedRealmPassiveIds[i]
 
@@ -2112,7 +2112,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
       message: 'bank vượt totalCultivationGained (accrual claim bất khả thi)',
     })
   }
-  // tribulationBonusStacks removed at v82 — Loi Kiep lives only in
+  // tribulationBonusStacks removed at v82 - Loi Kiep lives only in
   // talent_loi_kiep_* modifiers (was write-only).
 
   if (!isObject(player.nodeFreePurchaseRecord)) {
@@ -2128,9 +2128,9 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
     }
   }
 
-  // F-W-2 (v82) - provenance record của grant 1-lần (skill học, kiếm
-  // ý/kiếm đạo, specialization) mà respec phải clawback.
-  // Optional per-field nhưng khi có phải đúng kiểu.
+  // F-W-2 (v82) - provenance record cua grant 1-lan (skill hoc, kiem
+  // y/kiem dao, specialization) ma respec phai clawback.
+  // Optional per-field nhung khi co phai dung kieu.
   if (!isObject(player.nodeOneShotGrants)) {
     issues.push({ path: 'player.nodeOneShotGrants', message: 'phải là object' })
   } else {
@@ -2319,7 +2319,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   // formationLoadout: null | { formationId, assignments[] }. Mirror the
   // commitFormationLoadout contract (FormationPlacement.ts): a malformed
   // loadout passes shape-check then resolvePartyFormation() silently
-  // drops rows — validate content, not just shape.
+  // drops rows - validate content, not just shape.
   if (player.formationLoadout !== null) {
     const loadout = player.formationLoadout
     if (!isObject(loadout)) {
@@ -4187,7 +4187,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   // F-W-16 (v82): restore recomputes autoWorkerCapacity from the chi_hien_quan
   // instance, so a persisted non-zero capacity without that building is
-  // always corrupt — fail loud instead of silently clamping on restore.
+  // always corrupt - fail loud instead of silently clamping on restore.
   if (
     isObject(parsed.player) &&
     isNonNegativeFiniteNumber(parsed.player.autoWorkerCapacity) &&
@@ -4323,9 +4323,9 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
     }
   }
 
-  // v82 (F-W-5) - tribulation slice optional; khi có, committedOutcome
-  // phải đủ shape tối thiểu để restore dựng lại director runtime thay
-  // vì crash/restore sai.
+  // v82 (F-W-5) - tribulation slice optional; khi co, committedOutcome
+  // phai du shape toi thieu de restore dung lai director runtime thay
+  // vi crash/restore sai.
   if (parsed.tribulation !== undefined) {
     if (!isObject(parsed.tribulation)) {
       issues.push({ path: '.tribulation', message: 'phải là object hoặc vắng mặt' })

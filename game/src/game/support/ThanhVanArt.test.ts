@@ -16,8 +16,8 @@ function setOverride(key: string, value: string | null) {
   }
 }
 
-// Cache variant là state module-level — nạp lại module cho mỗi test để
-// mô phỏng đúng lúc "boot"/phiên trang mới.
+// Cache variant la state module-level - nap lai module cho moi test de
+// mo phong dung luc "boot"/phien trang moi.
 async function loadModule() {
   vi.resetModules()
 
@@ -74,8 +74,8 @@ describe('ThanhVanArt — chọn variant trận kế tiếp (battle_end)', () =>
 
     const current = { season: 'spring' as const, time: 'noon' as const }
 
-    // Mock phân bố: random luôn về index 0 của pool đã lọc — kết quả
-    // phải xác định và khác current ở CẢ HAI chiều.
+    // Mock phan bo: random luon ve index 0 cua pool da loc - ket qua
+    // phai xac dinh va khac current o CA HAI chieu.
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     for (let i = 0; i < 8; i++) {
@@ -108,7 +108,7 @@ describe('ThanhVanArt — chọn variant trận kế tiếp (battle_end)', () =>
       seenSeasons.add(next.season)
     }
 
-    // Pool 3 mùa còn lại — 24 lần gần như chắc chắn gặp >1 mùa.
+    // Pool 3 mua con lai - 24 lan gan nhu chac chan gap >1 mua.
     expect(seenSeasons.size).toBeGreaterThan(1)
   })
 
@@ -122,10 +122,10 @@ describe('ThanhVanArt — chọn variant trận kế tiếp (battle_end)', () =>
     for (let i = 0; i < 12; i++) {
       const next = selectNextThanhVanVariant(current)
 
-      // Chiến khóa theo override cũ còn dính trong localStorage…
+      // Chien khoa theo override cu con dinh trong localStorage...
       expect(next.season).toBe('winter')
 
-      // …nhưng chiều không khóa vẫn tránh giá trị hiện tại.
+      // ...nhung chieu khong khoa van tranh gia tri hien tai.
       expect(next.time).not.toBe(current.time)
     }
   })
@@ -151,7 +151,7 @@ describe('ThanhVanArt — cache phiên theo swap', () => {
 
     expect(mod.peekThanhVanVariant()).toEqual({ season: 'summer', time: 'noon' })
 
-    // Phiên trang mới (reload module) — override khóa lại từ đầu.
+    // Phien trang moi (reload module) - override khoa lai tu dau.
     const fresh = await loadModule()
 
     expect(fresh.peekThanhVanVariant().season).toBe('winter')

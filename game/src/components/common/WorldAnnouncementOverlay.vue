@@ -5,9 +5,9 @@ import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 const store = useWorldAnnouncementStore()
 
-// Hiệu ứng typewriter — gõ từng ký tự thay vì CSS steps() (chữ có
-// dấu tiếng Việt độ rộng không đều, JS interval an toàn hơn CSS
-// width-reveal theo số ký tự cố định).
+// Hieu ung typewriter - go tung ky tu thay vi CSS steps() (chu co
+// dau tieng Viet do rong khong deu, JS interval an toan hon CSS
+// width-reveal theo so ky tu co dinh).
 const TYPE_INTERVAL_MS = 28
 
 const displayedBody = ref('')
@@ -87,9 +87,9 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .world-announcement {
-  /* KHÔNG dùng position:fixed — component này KHÔNG Teleport, render
-     thẳng trong .game-root nên absolute để phủ đúng vùng container
-     game, không neo theo viewport trình duyệt thật. */
+  /* KHONG dung position:fixed - component nay KHONG Teleport, render
+     thang trong .game-root nen absolute de phu dung vung container
+     game, khong neo theo viewport trinh duyet that. */
   position: absolute;
   inset: 0;
   /* z-index via OVERLAY_LAYERS.announcement (inline style). */

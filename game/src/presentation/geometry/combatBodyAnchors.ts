@@ -1,6 +1,6 @@
-// combatBodyAnchors — the five points on a combat entity that effects attach to.
+// combatBodyAnchors - the five points on a combat entity that effects attach to.
 //
-// Spec C §3.1/§4.2
+// Spec C sec3.1/sec4.2
 // (docs/superpowers/specs/2026-09-12-combat-anchor-scale-geometry-design.md).
 //
 // THEY COME FROM THE BATTLEFIELD CELL, NOT FROM THE ART. Nothing here reads a
@@ -13,12 +13,12 @@
 //   - it is STABLE: an art-derived anchor moves as the character breathes, so an
 //     effect pinned to the head would jitter with the idle bob;
 //   - it CANNOT GO STALE: there is no datum describing the art, so there is no
-//     datum that can describe the wrong art — which is the defect that motivated
+//     datum that can describe the wrong art - which is the defect that motivated
 //     this spec.
 //
 // What it gives up, knowingly: the anchors describe a notional body standing in
 // a cell, not the character drawn in it. An effect at `front` leaves a body edge,
-// not the actual hand. "Lech khong quan trong" — the product owner's call.
+// not the actual hand. "Lech khong quan trong" - the product owner's call.
 export type BodyAnchorId = 'top' | 'bottom' | 'centre' | 'front' | 'back'
 
 /** Which way the entity faces. The player faces right; enemies face left. */
@@ -29,7 +29,7 @@ export interface BodyBox {
   footX: number
   footY: number
 
-  /** Character size, from combatEntityScale — NOT the sprite's box. */
+  /** Character size, from combatEntityScale - NOT the sprite's box. */
   personWidth: number
   personHeight: number
 

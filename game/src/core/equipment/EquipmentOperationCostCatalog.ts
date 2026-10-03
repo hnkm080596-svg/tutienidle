@@ -1,10 +1,10 @@
 // EquipmentOperationCostCatalog (2026-08-25, resource-professions-rework
-// plan §7) — sau rework Khí Đường chỉ còn BỐN operation public; trong
-// đó chỉ Cường Hóa dùng cost catalog (Tẩy/Tinh/Hóa có cost riêng theo
-// RefinementBalance + tham số người chơi chọn).
+// plan sec7) - sau rework Khi Duong chi con BON operation public; trong
+// do chi Cuong Hoa dung cost catalog (Tay/Tinh/Hoa co cost rieng theo
+// RefinementBalance + tham so nguoi choi chon).
 //
-// Cường Hóa (§7.1): cost chuyển sang Quáng CÙNG cảnh giới mục tiêu +
-// Linh Thạch. Baseline để playtest chỉnh tại đây.
+// Cuong Hoa (sec7.1): cost chuyen sang Quang CUNG canh gioi muc tieu +
+// Linh Thach. Baseline de playtest chinh tai day.
 import type { RecipeMaterialCost } from './Equipment'
 import {
   SUPPORTED_PROFESSION_REALMS,
@@ -16,19 +16,19 @@ export type EquipmentOperation = 'enhance'
 export interface EquipmentOperationCost {
   materials: RecipeMaterialCost[]
 
-  /** Linh Thạch (currency player.spiritStone) — undefined = không tốn. */
+  /** Linh Thach (currency player.spiritStone) - undefined = khong ton. */
   spiritStone?: number
 }
 
 export interface EquipmentOperationCostContext {
-  /** Enhance band — scale theo level như getScaledCost hiện có. */
+  /** Enhance band - scale theo level nhu getScaledCost hien co. */
   enhanceLevel?: number
 }
 
 export interface EquipmentOperationCostEntry {
   operation: EquipmentOperation
 
-  /** Realm CỦA ITEM bị tác động. */
+  /** Realm CUA ITEM bi tac dong. */
   realmId: string
 
   cost: EquipmentOperationCost
@@ -58,7 +58,7 @@ export class EquipmentOperationCostCatalog {
   }
 }
 
-/** Catalog mặc định product scope: enhance × 3 realm Thanh Vân. */
+/** Catalog mac dinh product scope: enhance x 3 realm Thanh Van. */
 export function createDefaultEquipmentOperationCostCatalog(): EquipmentOperationCostCatalog {
   const entries: EquipmentOperationCostEntry[] = []
 
@@ -68,7 +68,7 @@ export function createDefaultEquipmentOperationCostCatalog(): EquipmentOperation
 
       realmId,
 
-      // Sink Quáng Thập Niên (`ore_decade`, gp123 6E C2) + Linh Thạch — scale theo enhance level.
+      // Sink Quang Thap Nien (`ore_decade`, gp123 6E C2) + Linh Thach - scale theo enhance level.
       cost: {
         materials: [{ materialId: buildProfessionMaterialId('ore', realmId, 'decade'), amount: 2 }],
 

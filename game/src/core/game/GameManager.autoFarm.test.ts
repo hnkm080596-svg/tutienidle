@@ -7,9 +7,9 @@ import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import { StageWaveSystem } from './StageWaveSystem'
 
-// Auto-farm spec Task 4 — cycle reward roll (online tick, KHÔNG chạy trận
-// thật KHÔNG hoạt ảnh). Seed perfectClear* trực tiếp (record flow là việc
-// Task 3 đang treo — độc lập với cơ chế roll).
+// Auto-farm spec Task 4 - cycle reward roll (online tick, KHONG chay tran
+// that KHONG hoat anh). Seed perfectClear* truc tiep (record flow la viec
+// Task 3 dang treo - doc lap voi co che roll).
 
 const DUMMY = defineEnemy({
   id: 'farm_dummy', name: 'Farm Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -27,7 +27,7 @@ const FARM_STAGE: Stage = {
   spawnIntervalSeconds: 0,
 }
 
-// Spec v3 D5 (2026-09-11) — same farm stage shape but the pool entry
+// Spec v3 D5 (2026-09-11) - same farm stage shape but the pool entry
 // carries eliteChance: without the allowTags:false gate a forced hit
 // would tag the idle spawn.
 const TAGGED_FARM_STAGE: Stage = {
@@ -44,7 +44,7 @@ function harness(stage: Stage = FARM_STAGE) {
   const gameManager = new GameManager()
   const player = createDefaultPlayer()
 
-  // Seed perfect-clear state trực tiếp (bypass Task 3 record).
+  // Seed perfect-clear state truc tiep (bypass Task 3 record).
   player.perfectClearStageIds.push(stage.id)
   player.perfectClearSeconds[stage.id] = 100 // cycleSeconds = 50
 
@@ -89,7 +89,7 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
 
   it('startAutoFarm fail khi stage Hoàn Mỹ nhưng KHÔNG có cycle time hợp lệ', () => {
     // Same eligibility contract as reconcile (Mission B audit round 3):
-    // an armed farm with no usable perfectClearSeconds can never pay —
+    // an armed farm with no usable perfectClearSeconds can never pay -
     // arming it would hold the single StageManager slot inert and block
     // manual combat. Both entry points share resolveValidAutoFarmStage.
     const { gameManager, player } = harness()
@@ -121,17 +121,17 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
-    // Trôi 60s = 1 full cycle (cycleSeconds 50 → half 50s? KHÔNG —
-    // spec: cycle = perfectClearSeconds/2 = 50s → 60s = 1 cycle + 10s dư).
+    // Troi 60s = 1 full cycle (cycleSeconds 50 -> half 50s? KHONG -
+    // spec: cycle = perfectClearSeconds/2 = 50s -> 60s = 1 cycle + 10s du).
     vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
 
     gameManager.tickOps.update(0.1)
 
-    // 1 cycle hoàn thành → reward roll cho totalEnemyCount quái × spiritStone 5.
+    // 1 cycle hoan thanh -> reward roll cho totalEnemyCount quai x spiritStone 5.
     const summary = gameManager.getBattleRewardSummary()
 
     expect(summary.spiritStone).toBeGreaterThan(0)
-    // Leftover carry-over: lastCheckedMs tiến ĐÚNG 50_000ms (không reset).
+    // Leftover carry-over: lastCheckedMs tien DUNG 50_000ms (khong reset).
     expect(player.autoFarmStage?.lastCheckedMs).toBe(Date.parse('2026-09-04T10:00:50Z'))
   })
 
@@ -150,7 +150,7 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
     expect(gameManager.getTurnBattle()).toBeNull()
   })
 
-  // Spec v3 D5 — the idle channel passes allowTags:false: a forced
+  // Spec v3 D5 - the idle channel passes allowTags:false: a forced
   // eliteChance hit must NOT tag the spawn (no 'Tinh Anh ' prefix, no
   // isElite flag). Spied on the prototype to observe the picked
   // templates rollAutoFarmCycleReward consumed.

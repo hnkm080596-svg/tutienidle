@@ -1,15 +1,15 @@
-// EnemyArt (mortal-enemy-art-batch-plan.md) — map enemy ID runtime →
-// texture art trong public/assets/enemies/mortal/. Enemy spawn có id
-// dạng `<templateId>_<uuid>` nên lookup dùng LONGEST-PREFIX match trên
-// dạng underscore của template id.
+// EnemyArt (mortal-enemy-art-batch-plan.md) - map enemy ID runtime ->
+// texture art trong public/assets/enemies/mortal/. Enemy spawn co id
+// dang `<templateId>_<uuid>` nen lookup dung LONGEST-PREFIX match tren
+// dang underscore cua template id.
 //
-// 20 asset = 10 loài gốc + 10 bản ferocious (không tint runtime —
-// ferocious cần silhouette mạnh hơn hẳn theo plan).
+// 20 asset = 10 loai goc + 10 ban ferocious (khong tint runtime -
+// ferocious can silhouette manh hon han theo plan).
 
 export const ENEMY_SOURCE_SIZE = { w: 1254, h: 1254 }
 
 /**
- * CANONICAL enemy template-id list (R12/AR-30) — the only enumeration.
+ * CANONICAL enemy template-id list (R12/AR-30) - the only enumeration.
  * CombatPreload, CombatPresentationCatalogue and AssetBundleCatalog all
  * consume this array; adding a mortal enemy texture is a one-place edit.
  * Sorted LONGEST-FIRST so prefix matching below stays correct.
@@ -46,8 +46,8 @@ const TEXTURE_KEY_BY_ID = new Map<string, string>(
 )
 
 /**
- * Texture key cho enemy id runtime ('mortal_wild_boar_<uuid>' khớp
- * 'mortal-wild-boar-v1'). undefined khi không thuộc batch Mortal —
+ * Texture key cho enemy id runtime ('mortal_wild_boar_<uuid>' khop
+ * 'mortal-wild-boar-v1'). undefined khi khong thuoc batch Mortal -
  * caller resolves to the shared placeholder entity (uniformity 2026-09-19).
  */
 export function resolveEnemyTextureKey(enemyId: string): string | undefined {
@@ -60,7 +60,7 @@ export function resolveEnemyTextureKey(enemyId: string): string | undefined {
   return undefined
 }
 
-/** URL preload — key trùng tên file trong public/assets/enemies/mortal/. */
+/** URL preload - key trung ten file trong public/assets/enemies/mortal/. */
 export function enemyTextureUrl(textureKey: string): string {
   return `/assets/enemies/mortal/${textureKey}.png`
 }

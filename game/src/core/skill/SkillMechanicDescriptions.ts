@@ -3,14 +3,14 @@ import type { SkillEffect } from './SkillEffect'
 import type { BuffRegistry } from '../buff2/BuffRegistry'
 import { ELEMENT_LABELS } from '../element/ElementLabels'
 
-// Pháp Tu Thuần Hệ (Task 12, plan 2026-09-03) — dòng mô tả CƠ CHẾ effect
-// trong tooltip/chi tiết skill: engine field (hitCount, spreadsAilmentId,
-// grantsZone, add_stack/remove_buff, stacksPerAffectedTarget) KHÔNG có
-// trong skill.description tự do, người chơi không thể biết cơ chế từ
-// text. Helper THUẦN (core-no-i18n — trả string qua buffRegistry labels
-// + ELEMENT_LABELS đã là nguồn nhãn sẵn có; caller Vue render thẳng).
-// Trả [] cho skill không có field nào trong nhóm này → UI không hiện gì
-// thêm (backward-compatible với mọi skill cũ).
+// Phap Tu Thuan He (Task 12, plan 2026-09-03) - dong mo ta CO CHE effect
+// trong tooltip/chi tiet skill: engine field (hitCount, spreadsAilmentId,
+// grantsZone, add_stack/remove_buff, stacksPerAffectedTarget) KHONG co
+// trong skill.description tu do, nguoi choi khong the biet co che tu
+// text. Helper THUAN (core-no-i18n - tra string qua buffRegistry labels
+// + ELEMENT_LABELS da la nguon nhan san co; caller Vue render thang).
+// Tra [] cho skill khong co field nao trong nhom nay -> UI khong hien gi
+// them (backward-compatible voi moi skill cu).
 
 export interface SkillMechanicLine {
   /** Stable key cho v-for. */

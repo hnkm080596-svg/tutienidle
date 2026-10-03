@@ -15,8 +15,8 @@ describe('CombatScene implements CombatGridViewHost', () => {
     const assertHost = (_host: CombatGridViewHost) => {}
     const scene = Object.create(CombatScene.prototype) as CombatScene
 
-    // Không throw ở runtime — mục đích DUY NHẤT của dòng này là buộc
-    // TypeScript kiểm tra CombatScene thoả CombatGridViewHost lúc biên dịch.
+    // Khong throw o runtime - muc dich DUY NHAT cua dong nay la buoc
+    // TypeScript kiem tra CombatScene thoa CombatGridViewHost luc bien dich.
     expect(() => assertHost(scene)).not.toThrow()
   })
 })

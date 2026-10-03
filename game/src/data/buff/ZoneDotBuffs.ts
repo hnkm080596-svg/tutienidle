@@ -5,19 +5,19 @@
 // mission's parked-modules rule.
 import type { BuffDefinition } from '../../core/buff2/BuffDefinition'
 
-// Completion plan Task 7 Step 1 — dot buff definition thay zone-as-dot:
-//   - "Dung Nham" (thạch_hóa + bỏng, ReactionManager.spawnLavaZone →
-//     HazardZoneSystem.spawnLavaZone): hệ sống spawn Lava Zone 6 tick ×
-//     damagePerTick 20 CỐ ĐỊNH (ElementReaction.ts spawnsLavaZone data,
-//     không might-scaling). Turn-based dot pipeline damage/tick =
-//     power × coefficient (DamageSystem, physical dùng stats.might).
-//     coefficient = 20/10 = 2.0 quy đổi tại baseline might 10
-//     (StatBlock.ts) — damage/tick tại baseline giữ nguyên 20.
-//   - "Kiếm Trận" anchor REMOVED (Kiem Tu Reimagined spec 2026-09-15
-//     §7) — the sword-zone keystone no longer exists.
+// Completion plan Task 7 Step 1 - dot buff definition thay zone-as-dot:
+//   - "Dung Nham" (thach_hoa + bong, ReactionManager.spawnLavaZone ->
+//     HazardZoneSystem.spawnLavaZone): he song spawn Lava Zone 6 tick x
+//     damagePerTick 20 CO DINH (ElementReaction.ts spawnsLavaZone data,
+//     khong might-scaling). Turn-based dot pipeline damage/tick =
+//     power x coefficient (DamageSystem, physical dung stats.might).
+//     coefficient = 20/10 = 2.0 quy doi tai baseline might 10
+//     (StatBlock.ts) - damage/tick tai baseline giu nguyen 20.
+//   - "Kiem Tran" anchor REMOVED (Kiem Tu Reimagined spec 2026-09-15
+//     sec7) - the sword-zone keystone no longer exists.
 //
-// Duration giữ nguyên SỐ (no-rebalance policy Completion plan §Global
-// Constraints): 6 lượt.
+// Duration giu nguyen SO (no-rebalance policy Completion plan secGlobal
+// Constraints): 6 luot.
 //
 // CUTOVER NOTE (Task 7 Step 3-4 BLOCKED): TurnBattleSystem/
 // TurnSkillAction currently does NOT call ReactionManager (the turn

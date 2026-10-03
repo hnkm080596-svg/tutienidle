@@ -14,18 +14,18 @@ import { StageSystem } from '../stage/StageSystem'
 import { TemplateRegistry } from './TemplateRegistry'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 
-// Fix round 1 (2026-09-05) — regression cho finding Critical của review Task 2/2.5:
-// restartTurnBattleCycle() (GameManager.ts) từng tính isFinalSpawn thẳng theo
-// stageRef.totalEnemyCount (raw content data) thay vì effectiveTotalEnemyCount(stageRef)
-// — trong khi wave object nó dựng ngay phía trên đã đúng effectiveTotalEnemyCount().
-// Lệch này chỉ lộ ra ở cycle THỨ HAI trở đi (qua turnBattleRepeatContinuously): boss
-// chết → victory → auto-restart → spawn factory tính sai isFinalSpawn=false vì so với
-// totalEnemyCount thô (vd 5) thay vì effective (1) → pickEnemyForTurnSpawn() trả về
-// quái enemyPool bình thường thay vì Boss — Boss KHÔNG bao giờ spawn lại trên repeat.
-// GameManager.bossSolo.test.ts chỉ gọi startStage() 1 lần, không đi qua
-// restartTurnBattleCycle() nên miss hoàn toàn bug này — bài test dưới đây lái NGUYÊN
-// vòng lặp update() thật, bật repeatContinuously=true, để boss chết và cycle tự
-// restart, rồi assert quái spawn ở cycle 2 vẫn là Boss (không phải mob enemyPool).
+// Fix round 1 (2026-09-05) - regression cho finding Critical cua review Task 2/2.5:
+// restartTurnBattleCycle() (GameManager.ts) tung tinh isFinalSpawn thang theo
+// stageRef.totalEnemyCount (raw content data) thay vi effectiveTotalEnemyCount(stageRef)
+// - trong khi wave object no dung ngay phia tren da dung effectiveTotalEnemyCount().
+// Lech nay chi lo ra o cycle THU HAI tro di (qua turnBattleRepeatContinuously): boss
+// chet -> victory -> auto-restart -> spawn factory tinh sai isFinalSpawn=false vi so voi
+// totalEnemyCount tho (vd 5) thay vi effective (1) -> pickEnemyForTurnSpawn() tra ve
+// quai enemyPool binh thuong thay vi Boss - Boss KHONG bao gio spawn lai tren repeat.
+// GameManager.bossSolo.test.ts chi goi startStage() 1 lan, khong di qua
+// restartTurnBattleCycle() nen miss hoan toan bug nay - bai test duoi day lai NGUYEN
+// vong lap update() that, bat repeatContinuously=true, de boss chet va cycle tu
+// restart, roi assert quai spawn o cycle 2 van la Boss (khong phai mob enemyPool).
 describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning the boss', () => {
   it('a floor-10 boss stage under turnBattleRepeatContinuously still spawns the boss (not an enemyPool mob) on the 2nd cycle', () => {
     const gameManager = new GameManager()
@@ -34,14 +34,14 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
 
     const bossTemplate = defineEnemy({
       id: 'repeat_test_boss', name: 'Repeat Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
-      // maxHp cực thấp để player (basic attack mặc định, không cần chọn đạo)
-      // giết Boss trong lượt đầu tiên, kích hoạt victory + auto-restart ngay.
+      // maxHp cuc thap de player (basic attack mac dinh, khong can chon dao)
+      // giet Boss trong luot dau tien, kich hoat victory + auto-restart ngay.
       statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
     const mobTemplate = defineEnemy({
-      // maxHp rất cao — nếu bug tái xuất hiện (mob spawn nhầm ở cycle 2), mob
-      // sẽ KHÔNG chết trong vòng lặp test, id của nó vẫn lộ ra trong assertion.
+      // maxHp rat cao - neu bug tai xuat hien (mob spawn nham o cycle 2), mob
+      // se KHONG chet trong vong lap test, id cua no van lo ra trong assertion.
       id: 'repeat_test_mob_should_not_spawn', name: 'Mob', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 100000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueMastery: 0, spiritStone: 0 },
@@ -51,8 +51,8 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
       id: 'repeat_boss_stage', name: 'Repeat Boss Stage', description: '',
       floor: 10, bossEnemyId: 'repeat_test_boss',
       enemyPool: [{ enemyId: 'repeat_test_mob_should_not_spawn', weight: 1 }],
-      // content author "sai" totalEnemyCount, giống GameManager.bossSolo.test.ts —
-      // đây CHÍNH LÀ con số mà code cũ (chưa fix) so sánh nhầm trong isFinalSpawn.
+      // content author "sai" totalEnemyCount, giong GameManager.bossSolo.test.ts -
+      // day CHINH LA con so ma code cu (chua fix) so sanh nham trong isFinalSpawn.
       totalEnemyCount: 5, waves: [5],
       spawnIntervalSeconds: 0,
     }
@@ -64,8 +64,8 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
 
     gameManager.setActivePlayer(player)
 
-    // repeatContinuously = true — bật đúng feature auto-repeat-farm thật
-    // (GameManager.ts update() loop, gated bởi turnBattleRepeatContinuously).
+    // repeatContinuously = true - bat dung feature auto-repeat-farm that
+    // (GameManager.ts update() loop, gated boi turnBattleRepeatContinuously).
     expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
 
     const seenEnemyIds: string[] = []
@@ -80,14 +80,14 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
       }
     }
 
-    // Phải quan sát được ĐỦ 2 cycle trong vòng lặp test (nếu không, fixture sai).
+    // Phai quan sat duoc DU 2 cycle trong vong lap test (neu khong, fixture sai).
     expect(seenEnemyIds.length).toBeGreaterThanOrEqual(2)
 
-    // Cycle 1 (startStage, đường vốn đã đúng trước fix round 1).
+    // Cycle 1 (startStage, duong von da dung truoc fix round 1).
     expect(seenEnemyIds[0]).toMatch(/^repeat_test_boss_/)
 
-    // Cycle 2 (qua restartTurnBattleCycle — đường bị bug Critical) PHẢI vẫn là
-    // Boss. Trước fix, dòng này lẽ ra là 'repeat_test_mob_should_not_spawn_...'.
+    // Cycle 2 (qua restartTurnBattleCycle - duong bi bug Critical) PHAI van la
+    // Boss. Truoc fix, dong nay le ra la 'repeat_test_mob_should_not_spawn_...'.
     expect(seenEnemyIds[1]).toMatch(/^repeat_test_boss_/)
     expect(seenEnemyIds[1]).not.toContain('repeat_test_mob')
   })

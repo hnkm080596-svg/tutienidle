@@ -1,9 +1,9 @@
-// Dead-reference contract (item-grade-quality-rework, Task 22) — sau khi
-// xóa EquipmentQuality.ts (9 bậc tu vi cũ)/EquipmentRarity.ts (5 bậc
-// affix-density cũ)/ItemGradeRefs.ts (shim compile tạm), không file nào
-// trong src còn tham chiếu tên/đường dẫn cũ. CHỈ quét ký hiệu ĐẶC THÙ
-// equipment cũ — KHÔNG cấm "ItemGrade"/"Phẩm" nói chung vì Pill/Talisman/
-// Formation (ItemGrade.ts) vẫn dùng đúng, không thuộc phạm vi rework này.
+// Dead-reference contract (item-grade-quality-rework, Task 22) - sau khi
+// xoa EquipmentQuality.ts (9 bac tu vi cu)/EquipmentRarity.ts (5 bac
+// affix-density cu)/ItemGradeRefs.ts (shim compile tam), khong file nao
+// trong src con tham chieu ten/duong dan cu. CHI quet ky hieu DAC THU
+// equipment cu - KHONG cam "ItemGrade"/"Pham" noi chung vi Pill/Talisman/
+// Formation (ItemGrade.ts) van dung dung, khong thuoc pham vi rework nay.
 // @vitest-environment node
 // @ts-expect-error project omits Node ambient types by design (pattern: bundle-split.test.ts)
 import { readdirSync, readFileSync, statSync } from 'node:fs'
@@ -14,8 +14,8 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { makeInstance } from './EquipmentInstance.fixture'
 
-// Từ src/core/equipment/deadReferences.test.ts đi lên 2 cấp là chính
-// thư mục src/.
+// Tu src/core/equipment/deadReferences.test.ts di len 2 cap la chinh
+// thu muc src/.
 const srcRoot = fileURLToPath(new URL('../../', import.meta.url))
 
 
@@ -40,13 +40,13 @@ function listSourceFiles(dir: string): string[] {
   return out
 }
 
-// Ký hiệu XUẤT (export) của EquipmentQuality.ts/EquipmentRarity.ts đã
-// xóa hẳn trong task này — CHỈ liệt kê tên định danh ĐẶC THÙ, KHÔNG
-// dùng substring chung chung như "forgePoints"/"forgePotential" (những
-// field/comment đó vẫn tồn tại HỢP LỆ và KHÔNG LIÊN QUAN ở nơi khác —
-// vd RefinementBalance.ts's forgeUses budget, hoặc fixture test dữ liệu
-// save CŨ ở services/save/*.test.ts mô phỏng shape save trước khi
-// migrate — cả 2 đều ngoài phạm vi rework này).
+// Ky hieu XUAT (export) cua EquipmentQuality.ts/EquipmentRarity.ts da
+// xoa han trong task nay - CHI liet ke ten dinh danh DAC THU, KHONG
+// dung substring chung chung nhu "forgePoints"/"forgePotential" (nhung
+// field/comment do van ton tai HOP LE va KHONG LIEN QUAN o noi khac -
+// vd RefinementBalance.ts's forgeUses budget, hoac fixture test du lieu
+// save CU o services/save/*.test.ts mo phong shape save truoc khi
+// migrate - ca 2 deu ngoai pham vi rework nay).
 const DEAD_SYMBOLS = [
   'EQUIPMENT_QUALITY_MAX_FORGE_POINTS',
   'getMaxForgePoints',
@@ -63,8 +63,8 @@ const DEAD_SYMBOLS = [
   'EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE',
 ]
 
-// Đường dẫn 3 file đã xóa hẳn trong task này — không file nào được import
-// TỪ đây nữa (specifier import, không phải chỉ nhắc tên trong comment).
+// Duong dan 3 file da xoa han trong task nay - khong file nao duoc import
+// TU day nua (specifier import, khong phai chi nhac ten trong comment).
 const DEAD_IMPORT_SPECIFIERS = [
   './EquipmentQuality',
   '../EquipmentQuality',
@@ -79,14 +79,14 @@ const DEAD_IMPORT_SPECIFIERS = [
 
 describe('dead equipment-model references (item-grade-quality-rework Task 22)', () => {
   const files = listSourceFiles(srcRoot)
-    // Bản thân file test này liệt kê các ký hiệu chết trong mảng hằng số
-    // ở trên — loại nó khỏi vòng quét để không tự bắt chính mình.
+    // Ban than file test nay liet ke cac ky hieu chet trong mang hang so
+    // o tren - loai no khoi vong quet de khong tu bat chinh minh.
     .filter((file) => !file.endsWith(join('equipment', 'deadReferences.test.ts')))
 
-  // Flaky-hygiene (2026-09-05): 2 test đầu đọc TOÀN BỘ src/ qua fs — dưới full
-  // suite chạy parallel, I/O contention từng kéo test tới 24s và vướng default
-  // timeout 5s → flake luân phiên. Fix: (1) cache nội dung file 1 LẦN dùng
-  // chung cho cả 2 test, (2) timeout riêng 60s cho các test scan.
+  // Flaky-hygiene (2026-09-05): 2 test dau doc TOAN BO src/ qua fs - duoi full
+  // suite chay parallel, I/O contention tung keo test toi 24s va vuong default
+  // timeout 5s -> flake luan phien. Fix: (1) cache noi dung file 1 LAN dung
+  // chung cho ca 2 test, (2) timeout rieng 60s cho cac test scan.
   const contentsByFile = new Map(files.map((file) => [file, readFileSync(file, 'utf-8')]))
 
   it('không còn file nào chứa ký hiệu equipment cũ (forgePoints/forgePotential/EquipmentQuality 9-bậc)', () => {
@@ -108,9 +108,9 @@ describe('dead equipment-model references (item-grade-quality-rework Task 22)', 
 
     for (const [file, content] of contentsByFile) {
       for (const specifier of DEAD_IMPORT_SPECIFIERS) {
-        // Chỉ bắt specifier trong dấu nháy của import/export thật, tránh
-        // false-positive từ comment nhắc tên file cũ (nhiều file cố ý giữ
-        // comment lịch sử "xem EquipmentQuality.ts").
+        // Chi bat specifier trong dau nhay cua import/export that, tranh
+        // false-positive tu comment nhac ten file cu (nhieu file co y giu
+        // comment lich su "xem EquipmentQuality.ts").
         const pattern = new RegExp(`from ['"]${specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`)
 
         if (pattern.test(content)) {

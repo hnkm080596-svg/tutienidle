@@ -1,8 +1,8 @@
-// ProductionSystem (plan §4) — engine production dùng chung cho Lâm,
+// ProductionSystem (plan sec4) - engine production dung chung cho Lam,
 // Mine, Grotto. Mission D (spec D3): production runs on worker
 // lanes ONLY - workers are required fuel; the manual activeCycle path
 // is deleted. Start-time conditions snapshot (realm/level/table
-// version/seed), CHỈ roll reward khi cycle hoàn thành, delivery vào Bag
+// version/seed), CHI roll reward khi cycle hoan thanh, delivery vao Bag
 // idempotent, offline settle runs sequentially within the cap (sec 4.3).
 
 import type { MaterialBag } from '../material/MaterialBag'
@@ -46,7 +46,7 @@ import { getRealmIndex } from '../realm/realmSystem'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import { betaRecipeFamilyOfId, isScopeHidden } from '../betaScope'
 
-/** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
+/** Mot giao dich settle da xay ra - dung cho notification UI (sec9.1). */
 export interface ProductionSettlementEvent {
   siteId: string
 
@@ -54,7 +54,7 @@ export interface ProductionSettlementEvent {
 
   amount: number
 
-  /** Lượng tràn stack bị mất (túi đầy) — 0/undefined nếu không tràn. */
+  /** Luong tran stack bi mat (tui day) - 0/undefined neu khong tran. */
   overflow?: number
 }
 
@@ -63,7 +63,7 @@ export interface ResolvedProductionReward {
 
   amount: number
 
-  /** Metadata hiển thị (tier realm / phẩm / niên đại) — không gameplay. */
+  /** Metadata hien thi (tier realm / pham / nien dai) - khong gameplay. */
   detail?: string
 }
 
@@ -93,7 +93,7 @@ export class ProductionSystem {
 
   private readonly siteDefinitionsById: Map<string, ProductionSiteDefinition>
 
-  /** Settle events tích luỹ kể từ lần drain gần nhất (UI notification). */
+  /** Settle events tich luy ke tu lan drain gan nhat (UI notification). */
   private pendingEvents: ProductionSettlementEvent[] = []
 
   constructor(deps: ProductionSystemDeps) {
@@ -105,7 +105,7 @@ export class ProductionSystem {
   // State management
   // =========================
 
-  /** Tạo state level 1 idle cho site chưa có trong save (migration/boot). */
+  /** Tao state level 1 idle cho site chua co trong save (migration/boot). */
   ensureSiteState(siteId: string): ProductionSiteState {
     let state = this.states.get(siteId)
 
@@ -119,7 +119,7 @@ export class ProductionSystem {
   }
 
   /**
-   * M1 (ARCH-001) — restore REPLACES the whole site-state map, and every
+   * M1 (ARCH-001) - restore REPLACES the whole site-state map, and every
    * restored entry is a detached copy (workerCycles included): the
    * payload is a value, so mutating it afterwards must not leak into
    * live state (A3). Whitelisted fields only - legacy keys (e.g. the
@@ -130,9 +130,9 @@ export class ProductionSystem {
 
     for (const state of states) {
       // Mission A review (MA-R1-04) defense-in-depth: a payload that
-      // bypassed preflight can carry an unknown siteId — such a site
+      // bypassed preflight can carry an unknown siteId - such a site
       // holds allocated worker slots but never produces (no definition
-      // → cycleMs 0), draining capacity. Drop at the boundary.
+      // -> cycleMs 0), draining capacity. Drop at the boundary.
       if (!this.siteDefinitionsById.has(state.siteId)) {
         continue
       }
@@ -234,7 +234,7 @@ export class ProductionSystem {
   }
 
   // =========================
-  // Cycle lifecycle (§4.1)
+  // Cycle lifecycle (sec4.1)
   // =========================
 
   setAutoRestart(siteId: string, enabled: boolean): boolean {
@@ -248,9 +248,9 @@ export class ProductionSystem {
   }
 
   /**
-   * Nâng level nguồn bằng Gỗ + Linh Thạch (sink Lâm §5.2). Cycle đang
-   * chạy giữ nguyên levelAtStart. Plan Workstream F — Linh Thạch là
-   * MATERIAL: check/trừ trực tiếp trên MaterialBag.
+   * Nang level nguon bang Go + Linh Thach (sink Lam sec5.2). Cycle dang
+   * chay giu nguyen levelAtStart. Plan Workstream F - Linh Thach la
+   * MATERIAL: check/tru truc tiep tren MaterialBag.
    */
   upgradeSite(siteId: string, bag: MaterialBag, currentRealmTier?: number): boolean {
     const definition = this.getSiteDefinition(siteId)
@@ -341,18 +341,18 @@ export class ProductionSystem {
   }
 
   // =========================
-  // Tick & offline settle (§4.3)
+  // Tick & offline settle (sec4.3)
   // =========================
 
   /**
    * Mission D (spec D3) - every lane comes from the shared worker pool;
    * lane count = activeWorkerSlots (no manual slot, no activeCycle).
    *
-   * Chi-hien-quan spec (2026-09-02): `assignments` tùy chọn — Map
-   * siteId → số slot MANUAL. Sites có assignment (và autoRestart) nhận
-   * đúng min(assigned, capacity còn lại) theo thứ tự Map; phần dư
-   * capacity → round-robin cho sites auto KHÔNG có assignment. Không
-   * truyền (hoặc Map rỗng) = auto hoàn toàn — hành vi cũ giữ nguyên.
+   * Chi-hien-quan spec (2026-09-02): `assignments` tuy chon - Map
+   * siteId -> so slot MANUAL. Sites co assignment (va autoRestart) nhan
+   * dung min(assigned, capacity con lai) theo thu tu Map; phan du
+   * capacity -> round-robin cho sites auto KHONG co assignment. Khong
+   * truyen (hoac Map rong) = auto hoan toan - hanh vi cu giu nguyen.
    */
   tickWorkers(
     nowMs: number,
@@ -405,8 +405,8 @@ export class ProductionSystem {
       const cycleMs =
         definition && baseSeconds ? computeCycleSeconds(baseSeconds, state.level) * 1000 : 0
 
-      // M11 (ARCH-007) — same per-lane advancement mechanism as
-      // settleWorkersOffline (A9): 'observe' = single tick — due heads
+      // M11 (ARCH-007) - same per-lane advancement mechanism as
+      // settleWorkersOffline (A9): 'observe' = single tick - due heads
       // grant once, freed lanes refill on the NEXT tick via
       // emptyLaneStartMs (top-up-then-settle order preserved).
       const result = advanceWorkerLanes({
@@ -431,17 +431,17 @@ export class ProductionSystem {
   }
 
   /**
-   * Offline settle tuần tự (§4.3): settle các cycle hoàn thành trước
-   * nowMs theo thứ tự thời gian, MỖI auto-cycle một seed/roll riêng —
-   * không nhân một roll với số cycle. Ngân sách tổng bị chặn ở cap
-   * (§4.3): khi tổng thời gian cycle đã settle vượt cap thì dừng.
+   * Offline settle tuan tu (sec4.3): settle cac cycle hoan thanh truoc
+   * nowMs theo thu tu thoi gian, MOI auto-cycle mot seed/roll rieng -
+   * khong nhan mot roll voi so cycle. Ngan sach tong bi chan o cap
+   * (sec4.3): khi tong thoi gian cycle da settle vuot cap thi dung.
    *
-   * Backlog còn lại sau khi hết ngân sách (cycle hoàn thành trước nowMs
-   * nhưng chưa settle) bị HUỶ không cấp reward và auto-restart bắt đầu
-   * lại từ nowMs — nếu để nguyên, tick() online sẽ trả dần toàn bộ
-   * backlog nhiều ngày và cap mất tác dụng (review 2026-08-28).
+   * Backlog con lai sau khi het ngan sach (cycle hoan thanh truoc nowMs
+   * nhung chua settle) bi HUY khong cap reward va auto-restart bat dau
+   * lai tu nowMs - neu de nguyen, tick() online se tra dan toan bo
+   * backlog nhieu ngay va cap mat tac dung (review 2026-08-28).
    *
-   * Worker (T3 economy-ecosystem-plan): cycle dở dang của worker được
+   * Worker (T3 economy-ecosystem-plan): cycle do dang cua worker duoc
    * persisted to the save and settles offline under the whole cap
    * budget (Mission D - no manual phase eats budget first anymore).
    * Returns the number of worker cycles settled.
@@ -454,8 +454,8 @@ export class ProductionSystem {
     options: {
       workerCapacity?: number
       offlineSinceMs?: number
-      /** Chi-hien-quan — assignments snapshot (từ states trước settle) để
-       *  offline khớp online. */
+      /** Chi-hien-quan - assignments snapshot (tu states truoc settle) de
+       *  offline khop online. */
       workerAssignments?: Map<string, number>
     } = {},
   ): number {
@@ -469,7 +469,7 @@ export class ProductionSystem {
     )
   }
 
-  /** Deps injection cho ProductionOffline.ts — cùng pattern washDeps()/refineDeps(). */
+  /** Deps injection cho ProductionOffline.ts - cung pattern washDeps()/refineDeps(). */
   private offlineDeps(): ProductionOfflineDeps {
     return {
       states: this.states,
@@ -481,7 +481,7 @@ export class ProductionSystem {
     }
   }
 
-  /** Cộng reward của một cycle vào Bag + ghi settle event (dùng chung mọi đường settle). */
+  /** Cong reward cua mot cycle vao Bag + ghi settle event (dung chung moi duong settle). */
   private grantCycleRewards(cycle: ProductionCycle, bag: MaterialBag, registry: MaterialRegistry): void {
     // M-F-BODY-HIDDEN (spec sec.4) - hidden-channel emission appends
     // post-table rewards that RIDE this same bag.add/pendingEvents
@@ -578,13 +578,13 @@ export class ProductionSystem {
   }
 
   // =========================
-  // Reward rolls (§5/§6) — roll SAU hoàn thành bằng seed snapshot
+  // Reward rolls (sec5/sec6) - roll SAU hoan thanh bang seed snapshot
   // =========================
 
   /**
-   * Roll toàn bộ reward của một cycle từ seed + bảng theo version
-   * snapshot. Cùng collectionRealmId + level → cùng deadline, bất kể
-   * phẩm/niên đại roll ra (§4.1).
+   * Roll toan bo reward cua mot cycle tu seed + bang theo version
+   * snapshot. Cung collectionRealmId + level -> cung deadline, bat ke
+   * pham/nien dai roll ra (sec4.1).
    */
   rollRewards(cycle: ProductionCycle): ResolvedProductionReward[] {
     const random = mulberry32(cycle.rollSeed)
@@ -666,7 +666,7 @@ export class ProductionSystem {
       ]
     }
 
-    // Grotto: tier → thảo trong pool tier → niên đại (§6.1 hai bước roll).
+    // Grotto: tier -> thao trong pool tier -> nien dai (sec6.1 hai buoc roll).
     // BETA SCOPE LOCK v2 sec.12/sec.17 - herbs of dormant recipe families
     // have no beta sink (the brew gate rejects them), so the faucet
     // closes at the roll: identity admission is filtered to
@@ -681,8 +681,8 @@ export class ProductionSystem {
       return []
     }
 
-    // Nhóm theo đan phương (identity), roll identity đều trước rồi roll
-    // niên đại theo trọng số (§6.2 — niên đại roll độc lập trong tier).
+    // Nhom theo dan phuong (identity), roll identity deu truoc roi roll
+    // nien dai theo trong so (sec6.2 - nien dai roll doc lap trong tier).
     const identities = Array.from(new Set(pool.map((herb) => herb.pillRecipeId)))
 
     const identityId = identities[Math.floor(random() * identities.length) % identities.length]
@@ -711,7 +711,7 @@ export class ProductionSystem {
     ]
   }
 
-  /** Hiệu ứng speed hiện tại/kế cho UI card (§9.1). */
+  /** Hieu ung speed hien tai/ke cho UI card (sec9.1). */
   getSiteView(siteId: string, nowMs: number):
     | {
         definition: ProductionSiteDefinition
@@ -773,5 +773,5 @@ export class ProductionSystem {
 }
 
 // =========================
-// Helpers nội bộ
+// Helpers noi bo
 // =========================

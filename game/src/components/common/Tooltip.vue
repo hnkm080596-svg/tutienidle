@@ -50,10 +50,10 @@ const techniqueContent = computed<TechniqueTooltipContent | null>(() =>
 )
 const visibleSections = computed(() => techniqueContent.value?.sections ?? [])
 
-// Cap density theo từng loại tooltip (mục 5 tooltip-revamp-plan.md) —
-// khớp với .tooltip/--rich/--detailed ở CSS bên dưới. size() chỉ
-// dùng để clamp khi availableWidth NHỎ HƠN cap này (an toàn viewport),
-// không được ghi đè cap khi màn hình đủ rộng.
+// Cap density theo tung loai tooltip (muc 5 tooltip-revamp-plan.md) -
+// khop voi .tooltip/--rich/--detailed o CSS ben duoi. size() chi
+// dung de clamp khi availableWidth NHO HON cap nay (an toan viewport),
+// khong duoc ghi de cap khi man hinh du rong.
 function maxWidthForKind(kind: string | undefined): number {
   if (kind === 'equipment') return 380
   if (kind === 'element') return 300
@@ -98,16 +98,16 @@ const { floatingStyles } = useFloating(reference, floating, {
 const equippedLabel = computed(() => i18n.global.t('panels.bag.tooltip.compare.equipped'))
 const viewingLabel = computed(() => i18n.global.t('panels.bag.tooltip.compare.viewing'))
 
-// Quality/Pham → 1 màu accent qua namespace --grade-* (5 vars riêng,
-// rải 1-3-5-7-9 trên thang --rank-color, xem assets/theme.css) — KHÔNG
-// còn `--rank-color-${itemQualityRank(...)}` (1-5) như trước Fix 2
-// (final review, item-grade-quality-rework): equipment tooltip còn hiện
-// grade segment (ProfessionGrade, 10 bậc, tô --rank-color-1..10) cạnh
-// quality accent này, nên quality PHẢI dùng dải màu riêng --grade-*
-// (không trùng --rank-color-1..10) để tránh nhầm, đúng spec §5.8. Dùng
-// isMaxRankTone thay vì tự liệt kê lại từng ID quality/pham thành 1
-// rule CSS[data-quality=...]/[data-rarity=...] riêng (dễ sót khi thêm
-// bậc mới, xem git history).
+// Quality/Pham -> 1 mau accent qua namespace --grade-* (5 vars rieng,
+// rai 1-3-5-7-9 tren thang --rank-color, xem assets/theme.css) - KHONG
+// con `--rank-color-${itemQualityRank(...)}` (1-5) nhu truoc Fix 2
+// (final review, item-grade-quality-rework): equipment tooltip con hien
+// grade segment (ProfessionGrade, 10 bac, to --rank-color-1..10) canh
+// quality accent nay, nen quality PHAI dung dai mau rieng --grade-*
+// (khong trung --rank-color-1..10) de tranh nham, dung spec sec5.8. Dung
+// isMaxRankTone thay vi tu liet ke lai tung ID quality/pham thanh 1
+// rule CSS[data-quality=...]/[data-rarity=...] rieng (de sot khi them
+// bac moi, xem git history).
 const qualityAccentColor = computed(() => {
   if (content.value?.kind !== 'equipment') return undefined
   return `var(--grade-${content.value.qualityKey})`
@@ -179,9 +179,9 @@ function hideBrokenImage(event: Event) {
         <template v-else-if="content.kind === 'building'">
           <p class="tooltip__title">{{ content.name }}</p>
           <p v-if="content.functionLabel" class="tooltip__description">{{ content.functionLabel }}</p>
-          <!-- Màu theo ĐÚNG trạng thái (2026-08-30 frontend-design pass) —
-               trước đây LUÔN jade dù đang nói "Chưa mở" (trông như tích
-               cực nhầm). isBuilt=false (chưa xây/chưa mở) → muted. -->
+          <!-- Mau theo DUNG trang thai (2026-08-30 frontend-design pass) -
+               truoc day LUON jade du dang noi "Chua mo" (trong nhu tich
+               cuc nham). isBuilt=false (chua xay/chua mo) -> muted. -->
           <p
             class="tooltip__building-status"
             :class="{ 'tooltip__building-status--locked': content.isBuilt === false }"
@@ -244,9 +244,9 @@ function hideBrokenImage(event: Event) {
 .tooltip__pair { display: flex; gap: 12px; }
 .tooltip__card { min-width: 0; flex: 1 1 0; }
 .tooltip__heading { min-width: 0; }
-/* Title trước đây thừa hưởng font-size 12px của .tooltip gốc — cùng cỡ
-   với meta/description, chỉ khác weight/family (2026-08-30 frontend-
-   design pass: tiêu đề tooltip cần tách bậc rõ khỏi nội dung). */
+/* Title truoc day thua huong font-size 12px cua .tooltip goc - cung co
+   voi meta/description, chi khac weight/family (2026-08-30 frontend-
+   design pass: tieu de tooltip can tach bac ro khoi noi dung). */
 .tooltip__title { margin: 0 0 3px; color: var(--hk-text-primary); font-family: var(--hk-font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
 .tooltip__meta { margin: 0; color: var(--hk-text-muted); font-size: var(--text-xs); }
 /* pre-line: authored multi-line descriptions (Phap Tu Reimagine special

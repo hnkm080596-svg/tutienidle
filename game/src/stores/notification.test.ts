@@ -62,14 +62,14 @@ describe('notification queue', () => {
     expect(notification.queuedToasts).toEqual([])
   })
 
-  // Audit fix 2026-08-31 — farm AoE late-game push >10 toast/s trong khi
-  // drain chỉ ~1.4/s (maxVisible / 3.5s); không cap thì queue phình nghìn
-  // toast stale và replay hàng phút sau.
+  // Audit fix 2026-08-31 - farm AoE late-game push >10 toast/s trong khi
+  // drain chi ~1.4/s (maxVisible / 3.5s); khong cap thi queue phinh nghin
+  // toast stale va replay hang phut sau.
   it('queuedToasts có cap — push vượt 100 vào queue bị bỏ, không tích vô hạn', () => {
     const notification = useNotificationStore()
 
-    // maxVisible mặc định 5 → 5 toast đầu visible, 145 push sau vào queue,
-    // chỉ 100 đầu được giữ.
+    // maxVisible mac dinh 5 -> 5 toast dau visible, 145 push sau vao queue,
+    // chi 100 dau duoc giu.
     for (let i = 0; i < 150; i++) {
       notification.push('save', `msg ${i}`)
     }
@@ -87,7 +87,7 @@ describe('notification queue', () => {
       notification.push('save', `msg ${i}`)
     }
 
-    // Queue giữ "msg 0" (toast queue đầu tiên) — bỏ "msg 119" (mới nhất).
+    // Queue giu "msg 0" (toast queue dau tien) - bo "msg 119" (moi nhat).
     const messages = notification.queuedToasts.map((toast) => toast.message)
     expect(messages).toHaveLength(100)
     expect(messages[0]).toBe('msg 0')

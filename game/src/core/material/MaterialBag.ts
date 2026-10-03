@@ -9,17 +9,17 @@ export class MaterialBag {
 
 
   /**
-   * Cộng dồn stack, clamp tại stackLimit (mặc định MAX_STACK_AMOUNT).
-   * Trả về lượng TRÀN bị mất (0 nếu vừa đủ chỗ) — caller đường reward
-   * dùng để báo "túi đầy" thay vì mất lặng lẽ.
+   * Cong don stack, clamp tai stackLimit (mac dinh MAX_STACK_AMOUNT).
+   * Tra ve luong TRAN bi mat (0 neu vua du cho) - caller duong reward
+   * dung de bao "tui day" thay vi mat lang le.
    */
   add(
     material: Material,
     amount: number,
   ): number {
-    // Guard NaN/Infinity: `NaN <= 0` là false nên check cũ lọt NaN —
-    // NaN cộng vào stack sẽ poison vĩnh viễn amount đó (mọi has() trả
-    // false, UI hiện NaN). amount phải là số hữu hạn dương.
+    // Guard NaN/Infinity: `NaN <= 0` la false nen check cu lot NaN -
+    // NaN cong vao stack se poison vinh vien amount do (moi has() tra
+    // false, UI hien NaN). amount phai la so huu han duong.
     if (!Number.isFinite(amount) || amount <= 0) {
       return 0
     }
@@ -88,10 +88,10 @@ export class MaterialBag {
     materialId: string,
     amount: number,
   ): boolean {
-    // Guard: amount <= 0 KHÔNG phải remove hợp lệ — amount âm sẽ CỘNG
-    // ngược vào stack (vector nhân bản tiềm ẩn). NaN cũng bị chặn:
-    // `existing.amount < NaN` là false nên NaN sẽ lọt qua và trừ NaN
-    // khỏi stack (poison amount).
+    // Guard: amount <= 0 KHONG phai remove hop le - amount am se CONG
+    // nguoc vao stack (vector nhan ban tiem an). NaN cung bi chan:
+    // `existing.amount < NaN` la false nen NaN se lot qua va tru NaN
+    // khoi stack (poison amount).
     if (!Number.isFinite(amount) || amount <= 0) {
       return false
     }

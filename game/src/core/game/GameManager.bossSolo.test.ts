@@ -4,9 +4,9 @@ import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 
-// Combat Art Pipeline spec §7 addendum (2026-09-05) — effectiveTotalEnemyCount()
-// khiến GameManager.buildTurnBattle()'s wave config KHÔNG BAO GIỜ cho phép quái
-// thường trộn cùng Boss, kể cả khi content data (stage.totalEnemyCount) khai sai.
+// Combat Art Pipeline spec sec7 addendum (2026-09-05) - effectiveTotalEnemyCount()
+// khien GameManager.buildTurnBattle()'s wave config KHONG BAO GIO cho phep quai
+// thuong tron cung Boss, ke ca khi content data (stage.totalEnemyCount) khai sai.
 describe('boss stage — GameManager.buildTurnBattle wave config never allows a regular enemy alongside the boss', () => {
   it('a floor-10 boss stage with totalEnemyCount:5 in its content data still only ever has 1 enemy total', () => {
     const gameManager = new GameManager()
@@ -26,7 +26,7 @@ describe('boss stage — GameManager.buildTurnBattle wave config never allows a 
       id: 'boss_solo_stage', name: 'Boss Solo Stage', description: '',
       floor: 10, bossEnemyId: 'test_boss_solo',
       enemyPool: [{ enemyId: 'test_regular_should_not_spawn', weight: 1 }],
-      totalEnemyCount: 5, waves: [5], // content author mistake — should still be forced to 1 effectively
+      totalEnemyCount: 5, waves: [5], // content author mistake - should still be forced to 1 effectively
       spawnIntervalSeconds: 0,
     }
 

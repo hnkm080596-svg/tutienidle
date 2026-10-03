@@ -44,13 +44,13 @@ import {
 } from '../../data/buff/TheTuBuffs'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 
-// Cultivation Path Framework (spec 2026-09-16, M5) — the The Tu path
+// Cultivation Path Framework (spec 2026-09-16, M5) - the The Tu path
 // module: the two way definitions + the path machinery they own.
 //
-//   body_pathway — ordinary The Tu (kit kim_cang_bat_hoai_the): the root-mutex
+//   body_pathway - ordinary The Tu (kit kim_cang_bat_hoai_the): the root-mutex
 //     kit (cuong_chien XOR tran_the) + the 'body' stat domain
 //     (vitality -> enduranceThreshold channel).
-//   ung_the — The Tu An (kit ung_the_than_quyet): hidden way offered
+//   ung_the - The Tu An (kit ung_the_than_quyet): hidden way offered
 //     only at the Initiation Ritual when huy_quyen reaches Lv3. Ung The
 //     beta: the kit is the basic tham_the alone (Phan rides it
 //     baseline); quan_the is the Truc Co special granted by the
@@ -60,7 +60,7 @@ import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 //
 // Each way owns exactly one stat facet: body_pathway emits enduranceThreshold
 // on 'body', ung_the emits the three reactive chances on 'hidden_body'
-// — same D12 two-channel pattern as spell (assembly emitter here,
+// - same D12 two-channel pattern as spell (assembly emitter here,
 // mid-battle deltaDeriver registered in CultivationPathSystem).
 //
 // Dependency direction: this file is a leaf -- it runtime-imports the
@@ -75,10 +75,10 @@ import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
  * (spec 2026-09-15 section 3). Shared by the way stat facet (assembly-
  * time emission, id prefix 'hidden_body:attributes') and the 'hidden_body'
  * domain deltaDeriver registered in CultivationPathSystem (mid-battle
- * deltas, prefix 'hidden_body:attributes_delta') — one emitter, two
+ * deltas, prefix 'hidden_body:attributes_delta') - one emitter, two
  * channels (INV-10).
  *
- * RAW uncapped linear values — REACTIVE_CHANCE_CAP is a metadata bound
+ * RAW uncapped linear values - REACTIVE_CHANCE_CAP is a metadata bound
  * consumed at the roll/display site, never inside the pipeline, so a
  * mid-battle attribute debuff composes against an over-cap base.
  */
@@ -139,14 +139,14 @@ export function bodyEnduranceModifiers(vitality: number, idPrefix: string): Stat
   ]
 }
 
-// The body_pathway way stat facet — vitality -> enduranceThreshold on the
+// The body_pathway way stat facet - vitality -> enduranceThreshold on the
 // 'body' domain. collectActiveWayStatModifiers in
 // CultivationPathSystem is the single assembly-time consumer.
 const BODY_PATHWAY_STATS: PathWayStatFacet = {
   domains: ['body'],
   collectModifiers: (_player, totals) =>
     bodyEnduranceModifiers(totals.vitality, 'body:vitality'),
-  // M8 — mid-battle vitality deltas re-emit the endurance threshold on
+  // M8 - mid-battle vitality deltas re-emit the endurance threshold on
   // the same domain (INV-10: deltas only, never the base).
   deltaDerivers: {
     body: (delta) =>
@@ -154,20 +154,20 @@ const BODY_PATHWAY_STATS: PathWayStatFacet = {
   },
 }
 
-// The hidden_body_pathway way stat facet — the three reactive chances on the
+// The hidden_body_pathway way stat facet - the three reactive chances on the
 // 'hidden_body' domain.
 const HIDDEN_BODY_PATHWAY_STATS: PathWayStatFacet = {
   domains: ['hidden_body'],
   collectModifiers: (_player, totals) =>
     hiddenBodyReactiveModifiers(totals, 'hidden_body:attributes'),
-  // M8 — mid-battle attribute deltas re-derive the reactive chances.
+  // M8 - mid-battle attribute deltas re-derive the reactive chances.
   deltaDerivers: {
     hidden_body: (delta) => hiddenBodyReactiveModifiers(delta, 'hidden_body:attributes_delta'),
   },
 }
 
 /**
- * Structural read shape for the way predicates — PlayerData and
+ * Structural read shape for the way predicates - PlayerData and
  * presentation-side player slices both satisfy it; the fields stay
  * nullable because slices keep the persisted `| null` convention.
  */
@@ -177,13 +177,13 @@ export interface BodyWayRead {
 }
 
 /**
- * body_pathway membership — the gate for ALL body_pathway-only machinery: the root-
- * mutex kit resolution (cuong_chien/tran_the), the Bất Tử Ba Thể
- * survival source, the 'body' endurance facet, the Hiện node tree.
+ * body_pathway membership - the gate for ALL body_pathway-only machinery: the root-
+ * mutex kit resolution (cuong_chien/tran_the), the Bat Tu Ba The
+ * survival source, the 'body' endurance facet, the Hien node tree.
  *
  * Reads the RAW fields, same contract as NodeSystem.nodeWayApplies:
  * cultivationWay is authoritative once the ritual writes it. A
- * legacy-shaped player (cultivationPath only, no way) is NOT body_pathway —
+ * legacy-shaped player (cultivationPath only, no way) is NOT body_pathway -
  * the gate fails closed so way machinery never runs for a state the
  * path authority did not commit.
  */
@@ -192,10 +192,10 @@ export function isBodyPathway(player: BodyWayRead | null | undefined): boolean {
 }
 
 /**
- * hidden_body_pathway membership — the gate for the hidden way's kit
+ * hidden_body_pathway membership - the gate for the hidden way's kit
  * machinery (tham_the + baseline Phan, the Truc Co quan_the special,
  * reactive payloads, the The pool, the 'hidden_body' reactive facet,
- * the An node tree). M7 — strict
+ * the An node tree). M7 - strict
  * base-pair predicate: only the persisted pair ('body', 'hidden_body_pathway')
  * matches; the legacy 'the_tu_an' path id is gone from the union and
  * can never satisfy this.
@@ -205,7 +205,7 @@ export function isHiddenBodyPathway(player: BodyWayRead | null | undefined): boo
 }
 
 // ---------------------------------------------------------------------------
-// Way definitions — consumed by CULTIVATION_PATH_MODULES.body.ways in
+// Way definitions - consumed by CULTIVATION_PATH_MODULES.body.ways in
 // CultivationPathKit (the catalog is the single aggregation point).
 // ---------------------------------------------------------------------------
 
@@ -218,9 +218,9 @@ export const BODY_PATHWAY: PathWayDefinition = {
   // P7-M4 - starter basic: the mortal huy_quyen precursor stays the
   // basic until a root kit (cuong_chien XOR tran_the) is purchased.
   starterBasicSkillId: 'huy_quyen',
-  // The Tu Reimagined (T5) — root-mutex kit: the chosen progression
+  // The Tu Reimagined (T5) - root-mutex kit: the chosen progression
   // root (cuong_chien XOR tran_the) resolves the kit at battle build.
-  // P7-M4 — mortal precursor skills stay learned past initiation; the
+  // P7-M4 - mortal precursor skills stay learned past initiation; the
   // ritual clears mortalBasicSkillId inside the commit block and the
   // mortal-only pick gate blocks re-selection post-path.
   // P7-M2 - canonical realm-entry passive ladder (delivered by
@@ -272,7 +272,7 @@ export const HIDDEN_BODY_PATHWAY: PathWayDefinition = {
   // P7-M2 - canonical realm-entry passive ladder; no initiation passive
   // (responsive_body_art carries none).
   realmRewards: composeRealmRewards(),
-  // Former hidden_body kit — hidden way. Offered at the Initiation
+  // Former hidden_body kit - hidden way. Offered at the Initiation
   // Ritual only when the mortal skill huy_quyen reaches Lv3. Owns the
   // 'hidden_body' stat domain (reactive chances) and the The pool.
   offerGate: { requiresSkillLevel: { skillId: 'huy_quyen', level: 3 } },

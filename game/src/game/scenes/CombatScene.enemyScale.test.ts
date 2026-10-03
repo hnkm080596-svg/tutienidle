@@ -1,10 +1,10 @@
 ﻿// @vitest-environment jsdom
 //
-// Enemy art x2 (yÃªu cáº§u 2026-08-26): PNG quÃ¡i hiá»ƒn thá»‹ Gáº¤P ÄÃ”I â€” chiá»u
-// cao cuá»‘i = base Ã— depthScale Ã— ENEMY_DISPLAY_SCALE_MULTIPLIER (2),
-// ÃP Cáº¢ CHO BOSS. Multiplier chá»‰ nhÃ¢n Má»˜T Láº¦N táº¡i applyEntityDepthScale
-// (resize gá»i láº¡i khÃ´ng cá»™ng dá»“n), spawn fade-in tween káº¿t thÃºc Ä‘Ãºng
-// kÃ­ch thÆ°á»›c x2. Fallback Rectangle giá»¯ kÃ­ch thÆ°á»›c cÅ© (Ã—1).
+// Enemy art x2 (yeu cau 2026-08-26): PNG quai hien thI GAP DOI - chieu
+// cao cuoi = base x depthScale x ENEMY_DISPLAY_SCALE_MULTIPLIER (2),
+// AP CA CHO BOSS. Multiplier chi nhan MOT LAN tai applyEntityDepthScale
+// (resize goi lai khong cong don), spawn fade-in tween ket thuc dung
+// kich thuOc x2. Fallback Rectangle giu kich thuOc cu (x1).
 import { describe, expect, it } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { ENEMY_SOURCE_SIZE } from '../support/EnemyArt'
@@ -46,14 +46,14 @@ function makeEnemySprite(kind: 'sprite' | 'rect') {
     },
   }
 
-  // any-cÃ³-chá»§ Ä‘Ã­ch: stub EntitySprite cho method private any-typed
-  // (Object.create pattern) â€” khÃ´ng cáº§n khá»›p interface Ä‘áº§y Ä‘á»§.
+  // any-co-chu dich: stub EntitySprite cho method private any-typed
+  // (Object.create pattern) - khong can khOp interface day du.
   const sprite: any = {
     kind,
     rect,
     row: 4,
     sourceSize: kind === 'sprite' ? { ...ENEMY_SOURCE_SIZE } : undefined,
-    // ENEMY_DISPLAY_SCALE_MULTIPLIER â€” giÃ¡ trá»‹ production cá»§a enemy PNG.
+    // ENEMY_DISPLAY_SCALE_MULTIPLIER - gia trI production cua enemy PNG.
     sizeMultiplier: kind === 'sprite' ? 2 : 1,
     boost: { value: 1 },
     shadow: undefined,
@@ -73,19 +73,19 @@ describe('CombatScene â€” ENEMY_DISPLAY_SCALE_MULTIPLIER Ã—2', () => {
     expect(calls).toHaveLength(1)
     expect(calls[0]![1]).toBeCloseTo(50 * 0.8 * 2, 5)
 
-    // Aspect ratio nguá»“n giá»¯ nguyÃªn (PNG vuÃ´ng 1254Â² â†’ width === height).
+    // Aspect ratio nguon giu nguyen (PNG vuong 12542 -> width === height).
     expect(calls[0]![0]).toBeCloseTo(calls[0]![1], 5)
   })
 
-  // LƯU Ý (review round 1, task 9.5): test dưới đây gán sizeMultiplier = 4
-  // thủ công vào fixture — nó chỉ khoá math pass-through của
-  // applyEntityDepthScale() (nhân số có sẵn), KHÔNG chạm production code
-  // chọn ra giá trị 4 đó (getOrCreateSprite() trong combat-grid-view.ts).
-  // Revert cờ isBoss trong nhánh tạo sprite thật sẽ KHÔNG làm test này đỏ.
-  // Regression thật cho việc production code chọn đúng sizeMultiplier theo
-  // isBoss (kể cả nhánh fallback Rectangle chưa có texture) nằm ở
-  // combat-grid-view.test.ts — xem file đó để biết test nào thực sự bảo vệ
-  // tính năng Boss to hơn.
+  // LUU Y (review round 1, task 9.5): test duoi day gan sizeMultiplier = 4
+  // thu cong vao fixture - no chi khoa math pass-through cua
+  // applyEntityDepthScale() (nhan so co san), KHONG cham production code
+  // chon ra gia tri 4 do (getOrCreateSprite() trong combat-grid-view.ts).
+  // Revert co isBoss trong nhanh tao sprite that se KHONG lam test nay do.
+  // Regression that cho viec production code chon dung sizeMultiplier theo
+  // isBoss (ke ca nhanh fallback Rectangle chua co texture) nam o
+  // combat-grid-view.test.ts - xem file do de biet test nao thuc su bao ve
+  // tinh nang Boss to hon.
   it("Boss renders at 2× a regular enemy's size (2026-09-05: no longer the same ×2 rule)", () => {
     const scene = createScene()
     const { sprite, calls } = makeEnemySprite('sprite')
@@ -116,9 +116,9 @@ describe('CombatScene â€” ENEMY_DISPLAY_SCALE_MULTIPLIER Ã—2', () => {
       maxHp: 100,
       isBoss: true,
     }
-    // BOSS_DISPLAY_SCALE_MULTIPLIER — set tại thời điểm tạo sprite trong
-    // combat-grid-view.ts, không phải bên trong applyEntityDepthScale()
-    // (hàm này chỉ nhân lại giá trị sizeMultiplier có sẵn trên sprite).
+    // BOSS_DISPLAY_SCALE_MULTIPLIER - set tai thoi diem tao sprite trong
+    // combat-grid-view.ts, khong phai ben trong applyEntityDepthScale()
+    // (ham nay chi nhan lai gia tri sizeMultiplier co san tren sprite).
     sprite.sizeMultiplier = 4
 
     scene.applyEntityDepthScale(sprite, 1)
@@ -153,8 +153,8 @@ describe('CombatScene â€” ENEMY_DISPLAY_SCALE_MULTIPLIER Ã—2', () => {
       },
     }
 
-    // playMaterializeFadeIn Ä‘áº·t boost 0.7 rá»“i tween vá» 1 â€” má»—i bÆ°á»›c
-    // projection ghi láº¡i kÃ­ch thÆ°á»›c tuyá»‡t Ä‘á»‘i (khÃ´ng nhÃ¢n dá»“n).
+    // playMaterializeFadeIn dat boost 0.7 roi tween ve 1 - moi buOc
+    // projection ghi lai kich thuOc tuyet doi (khong nhan don).
     sprite.boost.value = 0.7
     scene.applyEntityDepthScale(sprite, 0.8)
     expect(calls[0]![1]).toBeCloseTo(50 * 0.8 * 0.7 * 2, 5)
@@ -163,7 +163,7 @@ describe('CombatScene â€” ENEMY_DISPLAY_SCALE_MULTIPLIER Ã—2', () => {
     scene.applyEntityDepthScale(sprite, 0.8)
     expect(calls.at(-1)![1]).toBeCloseTo(50 * 0.8 * 2, 5)
 
-    // BÃ³ng ellipse co giÃ£n theo cÃ¹ng nhÃ¢n sá»‘ Ã—2 (SHADOW_WIDTH_RATIO 1.12).
+    // Bong ellipse co gian theo cung nhan so x2 (SHADOW_WIDTH_RATIO 1.12).
     expect(sprite.shadow.sizes.at(-1)![0]).toBeCloseTo(40 * 0.8 * 2 * 1.12, 5)
   })
 

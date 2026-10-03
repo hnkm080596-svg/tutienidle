@@ -40,7 +40,7 @@ export function useTurnBattleInfo() {
     return current !== null && isBattleInProgress(current.state)
   })
 
-  /** Tối đa 5 actor kế tiếp theo gauge order (turn-order strip). */
+  /** Toi da 5 actor ke tiep theo gauge order (turn-order strip). */
   const upcomingActors = computed<TurnBattleParticipant[]>(() => {
     stateVersion.value
 
@@ -53,7 +53,7 @@ export function useTurnBattleInfo() {
     return peekUpcomingActors(current, 5)
   })
 
-  /** Battle log, newest-last (đọc tuần tự như nhật ký). */
+  /** Battle log, newest-last (doc tuan tu nhu nhat ky). */
   const logEntries = computed(() => {
     stateVersion.value
 

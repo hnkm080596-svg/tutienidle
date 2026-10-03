@@ -9,8 +9,8 @@ import {
 import { CHARACTER_RESKIN_MAP } from '@/game/support/CharacterArt'
 import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 
-// Player visual profile catalog (plan §4.1 + §9 unit tests):
-// - chọn đúng profile theo realmId/cultivationPath;
+// Player visual profile catalog (plan sec4.1 + sec9 unit tests):
+// - chon dung profile theo realmId/cultivationPath;
 // - dedicated art for kiem_tu/phap_tu cultivate (2026-09-27 hand-drawn
 //   wave); the_tu keeps the mortal fallback until its set is drawn.
 describe('PlayerVisualProfiles — resolvePlayerVisualProfileId', () => {
@@ -109,7 +109,7 @@ describe('PlayerVisualProfiles — art binding policy', () => {
           expect(anchor.y).toBeGreaterThanOrEqual(0)
           expect(anchor.y).toBeLessThanOrEqual(1)
 
-          // Sanity — đủ 5 anchor id chuẩn.
+          // Sanity - du 5 anchor id chuan.
           void anchorId
         }
 

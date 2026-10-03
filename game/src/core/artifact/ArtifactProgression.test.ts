@@ -85,7 +85,7 @@ describe('ArtifactProgression (doc §5)', () => {
     const progress = createDefaultArtifactProgress('ngu_hanh_chau')
     const required1 = getArtifactExpRequired(1)
 
-    // Vừa đủ để tăng đúng 1 tầng, không hơn.
+    // Vua du de tang dung 1 tang, khong hon.
     applyArtifactExperience(progress, required1, 5)
 
     expect(progress.realmLevel).toBe(2)
@@ -98,8 +98,8 @@ describe('ArtifactProgression (doc §5)', () => {
 
     const required3 = getArtifactExpRequired(3)
 
-    // Player đứng yên ở tầng 3 (bằng artifact) — bơm EXP khổng lồ vẫn
-    // không được vượt trần, không bank nhiều tầng.
+    // Player dung yen o tang 3 (bang artifact) - bom EXP khong lo van
+    // khong duoc vuot tran, khong bank nhieu tang.
     applyArtifactExperience(progress, required3 * 100, 3)
 
     expect(progress.realmLevel).toBe(3)
@@ -121,12 +121,12 @@ describe('ArtifactProgression (doc §5)', () => {
     const progress = createDefaultArtifactProgress('ngu_hanh_chau')
     const required1 = getArtifactExpRequired(1)
 
-    // Artifact đã chạm trần cũ (player tầng 1) với EXP đầy.
+    // Artifact da cham tran cu (player tang 1) voi EXP day.
     applyArtifactExperience(progress, required1, 1)
     expect(progress.realmLevel).toBe(1)
     expect(progress.experience).toBe(required1)
 
-    // Player vừa đột phá lên tầng 2.
+    // Player vua dot pha len tang 2.
     advanceArtifactRealmLevel(progress, 2)
 
     expect(progress.realmLevel).toBe(2)
@@ -319,7 +319,7 @@ describe('tryUpgradeArtifactGrade (doc §5.3)', () => {
   it('thiếu đá không mutate gì (progress lẫn bag)', () => {
     const progress = createDefaultArtifactProgress('ngu_hanh_chau')
     const bag = new MaterialBag()
-    bag.add(DOAN_BAO_THACH, 5) // pham -> linh cần 10, thiếu
+    bag.add(DOAN_BAO_THACH, 5) // pham -> linh can 10, thieu
 
     expect(tryUpgradeArtifactGrade(progress, bag)).toBe(false)
     expect(progress.grade).toBe('pham')

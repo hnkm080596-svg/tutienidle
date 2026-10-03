@@ -1,9 +1,9 @@
 // Talent v4 production wiring (spec 2026-09-03-talent-catalog-v4
-// §4.1 + plan M1 Task 4) — khóa 3 đường wiring qua GameManager THẬT:
+// sec4.1 + plan M1 Task 4) - khoa 3 duong wiring qua GameManager THAT:
 // 1. syncTalentCombatPassive: grant/revoke hidden passive theo talent.
-// 2. PassiveSystem closures (hpReader/buffApplier) nối battle player.
-// 3. startBattleWithPlayer set surviveEffects (cleanse + Tử Sinh Ngộ)
-//    cho Bất Tử Th thể v4.
+// 2. PassiveSystem closures (hpReader/buffApplier) noi battle player.
+// 3. startBattleWithPlayer set surviveEffects (cleanse + Tu Sinh Ngo)
+//    cho Bat Tu Th the v4.
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -85,7 +85,7 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     expect(manager.skillManager.getAll().filter((skill) => skill.id === 'talent_passive_kiem_quang')).toHaveLength(1)
 
-    // Đổi talent (save edit scenario) — passive cũ bị revoke.
+    // Doi talent (save edit scenario) - passive cu bi revoke.
     player.selectedTalentIds = ['vo_anh']
     manager.progressionOps.syncTalentCombatPassive(player)
 
@@ -119,19 +119,19 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     manager.startBattleWithPlayer(player, enemy)
 
-    // Truy cập session qua combatSystem — kiểm chứng nội bộ qua hành
-    // vi: đòn chí mạng giết player trong trận thật sẽ tẩy debuff +
-    // áp Tử Sinh Ngộ. Ở đây kiểm chứng wiring gián tiếp: player vào
-    // trận với passive bat_tu_the được grant + guard có 1 use.
+    // Truy cap session qua combatSystem - kiem chung noi bo qua hanh
+    // vi: don chi mang giet player trong tran that se tay debuff +
+    // ap Tu Sinh Ngo. O day kiem chung wiring gian tiep: player vao
+    // tran voi passive bat_tu_the duoc grant + guard co 1 use.
     const passive = manager.skillManager.get('talent_passive_bat_tu_the')
 
     expect(passive).toBeDefined()
     expect(manager.surviveLethalGuard.getRemainingUses()).toBe(1)
 
-    // Phase A0 (2026-09-07) — surviveEffects phải trỏ vào LIVE turn-based
-    // pool của player (không còn legacy battleSystem pool chết). Kiểm
-    // chứng hành vi thật: áp debuff lên pool turn-based, đòn chí mạng
-    // → debuff bị tẩy + Tử Sinh Ngộ xuất hiện trên CÙNG pool đó.
+    // Phase A0 (2026-09-07) - surviveEffects phai tro vao LIVE turn-based
+    // pool cua player (khong con legacy battleSystem pool chet). Kiem
+    // chung hanh vi that: ap debuff len pool turn-based, don chi mang
+    // -> debuff bi tay + Tu Sinh Ngo xuat hien tren CUNG pool do.
     const playerParticipant = manager.getTurnBattle()!.players[0]!
 
     manager.turnBattleOps.applyBuffToPlayer('hoa_an')
@@ -157,11 +157,11 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     manager.startBattleWithPlayer(player, enemy)
 
-    // hpReader là private wiring — kiểm chứng qua hành vi công khai:
-    // passive hap_linh có condition hpBelow 0.5; ngoài trận reader
-    // trả undefined (điều kiện thông qua — không crash), trong trận
-    // trả ratio thật. Không throw là pass tối thiểu; ratio đọc được
-    // qua readonly expose nếu manager cung cấp (xem production code).
+    // hpReader la private wiring - kiem chung qua hanh vi cong khai:
+    // passive hap_linh co condition hpBelow 0.5; ngoai tran reader
+    // tra undefined (dieu kien thong qua - khong crash), trong tran
+    // tra ratio that. Khong throw la pass toi thieu; ratio doc duoc
+    // qua readonly expose neu manager cung cap (xem production code).
     expect(() => manager.passiveSystem.tick(1)).not.toThrow()
   })
 

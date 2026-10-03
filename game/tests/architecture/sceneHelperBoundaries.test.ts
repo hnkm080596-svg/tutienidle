@@ -2,21 +2,21 @@
  * R14 guard (R11/AR-29 scene-helper ownership contract).
  *
  * The three rendering mechanisms named by AR-29 must own their state and
- * take narrow host capabilities — never the full `CombatScene`:
+ * take narrow host capabilities - never the full `CombatScene`:
  *
- * - `combat-cast-bar.ts`      — owns `castBarsMap`, takes `CastBarHost`.
- * - `combat-position-interpolation.ts` — owns `interpolationsMap`, takes
+ * - `combat-cast-bar.ts`      - owns `castBarsMap`, takes `CastBarHost`.
+ * - `combat-position-interpolation.ts` - owns `interpolationsMap`, takes
  *   only a `now()` clock.
- * - `combat-telegraph.ts`     — owns target/shown/segment/snapshotAt, takes
+ * - `combat-telegraph.ts`     - owns target/shown/segment/snapshotAt, takes
  *   `TelegraphHost` (clock + read-only handle map).
  *
  * The regression class: a helper that imports or references `CombatScene`
- * can reach every scene member — the "extracted but still coupled" shape
+ * can reach every scene member - the "extracted but still coupled" shape
  * AR-29 calls out. Conversely, the scene must not re-declare the telegraph
  * chase fields the module now owns.
  *
  * Deliberately scoped to the three named helpers: coordinators like
- * combat-snapshot-reconcile still legitimately take the scene — they drive
+ * combat-snapshot-reconcile still legitimately take the scene - they drive
  * several owners at once, which is their job.
  */
 import { describe, expect, it } from 'vitest'

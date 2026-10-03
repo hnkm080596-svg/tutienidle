@@ -6,7 +6,7 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import type { CultivationPathId, PathCapabilityDeps, CultivationWayId } from './CultivationPathKit'
 // Importing the path system registers its spell delta deriver with the
-// stats module (D12 contract) — the registration itself is under test.
+// stats module (D12 contract) - the registration itself is under test.
 import {
   applyPathChoice,
   getActivePath,
@@ -24,7 +24,7 @@ import {
 } from './CultivationPathSystem'
 
 // Task 7 (D12/D19, INV-10): attunement feeds MP ONLY through the spell
-// domain gate — emitted once at assembly from resolved attribute totals,
+// domain gate - emitted once at assembly from resolved attribute totals,
 // and re-emitted as a gated delta by the registered deltaDeriver when
 // attunement moves mid-battle.
 
@@ -81,14 +81,14 @@ describe('spell attunement -> MP emission (D12)', () => {
     player.baseStats.attunement = 10
     const resolved = resolvePlayerFinalStats(player, [])
 
-    // The entity owns spell — declared via the effective-stat context
+    // The entity owns spell - declared via the effective-stat context
     // (mid-battle derivers only run for domains the entity carries).
     const effective = calculateEffectiveStats(resolved, [attunementBuff(5)], {
       activeDomains: PHAP_TU_DOMAINS,
     })
 
     // Base 10 already contributed at assembly; the delta pass must add
-    // ONLY the +5 delta's share — 15 x rate total, not 25 x rate.
+    // ONLY the +5 delta's share - 15 x rate total, not 25 x rate.
     expect(effective.attunement).toBe(15)
     expect(effective.maxMp).toBeCloseTo(15 * SPELL_ATTUNEMENT_MAX_MP_PER_POINT, 6)
     expect(effective.manaRegenPerTurn).toBeCloseTo(15 * SPELL_ATTUNEMENT_MANA_REGEN_PER_POINT, 6)
@@ -101,7 +101,7 @@ describe('spell attunement -> MP emission (D12)', () => {
     player.baseStats.attunement = 10
     const resolved = resolvePlayerFinalStats(player, [])
 
-    // Kiem Tu never owns spell — the domain deltaDeriver must not run
+    // Kiem Tu never owns spell - the domain deltaDeriver must not run
     // for this entity even though it is globally registered.
     const effective = calculateEffectiveStats(resolved, [attunementBuff(5)], {
       activeDomains: new Set<StatDomain>(['sword']),
@@ -142,7 +142,7 @@ describe('spell attunement -> MP emission (D12)', () => {
 })
 
 // ---------------------------------------------------------------------------
-// Cultivation Path Framework M2 — the path/way authority. The Initiation
+// Cultivation Path Framework M2 - the path/way authority. The Initiation
 // Ritual's offer list and path/way writes both flow through here.
 // ---------------------------------------------------------------------------
 
@@ -263,7 +263,7 @@ describe('applyPathChoice — the sole path/way write authority', () => {
   it('rejects a way id that belongs to a different path', () => {
     const player = mortalPlayer()
 
-    // 'sword_pathway' is a real way — of sword and body, not spell.
+    // 'sword_pathway' is a real way - of sword and body, not spell.
     const result = applyPathChoice(player, 'spell', 'sword_pathway')
 
     expect(result.ok).toBe(false)
@@ -327,7 +327,7 @@ describe('applyPathChoice — the sole path/way write authority', () => {
 
       expect(applyPathChoice(player, pathId, wayId)).toEqual({ ok: true })
       expect(player.cultivationWay).toBe(wayId)
-      // M7 — the base path id persists directly; the legacy-id adapter
+      // M7 - the base path id persists directly; the legacy-id adapter
       // is gone.
       expect(player.cultivationPath).toBe(pathId)
     },
@@ -475,7 +475,7 @@ describe('resolvePathCapabilities / hasPathCapability - P1 capability authority'
   })
 
   // Phap Tu Reimagined: the 'spell.empowered_ult' capability and the
-  // empowerment@100 god-ult attach are retired — Phap The lives on the
+  // empowerment@100 god-ult attach are retired - Phap The lives on the
   // element basic's own empowerment channel (flat cap 5).
 
   it('hasStaticPathCapability answers from the declared static list only - conditional caps return false', () => {

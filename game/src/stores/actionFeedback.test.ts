@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// QA (task 2.2 lô 1 — actionFeedback key-form entries): entry key-form mới
-// phải giữ nguyên hợp đồng gộp (dedup) của "Nhật ký thao tác" và không rò
-// raw key/param ra message. Runtime-only store — không liên quan save.
+// QA (task 2.2 lo 1 - actionFeedback key-form entries): entry key-form moi
+// phai giu nguyen hop dong gop (dedup) cua "Nhat ky thao tac" va khong ro
+// raw key/param ra message. Runtime-only store - khong lien quan save.
 //
 // Auto-hide (user request 2026-09-11): the action log hides completely
 // after 5s without a new entry; a new entry shows it again immediately.

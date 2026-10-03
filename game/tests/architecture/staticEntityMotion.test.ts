@@ -1,13 +1,13 @@
 /**
- * Guard (Spec B §7) — a "static" entity still moves.
+ * Guard (Spec B sec7) - a "static" entity still moves.
  *
  * Spec: docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md
- * §3.2, §4.3, §7.
+ * sec3.2, sec4.3, sec7.
  *
- * §3.2 traded animation away for art cost, not for stillness. The trade is only
+ * sec3.2 traded animation away for art cost, not for stillness. The trade is only
  * honest if the thing given back actually exists: a `kind: 'static'` entity with
- * `amplitudePx: 0` is B5 done halfway — animation removed, nothing put in its
- * place — and it would look exactly like the bug that motion was deleted by on
+ * `amplitudePx: 0` is B5 done halfway - animation removed, nothing put in its
+ * place - and it would look exactly like the bug that motion was deleted by on
  * 2026-08-26.
  *
  * That is the probe this guard is written against: set one amplitude to 0 and
@@ -49,7 +49,7 @@ describe('static entity idle motion', () => {
   })
 
   it('periods differ between species, so a battlefield does not pulse as one organism', () => {
-    // The phase is jittered per runtime id in `combat-grid-view.ts` — five
+    // The phase is jittered per runtime id in `combat-grid-view.ts` - five
     // wolves share a texture key, so per-key data alone cannot separate them.
     // What this checks is the other half: two different species do not breathe
     // in lockstep either.

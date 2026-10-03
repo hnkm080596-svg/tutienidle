@@ -3,7 +3,7 @@ import type { ClockSource } from '@/core/battle/turn/CombatClock'
 /**
  * Fallback ClockSource for the browser path: combat counts on the render
  * cadence, so the battle advances exactly as fast as it is drawn. DOM-aware,
- * so it lives outside core/ — core must stay headlessly testable.
+ * so it lives outside core/ - core must stay headlessly testable.
  *
  * The production source under Electron is MainProcessClockSource. This one
  * remains for development in a plain browser and for tests.
@@ -19,7 +19,7 @@ const STALL_THRESHOLD_MS = 500
 export class RafClockSource implements ClockSource {
   private handle: number | null = null
   private lastTimestamp: number | null = null
-  // ARCH-013/L04 — a scheduled frame belongs to the start() that armed it.
+  // ARCH-013/L04 - a scheduled frame belongs to the start() that armed it.
   // stop() bumps the generation, so a frame whose callback stopped (or
   // stopped-then-restarted) the clock never re-arms: without the fence the
   // tail `requestAnimationFrame(frame)` below would resurrect the loop after

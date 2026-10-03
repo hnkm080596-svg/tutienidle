@@ -19,7 +19,7 @@ const MAIN_STATS: Record<EquipmentSlot, readonly EquipmentStatRange[]> = {
   ],
 }
 
-// Thêm art mới vào đúng slot; mỗi instance tự chọn một ảnh trong pool.
+// Them art moi vao dung slot; moi instance tu chon mot anh trong pool.
 export const EQUIPMENT_ICON_POOLS = {
   base_kiem: Array.from(
     { length: 5 },
@@ -66,10 +66,10 @@ type EquipmentTemplateId = keyof typeof EQUIPMENT_ICON_POOLS
 const BASE_COSTS: Pick<Equipment, 'maxEnhanceLevel' | 'enhanceSpiritStoneCost'> = {
   maxEnhanceLevel: 10,
 
-  // Fallback khi catalog nghề không có band cho realm hiện hành (xem
-  // EquipmentSystem.resolveEnhanceCost(): catalog → template → Linh
-  // Thạch thuần). Catalog hiện phủ đủ 3 realm có content nên nhánh
-  // này chỉ là lưới an toàn.
+  // Fallback khi catalog nghe khong co band cho realm hien hanh (xem
+  // EquipmentSystem.resolveEnhanceCost(): catalog -> template -> Linh
+  // Thach thuan). Catalog hien phu du 3 realm co content nen nhanh
+  // nay chi la luoi an toan.
   enhanceSpiritStoneCost: 20,
 }
 
@@ -88,7 +88,7 @@ function base(id: EquipmentTemplateId, name: string, slot: EquipmentSlot): Equip
   }
 }
 
-// Chỉ còn từ loại cơ sở; tên đầy đủ, quality/rarity, stat và ảnh sống trên instance.
+// Chi con tu loai co so; ten day du, quality/rarity, stat va anh song tren instance.
 export const equipment: Equipment[] = [
   base('base_kiem', 'Kiếm', 'weapon'),
   base('base_chau', 'Châu', 'weapon'),

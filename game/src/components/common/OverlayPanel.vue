@@ -36,8 +36,8 @@ const cardEl = computed<HTMLElement | null>(() => {
 })
 useDialogFocus(cardEl, computed(() => props.open), { onEscape: () => emit('close') })
 
-// Remediation Task 6 (2026-09-05) — aria-labelledby tham chiếu heading
-// thật (per-instance useId) thay vì aria-label duplicate.
+// Remediation Task 6 (2026-09-05) - aria-labelledby tham chieu heading
+// that (per-instance useId) thay vi aria-label duplicate.
 const headingId = useId()
 
 // i18n.global.t (not useI18n): dialog tests mount OverlayPanel through a
@@ -103,9 +103,9 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
    size rules regardless of injection order. */
 .overlay-panel__card .overlay-panel__close { position: absolute; top: clamp(20px, 3vw, 40px); right: clamp(20px, 3vw, 40px); z-index: 4; width: 34px; height: 34px; min-width: 0; min-height: 0; padding: 0; opacity: .75; }
 .overlay-panel__card .overlay-panel__close:hover { opacity: 1; }
-/* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm
-   flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid).
-   overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */
+/* Fit-engine (2026-08-29) - body la ngan sach flex cho noi dung: con chiem
+   flex thay vi scroll. Con tu paginate khi vuot ngan sach (pattern BagGrid).
+   overflow hidden la rao chan cuoi - panel con KHONG duoc dua vao no. */
 .overlay-panel__body { position: relative; z-index: 3; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; box-sizing: border-box; padding: 0 clamp(30px, 4vw, 48px) clamp(30px, 4vw, 48px); overflow: hidden; }
 .overlay-fade-enter-active,.overlay-fade-leave-active { transition: opacity var(--hk-motion-micro) var(--hk-ease-standard); }
 .overlay-fade-enter-active .overlay-panel__card,.overlay-fade-leave-active .overlay-panel__card { transition: transform var(--hk-motion-panel) var(--hk-ease-standard), opacity var(--hk-motion-panel) var(--hk-ease-standard); }

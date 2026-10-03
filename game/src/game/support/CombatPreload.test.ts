@@ -1,6 +1,6 @@
-// P2 cleanup (dong-fu plan) — queueCombatAssets không được queue trùng
-// một texture key trong cùng lượt gọi: `textures.exists()` không nhận
-// biết key mới chỉ được queue, và các Player profile dùng trùng key
+// P2 cleanup (dong-fu plan) - queueCombatAssets khong duoc queue trung
+// mot texture key trong cung luot goi: `textures.exists()` khong nhan
+// biet key moi chi duoc queue, va cac Player profile dung trung key
 // (sword = mortal combat key; cultivate key chung 3 profile).
 import { describe, expect, it } from 'vitest'
 import { PLAYER_TEXTURE_KEY, PLAYER_TEXTURE_URL, queueCombatAssets } from './CombatPreload'
@@ -16,8 +16,8 @@ describe('CombatPreload.queueCombatAssets — dedupe theo texture key', () => {
         image(key: string, url: string) {
           queued.set(key, url)
         },
-        // Task 9 (2026-09-05) — queueCombatAssets giờ CŨNG load atlas
-        // placeholder cho từng entity; stub no-op để không throw.
+        // Task 9 (2026-09-05) - queueCombatAssets gio CUNG load atlas
+        // placeholder cho tung entity; stub no-op de khong throw.
         atlas() {},
       },
     } as never

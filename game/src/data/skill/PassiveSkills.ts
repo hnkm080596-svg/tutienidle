@@ -146,13 +146,13 @@ export const PASSIVE_SKILLS: Skill[] = [
 
     name: 'Nguyên Anh Minh Triệt',
 
-    // PhÃ¡p Tu Redesign (magicpath, 2026-08-18) â€” cultivationRate Ä‘Ã£ bá»‹
-    // xoÃ¡ khá»i Stats (tá»‘c Ä‘á»™ tu luyá»‡n giá» cá»‘ Ä‘á»‹nh, khÃ´ng ai tÄƒng Ä‘Æ°á»£c
-    // ná»¯a), passiveModifiers CÅ¨ cá»§a skill nÃ y (buff cultivationRate)
-    // khÃ´ng cÃ²n há»£p lá»‡. Táº M Ä‘á»ƒ trá»‘ng, chÆ°a gÃ¡n stat má»›i â€” xem audit
-    // cuá»‘i phiÃªn [[tienhiep-phap-tu-magicpath]], cáº§n quyáº¿t Ä‘á»‹nh láº¡i
-    // hÆ°á»›ng passive nÃ y (Ä‘á»•i sang combat stat, hay bá» háº³n) khi lÃ m ná»™i
-    // dung "class chÃ­nh thá»©c".
+    // Phap Tu Redesign (magicpath, 2026-08-18) - cultivationRate da bI
+    // xoa khoi Stats (toc do tu luyen gio co dInh, khong ai tang duoc
+    // nua), passiveModifiers CU cua skill nay (buff cultivationRate)
+    // khong con hop le. TAM de trong, chua gan stat mOi - xem audit
+    // cuoi phien [[tienhiep-phap-tu-magicpath]], can quyet dInh lai
+    // huOng passive nay (doi sang combat stat, hay bo han) khi lam noi
+    // dung "class chinh thuc".
     description:
       'Nguyên Anh thấu triệt — cảm ngộ sâu hơn với thiên địa (hiện chưa có hiệu ứng, đang chờ thiết kế lại).',
 
@@ -344,10 +344,10 @@ export const PASSIVE_SKILLS: Skill[] = [
         sourceId: 'passive_dai_thua_dao_tam',
         sourceType: 'skill',
 
-        // TrÆ°á»›c cá»™ng %magicAttack (stat Ä‘Ã£ xoÃ¡, gá»™p vÃ o tá»•ng há»£p 5
-        // hÃ nh) â€” Ä‘á»•i sang Linh CÄƒn (Attunement), khá»›p tháº³ng Ã½ nghÄ©a
-        // "Ä‘áº¡o tÃ¢m viÃªn mÃ£n, phÃ¡p lá»±c tÄƒng dáº§n" vÃ  tá»± lan toáº£ Ä‘á»u
-        // sang cáº£ 6 hÃ nh qua táº§ng dáº«n xuáº¥t (xem
+        // TruOc cong %magicAttack (stat da xoa, gop vao tong hop 5
+        // hanh) - doi sang Linh Can (Attunement), khOp thang y nghia
+        // "dao tam vien man, phap luc tang dan" va tu lan toa deu
+        // sang ca 6 hanh qua tang dan xuat (xem
         // StatCalculator.deriveAttributeModifiers()).
         stat: 'attunement',
 

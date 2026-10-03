@@ -1,7 +1,7 @@
-// Hàm thuần cho progression Bản Mệnh Pháp Bảo (doc §5) — không đụng
-// Battle/PlayerData trực tiếp, chỉ nhận/trả state để test dễ và tái
-// dùng được ở cả BattleLootSystem (EXP combat) lẫn breakthrough hook
-// (bank-to-cap catch-up). Mirror phong cách hàm thuần của
+// Ham thuan cho progression Ban Menh Phap Bao (doc sec5) - khong dung
+// Battle/PlayerData truc tiep, chi nhan/tra state de test de va tai
+// dung duoc o ca BattleLootSystem (EXP combat) lan breakthrough hook
+// (bank-to-cap catch-up). Mirror phong cach ham thuan cua
 // core/artifact/ArtifactRuntime.ts.
 import type { Enemy } from '../enemy/Enemy'
 import type { ArtifactGrade, ArtifactId, ArtifactProgress } from './Artifact'
@@ -15,12 +15,12 @@ import { isBetaFeature } from '../betaScope'
 
 export const DOAN_BAO_THACH_MATERIAL_ID = 'doan_bao_thach'
 
-/** Trần content MVP (doc §5.1) — Trúc Cơ tầng 18, chưa thiết kế đột phá lên Kim Đan. */
+/** Tran content MVP (doc sec5.1) - Truc Co tang 18, chua thiet ke dot pha len Kim Dan. */
 export const ARTIFACT_MAX_DESIGNED_LEVEL = 18
 
 export type ArtifactExpStatus = 'training' | 'capped_by_player' | 'content_ceiling'
 
-/** Hệ số hiệu quả tổng theo phẩm (doc §5.3) — nhân damage/buff/control magnitude. */
+/** He so hieu qua tong theo pham (doc sec5.3) - nhan damage/buff/control magnitude. */
 const ARTIFACT_GRADE_MULTIPLIER: Record<ArtifactGrade, number> = {
   pham: 1.0,
   linh: 1.12,
@@ -29,7 +29,7 @@ const ARTIFACT_GRADE_MULTIPLIER: Record<ArtifactGrade, number> = {
   tien: 1.6,
 }
 
-/** Số Đoán Bảo Thạch để lên phẩm KẾ TIẾP — undefined ở 'tien' (không lên nữa). */
+/** So Doan Bao Thach de len pham KE TIEP - undefined o 'tien' (khong len nua). */
 const ARTIFACT_GRADE_UPGRADE_COST: Record<ArtifactGrade, number | undefined> = {
   pham: 10,
   linh: 25,
@@ -50,7 +50,7 @@ export function getNextArtifactGrade(grade: ArtifactGrade): ArtifactGrade | unde
   return ARTIFACT_GRADE_ORDER[ARTIFACT_GRADE_ORDER.indexOf(grade) + 1]
 }
 
-/** `required(level) = round(20 × level^1.35)` — doc §5.2, dùng cho simulation balance. */
+/** `required(level) = round(20 x level^1.35)` - doc sec5.2, dung cho simulation balance. */
 export function getArtifactExpRequired(level: number): number {
   return Math.round(20 * Math.pow(Math.max(1, level), 1.35))
 }
@@ -95,18 +95,18 @@ export function createDefaultArtifactProgress(artifactId: ArtifactId): ArtifactP
 }
 
 /**
- * Cộng EXP và tự tăng tầng KHÔNG tốn material, tuần tự từng tầng một,
- * chỉ tới đúng `playerRealmLevel` (doc §5.1 "không thể tăng nếu tầng
- * kế cao hơn người chơi"). Khi đã chạm trần, EXP dư chỉ bank tới đúng
- * requirement kế rồi dừng — không bank nhiều tầng, không tràn.
+ * Cong EXP va tu tang tang KHONG ton material, tuan tu tung tang mot,
+ * chi toi dung `playerRealmLevel` (doc sec5.1 "khong the tang neu tang
+ * ke cao hon nguoi choi"). Khi da cham tran, EXP du chi bank toi dung
+ * requirement ke roi dung - khong bank nhieu tang, khong tran.
  *
- * Gọi lại với `amount = 0` sau khi player vừa đột phá (tiểu hoặc đại
- * cảnh giới, `playerRealmLevel` mới) chính là cách "giải phóng" EXP đã
- * bank ở trần cũ — nếu artifact đang đứng đúng ở cap (experience ===
- * required của tầng đó), vòng lặp bên dưới tự tăng ĐÚNG một tầng rồi
- * reset EXP về 0, khớp doc §5.1 "artifact có thanh đầy lập tức tăng
- * đúng một tầng rồi EXP về 0" — không cần hàm riêng, tránh 2 nơi giữ
- * cùng 1 logic dễ lệch nhau.
+ * Goi lai voi `amount = 0` sau khi player vua dot pha (tieu hoac dai
+ * canh gioi, `playerRealmLevel` moi) chinh la cach "giai phong" EXP da
+ * bank o tran cu - neu artifact dang dung dung o cap (experience ===
+ * required cua tang do), vong lap ben duoi tu tang DUNG mot tang roi
+ * reset EXP ve 0, khop doc sec5.1 "artifact co thanh day lap tuc tang
+ * dung mot tang roi EXP ve 0" - khong can ham rieng, tranh 2 noi giu
+ * cung 1 logic de lech nhau.
  */
 export function applyArtifactExperience(
   progress: ArtifactProgress,
@@ -133,10 +133,10 @@ export function applyArtifactExperience(
 }
 
 /**
- * 3 trạng thái EXP bar (doc §12.1): đang luyện / đầy chờ chủ nhân / đạt
- * trần content — dùng cho ArtifactExperienceBar.vue. So sánh trần
- * player qua getRealmIndex (không string/level compare thẳng, an toàn
- * nếu player đã vượt qua foundation_establishment).
+ * 3 trang thai EXP bar (doc sec12.1): dang luyen / day cho chu nhan / dat
+ * tran content - dung cho ArtifactExperienceBar.vue. So sanh tran
+ * player qua getRealmIndex (khong string/level compare thang, an toan
+ * neu player da vuot qua foundation_establishment).
  */
 export function getArtifactExpStatus(
   artifactRealmLevel: number,
@@ -156,7 +156,7 @@ export function getArtifactExpStatus(
   return atPlayerCeiling ? 'capped_by_player' : 'training'
 }
 
-/** Semantic wrapper cho call site breakthrough — xem docstring applyArtifactExperience. */
+/** Semantic wrapper cho call site breakthrough - xem docstring applyArtifactExperience. */
 export function advanceArtifactRealmLevel(progress: ArtifactProgress, playerRealmLevel: number): void {
   applyArtifactExperience(progress, 0, playerRealmLevel)
 }
@@ -250,12 +250,12 @@ export function normalizeArtifactProgress(player: PlayerData): void {
 }
 
 /**
- * Nâng phẩm — transaction check-trừ-cập nhật (doc §5.3): không mutate
- * gì khi thiếu đá (MaterialBag.remove() đã tự no-op nếu không đủ,
- * không cần tự check-rồi-remove 2 bước tách rời), không thất bại,
- * không giảm phẩm, cap ở 'tien' (getNextArtifactGrade() trả undefined
- * -> no-op, không lỗi). "Chỉ làm ngoài combat" enforce ở GameManager
- * (caller), không phải ở đây — hàm này không biết gì về Battle.
+ * Nang pham - transaction check-tru-cap nhat (doc sec5.3): khong mutate
+ * gi khi thieu da (MaterialBag.remove() da tu no-op neu khong du,
+ * khong can tu check-roi-remove 2 buoc tach roi), khong that bai,
+ * khong giam pham, cap o 'tien' (getNextArtifactGrade() tra undefined
+ * -> no-op, khong loi). "Chi lam ngoai combat" enforce o GameManager
+ * (caller), khong phai o day - ham nay khong biet gi ve Battle.
  */
 export function tryUpgradeArtifactGrade(
   progress: ArtifactProgress,

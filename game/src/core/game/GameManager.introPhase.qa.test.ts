@@ -80,7 +80,7 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
     expect(gameManager.getTurnBattle()?.state).toBe('defeat')
     expect(gameManager.turnBattleOps.getStageProgress()).toBeNull()
 
-    // Stage slot must be released — refight starts cleanly.
+    // Stage slot must be released - refight starts cleanly.
     expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
   })

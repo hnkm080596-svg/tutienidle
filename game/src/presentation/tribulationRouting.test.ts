@@ -373,7 +373,7 @@ describe('Tribulation routing integration (Task 11)', () => {
 })
 
 /**
- * M6 / ARCH-006 — the once-only settlement is a domain commit that lands
+ * M6 / ARCH-006 - the once-only settlement is a domain commit that lands
  * BEFORE and INDEPENDENT of the curtain. These tests run the REAL
  * coordinator (deferred curtain) so the timing windows the audit flagged
  * are exercised exactly: a rejected request while the entry transition is
@@ -598,7 +598,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     const announcements = vi.spyOn(useWorldAnnouncementStore(), 'show')
     const debuffSpy = vi.spyOn(gameManager.effectOps, 'applyPersistentBuff')
 
-    // Too weak to survive a foundation_establishment kiếp with the
+    // Too weak to survive a foundation_establishment kiep with the
     // questions left unanswered (mind fail stacks amplify the strikes) ->
     // real defeat through the director.
     player.realmId = 'qi_refining'

@@ -82,14 +82,14 @@ export class GameManagerPersistentEffectOps {
       ...this.deps.skillSystem.getScaledPassiveModifiers(),
       ...(player ? this.getTechniqueTierModifiers(player) : []),
       ...(player ? getCultivationPathStatModifiers(player) : []),
-      // Node levels (plan §6.8) - node modifiers derived from (registry,
+      // Node levels (plan sec6.8) - node modifiers derived from (registry,
       // nodeLevels), scaled by current level; no longer inside
       // player.modifiers.
       ...(player ? this.admittedNodeModifiers(player) : []),
-      // combat-gate-teleport-autocast plan §9 - combatModifiers of the
+      // combat-gate-teleport-autocast plan sec9 - combatModifiers of the
       // way-owned technique: fixed, band-independent, while the way owns it.
       // This is the ONLY aggregation path so it is never double-counted.
-      // (No technique currently declares combatModifiers — the old +2
+      // (No technique currently declares combatModifiers - the old +2
       // range grant retired with the attackRange stat in Task 3/D16.)
       ...this.getTechniqueCombatModifiers(),
     ]
@@ -217,7 +217,7 @@ export class GameManagerPersistentEffectOps {
 
     // MP is a spell-domain resource (D9): emit the MP family only when
     // the player's active WAY owns that stat domain (both spell ways
-    // declare 'spell' via their stat facet — M7 routes this through
+    // declare 'spell' via their stat facet - M7 routes this through
     // resolveActiveWayStatDomains, the facet authority). applyDomainGate
     // checks stat<->modifier domain match, never path ownership -- this
     // emission gate is the credential check it cannot perform, so a
@@ -292,7 +292,7 @@ export class GameManagerPersistentEffectOps {
   }
 
   /**
-   * Stack policy MVP (plan §5.4): same effectGroup -> refresh deadline
+   * Stack policy MVP (plan sec5.4): same effectGroup -> refresh deadline
    * (max) and keep the stronger value per-modifier; different group ->
    * append new.
    *
@@ -363,7 +363,7 @@ export class GameManagerPersistentEffectOps {
   }
 
   /**
-   * TU LINH TRAN (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) - the
+   * TU LINH TRAN (economy-fixes-sinks-plan sec3.2 B1, 2026-08-29) - the
    * spirit-stone sink buying % cultivation speed for 24h. Cost scales
    * with the number of active effects in the SAME group (expiresAtMs >
    * now); only ONE effect of that group exists at a time
@@ -404,7 +404,7 @@ export class GameManagerPersistentEffectOps {
 
   /**
    * Applies a PERSISTENT (out-of-battle) buff/debuff to the player - used
-   * for Kiep Thuong on a failed Tribulation (§13 of the `breakthrough`
+   * for Kiep Thuong on a failed Tribulation (sec13 of the `breakthrough`
    * spec). Same buffSystem/buffManager feeding getAggregatedModifiers()
    * each tick (same mechanism as PillSystem's 'buff' effect).
    */

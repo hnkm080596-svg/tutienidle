@@ -1,14 +1,14 @@
-// T6.4 bundle code-split contract (Remediation Task 9, 2026-09-05) —
-// CHUYỂN khỏi Vitest: test cũ chạy `vite build` thật (~6s mỗi lần chạy
-// suite) qua child-process — brittleness + chậm. Contract giờ là dedicated
+// T6.4 bundle code-split contract (Remediation Task 9, 2026-09-05) -
+// CHUYEN khoi Vitest: test cu chay `vite build` that (~6s moi lan chay
+// suite) qua child-process - brittleness + cham. Contract gio la dedicated
 // script `npm run check:bundle-split` (scripts/check-bundle-split.mjs,
-// chạy độc lập/sau build/CI).
+// chay doc lap/sau build/CI).
 //
-// Test này giữ coverage NHẸ trong Vitest: assert SCRIPT CONTRACT — script
-// tồn tại, npm script được đăng ký, và logic classification (entry/phaser
-// chunk) đúng trên manifest giả. KHÔNG build vite trong test.
+// Test nay giu coverage NHE trong Vitest: assert SCRIPT CONTRACT - script
+// ton tai, npm script duoc dang ky, va logic classification (entry/phaser
+// chunk) dung tren manifest gia. KHONG build vite trong test.
 // @vitest-environment node
-// @ts-expect-error project omits Node ambient types by design (pattern giữ từ test cũ); Vitest supplies at runtime.
+// @ts-expect-error project omits Node ambient types by design (pattern giu tu test cu); Vitest supplies at runtime.
 import { readFileSync, existsSync } from 'node:fs'
 // @ts-expect-error see above
 import { join, dirname } from 'node:path'
@@ -40,7 +40,7 @@ describe('bundle code-split contract (Remediation Task 9 — script-based)', () 
     expect(source).toContain('>= 900')
     // Chunk count threshold.
     expect(source).toContain('<= 2')
-    // Script exit code vi phạm khác 0 (CI gate).
+    // Script exit code vi pham khac 0 (CI gate).
     expect(source).toContain('process.exit(1)')
   })
 })

@@ -54,10 +54,10 @@ function publishHostWhenSized(): void {
 // create(), which is what makes a late-starting CombatScene able to read a
 // snapshot rather than miss it.
 function seedRegion(registry: GateRegistry): () => void {
-  // MainScene.ts/CombatScene.ts CHỈ giao tiếp với core qua EventBus này (không
-  // cầm tham chiếu GameManager trực tiếp) — mọi thứ chúng cần (vị trí
-  // player/quái, animation attack/critical/hit/dodge/cast/death/battle_start/
-  // battle_end/combat_scene_exit) đều tới qua đây.
+  // MainScene.ts/CombatScene.ts CHI giao tiep voi core qua EventBus nay (khong
+  // cam tham chieu GameManager truc tiep) - moi thu chung can (vi tri
+  // player/quai, animation attack/critical/hit/dodge/cast/death/battle_start/
+  // battle_end/combat_scene_exit) deu toi qua day.
   writeGate(registry, 'eventBus', gameManager.eventBus)
   writeGate(registry, 'gameManager', gameManager)
 
@@ -86,20 +86,20 @@ function seedRegion(registry: GateRegistry): () => void {
   gameManager.eventBus.on<void>('battle_end', clearPositionsSnapshot)
   gameManager.eventBus.on<void>('combat_scene_exit', clearPositionsSnapshot)
 
-  // 9.4 — Kiếm bar reader (Kiếm Thế / Kiếm Ý tạm) đăng ký từ đây (có
-  // gameManager + player store) vào registry; CombatScene poll mỗi frame.
+  // 9.4 - Kiem bar reader (Kiem The / Kiem Y tam) dang ky tu day (co
+  // gameManager + player store) vao registry; CombatScene poll moi frame.
   registerKiemBarReader(registry, makeKiemBarReader(gameManager, () => usePlayerStore()))
 
-  // Task 16 — The bar reader (Pháp Tu) — cùng bridge pattern.
+  // Task 16 - The bar reader (Phap Tu) - cung bridge pattern.
   registerTheBarReader(registry, makeTheBarReader(gameManager, () => usePlayerStore()))
 
   // Phap Tu Reimagine (F13) -- Ho The DR reader for status tooltips.
   registerHoTheReader(registry, makeHoTheReader(gameManager))
 
-  // Player visual profile bridge (player-body-anchor-reward-gourd-plan §4.2) —
-  // snapshot ID vào registry để scene đọc lúc create() (không bỏ lỡ trạng thái
-  // khi scene khởi động muộn), và phát event qua EventBus mỗi khi realm/path
-  // đổi. Scenes chỉ nhận PROFILE ID.
+  // Player visual profile bridge (player-body-anchor-reward-gourd-plan sec4.2) -
+  // snapshot ID vao registry de scene doc luc create() (khong bo lo trang thai
+  // khi scene khoi dong muon), va phat event qua EventBus moi khi realm/path
+  // doi. Scenes chi nhan PROFILE ID.
   const publishProfile = () => {
     const profileId: PlayerVisualProfileId = player.visualProfileId
     const armed = player.visualArmed
@@ -138,15 +138,15 @@ function seedRegion(registry: GateRegistry): () => void {
   }
 }
 
-// Combat UI Redesign — 2 scene ĐĂNG KÝ cùng lúc, chỉ MainScene (đầu mảng) tự
-// động active — CombatScene nằm sẵn nhưng dormant tới khi MainScene tự gọi
-// this.scene.start('CombatScene') lúc 'battle_start'. Chỉ 1 Phaser.Game/canvas
-// DUY NHẤT cho cả 2 — scene chuyển qua lại KHÔNG destroy/tạo lại Game.
+// Combat UI Redesign - 2 scene DANG KY cung luc, chi MainScene (dau mang) tu
+// dong active - CombatScene nam san nhung dormant toi khi MainScene tu goi
+// this.scene.start('CombatScene') luc 'battle_start'. Chi 1 Phaser.Game/canvas
+// DUY NHAT cho ca 2 - scene chuyen qua lai KHONG destroy/tao lai Game.
 const region = useDynamicRegion({
   container: containerRef,
 
-  // T6.4 code-split — Phaser + 4 scene classes load qua dynamic import (chunk
-  // riêng ~1.2MB, không chặn entry).
+  // T6.4 code-split - Phaser + 4 scene classes load qua dynamic import (chunk
+  // rieng ~1.2MB, khong chan entry).
   load: async () => {
     const [
       { default: Phaser },
@@ -167,9 +167,9 @@ const region = useDynamicRegion({
 
   config: {
     transparent: true,
-    // roundPixels (fix "nhân vật đôi khi bị blur", 2026-08-26): sprite đứng
-    // giữa pixel lẻ (projection tọa độ thập phân + walk sway/bob) bị sample
-    // mờ; snap vị trí vẽ về lưới nguyên pixel cho cạnh nét.
+    // roundPixels (fix "nhan vat doi khi bi blur", 2026-08-26): sprite dung
+    // giua pixel le (projection toa do thap phan + walk sway/bob) bi sample
+    // mo; snap vi tri ve ve luoi nguyen pixel cho canh net.
     render: { roundPixels: true },
     physics: {
       default: 'arcade',
@@ -179,7 +179,7 @@ const region = useDynamicRegion({
 
   seed: seedRegion,
 
-  // §4.2 seed-time validation. Every read site downstream degrades rather than
+  // sec4.2 seed-time validation. Every read site downstream degrades rather than
   // throws - deliberately, and with a regression test protecting it - so this
   // is the one place a missing required key is reported as what it is: a wiring
   // bug at the host, named, before a scene runs.
@@ -188,8 +188,8 @@ const region = useDynamicRegion({
   onBooted: (game) => {
     hostGame = game
 
-    // Expose cho e2e/visual gate — đọc battlefieldGeometry qua registry mà
-    // không cần chạm canvas pixel. Không có code gameplay dùng nó.
+    // Expose cho e2e/visual gate - doc battlefieldGeometry qua registry ma
+    // khong can cham canvas pixel. Khong co code gameplay dung no.
     window.__tutienPhaserGame = game
 
     publishHostWhenSized()
@@ -217,11 +217,11 @@ const region = useDynamicRegion({
 
 onMounted(() => region.start())
 
-// ARCH-013/L04 — host bootstrap retry hook. A failed import/construct leaves
+// ARCH-013/L04 - host bootstrap retry hook. A failed import/construct leaves
 // region.bootError set and NO Phaser.Game behind it, while a failed game-route
 // transition keeps this component mounted (useBootFlow's failedRequest clause)
-// so the error shell's Retry/Back stay reachable. coordinator.retry() — and
-// Back, and any later request — only re-runs the TRANSITION; it cannot
+// so the error shell's Retry/Back stay reachable. coordinator.retry() - and
+// Back, and any later request - only re-runs the TRANSITION; it cannot
 // recreate the game, so without this hook the retried transition would strand
 // inside ensureFor's waitForLoaderScene until the asset deadline. Every new
 // transition bumps transitionId with targetRoute already set; when that target
@@ -239,17 +239,17 @@ watch(
   },
 )
 
-// Task 4 (perf-optimize-pass, phần 3) — bootstrap error boundary. bootError is
+// Task 4 (perf-optimize-pass, phan 3) - bootstrap error boundary. bootError is
 // the region's, and it stays LOCAL: the fallback UI is the <p> below, inside
-// the empty canvas container — NOT errorStore/ErrorScreen.vue, which is a
+// the empty canvas container - NOT errorStore/ErrorScreen.vue, which is a
 // full-screen overlay that blocks the whole app. A Phaser bootstrap failure
 // (e.g. a transient chunk-load error) must not lock the menu, stats and every
 // other system that is working fine (code review Task 4 finding 2).
 const bootError = region.bootError
 
-// Expose cho test/parent — bootError null nghĩa là bootstrap OK hoặc đang
-// chạy; khác null nghĩa là import('phaser')/scenes hoặc new Phaser.Game() đã
-// throw và đã dọn dẹp xong.
+// Expose cho test/parent - bootError null nghia la bootstrap OK hoac dang
+// chay; khac null nghia la import('phaser')/scenes hoac new Phaser.Game() da
+// throw va da don dep xong.
 defineExpose({ bootError })
 </script>
 
@@ -265,10 +265,10 @@ defineExpose({ bootError })
   height: 100%;
 }
 
-/* Task 4 — tín hiệu tối giản tại chỗ khi bootstrap Phaser lỗi (KHÔNG
-   route qua errorStore/ErrorScreen.vue toàn app — xem ghi chú ở khai
-   báo bootError phía trên); chỉ là fallback text ngay trong container
-   canvas rỗng, không thiết kế UI mới. */
+/* Task 4 - tin hieu toi gian tai cho khi bootstrap Phaser loi (KHONG
+   route qua errorStore/ErrorScreen.vue toan app - xem ghi chu o khai
+   bao bootError phia tren); chi la fallback text ngay trong container
+   canvas rong, khong thiet ke UI moi. */
 .phaser-canvas__boot-error {
   margin: 0;
   padding: 12px;

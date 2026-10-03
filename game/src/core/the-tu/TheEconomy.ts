@@ -50,14 +50,14 @@ export const DAN_THE_INCOME_MULT = 3
 
 const UNG_THE_ID = UNG_THE_BUFF.id
 
-/** Single cap authority — entity.maxThe is baked at participant build. */
+/** Single cap authority - entity.maxThe is baked at participant build. */
 export function theCap(entity: Pick<CombatEntity, 'maxThe'>): number {
   // Non-finite maxThe (corrupt bake) reads as the module default instead of
   // poisoning every downstream cap comparison.
   return Number.isFinite(entity.maxThe) ? entity.maxThe! : MAX_THE
 }
 
-/** Single mutation authority — all income/gain routes through here. */
+/** Single mutation authority - all income/gain routes through here. */
 export function grantThe(entity: Pick<CombatEntity, 'currentThe' | 'maxThe'>, amount: number): void {
   // A NaN/Infinity amount would slip `<= 0` and brick the pool on write.
   if (!Number.isFinite(amount) || amount <= 0) return

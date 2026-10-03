@@ -13,12 +13,12 @@ import {
 } from './helpers'
 
 /**
- * P13 wiring oracle for the tribulation flow — the e2e coverage F1 lacked.
+ * P13 wiring oracle for the tribulation flow - the e2e coverage F1 lacked.
  *
  * F1 (fix commit 5ea09d73) was a Critical soft-lock: App.vue's tick called
  * checkTribulationOutcomeAction WITHOUT the presentation argument, so a
  * finished tribulation applied its outcome but the coordinator never issued
- * request({ target: 'home' }) — the route stayed 'tribulation' forever and
+ * request({ target: 'home' }) - the route stayed 'tribulation' forever and
  * home chrome never returned. The static guard lives in
  * tests/architecture/tribulationOutcomeWiring.test.ts; this spec drives the
  * whole loop in a real browser:
@@ -34,19 +34,19 @@ import {
  * carries the real GameManager under the 'gameManager' gate key
  * (PresentationGate.ts REQUIRED_GATE_KEYS, seeded at PhaserCanvas.vue).
  * Calling tribulationDirector.update(seconds) runs the domain owner's own
- * closed catch-up loop — mind questions simply time out (counted as
+ * closed catch-up loop - mind questions simply time out (counted as
  * failures) and lightning chapters burn through. update() self-guards while
  * the interactive session is held, so the poll retries until the
  * coordinator's release lands (phase 'idle' implies released).
  */
 const SAVE_KEY = GUEST_SAVE_KEY
 
-// CORE_REALM_LEVEL (src/core/realm/realmSystem.ts) — minimum tier for the
+// CORE_REALM_LEVEL (src/core/realm/realmSystem.ts) - minimum tier for the
 // Quan Khi major breakthrough. The minor-tier ladder keeps working above
 // it (mortal maxLevel is 18), so a seeded level-12 mortal stays eligible.
 const BREAKTHROUGH_GATE_LEVEL = 12
 
-// Fast-forward budget: the Quan Khi kiếp (mind 3 questions ~33s of timers +
+// Fast-forward budget: the Quan Khi kiep (mind 3 questions ~33s of timers +
 // 15s lightning chapter) needs ~50s simulated; 600s covers any realm's
 // chapter list with margin. The director's closed catch-up loop consumes
 // only while state stays 'ongoing', so overshooting is harmless.
@@ -74,7 +74,7 @@ interface GameManagerHandle {
 
 function readSave(page: import('@playwright/test').Page): Promise<SaveShape | null> {
   return page.evaluate(() => {
-    // String literal — module constants do not serialize into evaluate.
+    // String literal - module constants do not serialize into evaluate.
     const raw = localStorage.getItem('tien-hiep-idle-save:guest')
 
     return raw ? (JSON.parse(raw) as SaveShape) : null
@@ -153,7 +153,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     await page.reload()
     await reauthAndEnterHome(page)
 
-    // Command wheel (Tab) -> Cảnh Giới slot -> RealmPanel -> "Quan Khi".
+    // Command wheel (Tab) -> Canh Gioi slot -> RealmPanel -> "Quan Khi".
     await page.keyboard.press('Tab')
     const realmSlot = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlot).toBeVisible({ timeout: 10_000 })
@@ -166,8 +166,8 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     await expect(breakthroughButton).toBeEnabled({ timeout: 10_000 })
     await breakthroughButton.click()
 
-    // BreakthroughRequirementPanel ("Độ kiếp cũng là độ thân...") -> confirm
-    // "Đã hiểu" -> triggerBreakthrough() -> runAdmitted('tribulation').
+    // BreakthroughRequirementPanel ("Do kiep cung la do than...") -> confirm
+    // "Da hieu" -> triggerBreakthrough() -> runAdmitted('tribulation').
     const confirmDialog = page.getByRole('dialog', { name: /Độ kiếp cũng là độ thân/ })
     await expect(confirmDialog).toBeVisible({ timeout: 10_000 })
     await confirmDialog.getByRole('button', { name: 'Đã hiểu' }).click()
@@ -181,7 +181,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     // 8), so director.update() below is no longer blocked.
     await waitForPresentationIdle(page)
 
-    // Fast-forward to the outcome. Victory or defeat are both valid ends —
+    // Fast-forward to the outcome. Victory or defeat are both valid ends -
     // the oracle under test is the route-home wiring, not the survival
     // math. A fresh mortal at 'human' grade reliably survives the Quan Khi
     // lightning chapter, so this normally lands 'victory'.
@@ -216,13 +216,13 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     // F1 oracle: the outcome tick must issue request({ target: 'home' }).
     // .command-wheel-layer only renders while the committed route is neither
     // 'combat' nor 'tribulation' (GameRoot.vue isFullSceneActive), so its
-    // re-attachment IS the route-home witness — under F1 it never reappears.
+    // re-attachment IS the route-home witness - under F1 it never reappears.
     const wheelLayer = page.locator('.command-wheel-layer')
     try {
       await expect(wheelLayer).toBeAttached({ timeout: 30_000 })
     } catch (error) {
       // Diagnostic dump: coordinator phase/curtain, director state, scene
-      // flags — tells a stuck transition apart from a consumed outcome.
+      // flags - tells a stuck transition apart from a consumed outcome.
       const diag = await page.evaluate(() => {
         const overlay = document.querySelector('[data-testid="presentation-overlay"]')
         const game = (window as Window & {
@@ -251,7 +251,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     // The outcome's world announcement appears during the closed curtain
     // and auto-hides ~5s after show() (worldAnnouncement AUTO_CLOSE_MS).
     // It may already be gone on a slow machine, so click only if present,
-    // then wait out the fade — no assertion on its visibility itself.
+    // then wait out the fade - no assertion on its visibility itself.
     const announcement = page.locator('.world-announcement')
     if (await announcement.isVisible()) {
       await announcement.click()

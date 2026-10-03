@@ -1,5 +1,5 @@
-// Feature flag renderer — default phải là perspective (renderer mới),
-// giá trị lạ/broken storage rơi về default, set/get bền qua localStorage.
+// Feature flag renderer - default phai la perspective (renderer moi),
+// gia tri la/broken storage roi ve default, set/get ben qua localStorage.
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest'
 import { getBattlefieldRenderMode, setBattlefieldRenderMode } from './BattlefieldRenderMode'

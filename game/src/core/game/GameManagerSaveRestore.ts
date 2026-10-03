@@ -455,9 +455,9 @@ export class GameManagerSaveRestore {
       applyAllBodyModifiers(bodyPlayer)
     }
 
-    // F-W-5 (v82) - tribulation runtime: khôi phục committed outcome +
-    // cooldown sau khi mọi slice domain đã nạp (director không phụ
-    // thuộc thứ tự domain khác nhưng đặt cuối cho đúng boundary).
+    // F-W-5 (v82) - tribulation runtime: khoi phuc committed outcome +
+    // cooldown sau khi moi slice domain da nap (director khong phu
+    // thuoc thu tu domain khac nhung dat cuoi cho dung boundary).
     this.deps.tribulationDirector.restoreRuntime(save.tribulation)
 
     // F-PT-A9-1 - realm-entry rewards replay BEFORE quest lifecycle so

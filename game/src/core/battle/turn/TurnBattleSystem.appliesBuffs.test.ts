@@ -10,7 +10,7 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// The Tu Reimagined (plan Task 6/11) — `appliesBuffs` plural replaces
+// The Tu Reimagined (plan Task 6/11) - `appliesBuffs` plural replaces
 // the singular appliesBuff: one skill applies several buff defs across
 // four target scopes (self / action_targets / allies_except_self /
 // all_enemies), each with an optional durationOverride delivered through
@@ -233,7 +233,7 @@ describe('appliesBuffs — multi-application resolution', () => {
       registry,
     })
 
-    // The stun must sit on an ALLY, not the actor — a hard-cc'd actor is
+    // The stun must sit on an ALLY, not the actor - a hard-cc'd actor is
     // ccBlocked at declare and could never cast the cleanse itself.
     runtime.applyBuff('test_stun', players[1]!, players[0]!)
     expect(buffsOf(runtime, players[1]!, 'test_stun')).toHaveLength(1)

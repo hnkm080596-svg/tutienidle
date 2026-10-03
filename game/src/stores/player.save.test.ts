@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-// R10 (AR-12) — buildGameSave's structuredClone(player) (S1) cannot clone
+// R10 (AR-12) - buildGameSave's structuredClone(player) (S1) cannot clone
 // a Vue-reactive Proxy tree at all: structuredClone throws DataCloneError
 // on the first nested reactive object/array it meets (even an empty one),
 // because Proxy exotic objects have no matching internal type for the
 // algorithm. usePlayerStore.save() used to pass `this` (later `this.
-// $state`) straight into buildGameSave — both still fully reactive — so
+// $state`) straight into buildGameSave - both still fully reactive - so
 // every real save attempt from the actual Settings UI crashed synchronously
 // before it ever reached the storage layer.
 import { afterEach, describe, expect, it } from 'vitest'

@@ -1,14 +1,14 @@
 import type { StatType } from '../../core/stats/StatTypes'
 
-// Currency Luyện Thể — xem data/materials/materials.ts (định nghĩa
-// Material) và data/enemy/Enemies.ts (nguồn rơi, 20 quái Phàm Nhân).
+// Currency Luyen The - xem data/materials/materials.ts (dinh nghia
+// Material) va data/enemy/Enemies.ts (nguon roi, 20 quai Pham Nhan).
 export const TINH_HOA_PHAM_THE_MATERIAL_ID = 'tinh_hoa_pham_the'
 
-// Luyện Thể (Realm Passive & Pressure System, 2026-08-20) — 6 tầng rèn
+// Luyen The (Realm Passive & Pressure System, 2026-08-20) - 6 tang ren
 // the TUAN TU, doc quyen Pham Nhan (xem core/realm/body/BodyRefinementChapter.ts).
-// Mỗi tầng ứng với ĐÚNG 1 (hoặc 2, tầng cuối) StatType theo tài liệu
+// Moi tang ung voi DUNG 1 (hoac 2, tang cuoi) StatType theo tai lieu
 // Original plan - the numbers (cap/baseGains) are a first pass, to be tuned in
-// playtest giống mọi hằng số cân bằng khác trong codebase.
+// playtest giong moi hang so can bang khac trong codebase.
 export interface BodyRefinementTierDefinition {
   id: string
 
@@ -16,7 +16,7 @@ export interface BodyRefinementTierDefinition {
 
   description: string
 
-  // Tinh Hoa Phàm Thể cần để làm ĐẦY tầng này (tuần tự — phải làm đầy
+  // Tinh Hoa Pham The can de lam DAY tang nay (tuan tu - phai lam day
   // tang truoc moi duoc dau tu vao tang sau, xem BodyRefinementChapter.ts).
   cap: number
 
@@ -28,13 +28,13 @@ export interface BodyRefinementTierDefinition {
   // are different units.
   baseGains: Partial<Record<StatType, number>>
 
-  // Phàm Nhân tầng tối thiểu để BẮT ĐẦU đầu tư tầng này (2026-08-20,
-  // yêu cầu cụ thể: Bì/Nhục/Cốt/Huyết/Tạng/Mạch mở lần lượt ở tầng
-  // 2/4/6/8/10/12) — ĐỘC LẬP với thứ tự tuần tự (phải làm đầy tầng
+  // Pham Nhan tang toi thieu de BAT DAU dau tu tang nay (2026-08-20,
+  // yeu cau cu the: Bi/Nhuc/Cot/Huyet/Tang/Mach mo lan luot o tang
+  // 2/4/6/8/10/12) - DOC LAP voi thu tu tuan tu (phai lam day tang
   // truoc MOI toi luot tang nay, xem body/BodyRefinementChapter.invest());
-  // cả 2 điều kiện đều phải thoả. Tầng cuối (Luyện Mạch) mở cùng cửa
-  // sổ Quán Khí (tầng 12 trở đi, xem TribulationOutcomeService)
-  // — cố ý, chừa tầng 12-18 làm cửa sổ hoàn thiện trước khi Quán Khí.
+  // ca 2 dieu kien deu phai thoa. Tang cuoi (Luyen Mach) mo cung cua
+  // so Quan Khi (tang 12 tro di, xem TribulationOutcomeService)
+  // - co y, chua tang 12-18 lam cua so hoan thien truoc khi Quan Khi.
   requiredRealmLevel: number
 }
 
@@ -45,9 +45,9 @@ export function baseGainKeys(gains: Partial<Record<StatType, number>>): StatType
   return Object.keys(gains) as StatType[]
 }
 
-// Caps cấp số nhân (spec dot-pha-loi-kiep §3.1 — hệ số ×3.5/tầng
-// first-pass: 50/175/615/2150/7500/26300; đối chiếu tổng nguồn Tinh
-// Hoa farm được trong 18 tầng Phàm Nhân khi playtest).
+// Caps cap so nhan (spec dot-pha-loi-kiep sec3.1 - he so x3.5/tang
+// first-pass: 50/175/615/2150/7500/26300; doi chieu tong nguon Tinh
+// Hoa farm duoc trong 18 tang Pham Nhan khi playtest).
 export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
   {
     id: 'luyen_bi',
@@ -86,10 +86,10 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     name: 'Luyện Tạng',
     description: 'Rèn lục phủ ngũ tạng.',
     cap: 7500,
-    // "Damage Reduction / Vitality" (tài liệu mục III.5) — dùng
-    // vitality (Thể Chất, tầng Attribute gốc) thay vì 1 stat mitigation
-    // trực tiếp: đi qua đúng pipeline deriveAttributeModifiers() sẵn có
-    // (StatCalculator.ts), tự dẫn ra maxHp/hpRegen/enduranceThreshold.
+    // "Damage Reduction / Vitality" (tai lieu muc III.5) - dung
+    // vitality (The Chat, tang Attribute goc) thay vi 1 stat mitigation
+    // truc tiep: di qua dung pipeline deriveAttributeModifiers() san co
+    // (StatCalculator.ts), tu dan ra maxHp/hpRegen/enduranceThreshold.
     baseGains: { vitality: 2 }, // P7-M-F PLACEHOLDER - pending dedicated balance phase
     requiredRealmLevel: 10,
   },

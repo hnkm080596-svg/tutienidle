@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BUFF_REGISTRY } from './BuffRegistry'
 import { buffs as LIVE_BUFFS } from './buffs'
 
-// M4 — the registry IS the validating buff2 catalog now: every def is
+// M4 - the registry IS the validating buff2 catalog now: every def is
 // authored in the canonical shape and was already validated at module
 // load (a malformed def would throw on import, before any test runs).
 // These tests pin the migration invariants, not the legacy converter.

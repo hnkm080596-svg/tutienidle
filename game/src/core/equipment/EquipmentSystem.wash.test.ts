@@ -27,11 +27,11 @@ import { SPIRIT_STONE_MATERIAL, SPIRIT_STONE_MATERIAL_ID } from '../material/Spi
 import { isValidEquipmentSubstat } from './EquipmentStatPolicy'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
-// Task 8 (phase7-gamemanager-split) — tách nguyên vẹn khỏi
-// EquipmentSystem.test.ts (describe 'EquipmentSystem — Tẩy Luyện
-// (washAffixes, plan §7.3)'), KHÔNG đổi assertion nào, chỉ di chuyển +
-// trùng lặp setup helper cần thiết cho file test độc lập (cùng convention
-// EquipmentSystem.dissolve.test.ts, Task 9 đợt trước).
+// Task 8 (phase7-gamemanager-split) - tach nguyen ven khoi
+// EquipmentSystem.test.ts (describe 'EquipmentSystem - Tay Luyen
+// (washAffixes, plan sec7.3)'), KHONG doi assertion nao, chi di chuyen +
+// trung lap setup helper can thiet cho file test doc lap (cung convention
+// EquipmentSystem.dissolve.test.ts, Task 9 dot truoc).
 
 const TEMPLATE: Equipment = {
   id: 'test_sword',
@@ -62,14 +62,14 @@ function setup() {
 
   materialBag.add(ENHANCE_ORE, 100_000)
 
-  // Plan Workstream F — Linh Thạch là MATERIAL: nạp sẵn số dư lớn.
+  // Plan Workstream F - Linh Thach la MATERIAL: nap san so du lon.
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 
   return { system, bag, registry, affixRegistry, slotManager, materialBag, player }
 }
 
-// Instance thủ công (không qua createInstance random) — dùng cho test
-// cần kiểm soát chính xác quality/affixes ban đầu.
+// Instance thu cong (khong qua createInstance random) - dung cho test
+// can kiem soat chinh xac quality/affixes ban dau.
 function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance {
   return makeInstance({
     instanceId: 'manual-1',
@@ -107,7 +107,7 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
   ) {
     const instance = manualInstance(overrides)
 
-    // Ngân sách rèn per-item — full để test luồng thành công.
+    // Ngan sach ren per-item - full de test luong thanh cong.
     instance.forgeUsesRemaining = instance.forgeUsesTotal
 
     instance.equipped = true
@@ -358,9 +358,9 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
       const decoy: Affix = {
         id: `wash-decoy-${quality}`,
         name: 'Wash decoy',
-        // Decoy non-locked phải hợp lệ ở boots nhưng khác stat compatible
-        // (criticalRate ở weapon) — dùng wardRegenPerTurn (boots substat)
-        // vì castSpeedPercent cũ đã retire (2026-09-04).
+        // Decoy non-locked phai hop le o boots nhung khac stat compatible
+        // (criticalRate o weapon) - dung wardRegenPerTurn (boots substat)
+        // vi castSpeedPercent cu da retire (2026-09-04).
         stat: lockedPool ? 'criticalDamage' : 'wardRegenPerTurn',
         kind: 'prefix',
         pool: lockedPool ?? expectedPool,
@@ -485,8 +485,8 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     incompatibleRegistry.register({
       id: 'wash-incompatible-only',
       name: 'Wash incompatible only',
-      // (2026-09-04) castSpeedPercent cũ retire — dùng wardRegenPerTurn
-      // (boots substat) giữ ý "hợp lệ boots, không hợp lệ weapon".
+      // (2026-09-04) castSpeedPercent cu retire - dung wardRegenPerTurn
+      // (boots substat) giu y "hop le boots, khong hop le weapon".
       stat: 'wardRegenPerTurn',
       kind: 'prefix',
       pool: 'basic',

@@ -1,9 +1,9 @@
 import type { SortDirection } from '@/stores/ui'
 
-// Sort model cho Hành Trang (plan Workstream E) — mỗi tab có state riêng
-// trong uiStore; sort chạy trên MỘT BẢN COPY của toàn bộ list TRƯỚC
-// pagination, không mutate thứ tự thật trong bag. Stable sort: comparator
-// cuối cùng quay về original index để item bằng nhau giữ nguyên thứ tự.
+// Sort model cho Hanh Trang (plan Workstream E) - moi tab co state rieng
+// trong uiStore; sort chay tren MOT BAN COPY cua toan bo list TRUOC
+// pagination, khong mutate thu tu that trong bag. Stable sort: comparator
+// cuoi cung quay ve original index de item bang nhau giu nguyen thu tu.
 
 export function stableSort<T>(items: readonly T[], compare: (a: T, b: T) => number): T[] {
   return items
@@ -12,7 +12,7 @@ export function stableSort<T>(items: readonly T[], compare: (a: T, b: T) => numb
     .map((entry) => entry.item)
 }
 
-/** Đảo chiều comparator theo direction (asc = comparator gốc). */
+/** Dao chieu comparator theo direction (asc = comparator goc). */
 export function withDirection<T>(compare: (a: T, b: T) => number, direction: SortDirection) {
   if (direction === 'asc') {
     return compare
@@ -21,7 +21,7 @@ export function withDirection<T>(compare: (a: T, b: T) => number, direction: Sor
   return (a: T, b: T) => -compare(a, b)
 }
 
-/** Comparator số an toàn NaN/undefined — undefined/co thiếu xếp trước ở asc. */
+/** Comparator so an toan NaN/undefined - undefined/co thieu xep truoc o asc. */
 export function compareNumber(a: number | undefined, b: number | undefined): number {
   return (a ?? Number.NEGATIVE_INFINITY) - (b ?? Number.NEGATIVE_INFINITY)
 }

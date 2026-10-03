@@ -19,7 +19,7 @@ import type { Stage } from '../stage/Stage'
 import type { StatusVfxAttachedEvent, StatusVfxRemovedEvent } from '../battle/BattleEvents'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Phase A6 (9.5 #7) — production wiring regression: a real turn-based
+// Phase A6 (9.5 #7) - production wiring regression: a real turn-based
 // fight must emit status_vfx_* events so the Phaser buff-icon pipeline
 // (dead since the real-time engine was retired) renders icons/tooltips
 // again. Doc Chuong (wood Phap Tu basic) applies trung_doc at chance 1.0.
@@ -79,20 +79,20 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     gameManager.catalogOps.registerEnemyTemplates([makeDummyEnemy()])
     gameManager.catalogOps.registerStages([stageFixture()])
     gameManager.setActivePlayer(player)
-    // The element basic must be LEARNED — the committed element alone
+    // The element basic must be LEARNED - the committed element alone
     // does not grant it (selectSpellPathElement does, via the root's
     // unlocksSkillIds). The old static fallback masked the missing skill.
     expect(gameManager.progressionOps.learnSkill('doc_chuong', player)).toBe(true)
 
     // ARCH-002 (M7): every engine construction now runs WITH
-    // BUFF_REGISTRY — non-stage battles (startBattleWithPlayer) included,
+    // BUFF_REGISTRY - non-stage battles (startBattleWithPlayer) included,
     // so applySkillAilments/appliesBuff branches are live everywhere.
     expect(
       gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('status_vfx_stage')!, false),
     ).toBe(true)
 
     // Advance until the first doc_chuong hit lands trung_doc (chance 1.0)
-    // — intro+countdown+first turns; the cap keeps broken wiring from
+    // - intro+countdown+first turns; the cap keeps broken wiring from
     // hanging the test.
     for (let i = 0; i < 300 && attached.length === 0; i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
@@ -102,7 +102,7 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     const ailment = attached.find((e) => e.dotType === 'doc_can')
     expect(ailment).toBeDefined()
     expect(ailment!.targetId.startsWith('status_vfx_dummy')).toBe(true)
-    // durationSeconds carries TURNS now — trung_doc's authored duration.
+    // durationSeconds carries TURNS now - trung_doc's authored duration.
     expect(ailment!.durationSeconds).toBeGreaterThan(0)
     expect(ailment!.polarity).toBe('debuff')
     expect(ailment!.buffName).toBeTruthy()
@@ -138,7 +138,7 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
       (e) => e.dotType === 'tran_phap_cuu_cung_buff' && e.targetId === 'player',
     )
     expect(grant).toBeDefined()
-    // Formation buffs are authored duration: Infinity → permanent flag.
+    // Formation buffs are authored duration: Infinity -> permanent flag.
     expect(grant!.permanent).toBe(true)
   })
 })

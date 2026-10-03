@@ -1,5 +1,5 @@
 /**
- * R8.2 Slice 3 — tribulation START-side prep becomes domain-owned.
+ * R8.2 Slice 3 - tribulation START-side prep becomes domain-owned.
  *
  * RED phase: the admitted-start callback in useTribulation.ts still
  * sequences unequip-all + modifier sync + startTribulation from Vue

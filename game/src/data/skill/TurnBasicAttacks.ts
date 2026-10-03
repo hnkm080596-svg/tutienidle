@@ -1,16 +1,16 @@
-// Turn-Based Combat Completion (Task 5) — mapping nội dung THẬT lên
-// TurnSkillDefinition cho 8 builds + enemy special, theo Slice 2 spec §3
+// Turn-Based Combat Completion (Task 5) - mapping noi dung THAT len
+// TurnSkillDefinition cho 8 builds + enemy special, theo Slice 2 spec sec3
 // ("straight field copy, not a redesign"):
-// - Kiếm Tu: 'tram' (Huy Kiếm, dealDamage value 1 physical, resourceType none)
-// - 5 Pháp Tu Thuần: skill đầu mỗi chuỗi SPELL_KIT_IDS, mỗi skill 1
+// - Kiem Tu: 'tram' (Huy Kiem, dealDamage value 1 physical, resourceType none)
+// - 5 Phap Tu Thuan: skill dau moi chuoi SPELL_KIT_IDS, moi skill 1
 //   component element ratio 1 (Skills.ts L140/374/319/450/532)
-// - Thể Tu + Phàm Nhân (chưa chọn đạo): KHÔNG dùng Skill object — hệ sống
-//   dùng generic melee (basic attack qua might stat), map thành
-//   TurnSkillDefinition physical multiplier 1 tương đương
-// - Enemy: hầu như chỉ basic attack (might stat) — chung generic physical.
-//   Riêng Thủy Giáp Long author specialAttacks[0] = Nuốt Sáng (everyNth 4,
-//   damageMultiplier 2.5) — mọiNth counter là trách nhiệm của caller
-//   (GameManager adapter), định nghĩa skill ở đây chỉ là shape damage.
+// - The Tu + Pham Nhan (chua chon dao): KHONG dung Skill object - he song
+//   dung generic melee (basic attack qua might stat), map thanh
+//   TurnSkillDefinition physical multiplier 1 tuong duong
+// - Enemy: hau nhu chi basic attack (might stat) - chung generic physical.
+//   Rieng Thuy Giap Long author specialAttacks[0] = Nuot Sang (everyNth 4,
+//   damageMultiplier 2.5) - moiNth counter la trach nhiem cua caller
+//   (GameManager adapter), dinh nghia skill o day chi la shape damage.
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
 import type { CultivationPathId } from '../../core/player/CultivationPathKit'
 
@@ -21,13 +21,13 @@ export const SWORD_BASIC: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
-// Phase A1 (2026-09-07) — each entry gains appliesAilment with the EXACT
+// Phase A1 (2026-09-07) - each entry gains appliesAilment with the EXACT
 // chance authored on the same skill's legacy Skill definition in Skills.ts
 // (ailmentChance): fire 0.5, water 0.5, wood 1.0, metal 0.4, earth 1.0.
 // These make elemental ailment application reachable in real turn-based
 // combat.
 //
-// TEST FIXTURES ONLY — production Phap Tu basics resolve through the
+// TEST FIXTURES ONLY - production Phap Tu basics resolve through the
 // canonical Skill -> TurnSkillDefinition converter (GameManager
 // resolvePlayerBasicAttack / resolveAnElementBasicPool); this static copy
 // is not an authority and must not re-enter a production path (it has no
@@ -41,7 +41,7 @@ export const SPELL_BASICS: Record<'fire' | 'water' | 'wood' | 'metal' | 'earth',
   earth: { id: 'tho_cau_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'earth', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'tran_an', chance: 1 } },
 }
 
-/** Thể Tu + Phàm Nhân — generic melee, hệ sống không dùng Skill object. */
+/** The Tu + Pham Nhan - generic melee, he song khong dung Skill object. */
 export const GENERIC_PHYSICAL_BASIC: TurnSkillDefinition = {
   id: 'generic_physical',
   cooldownTurns: 0,
@@ -54,10 +54,10 @@ export const BASIC_ATTACKS_BY_BUILD: Partial<Record<CultivationPathId, TurnSkill
 }
 
 /**
- * Enemy specialAttacks[0] của Thủy Giáp Long (Enemies.ts:1764) — đòn thứ 4
- * "Nuốt Sáng" (×2.5 damage nước). Turn-based: caller (GameManager adapter)
- * đếm everyNth theo lượt của enemy; damage multiplier đích thực nằm ở
- * damage.multiplier (enemy might stat × 2.5 qua resolveActionHit).
+ * Enemy specialAttacks[0] cua Thuy Giap Long (Enemies.ts:1764) - don thu 4
+ * "Nuot Sang" (x2.5 damage nuoc). Turn-based: caller (GameManager adapter)
+ * dem everyNth theo luot cua enemy; damage multiplier dich thuc nam o
+ * damage.multiplier (enemy might stat x 2.5 qua resolveActionHit).
  */
 export const THUY_GIAP_LONG_WATER_SURGE: TurnSkillDefinition = {
   id: 'water_surge',
@@ -68,9 +68,9 @@ export const THUY_GIAP_LONG_WATER_SURGE: TurnSkillDefinition = {
 
 // Builds whose basic is authored HERE as a static TurnSkillDefinition.
 // Phap Tu paths are deliberately absent: their basics convert from the
-// authored Skill at battle build (single authority — fail-fast on
+// authored Skill at battle build (single authority - fail-fast on
 // converter rejection, no static substitute). The Tu is absent too
-// (M7 — dead row removed): both ways resolve their kit at battle build
+// (M7 - dead row removed): both ways resolve their kit at battle build
 // and fall back to GENERIC_PHYSICAL_BASIC directly, never via this map.
 // Mortal (no cultivationPath) falls through to GENERIC_PHYSICAL_BASIC -
 // the removed 'pham_nhan' row only ever mapped to that same fallback.

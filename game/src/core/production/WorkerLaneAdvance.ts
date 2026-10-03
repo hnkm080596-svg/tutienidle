@@ -1,7 +1,7 @@
 import type { ProductionCycle } from './ProductionTypes'
 import { buildProductionCycle } from './ProductionCycles'
 
-// M11 (ARCH-007) — per-lane worker-cycle advancement, ONE mechanism with
+// M11 (ARCH-007) - per-lane worker-cycle advancement, ONE mechanism with
 // two drivers (A9):
 //   - online  ProductionSystem.tickWorkers   -> advanceMode 'observe'
 //   - offline ProductionOffline worker settle -> advanceMode 'deadline'
@@ -9,7 +9,7 @@ import { buildProductionCycle } from './ProductionCycles'
 // Lane model: a site's worker pool is `slots` parallel lanes; each lane
 // holds at most one in-flight cycle (state.workerCycles is the set of
 // in-flight lane heads). A lane completes ONLY when its own accumulated
-// time crosses its own completesAtMs — partial work across lanes never
+// time crosses its own completesAtMs - partial work across lanes never
 // pools into a completed cycle. Kept future cycles keep their reserved
 // lane capacity and their original deadlines.
 //
@@ -19,7 +19,7 @@ import { buildProductionCycle } from './ProductionCycles'
 //     emptyLaneStartMs (top-up-then-settle order preserved).
 //   - 'deadline' = continuous observation over [emptyLaneStartMs, nowMs]
 //     (settleOffline): a completed lane immediately starts its next cycle
-//     at the completion instant — the dense limit of the online tick.
+//     at the completion instant - the dense limit of the online tick.
 
 export type WorkerLaneAdvanceMode = 'observe' | 'deadline'
 
@@ -33,7 +33,7 @@ export interface WorkerLaneAdvanceParams {
 
   baseSeconds: number
 
-  /** Current cycle duration in ms — successors/empty-lane seeds use it. */
+  /** Current cycle duration in ms - successors/empty-lane seeds use it. */
   cycleMs: number
 
   /** In-flight lane heads from state (saved or tick-carried). */
@@ -91,7 +91,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
   const { siteId, collectionRealmId, siteLevel, baseSeconds, cycleMs, slots, nowMs } = params
 
   // Defensive guard: a non-finite clock or budget can never advance a
-  // lane — 'deadline' mode would loop forever because dueMs > NaN and
+  // lane - 'deadline' mode would loop forever because dueMs > NaN and
   // dueMs > Infinity are both always false. Zero-advance result: the
   // in-flight lanes are preserved untouched (no completions, no
   // respawns, no empty-lane seeding).
@@ -114,7 +114,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
   let budgetLeftMs = Math.max(0, params.budgetMs ?? 0)
 
   // Lane cursors, sorted by deadline: every saved in-flight cycle keeps
-  // its own lane, deadline and identity — including lanes beyond the
+  // its own lane, deadline and identity - including lanes beyond the
   // current slot budget (retained work is never killed early).
   const lanes: LaneCursor[] = [...params.pending]
     .map<LaneCursor>((cycle) => ({
@@ -147,7 +147,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
   while (lanes.length > 0) {
     const lane = lanes[0]!
 
-    // Lanes stay sorted by dueMs — once the earliest lane is in the
+    // Lanes stay sorted by dueMs - once the earliest lane is in the
     // future, every remaining lane is in-flight work to keep.
     if (lane.dueMs > nowMs) {
       break
@@ -188,7 +188,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
       lanes.splice(index, 0, next)
     }
     // 'observe': the freed lane ends here; the next tick refills it via
-    // emptyLaneStartMs — identical to tickWorkers' top-up ordering.
+    // emptyLaneStartMs - identical to tickWorkers' top-up ordering.
   }
 
   const pending = lanes.map((lane) =>

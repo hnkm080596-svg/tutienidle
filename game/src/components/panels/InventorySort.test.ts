@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 //
-// Inventory sort integration (plan "Test plan — Inventory sort"):
-// - Sort chạy TRƯỚC pagination; đổi mode/direction reset về trang 0.
-// - Mỗi tab nhớ state sort RIÊNG.
-// - Linh Thạch (spirit_stone) sort đúng trong tab Nguyên Liệu như
-//   material bình thường (plan Workstream F).
+// Inventory sort integration (plan "Test plan - Inventory sort"):
+// - Sort chay TRUOC pagination; doi mode/direction reset ve trang 0.
+// - Moi tab nho state sort RIENG.
+// - Linh Thach (spirit_stone) sort dung trong tab Nguyen Lieu nhu
+//   material binh thuong (plan Workstream F).
 import { beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import { createApp, defineComponent, h, ref } from 'vue'
@@ -54,7 +54,7 @@ function mountSections(gameManager: GameManager) {
   app.provide(BUMP_STATE_KEY, () => { stateVersion.value += 1 })
   app.directive('tooltip', vTooltip)
 
-  // ResizeObserver dùng bởi useBagGridLayout — stub cho jsdom.
+  // ResizeObserver dung boi useBagGridLayout - stub cho jsdom.
   window.ResizeObserver = window.ResizeObserver || (class {
     observe() {}
 
@@ -72,7 +72,7 @@ function mountSections(gameManager: GameManager) {
 
     materialSlotLabels: () =>
       Array.from(container.querySelectorAll('.bag-section:first-child .bag-section__slot')).map(
-        // Nametag caption removed 2026-09-15 — the item name now lives
+        // Nametag caption removed 2026-09-15 - the item name now lives
         // on aria-label; badges/amount still render as text.
         (el) => `${el.getAttribute('aria-label') ?? ''} ${el.textContent ?? ''}`.trim(),
       ),
@@ -118,14 +118,14 @@ describe('Inventory — sort per-tab + Linh Thạch material (plan Workstream E/
 
     await nextTick()
 
-    // Linh Thạch luôn ghim ô đầu bất kể mode/direction; phần còn lại
-    // sort Tên A→Z: Ám Hương, Bạch Thuật, Huyền Thiết.
+    // Linh Thach luon ghim o dau bat ke mode/direction; phan con lai
+    // sort Ten A->Z: Am Huong, Bach Thuat, Huyen Thiet.
     expect(mounted.materialSlotLabels()[0]).toContain('Linh Thạch')
     expect(mounted.materialSlotLabels()[1]).toContain('Ám Hương')
     expect(mounted.materialSlotLabels()[2]).toContain('Bạch Thuật')
     expect(mounted.materialSlotLabels()[3]).toContain('Huyền Thiết')
 
-    // Đảo chiều desc → Linh Thạch vẫn ở ô đầu (ghim không đi qua withDirection).
+    // Dao chieu desc -> Linh Thach van o o dau (ghim khong di qua withDirection).
     ui.toggleBagSortDirection('material')
 
     await nextTick()
@@ -152,7 +152,7 @@ describe('Inventory — sort per-tab + Linh Thạch material (plan Workstream E/
     expect(ui.bagSorts.material.mode).toBe('amount')
     expect(ui.bagSorts.equipment.mode).toBe('default')
 
-    // Đổi mode tự reset direction về asc.
+    // Doi mode tu reset direction ve asc.
     ui.toggleBagSortDirection('material')
     ui.setBagSortMode('material', 'name')
 

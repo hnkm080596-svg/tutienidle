@@ -25,7 +25,7 @@ export function startAStage(
   const enemyId = `${stageId}_dummy`
 
   const basePlayer = createDefaultPlayer()
-  // ARCH-002 (M7): startStage resolves stats internally — patch the RAW
+  // ARCH-002 (M7): startStage resolves stats internally - patch the RAW
   // baseStats at construction so the resolved snapshot keeps the
   // documented might/speed (object-literal form: the R14.3a guard forbids
   // post-creation baseStats assignments in src/).

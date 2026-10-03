@@ -47,9 +47,9 @@ function roleLabel(role: TurnSkillSlotRole): string {
   return t(`combat.overlay.skillBar.roles.${role}`)
 }
 
-// Bảng 9.5 #5 — nhãn hiển thị do CombatSkillSlot tự resolve qua
-// displayLabel prop (skillName → fallback emptyLabel). Bar chỉ truyền
-// metadata; tooltip qua tooltipFor() bên dưới.
+// Bang 9.5 #5 - nhan hien thi do CombatSkillSlot tu resolve qua
+// displayLabel prop (skillName -> fallback emptyLabel). Bar chi truyen
+// metadata; tooltip qua tooltipFor() ben duoi.
 function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefined {
   if (!entry.skillName || !entry.skillDescription) {
     return undefined
@@ -58,9 +58,9 @@ function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefin
   return { title: entry.skillName, description: entry.skillDescription }
 }
 
-// Slice 7 master plan Task 9 — mode toggle đọc/ghi ui.combatInputMode
-// (persist per-device), đồng bộ GameManager flag (plain class, không
-// import Pinia — UI layer gọi setter, cùng pattern battleRunMode).
+// Slice 7 master plan Task 9 - mode toggle doc/ghi ui.combatInputMode
+// (persist per-device), dong bo GameManager flag (plain class, khong
+// import Pinia - UI layer goi setter, cung pattern battleRunMode).
 const ui = useUiStore()
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -125,8 +125,8 @@ function setManualMode(enabled: boolean): void {
   gameManager.setBattleManualMode(enabled)
 }
 
-// Sync persisted mode → GameManager khi bar mount lần đầu (reload page:
-// ui flag persist, GameManager flag mặc định false).
+// Sync persisted mode -> GameManager khi bar mount lan dau (reload page:
+// ui flag persist, GameManager flag mac dinh false).
 onMounted(() => {
   gameManager.setBattleManualMode(ui.combatInputMode === 'manual')
 })
@@ -158,7 +158,7 @@ const visibleSlots = computed(() =>
     ),
 )
 
-// Kiem Tu Reimagined Task 7 — orb display names come from
+// Kiem Tu Reimagined Task 7 - orb display names come from
 // TurnSkillDisplayMeta (synced to the authored table). Fallback to the
 // raw id only keeps an un-authored def visible rather than blank.
 function orbLabel(def: TurnSkillDefinition): string {
@@ -323,7 +323,7 @@ function onDynamicBasicClick(defId: string): void {
   z-index: 2;
 }
 
-/* Phap Tu An (Task 16) — passive emblem replaces the ult slot button:
+/* Phap Tu An (Task 16) - passive emblem replaces the ult slot button:
    always-on dao passive, reads as an emblem not a disabled control. */
 .turn-combat-skill-bar__emblem {
   display: flex;

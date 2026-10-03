@@ -1,7 +1,7 @@
-// combat-snapshot-reconcile (Wave-3 large-file split) — tach tu CombatScene.ts.
-// Snapshot→sprite reconciliation: applies 'positions' (legacy real-time) and
+// combat-snapshot-reconcile (Wave-3 large-file split) - tach tu CombatScene.ts.
+// Snapshot->sprite reconciliation: applies 'positions' (legacy real-time) and
 // 'turn_battle_entity_snapshot' (turn engine) events to the scene's sprite
-// set — spawn telegraph gating, create/update/remove, HP bars, position
+// set - spawn telegraph gating, create/update/remove, HP bars, position
 // interpolation targets. All state (sprites/entityVisual/knownIds/pending
 // positions/telegraph fields) stays on the scene as Internal module-boundary
 // members; this module carries the reconcile mechanism only.
@@ -25,9 +25,9 @@ import {
 export class CombatSnapshotReconcile {
   constructor(private readonly scene: CombatScene) {}
 
-  // Combat Grid Rework — COALESCE: nhiều event 'positions' đồng bộ trong
-  // 1 frame chỉ giữ snapshot MỚI NHẤT, apply ĐÚNG MỘT lần trong update().
-  // Cadence = khoảng cách giữa 2 SNAPSHOT (lastSnapshotAt), clamp
+  // Combat Grid Rework - COALESCE: nhieu event 'positions' dong bo trong
+  // 1 frame chi giu snapshot MOI NHAT, apply DUNG MOT lan trong update().
+  // Cadence = khoang cach giua 2 SNAPSHOT (lastSnapshotAt), clamp
   // [MIN_SEGMENT_DURATION_MS, MAX_SEGMENT_DURATION_MS].
   onPositions(event: BattlePositionsEvent) {
     const scene = this.scene
@@ -50,19 +50,19 @@ export class CombatSnapshotReconcile {
   applyPendingPositions(event: BattlePositionsEvent) {
     const scene = this.scene
 
-    // Spawn VFX reconcile TRƯỚC enemy sprites: id rời spawningEnemies =
-    // materialize xong → đánh dấu để sprite mới tạo dưới đây fade-in.
+    // Spawn VFX reconcile TRUOC enemy sprites: id roi spawningEnemies =
+    // materialize xong -> danh dau de sprite moi tao duoi day fade-in.
     scene.reconcileSpawnVfx(event)
 
-    // Player spawn reconcile (plan §12.2): entityVisual.playerMaterialized false =
-    // ẩn sprite; playerSpawn hiện = vẽ telegraph tại projected cell;
-    // telegraph biến mất = materialize → hiện sprite với fade-in.
+    // Player spawn reconcile (plan sec12.2): entityVisual.playerMaterialized false =
+    // an sprite; playerSpawn hien = ve telegraph tai projected cell;
+    // telegraph bien mat = materialize -> hien sprite voi fade-in.
     scene.reconcilePlayerSpawn(event)
 
     scene.reconcileEnemySprites(event.enemies)
 
-    // Grid fallback cache (plan §7.1 mức 3) — ô cuối cùng theo snapshot
-    // positions, dùng khi cả sprite lẫn screen cache đã mất.
+    // Grid fallback cache (plan sec7.1 muc 3) - o cuoi cung theo snapshot
+    // positions, dung khi ca sprite lan screen cache da mat.
     for (const enemy of event.enemies) {
       scene.trackSourceGridPosition(enemy.id, enemy.row, enemy.x)
     }
@@ -70,8 +70,8 @@ export class CombatSnapshotReconcile {
     const playerSprite = scene.sprites.get(PLAYER_ID)
 
     if (playerSprite && playerSprite.row !== event.playerRow) {
-      // Teleport qua snapshot (fallback khi lỡ miss event riêng):
-      // snap tức thời, KHÔNG tween qua hàng trung gian.
+      // Teleport qua snapshot (fallback khi lo miss event rieng):
+      // snap tuc thoi, KHONG tween qua hang trung gian.
       playerSprite.row = event.playerRow
       scene.positionInterp.snapInterpolationTarget(PLAYER_ID, event.playerX)
       scene.positionSprite(playerSprite, event.playerX)
@@ -94,26 +94,26 @@ export class CombatSnapshotReconcile {
     }
   }
 
-  // Combat Art Pipeline Task 5 (2026-09-05) — thay thế snapshot ĐÔNG CỨNG
-  // (chỉ seed một lần từ 'positions' của legacy engine lúc battle start) bằng
-  // dữ liệu SỐNG mỗi fixed step từ turn engine (xem TurnActionPresentationEvents.ts).
-  // Tổng quát hoá đúng tinh thần reconcileEnemySprites() cho CẢ HAI phe.
+  // Combat Art Pipeline Task 5 (2026-09-05) - thay the snapshot DONG CUNG
+  // (chi seed mot lan tu 'positions' cua legacy engine luc battle start) bang
+  // du lieu SONG moi fixed step tu turn engine (xem TurnActionPresentationEvents.ts).
+  // Tong quat hoa dung tinh than reconcileEnemySprites() cho CA HAI phe.
   onTurnBattleEntitySnapshot(event: TurnBattleEntitySnapshotEvent) {
-    // Turn-Based Wave Redesign (2026-09-06) — countdown reconcile PHẢI
-    // chạy TRƯỚC reconcileCombatantSprites('player', ...): lần đầu 1
-    // player/companion id xuất hiện trong event.players (ngay từ tick đầu
-    // countdown, KHÔNG như enemy phải chờ pending), nhánh 'create' của
-    // reconcileCombatantSprites() sẽ setVisible(true) ngay — cần
-    // entityVisual.pending đã có id đó SẴN để nhánh 'create' biết
-    // giữ ẩn (xem nhánh 'create').
+    // Turn-Based Wave Redesign (2026-09-06) - countdown reconcile PHAI
+    // chay TRUOC reconcileCombatantSprites('player', ...): lan dau 1
+    // player/companion id xuat hien trong event.players (ngay tu tick dau
+    // countdown, KHONG nhu enemy phai cho pending), nhanh 'create' cua
+    // reconcileCombatantSprites() se setVisible(true) ngay - can
+    // entityVisual.pending da co id do SAN de nhanh 'create' biet
+    // giu an (xem nhanh 'create').
     this.reconcileTurnCountdownSpawn(event)
 
-    // Turn-Based Wave Redesign (2026-09-06) — enemy wave telegraph: tái dùng
-    // đúng reconcileSpawnVfx() của legacy qua SpawnVfxSnapshot (Task 6) —
-    // id biến mất khỏi pendingEnemySpawns = materialize → entityVisual.materializing
-    // đánh dấu TRƯỚC khi reconcileCombatantSprites tạo sprite (thứ tự giống
-    // applyPendingPositions() của legacy: spawn VFX reconcile chạy trước
-    // sprite reconcile) để nhánh 'create' kịp consume fade-in materialize.
+    // Turn-Based Wave Redesign (2026-09-06) - enemy wave telegraph: tai dung
+    // dung reconcileSpawnVfx() cua legacy qua SpawnVfxSnapshot (Task 6) -
+    // id bien mat khoi pendingEnemySpawns = materialize -> entityVisual.materializing
+    // danh dau TRUOC khi reconcileCombatantSprites tao sprite (thu tu giong
+    // applyPendingPositions() cua legacy: spawn VFX reconcile chay truoc
+    // sprite reconcile) de nhanh 'create' kip consume fade-in materialize.
     this.scene.reconcileSpawnVfx({
       spawningEnemies: event.pendingEnemySpawns.map((pending) => ({
         id: pending.id,
@@ -146,18 +146,18 @@ export class CombatSnapshotReconcile {
   }
 
   /**
-   * Turn-Based Wave Redesign (2026-09-06) — telegraph đếm 3→2→1 cho CẢ
+   * Turn-Based Wave Redesign (2026-09-06) - telegraph dem 3->2->1 cho CA
    * party (player + companion). countdownProgress undefined = countdown
-   * hết → flush mọi handle còn treo + hiện sprite từng id. KHÔNG đụng
+   * het -> flush moi handle con treo + hien sprite tung id. KHONG dung
    * reconcilePlayerSpawn() (legacy real-time).
    *
    * 2026-09-12 fix (user report: player art already on the field before
-   * its spawn telegraph ran) — 'intro' ALSO has countdownProgress ===
+   * its spawn telegraph ran) - 'intro' ALSO has countdownProgress ===
    * undefined, but it means "countdown has not started", not "countdown
    * done". An intro snapshot used to fall straight into the flush branch
    * (empty pending set -> no-op), then the 'create' branch of
    * reconcileCombatantSprites() saw the id as not pending and called
-   * setVisible(true) — the player stayed visible through intro and under
+   * setVisible(true) - the player stayed visible through intro and under
    * its own countdown telegraph. The phase field on the snapshot contract
    * separates the two meanings: intro marks pending so 'create' stays
    * hidden; only the flush reveals.
@@ -167,7 +167,7 @@ export class CombatSnapshotReconcile {
 
     if (event.phase === 'intro') {
       // Pre-combat intro: no telegraph runs yet, but ids already appear in
-      // the snapshot — mark them pending so the 'create' branch keeps them
+      // the snapshot - mark them pending so the 'create' branch keeps them
       // hidden until the countdown-end flush. Enemies are marked too: a
       // direct startBattle() may carry pre-materialized enemies in
       // battle.enemies, and "both sides spawn first, then appear" means
@@ -179,7 +179,7 @@ export class CombatSnapshotReconcile {
     }
 
     if (event.countdownProgress === undefined) {
-      // Countdown ended — the gating window is over: complete every hanging
+      // Countdown ended - the gating window is over: complete every hanging
       // handle (materialize flash), then reveal the union of still-pending
       // ids and every materialized id in the snapshot. Pending ids can lack
       // a handle (projection not ready when their telegraph would have
@@ -198,7 +198,7 @@ export class CombatSnapshotReconcile {
 
       scene.turnCountdownSpawnVfxHandles.clear()
 
-      // Reset interpolation state alongside the handles it drives — a
+      // Reset interpolation state alongside the handles it drives - a
       // refight's countdown must start its telegraph from 0, not resume
       // from the previous battle's last shown value.
       scene.telegraph.reset()
@@ -207,7 +207,7 @@ export class CombatSnapshotReconcile {
     }
 
     // Enemies already materialized in the snapshot (a direct startBattle()
-    // that skipped 'intro') join the same hidden window — marked pending so
+    // that skipped 'intro') join the same hidden window - marked pending so
     // the 'create' branch keeps them hidden until the flush. They get no
     // countdown handle: the enemy telegraph belongs to the wave path
     // (pendingEnemySpawns), these simply materialize at flush.
@@ -239,7 +239,7 @@ export class CombatSnapshotReconcile {
       scene.turnCountdownSpawnVfxHandles.set(player.id, handle)
     }
 
-    // The whole party shares ONE countdown progress — set the chase target
+    // The whole party shares ONE countdown progress - set the chase target
     // once per snapshot rather than once per player (telegraph.setTarget is
     // itself a no-op when the target hasn't actually changed).
     scene.telegraph.setTarget(event.countdownProgress)
@@ -257,16 +257,16 @@ export class CombatSnapshotReconcile {
 
     for (const action of actions) {
       if (action.type === 'create') {
-        // Fix round 1 (Task 5 review, Important) — dùng name/isBoss THẬT từ
-        // schema (TurnActionPresentationEvents.toVisualState()) thay vì
-        // hardcode false/id. Đây chính là đường tạo sprite ĐẦU TIÊN cho enemy
-        // các wave sau wave 1 (getOrCreateSprite no-op nếu id đã có trong
-        // scene.sprites) — hardcode isBoss:false ở đây từng làm mất luôn HP
+        // Fix round 1 (Task 5 review, Important) - dung name/isBoss THAT tu
+        // schema (TurnActionPresentationEvents.toVisualState()) thay vi
+        // hardcode false/id. Day chinh la duong tao sprite DAU TIEN cho enemy
+        // cac wave sau wave 1 (getOrCreateSprite no-op neu id da co trong
+        // scene.sprites) - hardcode isBoss:false o day tung lam mat luon HP
         // bar boss (1.45x width + BOSS_HP_FILL_COLOR, xem combat-grid-view.ts)
-        // cho đúng những boss mà task này sinh ra để fix.
-        // `action.state.row` đến từ entityGridPosition() — nguồn DUY NHẤT
-        // sản xuất LaneIndex hợp lệ cho luồng turn-based này, nên cast an
-        // toàn ở biên; không thêm runtime validation (per brief).
+        // cho dung nhung boss ma task nay sinh ra de fix.
+        // `action.state.row` den tu entityGridPosition() - nguon DUY NHAT
+        // san xuat LaneIndex hop le cho luong turn-based nay, nen cast an
+        // toan o bien; khong them runtime validation (per brief).
         const sprite = scene.getOrCreateSprite(
           action.state.id,
           color,
@@ -284,26 +284,26 @@ export class CombatSnapshotReconcile {
         scene.positionInterp.snapInterpolationTarget(action.state.id, action.state.column)
         scene.positionSprite(sprite, action.state.column, action.state.id)
 
-        // Bug fix (2026-09-06, user report "không thấy nhân vật nào trong
-        // combat") — sprite Player được tạo ẨN ở create() (setVisible(false),
-        // chờ event 'positions' LEGACY gọi reconcilePlayerSpawn() để hiện lại
-        // sau materialize). Turn-based combat không còn tick legacy
-        // BattleSystem (xem TurnActionPresentationEvents.ts) nên event đó
-        // không bao giờ tới nữa — sprite kẹt vô hình vĩnh viễn. Snapshot
-        // turn-based tự lo hiện sprite ngay khi id đó lần đầu xuất hiện.
-        // Turn-Based Wave Redesign (2026-09-06) — party countdown telegraph:
+        // Bug fix (2026-09-06, user report "khong thay nhan vat nao trong
+        // combat") - sprite Player duoc tao AN o create() (setVisible(false),
+        // cho event 'positions' LEGACY goi reconcilePlayerSpawn() de hien lai
+        // sau materialize). Turn-based combat khong con tick legacy
+        // BattleSystem (xem TurnActionPresentationEvents.ts) nen event do
+        // khong bao gio toi nua - sprite ket vo hinh vinh vien. Snapshot
+        // turn-based tu lo hien sprite ngay khi id do lan dau xuat hien.
+        // Turn-Based Wave Redesign (2026-09-06) - party countdown telegraph:
         // a pending id in entityVisual means pre-combat gating is NOT
-        // finished — keep the sprite hidden; reconcileTurnCountdownSpawn()
+        // finished - keep the sprite hidden; reconcileTurnCountdownSpawn()
         // flips it visible at the countdown-end flush (see that function).
         // The set holds event.players during countdown plus BOTH sides
         // during 'intro' (a direct startBattle() may carry already-
-        // materialized enemies — same hidden window as the party); wave
+        // materialized enemies - same hidden window as the party); wave
         // enemies come through pendingEnemySpawns instead and never enter
         // this set, so their behaviour is unchanged.
         scene.entityVisual.applyGating(action.state.id, sprite)
 
-        // Materialize từ telegraph (Turn-Based Wave Redesign, 2026-09-06) —
-        // đúng cơ chế đã dùng cho legacy enemy (reconcileEnemySprites()).
+        // Materialize tu telegraph (Turn-Based Wave Redesign, 2026-09-06) -
+        // dung co che da dung cho legacy enemy (reconcileEnemySprites()).
         scene.entityVisual.consumeMaterializing(action.state.id, sprite)
 
         if (action.state.id === PLAYER_ID) {
@@ -320,8 +320,8 @@ export class CombatSnapshotReconcile {
           continue
         }
 
-        // `action.state.row` — cùng trust boundary như nhánh 'create' ở trên
-        // (entityGridPosition() là nguồn duy nhất).
+        // `action.state.row` - cung trust boundary nhu nhanh 'create' o tren
+        // (entityGridPosition() la nguon duy nhat).
         sprite.row = action.state.row as LaneIndex
         scene.positionInterp.snapInterpolationTarget(action.state.id, action.state.column)
         scene.positionSprite(sprite, action.state.column, action.state.id)
@@ -329,10 +329,10 @@ export class CombatSnapshotReconcile {
         continue
       }
 
-      // 'remove' — id alive:false hoặc biến mất khỏi snapshot mà KHÔNG đi
-      // qua event 'death' riêng (race/fallback). Nếu onDeath() đang chạy
-      // death sequence cho id này (dyingIds/playerDying) thì BỎ QUA — sequence
-      // đó tự lo xóa sprite khi xong, chạy thêm ở đây là double-destroy.
+      // 'remove' - id alive:false hoac bien mat khoi snapshot ma KHONG di
+      // qua event 'death' rieng (race/fallback). Neu onDeath() dang chay
+      // death sequence cho id nay (dyingIds/playerDying) thi BO QUA - sequence
+      // do tu lo xoa sprite khi xong, chay them o day la double-destroy.
       const isDying = action.id === PLAYER_ID ? scene.playerDying : scene.dyingIds.has(action.id)
 
       if (isDying) {
@@ -345,10 +345,10 @@ export class CombatSnapshotReconcile {
         continue
       }
 
-      // Combat Art Pipeline Task 9 (2026-09-05) — đi qua CÙNG death sequence
-      // với onDeath() (phát '-death' + hoãn destroy tới khi animation/tween
-      // xong) thay vì xóa ngay, để entity chết theo đường fallback này cũng
-      // được chơi animation chết đầy đủ (spec §9).
+      // Combat Art Pipeline Task 9 (2026-09-05) - di qua CUNG death sequence
+      // voi onDeath() (phat '-death' + hoan destroy toi khi animation/tween
+      // xong) thay vi xoa ngay, de entity chet theo duong fallback nay cung
+      // duoc choi animation chet day du (spec sec9).
       scene.beginDeathSequence(sprite, action.id)
     }
 
@@ -372,8 +372,8 @@ export class CombatSnapshotReconcile {
 
       const sprite = scene.getOrCreateSprite(enemy.id, ENEMY_COLOR, enemy.name, enemy.row, enemy)
 
-      // Vừa materialize từ telegraph — fade-in + scale 0.7→1 (bóng/máu/
-      // tên chỉ hiện từ khoảnh khắc này, đúng spec spawn mới).
+      // Vua materialize tu telegraph - fade-in + scale 0.7->1 (bong/mau/
+      // ten chi hien tu khoanh khac nay, dung spec spawn moi).
       scene.entityVisual.consumeMaterializing(enemy.id, sprite)
     }
 

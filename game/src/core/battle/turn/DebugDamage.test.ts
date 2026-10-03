@@ -4,18 +4,18 @@ import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
 
-// QA regression evidence (2026-09-04, Combat Fairness Guards) — ghi nhận
-// hành vi endurance pipeline của hệ sống: đòn damage > enduranceThreshold
-// bị trừ PHẲNG threshold×percent SAU mọi multiplier (applyEndurance trong
-// CombatSystem). Đây là lý do Sudden Death test phải khống chế endurance:
-// scaled = (base + flat) × m − flat, KHÔNG phải base × m.
+// QA regression evidence (2026-09-04, Combat Fairness Guards) - ghi nhan
+// hanh vi endurance pipeline cua he song: don damage > enduranceThreshold
+// bi tru PHANG thresholdxpercent SAU moi multiplier (applyEndurance trong
+// CombatSystem). Day la ly do Sudden Death test phai khong che endurance:
+// scaled = (base + flat) x m - flat, KHONG phai base x m.
 //
-// Flaky-hygiene (2026-09-05): test đo d10 rồi d13/d25 ở 3 lần resolveActionHit
-// riêng — pipeline roll Math.random 4 lần/hit (rollHit/ignoreResistance/block/
-// crit). Stats fixture đã neutralize mọi rate, nhưng để test KHÔNG phụ thuộc
-// worker state/offset khi chạy full suite, seed Math.random deterministic:
-// roll nào cũng trả 0 → "không trúng mọi概率 roll" (hit roll < hitChance=1 vẫn
-// pass, các概率 khác đều false). Kết quả: damage 100% xác định giữa các run.
+// Flaky-hygiene (2026-09-05): test do d10 roi d13/d25 o 3 lan resolveActionHit
+// rieng - pipeline roll Math.random 4 lan/hit (rollHit/ignoreResistance/block/
+// crit). Stats fixture da neutralize moi rate, nhung de test KHONG phu thuoc
+// worker state/offset khi chay full suite, seed Math.random deterministic:
+// roll nao cung tra 0 -> "khong trung moi roll" (hit roll < hitChance=1 van
+// pass, cac khac deu false). Ket qua: damage 100% xac dinh giua cac run.
 
 function mk(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
@@ -33,8 +33,8 @@ describe('debug damage scaling pipeline', () => {
   })
 
   it('measures damage at multipliers 1.0 / 1.3 / 2.5', () => {
-    // 0 < mọi threshold có ý nghĩa: rollHit (hitChance = 1.0 → 0 < 1 = hit);
-    // ignoreResistance/block/crit (chance = 0 → 0 < 0 = false).
+    // 0 < moi threshold co y nghia: rollHit (hitChance = 1.0 -> 0 < 1 = hit);
+    // ignoreResistance/block/crit (chance = 0 -> 0 < 0 = false).
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const combat = new CombatSystem(new EventBus())
@@ -51,8 +51,8 @@ describe('debug damage scaling pipeline', () => {
     const d13 = run(1.3)
     const d25 = run(2.5)
 
-    // Endurance flat-subtract model: damage(m) = (base + flat) × m − flat
-    // với base = 93 (đo tại m=1), flat = threshold(10) × percent(0.7) = 7.
+    // Endurance flat-subtract model: damage(m) = (base + flat) x m - flat
+    // voi base = 93 (do tai m=1), flat = threshold(10) x percent(0.7) = 7.
     const flat = 10 * 0.7
     expect(d13).toBeCloseTo((d10 + flat) * 1.3 - flat, 1)
     expect(d25).toBeCloseTo((d10 + flat) * 2.5 - flat, 1)

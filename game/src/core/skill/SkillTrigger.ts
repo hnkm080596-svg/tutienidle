@@ -3,7 +3,7 @@ import type { Skill } from './Skill'
 import type { SkillAction } from './SkillAction'
 import type { SkillResourcePoolKey } from './SkillAction'
 
-// Trigger/Action rework (2026-08-31 spec, Phase 2A) — full vocabulary.
+// Trigger/Action rework (2026-08-31 spec, Phase 2A) - full vocabulary.
 // Bindings are consumed by toTurnSkillDefinition (LegacySkillAdapter) into the live turn
 // engine; the legacy nested-action firing site was deleted in Mission G.
 export type TriggerType =

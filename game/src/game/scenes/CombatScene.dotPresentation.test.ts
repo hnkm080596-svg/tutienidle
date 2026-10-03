@@ -1,9 +1,9 @@
 ﻿// @vitest-environment jsdom
 //
-// DoT presentation (combat-skill-flow-element-power-dot-plan.md Â§7) â€”
-// bá»™ gom damage text 3 láº§n/giÃ¢y: nhiá»u fixed tick trong cá»­a sá»•
-// 333,33ms chá»‰ sinh Má»˜T text/khÃ³a; tá»•ng hiá»ƒn thá»‹ báº±ng tá»•ng event Ä‘Ã£
-// gom; direct hit KHÃ”NG Ä‘i qua accumulator; dá»n khi target cháº¿t.
+// DoT presentation (combat-skill-flow-element-power-dot-plan.md sec7) -
+// bo gom damage text 3 lan/giay: nhieu fixed tick trong cua so
+// 333,33ms chi sinh MOT text/khoa; tong hien thI bang tong event da
+// gom; direct hit KHONG di qua accumulator; don khi target chet.
 import { describe, expect, it } from 'vitest'
 import { formatDotDamageText } from './CombatScene'
 import { createTestScene } from './combat/combatTestHarness'
@@ -14,7 +14,7 @@ function createScene() {
   scene.time = { now: 0 }
   scene.dotAccumulators = new Map()
 
-  // Sprite registry tá»‘i thiá»ƒu cho spriteFor().
+  // Sprite registry toi thieu cho spriteFor().
   const sprites = new Map<string, unknown>()
 
   scene.sprites = sprites
@@ -58,7 +58,7 @@ describe('CombatScene â€” DoT accumulator 3 láº§n/giÃ¢y (plan Â§7)',
 
     addSprite('enemy_1')
 
-    // 5 tick trong cÃ¹ng cá»­a sá»• Ä‘áº§u tiÃªn (má»—i tick 50ms < 333ms).
+    // 5 tick trong cung cua so dau tien (moi tick 50ms < 333ms).
     for (let i = 0; i < 5; i++) {
       scene.time.now = i * 50
 
@@ -67,7 +67,7 @@ describe('CombatScene â€” DoT accumulator 3 láº§n/giÃ¢y (plan Â§7)',
 
     expect(shown).toHaveLength(0)
 
-    // QuÃ¡ cá»­a sá»• â€” frame káº¿ flush Ä‘Ãºng 1 text.
+    // Qua cua so - frame ke flush dung 1 text.
     scene.time.now = 400
 
     scene.flushDueDotTexts()
@@ -114,14 +114,14 @@ describe('CombatScene â€” DoT accumulator 3 láº§n/giÃ¢y (plan Â§7)',
 
     addSprite('enemy_1')
 
-    // onDamageNumber vá»›i event khÃ´ng effectId pháº£i ráº½ nhÃ¡nh direct path â€”
-    // direct path gá»i showDamageNumber (khÃ´ng stub á»Ÿ Ä‘Ã¢y) nÃªn chá»‰ cáº§n
-    // cháº¯c cháº¯n accumulator TRá»NG lÃ  Ä‘á»§ cho há»£p Ä‘á»“ng accumulator.
+    // onDamageNumber vOi event khong effectId phai re nhanh direct path -
+    // direct path goi showDamageNumber (khong stub o day) nen chi can
+    // chac chan accumulator TRONG la du cho hop dong accumulator.
     try {
       scene.onDamageNumber({ type: 'damage', targetId: 'enemy_1', value: 10 })
     } catch {
-      // showDamageNumber tháº­t cáº§n Phaser objects â€” jsdom khÃ´ng cÃ³;
-      // quan trá»ng lÃ  KHÃ”NG cÃ³ bucket nÃ o Ä‘Æ°á»£c táº¡o.
+      // showDamageNumber that can Phaser objects - jsdom khong co;
+      // quan trong la KHONG co bucket nao duoc tao.
     }
 
     expect(scene.dotAccumulators.size).toBe(0)
@@ -134,7 +134,7 @@ describe('CombatScene â€” DoT accumulator 3 láº§n/giÃ¢y (plan Â§7)',
 
     scene.onDamageNumber(EFFECT_EVENT({}))
 
-    // MÃ´ phá»ng purge khi cháº¿t (cÃ¹ng logic onDeath dÃ¹ng).
+    // Mo phong purge khi chet (cung logic onDeath dung).
     for (const key of [...scene.dotAccumulators.keys()]) {
       if (key.split('|')[0] === 'enemy_1') {
         scene.dotAccumulators.delete(key)
@@ -161,8 +161,8 @@ describe('CombatScene â€” DoT accumulator 3 láº§n/giÃ¢y (plan Â§7)',
 
     expect(scene.dotAccumulators.size).toBeGreaterThan(0)
 
-    // renderMode 'flat' â†’ prepareThanhVanBackdropForNextBattle no-op,
-    // onBattleEnd cháº¡y an toÃ n vá»›i stub tá»‘i thiá»ƒu.
+    // renderMode 'flat' -> prepareThanhVanBackdropForNextBattle no-op,
+    // onBattleEnd chay an toan vOi stub toi thieu.
     scene.renderMode = 'flat'
     scene.inBattle = true
 
@@ -176,7 +176,7 @@ describe('CombatScene â€” DoT accumulator 3 láº§n/giÃ¢y (plan Â§7)',
     expect(formatDotDamageText(0.4)).toBe('-0.4')
     expect(formatDotDamageText(0.04)).toBe('-0.1')
 
-    // Ká»³ vá»ng SAI cÅ© (Ä‘Ã£ sá»­a): 0.04 tá»«ng bá»‹ ká»³ vá»ng thÃ nh '-0.0'.
+    // Ky vong SAI cu (da sua): 0.04 tung bI ky vong thanh '-0.0'.
     expect(formatDotDamageText(0.04)).not.toBe('-0.0')
     expect(formatDotDamageText(-0)).not.toContain('-0.0')
 

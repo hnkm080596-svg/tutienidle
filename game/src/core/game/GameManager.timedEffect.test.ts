@@ -88,8 +88,8 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    // Bug audit P0-1: hai percent khác nhau từng được coi là 2 modifier
-    // riêng và cộng dồn trong pipeline.
+    // Bug audit P0-1: hai percent khac nhau tung duoc coi la 2 modifier
+    // rieng va cong don trong pipeline.
     gameManager.effectOps.applyTimedEffect(
       player,
       makeEffect('e1', 'pill_buff', 10_000, [

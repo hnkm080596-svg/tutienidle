@@ -5,10 +5,10 @@ import { SKILLS } from '../../data/skill/Skills'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Pháp Tu Redesign (magicpath) — GameManager.purchaseNode() là phần
-// KHÔNG pure của Node Tree: gọi purchaseNode() thuần trước (đã test
-// riêng ở NodeSystem.test.ts), rồi tự làm nốt unlocksSkillIds (cần
-// skillTemplates — chỉ GameManager có).
+// Phap Tu Redesign (magicpath) - GameManager.purchaseNode() la phan
+// KHONG pure cua Node Tree: goi purchaseNode() thuan truoc (da test
+// rieng o NodeSystem.test.ts), roi tu lam not unlocksSkillIds (can
+// skillTemplates - chi GameManager co).
 describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
   // M-QI-05 - a levelled fixture skill (maxLevel > 1) only learns when
   // its canonical core is registered; mirrors SKILL_CORE_NODES shape.
@@ -86,11 +86,11 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     expect(player.skillInsight).toBe(5)
   })
 
-  // E-8 (2026-09-03) — node biến thể: effect.selectsSpecialization wire
-  // thẳng SkillSystem.selectSpecialization sau khi mua thành công.
-  // Fixture: skill template TỰ KHAI specializations (data Task 8 sẽ
-  // khai trên skill thật) + node unlock skill TRƯỚC rồi chọn spec —
-  // đúng thứ tự purchaseNode chạy (vòng unlocksSkillIds → selectsSpec).
+  // E-8 (2026-09-03) - node bien the: effect.selectsSpecialization wire
+  // thang SkillSystem.selectSpecialization sau khi mua thanh cong.
+  // Fixture: skill template TU KHAI specializations (data Task 8 se
+  // khai tren skill that) + node unlock skill TRUOC roi chon spec -
+  // dung thu tu purchaseNode chay (vong unlocksSkillIds -> selectsSpec).
   function specSkillTemplate() {
     return {
       id: 'test_spec_skill',
@@ -220,12 +220,12 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
 
       player.skillInsight = 10
 
-      // Mua claim hoa_long: purchase tự set spec hoa_long (purchase path
+      // Mua claim hoa_long: purchase tu set spec hoa_long (purchase path
       // IS the authorization).
       expect(gameManager.progressionOps.purchaseNode('claim_hoa_long', player)).toBe(true)
       expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBe('hoa_long')
 
-      // Chip switch sang hoa_phung khi chưa mua node của nó → reject.
+      // Chip switch sang hoa_phung khi chua mua node cua no -> reject.
       expect(
         gameManager.progressionOps.selectSkillSpecialization('test_spec_skill', 'hoa_phung', player),
       ).toBe(false)

@@ -1,9 +1,9 @@
 // Lifecycle regression (audit H3, model theo CombatScene.lifecycle.test.ts):
-// ScaleManager là game-level — anonymous resize callback đăng ký mỗi
-// create() KHÔNG bị gỡ bởi scene shutdown nên TÍCH TỤY qua mỗi lần
-// Home ↔ Combat; events.on('shutdown') anonymous cũng tích lũy vĩnh viễn.
-// create() phải dùng handler ỔN ĐỊNH + events.once để shutdown tự gỡ.
-// ?raw import (vite/client types) — đọc source không cần @types/node.
+// ScaleManager la game-level - anonymous resize callback dang ky moi
+// create() KHONG bi go boi scene shutdown nen TICH TUY qua moi lan
+// Home <-> Combat; events.on('shutdown') anonymous cung tich luy vinh vien.
+// create() phai dung handler ON DINH + events.once de shutdown tu go.
+// ?raw import (vite/client types) - doc source khong can @types/node.
 import { describe, expect, it } from 'vitest'
 import mainSceneSource from './MainScene.ts?raw'
 
@@ -21,10 +21,10 @@ describe('MainScene lifecycle — listener không tích lũy qua restart', () =>
     expect(mainSceneSource).toContain("this.events.once('shutdown', this.shutdownHandler)")
   })
 
-  // Audit M3b (2026-08-31) — shutdown phải null các ref scene-scoped:
-  // (a) resize callback lỡ trúng giữa shutdown không mutate dead
-  // GameObjects (applyBackgroundLayout đã có null guard), (b) closure
-  // không giữ scene state khỏi GC qua các lần restart.
+  // Audit M3b (2026-08-31) - shutdown phai null cac ref scene-scoped:
+  // (a) resize callback lo trung giua shutdown khong mutate dead
+  // GameObjects (applyBackgroundLayout da co null guard), (b) closure
+  // khong giu scene state khoi GC qua cac lan restart.
   it('shutdownHandler null các refs scene-scoped (chặn GC retention + dead-object mutation)', () => {
     const shutdownBody = mainSceneSource.match(/shutdownHandler = \(\) => \{[\s\S]*?\n  \}/)?.[0] ?? ''
     expect(shutdownBody).toContain('this.skyRect = undefined')

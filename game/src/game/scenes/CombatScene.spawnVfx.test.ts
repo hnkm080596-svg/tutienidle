@@ -1,6 +1,6 @@
 ﻿// CombatScene reconcile spawn telegraph (2026-08-24): snapshot
-// spawningEnemies â†’ ÄÃšNG Má»˜T VFX handle má»—i id; id rá»i snapshot â†’
-// complete + fade-in sprite; battle reset/shutdown dá»n sáº¡ch.
+// spawningEnemies a+' AAsNG Ma" T VFX handle ma"-i id; id ra"i snapshot a+'
+// complete + fade-in sprite; battle reset/shutdown don sach.
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
@@ -137,7 +137,7 @@ describe('CombatScene reconcileSpawnVfx', () => {
     scene.applyPendingPositions(positionsEvent(spawning))
     scene.update(0, 16)
 
-    // Snapshot káº¿: telegraph xong â†’ enemy materialize.
+    // Snapshot ke: telegraph xong -> enemy materialize.
     scene.applyPendingPositions(
       positionsEvent(
         [],
@@ -145,8 +145,8 @@ describe('CombatScene reconcileSpawnVfx', () => {
       ),
     )
 
-    // Fade-in gá»“m 2 tween: boost scale 0.7â†’1 + alpha proxy 0â†’1 (setAlpha
-    // per-target). Flash tween cá»§a handle lÃ  tween thá»© 3 (target {fade}).
+    // Fade-in gom 2 tween: boost scale 0.7->1 + alpha proxy 0->1 (setAlpha
+    // per-target). Flash tween cua handle la tween thu 3 (target {fade}).
     const boostTween = tweenConfigs.find(
       (config) => (config.targets as { value?: number }).value !== undefined,
     )
@@ -167,10 +167,10 @@ describe('CombatScene reconcileSpawnVfx', () => {
     expect(scene.entityVisual.materializing.has('enemy_1')).toBe(false)
     expect(scene.spawnVfxHandles.has('enemy_1')).toBe(false)
 
-    // Cháº¡y alpha tween tá»›i cuá»‘i â†’ má»i target vá» alpha cuá»‘i (rect=1,
+    // Chay alpha tween tOi cuoi -> moi target ve alpha cuoi (rect=1,
     // shadow=SHADOW_ALPHA).
-    // Cháº¡y alpha tween tá»›i cuá»‘i â€” onUpdate Ä‘á»c state.t tá»« targets object
-    // (giá»‘ng Phaser tween ghi giÃ¡ trá»‹ vÃ o targets khi cháº¡y).
+    // Chay alpha tween tOi cuoi - onUpdate doc state.t tu targets object
+    // (giong Phaser tween ghi gia trI vao targets khi chay).
     ;(alphaTween!.targets as { t: number }).t = 1
 
     const alphaOnUpdate = alphaTween!.onUpdate as () => void
@@ -208,7 +208,7 @@ describe('CombatScene reconcileSpawnVfx', () => {
     expect(scene.spawnVfxHandles.size).toBe(0)
     expect(scene.entityVisual.materializing.size).toBe(0)
 
-    // Tráº­n má»›i snapshot pending má»›i â†’ táº¡o handle Má»šI (khÃ´ng dÃ¹ng láº¡i cÅ©).
+    // Traon ma">i snapshot pending ma">i a+' tao!o handle Ma"sI (khA'ng dA1ng lao!i cA(c)).
     scene.applyPendingPositions(
       positionsEvent([
         {
@@ -224,7 +224,7 @@ describe('CombatScene reconcileSpawnVfx', () => {
     )
 
     expect(scene.spawnVfxHandles.has('enemy_2')).toBe(true)
-    expect(graphicsCreated.length).toBeGreaterThanOrEqual(4) // 2 cÅ© (destroyed) + 2 má»›i
+    expect(graphicsCreated.length).toBeGreaterThanOrEqual(4) // 2 cu (destroyed) + 2 mOi
   })
 
   it('flat mode: khÃ´ng táº¡o telegraph VFX (renderer legacy giá»¯ hÃ nh vi cÅ©)', () => {

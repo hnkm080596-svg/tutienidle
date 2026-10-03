@@ -10,10 +10,10 @@ import electron from 'vite-plugin-electron/simple'
 import { devPortForRoot } from './scripts/dev-port.ts'
 import type { BuildIdentity } from './src/shared/build/BuildIdentity.ts'
 
-// Uncommitted audit followup plan, Ưu tiên 2 (Electron packaging,
-// 2026-08-24) — plugin electron() chỉ đăng ký khi biến env ELECTRON được
-// set (script "electron:dev"/"dist:win" trong package.json), để `npm run
-// dev`/`npm run build` (target web thuần) tuyệt đối không đổi hành vi.
+// Uncommitted audit followup plan, Uu tien 2 (Electron packaging,
+// 2026-08-24) - plugin electron() chi dang ky khi bien env ELECTRON duoc
+// set (script "electron:dev"/"dist:win" trong package.json), de `npm run
+// dev`/`npm run build` (target web thuan) tuyet doi khong doi hanh vi.
 const isElectron = Boolean(process.env.ELECTRON)
 
 // Port per checkout (audit T7-62, 2026-09-16): derived from the checkout
@@ -119,9 +119,9 @@ export default defineConfig({
     port: devPort,
     strictPort: true,
   },
-  // Asset URL tương đối — bắt buộc để index.html load đúng qua file://
-  // khi Electron đóng gói (electron-builder). Không ảnh hưởng dev server/
-  // vite preview, cả 2 vẫn phục vụ qua http bình thường.
+  // Asset URL tuong doi - bat buoc de index.html load dung qua file://
+  // khi Electron dong goi (electron-builder). Khong anh huong dev server/
+  // vite preview, ca 2 van phuc vu qua http binh thuong.
   base: './',
   // Renderer bundle + Vitest both read the identity through this define.
   define: {

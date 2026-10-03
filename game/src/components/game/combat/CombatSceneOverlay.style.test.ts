@@ -1,15 +1,15 @@
 // @vitest-environment node
-// T8.1 (2026-09-02) — style-contract: khôi phục styles bị mất của
-// CombatSceneOverlay (root cause: 991ba75 xóa <style scoped>).
-// jsdom/vitest KHÔNG apply scoped CSS runtime → assert SOURCE SFC
-// (pattern source-contract, đọc file thật qua import query — vitest
-// hỗ trợ ?raw): 4 selector + properties chính, chống regression tái diễn.
+// T8.1 (2026-09-02) - style-contract: khoi phuc styles bi mat cua
+// CombatSceneOverlay (root cause: 991ba75 xoa <style scoped>).
+// jsdom/vitest KHONG apply scoped CSS runtime -> assert SOURCE SFC
+// (pattern source-contract, doc file that qua import query - vitest
+// ho tro ?raw): 4 selector + properties chinh, chong regression tai dien.
 //
-// Combat Art Pipeline Task 7 (2026-09-05, spec §7.5) — Build HUD +
-// TurnCombatSkillBar rời battlefield slot vào CombatSkillDockPanel
-// (dock mép phải). Rules __build-hud/__turn-skill-bar + media guard
-// padding-left 210px KHÔNG còn ở overlay — contract cập nhật theo;
-// dock tự bảo quản style của nó.
+// Combat Art Pipeline Task 7 (2026-09-05, spec sec7.5) - Build HUD +
+// TurnCombatSkillBar roi battlefield slot vao CombatSkillDockPanel
+// (dock mep phai). Rules __build-hud/__turn-skill-bar + media guard
+// padding-left 210px KHONG con o overlay - contract cap nhat theo;
+// dock tu bao quan style cua no.
 import { describe, expect, it } from 'vitest'
 import source from './CombatSceneOverlay.vue?raw'
 

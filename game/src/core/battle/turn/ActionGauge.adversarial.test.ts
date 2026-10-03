@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GAUGE_MAX, refundGauge, type GaugeActor } from './ActionGauge'
 
-// QA adversarial probe (2026-09-04 quick review) — attack operator: value
+// QA adversarial probe (2026-09-04 quick review) - attack operator: value
 // mutation (so am) tren primitive cong khai chua co caller. Contract
 // (post-Ung-Tre): a non-debtor is never pushed below 0 - debt exists only
 // via consume; an existing debtor floor-pins at its own residue so a

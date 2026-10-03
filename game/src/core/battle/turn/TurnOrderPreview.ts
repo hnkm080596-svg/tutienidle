@@ -2,8 +2,8 @@ import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import { consumeGaugeAfterAction } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 
-// Slice 7 extension (Completion Task 11) — turn-order preview: trả N actor
-// kế tiếp theo gauge-fill order mà KHÔNG mutate battle thật.
+// Slice 7 extension (Completion Task 11) - turn-order preview: tra N actor
+// ke tiep theo gauge-fill order ma KHONG mutate battle that.
 
 export interface BattleLogEntry {
   turn: number
@@ -18,10 +18,10 @@ export interface BattleLogEntry {
 }
 
 /**
- * Simulate gauge advancement trên CLONE gauge values (chỉ các field điều
- * khiển thứ tự — speed/priority/alive/actionGauge/priority; CombatEntity
- * mang class instance nên structuredClone không an toàn). Trả về actor
- * identity THẬT từ battle gốc (reference) để UI đọc entity thật.
+ * Simulate gauge advancement tren CLONE gauge values (chi cac field dieu
+ * khien thu tu - speed/priority/alive/actionGauge/priority; CombatEntity
+ * mang class instance nen structuredClone khong an toan). Tra ve actor
+ * identity THAT tu battle goc (reference) de UI doc entity that.
  */
 export function peekUpcomingActors(
   battle: TurnBattle,
@@ -94,12 +94,12 @@ function cloneGaugeActor(participant: TurnBattleParticipant): TurnBattleParticip
     ultimate: undefined,
     resources: undefined,
     bossTrigger: undefined,
-    // buffs là reference chung — resolveNextTurn chỉ đọc, an toàn.
+    // buffs la reference chung - resolveNextTurn chi doc, an toan.
     //
-    // Defect Task 8 (2026-09-05): clone participant vẫn TRỎ CHUNG entity sống
-    // (không deep-copy CombatEntity) — an toàn vì preview chỉ đọc, không
-    // mutate. Nếu sau này preview logic cần mô phỏng trạng thái giả định
-    // (vd. "nếu X chết thì thứ tự đổi thế nào"), phải deep-copy entity ở đây
-    // trước, không sửa trực tiếp.
+    // Defect Task 8 (2026-09-05): clone participant van TRO CHUNG entity song
+    // (khong deep-copy CombatEntity) - an toan vi preview chi doc, khong
+    // mutate. Neu sau nay preview logic can mo phong trang thai gia dinh
+    // (vd. "neu X chet thi thu tu doi the nao"), phai deep-copy entity o day
+    // truoc, khong sua truc tiep.
   }
 }

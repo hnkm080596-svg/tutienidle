@@ -90,14 +90,14 @@ function setup() {
 
   materialBag.add(ENHANCE_ORE, 100_000)
 
-  // Plan Workstream F — Linh Thạch là MATERIAL: nạp sẵn số dư lớn.
+  // Plan Workstream F - Linh Thach la MATERIAL: nap san so du lon.
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 
   return { system, bag, registry, affixRegistry, slotManager, materialBag, player }
 }
 
-// Instance thủ công (không qua createInstance random) — dùng cho test
-// cần kiểm soát chính xác quality/affixes ban đầu.
+// Instance thu cong (khong qua createInstance random) - dung cho test
+// can kiem soat chinh xac quality/affixes ban dau.
 function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance {
   return makeInstance({
     instanceId: 'manual-1',
@@ -714,7 +714,7 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
 
     ctx.bag.add(instance)
 
-    // Điểm Rèn per-item — cho vừa đủ để assert trừ đúng cost.
+    // Diem Ren per-item - cho vua du de assert tru dung cost.
     instance.forgeUsesRemaining = instance.forgeUsesTotal
 
     return { ...ctx, instance, essenceId }
@@ -813,7 +813,7 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
 
     const ctx2 = refineSetup()
 
-    // 4 affixes → khóa 3 là hợp lệ; khóa index ngoài range → invalid.
+    // 4 affixes -> khoa 3 la hop le; khoa index ngoai range -> invalid.
     expect(
       ctx2.system.refineAffixValues(
         ctx2.instance.instanceId,
@@ -1311,7 +1311,7 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
   it('mọi dòng đều tier không khớp → từ chối no_eligible_affix, KHÔNG trừ cost (atomic)', () => {
     const ctx = refineSetup()
 
-    // Ép tier=99 — chắc chắn không có trong affix.tiers.
+    // Ep tier=99 - chac chan khong co trong affix.tiers.
     ctx.instance.affixes = [
       { affixId: affixes[0]!.id, tier: 99, value: 5 },
       { affixId: affixes[1]!.id, tier: 99, value: 5 },

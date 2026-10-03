@@ -35,8 +35,8 @@ watch(
   },
 )
 
-// Khớp token màu có sẵn trong assets/theme.css — không thêm token
-// mới, tái dùng đúng bảng màu game đã có.
+// Khop token mau co san trong assets/theme.css - khong them token
+// moi, tai dung dung bang mau game da co.
 const KIND_COLOR: Record<NotificationKind, string> = {
   loot: 'var(--hk-jade)',
   craft: 'var(--hk-gold)',
@@ -46,11 +46,11 @@ const KIND_COLOR: Record<NotificationKind, string> = {
   error: 'var(--hk-cinnabar-bright)',
 }
 
-// Số toast hiện đồng thời tuỳ chiều cao màn hình thật — Teleport to
-// body nên .toast-container KHÔNG nằm trong scale transform của
-// .game-root (xem GameRoot.vue), window.innerHeight là đúng đơn vị.
-// Chiều cao item lấy dư ra (46px) vì loot toast kèm icon + nội dung
-// hai dòng render ~40-44px thực tế, không phải 32px như toast chữ trơn.
+// So toast hien dong thoi tuy chieu cao man hinh that - Teleport to
+// body nen .toast-container KHONG nam trong scale transform cua
+// .game-root (xem GameRoot.vue), window.innerHeight la dung don vi.
+// Chieu cao item lay du ra (46px) vi loot toast kem icon + noi dung
+// hai dong render ~40-44px thuc te, khong phai 32px nhu toast chu tron.
 const TOAST_TOP_OFFSET_PX = 24
 const TOAST_BOTTOM_MARGIN_PX = 24
 const TOAST_ITEM_HEIGHT_PX = 46
@@ -98,9 +98,9 @@ function lastNameText(name: string): string {
           role="status"
         >
           <InkNineSlice chrome-id="frame-xs-tooltip" layer="surface" tint-var="var(--toast-color)" />
-          <!-- UI-006 (Task 4, 2026-09-07) — toast message là live region
-               (role="status"), dismiss là NÚT RIÊNG (keyboard/SR reachable)
-               thay vì click div toàn toast. -->
+          <!-- UI-006 (Task 4, 2026-09-07) - toast message la live region
+               (role="status"), dismiss la NUT RIENG (keyboard/SR reachable)
+               thay vi click div toan toast. -->
           <GameButton
             variant="ghost"
             shape="circle"
@@ -167,7 +167,7 @@ function lastNameText(name: string): string {
   overflow: hidden;
   color: var(--hk-text-primary);
   font-family: var(--hk-font-ui);
-  /* UI-006 (Task 4) — toast text dài (vi/en) tự xuống dòng, không tràn. */
+  /* UI-006 (Task 4) - toast text dai (vi/en) tu xuong dong, khong tran. */
   overflow-wrap: anywhere;
 }
 

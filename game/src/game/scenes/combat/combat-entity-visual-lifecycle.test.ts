@@ -1,4 +1,4 @@
-// CombatEntityVisualLifecycle — the one owner of per-combatant sprite
+// CombatEntityVisualLifecycle - the one owner of per-combatant sprite
 // visibility state (roadmap "CombatScene rule" mechanism). The fake scene
 // exposes only the three surface points the lifecycle uses:
 // gridView.setSpriteVisible, sprites, playMaterializeFadeIn.
@@ -53,7 +53,7 @@ describe('CombatEntityVisualLifecycle', () => {
 
     lifecycle.revealPending(['c'])
 
-    // 'q' is pending but has no sprite — untouched, and not an error.
+    // 'q' is pending but has no sprite - untouched, and not an error.
     expect(scene.gridView.setSpriteVisible).toHaveBeenCalledTimes(2)
     expect(scene.gridView.setSpriteVisible).toHaveBeenCalledWith(pendingSprite, true)
     expect(scene.gridView.setSpriteVisible).toHaveBeenCalledWith(aliveSprite, true)
@@ -88,7 +88,7 @@ describe('CombatEntityVisualLifecycle', () => {
     expect(scene.playMaterializeFadeIn).toHaveBeenCalledTimes(1)
     expect(lifecycle.playerMaterialized).toBe(true)
 
-    // Already materialized — no second fade-in.
+    // Already materialized - no second fade-in.
     lifecycle.materializePlayer(sprite)
     expect(scene.playMaterializeFadeIn).toHaveBeenCalledTimes(1)
   })

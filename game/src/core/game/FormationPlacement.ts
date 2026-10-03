@@ -1,10 +1,10 @@
-// FormationPlacement (Trận Pháp spec §6, 2026-09-05) — chuyển
-// FormationLoadout đã lưu của player thành vị trí tuyệt đối trên chiến
-// trường, hoặc fallback về DEFAULT_PARTY_FORMATION nếu player chưa từng
-// cấu hình trận pháp. Đây là "điểm nối" (seam) DUY NHẤT mà cả Combat Art
-// Pipeline spec lẫn Trận Pháp spec đều trỏ vào buildTurnBattle() — được
-// tách thành pure function riêng ở đây để buildTurnBattle() (Task 19)
-// chỉ đóng vai trò caller mỏng.
+// FormationPlacement (Tran Phap spec sec6, 2026-09-05) - chuyen
+// FormationLoadout da luu cua player thanh vi tri tuyet doi tren chien
+// truong, hoac fallback ve DEFAULT_PARTY_FORMATION neu player chua tung
+// cau hinh tran phap. Day la "diem noi" (seam) DUY NHAT ma ca Combat Art
+// Pipeline spec lan Tran Phap spec deu tro vao buildTurnBattle() - duoc
+// tach thanh pure function rieng o day de buildTurnBattle() (Task 19)
+// chi dong vai tro caller mong.
 import type { GridPosition } from '../battle/BattleGrid'
 import { PLAYER_SIDE_REGION, standingSlotPosition } from '../battle/BattlefieldRegions'
 import type { FormationLoadout, PlayerData } from '../player/Player'
@@ -42,9 +42,9 @@ export function localCellToAbsolute(cell: { row: number; column: number }): Grid
   return standingSlotPosition(PLAYER_SIDE_REGION, cell.row, cell.column)
 }
 
-// Nếu player chưa từng lưu formationLoadout (null), trả về đội hình mặc
-// định (chỉ có player). Ngược lại, quy đổi từng assignment cục bộ đã lưu
-// thành PartyFormationSlot với tọa độ tuyệt đối.
+// Neu player chua tung luu formationLoadout (null), tra ve doi hinh mac
+// dinh (chi co player). Nguoc lai, quy doi tung assignment cuc bo da luu
+// thanh PartyFormationSlot voi toa do tuyet doi.
 export function resolvePartyFormation(player: PlayerData): PartyFormationSlot[] {
   if (!player.formationLoadout) {
     return DEFAULT_PARTY_FORMATION

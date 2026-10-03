@@ -14,10 +14,10 @@ import { materials } from '../../data/materials/materials'
 import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
-// Task 9 (perf-optimize-pass Phase 5, EquipmentSystem sibling-file split) —
-// tách nguyên vẹn khỏi EquipmentSystem.test.ts (describe 'EquipmentSystem —
-// Hóa Luyện (dissolveInstances, plan §7.5)'), KHÔNG đổi assertion nào, chỉ
-// di chuyển + trùng lặp setup helper cần thiết cho file test độc lập.
+// Task 9 (perf-optimize-pass Phase 5, EquipmentSystem sibling-file split) -
+// tach nguyen ven khoi EquipmentSystem.test.ts (describe 'EquipmentSystem -
+// Hoa Luyen (dissolveInstances, plan sec7.5)'), KHONG doi assertion nao, chi
+// di chuyen + trung lap setup helper can thiet cho file test doc lap.
 
 const TEMPLATE: Equipment = {
   id: 'test_sword',
@@ -48,14 +48,14 @@ function setup() {
 
   materialBag.add(ENHANCE_ORE, 100_000)
 
-  // Plan Workstream F — Linh Thạch là MATERIAL: nạp sẵn số dư lớn.
+  // Plan Workstream F - Linh Thach la MATERIAL: nap san so du lon.
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 
   return { system, bag, registry, affixRegistry, slotManager, materialBag, player }
 }
 
-// Instance thủ công (không qua createInstance random) — dùng cho test
-// cần kiểm soát chính xác quality/affixes ban đầu.
+// Instance thu cong (khong qua createInstance random) - dung cho test
+// can kiem soat chinh xac quality/affixes ban dau.
 function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance {
   return makeInstance({
     instanceId: 'manual-1',
@@ -152,7 +152,7 @@ describe('EquipmentSystem — Hóa Luyện (dissolveInstances, plan §7.5)', () 
 
     expect(result.ok).toBe(false)
 
-    // Không xoá món hợp lệ vì transaction all-or-nothing.
+    // Khong xoa mon hop le vi transaction all-or-nothing.
     expect(ctx.bag.get(free.instanceId)).toBeDefined()
   })
 
@@ -177,10 +177,10 @@ describe('EquipmentSystem — Hóa Luyện (dissolveInstances, plan §7.5)', () 
 
     expect(result.ok).toBe(true)
 
-    // Chỉ 1 reward duy nhất dù id lặp 3 lần.
+    // Chi 1 reward duy nhat du id lap 3 lan.
     expect(result.rewards).toHaveLength(1)
 
-    // Item bị xoá đúng 1 lần.
+    // Item bi xoa dung 1 lan.
     expect(ctx.bag.get('dup-1')).toBeUndefined()
   })
 })

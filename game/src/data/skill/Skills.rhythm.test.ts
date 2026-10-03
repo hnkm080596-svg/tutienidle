@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { SKILLS } from './Skills'
 
-// Combat Balance Pass (2026-08-29) — Task 4: đa dạng nhịp skill Pháp Tu
-// (plan §3.3). Mỗi hành một cá tính nhịp — số baseline theo bảng §3.3:
-// Hỏa bùng nổ chậm/mạnh, Thủy duy trì nhanh, Mộc DoT, Kim xuyên,
-// Thổ khống chế chậm. Đều là policy 'cast_time' — cast time khai trên
-// execution (nguồn sự thật runtime), field castTime legacy giữ đồng bộ
+// Combat Balance Pass (2026-08-29) - Task 4: da dang nhip skill Phap Tu
+// (plan sec3.3). Moi hanh mot ca tinh nhip - so baseline theo bang sec3.3:
+// Hoa bung no cham/manh, Thuy duy tri nhanh, Moc DoT, Kim xuyen,
+// Tho khong che cham. Deu la policy 'cast_time' - cast time khai tren
+// execution (nguon su that runtime), field castTime legacy giu dong bo
 // cho UI/tooltip.
 const SPELL_RHYTHM: Record<string, { castTime: number; cooldown: number }> = {
   hoa_cau_thuat: { castTime: 1.6, cooldown: 4 },

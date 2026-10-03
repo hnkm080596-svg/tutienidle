@@ -1,17 +1,17 @@
 // @vitest-environment jsdom
 //
 // Remediation Task 5 (2026-09-05) - App.vue boot/tick/listener lifecycle
-// idempotence. App.vue extract ra composable `useAppLifecycle` để test
-// được (script setup của App.vue không test trực tiếp được):
-// 1. startTickLoop() gọi 2 lần → chỉ 1 interval (trước đây setInterval
-//    chạy đè tickHandle — interval cũ leak, tick chạy 2×/giây).
-// 2. bootGame() 2 lần trong lúc boot đầu còn pending → boot/save flow chỉ
-//    chạy 1 lần (bootInFlight guard, reset khi fail để retry còn đường).
-// 3. Unmount: event-bus handlers gỡ, subscriptions/detached listeners
-//    dọn sạch (symmetric cleanup).
-// 4. persistProgress save-in-flight guard: gọi dồn 2 lần → 1 lần save.
+// idempotence. App.vue extract ra composable `useAppLifecycle` de test
+// duoc (script setup cua App.vue khong test truc tiep duoc):
+// 1. startTickLoop() goi 2 lan -> chi 1 interval (truoc day setInterval
+//    chay de tickHandle - interval cu leak, tick chay 2x/giay).
+// 2. bootGame() 2 lan trong luc boot dau con pending -> boot/save flow chi
+//    chay 1 lan (bootInFlight guard, reset khi fail de retry con duong).
+// 3. Unmount: event-bus handlers go, subscriptions/detached listeners
+//    don sach (symmetric cleanup).
+// 4. persistProgress save-in-flight guard: goi don 2 lan -> 1 lan save.
 //
-// KHÔNG có @vue/test-utils → mount thủ công createApp (pattern
+// KHONG co @vue/test-utils -> mount thu cong createApp (pattern
 // usePanelPagination.test.ts). Fake timers cho interval/tick.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, onUnmounted, ref } from 'vue'
@@ -20,7 +20,7 @@ import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import type { GameSave } from '../services/save/SaveSystem'
 import type { GameManager } from '../core/game/GameManager'
 
-// --- Stub dependency surface của useAppLifecycle (constructor injection) ---
+// --- Stub dependency surface cua useAppLifecycle (constructor injection) ---
 
 function makeStubs() {
   const clock = {
@@ -36,8 +36,8 @@ function makeStubs() {
     clock,
     intervals,
     intervalCalls,
-    // setInterval stub trả handle tuần tự, đẩy callback vào mảng để test
-    // bấm thủ công (mô phỏng timer fire).
+    // setInterval stub tra handle tuan tu, day callback vao mang de test
+    // bam thu cong (mo phong timer fire).
     scheduleInterval: (callback: () => void, timeoutMs: number): number => {
       intervals.push(callback)
       intervalCalls.push({ timeoutMs })
@@ -171,7 +171,7 @@ describe('useAppLifecycle — idempotent tick loop (Remediation Task 5)', () => 
     lifecycle.startAutosave()
     lifecycle.startAutosave()
 
-    // 1 interval autosave (tick interval riêng, chưa start).
+    // 1 interval autosave (tick interval rieng, chua start).
     expect(stubs.intervals).toHaveLength(1)
 
     lifecycle.stopAll()
@@ -195,12 +195,12 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
     const first = lifecycle.bootGame({ createNewCharacter: false })
     const second = lifecycle.bootGame({ createNewCharacter: false })
 
-    // Release load 'ok' — boot đi qua tới enterGame.
+    // Release load 'ok' - boot di qua toi enterGame.
     releaseLoad({ status: 'ok', revision: 3, save: { player: {} } })
 
     await Promise.all([first, second])
 
-    // startSaveLoad chỉ 1 lần — boot thứ 2 bị guard chặn.
+    // startSaveLoad chi 1 lan - boot thu 2 bi guard chan.
     expect(stubs.boot.startSaveLoad).toHaveBeenCalledTimes(1)
     expect(stubs.coordinator.load).toHaveBeenCalledTimes(1)
     expect(stubs.boot.enterGame).toHaveBeenCalledTimes(1)
@@ -208,14 +208,14 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
     lifecycle.stopAll()
   })
 
-  // Fix (2026-09-06) — regression test cho lớp bug đã làm freeze TOÀN BỘ
-  // game: bootGame() thành công phải TỰ khởi động tick loop, không phụ
-  // thuộc caller nhớ gọi startTickLoop() riêng (đúng lỗi đã xảy ra ở
-  // commit d6d9a1d — extract composable, quên rewire lời gọi). Khác với
-  // 2 test "startTickLoop 2 lần" ở trên (chỉ test HELPER khi được gọi thủ
-  // công với callback tự tạo), test này đi qua đúng con đường sản xuất
-  // (bootGame() → startTickLoop(deps.tick)) — nếu ai xoá dòng gọi đó
-  // trong useAppLifecycle.ts, test này FAIL trong khi 2 test kia vẫn xanh.
+  // Fix (2026-09-06) - regression test cho lop bug da lam freeze TOAN BO
+  // game: bootGame() thanh cong phai TU khoi dong tick loop, khong phu
+  // thuoc caller nho goi startTickLoop() rieng (dung loi da xay ra o
+  // commit d6d9a1d - extract composable, quen rewire loi goi). Khac voi
+  // 2 test "startTickLoop 2 lan" o tren (chi test HELPER khi duoc goi thu
+  // cong voi callback tu tao), test nay di qua dung con duong san xuat
+  // (bootGame() -> startTickLoop(deps.tick)) - neu ai xoa dong goi do
+  // trong useAppLifecycle.ts, test nay FAIL trong khi 2 test kia van xanh.
   it('bootGame thành công → tick loop tự khởi động (KHÔNG cần caller gọi startTickLoop riêng)', async () => {
     const stubs = makeStubs()
     const lifecycle = makeLifecycle(stubs)
@@ -228,8 +228,8 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
     expect(lifecycle.getTickHandle()).not.toBeUndefined()
     expect(stubs.intervals).toHaveLength(1)
 
-    // Interval đã đăng ký đúng là tick — bấm thủ công phải gọi tick(),
-    // không phải một no-op nào khác.
+    // Interval da dang ky dung la tick - bam thu cong phai goi tick(),
+    // khong phai mot no-op nao khac.
     stubs.intervals[0]?.()
     expect(stubs.tick).toHaveBeenCalledTimes(1)
 
@@ -250,7 +250,7 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
 
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
 
-    // Boot lại — lần này load 'empty' → requireCharacter.
+    // Boot lai - lan nay load 'empty' -> requireCharacter.
     ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       status: 'empty',
       revision: 0,
@@ -427,12 +427,12 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
     lifecycle.startAutosave()
     await lifecycle.persistProgress()
 
-    // No interval re-armed, no DOM listener re-registered — nhưng save cuối
-    // VẪN được phép: persistProgress không có listener-driven caller nào sót
-    // lại sau stopAll (tất cả đã bị gỡ), nên call duy nhất tới được nó là
-    // flush chủ đích trong App.vue's onUnmounted — cái flush "persist first
-    // so a development reload cannot roll the player back" phải thật sự
-    // chạy (regression review round 1: gate `stopped` ở đây đã giết nó).
+    // No interval re-armed, no DOM listener re-registered - nhung save cuoi
+    // VAN duoc phep: persistProgress khong co listener-driven caller nao sot
+    // lai sau stopAll (tat ca da bi go), nen call duy nhat toi duoc no la
+    // flush chu dich trong App.vue's onUnmounted - cai flush "persist first
+    // so a development reload cannot roll the player back" phai that su
+    // chay (regression review round 1: gate `stopped` o day da giet no).
     expect(stubs.intervals).toHaveLength(0)
     expect(stubs.addEventListener).not.toHaveBeenCalled()
     expect(stubs.persistPlayer).toHaveBeenCalledTimes(1)
@@ -636,7 +636,7 @@ describe('useAppLifecycle — event bus + listener cleanup (Remediation Task 5)'
 
     lifecycle.stopAll()
 
-    // Mỗi on() có đúng 1 off() cùng event+handler.
+    // Moi on() co dung 1 off() cung event+handler.
     const eventBus = stubs.gameManager.eventBus as unknown as {
       on: ReturnType<typeof vi.fn>
       off: ReturnType<typeof vi.fn>
@@ -715,7 +715,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
 
       expect(lifecycleRef).toBeDefined()
       expect(stubs.removeEventListener).toHaveBeenCalled()
-      expect(stubs.clock.stop).not.toHaveBeenCalled() // chưa start — không stop Ẩo
+      expect(stubs.clock.stop).not.toHaveBeenCalled() // chua start - khong stop Ao
 
       vi.useRealTimers()
     } finally {
@@ -724,12 +724,12 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
   })
 
   it('unmount-time persist vẫn fire SAU stopAll — ordering thật của App.vue (review round 1)', async () => {
-    // Ordering thật: composable tự đăng ký onBeforeUnmount(stopAll), còn
-    // App.vue gọi persistProgress() trong onUnmounted — Vue chạy
-    // beforeUnmount TRƯỚC unmounted, nên flush cuối luôn đến sau stopAll.
-    // Test này tái tạo đúng thứ tự đó: nếu persistProgress lại bị gate bởi
+    // Ordering that: composable tu dang ky onBeforeUnmount(stopAll), con
+    // App.vue goi persistProgress() trong onUnmounted - Vue chay
+    // beforeUnmount TRUOC unmounted, nen flush cuoi luon den sau stopAll.
+    // Test nay tai tao dung thu tu do: neu persistProgress lai bi gate boi
     // `stopped`, "persist first so a dev reload cannot roll the player
-    // back" lại thành dead code mà không test nào kêu.
+    // back" lai thanh dead code ma khong test nao keu.
     const stubs = makeStubs()
 
     const container = document.createElement('div')
@@ -776,7 +776,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
   })
 
   it('GameSave type import không phá build test (contract giữ nguyên)', () => {
-    // Type-only usage — giữ import có nghĩa.
+    // Type-only usage - giu import co nghia.
     const save: GameSave | undefined = undefined
 
     expect(save).toBeUndefined()

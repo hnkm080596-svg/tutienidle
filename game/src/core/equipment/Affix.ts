@@ -3,13 +3,13 @@ import type { EquipmentSlot } from './EquipmentTypes'
 
 export type AffixKind = 'prefix' | 'suffix'
 
-// Equipment Rework (2026-08-14) — chia affix thành 4 tầng, mở dần theo
+// Equipment Rework (2026-08-14) - chia affix thanh 4 tang, mo dan theo
 // Quality (ITEM_QUALITY_UNLOCKED_POOLS trong ItemQualityBalance.ts).
-// 'supreme' còn là pool DUY NHẤT "Exalted Affix" (roll bonus của
-// quality tien cao nhất, xem ITEM_QUALITY_EXALTED_AFFIX_CHANCE trong
-// ItemQualityBalance.ts) được phép rút ra, bất kể Quality của item đó
-// có tự mở pool 'supreme' hay không — phần thưởng may mắn của quality
-// cao nhất, không phụ thuộc trần Tier thường.
+// 'supreme' con la pool DUY NHAT "Exalted Affix" (roll bonus cua
+// quality tien cao nhat, xem ITEM_QUALITY_EXALTED_AFFIX_CHANCE trong
+// ItemQualityBalance.ts) duoc phep rut ra, bat ke Quality cua item do
+// co tu mo pool 'supreme' hay khong - phan thuong may man cua quality
+// cao nhat, khong phu thuoc tran Tier thuong.
 export type AffixPool = 'basic' | 'advanced' | 'specialized' | 'supreme'
 
 export interface AffixTierDef {
@@ -21,13 +21,13 @@ export interface AffixTierDef {
 }
 
 /**
- * Core Loop Foundation checklist (Mục AFFIX) — thay thế HOÀN TOÀN
- * substatPool cũ (roll ngẫu nhiên N cái, không phân loại, không có
- * tier). 1 Affix template roll ra 1 RolledAffix trên instance (xem
- * RolledAffix.ts) — số lượng Affix 1 item mang được do QUALITY quyết
- * định (ITEM_QUALITY_AFFIX_SLOTS), tier cao nhất roll được do QUALITY
- * quyết định (ITEM_QUALITY_AFFIX_TIER) — cùng 1 trục ItemQuality gate
- * cả 2 chiều (số lượng lẫn sức mạnh affix).
+ * Core Loop Foundation checklist (Muc AFFIX) - thay the HOAN TOAN
+ * substatPool cu (roll ngau nhien N cai, khong phan loai, khong co
+ * tier). 1 Affix template roll ra 1 RolledAffix tren instance (xem
+ * RolledAffix.ts) - so luong Affix 1 item mang duoc do QUALITY quyet
+ * dinh (ITEM_QUALITY_AFFIX_SLOTS), tier cao nhat roll duoc do QUALITY
+ * quyet dinh (ITEM_QUALITY_AFFIX_TIER) - cung 1 truc ItemQuality gate
+ * ca 2 chieu (so luong lan suc manh affix).
  */
 export interface Affix {
   id: string
@@ -38,15 +38,15 @@ export interface Affix {
 
   kind: AffixKind
 
-  // Không khai = roll được trên MỌI slot — khai thì CHỈ roll được
-  // trên đúng những slot liệt kê (vd affix "Sát Thương Cận Chiến" chỉ
-  // hợp weapon).
+  // Khong khai = roll duoc tren MOI slot - khai thi CHI roll duoc
+  // tren dung nhung slot liet ke (vd affix "Sat Thuong Can Chien" chi
+  // hop weapon).
   slots?: EquipmentSlot[]
 
-  // Tăng dần theo tier — tier[0] là tier thấp nhất (1), giá trị lớn
-  // dần theo index.
+  // Tang dan theo tier - tier[0] la tier thap nhat (1), gia tri lon
+  // dan theo index.
   tiers: AffixTierDef[]
 
-  // Equipment Rework — pool mở theo Quality (xem AffixPool ở trên).
+  // Equipment Rework - pool mo theo Quality (xem AffixPool o tren).
   pool: AffixPool
 }

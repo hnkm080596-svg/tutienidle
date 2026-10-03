@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { DUNG_NHAM_BURN_DEFINITION } from './ZoneDotBuffs'
 
-// Completion plan Task 7 Step 2 — structural assertions cho dot buff
-// definition thay Lava Zone (Dung Nham reaction). coefficient quy đổi từ
-// công thức hệ sống (Task 6 survey):
-//   - Dung Nham: spawnLavaZone damagePerTick 20 CỐ ĐỊNH (ElementReaction.ts),
-//     không might-scaling → baseline might 10 (StatBlock.ts) → 20/10 = 2.0
-//     (damage/tick tại baseline giữ nguyên 20).
-// (Kiếm Trận anchor removed — Kiem Tu Reimagined spec 2026-09-15 §7.)
-// Duration giữ nguyên SỐ (no-rebalance policy): 6 lượt.
+// Completion plan Task 7 Step 2 - structural assertions cho dot buff
+// definition thay Lava Zone (Dung Nham reaction). coefficient quy doi tu
+// cong thuc he song (Task 6 survey):
+//   - Dung Nham: spawnLavaZone damagePerTick 20 CO DINH (ElementReaction.ts),
+//     khong might-scaling -> baseline might 10 (StatBlock.ts) -> 20/10 = 2.0
+//     (damage/tick tai baseline giu nguyen 20).
+// (Kiem Tran anchor removed - Kiem Tu Reimagined spec 2026-09-15 sec7.)
+// Duration giu nguyen SO (no-rebalance policy): 6 luot.
 // M4: same numbers asserted in the canonical periodic recipe.
 
 describe('ZoneDotBuffs zone-as-dot definitions', () => {

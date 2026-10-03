@@ -1,31 +1,31 @@
-// Cầu nối kích thước giữa DOM chrome (CombatSceneOverlay.vue) và Phaser
-// (CombatScene.ts) — WS1 Responsive foundation (2026-08-24).
+// Cau noi kich thuoc giua DOM chrome (CombatSceneOverlay.vue) va Phaser
+// (CombatScene.ts) - WS1 Responsive foundation (2026-08-24).
 //
-// Nguồn chân lý: đo chiều cao render THẬT của bar DOM rồi cấp xuống
-// scene qua setCombatInsets(). Module plain-TS (không import Vue) để
-// scene dùng an toàn theo đúng luật phân tầng core↔view.
+// Nguon chan ly: do chieu cao render THAT cua bar DOM roi cap xuong
+// scene qua setCombatInsets(). Module plain-TS (khong import Vue) de
+// scene dung an toan theo dung luat phan tang core<->view.
 //
-// 6A-T3 (2026-09-01) — TOP-ONLY: 3 bar dưới (Status/Event/Control) rời
-// DOM để vào canvas (PlayerHudLayer T4) — bottom inset LUÔN 0; interface
-// giữ trường bottom cho tương thích call-site, giá trị bị ép 0.
-// Fallback: trước lần đo đầu tiên scene dùng công thức tỷ lệ top-only.
+// 6A-T3 (2026-09-01) - TOP-ONLY: 3 bar duoi (Status/Event/Control) roi
+// DOM de vao canvas (PlayerHudLayer T4) - bottom inset LUON 0; interface
+// giu truong bottom cho tuong thich call-site, gia tri bi ep 0.
+// Fallback: truoc lan do dau tien scene dung cong thuc ty le top-only.
 //
-// Combat Art Pipeline (2026-09-05) — thêm `right`: chiều rộng thực (px)
-// của skill dock panel mới bám mép phải màn hình (spec §7.5). Cùng pattern
-// đo-DOM-thật với `top` — KHÔNG suy từ tỉ lệ trừ khi chưa đo được lần nào.
+// Combat Art Pipeline (2026-09-05) - them `right`: chieu rong thuc (px)
+// cua skill dock panel moi bam mep phai man hinh (spec sec7.5). Cung pattern
+// do-DOM-that voi `top` - KHONG suy tu ti le tru khi chua do duoc lan nao.
 export interface CombatInsets {
-  /** Chiều cao thực (px) của Top Bar phía trên. */
+  /** Chieu cao thuc (px) cua Top Bar phia tren. */
   top: number
 
-  /** LUÔN 0 từ 6A — chỉ giữ cho tương thích call-site. */
+  /** LUON 0 tu 6A - chi giu cho tuong thich call-site. */
   bottom: number
 
-  /** Chiều rộng thực (px) của skill dock panel bám mép phải. */
+  /** Chieu rong thuc (px) cua skill dock panel bam mep phai. */
   right: number
 }
 
 interface MeasuredCombatInsets extends CombatInsets {
-  /** false khi chưa từng có phép đo nào (dùng fallback tỷ lệ). */
+  /** false khi chua tung co phep do nao (dung fallback ty le). */
   measured: boolean
 }
 
@@ -38,7 +38,7 @@ export function setCombatInsets(insets: CombatInsets): void {
   current.measured = true
 }
 
-/** Về trạng thái chưa đo (overlay unmount) để scene dùng lại fallback tỷ lệ. */
+/** Ve trang thai chua do (overlay unmount) de scene dung lai fallback ty le. */
 export function resetCombatInsets(): void {
   current.top = 0
   current.bottom = 0
@@ -50,30 +50,30 @@ export function getCombatInsets(): MeasuredCombatInsets {
   return current
 }
 
-// Combat Art Pipeline Task 7 (2026-09-05, spec §7.5) — 2 publisher
-// chuyên biệt cho kiến trúc inset 2 nguồn: CombatSceneOverlay (TopBar)
-// và CombatSkillDockPanel (dock phải) mỗi bên đo/publish riêng một
-// trường, KHÔNG đè trường của bên kia (setCombatInsets thô sẽ ghi đè
-// cả 3 trường mỗi lần gọi). `bottom` luôn 0 từ 6A.
+// Combat Art Pipeline Task 7 (2026-09-05, spec sec7.5) - 2 publisher
+// chuyen biet cho kien truc inset 2 nguon: CombatSceneOverlay (TopBar)
+// va CombatSkillDockPanel (dock phai) moi ben do/publish rieng mot
+// truong, KHONG de truong cua ben kia (setCombatInsets tho se ghi de
+// ca 3 truong moi lan goi). `bottom` luon 0 tu 6A.
 
-/** Overlay publish chiều cao TopBar đo được — giữ nguyên `right` hiện có. */
+/** Overlay publish chieu cao TopBar do duoc - giu nguyen `right` hien co. */
 export function publishTopBarHeight(top: number): void {
   setCombatInsets({ top, bottom: 0, right: current.right })
 }
 
-/** Dock publish chiều rộng thực đo được — giữ nguyên `top` hiện có. */
+/** Dock publish chieu rong thuc do duoc - giu nguyen `top` hien co. */
 export function publishSkillDockWidth(right: number): void {
   setCombatInsets({ top: current.top, bottom: 0, right })
 }
 
-/** Dock unmount — right về 0 (chưa đo) nhưng giữ `top` của TopBar. */
+/** Dock unmount - right ve 0 (chua do) nhung giu `top` cua TopBar. */
 export function clearSkillDockWidth(): void {
   setCombatInsets({ top: current.top, bottom: 0, right: 0 })
 }
 
-// Fallback insets TỈ LỆ — chỉ dùng khi chưa đo được DOM (mounted/
-// ResizeObserver chưa kịp chạy); frame thiết kế 16:9. Từ 6A bottom
-// fallback = 0 (chỉ còn Top Bar phía trên).
+// Fallback insets TI LE - chi dung khi chua do duoc DOM (mounted/
+// ResizeObserver chua kip chay); frame thiet ke 16:9. Tu 6A bottom
+// fallback = 0 (chi con Top Bar phia tren).
 const DESIGN_HEIGHT = 1440
 
 const FALLBACK_TOP_BAR = 64

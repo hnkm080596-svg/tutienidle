@@ -184,7 +184,7 @@ describe('domain gate (D10)', () => {
 
   it('deriver-emitted gated stat with the WRONG domain is rejected (derivers cannot bypass the gate)', () => {
     // Review fix (2026-09-15): deltaDeriver output is system-generated,
-    // so applyDomainGate is its only guard — the whitelist lint never
+    // so applyDomainGate is its only guard - the whitelist lint never
     // scans it. A sword deriver must not be able to emit maxMp.
     const resolved = calculateStats(createBaseStats(), [])
 

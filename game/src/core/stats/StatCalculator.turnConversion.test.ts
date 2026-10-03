@@ -3,10 +3,10 @@ import { calculateStats, calculateEffectiveStats, type StatModifier } from './St
 import { createBaseStats } from './StatBlock'
 import { STAT_METADATA, isPercentStat } from './StatMetadata'
 
-// Turn-based stat conversion (2026-09-04) — adversarial QA probes cho
-// plan 2026-09-04-stat-system-turn-based-conversion. Mỗi test bắn 1
-// hypothesis rủi ro riêng của việc rename attackSpeed→speed,
-// hpRegenPerSecond→hpRegenPerTurn, retire movementSpeed/
+// Turn-based stat conversion (2026-09-04) - adversarial QA probes cho
+// plan 2026-09-04-stat-system-turn-based-conversion. Moi test ban 1
+// hypothesis rui ro rieng cua viec rename attackSpeed->speed,
+// hpRegenPerSecond->hpRegenPerTurn, retire movementSpeed/
 // castSpeedPercent/cooldownReduction.
 
 describe('Adversarial QA — stat turn-based conversion invariants', () => {
@@ -18,11 +18,11 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
 
   it('INV-2 (stat-system-reimagined D7): NO attribute derives speed — attribute-only stats leave speed at base', () => {
     const base = createBaseStats()
-    // dexterity 1 → speed stays 100 (speed removed from every attribute
+    // dexterity 1 -> speed stays 100 (speed removed from every attribute
     // axis; speed sources are scarce authored grants, D1).
     const result = calculateStats(base, [])
     expect(result.speed).toBe(100)
-    // dexterity 21 → still exactly base: the delta pass must not emit a
+    // dexterity 21 -> still exactly base: the delta pass must not emit a
     // speed modifier either.
     const boosted = calculateStats(base, [
       { id: 't:dex', sourceId: 't', sourceType: 'technique', stat: 'dexterity', flat: 20 },
@@ -36,12 +36,12 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
   it('INV-3 (Exactly-once/Conservation): Intelligence KHÔNG còn cấp cooldownReduction — modifier không chết lọt pipeline', () => {
     const base = createBaseStats()
     const result = calculateStats(base, [])
-    // Trước conversion Intelligence 1 cấp +0.001 CDR. Sau retire, giá
-    // trị CDR phải biến mất hoàn toàn (không còn field để nhận).
+    // Truoc conversion Intelligence 1 cap +0.001 CDR. Sau retire, gia
+    // tri CDR phai bien mat hoan toan (khong con field de nhan).
     expect('cooldownReduction' in result).toBe(false)
-    // Intelligence cấp 3 stat đúng spec §5/D8: criticalDamage là PERCENT
-    // modifier → 1.5 × (1 + 1×0.003) = 1.5045; ailmentResistPercent +
-    // ailmentPotencyPercent là FLAT absolute trên base 0.
+    // Intelligence cap 3 stat dung spec sec5/D8: criticalDamage la PERCENT
+    // modifier -> 1.5 x (1 + 1x0.003) = 1.5045; ailmentResistPercent +
+    // ailmentPotencyPercent la FLAT absolute tren base 0.
     expect(result.criticalDamage).toBeCloseTo(1.5 * 1.003, 5)
     expect(result.ailmentResistPercent).toBeCloseTo(1 * 0.002, 5)
     expect(result.ailmentPotencyPercent).toBeCloseTo(1 * 0.002, 5)
@@ -52,19 +52,19 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
     const boosted = calculateStats(base, [
       { id: 't:vit', sourceId: 't', sourceType: 'technique', stat: 'vitality', flat: 9 },
     ])
-    // vitality 10 → 10×0.1 = 1.0 hpRegenPerTurn (base 0 + flat).
+    // vitality 10 -> 10x0.1 = 1.0 hpRegenPerTurn (base 0 + flat).
     expect(boosted.hpRegenPerTurn).toBeCloseTo(1, 5)
   })
 
   it('INV-5 (Recoverability): StatModifier nhắm stat đã retire bị StatType tĩnh chặn ngay compile-time — runtime chỉ nhận StatType hợp lệ', () => {
-    // Metadata của mọi StatType hợp lệ phải tra được; các key đã retire
-    // phải vắng mặt khỏi metadata (đảm bảo không còn memento rác).
-    expect(STAT_METADATA.speed).toBeUndefined() // speed là flat, không cần trần
+    // Metadata cua moi StatType hop le phai tra duoc; cac key da retire
+    // phai vang mat khoi metadata (dam bao khong con memento rac).
+    expect(STAT_METADATA.speed).toBeUndefined() // speed la flat, khong can tran
     expect(STAT_METADATA.hpRegenPerTurn).toBeUndefined()
     expect('cooldownReduction' in STAT_METADATA).toBe(false)
     expect('castSpeedPercent' in STAT_METADATA).toBe(false)
     expect('movementSpeed' in STAT_METADATA).toBe(false)
-    // isPercentStat không phân loại sai speed thành percent.
+    // isPercentStat khong phan loai sai speed thanh percent.
     expect(isPercentStat('speed')).toBe(false)
   })
 
@@ -86,12 +86,12 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
     ])
     expect(Number.isFinite(huge.speed)).toBe(true)
     expect(huge.speed).toBeGreaterThan(0)
-    // Speed không có trần metadata — chấp nhận theo spec (GAUGE_MAX
-    // chỉ quan tâm tỉ lệ), nhưng KHÔNG BAO GIỜ âm từ pipeline chuẩn.
+    // Speed khong co tran metadata - chap nhan theo spec (GAUGE_MAX
+    // chi quan tam ti le), nhung KHONG BAO GIO am tu pipeline chuan.
     const neg = calculateStats(base, [
       { id: 't:speed', sourceId: 't', sourceType: 'technique', stat: 'speed', flat: -50 },
     ])
-    // 100 - 50 (no attribute-derived speed anymore — D7).
+    // 100 - 50 (no attribute-derived speed anymore - D7).
     expect(neg.speed).toBeCloseTo(50, 5)
   })
 
@@ -102,19 +102,19 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
       { id: 'e:1', sourceId: 'e', sourceType: 'equipment', stat: 'speed', percent: 0.1 },
     ]
     const result = calculateStats(base, mods)
-    // Added pool: 100 + 10 (equipment flat) = 110 → Increased ×1.1 = 121
-    // (no attribute-derived speed anymore — D7).
+    // Added pool: 100 + 10 (equipment flat) = 110 -> Increased x1.1 = 121
+    // (no attribute-derived speed anymore - D7).
     expect(result.speed).toBeCloseTo(121, 5)
   })
 
   it('INV-9 (full Stats shape): deriveAttributeModifiers không sinh StatModifier nhắm key đã retire', () => {
-    // calculateStats gọi deriveAttributeModifiers nội bộ — kết quả cuối
-    // phải chứa ĐỦ 5 attribute dẫn xuất đúng; sau Task 8 (D7) Thân Pháp
-    // KHÔNG còn nhắm 'speed' (accuracy/evasion/crit giữ), Thần Thức
-    // KHÔNG nhắm gì đã retire.
+    // calculateStats goi deriveAttributeModifiers noi bo - ket qua cuoi
+    // phai chua DU 5 attribute dan xuat dung; sau Task 8 (D7) Than Phap
+    // KHONG con nham 'speed' (accuracy/evasion/crit giu), Than Thuc
+    // KHONG nham gi da retire.
     const base = createBaseStats()
     const result = calculateStats(base, [])
-    // Thân Pháp 1: accuracy +1.5, evasion +1.0, crit +0.05%.
+    // Than Phap 1: accuracy +1.5, evasion +1.0, crit +0.05%.
     expect(result.accuracyRating).toBeCloseTo(100 + 1.5, 5)
     expect(result.evasionRate).toBeCloseTo(5 + 1, 5)
     expect(result.criticalRate).toBeCloseTo(0.05 * (1 + 0.0005), 5)
@@ -122,8 +122,8 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
 })
 
 describe('calculateEffectiveStats (R2 resolved→effective boundary)', () => {
-  // Audit AR-02 probe: strength 100 + might 10 raw → calculateStats
-  // resolves to might 70 (10 + 100×0.6). Feeding that resolved snapshot
+  // Audit AR-02 probe: strength 100 + might 10 raw -> calculateStats
+  // resolves to might 70 (10 + 100x0.6). Feeding that resolved snapshot
   // back into calculateStats re-derived +60 (130). The effective boundary
   // must fold temp modifiers onto 70 without re-deriving.
   const RAW = createBaseStats({ strength: 100, might: 10 })

@@ -29,9 +29,9 @@ export class ZoneRegistry {
     return Array.from(this.zones.values())
   }
 
-  // Reverse lookup Stage -> Zone (2026-08-15, tiền tố "Địa Giới" trong
-  // tên vật phẩm ghép động, xem EquipmentNaming.ts) — undefined nếu
-  // stageId không thuộc Zone nào đã đăng ký.
+  // Reverse lookup Stage -> Zone (2026-08-15, tien to "Dia Gioi" trong
+  // ten vat pham ghep dong, xem EquipmentNaming.ts) - undefined neu
+  // stageId khong thuoc Zone nao da dang ky.
   getZoneForStage(stageId: string): Zone | undefined {
     return this.getAll().find(zone => zone.stageIds.includes(stageId))
   }

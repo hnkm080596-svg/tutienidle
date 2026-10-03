@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 //
-// Workstream C (dong-fu plan) — hotspot là MỘT trong HAI entry point
-// (entry kia = command wheel ring 3); cả hai đi qua
-// composables/useBuildingNavigation.ts và popover DÙNG CHUNG được render
-// ở tầng GameRoot (ui.activeBuildingPopoverId). Test mount cùng lúc
-// hotspot layer + popover authority stub y hệt GameRoot.
+// Workstream C (dong-fu plan) - hotspot la MOT trong HAI entry point
+// (entry kia = command wheel ring 3); ca hai di qua
+// composables/useBuildingNavigation.ts va popover DUNG CHUNG duoc render
+// o tang GameRoot (ui.activeBuildingPopoverId). Test mount cung luc
+// hotspot layer + popover authority stub y het GameRoot.
 //
-// Building đã xây mở LeftPanel; nút nâng cấp sống trong header panel,
-// không còn chip nổi trên world hotspot.
+// Building da xay mo LeftPanel; nut nang cap song trong header panel,
+// khong con chip noi tren world hotspot.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { computed, nextTick } from 'vue'
 import { createApp, defineComponent, h, ref } from 'vue'
@@ -62,7 +62,7 @@ function mountHomeBuildings(
 
   document.body.appendChild(container)
 
-  // Stub tầng GameRoot: hotspot layer + shared popover authority.
+  // Stub tang GameRoot: hotspot layer + shared popover authority.
   const RootStub = defineComponent({
     setup() {
       const ui = useUiStore()
@@ -403,7 +403,7 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
       lastCollectedAt: 0,
     })
 
-    // upgradeCost[1] = 10 Gỗ Linh Mộc — cấp đủ nguyên liệu.
+    // upgradeCost[1] = 10 Go Linh Moc - cap du nguyen lieu.
     gameManager.materialBag.add(UPGRADE_MATERIAL, 10)
 
     const mounted = mountHomeBuildings(gameManager)
@@ -497,7 +497,7 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
       instanceId: 'inst_spring',
       buildingId: 'chi_hien_quan',
       level: 1,
-      // lastCollectedAt lùi sâu vào quá khứ → stored >= 1.
+      // lastCollectedAt lui sau vao qua khu -> stored >= 1.
       lastCollectedAt: Date.now() / 1000 - 3600,
     })
 

@@ -131,7 +131,7 @@ describe('theGainOnLandedCast — per-cast gain contract (Task 8)', () => {
   it('grants nothing when every hit is dodged (no landed target)', () => {
     const { battle, playerParticipant, enemyParticipant, system } = specialBattle()
 
-    // Hit chance = accuracy / (accuracy + evasion) with a 5% floor —
+    // Hit chance = accuracy / (accuracy + evasion) with a 5% floor -
     // stats alone can never guarantee a dodge; force the roll instead.
     enemyParticipant.entity.stats = {
       ...enemyParticipant.entity.stats,
@@ -264,7 +264,7 @@ describe('theGainOnCrit retired — a crit grants no extra The (spec D1)', () =>
 
     system.resolveNextStep(battle)
 
-    // +5 landed-cast only — NOT 5x5 for five landed critting hits.
+    // +5 landed-cast only - NOT 5x5 for five landed critting hits.
     expect(playerParticipant.entity.currentThe).toBe(5)
   })
 })

@@ -17,11 +17,11 @@ const seasons = ['spring', 'summer', 'autumn', 'winter'] as const
 const technicalNames = ['base.png', 'ground-shadow.png', 'locked-overlay.png', 'silhouette-mask.png']
 
 // Flaky fix (2026-09-02, user-approved): alpha-bounds test (spawn 6
-// ImageMagick processes decoding 1254×1254 PNGs) REMOVED — dưới tải
-// full suite nó vượt timeout 5s không deterministic. Trách nhiệm
-// "asset khớp geometry đã đăng ký" thuộc về pipeline test
-// (dongFuBuildingPipeline.test.ts — nơi asset được tạo ra, timeout 180s).
-// Test 1+3 giữ lại: thuần fs read, vẫn chặn PNG sai kích thước/kênh.
+// ImageMagick processes decoding 1254x1254 PNGs) REMOVED - duoi tai
+// full suite no vuot timeout 5s khong deterministic. Trach nhiem
+// "asset khop geometry da dang ky" thuoc ve pipeline test
+// (dongFuBuildingPipeline.test.ts - noi asset duoc tao ra, timeout 180s).
+// Test 1+3 giu lai: thuan fs read, van chan PNG sai kich thuoc/kenh.
 
 describe('Dong Fu building V2 assets', () => {
   it('contains exactly twenty-four aligned RGBA technical PNGs', () => {

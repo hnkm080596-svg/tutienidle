@@ -1,11 +1,11 @@
-// combatTextFormat (ui-discoverability-refactor-plan.md §3.2) — tách từ
-// CombatScene.ts: formatDotDamageText là hàm thuần, test trực tiếp.
+// combatTextFormat (ui-discoverability-refactor-plan.md sec3.2) - tach tu
+// CombatScene.ts: formatDotDamageText la ham thuan, test truc tiep.
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 /**
- * Format số DoT hiển thị (hàm thuần, test trực tiếp) — tổng ≥1 làm tròn
- * qua formatter chung; 0<x<1 hiện 1 chữ số thập phân với sàn 0.1 nên
- * KHÔNG bao giờ render "-0.0" (fix 2026-08-26).
+ * Format so DoT hien thi (ham thuan, test truc tiep) - tong >=1 lam tron
+ * qua formatter chung; 0<x<1 hien 1 chu so thap phan voi san 0.1 nen
+ * KHONG bao gio render "-0.0" (fix 2026-08-26).
  */
 export function formatDotDamageText(value: number): string {
   const rounded = Math.round(value)

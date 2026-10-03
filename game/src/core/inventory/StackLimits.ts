@@ -1,3 +1,3 @@
-// Giới hạn số lượng tối đa 1 ô stack (material/pill/talisman/formation)
-// có thể chứa — xem MaterialBag/PillBag/TalismanBag/FormationBag.add().
+// Gioi han so luong toi da 1 o stack (material/pill/talisman/formation)
+// co the chua - xem MaterialBag/PillBag/TalismanBag/FormationBag.add().
 export const MAX_STACK_AMOUNT = 1000

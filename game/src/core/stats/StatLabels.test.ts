@@ -22,22 +22,22 @@ describe('formatStat', () => {
   })
 
   it('criticalDamage displays as % while staying a multiplier in formulas — bug 2026-09-01', () => {
-    // Base 1.5 (multiplier ×1.5 trong CombatSystem) → hiển thị "150%"
-    // (100% đòn thường + 50% bonus). Display-only: unit vẫn multiplier.
+    // Base 1.5 (multiplier x1.5 trong CombatSystem) -> hien thi "150%"
+    // (100% don thuong + 50% bonus). Display-only: unit van multiplier.
     expect(formatStat('criticalDamage', 1.5)).toBe('150%')
     expect(formatStat('criticalDamage', 1.05)).toBe('105%')
     expect(formatStat('criticalDamage', 2.0)).toBe('200%')
   })
 
   it('blockEffectiveness is a percent stat — displays %, not raw fraction', () => {
-    // Bug hệ thống: từng rơi vào DECIMAL_STAT_KEYS hiển thị "0.25".
+    // Bug he thong: tung roi vao DECIMAL_STAT_KEYS hien thi "0.25".
     expect(formatStat('blockEffectiveness', 0.25)).toBe('25.0%')
     expect(formatStat('blockEffectiveness', 0.75)).toBe('75.0%')
   })
 
   it('speed is a flat rating stat — displays via formatNumber, not 2-decimal', () => {
     // Turn-based conversion (2026-09-04): speed ~100 scale (HSR SPD),
-    // không còn multiplier 2-chữ-số như attackSpeed cũ.
+    // khong con multiplier 2-chu-so nhu attackSpeed cu.
     expect(formatStat('speed', 115)).toBe('115')
   })
 

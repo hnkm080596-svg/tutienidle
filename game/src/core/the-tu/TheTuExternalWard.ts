@@ -4,12 +4,12 @@ import type { BuffRegistry } from '../buff2/BuffRegistry'
 import type { MarkerPayload } from '../proc/MarkerCapabilities'
 
 /**
- * The Tu Reimagined (plan Task 11, review P1.1) — the externalWard pool
+ * The Tu Reimagined (plan Task 11, review P1.1) - the externalWard pool
  * is EXISTENCE-BOUND to the marker instance that granted it, keyed to
  * the ward's CURRENT sourceId: the pool survives only while a
  * grantsExternalWard-carrying marker instance from that same source
  * still lives in the holder's pool. This must never degrade to "any
- * marker with the same id" — a surviving source-A marker must not
+ * marker with the same id" - a surviving source-A marker must not
  * resurrect source-B's spent pool.
  *
  * Called at the stat-refresh seam (refreshParticipantStats runs after
@@ -17,7 +17,7 @@ import type { MarkerPayload } from '../proc/MarkerCapabilities'
  * expiry, remove, CC clear) so reconcile stays a single choke
  * point rather than a call site per mutation kind.
  *
- * buff2 M4 — reads canonical instance snapshots; the marker grant is a
+ * buff2 M4 - reads canonical instance snapshots; the marker grant is a
  * capability payload on the resolved definition (the `marker`
  * capability owner validates `grantsExternalWard`).
  */

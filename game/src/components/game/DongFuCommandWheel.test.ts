@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 //
-// Command wheel tests (plan "Test plan — Command wheel"):
-// - Future slot (available=false) KHÔNG render nút.
-// - Shortcut mở đúng leftPanelMode/standalonePanel và ĐÓNG wheel trước.
-// - Escape/backdrop click đóng wheel.
-// - Ring 4: Tàng Kinh Các TRÁI / Cài Đặt PHẢI đối xứng ngang cùng ring.
-// - Building shortcut đi qua building navigation controller.
+// Command wheel tests (plan "Test plan - Command wheel"):
+// - Future slot (available=false) KHONG render nut.
+// - Shortcut mo dung leftPanelMode/standalonePanel va DONG wheel truoc.
+// - Escape/backdrop click dong wheel.
+// - Ring 4: Tang Kinh Cac TRAI / Cai Dat PHAI doi xung ngang cung ring.
+// - Building shortcut di qua building navigation controller.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
@@ -38,8 +38,8 @@ function mountWheel(gameManager: GameManager) {
   document.body.appendChild(container)
 
   const RootStub = defineComponent({
-    // Khớp production GameRoot: component luôn mount và tự điều khiển
-    // visibility bằng ui.isCommandWheelOpen.
+    // Khop production GameRoot: component luon mount va tu dieu khien
+    // visibility bang ui.isCommandWheelOpen.
     render: () => h('div', [h(DongFuCommandWheel)]),
   })
 
@@ -148,7 +148,7 @@ describe('DongFuCommandWheel', () => {
 
     expect(mounted.slot('talisman_slot')).toBeNull()
 
-    // Slot thật vẫn render đủ.
+    // Slot that van render du.
     expect(mounted.slot('character')).not.toBeNull()
     expect(mounted.slot('scripture_pavilion')).not.toBeNull()
   })
@@ -212,8 +212,8 @@ describe('DongFuCommandWheel', () => {
     expect(mounted.ui.isCommandWheelOpen).toBe(false)
   })
 
-  // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED: slot render ngay (khác
-  // talisman_slot vẫn future) nhưng disabled trước Trúc Cơ, xem
+  // Ban Menh Phap Bao (2026-08-27) - SHIPPED: slot render ngay (khac
+  // talisman_slot van future) nhung disabled truoc Truc Co, xem
   // commandWheelCatalog.ts's phap_bao.disabledReason().
   // M-F-ARTIFACT-DEFER: the domain is deferred to Kim Dan+, which sits
   // outside the release window - the slot reads disabled for EVERY

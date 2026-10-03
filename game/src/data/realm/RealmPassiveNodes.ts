@@ -16,7 +16,7 @@ const LABELS: Record<RealmTierId, string> = {
 export interface RealmPassiveNode {
   realmId: RealmTierId
   label: string
-  /** Tier đã bước vào sau khi thắng lôi kiếp để thắp sáng node. */
+  /** Tier da buoc vao sau khi thang loi kiep de thap sang node. */
   unlockTier: number
   comingSoon: boolean
 }
@@ -33,7 +33,7 @@ export const REALM_PASSIVE_NODES: readonly RealmPassiveNode[] = REALM_TIERS.slic
     return {
       realmId: targetId,
       label: LABELS[targetId],
-      // Node đầu là phần thưởng Phàm → Luyện Khí; node hai là Luyện Khí → Trúc Cơ.
+      // Node dau la phan thuong Pham -> Luyen Khi; node hai la Luyen Khi -> Truc Co.
       unlockTier: index + 2,
       comingSoon: isBeyondReleaseCeiling(targetId),
     }

@@ -14,14 +14,14 @@ import { ARTIFACT_UNLOCK_REALM_ID } from '../artifact/ArtifactDomain'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { MAX_THE } from '../combat/CombatTypes'
 
-// Cultivation Path Framework (spec 2026-09-16, M4) — the Phap Tu path
+// Cultivation Path Framework (spec 2026-09-16, M4) - the Phap Tu path
 // module: the two way definitions + the path-domain machinery they own.
 //
-//   spell_pathway — ordinary Phap Tu (kit dai_ngu_hanh_chan_quyet): the
+//   spell_pathway - ordinary Phap Tu (kit dai_ngu_hanh_chan_quyet): the
 //     element/The machinery. In-way state lives on
 //     player.spellPath { element } (SpellPathState stays the single
 //     authority - the atomic commit is unchanged).
-//   ngo_dao — Phap Tu An (kit ngo_dao_chan_quyet): hidden way offered
+//   ngo_dao - Phap Tu An (kit ngo_dao_chan_quyet): hidden way offered
 //     only at the Initiation Ritual when linh_bao is cast-Lv3. Fixed
 //     three-skill kit (HIDDEN_SPELL_REQUIRED_SKILLS), NO element/The
 //     machinery (spec: hidden basics never gain The).
@@ -38,7 +38,7 @@ import { MAX_THE } from '../combat/CombatTypes'
 // runtime cycle.
 
 // D12 (stat-system-reimagined spec section 5): Linh Can (attunement)
-// feeds MP through the spell domain gate — the path's own conversion
+// feeds MP through the spell domain gate - the path's own conversion
 // channel, not the generic attribute derivation (MP is a Phap Tu
 // resource, D9). Ratios are playtest-tunable first passes, same
 // convention as the ATTRIBUTE_* constants in StatCalculator.ts.
@@ -50,7 +50,7 @@ export const SPELL_ATTUNEMENT_MANA_REGEN_PER_POINT = 0.05
  * stat facet (assembly-time emission, id prefix 'spell:attunement')
  * and the 'spell' domain deltaDeriver registered in
  * CultivationPathSystem (mid-battle deltas, prefix
- * 'spell:attunement_delta') — one emitter, two channels (INV-10).
+ * 'spell:attunement_delta') - one emitter, two channels (INV-10).
  */
 export function spellPathAttunementMpModifiers(attunement: number, idPrefix: string): StatModifier[] {
   return [
@@ -73,7 +73,7 @@ export function spellPathAttunementMpModifiers(attunement: number, idPrefix: str
   ]
 }
 
-// The shared way stat facet — identical for both Phap Tu ways (spec §6:
+// The shared way stat facet - identical for both Phap Tu ways (spec sec6:
 // the hidden way rides the same 'spell' stat channel). Assembly-time
 // emission reads the resolved attribute totals and emits the gated MP
 // modifiers BEFORE calculateStats runs; collectActiveWayStatModifiers
@@ -82,7 +82,7 @@ const SPELL_WAY_STATS: PathWayStatFacet = {
   domains: ['spell'],
   collectModifiers: (_player, totals) =>
     spellPathAttunementMpModifiers(totals.attunement, 'spell:attunement'),
-  // M8 — the mid-battle attunement-delta channel is declared here too:
+  // M8 - the mid-battle attunement-delta channel is declared here too:
   // the deriver sees only deltas, never the base, so a stacked
   // attunement buff cannot double-count the assembly-time emission
   // (INV-10). The framework registers it at catalog load.
@@ -95,7 +95,7 @@ const SPELL_WAY_STATS: PathWayStatFacet = {
 }
 
 /**
- * Structural read shape for the way predicates — PlayerData and the
+ * Structural read shape for the way predicates - PlayerData and the
  * presentation-side player slices (e.g. TheBarPlayerState) both satisfy
  * it; the fields stay nullable because slices keep the persisted
  * `| null` convention.
@@ -106,7 +106,7 @@ export interface SpellPathWayRead {
 }
 
 /**
- * spell_pathway membership — the gate for ALL element/The machinery
+ * spell_pathway membership - the gate for ALL element/The machinery
  * (the R6 audit target: a bare `cultivationPath === 'spell'` check
  * would leak element machinery to hidden_spell_pathway players once the M7 collapse
  * folds phap_tu_an into the base path id).
@@ -114,7 +114,7 @@ export interface SpellPathWayRead {
  * Reads the RAW fields, same contract as NodeSystem.nodeWayApplies:
  * cultivationWay is authoritative once the ritual writes it. A
  * legacy-shaped player (cultivationPath only, no way) is NOT spell_pathway
- * — the gate fails closed so element machinery never runs for a state
+ * - the gate fails closed so element machinery never runs for a state
  * the path authority did not commit.
  */
 export function isSpellPathway(player: SpellPathWayRead | null | undefined): boolean {
@@ -134,9 +134,9 @@ export function resolveMaxThe(player: SpellPathWayRead | null | undefined): numb
 }
 
 /**
- * hidden_spell_pathway membership — the gate for the hidden way's fixed-kit
+ * hidden_spell_pathway membership - the gate for the hidden way's fixed-kit
  * machinery (applyAnKitToBasic/Special, the kit-learned assertion, the
- * combat emblem). M7 — strict base-pair predicate: only the persisted
+ * combat emblem). M7 - strict base-pair predicate: only the persisted
  * pair ('spell', 'hidden_spell_pathway') matches; the legacy 'phap_tu_an' path id
  * is gone from the union and can never satisfy this.
  */
@@ -205,7 +205,7 @@ export function validateSpellPathPersistedState(
 }
 
 // ---------------------------------------------------------------------------
-// Way definitions — consumed by CULTIVATION_PATH_MODULES.spell.ways in
+// Way definitions - consumed by CULTIVATION_PATH_MODULES.spell.ways in
 // CultivationPathKit (the catalog is the single aggregation point).
 // ---------------------------------------------------------------------------
 
@@ -255,7 +255,7 @@ export const SPELL_PATHWAY: PathWayDefinition = {
     [ARTIFACT_UNLOCK_REALM_ID]: {
       artifactId: 'ngu_hanh_chau',
     },
-    // Three-path design (2026-09-25, sec.4-b + ruling #19) — Truc Co
+    // Three-path design (2026-09-25, sec.4-b + ruling #19) - Truc Co
     // breakthrough: mastery per element (the element gate activates only
     // the committed element's grant). Phap Tu Reimagined: the legacy
     // the_thuc_tinh The-pool-deepening grant is retired (spec D1 cap
@@ -292,12 +292,12 @@ export const SPELL_PATHWAY: PathWayDefinition = {
   },
 }
 
-// Ngo Dao required kit (review round-4, MEDIUM) — the ritual grants
+// Ngo Dao required kit (review round-4, MEDIUM) - the ritual grants
 // exactly these three skills atomically (learn-only): two actives +
 // the dao passive declared on the way's passiveSkillIds (the skillIds
 // list cannot express a passive member). Battle construction asserts
 // the full set is learned; a partial kit is corrupt progression state
-// and must fail loudly, never silently drop a role. P1-M2 — the kit's
+// and must fail loudly, never silently drop a role. P1-M2 - the kit's
 // declaration of record is the way's ownedContent.skillIds below;
 // HIDDEN_SPELL_REQUIRED_SKILLS derives FROM it (single source) and is
 // re-exported from CultivationPathKit so existing consumers keep their
@@ -311,9 +311,9 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   pathId: 'spell',
   name: 'Pháp Tu Ẩn — Ngộ Đạo Chân Quyết',
   techniqueId: 'dao_insight_art',
-  // Former phap_tu_an kit — hidden way. Owns the same 'spell' stat
+  // Former phap_tu_an kit - hidden way. Owns the same 'spell' stat
   // domain (the shared SPELL_WAY_STATS facet) so its MP-shield line
-  // passes the domain gate. M9 — the two actives ride the generic
+  // passes the domain gate. M9 - the two actives ride the generic
   // skillIds channel (learn-only; the path runtime resolves basic/
   // special roles from the kit, P7-M4); the kit's third member is the
   // dao passive declared on passiveSkillIds (P7-M2 - replaces the
@@ -322,9 +322,9 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   skillIds: [HIDDEN_SPELL_BASIC_ID, HIDDEN_SPELL_SPECIAL_ID],
   passiveSkillIds: [HIDDEN_SPELL_PASSIVE_ID],
   // P7-M2 - canonical realm-entry passive ladder.
-  // Three-path design (2026-09-25, sec.4-b) — hidden way takes the same
+  // Three-path design (2026-09-25, sec.4-b) - hidden way takes the same
   // grant kinds at level 2; the_thuc_tinh is omitted because ngo_dao
-  // owns no The pool (M4/R6 — a granted gain would be a dead write).
+  // owns no The pool (M4/R6 - a granted gain would be a dead write).
   realmRewards: composeRealmRewards({
     foundation_establishment: {
       grantedNodeLevels: {
@@ -379,7 +379,7 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   },
   offerGate: { requiresSkillCastLevel: { skillId: 'linh_bao', level: 3 } },
   // Sealed hidden-path card at the ritual (named way + permanent-choice
-  // warning, no plain button) — the panel reads this flag, never the id.
+  // warning, no plain button) - the panel reads this flag, never the id.
   sealedOffer: true,
 }
 

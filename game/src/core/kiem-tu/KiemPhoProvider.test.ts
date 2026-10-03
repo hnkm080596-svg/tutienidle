@@ -7,7 +7,7 @@ import type { OrbId } from './KiemTuState'
 import type { KiemPhoComboModifier } from './KiemPhoSystem'
 import type { DynamicBasicCastContext } from '../battle/turn/TurnSkillAction'
 
-// Kiem Tu Reimagined Task 6 — hien provider contract: preset cursor,
+// Kiem Tu Reimagined Task 6 - hien provider contract: preset cursor,
 // manual pick without cursor advance, combo fire through
 // onCastResolved, battle-boundary reset (auto-repeat safety).
 
@@ -61,7 +61,7 @@ describe('KiemPhoProvider', () => {
     expect(extras[0]!.progressionOwnerId).toBe('orb_dam')
     expect(extras[0]!.damage?.levelScaling).toBe(0.05)
 
-    // Log cleared — a 4th cast starts fresh.
+    // Log cleared - a 4th cast starts fresh.
     expect(provider.onCastResolved!(castCtx('orb_dam'))).toEqual([])
   })
 
@@ -149,7 +149,7 @@ describe('KiemPhoProvider', () => {
   it('manual picks land in the log and can complete a combo', () => {
     const provider = buildKiemPhoProvider(hienPlayer(['orb_chem']), [])
 
-    // Two auto casts of orb_dam would not be in this preset — simulate
+    // Two auto casts of orb_dam would not be in this preset - simulate
     // two manual orb_dam picks resolving, then a third.
     provider.resolveManualPick!('orb_dam')
     provider.onCastResolved!(castCtx('orb_dam'))

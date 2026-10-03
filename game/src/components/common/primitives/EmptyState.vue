@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Primitive khối trống — thay ~13 div empty tự viết ("Chưa có...",
-// "Chọn một... để xem"). size sm/md/lg điều padding; framed thêm viền
+// Primitive khoi trong - thay ~13 div empty tu viet ("Chua co...",
+// "Chon mot... de xem"). size sm/md/lg dieu padding; framed them vien
 // dashed (EquipmentHall empty-state).
 withDefaults(defineProps<{
   size?: 'sm' | 'md' | 'lg'

@@ -1,7 +1,7 @@
 ﻿// @vitest-environment jsdom
-// Task 14-UI (rework P4) — DecomposeTab: settings UI (grade/age
+// Task 14-UI (rework P4) - DecomposeTab: settings UI (grade/age
 // select + worker slider) + output preview, mount qua createApp+provide
-// (project pattern, KHÔNG @vue/test-utils).
+// (project pattern, KHONG @vue/test-utils).
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
@@ -178,7 +178,7 @@ describe('DecomposeTab — settings UI (Task 14-UI)', () => {
     slider.dispatchEvent(new Event('input'))
     await nextTick()
 
-    // Output estimate text: base 1 × Hoang 1 × 2 workers = 2/lượt.
+    // Output estimate text: base 1 x Hoang 1 x 2 workers = 2/luot.
     expect(tab.text()).toContain('2')
 
     tab.unmount()

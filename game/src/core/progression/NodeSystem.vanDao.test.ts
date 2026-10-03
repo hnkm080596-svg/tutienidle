@@ -9,10 +9,10 @@ import { NodeRegistry } from './NodeRegistry'
 import { createDefaultPlayer } from '../player/Player'
 import type { ProgressionNode } from './ProgressionNode'
 
-// Talent v4 M2 — Van Dao (spec §4.3 row 18): at each purchase/upgrade a
+// Talent v4 M2 - Van Dao (spec sec4.3 row 18): at each purchase/upgrade a
 // 50% roll may waive the insight cost; the waived amount is recorded in
 // player.nodeFreePurchaseRecord so devResetBranch refunds only what was
-// ACTUALLY paid (record survives talent removal — no refund exploit).
+// ACTUALLY paid (record survives talent removal - no refund exploit).
 function minorNode(overrides: Partial<ProgressionNode> = {}): ProgressionNode {
   return {
     id: 'test_minor',
@@ -48,7 +48,7 @@ describe('NodeSystem — Van Dao free-purchase roll (M2)', () => {
 
     expect(purchaseNode(player, minorNode())).toBe(true)
 
-    expect(player.skillInsight).toBe(5) // waived — khong tru
+    expect(player.skillInsight).toBe(5) // waived - khong tru
     expect(player.nodeFreePurchaseRecord['test_minor']).toBe(5)
     expect(getNodeLevel(player, 'test_minor')).toBe(1)
   })
@@ -95,7 +95,7 @@ describe('NodeSystem — Van Dao free-purchase roll (M2)', () => {
     expect(player.skillInsight).toBe(5)
     expect(player.nodeFreePurchaseRecord).toEqual({})
     expect(randomSpy).not.toHaveBeenCalled()
-    // canPurchaseNode still gates — affordability unchanged.
+    // canPurchaseNode still gates - affordability unchanged.
   })
 
   it('devResetBranch refund = tien THUC tra (tru waived amount da ghi)', () => {
@@ -144,7 +144,7 @@ describe('NodeSystem — Van Dao free-purchase roll (M2)', () => {
     registry.register(node)
     const refunded = devResetBranch(player, registry, 'test_branch')
 
-    expect(refunded).toBe(0) // node was free — nothing paid, nothing refunded
+    expect(refunded).toBe(0) // node was free - nothing paid, nothing refunded
     expect(player.skillInsight).toBe(20)
   })
 })

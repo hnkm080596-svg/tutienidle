@@ -156,7 +156,7 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
     gameManager.catalogOps.registerAffixes(affixes)
 
     const basePlayer = createDefaultPlayer()
-    // ARCH-002 (M7): startStage resolves stats internally — patch the RAW
+    // ARCH-002 (M7): startStage resolves stats internally - patch the RAW
     // baseStats so the resolved snapshot keeps the guaranteed-kill might.
     player = {
       ...basePlayer,

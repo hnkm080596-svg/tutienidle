@@ -10,24 +10,24 @@ export interface Pill {
 
   description?: string
 
-  // Path ảnh minh hoạ — khai NGAY TRÊN data item (2026-08-15), xem
-  // ghi chú tương tự trong core/technique/Technique.ts.
+  // Path anh minh hoa - khai NGAY TREN data item (2026-08-15), xem
+  // ghi chu tuong tu trong core/technique/Technique.ts.
   icon?: string
 
   type: PillType
 
-  // Naming-principles pass (2026-08-14) — thay `grade: number` cũ,
-  // dùng CHUNG thang Ngũ Phẩm với Equipment/Talisman/Formation (xem
-  // core/item/Pham.ts) — Phẩm ở đây là driver THẬT (không phải nhãn
-  // suy ra), quyết định trực tiếp độ mạnh effect. Tên ghép động
-  // (2026-08-15) — `name` bên trên KHÔNG chứa tiền tố Phẩm, ghép động
-  // lúc hiển thị từ field này (xem composeItemGradeNameSegments()).
+  // Naming-principles pass (2026-08-14) - thay `grade: number` cu,
+  // dung CHUNG thang Ngu Pham voi Equipment/Talisman/Formation (xem
+  // core/item/Pham.ts) - Pham o day la driver THAT (khong phai nhan
+  // suy ra), quyet dinh truc tiep do manh effect. Ten ghep dong
+  // (2026-08-15) - `name` ben tren KHONG chua tien to Pham, ghep dong
+  // luc hien thi tu field nay (xem composeItemGradeNameSegments()).
   grade: ItemGrade
 
-  // Nghề Đan mới (2026-08-24, resource-professions-rework §5.1): realm
-  // + phẩm nghề theo cảnh giới. Pill CÓ realmId bị gate ĐÚNG cảnh giới
-  // khi dùng (wrong_realm — plan §5.2); legacy pill không có field này
-  // giữ hành vi cũ.
+  // Nghe Dan moi (2026-08-24, resource-professions-rework sec5.1): realm
+  // + pham nghe theo canh gioi. Pill CO realmId bi gate DUNG canh gioi
+  // khi dung (wrong_realm - plan sec5.2); legacy pill khong co field nay
+  // giu hanh vi cu.
   realmId?: string
 
   // M-F-CEILING - realm this pill's breakthrough prepares for (e.g. Truc
@@ -42,7 +42,7 @@ export interface Pill {
   effects: PillEffect[]
 
   /**
-   * M10 (ARCH-008) — retired family (Hoi Xuan Dan): the item still resolves
+   * M10 (ARCH-008) - retired family (Hoi Xuan Dan): the item still resolves
    * for bag display / old saves, but consumption is rejected explicitly
    * (usePillDetailed -> 'retired'). Never silently inert.
    */

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
 
-// Task 17 (rework P5) — unequipAllEquipment() tháo TOÀN BỘ trang bị đang
-// mặc (để tránh kẹt đồ lệch phẩm sau breakthrough, xem Task 16 gate) —
-// slot state (enhanceLevel/enhanceFailStreak) PHẢI giữ nguyên, chỉ đổi
+// Task 17 (rework P5) - unequipAllEquipment() thao TOAN BO trang bi dang
+// mac (de tranh ket do lech pham sau breakthrough, xem Task 16 gate) -
+// slot state (enhanceLevel/enhanceFailStreak) PHAI giu nguyen, chi doi
 // equipped flag + modifier sync.
 describe('GameManager — unequipAllEquipment() (rework P5, Task 17)', () => {
   it('mọi instance đang equipped → equipped=false sau khi gọi', () => {
@@ -32,8 +32,8 @@ describe('GameManager — unequipAllEquipment() (rework P5, Task 17)', () => {
     const weapon = makeInstance({ instanceId: 'unequip-all-mod-weapon', slot: 'weapon', equipped: true })
     manager.equipmentBag.add(weapon)
 
-    // equip() thật để modifierSystem nội bộ của EquipmentSystem có dữ liệu
-    // (add() ở trên chỉ nạp instance vào bag, KHÔNG tự apply modifier).
+    // equip() that de modifierSystem noi bo cua EquipmentSystem co du lieu
+    // (add() o tren chi nap instance vao bag, KHONG tu apply modifier).
     manager.equipmentSystem.refreshModifiers(
       manager.equipmentBag,
       manager.equipmentSlotManager,

@@ -32,9 +32,9 @@ const { unequip } = useEquipmentActions()
 // instance; the unequip mutation below stays the slot's behavior.
 const emit = defineEmits<{ select: [instanceId: string] }>()
 
-// Lưới 3 cột × 2 hàng (thay lục giác quanh sprite cũ — khối Equipment
-// giờ chỉ chiếm 30% chiều cao panel, cố định cho Hành Trang/Tứ Nghệ,
-// xem LeftPanel.vue) — không còn sprite nhân vật ở giữa.
+// Luoi 3 cot x 2 hang (thay luc giac quanh sprite cu - khoi Equipment
+// gio chi chiem 30% chieu cao panel, co dinh cho Hanh Trang/Tu Nghe,
+// xem LeftPanel.vue) - khong con sprite nhan vat o giua.
 // Slot labels go through i18n (panels.bag.paperdoll.slots.*) - P16.
 const SLOT_LAYOUT: { slot: EquipmentSlot }[] = [
   { slot: 'helmet' },
@@ -57,9 +57,9 @@ const equippedBySlot = computed<Record<EquipmentSlot, EquipmentInstance | undefi
   return result
 })
 
-// MASTER SPEC Mục XVI (Phase 9) — enhanceLevel giờ thuộc SLOT, hiện
-// được NGAY CẢ KHI slot đang trống (đổi/tháo trang bị không mất cấp
-// đã cường hóa) — minh chứng trực quan cho tách Item/Slot.
+// MASTER SPEC Muc XVI (Phase 9) - enhanceLevel gio thuoc SLOT, hien
+// duoc NGAY CA KHI slot dang trong (doi/thao trang bi khong mat cap
+// da cuong hoa) - minh chung truc quan cho tach Item/Slot.
 const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
   stateVersion.value
 
@@ -72,10 +72,10 @@ const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
   return result
 })
 
-// Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId lạ
-// (data edit/save lệch) từng chết cả khối trang bị qua ErrorBoundary;
-// getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts) +
-// fallback hiển thị itemId thô (pattern Task 13 EquipmentBagSection).
+// Audit fix 2026-08-31 - equipmentRegistry.get() THROW voi itemId la
+// (data edit/save lech) tung chet ca khoi trang bi qua ErrorBoundary;
+// getEquipmentTemplate() tra an toan tra undefined (GameManager.ts) +
+// fallback hien thi itemId tho (pattern Task 13 EquipmentBagSection).
 function itemName(instance: EquipmentInstance): string {
   return gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)?.name ?? instance.itemId
 }
@@ -94,10 +94,10 @@ function itemIcon(instance: EquipmentInstance): string | undefined {
   return instance.icon ?? gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)?.icon
 }
 
-// Tên ghép động (2026-08-15) — Phẩm · Set (nếu có) · Địa Giới+Tên gốc,
-// xem EquipmentNaming.ts. Chỉ slot ĐANG mặc mới có (đồng nhất với
-// tooltipBySlot bên dưới) — slot trống fallback về `label` mặc định
-// của SlotView.vue.
+// Ten ghep dong (2026-08-15) - Pham * Set (neu co) * Dia Gioi+Ten goc,
+// xem EquipmentNaming.ts. Chi slot DANG mac moi co (dong nhat voi
+// tooltipBySlot ben duoi) - slot trong fallback ve `label` mac dinh
+// cua SlotView.vue.
 const nameSegmentsBySlot = computed<Record<EquipmentSlot, NameSegment[] | undefined>>(() => {
   stateVersion.value
 
@@ -106,8 +106,8 @@ const nameSegmentsBySlot = computed<Record<EquipmentSlot, NameSegment[] | undefi
   for (const entry of SLOT_LAYOUT) {
     const instance = equippedBySlot.value[entry.slot]
 
-    // Audit fix 2026-08-31 — registry miss → hiển thị itemId thô thay vì
-    // chết panel (composeEquipmentNameSegments đòi template thật).
+    // Audit fix 2026-08-31 - registry miss -> hien thi itemId tho thay vi
+    // chet panel (composeEquipmentNameSegments doi template that).
     const template = instance ? gameManager.equipmentOps.getEquipmentTemplate(instance.itemId) : undefined
 
     result[entry.slot] = instance
@@ -120,9 +120,9 @@ const nameSegmentsBySlot = computed<Record<EquipmentSlot, NameSegment[] | undefi
   return result
 })
 
-// Tooltip có cấu trúc (2026-08-15) — chỉ slot ĐANG mặc mới có, slot
-// trống fallback về title/description đơn giản mặc định của
-// SlotView.vue (tooltip undefined = dùng lại hành vi cũ).
+// Tooltip co cau truc (2026-08-15) - chi slot DANG mac moi co, slot
+// trong fallback ve title/description don gian mac dinh cua
+// SlotView.vue (tooltip undefined = dung lai hanh vi cu).
 const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | undefined>>(() => {
   stateVersion.value
 
@@ -131,8 +131,8 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
   for (const entry of SLOT_LAYOUT) {
     const instance = equippedBySlot.value[entry.slot]
 
-    // Audit fix 2026-08-31 — registry miss → không tooltip (SlotView
-    // tooltip optional), slot vẫn hiển thị, không chết panel.
+    // Audit fix 2026-08-31 - registry miss -> khong tooltip (SlotView
+    // tooltip optional), slot van hien thi, khong chet panel.
     const template = instance ? gameManager.equipmentOps.getEquipmentTemplate(instance.itemId) : undefined
 
     // G1 (Mission G Task 37) - the tooltip contract requires the
@@ -161,10 +161,10 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
   return result
 })
 
-// Slot Revamp (mục 17.7 "Equipment paperdoll: empty/filled, enhance,
-// formation/talisman marker") — Quality/Rarity rank + badge Cường Hóa
-// giờ do SlotView tự vẽ CSS, thay `.paperdoll__enhance-badge` absolute-
-// position bên ngoài slot cũ.
+// Slot Revamp (muc 17.7 "Equipment paperdoll: empty/filled, enhance,
+// formation/talisman marker") - Quality/Rarity rank + badge Cuong Hoa
+// gio do SlotView tu ve CSS, thay `.paperdoll__enhance-badge` absolute-
+// position ben ngoai slot cu.
 const qualityRankBySlot = computed<Record<EquipmentSlot, number | undefined>>(() => {
   const result = {} as Record<EquipmentSlot, number | undefined>
 

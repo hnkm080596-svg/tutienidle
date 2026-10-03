@@ -1,7 +1,7 @@
 export interface GameClockState {
   /**
-   * Timestamp thực tế lần cuối
-   * game được cập nhật / lưu trạng thái.
+   * Timestamp thuc te lan cuoi
+   * game duoc cap nhat / luu trang thai.
    *
    * Unix timestamp milliseconds.
    */
@@ -10,33 +10,33 @@ export interface GameClockState {
 
 export interface GameClockUpdate {
   /**
-   * Thời gian hiện tại.
+   * Thoi gian hien tai.
    */
   currentTime: number
 
   /**
-   * Thời gian đã trôi qua kể từ lần update trước.
+   * Thoi gian da troi qua ke tu lan update truoc.
    *
-   * Đơn vị: giây.
+   * Don vi: giay.
    */
   deltaSeconds: number
 }
 
 export interface OfflineTimeResult {
   /**
-   * Timestamp lúc offline bắt đầu.
+   * Timestamp luc offline bat dau.
    */
   lastOnlineAt: number
 
   /**
-   * Timestamp hiện tại.
+   * Timestamp hien tai.
    */
   currentTime: number
 
   /**
-   * Tổng thời gian offline.
+   * Tong thoi gian offline.
    *
-   * Đơn vị: giây.
+   * Don vi: giay.
    */
   offlineSeconds: number
 }
@@ -44,15 +44,15 @@ export interface OfflineTimeResult {
 export const DEFAULT_MAX_OFFLINE_SECONDS = 24 * 60 * 60
 
 /**
- * Tính thời gian offline (đã clamp theo maxOfflineSeconds).
+ * Tinh thoi gian offline (da clamp theo maxOfflineSeconds).
  *
- * Đây là NGUỒN DUY NHẤT cho việc tính offline-seconds trong
- * toàn bộ game. GameClock (instance) và bất kỳ nơi nào khác
- * cần tính offline (ví dụ: store lúc load save) đều gọi hàm
- * thuần này, để tránh 2 nơi tự tính elapsed time theo 2 kiểu
- * khác nhau và bị lệch nhau.
+ * Day la NGUON DUY NHAT cho viec tinh offline-seconds trong
+ * toan bo game. GameClock (instance) va bat ky noi nao khac
+ * can tinh offline (vi du: store luc load save) deu goi ham
+ * thuan nay, de tranh 2 noi tu tinh elapsed time theo 2 kieu
+ * khac nhau va bi lech nhau.
  *
- * Hàm thuần, không cần khởi tạo GameClock instance.
+ * Ham thuan, khong can khoi tao GameClock instance.
  */
 export function calculateOfflineTime(
   state: GameClockState,
@@ -84,10 +84,10 @@ export class GameClock {
   private running = false
 
   /**
-   * Thời gian offline tối đa được tính.
+   * Thoi gian offline toi da duoc tinh.
    *
-   * Ví dụ:
-   * 24 giờ = 86400 giây
+   * Vi du:
+   * 24 gio = 86400 giay
    */
   private maxOfflineSeconds: number
 
@@ -102,7 +102,7 @@ export class GameClock {
   }
 
   /**
-   * Bắt đầu GameClock.
+   * Bat dau GameClock.
    */
   start(timestamp = Date.now()): void {
     this.currentTime = timestamp
@@ -113,29 +113,29 @@ export class GameClock {
   }
 
   /**
-   * Dừng GameClock.
+   * Dung GameClock.
    */
   stop(): void {
     this.running = false
   }
 
   /**
-   * GameClock có đang chạy không.
+   * GameClock co dang chay khong.
    */
   isRunning(): boolean {
     return this.running
   }
 
   /**
-   * Cập nhật thời gian game.
+   * Cap nhat thoi gian game.
    *
-   * Hàm này nên được gọi bởi game loop.
+   * Ham nay nen duoc goi boi game loop.
    *
-   * Ví dụ:
+   * Vi du:
    *
    * clock.update()
    *
-   * hoặc:
+   * hoac:
    *
    * const result = clock.update()
    */
@@ -164,21 +164,21 @@ export class GameClock {
   }
 
   /**
-   * Timestamp hiện tại.
+   * Timestamp hien tai.
    */
   now(): number {
     return this.currentTime
   }
 
   /**
-   * Thời gian hiện tại tính bằng giây.
+   * Thoi gian hien tai tinh bang giay.
    */
   nowSeconds(): number {
     return this.currentTime / 1000
   }
 
   /**
-   * Tạo state để SaveSystem lưu.
+   * Tao state de SaveSystem luu.
    */
   createState(): GameClockState {
     return {
@@ -187,17 +187,17 @@ export class GameClock {
   }
 
   /**
-   * Tính thời gian đã offline từ một GameClockState đã lưu.
+   * Tinh thoi gian da offline tu mot GameClockState da luu.
    *
-   * Hàm này KHÔNG thay đổi clock. Ủy quyền cho hàm thuần
-   * calculateOfflineTime() để đảm bảo chỉ có một chỗ chứa logic này.
+   * Ham nay KHONG thay doi clock. Uy quyen cho ham thuan
+   * calculateOfflineTime() de dam bao chi co mot cho chua logic nay.
    */
   calculateOfflineTime(state: GameClockState, timestamp = Date.now()): OfflineTimeResult {
     return calculateOfflineTime(state, timestamp, this.maxOfflineSeconds)
   }
 
   /**
-   * Đặt lại clock sau khi load game.
+   * Dat lai clock sau khi load game.
    */
   restore(timestamp: number): void {
     this.currentTime = timestamp
@@ -206,14 +206,14 @@ export class GameClock {
   }
 
   /**
-   * Thay đổi giới hạn offline.
+   * Thay doi gioi han offline.
    */
   setMaxOfflineSeconds(seconds: number): void {
     this.maxOfflineSeconds = Math.max(0, seconds)
   }
 
   /**
-   * Lấy giới hạn offline hiện tại.
+   * Lay gioi han offline hien tai.
    */
   getMaxOfflineSeconds(): number {
     return this.maxOfflineSeconds

@@ -27,8 +27,8 @@ const BACKUP_KEY = resolveBackupKey()
 const SAVE_REVISION_KEY = resolveRevisionKey()
 const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY = resolveImportHandoffKey()
 
-// vitest.config chạy environment: 'node' — không có localStorage thật,
-// polyfill in-memory tối thiểu đủ cho SaveSystem (chỉ dùng getItem/
+// vitest.config chay environment: 'node' - khong co localStorage that,
+// polyfill in-memory toi thieu du cho SaveSystem (chi dung getItem/
 // setItem/removeItem).
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()
@@ -63,9 +63,9 @@ beforeEach(() => {
   setSaveAccountId(null)
 })
 
-// Fixture hợp lệ đầy đủ theo shape GameSave hiện hành — từ
-// save-shape-validation-plan.md, loadGame() giờ validate shape nên
-// fixture tối thiểu { version, player: { name } } không còn đủ.
+// Fixture hop le day du theo shape GameSave hien hanh - tu
+// save-shape-validation-plan.md, loadGame() gio validate shape nen
+// fixture toi thieu { version, player: { name } } khong con du.
 function validGameSave(name?: string): GameSave {
   const player = createDefaultPlayer()
 
@@ -321,9 +321,9 @@ describe('backup / restore', () => {
     expect(localStorage.getItem(BACKUP_KEY)).toBe(VALID_RAW)
   })
 
-  // Fix (2026-08-24) — xoá save phải xoá cả revision key, nếu không
-  // revision tồn dư khiến lần CAS đầu của nhân vật mới fail ("Save đã
-  // thay đổi ở một phiên khác.").
+  // Fix (2026-08-24) - xoa save phai xoa ca revision key, neu khong
+  // revision ton du khien lan CAS dau cua nhan vat moi fail ("Save da
+  // thay doi o mot phien khac.").
   it('deleteSave() xoá cả SAVE_REVISION_KEY để revision không tồn dư', () => {
     localStorage.setItem(SAVE_KEY, VALID_RAW)
     localStorage.setItem(SAVE_REVISION_KEY, '12')
@@ -399,7 +399,7 @@ describe('importSaveRaw', () => {
 
     expect(importSaveRaw(brokenRaw)).toBe(false)
 
-    // Save tốt ban đầu KHÔNG bị ghi đè.
+    // Save tot ban dau KHONG bi ghi de.
     expect(getRawSave()).toBe(VALID_RAW)
     expect(localStorage.getItem(BACKUP_KEY)).toBeNull()
   })

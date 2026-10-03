@@ -22,7 +22,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
 
     const result = calculateStats(base, [makeModifier({ flat: 15 })])
 
-    // attribute-derived: strength 1 × 0.6 = +0.6 might ở pass 2.
+    // attribute-derived: strength 1 x 0.6 = +0.6 might o pass 2.
     expect(result.might).toBeCloseTo(25.6, 5)
   })
 
@@ -34,7 +34,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
       makeModifier({ percent: 0.2 }),
     ])
 
-    // (10 + 0.6) × (1 + 0.2 + 0.2) = 10.6 × 1.4 = 14.84.
+    // (10 + 0.6) x (1 + 0.2 + 0.2) = 10.6 x 1.4 = 14.84.
     expect(result.might).toBeCloseTo(14.84, 5)
   })
 
@@ -46,7 +46,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
       makeModifier({ multiplier: 1.2 }),
     ])
 
-    // (10 + 0.6) × 1.2 × 1.2 = 15.264.
+    // (10 + 0.6) x 1.2 x 1.2 = 15.264.
     expect(result.might).toBeCloseTo(15.264, 5)
   })
 
@@ -59,7 +59,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
       makeModifier({ multiplier: 2 }),
     ])
 
-    // (10 + 10 + 0.6) × (1 + 0.5) × 2 = 20.6 × 1.5 × 2 = 61.8.
+    // (10 + 10 + 0.6) x (1 + 0.5) x 2 = 20.6 x 1.5 x 2 = 61.8.
     expect(result.might).toBeCloseTo(61.8, 5)
   })
 
@@ -68,11 +68,11 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
 
     const result = calculateStats(base, [
       makeModifier({ percent: 0.2, tag: 'fire' }),
-      makeModifier({ percent: 0.2 }), // untagged → pool chung
+      makeModifier({ percent: 0.2 }), // untagged -> pool chung
     ])
 
-    // (10 + 0.6) × (1 + 0.2) × (1 + 0.2) = 10.6 × 1.2 × 1.2 = 15.264,
-    // KHÔNG phải 10.6 × 1.4.
+    // (10 + 0.6) x (1 + 0.2) x (1 + 0.2) = 10.6 x 1.2 x 1.2 = 15.264,
+    // KHONG phai 10.6 x 1.4.
     expect(result.might).toBeCloseTo(15.264, 5)
   })
 
@@ -84,7 +84,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
       makeModifier({ percent: 0.1, stacks: 3 }),
     ])
 
-    // (10 + 0.6 + 15) × (1 + 0.3) = 25.6 × 1.3 = 33.28.
+    // (10 + 0.6 + 15) x (1 + 0.3) = 25.6 x 1.3 = 33.28.
     expect(result.might).toBeCloseTo(33.28, 5)
   })
 
@@ -93,9 +93,9 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
 
     const result = calculateStats(base, [makeModifier({ stat: 'vitality', flat: 10 })])
 
-    // pass1 vitality = 1 + 10 = 11 → +88 maxHp, +1.1 hpRegen.
+    // pass1 vitality = 1 + 10 = 11 -> +88 maxHp, +1.1 hpRegen.
     // The Tu Reimagined (spec 2026-09-15 section 3.3): vitality ->
-    // enduranceThreshold left the universal derivation — it is now a
+    // enduranceThreshold left the universal derivation - it is now a
     // the_tu-domain emission, so base stays at 10 here.
     expect(result.maxHp).toBeCloseTo(188, 5)
     expect(result.hpRegenPerTurn).toBeCloseTo(1.1, 5)
@@ -107,9 +107,9 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
 
     const result = calculateStats(base, [])
 
-    expect(result.maxHp).toBeCloseTo(108, 5) // vitality 1 × 8
-    expect(result.might).toBeCloseTo(10.6, 5) // strength 1 × 0.6
-    expect(result.defense).toBeCloseTo(5.4, 5) // strength 1 × 0.4
+    expect(result.maxHp).toBeCloseTo(108, 5) // vitality 1 x 8
+    expect(result.might).toBeCloseTo(10.6, 5) // strength 1 x 0.6
+    expect(result.defense).toBeCloseTo(5.4, 5) // strength 1 x 0.4
   })
 })
 
@@ -152,9 +152,9 @@ describe('getMainStatCap + allocateAttributePoint — trần theo cảnh giới'
   })
 
   it('cảnh giới chưa có số liệu tay: neo Trúc Cơ 100, nhân đôi mỗi đại cảnh giới', () => {
-    // golden_core = index 3, anchor index 2 → 100 × 2^(3-2) = 200.
+    // golden_core = index 3, anchor index 2 -> 100 x 2^(3-2) = 200.
     expect(getMainStatCap('golden_core')).toBe(200)
-    // nascent_soul = index 4 → 400.
+    // nascent_soul = index 4 -> 400.
     expect(getMainStatCap('nascent_soul')).toBe(400)
   })
 

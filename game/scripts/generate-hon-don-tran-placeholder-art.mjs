@@ -1,18 +1,18 @@
-// Placeholder combat animation — 32 frames, emitted as a TEXTUREPACKER ATLAS.
+// Placeholder combat animation - 32 frames, emitted as a TEXTUREPACKER ATLAS.
 //
-// Spec B §3.4 (docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md).
+// Spec B sec3.4 (docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md).
 //
 // Shared by every combat entity (player/enemy/companion, real battles
 // included). Each frame is a stylised figure plus a large frame number, so one
-// glance says whether the AnimationManager is actually running or stuck — the
+// glance says whether the AnimationManager is actually running or stuck - the
 // same class of bug as the 2026-09-05 tick-loop freeze, but in animation.
 //
 // WHY AN ATLAS, when the art is a placeholder (2026-09-11):
 //
-// §3.1 makes a trimmed TexturePacker atlas the standard character format. If the
+// sec3.1 makes a trimmed TexturePacker atlas the standard character format. If the
 // placeholder stayed a grid spritesheet, that format would ship with zero
 // consumers, and the first REAL atlas would simultaneously be the first test of
-// the loader path, the metadata shape, the frame naming and the trim maths —
+// the loader path, the metadata shape, the frame naming and the trim maths -
 // with no way to tell which half was wrong. So the placeholder is packed the way
 // real art will be.
 //
@@ -24,8 +24,8 @@
 //
 // Output format is JSON Hash (TexturePacker's "Phaser 3" export), matching
 // scripts/build-ink-wash-assets.mjs and loaded with `load.atlas`. When real art
-// arrives, drop a TexturePacker export in its place — same two files, same frame
-// names — and nothing in src/ changes.
+// arrives, drop a TexturePacker export in its place - same two files, same frame
+// names - and nothing in src/ changes.
 import { createCanvas } from 'canvas'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -50,7 +50,7 @@ const OUT_DIR = path.join(
 const PNG_NAME = 'combat-anim-32frame.png'
 const JSON_NAME = 'combat-anim-32frame.json'
 
-/** `frame_000.png` … — TexturePacker's default naming at zero-pad 3. */
+/** `frame_000.png` ... - TexturePacker's default naming at zero-pad 3. */
 const FRAME_PREFIX = 'frame_'
 const FRAME_SUFFIX = '.png'
 const ZERO_PAD = 3
@@ -69,7 +69,7 @@ function frameName(index) {
 function drawFrame(context, index) {
   const phase = index / FRAME_COUNT
 
-  // Hue rotates with the frame — a second visual signal, so a running animation
+  // Hue rotates with the frame - a second visual signal, so a running animation
   // is recognisable even when the number is moving too fast to read. It is on
   // the FIGURE now, not on a background rectangle: an opaque background would
   // make every frame's trim the full box, which is the thing this file exists
@@ -98,7 +98,7 @@ function drawFrame(context, index) {
   context.roundRect(bodyX, bodyY, bodyW, bodyH, FRAME_WIDTH * 0.08)
   context.fill()
 
-  // The frame number — the primary signal that animation is advancing.
+  // The frame number - the primary signal that animation is advancing.
   context.fillStyle = '#111111'
   context.font = `bold ${Math.round(FRAME_HEIGHT * 0.22)}px sans-serif`
   context.textAlign = 'center'

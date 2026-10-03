@@ -78,8 +78,8 @@ describe('ink-wash shared primitives', () => {
     expect(badge.textContent).toContain('3')
   })
 
-  // SlotView KHÔNG dùng ink-wash frame — lặp lại trên lưới dày đặc (Kho
-  // Vật) gây rối; giữ viền CSS đơn giản (xem SlotView.vue).
+  // SlotView KHONG dung ink-wash frame - lap lai tren luoi day dac (Kho
+  // Vat) gay roi; giu vien CSS don gian (xem SlotView.vue).
   it('SlotView stays plain CSS border, no repeated nine-slice frame', () => {
     const slot = mount(SlotView as Component, { item: null, label: 'Trống' })
 

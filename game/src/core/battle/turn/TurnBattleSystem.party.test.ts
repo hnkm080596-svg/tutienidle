@@ -5,8 +5,8 @@ import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
 
-// Future Systems Task 9 — party (multi player-side unit): 1 ATB queue
-// chung, thua khi TOÀN BỘ party chết, opposingSide đối diện toàn party.
+// Future Systems Task 9 - party (multi player-side unit): 1 ATB queue
+// chung, thua khi TOAN BO party chet, opposingSide doi dien toan party.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -57,10 +57,10 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
     const { battle } = partyBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    // Speeds: memberA 30 > memberB 20 > enemy 10. 2 lượt đầu chắc chắn
-    // theo speed; lượt 3+ theo gauge-fill thuần (memberA có thể act 2 lần
-    // trước enemy nếu gauge đủ — hành vi ATB đúng, KHÔNG có "player side
-    // luôn xen giữa" grouping).
+    // Speeds: memberA 30 > memberB 20 > enemy 10. 2 luot dau chac chan
+    // theo speed; luot 3+ theo gauge-fill thuan (memberA co the act 2 lan
+    // truoc enemy neu gauge du - hanh vi ATB dung, KHONG co "player side
+    // luon xen giua" grouping).
     const order: string[] = []
 
     for (let i = 0; i < 2 && battle.state === 'fighting'; i++) {
@@ -70,8 +70,8 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
 
     expect(order.slice(0, 2)).toEqual(['memberA', 'memberB'])
 
-    // Chứng minh enemy cũng nằm trong CÙNG queue: chạy đủ lâu, enemy phải
-    // xuất hiện trong sequence.
+    // Chung minh enemy cung nam trong CUNG queue: chay du lau, enemy phai
+    // xuat hien trong sequence.
     for (let i = 0; i < 8 && battle.state === 'fighting'; i++) {
       const step = system.resolveNextStep(battle)
       order.push(step.actorId)
@@ -86,7 +86,7 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
     const { battle, memberA } = partyBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    // memberA (10 HP) bị enemy giết qua vài lượt — ép enemy might lớn.
+    // memberA (10 HP) bi enemy giet qua vai luot - ep enemy might lon.
     battle.enemies[0]!.entity.stats.might = 10_000
 
     for (let i = 0; i < 30 && memberA.alive; i++) {
@@ -96,7 +96,7 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
     expect(memberA.alive).toBe(false)
     expect(battle.state).toBe('fighting')
 
-    // Member B còn sống — engine tiếp tục resolve lượt của B/enemy.
+    // Member B con song - engine tiep tuc resolve luot cua B/enemy.
     expect(battle.players[1]!.entity.alive).toBe(true)
 
     expect(() => system.resolveNextStep(battle)).not.toThrow()
@@ -109,7 +109,7 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
 
     battle.enemies[0]!.entity.stats.might = 10_000
 
-    // memberB (1M HP) dies via Sudden Death escalation — which counts ATB
+    // memberB (1M HP) dies via Sudden Death escalation - which counts ATB
     // rounds (D2 contract), not raw actions: ~3 actions per round here, so
     // the ramp needs a larger step budget than the old per-action count.
     for (let i = 0; i < 200 && battle.state === 'fighting'; i++) {
@@ -126,8 +126,8 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
     const { battle, memberA, memberB } = partyBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    // Enemy might lớn — đòn enemy phải CÓ THỂ trúng memberB (players[1]),
-    // không chỉ memberA.
+    // Enemy might lon - don enemy phai CO THE trung memberB (players[1]),
+    // khong chi memberA.
     battle.enemies[0]!.entity.stats.might = 5
 
     const hpBBefore = memberB.currentHp
@@ -140,9 +140,9 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
     const damagedB = memberB.currentHp < hpBBefore
     const damagedA = memberA.currentHp < hpABefore
 
-    // Ít nhất 1 trong 2 member phải bị enemy đánh (targeting hoạt động
-    // trên toàn party); với selectTarget "gần nhất" + cả 2 alive, cả 2
-    // đều có thể trúng tuỳ lượt — assert KHÔNG phải "chỉ memberA bị đánh".
+    // It nhat 1 trong 2 member phai bi enemy danh (targeting hoat dong
+    // tren toan party); voi selectTarget "gan nhat" + ca 2 alive, ca 2
+    // deu co the trung tuy luot - assert KHONG phai "chi memberA bi danh".
     expect(damagedA || damagedB).toBe(true)
   })
 })

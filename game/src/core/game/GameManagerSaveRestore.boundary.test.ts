@@ -1,4 +1,4 @@
-// M1 (ARCH-001) — the save/restore boundary contract, exercised through
+// M1 (ARCH-001) - the save/restore boundary contract, exercised through
 // the real GameManager + real catalogs (not helper-level checks):
 //  - every payload slice REPLACES the owner's live set (no additive merge)
 //  - absent/empty slices reset to defaults
@@ -211,7 +211,7 @@ const FUTURE_JOB: AlchemyJobSave = (() => {
     pillId: pills[0]!.id,
     herbMaterialId: 'saved-herb',
     startedAtMs: Date.now(),
-    completesAtMs: Date.now() + 86_400_000, // far future — never settles during the test
+    completesAtMs: Date.now() + 86_400_000, // far future - never settles during the test
     roomLevelAtStart: 1,
   }
   const reservation = {
@@ -495,7 +495,7 @@ describe('M1 (ARCH-001) — the input save is a value', () => {
     const player = createDefaultPlayer()
 
     // A legacy-shaped skill (no `execution`) triggers the template
-    // backfill path — the write must land on a detached copy.
+    // backfill path - the write must land on a detached copy.
     const legacySkill = structuredClone(SKILLS.find((skill) => skill.id === 'tram') ?? SKILLS[0]!)
     delete legacySkill.execution
     legacySkill.name = 'stale saved name'
@@ -601,7 +601,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     manager.saveOps.restoreFromSave(save)
     const first = liveSnapshot(manager)
 
-    // Identical payload again — the identity guard converges.
+    // Identical payload again - the identity guard converges.
     manager.saveOps.restoreFromSave(save)
     expect(liveSnapshot(manager)).toEqual(first)
     expect(manager.equipmentBag.getAll()).toHaveLength(1)
@@ -641,7 +641,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     manager.setActivePlayer(player)
     const save = populatedSave(manager, player)
 
-    // Inject a one-shot fault into the buildings slice owner — slices
+    // Inject a one-shot fault into the buildings slice owner - slices
     // restored earlier in the chain (skills, bags, equipment) have
     // already applied when it throws.
     vi.spyOn(manager.buildingManager, 'restore').mockImplementationOnce(() => {
@@ -651,7 +651,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow('injected mid-restore failure')
 
     // Partial apply is observable, and the payload must NOT be marked
-    // applied — the retry below has to run the full restore again.
+    // applied - the retry below has to run the full restore again.
     expect(manager.materialBag.getAmount(materials[0]!.id)).toBe(7)
     expect(manager.buildingManager.getAll()).toEqual([])
 
@@ -659,7 +659,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
 
     expect(Array.isArray(modifiers)).toBe(true)
     expect(manager.buildingManager.getAll().map((instance) => instance.instanceId)).toEqual(['b1'])
-    // Retry re-applied from cleared state — no doubled materials.
+    // Retry re-applied from cleared state - no doubled materials.
     expect(manager.materialBag.getAmount(materials[0]!.id)).toBe(7)
     expect(manager.skillManager.getAll().map((skill) => skill.id)).toEqual(['saved_skill'])
     expect(manager.equipmentBag.getAll().map((instance) => instance.instanceId)).toEqual(['saved-item'])
@@ -684,7 +684,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     expect(first.status).toBe('rejected')
 
     // The player slice already applied+committed; the manager payload did
-    // not — retry must run the manager restore, not skip it.
+    // not - retry must run the manager restore, not skip it.
     const retry = restoreGameSession(playerStore, manager, save)
     expect(retry.status).toBe('ok')
     expect(manager.buildingManager.getAll().map((instance) => instance.instanceId)).toEqual(['b1'])
@@ -721,7 +721,7 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     manager.saveOps.restoreFromSave(save)
 
     // The item still exists post-restore, so the rejection proves the
-    // ticket was invalidated — not that the item went missing.
+    // ticket was invalidated - not that the item went missing.
     expect(manager.equipmentBag.has('wash-boundary-item')).toBe(true)
     expect(manager.equipmentOps.commitWashItem('wash-boundary-item', preview.ticketId!)).toEqual({
       ok: false,
@@ -729,7 +729,7 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     })
   })
 
-  // M2 (ARCH-011 / AUD-E02) — the E02 loop through the real restore path:
+  // M2 (ARCH-011 / AUD-E02) - the E02 loop through the real restore path:
   // the payload carries the SAME instanceId but a different affix shape.
   // Restore replaces the bag with a detached clone (different object, new
   // membership generation), so the pre-restore paid roll must not land on
@@ -783,12 +783,12 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
   })
 })
 
-// Stat-key restore contract (post-Mission-G) — saves written before the
+// Stat-key restore contract (post-Mission-G) - saves written before the
 // stat-key rename keep legacy stat keys inside skills[] entries.
 // gradeEffects/combatModifiers/passiveModifiers/specializations are
 // authored data: restore re-derives them from the registered template
 // (same contract as name/description), so stale keys can't stay inert.
-// P7-M3 — a technique entry with NO registered template is no longer a
+// P7-M3 - a technique entry with NO registered template is no longer a
 // silent drop: the v70 holder contract rejects the whole save in the
 // preflight. Skills keep the drop rule.
 describe('stat-key handling on techniques[]/skills[] restore', () => {
@@ -796,7 +796,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     const manager = makeManager()
     const player = swordCommittedPlayer()
 
-    // Save authored with stale/unknown gradeEffects keys — restore must
+    // Save authored with stale/unknown gradeEffects keys - restore must
     // re-derive the authored table from the template, not trust the
     // persisted copy.
     const stale = structuredClone(SAVED_TECHNIQUE)
@@ -837,7 +837,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     const player = createDefaultPlayer()
 
     // Save written while da_phap_lien_tuyen was authored with an empty
-    // effects[] shell — the converter gate then rejects every An battle.
+    // effects[] shell - the converter gate then rejects every An battle.
     // effects is authored data, so restore must re-derive it from the
     // registered template like execution/targeting/passiveModifiers.
     const stale = structuredClone(
@@ -870,7 +870,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
       },
     ]
 
-    // A valid sibling entry still restores — the drop is per-entry.
+    // A valid sibling entry still restores - the drop is per-entry.
     const validSkill = structuredClone(SAVED_SKILL)
 
     manager.saveOps.restoreFromSave(
@@ -884,7 +884,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
   })
 })
 
-// P7-M3 (v70) — technique holder contract preflight: 0-or-1 entries,
+// P7-M3 (v70) - technique holder contract preflight: 0-or-1 entries,
 // the single entry must equal the committed way's techniqueId, a
 // way-less player must carry none, and rank/mastery/grade/quality must
 // be valid (rank cap 10 => mastery 0). Every rejection happens BEFORE

@@ -1,4 +1,4 @@
-// EquipmentRefine — module-level coverage for the exported surface that
+// EquipmentRefine - module-level coverage for the exported surface that
 // the system-level suite (EquipmentSystem.test.ts "Tinh Luyen" block)
 // cannot reach: the pending-slot accessor contract, scoped preview
 // cancel semantics, guard inputs that need unusual items (zero affix
@@ -62,7 +62,7 @@ function setup() {
   materialBag.add(ESSENCE, 1_000)
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 
-  // Hand-bound RefineDeps — same wiring EquipmentSystem.refineDeps()
+  // Hand-bound RefineDeps - same wiring EquipmentSystem.refineDeps()
   // builds, kept local so dep call counts are directly observable.
   const refinePendingSlot = createRefinePendingSlotAccessor()
   const applyCostDiscount = vi.fn((amount: number) => amount)
@@ -236,7 +236,7 @@ describe('discardRefinePreview — scoped cancel semantics', () => {
     expect(ctx.refinePendingSlot.get()).not.toBeNull()
 
     // The scope check reads pending.instance.instanceId (the captured
-    // object), not the bag contents — the cancel survives the removal.
+    // object), not the bag contents - the cancel survives the removal.
     ctx.bag.remove(instance.instanceId)
     discardRefinePreview(ctx.deps, instance.instanceId)
 
@@ -374,7 +374,7 @@ describe('single pending capability', () => {
     const previewB = preview(ctx, second.instanceId)
     expect(previewB.ok).toBe(true)
 
-    // The single slot now binds item B — item A's paid payload is dead.
+    // The single slot now binds item B - item A's paid payload is dead.
     // (Asserted before any commit: every commit attempt consumes the slot.)
     expect(ctx.refinePendingSlot.get()?.instance).toBe(second)
     expect(ctx.refinePendingSlot.get()?.values).toEqual(previewB.values)
@@ -411,7 +411,7 @@ describe('single pending capability', () => {
     expect(instance.affixes[1]!.value).toBeCloseTo(26.25, 12)
     expect(ctx.refinePendingSlot.get()).toBeNull()
 
-    // The internal commit already consumed the slot — replaying the same
+    // The internal commit already consumed the slot - replaying the same
     // rolled values through commitRefineValues is rejected.
     expect(
       commit(ctx, instance.instanceId, [

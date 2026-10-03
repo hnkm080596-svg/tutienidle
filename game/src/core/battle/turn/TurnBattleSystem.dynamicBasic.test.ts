@@ -9,7 +9,7 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinitionId } from '../contracts/ids'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// Kiem Tu Reimagined Task 2 — generic engine primitives:
+// Kiem Tu Reimagined Task 2 - generic engine primitives:
 // guaranteedHit / resolved armor policy / damageMultiplier on
 // resolveActionHit; `instances` + `dynamicBasic` on TurnSkillDefinition/
 // TurnBattleParticipant; resolveDeclaredHit extraction; applyActionImpact

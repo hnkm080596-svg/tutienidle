@@ -10,7 +10,7 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 
-// QA adversarial probes (2026-09-04 quick review) — Slice 1 TurnBattleSystem.
+// QA adversarial probes (2026-09-04 quick review) - Slice 1 TurnBattleSystem.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -82,7 +82,7 @@ describe('TurnBattleSystem adversarial (QA probes)', () => {
       2,
     )
 
-    // Determinism: cùng 1 thứ tự input → cùng winner (first-min wins).
+    // Determinism: cung 1 thu tu input -> cung winner (first-min wins).
     expect(selectTarget(actor, [right, left])?.id).toBe('right')
     expect(selectTarget(actor, [right, left])?.id).toBe('right')
     expect(selectTarget(actor, [left, right])?.id).toBe('left')

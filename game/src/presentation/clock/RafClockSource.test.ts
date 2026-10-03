@@ -96,7 +96,7 @@ describe('RafClockSource', () => {
   it('stop() inside its own frame callback leaves no pending frame (ARCH-013/L04)', () => {
     // Combat-over calls clock.stop() from inside the step the clock itself
     // delivered. Before the generation fence the frame tail still re-armed
-    // after that stop, and each fired frame re-armed again — a ghost loop
+    // after that stop, and each fired frame re-armed again - a ghost loop
     // of no-op frames for the rest of the session.
     const frames: Array<(t: number) => void> = []
     vi.stubGlobal('requestAnimationFrame', ((cb: (t: number) => void) => {
@@ -151,7 +151,7 @@ describe('RafClockSource', () => {
     pump(1000)
     pump(1016) // cbA runs -> stop+start -> the NEW generation armed its frame
 
-    // Exactly one pending rAF — the stale frame did not re-arm alongside it.
+    // Exactly one pending rAF - the stale frame did not re-arm alongside it.
     expect(frames.length - fired).toBe(1)
     expect(deltas).toHaveLength(1)
 

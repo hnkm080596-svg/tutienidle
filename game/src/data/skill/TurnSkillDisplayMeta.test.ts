@@ -38,7 +38,7 @@ function productionTurnSkillIds(): string[] {
   for (const orb of Object.values(KIEM_PHO_ORBS)) {
     ids.add(orb.id)
   }
-  // KIEM_PHO_COMBOS deliberately excluded — K11: no combo id may
+  // KIEM_PHO_COMBOS deliberately excluded - K11: no combo id may
   // resolve to display text (the fired payload is the only signal).
 
   // Mortal precursors are persisted turn-skill picks (creation contract):

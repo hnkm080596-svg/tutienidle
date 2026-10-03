@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// QA (task 2.2 lô 1 — ActionFeedbackLog render): entry key-form phải render
-// chuỗi vi GIỐNG BYTE với thông điệp cũ ("Không thể {label}: {reason}") qua
-// t() lồng param; entry chuỗi thường render nguyên văn. Regression theo
+// QA (task 2.2 lo 1 - ActionFeedbackLog render): entry key-form phai render
+// chuoi vi GIONG BYTE voi thong diep cu ("Khong the {label}: {reason}") qua
+// t() long param; entry chuoi thuong render nguyen van. Regression theo
 // learned-defect QA-2026-09-01-007 (rendered contract copy per locale).
 import { describe, expect, it } from 'vitest'
 import { createApp, h, nextTick } from 'vue'

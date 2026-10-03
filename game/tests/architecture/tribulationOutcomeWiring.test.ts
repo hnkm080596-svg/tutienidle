@@ -1,12 +1,12 @@
 /**
- * F1 (2026-09-13 whole-codebase audit) wiring guard — the tribulation
+ * F1 (2026-09-13 whole-codebase audit) wiring guard - the tribulation
  * outcome check in App.vue's tick() must pass the `presentation` object so
  * the behind-curtain `request({ target: 'home' })` branch can run.
  *
  * Root cause of the defect: App.vue called
  * `checkTribulationOutcomeAction(player, gameManager)` without the third
  * argument, so a completed tribulation applied its outcome but never
- * issued the coordinator route request — the UI soft-locked on the
+ * issued the coordinator route request - the UI soft-locked on the
  * 'tribulation' route (home chrome hidden, empty overlay, Phaser scene
  * never deactivated) until reload.
  *
@@ -14,7 +14,7 @@
  * (the production-signature case drives the full coordinator dance). This
  * STATIC guard pins the call-site shape itself: a regex over the
  * comment-stripped App.vue source asserting the call passes a third
- * argument — the cheap guard that would have caught the regression at
+ * argument - the cheap guard that would have caught the regression at
  * authoring time.
  */
 import { describe, expect, it } from 'vitest'

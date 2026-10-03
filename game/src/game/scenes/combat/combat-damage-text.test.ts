@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// 6A-T2 (2026-09-01) — floating text kill + heal: showKillText/showHealText
-// trên CombatDamageText, guard sprite null, màu đúng spec §2 (kill trắng
-// stroke đỏ 18px, heal xanh "+N" 14px). Scene handlers test ở scene-level
+// 6A-T2 (2026-09-01) - floating text kill + heal: showKillText/showHealText
+// tren CombatDamageText, guard sprite null, mau dung spec sec2 (kill trang
+// stroke do 18px, heal xanh "+N" 14px). Scene handlers test o scene-level
 // qua subscribe contract (Task 5 wiring).
 import { describe, expect, it } from 'vitest'
 import { CombatDamageText } from './combat-damage-text'
@@ -145,8 +145,8 @@ describe('CombatDamageText — kill + heal floating (6A-T2)', () => {
   it('scene guard: heal/kill handler với sprite không tồn tại → không crash, không text', () => {
     const { damageText, texts } = createTextHarness()
 
-    // Giả lập handler path: spriteFor trả undefined → method phải no-op
-    // an toàn (sprite chết giữa chừng fade).
+    // Gia lap handler path: spriteFor tra undefined -> method phai no-op
+    // an toan (sprite chet giua chung fade).
     const dead = damageText as unknown as {
       scene: { spriteFor(id?: string): unknown }
     }

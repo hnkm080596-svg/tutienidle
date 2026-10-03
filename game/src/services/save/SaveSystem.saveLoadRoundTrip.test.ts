@@ -1,10 +1,10 @@
-// Task 3 (perf-optimize-pass) — round-trip thật qua localStorage:
-// buildGameSave() -> writeGameSave() -> loadGame() phải trả về CHÍNH XÁC
-// dữ liệu đã ghi (deep equal), chứng minh việc tối ưu double-serialize
-// (nếu có) không đổi shape lưu ra. Test thứ hai khoá lại lý do
-// structuredClone(quests) tồn tại trong buildGameSave(): questManager.getState()
-// trả về tham chiếu sống — mutate SAU buildGameSave() không được phép rò
-// vào save đã build.
+// Task 3 (perf-optimize-pass) - round-trip that qua localStorage:
+// buildGameSave() -> writeGameSave() -> loadGame() phai tra ve CHINH XAC
+// du lieu da ghi (deep equal), chung minh viec toi uu double-serialize
+// (neu co) khong doi shape luu ra. Test thu hai khoa lai ly do
+// structuredClone(quests) ton tai trong buildGameSave(): questManager.getState()
+// tra ve tham chieu song - mutate SAU buildGameSave() khong duoc phep ro
+// vao save da build.
 import { primeMortalCreationPick } from './GameSave.fixture'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -26,8 +26,8 @@ import { buildings } from '../../data/building/buildings'
 import type { Quest } from '../../core/quest/Quest'
 import { buildGameSave, loadGame, writeGameSave } from './SaveSystem'
 
-// vitest.config chạy environment: 'node' — localStorage in-memory tối
-// thiểu, cùng convention SaveSystem.test.ts.
+// vitest.config chay environment: 'node' - localStorage in-memory toi
+// thieu, cung convention SaveSystem.test.ts.
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()
 
@@ -106,8 +106,8 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
       return
     }
 
-    // So sánh sâu với dữ liệu đã build TRƯỚC khi ghi — bảo đảm
-    // write/load không đổi shape, kể cả field quests (structuredClone).
+    // So sanh sau voi du lieu da build TRUOC khi ghi - bao dam
+    // write/load khong doi shape, ke ca field quests (structuredClone).
     expect(outcome.save).toEqual(save)
     expect(outcome.save.quests).toEqual({
       active: [{ questId: TEST_QUEST.id, progress: 2, claimed: false }],
@@ -128,15 +128,15 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     const save = buildGameSave(player, gameManager)
     const questsSnapshotBeforeMutation = structuredClone(save.quests)
 
-    // Mô phỏng đúng kịch bản comment mô tả: một write khác (vd
-    // CloudSaveCoordinator retry sau conflict, cách await) mutate
-    // questManager SAU khi save đã build nhưng TRƯỚC khi ghi thật.
+    // Mo phong dung kich ban comment mo ta: mot write khac (vd
+    // CloudSaveCoordinator retry sau conflict, cach await) mutate
+    // questManager SAU khi save da build nhung TRUOC khi ghi that.
     gameManager.questManager.incrementProgress(TEST_QUEST.id, 999)
     gameManager.questManager.markCompletedOnce('mutated_after_build')
 
-    // Nếu buildGameSave() không structuredClone quests, save.quests sẽ
-    // là CHÍNH tham chiếu live và đã bị mutate ở trên — assert nó KHÔNG
-    // đổi, tức là save đã build vẫn là snapshot đúng thời điểm.
+    // Neu buildGameSave() khong structuredClone quests, save.quests se
+    // la CHINH tham chieu live va da bi mutate o tren - assert no KHONG
+    // doi, tuc la save da build van la snapshot dung thoi diem.
     expect(save.quests).toEqual(questsSnapshotBeforeMutation)
 
     const writeResult = writeGameSave(save)

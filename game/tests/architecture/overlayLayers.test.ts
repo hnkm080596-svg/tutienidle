@@ -1,11 +1,11 @@
 /**
- * Guard — the app-level overlay order has exactly one source:
+ * Guard - the app-level overlay order has exactly one source:
  * `src/core/presentation/OverlayLayers.ts`, and the presentation curtain
  * is its TOPMOST entry.
  *
  * Why (user report 2026-09-12): `.game-root` is positioned but creates no
  * stacking context, and Teleport-to-body overlays share the same root
- * context — so every app-level z-index competes globally. The curtain was
+ * context - so every app-level z-index competes globally. The curtain was
  * a hardcoded 1000 while OfflineSummaryModal (1800), toasts, tooltips and
  * the error/save screens all outranked it, leaking above a closed curtain.
  * The fix raised the curtain to the top of a named scale and routed every
@@ -13,10 +13,10 @@
  *
  * What this polices:
  *   1. OVERLAY_LAYERS.curtain is strictly the largest entry in the scale.
- *   2. The curtain component actually binds OVERLAY_LAYERS.curtain — a
+ *   2. The curtain component actually binds OVERLAY_LAYERS.curtain - a
  *      scale entry nobody uses is decoration.
  *   3. No production file hardcodes a z-index in the app-level range
- *      (>= OVERLAY_LAYERS.combatPause, the lowest named tier) — that is how
+ *      (>= OVERLAY_LAYERS.combatPause, the lowest named tier) - that is how
  *      a panel ends up over the curtain again. Intra-component stacking
  *      stays in single/double digits and is none of this guard's business.
  *   4. The known app-level overlays each bind their named tier.
@@ -31,7 +31,7 @@ const LAYERS_MODULE = 'core/presentation/OverlayLayers.ts'
 const corpus = srcCorpus(SRC_DIR)
 const layerFile = corpus.find((file) => file.fromSrc === LAYERS_MODULE)
 
-/** `name: 123` entries parsed straight from the scale's source — the guard
+/** `name: 123` entries parsed straight from the scale's source - the guard
  *  never imports app code. */
 const LAYER_ENTRY = /^\s*(\w+):\s*(\d+)\s*,/gm
 

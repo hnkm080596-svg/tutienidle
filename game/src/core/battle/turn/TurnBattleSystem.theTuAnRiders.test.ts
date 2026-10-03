@@ -83,7 +83,7 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
   return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-/** Clone a marker def with hand-baked reactive_proc rider fields — the
+/** Clone a marker def with hand-baked reactive_proc rider fields - the
     same capability-payload writes buildTheTuAnKit performs. */
 function markerClone(
   base: BuffDefinition,
@@ -99,7 +99,7 @@ function markerClone(
 }
 
 /** Live-data registry with the given defs swapped in under their own
-    ids — the kit-clone seam the battle-local registry performs. */
+    ids - the kit-clone seam the battle-local registry performs. */
 function registryWith(replacements: readonly BuffDefinition[]) {
   const byId = new Map(replacements.map((def) => [def.id, def]))
   return makeTestBuffRegistry(LIVE_BUFFS.map((def) => byId.get(def.id) ?? def))
@@ -404,7 +404,7 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
 
   it('the same lethal hit with Bat Tu survival wired -> holder lives -> the Phan window still rolls', () => {
     // Counter-case: the gate keys on alive AFTER survival resolution, not
-    // on the raw damage amount — a saved holder must still counter.
+    // on the raw damage amount - a saved holder must still counter.
     const f = lethalFixture()
     f.defenderP.ultimate = { skill: BAT_TU_BA_THE, remainingCooldownTurns: 0 }
 
@@ -412,7 +412,7 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
     const w = world(() => f.roster, { rng })
     const runtime = w.runtime
     w.runtime.applyBuff('phan_mon', f.defenderP)
-    // Clear the seed-apply's resolver roll — the assertion below counts
+    // Clear the seed-apply's resolver roll - the assertion below counts
     // only draws the taken window itself performs.
     rng.mockClear()
 

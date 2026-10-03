@@ -1,9 +1,9 @@
 import { expect, test } from './fixtures'
 
 /**
- * E2E lifecycle spec 1/3 (tech-debt-test-coverage-plan.md §3.3) — boot
- * KHÔNG có save: LoadingScreen → AuthEntryScreen → guest →
- * CharacterCreationScreen hiển thị.
+ * E2E lifecycle spec 1/3 (tech-debt-test-coverage-plan.md sec3.3) - boot
+ * KHONG co save: LoadingScreen -> AuthEntryScreen -> guest ->
+ * CharacterCreationScreen hien thi.
  */
 test.describe('Boot fresh (no saved state)', () => {
   test('boots to character-creation when no save exists', async ({ page }) => {
@@ -17,10 +17,10 @@ test.describe('Boot fresh (no saved state)', () => {
     const auth = page.getByTestId('auth-screen')
     await expect(auth).toBeVisible({ timeout: 15_000 })
 
-    // "Chơi ngay" (guest) skips credentials; MockAuthService resolves after 250ms.
+    // "Choi ngay" (guest) skips credentials; MockAuthService resolves after 250ms.
     await page.getByTestId('auth-guest-button').click()
 
-    // Empty save → bootFlow.requireCharacter() → creation screen.
+    // Empty save -> bootFlow.requireCharacter() -> creation screen.
     const creation = page.getByTestId('character-creation-screen')
     await expect(creation).toBeVisible({ timeout: 15_000 })
 

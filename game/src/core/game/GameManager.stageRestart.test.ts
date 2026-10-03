@@ -49,7 +49,7 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
-    // Fighting reached — run battle A to victory with presentation still on:
+    // Fighting reached - run battle A to victory with presentation still on:
     // a pending phase forms each time an actor becomes ready (Action Playback
     // 5-phase machine); the test drives the 3 acknowledgements (like Phaser
     // would) then lets ticks continue, until the victory terminal fires and
@@ -72,7 +72,7 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
     // state to victory - and that step also STOPPED the clock, so there is no
     // further step to take here.
 
-    // NOW a fresh stage — stale pending fields (if any survived the victory
+    // NOW a fresh stage - stale pending fields (if any survived the victory
     // terminal) would leak into battle B. startStage resets them (Defect
     // Task 6) so the new battle starts clean.
     expect(gameManager.turnBattleOps.startStage(player, stageB, false)).toBe(true)

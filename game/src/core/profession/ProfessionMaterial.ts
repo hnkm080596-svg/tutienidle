@@ -1,15 +1,15 @@
-// ProfessionMaterial (2026-08-25, resource-professions-rework plan §5/§6)
-// — metadata nghề gắn lên Material cho vòng kinh tế mới: Địa Giới →
-// Lâm/Quáng/Động Thiên → Bag → Khí Đường/Đan Phòng. KHÔNG còn cặp
-// raw|processed (plan §2). Optional field trên Material nên save cũ /
-// material legacy không có metadata vẫn load bình thường.
+// ProfessionMaterial (2026-08-25, resource-professions-rework plan sec5/sec6)
+// - metadata nghe gan len Material cho vong kinh te moi: Dia Gioi ->
+// Lam/Quang/Dong Thien -> Bag -> Khi Duong/Dan Phong. KHONG con cap
+// raw|processed (plan sec2). Optional field tren Material nen save cu /
+// material legacy khong co metadata van load binh thuong.
 //
-// ID convention (gp123 6E task C2 — trục tuổi thống nhất):
-// - Gỗ: `<realm>_wood_<age>` (age ∈ decade..thuong_co; plain
-//   `<realm>_wood` và hậu tố phẩm hoang..tien đã XÓA)
-// - Quáng: `<realm>_ore_<age>`
-// - Linh thảo Động Thiên: `<herbBase>_<age>`
-// TÊN HIỂN THỊ nằm trong catalog data, KHÔNG parse từ id để lấy tên.
+// ID convention (gp123 6E task C2 - truc tuoi thong nhat):
+// - Go: `<realm>_wood_<age>` (age in decade..thuong_co; plain
+//   `<realm>_wood` va hau to pham hoang..tien da XOA)
+// - Quang: `<realm>_ore_<age>`
+// - Linh thao Dong Thien: `<herbBase>_<age>`
+// TEN HIEN THI nam trong catalog data, KHONG parse tu id de lay ten.
 
 import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGES } from '../production/ProductionTypes'
@@ -23,9 +23,9 @@ export function isResourceKind(value: unknown): value is ResourceKind {
 }
 
 /**
- * Product scope hiện tại (plan §3.1): chỉ Địa Giới Thanh Vân với ba
- * cảnh giới Phàm Nhân/Luyện Khí/Trúc Cơ. Contract dùng catalog để mở
- * rộng sau này mà không sửa engine.
+ * Product scope hien tai (plan sec3.1): chi Dia Gioi Thanh Van voi ba
+ * canh gioi Pham Nhan/Luyen Khi/Truc Co. Contract dung catalog de mo
+ * rong sau nay ma khong sua engine.
  */
 export const SUPPORTED_PROFESSION_REALMS: readonly string[] = [
   'mortal',
@@ -33,19 +33,19 @@ export const SUPPORTED_PROFESSION_REALMS: readonly string[] = [
   'foundation_establishment',
 ]
 
-/** Metadata nghề trên Material — shape tuỳ kind (§5.3/§6.1 + 6E C2: gỗ/khoáng dùng `age`). */
+/** Metadata nghe tren Material - shape tuy kind (sec5.3/sec6.1 + 6E C2: go/khoang dung `age`). */
 export interface ProfessionMaterialMeta {
   resourceKind: ResourceKind
 
   realmId: string
 
-  /** gp123 6E C2: gỗ/khoáng/thảo đều dùng trục tuổi thống nhất. */
+  /** gp123 6E C2: go/khoang/thao deu dung truc tuoi thong nhat. */
   age?: HerbAge
 
-  /** Chỉ Linh thảo — đan phương DUY NHẤT mà thảo này nuôi (§6.1). */
+  /** Chi Linh thao - dan phuong DUY NHAT ma thao nay nuoi (sec6.1). */
   pillRecipeId?: string
 
-  /** Chỉ Linh thảo — base identity chung các biến thể niên đại. */
+  /** Chi Linh thao - base identity chung cac bien the nien dai. */
   herbBaseId?: string
 }
 
@@ -61,17 +61,17 @@ export function buildProfessionMaterialId(
   return `${realmId}_${resourceKind}_${age}`
 }
 
-/** Linh thảo base identity chung các biến thể niên đại — `<herbId>_<realmId>`. */
+/** Linh thao base identity chung cac bien the nien dai - `<herbId>_<realmId>`. */
 export function herbBaseId(herbId: string, realmId: string): string {
   return `${herbId}_${realmId}`
 }
 
-/** Linh thảo variant id — `<herbBaseId>_<age>`. */
+/** Linh thao variant id - `<herbBaseId>_<age>`. */
 export function herbMaterialId(baseId: string, age: HerbAge): string {
   return `${baseId}_${age}`
 }
 
-/** Guard đầy đủ cho meta Gỗ/Khoáng — trục tuổi 5 bậc thống nhất (6E C2). */
+/** Guard day du cho meta Go/Khoang - truc tuoi 5 bac thong nhat (6E C2). */
 export function isProfessionResourceMeta(meta: ProfessionMaterialMeta): boolean {
   return (
     (meta.resourceKind === 'wood' || meta.resourceKind === 'ore') &&
@@ -80,7 +80,7 @@ export function isProfessionResourceMeta(meta: ProfessionMaterialMeta): boolean 
   )
 }
 
-/** Guard đầy đủ cho meta Linh thảo Động Thiên. */
+/** Guard day du cho meta Linh thao Dong Thien. */
 export function isHerbProfessionMeta(meta: ProfessionMaterialMeta): boolean {
   return (
     meta.resourceKind === 'herb' &&

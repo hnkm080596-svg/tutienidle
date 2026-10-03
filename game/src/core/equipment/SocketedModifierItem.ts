@@ -1,14 +1,14 @@
-// SocketedModifierItem (2026-08-24, resource-professions-rework §7.2) —
-// state Phù/Trận đã socket trên equipment slot: MỖI item cấp ĐÚNG HAI
-// modifier (tuple enforced bởi type + validator), gắn theo SLOT (không
-// theo instance), chỉ active khi slot đang có equipment.
+// SocketedModifierItem (2026-08-24, resource-professions-rework sec7.2) -
+// state Phu/Tran da socket tren equipment slot: MOI item cap DUNG HAI
+// modifier (tuple enforced boi type + validator), gan theo SLOT (khong
+// theo instance), chi active khi slot dang co equipment.
 import type { StatModifier } from '../stats/StatCalculator'
 
-/** Tuple ĐÚNG HAI modifier — compiler + validator cùng enforce. */
+/** Tuple DUNG HAI modifier - compiler + validator cung enforce. */
 export type TwoModifiers = readonly [StatModifier, StatModifier]
 
 export interface SocketedModifierItem {
-  /** Id TEMPLATE (Phù/Trận trong registry) — unsocket trả template này. */
+  /** Id TEMPLATE (Phu/Tran trong registry) - unsocket tra template nay. */
   itemId: string
 
   realmId: string

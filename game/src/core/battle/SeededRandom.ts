@@ -1,5 +1,5 @@
 /**
- * Mission C Task 8 — one injectable session RNG for all combat rolls.
+ * Mission C Task 8 - one injectable session RNG for all combat rolls.
  * mulberry32: tiny deterministic PRNG, same seed -> identical sequence.
  * Pure, seeded, no deps. Output in [0, 1).
  */
