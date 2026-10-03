@@ -20,7 +20,6 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import type { AmountRange, DropEntry } from '@/core/drop/DropTable'
 import { materials } from '@/data/materials/materials'
 import { equipment } from '@/data/equipment/equipment'
-import BuildingConstructionGate from '@/components/panels/BuildingConstructionGate.vue'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import ExplorationFidelityScene from './fidelity/ExplorationFidelityScene.vue'
 import type {
@@ -424,21 +423,19 @@ const paperModel = computed<ExplorationPaperModel>(() => ({
 
 <template>
   <SceneDesignCanvas overlay>
-    <BuildingConstructionGate building-id="teleport_array">
-      <ExplorationFidelityScene
-        :model="paperModel"
-        :stage="paperStage"
-        :navigation="navItems"
-        :notice="notice"
-        @select="selectStage"
-        @zone="selectZone"
-        @navigate="navigate"
-        @mode="pickMode"
-        @stop-farm="stopAutoFarm"
-        @open-build="openBuild"
-        @start="start"
-        @back="ui.closeHomeOverlays()"
-      />
-    </BuildingConstructionGate>
+    <ExplorationFidelityScene
+      :model="paperModel"
+      :stage="paperStage"
+      :navigation="navItems"
+      :notice="notice"
+      @select="selectStage"
+      @zone="selectZone"
+      @navigate="navigate"
+      @mode="pickMode"
+      @stop-farm="stopAutoFarm"
+      @open-build="openBuild"
+      @start="start"
+      @back="ui.closeHomeOverlays()"
+    />
   </SceneDesignCanvas>
 </template>

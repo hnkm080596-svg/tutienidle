@@ -6,7 +6,6 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
-import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
@@ -324,8 +323,7 @@ function collectLinMach() {
 </script>
 
 <template>
-  <BuildingConstructionGate building-id="gathering_outpost">
-    <div class="production-panel scrollfade">
+  <div class="production-panel scrollfade">
       <p class="production-panel__summary">
         {{ t('panels.production.summary') }}
       </p>
@@ -487,7 +485,6 @@ function collectLinMach() {
         </article>
       </div>
     </div>
-  </BuildingConstructionGate>
 </template>
 
 <style scoped>

@@ -108,7 +108,6 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
     const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
     expect(upgradeButton).not.toBeNull()
     expect(actions.textContent).toContain(t('layout.functionOverlay.upgrade'))
-    expect(mounted.container.querySelector('.construction-gate__upgrade')).toBeNull()
     expect(mounted.container.querySelectorAll('.building-heading__upgrade')).toHaveLength(1)
 
     expect(mounted.container.querySelector('.worker-lodge-panel')).not.toBeNull()

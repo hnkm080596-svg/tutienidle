@@ -364,11 +364,20 @@ describe('realm/breakthrough seams fail closed at the beta ceiling', () => {
 })
 
 describe('economy/building/companion/artifact seams fail closed', () => {
-  it('scope-hidden buildings cannot be built', () => {
+  it('scope-hidden building stays dormant - granted but unupgradable', () => {
     const manager = makeManager()
     const p = player({ realmId: 'qi_refining' })
-    expect(manager.buildingOps.canBuildBuilding('chi_hien_quan', p)).toBe(false)
-    expect(manager.buildingOps.buildBuilding('chi_hien_quan', p)).toBeFalsy()
+    manager.setActivePlayer(p)
+
+    // Default-built (2026-10-03): no build seam remains - reconcile
+    // grants the carried lv1 instance; the scope gate now only has to
+    // hold back writes (upgrade).
+    manager.buildingOps.reconcileBuildings(p, 1_000)
+
+    const instance = manager.buildingManager.getByBuildingId('chi_hien_quan')!
+
+    expect(instance.level).toBe(1)
+    expect(manager.buildingOps.upgradeBuilding(instance.instanceId)).toBe(false)
   })
 
   it('manual worker assignment is a no-op while manualWorkforce is hidden', () => {
