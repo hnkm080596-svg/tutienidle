@@ -20,6 +20,8 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import type { AmountRange, DropEntry } from '@/core/drop/DropTable'
 import { materials } from '@/data/materials/materials'
 import { equipment } from '@/data/equipment/equipment'
+import { createMaterialTooltipBuilder } from '@/components/panels/bag-sections/materialTooltip'
+import type { TooltipContent, TooltipStatRow } from '@/composables/useTooltip'
 import BuildingConstructionGate from '@/components/panels/BuildingConstructionGate.vue'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import ExplorationFidelityScene from './fidelity/ExplorationFidelityScene.vue'
@@ -28,6 +30,7 @@ import type {
   ExplorationDetail,
   ExplorationNode,
   ExplorationPaperModel,
+  ExplorationReward,
 } from './fidelity/explorationUi'
 import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { disabledReasonLabel } from './disabledReasonLabel'
@@ -335,6 +338,85 @@ function dropEntryLabel(entry: DropEntry): string {
   return entry.amount ? `${label} ×${rangeLabel(entry.amount)}` : label
 }
 
+// Reward cells render like bag cells - the item's own art in the slot
+// frame (registry icon; the equipment_any pool uses the shared gear
+// glyph), the drop range under the cell, and the canonical item-info
+// card on hover (graded card for materials, plain card elsewhere).
+const EQUIPMENT_ANY_ICON = resolveAssetUrl('/assets/ui/huyen-kim/symbols/equipment.svg')
+const buildMaterialTooltip = createMaterialTooltipBuilder(t)
+
+function dropAmountText(entry: DropEntry): string {
+  if (entry.amount) {
+    return `×${rangeLabel(entry.amount)}`
+  }
+  // Equipment (fixed or pool-rolled) always yields exactly one instance
+  // per draw (DropTable contract); materials/pills carry amount ranges.
+  return entry.kind === 'equipment' || entry.kind === 'equipment_any' ? '×1' : ''
+}
+
+function extraDropRows(entry: DropEntry, chance: number | undefined): TooltipStatRow[] {
+  const rows: TooltipStatRow[] = []
+  const amountText = dropAmountText(entry)
+  if (amountText) {
+    rows.push({ label: t('panels.stageSelect.rewards.dropAmount'), value: amountText })
+  }
+  if (chance !== undefined && chance < 1) {
+    rows.push({ label: t('panels.stageSelect.rewards.dropChance'), value: `${Math.round(chance * 100)}%` })
+  }
+  return rows
+}
+
+function plainRewardTooltip(title: string, description: string | undefined, rows: TooltipStatRow[]): TooltipContent {
+  return {
+    kind: 'plain',
+    title,
+    description: [description ?? '', ...rows.map(row => `${row.label}: ${row.value}`)].filter(Boolean).join('\n'),
+  }
+}
+
+function dropEntryReward(entry: DropEntry, chance: number | undefined): ExplorationReward {
+  const rows = extraDropRows(entry, chance)
+  if (entry.kind === 'equipment_any') {
+    const label = t(KIND_LABEL_KEYS['equipment_any'] ?? 'panels.stageSelect.rewards.kinds.equipmentAny')
+    return {
+      label,
+      amount: dropAmountText(entry),
+      icon: EQUIPMENT_ANY_ICON,
+      tooltip: plainRewardTooltip(label, undefined, rows),
+    }
+  }
+  const id = entry.itemId
+  if (id && gameManager.materialRegistry.has(id)) {
+    const material = gameManager.materialRegistry.get(id)
+    return {
+      label: material.name,
+      amount: dropAmountText(entry),
+      icon: material.icon,
+      tooltip: buildMaterialTooltip(material, { extraRows: rows }),
+    }
+  }
+  if (id && gameManager.equipmentRegistry.has(id)) {
+    const item = gameManager.equipmentRegistry.get(id)
+    return {
+      label: item.name,
+      amount: dropAmountText(entry),
+      icon: item.icon,
+      tooltip: plainRewardTooltip(item.name, item.description, rows),
+    }
+  }
+  if (id && gameManager.pillRegistry.has(id)) {
+    const pill = gameManager.pillRegistry.get(id)
+    return {
+      label: pill.name,
+      amount: dropAmountText(entry),
+      icon: pill.icon,
+      tooltip: plainRewardTooltip(pill.name, pill.description, rows),
+    }
+  }
+  // Unknown id - keep the generic kind label, no icon (monogram).
+  return { label: dropEntryLabel(entry), amount: dropAmountText(entry) }
+}
+
 const paperStage = computed<ExplorationDetail | null>(() => {
   const stage = selectedStage.value
   if (!stage) {
@@ -344,17 +426,17 @@ const paperStage = computed<ExplorationDetail | null>(() => {
   const enemy = model?.displayEnemy
   const preview = model?.rewardPreview
 
-  const rewards: { label: string; amount: string }[] = []
+  const rewards: ExplorationReward[] = []
   if (preview) {
     rewards.push(
-      { label: t('combat.rewards.spiritStone'), amount: rangeLabel(preview.spiritStone) },
-      { label: t('combat.rewards.techniqueMastery'), amount: rangeLabel(preview.techniqueMastery) },
+      { label: t('combat.rewards.spiritStone'), amount: rangeLabel(preview.spiritStone), tooltip: plainRewardTooltip(t('combat.rewards.spiritStone'), undefined, []) },
+      { label: t('combat.rewards.techniqueMastery'), amount: rangeLabel(preview.techniqueMastery), tooltip: plainRewardTooltip(t('combat.rewards.techniqueMastery'), undefined, []) },
     )
     for (const entry of preview.guaranteed) {
-      rewards.push({ label: dropEntryLabel(entry), amount: '' })
+      rewards.push(dropEntryReward(entry, entry.chance))
     }
     for (const entry of preview.poolItems) {
-      rewards.push({ label: dropEntryLabel(entry), amount: '' })
+      rewards.push(dropEntryReward(entry, undefined))
     }
   }
 

@@ -30,6 +30,12 @@ export interface ExplorationModeChip {
   active: boolean
   disabled: boolean
 }
+export interface ExplorationReward {
+  label: string
+  amount: string
+  icon?: string
+  tooltip?: import('@/composables/useTooltip').TooltipContent
+}
 export interface ExplorationDetail {
   id: string
   title: string
@@ -41,7 +47,10 @@ export interface ExplorationDetail {
   enemySummary: string
   // "Ten Quai - Cap 3 - Can chien" - displayEnemy name/level/archetype.
   enemyLabel: string
-  rewards: readonly { label: string; amount: string }[]
+  // Reward cells render as SlotView tiles - icon/tooltip resolve from
+  // the item registries (undefined icon falls back to the monogram,
+  // undefined tooltip renders nothing on hover).
+  rewards: readonly ExplorationReward[]
   // disabledReasonLabel() verdict - empty when startable.
   disabledLabel: string
   modes: readonly ExplorationModeChip[]

@@ -595,12 +595,29 @@ export class ProductionSystem {
       return []
     }
 
+    const collectionRealmId = resolveTerritoryTier(
+      this.deps.territory,
+      cycle.collectionRealmId,
+    )
+
     const profile = getTierWeightProfile(
-      resolveTerritoryTier(this.deps.territory, cycle.collectionRealmId),
+      collectionRealmId,
       this.deps.territory.realmIds,
     )
 
-    const tierIndex = rollWeightedIndex(profile, random)
+    // F-MAT-REALM (saveShapeValidation): a holding more than one realm
+    // tier above the collector fails producibility, so the tier roll
+    // caps at collection tier + 1 - a mortal cycle can still pull
+    // qi_refining materials but can never mint foundation_establishment
+    // ones (the un-capped low profile leaked them ~11% of the time and
+    // corrupted mortal saves).
+    const collectionTierIndex = this.deps.territory.realmIds.indexOf(collectionRealmId)
+
+    const cappedProfile = profile.map((weight, index) =>
+      index <= collectionTierIndex + 1 ? weight : 0,
+    )
+
+    const tierIndex = rollWeightedIndex(cappedProfile, random)
 
     const tierRealmId = this.deps.territory.realmIds[tierIndex]
 
