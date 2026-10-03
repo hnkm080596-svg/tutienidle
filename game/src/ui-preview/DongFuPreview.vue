@@ -14,7 +14,7 @@ const model = computed<DongFuUiModel>(() => ({
     { id: 'crystal', label: t('currency.crystal'), value: '1.240' },
   ],
   actions: [
-    { id: 'character', ring: 1 }, { id: 'realm', ring: 1 }, { id: 'skill', ring: 1 },
+    { id: 'character' }, { id: 'realm' }, { id: 'skill' },
     { id: 'body' }, { id: 'alchemy' }, { id: 'exploration' }, { id: 'equipment' },
     { id: 'inventory' }, { id: 'technique' },
   ].map(action => ({ ...action, labelKey: `action.${action.id}`, symbol: action.id })),
