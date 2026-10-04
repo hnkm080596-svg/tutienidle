@@ -80,11 +80,12 @@ floor-sweep, foundation-entry — chay lai bang
 
 ### B2. Floor sweep GEARED (build gear that, stats gan dung moc moi floor)
 
-GEARED thang 10/10 floor mortal (k=10-18, mat 29-184 mau), thang
-3/10 floor qi (Quat 1-3), thua 7/10 floor qi con lai (k=7-13 truoc khi
-chet — sat nguc, frontier dung thiet ke), thua 9/10 floor foundation
-SAU TUNE o model nay (k=3-7; model GEARED yeu hon nguoi choi that da
-grind — honest-entry co growth thang duoc floor 1-4).
+GEARED thang 9/10 floor mortal (thua duy nhat dong_10 boss, kills 0 —
+build GEARED yeu hon journey build vi attribute spend ngau nhien),
+thang 3/10 floor qi (Quat 1-3), thua 7/10 floor qi con lai (k=7-13
+truoc khi chet — sat nguc, frontier dung thiet ke), thua 9/10 floor
+foundation SAU TUNE o model nay (k=3-7; model GEARED yeu hon nguoi choi
+that da grind — honest-entry co growth thang duoc floor 1-4).
 
 ### B3. Do doc species-normal qua cac chuong (sau tune)
 
@@ -123,7 +124,7 @@ cua vao Truc Co (mit giao 15 ≈ 10%) thi EHP muc tieu ~170-230.
 
 | Floor | Ket qua |
 |---|---|
-| 1 | thang try 1-2 (r19-20, con 6-41% mau) |
+| 1 | thang try 1 (r19-20, con 6-41% mau) |
 | 2 | thang try 5 |
 | 3 | thang try 3-7 |
 | 4 | thang try 2 |

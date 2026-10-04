@@ -479,14 +479,14 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
   // Balance retune (2026-10-04, docs/balance/enemies-review.md): the
   // roster remap put ONE wolf id on all 10 floors. At t4 (684hp) a real
   // post-initiation entrant kills ~1-3 wolves per attempt and never
-  // clears any floor (0 wins in 80+ measured runs); at t2 (518hp) the
+  // clears any floor (0 wins in 100+ measured runs); at t2 (518hp) the
   // same. perfectClearTurnLimit=20 for 10 wolves implies ~2 rounds per
-  // kill - the entrant's atk ~85-110 wants mob EHP ~260, which the
+  // kill - the entrant's atk ~85-110 wants mob EHP ~170-230, which the
   // foundationBeast formula cannot reach (t:1 = 450). Literal block,
-  // same as the Linh Lang Vuong boss below: hp ~2x bandit (the authored
-  // realm-jump slope boar->bandit->wolf ~2.0x), might/armor mid-way
-  // between bandit and the old t4 so wolf hits still threaten on
-  // defense-light builds.
+  // same as the Linh Lang Vuong boss below: hp ~1.5x bandit keeps the
+  // authored realm-jump slope (boar->bandit was 2.2x), might/armor
+  // mid-way between bandit and the old t4 so wolf hits still threaten
+  // on defense-light builds.
   defineEnemy({
     id: 'foundation_spirit_wolf',
     name: 'Linh Lang',
