@@ -256,7 +256,8 @@
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
         },
-        "upgradeGateHeader": "Upgrade blocked:"
+        "upgradeGateHeader": "Upgrade blocked:",
+        "infoOnly": "Precursor skill - read-only; it levels itself by cast count and cannot be enlightened or upgraded with Insight."
       },
       "elementTabs": {
         "aria": "Choose Pháp Tu element"
@@ -2020,6 +2021,7 @@
     "tree": "Skill Meridians",
     "levelLabel": "Level",
     "grants": "Skill",
+    "infoCasts": "Casts",
     "effects": "Effects",
     "conditions": "Requirements",
     "noConditions": "No further requirements.",

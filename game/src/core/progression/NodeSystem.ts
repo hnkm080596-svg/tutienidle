@@ -207,8 +207,13 @@ export function isNodeElementEffective(player: PlayerData, node: ProgressionNode
 export function canPurchaseNode(player: PlayerData, node: ProgressionNode): boolean {
   // M-QI-05 - Core Nodes are granted through learn/kit-root/way-commit
   // seams, never purchased. Ngu Kiem Beta: grantedOnly nodes (evolution
-  // layers) likewise enter only through explicit grants.
-  if (node.levelsSkillId !== undefined || node.grantedOnly === true) {
+  // layers) likewise enter only through explicit grants. Info anchors
+  // (infoSkillId) are read-only seats - Insight is never a valid input.
+  if (
+    node.levelsSkillId !== undefined ||
+    node.grantedOnly === true ||
+    node.infoSkillId !== undefined
+  ) {
     return false
   }
 
@@ -243,8 +248,9 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boolean {
   // M-QI-05 - cast-channel cores level by cast count ONLY; Insight is
   // never a valid input for them (QI-D3). Ngu Kiem Beta: evolution
-  // layers are single-level grants - no upgrade channel exists.
-  if (node.grantedOnly === true) {
+  // layers are single-level grants - no upgrade channel exists. Info
+  // anchors mirror a skill level they do not own - no upgrade channel.
+  if (node.grantedOnly === true || node.infoSkillId !== undefined) {
     return false
   }
 
@@ -543,8 +549,9 @@ export function revokeNodeOwnership(
 ): number {
   // rewardOnly nodes are grant-owned: callers already scope them out of
   // respec/devReset target sets; the guard belongs in this seam too so a
-  // future tag or new caller cannot silently re-open it.
-  if (node.rewardOnly) {
+  // future tag or new caller cannot silently re-open it. Info anchors
+  // are never owned in the first place - nothing to revoke.
+  if (node.rewardOnly || node.infoSkillId !== undefined) {
     return 0
   }
 
@@ -649,8 +656,9 @@ function cascadeRevokeOrphanedNodes(
       }
 
       // Grant-owned nodes are not revocable through respec - the same
-      // exemption the target selection above gives them.
-      if (node.rewardOnly) {
+      // exemption the target selection above gives them. Info anchors
+      // can never hold a legit level, so they share the exemption.
+      if (node.rewardOnly || node.infoSkillId !== undefined) {
         continue
       }
 

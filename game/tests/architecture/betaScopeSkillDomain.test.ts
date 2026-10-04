@@ -21,6 +21,7 @@ import {
   activeElementTreeFor,
   betaCombatRolesFor,
   betaCombatSurfacesFor,
+  betaMortalTreeViewTags,
   betaSkillTreeFor,
   type BetaSkillTreeNode,
 } from '@/core/betaScopeSkillDomain'
@@ -337,6 +338,46 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
         expect(node.reason).toBe('initiation-pending')
       }
     }
+  })
+
+  it('mortal tree surface admits only the info-anchor branches (fire for linh_bao)', () => {
+    const mortal = betaSkillTreeFor(mortalPlayer())
+
+    expect(mortal.mortal).toBe(true)
+    expect([...betaMortalTreeViewTags(PHAP_TU_NODES)]).toEqual(['fire'])
+
+    const seat = nodeById(mortal.nodes, 'linh_bao_tien_than')
+    expect(seat.state).toBe('progression-locked')
+    expect(seat.reason).toBe('initiation-pending')
+    expect(seat.infoSkillId).toBe('linh_bao')
+    expect(seat.canUpgrade).toBe(false)
+  })
+
+  it('info anchor: renderable for every in-scope player but never purchasable', () => {
+    // Uncommitted spell player browsing the element picker still reads it.
+    const uncommitted = betaSkillTreeFor(spellPlayer())
+    const seat = nodeById(uncommitted.nodes, 'linh_bao_tien_than')
+    expect(seat.state).toBe('progression-locked')
+    expect(seat.reason).toBe('info-only')
+
+    // Committed fire: same info-only verdict, no Insight channel.
+    const committed = betaSkillTreeFor(spellPlayer({ skillInsight: 50 }, 'fire'))
+    const committedSeat = nodeById(committed.nodes, 'linh_bao_tien_than')
+    expect(committedSeat.state).toBe('progression-locked')
+    expect(committedSeat.reason).toBe('info-only')
+    expect(committedSeat.canUpgrade).toBe(false)
+
+    // Other-element commit: the seat hides with its branch.
+    const water = betaSkillTreeFor(spellPlayer({}, 'water'))
+    expect(nodeById(water.nodes, 'linh_bao_tien_than').state).toBe(
+      'scope-hidden',
+    )
+
+    // Non-beta way: the whole surface fails closed, anchor included.
+    const sword = betaSkillTreeFor(swordPlayer())
+    expect(nodeById(sword.nodes, 'linh_bao_tien_than').state).toBe(
+      'scope-hidden',
+    )
   })
 
   it('corrupt mortal + cultivationPath save: every node is scope-hidden, nothing purchasable', () => {

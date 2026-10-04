@@ -27,6 +27,8 @@ import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { ELEMENT_ORDER, ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { viewBranchTags } from '@/core/progression/NodeBranchViews'
+import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/CastLeveling'
+import { betaMortalTreeViewTags } from '@/core/betaScopeSkillDomain'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
@@ -91,14 +93,23 @@ const revealHidden = (row: BetaSkillTreeNode): boolean =>
 const nodeViewTag = (node: ProgressionNode): string | undefined => node.elementTag ?? node.branchTag
 
 // Pathway-scoped render set: spell paths take their element tags, other
-// ways their declared tree tags; mortals render nothing.
+// ways their declared tree tags; a pre-initiation mortal admits only the
+// branches carrying a renderable info anchor (betaMortalTreeViewTags) -
+// every node there still renders its 'initiation-pending' lock.
 const pathwayRows = computed(() => {
-  const spell = elementCasting.value && wayNodeTreeTag.value === undefined
-  const tags = spell
-    ? new Set<ElementType>(ELEMENT_ORDER)
-    : wayNodeTreeTag.value !== undefined
-      ? new Set<string>(viewBranchTags(wayNodeTreeTag.value))
-      : null
+  const mortalTags = skillTree.value.mortal
+    ? betaMortalTreeViewTags(allNodes.value)
+    : null
+  const mortalView = mortalTags !== null && mortalTags.size > 0
+  const spell = mortalView || (elementCasting.value && wayNodeTreeTag.value === undefined)
+  let tags: ReadonlySet<string> | null = null
+  if (mortalView) {
+    tags = mortalTags
+  } else if (spell) {
+    tags = new Set<ElementType>(ELEMENT_ORDER)
+  } else if (wayNodeTreeTag.value !== undefined) {
+    tags = new Set<string>(viewBranchTags(wayNodeTreeTag.value))
+  }
   if (tags === null) return { spell, rows: new Map<string, BetaSkillTreeNode>(), nodes: [] as ProgressionNode[] }
 
   const nodes = allNodes.value.filter((node) => {
@@ -256,8 +267,59 @@ function nodeIcon(node: ProgressionNode): string {
     : FALLBACK_ICON
 }
 
+// Info-anchor presentation: the node's seat renders the LIVE skill
+// state (template + core level + cast progress) and never an action -
+// the skill's own channel owns leveling, Insight is not an input.
+function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphEntry): SkillUiNode {
+  const skillId = row.infoSkillId!
+  const skill = gameManager.catalogOps.getSkillTemplate(skillId)
+  const learned = gameManager.skillManager.has(skillId)
+  const coreLevel = gameManager.progressionOps.getSkillLevel(skillId, player.$state)
+  const maxLevel = gameManager.progressionOps.getSkillCoreMaxLevel(skillId)
+  const casts = player.$state.skillCastCounts?.[skillId] ?? 0
+  const thresholds = CAST_LEVELING_THRESHOLDS[skillId]
+  let nextThreshold: number | undefined
+  if (thresholds !== undefined && coreLevel < maxLevel) {
+    nextThreshold = coreLevel >= 2 ? thresholds.lv3 : thresholds.lv2
+  }
+  const position =
+    constellationPoints.value?.get(node.id) ??
+    layout.value.positions.get(node.id) ??
+    { x: 0, y: 0 }
+
+  return {
+    id: node.id,
+    name: skill?.name ?? row.name,
+    icon: nodeIcon(node),
+    x: position.x,
+    y: position.y,
+    prominent: entry.depth === 0,
+    emphasis: constellationPoints.value?.get(node.id)?.emphasis ?? 'normal',
+    level: `${coreLevel} / ${maxLevel}`,
+    state: learned ? 'learned' : 'locked',
+    description: skill?.description ?? row.description ?? '',
+    rows: [
+      { id: 'level', label: t('skill.levelLabel'), value: `${coreLevel} / ${maxLevel}` },
+      {
+        id: 'casts',
+        label: t('skill.infoCasts'),
+        value:
+          nextThreshold !== undefined
+            ? `${formatNumber(casts)} / ${formatNumber(nextThreshold)}`
+            : formatNumber(casts),
+      },
+    ],
+    conditions: [t('panels.skillPath.nodeInspector.infoOnly')],
+    costLabel: '',
+    actionLabel: '',
+    actionDisabled: true,
+    actionHint: '',
+  }
+}
+
 function toUiNode(entry: GraphEntry): SkillUiNode {
   const { node, row } = entry
+  if (row.infoSkillId !== undefined) return infoUiNode(node, row, entry)
   const owned = row.level >= 1
   const state: SkillUiNode['state'] = owned ? 'learned' : row.state === 'purchasable' ? 'available' : 'locked'
   const purchaseCost = row.nextLevelCost ?? node.insightCost ?? 0

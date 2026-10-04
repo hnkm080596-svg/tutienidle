@@ -45,4 +45,23 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
   // a hidden-way player aggregates every granted mastery (hidden_spell_-
   // pathway still cannot buy a single tree node).
   ...buildRealmRewardNodes(),
+  // Mortal precursor info anchor (2026-10-04) - linh_bao's readable seat
+  // on the fire glyph. Deliberately OUTSIDE the stamping map: the skill
+  // is mortal-domain (learned before the ritual, carried into every
+  // way), so path/way stamps would hide it from its own audience.
+  // infoSkillId makes it purchase-proof; the detail surface mirrors the
+  // live skill (template + core level + cast count) - the node's own
+  // level/effect stay inert.
+  {
+    id: 'linh_bao_tien_than',
+    name: 'Linh Bạo',
+    type: 'major',
+    description:
+      'Chiêu thức tiền thân của đại đạo pháp tu - tụ linh khí bùng nổ, bỏ qua mọi phòng thủ. Tự lên cấp theo số lần xuất chiêu, không thể lĩnh ngộ hay nâng cấp bằng Cảm Ngộ.',
+    elementTag: 'fire',
+    effect: {},
+    insightCost: 0,
+    maxLevel: 1,
+    infoSkillId: 'linh_bao',
+  },
 ]

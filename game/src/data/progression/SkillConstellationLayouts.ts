@@ -59,6 +59,9 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     { nodeId: 'fire_basic_hoa_tan_diem', x: 398, y: 280, emphasis: 'major', labelPlacement: 'top' },
     { nodeId: 'fire_ailment_mastery', x: 140, y: 96 },
     { nodeId: 'linh_ngo_tam_muoi_chan_hoa', x: 320, y: 80, emphasis: 'major' },
+    // Mortal precursor seat - a small satellite feeding the junction
+    // from the left, off every authored leg stroke's corridor.
+    { nodeId: 'linh_bao_tien_than', x: 150, y: 150, emphasis: 'major', labelPlacement: 'left' },
   ],
   strokes: [
     // Left-falling sweep (pie): top extension through the junction down
@@ -73,6 +76,8 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     // The two top marks.
     { fromNodeId: 'hoa_linh_ngo', toNodeId: 'fire_ailment_mastery' },
     { fromNodeId: 'hoa_linh_ngo', toNodeId: 'linh_ngo_tam_muoi_chan_hoa' },
+    // Precursor satellite feeding the root junction.
+    { fromNodeId: 'linh_bao_tien_than', toNodeId: 'hoa_linh_ngo' },
   ],
 }
 
