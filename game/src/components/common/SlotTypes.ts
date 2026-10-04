@@ -28,13 +28,17 @@ export interface SlotPresentationState {
 //               glass slot-backdrop.png ("empty" - reads faintly on
 //               the dark backdrop) + pale gold frame hover
 //               slot-frame-hover.png ("click").
+//   bag       = the dense Kho Vat / Trang Bi inventory grids (owner
+//               ruling 2026-10-04): drawn ornate cell frame
+//               frame-s-slot (huyen-kim chrome manifest) layered over
+//               the same dark tile + pale gold frame hover.
 // Item hover fits the cell edge exactly (inset 0, 100% 100%); the
 // equipment gold frame bakes ~2-3% transparent padding into its PNG
 // edges, so it overshoots via --slot-hover-inset: -4% to land the
 // bright stroke on the slot border. equip-slot-backdrop.png (stray
 // metal rim) + equip-slot-hover.png (black 293x134 banner cut from
 // the wrong region) were removed.
-export type SlotVariant = 'item' | 'equipment'
+export type SlotVariant = 'item' | 'equipment' | 'bag'
 
 // Badge nho o layer 6 (muc 17.3) - thay cho cac span tu absolute-
 // position ben ngoai Slot (vd .paperdoll__enhance-badge cu).

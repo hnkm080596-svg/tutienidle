@@ -210,7 +210,7 @@ export const useUiStore = defineStore('ui', {
         this.characterOverlayOpen = !shouldClose
         if (this.characterOverlayOpen) {
           this.characterSceneTab = mode
-          this.activeBagTab = 'equipment'
+          this.activeBagTab = 'material'
         }
         return
       }
@@ -233,7 +233,7 @@ export const useUiStore = defineStore('ui', {
         this.closeHomeOverlays()
         this.characterOverlayOpen = true
         this.characterSceneTab = mode
-        this.activeBagTab = 'equipment'
+        this.activeBagTab = 'material'
         return
       }
       this.closeHomeOverlays()

@@ -2105,8 +2105,7 @@
       "accessories": "Accessories"
     },
     "workspace": {
-      "equip": "Gear",
-      "bag": "Stash"
+      "equip": "Gear"
     }
   },
   "inventoryPreview": {
