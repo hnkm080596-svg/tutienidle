@@ -28,161 +28,165 @@
     },
     "textures": [
       {
-        "id": "tex_mob_stompmulti_sole_11f27c8fcadf",
-        "name": "mob stompmulti sole",
+        "id": "tex_mob_stompmulti_leg_l_79d6ca4835c2",
+        "name": "mob stompmulti leg l",
+        "sheet": null
+      },
+      {
+        "id": "tex_mob_stompmulti_leg_r_4f672f7bda53",
+        "name": "mob stompmulti leg r",
         "sheet": null
       }
     ],
     "layers": [
       {
-        "id": "lr_sm_sole_a",
-        "name": "Sole a",
-        "type": "sprite",
-        "blend": "normal",
+        "id": "lr_sm_sparks",
+        "name": "Impact Sparks",
+        "type": "emitter",
+        "blend": "add",
         "start": -0.02,
-        "end": 0.6,
-        "opacity": {
-          "keys": [
+        "end": 0.62,
+        "em": {
+          "x": {
+            "keys": [
+              {
+                "t": 0.11,
+                "v": -38
+              },
+              {
+                "t": 0.34,
+                "v": 38
+              }
+            ]
+          },
+          "y": 52,
+          "shape": "point",
+          "sx": 8,
+          "sy": 4,
+          "dir": "dir",
+          "angle": -90,
+          "spread": 115,
+          "speed": 175,
+          "speedRnd": 0.45,
+          "rate": 0,
+          "bursts": [
             {
-              "t": 0.020000000000000004,
-              "v": 0
+              "t": 0.11,
+              "n": 8
             },
             {
-              "t": 0.045,
-              "v": 1
+              "t": 0.165,
+              "n": 4
             },
             {
-              "t": 0.33,
-              "v": 1
+              "t": 0.34,
+              "n": 9
             },
             {
-              "t": 0.37,
-              "v": 0
+              "t": 0.395,
+              "n": 5
             }
-          ]
-        },
-        "sp": {
-          "sprite": {
-            "kind": "tex",
-            "texId": "tex_mob_stompmulti_sole_11f27c8fcadf",
-            "p": {}
-          },
-          "size": 200,
-          "x": -38,
-          "y": {
-            "keys": [
-              {
-                "t": 0.020000000000000004,
-                "v": -160
-              },
-              {
-                "t": 0.11,
-                "v": 10
-              },
-              {
-                "t": 0.37,
-                "v": 10
-              }
-            ]
-          },
-          "scale": {
-            "keys": [
-              {
-                "t": 0.020000000000000004,
-                "v": 0.9
-              },
-              {
-                "t": 0.11,
-                "v": 1
-              },
-              {
-                "t": 0.135,
-                "v": 0.86
-              },
-              {
-                "t": 0.22,
-                "v": 1
-              }
-            ]
-          },
-          "aspect": 1,
-          "rot": -6,
-          "color": [
-            255,
-            255,
-            255
           ],
-          "squash": 0.62,
-          "glow": 0,
-          "glowSize": 1.6,
-          "glowBlur": 0.15,
-          "fps": 0
-        }
-      },
-      {
-        "id": "lr_sm_dent_a",
-        "name": "Dent a",
-        "type": "sprite",
-        "blend": "normal",
-        "start": -0.02,
-        "end": 0.6,
-        "opacity": {
-          "keys": [
-            {
-              "t": 0.105,
-              "v": 0
-            },
-            {
-              "t": 0.14,
-              "v": 0.55
-            },
-            {
-              "t": 0.31,
-              "v": 0.45
-            },
-            {
-              "t": 0.37,
-              "v": 0
-            }
-          ]
+          "seed": 71,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
         },
-        "sp": {
+        "pt": {
+          "life": 0.4,
+          "lifeRnd": 0.35,
           "sprite": {
             "kind": "shape",
-            "id": "soft",
+            "id": "ember",
             "p": {}
           },
-          "size": 110,
-          "x": -38,
-          "y": 66,
-          "scale": {
-            "keys": [
+          "size": 9,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
               {
-                "t": 0.105,
-                "v": 0.5
-              },
-              {
-                "t": 0.16,
+                "t": 0,
                 "v": 1.1
               },
               {
-                "t": 0.37,
-                "v": 1.3
+                "t": 0.7,
+                "v": 0.8
+              },
+              {
+                "t": 1,
+                "v": 0.2
               }
             ]
           },
-          "aspect": 1,
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.12,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  244,
+                  214
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  246,
+                  200,
+                  120
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  200,
+                  138,
+                  70
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
           "rot": 0,
-          "color": [
-            40,
-            26,
-            16
-          ],
-          "squash": 0.55,
-          "glow": 0,
-          "glowSize": 1.6,
-          "glowBlur": 0.15,
-          "fps": 0
+          "rotRnd": 1,
+          "spin": 60,
+          "spinRnd": 0.6,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": 320,
+          "drag": 1.2,
+          "turbAmp": 12,
+          "turbFreq": 1.4,
+          "squash": 0,
+          "glow": 0.35,
+          "glowSize": 1.8,
+          "glowBlur": 0.2,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
         }
       },
       {
@@ -191,7 +195,7 @@
         "type": "sprite",
         "blend": "add",
         "start": -0.02,
-        "end": 0.6,
+        "end": 0.62,
         "opacity": {
           "keys": [
             {
@@ -199,11 +203,11 @@
               "v": 0
             },
             {
-              "t": 0.13,
-              "v": 0.85
+              "t": 0.125,
+              "v": 0.7
             },
             {
-              "t": 0.22,
+              "t": 0.2,
               "v": 0
             },
             {
@@ -211,11 +215,11 @@
               "v": 0
             },
             {
-              "t": 0.36,
-              "v": 0.9
+              "t": 0.355,
+              "v": 0.72
             },
             {
-              "t": 0.47,
+              "t": 0.45,
               "v": 0
             }
           ]
@@ -226,7 +230,7 @@
             "id": "soft",
             "p": {}
           },
-          "size": 150,
+          "size": 64,
           "x": {
             "keys": [
               {
@@ -239,24 +243,24 @@
               }
             ]
           },
-          "y": 46,
+          "y": 44,
           "scale": {
             "keys": [
               {
                 "t": 0.105,
-                "v": 0.4
+                "v": 0.5
               },
               {
-                "t": 0.16,
-                "v": 1.4
+                "t": 0.17,
+                "v": 1.15
               },
               {
                 "t": 0.335,
-                "v": 1.1
+                "v": 0.9
               },
               {
-                "t": 0.4,
-                "v": 1.5
+                "t": 0.42,
+                "v": 1.2
               }
             ]
           },
@@ -264,11 +268,259 @@
           "rot": 0,
           "color": [
             255,
-            232,
-            190
+            240,
+            200
+          ],
+          "squash": 0.55,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_sm_leg_a",
+        "name": "Spectral Leg a",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.62,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.020000000000000004,
+              "v": 0
+            },
+            {
+              "t": 0.05,
+              "v": 0.82
+            },
+            {
+              "t": 0.22,
+              "v": 0.82
+            },
+            {
+              "t": 0.34,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_stompmulti_leg_l_79d6ca4835c2",
+            "p": {}
+          },
+          "size": 260,
+          "x": {
+            "keys": [
+              {
+                "t": 0.020000000000000004,
+                "v": -12
+              },
+              {
+                "t": 0.11,
+                "v": -38
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.020000000000000004,
+                "v": -260,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "cust",
+                  "h": [
+                    0.4,
+                    0
+                  ]
+                }
+              },
+              {
+                "t": 0.11,
+                "v": -21,
+                "i": {
+                  "m": "lin"
+                }
+              },
+              {
+                "t": 0.3,
+                "v": -25
+              },
+              {
+                "t": 0.39,
+                "v": -25
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.020000000000000004,
+                "v": 0.92
+              },
+              {
+                "t": 0.11,
+                "v": 1
+              },
+              {
+                "t": 0.132,
+                "v": 0.88
+              },
+              {
+                "t": 0.22,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": {
+            "keys": [
+              {
+                "t": 0.020000000000000004,
+                "v": -5.4
+              },
+              {
+                "t": 0.11,
+                "v": -4
+              }
+            ]
+          },
+          "color": [
+            255,
+            255,
+            255
           ],
           "squash": 0.4,
-          "glow": 0.45,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_sm_leg_b",
+        "name": "Spectral Leg b",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.62,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.25,
+              "v": 0
+            },
+            {
+              "t": 0.28,
+              "v": 0.82
+            },
+            {
+              "t": 0.45,
+              "v": 0.82
+            },
+            {
+              "t": 0.5700000000000001,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_stompmulti_leg_r_4f672f7bda53",
+            "p": {}
+          },
+          "size": 260,
+          "x": {
+            "keys": [
+              {
+                "t": 0.25,
+                "v": 64
+              },
+              {
+                "t": 0.34,
+                "v": 38
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.25,
+                "v": -260,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "cust",
+                  "h": [
+                    0.4,
+                    0
+                  ]
+                }
+              },
+              {
+                "t": 0.34,
+                "v": -21,
+                "i": {
+                  "m": "lin"
+                }
+              },
+              {
+                "t": 0.53,
+                "v": -25
+              },
+              {
+                "t": 0.6200000000000001,
+                "v": -25
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.25,
+                "v": 0.92
+              },
+              {
+                "t": 0.34,
+                "v": 1
+              },
+              {
+                "t": 0.36200000000000004,
+                "v": 0.88
+              },
+              {
+                "t": 0.45,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": {
+            "keys": [
+              {
+                "t": 0.25,
+                "v": 5.4
+              },
+              {
+                "t": 0.34,
+                "v": 4
+              }
+            ]
+          },
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0.4,
+          "glow": 0,
           "glowSize": 1.6,
           "glowBlur": 0.15,
           "fps": 0
@@ -280,7 +532,7 @@
         "type": "sprite",
         "blend": "add",
         "start": -0.02,
-        "end": 0.6,
+        "end": 0.62,
         "opacity": {
           "keys": [
             {
@@ -289,7 +541,7 @@
             },
             {
               "t": 0.14,
-              "v": 0.7
+              "v": 0.5
             },
             {
               "t": 0.3,
@@ -301,7 +553,7 @@
             },
             {
               "t": 0.37,
-              "v": 0.7
+              "v": 0.52
             },
             {
               "t": 0.55,
@@ -314,7 +566,7 @@
             "kind": "shape",
             "id": "ring",
             "p": {
-              "th": 0.16
+              "th": 0.14
             }
           },
           "size": 170,
@@ -354,166 +606,157 @@
           "aspect": 1,
           "rot": 0,
           "color": [
-            238,
-            196,
-            130
+            240,
+            210,
+            158
           ],
-          "squash": 0.5,
-          "glow": 0.3,
+          "squash": 1,
+          "glow": 0.25,
           "glowSize": 1.6,
           "glowBlur": 0.15,
           "fps": 0
         }
       },
       {
-        "id": "lr_sm_sole_b",
-        "name": "Sole b",
-        "type": "sprite",
+        "id": "lr_sm_rocks",
+        "name": "Thrown Rocks",
+        "type": "emitter",
         "blend": "normal",
         "start": -0.02,
-        "end": 0.6,
-        "opacity": {
-          "keys": [
-            {
-              "t": 0.25,
-              "v": 0
-            },
-            {
-              "t": 0.275,
-              "v": 1
-            },
-            {
-              "t": 0.56,
-              "v": 1
-            },
-            {
-              "t": 0.6000000000000001,
-              "v": 0
-            }
-          ]
-        },
-        "sp": {
-          "sprite": {
-            "kind": "tex",
-            "texId": "tex_mob_stompmulti_sole_11f27c8fcadf",
-            "p": {}
-          },
-          "size": 200,
-          "x": 38,
-          "y": {
+        "end": 0.62,
+        "em": {
+          "x": {
             "keys": [
               {
-                "t": 0.25,
-                "v": -160
+                "t": 0.11,
+                "v": -38
               },
               {
                 "t": 0.34,
-                "v": 10
-              },
-              {
-                "t": 0.6000000000000001,
-                "v": 10
+                "v": 38
               }
             ]
           },
-          "scale": {
-            "keys": [
+          "y": 54,
+          "shape": "point",
+          "sx": 10,
+          "sy": 5,
+          "dir": "dir",
+          "angle": -90,
+          "spread": 75,
+          "speed": 215,
+          "speedRnd": 0.45,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.11,
+              "n": 8
+            },
+            {
+              "t": 0.34,
+              "n": 9
+            }
+          ],
+          "seed": 53,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.5,
+          "lifeRnd": 0.3,
+          "sprite": {
+            "kind": "shape",
+            "id": "shard",
+            "p": {}
+          },
+          "size": 10,
+          "sizeRnd": 0.45,
+          "sizeOL": {
+            "pts": [
               {
-                "t": 0.25,
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.8,
                 "v": 0.9
               },
               {
-                "t": 0.34,
-                "v": 1
-              },
-              {
-                "t": 0.36500000000000005,
-                "v": 0.86
-              },
-              {
-                "t": 0.45,
-                "v": 1
+                "t": 1,
+                "v": 0.3
               }
             ]
           },
-          "aspect": 1,
-          "rot": 6,
-          "color": [
-            255,
-            255,
-            255
-          ],
-          "squash": 0.62,
-          "glow": 0,
-          "glowSize": 1.6,
-          "glowBlur": 0.15,
-          "fps": 0
-        }
-      },
-      {
-        "id": "lr_sm_dent_b",
-        "name": "Dent b",
-        "type": "sprite",
-        "blend": "normal",
-        "start": -0.02,
-        "end": 0.6,
-        "opacity": {
-          "keys": [
-            {
-              "t": 0.335,
-              "v": 0
-            },
-            {
-              "t": 0.37,
-              "v": 0.55
-            },
-            {
-              "t": 0.54,
-              "v": 0.45
-            },
-            {
-              "t": 0.6000000000000001,
-              "v": 0
-            }
-          ]
-        },
-        "sp": {
-          "sprite": {
-            "kind": "shape",
-            "id": "soft",
-            "p": {}
-          },
-          "size": 110,
-          "x": 38,
-          "y": 66,
-          "scale": {
-            "keys": [
+          "opacityOL": {
+            "pts": [
               {
-                "t": 0.335,
-                "v": 0.5
+                "t": 0,
+                "v": 0.9
               },
               {
-                "t": 0.39,
-                "v": 1.1
+                "t": 0.75,
+                "v": 0.9
               },
               {
-                "t": 0.6000000000000001,
-                "v": 1.3
+                "t": 1,
+                "v": 0
               }
             ]
           },
-          "aspect": 1,
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  228,
+                  190,
+                  132
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  172,
+                  132,
+                  86
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  112,
+                  82,
+                  52
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
           "rot": 0,
-          "color": [
-            40,
-            26,
-            16
-          ],
-          "squash": 0.55,
+          "rotRnd": 1,
+          "spin": 180,
+          "spinRnd": 0.8,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": 400,
+          "drag": 0.4,
+          "turbAmp": 10,
+          "turbFreq": 1.5,
+          "squash": 0,
           "glow": 0,
           "glowSize": 1.6,
           "glowBlur": 0.15,
-          "fps": 0
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
         }
       },
       {
@@ -522,7 +765,7 @@
         "type": "emitter",
         "blend": "normal",
         "start": -0.02,
-        "end": 0.6,
+        "end": 0.62,
         "em": {
           "x": {
             "keys": [
@@ -608,7 +851,7 @@
               },
               {
                 "t": 0.2,
-                "v": 0.8
+                "v": 0.65
               },
               {
                 "t": 1,
@@ -621,25 +864,25 @@
               {
                 "t": 0,
                 "c": [
-                  226,
-                  194,
-                  144
+                  232,
+                  200,
+                  150
                 ]
               },
               {
                 "t": 0.55,
                 "c": [
-                  176,
-                  138,
-                  92
+                  184,
+                  146,
+                  98
                 ]
               },
               {
                 "t": 1,
                 "c": [
-                  122,
-                  92,
-                  60
+                  130,
+                  98,
+                  64
                 ]
               }
             ]
@@ -667,46 +910,65 @@
         }
       },
       {
-        "id": "lr_sm_rocks",
-        "name": "Thrown Rocks",
+        "id": "lr_sm_wisps_a",
+        "name": "Wisps a",
         "type": "emitter",
-        "blend": "normal",
+        "blend": "add",
         "start": -0.02,
-        "end": 0.6,
+        "end": 0.62,
         "em": {
           "x": {
             "keys": [
               {
-                "t": 0.11,
-                "v": -38
+                "t": 0.020000000000000004,
+                "v": -12
               },
               {
-                "t": 0.34,
-                "v": 38
+                "t": 0.11,
+                "v": -38
               }
             ]
           },
-          "y": 54,
-          "shape": "point",
-          "sx": 10,
-          "sy": 5,
-          "dir": "dir",
+          "y": {
+            "keys": [
+              {
+                "t": 0.05,
+                "v": -150
+              },
+              {
+                "t": 0.11,
+                "v": 30
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 26,
+          "sy": 60,
+          "dir": "omni",
           "angle": -90,
-          "spread": 75,
-          "speed": 215,
-          "speedRnd": 0.45,
+          "spread": 360,
+          "speed": 26,
+          "speedRnd": 0.5,
           "rate": 0,
           "bursts": [
             {
-              "t": 0.11,
-              "n": 8
+              "t": 0.06,
+              "n": 5
             },
             {
-              "t": 0.34,
-              "n": 9
+              "t": 0.08,
+              "n": 5
+            },
+            {
+              "t": 0.14,
+              "n": 6
+            },
+            {
+              "t": 0.2,
+              "n": 5
             }
           ],
-          "seed": 53,
+          "seed": -9,
           "branch": {
             "chance": 0,
             "spread": 35,
@@ -718,27 +980,27 @@
         },
         "pt": {
           "life": 0.5,
-          "lifeRnd": 0.3,
+          "lifeRnd": 0.5,
           "sprite": {
             "kind": "shape",
-            "id": "shard",
+            "id": "spark",
             "p": {}
           },
-          "size": 10,
-          "sizeRnd": 0.45,
+          "size": 8,
+          "sizeRnd": 0.5,
           "sizeOL": {
             "pts": [
               {
                 "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 0.4,
                 "v": 1
               },
               {
-                "t": 0.8,
-                "v": 0.9
-              },
-              {
                 "t": 1,
-                "v": 0.3
+                "v": 0.7
               }
             ]
           },
@@ -746,11 +1008,11 @@
             "pts": [
               {
                 "t": 0,
-                "v": 1
+                "v": 0
               },
               {
-                "t": 0.75,
-                "v": 1
+                "t": 0.25,
+                "v": 0.75
               },
               {
                 "t": 1,
@@ -763,25 +1025,25 @@
               {
                 "t": 0,
                 "c": [
-                  158,
-                  114,
-                  68
+                  255,
+                  246,
+                  220
                 ]
               },
               {
                 "t": 0.6,
                 "c": [
-                  112,
-                  78,
-                  46
+                  240,
+                  206,
+                  140
                 ]
               },
               {
                 "t": 1,
                 "c": [
-                  72,
-                  48,
-                  30
+                  200,
+                  160,
+                  96
                 ]
               }
             ]
@@ -789,19 +1051,19 @@
           "tintTex": false,
           "rot": 0,
           "rotRnd": 1,
-          "spin": 180,
-          "spinRnd": 0.8,
+          "spin": 45,
+          "spinRnd": 0.5,
           "alignVel": false,
           "stretch": 0,
           "gravX": 0,
-          "gravY": 400,
-          "drag": 0.4,
-          "turbAmp": 10,
-          "turbFreq": 1.5,
+          "gravY": -70,
+          "drag": 1.8,
+          "turbAmp": 16,
+          "turbFreq": 1.1,
           "squash": 0,
-          "glow": 0,
-          "glowSize": 1.6,
-          "glowBlur": 0.15,
+          "glow": 0.3,
+          "glowSize": 1.8,
+          "glowBlur": 0.2,
           "fps": 0,
           "render": "sprite",
           "trailCore": 0,
@@ -809,48 +1071,189 @@
         }
       },
       {
-        "id": "lr_sm_shadow",
-        "name": "Sole Shadows",
+        "id": "lr_sm_wisps_b",
+        "name": "Wisps b",
+        "type": "emitter",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.62,
+        "em": {
+          "x": {
+            "keys": [
+              {
+                "t": 0.25,
+                "v": 64
+              },
+              {
+                "t": 0.34,
+                "v": 38
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.28,
+                "v": -150
+              },
+              {
+                "t": 0.34,
+                "v": 30
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 26,
+          "sy": 60,
+          "dir": "omni",
+          "angle": -90,
+          "spread": 360,
+          "speed": 26,
+          "speedRnd": 0.5,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.29000000000000004,
+              "n": 5
+            },
+            {
+              "t": 0.31000000000000005,
+              "n": 5
+            },
+            {
+              "t": 0.37,
+              "n": 6
+            },
+            {
+              "t": 0.43000000000000005,
+              "n": 5
+            }
+          ],
+          "seed": 67,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.5,
+          "lifeRnd": 0.5,
+          "sprite": {
+            "kind": "shape",
+            "id": "spark",
+            "p": {}
+          },
+          "size": 8,
+          "sizeRnd": 0.5,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 0.4,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.7
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.25,
+                "v": 0.75
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  246,
+                  220
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  240,
+                  206,
+                  140
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  200,
+                  160,
+                  96
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 45,
+          "spinRnd": 0.5,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": -70,
+          "drag": 1.8,
+          "turbAmp": 16,
+          "turbFreq": 1.1,
+          "squash": 0,
+          "glow": 0.3,
+          "glowSize": 1.8,
+          "glowBlur": 0.2,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_sm_dent_a",
+        "name": "Dent a",
         "type": "sprite",
         "blend": "normal",
         "start": -0.02,
-        "end": 0.6,
+        "end": 0.62,
         "opacity": {
           "keys": [
             {
-              "t": 0.02,
+              "t": 0.105,
               "v": 0
             },
             {
-              "t": 0.09,
-              "v": 0.35
-            },
-            {
-              "t": 0.11,
-              "v": 0.55
-            },
-            {
-              "t": 0.22,
-              "v": 0.2
-            },
-            {
-              "t": 0.28,
-              "v": 0
+              "t": 0.14,
+              "v": 0.34
             },
             {
               "t": 0.31,
-              "v": 0.35
+              "v": 0.26
             },
             {
-              "t": 0.34,
-              "v": 0.55
-            },
-            {
-              "t": 0.5,
-              "v": 0.3
-            },
-            {
-              "t": 0.6,
+              "t": 0.37,
               "v": 0
             }
           ]
@@ -861,48 +1264,231 @@
             "id": "soft",
             "p": {}
           },
-          "size": 140,
-          "x": {
-            "keys": [
-              {
-                "t": 0.02,
-                "v": -38
-              },
-              {
-                "t": 0.25,
-                "v": 38
-              }
-            ]
-          },
-          "y": 64,
+          "size": 108,
+          "x": -38,
+          "y": 66,
           "scale": {
             "keys": [
               {
-                "t": 0.02,
+                "t": 0.105,
+                "v": 0.5
+              },
+              {
+                "t": 0.16,
+                "v": 1.1
+              },
+              {
+                "t": 0.37,
                 "v": 1.3
-              },
-              {
-                "t": 0.11,
-                "v": 0.9
-              },
-              {
-                "t": 0.25,
-                "v": 1.3
-              },
-              {
-                "t": 0.34,
-                "v": 0.9
               }
             ]
           },
           "aspect": 1,
           "rot": 0,
           "color": [
-            22,
-            14,
-            9
+            62,
+            44,
+            28
           ],
-          "squash": 0.5,
+          "squash": 1,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_sm_dent_b",
+        "name": "Dent b",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.62,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.335,
+              "v": 0
+            },
+            {
+              "t": 0.37,
+              "v": 0.34
+            },
+            {
+              "t": 0.54,
+              "v": 0.26
+            },
+            {
+              "t": 0.6000000000000001,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 108,
+          "x": 38,
+          "y": 66,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.335,
+                "v": 0.5
+              },
+              {
+                "t": 0.39,
+                "v": 1.1
+              },
+              {
+                "t": 0.6000000000000001,
+                "v": 1.3
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            62,
+            44,
+            28
+          ],
+          "squash": 1,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_sm_shadow_a",
+        "name": "Shadow a",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.62,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.020000000000000004,
+              "v": 0
+            },
+            {
+              "t": 0.1,
+              "v": 0.22
+            },
+            {
+              "t": 0.11,
+              "v": 0.32
+            },
+            {
+              "t": 0.28,
+              "v": 0.2
+            },
+            {
+              "t": 0.37,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 130,
+          "x": -38,
+          "y": 64,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.020000000000000004,
+                "v": 1.3
+              },
+              {
+                "t": 0.11,
+                "v": 0.85
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            40,
+            28,
+            18
+          ],
+          "squash": 1,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_sm_shadow_b",
+        "name": "Shadow b",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.62,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.25,
+              "v": 0
+            },
+            {
+              "t": 0.33,
+              "v": 0.22
+            },
+            {
+              "t": 0.34,
+              "v": 0.32
+            },
+            {
+              "t": 0.51,
+              "v": 0.2
+            },
+            {
+              "t": 0.6000000000000001,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 130,
+          "x": 38,
+          "y": 64,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.25,
+                "v": 1.3
+              },
+              {
+                "t": 0.34,
+                "v": 0.85
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            40,
+            28,
+            18
+          ],
+          "squash": 1,
           "glow": 0,
           "glowSize": 1.6,
           "glowBlur": 0.15,
@@ -912,6 +1498,7 @@
     ]
   },
   "tex": {
-    "tex_mob_stompmulti_sole_11f27c8fcadf": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGcgZmlsbD0iIzNkMjQxNiIgc3Ryb2tlPSIjMTgwYzA1IiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPGVsbGlwc2UgY3g9Ijg2IiBjeT0iODYiIHJ4PSIyMCIgcnk9IjI2Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTI4IiBjeT0iNzQiIHJ4PSIyMiIgcnk9IjI4Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTcwIiBjeT0iODYiIHJ4PSIyMCIgcnk9IjI2Ii8+CiAgICA8cmVjdCB4PSI3MCIgeT0iMTEyIiB3aWR0aD0iMTE2IiBoZWlnaHQ9Ijg0IiByeD0iMzQiIHJ5PSIzMCIvPgogIDwvZz4KICA8ZyBmaWxsPSIjNmI0NTJhIiBvcGFjaXR5PSIwLjg1Ij4KICAgIDxlbGxpcHNlIGN4PSIxMjgiIGN5PSIxNjAiIHJ4PSIzOCIgcnk9IjI0Ii8+CiAgICA8ZWxsaXBzZSBjeD0iODYiIGN5PSI4OCIgcng9IjEwIiByeT0iMTMiLz4KICAgIDxlbGxpcHNlIGN4PSIxMjgiIGN5PSI3NiIgcng9IjExIiByeT0iMTQiLz4KICAgIDxlbGxpcHNlIGN4PSIxNzAiIGN5PSI4OCIgcng9IjEwIiByeT0iMTMiLz4KICA8L2c+Cjwvc3ZnPg=="
+    "tex_mob_stompmulti_leg_l_79d6ca4835c2": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMzQwIiB2aWV3Qm94PSIwIDAgMjU2IDM0MCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImhvdCIgY3g9IjAuNSIgY3k9IjAuNSIgcj0iMC41Ij4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmNmRhIiBzdG9wLW9wYWNpdHk9IjAuNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjAuNjUiIHN0b3AtY29sb3I9IiNmZmVkYzAiIHN0b3Atb3BhY2l0eT0iMC4yMiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmVkYzAiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTYsMCkiPgogIDxwYXRoIGZpbGw9IiNlOGQ2YjQiIGZpbGwtb3BhY2l0eT0iMC42MiIgc3Ryb2tlPSIjN2Q1YjM4IiBzdHJva2Utb3BhY2l0eT0iMC44NSIgc3Ryb2tlLXdpZHRoPSI1LjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiCiAgICBkPSJNNDggLTggQzQ0IDYyIDQyIDExOCA0MiAxNTYgQzQyIDE3MiA0MCAxODYgMzYgMjAwIEwyNiAyMjYKICAgICAgIEMyMSAyNDAgMTYgMjUwIDE2IDI1OCBDMTYgMjY1IDIxIDI3MCAyNyAyNzAgQzM0IDI3MCAzOSAyNjYgNDIgMjYwCiAgICAgICBMNTAgMjQwIEM1MiAyMzUgNTcgMjM1IDU5IDI0MCBMNjggMjYwCiAgICAgICBDNzAgMjY3IDc3IDI3MSA4NCAyNzEgQzkxIDI3MSA5OCAyNjcgMTAyIDI2MAogICAgICAgQzEwOCAyNTIgMTEwIDI0NSAxMDkgMjM4IEMxMDggMjMyIDEwMiAyMjggOTYgMjI2CiAgICAgICBDOTkgMjIwIDk4IDIxNCA5NCAyMDggTDg4IDIwMgogICAgICAgTDEwMiAxOTggTDkyIDE5MiBMMTA2IDE4OCBMOTQgMTgyIEwxMDggMTc4IEw5NiAxNzIKICAgICAgIEMxMDQgMTUyIDExMCAxMjggMTE0IDEwMiBDMTIwIDYyIDEyNCAyNCAxMjYgLTggWiIvPgogIDxwYXRoIGQ9Ik0xNiAyNTIgQzE2IDI2MiAyMSAyNzAgMjcgMjcwIEMzNCAyNzAgMzkgMjY2IDQyIDI2MCBMMzggMjQ4IFoiCiAgICAgICAgZmlsbD0iIzhhNjc0MiIgZmlsbC1vcGFjaXR5PSIwLjU1Ii8+CiAgPHBhdGggZD0iTTYyIDI0OCBMNjggMjYwIEM3MCAyNjcgNzcgMjcxIDg0IDI3MSBDOTEgMjcxIDk1IDI2OCA5OCAyNjIgTDkwIDI0NiBaIgogICAgICAgIGZpbGw9IiM4YTY3NDIiIGZpbGwtb3BhY2l0eT0iMC40NSIvPgogIDxwYXRoIGQ9Ik0zOCAxOTggQzUyIDIwNiA3NCAyMDggOTAgMjAyIiBzdHJva2U9IiM4YTY3NDIiIHN0cm9rZS1vcGFjaXR5PSIwLjQiIHN0cm9rZS13aWR0aD0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGVsbGlwc2UgY3g9IjY2IiBjeT0iMjIwIiByeD0iNTYiIHJ5PSI0NiIgZmlsbD0idXJsKCNob3QpIi8+CiAgPHBhdGggZD0iTTQyIDk2IEMzNiAxMjAgMzQgMTQyIDM4IDE2MCIgc3Ryb2tlPSIjZjJlMmJjIiBzdHJva2Utb3BhY2l0eT0iMC4zNSIgc3Ryb2tlLXdpZHRoPSI2IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNMTE2IDM2IEMxMjQgNjAgMTI0IDg0IDEyMCAxMDYiIHN0cm9rZT0iI2YyZTJiYyIgc3Ryb2tlLW9wYWNpdHk9IjAuMjgiIHN0cm9rZS13aWR0aD0iNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9nPgo8L3N2Zz4=",
+    "tex_mob_stompmulti_leg_r_4f672f7bda53": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMzQwIiB2aWV3Qm94PSIwIDAgMjU2IDM0MCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImhvdCIgY3g9IjAuNSIgY3k9IjAuNSIgcj0iMC41Ij4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmNmRhIiBzdG9wLW9wYWNpdHk9IjAuNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjAuNjUiIHN0b3AtY29sb3I9IiNmZmVkYzAiIHN0b3Atb3BhY2l0eT0iMC4yMiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmVkYzAiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAwLDApIHNjYWxlKC0xLDEpIj4KICA8cGF0aCBmaWxsPSIjZThkNmI0IiBmaWxsLW9wYWNpdHk9IjAuNjIiIHN0cm9rZT0iIzdkNWIzOCIgc3Ryb2tlLW9wYWNpdHk9IjAuODUiIHN0cm9rZS13aWR0aD0iNS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIgogICAgZD0iTTQ4IC04IEM0NCA2MiA0MiAxMTggNDIgMTU2IEM0MiAxNzIgNDAgMTg2IDM2IDIwMCBMMjYgMjI2CiAgICAgICBDMjEgMjQwIDE2IDI1MCAxNiAyNTggQzE2IDI2NSAyMSAyNzAgMjcgMjcwIEMzNCAyNzAgMzkgMjY2IDQyIDI2MAogICAgICAgTDUwIDI0MCBDNTIgMjM1IDU3IDIzNSA1OSAyNDAgTDY4IDI2MAogICAgICAgQzcwIDI2NyA3NyAyNzEgODQgMjcxIEM5MSAyNzEgOTggMjY3IDEwMiAyNjAKICAgICAgIEMxMDggMjUyIDExMCAyNDUgMTA5IDIzOCBDMTA4IDIzMiAxMDIgMjI4IDk2IDIyNgogICAgICAgQzk5IDIyMCA5OCAyMTQgOTQgMjA4IEw4OCAyMDIKICAgICAgIEwxMDIgMTk4IEw5MiAxOTIgTDEwNiAxODggTDk0IDE4MiBMMTA4IDE3OCBMOTYgMTcyCiAgICAgICBDMTA0IDE1MiAxMTAgMTI4IDExNCAxMDIgQzEyMCA2MiAxMjQgMjQgMTI2IC04IFoiLz4KICA8cGF0aCBkPSJNMTYgMjUyIEMxNiAyNjIgMjEgMjcwIDI3IDI3MCBDMzQgMjcwIDM5IDI2NiA0MiAyNjAgTDM4IDI0OCBaIgogICAgICAgIGZpbGw9IiM4YTY3NDIiIGZpbGwtb3BhY2l0eT0iMC41NSIvPgogIDxwYXRoIGQ9Ik02MiAyNDggTDY4IDI2MCBDNzAgMjY3IDc3IDI3MSA4NCAyNzEgQzkxIDI3MSA5NSAyNjggOTggMjYyIEw5MCAyNDYgWiIKICAgICAgICBmaWxsPSIjOGE2NzQyIiBmaWxsLW9wYWNpdHk9IjAuNDUiLz4KICA8cGF0aCBkPSJNMzggMTk4IEM1MiAyMDYgNzQgMjA4IDkwIDIwMiIgc3Ryb2tlPSIjOGE2NzQyIiBzdHJva2Utb3BhY2l0eT0iMC40IiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxlbGxpcHNlIGN4PSI2NiIgY3k9IjIyMCIgcng9IjU2IiByeT0iNDYiIGZpbGw9InVybCgjaG90KSIvPgogIDxwYXRoIGQ9Ik00MiA5NiBDMzYgMTIwIDM0IDE0MiAzOCAxNjAiIHN0cm9rZT0iI2YyZTJiYyIgc3Ryb2tlLW9wYWNpdHk9IjAuMzUiIHN0cm9rZS13aWR0aD0iNiIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHBhdGggZD0iTTExNiAzNiBDMTI0IDYwIDEyNCA4NCAxMjAgMTA2IiBzdHJva2U9IiNmMmUyYmMiIHN0cm9rZS1vcGFjaXR5PSIwLjI4IiBzdHJva2Utd2lkdGg9IjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvZz4KPC9zdmc+"
   }
 }
