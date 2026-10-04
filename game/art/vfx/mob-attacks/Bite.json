@@ -1,0 +1,473 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_bite",
+    "name": "Mob Bite",
+    "comp": {
+      "w": 256,
+      "h": 192,
+      "dur": 0.34,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 55
+    },
+    "exp": {
+      "cols": 5,
+      "rows": 2,
+      "frames": 10,
+      "cellW": 256,
+      "cellH": 192,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_bite_upper_e674912c6da4",
+        "name": "mob bite upper",
+        "sheet": null
+      },
+      {
+        "id": "tex_mob_bite_lower_00dec58e8cfc",
+        "name": "mob bite lower",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_bite_flash_white",
+        "name": "Hit Flash",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.34,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.13,
+              "v": 0
+            },
+            {
+              "t": 0.155,
+              "v": 0.8
+            },
+            {
+              "t": 0.27,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 140,
+          "x": 0,
+          "y": -4,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.13,
+                "v": 0.45
+              },
+              {
+                "t": 0.17,
+                "v": 1.35
+              },
+              {
+                "t": 0.27,
+                "v": 1.7
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            250,
+            240
+          ],
+          "squash": 0,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_bite_flash_red",
+        "name": "Red Bite Bloom",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.34,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.14,
+              "v": 0
+            },
+            {
+              "t": 0.175,
+              "v": 0.7
+            },
+            {
+              "t": 0.29,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 190,
+          "x": 0,
+          "y": -4,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.14,
+                "v": 0.65
+              },
+              {
+                "t": 0.21,
+                "v": 1.75
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            84,
+            68
+          ],
+          "squash": 0,
+          "glow": 0.35,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_bite_spray",
+        "name": "Fang Sparks",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.34,
+        "em": {
+          "x": 0,
+          "y": -4,
+          "shape": "ring",
+          "sx": 6,
+          "sy": 6,
+          "dir": "omni",
+          "angle": -90,
+          "spread": 40,
+          "speed": 240,
+          "speedRnd": 0.45,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.15,
+              "n": 10
+            }
+          ],
+          "seed": 7,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.3,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 9,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.6,
+                "v": 0.7
+              },
+              {
+                "t": 1,
+                "v": 0.1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.55,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  255,
+                  255
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  255,
+                  190,
+                  170
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  200,
+                  60,
+                  50
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0,
+          "spin": 0,
+          "spinRnd": 0,
+          "alignVel": true,
+          "stretch": 1.8,
+          "gravX": 0,
+          "gravY": 60,
+          "drag": 3,
+          "turbAmp": 8,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_bite_jaw_top",
+        "name": "Upper Fangs",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.34,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.035,
+              "v": 1
+            },
+            {
+              "t": 0.26,
+              "v": 1
+            },
+            {
+              "t": 0.335,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_bite_upper_e674912c6da4",
+            "p": {}
+          },
+          "size": 246,
+          "x": 0,
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -58
+              },
+              {
+                "t": 0.055,
+                "v": -58
+              },
+              {
+                "t": 0.15,
+                "v": -3
+              },
+              {
+                "t": 0.185,
+                "v": -8
+              },
+              {
+                "t": 0.26,
+                "v": -3
+              },
+              {
+                "t": 0.34,
+                "v": -3
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.055,
+                "v": 1.06
+              },
+              {
+                "t": 0.15,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_bite_jaw_bottom",
+        "name": "Lower Fangs",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.34,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.035,
+              "v": 1
+            },
+            {
+              "t": 0.26,
+              "v": 1
+            },
+            {
+              "t": 0.335,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_bite_lower_00dec58e8cfc",
+            "p": {}
+          },
+          "size": 246,
+          "x": 0,
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 58
+              },
+              {
+                "t": 0.055,
+                "v": 58
+              },
+              {
+                "t": 0.15,
+                "v": 3
+              },
+              {
+                "t": 0.185,
+                "v": 8
+              },
+              {
+                "t": 0.26,
+                "v": 3
+              },
+              {
+                "t": 0.34,
+                "v": 3
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.055,
+                "v": 1.06
+              },
+              {
+                "t": 0.15,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_bite_upper_e674912c6da4": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPHBhdGggZD0iTTQ2IDc0IFExMjggNDQgMjEwIDc0IEwyMDIgMTAyIFExMjggNzYgNTQgMTAyIFoiIGZpbGw9IiNhMTJhMzgiIHN0cm9rZT0iIzJjMGExNiIgc3Ryb2tlLXdpZHRoPSI5IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPGcgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMmMwYTE2IiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPHBhdGggZD0iTTY2IDk2IEw4MCAxMzAgTDk0IDk0IFoiLz4KICAgIDxwYXRoIGQ9Ik05NiA5MCBMMTEzIDE0MCBMMTMwIDg4IFoiLz4KICAgIDxwYXRoIGQ9Ik0xMjYgODggTDE0MiAxNDIgTDE1OCA5MCBaIi8+CiAgICA8cGF0aCBkPSJNMTU4IDkyIEwxNzIgMTM0IEwxODggOTYgWiIvPgogICAgPHBhdGggZD0iTTE5MiA5NiBMMjAyIDEyNCBMMjE0IDkyIFoiIGZpbGw9IiNlMmVjZjgiLz4KICA8L2c+Cjwvc3ZnPg==",
+    "tex_mob_bite_lower_00dec58e8cfc": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPHBhdGggZD0iTTUwIDE4MiBRMTI4IDIxMiAyMDYgMTgyIEwxOTggMTU0IFExMjggMTgwIDU4IDE1NCBaIiBmaWxsPSIjYTEyYTM4IiBzdHJva2U9IiMyYzBhMTYiIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzJjMGExNiIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik02MiAxNjAgTDc2IDEyNiBMOTAgMTYyIFoiLz4KICAgIDxwYXRoIGQ9Ik05NCAxNjYgTDExMCAxMTQgTDEyNiAxNjggWiIvPgogICAgPHBhdGggZD0iTTEyOCAxNjggTDE0MiAxMjAgTDE1OCAxNjYgWiIvPgogICAgPHBhdGggZD0iTTE2MCAxNjQgTDE3NiAxMTYgTDE5MCAxNjAgWiIvPgogICAgPHBhdGggZD0iTTE5MCAxNTggTDIwMCAxMzIgTDIxMiAxNjQgWiIgZmlsbD0iI2UyZWNmOCIvPgogIDwvZz4KPC9zdmc+"
+  }
+}

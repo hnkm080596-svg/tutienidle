@@ -2,8 +2,9 @@ import type { CombatVfxPresetId } from '../../core/battle/CombatAction'
 
 // Monster attack VFX sweep (2026-10-04) - the VfxAssetManifest seam the
 // three-path content design doc (docs/design/2026-09-24, section 2.b)
-// described: binds a CombatVfxPresetId to a spritesheet atlas from the
-// shared library (public/assets/vfx/spritesheets/) plus the playback
+// described: binds a CombatVfxPresetId to a spritesheet atlas - either a
+// shared-library sheet (public/assets/vfx/spritesheets/) or an authored
+// Arcadia export (public/assets/vfx/mob-*/) - plus the playback
 // metadata the recipe layer needs. The 'sheet' cue primitive added beside
 // the analytic primitives renders these atlases; presets without a
 // binding keep the analytic primitive presentation (procedural
@@ -42,11 +43,12 @@ function binding(
   fps: number,
   fitPx: number,
   grounded: boolean,
+  dir = SHEETS,
 ): VfxSheetBinding {
   return {
     sheetKey,
-    textureUrl: `${SHEETS}/${basename}.png`,
-    atlasUrl: `${SHEETS}/${basename}.json`,
+    textureUrl: `${dir}/${basename}.png`,
+    atlasUrl: `${dir}/${basename}.json`,
     firstFrame,
     lastFrame,
     fps,
@@ -58,19 +60,24 @@ function binding(
 export const VFX_SHEET_BINDINGS: Partial<Record<CombatVfxPresetId, VfxSheetBinding>> = {
   // Slash_21 - wide blue arc; boar's gore and generic weapon-weight hits.
   slash: binding('vfx-sheet-slash-21', 'Slash_21', 0, 15, 30, 110, false),
-  // SFFXEP 27 - pale claw rakes; tiger, scorpion tail, dragon whelp.
-  claw: binding('vfx-sheet-sffxep-27', 'SFFXEP 27', 4, 20, 30, 130, false),
-  // SFFXEP 31 - closing crescent jaw; wolves, crocodile.
-  bite: binding('vfx-sheet-sffxep-31', 'SFFXEP 31', 0, 15, 30, 120, false),
+  // Authored triple gash rake (art/vfx/mob-attacks/Claw.json); tiger,
+  // scorpion tail, dragon whelp.
+  claw: binding('vfx-sheet-mob-claw', 'claw', 0, 10, 30, 130, false, '/assets/vfx/mob-claw'),
+  // Authored converging fang jaws (art/vfx/mob-attacks/Bite.json);
+  // wolves, crocodile.
+  bite: binding('vfx-sheet-mob-bite', 'bite', 0, 9, 30, 120, false, '/assets/vfx/mob-bite'),
   // SFFXEP 09 - fire swirl burst; flame fox, lava hound.
   fire_burst: binding('vfx-sheet-sffxep-09', 'SFFXEP 09', 2, 20, 30, 140, false),
-  // Water FX 10 - rolling wave hit; flood serpent and the authored
-  // water_surge specials share one element presentation.
-  water_surge: binding('vfx-sheet-water-fx-10', 'Water FX 10', 10, 44, 36, 150, true),
-  // Earth_07 - rock eruption; earthworm cast.
-  earth_shockwave: binding('vfx-sheet-earth-07', 'Earth_07', 0, 15, 24, 150, true),
-  // Explosion_10 - heavy ground blast for the mud golem slam.
-  boss_ground_slam: binding('vfx-sheet-explosion-10', 'Explosion_10', 4, 34, 30, 160, true),
+  // Authored wave crash + droplets (art/vfx/mob-attacks/Water Surge.json);
+  // flood serpent and the authored water_surge specials share one
+  // element presentation.
+  water_surge: binding('vfx-sheet-mob-water', 'water-surge', 0, 12, 30, 150, true, '/assets/vfx/mob-water-surge'),
+  // Authored fault crack + dust burst (art/vfx/mob-attacks/Earth
+  // Shockwave.json); earthworm cast.
+  earth_shockwave: binding('vfx-sheet-mob-earth', 'earth-shockwave', 0, 12, 30, 150, true, '/assets/vfx/mob-earth-shockwave'),
+  // Authored heavy slam - shock ring, debris, dim flash
+  // (art/vfx/mob-attacks/Boss Ground Slam.json); mud golem slam.
+  boss_ground_slam: binding('vfx-sheet-mob-slam', 'boss-ground-slam', 0, 12, 30, 160, true, '/assets/vfx/mob-boss-ground-slam'),
 }
 
 export function vfxSheetCombatDescriptors() {

@@ -1,0 +1,851 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_boss_ground_slam",
+    "name": "Mob Boss Ground Slam",
+    "comp": {
+      "w": 256,
+      "h": 224,
+      "dur": 0.44,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 32
+    },
+    "exp": {
+      "cols": 5,
+      "rows": 3,
+      "frames": 13,
+      "cellW": 256,
+      "cellH": 224,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_slam_crack_6058fddccca0",
+        "name": "mob slam crack",
+        "sheet": null
+      },
+      {
+        "id": "tex_mob_slam_crack_hot_33974e633031",
+        "name": "mob slam crack hot",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_slam_flash_white",
+        "name": "Impact Flash",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.44,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.01,
+              "v": 0
+            },
+            {
+              "t": 0.045,
+              "v": 1
+            },
+            {
+              "t": 0.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 170,
+          "x": 0,
+          "y": 64,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.01,
+                "v": 0.4
+              },
+              {
+                "t": 0.2,
+                "v": 1.8
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            244,
+            220
+          ],
+          "squash": 0,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_slam_dark",
+        "name": "Screen Dim",
+        "type": "sprite",
+        "blend": "multiply",
+        "start": -0.02,
+        "end": 0.44,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.07,
+              "v": 0.55
+            },
+            {
+              "t": 0.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 480,
+          "x": 0,
+          "y": 0,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 1
+              },
+              {
+                "t": 0.2,
+                "v": 1.25
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            30,
+            34,
+            48
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_slam_streaks",
+        "name": "Slam Streaks",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.44,
+        "em": {
+          "x": 0,
+          "y": 68,
+          "shape": "ring",
+          "sx": 14,
+          "sy": 6,
+          "dir": "out",
+          "angle": -90,
+          "spread": 40,
+          "speed": 420,
+          "speedRnd": 0.4,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.02,
+              "n": 14
+            }
+          ],
+          "seed": 53,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.3,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 12,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.55,
+                "v": 0.7
+              },
+              {
+                "t": 1,
+                "v": 0.05
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.5,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  244,
+                  210
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  255,
+                  170,
+                  80
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  200,
+                  90,
+                  30
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0,
+          "spin": 0,
+          "spinRnd": 0,
+          "alignVel": true,
+          "stretch": 2.2,
+          "gravX": 0,
+          "gravY": 120,
+          "drag": 2.8,
+          "turbAmp": 10,
+          "turbFreq": 1.5,
+          "squash": 0.6,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_slam_ring_fast",
+        "name": "Shock Ring",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.44,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.01,
+              "v": 0
+            },
+            {
+              "t": 0.05,
+              "v": 0.9
+            },
+            {
+              "t": 0.32,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "ring",
+            "p": {
+              "th": 0.16
+            }
+          },
+          "size": 210,
+          "x": 0,
+          "y": 74,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.01,
+                "v": 0.18
+              },
+              {
+                "t": 0.32,
+                "v": 2.6
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            216,
+            140
+          ],
+          "squash": 1,
+          "glow": 0.3,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_slam_debris",
+        "name": "Debris Chunks",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.44,
+        "em": {
+          "x": 0,
+          "y": 70,
+          "shape": "ring",
+          "sx": 16,
+          "sy": 6,
+          "dir": "dir",
+          "angle": -90,
+          "spread": 78,
+          "speed": 260,
+          "speedRnd": 0.5,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.02,
+              "n": 16
+            }
+          ],
+          "seed": 59,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.6,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "shard",
+            "p": {}
+          },
+          "size": 13,
+          "sizeRnd": 0.45,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.8,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.78,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  170,
+                  128,
+                  80
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  120,
+                  86,
+                  50
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  70,
+                  48,
+                  30
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 200,
+          "spinRnd": 0.9,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": 460,
+          "drag": 0.4,
+          "turbAmp": 12,
+          "turbFreq": 1.4,
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_slam_dust",
+        "name": "Dust Billow",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.44,
+        "em": {
+          "x": 0,
+          "y": 74,
+          "shape": "ring",
+          "sx": 18,
+          "sy": 6,
+          "dir": "out",
+          "angle": -90,
+          "spread": 30,
+          "speed": 175,
+          "speedRnd": 0.35,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.02,
+              "n": 12
+            },
+            {
+              "t": 0.08,
+              "n": 8
+            }
+          ],
+          "seed": 61,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.55,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "smoke",
+            "p": {}
+          },
+          "size": 30,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.45,
+                "v": 1.05
+              },
+              {
+                "t": 1,
+                "v": 1.4
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0.8
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  200,
+                  164,
+                  116
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  150,
+                  114,
+                  76
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  96,
+                  72,
+                  50
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 70,
+          "spinRnd": 1,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": -14,
+          "drag": 2.2,
+          "turbAmp": 16,
+          "turbFreq": 1.2,
+          "squash": 0.4,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_slam_ring_outer",
+        "name": "Dust Shock",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.44,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.03,
+              "v": 0
+            },
+            {
+              "t": 0.08,
+              "v": 0.5
+            },
+            {
+              "t": 0.42,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "ring",
+            "p": {
+              "th": 0.24
+            }
+          },
+          "size": 230,
+          "x": 0,
+          "y": 74,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.03,
+                "v": 0.3
+              },
+              {
+                "t": 0.42,
+                "v": 2.4
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            150,
+            116,
+            76
+          ],
+          "squash": 1,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_slam_crack_ember",
+        "name": "Ember Fissures",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.44,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.1,
+              "v": 0.9
+            },
+            {
+              "t": 0.32,
+              "v": 0.75
+            },
+            {
+              "t": 0.44,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_slam_crack_hot_33974e633031",
+            "p": {}
+          },
+          "size": 240,
+          "x": 0,
+          "y": 78,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 0.5
+              },
+              {
+                "t": 0.11,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            190,
+            120
+          ],
+          "squash": 1,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_slam_crack",
+        "name": "Crater Fissures",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.44,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.1,
+              "v": 0.95
+            },
+            {
+              "t": 0.34,
+              "v": 0.9
+            },
+            {
+              "t": 0.44,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_slam_crack_6058fddccca0",
+            "p": {}
+          },
+          "size": 240,
+          "x": 0,
+          "y": 78,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 0.5
+              },
+              {
+                "t": 0.11,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 1,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_slam_glow",
+        "name": "Heat Core",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.44,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.01,
+              "v": 0
+            },
+            {
+              "t": 0.05,
+              "v": 0.75
+            },
+            {
+              "t": 0.24,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 150,
+          "x": 0,
+          "y": 66,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.01,
+                "v": 0.4
+              },
+              {
+                "t": 0.24,
+                "v": 1.6
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            204,
+            120
+          ],
+          "squash": 0,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_slam_crack_6058fddccca0": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWQwZjA1IiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiPgogICAgPHBhdGggZD0iTTI2IDE0NCBMNzAgMTI4IEwxMDAgMTQyIEwxMzIgMTIyIEwxNjYgMTM4IEwyMDIgMTI2IEwyMzIgMTM2Ii8+CiAgICA8cGF0aCBkPSJNNTIgMTA2IEw5NCA5OCBMMTM0IDEwOCIvPgogICAgPHBhdGggZD0iTTE0MCAxNTggTDE3NiAxNTAgTDIwOCAxNjAiLz4KICAgIDxwYXRoIGQ9Ik0xMzIgMTIyIEwxNDAgOTIgTDE1MiA2NiIvPgogICAgPHBhdGggZD0iTTEzMiAxMjIgTDEyMCAxNTQgTDExMiAxODAiLz4KICAgIDxwYXRoIGQ9Ik0xNjYgMTM4IEwxODIgMTYyIEwxOTIgMTg2Ii8+CiAgICA8cGF0aCBkPSJNMTAwIDE0MiBMODggMTcwIEw4MCAxOTYiLz4KICA8L2c+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjN2E0ZjI2IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciI+CiAgICA8cGF0aCBkPSJNMjYgMTQ0IEw3MCAxMjggTDEwMCAxNDIgTDEzMiAxMjIgTDE2NiAxMzggTDIwMiAxMjYgTDIzMiAxMzYiLz4KICAgIDxwYXRoIGQ9Ik01MiAxMDYgTDk0IDk4IEwxMzQgMTA4Ii8+CiAgICA8cGF0aCBkPSJNMTQwIDE1OCBMMTc2IDE1MCBMMjA4IDE2MCIvPgogICAgPHBhdGggZD0iTTEzMiAxMjIgTDE0MCA5MiBMMTUyIDY2Ii8+CiAgICA8cGF0aCBkPSJNMTMyIDEyMiBMMTIwIDE1NCBMMTEyIDE4MCIvPgogICAgPHBhdGggZD0iTTE2NiAxMzggTDE4MiAxNjIgTDE5MiAxODYiLz4KICAgIDxwYXRoIGQ9Ik0xMDAgMTQyIEw4OCAxNzAgTDgwIDE5NiIvPgogIDwvZz4KICA8ZyBmaWxsPSIjMWQwZjA1Ij4KICAgIDxwYXRoIGQ9Ik0xMTggMTMwIEwxMzYgMTIyIEwxNDYgMTM2IEwxMjggMTQ0IFoiLz4KICAgIDxwYXRoIGQ9Ik03NCAxMjQgTDg4IDExNiBMOTYgMTI4IEw4MiAxMzQgWiIvPgogICAgPHBhdGggZD0iTTE3NiAxMzAgTDE5MCAxMjIgTDE5OCAxMzQgTDE4MiAxNDIgWiIvPgogICAgPHBhdGggZD0iTTE0OCAxMDQgTDE2MCA5NiBMMTY2IDEwOCBMMTUyIDExNCBaIi8+CiAgPC9nPgo8L3N2Zz4=",
+    "tex_mob_slam_crack_hot_33974e633031": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY5ZDNlIiBzdHJva2Utd2lkdGg9IjExIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIG9wYWNpdHk9IjAuNTUiPgogICAgPHBhdGggZD0iTTI2IDE0NCBMNzAgMTI4IEwxMDAgMTQyIEwxMzIgMTIyIEwxNjYgMTM4IEwyMDIgMTI2IEwyMzIgMTM2Ii8+CiAgICA8cGF0aCBkPSJNNTIgMTA2IEw5NCA5OCBMMTM0IDEwOCIvPgogICAgPHBhdGggZD0iTTE0MCAxNTggTDE3NiAxNTAgTDIwOCAxNjAiLz4KICAgIDxwYXRoIGQ9Ik0xMzIgMTIyIEwxNDAgOTIgTDE1MiA2NiIvPgogICAgPHBhdGggZD0iTTEzMiAxMjIgTDEyMCAxNTQgTDExMiAxODAiLz4KICAgIDxwYXRoIGQ9Ik0xNjYgMTM4IEwxODIgMTYyIEwxOTIgMTg2Ii8+CiAgICA8cGF0aCBkPSJNMTAwIDE0MiBMODggMTcwIEw4MCAxOTYiLz4KICA8L2c+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZkOWEwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciI+CiAgICA8cGF0aCBkPSJNMjYgMTQ0IEw3MCAxMjggTDEwMCAxNDIgTDEzMiAxMjIgTDE2NiAxMzggTDIwMiAxMjYgTDIzMiAxMzYiLz4KICAgIDxwYXRoIGQ9Ik01MiAxMDYgTDk0IDk4IEwxMzQgMTA4Ii8+CiAgICA8cGF0aCBkPSJNMTQwIDE1OCBMMTc2IDE1MCBMMjA4IDE2MCIvPgogICAgPHBhdGggZD0iTTEzMiAxMjIgTDE0MCA5MiBMMTUyIDY2Ii8+CiAgICA8cGF0aCBkPSJNMTMyIDEyMiBMMTIwIDE1NCBMMTEyIDE4MCIvPgogICAgPHBhdGggZD0iTTE2NiAxMzggTDE4MiAxNjIgTDE5MiAxODYiLz4KICAgIDxwYXRoIGQ9Ik0xMDAgMTQyIEw4OCAxNzAgTDgwIDE5NiIvPgogIDwvZz4KPC9zdmc+"
+  }
+}

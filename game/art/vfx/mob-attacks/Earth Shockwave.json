@@ -1,0 +1,548 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_earth_shockwave",
+    "name": "Mob Earth Shockwave",
+    "comp": {
+      "w": 256,
+      "h": 192,
+      "dur": 0.42,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 32
+    },
+    "exp": {
+      "cols": 5,
+      "rows": 3,
+      "frames": 13,
+      "cellW": 256,
+      "cellH": 192,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_earth_crack_fd788c1c8540",
+        "name": "mob earth crack",
+        "sheet": null
+      },
+      {
+        "id": "tex_mob_earth_crack_hot_4f7c3b2fe9ac",
+        "name": "mob earth crack hot",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_earth_rocks",
+        "name": "Thrown Rocks",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "em": {
+          "x": 0,
+          "y": 54,
+          "shape": "point",
+          "sx": 10,
+          "sy": 6,
+          "dir": "dir",
+          "angle": -90,
+          "spread": 72,
+          "speed": 210,
+          "speedRnd": 0.45,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.02,
+              "n": 13
+            }
+          ],
+          "seed": 23,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.55,
+          "lifeRnd": 0.3,
+          "sprite": {
+            "kind": "shape",
+            "id": "shard",
+            "p": {}
+          },
+          "size": 11,
+          "sizeRnd": 0.45,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.8,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.75,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  156,
+                  112,
+                  66
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  110,
+                  76,
+                  44
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  70,
+                  46,
+                  28
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 160,
+          "spinRnd": 0.8,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": 400,
+          "drag": 0.4,
+          "turbAmp": 10,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_earth_ring_glow",
+        "name": "Shock Ring",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.01,
+              "v": 0
+            },
+            {
+              "t": 0.05,
+              "v": 0.85
+            },
+            {
+              "t": 0.3,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "ring",
+            "p": {
+              "th": 0.14
+            }
+          },
+          "size": 200,
+          "x": 0,
+          "y": 58,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.01,
+                "v": 0.22
+              },
+              {
+                "t": 0.3,
+                "v": 2.3
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            196,
+            110
+          ],
+          "squash": 1,
+          "glow": 0.3,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_earth_dust",
+        "name": "Dust Roll",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "em": {
+          "x": 0,
+          "y": 58,
+          "shape": "ring",
+          "sx": 14,
+          "sy": 5,
+          "dir": "out",
+          "angle": -90,
+          "spread": 30,
+          "speed": 150,
+          "speedRnd": 0.3,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.02,
+              "n": 14
+            },
+            {
+              "t": 0.07,
+              "n": 8
+            }
+          ],
+          "seed": 31,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.5,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "smoke",
+            "p": {}
+          },
+          "size": 24,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.45,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 1.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0.8
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  214,
+                  178,
+                  126
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  164,
+                  126,
+                  82
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  110,
+                  82,
+                  56
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 60,
+          "spinRnd": 1,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": -16,
+          "drag": 2.2,
+          "turbAmp": 14,
+          "turbFreq": 1.2,
+          "squash": 0.4,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_earth_crack_ember",
+        "name": "Ember Fissures",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.1,
+              "v": 0.85
+            },
+            {
+              "t": 0.28,
+              "v": 0.7
+            },
+            {
+              "t": 0.42,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_earth_crack_hot_4f7c3b2fe9ac",
+            "p": {}
+          },
+          "size": 220,
+          "x": 0,
+          "y": 64,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 0.55
+              },
+              {
+                "t": 0.1,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            190,
+            120
+          ],
+          "squash": 1,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_earth_crack",
+        "name": "Fissure Fan",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.09,
+              "v": 0.95
+            },
+            {
+              "t": 0.3,
+              "v": 0.9
+            },
+            {
+              "t": 0.42,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_earth_crack_fd788c1c8540",
+            "p": {}
+          },
+          "size": 220,
+          "x": 0,
+          "y": 64,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 0.55
+              },
+              {
+                "t": 0.1,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 1,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_earth_glow",
+        "name": "Impact Glow",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.01,
+              "v": 0
+            },
+            {
+              "t": 0.05,
+              "v": 0.7
+            },
+            {
+              "t": 0.22,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 130,
+          "x": 0,
+          "y": 50,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.01,
+                "v": 0.4
+              },
+              {
+                "t": 0.22,
+                "v": 1.5
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            210,
+            130
+          ],
+          "squash": 0,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_earth_crack_fd788c1c8540": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjQxMjA3IiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciI+CiAgICA8cGF0aCBkPSJNMzAgMTQyIEw3MiAxMjYgTDk4IDEzOCBMMTI4IDEyMCBMMTYyIDEzNCBMMTk4IDEyMiBMMjI4IDEzMiIvPgogICAgPHBhdGggZD0iTTYwIDEwNiBMOTggMTAwIEwxMzQgMTA4Ii8+CiAgICA8cGF0aCBkPSJNMTQyIDE1NCBMMTc0IDE0OCBMMjAyIDE1NiIvPgogICAgPHBhdGggZD0iTTEyOCAxMjAgTDEzNCA5NCBMMTQ2IDc0Ii8+CiAgICA8cGF0aCBkPSJNMTI4IDEyMCBMMTE4IDE1MCBMMTEwIDE3MiIvPgogICAgPHBhdGggZD0iTTE2MiAxMzQgTDE3NiAxNTYgTDE4NCAxNzYiLz4KICAgIDxwYXRoIGQ9Ik05OCAxMzggTDg2IDE2NCBMODAgMTg2Ii8+CiAgPC9nPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzdhNGYyNiIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciI+CiAgICA8cGF0aCBkPSJNMzAgMTQyIEw3MiAxMjYgTDk4IDEzOCBMMTI4IDEyMCBMMTYyIDEzNCBMMTk4IDEyMiBMMjI4IDEzMiIvPgogICAgPHBhdGggZD0iTTYwIDEwNiBMOTggMTAwIEwxMzQgMTA4Ii8+CiAgICA8cGF0aCBkPSJNMTQyIDE1NCBMMTc0IDE0OCBMMjAyIDE1NiIvPgogICAgPHBhdGggZD0iTTEyOCAxMjAgTDEzNCA5NCBMMTQ2IDc0Ii8+CiAgICA8cGF0aCBkPSJNMTI4IDEyMCBMMTE4IDE1MCBMMTEwIDE3MiIvPgogICAgPHBhdGggZD0iTTE2MiAxMzQgTDE3NiAxNTYgTDE4NCAxNzYiLz4KICAgIDxwYXRoIGQ9Ik05OCAxMzggTDg2IDE2NCBMODAgMTg2Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiMyNDEyMDciPgogICAgPHBhdGggZD0iTTExOCAxMjggTDEzNCAxMjIgTDE0MiAxMzQgTDEyNiAxNDAgWiIvPgogICAgPHBhdGggZD0iTTc4IDEyMiBMOTAgMTE2IEw5NiAxMjYgTDg0IDEzMiBaIi8+CiAgICA8cGF0aCBkPSJNMTcyIDEyOCBMMTg0IDEyMiBMMTkwIDEzMiBMMTc4IDEzOCBaIi8+CiAgPC9nPgo8L3N2Zz4=",
+    "tex_mob_earth_crack_hot_4f7c3b2fe9ac": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY5ZDNlIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgb3BhY2l0eT0iMC41NSI+CiAgICA8cGF0aCBkPSJNMzAgMTQyIEw3MiAxMjYgTDk4IDEzOCBMMTI4IDEyMCBMMTYyIDEzNCBMMTk4IDEyMiBMMjI4IDEzMiIvPgogICAgPHBhdGggZD0iTTYwIDEwNiBMOTggMTAwIEwxMzQgMTA4Ii8+CiAgICA8cGF0aCBkPSJNMTQyIDE1NCBMMTc0IDE0OCBMMjAyIDE1NiIvPgogICAgPHBhdGggZD0iTTEyOCAxMjAgTDEzNCA5NCBMMTQ2IDc0Ii8+CiAgICA8cGF0aCBkPSJNMTI4IDEyMCBMMTE4IDE1MCBMMTEwIDE3MiIvPgogICAgPHBhdGggZD0iTTE2MiAxMzQgTDE3NiAxNTYgTDE4NCAxNzYiLz4KICAgIDxwYXRoIGQ9Ik05OCAxMzggTDg2IDE2NCBMODAgMTg2Ii8+CiAgPC9nPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZDlhMCIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICA8cGF0aCBkPSJNMzAgMTQyIEw3MiAxMjYgTDk4IDEzOCBMMTI4IDEyMCBMMTYyIDEzNCBMMTk4IDEyMiBMMjI4IDEzMiIvPgogICAgPHBhdGggZD0iTTYwIDEwNiBMOTggMTAwIEwxMzQgMTA4Ii8+CiAgICA8cGF0aCBkPSJNMTQyIDE1NCBMMTc0IDE0OCBMMjAyIDE1NiIvPgogICAgPHBhdGggZD0iTTEyOCAxMjAgTDEzNCA5NCBMMTQ2IDc0Ii8+CiAgICA8cGF0aCBkPSJNMTI4IDEyMCBMMTE4IDE1MCBMMTEwIDE3MiIvPgogICAgPHBhdGggZD0iTTE2MiAxMzQgTDE3NiAxNTYgTDE4NCAxNzYiLz4KICAgIDxwYXRoIGQ9Ik05OCAxMzggTDg2IDE2NCBMODAgMTg2Ii8+CiAgPC9nPgo8L3N2Zz4="
+  }
+}
