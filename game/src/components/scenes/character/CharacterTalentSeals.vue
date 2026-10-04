@@ -6,6 +6,8 @@ import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentRarity } from '@/core/talent/Talent'
 import { isBetaTalentId } from '@/core/betaScope'
 import SysTag from '@/components/common/system/SysTag.vue'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
+import { talentSymbolId } from '@/presentation/huyenKim/StableSceneArt'
 import CharacterSectionPlaque from './CharacterSectionPlaque.vue'
 
 // talent-seals region: the Thien Phu band under the identity header -
@@ -49,11 +51,9 @@ const TALENT_RARITY_TONE: Record<TalentRarity, 'muted' | 'success' | 'cyan' | 'v
         :class="`talent-tier-${talent.rarity}`"
         v-tooltip="talent.description"
       >
-        <span
-          class="talent-seal__icon art-needed"
-          :data-art-id="`talent-seal-glyph-${talent.rarity}`"
-          aria-hidden="true"
-        />
+        <span class="talent-seal__icon" aria-hidden="true">
+          <HuyenKimSymbol :name="talentSymbolId(talent.id)" />
+        </span>
         <span class="talent-seal__body">
           <span class="talent-seal__head">
             <SysTag :tone="TALENT_RARITY_TONE[talent.rarity]" class="talent-seal__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</SysTag>
@@ -96,15 +96,24 @@ const TALENT_RARITY_TONE: Record<TalentRarity, 'muted' | 'success' | 'cyan' | 'v
   cursor: default;
 }
 
-/* Temp art: octagonal seal glyph tinted by tier (one asset per tier). */
+/* Octagonal seal chip tinted by tier, carrying the per-talent glyph. */
 .talent-seal__icon {
   flex: 0 0 auto;
   width: 26px;
   height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
   background:
     radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--talent-tier-color, #b99a55) 90%, #fff 10%), color-mix(in srgb, var(--talent-tier-color, #b99a55) 55%, #101718) 80%);
   box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+.talent-seal__icon .hk-symbol {
+  width: 17px;
+  height: 17px;
+  color: var(--paper-text, #211f1a);
 }
 
 .talent-seal__body {

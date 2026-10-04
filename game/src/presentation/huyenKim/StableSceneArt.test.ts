@@ -75,7 +75,7 @@ describe('StableSceneArt registry', () => {
   })
 
   it('maps every declared symbol to its shipped SVG url', () => {
-    expect(STABLE_SYMBOL_IDS).toHaveLength(18)
+    expect(STABLE_SYMBOL_IDS).toHaveLength(53)
     for (const id of STABLE_SYMBOL_IDS) {
       expect(stableSymbolUrl(id)).toBe(`/assets/ui/huyen-kim/symbols/${id}.svg`)
     }

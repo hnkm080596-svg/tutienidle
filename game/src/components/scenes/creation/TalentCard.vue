@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentTag } from '@/core/talent/Talent'
-import type { StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
+import { talentSymbolId, type StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
 import CreationChoiceTile from './CreationChoiceTile.vue'
 import TalentCardEmblem from './TalentCardEmblem.vue'
 const props = defineProps<{ talent: TalentDefinition; selected: boolean; disabled?: boolean }>()
 defineEmits<{ toggle: [] }>()
-const symbols: Record<TalentTag, StableSymbolId> = {
+const tagSymbols: Record<TalentTag, StableSymbolId> = {
   cultivation: 'realm', combat: 'skill', defense: 'body', resource: 'inventory',
   crafting: 'alchemy', element: 'technique', skill: 'skill', risk_reward: 'exploration', mechanic: 'settings',
 }
-const symbol = computed(() => symbols[props.talent.tags[0] ?? 'cultivation'])
+const symbol = computed(() => talentSymbolId(props.talent.id, tagSymbols[props.talent.tags[0] ?? 'cultivation']))
 const detail = computed(() => ({
   title: `${props.talent.name} · ${TALENT_RARITY_LABELS[props.talent.rarity]}`,
   description: props.talent.description,
