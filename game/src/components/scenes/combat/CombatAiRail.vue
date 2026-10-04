@@ -50,13 +50,14 @@ const aiOpen = shallowRef(false)
 /* InkNineSlice 'surface' renders at z-index 1 - contents need 2. */
 .combat-ai-rail > :not(.ink-nine-slice) { position: relative; z-index: 2; }
 
+/* >= 32px: icon-button-utility's 30px slices need the room. */
 .combat-ai-rail__close {
   position: absolute;
   top: 4px;
   right: 4px;
   z-index: 3;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   min-width: 0;
   min-height: 0;
   padding: 0;

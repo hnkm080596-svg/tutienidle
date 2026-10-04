@@ -116,10 +116,13 @@ const { t } = useI18n()
    the frame chip - the nameplate hangs vertically like the ref's tags.
    The anchor x/y still comes from BUILDING_ANCHORS (tuned for the old
    horizontal chips), so the tag centers on x and drops straight down. */
-.df-building { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 0; width: 62px; min-height: 100px; border: 0; padding: 10px 4px 18px; background: transparent; color: #33291a; cursor: pointer; pointer-events: auto; text-align: center; transform: translateX(-50%); }
+.df-building { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 0; width: 72px; min-height: 112px; border: 0; padding: 12px 5px 20px; background: transparent; color: #33291a; cursor: pointer; pointer-events: auto; text-align: center; transform: translateX(-50%); }
 .df-building__plaque { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; }
 .df-building__symbol { position: relative; z-index: 1; width: 20px; height: 20px; margin-top: 4px; opacity: .85; }
-.df-building__name { position: relative; z-index: 1; margin-top: 6px; writing-mode: vertical-rl; letter-spacing: 3px; font-size: 14px; line-height: 1; font-weight: 600; color: #33291a; max-height: 78px; overflow: hidden; }
+/* Vietnamese names run up to ~15 glyphs ('Truyen Tong Tran') - the
+   name wraps horizontally inside the tag (2-3 lines) instead of a
+   vertical column that would clip the plaque. */
+.df-building__name { position: relative; z-index: 1; margin-top: 5px; font-size: 12px; line-height: 15px; font-weight: 600; color: #33291a; max-height: 45px; overflow: hidden; }
 .df-building__dot { position: absolute; top: 4px; right: 5px; z-index: 2; width: 9px; height: 9px; border-radius: 50%; background: #ffd766; box-shadow: 0 0 6px #ffc94d; }
 .df-building__dot--alert { background: #ff9d5c; box-shadow: 0 0 8px #ff7a3c; }
 /* Upgrade affordance replaces the passive dot when the model marks the
