@@ -378,9 +378,9 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     actionDisabled = row.state !== 'purchasable' || inBattle.value
     if (row.state === 'available') {
       actionHint = t('panels.skillPath.nodeInspector.lockedReasons.cost', { cost: purchaseCost, current: player.skillInsight })
-    } else if (row.state !== 'purchasable' && conditions.length > 0) {
-      actionHint = conditions[0]!
     }
+    // conditions[0] is already the rail's first lock line - the action
+    // hint must not repeat it under the button.
   } else {
     const maxed = row.nextLevelCost === null && !row.canUpgrade
     actionLabel = maxed
@@ -389,7 +389,6 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     if (!maxed) {
       costLabel = t('panels.skillPath.nodeInspector.cost.upgrade', { cost: row.nextLevelCost ?? 0 })
       actionDisabled = !row.canUpgrade || inBattle.value
-      if (!row.canUpgrade && conditions.length > 0) actionHint = conditions[0]!
     } else {
       actionDisabled = true
     }

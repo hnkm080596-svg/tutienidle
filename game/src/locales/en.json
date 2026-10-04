@@ -386,6 +386,7 @@
         },
         "elementPick": {
           "hint": "Choose the element of the Five Element Art — a permanent commitment.",
+          "lockedBeta": "Locked in beta",
           "back": "Back"
         }
       },
@@ -910,7 +911,8 @@
     },
     "hkNav": {
       "aria": "Feature navigation",
-      "body": "Dao Body"
+      "body": "Dao Body",
+      "techniqueLocked": "Technique unlocks at Qi Refining"
     },
     "decompose": {
       "labels": {

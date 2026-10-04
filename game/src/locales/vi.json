@@ -386,6 +386,7 @@
         },
         "elementPick": {
           "hint": "Chọn hành của Ngũ Hành Chân Quyết — quyết định vĩnh viễn.",
+          "lockedBeta": "Chưa mở trong beta",
           "back": "Quay lại"
         }
       },
@@ -910,7 +911,8 @@
     },
     "hkNav": {
       "aria": "Điều hướng chức năng",
-      "body": "Đạo Thể"
+      "body": "Đạo Thể",
+      "techniqueLocked": "Tâm Pháp mở khi vào Luyện Khí"
     },
     "decompose": {
       "labels": {

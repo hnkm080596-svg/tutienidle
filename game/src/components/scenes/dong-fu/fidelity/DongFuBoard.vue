@@ -36,5 +36,7 @@ const { t } = useI18n()
 .df-board__copy { flex: 1; min-width: 0; display: grid; gap: 3px; padding: 6px 0; }
 .df-board__copy strong { font-size: 15px; line-height: 19px; font-weight: 500; color: #e1c98c; }
 .df-board__copy small { font-size: 11px; line-height: 15px; color: #c4c4ad; }
-.df-board__go { flex: 0 0 53px; height: 29px; border: 1px solid #8e6b32; color: #352414; background: linear-gradient(#ffecaf,#d6af60); clip-path: polygon(9% 0,91% 0,100% 50%,91% 100%,9% 100%,0 50%); cursor: pointer; font-size: 13px; }
+/* 72px basis: 'Nang cap'/'Nhan thuong' no longer clip at the hexagon
+   corners (the old 53px cut glyphs mid-stroke). */
+.df-board__go { flex: 0 0 72px; height: 29px; border: 1px solid #8e6b32; color: #352414; background: linear-gradient(#ffecaf,#d6af60); clip-path: polygon(9% 0,91% 0,100% 50%,91% 100%,9% 100%,0 50%); cursor: pointer; font-size: 12px; white-space: nowrap; }
 </style>

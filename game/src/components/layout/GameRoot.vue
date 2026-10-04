@@ -30,6 +30,8 @@ import TalentEntitlementModal from '../common/TalentEntitlementModal.vue'
 import BreakthroughRequirementPanel from '../common/BreakthroughRequirementPanel.vue'
 import TutorialOverlay from '../common/TutorialOverlay.vue'
 import { useOfflineSummaryStore } from '@/stores/offlineSummary'
+import { useNotificationStore } from '@/stores/notification'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
@@ -37,6 +39,8 @@ import { isBetaStandalonePanel } from '@/core/betaScopeSurface'
 import { isBetaTechniqueSurfaceUnlocked } from '@/core/betaScopeTechniqueDomain'
 
 const offlineSummary = useOfflineSummaryStore()
+const notification = useNotificationStore()
+const { t } = useI18n()
 
 // WS1 Responsive foundation (2026-08-24) - BO frame 2560x1440 +
 // transform:scale() toan game. Command-wheel plan (2026-08-26) - bo
@@ -83,6 +87,9 @@ watch(
       // Luyen Khi + a committed pathway - direct state writes get
       // bounced back so no seam can leave a stale open panel behind.
       if (panel === 'technique' && !isBetaTechniqueSurfaceUnlocked(player.$state)) {
+        // The bounce stays, but it is no longer silent: a lock toast
+        // explains why the panel did not open.
+        notification.push('warning', t('panels.hkNav.techniqueLocked'))
         ui.standalonePanel = null
         return
       }

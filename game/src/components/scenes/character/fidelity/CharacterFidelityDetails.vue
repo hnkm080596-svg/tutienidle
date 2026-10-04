@@ -25,7 +25,8 @@ const rowTooltip = (row: CharacterUiDetail) =>
 .cf-details { position: absolute; left: 1160px; top: 174px; width: 252px; height: 540px; padding: 0 23px; border-left: 1px solid #96815260; z-index: 5; color: #30291d; }
 /* Heading is static now - same look, no toggle affordance. */
 .cf-details__heading { position: relative; display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 0 0 11px; border-bottom: 1px solid #8d754c80; color: #4b3822; font-size: 22px; line-height: 25px; font-weight: 500; }
-.cf-details__body { position: relative; height: 475px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #7f714c transparent; }
+/* Bottom padding keeps the last stat row clear of the clip edge. */
+.cf-details__body { position: relative; height: 475px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #7f714c transparent; padding-bottom: 14px; }
 .cf-details__section h3 { font-size: 14px; color: #745730; margin: 16px 0 6px; font-weight: 600; }.cf-details__section dl { margin: 0; }
 .cf-detail-row { display: flex; justify-content: space-between; gap: 8px; padding: 7px 0; border-bottom: 1px solid #96815230; font-size: 13px; line-height: 17px; }.cf-detail-row dt { color: #4e4430; }.cf-detail-row dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: #241e10; }
 </style>
