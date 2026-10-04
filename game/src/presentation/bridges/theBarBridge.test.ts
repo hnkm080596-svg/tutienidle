@@ -30,7 +30,9 @@ function spellPathPlayer(overrides: Partial<TheBarPlayerState> = {}): TheBarPlay
     cultivationPath: 'spell',
     cultivationWay: 'spell_pathway',
     spellPath: { element: 'fire' } as TheBarPlayerState['spellPath'],
-    nodeLevels: {},
+    // Hoa The gate (Minh ruling 2026-10-04): the bar only renders while
+    // the gate node is owned - fixtures default it open at max.
+    nodeLevels: { hoa_the: 4 },
     ...overrides,
   }
 }
@@ -124,6 +126,15 @@ describe('makeTheBarReader — reimagined The bar mapping (D17)', () => {
     const reader = makeReader(
       fakeBattle('fighting', { currentThe: 3 }),
       spellPathPlayer({ cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway' }),
+    )
+
+    expect(reader()).toBeNull()
+  })
+
+  it('hoa_the node not owned yet → null (Minh ruling 2026-10-04)', () => {
+    const reader = makeReader(
+      fakeBattle('fighting', { currentThe: 3 }),
+      spellPathPlayer({ nodeLevels: {} }),
     )
 
     expect(reader()).toBeNull()

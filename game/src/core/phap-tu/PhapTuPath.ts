@@ -127,10 +127,26 @@ export function isSpellPathway(player: SpellPathWayRead | null | undefined): boo
 // retired; every other path keeps the shared MAX_THE default.
 export const SPELL_PATH_MAX_THE = 5
 
+/**
+ * Hoa The gate node (Minh ruling 2026-10-04): the fire The loop is
+ * node-unlocked, not element-inherent. Owning `hoa_the` level L gives
+ * a landed cast an L * THE_GAIN_CHANCE_PER_LEVEL shot at +1 The; the
+ * empowerment and the The cap come online with the same purchase.
+ */
+export const HOA_THE_NODE_ID = 'hoa_the'
+export const THE_GAIN_CHANCE_PER_LEVEL = 0.25
+
 /** Battle-scoped The-cap authority (reads onto entity.maxThe at
-    participant build via CombatBuild -> runtime.resolveMaxThe). */
-export function resolveMaxThe(player: SpellPathWayRead | null | undefined): number {
-  return isSpellPathway(player) ? SPELL_PATH_MAX_THE : MAX_THE
+    participant build via CombatBuild -> runtime.resolveMaxThe).
+    hoaTheLevel: player's level on the hoa_the gate node (0 = locked). */
+export function resolveMaxThe(
+  player: SpellPathWayRead | null | undefined,
+  hoaTheLevel = 0,
+): number {
+  if (!isSpellPathway(player)) {
+    return MAX_THE
+  }
+  return hoaTheLevel > 0 ? SPELL_PATH_MAX_THE : 0
 }
 
 /**
