@@ -1166,7 +1166,7 @@
     },
     "overlay": {
       "aiPanel": {
-        "title": "Target AI",
+        "title": "Battle AI",
         "ariaGroup": "AI target selection strategy",
         "strategies": {
           "nearest": "Nearest",
@@ -1181,7 +1181,9 @@
           "elite_first": "Boss → Elite → normal, then sorted by distance.",
           "lowest_hp": "Targets the enemy with the lowest remaining HP.",
           "highest_hp": "Targets the enemy with the highest remaining HP."
-        }
+        },
+        "close": "Close AI panel",
+        "target": "Target priority"
       },
       "countdown": {
         "go": "To Battle!"
@@ -1200,7 +1202,11 @@
         "exit": "Leave Battle"
       },
       "topBar": {
-        "enemiesSuffix": "enemies"
+        "enemiesSuffix": "enemies",
+        "autoMode": "Auto",
+        "manualMode": "Manual",
+        "pause": "Pause",
+        "resume": "Resume"
       },
       "skillBar": {
         "roles": {
@@ -1219,6 +1225,13 @@
         "upcoming": "Next up",
         "round": "Round {current}",
         "roundWithLimit": "Round {current}/{limit}"
+      },
+      "playerCard": {
+        "title": "Character",
+        "hp": "HP",
+        "mp": "MP",
+        "ward": "Ward",
+        "effects": "Effects"
       }
     }
   },

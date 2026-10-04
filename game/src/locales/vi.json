@@ -1166,7 +1166,7 @@
     },
     "overlay": {
       "aiPanel": {
-        "title": "AI Mục Tiêu",
+        "title": "AI Chiến Đấu",
         "ariaGroup": "Chiến lược AI chọn mục tiêu",
         "strategies": {
           "nearest": "Gần nhất",
@@ -1181,7 +1181,9 @@
           "elite_first": "Boss → Elite → thường, sau đó xếp theo khoảng cách.",
           "lowest_hp": "Chọn mục tiêu đang còn máu thấp nhất.",
           "highest_hp": "Chọn mục tiêu đang còn máu cao nhất."
-        }
+        },
+        "close": "Đóng bảng AI",
+        "target": "Ưu tiên mục tiêu"
       },
       "countdown": {
         "go": "Xuất Trận!"
@@ -1200,7 +1202,11 @@
         "exit": "Thoát Trận"
       },
       "topBar": {
-        "enemiesSuffix": "quái"
+        "enemiesSuffix": "quái",
+        "autoMode": "Tự Động",
+        "manualMode": "Thủ Công",
+        "pause": "Tạm dừng",
+        "resume": "Tiếp tục"
       },
       "skillBar": {
         "roles": {
@@ -1219,6 +1225,13 @@
         "upcoming": "Lượt tới",
         "round": "Hiệp {current}",
         "roundWithLimit": "Hiệp {current}/{limit}"
+      },
+      "playerCard": {
+        "title": "Thông tin nhân vật",
+        "hp": "HP",
+        "mp": "MP",
+        "ward": "Khiên",
+        "effects": "Hiệu ứng"
       }
     }
   },

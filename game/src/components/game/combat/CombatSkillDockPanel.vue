@@ -9,18 +9,16 @@
 // `top` cua CombatSceneOverlay), cung pattern do-DOM-that + ResizeObserver
 // voi overlay. Unmount: clear `right` ve 0 nhung giu `top`.
 //
-// Layout fix (2026-09-06) -- dock truoc do `top: 0` nen full-height, de len
-// enemy counter mep phai cua TopBar (TopBar va dock la 2 sibling absolute
-// rieng, dock khong nam trong luong flex cua overlay). Doi `top` sang
-// `var(--combat-topbar-h)` -- DUNG token TopBar dung de set height cua no
-// (CombatSceneOverlay.vue, theme.css) -- de dock bat dau ngay duoi TopBar
-// thay vi de len. Khong hardcode 60px du TurnOrderStrip tung dung so do --
-// token that la clamp(46px, 4.8vh, 72px), 60px chi la xap xi giua dai.
-// `bottom: 0` giu nguyen nen height tu co theo top moi, khong can khai
-// bao height tuong minh. Khong doi `width`/measuring logic -- publishWidth
-// do `offsetWidth` (chieu ngang), khong phu thuoc `top`.
+// ui-combat reskin (2026-10-04) -- the mock's bottom-right cluster is a
+// tall ornate frame holding the attack/skill orbs (skill-dock at
+// right:1.7vw top:~50vh width:9.7vw on the 1366x768 canvas). The dock now
+// wears the surface-m-panel chrome instead of the flush drawer fill and
+// anchors toward the lower right like the mock. The ResizeObserver
+// publish is unchanged - it still feeds the scene's right inset with the
+// real offsetWidth.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { clearSkillDockWidth, publishSkillDockWidth } from '@/presentation/geometry/combatInsets'
 
 const rootRef = ref<HTMLElement | null>(null)
@@ -52,33 +50,40 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <aside ref="rootRef" class="combat-skill-dock-panel dark-drawer-fill" data-hk-region="skill-dock">
+  <aside ref="rootRef" class="combat-skill-dock-panel" data-hk-region="skill-dock">
+    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
     <TurnCombatSkillBar />
   </aside>
 </template>
 
 <style scoped>
-/* Spec 10 skill-dock 1540/80/132/560 on the 1672x941 canvas: flush
-   right edge, canvas-top 8.5vh, 7.89vw wide, capped at 59.5vh tall.
-   The ResizeObserver publish keeps the scene's right inset in sync
-   with the real width. */
+/* ui-combat reskin (2026-10-04): mock anchors the framed orb dock at
+   right:1.7vw / top:~50vh / width:9.7vw of the 1366x768 canvas. Ours
+   holds up to three orbs plus the emblem, so it anchors by `bottom`
+   (bottom-anchored = content height can never push the box past the
+   viewport bottom) at the mock's right offset. The ResizeObserver
+   publish keeps the scene's right inset in sync with the real width. */
 .combat-skill-dock-panel {
   position: absolute;
-  top: 8.5vh;
-  right: 0;
-  width: 7.89vw;
-  min-width: 96px;
-  max-height: 59.5vh;
+  bottom: 4vh;
+  right: 1.6vw;
+  width: 9.73vw;
+  min-width: 118px;
+  max-width: 172px;
+  max-height: 56vh;
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 12px);
-  padding: var(--space-3, 12px);
+  padding: 2.6vh 1.1vw 3.1vh;
   overflow: hidden;
-  border-left: 1px solid var(--frame-outer);
-  border-bottom: 1px solid var(--frame-outer);
-  border-bottom-left-radius: var(--radius-md, 8px);
-  box-shadow: var(--surface-shadow-deep);
   pointer-events: auto;
   z-index: 12;
+  isolation: isolate;
+}
+
+/* InkNineSlice 'surface' renders at z-index 1 - contents need 2. */
+.combat-skill-dock-panel > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 2;
 }
 </style>

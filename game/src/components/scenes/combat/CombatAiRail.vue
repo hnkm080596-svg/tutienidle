@@ -6,12 +6,12 @@
 // wave B (art-qa): the panel no longer auto-opens at battle start - the
 // rail renders a compact 'AI Muc Tieu' chip; opening/closing is a local
 // shell concern (CombatAiPanel stays content-only). The chip rides the
-// drawn button-compact slice; the close affordance is icon-button-utility.
+// drawn button-compact slice. ui-combat reskin (2026-10-04): the mock's
+// 'AI Chien Dau' card carries its own x close in the panel heading -
+// the panel emits `close` and the rail flips back to the chip.
 import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-import GameButton from '@/components/common/GameButton.vue'
-import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import CombatAiPanel from '@/components/game/combat/CombatAiPanel.vue'
 
 const { t } = useI18n()
@@ -32,15 +32,7 @@ const aiOpen = shallowRef(false)
 
   <div v-else class="combat-ai-rail" data-hk-region="ai-panel">
     <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
-    <GameButton
-      class="combat-ai-rail__close"
-      variant="secondary"
-      shape="circle"
-      size="sm"
-      :aria-label="t('panels.common.close')"
-      @click="aiOpen = false"
-    ><HuyenKimSymbol name="close" /></GameButton>
-    <CombatAiPanel />
+    <CombatAiPanel @close="aiOpen = false" />
   </div>
 </template>
 
@@ -49,20 +41,6 @@ const aiOpen = shallowRef(false)
 
 /* InkNineSlice 'surface' renders at z-index 1 - contents need 2. */
 .combat-ai-rail > :not(.ink-nine-slice) { position: relative; z-index: 2; }
-
-/* >= 32px: icon-button-utility's 30px slices need the room. */
-.combat-ai-rail__close {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  z-index: 3;
-  width: 32px;
-  height: 32px;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
-  font-size: var(--text-xs);
-}
 
 /* Collapsed state: the reopen chip keeps the rail's anchor but takes a
    fraction of the footprint - battlefield stays clear until asked. */

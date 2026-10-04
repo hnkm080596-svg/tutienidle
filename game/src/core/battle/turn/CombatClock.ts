@@ -22,10 +22,17 @@ export type CombatClockState = 'running' | 'frozen' | 'stopped'
  * Reasons the clock may be held back. `tab-hidden` and `not-revealed` describe
  * the battle not being on screen. `turn-in-flight` describes the turn engine
  * having claimed the token and not yet released it. `authority-pause` is the
- * B1-D online-admission block (server authority lost). All compose uniformly:
- * the clock runs only when the reason set is empty.
+ * B1-D online-admission block (server authority lost). `user-pause` is the
+ * top-bar pause toggle (ui-combat reskin) - a plain freeze like the others,
+ * no overlay. All compose uniformly: the clock runs only when the reason
+ * set is empty.
  */
-export type FreezeReason = 'tab-hidden' | 'not-revealed' | 'turn-in-flight' | 'authority-pause'
+export type FreezeReason =
+  | 'tab-hidden'
+  | 'not-revealed'
+  | 'turn-in-flight'
+  | 'authority-pause'
+  | 'user-pause'
 
 export interface ClockSource {
   start(onFrame: (elapsedSeconds: number) => void): void
