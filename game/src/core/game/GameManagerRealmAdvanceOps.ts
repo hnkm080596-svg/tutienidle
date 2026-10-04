@@ -21,7 +21,11 @@ import {
   computeBreakthroughGrade,
   investBodyChapterState,
 } from '../realm/body/BodyProgressionSystem'
-import { getTierCap } from '../realm/body/BodyRefinementChapter'
+import {
+  getActiveTierIndex,
+  getTierCap,
+  isActiveTierUnlocked,
+} from '../realm/body/BodyRefinementChapter'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import type { NotificationQueue } from './NotificationQueue'
 import {
@@ -1028,6 +1032,7 @@ export class GameManagerRealmAdvanceOps {
     const probe = JSON.parse(JSON.stringify(player)) as PlayerData
     const consumed = investBodyChapterState(probe, chapterId, effectiveAvailable, auxOwned)
     if (consumed <= 0) {
+      this.maybeEmitBodyChapterLockHint(player, chapterId, available)
       return 0
     }
 
@@ -1077,6 +1082,51 @@ export class GameManagerRealmAdvanceOps {
       this.emitBodyChapterInvested(player, chapterId, applied, tiersBefore)
     }
     return applied
+  }
+
+  // One-shot per tier per session - the invest seam runs every tick,
+  // so the lock hint must not re-fire while the same tier stays gated.
+  private bodyRefineLockHintTier = -1
+
+  /**
+   * Realm-gate honesty: while the active tier is realm-locked, dropped
+   * essence only accumulates in the bag - the "+N Tinh Hoa" toast then
+   * misleads players into expecting visible growth. Surfaces the real
+   * requirement (tier name + required mortal level + stored count) once
+   * per tier so the stall explains itself instead of reading as "no
+   * growth".
+   */
+  private maybeEmitBodyChapterLockHint(
+    player: PlayerData,
+    chapterId: BodyChapterId,
+    available: number,
+  ): void {
+    if (chapterId !== 'body_refinement' || available <= 0) {
+      return
+    }
+
+    const activeIndex = getActiveTierIndex(player)
+    if (activeIndex === undefined || isActiveTierUnlocked(player)) {
+      return
+    }
+
+    if (this.bodyRefineLockHintTier === activeIndex) {
+      return
+    }
+
+    this.bodyRefineLockHintTier = activeIndex
+
+    const tier = BODY_REFINEMENT_TIERS[activeIndex]
+    this.deps.notifications.push({
+      kind: 'warning',
+      message: `${tier?.name ?? 'Luyện Thể'} cần Phàm Nhân tầng ${tier?.requiredRealmLevel ?? 0} — ${available} tinh hoa đang chờ trong túi`,
+      messageKey: 'notifications.bodyRefinementTierLocked',
+      messageParams: {
+        tier: tier?.name ?? '',
+        level: String(tier?.requiredRealmLevel ?? 0),
+        stored: String(available),
+      },
+    })
   }
 
   /**

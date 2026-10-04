@@ -85,7 +85,7 @@ describe('Luyen The growth chain', () => {
     expect(player.realmLevel).toBe(1)
   })
 
-  it('tick invest at realmLevel 1: gated - essence stays, nothing converts, no growth toast', () => {
+  it('tick invest at realmLevel 1: gated - essence stays, nothing converts, lock hint fires once', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { gameManager, player, killBoar } = harness()
 
@@ -96,10 +96,29 @@ describe('Luyen The growth chain', () => {
 
     expect(bagAmount(gameManager)).toBe(before)
     expect(tierProgress(player)).toBe(0)
+
+    const events = gameManager.drainNotifications()
     expect(
-      gameManager.drainNotifications().some(
-        (event) => event.messageKey === 'notifications.bodyRefinementInvested',
-      ),
+      events.some((event) => event.messageKey === 'notifications.bodyRefinementInvested'),
+    ).toBe(false)
+
+    const locked = events.find(
+      (event) => event.messageKey === 'notifications.bodyRefinementTierLocked',
+    )
+    expect(locked).toBeDefined()
+    expect(locked?.kind).toBe('warning')
+    expect(locked?.messageParams).toMatchObject({
+      tier: 'Luyện Bì',
+      level: '2',
+      stored: String(before),
+    })
+
+    // Once per tier per session - the hint must not re-fire every tick.
+    gameManager.tickOps.update(0.1)
+    expect(
+      gameManager
+        .drainNotifications()
+        .some((event) => event.messageKey === 'notifications.bodyRefinementTierLocked'),
     ).toBe(false)
   })
 

@@ -1623,6 +1623,7 @@
     "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
     "bodyRefinementInvested": "Body Refinement +{amount} — {tier} {progress}/{cap}",
     "bodyRefinementTierComplete": "{tier} complete!",
+    "bodyRefinementTierLocked": "{tier} needs Mortal tier {level} — {stored} essence stored",
     "autosaveFailed": "Progress could not be saved — browser storage is full. Smelt some equipment to free space.",
     "resetDeleteFailed": "Could not delete the save — the browser is refusing storage access."
   },
