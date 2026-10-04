@@ -50,13 +50,9 @@ export const BETA_PLAYABLE_WAYS: ReadonlySet<CultivationWayId> = new Set([
   'spell_pathway',
 ])
 
-/** All five Ngu Hanh elements stay playable in beta. */
+/** Beta opens the fire element only; the other four stay locked. */
 export const BETA_PLAYABLE_ELEMENTS: ReadonlySet<ElementType> = new Set([
   'fire',
-  'water',
-  'wood',
-  'metal',
-  'earth',
 ])
 
 /** Beta-offerable way check - the ritual/path admission gate. */

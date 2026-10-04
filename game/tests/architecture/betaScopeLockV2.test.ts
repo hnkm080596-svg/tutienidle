@@ -14,6 +14,7 @@
 import { describe, expect, it } from 'vitest'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
 import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { lockBetaElementsForTests } from '@/core/game/__fixtures__/betaElementsUnlock'
 import {
   BETA_ACT_COUNT,
   BETA_BOSSES_PER_ACT,
@@ -49,6 +50,7 @@ import { QUESTS } from '@/data/quest/quests'
 // allow-lists, so re-pin them.
 lockBetaWaysForTests()
 lockBetaFeaturesForTests()
+lockBetaElementsForTests()
 
 describe('beta scope v2 - way and element allow-lists', () => {
   it('offers spell_pathway and only spell_pathway', () => {
@@ -74,10 +76,11 @@ describe('beta scope v2 - way and element allow-lists', () => {
     }
   })
 
-  it('keeps all five Ngu Hanh elements playable, unknown elements fail closed', () => {
-    expect(BETA_PLAYABLE_ELEMENTS.size).toBe(5)
-    for (const el of ['fire', 'water', 'wood', 'metal', 'earth']) {
-      expect(isBetaElement(el)).toBe(true)
+  it('offers fire only; the other four Ngu Hanh elements fail closed', () => {
+    expect(BETA_PLAYABLE_ELEMENTS.size).toBe(1)
+    expect(isBetaElement('fire')).toBe(true)
+    for (const el of ['water', 'wood', 'metal', 'earth']) {
+      expect(isBetaElement(el)).toBe(false)
     }
     for (const el of ['', 'wind', 'lightning', 'FIRE']) {
       expect(isBetaElement(el)).toBe(false)

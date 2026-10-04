@@ -17,10 +17,17 @@
 // suites resolve ids outside the beta roster (the Great Dao reward
 // pham_nhan_chi_cot, PARKED talents), so the talent roster also starts
 // fully admitted and lock suites call lockBetaTalentsForTests().
+// The same contract applies to BETA_PLAYABLE_ELEMENTS: the beta opens
+// fire only, but the historical suite (element boss matrix, phap_tu
+// node catalogs) commits water/wood/metal/earth, so the element set
+// also starts fully admitted and lock suites call
+// lockBetaElementsForTests().
 import { unlockAllWaysForTests } from '../src/core/game/__fixtures__/betaWaysUnlock'
 import { unlockAllFeaturesForTests } from '../src/core/game/__fixtures__/betaFeaturesUnlock'
 import { unlockAllTalentsForTests } from '../src/core/game/__fixtures__/betaTalentsUnlock'
+import { unlockAllElementsForTests } from '../src/core/game/__fixtures__/betaElementsUnlock'
 
 unlockAllWaysForTests()
 unlockAllFeaturesForTests()
 unlockAllTalentsForTests()
+unlockAllElementsForTests()

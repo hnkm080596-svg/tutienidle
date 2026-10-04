@@ -81,7 +81,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
 
     name: 'Hỏa Cầu Thuật',
 
-    description: 'Phóng Hỏa Cầu vào mục tiêu, có cơ hội gây Thiêu Đốt.',
+    description: 'Phóng Hỏa Cầu vào mục tiêu, có cơ hội gây Hỏa Ấn.',
 
     type: 'active',
 
@@ -169,7 +169,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'hoa_tu_diem',
         name: 'Tụ Diễm',
-        description: 'Hỏa Cầu tụ một điểm — đòn đánh đậm hơn, Thiêu Đốt dễ trúng.',
+        description: 'Hỏa Cầu tụ một điểm — đòn đánh đậm hơn, Hỏa Ấn dễ trúng.',
         effectsOverride: [
           {
             type: 'damage',
@@ -202,7 +202,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'hoa_tan_diem',
         name: 'Tán Diễm',
-        description: 'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Thiêu Đốt khó trúng hơn.',
+        description: 'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {
