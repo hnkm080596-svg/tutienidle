@@ -476,18 +476,41 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
   // --- Roster remap (2026-10-04): moi canh gioi chi mot loai quai.
   // Truc Co = ho Linh Lang: normal + tinh anh (tinh_anh tag roll luc
   // spawn, khong phai id rieng) + Linh Lang Vuong boss tang 10. ---
-  foundationBeast({
+  // Balance retune (2026-10-04, docs/balance/enemies-review.md): the
+  // roster remap put ONE wolf id on all 10 floors. At t4 (684hp) a real
+  // post-initiation entrant kills ~1-3 wolves per attempt and never
+  // clears any floor (0 wins in 80+ measured runs); at t2 (518hp) the
+  // same. perfectClearTurnLimit=20 for 10 wolves implies ~2 rounds per
+  // kill - the entrant's atk ~85-110 wants mob EHP ~260, which the
+  // foundationBeast formula cannot reach (t:1 = 450). Literal block,
+  // same as the Linh Lang Vuong boss below: hp ~2x bandit (the authored
+  // realm-jump slope boar->bandit->wolf ~2.0x), might/armor mid-way
+  // between bandit and the old t4 so wolf hits still threaten on
+  // defense-light builds.
+  defineEnemy({
     id: 'foundation_spirit_wolf',
     name: 'Linh Lang',
-    t: 4,
+    level: 2,
+    realmId: 'foundation_establishment',
     lane: 'ground',
     archetype: 'melee',
-    bossEligible: false,
-    element: 'wood',
-    power: 12,
-    resistance: 12,
     family: 'wolf',
     attackPresetId: 'bite',
+    statsInput: {
+      maxHp: 190,
+      might: 30,
+      attackSpeed: 1.2,
+      criticalRate: 0.08,
+      criticalDamage: 2,
+      armor: 15,
+      evasionRate: 20,
+      resistances: { wood: 12 },
+      elemental: { element: 'wood', power: 12 },
+    },
+    rewards: {
+      techniqueMastery: 52,
+      spiritStone: 12,
+    },
   }),
   defineEnemy({
     id: 'foundation_ferocious_spirit_wolf',
@@ -508,12 +531,17 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
       // Boss-tier literal (same shell the flood-dragon whelp carried):
       // createBossVariant x7 hp / x2 might / x1.2 armor lands the duel
       // in the ~13-cast window a strong foundation kit wins narrowly.
-      maxHp: 550,
+      // Retune (2026-10-04, docs/balance/enemies-review.md): the literal
+      // was sized against the old t4 wolf (684 hp). With the normal at
+      // 190 hp, 550 made the king ~2.9x the mob baseline; 420 keeps a
+      // ~2.2x boss-shell ratio so the floor-10 duel stays a cap-check,
+      // not an out-of-reach wall.
+      maxHp: 420,
       might: 35,
       attackSpeed: 1.2,
       criticalRate: 0.08,
       criticalDamage: 2,
-      armor: 34,
+      armor: 30,
       evasionRate: 20,
       // Uniform across the five elements (stage-boss fairness).
       resistances: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
