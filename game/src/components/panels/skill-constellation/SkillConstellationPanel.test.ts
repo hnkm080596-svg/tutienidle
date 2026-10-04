@@ -120,6 +120,31 @@ describe('SkillConstellationPanel', () => {
     view.unmount()
   })
 
+  it('treats a stroke overlapping an edge in either direction as a prereq win', async () => {
+    // decor->root is authored as a stroke while the edge runs root->decor:
+    // the same segment, so no decorative glyph-stroke may double-draw it.
+    const reversedEdges = [...edges, { from: 'root', to: 'decor' }]
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const app = createApp({
+      render: () =>
+        h(SkillConstellationPanel, {
+          layout,
+          nodes,
+          edges: reversedEdges,
+          selected: 'root',
+          accent: '',
+        }),
+    })
+    app.use(i18n)
+    app.mount(container)
+    await nextTick()
+    expect(container.querySelectorAll('.constellation-connections .glyph-stroke').length).toBe(0)
+    expect(container.querySelectorAll('.constellation-connections .connection.free').length).toBe(0)
+    app.unmount()
+    container.remove()
+  })
+
   it('marks the selected node and its related connection', async () => {
     const view = mountPanel({ selected: 'minor_a' })
     await nextTick()

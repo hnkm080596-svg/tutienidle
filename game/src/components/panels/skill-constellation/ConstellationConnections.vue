@@ -16,10 +16,14 @@ const props = defineProps<{
   unlocking: string
 }>()
 
+// Overlap is geometric, not directional: a brush stroke drawn A->B and
+// a prereq edge authored B->A cover the same segment, so pair keys are
+// direction-insensitive and the prereq always wins.
+const pairKey = (a: string, b: string) => (a < b ? `${a}->${b}` : `${b}->${a}`)
 const nodesById = computed(() => new Map(props.nodes.map((node) => [node.id, node])))
-const prereqPairs = computed(() => new Set(props.edges.map((edge) => `${edge.from}->${edge.to}`)))
+const prereqPairs = computed(() => new Set(props.edges.map((edge) => pairKey(edge.from, edge.to))))
 const strokePairs = computed(
-  () => new Set(props.strokes.map((stroke) => `${stroke.fromNodeId}->${stroke.toNodeId}`)),
+  () => new Set(props.strokes.map((stroke) => pairKey(stroke.fromNodeId, stroke.toNodeId))),
 )
 
 interface RenderedStroke {
@@ -29,7 +33,7 @@ interface RenderedStroke {
 
 const glyphOnly = computed<RenderedStroke[]>(() =>
   props.strokes
-    .filter((stroke) => !prereqPairs.value.has(`${stroke.fromNodeId}->${stroke.toNodeId}`))
+    .filter((stroke) => !prereqPairs.value.has(pairKey(stroke.fromNodeId, stroke.toNodeId)))
     .flatMap((stroke) => {
       const from = nodesById.value.get(stroke.fromNodeId)
       const to = nodesById.value.get(stroke.toNodeId)
@@ -55,7 +59,7 @@ const prereqEdges = computed<RenderedEdge[]>(() =>
         key: `${edge.from}-${edge.to}`,
         d: `M ${from.x} ${from.y} L ${to.x} ${to.y}`,
         state: to.state,
-        free: !strokePairs.value.has(`${edge.from}->${edge.to}`),
+        free: !strokePairs.value.has(pairKey(edge.from, edge.to)),
         related: props.selected === edge.from || props.selected === edge.to,
         unlocking: props.unlocking === edge.to,
       },

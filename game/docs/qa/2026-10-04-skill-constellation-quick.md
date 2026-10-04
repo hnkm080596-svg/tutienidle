@@ -61,6 +61,13 @@ validation shares the authoritative predicate instead of duplicating it.
 
 No confirmed Medium-or-higher defects.
 
+- **Low (fixed in Pass 1):** glyph/prereq overlap matching in
+  `ConstellationConnections` was direction-sensitive - a brush stroke
+  authored A->B covering a prereq edge authored B->A would double-draw,
+  violating the plan's "prereq wins when overlapping" rule. Fixed with a
+  direction-insensitive `pairKey` shared by both layers; regression test
+  added (`reversed edge -> no glyph-stroke, no free`).
+
 - **Coverage gap (recorded):** the unlock travel animation itself
   (dash-offset path + arrival pulse) has runtime evidence only for its
   DOM contract via the panel test (`unlock-flow` path exists for the
@@ -95,6 +102,56 @@ No confirmed Medium-or-higher defects.
 - Pre-existing: `respecDisabled`/`hasOwnedNodes` is computed over the
   rendered (selected-element) graph, so a spell player's respec button
   reflects only the visible branch's ownership - unchanged by this task.
+
+## Sequential Review Passes (P5)
+
+Independence evidence: unavailable. Dispatching an isolated child-session
+blind reviewer failed - the org's concurrent-session cap was exhausted
+(HTTP 429) and the mode cap forbids a lower-mode child. The passes below
+are self-review per the protocol's fallback; the missing independent
+read is reported rather than fabricated.
+
+Sequential Review Pass 1 - Local Correctness / Regression
+  Reviewed state: post-implementation committed diff (150ed7c9), every
+    changed file plus the component consumers.
+  Findings: P1-F1 direction-sensitive overlap matching in
+    ConstellationConnections (Low, doc-rule violation on reversed
+    stroke/edge authoring); P1-F2 unlock flag fires on upgrades too
+    (Nit, intentional); P1-F3 nodes missing a layout slot fall back to
+    radial coordinates in percent space (Nit, unreachable while the
+    layout test holds); P1-F4 aria/timer/purchase contracts verified
+    clean.
+  Fixes: direction-insensitive pairKey for both connection layers.
+  Verification: +1 panel regression test; 14 constellation tests green,
+    vue-tsc clean.
+
+Sequential Review Pass 2 - Architecture / Authority / Ownership
+  Reviewed state after Pass 1 fixes: YES
+  Findings: none confirmed. Ownership boundaries hold - layout data is
+    pure presentation keyed by nodeId (ProgressionNode carries no
+    coordinates), betaNodeTreeRenderable is the single owner of the
+    tree-surface verdict shared by domain and validation, SkillSurface
+    remains the single surface-selection point, SkillPaperDetails keeps
+    the purchase surface, accent resolves from ELEMENT_COLOR_VARS
+    tokens rather than a hardcoded palette, additive optional props
+    only (emphasis, constellation, unlocking).
+  Fixes: none.
+  Verification: scoped suite (82 tests incl. tests/architecture/beta*)
+    green after Pass 1.
+
+Sequential Review Pass 3 - Adversarial Integration
+  Reviewed state after Pass 2 fixes: YES
+  Findings: none confirmed. Attacked: successive purchases reset the
+    flag/timer cleanly (newer unlock truncates the older pulse, then
+    clears); element switch, respec confirm, and unmount all clear the
+    unlock flag and timer (onBeforeUnmount); non-constellation branches
+    take the radial fallback with identical node positions; stray
+    edges referencing unrendered nodes drop gracefully; DOM order
+    equals authored stroke order for Tab navigation; the svg layer is
+    aria-hidden while each node button carries name/level/state.
+  Fixes: none.
+  Verification: re-ran touched-scope vitest + type-check on the final
+    state (82 tests, 8 files, green).
 
 ## Pre-existing Failures
 
