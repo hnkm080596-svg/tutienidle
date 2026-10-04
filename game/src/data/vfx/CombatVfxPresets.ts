@@ -30,6 +30,9 @@ export const COMBAT_VFX_PRESETS = {
   ngu_kiem_flight: { id: 'ngu_kiem_flight', color: 0xaeeaff, space: 'upright', areaScale: 1, durationMs: 250 },
   slash: { id: 'slash', color: 0xeaf6ff, space: 'upright', areaScale: 1, durationMs: 230 },
   claw: { id: 'claw', color: 0xffb0a0, space: 'upright', areaScale: 1, durationMs: 230 },
+  // Monster attack VFX sweep (2026-10-04) -- bite/jaw snap for melee
+  // beasts; pale steel-blue reads as fangs against warm claw red.
+  bite: { id: 'bite', color: 0xcfe4ff, space: 'upright', areaScale: 1, durationMs: 230, signature: ['crescent', 'scar'] },
   arcane_impact: {
     id: 'arcane_impact',
     color: 0x9cecff,

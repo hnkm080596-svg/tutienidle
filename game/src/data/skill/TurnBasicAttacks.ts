@@ -49,6 +49,21 @@ export const GENERIC_PHYSICAL_BASIC: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
+/**
+ * Monster attack VFX sweep (2026-10-04) - the enemy participant's basic
+ * def. Enemies share the generic physical basic; CombatEntity.
+ * attackPresetId (authored on the Enemy template) stamps the skill's
+ * presetId so the shared skill-presentation pipeline renders the
+ * attack-type VFX instead of the arcane_impact fallback. Skill id stays
+ * 'generic_physical' - cast-clip resolution and skill bookkeeping are
+ * unchanged.
+ */
+export function enemyBasicAttackFor(entity: { attackPresetId?: import('../../core/battle/CombatAction').CombatVfxPresetId }): TurnSkillDefinition {
+  return entity.attackPresetId
+    ? { ...GENERIC_PHYSICAL_BASIC, presetId: entity.attackPresetId }
+    : GENERIC_PHYSICAL_BASIC
+}
+
 export const BASIC_ATTACKS_BY_BUILD: Partial<Record<CultivationPathId, TurnSkillDefinition>> = {
   sword: SWORD_BASIC,
 }

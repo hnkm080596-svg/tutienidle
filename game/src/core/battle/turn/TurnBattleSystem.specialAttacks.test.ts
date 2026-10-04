@@ -145,4 +145,32 @@ describe('turn-based enemy specialAttacks reader (Phase A3)', () => {
     expect(totalDamage).toBeGreaterThanOrEqual(1)
     expect(totalDamage).toBeLessThan(20)
   })
+
+  // Monster attack VFX sweep (2026-10-04) - the scripted special's authored
+  // presetId must reach the resolved skill so both presentation feeds read
+  // it. Before the fix the special swapped only damage and the authored
+  // water_surge never presented.
+  it('scripted special stamps its presetId onto the resolved skill', () => {
+    const { battle, bossParticipant, system } = bossBattle()
+
+    let sawSpecial = false
+    for (let i = 0; i < 60 && !sawSpecial; i++) {
+      const step = system.resolveNextStep(battle)
+      if (step.actorId !== bossParticipant.id) continue
+
+      const counter = bossParticipant.specialAttackCounter ?? 0
+      if (counter % 4 === 0) {
+        sawSpecial = true
+        // Identity stays the basic; only the resolved payload's
+        // presentation fields change.
+        expect(step.skillId).toBe('qa_basic')
+        expect(step.execution?.resolvedSkill?.id).toBe('qa_basic')
+        expect(step.execution?.resolvedSkill?.presetId).toBe('water_surge')
+      } else {
+        expect(step.execution?.resolvedSkill?.presetId).toBeUndefined()
+      }
+    }
+
+    expect(sawSpecial).toBe(true)
+  })
 })

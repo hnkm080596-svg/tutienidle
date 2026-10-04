@@ -90,7 +90,7 @@ import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import { effectiveWaves } from '../stage/EffectiveWaves'
 import type { Stage } from '../stage/Stage'
 
-import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { enemyBasicAttackFor } from '../../data/skill/TurnBasicAttacks'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../data/buff/buffs'
 import type { FormationLoadout, PlayerData } from '../player/Player'
@@ -2028,13 +2028,15 @@ export class GameManagerTurnBattleOps {
 
       this.lastStageEnemyTemplate = template
 
+      const entity = this.placeSpawnedEnemy(
+        enemyToCombatEntity(this.deps.enemySystem.spawn(template)),
+        occupiedSlots,
+      )
+
       return toTurnBattleParticipant(
-        this.placeSpawnedEnemy(
-          enemyToCombatEntity(this.deps.enemySystem.spawn(template)),
-          occupiedSlots,
-        ),
+        entity,
         this.turnBattle?.enemies.length ?? 0,
-        GENERIC_PHYSICAL_BASIC,
+        enemyBasicAttackFor(entity),
       )
     }
   }
@@ -2151,7 +2153,7 @@ export class GameManagerTurnBattleOps {
       enemyEntity.row = position.row
       enemyEntity.x = position.column
 
-      return toTurnBattleParticipant(enemyEntity, index + 1, GENERIC_PHYSICAL_BASIC)
+      return toTurnBattleParticipant(enemyEntity, index + 1, enemyBasicAttackFor(enemyEntity))
     })
 
     return {

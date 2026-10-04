@@ -8,11 +8,20 @@ import { flightProgress, makeFlightCurve, sampleCurve, type Point } from './traj
 export type SkillVfxGraphics = Pick<Phaser.GameObjects.Graphics,
   'clear' | 'setVisible' | 'setDepth' | 'lineStyle' | 'lineBetween' | 'fillStyle' |
   'fillTriangle' | 'strokeCircle' | 'strokeEllipse' | 'destroy'>
+// Monster attack VFX sweep (2026-10-04) - 'sheet' cue sprites: an atlas
+// image the driver positions/sizes/frame-steps per target.
+export type SkillVfxSprite = Pick<Phaser.GameObjects.Image,
+  'setFrame' | 'setPosition' | 'setDepth' | 'setVisible' | 'setDisplaySize' |
+  'setOrigin' | 'setAlpha' | 'destroy' | 'width' | 'height' | 'active'>
 export interface SkillVfxSurface {
   graphics(): SkillVfxGraphics
   anchor(fact: ActorAnchorFact): Point | undefined
   ground(fact: Pick<ActorAnchorFact, 'row' | 'column'>): Point | undefined
   uprightDepth(fact: ActorAnchorFact): number
+  // Optional: 'sheet' cue sprite factory. Returns undefined when the
+  // texture key is not loaded - the cue then silently falls back to the
+  // recipe's analytic primitives.
+  sprite?(key: string, frame: string): SkillVfxSprite | undefined
   actorImpulse?(fact: ActorAnchorFact, durationMs: number, impulsePx: number, cast?: SkillCastPresentation): void
   cameraImpulse?(durationMs: number, intensity: number): void
 }
@@ -33,6 +42,10 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
   // ref.token, which preparePresentationResume rotates; a token key would
   // let the cue fire a second time for the same action after a resume.
   private readonly cameraImpulseFired = new Set<string>()
+  // Live 'sheet' cue sprites (one per anchor target). Graphics leases use
+  // the pool; atlas sprites are direct GameObjects the runner retires via
+  // finish/cancel - tracked here so reset/destroy can retire stragglers.
+  private readonly liveSheetSprites = new Set<SkillVfxSprite>()
   private readonly budget
   constructor(
     private readonly surface: SkillVfxSurface,
@@ -55,8 +68,16 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     this.epoch++
     if (scope === 'battle') this.cameraImpulseFired.clear()
     this.pool.reset()
+    for (const sprite of this.liveSheetSprites) sprite.destroy()
+    this.liveSheetSprites.clear()
   }
-  destroy(): void { this.epoch++; this.cameraImpulseFired.clear(); this.pool.destroy() }
+  destroy(): void {
+    this.epoch++
+    this.cameraImpulseFired.clear()
+    this.pool.destroy()
+    for (const sprite of this.liveSheetSprites) sprite.destroy()
+    this.liveSheetSprites.clear()
+  }
   private latchCamera(requestId: string): boolean {
     if (this.cameraImpulseFired.has(requestId)) return false
     this.cameraImpulseFired.add(requestId)
@@ -112,6 +133,11 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     const unique = [...new Map((returning ? returnTargets : targets).map(target => [target.entityId, target])).values()]
     if (context.phase === 'resolved' && unique.length === 0) return quietHandle
     if (cue.primitive === 'trajectory' && unique.length === 0) return quietHandle
+    // 'sheet' cue (Monster attack VFX sweep 2026-10-04): one atlas sprite
+    // per target, frame-stepped in sample() over the authored window.
+    // Missing hook/texture leaves the analytic primitives to carry the
+    // impact - no warning, no lease.
+    if (cue.primitive === 'sheet') return this.openSheet(cue, source, unique, context)
     const lease = this.pool.acquire()
     if (!lease) return quietHandle
     const graphics = lease.value
@@ -154,6 +180,56 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
             const point = cue.primitive === 'ground-shape' ? this.surface.ground(fact) : this.surface.anchor(fact)
             if (point) this.accent(graphics, cue, context.recipe.color, point, origin, elapsed)
           }
+        }
+      },
+      finish: end, cancel: end,
+    }
+  }
+  private openSheet(cue: SkillCue, source: ActorAnchorFact, targets: ActorAnchorFact[],
+    context: SkillCueContext): SkillCueHandle {
+    if (!this.surface.sprite || !cue.sheetKey) return quietHandle
+    const first = cue.firstFrame ?? 0
+    const last = cue.lastFrame ?? first
+    const fps = cue.fps ?? 30
+    const fitPx = cue.fitPx ?? 120
+    const anchored = (cue.anchor === 'source' ? [source] : targets).slice(0, 8)
+    const epoch = this.epoch
+    const sprites: { sprite: SkillVfxSprite; fact: ActorAnchorFact }[] = []
+    for (const fact of anchored) {
+      const sprite = this.surface.sprite(cue.sheetKey, `frame_${first}`)
+      if (!sprite) continue
+      sprite.setVisible(true)
+      sprite.setOrigin(0.5, cue.grounded ? 0.85 : 0.5)
+      sprite.setDisplaySize(fitPx, fitPx * (sprite.height / Math.max(1, sprite.width)))
+      this.liveSheetSprites.add(sprite)
+      sprites.push({ sprite, fact })
+    }
+    if (!sprites.length) return quietHandle
+    let alive = true
+    const end = () => {
+      if (!alive) return
+      alive = false
+      for (const { sprite } of sprites) {
+        this.liveSheetSprites.delete(sprite)
+        sprite.destroy()
+      }
+    }
+    const place = (sprite: SkillVfxSprite, fact: ActorAnchorFact) => {
+      const point = cue.grounded ? this.surface.ground(fact) : this.surface.anchor(fact)
+      if (!point) { sprite.setVisible(false); return }
+      sprite.setVisible(true)
+      sprite.setPosition(point.x, point.y)
+      sprite.setDepth(cue.grounded ? DEPTH_GROUND_VFX : this.surface.uprightDepth(fact))
+    }
+    for (const { sprite, fact } of sprites) place(sprite, fact)
+    return {
+      sample: elapsed => {
+        if (!alive || epoch !== this.epoch) return
+        const index = Math.min(last, first + Math.max(0, Math.floor(elapsed * fps / 1000)))
+        for (const { sprite, fact } of sprites) {
+          if (!sprite.active) continue
+          sprite.setFrame(`frame_${index}`)
+          place(sprite, fact)
         }
       },
       finish: end, cancel: end,

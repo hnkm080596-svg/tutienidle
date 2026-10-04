@@ -79,6 +79,7 @@ import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
 import { TECHNIQUES } from '@/data/technique/Techniques'
 import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 import { hoaCauCombatDescriptors } from '@/game/support/HoaCauVfxAssets'
+import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
 
 export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
 
@@ -351,6 +352,14 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
   }
 
   for (const descriptor of hoaCauCombatDescriptors()) {
+    if (seenKeys.has(descriptor.key)) continue
+    seenKeys.add(descriptor.key)
+    descriptors.push(descriptor)
+  }
+
+  // Monster attack VFX sweep (2026-10-04) - preset-bound attack sheets
+  // (VfxSheetManifest); 'sheet' impact cues read these texture keys.
+  for (const descriptor of vfxSheetCombatDescriptors()) {
     if (seenKeys.has(descriptor.key)) continue
     seenKeys.add(descriptor.key)
     descriptors.push(descriptor)
