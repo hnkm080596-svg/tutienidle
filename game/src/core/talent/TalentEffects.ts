@@ -104,6 +104,15 @@ export function getInsightGainMultiplier(
   return Math.max(0, 1 + sumPercent(selectedTalentIds, 'insight_gain', talentLevels))
 }
 
+// Van Dao downside - scales base battle insight before the gain
+// multiplier; 1 when absent.
+export function getInsightBaseMultiplier(
+  selectedTalentIds: readonly string[] | undefined,
+  talentLevels?: Readonly<Record<string, number>>,
+): number {
+  return Math.max(0, 1 + sumPercent(selectedTalentIds, 'insight_base', talentLevels))
+}
+
 // Ngo Dao - nguon Cam Ngo tu tu luyen. Tra ve nguong tu vi/diem Cam Ngo,
 // undefined neu khong co thien phu nao cap. Nhieu nguon (multi-talent)
 // lay nguong nho nhat - nguon co loi nhat thang, khong cong don hai nguong.

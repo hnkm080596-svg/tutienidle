@@ -35,7 +35,7 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     // CP-01 - flat, not percent: this rate stat's base is 0 so
     // percent*(0+0)=0 (silent no-op). Convention for rate stats is flat
     // fraction (TheTuBuffs/affixes/node riders).
-    statModifiers: [{ stat: 'finalDamagePercent', flat: 0.3 }],
+    statModifiers: [{ stat: 'finalDamagePercent', flat: 0.18 }],
     dispellable: false,
   },
   // Thach Giap - Thach Nham 5s: -50% sat thuong nhan vao.
