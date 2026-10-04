@@ -9,6 +9,12 @@ export { HERO_COLUMN, HERO_LANE_INDEX }
 export const HIT_RECOIL_PX = 6
 export const HIT_RECOIL_DURATION_MS = 65
 
+// Turn-ready emphasis: forward lean on the shared offsetX impulse channel
+// (replaces the old boost scale punch). Duration is one leg of the yoyo -
+// the full out-and-back beat stays at the tuned 2 x 250 ms.
+export const TURN_READY_LEAN_PX = 8
+export const TURN_READY_LEAN_MS = 250
+
 /** DoT text flush 3 lan/giay (plan sec7.2) - cua so gom 333,33ms. */
 export const DOT_TEXT_FLUSH_INTERVAL_MS = 1000 / 3
 
