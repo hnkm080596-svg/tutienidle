@@ -19,6 +19,8 @@ const presetInput = element<HTMLSelectElement>('preset')
 const outcomeInput = element<HTMLSelectElement>('outcome')
 const tamMuoiInput = element<HTMLInputElement>('tam-muoi-aura')
 element('tam-muoi-label').textContent = i18n.global.t('skillVfxLab.tamMuoiAura')
+const phapTheInput = element<HTMLSelectElement>('phap-the-stacks')
+element('phap-the-label').textContent = i18n.global.t('skillVfxLab.phapTheStacks')
 for (const id of ['ngu_kiem_flight', 'slash', 'earth_shockwave', 'holy_radiance', 'hoa_cau_comet'])
   presetInput.add(new Option(t(id), id))
 for (const id of ['hit', 'miss', 'intercept', 'sourceDeath', 'multi', 'combo', 'empty'])
@@ -36,6 +38,7 @@ function paintSequence() {
 }
 const query = new URLSearchParams(location.search)
 tamMuoiInput.checked = query.get('tam_muoi') === '1'
+phapTheInput.value = String(Math.max(0, Math.min(5, Number(query.get('phap_the')) || 0)))
 if ([...presetInput.options].some(option => option.value === query.get('preset')))
   presetInput.value = query.get('preset')!
 paintSequence()
@@ -46,8 +49,10 @@ const scrubWrap = element<HTMLLabelElement>('scrub-wrap')
 element('scrub-label').textContent = i18n.global.t('skillVfxLab.scrub')
 const paintScrub = () => { scrubWrap.hidden = !manual || !fireballMode() }
 const paintAuraControl = () => { element('tam-muoi-wrap').hidden = !fireballMode() }
+const paintPhapTheControl = () => { element('phap-the-wrap').hidden = !fireballMode() }
 paintScrub()
 paintAuraControl()
+paintPhapTheControl()
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
 const quality = query.get('quality') === 'low' || reduced ? 'low' : 'standard'
 const source: ActorAnchorFact = { entityId: 'player', row: 1, column: 1 }
@@ -76,6 +81,7 @@ function paintStats() {
   if (!runner) return
   if (fireballMode()) {
     const state = fireball.snapshot()
+    phapTheInput.value = String(state.phapTheStacks)
     element('stats').textContent = `fireball: ${state.phase} · release ${(state.releaseMs / 1000).toFixed(2)} s · impact ${(state.impactMs / 1000).toFixed(2)} s · ${quality}`
     const index = { raise: 0, portal: 1, charge: 2, projectile: 3, impact: 4, complete: 5, idle: -1 }[state.phase]
     for (const [i, item] of [...element('sequence').children].entries())
@@ -111,7 +117,7 @@ function play(autoplay = false) {
   casterFigure.setVisible(!fireballMode())
   if (fireballMode()) {
     scrubInput.value = '0'
-    fireball.play(outcomeInput.value !== 'miss')
+    fireball.play(outcomeInput.value !== 'miss', autoplay)
     paintStats()
     return
   }
@@ -199,11 +205,13 @@ class SkillLabScene extends Phaser.Scene {
     runner = new SkillPresentationRunner(driver, getSkillPresentationRecipe, error => console.error(error))
     fireball = new HoaCauLabPlayback(this)
     fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode())
+    fireball.setPhapTheStacks(Number(phapTheInput.value))
+    phapTheInput.onchange = () => { fireball.setPhapTheStacks(Number(phapTheInput.value)); paintStats() }
     tamMuoiInput.onchange = () => { fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode()); paintStats() }
     scrubInput.oninput = () => {
       if (!manual || !fireballMode()) return
       fireballAutoplay = false
-      fireball.play(outcomeInput.value !== 'miss')
+    fireball.play(outcomeInput.value !== 'miss')
       fireball.update(Number(scrubInput.value))
       paintStats()
     }
@@ -218,6 +226,7 @@ class SkillLabScene extends Phaser.Scene {
       casterFigure.setVisible(!fireballMode())
       paintScrub()
       paintAuraControl()
+      paintPhapTheControl()
       fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode())
       paintSequence(); paintStats()
     }
@@ -238,6 +247,7 @@ class SkillLabScene extends Phaser.Scene {
       element('cancel').onclick = null
       presetInput.onchange = null
       tamMuoiInput.onchange = null
+      phapTheInput.onchange = null
       Object.assign(window, { __skillVfxLab: undefined })
     })
     play()
