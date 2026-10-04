@@ -51,15 +51,13 @@ test('Pháp Thế preview lights four calligraphy strokes then the whole glyph a
   await expect(count).toBeVisible()
   const snapshot = () => page.evaluate(() => window.__skillVfxLab!.snapshot() as unknown as {
     phapTheStacks: number; phapTheGlyphVisible: boolean; phapTheLitStrokes: number; phapTheFullGlow: boolean
-    phapTheFlameVisible: boolean; phapTheParticleCount: number; phapTheFlameTongueCount: number
-    phapTheGlowVisible: boolean; phapTheFlameMaxHeight: number
+    hoaTheVisible: boolean; hoaTheFrame: number
     phapTheGlyphScale: number; phapTheGlyphOffsetX: number; phapTheGlyphOffsetY: number
   })
   await count.selectOption('0')
   expect((await snapshot()).phapTheGlyphVisible).toBe(true)
   expect((await snapshot()).phapTheLitStrokes).toBe(0)
-  expect((await snapshot()).phapTheFlameVisible).toBe(false)
-  expect((await snapshot()).phapTheGlowVisible).toBe(false)
+  expect((await snapshot()).hoaTheVisible).toBe(false)
   expect((await snapshot()).phapTheGlyphScale).toBeCloseTo(0.21)
   expect((await snapshot()).phapTheGlyphOffsetX).toBe(25)
   expect((await snapshot()).phapTheGlyphOffsetY).toBe(-240)
@@ -67,13 +65,13 @@ test('Pháp Thế preview lights four calligraphy strokes then the whole glyph a
   await expect.poll(async () => (await snapshot()).phapTheStacks).toBe(4)
   expect((await snapshot()).phapTheLitStrokes).toBe(4)
   expect((await snapshot()).phapTheFullGlow).toBe(false)
-  expect((await snapshot()).phapTheFlameVisible).toBe(false)
+  expect((await snapshot()).hoaTheVisible).toBe(false)
   await page.locator('#play').click()
   await expect.poll(async () => (await snapshot()).phapTheStacks).toBe(5)
   await expect.poll(async () => (await snapshot()).phapTheFullGlow).toBe(true)
-  await expect.poll(async () => (await snapshot()).phapTheFlameVisible).toBe(true)
-  expect((await snapshot()).phapTheParticleCount).toBeGreaterThan(12)
-  expect((await snapshot()).phapTheFlameTongueCount).toBeGreaterThan(5)
-  expect((await snapshot()).phapTheGlowVisible).toBe(true)
-  expect((await snapshot()).phapTheFlameMaxHeight).toBeLessThanOrEqual(18)
+  await expect.poll(async () => (await snapshot()).hoaTheVisible).toBe(true)
+  // Stack five shows the Arcadia fire seal: authored reveal, then a looping burn tail.
+  const firstFrame = (await snapshot()).hoaTheFrame
+  await expect.poll(async () => (await snapshot()).hoaTheFrame).toBeGreaterThan(firstFrame)
+  expect((await snapshot()).phapTheGlyphVisible).toBe(false)
 })

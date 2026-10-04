@@ -35,6 +35,8 @@ export class HoaCauLabPlayback {
       TAM_MUOI_AURA_PREVIEW_ASSET.textureUrl, TAM_MUOI_AURA_PREVIEW_ASSET.atlasUrl)
     scene.load.atlas(TAM_MUOI_AURA_FRONT_PREVIEW_ASSET.key,
       TAM_MUOI_AURA_FRONT_PREVIEW_ASSET.textureUrl, TAM_MUOI_AURA_FRONT_PREVIEW_ASSET.atlasUrl)
+    for (let stack = 0; stack <= 5; stack++)
+      scene.load.svg(`phap-the-${stack}`, `/assets/vfx/hoa-cau-thuat/phap-the/phap-the-${stack}.svg`)
     scene.load.atlas(HOA_THE_PREVIEW_ASSET.key,
       HOA_THE_PREVIEW_ASSET.textureUrl, HOA_THE_PREVIEW_ASSET.atlasUrl)
   }
@@ -42,6 +44,7 @@ export class HoaCauLabPlayback {
   private readonly actor: Phaser.GameObjects.Sprite
   private readonly auraBack: Phaser.GameObjects.Sprite
   private readonly auraFront: Phaser.GameObjects.Sprite
+  private readonly phapTheGlyph: Phaser.GameObjects.Image
   private readonly hoaThe: Phaser.GameObjects.Sprite
   private readonly presenter: HoaCauFireballPresentation
   private elapsedMs = 0
@@ -51,7 +54,9 @@ export class HoaCauLabPlayback {
   private phase: Phase = 'idle'
   private tamMuoiActive = false
   private auraElapsedMs = 0
-  private hoaTheActive = false
+  private phapTheStacks = 0
+  private awardStackOnRelease = false
+  private hoaTheMs = 0
 
   constructor(private readonly scene: Phaser.Scene) {
     this.actor = scene.add.sprite(210, 325, castClip.sheetKey, frameName(castClip.firstFrame))
@@ -62,9 +67,10 @@ export class HoaCauLabPlayback {
     this.auraFront = scene.add.sprite(210, 325, TAM_MUOI_AURA_FRONT_PREVIEW_ASSET.key, 'frame_0')
       .setOrigin(0.5, 1).setScale(0.95).setDepth(590.5)
       .setBlendMode(Phaser.BlendModes.ADD).setVisible(false)
-    this.hoaThe = scene.add.sprite(210, 235, HOA_THE_PREVIEW_ASSET.key, 'frame_0')
-      .setOrigin(0.5, 0.5).setScale(0.85).setDepth(591)
-      .setBlendMode(Phaser.BlendModes.ADD).setVisible(false)
+    this.hoaThe = scene.add.sprite(235, 85, HOA_THE_PREVIEW_ASSET.key, 'frame_0')
+      .setScale(0.26).setDepth(610).setVisible(false)
+    this.phapTheGlyph = scene.add.image(235, 85, 'phap-the-0')
+      .setScale(0.21).setDepth(610).setVisible(false)
     this.presenter = new HoaCauFireballPresentation({
       anchor: fact => fact.entityId === source.entityId
         ? hoaCauHandAnchor(this.actor) : { x: 750, y: 205 },
@@ -75,13 +81,15 @@ export class HoaCauLabPlayback {
     })
   }
 
-  play(landed = true): void {
+  play(landed = true, awardStackOnRelease = false): void {
     this.presenter.cancel()
     this.elapsedMs = 0
     this.resolved = false
     this.landed = landed
     this.phase = 'raise'
+    this.awardStackOnRelease = awardStackOnRelease
     this.actor.setVisible(true).setFrame(frameName(castClip.firstFrame))
+    this.paintPhapTheGlyph()
     const id = ++this.serial
     const cast: SkillCastPresentation = {
       ref: { sessionId: 1, requestId: `lab-fireball-${id}`, token: `lab-fireball-${id}` },
@@ -95,6 +103,33 @@ export class HoaCauLabPlayback {
 
   private cast?: SkillCastPresentation
 
+  setPhapTheStacks(stacks: number): void {
+    this.phapTheStacks = Number.isFinite(stacks) ? Math.max(0, Math.min(5, Math.trunc(stacks))) : 0
+    this.paintPhapTheGlyph()
+  }
+
+  private paintPhapTheGlyph(): void {
+    const maxed = this.phapTheStacks === 5
+    if (maxed && !this.hoaThe.visible) this.hoaTheMs = 0
+    this.phapTheGlyph.setTexture(`phap-the-${Math.min(this.phapTheStacks, 4)}`)
+      .setPosition(this.actor.x + 25, this.actor.y - 240)
+      .setVisible(this.actor.visible && !maxed)
+    // Stack 5 swaps the static glyph for the Arcadia fire seal: the authored
+    // reveal plays once, then the burn tail loops as a living flame.
+    this.hoaThe.setPosition(this.actor.x + 25, this.actor.y - 240)
+      .setVisible(this.actor.visible && maxed)
+  }
+
+  private hoaTheFrame(): number {
+    const revealMs = 2400
+    const burnLoopFrames = 18
+    const burnLoopMs = 900
+    if (this.hoaTheMs < revealMs)
+      return Math.min(HOA_THE_PREVIEW_ASSET.lastFrame,
+        Math.floor(this.hoaTheMs / revealMs * (HOA_THE_PREVIEW_ASSET.lastFrame + 1)))
+    return 18 + Math.floor((this.hoaTheMs - revealMs) / burnLoopMs * burnLoopFrames) % burnLoopFrames
+  }
+
   setTamMuoiActive(active: boolean): void {
     this.tamMuoiActive = active
     if (!active) this.auraElapsedMs = 0
@@ -102,30 +137,13 @@ export class HoaCauLabPlayback {
     this.auraFront.setVisible(active && this.actor.visible)
   }
 
-  setHoaTheActive(active: boolean): void {
-    this.hoaTheActive = active
-    if (!active) this.hoaThe.setVisible(false)
-  }
-
-  // The seal lights stroke-by-stroke over the charge window so the completed
-  // character arrives exactly at the release beat; it holds through the flight
-  // so the living-flame burn reads before the projectile lands.
-  updateHoaThe(): void {
-    if (!this.hoaTheActive || !this.actor.visible || !this.cast) { this.hoaThe.setVisible(false); return }
-    const timing = hoaCauTiming(impactMs)
-    const span = Math.max(1, timing.releaseMs - timing.chargeStartMs)
-    const progress = (this.elapsedMs - timing.chargeStartMs) / span
-    const show = progress > 0 && this.elapsedMs < impactMs
-    this.hoaThe.setVisible(show)
-    if (show) {
-      const frame = Math.min(HOA_THE_PREVIEW_ASSET.lastFrame,
-        Math.floor(progress * (HOA_THE_PREVIEW_ASSET.lastFrame + 1)))
-      this.hoaThe.setFrame(`frame_${frame}`)
-    }
-  }
-
   updateAura(deltaMs: number): void {
-    if (!this.tamMuoiActive || !this.actor.visible || !Number.isFinite(deltaMs) || deltaMs < 0) return
+    if (!Number.isFinite(deltaMs) || deltaMs < 0) return
+    if (this.hoaThe.visible) {
+      this.hoaTheMs += deltaMs
+      this.hoaThe.setFrame(`frame_${this.hoaTheFrame()}`)
+    }
+    if (!this.tamMuoiActive || !this.actor.visible) return
     this.auraElapsedMs = (this.auraElapsedMs + deltaMs) % 1200
     const frame = `frame_${Math.floor(this.auraElapsedMs / 1200 * 36)}`
     for (const aura of [this.auraBack, this.auraFront]) {
@@ -137,6 +155,11 @@ export class HoaCauLabPlayback {
 
   update(deltaMs: number): void {
     if (!this.cast || this.phase === 'complete' || !Number.isFinite(deltaMs) || deltaMs < 0) return
+    const releaseMs = hoaCauTiming(impactMs).releaseMs
+    if (this.awardStackOnRelease && this.elapsedMs < releaseMs && this.elapsedMs + deltaMs >= releaseMs) {
+      this.setPhapTheStacks(this.phapTheStacks + 1)
+      this.awardStackOnRelease = false
+    }
     let remaining = deltaMs
     if (!this.resolved && this.elapsedMs + remaining >= impactMs) {
       const toImpact = impactMs - this.elapsedMs
@@ -148,7 +171,6 @@ export class HoaCauLabPlayback {
     }
     this.presenter.update(remaining)
     this.elapsedMs += remaining
-    this.updateHoaThe()
     // Drive the caster from the same preview clock as the VFX (including 0.25x).
     const frameIndex = Math.min((castClip.frameSequence?.length ?? castClip.lastFrame - castClip.firstFrame + 1) - 1,
       Math.floor(this.elapsedMs * castClip.frameRate / 1000))
@@ -164,6 +186,12 @@ export class HoaCauLabPlayback {
   snapshot() {
     return { phase: this.phase, elapsedMs: this.elapsedMs,
       tamMuoiActive: this.tamMuoiActive, auraFrame: Math.floor(this.auraElapsedMs / 1200 * 36),
+      phapTheStacks: this.phapTheStacks, phapTheGlyphVisible: this.phapTheGlyph.visible,
+      phapTheLitStrokes: Math.min(this.phapTheStacks, 4), phapTheFullGlow: this.phapTheStacks === 5,
+      phapTheGlyphScale: this.phapTheGlyph.scaleX,
+      hoaTheVisible: this.hoaThe.visible, hoaTheFrame: this.hoaThe.visible ? this.hoaTheFrame() : 0,
+      phapTheGlyphOffsetX: this.hoaThe.x - this.actor.x,
+      phapTheGlyphOffsetY: this.hoaThe.y - this.actor.y,
       ...hoaCauTiming(impactMs) }
   }
 
@@ -172,6 +200,7 @@ export class HoaCauLabPlayback {
     this.actor.stop().setVisible(false)
     this.auraBack.setVisible(false)
     this.auraFront.setVisible(false)
+    this.phapTheGlyph.setVisible(false)
     this.hoaThe.setVisible(false)
     this.cast = undefined
     this.phase = 'idle'
@@ -182,6 +211,7 @@ export class HoaCauLabPlayback {
     this.actor.destroy()
     this.auraBack.destroy()
     this.auraFront.destroy()
+    this.phapTheGlyph.destroy()
     this.hoaThe.destroy()
   }
 
