@@ -102,8 +102,11 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
   private atlasPool(key: string): VfxPool<SkillVfxSprite> {
     let pool = this.atlasPools.get(key)
     if (!pool) {
-      pool = new VfxPool(this.budget.sprites, () => this.surface.sprite!(key),
-        sprite => { sprite.setVisible(false) }, sprite => sprite.destroy())
+      pool = new VfxPool(this.budget.sprites, () => {
+        const sprite = this.surface.sprite!(key)
+        if (!sprite) throw new Error('atlas texture unavailable')
+        return sprite
+      }, sprite => { sprite.setVisible(false) }, sprite => sprite.destroy())
       this.atlasPools.set(key, pool)
     }
     return pool
@@ -226,7 +229,14 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     for (const fact of anchors) {
       const point = this.surface.anchor(fact)
       if (!point) continue
-      const lease = pool.acquire()
+      let lease: VfxLease<SkillVfxSprite> | null
+      try {
+        lease = pool.acquire()
+      } catch {
+        // Texture key not loaded - the cue quietly drops rather than
+        // drawing a missing-texture placeholder.
+        break
+      }
       if (!lease) break
       lease.value.setFrame('frame_0')
         .setPosition(point.x, point.y)

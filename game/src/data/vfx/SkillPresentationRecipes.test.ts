@@ -132,8 +132,10 @@ describe('sheet cue injection (Monster attack VFX sweep)', () => {
       const recipe = getSkillPresentationRecipe(preset.id)
       expect(recipe.impact.every(c => c.primitive !== 'sheet'), preset.id).toBe(true)
       // Generated recipes keep the preset duration; authored overrides
-      // (ngu_kiem_flight, hoa_cau_comet) own their own timing.
-      if (preset.id !== 'ngu_kiem_flight' && preset.id !== 'hoa_cau_comet')
+      // (ngu_kiem_flight, hoa_cau_comet, linh_bao_burst, tam_muoi_aura)
+      // own their own timing.
+      if (preset.id !== 'ngu_kiem_flight' && preset.id !== 'hoa_cau_comet'
+        && preset.id !== 'linh_bao_burst' && preset.id !== 'tam_muoi_aura')
         expect(recipe.impactMs).toBe(preset.durationMs)
     }
   })
