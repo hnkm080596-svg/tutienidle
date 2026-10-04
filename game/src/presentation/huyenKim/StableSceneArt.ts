@@ -269,7 +269,28 @@ export const STABLE_SYMBOL_IDS = [
   'back', 'close', 'home', 'character', 'realm', 'skill', 'body',
   'technique', 'inventory', 'exploration', 'alchemy', 'equipment',
   'quest', 'settings', 'feedback', 'auto-farm', 'confirm', 'lock',
+  'talent-bach_luyen_thanh_khi', 'talent-bat_tu_the', 'talent-can_than',
+  'talent-hai_na', 'talent-hap_linh', 'talent-ho_the',
+  'talent-ho_tich_bat_phat', 'talent-hoa_hau_thong_than', 'talent-kd_linh_dan',
+  'talent-kd_thanh_dan', 'talent-kiem_quang', 'talent-lk_bac_hai',
+  'talent-lk_dung_nap', 'talent-lk_linh_mach', 'talent-lk_ngo_tinh',
+  'talent-lk_tam_tue', 'talent-loi_kiep', 'talent-ngo_dao',
+  'talent-pha_giap', 'talent-pham_cot', 'talent-pham_nhan_chi_cot',
+  'talent-phu_van', 'talent-tat_phong', 'talent-tc_dia_can',
+  'talent-tc_huyet_nhuc', 'talent-tc_kim_lan', 'talent-tc_linh_giac',
+  'talent-tc_thien_co', 'talent-tc_truc_hon', 'talent-thach_giap',
+  'talent-thu_phat', 'talent-tran_tam', 'talent-trong_kich',
+  'talent-van_dao', 'talent-vo_anh',
 ] as const
+
+const stableSymbolIdSet = new Set<string>(STABLE_SYMBOL_IDS)
+
+// Maps a talent id to its dedicated glyph, or `fallback` when the id has
+// no shipped glyph yet.
+export function talentSymbolId(talentId: string, fallback: StableSymbolId = 'character'): StableSymbolId {
+  const id = `talent-${talentId}`
+  return stableSymbolIdSet.has(id) ? (id as StableSymbolId) : fallback
+}
 
 export type StableSymbolId = (typeof STABLE_SYMBOL_IDS)[number]
 
