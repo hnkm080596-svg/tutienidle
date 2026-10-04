@@ -1,8 +1,9 @@
-// BETA SCOPE LOCK v2 census + adversarial pool probing. The shipped
+// BETA SCOPE LOCK v3 census + adversarial pool probing. The shipped
 // STAGES data is the allow-list: exactly 3 chapters x 10 floors, each
-// chapter on the final 12-identity roster (3 band normals + 1 boss),
-// and no spawn path can surface a dormant/hidden identity on a beta
-// stage.
+// chapter on ONE species family (roster remap, Minh ruling 2026-10-04:
+// same normal id on all bands + its king as the act boss = 6
+// identities), and no spawn path can surface a dormant/hidden identity
+// on a beta stage.
 import { describe, expect, it } from 'vitest'
 
 import { STAGES } from './Stages'
@@ -22,19 +23,19 @@ import { TemplateRegistry } from '../../core/game/TemplateRegistry'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { Enemy } from '../../core/enemy/Enemy'
 
-/** The final 12-identity beta roster (work-order section 8). */
+/** The final 6-identity beta roster - one family per chapter. */
 const BETA_ROSTER = {
   1: {
-    normals: ['mortal_wild_boar', 'mortal_savage_tiger', 'mortal_water_wolf'],
-    boss: 'mortal_ferocious_giant_crocodile',
+    normals: ['mortal_wild_boar', 'mortal_wild_boar', 'mortal_wild_boar'],
+    boss: 'mortal_ferocious_wild_boar',
   },
   2: {
-    normals: ['wild_wolf', 'flame_fox', 'giant_earthworm'],
-    boss: 'ferocious_flood_serpent',
+    normals: ['bandit', 'bandit', 'bandit'],
+    boss: 'ferocious_bandit',
   },
   3: {
-    normals: ['foundation_lava_hound', 'foundation_sand_scorpion', 'foundation_mud_golem'],
-    boss: 'foundation_ferocious_flood_dragon_whelp',
+    normals: ['foundation_spirit_wolf', 'foundation_spirit_wolf', 'foundation_spirit_wolf'],
+    boss: 'foundation_ferocious_spirit_wolf',
   },
 } as const
 
@@ -56,7 +57,7 @@ describe('beta stage roster census (BETA SCOPE LOCK v2)', () => {
   })
 
   it.each([1, 2, 3] as const)(
-    'chapter %i: 3 distinct band normals on 1-3/4-6/7-9 + roster boss on 10',
+    'chapter %i: one family normal on 1-3/4-6/7-9 + roster boss on 10',
     (chapter) => {
       const roster = BETA_ROSTER[chapter]
       const stages = STAGES.filter((stage) => stage.chapter === chapter)
@@ -77,14 +78,14 @@ describe('beta stage roster census (BETA SCOPE LOCK v2)', () => {
     },
   )
 
-  it('exactly 12 distinct identities spawn across all beta stages', () => {
+  it('exactly 6 distinct identities spawn across all beta stages', () => {
     const spawnable = new Set<string>()
     for (const stage of STAGES) {
       for (const id of stageSpawnableEnemyIds(stage)) {
         spawnable.add(id)
       }
     }
-    expect([...spawnable].sort()).toEqual([...ALL_ROSTER_IDS].sort())
+    expect([...spawnable].sort()).toEqual([...new Set(ALL_ROSTER_IDS)].sort())
   })
 
   it('every roster id resolves to a real ENEMIES template', () => {
@@ -116,36 +117,37 @@ describe('beta stage roster census (BETA SCOPE LOCK v2)', () => {
 describe('beta boss mechanics preserved', () => {
   const enemyById = (id: string): Enemy => ENEMIES.find((enemy) => enemy.id === id)!
 
-  it('ferocious_flood_serpent: water_surge every 4th own action + 60-turn enrage', () => {
-    const serpent = enemyById('ferocious_flood_serpent')
-    expect(serpent.specialAttacks).toEqual([
-      { everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' },
+  it('ferocious_bandit: slash every 4th own action + 60-turn enrage', () => {
+    const bandit = enemyById('ferocious_bandit')
+    expect(bandit.specialAttacks).toEqual([
+      { everyNth: 4, damageMultiplier: 2.5, presetId: 'slash' },
     ])
-    expect(serpent.bossTrigger).toEqual({
+    expect(bandit.bossTrigger).toEqual({
       afterTurns: 60,
-      buffDefinitionId: 'qi_refining_serpent_enrage',
+      buffDefinitionId: 'qi_refining_bandit_king_enrage',
     })
   })
 
-  it('mortal_ferocious_giant_crocodile: water_surge every 4th own action + 60-turn enrage', () => {
-    const croc = enemyById('mortal_ferocious_giant_crocodile')
-    expect(croc.specialAttacks).toEqual([
-      { everyNth: 4, damageMultiplier: 2, presetId: 'water_surge' },
+  it('mortal_ferocious_wild_boar: slash every 4th own action + 60-turn enrage', () => {
+    const boar = enemyById('mortal_ferocious_wild_boar')
+    expect(boar.specialAttacks).toEqual([
+      { everyNth: 4, damageMultiplier: 2, presetId: 'slash' },
     ])
-    expect(croc.bossTrigger).toEqual({
+    expect(boar.bossTrigger).toEqual({
       afterTurns: 60,
-      buffDefinitionId: 'mortal_crocodile_enrage',
+      buffDefinitionId: 'mortal_boar_king_enrage',
     })
   })
 
-  it('foundation_ferocious_flood_dragon_whelp: HP 50%/25% phases + enrages + special', () => {
-    const whelp = enemyById('foundation_ferocious_flood_dragon_whelp')
-    expect(whelp.tribulationPhases?.map((phase) => phase.hpThresholdPercent)).toEqual([0.5, 0.25])
-    expect(whelp.enrage?.afterSeconds).toBe(60)
-    expect(whelp.bossTrigger?.afterTurns).toBe(60)
-    expect(whelp.specialAttacks).toEqual([
-      { everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' },
+  it('foundation_ferocious_spirit_wolf: bite every 4th own action + 60-turn enrage', () => {
+    const wolf = enemyById('foundation_ferocious_spirit_wolf')
+    expect(wolf.specialAttacks).toEqual([
+      { everyNth: 4, damageMultiplier: 2.5, presetId: 'bite' },
     ])
+    expect(wolf.bossTrigger).toEqual({
+      afterTurns: 60,
+      buffDefinitionId: 'foundation_wolf_king_enrage',
+    })
   })
 
   it('the 3 beta bosses carry uniform resistance across the five elements', () => {

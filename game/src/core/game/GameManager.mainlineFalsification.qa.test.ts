@@ -136,7 +136,7 @@ describe('mainline falsification (adopted probes)', () => {
     carried.questSystem.onEnemyDefeated(
       carried.questRegistry,
       carried.questManager,
-      'wild_wolf',
+      'bandit',
       undefined,
     )
     expect(carried.questManager.getProgress(WOLF_QUEST)!.progress).toBe(1)

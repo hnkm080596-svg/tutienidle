@@ -30,7 +30,15 @@ export const FAMILY_DROP_TABLES: FamilyDropTable[] = [
     // signature technique now (granted by the ngu way ritual kit), never
     // a drop - the legacy elite/boss signatureDrops lines were removed
     // in the same teardown.
-    pool: [],
+    //
+    // Roster remap (2026-10-04): bandit is the qi_refining roster
+    // family, so it inherits the realm's equipment bases whose sources
+    // left the roster - base_hai (was earthworm's) and base_truy (was
+    // flood_serpent's). Dormant family rows below stay untouched.
+    pool: [
+      { kind: 'equipment', itemId: 'base_hai', weight: 10 },
+      { kind: 'equipment', itemId: 'base_truy', weight: 10 },
+    ],
   },
   {
     familyId: 'magma_boar',
@@ -86,10 +94,15 @@ export const FAMILY_DROP_TABLES: FamilyDropTable[] = [
     pool: [{ kind: 'equipment', itemId: 'base_gioi', weight: 10 }],
   },
 
-  // No family-exclusive item in the current data - only the realm-generic
-  // mortal essence (tinh_hoa_pham_the) and/or the shared base_kiem drop,
-  // both already covered by the mortal stage table.
-  { familyId: 'wolf', guaranteed: [], pool: [] },
+  // Roster remap (2026-10-04): foundation_spirit_wolf is the Truc Co
+  // roster species (family 'wolf'), so it pays base_gioi - the ring
+  // base that left the roster with sand_scorpion. (The shared base_kiem
+  // still lands via the stage table's equipment_any pool, as before.)
+  {
+    familyId: 'wolf',
+    guaranteed: [],
+    pool: [{ kind: 'equipment', itemId: 'base_gioi', weight: 10 }],
+  },
 
   // Phase-4 fallout re-source: mortal_wild_boar is on the beta roster and
   // is the literal species sibling of magma_boar, so it now pays

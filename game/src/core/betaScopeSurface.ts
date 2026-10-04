@@ -240,7 +240,7 @@ export function betaHiddenRealmRecordFor(
  * The id is pinned to the roster's act-3 boss by spec test; update the
  * roster authority and this literal together.
  */
-export const BETA_FINAL_BOSS_ENEMY_ID = 'foundation_ferocious_flood_dragon_whelp'
+export const BETA_FINAL_BOSS_ENEMY_ID = 'foundation_ferocious_spirit_wolf'
 
 export interface BetaCompletion {
   /** The act-3 final boss stage has been cleared. */

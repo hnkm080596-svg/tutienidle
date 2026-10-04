@@ -140,8 +140,8 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
     })
 
 
-    it('all 68 definitions are present (merged catalog: master ung-the set + PT trang windows)', () => {
-      expect(buffs).toHaveLength(68)
+    it('all 71 definitions are present (68 + 3 roster-remap king enrages)', () => {
+      expect(buffs).toHaveLength(71)
     })
   })
 

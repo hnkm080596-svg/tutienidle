@@ -32,18 +32,20 @@ describe('kill quests vs the beta stage roster (QA repro)', () => {
   it('inventory: kill quests with explicit targets', () => {
     // Guards the repro list itself: these quests exist and target
     // template ids (enemyId omitted would be 'any kill').
-    expect(killQuestEnemyIds).toContainEqual({ questId: 'kill_wild_wolf_10', enemyId: 'wild_wolf' })
+    // Roster remap (2026-10-04): quest ids preserved; targets follow
+    // the one-family-per-realm roster.
+    expect(killQuestEnemyIds).toContainEqual({ questId: 'kill_wild_wolf_10', enemyId: 'bandit' })
     expect(killQuestEnemyIds).toContainEqual({
       questId: 'kill_foundation_stone_fungus_15',
-      enemyId: 'foundation_mud_golem',
+      enemyId: 'foundation_spirit_wolf',
     })
     expect(killQuestEnemyIds).toContainEqual({
       questId: 'kill_foundation_floor_10_boss_1',
-      enemyId: 'foundation_ferocious_flood_dragon_whelp',
+      enemyId: 'foundation_ferocious_spirit_wolf',
     })
     expect(killQuestEnemyIds).toContainEqual({
       questId: 'kill_foundation_flood_dragon_whelp_10',
-      enemyId: 'foundation_ferocious_flood_dragon_whelp',
+      enemyId: 'foundation_ferocious_spirit_wolf',
     })
   })
 

@@ -53,7 +53,9 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     name: 'Sơn Tặc',
 
-    level: 2,
+    // Roster remap: the single qi_refining species - level label reads
+    // mid-chapter (display-only field; stats carry the balance).
+    level: 5,
 
     realmId: 'qi_refining',
 
@@ -61,13 +63,23 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     family: 'bandit',
 
+    // Roster remap: on the beta roster now - the blade attack reads as
+    // a slash (VfxSheetManifest requires every roster id a preset).
+    attackPresetId: 'slash',
+
     statsInput: {
-      maxHp: 350,
-      might: 35,
-      attackSpeed: 1.1,
+      // Roster remap (2026-10-04): bandit is now the ONE qi_refining
+      // roster species - it must be floor-1-viable for a fresh Luyen
+      // Khi kit, since every band spawns it (the chapter's difficulty
+      // ramp rides on eliteChance, not species strength). Retuned off
+      // the old floor-4-6 block (350/35) toward entry strength: a
+      // bladed human still out-tanks the wild beasts it replaced.
+      maxHp: 130,
+      might: 13,
+      attackSpeed: 1.0,
       criticalRate: 0.1,
       criticalDamage: 2,
-      armor: 20,
+      armor: 10,
       evasionRate: 15,
 
       // Dung binh khi kim loai - co chut khang Kim nho giap tru.
@@ -94,6 +106,47 @@ export const MORTAL_ENEMIES: Enemy[] = [
       // 2026-09-23: great_dao_seed drop retired with the material
       // itself (hidden-perfection-lineage sec.19) - Dai Dao now belongs
       // to the lineage channel, never to loot.
+    ],
+  }),
+
+  defineEnemy({
+    id: 'ferocious_bandit',
+    name: 'Sơn Tặc Vương',
+    level: 10,
+    realmId: 'qi_refining',
+    lane: 'ground',
+    family: 'bandit',
+    attackPresetId: 'slash',
+    // Roster remap (2026-10-04): Luyen Khi = ho Son Tac - normal + tinh
+    // anh (runtime tag) + Son Tac Vuong boss Quat 10, cung mot loai.
+    // Blade flurry every 4th own action (serpent cadence shape).
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'slash' }],
+    // Turn-based enrage trigger; buff resolves through BUFF_REGISTRY.
+    bossTrigger: { afterTurns: 60, buffDefinitionId: 'qi_refining_bandit_king_enrage' },
+    statsInput: {
+      // Boss-tier literal (serpent shell): createBossVariant x7 hp /
+      // x2 might / x1.2 armor lands the duel in the ~12-18-cast window
+      // a strong qi kit wins narrowly.
+      maxHp: 350,
+      might: 19,
+      attackSpeed: 1.1,
+      criticalRate: 0.08,
+      criticalDamage: 2,
+      armor: 30,
+      evasionRate: 15,
+      // Uniform across the five elements (stage-boss fairness).
+      resistances: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
+      elemental: { element: 'metal', power: 14 },
+    },
+    rewards: {
+      techniqueMastery: 145,
+      spiritStone: 35,
+    },
+    signatureDrops: [
+      // yeu_dan_hung_giao keeps its only beta source on the act-2 boss
+      // slot - the bandit king hoards a stolen demon core; the Truc Co
+      // pill recipes stay craftable after the serpent left the roster.
+      { kind: 'material', itemId: 'yeu_dan_hung_giao', amount: { min: 1, max: 1 }, chance: 1, requiresModifier: 'boss' },
     ],
   }),
 
@@ -726,24 +779,36 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
   defineEnemy({
     id: 'mortal_ferocious_wild_boar',
-    name: 'Hung Dã Trư',
-    level: 2,
+    name: 'Heo Rừng Vương',
+    level: 10,
     realmId: 'mortal',
     lane: 'ground',
     family: 'boar',
+    attackPresetId: 'slash',
+    // Roster remap (2026-10-04): one species per realm - the boar king
+    // is the mortal chapter's floor-10 boss, same family as every floor.
+    // Tusk rush every 4th own action (same cadence shape the crocodile
+    // boss carried before).
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2, presetId: 'slash' }],
+    // Turn-based enrage trigger; buff resolves through BUFF_REGISTRY.
+    bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_boar_king_enrage' },
     statsInput: {
-      maxHp: 70,
-      might: 7,
-      attackSpeed: 0.95,
-      criticalRate: 0.05,
+      // Boss-tier literal (crocodile shell): createBossVariant x7 hp /
+      // x2 might / x1.2 armor on top at the actual boss spawn.
+      maxHp: 390,
+      might: 30,
+      attackSpeed: 0.9,
+      criticalRate: 0.1,
       criticalDamage: 2,
-      armor: 7,
-      resistances: { wood: 5 },
-      elemental: { element: 'wood', power: 3 },
+      armor: 18,
+      evasionRate: 15,
+      // Uniform across the five elements (stage-boss fairness).
+      resistances: { wood: 8, fire: 8, earth: 8, metal: 8, water: 8 },
+      elemental: { element: 'wood', power: 12 },
     },
     rewards: {
-      techniqueMastery: 6,
-      spiritStone: 1,
+      techniqueMastery: 36,
+      spiritStone: 8,
     },
   }),
 

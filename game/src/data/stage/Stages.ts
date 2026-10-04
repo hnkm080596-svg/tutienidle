@@ -8,10 +8,11 @@ import { defineChapterStages, type ChapterConfig } from './ChapterStages'
 // bossEnemyId on floor 10 only, perfectClearTurnLimit, elite ramp,
 // spawnIntervalSeconds) live in the builder - one owner.
 //
-// BETA SCOPE LOCK v2: each chapter's roster is exactly 3 distinct
-// normal species (floor bands 1-3 / 4-6 / 7-9) + 1 act boss = the final
-// 12-identity beta roster. The stage data is the allow-list; dormant
-// catalog species can never roll into a beta stage.
+// BETA SCOPE LOCK v3 (roster remap, Minh ruling 2026-10-04): each
+// chapter's roster is ONE species family - the same normal id on all
+// floor bands + its king as the act boss = 6 identities total. The
+// stage data is the allow-list; dormant catalog species can never roll
+// into a beta stage.
 //
 // STAGES export order is FROZEN (save/zone consumers depend on it):
 // qi_refining chapter first, then mortal, then foundation - the same
@@ -34,20 +35,20 @@ const QI_CHAPTER: ChapterConfig = {
   ],
   names: (floor) => `Quật ${floor}`,
   descriptions: [
-    'Khu rừng đầu núi, nơi bầy Dã Lang lang thang săn mồi — thử thách đầu tiên cho tu sĩ mới nhập môn.',
-    'Rừng sâu hơn hẳn Thanh Vân Cốc, Dã Lang nơi đây săn mồi thành bầy và hung hãn hơn.',
-    'Rìa rừng giáp hẻm núi tro nóng, bầy Dã Lang lì lợm nhất chặn giữ đường lên.',
-    'Hẻm núi phủ tro nóng, Viêm Hồ tinh ranh lẩn khuất quanh những khe nứt phun lửa.',
-    'Đồng cát xém cháy, Viêm Hồ lướt qua từng luồng lửa — mỗi bước tiến đều bị theo dõi.',
-    'Dãy núi đá đỏ nóng, Viêm Hồ nơi đây đã quen với máu tu sĩ, tàn nhẫn hơn hẳn.',
-    'Đỉnh núi phủ khoáng, Trùn Đất khổng lồ ngầm dưới đất làm rung chuyển từng vách núi.',
-    'Hầm khoáng sâu, Trùn Đất đào hang chằng chịt trong bóng tối, nuốt trọn kẻ xâm nhập.',
-    'Đầm lầy mù sương huyền bí, Trùn Đất rình mập dưới lớp bùn đen.',
-    'Vực nước sâu thẳm cuối Huyền Đàm Trạch — nơi Hung Giao Xà ngự trị, chặng thử thách cuối cùng trước ngưỡng cửa Trúc Cơ.',
+    'Khu rừng đầu núi, Sơn Tặc lập đồn chặn đường thu mãi lộ — thử thách đầu tiên cho tu sĩ mới nhập môn.',
+    'Rừng sâu hơn hẳn Thanh Vân Cốc, Sơn Tặc nơi đây phục kích thành bọn và hung hãn hơn.',
+    'Rìa rừng giáp hẻm núi tro nóng, bọn Sơn Tặc lì lợm nhất chặn giữ đường lên.',
+    'Hẻm núi phủ tro nóng, Sơn Tặc lẩn khuất quanh những khe nứt rình cướp bóc.',
+    'Đồng cát xém cháy, Sơn Tặc rình rập từng luồng bụi — mỗi bước tiến đều bị theo dõi.',
+    'Dãy núi đá đỏ nóng, Sơn Tặc nơi đây đã quen với máu tu sĩ, tàn nhẫn hơn hẳn.',
+    'Đỉnh núi phủ khoáng, Sơn Tặc dựng trại lớn ngầm dưới đá, đe dọa từng vách núi.',
+    'Hầm khoáng sâu, Sơn Tặc đào hang chằng chịt trong bóng tối, cướp trọn kẻ xâm nhập.',
+    'Đầm lầy mù sương huyền bí, Sơn Tặc bố trí mai phục dưới lớp sương dày đặc.',
+    'Doanh trại cuối Huyền Đàm Trạch — nơi Sơn Tặc Vương ngự trị, chặng thử thách cuối cùng trước ngưỡng cửa Trúc Cơ.',
   ],
   roster: {
-    normals: ['wild_wolf', 'flame_fox', 'giant_earthworm'],
-    boss: 'ferocious_flood_serpent',
+    normals: ['bandit', 'bandit', 'bandit'],
+    boss: 'ferocious_bandit',
   },
 }
 
@@ -68,20 +69,20 @@ const MORTAL_CHAPTER: ChapterConfig = {
   ],
   names: (floor) => `Động ${floor}`,
   descriptions: [
-    'Cửa hang đầu tiên nơi chân núi, bầy Dã Trư cào đất kiếm mồi — thử thách đầu đời của 1 phàm nhân.',
-    'Hang sâu hơn, Dã Trư ở đây đã dữ tợn hơn hẳn cửa hang ngoài.',
-    'Đoạn hang cuối cùng còn mùi cỏ dại, Dã Trư lớn nhất đàn lì lợm chặn lối.',
-    'Vách hang khô nóng, Man Hổ lang thang tìm mồi giữa nắng gắt.',
-    'Nắng càng gắt, Man Hổ càng hung hãn — không còn là con mồi dễ dàng.',
-    'Sào huyệt mãnh thú, Man Hổ nơi đây đã nếm máu người — tiếng gầm rung cả vách hang.',
-    'Hang ngập nước mát, Thủy Lang săn mồi dưới ánh sáng mờ.',
-    'Nước càng sâu, Thủy Lang càng nhanh và đoàn kết — bóng sói lướt trên mặt sóng.',
-    'Hồ nước ngầm cuối hang, bầy Thủy Lang hung bạo nhất canh giữ lãnh địa.',
-    'Đáy hang ngập nước sâu nhất — Hung Cự Ngạc ngự trị, chặng thử thách cuối cùng của kiếp phàm nhân, trước ngưỡng cửa Luyện Khí.',
+    'Cửa hang đầu tiên nơi chân núi, bầy Heo Rừng cào đất kiếm mồi — thử thách đầu đời của một phàm nhân.',
+    'Hang sâu hơn, Heo Rừng ở đây đã dữ tợn hơn hẳn cửa hang ngoài.',
+    'Đoạn hang cuối cùng còn mùi cỏ dại, Heo Rừng lớn nhất đàn lì lợm chặn lối.',
+    'Vách hang khô nóng, bầy Heo Rừng lang thang kiếm mồi giữa nắng gắt.',
+    'Nắng càng gắt, heo rừng càng hung hãn — không còn là con mồi dễ dàng.',
+    'Sào huyệt mãnh trư, heo rừng nơi đây đã nếm máu người — tiếng hí rung cả vách hang.',
+    'Hang ngập nước mát, bầy Heo Rừng lội bùn săn mồi dưới ánh sáng mờ.',
+    'Bùn càng sâu, heo rừng càng nhanh và đoàn kết — bóng trư lướt trên mặt nước đục.',
+    'Hồ ngầm cuối hang, bầy Heo Rừng hung bạo nhất canh giữ lãnh địa của Vương.',
+    'Đáy hang ngập nước sâu nhất — Heo Rừng Vương ngự trị, chặng thử thách cuối cùng của kiếp phàm nhân, trước ngưỡng cửa Luyện Khí.',
   ],
   roster: {
-    normals: ['mortal_wild_boar', 'mortal_savage_tiger', 'mortal_water_wolf'],
-    boss: 'mortal_ferocious_giant_crocodile',
+    normals: ['mortal_wild_boar', 'mortal_wild_boar', 'mortal_wild_boar'],
+    boss: 'mortal_ferocious_wild_boar',
   },
 }
 
@@ -102,20 +103,20 @@ const FOUNDATION_CHAPTER: ChapterConfig = {
   ],
   names: (floor) => `Màn 3.${floor}`,
   descriptions: [
-    'Hậu sơn Thanh Vân, tro nóng phủ tán cổ thụ — Dực Hỏa Khuyển dắt bầy dò lối, chặng thử thách đầu tiên cho tu sĩ Trúc Cơ.',
-    'Sườn núi khói mỏ, Dực Hỏa Khuyển nơi đây đã học cách săn theo mùi linh khí.',
-    'Miệng hỏa địa đầu tiên, bầy Dực Hỏa Khuyển hung bạo nhất gầm giữa tro tàn.',
-    'Vùng đất hỏa diệm đỏ rực, Sa Hắc chui rúc dưới lớp cát nóng chờ con mồi lơi mỏi.',
-    'Sa mạc càng sâu, Sa Hắc càng đông và càng độc — một cái chạm cũng đủ trả giá.',
-    'Ổ độc dưới cồn cát, Sa Hắc nơi đây săn theo đàn — vũ khí của chúng là cả sa mạc.',
-    'Thạch cốc hậu sơn, Nê Cự Nhân lầm lũi trấn giữ từng vách đá dựng đứng.',
-    'Đất đá càng dày, Nê Cự Nhân càng to khỏe — mỗi bước chân đều rung chuyển thạch cốc.',
-    'Lòng cốc sâu nhất, Nê Cự Nhân cổ đại nằm nghỉ — đánh thức chúng là đánh cược mạng sống.',
-    'Đáy hàn thạch đàm — Hung Giao Sủng cuồng nộ ngự trị, chặng thử thách cuối cùng trước khi tu sĩ Trúc Cơ tìm kiếm cơ duyên kế tiếp.',
+    'Hậu sơn Thanh Vân, bóng trắng Linh Lang lướt qua tán cổ thụ — chặng thử thách đầu tiên cho tu sĩ Trúc Cơ.',
+    'Sườn núi khói mỏ, Linh Lang nơi đây đã học cách săn theo mùi linh khí.',
+    'Miệng hỏa địa đầu tiên, bầy Linh Lang hung bạo nhất gầm giữa tro tàn.',
+    'Vùng đất mộc khí dày đặc, Linh Lang chạy dưới tán rừng chờ con mồi lơi mỏi.',
+    'Rừng càng sâu, Linh Lang càng đông và càng hiểm — một cái chạm cũng đủ trả giá.',
+    'Ổ linh thú dưới tán cổ mộc, Linh Lang nơi đây săn theo đàn — vũ khí của chúng là cả khu rừng.',
+    'Thạch cốc hậu sơn, Linh Lang lầm lũi rình giữa từng vách đá dựng đứng.',
+    'Vách đá càng cao, Linh Lang càng lắm bầy — mỗi bước chân đều lọt vào phục kích.',
+    'Lòng cốc sâu nhất, Linh Lang cổ đại nằm nghỉ — đánh thức chúng là đánh cược mạng sống.',
+    'Đáy cổ mộc đàm — Linh Lang Vương cuồng nộ ngự trị, chặng thử thách cuối cùng trước khi tu sĩ Trúc Cơ tìm kiếm cơ duyên kế tiếp.',
   ],
   roster: {
-    normals: ['foundation_lava_hound', 'foundation_sand_scorpion', 'foundation_mud_golem'],
-    boss: 'foundation_ferocious_flood_dragon_whelp',
+    normals: ['foundation_spirit_wolf', 'foundation_spirit_wolf', 'foundation_spirit_wolf'],
+    boss: 'foundation_ferocious_spirit_wolf',
   },
 }
 

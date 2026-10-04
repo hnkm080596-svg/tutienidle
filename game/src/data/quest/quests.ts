@@ -38,9 +38,9 @@ export const QUESTS: Quest[] = [
   },
   {
     id: 'main_03_ho_khieu_lam_trung',
-    name: 'Hổ Khiếu Lâm Trung',
-    description: 'Man Hổ chiếm giữ Động 4–6 — đánh bại 5 con.',
-    condition: { kind: 'kill', enemyId: 'mortal_savage_tiger', amount: 5 },
+    name: 'Bầy Trư Trỗi Dậy',
+    description: 'Heo Rừng chiếm giữ Động 4–6 — đánh bại 5 con.',
+    condition: { kind: 'kill', enemyId: 'mortal_wild_boar', amount: 5 },
     reward: { reward: { spiritStone: 15, cultivation: 50 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -58,9 +58,9 @@ export const QUESTS: Quest[] = [
   },
   {
     id: 'main_05_thuy_lang_dam',
-    name: 'Thủy Lang Ẩm Đàm',
-    description: 'Đoạn hang ngập nước là địa bàn Thủy Lang — diệt 5 con.',
-    condition: { kind: 'kill', enemyId: 'mortal_water_wolf', amount: 5 },
+    name: 'Trư Đàn Địa Bàn',
+    description: 'Đoạn hang ngập nước là địa bàn Heo Rừng — diệt 5 con.',
+    condition: { kind: 'kill', enemyId: 'mortal_wild_boar', amount: 5 },
     reward: { reward: { spiritStone: 20, cultivation: 80 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -69,8 +69,8 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_06_vuong_gia_da_de',
     name: 'Vương Giả Đá Đề',
-    description: 'Hung Cự Ngạc ngự trị đáy Động 10 — diệt 5 con, dọn đường tới Luyện Khí.',
-    condition: { kind: 'kill', enemyId: 'mortal_ferocious_giant_crocodile', amount: 5 },
+    description: 'Heo Rừng Vương ngự trị đáy Động 10 — diệt 5 con, dọn đường tới Luyện Khí.',
+    condition: { kind: 'kill', enemyId: 'mortal_ferocious_wild_boar', amount: 5 },
     reward: { reward: { spiritStone: 40, cultivation: 120 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -79,8 +79,8 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_07_ngu_hanh_nhap_mon',
     name: 'Ngũ Hành Nhập Môn',
-    description: 'Đạt Phàm Nhân tầng 12 rồi làm lễ Quán Khí chọn một hành. Sau khi nhập môn, săn 5 Dã Lang nơi Quật 1–3.',
-    condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 5 },
+    description: 'Đạt Phàm Nhân tầng 12 rồi làm lễ Quán Khí chọn một hành. Sau khi nhập môn, săn 5 Sơn Tặc nơi Quật 1–3.',
+    condition: { kind: 'kill', enemyId: 'bandit', amount: 5 },
     reward: { reward: { spiritStone: 30, cultivation: 150, skillInsight: 5 } },
     cadence: 'once',
     requiredRealmId: 'qi_refining',
@@ -89,9 +89,9 @@ export const QUESTS: Quest[] = [
   },
   {
     id: 'main_08_viem_ho_coc',
-    name: 'Viêm Hồ Xích Cốc',
-    description: 'Quật 4–6 rực lửa, Viêm Hồ chặn đường — diệt 5 con.',
-    condition: { kind: 'kill', enemyId: 'flame_fox', amount: 5 },
+    name: 'Sơn Tặc Giáp Khẩu',
+    description: 'Quật 4–6 là đồn Sơn Tặc chặn đường — diệt 5 con.',
+    condition: { kind: 'kill', enemyId: 'bandit', amount: 5 },
     reward: { reward: { spiritStone: 40, skillInsight: 10 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -140,9 +140,9 @@ export const QUESTS: Quest[] = [
   },
   {
     id: 'main_12_trun_don_khoang',
-    name: 'Trùn Đồn Khoáng',
-    description: 'Trùn Đất khổng lồ ngầm Quật 7–9 — diệt 5 con.',
-    condition: { kind: 'kill', enemyId: 'giant_earthworm', amount: 5 },
+    name: 'Sơn Tặc Trại Lớn',
+    description: 'Sơn Tặc ngầm Quật 7–9 — diệt 5 con.',
+    condition: { kind: 'kill', enemyId: 'bandit', amount: 5 },
     reward: { reward: { spiritStone: 45, cultivation: 200 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -150,9 +150,9 @@ export const QUESTS: Quest[] = [
   },
   {
     id: 'main_13_giao_xa_uyen_dam',
-    name: 'Giao Xà Uyên Đàm',
-    description: 'Hung Giao Xà trấn Quật 10 — diệt 5 con. Đây là điều kiện độ kiếp Trúc Cơ.',
-    condition: { kind: 'kill', enemyId: 'ferocious_flood_serpent', amount: 5 },
+    name: 'Sơn Tặc Vương Đàm',
+    description: 'Sơn Tặc Vương trấn Quật 10 — diệt 5 con. Đây là điều kiện độ kiếp Trúc Cơ.',
+    condition: { kind: 'kill', enemyId: 'ferocious_bandit', amount: 5 },
     reward: { reward: { spiritStone: 60, skillInsight: 10 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -161,8 +161,8 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_14_do_kiep_truc_co',
     name: 'Độ Kiếp Trúc Cơ',
-    description: 'Tầng 12 + vượt Quật 10 mở lôi kiếp — độ kiếp thành công, bước chân đầu vào hậu sơn: diệt 5 Dực Hỏa Khuyển.',
-    condition: { kind: 'kill', enemyId: 'foundation_lava_hound', amount: 5 },
+    description: 'Tầng 12 + vượt Quật 10 mở lôi kiếp — độ kiếp thành công, bước chân đầu vào hậu sơn: diệt 5 Linh Lang.',
+    condition: { kind: 'kill', enemyId: 'foundation_spirit_wolf', amount: 5 },
     reward: { reward: { spiritStone: 100, cultivation: 500 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',
@@ -171,9 +171,9 @@ export const QUESTS: Quest[] = [
   },
   {
     id: 'main_15_giao_sung_chung_cuc',
-    name: 'Giao Sủng Chung Cực',
-    description: 'Hung Giao Sủng cuồng nộ đáy hàn thạch đàm — diệt 5 con, khép lại chính tuyến beta.',
-    condition: { kind: 'kill', enemyId: 'foundation_ferocious_flood_dragon_whelp', amount: 5 },
+    name: 'Lang Vương Chung Cực',
+    description: 'Linh Lang Vương cuồng nộ đáy cổ mộc đàm — diệt 5 con, khép lại chính tuyến beta.',
+    condition: { kind: 'kill', enemyId: 'foundation_ferocious_spirit_wolf', amount: 5 },
     reward: { reward: { spiritStone: 200, skillInsight: 30 } },
     cadence: 'once',
     chainId: 'mainline',
@@ -185,15 +185,16 @@ export const QUESTS: Quest[] = [
   // the entries are removed, not just scope-hidden, so saves holding
   // their progress simply find no active quest to resume.
   {
-    // wild_wolf only spawns in the qi_refining Quat stages - ungated,
+    // bandit only spawns in the qi_refining Quat stages - ungated,
     // the quest auto-admitted at mortal creation as a dead 0/10 row.
     // The realm gate keeps it admission-gated to Act II; a carried save
     // that already holds it active retains the row (inverse pass only
     // retires product-dead quests) so it stays finishable at qi_refining.
+    // Roster remap (2026-10-04): target is the qi roster family.
     id: 'kill_wild_wolf_10',
-    name: 'Tiêu Diệt Dã Lang',
-    description: 'Đánh bại 10 Dã Lang.',
-    condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 10 },
+    name: 'Tiêu Diệt Sơn Tặc',
+    description: 'Đánh bại 10 Sơn Tặc.',
+    condition: { kind: 'kill', enemyId: 'bandit', amount: 10 },
     reward: { reward: { spiritStone: 25 } },
     cadence: 'once',
     requiredRealmId: 'qi_refining',
@@ -205,14 +206,14 @@ export const QUESTS: Quest[] = [
   // equipment, thuong trang bi lan dau doi sau (spec muc 4.3 ghi chu).
   // So lieu thuong first pass, can bang ky hon de sau.
   {
-    // BETA SCOPE LOCK v2 Phase-5 (Phase-4 fallout): foundation_stone_fungus
-    // has no beta spawn source - the kill target retargets onto the
-    // roster earth-construct (mud golem); the quest id is preserved so
-    // save progress/claimed state keyed by questId keeps resolving.
+    // Roster remap (2026-10-04): one species per realm - the kill
+    // target retargets onto the foundation roster family (Linh Lang);
+    // the quest id is preserved so save progress/claimed state keyed by
+    // questId keeps resolving.
     id: 'kill_foundation_stone_fungus_15',
-    name: 'Diệt Nê Ngẫu',
-    description: 'Nê Ngẫu trỗi dậy chắn lối hậu sơn Thanh Vân — diệt 15 con.',
-    condition: { kind: 'kill', enemyId: 'foundation_mud_golem', amount: 15 },
+    name: 'Diệt Linh Lang',
+    description: 'Linh Lang trỗi dậy chắn lối hậu sơn Thanh Vân — diệt 15 con.',
+    condition: { kind: 'kill', enemyId: 'foundation_spirit_wolf', amount: 15 },
     reward: { reward: { skillInsight: 120 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',
@@ -220,8 +221,8 @@ export const QUESTS: Quest[] = [
   {
     id: 'kill_foundation_floor_10_boss_1',
     name: 'Chinh Phục Hậu Sơn',
-    description: 'Đánh bại Giao Sủng hung hãn nơi đáy hàn thạch đàm — trùm cuối Trúc Cơ.',
-    condition: { kind: 'kill', enemyId: 'foundation_ferocious_flood_dragon_whelp', amount: 1 },
+    description: 'Đánh bại Linh Lang Vương nơi đáy cổ mộc đàm — trùm cuối Trúc Cơ.',
+    condition: { kind: 'kill', enemyId: 'foundation_ferocious_spirit_wolf', amount: 1 },
     reward: { reward: { spiritStone: 800 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',
@@ -236,14 +237,13 @@ export const QUESTS: Quest[] = [
     requiredRealmId: 'foundation_establishment',
   },
   {
-    // BETA SCOPE LOCK v2 Phase-5 (Phase-4 fallout): the non-ferocious
-    // foundation_flood_dragon_whelp is off the beta roster - its kill
-    // quest retargets onto the same-species roster twin (the ferocious
-    // variant, final boss of Act III); the quest id is preserved.
+    // Roster remap (2026-10-04): the act-3 boss is the Linh Lang
+    // Vuong - the kill target retargets onto it; the quest id is
+    // preserved for save progress/claimed state.
     id: 'kill_foundation_flood_dragon_whelp_10',
-    name: 'Diệt Giao Sủng',
-    description: 'Giao Sủng hung hãn trú ngụ hàn thạch đàm — đánh bại 10 con.',
-    condition: { kind: 'kill', enemyId: 'foundation_ferocious_flood_dragon_whelp', amount: 10 },
+    name: 'Diệt Lang Vương',
+    description: 'Linh Lang Vương trú ngụ cổ mộc đàm — đánh bại 10 con.',
+    condition: { kind: 'kill', enemyId: 'foundation_ferocious_spirit_wolf', amount: 10 },
     reward: { reward: { skillInsight: 200 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',

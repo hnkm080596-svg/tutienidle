@@ -472,4 +472,60 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
       { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 3, max: 3 }, chance: 1, requiresModifier: 'boss' },
     ],
   }),
+
+  // --- Roster remap (2026-10-04): moi canh gioi chi mot loai quai.
+  // Truc Co = ho Linh Lang: normal + tinh anh (tinh_anh tag roll luc
+  // spawn, khong phai id rieng) + Linh Lang Vuong boss tang 10. ---
+  foundationBeast({
+    id: 'foundation_spirit_wolf',
+    name: 'Linh Lang',
+    t: 4,
+    lane: 'ground',
+    archetype: 'melee',
+    bossEligible: false,
+    element: 'wood',
+    power: 12,
+    resistance: 12,
+    family: 'wolf',
+    attackPresetId: 'bite',
+  }),
+  defineEnemy({
+    id: 'foundation_ferocious_spirit_wolf',
+    name: 'Linh Lang Vương',
+    level: 10,
+    realmId: 'foundation_establishment',
+    lane: 'ground',
+    archetype: 'melee',
+    family: 'wolf',
+    attackPresetId: 'bite',
+    // Bite-swipe finisher every 4th own action - same cadence the
+    // chapter-3 boss slot carried before (whelp water_surge).
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'bite' }],
+    // Turn-based enrage trigger; buff resolves through BUFF_REGISTRY.
+    bossTrigger: { afterTurns: 60, buffDefinitionId: 'foundation_wolf_king_enrage' },
+    statsInput: {
+      // Boss-tier literal (same shell the flood-dragon whelp carried):
+      // createBossVariant x7 hp / x2 might / x1.2 armor lands the duel
+      // in the ~13-cast window a strong foundation kit wins narrowly.
+      maxHp: 550,
+      might: 35,
+      attackSpeed: 1.2,
+      criticalRate: 0.08,
+      criticalDamage: 2,
+      armor: 34,
+      evasionRate: 20,
+      // Uniform across the five elements (stage-boss fairness).
+      resistances: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
+      elemental: { element: 'wood', power: 14 },
+    },
+    rewards: {
+      techniqueMastery: 100,
+      spiritStone: 28,
+    },
+    signatureDrops: [
+      // Chieu Hien Lenh keeps its only beta source - same guaranteed
+      // boss drop the whelp used to carry.
+      { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 3, max: 3 }, chance: 1, requiresModifier: 'boss' },
+    ],
+  }),
 ]

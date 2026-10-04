@@ -588,7 +588,7 @@ describe('beta canonical journey (spec sec.9) - headless drive of the production
     for (const node of betaRealmLadderNodes()) {
       expect(SCOPE_HIDDEN_REALMS).not.toContain(node.realmId)
     }
-    expect(BETA_FINAL_BOSS_ENEMY_ID).toBe('foundation_ferocious_flood_dragon_whelp')
+    expect(BETA_FINAL_BOSS_ENEMY_ID).toBe('foundation_ferocious_spirit_wolf')
     expect(betaSupportedFor(s.player)).toBe(true)
     expect(unsupportedReleaseReason(s.player)).toBeNull()
     // The journey consumed only roster content: no authored stage can
