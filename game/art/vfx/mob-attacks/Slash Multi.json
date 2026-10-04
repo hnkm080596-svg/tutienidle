@@ -28,15 +28,15 @@
     },
     "textures": [
       {
-        "id": "tex_mob_slashm_blade_33be2bcc3d55",
+        "id": "tex_mob_slashm_blade_ea007b27295f",
         "name": "mob slashm blade",
         "sheet": null
       }
     ],
     "layers": [
       {
-        "id": "lr_sm_glow_1",
-        "name": "Edge 1",
+        "id": "lr_sm_bloom_1",
+        "name": "Bloom 1",
         "type": "sprite",
         "blend": "add",
         "start": -0.02,
@@ -49,11 +49,11 @@
             },
             {
               "t": 0.062,
-              "v": 1
+              "v": 0.45
             },
             {
               "t": 0.18,
-              "v": 0.9
+              "v": 0.4
             },
             {
               "t": 0.25,
@@ -64,7 +64,7 @@
         "sp": {
           "sprite": {
             "kind": "tex",
-            "texId": "tex_mob_slashm_blade_33be2bcc3d55",
+            "texId": "tex_mob_slashm_blade_ea007b27295f",
             "p": {}
           },
           "size": 185,
@@ -97,19 +97,19 @@
           "aspect": 1,
           "color": [
             255,
-            190,
-            150
+            210,
+            160
           ],
           "squash": 0,
-          "glow": 0.5,
+          "glow": 0.55,
           "glowSize": 1.6,
           "glowBlur": 0.15,
           "fps": 0
         }
       },
       {
-        "id": "lr_sm_glow_2",
-        "name": "Edge 2",
+        "id": "lr_sm_bloom_2",
+        "name": "Bloom 2",
         "type": "sprite",
         "blend": "add",
         "start": -0.02,
@@ -122,11 +122,11 @@
             },
             {
               "t": 0.18200000000000002,
-              "v": 1
+              "v": 0.45
             },
             {
               "t": 0.30000000000000004,
-              "v": 0.9
+              "v": 0.4
             },
             {
               "t": 0.37,
@@ -137,7 +137,7 @@
         "sp": {
           "sprite": {
             "kind": "tex",
-            "texId": "tex_mob_slashm_blade_33be2bcc3d55",
+            "texId": "tex_mob_slashm_blade_ea007b27295f",
             "p": {}
           },
           "size": 185,
@@ -170,19 +170,19 @@
           "aspect": 1,
           "color": [
             255,
-            190,
-            150
+            210,
+            160
           ],
           "squash": 0,
-          "glow": 0.5,
+          "glow": 0.55,
           "glowSize": 1.6,
           "glowBlur": 0.15,
           "fps": 0
         }
       },
       {
-        "id": "lr_sm_glow_3",
-        "name": "Edge 3",
+        "id": "lr_sm_bloom_3",
+        "name": "Bloom 3",
         "type": "sprite",
         "blend": "add",
         "start": -0.02,
@@ -195,11 +195,11 @@
             },
             {
               "t": 0.302,
-              "v": 1
+              "v": 0.45
             },
             {
               "t": 0.42,
-              "v": 0.9
+              "v": 0.4
             },
             {
               "t": 0.49,
@@ -210,7 +210,7 @@
         "sp": {
           "sprite": {
             "kind": "tex",
-            "texId": "tex_mob_slashm_blade_33be2bcc3d55",
+            "texId": "tex_mob_slashm_blade_ea007b27295f",
             "p": {}
           },
           "size": 185,
@@ -243,11 +243,11 @@
           "aspect": 1,
           "color": [
             255,
-            190,
-            150
+            210,
+            160
           ],
           "squash": 0,
-          "glow": 0.5,
+          "glow": 0.55,
           "glowSize": 1.6,
           "glowBlur": 0.15,
           "fps": 0
@@ -419,6 +419,163 @@
         }
       },
       {
+        "id": "lr_sm_embers",
+        "name": "Trail Embers",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.5,
+        "em": {
+          "x": {
+            "keys": [
+              {
+                "t": 0.05,
+                "v": -8
+              },
+              {
+                "t": 0.29,
+                "v": -2
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.05,
+                "v": -10
+              },
+              {
+                "t": 0.29,
+                "v": 6
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 10,
+          "sy": 10,
+          "dir": "omni",
+          "angle": -90,
+          "spread": 60,
+          "speed": 150,
+          "speedRnd": 0.5,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.08,
+              "n": 4
+            },
+            {
+              "t": 0.2,
+              "n": 4
+            },
+            {
+              "t": 0.32,
+              "n": 6
+            }
+          ],
+          "seed": 73,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.3,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 8,
+          "sizeRnd": 0.45,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.6,
+                "v": 0.7
+              },
+              {
+                "t": 1,
+                "v": 0.1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.5,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  250,
+                  235
+                ]
+              },
+              {
+                "t": 0.4,
+                "c": [
+                  255,
+                  185,
+                  105
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  205,
+                  65,
+                  42
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 50,
+          "spinRnd": 0.6,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": -20,
+          "gravY": 150,
+          "drag": 2.2,
+          "turbAmp": 9,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
         "id": "lr_sm_blade_1",
         "name": "Cut 1",
         "type": "sprite",
@@ -433,11 +590,11 @@
             },
             {
               "t": 0.062,
-              "v": 1
+              "v": 0.85
             },
             {
               "t": 0.18,
-              "v": 0.9
+              "v": 0.8
             },
             {
               "t": 0.25,
@@ -448,7 +605,7 @@
         "sp": {
           "sprite": {
             "kind": "tex",
-            "texId": "tex_mob_slashm_blade_33be2bcc3d55",
+            "texId": "tex_mob_slashm_blade_ea007b27295f",
             "p": {}
           },
           "size": 185,
@@ -506,11 +663,11 @@
             },
             {
               "t": 0.18200000000000002,
-              "v": 1
+              "v": 0.85
             },
             {
               "t": 0.30000000000000004,
-              "v": 0.9
+              "v": 0.8
             },
             {
               "t": 0.37,
@@ -521,7 +678,7 @@
         "sp": {
           "sprite": {
             "kind": "tex",
-            "texId": "tex_mob_slashm_blade_33be2bcc3d55",
+            "texId": "tex_mob_slashm_blade_ea007b27295f",
             "p": {}
           },
           "size": 185,
@@ -579,11 +736,11 @@
             },
             {
               "t": 0.302,
-              "v": 1
+              "v": 0.85
             },
             {
               "t": 0.42,
-              "v": 0.9
+              "v": 0.8
             },
             {
               "t": 0.49,
@@ -594,7 +751,7 @@
         "sp": {
           "sprite": {
             "kind": "tex",
-            "texId": "tex_mob_slashm_blade_33be2bcc3d55",
+            "texId": "tex_mob_slashm_blade_ea007b27295f",
             "p": {}
           },
           "size": 185,
@@ -647,12 +804,12 @@
         "opacity": {
           "keys": [
             {
-              "t": 0.28,
+              "t": 0.29,
               "v": 0
             },
             {
-              "t": 0.31,
-              "v": 0.85
+              "t": 0.315,
+              "v": 0.8
             },
             {
               "t": 0.44,
@@ -663,32 +820,39 @@
         "sp": {
           "sprite": {
             "kind": "shape",
-            "id": "soft",
-            "p": {}
+            "id": "star",
+            "p": {
+              "n": 6,
+              "inr": 0.26
+            }
           },
-          "size": 150,
-          "x": 0,
-          "y": 0,
+          "size": 92,
+          "x": -2,
+          "y": 4,
           "scale": {
             "keys": [
               {
-                "t": 0.28,
+                "t": 0.29,
                 "v": 0.4
               },
               {
-                "t": 0.37,
-                "v": 1.5
+                "t": 0.36,
+                "v": 1.05
+              },
+              {
+                "t": 0.44,
+                "v": 1.25
               }
             ]
           },
+          "rot": 20,
           "aspect": 1,
-          "rot": 0,
           "color": [
             255,
-            244,
-            230
+            238,
+            205
           ],
-          "squash": 0,
+          "squash": 0.3,
           "glow": 0.5,
           "glowSize": 1.6,
           "glowBlur": 0.15,
@@ -698,6 +862,6 @@
     ]
   },
   "tex": {
-    "tex_mob_slashm_blade_33be2bcc3d55": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPHBhdGggZD0iTTE4IDE0OCBDODYgOTYgMTcwIDk2IDIzOCAxNDAgQzE3MiAxMjggOTIgMTU2IDE4IDE0OCBaIiBmaWxsPSIjZmZmNGU4IiBzdHJva2U9IiNiNDI4MjAiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0xOCAxNDggQzg2IDk2IDE3MCA5NiAyMzggMTQwIEMxNzYgMTE4IDk0IDEzOCAyNiAxNDYgWiIgZmlsbD0iI2ZmZmZmZiIvPgogIDxwYXRoIGQ9Ik0xOCAxNDggQzgwIDExMCAxNTYgMTA4IDIyNiAxMzQgQzE2MiAxMjIgOTAgMTQyIDI0IDE0NiBaIiBmaWxsPSIjZmY1YTNjIiBvcGFjaXR5PSIwLjU1Ii8+Cjwvc3ZnPg=="
+    "tex_mob_slashm_blade_ea007b27295f": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJkIiB4MT0iMCIgeTE9IjAiIHgyPSIwLjEyIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjllYSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjAuMyIgc3RvcC1jb2xvcj0iI2ZmY2Y4ZSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjAuNyIgc3RvcC1jb2xvcj0iI2YyMzgyOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNhODE1MjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxwYXRoIGQ9Ik0gMjQ2IDU4IEMgMjA0IDcwIDE2MCA4OCAxMjAgMTA4IEMgODIgMTI4IDQ0IDE1OCAxMiAxOTAgQyA2MiAxNjggMTE0IDE0NiAxNjIgMTI0IEMgMjAwIDEwNCAyMzIgODIgMjQ2IDU4IFoiIGZpbGw9InVybCgjYmQpIiBmaWxsLW9wYWNpdHk9IjAuNzQiIHN0cm9rZT0iIzZiMjQxNiIgc3Ryb2tlLW9wYWNpdHk9IjAuMzYiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPHBhdGggZD0iTSAyMzggNzAgQyAyMDIgODAgMTY2IDk0IDEzMiAxMTAgQyAxMDAgMTI2IDY4IDE0OCA0MiAxNzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmY2Y4ZSIgc3Ryb2tlLXdpZHRoPSIxMSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjUiLz4KICA8cGF0aCBkPSJNIDIzOCA3MCBDIDIwMiA4MCAxNjYgOTQgMTMyIDExMCBDIDEwMCAxMjYgNjggMTQ4IDQyIDE3MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmOGU0IiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44NSIvPgo8L3N2Zz4="
   }
 }
