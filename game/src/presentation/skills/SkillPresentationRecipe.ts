@@ -1,13 +1,13 @@
 import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
 import type { PlaybackRef, SkillCastPresentation, ResolvedPresentationGroup } from '@/core/battle/turn/SkillPresentationFacts'
 
-export type SkillPrimitive = 'trajectory' | 'stroke' | 'burst' | 'aura' | 'ground-shape' | 'actor-impulse' | 'camera-cue' | 'atlas'
+export type SkillPrimitive = 'trajectory' | 'stroke' | 'burst' | 'aura' | 'ground-shape' | 'actor-impulse' | 'camera-cue' | 'atlas' | 'sheet'
 export interface SkillCue {
   readonly primitive: SkillPrimitive
   readonly offsetMs: number
   readonly durationMs: number
   readonly anchor: 'source' | 'target' | 'targets'
-  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse' | 'camera' | 'explosion'
+  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse' | 'camera' | 'explosion' | 'sheet'
   // Atlas primitive payload: an authored sprite sheet played one frame at a
   // time across durationMs (frame = floor(elapsed/duration * frames)). The
   // cue stays self-contained - key/frames travel in the recipe, so
@@ -21,6 +21,14 @@ export interface SkillCue {
   readonly releaseMs?: number
   readonly cruiseMs?: number
   readonly accelerationMs?: number
+  // 'sheet' primitive payload - spritesheet atlas playback authored by
+  // VfxSheetManifest (see data/vfx/VfxSheetManifest.ts).
+  readonly sheetKey?: string
+  readonly firstFrame?: number
+  readonly lastFrame?: number
+  readonly fps?: number
+  readonly fitPx?: number
+  readonly grounded?: boolean
 }
 export interface SkillPresentationRecipe {
   readonly id: string
@@ -65,7 +73,7 @@ export interface SkillPresentationDriver {
 }
 export type SkillRecipeResolver = (presetId: CombatVfxPresetId) => SkillPresentationRecipe
 
-const primitives = new Set<SkillPrimitive>(['trajectory', 'stroke', 'burst', 'aura', 'ground-shape', 'actor-impulse', 'camera-cue', 'atlas'])
+const primitives = new Set<SkillPrimitive>(['trajectory', 'stroke', 'burst', 'aura', 'ground-shape', 'actor-impulse', 'camera-cue', 'atlas', 'sheet'])
 // One-shot primitives execute only in the playback phase whose context
 // carries the facts they read: actor-impulse needs context.cast (present
 // only during cast playback), camera-cue needs group / primaryLanded
@@ -87,7 +95,7 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
       if (!primitives.has(cue.primitive) || !Number.isFinite(cue.offsetMs) || !Number.isFinite(cue.durationMs)
         || cue.offsetMs < 0 || cue.durationMs <= 0 || cue.offsetMs + cue.durationMs > duration
         || !['source', 'target', 'targets'].includes(cue.anchor)
-        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse', 'camera', 'explosion'].includes(cue.shape))
+        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse', 'camera', 'explosion', 'sheet'].includes(cue.shape))
         throw new Error('Invalid skill recipe cue')
       if (cue.primitive === 'atlas') {
         const atlas = cue.atlas
@@ -97,6 +105,14 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
           throw new Error('Invalid skill atlas cue')
       } else if (cue.atlas !== undefined) {
         throw new Error('Skill cue atlas payload on a non-atlas primitive')
+      }
+      if (cue.primitive === 'sheet') {
+        if (!cue.sheetKey || cue.sheetKey.length > 64
+          || !Number.isInteger(cue.firstFrame) || !Number.isInteger(cue.lastFrame)
+          || cue.firstFrame! < 0 || cue.lastFrame! < cue.firstFrame! || cue.lastFrame! > 9999
+          || !Number.isFinite(cue.fps) || cue.fps! < 1 || cue.fps! > 120
+          || !Number.isFinite(cue.fitPx) || cue.fitPx! < 8 || cue.fitPx! > 640)
+          throw new Error('Invalid skill sheet cue')
       }
       const allowedPhases = primitivePhaseAllowlist[cue.primitive]
       if (allowedPhases && !allowedPhases.includes(phase))
@@ -109,6 +125,9 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
         throw new Error('Unbounded skill cue camera intensity')
       for (const value of [cue.bend, cue.count, cue.releaseMs, cue.cruiseMs, cue.accelerationMs])
         if (value !== undefined && !Number.isFinite(value)) throw new Error('Non-finite skill cue parameter')
+      if (cue.primitive !== 'sheet'
+        && [cue.sheetKey, cue.firstFrame, cue.lastFrame, cue.fps, cue.fitPx, cue.grounded].some((value) => value !== undefined))
+        throw new Error('Sheet cue fields on non-sheet primitive')
       if (cue.count !== undefined && (!Number.isInteger(cue.count) || cue.count < 1 || cue.count > 256))
         throw new Error('Unbounded skill cue count')
     }

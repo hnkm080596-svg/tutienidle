@@ -3,6 +3,7 @@ import { COMBAT_VFX_PRESETS } from './CombatVfxPresets'
 import { NGU_KIEM_THUAT } from '@/data/skill/NguKiemDaoSkills'
 import { getSkillPresentationRecipe } from './SkillPresentationRecipes'
 import { validateSkillRecipe } from '@/presentation/skills/SkillPresentationRecipe'
+import { VFX_SHEET_BINDINGS } from './VfxSheetManifest'
 describe('authored skill presentation recipes', () => {
   it('leaves Hỏa Cầu imagery solely to its atlas presentation', () => {
     const recipe = getSkillPresentationRecipe('hoa_cau_comet')
@@ -101,5 +102,60 @@ describe('authored skill presentation recipes', () => {
       expect(() => validateSkillRecipe({ ...recipe, castMs })).toThrow()
     expect(() => validateSkillRecipe({ ...recipe, cast: [{ primitive: 'burst', shape: 'sparks',
       anchor: 'target', offsetMs: 0, durationMs: 100, count: 999 }] })).toThrow()
+  })
+})
+
+// Monster attack VFX sweep (2026-10-04) - presets with a VfxSheetManifest
+// binding play a 'sheet' impact cue covering the whole sheet window; the
+// analytic primitives stay in place as the procedural fallback.
+describe('sheet cue injection (Monster attack VFX sweep)', () => {
+  it('emits a sheet cue per bound preset, sized to its frame window', () => {
+    for (const [presetId, binding] of Object.entries(VFX_SHEET_BINDINGS)) {
+      const recipe = getSkillPresentationRecipe(presetId as keyof typeof COMBAT_VFX_PRESETS)
+      const cue = recipe.impact.find(c => c.primitive === 'sheet')
+      expect(cue, `${presetId} missing sheet cue`).toBeDefined()
+      const expectedMs = Math.ceil(((binding.lastFrame - binding.firstFrame + 1) * 1000) / binding.fps)
+      expect(cue).toMatchObject({
+        anchor: 'targets', shape: 'sheet', offsetMs: 0, durationMs: expectedMs,
+        sheetKey: binding.sheetKey, firstFrame: binding.firstFrame,
+        lastFrame: binding.lastFrame, fps: binding.fps,
+        fitPx: binding.fitPx, grounded: binding.grounded,
+      })
+      // The impact phase extends so the cue stays inside the recipe bounds.
+      expect(recipe.impactMs).toBeGreaterThanOrEqual(expectedMs)
+    }
+  })
+
+  it('leaves unbound presets sheet-free', () => {
+    for (const preset of Object.values(COMBAT_VFX_PRESETS)) {
+      if (VFX_SHEET_BINDINGS[preset.id]) continue
+      const recipe = getSkillPresentationRecipe(preset.id)
+      expect(recipe.impact.every(c => c.primitive !== 'sheet'), preset.id).toBe(true)
+      // Generated recipes keep the preset duration; authored overrides
+      // (ngu_kiem_flight, hoa_cau_comet) own their own timing.
+      if (preset.id !== 'ngu_kiem_flight' && preset.id !== 'hoa_cau_comet')
+        expect(recipe.impactMs).toBe(preset.durationMs)
+    }
+  })
+
+  it('rejects malformed sheet cue payloads', () => {
+    const recipe = getSkillPresentationRecipe('slash')
+    const base = { primitive: 'sheet' as const, anchor: 'targets' as const,
+      shape: 'sheet' as const, offsetMs: 0, durationMs: 200,
+      sheetKey: 'vfx-sheet-x', firstFrame: 0, lastFrame: 10, fps: 30, fitPx: 100 }
+    expect(() => validateSkillRecipe({ ...recipe, impact: [{ ...base }] })).not.toThrow()
+    for (const bad of [
+      { ...base, sheetKey: '' },
+      { ...base, firstFrame: -1 },
+      { ...base, lastFrame: 5, firstFrame: 6 },
+      { ...base, fps: 0 },
+      { ...base, fps: 200 },
+      { ...base, fitPx: 4 },
+      { ...base, fitPx: 700 },
+      { primitive: 'burst' as const, anchor: 'targets' as const, shape: 'sparks' as const,
+        offsetMs: 0, durationMs: 100, sheetKey: 'vfx-sheet-x' },
+    ]) {
+      expect(() => validateSkillRecipe({ ...recipe, impact: [bad] }), JSON.stringify(bad)).toThrow()
+    }
   })
 })

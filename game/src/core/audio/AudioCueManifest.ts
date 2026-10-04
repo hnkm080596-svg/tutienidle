@@ -140,6 +140,7 @@ const REACTION_IDS = [
 const IMPACT_PRESET_IDS = [
   'slash',
   'claw',
+  'bite',
   'arcane_impact',
   'fire_burst',
   'water_surge',
@@ -161,6 +162,7 @@ const IMPACT_PRESET_IDS = [
   'tram_slash',
   'linh_bao_burst',
   'huy_quyen_strike',
+  'tam_muoi_aura',
 ] as const
 
 // Every combo id in src/data/skill/KiemPhoCombos.ts (37, prefix-free form).

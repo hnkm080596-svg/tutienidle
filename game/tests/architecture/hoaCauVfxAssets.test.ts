@@ -8,7 +8,7 @@ import { getCombatDescriptors } from '../../src/presentation/assets/AssetBundleC
 const root = fileURLToPath(new URL('../../', import.meta.url))
 
 describe('Hỏa Cầu asset contract', () => {
-  it('preloads all six atlases, with only occupied frame ranges', () => {
+  it('preloads every declared atlas, with only occupied frame ranges', () => {
     const descriptors = getCombatDescriptors()
     for (const asset of Object.values(HOA_CAU_VFX_ASSETS)) {
       expect(descriptors).toContainEqual({
@@ -33,18 +33,22 @@ describe('Hỏa Cầu asset contract', () => {
       const context = canvas.getContext('2d')
       context.drawImage(image, 0, 0)
       const data = JSON.parse(readFileSync(`${root}/public${asset.atlasUrl}`, 'utf8'))
-      for (const entry of Object.values(data.frames) as Array<{ frame: { x: number; y: number; w: number; h: number } }>) {
+      // Sheets may keep authored blank pad cells outside the declared
+      // occupied range; only frames the game actually indexes must burn.
+      for (const [name, entry] of Object.entries(data.frames) as Array<[string, { frame: { x: number; y: number; w: number; h: number } }]>) {
         const { x, y, w, h } = entry.frame
         expect(x).toBeGreaterThanOrEqual(0)
         expect(y).toBeGreaterThanOrEqual(0)
         expect(x + w).toBeLessThanOrEqual(image.width)
         expect(y + h).toBeLessThanOrEqual(image.height)
+        const index = Number(name.replace('frame_', ''))
+        if (index < asset.firstFrame || index > asset.lastFrame) continue
         const pixels = context.getImageData(x, y, w, h).data
         let nonblank = false
         for (let offset = 3; offset < pixels.length; offset += 4) {
           if (pixels[offset]! > 5) { nonblank = true; break }
         }
-        expect(nonblank, `${asset.key} blank frame at ${x},${y}`).toBe(true)
+        expect(nonblank, `${asset.key} blank frame ${name} at ${x},${y}`).toBe(true)
       }
     }
   })

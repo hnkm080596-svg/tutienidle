@@ -2029,7 +2029,12 @@
       "locked": "Locked"
     },
     "actionDone": "{name} updated.",
-    "actionFailed": "Action unavailable — check requirements and Insight."
+    "actionFailed": "Action unavailable — check requirements and Insight.",
+    "constellation": {
+      "legendGlyph": "Glyph stroke",
+      "legendPrereq": "Prerequisite",
+      "canvas": "{glyph} constellation"
+    }
   },
   "body": {
     "title": "Body Tempering",

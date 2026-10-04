@@ -130,6 +130,13 @@ export interface Enemy {
   // driven thay basic attack cung, xem EnemySpecialAttack. Boss mau truoc.
   specialAttacks?: EnemySpecialAttack[]
 
+  // Monster attack VFX sweep (2026-10-04) - authored VFX identity of the
+  // enemy's basic attack (slash/claw/bite/elemental per its action type).
+  // Threaded Enemy -> CombatEntity -> participant basic def so the shared
+  // skill-presentation pipeline renders a distinct preset instead of the
+  // generic arcane_impact fallback. undefined = generic fallback.
+  attackPresetId?: CombatVfxPresetId
+
   // Hidden Perfection Lineage (design 2026-09-23 sec.9) - semantic
   // immortality for the Ancient Beast trial: an undefeatable enemy can
   // never die in battle (lethal hits clamp to 1 HP in
@@ -180,6 +187,11 @@ export interface EnemyDefinition {
   // Combat Balance Pass (2026-08-29, plan sec3.6) - thread qua Enemy/
   // CombatEntity, tieu thu o BattleSystem.fireEnemyAttack().
   specialAttacks?: EnemySpecialAttack[]
+
+  // Monster attack VFX sweep (2026-10-04) - threaded to Enemy/
+  // CombatEntity by defineEnemy() + enemyToCombatEntity(); consumed by
+  // the participant mint (enemyBasicAttackFor).
+  attackPresetId?: CombatVfxPresetId
 
   // Dot Pha Truc Co (Phase 4) - quai Kiep set true truc tiep luc dinh
   // nghia (KHONG qua createBossVariant(), vi multiplier 8x/3x cua Boss
@@ -233,6 +245,8 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
     breakGaugeMax: definition.breakGaugeMax,
 
     specialAttacks: definition.specialAttacks,
+
+    attackPresetId: definition.attackPresetId,
 
     isBoss: definition.isBoss,
 
@@ -339,6 +353,8 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
     currentBreakGauge: enemy.breakGaugeMax,
 
     specialAttacks: enemy.specialAttacks,
+
+    attackPresetId: enemy.attackPresetId,
 
     undefeatable: enemy.undefeatable,
   }

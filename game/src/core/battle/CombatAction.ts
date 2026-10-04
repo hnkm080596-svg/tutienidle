@@ -101,6 +101,9 @@ export interface CombatActionDefinition {
 export type CombatVfxPresetId =
   | 'slash'
   | 'claw'
+  // Monster attack VFX sweep (2026-10-04) -- jaw/bite attack type for
+  // melee beasts (wolves, crocodiles) distinct from claw rakes.
+  | 'bite'
   | 'arcane_impact'
   | 'fire_burst'
   | 'water_surge'
@@ -151,6 +154,10 @@ export type CombatVfxPresetId =
   // element basic. DATA ONLY until the presentation pass registers
   // dien xuat; renderer maps each preset to space/color/scale/shake.
   | 'hoa_cau_comet' | 'thuy_tien_dart' | 'doc_chuong_palm' | 'diem_kim_point' | 'tho_cau_boulder'
+  // Phap Tu Phap Trang windows (2026-10-04) -- one preset per self-cast
+  // element window so the presentation can own its own dien xuat; the
+  // fire window (tam_muoi_chan_hoa) renders the authored aura sheets.
+  | 'tam_muoi_aura'
   // Mortal precursors (same three-path pass) -- the three pre-path
   // actives render distinct from the generic arcane fallback.
   | 'tram_slash' | 'linh_bao_burst' | 'huy_quyen_strike'

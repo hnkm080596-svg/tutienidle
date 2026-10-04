@@ -53,11 +53,11 @@ describe('toTurnSkillDefinition', () => {
     const withPreset = toTurnSkillDefinition(manager.get(skill.id)!, effective)
     expect(withPreset.presetId).toBe('hoa_cau_comet')
 
-    const noPresetSkill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
-    manager.add(noPresetSkill)
-    const noPresetEffective = skillSystem.getEffectiveSkill(manager.get(noPresetSkill.id)!)
-    const withoutPreset = toTurnSkillDefinition(manager.get(noPresetSkill.id)!, noPresetEffective)
-    expect(withoutPreset.presetId).toBeUndefined()
+    const auraPresetSkill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+    manager.add(auraPresetSkill)
+    const auraEffective = skillSystem.getEffectiveSkill(manager.get(auraPresetSkill.id)!)
+    const withAuraPreset = toTurnSkillDefinition(manager.get(auraPresetSkill.id)!, auraEffective)
+    expect(withAuraPreset.presetId).toBe('tam_muoi_aura')
   })
 
   it('applies the selected specialization override through getEffectiveSkill (Tán Diễm AoE branch)', () => {

@@ -45,14 +45,9 @@ const ALLOWED_UNCOVERED = new Set([
   // misses). Pre-existing defect; enumerating a missing file would fail
   // the uiArt on-disk guard. Revisit when dedicated art lands.
   'components/scenes/alchemy/AlchemySurface.vue: /assets/pills/truc_co_dan.png',
-  // game/support/HoaCauVfxAssets.ts - dev-lab preview variants: production
-  // CombatScene never sets `artVariant`, so these sheets are fetched only by
-  // dev/HoaCauLabPlayback on demand; warming them into a prod bundle would
-  // ship megabytes of review-only art to players.
-  'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/projectile/hoa-cau-phoenix.png',
-  'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/circle/hoa-cau-triple-fire-circle.png',
-  'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-back.png',
-  'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-front.png',
+  // game/support/HoaCauVfxAssets.ts - dev-lab preview variant: the Hoa The
+  // seal is lab-only until its skill slot is approved; warming it into a
+  // prod bundle would ship megabytes of review-only art to players.
   'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/fire-stroke/hoa-the.png',
 ])
 

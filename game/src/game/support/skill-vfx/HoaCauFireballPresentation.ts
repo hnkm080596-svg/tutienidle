@@ -1,5 +1,5 @@
 import type { ActorAnchorFact, PlaybackRef, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
-import { HOA_CAU_PHOENIX_PREVIEW_ASSET, HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET, HOA_CAU_VFX_ASSETS, type HoaCauAsset } from '@/game/support/HoaCauVfxAssets'
+import { HOA_CAU_VFX_ASSETS, type HoaCauAsset } from '@/game/support/HoaCauVfxAssets'
 import { hoaCauTiming, landedHoaCauTargets, sampleHoaCauTimeline } from './HoaCauFireballTimeline'
 
 type Point = Readonly<{ x: number; y: number }>
@@ -46,6 +46,9 @@ type Active = {
   impactElapsedMs: number | null
   impactPositions: readonly { fact: ActorAnchorFact; point: Point }[]
   resolved: boolean
+  /** Empowered art variant for THIS cast (see artVariantFor - the
+      surface's fixed variant wins over the Tam Muoi window gate). */
+  artVariant?: string
 }
 
 /** Purely visual: this class never acknowledges impact or changes battle facts. */
@@ -69,6 +72,7 @@ export class HoaCauFireballPresentation {
       destination: { x: target.x, y: source.y },
       impactElapsedMs: null, impactPositions: [],
       resolved: false,
+      artVariant: this.artVariantFor(cast),
     }
     this.render()
   }
@@ -108,6 +112,13 @@ export class HoaCauFireballPresentation {
 
   destroy(): void { this.cancel() }
 
+  /** The dev-lab surface pins a fixed variant; production derives the
+      empowered set from the cast fact's caster-window buffs instead. */
+  private artVariantFor(cast: SkillCastPresentation): string | undefined {
+    return this.surface.artVariant
+      ?? (cast.casterBuffIds?.includes('tam_muoi') ? 'phoenix_projectile' : undefined)
+  }
+
   private sprite(asset: HoaCauAsset, slot: string = asset.key): HoaCauSprite {
     let sprite = this.sprites.get(slot)
     if (!sprite) {
@@ -136,13 +147,13 @@ export class HoaCauFireballPresentation {
     const timing = hoaCauTiming(active.impactMs)
     const sample = sampleHoaCauTimeline(active.elapsedMs, active.impactMs)
     const sourceDepth = this.surface.depth(active.cast.source)
-    if (this.surface.artVariant === 'phoenix_projectile') {
+    if (active.artVariant === 'phoenix_projectile') {
       if (active.elapsedMs >= timing.portalStartMs && active.elapsedMs < timing.releaseMs) {
         const progress = (active.elapsedMs - timing.portalStartMs)
           / (timing.releaseMs - timing.portalStartMs)
         const frame = this.surface.reducedMotion ? 56 : Math.min(63, Math.floor(progress * 64))
-        this.show(HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET, frame, active.portalOrigin,
-          0.34, sourceDepth, 0, HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET.key, 1, 0.55)
+        this.show(HOA_CAU_VFX_ASSETS.tripleCircle, frame, active.portalOrigin,
+          0.34, sourceDepth, 0, HOA_CAU_VFX_ASSETS.tripleCircle.key, 1, 0.55)
       }
     } else if (sample.portal === 'open') {
       const asset = HOA_CAU_VFX_ASSETS.portalOpen
@@ -181,9 +192,9 @@ export class HoaCauFireballPresentation {
       const elapsedFlightMs = active.elapsedMs - timing.releaseMs
       const flightAngle = Math.atan2(active.destination.y - active.origin.y,
         active.destination.x - active.origin.x) * 180 / Math.PI
-      if (this.surface.artVariant === 'phoenix_projectile') {
+      if (active.artVariant === 'phoenix_projectile') {
         const frame = Math.floor(elapsedFlightMs / (1200 / 36)) % 36
-        this.show(HOA_CAU_PHOENIX_PREVIEW_ASSET, frame, position, 1,
+        this.show(HOA_CAU_VFX_ASSETS.phoenixProjectile, frame, position, 1,
           sourceDepth + 0.02, flightAngle)
       } else {
         const frame = Math.floor(elapsedFlightMs / (1000 / 30)) % 27
@@ -196,7 +207,7 @@ export class HoaCauFireballPresentation {
       const frame = Math.floor(active.impactElapsedMs / 900 * 27)
       for (const { fact, point } of active.impactPositions) {
         this.show(HOA_CAU_VFX_ASSETS.impact, frame, point,
-          this.surface.artVariant === 'phoenix_projectile' ? 1.2 : 0.6,
+          active.artVariant === 'phoenix_projectile' ? 1.2 : 0.6,
           this.surface.depth(fact) + 0.01, 0, `${HOA_CAU_VFX_ASSETS.impact.key}:${fact.entityId}`)
       }
     }

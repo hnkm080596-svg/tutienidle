@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
 import { clipImpactMs } from '@/presentation/art/CombatEntityPresentation'
-import { HOA_CAU_PHOENIX_PREVIEW_ASSET, HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET, HOA_CAU_VFX_ASSETS, HOA_THE_PREVIEW_ASSET, TAM_MUOI_AURA_FRONT_PREVIEW_ASSET, TAM_MUOI_AURA_PREVIEW_ASSET } from '@/game/support/HoaCauVfxAssets'
+import { HOA_CAU_VFX_ASSETS, HOA_THE_PREVIEW_ASSET } from '@/game/support/HoaCauVfxAssets'
 import { HoaCauFireballPresentation, hoaCauHandAnchor } from '@/game/support/skill-vfx/HoaCauFireballPresentation'
 import { hoaCauTiming } from '@/game/support/skill-vfx/HoaCauFireballTimeline'
 
@@ -27,14 +27,6 @@ export class HoaCauLabPlayback {
     for (const asset of Object.values(HOA_CAU_VFX_ASSETS)) {
       scene.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
     }
-    scene.load.atlas(HOA_CAU_PHOENIX_PREVIEW_ASSET.key,
-      HOA_CAU_PHOENIX_PREVIEW_ASSET.textureUrl, HOA_CAU_PHOENIX_PREVIEW_ASSET.atlasUrl)
-    scene.load.atlas(HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET.key,
-      HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET.textureUrl, HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET.atlasUrl)
-    scene.load.atlas(TAM_MUOI_AURA_PREVIEW_ASSET.key,
-      TAM_MUOI_AURA_PREVIEW_ASSET.textureUrl, TAM_MUOI_AURA_PREVIEW_ASSET.atlasUrl)
-    scene.load.atlas(TAM_MUOI_AURA_FRONT_PREVIEW_ASSET.key,
-      TAM_MUOI_AURA_FRONT_PREVIEW_ASSET.textureUrl, TAM_MUOI_AURA_FRONT_PREVIEW_ASSET.atlasUrl)
     for (let stack = 0; stack <= 5; stack++)
       scene.load.svg(`phap-the-${stack}`, `/assets/vfx/hoa-cau-thuat/phap-the/phap-the-${stack}.svg`)
     scene.load.atlas(HOA_THE_PREVIEW_ASSET.key,
@@ -61,10 +53,10 @@ export class HoaCauLabPlayback {
   constructor(private readonly scene: Phaser.Scene) {
     this.actor = scene.add.sprite(210, 325, castClip.sheetKey, frameName(castClip.firstFrame))
       .setOrigin(0.5, 1).setScale(0.95).setDepth(590).setVisible(false)
-    this.auraBack = scene.add.sprite(210, 325, TAM_MUOI_AURA_PREVIEW_ASSET.key, 'frame_0')
+    this.auraBack = scene.add.sprite(210, 325, HOA_CAU_VFX_ASSETS.tamMuoiAuraBack.key, 'frame_0')
       .setOrigin(0.5, 1).setScale(0.95).setDepth(589.5)
       .setBlendMode(Phaser.BlendModes.ADD).setVisible(false)
-    this.auraFront = scene.add.sprite(210, 325, TAM_MUOI_AURA_FRONT_PREVIEW_ASSET.key, 'frame_0')
+    this.auraFront = scene.add.sprite(210, 325, HOA_CAU_VFX_ASSETS.tamMuoiAuraFront.key, 'frame_0')
       .setOrigin(0.5, 1).setScale(0.95).setDepth(590.5)
       .setBlendMode(Phaser.BlendModes.ADD).setVisible(false)
     this.hoaThe = scene.add.sprite(235, 85, HOA_THE_PREVIEW_ASSET.key, 'frame_0')
