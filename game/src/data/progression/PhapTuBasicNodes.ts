@@ -165,14 +165,14 @@ function buildFire(): ProgressionNode[] {
       'fire',
       'hoa_tu_diem',
       'Tụ Diễm',
-      'Hỏa Cầu tụ một điểm — sát thương cao hơn, Hỏa Ấn dễ trúng.',
+      'Ly Hỏa tụ một điểm — sát thương cao hơn, Hỏa Ấn dễ trúng.',
       'hoa_nhiet_keo',
     ),
     capstone(
       'fire',
       'hoa_tan_diem',
       'Tán Diễm',
-      'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
+      'Ly Hỏa tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
       'hoa_diem_tham',
     ),
   ]

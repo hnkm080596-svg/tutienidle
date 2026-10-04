@@ -79,9 +79,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
   {
     id: 'hoa_cau_thuat',
 
-    name: 'Hỏa Cầu Thuật',
+    name: 'Ly Hỏa Thuật',
 
-    description: 'Phóng Hỏa Cầu vào mục tiêu, có cơ hội gây Hỏa Ấn.',
+    description: 'Phóng đoàn Ly Hỏa vào mục tiêu, có cơ hội gây Hỏa Ấn.',
 
     type: 'active',
 
@@ -169,7 +169,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'hoa_tu_diem',
         name: 'Tụ Diễm',
-        description: 'Hỏa Cầu tụ một điểm — đòn đánh đậm hơn, Hỏa Ấn dễ trúng.',
+        description: 'Ly Hỏa tụ một điểm — đòn đánh đậm hơn, Hỏa Ấn dễ trúng.',
         effectsOverride: [
           {
             type: 'damage',
@@ -202,7 +202,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'hoa_tan_diem',
         name: 'Tán Diễm',
-        description: 'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
+        description: 'Ly Hỏa tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {
@@ -652,9 +652,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
   // ------------------------------------------------------------------
   {
     id: 'tam_muoi_chan_hoa',
-    name: 'Tam Muội Chân Hỏa',
+    name: 'Ngự Diễm',
     description:
-      'Đốt Linh Lực bật Tam Muội — Hỏa Ấn gieo trong trạng thái này mạnh hơn hẳn.',
+      'Ngự dụng chân hỏa quanh thân — Hỏa Ấn gieo trong trạng thái này mạnh hơn hẳn.',
     type: 'active',
     level: 1,
     maxLevel: 10,

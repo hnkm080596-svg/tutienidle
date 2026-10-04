@@ -62,7 +62,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
 
   // 5 Phap Tu Thuan He -- dong bo tu Skills.ts; iconKey moi he rieng
   // (three-path design 2026-09-25).
-  hoa_cau_thuat: { ...fromSkills('hoa_cau_thuat', { name: 'Hỏa Cầu Thuật', description: 'Hỏa hệ công kích.' }), iconKey: 'hoa_cau_thuat' },
+  hoa_cau_thuat: { ...fromSkills('hoa_cau_thuat', { name: 'Ly Hỏa Thuật', description: 'Ly hỏa công kích.' }), iconKey: 'hoa_cau_thuat' },
   thuy_tien_thuat: { ...fromSkills('thuy_tien_thuat', { name: 'Thủy Tiễn Thuật', description: 'Thủy hệ công kích.' }), iconKey: 'thuy_tien_thuat' },
   doc_chuong: { ...fromSkills('doc_chuong', { name: 'Độc Chương', description: 'Mộc hệ công kích.' }), iconKey: 'doc_chuong' },
   diem_kim_thuat: { ...fromSkills('diem_kim_thuat', { name: 'Điểm Kim Thuật', description: 'Kim hệ công kích.' }), iconKey: 'diem_kim_thuat' },
@@ -70,7 +70,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
 
   // Phap Tu Reimagine (spec 2026-09-26) -- the 5 Phap Trang specials
   // (self-buff windows); iconKey points at placeholder art until drawn.
-  tam_muoi_chan_hoa: { ...fromSkills('tam_muoi_chan_hoa', { name: 'Tam Muội Chân Hỏa', description: 'Trạng thái Tam Muội.' }), iconKey: 'tam_muoi_chan_hoa' },
+  tam_muoi_chan_hoa: { ...fromSkills('tam_muoi_chan_hoa', { name: 'Ngự Diễm', description: 'Trạng thái Ngự Diễm.' }), iconKey: 'tam_muoi_chan_hoa' },
   thanh_tuyen_duong_linh: { ...fromSkills('thanh_tuyen_duong_linh', { name: 'Thanh Tuyền Dưỡng Linh', description: 'Trạng thái Thanh Tuyền.' }), iconKey: 'thanh_tuyen_duong_linh' },
   van_moc_sinh_co: { ...fromSkills('van_moc_sinh_co', { name: 'Vạn Mộc Sinh Cơ', description: 'Trạng thái Sinh Cơ.' }), iconKey: 'van_moc_sinh_co' },
   kim_y_ngung_phong: { ...fromSkills('kim_y_ngung_phong', { name: 'Kim Ý Ngưng Phong', description: 'Trạng thái Kim Ý.' }), iconKey: 'kim_y_ngung_phong' },
