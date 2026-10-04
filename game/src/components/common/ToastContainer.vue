@@ -123,7 +123,7 @@ function lastNameText(name: string): string {
           :style="{ '--toast-color': toast.loot?.accentColorVar ? `var(${toast.loot.accentColorVar})` : KIND_COLOR[toast.kind] }"
           role="status"
         >
-          <InkNineSlice chrome-id="frame-xs-tooltip" layer="surface" tint-var="var(--toast-color)" />
+          <InkNineSlice chrome-id="frame-xs-tooltip" layer="surface" />
           <!-- UI-006 (Task 4, 2026-09-07) - toast message la live region
                (role="status"), dismiss la NUT RIENG (keyboard/SR reachable)
                thay vi click div toan toast. -->
