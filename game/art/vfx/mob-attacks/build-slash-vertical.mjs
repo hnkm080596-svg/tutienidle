@@ -2,7 +2,7 @@ import { curve, grad, texMeta, texPayloads, texture, track, writeOnRun } from '.
 
 const DOC_ID = 'fx_mob_slash_vertical'
 
-// Spectral blade cut: a long tapered crescent that reads as a real slash —
+// Spectral blade cut: a long tapered crescent that reads as a real slash -
 // translucent crimson body bleeding through amber into a hot ivory spine,
 // thin warm rim for readability. Pointed both ends; fill stays ~0.74 alpha
 // so it reads as light, not a pasted solid. Same cut language as the claw
