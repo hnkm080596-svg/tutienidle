@@ -31,7 +31,7 @@ if (effect.app !== 'arcadia-effects' || effect.doc.id !== 'fx_hoa_tu_charge') {
   throw new Error('Unexpected Arcadia source document')
 }
 const doc = globalThis.AFX.Model.migrate(effect.doc)
-if (doc.exp.mode !== 'rgba' || doc.comp.dur !== 0.55 || doc.exp.frames !== 18) {
+if (doc.exp.mode !== 'rgba' || doc.comp.dur !== 1.7 || doc.exp.frames !== 51) {
   throw new Error('Charge export contract changed')
 }
 const { canvas, info } = globalThis.AFX.Atlas.build(doc)
@@ -58,8 +58,8 @@ const metadata = {
     image: 'hoa-tu-charge.png',
     size: { w: canvas.width, h: canvas.height },
     scale: '1',
-    durationMs: 550,
-    releaseMs: 550,
+    durationMs: 1700,
+    releaseMs: 1700,
     frameRate: info.fps,
     frameCount: info.frames,
     transparent: true,

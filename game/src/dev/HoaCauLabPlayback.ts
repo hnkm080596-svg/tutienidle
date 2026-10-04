@@ -2,7 +2,13 @@ import Phaser from 'phaser'
 import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
 import { clipImpactMs } from '@/presentation/art/CombatEntityPresentation'
-import { HOA_CAU_VFX_ASSETS, HOA_THE_ASSET } from '@/game/support/HoaCauVfxAssets'
+import {
+  HOA_CAU_VFX_ASSETS,
+  HOA_THE_ASSET,
+  HOA_THE_BURN_FRAME_COUNT,
+  HOA_THE_BURN_LOOP_MS,
+  HOA_THE_BURN_START_FRAME,
+} from '@/game/support/HoaCauVfxAssets'
 import { HoaCauFireballPresentation, hoaCauHandAnchor } from '@/game/support/skill-vfx/HoaCauFireballPresentation'
 import { hoaCauTiming } from '@/game/support/skill-vfx/HoaCauFireballTimeline'
 
@@ -74,7 +80,7 @@ export class HoaCauLabPlayback {
     })
   }
 
-  play(landed = true, awardStackOnRelease = false): void {
+  play(landed = true, awardStackOnRelease = false, empowered = false): void {
     this.presenter.cancel()
     this.elapsedMs = 0
     this.resolved = false
@@ -89,6 +95,7 @@ export class HoaCauLabPlayback {
       rootSkillId: 'hoa_cau_thuat', resolvedSkillId: 'hoa_cau_thuat',
       presetId: 'hoa_cau_comet', source, declaredTargets: [target],
       candidateInstanceCount: 1, disposition: 'action', slotRole: 'basic',
+      empowered,
     }
     this.cast = cast
     this.presenter.start(cast, impactMs)
@@ -107,20 +114,17 @@ export class HoaCauLabPlayback {
     this.phapTheGlyph.setTexture(`phap-the-${Math.min(this.phapTheStacks, 4)}`)
       .setPosition(this.actor.x + 25, this.actor.y - 240)
       .setVisible(this.actor.visible && !maxed)
-    // Stack 5 swaps the static glyph for the Arcadia fire seal: the authored
-    // reveal plays once, then the burn tail loops as a living flame.
+    // Stack 5 swaps the static glyph for the Arcadia fire seal: the flame
+    // ignites instantly at the glyph's spot (no reveal beat) and loops.
     this.hoaThe.setPosition(this.actor.x + 25, this.actor.y - 240)
       .setVisible(this.actor.visible && maxed)
   }
 
+  // Mirrors CombatScene.hoaTheSealFrame: instant burn tail from ms 0.
   private hoaTheFrame(): number {
-    const revealMs = 2400
-    const burnLoopFrames = 18
-    const burnLoopMs = 900
-    if (this.hoaTheMs < revealMs)
-      return Math.min(HOA_THE_ASSET.lastFrame,
-        Math.floor(this.hoaTheMs / revealMs * (HOA_THE_ASSET.lastFrame + 1)))
-    return 18 + Math.floor((this.hoaTheMs - revealMs) / burnLoopMs * burnLoopFrames) % burnLoopFrames
+    return HOA_THE_BURN_START_FRAME
+      + Math.floor(this.hoaTheMs / HOA_THE_BURN_LOOP_MS * HOA_THE_BURN_FRAME_COUNT)
+        % HOA_THE_BURN_FRAME_COUNT
   }
 
   setTamMuoiActive(active: boolean): void {

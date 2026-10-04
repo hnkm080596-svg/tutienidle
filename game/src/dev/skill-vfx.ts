@@ -23,6 +23,8 @@ const tamMuoiInput = element<HTMLInputElement>('tam-muoi-aura')
 element('tam-muoi-label').textContent = i18n.global.t('skillVfxLab.tamMuoiAura')
 const phapTheInput = element<HTMLSelectElement>('phap-the-stacks')
 element('phap-the-label').textContent = i18n.global.t('skillVfxLab.phapTheStacks')
+const empoweredInput = element<HTMLInputElement>('empowered')
+element('empowered-label').textContent = i18n.global.t('skillVfxLab.empowered')
 // Player-side skills first (ngu_kiem_flight stays the default option: the e2e
 // suite drives the lab's initial play against its flight milestones), then the
 // beta monster attacks keyed by their authored attackPresetId, then the
@@ -83,6 +85,7 @@ function paintSequence() {
 }
 const query = new URLSearchParams(location.search)
 tamMuoiInput.checked = query.get('tam_muoi') === '1'
+empoweredInput.checked = query.get('empowered') === '1'
 phapTheInput.value = String(Math.max(0, Math.min(5, Number(query.get('phap_the')) || 0)))
 if ([...presetInput.options].some(option => option.value === query.get('preset')))
   presetInput.value = query.get('preset')!
@@ -97,9 +100,12 @@ const paintScrub = () => { scrubWrap.hidden = !manual || !fireballMode() }
 // in every mode - not only while the fireball preview runs.
 const paintAuraControl = () => { element('tam-muoi-wrap').hidden = false }
 const paintPhapTheControl = () => { element('phap-the-wrap').hidden = false }
+// The empowered toggle only makes sense while previewing Ly Hoa Thuat.
+const paintEmpoweredControl = () => { element('empowered-wrap').hidden = !fireballMode() }
 paintScrub()
 paintAuraControl()
 paintPhapTheControl()
+paintEmpoweredControl()
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
 const quality = query.get('quality') === 'low' || reduced ? 'low' : 'standard'
 // Monster entries attack right-to-left: the lab anchors swap so the cue layer
@@ -176,7 +182,7 @@ function play(autoplay = false) {
   fireball.cancel()
   if (fireballMode()) {
     scrubInput.value = '0'
-    fireball.play(outcomeInput.value !== 'miss', autoplay)
+    fireball.play(outcomeInput.value !== 'miss', autoplay, empoweredInput.checked)
     paintStats()
     return
   }
@@ -287,7 +293,7 @@ class SkillLabScene extends Phaser.Scene {
     scrubInput.oninput = () => {
       if (!manual || !fireballMode()) return
       fireballAutoplay = false
-    fireball.play(outcomeInput.value !== 'miss')
+      fireball.play(outcomeInput.value !== 'miss', false, empoweredInput.checked)
       fireball.update(Number(scrubInput.value))
       paintStats()
     }

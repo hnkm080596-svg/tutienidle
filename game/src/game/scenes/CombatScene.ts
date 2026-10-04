@@ -36,7 +36,12 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
 import { readTheBar, type TheBarSnapshot } from '@/presentation/bridges/theBarBridge'
-import { HOA_THE_ASSET } from '@/game/support/HoaCauVfxAssets'
+import {
+  HOA_THE_ASSET,
+  HOA_THE_BURN_FRAME_COUNT,
+  HOA_THE_BURN_LOOP_MS,
+  HOA_THE_BURN_START_FRAME,
+} from '@/game/support/HoaCauVfxAssets'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -1224,23 +1229,16 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
   }
 
-  /** Seal timing mirrors the authored clip: one 2400ms reveal across the
-      full sheet, then the 18-frame burn tail loops at 900ms. Reduced
-      motion parks on the tail's first frame. */
+  /** Tier-5 Hoa The seal: ignites INSTANTLY where the glyph stood - no
+      reveal beat. The authored burn tail loops from ms 0 at the authored
+      rate. Reduced motion parks on the tail's first frame. */
   private hoaTheSealFrame(): number {
     if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return 18
+      return HOA_THE_BURN_START_FRAME
     }
-    const revealMs = 2400
-    const burnLoopFrames = 18
-    const burnLoopMs = 900
-    if (this.hoaTheSealMs < revealMs) {
-      return Math.min(
-        HOA_THE_ASSET.lastFrame,
-        Math.floor((this.hoaTheSealMs / revealMs) * (HOA_THE_ASSET.lastFrame + 1)),
-      )
-    }
-    return 18 + Math.floor(((this.hoaTheSealMs - revealMs) / burnLoopMs) * burnLoopFrames) % burnLoopFrames
+    return HOA_THE_BURN_START_FRAME
+      + Math.floor((this.hoaTheSealMs / HOA_THE_BURN_LOOP_MS) * HOA_THE_BURN_FRAME_COUNT)
+        % HOA_THE_BURN_FRAME_COUNT
   }
 
   /**

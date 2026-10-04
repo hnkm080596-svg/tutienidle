@@ -70,8 +70,10 @@ test('Pháp Thế preview lights four calligraphy strokes then the whole glyph a
   await expect.poll(async () => (await snapshot()).phapTheStacks).toBe(5)
   await expect.poll(async () => (await snapshot()).phapTheFullGlow).toBe(true)
   await expect.poll(async () => (await snapshot()).hoaTheVisible).toBe(true)
-  // Stack five shows the Arcadia fire seal: authored reveal, then a looping burn tail.
+  // Stack five ignites the Arcadia fire seal instantly (no reveal beat):
+  // the burn tail loops frames 18..35 from the moment it appears.
   const firstFrame = (await snapshot()).hoaTheFrame
-  await expect.poll(async () => (await snapshot()).hoaTheFrame).toBeGreaterThan(firstFrame)
+  expect(firstFrame).toBeGreaterThanOrEqual(18)
+  await expect.poll(async () => (await snapshot()).hoaTheFrame).not.toBe(firstFrame)
   expect((await snapshot()).phapTheGlyphVisible).toBe(false)
 })

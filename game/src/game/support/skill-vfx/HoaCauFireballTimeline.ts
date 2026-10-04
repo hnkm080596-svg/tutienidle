@@ -37,8 +37,10 @@ export function sampleHoaCauTimeline(elapsedMs: number, impactMs: number) {
       : elapsed < timing.releaseMs + timing.closeDurationMs
         ? 'close'
         : 'none'
+  // The charge sheet is authored for the full charge window (51 frames
+  // over HOA_CAU_CHARGE_MS) so the sprite plays at authored rate.
   const chargeFrame = elapsed >= timing.chargeStartMs && elapsed < timing.releaseMs
-    ? Math.min(17, Math.floor((elapsed - timing.chargeStartMs) / timing.chargeDurationMs * 18))
+    ? Math.min(50, Math.floor((elapsed - timing.chargeStartMs) / timing.chargeDurationMs * 51))
     : null
   const projectileProgress = elapsed >= timing.releaseMs && elapsed <= timing.impactMs
     ? Math.max(0, Math.min(1, (elapsed - timing.releaseMs) / Math.max(1, timing.travelMs)))
