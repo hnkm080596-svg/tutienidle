@@ -79,7 +79,7 @@ export const TAM_MUOI_AURA_FRONT_PREVIEW_ASSET = {
   lastFrame: 35,
 } as const
 
-/** Stroke-by-stroke 火 seal; preview-only until its skill slot is approved. */
+/** Stroke-by-stroke fire seal; preview-only until its skill slot is approved. */
 export const HOA_THE_PREVIEW_ASSET = {
   key: 'hoa-the-fire-stroke',
   textureUrl: '/assets/vfx/hoa-cau-thuat/fire-stroke/hoa-the.png',

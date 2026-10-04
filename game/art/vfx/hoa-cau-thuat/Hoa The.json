@@ -799,7 +799,7 @@
       },
       {
         "id": "lr_hoa_the_stroke_1",
-        "name": "火 stroke 1 lights",
+        "name": "Fire stroke 1 lights",
         "type": "sprite",
         "start": 0,
         "end": 2.4,
@@ -880,7 +880,7 @@
       },
       {
         "id": "lr_hoa_the_stroke_2",
-        "name": "火 stroke 2 lights",
+        "name": "Fire stroke 2 lights",
         "type": "sprite",
         "start": 0,
         "end": 2.4,
@@ -961,7 +961,7 @@
       },
       {
         "id": "lr_hoa_the_stroke_3",
-        "name": "火 stroke 3 lights",
+        "name": "Fire stroke 3 lights",
         "type": "sprite",
         "start": 0,
         "end": 2.4,
@@ -1042,7 +1042,7 @@
       },
       {
         "id": "lr_hoa_the_stroke_4",
-        "name": "火 stroke 4 lights",
+        "name": "Fire stroke 4 lights",
         "type": "sprite",
         "start": 0,
         "end": 2.4,

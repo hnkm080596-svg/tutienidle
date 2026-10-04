@@ -2,8 +2,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Hoa The -- the fifth Hoa Cau VFX: four strokes light one by one into the 火
-// glyph, then the completed character burns as living flame with rising embers.
+// Hoa The -- the fifth Hoa Cau VFX: four strokes light one by one into the
+// fire glyph, then the completed character burns as living flame with rising embers.
 // Stroke textures come from the four fire-stroke-*.svg sources beside this file
 // (each keeps the shared 256 viewBox so all four align at x:0 y:0 size:256).
 const duration = 2.4
@@ -35,7 +35,7 @@ const LICK_PATHS = [
 function strokeLayer(stroke) {
   const { id, texId, litAt } = stroke
   return {
-    id, name: `火 stroke ${id.slice(-1)} lights`, type: 'sprite',
+    id, name: `Fire stroke ${id.slice(-1)} lights`, type: 'sprite',
     start: 0, end: duration, blend: 'add',
     opacity: track([[0, 0], [litAt, 0], [litAt + 0.22, 1], [duration, 1]]),
     sp: {
