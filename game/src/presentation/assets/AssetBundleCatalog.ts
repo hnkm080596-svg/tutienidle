@@ -596,6 +596,10 @@ const UI_SCENE_SINGLE_URLS = [
   // CombatPreview portrait - enemy battle-status avatar fetched as a
   // DOM image by the ui-preview page.
   '/assets/characters/animated/zuofeng/avatar/zuofeng-battle-status-avatar.png',
+  // CharacterFidelityFigure hand-flame - Fire 9 sheetUrl quoted as a
+  // literal by the Nhan Vat tab figure (component art path, no registry
+  // owner) - pinned by the domArtLiteralCoverage guard.
+  '/assets/vfx/spritesheets/火 (9).png',
 ] as const
 
 /**

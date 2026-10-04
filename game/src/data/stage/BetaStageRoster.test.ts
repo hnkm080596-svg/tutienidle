@@ -117,10 +117,10 @@ describe('beta stage roster census (BETA SCOPE LOCK v2)', () => {
 describe('beta boss mechanics preserved', () => {
   const enemyById = (id: string): Enemy => ENEMIES.find((enemy) => enemy.id === id)!
 
-  it('ferocious_bandit: slash every 4th own action + 60-turn enrage', () => {
+  it('ferocious_bandit: slash flurry every 4th own action + 60-turn enrage', () => {
     const bandit = enemyById('ferocious_bandit')
     expect(bandit.specialAttacks).toEqual([
-      { everyNth: 4, damageMultiplier: 2.5, presetId: 'slash' },
+      { everyNth: 4, damageMultiplier: 2.5, presetId: 'slash_multi' },
     ])
     expect(bandit.bossTrigger).toEqual({
       afterTurns: 60,
@@ -128,10 +128,10 @@ describe('beta boss mechanics preserved', () => {
     })
   })
 
-  it('mortal_ferocious_wild_boar: slash every 4th own action + 60-turn enrage', () => {
+  it('mortal_ferocious_wild_boar: stomp every 4th own action + 60-turn enrage', () => {
     const boar = enemyById('mortal_ferocious_wild_boar')
     expect(boar.specialAttacks).toEqual([
-      { everyNth: 4, damageMultiplier: 2, presetId: 'slash' },
+      { everyNth: 4, damageMultiplier: 2, presetId: 'stomp' },
     ])
     expect(boar.bossTrigger).toEqual({
       afterTurns: 60,
@@ -139,10 +139,10 @@ describe('beta boss mechanics preserved', () => {
     })
   })
 
-  it('foundation_ferocious_spirit_wolf: bite every 4th own action + 60-turn enrage', () => {
+  it('foundation_ferocious_spirit_wolf: bite flurry every 4th own action + 60-turn enrage', () => {
     const wolf = enemyById('foundation_ferocious_spirit_wolf')
     expect(wolf.specialAttacks).toEqual([
-      { everyNth: 4, damageMultiplier: 2.5, presetId: 'bite' },
+      { everyNth: 4, damageMultiplier: 2.5, presetId: 'bite_multi' },
     ])
     expect(wolf.bossTrigger).toEqual({
       afterTurns: 60,

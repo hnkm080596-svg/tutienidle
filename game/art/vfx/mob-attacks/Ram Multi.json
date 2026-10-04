@@ -1,0 +1,697 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_ram_multi",
+    "name": "Mob Ram Multi",
+    "comp": {
+      "w": 256,
+      "h": 192,
+      "dur": 0.56,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 55
+    },
+    "exp": {
+      "cols": 5,
+      "rows": 4,
+      "frames": 17,
+      "cellW": 256,
+      "cellH": 192,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_rammulti_wedge_5e5c66ff599e",
+        "name": "mob rammulti wedge",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_rm_flash",
+        "name": "Impact Flashes",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.56,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.105,
+              "v": 0
+            },
+            {
+              "t": 0.13,
+              "v": 0.95
+            },
+            {
+              "t": 0.24,
+              "v": 0
+            },
+            {
+              "t": 0.365,
+              "v": 0
+            },
+            {
+              "t": 0.39,
+              "v": 1
+            },
+            {
+              "t": 0.5,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 160,
+          "x": -6,
+          "y": {
+            "keys": [
+              {
+                "t": 0.105,
+                "v": -8
+              },
+              {
+                "t": 0.36,
+                "v": -8
+              },
+              {
+                "t": 0.365,
+                "v": 4
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.105,
+                "v": 0.4
+              },
+              {
+                "t": 0.16,
+                "v": 1.5
+              },
+              {
+                "t": 0.36,
+                "v": 1.2
+              },
+              {
+                "t": 0.42,
+                "v": 1.6
+              },
+              {
+                "t": 0.5,
+                "v": 1.9
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            236,
+            205
+          ],
+          "squash": 0,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_rm_streaks",
+        "name": "Impact Streaks",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.56,
+        "em": {
+          "x": -6,
+          "y": {
+            "keys": [
+              {
+                "t": 0.12,
+                "v": -8
+              },
+              {
+                "t": 0.38,
+                "v": 4
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 10,
+          "sy": 8,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 95,
+          "speed": 300,
+          "speedRnd": 0.45,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.12,
+              "n": 11
+            },
+            {
+              "t": 0.38,
+              "n": 12
+            }
+          ],
+          "seed": 37,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.26,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 11,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.55,
+                "v": 0.75
+              },
+              {
+                "t": 1,
+                "v": 0.05
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.55,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  255,
+                  240
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  255,
+                  190,
+                  120
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  190,
+                  90,
+                  40
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0,
+          "spin": 0,
+          "spinRnd": 0,
+          "alignVel": true,
+          "stretch": 2,
+          "gravX": 0,
+          "gravY": 140,
+          "drag": 2.6,
+          "turbAmp": 8,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.45,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_rm_debris",
+        "name": "Knock Debris",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.56,
+        "em": {
+          "x": -4,
+          "y": {
+            "keys": [
+              {
+                "t": 0.12,
+                "v": -4
+              },
+              {
+                "t": 0.38,
+                "v": 8
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 8,
+          "sy": 6,
+          "dir": "dir",
+          "angle": -60,
+          "spread": 80,
+          "speed": 190,
+          "speedRnd": 0.5,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.12,
+              "n": 8
+            },
+            {
+              "t": 0.38,
+              "n": 9
+            }
+          ],
+          "seed": 41,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.4,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "shard",
+            "p": {}
+          },
+          "size": 8,
+          "sizeRnd": 0.45,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.8,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.75,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  200,
+                  160,
+                  110
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  140,
+                  100,
+                  66
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  90,
+                  62,
+                  40
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 220,
+          "spinRnd": 0.8,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": 420,
+          "drag": 0.35,
+          "turbAmp": 10,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_rm_dust",
+        "name": "Dust Kick",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.56,
+        "em": {
+          "x": -8,
+          "y": {
+            "keys": [
+              {
+                "t": 0.12,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 12
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 12,
+          "sy": 6,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 70,
+          "speed": 140,
+          "speedRnd": 0.4,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.12,
+              "n": 8
+            },
+            {
+              "t": 0.38,
+              "n": 9
+            },
+            {
+              "t": 0.42,
+              "n": 5
+            }
+          ],
+          "seed": 43,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.4,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "smoke",
+            "p": {}
+          },
+          "size": 20,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.45,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 1.35
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.25,
+                "v": 0.75
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  220,
+                  190,
+                  150
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  170,
+                  135,
+                  95
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  120,
+                  90,
+                  62
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 30,
+          "spinRnd": 0.5,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": -14,
+          "drag": 2.4,
+          "turbAmp": 12,
+          "turbFreq": 1.2,
+          "squash": 0.4,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_rm_wedge",
+        "name": "Charge Wedge",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.56,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.045,
+              "v": 1
+            },
+            {
+              "t": 0.14,
+              "v": 1
+            },
+            {
+              "t": 0.17,
+              "v": 0
+            },
+            {
+              "t": 0.31,
+              "v": 0
+            },
+            {
+              "t": 0.335,
+              "v": 1
+            },
+            {
+              "t": 0.4,
+              "v": 1
+            },
+            {
+              "t": 0.44,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_rammulti_wedge_5e5c66ff599e",
+            "p": {}
+          },
+          "size": 200,
+          "x": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 150
+              },
+              {
+                "t": 0.115,
+                "v": 0
+              },
+              {
+                "t": 0.28,
+                "v": 0
+              },
+              {
+                "t": 0.31,
+                "v": 130
+              },
+              {
+                "t": 0.375,
+                "v": 0
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": -14
+              },
+              {
+                "t": 0.115,
+                "v": -8
+              },
+              {
+                "t": 0.31,
+                "v": -2
+              },
+              {
+                "t": 0.375,
+                "v": 4
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 0.7
+              },
+              {
+                "t": 0.115,
+                "v": 1
+              },
+              {
+                "t": 0.31,
+                "v": 0.95
+              },
+              {
+                "t": 0.375,
+                "v": 1.05
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0.15,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_rammulti_wedge_5e5c66ff599e": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2FhMjdhIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuOSI+CiAgICA8cGF0aCBkPSJNMTk2IDkyIEwyNDYgODQiLz4KICAgIDxwYXRoIGQ9Ik0yMDQgMTI4IEwyNTAgMTI4Ii8+CiAgICA8cGF0aCBkPSJNMTk2IDE2NCBMMjQ2IDE3MiIvPgogIDwvZz4KICA8cGF0aCBkPSJNMzAgMTI4IEwxMTggODYgTDIyNCA5NCBMMjI0IDE2MiBMMTE4IDE3MCBaIiBmaWxsPSIjZDlhODZjIiBzdHJva2U9IiMzYTI0MTAiIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCAxMjggTDExOCA4NiBMMjI0IDk0IEwyMDAgMTE4IEw5NiAxMzAgWiIgZmlsbD0iI2YwZDBhMCIvPgogIDxwYXRoIGQ9Ik0zMCAxMjggTDUyIDExNCBMNDYgMTQyIFoiIGZpbGw9IiNmZmY0ZGQiLz4KPC9zdmc+"
+  }
+}

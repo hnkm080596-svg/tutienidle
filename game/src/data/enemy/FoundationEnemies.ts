@@ -498,9 +498,10 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     archetype: 'melee',
     family: 'wolf',
     attackPresetId: 'bite',
-    // Bite-swipe finisher every 4th own action - same cadence the
-    // chapter-3 boss slot carried before (whelp water_surge).
-    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'bite' }],
+    // Bite flurry finisher every 4th own action - same cadence the
+    // chapter-3 boss slot carried before (whelp water_surge). Batch-2
+    // VFX (2026-10-04): renders the authored multi-bite - Minh's mapping.
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'bite_multi' }],
     // Turn-based enrage trigger; buff resolves through BUFF_REGISTRY.
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'foundation_wolf_king_enrage' },
     statsInput: {
