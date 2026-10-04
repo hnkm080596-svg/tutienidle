@@ -89,3 +89,19 @@ Sequential Review Pass 3 - Adversarial integration
 PASS WITH EVIDENCE for the authored batch. Deferred-by-instruction
 (not defects): monster->preset mapping awaits Minh's spec; lab preview plays
 player->dummy direction (Low, covered by e2e for real direction).
+
+## Wiring addendum (2026-10-04, Minh's approved binding map)
+
+- mortal_wild_boar basic: slash -> ram; boar king special: slash -> stomp;
+  ferocious_bandit special: slash -> slash_multi;
+  foundation_ferocious_spirit_wolf special: bite -> bite_multi.
+  spirit_wolf stays bite, bandit stays slash, elites inherit (unbound).
+- Lab: mob_* entries updated + 4 new entries (boar king / bandit +
+  bandit king / wolf + wolf king); i18n vi+en labels renamed to the new
+  attack type.
+- Audio: 8 new presets each own combat.impact.* row (unrouted gate).
+- Base-branch regressions fixed in this PR: P15 Vietnamese comment
+  tokens ASCII-ified (CombatAiPanel, CombatTopBar); Fire-9 figure
+  literal pinned in UI_SCENE_SINGLE_URLS (domArtLiteralCoverage).
+- Re-verify: type-check clean; vitest scoped 1006 green; e2e sweep pass
+  (authored check now asserts presetId 'ram' + sheet 'vfx-sheet-mob-ram').

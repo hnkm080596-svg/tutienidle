@@ -163,6 +163,16 @@ const IMPACT_PRESET_IDS = [
   'linh_bao_burst',
   'huy_quyen_strike',
   'tam_muoi_aura',
+  // Batch-2 monster attacks (2026-10-04) - each owns an expanded row so a
+  // routed special never collapses to the bare combat.impact anchor.
+  'bite_multi',
+  'ram',
+  'ram_multi',
+  'stomp',
+  'stomp_multi',
+  'slash_vertical',
+  'slash_horizontal',
+  'slash_multi',
 ] as const
 
 // Every combo id in src/data/skill/KiemPhoCombos.ts (37, prefix-free form).

@@ -7,8 +7,8 @@
 // RIENG, chi no nhan pointer events, khong chan battlefield va khong
 // lam doi combat insets (plan sec11.2).
 //
-// ui-combat reskin (2026-10-04): the mock's AI panel is an 'AI Chiến
-// Đấu' card - heading with a x close button, a 'target' fieldset legend,
+// ui-combat reskin (2026-10-04): the mock's AI panel is an 'AI Chien
+// Dau' card - heading with a x close button, a 'target' fieldset legend,
 // and the strategy radios as bordered rows whose selected one wears a
 // gold wash. The close button only emits `close`; the rail owns the
 // collapsed state + reopen control (the region must stay mounted for

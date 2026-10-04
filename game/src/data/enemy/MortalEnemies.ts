@@ -120,7 +120,9 @@ export const MORTAL_ENEMIES: Enemy[] = [
     // Roster remap (2026-10-04): Luyen Khi = ho Son Tac - normal + tinh
     // anh (runtime tag) + Son Tac Vuong boss Quat 10, cung mot loai.
     // Blade flurry every 4th own action (serpent cadence shape).
-    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'slash' }],
+    // Batch-2 VFX (2026-10-04): renders the authored slash_multi
+    // asterisk - Minh's mapping.
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'slash_multi' }],
     // Turn-based enrage trigger; buff resolves through BUFF_REGISTRY.
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'qi_refining_bandit_king_enrage' },
     statsInput: {
@@ -736,7 +738,9 @@ export const MORTAL_ENEMIES: Enemy[] = [
     realmId: 'mortal',
     lane: 'ground',
     family: 'boar',
-    attackPresetId: 'slash',
+    // Batch-2 VFX (2026-10-04): boar gore reads as a charge/ram, not a
+    // blade slash - Minh's mapping.
+    attackPresetId: 'ram',
     statsInput: {
       maxHp: 60,
       might: 6,
@@ -784,12 +788,12 @@ export const MORTAL_ENEMIES: Enemy[] = [
     realmId: 'mortal',
     lane: 'ground',
     family: 'boar',
-    attackPresetId: 'slash',
+    attackPresetId: 'ram',
     // Roster remap (2026-10-04): one species per realm - the boar king
     // is the mortal chapter's floor-10 boss, same family as every floor.
-    // Tusk rush every 4th own action (same cadence shape the crocodile
-    // boss carried before).
-    specialAttacks: [{ everyNth: 4, damageMultiplier: 2, presetId: 'slash' }],
+    // Batch-2 VFX: hoof stomp every 4th own action (same cadence shape
+    // the crocodile boss carried before) - Minh's mapping.
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2, presetId: 'stomp' }],
     // Turn-based enrage trigger; buff resolves through BUFF_REGISTRY.
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_boar_king_enrage' },
     statsInput: {
