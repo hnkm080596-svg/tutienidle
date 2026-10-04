@@ -28,7 +28,13 @@ const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierInde
     baseDurationSeconds: Math.round(600 * Math.pow(1.45, tierIndex)),
     // M10 (ARCH-008) - retired families (Hoi Xuan Dan) keep their recipes
     // resolvable for in-flight settle, but new jobs are rejected.
-    ...(family.retired === true ? { retired: true } : {}),
+    // economy-review 2026-10-04: hoi_linh_dan at mortal is also retired -
+    // mp_regen cannot land while maxMp/manaRegenPerTurn are spell-domain
+    // stats that stay 0 until the qi_refining spell path unlocks.
+    ...(family.retired === true ||
+      (family.effect.kind === 'mp_regen' && realmId === 'mortal')
+      ? { retired: true }
+      : {}),
   })),
 )
 
