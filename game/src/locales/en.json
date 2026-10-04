@@ -34,7 +34,8 @@
     "cruise": "Cruise · 180 ms",
     "acceleration": "Acceleration · 70 ms",
     "impact": "Impact · 80 ms",
-    "recall": "Recall · 170 ms"
+    "recall": "Recall · 170 ms",
+    "hoaTheSeal": "Fire-stroke seal (preview)"
   },
   "_meta": {
     "version": 1,

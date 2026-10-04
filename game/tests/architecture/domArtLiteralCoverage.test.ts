@@ -53,6 +53,7 @@ const ALLOWED_UNCOVERED = new Set([
   'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/circle/hoa-cau-triple-fire-circle.png',
   'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-back.png',
   'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-front.png',
+  'game/support/HoaCauVfxAssets.ts: /assets/vfx/hoa-cau-thuat/fire-stroke/hoa-the.png',
 ])
 
 describe('dom art literal coverage', () => {

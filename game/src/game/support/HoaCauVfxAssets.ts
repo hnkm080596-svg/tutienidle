@@ -79,8 +79,18 @@ export const TAM_MUOI_AURA_FRONT_PREVIEW_ASSET = {
   lastFrame: 35,
 } as const
 
+/** Stroke-by-stroke 火 seal; preview-only until its skill slot is approved. */
+export const HOA_THE_PREVIEW_ASSET = {
+  key: 'hoa-the-fire-stroke',
+  textureUrl: '/assets/vfx/hoa-cau-thuat/fire-stroke/hoa-the.png',
+  atlasUrl: '/assets/vfx/hoa-cau-thuat/fire-stroke/hoa-the.json',
+  firstFrame: 0,
+  lastFrame: 35,
+} as const
+
 export type HoaCauAsset = typeof HOA_CAU_VFX_ASSETS[keyof typeof HOA_CAU_VFX_ASSETS]
   | typeof HOA_CAU_PHOENIX_PREVIEW_ASSET | typeof HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET
+  | typeof HOA_THE_PREVIEW_ASSET
 
 export function hoaCauCombatDescriptors() {
   return Object.values(HOA_CAU_VFX_ASSETS).map(({ key, textureUrl, atlasUrl }) => ({
