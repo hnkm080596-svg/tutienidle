@@ -1,56 +1,19 @@
-import { curve, grad, texMeta, texPayloads, texture, track, writeOnRun } from './mob-common.mjs'
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { curve, grad, texMeta, track, writeOnRun } from './mob-common.mjs'
 
 const DOC_ID = 'fx_mob_ram'
 
-// Spectral translucent boar charging left: ghost-pale ivory fills (~0.7),
-// thin dark-warm outline, lowered wedge head with tusk, bristled back,
-// gallop legs, tail curl, and three speed streaks trailing the tail end.
-const BOAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="160" viewBox="0 0 256 160">
-  <defs>
-    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f4e4c0"/>
-      <stop offset="1" stop-color="#dfc59b"/>
-    </linearGradient>
-  </defs>
-  <g fill="none" stroke="#f2e2bc" stroke-linecap="round" opacity="0.42">
-    <path d="M236 52 L252 48" stroke-width="6"/>
-    <path d="M240 80 L254 80" stroke-width="7"/>
-    <path d="M234 108 L250 112" stroke-width="6"/>
-  </g>
-  <g fill="#d8c096" fill-opacity="0.55" stroke="#6b4526" stroke-width="4" stroke-linejoin="round" opacity="0.8">
-    <path d="M98 102 L94 122 L84 134 L90 140 L102 128 L108 108 Z"/>
-    <path d="M164 106 L172 122 L168 138 L177 142 L186 130 L180 110 Z"/>
-  </g>
-  <g fill="url(#body)" fill-opacity="0.7" stroke="#6b4526" stroke-width="5" stroke-linejoin="round">
-    <path d="M86 94 L82 116 L66 138 L60 146 L70 150 L86 134 L98 106 Z"/>
-    <path d="M182 102 L194 122 L208 140 L202 147 L190 142 L174 120 Z"/>
-  </g>
-  <path d="M72 56 L86 36 L96 54 Z" fill="url(#body)" fill-opacity="0.7" stroke="#6b4526" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M22 100
-           L46 66
-           Q58 54 76 50
-           L86 46
-           L100 30 L110 42
-           L122 28 L132 40
-           L146 28 L156 38
-           Q174 38 196 48
-           Q214 56 220 70
-           Q224 84 216 94
-           L210 106
-           Q180 118 148 118
-           Q112 116 92 112
-           Q70 108 56 112
-           Q42 114 30 108 Z"
-        fill="url(#body)" fill-opacity="0.72" stroke="#6b4526" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M48 102 Q42 92 38 80 Q48 88 54 96 Z" fill="#fff8e0" fill-opacity="0.95" stroke="#6b4526" stroke-width="3" stroke-linejoin="round"/>
-  <circle cx="58" cy="78" r="5" fill="#3a2410" opacity="0.85"/>
-  <ellipse cx="25" cy="99" rx="4" ry="5" fill="#3a2410" opacity="0.7"/>
-  <path d="M30 104 L44 106" fill="none" stroke="#6b4526" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
-  <path d="M218 66 Q230 62 230 72 Q230 80 224 78 Q220 76 222 71" fill="none" stroke="#6b4526" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
-</svg>`
-
-const boar = texture('mob_ram_boar', BOAR_SVG)
+// Spectral ghost of the real iron-boar sprite (pre-rendered at
+// art/vfx/mob-attacks/boar-spectral.png: alpha 0.78 + ivory wash) - reuse the
+// game's own art translucified, per Minh, instead of a hand-drawn stand-in.
+const BOAR_PNG = readFileSync(new URL('./boar-spectral.png', import.meta.url))
+const boar = {
+  id: `tex_mob_ram_boar_${createHash('sha256').update(BOAR_PNG).digest('hex').slice(0, 12)}`,
+  name: 'mob ram boar',
+}
 const TEXTURES = [boar]
+const PAYLOADS = { [boar.id]: `data:image/png;base64,${BOAR_PNG.toString('base64')}` }
 
 // The spectral boar streaks in from the right edge and rams the target at
 // t=0.115: small white-amber flash + glint, a short leftward spray, a few
@@ -214,7 +177,7 @@ export function buildMobRam() {
         },
       ],
     },
-    tex: texPayloads(TEXTURES),
+    tex: PAYLOADS,
   }
 }
 
