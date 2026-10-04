@@ -2173,10 +2173,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Action Playback Task 7 (2026-09-05) - 'turn_ready': short flash/pulse
-   * tren sprite actor roi acknowledgeTurnReady() trong onComplete (5-phase
-   * machine buoc 1 -> 2). Placeholder visual don gian theo plan (khong
-   * designed visual - polish sau).
+   * Action Playback Task 7 (2026-09-05) - 'turn_ready': standby transition
+   * + short forward lean on the actor sprite, then acknowledgeTurnReady()
+   * after the beat (5-phase machine step 1 -> 2).
    */
   // Internal (module boundary - combat-action-feedback).
   private onTurnReady(event: { actorId: string }) {

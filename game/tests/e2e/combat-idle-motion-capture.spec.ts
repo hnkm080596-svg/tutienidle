@@ -411,8 +411,8 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
           const s = scene.sprites.get(id)
           if (!s?.personHeight) return undefined
           const depth = scene.projection?.gridToScreen(s.row, 8).scale ?? 1
-          // personHeight tracks boost deliberately (turn-ready pulse 1.15,
-          // crit pop 1.25, spawn fade 0.7) - the assertion compares the
+          // personHeight tracks boost deliberately (crit pop 1.25,
+          // spawn fade 0.7) - the assertion compares the
           // geometry class factors, so the transient modulation divides out.
           const boost = s.boost?.value || 1
           return s.personHeight / (depth * boost)
