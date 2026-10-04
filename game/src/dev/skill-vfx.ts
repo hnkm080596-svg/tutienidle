@@ -18,7 +18,7 @@ for (const id of ['skill', 'outcome', 'speed']) element(id + '-label').textConte
 const presetInput = element<HTMLSelectElement>('preset')
 const outcomeInput = element<HTMLSelectElement>('outcome')
 const tamMuoiInput = element<HTMLInputElement>('tam-muoi-aura')
-element('tam-muoi-label').textContent = t('tamMuoiAura')
+element('tam-muoi-label').textContent = i18n.global.t('skillVfxLab.tamMuoiAura')
 for (const id of ['ngu_kiem_flight', 'slash', 'earth_shockwave', 'holy_radiance', 'hoa_cau_comet'])
   presetInput.add(new Option(t(id), id))
 for (const id of ['hit', 'miss', 'intercept', 'sourceDeath', 'multi', 'combo', 'empty'])

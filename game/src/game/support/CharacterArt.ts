@@ -191,7 +191,7 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { idle: [1, 33, 1], attack: [1, 17, 2], death: [1, 17, 2] },
     { avatarSize: { w: 512, h: 512 }, cast: { 'role:special': { range: [1, 17, 3] } } },
   ),
-  // One neutral Pháp Tu body for every spell element and hidden spell way.
+  // One neutral Phap Tu body for every spell element and hidden spell way.
   // The supplied 244x252 cell sheets are indexed directly (no painted VFX).
   phap_tu_shared: variant(
     'phap_tu_shared',
@@ -199,7 +199,7 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { x: 0.004098, y: 0.063492, w: 0.807377, h: 0.912698 },
     { idle: [1, 33, 1], attack: [1, 17, 2], death: [1, 17, 4] },
     { avatarSize: { w: 244, h: 252 }, avatarFile: 'avatar-transparent.png', cast: {
-      // Hỏa Cầu reuses the shared attack frames; only its release timing differs.
+      // Hoa Cau reuses the shared attack frames; only its release timing differs.
       // Rise to frame 12 by 625 ms, hold until portal close (3625 ms),
       // then lower via the existing final frames. No artwork is redrawn.
       hoa_cau_thuat: { src: 'attack', range: [1, 17, 2], impactFrameIndex: 29,

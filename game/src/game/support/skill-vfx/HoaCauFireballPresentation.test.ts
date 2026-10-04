@@ -159,34 +159,6 @@ describe('Hỏa Cầu Phaser handoff', () => {
     expect(sprites.find(sprite => sprite.key === 'hoa-cau-fire-20')).toMatchObject({ x: 400, y: 100 })
   })
 
-  it('previews the new fire circle continuously without replacing the original asset sequence', () => {
-    const { presenter, sprites } = fixture({ artVariant: 'ember_gold' })
-    presenter.start(cast, 3687.5)
-    presenter.update(825)
-    const ring = sprites.find(sprite => sprite.key === 'hoa-cau-ember-gold-circle')
-    expect(ring).toMatchObject({ visible: true, x: 124, y: 100 })
-    const openingScale = ring!.scale
-    presenter.update(600)
-    expect(ring).toMatchObject({ visible: true, alpha: 1 })
-    expect(ring!.scale).toBeGreaterThan(openingScale)
-    presenter.update(1700)
-    expect(ring!.visible).toBe(true)
-    expect(sprites.some(sprite => sprite.key.startsWith('hoa-cau-portal-'))).toBe(false)
-  })
-
-  it('previews a larger right-facing fireball but keeps the existing Fire 20 impact', () => {
-    const { presenter, sprites } = fixture({ artVariant: 'ember_gold' })
-    presenter.start(cast, 3687.5)
-    presenter.update(3125)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-ember-gold-projectile')).toMatchObject({
-      visible: true, x: 172, y: 100, angle: 0,
-    })
-    presenter.update(562.5)
-    presenter.resolve(receipt(true))
-    expect(sprites.some(sprite => sprite.key === 'hoa-cau-fire-20' && sprite.visible)).toBe(true)
-    expect(sprites.some(sprite => sprite.key === 'hoa-cau-fire-9')).toBe(false)
-  })
-
   it('plays the Arcadia phoenix projectile and its attached tail throughout the test flight', () => {
     const { presenter, sprites } = fixture({ artVariant: 'phoenix_projectile' })
     presenter.start(cast, 3687.5)

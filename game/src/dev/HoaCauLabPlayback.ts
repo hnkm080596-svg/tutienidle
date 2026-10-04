@@ -119,7 +119,7 @@ export class HoaCauLabPlayback {
     }
     this.presenter.update(remaining)
     this.elapsedMs += remaining
-    // Drive the caster from the same preview clock as the VFX (including 0.25×).
+    // Drive the caster from the same preview clock as the VFX (including 0.25x).
     const frameIndex = Math.min((castClip.frameSequence?.length ?? castClip.lastFrame - castClip.firstFrame + 1) - 1,
       Math.floor(this.elapsedMs * castClip.frameRate / 1000))
     this.actor.setFrame(frameName(castClip.frameSequence?.[frameIndex] ?? castClip.firstFrame + frameIndex))
