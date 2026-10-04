@@ -986,12 +986,16 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
     // stage battle. No-ops when the lab bridge never registered the
     // poke (production build or non-mock backend). Optional params:
     // element (default 'fire'), stage (default foundation_floor_1),
+    // keepTalent=1 (leave the breakthrough talent modal pending),
     // noBattle=1 (provision only), auto=1 (leave auto-battle on).
     const labParams = new URLSearchParams(window.location.search)
     if (labParams.get('lab') === 'phap_tu' && window.__tutienPhapTuLab) {
       const lab = window.__tutienPhapTuLab
       const element = (labParams.get('element') ?? 'fire') as ElementType
-      const setupResult = lab.setup({ element })
+      const setupResult = lab.setup({
+        element,
+        keepTalent: labParams.get('keepTalent') === '1',
+      })
       console.info('[phap-tu-lab]', setupResult)
       if (setupResult.startsWith('ok') && labParams.get('noBattle') !== '1') {
         const stageId = labParams.get('stage') ?? undefined

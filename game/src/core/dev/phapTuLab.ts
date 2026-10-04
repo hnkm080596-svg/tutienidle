@@ -55,12 +55,17 @@ export interface PhapTuLabDeps {
   // talent entitlement seams write optional keys that only materialize
   // through the store proxy.
   player: TribulationPlayerWriter
-  // store.$state - the JSON-cloneable surface every other production call
-  // site passes to progression/realm ops (commitFiveElementInitiation
-  // JSON-clones its player arg, so the store proxy cannot ride this leg).
-  playerState: PlayerData
+  // () => store.$state - the JSON-cloneable surface every other
+  // production call site passes to progression/realm ops
+  // (commitFiveElementInitiation JSON-clones its player arg, so the
+  // store proxy cannot ride this leg). Evaluated at each call so a
+  // wholesale $state swap (future $reset/$patch) can never leave the
+  // lab mutating a detached snapshot.
+  getPlayerState: () => PlayerData
   // UI glue bound in the dev bridge component: useBattleActions seams.
-  enterStage: (stage: Stage) => Promise<boolean>
+  // Zone id rides with the stage so a lab battle is not pinned to a
+  // single hardcoded zone.
+  enterStage: (zoneId: string, stage: Stage) => Promise<boolean>
   // battleActions.exitCombatToHome semantics - the standalone panels
   // only render on the home route, so openConstellation leaves combat
   // first (no-op for the caller to care about: the teardown self-guards
@@ -118,7 +123,8 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
       return 'refused: in_combat'
     }
 
-    const { gameManager, player, playerState } = deps
+    const { gameManager, player } = deps
+    const playerState = deps.getPlayerState()
     const steps: string[] = []
 
     // Path + element leg - the atomic initiation ritual. A character
@@ -234,7 +240,9 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
         }
       }
     }
-    steps.push('attributes')
+    if (deficit > 0 || options.attributePoints !== undefined) {
+      steps.push('attributes')
+    }
 
     deps.refreshUi()
 
@@ -242,7 +250,8 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
   }
 
   const unlockStage = (stageId: string): string | null => {
-    const { gameManager, playerState } = deps
+    const { gameManager } = deps
+    const playerState = deps.getPlayerState()
     const stage = gameManager.catalogOps.getStage(stageId)
 
     if (!stage) {
@@ -279,6 +288,9 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
     return null
   }
 
+  const zoneIdForStage = (stageId: string): string =>
+    deps.gameManager.zoneRegistry.getZoneForStage(stageId)?.id ?? 'thanh_van'
+
   window.__tutienPhapTuLab = {
     setup,
 
@@ -293,15 +305,24 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
       }
 
       deps.setManualInput(manual)
+      // unlockStage may have bumped realmLevel / completedStageIds -
+      // bump stateVersion so panels recompute before the transition.
+      deps.refreshUi()
 
       const stage = deps.gameManager.catalogOps.getStage(stageId)!
-      const entered = await deps.enterStage(stage)
-
-      return entered ? `entered: ${stageId}` : `rejected: ${stageId}`
+      try {
+        const entered = await deps.enterStage(zoneIdForStage(stageId), stage)
+        return entered ? `entered: ${stageId}` : `rejected: ${stageId}`
+      } catch {
+        return `rejected: ${stageId} (enterStage threw)`
+      }
     },
 
     openConstellation(): string {
-      if (inCombat()) {
+      // getTurnBattle() non-null also covers a finished battle still
+      // parked on the combat route - exit either way so the standalone
+      // panel can actually render on the home chrome.
+      if (deps.gameManager.getTurnBattle() !== null) {
         deps.exitCombat()
       }
       deps.openSkillPanel()
@@ -309,7 +330,8 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
     },
 
     status(): string {
-      const { gameManager, playerState } = deps
+      const { gameManager } = deps
+      const playerState = deps.getPlayerState()
       const element = playerState.spellPath.element ?? '-'
       const kit = (SPELL_KIT_IDS[element as ElementType] ?? [])
         .map((skillId) => `${skillId}:${gameManager.skillManager.has(skillId) ? 'learned' : 'missing'}`)

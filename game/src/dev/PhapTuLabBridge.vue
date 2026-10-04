@@ -34,8 +34,8 @@ onMounted(() => {
   registerPhapTuLab({
     gameManager,
     player,
-    playerState: player.$state,
-    enterStage: (stage) => battleActions.startSelectedStage('thanh_van', stage, 'manual'),
+    getPlayerState: () => player.$state,
+    enterStage: (zoneId, stage) => battleActions.startSelectedStage(zoneId, stage, 'manual'),
     exitCombat: () => battleActions.exitCombatToHome({ abandon: true }),
     openSkillPanel: () => ui.openStandalonePanel('skill'),
     setManualInput: (enabled) => {

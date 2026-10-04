@@ -21,7 +21,7 @@ function makeDeps(gameManager: GameManager): PhapTuLabDeps {
   return {
     gameManager,
     player,
-    playerState: player.$state,
+    getPlayerState: () => player.$state,
     enterStage: vi.fn(async () => true),
     exitCombat: vi.fn(),
     openSkillPanel: vi.fn(),
@@ -136,6 +136,7 @@ describe('phapTuLab poke', () => {
     expect(player.completedStageIds).toContain('qi_refining_abyssal_pool')
     expect(deps.setManualInput).toHaveBeenCalledWith(true)
     expect(deps.enterStage).toHaveBeenCalledWith(
+      'thanh_van',
       expect.objectContaining({ id: 'foundation_floor_3' }),
     )
   })
