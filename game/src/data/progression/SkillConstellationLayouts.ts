@@ -59,6 +59,9 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     { nodeId: 'fire_basic_hoa_tan_diem', x: 398, y: 280, emphasis: 'major', labelPlacement: 'top' },
     { nodeId: 'fire_ailment_mastery', x: 140, y: 96 },
     { nodeId: 'linh_ngo_tam_muoi_chan_hoa', x: 320, y: 80, emphasis: 'major' },
+    // Realm-reward mastery seat - a spark nested inside the glyph's leg
+    // junction (no prereq edge, so it carries no stroke).
+    { nodeId: 'tinh_thong_hoa', x: 218, y: 195, labelPlacement: 'top' },
   ],
   strokes: [
     // Left-falling sweep (pie): top extension through the junction down

@@ -283,7 +283,8 @@
           "skillUpgrade": "Upgrade the related skill"
         },
         "upgradeGateHeader": "Upgrade blocked:",
-        "infoOnly": "Precursor skill - read-only; it levels itself by cast count and cannot be enlightened or upgraded with Insight."
+        "infoOnly": "Precursor skill - read-only; it levels itself by cast count and cannot be enlightened or upgraded with Insight.",
+        "grantOnly": "Realm breakthrough reward - read-only; it levels itself on breakthrough and cannot be enlightened or upgraded with Insight."
       },
       "elementTabs": {
         "aria": "Choose Pháp Tu element"

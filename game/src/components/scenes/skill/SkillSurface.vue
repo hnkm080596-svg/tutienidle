@@ -325,9 +325,42 @@ function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphE
   }
 }
 
+// Grant-seat presentation: realm-reward nodes render readable -
+// their level arrives only via breakthrough grants, so the inspector
+// shows the seat + level and never an Insight action.
+function grantUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphEntry): SkillUiNode {
+  const owned = row.level >= 1
+  const position =
+    constellationPoints.value?.get(node.id) ??
+    layout.value.positions.get(node.id) ??
+    { x: 0, y: 0 }
+
+  return {
+    id: node.id,
+    name: row.name,
+    icon: nodeIcon(node),
+    x: position.x,
+    y: position.y,
+    prominent: entry.depth === 0,
+    emphasis: constellationPoints.value?.get(node.id)?.emphasis ?? 'normal',
+    level: `${row.level} / ${row.maxLevel}`,
+    state: owned ? 'learned' : 'locked',
+    description: row.description ?? '',
+    rows: [
+      { id: 'level', label: t('skill.levelLabel'), value: `${row.level} / ${row.maxLevel}` },
+    ],
+    conditions: [t('panels.skillPath.nodeInspector.grantOnly')],
+    costLabel: '',
+    actionLabel: '',
+    actionDisabled: true,
+    actionHint: '',
+  }
+}
+
 function toUiNode(entry: GraphEntry): SkillUiNode {
   const { node, row } = entry
   if (row.infoSkillId !== undefined) return infoUiNode(node, row, entry)
+  if (row.rewardOnly === true) return grantUiNode(node, row, entry)
   const owned = row.level >= 1
   const state: SkillUiNode['state'] = owned ? 'learned' : row.state === 'purchasable' ? 'available' : 'locked'
   const purchaseCost = row.nextLevelCost ?? node.insightCost ?? 0

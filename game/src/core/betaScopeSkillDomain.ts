@@ -269,6 +269,9 @@ export interface BetaSkillTreeNode {
   /** Info-anchor node: rendered for readability, never purchasable -
       the named skill's own channel (casts/grants) owns its level. */
   infoSkillId?: string
+  /** Realm-reward grant node: rendered for readability on its own
+      branch; realm rewards own the level, Insight is never an input. */
+  rewardOnly?: boolean
 }
 
 /**
@@ -300,13 +303,17 @@ function betaDormantTreeViewTags(): ReadonlySet<string> {
   return tags
 }
 
-// Grant-only content never joins the tree surface (rewardOnly realm
-// grants; grantedOnly/levelsSkillId cores are defensive coverage -
-// PHAP_TU_NODES currently authors none of those two). Shared with the
+// Grant-internal content never joins the tree surface (grantedOnly /
+// levelsSkillId cores are defensive coverage - PHAP_TU_NODES currently
+// authors none of those two). rewardOnly realm grants DO render as
+// readable seats on their own branch (Minh ruling 2026-10-04: the
+// mastery seat must be visible so the rider is inspectable); Insight
+// still cannot buy or upgrade them - canPurchaseNode / canUpgradeNode
+// reject rewardOnly upstream of this display gate. Shared with the
 // constellation layout validation so a new exclusion flag here stays
 // authoritative for both consumers.
 export function betaNodeTreeRenderable(node: ProgressionNode): boolean {
-  return !(node.rewardOnly === true || node.grantedOnly === true || node.levelsSkillId !== undefined)
+  return !(node.grantedOnly === true || node.levelsSkillId !== undefined)
 }
 
 /**
@@ -539,6 +546,7 @@ function treeNodeFor(
     role: node.role,
     elementTag: node.elementTag,
     infoSkillId: node.infoSkillId,
+    rewardOnly: node.rewardOnly,
     state: 'scope-hidden',
     level,
     maxLevel: getNodeMaxLevel(node),
@@ -622,6 +630,14 @@ function treeNodeFor(
   // nodeLevels pass for 'purchased'.
   if (node.infoSkillId !== undefined) {
     return { ...entry, state: 'progression-locked', reason: 'info-only' }
+  }
+
+  // Realm-reward grants read as a locked seat until the breakthrough
+  // writes them - 'grant-only' keeps 'progression-locked' legibility
+  // without implying Insight could unlock it. A granted level falls
+  // through to 'purchased' so the seat renders lit like any owned node.
+  if (node.rewardOnly === true && level < 1) {
+    return { ...entry, state: 'progression-locked', reason: 'grant-only' }
   }
 
   if (level >= 1) {

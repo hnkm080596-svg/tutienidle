@@ -283,7 +283,8 @@
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         },
         "upgradeGateHeader": "Nâng cấp bị chặn:",
-        "infoOnly": "Kỹ năng tiền thân — chỉ để xem; tự lên cấp theo số lần xuất chiêu, không thể lĩnh ngộ hay nâng cấp bằng Cảm Ngộ."
+        "infoOnly": "Kỹ năng tiền thân — chỉ để xem; tự lên cấp theo số lần xuất chiêu, không thể lĩnh ngộ hay nâng cấp bằng Cảm Ngộ.",
+        "grantOnly": "Phần thưởng đột phá cảnh giới — chỉ để xem; tự động lên cấp khi đột phá, không thể lĩnh ngộ hay nâng cấp bằng Cảm Ngộ."
       },
       "elementTabs": {
         "aria": "Chọn Hành Pháp Tu"
