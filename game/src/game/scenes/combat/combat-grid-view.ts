@@ -17,6 +17,7 @@ import {
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { resolveEntityDisplaySize } from '@/presentation/geometry/combatEntityScale'
 import { DEPTH_ENTITY_SHADOW, DEPTH_OVERLAY_UI, entitySpriteDepth } from '@/game/support/BattleLayers'
+import { fitEntityLabelText } from './combatTextFormat'
 
 import type { CombatGridViewHost } from './CombatGridViewHost'
 import {
@@ -414,6 +415,55 @@ export class CombatGridView {
     }
   }
 
+  /**
+   * Pixel cap for an entity name label on `row` (ui-combat reskin,
+   * 2026-10-04): the column cell width minus a small gutter. Flat-mode
+   * hosts without a projection fall back to the character height, same
+   * as entityDisplaySize's flat nearCellWidth.
+   */
+  private labelWidthCap(row: LaneIndex): number {
+    const cell = this.host.projection?.cellSizeAt(row).width ?? this.host.characterHeight
+
+    return Math.max(24, cell - 8)
+  }
+
+  /**
+   * Shrink-then-ellipsize a name label onto `label` under `maxWidth`
+   * (fitEntityLabelText - pure helper, unit-tested). The measure callback
+   * re-renders the Text: setFontSize only dirties the style, setText is
+   * what calls updateText - the explicit updateText keeps width fresh
+   * even when the candidate equals the current string.
+   */
+  private applyEntityLabelFit(
+    label: Phaser.GameObjects.Text,
+    name: string,
+    maxWidth: number,
+  ): void {
+    const fitted = fitEntityLabelText(
+      name,
+      (text, fontSize) => {
+        label.setFontSize(fontSize)
+        label.setText(text)
+        label.updateText()
+
+        return label.width
+      },
+      maxWidth,
+    )
+
+    label.setFontSize(fitted.fontSize)
+    label.setText(fitted.text)
+  }
+
+  /**
+   * Re-apply the label fit after a snapshot rename
+   * (combat-snapshot-reconcile) - the cap re-derives from the sprite's
+   * lane so a resized projection still bounds it.
+   */
+  refitEntityLabel(sprite: EntitySprite, name: string): void {
+    this.applyEntityLabelFit(sprite.label, name, this.labelWidthCap(sprite.row))
+  }
+
   getOrCreateSprite(
     id: string,
     color: number,
@@ -431,6 +481,10 @@ export class CombatGridView {
       .text(0, 0, labelText, { fontSize: '14px', color: '#ffffff' })
       .setOrigin(0.5, 0)
       .setDepth(DEPTH_OVERLAY_UI + 1)
+
+    // ui-combat reskin (2026-10-04) - label capped at the column's cell
+    // width so names on adjacent columns no longer bleed into each other.
+    this.applyEntityLabelFit(label, labelText, this.labelWidthCap(row))
 
     // Player dung artwork theo PROFILE hien hanh (body-anchor plan);
     // enemy resolves qua catalogue - authored art hoac placeholder cung

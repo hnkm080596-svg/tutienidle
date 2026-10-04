@@ -6,12 +6,30 @@
 // Future Systems Task 10 Step 6 - party status toi thieu: HP/alive moi
 // member hien canh turn-order (bare minimum de manual UI dung duoc voi
 // >1 player unit; polish day du la Party UI spec rieng sau).
+//
+// ui-combat reskin (2026-10-04): the mock's framed rail centers a row of
+// round portrait chips (ornament ring + circular art), the current actor
+// enlarged with a gold glow + diamond marker and a '>' arrow at the tail.
+// The rail now wears the surface-m-panel chrome; chips carry the avatar
+// image inside the turn-token disc, and the ATB gauge moved OUT of the
+// chip face into its own bottom row - the old absolute overlay is what
+// clipped the actor names.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useStateVersion } from '@/composables/useGameState'
 import { hkChromeUrl } from '@/ui/huyenKimChrome'
+import { usePlayerStore } from '@/stores/player'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import {
+  PLACEHOLDER_STATIC_TEXTURE_URL,
+  resolveCombatEntityKey,
+  resolvePlayerEntityKey,
+  staticArtFormFor,
+} from '@/presentation/art/CombatPresentationCatalogue'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 
 // Scene 13 spec: upcoming actors render as turn-token chips.
 const turnTokenUrl = hkChromeUrl('turn-token')
@@ -30,6 +48,12 @@ const { isBattleFighting, upcomingActors, battle, roundsElapsed, activeStage, bu
 // useTurnBattleInfo/useTurnCombatManual).
 const { stateVersion } = useStateVersion()
 
+const player = usePlayerStore()
+
+const playerProfile = computed(
+  () => PLAYER_VISUAL_PROFILES[player.visualProfileId] ?? PLAYER_VISUAL_PROFILES.mortal,
+)
+
 const visible = computed(() => {
   stateVersion.value
 
@@ -41,6 +65,25 @@ const partyMembers = computed(() => {
 
   return battle.value?.players ?? []
 })
+
+// ui-combat reskin - chip portrait = the same art the combat sprite
+// draws: the human player's entity (literal entity.id === 'player', the
+// CombatBuild partition gate) resolves through the visual-profile path;
+// every other actor - enemies AND player-type allies/companions - goes
+// through the runtime-id catalogue lookup, exactly like grid-view.
+// The shared placeholder texture is the last fallback.
+function avatarUrlFor(actor: TurnBattleParticipant): string {
+  const entityKey =
+    actor.entity.id === 'player'
+      ? resolvePlayerEntityKey(playerProfile.value.id, playerProfile.value.combatTextureKey, {
+          armed: player.visualArmed,
+        })
+      : resolveCombatEntityKey(actor.entity.id)
+
+  return resolveAssetUrl(
+    staticArtFormFor(entityKey)?.texture.textureUrl ?? PLACEHOLDER_STATIC_TEXTURE_URL,
+  )
+}
 
 // Combat speed gauge (2026-09-12) - ATB fill on every combatant chip:
 // actionGauge / GAUGE_MAX as an integer percent, clamped (a ready actor can
@@ -67,16 +110,6 @@ const roundLabel = computed(() =>
 const isRoundOverLimit = computed(
   () => perfectClearLimit.value !== undefined && roundsElapsed.value >= perfectClearLimit.value,
 )
-
-function label(index: number): string {
-  const actor = upcomingActors.value[index]
-
-  if (!actor) {
-    return ''
-  }
-
-  return index === 0 ? '▶ ' : ''
-}
 
 // Phase A6 (2026-09-08) - visible buff badges for a party member's chip:
 // hidden buffs skipped (same convention as the buff pipeline), badge text
@@ -121,7 +154,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
         class="turn-order-strip__member"
         :class="{ 'is-dead': !member.entity.alive }"
       >
-        {{ member.entity.name || member.id }}
+        <span class="turn-order-strip__member-name">{{ member.entity.name || member.id }}</span>
         <span class="turn-order-strip__member-hp">{{ formatNumber(Math.max(0, Math.ceil(member.entity.currentHp))) }}/{{ formatNumber(Math.max(0, Math.ceil(member.entity.maxHp))) }}</span>
         <span v-if="!member.entity.alive" class="turn-order-strip__member-dead">†</span>
         <span
@@ -149,6 +182,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
     </div>
 
     <div class="turn-order-strip__order">
+      <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
       <span class="turn-order-strip__round" :class="{ 'is-over': isRoundOverLimit }">{{ roundLabel }}</span>
 
       <template v-if="upcomingActors.length > 0">
@@ -160,9 +194,15 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
             :key="`${actor.id}-${index}`"
             class="turn-order-strip__item"
             :class="{ 'is-current': index === 0, 'is-enemy': actor.entity.type === 'enemy' }"
+            :aria-label="actor.entity.name || actor.id"
+            :aria-current="index === 0 ? 'step' : undefined"
           >
-            <img v-if="turnTokenUrl" class="turn-order-strip__token" :src="turnTokenUrl" alt="" aria-hidden="true" />
-            <span class="turn-order-strip__actor-name">{{ label(index) }}{{ actor.entity.name || actor.id }}</span>
+            <span class="turn-order-strip__portrait">
+              <img v-if="turnTokenUrl" class="turn-order-strip__token" :src="turnTokenUrl" alt="" aria-hidden="true" />
+              <img class="turn-order-strip__avatar" :src="avatarUrlFor(actor)" alt="" draggable="false" />
+              <span v-if="index === 0" class="turn-order-strip__current-mark" aria-hidden="true">◆</span>
+            </span>
+            <span class="turn-order-strip__actor-name">{{ actor.entity.name || actor.id }}</span>
             <span
               class="turn-order-strip__gauge"
               role="progressbar"
@@ -178,6 +218,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
             </span>
           </li>
         </ol>
+        <span class="turn-order-strip__rail-arrow" aria-hidden="true">›</span>
       </template>
     </div>
   </div>
@@ -198,15 +239,32 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   gap: 8px;
 }
 
+/* ui-combat reskin - party chips share the rail's dark-ink/gold grammar
+   and wrap their contents so the ATB gauge (own row) and buff badges
+   never overlap the name/hp text. */
 .turn-order-strip__member {
-  position: relative;
-  overflow: hidden;
-  padding: 2px 8px 5px;
-  border: 1px solid var(--ink-800, #333);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 5px;
+  max-width: 180px;
+  padding: 3px 9px;
+  border: 1px solid #b69b5866;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
+  background: #0c1616d0;
   color: var(--text-primary, #eee);
+}
+
+.turn-order-strip__member-name {
+  font-family: var(--font-display);
+  color: #efdba1;
+  /* Long unbroken player names used to be able to push the 180px chip
+     - ellipsis inside the flex row keeps the chip bounded. */
+  min-width: 0;
+  max-width: 100%;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .turn-order-strip__member-hp {
@@ -238,66 +296,130 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   color: var(--danger, #e53935);
 }
 
+/* The framed rail (ui-combat reskin): surface-m-panel chrome behind the
+   round indicator, the 'Upcoming' caption and the portrait chips. */
 .turn-order-strip__order {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 7px 26px 8px 14px;
+}
+
+.turn-order-strip__order > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 2;
 }
 
 .turn-order-strip__title {
-  color: var(--text-muted, #999);
+  font-family: var(--font-display);
+  font-size: var(--text-xs, 12px);
+  color: #e4cf95;
+  white-space: nowrap;
 }
 
 .turn-order-strip__list {
   display: flex;
-  gap: 6px;
+  align-items: flex-end;
+  gap: 12px;
   margin: 0;
-  padding: 0;
+  padding: 0 4px;
   list-style: none;
+  overflow-x: auto;
+  max-width: 42vw;
+  scrollbar-width: none;
 }
 
+/* Portrait chip (ui-combat reskin): a column of ring portrait -> name
+   caption -> gauge row. Nothing absolute inside the text rows, so the
+   gauges can no longer clip the names. */
 .turn-order-strip__item {
-  position: relative;
-  overflow: hidden;
-  padding: 2px 8px 5px;
-  border: 1px solid var(--ink-800, #333);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  gap: 2px;
+  width: 56px;
   color: var(--text-primary, #eee);
-  white-space: nowrap;
+  opacity: 0.85;
 }
 
-/* turn-token chrome behind the actor name (scene 13 token strip). */
+.turn-order-strip__item.is-current {
+  opacity: 1;
+}
+
+.turn-order-strip__portrait {
+  position: relative;
+  width: 42px;
+  aspect-ratio: 1;
+  transition: width 0.15s ease;
+}
+
+/* turn-token chrome ring behind the circular avatar (scene 13). */
 .turn-order-strip__token {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: fill;
-  opacity: 0.85;
   pointer-events: none;
 }
 
-.turn-order-strip__actor-name {
-  position: relative;
-  z-index: 1;
-}
-
-.turn-order-strip__item.is-current {
-  border-color: var(--jade, #4caf50);
-  color: var(--jade, #4caf50);
-}
-
-/* Combat speed gauge (2026-09-12) - thin ATB fill along the bottom edge of
-   each combatant chip. Jade for the party, danger for enemies; a full bar
-   brightens to signal "ready to act". */
-.turn-order-strip__gauge {
+.turn-order-strip__avatar {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 12%;
+  width: 76%;
+  height: 76%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #142321;
+}
+
+.turn-order-strip__item.is-enemy .turn-order-strip__avatar {
+  filter: saturate(0.7);
+}
+
+.turn-order-strip__item.is-current .turn-order-strip__portrait {
+  width: 52px;
+  filter: drop-shadow(0 0 7px #d2a94c);
+}
+
+/* The mock's diamond marker under the current actor's portrait. */
+.turn-order-strip__current-mark {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #ffe6a5;
+}
+
+.turn-order-strip__actor-name {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-2xs, 10px);
+  color: #efdba1;
+}
+
+.turn-order-strip__item.is-current .turn-order-strip__actor-name {
+  color: #ffe8a4;
+}
+
+/* Combat speed gauge - now a dedicated bottom row of the chip column
+   (used to be an absolute overlay across the name text). Jade for the
+   party, crimson for enemies; a full bar brightens to signal ready. */
+.turn-order-strip__gauge {
+  display: block;
+  width: 100%;
   height: 3px;
   background: color-mix(in srgb, var(--ink-800, #333) 60%, transparent);
+}
+
+.turn-order-strip__member .turn-order-strip__gauge {
+  flex: 0 0 100%;
+  margin-top: 1px;
 }
 
 .turn-order-strip__gauge-fill {
@@ -318,16 +440,27 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
 /* Round indicator (2026-09-12) - completed ATB rounds (+ perfect-clear
    limit when the launching stage has one). is-over = window missed. */
 .turn-order-strip__round {
-  padding: 2px 8px;
-  border: 1px solid var(--ink-800, #333);
+  padding: 3px 10px;
+  border: 1px solid #b69b58;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
-  color: var(--gold, #ffd75e);
+  background: #0c1616d0;
+  color: #e8cd8d;
+  font-family: var(--font-display);
   white-space: nowrap;
 }
 
 .turn-order-strip__round.is-over {
   border-color: color-mix(in srgb, var(--danger, #e53935) 60%, transparent);
   color: var(--danger, #e53935);
+}
+
+/* The mock's '>' tail on the framed rail. */
+.turn-order-strip__rail-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-52%);
+  font-size: 22px;
+  color: #e7c977;
 }
 </style>

@@ -35,6 +35,13 @@ function createFakeScene() {
       setScale: () => obj,
       updateDisplayOrigin: () => obj,
       setDisplaySize: vi.fn(() => obj),
+      // Label-fit hooks (ui-combat reskin): applyEntityLabelFit re-renders
+      // the Text to measure it - a numeric width keeps the fit trivially
+      // inside any cap.
+      setFontSize: () => obj,
+      setText: () => obj,
+      updateText: () => obj,
+      width: 0,
       destroy: () => obj,
       // positionSprite() writes here. Captured so a test can read where the
       // body actually landed (Spec B sec4.3's idle bob).

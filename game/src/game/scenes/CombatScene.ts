@@ -323,14 +323,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this._playerHud = hud
   }
 
-  private ensurePlayerHud(): PlayerHudLayer {
-    this._playerHud ??= new PlayerHudLayer(this, {
-      width: this.scale.width,
-      height: this.scale.height,
-    })
-
-    return this._playerHud
-  }
+  // ensurePlayerHud() removed (ui-combat reskin, 2026-10-04): the player
+  // HUD now lives in the DOM overlay (hud/CombatPlayerCard.vue). The
+  // getter/setter stay - tests inject fakes through them and every live
+  // consumer reads `playerHud?`, so a missing layer is a no-op, not a crash.
 
   private _castBar?: CombatCastBar
 
@@ -1024,7 +1020,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     // 6A-T4 - HUD player trong canvas (HP/MP/Kiem) - tao mot lan cho
     // doi scene; hien thi/an theo inBattle qua battle_start/battle_end.
-    this.ensurePlayerHud()
+    // ui-combat reskin (2026-10-04): canvas HUD khong con duoc tao - the
+    // DOM CombatPlayerCard so huu player vitals bay gio.
 
     // Initial snapshot reconciliation via GameManager query (Task 4/10)
     const gameManager = readOptionalGate(this.registry, 'gameManager')

@@ -69,7 +69,10 @@ describe('CombatSceneOverlay — style contract (T8.1)', () => {
 
     expect(rule).toContain('position: absolute')
     expect(rule).toContain('left: 0.96vw')
-    expect(rule).toContain('top: calc(14.88vh - var(--combat-topbar-h))')
+    // ui-combat reskin (2026-10-04) - panel sits ~28vh abs, under the new
+    // framed player card (mock ui-combat.html: ai-panel top 198/768);
+    // the max() floor keeps it below the card on short viewports.
+    expect(rule).toContain('top: calc(max(28vh, 1.8vh + 190px) - var(--combat-topbar-h))')
     expect(rule).toContain('z-index: 12')
   })
 
