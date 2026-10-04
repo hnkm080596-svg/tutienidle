@@ -488,14 +488,13 @@ function removeOrbAt(index: number) {
   gap: 6px;
 }
 
+/* wave B chrome: cinnabar-tinted button-compact art owns the choice
+   shell - the permanent-decision signal rides the tint, not a hand
+   gradient/border pasted over the drawn chrome. */
 .quan-khi-panel__choice {
   display: block;
   width: 100%;
   padding: 10px;
-  /* Nghi thuc chon con duong vinh vien -- giu crimson gradient chu dich
-     (signaling quyet dinh khong hoan tac), de len variant danger phang. */
-  background: linear-gradient(180deg, var(--crimson), var(--ink-800));
-  border: 1px solid var(--chrome-500);
   color: var(--text-primary);
 }
 
@@ -519,12 +518,6 @@ function removeOrbAt(index: number) {
   font-size: var(--text-2xs, 10px);
   font-weight: 400;
   color: var(--text-muted);
-}
-
-.quan-khi-panel__choice.is-selected {
-  border-color: var(--jade);
-  background: linear-gradient(180deg, var(--jade), var(--ink-800));
-  box-shadow: 0 0 10px -3px var(--jade);
 }
 
 .quan-khi-panel__choice:disabled {
@@ -615,10 +608,10 @@ function removeOrbAt(index: number) {
   gap: 6px;
 }
 
+/* wave B chrome: the GameButton danger slice (cinnabar-tinted
+   button-compact) owns the chip shell - no hand gradient/border on top. */
 .quan-khi-panel__element-btn {
   padding: 10px 4px;
-  background: linear-gradient(180deg, var(--crimson), var(--ink-800));
-  border: 1px solid var(--chrome-500);
   color: var(--text-primary);
 }
 

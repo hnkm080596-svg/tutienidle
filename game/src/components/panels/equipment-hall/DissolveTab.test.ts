@@ -158,7 +158,7 @@ describe('DissolveTab — Hóa Luyện', () => {
     const mounted = mountTab()
 
     const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
-      '.dissolve-filters select:nth-of-type(1)',
+      '.dissolve-filters .dissolve-filters__field:nth-of-type(1) select',
     )!
 
     expect(gradeSelect.options.length).toBe(11) // 10 pham + "Moi pham"
@@ -174,7 +174,7 @@ describe('DissolveTab — Hóa Luyện', () => {
     })
 
     const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
-      '.dissolve-filters select:nth-of-type(1)',
+      '.dissolve-filters .dissolve-filters__field:nth-of-type(1) select',
     )!
 
     gradeSelect.value = 'luc_pham'
@@ -190,7 +190,7 @@ describe('DissolveTab — Hóa Luyện', () => {
     gradeSelect.dispatchEvent(new Event('change'))
 
     const qualitySelect = mounted.container.querySelector<HTMLSelectElement>(
-      '.dissolve-filters select:nth-of-type(2)',
+      '.dissolve-filters .dissolve-filters__field:nth-of-type(2) select',
     )!
 
     mounted.manager.equipmentBag.get('d2')!.quality = 'dia'
@@ -285,7 +285,7 @@ describe('DissolveTab — Hóa Luyện', () => {
     const primary = () =>
       mounted.container.querySelector<HTMLButtonElement>('.qi-hall__primary-action')!
     const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
-      '.dissolve-filters select:nth-of-type(1)',
+      '.dissolve-filters .dissolve-filters__field:nth-of-type(1) select',
     )!
     const selectAll = Array.from(
       mounted.container.querySelectorAll<HTMLButtonElement>('.dissolve-filters__bulk'),

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 const mode = defineModel<'login' | 'register'>({ required: true })
 const { t } = useI18n()
 function switchTab(target: 'login' | 'register') {
@@ -19,34 +20,34 @@ function switchTab(target: 'login' | 'register') {
       @click="mode = tab"
       @keydown.right.prevent="switchTab(tab === 'login' ? 'register' : 'login')"
       @keydown.left.prevent="switchTab(tab === 'login' ? 'register' : 'login')"
-    >{{ t(`onboarding.auth.tabs.${tab}`) }}</button>
+    ><InkNineSlice chrome-id="tab-seal" layer="surface" :tint-var="mode === tab ? '--hk-gold' : undefined" /><span class="auth-tabs__label">{{ t(`onboarding.auth.tabs.${tab}`) }}</span></button>
   </div>
 </template>
 
 <style scoped>
+/* wave B chrome: each tab consumes the drawn tab-seal slice (grayscale
+   sheet, gold tint on the open tab); no hand clip-path/gradient shell. */
 .auth-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  padding: 1px;
-  background: #897247;
-  clip-path: polygon(2% 0, 98% 0, 100% 50%, 98% 100%, 2% 100%, 0 50%);
+  gap: .6cqw;
 }
 .auth-tabs__tab {
+  position: relative;
   min-height: 7.5cqw;
   border: 0;
   padding: 1cqw 2cqw;
   color: #c7c0ab;
-  background: linear-gradient(150deg, #373830, #242823);
+  background: transparent;
   font: 500 3.1cqw var(--hk-font-display, Georgia, serif);
   cursor: pointer;
-  transition: color 150ms, background 150ms;
+  transition: color 150ms;
 }
 .auth-tabs__tab.active {
   color: var(--hk-ivory, #ede6d6);
-  background: radial-gradient(ellipse at bottom, #246859, #092f2b);
-  box-shadow: inset 0 0 0 1px #b99a55, inset 0 0 0 3px #163a32;
   text-shadow: 0 1px 3px #000;
 }
+.auth-tabs__label { position: relative; z-index: 2; }
 .auth-tabs__tab:hover { color: #fff0bd; }
 .auth-tabs__tab:focus-visible { outline: 2px solid #ffe4a2; outline-offset: -4px; }
 </style>

@@ -79,7 +79,7 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
              visually) so focus-on-open still lands on slotted content,
              not on this button. -->
         <GameButton
-          variant="ghost"
+          variant="secondary"
           shape="circle"
           size="sm"
           class="overlay-panel__close"

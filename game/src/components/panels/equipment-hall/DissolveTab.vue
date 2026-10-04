@@ -27,6 +27,8 @@ import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import GameButton from '@/components/common/GameButton.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import BagPaginationControls from '@/components/panels/bag-sections/BagPaginationControls.vue'
 
 const { t } = useI18n()
 
@@ -280,33 +282,40 @@ function doDissolve() {
 <template>
   <section class="qi-hall__body qi-hall__dissolve">
     <div class="dissolve-filters">
-      <select v-model="dissolveFilterGrade">
-        <option value="any">{{ t('panels.equipmentHall.select.anyProfessionGrade') }}</option>
+      <!-- wave B chrome: drawn text-field slice behind each select. -->
+      <div class="dissolve-filters__field">
+        <InkNineSlice chrome-id="text-field" layer="surface" />
+        <select v-model="dissolveFilterGrade">
+          <option value="any">{{ t('panels.equipmentHall.select.anyProfessionGrade') }}</option>
 
-        <option
-          v-for="grade in PROFESSION_GRADE_ORDER"
-          :key="grade"
-          :value="grade"
-          :style="{ color: `var(--rank-color-${professionGradeRank(grade)})` }"
-        >
-          {{ PROFESSION_GRADE_NAMES[grade] }}
-        </option>
-      </select>
+          <option
+            v-for="grade in PROFESSION_GRADE_ORDER"
+            :key="grade"
+            :value="grade"
+            :style="{ color: `var(--rank-color-${professionGradeRank(grade)})` }"
+          >
+            {{ PROFESSION_GRADE_NAMES[grade] }}
+          </option>
+        </select>
+      </div>
 
       <!-- Chat - dropdown Chat duy nhat (Task 19: gop rarity+quality cu,
            2 dropdown do von da doc CHUNG 1 truc ITEM_QUALITY/ITEM_GRADE). -->
-      <select v-model="dissolveFilterQuality">
-        <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
+      <div class="dissolve-filters__field">
+        <InkNineSlice chrome-id="text-field" layer="surface" />
+        <select v-model="dissolveFilterQuality">
+          <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
-        <option
-          v-for="quality in ITEM_QUALITY_ORDER"
-          :key="quality"
-          :value="quality"
-          :style="{ color: `var(--grade-${quality})` }"
-        >
-          {{ equipmentQualityLabel(quality) }}
-        </option>
-      </select>
+          <option
+            v-for="quality in ITEM_QUALITY_ORDER"
+            :key="quality"
+            :value="quality"
+            :style="{ color: `var(--grade-${quality})` }"
+          >
+            {{ equipmentQualityLabel(quality) }}
+          </option>
+        </select>
+      </div>
 
       <button
         type="button"
@@ -314,7 +323,8 @@ function doDissolve() {
         :disabled="dissolveCandidates.length === 0"
         @click="selectAllDissolveByFilter"
       >
-        {{ t('panels.equipmentHall.buttons.selectAll') }} ({{ dissolveCandidates.length }})
+        <InkNineSlice chrome-id="seal-chip" layer="surface" />
+        <span class="dissolve-filters__bulk-label">{{ t('panels.equipmentHall.buttons.selectAll') }} ({{ dissolveCandidates.length }})</span>
       </button>
 
       <button
@@ -323,7 +333,8 @@ function doDissolve() {
         :disabled="dissolveSelected.size === 0"
         @click="clearDissolveSelection"
       >
-        {{ t('panels.equipmentHall.buttons.clearAll') }}
+        <InkNineSlice chrome-id="seal-chip" layer="surface" />
+        <span class="dissolve-filters__bulk-label">{{ t('panels.equipmentHall.buttons.clearAll') }}</span>
       </button>
     </div>
 
@@ -354,11 +365,17 @@ function doDissolve() {
       <p v-if="dissolveCandidates.length === 0" class="qi-hall__empty">{{ t('panels.equipmentHall.empty.noDissolveCandidates') }}</p>
     </div>
 
-    <div v-if="dissolveTotalPages > 1" class="dissolve-pagination">
-      <GameButton variant="ghost" size="sm" :disabled="dissolvePage === 0" @click="dissolveGoTo(dissolvePage - 1)">‹</GameButton>
-      <span class="dissolve-pagination__label">{{ dissolvePage + 1 }} / {{ dissolveTotalPages }}</span>
-      <GameButton variant="ghost" size="sm" :disabled="dissolvePage >= dissolveTotalPages - 1" @click="dissolveGoTo(dissolvePage + 1)">›</GameButton>
-    </div>
+    <!-- wave B: same drawn pagination footer as the bag sections; no
+         sort axis here, so the sort cluster stays hidden. -->
+    <BagPaginationControls
+      v-if="dissolveTotalPages > 1"
+      :current-page="dissolvePage"
+      :total-pages="dissolveTotalPages"
+      :sort-options="[]"
+      active-mode="default"
+      active-direction="asc"
+      @go-to-page="dissolveGoTo"
+    />
 
     <div v-if="dissolvePreview.length > 0" class="dissolve-preview">
       <h4>{{ t('panels.equipmentHall.labels.dissolveReward') }} ({{ t('panels.equipmentHall.labels.itemCount', { count: dissolveSelected.size }) }}):</h4>
@@ -391,26 +408,47 @@ function doDissolve() {
   gap: 6px;
 }
 
-.dissolve-filters select {
-  background: var(--ink-800);
+/* wave B chrome: text-field slice wraps each select (transparent
+   control on top); bulk actions ride the seal-chip pill. */
+.dissolve-filters__field {
+  position: relative;
+  min-height: var(--tap-min);
+}
+
+.dissolve-filters__field select {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  background: transparent;
   color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
+  border: 0;
   border-radius: var(--radius-sm);
-  padding: 4px;
+  padding: 4px 8px;
   min-height: var(--tap-min);
   font-family: var(--font-body);
 }
 
+.dissolve-filters__field select:focus-visible {
+  outline: 2px solid var(--chrome-300);
+  outline-offset: 1px;
+}
+
 .dissolve-filters__bulk {
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
+  position: relative;
+  border: 0;
   border-radius: var(--radius-sm);
-  padding: 4px 10px;
+  background: transparent;
+  padding: 4px 14px;
   min-height: var(--tap-min);
   font-family: var(--font-body);
   font-size: var(--text-xs);
+  color: var(--text-primary);
   cursor: pointer;
+}
+
+.dissolve-filters__bulk-label {
+  position: relative;
+  z-index: 2;
 }
 
 .dissolve-filters__bulk:disabled {
@@ -460,20 +498,6 @@ function doDissolve() {
   font-size: 11px;
   font-weight: 700;
   box-shadow: 0 0 0 2px var(--paper-50), var(--surface-shadow-soft);
-}
-
-.dissolve-pagination {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.dissolve-pagination__label {
-  font-size: var(--text-sm);
-  color: var(--paper-text-soft);
-  font-variant-numeric: tabular-nums;
 }
 
 .dissolve-preview {

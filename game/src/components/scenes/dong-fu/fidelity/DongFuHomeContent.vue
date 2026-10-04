@@ -9,7 +9,10 @@ import DongFuHud from './DongFuHud.vue'
 import DongFuWheel from './DongFuWheel.vue'
 import DongFuBoard from './DongFuBoard.vue'
 import DongFuArtFrame from './DongFuArtFrame.vue'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 import { DONG_FU_ART, symbolUrl, type DongFuUiModel } from './dongFuUi'
+
+const buildingPlaqueUrl = hkChromeUrl('building-plaque')
 
 withDefaults(defineProps<{
   model: DongFuUiModel
@@ -42,11 +45,12 @@ const { t } = useI18n()
       class="df-building"
       :data-df-building="building.id"
       :style="{ left: `${building.x}px`, top: `${building.y}px` }"
+      :title="t('dongFu.buildingHint')"
       @click="emit('action', building.id)"
     >
-      <DongFuArtFrame :border-width="22" />
-      <img :src="symbolUrl(building.symbol)" alt="">
-      <span>{{ t(building.labelKey) }}<small>{{ t('dongFu.buildingHint') }}</small></span>
+      <img class="df-building__plaque" :src="buildingPlaqueUrl ?? undefined" alt="">
+      <img class="df-building__symbol" :src="symbolUrl(building.symbol)" alt="">
+      <span class="df-building__name">{{ t(building.labelKey) }}</span>
       <span
         v-if="building.badge === 'upgrade'"
         role="button"
@@ -108,17 +112,21 @@ const { t } = useI18n()
 
 <style scoped>
 .df-buildings { position: absolute; inset: 0; z-index: 2; transform: translate(calc(var(--df-x) * -3px),calc(var(--df-y) * -2px)); transition: transform 400ms ease-out; pointer-events: none; }
-.df-building { position: absolute; display: flex; align-items: center; gap: 7px; height: 49px; min-width: 143px; max-width: 185px; border: 0; padding: 7px 13px; background: transparent; color: var(--df-ivory); cursor: pointer; pointer-events: auto; text-align: left; }
-.df-building > img { position: relative; width: 21px; height: 26px; filter: invert(87%) sepia(41%) saturate(480%) hue-rotate(350deg); }
-.df-building > span:not(.df-art-frame) { position: relative; font-size: 15px; line-height: 19px; white-space: nowrap; }
-.df-building small { display: block; font-size: 10px; color: #c3bea5; line-height: 14px; }
-.df-building__dot { position: absolute; top: 6px; right: 8px; width: 9px; height: 9px; border-radius: 50%; background: #ffd766; box-shadow: 0 0 6px #ffc94d; }
+/* wave B chrome: drawn building-plaque (96x160 parchment tag) replaces
+   the frame chip - the nameplate hangs vertically like the ref's tags.
+   The anchor x/y still comes from BUILDING_ANCHORS (tuned for the old
+   horizontal chips), so the tag centers on x and drops straight down. */
+.df-building { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 0; width: 62px; min-height: 100px; border: 0; padding: 10px 4px 18px; background: transparent; color: #33291a; cursor: pointer; pointer-events: auto; text-align: center; transform: translateX(-50%); }
+.df-building__plaque { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; }
+.df-building__symbol { position: relative; z-index: 1; width: 20px; height: 20px; margin-top: 4px; opacity: .85; }
+.df-building__name { position: relative; z-index: 1; margin-top: 6px; writing-mode: vertical-rl; letter-spacing: 3px; font-size: 14px; line-height: 1; font-weight: 600; color: #33291a; max-height: 78px; overflow: hidden; }
+.df-building__dot { position: absolute; top: 4px; right: 5px; z-index: 2; width: 9px; height: 9px; border-radius: 50%; background: #ffd766; box-shadow: 0 0 6px #ffc94d; }
 .df-building__dot--alert { background: #ff9d5c; box-shadow: 0 0 8px #ff7a3c; }
 /* Upgrade affordance replaces the passive dot when the model marks the
    building 'upgrade': same gold family as the dot, enlarged into a
    tappable circle with an ink arrow (owner: "hien khi du dieu kien"
    - hidden entirely otherwise). */
-.df-building__upgrade { position: absolute; top: 3px; right: 4px; width: 18px; height: 18px; padding: 0; border: 1px solid #f4d896; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #ffe49a 0%, #e2b04a 62%, #b5832e 100%); color: #241a06; font-size: 12px; font-weight: 700; line-height: 16px; cursor: pointer; box-shadow: 0 0 7px #ffc94dcc, 0 1px 2px #0009; }
+.df-building__upgrade { position: absolute; top: 3px; right: 3px; z-index: 2; width: 18px; height: 18px; padding: 0; border: 1px solid #f4d896; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #ffe49a 0%, #e2b04a 62%, #b5832e 100%); color: #241a06; font-size: 12px; font-weight: 700; line-height: 16px; cursor: pointer; box-shadow: 0 0 7px #ffc94dcc, 0 1px 2px #0009; }
 .df-building__upgrade:hover { filter: brightness(1.12); box-shadow: 0 0 10px #ffd97a, 0 1px 2px #0009; }
 .df-building__upgrade:focus-visible { outline: 2px solid #ffe9b0; outline-offset: 1px; }
 .df-cultivator { position: absolute; z-index: 2; left: 550px; top: 366px; width: 300px; height: 300px; padding: 0; background: none; border: 0; cursor: pointer; filter: drop-shadow(0 8px 7px #07101bcc); }
