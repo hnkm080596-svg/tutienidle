@@ -538,7 +538,7 @@ describe('beta scope - initiation atomicity', () => {
     const { gameManager, player } = committedContext()
     const committed = structuredClone(player)
 
-    const again = gameManager.realmAdvanceOps.commitFiveElementInitiation('water', player)
+    const again = gameManager.realmAdvanceOps.commitFiveElementInitiation('fire', player)
     expect(again.ok).toBe(false)
     // preflight ordering: not_mortal fires before already_committed on
     // a committed (qi_refining) player - either way zero drift.
@@ -546,11 +546,11 @@ describe('beta scope - initiation atomicity', () => {
     expect(player).toEqual(committed)
   })
 
-  it('every beta element is admissible; a foreign element id rejects', () => {
-    for (const el of ['fire', 'water', 'wood', 'metal', 'earth'] as const) {
-      expect(isBetaElement(el)).toBe(true)
+  it('the beta element is admissible; locked and foreign element ids reject', () => {
+    expect(isBetaElement('fire')).toBe(true)
+    for (const el of ['water', 'wood', 'metal', 'earth', 'lightning'] as const) {
+      expect(isBetaElement(el)).toBe(false)
     }
-    expect(isBetaElement('lightning')).toBe(false)
   })
 
   it('a rejected commit leaves the player untouched (snapshot audit)', () => {

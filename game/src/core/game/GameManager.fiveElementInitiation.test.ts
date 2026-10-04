@@ -167,9 +167,9 @@ describe('commitFiveElementInitiation - commit postconditions under injection', 
 
     spy.mockRestore()
 
-    const result = gameManager.realmAdvanceOps.commitFiveElementInitiation('water', player)
+    const result = gameManager.realmAdvanceOps.commitFiveElementInitiation('fire', player)
 
     expect(result.ok).toBe(true)
-    expect(getActiveElement(player)).toBe('water')
+    expect(getActiveElement(player)).toBe('fire')
   })
 })

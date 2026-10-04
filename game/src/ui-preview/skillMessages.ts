@@ -2,7 +2,7 @@ export const skillMessages = { vi: {
   element: { fire: 'Hỏa', wood: 'Mộc', water: 'Thủy', metal: 'Kim', earth: 'Thổ' },
   skillName: { core: 'Linh Bạo', fire: 'Hỏa Cầu Thuật', wood: 'Độc Chưởng', water: 'Thủy Tiễn Thuật', metal: 'Điểm Kim Thuật', earth: 'Thổ Cầu Thuật' },
   branch: { fire: { a: 'Tụ Diễm', b: 'Tán Diễm', passive: 'Tam Muội Chân Hỏa' }, wood: { a: 'Tụ Độc', b: 'Lan Độc', passive: 'Vạn Mộc Sinh Cơ' }, water: { a: 'Ngưng Liễn', b: 'Đào Lan', passive: 'Thanh Tuyền Dưỡng Linh' }, metal: { a: 'Tụ Phong', b: 'Tán Phong', passive: 'Kim Ý Ngưng Phong' }, earth: { a: 'Tụ Nhán', b: 'Đá Loạn', passive: 'Trọng Nhạc' } },
-  future: 'Nhánh mở rộng', description: 'Thông tin kỹ năng được hiển thị tại đây. Nội dung và thông số sẽ lấy từ dữ liệu kỹ năng khi nối logic.', fireDescription: 'Phóng Hỏa Cầu vào mục tiêu, có cơ hội gây Thiêu Đốt.',
+  future: 'Nhánh mở rộng', description: 'Thông tin kỹ năng được hiển thị tại đây. Nội dung và thông số sẽ lấy từ dữ liệu kỹ năng khi nối logic.', fireDescription: 'Phóng Hỏa Cầu vào mục tiêu, có cơ hội gây Hỏa Ấn.',
   level: 'Cấp kỹ năng', effect: 'Hiệu ứng', effectValue: 'Theo dữ liệu kỹ năng',
   costSample: 'Chi phí: 5 Cảm Ngộ', lockedHint: 'Điều kiện mở nhánh sẽ được cung cấp khi nối logic.', fixtureNote: 'Dữ liệu mẫu để duyệt UI, không phải điều kiện hay cây kỹ năng chính thức.', upgrade: 'Nâng Cấp', notice: 'Chỉ xem trước UI — chưa học, tăng cấp hay tiêu hao điểm.',
   navNotice: '{name} — chưa có bản duyệt trong màn này.',

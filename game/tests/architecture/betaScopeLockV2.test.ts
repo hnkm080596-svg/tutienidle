@@ -74,10 +74,11 @@ describe('beta scope v2 - way and element allow-lists', () => {
     }
   })
 
-  it('keeps all five Ngu Hanh elements playable, unknown elements fail closed', () => {
-    expect(BETA_PLAYABLE_ELEMENTS.size).toBe(5)
-    for (const el of ['fire', 'water', 'wood', 'metal', 'earth']) {
-      expect(isBetaElement(el)).toBe(true)
+  it('keeps only the fire element playable; the other four and unknown elements fail closed', () => {
+    expect(BETA_PLAYABLE_ELEMENTS.size).toBe(1)
+    expect(isBetaElement('fire')).toBe(true)
+    for (const el of ['water', 'wood', 'metal', 'earth']) {
+      expect(isBetaElement(el)).toBe(false)
     }
     for (const el of ['', 'wind', 'lightning', 'FIRE']) {
       expect(isBetaElement(el)).toBe(false)
