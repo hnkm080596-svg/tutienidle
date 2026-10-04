@@ -1,0 +1,622 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_water_surge",
+    "name": "Mob Water Surge",
+    "comp": {
+      "w": 256,
+      "h": 192,
+      "dur": 0.42,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 32
+    },
+    "exp": {
+      "cols": 5,
+      "rows": 3,
+      "frames": 13,
+      "cellW": 256,
+      "cellH": 192,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_water_crest_36f7cee59f4d",
+        "name": "mob water crest",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_water_drops",
+        "name": "Spray Droplets",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.42,
+        "em": {
+          "x": -10,
+          "y": 28,
+          "shape": "ring",
+          "sx": 24,
+          "sy": 16,
+          "dir": "omni",
+          "angle": -90,
+          "spread": 40,
+          "speed": 250,
+          "speedRnd": 0.5,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.1,
+              "n": 12
+            }
+          ],
+          "seed": 41,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.5,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "dot",
+            "p": {}
+          },
+          "size": 5.5,
+          "sizeRnd": 0.5,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.7,
+                "v": 0.8
+              },
+              {
+                "t": 1,
+                "v": 0.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.7,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  245,
+                  252,
+                  255
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  170,
+                  220,
+                  250
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  110,
+                  180,
+                  235
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0,
+          "spin": 0,
+          "spinRnd": 0,
+          "alignVel": true,
+          "stretch": 1.4,
+          "gravX": 0,
+          "gravY": 360,
+          "drag": 0.6,
+          "turbAmp": 8,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.3,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_water_crown",
+        "name": "Splash Crown",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "em": {
+          "x": 0,
+          "y": 58,
+          "shape": "ring",
+          "sx": 16,
+          "sy": 5,
+          "dir": "dir",
+          "angle": -90,
+          "spread": 58,
+          "speed": 200,
+          "speedRnd": 0.4,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.02,
+              "n": 15
+            }
+          ],
+          "seed": 43,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.5,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "blob",
+            "p": {}
+          },
+          "size": 14,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.8
+              },
+              {
+                "t": 0.4,
+                "v": 1.1
+              },
+              {
+                "t": 1,
+                "v": 0.4
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.95
+              },
+              {
+                "t": 0.75,
+                "v": 0.8
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  240,
+                  251,
+                  255
+                ]
+              },
+              {
+                "t": 0.45,
+                "c": [
+                  110,
+                  196,
+                  245
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  34,
+                  110,
+                  200
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 120,
+          "spinRnd": 1,
+          "alignVel": true,
+          "stretch": 1.2,
+          "gravX": 0,
+          "gravY": 330,
+          "drag": 0.8,
+          "turbAmp": 12,
+          "turbFreq": 1.4,
+          "squash": 0.5,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_water_column",
+        "name": "Rebound Column",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.42,
+        "em": {
+          "x": 4,
+          "y": 56,
+          "shape": "point",
+          "sx": 5,
+          "sy": 4,
+          "dir": "dir",
+          "angle": -90,
+          "spread": 14,
+          "speed": 310,
+          "speedRnd": 0.3,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.05,
+              "n": 9
+            }
+          ],
+          "seed": 47,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.45,
+          "lifeRnd": 0.3,
+          "sprite": {
+            "kind": "shape",
+            "id": "blob",
+            "p": {}
+          },
+          "size": 10,
+          "sizeRnd": 0.35,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 0.5,
+                "v": 1.15
+              },
+              {
+                "t": 1,
+                "v": 0.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.9
+              },
+              {
+                "t": 0.7,
+                "v": 0.75
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  255,
+                  255
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  160,
+                  216,
+                  250
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  70,
+                  150,
+                  225
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0.5,
+          "spin": 90,
+          "spinRnd": 0.6,
+          "alignVel": true,
+          "stretch": 1.6,
+          "gravX": 0,
+          "gravY": 300,
+          "drag": 0.8,
+          "turbAmp": 10,
+          "turbFreq": 1.4,
+          "squash": 0.3,
+          "glow": 0.2,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_water_crest",
+        "name": "Wave Crest",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.03,
+              "v": 0
+            },
+            {
+              "t": 0.1,
+              "v": 0.95
+            },
+            {
+              "t": 0.28,
+              "v": 0.9
+            },
+            {
+              "t": 0.4,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_water_crest_36f7cee59f4d",
+            "p": {}
+          },
+          "size": 210,
+          "x": {
+            "keys": [
+              {
+                "t": 0.03,
+                "v": -74
+              },
+              {
+                "t": 0.16,
+                "v": -6
+              },
+              {
+                "t": 0.4,
+                "v": 44
+              }
+            ]
+          },
+          "y": 30,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.03,
+                "v": 0.85
+              },
+              {
+                "t": 0.16,
+                "v": 1.05
+              },
+              {
+                "t": 0.4,
+                "v": 1.1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0.45,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_water_foam",
+        "name": "Foam Collar",
+        "type": "sprite",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.03,
+              "v": 0
+            },
+            {
+              "t": 0.09,
+              "v": 0.8
+            },
+            {
+              "t": 0.36,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "ring",
+            "p": {
+              "th": 0.22
+            }
+          },
+          "size": 180,
+          "x": 0,
+          "y": 58,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.03,
+                "v": 0.35
+              },
+              {
+                "t": 0.36,
+                "v": 2
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            230,
+            246,
+            255
+          ],
+          "squash": 1,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_water_trough",
+        "name": "Dark Trough",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.04,
+              "v": 0
+            },
+            {
+              "t": 0.12,
+              "v": 0.45
+            },
+            {
+              "t": 0.34,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 170,
+          "x": 0,
+          "y": 66,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.04,
+                "v": 0.6
+              },
+              {
+                "t": 0.34,
+                "v": 1.9
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            16,
+            62,
+            126
+          ],
+          "squash": 1,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_water_crest_36f7cee59f4d": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvZHkiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjNGFhOWVmIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzEzNWNiMCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHBhdGggZD0iTTM2IDE5MCBDNzAgMTEwIDE0MCA3MCAxOTAgOTIgQzIxNCAxMDQgMjIwIDEzMCAyMDYgMTQ4IEMxOTYgMTYyIDE3OCAxNjQgMTY4IDE1NCBDMTgyIDE1MiAxOTAgMTQwIDE4NCAxMjYgQzE3NiAxMDggMTQ4IDEwNiAxMjIgMTIyIEM5NiAxMzggNzQgMTY0IDYyIDE5MCBaIgogICAgZmlsbD0idXJsKCNib2R5KSIgc3Ryb2tlPSIjMGQzZjdjIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8cGF0aCBkPSJNNjAgMTUyIEM5NiAxMDQgMTUwIDg0IDE4OCAxMDAgQzIwMCAxMDYgMjA2IDExOCAyMDIgMTMwIEMxOTAgMTE2IDE2OCAxMTAgMTQ4IDExNiBDMTE4IDEyNiA5MiAxNTAgNzYgMTcyIFoiIGZpbGw9IiNmMmZiZmYiLz4KICA8cGF0aCBkPSJNOTYgMTU4IEMxMjAgMTQwIDE0OCAxMzAgMTcwIDEzMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYmZlNmZmIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44Ii8+CiAgPGVsbGlwc2UgY3g9IjIxMiIgY3k9Ijk2IiByeD0iNyIgcnk9IjUiIGZpbGw9IiNmMmZiZmYiLz4KICA8ZWxsaXBzZSBjeD0iMjI2IiBjeT0iMTE4IiByeD0iNSIgcnk9IjQiIGZpbGw9IiNkOWYxZmYiLz4KICA8ZWxsaXBzZSBjeD0iMjIyIiBjeT0iNzYiIHJ4PSI0IiByeT0iMyIgZmlsbD0iI2YyZmJmZiIvPgo8L3N2Zz4="
+  }
+}

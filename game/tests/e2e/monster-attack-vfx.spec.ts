@@ -87,12 +87,12 @@ test.describe('Monster attack VFX sweep', () => {
       lastFrame: number
     }> = [
       { presetId: 'slash', sheetKey: 'vfx-sheet-slash-21', firstFrame: 0, lastFrame: 15 },
-      { presetId: 'claw', sheetKey: 'vfx-sheet-sffxep-27', firstFrame: 4, lastFrame: 20 },
-      { presetId: 'bite', sheetKey: 'vfx-sheet-sffxep-31', firstFrame: 0, lastFrame: 15 },
+      { presetId: 'claw', sheetKey: 'vfx-sheet-mob-claw', firstFrame: 0, lastFrame: 10 },
+      { presetId: 'bite', sheetKey: 'vfx-sheet-mob-bite', firstFrame: 0, lastFrame: 9 },
       { presetId: 'fire_burst', sheetKey: 'vfx-sheet-sffxep-09', firstFrame: 2, lastFrame: 20 },
-      { presetId: 'water_surge', sheetKey: 'vfx-sheet-water-fx-10', firstFrame: 10, lastFrame: 44 },
-      { presetId: 'earth_shockwave', sheetKey: 'vfx-sheet-earth-07', firstFrame: 0, lastFrame: 15 },
-      { presetId: 'boss_ground_slam', sheetKey: 'vfx-sheet-explosion-10', firstFrame: 4, lastFrame: 34 },
+      { presetId: 'water_surge', sheetKey: 'vfx-sheet-mob-water', firstFrame: 0, lastFrame: 12 },
+      { presetId: 'earth_shockwave', sheetKey: 'vfx-sheet-mob-earth', firstFrame: 0, lastFrame: 12 },
+      { presetId: 'boss_ground_slam', sheetKey: 'vfx-sheet-mob-slam', firstFrame: 0, lastFrame: 12 },
     ]
 
     const samplesFor = (sheetKey: string) =>
@@ -197,15 +197,15 @@ test.describe('Monster attack VFX sweep', () => {
       }
     })
 
-    const surgeBefore = (await samplesFor('vfx-sheet-water-fx-10')).length
-    await expect.poll(async () => (await samplesFor('vfx-sheet-water-fx-10')).length,
+    const surgeBefore = (await samplesFor('vfx-sheet-mob-water')).length
+    await expect.poll(async () => (await samplesFor('vfx-sheet-mob-water')).length,
       { timeout: 45_000 }).toBeGreaterThan(surgeBefore)
     await expect.poll(async () =>
       page.evaluate(() => {
         const w = window as any
         const scene = w.__tutienPhaserGame.scene.getScene('CombatScene')
         const list = scene.children.getAll ? scene.children.getAll() : []
-        const live = list.some((obj: any) => obj?.texture?.key === 'vfx-sheet-water-fx-10' && obj.visible)
+        const live = list.some((obj: any) => obj?.texture?.key === 'vfx-sheet-mob-water' && obj.visible)
         if (!live) return false
         scene.sys.game.loop.sleep()
         return true
