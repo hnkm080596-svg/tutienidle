@@ -5,6 +5,7 @@ import { getSkillInsightReward } from '../reward/SkillInsightBalance'
 import { getRealmRewardMultiplier } from '../reward/RealmRewardScale'
 import {
   getHealOnKillMaxHpPercent,
+  getInsightBaseMultiplier,
   getInsightGainMultiplier,
   getSpiritStoneGainMultiplier,
 } from '../talent/TalentEffects'
@@ -342,7 +343,7 @@ export class BattleLootSystem {
           const baseSkillInsight = getSkillInsightReward(rewards)
           const skillInsightGained =
             baseSkillInsight > 0 && this.player
-              ? Math.floor(baseSkillInsight * getInsightGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels))
+              ? Math.floor(baseSkillInsight * getInsightBaseMultiplier(this.player.selectedTalentIds, this.player.talentLevels) * getInsightGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels))
               : 0
 
           if (skillInsightGained > 0 && this.player) {

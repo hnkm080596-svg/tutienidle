@@ -22,6 +22,10 @@ export type TalentTag =
 export type TalentEffect =
   | { kind: 'cultivation_speed'; percent: number }
   | { kind: 'insight_gain'; percent: number }
+  // Van Dao downside: scales the base battle insight before the
+  // insight_gain multiplier applies; negative percent is the authored
+  // tradeoff ("phan can ban moi tran it hon truoc").
+  | { kind: 'insight_base'; percent: number }
   | { kind: 'insight_per_cultivation'; cultivationPerInsight: number }
   | { kind: 'spirit_stone_gain'; percent: number }
   | { kind: 'equipment_drop_chance'; percent: number }

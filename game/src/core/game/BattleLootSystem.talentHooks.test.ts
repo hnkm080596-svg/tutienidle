@@ -45,7 +45,7 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
     expect(loot.getSummary().skillInsight).toBe(21)
   })
 
-  it('Van Dao (M2) — Cảm Ngộ từ quái nhân x2 qua insight_gain', () => {
+  it('Van Dao (M2) — insight_gain x2 tren nen insight_base -25% = net x1.5', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, loot, player } = createLootTestSetup({
       realmId: 'qi_refining',
@@ -55,9 +55,9 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
 
     killEnemy()
 
-    // floor(21 * (1 + 1.0)) = 42.
-    expect(player.skillInsight).toBe(42)
-    expect(loot.getSummary().skillInsight).toBe(42)
+    // floor(21 * 0.75 * (1 + 1.0)) = 31.
+    expect(player.skillInsight).toBe(31)
+    expect(loot.getSummary().skillInsight).toBe(31)
   })
 
   it('máu không đổi khi quái chết', () => {

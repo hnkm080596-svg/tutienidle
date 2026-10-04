@@ -117,7 +117,7 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Hấp Linh',
     'Nội tại Hấp Linh của thiên phú — hút máu bùng phát khi thân thương.',
     'per_second',
-    [stat('leechPercent', 0.0125)],
+    [stat('leechPercent', 0.03)],
     { passiveCondition: { kind: 'hpBelow', percent: 0.5 } },
   ),
   // 6. Thach Giap - phong thu: block thanh cong +2% defense (max 10)
@@ -155,7 +155,7 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Cẩn Thận (phản)',
     'Nội tại Cẩn Thận của thiên phú — chủ quan khi an toàn.',
     'per_second',
-    [flatStat('finalDamageReductionPercent', -0.05)],
+    [flatStat('finalDamageReductionPercent', -0.02)],
     // CP-01 - downside leg chi ap TREN nguong; khong condition thi no
     // luon active va triet tieu mot nua leg 'hpBelow' phia tren.
     { passiveCondition: { kind: 'hpNotBelow', percent: 0.35 } },

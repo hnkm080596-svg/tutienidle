@@ -50,7 +50,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'trong_kich',
     name: 'Trọng Kích',
-    description: 'Kiếm nặng mạch chậm, trúng là trúng thật. Mỗi chí mạng +2% sát thương chí mạng (tối đa 3 tầng); đủ 3 tầng bùng +30% sát thương cuối trong 8 giây rồi tích lại. Ngược lại: chỉ số này không cộng thêm từ nguồn thiên phú nào khác.',
+    description: 'Kiếm nặng mạch chậm, trúng là trúng thật. Mỗi chí mạng +2% sát thương chí mạng (tối đa 3 tầng); đủ 3 tầng bùng +18% sát thương cuối trong 8 giây rồi tích lại. Ngược lại: chỉ số này không cộng thêm từ nguồn thiên phú nào khác.',
     rarity: 'linh',
     weight: 28,
     tags: ['combat'],
@@ -87,7 +87,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'can_than',
     name: 'Cẩn Thận',
-    description: 'Sát tử đường mới lạnh lòng. Khi sinh lực dưới 35%: mọi sát thương nhận vào giảm 10%. Khi an toàn trên ngưỡng: ngược lại dễ chủ quan, nhận thêm 5% sát thương — lưỡi kiếm hai cạnh.',
+    description: 'Sát tử đường mới lạnh lòng. Khi sinh lực dưới 35%: mọi sát thương nhận vào giảm 10%. Khi an toàn trên ngưỡng: ngược lại dễ chủ quan, nhận thêm 2% sát thương — lưỡi kiếm hai cạnh.',
     rarity: 'linh',
     weight: 28,
     tags: ['defense', 'risk_reward'],
@@ -172,6 +172,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     effects: [
       { kind: 'node_cost_free_chance', chance: 0.5 },
       { kind: 'insight_gain', percent: 1 },
+      { kind: 'insight_base', percent: -0.25 },
     ],
   },
   {
