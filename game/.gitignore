@@ -64,3 +64,6 @@ dist-electron
 # Anchor to the packaging output dir: the unanchored `release` pattern also
 # hid scripts/release/ (build-identity generator + tests).
 /release
+
+# Balance-audit lab output (tests/lab writeJson dumps, regenerable)
+.audit-out/
