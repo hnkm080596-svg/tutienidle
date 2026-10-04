@@ -10,6 +10,7 @@ import {
   buildTheTuKit,
 } from '../../data/skill/TheTuSkills'
 import { applyAnKitToBasic, applyAnKitToSpecial } from '../../data/skill/TurnAnKitSkills'
+import { enemyBasicAttackFor } from '../../data/skill/TurnBasicAttacks'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { isKiemPhoProviderHandle } from '../kiem-tu/KiemPhoProvider'
@@ -95,6 +96,7 @@ const DEF_PRODUCER_FUNCTIONS: Record<string, string> = {
   '../../data/skill/TheTuSkills.ts#buildTheTuAnKit': 'body:ung_the runtime leg + direct matrix',
   '../../data/skill/TurnAnKitSkills.ts#applyAnKitToBasic': 'spell:ngo_dao runtime leg + direct matrix',
   '../../data/skill/TurnAnKitSkills.ts#applyAnKitToSpecial': 'spell:ngo_dao runtime leg + direct matrix',
+  '../../data/skill/TurnBasicAttacks.ts#enemyBasicAttackFor': 'direct matrix (generic + authored preset arms)',
 }
 
 // Exported functions in def-adjacent data modules that do NOT produce
@@ -623,6 +625,12 @@ function collectCastableDefs(): Census {
     ),
   )
   exercisedProducerFns.add('../../data/skill/TurnAnKitSkills.ts#applyAnKitToSpecial')
+
+  // Monster attack VFX sweep (2026-10-04) - the enemy basic mint: exercise
+  // both arms (authored preset stamp vs untouched generic basic).
+  exercisedProducerFns.add('../../data/skill/TurnBasicAttacks.ts#enemyBasicAttackFor')
+  requireDef('enemyBasic:authored-preset', enemyBasicAttackFor({ attackPresetId: 'claw' }))
+  requireDef('enemyBasic:generic', enemyBasicAttackFor({}))
 
   // -- Leg 5: companion kits at max unlock -------------------------------
   const maxInstance: CompanionInstance = {

@@ -140,7 +140,7 @@ test.describe('Monster attack VFX sweep', () => {
         { timeout: 45_000 }).toBeGreaterThan(before)
 
       // Mid-window visual evidence for the run report: freeze the Phaser
-      // loop while a sheet sprite is live, then screenshot — a plain
+      // loop while a sheet sprite is live, then screenshot - a plain
       // page.screenshot races the ~0.5s clip and lands after the sprite
       // is destroyed (WebGL canvas toDataURL reads back black without
       // preserveDrawingBuffer, so an in-page canvas grab is not viable).
