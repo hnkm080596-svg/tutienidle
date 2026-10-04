@@ -26,9 +26,10 @@ import {
   isActivePath,
   listOfferableWays,
 } from '@/core/player/CultivationPathSystem'
-import { BETA_PLAYABLE_ELEMENTS, isBetaWay, isScopeHidden } from '@/core/betaScope'
+import { BETA_PLAYABLE_ELEMENTS, isBetaElement, isBetaWay, isScopeHidden } from '@/core/betaScope'
 import type { ElementType } from '@/core/element/ElementType'
-import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
+import { ELEMENT_LABELS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -127,7 +128,15 @@ const pendingPathName = computed(() => pendingWay.value?.name ?? '')
 const pendingWayHasElementAxis = computed(
   () => declaresElementAxis(pendingWay.value),
 )
-const elementChoices = [...BETA_PLAYABLE_ELEMENTS]
+
+// All five elements render; non-beta tiles stay visible but locked (dim
+// + lock glyph + tooltip) instead of leaving four empty grid cells.
+// Playable elements lead so the enabled pick keeps its position.
+const elementChoices: ElementType[] = [
+  ...BETA_PLAYABLE_ELEMENTS,
+  ...ELEMENT_ORDER.filter((element) => !BETA_PLAYABLE_ELEMENTS.has(element)),
+]
+const lockIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/lock.svg')
 const initiationError = ref('')
 
 function elementLabel(element: ElementType): string {
@@ -317,12 +326,15 @@ function removeOrbAt(index: number) {
             v-for="element in elementChoices"
             :key="element"
             class="quan-khi-panel__element-btn"
+            :class="{ 'is-locked': !isBetaElement(element) }"
             variant="danger"
             size="sm"
-            :disabled="cooldownSeconds > 0"
+            :disabled="cooldownSeconds > 0 || !isBetaElement(element)"
+            :title="isBetaElement(element) ? undefined : t('panels.quanKhi.sections.elementPick.lockedBeta')"
             @click="commitInitiation(element)"
           >
             {{ elementLabel(element) }}
+            <img v-if="!isBetaElement(element)" class="quan-khi-panel__element-lock" :src="lockIcon" alt="">
           </GameButton>
         </div>
         <p v-if="initiationError" class="quan-khi-panel__element-error">{{ initiationError }}</p>
@@ -616,10 +628,29 @@ function removeOrbAt(index: number) {
 }
 
 .quan-khi-panel__element-btn {
+  position: relative;
   padding: 10px 4px;
   background: linear-gradient(180deg, var(--crimson), var(--ink-800));
   border: 1px solid var(--chrome-500);
   color: var(--text-primary);
+}
+
+/* Locked elements (out of beta scope): dimmed, non-interactive, lock
+   glyph bottom-right - same locked-read as the preset orb palette. */
+.quan-khi-panel__element-btn.is-locked {
+  opacity: 0.45;
+  filter: saturate(0.35);
+  cursor: default;
+}
+
+.quan-khi-panel__element-lock {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 11px;
+  height: 11px;
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 .quan-khi-panel__element-error {

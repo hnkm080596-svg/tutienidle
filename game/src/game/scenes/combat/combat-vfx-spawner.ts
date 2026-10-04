@@ -341,7 +341,10 @@ export class CombatVfxSpawner {
     if (sprite.kind === 'sprite') {
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
-      gameSprite.setTint(color)
+      // FILL tint: uniform silhouette flash - the multiply tint left dark
+      // pixels dark, so the hit read as patchy red blocks on the art.
+      // clearTint() restores MULTIPLY.
+      gameSprite.setTint(color).setTintMode(Phaser.TintModes.FILL)
 
       this.scene.time.delayedCall(duration, () => gameSprite.clearTint())
 

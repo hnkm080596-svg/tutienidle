@@ -83,7 +83,9 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
 .equipment-title { position:absolute; left:235px; top:166px; margin:0; font-size:32px; font-weight:500; }
 .equipment-subtitle { position:absolute; left:380px; top:183px; margin:0; font-size:13px; color:#8b7246; }
 .equipment-upgrade { position:absolute; left:572px; top:176px; width:120px; }
-.equipment-upgrade :deep(.building-heading__cost) { color:#8b7246; font-size:10px; line-height:11px; }
+/* Single-line cost: the row is bounded so it keeps its own lane and
+   never spills onto the socket grid below (y=240). */
+.equipment-upgrade :deep(.building-heading__cost) { color:#8b7246; font-size:10px; line-height:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .character-stage { position:absolute; left:338px; top:229px; width:264px; height:374px; pointer-events:none; }
 .character-image { width:100%; height:100%; object-fit:contain; }
 .equipment-sockets { position:absolute; left:244px; top:240px; width:449px; height:350px; display:grid; grid-template-columns:74px 74px; grid-template-rows:repeat(3,1fr); justify-content:center; column-gap:264px; }
