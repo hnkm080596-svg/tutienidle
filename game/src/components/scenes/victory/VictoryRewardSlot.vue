@@ -3,6 +3,7 @@
 // item icon, an amount badge in the corner and the canonical item name
 // as caption below - one per BattleRewardSummary gain.
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import type { VictorySlotView } from './victorySceneModel'
 
@@ -10,6 +11,7 @@ const props = defineProps<{ slot: VictorySlotView }>()
 
 const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
   currency: '◆',
+  growth: '✦',
   material: '◈',
   pill: '●',
   equipment: '▣',
@@ -25,8 +27,9 @@ const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
   >
     <span class="victory-slot__tile">
       <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+      <HuyenKimSymbol v-if="props.slot.symbol" class="victory-slot__symbol" :name="props.slot.symbol" />
       <img
-        v-if="props.slot.icon"
+        v-else-if="props.slot.icon"
         class="victory-slot__icon"
         :src="props.slot.icon"
         :alt="props.slot.name"
@@ -76,6 +79,14 @@ const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
 .victory-slot--currency .victory-slot__glyph { color: var(--hk-jade-soft, #67c4ab); }
 .victory-slot--pill .victory-slot__glyph { color: var(--hk-cinnabar, #b54432); }
 
+.victory-slot__symbol {
+  position: relative;
+  z-index: 1;
+  width: 60%;
+  height: 60%;
+  color: var(--hk-gold-radiant, #f4d98b);
+}
+
 .victory-slot__amount {
   position: absolute;
   z-index: 2;
@@ -100,6 +111,8 @@ const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 10px;
-  color: var(--hk-text-secondary, #b8ae97);
+  /* Tile captions sit on cream paper - dark ink, not the dark-theme
+     secondary ramp. */
+  color: var(--paper-text-soft, #5e5a50);
 }
 </style>

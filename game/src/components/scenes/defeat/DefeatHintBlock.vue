@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Scene 15/16 hint region (spec: 526/260/620/80, shell-panel).
-// Audit EXACT: isCultivationGap picks cultivate vs gear hint. Ref adds
-// a "Nguyen Nhan That Bai" header and an exclamation seal medallion -
-// the seal is temp art.
+// Scene 15/16 reason column (huyen-kim reskin): sits on the cream paper
+// inside the left split of the defeat panel - cinnabar '!' seal +
+// "Nguyen Nhan That Bai" header + italic hint, hairline divider on the
+// right edge. The seal stays temp art (no ready chrome slot for it).
 import { useI18n } from 'vue-i18n'
 
 defineProps<{
@@ -23,43 +23,62 @@ const { t } = useI18n()
 
 <style scoped>
 .combat-defeat-panel__hint-block {
-  margin: 0 0 14px;
-  padding: 10px 16px 12px;
-  border: 1px solid color-mix(in srgb, var(--cinnabar) 40%, var(--paper-line));
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--cinnabar) 6%, var(--paper-50));
+  position: relative;
+  margin: 0;
+  padding: 6px 18px 6px 4px;
+  border-right: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
+  text-align: left;
+}
+/* No rewards -> the reason block spans the whole paper width. */
+.combat-defeat-panel__hint-block:last-child {
+  grid-column: 1 / -1;
+  border-right: 0;
+  max-width: 560px;
+  margin: 0 auto;
+  text-align: center;
 }
 .combat-defeat-panel__hint-header {
-  margin: 0 0 6px;
+  position: relative;
+  margin: 0 0 8px;
+  padding-left: 46px;
+  min-height: 36px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
   font-family: var(--font-display);
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--cinnabar);
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+}
+.combat-defeat-panel__hint-block:last-child .combat-defeat-panel__hint-header {
+  justify-content: center;
 }
 /* Ref: cinnabar '!' seal medallion (temp art). */
 .combat-defeat-panel__hint-seal {
-  width: 26px;
-  height: 26px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   font-style: normal;
   font-weight: 800;
-  font-size: 14px;
-  color: #f3e3d8;
+  font-size: 20px;
+  font-family: var(--font-display, Georgia, serif);
+  color: var(--cinnabar);
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 30%, var(--cinnabar), #5c1f16 75%);
-  border: 1px solid color-mix(in srgb, var(--hk-gold-muted, #b99a55) 55%, transparent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--cinnabar) 50%, transparent);
+  border: 2px solid var(--cinnabar);
+  background: color-mix(in srgb, var(--cinnabar) 8%, var(--paper-50, #f5f0e4));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--cinnabar) 35%, transparent);
 }
 .combat-defeat-panel__hint {
   margin: 0;
-  color: var(--text-muted);
-  font-size: var(--text-small);
+  color: var(--paper-text-soft, #5e5a50);
+  font-size: var(--text-sm);
   font-style: italic;
+  line-height: 1.7;
 }
 </style>

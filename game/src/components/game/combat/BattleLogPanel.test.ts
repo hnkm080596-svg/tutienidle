@@ -67,7 +67,7 @@ describe('BattleLogPanel display names (T4-36)', () => {
 
     expect(line).toContain('Dã Lang')
     expect(line).toContain('Ta')
-    expect(line).toContain('Hỏa Cầu Thuật')
+    expect(line).toContain('Ly Hỏa Thuật')
     expect(line).not.toContain('wild_wolf_1')
     expect(line).not.toContain('hoa_cau_thuat')
     expect(line).toMatch(/Lượt 3/)

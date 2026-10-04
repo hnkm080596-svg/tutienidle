@@ -3,14 +3,17 @@
 // onto the reference regions: reward slot row (treasure gains) and the
 // Tang Truong growth cards (mastery/insight gains).
 import type { BattleRewardItemKind } from '@/core/reward/BattleRewardSummary'
+import type { StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
 
-export type VictorySlotKind = 'currency' | BattleRewardItemKind
+export type VictorySlotKind = 'currency' | 'growth' | BattleRewardItemKind
 
 export interface VictorySlotView {
   id: string
   kind: VictorySlotKind
-  /** Resolved PNG path when the registry entry carries an icon; null = glyph fallback. */
+  /** Resolved PNG path when the entry carries an icon; null = glyph fallback. */
   icon: string | null
+  /** Tintable huyen-kim symbol (growth tiles); takes precedence over icon/glyph. */
+  symbol?: StableSymbolId
   /** Caption under the tile (canonical material/pill/equipment name or i18n label). */
   name: string
   amount: number
@@ -25,6 +28,8 @@ export interface VictoryGrowthCardView {
   amount: number
   /** Visual accent for the card glyph: jade (insight) / gold (mastery) / cinnabar (artifact). */
   accent: 'jade' | 'gold' | 'cinnabar'
+  /** Stable huyen-kim symbol for the kind (technique/skill/equipment seal). */
+  symbol: StableSymbolId
 }
 
 export interface VictorySceneView {

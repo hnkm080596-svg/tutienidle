@@ -80,8 +80,10 @@ describe('InkWashBackdrop', () => {
     // screens (the scroll exchanges inside one persistent backdrop).
     expect(creationSource).toContain('CreationSceneLayout')
     expect(onboardingStageSource).not.toContain('CreationVista')
-    expect(victorySource).toContain('<InkWashBackdrop :left-mountain="false" bottom-mist seal="large"')
-    expect(defeatSource).toContain('<InkWashBackdrop left-mountain bottom-mist')
+    // Huyen-kim reskin: victory/defeat dropped the ink-wash backdrop
+    // entirely - the mock is a flat scrim + floating title art.
+    expect(victorySource).not.toContain('InkWashBackdrop')
+    expect(defeatSource).not.toContain('InkWashBackdrop')
   })
 
   it('keeps onboarding controls legible on the ivory scroll', () => {

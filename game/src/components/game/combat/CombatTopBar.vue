@@ -17,7 +17,7 @@ import GameButton from '@/components/common/GameButton.vue'
 //
 // ui-combat reskin (2026-10-04): mock ui-combat.html centers an ornate
 // stage plaque (zone small + stage big) and gathers the utility cluster
-// right: enemy counter, the Tự Động/Thủ Công mode toggle (moved from the
+// right: enemy counter, the Tu Dong/Thu Cong mode toggle (moved from the
 // skill bar - selector class kept for e2e/tooling compatibility), a
 // circular pause toggle (clock freeze reason 'user-pause', no overlay),
 // and the exit button.

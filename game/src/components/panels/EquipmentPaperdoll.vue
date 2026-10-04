@@ -215,7 +215,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
         <div class="paperdoll__slot-wrap">
           <SlotView
             class="paperdoll__slot"
-            variant="equipment"
+            variant="bag"
             :item="equippedBySlot[slot] ?? null"
             :label="equippedBySlot[slot] ? itemName(equippedBySlot[slot]!) : t(`panels.bag.paperdoll.slots.${slot}`)"
             :accessible-label="equippedBySlot[slot] ? itemAccessibleLabel(equippedBySlot[slot]!) : undefined"
@@ -303,10 +303,10 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   text-align: center;
 }
 
-/* Paperdoll slots use variant="equipment" - the 6 worn slots get the
-   "empty" glass tile + "click" select frame (SlotVariant registry).
-   Quality aura (rarityRank >= 3) still rides on top. Empty slots stay
-   bare: no silhouette art. */
+/* Paperdoll slots use variant="bag" (owner ruling 2026-10-04): the 6
+   worn slots join the dense Trang Bi cells - drawn frame-s-slot chrome
+   over the dark tile + the shared pale-gold hover frame. Quality aura
+   (rarityRank >= 3) still rides on top. */
 .paperdoll__slot {
   width: 100%;
 }
