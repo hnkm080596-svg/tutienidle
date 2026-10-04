@@ -12,7 +12,7 @@
 // there is the Phaser DEPTH table and the tint grade: display-list ordering and
 // a canvas tint are dynamic-layer facts, and only a scene calls them. What
 // moved is everything the STATIC layer was already reaching across the boundary
-// to read - `DongFuScene.vue` needs the current variant to pick the matching
+// to read - `DongFuStage.vue` needs the current variant to pick the matching
 // home stack, and `AssetBundleCatalog` needs the load list.
 //
 // Variant lifecycle (2026-08-26):

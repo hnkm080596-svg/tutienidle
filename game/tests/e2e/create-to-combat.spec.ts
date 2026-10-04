@@ -21,7 +21,7 @@ test.describe('Create character to combat', () => {
 
     // Mo man chon ai qua command wheel slot Truyen Tong Tran (data-wheel-slot attr).
     // Phaser canvas click risk: AVOID clicking the canvas character trigger; instead
-    // use the keyboard shortcut Tab (DongFuCommandWheel.vue listens for Tab keydown)
+    // use the keyboard shortcut Tab (DongFuStage.vue listens for Tab keydown)
     // to open the command wheel deterministically.
     await page.keyboard.press('Tab')
 

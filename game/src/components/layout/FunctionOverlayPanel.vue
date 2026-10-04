@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
-import GameButton from '@/components/common/GameButton.vue'
+import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
 import ProductionPanel from '@/components/panels/ProductionPanel.vue'
 import SettingsSurface from '@/components/scenes/settings/SettingsSurface.vue'
@@ -139,23 +139,11 @@ function close() {
           <p class="building-heading__name">{{ header.template.value.name }}</p>
           <small class="building-heading__level">{{ t('layout.functionOverlay.levelRange', { level: header.instance.value?.level ?? 0, max: header.template.value.maxLevel }) }}</small>
         </div>
-        <div v-if="header.instance.value" class="building-heading__upgrade-area">
-          <GameButton
-            v-if="header.hasNextLevel.value"
-            class="building-heading__upgrade"
-            size="sm"
-            :disabled="!header.meetsRealmRequirement.value || !header.canAffordUpgrade.value"
-            :title="!header.meetsRealmRequirement.value ? t('layout.functionOverlay.requiredRealm', { realm: header.requiredRealmName.value }) : header.upgradeCostLabel.value || t('layout.functionOverlay.noUpgradeCost')"
-            @click="header.upgrade"
-          >
-            {{ t('layout.functionOverlay.upgrade') }}
-          </GameButton>
-
-          <small v-if="header.hasNextLevel.value" class="building-heading__cost">
-            <template v-if="!header.meetsRealmRequirement.value">{{ t('layout.functionOverlay.requiredRealm', { realm: header.requiredRealmName.value }) }}</template>
-            <template v-else-if="header.upgradeCostLabel.value">{{ header.upgradeCostLabel.value }}</template>
-          </small>
-        </div>
+        <BuildingUpgradeButton
+          v-if="buildingId"
+          :building-id="buildingId"
+          class="building-heading__upgrade-area"
+        />
       </div>
     </template>
 
@@ -193,24 +181,8 @@ function close() {
       </div>
     </template>
 
-    <template v-if="header.template.value && header.instance.value" #header-actions>
-      <div class="building-heading__upgrade-area">
-        <GameButton
-          v-if="header.hasNextLevel.value"
-          class="building-heading__upgrade"
-          size="sm"
-          :disabled="!header.meetsRealmRequirement.value || !header.canAffordUpgrade.value"
-          :title="!header.meetsRealmRequirement.value ? t('layout.functionOverlay.requiredRealm', { realm: header.requiredRealmName.value }) : header.upgradeCostLabel.value || t('layout.functionOverlay.noUpgradeCost')"
-          @click="header.upgrade"
-        >
-          {{ t('layout.functionOverlay.upgrade') }}
-        </GameButton>
-
-        <small v-if="header.hasNextLevel.value" class="building-heading__cost">
-          <template v-if="!header.meetsRealmRequirement.value">{{ t('layout.functionOverlay.requiredRealm', { realm: header.requiredRealmName.value }) }}</template>
-          <template v-else-if="header.upgradeCostLabel.value">{{ header.upgradeCostLabel.value }}</template>
-        </small>
-      </div>
+    <template v-if="header.template.value && buildingId" #header-actions>
+      <BuildingUpgradeButton :building-id="buildingId" class="building-heading__upgrade-area" />
     </template>
 
     <div v-if="legacyMode" class="function-overlay">
@@ -261,25 +233,11 @@ function close() {
 .building-heading__name { margin: 0; color: var(--surface-text); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
 .building-heading__level { color: var(--jade); font-size: var(--text-sm); }
 
-.building-heading__upgrade-area { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
-
-.building-heading__upgrade:disabled {
-  background: var(--ink-800);
-  color: var(--surface-text-muted);
-}
-
-.building-heading__cost {
-  text-align: right;
-  color: var(--surface-text-muted);
-  font-size: var(--text-xs);
-}
-
 /* Unnamed container query: resolves against the imperial-scroll
    envelope in scene mounts and the overlay-panel card in legacy
    mounts - the named 'overlay-panel' container never exists inside
    the scene shell, so the name would silently disable this block. */
 @container (max-width: 640px) {
   .building-heading__upgrade-area { align-items: flex-start; }
-  .building-heading__cost { text-align: left; }
 }
 </style>

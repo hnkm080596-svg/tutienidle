@@ -1,4 +1,4 @@
-import { useGameManager } from './useGameState'
+import { useGameManager, useStateVersion } from './useGameState'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
 import type { Building } from '@/core/building/Building'
@@ -39,7 +39,7 @@ export type BuildingBadgeStatus =
 export function useBuildingNavigation() {
   const gameManager = useGameManager()
 
-  const ui = useUiStore()
+  const { bumpState } = useStateVersion()
 
   function getBuildingPresentation(buildingId: string): BuildingPresentation {
     const template = gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === buildingId)
@@ -74,6 +74,9 @@ export function useBuildingNavigation() {
    *   dan pill_room (AlchemySystem qua getAlchemyJobs()).
    * - upgradeable: built + chua max + du nguyen lieu nang KE TIEP
    *   (upgradeCost[level], cung luat cost index voi BuildingSystem.upgrade()).
+   *   Doc qua quoteBuildingUpgrade - cung authority voi nut Nang cap:
+   *   hasNextLevel + meetsRealmRequirement + canAfford, nen badge chi
+   *   sang khi nut thuc su an duoc (realm-gated thi an han).
    */
   function getBuildingStatus(buildingId: string): BuildingBadgeStatus {
     const template = gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === buildingId)
@@ -94,15 +97,41 @@ export function useBuildingNavigation() {
       return 'active'
     }
 
-    if (instance.level < template.maxLevel) {
-      const cost = template.upgradeCost[instance.level] ?? []
+    const quote = gameManager.buildingOps.quoteBuildingUpgrade(instance.instanceId)
 
-      if (cost.every((entry) => gameManager.materialBag.has(entry.materialId, entry.amount))) {
-        return 'upgradeable'
-      }
+    if (quote && quote.hasNextLevel && quote.meetsRealmRequirement && quote.canAfford) {
+      return 'upgradeable'
     }
 
     return 'default'
+  }
+
+  /**
+   * Write path DUY NHAT cho nang cap cong trinh tu moi entry point
+   * (chip tren plaque ngoai dong phu + nut trong panel): predicate gioi
+   * han la quoteBuildingUpgrade - cung 3 co upgrade() ap, khong re-derive
+   * cost/dieu kien o day. Tra ve false khi khong con upgradeable.
+   */
+  function upgradeBuilding(buildingId: string): boolean {
+    const instance = gameManager.buildingManager.getByBuildingId(buildingId)
+
+    if (!instance) {
+      return false
+    }
+
+    const quote = gameManager.buildingOps.quoteBuildingUpgrade(instance.instanceId)
+
+    if (!quote || !quote.hasNextLevel || !quote.meetsRealmRequirement || !quote.canAfford) {
+      return false
+    }
+
+    if (!gameManager.buildingOps.upgradeBuilding(instance.instanceId)) {
+      return false
+    }
+
+    bumpState()
+
+    return true
   }
 
   function openBuilding(buildingId: string): void {
@@ -121,12 +150,14 @@ export function useBuildingNavigation() {
 
     // Da xay + functionType -> mo thang panel chuc nang.
     if (presentation.template.functionType) {
-      ui.openLeftPanel(presentation.template.functionType as Exclude<LeftPanelMode, null>)
+      useUiStore().openLeftPanel(presentation.template.functionType as Exclude<LeftPanelMode, null>)
     }
   }
 
   return {
     openBuilding,
+
+    upgradeBuilding,
 
     getBuildingPresentation,
 

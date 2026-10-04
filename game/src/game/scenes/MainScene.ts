@@ -5,7 +5,7 @@ import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 const GROUND_COLOR = 0x1c1712
 const SKY_COLOR = 0x11141c
 
-// (2026-08-26) Art base Dong Phu chuyen han ve DOM: DongFuScene.vue mount
+// (2026-08-26) Art base Dong Phu chuyen han ve DOM: DongFuStage.vue mount
 // thanh-van-dong-fu-base.png lam lop nen cover-fit. Overlay DOM opaque
 // do de len canvas nen image trong scene nay KHONG BAO GIO nhin thay -
 // pipeline Phaser bi go de khong duy tri hai nguon su that song song;

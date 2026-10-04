@@ -9,7 +9,7 @@ export const DESIGN_HEIGHT = 1440
 
 export const BOTTOM_BAR_HEIGHT = 72
 
-// UI redesign - DongFuTopBar.vue (Menu/Realm/Resource/Settings), thay
+// UI redesign - thanh top bar DOM (Menu/Realm/Resource/Settings), thay
 // nut Menu tron noi rieng o RightPanel.vue cu (da go, xem GameRoot.vue).
 export const TOP_BAR_HEIGHT = 64
 

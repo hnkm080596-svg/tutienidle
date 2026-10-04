@@ -23,7 +23,7 @@ import {
 // Tham Hiem rework (2026-08-14) - 'building' (Kien Truc, panel liet ke
 // phang moi Building) va 'asset_reference' (dev-only, khong thuoc nav
 // nguoi choi) bi GO KHOI union nay - Kien Truc bi thay hoan toan boi
-// icon Building dat trong Home Scene (xem scenes/dong-fu/hotspots/DongFuBuildingHotspots.vue).
+// icon Building dat trong Home Scene (xem scenes/dong-fu/DongFuStage.vue).
 // 'exploration' GIU NGUYEN key (label gio "San Xuat") - day la he Thu
 // Thap nguyen lieu tu dong cu, KHONG phai Tham Hiem moi.
 // 'stage_select' MOI - man hinh chon Dia Gioi -> Man -> che do truoc khi
@@ -34,9 +34,9 @@ import {
 // 'formation_altar'/'talisman_institute' (Phu/Tran khai tu). 'exploration'
 // giu key, doi label "San Xuat" - render ProductionPanel (Lam/Quang/
 // Dong Thien).
-// Command-wheel plan (2026-08-26) - NavMenuOverlay/DongFuTopBar/
+// Command-wheel plan (2026-08-26) - NavMenuOverlay/TopBar/
 // BottomBar da xoa: moi entry chuc nang di qua command wheel
-// (DongFuCommandWheel.vue) hoac hotspot building.
+// (slot wheel trong scenes/dong-fu/DongFuStage.vue) hoac plaque building.
 // Declared in `presentation/contracts/panelIds.ts` and re-exported here, so
 // that `src/game/` can name a panel without importing a Pinia store (V2/sec3.2).
 // Every existing `from '@/stores/ui'` import keeps working.

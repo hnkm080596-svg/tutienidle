@@ -44,7 +44,7 @@ const resourcePillSlice = chromeSlice('resource-pill')
   position: absolute;
   top: var(--space-3);
   left: var(--space-3);
-  /* Above building hotspots (5) and the command wheel (8), below the
+  /* Above building plaques (5) and the command wheel (8), below the
      panel drawers (10) and overlay scrims - panels still cover it. */
   z-index: 9;
   display: flex;

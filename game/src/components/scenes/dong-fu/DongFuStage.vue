@@ -2,8 +2,7 @@
 // Dong Phu home stage (production host for the approved dong-fu-v2
 // fidelity surface): SceneDesignCanvas 1440x810 + two-plane vista +
 // shared DongFuHomeContent driven by REAL read-models. Replaces the old
-// hotspot scene + GlobalTopBar/ThienCoRail/wheel/quest-tracker chrome -
-// one surface, no stacked HUDs. All actions route to the existing
+// stacked HUD chrome (hotspot scene + top bar + rails) - one surface. All actions route to the existing
 // owners: commandWheelCatalog slots, useBuildingNavigation, ui store
 // panels, ThienCoEntry.run(), FeedbackDialog. Nothing here owns domain
 // state (A7).
@@ -67,7 +66,7 @@ const homeOverlayOpen = computed(
   () => Boolean(ui.leftPanelMode) || ui.characterOverlayOpen || Boolean(ui.standalonePanel),
 )
 const notice = ref('')
-let noticeTimer: ReturnType<typeof setTimeout> | undefined
+let noticeTimer: number | undefined
 
 function flashNotice(text: string) {
   notice.value = text
@@ -185,7 +184,10 @@ const buildings = computed<DongFuUiBuilding[]>(() => {
       symbol: anchor.symbol,
       x: anchor.x,
       y: anchor.y,
-      badge: status === 'ready' || status === 'upgradeable' ? 'dot' : null,
+      // 'upgrade' -> clickable gold arrow affordance on the plaque
+      // (owner 2026-10-03: "nang cap hien khi du dieu kien o cho button
+      // building"); 'dot' stays the passive ready/collectable marker.
+      badge: status === 'upgradeable' ? 'upgrade' : status === 'ready' ? 'dot' : null,
     }
   })
 })
@@ -372,6 +374,7 @@ function move(event: PointerEvent) {
         @action="onAction"
         @toggle-wheel="ui.toggleCommandWheel()"
         @toggle-board="boardOpen = !boardOpen"
+        @upgrade="navigation.upgradeBuilding"
       >
         <template #utilities-extra><AutoFarmIndicator /></template>
       </DongFuHomeContent>

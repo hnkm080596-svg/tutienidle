@@ -26,6 +26,10 @@ const emit = defineEmits<{
   action: [id: string]
   toggleWheel: []
   toggleBoard: []
+  // Owner scope 2026-10-03: gate 1 - the plaque badge dot becomes a real
+  // upgrade button when the model marks the building 'upgrade'. Emits
+  // bare ids like 'action'; the host routes them to navigation.upgrade.
+  upgrade: [id: string]
 }>()
 const { t } = useI18n()
 </script>
@@ -43,7 +47,18 @@ const { t } = useI18n()
       <DongFuArtFrame :border-width="22" />
       <img :src="symbolUrl(building.symbol)" alt="">
       <span>{{ t(building.labelKey) }}<small>{{ t('dongFu.buildingHint') }}</small></span>
-      <i v-if="building.badge" class="df-building__dot" :class="`df-building__dot--${building.badge}`" aria-hidden="true" />
+      <span
+        v-if="building.badge === 'upgrade'"
+        role="button"
+        tabindex="0"
+        class="df-building__upgrade"
+        :title="t('layout.functionOverlay.upgrade')"
+        :aria-label="t('layout.functionOverlay.upgrade')"
+        @click.stop="emit('upgrade', building.id)"
+        @keydown.enter.stop="emit('upgrade', building.id)"
+        @keydown.space.stop.prevent="emit('upgrade', building.id)"
+      >↑</span>
+      <i v-else-if="building.badge" class="df-building__dot" :class="`df-building__dot--${building.badge}`" aria-hidden="true" />
     </button>
   </div>
   <button
@@ -99,6 +114,13 @@ const { t } = useI18n()
 .df-building small { display: block; font-size: 10px; color: #c3bea5; line-height: 14px; }
 .df-building__dot { position: absolute; top: 6px; right: 8px; width: 9px; height: 9px; border-radius: 50%; background: #ffd766; box-shadow: 0 0 6px #ffc94d; }
 .df-building__dot--alert { background: #ff9d5c; box-shadow: 0 0 8px #ff7a3c; }
+/* Upgrade affordance replaces the passive dot when the model marks the
+   building 'upgrade': same gold family as the dot, enlarged into a
+   tappable circle with an ink arrow (owner: "hien khi du dieu kien"
+   - hidden entirely otherwise). */
+.df-building__upgrade { position: absolute; top: 3px; right: 4px; width: 18px; height: 18px; padding: 0; border: 1px solid #f4d896; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #ffe49a 0%, #e2b04a 62%, #b5832e 100%); color: #241a06; font-size: 12px; font-weight: 700; line-height: 16px; cursor: pointer; box-shadow: 0 0 7px #ffc94dcc, 0 1px 2px #0009; }
+.df-building__upgrade:hover { filter: brightness(1.12); box-shadow: 0 0 10px #ffd97a, 0 1px 2px #0009; }
+.df-building__upgrade:focus-visible { outline: 2px solid #ffe9b0; outline-offset: 1px; }
 .df-cultivator { position: absolute; z-index: 2; left: 550px; top: 366px; width: 300px; height: 300px; padding: 0; background: none; border: 0; cursor: pointer; filter: drop-shadow(0 8px 7px #07101bcc); }
 .df-cultivator img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .df-location { position: absolute; left: 477px; bottom: 23px; width: 450px; text-align: center; display: grid; gap: 3px; text-shadow: 0 2px 4px #000; }

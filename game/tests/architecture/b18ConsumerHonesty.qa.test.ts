@@ -209,7 +209,7 @@ describe('B18 hostile persisted state -> read-model honesty', () => {
     const html = await renderToString(app)
     // getCultivateTexture's override map has no beta-way gate; the
     // static variant paints the hidden-way PNG on live surfaces
-    // (DongFuScene cultivate pose, RealmPanel figure).
+    // (DongFuStage cultivate pose, RealmPanel figure).
     expect(html).not.toContain('phap-tu-an')
   })
 

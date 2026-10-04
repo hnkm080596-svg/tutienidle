@@ -53,7 +53,7 @@ save('base.png', (ctx) => {
 })
 
 // silhouette-mask.png - cung hinh dang base nhung dac 1 mau (dung cho
-// glow outline khi hover/selected qua filter sepia trong DongFuBuildingSprite).
+// glow outline khi hover/selected qua filter sepia tren plaque).
 save('silhouette-mask.png', (ctx) => {
   const { x, y, width, height } = BOUNDS
   const roofH = height * 0.32
@@ -87,7 +87,7 @@ save('ground-shadow.png', (ctx) => {
 })
 
 // locked-overlay.png - phu toi vung building khi CHUA xay (chi hien khi
-// status === 'locked', xem DongFuBuildingSprite.vue).
+// status === 'locked' tren plaque cong trinh).
 save('locked-overlay.png', (ctx) => {
   const { x, y, width, height } = BOUNDS
 

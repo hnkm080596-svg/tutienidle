@@ -160,9 +160,8 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       const list = offenders(
         /\b(isCompanionDomainUnlocked|isArtifactDomainUnlocked|isFormationUnlocked)\b/,
         [
-          'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue',
-          // S03 fidelity: DongFuStage builds the wheel disabledContext
-          // from the same domain predicates the legacy layer used - dead
+          // DongFuStage builds the wheel disabledContext
+          // from the domain predicates - dead
           // contexts stay upstream of betaWheelSlots admission.
           'components/scenes/dong-fu/DongFuStage.vue',
           // S03 fidelity: the chip predicates live in useCurrencyChips -
@@ -323,7 +322,9 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
           'isBetaStandalonePanel',
           'isBetaLeftPanelMode',
         ],
-        'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue': ['betaWheelSlots'],
+        // DongFuStage is the live wheel host - the betaWheelSlots pin
+        // moved here when the legacy wheel layer was deleted.
+        'components/scenes/dong-fu/DongFuStage.vue': ['betaWheelSlots'],
         'components/scenes/equipment/EquipmentSurface.vue': ['isBetaEquipmentTab'],
         // S03 fidelity: the companion-currency gate moved into
         // useCurrencyChips when the HUD strip was extracted.

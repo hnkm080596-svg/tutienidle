@@ -4,7 +4,7 @@
 // stageManager.stop() nhung CombatScene van dang hien thi ket qua:
 // Home/DongFu CHI duoc hien lai khi route coordinator da roi 'combat'
 // (bam "Tiep Tuc"/"Ve Dong Phu" -> request({target:'home'})). Regression
-// goc: victory -> useStageActive tra false -> DongFuScene che canvas du
+// goc: victory -> useStageActive tra false -> DongFuStage che canvas du
 // modal ket qua dang hien.
 //
 // R12 cleanup: visibility authority is the coordinator's activeRoute -
@@ -98,7 +98,7 @@ describe('useStageActive / useCombatSceneActive — result lifecycle', () => {
     // route khong doi, CombatScene van mount den khi player bam tiep.
     const view = harness.read()
 
-    // Truoc fix: stageActive=false tai day khien DongFuScene che canvas.
+    // Truoc fix: stageActive=false tai day khien DongFuStage che canvas.
     expect(view.stageActive).toBe(true)
     expect(view.combatSceneActive).toBe(true)
 

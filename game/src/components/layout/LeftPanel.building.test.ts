@@ -121,18 +121,16 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
     mounted.unmount()
   })
 
-  it('header mirrors the buildingOps quote — realm-gated next level disables upgrade and names the required realm', async () => {
-    // Mission G Task 36 - mortal (tier 1) cannot take a level-2 building;
-    // the disabled state and label must come from quoteBuildingUpgrade,
-    // not a panel-side formula.
+  it('header mirrors the buildingOps quote — realm-gated next level ẨN HẲN nút nâng cấp (không còn disabled)', async () => {
+    // Owner scope 2026-10-03: "nang cap hien khi du dieu kien" - mot
+    // building bi realm-gate (mortal tier 1 < lv2) khong render nut
+    // disabled nua ma AN HAN, giong chip tren plaque chi xuat hien khi
+    // status === 'upgradeable' (quoteBuildingUpgrade la authority chung).
     const mounted = mountSpringPanel('mortal')
     const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
-    const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
 
-    expect(upgradeButton.disabled).toBe(true)
-    expect(upgradeButton.title).toContain(
-      t('layout.functionOverlay.requiredRealm', { realm: 'Luyện Khí' }),
-    )
+    expect(actions.querySelector('.building-heading__upgrade')).toBeNull()
+    expect(actions.querySelector('.building-upgrade')).toBeNull()
 
     mounted.unmount()
   })
