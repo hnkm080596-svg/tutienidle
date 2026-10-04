@@ -38,6 +38,7 @@ import {
   lockBetaWaysForTests,
 } from '../../src/core/game/__fixtures__/betaWaysUnlock'
 import { lockBetaTalentsForTests } from '../../src/core/game/__fixtures__/betaTalentsUnlock'
+import { lockBetaElementsForTests } from '../../src/core/game/__fixtures__/betaElementsUnlock'
 import {
   BETA_MORTAL_STARTER_SKILL_ID,
   isBetaElement,
@@ -115,6 +116,7 @@ import {
 lockBetaFeaturesForTests()
 lockBetaWaysForTests()
 lockBetaTalentsForTests()
+lockBetaElementsForTests()
 
 // ---------------------------------------------------------------------------
 // Fixture builders
@@ -546,7 +548,7 @@ describe('beta scope - initiation atomicity', () => {
     expect(player).toEqual(committed)
   })
 
-  it('the beta element is admissible; locked and foreign element ids reject', () => {
+  it('only fire is admissible; the other elements and foreign ids reject', () => {
     expect(isBetaElement('fire')).toBe(true)
     for (const el of ['water', 'wood', 'metal', 'earth', 'lightning'] as const) {
       expect(isBetaElement(el)).toBe(false)
