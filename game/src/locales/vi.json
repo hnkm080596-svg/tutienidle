@@ -1621,6 +1621,8 @@
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
     "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
+    "bodyRefinementInvested": "Luyện Thể +{amount} — {tier} {progress}/{cap}",
+    "bodyRefinementTierComplete": "{tier} đã viên mãn!",
     "autosaveFailed": "Không lưu được tiến trình — bộ nhớ trình duyệt đầy. Hãy hóa luyện bớt trang bị.",
     "resetDeleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ."
   },
