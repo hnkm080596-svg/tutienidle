@@ -546,3 +546,10 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Detector escape:** regeneration had only been run in the existing populated pack, not in a clean output root.
   - **Evidence:** EXECUTED_TOOLING failure in the isolated replay, then a successful clean replay producing all nine preview sheets after the generator created each output parent.
   - **Pin/attack proposal:** asset-generator qualification must include a clean-root replay with no output directories, followed by exact output and preservation census. Capture as CANDIDATE; independent qualification is still required before promotion.
+
+### 2026-10-04 luyen-the-growth - loot repro fixture masked the real drop chain
+
+- **Incident:** the diagnostic repro for "luyen the danh quai khong thay tang truong" first fabricated the pending-enemy entity (`{alive:false, id:'boar-N', templateId:...}`) and saw zero essence in the bag - suggesting Suspect "drops never land" - while the real break was feedback-only.
+  - **Root class:** L-FIXTURE-IDENTITY-DIVERGENCE - the test entity carried the right fields but not a registered identity: `BattleLootSystem.processDefeatedEnemies` resolves the template through `enemySystem.get(entity.id)`, and only `enemySystem.spawn()` mints registered ids, so the fabricated id silently skipped the entire reward/drop block (fail-quiet, no error).
+  - **Detector escape:** the fixture looked plausible because `RewardPendingEnemy.entity` only types `CombatEntity` fields; nothing in the signature warns that the id must exist in the live `EnemySystem` registry, and the silent `if (enemy)` skip produced no signal distinguishing "no drop rolled" from "enemy not resolved".
+  - **Pin/attack proposal:** loot/reward repros must spawn real `enemySystem.spawn(template)` instances (or use the shared `createLootTestSetup`/`createDeadEnemy` seam that registers ids); a repro asserting "drop missing" must first prove `enemySystem.get(id)` resolves. Capture as CANDIDATE.

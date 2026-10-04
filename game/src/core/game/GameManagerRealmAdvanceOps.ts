@@ -22,6 +22,13 @@ import {
   investBodyChapterState,
 } from '../realm/body/BodyProgressionSystem'
 import {
+  getActiveTierIndex,
+  getTierCap,
+  isActiveTierUnlocked,
+} from '../realm/body/BodyRefinementChapter'
+import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
+import type { NotificationQueue } from './NotificationQueue'
+import {
   bodyChapterEssenceGrade,
   getBodyChapterDefinition,
   type BodyChapterCurrency,
@@ -158,6 +165,10 @@ export class GameManagerRealmAdvanceOps {
       // Material-landing funnel (the essence change credit is a live
       // landing).
       notifyMaterialGained: (materialId: string, amount: number) => void
+      // Growth toast funnel - invest converts bag essence into progress
+      // silently; the queue surfaces the conversion the drop toast
+      // cannot describe.
+      notifications: NotificationQueue
     },
   ) {
     this.techniqueManager = deps.techniqueManager
@@ -972,6 +983,12 @@ export class GameManagerRealmAdvanceOps {
     const auxOwned = chapter.auxCurrency
       ? this.bodyChapterBag(chapter.auxCurrency).getAmount(chapter.auxCurrency.id)
       : 0
+    // Pre-invest completion count - the emit below detects a tier
+    // completion by comparing it with the post-apply state.
+    const tiersBefore =
+      chapterId === 'body_refinement'
+        ? player.bodyProgression.body_refinement.completedTiers
+        : 0
 
     // M-QI-09 (QI-D4c) - downward-only essence substitution resolved at
     // this cost check, no exchange UI: a material-bag physique-essence
@@ -994,6 +1011,7 @@ export class GameManagerRealmAdvanceOps {
           // itself gated on realm + lineage and stays a no-op otherwise.
           maybeDiscoverNghichChuTian(player)
         }
+        this.emitBodyChapterInvested(player, chapterId, consumed, tiersBefore)
       }
       return consumed
     }
@@ -1014,6 +1032,7 @@ export class GameManagerRealmAdvanceOps {
     const probe = JSON.parse(JSON.stringify(player)) as PlayerData
     const consumed = investBodyChapterState(probe, chapterId, effectiveAvailable, auxOwned)
     if (consumed <= 0) {
+      this.maybeEmitBodyChapterLockHint(player, chapterId, available)
       return 0
     }
 
@@ -1059,7 +1078,100 @@ export class GameManagerRealmAdvanceOps {
       // HIDDEN-C - same post-invest discovery check as the legacy path.
       maybeDiscoverNghichChuTian(player)
     }
+    if (applied > 0) {
+      this.emitBodyChapterInvested(player, chapterId, applied, tiersBefore)
+    }
     return applied
+  }
+
+  // One-shot per tier per session - the invest seam runs every tick,
+  // so the lock hint must not re-fire while the same tier stays gated.
+  private bodyRefineLockHintTier = -1
+
+  /**
+   * Realm-gate honesty: while the active tier is realm-locked, dropped
+   * essence only accumulates in the bag - the "+N Tinh Hoa" toast then
+   * misleads players into expecting visible growth. Surfaces the real
+   * requirement (tier name + required mortal level + stored count) once
+   * per tier so the stall explains itself instead of reading as "no
+   * growth".
+   */
+  private maybeEmitBodyChapterLockHint(
+    player: PlayerData,
+    chapterId: BodyChapterId,
+    available: number,
+  ): void {
+    if (chapterId !== 'body_refinement' || available <= 0) {
+      return
+    }
+
+    const activeIndex = getActiveTierIndex(player)
+    if (activeIndex === undefined || isActiveTierUnlocked(player)) {
+      return
+    }
+
+    if (this.bodyRefineLockHintTier === activeIndex) {
+      return
+    }
+
+    this.bodyRefineLockHintTier = activeIndex
+
+    const tier = BODY_REFINEMENT_TIERS[activeIndex]
+    this.deps.notifications.push({
+      kind: 'warning',
+      message: `${tier?.name ?? 'Luyện Thể'} cần Phàm Nhân tầng ${tier?.requiredRealmLevel ?? 0} — ${available} tinh hoa đang chờ trong túi`,
+      messageKey: 'notifications.bodyRefinementTierLocked',
+      messageParams: {
+        tier: tier?.name ?? '',
+        level: String(tier?.requiredRealmLevel ?? 0),
+        stored: String(available),
+      },
+    })
+  }
+
+  /**
+   * Luyen The growth feedback: the drop toast reports the material
+   * landing ("+N Tinh Hoa Pham The") and the tick invest then drains
+   * the bag invisibly, so nothing on screen showed the tier advance.
+   * Emits the actual conversion - consumed essence into progress - and
+   * the tier completion milestone; scoped to body_refinement only.
+   */
+  private emitBodyChapterInvested(
+    player: PlayerData,
+    chapterId: BodyChapterId,
+    consumed: number,
+    tiersBefore: number,
+  ): void {
+    if (chapterId !== 'body_refinement') {
+      return
+    }
+
+    const state = player.bodyProgression.body_refinement
+
+    if (state.completedTiers > tiersBefore) {
+      const completed = BODY_REFINEMENT_TIERS[state.completedTiers - 1]
+      this.deps.notifications.push({
+        kind: 'upgrade',
+        message: `${completed?.name ?? 'Luyện Thể'} viên mãn!`,
+        messageKey: 'notifications.bodyRefinementTierComplete',
+        messageParams: { tier: completed?.name ?? '' },
+      })
+      return
+    }
+
+    const tier = BODY_REFINEMENT_TIERS[state.completedTiers]
+    const cap = getTierCap(state.completedTiers)
+    this.deps.notifications.push({
+      kind: 'upgrade',
+      message: `Luyện Thể +${consumed} — ${tier?.name ?? ''} ${state.currentTierProgress}/${cap}`,
+      messageKey: 'notifications.bodyRefinementInvested',
+      messageParams: {
+        amount: String(consumed),
+        tier: tier?.name ?? '',
+        progress: String(state.currentTierProgress),
+        cap: String(cap),
+      },
+    })
   }
 
   /**
