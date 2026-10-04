@@ -148,8 +148,8 @@ describe('TurnActionPresentationEvents', () => {
       emitTurnBattleEntitySnapshot(eventBus, battle)
 
       expect(received).toHaveLength(1)
-      expect(received[0]!.players).toEqual([{ id: 'player', name: 'Player', row: 4, column: 1, currentHp: 80, maxHp: 100, currentMp: 0, maxMp: 0, alive: true, isBoss: false }])
-      expect(received[0]!.enemies).toEqual([{ id: 'enemy', name: 'Boss Enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, currentMp: 0, maxMp: 0, alive: false, isBoss: true }])
+      expect(received[0]!.players).toEqual([{ id: 'player', name: 'Player', row: 4, column: 1, currentHp: 80, maxHp: 100, currentMp: 0, maxMp: 0, alive: true, isBoss: false, isElite: false }])
+      expect(received[0]!.enemies).toEqual([{ id: 'enemy', name: 'Boss Enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, currentMp: 0, maxMp: 0, alive: false, isBoss: true, isElite: false }])
     })
 
     it('defaults isBoss to false when CombatEntity.isBoss is undefined', () => {
@@ -167,6 +167,23 @@ describe('TurnActionPresentationEvents', () => {
       emitTurnBattleEntitySnapshot(eventBus, battle)
 
       expect(received[0]!.players[0]!.isBoss).toBe(false)
+    })
+
+    it('carries isElite from CombatEntity (tinh_anh tag) into the visual state', () => {
+      const eventBus = new EventBus()
+      const received: TurnBattleEntitySnapshotEvent[] = []
+
+      eventBus.on<TurnBattleEntitySnapshotEvent>('turn_battle_entity_snapshot', (event) => received.push(event))
+
+      const battle: TurnBattle = {
+        players: [],
+        enemies: [makeParticipant('elite', createCombatant({ id: 'elite', name: 'Elite Boar', isElite: true }), 100, 1)],
+        state: 'fighting',
+      }
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received[0]!.enemies[0]!.isElite).toBe(true)
     })
   })
 
@@ -326,6 +343,7 @@ describe('TurnActionPresentationEvents', () => {
         maxMp: 0,
         alive: true,
         isBoss: false,
+        isElite: false,
       })
       snapshot.enemies[0]!.currentHp = 9999
 

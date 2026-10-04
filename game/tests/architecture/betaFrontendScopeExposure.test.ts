@@ -200,10 +200,14 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // for branch visibility.
       const elementReads = offendersInCode(
         /\bgetActiveElement\b|\.spellPath\b/,
-        // CharacterSurface reads the committed element for the Ly Hoa Chi
-        // Dao identity plate only - same recorded purpose as the wheel.
-        ['components/scenes/character/CharacterFigureWheel.vue',
-          'components/scenes/character/CharacterSurface.vue'],
+        [
+          'components/scenes/character/CharacterFigureWheel.vue',
+          // CharacterSurface reads the committed element for the
+          // identity-plate dao label only (Ly Hoa Chi Dao name + verse),
+          // never for branch visibility - same class of exception as
+          // CharacterFigureWheel's hero-art identity read.
+          'components/scenes/character/CharacterSurface.vue',
+        ],
       )
 
       expect(elementReads).toEqual([])

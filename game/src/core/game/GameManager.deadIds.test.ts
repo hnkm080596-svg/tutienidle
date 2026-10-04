@@ -151,6 +151,9 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'hoa_diem_bao',
     'hoa_bao_nhiet',
     'hoa_diem_tham',
+    // Hoa The gate node (Minh ruling 2026-10-04): same minor-tier
+    // level caps as the rest of the basic lane.
+    'hoa_the',
     'thuy_xuyen_lan',
     'thuy_diem_chuan',
     'thuy_te_dam',

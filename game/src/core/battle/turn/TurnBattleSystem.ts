@@ -3278,9 +3278,14 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     skill: TurnSkillDefinition,
   ): void {
-    if (skill.theGainOnLandedCast) {
-      grantThe(actor.entity, skill.theGainOnLandedCast)
+    if (!skill.theGainOnLandedCast) {
+      return
     }
+    const chance = skill.theGainChance ?? 1
+    if (chance < 1 && !this.rng.rollChance(chance)) {
+      return
+    }
+    grantThe(actor.entity, skill.theGainOnLandedCast)
   }
 
   /**

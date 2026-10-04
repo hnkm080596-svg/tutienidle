@@ -34,6 +34,10 @@ function makeManager() {
   const player = createDefaultPlayer()
   player.cultivationPath = 'spell'
   player.cultivationWay = 'spell_pathway'
+  // Hoa The gate (Minh ruling 2026-10-04): these specs exercise the
+  // empowerment loop, so the gate node is owned at max - guaranteed
+  // mint matches the legacy unconditional income.
+  player.nodeLevels = { hoa_the: 4 }
   gameManager.setActivePlayer(player)
 
   return { gameManager, player }

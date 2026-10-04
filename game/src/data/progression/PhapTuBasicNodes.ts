@@ -131,6 +131,27 @@ function capstone(
 
 function buildFire(): ProgressionNode[] {
   return [
+    // Hoa The gate (Minh ruling 2026-10-04): the The loop does NOT come
+    // with the element - this node unlocks it. Level = the chance a
+    // landed Ly Hoa cast mints +1 The (lv1 = 25%, lv4 = 100% certain).
+    // The mechanic is read straight off player.nodeLevels at kit build
+    // (CultivationPathRegistry), like the evolution/cascade markers --
+    // statModifiers stay empty so nothing double-counts the chance.
+    {
+      id: 'hoa_the',
+      name: 'Hỏa Thế',
+      description:
+        'Mở khóa Hỏa Thế — mỗi cấp +25% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng (cấp 4 = chắc chắn). Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: 1,
+      maxLevel: 4,
+      upgradeCost: { base: 1, perLevel: 2 },
+      levelGates: MINOR_TIER_GATES_4,
+      prerequisites: [{ kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS.fire }],
+      elementTag: 'fire',
+      effect: {},
+    },
     powerNode(
       'hoa_diem_chuan',
       'Diễm Chuẩn',

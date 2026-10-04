@@ -24,7 +24,7 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
 import type { SpellPathState } from '@/core/phap-tu/PhapTuState'
 import type { CultivationPathId, CultivationWayId } from '@/core/player/CultivationPathKit'
-import { SPELL_PATH_MAX_THE } from '@/core/phap-tu/PhapTuPath'
+import { HOA_THE_NODE_ID, SPELL_PATH_MAX_THE } from '@/core/phap-tu/PhapTuPath'
 import {
   getActiveElement,
   hasStaticPathCapability,
@@ -119,6 +119,12 @@ export function makeTheBarReader(
       const element = getActiveElement(player)
 
       if (!element) {
+        return null
+      }
+
+      // Hoa The gate (Minh ruling 2026-10-04): the pool comes online
+      // with the hoa_the node purchase - no node, no bar at all.
+      if ((player.nodeLevels?.[HOA_THE_NODE_ID] ?? 0) <= 0) {
         return null
       }
     }

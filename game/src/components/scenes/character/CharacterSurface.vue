@@ -17,8 +17,8 @@ import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
+import { getActiveElement } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
-import { getActiveElement, isActivePath } from '@/core/player/CultivationPathSystem'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
 import { MAIN_STAT_KEYS, type MainStatKey, type StatType } from '@/core/stats/StatTypes'
 import type { ModifierSourceType } from '@/core/stats/StatCalculator'
@@ -82,23 +82,23 @@ const combatPower = computed(() => {
   )
 })
 
-// Ly Hoa Chi Dao branding: a fire-aligned Phap Tu walks the Li trigram
-// dao (Minh ruling 2026-10-04). Identity reads go through the path
-// authority seam - never a .spellPath slice read or a literal path
-// comparison in shell code.
-const isLyHoaDao = computed(() => isActivePath(player, 'spell') && getActiveElement(player) === 'fire')
+// Ly Hoa Chi Dao branding (Minh ruling 2026-10-04): a fire-committed
+// Phap Tu walks the Li-trigram dao, so the elemental dao name + verse
+// replace the generic path label on the identity plate. The committed
+// element comes through the canonical accessor - the shell never
+// reconstructs it from player state.
+const isLyHoa = computed(() => getActiveElement(player.$state) === 'fire')
 
 const pathName = computed(() => {
-  const pathId = player.cultivationPath as CultivationPathId | undefined
-
-  if (isLyHoaDao.value) {
+  if (isLyHoa.value) {
     return t('character.lyHoaDao')
   }
 
+  const pathId = player.cultivationPath as CultivationPathId | undefined
   return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('panels.skillPath.mortalName')
 })
 
-const pathVerse = computed(() => (isLyHoaDao.value ? t('character.lyHoaVerse') : undefined))
+const pathVerse = computed(() => (isLyHoa.value ? t('character.lyHoaVerse') : undefined))
 
 function detailRows(
   categories: readonly StatCategory[],

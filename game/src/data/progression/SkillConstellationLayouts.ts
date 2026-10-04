@@ -51,6 +51,7 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
   viewBox: '0 0 480 300',
   points: [
     { nodeId: 'hoa_linh_ngo', x: 216, y: 150, emphasis: 'root' },
+    { nodeId: 'hoa_the', x: 118, y: 176 },
     { nodeId: 'hoa_an_sau', x: 252, y: 40 },
     { nodeId: 'hoa_nhiet_keo', x: 180, y: 216 },
     { nodeId: 'fire_basic_hoa_tu_diem', x: 110, y: 278, emphasis: 'major', labelPlacement: 'top' },
@@ -76,6 +77,7 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     // The two top marks.
     { fromNodeId: 'hoa_linh_ngo', toNodeId: 'fire_ailment_mastery' },
     { fromNodeId: 'hoa_linh_ngo', toNodeId: 'linh_ngo_tam_muoi_chan_hoa' },
+    { fromNodeId: 'hoa_linh_ngo', toNodeId: 'hoa_the' },
   ],
 }
 

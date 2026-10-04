@@ -233,6 +233,25 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
       steps.push(`special:${specialId}`)
     }
 
+    // Hoa The leg - the The pool is node-gated (Minh ruling 2026-10-04).
+    // Buy through the real seam while the technique-rank level gates
+    // allow, then top the level up raw: the lab exists to hand the full
+    // kit back deterministically (25%/cast income would flake the Phap
+    // The exercises), and no op seam grants node levels past a gate.
+    // `hoa_the` stays a literal: core/dev has no declared seam into
+    // phap-tu (cultivationPathIsolation) and node ids are data.
+    const hoaTheNodeId = 'hoa_the'
+    const hoaTheTarget = 4
+    while ((playerState.nodeLevels[hoaTheNodeId] ?? 0) < hoaTheTarget) {
+      if (!gameManager.progressionOps.purchaseNode(hoaTheNodeId, playerState)) {
+        break
+      }
+    }
+    if ((playerState.nodeLevels[hoaTheNodeId] ?? 0) < hoaTheTarget) {
+      playerState.nodeLevels[hoaTheNodeId] = hoaTheTarget
+    }
+    steps.push(`hoa_the:${playerState.nodeLevels[hoaTheNodeId]}`)
+
     // Attribute leg - fill toward plan targets through the real seam so
     // caps and per-point rules apply exactly like earned points. Only
     // the deficit is granted: re-running setup leaves a provisioned save

@@ -52,6 +52,14 @@ export interface EntitySprite {
   // depth sort, va boost object cho tween pop (Chi Mang) KHONG dung vao
   // scale/geometry ma projection ghi moi frame.
   shadow?: Phaser.GameObjects.Ellipse
+
+  /**
+   * Tier aura (2026-10-04): a pulsing ground ellipse under tinh anh
+   * (violet) and boss (gold) enemies, created only for perspective
+   * viewports - same lifecycle as `shadow` (size in applyEntityDepthScale,
+   * position in positionSprite, visibility/destroy alongside it).
+   */
+  aura?: Phaser.GameObjects.Ellipse
   boost: { value: number }
 
   /**

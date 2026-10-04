@@ -96,6 +96,19 @@ export const SHADOW_ALPHA = 0.32
 export const SHADOW_WIDTH_RATIO = 1.12
 export const SHADOW_HEIGHT_RATIO = 0.34
 
+// Tier aura (2026-10-04, Minh ruling): a glowing ground ring under elite
+// (tinh anh) and boss enemies so a wave's threat tiers read at a glance
+// before the name tag is legible. Palette matches EnemySpawnVfx
+// (enemy/elite/boss = cyan/violet/gold) so the spawn flash and the
+// standing aura stay one color language.
+export const ELITE_AURA_COLOR = 0xc9a2ff
+export const BOSS_AURA_COLOR = 0xffd54f
+export const AURA_ALPHA = 0.32
+export const AURA_PULSE_ALPHA = 0.14
+export const AURA_PULSE_MS = 1600
+export const AURA_WIDTH_RATIO = 1.55
+export const AURA_HEIGHT_RATIO = 0.46
+
 export const CHARACTER_HEIGHT_RATIO = 0.7
 export const CHARACTER_WIDTH_RATIO = 0.45
 
