@@ -7,6 +7,7 @@ import {
   resolvePlayerVisualProfileId,
 } from '@/presentation/art/PlayerVisualProfiles'
 import { CHARACTER_RESKIN_MAP } from '@/game/support/CharacterArt'
+import { resolvePlayerEntityKey } from '@/presentation/art/CombatPresentationCatalogue'
 import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 
 // Player visual profile catalog (plan §4.1 + §9 unit tests):
@@ -75,14 +76,14 @@ describe('PlayerVisualProfiles — art binding policy', () => {
     expect(getCultivateTexture(kiemTu).key).not.toBe(getCultivateTexture(mortal).key)
   })
 
-  it('phap_tu có combat + cultivate art riêng (Ngũ Hành)', () => {
+  it('phap_tu dùng combat art chung mới, giữ cultivate art hiện có', () => {
     const phapTu = PLAYER_VISUAL_PROFILES.phap_tu
 
-    expect(phapTu.combatTextureKey).toBe('player-phap-tu-ngu-hanh-v1')
+    expect(phapTu.combatTextureKey).toBe('player-phap-tu-shared-v1')
     expect(phapTu.combatTextureUrl).toBe(
-      '/assets/characters/player/phap-tu/player-phap-tu-ngu-hanh-v1.png',
+      '/assets/characters/animated/phap_tu_shared/avatar-transparent.png',
     )
-    expect(phapTu.combatSourceSize).toEqual({ w: 732, h: 756 })
+    expect(phapTu.combatSourceSize).toEqual({ w: 244, h: 252 })
     expect(phapTu.combatTextureKey).not.toBe(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey)
     expect(getCultivateTexture(phapTu).key).toBe('player-phap-tu-cultivate-ngu-hanh-v1')
     expect(getCultivateTexture(phapTu).key).not.toBe(
@@ -127,13 +128,23 @@ describe('PlayerVisualProfiles - reskin art family', () => {
   // to (armed pick for the {armed,unarmed} mortal pair).
   it('profile combat statics match their reskin family', () => {
     expect(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey).toContain('pham-nhan')
-    expect(PLAYER_VISUAL_PROFILES.phap_tu.combatTextureKey).toContain('ngu-hanh')
+    expect(PLAYER_VISUAL_PROFILES.phap_tu.combatTextureKey).toContain('phap-tu-shared')
 
     // The binding side agrees: mortal's armed slug IS pham_nhan, phap_tu's
-    // sole slug is ngu_hanh - the static key echoes the same family name.
+    // sole slug is phap_tu_shared - the static key echoes the same family name.
     const mortalBinding = CHARACTER_RESKIN_MAP.mortal
     expect(typeof mortalBinding === 'object' && mortalBinding.armed).toBe('pham_nhan')
-    expect(CHARACTER_RESKIN_MAP.phap_tu).toBe('ngu_hanh')
+    expect(CHARACTER_RESKIN_MAP.phap_tu).toBe('phap_tu_shared')
+  })
+
+  it('mọi hệ Pháp Tu và hidden spell way dùng cùng một combat entity', () => {
+    for (const way of ['spell_pathway', 'hidden_spell_pathway'] as const) {
+      for (const element of ['fire', 'water', 'wood', 'metal', 'earth', 'wind', 'thunder'] as const) {
+        const player = { cultivationPath: 'spell', cultivationWay: way, element, realmId: 'qi_refining' }
+        const profileId = resolvePlayerVisualProfileId(player)
+        expect(resolvePlayerEntityKey(profileId, 'legacy-fallback')).toBe('phap_tu_shared')
+      }
+    }
   })
 })
 

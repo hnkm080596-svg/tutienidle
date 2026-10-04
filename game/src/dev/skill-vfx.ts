@@ -6,6 +6,7 @@ import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentation
 import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
 import { applyScreenShake } from '@/presentation/vfx/screenShakePolicy'
 import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
+import { HoaCauLabPlayback } from './HoaCauLabPlayback'
 
 // This HTML entry is not in the production build and never imports GameManager/save services.
 if (!import.meta.env.DEV) throw new Error('Skill VFX lab is development-only')
@@ -16,19 +17,37 @@ for (const id of ['title', 'intro', 'back', 'play', 'cancel', 'note'])
 for (const id of ['skill', 'outcome', 'speed']) element(id + '-label').textContent = t(id)
 const presetInput = element<HTMLSelectElement>('preset')
 const outcomeInput = element<HTMLSelectElement>('outcome')
-for (const id of ['ngu_kiem_flight', 'slash', 'earth_shockwave', 'holy_radiance'])
+const tamMuoiInput = element<HTMLInputElement>('tam-muoi-aura')
+element('tam-muoi-label').textContent = t('tamMuoiAura')
+for (const id of ['ngu_kiem_flight', 'slash', 'earth_shockwave', 'holy_radiance', 'hoa_cau_comet'])
   presetInput.add(new Option(t(id), id))
 for (const id of ['hit', 'miss', 'intercept', 'sourceDeath', 'multi', 'combo', 'empty'])
   outcomeInput.add(new Option(t(id), id))
-for (const id of ['release', 'cruise', 'acceleration', 'impact', 'recall']) {
-  const item = document.createElement('li')
-  item.textContent = t(id)
-  element('sequence').append(item)
+const fireballMode = () => presetInput.value === 'hoa_cau_comet'
+function paintSequence() {
+  const steps = fireballMode()
+    ? ['raise', 'portal', 'gather', 'projectile', 'explosion', 'finish']
+    : ['release', 'cruise', 'acceleration', 'impact', 'recall']
+  element('sequence').replaceChildren(...steps.map(id => {
+    const item = document.createElement('li')
+    item.textContent = t(id)
+    return item
+  }))
 }
 const query = new URLSearchParams(location.search)
+tamMuoiInput.checked = query.get('tam_muoi') === '1'
 if ([...presetInput.options].some(option => option.value === query.get('preset')))
   presetInput.value = query.get('preset')!
+paintSequence()
 const manual = query.get('manual') === '1'
+let fireballAutoplay = false
+const scrubInput = element<HTMLInputElement>('scrub')
+const scrubWrap = element<HTMLLabelElement>('scrub-wrap')
+element('scrub-label').textContent = i18n.global.t('skillVfxLab.scrub')
+const paintScrub = () => { scrubWrap.hidden = !manual || !fireballMode() }
+const paintAuraControl = () => { element('tam-muoi-wrap').hidden = !fireballMode() }
+paintScrub()
+paintAuraControl()
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
 const quality = query.get('quality') === 'low' || reduced ? 'low' : 'standard'
 const source: ActorAnchorFact = { entityId: 'player', row: 1, column: 1 }
@@ -39,6 +58,8 @@ let completes = 0
 let token: string | null = null
 let runner: SkillPresentationRunner
 let driver: PhaserSkillVfxDriver
+let fireball: HoaCauLabPlayback
+let casterFigure: Phaser.GameObjects.Graphics
 function snapshot() {
   return { phase: runner.snapshot.phase, impacts, completes, faults: runner.snapshot.faultCount, ...driver.stats }
 }
@@ -53,6 +74,14 @@ const PHASE_ITEMS: Record<string, readonly number[]> = {
 }
 function paintStats() {
   if (!runner) return
+  if (fireballMode()) {
+    const state = fireball.snapshot()
+    element('stats').textContent = `fireball: ${state.phase} · release ${(state.releaseMs / 1000).toFixed(2)} s · impact ${(state.impactMs / 1000).toFixed(2)} s · ${quality}`
+    const index = { raise: 0, portal: 1, charge: 2, projectile: 3, impact: 4, complete: 5, idle: -1 }[state.phase]
+    for (const [i, item] of [...element('sequence').children].entries())
+      item.classList.toggle('is-active', i === index)
+    return
+  }
   const state = snapshot()
   element('stats').textContent = `${state.phase} · impact ${impacts} · complete ${completes} · pool ${state.active}/${state.allocated} · ${quality}`
   const lit = PHASE_ITEMS[state.phase] ?? []
@@ -74,9 +103,18 @@ function fixtureOutcomes(fixture: string, id: CombatVfxPresetId, count: number):
   return Array.from({ length: count }, (_, i) => ({ kind: 'hit' as const, outcomeId: 'hit-' + i,
     target, hitOrdinal: i, landed: fixture !== 'miss', hpDamage: fixture === 'miss' ? 0 : 10, crit: false, killed: false }))
 }
-function play() {
+function play(autoplay = false) {
   if (!runner) return
+  fireballAutoplay = autoplay
   runner.cancel()
+  fireball.cancel()
+  casterFigure.setVisible(!fireballMode())
+  if (fireballMode()) {
+    scrubInput.value = '0'
+    fireball.play(outcomeInput.value !== 'miss')
+    paintStats()
+    return
+  }
   const id = presetInput.value as CombatVfxPresetId
   const ref = { sessionId: 1, requestId: 'lab-' + ++sequence, token: 'lab-' + sequence }
   token = ref.token
@@ -112,6 +150,7 @@ function play() {
   paintStats()
 }
 class SkillLabScene extends Phaser.Scene {
+  preload() { HoaCauLabPlayback.preload(this) }
   create() {
     const backdrop = this.add.graphics()
     backdrop.fillStyle(0x122733).fillRect(0, 0, 960, 440)
@@ -121,11 +160,16 @@ class SkillLabScene extends Phaser.Scene {
     backdrop.fillStyle(0x203c48).fillTriangle(0, 160, 240, 30, 460, 160)
     backdrop.fillStyle(0x192f3b).fillTriangle(400, 160, 710, 10, 960, 160)
     for (const [x, color] of [[210, 0x7daebd], [750, 0xa89b7d]] as const) {
-      backdrop.fillStyle(0x081721, 0.8).fillEllipse(x, 325, 110, 26)
-      backdrop.lineStyle(1, color, 0.4).strokeEllipse(x, 325, 132, 38)
-      backdrop.fillStyle(color, 0.28).fillTriangle(x, 218, x - 28, 318, x + 28, 318)
-      backdrop.lineStyle(2, color, 0.7).lineBetween(x, 238, x - 16, 300)
-      backdrop.fillStyle(color, 0.8).fillCircle(x, 213, 10)
+      const figure = this.add.graphics()
+      if (x === 210) casterFigure = figure
+      figure.fillStyle(0x081721, 0.8).fillEllipse(x, 325, 110, 26)
+      figure.lineStyle(1, color, 0.4).strokeEllipse(x, 325, 132, 38)
+      const enemy = x === 750
+      figure.fillStyle(color, 0.28).fillTriangle(x, enemy ? 128 : 218,
+        x - (enemy ? 48 : 28), 318, x + (enemy ? 48 : 28), 318)
+      figure.lineStyle(2, color, 0.7).lineBetween(x, enemy ? 145 : 238,
+        x - (enemy ? 35 : 16), 300)
+      figure.fillStyle(color, 0.8).fillCircle(x, enemy ? 110 : 213, enemy ? 18 : 10)
     }
     const point = (fact: Pick<ActorAnchorFact, 'column' | 'row'>) => ({
       x: fact.column < 4 ? 210 : 750, y: 260 + (fact.row - 1) * 42,
@@ -153,26 +197,57 @@ class SkillLabScene extends Phaser.Scene {
       cameraImpulse: (durationMs, intensity) => applyScreenShake(this.cameras.main, durationMs, intensity, false),
     }, quality, reduced)
     runner = new SkillPresentationRunner(driver, getSkillPresentationRecipe, error => console.error(error))
-    element('play').onclick = play
-    element('cancel').onclick = () => { runner.cancel(); token = null; paintStats() }
+    fireball = new HoaCauLabPlayback(this)
+    fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode())
+    tamMuoiInput.onchange = () => { fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode()); paintStats() }
+    scrubInput.oninput = () => {
+      if (!manual || !fireballMode()) return
+      fireballAutoplay = false
+      fireball.play(outcomeInput.value !== 'miss')
+      fireball.update(Number(scrubInput.value))
+      paintStats()
+    }
+    element('play').onclick = () => play(true)
+    element('cancel').onclick = () => {
+      runner.cancel(); fireball.cancel(); fireball.setTamMuoiActive(false)
+      tamMuoiInput.checked = false; fireballAutoplay = false; token = null; paintStats()
+    }
+    presetInput.onchange = () => {
+      runner.cancel(); fireball.cancel(); token = null
+      fireballAutoplay = false
+      casterFigure.setVisible(!fireballMode())
+      paintScrub()
+      paintAuraControl()
+      fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode())
+      paintSequence(); paintStats()
+    }
     const lab = {
-      snapshot, play,
-      advance: (ms: number) => { runner.update(ms); paintStats() },
-      cancel: () => { runner.cancel(); token = null; paintStats() },
+      snapshot: () => fireballMode() ? fireball.snapshot() : snapshot(), play,
+      advance: (ms: number) => { if (fireballMode()) fireball.update(ms); else runner.update(ms); paintStats() },
+      cancel: () => {
+        runner.cancel(); fireball.cancel(); fireball.setTamMuoiActive(false)
+        tamMuoiInput.checked = false; token = null; paintStats()
+      },
     }
     Object.assign(window, { __skillVfxLab: lab })
     this.events.once('shutdown', () => {
       runner.cancel()
+      fireball.destroy()
       driver.destroy()
       element('play').onclick = null
       element('cancel').onclick = null
+      presetInput.onchange = null
+      tamMuoiInput.onchange = null
       Object.assign(window, { __skillVfxLab: undefined })
     })
     play()
   }
   update(_time: number, delta: number) {
-    if (runner && !manual) {
-      runner.update(delta * Number(element<HTMLSelectElement>('speed').value))
+    if (fireball) fireball.updateAura(delta)
+    if (runner && (!manual || fireballAutoplay)) {
+      const step = delta * Number(element<HTMLSelectElement>('speed').value)
+      if (fireballMode()) fireball.update(step)
+      else runner.update(step)
       paintStats()
     }
   }

@@ -54,6 +54,13 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS) as CombatVfxPreset[]) {
   })
 }
 recipes.set('ngu_kiem_flight', PHI_KIEM_RECIPE)
+// Fireball portal/charge/projectile/impact imagery is owned by the dedicated
+// Phaser presentation. Keep this recipe timing-only for the runner's impact ACK.
+recipes.set('hoa_cau_comet', {
+  id: 'hoa_cau_comet', version: 1, color: 0xff7125,
+  castMs: 1450, impactMs: 900, recoveryMs: 0,
+  cast: [], impact: [], recovery: [],
+})
 /** Existing skills migrate by preset; a new skill can supply its own data recipe. */
 export function getSkillPresentationRecipe(id: CombatVfxPresetId): SkillPresentationRecipe {
   return recipes.get(id) ?? recipes.get('slash')!

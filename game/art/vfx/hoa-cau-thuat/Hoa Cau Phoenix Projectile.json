@@ -1,0 +1,1259 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_hoa_cau_phoenix_projectile",
+    "name": "Hoa Cau Phoenix Projectile",
+    "comp": {
+      "w": 320,
+      "h": 192,
+      "dur": 1.2,
+      "fps": 60
+    },
+    "cam": {
+      "comp": 0
+    },
+    "exp": {
+      "cols": 6,
+      "rows": 6,
+      "frames": 36,
+      "cellW": 256,
+      "cellH": 154,
+      "t0": 0,
+      "t1": 1.2,
+      "mode": "rgba",
+      "ss": 2
+    },
+    "textures": [],
+    "layers": [
+      {
+        "id": "lr_hc_phoenix_sparks",
+        "name": "White gold cinders",
+        "type": "emitter",
+        "start": -0.35,
+        "end": 1.2,
+        "blend": "screen",
+        "em": {
+          "x": 5,
+          "y": 0,
+          "shape": "box",
+          "sx": 15,
+          "sy": 20,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 17,
+          "speed": 300,
+          "speedRnd": 0.32,
+          "rate": 36,
+          "bursts": [],
+          "seed": 718351
+        },
+        "pt": {
+          "life": 0.34,
+          "lifeRnd": 0.36,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 7,
+          "sizeRnd": 0.42,
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.06
+              },
+              {
+                "t": 0.42,
+                "v": 0.94
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.42,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.15
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  252,
+                  209
+                ]
+              },
+              {
+                "t": 0.4,
+                "c": [
+                  255,
+                  185,
+                  57
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  224,
+                  45,
+                  13
+                ]
+              }
+            ]
+          },
+          "alignVel": true,
+          "stretch": 1.25,
+          "drag": 0.7,
+          "glow": 0.48
+        },
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 1
+            },
+            {
+              "t": 1.1,
+              "v": 1
+            },
+            {
+              "t": 1.55,
+              "v": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_sparks_loop",
+        "name": "White gold cinders loop handoff",
+        "type": "emitter",
+        "start": 0.85,
+        "end": 1.2,
+        "blend": "screen",
+        "em": {
+          "x": 5,
+          "y": 0,
+          "shape": "box",
+          "sx": 15,
+          "sy": 20,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 17,
+          "speed": 300,
+          "speedRnd": 0.32,
+          "rate": 36,
+          "bursts": [],
+          "seed": 718351
+        },
+        "pt": {
+          "life": 0.34,
+          "lifeRnd": 0.36,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 7,
+          "sizeRnd": 0.42,
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.06
+              },
+              {
+                "t": 0.42,
+                "v": 0.94
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.42,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.15
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  252,
+                  209
+                ]
+              },
+              {
+                "t": 0.4,
+                "c": [
+                  255,
+                  185,
+                  57
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  224,
+                  45,
+                  13
+                ]
+              }
+            ]
+          },
+          "alignVel": true,
+          "stretch": 1.25,
+          "drag": 0.7,
+          "glow": 0.48
+        },
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.35,
+              "v": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_white_core",
+        "name": "White hot compressed heart",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.8
+            },
+            {
+              "t": 0.2,
+              "v": 0.98
+            },
+            {
+              "t": 0.42,
+              "v": 0.87
+            },
+            {
+              "t": 0.63,
+              "v": 1
+            },
+            {
+              "t": 0.85,
+              "v": 0.86
+            },
+            {
+              "t": 1.05,
+              "v": 1
+            },
+            {
+              "t": 1.2,
+              "v": 0.8
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "x": 53,
+          "y": 0,
+          "size": 45,
+          "aspect": 1,
+          "color": [
+            255,
+            253,
+            225
+          ],
+          "glow": 0.25,
+          "scale": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.98
+              },
+              {
+                "t": 0.28,
+                "v": 1.08
+              },
+              {
+                "t": 0.52,
+                "v": 0.94
+              },
+              {
+                "t": 0.82,
+                "v": 1.05
+              },
+              {
+                "t": 1.2,
+                "v": 0.98
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_gold_core",
+        "name": "Molten sun core",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "screen",
+        "opacity": 0.94,
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "x": 43,
+          "y": 0,
+          "size": 78,
+          "aspect": 1.08,
+          "color": [
+            255,
+            182,
+            40
+          ],
+          "glow": 0.26,
+          "scale": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.24,
+                "v": 1.06
+              },
+              {
+                "t": 0.52,
+                "v": 0.97
+              },
+              {
+                "t": 0.82,
+                "v": 1.04
+              },
+              {
+                "t": 1.2,
+                "v": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_tongues",
+        "name": "Amber fire tongues peeling backward",
+        "type": "emitter",
+        "start": -0.35,
+        "end": 1.2,
+        "blend": "screen",
+        "em": {
+          "x": 20,
+          "y": 0,
+          "shape": "box",
+          "sx": 15,
+          "sy": 22,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 20,
+          "speed": 210,
+          "speedRnd": 0.32,
+          "rate": 98,
+          "bursts": [],
+          "seed": 718352
+        },
+        "pt": {
+          "life": 0.31,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "flame",
+            "p": {
+              "taper": 1
+            }
+          },
+          "size": 42,
+          "sizeRnd": 0.37,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.65
+              },
+              {
+                "t": 0.42,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.12
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.03
+              },
+              {
+                "t": 0.42,
+                "v": 0.26
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  226,
+                  91
+                ]
+              },
+              {
+                "t": 0.48,
+                "c": [
+                  255,
+                  111,
+                  27
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  202,
+                  26,
+                  11
+                ]
+              }
+            ]
+          },
+          "alignVel": true,
+          "stretch": 0.96,
+          "drag": 1.5,
+          "turbMode": "curl",
+          "turbAmp": 27,
+          "turbScale": 24,
+          "turbOct": 2,
+          "turbWind": 21,
+          "turbRise": -17,
+          "glow": 0.14
+        },
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 1
+            },
+            {
+              "t": 1.1,
+              "v": 1
+            },
+            {
+              "t": 1.55,
+              "v": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_tongues_loop",
+        "name": "Amber fire tongues peeling backward loop handoff",
+        "type": "emitter",
+        "start": 0.85,
+        "end": 1.2,
+        "blend": "screen",
+        "em": {
+          "x": 20,
+          "y": 0,
+          "shape": "box",
+          "sx": 15,
+          "sy": 22,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 20,
+          "speed": 210,
+          "speedRnd": 0.32,
+          "rate": 98,
+          "bursts": [],
+          "seed": 718352
+        },
+        "pt": {
+          "life": 0.31,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "flame",
+            "p": {
+              "taper": 1
+            }
+          },
+          "size": 42,
+          "sizeRnd": 0.37,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.65
+              },
+              {
+                "t": 0.42,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.12
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.03
+              },
+              {
+                "t": 0.42,
+                "v": 0.26
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  226,
+                  91
+                ]
+              },
+              {
+                "t": 0.48,
+                "c": [
+                  255,
+                  111,
+                  27
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  202,
+                  26,
+                  11
+                ]
+              }
+            ]
+          },
+          "alignVel": true,
+          "stretch": 0.96,
+          "drag": 1.5,
+          "turbMode": "curl",
+          "turbAmp": 27,
+          "turbScale": 24,
+          "turbOct": 2,
+          "turbWind": 21,
+          "turbRise": -17,
+          "glow": 0.14
+        },
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.35,
+              "v": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_displace",
+        "name": "Living flame edge distortion",
+        "type": "postfx",
+        "start": 0,
+        "end": 1.2,
+        "opacity": 0.62,
+        "blend": "screen",
+        "targets": [
+          "lr_hc_phoenix_upper_ribbon",
+          "lr_hc_phoenix_lower_ribbon",
+          "lr_hc_phoenix_shell",
+          "lr_hc_phoenix_upper_ribbon_loop",
+          "lr_hc_phoenix_lower_ribbon_loop"
+        ],
+        "fx": {
+          "effect": "displace",
+          "field": "swirl",
+          "amount": 9,
+          "scale": 18,
+          "aspect": 2.2,
+          "oct": 2,
+          "evo": 0.14,
+          "rise": -32,
+          "seed": 718357
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_upper_ribbon",
+        "name": "Upper molten ribbon trail",
+        "type": "emitter",
+        "start": -0.35,
+        "end": 1.2,
+        "blend": "screen",
+        "em": {
+          "x": -1,
+          "y": -3,
+          "shape": "box",
+          "sx": 4,
+          "sy": 5,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 8,
+          "speed": 330,
+          "speedRnd": 0.32,
+          "rate": 46,
+          "bursts": [],
+          "seed": 718353
+        },
+        "pt": {
+          "life": 0.48,
+          "lifeRnd": 0.22,
+          "render": "trail",
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 7,
+          "sizeRnd": 0.24,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.62
+              },
+              {
+                "t": 0.42,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.18
+              }
+            ]
+          },
+          "sizeOT": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.05
+              },
+              {
+                "t": 0.4,
+                "v": 0.5
+              },
+              {
+                "t": 1,
+                "v": 1.1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.02
+              },
+              {
+                "t": 0.42,
+                "v": 0.19
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  242,
+                  151
+                ]
+              },
+              {
+                "t": 0.45,
+                "c": [
+                  255,
+                  139,
+                  39
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  174,
+                  31,
+                  15
+                ]
+              }
+            ]
+          },
+          "drag": 0.5,
+          "turbMode": "curl",
+          "turbAmp": 21,
+          "turbScale": 22,
+          "turbOct": 2,
+          "turbWind": 10,
+          "glow": 0.17
+        },
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 1
+            },
+            {
+              "t": 1.1,
+              "v": 1
+            },
+            {
+              "t": 1.55,
+              "v": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_upper_ribbon_loop",
+        "name": "Upper molten ribbon trail loop handoff",
+        "type": "emitter",
+        "start": 0.85,
+        "end": 1.2,
+        "blend": "screen",
+        "em": {
+          "x": -1,
+          "y": -3,
+          "shape": "box",
+          "sx": 4,
+          "sy": 5,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 8,
+          "speed": 330,
+          "speedRnd": 0.32,
+          "rate": 46,
+          "bursts": [],
+          "seed": 718353
+        },
+        "pt": {
+          "life": 0.48,
+          "lifeRnd": 0.22,
+          "render": "trail",
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 7,
+          "sizeRnd": 0.24,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.62
+              },
+              {
+                "t": 0.42,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.18
+              }
+            ]
+          },
+          "sizeOT": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.05
+              },
+              {
+                "t": 0.4,
+                "v": 0.5
+              },
+              {
+                "t": 1,
+                "v": 1.1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.02
+              },
+              {
+                "t": 0.42,
+                "v": 0.19
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  242,
+                  151
+                ]
+              },
+              {
+                "t": 0.45,
+                "c": [
+                  255,
+                  139,
+                  39
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  174,
+                  31,
+                  15
+                ]
+              }
+            ]
+          },
+          "drag": 0.5,
+          "turbMode": "curl",
+          "turbAmp": 21,
+          "turbScale": 22,
+          "turbOct": 2,
+          "turbWind": 10,
+          "glow": 0.17
+        },
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.35,
+              "v": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_lower_ribbon",
+        "name": "Lower vermilion ribbon trail",
+        "type": "emitter",
+        "start": -0.35,
+        "end": 1.2,
+        "blend": "screen",
+        "em": {
+          "x": -2,
+          "y": 3,
+          "shape": "box",
+          "sx": 4,
+          "sy": 5,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 8,
+          "speed": 315,
+          "speedRnd": 0.32,
+          "rate": 46,
+          "bursts": [],
+          "seed": 718354
+        },
+        "pt": {
+          "life": 0.48,
+          "lifeRnd": 0.25,
+          "render": "trail",
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 7,
+          "sizeRnd": 0.28,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 0.42,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.1
+              }
+            ]
+          },
+          "sizeOT": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.05
+              },
+              {
+                "t": 0.4,
+                "v": 0.46
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.02
+              },
+              {
+                "t": 0.42,
+                "v": 0.18
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  193,
+                  75
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  255,
+                  94,
+                  29
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  142,
+                  20,
+                  12
+                ]
+              }
+            ]
+          },
+          "drag": 0.48,
+          "turbMode": "curl",
+          "turbAmp": 20,
+          "turbScale": 21,
+          "turbOct": 2,
+          "turbWind": 11,
+          "glow": 0.16
+        },
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 1
+            },
+            {
+              "t": 1.1,
+              "v": 1
+            },
+            {
+              "t": 1.55,
+              "v": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_lower_ribbon_loop",
+        "name": "Lower vermilion ribbon trail loop handoff",
+        "type": "emitter",
+        "start": 0.85,
+        "end": 1.2,
+        "blend": "screen",
+        "em": {
+          "x": -2,
+          "y": 3,
+          "shape": "box",
+          "sx": 4,
+          "sy": 5,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 8,
+          "speed": 315,
+          "speedRnd": 0.32,
+          "rate": 46,
+          "bursts": [],
+          "seed": 718354
+        },
+        "pt": {
+          "life": 0.48,
+          "lifeRnd": 0.25,
+          "render": "trail",
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 7,
+          "sizeRnd": 0.28,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 0.42,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.1
+              }
+            ]
+          },
+          "sizeOT": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.05
+              },
+              {
+                "t": 0.4,
+                "v": 0.46
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.02
+              },
+              {
+                "t": 0.42,
+                "v": 0.18
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  193,
+                  75
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  255,
+                  94,
+                  29
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  142,
+                  20,
+                  12
+                ]
+              }
+            ]
+          },
+          "drag": 0.48,
+          "turbMode": "curl",
+          "turbAmp": 20,
+          "turbScale": 21,
+          "turbOct": 2,
+          "turbWind": 11,
+          "glow": 0.16
+        },
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.35,
+              "v": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_shell",
+        "name": "Crimson fire shell",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "screen",
+        "opacity": 0.72,
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "x": 28,
+          "y": 0,
+          "size": 96,
+          "aspect": 1.04,
+          "color": [
+            240,
+            48,
+            17
+          ],
+          "glow": 0.12,
+          "scale": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.99
+              },
+              {
+                "t": 0.3,
+                "v": 1.05
+              },
+              {
+                "t": 0.65,
+                "v": 0.97
+              },
+              {
+                "t": 0.92,
+                "v": 1.04
+              },
+              {
+                "t": 1.2,
+                "v": 0.99
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_phoenix_halo",
+        "name": "Subtle warm heat halo",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "screen",
+        "opacity": 0.24,
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "x": 28,
+          "y": 0,
+          "size": 110,
+          "aspect": 1.04,
+          "color": [
+            202,
+            43,
+            20
+          ],
+          "glow": 0.1
+        }
+      }
+    ]
+  },
+  "tex": {}
+}

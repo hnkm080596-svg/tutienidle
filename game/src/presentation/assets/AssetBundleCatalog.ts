@@ -52,6 +52,7 @@ import {
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import { atlasClipsOf } from '@/presentation/art/CombatEntityPresentation'
 import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
+import { hoaCauCombatDescriptors } from '@/game/support/HoaCauVfxAssets'
 
 export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
 
@@ -314,6 +315,12 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
         atlasUrl: clip.atlasUrl,
       })
     }
+  }
+
+  for (const descriptor of hoaCauCombatDescriptors()) {
+    if (seenKeys.has(descriptor.key)) continue
+    seenKeys.add(descriptor.key)
+    descriptors.push(descriptor)
   }
 
   return descriptors

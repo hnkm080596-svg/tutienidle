@@ -1,0 +1,752 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "id": "fx_tam_muoi_fire_aura",
+    "name": "Tam Muoi Fire Aura",
+    "comp": {
+      "w": 256,
+      "h": 256,
+      "dur": 1.2,
+      "fps": 30
+    },
+    "exp": {
+      "cols": 6,
+      "rows": 6,
+      "frames": 36,
+      "cellW": 256,
+      "cellH": 256,
+      "t0": 0,
+      "t1": 1.2,
+      "mode": "rgba",
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_tam_muoi_moving_embers_b5f0b9194eea",
+        "name": "moving embers",
+        "sheet": null
+      },
+      {
+        "id": "tex_tam_muoi_fire_qi_glyphs_one_763b4729ed44",
+        "name": "fire qi glyphs one",
+        "sheet": null
+      },
+      {
+        "id": "tex_tam_muoi_fire_qi_glyphs_two_d640f0242c6f",
+        "name": "fire qi glyphs two",
+        "sheet": null
+      },
+      {
+        "id": "tex_tam_muoi_fire_qi_glyphs_three_4fe726727a74",
+        "name": "fire qi glyphs three",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_tam_muoi_glyph_1",
+        "name": "BACK: scrolling fire glyphs 1",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.46,
+              "v": 1
+            },
+            {
+              "t": 0.9,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_fire_qi_glyphs_one_763b4729ed44"
+          },
+          "size": 256,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -76
+              },
+              {
+                "t": 1.2,
+                "v": -76
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 45
+              },
+              {
+                "t": 0.02,
+                "v": 45
+              },
+              {
+                "t": 0.9,
+                "v": -64
+              },
+              {
+                "t": 1.2,
+                "v": 45
+              }
+            ]
+          }
+        },
+        "glowL": 0.55,
+        "glowLR": 4
+      },
+      {
+        "id": "lr_tam_muoi_glyph_2",
+        "name": "BACK: scrolling fire glyphs 2",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.24,
+              "v": 0
+            },
+            {
+              "t": 0.68,
+              "v": 1
+            },
+            {
+              "t": 1.12,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_fire_qi_glyphs_two_d640f0242c6f"
+          },
+          "size": 256,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 72
+              },
+              {
+                "t": 1.2,
+                "v": 72
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 45
+              },
+              {
+                "t": 0.24,
+                "v": 45
+              },
+              {
+                "t": 1.12,
+                "v": -64
+              },
+              {
+                "t": 1.2,
+                "v": 45
+              }
+            ]
+          }
+        },
+        "glowL": 0.55,
+        "glowLR": 4
+      },
+      {
+        "id": "lr_tam_muoi_glyph_3",
+        "name": "BACK: scrolling fire glyphs 3",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.38,
+              "v": 0
+            },
+            {
+              "t": 0.79,
+              "v": 1
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_fire_qi_glyphs_three_4fe726727a74"
+          },
+          "size": 256,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -26
+              },
+              {
+                "t": 1.2,
+                "v": -26
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 45
+              },
+              {
+                "t": 0.38,
+                "v": 45
+              },
+              {
+                "t": 1.2,
+                "v": -64
+              },
+              {
+                "t": 1.2,
+                "v": 45
+              }
+            ]
+          }
+        },
+        "glowL": 0.55,
+        "glowLR": 4
+      },
+      {
+        "id": "lr_tam_muoi_glyph_4",
+        "name": "FRONT: scrolling fire glyphs 4",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.13,
+              "v": 0
+            },
+            {
+              "t": 0.5700000000000001,
+              "v": 1
+            },
+            {
+              "t": 1.01,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_fire_qi_glyphs_two_d640f0242c6f"
+          },
+          "size": 256,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -51
+              },
+              {
+                "t": 1.2,
+                "v": -51
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 45
+              },
+              {
+                "t": 0.13,
+                "v": 45
+              },
+              {
+                "t": 1.01,
+                "v": -64
+              },
+              {
+                "t": 1.2,
+                "v": 45
+              }
+            ]
+          }
+        },
+        "glowL": 0.55,
+        "glowLR": 4
+      },
+      {
+        "id": "lr_tam_muoi_glyph_5",
+        "name": "FRONT: scrolling fire glyphs 5",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.35,
+              "v": 0
+            },
+            {
+              "t": 0.7749999999999999,
+              "v": 1
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_fire_qi_glyphs_one_763b4729ed44"
+          },
+          "size": 256,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 54
+              },
+              {
+                "t": 1.2,
+                "v": 54
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 45
+              },
+              {
+                "t": 0.35,
+                "v": 45
+              },
+              {
+                "t": 1.2,
+                "v": -64
+              },
+              {
+                "t": 1.2,
+                "v": 45
+              }
+            ]
+          }
+        },
+        "glowL": 0.55,
+        "glowLR": 4
+      },
+      {
+        "id": "lr_tam_muoi_ember_1",
+        "name": "BACK: floating fire ember 1",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.19,
+              "v": 0.65
+            },
+            {
+              "t": 0.49,
+              "v": 0.4
+            },
+            {
+              "t": 0.63,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_moving_embers_b5f0b9194eea"
+          },
+          "size": 20,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -74
+              },
+              {
+                "t": 0.02,
+                "v": -74
+              },
+              {
+                "t": 0.63,
+                "v": -67
+              },
+              {
+                "t": 1.2,
+                "v": -74
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 102
+              },
+              {
+                "t": 0.02,
+                "v": 102
+              },
+              {
+                "t": 0.63,
+                "v": 55
+              },
+              {
+                "t": 1.2,
+                "v": 102
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_tam_muoi_ember_2",
+        "name": "BACK: floating fire ember 2",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.24,
+              "v": 0
+            },
+            {
+              "t": 0.41000000000000003,
+              "v": 0.65
+            },
+            {
+              "t": 0.71,
+              "v": 0.4
+            },
+            {
+              "t": 0.85,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_moving_embers_b5f0b9194eea"
+          },
+          "size": 18,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 69
+              },
+              {
+                "t": 0.24,
+                "v": 69
+              },
+              {
+                "t": 0.85,
+                "v": 63
+              },
+              {
+                "t": 1.2,
+                "v": 69
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 112
+              },
+              {
+                "t": 0.24,
+                "v": 112
+              },
+              {
+                "t": 0.85,
+                "v": 65
+              },
+              {
+                "t": 1.2,
+                "v": 112
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_tam_muoi_ember_3",
+        "name": "FRONT: floating fire ember 3",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.45,
+              "v": 0
+            },
+            {
+              "t": 0.62,
+              "v": 0.65
+            },
+            {
+              "t": 0.9199999999999999,
+              "v": 0.4
+            },
+            {
+              "t": 1.06,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_moving_embers_b5f0b9194eea"
+          },
+          "size": 14,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -66
+              },
+              {
+                "t": 0.45,
+                "v": -66
+              },
+              {
+                "t": 1.06,
+                "v": -59
+              },
+              {
+                "t": 1.2,
+                "v": -66
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 70
+              },
+              {
+                "t": 0.45,
+                "v": 70
+              },
+              {
+                "t": 1.06,
+                "v": 23
+              },
+              {
+                "t": 1.2,
+                "v": 70
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_tam_muoi_ember_4",
+        "name": "FRONT: floating fire ember 4",
+        "type": "sprite",
+        "start": 0,
+        "end": 1.2,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.05,
+              "v": 0
+            },
+            {
+              "t": 0.22000000000000003,
+              "v": 0.65
+            },
+            {
+              "t": 0.52,
+              "v": 0.4
+            },
+            {
+              "t": 0.66,
+              "v": 0
+            },
+            {
+              "t": 1.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_tam_muoi_moving_embers_b5f0b9194eea"
+          },
+          "size": 15,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 81
+              },
+              {
+                "t": 0.05,
+                "v": 81
+              },
+              {
+                "t": 0.66,
+                "v": 75
+              },
+              {
+                "t": 1.2,
+                "v": 81
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 85
+              },
+              {
+                "t": 0.05,
+                "v": 85
+              },
+              {
+                "t": 0.66,
+                "v": 38
+              },
+              {
+                "t": 1.2,
+                "v": 85
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_tam_muoi_moving_embers_b5f0b9194eea": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CjxkZWZzPjxyYWRpYWxHcmFkaWVudCBpZD0iZW1iZXIiPjxzdG9wIHN0b3AtY29sb3I9IiNmZmYzYmQiLz48c3RvcCBvZmZzZXQ9Ii4zNCIgc3RvcC1jb2xvcj0iI2ZmYjM0OCIgc3RvcC1vcGFjaXR5PSIuODgiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNlZTQ2MWUiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPgo8Y2lyY2xlIGN4PSIxMjgiIGN5PSIxMjgiIHI9IjE1IiBmaWxsPSJ1cmwoI2VtYmVyKSIvPjxwYXRoIGQ9Ik0xMjggMTI5IFExMjIgMTM5IDEyNyAxNDYgUTEzMiAxMzggMTI4IDEyOSIgZmlsbD0iI2ZmODYzMyIgZmlsbC1vcGFjaXR5PSIuNjIiLz48L3N2Zz4=",
+    "tex_tam_muoi_fire_qi_glyphs_one_763b4729ed44": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CjxnIGZvbnQtZmFtaWx5PSJTaW1TdW4iIGZvbnQtc2l6ZT0iMjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIj4KPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjMyYTM1IiBzdHJva2Utb3BhY2l0eT0iLjU1IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjx0ZXh0IHg9IjEyNiIgeT0iMTQzIj7ngas8L3RleHQ+PHRleHQgeD0iMTMwIiB5PSIxNzIiPueCjjwvdGV4dD48dGV4dCB4PSIxMjYiIHk9IjIwMSI+54G1PC90ZXh0Pjx0ZXh0IHg9IjEzMCIgeT0iMjMwIj7msJQ8L3RleHQ+PC9nPgo8ZyBmaWxsPSIjZmY3MTY2IiBzdHJva2U9IiNmZmRiYmQiIHN0cm9rZS13aWR0aD0iMC42NSIgc3Ryb2tlLW9wYWNpdHk9Ii45NiI+PHRleHQgeD0iMTI2IiB5PSIxNDMiPueBqzwvdGV4dD48dGV4dCB4PSIxMzAiIHk9IjE3MiI+54KOPC90ZXh0Pjx0ZXh0IHg9IjEyNiIgeT0iMjAxIj7ngbU8L3RleHQ+PHRleHQgeD0iMTMwIiB5PSIyMzAiPuawlDwvdGV4dD48L2c+CjxnIGZpbGw9IiNmZmYwZGIiIGZpbGwtb3BhY2l0eT0iLjY2IiBmb250LXNpemU9IjE5Ij48dGV4dCB4PSIxMjYiIHk9IjE0MyI+54GrPC90ZXh0Pjx0ZXh0IHg9IjEzMCIgeT0iMTcyIj7ngo48L3RleHQ+PHRleHQgeD0iMTI2IiB5PSIyMDEiPueBtTwvdGV4dD48dGV4dCB4PSIxMzAiIHk9IjIzMCI+5rCUPC90ZXh0PjwvZz4KPC9nPjwvc3ZnPg==",
+    "tex_tam_muoi_fire_qi_glyphs_two_d640f0242c6f": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CjxnIGZvbnQtZmFtaWx5PSJTaW1TdW4iIGZvbnQtc2l6ZT0iMjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIj4KPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjMyYTM1IiBzdHJva2Utb3BhY2l0eT0iLjU1IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjx0ZXh0IHg9IjEyNiIgeT0iMTQzIj7nhLA8L3RleHQ+PHRleHQgeD0iMTMwIiB5PSIxNzIiPueCvTwvdGV4dD48dGV4dCB4PSIxMjYiIHk9IjIwMSI+54WMPC90ZXh0Pjx0ZXh0IHg9IjEzMCIgeT0iMjMwIj7ng4E8L3RleHQ+PC9nPgo8ZyBmaWxsPSIjZmY3MTY2IiBzdHJva2U9IiNmZmRiYmQiIHN0cm9rZS13aWR0aD0iMC42NSIgc3Ryb2tlLW9wYWNpdHk9Ii45NiI+PHRleHQgeD0iMTI2IiB5PSIxNDMiPueEsDwvdGV4dD48dGV4dCB4PSIxMzAiIHk9IjE3MiI+54K9PC90ZXh0Pjx0ZXh0IHg9IjEyNiIgeT0iMjAxIj7nhYw8L3RleHQ+PHRleHQgeD0iMTMwIiB5PSIyMzAiPueDgTwvdGV4dD48L2c+CjxnIGZpbGw9IiNmZmYwZGIiIGZpbGwtb3BhY2l0eT0iLjY2IiBmb250LXNpemU9IjE5Ij48dGV4dCB4PSIxMjYiIHk9IjE0MyI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEzMCIgeT0iMTcyIj7ngr08L3RleHQ+PHRleHQgeD0iMTI2IiB5PSIyMDEiPueFjDwvdGV4dD48dGV4dCB4PSIxMzAiIHk9IjIzMCI+54OBPC90ZXh0PjwvZz4KPC9nPjwvc3ZnPg==",
+    "tex_tam_muoi_fire_qi_glyphs_three_4fe726727a74": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CjxnIGZvbnQtZmFtaWx5PSJTaW1TdW4iIGZvbnQtc2l6ZT0iMjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIj4KPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjMyYTM1IiBzdHJva2Utb3BhY2l0eT0iLjU1IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjx0ZXh0IHg9IjEyNiIgeT0iMTQzIj7nprs8L3RleHQ+PHRleHQgeD0iMTMwIiB5PSIxNzIiPueBqzwvdGV4dD48dGV4dCB4PSIxMjYiIHk9IjIwMSI+6LWkPC90ZXh0Pjx0ZXh0IHg9IjEzMCIgeT0iMjMwIj7nhLA8L3RleHQ+PC9nPgo8ZyBmaWxsPSIjZmY3MTY2IiBzdHJva2U9IiNmZmRiYmQiIHN0cm9rZS13aWR0aD0iMC42NSIgc3Ryb2tlLW9wYWNpdHk9Ii45NiI+PHRleHQgeD0iMTI2IiB5PSIxNDMiPuemuzwvdGV4dD48dGV4dCB4PSIxMzAiIHk9IjE3MiI+54GrPC90ZXh0Pjx0ZXh0IHg9IjEyNiIgeT0iMjAxIj7otaQ8L3RleHQ+PHRleHQgeD0iMTMwIiB5PSIyMzAiPueEsDwvdGV4dD48L2c+CjxnIGZpbGw9IiNmZmYwZGIiIGZpbGwtb3BhY2l0eT0iLjY2IiBmb250LXNpemU9IjE5Ij48dGV4dCB4PSIxMjYiIHk9IjE0MyI+56a7PC90ZXh0Pjx0ZXh0IHg9IjEzMCIgeT0iMTcyIj7ngas8L3RleHQ+PHRleHQgeD0iMTI2IiB5PSIyMDEiPui1pDwvdGV4dD48dGV4dCB4PSIxMzAiIHk9IjIzMCI+54SwPC90ZXh0PjwvZz4KPC9nPjwvc3ZnPg=="
+  }
+}

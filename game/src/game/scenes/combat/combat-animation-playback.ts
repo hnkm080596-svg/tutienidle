@@ -81,7 +81,9 @@ export function registerClipCatalogue(
       // Frame NAMES, not indices - the clip describes a TexturePacker atlas
       // (Spec B sec. 3.1/sec. 4.2), so a frame is `frame_` + a zero-padded number
       // + `.png` rather than an offset into a uniform grid.
-      frames: anims.generateFrameNames(clip.sheetKey, {
+      frames: clip.frameSequence?.map(index => ({ key: clip.sheetKey,
+        frame: `${clip.framePrefix}${String(index).padStart(clip.zeroPad, '0')}${clip.frameSuffix}` }))
+        ?? anims.generateFrameNames(clip.sheetKey, {
         prefix: clip.framePrefix,
         suffix: clip.frameSuffix,
         start: clip.firstFrame,

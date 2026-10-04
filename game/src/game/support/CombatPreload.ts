@@ -34,6 +34,7 @@ import {
   type CombatAnimationCatalogue,
 } from '@/presentation/art/CombatEntityPresentation'
 import { CULTIVATE_TEXTURE_OVERRIDES } from '@/presentation/art/PlayerVisualProfiles'
+import { hoaCauCombatDescriptors } from './HoaCauVfxAssets'
 
 // The mortal entity key - the shared player fallback. MainScene keeps its
 // own atlas; the scenes intentionally use separate texture keys. Re-exported
@@ -195,5 +196,11 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
   // still PNG is already queued above, and their motion is a tween.
   for (const { clips } of animatedCombatAnimationSets()) {
     queueAtlasOnce(clips)
+  }
+
+  for (const asset of hoaCauCombatDescriptors()) {
+    if (queuedKeys.has(asset.key) || scene.textures.exists(asset.key)) continue
+    queuedKeys.add(asset.key)
+    scene.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
   }
 }

@@ -6,7 +6,7 @@ declare global { interface Window { __skillVfxLab?: Lab } }
 test('skill VFX lab uses the shared runner, cleans up, and never writes saves', async ({ page }) => {
   const errors = collectBrowserErrors(page)
   await page.goto('/dev/skill-vfx.html?manual=1')
-  await expect(page.getByRole('heading', { name: 'Diễn võ · Phi Kiếm' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Diễn võ · Hiệu ứng kỹ năng' })).toBeVisible()
   await expect(page.locator('canvas')).toBeVisible()
   await page.waitForFunction(() => Boolean(window.__skillVfxLab))
   const advance = (ms: number) => page.evaluate(value => window.__skillVfxLab!.advance(value), ms)

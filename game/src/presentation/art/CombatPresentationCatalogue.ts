@@ -139,6 +139,12 @@ const PLAYER_STATIC_EXTENTS: Record<string, ArtExtent> = {
     w: 0.786885,
     h: 0.912698,
   },
+  'player-phap-tu-shared-v1': {
+    x: 0.012295,
+    y: 0.063492,
+    w: 0.786885,
+    h: 0.912698,
+  },
   'player-kiem-tu-v1': PLAYER_STATIC_EXTENT_KIEM_TU,
 }
 
@@ -523,6 +529,7 @@ export function buildCatalogue(): {
     zeroPad: CHARACTER_ZERO_PAD,
     firstFrame: range.firstFrame,
     lastFrame: range.lastFrame,
+    frameSequence: range.frameSequence,
     frameRate,
     sourceSize: { ...sourceSize },
     extent,

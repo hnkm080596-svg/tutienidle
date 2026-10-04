@@ -36,6 +36,8 @@ export interface CharacterClipRange {
    * manifest by pack-character-art.mjs. Absent when unmarked.
    */
   impactFrameIndex?: number
+  /** Optional playback order using existing atlas frames; duplicates hold a pose. */
+  frameSequence?: readonly number[]
 }
 
 /**
@@ -108,7 +110,7 @@ function variant(
     attack?: [number, number, number]
     ult?: [number, number, number]
   },
-  opts: { avatarSize?: { w: number; h: number }; cast?: Record<string, { src?: string; range: [number, number, number] }> } = {},
+  opts: { avatarSize?: { w: number; h: number }; avatarFile?: string; cast?: Record<string, { src?: string; range: [number, number, number]; impactFrameIndex?: number; frameSequence?: readonly number[] }> } = {},
 ): CharacterArtVariant {
   const castClips: Record<string, CharacterClipRange> = {}
   for (const [key, entry] of Object.entries(opts.cast ?? {})) {
@@ -116,14 +118,18 @@ function variant(
     // manifest call it); it defaults to `cast-<key>` with the `role:`
     // selector prefix stripped so `role:special` -> clip 'cast-special'.
     const src = entry.src ?? `cast-${key.replace(/^role:/, '')}`
-    castClips[key] = clip(slug, src, entry.range[0], entry.range[1], entry.range[2])
+    const source = clip(slug, src, entry.range[0], entry.range[1], entry.range[2])
+    castClips[key] = { ...source,
+      ...(entry.impactFrameIndex === undefined ? {} : { impactFrameIndex: entry.impactFrameIndex }),
+      ...(entry.frameSequence ? { frameSequence: entry.frameSequence } : {}),
+    }
   }
   return {
     slug,
     sourceSize,
     extent,
     avatarKey: `${slug}-avatar`,
-    avatarUrl: `${ART_ROOT}/${slug}/avatar.png`,
+    avatarUrl: `${ART_ROOT}/${slug}/${opts.avatarFile ?? 'avatar.png'}`,
     avatarSize: opts.avatarSize ?? { w: 150, h: 150 },
     clips: {
       idle: clip(slug, 'idle', ranges.idle[0], ranges.idle[1], ranges.idle[2]),
@@ -185,6 +191,22 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { idle: [1, 33, 1], attack: [1, 17, 2], death: [1, 17, 2] },
     { avatarSize: { w: 512, h: 512 }, cast: { 'role:special': { range: [1, 17, 3] } } },
   ),
+  // One neutral Pháp Tu body for every spell element and hidden spell way.
+  // The supplied 244x252 cell sheets are indexed directly (no painted VFX).
+  phap_tu_shared: variant(
+    'phap_tu_shared',
+    { w: 244, h: 252 },
+    { x: 0.004098, y: 0.063492, w: 0.807377, h: 0.912698 },
+    { idle: [1, 33, 1], attack: [1, 17, 2], death: [1, 17, 4] },
+    { avatarSize: { w: 244, h: 252 }, avatarFile: 'avatar-transparent.png', cast: {
+      // Hỏa Cầu reuses the shared attack frames; only its release timing differs.
+      // Rise to frame 12 by 625 ms, hold until portal close (3625 ms),
+      // then lower via the existing final frames. No artwork is redrawn.
+      hoa_cau_thuat: { src: 'attack', range: [1, 17, 2], impactFrameIndex: 29,
+        frameSequence: [1, 3, 5, 7, 10, 12, ...Array(24).fill(12), 14, 15, 16, 17] },
+      'role:special': { range: [1, 17, 3] },
+    } },
+  ),
 }
 
 /**
@@ -199,7 +221,7 @@ export interface CharacterReskinBinding {
 }
 export const CHARACTER_RESKIN_MAP: Record<PlayerVisualProfileId, string | CharacterReskinBinding> = {
   mortal: { armed: 'pham_nhan', unarmed: 'pham_nhan_unarmed' },
-  phap_tu: 'ngu_hanh',
+  phap_tu: 'phap_tu_shared',
   kiem_tu: 'ngu_kiem',
   // the_tu art not drawn yet - keeps the placeholder set.
   the_tu: 'zuofeng',

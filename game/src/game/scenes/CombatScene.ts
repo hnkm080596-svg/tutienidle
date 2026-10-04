@@ -3,6 +3,8 @@ import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
 import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentationRunner'
 import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
+import { HoaCauFireballPresentation, hoaCauHandAnchor, isHoaCauFireballCast } from '@/game/support/skill-vfx/HoaCauFireballPresentation'
+import { HOA_CAU_REFERENCE_IMPACT_MS } from '@/game/support/skill-vfx/HoaCauFireballTimeline'
 import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
 import type { EventBus, EventHandler } from '@/core/events/EventBus'
 import {
@@ -609,6 +611,31 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private _skillPlayback?: SkillPresentationRunner
   private _skillVfxDriver?: PhaserSkillVfxDriver
+  private _hoaCauPresentation?: HoaCauFireballPresentation
+
+  private get hoaCauPresentation(): HoaCauFireballPresentation {
+    if (!this._hoaCauPresentation) {
+      this._hoaCauPresentation = new HoaCauFireballPresentation({
+        anchor: fact => (fact.entityId === PLAYER_ID && this.sprites.get(fact.entityId)?.kind === 'sprite'
+          && this.sprites.get(fact.entityId)?.sourceSize?.w === 244
+          ? hoaCauHandAnchor(this.sprites.get(fact.entityId)!.rect as Phaser.GameObjects.Sprite)
+          : this.bodyAnchorScreen(fact.entityId, fact.entityId === PLAYER_ID ? 'front' : 'centre'))
+          ?? this.lastKnownScreenPositions?.get(fact.entityId)
+          ?? this.projection?.gridToScreen(fact.row, fact.column),
+        depth: fact => {
+          const foot = this.projection?.gridToScreen(fact.row, fact.column)
+          return this.isPerspective && foot
+            ? uprightVfxDepth(foot.y, this.entityFootMinY, this.entityFootMaxY, fact.column)
+            : DEPTH_UPRIGHT_VFX
+        },
+        createSprite: (key, frame) => this.add.image(0, 0, key, frame),
+        isCurrent: ref => this.gameManagerRef?.getPendingPlaybackToken() === ref.token,
+        reducedMotion: typeof matchMedia === 'function'
+          && matchMedia('(prefers-reduced-motion: reduce)').matches,
+      })
+    }
+    return this._hoaCauPresentation
+  }
 
   private get skillPlayback(): SkillPresentationRunner {
     if (!this._skillPlayback) {
@@ -682,7 +709,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       ? this.animationPlayback.startCastPlayback(sprite, cast.source.entityId, cast)
       : { source: 'none' as const }
 
-    const castMs = playback.clip ? clipImpactMs(playback.clip) : undefined
+    const fireballCast = isHoaCauFireballCast(cast)
+    const castMs = playback.clip ? clipImpactMs(playback.clip)
+      : fireballCast ? HOA_CAU_REFERENCE_IMPACT_MS : undefined
 
     // Unmarked-policy art debt (plan sec.33): a long clip with no authored
     // impact frame plays but reports its impact at clip end - flag it so
@@ -698,9 +727,15 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     this.skillPlayback.start(cast, port, castMs === undefined ? undefined : { castMs })
+    if (fireballCast) {
+      const timing = castMs !== undefined && castMs > 0 && castMs < 4000
+        ? castMs : getSkillPresentationRecipe(cast.presetId).castMs
+      this.hoaCauPresentation.start(cast, timing)
+    }
   }
 
   private onSkillResolved(resolved: SkillPresentationResolved): void {
+    this._hoaCauPresentation?.resolve(resolved)
     this._skillPlayback?.resolve(resolved)
   }
 
@@ -741,6 +776,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           }
 
           if (profileId && PLAYER_VISUAL_PROFILES[profileId]) {
+            this._hoaCauPresentation?.cancel()
             this.applyPlayerVisualProfile(profileId)
           }
         },
@@ -973,6 +1009,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   update(_time: number, delta: number) {
+    this._hoaCauPresentation?.update(delta)
     this._skillPlayback?.update(delta)
     for (const [id, sprite] of this.sprites) {
       const visualX = this.getInterpolatedX(id)
@@ -1513,6 +1550,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private clearSceneState() {
     this._skillPlayback?.cancel()
+    this._hoaCauPresentation?.destroy()
+    this._hoaCauPresentation = undefined
     this._skillVfxDriver?.destroy()
     this._skillPlayback = undefined
     this._skillVfxDriver = undefined
@@ -1777,6 +1816,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // presentation tÃ¡ÂºÂ¡i chÃ¡Â»â€”. ViÃ¡Â»â€¡c cÃƒÂ²n lÃ¡ÂºÂ¡i Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y: chÃ¡Â»Ân + load trÃ†Â°Ã¡Â»â€ºc variant
   // nÃ¡Â»Ân cho trÃ¡ÂºÂ­n KÃ¡ÂºÂ¾ TIÃ¡ÂºÂ¾P vÃƒÂ  dÃ¡Â»Ân DoT accumulator.
   onBattleEnd() {
+    this._hoaCauPresentation?.cancel()
     // 6A-T5 — HUD theo dõi battle end.
     this._playerHud?.setVisible(false)
     this.inBattle = false
@@ -1919,6 +1959,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // no-op nÃ¡ÂºÂ¿u Ã„â€˜ÃƒÂ£ sÃ¡ÂºÂ¡ch sÃ¡ÂºÂµn).
   onBattleStart(options?: { rebind?: boolean }) {
     this._skillPlayback?.cancel()
+    this._hoaCauPresentation?.cancel()
     // 'rebind' = in-place reattach to the SAME battle/session: the
     // driver's per-action camera latch survives so a 'complete'-phase
     // resume cannot refire an already-fired camera impulse. Anything else

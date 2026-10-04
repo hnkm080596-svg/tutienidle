@@ -1,5 +1,8 @@
 # Hỏa Cầu Thuật Fireball VFX Design
 
+> Runtime revision: the original short timeline below is superseded by the
+> hand-hold/full-portal timeline at the end of this document.
+
 ## Status and scope
 
 Approved direction: a skill-specific visual sequence for `hoa_cau_thuat`, using the supplied red MysticPortal sheets as the magic circle, an editable Arcadia Tụ Hỏa effect, the existing `火 (9)` sheet as the projectile, and the existing `火 (20)` sheet as the landed-hit explosion. This is presentation-only: damage, targeting, cast-time rules, the shared Pháp Tu character clips, and unrelated skills remain unchanged.
@@ -26,7 +29,7 @@ Normal animated-player timeline, relative to the admitted `skill_presentation_ca
 | impact ACK | Fire 9 retires. On a *landed* hit, Fire 20 plays once at the resolved target. Misses/blocked outcomes do not fabricate an explosion. |
 | after ACK | Fire 20 finishes; no portal or charge layer remains. |
 
-The currently selected 17-frame shared attack clip at 8 fps has no impact marker, so `clipImpactMs` resolves at 2,062.5 ms. The 1.35–2.0625 s flight is therefore about 712.5 ms in this art configuration. The implementation must derive the deadline from the **actual played clip** (not hard-code 2,062.5 ms) and use the runner's existing impact ACK as the authoritative arrival boundary. If the clip or source texture is unavailable, fall back safely to the recipe clock; scale or suppress visual phases without delaying mechanical ACK. The game domain remains the only owner of hit/miss/damage facts. `castTime: 1.6` remains untouched; it is not used as a second visual clock.
+Implementation finding: the shipping impact-marker gate requires the newly added shared Pháp Tu attack and special cast clips to have authored markers. Frame inspection places the basic attack release at clip-local frame 10 (1,312.5 ms at 8 fps), and the special cast release at frame 12. The basic Hỏa Cầu timeline therefore keeps Tụ Hỏa at its full 550 ms, shortens portal OPEN to 612.5 ms, releases Fire 9 at 1,162.5 ms, and reserves 150 ms for travel before the 1,312.5 ms impact ACK. The nominal 0.8/0.55/0.7125 s example above applies only when a played clip actually has a 2,062.5 ms deadline. The implementation derives all boundaries from the **actual played clip**, not a hard-coded duration. If the clip or source texture is unavailable, it falls back safely to the recipe clock without delaying mechanical ACK. The game domain remains the only owner of hit/miss/damage facts. `castTime: 1.6` remains untouched; it is not used as a second visual clock.
 
 ## Presentation integration
 
@@ -42,3 +45,16 @@ A focused `HoaCauFireballPresentation` component owns only the four visual actor
 ## Exclusions
 
 No new character cast animation, no new projectile painting, no Fire 20 redesign, no gameplay balance changes, no global VFX renderer rewrite, and no changes to other element pathways.
+
+## Runtime revision: full portal cycle and hand hold
+
+- 0–625 ms: raise the hand to the existing shared Pháp Tu atlas frame 12; no portal yet.
+- 625–1425 ms: show all occupied OPEN frames 1–24, offset 24 px in front of the palm.
+- 1425–3125 ms: show all ACTIVE frames 0–51 and retime the Arcadia charge across the same 1700 ms. The compact charge sits a further 48 px in front of the circle.
+- 3125 ms: end charge, launch the existing Fire 9 horizontally, and start CLOSE.
+- 3125–3625 ms: show all CLOSE frames 0–14 while Fire 9 travels. Keep the palm pose held.
+- 3687.5 ms: Fire 9 reaches the target and the presentation ACK occurs. Only a landed receipt shows the existing Fire 20 at that same height. The character lowers the hand after CLOSE.
+
+The Fireball-only clip reuses the original Pháp Tu frames in a 34-frame playback sequence; frame 12 is repeated through clip index 29, and the existing lowering frames follow. Shared basic/special cast markers and gameplay damage rules are unchanged. The source Arcadia charge stays editable at 550 ms; its exported 18 frames are retimed over ACTIVE in Phaser.
+
+Pixel comparison measured the two raw cross-sheet edge jumps at about 0.06 mean alpha difference, versus about 0.009–0.010 for ordinary neighboring frames. A complete pair scan found no near-identical edge frame; skipping to the closest would discard large parts of the 0.8/1.7/0.5 s cycle. Runtime uses exactly the prior phase's final frame as a 180 ms opacity bridge while the next phase begins. No source art is changed.

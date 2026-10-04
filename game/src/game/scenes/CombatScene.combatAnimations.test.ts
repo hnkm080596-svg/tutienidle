@@ -479,7 +479,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-attack'])
   })
 
-  // Slot-role keyed castClips: ngu_hanh authors ONE 'special' cast covering
+  // Slot-role keyed castClips: phap_tu_shared authors ONE 'special' cast covering
   // every element - the skillId lookup misses, the slot-role lookup hits.
   it("skill_presentation_cast falls back to the slot-role cast clip when the skillId isn't keyed", () => {
     const scene = createScene()
@@ -498,7 +498,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
       skillId: 'ngu_hanh_tho_thuan',
     })
 
-    expect(gameSprite.playCalls).toEqual(['ngu_hanh-cast-special'])
+    expect(gameSprite.playCalls).toEqual(['phap_tu_shared-cast-special'])
   })
 
   // slotRole 'none' marks a declared turn that is not a slot cast

@@ -4,6 +4,13 @@ import { NGU_KIEM_THUAT } from '@/data/skill/NguKiemDaoSkills'
 import { getSkillPresentationRecipe } from './SkillPresentationRecipes'
 import { validateSkillRecipe } from '@/presentation/skills/SkillPresentationRecipe'
 describe('authored skill presentation recipes', () => {
+  it('leaves Hỏa Cầu imagery solely to its atlas presentation', () => {
+    const recipe = getSkillPresentationRecipe('hoa_cau_comet')
+    expect(recipe.cast).toEqual([])
+    expect(recipe.impact).toEqual([])
+    expect(recipe.recovery).toEqual([])
+    expect(recipe.castMs).toBe(1450)
+  })
   it('registers every existing preset in the shared recipe system', () => {
     for (const preset of Object.values(COMBAT_VFX_PRESETS))
       expect(() => validateSkillRecipe(getSkillPresentationRecipe(preset.id))).not.toThrow()
