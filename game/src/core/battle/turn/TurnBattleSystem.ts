@@ -1857,6 +1857,14 @@ export class TurnBattleSystem {
           action = {
             ...action,
             damage: { kind: 'physical', multiplier: specialAttack.damageMultiplier },
+            // Monster attack VFX sweep (2026-10-04) -- carry the authored
+            // presetId onto the resolved skill so the declared cast and the
+            // action_impact present the special's VFX instead of the basic
+            // attack's. Skill identity (id/cooldown/counts) is untouched -
+            // presetId is presentation-only data.
+            ...(specialAttack.presetId && action.skill
+              ? { skill: { ...action.skill, presetId: specialAttack.presetId } }
+              : {}),
           }
         }
       }

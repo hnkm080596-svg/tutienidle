@@ -21,6 +21,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
     // LABEL (nhom hinh anh/lore), khong con quyet dinh material rieng.
     family: 'wolf',
 
+    attackPresetId: 'bite',
+
     statsInput: {
       maxHp: 90,
       might: 10,
@@ -150,6 +152,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
     // roi troi len tan cong, co "khoang lang" telegraph truoc don.
     archetype: 'caster',
 
+    attackPresetId: 'earth_shockwave',
+
     statsInput: {
       maxHp: 450,
       might: 30,
@@ -244,6 +248,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     lane: 'ground',
     archetype: 'ranged',
     family: 'flame_fox',
+    attackPresetId: 'fire_burst',
     statsInput: {
       maxHp: 275,
       might: 27,
@@ -620,6 +625,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     lane: 'ground',
     archetype: 'caster',
     family: 'flood_serpent',
+    attackPresetId: 'water_surge',
     // Phase A2 (2026-09-07) - turn-based enrage trigger; buff resolves
     // through BUFF_REGISTRY at spawn (see TurnBattleAdapter).
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'qi_refining_serpent_enrage' },
@@ -677,6 +683,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     realmId: 'mortal',
     lane: 'ground',
     family: 'boar',
+    attackPresetId: 'slash',
     statsInput: {
       maxHp: 60,
       might: 6,
@@ -794,6 +801,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     realmId: 'mortal',
     lane: 'ground',
     family: 'tiger',
+    attackPresetId: 'claw',
     statsInput: {
       maxHp: 131,
       might: 11,
@@ -1053,6 +1061,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     realmId: 'mortal',
     lane: 'ground',
     family: 'wolf',
+    attackPresetId: 'bite',
     statsInput: {
       maxHp: 211,
       might: 14,
@@ -1123,6 +1132,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     realmId: 'mortal',
     lane: 'ground',
     family: 'crocodile',
+    attackPresetId: 'bite',
     // Phase A2 (2026-09-07) - turn-based enrage trigger; buff resolves
     // through BUFF_REGISTRY at spawn (see TurnBattleAdapter).
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_crocodile_enrage' },

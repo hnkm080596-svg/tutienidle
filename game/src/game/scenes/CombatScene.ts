@@ -682,6 +682,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         graphics: () => this.add.graphics(),
         anchor: anchorPoint,
         ground: fact => this.projection?.gridToScreen(fact.row, fact.column),
+        // Monster attack VFX sweep (2026-10-04) - 'sheet' cue sprite factory.
+        // Undefined return = texture not loaded (headless, missing bundle);
+        // the cue then quietly leaves the analytic primitives in place.
+        sprite: (key, frame) =>
+          this.textures.exists(key) ? this.add.image(0, 0, key, frame) : undefined,
         uprightDepth: fact => {
           const foot = this.projection?.gridToScreen(fact.row, fact.column)
           return this.isPerspective && foot

@@ -101,6 +101,9 @@ export interface CombatActionDefinition {
 export type CombatVfxPresetId =
   | 'slash'
   | 'claw'
+  // Monster attack VFX sweep (2026-10-04) -- jaw/bite attack type for
+  // melee beasts (wolves, crocodiles) distinct from claw rakes.
+  | 'bite'
   | 'arcane_impact'
   | 'fire_burst'
   | 'water_surge'

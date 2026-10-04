@@ -36,6 +36,7 @@ import {
 } from '@/presentation/art/CombatEntityPresentation'
 import { CULTIVATE_TEXTURE_OVERRIDES } from '@/presentation/art/PlayerVisualProfiles'
 import { hoaCauCombatDescriptors } from './HoaCauVfxAssets'
+import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
 
 // The mortal entity key - the shared player fallback. MainScene keeps its
 // own atlas; the scenes intentionally use separate texture keys. Re-exported
@@ -200,6 +201,15 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
   }
 
   for (const asset of hoaCauCombatDescriptors()) {
+    if (queuedKeys.has(asset.key) || scene.textures.exists(asset.key)) continue
+    queuedKeys.add(asset.key)
+    scene.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
+  }
+
+  // Monster attack VFX sweep (2026-10-04) - preset-bound attack sheets
+  // (VfxSheetManifest); kept in parity with getCombatDescriptors() by the
+  // catalogPreloadParity architecture test.
+  for (const asset of vfxSheetCombatDescriptors()) {
     if (queuedKeys.has(asset.key) || scene.textures.exists(asset.key)) continue
     queuedKeys.add(asset.key)
     scene.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)

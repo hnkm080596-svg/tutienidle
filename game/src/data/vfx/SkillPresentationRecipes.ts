@@ -1,6 +1,7 @@
 import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
-import type { SkillPresentationRecipe } from '@/presentation/skills/SkillPresentationRecipe'
+import type { SkillPresentationRecipe, SkillCue } from '@/presentation/skills/SkillPresentationRecipe'
 import { COMBAT_VFX_PRESETS, type CombatVfxPreset } from './CombatVfxPresets'
+import { VFX_SHEET_BINDINGS } from './VfxSheetManifest'
 
 // Restored actor lunge (design section 9 "actor impulse + signature stroke"):
 // the tuned values moved here from combatConstants ATTACK_LUNGE_* (2026-09-07
@@ -29,10 +30,24 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS) as CombatVfxPreset[]) {
   // presets keep a static cast until a melee/ranged discriminator exists.
   const impulse = preset.space === 'upright' || preset.id === 'arcane_impact'
   const castMs = aura ? 220 : ground || burst ? 260 : 180
+  // Monster attack VFX sweep (2026-10-04) - a bound spritesheet plays as a
+  // 'sheet' cue inside the impact phase alongside the analytic primitives
+  // (the primitives stay as the procedural fallback for missing textures /
+  // unbound presets). The impact phase extends to cover the sheet window's
+  // playback so the whole clip runs inside the recipe bounds.
+  const sheet = VFX_SHEET_BINDINGS[preset.id]
+  const sheetMs = sheet ? Math.ceil(((sheet.lastFrame - sheet.firstFrame + 1) * 1000) / sheet.fps) : 0
+  const impactMs = Math.max(preset.durationMs, sheetMs)
+  const sheetCue: SkillCue[] = sheet ? [{
+    primitive: 'sheet' as const, anchor: 'targets' as const, shape: 'sheet' as const,
+    offsetMs: 0, durationMs: sheetMs,
+    sheetKey: sheet.sheetKey, firstFrame: sheet.firstFrame, lastFrame: sheet.lastFrame,
+    fps: sheet.fps, fitPx: sheet.fitPx, grounded: sheet.grounded,
+  }] : []
   recipes.set(preset.id, {
     id: preset.id, version: 1, color: preset.color,
     castMs,
-    impactMs: preset.durationMs, recoveryMs: 80,
+    impactMs, recoveryMs: 80,
     cast: [
       ...(impulse ? [{ primitive: 'actor-impulse' as const, anchor: 'source' as const,
         shape: 'impulse' as const, offsetMs: 0,
@@ -41,6 +56,7 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS) as CombatVfxPreset[]) {
         offsetMs: 0, durationMs: castMs },
     ],
     impact: [
+      ...sheetCue,
       { primitive: aura ? 'aura' : ground ? 'ground-shape' : burst ? 'burst' : 'stroke',
         anchor: 'targets', shape: aura || ground ? 'ring' : burst ? 'sparks' : 'slash',
         offsetMs: 0, durationMs: preset.durationMs, count: 12 },

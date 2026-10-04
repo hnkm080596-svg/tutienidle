@@ -1,6 +1,7 @@
 import { defineEnemy } from '../../core/enemy/Enemy'
 import type { Enemy } from '../../core/enemy/Enemy'
 import type { EnemySpecialAttack } from '../../core/enemy/Enemy'
+import type { CombatVfxPresetId } from '../../core/battle/CombatAction'
 import type { TribulationPhase, BossEnrage } from '../../core/enemy/TribulationPhase'
 import type { SignatureDrop } from '../../core/drop/DropTable'
 
@@ -120,6 +121,9 @@ function foundationBeast(params: {
   // to defineEnemy() unchanged. Separate from the legacy `enrage` above.
   bossTrigger?: { afterTurns: number; buffDefinitionId: string }
   specialAttacks?: EnemySpecialAttack[]
+  // Monster attack VFX sweep (2026-10-04) - basic attack's authored VFX
+  // identity; threaded to defineEnemy() unchanged.
+  attackPresetId?: CombatVfxPresetId
   // Per-enemy named drops (Task 6: floor-10 boss Chieu Hien Lenh) -
   // threaded to defineEnemy() unchanged, resolved by resolveDrops.
   signatureDrops?: SignatureDrop[]
@@ -155,6 +159,7 @@ function foundationBeast(params: {
     enrage: params.enrage,
     bossTrigger: params.bossTrigger,
     specialAttacks: params.specialAttacks,
+    attackPresetId: params.attackPresetId,
     signatureDrops: params.signatureDrops,
     family: params.family,
     statsInput: {
@@ -244,6 +249,7 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'fire',
     power: 11,
     resistance: 11,
+    attackPresetId: 'fire_burst',
   }),
   foundationBeast({
     id: 'foundation_sand_scorpion',
@@ -258,6 +264,7 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     // BETA SCOPE LOCK v2 Phase-5 - roster species carrying the
     // re-sourced base_gioi family drop (was metal_beetle's pool).
     family: 'sand_scorpion',
+    attackPresetId: 'claw',
   }),
   foundationBeast({
     id: 'foundation_ferocious_lava_hound',
@@ -307,6 +314,7 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'earth',
     power: 12,
     resistance: 16,
+    attackPresetId: 'boss_ground_slam',
   }),
   foundationBeast({
     id: 'foundation_ferocious_rock_tortoise',
@@ -432,6 +440,9 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     // TurnBattleSystem's specialAttackCounter), so this existing example
     // is live in turn-based combat as of A3.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
+    // Dragon whelp rends with its claws between the authored water
+    // special casts.
+    attackPresetId: 'claw',
     statsInput: {
       // Beta P8 (2026-09-30) - literal stats replace the shared
       // foundationBeast formula for the act-3 boss only. The formula

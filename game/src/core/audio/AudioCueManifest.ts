@@ -140,6 +140,7 @@ const REACTION_IDS = [
 const IMPACT_PRESET_IDS = [
   'slash',
   'claw',
+  'bite',
   'arcane_impact',
   'fire_burst',
   'water_surge',
