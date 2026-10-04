@@ -188,9 +188,10 @@ describe('Detonate (dot-route empowered ult)', () => {
     // doc_can burst: intent 0.2 x 3 remaining x 3 stacks x 1.5 = 2.7,
     // resolved vs the minion's wood power 10 -> 27. The cast's own hoa_an
     // (fire, chance 1) lands then is consumed in the same pass: intent
-    // 0.15 x 3 x 1 x 1.5 = 0.675 vs the caster's fire power 150 -> 101.25.
+    // 0.2 x 3 x 1 x 1.5 = 0.9 vs the caster's fire power 150 -> 135.
+    // (Balance 2026-10-04 skills-review.md C3: hoa_an coefficient 0.15 -> 0.2.)
     // Direct packet floors at min-1.
-    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 27 - 101.25 - 1, 0)
+    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 27 - 135 - 1, 0)
 
     // Utility ailment untouched - same instance, same remaining life.
     const choangAfter = buffsOf(runtime, enemy, 'choang')[0]
@@ -216,8 +217,8 @@ describe('Detonate (dot-route empowered ult)', () => {
 
     // minion burst: 0.2 x 3 x 3 x 1.5 = 2.7 vs wood 10 -> 27; player's
     // own doc_can: 0.2 x 3 x 1 x 1.5 = 0.9 vs wood 130 -> 117; hoa_an:
-    // 101.25; direct min-1.
-    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 27 - 117 - 101.25 - 1, 0)
+    // 135; direct min-1.
+    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 27 - 117 - 135 - 1, 0)
 
     // Both consumed instances are gone; the id re-seeded ONCE by the
     // CASTER at exactly 1 stack and the AUTHORED 3-turn duration.
@@ -230,10 +231,10 @@ describe('Detonate (dot-route empowered ult)', () => {
     // Potency recomputed vs the caster's CURRENT stats - the enemy's
     // own turn end ticks BOTH re-seeded ailments at caster power:
     // doc_can 130 wood x 0.2 = 26 (never the consumed snapshot's
-    // stale 2/tick) + hoa_an 150 fire x 0.15 = 22.5.
+    // stale 2/tick) + hoa_an 150 fire x 0.2 = 30.
     const hpAfterDetonate = enemyEntity.currentHp
     system.resolveActorTurn(battle, enemy)
-    expect(hpAfterDetonate - enemyEntity.currentHp).toBeCloseTo(26 + 22.5, 5)
+    expect(hpAfterDetonate - enemyEntity.currentHp).toBeCloseTo(26 + 30, 5)
   })
 
   it('re-seed is reaction-silent — suppressed eligibility is wired into the consume+re-seed ops', () => {
@@ -259,9 +260,9 @@ describe('Detonate (dot-route empowered ult)', () => {
     system.resolveActorTurn(battle, player)
 
     // Direct packet floors at 1 + the fresh hoa_an IS a DoT ailment --
-    // consumed for intent 0.15 x 3 x 1 x 1.5 = 0.675 vs caster fire power
-    // 150 -> 101.25, then re-seeded at fixed 1.
-    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 1 - 101.25, 0)
+    // consumed for intent 0.2 x 3 x 1 x 1.5 = 0.9 vs caster fire power
+    // 150 -> 135, then re-seeded at fixed 1.
+    expect(enemyEntity.currentHp).toBeCloseTo(hpBefore - 1 - 135, 0)
     const hoaAn = buffsOf(runtime, enemy, 'hoa_an')
     expect(hoaAn).toHaveLength(1)
     expect(hoaAn[0]!.stacks).toBe(1)
