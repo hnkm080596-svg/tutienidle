@@ -27,17 +27,24 @@ import { TRONG_THE_THRESHOLD } from '../buff/PhapTuTrangBuffs'
 // balance pass owns the final tuning).
 // ---------------------------------------------------------------------------
 
-/** Special cast cost: percent of MAX Linh Luc (spec D8, uniform 0.30).
+/** Special cast cost: percent of MAX Linh Luc (spec D8, uniform).
     Stamped as `resourceCostPercentOfMax` on the converted
     TurnSkillDefinition by the resolve seam -- Skill.cost is flat-only and
     cannot express percent-of-max, so the records below leave `cost`
-    unset. */
-export const PHAP_TU_TRANG_COST_PERCENT_OF_MAX = 0.3
+    unset.
+    Balance 2026-10-04 (skills-review.md C1): 0.30 -> 0.15. A zero-damage
+    window costing 30% max MP emptied the pool after ~3 casts and made the
+    auto scheduler burn MP on a trap button; ~15% matches MP regen over
+    the 5-turn cooldown so the window is a real rotation staple. */
+export const PHAP_TU_TRANG_COST_PERCENT_OF_MAX = 0.15
 
 /** Tam Muoi potency multiplier for own-source Hoa An applications while
     the window is up (spec D12; rides the fire basic's ailmentInteractions
-    gated by `whenSourceBuff: 'tam_muoi'`). */
-export const TAM_MUOI_POTENCY_MULTIPLIER = 1.5
+    gated by `whenSourceBuff: 'tam_muoi'`).
+    Balance 2026-10-04 (skills-review.md C2): 1.5 -> 2.0. The window's only
+    payoff is this multiplier on the weakest ailment dot at a 50% proc;
+    x1.5 returned ~10-25 dmg per window vs the ~45-90 forgone basic. */
+export const TAM_MUOI_POTENCY_MULTIPLIER = 2.0
 
 /** Thuy Phap The rider: secondary-hit coefficient vs the primary hit
     (spec D4). */
