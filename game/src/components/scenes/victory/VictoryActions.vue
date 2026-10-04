@@ -51,11 +51,12 @@ const { t } = useI18n()
 .victory-actions {
   display: flex;
   justify-content: center;
-  gap: 14px;
+  gap: 26px;
+  margin-top: 14px;
 }
 .victory-actions :deep(button) {
-  flex: 0 1 200px;
-  padding: 10px;
+  width: 230px;
+  min-height: 50px;
 }
 .victory-actions__glyph {
   width: 14px;
@@ -69,7 +70,6 @@ const { t } = useI18n()
   --btn-accent: var(--hk-jade-soft, #67c4ab);
 }
 .victory-actions__retry.is-disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
+  filter: grayscale(0.5) brightness(0.7);
 }
 </style>
