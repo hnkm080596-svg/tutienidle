@@ -7,6 +7,7 @@ import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDri
 import { applyScreenShake } from '@/presentation/vfx/screenShakePolicy'
 import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
 import { linhBaoCombatDescriptors } from '@/game/support/LinhBaoVfxAssets'
+import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
 import { HoaCauLabPlayback } from './HoaCauLabPlayback'
 
 // This HTML entry is not in the production build and never imports GameManager/save services.
@@ -22,8 +23,42 @@ const tamMuoiInput = element<HTMLInputElement>('tam-muoi-aura')
 element('tam-muoi-label').textContent = i18n.global.t('skillVfxLab.tamMuoiAura')
 const phapTheInput = element<HTMLSelectElement>('phap-the-stacks')
 element('phap-the-label').textContent = i18n.global.t('skillVfxLab.phapTheStacks')
-for (const id of ['ngu_kiem_flight', 'slash', 'earth_shockwave', 'holy_radiance', 'hoa_cau_comet', 'linh_bao_burst'])
-  presetInput.add(new Option(t(id), id))
+// Player-side skills first (ngu_kiem_flight stays the default option: the e2e
+// suite drives the lab's initial play against its flight milestones), then the
+// beta monster attacks keyed by their authored attackPresetId, then the
+// remaining generic presets.
+const MOB_ATTACKS: Record<string, CombatVfxPresetId> = {
+  mob_wild_wolf: 'bite',
+  mob_giant_earthworm: 'earth_shockwave',
+  mob_flame_fox: 'fire_burst',
+  mob_ferocious_flood_serpent: 'water_surge',
+  mob_mortal_wild_boar: 'slash',
+  mob_mortal_savage_tiger: 'claw',
+  mob_mortal_water_wolf: 'bite',
+  mob_mortal_ferocious_giant_crocodile: 'bite',
+  mob_foundation_lava_hound: 'fire_burst',
+  mob_foundation_sand_scorpion: 'claw',
+  mob_foundation_mud_golem: 'boss_ground_slam',
+}
+const mobId = () => (presetInput.value.startsWith('mob_') ? presetInput.value : null)
+const activePreset = (): CombatVfxPresetId => {
+  const mob = mobId()
+  return mob ? MOB_ATTACKS[mob]! : (presetInput.value as CombatVfxPresetId)
+}
+const skillGroup = document.createElement('optgroup')
+skillGroup.label = i18n.global.t('skillVfxLab.groupSkill')
+for (const id of ['ngu_kiem_flight', 'hoa_cau_comet', 'linh_bao_burst', 'holy_radiance'])
+  skillGroup.append(new Option(t(id), id))
+const mobGroup = document.createElement('optgroup')
+mobGroup.label = i18n.global.t('skillVfxLab.groupMonsters')
+for (const id of Object.keys(MOB_ATTACKS)) mobGroup.append(new Option(t(id), id))
+const presetGroup = document.createElement('optgroup')
+presetGroup.label = i18n.global.t('skillVfxLab.groupPresets')
+for (const id of ['slash', 'claw', 'bite', 'arcane_impact', 'fire_burst', 'water_surge',
+  'earth_shockwave', 'metal_slash', 'wood_spikes', 'lightning_strike', 'wind_blade',
+  'shadow_burst', 'boss_ground_slam', 'tu_luc'])
+  presetGroup.append(new Option(t(id), id))
+presetInput.append(skillGroup, mobGroup, presetGroup)
 for (const id of ['hit', 'miss', 'intercept', 'sourceDeath', 'multi', 'combo', 'empty'])
   outcomeInput.add(new Option(t(id), id))
 const fireballMode = () => presetInput.value === 'hoa_cau_comet'
@@ -49,15 +84,29 @@ const scrubInput = element<HTMLInputElement>('scrub')
 const scrubWrap = element<HTMLLabelElement>('scrub-wrap')
 element('scrub-label').textContent = i18n.global.t('skillVfxLab.scrub')
 const paintScrub = () => { scrubWrap.hidden = !manual || !fireballMode() }
-const paintAuraControl = () => { element('tam-muoi-wrap').hidden = !fireballMode() }
-const paintPhapTheControl = () => { element('phap-the-wrap').hidden = !fireballMode() }
+// Seal and aura persist through the buff window, so their controls stay live
+// in every mode - not only while the fireball preview runs.
+const paintAuraControl = () => { element('tam-muoi-wrap').hidden = false }
+const paintPhapTheControl = () => { element('phap-the-wrap').hidden = false }
 paintScrub()
 paintAuraControl()
 paintPhapTheControl()
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
 const quality = query.get('quality') === 'low' || reduced ? 'low' : 'standard'
-const source: ActorAnchorFact = { entityId: 'player', row: 1, column: 1 }
-const target: ActorAnchorFact = { entityId: 'dummy', row: 1, column: 8 }
+// Monster entries attack right-to-left: the lab anchors swap so the cue layer
+// previews the same direction real combat runs.
+let source: ActorAnchorFact = { entityId: 'player', row: 1, column: 1 }
+let target: ActorAnchorFact = { entityId: 'dummy', row: 1, column: 8 }
+function applyDirection() {
+  if (mobId()) {
+    source = { entityId: mobId()!, row: 1, column: 8 }
+    target = { entityId: 'player', row: 1, column: 1 }
+  } else {
+    source = { entityId: 'player', row: 1, column: 1 }
+    target = { entityId: 'dummy', row: 1, column: 8 }
+  }
+}
+applyDirection()
 let sequence = 0
 let impacts = 0
 let completes = 0
@@ -116,27 +165,27 @@ function play(autoplay = false) {
   fireballAutoplay = autoplay
   runner.cancel()
   fireball.cancel()
-  casterFigure.setVisible(!fireballMode())
   if (fireballMode()) {
     scrubInput.value = '0'
     fireball.play(outcomeInput.value !== 'miss', autoplay)
     paintStats()
     return
   }
-  const id = presetInput.value as CombatVfxPresetId
+  const id = activePreset()
   const ref = { sessionId: 1, requestId: 'lab-' + ++sequence, token: 'lab-' + sequence }
   token = ref.token
   const fixture = outcomeInput.value
   const count = fixture === 'multi' ? 8 : 1
   const cast: SkillCastPresentation = {
-    ref, rootSkillId: id, resolvedSkillId: id, presetId: id, source,
+    ref, rootSkillId: mobId() ?? id, resolvedSkillId: id, presetId: id, source,
     declaredTargets: [target], candidateInstanceCount: count, disposition: 'action',
     slotRole: 'basic',
   }
   const receipt: SkillPresentationResolved = { ref, sealed: true, groups: [{
     groupId: 'primary', role: 'primary', resolvedSkillId: id, presetId: id, source,
     actualTargets: id === 'holy_radiance' || fixture === 'sourceDeath' ? [source] : [target],
-    footprint: { kind: 'cells', cells: [{ row: 1, column: fixture === 'sourceDeath' ? 1 : 8 }] },
+    footprint: { kind: 'cells', cells: [{ row: 1,
+      column: id === 'holy_radiance' || fixture === 'sourceDeath' ? source.column : target.column }] },
     outcomes: fixtureOutcomes(fixture, id, count),
   }] }
   const result = fixture === 'combo' ? { ...receipt, groups: [...receipt.groups, {
@@ -163,6 +212,11 @@ class SkillLabScene extends Phaser.Scene {
     for (const asset of linhBaoCombatDescriptors()) {
       this.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
     }
+    // Sheet-bound presets (bite/claw/slash bursts etc.) need their atlases or
+    // the cue layer silently falls back to the analytic primitives.
+    for (const asset of vfxSheetCombatDescriptors()) {
+      this.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
+    }
   }
   create() {
     const backdrop = this.add.graphics()
@@ -174,7 +228,12 @@ class SkillLabScene extends Phaser.Scene {
     backdrop.fillStyle(0x192f3b).fillTriangle(400, 160, 710, 10, 960, 160)
     for (const [x, color] of [[210, 0x7daebd], [750, 0xa89b7d]] as const) {
       const figure = this.add.graphics()
-      if (x === 210) casterFigure = figure
+      if (x === 210) {
+        casterFigure = figure
+        // The playback actor sprite is the caster figure in every mode now;
+        // the drawn silhouette would double up underneath it.
+        figure.setVisible(false)
+      }
       figure.fillStyle(0x081721, 0.8).fillEllipse(x, 325, 110, 26)
       figure.lineStyle(1, color, 0.4).strokeEllipse(x, 325, 132, 38)
       const enemy = x === 750
@@ -212,10 +271,10 @@ class SkillLabScene extends Phaser.Scene {
     }, quality, reduced)
     runner = new SkillPresentationRunner(driver, getSkillPresentationRecipe, error => console.error(error))
     fireball = new HoaCauLabPlayback(this)
-    fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode())
+    fireball.setTamMuoiActive(tamMuoiInput.checked)
     fireball.setPhapTheStacks(Number(phapTheInput.value))
     phapTheInput.onchange = () => { fireball.setPhapTheStacks(Number(phapTheInput.value)); paintStats() }
-    tamMuoiInput.onchange = () => { fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode()); paintStats() }
+    tamMuoiInput.onchange = () => { fireball.setTamMuoiActive(tamMuoiInput.checked); paintStats() }
     scrubInput.oninput = () => {
       if (!manual || !fireballMode()) return
       fireballAutoplay = false
@@ -231,11 +290,11 @@ class SkillLabScene extends Phaser.Scene {
     presetInput.onchange = () => {
       runner.cancel(); fireball.cancel(); token = null
       fireballAutoplay = false
-      casterFigure.setVisible(!fireballMode())
+      applyDirection()
       paintScrub()
       paintAuraControl()
       paintPhapTheControl()
-      fireball.setTamMuoiActive(tamMuoiInput.checked && fireballMode())
+      fireball.setTamMuoiActive(tamMuoiInput.checked)
       paintSequence(); paintStats()
     }
     const lab = {

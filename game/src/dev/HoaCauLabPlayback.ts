@@ -51,8 +51,10 @@ export class HoaCauLabPlayback {
   private hoaTheMs = 0
 
   constructor(private readonly scene: Phaser.Scene) {
+    // The actor is a permanent standby figure: seal and aura overlays must
+    // preview in every lab mode, not only while a fireball cast runs.
     this.actor = scene.add.sprite(210, 325, castClip.sheetKey, frameName(castClip.firstFrame))
-      .setOrigin(0.5, 1).setScale(0.95).setDepth(590).setVisible(false)
+      .setOrigin(0.5, 1).setScale(0.95).setDepth(590).setVisible(true)
     this.auraBack = scene.add.sprite(210, 325, HOA_CAU_VFX_ASSETS.tamMuoiAuraBack.key, 'frame_0')
       .setOrigin(0.5, 1).setScale(0.95).setDepth(589.5)
       .setBlendMode(Phaser.BlendModes.ADD).setVisible(false)
@@ -188,13 +190,13 @@ export class HoaCauLabPlayback {
 
   cancel(): void {
     this.presenter.cancel()
-    this.actor.stop().setVisible(false)
-    this.auraBack.setVisible(false)
-    this.auraFront.setVisible(false)
-    this.phapTheGlyph.setVisible(false)
-    this.hoaThe.setVisible(false)
+    // Back to standby instead of hidden - the seal and aura stay live since
+    // they represent persistent combat state, not cast-transient effects.
+    this.actor.stop().setFrame(frameName(castClip.firstFrame)).setVisible(true)
     this.cast = undefined
     this.phase = 'idle'
+    this.paintPhapTheGlyph()
+    this.setTamMuoiActive(this.tamMuoiActive)
   }
 
   destroy(): void {
