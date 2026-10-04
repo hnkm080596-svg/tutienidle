@@ -13,9 +13,11 @@ import { EventBus } from '../events/EventBus'
 // All cases run on the REAL authored chapters
 // (data/tribulation/TribulationChapters) via
 // director.start('foundation_establishment'): mind (4 questions) -> body
-// (20s, 2s/strike, 10% maxHp) -> lightning (18s, 1.5s/strike, 13% maxHp,
-// 30% maxHp final strike). Answering all 4 questions correctly grants the
-// 20% lightning-damage reduction.
+// (20s, 2s/strike, 8% maxHp) -> lightning (18s, 1.5s/strike, 10% maxHp,
+// 20% maxHp final strike). Answering all 4 questions correctly grants the
+// 20% lightning-damage reduction. The loi_kiep talent x2 intensity keeps
+// the lethal-boundary scenarios reachable after the 2026-10-04 balance
+// pass softened the authored percents.
 
 interface Rig {
   director: TribulationDirector
@@ -48,6 +50,14 @@ function mortalPlayer(): PlayerData {
   return player
 }
 
+// Loi Kiep talent holder - x2 lightning intensity makes body-chapter
+// lethality reachable again under the softened 8% strike profile.
+function loiKiepPlayer(): PlayerData {
+  const player = qiRefiningPlayer()
+  player.selectedTalentIds = ['loi_kiep']
+  return player
+}
+
 function statsWithDefense(defense: number): Stats {
   return createBaseStats({ maxHp: 5000, defense }) as Stats
 }
@@ -71,10 +81,10 @@ function driveToTerminal(director: TribulationDirector, answerCorrectly: boolean
 }
 
 describe('TribulationDirector - unique terminal outcome (M5 / ARCH-006)', () => {
-  it('L02 oracle: def=105, final strike kills on the last chapter end frame -> ["defeat"], hp 0', () => {
+  it('L02 oracle: def=70, final strike kills on the last chapter end frame -> ["defeat"], hp 0', () => {
     const rig = makeRig()
     expect(
-      rig.director.start(qiRefiningPlayer(), statsWithDefense(105), false, 'foundation_establishment'),
+      rig.director.start(qiRefiningPlayer(), statsWithDefense(70), false, 'foundation_establishment'),
     ).toBe(true)
 
     driveToTerminal(rig.director, true)
@@ -87,9 +97,9 @@ describe('TribulationDirector - unique terminal outcome (M5 / ARCH-006)', () => 
     expect(state.hp).toBe(0)
   })
 
-  it('regular lethal strike at the last-chapter boundary (def=100) -> single ["defeat"]', () => {
+  it('regular lethal strike at the last-chapter boundary (def=40) -> single ["defeat"]', () => {
     const rig = makeRig()
-    rig.director.start(qiRefiningPlayer(), statsWithDefense(100), false, 'foundation_establishment')
+    rig.director.start(qiRefiningPlayer(), statsWithDefense(40), false, 'foundation_establishment')
 
     driveToTerminal(rig.director, true)
 
@@ -103,9 +113,9 @@ describe('TribulationDirector - unique terminal outcome (M5 / ARCH-006)', () => 
     expect(rig.chapterChanges).toEqual([0, 1, 2])
   })
 
-  it('lethal strike mid body chapter (def=0, questions unanswered) -> defeat, no chapter change', () => {
+  it('lethal strike mid body chapter (def=0, loi_kiep, questions unanswered) -> defeat, no chapter change', () => {
     const rig = makeRig()
-    rig.director.start(qiRefiningPlayer(), statsWithDefense(0), false, 'foundation_establishment')
+    rig.director.start(loiKiepPlayer(), statsWithDefense(0), false, 'foundation_establishment')
 
     driveToTerminal(rig.director, false)
 
@@ -119,9 +129,9 @@ describe('TribulationDirector - unique terminal outcome (M5 / ARCH-006)', () => 
     expect(rig.chapterChanges).toEqual([0, 1])
   })
 
-  it('lethal strike at the body-chapter boundary (def=15, unanswered) -> never enters lightning chapter', () => {
+  it('lethal strike at the body-chapter boundary (def=100, loi_kiep, unanswered) -> never enters lightning chapter', () => {
     const rig = makeRig()
-    rig.director.start(qiRefiningPlayer(), statsWithDefense(15), false, 'foundation_establishment')
+    rig.director.start(loiKiepPlayer(), statsWithDefense(100), false, 'foundation_establishment')
 
     driveToTerminal(rig.director, false)
 
@@ -136,9 +146,9 @@ describe('TribulationDirector - unique terminal outcome (M5 / ARCH-006)', () => 
     expect(rig.chapterChanges).toEqual([0, 1])
   })
 
-  it('barely survives the final strike at the boundary (def=130) -> ["victory"] exactly once', () => {
+  it('barely survives the final strike at the boundary (def=95) -> ["victory"] exactly once', () => {
     const rig = makeRig()
-    rig.director.start(qiRefiningPlayer(), statsWithDefense(130), false, 'foundation_establishment')
+    rig.director.start(qiRefiningPlayer(), statsWithDefense(95), false, 'foundation_establishment')
 
     driveToTerminal(rig.director, true)
 
@@ -165,7 +175,7 @@ describe('TribulationDirector - unique terminal outcome (M5 / ARCH-006)', () => 
 
   it('defeat path: extra ticks after the terminal emit no further outcome', () => {
     const rig = makeRig()
-    rig.director.start(qiRefiningPlayer(), statsWithDefense(105), false, 'foundation_establishment')
+    rig.director.start(qiRefiningPlayer(), statsWithDefense(70), false, 'foundation_establishment')
 
     driveToTerminal(rig.director, true)
     expect(rig.outcomes).toEqual(['defeat'])

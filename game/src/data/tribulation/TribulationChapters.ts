@@ -91,13 +91,13 @@ const CHAPTERS_BY_REALM: Record<string, readonly TribulationChapterProfile[]> = 
       kind: 'body',
       name: 'Thân Kiếp',
       description: 'Lôi hỏa rèn thân — lôi kích đều đặn, máu phải trụ được.',
-      tank: { durationSeconds: 20, strikeIntervalSeconds: 2, lightningMaxHpDamagePercent: 0.1 },
+      tank: { durationSeconds: 20, strikeIntervalSeconds: 2, lightningMaxHpDamagePercent: 0.08 },
     },
     {
       kind: 'lightning',
       name: 'Lôi Kiếp',
       description: 'Cửu tiêu thần lôi — đợt dồn dập khép lại bằng một đạo đại lôi.',
-      tank: { durationSeconds: 18, strikeIntervalSeconds: 1.5, lightningMaxHpDamagePercent: 0.13, finalStrikeMaxHpDamagePercent: 0.3 },
+      tank: { durationSeconds: 18, strikeIntervalSeconds: 1.5, lightningMaxHpDamagePercent: 0.1, finalStrikeMaxHpDamagePercent: 0.2 },
     },
   ],
 }
