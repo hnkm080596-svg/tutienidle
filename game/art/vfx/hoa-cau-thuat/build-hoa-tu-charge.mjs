@@ -125,13 +125,9 @@ export function buildHoaTuCharge() {
         track([[0, 0], [0.1, 1], [0.45, 0.9]])),
     ]),
 
-    // Release handoff: a tight intake pulse + bright flash as the cast
-    // commits - the phoenix picks up the brightness from here.
-    sprite('lr_ht_intake', 'Final intake pulse', 1.52, duration,
-      { sprite: shape('ring'), x: 0, y: 0, size: 70, aspect: 1,
-        color: [255, 210, 120], glow: 0.7,
-        scale: track([[1.52, 1.5], [1.66, 0.5], [duration, 0.2]]) },
-      track([[1.52, 0.9], [1.66, 0.5], [duration, 0]])),
+    // Release handoff: a bright flash as the cast commits - the phoenix
+    // picks up the brightness from here. (Minh 2026-10-04: the intake ring
+    // read as an unrelated circle stamped on the orb - dropped.)
     sprite('lr_ht_flash', 'Release flash', 1.62, duration,
       { sprite: shape('soft'), x: 0, y: 0, size: 44, aspect: 1,
         color: [255, 246, 214], glow: 1.15,

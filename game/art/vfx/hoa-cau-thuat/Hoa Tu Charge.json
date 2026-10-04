@@ -1287,63 +1287,6 @@
         }
       },
       {
-        "id": "lr_ht_intake",
-        "name": "Final intake pulse",
-        "type": "sprite",
-        "start": 1.52,
-        "end": 1.7,
-        "blend": "add",
-        "opacity": {
-          "keys": [
-            {
-              "t": 1.52,
-              "v": 0.9
-            },
-            {
-              "t": 1.66,
-              "v": 0.5
-            },
-            {
-              "t": 1.7,
-              "v": 0
-            }
-          ]
-        },
-        "sp": {
-          "sprite": {
-            "kind": "shape",
-            "id": "ring",
-            "p": {}
-          },
-          "x": 0,
-          "y": 0,
-          "size": 70,
-          "aspect": 1,
-          "color": [
-            255,
-            210,
-            120
-          ],
-          "glow": 0.7,
-          "scale": {
-            "keys": [
-              {
-                "t": 1.52,
-                "v": 1.5
-              },
-              {
-                "t": 1.66,
-                "v": 0.5
-              },
-              {
-                "t": 1.7,
-                "v": 0.2
-              }
-            ]
-          }
-        }
-      },
-      {
         "id": "lr_ht_flash",
         "name": "Release flash",
         "type": "sprite",
