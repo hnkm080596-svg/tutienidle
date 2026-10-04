@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import SkillConstellationPanel from '@/components/panels/skill-constellation/SkillConstellationPanel.vue'
 import SkillPaperTree from './SkillPaperTree.vue'
 import SkillPaperDetails from './SkillPaperDetails.vue'
+import { ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
+import type { SkillConstellationLayout } from '@/data/progression/SkillConstellationLayouts'
 import type { SkillUiNode, SkillUiEdge, SkillUiElement } from './skillUi'
-withDefaults(
+const props = withDefaults(
   defineProps<{
     nodes: readonly SkillUiNode[]
     edges: readonly SkillUiEdge[]
@@ -25,8 +28,19 @@ withDefaults(
     graphSize?: number
     graphFit?: number
     preview?: boolean
+    /** Authored glyph layout for the selected element; when set the
+     *  constellation panel replaces the radial tree. */
+    constellation?: SkillConstellationLayout | null
+    /** Node id mid-unlock animation (dash travel + arrival pulse). */
+    unlocking?: string
   }>(),
-  { preview: false, graphSize: 710, graphFit: 1 },
+  { preview: false, graphSize: 710, graphFit: 1, constellation: null, unlocking: '' },
+)
+
+// Accent comes from the element tokens - the plan forbids per-glyph
+// hardcoded palettes.
+const constellationAccent = computed(
+  () => (ELEMENT_COLOR_VARS as Record<string, string>)[props.element] ?? '',
 )
 const emit = defineEmits<{ navigate: [id: string]; back: []; select: [id: string]; element: [id: string]; upgrade: [id: string]; respec: [] }>()
 const { t } = useI18n()
@@ -43,7 +57,17 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <PaperPanelNavigation :items="navigation" active="skill" :label="t('skill.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <header class="skill-heading"><h1>{{ t('skill.title') }}</h1><p>{{ identity }}</p></header>
     <div v-if="elements.length" class="skill-elements" role="group" :aria-label="t('skill.elements')"><button v-for="entry in elements" :key="entry.id" :class="{ active: entry.id === element }" :aria-pressed="entry.id === element" @click="emit('element', entry.id)"><img :src="entry.icon" alt=""><span>{{ entry.label }}</span></button></div>
-    <SkillPaperTree :nodes="nodes" :edges="edges" :selected="selected?.id ?? ''" :size="graphSize" :fit="graphFit" @select="emit('select', $event)" />
+    <SkillConstellationPanel
+      v-if="constellation"
+      :layout="constellation"
+      :nodes="nodes"
+      :edges="edges"
+      :selected="selected?.id ?? ''"
+      :unlocking="unlocking"
+      :accent="constellationAccent"
+      @select="emit('select', $event)"
+    />
+    <SkillPaperTree v-else :nodes="nodes" :edges="edges" :selected="selected?.id ?? ''" :size="graphSize" :fit="graphFit" @select="emit('select', $event)" />
     <SkillPaperDetails :node="selected" :notice="notice" @upgrade="emit('upgrade', $event)" />
     <footer class="skill-meta">
       <span class="skill-insight">{{ insightLabel }}</span>

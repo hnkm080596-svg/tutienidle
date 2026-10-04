@@ -3,10 +3,14 @@
 // surface (paper constellation + node detail rail) fed entirely by the
 // canonical read-models - progressionOps.betaSkillTreeFor resolves every
 // node predicate (scope-hidden/reveal gates/purchasable/canUpgrade/
-// costs), the layout reuses the same pure radial projection the retired
-// NodeTreePanel consumed, and mutations stay on useProgressionActions
+// costs), and mutations stay on useProgressionActions
 // (purchaseNode / upgradeNode / respecNodeTree). Nothing here recomputes
 // gates, costs, or pathway admission.
+//
+// Layout: branches with an authored Han-glyph constellation
+// (SkillConstellationLayouts - beta: fire only) render their authored
+// points; every other branch keeps the radial projection the retired
+// NodeTreePanel consumed, per the plan's fallback rule.
 //
 // Pathway lock (user ruling S07): the surface renders ONLY the committed
 // pathway - element pills appear solely for the elements the tree model
@@ -27,6 +31,10 @@ import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { layoutRadialGraph } from '@/components/panels/skill-path/skillGraphLayout'
+import {
+  constellationPointsById,
+  skillConstellationLayoutFor,
+} from '@/data/progression/SkillConstellationLayouts'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
@@ -127,6 +135,30 @@ const elements = computed<SkillUiElement[]>(() =>
     icon: resolveAssetUrl(`/assets/ui/elements/el-${id}.png`),
   })),
 )
+
+// The glyph the selected element branch has authored, if any.
+const constellation = computed(() =>
+  pathwayRows.value.spell && selectedElement.value !== null
+    ? (skillConstellationLayoutFor(selectedElement.value) ?? null)
+    : null,
+)
+const constellationPoints = computed(() =>
+  constellation.value !== null ? constellationPointsById(constellation.value) : null,
+)
+
+// Brief "node id mid-unlock" flag - lets the constellation run the
+// parent->child energy travel + arrival pulse once per purchase.
+const unlockingId = ref('')
+let unlockTimer: number | undefined
+function flagUnlock(id: string) {
+  unlockingId.value = id
+  if (unlockTimer !== undefined) clearTimeout(unlockTimer)
+  unlockTimer = window.setTimeout(() => {
+    unlockTimer = undefined
+    unlockingId.value = ''
+  }, 1500)
+}
+onBeforeUnmount(() => { if (unlockTimer !== undefined) clearTimeout(unlockTimer) })
 
 // Rendered graph: spell paths view the selected element branch; other
 // pathways render every tag in one constellation.
@@ -260,7 +292,8 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     }
   }
 
-  const position = layout.value.positions.get(node.id) ?? { x: 0, y: 0 }
+  const glyphPoint = constellationPoints.value?.get(node.id)
+  const position = glyphPoint ?? layout.value.positions.get(node.id) ?? { x: 0, y: 0 }
 
   return {
     id: node.id,
@@ -269,6 +302,7 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     x: position.x,
     y: position.y,
     prominent: entry.depth === 0,
+    emphasis: glyphPoint?.emphasis ?? 'normal',
     level: `${row.level} / ${row.maxLevel}`,
     state,
     description: row.description ?? '',
@@ -299,6 +333,7 @@ const selected = computed(() => nodes.value.find((node) => node.id === selectedI
 const insightLabel = computed(() => `${t('panels.nodeTree.labels.insight')}: ${formatNumber(player.skillInsight)}`)
 
 function onSelectElement(id: string) {
+  unlockingId.value = ''
   selectedElement.value = id as ElementType
 }
 function onSelect(id: string) {
@@ -308,6 +343,7 @@ function onUpgrade(id: string) {
   const row = rowsById.value.get(id)
   if (!row || inBattle.value) return
   const ok = row.level >= 1 ? (row.canUpgrade && upgradeNode(id)) : (row.state === 'purchasable' && purchaseNode(id))
+  if (ok) flagUnlock(id)
   flashNotice(ok ? t('skill.actionDone', { name: row.name }) : t('skill.actionFailed'))
 }
 
@@ -336,6 +372,7 @@ watch(inBattle, (engaged) => { if (engaged) pendingRespec.value = false })
 function onRespec() { if (!respecDisabled.value) pendingRespec.value = true }
 function confirmRespec() {
   pendingRespec.value = false
+  unlockingId.value = ''
   if (!inBattle.value) respecNodeTree()
 }
 </script>
@@ -355,6 +392,8 @@ function confirmRespec() {
       :respec-disabled="respecDisabled"
       :graph-size="graphSize"
       :graph-fit="graphFit"
+      :constellation="constellation"
+      :unlocking="unlockingId"
       @select="onSelect"
       @element="onSelectElement"
       @navigate="navigate"

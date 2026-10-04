@@ -6,6 +6,20 @@ export const skillMessages = { vi: {
   level: 'Cấp kỹ năng', effect: 'Hiệu ứng', effectValue: 'Theo dữ liệu kỹ năng',
   costSample: 'Chi phí: 5 Cảm Ngộ', lockedHint: 'Điều kiện mở nhánh sẽ được cung cấp khi nối logic.', fixtureNote: 'Dữ liệu mẫu để duyệt UI, không phải điều kiện hay cây kỹ năng chính thức.', upgrade: 'Nâng Cấp', notice: 'Chỉ xem trước UI — chưa học, tăng cấp hay tiêu hao điểm.',
   navNotice: '{name} — chưa có bản duyệt trong màn này.',
+  // Display names for the authored fire constellation fixture
+  // (SkillConstellationLayouts fire glyph) - mirror the registry names
+  // so the preview reads like the real branch.
+  fireConst: {
+    hoa_linh_ngo: 'Hỏa Linh Ngộ',
+    hoa_an_sau: 'Hỏa Ấn Sâu',
+    hoa_nhiet_keo: 'Nhiệt Kéo',
+    fire_basic_hoa_tu_diem: 'Tụ Diễm',
+    hoa_diem_chuan: 'Diễm Chuẩn',
+    hoa_diem_tham: 'Diễm Thấm',
+    fire_basic_hoa_tan_diem: 'Tán Diễm',
+    fire_ailment_mastery: 'Hỏa Chưởng',
+    linh_ngo_tam_muoi_chan_hoa: 'Linh Ngộ Hỏa Đặc Biệt',
+  },
   // Mirrors the production `skill.*` + `dongFu.aria` +
   // `panels.nodeTree.respec.*` keys the fidelity surface resolves.
   skill: {
@@ -14,6 +28,7 @@ export const skillMessages = { vi: {
     effects: 'Hiệu Ứng', conditions: 'Điều Kiện', noConditions: 'Không có điều kiện bổ sung.',
     state: { learned: 'Đã Lĩnh Ngộ', available: 'Có Thể Lĩnh Ngộ', locked: 'Chưa Đủ Điều Kiện' },
     actionDone: '{name} đã cập nhật.', actionFailed: 'Không thể thực hiện — kiểm tra điều kiện và Cảm Ngộ.',
+    constellation: { legendGlyph: 'Nét chữ', legendPrereq: 'Điều kiện', canvas: 'Chòm sao {glyph}' },
   },
   dongFu: { aria: 'Về Động Phủ' },
   panels: { nodeTree: { respec: { button: 'Đặt Lại' } } },

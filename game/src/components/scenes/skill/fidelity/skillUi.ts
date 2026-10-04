@@ -5,6 +5,9 @@ export interface SkillUiNode {
   x: number
   y: number
   prominent?: boolean
+  /** Constellation emphasis from the glyph layout (plan sec.4) - drives
+   *  the minor/major/root sizing inside SkillConstellationPanel. */
+  emphasis?: 'normal' | 'major' | 'root'
   level: string
   state: 'learned' | 'available' | 'locked'
   description: string
