@@ -297,6 +297,15 @@ function betaDormantTreeViewTags(): ReadonlySet<string> {
   return tags
 }
 
+// Grant-only content never joins the tree surface (rewardOnly realm
+// grants; grantedOnly/levelsSkillId cores are defensive coverage -
+// PHAP_TU_NODES currently authors none of those two). Shared with the
+// constellation layout validation so a new exclusion flag here stays
+// authoritative for both consumers.
+export function betaNodeTreeRenderable(node: ProgressionNode): boolean {
+  return !(node.rewardOnly === true || node.grantedOnly === true || node.levelsSkillId !== undefined)
+}
+
 export function betaTreeNodeAdmitted(node: ProgressionNode): boolean {
   if (node.requiredWay !== undefined && !isBetaWay(node.requiredWay)) {
     return false
@@ -511,10 +520,7 @@ function treeNodeFor(
     ],
   }
 
-  // Grant-only content never joins the tree surface (rewardOnly realm
-  // grants; grantedOnly/levelsSkillId cores are defensive coverage -
-  // PHAP_TU_NODES currently authors none of those two).
-  if (node.rewardOnly === true || node.grantedOnly === true || node.levelsSkillId !== undefined) {
+  if (!betaNodeTreeRenderable(node)) {
     return { ...entry, state: 'scope-hidden', reason: 'grant-only-node' }
   }
 

@@ -2028,7 +2028,12 @@
       "locked": "Chưa Đủ Điều Kiện"
     },
     "actionDone": "{name} đã cập nhật.",
-    "actionFailed": "Không thể thực hiện — kiểm tra điều kiện và Cảm Ngộ."
+    "actionFailed": "Không thể thực hiện — kiểm tra điều kiện và Cảm Ngộ.",
+    "constellation": {
+      "legendGlyph": "Nét chữ",
+      "legendPrereq": "Điều kiện",
+      "canvas": "Chòm sao {glyph}"
+    }
   },
   "body": {
     "title": "Luyện Thể",
