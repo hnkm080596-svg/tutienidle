@@ -178,7 +178,7 @@ describe('requiredWay — domain collectors honor the same gate', () => {
   })
 
   it('resolveMaxThe: spell_pathway gates the pool on the hoa_the node (0 locked → 5 owned); MAX_THE elsewhere', () => {
-    // Hoa The gate (Minh ruling 2026-10-04): the pool is node-unlocked —
+    // Hoa The gate (Minh ruling 2026-10-04): the pool is node-unlocked -
     // the truong_the theCapPerLevel aggregator stayed retired; ownership
     // of the hoa_the node is the new unlock (spec D1 + gate ruling).
     const nguHanh = playerWith({ cultivationPath: 'spell', cultivationWay: 'spell_pathway' })
