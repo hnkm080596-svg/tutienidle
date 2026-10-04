@@ -210,7 +210,14 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
     // (tam_muoi_chan_hoa for fire) + the Linh Luc Ho The cap. Insight
     // tops up to a floor (not +=) so re-running setup on a provisioned
     // save stays idempotent instead of stacking grants on every boot.
-    playerState.skillInsight = Math.max(playerState.skillInsight, options.skillInsight ?? 20)
+    // F-A11-3: the mint bumps totalSkillInsightGained in the same
+    // statement - a bare skillInsight write reads as a fabricated
+    // currency claim and the save gate rejects the provisioned save.
+    const insightTarget = Math.max(playerState.skillInsight, options.skillInsight ?? 20)
+    if (insightTarget > playerState.skillInsight) {
+      playerState.totalSkillInsightGained += insightTarget - playerState.skillInsight
+      playerState.skillInsight = insightTarget
+    }
 
     const specialId = SPELL_KIT_IDS[element]?.[1]
 

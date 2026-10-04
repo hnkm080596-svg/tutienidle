@@ -83,6 +83,22 @@ describe('phapTuLab poke', () => {
     expect(deps.refreshUi).toHaveBeenCalled()
   })
 
+  it('the minted insight carries its totalSkillInsightGained witness (F-A11-3)', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    const deps = makeDeps(gameManager)
+    registerCatalogs(gameManager)
+    registerPhapTuLab(deps)
+
+    window.__tutienPhapTuLab!.setup()
+
+    // The save gate rejects skillInsight > totalSkillInsightGained as a
+    // fabricated currency claim - the lab mint must keep the pair in step
+    // (20 minted, the keystone purchase then spends what it costs).
+    expect(player.totalSkillInsightGained).toBe(20)
+    expect(player.totalSkillInsightGained).toBeGreaterThanOrEqual(player.skillInsight)
+  })
+
   it('re-running setup leaves the provisioned save unchanged', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
