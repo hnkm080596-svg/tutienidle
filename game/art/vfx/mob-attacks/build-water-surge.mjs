@@ -2,22 +2,33 @@ import { curve, grad, texMeta, texPayloads, texture, track, writeOnRun } from '.
 
 const DOC_ID = 'fx_mob_water_surge'
 
-// Curling wave tongue crashing left to right: deep blue body, bright foam cap
-// on the lip, stray foam flecks. The dark inner curl sells the water mass.
+// Translucent spectral wave curling over the target, crashing right to left
+// (enemy side toward the player): azure body, scalloped foam cap on the lip,
+// dark inner curl, trailing spray streaks and stray droplets.
 const CREST_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
   <defs>
     <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#4aa9ef"/>
-      <stop offset="1" stop-color="#135cb0"/>
+      <stop offset="0" stop-color="#8fd8ff"/>
+      <stop offset="1" stop-color="#1a6fd0"/>
     </linearGradient>
   </defs>
-  <path d="M36 190 C70 110 140 70 190 92 C214 104 220 130 206 148 C196 162 178 164 168 154 C182 152 190 140 184 126 C176 108 148 106 122 122 C96 138 74 164 62 190 Z"
-    fill="url(#body)" stroke="#0d3f7c" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M60 152 C96 104 150 84 188 100 C200 106 206 118 202 130 C190 116 168 110 148 116 C118 126 92 150 76 172 Z" fill="#f2fbff"/>
-  <path d="M96 158 C120 140 148 130 170 132" fill="none" stroke="#bfe6ff" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
-  <ellipse cx="212" cy="96" rx="7" ry="5" fill="#f2fbff"/>
-  <ellipse cx="226" cy="118" rx="5" ry="4" fill="#d9f1ff"/>
-  <ellipse cx="222" cy="76" rx="4" ry="3" fill="#f2fbff"/>
+  <path d="M216 150 L236 134 M204 120 L226 106 M190 96 L212 84" fill="none" stroke="#cfeeff" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M232 196 C196 96 116 56 56 84 C28 98 20 128 38 150 C52 168 74 168 84 156 C68 152 60 138 68 122 C78 102 108 102 138 120 C168 138 194 166 208 196 Z"
+    fill="url(#body)" opacity="0.78"/>
+  <path d="M84 156 C68 152 60 138 68 122 C78 102 108 102 138 120 C152 129 166 141 178 156 C160 148 138 138 116 140 C96 142 84 148 84 156 Z" fill="#0d4f9e" opacity="0.6"/>
+  <path d="M196 132 C160 84 104 68 58 88 C42 96 34 110 36 124 C44 108 60 96 80 92 C114 84 152 100 178 128 C186 136 192 144 196 152 Z" fill="#f4fbff" opacity="0.95"/>
+  <g fill="#ffffff" opacity="0.95">
+    <circle cx="178" cy="118" r="9"/>
+    <circle cx="158" cy="104" r="10"/>
+    <circle cx="136" cy="94" r="10"/>
+    <circle cx="112" cy="88" r="10"/>
+    <circle cx="88" cy="88" r="9"/>
+    <circle cx="66" cy="94" r="8"/>
+    <circle cx="50" cy="106" r="7"/>
+  </g>
+  <circle cx="28" cy="88" r="6" fill="#f4fbff"/>
+  <circle cx="18" cy="116" r="4" fill="#dff3ff"/>
+  <circle cx="34" cy="66" r="4" fill="#f4fbff"/>
 </svg>`
 
 const crest = texture('mob_water_crest', CREST_SVG)
@@ -98,7 +109,7 @@ export function buildMobWaterSurge() {
           opacity: track([[0.03, 0], [0.1, 0.95], [0.28, 0.9], [0.4, 0]]),
           sp: {
             sprite: { kind: 'tex', texId: crest.id, p: {} }, size: 210,
-            x: track([[0.03, -74], [0.16, -6], [0.4, 44]]),
+            x: track([[0.03, 74], [0.16, 6], [0.4, -44]]),
             y: FEET - 28,
             scale: track([[0.03, 0.85], [0.16, 1.05], [0.4, 1.1]]),
             aspect: 1, rot: 0, color: [255, 255, 255], squash: 0.45, glow: 0, glowSize: 1.6, glowBlur: 0.15, fps: 0,

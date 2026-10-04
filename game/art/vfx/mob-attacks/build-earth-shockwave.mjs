@@ -2,54 +2,54 @@ import { curve, grad, texMeta, texPayloads, texture, track, writeOnRun } from '.
 
 const DOC_ID = 'fx_mob_earth_shockwave'
 
-// One jagged fault line crossing the comp with branches and rubble chips; the
-// sprite layer squashes it into the ground plane at runtime.
+// Bold jagged rift lines fanning out from the epicenter plus lifted crust
+// slabs and a ground dent smudge. Drawn for a ground-anchored binding (the
+// sprite sits at feet level); translucent so the ground reads through.
 const CRACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <g fill="none" stroke="#241207" stroke-width="8" stroke-linecap="round" stroke-linejoin="miter">
-    <path d="M30 142 L72 126 L98 138 L128 120 L162 134 L198 122 L228 132"/>
-    <path d="M60 106 L98 100 L134 108"/>
-    <path d="M142 154 L174 148 L202 156"/>
-    <path d="M128 120 L134 94 L146 74"/>
-    <path d="M128 120 L118 150 L110 172"/>
-    <path d="M162 134 L176 156 L184 176"/>
-    <path d="M98 138 L86 164 L80 186"/>
+  <g fill="none" stroke="#1a0c04" stroke-linecap="round" stroke-linejoin="round" opacity="0.85">
+    <path d="M128 140 L102 130 L76 140 L50 128 L24 140" stroke-width="16"/>
+    <path d="M128 140 L158 128 L188 140 L214 128 L240 138" stroke-width="16"/>
+    <path d="M128 140 L138 108 L126 82 L140 56" stroke-width="14"/>
+    <path d="M102 130 L96 158 L80 180" stroke-width="11"/>
+    <path d="M158 128 L170 156 L166 182" stroke-width="11"/>
+    <path d="M76 140 L66 112 L50 100" stroke-width="10"/>
+    <path d="M188 140 L200 114 L218 102" stroke-width="10"/>
+    <path d="M128 140 L114 166 L120 190" stroke-width="12"/>
   </g>
-  <g fill="none" stroke="#7a4f26" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="miter">
-    <path d="M30 142 L72 126 L98 138 L128 120 L162 134 L198 122 L228 132"/>
-    <path d="M60 106 L98 100 L134 108"/>
-    <path d="M142 154 L174 148 L202 156"/>
-    <path d="M128 120 L134 94 L146 74"/>
-    <path d="M128 120 L118 150 L110 172"/>
-    <path d="M162 134 L176 156 L184 176"/>
-    <path d="M98 138 L86 164 L80 186"/>
-  </g>
-  <g fill="#241207">
-    <path d="M118 128 L134 122 L142 134 L126 140 Z"/>
-    <path d="M78 122 L90 116 L96 126 L84 132 Z"/>
-    <path d="M172 128 L184 122 L190 132 L178 138 Z"/>
+  <ellipse cx="128" cy="142" rx="46" ry="18" fill="#120702" opacity="0.55"/>
+  <g fill="#160a04" opacity="0.9">
+    <path d="M96 116 L124 104 L134 120 L106 130 Z"/>
+    <path d="M58 114 L80 106 L88 122 L66 130 Z"/>
+    <path d="M178 114 L200 106 L208 122 L186 130 Z"/>
+    <path d="M138 58 L158 48 L164 64 L146 72 Z"/>
+    <path d="M124 146 L148 138 L156 154 L132 160 Z"/>
+    <path d="M64 162 L82 156 L88 170 L70 176 Z"/>
+    <path d="M182 162 L200 156 L206 170 L188 176 Z"/>
   </g>
 </svg>`
 
 // Hot variant of the same faults - light strokes only, used by the additive
 // ember layer (dark texels add no light under 'add' blend).
 const CRACK_HOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <g fill="none" stroke="#ff9d3e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.55">
-    <path d="M30 142 L72 126 L98 138 L128 120 L162 134 L198 122 L228 132"/>
-    <path d="M60 106 L98 100 L134 108"/>
-    <path d="M142 154 L174 148 L202 156"/>
-    <path d="M128 120 L134 94 L146 74"/>
-    <path d="M128 120 L118 150 L110 172"/>
-    <path d="M162 134 L176 156 L184 176"/>
-    <path d="M98 138 L86 164 L80 186"/>
+  <g fill="none" stroke="#ff8f2e" stroke-linecap="round" stroke-linejoin="round" opacity="0.55">
+    <path d="M128 140 L102 130 L76 140 L50 128 L24 140" stroke-width="10"/>
+    <path d="M128 140 L158 128 L188 140 L214 128 L240 138" stroke-width="10"/>
+    <path d="M128 140 L138 108 L126 82 L140 56" stroke-width="9"/>
+    <path d="M102 130 L96 158 L80 180" stroke-width="7"/>
+    <path d="M158 128 L170 156 L166 182" stroke-width="7"/>
+    <path d="M76 140 L66 112 L50 100" stroke-width="6"/>
+    <path d="M188 140 L200 114 L218 102" stroke-width="6"/>
+    <path d="M128 140 L114 166 L120 190" stroke-width="8"/>
   </g>
-  <g fill="none" stroke="#ffd9a0" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M30 142 L72 126 L98 138 L128 120 L162 134 L198 122 L228 132"/>
-    <path d="M60 106 L98 100 L134 108"/>
-    <path d="M142 154 L174 148 L202 156"/>
-    <path d="M128 120 L134 94 L146 74"/>
-    <path d="M128 120 L118 150 L110 172"/>
-    <path d="M162 134 L176 156 L184 176"/>
-    <path d="M98 138 L86 164 L80 186"/>
+  <g fill="none" stroke="#ffe1ac" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128 140 L102 130 L76 140 L50 128 L24 140" stroke-width="4"/>
+    <path d="M128 140 L158 128 L188 140 L214 128 L240 138" stroke-width="4"/>
+    <path d="M128 140 L138 108 L126 82 L140 56" stroke-width="3.5"/>
+    <path d="M102 130 L96 158 L80 180" stroke-width="2.8"/>
+    <path d="M158 128 L170 156 L166 182" stroke-width="2.8"/>
+    <path d="M76 140 L66 112 L50 100" stroke-width="2.4"/>
+    <path d="M188 140 L200 114 L218 102" stroke-width="2.4"/>
+    <path d="M128 140 L114 166 L120 190" stroke-width="3"/>
   </g>
 </svg>`
 
