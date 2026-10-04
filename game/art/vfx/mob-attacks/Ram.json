@@ -28,12 +28,74 @@
     },
     "textures": [
       {
-        "id": "tex_mob_ram_wedge_5e5c66ff599e",
-        "name": "mob ram wedge",
+        "id": "tex_mob_ram_boar_317ad192da49",
+        "name": "mob ram boar",
         "sheet": null
       }
     ],
     "layers": [
+      {
+        "id": "lr_ram_glint",
+        "name": "Impact Glint",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.11,
+              "v": 0
+            },
+            {
+              "t": 0.125,
+              "v": 0.8
+            },
+            {
+              "t": 0.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "spark",
+            "p": {}
+          },
+          "size": 44,
+          "x": -12,
+          "y": 8,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.11,
+                "v": 0.5
+              },
+              {
+                "t": 0.14,
+                "v": 1.1
+              },
+              {
+                "t": 0.2,
+                "v": 1.4
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            246,
+            220
+          ],
+          "squash": 0,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
       {
         "id": "lr_ram_flash",
         "name": "Impact Flash",
@@ -48,11 +110,11 @@
               "v": 0
             },
             {
-              "t": 0.13,
-              "v": 0.95
+              "t": 0.125,
+              "v": 0.8
             },
             {
-              "t": 0.26,
+              "t": 0.25,
               "v": 0
             }
           ]
@@ -63,22 +125,22 @@
             "id": "soft",
             "p": {}
           },
-          "size": 160,
-          "x": -6,
-          "y": -2,
+          "size": 78,
+          "x": -12,
+          "y": 10,
           "scale": {
             "keys": [
               {
                 "t": 0.105,
-                "v": 0.4
+                "v": 0.5
               },
               {
-                "t": 0.16,
-                "v": 1.5
+                "t": 0.15,
+                "v": 1.05
               },
               {
-                "t": 0.26,
-                "v": 1.9
+                "t": 0.25,
+                "v": 1.3
               }
             ]
           },
@@ -87,7 +149,7 @@
           "color": [
             255,
             236,
-            205
+            200
           ],
           "squash": 0,
           "glow": 0.5,
@@ -97,68 +159,374 @@
         }
       },
       {
-        "id": "lr_ram_burst",
-        "name": "Impact Starburst",
+        "id": "lr_ram_boar",
+        "name": "Spectral Boar",
         "type": "sprite",
-        "blend": "add",
+        "blend": "normal",
         "start": -0.02,
         "end": 0.4,
         "opacity": {
           "keys": [
             {
-              "t": 0.11,
-              "v": 0
+              "t": 0,
+              "v": 0.1
             },
             {
-              "t": 0.14,
-              "v": 0.9
+              "t": 0.02,
+              "v": 0.82
             },
             {
-              "t": 0.3,
+              "t": 0.125,
+              "v": 0.82
+            },
+            {
+              "t": 0.19,
               "v": 0
             }
           ]
         },
         "sp": {
           "sprite": {
-            "kind": "shape",
-            "id": "star",
-            "p": {
-              "n": 8,
-              "inner": 0.22
-            }
+            "kind": "tex",
+            "texId": "tex_mob_ram_boar_317ad192da49",
+            "p": {}
           },
-          "size": 190,
-          "x": -6,
-          "y": -2,
-          "scale": {
+          "size": 200,
+          "x": {
             "keys": [
               {
+                "t": 0,
+                "v": 230
+              },
+              {
                 "t": 0.11,
-                "v": 0.35
+                "v": 76
               },
               {
-                "t": 0.17,
-                "v": 1.1
-              },
-              {
-                "t": 0.3,
-                "v": 1.5
+                "t": 0.185,
+                "v": 52
               }
             ]
           },
-          "rot": 8,
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -8
+              },
+              {
+                "t": 0.11,
+                "v": -3
+              },
+              {
+                "t": 0.185,
+                "v": -1
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.92
+              },
+              {
+                "t": 0.11,
+                "v": 1
+              },
+              {
+                "t": 0.185,
+                "v": 1.02
+              }
+            ]
+          },
           "aspect": 1,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.11,
+                "v": -6
+              },
+              {
+                "t": 0.185,
+                "v": -4
+              }
+            ]
+          },
           "color": [
             255,
-            214,
-            150
+            255,
+            255
           ],
-          "squash": 0,
-          "glow": 0.4,
+          "squash": 0.12,
+          "glow": 0,
           "glowSize": 1.6,
           "glowBlur": 0.15,
           "fps": 0
+        }
+      },
+      {
+        "id": "lr_ram_echo",
+        "name": "Boar Echo",
+        "type": "sprite",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.06
+            },
+            {
+              "t": 0.03,
+              "v": 0.4
+            },
+            {
+              "t": 0.13,
+              "v": 0.36
+            },
+            {
+              "t": 0.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_ram_boar_317ad192da49",
+            "p": {}
+          },
+          "size": 200,
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 285
+              },
+              {
+                "t": 0.11,
+                "v": 131
+              },
+              {
+                "t": 0.185,
+                "v": 107
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -8
+              },
+              {
+                "t": 0.11,
+                "v": -3
+              },
+              {
+                "t": 0.185,
+                "v": -1
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.92
+              },
+              {
+                "t": 0.11,
+                "v": 1
+              },
+              {
+                "t": 0.185,
+                "v": 1.02
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.11,
+                "v": -6
+              },
+              {
+                "t": 0.185,
+                "v": -4
+              }
+            ]
+          },
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0.12,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_ram_wisps",
+        "name": "Spectral Wake",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.16,
+        "opacity": 0.7,
+        "em": {
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 244
+              },
+              {
+                "t": 0.11,
+                "v": 90
+              },
+              {
+                "t": 0.16,
+                "v": 74
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -4
+              },
+              {
+                "t": 0.11,
+                "v": 0
+              },
+              {
+                "t": 0.16,
+                "v": 2
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 26,
+          "sy": 14,
+          "dir": "omni",
+          "angle": 0,
+          "spread": 360,
+          "speed": 14,
+          "speedRnd": 0.6,
+          "rate": 220,
+          "bursts": [],
+          "seed": 53,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.2,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 9,
+          "sizeRnd": 0.5,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 1,
+                "v": 1.1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.55
+              },
+              {
+                "t": 0.4,
+                "v": 0.5
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  244,
+                  214
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  240,
+                  205,
+                  150
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  210,
+                  160,
+                  100
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 10,
+          "spinRnd": 0.5,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": -32,
+          "drag": 3.2,
+          "turbAmp": 14,
+          "turbFreq": 1.3,
+          "squash": 0,
+          "glow": 0.3,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
         }
       },
       {
@@ -168,22 +536,23 @@
         "blend": "screen",
         "start": -0.02,
         "end": 0.4,
+        "opacity": 0.85,
         "em": {
-          "x": -6,
-          "y": -2,
+          "x": -14,
+          "y": 8,
           "shape": "ring",
-          "sx": 10,
-          "sy": 8,
+          "sx": 9,
+          "sy": 6,
           "dir": "dir",
-          "angle": 180,
-          "spread": 95,
-          "speed": 300,
+          "angle": 185,
+          "spread": 65,
+          "speed": 250,
           "speedRnd": 0.45,
           "rate": 0,
           "bursts": [
             {
-              "t": 0.12,
-              "n": 12
+              "t": 0.115,
+              "n": 8
             }
           ],
           "seed": 37,
@@ -197,14 +566,14 @@
           }
         },
         "pt": {
-          "life": 0.26,
+          "life": 0.22,
           "lifeRnd": 0.35,
           "sprite": {
             "kind": "shape",
             "id": "streak",
             "p": {}
           },
-          "size": 11,
+          "size": 9,
           "sizeRnd": 0.4,
           "sizeOL": {
             "pts": [
@@ -214,7 +583,7 @@
               },
               {
                 "t": 0.55,
-                "v": 0.75
+                "v": 0.7
               },
               {
                 "t": 1,
@@ -226,11 +595,11 @@
             "pts": [
               {
                 "t": 0,
-                "v": 1
+                "v": 0.95
               },
               {
                 "t": 0.55,
-                "v": 0.9
+                "v": 0.85
               },
               {
                 "t": 1,
@@ -252,16 +621,16 @@
                 "t": 0.5,
                 "c": [
                   255,
-                  190,
-                  120
+                  196,
+                  130
                 ]
               },
               {
                 "t": 1,
                 "c": [
-                  190,
-                  90,
-                  40
+                  200,
+                  105,
+                  48
                 ]
               }
             ]
@@ -274,12 +643,140 @@
           "alignVel": true,
           "stretch": 2,
           "gravX": 0,
-          "gravY": 140,
+          "gravY": 120,
           "drag": 2.6,
           "turbAmp": 8,
           "turbFreq": 1.5,
           "squash": 0,
-          "glow": 0.45,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_ram_embers",
+        "name": "Impact Embers",
+        "type": "emitter",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.4,
+        "opacity": 0.8,
+        "em": {
+          "x": -12,
+          "y": 12,
+          "shape": "ring",
+          "sx": 12,
+          "sy": 8,
+          "dir": "omni",
+          "angle": 0,
+          "spread": 360,
+          "speed": 60,
+          "speedRnd": 0.55,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.115,
+              "n": 7
+            }
+          ],
+          "seed": 59,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.5,
+          "lifeRnd": 0.45,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 6,
+          "sizeRnd": 0.5,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.7,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.9
+              },
+              {
+                "t": 0.5,
+                "v": 0.8
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  240,
+                  200
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  255,
+                  185,
+                  105
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  190,
+                  100,
+                  45
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 60,
+          "spinRnd": 0.6,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": -26,
+          "drag": 1.6,
+          "turbAmp": 22,
+          "turbFreq": 1.4,
+          "squash": 0,
+          "glow": 0.6,
           "glowSize": 1.6,
           "glowBlur": 0.15,
           "fps": 0,
@@ -295,22 +792,23 @@
         "blend": "normal",
         "start": -0.02,
         "end": 0.4,
+        "opacity": 0.85,
         "em": {
-          "x": -4,
-          "y": 4,
+          "x": -10,
+          "y": 18,
           "shape": "ring",
-          "sx": 8,
-          "sy": 6,
+          "sx": 7,
+          "sy": 5,
           "dir": "dir",
           "angle": -60,
-          "spread": 80,
-          "speed": 190,
+          "spread": 75,
+          "speed": 175,
           "speedRnd": 0.5,
           "rate": 0,
           "bursts": [
             {
-              "t": 0.12,
-              "n": 9
+              "t": 0.115,
+              "n": 6
             }
           ],
           "seed": 41,
@@ -324,14 +822,14 @@
           }
         },
         "pt": {
-          "life": 0.42,
+          "life": 0.4,
           "lifeRnd": 0.35,
           "sprite": {
             "kind": "shape",
             "id": "shard",
             "p": {}
           },
-          "size": 8,
+          "size": 7,
           "sizeRnd": 0.45,
           "sizeOL": {
             "pts": [
@@ -353,11 +851,11 @@
             "pts": [
               {
                 "t": 0,
-                "v": 1
+                "v": 0.8
               },
               {
                 "t": 0.75,
-                "v": 1
+                "v": 0.9
               },
               {
                 "t": 1,
@@ -370,25 +868,25 @@
               {
                 "t": 0,
                 "c": [
-                  200,
-                  160,
-                  110
+                  205,
+                  165,
+                  115
                 ]
               },
               {
                 "t": 0.6,
                 "c": [
-                  140,
-                  100,
-                  66
+                  145,
+                  105,
+                  68
                 ]
               },
               {
                 "t": 1,
                 "c": [
-                  90,
-                  62,
-                  40
+                  95,
+                  64,
+                  42
                 ]
               }
             ]
@@ -401,7 +899,7 @@
           "alignVel": false,
           "stretch": 0,
           "gravX": 0,
-          "gravY": 420,
+          "gravY": 400,
           "drag": 0.35,
           "turbAmp": 10,
           "turbFreq": 1.5,
@@ -417,31 +915,32 @@
       },
       {
         "id": "lr_ram_dust",
-        "name": "Dust Kick",
+        "name": "Dust Puff",
         "type": "emitter",
         "blend": "normal",
         "start": -0.02,
         "end": 0.4,
+        "opacity": 0.8,
         "em": {
-          "x": -8,
-          "y": 8,
+          "x": -14,
+          "y": 48,
           "shape": "ring",
-          "sx": 12,
-          "sy": 6,
+          "sx": 14,
+          "sy": 5,
           "dir": "dir",
-          "angle": 180,
-          "spread": 70,
-          "speed": 140,
-          "speedRnd": 0.4,
+          "angle": -90,
+          "spread": 115,
+          "speed": 85,
+          "speedRnd": 0.45,
           "rate": 0,
           "bursts": [
             {
-              "t": 0.12,
+              "t": 0.115,
               "n": 8
             },
             {
-              "t": 0.16,
-              "n": 5
+              "t": 0.15,
+              "n": 4
             }
           ],
           "seed": 43,
@@ -455,14 +954,14 @@
           }
         },
         "pt": {
-          "life": 0.4,
+          "life": 0.42,
           "lifeRnd": 0.4,
           "sprite": {
             "kind": "shape",
             "id": "smoke",
             "p": {}
           },
-          "size": 20,
+          "size": 18,
           "sizeRnd": 0.4,
           "sizeOL": {
             "pts": [
@@ -476,7 +975,7 @@
               },
               {
                 "t": 1,
-                "v": 1.35
+                "v": 1.3
               }
             ]
           },
@@ -488,7 +987,7 @@
               },
               {
                 "t": 0.25,
-                "v": 0.75
+                "v": 0.6
               },
               {
                 "t": 1,
@@ -501,25 +1000,25 @@
               {
                 "t": 0,
                 "c": [
-                  220,
-                  190,
-                  150
+                  226,
+                  196,
+                  156
                 ]
               },
               {
                 "t": 0.55,
                 "c": [
-                  170,
-                  135,
-                  95
+                  178,
+                  142,
+                  100
                 ]
               },
               {
                 "t": 1,
                 "c": [
-                  120,
-                  90,
-                  62
+                  126,
+                  96,
+                  66
                 ]
               }
             ]
@@ -532,7 +1031,7 @@
           "alignVel": false,
           "stretch": 0,
           "gravX": 0,
-          "gravY": -14,
+          "gravY": -16,
           "drag": 2.4,
           "turbAmp": 12,
           "turbFreq": 1.2,
@@ -545,94 +1044,10 @@
           "trailCore": 0,
           "zigzag": 0
         }
-      },
-      {
-        "id": "lr_ram_wedge",
-        "name": "Charge Wedge",
-        "type": "sprite",
-        "blend": "normal",
-        "start": -0.02,
-        "end": 0.4,
-        "opacity": {
-          "keys": [
-            {
-              "t": 0.02,
-              "v": 0
-            },
-            {
-              "t": 0.045,
-              "v": 1
-            },
-            {
-              "t": 0.13,
-              "v": 1
-            },
-            {
-              "t": 0.17,
-              "v": 0
-            }
-          ]
-        },
-        "sp": {
-          "sprite": {
-            "kind": "tex",
-            "texId": "tex_mob_ram_wedge_5e5c66ff599e",
-            "p": {}
-          },
-          "size": 200,
-          "x": {
-            "keys": [
-              {
-                "t": 0.02,
-                "v": 150
-              },
-              {
-                "t": 0.115,
-                "v": 0
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0.02,
-                "v": -8
-              },
-              {
-                "t": 0.115,
-                "v": -2
-              }
-            ]
-          },
-          "scale": {
-            "keys": [
-              {
-                "t": 0.02,
-                "v": 0.7
-              },
-              {
-                "t": 0.115,
-                "v": 1
-              }
-            ]
-          },
-          "aspect": 1,
-          "rot": 0,
-          "color": [
-            255,
-            255,
-            255
-          ],
-          "squash": 0.15,
-          "glow": 0,
-          "glowSize": 1.6,
-          "glowBlur": 0.15,
-          "fps": 0
-        }
       }
     ]
   },
   "tex": {
-    "tex_mob_ram_wedge_5e5c66ff599e": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2FhMjdhIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuOSI+CiAgICA8cGF0aCBkPSJNMTk2IDkyIEwyNDYgODQiLz4KICAgIDxwYXRoIGQ9Ik0yMDQgMTI4IEwyNTAgMTI4Ii8+CiAgICA8cGF0aCBkPSJNMTk2IDE2NCBMMjQ2IDE3MiIvPgogIDwvZz4KICA8cGF0aCBkPSJNMzAgMTI4IEwxMTggODYgTDIyNCA5NCBMMjI0IDE2MiBMMTE4IDE3MCBaIiBmaWxsPSIjZDlhODZjIiBzdHJva2U9IiMzYTI0MTAiIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCAxMjggTDExOCA4NiBMMjI0IDk0IEwyMDAgMTE4IEw5NiAxMzAgWiIgZmlsbD0iI2YwZDBhMCIvPgogIDxwYXRoIGQ9Ik0zMCAxMjggTDUyIDExNCBMNDYgMTQyIFoiIGZpbGw9IiNmZmY0ZGQiLz4KPC9zdmc+"
+    "tex_mob_ram_boar_317ad192da49": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMTYwIiB2aWV3Qm94PSIwIDAgMjU2IDE2MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvZHkiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjRlNGMwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2RmYzU5YiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjJlMmJjIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNDIiPgogICAgPHBhdGggZD0iTTIzNiA1MiBMMjUyIDQ4IiBzdHJva2Utd2lkdGg9IjYiLz4KICAgIDxwYXRoIGQ9Ik0yNDAgODAgTDI1NCA4MCIgc3Ryb2tlLXdpZHRoPSI3Ii8+CiAgICA8cGF0aCBkPSJNMjM0IDEwOCBMMjUwIDExMiIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPC9nPgogIDxnIGZpbGw9IiNkOGMwOTYiIGZpbGwtb3BhY2l0eT0iMC41NSIgc3Ryb2tlPSIjNmI0NTI2IiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIG9wYWNpdHk9IjAuOCI+CiAgICA8cGF0aCBkPSJNOTggMTAyIEw5NCAxMjIgTDg0IDEzNCBMOTAgMTQwIEwxMDIgMTI4IEwxMDggMTA4IFoiLz4KICAgIDxwYXRoIGQ9Ik0xNjQgMTA2IEwxNzIgMTIyIEwxNjggMTM4IEwxNzcgMTQyIEwxODYgMTMwIEwxODAgMTEwIFoiLz4KICA8L2c+CiAgPGcgZmlsbD0idXJsKCNib2R5KSIgZmlsbC1vcGFjaXR5PSIwLjciIHN0cm9rZT0iIzZiNDUyNiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik04NiA5NCBMODIgMTE2IEw2NiAxMzggTDYwIDE0NiBMNzAgMTUwIEw4NiAxMzQgTDk4IDEwNiBaIi8+CiAgICA8cGF0aCBkPSJNMTgyIDEwMiBMMTk0IDEyMiBMMjA4IDE0MCBMMjAyIDE0NyBMMTkwIDE0MiBMMTc0IDEyMCBaIi8+CiAgPC9nPgogIDxwYXRoIGQ9Ik03MiA1NiBMODYgMzYgTDk2IDU0IFoiIGZpbGw9InVybCgjYm9keSkiIGZpbGwtb3BhY2l0eT0iMC43IiBzdHJva2U9IiM2YjQ1MjYiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0yMiAxMDAKICAgICAgICAgICBMNDYgNjYKICAgICAgICAgICBRNTggNTQgNzYgNTAKICAgICAgICAgICBMODYgNDYKICAgICAgICAgICBMMTAwIDMwIEwxMTAgNDIKICAgICAgICAgICBMMTIyIDI4IEwxMzIgNDAKICAgICAgICAgICBMMTQ2IDI4IEwxNTYgMzgKICAgICAgICAgICBRMTc0IDM4IDE5NiA0OAogICAgICAgICAgIFEyMTQgNTYgMjIwIDcwCiAgICAgICAgICAgUTIyNCA4NCAyMTYgOTQKICAgICAgICAgICBMMjEwIDEwNgogICAgICAgICAgIFExODAgMTE4IDE0OCAxMTgKICAgICAgICAgICBRMTEyIDExNiA5MiAxMTIKICAgICAgICAgICBRNzAgMTA4IDU2IDExMgogICAgICAgICAgIFE0MiAxMTQgMzAgMTA4IFoiCiAgICAgICAgZmlsbD0idXJsKCNib2R5KSIgZmlsbC1vcGFjaXR5PSIwLjcyIiBzdHJva2U9IiM2YjQ1MjYiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik00OCAxMDIgUTQyIDkyIDM4IDgwIFE0OCA4OCA1NCA5NiBaIiBmaWxsPSIjZmZmOGUwIiBmaWxsLW9wYWNpdHk9IjAuOTUiIHN0cm9rZT0iIzZiNDUyNiIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPGNpcmNsZSBjeD0iNTgiIGN5PSI3OCIgcj0iNSIgZmlsbD0iIzNhMjQxMCIgb3BhY2l0eT0iMC44NSIvPgogIDxlbGxpcHNlIGN4PSIyNSIgY3k9Ijk5IiByeD0iNCIgcnk9IjUiIGZpbGw9IiMzYTI0MTAiIG9wYWNpdHk9IjAuNyIvPgogIDxwYXRoIGQ9Ik0zMCAxMDQgTDQ0IDEwNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNmI0NTI2IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC43Ii8+CiAgPHBhdGggZD0iTTIxOCA2NiBRMjMwIDYyIDIzMCA3MiBRMjMwIDgwIDIyNCA3OCBRMjIwIDc2IDIyMiA3MSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNmI0NTI2IiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44NSIvPgo8L3N2Zz4="
   }
 }

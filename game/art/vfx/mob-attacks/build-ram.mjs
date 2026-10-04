@@ -1,13 +1,71 @@
 import { curve, grad, texMeta, texPayloads, texture, track, writeOnRun } from './mob-common.mjs'
-import { RAM_WEDGE_SVG } from './mob-parts.mjs'
 
 const DOC_ID = 'fx_mob_ram'
 
-const wedge = texture('mob_ram_wedge', RAM_WEDGE_SVG)
-const TEXTURES = [wedge]
+// Spectral translucent boar charging left: ghost-pale ivory fills (~0.7),
+// thin dark-warm outline, lowered wedge head with tusk, bristled back,
+// gallop legs, tail curl, and three speed streaks trailing the tail end.
+const BOAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="160" viewBox="0 0 256 160">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4e4c0"/>
+      <stop offset="1" stop-color="#dfc59b"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#f2e2bc" stroke-linecap="round" opacity="0.42">
+    <path d="M236 52 L252 48" stroke-width="6"/>
+    <path d="M240 80 L254 80" stroke-width="7"/>
+    <path d="M234 108 L250 112" stroke-width="6"/>
+  </g>
+  <g fill="#d8c096" fill-opacity="0.55" stroke="#6b4526" stroke-width="4" stroke-linejoin="round" opacity="0.8">
+    <path d="M98 102 L94 122 L84 134 L90 140 L102 128 L108 108 Z"/>
+    <path d="M164 106 L172 122 L168 138 L177 142 L186 130 L180 110 Z"/>
+  </g>
+  <g fill="url(#body)" fill-opacity="0.7" stroke="#6b4526" stroke-width="5" stroke-linejoin="round">
+    <path d="M86 94 L82 116 L66 138 L60 146 L70 150 L86 134 L98 106 Z"/>
+    <path d="M182 102 L194 122 L208 140 L202 147 L190 142 L174 120 Z"/>
+  </g>
+  <path d="M72 56 L86 36 L96 54 Z" fill="url(#body)" fill-opacity="0.7" stroke="#6b4526" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M22 100
+           L46 66
+           Q58 54 76 50
+           L86 46
+           L100 30 L110 42
+           L122 28 L132 40
+           L146 28 L156 38
+           Q174 38 196 48
+           Q214 56 220 70
+           Q224 84 216 94
+           L210 106
+           Q180 118 148 118
+           Q112 116 92 112
+           Q70 108 56 112
+           Q42 114 30 108 Z"
+        fill="url(#body)" fill-opacity="0.72" stroke="#6b4526" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M48 102 Q42 92 38 80 Q48 88 54 96 Z" fill="#fff8e0" fill-opacity="0.95" stroke="#6b4526" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="58" cy="78" r="5" fill="#3a2410" opacity="0.85"/>
+  <ellipse cx="25" cy="99" rx="4" ry="5" fill="#3a2410" opacity="0.7"/>
+  <path d="M30 104 L44 106" fill="none" stroke="#6b4526" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  <path d="M218 66 Q230 62 230 72 Q230 80 224 78 Q220 76 222 71" fill="none" stroke="#6b4526" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+</svg>`
 
-// Charge lands at t=0.12: the wedge streaks in from the right, hits with a
-// white-orange burst, radiating impact streaks, dust kick and small debris.
+const boar = texture('mob_ram_boar', BOAR_SVG)
+const TEXTURES = [boar]
+
+// The spectral boar streaks in from the right edge and rams the target at
+// t=0.115: small white-amber flash + glint, a short leftward spray, a few
+// debris bits, and a low dust puff at feet level. A lagging ghost echo and
+// a faint wisp wake sell the spectral read; impact stays under ~40% of the
+// 256px cell.
+const boarSp = xOff => ({
+  sprite: { kind: 'tex', texId: boar.id, p: {} }, size: 200,
+  x: track([[0, 230 + xOff], [0.11, 76 + xOff], [0.185, 52 + xOff]]),
+  y: track([[0, -8], [0.11, -3], [0.185, -1]]),
+  scale: track([[0, 0.92], [0.11, 1], [0.185, 1.02]]),
+  aspect: 1, rot: track([[0, 0], [0.11, -6], [0.185, -4]]),
+  color: [255, 255, 255], squash: 0.12, glow: 0, glowSize: 1.6, glowBlur: 0.15, fps: 0,
+})
+
 export function buildMobRam() {
   return {
     app: 'arcadia-effects',
@@ -22,88 +80,136 @@ export function buildMobRam() {
       textures: texMeta(TEXTURES),
       layers: [
         {
-          id: 'lr_ram_flash', name: 'Impact Flash', type: 'sprite', blend: 'add',
+          id: 'lr_ram_glint', name: 'Impact Glint', type: 'sprite', blend: 'add',
           start: -0.02, end: 0.4,
-          opacity: track([[0.105, 0], [0.13, 0.95], [0.26, 0]]),
+          opacity: track([[0.11, 0], [0.125, 0.8], [0.2, 0]]),
           sp: {
-            sprite: { kind: 'shape', id: 'soft', p: {} }, size: 160, x: -6, y: -2,
-            scale: track([[0.105, 0.4], [0.16, 1.5], [0.26, 1.9]]),
-            aspect: 1, rot: 0, color: [255, 236, 205], squash: 0, glow: 0.5, glowSize: 1.6, glowBlur: 0.15, fps: 0,
+            sprite: { kind: 'shape', id: 'spark', p: {} }, size: 44, x: -12, y: 8,
+            scale: track([[0.11, 0.5], [0.14, 1.1], [0.2, 1.4]]),
+            aspect: 1, rot: 0, color: [255, 246, 220], squash: 0, glow: 0.4, glowSize: 1.6, glowBlur: 0.15, fps: 0,
           },
         },
         {
-          id: 'lr_ram_burst', name: 'Impact Starburst', type: 'sprite', blend: 'add',
+          id: 'lr_ram_flash', name: 'Impact Flash', type: 'sprite', blend: 'add',
           start: -0.02, end: 0.4,
-          opacity: track([[0.11, 0], [0.14, 0.9], [0.3, 0]]),
+          opacity: track([[0.105, 0], [0.125, 0.8], [0.25, 0]]),
           sp: {
-            sprite: { kind: 'shape', id: 'star', p: { n: 8, inner: 0.22 } }, size: 190, x: -6, y: -2,
-            scale: track([[0.11, 0.35], [0.17, 1.1], [0.3, 1.5]]), rot: 8,
-            aspect: 1, color: [255, 214, 150], squash: 0, glow: 0.4, glowSize: 1.6, glowBlur: 0.15, fps: 0,
+            sprite: { kind: 'shape', id: 'soft', p: {} }, size: 78, x: -12, y: 10,
+            scale: track([[0.105, 0.5], [0.15, 1.05], [0.25, 1.3]]),
+            aspect: 1, rot: 0, color: [255, 236, 200], squash: 0, glow: 0.5, glowSize: 1.6, glowBlur: 0.15, fps: 0,
+          },
+        },
+        {
+          id: 'lr_ram_boar', name: 'Spectral Boar', type: 'sprite', blend: 'normal',
+          start: -0.02, end: 0.4,
+          opacity: track([[0, 0.1], [0.02, 0.82], [0.125, 0.82], [0.19, 0]]),
+          sp: boarSp(0),
+        },
+        {
+          // Ghost double trailing the charge: same texture, offset behind,
+          // dimmer - reads as the spectral wake of the lunge.
+          id: 'lr_ram_echo', name: 'Boar Echo', type: 'sprite', blend: 'screen',
+          start: -0.02, end: 0.4,
+          opacity: track([[0, 0.06], [0.03, 0.4], [0.13, 0.36], [0.2, 0]]),
+          sp: boarSp(55),
+        },
+        {
+          // Faint wisp wake: slow soft dots born along the charge path that
+          // linger a beat then lift off like spectral mist.
+          id: 'lr_ram_wisps', name: 'Spectral Wake', type: 'emitter', blend: 'screen',
+          start: -0.02, end: 0.16,
+          opacity: 0.7,
+          em: {
+            x: track([[0, 244], [0.11, 90], [0.16, 74]]),
+            y: track([[0, -4], [0.11, 0], [0.16, 2]]),
+            shape: 'ring', sx: 26, sy: 14, dir: 'omni', angle: 0, spread: 360,
+            speed: 14, speedRnd: 0.6, rate: 220, bursts: [], seed: 53,
+            branch: { chance: 0, spread: 35, lifeScale: 0.6, sizeScale: 0.7, speedScale: 1, maxGen: 2 },
+          },
+          pt: {
+            life: 0.2, lifeRnd: 0.4, sprite: { kind: 'shape', id: 'soft', p: {} }, size: 9, sizeRnd: 0.5,
+            sizeOL: curve([0, 0.7], [1, 1.1]),
+            opacityOL: curve([0, 0.55], [0.4, 0.5], [1, 0]),
+            grad: grad([0, [255, 244, 214]], [0.6, [240, 205, 150]], [1, [210, 160, 100]]),
+            tintTex: false, rot: 0, rotRnd: 1, spin: 10, spinRnd: 0.5, alignVel: false, stretch: 0,
+            gravX: 0, gravY: -32, drag: 3.2, turbAmp: 14, turbFreq: 1.3, squash: 0, glow: 0.3,
+            glowSize: 1.6, glowBlur: 0.15, fps: 0, render: 'sprite', trailCore: 0, zigzag: 0,
           },
         },
         {
           id: 'lr_ram_streaks', name: 'Impact Streaks', type: 'emitter', blend: 'screen',
           start: -0.02, end: 0.4,
+          opacity: 0.85,
           em: {
-            x: -6, y: -2, shape: 'ring', sx: 10, sy: 8, dir: 'dir', angle: 180, spread: 95,
-            speed: 300, speedRnd: 0.45, rate: 0, bursts: [{ t: 0.12, n: 12 }], seed: 37,
+            x: -14, y: 8, shape: 'ring', sx: 9, sy: 6, dir: 'dir', angle: 185, spread: 65,
+            speed: 250, speedRnd: 0.45, rate: 0, bursts: [{ t: 0.115, n: 8 }], seed: 37,
             branch: { chance: 0, spread: 35, lifeScale: 0.6, sizeScale: 0.7, speedScale: 1, maxGen: 2 },
           },
           pt: {
-            life: 0.26, lifeRnd: 0.35, sprite: { kind: 'shape', id: 'streak', p: {} }, size: 11, sizeRnd: 0.4,
-            sizeOL: curve([0, 1], [0.55, 0.75], [1, 0.05]),
-            opacityOL: curve([0, 1], [0.55, 0.9], [1, 0]),
-            grad: grad([0, [255, 255, 240]], [0.5, [255, 190, 120]], [1, [190, 90, 40]]),
+            life: 0.22, lifeRnd: 0.35, sprite: { kind: 'shape', id: 'streak', p: {} }, size: 9, sizeRnd: 0.4,
+            sizeOL: curve([0, 1], [0.55, 0.7], [1, 0.05]),
+            opacityOL: curve([0, 0.95], [0.55, 0.85], [1, 0]),
+            grad: grad([0, [255, 255, 240]], [0.5, [255, 196, 130]], [1, [200, 105, 48]]),
             tintTex: false, rot: 0, rotRnd: 0, spin: 0, spinRnd: 0, alignVel: true, stretch: 2,
-            gravX: 0, gravY: 140, drag: 2.6, turbAmp: 8, turbFreq: 1.5, squash: 0, glow: 0.45,
+            gravX: 0, gravY: 120, drag: 2.6, turbAmp: 8, turbFreq: 1.5, squash: 0, glow: 0.4,
+            glowSize: 1.6, glowBlur: 0.15, fps: 0, render: 'sprite', trailCore: 0, zigzag: 0,
+          },
+        },
+        {
+          id: 'lr_ram_embers', name: 'Impact Embers', type: 'emitter', blend: 'add',
+          start: -0.02, end: 0.4,
+          opacity: 0.8,
+          em: {
+            x: -12, y: 12, shape: 'ring', sx: 12, sy: 8, dir: 'omni', angle: 0, spread: 360,
+            speed: 60, speedRnd: 0.55, rate: 0, bursts: [{ t: 0.115, n: 7 }], seed: 59,
+            branch: { chance: 0, spread: 35, lifeScale: 0.6, sizeScale: 0.7, speedScale: 1, maxGen: 2 },
+          },
+          pt: {
+            life: 0.5, lifeRnd: 0.45, sprite: { kind: 'shape', id: 'ember', p: {} }, size: 6, sizeRnd: 0.5,
+            sizeOL: curve([0, 1], [0.7, 0.9], [1, 0.3]),
+            opacityOL: curve([0, 0.9], [0.5, 0.8], [1, 0]),
+            grad: grad([0, [255, 240, 200]], [0.55, [255, 185, 105]], [1, [190, 100, 45]]),
+            tintTex: false, rot: 0, rotRnd: 1, spin: 60, spinRnd: 0.6, alignVel: false, stretch: 0,
+            gravX: 0, gravY: -26, drag: 1.6, turbAmp: 22, turbFreq: 1.4, squash: 0, glow: 0.6,
             glowSize: 1.6, glowBlur: 0.15, fps: 0, render: 'sprite', trailCore: 0, zigzag: 0,
           },
         },
         {
           id: 'lr_ram_debris', name: 'Knock Debris', type: 'emitter', blend: 'normal',
           start: -0.02, end: 0.4,
+          opacity: 0.85,
           em: {
-            x: -4, y: 4, shape: 'ring', sx: 8, sy: 6, dir: 'dir', angle: -60, spread: 80,
-            speed: 190, speedRnd: 0.5, rate: 0, bursts: [{ t: 0.12, n: 9 }], seed: 41,
+            x: -10, y: 18, shape: 'ring', sx: 7, sy: 5, dir: 'dir', angle: -60, spread: 75,
+            speed: 175, speedRnd: 0.5, rate: 0, bursts: [{ t: 0.115, n: 6 }], seed: 41,
             branch: { chance: 0, spread: 35, lifeScale: 0.6, sizeScale: 0.7, speedScale: 1, maxGen: 2 },
           },
           pt: {
-            life: 0.42, lifeRnd: 0.35, sprite: { kind: 'shape', id: 'shard', p: {} }, size: 8, sizeRnd: 0.45,
+            life: 0.4, lifeRnd: 0.35, sprite: { kind: 'shape', id: 'shard', p: {} }, size: 7, sizeRnd: 0.45,
             sizeOL: curve([0, 1], [0.8, 0.9], [1, 0.3]),
-            opacityOL: curve([0, 1], [0.75, 1], [1, 0]),
-            grad: grad([0, [200, 160, 110]], [0.6, [140, 100, 66]], [1, [90, 62, 40]]),
+            opacityOL: curve([0, 0.8], [0.75, 0.9], [1, 0]),
+            grad: grad([0, [205, 165, 115]], [0.6, [145, 105, 68]], [1, [95, 64, 42]]),
             tintTex: false, rot: 0, rotRnd: 1, spin: 220, spinRnd: 0.8, alignVel: false, stretch: 0,
-            gravX: 0, gravY: 420, drag: 0.35, turbAmp: 10, turbFreq: 1.5, squash: 0, glow: 0,
+            gravX: 0, gravY: 400, drag: 0.35, turbAmp: 10, turbFreq: 1.5, squash: 0, glow: 0,
             glowSize: 1.6, glowBlur: 0.15, fps: 0, render: 'sprite', trailCore: 0, zigzag: 0,
           },
         },
         {
-          id: 'lr_ram_dust', name: 'Dust Kick', type: 'emitter', blend: 'normal',
+          id: 'lr_ram_dust', name: 'Dust Puff', type: 'emitter', blend: 'normal',
           start: -0.02, end: 0.4,
+          opacity: 0.8,
           em: {
-            x: -8, y: 8, shape: 'ring', sx: 12, sy: 6, dir: 'dir', angle: 180, spread: 70,
-            speed: 140, speedRnd: 0.4, rate: 0, bursts: [{ t: 0.12, n: 8 }, { t: 0.16, n: 5 }], seed: 43,
+            x: -14, y: 48, shape: 'ring', sx: 14, sy: 5, dir: 'dir', angle: -90, spread: 115,
+            speed: 85, speedRnd: 0.45, rate: 0, bursts: [{ t: 0.115, n: 8 }, { t: 0.15, n: 4 }], seed: 43,
             branch: { chance: 0, spread: 35, lifeScale: 0.6, sizeScale: 0.7, speedScale: 1, maxGen: 2 },
           },
           pt: {
-            life: 0.4, lifeRnd: 0.4, sprite: { kind: 'shape', id: 'smoke', p: {} }, size: 20, sizeRnd: 0.4,
-            sizeOL: curve([0, 0.5], [0.45, 1], [1, 1.35]),
-            opacityOL: curve([0, 0], [0.25, 0.75], [1, 0]),
-            grad: grad([0, [220, 190, 150]], [0.55, [170, 135, 95]], [1, [120, 90, 62]]),
+            life: 0.42, lifeRnd: 0.4, sprite: { kind: 'shape', id: 'smoke', p: {} }, size: 18, sizeRnd: 0.4,
+            sizeOL: curve([0, 0.5], [0.45, 1], [1, 1.3]),
+            opacityOL: curve([0, 0], [0.25, 0.6], [1, 0]),
+            grad: grad([0, [226, 196, 156]], [0.55, [178, 142, 100]], [1, [126, 96, 66]]),
             tintTex: false, rot: 0, rotRnd: 1, spin: 30, spinRnd: 0.5, alignVel: false, stretch: 0,
-            gravX: 0, gravY: -14, drag: 2.4, turbAmp: 12, turbFreq: 1.2, squash: 0.4, glow: 0,
+            gravX: 0, gravY: -16, drag: 2.4, turbAmp: 12, turbFreq: 1.2, squash: 0.4, glow: 0,
             glowSize: 1.6, glowBlur: 0.15, fps: 0, render: 'sprite', trailCore: 0, zigzag: 0,
-          },
-        },
-        {
-          id: 'lr_ram_wedge', name: 'Charge Wedge', type: 'sprite', blend: 'normal',
-          start: -0.02, end: 0.4,
-          opacity: track([[0.02, 0], [0.045, 1], [0.13, 1], [0.17, 0]]),
-          sp: {
-            sprite: { kind: 'tex', texId: wedge.id, p: {} }, size: 200,
-            x: track([[0.02, 150], [0.115, 0]]), y: track([[0.02, -8], [0.115, -2]]),
-            scale: track([[0.02, 0.7], [0.115, 1]]),
-            aspect: 1, rot: 0, color: [255, 255, 255], squash: 0.15, glow: 0, glowSize: 1.6, glowBlur: 0.15, fps: 0,
           },
         },
       ],
