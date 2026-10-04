@@ -135,17 +135,26 @@ export class HoaCauFireballPresentation {
     const timing = hoaCauTiming(active.impactMs)
     const sample = sampleHoaCauTimeline(active.elapsedMs, active.impactMs)
     const sourceDepth = this.surface.depth(active.cast.source)
-    // Single authored presentation: the Arcadia triple-fire-circle is the
-    // portal phase for EVERY cast (no variants).
+    // Ring count by cast tier: 1 circle = normal Ly Hoa Thuat, 2 = Phap
+    // The empowered cast, 3 = ultimate (art placeholder reuses the same
+    // sheet - a dedicated triple-ring asset lands with the ult).
     if (active.elapsedMs >= timing.portalStartMs && active.elapsedMs < timing.releaseMs) {
       const progress = (active.elapsedMs - timing.portalStartMs)
         / (timing.releaseMs - timing.portalStartMs)
       const frame = this.surface.reducedMotion ? 56 : Math.min(63, Math.floor(progress * 64))
-      this.show(HOA_CAU_VFX_ASSETS.tripleCircle, frame, active.portalOrigin,
-        0.34, sourceDepth, 0, HOA_CAU_VFX_ASSETS.tripleCircle.key, 1, 0.55)
+      const ringCount = active.cast.slotRole === 'ultimate' ? 3
+        : active.cast.empowered ? 2 : 1
+      for (let ring = 0; ring < ringCount; ring += 1) {
+        // Outer rings start on a different spin phase so the stacked
+        // circles read as two discs, not one blurred ring.
+        this.show(HOA_CAU_VFX_ASSETS.tripleCircle, frame + ring * 11, active.portalOrigin,
+          0.34 + ring * 0.12, sourceDepth - ring * 0.01, 0,
+          ring === 0 ? HOA_CAU_VFX_ASSETS.tripleCircle.key : `${HOA_CAU_VFX_ASSETS.tripleCircle.key}:ring${ring + 1}`,
+          1 - ring * 0.35, 0.55)
+      }
     }
     if (sample.chargeFrame !== null) {
-      const frame = this.surface.reducedMotion ? Math.max(9, Math.min(15, sample.chargeFrame)) : sample.chargeFrame
+      const frame = this.surface.reducedMotion ? Math.max(27, Math.min(44, sample.chargeFrame)) : sample.chargeFrame
       this.show(HOA_CAU_VFX_ASSETS.charge, frame, active.origin, 1.75, sourceDepth + 0.03)
     }
     if (sample.projectileProgress !== null && !active.resolved) {
@@ -158,7 +167,12 @@ export class HoaCauFireballPresentation {
       const flightAngle = Math.atan2(active.destination.y - active.origin.y,
         active.destination.x - active.origin.x) * 180 / Math.PI
       const frame = Math.floor(elapsedFlightMs / (1200 / 36)) % 36
-      this.show(HOA_CAU_VFX_ASSETS.phoenixProjectile, frame, position, 1,
+      // Empowered casts fly the authored azure variant (offline hue-shift,
+      // no runtime tint); normal casts keep the red comet.
+      const projectileAsset = active.cast.empowered
+        ? HOA_CAU_VFX_ASSETS.phoenixProjectileEmpowered
+        : HOA_CAU_VFX_ASSETS.phoenixProjectile
+      this.show(projectileAsset, frame, position, 1,
         sourceDepth + 0.02, flightAngle)
     }
     if (active.impactElapsedMs !== null && active.impactElapsedMs < 900) {

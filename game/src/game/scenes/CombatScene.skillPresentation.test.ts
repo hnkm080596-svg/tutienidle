@@ -222,17 +222,17 @@ describe('Phap The seal (fire empowerment surface)', () => {
     scene.flushDueDotTexts = vi.fn()
     scene.pollTheBar()
     scene.update(0, 16)
-    expect(seal.setFrame).toHaveBeenCalledWith('frame_0')
+    expect(seal.setFrame).toHaveBeenCalledWith('frame_18')
   })
 
-  it('seal frame math: 2400ms reveal across the sheet, then the 18-frame tail loops at 900ms', () => {
+  it('seal frame math: tier five ignites instantly - the 18-frame tail loops from ms 0 at the authored 1200ms rate', () => {
     const { scene } = sealFixture(0)
     scene.phapTheSealObjects()
     scene.hoaTheSealMs = 0
-    expect(scene.hoaTheSealFrame()).toBe(0)
-    scene.hoaTheSealMs = 2400
     expect(scene.hoaTheSealFrame()).toBe(18)
-    scene.hoaTheSealMs = 3300
+    scene.hoaTheSealMs = 1200
     expect(scene.hoaTheSealFrame()).toBe(18)
+    scene.hoaTheSealMs = 1266.7
+    expect(scene.hoaTheSealFrame()).toBe(19)
   })
 })

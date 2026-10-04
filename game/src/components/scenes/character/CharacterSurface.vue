@@ -18,6 +18,7 @@ import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
+import { getActiveElement, isActivePath } from '@/core/player/CultivationPathSystem'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
 import { MAIN_STAT_KEYS, type MainStatKey, type StatType } from '@/core/stats/StatTypes'
 import type { ModifierSourceType } from '@/core/stats/StatCalculator'
@@ -81,26 +82,23 @@ const combatPower = computed(() => {
   )
 })
 
+// Ly Hoa Chi Dao branding: a fire-aligned Phap Tu walks the Li trigram
+// dao (Minh ruling 2026-10-04). Identity reads go through the path
+// authority seam - never a .spellPath slice read or a literal path
+// comparison in shell code.
+const isLyHoaDao = computed(() => isActivePath(player, 'spell') && getActiveElement(player) === 'fire')
+
 const pathName = computed(() => {
   const pathId = player.cultivationPath as CultivationPathId | undefined
 
-  // Ly Hoa Chi Dao branding: a fire-aligned Phap Tu walks the Li trigram
-  // dao (Minh ruling 2026-10-04) - the elemental dao name replaces the
-  // generic path label on the identity plate.
-  if (pathId === 'spell' && player.spellPath?.element === 'fire') {
+  if (isLyHoaDao.value) {
     return t('character.lyHoaDao')
   }
 
   return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('panels.skillPath.mortalName')
 })
 
-const pathVerse = computed(() => {
-  const pathId = player.cultivationPath as CultivationPathId | undefined
-
-  return pathId === 'spell' && player.spellPath?.element === 'fire'
-    ? t('character.lyHoaVerse')
-    : undefined
-})
+const pathVerse = computed(() => (isLyHoaDao.value ? t('character.lyHoaVerse') : undefined))
 
 function detailRows(
   categories: readonly StatCategory[],

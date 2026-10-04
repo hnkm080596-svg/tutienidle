@@ -19,14 +19,16 @@ describe('Hỏa Cầu Arcadia charge asset', () => {
 
     expect(effect.app).toBe('arcadia-effects')
     expect(effect.doc.id).toBe('fx_hoa_tu_charge')
-    expect(effect.doc.comp.dur).toBe(0.55)
+    // Genki-dama rebuild (2026-10-04): the doc is authored for the full
+    // 1700ms charge window so the render plays it at authored rate.
+    expect(effect.doc.comp.dur).toBe(1.7)
     expect(effect.doc.exp.mode).toBe('rgba')
-    expect(effect.doc.exp.frames).toBe(18)
-    expect(data.meta.durationMs).toBe(550)
-    expect(data.meta.releaseMs).toBe(550)
-    expect(Object.keys(data.frames)).toHaveLength(18)
-    expect(image.width).toBe(1152)
-    expect(image.height).toBe(576)
+    expect(effect.doc.exp.frames).toBe(51)
+    expect(data.meta.durationMs).toBe(1700)
+    expect(data.meta.releaseMs).toBe(1700)
+    expect(Object.keys(data.frames)).toHaveLength(51)
+    expect(image.width).toBe(1536)
+    expect(image.height).toBe(1344)
     expect(context.getImageData(0, 0, 1, 1).data[3]).toBe(0)
   })
 })

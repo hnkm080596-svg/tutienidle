@@ -108,9 +108,9 @@ describe('Hỏa Cầu Phaser handoff', () => {
     const { presenter, sprites } = fixture({ reducedMotion: true })
     presenter.start(cast, 3687.5)
     presenter.update(1425)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-charge')?.frame).toBe('frame_9')
+    expect(sprites.find(sprite => sprite.key === 'hoa-cau-charge')?.frame).toBe('frame_27')
     presenter.update(1690)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-charge')?.frame).toBe('frame_15')
+    expect(sprites.find(sprite => sprite.key === 'hoa-cau-charge')?.frame).toBe('frame_44')
   })
 
   it('pins the magic circle to the raised Pháp Tu palm', () => {
@@ -172,6 +172,30 @@ describe('Hỏa Cầu Phaser handoff', () => {
     const impact = sprites.find(sprite => sprite.key === 'hoa-cau-fire-20')
     expect(impact).toMatchObject({ visible: true, x: 400, y: 100 })
     expect(impact!.scale).toBeGreaterThanOrEqual(1.1)
+  })
+
+  it('doubles the portal rings and flies the azure phoenix on an empowered cast', () => {
+    const { presenter, sprites } = fixture()
+    presenter.start({ ...cast, empowered: true }, 3687.5)
+    presenter.update(625)
+    const rings = sprites.filter(sprite => sprite.key === 'hoa-cau-triple-fire-circle' && sprite.visible)
+    // Two stacked portal discs: the normal disc plus a larger, fainter
+    // echo disc behind it (the authored "2 vong" tier).
+    expect(rings).toHaveLength(2)
+    expect(rings[1]!.scale).toBeGreaterThan(rings[0]!.scale)
+    expect(rings[1]!.alpha).toBeLessThan(rings[0]!.alpha)
+    presenter.update(2500)
+    expect(sprites.some(sprite => sprite.key === 'hoa-cau-phoenix-empowered' && sprite.visible)).toBe(true)
+    expect(sprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(false)
+    presenter.cancel()
+    // A normal cast still shows exactly one ring and the red comet.
+    const { presenter: plain, sprites: plainSprites } = fixture()
+    plain.start(cast, 3687.5)
+    plain.update(625)
+    expect(plainSprites.filter(sprite => sprite.key === 'hoa-cau-triple-fire-circle' && sprite.visible)).toHaveLength(1)
+    plain.update(2500)
+    expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(true)
+    expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-phoenix-empowered' && sprite.visible)).toBe(false)
   })
 
   it('renders the authored Arcadia set for every cast, with or without a Tam Muoi window', () => {

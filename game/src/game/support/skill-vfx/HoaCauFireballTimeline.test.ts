@@ -15,7 +15,7 @@ describe('Hỏa Cầu visual timeline', () => {
     expect(sampleHoaCauTimeline(625, 3687.5).portal).toBe('open')
     expect(sampleHoaCauTimeline(1424, 3687.5).portal).toBe('open')
     expect(sampleHoaCauTimeline(1425, 3687.5).portal).toBe('active')
-    expect(sampleHoaCauTimeline(3124, 3687.5).chargeFrame).toBe(17)
+    expect(sampleHoaCauTimeline(3124, 3687.5).chargeFrame).toBe(50)
     expect(sampleHoaCauTimeline(3125, 3687.5).chargeFrame).toBeNull()
     expect(sampleHoaCauTimeline(3125, 3687.5).portal).toBe('close')
     expect(sampleHoaCauTimeline(3125, 3687.5).projectileProgress).toBe(0)
@@ -30,7 +30,7 @@ describe('Hỏa Cầu visual timeline', () => {
     expect(sampleHoaCauTimeline(timing.releaseMs, 1400).projectileProgress).toBe(0)
   })
 
-  it('keeps the full 550 ms charge before the Pháp Tu basic release marker', () => {
+  it('keeps the full 1700 ms charge before the Pháp Tu basic release marker', () => {
     const impact = clipImpactMs(animatedArtFormFor('phap_tu_shared')!.attack!)
     expect(impact).toBe(1312.5)
     const timing = hoaCauTiming(impact)

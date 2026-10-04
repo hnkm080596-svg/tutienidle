@@ -45,6 +45,10 @@ export type SkillCastPresentation = Readonly<{
   /** Buff definition ids live on the CASTER at declare (presentation-only
       gate, e.g. a self-buff window driving an empowered art variant). */
   casterBuffIds?: readonly string[]
+  /** True when the declared execution resolved through a Phap The
+      empowerment swap (execution source 'empowered') - drives empowered
+      art variants (extra portal rings, azure projectile). */
+  empowered?: boolean
 }>
 type OutcomeIdentity = Readonly<{
   outcomeId: string
@@ -140,6 +144,7 @@ export function buildSkillCastPresentation(
     disposition: castDisposition(declared),
     slotRole: castSlotRole(actor, declared),
     casterBuffIds: declared.casterBuffIds,
+    empowered: declared.execution?.source === 'empowered',
   })
 }
 

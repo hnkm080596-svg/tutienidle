@@ -1,11 +1,13 @@
 /** Only occupied frames are playable; source sheets retain their padded cells. */
 export const HOA_CAU_VFX_ASSETS = {
+  /** Converging-energy (Genki-dama style) charge authored for the full
+      1700ms charge window - plays at authored rate, no render stretch. */
   charge: {
     key: 'hoa-cau-charge',
     textureUrl: '/assets/vfx/hoa-cau-thuat/charge/hoa-tu-charge.png',
     atlasUrl: '/assets/vfx/hoa-cau-thuat/charge/hoa-tu-charge.json',
     firstFrame: 0,
-    lastFrame: 17,
+    lastFrame: 50,
   },
   impact: {
     key: 'hoa-cau-fire-20',
@@ -28,6 +30,15 @@ export const HOA_CAU_VFX_ASSETS = {
     key: 'hoa-cau-phoenix-projectile',
     textureUrl: '/assets/vfx/hoa-cau-thuat/projectile/hoa-cau-phoenix.png',
     atlasUrl: '/assets/vfx/hoa-cau-thuat/projectile/hoa-cau-phoenix.json',
+    firstFrame: 0,
+    lastFrame: 35,
+  },
+  /** Same authored flight hue-shifted to azure offline - the Phap The
+      (empowered) cast flies blue while normal Ly Hoa Thuat stays red. */
+  phoenixProjectileEmpowered: {
+    key: 'hoa-cau-phoenix-empowered',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/projectile-empowered/hoa-cau-phoenix-empowered.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/projectile-empowered/hoa-cau-phoenix-empowered.json',
     firstFrame: 0,
     lastFrame: 35,
   },
@@ -54,8 +65,9 @@ export const HOA_CAU_VFX_ASSETS = {
 
 /** The 5th-stack Phap The seal - the authored Arcadia living flame that
     replaces the static glyph while `currentThe >= theThreshold` holds.
-    Timeline: a 2400ms reveal across the full sheet, then frames 18..35
-    loop at 900ms for the burn tail (mirrors the dev-lab driver). */
+    The 5th stack ignites INSTANTLY on the spot where the glyph stood:
+    no reveal beat - the burn tail (frames 18..35) loops from ms 0 at the
+    authored tail rate (mirrors the dev-lab driver). */
 export const HOA_THE_ASSET = {
   key: 'hoa-the-fire-stroke',
   textureUrl: '/assets/vfx/hoa-cau-thuat/fire-stroke/hoa-the.png',
@@ -73,6 +85,13 @@ export type HoaCauAsset = typeof HOA_CAU_VFX_ASSETS[keyof typeof HOA_CAU_VFX_ASS
 
 /** Both aura layers loop once per this many ms (authored ~30fps sheets). */
 export const TAM_MUOI_AURA_LOOP_MS = 1200
+
+/** Tier-5 Hoa The seal timing: the glyph vanishes at stack 5 and the burn
+    tail (frames 18..35) loops instantly at the authored rate - the doc
+    authored those 18 frames over 1.2s. Reduced-motion freezes on 18. */
+export const HOA_THE_BURN_START_FRAME = 18
+export const HOA_THE_BURN_FRAME_COUNT = 18
+export const HOA_THE_BURN_LOOP_MS = 1200
 
 export function hoaCauCombatDescriptors() {
   return Object.values(HOA_CAU_VFX_ASSETS).map(({ key, textureUrl, atlasUrl }) => ({
