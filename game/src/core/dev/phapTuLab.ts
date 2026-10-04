@@ -48,6 +48,10 @@ import {
   getUpgradeableTalentIds,
   reconcileTalentEntitlement,
 } from '../talent/TalentEntitlement'
+import {
+  getActiveElement,
+  isActivePath,
+} from '../player/CultivationPathSystem'
 
 export interface PhapTuLabDeps {
   gameManager: GameManager
@@ -162,13 +166,13 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
       }
 
       steps.push(`initiation:${element}`)
-    } else if (playerState.cultivationPath !== 'spell' || playerState.cultivationWay !== 'spell_pathway') {
+    } else if (!isActivePath(playerState, 'spell')) {
       return `refused: save already committed to ${playerState.cultivationPath}/${playerState.cultivationWay} - lab needs a fresh or spell_pathway character`
     }
 
-    const element = playerState.spellPath.element
+    const element = getActiveElement(playerState)
 
-    if (element === null) {
+    if (element === undefined) {
       return 'refused: spell_pathway without an element commit (legacy/broken state)'
     }
 
@@ -332,7 +336,7 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
     status(): string {
       const { gameManager } = deps
       const playerState = deps.getPlayerState()
-      const element = playerState.spellPath.element ?? '-'
+      const element = getActiveElement(playerState) ?? '-'
       const kit = (SPELL_KIT_IDS[element as ElementType] ?? [])
         .map((skillId) => `${skillId}:${gameManager.skillManager.has(skillId) ? 'learned' : 'missing'}`)
         .join(', ')
