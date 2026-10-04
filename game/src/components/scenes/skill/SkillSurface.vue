@@ -28,6 +28,7 @@ import { useProgressionActions } from '@/composables/useProgressionActions'
 import { ELEMENT_ORDER, ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/CastLeveling'
+import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
 import { betaMortalTreeViewTags } from '@/core/betaScopeSkillDomain'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -94,8 +95,9 @@ const nodeViewTag = (node: ProgressionNode): string | undefined => node.elementT
 
 // Pathway-scoped render set: spell paths take their element tags, other
 // ways their declared tree tags; a pre-initiation mortal admits only the
-// branches carrying a renderable info anchor (betaMortalTreeViewTags) -
-// every node there still renders its 'initiation-pending' lock.
+// branches carrying a renderable info anchor (betaMortalTreeViewTags -
+// the 'tien_than' precursor trio) - every node there still renders its
+// 'initiation-pending' lock.
 const pathwayRows = computed(() => {
   const mortalTags = skillTree.value.mortal
     ? betaMortalTreeViewTags(allNodes.value)
@@ -273,7 +275,10 @@ function nodeIcon(node: ProgressionNode): string {
 function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphEntry): SkillUiNode {
   const skillId = row.infoSkillId!
   const skill = gameManager.catalogOps.getSkillTemplate(skillId)
-  const learned = gameManager.skillManager.has(skillId)
+  // The lit seat is the basic the mortal actually fights with (beta
+  // fixes the pick to linh_bao); the other learned-but-unpickable
+  // precursors stay visually locked - readable, never selectable.
+  const isActiveBasic = player.$state.mortalBasicSkillId === skillId
   const coreLevel = gameManager.progressionOps.getSkillLevel(skillId, player.$state)
   const maxLevel = gameManager.progressionOps.getSkillCoreMaxLevel(skillId)
   const casts = player.$state.skillCastCounts?.[skillId] ?? 0
@@ -290,13 +295,16 @@ function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphE
   return {
     id: node.id,
     name: skill?.name ?? row.name,
-    icon: nodeIcon(node),
+    icon:
+      SKILL_ICON_MANIFEST[skillId] !== undefined
+        ? resolveAssetUrl(SKILL_ICON_MANIFEST[skillId])
+        : nodeIcon(node),
     x: position.x,
     y: position.y,
     prominent: entry.depth === 0,
     emphasis: constellationPoints.value?.get(node.id)?.emphasis ?? 'normal',
     level: `${coreLevel} / ${maxLevel}`,
-    state: learned ? 'learned' : 'locked',
+    state: isActiveBasic ? 'learned' : 'locked',
     description: skill?.description ?? row.description ?? '',
     rows: [
       { id: 'level', label: t('skill.levelLabel'), value: `${coreLevel} / ${maxLevel}` },

@@ -4,7 +4,7 @@ export const skillMessages = { vi: {
   branch: { fire: { a: 'Tụ Diễm', b: 'Tán Diễm', passive: 'Tam Muội Chân Hỏa' }, wood: { a: 'Tụ Độc', b: 'Lan Độc', passive: 'Vạn Mộc Sinh Cơ' }, water: { a: 'Ngưng Liễn', b: 'Đào Lan', passive: 'Thanh Tuyền Dưỡng Linh' }, metal: { a: 'Tụ Phong', b: 'Tán Phong', passive: 'Kim Ý Ngưng Phong' }, earth: { a: 'Tụ Nhán', b: 'Đá Loạn', passive: 'Trọng Nhạc' } },
   future: 'Nhánh mở rộng', description: 'Thông tin kỹ năng được hiển thị tại đây. Nội dung và thông số sẽ lấy từ dữ liệu kỹ năng khi nối logic.', fireDescription: 'Phóng Hỏa Cầu vào mục tiêu, có cơ hội gây Thiêu Đốt.',
   level: 'Cấp kỹ năng', effect: 'Hiệu ứng', effectValue: 'Theo dữ liệu kỹ năng',
-  costSample: 'Chi phí: 5 Cảm Ngộ', lockedHint: 'Điều kiện mở nhánh sẽ được cung cấp khi nối logic.', fixtureNote: 'Dữ liệu mẫu để duyệt UI, không phải điều kiện hay cây kỹ năng chính thức.', fixtureInfoOnly: 'Kỹ năng tiền thân — chỉ để xem; tự lên cấp theo số lần xuất chiêu.', upgrade: 'Nâng Cấp', notice: 'Chỉ xem trước UI — chưa học, tăng cấp hay tiêu hao điểm.',
+  costSample: 'Chi phí: 5 Cảm Ngộ', lockedHint: 'Điều kiện mở nhánh sẽ được cung cấp khi nối logic.', fixtureNote: 'Dữ liệu mẫu để duyệt UI, không phải điều kiện hay cây kỹ năng chính thức.', upgrade: 'Nâng Cấp', notice: 'Chỉ xem trước UI — chưa học, tăng cấp hay tiêu hao điểm.',
   navNotice: '{name} — chưa có bản duyệt trong màn này.',
   // Display names for the authored fire constellation fixture
   // (SkillConstellationLayouts fire glyph) - mirror the registry names
@@ -19,7 +19,6 @@ export const skillMessages = { vi: {
     fire_basic_hoa_tan_diem: 'Tán Diễm',
     fire_ailment_mastery: 'Hỏa Chưởng',
     linh_ngo_tam_muoi_chan_hoa: 'Linh Ngộ Hỏa Đặc Biệt',
-    linh_bao_tien_than: 'Linh Bạo',
   },
   // Mirrors the production `skill.*` + `dongFu.aria` +
   // `panels.nodeTree.respec.*` keys the fidelity surface resolves.

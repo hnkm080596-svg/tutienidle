@@ -5,6 +5,7 @@ import { KIEM_TU_NODES } from './KiemTuNodes'
 import { THE_TU_NODES } from './TheTuNodes'
 import { THE_TU_AN_NODES } from './TheTuAnNodes'
 import { SKILL_CORE_NODES } from './SkillCoreNodes'
+import { MORTAL_TIEN_THAN_NODES } from './MortalTienThanNodes'
 
 // Single catalog of every registered progression node - saveShapeValidation
 // and any ownership-checking consumer share this map instead of rebuilding
@@ -16,6 +17,7 @@ export const ALL_PROGRESSION_NODES: readonly ProgressionNode[] = [
   ...THE_TU_NODES,
   ...THE_TU_AN_NODES,
   ...SKILL_CORE_NODES,
+  ...MORTAL_TIEN_THAN_NODES,
 ]
 
 export const PROGRESSION_NODE_BY_ID: ReadonlyMap<string, ProgressionNode> = new Map(

@@ -312,22 +312,23 @@ export function betaNodeTreeRenderable(node: ProgressionNode): boolean {
 /**
  * Mortal tree-surface admission: pre-initiation the player owns no
  * path/way, so no pathway-scoped tag set applies - the surface admits
- * only the element branches that carry a renderable info anchor (the
- * mortal precursor skills' readable seats). Every node on an admitted
- * branch still carries its own mortal 'initiation-pending' verdict;
- * nothing here unlocks purchase.
+ * only the branches that carry a renderable info anchor (the mortal
+ * precursor skills' readable seats on the 'tien_than' branch tag).
+ * Every node on an admitted branch still carries its own mortal
+ * 'initiation-pending' verdict; nothing here unlocks purchase.
  */
 export function betaMortalTreeViewTags(
   tree: readonly ProgressionNode[],
-): ReadonlySet<ElementType> {
-  const tags = new Set<ElementType>()
+): ReadonlySet<string> {
+  const tags = new Set<string>()
   for (const node of tree) {
+    const viewTag = node.elementTag ?? node.branchTag
     if (
       node.infoSkillId !== undefined &&
-      node.elementTag !== undefined &&
+      viewTag !== undefined &&
       betaNodeTreeRenderable(node)
     ) {
-      tags.add(node.elementTag)
+      tags.add(viewTag)
     }
   }
   return tags

@@ -31,8 +31,6 @@ const fireFixture: Record<string, { state: SkillUiNode['state']; level: string }
   hoa_nhiet_keo: { state: 'locked', level: '0 / 4' },
   fire_basic_hoa_tu_diem: { state: 'locked', level: '0 / 3' },
   fire_basic_hoa_tan_diem: { state: 'locked', level: '0 / 3' },
-  // Info anchor - read-only seat, mirrors the mortal precursor level.
-  linh_bao_tien_than: { state: 'learned', level: '1 / 3' },
 }
 const constellation = computed(() => (element.value === 'fire' ? fireLayout ?? null : null))
 const nodes = computed<SkillUiNode[]>(() => {
@@ -51,10 +49,6 @@ const nodes = computed<SkillUiNode[]>(() => {
     return fireLayout.points.map((point) => ({
       ...make(point.nodeId, t(`fireConst.${point.nodeId}`), point.x, point.y, fireFixture[point.nodeId]?.state ?? 'locked', fireFixture[point.nodeId]?.level ?? '0 / 1'),
       emphasis: point.emphasis ?? 'normal',
-      // The info anchor offers no action - read-only like production.
-      ...(point.nodeId === 'linh_bao_tien_than'
-        ? { actionLabel: '', actionDisabled: true, actionHint: '', costLabel: '', conditions: [t('fixtureInfoOnly')] }
-        : {}),
     }))
   }
   return [make('core', t('skillName.core'), 355, 195, 'learned', '3 / 10'), make('root', t(`skillName.${element.value}`), 355, 36, 'learned', '3 / 10'), make('a', t(`branch.${element.value}.a`), 169, 148, 'learned', '1 / 5'), make('b', t(`branch.${element.value}.b`), 540, 148, 'available', '0 / 5'), make('passive', t(`branch.${element.value}.passive`), 169, 310, 'available', '0 / 5'), make('future-a', t('future'), 355, 359, 'locked', '0 / 5'), make('future-b', t('future'), 540, 310, 'locked', '0 / 5')]

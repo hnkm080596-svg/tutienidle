@@ -9,6 +9,7 @@ import {
   purchaseNode,
 } from '../progression/NodeSystem'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { MORTAL_TIEN_THAN_NODES } from '../../data/progression/MortalTienThanNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { defineEnemy } from '../enemy/Enemy'
@@ -163,10 +164,11 @@ describe('The cap — spell_pathway way gate', () => {
 
 describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
   it('every purchasable node carries requiredCultivationPath spell + requiredWay spell_pathway', () => {
-    for (const node of PHAP_TU_NODES) {
+    for (const node of [...PHAP_TU_NODES, ...MORTAL_TIEN_THAN_NODES]) {
       // Info anchors (infoSkillId, 2026-10-04) are pathless by design:
-      // the mortal precursor seat must be readable before initiation -
-      // the stamp contract applies to purchasable/progression nodes.
+      // the mortal precursor seats live on the way-less 'tien_than'
+      // branch - the stamp contract applies to purchasable/progression
+      // nodes only.
       if (node.infoSkillId !== undefined) {
         expect(node.requiredCultivationPath, node.id).toBeUndefined()
         expect(node.requiredWay, node.id).toBeUndefined()
