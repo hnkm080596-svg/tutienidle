@@ -1581,7 +1581,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     color: number,
     labelText: string,
     row: LaneIndex = HERO_LANE_INDEX,
-    health?: { currentHp: number; maxHp: number; isBoss: boolean },
+    health?: { currentHp: number; maxHp: number; isBoss: boolean; isElite?: boolean },
   ): EntitySprite {
     if (this.dyingIds.has(id)) {
       this.forceFinalizeDeath(id)

@@ -272,7 +272,12 @@ export class CombatSnapshotReconcile {
           color,
           action.state.name,
           action.state.row as LaneIndex,
-          { currentHp: action.state.currentHp, maxHp: action.state.maxHp, isBoss: action.state.isBoss },
+          {
+            currentHp: action.state.currentHp,
+            maxHp: action.state.maxHp,
+            isBoss: action.state.isBoss,
+            isElite: action.state.isElite,
+          },
         )
 
         // FE-06 - the player sprite pre-exists (created hidden at scene

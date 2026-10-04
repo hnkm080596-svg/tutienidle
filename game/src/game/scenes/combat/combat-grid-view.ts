@@ -21,8 +21,15 @@ import { fitEntityLabelText } from './combatTextFormat'
 
 import type { CombatGridViewHost } from './CombatGridViewHost'
 import {
+  AURA_ALPHA,
+  AURA_HEIGHT_RATIO,
+  AURA_PULSE_ALPHA,
+  AURA_PULSE_MS,
+  AURA_WIDTH_RATIO,
+  BOSS_AURA_COLOR,
   BOSS_DISPLAY_SCALE_MULTIPLIER,
   BOSS_HP_FILL_COLOR,
+  ELITE_AURA_COLOR,
   ENEMY_DISPLAY_SCALE_MULTIPLIER,
   ENEMY_HP_BAR_HEIGHT,
   ENEMY_HP_BAR_OFFSET_Y,
@@ -351,6 +358,12 @@ export class CombatGridView {
 
       sprite.shadow.setSize(shadowWidth, shadowWidth * SHADOW_HEIGHT_RATIO)
     }
+
+    if (sprite.aura) {
+      const auraWidth = this.host.characterWidth * effectiveScale * multiplier * AURA_WIDTH_RATIO
+
+      sprite.aura.setSize(auraWidth, auraWidth * AURA_HEIGHT_RATIO)
+    }
   }
 
   // Dinh dau sprite theo anchor hien hanh - moi chrome treo tren dau
@@ -395,6 +408,7 @@ export class CombatGridView {
       // Foot anchor: origin (0.5, 1) dat tai diem chan dat cua o.
       sprite.rect.setPosition(screenX, screenY)
       sprite.shadow?.setPosition(screenX, point.y)
+      sprite.aura?.setPosition(screenX, point.y)
       sprite.footY = point.y
       sprite.label.setPosition(screenX, point.y + 6)
     } else {
@@ -469,7 +483,7 @@ export class CombatGridView {
     color: number,
     labelText: string,
     row: LaneIndex = HERO_LANE_INDEX,
-    health?: { currentHp: number; maxHp: number; isBoss: boolean },
+    health?: { currentHp: number; maxHp: number; isBoss: boolean; isElite?: boolean },
   ): EntitySprite {
     const existing = this.host.sprites.get(id)
 
@@ -759,6 +773,7 @@ export class CombatGridView {
         sprite.shadow = this.host.add
           .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
           .setDepth(DEPTH_ENTITY_SHADOW)
+        this.attachTierAura(sprite, health)
       }
 
       this.host.sprites.set(id, sprite)
@@ -809,6 +824,7 @@ export class CombatGridView {
         sprite.shadow = this.host.add
           .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
           .setDepth(DEPTH_ENTITY_SHADOW)
+        this.attachTierAura(sprite, health)
       }
 
       this.host.sprites.set(id, sprite)
@@ -877,6 +893,7 @@ export class CombatGridView {
       sprite.shadow = this.host.add
         .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
         .setDepth(DEPTH_ENTITY_SHADOW)
+      this.attachTierAura(sprite, health)
     }
 
     this.host.sprites.set(id, sprite)
@@ -939,12 +956,43 @@ export class CombatGridView {
     })
   }
 
-  /** Whole-combatant visibility: body, label, shadow and health bar toggle
-   * together. Callers must not touch sprite.rect.setVisible directly. */
+  /**
+   * Tier aura (2026-10-04) - glowing ground ring under a tinh anh
+   * (violet) or boss (gold) enemy, palette mirroring its spawn preset.
+   * Created only in perspective (it shares the shadow's ground-plane
+   * geometry); sized/positioned alongside the shadow every frame.
+   */
+  private attachTierAura(
+    sprite: EntitySprite,
+    health?: { currentHp: number; maxHp: number; isBoss: boolean; isElite?: boolean },
+  ): void {
+    const color = health?.isBoss ? BOSS_AURA_COLOR : health?.isElite ? ELITE_AURA_COLOR : undefined
+
+    if (color === undefined) {
+      return
+    }
+
+    sprite.aura = this.host.add
+      .ellipse(0, 0, 10, 4, color, AURA_ALPHA)
+      .setDepth(DEPTH_ENTITY_SHADOW)
+
+    this.host.tweens.add({
+      targets: sprite.aura,
+      alpha: AURA_PULSE_ALPHA,
+      duration: AURA_PULSE_MS / 2,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    })
+  }
+
+  /** Whole-combatant visibility: body, label, shadow, aura and health bar
+   * toggle together. Callers must not touch sprite.rect.setVisible directly. */
   setSpriteVisible(sprite: EntitySprite, visible: boolean) {
     sprite.rect.setVisible(visible)
     sprite.label.setVisible(visible)
     sprite.shadow?.setVisible(visible)
+    sprite.aura?.setVisible(visible)
     sprite.healthBar?.background.setVisible(visible)
     sprite.healthBar?.fill.setVisible(visible)
   }
@@ -956,6 +1004,11 @@ export class CombatGridView {
       this.host.tweens.killTweensOf(sprite.idle)
     }
 
+    if (sprite.aura) {
+      this.host.tweens.killTweensOf(sprite.aura)
+    }
+
+    sprite.aura?.destroy()
     sprite.shadow?.destroy()
     sprite.healthBar?.background.destroy()
     sprite.healthBar?.fill.destroy()
@@ -987,6 +1040,7 @@ export class CombatGridView {
     sprite.rect.setScale(1)
     sprite.label.setAlpha(1)
     sprite.shadow?.setAlpha(SHADOW_ALPHA)
+    sprite.aura?.setAlpha(AURA_ALPHA)
 
     if (sprite.kind === 'sprite') {
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite

@@ -14,6 +14,7 @@ function state(overrides: Partial<TurnBattleEntityVisualState> = {}): TurnBattle
     maxMp: 0,
     alive: true,
     isBoss: false,
+    isElite: false,
     ...overrides,
   }
 }
