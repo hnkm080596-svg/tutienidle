@@ -187,15 +187,27 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
       lease.release()
       throw error
     }
+    // Impact-position cues pin their anchors at open: the burst must stay on
+    // the cell where the hit landed even if the target's sprite then dies and
+    // its death tween drags the live anchor away (linh_bao 1-cell drift).
+    // Trajectory keeps live anchors - flight tracking is its point.
+    const visualTargets = unique.length ? unique : [source]
+    const pinnedOrigin = cue.primitive === 'trajectory' ? undefined : this.surface.anchor(source)
+    const pinned = (cue.primitive === 'trajectory' ? []
+      : cue.anchor === 'source' ? [source] : visualTargets).slice(0, 8)
+      .map(fact => ({
+        fact,
+        point: cue.primitive === 'ground-shape'
+          ? this.surface.ground(fact) : this.surface.anchor(fact),
+      }))
     return {
       sample: elapsed => {
         if (!alive || epoch !== this.epoch) return
         graphics.clear()
-        const origin = this.surface.anchor(source)
-        if (!origin) return
-        const visualTargets = unique.length ? unique : [source]
-        graphics.setDepth(cue.primitive === 'ground-shape' ? DEPTH_GROUND_VFX : this.surface.uprightDepth(visualTargets[0]!))
         if (cue.primitive === 'trajectory') {
+          const origin = this.surface.anchor(source)
+          if (!origin) return
+          graphics.setDepth(this.surface.uprightDepth(visualTargets[0]!))
           const count = Math.min(this.budget.blades, Math.max(1, cast?.candidateInstanceCount ?? returnTargets.length))
           for (let i = 0; i < count; i++) {
             const destination = this.surface.anchor(visualTargets[i % visualTargets.length]!)
@@ -203,10 +215,10 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
             this.flight(graphics, cue, context.recipe.color, origin, destination, elapsed, i, count)
           }
         } else {
-          const anchors = cue.anchor === 'source' ? [source] : visualTargets
-          for (const fact of anchors.slice(0, 8)) {
-            const point = cue.primitive === 'ground-shape' ? this.surface.ground(fact) : this.surface.anchor(fact)
-            if (point) this.accent(graphics, cue, context.recipe.color, point, origin, elapsed)
+          if (!pinnedOrigin) return
+          graphics.setDepth(cue.primitive === 'ground-shape' ? DEPTH_GROUND_VFX : this.surface.uprightDepth(visualTargets[0]!))
+          for (const entry of pinned) {
+            if (entry.point) this.accent(graphics, cue, context.recipe.color, entry.point, pinnedOrigin, elapsed)
           }
         }
       },
@@ -223,7 +235,7 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     let anchors = unique
     if (cue.anchor === 'source' || unique.length === 0) anchors = [source]
     const epoch = this.epoch
-    const entries: { fact: ActorAnchorFact; lease: VfxLease<SkillVfxSprite> }[] = []
+    const entries: { lease: VfxLease<SkillVfxSprite> }[] = []
     let alive = true
     const end = () => { if (alive) { alive = false; for (const entry of entries) entry.lease.release() } }
     for (const fact of anchors) {
@@ -244,7 +256,7 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
         .setScale(spec.scale ?? 1)
         .setAlpha(1)
         .setVisible(true)
-      entries.push({ fact, lease })
+      entries.push({ lease })
     }
     if (entries.length === 0) return quietHandle
     return {
@@ -252,9 +264,9 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
         if (!alive || epoch !== this.epoch) return
         const frame = Math.min(spec.frames - 1,
           Math.floor(Math.max(0, elapsed) / cue.durationMs * spec.frames))
+        // Position stays pinned to the open-time hit point - see the
+        // impact-position note in open(); a dying target must not drag it.
         for (const entry of entries) {
-          const point = this.surface.anchor(entry.fact)
-          if (point) entry.lease.value.setPosition(point.x, point.y)
           entry.lease.value.setFrame(`frame_${frame}`)
         }
       },
@@ -270,15 +282,21 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     const fitPx = cue.fitPx ?? 120
     const anchored = (cue.anchor === 'source' ? [source] : targets).slice(0, 8)
     const epoch = this.epoch
-    const sprites: { sprite: SkillVfxSprite; fact: ActorAnchorFact }[] = []
+    // Impact-position pin (see open()'s note): each sprite keeps the hit point
+    // resolved at open - a dying target's tween must not drag the burst.
+    const sprites: { sprite: SkillVfxSprite }[] = []
     for (const fact of anchored) {
+      const point = cue.grounded ? this.surface.ground(fact) : this.surface.anchor(fact)
+      if (!point) continue
       const sprite = this.surface.sprite(cue.sheetKey, `frame_${first}`)
       if (!sprite) continue
       sprite.setVisible(true)
       sprite.setOrigin(0.5, cue.grounded ? 0.85 : 0.5)
       sprite.setDisplaySize(fitPx, fitPx * (sprite.height / Math.max(1, sprite.width)))
+      sprite.setPosition(point.x, point.y)
+      sprite.setDepth(cue.grounded ? DEPTH_GROUND_VFX : this.surface.uprightDepth(fact))
       this.liveSheetSprites.add(sprite)
-      sprites.push({ sprite, fact })
+      sprites.push({ sprite })
     }
     if (!sprites.length) return quietHandle
     let alive = true
@@ -290,22 +308,13 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
         sprite.destroy()
       }
     }
-    const place = (sprite: SkillVfxSprite, fact: ActorAnchorFact) => {
-      const point = cue.grounded ? this.surface.ground(fact) : this.surface.anchor(fact)
-      if (!point) { sprite.setVisible(false); return }
-      sprite.setVisible(true)
-      sprite.setPosition(point.x, point.y)
-      sprite.setDepth(cue.grounded ? DEPTH_GROUND_VFX : this.surface.uprightDepth(fact))
-    }
-    for (const { sprite, fact } of sprites) place(sprite, fact)
     return {
       sample: elapsed => {
         if (!alive || epoch !== this.epoch) return
         const index = Math.min(last, first + Math.max(0, Math.floor(elapsed * fps / 1000)))
-        for (const { sprite, fact } of sprites) {
+        for (const { sprite } of sprites) {
           if (!sprite.active) continue
           sprite.setFrame(`frame_${index}`)
-          place(sprite, fact)
         }
       },
       finish: end, cancel: end,

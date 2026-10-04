@@ -321,5 +321,62 @@ describe('pooled Phaser skill driver', () => {
       f.driver.destroy()
       expect(f.spritesDestroyed()).toBe(f.sprites.length)
     })
+    // Linh Bao drift regression (2026-10-04): the target's death tween drags
+    // its body anchor mid-burst, then destruction snaps the fallback anchor to
+    // the grid node - impact cues must pin the point resolved at open instead.
+    const positionSprite = (key: string) => {
+      const record = { key, frames: [] as string[], x: NaN, y: NaN, active: true, width: 100, height: 100 }
+      const obj: Record<string, unknown> = {}
+      for (const k of ['setTexture', 'setDepth', 'setScale', 'setAlpha',
+        'setVisible', 'setOrigin', 'setDisplaySize']) obj[k] = () => obj
+      obj.setFrame = (frame: string) => { record.frames.push(frame); return obj }
+      obj.setPosition = (x: number, y: number) => { record.x = x; record.y = y; return obj }
+      obj.destroy = () => { record.active = false }
+      return { record, sprite: obj as unknown as SkillVfxSprite }
+    }
+    const driftSurface = (f: ReturnType<typeof fixture>, pull: () => number) => {
+      const records: { x: number; y: number; key: string }[] = []
+      const surface: SkillVfxSurface = { ...f.surface,
+        anchor: fact => ({ x: fact.column * 50 + pull(), y: fact.row * 50 }),
+        sprite: (key: string) => {
+          const { record, sprite } = positionSprite(key)
+          records.push(record)
+          return sprite
+        } }
+      return { surface, records }
+    }
+    it('pins an atlas detonation to the hit point when the target anchor drifts', () => {
+      const f = fixture()
+      let shift = 0
+      const { surface, records } = driftSurface(f, () => shift)
+      const driver = new PhaserSkillVfxDriver(surface, 'standard', false)
+      const handle = driver.open(atlasCue, landedContext(f))
+      const openX = records[0]!.x
+      const openY = records[0]!.y
+      shift = 50 // death tween drags the anchor one cell over
+      handle.sample(275)
+      expect(records[0]!.x).toBe(openX)
+      expect(records[0]!.y).toBe(openY)
+      handle.sample(549)
+      expect(records[0]!.x).toBe(openX)
+      handle.finish()
+    })
+    it('pins a sheet burst to the hit point when the target anchor drifts', () => {
+      const f = fixture()
+      let shift = 0
+      const { surface, records } = driftSurface(f, () => shift)
+      const driver = new PhaserSkillVfxDriver(surface, 'standard', false)
+      const sheetCue = { primitive: 'sheet' as const, anchor: 'targets' as const,
+        shape: 'sheet' as const, offsetMs: 0, durationMs: 300,
+        sheetKey: 'bite-sheet', firstFrame: 0, lastFrame: 7, fps: 24, fitPx: 90 }
+      const handle = driver.open(sheetCue, landedContext(f))
+      const openX = records[0]!.x
+      shift = 50
+      handle.sample(150)
+      expect(records[0]!.x).toBe(openX)
+      handle.sample(299)
+      expect(records[0]!.x).toBe(openX)
+      handle.finish()
+    })
   })
 })
