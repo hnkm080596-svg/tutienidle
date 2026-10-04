@@ -580,6 +580,9 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png',
   '/assets/ui/huyen-kim/ornaments/divider-ornament@2x.png',
   '/assets/ui/huyen-kim/scene/character-v2/figure.png',
+  // CharacterFidelityFigure hand flame - Fire 9 sheet played on the
+  // figure's hand socket via EntitySpriteCanvas.
+  '/assets/vfx/spritesheets/火 (9).png',
   '/assets/ui/huyen-kim/scene/dong-fu-v2/rear.png',
   '/assets/ui/huyen-kim/scene/dong-fu-v2/foreground.png',
   '/assets/ui/huyen-kim/scene/dong-fu-v2/cultivator.png',
