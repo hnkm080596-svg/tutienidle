@@ -2,39 +2,44 @@ import type Phaser from 'phaser'
 import type { ActorAnchorFact, SkillCastPresentation } from '@/core/battle/turn/SkillPresentationFacts'
 import type { SkillCue, SkillCueContext, SkillCueHandle, SkillPresentationDriver } from '@/presentation/skills/SkillPresentationRecipe'
 import { DEPTH_GROUND_VFX } from '../BattleLayers'
-import { VfxPool } from './VfxPool'
+import { VfxPool, type VfxLease } from './VfxPool'
 import { flightProgress, makeFlightCurve, sampleCurve, type Point } from './trajectory'
 
 export type SkillVfxGraphics = Pick<Phaser.GameObjects.Graphics,
   'clear' | 'setVisible' | 'setDepth' | 'lineStyle' | 'lineBetween' | 'fillStyle' |
   'fillTriangle' | 'strokeCircle' | 'strokeEllipse' | 'destroy'>
-// Monster attack VFX sweep (2026-10-04) - 'sheet' cue sprites: an atlas
-// image the driver positions/sizes/frame-steps per target.
+// Sprite contract shared by the 'atlas' (authored sheet, per-key pool) and
+// 'sheet' (manifest frame-window, direct sprites) cue primitives.
 export type SkillVfxSprite = Pick<Phaser.GameObjects.Image,
-  'setFrame' | 'setPosition' | 'setDepth' | 'setVisible' | 'setDisplaySize' |
-  'setOrigin' | 'setAlpha' | 'destroy' | 'width' | 'height' | 'active'>
+  'setTexture' | 'setFrame' | 'setPosition' | 'setDepth' | 'setScale' | 'setAlpha' | 'setVisible' | 'setDisplaySize' |
+  'setOrigin' | 'destroy' | 'width' | 'height' | 'active'>
 export interface SkillVfxSurface {
   graphics(): SkillVfxGraphics
   anchor(fact: ActorAnchorFact): Point | undefined
   ground(fact: Pick<ActorAnchorFact, 'row' | 'column'>): Point | undefined
   uprightDepth(fact: ActorAnchorFact): number
-  // Optional: 'sheet' cue sprite factory. Returns undefined when the
-  // texture key is not loaded - the cue then silently falls back to the
-  // recipe's analytic primitives.
-  sprite?(key: string, frame: string): SkillVfxSprite | undefined
+  // Optional: sprite factory for the 'atlas'/'sheet' primitives. Keyed by
+  // texture key so a pool can bind each lease to its own sheet; 'sheet'
+  // cues also pass the initial frame. Returns undefined when the texture
+  // key is not loaded - the cue then falls back to the recipe's analytic
+  // primitives rather than fabricating imagery.
+  sprite?(key: string, frame?: string): SkillVfxSprite | undefined
   actorImpulse?(fact: ActorAnchorFact, durationMs: number, impulsePx: number, cast?: SkillCastPresentation): void
   cameraImpulse?(durationMs: number, intensity: number): void
 }
 export type SkillVfxQuality = 'standard' | 'low'
 export const SKILL_VFX_BUDGETS = {
-  standard: { graphics: 24, blades: 8, trailSamples: 24, afterimages: 3, sparks: 32 },
-  low: { graphics: 12, blades: 3, trailSamples: 8, afterimages: 0, sparks: 6 },
+  standard: { graphics: 24, blades: 8, trailSamples: 24, afterimages: 3, sparks: 32, sprites: 8 },
+  low: { graphics: 12, blades: 3, trailSamples: 8, afterimages: 0, sparks: 6, sprites: 4 },
 } as const
 const quietHandle: SkillCueHandle = { sample() {}, finish() {}, cancel() {} }
 
 /** One pooled Graphics per cue; trails and particles are bounded analytic geometry. */
 export class PhaserSkillVfxDriver implements SkillPresentationDriver {
   private readonly pool: VfxPool<SkillVfxGraphics>
+  // Atlas sprites pool per texture key - a cue can detonate on several
+  // landed targets at once, and pooling per key keeps the set bounded.
+  private readonly atlasPools = new Map<string, VfxPool<SkillVfxSprite>>()
   private epoch = 0
   // One camera impulse per action receipt; authored cues and the generic
   // landed-hit impulse share the latch so the <=1/action cap holds. Keyed on
@@ -57,6 +62,15 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
       graphics => { graphics.clear(); graphics.setVisible(false) }, graphics => graphics.destroy())
   }
   get stats() { return this.pool.stats }
+  get spriteStats() {
+    let allocated = 0
+    let active = 0
+    for (const pool of this.atlasPools.values()) {
+      allocated += pool.stats.allocated
+      active += pool.stats.active
+    }
+    return { allocated, active }
+  }
   /**
    * Battle-boundary reset. 'battle' (default) clears everything for a new
    * battle. 'rebind' is an in-place reattach to the SAME battle/session:
@@ -68,6 +82,7 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     this.epoch++
     if (scope === 'battle') this.cameraImpulseFired.clear()
     this.pool.reset()
+    for (const pool of this.atlasPools.values()) pool.reset()
     for (const sprite of this.liveSheetSprites) sprite.destroy()
     this.liveSheetSprites.clear()
   }
@@ -75,6 +90,7 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     this.epoch++
     this.cameraImpulseFired.clear()
     this.pool.destroy()
+    for (const pool of this.atlasPools.values()) pool.destroy()
     for (const sprite of this.liveSheetSprites) sprite.destroy()
     this.liveSheetSprites.clear()
   }
@@ -82,6 +98,18 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     if (this.cameraImpulseFired.has(requestId)) return false
     this.cameraImpulseFired.add(requestId)
     return true
+  }
+  private atlasPool(key: string): VfxPool<SkillVfxSprite> {
+    let pool = this.atlasPools.get(key)
+    if (!pool) {
+      pool = new VfxPool(this.budget.sprites, () => {
+        const sprite = this.surface.sprite!(key)
+        if (!sprite) throw new Error('atlas texture unavailable')
+        return sprite
+      }, sprite => { sprite.setVisible(false) }, sprite => sprite.destroy())
+      this.atlasPools.set(key, pool)
+    }
+    return pool
   }
 
   open(cue: SkillCue, context: SkillCueContext): SkillCueHandle {
@@ -133,10 +161,10 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     const unique = [...new Map((returning ? returnTargets : targets).map(target => [target.entityId, target])).values()]
     if (context.phase === 'resolved' && unique.length === 0) return quietHandle
     if (cue.primitive === 'trajectory' && unique.length === 0) return quietHandle
-    // 'sheet' cue (Monster attack VFX sweep 2026-10-04): one atlas sprite
-    // per target, frame-stepped in sample() over the authored window.
-    // Missing hook/texture leaves the analytic primitives to carry the
-    // impact - no warning, no lease.
+    if (cue.primitive === 'atlas') return this.atlas(cue, unique, source)
+    // 'sheet' cue: one atlas sprite per target, frame-stepped in sample()
+    // over the authored window. Missing hook/texture leaves the analytic
+    // primitives to carry the impact - no warning, no lease.
     if (cue.primitive === 'sheet') return this.openSheet(cue, source, unique, context)
     const lease = this.pool.acquire()
     if (!lease) return quietHandle
@@ -180,6 +208,54 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
             const point = cue.primitive === 'ground-shape' ? this.surface.ground(fact) : this.surface.anchor(fact)
             if (point) this.accent(graphics, cue, context.recipe.color, point, origin, elapsed)
           }
+        }
+      },
+      finish: end, cancel: end,
+    }
+  }
+  private atlas(cue: SkillCue, unique: ActorAnchorFact[], source: ActorAnchorFact): SkillCueHandle {
+    const spec = cue.atlas
+    if (!spec || !this.surface.sprite) {
+      console.warn('[SkillVfx] atlas cue dropped: no sprite surface')
+      return quietHandle
+    }
+    const pool = this.atlasPool(spec.key)
+    let anchors = unique
+    if (cue.anchor === 'source' || unique.length === 0) anchors = [source]
+    const epoch = this.epoch
+    const entries: { fact: ActorAnchorFact; lease: VfxLease<SkillVfxSprite> }[] = []
+    let alive = true
+    const end = () => { if (alive) { alive = false; for (const entry of entries) entry.lease.release() } }
+    for (const fact of anchors) {
+      const point = this.surface.anchor(fact)
+      if (!point) continue
+      let lease: VfxLease<SkillVfxSprite> | null
+      try {
+        lease = pool.acquire()
+      } catch {
+        // Texture key not loaded - the cue quietly drops rather than
+        // drawing a missing-texture placeholder.
+        break
+      }
+      if (!lease) break
+      lease.value.setFrame('frame_0')
+        .setPosition(point.x, point.y)
+        .setDepth(this.surface.uprightDepth(fact))
+        .setScale(spec.scale ?? 1)
+        .setAlpha(1)
+        .setVisible(true)
+      entries.push({ fact, lease })
+    }
+    if (entries.length === 0) return quietHandle
+    return {
+      sample: elapsed => {
+        if (!alive || epoch !== this.epoch) return
+        const frame = Math.min(spec.frames - 1,
+          Math.floor(Math.max(0, elapsed) / cue.durationMs * spec.frames))
+        for (const entry of entries) {
+          const point = this.surface.anchor(entry.fact)
+          if (point) entry.lease.value.setPosition(point.x, point.y)
+          entry.lease.value.setFrame(`frame_${frame}`)
         }
       },
       finish: end, cancel: end,

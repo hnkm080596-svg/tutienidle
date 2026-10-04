@@ -35,6 +35,32 @@ describe('authored skill presentation recipes', () => {
     expect(getSkillPresentationRecipe('ngu_kiem_flight').cast.every(c => c.primitive !== 'actor-impulse')).toBe(true)
     expect(getSkillPresentationRecipe('boss_ground_slam').cast.every(c => c.primitive !== 'actor-impulse')).toBe(true)
   })
+  it('plays the Linh Bao Arcadia burst at the landed targets on the impact beat', () => {
+    const recipe = getSkillPresentationRecipe('linh_bao_burst')
+    expect([recipe.castMs, recipe.impactMs, recipe.recoveryMs]).toEqual([260, 550, 0])
+    expect(recipe.cast).toEqual([
+      { primitive: 'aura', anchor: 'source', shape: 'ring', offsetMs: 0, durationMs: 260 }])
+    expect(recipe.impact).toContainEqual(expect.objectContaining({
+      primitive: 'atlas', anchor: 'targets', shape: 'explosion',
+      offsetMs: 0, durationMs: 550,
+      atlas: { key: 'linh-bao-burst', frames: 12, scale: 1 } }))
+    expect(recipe.impact).toContainEqual(expect.objectContaining({
+      primitive: 'camera-cue', anchor: 'source', shape: 'camera',
+      offsetMs: 0, durationMs: 90, intensity: 0.003 }))
+  })
+  it('rejects malformed atlas cue payloads', () => {
+    const recipe = getSkillPresentationRecipe('slash')
+    const base = { primitive: 'atlas' as const, anchor: 'targets' as const,
+      shape: 'explosion' as const, offsetMs: 0, durationMs: 100 }
+    for (const atlas of [undefined, { key: '', frames: 4 }, { key: 'k', frames: 0 },
+      { key: 'k', frames: 65 }, { key: 'k', frames: 1.5 }, { key: 'k', frames: 4, scale: 0 },
+      { key: 'k', frames: 4, scale: 9 }])
+      expect(() => validateSkillRecipe({ ...recipe, impact: [{ ...base, atlas }] })).toThrow()
+    // An atlas payload on a non-atlas primitive is a recipe bug too.
+    expect(() => validateSkillRecipe({ ...recipe, impact: [{ primitive: 'burst' as const,
+      anchor: 'targets' as const, shape: 'sparks' as const, offsetMs: 0, durationMs: 100,
+      atlas: { key: 'k', frames: 4 } }] })).toThrow()
+  })
   it('migrates authored screenShake to an impact camera-cue', () => {
     const slam = getSkillPresentationRecipe('boss_ground_slam')
     expect(slam.impact).toContainEqual(expect.objectContaining({
@@ -106,8 +132,10 @@ describe('sheet cue injection (Monster attack VFX sweep)', () => {
       const recipe = getSkillPresentationRecipe(preset.id)
       expect(recipe.impact.every(c => c.primitive !== 'sheet'), preset.id).toBe(true)
       // Generated recipes keep the preset duration; authored overrides
-      // (ngu_kiem_flight, hoa_cau_comet) own their own timing.
-      if (preset.id !== 'ngu_kiem_flight' && preset.id !== 'hoa_cau_comet')
+      // (ngu_kiem_flight, hoa_cau_comet, linh_bao_burst, tam_muoi_aura)
+      // own their own timing.
+      if (preset.id !== 'ngu_kiem_flight' && preset.id !== 'hoa_cau_comet'
+        && preset.id !== 'linh_bao_burst' && preset.id !== 'tam_muoi_aura')
         expect(recipe.impactMs).toBe(preset.durationMs)
     }
   })

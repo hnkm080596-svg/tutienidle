@@ -36,6 +36,7 @@ import {
 } from '@/presentation/art/CombatEntityPresentation'
 import { CULTIVATE_TEXTURE_OVERRIDES } from '@/presentation/art/PlayerVisualProfiles'
 import { hoaCauCombatDescriptors } from './HoaCauVfxAssets'
+import { linhBaoCombatDescriptors } from './LinhBaoVfxAssets'
 import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
 
 // The mortal entity key - the shared player fallback. MainScene keeps its
@@ -200,7 +201,7 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
     queueAtlasOnce(clips)
   }
 
-  for (const asset of hoaCauCombatDescriptors()) {
+  for (const asset of [...hoaCauCombatDescriptors(), ...linhBaoCombatDescriptors()]) {
     if (queuedKeys.has(asset.key) || scene.textures.exists(asset.key)) continue
     queuedKeys.add(asset.key)
     scene.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
