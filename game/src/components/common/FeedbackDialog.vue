@@ -4,6 +4,7 @@ import { i18n } from '@/i18n'
 import OverlayPanel from './OverlayPanel.vue'
 import GameButton from './GameButton.vue'
 import Chip from './primitives/Chip.vue'
+import InkNineSlice from './primitives/InkNineSlice.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { BUILD_IDENTITY } from '@/shared/build/BuildIdentity'
 import {
@@ -362,13 +363,14 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
     <OverlayPanel
       :open="open"
       :title="title"
+      variant="paper"
       width="min(660px, 94vw)"
       height="min(760px, 92vh)"
       :layer="props.layer"
       data-testid="feedback-dialog"
       @close="onClose"
     >
-      <div class="feedback-dialog paper-on-dark">
+      <div class="feedback-dialog">
         <!-- Success state: stable server report id replaces the form. -->
         <div v-if="result?.status === 'accepted'" class="feedback-dialog__success" data-testid="feedback-success">
           <p class="feedback-dialog__success-title">{{ i18n.global.t('betaFeedback.status.accepted') }}</p>
@@ -408,16 +410,19 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
             <label class="feedback-dialog__label" for="feedback-description">
               {{ i18n.global.t('betaFeedback.fields.description') }}
             </label>
-            <textarea
-              id="feedback-description"
-              v-model="description"
-              class="feedback-dialog__textarea"
-              data-testid="feedback-description"
-              rows="5"
-              :maxlength="FEEDBACK_LIMITS.maxDescriptionChars * 2"
-              :placeholder="i18n.global.t('betaFeedback.placeholders.description')"
-              :aria-describedby="fieldError ? 'feedback-error' : 'feedback-description-hint'"
-            />
+            <div class="feedback-dialog__field-frame">
+              <InkNineSlice chrome-id="text-field" layer="surface" />
+              <textarea
+                id="feedback-description"
+                v-model="description"
+                class="feedback-dialog__textarea"
+                data-testid="feedback-description"
+                rows="5"
+                :maxlength="FEEDBACK_LIMITS.maxDescriptionChars * 2"
+                :placeholder="i18n.global.t('betaFeedback.placeholders.description')"
+                :aria-describedby="fieldError ? 'feedback-error' : 'feedback-description-hint'"
+              />
+            </div>
             <div class="feedback-dialog__meta">
               <small id="feedback-description-hint" class="feedback-dialog__hint">
                 {{ i18n.global.t('betaFeedback.hints.redaction') }}
@@ -430,30 +435,36 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
             <label class="feedback-dialog__label" for="feedback-steps">
               {{ i18n.global.t('betaFeedback.fields.steps') }}
             </label>
-            <textarea
-              id="feedback-steps"
-              v-model="steps"
-              class="feedback-dialog__textarea"
-              data-testid="feedback-steps"
-              rows="3"
-              :maxlength="FEEDBACK_LIMITS.maxStepsChars * 2"
-              :placeholder="i18n.global.t('betaFeedback.placeholders.steps')"
-            />
+            <div class="feedback-dialog__field-frame">
+              <InkNineSlice chrome-id="text-field" layer="surface" />
+              <textarea
+                id="feedback-steps"
+                v-model="steps"
+                class="feedback-dialog__textarea"
+                data-testid="feedback-steps"
+                rows="3"
+                :maxlength="FEEDBACK_LIMITS.maxStepsChars * 2"
+                :placeholder="i18n.global.t('betaFeedback.placeholders.steps')"
+              />
+            </div>
           </div>
 
           <div class="feedback-dialog__field">
             <label class="feedback-dialog__label" for="feedback-contact">
               {{ i18n.global.t('betaFeedback.fields.contact') }}
             </label>
-            <input
-              id="feedback-contact"
-              v-model="contact"
-              class="feedback-dialog__input"
-              data-testid="feedback-contact"
-              type="text"
-              :maxlength="FEEDBACK_LIMITS.maxContactChars * 2"
-              :placeholder="i18n.global.t('betaFeedback.placeholders.contact')"
-            />
+            <div class="feedback-dialog__field-frame">
+              <InkNineSlice chrome-id="text-field" layer="surface" />
+              <input
+                id="feedback-contact"
+                v-model="contact"
+                class="feedback-dialog__input"
+                data-testid="feedback-contact"
+                type="text"
+                :maxlength="FEEDBACK_LIMITS.maxContactChars * 2"
+                :placeholder="i18n.global.t('betaFeedback.placeholders.contact')"
+              />
+            </div>
           </div>
 
           <div class="feedback-dialog__attach">
@@ -504,7 +515,7 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
           </p>
 
           <div class="feedback-dialog__actions">
-            <GameButton variant="ghost" size="sm" data-testid="feedback-export" @click="onExport">
+            <GameButton class="ghost-on-paper" variant="ghost" size="sm" data-testid="feedback-export" @click="onExport">
               {{ exported ? i18n.global.t('betaFeedback.actions.exported') : i18n.global.t('betaFeedback.actions.export') }}
             </GameButton>
             <GameButton
@@ -559,19 +570,32 @@ const title = computed(() => i18n.global.t('betaFeedback.title'))
   gap: 6px;
 }
 
+/* The drawn text-field chrome owns the field shell (dark metal - the
+   small-chrome rule); the input itself stays transparent on top of it
+   and keeps light text for the dark field. */
+.feedback-dialog__field-frame {
+  position: relative;
+}
+
 .feedback-dialog__textarea,
 .feedback-dialog__input {
+  position: relative;
+  z-index: 3;
   width: 100%;
   box-sizing: border-box;
-  padding: 8px 10px;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--paper-50) 75%, transparent);
-  color: var(--paper-text);
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--hk-text-primary, #ede6d6);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   line-height: 1.5;
   resize: vertical;
+}
+
+.feedback-dialog__textarea::placeholder,
+.feedback-dialog__input::placeholder {
+  color: var(--hk-text-muted, #7a7260);
 }
 
 .feedback-dialog__textarea:focus-visible,

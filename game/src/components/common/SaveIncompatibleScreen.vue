@@ -125,9 +125,9 @@ function handleImport(event: Event) {
 <template>
   <div class="save-incompatible" :style="{ zIndex: OVERLAY_LAYERS.saveGate }">
     <InkWashBackdrop left-mountain right-mountain bottom-mist />
-    <div class="save-incompatible__panel paper-on-dark">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+    <div class="save-incompatible__panel">
+      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
       <h2 class="save-incompatible__title">{{ t('saveIncompatible.title') }}</h2>
 
@@ -143,7 +143,8 @@ function handleImport(event: Event) {
         <GameButton variant="secondary" @click="handleExport">{{ t('saveIncompatible.actions.export') }}</GameButton>
 
         <label class="save-incompatible__import">
-          {{ t('saveIncompatible.actions.import') }}
+          <InkNineSlice chrome-id="button-standard" layer="surface" />
+          <span class="save-incompatible__import-label">{{ t('saveIncompatible.actions.import') }}</span>
           <input type="file" accept="application/json" @change="handleImport" />
         </label>
 
@@ -180,12 +181,17 @@ function handleImport(event: Event) {
 
 .save-incompatible__panel {
   /* margin:auto - van can giua khi vua man hinh, nhung khi overflow
-     thi panel dat len tren de cuon toi duoc toan bo noi dung. */
+     thi panel dat len tren de cuon toi duoc toan bo noi dung.
+   Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll +
+   frame-m-modal band; padding clears the band and overflow:hidden +
+   border-radius clip the scroll's square corners. */
   position: relative;
   isolation: isolate;
   margin: auto;
   max-width: 460px;
-  padding: 28px 32px;
+  padding: 46px 40px;
+  overflow: hidden;
+  border-radius: 16px;
   box-shadow: var(--shadow-panel);
   text-align: center;
   font-family: var(--font-body);
@@ -217,6 +223,9 @@ function handleImport(event: Event) {
   gap: 10px;
 }
 
+/* The import affordance paints no button of its own - the drawn
+   button-standard chrome supplies the metal shell and the hidden file
+   input still owns the click target. */
 .save-incompatible__import {
   position: relative;
   overflow: hidden;
@@ -225,9 +234,7 @@ function handleImport(event: Event) {
   justify-content: center;
   min-height: var(--tap-comfortable);
   padding: var(--space-2) var(--space-4);
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line);
+  color: var(--hk-text-primary, #ede6d6);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: var(--font-body);
@@ -235,15 +242,20 @@ function handleImport(event: Event) {
   font-weight: 700;
 }
 
+.save-incompatible__import-label {
+  position: relative;
+  z-index: 3;
+}
+
 .save-incompatible__import input {
   position: absolute;
   inset: 0;
+  z-index: 4;
   opacity: 0;
   cursor: pointer;
 }
 
-.save-incompatible__import:hover {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
+.save-incompatible__import:hover .save-incompatible__import-label {
+  color: var(--hk-gold-bright, #e8c35a);
 }
 </style>

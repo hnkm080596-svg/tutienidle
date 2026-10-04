@@ -47,14 +47,14 @@ function next() {
   <div v-if="!player.hasSeenTutorial" class="tutorial-overlay" :style="{ zIndex: OVERLAY_LAYERS.modal }">
     <div
       ref="panelRef"
-      class="tutorial-overlay__panel paper-on-dark"
+      class="tutorial-overlay__panel"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
       :aria-describedby="bodyId"
     >
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
       <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>
 
@@ -63,7 +63,7 @@ function next() {
       <p :id="bodyId" class="tutorial-overlay__body">{{ t(currentStep.bodyKey) }}</p>
 
       <div class="tutorial-overlay__actions">
-        <GameButton variant="ghost" @click="finish">{{ t('tutorial.skip') }}</GameButton>
+        <GameButton class="ghost-on-paper" variant="ghost" @click="finish">{{ t('tutorial.skip') }}</GameButton>
 
         <GameButton variant="primary" @click="next">
           {{ isLastStep ? t('tutorial.start') : t('tutorial.next') }}
@@ -84,11 +84,16 @@ function next() {
   background: var(--scrim);
 }
 
+/* Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll
+   surface + frame-m-modal's 40px band; padding clears the band and
+   overflow:hidden + border-radius clip the scroll's square corners. */
 .tutorial-overlay__panel {
   position: relative;
   isolation: isolate;
   width: min(420px, 92vw);
-  padding: 28px 32px;
+  padding: 46px 40px;
+  overflow: hidden;
+  border-radius: 16px;
   color: var(--paper-text);
   box-shadow: var(--shadow-panel);
   font-family: var(--font-body);
@@ -127,4 +132,5 @@ function next() {
   justify-content: space-between;
   gap: 10px;
 }
+
 </style>

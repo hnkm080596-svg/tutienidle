@@ -445,34 +445,23 @@
 
 /* INK DRAWER - RETIRED (Huyen Kim rebuild): the dual HUD drawers were
    replaced by the imperial scroll scenes; no component applies
-   .ink-drawer anymore, so the rule and its drawer PNGs are removed.
-   The paper->surface token map below survives on .paper-on-dark. */
+   .ink-drawer anymore, so the rule and its drawer PNGs are removed. */
 
-.paper-on-dark {
-  color: var(--surface-text);
-  --paper-50: var(--surface-600);
-  --paper-100: var(--surface-700);
-  --paper-200: var(--surface-800);
-  --paper-text: var(--surface-text);
-  --paper-text-soft: var(--surface-text-soft);
-  --paper-text-muted: var(--surface-text-muted);
-  --paper-eyebrow: var(--surface-eyebrow);
-  --paper-line: var(--surface-line);
-  --paper-line-soft: var(--surface-line-soft);
-  --paper-grain: var(--surface-grain);
+/* PAPER-ON-DARK - RETIRED (modal paper chrome): every former consumer
+   now paints a real cream scroll surface, so the paper->surface token
+   map has no remaining owner. */
+
+/* GHOST-ON-PAPER - ghost-variant buttons paint no drawn chrome, so on a
+   cream scroll their light --hk-* label and hairline border would wash
+   out. This utility remaps just those two tokens onto the paper family;
+   apply it on the ghost button's own class (vars inherit into the
+   GameButton internals). Dark drawn chrome (chips, slots, buttons that
+   DO carry art) must not get this class. */
+.ghost-on-paper {
+  --hk-text-secondary: var(--paper-text-soft);
+  --hk-border-muted: var(--paper-line);
+  --hk-border-active: var(--paper-line);
 }
-
-/* PAPER-TO-SURFACE TOKEN MAP - remaps the paper token family onto the
-   dark surface palette for containers painted by dark InkNineSlice art
-   (auth card, creation panel, tutorial/offline/save-error/confirm modals,
-   SettingsPanel inside the dark OverlayPanel). Extracted from the retired
-   drawer surface contract so non-drawer dark surfaces share ONE owner
-   instead of duplicating the per-token override (TalentEntitlementModal
-   kept an inline copy before this utility existed). */
-/* `.paper-on-dark` sets `color` directly (not only --paper-text) because
-   descendants relying on INHERITED color (bare h1/h2/p) never
-   re-evaluate --paper-text for inheritance, so the remap alone left them
-   dark-on-dark (ui-audit creation-meta High). */
 
 /* PAPER-TO-SYS TOKEN MAP - panels inside the system modal chrome remap
    the paper family onto the sys palette (NOT --surface-*). Lives here

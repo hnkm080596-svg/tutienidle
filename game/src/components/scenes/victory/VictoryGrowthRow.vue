@@ -40,6 +40,9 @@ const { t } = useI18n()
   margin: 0;
   list-style: none;
   font-size: var(--text-sm);
-  color: var(--hk-text-muted, #7a7260);
+  /* The empty state renders directly on the cream scroll, so it takes
+     the paper text family (the cards' light --hk-* labels stay inside
+     their own dark list-row chrome). */
+  color: var(--paper-text-soft, #5e5a50);
 }
 </style>

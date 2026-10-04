@@ -32,10 +32,10 @@ const model = useVictorySceneModel(computed(() => props.summary))
 </script>
 
 <template>
-  <div class="victory-scene paper-on-dark">
+  <div class="victory-scene">
     <InkWashBackdrop :left-mountain="false" bottom-mist seal="large" />
     <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+    <InkNineSlice chrome-id="frame-xl-ceremony" layer="frame" />
 
     <VictoryRoller side="left" />
     <VictoryRoller side="right" />

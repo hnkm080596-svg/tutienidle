@@ -130,10 +130,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="combat-defeat-panel paper-on-dark">
+  <div class="combat-defeat-panel">
     <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
     <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
+    <InkNineSlice chrome-id="frame-xl-ceremony" layer="frame" />
 
     <DefeatTitleBand :title="t('combat.defeat.title')" :subtitle="t('combat.defeat.subtitle')" />
 
@@ -152,9 +152,10 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Scene 16: same ceremonial family as Victory - ink + cinnabar. */
+/* Scene 16: same ceremonial family as Victory - cream scroll + the
+   drawn frame-xl-ceremony band (the frame is not tintable, so the
+   old --cinnabar tint is gone). */
 .combat-defeat-panel {
-  /* .paper-on-dark owns the paper->surface remap (theme.css). */
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
