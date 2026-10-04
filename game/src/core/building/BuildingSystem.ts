@@ -28,11 +28,11 @@ const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
 const LEVEL_BONUS_PER_LEVEL = 0.2
 
 // Linh Tuyen - engine thach offline chinh (balance playtest 2026-08-28).
-// Muc tieu san luong o level MAX = 5% rate farm online cua realm, tuong
-// duong ~30 phut farm cho moi 10h offline (dung cap). Don vi: thach/phut.
-// Realm tren Truc Co scale x3 moi bac (khop getRealmRewardMultiplier ben
-// core/reward/RealmRewardScale.ts - farm online cung tang x3 nen offline giu
-// ti le 5%).
+// San luong level MAX ~ ngang nhip farm online (economy-review
+// 2026-10-04 do ~330 thach/gio o mortal; comment "5% farm" cu loi thoi).
+// Don vi: thach/phut. Realm tren Truc Co scale x3 moi bac (khop
+// getRealmRewardMultiplier ben core/reward/RealmRewardScale.ts - farm
+// online cung tang x3 nen offline giu ty le tuong duong).
 const SPIRIT_SPRING_TARGET_PER_MINUTE: Record<string, number> = {
   mortal: 5.5,
   qi_refining: 31,
@@ -288,7 +288,8 @@ export class BuildingSystem {
   }
 
   // Linh Tuyen - rate neo theo realm (bang SPIRIT_SPRING_TARGET_PER_MINUTE),
-  // level scaling giu +20%/level; level MAX dat dung target 5% farm online.
+  // level scaling giu +20%/level; level MAX dat dung target bang tren
+  // (~ nhip farm online, economy-review 2026-10-04).
   private getSpiritSpringRatePerSecond(template: Building, level: number, realmId?: string): number {
     const targetPerMinute = getSpiritSpringTargetRatePerMinute(realmId)
     const maxLevelMultiplier = 1 + (template.maxLevel - 1) * LEVEL_BONUS_PER_LEVEL

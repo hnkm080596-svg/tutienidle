@@ -151,3 +151,8 @@ byte-identical.
    Vấn đề thiết kế hệ thống, không phải số.
 5. `hoa_the` maxLevel 4 và đường insight capstone nằm ở
    `data/progression` — ngoài 3 thư mục được cấp.
+
+### Ngoài phạm vi — cập nhật áp dụng (2026-10-04, theo chỉ thị Minh)
+
+- Mục 2 `THE_GAIN_CHANCE_PER_LEVEL` — ĐÃ ÁP DỤNG `0.25 → 0.35`/level (`PhapTuPath.ts`); ngưỡng Thế giữ 5. Pin `PhapTuPath.way.test.ts` cập nhật.
+- Các mục 1 (enemy/stage), 3 (cooldown tooltip), 4 (reaction 2-ấn), 5 (`hoa_the` maxLevel) — giữ nguyên chờ quyết định thiết kế.

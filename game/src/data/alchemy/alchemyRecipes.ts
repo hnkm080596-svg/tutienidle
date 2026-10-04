@@ -3,7 +3,7 @@ import { HERB_AGES } from '@/core/production/ProductionTypes'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
 import { herbBaseId, herbMaterialId } from '@/core/profession/ProfessionMaterial'
-import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import { isPillFamilyRecipeLiveAtRealm, PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 /** Bien the phu DU truc HerbAge (5 bac - gp123 6E C1, thuong_co craftable). */
 function grottoVariants(baseId: string): AlchemyHerbVariant[] {
@@ -28,13 +28,10 @@ const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierInde
     baseDurationSeconds: Math.round(600 * Math.pow(1.45, tierIndex)),
     // M10 (ARCH-008) - retired families (Hoi Xuan Dan) keep their recipes
     // resolvable for in-flight settle, but new jobs are rejected.
-    // economy-review 2026-10-04: hoi_linh_dan at mortal is also retired -
-    // mp_regen cannot land while maxMp/manaRegenPerTurn are spell-domain
-    // stats that stay 0 until the qi_refining spell path unlocks.
-    ...(family.retired === true ||
-      (family.effect.kind === 'mp_regen' && realmId === 'mortal')
-      ? { retired: true }
-      : {}),
+    // Per-realm retirement predicate lives in PillFamilies
+    // (isPillFamilyRecipeLiveAtRealm): hoi_linh_dan at mortal is retired
+    // because mp_regen cannot land while spell-domain stats stay 0.
+    ...(isPillFamilyRecipeLiveAtRealm(family, realmId) ? {} : { retired: true }),
   })),
 )
 

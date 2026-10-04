@@ -147,3 +147,9 @@ Không tune (có lý do):
 - **Chú thích Linh Mạch:** sửa comment "5% farm online" trong
   `BuildingSystem.ts` khi có dịp — mismatch comment-to-code,
   không thuộc data/**.
+
+### Ngoài phạm vi — cập nhật áp dụng (2026-10-04, theo chỉ thị Minh)
+
+- **Thảo dược mồ côi ở hang động — ĐÃ SỬA**: predicate chung `isPillFamilyRecipeLiveAtRealm(family, realmId)` trong `data/pill/PillFamilies.ts`; cả gate nghỉ hưu recipe (`alchemyRecipes.ts`) lẫn pool Động Thiên (`ProductionCatalog.ts`) dùng chung → `hoi_linh_thao_mortal_*` ngừng mint. ProfessionDataIntegrity test xanh.
+- **Chú thích Linh Mạch "5% farm online" — ĐÃ SỬA** trong `BuildingSystem.ts` (đo ~330 thạch/giờ ≈ nhịp online).
+- TLD 0.04→0.06-0.08 (song-song funnel) và hint vendor — giữ nguyên (quyết định thiết kế / owner UI).

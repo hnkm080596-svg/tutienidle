@@ -79,7 +79,7 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
 // TARGET level rides the sink (canonical write: nodeLevels[core_tram],
 // covered end-to-end in SkillSystem.castCount.test.ts).
 describe('Huy Kiếm — cast-channel target levels (sink contract)', () => {
-  it('Lv2 target tại 1000 cast, Lv3 tại 10000, không bao giờ Lv4 (Skill.level frozen)', () => {
+  it('Lv2 target tại 250 cast, Lv3 tại 10000, không bao giờ Lv4 (Skill.level frozen)', () => {
     const manager = new SkillManager()
     const system = new SkillSystem(manager)
     const sink = vi.fn()
@@ -88,14 +88,14 @@ describe('Huy Kiếm — cast-channel target levels (sink contract)', () => {
     system.learn(template)
     const skill = manager.get('tram')!
 
-    for (let cast = 0; cast < 999; cast++) system.recordCast('tram')
-    expect(sink).toHaveBeenLastCalledWith('tram', 999, 1)
+    for (let cast = 0; cast < 249; cast++) system.recordCast('tram')
+    expect(sink).toHaveBeenLastCalledWith('tram', 249, 1)
     expect(skill.level).toBe(1)
 
     system.recordCast('tram')
-    expect(sink).toHaveBeenLastCalledWith('tram', 1000, 2)
+    expect(sink).toHaveBeenLastCalledWith('tram', 250, 2)
 
-    for (let cast = 0; cast < 9000; cast++) system.recordCast('tram')
+    for (let cast = 0; cast < 9750; cast++) system.recordCast('tram')
     expect(sink).toHaveBeenLastCalledWith('tram', 10000, 3)
 
     for (let cast = 0; cast < 5000; cast++) system.recordCast('tram')

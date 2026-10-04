@@ -39,3 +39,22 @@ export const PILL_FAMILIES: readonly PillFamilyDefinition[] = [
   { id: 'duong_than_dan', name: 'Dưỡng Thần Đan', herbId: 'duong_than_thao', herbName: 'Dưỡng Thần Thảo', effect: { kind: 'permanent_stat', stat: 'intelligence' } },
   { id: 'khai_linh_dan', name: 'Khải Linh Đan', herbId: 'khai_linh_hoa', herbName: 'Khải Linh Hoa', effect: { kind: 'permanent_stat', stat: 'attunement' } },
 ] as const
+
+/**
+ * economy-review 2026-10-04: per-realm recipe availability. Family-level
+ * `retired` retires the whole family; the mp_regen line is additionally
+ * retired AT MORTAL only - maxMp/manaRegenPerTurn are spell-domain stats
+ * that stay 0 until the qi_refining spell path unlocks, so the mortal
+ * recipe is a dead craft while later-realm recipes stay live.
+ * One predicate owns both surfaces that gate on it: the generated recipe
+ * flag (alchemyRecipes) and the Dong Thien grotto herb pool
+ * (ProductionCatalog).
+ */
+export function isPillFamilyRecipeLiveAtRealm(
+  family: PillFamilyDefinition,
+  realmId: string,
+): boolean {
+  if (family.retired === true) return false
+  if (family.effect.kind === 'mp_regen' && realmId === 'mortal') return false
+  return true
+}

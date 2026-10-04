@@ -98,3 +98,12 @@ So với kiếp Quán Khí (35% raw — nhẹ nhàng) đây là bậc thang ×8 
 4. **Cast-count kỹ năng**: 19/1000 sau 1 tầng → cân nhắc giảm ngưỡng hoặc batch-count (knob ở `data/skill`, ngoài domain).
 5. **Thiên Kiến Cơ 36,790 essence**: nếu muốn reachable trong beta, giảm cap tầng 5-6 (7,500/26,300 → ~2-3k/8k) hoặc thêm nguồn essence mới; nếu là prestige cuối nội dung thì giữ.
 6. **UI**: thắng stage nên có kết quả rõ — giao lại owner UI (không sửa theo yêu cầu).
+
+### C2 — Kết quả áp dụng (2026-10-04, theo chỉ thị Minh "làm theo đề xuất balance")
+
+- **C2.1 Insight economy — ĐÃ ÁP DỤNG**: `SKILL_INSIGHT_PER_TECHNIQUE_MASTERY 0.6 → 0.18` (`SkillInsightBalance.ts`). Insight trở về khan hiếm; toàn bộ node insight-effect (Tâm Tuệ, Ngộ Đạo) thoát bẫy theo.
+- **C2.2 Trần +10%/kênh — ĐÃ ÁP DỤNG ở mức 12.5%**: 12 node thân cây `stat(..., 0.02)` → `0.025` (cap 0.10→0.125). Vòng ngoài foundation-gated giữ 0.025×4=0.10. Pin `PhapTuBasicNodes.test.ts` cập nhật theo phân vùng trunk/outer.
+- **C2.3 `lk_tam_tue` — KHÔNG ĐỔI**: sau C2.1 insight không còn dư, talent tự khôi phục giá trị.
+- **C2.4 Cast-count — ĐÃ ÁP DỤNG**: `CAST_LEVELING_THRESHOLDS` lv2 `1000 → 250` (tram/linh_bao/huy_quyen); lv3 giữ 10.000 (cổng ẩn L3 có chủ đích, không đụng).
+- **C2.5 Thiên Kiến Cơ — ĐÃ ÁP DỤNG phương án giảm cap**: luyen_tang `7500→2500`, luyen_mach `26300→8000` (tổng ≤ ~13.5k essence, reachable trong beta).
+- **C2.6 UI thắng/thua — giữ nguyên** (owner UI).

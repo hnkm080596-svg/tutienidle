@@ -370,6 +370,6 @@ describe('battle build — the way drives the kit branch', () => {
 
     const participant = gameManager.getTurnBattle()!.players[0]!
     expect(participant.basic?.theGainOnLandedCast).toBe(1)
-    expect(participant.basic?.theGainChance).toBe(0.25)
+    expect(participant.basic?.theGainChance).toBe(0.35)
   })
 })
