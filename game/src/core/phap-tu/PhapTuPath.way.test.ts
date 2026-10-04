@@ -162,8 +162,17 @@ describe('The cap — spell_pathway way gate', () => {
 // this surface does not depend on the bridge module.
 
 describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
-  it('every node carries requiredCultivationPath spell + requiredWay spell_pathway', () => {
+  it('every purchasable node carries requiredCultivationPath spell + requiredWay spell_pathway', () => {
     for (const node of PHAP_TU_NODES) {
+      // Info anchors (infoSkillId, 2026-10-04) are pathless by design:
+      // the mortal precursor seat must be readable before initiation -
+      // the stamp contract applies to purchasable/progression nodes.
+      if (node.infoSkillId !== undefined) {
+        expect(node.requiredCultivationPath, node.id).toBeUndefined()
+        expect(node.requiredWay, node.id).toBeUndefined()
+        continue
+      }
+
       expect(node.requiredCultivationPath, node.id).toBe('spell')
 
       // Three-path design (2026-09-25, sec.4-b): realm-reward grant
