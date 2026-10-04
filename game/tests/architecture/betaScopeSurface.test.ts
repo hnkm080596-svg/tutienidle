@@ -308,7 +308,7 @@ describe('hidden progression domain gates', () => {
 
 describe('betaScopeSurface - Beta Complete beat', () => {
   it('BETA_FINAL_BOSS_ENEMY_ID is the act-3 roster boss', () => {
-    expect(BETA_FINAL_BOSS_ENEMY_ID).toBe('foundation_ferocious_flood_dragon_whelp')
+    expect(BETA_FINAL_BOSS_ENEMY_ID).toBe('foundation_ferocious_spirit_wolf')
     const act3Bosses = BETA_ENEMY_ROSTER.filter(
       (entry) => entry.act === 3 && entry.role === 'boss',
     )
