@@ -1,14 +1,27 @@
 <script setup lang="ts">
+import EntitySpriteCanvas from '@/components/common/EntitySpriteCanvas.vue'
 import { CHARACTER_ART } from './characterUi'
 </script>
 <template>
   <div class="cf-figure">
     <div class="cf-aura" aria-hidden="true"><i /><i /></div>
     <img class="cf-person" :src="CHARACTER_ART.figure" alt="" draggable="false">
-    <!-- Effect slot: the single kept position on the character's hand
-         (the old he-kim spot). Stays as a visible empty socket - a
-         pathway-specific effect visual lands here later. -->
-    <span class="cf-effect-slot" aria-hidden="true" />
+    <!-- Effect slot: the kept position on the character's hand (the old
+         he-kim spot). Fire 9's 27-frame fireball loop sits here as the
+         held flame. -->
+    <EntitySpriteCanvas
+      class="cf-effect-fire"
+      sheet-url="/assets/vfx/spritesheets/火 (9).png"
+      atlas-url="/assets/vfx/hoa-cau-thuat/fire-9.atlas.json"
+      frame-prefix="frame_"
+      frame-suffix=""
+      :zero-pad="0"
+      :first-frame="0"
+      :last-frame="26"
+      :fps="24"
+      :height="96"
+      aria-hidden="true"
+    />
   </div>
 </template>
 <style scoped>
@@ -17,14 +30,11 @@ import { CHARACTER_ART } from './characterUi'
 .cf-aura { position: absolute; left: 438px; top: 185px; width: 420px; height: 375px; border: 1px solid #b8893d; border-radius: 50%; box-shadow: 0 0 22px #ffd98f88, inset 0 0 25px #ffe5a277; background: radial-gradient(ellipse,#e6c26d33,transparent 68%); }
 .cf-aura i { position: absolute; inset: 25px; border: 1px solid #d6a95a; border-radius: 50%; transform: rotate(-25deg) scaleY(.65); box-shadow: 0 0 7px #ffe8a7; }
 .cf-aura i + i { inset: 44px; transform: rotate(32deg) scaleY(.8); border-style: dashed; }
-/* Empty socket on the hand - etched dashed ring, same gold/parchment
-   palette as the scene chrome. Non-interactive until a real effect
-   visual replaces it. */
-.cf-effect-slot {
-  position: absolute; left: 803px; top: 411px; width: 66px; height: 66px;
+/* Held flame on the hand - centered on the old he-kim socket point.
+   The Fire 9 cells are 4:3, so ~96px tall reads as a palm-sized orb. */
+.cf-effect-fire {
+  position: absolute; left: 803px; top: 411px;
   transform: translate(-50%,-50%);
-  border: 2px dashed #b8893dcc; border-radius: 50%;
-  background: radial-gradient(circle, #1d151022, #1d15104d 75%);
-  box-shadow: inset 0 0 12px #b8893d40, 0 0 9px #ffd98f33;
+  filter: drop-shadow(0 0 10px #ffb13d88) drop-shadow(0 0 22px #ff7a1f44);
 }
 </style>
