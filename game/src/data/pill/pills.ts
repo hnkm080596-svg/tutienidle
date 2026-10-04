@@ -13,7 +13,11 @@ function buildEffects(family: PillFamilyDefinition, tierIndex: number): Pill['ef
 
   switch (family.effect.kind) {
     case 'cultivation':
-      return [{ type: 'cultivation', cultivationPercent: 0.02 + tierIndex * 0.005 }]
+      // economy-review 2026-10-04: 0.02 base bought ~14s of cultivation at
+      // mortal tang12 for 50 stones + 2 herb + 2 wood + 600s - a trap craft
+      // next to every other 50-stone spend. 0.04 keeps it a modest parallel
+      // accelerator (~29s at mortal t12) without touching the tier slope.
+      return [{ type: 'cultivation', cultivationPercent: 0.04 + tierIndex * 0.005 }]
     case 'hp_regen':
       return [{
         type: 'regen',
