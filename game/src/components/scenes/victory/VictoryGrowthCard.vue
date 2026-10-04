@@ -5,6 +5,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import type { VictoryGrowthCardView } from './victorySceneModel'
 
@@ -12,19 +13,15 @@ const props = defineProps<{ card: VictoryGrowthCardView }>()
 
 const { t } = useI18n()
 
-const GLYPH: Record<VictoryGrowthCardView['id'], string> = {
-  techniqueMastery: '',
-  skillInsight: '',
-  artifactInsight: '',
-}
-
 const label = computed(() => t(props.card.labelKey))
 </script>
 
 <template>
   <li class="victory-growth-card" :class="`is-${props.card.accent}`">
     <InkNineSlice chrome-id="list-row" layer="surface" />
-    <span class="victory-growth-card__seal" aria-hidden="true">{{ GLYPH[props.card.id] }}</span>
+    <span class="victory-growth-card__seal" aria-hidden="true">
+      <HuyenKimSymbol class="victory-growth-card__icon" :name="props.card.symbol" />
+    </span>
     <span class="victory-growth-card__body">
       <span class="victory-growth-card__label">{{ label }}</span>
     </span>
@@ -59,6 +56,10 @@ const label = computed(() => t(props.card.labelKey))
   background: radial-gradient(circle at 35% 30%, #22322b 0%, #101718 72%);
   font-family: var(--font-display, serif);
   font-size: 15px;
+}
+.victory-growth-card__icon {
+  width: 18px;
+  height: 18px;
 }
 .is-gold .victory-growth-card__seal { color: var(--hk-gold-radiant, #f4d98b); }
 .is-jade .victory-growth-card__seal { color: var(--hk-jade-soft, #67c4ab); }

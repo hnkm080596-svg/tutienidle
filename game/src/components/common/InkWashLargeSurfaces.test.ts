@@ -50,10 +50,13 @@ describe('ink-wash large surfaces', () => {
     // it intentionally no longer carries the XL ink layers, so only the
     // combat victory/defeat panels stay in this ceremonial assertion.
     for (const source of [victorySurfaceSource, defeatSource]) {
-      // XL scroll surface migrated to the Huyen Kim chrome registry;
-      // the ceremony frame stays on the legacy ink-wash asset id.
-      expect(source).toContain('chrome-id="surface-xl-scroll"')
-      expect(source).toContain('asset-id="frame-xl-ceremony"')
+      // Huyen-kim reskin: the paper body AND the ceremony frame both come
+      // from the chrome registry now (no legacy ink-wash asset ids).
+      expect(source).toContain('chrome-id="imperial-scroll-body"')
+      expect(source).toContain('chrome-id="frame-xl-ceremony"')
+      expect(source).toContain('chrome-id="scroll-title-plaque"')
+      expect(source).not.toContain('paper-on-dark')
+      expect(source).not.toContain('asset-id=')
     }
     expect(confirmSource).toContain("emit('confirm')")
     expect(victorySource).toContain('startAutoRefightCountdown')

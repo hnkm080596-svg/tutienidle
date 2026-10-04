@@ -7,11 +7,13 @@ import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
-import DefeatTitleBand from '@/components/scenes/defeat/DefeatTitleBand.vue'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import DefeatHintBlock from '@/components/scenes/defeat/DefeatHintBlock.vue'
-import DefeatRewardBlock from '@/components/scenes/defeat/DefeatRewardBlock.vue'
 import DefeatActionRow from '@/components/scenes/defeat/DefeatActionRow.vue'
+import { useVictorySceneModel } from '@/components/scenes/victory/useVictorySceneModel'
+import type { VictorySlotView } from '@/components/scenes/victory/victorySceneModel'
+import VictorySectionPlaque from '@/components/scenes/victory/VictorySectionPlaque.vue'
+import VictoryRewardSlots from '@/components/scenes/victory/VictoryRewardSlots.vue'
 
 // Combat UI Redesign muc 18/23, mo rong 2026-08-22 -- truoc day CHI 1
 // nut "Ve Dong Phu" (khong danh lai). Gio them "Tai Chien" (LUON danh
@@ -54,6 +56,27 @@ const summary = computed(() => {
   return gameManager.getBattleRewardSummary()
 })
 
+const model = useVictorySceneModel(summary)
+
+const titleUrl = resolveAssetUrl('/assets/ui/huyen-kim/scene/defeat-v2/defeat-title-v1.png')
+const stageLabel = computed(() => model.stageName.value ?? t('combat.defeat.subtitle'))
+
+// Defeat rewards ride the same tile family as victory: growth gains
+// (mastery/insight) become symbol tiles ahead of the treasure slots -
+// preserves the old RewardList ordering (growth first, then drops).
+const rewardSlots = computed<VictorySlotView[]>(() => {
+  const growthTiles: VictorySlotView[] = model.growth.value.map((card) => ({
+    id: card.id,
+    kind: 'growth',
+    icon: null,
+    symbol: card.symbol,
+    name: t(card.labelKey),
+    amount: card.amount,
+  }))
+
+  return [...growthTiles, ...model.slots.value]
+})
+
 // B2-1 ruling (2026-09-14): floor 1 stays un-winnable on first entry by
 // design -- the hint tells the player WHY. At/below the stage's realm
 // gate the answer is "cultivate more levels"; above it, gear/pills/
@@ -62,12 +85,6 @@ const isCultivationGap = computed(() => {
   const stage = ui.selectedStageId ? gameManager.catalogOps.getStage(ui.selectedStageId) : undefined
 
   return stage?.requiredRealmLevel !== undefined && player.realmLevel <= stage.requiredRealmLevel
-})
-
-const hasAnyReward = computed(() => {
-  stateVersion.value
-
-  return summary.value.techniqueMastery > 0 || summary.value.skillInsight > 0 || summary.value.artifactInsight > 0 || summary.value.spiritStone > 0 || summary.value.items.length > 0
 })
 
 const isAutoRetrying = ref(false)
@@ -130,18 +147,32 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="combat-defeat-panel paper-on-dark">
-    <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
-    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
+  <div class="combat-defeat-panel">
+    <header class="combat-defeat-panel__hero" data-hk-region="title">
+      <h1 class="combat-defeat-panel__title">
+        <img :src="titleUrl" :alt="t('combat.defeat.title')" />
+      </h1>
+      <p class="combat-defeat-panel__stage">
+        <InkNineSlice chrome-id="scroll-title-plaque" layer="surface" />
+        <span class="combat-defeat-panel__stage-name">{{ stageLabel }}</span>
+      </p>
+      <p class="combat-defeat-panel__flavor">{{ t('combat.defeat.subtitle') }}</p>
+    </header>
 
-    <DefeatTitleBand :title="t('combat.defeat.title')" :subtitle="t('combat.defeat.subtitle')" />
-
-    <DefeatHintBlock :hint="t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear')" />
-
-    <DefeatRewardBlock v-if="hasAnyReward" :summary="summary" />
+    <section class="combat-defeat-panel__paper">
+      <InkNineSlice chrome-id="imperial-scroll-body" layer="surface" />
+      <InkNineSlice chrome-id="frame-xl-ceremony" layer="frame" />
+      <div class="combat-defeat-panel__paper-inner">
+        <DefeatHintBlock :hint="t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear')" />
+        <div v-if="rewardSlots.length" class="combat-defeat-panel__reward-col">
+          <VictorySectionPlaque>{{ t('combat.defeat.rewardsHeader') }}</VictorySectionPlaque>
+          <VictoryRewardSlots :slots="rewardSlots" />
+        </div>
+      </div>
+    </section>
 
     <DefeatActionRow
+      class="combat-defeat-panel__action-row"
       :is-auto-retrying="isAutoRetrying"
       :retry-countdown="retryCountdown"
       :return-countdown="returnCountdown"
@@ -152,27 +183,85 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Scene 16: same ceremonial family as Victory - ink + cinnabar. */
+/* Scene 16 (huyen-kim reskin): same mock family as Victory - floating
+   calligraphy title over the scrim, stage plaque, cream paper
+   (imperial-scroll-body + frame-xl-ceremony) split into the reason
+   column + reward tile column, dark-metal actions below the paper. */
 .combat-defeat-panel {
-  /* .paper-on-dark owns the paper->surface remap (theme.css). */
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  /* Spec envelope 760 design px = 45.45% of the 1672 frame - identical
-     to the victory scroll's width; a fixed ~582px was only correct at
-     1280w. */
-  width: min(45.45vw, calc(100vw - 32px));
-  padding: 34px 40px 30px;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  width: min(64vw, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   font-family: var(--font-body);
 }
 
-.combat-defeat-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
+.combat-defeat-panel__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.combat-defeat-panel__title {
+  margin: 0;
+  width: min(56%, 600px);
+}
+.combat-defeat-panel__title img {
+  display: block;
+  width: 100%;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
+}
+.combat-defeat-panel__stage {
+  position: relative;
+  isolation: isolate;
+  margin: 4px auto 0;
+  min-width: 240px;
+  padding: 9px 34px;
+}
+.combat-defeat-panel__stage-name {
   position: relative;
   z-index: 3;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--hk-gold-radiant, #f4d98b);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.combat-defeat-panel__flavor {
+  margin: 6px 0 0;
+  font-size: var(--text-sm);
+  color: var(--hk-text-secondary, #e5d3a9);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
+}
+
+.combat-defeat-panel__paper {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  padding: 30px 44px 26px;
+  filter: drop-shadow(0 9px 14px rgba(0, 0, 0, 0.55));
+}
+.combat-defeat-panel__paper > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 3;
+}
+.combat-defeat-panel__paper-inner {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) 1.6fr;
+  gap: 22px;
+  align-items: start;
+  text-align: left;
+}
+.combat-defeat-panel__reward-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.combat-defeat-panel__action-row {
+  margin-top: 14px;
 }
 </style>
