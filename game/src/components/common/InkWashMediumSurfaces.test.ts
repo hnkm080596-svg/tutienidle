@@ -48,7 +48,7 @@ describe('ink-wash medium surfaces', () => {
       container.remove()
     })
 
-    expect(container.querySelector('[data-ink-slice="frame-m-seal-corner"]')).not.toBeNull()
+    expect(container.querySelector('[data-hk-slice="frame-s-slot"]')).not.toBeNull()
   })
 
   it('renders the teleported tooltip inside the approved paper surface and ink frame', async () => {
