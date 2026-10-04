@@ -1,13 +1,18 @@
 import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
 import type { PlaybackRef, SkillCastPresentation, ResolvedPresentationGroup } from '@/core/battle/turn/SkillPresentationFacts'
 
-export type SkillPrimitive = 'trajectory' | 'stroke' | 'burst' | 'aura' | 'ground-shape' | 'actor-impulse' | 'camera-cue'
+export type SkillPrimitive = 'trajectory' | 'stroke' | 'burst' | 'aura' | 'ground-shape' | 'actor-impulse' | 'camera-cue' | 'atlas'
 export interface SkillCue {
   readonly primitive: SkillPrimitive
   readonly offsetMs: number
   readonly durationMs: number
   readonly anchor: 'source' | 'target' | 'targets'
-  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse' | 'camera'
+  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse' | 'camera' | 'explosion'
+  // Atlas primitive payload: an authored sprite sheet played one frame at a
+  // time across durationMs (frame = floor(elapsed/duration * frames)). The
+  // cue stays self-contained - key/frames travel in the recipe, so
+  // validation needs no asset-registry dependency.
+  readonly atlas?: { key: string; frames: number; scale?: number }
   readonly impulsePx?: number
   readonly intensity?: number
   readonly recall?: boolean
@@ -60,7 +65,7 @@ export interface SkillPresentationDriver {
 }
 export type SkillRecipeResolver = (presetId: CombatVfxPresetId) => SkillPresentationRecipe
 
-const primitives = new Set<SkillPrimitive>(['trajectory', 'stroke', 'burst', 'aura', 'ground-shape', 'actor-impulse', 'camera-cue'])
+const primitives = new Set<SkillPrimitive>(['trajectory', 'stroke', 'burst', 'aura', 'ground-shape', 'actor-impulse', 'camera-cue', 'atlas'])
 // One-shot primitives execute only in the playback phase whose context
 // carries the facts they read: actor-impulse needs context.cast (present
 // only during cast playback), camera-cue needs group / primaryLanded
@@ -82,8 +87,17 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
       if (!primitives.has(cue.primitive) || !Number.isFinite(cue.offsetMs) || !Number.isFinite(cue.durationMs)
         || cue.offsetMs < 0 || cue.durationMs <= 0 || cue.offsetMs + cue.durationMs > duration
         || !['source', 'target', 'targets'].includes(cue.anchor)
-        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse', 'camera'].includes(cue.shape))
+        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse', 'camera', 'explosion'].includes(cue.shape))
         throw new Error('Invalid skill recipe cue')
+      if (cue.primitive === 'atlas') {
+        const atlas = cue.atlas
+        if (!atlas || typeof atlas.key !== 'string' || atlas.key.length === 0
+          || !Number.isInteger(atlas.frames) || atlas.frames < 1 || atlas.frames > 64
+          || (atlas.scale !== undefined && (!Number.isFinite(atlas.scale) || atlas.scale <= 0 || atlas.scale > 8)))
+          throw new Error('Invalid skill atlas cue')
+      } else if (cue.atlas !== undefined) {
+        throw new Error('Skill cue atlas payload on a non-atlas primitive')
+      }
       const allowedPhases = primitivePhaseAllowlist[cue.primitive]
       if (allowedPhases && !allowedPhases.includes(phase))
         throw new Error('Skill recipe cue in wrong phase')

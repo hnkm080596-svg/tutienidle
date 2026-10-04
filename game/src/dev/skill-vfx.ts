@@ -6,6 +6,7 @@ import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentation
 import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
 import { applyScreenShake } from '@/presentation/vfx/screenShakePolicy'
 import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
+import { linhBaoCombatDescriptors } from '@/game/support/LinhBaoVfxAssets'
 import { HoaCauLabPlayback } from './HoaCauLabPlayback'
 
 // This HTML entry is not in the production build and never imports GameManager/save services.
@@ -21,7 +22,7 @@ const tamMuoiInput = element<HTMLInputElement>('tam-muoi-aura')
 element('tam-muoi-label').textContent = i18n.global.t('skillVfxLab.tamMuoiAura')
 const phapTheInput = element<HTMLSelectElement>('phap-the-stacks')
 element('phap-the-label').textContent = i18n.global.t('skillVfxLab.phapTheStacks')
-for (const id of ['ngu_kiem_flight', 'slash', 'earth_shockwave', 'holy_radiance', 'hoa_cau_comet'])
+for (const id of ['ngu_kiem_flight', 'slash', 'earth_shockwave', 'holy_radiance', 'hoa_cau_comet', 'linh_bao_burst'])
   presetInput.add(new Option(t(id), id))
 for (const id of ['hit', 'miss', 'intercept', 'sourceDeath', 'multi', 'combo', 'empty'])
   outcomeInput.add(new Option(t(id), id))
@@ -66,7 +67,8 @@ let driver: PhaserSkillVfxDriver
 let fireball: HoaCauLabPlayback
 let casterFigure: Phaser.GameObjects.Graphics
 function snapshot() {
-  return { phase: runner.snapshot.phase, impacts, completes, faults: runner.snapshot.faultCount, ...driver.stats }
+  return { phase: runner.snapshot.phase, impacts, completes, faults: runner.snapshot.faultCount,
+    ...driver.stats, spriteActive: driver.spriteStats.active }
 }
 // Live phase markers: the five sequence items stand in for the runner's
 // coarse phases - cast spans the flight items, waiting is the impact beat,
@@ -156,7 +158,12 @@ function play(autoplay = false) {
   paintStats()
 }
 class SkillLabScene extends Phaser.Scene {
-  preload() { HoaCauLabPlayback.preload(this) }
+  preload() {
+    HoaCauLabPlayback.preload(this)
+    for (const asset of linhBaoCombatDescriptors()) {
+      this.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
+    }
+  }
   create() {
     const backdrop = this.add.graphics()
     backdrop.fillStyle(0x122733).fillRect(0, 0, 960, 440)
@@ -182,6 +189,7 @@ class SkillLabScene extends Phaser.Scene {
     })
     driver = new PhaserSkillVfxDriver({
       graphics: () => this.add.graphics(), anchor: point,
+      sprite: key => this.add.image(0, 0, key),
       ground: fact => ({ ...point(fact), y: 325 }),
       uprightDepth: () => 600,
       // One-shot stubs so the cast-phase actor-impulse and the impact

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { PhaserSkillVfxDriver, type SkillVfxSurface, type SkillVfxGraphics } from './PhaserSkillVfxDriver'
+import { PhaserSkillVfxDriver, type SkillVfxSurface, type SkillVfxGraphics, type SkillVfxSprite } from './PhaserSkillVfxDriver'
 import type { SkillCue, SkillCueContext } from '@/presentation/skills/SkillPresentationRecipe'
 const source = { entityId: 'player', row: 1, column: 1 }
 const target = { entityId: 'enemy', row: 1, column: 8 }
@@ -8,6 +8,8 @@ const recipe = { id: 'test', version: 1 as const, color: 0xffffff, castMs: 370, 
 function fixture(quality: 'standard' | 'low' = 'standard', reducedMotion = false) {
   const draws: string[] = []
   let destroyed = 0
+  let spritesDestroyed = 0
+  const sprites: { key: string; frames: string[] }[] = []
   const graphics = () => {
     const obj: Record<string, unknown> = {}
     for (const key of ['clear', 'setVisible', 'setDepth', 'lineStyle', 'lineBetween', 'fillStyle',
@@ -15,8 +17,17 @@ function fixture(quality: 'standard' | 'low' = 'standard', reducedMotion = false
     obj.destroy = () => { destroyed++ }
     return obj as unknown as SkillVfxGraphics
   }
+  const sprite = (key: string) => {
+    const record = { key, frames: [] as string[] }
+    const obj: Record<string, unknown> = {}
+    for (const k of ['setTexture', 'setPosition', 'setDepth', 'setScale', 'setAlpha', 'setVisible']) obj[k] = () => obj
+    obj.setFrame = (frame: string) => { record.frames.push(frame); return obj }
+    obj.destroy = () => { spritesDestroyed++ }
+    sprites.push(record)
+    return obj as unknown as SkillVfxSprite
+  }
   const surface: SkillVfxSurface = {
-    graphics, anchor: fact => ({ x: fact.column * 50, y: fact.row * 50 }),
+    graphics, sprite, anchor: fact => ({ x: fact.column * 50, y: fact.row * 50 }),
     ground: fact => ({ x: fact.column * 50, y: fact.row * 50 }),
     uprightDepth: () => 450, actorImpulse: vi.fn(), cameraImpulse: vi.fn(),
   }
@@ -25,7 +36,8 @@ function fixture(quality: 'standard' | 'low' = 'standard', reducedMotion = false
     phase: 'cast', cast: { ref: { sessionId: 1, requestId: '1', token: '1' }, rootSkillId: 'test',
       resolvedSkillId: 'test', presetId: 'metal_slash', source, declaredTargets: [target],
       candidateInstanceCount: 100, disposition: 'action', slotRole: 'basic' } }
-  return { driver, context, draws, surface, destroyed: () => destroyed }
+  return { driver, context, draws, surface, destroyed: () => destroyed,
+    sprites, spritesDestroyed: () => spritesDestroyed }
 }
 describe('pooled Phaser skill driver', () => {
   it.each(['standard', 'low'] as const)('bounds and releases ten thousand cue lifecycles at %s quality', quality => {
@@ -239,5 +251,75 @@ describe('pooled Phaser skill driver', () => {
     expect(f.driver.stats.active).toBe(1)
     current.finish()
     expect(f.driver.stats.active).toBe(0)
+  })
+  describe('atlas primitive', () => {
+    const atlasCue = { primitive: 'atlas' as const, anchor: 'targets' as const,
+      shape: 'explosion' as const, offsetMs: 0, durationMs: 550,
+      atlas: { key: 'linh-bao-burst', frames: 12, scale: 1 } }
+    it('plays the authored sheet across the cue window on every landed target', () => {
+      const f = fixture()
+      const second = { entityId: 'enemy-2', row: 2, column: 8 }
+      const context = { ...landedContext(f), group: { ...landedContext(f).group!,
+        outcomes: [{ kind: 'hit' as const, outcomeId: 'h', target, landed: true, crit: false, hpDamage: 4, killed: false, hitOrdinal: 0 },
+          { kind: 'hit' as const, outcomeId: 'h2', target: second, landed: true, crit: false, hpDamage: 4, killed: false, hitOrdinal: 1 }] } }
+      const handle = f.driver.open(atlasCue, context)
+      handle.sample(0)
+      // One sprite per landed target; frame_0 is bound at open, then re-applied by the sample.
+      expect(f.sprites).toHaveLength(2)
+      for (const record of f.sprites) {
+        expect(record.key).toBe('linh-bao-burst')
+        expect(record.frames).toEqual(['frame_0', 'frame_0'])
+      }
+      handle.sample(275)
+      expect(f.sprites[0]!.frames.at(-1)).toBe('frame_6')
+      handle.sample(549)
+      expect(f.sprites[0]!.frames.at(-1)).toBe('frame_11')
+      handle.finish()
+      expect(f.driver.spriteStats.active).toBe(0)
+      // A stale handle never rewrites frames after the cue ends.
+      handle.sample(600)
+      expect(f.sprites[0]!.frames.at(-1)).toBe('frame_11')
+      // And the sprites stay out of the graphics pool.
+      expect(f.draws).toHaveLength(0)
+      expect(f.driver.stats.active).toBe(0)
+    })
+    it('does not fabricate detonation imagery for missed or skipped outcomes', () => {
+      const f = fixture()
+      const base = landedContext(f)
+      const missed = { ...base, group: { ...base.group!,
+        outcomes: [{ kind: 'hit' as const, outcomeId: 'm', target, landed: false, crit: false, hpDamage: 0, killed: false, hitOrdinal: 0 }] } }
+      const handle = f.driver.open(atlasCue, missed)
+      handle.sample(100)
+      expect(f.sprites).toHaveLength(0)
+      expect(f.driver.spriteStats.active).toBe(0)
+      handle.finish()
+    })
+    it('warns and drops the cue when the surface cannot create sprites', () => {
+      const f = fixture()
+      const driver = new PhaserSkillVfxDriver({ ...f.surface, sprite: undefined }, 'standard', false)
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+      try {
+        const handle = driver.open(atlasCue, landedContext(f))
+        handle.sample(100)
+        expect(warn).toHaveBeenCalledWith('[SkillVfx] atlas cue dropped: no sprite surface')
+        expect(f.sprites).toHaveLength(0)
+      } finally { warn.mockRestore() }
+    })
+    it('keeps simultaneous detonations inside the per-key sprite budget', () => {
+      const f = fixture('low')
+      const handles = []
+      for (let n = 0; n < 4; n++) {
+        const context = { ...landedContext(f), ref: { sessionId: 1, requestId: `r${n}`, token: `t${n}` } }
+        handles.push(f.driver.open(atlasCue, context))
+      }
+      // Low quality budgets 4 atlas sprites per texture key; four concurrent
+      // cues share that pool instead of spawning 4 sprites each.
+      expect(f.driver.spriteStats.allocated).toBeLessThanOrEqual(4)
+      for (const handle of handles) handle.finish()
+      expect(f.driver.spriteStats.active).toBe(0)
+      for (const handle of handles) handle.cancel()
+      f.driver.destroy()
+      expect(f.spritesDestroyed()).toBe(f.sprites.length)
+    })
   })
 })

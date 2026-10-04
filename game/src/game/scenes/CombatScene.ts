@@ -647,6 +647,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           ?? this.projection?.gridToScreen(fact.row, fact.column)
       this._skillVfxDriver = new PhaserSkillVfxDriver({
         graphics: () => this.add.graphics(),
+        sprite: key => this.add.image(0, 0, key),
         anchor: anchorPoint,
         ground: fact => this.projection?.gridToScreen(fact.row, fact.column),
         uprightDepth: fact => {

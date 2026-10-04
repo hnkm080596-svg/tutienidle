@@ -1,0 +1,257 @@
+{
+  "frames": {
+    "frame_0": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_1": {
+      "frame": {
+        "x": 258,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_2": {
+      "frame": {
+        "x": 516,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_3": {
+      "frame": {
+        "x": 774,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_4": {
+      "frame": {
+        "x": 0,
+        "y": 256,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_5": {
+      "frame": {
+        "x": 258,
+        "y": 256,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_6": {
+      "frame": {
+        "x": 516,
+        "y": 256,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_7": {
+      "frame": {
+        "x": 774,
+        "y": 256,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_8": {
+      "frame": {
+        "x": 0,
+        "y": 512,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_9": {
+      "frame": {
+        "x": 258,
+        "y": 512,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_10": {
+      "frame": {
+        "x": 516,
+        "y": 512,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    },
+    "frame_11": {
+      "frame": {
+        "x": 774,
+        "y": 512,
+        "w": 258,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 256
+      }
+    }
+  },
+  "meta": {
+    "app": "arcadia-effects",
+    "image": "linh-bao-burst.png",
+    "size": {
+      "w": 1032,
+      "h": 768
+    },
+    "scale": "1",
+    "durationMs": 550,
+    "frameRate": 21.81,
+    "frameCount": 12,
+    "transparent": true
+  }
+}

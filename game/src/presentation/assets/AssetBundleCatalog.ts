@@ -79,6 +79,7 @@ import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
 import { TECHNIQUES } from '@/data/technique/Techniques'
 import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 import { hoaCauCombatDescriptors } from '@/game/support/HoaCauVfxAssets'
+import { linhBaoCombatDescriptors } from '@/game/support/LinhBaoVfxAssets'
 
 export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
 
@@ -350,7 +351,7 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
-  for (const descriptor of hoaCauCombatDescriptors()) {
+  for (const descriptor of [...hoaCauCombatDescriptors(), ...linhBaoCombatDescriptors()]) {
     if (seenKeys.has(descriptor.key)) continue
     seenKeys.add(descriptor.key)
     descriptors.push(descriptor)

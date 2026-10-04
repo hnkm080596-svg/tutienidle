@@ -61,6 +61,23 @@ recipes.set('hoa_cau_comet', {
   castMs: 1450, impactMs: 900, recoveryMs: 0,
   cast: [], impact: [], recovery: [],
 })
+// Linh Bao point detonation: the authored Arcadia burst (12 frames over the
+// sheet's 550ms detonation window) plays at each landed target on the impact
+// beat, replacing the generic sparks accent. The cast aura and the preset's
+// authored camera-cue keep the hybrid recipe's behavior; the impact ACK
+// itself still lands on the cast clip's marked frame.
+recipes.set('linh_bao_burst', {
+  id: 'linh_bao_burst', version: 1, color: 0xbef0ff,
+  castMs: 260, impactMs: 550, recoveryMs: 0,
+  cast: [{ primitive: 'aura', anchor: 'source', shape: 'ring', offsetMs: 0, durationMs: 260 }],
+  impact: [
+    { primitive: 'atlas', anchor: 'targets', shape: 'explosion', offsetMs: 0, durationMs: 550,
+      atlas: { key: 'linh-bao-burst', frames: 12, scale: 1 } },
+    { primitive: 'camera-cue', anchor: 'source', shape: 'camera', offsetMs: 0, durationMs: 90,
+      intensity: 0.003 },
+  ],
+  recovery: [],
+})
 /** Existing skills migrate by preset; a new skill can supply its own data recipe. */
 export function getSkillPresentationRecipe(id: CombatVfxPresetId): SkillPresentationRecipe {
   return recipes.get(id) ?? recipes.get('slash')!
