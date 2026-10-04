@@ -367,6 +367,11 @@ export interface TurnDeclaredAction {
 
   action: SelectedAction | null
 
+  /** Buff definition ids live on the caster at declare - stamped so the
+      presentation facts can gate buff-window art variants without reading
+      back into the buff authority. Empty when no runtime is wired. */
+  casterBuffIds?: readonly string[]
+
   opposingSide: TurnBattleParticipant[]
 
   affected: TurnBattleParticipant[]
@@ -597,6 +602,15 @@ export class TurnBattleSystem {
       throw new Error('TurnBattleSystem: proc lane reached without a TurnCombatRuntime (unwired battle)')
     }
     return this.runtime.procs
+  }
+
+  /** Live buff definition ids on the caster, stamped onto every real cast
+      declare so presentation facts can gate buff-window art variants
+      without reading back into the buff authority. */
+  private declaredCasterBuffIds(actor: TurnBattleParticipant): readonly string[] {
+    return this.runtime?.buffs
+      .getForTarget(actor.entity.id)
+      .map((instance) => String(instance.definitionId)) ?? []
   }
 
   private get scheduler(): CombatScheduler {
@@ -2039,6 +2053,7 @@ export class TurnBattleSystem {
       compositePickedSkills,
       isFollowUpBypass: false,
       actionSource,
+      casterBuffIds: this.declaredCasterBuffIds(actor),
       // Task 9 -- every real cast records its execution identity here:
       // 'original' for now (empowered/composite/repeat/multicast arrive
       // with Tasks 10-13). Charge-resolve/CC-blocked turns carry none.
@@ -3072,6 +3087,7 @@ export class TurnBattleSystem {
       suddenDeathMultiplier,
       compositePickedSkills,
       isFollowUpBypass: true,
+      casterBuffIds: this.declaredCasterBuffIds(actor),
       execution,
     }
   }
@@ -3991,6 +4007,7 @@ export class TurnBattleSystem {
       suddenDeathMultiplier: this.suddenDeathDamageMultiplier(battle.roundsElapsed ?? 0),
       compositePickedSkills: null,
       isFollowUpBypass: true,
+      casterBuffIds: this.declaredCasterBuffIds(actor),
       actionSource: entry.actionSource,
       triggerContext: entry.triggerContext,
     }

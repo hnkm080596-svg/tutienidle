@@ -42,6 +42,9 @@ export type SkillCastPresentation = Readonly<{
   candidateInstanceCount: number
   disposition: CastDisposition
   slotRole: CastSlotRole
+  /** Buff definition ids live on the CASTER at declare (presentation-only
+      gate, e.g. a self-buff window driving an empowered art variant). */
+  casterBuffIds?: readonly string[]
 }>
 type OutcomeIdentity = Readonly<{
   outcomeId: string
@@ -136,6 +139,7 @@ export function buildSkillCastPresentation(
     candidateInstanceCount: skill?.instances?.count ?? 1,
     disposition: castDisposition(declared),
     slotRole: castSlotRole(actor, declared),
+    casterBuffIds: declared.casterBuffIds,
   })
 }
 

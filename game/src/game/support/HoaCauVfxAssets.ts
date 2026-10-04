@@ -42,41 +42,43 @@ export const HOA_CAU_VFX_ASSETS = {
     firstFrame: 0,
     lastFrame: 26,
   },
-} as const
-
-/** Dev-preview candidate; production still uses the existing Fire 9 projectile. */
-export const HOA_CAU_PHOENIX_PREVIEW_ASSET = {
-  key: 'hoa-cau-phoenix-projectile',
-  textureUrl: '/assets/vfx/hoa-cau-thuat/projectile/hoa-cau-phoenix.png',
-  atlasUrl: '/assets/vfx/hoa-cau-thuat/projectile/hoa-cau-phoenix.json',
-  firstFrame: 0,
-  lastFrame: 35,
-} as const
-
-/** The authored Arcadia circle is preview-only until the full skill is approved. */
-export const HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET = {
-  key: 'hoa-cau-triple-fire-circle',
-  textureUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-triple-fire-circle.png',
-  atlasUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-triple-fire-circle.json',
-  firstFrame: 0,
-  lastFrame: 63,
-} as const
-
-/** Two passes from one editable Arcadia effect; preview-only until approved. */
-export const TAM_MUOI_AURA_PREVIEW_ASSET = {
-  key: 'tam-muoi-fire-aura-back',
-  textureUrl: '/assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-back.png',
-  atlasUrl: '/assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-back.json',
-  firstFrame: 0,
-  lastFrame: 35,
-} as const
-
-export const TAM_MUOI_AURA_FRONT_PREVIEW_ASSET = {
-  key: 'tam-muoi-fire-aura-front',
-  textureUrl: '/assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-front.png',
-  atlasUrl: '/assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-front.json',
-  firstFrame: 0,
-  lastFrame: 35,
+  /** Tam Muoi empowered-state circle, swapped in for the portal while the
+      caster's tam_muoi window is up (the phoenix_projectile art variant).
+      The sheet books its 62-frame loop with one blank cell at each end. */
+  tripleCircle: {
+    key: 'hoa-cau-triple-fire-circle',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-triple-fire-circle.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-triple-fire-circle.json',
+    firstFrame: 1,
+    lastFrame: 62,
+  },
+  /** Empowered projectile for the same Tam Muoi variant of the fireball. */
+  phoenixProjectile: {
+    key: 'hoa-cau-phoenix-projectile',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/projectile/hoa-cau-phoenix.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/projectile/hoa-cau-phoenix.json',
+    firstFrame: 0,
+    lastFrame: 35,
+  },
+  /** Two passes from one editable Arcadia effect: back sits behind the
+      caster sprite, front in front - both wrap it for the whole cast.
+      Each keeps its own occupied range (the authored ramp pads the front
+      loop with one more blank cell), so the layers run 35 and 34 frames
+      over the same 1200ms phase. */
+  tamMuoiAuraBack: {
+    key: 'tam-muoi-fire-aura-back',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-back.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-back.json',
+    firstFrame: 1,
+    lastFrame: 35,
+  },
+  tamMuoiAuraFront: {
+    key: 'tam-muoi-fire-aura-front',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-front.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/tam-muoi-aura/tam-muoi-aura-front.json',
+    firstFrame: 2,
+    lastFrame: 35,
+  },
 } as const
 
 /** Stroke-by-stroke fire seal; preview-only until its skill slot is approved. */
@@ -89,8 +91,10 @@ export const HOA_THE_PREVIEW_ASSET = {
 } as const
 
 export type HoaCauAsset = typeof HOA_CAU_VFX_ASSETS[keyof typeof HOA_CAU_VFX_ASSETS]
-  | typeof HOA_CAU_PHOENIX_PREVIEW_ASSET | typeof HOA_CAU_TRIPLE_CIRCLE_PREVIEW_ASSET
   | typeof HOA_THE_PREVIEW_ASSET
+
+/** Both aura layers loop once per this many ms (authored ~30fps sheets). */
+export const TAM_MUOI_AURA_LOOP_MS = 1200
 
 export function hoaCauCombatDescriptors() {
   return Object.values(HOA_CAU_VFX_ASSETS).map(({ key, textureUrl, atlasUrl }) => ({

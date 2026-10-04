@@ -61,6 +61,14 @@ recipes.set('hoa_cau_comet', {
   castMs: 1450, impactMs: 900, recoveryMs: 0,
   cast: [], impact: [], recovery: [],
 })
+// Same contract for the Tam Muoi self-buff cast: the aura layers + ignite
+// are drawn by TamMuoiAuraPresentation, so this recipe stays timing-only
+// for the runner's impact ACK (the played clip's marker supplies castMs).
+recipes.set('tam_muoi_aura', {
+  id: 'tam_muoi_aura', version: 1, color: 0xff8c42,
+  castMs: 1450, impactMs: 400, recoveryMs: 0,
+  cast: [], impact: [], recovery: [],
+})
 /** Existing skills migrate by preset; a new skill can supply its own data recipe. */
 export function getSkillPresentationRecipe(id: CombatVfxPresetId): SkillPresentationRecipe {
   return recipes.get(id) ?? recipes.get('slash')!
