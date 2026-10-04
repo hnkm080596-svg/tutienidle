@@ -1,39 +1,11 @@
 /** Only occupied frames are playable; source sheets retain their padded cells. */
 export const HOA_CAU_VFX_ASSETS = {
-  portalOpen: {
-    key: 'hoa-cau-portal-open',
-    textureUrl: '/assets/vfx/hoa-cau-thuat/portal/mystic-portal-blood-open.png',
-    atlasUrl: '/assets/vfx/hoa-cau-thuat/portal/mystic-portal-blood-open.atlas.json',
-    firstFrame: 1,
-    lastFrame: 24,
-  },
-  portalActive: {
-    key: 'hoa-cau-portal-active',
-    textureUrl: '/assets/vfx/hoa-cau-thuat/portal/mystic-portal-blood-active.png',
-    atlasUrl: '/assets/vfx/hoa-cau-thuat/portal/mystic-portal-blood-active.atlas.json',
-    firstFrame: 0,
-    lastFrame: 51,
-  },
-  portalClose: {
-    key: 'hoa-cau-portal-close',
-    textureUrl: '/assets/vfx/hoa-cau-thuat/portal/mystic-portal-blood-close.png',
-    atlasUrl: '/assets/vfx/hoa-cau-thuat/portal/mystic-portal-blood-close.atlas.json',
-    firstFrame: 0,
-    lastFrame: 14,
-  },
   charge: {
     key: 'hoa-cau-charge',
     textureUrl: '/assets/vfx/hoa-cau-thuat/charge/hoa-tu-charge.png',
     atlasUrl: '/assets/vfx/hoa-cau-thuat/charge/hoa-tu-charge.json',
     firstFrame: 0,
     lastFrame: 17,
-  },
-  projectile: {
-    key: 'hoa-cau-fire-9',
-    textureUrl: '/assets/vfx/spritesheets/火 (9).png',
-    atlasUrl: '/assets/vfx/hoa-cau-thuat/fire-9.atlas.json',
-    firstFrame: 0,
-    lastFrame: 26,
   },
   impact: {
     key: 'hoa-cau-fire-20',
@@ -42,8 +14,7 @@ export const HOA_CAU_VFX_ASSETS = {
     firstFrame: 0,
     lastFrame: 26,
   },
-  /** Tam Muoi empowered-state circle, swapped in for the portal while the
-      caster's tam_muoi window is up (the phoenix_projectile art variant).
+  /** Portal phase for every cast - the authored Arcadia fire circle.
       The sheet books its 62-frame loop with one blank cell at each end. */
   tripleCircle: {
     key: 'hoa-cau-triple-fire-circle',
@@ -52,7 +23,7 @@ export const HOA_CAU_VFX_ASSETS = {
     firstFrame: 1,
     lastFrame: 62,
   },
-  /** Empowered projectile for the same Tam Muoi variant of the fireball. */
+  /** Authored Arcadia projectile - the only fireball flight art. */
   phoenixProjectile: {
     key: 'hoa-cau-phoenix-projectile',
     textureUrl: '/assets/vfx/hoa-cau-thuat/projectile/hoa-cau-phoenix.png',

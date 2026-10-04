@@ -69,7 +69,6 @@ export class HoaCauLabPlayback {
       depth: () => 600,
       createSprite: (key, frame) => scene.add.sprite(0, 0, key, frame),
       reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-      artVariant: 'phoenix_projectile',
     })
   }
 

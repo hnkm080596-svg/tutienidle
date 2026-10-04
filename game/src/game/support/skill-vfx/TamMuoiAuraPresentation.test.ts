@@ -21,12 +21,13 @@ type SpriteState = {
   destroyed: boolean; additive: boolean
 }
 
-function fixture(options: { isCurrent?: () => boolean; reducedMotion?: boolean } = {}) {
+function fixture(options: { isCurrent?: () => boolean; reducedMotion?: boolean; buffActive?: () => boolean } = {}) {
   const sprites: SpriteState[] = []
   const surface = {
     anchor: (fact: ActorAnchorFact) =>
       fact.entityId === 'player' ? { x: 210, y: 325, scale: 0.95, depth: 590 } : undefined,
     isCurrent: options.isCurrent,
+    buffActive: options.buffActive,
     reducedMotion: options.reducedMotion,
     createSprite: (key: string, frame: string) => {
       const state: SpriteState = {
@@ -162,6 +163,41 @@ describe('Tam Muoi aura presentation', () => {
     expect(back.scale).toBeCloseTo(0.95) // no swell
     expect(back.alpha).toBeLessThan(1)
     presenter.update(100)
+    expect(sprites.every(s => s.destroyed)).toBe(true)
+  })
+
+  it('keeps burning for the whole tam_muoi window after the ignite', () => {
+    let windowUp = true
+    const { presenter, sprites } = fixture({ buffActive: () => windowUp })
+    presenter.start(cast, 1200)
+    presenter.update(1200)
+    presenter.resolve(receipt())
+    presenter.update(480) // ignite completes
+    const back = sprites.find(s => s.key === 'tam-muoi-fire-aura-back')!
+    // Persistent phase: the aura stays lit while the window is up.
+    presenter.update(5000)
+    expect(back.visible).toBe(true)
+    expect(back.destroyed).toBe(false)
+    expect(back.alpha).toBe(1)
+    // Window lapses: the aura drains out then despawns (the fade state
+    // flips after the same tick's render, so one frame of alpha 1 is fine).
+    windowUp = false
+    presenter.update(16)
+    presenter.update(16)
+    expect(back.alpha).toBeLessThan(1)
+    presenter.update(300)
+    expect(sprites.every(s => s.destroyed)).toBe(true)
+  })
+
+  it('gives up waiting when the window never attaches', () => {
+    const { presenter, sprites } = fixture({ buffActive: () => false })
+    presenter.start(cast, 1200)
+    presenter.update(1200)
+    presenter.resolve(receipt())
+    presenter.update(480) // ignite done -> persistent phase, buff never seen
+    presenter.update(1500)
+    expect(sprites.some(s => s.visible)).toBe(true)
+    presenter.update(600) // grace (2000ms) exceeded
     expect(sprites.every(s => s.destroyed)).toBe(true)
   })
 })

@@ -29,7 +29,6 @@ export interface HoaCauSurface {
   createSprite(key: string, frame: string): HoaCauSprite
   isCurrent?(ref: PlaybackRef): boolean
   reducedMotion?: boolean
-  artVariant?: string
 }
 
 export function isHoaCauFireballCast(cast: SkillCastPresentation): boolean {
@@ -46,9 +45,6 @@ type Active = {
   impactElapsedMs: number | null
   impactPositions: readonly { fact: ActorAnchorFact; point: Point }[]
   resolved: boolean
-  /** Empowered art variant for THIS cast (see artVariantFor - the
-      surface's fixed variant wins over the Tam Muoi window gate). */
-  artVariant?: string
 }
 
 /** Purely visual: this class never acknowledges impact or changes battle facts. */
@@ -72,7 +68,6 @@ export class HoaCauFireballPresentation {
       destination: { x: target.x, y: source.y },
       impactElapsedMs: null, impactPositions: [],
       resolved: false,
-      artVariant: this.artVariantFor(cast),
     }
     this.render()
   }
@@ -112,13 +107,6 @@ export class HoaCauFireballPresentation {
 
   destroy(): void { this.cancel() }
 
-  /** The dev-lab surface pins a fixed variant; production derives the
-      empowered set from the cast fact's caster-window buffs instead. */
-  private artVariantFor(cast: SkillCastPresentation): string | undefined {
-    return this.surface.artVariant
-      ?? (cast.casterBuffIds?.includes('tam_muoi') ? 'phoenix_projectile' : undefined)
-  }
-
   private sprite(asset: HoaCauAsset, slot: string = asset.key): HoaCauSprite {
     let sprite = this.sprites.get(slot)
     if (!sprite) {
@@ -147,37 +135,14 @@ export class HoaCauFireballPresentation {
     const timing = hoaCauTiming(active.impactMs)
     const sample = sampleHoaCauTimeline(active.elapsedMs, active.impactMs)
     const sourceDepth = this.surface.depth(active.cast.source)
-    if (active.artVariant === 'phoenix_projectile') {
-      if (active.elapsedMs >= timing.portalStartMs && active.elapsedMs < timing.releaseMs) {
-        const progress = (active.elapsedMs - timing.portalStartMs)
-          / (timing.releaseMs - timing.portalStartMs)
-        const frame = this.surface.reducedMotion ? 56 : Math.min(63, Math.floor(progress * 64))
-        this.show(HOA_CAU_VFX_ASSETS.tripleCircle, frame, active.portalOrigin,
-          0.34, sourceDepth, 0, HOA_CAU_VFX_ASSETS.tripleCircle.key, 1, 0.55)
-      }
-    } else if (sample.portal === 'open') {
-      const asset = HOA_CAU_VFX_ASSETS.portalOpen
-      const frame = this.surface.reducedMotion ? asset.lastFrame
-        : asset.firstFrame + Math.floor((active.elapsedMs - timing.portalStartMs)
-          / (timing.chargeStartMs - timing.portalStartMs) * 24)
-      this.show(asset, frame, active.portalOrigin, 0.55, sourceDepth)
-    } else if (sample.portal === 'active') {
-      const asset = HOA_CAU_VFX_ASSETS.portalActive
-      const frame = this.surface.reducedMotion ? 20
-        : Math.floor((active.elapsedMs - timing.chargeStartMs) / timing.chargeDurationMs * 52)
-      const blend = Math.min(1, (active.elapsedMs - timing.chargeStartMs) / PORTAL_BLEND_MS)
-      if (blend < 1) this.show(HOA_CAU_VFX_ASSETS.portalOpen,
-        HOA_CAU_VFX_ASSETS.portalOpen.lastFrame, active.portalOrigin, 0.55, sourceDepth,
-        0, HOA_CAU_VFX_ASSETS.portalOpen.key, Math.sqrt(1 - blend))
-      this.show(asset, frame, active.portalOrigin, 0.55, sourceDepth, 0, asset.key, Math.sqrt(blend))
-    } else if (sample.portal === 'close') {
-      const asset = HOA_CAU_VFX_ASSETS.portalClose
-      const frame = Math.floor((active.elapsedMs - timing.releaseMs) / timing.closeDurationMs * 15)
-      const blend = Math.min(1, (active.elapsedMs - timing.releaseMs) / PORTAL_BLEND_MS)
-      if (blend < 1) this.show(HOA_CAU_VFX_ASSETS.portalActive,
-        HOA_CAU_VFX_ASSETS.portalActive.lastFrame, active.portalOrigin, 0.55, sourceDepth,
-        0, HOA_CAU_VFX_ASSETS.portalActive.key, Math.sqrt(1 - blend))
-      this.show(asset, frame, active.portalOrigin, 0.55, sourceDepth, 0, asset.key, Math.sqrt(blend))
+    // Single authored presentation: the Arcadia triple-fire-circle is the
+    // portal phase for EVERY cast (no variants).
+    if (active.elapsedMs >= timing.portalStartMs && active.elapsedMs < timing.releaseMs) {
+      const progress = (active.elapsedMs - timing.portalStartMs)
+        / (timing.releaseMs - timing.portalStartMs)
+      const frame = this.surface.reducedMotion ? 56 : Math.min(63, Math.floor(progress * 64))
+      this.show(HOA_CAU_VFX_ASSETS.tripleCircle, frame, active.portalOrigin,
+        0.34, sourceDepth, 0, HOA_CAU_VFX_ASSETS.tripleCircle.key, 1, 0.55)
     }
     if (sample.chargeFrame !== null) {
       const frame = this.surface.reducedMotion ? Math.max(9, Math.min(15, sample.chargeFrame)) : sample.chargeFrame
@@ -192,22 +157,14 @@ export class HoaCauFireballPresentation {
       const elapsedFlightMs = active.elapsedMs - timing.releaseMs
       const flightAngle = Math.atan2(active.destination.y - active.origin.y,
         active.destination.x - active.origin.x) * 180 / Math.PI
-      if (active.artVariant === 'phoenix_projectile') {
-        const frame = Math.floor(elapsedFlightMs / (1200 / 36)) % 36
-        this.show(HOA_CAU_VFX_ASSETS.phoenixProjectile, frame, position, 1,
-          sourceDepth + 0.02, flightAngle)
-      } else {
-        const frame = Math.floor(elapsedFlightMs / (1000 / 30)) % 27
-        // Fire 9's bright leading core is at the BOTTOM of its authored frame.
-        this.show(HOA_CAU_VFX_ASSETS.projectile, frame, position, 0.7,
-          sourceDepth + 0.02, flightAngle - 90)
-      }
+      const frame = Math.floor(elapsedFlightMs / (1200 / 36)) % 36
+      this.show(HOA_CAU_VFX_ASSETS.phoenixProjectile, frame, position, 1,
+        sourceDepth + 0.02, flightAngle)
     }
     if (active.impactElapsedMs !== null && active.impactElapsedMs < 900) {
       const frame = Math.floor(active.impactElapsedMs / 900 * 27)
       for (const { fact, point } of active.impactPositions) {
-        this.show(HOA_CAU_VFX_ASSETS.impact, frame, point,
-          active.artVariant === 'phoenix_projectile' ? 1.2 : 0.6,
+        this.show(HOA_CAU_VFX_ASSETS.impact, frame, point, 1.2,
           this.surface.depth(fact) + 0.01, 0, `${HOA_CAU_VFX_ASSETS.impact.key}:${fact.entityId}`)
       }
     }

@@ -31,6 +31,10 @@ export interface TamMuoiAuraSurface {
   anchor(fact: ActorAnchorFact): TamMuoiAuraAnchor | undefined
   createSprite(key: string, frame: string): TamMuoiAuraSprite
   isCurrent?(ref: PlaybackRef): boolean
+  /** Live "is the caster's tam_muoi window still up" check - drives the
+      persistent phase after the cast ignite. When absent the aura keeps
+      the legacy cast-only lifecycle. */
+  buffActive?(fact: ActorAnchorFact): boolean
   reducedMotion?: boolean
 }
 
@@ -44,6 +48,10 @@ const AURA_IGNITE_REDUCED_MS = 200
 const AURA_IGNITE_SWELL = 0.22
 /** The runner always resolves a started cast; this caps a lost-receipt loop. */
 const AURA_OVERDUE_MS = 800
+/** Buff attach lands on the next status diff after the sealed receipt;
+    this is how long the persistent phase waits for the window to appear. */
+const BUFF_ATTACH_GRACE_MS = 2000
+const AURA_FADE_OUT_MS = 300
 
 type Active = {
   cast: SkillCastPresentation
@@ -51,10 +59,16 @@ type Active = {
   elapsedMs: number
   resolved: boolean
   igniteElapsedMs: number | null
+  /** Post-ignite persistent phase while the window buff is live. */
+  lingerElapsedMs: number | null
+  buffSeen: boolean
+  fadeElapsedMs: number | null
 }
 
 /** Purely visual: wraps the caster for the cast, ignites on the sealed
-    receipt; never acknowledges impact or changes battle facts. */
+    receipt, then keeps burning for the whole tam_muoi window (drains
+    when the buff lapses or the caster dies); never acknowledges impact
+    or changes battle facts. */
 export class TamMuoiAuraPresentation {
   private active?: Active
   private sprites = new Map<string, TamMuoiAuraSprite>()
@@ -64,20 +78,42 @@ export class TamMuoiAuraPresentation {
   start(cast: SkillCastPresentation, releaseMs: number): void {
     this.cancel()
     if (!isTamMuoiAuraCast(cast) || this.surface.anchor(cast.source) === undefined) return
-    this.active = { cast, releaseMs, elapsedMs: 0, resolved: false, igniteElapsedMs: null }
+    this.active = { cast, releaseMs, elapsedMs: 0, resolved: false,
+      igniteElapsedMs: null, lingerElapsedMs: null, buffSeen: false, fadeElapsedMs: null }
     this.render()
   }
 
   update(deltaMs: number): void {
     const active = this.active
     if (!active || !Number.isFinite(deltaMs) || deltaMs < 0) return
-    if (this.surface.isCurrent && !this.surface.isCurrent(active.cast.ref)) { this.cancel(); return }
+    // isCurrent guards only the in-flight cast - once the receipt is
+    // sealed the pending-playback token clears and the persistent phase
+    // must not read it as a stale playback.
+    if (!active.resolved && this.surface.isCurrent && !this.surface.isCurrent(active.cast.ref)) {
+      this.cancel(); return
+    }
     active.elapsedMs += deltaMs
     if (active.igniteElapsedMs !== null) active.igniteElapsedMs += deltaMs
+    if (active.lingerElapsedMs !== null) active.lingerElapsedMs += deltaMs
+    if (active.fadeElapsedMs !== null) active.fadeElapsedMs += deltaMs
     this.render()
     const igniteMs = this.surface.reducedMotion ? AURA_IGNITE_REDUCED_MS : AURA_IGNITE_MS
-    if (active.igniteElapsedMs !== null && active.igniteElapsedMs >= igniteMs) this.cancel()
-    else if (!active.resolved && active.elapsedMs > active.releaseMs + AURA_OVERDUE_MS) this.cancel()
+    if (active.igniteElapsedMs !== null && active.igniteElapsedMs >= igniteMs
+      && active.lingerElapsedMs === null && active.fadeElapsedMs === null) {
+      // Ignite finished: with a live buff channel the aura persists for
+      // the whole tam_muoi window; without one it ends as before.
+      if (this.surface.buffActive === undefined) this.cancel()
+      else active.lingerElapsedMs = 0
+    } else if (active.lingerElapsedMs !== null) {
+      const up = this.surface.buffActive!(active.cast.source)
+      if (up) active.buffSeen = true
+      else if (active.buffSeen) { active.lingerElapsedMs = null; active.fadeElapsedMs = 0 }
+      else if (active.lingerElapsedMs > BUFF_ATTACH_GRACE_MS) this.cancel()
+    } else if (active.fadeElapsedMs !== null && active.fadeElapsedMs >= AURA_FADE_OUT_MS) {
+      this.cancel()
+    } else if (!active.resolved && active.elapsedMs > active.releaseMs + AURA_OVERDUE_MS) {
+      this.cancel()
+    }
   }
 
   resolve(resolved: SkillPresentationResolved): void {
@@ -121,8 +157,14 @@ export class TamMuoiAuraPresentation {
 
     let alpha = 1
     let scale = anchor.scale
-    if (active.igniteElapsedMs === null) {
+    if (active.fadeElapsedMs !== null) {
+      // Window ended: drain the aura out.
+      alpha = Math.max(0, 1 - active.fadeElapsedMs / AURA_FADE_OUT_MS)
+    } else if (active.igniteElapsedMs === null) {
       alpha = Math.min(1, active.elapsedMs / AURA_FADE_IN_MS)
+    } else if (active.lingerElapsedMs !== null) {
+      // Buff-persistent phase: steady burn while the window is up.
+      alpha = 1
     } else if (this.surface.reducedMotion) {
       alpha = Math.max(0, 1 - active.igniteElapsedMs / AURA_IGNITE_REDUCED_MS)
     } else {

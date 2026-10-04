@@ -9,14 +9,13 @@ const cast: SkillCastPresentation = {
   ref, rootSkillId: 'hoa_cau_thuat', resolvedSkillId: 'hoa_cau_thuat', presetId: 'hoa_cau_comet',
   source, declaredTargets: [target], candidateInstanceCount: 1, disposition: 'action', slotRole: 'basic',
 }
-function fixture(options: { isCurrent?: () => boolean; reducedMotion?: boolean; targetY?: number; artVariant?: string } = {}) {
+function fixture(options: { isCurrent?: () => boolean; reducedMotion?: boolean; targetY?: number } = {}) {
   const sprites: Array<{ key: string; frame: string; x: number; y: number; scale: number; scaleY: number; angle: number; alpha: number; visible: boolean; destroyed: boolean }> = []
   const surface = {
     anchor: (fact: ActorAnchorFact) => fact.entityId === 'player' ? { x: 100, y: 100 } : { x: 400, y: options.targetY ?? 100 },
     depth: () => 10,
     isCurrent: options.isCurrent,
     reducedMotion: options.reducedMotion,
-    artVariant: options.artVariant,
     createSprite: (key: string, frame: string) => {
       const state = { key, frame, x: 0, y: 0, scale: 1, scaleY: 1, angle: 0, alpha: 1, visible: true, destroyed: false }
       sprites.push(state)
@@ -41,29 +40,28 @@ function receipt(landed: boolean): SkillPresentationResolved {
 }
 
 describe('Hỏa Cầu Phaser handoff', () => {
-  it('keeps portal, charge and Fire 9 in sequence before landed Fire 20', () => {
+  it('keeps fire-circle, charge and phoenix in sequence before landed Fire 20', () => {
     const { presenter, sprites } = fixture()
     presenter.start(cast, 3687.5)
     expect(sprites).toHaveLength(0)
     presenter.update(625)
-    expect(sprites[0]?.key).toBe('hoa-cau-portal-open')
+    expect(sprites[0]?.key).toBe('hoa-cau-triple-fire-circle')
     expect(sprites[0]).toMatchObject({ x: 124, y: 100 })
     presenter.update(800)
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-charge' && sprite.visible)).toBe(true)
     expect(sprites.find(sprite => sprite.key === 'hoa-cau-charge')).toMatchObject({ x: 172, y: 100 })
     expect(sprites.find(sprite => sprite.key === 'hoa-cau-charge')!.scale).toBeGreaterThanOrEqual(1)
     presenter.update(1700)
-    expect(sprites.some(sprite => sprite.key === 'hoa-cau-fire-9' && sprite.visible)).toBe(true)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-fire-9')?.scale).toBeGreaterThanOrEqual(0.65)
+    expect(sprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(true)
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-charge' && sprite.visible)).toBe(false)
-    const fire = sprites.find(sprite => sprite.key === 'hoa-cau-fire-9')!
-    expect(fire).toMatchObject({ x: 172, y: 100, angle: -90 })
+    const fire = sprites.find(sprite => sprite.key === 'hoa-cau-phoenix-projectile')!
+    expect(fire).toMatchObject({ x: 172, y: 100, angle: 0 })
     presenter.update(281.25)
-    expect(fire).toMatchObject({ x: 286, y: 100, angle: -90 })
+    expect(fire).toMatchObject({ x: 286, y: 100, angle: 0 })
     presenter.update(281.25)
     presenter.resolve(receipt(true))
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-fire-20' && sprite.visible)).toBe(true)
-    expect(sprites.some(sprite => sprite.key === 'hoa-cau-fire-9' && sprite.visible)).toBe(false)
+    expect(sprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(false)
   })
 
   it('does not explode on a miss and tears down every sprite on cancel', () => {
@@ -72,7 +70,7 @@ describe('Hỏa Cầu Phaser handoff', () => {
     presenter.update(2062.5)
     presenter.resolve(receipt(false))
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-fire-20')).toBe(false)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-fire-9')?.visible).toBe(false)
+    expect(sprites.find(sprite => sprite.key === 'hoa-cau-phoenix-projectile')?.visible).toBe(false)
     presenter.cancel()
     expect(sprites.every(sprite => sprite.destroyed)).toBe(true)
   })
@@ -115,34 +113,6 @@ describe('Hỏa Cầu Phaser handoff', () => {
     expect(sprites.find(sprite => sprite.key === 'hoa-cau-charge')?.frame).toBe('frame_15')
   })
 
-  it('resamples the full portal ACTIVE sheet across the charge phase', () => {
-    const { presenter, sprites } = fixture()
-    presenter.start(cast, 3687.5)
-    presenter.update(3124)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-active')?.frame).toBe('frame_51')
-  })
-
-  it('bridges OPEN→ACTIVE→CLOSE with one held edge frame and a short crossfade', () => {
-    const { presenter, sprites } = fixture()
-    presenter.start(cast, 3687.5)
-    presenter.update(1424)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-open')).toMatchObject({ frame: 'frame_24', visible: true })
-    presenter.update(1)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-open')).toMatchObject({ frame: 'frame_24', alpha: 1, visible: true })
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-active')).toMatchObject({ frame: 'frame_0', alpha: 0, visible: true })
-    presenter.update(90)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-open')?.alpha).toBeCloseTo(Math.SQRT1_2)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-active')?.alpha).toBeCloseTo(Math.SQRT1_2)
-    presenter.update(1609)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-active')).toMatchObject({ frame: 'frame_51', visible: true })
-    presenter.update(1)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-active')).toMatchObject({ frame: 'frame_51', alpha: 1, visible: true })
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-close')).toMatchObject({ frame: 'frame_0', alpha: 0, visible: true })
-    presenter.update(180)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-active')?.visible).toBe(false)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-portal-close')).toMatchObject({ alpha: 1, visible: true })
-  })
-
   it('pins the magic circle to the raised Pháp Tu palm', () => {
     const point = hoaCauHandAnchor({ x: 210, y: 325, displayWidth: 244 * 0.95,
       displayHeight: 252 * 0.95, originX: 0.5, originY: 1 })
@@ -154,13 +124,13 @@ describe('Hỏa Cầu Phaser handoff', () => {
     const { presenter, sprites } = fixture({ targetY: 220 })
     presenter.start(cast, 3687.5)
     presenter.update(3687.5)
-    expect(sprites.find(sprite => sprite.key === 'hoa-cau-fire-9')).toMatchObject({ x: 400, y: 100, angle: -90 })
+    expect(sprites.find(sprite => sprite.key === 'hoa-cau-phoenix-projectile')).toMatchObject({ x: 400, y: 100, angle: 0 })
     presenter.resolve(receipt(true))
     expect(sprites.find(sprite => sprite.key === 'hoa-cau-fire-20')).toMatchObject({ x: 400, y: 100 })
   })
 
   it('plays the Arcadia phoenix projectile and its attached tail throughout the test flight', () => {
-    const { presenter, sprites } = fixture({ artVariant: 'phoenix_projectile' })
+    const { presenter, sprites } = fixture()
     presenter.start(cast, 3687.5)
     presenter.update(3125)
     const fire = sprites.find(sprite => sprite.key === 'hoa-cau-phoenix-projectile')
@@ -177,7 +147,7 @@ describe('Hỏa Cầu Phaser handoff', () => {
   })
 
   it('previews the authored Arcadia fire circle from raised hand through its dissolve', () => {
-    const { presenter, sprites } = fixture({ artVariant: 'phoenix_projectile' })
+    const { presenter, sprites } = fixture()
     presenter.start(cast, 3687.5)
     presenter.update(625)
     const circle = sprites.find(sprite => sprite.key === 'hoa-cau-triple-fire-circle')
@@ -195,7 +165,7 @@ describe('Hỏa Cầu Phaser handoff', () => {
   })
 
   it('makes the preview Fire 20 impact visibly larger than the old production size', () => {
-    const { presenter, sprites } = fixture({ artVariant: 'phoenix_projectile' })
+    const { presenter, sprites } = fixture()
     presenter.start(cast, 3687.5)
     presenter.update(3687.5)
     presenter.resolve(receipt(true))
@@ -204,25 +174,19 @@ describe('Hỏa Cầu Phaser handoff', () => {
     expect(impact!.scale).toBeGreaterThanOrEqual(1.1)
   })
 
-  it('fires the empowered variant when the caster holds a Tam Muoi window at declare', () => {
+  it('renders the authored Arcadia set for every cast, with or without a Tam Muoi window', () => {
     const { presenter, sprites } = fixture()
     presenter.start({ ...cast, casterBuffIds: ['tam_muoi'] }, 3687.5)
     presenter.update(625)
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-triple-fire-circle' && sprite.visible)).toBe(true)
-    expect(sprites.some(sprite => sprite.key.startsWith('hoa-cau-portal-'))).toBe(false)
     presenter.update(3687.5 - 625)
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(true)
-    expect(sprites.some(sprite => sprite.key === 'hoa-cau-fire-9' && sprite.visible)).toBe(false)
-  })
 
-  it('keeps the plain set when the window is absent, and the surface variant wins', () => {
-    const { presenter, sprites } = fixture()
-    presenter.start({ ...cast, casterBuffIds: ['thanh_tuyen'] }, 3687.5)
-    presenter.update(625)
-    expect(sprites.some(sprite => sprite.key === 'hoa-cau-portal-open')).toBe(true)
-    const { presenter: pinned, sprites: pinnedSprites } = fixture({ artVariant: 'phoenix_projectile' })
-    pinned.start(cast, 3687.5)
-    pinned.update(625)
-    expect(pinnedSprites.some(sprite => sprite.key === 'hoa-cau-triple-fire-circle')).toBe(true)
+    const { presenter: plain, sprites: plainSprites } = fixture()
+    plain.start(cast, 3687.5)
+    plain.update(625)
+    expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-triple-fire-circle' && sprite.visible)).toBe(true)
+    plain.update(3687.5 - 625)
+    expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(true)
   })
 })

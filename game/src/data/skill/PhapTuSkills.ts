@@ -665,7 +665,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
     effects: [{ type: 'buff', buffId: 'tam_muoi' }],
     resourceType: 'mana',
     // Authored aura sheets (two passes wrap the caster for the cast,
-    // ignite on release) -- TamMuoiAuraPresentation owns the dien xuat.
+    // ignite on release, then persist for the whole tam_muoi window) --
+    // TamMuoiAuraPresentation owns the dien xuat.
     vfxPresetId: 'tam_muoi_aura',
   },
   {

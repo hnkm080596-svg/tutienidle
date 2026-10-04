@@ -664,6 +664,15 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           }
         },
         isCurrent: ref => this.gameManagerRef?.getPendingPlaybackToken() === ref.token,
+        // The aura outlives its cast for the whole tam_muoi window: the
+        // statuses map drops the entry the tick the window expires (or
+        // the caster dies), which is the aura's cue to drain out.
+        buffActive: fact => {
+          for (const entry of this.statuses.values()) {
+            if (entry.targetId === fact.entityId && entry.buffId === 'tam_muoi') return true
+          }
+          return false
+        },
         reducedMotion: typeof matchMedia === 'function'
           && matchMedia('(prefers-reduced-motion: reduce)').matches,
       })

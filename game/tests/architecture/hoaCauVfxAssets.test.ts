@@ -20,9 +20,7 @@ describe('Hỏa Cầu asset contract', () => {
       expect(data.frames[`frame_${asset.firstFrame}`]).toBeDefined()
       expect(data.frames[`frame_${asset.lastFrame}`]).toBeDefined()
     }
-    expect(HOA_CAU_VFX_ASSETS.projectile.textureUrl).toContain('火 (9).png')
     expect(HOA_CAU_VFX_ASSETS.impact.textureUrl).toContain('火 (20).png')
-    expect(HOA_CAU_VFX_ASSETS.projectile.lastFrame).toBe(26)
     expect(HOA_CAU_VFX_ASSETS.impact.lastFrame).toBe(26)
   })
 
