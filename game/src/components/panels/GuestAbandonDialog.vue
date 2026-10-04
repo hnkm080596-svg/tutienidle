@@ -36,15 +36,15 @@ useDialogFocus(panelRef, computed(() => props.open), {
       <div v-if="open" class="abandon-modal" :style="{ zIndex: OVERLAY_LAYERS.panel }">
         <section
           ref="panelRef"
-          class="abandon-modal__panel paper-on-dark"
+          class="abandon-modal__panel"
           tabindex="-1"
           role="alertdialog"
           aria-modal="true"
           :aria-labelledby="titleId"
           :aria-describedby="messageId"
         >
-          <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-          <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+          <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+          <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
           <h3 :id="titleId" class="abandon-modal__title">{{ i18n.global.t('account.abandon.title') }}</h3>
           <p :id="messageId" class="abandon-modal__message">{{ i18n.global.t('account.abandon.body') }}</p>
@@ -56,7 +56,7 @@ useDialogFocus(panelRef, computed(() => props.open), {
             <GameButton variant="secondary" :sound="false" :disabled="busy" data-testid="abandon-export" @click="pick('export')">
               {{ i18n.global.t('account.abandon.export') }}
             </GameButton>
-            <GameButton variant="ghost" :sound="false" :disabled="busy" @click="pick('cancel')">
+            <GameButton class="ghost-on-paper" variant="ghost" :sound="false" :disabled="busy" @click="pick('cancel')">
               {{ i18n.global.t('panels.common.cancel') }}
             </GameButton>
             <GameButton variant="danger" :sound="false" :loading="busy" data-testid="abandon-confirm" @click="pick('abandon')">
@@ -71,7 +71,7 @@ useDialogFocus(panelRef, computed(() => props.open), {
 
 <style scoped>
 .abandon-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--scrim); }
-.abandon-modal__panel { position: relative; isolation: isolate; width: min(440px, 92vw); padding: 40px 36px; color: var(--paper-text); font-family: var(--font-body); text-align: center; }
+.abandon-modal__panel { position: relative; isolation: isolate; width: min(440px, 92vw); padding: 44px 40px; overflow: hidden; border-radius: 16px; color: var(--paper-text); font-family: var(--font-body); text-align: center; }
 .abandon-modal__panel > :not(.ink-nine-slice) { position: relative; z-index: 3; }
 .abandon-modal__title { margin: 0 0 10px; font-family: var(--font-display); font-size: var(--text-title); letter-spacing: .06em; color: var(--cinnabar, #b54432); }
 .abandon-modal__message { margin: 0 0 18px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-sm); line-height: 1.6; }

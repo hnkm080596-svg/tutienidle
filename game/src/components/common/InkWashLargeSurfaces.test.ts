@@ -39,10 +39,25 @@ describe('ink-wash large surfaces', () => {
     const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!
 
     expect(dialog.getAttribute('aria-modal')).toBe('true')
+    expect(overlay.classList.contains('overlay-panel--ink')).toBe(true)
+    // The default ink variant keeps the dark panel surface - only the
+    // opt-in 'paper' variant paints the cream scroll, so legacy panels
+    // authored with light --surface-* text stay readable.
     expect(dialog.querySelector('[data-hk-slice="surface-m-panel"]')).not.toBeNull()
     expect(dialog.querySelector('[data-hk-slice="frame-m-modal"]')).not.toBeNull()
     overlay.click()
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders the cream scroll surface only on the paper variant', () => {
+    const container = mount(OverlayPanel, { open: true, title: 'Đối thoại', variant: 'paper' })
+    const overlay = container.querySelector<HTMLElement>('.overlay-panel')!
+    const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!
+
+    expect(overlay.classList.contains('overlay-panel--paper')).toBe(true)
+    expect(dialog.querySelector('[data-hk-slice="surface-xl-scroll"]')).not.toBeNull()
+    expect(dialog.querySelector('[data-hk-slice="frame-m-modal"]')).not.toBeNull()
+    expect(dialog.querySelector('[data-hk-slice="surface-m-panel"]')).toBeNull()
   })
 
   it('adds ceremonial layers without removing modal and combat actions', () => {

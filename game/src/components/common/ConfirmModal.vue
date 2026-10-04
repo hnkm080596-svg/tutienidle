@@ -9,9 +9,9 @@ import { useAudioStore } from '@/stores/audio'
 
 // Restyle (2026-09-28, ui-audit creation-meta) - was SysModalBase system
 // chrome (sci-fi chrome chrome + translucent panel) clashing with the
-// game's ink/paper art. Now the same M-tier InkNineSlice recipe as
-// OfflineSummaryModal + .paper-on-dark token map. Panel renders opaque
-// (ink art has no translucency knob).
+// game's ink/paper art. Now the huyen-kim paper recipe: surface-xl-scroll
+// cream surface + frame-m-modal gold band (same as OfflineSummaryModal).
+// Panel renders opaque (the PNG art has no translucency knob).
 //
 // i18n.global.t (not useI18n): dialogFocus/dialogLabeling tests mount
 // this component through a bare createApp without installing i18n - the
@@ -87,14 +87,14 @@ useDialogFocus(panelRef, computed(() => props.open), {
           :aria-labelledby="titleId"
           :aria-describedby="messageId"
         >
-          <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+          <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
           <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
           <h3 :id="titleId" class="confirm-modal__title" :class="{ 'is-danger': danger }">{{ title }}</h3>
           <p :id="messageId" class="confirm-modal__message">{{ message }}</p>
 
           <div class="confirm-modal__actions">
-            <GameButton class="confirm-modal__cancel" variant="ghost" :sound="false" @click="onCancel">{{ cancelLabel }}</GameButton>
+            <GameButton class="ghost-on-paper" variant="ghost" :sound="false" @click="onCancel">{{ cancelLabel }}</GameButton>
             <GameButton class="confirm-modal__confirm" :variant="danger ? 'danger' : 'primary'" :sound="false" @click="onConfirm">{{ confirmLabel }}</GameButton>
           </div>
         </section>
@@ -113,16 +113,19 @@ useDialogFocus(panelRef, computed(() => props.open), {
   background: color-mix(in srgb, var(--hk-surface-base) 70%, transparent);
 }
 
-/* Same recipe as OfflineSummaryModal - M-tier slices + thin frame band
-   fit a small dialog (frame-xl-ceremony's 80px band would eat the card). */
+/* Same recipe as OfflineSummaryModal - cream scroll surface + the 40px
+   frame-m-modal band fit a small dialog (frame-xl-ceremony's 72px band
+   would eat the card). overflow:hidden + border-radius clip the scroll's
+   square corners under the frame's rounded silhouette. */
 .confirm-modal__panel {
   position: relative;
   isolation: isolate;
   width: min(420px, 92vw);
-  padding: var(--hk-space-8) var(--hk-space-7);
-  border-radius: var(--hk-radius-md);
+  padding: 48px var(--hk-space-8);
+  overflow: hidden;
+  border-radius: 16px;
   box-shadow: 0 8px 32px var(--hk-shadow-high);
-  color: var(--hk-text-primary);
+  color: var(--paper-text, #211f1a);
   font-family: var(--hk-font-ui);
   text-align: center;
 }
@@ -137,16 +140,16 @@ useDialogFocus(panelRef, computed(() => props.open), {
   font-family: var(--hk-font-display);
   font-size: var(--text-title);
   letter-spacing: 0.06em;
-  color: var(--hk-text-primary);
+  color: var(--paper-text, #211f1a);
 }
 
 .confirm-modal__title.is-danger {
-  color: var(--hk-cinnabar-bright);
+  color: var(--cinnabar, #b54432);
 }
 
 .confirm-modal__message {
   margin: 0 0 var(--hk-space-5);
-  color: var(--hk-text-secondary);
+  color: var(--paper-text-soft, #5e5a50);
   font-size: var(--text-sm);
   line-height: 1.55;
   word-break: break-word;

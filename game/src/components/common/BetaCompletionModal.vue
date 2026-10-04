@@ -39,13 +39,13 @@ const titleId = useId()
   <div class="beta-completion" :style="{ zIndex: OVERLAY_LAYERS.modal }">
     <section
       ref="panelRef"
-      class="beta-completion__panel paper-on-dark"
+      class="beta-completion__panel"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
     >
-      <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-      <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
       <h3 :id="titleId" class="beta-completion__title">{{ t('betaComplete.title') }}</h3>
 
@@ -67,6 +67,9 @@ const titleId = useId()
 }
 
 .beta-completion__panel {
+  /* Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll +
+     frame-m-modal band; overflow+border-radius clip the scroll's
+     square corners under the frame's rounded silhouette. */
   position: relative;
   isolation: isolate;
   display: flex;
@@ -75,6 +78,8 @@ const titleId = useId()
   min-width: min(340px, 92vw);
   max-width: min(460px, 92vw);
   padding: 44px 40px;
+  overflow: hidden;
+  border-radius: 16px;
   color: var(--paper-text, #211f1a);
   font-family: var(--font-body);
 }
