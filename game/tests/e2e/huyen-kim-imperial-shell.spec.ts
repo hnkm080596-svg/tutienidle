@@ -188,12 +188,13 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     // The fidelity surface mounts outside the imperial scroll - the old
     // chrome must not double-render.
     await expect(page.getByTestId('function-overlay-panel')).toHaveCount(0)
-    // Beta scope admits enhance + dissolve plus the view/bag tabs.
+    // Rail = Trang Bi gear grid + 5 op seals; the 3 scope-hidden ops
+    // render as disabled shells (all seals still match the selector).
     const tabs = scene.locator('.equipment-workspace nav button')
-    await expect(tabs).toHaveCount(4)
+    await expect(tabs).toHaveCount(6)
     await expect(tabs.nth(0)).toHaveText(/Trang Bị|Gear/)
-    // Default workspace is the Trang Bi item detail.
-    await expect(scene.locator('.equipment-item-detail')).toBeVisible({ timeout: 10_000 })
+    // Default workspace is the Trang Bi unequipped-gear grid.
+    await expect(scene.locator('.bag-section__grid')).toBeVisible({ timeout: 10_000 })
     await shot(page, '12-equipment')
     assertNoBrowserErrors(errors)
   })
