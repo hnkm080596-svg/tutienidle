@@ -181,6 +181,8 @@ real player co quest + drop 10 floor + technique mastery.
    human. Build strength-first (hap dan tu nhien cho nguoi choi "build
    dam") thua kiem lap lai phai respec vitality — trai nghiem "dao
    nguoc build" co the kho chiu. Domain `src/data/tribulation/`.
+   (Luu y: PR song song #143 dang retune ty le % kiem ve ~2.2x — gate
+   def se nhe bot khi no land.)
 2. **abyssal_pool variance**: seed 7 thua 10/10 o qi:18 vs seed 13
    1-try — co the do elite x boss roll ~10% ket hop build variance.
    Theo doi them neu nguoi choi that phan nan; hieu tai khong tune.
