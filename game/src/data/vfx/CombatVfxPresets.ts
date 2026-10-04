@@ -445,6 +445,16 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 260,
     screenShake: { durationMs: 110, intensity: 0.003 },
   },
+  // Phap Trang windows -- the aura wraps the caster's own sprite, so the
+  // preset is 'attached' with no shake; TamMuoiAuraPresentation owns the
+  // authored dien xuat and suppresses the generic recipe visuals.
+  tam_muoi_aura: {
+    id: 'tam_muoi_aura',
+    color: 0xff8c42,
+    space: 'attached',
+    areaScale: 1,
+    durationMs: 260,
+  },
   thuy_tien_dart: {
     id: 'thuy_tien_dart',
     color: 0x63d8ff,
