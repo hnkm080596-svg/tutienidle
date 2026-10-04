@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { TalentRarity } from '../../core/talent/Talent'
 import {
   CHARACTER_CREATION_TALENTS,
   PARKED_TALENTS,
+  PHAM_COT_OFFER_CHANCE,
   getTalentDefinition,
   rollCharacterCreationTalents,
 } from './Talents'
@@ -210,5 +211,30 @@ describe('rollCharacterCreationTalents', () => {
       const roll = rollCharacterCreationTalents()
       expect(roll.some((talent) => excludedIds.has(talent.id))).toBe(false)
     }
+  })
+
+  it('pham_cot easter-egg — injection phẳng bỏ qua thang weight', () => {
+    // Draw calls tra 0.001 -> luon chon phan tu index 0 (bat ky element nao
+    // cung co weight lon hon nguong do), nen weighted draw khong bao gio
+    // cham pham_cot; injection check 0.001 < PHAM_COT_OFFER_CHANCE luon bat.
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0.001)
+    try {
+      for (let index = 0; index < 20; index++) {
+        const roll = rollCharacterCreationTalents()
+        expect(roll[0]!.id).toBe('pham_cot')
+        expect(new Set(roll.map((talent) => talent.id)).size).toBe(9)
+      }
+    } finally {
+      spy.mockRestore()
+    }
+
+    // Real random: ti le xuat hien phai nam trong dai easter-egg
+    // (~PHAM_COT_OFFER_CHANCE, sai so rong de khong flaky).
+    let hits = 0
+    const runs = 400
+    for (let index = 0; index < runs; index++)
+      if (rollCharacterCreationTalents().some((talent) => talent.id === 'pham_cot')) hits++
+    expect(hits).toBeGreaterThanOrEqual(Math.floor(runs * PHAM_COT_OFFER_CHANCE * 0.5))
+    expect(hits).toBeLessThanOrEqual(Math.ceil(runs * PHAM_COT_OFFER_CHANCE * 1.7))
   })
 })
