@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import InkNineSlice from './primitives/InkNineSlice.vue'
-// Shared chrome primitive (UI/UX rework Giai đoạn A/C) — idle-game
-// convention còn thiếu hoàn toàn trước đợt này (đã grep xác nhận không
-// có pattern "unseen/new" nào trong src). variant="dot" cho trạng thái
-// nhị phân (có/không có gì mới), variant="count" hiện số thật.
+// Shared chrome primitive (UI/UX rework Giai doan A/C) - idle-game
+// convention con thieu hoan toan truoc dot nay (da grep xac nhan khong
+// co pattern "unseen/new" nao trong src). variant="dot" cho trang thai
+// nhi phan (co/khong co gi moi), variant="count" hien so that.
 const props = withDefaults(defineProps<{
   count?: number
   variant?: 'dot' | 'count'
@@ -21,7 +21,7 @@ const isVisible = () => props.variant === 'dot' || (props.count ?? 0) > 0
 
 <template>
   <span v-if="isVisible()" class="notification-badge" :class="`notification-badge--${variant}`">
-    <InkNineSlice asset-id="frame-xs-ink-line" layer="frame" />
+    <InkNineSlice asset-id="frame-xs-ink-line" layer="frame" tint-var="--hk-cinnabar-bright" />
     <span v-if="variant === 'count'" class="notification-badge__count">{{ displayCount() }}</span>
   </span>
 </template>
@@ -33,11 +33,11 @@ const isVisible = () => props.variant === 'dot' || (props.count ?? 0) > 0
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--crimson);
+  background: var(--hk-cinnabar);
   border: 0;
-  border-radius: 999px;
-  color: #fff;
-  font-family: var(--font-body);
+  border-radius: var(--hk-radius-pill);
+  color: var(--hk-text-primary);
+  font-family: var(--hk-font-ui);
   font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1;

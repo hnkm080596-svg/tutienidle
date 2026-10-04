@@ -7,6 +7,10 @@ export interface QuestManagerState {
   completedOnceIds: string[]
 
   lastDailyResetAtMs: number
+
+  // Feature-witness flags fired via QuestSystem.onFlag (dedup'd flag
+  // ids). Optional - saves written before flag quests lack the slice.
+  questFlags?: string[]
 }
 
 function createDefaultState(): QuestManagerState {
@@ -16,6 +20,8 @@ function createDefaultState(): QuestManagerState {
     completedOnceIds: [],
 
     lastDailyResetAtMs: 0,
+
+    questFlags: [],
   }
 }
 
@@ -101,6 +107,24 @@ export class QuestManager {
   }
 
   /**
+   * Feature-witness flag (kind:'flag' quest conditions). Dedup'd - the
+   * record is "the flag fired at least once"; progress counting lives
+   * on the active quest entries via onFlag, same activation-counts
+   * rule as kills/collects.
+   */
+  markQuestFlag(flagId: string): void {
+    const flags = this.state.questFlags ?? (this.state.questFlags = [])
+
+    if (!flags.includes(flagId)) {
+      flags.push(flagId)
+    }
+  }
+
+  hasQuestFlag(flagId: string): boolean {
+    return (this.state.questFlags ?? []).includes(flagId)
+  }
+
+  /**
    * Removes progress for UNCLAIMED 'daily' quests, keeping
    * completedOnceIds ('once' quests are unrelated to daily reset).
    * newActiveDailyQuestIds is the full set of 'daily' quest ids unlocked
@@ -146,14 +170,24 @@ export class QuestManager {
             }))
         : [],
 
+      // Same normalize contract as questFlags below - type-filter plus
+      // dedup (markCompletedOnce dedups at the seam, so a bypassed
+      // payload's duplicated id is unproducible and must not
+      // self-replicate into future saves).
       completedOnceIds: Array.isArray(state.completedOnceIds)
-        ? state.completedOnceIds.filter((id) => typeof id === 'string')
+        ? [...new Set(state.completedOnceIds.filter((id) => typeof id === 'string'))]
         : [],
 
       lastDailyResetAtMs:
         Number.isFinite(state.lastDailyResetAtMs) && state.lastDailyResetAtMs >= 0
           ? state.lastDailyResetAtMs
           : 0,
+
+      // Same normalize contract as completedOnceIds - type-filter plus
+      // dedup so a bypassed payload cannot self-replicate flag rows.
+      questFlags: Array.isArray(state.questFlags)
+        ? [...new Set(state.questFlags.filter((id) => typeof id === 'string'))]
+        : [],
     }
   }
 

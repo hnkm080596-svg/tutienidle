@@ -1,5 +1,5 @@
-// Cultivation Path Framework — M6: Kiếm Tu way-normalisation contract
-// tests. sword never had a hidden-variant path id — BOTH ways
+// Cultivation Path Framework - M6: Kiem Tu way-normalisation contract
+// tests. sword never had a hidden-variant path id - BOTH ways
 // persist cultivationPath 'sword' and cultivationWay ('sword_pathway'|'hidden_sword_pathway')
 // is the sole discriminator (the retired swordPath.mode field is gone).
 // Every kiem way-specific gate (Kiem Pho preset/provider, the Ngu Kiem
@@ -53,7 +53,7 @@ describe('Kiếm Tu way predicates — strict pair doctrine', () => {
   it.each([
     [{ cultivationPath: 'sword', cultivationWay: 'sword_pathway' }, true],
     [{ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway' }, false],
-    // sword has exactly one persisted era — but the WAY field is
+    // sword has exactly one persisted era - but the WAY field is
     // still authoritative: a way-less kiem player is not hien.
     [{ cultivationPath: 'sword' }, false],
     [{ cultivationPath: 'body', cultivationWay: 'sword_pathway' }, false],
@@ -149,7 +149,7 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
   it('hien player buys orb nodes but not ngu nodes; ngu player buys ngu nodes but not orb nodes', () => {
     const hien = swordPathPlayer('sword_pathway')
     hien.realmId = 'foundation_establishment'
-    hien.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape — way gate still holds
+    hien.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape - way gate still holds
     expect(purchaseNode(hien, nodeById('thich_can'))).toBe(true)
     expect(purchaseNode(hien, nodeById('ngu_kiem_lien'))).toBe(false)
 
@@ -163,7 +163,7 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
   it('cross-path way bleed: a body/hien player cannot buy kiem orb nodes', () => {
     const body = createDefaultPlayer()
     body.cultivationPath = 'body'
-    body.cultivationWay = 'sword_pathway' // same way id, different path — path stamp must hold
+    body.cultivationWay = 'sword_pathway' // same way id, different path - path stamp must hold
     body.realmId = 'qi_refining'
     body.skillInsight = 99
 
@@ -206,7 +206,7 @@ describe('way-resolved stat/domain channels', () => {
 
     const wayLess = swordPathPlayer('sword_pathway')
     delete wayLess.cultivationWay
-    // M7: the LEGACY_PATH_TO_WAY lenient fallback is gone — a persisted
+    // M7: the LEGACY_PATH_TO_WAY lenient fallback is gone - a persisted
     // path without a way resolves nothing instead of guessing hien.
     expect(getActiveWayDefinition(wayLess)).toBeUndefined()
     expect(getActiveWay(wayLess)).toBeUndefined()

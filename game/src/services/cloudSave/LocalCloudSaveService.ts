@@ -1,4 +1,4 @@
-import { loadGame, writeGameSave, type GameSave } from '../save/SaveSystem'
+import { getRawSave, loadGame, writeGameSave, type GameSave } from '../save/SaveSystem'
 import { resolveRevisionKey } from '../save/saveKeys'
 import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
 
@@ -9,6 +9,12 @@ export function readLocalSaveRevision(): number {
 
 export class LocalCloudSaveService implements CloudSaveService {
   readonly capability = 'local-only' as const
+
+  // B1-C cache facade - the local slot IS the mirror here.
+  async readCachedSave(): Promise<{ raw: string; revision: number } | null> {
+    const raw = getRawSave()
+    return raw ? { raw, revision: readLocalSaveRevision() } : null
+  }
 
   async load(): Promise<CloudSaveLoadResult> {
     try {
@@ -30,10 +36,10 @@ export class LocalCloudSaveService implements CloudSaveService {
     const currentRevision = readLocalSaveRevision()
     if (currentRevision !== expectedRevision) return { status: 'conflict', currentRevision }
     const revision = currentRevision + 1
-    // 9.11 — revision-first: ghi SAVE_REVISION_KEY trước, SAVE_KEY sau.
-    // Crash giữa hai key để lại revision mới + save cũ → lần save kế tiếp
-    // CAS mismatch → coordinator resync (đọc revision từ storage) — an toàn
-    // hơn stale-revision (save mới + revision cũ, hai bên lệch vĩnh viễn).
+    // 9.11 - revision-first: ghi SAVE_REVISION_KEY truoc, SAVE_KEY sau.
+    // Crash giua hai key de lai revision moi + save cu -> lan save ke tiep
+    // CAS mismatch -> coordinator resync (doc revision tu storage) - an toan
+    // hon stale-revision (save moi + revision cu, hai ben lech vinh vien).
     try {
       localStorage.setItem(resolveRevisionKey(), String(revision))
     } catch {
@@ -45,13 +51,13 @@ export class LocalCloudSaveService implements CloudSaveService {
     }
     const write = writeGameSave(save)
     if (write.status !== 'ok') {
-      // Save write fail (quota...) — rollback revision về giá trị cũ để CAS
-      // state nguyên vẹn; autosave kế tiếp (15s) retry tự nhiên → retryable.
+      // Save write fail (quota...) - rollback revision ve gia tri cu de CAS
+      // state nguyen ven; autosave ke tiep (15s) retry tu nhien -> retryable.
       try {
         localStorage.setItem(resolveRevisionKey(), String(currentRevision))
       } catch {
-        // Rollback fail: revision mới + save cũ → CAS mismatch ở lần save
-        // kế tiếp → coordinator resync — vẫn an toàn theo lý thuyết 9.11.
+        // Rollback fail: revision moi + save cu -> CAS mismatch o lan save
+        // ke tiep -> coordinator resync - van an toan theo ly thuyet 9.11.
       }
       return {
         status: 'unavailable',

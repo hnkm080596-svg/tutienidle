@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-// R10 (AR-12) — buildGameSave's structuredClone(player) (S1) cannot clone
+// R10 (AR-12) - buildGameSave's structuredClone(player) (S1) cannot clone
 // a Vue-reactive Proxy tree at all: structuredClone throws DataCloneError
 // on the first nested reactive object/array it meets (even an empty one),
 // because Proxy exotic objects have no matching internal type for the
 // algorithm. usePlayerStore.save() used to pass `this` (later `this.
-// $state`) straight into buildGameSave — both still fully reactive — so
+// $state`) straight into buildGameSave - both still fully reactive - so
 // every real save attempt from the actual Settings UI crashed synchronously
 // before it ever reached the storage layer.
 import { afterEach, describe, expect, it } from 'vitest'
@@ -41,5 +41,27 @@ describe('usePlayerStore.save (R10, AR-12)', () => {
     const outcome = loadGame()
     if (outcome.status !== 'ok') throw new Error(`expected a valid save, got ${outcome.status}`)
     expect(outcome.save.player.name).toBe('saved-name')
+  })
+
+  it('overlapping save callers join the shared coordinator queue - both settle, latest snapshot wins (B1-C)', async () => {
+    setActivePinia(createPinia())
+    const player = usePlayerStore()
+    const gameManager = new GameManager()
+    gameManager.setActivePlayer(player.$state)
+    player.name = 'first-write'
+
+    // Two overlapping callers must not start independent writes: the
+    // second joins the coordinator's single queue entry.
+    const s1 = player.save(gameManager)
+    player.name = 'second-write'
+    const s2 = player.save(gameManager)
+    const [r1, r2] = await Promise.all([s1, s2])
+
+    expect(r1.status).toBe('ok')
+    expect(r2.status).toBe('ok')
+
+    const outcome = loadGame()
+    if (outcome.status !== 'ok') throw new Error(`expected a valid save, got ${outcome.status}`)
+    expect(outcome.save.player.name).toBe('second-write')
   })
 })

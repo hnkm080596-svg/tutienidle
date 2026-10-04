@@ -9,7 +9,7 @@ import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { BuffDefinitionId } from '../contracts/ids'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// R2 (AR-05) — participant.speed is a synced read-only cache of effective
+// R2 (AR-05) - participant.speed is a synced read-only cache of effective
 // combat speed. Before this fix, TurnBattleAdapter copied
 // entity.stats.speed once at battle start and the engine never refreshed
 // it, so a +100% speed buff raised stats.speed to 200 while the gauge
@@ -125,7 +125,7 @@ describe('effective speed sync (AR-05)', () => {
     expect(enemy.speed).toBe(100)
 
     // Subsequent pacing: the player (speed 200) must become ready again
-    // BEFORE the enemy (speed 100) fills the same gauge — 2× rate means
+    // BEFORE the enemy (speed 100) fills the same gauge - 2x rate means
     // the player's next turn arrives in roughly half the enemy's time.
     let playerReadyTurns = 0
 
@@ -142,7 +142,7 @@ describe('effective speed sync (AR-05)', () => {
     // readiness must come strictly before any enemy turn. With synced
     // speeds the player is the ready actor; the stale-speed bug would let
     // the enemy (equal 100/100 + higher priority number tiebreak... here
-    // enemy priority 1 > player priority 0, so player still wins ties —
+    // enemy priority 1 > player priority 0, so player still wins ties -
     // the discriminating assertion is the gauge RATE below).
     expect(playerReadyTurns).toBeLessThan(10)
 
@@ -157,7 +157,7 @@ describe('effective speed sync (AR-05)', () => {
 
 /**
  * Measures the per-step gauge accumulation rate for one participant by
- * cloning its gauge fields (no battle mutation) and advancing manually —
+ * cloning its gauge fields (no battle mutation) and advancing manually -
  * mirrors what resolveNextTurn does per step.
  */
 function measureGaugeRate(battle: TurnBattle, id: string): number {

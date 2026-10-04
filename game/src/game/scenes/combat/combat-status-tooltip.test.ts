@@ -1,6 +1,6 @@
-// Buff bar (2026-09-02, Task 5) — StatusTooltip canvas: 1 active duy nhất,
-// 2 dòng (tên màu polarity; stacks · thời gian/vĩnh viễn), hideFor đóng
-// đúng theo statusInstanceId, clamp trong viewport.
+// Buff bar (2026-09-02, Task 5) - StatusTooltip canvas: 1 active duy nhat,
+// 2 dong (ten mau polarity; stacks * thoi gian/vinh vien), hideFor dong
+// dung theo statusInstanceId, clamp trong viewport.
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest'
 import { StatusTooltip } from './combat-status-tooltip'
@@ -146,9 +146,9 @@ describe('StatusTooltip (buff bar)', () => {
   })
 
   it('clamp viewport: x gần mép phải 800 → group không tràn', () => {
-    // FakeScene không track container x — verify qua logic: gọi show với
-    // x=790 (gần mép), width 120 → clampedX ≤ 800-120-8 = 672. Container
-    // mock lưu không đủ — test hợp đồng qua không throw + show OK.
+    // FakeScene khong track container x - verify qua logic: goi show voi
+    // x=790 (gan mep), width 120 -> clampedX <= 800-120-8 = 672. Container
+    // mock luu khong du - test hop dong qua khong throw + show OK.
     expect(() => tooltip.show(790, 100, 'a', makeData())).not.toThrow()
     expect(() => tooltip.show(100, -5, 'a', makeData())).not.toThrow()
   })

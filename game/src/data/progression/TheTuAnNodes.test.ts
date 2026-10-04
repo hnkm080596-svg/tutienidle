@@ -178,7 +178,7 @@ describe('buildTheTuAnKit modifier baking (participant-local clones)', () => {
     )
     for (const id of ['ho_mon', 'phan_mon', 'tro_mon']) {
       for (const effect of procPayloads(markers[id]!)) {
-        // CombatProcSystem resolves `theCost ?? THE_PROC_COST` — absence
+        // CombatProcSystem resolves `theCost ?? THE_PROC_COST` - absence
         // of the field IS the invariant (no cost nodes exist to bake).
         expect(effect.theCost).toBeUndefined()
       }

@@ -5,10 +5,10 @@ import { createDefaultPlayer } from '../../core/player/Player'
 
 const SAVE_KEY = resolveSaveKey()
 
-// Phap Tu Reimagined Task 15 — the rework deleted PlayerData fields
+// Phap Tu Reimagined Task 15 - the rework deleted PlayerData fields
 // (unlockedElements/equippedElements/skillStats consumers) and whole
 // registries (reaction-path skills/buffs/nodes). A save stamped with any
-// pre-rework version carries that retired shape — it must be REJECTED
+// pre-rework version carries that retired shape - it must be REJECTED
 // with a clear 'incompatible' outcome (no partial load, no state touch),
 // while a current-version save still loads.
 
@@ -45,7 +45,7 @@ const PRE_M4_VERSION = 70
 // mission cut over.
 const PRE_M5_VERSION = 71
 
-// vitest runs environment: 'node' — no real localStorage, so a minimal
+// vitest runs environment: 'node' - no real localStorage, so a minimal
 // in-memory polyfill is stubbed (same pattern as SaveSystem.test.ts).
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()

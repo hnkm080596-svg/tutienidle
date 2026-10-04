@@ -4,12 +4,12 @@ import { useActionFeedbackStore } from '@/stores/actionFeedback'
 import type { ActionFeedbackEntry, ActionFeedbackTone } from '@/stores/actionFeedback'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
-// Workstream A §4.3 — "Nhật ký thao tác": phản hồi cho action gameplay
-// (Cường Hóa/Tẩy Luyện/Tinh Luyện/Hóa Luyện, xây công trình, đột phá...),
-// tách khỏi toast loot (ToastContainer.vue) neo góc trên phải. Neo góc
-// dưới phải, không che combat control/modal (z-index thấp hơn modal).
-// i18n (task 2.2 lô 1) — entry key-form render qua t(messageKey, params);
-// giá trị param cũng là locale key nên được t() lồng trước khi ghép.
+// Workstream A sec4.3 - "Nhat ky thao tac": phan hoi cho action gameplay
+// (Cuong Hoa/Tay Luyen/Tinh Luyen/Hoa Luyen, xay cong trinh, dot pha...),
+// tach khoi toast loot (ToastContainer.vue) neo goc tren phai. Neo goc
+// duoi phai, khong che combat control/modal (z-index thap hon modal).
+// i18n (task 2.2 lo 1) - entry key-form render qua t(messageKey, params);
+// gia tri param cung la locale key nen duoc t() long truoc khi ghep.
 const { t } = useI18n()
 
 const feedback = useActionFeedbackStore()

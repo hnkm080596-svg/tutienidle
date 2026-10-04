@@ -1,0 +1,11 @@
+.auth-field-row { display: grid; gap: 1cqw; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.auth-field { position: relative; display: flex; align-items: center; border: 1px solid #a99d80; border-radius: 4px; background: linear-gradient(110deg, #faf4e66b, #9e987133); box-shadow: inset 0 0 0 1px #fff9e394; }
+.auth-field:focus-within { border-color: #345d4b; box-shadow: 0 0 0 2px #426d4c38, inset 0 0 0 1px #fff9e3; }
+.auth-field__icon { position: absolute; left: 2.6cqw; width: 3.3cqw; height: 3.3cqw; color: #68634f; pointer-events: none; }
+.auth-field input { box-sizing: border-box; width: 100%; min-width: 0; height: 8cqw; padding: 1cqw 2.5cqw 1cqw 8cqw; border: 0; border-radius: 4px; outline: none; background: transparent; color: #302f25; font: 2.9cqw var(--hk-font-display, Georgia, serif); }
+.auth-field input::placeholder { color: #706c57; opacity: 1; }
+.auth-field input.auth-field__password { padding-right: 8cqw; }
+.auth-field__reveal { position: absolute; right: 0; top: 0; bottom: 0; width: 8cqw; padding: 2cqw; border: 0; background: none; color: #68634f; cursor: pointer; }
+.auth-field__reveal svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.auth-field__reveal:focus-visible { outline: 2px solid #315f55; outline-offset: -2px; }

@@ -34,9 +34,9 @@ export interface ActiveStageSnapshot {
 }
 
 /**
- * Chỉ 1 slot đang chạy tại 1 thời điểm — cùng cardinality với Battle
- * (BattleSystem.battle: Battle | null), không phải nhiều tab chạy
- * song song như CraftingManager (Map theo resultType).
+ * Chi 1 slot dang chay tai 1 thoi diem - cung cardinality voi Battle
+ * (BattleSystem.battle: Battle | null), khong phai nhieu tab chay
+ * song song nhu CraftingManager (Map theo resultType).
  *
  * Mission C audit (capability hardening, C5): the slot is a CAPABILITY -
  * acquire() mints an opaque StageLease token and only that exact object

@@ -186,7 +186,7 @@ describe('COMPANIONS gacha rates', () => {
 
 // P7-M-G (beta companion roster): the catalog keeps all 12 definitions
 // resolvable (owned instances, save validation, combat build, art), but
-// the Beta-ACQUIRABLE pool is exactly {than_nong, khai_minh} — the
+// the Beta-ACQUIRABLE pool is exactly {than_nong, khai_minh} - the
 // existing ten are "future content" per the mission graph.
 describe('BETA_COMPANIONS pool (P7-M-G)', () => {
   it('is exactly than_nong + khai_minh, in catalog order', () => {

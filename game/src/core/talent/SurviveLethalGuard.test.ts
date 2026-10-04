@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { SurviveLethalGuard } from './SurviveLethalGuard'
 
-// Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — counter lượt
-// sống sót battle-scoped; reset mỗi trận mới, 0 lượt trong trận Độ Kiếp.
+// Thien phu Bat Tu The (talent-direction-choice-plan sec6) - counter luot
+// song sot battle-scoped; reset moi tran moi, 0 luot trong tran Do Kiep.
 describe('SurviveLethalGuard — Bất Tử Thể', () => {
   it('không có thiên phú — 0 lượt sống sót', () => {
     const guard = new SurviveLethalGuard()

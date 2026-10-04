@@ -97,16 +97,16 @@ export interface SkillEffect {
 
   damageType?: 'physical' | 'primordial'
 
-  // Dùng cho effect 'damage' khi skill pha trộn nhiều loại damage
-  // (vd 20% Physical + 80% Fire) — có mặt thì thay thế hoàn toàn
+  // Dung cho effect 'damage' khi skill pha tron nhieu loai damage
+  // (vd 20% Physical + 80% Fire) - co mat thi thay the hoan toan
   // damageType.
   components?: SkillDamageComponent[]
 
-  // 0..1 — tỉ lệ áp dụng debuff SAU KHI đòn đã trúng, roll ĐỘC LẬP
-  // với dodge/crit của damage chính (không mặc định 100%, phải khai
-  // rõ trong data skill). Unified Buff System (Task 11, 2026-09-01) —
-  // trước đây riêng cho effect 'ailment' (đi cùng ailmentId), giờ dùng
-  // chung với effect 'debuff' (đi cùng buffId ở trên).
+  // 0..1 - ti le ap dung debuff SAU KHI don da trung, roll DOC LAP
+  // voi dodge/crit cua damage chinh (khong mac dinh 100%, phai khai
+  // ro trong data skill). Unified Buff System (Task 11, 2026-09-01) -
+  // truoc day rieng cho effect 'ailment' (di cung ailmentId), gio dung
+  // chung voi effect 'debuff' (di cung buffId o tren).
   ailmentChance?: number
 
   // ONLY for 'damage' effects - multiplier scaled by the
@@ -146,11 +146,11 @@ export interface SkillEffect {
   // direct state mutation -- each entry is an authored ailment op.
   ailmentInteractions?: readonly SkillAilmentInteraction[]
 
-  // Pháp Tu Lifedrain (Mộc Tu) — CHỈ có ý nghĩa cùng consumesAilmentId/
-  // damagePerStack. Hồi máu cho SOURCE = healPercentOfDamage × bonus
-  // damage Detonate vừa gây. Tách riêng khỏi leechPercent toàn cục vì
-  // nhánh Detonate đi thẳng currentHp (không qua missile/CombatSystem's
-  // leech pipeline) — leechPercent KHÔNG tự áp dụng cho true damage này.
+  // Phap Tu Lifedrain (Moc Tu) - CHI co y nghia cung consumesAilmentId/
+  // damagePerStack. Hoi mau cho SOURCE = healPercentOfDamage x bonus
+  // damage Detonate vua gay. Tach rieng khoi leechPercent toan cuc vi
+  // nhanh Detonate di thang currentHp (khong qua missile/CombatSystem's
+  // leech pipeline) - leechPercent KHONG tu ap dung cho true damage nay.
   healPercentOfDamage?: number
 
   // Phap Tu (Tho Tu, 2026-08-15) - "shield self-detonate": ONLY for the
@@ -175,49 +175,49 @@ export interface SkillEffect {
   // (the explicit number beats the realm formula).
   hitCount?: number
 
-  // "Cảnh giới càng cao sát thương càng lớn": cộng thêm ratio ×
-  // source.realmIndex (0-based, 9 đại cảnh giới) vào scalingBonus.
+  // "Canh gioi cang cao sat thuong cang lon": cong them ratio x
+  // source.realmIndex (0-based, 9 dai canh gioi) vao scalingBonus.
   realmDamageRatio?: number
 
-  // Pháp Tu Thuần Hệ (E-2, 2026-09-03) — CHỈ dùng cho effect 'buff'
-  // scope 'source' (Hậu Thổ Thành Lũy): số tầng của buff tự áp = số
-  // target CÒN SỐNG mà action vừa trúng (ctx.affectedTargets, cap trần
-  // maxStacks của buff qua BuffSystem.apply nhiều lần). 0 target →
-  // không buff. Không set = 'buff' hoạt động như cũ (1 lần apply).
+  // Phap Tu Thuan He (E-2, 2026-09-03) - CHI dung cho effect 'buff'
+  // scope 'source' (Hau Tho Thanh Luy): so tang cua buff tu ap = so
+  // target CON SONG ma action vua trung (ctx.affectedTargets, cap tran
+  // maxStacks cua buff qua BuffSystem.apply nhieu lan). 0 target ->
+  // khong buff. Khong set = 'buff' hoat dong nhu cu (1 lan apply).
   // Mission C Task 10a supersession note: the turn-engine port
   // (TurnSkillBuffApplication.stacksPerAffectedTarget) keeps the
   // alive-only stacking but deliberately drops the "0 target -> no
-  // buff" clause — whiffed actions still grant the base stack,
+  // buff" clause - whiffed actions still grant the base stack,
   // consistent with the `stacks ?? 1` default.
   stacksPerAffectedTarget?: boolean
 
-  /** Bonus multiplier theo Linh Lực tối đa của Pháp Tu. */
+  /** Bonus multiplier theo Linh Luc toi da cua Phap Tu. */
   manaScalingRatio?: number
 
-  /** Bonus sát thương phẳng quy đổi thành multiplier theo ATK của source. */
+  /** Bonus sat thuong phang quy doi thanh multiplier theo ATK cua source. */
   skillExperienceRatio?: number
 
-  // Combat Rework Phase 3 — CHỈ dùng cho effect 'damage'. Khai hành vi
-  // bay Pierce/Bounce/Homing/AOE cho MỌI missile effect này bắn ra
-  // (kể cả nhiều missile của hitCountByRealm) — xem
-  // undefined = Normal, hành vi giữ nguyên như trước khi có field này.
+  // Combat Rework Phase 3 - CHI dung cho effect 'damage'. Khai hanh vi
+  // bay Pierce/Bounce/Homing/AOE cho MOI missile effect nay ban ra
+  // (ke ca nhieu missile cua hitCountByRealm) - xem
+  // undefined = Normal, hanh vi giu nguyen nhu truoc khi co field nay.
 
 
-  // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — CHỈ dùng cho effect 'damage'.
-  // Spawn 1 zone tại target với element từ `zoneElement` (mặc định
-  // 'metal' nếu không khai). Dùng cho Tắt Phương Giông Thổ (fire) /
-  // Kiếm Mộc Thông Thiên (wood). Authored data only — the turn engine
+  // Phap Tu Thuan He (E-5, 2026-09-03) - CHI dung cho effect 'damage'.
+  // Spawn 1 zone tai target voi element tu `zoneElement` (mac dinh
+  // 'metal' neu khong khai). Dung cho Tat Phuong Giong Tho (fire) /
+  // Kiem Moc Thong Thien (wood). Authored data only - the turn engine
   // reports it via collectUnsupportedSkillSemantics; no runtime zone
   // spawner is wired (the sword-zone channel was retired, spec
-  // 2026-09-15 §7).
+  // 2026-09-15 sec7).
   grantsZone?: boolean
 
   zoneElement?: ElementType
 
-  // Zone tuning dials for grantsZone — names are historical (the
+  // Zone tuning dials for grantsZone - names are historical (the
   // mechanism is generic: Phap Tu authors fire/wood zones). Parked:
   // no runtime spawner is wired after the sword-zone channel retired.
   swordZoneCharges?: number
   swordZoneTickInterval?: number
-  swordZoneDamageRatio?: number // × finalMultiplier của effect này = damagePerTick
+  swordZoneDamageRatio?: number // x finalMultiplier cua effect nay = damagePerTick
 }

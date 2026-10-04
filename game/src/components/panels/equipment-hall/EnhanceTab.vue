@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Task 19 (item-grade-quality-rework, rework P6) — Tab Cường Hóa
-// extracted from EquipmentHallPanel.vue shell. Cường Hóa gắn SLOT (not
-// selectedInstanceId) — hoàn toàn tự chứa, KHÔNG cần inject shared
-// selection (chỉ Wash/Refine mới dùng selectedInstanceId/selectEquipped).
+// Task 19 (item-grade-quality-rework, rework P6) - Tab Cuong Hoa
+// extracted from EquipmentHallPanel.vue shell. Cuong Hoa gan SLOT (not
+// selectedInstanceId) - hoan toan tu chua, KHONG can inject shared
+// selection (chi Wash/Refine moi dung selectedInstanceId/selectEquipped).
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -39,7 +39,7 @@ const { enhance } = useEquipmentActions()
 const { equippedRows } = useEquippedRows()
 
 // =========================
-// Tab Cường Hóa
+// Tab Cuong Hoa
 // =========================
 
 interface EnhanceSlotRow {
@@ -60,22 +60,22 @@ interface EnhanceSlotRow {
   equippedRow?: (typeof equippedRows.value)[number]
 }
 
-// perf-optimize-pass Task 5 — `stateVersion.value` đọc vô điều kiện ở
-// đây KHÔNG cần cổng visibility riêng: EnhanceTab chỉ TỒN TẠI khi tab
-// đang hiện. Chuỗi v-if (không có <KeepAlive> nào trong app):
-//   FunctionOverlayPanel `v-if="mode"` (bên trong OverlayPanel
+// perf-optimize-pass Task 5 - `stateVersion.value` doc vo dieu kien o
+// day KHONG can cong visibility rieng: EnhanceTab chi TON TAI khi tab
+// dang hien. Chuoi v-if (khong co <KeepAlive> nao trong app):
+//   FunctionOverlayPanel `v-if="mode"` (ben trong OverlayPanel
 //   `v-if="open"`) -> EquipmentHallPanel `v-if="activeTab === 'enhance'"`.
-// Đổi tab hoặc đóng panel là unmount hẳn component, effect scope của
-// computed bị stop nên nó không recompute theo tick nữa. Khi tab ĐANG
-// hiện thì recompute mỗi tick là ĐÚNG YÊU CẦU (cột "sở hữu" nguyên
-// liệu/linh thạch phải chạy theo thời gian thật). Thêm cờ visibility
-// cục bộ ở đây chỉ là code chết — xem task-5-report.md.
+// Doi tab hoac dong panel la unmount han component, effect scope cua
+// computed bi stop nen no khong recompute theo tick nua. Khi tab DANG
+// hien thi recompute moi tick la DUNG YEU CAU (cot "so huu" nguyen
+// lieu/linh thach phai chay theo thoi gian that). Them co visibility
+// cuc bo o day chi la code chet - xem task-5-report.md.
 const enhanceRows = computed<EnhanceSlotRow[]>(() => {
   stateVersion.value
 
-  // Slot-level rework (yêu cầu 2026-08-26): Cường Hóa gắn SLOT —
-  // slot TRỐNG vẫn hiện trần/cost và nâng được; realmId lấy theo người
-  // chơi hiện hành để resolve catalog nghề.
+  // Slot-level rework (yeu cau 2026-08-26): Cuong Hoa gan SLOT -
+  // slot TRONG van hien tran/cost va nang duoc; realmId lay theo nguoi
+  // choi hien hanh de resolve catalog nghe.
   const realmId = player.$state.realmId
 
   const equippedRowBySlot = new Map(equippedRows.value.map((row) => [row.slot, row]))
@@ -147,8 +147,8 @@ interface EnhancePreviewRow {
 
   label: string
 
-  // Stat key để formatStat chọn độ chính xác theo loại stat — số thập
-  // phân nhỏ (attackSpeed 0.01–0.02) không bị toFixed(1) thành "0.0"
+  // Stat key de formatStat chon do chinh xac theo loai stat - so thap
+  // phan nho (attackSpeed 0.01-0.02) khong bi toFixed(1) thanh "0.0"
   // (bug report 2026-08-30).
   stat: keyof Stats | undefined
 
@@ -156,21 +156,21 @@ interface EnhancePreviewRow {
 
   nextValue: number
 
-  // Percent growth as stat-ratio (0-1), not display-percent (0-100) —
+  // Percent growth as stat-ratio (0-1), not display-percent (0-100) -
   // stored as ratio so formatStat('affixDeltaPercent', ...) applies
-  // the ×100.toFixed(1)% logic automatically.
+  // the x100.toFixed(1)% logic automatically.
   percent: number
 }
 
 /**
- * Xem trước "sau Cường Hóa" — xác định (không random), luôn tính được ngay
- * khi có mainStat, không cần preview/giữ/bỏ như Tẩy/Tinh Luyện. Danh sách
- * dòng khớp CHÍNH XÁC những gì EquipmentSystem.applyModifiers() thật sự
- * scale theo enhanceLevel (2026-08-30 bug report: cột "Sau Cường Hóa" cũ
- * chỉ tính mainStat, bỏ sót toàn bộ affix phụ nên 2 cột không khớp dòng) —
- * dòng đầu LUÔN là mainStat, sau đó từng affix theo ĐÚNG thứ tự
- * instance.affixes để 2 cột "Hiện tại"/"Sau" render cùng danh sách, khớp
- * 1-1 theo index thay vì 2 mảng khác nguồn.
+ * Xem truoc "sau Cuong Hoa" - xac dinh (khong random), luon tinh duoc ngay
+ * khi co mainStat, khong can preview/giu/bo nhu Tay/Tinh Luyen. Danh sach
+ * dong khop CHINH XAC nhung gi EquipmentSystem.applyModifiers() that su
+ * scale theo enhanceLevel (2026-08-30 bug report: cot "Sau Cuong Hoa" cu
+ * chi tinh mainStat, bo sot toan bo affix phu nen 2 cot khong khop dong) -
+ * dong dau LUON la mainStat, sau do tung affix theo DUNG thu tu
+ * instance.affixes de 2 cot "Hien tai"/"Sau" render cung danh sach, khop
+ * 1-1 theo index thay vi 2 mang khac nguon.
  */
 const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
   stateVersion.value
@@ -203,7 +203,7 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
       nextValue,
 
       // Stat-ratio (0-1) so formatStat() can apply the standard
-      // `×100.toFixed(1)%` percent formatting.
+      // `x100.toFixed(1)%` percent formatting.
       percent: currentValue > 0 ? (nextValue - currentValue) / currentValue : 0,
     }
   }
@@ -252,16 +252,16 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
     </div>
 
     <div v-if="selectedEnhanceRow" class="qi-hall__split-right">
-      <!-- Dùng THẲNG <table> giống Tẩy/Tinh Luyện thay vì 2 cột flex độc
-           lập (2026-08-30 bug report: "không ngang hàng với nhau" — 2
-           cột flex co giãn riêng nên dòng chính/dòng phụ lệch nhau khi
-           số dòng hoặc độ dài nội dung khác nhau; <tr> đảm bảo khớp
-           hàng-với-hàng thật sự). Bỏ hẳn dòng tiêu đề "Slot · Tên món"
-           cũ (2026-08-30, bug report thứ 2: dòng đó tạo lệch — thông
-           tin này đã có sẵn qua ô đang chọn ở lưới bên trái, không cần
-           lặp lại). Header bảng dùng "Trước/Sau" y hệt Tẩy/Tinh Luyện
-           thay vì hiện số cấp thô màu eyebrow khó đọc — cấp đổi dời
-           xuống 1 dòng chú thích màu chữ thường, dễ đọc. -->
+      <!-- Dung THANG <table> giong Tay/Tinh Luyen thay vi 2 cot flex doc
+           lap (2026-08-30 bug report: "khong ngang hang voi nhau" - 2
+           cot flex co gian rieng nen dong chinh/dong phu lech nhau khi
+           so dong hoac do dai noi dung khac nhau; <tr> dam bao khop
+           hang-voi-hang that su). Bo han dong tieu de "Slot * Ten mon"
+           cu (2026-08-30, bug report thu 2: dong do tao lech - thong
+           tin nay da co san qua o dang chon o luoi ben trai, khong can
+           lap lai). Header bang dung "Truoc/Sau" y het Tay/Tinh Luyen
+           thay vi hien so cap tho mau eyebrow kho doc - cap doi doi
+           xuong 1 dong chu thich mau chu thuong, de doc. -->
       <div class="qi-hall__preview-card">
         <p v-if="enhancePreviewRows && selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel" class="qi-hall__col-title">
           {{ t('panels.equipmentHall.labels.levelPrefix') }} +{{ selectedEnhanceRow.enhanceLevel }}/{{ selectedEnhanceRow.maxLevel }}
@@ -328,7 +328,7 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
 </template>
 
 <style scoped>
-/* Shared .qi-hall__* layout lives in ./qi-hall.css (one owner — see the
+/* Shared .qi-hall__* layout lives in ./qi-hall.css (one owner - see the
    sheet header for the specificity-war rationale). Only Enhance-private
    classes stay scoped here. */
 .enhance-row__costs {

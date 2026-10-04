@@ -4,10 +4,10 @@ import { asBaseStats } from '../stats/StatBlock'
 import { GameManager } from './GameManager'
 import { pills } from '../../data/pill/pills'
 
-// GameManager facade mới (spec dot-pha-loi-kiep §5.1) — TribulationSystem
-// cũ đã bị dỡ thay bằng TribulationDirector: KHÔNG còn battle mode
-// 'tribulation' (getBattle() null suốt kiếp), state bậc + chương nằm
-// trong getActiveTribulation() (ActiveTribulationState mới).
+// GameManager facade moi (spec dot-pha-loi-kiep sec5.1) - TribulationSystem
+// cu da bi do thay bang TribulationDirector: KHONG con battle mode
+// 'tribulation' (getBattle() null suot kiep), state bac + chuong nam
+// trong getActiveTribulation() (ActiveTribulationState moi).
 describe('GameManager — facade TribulationDirector', () => {
   it('startTribulation Quán Khí: getActiveTribulation() có grade + 2 chương, KHÔNG có battle', () => {
     const gameManager = new GameManager()
@@ -26,8 +26,8 @@ describe('GameManager — facade TribulationDirector', () => {
 
   it('startTribulation Trúc Cơ (đủ Địa Đạo): grade earth; thiếu đan → human', () => {
     const gameManager = new GameManager()
-    // Đăng ký pills data thật để PillBag add/has Trúc Cơ Đan hoạt động
-    // (GameManager trần chưa register gì — pattern các test khác).
+    // Dang ky pills data that de PillBag add/has Truc Co Dan hoat dong
+    // (GameManager tran chua register gi - pattern cac test khac).
     gameManager.catalogOps.registerPills(pills)
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
@@ -35,12 +35,12 @@ describe('GameManager — facade TribulationDirector', () => {
     player.completedStageIds = ['qi_refining_abyssal_pool']
     player.bodyProgression.body_refinement.completedTiers = 3
 
-    // KHÔNG có Trúc Cơ Đan trong túi → human
+    // KHONG co Truc Co Dan trong tui -> human
     expect(gameManager.startTribulation(player, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.grade).toBe('human')
     gameManager.tribulationDirector.clear()
 
-    // Có Trúc Cơ Đan → earth
+    // Co Truc Co Dan -> earth
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')
     expect(trucCoDan).toBeDefined()
     gameManager.pillBag.add(trucCoDan!, 1)
@@ -57,7 +57,7 @@ describe('GameManager — facade TribulationDirector', () => {
     gameManager.startTribulation(player, 'qi_refining')
     const q = gameManager.tribulationDirector.getState()!.currentQuestion!
     expect(gameManager.tribulationDirector.answerQuestion(q.correctAnswerIndex)).toBe(true)
-    expect(gameManager.tribulationDirector.answerQuestion(0)).toBe(false) // đang nghỉ giữa câu
+    expect(gameManager.tribulationDirector.answerQuestion(0)).toBe(false) // dang nghi giua cau
   })
 
   it('unknown realm → start false', () => {
@@ -71,7 +71,7 @@ describe('GameManager — facade TribulationDirector', () => {
     const player = createDefaultPlayer()
     player.realmId = 'mortal'
     player.realmLevel = 12
-    // ARCH-002 (M7): resolved internally — patch the raw base.
+    // ARCH-002 (M7): resolved internally - patch the raw base.
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5000, defense: 0, hpRegenPerTurn: 0 })
 
     gameManager.startTribulation(player, 'qi_refining')

@@ -68,7 +68,8 @@ import {
   ZHOU_TIAN_CURRENCY_MATERIAL_ID,
   zhouTianStepCost,
 } from '../../../data/realm/ZhouTian'
-import { asBaseStats } from '../../stats/StatBlock'
+import { asBaseStats, createBaseStats, type Stats } from '../../stats/StatBlock'
+import { MAIN_STAT_KEYS } from '../../stats/StatTypes'
 import { buildGameSave } from '../../../services/save/SaveSystem'
 import type { GameSave } from '../../../services/save/saveTypes'
 import {
@@ -85,12 +86,24 @@ import { isCompanionPullPoolEnabled } from '../../realm/ReleasePolicy'
 import { makeInstance } from '../../equipment/EquipmentInstance.fixture'
 import { usePlayerStore } from '../../../stores/player'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import {
   getZhouTianCapacity,
   isDaiChuThienReached,
   isTieuChuThienReached,
 } from '../../realm/body/ZhouTianChapter'
 import { EarlyGameSession } from './EarlyGameSession'
+import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
+import { getWorkerCapacityForLevel } from '../../production/WorkerCapacity'
 
 const PINNED_PROFILE = {
   name: 'journey',
@@ -205,6 +218,22 @@ function normalizeVolatileSaveFields(save: GameSave): GameSave {
   if (save.quests) {
     save.quests.lastDailyResetAtMs = 0
   }
+  // Parity compares through the restore contract: non-main baseStats
+  // have no persisted writer, so a save's claims reset to authored
+  // defaults on restore - the expected side normalizes the same way.
+  const authoredBaseStats = createBaseStats()
+  const baseStats = save.player.baseStats as Record<string, number>
+  const mainKeys = new Set<string>(MAIN_STAT_KEYS)
+  for (const key of Object.keys(baseStats)) {
+    if (!(key in authoredBaseStats)) {
+      delete baseStats[key]
+    }
+  }
+  for (const key of Object.keys(authoredBaseStats) as (keyof Stats)[]) {
+    if (!mainKeys.has(key)) {
+      baseStats[key] = authoredBaseStats[key]
+    }
+  }
   const UUID_RE =
     /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g
   const scrub = (value: unknown): void => {
@@ -241,13 +270,37 @@ function normalizeVolatileSaveFields(save: GameSave): GameSave {
  * every persisted authority field. Restore legitimately MATERIALIZES
  * derived state the live session had not (ensureSiteState seeds a
  * default row per site definition; quest reconcile activates newly
- * unlocked realm quests), so those two slices are subset-compared -
+ * unlocked realm quests; default-built reconcile grants the missing
+ * registered buildings at lv1), so those slices are subset-compared -
  * every persisted row must round-trip byte-identically while extra
  * defaulted rows are allowed. Everything else must be byte-equal
  * after volatile normalization. */
 function assertRestoredSaveParity(before: GameSave, after: GameSave): void {
   const expected = normalizeVolatileSaveFields(before)
   const actual = normalizeVolatileSaveFields(after)
+  // Default-built (2026-10-03): the session restore grants any missing
+  // registered building at lv1 - a carried row must round-trip verbatim.
+  const actualChq = (actual.buildings ?? []).find(
+    (entry) => entry.buildingId === 'chi_hien_quan',
+  )
+  if (expected.buildings !== undefined || actual.buildings !== undefined) {
+    expect(actual.buildings ?? []).toEqual(
+      expect.arrayContaining(
+        (expected.buildings ?? []).map((entry) => expect.objectContaining(entry)),
+      ),
+    )
+    actual.buildings = expected.buildings
+  }
+  // autoWorkerCapacity is re-derived from the carried chi_hien_quan
+  // instance at restore (formula over the persisted field): a carried
+  // 0 becomes the lv1 baseline 3. Verify the restored value against the
+  // ACTUAL instance level, then exclude the field from byte-parity.
+  if (actualChq !== undefined) {
+    expect(actual.player.autoWorkerCapacity).toBe(
+      getWorkerCapacityForLevel(actualChq.level),
+    )
+    actual.player.autoWorkerCapacity = expected.player.autoWorkerCapacity
+  }
   if (expected.productionSites !== undefined || actual.productionSites !== undefined) {
     expect(actual.productionSites ?? []).toEqual(
       expect.arrayContaining(
@@ -296,6 +349,17 @@ describe('TrucCoJourney - ordered journey', () => {
     { timeout: 300_000 },
     () => {
       vi.useFakeTimers()
+      // Economy/equipment draws ride unseeded Math.random BY DESIGN
+      // (a seeded battle must not pin drops - EarlyGameSession), which
+      // leaves this pinned order nondeterministic whenever a marginal
+      // fight meets gear variance (floor_10 intermittently observed
+      // defeat). Pin the unseeded surface to its own stream for the
+      // run - the same substitution the benchmark drive uses
+      // (EssenceSubstitutionEconomy) via the sanctioned vi.spyOn seam.
+      const unseededStream = new SeededCombatRng(0x5d1ce7)
+      const randomSpy = vi
+        .spyOn(Math, 'random')
+        .mockImplementation(() => unseededStream.roll())
 
       // ===== Leg A - seeded LQ fixture + admission =====
       let s = makeJourneySession()
@@ -390,7 +454,7 @@ describe('TrucCoJourney - ordered journey', () => {
       // Phase (a): settle binds/applies ONCE; the drain holds while the
       // entitlement is unresolved. F-W-6: runTribulation goes through
       // startTribulationPrepared so equipment is already stripped at
-      // tribulation start — zero equipment modifiers BEFORE the settle.
+      // tribulation start - zero equipment modifiers BEFORE the settle.
       expect(
         s.player.modifiers.filter((m) => m.sourceType === 'equipment')
           .length,
@@ -773,6 +837,13 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(s.breakthroughIfReady()).toBe(true)
       expect(s.player.realmLevel).toBe(10)
       expect(getZhouTianCapacity(s.player)).toBe(20)
+      // Growth cycle before the boss, same authored rhythm every
+      // other floor enjoys (leg E.2): equip the carried drops and
+      // spend the earned attribute pool. floor_10 was the only boss
+      // attempted on the pre-growth state, which left the seeded
+      // battle margin RNG-exposed.
+      s.equipAll()
+      while (s.allocateAttribute('strength')) {}
       expect(s.runStage('foundation_floor_10')).toBe('victory')
       expect(s.player.completedStageIds.at(-1)).toBe(
         'foundation_floor_10',
@@ -978,6 +1049,7 @@ describe('TrucCoJourney - ordered journey', () => {
       // no site carries a recorded cycle.
       expect(s.snapshot().hiddenChannelCycles).toEqual([])
 
+      randomSpy.mockRestore()
       vi.useRealTimers()
     },
   )

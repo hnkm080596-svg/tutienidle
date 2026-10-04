@@ -4,10 +4,10 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 
-// skill-insight-and-auto-combat-hud-plan.md mục 3/11 — Cảm ngộ Kỹ năng
-// (skillInsight) LUÔN cấp khi hạ quái, KHÔNG cần trang bị tâm pháp
+// skill-insight-and-auto-combat-hud-plan.md muc 3/11 - Cam ngo Ky nang
+// (skillInsight) LUON cap khi ha quai, KHONG can trang bi tam phap
 // (khac Cam ngo Tam Phap/techniqueMastery), va chi cap dung 1 lan cho
-// mỗi con quái chết dù nhiều tick cùng xử lý (guard rewardGranted).
+// moi con quai chet du nhieu tick cung xu ly (guard rewardGranted).
 function makeEnemy(techniqueMastery: number) {
   return defineEnemy({
     id: 'skill_insight_test_enemy',
@@ -30,9 +30,9 @@ describe('GameManager — Cảm ngộ Kỹ năng khi hạ quái', () => {
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
 
-    // Không techniqueManager.equip() gì cả — cố ý không có tâm pháp.
+    // Khong techniqueManager.equip() gi ca - co y khong co tam phap.
     gameManager.startBattleWithPlayer(player, makeEnemy(10))
-    combatSource.advance(3) // bỏ qua countdown
+    combatSource.advance(3) // bo qua countdown
 
     const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!
     battleEnemy.entity.currentHp = 0

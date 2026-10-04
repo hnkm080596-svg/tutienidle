@@ -1,13 +1,13 @@
 ﻿// @vitest-environment jsdom
-// Combat Art Pipeline Task 9 (2026-09-05) â€” headless coverage cho pháº§n
-// KHÃ”NG cáº§n Phaser runtime tháº­t: derive animation key theo actor, guard
-// Ä‘Äƒng kÃ½ Animation (anims.exists skip), dispatch playCombatAnimation(), vÃ
-// bookkeeping hoÃ£n xÃ³a sprite khi cháº¿t (death-deferral) â€” bao gá»“m case
-// player khÃ´ng bao giá» bá»‹ destroy vÃ  case id tÃ¡i xuáº¥t hiá»‡n giá»¯a lÃºc sprite
-// cÅ© cÃ²n Ä‘ang chá» animation/tween cháº¿t (Task 5 review's orphan/double-
-// destroy concern). Theo Ä‘Ãºng pattern createTestScene('bare') +
-// Object.create cá»§a cÃ¡c file CombatScene.*.test.ts khÃ¡c â€” KHÃ”NG dá»±ng
-// Phaser tháº­t.
+// Combat Art Pipeline Task 9 (2026-09-05) - headless coverage cho phan
+// KHONG can Phaser runtime that: derive animation key theo actor, guard
+// A'Afng kA1/2 Animation (anims.exists skip), dispatch playCombatAnimation(), vA
+// bookkeeping hoan xoa sprite khi chet (death-deferral) - bao gom case
+// player khong bao gio bI destroy va case id tai xuat hien giua luc sprite
+// cu con dang cho animation/tween chet (Task 5 review's orphan/double-
+// destroy concern). Theo dung pattern createTestScene('bare') +
+// Object.create cua cac file CombatScene.*.test.ts khac - KHONG dung
+// Phaser that.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createTestScene, patchScene } from './combat/combatTestHarness'
 import { PLAYER_ID } from './combat/combatConstants'
@@ -19,12 +19,12 @@ import {
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 
-// Spec B §3.2 (2026-09-11) — enemies are `kind: 'static'`: they have no clips,
+// Spec B sec3.2 (2026-09-11) - enemies are `kind: 'static'`: they have no clips,
 // so the death-DEFERRAL machinery (wait for the tween AND
 // ANIMATION_COMPLETE) has no live enemy to exercise it. The player is the only
 // animated entity, and the player is never destroyed.
 //
-// Rather than delete that coverage, the promotion in §9 criterion 7 is
+// Rather than delete that coverage, the promotion in sec9 criterion 7 is
 // performed here: one entity's entry becomes `animated`, and NO playback code
 // changes for it to work. The tests below that assert the static behaviour
 // leave the override unset, so both halves are covered in one file.
@@ -188,9 +188,9 @@ function makeSprite(kind: 'sprite' | 'rect', rectOverride?: Record<string, unkno
     boost: { value: 1 },
     footY: 0,
     columnFloat: 0,
-    // any-cÃ³-chá»§-Ä‘Ã­ch (cÃ¹ng pattern CombatScene.enemyScale.test.ts) â€” stub
-    // EntitySprite tá»‘i giáº£n cho method Object.create test, khÃ´ng cáº§n khá»›p
-    // interface Ä‘áº§y Ä‘á»§.
+    // any-co-chu-dich (cung pattern CombatScene.enemyScale.test.ts) - stub
+    // EntitySprite toi gian cho method Object.create test, khong can khOp
+    // interface day du.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any
 }
@@ -281,7 +281,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
 
     scene.anims = { exists: () => true }
 
-    // KhÃ´ng throw dÃ¹ rect khÃ´ng cÃ³ .play â€” guard kind !== 'sprite' cháº·n trÆ°á»›c.
+    // Khong throw du rect khong co .play - guard kind !== 'sprite' chan truOc.
     expect(() => scene.playCombatAnimation(sprite, 'mortal_savage_tiger_1', 'idle_to_standby')).not.toThrow()
   })
 
@@ -337,7 +337,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
   })
 
   it('promoting that same enemy to animated makes it play — one data edit, no playback code (§9 criterion 7)', () => {
-    // This is the criterion that protects §3.2's reversibility. The ONLY
+    // This is the criterion that protects sec3.2's reversibility. The ONLY
     // difference from the test above is the catalogue entry.
     PROMOTED.set('mortal-savage-tiger-v1', 'animated')
 
@@ -1001,7 +1001,7 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     expect(scene.dyingIds.has('enemy-1')).toBe(true)
     expect(scene._gridView.destroyEntitySprite).not.toHaveBeenCalled()
 
-    // Tween chÃ­nh (rotation/alpha trÃªn sprite.rect) luÃ´n Ä‘Æ°á»£c add() Ä‘áº§u tiÃªn.
+    // Tween chinh (rotation/alpha tren sprite.rect) luon duoc add() dau tien.
     const mainTweenOnComplete = tweenConfigs[0]!.onComplete as () => void
 
     mainTweenOnComplete()
@@ -1199,13 +1199,13 @@ describe('CombatScene.getOrCreateSprite() â€” id tÃ¡i xuáº¥t hiá»‡
 
     const result = scene.getOrCreateSprite('mortal_savage_tiger_1', 0, 'Boar', 4)
 
-    // Sprite cÅ© bá»‹ dá»n NGAY (khÃ´ng chá» animation/tween nÃ o) â€” khÃ´ng rÆ¡i vÃ o
-    // beginDeathSequence() láº§n hai.
+    // Sprite cu bI don NGAY (khong cho animation/tween nao) - khong roi vao
+    // beginDeathSequence() lan hai.
     expect(destroyEntitySprite).toHaveBeenCalledWith(oldSprite)
     expect((oldSprite.rect as ReturnType<typeof fakeGameSprite>).destroyed).toBe(true)
     expect(scene.dyingIds.has('mortal_savage_tiger_1')).toBe(false)
 
-    // getOrCreateSprite() tháº­t (gridView) Ä‘Æ°á»£c gá»i Ä‘á»ƒ táº¡o sprite Má»šI.
+    // getOrCreateSprite() thaot (gridView) A'AEdega"GBPc ga"i A'a"f tao!o sprite Ma"sI.
     expect(result).toBe(newSprite)
     expect(scene.sprites.get('mortal_savage_tiger_1')).toBe(newSprite)
   })

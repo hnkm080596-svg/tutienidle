@@ -1,7 +1,7 @@
-// Slot Revamp (tooltip-revamp-plan.md mục 17.2) — trục semantic loại
-// trừ lẫn nhau thay vì danh sách boolean độc lập có thể mâu thuẫn.
-// Precedence thật sự nằm trong SlotView.vue (đọc comment ở đó), file
-// này chỉ khai type dùng chung cho SlotView + mọi consumer.
+// Slot Revamp (tooltip-revamp-plan.md muc 17.2) - truc semantic loai
+// tru lan nhau thay vi danh sach boolean doc lap co the mau thuan.
+// Precedence that su nam trong SlotView.vue (doc comment o do), file
+// nay chi khai type dung chung cho SlotView + moi consumer.
 export type SlotAvailability = 'available' | 'disabled' | 'locked'
 export type SlotInteraction = 'idle' | 'selected' | 'processing'
 export type SlotValidation = 'neutral' | 'valid' | 'invalid' | 'missing'
@@ -36,8 +36,8 @@ export interface SlotPresentationState {
 // the wrong region) were removed.
 export type SlotVariant = 'item' | 'equipment'
 
-// Badge nhỏ ở layer 6 (mục 17.3) — thay cho các span tự absolute-
-// position bên ngoài Slot (vd .paperdoll__enhance-badge cũ).
+// Badge nho o layer 6 (muc 17.3) - thay cho cac span tu absolute-
+// position ben ngoai Slot (vd .paperdoll__enhance-badge cu).
 export type SlotBadgeKind = 'enhance' | 'equipped' | 'new' | 'comparison'
 
 export interface SlotBadge {

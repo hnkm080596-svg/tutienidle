@@ -1,7 +1,7 @@
-// Bank câu hỏi Tâm Ma Kiếp (spec dot-pha-loi-kiep §5.3) — viết sẵn theo
-// realm: thiên văn, địa lý, đạo lý, kiến thức thế giới Thanh Vân.
-// Realm càng cao câu hỏi càng phức tạp. Mỗi câu 4 đáp án, 1 đúng —
-// UI shuffle thứ tự hiển thị, correctAnswerIndex là nguồn sự thật.
+// Bank cau hoi Tam Ma Kiep (spec dot-pha-loi-kiep sec5.3) - viet san theo
+// realm: thien van, dia ly, dao ly, kien thuc the gioi Thanh Van.
+// Realm cang cao cau hoi cang phuc tap. Moi cau 4 dap an, 1 dung -
+// UI shuffle thu tu hien thi, correctAnswerIndex la nguon su that.
 
 export interface MindQuestion {
   id: string
@@ -12,7 +12,7 @@ export interface MindQuestion {
 }
 
 export const TRIBULATION_MIND_QUESTIONS: readonly MindQuestion[] = [
-  // ============ Quán Khí (qi_refining) — 12 câu ============
+  // ============ Quan Khi (qi_refining) - 12 cau ============
   {
     id: 'mind_qi_01',
     realmId: 'qi_refining',
@@ -98,7 +98,7 @@ export const TRIBULATION_MIND_QUESTIONS: readonly MindQuestion[] = [
     correctAnswerIndex: 0,
   },
 
-  // ============ Trúc Cơ (foundation_establishment) — 16 câu ============
+  // ============ Truc Co (foundation_establishment) - 16 cau ============
   {
     id: 'mind_fe_01',
     realmId: 'foundation_establishment',

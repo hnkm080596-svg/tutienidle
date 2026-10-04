@@ -1,0 +1,14 @@
+/*
+ * Scene 02 scaffold — temp-art marker (imported globally by
+ * CharacterCreationScreen). Every `.art-needed` element is a placeholder
+ * surface awaiting Minh's painted asset; its `data-art-id` matches a row in
+ * game/docs/design/art-requests/02-character-creation.md.
+ *
+ * Temp palette: ink #101718 · jade #315f55 · muted gold #b99a55 · ivory paper.
+ */
+.art-needed {
+  position: relative;
+  box-sizing: border-box;
+  outline: 1px dashed rgba(185, 154, 85, 0.28);
+  outline-offset: -1px;
+}

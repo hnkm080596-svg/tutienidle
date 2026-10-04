@@ -12,10 +12,10 @@ import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
 import type { PlayerData } from '@/core/player/Player'
 import { i18n } from '@/i18n'
 
-// Task 9.1 — panel chỉ còn xác nhận "Độ kiếp cũng là độ thân" (2 nút
-// Đã hiểu / Chờ đã). Linh Thạch cost + warning cũ đã dỡ khỏi UI.
-// i18n (2.5 task 8) — panel dùng t() nên assert qua i18n.global.t(key)
-// thay vì raw vi string (pattern HomeResourceStrip).
+// Task 9.1 - panel chi con xac nhan "Do kiep cung la do than" (2 nut
+// Da hieu / Cho da). Linh Thach cost + warning cu da do khoi UI.
+// i18n (2.5 task 8) - panel dung t() nen assert qua i18n.global.t(key)
+// thay vi raw vi string (pattern HomeResourceStrip).
 function t(key: string): string {
   return (i18n.global as unknown as { t: (k: string) => string }).t(key)
 }

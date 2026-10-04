@@ -1,11 +1,11 @@
-// VendorSystem (economy-fixes-sinks-plan §3.2 B2, 2026-08-29) — Hóa Bán:
-// bán nguyên liệu thừa (herb/wood/ore/essence/byproduct) lấy Linh Thạch
-// đúng phẩm theo realm. Giao dịch atomic: trừ material → nếu cộng Linh
-// Thạch tràn stack thì hoàn lại material và từ chối.
-// gp123 6G (2026-09-06): thu mua chỉ nhận material phẩm NGHỀ THẤP HƠN
-// cảnh giới người chơi (gate sell-by-grade) — phẩm suy từ meta nghề
-// profession.realmId qua PROFESSION_GRADE_BY_REALM, so bằng
-// PROFESSION_GRADE_ORDER. Đồng phẩm hoặc cao hơn → grade_not_below.
+// VendorSystem (economy-fixes-sinks-plan sec3.2 B2, 2026-08-29) - Hoa Ban:
+// ban nguyen lieu thua (herb/wood/ore/essence/byproduct) lay Linh Thach
+// dung pham theo realm. Giao dich atomic: tru material -> neu cong Linh
+// Thach tran stack thi hoan lai material va tu choi.
+// gp123 6G (2026-09-06): thu mua chi nhan material pham NGHE THAP HON
+// canh gioi nguoi choi (gate sell-by-grade) - pham suy tu meta nghe
+// profession.realmId qua PROFESSION_GRADE_BY_REALM, so bang
+// PROFESSION_GRADE_ORDER. Dong pham hoac cao hon -> grade_not_below.
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { Material } from '../material/Material'
@@ -18,16 +18,16 @@ import {
   type ProfessionGrade,
 } from '../profession/ProfessionGrade'
 
-/** Thảo DUY NHẤT của một đan phương — bán hết thì đan phương mất nguyên liệu. */
+/** Thao DUY NHAT cua mot dan phuong - ban het thi dan phuong mat nguyen lieu. */
 interface RecipeHerbVariant {
   materialId: string
 }
 
 /**
- * Phẩm nghề của material suy từ meta nghề (nguồn sự thật
- * PROFESSION_GRADE_BY_REALM — cùng pattern DecomposeSystem.parseOre).
- * Essence/byproduct không có meta nghề đủ tốt → undefined, không thể
- * chứng minh "phẩm thấp hơn" → bị gate loại.
+ * Pham nghe cua material suy tu meta nghe (nguon su that
+ * PROFESSION_GRADE_BY_REALM - cung pattern DecomposeSystem.parseOre).
+ * Essence/byproduct khong co meta nghe du tot -> undefined, khong the
+ * chung minh "pham thap hon" -> bi gate loai.
  */
 function getMaterialGrade(material: Material): ProfessionGrade | undefined {
   return material.profession?.realmId !== undefined
@@ -36,8 +36,8 @@ function getMaterialGrade(material: Material): ProfessionGrade | undefined {
 }
 
 /**
- * Gate 6G: material chỉ bán được khi phẩm nghề NGHIÊM NGẶT thấp hơn phẩm
- * suy từ cảnh giới người chơi. Material không suy được phẩm → false.
+ * Gate 6G: material chi ban duoc khi pham nghe NGHIEM NGAT thap hon pham
+ * suy tu canh gioi nguoi choi. Material khong suy duoc pham -> false.
  */
 function isGradeBelowPlayer(material: Material, playerRealmId: string): boolean {
   const itemGrade = getMaterialGrade(material)
@@ -65,10 +65,10 @@ export class VendorSystem {
   ) {}
 
   /**
-   * gp123 6G: getUnitSellPrice nhận realmId = CẢNH GIỚI NGƯỜI CHƠI (từ
-   * GameManager thread player.$state.realmId). Trả undefined khi phẩm
-   * material KHÔNG thấp hơn — caller dùng nó để lọc rows nên gate tự
-   * áp cho mọi đường liệt kê.
+   * gp123 6G: getUnitSellPrice nhan realmId = CANH GIOI NGUOI CHOI (tu
+   * GameManager thread player.$state.realmId). Tra undefined khi pham
+   * material KHONG thap hon - caller dung no de loc rows nen gate tu
+   * ap cho moi duong liet ke.
    */
   getUnitSellPrice(materialId: string, realmId: string): number | undefined {
     if (!this.registry.has(materialId)) {
@@ -85,9 +85,9 @@ export class VendorSystem {
   }
 
   /**
-   * Material chỉ còn lại MỘT biến thể thảo trong ĐÚNG 1 đan phương nào đó
-   * (sole ingredient). Đan phương sẽ mất nguyên liệu duy nhất nếu người
-   * chơi bán hết stack (remaining = 0) — chặn giao dịch đó.
+   * Material chi con lai MOT bien the thao trong DUNG 1 dan phuong nao do
+   * (sole ingredient). Dan phuong se mat nguyen lieu duy nhat neu nguoi
+   * choi ban het stack (remaining = 0) - chan giao dich do.
    */
   private isSoleRecipeIngredient(materialId: string, remainingAfterSale: number): boolean {
     if (remainingAfterSale > 0) {
@@ -158,8 +158,8 @@ export class VendorSystem {
   }
 
   /**
-   * Bán `amount` đơn vị material lấy Linh Thạch. Trả { ok: true, gained }
-   * với gained = số Linh Thạch ĐÃ quy đổi theo phẩm realm của material.
+   * Ban `amount` don vi material lay Linh Thach. Tra { ok: true, gained }
+   * voi gained = so Linh Thach DA quy doi theo pham realm cua material.
    */
   sellMaterial(
     bag: MaterialBag,
@@ -183,9 +183,9 @@ export class VendorSystem {
       return { ok: false, reason: 'not_sellable' }
     }
 
-    // gp123 6G — gate phẩm: đồng phẩm hoặc cao hơn cảnh giới người chơi
-    // → từ chối. Đặt SAU price check để Linh Thạch (spirit_stone) vẫn
-    // trả not_sellable như cũ, không đổi reason của danh mục ngoài gate.
+    // gp123 6G - gate pham: dong pham hoac cao hon canh gioi nguoi choi
+    // -> tu choi. Dat SAU price check de Linh Thach (spirit_stone) van
+    // tra not_sellable nhu cu, khong doi reason cua danh muc ngoai gate.
     if (!isGradeBelowPlayer(material, realmId)) {
       return { ok: false, reason: 'grade_not_below' }
     }
@@ -196,7 +196,7 @@ export class VendorSystem {
       return { ok: false, reason: 'invalid_amount' }
     }
 
-    // Sole-ingredient guard — kiểm tra "còn lại sau khi bán" TRƯỚC khi trừ.
+    // Sole-ingredient guard - kiem tra "con lai sau khi ban" TRUOC khi tru.
     if (this.isSoleRecipeIngredient(materialId, owned - amount)) {
       return { ok: false, reason: 'sole_recipe_ingredient' }
     }

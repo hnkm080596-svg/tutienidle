@@ -7,14 +7,15 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from './__fixtures__/betaWaysUnlock'
 
-// QA-2026-09-02-001 — RESOLVED 2026-09-02 qua redesign Task 9.1 (spec v6):
-// chooseCultivationPath (Lễ Nhập Môn) là feature-unlock SAU đột phá
-// mortal → qi_refining, KHÔNG phải một lần đột phá → KHÔNG auto-unequip
-// và KHÔNG gate theo trang bị đang mặc. Auto-unequip thuộc về
-// triggerBreakthroughAction (useTribulation.ts) — đường kiếp thật, chạy
-// cho MỌI lần đột phá. Reproduction cũ (kỳ vọng auto-unequip) nằm trong
-// git history (deecb9e, commit 3fa501f trên master). Test này khóa hợp đồng mới.
+// QA-2026-09-02-001 - RESOLVED 2026-09-02 qua redesign Task 9.1 (spec v6):
+// chooseCultivationPath (Le Nhap Mon) la feature-unlock SAU dot pha
+// mortal -> qi_refining, KHONG phai mot lan dot pha -> KHONG auto-unequip
+// va KHONG gate theo trang bi dang mac. Auto-unequip thuoc ve
+// triggerBreakthroughAction (useTribulation.ts) - duong kiep that, chay
+// cho MOI lan dot pha. Reproduction cu (ky vong auto-unequip) nam trong
+// git history (deecb9e, commit 3fa501f tren master). Test nay khoa hop dong moi.
 function setup() {
   const manager = new GameManager()
   manager.catalogOps.registerSkillTemplates(SKILLS)
@@ -39,7 +40,7 @@ describe('GameManager — chooseCultivationPath realm advance và trang bị đa
     })
     manager.equipmentBag.add(weapon)
 
-    expect(manager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
+    commitSpellInitiationForTest(manager, player)
     expect(player.realmId).toBe('qi_refining')
     expect(weapon.equipped).toBe(true)
   })

@@ -5,10 +5,10 @@ import {
 } from '../artifact/ArtifactProgression'
 import { createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
 
-// Bản Mệnh Pháp Bảo (doc §6/§5.2) — drop-system (2026-09-12): Đoán Bảo
-// Thạch không còn roll riêng có gate realm trong grantArtifactStoneDrop —
-// nó là 1 dòng weighted trong POOL của stage table Trúc Cơ (w25/60), vắng
-// mặt ở mọi bảng thấp hơn. "Gate" giờ là dữ liệu bảng, không phải `if`.
+// Ban Menh Phap Bao (doc sec6/sec5.2) - drop-system (2026-09-12): Doan Bao
+// Thach khong con roll rieng co gate realm trong grantArtifactStoneDrop -
+// no la 1 dong weighted trong POOL cua stage table Truc Co (w25/60), vang
+// mat o moi bang thap hon. "Gate" gio la du lieu bang, khong phai `if`.
 // M-F-ARTIFACT-DEFER: the authored row is RETAINED but the material
 // record is domain-scoped (domainUnlockRealmId = ARTIFACT_UNLOCK_REALM_ID)
 // and the material arm composes isDomainScopedAcquisitionEnabled - under
@@ -31,7 +31,7 @@ describe('BattleLootSystem — Đoán Bảo Thạch drop deferred (doc §6, M-F-
   })
 
   it('stage dưới Trúc Cơ không rơi đá — bảng Luyện Khí không chứa nó', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0) // mọi roll trúng/draw entry đầu
+    vi.spyOn(Math, 'random').mockReturnValue(0) // moi roll trung/draw entry dau
 
     const { killEnemy, materialBag } = createLootTestSetup({
       realmId: 'qi_refining',
@@ -59,8 +59,8 @@ describe('BattleLootSystem — Đoán Bảo Thạch drop deferred (doc §6, M-F-
   })
 
   it('pool draw trượt qua đá (roll vào equipment_any) thì không rơi', () => {
-    // rng 0.999 -> roll 59.94/60 -> entry cuối = equipment_any; registry
-    // trống nên không có gì rơi.
+    // rng 0.999 -> roll 59.94/60 -> entry cuoi = equipment_any; registry
+    // trong nen khong co gi roi.
     vi.spyOn(Math, 'random').mockReturnValue(0.999)
 
     const { killEnemy, materialBag } = createLootTestSetup({
@@ -102,7 +102,7 @@ describe('BattleLootSystem — Đoán Bảo Thạch drop deferred (doc §6, M-F-
     const battleEnemy = createDeadEnemy('mob')
 
     loot.processDefeatedEnemies([battleEnemy], null)
-    // giả lập entity vẫn còn trong mảng do caller quên filter — rewardGranted đã true
+    // gia lap entity van con trong mang do caller quen filter - rewardGranted da true
     loot.processDefeatedEnemies([battleEnemy], null)
 
     expect(materialBag.getAmount('doan_bao_thach')).toBe(0)
@@ -132,7 +132,7 @@ describe('BattleLootSystem — EXP Bản Mệnh Pháp Bảo deferred (doc §5.2,
   })
 
   it('quái chết KHÔNG cấp artifact EXP khi domain chưa mở (Trúc Cơ, artifact còn dormant)', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.999) // pool draw trượt đá, cô lập EXP
+    vi.spyOn(Math, 'random').mockReturnValue(0.999) // pool draw truot da, co lap EXP
 
     const { killEnemy, loot, player } = createLootTestSetup({
       realmId: 'foundation_establishment',

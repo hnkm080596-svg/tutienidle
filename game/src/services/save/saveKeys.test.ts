@@ -24,8 +24,9 @@ describe('saveKeys - per-account resolution (spec F8)', () => {
     expect(resolveSaveKey()).toBe('tien-hiep-idle-save:account-uuid-2')
   })
 
-  it('guest-mode sessions always resolve to the guest slot', () => {
-    expect(accountIdForSession({ mode: 'guest', userId: 'anon-uuid' })).toBe('guest')
+  it('guest sessions with a Supabase userId scope to it (B1.5) - only userId-less guests share the slot', () => {
+    expect(accountIdForSession({ mode: 'guest', userId: 'anon-uuid' })).toBe('anon-uuid')
+    expect(accountIdForSession({ mode: 'guest' })).toBe('guest')
   })
 
   it('login/register sessions resolve to userId, falling back to loginId (mock auth)', () => {

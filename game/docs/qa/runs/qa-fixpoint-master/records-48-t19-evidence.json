@@ -1,0 +1,236 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-VERIFY-T19",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npm run verify (type-check + build + vitest)",
+    "cwd": "game/",
+    "artifactPath": "evidence/t19-verify-final.log",
+    "artifactHash": "bc83fd1c1aca9758684f38b3f0ce75b3cf9c27c9a75f68872b0106b0face4d85",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T12:15:00Z",
+    "finishedAt": "2026-10-01T13:00:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1",
+     "I-DS-1",
+     "I-CC-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "verify GREEN on T19 tip a2bd826f: 8070 tests passed, 5 expected-fail, 4 skipped"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-T19",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npx vitest run tests/architecture/betaWriterBoundsTc8.qa.test.ts tests/architecture/betaConsumerSeamsB8.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/t19-pins.log",
+    "artifactHash": "93e05bd9532a746e0663713d602f941f2ab9232099342713f6b7643b12af5e6a",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T12:15:00Z",
+    "finishedAt": "2026-10-01T13:00:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "34 pin asserts green (22 TC8/B10 + 12 A10) + F-B8-4 unskipped"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-SUITE-T19",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npx vitest run tests/architecture src/services/save (1129 tests incl. all TC8/B10/A10 pins + controls)",
+    "cwd": "game/",
+    "artifactPath": "evidence/t19-pin-suite.log",
+    "artifactHash": "c674c20f8b65ade9821a50d7cbe018e51d0f278ed766506f933a2cde9c46cb85",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T12:15:00Z",
+    "finishedAt": "2026-10-01T13:00:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "1129 scoped tests green incl. all pins + controls on T19 state"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-T19",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "19 hand mutants reverted one new gate each (rebuild-trust, marker bound, pool realm, stage realm, affix bounds, dormant gates...) - all must fail pins",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-all-t19.log",
+    "artifactHash": "36b5b86cc01884df033ec2879f611aec2739e999ccf4b0b04423b7f5bbc6c989",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T12:15:00Z",
+    "finishedAt": "2026-10-01T13:00:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "19/19 mutants KILLED on the T19 wave gates"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-A10",
+    "kind": "EXECUTED_PROPERTY",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "A10 blind-round probe suite (13 forged-impossible save probes through full acceptance chain)",
+    "cwd": "game/",
+    "artifactPath": "evidence/a10-scope-write-attacks.test.ts",
+    "artifactHash": "96532d55fd272f9392a4f8c48c1f8c1dff38ce8235b1d9eaf2569be05acc558d",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T12:15:00Z",
+    "finishedAt": "2026-10-01T13:00:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "A10 blind probes - 13 forged-impossible save claims exercised full acceptance chain"
+    ],
+    "limitations": [
+     "probe file sanitized for P15 (em-dashes->hyphens in comments only)"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-TC8",
+    "kind": "EXECUTED_PROPERTY",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "TC8 blind-round probe suite (hostile save payloads vs validation/restore/emit)",
+    "cwd": "game/",
+    "artifactPath": "evidence/tc8-hostile-save-probes.test.ts",
+    "artifactHash": "9a3a93388afbd9fd99f7eef64539b50306b10b97b1aca6156ed759892eecb712",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T12:15:00Z",
+    "finishedAt": "2026-10-01T13:00:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "TC8 blind probes - hostile payloads vs validation/restore/emit"
+    ],
+    "limitations": [
+     "probe file sanitized for P15 (em-dashes->hyphens in comments only)"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-REPORT-TC8",
+    "kind": "HISTORICAL",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "TC8 blind-round findings report (13 findings)",
+    "cwd": "game/",
+    "artifactPath": "evidence/tc8-findings.json",
+    "artifactHash": "bc077b1f89463a620838b73aa6a565f8758f7b8a97ced9a30f7f2fcbcd3f4f10",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T12:15:00Z",
+    "finishedAt": "2026-10-01T13:00:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "TC8 blind round report (13 findings)"
+    ],
+    "limitations": [
+     "report JSON archived, not re-executed"
+    ]
+   }
+  }
+ ]
+}

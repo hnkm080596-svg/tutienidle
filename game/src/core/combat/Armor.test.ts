@@ -1,8 +1,8 @@
 // @vitest-environment node
-// T5.4 (2026-09-01) — Armor K scale theo realmIndex (user-approved:
-// phương án A — K = 50 × (1 + realmIndex × 0.8)). Giữ DNA Last Epoch
-// (K mỗi level tăng, armor cũ giảm hiệu lực theo tiến trình) nhưng
-// đơn giản hoá theo realm (10 bậc) thay vì per-level.
+// T5.4 (2026-09-01) - Armor K scale theo realmIndex (user-approved:
+// phuong an A - K = 50 x (1 + realmIndex x 0.8)). Giu DNA Last Epoch
+// (K moi level tang, armor cu giam hieu luc theo tien trinh) nhung
+// don gian hoa theo realm (10 bac) thay vi per-level.
 import { describe, expect, it } from 'vitest'
 import { getArmorMitigationPercent, armorKForRealm } from './Armor'
 
@@ -21,7 +21,7 @@ describe('Armor — K scale theo realmIndex (T5.4)', () => {
     const mortal = getArmorMitigationPercent(150, 0)
     const tribulation = getArmorMitigationPercent(150, 9)
 
-    expect(mortal).toBeCloseTo(0.75) // chạm trần
+    expect(mortal).toBeCloseTo(0.75) // cham tran
     expect(tribulation).toBeCloseTo(150 / (150 + 410), 6)
     expect(tribulation).toBeLessThan(0.3)
   })

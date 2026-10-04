@@ -1,12 +1,12 @@
 import type { BuffDefinition } from '../buff2/BuffDefinition'
-import type { StatType } from '../stats/StatTypes'
+import type { MainStatKey } from '../stats/StatTypes'
 
 export type PillEffectType =
   | 'heal'
   | 'cultivation'
   | 'buff'
   | 'permanent_stat'
-  // 4 effect MVP nghề Đan (2026-08-24, resource-professions-rework §5.1):
+  // 4 effect MVP nghe Dan (2026-08-24, resource-professions-rework sec5.1):
   | 'random_main_stat'
   | 'regen'
   | 'skill_insight'
@@ -14,32 +14,34 @@ export type PillEffectType =
 export interface PillEffect {
   type: PillEffectType
 
-  // Với 'permanent_stat'/'skill_insight': lượng flat cộng một lần.
+  // Voi 'permanent_stat'/'skill_insight': luong flat cong mot lan.
   value?: number
 
-  // Buff đầy đủ, dùng khi type === 'buff'. Pill không có registry
-  // buff riêng để tra theo id — effect mang theo definition luôn
-  // (BuffDefinition, template/authored data — PillTarget.applyBuff()
-  // resolves it into a runtime Buff via BuffSystem.apply(), giống
+  // Buff day du, dung khi type === 'buff'. Pill khong co registry
+  // buff rieng de tra theo id - effect mang theo definition luon
+  // (BuffDefinition, template/authored data - PillTarget.applyBuff()
+  // resolves it into a runtime Buff via BuffSystem.apply(), giong
   // GameManager.applyPersistentBuff()).
   buff?: BuffDefinition
 
-  // Dạng khi type === 'permanent_stat'.
-  stat?: StatType
+  // For 'permanent_stat'. Writes land in baseStats under the shared
+  // main-stat cap, so only MAIN_STAT_KEYS are meaningful here - the
+  // runtime also refuses non-main entries as authored drift.
+  stat?: MainStatKey
 
-  // ---- 'regen' (plan §5.4) — hồi HP/MP theo giây, thời gian thực ----
+  // ---- 'regen' (plan sec5.4) - hoi HP/MP theo giay, thoi gian thuc ----
   hpPerSecond?: number
 
   mpPerSecond?: number
 
   durationSeconds?: number
 
-  /** Nhóm stack — cùng nhóm refresh deadline, không cộng dồn. */
+  /** Nhom stack - cung nhom refresh deadline, khong cong don. */
   effectGroup?: string
 
-  /** Uống lại cộng tiếp thời lượng thay vì chỉ refresh deadline. */
+  /** Uong lai cong tiep thoi luong thay vi chi refresh deadline. */
   stackable?: boolean
 
-  // ---- 'cultivation' theo % yêu cầu tầng hiện tại (plan §5.5) ----
+  // ---- 'cultivation' theo % yeu cau tang hien tai (plan sec5.5) ----
   cultivationPercent?: number
 }

@@ -4,9 +4,9 @@ import { createDefaultPlayer } from '../player/Player'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
 import { equipment } from '../../data/equipment/equipment'
 
-// Task 16 (rework P5) — equip() gate ngang phẩm: instance.grade phải khớp
-// ĐÚNG phẩm nghề theo cảnh giới hiện tại của người chơi (canUseItemGrade),
-// không phải "đủ hoặc cao hơn" — lệch bậc nào cũng bị chặn.
+// Task 16 (rework P5) - equip() gate ngang pham: instance.grade phai khop
+// DUNG pham nghe theo canh gioi hien tai cua nguoi choi (canUseItemGrade),
+// khong phai "du hoac cao hon" - lech bac nao cung bi chan.
 describe('GameManager — equipItem() grade gate (rework P5, Task 16)', () => {
   function setup() {
     const manager = new GameManager()

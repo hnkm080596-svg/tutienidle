@@ -31,6 +31,7 @@ import {
   type LaneIndex,
 } from '@/core/battle/BattleLane'
 import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometry/combatInsets'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
 import { readTheBar } from '@/presentation/bridges/theBarBridge'
@@ -140,50 +141,50 @@ export { formatDotDamageText } from './combat/combatTextFormat'
 
 
 
-// Top-down 5-lane (2026-08-22) Ã¢â€ â€™ 2.5D migration (2026-08-24): 'flat' giÃ¡Â»Â¯
-// nguyÃƒÂªn palette legacy sau feature flag (BattlefieldRenderMode.ts);
-// 'perspective' chuyÃ¡Â»Æ’n sang BattlefieldBackdrop + lÃ†Â°Ã¡Â»â€ºi phÃ¡Â»â€˜i cÃ¡ÂºÂ£nh rÃ¡ÂºÂ¥t nhÃ¡ÂºÂ¡t
-// Ã„â€˜Ã¡Â»Æ’ texture Ã„â€˜Ã¡ÂºÂ¥t lÃƒÂ m chÃƒÂ­nh, trÃƒÂ¡nh lÃ¡Â»â„¢ cÃ¡ÂºÂ£m giÃƒÂ¡c bÃƒÂ n cÃ¡Â»Â 10 lane.
+// Top-down 5-lane (2026-08-22) a+' 2.5D migration (2026-08-24): 'flat' gia"-
+// nguyAan palette legacy sau feature flag (BattlefieldRenderMode.ts);
+// 'perspective' chuya"fn sang BattlefieldBackdrop + lAEdega">i pha"'i caoGBPnh raoJPYt nhao!t
+// A'a"f texture A'aoJPYt lA m chAnh, trA!nh la"(TM) caoGBPm giA!c bA n ca" 10 lane.
 const ARENA_COLOR = 0x14161c
 
-/** DoT text flush 3 lÃ¡ÂºÂ§n/giÃƒÂ¢y (plan Ã‚Â§7.2) Ã¢â‚¬â€ cÃ¡Â»Â­a sÃ¡Â»â€¢ gom 333,33ms. */
+/** DoT text flush 3 laosecn/giAcy (plan Asec7.2) aEUR" ca"a sa"* gom 333,33ms. */
 
-// Cast Time (2026-08-21) Ã¢â‚¬â€ cast bar hiÃ¡Â»â€¡n phÃƒÂ­a TRÃƒÅ N Ã„â€˜Ã¡ÂºÂ§u unit (Ã„â€˜Ã¡Â»â€˜i xÃ¡Â»Â©ng
-// vÃ¡Â»â€ºi label tÃƒÂªn hiÃ¡Â»â€¡n phÃƒÂ­a dÃ†Â°Ã¡Â»â€ºi), mÃƒÂ u vÃƒÂ ng tÃƒÂ¡ch hÃ¡ÂºÂ³n khÃ¡Â»Âi mÃ¡Â»Âi mÃƒÂ u sÃ¡Â»â€˜ nÃ¡ÂºÂ£y
-// (Ã„â€˜Ã¡Â»Â/trÃ¡ÂºÂ¯ng/vÃƒÂ ng chÃƒÂ³i cÃ¡Â»Â§a ChÃƒÂ­ MÃ¡ÂºÂ¡ng) Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng lÃ¡ÂºÂ«n Ã¢â‚¬â€ dÃƒÂ¹ng CÃƒâ„¢NG gold nhÃ¡ÂºÂ¡t
-// hÃ†Â¡n CRITICAL_DAMAGE_COLOR.
+// Cast Time (2026-08-21) aEUR" cast bar hia"+n phAa TRASN A'aosecu unit (A'a"'i xa"(c)ng
+// va">i label tAan hia"+n phAa dAEdega">i), mA u vA ng tA!ch hao3n kha"i ma"i mA u sa"' naoGBPy
+// (A'a"/trao-ng/vA ng chA3i ca"seca ChA Mao!ng) A'a"f khA'ng lao"n aEUR" dA1ng CA(TM)NG gold nhao!t
+// hAE!n CRITICAL_DAMAGE_COLOR.
 
-// NÃ¡ÂºÂ£y sÃ¡Â»â€˜ sÃƒÂ¡t thÃ†Â°Ã†Â¡ng (spec CombatUIredesign mÃ¡Â»Â¥c 10 Ã¢â‚¬â€ "Damage thÃƒÂ´ng
-// thÃ†Â°Ã¡Â»Âng vÃ¡ÂºÂ«n hiÃ¡Â»Æ’n thÃ¡Â»â€¹ trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p trÃƒÂªn enemy") Ã¢â‚¬â€ cÃƒÂ¹ng nguÃ¡Â»â€œn dÃ¡Â»Â¯ liÃ¡Â»â€¡u
-// event 'damage' mÃƒÂ  CombatStatusBar.vue (thanh trÃ¡ÂºÂ¡ng thÃƒÂ¡i) Ã„â€˜ang dÃƒÂ¹ng
-// Ã„â€˜Ã¡Â»Æ’ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t HP bar, chÃ¡Â»â€° khÃƒÂ¡c nÃ†Â¡i tiÃƒÂªu thÃ¡Â»Â¥ (Phaser vÃ¡ÂºÂ½ sÃ¡Â»â€˜ nÃ¡ÂºÂ£y lÃƒÂªn thay
-// vÃƒÂ¬ Vue vÃ¡ÂºÂ½ thanh mÃƒÂ¡u) Ã¢â‚¬â€ 1 event, 2 cÃƒÂ¡ch thÃ¡Â»Æ’ hiÃ¡Â»â€¡n trÃ¡Â»Â±c quan song song.
-// Ã„ÂÃ¡Â»Â cho sÃƒÂ¡t thÃ†Â°Ã†Â¡ng NHÃ¡ÂºÂ¬N vÃƒÂ o (target lÃƒÂ  player), trÃ¡ÂºÂ¯ng cho sÃƒÂ¡t thÃ†Â°Ã†Â¡ng
-// GÃƒâ€šY RA (target lÃƒÂ  quÃƒÂ¡i), vÃƒÂ ng riÃƒÂªng cho Ã„â€˜ÃƒÂ²n ChÃƒÂ­ MÃ¡ÂºÂ¡ng bÃ¡ÂºÂ¥t kÃ¡Â»Æ’ chiÃ¡Â»Âu.
-// TÃ¡Â»â€° lÃ¡Â»â€¡ theo CHIÃ¡Â»â‚¬U CAO 1 HÃƒâ‚¬NG lane (khÃƒÂ´ng phÃ¡ÂºÂ£i cÃ¡ÂºÂ£ battlefield nhÃ†Â° side-
-// view cÃ…Â©) Ã¢â‚¬â€ 5 lane top-down (2026-08-22), nhÃƒÂ¢n vÃ¡ÂºÂ­t phÃ¡ÂºÂ£i nhÃ¡Â»Â hÃ†Â¡n hÃ¡ÂºÂ³n
-// hÃƒÂ ng cÃ¡Â»Â§a nÃƒÂ³ Ã„â€˜Ã¡Â»Æ’ cÃƒÂ²n chÃ¡Â»Â«a lÃ¡Â»Â trÃƒÂªn/dÃ†Â°Ã¡Â»â€ºi, khÃƒÂ´ng Ã„â€˜ÃƒÂ¨ hÃƒÂ ng kÃ¡ÂºÂ¿ bÃƒÂªn.
+// NaoGBPy sa"' sA!t thAEdegAE!ng (spec CombatUIredesign ma"JPYc 10 aEUR" "Damage thA'ng
+// thAEdega"ng vao"n hia"fn tha"< tra"+/-c tiao?p trAan enemy") aEUR" cA1ng ngua""n da"- lia"+u
+// event 'damage' mA  CombatStatusBar.vue (thanh trao!ng thA!i) A'ang dA1ng
+// A'a"f caop nhaot HP bar, cha"o/oo khA!c nAE!i tiAau tha"JPY (Phaser vao1/2 sa"' naoGBPy lAan thay
+// vA! Vue vao1/2 thanh mA!u) aEUR" 1 event, 2 cA!ch tha"f hia"+n tra"+/-c quan song song.
+// Aa" cho sA!t thAEdegAE!ng NHao!N vA o (target lA  player), trao-ng cho sA!t thAEdegAE!ng
+// GAfaEURsY RA (target lAfA  quAfA!i), vAfA ng riAfAang cho A"aEUR AfA2n ChAfA MA!AoA!ng bA!AoAJPYt kA!A"AE' chiA!A"Au.
+// Ta"o/oo la"+ theo CHIa"EURU CAO 1 HAEURNG lane (khA'ng phaoGBPi caoGBP battlefield nhAEdeg side-
+// view cA(c)) aEUR" 5 lane top-down (2026-08-22), nhAcn vaot phaoGBPi nha" hAE!n hao3n
+// hA ng ca"seca nA3 A'a"f cA2n cha""a la" trAan/dAEdega">i, khA'ng A'A" hA ng kao? bAan.
 
-// Combat AI rework (plan Ã‚Â§12.1) Ã¢â‚¬â€ avatar Player LÃ¡Â»Å¡N GÃ¡ÂºÂ¤P Ã„ÂÃƒâ€I enemy: chÃ¡Â»â€°
-// nhÃƒÂ¢n lÃƒÂªn PLAYER sprite, khÃƒÂ´ng Ã„â€˜Ã¡Â»Â¥ng enemy/VFX footprint. KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cuÃ¡Â»â€˜i
-// = source aspect ratio Ãƒâ€” base character size Ãƒâ€” multiplier Ãƒâ€” depth scale.
-// Enemy art x2 (yÃƒÂªu cÃ¡ÂºÂ§u 2026-08-26) Ã¢â‚¬â€ PNG quÃƒÂ¡i hiÃ¡Â»Æ’n thÃ¡Â»â€¹ GÃ¡ÂºÂ¤P Ã„ÂÃƒâ€I: nhÃƒÂ¢n
-// Ã„â€˜ÃƒÂºng MÃ¡Â»ËœT LÃ¡ÂºÂ¦N tÃ¡ÂºÂ¡i sizeMultiplier, KHÃƒâ€NG cÃ¡Â»â„¢ng dÃ¡Â»â€œn vÃƒÂ o depth scale hay
-// spawn tween (boost). ÃƒÂp cho enemy DÃƒâ„¢NG PNG (kind='sprite', kÃ¡Â»Æ’ cÃ¡ÂºÂ£ Boss
-// Ã¢â‚¬â€ cÃƒÂ¹ng quy tÃ¡ÂºÂ¯c); fallback Rectangle giÃ¡Â»Â¯ kÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cÃ…Â© vÃƒÂ¬ khÃƒÂ´ng phÃ¡ÂºÂ£i
-// "hÃƒÂ¬nh Ã¡ÂºÂ£nh enemy".
-// Hero cÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh sÃƒÂ¡t mÃƒÂ©p trÃƒÂ¡i battlefield (top-down 5-lane, 2026-08-22 Ã¢â‚¬â€
-// thay layout side-view cÃ…Â© cÃƒÂ³ layout side-view cÃ…Â©) Ã¢â‚¬â€ chÃ¡Â»Â«a 1
-// lÃ¡Â»Â nhÃ¡Â»Â Ã„â€˜Ã¡Â»Æ’ sprite khÃƒÂ´ng bÃ¡Â»â€¹ cÃ¡ÂºÂ¯t viÃ¡Â»Ân trÃƒÂ¡i.
+// Combat AI rework (plan Asec12.1) aEUR" avatar Player La"sN Gao*P AA"I enemy: cha"o/oo
+// nhAcn lAan PLAYER sprite, khA'ng A'a"JPYng enemy/VFX footprint. KAch thAEdega">c cua"'i
+// = source aspect ratio A- base character size A- multiplier A- depth scale.
+// Enemy art x2 (yAau caosecu 2026-08-26) aEUR" PNG quA!i hia"fn tha"< Gao*P AA"I: nhAcn
+// A'Aong Ma" T Lao|N tao!i sizeMultiplier, KHA"NG ca"(TM)ng da""n vA o depth scale hay
+// spawn tween (boost). Ap cho enemy DA(TM)NG PNG (kind='sprite', ka"f caoGBP Boss
+// aEUR" cA1ng quy tao-c); fallback Rectangle gia"- kAch thAEdega">c cA(c) vA! khA'ng phaoGBPi
+// "hA!nh aoGBPnh enemy".
+// Hero ca"' A'a"<nh sA!t mA(c)p trA!i battlefield (top-down 5-lane, 2026-08-22 aEUR"
+// thay layout side-view cA(c) cA3 layout side-view cA(c)) aEUR" cha""a 1
+// la" nha" A'a"f sprite khA'ng ba"< cao-t via"n trA!i.
 
 
-// Audit P0-3 Ã¢â‚¬â€ anchor THÃƒâ€šN TRUNG TÃƒÂNH cho enemy reward particle,
-// chuÃ¡ÂºÂ©n hoÃƒÂ¡ theo bounds cÃ¡Â»Â§a chÃƒÂ­nh sprite enemy (0.5, ~0.4 tÃ¡Â»Â« chÃƒÂ¢n).
-// Enemy khÃƒÂ´ng cÃƒÂ³ catalog anchor nhÃ†Â° Player (PlayerVisualProfiles) nÃƒÂªn
-// KHÃƒâ€NG Ã„ÂÃ†Â¯Ã¡Â»Â¢C mÃ†Â°Ã¡Â»Â£n anchor Player Ã¢â‚¬â€ vÃ¡Â»â€¹ trÃƒÂ­ particle khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c Ã„â€˜Ã¡Â»â€¢i khi
-// Player Ã„â€˜Ã¡Â»â€¢i visual profile.
+// Audit P0-3 Aca'!aEUR anchor THAfaEURsN TRUNG TAfANH cho enemy reward particle,
+// chuao(c)n hoA! theo bounds ca"seca chAnh sprite enemy (0.5, ~0.4 ta"" chAcn).
+// Enemy khA'ng cA3 catalog anchor nhAEdeg Player (PlayerVisualProfiles) nAan
+// KHA"NG AAE-a"cC mAEdega"GBPn anchor Player aEUR" va"< trA particle khA'ng A'AEdega"GBPc A'a"*i khi
+// Player A'a"*i visual profile.
 
-// Internal (module boundary â€” combat/* Ä‘á»c qua scene ref).
+// Internal (module boundary - combat/* doc qua scene ref).
 export interface CombatScenePayload {
   sourceId?: string
   targetId?: string
@@ -193,8 +194,8 @@ export interface CombatScenePayload {
    *  slot cast at all (charge-continuation/skipped turns): no lunge, no
    *  clip, just the impact ack pacing (Clean-B F-CB2-02). */
   slotRole?: 'basic' | 'special' | 'ultimate' | 'none'
-  // Player visual profile bridge (body-anchor plan Ã‚Â§4.2) Ã¢â‚¬â€ event
-  // 'player_visual_profile_changed' gÃ¡Â»Â­i kÃƒÂ¨m ID hÃƒÂ¬nh thÃƒÂ¡i mÃ¡Â»â€ºi.
+  // Player visual profile bridge (body-anchor plan Asec4.2) aEUR" event
+  // 'player_visual_profile_changed' ga"i kA"m ID hA!nh thA!i ma">i.
   profileId?: string
   // Armed/unarmed discriminator (art-seam wave, user ruling Q2): mortal
   // resolves 'pham_nhan' when armed, 'pham_nhan_unarmed' when not. Absent
@@ -208,10 +209,10 @@ interface ResizeSize {
 }
 
 interface EntitySprite {
-  // Player = Sprite profile art, enemy = Sprite Mortal art batch HOÃ¡ÂºÂ¶C
-  // Rectangle mÃƒÂ u (id ngoÃƒÂ i batch). `kind` phÃƒÂ¢n biÃ¡Â»â€¡t Ã„â€˜Ã¡Â»Æ’ biÃ¡ÂºÂ¿t dÃƒÂ¹ng
+  // Player = Sprite profile art, enemy = Sprite Mortal art batch HOaoPC
+  // Rectangle mA u (id ngoA i batch). `kind` phAcn bia"+t A'a"f biao?t dA1ng
   // setFillStyle() hay setTint()/clearTint() (flashColor()/resetVisual())
-  // Ã¢â‚¬â€ mÃ¡Â»Âi thao tÃƒÂ¡c position/scale/rotation/alpha khÃƒÂ¡c Ã„â€˜Ã¡Â»Âu dÃƒÂ¹ng chung API.
+  // aEUR" ma"i thao tA!c position/scale/rotation/alpha khA!c A'a"u dA1ng chung API.
   kind: 'rect' | 'sprite'
   rect: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Sprite
   label: Phaser.GameObjects.Text
@@ -221,13 +222,13 @@ interface EntitySprite {
   healthBar?: EnemyHealthBar
 
   /**
-   * KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc nguÃ¡Â»â€œn cÃ¡Â»Â§a texture sprite nÃƒÂ y Ã¢â‚¬â€ player theo profile hiÃ¡Â»â€¡n
-   * hÃƒÂ nh (this.playerSourceSize), enemy art batch 1254Ã‚Â². BÃ¡ÂºÂ¯t buÃ¡Â»â„¢c cho
-   * mÃ¡Â»Âi kind='sprite' Ã„â€˜Ã¡Â»Æ’ setDisplaySize giÃ¡Â»Â¯ Ã„â€˜ÃƒÂºng tÃ¡Â»â€° lÃ¡Â»â€¡ khung hÃƒÂ¬nh.
+   * KAch thAEdega">c ngua""n ca"seca texture sprite nA y aEUR" player theo profile hia"+n
+   * hA nh (this.playerSourceSize), enemy art batch 1254A2. Bao-t bua"(TM)c cho
+   * ma"i kind='sprite' A'a"f setDisplaySize gia"- A'Aong ta"o/oo la"+ khung hA!nh.
    */
   sourceSize?: { w: number; h: number }
 
-  // How much of its authored box this sprite's art fills (Spec C §4.1) --
+  // How much of its authored box this sprite's art fills (Spec C sec4.1) --
   // duplicated from combatTypes.ts's EntitySprite (see the note above on why
   // this local interface mirrors that one); combat-grid-view.ts writes this
   // field onto objects stored in `sprites`, which is typed against THIS
@@ -243,14 +244,14 @@ interface EntitySprite {
   personWidth?: number
   personHeight?: number
 
-  // Combat AI rework (plan Ã‚Â§12.1) + enemy art x2 (2026-08-26) Ã¢â‚¬â€ player
-  // sprite Ãƒâ€”2, enemy PNG Ãƒâ€”2 (fallback Rectangle Ãƒâ€”1).
+  // Combat AI rework (plan Asec12.1) + enemy art x2 (2026-08-26) aEUR" player
+  // sprite A-2, enemy PNG A-2 (fallback Rectangle A-1).
   sizeMultiplier: number
 
-  // 2.5D presentation (2026-08-24) Ã¢â‚¬â€ bÃƒÂ³ng ellipse trÃƒÂªn mÃ¡ÂºÂ·t Ã„â€˜Ã¡ÂºÂ¥t (chÃ¡Â»â€° tÃ¡ÂºÂ¡o
-  // Ã¡Â»Å¸ perspective), foot point + column float lÃ¡ÂºÂ§n chiÃ¡ÂºÂ¿u gÃ¡ÂºÂ§n nhÃ¡ÂºÂ¥t phÃ¡Â»Â¥c vÃ¡Â»Â¥
-  // depth sort, vÃƒÂ  boost object cho tween pop (ChÃƒÂ­ MÃ¡ÂºÂ¡ng) KHÃƒâ€NG Ã„â€˜Ã¡Â»Â¥ng vÃƒÂ o
-  // scale/geometry mÃƒÂ  projection ghi mÃ¡Â»â€”i frame.
+  // 2.5D presentation (2026-08-24) aEUR" bA3ng ellipse trAan mao*t A'aoJPYt (cha"o/oo tao!o
+  // a"Y perspective), foot point + column float laosecn chiao?u gaosecn nhaoJPYt pha"JPYc va"JPY
+  // depth sort, vA  boost object cho tween pop (ChA Mao!ng) KHA"NG A'a"JPYng vA o
+  // scale/geometry mA  projection ghi ma"-i frame.
   shadow?: Phaser.GameObjects.Ellipse
   boost: { value: number }
   // Mirrors combatTypes.ts EntitySprite (see the note above): procedural
@@ -296,9 +297,9 @@ interface CastBarSprite {
  * (position interpolation, discrete animation...).
  */
 export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
-  // ui-discoverability-refactor-plan.md Ã‚Â§3.2 Ã¢â‚¬â€ module tÃƒÂ¡ch khÃ¡Â»Âi god-class,
-  // khÃ¡Â»Å¸i tÃ¡ÂºÂ¡o LAZY (Object.create(CombatScene.prototype) trong test KHÃƒâ€NG
-  // chÃ¡ÂºÂ¡y field initializer Ã¢â‚¬â€ getter an toÃƒÂ n cho cÃ¡ÂºÂ£ test lÃ¡ÂºÂ«n runtime).
+  // ui-discoverability-refactor-plan.md Asec3.2 aEUR" module tA!ch kha"i god-class,
+  // kha"Yi tao!o LAZY (Object.create(CombatScene.prototype) trong test KHA"NG
+  // chao!y field initializer aEUR" getter an toA n cho caoGBP test lao"n runtime).
   private _damageText?: CombatDamageText
 
   private get damageText(): CombatDamageText {
@@ -307,9 +308,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return this._damageText
   }
 
-  // 6A-T4/T5 — HUD player trong canvas; lazy như damageText để
-  // Object.create(prototype) test không chạy field initializer.
-  // Setter cho test stub (prototype object cho phép gán fake hud).
+  // 6A-T4/T5 - HUD player trong canvas; lazy nhu damageText de
+  // Object.create(prototype) test khong chay field initializer.
+  // Setter cho test stub (prototype object cho phep gan fake hud).
   private _playerHud?: PlayerHudLayer
 
   get playerHud(): PlayerHudLayer | undefined {
@@ -349,7 +350,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private _vfxSpawner?: CombatVfxSpawner
 
-  // Internal (module boundary — combat-action-feedback/snapshot-reconcile
+  // Internal (module boundary - combat-action-feedback/snapshot-reconcile
   // drive VFX spawns through this owner).
   get vfxSpawner(): CombatVfxSpawner {
     this._vfxSpawner ??= new CombatVfxSpawner(this)
@@ -357,7 +358,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return this._vfxSpawner
   }
 
-  // Action feedback + ack pacing (Wave-3 split) — lazy như các module trên.
+  // Action feedback + ack pacing (Wave-3 split) - lazy nhu cac module tren.
   private _actionFeedback?: CombatActionFeedback
 
   private get actionFeedback(): CombatActionFeedback {
@@ -374,19 +375,19 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return this._rewardGourd
   }
 
-  // Task 8 (perf-optimize-pass phần 2) — nội suy vị trí X + hình thái
-  // Player/body-anchor, cùng pattern lazy getter với các module trên.
+  // Task 8 (perf-optimize-pass phan 2) - noi suy vi tri X + hinh thai
+  // Player/body-anchor, cung pattern lazy getter voi cac module tren.
   private _positionInterp?: CombatPositionInterpolation
 
-  // Internal (module boundary — combat-animation-playback deletes entries).
+  // Internal (module boundary - combat-animation-playback deletes entries).
   get positionInterp(): CombatPositionInterpolation {
     this._positionInterp ??= new CombatPositionInterpolation(() => this.time.now)
 
     return this._positionInterp
   }
 
-  // Animation playback + death sequence (Wave-3 split) — lazy như các
-  // module trên.
+  // Animation playback + death sequence (Wave-3 split) - lazy nhu cac
+  // module tren.
   private _animationPlayback?: CombatAnimationPlayback
 
   private get animationPlayback(): CombatAnimationPlayback {
@@ -403,17 +404,17 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return this._playerVisual
   }
 
-  // Countdown telegraph chase (Wave-3 split) — lazy như các module trên.
+  // Countdown telegraph chase (Wave-3 split) - lazy nhu cac module tren.
   private _telegraph?: CombatTelegraph
 
-  // Internal (module boundary — combat-snapshot-reconcile drives the chase).
+  // Internal (module boundary - combat-snapshot-reconcile drives the chase).
   get telegraph(): CombatTelegraph {
     this._telegraph ??= new CombatTelegraph(this)
 
     return this._telegraph
   }
 
-  // Snapshot→sprite reconcile (Wave-3 split) — lazy như các module trên.
+  // Snapshot->sprite reconcile (Wave-3 split) - lazy nhu cac module tren.
   private _snapshotReconcile?: CombatSnapshotReconcile
 
   private get snapshotReconcile(): CombatSnapshotReconcile {
@@ -427,47 +428,47 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // visible + the legacy player materialized flag). Eager field: pure
   // state container, safe to construct before Phaser systems exist.
   readonly entityVisual = new CombatEntityVisualLifecycle(this)
-  // ChÃ¡Â»â€° tÃ¡Â»â€œn tÃ¡ÂºÂ¡i Ã¡Â»Å¸ chÃ¡ÂºÂ¿ Ã„â€˜Ã¡Â»â„¢ 'flat' (renderer legacy cÃ¡ÂºÂ§n nÃ¡Â»Ân phÃ¡ÂºÂ³ng Ã„â€˜Ã¡ÂºÂ·c);
-  // 'perspective' thay bÃ¡ÂºÂ±ng BattlefieldBackdrop hÃ¡Â»â„¢i tÃ¡Â»Â¥ hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh.
-  // Battlefield Slot (2026-09-06) — required-property `| undefined` để
-  // thoả CombatGridViewHost (ngữ nghĩa giữ nguyên, CombatGridView tự guard).
+  // Cha"o/oo ta""n tao!i a"Y chao? A'a"(TM) 'flat' (renderer legacy caosecn na"n phao3ng A'ao*c);
+  // 'perspective' thay bao+/-ng BattlefieldBackdrop ha"(TM)i ta"JPY haou caoGBPnh.
+  // Battlefield Slot (2026-09-06) - required-property `| undefined` de
+  // thoa CombatGridViewHost (ngu nghia giu nguyen, CombatGridView tu guard).
   arenaRect: Phaser.GameObjects.Rectangle | undefined
 
-  // Projection layer Ã¢â‚¬â€ nguÃ¡Â»â€œn DUY NHÃ¡ÂºÂ¤T cho mÃ¡Â»Âi quy Ã„â€˜Ã¡Â»â€¢i gridÃ¢â€ â€screen kÃ¡Â»Æ’ cÃ¡ÂºÂ£
-  // flat (2 mode cÃƒÂ¹ng interface BattleGridProjection nÃƒÂªn phÃ¡ÂºÂ§n cÃƒÂ²n lÃ¡ÂºÂ¡i cÃ¡Â»Â§a
-  // scene khÃƒÂ´ng cÃ¡ÂºÂ§n biÃ¡ÂºÂ¿t mode Ã„â€˜ang chÃ¡ÂºÂ¡y).
+  // Projection layer aEUR" ngua""n DUY NHao*T cho ma"i quy A'a"*i grida+"screen ka"f caoGBP
+  // flat (2 mode cA1ng interface BattleGridProjection nAan phaosecn cA2n lao!i ca"seca
+  // scene khA'ng caosecn biao?t mode A'ang chao!y).
   private renderMode: BattlefieldRenderMode = getBattlefieldRenderMode()
-  // Battlefield Slot (2026-09-06) — khai báo required-property kiểu
-  // `| undefined` (thay `?:`) để thoả CombatGridViewHost: ngữ nghĩa giống
-  // hệt (có lúc undefined), chỉ khác chỗ interface yêu cầu property luôn
-  // TỒN TẠI trên type (CombatGridView tự guard trước khi đọc).
+  // Battlefield Slot (2026-09-06) - khai bao required-property kieu
+  // `| undefined` (thay `?:`) de thoa CombatGridViewHost: ngu nghia giong
+  // het (co luc undefined), chi khac cho interface yeu cau property luon
+  // TON TAI tren type (CombatGridView tu guard truoc khi doc).
   projection: BattleGridProjection | undefined
   private backdrop?: BattlefieldBackdropHandle
 
-  /** Variant Thanh VÃƒÂ¢n Ã„â€˜ang dÃƒÂ¹ng (season/time, override qua localStorage). */
-  // Variant Thanh VÃƒÂ¢n cÃ¡Â»Â§a PHIÃƒÅ N Ã¢â‚¬â€ peek (cache module) trÃ¡ÂºÂ£ preset cÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh
-  // spring/morning lÃƒÂºc boot; battle_end chÃ¡Â»Ân + swap variant kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p.
+  /** Variant Thanh VAcn A'ang dA1ng (season/time, override qua localStorage). */
+  // Variant Thanh VAcn ca"seca PHIASN aEUR" peek (cache module) traoGBP preset ca"' A'a"<nh
+  // spring/morning lAoc boot; battle_end cha"n + swap variant kao? tiao?p.
   private thanhVanVariant: ThanhVanVariant = peekThanhVanVariant()
 
-  /** true giÃ¡Â»Â¯a battle_start vÃƒÂ  battle_end Ã¢â‚¬â€ cÃ¡ÂºÂ¥m swap backdrop giÃ¡Â»Â¯a trÃ¡ÂºÂ­n. */
+  /** true gia"-a battle_start vA  battle_end aEUR" caoJPYm swap backdrop gia"-a traon. */
   private inBattle = false
 
   /**
-   * Generation token cho background: battle_end cÃ¡ÂºÂ¥p token mÃ¡Â»â€ºi cho lÃ¡ÂºÂ§n
-   * load hiÃ¡Â»â€¡n hÃƒÂ nh, battle_start tÃ„Æ’ng token Ã„â€˜Ã¡Â»Æ’ callback load cÃ…Â© khÃƒÂ´ng
-   * bao giÃ¡Â»Â swap nhÃ¡ÂºÂ§m vÃƒÂ o giÃ¡Â»Â¯a trÃ¡ÂºÂ­n (yÃƒÂªu cÃ¡ÂºÂ§u 2026-08-26).
+   * Generation token cho background: battle_end caoJPYp token ma">i cho laosecn
+   * load hia"+n hA nh, battle_start tAfng token A'a"f callback load cA(c) khA'ng
+   * bao gia" swap nhaosecm vA o gia"-a traon (yAau caosecu 2026-08-26).
    */
   private backdropGeneration = 0
 
-  /** true khi nÃ¡Â»Ân lÃƒÂ  art modular Ã¢â‚¬â€ grid lines/border khÃƒÂ´ng vÃ¡ÂºÂ½ Ã„â€˜ÃƒÂ¨ lÃƒÂªn art. */
+  /** true khi na"n lA  art modular aEUR" grid lines/border khA'ng vao1/2 A'A" lAan art. */
   usingArtBackdrop = false
-  // Battlefield Slot (2026-09-06) — required-property `| undefined` để
-  // thoả CombatGridViewHost (ngữ nghĩa giữ nguyên, CombatGridView tự guard).
+  // Battlefield Slot (2026-09-06) - required-property `| undefined` de
+  // thoa CombatGridViewHost (ngu nghia giu nguyen, CombatGridView tu guard).
   gridGraphics: Phaser.GameObjects.Graphics | undefined
 
   sprites = new Map<string, EntitySprite>()
 
-  // R5 (AR-29) / S3 — encapsulated helpers own their maps. Scene exposes
+  // R5 (AR-29) / S3 - encapsulated helpers own their maps. Scene exposes
   // read-only views; mutation goes through the helpers' owned
   // setInterpolationTarget/snap/delete/clear and cast-bar API.
   get interpolations(): ReadonlyMap<string, PositionInterpolation> {
@@ -478,7 +479,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return this.castBar.castBars
   }
 
-  // Combat Grid Rework Ã¢â‚¬â€ DOT VFX theo (targetId + ailmentId), bÃƒÂ¡m target.
+  // Combat Grid Rework aEUR" DOT VFX theo (targetId + ailmentId), bA!m target.
   statuses = new Map<
     string,
     {
@@ -494,39 +495,39 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
   >()
 
-  // Internal (module boundary — combat/combat-animation-playback.ts owns the
+  // Internal (module boundary - combat/combat-animation-playback.ts owns the
   // death sequence; reconcile reads these to skip in-flight deaths).
   dyingIds = new Set<string>()
   playerDying = false
 
-  // Combat Art Pipeline Task 5 (2026-09-05) — id sprite ĐÃ BIẾT theo phe,
-  // riêng cho luồng 'turn_battle_entity_snapshot' (KHÔNG dùng chung với
-  // reconcileEnemySprites()/this.sprites — nếu dùng chung, side này có thể
-  // xóa nhầm sprite của side kia vì cả hai đều lưu chung trong `this.sprites`).
-  // Cập nhật lại sau mỗi lần planCombatantSpriteReconciliation() chạy.
-  // Internal (module boundary — combat-snapshot-reconcile owns the sets).
+  // Combat Art Pipeline Task 5 (2026-09-05) - id sprite DA BIET theo phe,
+  // rieng cho luong 'turn_battle_entity_snapshot' (KHONG dung chung voi
+  // reconcileEnemySprites()/this.sprites - neu dung chung, side nay co the
+  // xoa nham sprite cua side kia vi ca hai deu luu chung trong `this.sprites`).
+  // Cap nhat lai sau moi lan planCombatantSpriteReconciliation() chay.
+  // Internal (module boundary - combat-snapshot-reconcile owns the sets).
   knownTurnBattlePlayerIds = new Set<string>()
   knownTurnBattleEnemyIds = new Set<string>()
 
-  // Spawn telegraph (2026-08-24) Ã¢â‚¬â€ VFX handle theo pending enemy id:
-  // reconcile tÃ¡Â»Â« SNAPSHOT positions.spawningEnemies (id biÃ¡ÂºÂ¿n mÃ¡ÂºÂ¥t =
-  // materialize Ã¢â€ â€™ flash + fade-in enemy sprite). Flat mode khÃƒÂ´ng chÃ¡ÂºÂ¡y
-  // (renderer legacy giÃ¡Â»Â¯ nguyÃƒÂªn hÃƒÂ nh vi cÃ…Â©).
+  // Spawn telegraph (2026-08-24) aEUR" VFX handle theo pending enemy id:
+  // reconcile ta"" SNAPSHOT positions.spawningEnemies (id biao?n maoJPYt =
+  // materialize a+' flash + fade-in enemy sprite). Flat mode khA'ng chao!y
+  // (renderer legacy gia"- nguyAan hA nh vi cA(c)).
   spawnVfxHandles = new Map<string, { handle: EnemySpawnVfxHandle; progress: number }>()
   // The materialize marks that used to sit here moved to entityVisual
   // (combat-entity-visual-lifecycle.ts), the one visibility-state owner.
 
-  // Party countdown telegraph (Turn-Based Wave Redesign, 2026-09-06) —
-  // handle riêng cho player + companion lúc đếm 3→2→1, TÁCH KHỎI
-  // spawnVfxHandles (dành cho enemy wave telegraph) vì lifecycle khác hẳn:
-  // mọi thành viên party materialize CÙNG LÚC theo 1 countdownProgress
-  // chung, không phải từng id một như enemy. KHÔNG đụng
-  // reconcilePlayerSpawn() (dành riêng cho legacy real-time, single-id) —
-  // xem spec §6b lý do tách biệt hoàn toàn.
+  // Party countdown telegraph (Turn-Based Wave Redesign, 2026-09-06) -
+  // handle rieng cho player + companion luc dem 3->2->1, TACH KHOI
+  // spawnVfxHandles (danh cho enemy wave telegraph) vi lifecycle khac han:
+  // moi thanh vien party materialize CUNG LUC theo 1 countdownProgress
+  // chung, khong phai tung id mot nhu enemy. KHONG dung
+  // reconcilePlayerSpawn() (danh rieng cho legacy real-time, single-id) -
+  // xem spec sec6b ly do tach biet hoan toan.
   turnCountdownSpawnVfxHandles = new Map<string, EnemySpawnVfxHandle>()
   // Pre-combat gating ids moved to entityVisual (pending set).
 
-  // Task 9 (telegraph interpolation) — countdownProgress from the snapshot is
+  // Task 9 (telegraph interpolation) - countdownProgress from the snapshot is
   // a TARGET, not a frame to paint. The chase state (target/shown/segment/
   // snapshotAt) lives inside combat/combat-telegraph.ts; the read-only
   // passthroughs below exist for existing observers (same pattern as
@@ -539,17 +540,17 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return this.telegraph.shown
   }
 
-  // Player spawn telegraph (plan Ã‚Â§12.2) Ã¢â‚¬â€ handle DUY NHÃ¡ÂºÂ¤T cho telegraph
-  // cÃ¡Â»Â§a avatar (preset 'player_spawn'); entityVisual.playerMaterialized false = KHÃƒâ€NG
-  // hiÃ¡Â»â€¡n Player sprite. Pending telegraph vÃƒÂ  materialized sprite loÃ¡ÂºÂ¡i
-  // trÃ¡Â»Â« nhau Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng render hai lÃ¡ÂºÂ§n.
+  // Player spawn telegraph (plan Asec12.2) aEUR" handle DUY NHao*T cho telegraph
+  // ca"seca avatar (preset 'player_spawn'); entityVisual.playerMaterialized false = KHA"NG
+  // hia"+n Player sprite. Pending telegraph vA  materialized sprite loao!i
+  // tra"" nhau A'a"f khA'ng render hai laosecn.
   playerSpawnHandle?: EnemySpawnVfxHandle
   // The playerMaterialized flag moved to entityVisual.playerMaterialized.
 
-  // ================= Player visual profile (body-anchor plan Ã‚Â§4) ======
-  // Profile hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€ Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« Phaser registry lÃƒÂºc create() vÃƒÂ  cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t
-  // qua event 'player_visual_profile_changed' (bridge Ã¡Â»Å¸ PhaserCanvas.vue).
-  // Task 8 — public: combat-player-visual.ts ghi trực tiếp qua scene ref.
+  // ================= Player visual profile (body-anchor plan Asec4) ======
+  // Profile hia"+n hA nh aEUR" A'a"c ta"" Phaser registry lAoc create() vA  caop nhaot
+  // qua event 'player_visual_profile_changed' (bridge a"Y PhaserCanvas.vue).
+  // Task 8 - public: combat-player-visual.ts ghi truc tiep qua scene ref.
   playerProfileId: PlayerVisualProfileId = 'mortal'
   playerProfile: PlayerVisualProfile = PLAYER_VISUAL_PROFILES.mortal
 
@@ -559,54 +560,54 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // Internal (module boundary - combat-animation-playback, grid view).
   playerArmed = true
 
-  /** KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc nguÃ¡Â»â€œn cÃ¡Â»Â§a texture combat Ã„â€˜ang gÃ¡ÂºÂ¯n trÃƒÂªn player sprite. */
+  /** KAch thAEdega">c ngua""n ca"seca texture combat A'ang gao-n trAan player sprite. */
   playerSourceSize = { ...PLAYER_VISUAL_PROFILES.mortal.combatSourceSize }
 
-  // Debug body anchors (plan Ã‚Â§5.4) Ã¢â‚¬â€ dev-only, bÃ¡ÂºÂ­t qua
-  // localStorage['debug.playerBodyAnchors']='1'; khÃƒÂ´ng cÃƒÂ³ UI production.
+  // Debug body anchors (plan Asec5.4) aEUR" dev-only, baot qua
+  // localStorage['debug.playerBodyAnchors']='1'; khA'ng cA3 UI production.
   readonly debugBodyAnchorsEnabled =
     typeof window !== 'undefined' && window.localStorage?.getItem('debug.playerBodyAnchors') === '1'
   debugAnchorGraphics?: Phaser.GameObjects.Graphics
 
-  // ================= Reward gourd + stream state (plan Ã‚Â§6/Ã‚Â§7) =========
+  // ================= Reward gourd + stream state (plan Asec6/Asec7) =========
   gourdPlacement = computeGourdPlacement({ canvasHeight: 0, bottomInset: 0 })
 
   /**
-   * View hÃ¡Â»â€œ lÃƒÂ´: Image art thÃ¡ÂºÂ­t khi texture sÃ¡ÂºÂµn sÃƒÂ ng (plan Ã‚Â§8), fallback
-   * Graphics placeholder nÃ¡ÂºÂ¿u thiÃ¡ÂºÂ¿u. CÃƒÂ¹ng API setPosition/scale/destroy
-   * nÃƒÂªn pulse/placement dÃƒÂ¹ng chung.
+   * View ha"" lA': Image art thaot khi texture saoun sA ng (plan Asec8), fallback
+   * Graphics placeholder nao?u thiao?u. CA1ng API setPosition/scale/destroy
+   * nAan pulse/placement dA1ng chung.
    */
   gourdGraphics?: Phaser.GameObjects.Image | Phaser.GameObjects.Graphics
 
-  /** Scale gÃ¡Â»â€˜c sau setDisplaySize Ã¢â‚¬â€ pulse nhÃƒÂ¢n lÃƒÂªn, khÃƒÂ´ng Ã„â€˜ÃƒÂ¨ tuyÃ¡Â»â€¡t Ã„â€˜Ã¡Â»â€˜i. */
+  /** Scale ga"'c sau setDisplaySize aEUR" pulse nhAcn lAan, khA'ng A'A" tuya"+t A'a"'i. */
   gourdBaseScale = { x: 1, y: 1 }
 
   gourdPulseTween?: Phaser.Tweens.Tween
 
-  /** Bottom inset gÃ¡ÂºÂ§n nhÃ¡ÂºÂ¥t (Event+Control bar) Ã¢â‚¬â€ create() dÃ¡Â»Â±ng view muÃ¡Â»â„¢n cÃ¡ÂºÂ§n re-position. */
+  /** Bottom inset gaosecn nhaoJPYt (Event+Control bar) aEUR" create() da"+/-ng view mua"(TM)n caosecn re-position. */
   gourdBottomInset = 0
 
   /**
-   * VÃ¡Â»â€¹ trÃƒÂ­ screen GÃ¡ÂºÂ¦N NHÃ¡ÂºÂ¤T cÃ¡Â»Â§a mÃ¡Â»Âi sprite (update trong positionSprite)
-   * Ã¢â‚¬â€ nguÃ¡Â»â€œn dÃ¡Â»Â± phÃƒÂ²ng cho reward particle khi sprite nguÃ¡Â»â€œn Ã„â€˜ÃƒÂ£ bÃ¡Â»â€¹ dÃ¡Â»Ân.
+   * Va"< trA screen Gao|N NHao*T ca"seca ma"i sprite (update trong positionSprite)
+   * aEUR" ngua""n da"+/- phA2ng cho reward particle khi sprite ngua""n A'AGBP ba"< da"n.
    */
   lastKnownScreenPositions = new Map<string, { x: number; y: number }>()
 
-  /** Ãƒâ€ grid gÃ¡ÂºÂ§n nhÃ¡ÂºÂ¥t theo snapshot positions Ã¢â‚¬â€ fallback cuÃ¡Â»â€˜i cÃƒÂ¹ng. */
+  /** A" grid gaosecn nhaoJPYt theo snapshot positions aEUR" fallback cua"'i cA1ng. */
   lastKnownGridPositions = new Map<string, { row: LaneIndex; column: number }>()
 
   readonly maxTrackedSourcePositions = 64
 
   private eventBus?: EventBus
-  // OPT-09 (roadmap.md §8.3): một danh sách [eventName, handler] duy nhất —
-  // subscribe/unsubscribe cùng lặp qua nó nên không thể lệch nhau (trước
-  // đây có 10 entry trong mảng này + 12 dòng on/off thủ công song song,
-  // thêm event vào bên này mà quên bên kia không có gì báo lỗi).
+  // OPT-09 (roadmap.md sec8.3): mot danh sach [eventName, handler] duy nhat -
+  // subscribe/unsubscribe cung lap qua no nen khong the lech nhau (truoc
+  // day co 10 entry trong mang nay + 12 dong on/off thu cong song song,
+  // them event vao ben nay ma quen ben kia khong co gi bao loi).
   private boundHandlers: Array<[string, EventHandler<never>]> = []
   private debugAnchorHandler = () => this.drawDebugBodyAnchors()
-  // Action Playback Task 7 (2026-09-05) — GameManager bridge (set trong
-  // subscribeCombatEvents từ registry; scene KHÔNG import trực tiếp).
-  // Internal (module boundary — combat-action-feedback paces engine acks).
+  // Action Playback Task 7 (2026-09-05) - GameManager bridge (set trong
+  // subscribeCombatEvents tu registry; scene KHONG import truc tiep).
+  // Internal (module boundary - combat-action-feedback paces engine acks).
   gameManagerRef?: DomainCommandPort
 
   private _skillPlayback?: SkillPresentationRunner
@@ -746,7 +747,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
       ['dodge', (event: CombatScenePayload) => this.onDodge(event)],
-      // ARCH-014 (M12) — retired bindings: 'cast', 'cast_start',
+      // ARCH-014 (M12) - retired bindings: 'cast', 'cast_start',
       // 'cast_complete', 'positions' and 'player_teleported' have NO live
       // producer anywhere
       // in the production graph (the legacy real-time BattleSystem that
@@ -755,14 +756,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       // positions -> 'turn_battle_entity_snapshot' reconcile +
       // getCombatPresentationSnapshot() late-join; teleports/column moves
       // -> the same snapshot path (snapInterpolationTarget). Of the kept
-      // handler methods only onPositions still has callers — create()'s
+      // handler methods only onPositions still has callers - create()'s
       // 'lastBattlePositionsSnapshot' gate fallback (below) and the
       // positionSmoothing/hudWiring/turnCountdownSpawn tests invoke it
       // directly. M13: onCastStart/onCastComplete/onPlayerTeleported (and
       // their exclusive delegates CombatCastBar.onCastStart/CastStartEvent,
       // actionFeedback.onCastComplete, playTeleportVfx, PlayerTeleportedEvent)
-      // deleted — zero bindings, zero tests, zero standalone callers.
-      // M13 review: 'cast' joined them — its sole emitter was the retired
+      // deleted - zero bindings, zero tests, zero standalone callers.
+      // M13 review: 'cast' joined them - its sole emitter was the retired
       // SkillEffectResolver; onCast/actionFeedback.onCast and the
       // skillName/castTimeSeconds payload fields are gone too.
       ['death', (event: CombatScenePayload) => this.onDeath(event)],
@@ -787,7 +788,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       ],
       ['battle_end', () => this.onBattleEnd()],
       ['damage', (event: CombatEvent) => this.onDamageNumber(event)],
-      // 6A-T2 (2026-09-01) — floating kill/heal.
+      // 6A-T2 (2026-09-01) - floating kill/heal.
       [
         'kill',
         (event: CombatEvent) => {
@@ -819,19 +820,19 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     ]
   }
 
-  // Internal (module boundary Ã¢â‚¬â€ combat/* Ã„â€˜Ã¡Â»Âc qua scene ref).
+  // Internal (module boundary aEUR" combat/* A'a"c qua scene ref).
   get isPerspective(): boolean {
     return this.renderMode === 'perspective'
   }
 
-  // Combat Grid Rework Ã¢â‚¬â€ hÃƒÂ¬nh hÃ¡Â»Âc lÃ†Â°Ã¡Â»â€ºi vuÃƒÂ´ng (px), tÃƒÂ­nh lÃ¡ÂºÂ¡i mÃ¡Â»â€”i layout.
-  // GIÃ¡Â»Â® LÃ¡ÂºÂ I lÃƒÂ m mirror chÃ¡ÂºÂ©n Ã„â€˜oÃƒÂ¡n/test: flat = giÃƒÂ¡ trÃ¡Â»â€¹ legacy chÃƒÂ­nh xÃƒÂ¡c;
-  // perspective = bounding box + bÃ¡Â»Â rÃ¡Â»â„¢ng ÃƒÂ´ cÃ¡ÂºÂ¡nh gÃ¡ÂºÂ§n.
+  // Combat Grid Rework aEUR" hA!nh ha"c lAEdega">i vuA'ng (px), tAnh lao!i ma"-i layout.
+  // GIa"(R) Lao I lA m mirror chao(c)n A'oA!n/test: flat = giA! tra"< legacy chAnh xA!c;
+  // perspective = bounding box + ba" ra"(TM)ng A' cao!nh gaosecn.
   private gridLeft = 0
   private gridTop = 0
   private cellSize = 0
 
-  // Internal (module boundary — combat-snapshot-reconcile coalesces
+  // Internal (module boundary - combat-snapshot-reconcile coalesces
   // 'positions' events; update() consumes pendingPositions once per frame).
   pendingPositions?: BattlePositionsEvent
   pendingCadence?: number
@@ -840,8 +841,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private canvasWidth = 0
   private canvasHeight = 0
 
-  // Top-down 5-lane (2026-08-22) Ã¢â‚¬â€ tÃƒÂ¢m Y cÃ¡Â»Â§a mÃ¡Â»â€”i hÃƒÂ ng, length GRID_ROW_COUNT,
-  // tÃƒÂ­nh lÃ¡ÂºÂ¡i mÃ¡Â»â€”i khi layout Ã„â€˜Ã¡Â»â€¢i (xem applyBattlefieldLayout()).
+  // Top-down 5-lane (2026-08-22) aEUR" tAcm Y ca"seca ma"-i hA ng, length GRID_ROW_COUNT,
+  // tAnh lao!i ma"-i khi layout A'a"*i (xem applyBattlefieldLayout()).
   laneRowCenterY: number[] = []
 
   characterWidth = 0
@@ -872,8 +873,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   create() {
-    // Ã„ÂÃ¡Â»Âc flag MÃ¡Â»â€“I LÃ¡ÂºÂ¦N create Ã¢â‚¬â€ Ã„â€˜Ã¡Â»â€¢i mode qua localStorage cÃƒÂ³ hiÃ¡Â»â€¡u lÃ¡Â»Â±c Ã¡Â»Å¸
-    // lÃ¡ÂºÂ§n vÃƒÂ o Combat kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p (Home Ã¢â€ â€ Combat lÃƒÂ  Ã„â€˜Ã¡Â»Â§, khÃƒÂ´ng cÃ¡ÂºÂ§n reload).
+    // Aa"c flag Ma"-I Lao|N create aEUR" A'a"*i mode qua localStorage cA3 hia"+u la"+/-c a"Y
+    // laosecn vA o Combat kao? tiao?p (Home a+" Combat lA  A'a"sec, khA'ng caosecn reload).
     this.renderMode = getBattlefieldRenderMode()
 
     this.gridGraphics = this.add.graphics().setDepth(DEPTH_GROUND_GRID)
@@ -887,9 +888,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.applyBattlefieldLayout(this.scale.width, this.scale.height)
 
-    // Player visual profile (body-anchor plan Ã‚Â§4.2) Ã¢â‚¬â€ Ã„â€˜Ã¡Â»Âc SNAPSHOT tÃ¡Â»Â«
-    // registry TRÃ†Â¯Ã¡Â»Å¡C khi dÃ¡Â»Â±ng sprite Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng bÃ¡Â»Â lÃ¡Â»Â¡ trÃ¡ÂºÂ¡ng thÃƒÂ¡i khi scene
-    // khÃ¡Â»Å¸i Ã„â€˜Ã¡Â»â„¢ng; cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t vÃ¡Â»Â sau qua event
+    // Player visual profile (body-anchor plan Asec4.2) aEUR" A'a"c SNAPSHOT ta""
+    // registry TRAE-a"sC khi da"+/-ng sprite A'a"f khA'ng ba" la"! trao!ng thA!i khi scene
+    // kha"Yi A'a"(TM)ng; caop nhaot va" sau qua event
     // 'player_visual_profile_changed' (subscribeCombatEvents).
     const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
     const registryArmed = readOptionalGate(this.registry, 'playerVisualArmed')
@@ -902,21 +903,21 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.applyPlayerVisualProfile(registryProfileId)
     }
 
-    // Spec B §3.2 (2026-09-11) — register animations for ANIMATED entities
+    // Spec B sec3.2 (2026-09-11) - register animations for ANIMATED entities
     // only. This used to walk every combat entity; enemies are `kind: 'static'`
     // now, and registering their clips would leave a loaded gun beside
     // playCombatAnimation(). The combat bundle enumerates its atlases from
-    // the same list, so the two can never name different keys — bundle
+    // the same list, so the two can never name different keys - bundle
     // ensure completes before scene activation, so these sheetKey textures
     // are already present at create().
     for (const { entityKey, clips } of animatedCombatAnimationSets()) {
       this.registerCombatAnimations(entityKey, clips)
     }
 
-    // Reward gourd (plan Ã‚Â§6 + Ã‚Â§8) Ã¢â‚¬â€ art thÃ¡ÂºÂ­t nÃ¡ÂºÂ¿u texture sÃ¡ÂºÂµn sÃƒÂ ng,
-    // fallback Graphics placeholder. DÃ¡Â»Â±ng MÃ¡Â»ËœT LÃ¡ÂºÂ¦N mÃ¡Â»â€”i create();
-    // auto-refight KHÃƒâ€NG tÃ¡ÂºÂ¡o lÃ¡ÂºÂ¡i hÃ¡Â»â€œ lÃƒÂ´ vÃƒÂ  streams cÃ…Â© tÃ¡Â»Â± hoÃƒÂ n tÃ¡ÂºÂ¥t vÃƒÂ o
-    // Ã„â€˜ÃƒÂºng miÃ¡Â»â€¡ng nÃƒÂ³ (Ã‚Â§7.4).
+    // Reward gourd (plan Asec6 + Asec8) aEUR" art thaot nao?u texture saoun sA ng,
+    // fallback Graphics placeholder. Da"+/-ng Ma" T Lao|N ma"-i create();
+    // auto-refight KHA"NG tao!o lao!i ha"" lA' vA  streams cA(c) ta"+/- hoA n taoJPYt vA o
+    // A'Aong mia"+ng nA3 (Asec7.4).
     if (!this.gourdGraphics) {
       if (this.textures.exists(GOURD_TEXTURE_KEY)) {
         this.gourdGraphics = this.add.image(0, 0, GOURD_TEXTURE_KEY)
@@ -929,19 +930,19 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.refreshRewardGourd(this.canvasHeight, this.gourdBottomInset)
 
-    // Scene nÃƒÂ y chÃ¡Â»â€° Ã„â€˜Ã†Â°Ã¡Â»Â£c start() SAU KHI 'battle_start' Ã„â€˜ÃƒÂ£ emit (xem
-    // MainScene.ts) Ã¢â‚¬â€ quÃƒÂ¡i/player Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn Ã„â€˜ÃƒÂ£ tÃ¡Â»â€œn tÃ¡ÂºÂ¡i Ã¡Â»Å¸ core rÃ¡Â»â€œi. Player
-    // sprite dÃ¡Â»Â±ng NGAY nhÃ†Â°ng Ã¡ÂºÂ¨N cho tÃ¡Â»â€ºi khi snapshot bÃƒÂ¡o materialize
-    // (plan Ã‚Â§12.2): pending telegraph vÃƒÂ  materialized sprite loÃ¡ÂºÂ¡i trÃ¡Â»Â«
-    // nhau. QuÃƒÂ¡i tÃ¡Â»â€ºi qua 'positions' Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn nhÃ†Â° bÃƒÂ¬nh thÃ†Â°Ã¡Â»Âng.
+    // Scene nA y cha"o/oo A'AEdega"GBPc start() SAU KHI 'battle_start' A'AGBP emit (xem
+    // MainScene.ts) aEUR" quA!i/player A'aosecu tiAan A'AGBP ta""n tao!i a"Y core ra""i. Player
+    // sprite da"+/-ng NGAY nhAEdegng ao"N cho ta">i khi snapshot bA!o materialize
+    // (plan Asec12.2): pending telegraph vA  materialized sprite loao!i tra""
+    // nhau. QuA!i ta">i qua 'positions' A'aosecu tiAan nhAEdeg bA!nh thAEdega"ng.
     const playerName =
       readOptionalGate(this.registry, 'gameManager')?.getActivePlayerName?.() ?? 'Player'
     const player = this.getOrCreateSprite(PLAYER_ID, PLAYER_COLOR, playerName, HERO_LANE_INDEX)
 
     this.entityVisual.hidePlayer(player)
 
-    // Spec B §4.5/§6 B7 (2026-09-11) — `idle` finally has a call site. It was
-    // built for every entity and never played in combat at all (§2.3): the
+    // Spec B sec4.5/sec6 B7 (2026-09-11) - `idle` finally has a call site. It was
+    // built for every entity and never played in combat at all (sec2.3): the
     // player stood on a single frozen frame between turns. This is the default
     // state, played the moment the sprite exists, and the one every other clip
     // returns to.
@@ -950,18 +951,17 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.snapInterpolationTarget(PLAYER_ID, HERO_COLUMN)
     this.positionSprite(player, HERO_COLUMN)
 
-    // Lifecycle listeners dÃƒÂ¹ng handler Ã¡Â»â€N Ã„ÂÃ¡Â»Å NH + gÃ¡Â»Â¡ Ã„â€˜ÃƒÂºng lÃƒÂºc shutdown Ã¢â‚¬â€
-    // ScaleManager lÃƒÂ  game-level nÃƒÂªn anonymous callback Ã„â€˜Ã„Æ’ng kÃƒÂ½ mÃ¡Â»â€”i
-    // create() sÃ¡ÂºÂ½ TÃƒÂCH TÃ¡Â»Â¤C qua cÃƒÂ¡c lÃ¡ÂºÂ§n Home Ã¢â€ â€™ Combat (N listener cÃƒÂ¹ng
-    // chÃ¡ÂºÂ¡y mÃ¡Â»â€”i resize). events.once Ã„â€˜Ã¡ÂºÂ£m bÃ¡ÂºÂ£o shutdown handler tÃ¡Â»Â± gÃ¡Â»Â¡.
+    // Lifecycle listeners dA1ng handler a""N Aa"SNH + ga"! A'Aong lAoc shutdown aEUR"
+    // ScaleManager lA  game-level nAan anonymous callback A'Afng kA1/2 ma"-i
+    // create() sao1/2 TACH Ta"*C qua cA!c laosecn Home a+' Combat (N listener cA1ng
+    // chao!y ma"-i resize). events.once A'aoGBPm baoGBPo shutdown handler ta"+/- ga"!.
     this.scale.on('resize', this.resizeHandler)
 
     this.subscribeCombatEvents()
 
-    // 6A-T4 — HUD player trong canvas (HP/MP/Kiếm) — tạo một lần cho
-    // đời scene; hiển thị/ẩn theo inBattle qua battle_start/battle_end.
+    // 6A-T4 - HUD player trong canvas (HP/MP/Kiem) - tao mot lan cho
+    // doi scene; hien thi/an theo inBattle qua battle_start/battle_end.
     this.ensurePlayerHud()
-    this._playerHud?.setVisible(this.inBattle)
 
     // Initial snapshot reconciliation via GameManager query (Task 4/10)
     const gameManager = readOptionalGate(this.registry, 'gameManager')
@@ -981,6 +981,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     this.inBattle = true
+    // This create() runs AFTER 'battle_start' already emitted (see above),
+    // so inBattle only becomes true here - the setVisible must run under
+    // the true flag or the HUD stays hidden until the first
+    // vitals_changed / a refight's battle_start reveals it.
+    this._playerHud?.setVisible(this.inBattle)
 
     // Report READY to adapter
     const adapter = readOptionalGate(this.registry, 'sceneAdapter')
@@ -998,7 +1003,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private resizeHandler = (gameSize: ResizeSize) => {
     this.applyBattlefieldLayout(gameSize.width, gameSize.height)
-    // 6A-T5 — HUD re-layout theo viewport mới (flexible rule).
+    // 6A-T5 - HUD re-layout theo viewport moi (flexible rule).
     this.playerHud?.layout(gameSize.width, gameSize.height)
   }
 
@@ -1020,9 +1025,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
       this.positionSprite(sprite, visualX, id)
 
-      // Reward stream fallback cache (plan Ã‚Â§7.1) Ã¢â‚¬â€ last-known screen
-      // position per entity, dÃƒÂ¹ng khi sprite nguÃ¡Â»â€œn Ã„â€˜ÃƒÂ£ bÃ¡Â»â€¹ dÃ¡Â»Ân trÃ†Â°Ã¡Â»â€ºc khi
-      // reward particle Ã„â€˜Ã†Â°Ã¡Â»Â£c render.
+      // Reward stream fallback cache (plan Asec7.1) aEUR" last-known screen
+      // position per entity, dA1ng khi sprite ngua""n A'AGBP ba"< da"n trAEdega">c khi
+      // reward particle A'AEdega"GBPc render.
       this.trackSourceScreenPosition(id, sprite)
 
       const castBar = this.castBars.get(id)
@@ -1032,30 +1037,30 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       }
     }
 
-    // Combat Grid Rework Ã¢â‚¬â€ DOT icon bÃƒÂ¡m theo target mÃ¡Â»â€”i frame.
+    // Combat Grid Rework aEUR" DOT icon bA!m theo target ma"-i frame.
     this.updateStatusIconPositions()
 
-    // Debug body anchors (plan Ã‚Â§5.4, dev-only).
+    // Debug body anchors (plan Asec5.4, dev-only).
     if (this.debugBodyAnchorsEnabled) {
       this.drawDebugBodyAnchors()
     }
 
-    // DoT presentation (Ã‚Â§7.2) Ã¢â‚¬â€ flush bucket Ã„â€˜Ã¡ÂºÂ¿n hÃ¡ÂºÂ¡n mÃ¡Â»â€”i frame.
+    // DoT presentation (Asec7.2) aEUR" flush bucket A'ao?n hao!n ma"-i frame.
     this.flushDueDotTexts()
 
-    // Spawn telegraph Ã¢â‚¬â€ drive handle theo progress snapshot mÃ¡Â»â€ºi nhÃ¡ÂºÂ¥t.
+    // Spawn telegraph aEUR" drive handle theo progress snapshot ma">i nhaoJPYt.
     for (const entry of this.spawnVfxHandles.values()) {
       entry.handle.update(entry.progress)
     }
 
-    // 2.5D depth sort Ã¢â‚¬â€ projected Y quyÃ¡ÂºÂ¿t Ã„â€˜Ã¡Â»â€¹nh chÃƒÂ­nh, column/entityId
-    // chÃ¡Â»â€° phÃƒÂ¡ hÃƒÂ²a chÃ¡Â»â€˜ng nhÃ¡ÂºÂ¥p nhÃƒÂ¡y; chÃ¡Â»â€° chÃ¡ÂºÂ¡y Ã¡Â»Å¸ perspective vÃƒÂ¬ flat giÃ¡Â»Â¯
-    // insertion order Ã„â€˜ÃƒÂºng nhÃ†Â° renderer cÃ…Â©.
+    // 2.5D depth sort aEUR" projected Y quyao?t A'a"<nh chAnh, column/entityId
+    // cha"o/oo phA! hA2a cha"'ng nhaoJPYp nhA!y; cha"o/oo chao!y a"Y perspective vA! flat gia"-
+    // insertion order A'Aong nhAEdeg renderer cA(c).
     if (this.isPerspective) {
       this.updateEntityDepths()
     }
 
-    // Coalesce positions: apply Ã„ÂÃƒÅ¡NG MÃ¡Â»ËœT lÃ¡ÂºÂ§n mÃ¡Â»â€”i frame.
+    // Coalesce positions: apply AAsNG Ma" T laosecn ma"-i frame.
     if (this.pendingPositions) {
       const event = this.pendingPositions
 
@@ -1066,20 +1071,20 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // 9.4 - Kiem bar (Kiem The / Kiem Y tam) poll MOI frame.
     this.pollKiemBar()
 
-    // Task 16 — The bar (Phap Tu) same poll pattern.
+    // Task 16 - The bar (Phap Tu) same poll pattern.
     this.pollTheBar()
 
-    // Task 9 — party countdown telegraph chases its snapshot target on
+    // Task 9 - party countdown telegraph chases its snapshot target on
     // Phaser's own render clock, independent of how often CombatClock
     // happens to publish a new countdownProgress (game/docs/superpowers/
-    // specs/2026-09-10-combat-realtime-turn-authority-design.md §5.2a,
-    // §4.4 frame-rate independence).
+    // specs/2026-09-10-combat-realtime-turn-authority-design.md sec5.2a,
+    // sec4.4 frame-rate independence).
     this.telegraph.advance()
   }
 
-  // 9.4 — Kiếm bar poll mỗi frame từ reader đăng ký trong PhaserCanvas
-  // (chỉ nơi có gameManager — xem kiemBarBridge.ts). null = ẩn bar.
-  // registry thiếu (stub/scene chưa init) coi như "không có reader".
+  // 9.4 - Kiem bar poll moi frame tu reader dang ky trong PhaserCanvas
+  // (chi noi co gameManager - xem kiemBarBridge.ts). null = an bar.
+  // registry thieu (stub/scene chua init) coi nhu "khong co reader".
   private pollKiemBar(): void {
     const kiem = this.registry ? readKiemBar(this.registry) : null
 
@@ -1089,15 +1094,15 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.playerHud?.updateKiem(0, 0, '')
     }
 
-    // The Tu Reimagined (T22) — Son Nhac Ho The shield layer rides the
+    // The Tu Reimagined (T22) - Son Nhac Ho The shield layer rides the
     // same poll; absent/undefined hides the layer (updateExternalWard's
     // hasPool gate), separate from the resource bar entirely.
     this.playerHud?.updateExternalWard(kiem?.externalWard?.current ?? 0, kiem?.externalWard?.max ?? 0)
   }
 
-  // Task 16 — The bar poll mỗi frame từ reader đăng ký trong
-  // PhaserCanvas (chỉ nơi có gameManager — xem theBarBridge.ts).
-  // null = ẩn bar (không phải spell / không battle / chưa chọn hành).
+  // Task 16 - The bar poll moi frame tu reader dang ky trong
+  // PhaserCanvas (chi noi co gameManager - xem theBarBridge.ts).
+  // null = an bar (khong phai spell / khong battle / chua chon hanh).
   private pollTheBar(): void {
     const the = this.registry ? readTheBar(this.registry) : null
 
@@ -1114,11 +1119,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Depth sort entity sprite theo projected foot Y (gÃ¡ÂºÂ§n Ã„â€˜ÃƒÂ¨ xa). min/max
-   * lÃƒÂ  BIÃƒÅ N CÃ¡Â»Â Ã„ÂÃ¡Â»Å NH cÃ¡Â»Â§a mÃ¡ÂºÂ·t Ã„â€˜Ã†Â°Ã¡Â»Âng (entityFootMinY/MaxY Ã„â€˜Ã¡ÂºÂ·t tÃ¡Â»Â«
-   * projection.bounds() mÃ¡Â»â€”i layout) Ã¢â‚¬â€ KHÃƒâ€NG tÃƒÂ­nh lÃ¡ÂºÂ¡i tÃ¡Â»Â« tÃ¡ÂºÂ­p entity Ã„â€˜ang
-   * sÃ¡Â»â€˜ng: spawn/death cÃ¡Â»Â§a 1 entity khÃƒÂ´ng remap depth cÃ¡Â»Â§a entity khÃƒÂ¡c vÃƒÂ
-   * upright VFX (chÃ¡Â»â€˜t depth lÃƒÂºc spawn) luÃƒÂ´n cÃƒÂ¹ng thÃ†Â°Ã¡Â»â€ºc vÃ¡Â»â€ºi entity.
+   * Depth sort entity sprite theo projected foot Y (gA!AoAsecn A"aEUR AfA" xa). min/max
+   * lAfA  BIAfA N CA!A"A A"AA!A"A NH cA!A"Aseca mA!AoA*t A"aEUR A+AdegA!A"Ang (entityFootMinY/MaxY A"aEUR A!AoA*t tA!A"A"
+   * projection.bounds() mA!A"aEUR"i layout) Aca'!aEUR KHAfaEURNG tAfAnh lA!AoA!i tA!A"A" tA!AoAp entity A"aEUR ang
+   * sA!A"aEUR ng: spawn/death cA!A"Aseca 1 entity khAfA'ng remap depth cA!A"Aseca entity khAfA!c vAfA
+   * upright VFX (chA!A"aEUR t depth lAfAoc spawn) luAfA'n cAfA1ng thA+AdegA!A"aEURoc vA!A"aEURoi entity.
    */
   entityFootMinY = 0
   entityFootMaxY = 1
@@ -1128,24 +1133,24 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * DÃƒÂ nh khoÃ¡ÂºÂ£ng trÃƒÂªn (Top Bar + Status Bar) vÃƒÂ  dÃ†Â°Ã¡Â»â€ºi (Event Bar +
-   * Control Bar) cho DOM chrome cÃ¡Â»Â§a CombatSceneOverlay.vue (xem
-   * DesignFrame.ts's COMBAT_*_HEIGHT) Ã¢â‚¬â€ battlefield thÃ¡ÂºÂ­t chÃ¡Â»â€° vÃ¡ÂºÂ½ trong
-   * khoÃ¡ÂºÂ£ng CÃƒâ€™N LÃ¡ÂºÂ I Ã¡Â»Å¸ giÃ¡Â»Â¯a.
+   * DA nh khoaoGBPng trAan (Top Bar + Status Bar) vA  dAEdega">i (Event Bar +
+   * Control Bar) cho DOM chrome ca"seca CombatSceneOverlay.vue (xem
+   * DesignFrame.ts's COMBAT_*_HEIGHT) aEUR" battlefield thaot cha"o/oo vao1/2 trong
+   * khoaoGBPng CA'N Lao I a"Y gia"-a.
    *
-   * 2.5D migration Ã¢â‚¬â€ layout chÃ¡Â»â€° cÃƒÂ²n 2 viÃ¡Â»â€¡c:
-   * 1. DÃ¡Â»Â±ng/resize projection (flat hoÃ¡ÂºÂ·c perspective theo flag) tÃ¡Â»Â«
-   *    viewport + insets. Insets Ã†Â°u tiÃƒÂªn sÃ¡Â»â€˜ Ã„ÂO THÃ¡ÂºÂ¬T cÃ¡Â»Â§a bar DOM qua
-   *    getCombatInsets() (WS1), fallback cÃƒÂ´ng thÃ¡Â»Â©c tÃ¡Â»Â· lÃ¡Â»â€¡ legacy khi chÃ†Â°a
-   *   cÃƒÂ³ phÃƒÂ©p Ã„â€˜o Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn.
-   * 2. VÃ¡ÂºÂ½ lÃ¡ÂºÂ¡i mÃ¡Â»Âi lÃ¡Â»â€ºp phÃ¡Â»Â¥ thuÃ¡Â»â„¢c hÃƒÂ¬nh hÃ¡Â»Âc: nÃ¡Â»Ân, lÃ†Â°Ã¡Â»â€ºi, entity, chrome Ã¢â‚¬â€
-   *    NGAY TRONG LÃ¡ÂºÂ¦N GÃ¡Â»Å’I Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng cÃƒÂ³ frame nÃƒÂ o hiÃ¡Â»â€¡n vÃ¡Â»â€¹ trÃƒÂ­ stale.
+   * 2.5D migration aEUR" layout cha"o/oo cA2n 2 via"+c:
+   * 1. Da"+/-ng/resize projection (flat hoao*c perspective theo flag) ta""
+   *    viewport + insets. Insets AEdegu tiAan sa"' AO THao!T ca"seca bar DOM qua
+   *    getCombatInsets() (WS1), fallback cA'ng tha"(c)c ta"* la"+ legacy khi chAEdega
+   *   cA3 phA(c)p A'o A'aosecu tiAan.
+   * 2. Vao1/2 lao!i ma"i la">p pha"JPY thua"(TM)c hA!nh ha"c: na"n, lAEdega">i, entity, chrome aEUR"
+   *    NGAY TRONG Lao|N Ga"OEI A'a"f khA'ng cA3 frame nA o hia"+n va"< trA stale.
    */
   private applyBattlefieldLayout(width: number, height: number) {
-    // Guard chÃ¡Â»â€˜ng resize bÃ¡ÂºÂ¯n vÃƒÂ o scene Ã„â€˜ang STOPPED: listener trÃƒÂªn
-    // ScaleManager (game-level) khÃƒÂ´ng tÃ¡Â»Â± gÃ¡Â»Â¡ khi shutdown, mÃƒÂ  clearSceneState
-    // Ã„â€˜ÃƒÂ£ null gridGraphics Ã¢â‚¬â€ dÃƒÂ¹ng nÃƒÂ³ lÃƒÂ m cÃ¡Â»Â "scene Ã„â€˜ang sÃ¡Â»â€˜ng" thay cho
-    // guard arenaRect cÃ¡Â»Â§a bÃ¡ÂºÂ£n legacy.
+    // Guard cha"'ng resize bao-n vA o scene A'ang STOPPED: listener trAan
+    // ScaleManager (game-level) khA'ng ta"+/- ga"! khi shutdown, mA  clearSceneState
+    // A'AGBP null gridGraphics aEUR" dA1ng nA3 lA m ca" "scene A'ang sa"'ng" thay cho
+    // guard arenaRect ca"seca baoGBPn legacy.
     if (!this.gridGraphics) {
       return
     }
@@ -1154,13 +1159,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.canvasHeight = height
 
     const measuredInsets = getCombatInsets()
-    // ui-discoverability-refactor-plan.md §3.3 — fallback insets một nguồn
-    // (combatInsets.getFallbackCombatInsets) thay vì hằng COMBAT_*_HEIGHT
-    // trùng lặp giữa DesignFrame và CSS clamp().
+    // ui-discoverability-refactor-plan.md sec3.3 - fallback insets mot nguon
+    // (combatInsets.getFallbackCombatInsets) thay vi hang COMBAT_*_HEIGHT
+    // trung lap giua DesignFrame va CSS clamp().
     const fallbackInsets = getFallbackCombatInsets(height)
-    // Camera zoom cÃ¡Â»Â§a scene nÃƒÂ y LUÃƒâ€N giÃ¡Â»Â¯ 1 Ã¢â‚¬â€ mÃ¡Â»Âi tÃ¡Â»Âa Ã„â€˜Ã¡Â»â„¢ combat lÃƒÂ  pixel
-    // canvas, projection khÃƒÂ´ng cÃ¡ÂºÂ§n bÃƒÂ¹ transform (plan: zoom khÃƒÂ´ng Ã¡ÂºÂ£nh
-    // hÃ†Â°Ã¡Â»Å¸ng combat coordinates).
+    // Camera zoom ca"seca scene nA y LUA"N gia"- 1 aEUR" ma"i ta"a A'a"(TM) combat lA  pixel
+    // canvas, projection khA'ng caosecn bA1 transform (plan: zoom khA'ng aoGBPnh
+    // hAEdega"Yng combat coordinates).
     this.cameras.main.setZoom(1)
 
     const viewport = {
@@ -1180,9 +1185,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     const bounds = this.projection.bounds()
 
     if (this.isPerspective && !this.backdrop) {
-      // Thanh VÃƒÂ¢n art mount (thanh-van-dong-fu-art-production-plan) Ã¢â‚¬â€
-      // Ã†Â°u tiÃƒÂªn modular layers (sky + 6 layer mÃƒÂ¹a); texture thiÃ¡ÂºÂ¿u thÃƒÂ¬
-      // fallback procedural backdrop cÃ…Â©. Flat mode giÃ¡Â»Â¯ procedural.
+      // Thanh VAcn art mount (thanh-van-dong-fu-art-production-plan) aEUR"
+      // AEdegu tiAan modular layers (sky + 6 layer mA1a); texture thiao?u thA!
+      // fallback procedural backdrop cA(c). Flat mode gia"- procedural.
       const allTexturesReady = thanhVanLoadList(this.thanhVanVariant).every((entry) =>
         this.textures.exists(entry.key),
       )
@@ -1208,7 +1213,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       }
     }
 
-    // Mirror chÃ¡ÂºÂ©n Ã„â€˜oÃƒÂ¡n/test Ã¢â‚¬â€ flat khÃ¡Â»â€ºp chÃƒÂ­nh xÃƒÂ¡c sÃ¡Â»â€˜ liÃ¡Â»â€¡u legacy cÃ…Â©.
+    // Mirror chao(c)n A'oA!n/test aEUR" flat kha">p chAnh xA!c sa"' lia"+u legacy cA(c).
     this.gridLeft = bounds.left
     this.gridTop = bounds.top
     this.cellSize = this.projection.cellSizeAt(GRID_ROW_COUNT - 1).width
@@ -1219,7 +1224,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     )
 
     if (this.arenaRect) {
-      // Legacy: nÃ¡Â»Ân phÃ¡ÂºÂ³ng phÃ¡Â»Â§ TOÃƒâ‚¬N bÃ„Æ’ng battlefield (kÃ¡Â»Æ’ cÃ¡ÂºÂ£ letterbox).
+      // Legacy: na"n phao3ng pha"sec TOAEURN bAfng battlefield (ka"f caoGBP letterbox).
       const bandHeight = Math.max(0, height - viewport.topInset - viewport.bottomInset)
 
       this.arenaRect.setPosition(width / 2, viewport.topInset + bandHeight / 2)
@@ -1228,10 +1233,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.arenaRect.updateDisplayOrigin()
     }
 
-    // KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cÃ†Â¡ sÃ¡Â»Å¸ nhÃƒÂ¢n vÃ¡ÂºÂ­t: flat dÃƒÂ¹ng ÃƒÂ´ vuÃƒÂ´ng chuÃ¡ÂºÂ©n (legacy).
-    // Perspective dÃƒÂ¹ng BÃ¡Â»â‚¬ RÃ¡Â»ËœNG ÃƒÂ´ cÃ¡ÂºÂ¡nh gÃ¡ÂºÂ§n lÃƒÂ m thÃ†Â°Ã¡Â»â€ºc Ã¢â‚¬â€ chiÃ¡Â»Âu cao ÃƒÂ´ Ã„â€˜ÃƒÂ£ bÃ¡Â»â€¹
-    // nÃƒÂ©n phÃ¡Â»â€˜i cÃ¡ÂºÂ£nh (vÃƒÂ  giÃ¡Â»Â nhÃ¡Â»Â hÃ†Â¡n nÃ¡Â»Â¯a sau khi chia nÃ¡Â»Â­a phong cÃ¡ÂºÂ£nh),
-    // khÃƒÂ´ng cÃƒÂ²n lÃƒÂ  thÃ†Â°Ã¡Â»â€ºc Ã„â€˜o hÃ¡Â»Â£p lÃƒÂ½ cho chiÃ¡Â»Âu cao ngÃ†Â°Ã¡Â»Âi Ã„â€˜Ã¡Â»Â©ng.
+    // KAch thAEdega">c cAE! sa"Y nhAcn vaot: flat dA1ng A' vuA'ng chuao(c)n (legacy).
+    // Perspective dA1ng Ba"EUR Ra" NG A' cao!nh gaosecn lA m thAEdega">c aEUR" chia"u cao A' A'AGBP ba"<
+    // nA(c)n pha"'i caoGBPnh (vA  gia" nha" hAE!n na"-a sau khi chia na"a phong caoGBPnh),
+    // khA'ng cA2n lA  thAEdega">c A'o ha"GBPp lA1/2 cho chia"u cao ngAEdega"i A'a"(c)ng.
     const nearCell = this.projection.cellSizeAt(GRID_ROW_COUNT - 1)
     const baseCell = this.isPerspective ? nearCell.width : this.cellSize
 
@@ -1242,13 +1247,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.backdrop?.redraw(width, height, bounds.top)
 
-    // MÃ¡Â»â€˜c depth ban Ã„â€˜Ã¡ÂºÂ§u cho upright VFX (trÃ†Â°Ã¡Â»â€ºc frame entity Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn):
-    // full mÃ¡ÂºÂ·t Ã„â€˜Ã†Â°Ã¡Â»Âng theo projection hiÃ¡Â»â€¡n hÃƒÂ nh.
+    // Ma"'c depth ban A'aosecu cho upright VFX (trAEdega">c frame entity A'aosecu tiAan):
+    // full mao*t A'AEdega"ng theo projection hia"+n hA nh.
     this.entityFootMinY = bounds.top
     this.entityFootMaxY = bounds.bottom
 
-    // Snapshot hÃƒÂ¬nh hÃ¡Â»Âc cho e2e/visual gate Ã¢â‚¬â€ assertion bÃ¡Â»â€˜ cÃ¡Â»Â¥c (tÃ¡Â»â€° lÃ¡Â»â€¡
-    // horizon, min road height) Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« Ã„â€˜ÃƒÂ¢y thay vÃƒÂ¬ Ã„â€˜o pixel.
+    // Snapshot hA!nh ha"c cho e2e/visual gate aEUR" assertion ba"' ca"JPYc (ta"o/oo la"+
+    // horizon, min road height) A'a"c ta"" A'Acy thay vA! A'o pixel.
     writeGate(this.game.registry, 'battlefieldGeometry', {
       viewportWidth: width,
       viewportHeight: height,
@@ -1260,7 +1265,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       roadHeight: bounds.bottom - bounds.top,
     } satisfies BattlefieldGeometrySnapshot)
 
-    // Resize giÃ¡Â»Â¯a trÃ¡ÂºÂ­n: dÃ¡Â»Â±ng lÃ¡ÂºÂ¡i vÃ¡Â»â€¹ trÃƒÂ­ NGAY, khÃƒÂ´ng Ã„â€˜Ã¡Â»Â£i snapshot kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p.
+    // Resize gia"-a traon: da"+/-ng lao!i va"< trA NGAY, khA'ng A'a"GBPi snapshot kao? tiao?p.
 
     for (const [id, sprite] of this.sprites) {
       const entry = this.interpolations.get(id)
@@ -1279,52 +1284,52 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.updateStatusIconPositions()
 
-    // Reward gourd (plan Ã‚Â§6.2) Ã¢â‚¬â€ neo safe-area theo canvas + bottom inset,
-    // tÃƒÂ­nh lÃ¡ÂºÂ¡i trong MÃ¡Â»Å’I lÃ¡ÂºÂ§n layout/resize.
+    // Reward gourd (plan Asec6.2) aEUR" neo safe-area theo canvas + bottom inset,
+    // tAnh lao!i trong Ma"OEI laosecn layout/resize.
     this.gourdBottomInset = viewport.bottomInset
 
     this.refreshRewardGourd(height, viewport.bottomInset)
   }
 
-  // ================= Reward gourd placeholder (body-anchor plan Ã‚Â§6) ====
+  // ================= Reward gourd placeholder (body-anchor plan Asec6) ====
 
   /**
-   * TÃƒÂ­nh lÃ¡ÂºÂ¡i vÃ¡Â»â€¹ trÃƒÂ­ hÃ¡Â»â€œ lÃƒÂ´ theo viewport hiÃ¡Â»â€¡n hÃƒÂ nh vÃƒÂ  cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t view.
-   * Neo gÃƒÂ³c TRÃƒÂI DÃ†Â¯Ã¡Â»Å¡I battlefield an toÃƒÂ n Ã¢â‚¬â€ phÃƒÂ­a trÃƒÂªn Event Bar +
-   * Control Bar, KHÃƒâ€NG neo theo grid Player. Art thÃ¡ÂºÂ­t (Image): origin =
-   * normalized mouth anchor nÃƒÂªn setPosition Ã„â€˜Ã¡ÂºÂ·t Ã„ÂÃƒÅ¡NG miÃ¡Â»â€¡ng; Graphics
-   * placeholder: shapes vÃ¡ÂºÂ½ tÃ†Â°Ã†Â¡ng Ã„â€˜Ã¡Â»â€˜i quanh miÃ¡Â»â€¡ng.
+   * TAnh lao!i va"< trA ha"" lA' theo viewport hia"+n hA nh vA  caop nhaot view.
+   * Neo gA3c TRAI DAE-a"sI battlefield an toA n aEUR" phAa trAan Event Bar +
+   * Control Bar, KHA"NG neo theo grid Player. Art thaot (Image): origin =
+   * normalized mouth anchor nAan setPosition A'ao*t AAsNG mia"+ng; Graphics
+   * placeholder: shapes vao1/2 tAEdegAE!ng A'a"'i quanh mia"+ng.
    */
   refreshRewardGourd(canvasHeight: number, bottomInset: number) {
     this.rewardGourd.refreshRewardGourd(canvasHeight, bottomInset)
   }
 
-  /** Placeholder Graphics thuÃ¡ÂºÂ§n Ã¢â‚¬â€ khÃƒÂ´ng asset AI, silhouette Ã„â€˜Ã¡Â»Âc tÃ¡Â»â€˜t. */
+  /** Placeholder Graphics thuaosecn aEUR" khA'ng asset AI, silhouette A'a"c ta"'t. */
   redrawGourd() {
     this.rewardGourd.redrawGourd()
   }
 
-  /** Pulse Ã„ÂÃƒÅ¡NG MÃ¡Â»ËœT nhÃ¡Â»â€¹p mÃ¡Â»â€”i reward event (plan Ã‚Â§6.3) Ã¢â‚¬â€ nÃ¡Â»Å¸ tÃ¡Â»Â« miÃ¡Â»â€¡ng. */
+  /** Pulse AAsNG Ma" T nha"<p ma"-i reward event (plan Asec6.3) aEUR" na"Y ta"" mia"+ng. */
   pulseGourd() {
     this.rewardGourd.pulseGourd()
   }
 
-  /** Ã„ÂiÃ¡Â»Æ’m hÃƒÂºt LIVE Ã¢â‚¬â€ luÃƒÂ´n lÃƒÂ  miÃ¡Â»â€¡ng hÃ¡Â»â€œ lÃƒÂ´, khÃƒÂ´ng bao giÃ¡Â»Â lÃƒÂ  Player (Ã‚Â§7.2). */
+  /** Aia"fm hAot LIVE aEUR" luA'n lA  mia"+ng ha"" lA', khA'ng bao gia" lA  Player (Asec7.2). */
   gourMouthPoint(): { x: number; y: number } {
     return this.rewardGourd.gourMouthPoint()
   }
 
   // ================= Player visual profile + body anchors =============
 
-  // Task 8 (perf-optimize-pass phần 2) — logic đầy đủ chuyển sang
-  // combat/combat-player-visual.ts (đổi hình thái Player + resolver
-  // body-anchor); wrapper giữ nguyên chữ ký public cho combat-vfx-spawner.ts.
+  // Task 8 (perf-optimize-pass phan 2) - logic day du chuyen sang
+  // combat/combat-player-visual.ts (doi hinh thai Player + resolver
+  // body-anchor); wrapper giu nguyen chu ky public cho combat-vfx-spawner.ts.
   private applyPlayerVisualProfile(profileId: PlayerVisualProfileId) {
     this.playerVisual.applyPlayerVisualProfile(profileId)
   }
 
   /**
-   * Spec C §4.2 — a body anchor in screen space, for any entity.
+   * Spec C sec4.2 - a body anchor in screen space, for any entity.
    *
    * Replaces getPlayerBodyAnchorScreen(), which could only answer for the
    * player and read a hand-authored table describing the profile's static PNG
@@ -1362,52 +1367,52 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Debug mode (plan Ã‚Â§5.4) Ã¢â‚¬â€ dev-only, bÃ¡ÂºÂ­t qua
-   * localStorage['debug.playerBodyAnchors']='1'; vÃ¡ÂºÂ½ chÃ¡ÂºÂ¥m mÃƒÂ u tÃ¡ÂºÂ¡i tÃ¡Â»Â«ng
-   * body anchor mÃ¡Â»â€”i frame. KhÃƒÂ´ng cÃƒÂ³ UI production nÃƒÂ o Ã„â€˜Ã¡Â»Â¥ng tÃ¡Â»â€ºi.
+   * Debug mode (plan Asec5.4) aEUR" dev-only, baot qua
+   * localStorage['debug.playerBodyAnchors']='1'; vao1/2 chaoJPYm mA u tao!i ta""ng
+   * body anchor ma"-i frame. KhA'ng cA3 UI production nA o A'a"JPYng ta">i.
    */
   drawDebugBodyAnchors() {
     this.vfxSpawner.drawDebugBodyAnchors()
   }
 
   /**
-   * VÃ¡ÂºÂ½ lÃ†Â°Ã¡Â»â€ºi lane qua projection Ã¢â‚¬â€ cÃ¡ÂºÂ£ 2 mode dÃƒÂ¹ng chung 1 code path:
-   * flat tÃ¡Â»Â± cho ra ÃƒÂ´ vuÃƒÂ´ng Ã„â€˜Ã¡Â»Âu khÃ¡Â»â€ºp renderer cÃ…Â©; perspective cho lÃ†Â°Ã¡Â»â€ºi
-   * hÃ¡Â»â„¢i tÃ¡Â»Â¥ vÃ¡Â»Â hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh vÃ¡Â»â€ºi vÃ¡ÂºÂ¡ch RÃ¡ÂºÂ¤T NHÃ¡ÂºÂ T (texture Ã„â€˜Ã¡ÂºÂ¥t trong backdrop lÃƒÂ
-   * chÃƒÂ­nh, trÃƒÂ¡nh cÃ¡ÂºÂ£m giÃƒÂ¡c bÃƒÂ n cÃ¡Â»Â). KHÃƒâ€NG bake vÃƒÂ o background.
+   * VA!AoA1/2 lA+AdegA!A"aEURoi lane qua projection Aca'!aEUR cA!AoAGBP 2 mode dAfA1ng chung 1 code path:
+   * flat tA!A"A+/- cho ra AfA' vuAfA'ng A"aEUR A!A"Au khA!A"aEURop renderer cA...A(c); perspective cho lA+AdegA!A"aEURoi
+   * hA!A"a"ci tA!A"AJPY vA!A"A hA!AoAu cA!AoAGBPnh vA!A"aEURoi vA!AoA!ch RA!AoA*T NHA!AoA T (texture A"aEUR A!AoAJPYt trong backdrop lAfA
+   * chAfAnh, trAfA!nh cA!AoAGBPm giAfA!c bAfA n cA!A"A). KHAfaEURNG bake vAfA o background.
    */
   redrawGridLines() {
     this.gridView.redrawGridLines()
   }
 
-  // Rectangle (enemy) cÃ¡ÂºÂ§n width/height + updateDisplayOrigin() (mutate
-  // geometry trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p); Sprite (player) cÃ¡ÂºÂ§n setDisplaySize() vÃ¡Â»â€ºi TÃ¡Â»Ë† LÃ¡Â»â€
-  // Ã„ÂÃƒÅ¡NG cÃ¡Â»Â§a artwork gÃ¡Â»â€˜c (playerSourceSize theo profile hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€
-  // body-anchor plan Ã‚Â§4.3),
-  // nÃ¡ÂºÂ¿u khÃƒÂ´ng nhÃƒÂ¢n vÃ¡ÂºÂ­t sÃ¡ÂºÂ½ mÃƒÂ©o hÃƒÂ¬nh khi ÃƒÂ©p cÃƒÂ¹ng characterWidth/Height
-  // hÃƒÂ¬nh vuÃƒÂ´ng-ish cÃ¡Â»Â§a enemy (xem MainScene.ts's updateSpriteDisplaySize()
-  // Ã¢â‚¬â€ cÃƒÂ¹ng lÃƒÂ½ do).
+  // Rectangle (enemy) caosecn width/height + updateDisplayOrigin() (mutate
+  // geometry trA!A"A+/-c tiA!AoA?p); Sprite (player) cA!AoAsecn setDisplaySize() vA!A"aEURoi TA!A"E+ LA!A"aEUR
+  // AAsNG ca"seca artwork ga"'c (playerSourceSize theo profile hia"+n hA nh aEUR"
+  // body-anchor plan Asec4.3),
+  // nao?u khA'ng nhAcn vaot sao1/2 mA(c)o hA!nh khi A(c)p cA1ng characterWidth/Height
+  // hA!nh vuA'ng-ish ca"seca enemy (xem MainScene.ts's updateSpriteDisplaySize()
+  // aEUR" cA1ng lA1/2 do).
   //
-  // Perspective: baseline chÃ¡Â»â€° lÃƒÂ  kÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc Ã¡Â»Å¸ hÃƒÂ ng hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€ co giÃƒÂ£n
-  // theo chiÃ¡Â»Âu sÃƒÂ¢u diÃ¡Â»â€¦n ra trong applyEntityDepthScale() mÃ¡Â»â€”i lÃ¡ÂºÂ§n chiÃ¡ÂºÂ¿u.
+  // Perspective: baseline cha"o/oo lA  kAch thAEdega">c a"Y hA ng hia"+n hA nh aEUR" co giAGBPn
+  // theo chia"u sAcu dia"...n ra trong applyEntityDepthScale() ma"-i laosecn chiao?u.
   applySpriteSize(sprite: EntitySprite) {
     this.gridView.applySpriteSize(sprite)
   }
 
   /**
-   * ÃƒÂp scale chiÃ¡Â»Âu sÃƒÂ¢u cho entity: kÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc = baseline Ãƒâ€” depthScale Ãƒâ€”
-   * sizeMultiplier (player Ãƒâ€”2, enemy PNG Ãƒâ€”2 Ã¢â‚¬â€ multiplier NHÃƒâ€šN MÃ¡Â»ËœT LÃ¡ÂºÂ¦N
-   * duy nhÃ¡ÂºÂ¥t tÃ¡ÂºÂ¡i Ã„â€˜ÃƒÂ¢y, khÃƒÂ´ng cÃ¡Â»â„¢ng dÃ¡Â»â€œn qua resize/tween) Ãƒâ€” boost (pop ChÃƒÂ­
-   * MÃ¡ÂºÂ¡ng/spawn fade-in), ghi vÃƒÂ o GEOMETRY/scale cÃ¡Â»Â§a GameObject nÃƒÂªn tween
-   * cÃ…Â© vÃ¡ÂºÂ«n hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng; bÃƒÂ³ng ellipse dÃ†Â°Ã¡Â»â€ºi chÃƒÂ¢n co giÃƒÂ£n theo.
+   * AfAp scale chiA!A"Au sAfAcu cho entity: kAfAch thA+AdegA!A"aEURoc = baseline AfaEUR" depthScale AfaEUR"
+   * sizeMultiplier (player AfaEUR"2, enemy PNG AfaEUR"2 Aca'!aEUR multiplier NHAfaEURsN MA!A"EoeT LA!AoA|N
+   * duy nhA!AoAJPYt tA!AoA!i A"aEUR AfAcy, khAfA'ng cA!A"a"cng dA!A"aEURoen qua resize/tween) AfaEUR" boost (pop ChAfA
+   * MA!AoA!ng/spawn fade-in), ghi vAfA o GEOMETRY/scale cA!A"Aseca GameObject nAfAan tween
+   * cA...A(c) vA!AoA"n hoA!AoA!t A"aEUR A!A"a"cng; bAfA3ng ellipse dA+AdegA!A"aEURoi chAfAcn co giAfAGBPn theo.
    */
   applyEntityDepthScale(sprite: EntitySprite, depthScale: number) {
     this.gridView.applyEntityDepthScale(sprite, depthScale)
   }
 
-  // Ã„ÂÃ¡Â»â€°nh Ã„â€˜Ã¡ÂºÂ§u sprite theo anchor hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€ mÃ¡Â»Âi chrome treo trÃƒÂªn Ã„â€˜Ã¡ÂºÂ§u
-  // (HP bar / cast bar / DOT icon / text bay) Ã„â€˜i qua Ã„â€˜ÃƒÂ¢y Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng phÃ¡Â»Â¥
-  // thuÃ¡Â»â„¢c origin (foot anchor Ã¡Â»Å¸ perspective, center anchor Ã¡Â»Å¸ flat).
+  // Aa"o/oonh A'aosecu sprite theo anchor hia"+n hA nh aEUR" ma"i chrome treo trAan A'aosecu
+  // (HP bar / cast bar / DOT icon / text bay) A'i qua A'Acy A'a"f khA'ng pha"JPY
+  // thua"(TM)c origin (foot anchor a"Y perspective, center anchor a"Y flat).
   // Internal (module boundary).
   entityHeadY(sprite: EntitySprite): number {
     return this.gridView.entityHeadY(sprite)
@@ -1434,18 +1439,18 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.gridView.positionSprite(sprite, worldColumn, _id)
   }
 
-  // Task 8 (perf-optimize-pass phần 2) — logic đầy đủ chuyển sang
-  // combat/combat-grid-view.ts (đã có sẵn getOrCreateSprite tương đương
-  // — chỉ còn thiếu wiring); wrapper giữ nguyên chữ ký public.
+  // Task 8 (perf-optimize-pass phan 2) - logic day du chuyen sang
+  // combat/combat-grid-view.ts (da co san getOrCreateSprite tuong duong
+  // - chi con thieu wiring); wrapper giu nguyen chu ky public.
   //
-  // Combat Art Pipeline Task 9 (2026-09-05) — id CHẾT rồi TÁI XUẤT HIỆN
-  // (spawn lại) trong lúc sprite cũ còn đang chờ death animation hoàn tất
-  // (deferred cleanup, xem beginDeathSequence()): finalize NGAY sprite cũ ở
-  // ĐÂY trước khi tạo sprite mới. Không có bước này, gridView.getOrCreateSprite()
-  // sẽ thấy `this.sprites.has(id)` vẫn true (sprite cũ chưa bị xóa) và TRẢ VỀ
-  // NGUYÊN sprite đang chết cho entity mới — rồi callback ANIMATION_COMPLETE/
-  // tween của lần chết trước destroy() NHẦM sprite của entity mới (orphan/
-  // double-destroy đúng như review Task 5 cảnh báo).
+  // Combat Art Pipeline Task 9 (2026-09-05) - id CHET roi TAI XUAT HIEN
+  // (spawn lai) trong luc sprite cu con dang cho death animation hoan tat
+  // (deferred cleanup, xem beginDeathSequence()): finalize NGAY sprite cu o
+  // DAY truoc khi tao sprite moi. Khong co buoc nay, gridView.getOrCreateSprite()
+  // se thay `this.sprites.has(id)` van true (sprite cu chua bi xoa) va TRA VE
+  // NGUYEN sprite dang chet cho entity moi - roi callback ANIMATION_COMPLETE/
+  // tween cua lan chet truoc destroy() NHAM sprite cua entity moi (orphan/
+  // double-destroy dung nhu review Task 5 canh bao).
   getOrCreateSprite(
     id: string,
     color: number,
@@ -1461,12 +1466,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Dọn NGAY sprite đang ở giữa death sequence (animation/tween chưa xong) —
-   * dùng khi id đó tái xuất hiện (xem getOrCreateSprite()) để tránh
-   * beginDeathSequence() cũ đóng cửa nhầm sprite mới sau này. Đơn giản hơn
-   * beginDeathSequence(): không cần chờ gì cả, huỷ NGAY.
+   * Don NGAY sprite dang o giua death sequence (animation/tween chua xong) -
+   * dung khi id do tai xuat hien (xem getOrCreateSprite()) de tranh
+   * beginDeathSequence() cu dong cua nham sprite moi sau nay. Don gian hon
+   * beginDeathSequence(): khong can cho gi ca, huy NGAY.
    */
-  // Internal (module boundary — combat-animation-playback).
+  // Internal (module boundary - combat-animation-playback).
   private forceFinalizeDeath(id: string): void {
     this.animationPlayback.forceFinalizeDeath(id)
   }
@@ -1480,16 +1485,16 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Combat Art Pipeline Task 9 (2026-09-05) — đăng ký Phaser
-   * Animation cho MỘT entity (player theo profile, hoặc enemy theo texture
-   * key) từ animation set đã build sẵn. `this.anims` là AnimationManager
-   * DÙNG CHUNG toàn Game (không riêng theo scene) nên guard `exists()` bắt
-   * buộc — gọi lại nhiều lần qua các trận/scene KHÔNG được tạo trùng key.
+   * Combat Art Pipeline Task 9 (2026-09-05) - dang ky Phaser
+   * Animation cho MOT entity (player theo profile, hoac enemy theo texture
+   * key) tu animation set da build san. `this.anims` la AnimationManager
+   * DUNG CHUNG toan Game (khong rieng theo scene) nen guard `exists()` bat
+   * buoc - goi lai nhieu lan qua cac tran/scene KHONG duoc tao trung key.
    */
-  // `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang
-  // đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và
-  // để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).
-  // Internal (module boundary — combat-animation-playback).
+  // `entityKey` khong dung truc tiep trong than ham (moi clip da tu mang
+  // du key/sheetKey) - giu tham so vi chu ky khop cach goi tai create() va
+  // de log/mo rong sau nay (vd. gan nhan loi khi generateFrameNumbers rong).
+  // Internal (module boundary - combat-animation-playback).
   private registerCombatAnimations(entityKey: string, clips: CombatAnimationCatalogue): void {
     this.animationPlayback.registerCombatAnimations(entityKey, clips)
   }
@@ -1508,30 +1513,30 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Spec B §3.2 — is this entity's art ANIMATED, or a still image?
+   * Spec B sec3.2 - is this entity's art ANIMATED, or a still image?
    *
    * One question, asked of the catalogue, in the one place that plays clips.
    * A static entity is not a degraded animated one: it has no clips at all, and
    * asking for one is a no-op rather than a fallback.
    */
-  // Internal (module boundary — combat-animation-playback).
+  // Internal (module boundary - combat-animation-playback).
   private isAnimatedEntity(entityKey: string): boolean {
     return this.animationPlayback.isAnimatedEntity(entityKey)
   }
 
   /**
-   * Phát 1 animation clip cho actor NẾU sprite là Sprite thật (kind ===
-   * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký —
-   * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip
-   * chưa/không tồn tại (test fixture không stub this.anims đầy đủ).
+   * Phat 1 animation clip cho actor NEU sprite la Sprite that (kind ===
+   * 'sprite') VA clip do da duoc registerCombatAnimations() dang ky -
+   * no-op an toan cho Rectangle fallback (enemy ngoai batch) hoac clip
+   * chua/khong ton tai (test fixture khong stub this.anims day du).
    *
-   * Spec B §3.2 (2026-09-11) — AND the entity's art is animated. Before this,
+   * Spec B sec3.2 (2026-09-11) - AND the entity's art is animated. Before this,
    * an enemy taking its turn played the 32-frame placeholder, which SWAPPED its
    * texture from its own Mortal PNG to a numbered stick figure for the length of
    * the clip. Enemies are static now; their motion is the bob in
    * `combat-grid-view.ts`.
    */
-  // Internal (module boundary — combat-animation-playback).
+  // Internal (module boundary - combat-animation-playback).
   playCombatAnimation(
     sprite: EntitySprite,
     actorId: string | undefined,
@@ -1571,12 +1576,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.spawnVfxHandles.clear()
     this.entityVisual.clear()
 
-    // Task 9 fix round (Finding 1) — the party countdown telegraph has its
+    // Task 9 fix round (Finding 1) - the party countdown telegraph has its
     // own handle map/pending-ids set, separate from spawnVfxHandles above,
     // and was never cleared here. Phaser reuses the Scene instance across
     // stop/restart, so leaving this out let a player who left mid-countdown
     // and re-entered combat carry a leaked handle plus a stale non-zero
-    // telegraphShown into the next battle — exactly what telegraph.reset()
+    // telegraphShown into the next battle - exactly what telegraph.reset()
     // exists to prevent on a normal countdown-end flush.
     for (const handle of this.turnCountdownSpawnVfxHandles.values()) {
       handle.destroy()
@@ -1585,8 +1590,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.turnCountdownSpawnVfxHandles.clear()
     this.telegraph.reset()
 
-    // 6A-T4/T5 — HUD dọn khi scene shutdown (battle_end KHÔNG destroy —
-    // chỉ shutdown mới hủy; restart scene tạo lại).
+    // 6A-T4/T5 - HUD don khi scene shutdown (battle_end KHONG destroy -
+    // chi shutdown moi huy; restart scene tao lai).
     this._playerHud?.destroy()
     this._playerHud = undefined
 
@@ -1600,12 +1605,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.dyingIds.clear()
     this.playerDying = false
 
-    // DoT accumulator (Ã‚Â§7.2) Ã¢â‚¬â€ dÃ¡Â»Ân khi scene shutdown.
+    // DoT accumulator (Asec7.2) aEUR" da"n khi scene shutdown.
     this.dotAccumulators?.clear()
 
-    // Reward gourd + caches (plan Ã‚Â§7.4) Ã¢â‚¬â€ dÃ¡Â»Ân sÃ¡ÂºÂ¡ch khi scene shutdown;
-    // auto-refight (onBattleStart) cÃ¡Â»â€˜ ÃƒÂ½ KHÃƒâ€NG Ã„â€˜Ã¡Â»Â¥ng vÃƒÂ o Ã„â€˜ÃƒÂ¢y Ã„â€˜Ã¡Â»Æ’ streams
-    // Ã„â€˜ÃƒÂ£ sinh hoÃƒÂ n tÃ¡ÂºÂ¥t vÃƒÂ o miÃ¡Â»â€¡ng hÃ¡Â»â€œ lÃƒÂ´.
+    // Reward gourd + caches (plan Asec7.4) aEUR" da"n sao!ch khi scene shutdown;
+    // auto-refight (onBattleStart) ca"' A1/2 KHA"NG A'a"JPYng vA o A'Acy A'a"f streams
+    // A'AGBP sinh hoA n taoJPYt vA o mia"+ng ha"" lA'.
     this.gourdGraphics?.destroy()
 
     this.gourdGraphics = undefined
@@ -1620,22 +1625,22 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.lastKnownScreenPositions.clear()
     this.lastKnownGridPositions.clear()
 
-    // Essence stream (2026-08-30) — motes là scene children bị destroy
-    // cùng display list; bỏ cache để create() kế dựng lại (arrival
-    // callback giữ nguyên qua closure eventBus).
+    // Essence stream (2026-08-30) - motes la scene children bi destroy
+    // cung display list; bo cache de create() ke dung lai (arrival
+    // callback giu nguyen qua closure eventBus).
     this._essenceStream = undefined
 
-    // Scene shutdown Ä‘ÃƒÂ£ destroy children cÃ¡Â»Â§a display list Ã¢â‚¬â€ chÃ¡Â» cÃ¡ÂºÂ§n bÃ¡Â»
-    // tham chiÃ¡ÂºÂ¿u Ã„â€˜Ã¡Â» create() kÃ¡ÂºÂ¿ dÃ¡Â»Â±ng lÃ¡ÂºÂ¡i sÃ¡ÂºÂ¡ch theo mode hiÃ¡Â»â€¡n hÃƒÂ¬nh.
+    // Scene shutdown A'AfAGBP destroy children cA!A"Aseca display list Aca'!aEUR chA!A" cA!AoAsecn bA!A"
+    // tham chiao?u A'a" create() kao? da"+/-ng lao!i sao!ch theo mode hia"+n hA!nh.
     this.arenaRect = undefined
     this.gridGraphics = undefined
     this.backdrop = undefined
     this.projection = undefined
   }
 
-  // Task 8 (perf-optimize-pass phần 2) — logic đầy đủ chuyển sang
-  // combat/combat-position-interpolation.ts; wrapper giữ nguyên chữ ký
-  // (+ private, vì chỉ dùng nội bộ CombatScene) cho các call site cũ.
+  // Task 8 (perf-optimize-pass phan 2) - logic day du chuyen sang
+  // combat/combat-position-interpolation.ts; wrapper giu nguyen chu ky
+  // (+ private, vi chi dung noi bo CombatScene) cho cac call site cu.
   private setInterpolationTarget(
     id: string,
     worldX: number,
@@ -1657,17 +1662,17 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return this.positionInterp.getInterpolatedX(id)
   }
 
-  // Internal (module boundary — combat-snapshot-reconcile).
+  // Internal (module boundary - combat-snapshot-reconcile).
   reconcileEnemySprites(enemies: BattlePositionsEvent['enemies']) {
     this.snapshotReconcile.reconcileEnemySprites(enemies)
   }
 
-  // Internal (module boundary — combat-snapshot-reconcile).
+  // Internal (module boundary - combat-snapshot-reconcile).
   private onTurnBattleEntitySnapshot(event: TurnBattleEntitySnapshotEvent) {
     this.snapshotReconcile.onTurnBattleEntitySnapshot(event)
   }
 
-  // Internal (module boundary — combat-snapshot-reconcile).
+  // Internal (module boundary - combat-snapshot-reconcile).
   private reconcileTurnCountdownSpawn(event: TurnBattleEntitySnapshotEvent) {
     this.snapshotReconcile.reconcileTurnCountdownSpawn(event)
   }
@@ -1687,11 +1692,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       eventBus.on(eventName, handler)
     }
 
-    // Action Playback Task 7 (2026-09-05) — bật presentation mode: turn
-    // engine chờ Phaser ack qua 3 signal (ready flourish → impact frame →
-    // VFX tween complete) thay vì resolve instant headless.
-    // Remediation Task 1+2 — bridge cũng expose token getter; ack từ VFX
-    // completion gắn token để stale callback bị engine từ chối.
+    // Action Playback Task 7 (2026-09-05) - bat presentation mode: turn
+    // engine cho Phaser ack qua 3 signal (ready flourish -> impact frame ->
+    // VFX tween complete) thay vi resolve instant headless.
+    // Remediation Task 1+2 - bridge cung expose token getter; ack tu VFX
+    // completion gan token de stale callback bi engine tu choi.
     this.gameManagerRef = readOptionalGate(this.registry, 'gameManager')
   }
 
@@ -1710,21 +1715,21 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Reward stream (plan Ã‚Â§7) Ã¢â‚¬â€ BÃƒÂ©zier hÃƒÂºt vÃ¡Â»Â MIÃ¡Â»â€ NG HÃ¡Â»â€™ LÃƒâ€:
-   * - Ã„ÂiÃ¡Â»Æ’m phÃƒÂ¡t: chest anchor cÃ¡Â»Â§a sprite nguÃ¡Â»â€œn Ã¢â€ â€™ screen cache Ã¢â€ â€™ ÃƒÂ´ grid
-   *   cuÃ¡Â»â€˜i cÃƒÂ¹ng (sprite Ã„â€˜ÃƒÂ£ bÃ¡Â»â€¹ dÃ¡Â»Ân vÃ¡ÂºÂ«n cÃƒÂ³ nguÃ¡Â»â€œn hÃ¡Â»Â£p lÃƒÂ½).
-   * - Ã„ÂiÃ¡Â»Æ’m hÃƒÂºt LIVE tÃ¡Â»Â« gourd mouth mÃ¡Â»â€”i onUpdate: Player teleport giÃ¡Â»Â¯a
-   *   tween KHÃƒâ€NG Ã¡ÂºÂ£nh hÃ†Â°Ã¡Â»Å¸ng quÃ¡Â»Â¹ Ã„â€˜Ã¡ÂºÂ¡o; resize re-resolve Ã„â€˜ÃƒÂ­ch mÃ¡Â»â€ºi.
-   * - TÃ„Æ’ng tÃ¡Â»â€˜c nÃ¡Â»Â­a sau (quad-in), co scale + xoÃƒÂ¡y nhÃ¡Â»Â khi tÃ¡Â»â€ºi miÃ¡Â»â€¡ng.
-   * - Pulse hÃ¡Â»â€œ lÃƒÂ´ Ã„ÂÃƒÅ¡NG MÃ¡Â»ËœT nhÃ¡Â»â€¹p mÃ¡Â»â€”i reward event (mÃ¡Â»â€˜c Ã„â€˜Ã¡ÂºÂ¡i diÃ¡Â»â€¡n), khÃƒÂ´ng
-   *   pulse theo tÃ¡Â»Â«ng mote (Ã‚Â§6.3).
+   * Reward stream (plan Asec7) aEUR" BA(c)zier hAot va" MIa"+NG Ha"' LA":
+   * - Aia"fm phA!t: chest anchor ca"seca sprite ngua""n a+' screen cache a+' A' grid
+   *   cua"'i cA1ng (sprite A'AGBP ba"< da"n vao"n cA3 ngua""n ha"GBPp lA1/2).
+   * - Aia"fm hAot LIVE ta"" gourd mouth ma"-i onUpdate: Player teleport gia"-a
+   *   tween KHA"NG aoGBPnh hAEdega"Yng qua"1 A'ao!o; resize re-resolve A'Ach ma">i.
+   * - TAfng ta"'c na"a sau (quad-in), co scale + xoA!y nha" khi ta">i mia"+ng.
+   * - Pulse ha"" lA' AAsNG Ma" T nha"<p ma"-i reward event (ma"'c A'ao!i dia"+n), khA'ng
+   *   pulse theo ta""ng mote (Asec6.3).
    */
   private onRewardParticle(event: BattleRewardParticleEvent) {
-    // Tinh Hoa Phàm Thể (2026-08-30) — stream tím bay VỀ NGƯỜI CHƠI thay
-    // vì hồ lô; mote cuối hoàn tất mới phát 'essence_stream_arrival' để
-    // App.vue nạp tiến độ Luyện Thể. Không resolve được điểm phát (sprite
-    // nguồn đã dọn + cache rỗng) → phát arrival NGAY, không bao giờ kẹt
-    // tinh hoa trong bag vì thiếu presentation.
+    // Tinh Hoa Pham The (2026-08-30) - stream tim bay VE NGUOI CHOI thay
+    // vi ho lo; mote cuoi hoan tat moi phat 'essence_stream_arrival' de
+    // App.vue nap tien do Luyen The. Khong resolve duoc diem phat (sprite
+    // nguon da don + cache rong) -> phat arrival NGAY, khong bao gio ket
+    // tinh hoa trong bag vi thieu presentation.
     if (event.kind === 'essence') {
       const start = this.resolveRewardSourcePoint(event.sourceId)
 
@@ -1751,13 +1756,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Ã„ÂiÃ¡Â»Æ’m phÃƒÂ¡t reward (plan Ã‚Â§7.1) Ã¢â‚¬â€ Ã†Â°u tiÃƒÂªn:
-   * 1. body anchor cÃ¡Â»Â§a sprite nguÃ¡Â»â€œn cÃƒÂ²n tÃ¡Â»â€œn tÃ¡ÂºÂ¡i (Player dÃƒÂ¹ng catalog
-   *    anchor 'chest' cÃ¡Â»Â§a profile; enemy KHÃƒâ€NG cÃƒÂ³ catalog anchor nÃƒÂªn
-   *    dÃƒÂ¹ng Ã„â€˜iÃ¡Â»Æ’m thÃƒÂ¢n trung tÃƒÂ­nh suy ra tÃ¡Â»Â« sprite bounds Ã¢â‚¬â€ audit P0-3,
-   *    khÃƒÂ´ng bao giÃ¡Â»Â ÃƒÂ¡p Player anchor cho enemy);
+   * Aia"fm phA!t reward (plan Asec7.1) aEUR" AEdegu tiAan:
+   * 1. body anchor ca"seca sprite ngua""n cA2n ta""n tao!i (Player dA1ng catalog
+   *    anchor 'chest' ca"seca profile; enemy KHA"NG cA3 catalog anchor nAan
+   *    dA1ng A'ia"fm thAcn trung tAnh suy ra ta"" sprite bounds aEUR" audit P0-3,
+   *    khA'ng bao gia" A!p Player anchor cho enemy);
    * 2. last-known screen position theo entity ID;
-   * 3. ÃƒÂ´ grid cuÃ¡Â»â€˜i cÃƒÂ¹ng chiÃ¡ÂºÂ¿u qua projection hiÃ¡Â»â€¡n hÃƒÂ nh.
+   * 3. A' grid cua"'i cA1ng chiao?u qua projection hia"+n hA nh.
    */
   resolveRewardSourcePoint(sourceId: string): { x: number; y: number } | undefined {
     return this.rewardGourd.resolveRewardSourcePoint(sourceId)
@@ -1768,61 +1773,61 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     return id ? this.sprites.get(id) : undefined
   }
 
-  // Combat Grid Rework Ã¢â‚¬â€ COALESCE: nhiÃ¡Â»Âu event 'positions' Ã„â€˜Ã¡Â»â€œng bÃ¡Â»â„¢ trong
-  // 1 frame chÃ¡Â»â€° giÃ¡Â»Â¯ snapshot MÃ¡Â»Å¡I NHÃ¡ÂºÂ¤T, apply Ã„ÂÃƒÅ¡NG MÃ¡Â»ËœT lÃ¡ÂºÂ§n trong update().
-  // Cadence = khoÃ¡ÂºÂ£ng cÃƒÂ¡ch giÃ¡Â»Â¯a 2 SNAPSHOT (lastSnapshotAt), clamp
+  // Combat Grid Rework aEUR" COALESCE: nhia"u event 'positions' A'a""ng ba"(TM) trong
+  // 1 frame cha"o/oo gia"- snapshot Ma"sI NHao*T, apply AAsNG Ma" T laosecn trong update().
+  // Cadence = khoaoGBPng cA!ch gia"-a 2 SNAPSHOT (lastSnapshotAt), clamp
   // [MIN_SEGMENT_DURATION_MS, MAX_SEGMENT_DURATION_MS].
-  // Internal (module boundary — combat-snapshot-reconcile).
+  // Internal (module boundary - combat-snapshot-reconcile).
   private onPositions(event: BattlePositionsEvent) {
     this.snapshotReconcile.onPositions(event)
   }
 
-  // Internal (module boundary — combat-snapshot-reconcile).
+  // Internal (module boundary - combat-snapshot-reconcile).
   private applyPendingPositions(event: BattlePositionsEvent) {
     this.snapshotReconcile.applyPendingPositions(event)
   }
 
   /**
-   * Reconcile telegraph spawn cÃ¡Â»Â§a PLAYER theo SNAPSHOT (plan Ã‚Â§12.2).
-   * Flat mode vÃ¡ÂºÂ«n chÃ¡ÂºÂ¡y visibility (Ã¡ÂºÂ©n/hiÃ¡Â»â€¡n sprite) nhÃ†Â°ng bÃ¡Â»Â VFX telegraph
-   * nhÃ†Â° enemy spawn.
+   * Reconcile telegraph spawn ca"seca PLAYER theo SNAPSHOT (plan Asec12.2).
+   * Flat mode vao"n chao!y visibility (ao(c)n/hia"+n sprite) nhAEdegng ba" VFX telegraph
+   * nhAEdeg enemy spawn.
    */
   reconcilePlayerSpawn(event: BattlePositionsEvent) {
     this.vfxSpawner.reconcilePlayerSpawn(event)
   }
 
   /**
-   * Reconcile telegraph spawn VFX theo SNAPSHOT (không event tức thời):
-   * id mới → tạo handle; id còn → cập nhật progress; id MẤT → materialize
-   * (flash ngắn + fade-in sprite) và dọn handle. Flat mode bỏ qua (renderer
-   * legacy giữ hành vi cũ). Turn-Based Wave Redesign (2026-09-06) — kiểu
-   * tham số narrow xuống SpawnVfxSnapshot (subset BattlePositionsEvent);
-   * turn-based snapshot path gọi qua đúng delegate này.
+   * Reconcile telegraph spawn VFX theo SNAPSHOT (khong event tuc thoi):
+   * id moi -> tao handle; id con -> cap nhat progress; id MAT -> materialize
+   * (flash ngan + fade-in sprite) va don handle. Flat mode bo qua (renderer
+   * legacy giu hanh vi cu). Turn-Based Wave Redesign (2026-09-06) - kieu
+   * tham so narrow xuong SpawnVfxSnapshot (subset BattlePositionsEvent);
+   * turn-based snapshot path goi qua dung delegate nay.
    */
   reconcileSpawnVfx(event: SpawnVfxSnapshot) {
     this.vfxSpawner.reconcileSpawnVfx(event)
   }
 
-  /** Fade-in + scale 0.7Ã¢â€ â€™1 cho enemy vÃ¡Â»Â«a materialize (mÃ¡Â»â„¢t lÃ¡ÂºÂ§n duy nhÃ¡ÂºÂ¥t). */
+  /** Fade-in + scale 0.7a+'1 cho enemy va""a materialize (ma"(TM)t laosecn duy nhaoJPYt). */
   playMaterializeFadeIn(sprite: EntitySprite) {
     this.vfxSpawner.playMaterializeFadeIn(sprite)
   }
 
-  // TrÃ¡ÂºÂ­n kÃ¡ÂºÂ¿t thÃƒÂºc (thÃ¡ÂºÂ¯ng/thua) Ã¢â‚¬â€ KHÃƒâ€NG dÃ¡Â»Ân quÃƒÂ¡i, KHÃƒâ€NG snap player vÃ¡Â»Â
-  // cÃ¡Â»â„¢t cÃ¡Â»â€¢ng: giÃ¡Â»Â¯ vÃ¡Â»â€¹ trÃƒÂ­ cuÃ¡Â»â€˜i cÃ¡Â»Â§a player/enemy dÃ†Â°Ã¡Â»â€ºi overlay kÃ¡ÂºÂ¿t quÃ¡ÂºÂ£
-  // (2026-08-26). KHÃƒâ€NG tÃ¡Â»Â± rÃ¡Â»Âi scene Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y Ã¢â‚¬â€ chÃ¡Â»â€° 'combat_scene_exit'
-  // (CombatResultModal.vue Ã¢â€ â€™ onExit()) mÃ¡Â»â€ºi chuyÃ¡Â»Æ’n vÃ¡Â»Â MainScene; "Ã„ÂÃƒÂ¡nh
-  // LÃ¡ÂºÂ¡i"/auto-refight Ã„â€˜i qua 'battle_start' Ã¢â€ â€™ onBattleStart() reset
-  // presentation tÃ¡ÂºÂ¡i chÃ¡Â»â€”. ViÃ¡Â»â€¡c cÃƒÂ²n lÃ¡ÂºÂ¡i Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y: chÃ¡Â»Ân + load trÃ†Â°Ã¡Â»â€ºc variant
-  // nÃ¡Â»Ân cho trÃ¡ÂºÂ­n KÃ¡ÂºÂ¾ TIÃ¡ÂºÂ¾P vÃƒÂ  dÃ¡Â»Ân DoT accumulator.
+  // Traon kao?t thAoc (thao-ng/thua) aEUR" KHA"NG da"n quA!i, KHA"NG snap player va"
+  // ca"(TM)t ca"*ng: gia"- va"< trA cua"'i ca"seca player/enemy dAEdega">i overlay kao?t quaoGBP
+  // (2026-08-26). KHA"NG ta"+/- ra"i scene a"Y A'Acy aEUR" cha"o/oo 'combat_scene_exit'
+  // (CombatResultModal.vue a+' onExit()) ma">i chuya"fn va" MainScene; "AA!nh
+  // Lao!i"/auto-refight A'i qua 'battle_start' a+' onBattleStart() reset
+  // presentation tao!i cha"-. Via"+c cA2n lao!i a"Y A'Acy: cha"n + load trAEdega">c variant
+  // na"n cho traon Kao3/4 TIao3/4P vA  da"n DoT accumulator.
   onBattleEnd() {
     this._hoaCauPresentation?.cancel()
-    // 6A-T5 — HUD theo dõi battle end.
+    // 6A-T5 - HUD theo doi battle end.
     this._playerHud?.setVisible(false)
     this.inBattle = false
 
-    // DoT accumulator (Ã‚Â§7.2) Ã¢â‚¬â€ trÃ¡ÂºÂ­n Ã„â€˜ÃƒÂ£ xong, bucket cÃ…Â© khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c rÃƒÂ²
-    // sang text cÃ¡Â»Â§a trÃ¡ÂºÂ­n kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p.
+    // DoT accumulator (Asec7.2) aEUR" traon A'AGBP xong, bucket cA(c) khA'ng A'AEdega"GBPc rA2
+    // sang text ca"seca traon kao? tiao?p.
     this.dotAccumulators.clear()
 
     this.prepareThanhVanBackdropForNextBattle()
@@ -1832,25 +1837,25 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.vfxSpawner.playHorizontalImpulse(sprite, distance, duration)
   }
 
-  // NÃ¡ÂºÂ£y sÃ¡Â»â€˜ sÃƒÂ¡t thÃ†Â°Ã†Â¡ng Ã¢â‚¬â€ dÃƒÂ¹ng CHUNG event 'damage' mÃƒÂ  CombatStatusBar.vue
-  // Ã„â€˜Ã¡Â»Âc Ã„â€˜Ã¡Â»Æ’ vÃ¡ÂºÂ½ thanh HP (xem ghi chÃƒÂº DAMAGE_*_COLOR Ã„â€˜Ã¡ÂºÂ§u file), nÃƒÂªn sÃ¡Â»â€˜
-  // nÃ¡ÂºÂ£y lÃƒÂªn LUÃƒâ€N khÃ¡Â»â€ºp vÃ¡Â»â€ºi thanh mÃƒÂ¡u vÃ¡Â»Â«a hÃ¡Â»Â¥t, khÃƒÂ´ng lÃ¡Â»â€¡ch nhÃ¡Â»â€¹p. ChÃ¡ÂºÂ¡y cho
-  // CÃ¡ÂºÂ¢ 2 chiÃ¡Â»Âu Ã¢â‚¬â€ target lÃƒÂ  quÃƒÂ¡i (player gÃƒÂ¢y sÃƒÂ¡t thÃ†Â°Ã†Â¡ng) hay target lÃƒÂ
-  // player (quÃƒÂ¡i gÃƒÂ¢y sÃƒÂ¡t thÃ†Â°Ã†Â¡ng) Ã„â€˜Ã¡Â»Âu qua Ã„â€˜ÃƒÂºng 1 handler nÃƒÂ y.
+  // NaoGBPy sa"' sA!t thAEdegAE!ng aEUR" dA1ng CHUNG event 'damage' mA  CombatStatusBar.vue
+  // A'a"c A'a"f vao1/2 thanh HP (xem ghi chAo DAMAGE_*_COLOR A'aosecu file), nAan sa"'
+  // naoGBPy lAan LUA"N kha">p va">i thanh mA!u va""a ha"JPYt, khA'ng la"+ch nha"<p. Chao!y cho
+  // CA!AoAc 2 chiA!A"Au Aca'!aEUR target lAfA  quAfA!i (player gAfAcy sAfA!t thA+AdegA+A!ng) hay target lAfA
+  // player (quA!i gAcy sA!t thAEdegAE!ng) A'a"u qua A'Aong 1 handler nA y.
   //
-  // DoT presentation (combat-skill-flow-element-power-dot-plan.md Ã‚Â§7) Ã¢â‚¬â€
-  // tick DoT (event cÃƒÂ³ effectId) KHÃƒâ€NG hiÃ¡Â»â€¡n text ngay: gom vÃƒÂ o
-  // accumulator theo khÃƒÂ³a `targetId|effectId|sourceId`, mÃ¡Â»â€”i 333.33ms
-  // flush Ã„ÂÃƒÅ¡NG 1 text/khÃƒÂ³a Ã¡Â»Å¸ anchor thÃ¡ÂºÂ¥p hÃ†Â¡n + depth thÃ¡ÂºÂ¥p hÃ†Â¡n direct hit.
+  // DoT presentation (combat-skill-flow-element-power-dot-plan.md Asec7) aEUR"
+  // tick DoT (event cA3 effectId) KHA"NG hia"+n text ngay: gom vA o
+  // accumulator theo khA3a `targetId|effectId|sourceId`, ma"-i 333.33ms
+  // flush AAsNG 1 text/khA3a a"Y anchor thaoJPYp hAE!n + depth thaoJPYp hAE!n direct hit.
   private onDamageNumber(event: CombatEvent) {
     this.damageText.handleDamageEvent(event)
   }
 
-  /** BÃ¡Â»â„¢ gom DoT Ã¢â‚¬â€ khÃƒÂ³a `targetId|effectId|sourceId`, cÃ¡Â»Â­a sÃ¡Â»â€¢ 1/3 giÃƒÂ¢y. */
+  /** Ba"(TM) gom DoT aEUR" khA3a `targetId|effectId|sourceId`, ca"a sa"* 1/3 giAcy. */
   // Internal (module boundary).
   dotAccumulators = new Map<string, { value: number; nextFlushAt: number }>()
 
-  /** Flush cÃƒÂ¡c bucket Ã„â€˜ÃƒÂ£ Ã„â€˜Ã¡ÂºÂ¿n hÃ¡ÂºÂ¡n Ã¢â‚¬â€ MÃ¡Â»â€“I KHÃƒâ€œA Ã„â€˜ÃƒÂºng 1 text (Ã‚Â§7.2). */
+  /** Flush cA!c bucket A'AGBP A'ao?n hao!n aEUR" Ma"-I KHA"A A'Aong 1 text (Asec7.2). */
   private flushDueDotTexts() {
     this.damageText.flushDueDotTexts()
   }
@@ -1862,7 +1867,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.updateEnemyHealthBar(sprite, event.hpAfter, event.maxHp)
     }
 
-    // 6A-T5 — HUD player (entityId === PLAYER_ID) cập nhật từ vitals.
+    // 6A-T5 - HUD player (entityId === PLAYER_ID) cap nhat tu vitals.
     if (event.entityId === PLAYER_ID) {
       this.playerHud?.updateHp(event.hpAfter, event.maxHp)
 
@@ -1873,8 +1878,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * 6A-T5 — exit zone trong canvas click → bridge sang DOM confirm
-   * modal (T6) qua eventBus. KHÔNG mở modal trực tiếp từ scene.
+   * 6A-T5 - exit zone trong canvas click -> bridge sang DOM confirm
+   * modal (T6) qua eventBus. KHONG mo modal truc tiep tu scene.
    */
   // NOTE (2026-09-28): intentional seam - no production caller wires a
   // canvas exit-zone click today; the DOM CombatTopBar exit button emits
@@ -1884,38 +1889,38 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.eventBus?.emit('combat_exit_request', undefined)
   }
 
-  // "NÃ¡ÂºÂ£y sÃ¡Â»â€˜" thÃ¡ÂºÂ­t sÃ¡Â»Â± Ã¢â‚¬â€ pop-in bÃ¡ÂºÂ±ng Back.easeOut (bÃ¡ÂºÂ­t nÃ¡ÂºÂ£y quÃƒÂ¡ cÃ¡Â»Â¡ rÃ¡Â»â€œi
-  // co vÃ¡Â»Â, khÃƒÂ¡c easeOut tuyÃ¡ÂºÂ¿n tÃƒÂ­nh cÃ¡Â»Â§a showFloatingText) rÃ¡Â»â€œi mÃ¡Â»â€ºi trÃƒÂ´i
-  // lÃƒÂªn/mÃ¡Â»Â dÃ¡ÂºÂ§n, tÃƒÂ¡ch biÃ¡Â»â€¡t hÃ¡ÂºÂ³n phÃ¡ÂºÂ§n chÃ¡Â»Â¯ "ChÃƒÂ­ MÃ¡ÂºÂ¡ng!"/"NÃƒÂ©!" (showFloatingText)
-  // Ã¢â‚¬â€ jitter ngang nhÃ¡Â»Â Ã„â€˜Ã¡Â»Æ’ 2 hiÃ¡Â»â€¡u Ã¡Â»Â©ng khÃƒÂ´ng Ã„â€˜ÃƒÂ¨ khÃƒÂ­t lÃƒÂªn nhau khi cÃƒÂ¹ng
-  // 1 Ã„â€˜ÃƒÂ²n vÃ¡Â»Â«a ChÃƒÂ­ MÃ¡ÂºÂ¡ng vÃ¡Â»Â«a cÃƒÂ³ sÃƒÂ¡t thÃ†Â°Ã†Â¡ng.
+  // "NaoGBPy sa"'" thaot sa"+/- aEUR" pop-in bao+/-ng Back.easeOut (baot naoGBPy quA! ca"! ra""i
+  // co va", khA!c easeOut tuyao?n tAnh ca"seca showFloatingText) ra""i ma">i trA'i
+  // lAan/ma" daosecn, tA!ch bia"+t hao3n phaosecn cha"- "ChA Mao!ng!"/"NA(c)!" (showFloatingText)
+  // aEUR" jitter ngang nha" A'a"f 2 hia"+u a"(c)ng khA'ng A'A" khAt lAan nhau khi cA1ng
+  // 1 A'A2n va""a ChA Mao!ng va""a cA3 sA!t thAEdegAE!ng.
   // Internal (module boundary).
   showDamageNumber(sprite: EntitySprite, value: number, color: string, critical: boolean) {
     this.damageText.showDamageNumber(sprite, value, color, critical)
   }
 
   /**
-   * Format text DoT Ã„â€˜ÃƒÂ£ gom (Ã‚Â§7.2, tÃƒÂ¡ch hÃƒÂ m thuÃ¡ÂºÂ§n Ã„â€˜Ã¡Â»Æ’ test trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p) Ã¢â‚¬â€
-   * tÃ¡Â»â€¢ng Ã¢â€°Â¥1 lÃƒÂ m trÃƒÂ²n theo formatter hiÃ¡Â»â€¡n cÃƒÂ³; sÃ¡Â»â€˜ nhÃ¡Â»Â (|x|<1) hiÃ¡Â»â€¡n 1 chÃ¡Â»Â¯
-   * sÃ¡Â»â€˜ thÃ¡ÂºÂ­p phÃƒÂ¢n vÃ¡Â»â€ºi SÃƒâ‚¬N 0.1 nÃƒÂªn KHÃƒâ€NG BAO GIÃ¡Â»Å“ hiÃ¡Â»â€¡n "-0.0" (fix
-   * 2026-08-26: trÃ†Â°Ã¡Â»â€ºc Ã„â€˜ÃƒÂ¢y 0<x<0.05 render thÃƒÂ nh "-0.0").
+   * Format text DoT A'AGBP gom (Asec7.2, tA!ch hA m thuaosecn A'a"f test tra"+/-c tiao?p) aEUR"
+   * ta"*ng ao/ooJPY1 lA m trA2n theo formatter hia"+n cA3; sa"' nha" (|x|<1) hia"+n 1 cha"-
+   * sa"' thaop phAcn va">i SAEURN 0.1 nAan KHA"NG BAO GIa"oe hia"+n "-0.0" (fix
+   * 2026-08-26: trAEdega">c A'Acy 0<x<0.05 render thA nh "-0.0").
    */
   // Internal (module boundary).
   showDotDamageNumber(sprite: EntitySprite, value: number, color: string) {
     this.damageText.showDotDamageNumber(sprite, value, color)
   }
 
-  // Internal (module boundary — combat-action-feedback).
+  // Internal (module boundary - combat-action-feedback).
   onCritical(event: CombatScenePayload) {
     this.actionFeedback.onCritical(event)
   }
 
-  // Internal (module boundary — combat-action-feedback).
+  // Internal (module boundary - combat-action-feedback).
   onHit(event: CombatScenePayload) {
     this.actionFeedback.onHit(event)
   }
 
-  // Internal (module boundary — combat-action-feedback).
+  // Internal (module boundary - combat-action-feedback).
   onDodge(event: CombatScenePayload) {
     this.actionFeedback.onDodge(event)
   }
@@ -1933,30 +1938,30 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Combat Art Pipeline Task 9 (2026-09-05) — dùng chung bởi onDeath() (event
-   * 'death' thật) và reconcileCombatantSprites() (fallback khi entity mất
-   * khỏi snapshot mà không có event riêng): đánh dấu dying, dọn DoT/cast bar,
-   * phát animation '-death' NẾU sprite là Sprite thật + clip đã đăng ký, và
-   * HOÃN destroy tới khi CẢ tween xoay/mờ CŨ lẫn animation (nếu có) đều xong
-   * — spec §9: cleanup không được cắt ngang animation chết. Không có
-   * animation hợp lệ → animDone giữ true ngay từ đầu, hành vi y hệt trước
-   * Task 9 (chỉ chờ tween).
+   * Combat Art Pipeline Task 9 (2026-09-05) - dung chung boi onDeath() (event
+   * 'death' that) va reconcileCombatantSprites() (fallback khi entity mat
+   * khoi snapshot ma khong co event rieng): danh dau dying, don DoT/cast bar,
+   * phat animation '-death' NEU sprite la Sprite that + clip da dang ky, va
+   * HOAN destroy toi khi CA tween xoay/mo CU lan animation (neu co) deu xong
+   * - spec sec9: cleanup khong duoc cat ngang animation chet. Khong co
+   * animation hop le -> animDone giu true ngay tu dau, hanh vi y het truoc
+   * Task 9 (chi cho tween).
    *
-   * Player KHÔNG BAO GIỜ bị destroy ở đây (giữ vị trí cuối dưới overlay kết
-   * quả, xem onBattleEnd) — chỉ tween/animation chạy, isPlayer chặn nhánh
+   * Player KHONG BAO GIO bi destroy o day (giu vi tri cuoi duoi overlay ket
+   * qua, xem onBattleEnd) - chi tween/animation chay, isPlayer chan nhanh
    * destroy trong finalize().
    */
-  // Internal (module boundary — combat-animation-playback owns the death
+  // Internal (module boundary - combat-animation-playback owns the death
   // sequence; scene delegate kept for reconcile fallback + test seams).
   beginDeathSequence(sprite: EntitySprite, id: string): void {
     this.animationPlayback.beginDeathSequence(sprite, id)
   }
 
-  // TrÃ¡ÂºÂ­n mÃ¡Â»â€ºi bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u TRONG LÃƒÅ¡C scene nÃƒÂ y vÃ¡ÂºÂ«n Ã„â€˜ang active (Auto-refight
-  // sau victory/defeat, xem CombatVictoryPanel.vue Ã¢â‚¬â€ KHÃƒâ€NG Ã„â€˜i qua
-  // MainScene) hoÃ¡ÂºÂ·c lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u vÃƒÂ o Combat Scene (create() Ã„â€˜ÃƒÂ£ tÃ¡Â»Â± dÃ¡Â»Â±ng
-  // player, hÃƒÂ m nÃƒÂ y reset lÃ¡ÂºÂ¡i vÃ¡Â»Â Ã„â€˜ÃƒÂºng trÃ¡ÂºÂ¡ng thÃƒÂ¡i ban Ã„â€˜Ã¡ÂºÂ§u cho chÃ¡ÂºÂ¯c,
-  // no-op nÃ¡ÂºÂ¿u Ã„â€˜ÃƒÂ£ sÃ¡ÂºÂ¡ch sÃ¡ÂºÂµn).
+  // Traon ma">i bao-t A'aosecu TRONG LAsC scene nA y vao"n A'ang active (Auto-refight
+  // sau victory/defeat, xem CombatVictoryPanel.vue aEUR" KHA"NG A'i qua
+  // MainScene) hoao*c laosecn A'aosecu vA o Combat Scene (create() A'AGBP ta"+/- da"+/-ng
+  // player, hA m nA y reset lao!i va" A'Aong trao!ng thA!i ban A'aosecu cho chao-c,
+  // no-op nao?u A'AGBP sao!ch saoun).
   onBattleStart(options?: { rebind?: boolean }) {
     this._skillPlayback?.cancel()
     this._hoaCauPresentation?.cancel()
@@ -1967,21 +1972,21 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this._skillVfxDriver?.reset(options?.rebind ? 'rebind' : 'battle')
     this.inBattle = true
 
-    // 6A-T5 — HUD hiện khi vào trận.
+    // 6A-T5 - HUD hien khi vao tran.
     this._playerHud?.setVisible(true)
 
-    // VÃƒÂ²ng Ã„â€˜Ã¡Â»Âi background (2026-08-26): trÃ¡ÂºÂ­n mÃ¡Â»â€ºi bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u Ã¢â‚¬â€ HÃ¡Â»Â¦Y mÃ¡Â»Âi lÃ¡ÂºÂ§n
-    // load backdrop cÃƒÂ²n treo cÃ¡Â»Â§a battle_end trÃ†Â°Ã¡Â»â€ºc (generation cÃ…Â©) Ã„â€˜Ã¡Â»Æ’
-    // callback khÃƒÂ´ng swap giÃ¡Â»Â¯a trÃ¡ÂºÂ­n; nÃ¡Â»Ân hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i giÃ¡Â»Â¯ nguyÃƒÂªn tÃ¡Â»â€ºi
-    // battle_end KÃ¡ÂºÂ¾ TIÃ¡ÂºÂ¾P.
+    // VA2ng A'a"i background (2026-08-26): traon ma">i bao-t A'aosecu aEUR" Ha"|Y ma"i laosecn
+    // load backdrop cA2n treo ca"seca battle_end trAEdega">c (generation cA(c)) A'a"f
+    // callback khA'ng swap gia"-a traon; na"n hia"+n tao!i gia"- nguyAan ta">i
+    // battle_end Kao3/4 TIao3/4P.
     this.backdropGeneration++
 
-    // DoT accumulator (Ã‚Â§7.2) Ã¢â‚¬â€ trÃ¡ÂºÂ­n mÃ¡Â»â€ºi, dÃ¡Â»Ân bucket cÃ…Â©.
+    // DoT accumulator (Asec7.2) aEUR" traon ma">i, da"n bucket cA(c).
     this.dotAccumulators.clear()
 
-    // Audit fix 2026-08-31 — status VFX icons của trận trước (DoT còn tick khi
-    // battle end, không có status_vfx_removed event) không được dọn ở đây từng
-    // khiến icon cũ đóng băng trên màn qua auto-refight trong cùng scene.
+    // Audit fix 2026-08-31 - status VFX icons cua tran truoc (DoT con tick khi
+    // battle end, khong co status_vfx_removed event) khong duoc don o day tung
+    // khien icon cu dong bang tren man qua auto-refight trong cung scene.
     for (const status of this.statuses.values()) {
       status.icon.destroy()
       status.stackLabel.destroy()
@@ -2002,13 +2007,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     if (player) {
       this.resetVisual(player)
 
-      // resetVisual restores transform/alpha but not animation state — a
+      // resetVisual restores transform/alpha but not animation state - a
       // death clip frozen on its last frame would carry into the new
       // battle. Replay the default state the same way create() does.
       this.playCombatAnimation(player, PLAYER_ID, 'idle')
 
-      // TrÃ¡ÂºÂ­n mÃ¡Â»â€ºi = Player lÃ¡ÂºÂ¡i Ã„â€˜i qua telegraph spawn (plan Ã‚Â§12.2): Ã¡ÂºÂ©n
-      // sprite tÃ¡Â»â€ºi khi snapshot bÃƒÂ¡o materialize, snap vÃ¡Â»Â cÃ¡Â»â„¢t cÃ¡Â»â€¢ng.
+      // Traon ma">i = Player lao!i A'i qua telegraph spawn (plan Asec12.2): ao(c)n
+      // sprite ta">i khi snapshot bA!o materialize, snap va" ca"(TM)t ca"*ng.
       this.entityVisual.hidePlayer(player)
 
       this.snapInterpolationTarget(PLAYER_ID, HERO_COLUMN)
@@ -2019,8 +2024,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.playerSpawnHandle?.destroy()
     this.playerSpawnHandle = undefined
 
-    // Auto-repeat/trÃ¡ÂºÂ­n mÃ¡Â»â€ºi trong cÃƒÂ¹ng scene Ã¢â‚¬â€ dÃ¡Â»Ân telegraph cÃ…Â© (snapshot
-    // mÃ¡Â»â€ºi cÃ¡Â»Â§a battle kÃ¡ÂºÂ¿ sÃ¡ÂºÂ½ tÃ¡ÂºÂ¡o handle sÃ¡ÂºÂ¡ch theo pendingEnemySpawns mÃ¡Â»â€ºi).
+    // Auto-repeat/traon ma">i trong cA1ng scene aEUR" da"n telegraph cA(c) (snapshot
+    // ma">i ca"seca battle kao? sao1/2 tao!o handle sao!ch theo pendingEnemySpawns ma">i).
     for (const entry of this.spawnVfxHandles.values()) {
       entry.handle.destroy()
     }
@@ -2029,7 +2034,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.entityVisual.clear()
 
     // QA 2026-09-10 Task 9 follow-up (R14.4 guard): the party countdown
-    // telegraph handle map was NOT cleared here — the old reasoning relied
+    // telegraph handle map was NOT cleared here - the old reasoning relied
     // on the turn engine always publishing a flush snapshot before combat
     // proper, a cross-system invariant enforced nowhere. A forced start
     // that skips that snapshot would carry a leaked handle and stale
@@ -2117,43 +2122,43 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Action Playback Task 7 (2026-09-05) — 'turn_ready': short flash/pulse
-   * trên sprite actor rồi acknowledgeTurnReady() trong onComplete (5-phase
-   * machine bước 1 → 2). Placeholder visual đơn giản theo plan (không
-   * designed visual — polish sau).
+   * Action Playback Task 7 (2026-09-05) - 'turn_ready': short flash/pulse
+   * tren sprite actor roi acknowledgeTurnReady() trong onComplete (5-phase
+   * machine buoc 1 -> 2). Placeholder visual don gian theo plan (khong
+   * designed visual - polish sau).
    */
-  // Internal (module boundary — combat-action-feedback).
+  // Internal (module boundary - combat-action-feedback).
   private onTurnReady(event: { actorId: string }) {
     this.actionFeedback.onTurnReady(event)
   }
 
   /**
-   * Action Playback Task 7 (2026-09-05) — 'turn_standby_complete': tail
-   * event (completeAction ĐÃ chạy trước khi event tới) — presentation-only
-   * bookkeeping, KHÔNG ack gì (không còn wait-gate).
+   * Action Playback Task 7 (2026-09-05) - 'turn_standby_complete': tail
+   * event (completeAction DA chay truoc khi event toi) - presentation-only
+   * bookkeeping, KHONG ack gi (khong con wait-gate).
    */
-  // Internal (module boundary — combat-action-feedback).
+  // Internal (module boundary - combat-action-feedback).
   private onTurnStandbyComplete(event: { actorId: string }) {
     this.actionFeedback.onTurnStandbyComplete(event)
   }
 
   /**
-   * Depth lÃ¡Â»â€ºp upright cho impact tÃ¡ÂºÂ¡i anchorCell: cÃƒÂ¹ng hÃ¡Â»â€¡ vÃ¡Â»â€ºi entity sprite
-   * (foot Y) + bias nhÃ¡Â»Â Ã¢â€ â€™ effect Ã„â€˜ÃƒÂ¨ Ã„â€˜ÃƒÂºng target cÃ¡Â»Â§a nÃƒÂ³ nhÃ†Â°ng vÃ¡ÂºÂ«n bÃ¡Â»â€¹
-   * entity hÃƒÂ ng GÃ¡ÂºÂ¦N camera che (occlusion 2.5D). Flat mode giÃ¡Â»Â¯ lÃ¡Â»â€ºp
-   * upright cÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh nhÃ†Â° renderer cÃ…Â©.
+   * Depth la">p upright cho impact tao!i anchorCell: cA1ng ha"+ va">i entity sprite
+   * (foot Y) + bias nha" a+' effect A'A" A'Aong target ca"seca nA3 nhAEdegng vao"n ba"<
+   * entity hA ng Gao|N camera che (occlusion 2.5D). Flat mode gia"- la">p
+   * upright ca"' A'a"<nh nhAEdeg renderer cA(c).
    */
   resolveUprightVfxDepth(anchorCell: GridPosition): number {
     return this.vfxSpawner.resolveUprightVfxDepth(anchorCell)
   }
 
-  // Buff bar (2026-09-02) — floating text tên hiệu ứng CHỈ lần đầu
-  // attach theo (targetId:buffId) — 2 nguồn cùng buff id chỉ floating 1
-  // lần; stack tăng không floating lại. Clear ở 2 cleanup sites.
-  // Internal (module boundary — combat-action-feedback owns attach-float dedup).
+  // Buff bar (2026-09-02) - floating text ten hieu ung CHI lan dau
+  // attach theo (targetId:buffId) - 2 nguon cung buff id chi floating 1
+  // lan; stack tang khong floating lai. Clear o 2 cleanup sites.
+  // Internal (module boundary - combat-action-feedback owns attach-float dedup).
   floatedStatusKeys = new Set<string>()
 
-  // Internal (module boundary — combat-action-feedback).
+  // Internal (module boundary - combat-action-feedback).
   private onStatusAttached(event: StatusVfxAttachedEvent) {
     this.actionFeedback.onStatusAttached(event)
   }
@@ -2215,20 +2220,20 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // ================= Background lifecycle (battle_end) =================
 
   /**
-   * VÃƒÂ²ng Ã„â€˜Ã¡Â»Âi background mÃ¡Â»â€ºi (2026-08-26) Ã¢â‚¬â€ gÃ¡Â»Âi DUY NHÃ¡ÂºÂ¤T tÃ¡ÂºÂ¡i battle_end:
-   * chÃ¡Â»Ân ngÃ¡ÂºÂ«u nhiÃƒÂªn variant KÃ¡ÂºÂ¾ TIÃ¡ÂºÂ¾P khÃƒÂ¡c variant hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i (selectNext
-   * trÃƒÂ¡nh trÃƒÂ¹ng tÃ¡Â»Â«ng chiÃ¡Â»Âu), load thiÃ¡ÂºÂ¿u asset NGAY LÃƒÅ¡C overlay kÃ¡ÂºÂ¿t quÃ¡ÂºÂ£
-   * Ã„â€˜ang hiÃ¡Â»â€¡n rÃ¡Â»â€œi swap nguyÃƒÂªn khÃ¡Â»â€˜i Ã¢â‚¬â€ khÃƒÂ´ng flash, khÃƒÂ´ng Ã„â€˜Ã¡Â»Â¥ng nÃ¡Â»Ân trong
-   * lÃƒÂºc trÃ¡ÂºÂ­n cÃƒÂ²n/Ã„â€˜ang Ã„â€˜ÃƒÂ¡nh lÃ¡ÂºÂ¡i.
+   * VA2ng A'a"i background ma">i (2026-08-26) aEUR" ga"i DUY NHao*T tao!i battle_end:
+   * cha"n ngao"u nhiAan variant Kao3/4 TIao3/4P khA!c variant hia"+n tao!i (selectNext
+   * trA!nh trA1ng ta""ng chia"u), load thiao?u asset NGAY LAsC overlay kao?t quaoGBP
+   * A'ang hia"+n ra""i swap nguyAan kha"'i aEUR" khA'ng flash, khA'ng A'a"JPYng na"n trong
+   * lAoc traon cA2n/A'ang A'A!nh lao!i.
    *
-   * - Load xong TRÃ†Â¯Ã¡Â»Å¡C trÃ¡ÂºÂ­n kÃ¡ÂºÂ¿: swap ngay (an toÃƒÂ n Ã¢â‚¬â€ battle Ã„â€˜ÃƒÂ£ hÃ¡ÂºÂ¿t).
-   * - TrÃ¡ÂºÂ­n mÃ¡Â»â€ºi bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u TRÃ†Â¯Ã¡Â»Å¡C khi load xong: generation token cÃ…Â© bÃ¡Â»â€¹ vÃƒÂ´
-   *   hiÃ¡Â»â€¡u (onBattleStart++), KHÃƒâ€NG swap giÃ¡Â»Â¯a trÃ¡ÂºÂ­n; nÃ¡Â»Ân hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i giÃ¡Â»Â¯
-   *   nguyÃƒÂªn tÃ¡Â»â€ºi battle_end kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p.
+   * - Load xong TRAE-a"sC traon kao?: swap ngay (an toA n aEUR" battle A'AGBP hao?t).
+   * - Traon ma">i bao-t A'aosecu TRAE-a"sC khi load xong: generation token cA(c) ba"< vA'
+   *   hia"+u (onBattleStart++), KHA"NG swap gia"-a traon; na"n hia"+n tao!i gia"-
+   *   nguyAan ta">i battle_end kao? tiao?p.
    */
   private prepareThanhVanBackdropForNextBattle() {
-    // Flat mode khÃƒÂ´ng cÃƒÂ³ art backdrop Ã„â€˜Ã¡Â»Æ’ swap; scene stub/test thiÃ¡ÂºÂ¿u
-    // loader cÃ…Â©ng bÃ¡Â»Â qua an toÃƒÂ n.
+    // Flat mode khA'ng cA3 art backdrop A'a"f swap; scene stub/test thiao?u
+    // loader cA(c)ng ba" qua an toA n.
     if (!this.isPerspective || !this.textures || !this.load) {
       return
     }
@@ -2252,19 +2257,19 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     for (const entry of missing) {
-      this.load.image(entry.key, entry.url)
+      this.load.image(entry.key, resolveAssetUrl(entry.url))
     }
 
     const generation = ++this.backdropGeneration
 
-    // Guard scene chÃ¡ÂºÂ¿t giÃ¡Â»Â¯a lÃƒÂºc tÃ¡ÂºÂ£i: handler kiÃ¡Â»Æ’m tra scene cÃƒÂ²n active.
+    // Guard scene chao?t gia"-a lAoc taoGBPi: handler kia"fm tra scene cA2n active.
     this.load.once(Phaser.Loader.Events.COMPLETE, () => {
       if (!this.scene || !this.sys.isActive()) {
         return
       }
 
-      // ChÃ¡Â»â€° lÃ¡ÂºÂ§n yÃƒÂªu cÃ¡ÂºÂ§u MÃ¡Â»Å¡I NHÃ¡ÂºÂ¤T Ã„â€˜Ã†Â°Ã¡Â»Â£c swap, vÃƒÂ  chÃ¡Â»â€° khi chÃ†Â°a cÃƒÂ³ trÃ¡ÂºÂ­n mÃ¡Â»â€ºi
-      // (onBattleStart Ã„â€˜ÃƒÂ£ tÃ„Æ’ng token).
+      // Cha"o/oo laosecn yAau caosecu Ma"sI NHao*T A'AEdega"GBPc swap, vA  cha"o/oo khi chAEdega cA3 traon ma">i
+      // (onBattleStart A'AGBP tAfng token).
       if (generation === this.backdropGeneration && !this.inBattle) {
         this.swapThanhVanBackdrop(desired)
       }
@@ -2273,7 +2278,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.load.start()
   }
 
-  /** HuÃ¡Â»Â· backdrop Thanh VÃƒÂ¢n hiÃ¡Â»â€¡n hÃƒÂ nh vÃƒÂ  dÃ¡Â»Â±ng lÃ¡ÂºÂ¡i tÃ¡Â»Â« texture Ã„â€˜ÃƒÂ£ load. */
+  /** Hua"* backdrop Thanh VAcn hia"+n hA nh vA  da"+/-ng lao!i ta"" texture A'AGBP load. */
   private swapThanhVanBackdrop(variant: ThanhVanVariant) {
     this.thanhVanVariant = variant
 
@@ -2291,8 +2296,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.usingArtBackdrop = true
 
-    // Grid lines Ã„â€˜ÃƒÂ£ tÃ¡ÂºÂ¯t khi dÃƒÂ¹ng art backdrop Ã¢â‚¬â€ gÃ¡Â»Âi lÃ¡ÂºÂ¡i cho chÃ¡ÂºÂ¯c (khÃƒÂ´ng
-    // vÃ¡ÂºÂ½ gÃƒÂ¬ khi usingArtBackdrop=true).
+    // Grid lines A'AGBP tao-t khi dA1ng art backdrop aEUR" ga"i lao!i cho chao-c (khA'ng
+    // vao1/2 gA! khi usingArtBackdrop=true).
     this.redrawGridLines()
   }
 }

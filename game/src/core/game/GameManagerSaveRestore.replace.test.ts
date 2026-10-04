@@ -1,7 +1,7 @@
-// R10 (AR-12, S3) — restore replaces bag contents instead of adding.
+// R10 (AR-12, S3) - restore replaces bag contents instead of adding.
 // Pre-R10, GameManagerSaveRestore.restoreFromSave() looped save.materials/
 // save.pills through MaterialBag.add()/PillBag.add() without clearing the
-// live bag first — a live-session restore (boot retry, reload race) into a
+// live bag first - a live-session restore (boot retry, reload race) into a
 // nonempty bag would MERGE saved amounts on top of whatever was already
 // there instead of replacing it. Fresh boot starts empty so this was
 // invisible in the only production caller today; it is still a correctness
@@ -78,7 +78,7 @@ describe('GameManagerSaveRestore — replacement semantics (R10, S3)', () => {
     manager.saveOps.restoreFromSave(baseSave(player, { materials: [{ materialId: 'r10_replace_material_a', amount: 5 }] }))
 
     expect(manager.materialBag.getAmount('r10_replace_material_a')).toBe(5)
-    // Pre-existing, unrelated stack must be gone — replaced, not merged.
+    // Pre-existing, unrelated stack must be gone - replaced, not merged.
     expect(manager.materialBag.getAmount('r10_replace_material_b')).toBe(0)
     expect(manager.materialBag.getAll()).toHaveLength(1)
   })

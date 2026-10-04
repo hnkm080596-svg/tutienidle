@@ -1,10 +1,10 @@
 /**
- * Roll thuần dùng chung cho mọi nơi cần random rơi đồ/số lượng —
- * tách ra từ ExplorationSystem (trước đây có riêng 1 bản
- * randomInt() private) để ExplorationSystem lẫn loot-khi-giết-quái
- * (xem GameManager.grantBattleRewardIfNeeded()) dùng chung 1 nguồn.
+ * Roll thuan dung chung cho moi noi can random roi do/so luong -
+ * tach ra tu ExplorationSystem (truoc day co rieng 1 ban
+ * randomInt() private) de ExplorationSystem lan loot-khi-giet-quai
+ * (xem GameManager.grantBattleRewardIfNeeded()) dung chung 1 nguon.
  *
- * Mission C Task 8 — optional trailing `rng` param: the combat session
+ * Mission C Task 8 - optional trailing `rng` param: the combat session
  * threads its seeded RNG through; economy callers leave it at the
  * Math.random default (out of the session-RNG boundary).
  */
@@ -27,9 +27,9 @@ export interface WeightedEntry<T> {
 }
 
 /**
- * Random 1 giá trị theo trọng số — dùng cho roll phẩm chất trang
- * bị (xem EquipmentQuality.ts) và bất kỳ chỗ nào khác cần random
- * không đều.
+ * Random 1 gia tri theo trong so - dung cho roll pham chat trang
+ * bi (xem EquipmentQuality.ts) va bat ky cho nao khac can random
+ * khong deu.
  */
 export function weightedRandom<T>(entries: WeightedEntry<T>[], rng: () => number = Math.random): T {
   // T8-71 - an empty table used to crash on `entries[-1]!.value` with an

@@ -1,13 +1,13 @@
 ﻿// @vitest-environment jsdom
 //
-// electron-combat-timing-smoothing-plan.md má»¥c 4/5/11 â€” BattleSystem cÃ³
-// thá»ƒ emit nhiá»u event 'positions' Äá»’NG Bá»˜ trong 1 outer tick (fixed-step
-// catch-up + snapshot-trÆ°á»›c-attack/snapshot-cuá»‘i-update). TrÆ°á»›c Ä‘Ã¢y
-// onPositions() gá»i setInterpolationTarget() NGAY cho má»i event, khiáº¿n
-// Ä‘oáº¡n ná»™i suy cuá»‘i cÃ¹ng ghi Ä‘Ã¨ cÃ¡c Ä‘oáº¡n trÆ°á»›c báº±ng cadence gáº§n 0ms
-// (this.time.now khÃ´ng Ä‘á»•i giá»¯a cÃ¡c lá»‡nh gá»i Ä‘á»“ng bá»™ trong cÃ¹ng 1 frame
-// Phaser). Test nÃ y gá»i THáº²NG method private tháº­t (cÃ¹ng pattern
-// CombatScene.projectile.test.ts) Ä‘á»ƒ bug tÆ°Æ¡ng tá»± tÃ¡i diá»…n sáº½ bá»‹ báº¯t láº¡i.
+// electron-combat-timing-smoothing-plan.md muc 4/5/11 - BattleSystem co
+// the emit nhieu event 'positions' DONG BO trong 1 outer tick (fixed-step
+// catch-up + snapshot-truOc-attack/snapshot-cuoi-update). TruOc day
+// onPositions() goi setInterpolationTarget() NGAY cho moi event, khien
+// doan noi suy cuoi cung ghi de cac doan truOc bang cadence gan 0ms
+// (this.time.now khong doi giua cac lenh goi dong bo trong cung 1 frame
+// Phaser). Test nay goi THANG method private that (cung pattern
+// CombatScene.projectile.test.ts) de bug tuong tu tai dien se bI bat lai.
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
@@ -15,9 +15,9 @@ import type { CombatScene } from './CombatScene'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 
 // Stub Phaser GameObject chainable API (setOrigin/setPosition/setSize/
-// updateDisplayOrigin/setStrokeStyle/setDisplaySize/play...) mÃ  khÃ´ng
-// cáº§n liá»‡t kÃª tá»«ng method â€” má»i method tráº£ vá» CHÃNH object Ä‘Ã³ (chainable),
-// property gÃ¡n/Ä‘á»c Ä‘Æ°á»£c nhÆ° object thÆ°á»ng (width/height/x/y/active...).
+// updateDisplayOrigin/setStrokeStyle/setDisplaySize/play...) ma khong
+// can liet ke tung method - moi method tra ve CHINH object do (chainable),
+// property gan/doc duoc nhu object thuong (width/height/x/y/active...).
 function chainable(): any {
   const target: Record<string, unknown> = {}
   const proxy: any = new Proxy(target, {
@@ -123,7 +123,7 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
 
     scene.time.now = 0
     scene.onPositions(positionsEvent({ playerX: 0 }))
-    scene.update(0, 16) // snap ban Ä‘áº§u
+    scene.update(0, 16) // snap ban dau
 
     scene.time.now = 100
     scene.onPositions(positionsEvent({ playerX: 10 }))
@@ -205,8 +205,8 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
     )
     scene.update(0, 16)
 
-    // Ngay táº¡i thá»i Ä‘iá»ƒm Ã¡p snapshot má»›i â€” visual X báº¯t Ä‘áº§u tá»« vá»‹ trÃ­
-    // CÅ¨ (0, chÆ°a nháº£y tá»›i 100), tiáº¿n dáº§n theo interpolate() á»Ÿ update() sau.
+    // Ngay tai thoi diem ap snapshot mOi - visual X bat dau tu vI tri
+    // CU (0, chua nhay tOi 100), tien dan theo interpolate() o update() sau.
     scene.time.now = 100
     const entry = scene.interpolations.get('enemy_a')
     expect(entry.fromX).toBe(0)
@@ -245,8 +245,8 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
 
     expect(scene.sprites.has('enemy_a')).toBe(true)
 
-    // QuÃ¡i cháº¿t â€” emitPositions() cá»§a core CHá»ˆ liá»‡t kÃª quÃ¡i cÃ²n alive,
-    // nÃªn snapshot káº¿ tiáº¿p khÃ´ng cÃ²n 'enemy_a' trong máº£ng enemies.
+    // Quai chet - emitPositions() cua core CHI liet ke quai con alive,
+    // nen snapshot ke tiep khong con 'enemy_a' trong mang enemies.
     scene.onPositions(positionsEvent({ enemies: [] }))
     scene.update(0, 16)
 

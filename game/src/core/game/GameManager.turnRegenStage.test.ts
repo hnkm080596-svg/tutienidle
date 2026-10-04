@@ -11,12 +11,12 @@ import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
 import type { StatusVfxAttachedEvent } from '../battle/BattleEvents'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// M8 (ARCH-003) — real stage-loop regression for the per-turn resource
+// M8 (ARCH-003) - real stage-loop regression for the per-turn resource
 // contract: the REAL Phap Tu chain kits (resolved through
 // resolvePlayerSpecialUltimate + toTurnSkillDefinition (LegacySkillAdapter) +
 // playerToCombatEntity) apply thanh_tuyen / bang_giap / dia_tru through
 // appliesBuff, and the legacy-named regen stats they grant produce real
-// MP/Ward on the entity-turn cadence — nothing here is a synthetic
+// MP/Ward on the entity-turn cadence - nothing here is a synthetic
 // participant or a mocked stat.
 //
 // Vitals events carry the authoritative before/after views, so each test
@@ -94,8 +94,8 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
   gameManager.catalogOps.registerStages([stageFixture()])
   gameManager.setActivePlayer(player)
 
-  // Learn the chain special through SkillManager.add — the same manager
-  // API the unlocksSkillIds node effect calls — so the real
+  // Learn the chain special through SkillManager.add - the same manager
+  // API the unlocksSkillIds node effect calls - so the real
   // resolvePlayerSpecialUltimate path converts it into the battle's
   // `special` slot. The chain ultimate stays unlearned, so the special
   // is the player's first cast (turn 1) and regen starts immediately.
@@ -141,7 +141,7 @@ describe('M8 — real stage-loop resource regen (ARCH-003)', () => {
     startStage(h)
 
     const entity = h.playerEntity()
-    // Drain the pool so the regen is observable (test fixture write —
+    // Drain the pool so the regen is observable (test fixture write -
     // production mutation still flows through EntityVitalsSystem).
     entity.currentMp = 0
 

@@ -1,0 +1,11 @@
+Manual mutant-kill sweep over the T13 forged-claim seams vs tests/architecture/betaClaimedSourceForge.qa.test.ts (+ betaPersistedRealmModifiers.qa.test.ts for M1). Each mutant = revert/weaken ONE guard; pin must go RED.
+
+M1 Player.ts emit filter fallthrough 'return false' -> 'return true' (both branches): KILLED - 3 fails (realm unknown sourceId inert assert, non-inventory sourceType inert assert, phap-tu persisted claim inert assert).
+M2 saveShapeValidation F-A7-1 claim block emptied: KILLED - 3 fails (realm unknown sourceId rejected, non-loi_kiep talent rejected, non-inventory sourceType rejected).
+M3 AlchemySystem settle resolvePill(recipe.pillId) -> resolvePill(job.pillId): KILLED - 1 fail (forged pillId job delivers recipe.pillId assert).
+M5 BuildingSystem claim resolveAccrualRealmId -> raw pin: KILLED - 1 fail (forged pin clamps at claim; thuong_pham minted).
+M6 saveShapeValidation accrualRealmId bound disabled: KILLED - 2 fails (pin-above-realm rejected, unknown pin rejected).
+M7 TuLinhTranBalance emit bound -> sourceItemId presence only: KILLED - 2 fails (percent 9 emits >0; forged entry emits extra).
+M8 saveShapeValidation timed-effect coherence (source resolution + group multiplicity) disabled: KILLED - 5 fails (tl_tran+modifiers, percent bound, fabricated sourceItemId, pill+cultivationSpeedPercent, dup effectGroup).
+
+All mutants KILLED_EXPECTED; fixes restored byte-identical from saved copies; 22/22 pin tests green post-restore.

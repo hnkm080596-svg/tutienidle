@@ -10,7 +10,7 @@ import {
   kiemDaoCap,
 } from './NguKiemDao'
 
-// Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) — the ngu economy:
+// Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) - the ngu economy:
 // +1 Kiem Y per cast, converts to Kiem Dao at forgeCost(realmIndex),
 // count capped at realmIndex+1, gain is a no-op at cap, breakthrough
 // merge snapshots count into kiemDaoBase then resets count to 1.
@@ -56,7 +56,7 @@ describe('gainKiemY', () => {
   it('converts exactly at forgeCost and keeps the remainder', () => {
     const player = makeNguPlayer('qi_refining')
 
-    // LK cap is 2 — one forge at 9999 fills it.
+    // LK cap is 2 - one forge at 9999 fills it.
     gainKiemY(player, 9_999)
     expect(player.swordPath!.kiemDaoCount).toBe(2)
     expect(player.swordPath!.kiemY).toBe(0)
@@ -79,7 +79,7 @@ describe('gainKiemY', () => {
     gainKiemY(player, 16_899 * 3 + 123)
 
     expect(player.swordPath!.kiemDaoCount).toBe(4)
-    // Cap reached — per the gain-gate the remaining amount is NOT banked
+    // Cap reached - per the gain-gate the remaining amount is NOT banked
     // once count hits cap mid-gain (the while loop stops at cap; the
     // leftover below forgeCost stays banked).
     expect(player.swordPath!.kiemY).toBeLessThan(forgeCost(3))

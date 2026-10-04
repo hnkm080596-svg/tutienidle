@@ -1,0 +1,8 @@
+{
+  "applied": [
+    "evidence:EV-VERIFY-T18",
+    "evidence:EV-PIN-T17",
+    "evidence:EV-PIN-ARMISO",
+    "evidence:EV-MUT-T17"
+  ]
+}

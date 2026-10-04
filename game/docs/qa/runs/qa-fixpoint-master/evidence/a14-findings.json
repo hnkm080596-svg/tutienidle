@@ -1,0 +1,79 @@
+{
+  "audit": "SCOPE AUTHORITY seam - blind adversarial review",
+  "commit": "120cba78",
+  "branch": "devin/qa-fixpoint",
+  "probe_file": "tests/architecture/scopeAuthorityBlind.qa.test.ts",
+  "run": "cd game && npx vitest run tests/architecture/scopeAuthorityBlind.qa.test.ts",
+  "summary": "Two save gates (validateGameSaveShape then assertSaveAcceptable/preflight) plus restore-time normalization guard persisted claims. The realm/foundation/technique/affix/tribulation seams are deeply coherent - they replay the authored writers' rules at the boundary. The gaps cluster in one class: progress LEVEL and currency-TIER claims that bound only against catalog ceilings (maxLevel, MAX_SLOT_ENHANCE_LEVEL, stackLimit), never against the realm-tier that every authored WRITER gates on. Five confirmed findings; the forged-claims mint real effects on restore (enhance scale x4.6, production level 9 on a mortal, trung/thuong stone spending, and a beyond-ceiling realm that plays at tier 4 behind a notice-only flag). 20+ attacked surfaces held.",
+  "findings": [
+    {
+      "id": "F-SCOPE-1",
+      "title": "Forged high-tier spirit-stone stacks accepted at boundary and spent by enhance",
+      "severity": "High",
+      "attack_class": "forged persisted claim (currency tier)",
+      "surface": "materials[] -> validateStackEntries (saveShapeValidation.ts) -> materialBag",
+      "detail": "Every spirit-stone writer is realm-tier-keyed (production rollRewards via collectionRealmId, vendor quoteStoneGrant, GameManagerRewardOps reward receiver via getRealmTier(player.realmId), tribulation penalties). Beta realms mortal/qi_refining/foundation_establishment are tiers 1/2/3, so spirit_stone_trung_pham (tier>=4) and spirit_stone_thuong_pham (tier>=7) have ZERO beta producers. validateStackEntries checks registry membership + amount>=0 only; spirit stones declare stackLimit MAX_SAFE_INTEGER. The forged stack restores verbatim and enhance() accepts it: at enhanceLevel 30 the required stone id is spirit_stone_trung_pham (getSpiritStoneMaterialIdForEnhanceLevel), hasSpiritStones passes, spend commits - the forge pays a cost tier no beta session can unlock.",
+      "reproduction": "mortal save + materials[{spirit_stone_trung_pham x5000}] + equipmentSlots[{weapon enhanceLevel 30}] -> validateGameSaveShape ok=true -> restoreGameSession ok -> stack lands 5000 -> equipmentSystem.enhance('weapon','mortal',...) returns reason != 'missing_spirit_stone' and the trung stack drops below 5000. Probe: F-A in scopeAuthorityBlind.qa.test.ts (both secure assertions fail: shape.ok expected false, got true)."
+    },
+    {
+      "id": "F-SCOPE-2",
+      "title": "Forged equipmentSlots[].enhanceLevel restores verbatim and mints stat scale",
+      "severity": "High",
+      "attack_class": "forged persisted claim (progression level vs realm-tier-gated writer)",
+      "surface": "equipmentSlots[].enhanceLevel -> validateEquipmentSlotEntries (:3321) -> EquipmentSlotManager.restore -> calculateEquipmentScale",
+      "detail": "validateEquipmentSlotEntries bounds enhanceLevel to [0, MAX_SLOT_ENHANCE_LEVEL=100] only. The authored writer enhance() spends the spirit-stone tier keyed by level (ha_pham-only beta economy caps honest play at enhance <=29). A forged enhanceLevel 60 restores, and calculateEquipmentScale(level)=1+level*0.06 applies x4.6 to every stat of whatever item is equipped in the slot (EquipmentSystem :931, applied to equipped items at mint). No replay of the cost history bounds the claim to what the save's realm tier could have paid.",
+      "reproduction": "mortal save + equipmentSlots[{weapon, enhanceLevel 60, enhanceFailStreak 0}] -> shape ok -> restore ok -> equipmentSlotManager.get('weapon').enhanceLevel === 60 -> calculateEquipmentScale(60) === 4.6. Probe: F-B."
+    },
+    {
+      "id": "F-SCOPE-3",
+      "title": "Forged production-site and building levels mint impossible production (realm-tier gate skipped at boundary)",
+      "severity": "High",
+      "attack_class": "forged persisted claim (level vs realm-tier-gated writer)",
+      "surface": "productionSites[].level -> validateProductionSitesSave (:2715) -> ProductionSystem.restoreStates / buildings[].level -> validateBuildingsSave (:2580) -> getStoredAmount",
+      "detail": "Authored writers gate on realm tier: upgradeSite refuses currentRealmTier < targetLevel (level N+1 needs tier N+1); BuildingSystem.build canBuildDetailed gates requiredRealmId and upgrade refuses getRealmTier(currentRealmId) < instance.level+1. The save validators bound ONLY against catalog maxLevel (site.maxLevel / template.maxLevel) - no realm check. Restore copies level verbatim (restoreStates) and the level flows into live mints: spawned lanes stamp cycleMs = computeCycleSeconds(base, forged level)*1000 (level 9 = 4.6x speed, SITE_SPEED_MULTIPLIERS), and building accrual rate/capacity keys off the forged level.",
+      "reproduction": "mortal save + productionSites[{thanh_van_lam, level 9, autoRestart}] -> shape ok -> restore ok -> getState level 9 -> setWorkerAssignment spawns a lane with completesAt-startedAt == computeCycleSeconds(mortalBase, 9)*1000; control: upgradeSite on a clean level-1 save returns rejected (tier 1 < 2). Building variant: buildings[{linh_tuyen, level 9, accrualRealmId mortal}] -> shape ok -> getStoredAmount(9-level, T0+3600s) = 3300 vs 1269 for level 1 over the same window; control upgrade refused. Probe: F-C x2."
+    },
+    {
+      "id": "F-SCOPE-4",
+      "title": "Forged workerCycle.siteLevelAtStart mints a compressed settle window on a level-1 site",
+      "severity": "Medium",
+      "attack_class": "forged persisted claim (cycle window parameters vs parent state)",
+      "surface": "productionSites[].workerCycles[].siteLevelAtStart -> validateProductionCycleSave (:2634) -> tickWorkers settle",
+      "detail": "Per-cycle validation requires the span to equal computeCycleSeconds(CYCLE_BASE_SECONDS_BY_REALM[collectionRealmId], siteLevelAtStart)*1000, and pins collectionRealmId <= player realm - but siteLevelAtStart is bounded only by the site definition's maxLevel, NOT by the parent site entry's actual level and NOT by realm tier. A level-1 site can carry cycles stamped at level 9: the span is forged consistent so the validator passes, restore keeps the lane, and tickWorkers settles it immediately granting the cycle rewards. A lane claiming level 9 on a level-1 site is a state no writer emits (ensureSiteState stamps the site's real level).",
+      "reproduction": "mortal save + productionSites[{thanh_van_lam, level 1, workerCycles:[{siteLevelAtStart 9, completesAtMs T0+level9-span}] }] -> shape ok -> restore ok -> lane kept -> tickWorkers(T0+span) settles: material bag grows, lane list empties. Probe: F-D."
+    },
+    {
+      "id": "F-SCOPE-5",
+      "title": "Beyond-ceiling realm claim loads (flag is notice-only) and plays at the forged tier",
+      "severity": "Medium",
+      "attack_class": "forged persisted claim (realm claim) / acceptance-by-flag",
+      "surface": "player.realmId -> realm coherence (:3410) -> restoreGameSession -> unsupportedReleaseReason (betaScopeSurface :324)",
+      "detail": "A canonical golden_core save (coherent technique holder + sealed gradeHistory for the lagging grade, foundation record, realm index 4) passes shape validation and restores ok; unsupportedReleaseReason returns 'realm_beyond_release' which surfaces only a notice (useAppLifecycle :467). The forged realm is then LIVE: getRealmTier(golden_core)=4 keys the reward receiver (GameManagerRewardOps) and vendor quoteStoneGrant to spirit_stone_trung_pham - the impossible-currency of F-SCOPE-1 becomes legally produced; building/site upgrade realm-tier gates lift to 4; all beta stages/unlocks satisfy requiredRealmId <= golden_core. Note: flagged-load is the designed cross-release carry-forward path and the flag cannot distinguish a forged realm - the defect is that tier-keyed faucets do not bound by the flag, not that the save loads. resolveTerritoryTier does clamp production to foundation tier, so the production faucet stays ha_pham.",
+      "reproduction": "beyondCeilingSave('golden_core') -> validateGameSaveShape ok -> restoreGameSession status ok, player.realmId 'golden_core', unsupportedReleaseReason 'realm_beyond_release'. Probe: F-E."
+    }
+  ],
+  "holds": [
+    "production workerCycle.collectionRealmId pinned <= player realm index (forged foundation cycle on mortal save rejected)",
+    "building accrualRealmId pinned <= player realm index (F-TC5-1)",
+    "equipmentSlots[].enhanceLevel > MAX_SLOT_ENHANCE_LEVEL(100) rejected; enhanceFailStreak/negative bounds held",
+    "unknown registry ids (material/equipment/affix/pill/building/technique/production-site) rejected by assertSaveAcceptable preflight via staticSaveAcceptanceCatalogs",
+    "player.externalModifiers wiped on restore (stores/player.ts :453)",
+    "techniqueProgress mirror republished by TechniqueSystem.restore - forged mirror self-corrects",
+    "nodeLevels: core_* strict member + bounds + purchasedNodeIds mirror; non-core replay of node/excludesNode/nodeCount/realm prereqs; laggy gates (techniqueRank/techniqueGrade/skillCastCount/kiemDaoBelowCap) deliberately NOT replayed = legal frozen surplus",
+    "dormant-way nodeLevels cannot emit stats - admittedNodeModifiers pre-filters via betaNodeWriteAdmitted (GameManagerPersistentEffectOps :174)",
+    "phaGiapCarryStacks seeding capped at modifier.maxStacks per passive modifier",
+    "attributePoints <= getGlobalCultivationLevel(realmId, realmLevel); addCultivation clamps to required",
+    "realm coherence: realmId in REALMS, realmLevel <= maxLevel, techniques+grade/foundation earnability bounds via persistedResolvableFoundationRank, great_dao requires hiddenPerfection membership",
+    "stage claims: requiredRealmId <= player realm index (downward only) + zone-chain predecessor must be completed (F-TC9-2)",
+    "tribulation committedOutcome: grade <= persistedResolvableFoundationRank (F-TRB-1); settle re-gates isRealmTransitionEnabled(player.realmId, targetRealmId) + canTriggerBreakthrough -> forged target realm dropped (TribulationOutcomeService :183)",
+    "quests: progress claims reachable-class only; isUnlocked prune deactivates progress for unreachable quests; claim fails closed on scope-hidden quests (BETA SCOPE LOCK v2 sec.15)",
+    "equipment rolls: affix envelope pools/tiers/authored-tier-existence, foreign slots, slot substat policy, stat uniqueness, per-quality substat ceiling, main-stat range x quality multiplier all replayed; forged affix.value is clamped into the tier band by getEffectiveAffixValue at consume time",
+    "talent pools: pool-realm pin (F-A10-1), getTalentMaxLevel bound, isTalentEntitlementActionable",
+    "technique holder: exactly one entry equal to active way's techniqueId; canonical gradeHistory key-set (lagging live grade must carry sealed record) - verified by forging around it",
+    "skill core coverage: learned/node-granted/way-granted sources required for owned cores; mortal-boundary contract enforced",
+    "equipmentWash/equipmentRefine/other scope-hidden system calls gate on isScopeHidden at entry; test/dev helpers (isTestModeUnlockAll) DEV-gated",
+    "companion domain closed: isBetaFeature('companion') = false, isCompanionPullPoolEnabled() = false",
+    "notifications/tutorial stores are cosmetic - no authority mint",
+    "skillCastCounts/totalExperience accept any non-negative value but are writer-producible (no authored cap on casts) - reachable claims, not impossible"
+  ]
+}

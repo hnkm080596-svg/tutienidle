@@ -1,7 +1,7 @@
-// Buff bar (2026-09-02, Task 5) — floating text tên hiệu ứng CHỈ lần
-// đầu attach theo key `targetId:buffId` (không gồm sourceId): 2 nguồn
-// cùng buff id → 1 floating; event cũ không buffName → không floating
-// (compat). Màu theo polarity.
+// Buff bar (2026-09-02, Task 5) - floating text ten hieu ung CHI lan
+// dau attach theo key `targetId:buffId` (khong gom sourceId): 2 nguon
+// cung buff id -> 1 floating; event cu khong buffName -> khong floating
+// (compat). Mau theo polarity.
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { CombatScene } from './CombatScene'
@@ -45,7 +45,7 @@ function createScene() {
 
   scene.statuses = new Map()
 
-  // vfxSpawner là lazy getter trên prototype — override bằng own property.
+  // vfxSpawner la lazy getter tren prototype - override bang own property.
   Object.defineProperty(scene, 'vfxSpawner', {
     value: { onStatusAttached: vi.fn() },
     writable: true,

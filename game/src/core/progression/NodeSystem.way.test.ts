@@ -16,11 +16,11 @@ import { MAX_THE } from '../combat/CombatTypes'
 import { createDefaultPlayer } from '../player/Player'
 import type { ProgressionNode } from './ProgressionNode'
 
-// Cultivation Path Framework (M3, spec 2026-09-16 §24) — requiredWay
+// Cultivation Path Framework (M3, spec 2026-09-16 sec24) - requiredWay
 // way-membership gate: a way-tagged node is inert for every other way
 // at purchase, upgrade, aggregation, and every domain collector (the
 // render layer is not the gameplay authority). requiredWay undefined =
-// way-agnostic — all existing (untagged) nodes keep working.
+// way-agnostic - all existing (untagged) nodes keep working.
 //
 // The way gate sits BESIDE the path gate: the test nodes here carry
 // only requiredWay (no requiredCultivationPath) so the way check alone

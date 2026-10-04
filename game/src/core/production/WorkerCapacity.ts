@@ -1,6 +1,8 @@
-/** Nhân công tối đa theo cấp Chiêu Hiền Quán — công thức user chốt
- *  (roadmap 6C: "Nhân công tối đa = 1 + cấp Chiêu Hiền Quán × 2").
- *  Chưa xây CHQ (level 0) = 0 nhân công; cấp 1 → 3; cấp 9 → 19. */
+import { isScopeHidden } from '../betaScope'
+
+/** Nhan cong toi da theo cap Chieu Hien Quan - cong thuc user chot
+ *  (roadmap 6C: "Nhan cong toi da = 1 + cap Chieu Hien Quan x 2").
+ *  Chua xay CHQ (level 0) = 0 nhan cong; cap 1 -> 3; cap 9 -> 19. */
 export function getWorkerCapacityForLevel(chiHienQuanLevel: number): number {
   if (!Number.isFinite(chiHienQuanLevel) || chiHienQuanLevel <= 0) {
     return 0
@@ -42,4 +44,22 @@ export function sanitizeWorkerPoolInputs(
     : 0
 
   return { total, reserved, available: Math.max(0, total - reserved) }
+}
+
+/**
+ * Beta scope (sec.4C policy): `manualWorkforce` is scope-hidden - the
+ * CHQ pool and its persisted assignments stay dormant, but authored
+ * policy keeps automatic production running as a background system.
+ * While hidden, every capacity consumer reads this flat auto pool
+ * (CHQ level-1 equivalent: one lane per Thanh Van site) instead of the
+ * CHQ-sourced `player.autoWorkerCapacity`, so fresh and carried saves
+ * share the same live production economy. Value: 3 sites x 1 lane.
+ */
+export const BETA_BASELINE_WORKER_CAPACITY = 3
+
+export function betaEffectiveWorkerCapacity(autoWorkerCapacity: number): number {
+  if (isScopeHidden('manualWorkforce')) {
+    return BETA_BASELINE_WORKER_CAPACITY
+  }
+  return autoWorkerCapacity
 }

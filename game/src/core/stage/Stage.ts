@@ -3,7 +3,7 @@ export interface StageEnemyEntry {
 
   weight: number
 
-  // 0..1 — chance to attach the tinh_anh tag to that spawn (spec v3 B9):
+  // 0..1 - chance to attach the tinh_anh tag to that spawn (spec v3 B9):
   // stat buff via applyEliteMultiplier (core/enemy/EnemyStatInput.ts),
   // applied through applyEnemyTags (core/enemy/EnemyTag.ts) on the active
   // channel only. Default 0 (never tagged).
@@ -19,12 +19,12 @@ export interface Stage {
 
   requiredRealmId?: string
 
-  // Luyện Khí tầng 1-10 content pass (2026-08-14) — CHỈ còn dùng để
-  // HIỂN THỊ số "Tầng N" (xem StageSelectPanel.vue). Gate mở/khoá THẬT
-  // SỰ chạy hoàn toàn qua GameManager.isStageUnlocked() (thứ tự
-  // zone.stageIds + player.completedStageIds) — field này KHÔNG được
-  // đọc bởi logic gate; đổi thứ tự stage trong Zones.ts thì nhớ đồng
-  // bộ số hiển thị ở đây theo, không tự khớp.
+  // Luyen Khi tang 1-10 content pass (2026-08-14) - CHI con dung de
+  // HIEN THI so "Tang N" (xem StageSelectPanel.vue). Gate mo/khoa THAT
+  // SU chay hoan toan qua GameManager.isStageUnlocked() (thu tu
+  // zone.stageIds + player.completedStageIds) - field nay KHONG duoc
+  // doc boi logic gate; doi thu tu stage trong Zones.ts thi nho dong
+  // bo so hien thi o day theo, khong tu khop.
   requiredRealmLevel?: number
 
   // One zone contains three realm chapters; every chapter has ten floors.
@@ -34,37 +34,37 @@ export interface Stage {
 
   enemyPool: StageEnemyEntry[]
 
-  // Tổng số quái phải spawn hết (và đánh chết hết) để thắng màn.
+  // Tong so quai phai spawn het (va danh chet het) de thang man.
   totalEnemyCount: number
 
   /**
-   * Turn-Based Wave Redesign (2026-09-06) — số quái spawn ĐỒNG THỜI mỗi
-   * wave, theo thứ tự. sum(waves) PHẢI bằng totalEnemyCount (test bất
-   * biến enforce điều này cho mọi stage — xem EffectiveWaves.test.ts).
-   * Stage floor 10 (solo boss) vẫn khai waves bình thường (dữ liệu thô,
-   * không override) — effectiveWaves() mới là hàm áp override thành [1],
-   * y hệt cách effectiveTotalEnemyCount() đã làm cho totalEnemyCount.
+   * Turn-Based Wave Redesign (2026-09-06) - so quai spawn DONG THOI moi
+   * wave, theo thu tu. sum(waves) PHAI bang totalEnemyCount (test bat
+   * bien enforce dieu nay cho moi stage - xem EffectiveWaves.test.ts).
+   * Stage floor 10 (solo boss) van khai waves binh thuong (du lieu tho,
+   * khong override) - effectiveWaves() moi la ham ap override thanh [1],
+   * y het cach effectiveTotalEnemyCount() da lam cho totalEnemyCount.
    */
   waves: number[]
 
-  // Nhịp spawn mặc định — quái mới spawn theo nhịp này SONG SONG với
-  // quái đang sống (không đợi chết mới spawn tiếp), xem
-  // GameManager.updateStageProgress(). Sân trống quái giữa chừng thì
-  // spawn ngay bất kể còn bao nhiêu giây trong nhịp này.
+  // Nhip spawn mac dinh - quai moi spawn theo nhip nay SONG SONG voi
+  // quai dang song (khong doi chet moi spawn tiep), xem
+  // GameManager.updateStageProgress(). San trong quai giua chung thi
+  // spawn ngay bat ke con bao nhieu giay trong nhip nay.
   spawnIntervalSeconds: number
 
-  // Core Loop Foundation checklist (Mục BOSS) — không khai = stage
-  // này không có Boss (chỉ enemyPool ngẫu nhiên như cũ). Khai thì
-  // LƯỢT SPAWN CUỐI CÙNG (spawnedCount === totalEnemyCount - 1) LUÔN
-  // LÀ Boss (không roll enemyPool cho lượt đó) — xem
+  // Core Loop Foundation checklist (Muc BOSS) - khong khai = stage
+  // nay khong co Boss (chi enemyPool ngau nhien nhu cu). Khai thi
+  // LUOT SPAWN CUOI CUNG (spawnedCount === totalEnemyCount - 1) LUON
+  // LA Boss (khong roll enemyPool cho luot do) - xem
   // GameManager.pickEnemyForSpawn().
   bossEnemyId?: string
 
-  // Auto-farm Hoàn Mỹ (2026-09-04 spec) — số ROUND tối đa để đạt điều
-  // kiện "Hoàn Mỹ" (spec v3 D1: every party member alive at victory;
+  // Auto-farm Hoan My (2026-09-04 spec) - so ROUND toi da de dat dieu
+  // kien "Hoan My" (spec v3 D1: every party member alive at victory;
   // the count is battle.roundsElapsed - ATB rounds, NOT actor actions;
-  // the HP-loss threshold was removed). undefined = stage này chưa định nghĩa ngưỡng, không
-  // bao giờ đạt Hoàn Mỹ (an toàn — không mở khoá auto-farm ngoài ý
-  // muốn cho stage chưa balance). Content work, set theo từng stage.
+  // the HP-loss threshold was removed). undefined = stage nay chua dinh nghia nguong, khong
+  // bao gio dat Hoan My (an toan - khong mo khoa auto-farm ngoai y
+  // muon cho stage chua balance). Content work, set theo tung stage.
   perfectClearTurnLimit?: number
 }

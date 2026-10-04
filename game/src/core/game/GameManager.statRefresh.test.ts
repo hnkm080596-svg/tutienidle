@@ -1,4 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 - companion + formation domains are scope-hidden in
+// the beta build. This file keeps exercising the dormant build's enabled
+// semantics by stubbing the scope flags open (dormant-system convention).
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
@@ -9,16 +19,16 @@ import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../bat
 import { PASSIVE_SKILLS } from '../../data/skill/PassiveSkills'
 import { SKILLS } from '../../data/skill/Skills'
 
-// ARCH-002 (M7) — regression coverage for the stat-refresh / battle-reset
+// ARCH-002 (M7) - regression coverage for the stat-refresh / battle-reset
 // repair, driven through the real GameManager entry paths (no internal
 // helpers): passive stacks must be live in the current battle, must not leak
 // into the next battle's resolved base, and buff apply/remove/expire must be
-// effective before the next dependent read — including CC'd/charging actors.
+// effective before the next dependent read - including CC'd/charging actors.
 //
 // Audit anchors (docs/qa/2026-09-14-audit-combat-review.md):
 //  - C01: tat_phong 3 kills -> +6% speed live; next battle baseStats stayed
 //    stale at the buffed value (snapshot leaked resolved stacks).
-//  - C03: kim_giap on thiet_y_tang — defense sat in the pool without
+//  - C03: kim_giap on thiet_y_tang - defense sat in the pool without
 //    reaching entity.stats before the counter read them.
 
 function makeEnemy(id = 'sr_enemy'): ReturnType<typeof defineEnemy> {
@@ -120,7 +130,7 @@ describe('ARCH-002 M7 — passive stacks are live in-fight and reset before the 
     manager.setActivePlayer(player)
     manager.progressionOps.syncTalentCombatPassive(player)
 
-    // New entry contract: no caller-side stats — ops resolves the base
+    // New entry contract: no caller-side stats - ops resolves the base
     // internally after the passive reset.
     manager.startBattleWithPlayer(player, makeEnemy())
     advanceUntilFighting(manager, clock)
@@ -172,7 +182,7 @@ describe('ARCH-002 M7 — passive stacks are live in-fight and reset before the 
     clock.advance(COMBAT_STEP_SECONDS)
     expect(manager.getTurnBattle()!.players[0]!.entity.stats.speed).toBeGreaterThan(firstBaseSpeed)
 
-    // Second battle: baseStats must equal the clean resolved speed again —
+    // Second battle: baseStats must equal the clean resolved speed again -
     // the previous battle's stacks were reset before this snapshot, and the
     // live channel is the only way they can re-enter.
     manager.startBattleWithPlayer(player, makeEnemy('sr_enemy_b'))
@@ -221,7 +231,7 @@ describe('ARCH-002 M7 — buff apply is effective before the next dependent read
     const baseDefense = monk.entity.baseStats.defense
 
     // Advance until the monk's special lands (kim_giap, self). Assert the
-    // stats read is updated immediately — before any further step runs —
+    // stats read is updated immediately - before any further step runs -
     // so a counter/hit between now and the monk's next turn sees it.
     let applied = false
     for (let i = 0; i < 400 && !applied; i++) {
@@ -257,7 +267,7 @@ describe('ARCH-002 M7 — buff apply is effective before the next dependent read
     clock.advance(COMBAT_STEP_SECONDS)
     expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.2, 4)
 
-    // Advance until the holder's declare expires it — effective stats drop
+    // Advance until the holder's declare expires it - effective stats drop
     // back to base on the same step, never past the expiry boundary.
     let restored = false
     for (let i = 0; i < 400 && !restored; i++) {
@@ -290,11 +300,11 @@ describe('ARCH-002 M7 — buff apply is effective before the next dependent read
     applyBattleBuff(manager, 'sat_na', participant.entity.id)
 
     // The next pacing step folds the haste in even though the holder is
-    // stunned — CC must not freeze the stat view.
+    // stunned - CC must not freeze the stat view.
     clock.advance(COMBAT_STEP_SECONDS)
     expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.2, 4)
 
-    // Advance through the stunned declare — the refresh at declare is
+    // Advance through the stunned declare - the refresh at declare is
     // unconditional, so the buff stays live while ccBlocked resolves.
     clock.advance(COMBAT_STEP_SECONDS)
     expect(participant.entity.stats.speed).toBeCloseTo(baseSpeed * 1.2, 4)
@@ -307,7 +317,7 @@ describe('ARCH-002 M7 review R1 — live maxHp moves the real heal ceiling', () 
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
 
-    // hpRegen 0 keeps currentHp deterministic — no regen tick could heal
+    // hpRegen 0 keeps currentHp deterministic - no regen tick could heal
     // into the grown headroom between refresh and assertion.
     const player = makePlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, hpRegenPerTurn: 0, vitality: 0 })
@@ -320,7 +330,7 @@ describe('ARCH-002 M7 review R1 — live maxHp moves the real heal ceiling', () 
     const baseCeiling = entity.maxHp
     expect(entity.currentHp).toBeCloseTo(baseCeiling, 4)
 
-    // Mid-battle +50% maxHp through the timed-effects live channel — the
+    // Mid-battle +50% maxHp through the timed-effects live channel - the
     // same union the engine's liveStatModifiers provider serves.
     player.persistentTimedEffects.push({
       id: 'test_live_maxhp',
@@ -333,9 +343,9 @@ describe('ARCH-002 M7 review R1 — live maxHp moves the real heal ceiling', () 
     })
     clock.advance(COMBAT_STEP_SECONDS)
 
-    // The REAL vitals ceiling (entity.maxHp — heal clamp, regen gate,
+    // The REAL vitals ceiling (entity.maxHp - heal clamp, regen gate,
     // entity_vitals_changed.maxHp) moved with the effective stat on the
-    // same step — and growth granted no free HP.
+    // same step - and growth granted no free HP.
     expect(entity.maxHp).toBeCloseTo(baseCeiling * 1.5, 4)
     expect(entity.currentHp).toBeCloseTo(baseCeiling, 4)
 
@@ -362,7 +372,7 @@ describe('ARCH-002 M7 review R1 — tribulation ghost snapshot cannot leak passi
     player.realmLevel = 12
     manager.setActivePlayer(player)
 
-    // A maxHp-stacking passive left hot from a finished battle — the old
+    // A maxHp-stacking passive left hot from a finished battle - the old
     // caller-side finalStats mirror would have baked +200% into the ghost.
     manager.skillManager.add({
       id: 'test_maxhp_passive',
@@ -420,8 +430,8 @@ describe('ARCH-002 M7 — resolved base provenance', () => {
     manager.startBattleWithPlayer(player, makeEnemy())
 
     const participant = manager.getTurnBattle()!.players[0]!
-    // +12% might must be effective immediately at battle start — before the
-    // first fighting step — not wait for the player's first declare.
+    // +12% might must be effective immediately at battle start - before the
+    // first fighting step - not wait for the player's first declare.
     expect(
       manager
         .getBattleBuffs(participant.entity.id)
@@ -474,7 +484,7 @@ describe('M9 retained M7 debt — live attunement stacks re-derive elemental pow
     manager.setActivePlayer(player)
 
     // Learn the REAL passive through the same collection the production
-    // learn path fills (realm-gate bypassed — the test targets the
+    // learn path fills (realm-gate bypassed - the test targets the
     // stack/live-modifier channel, not the unlock gate).
     const template = PASSIVE_SKILLS.find((skill) => skill.id === 'passive_dai_thua_dao_tam')!
     manager.skillManager.add(structuredClone(template))
@@ -504,7 +514,7 @@ describe('M9 retained M7 debt — live attunement stacks re-derive elemental pow
 
     // ARCH-009-adjacent retained debt: the delta (15 attunement) derives
     // flat +7.5 and tagged +1.5% per element, folded ON TOP of the
-    // resolved base — powers move in-battle without re-deriving the base.
+    // resolved base - powers move in-battle without re-deriving the base.
     const delta = effectiveAttunement - baseAttunement
     const expectedFire = (baseFirePower + delta * 0.5) * (1 + delta * 0.001)
 
@@ -525,7 +535,7 @@ describe('M9 retained M7 debt — live attunement stacks re-derive elemental pow
 
     // Push to the authored stack cap (50 stacks x +1.5% = +75%
     // attunement): the delta-fold divergence stays bounded and
-    // one-directional — below the menu single-pass value (~3.3% at
+    // one-directional - below the menu single-pass value (~3.3% at
     // attunement 100), never above it.
     for (let i = 10; i < 50; i++) {
       manager.eventBus.emit('hit', { type: 'hit', sourceId: 'player', targetId: 'e' })

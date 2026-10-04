@@ -1,15 +1,15 @@
-// T6.4 bundle code-split contract (Remediation Task 9, 2026-09-05) — CHUYỂN
-// khỏi Vitest (`src/bundle-split.test.ts` cũ): chạy `vite build` thật trong
-// một test làm suite chậm ~6s và phụ thuộc child-process env. Bây giờ là
-// dedicated script — chạy độc lập hoặc sau build qua npm script:
+// T6.4 bundle code-split contract (Remediation Task 9, 2026-09-05) - CHUYEN
+// khoi Vitest (`src/bundle-split.test.ts` cu): chay `vite build` that trong
+// mot test lam suite cham ~6s va phu thuoc child-process env. Bay gio la
+// dedicated script - chay doc lap hoac sau build qua npm script:
 //   node scripts/check-bundle-split.mjs [--dist <dir>]
-// Mặc định BUILD MỚI vào thư mục tạm rồi xoá; --dist tái dùng build có sẵn
+// Mac dinh BUILD MOI vao thu muc tam roi xoa; --dist tai dung build co san
 // (CI: `node scripts/check-bundle-split.mjs --dist dist` sau `npm run build-only`).
 //
-// Assert (giữ nguyên contract cũ):
-// (1) KHÔNG còn 1 bundle khổng lồ duy nhất (entry index-*.js < 900KB),
-// (2) Phaser tách chunk riêng (>= 900KB — thư viện ~1.2MB),
-// (3) tổng số file JS > 2 (có thêm ít nhất 1 chunk dynamic).
+// Assert (giu nguyen contract cu):
+// (1) KHONG con 1 bundle khong lo duy nhat (entry index-*.js < 900KB),
+// (2) Phaser tach chunk rieng (>= 900KB - thu vien ~1.2MB),
+// (3) tong so file JS > 2 (co them it nhat 1 chunk dynamic).
 
 import { execFileSync } from 'node:child_process'
 import { rmSync, readdirSync, statSync, existsSync } from 'node:fs'
@@ -45,9 +45,9 @@ try {
   if (!reuseDist) {
     const viteBin = join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js')
 
-    // NODE_ENV=production — child kế thừa env của shell; vite build mode
-    // production phải thấy NODE_ENV=production để output khớp bản build
-    // thật (khác ~200KB giữa 2 mode — bình luận cũ của test giữ nguyên).
+    // NODE_ENV=production - child ke thua env cua shell; vite build mode
+    // production phai thay NODE_ENV=production de output khop ban build
+    // that (khac ~200KB giua 2 mode - binh luan cu cua test giu nguyen).
     execFileSync(
       process.execPath,
       [viteBin, 'build', '--outDir', outDir, '--emptyOutDir', '--logLevel', 'error', '--mode', 'production'],

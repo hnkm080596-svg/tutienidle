@@ -1,5 +1,15 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 - companion + formation domains are scope-hidden in
+// the beta build. This file keeps exercising the dormant build's enabled
+// semantics by stubbing the scope flags open (dormant-system convention).
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { GameManager, INTRO_TOTAL_TICKS, COUNTDOWN_TOTAL_TICKS } from './GameManager'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { createDefaultPlayer } from '../player/Player'
@@ -230,7 +240,7 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
     // (lands only after both windows closed).
     expect(cycleDelta).toBe(-THE_PROC_COST * 2 + 4)
 
-    // The substitution resolved fully vs the protector — the companion
+    // The substitution resolved fully vs the protector - the companion
     // was never touched.
     expect(companion!.entity.currentHp).toBe(companionHp)
     expect(protector!.entity.currentHp).toBeLessThan(protector!.entity.stats.maxHp)
@@ -335,49 +345,48 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
   })
 })
 
-describe('mortal basic wiring — huy_quyen is castable as the picked basic (spec 2.3)', () => {
+describe('mortal basic wiring — the beta starter pick is castable as the battle basic', () => {
   function mortalWithBasic(basicSkillId: string | null) {
     const { gameManager, combatSource } = makeManager()
     const player = createDefaultPlayer()
     player.realmId = 'mortal'
     player.realmLevel = CORE_REALM_LEVEL
     player.baseStats = asBaseStats({ ...player.baseStats, speed: 500 })
-    for (const skillId of ['tram', 'huy_quyen'] as const) {
-      gameManager.progressionOps.learnSkill(skillId, player)
-    }
+    gameManager.progressionOps.learnSkill('linh_bao', player)
     if (basicSkillId !== null) {
       gameManager.progressionOps.setMortalBasicSkill(player, basicSkillId)
     }
     return { gameManager, combatSource, player }
   }
 
-  it('huy_quyen picked as the mortal basic becomes the battle basic and accrues huy_quyen casts', () => {
-    const { gameManager, combatSource, player } = mortalWithBasic('huy_quyen')
-    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_hq'))
-    expect(battle.players[0]!.basic?.id).toBe('huy_quyen')
+  it('linh_bao picked as the mortal basic becomes the battle basic and accrues linh_bao casts', () => {
+    const { gameManager, combatSource, player } = mortalWithBasic('linh_bao')
+    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_lb'))
+    expect(battle.players[0]!.basic?.id).toBe('linh_bao')
 
     advanceIntoFighting(combatSource, battle)
 
-    expect(advanceUntil(combatSource, () => (player.skillCastCounts?.['huy_quyen'] ?? 0) > 0)).toBe(true)
+    expect(advanceUntil(combatSource, () => (player.skillCastCounts?.['linh_bao'] ?? 0) > 0)).toBe(true)
   })
 
-  it('tram picked as the mortal basic keeps recording tram casts (kiem-route parity)', () => {
-    const { gameManager, combatSource, player } = mortalWithBasic('tram')
-    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_tram'))
+  it('non-beta precursor picks are rejected and fall back to the runtime default', () => {
+    const { gameManager, combatSource, player } = mortalWithBasic(null)
+    gameManager.progressionOps.learnSkill('tram', player)
+    gameManager.progressionOps.learnSkill('huy_quyen', player)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(false)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'huy_quyen')).toBe(false)
+
+    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_nb'))
     expect(battle.players[0]!.basic?.id).toBe('tram')
-
-    advanceIntoFighting(combatSource, battle)
-
-    expect(advanceUntil(combatSource, () => (player.skillCastCounts?.['tram'] ?? 0) > 0)).toBe(true)
   })
 
-  it('a non-precursor pick is rejected and falls back to the runtime-default tram', () => {
+  it('a non-precursor pick is rejected and the battle basic falls back generic', () => {
     const { gameManager, combatSource, player } = mortalWithBasic(null)
     gameManager.progressionOps.learnSkill('bat_kiem_thuat', player)
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'bat_kiem_thuat')).toBe(false)
 
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_mortal_bk'))
-    expect(battle.players[0]!.basic?.id).toBe('tram')
+    expect(battle.players[0]!.basic?.id).toBe('generic_physical')
   })
 })
 

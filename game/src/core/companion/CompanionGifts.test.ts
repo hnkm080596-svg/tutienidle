@@ -3,7 +3,17 @@
 // pure write-if-absent over player.companionGifts; the registry is
 // content - every moment's definitionId must resolve inside the Beta
 // gift authority so no unclaimable record can ever be authored.
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { issueCompanionGifts } from './CompanionGifts'
 import {
   COMPANION_GIFT_MOMENTS,

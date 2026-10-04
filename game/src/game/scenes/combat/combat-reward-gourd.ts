@@ -1,10 +1,10 @@
-// combat-reward-gourd (ui-discoverability-refactor-plan.md §3.2) — tách từ
-// CombatScene.ts: HỒ LÔ HÚT PHẦN THƯỞNG Bezier (placement/pulse/redraw +
-// reward stream mote + resolve điểm phát theo priority chest-anchor →
-// screen cache → grid cache). Module nhận dependency tường minh qua
-// `scene` — mọi cross-call đi qua scene delegate để giữ nguyên seam test
-// (rewardStream test gọi scene.resolveRewardSourcePoint /
-// scene.onRewardParticle trực tiếp trên Object.create instance).
+// combat-reward-gourd (ui-discoverability-refactor-plan.md sec3.2) - tach tu
+// CombatScene.ts: HO LO HUT PHAN THUONG Bezier (placement/pulse/redraw +
+// reward stream mote + resolve diem phat theo priority chest-anchor ->
+// screen cache -> grid cache). Module nhan dependency tuong minh qua
+// `scene` - moi cross-call di qua scene delegate de giu nguyen seam test
+// (rewardStream test goi scene.resolveRewardSourcePoint /
+// scene.onRewardParticle truc tiep tren Object.create instance).
 import Phaser from 'phaser'
 
 import type { BattleRewardParticleEvent } from '@/core/battle/BattleEvents'
@@ -27,11 +27,11 @@ export class CombatRewardGourd {
   constructor(private readonly scene: CombatScene) {}
 
   /**
-   * Tính lại vị trí hồ lô theo viewport hiện hành và cập nhật view.
-   * Neo góc TRÁI DƯỚI battlefield an toàn — phía trên Event Bar +
-   * Control Bar, KHÔNG neo theo grid Player. Art thật (Image): origin =
-   * normalized mouth anchor nên setPosition đặt ĐÚNG miệng; Graphics
-   * placeholder: shapes vẽ tương đối quanh miệng.
+   * Tinh lai vi tri ho lo theo viewport hien hanh va cap nhat view.
+   * Neo goc TRAI DUOI battlefield an toan - phia tren Event Bar +
+   * Control Bar, KHONG neo theo grid Player. Art that (Image): origin =
+   * normalized mouth anchor nen setPosition dat DUNG mieng; Graphics
+   * placeholder: shapes ve tuong doi quanh mieng.
    */
   refreshRewardGourd(canvasHeight: number, bottomInset: number) {
     this.scene.gourdPlacement = computeGourdPlacement({ canvasHeight, bottomInset })
@@ -51,7 +51,7 @@ export class CombatRewardGourd {
 
       view.setDisplaySize(GOURD_PLACEHOLDER_SIZE.w, GOURD_PLACEHOLDER_SIZE.h)
 
-      // Scale gốc sau setDisplaySize — pulse nhân lên thay vì đè số tuyệt đối.
+      // Scale goc sau setDisplaySize - pulse nhan len thay vi de so tuyet doi.
       this.scene.gourdBaseScale = { x: view.scaleX, y: view.scaleY }
     } else {
       this.scene.gourdBaseScale = { x: 1, y: 1 }
@@ -60,7 +60,7 @@ export class CombatRewardGourd {
     }
   }
 
-  /** Placeholder Graphics thuần — không asset AI, silhouette đọc tốt. */
+  /** Placeholder Graphics thuan - khong asset AI, silhouette doc tot. */
   redrawGourd() {
     const graphics = this.scene.gourdGraphics
 
@@ -72,22 +72,22 @@ export class CombatRewardGourd {
 
     graphics.clear()
 
-    // Thân dưới (bầu to) + thân trên (bầu nhỏ) — tông ngọc sẫm.
+    // Than duoi (bau to) + than tren (bau nho) - tong ngoc sam.
     graphics.fillStyle(0x1d3a2c, 1)
     graphics.fillEllipse(0, height * 0.42, width * 0.84, height * 0.52)
     graphics.fillEllipse(0, height * 0.14, width * 0.6, height * 0.34)
 
-    // Khối bóng nhẹ bên trái tạo thể tích.
+    // Khoi bong nhe ben trai tao the tich.
     graphics.fillStyle(0x27503b, 1)
     graphics.fillEllipse(-width * 0.16, height * 0.4, width * 0.3, height * 0.36)
 
-    // Miệng hồ lô — anchor hút (0,0), vành đồng cổ + lòng tối.
+    // Mieng ho lo - anchor hut (0,0), vanh dong co + long toi.
     graphics.fillStyle(0x8a6a3a, 1)
     graphics.fillEllipse(0, 0, width * 0.44, height * 0.12)
     graphics.fillStyle(0x120c08, 1)
     graphics.fillEllipse(0, 0, width * 0.32, height * 0.075)
 
-    // Dây đỏ trầm quấn quanh cổ + tua xuống thân.
+    // Day do tram quan quanh co + tua xuong than.
     graphics.lineStyle(2.5, 0xa33228, 0.95)
     graphics.strokeEllipse(0, height * 0.07, width * 0.5, height * 0.1)
     graphics.beginPath()
@@ -98,7 +98,7 @@ export class CombatRewardGourd {
     graphics.strokePath()
   }
 
-  /** Pulse ĐÚNG MỘT nhịp mỗi reward event (plan §6.3) — nở từ miệng. */
+  /** Pulse DUNG MOT nhip moi reward event (plan sec6.3) - no tu mieng. */
   pulseGourd() {
     const view = this.scene.gourdGraphics
 
@@ -112,7 +112,7 @@ export class CombatRewardGourd {
 
     const base = this.scene.gourdBaseScale
 
-    // Proxy scale — nhân lên từ scale gốc (Image display-size ≠ scale 1).
+    // Proxy scale - nhan len tu scale goc (Image display-size != scale 1).
     const pulse = { value: 1 }
 
     this.scene.tweens.add({
@@ -136,20 +136,20 @@ export class CombatRewardGourd {
     })
   }
 
-  /** Điểm hút LIVE — luôn là miệng hồ lô, không bao giờ là Player (§7.2). */
+  /** Diem hut LIVE - luon la mieng ho lo, khong bao gio la Player (sec7.2). */
   gourMouthPoint(): { x: number; y: number } {
     return resolveGourdMouth(this.scene.gourdPlacement)
   }
 
   /**
-   * Reward stream (plan §7) — Bezier hút về MIỆNG HỒ LÔ:
-   * - Điểm phát: chest anchor của sprite nguồn → screen cache → ô grid
-   *   cuối cùng (sprite đã bị dọn vẫn có nguồn hợp lý).
-   * - Điểm hút LIVE từ gourd mouth mỗi onUpdate: Player teleport giữa
-   *   tween KHÔNG ảnh hưởng quỹ đạo; resize re-resolve đích mới.
-   * - Tăng tốc nửa sau (quad-in), co scale + xoáy nhỏ khi tới miệng.
-   * - Pulse hồ lô ĐÚNG MỘT nhịp mỗi reward event (mốc đại diện), không
-   *   pulse theo từng mote (§6.3).
+   * Reward stream (plan sec7) - Bezier hut ve MIENG HO LO:
+   * - Diem phat: chest anchor cua sprite nguon -> screen cache -> o grid
+   *   cuoi cung (sprite da bi don van co nguon hop ly).
+   * - Diem hut LIVE tu gourd mouth moi onUpdate: Player teleport giua
+   *   tween KHONG anh huong quy dao; resize re-resolve dich moi.
+   * - Tang toc nua sau (quad-in), co scale + xoay nho khi toi mieng.
+   * - Pulse ho lo DUNG MOT nhip moi reward event (moc dai dien), khong
+   *   pulse theo tung mote (sec6.3).
    */
   onRewardParticle(event: BattleRewardParticleEvent) {
     const start = this.scene.resolveRewardSourcePoint(event.sourceId)
@@ -169,8 +169,8 @@ export class CombatRewardGourd {
       kind === 'insight' ? Phaser.Math.FloatBetween(0.55, 0.78) : Phaser.Math.FloatBetween(0.75, 1)
 
     for (let index = 0; index < particleCount; index++) {
-      // Mote nhỏ tương đồng nối đuôi nhau thành dải linh khí; khởi tạo
-      // trong suốt để stagger không chồng thành cục tại nguồn.
+      // Mote nho tuong dong noi duoi nhau thanh dai linh khi; khoi tao
+      // trong suot de stagger khong chong thanh cuc tai nguon.
       const mote = this.scene.add
         .ellipse(
           startX,
@@ -181,7 +181,7 @@ export class CombatRewardGourd {
           1,
         )
         .setBlendMode(Phaser.BlendModes.ADD)
-        // Dưới lớp gourd (DEPTH_OVERLAY_UI - 4) để hạt "chui vào" miệng.
+        // Duoi lop gourd (DEPTH_OVERLAY_UI - 4) de hat "chui vao" mieng.
         .setDepth(DEPTH_OVERLAY_UI - 6)
         .setAlpha(0)
 
@@ -195,7 +195,7 @@ export class CombatRewardGourd {
         duration: baseDuration + Phaser.Math.Between(-40, 60),
         ease: 'Linear',
         onUpdate: () => {
-          // Đích + control giải LIVE — teleport/resize-safe (§7.2).
+          // Dich + control giai LIVE - teleport/resize-safe (sec7.2).
           const end = this.gourMouthPoint()
           const control = controlFor(end)
           const p = easeRewardProgress(state.progress)
@@ -217,7 +217,7 @@ export class CombatRewardGourd {
 
           mote.setRotation(Math.atan2(tangentY, tangentX))
 
-          // Fade chỉ ở đoạn cuối khi chui vào miệng, giữ thân stream sáng.
+          // Fade chi o doan cuoi khi chui vao mieng, giu than stream sang.
           mote.setAlpha(peakAlpha * (p > 0.85 ? (1 - p) / 0.15 : 1))
 
           mote.setScale(rewardMoteScale(p))
@@ -234,22 +234,22 @@ export class CombatRewardGourd {
       })
     }
 
-    // Pulse đại diện cho CẢ stream — một nhịp/event, không theo mote.
+    // Pulse dai dien cho CA stream - mot nhip/event, khong theo mote.
     const totalFlightMs = baseDuration + (particleCount - 1) * 18 + 40
 
     this.scene.time.delayedCall(totalFlightMs, () => this.pulseGourd())
   }
 
   /**
-   * Điểm phát reward (plan §7.1) — ưu tiên:
-   * 1. body anchor 'centre' của sprite nguồn còn tồn tại — MỘT rule cho mọi
-   *    entity (Spec C §3.1), suy từ cell battlefield thay vì hand-authored
-   *    table riêng cho Player;
+   * Diem phat reward (plan sec7.1) - uu tien:
+   * 1. body anchor 'centre' cua sprite nguon con ton tai - MOT rule cho moi
+   *    entity (Spec C sec3.1), suy tu cell battlefield thay vi hand-authored
+   *    table rieng cho Player;
    * 2. last-known screen position theo entity ID;
-   * 3. ô grid cuối cùng chiếu qua projection hiện hành.
+   * 3. o grid cuoi cung chieu qua projection hien hanh.
    */
   resolveRewardSourcePoint(sourceId: string): { x: number; y: number } | undefined {
-    // Spec C §3.1 — one rule for every entity. This used to branch: the player's
+    // Spec C sec3.1 - one rule for every entity. This used to branch: the player's
     // hand-authored `chest` anchor, and a hardcoded "~40% of height from the
     // feet" for everything else. The audit ruling behind that branch (never
     // borrow one character's proportions for another) is kept; what goes is the
@@ -280,8 +280,8 @@ export class CombatRewardGourd {
   trackSourceScreenPosition(id: string, sprite: EntitySpriteLike) {
     this.scene.lastKnownScreenPositions.set(id, { x: sprite.rect.x, y: sprite.rect.y })
 
-    // FIFO prune — cache phục vụ presentation, không rò rỉ vô hạn qua
-    // các trận auto-refight dài.
+    // FIFO prune - cache phuc vu presentation, khong ro ri vo han qua
+    // cac tran auto-refight dai.
     if (this.scene.lastKnownScreenPositions.size > this.scene.maxTrackedSourcePositions) {
       const oldest = this.scene.lastKnownScreenPositions.keys().next().value
 

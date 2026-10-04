@@ -1,0 +1,36 @@
+=== EV-MUT-IA-1 rollback-noop T7 2026-10-01T04:15:08.515013Z ===
+ance":0,"metalPenetration":0,"waterPower":0,"waterResistance":0,"waterPenetration":0,"primordialPower":0},"modifiers":[{"id":"realm-passive:nhap_dao:maxHp","sourceId":"nhap_dao","sourceType":"realm","stat":"maxHp","percent":0.03},{"id":"realm-passive:nhap_dao:hpRegenPerTurn","sourceId":"nhap_dao","sourceType":"realm","stat":"hpRegenPerTurn","percent":0.03},{"id":"realm-passive:nhap_dao:maxMp","sourceId":"nhap_dao","sourceType":"realm","stat":"maxMp","percent":0.03,"domain":"spell"},{"id":"realm-passive:nhap_dao:manaRegenPerTurn","sourceId":"nhap_dao","sourceType":"realm","stat":"manaRegenPerTurn","percent":0.03,"domain":"spell"}],"externalModifiers":[],"selectedTalentIds":[],"talentLevels":{},"completedStageIds":[],"perfectClearStageIds":[],"perfectClearSeconds":{},"autoFarmStage":null,"hasSeenTutorial":false,"cultivationPath":"spell","cultivationWay":"spell_pathway","spellPath":{"element":"fire"},"skillCastCounts":{"linh_bao":10000},"totalCultivationGained":0,"bossKillCount":0,"hiddenBeastKills":{},"hiddenPerfection":{"lineageActive":false,"completedHiddenBodyRealmIds":[],"hiddenBreakthroughRealmIds":[],"realms":{},"lineageClosedByRealmId":"mortal"},"skillInsight":0,"totalSkillInsightGained":0,"cultivationInsightAccumulator":0,"cultivationOvercharge":0,"attributePoints":0,"purchasedNodeIds":["core_linh_bao","hoa_linh_ngo","core_hoa_cau_thuat"],"nodeLevels":{"core_linh_bao":1,"hoa_linh_ngo":1,"core_hoa_cau_thuat":1},"nodeFreePurchaseRecord":{},"nodeOneShotGrants":{},"bodyProgression":{"body_refinement":{"completedTiers":0,"currentTierProgress":0},"meridian":{"openedIds":[]},"zhou_tian":{"completed":0}},"physiqueGrade":"pham","breakthroughGrade":1,"grantedRealmPassiveIds":["qi_refining"],"phaGiapCarryStacks":0,"phaGiapCarryRealmId":null,"persistentTimedEffects":[],"combatAiStrategy":"nearest","companions":[],"companionPullsSinceRare":0,"duyenPhan":0,"companionGifts":[],"formationLoadout":null,"lastSavedAt":1790828111182},"skills":[],"techniques":[]}"
+
+ ❯ expectByteEquivalent src/core/game/GameManager.fiveElementInitiation.test.ts:54:43
+     52|   player: PlayerData,
+     53| ): void {
+     54|   expect(snapshotOf(gameManager, player)).toBe(before)
+       |                                           ^
+     55| }
+     56|
+ ❯ src/core/game/GameManager.fiveElementInitiation.test.ts:151:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/core/game/GameManager.fiveElementInitiation.test.ts > commitFiveElementInitiation - commit postconditions under injection > failed commit leaves the caller retriable (no poisoned half-state)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/core/game/GameManager.fiveElementInitiation.test.ts:172:23
+    170|     const result = gameManager.realmAdvanceOps.commitFiveElementInitia…
+    171|
+    172|     expect(result.ok).toBe(true)
+       |                       ^
+    173|     expect(getActiveElement(player)).toBe('water')
+    174|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+DETECTOR_EXIT=1  (nonzero = mutant killed the suite = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

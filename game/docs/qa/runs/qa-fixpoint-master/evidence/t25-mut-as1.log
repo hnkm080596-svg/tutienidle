@@ -1,0 +1,35 @@
+=== MUTANT as1 applied ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (47 tests | 1 failed) 45ms
+     × usePillDetailed rejects a dormant-family pill without consuming it 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant-family pills on a carried save stay inert (F-TRI-1) > usePillDetailed rejects a dormant-family pill without consuming it
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:174:23
+    172|     const result = gameManager.pillOps.usePillDetailed('phi_van_dan_mo…
+    173|
+    174|     expect(result.ok).toBe(false)
+       |                       ^
+    175|     expect(result.reason).toBe('scope_hidden')
+    176|     expect(gameManager.pillBag.getAmount('phi_van_dan_mortal')).toBe(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 46 passed (47)
+   Start at  20:05:24
+   Duration  1.76s (transform 1.29s, setup 209ms, import 1.39s, tests 45ms, environment 0ms)
+
+EXIT=1

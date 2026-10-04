@@ -17,7 +17,7 @@ import { selectAction } from './TurnSkillAction'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 
 // The Tu Reimagined (spec 2026-09-15 section 5.1, plan Task 9,
-// D9/D10/INV-4/5) — Bat Tu Ba The survival contract: lethal -> HP 1 ->
+// D9/D10/INV-4/5) - Bat Tu Ba The survival contract: lethal -> HP 1 ->
 // bat_tu_ba_the buff for the holder's own turns + ultimate cooldown
 // consumed; an active buff means FREE survive (no re-grant, no refresh);
 // the talent guard stays the second line when the ult is spent.
@@ -67,7 +67,7 @@ const STUN: BuffDefinition = {
   controls: [{ type: 'stun' }],
 }
 
-// Non-cc debuff (poison/dot) — must survive BOTH the lethal grant and
+// Non-cc debuff (poison/dot) - must survive BOTH the lethal grant and
 // repeat lethals inside the Bat Tu window: only hard CC is cleansed,
 // via clearsCcOnApply on the grant path.
 const POISON: BuffDefinition = {
@@ -242,7 +242,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 1_000 }))
     const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard())
 
-    // Buff already active at 2 remaining turns — a re-grant would reset to 3.
+    // Buff already active at 2 remaining turns - a re-grant would reset to 3.
     runtime.applyBuff('bat_tu_ba_the', player, player, { durationOverride: 2 })
     player.ultimate!.remainingCooldownTurns = 4 // ticking down from an earlier trigger
 
@@ -353,7 +353,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
     const step = system.resolveNextStep(battle)
 
-    // Buffed: the stun cannot block — the actor still acts (basic hit).
+    // Buffed: the stun cannot block - the actor still acts (basic hit).
     expect(step.ccBlocked).toBe(false)
     expect(step.skillId).toBe('cuong_quyen')
     // Suppressed, NOT reset: the counter resumes accumulating post-expiry.
@@ -361,7 +361,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
   })
 
   it('manual cast applies the buff through the appliesBuffs path', () => {
-    // A stunned actor cannot cast at all — clearsCcOnApply on a self-buff
+    // A stunned actor cannot cast at all - clearsCcOnApply on a self-buff
     // is only reachable through the lethal grant (covered above). The
     // manual path just proves the skill applies its own buff.
     const player = makeBodyParticipant('player', createCombatant({ id: 'player', type: 'player', currentHp: 500, maxHp: 1_000 }))
@@ -390,7 +390,7 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     const { combat, runtime } = makeCombatWithSession(player, new SurviveLethalGuard(), [enemyP, dummy])
 
     // Lethal poison ticking on the holder's OWN turn: a might-999k source
-    // x coefficient 0.2 resolves ~200k at tick — far over 50 HP.
+    // x coefficient 0.2 resolves ~200k at tick - far over 50 HP.
     runtime.applyBuff('fixture_poison', player, dummy)
 
     const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
@@ -401,11 +401,11 @@ describe('Bat Tu Ba The survival contract (D9/D10/INV-4/5)', () => {
     expect(buffsOf(runtime, player, 'bat_tu_ba_the')).toHaveLength(1)
     // The survival source committed the full 8-turn cooldown DURING this
     // turn's status phase (inside BuffSystem.update); the same turn's
-    // cooldown tick must not drop it to 7 — the regression this guards.
+    // cooldown tick must not drop it to 7 - the regression this guards.
     expect(player.ultimate!.remainingCooldownTurns).toBe(8)
 
     // Next own turn: the poison ticks lethal again inside the still-active
-    // Bat Tu window (free survive — no new commit), so the cooldown DOES
+    // Bat Tu window (free survive - no new commit), so the cooldown DOES
     // tick down to 7. The first turn's skip was a same-turn exemption,
     // not a freeze.
     system.declareActorAction(battle, player)

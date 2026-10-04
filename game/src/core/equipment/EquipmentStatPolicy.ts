@@ -36,8 +36,8 @@ const ELEMENT_RESISTANCE_STATS = [
   'waterResistance',
   'metalResistance',
   'earthResistance',
-  // Spec 2026-08-30-phap-tu-dao-sac §5 — windResistance/
-  // lightningResistance đã xoá cùng element Phong/Lôi.
+  // Spec 2026-08-30-phap-tu-dao-sac sec5 - windResistance/
+  // lightningResistance da xoa cung element Phong/Loi.
 ] as const
 
 export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStatPolicy> = {
@@ -74,7 +74,7 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
     tendency: 'Thủ',
     mainStats: ['defense'],
     // The Tu Reimagined (spec 2026-09-15 section 3.3): block/endurance
-    // are body-domain stats — domain-gated data can't be authored
+    // are body-domain stats - domain-gated data can't be authored
     // untagged, so they leave the equipment pools entirely.
     // generic thorns stat retired with the stat (spec section 7.13/T12).
     substats: [
@@ -144,10 +144,10 @@ export function isValidEquipmentSubstat(slot: EquipmentSlot, stat: StatType): bo
   return !isForbiddenEquipmentStat(stat) && EQUIPMENT_SLOT_STAT_POLICY[slot].substats.includes(stat)
 }
 
-// Dùng chung bởi GameManager.catalogOps.registerEquipment() (validate 1 lần lúc
-// startup, TASK.md yêu cầu) VÀ EquipmentSystem.createInstance() (validate
-// lại lúc roll, phòng template lọt qua chưa đăng ký) — tránh 2 nơi tự copy
-// cùng 1 rule rồi lệch nhau khi rule đổi.
+// Dung chung boi GameManager.catalogOps.registerEquipment() (validate 1 lan luc
+// startup, TASK.md yeu cau) VA EquipmentSystem.createInstance() (validate
+// lai luc roll, phong template lot qua chua dang ky) - tranh 2 noi tu copy
+// cung 1 rule roi lech nhau khi rule doi.
 export function assertValidEquipmentMainStats(
   item: Pick<Equipment, 'id' | 'slot' | 'mainStats'>,
 ): void {

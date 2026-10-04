@@ -22,7 +22,7 @@ export interface EntityVitalsChangedEvent {
   killed: boolean
 }
 
-/** 6A (2026-09-01) — floating "+N" xanh; emit từ applyHealing (healing/leech). */
+/** 6A (2026-09-01) - floating "+N" xanh; emit tu applyHealing (healing/leech). */
 export interface CombatHealEvent {
   type: 'heal'
   sourceId?: string
@@ -112,7 +112,7 @@ export class EntityVitalsSystem {
   }
 
   applyHealing(target: CombatEntity, amount: number, reason: VitalsChangeReason, sourceId?: string) {
-    // M8 (ARCH-010) — dead entities reject ordinary healing: no
+    // M8 (ARCH-010) - dead entities reject ordinary healing: no
     // resurrection policy exists, so a heal landing after the death flag
     // (e.g. a post-status-phase heal on a DoT-killed actor) must not
     // silently un-kill or emit a phantom vitals event.
@@ -123,7 +123,7 @@ export class EntityVitalsSystem {
     const hpBefore = target.currentHp
     const wardBefore = target.currentWard
     const mpBefore = target.currentMp
-    // stat-system-reimagined Task 4 (D18/INV-13) — receiver-side heal
+    // stat-system-reimagined Task 4 (D18/INV-13) - receiver-side heal
     // amplification: every HP restore EXCEPT damage-derived leech scales
     // with the receiver's healingEffectivenessPercent. Leech output stays
     // hpDamage * leechPercent, bitwise.
@@ -135,9 +135,9 @@ export class EntityVitalsSystem {
     const actualHealing = target.currentHp - hpBefore
     this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
 
-    // 6A (2026-09-01) — event 'heal' cho floating "+N" xanh trong
-    // CombatScene. CHỈ healing/leech (nguồn có ý nghĩa hiển thị),
-    // KHÔNG regen (spam mỗi tick) và actual > 0 — the float shows the
+    // 6A (2026-09-01) - event 'heal' cho floating "+N" xanh trong
+    // CombatScene. CHI healing/leech (nguon co y nghia hien thi),
+    // KHONG regen (spam moi tick) va actual > 0 - the float shows the
     // HP really gained post-clamp, never the pre-clamp attempt.
     if (actualHealing > 0 && (reason === 'healing' || reason === 'leech')) {
       this.eventBus.emit<CombatHealEvent>('heal', {
@@ -152,9 +152,9 @@ export class EntityVitalsSystem {
   }
 
   /**
-   * M8 (ARCH-003) — authoritative per-turn resource regeneration.
+   * M8 (ARCH-003) - authoritative per-turn resource regeneration.
    * The turn engine (the only production caller) decides WHICH pools
-   * regenerate and with what amounts — including the Ward delay gate —
+   * regenerate and with what amounts - including the Ward delay gate -
    * once per entity turn; this owner clamps every pool to its live
    * ceiling and emits a single 'regen' vitals event carrying all three
    * before/after views. Dead entities regen nothing (same boundary as
@@ -177,7 +177,7 @@ export class EntityVitalsSystem {
     const mpBefore = target.currentMp
 
     if ((deltas.hp ?? 0) > 0) {
-      // D18/INV-13 — hpRegenPerTurn ticks are HP restores (not
+      // D18/INV-13 - hpRegenPerTurn ticks are HP restores (not
       // damage-derived), so the receiver's healingEffectivenessPercent
       // amplifies them. The mp/ward legs are not HP and never scale.
       const scaled =

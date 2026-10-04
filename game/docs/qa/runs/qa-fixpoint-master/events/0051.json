@@ -1,0 +1,22 @@
+{
+  "op": "closureReviewIds<-RV-CLOSURE-6",
+  "findings": [
+    "F-A4-1",
+    "F-A4-2",
+    "F-A4-3",
+    "F-A4-4",
+    "F-B-CONS-1",
+    "F-B-CONS-2",
+    "F-B-CONS-3",
+    "F-B-CONS-4",
+    "F-B-CONS-5",
+    "F-BS-1",
+    "F-BS-2",
+    "F-BS-3",
+    "F-BS-4",
+    "F-BS-5",
+    "F-BS-6",
+    "F-BS-7"
+  ],
+  "updated": 16
+}

@@ -1,0 +1,400 @@
+{
+  "schema_version": 1,
+  "pack": "Huyen Kim Stable Scene Art Extension",
+  "human_visual_inspection": {
+    "status": "PASS",
+    "evidence": [
+      { "path": "preview/09-stable-symbols.png", "sha256": "6b161102fcb22406f3f82320325da7c547a55d42552fe1b2e1b8a38556ab7969" },
+      { "path": "preview/10-scene-substrates.png", "sha256": "9be298eb03d7035afb024adab8cd920b67f6813efb47be6aa74111c168b12de9" },
+      { "path": "preview/11-transparent-layer-kits.png", "sha256": "73cdd7c5543c27c1046bb37b242411b95f4b668c08093cbc015cf97f9da9ece1" },
+      { "path": "preview/12-stable-scene-compositions.png", "sha256": "4214ed30d066c2d6a4b991f604ef63b34e30cab18dacd510217a6a417736c0e9" },
+      { "path": "preview/13-stable-scene-safe-areas.png", "sha256": "dc5be091ea9e756f8f15f44bd08bf322e420f8a320ef452d23505f8f4b06f5c7" },
+      { "path": "preview/14-parallax-motion-qa.png", "sha256": "f6de04417d77024bf461918b679de1a537e6d37c3b144f5af0de585dd7f43f65" }
+    ],
+    "notes": "Inspected aligned layers, neutral composites, protected runtime regions, and maximum positive/negative drift. Rejected and regenerated the first skill celestial field because discrete points resembled runtime nodes."
+  },
+  "reference_root": "docs/design/references/huyen-kim/scenes",
+  "symbols": [
+    "back",
+    "close",
+    "home",
+    "character",
+    "realm",
+    "skill",
+    "body",
+    "technique",
+    "inventory",
+    "exploration",
+    "alchemy",
+    "equipment",
+    "quest",
+    "settings",
+    "feedback",
+    "auto-farm",
+    "confirm",
+    "lock"
+  ],
+  "packages": [
+    {
+      "package_id": "huyen-kim-ui-symbol-set",
+      "priority": "P0",
+      "consumers": ["global navigation", "utility controls"],
+      "runtime_owns": ["tint", "hover", "selected", "disabled", "attention", "notification"]
+    },
+    {
+      "package_id": "realm-ascent-vista",
+      "priority": "P0",
+      "consumers": ["Scene 05 Realm ascent-map"],
+      "runtime_owns": ["18 nodes", "realm rungs", "labels", "progress", "locks", "selection"]
+    },
+    {
+      "package_id": "body-diagram-kit",
+      "priority": "P0",
+      "consumers": ["Scene 08 Body figure-focus"],
+      "runtime_owns": ["meridian orbs", "labels", "tiers", "chapter state", "invest animation"]
+    },
+    {
+      "package_id": "tribulation-environment-kit",
+      "priority": "P0",
+      "consumers": ["Scene 14 Tribulation world"],
+      "runtime_owns": ["lightning", "flash", "debris", "shake", "phases", "characters", "questions", "meters"]
+    },
+    {
+      "package_id": "equipment-paperdoll-base",
+      "priority": "P1",
+      "consumers": ["Scene 12 Equipment paperdoll"],
+      "runtime_owns": ["equipment art", "six sockets", "rarity", "selection", "operations"]
+    },
+    {
+      "package_id": "exploration-map-chrome-kit",
+      "priority": "P1",
+      "consumers": ["Scene 10 Exploration map-canvas"],
+      "runtime_owns": ["geography", "routes", "nodes", "boss marks", "labels", "chapter state"]
+    },
+    {
+      "package_id": "technique-display-plinth",
+      "priority": "P1",
+      "consumers": ["Scene 06 Technique artifact-vista"],
+      "runtime_owns": ["technique illustration", "name", "grade", "rank", "materials", "upgrade effects"]
+    },
+    {
+      "package_id": "neutral-skill-tree-substrate",
+      "priority": "P1",
+      "consumers": ["Scene 07 Skill tree-canvas"],
+      "runtime_owns": ["core node", "branch nodes", "icons", "edges", "topology", "levels", "locks", "element tint"]
+    },
+    {
+      "package_id": "auth-creation-vista",
+      "priority": "P1",
+      "consumers": ["Scene 01 Login", "Scene 02 Character Creation"],
+      "runtime_owns": ["logo", "auth scroll", "forms", "talent cards", "player character", "controls"]
+    }
+  ],
+  "assets": [
+    {
+      "asset_id": "auth-creation-00-sky", "package_id": "auth-creation-vista", "kind": "generated",
+      "source": "_source/generated/auth-creation-00-sky.png", "reference_scenes": ["01-login.jpg", "02-character-creation.jpg"],
+      "output_base": "scene/auth/00-sky", "width": 1672, "height": 941, "alpha": false, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 0, "y": 0, "width": 960, "height": 941 }, "runtime_reserved_rects": [{ "x": 1016, "y": 120, "width": 560, "height": 700 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "auth-creation", "depth": "L0", "order": 0, "motion": "static", "max_drift_px": { "x": 0, "y": 0 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "auth-creation-01-far-mountains", "package_id": "auth-creation-vista", "kind": "generated",
+      "source": "_source/generated/auth-creation-01-far-mountains.png", "reference_scenes": ["01-login.jpg", "02-character-creation.jpg"],
+      "output_base": "scene/auth/01-far-mountains", "width": 1672, "height": 941, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 0, "y": 0, "width": 960, "height": 941 }, "runtime_reserved_rects": [{ "x": 1016, "y": 120, "width": 560, "height": 700 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "auth-creation", "depth": "L1", "order": 1, "motion": "far-slow", "max_drift_px": { "x": 4, "y": 2 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "auth-creation-02-mid-landscape", "package_id": "auth-creation-vista", "kind": "generated",
+      "source": "_source/generated/auth-creation-02-mid-landscape.png", "reference_scenes": ["01-login.jpg", "02-character-creation.jpg"],
+      "output_base": "scene/auth/02-mid-landscape", "width": 1672, "height": 941, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 0, "y": 0, "width": 960, "height": 941 }, "runtime_reserved_rects": [{ "x": 1016, "y": 120, "width": 560, "height": 700 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "auth-creation", "depth": "L2", "order": 2, "motion": "mid", "max_drift_px": { "x": 8, "y": 4 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "auth-creation-03-focal-architecture", "package_id": "auth-creation-vista", "kind": "generated",
+      "source": "_source/generated/auth-creation-03-focal-architecture.png", "reference_scenes": ["01-login.jpg", "02-character-creation.jpg"],
+      "output_base": "scene/auth/03-focal-architecture", "width": 1672, "height": 941, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 0, "y": 0, "width": 960, "height": 941 }, "runtime_reserved_rects": [{ "x": 1016, "y": 120, "width": 560, "height": 700 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "auth-creation", "depth": "L3", "order": 3, "motion": "ground", "max_drift_px": { "x": 10, "y": 5 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "auth-creation-04-low-mist", "package_id": "auth-creation-vista", "kind": "generated",
+      "source": "_source/generated/auth-creation-04-low-mist.png", "reference_scenes": ["01-login.jpg", "02-character-creation.jpg"],
+      "output_base": "scene/auth/04-low-mist", "width": 1672, "height": 941, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 0, "y": 0, "width": 960, "height": 941 }, "runtime_reserved_rects": [{ "x": 1016, "y": 120, "width": 560, "height": 700 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "auth-creation", "depth": "L4", "order": 4, "motion": "mist-slow", "max_drift_px": { "x": 12, "y": 6 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "auth-creation-05-foreground", "package_id": "auth-creation-vista", "kind": "generated",
+      "source": "_source/generated/auth-creation-05-foreground.png", "reference_scenes": ["01-login.jpg", "02-character-creation.jpg"],
+      "output_base": "scene/auth/05-foreground", "width": 1672, "height": 941, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 0, "y": 0, "width": 960, "height": 941 }, "runtime_reserved_rects": [{ "x": 1016, "y": 120, "width": 560, "height": 700 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "auth-creation", "depth": "L5", "order": 5, "motion": "foreground", "max_drift_px": { "x": 18, "y": 9 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "realm-ascent-00-sky", "package_id": "realm-ascent-vista", "kind": "generated",
+      "source": "_source/generated/realm-ascent-00-sky.png", "reference_scenes": ["05-realm.jpg"],
+      "output_base": "scene/realm/00-sky", "width": 812, "height": 610, "alpha": false, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 24, "y": 24, "width": 764, "height": 562 }, "runtime_reserved_rects": [{ "x": 72, "y": 28, "width": 650, "height": 554 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "realm-ascent", "depth": "L0", "order": 0, "motion": "static", "max_drift_px": { "x": 0, "y": 0 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "realm-ascent-01-far-mountains", "package_id": "realm-ascent-vista", "kind": "generated",
+      "source": "_source/generated/realm-ascent-01-far-mountains.png", "reference_scenes": ["05-realm.jpg"],
+      "output_base": "scene/realm/01-far-mountains", "width": 812, "height": 610, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 24, "y": 24, "width": 764, "height": 562 }, "runtime_reserved_rects": [{ "x": 72, "y": 28, "width": 650, "height": 554 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "realm-ascent", "depth": "L1", "order": 1, "motion": "far-slow", "max_drift_px": { "x": 3, "y": 2 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "realm-ascent-02-mid-ascent", "package_id": "realm-ascent-vista", "kind": "generated",
+      "source": "_source/generated/realm-ascent-02-mid-ascent.png", "reference_scenes": ["05-realm.jpg"],
+      "output_base": "scene/realm/02-mid-ascent", "width": 812, "height": 610, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 24, "y": 24, "width": 764, "height": 562 }, "runtime_reserved_rects": [{ "x": 72, "y": 28, "width": 650, "height": 554 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "realm-ascent", "depth": "L2", "order": 2, "motion": "mid", "max_drift_px": { "x": 6, "y": 3 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "realm-ascent-03-summit-architecture", "package_id": "realm-ascent-vista", "kind": "generated",
+      "source": "_source/generated/realm-ascent-03-summit-architecture.png", "reference_scenes": ["05-realm.jpg"],
+      "output_base": "scene/realm/03-summit-architecture", "width": 812, "height": 610, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 24, "y": 24, "width": 764, "height": 562 }, "runtime_reserved_rects": [{ "x": 72, "y": 28, "width": 650, "height": 554 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "realm-ascent", "depth": "L3", "order": 3, "motion": "ground", "max_drift_px": { "x": 8, "y": 4 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "realm-ascent-04-low-mist", "package_id": "realm-ascent-vista", "kind": "generated",
+      "source": "_source/generated/realm-ascent-04-low-mist.png", "reference_scenes": ["05-realm.jpg"],
+      "output_base": "scene/realm/04-low-mist", "width": 812, "height": 610, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 24, "y": 24, "width": 764, "height": 562 }, "runtime_reserved_rects": [{ "x": 72, "y": 28, "width": 650, "height": 554 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "realm-ascent", "depth": "L4", "order": 4, "motion": "mist-slow", "max_drift_px": { "x": 10, "y": 5 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "body-cultivation-figure",
+      "package_id": "body-diagram-kit",
+      "kind": "generated",
+      "source": "_source/generated/body-cultivation-figure.png",
+      "reference_scenes": ["08-body.jpg"],
+      "output_base": "scene/body/body-cultivation-figure",
+      "width": 640,
+      "height": 520,
+      "alpha": true,
+      "fit": "contain",
+      "position": "center",
+      "content_safe_rect": { "x": 112, "y": 16, "width": 416, "height": 488 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 12, "right": 24, "bottom": 12, "left": 24 }
+    },
+    {
+      "asset_id": "body-meridian-overlay",
+      "package_id": "body-diagram-kit",
+      "kind": "deterministic-meridian",
+      "source": null,
+      "reference_scenes": ["08-body.jpg"],
+      "output_base": "scene/body/body-meridian-overlay",
+      "width": 640,
+      "height": 520,
+      "alpha": true,
+      "fit": "none",
+      "position": "center",
+      "content_safe_rect": { "x": 176, "y": 44, "width": 288, "height": 442 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 24, "right": 96, "bottom": 20, "left": 96 }
+    },
+    {
+      "asset_id": "tribulation-storm-far",
+      "package_id": "tribulation-environment-kit",
+      "kind": "generated",
+      "source": "_source/generated/tribulation-storm-far.png",
+      "reference_scenes": ["13-tribulation.jpg"],
+      "output_base": "scene/tribulation/tribulation-storm-far",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "fit": "contain",
+      "position": "north",
+      "content_safe_rect": { "x": 0, "y": 0, "width": 1672, "height": 560 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 160, "left": 0 }
+    },
+    {
+      "asset_id": "tribulation-storm-near",
+      "package_id": "tribulation-environment-kit",
+      "kind": "generated",
+      "source": "_source/generated/tribulation-storm-near.png",
+      "reference_scenes": ["13-tribulation.jpg"],
+      "output_base": "scene/tribulation/tribulation-storm-near",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "fit": "contain",
+      "position": "north",
+      "content_safe_rect": { "x": 220, "y": 0, "width": 1232, "height": 660 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 0, "right": 40, "bottom": 120, "left": 40 }
+    },
+    {
+      "asset_id": "tribulation-dais",
+      "package_id": "tribulation-environment-kit",
+      "kind": "generated",
+      "source": "_source/generated/tribulation-dais.png",
+      "reference_scenes": ["13-tribulation.jpg"],
+      "output_base": "scene/tribulation/tribulation-dais",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "fit": "contain",
+      "position": "south",
+      "content_safe_rect": { "x": 426, "y": 420, "width": 820, "height": 480 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 280, "right": 160, "bottom": 20, "left": 160 }
+    },
+    {
+      "asset_id": "tribulation-sky-vignette",
+      "package_id": "tribulation-environment-kit",
+      "kind": "generated",
+      "source": "_source/generated/tribulation-sky-vignette.png",
+      "reference_scenes": ["13-tribulation.jpg"],
+      "output_base": "scene/tribulation/tribulation-sky-vignette",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "fit": "cover",
+      "position": "center",
+      "content_safe_rect": { "x": 0, "y": 0, "width": 1672, "height": 941 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 }
+    },
+    {
+      "asset_id": "equipment-paperdoll-base",
+      "package_id": "equipment-paperdoll-base",
+      "kind": "generated",
+      "source": "_source/generated/equipment-paperdoll-base.png",
+      "reference_scenes": ["12-equipment.jpg"],
+      "output_base": "scene/equipment/equipment-paperdoll-base",
+      "width": 380,
+      "height": 610,
+      "alpha": true,
+      "fit": "contain",
+      "position": "center",
+      "content_safe_rect": { "x": 64, "y": 16, "width": 252, "height": 578 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 12, "right": 20, "bottom": 12, "left": 20 }
+    },
+    {
+      "asset_id": "exploration-map-frame",
+      "package_id": "exploration-map-chrome-kit",
+      "kind": "deterministic-map-frame",
+      "source": null,
+      "reference_scenes": ["09-exploration.jpg"],
+      "output_base": "scene/map/exploration-map-frame",
+      "width": 700,
+      "height": 524,
+      "alpha": true,
+      "fit": "none",
+      "position": "center",
+      "content_safe_rect": { "x": 52, "y": 44, "width": 596, "height": 436 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 }
+    },
+    {
+      "asset_id": "exploration-map-mask",
+      "package_id": "exploration-map-chrome-kit",
+      "kind": "deterministic-map-mask",
+      "source": null,
+      "reference_scenes": ["09-exploration.jpg"],
+      "output_base": "scene/map/exploration-map-mask",
+      "width": 700,
+      "height": 524,
+      "alpha": true,
+      "fit": "none",
+      "position": "center",
+      "content_safe_rect": { "x": 42, "y": 36, "width": 616, "height": 452 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 20, "right": 20, "bottom": 20, "left": 20 }
+    },
+    {
+      "asset_id": "exploration-chapter-divider",
+      "package_id": "exploration-map-chrome-kit",
+      "kind": "deterministic-map-divider",
+      "source": null,
+      "reference_scenes": ["09-exploration.jpg"],
+      "output_base": "scene/map/exploration-chapter-divider",
+      "width": 620,
+      "height": 16,
+      "alpha": true,
+      "fit": "none",
+      "position": "center",
+      "content_safe_rect": { "x": 18, "y": 0, "width": 584, "height": 16 },
+      "runtime_reserved_rects": [],
+      "transparent_margin": { "top": 2, "right": 10, "bottom": 2, "left": 10 }
+    },
+    {
+      "asset_id": "technique-display-plinth",
+      "package_id": "technique-display-plinth",
+      "kind": "generated",
+      "source": "_source/generated/technique-display-plinth.png",
+      "reference_scenes": ["06-technique.jpg"],
+      "output_base": "scene/technique/technique-display-plinth",
+      "width": 448,
+      "height": 480,
+      "alpha": true,
+      "fit": "contain",
+      "position": "south",
+      "content_safe_rect": { "x": 48, "y": 48, "width": 352, "height": 400 },
+      "runtime_reserved_rects": [{ "x": 92, "y": 30, "width": 264, "height": 292 }],
+      "transparent_margin": { "top": 16, "right": 20, "bottom": 12, "left": 20 }
+    },
+    {
+      "asset_id": "skill-tree-00-sky", "package_id": "neutral-skill-tree-substrate", "kind": "generated",
+      "source": "_source/generated/skill-tree-00-sky.png", "reference_scenes": ["07-skill.jpg"],
+      "output_base": "scene/skill/00-sky", "width": 640, "height": 470, "alpha": false, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 40, "y": 32, "width": 560, "height": 406 }, "runtime_reserved_rects": [{ "x": 80, "y": 48, "width": 480, "height": 374 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "skill-tree", "depth": "L0", "order": 0, "motion": "static", "max_drift_px": { "x": 0, "y": 0 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "skill-tree-01-far-mountains", "package_id": "neutral-skill-tree-substrate", "kind": "generated",
+      "source": "_source/generated/skill-tree-01-far-mountains.png", "reference_scenes": ["07-skill.jpg"],
+      "output_base": "scene/skill/01-far-mountains", "width": 640, "height": 470, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 40, "y": 32, "width": 560, "height": 406 }, "runtime_reserved_rects": [{ "x": 80, "y": 48, "width": 480, "height": 374 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "skill-tree", "depth": "L1", "order": 1, "motion": "far-slow", "max_drift_px": { "x": 3, "y": 2 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "skill-tree-02-celestial-field", "package_id": "neutral-skill-tree-substrate", "kind": "generated",
+      "source": "_source/generated/skill-tree-02-celestial-field.png", "reference_scenes": ["07-skill.jpg"],
+      "output_base": "scene/skill/02-celestial-field", "width": 640, "height": 470, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 40, "y": 32, "width": 560, "height": 406 }, "runtime_reserved_rects": [{ "x": 80, "y": 48, "width": 480, "height": 374 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "skill-tree", "depth": "L2", "order": 2, "motion": "celestial-slow", "max_drift_px": { "x": 5, "y": 2 }, "reduced_motion_offset_px": 0 }
+    },
+    {
+      "asset_id": "skill-tree-03-atmosphere", "package_id": "neutral-skill-tree-substrate", "kind": "generated",
+      "source": "_source/generated/skill-tree-03-atmosphere.png", "reference_scenes": ["07-skill.jpg"],
+      "output_base": "scene/skill/03-atmosphere", "width": 640, "height": 470, "alpha": true, "fit": "cover", "position": "center",
+      "content_safe_rect": { "x": 40, "y": 32, "width": 560, "height": 406 }, "runtime_reserved_rects": [{ "x": 80, "y": 48, "width": 480, "height": 374 }],
+      "transparent_margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+      "parallax": { "stack": "skill-tree", "depth": "L3", "order": 3, "motion": "atmosphere", "max_drift_px": { "x": 8, "y": 4 }, "reduced_motion_offset_px": 0 }
+    }
+  ],
+  "banned_output_fragments": [
+    "/characters/",
+    "/enemies/",
+    "/items/",
+    "/equipment/items/",
+    "/skills/icons/",
+    "/pills/",
+    "/vfx/"
+  ]
+}

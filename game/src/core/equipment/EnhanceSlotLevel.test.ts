@@ -1,6 +1,6 @@
 // @vitest-environment node
-// Task 10 (rework P3) — slot-level enhance: đường cong mũ + pity 10 +
-// max 100 + scale 0.06. Mock random kiểm soát để không flaky.
+// Task 10 (rework P3) - slot-level enhance: duong cong mu + pity 10 +
+// max 100 + scale 0.06. Mock random kiem soat de khong flaky.
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { EquipmentSystem } from './EquipmentSystem'
 import { EquipmentBag } from './EquipmentBag'
@@ -53,8 +53,8 @@ function makeEquipment(slot: EquipmentSlotState['slot'] = 'weapon'): Equipment {
 }
 
 function setup(options: { random?: () => number } = {}) {
-  // Constructor nhận costCatalog (không phải eventBus) — undefined là
-  // hợp lệ (fallback template/fallback cost, pattern EquipmentSystem.test).
+  // Constructor nhan costCatalog (khong phai eventBus) - undefined la
+  // hop le (fallback template/fallback cost, pattern EquipmentSystem.test).
   const system = new EquipmentSystem()
   const bag = new EquipmentBag()
   const registry = new EquipmentRegistry()
@@ -84,7 +84,7 @@ afterEach(() => {
 describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
   it('L1 rate 100%: luôn thành công, level 0 → 1, streak giữ 0', () => {
     const { system, bag, registry, materialBag, slotManager, affixRegistry, player } = setup({
-      random: () => 0.99, // < 100 → thành công; chứng minh rate L1 = 100
+      random: () => 0.99, // < 100 -> thanh cong; chung minh rate L1 = 100
     })
 
     const result = system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry)
@@ -95,8 +95,8 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
   })
 
   it('rate thấp: fail → streak +1, KHÔNG đổi level, đã trừ nguyên liệu (không phạt khác)', () => {
-    // L1 rate 100 (0.5<100 ok); L2 rate 96 (0.5<96 ok) → lên L2.
-    // L3 rate 92 → random 0.99×100=99 ≥ 92 → FAIL.
+    // L1 rate 100 (0.5<100 ok); L2 rate 96 (0.5<96 ok) -> len L2.
+    // L3 rate 92 -> random 0.99x100=99 >= 92 -> FAIL.
     const randoms = [0.5, 0.5, 0.99]
     let index = -1
 
@@ -108,7 +108,7 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
       },
     })
 
-    // Lên L2 trước (2 lần success tại rate 100).
+    // Len L2 truoc (2 lan success tai rate 100).
     system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry)
     system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry)
 
@@ -125,7 +125,7 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
     expect(slotManager.get('weapon').enhanceLevel).toBe(2)
     expect(slotManager.get('weapon').enhanceFailStreak).toBe(1)
 
-    // Nguyên liệu lần fail ĐÃ mất (chỉ mất nguyên liệu, không phạt khác).
+    // Nguyen lieu lan fail DA mat (chi mat nguyen lieu, khong phat khac).
     const stonesAfter = materialBag.getAmount(
       requireSpiritStoneIdForLevel(materialBag),
     )
@@ -135,10 +135,10 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
 
   it('pity: 10 fail liên tiếp → lần 11 chắc chắn thành công bất chấp random, reset streak', () => {
     const { system, bag, registry, materialBag, slotManager, affixRegistry, player } = setup({
-      random: () => 0.999, // luôn fail ở mọi rate < 100
+      random: () => 0.999, // luon fail o moi rate < 100
     })
 
-    // L1 rate 100 → success (bất kể random). Từ L2 rate < 100 → fail x10.
+    // L1 rate 100 -> success (bat ke random). Tu L2 rate < 100 -> fail x10.
     system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry)
 
     for (let i = 1; i <= 10; i++) {
@@ -149,7 +149,7 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
       expect(slotManager.get('weapon').enhanceFailStreak).toBe(i)
     }
 
-    // Lần 11 — pity: CHẮC CHẮC thành công dù random 0.999.
+    // Lan 11 - pity: CHAC CHAC thanh cong du random 0.999.
     const pity = system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry)
 
     expect(pity.ok).toBe(true)
@@ -161,7 +161,7 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
     const sequence = [
       0.5, 0.5, 0.5, 0.5, // L1 success (rate 100), L2..L4 success (rate cao)
       0.999, // L5 fail (rate ~83)
-      0.5, // L5 retry — success (rate ~83, 0.5 < 83) → reset
+      0.5, // L5 retry - success (rate ~83, 0.5 < 83) -> reset
     ]
 
     let index = -1
@@ -178,8 +178,8 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
       system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry)
     }
 
-    system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry) // fail → streak 1
-    system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry) // success → reset
+    system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry) // fail -> streak 1
+    system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry) // success -> reset
 
     expect(slotManager.get('weapon').enhanceFailStreak).toBe(0)
     expect(slotManager.get('weapon').enhanceLevel).toBe(5)
@@ -192,7 +192,7 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
 
     const slotState = slotManager.get('weapon')
 
-    slotState.enhanceLevel = 100 // test shortcut — không roll 100 lần
+    slotState.enhanceLevel = 100 // test shortcut - khong roll 100 lan
 
     const result = system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry)
 
@@ -201,8 +201,8 @@ describe('EquipmentSystem.enhance — slot-level + pity (Task 10)', () => {
 })
 
 function requireSpiritStoneIdForLevel(materialBag: MaterialBag): string {
-  // Lấy id Linh Thạch đang có trong bag (mortal tier) — test không cứng
-  // id, chỉ cần 1 stack spirit_stone bất kỳ.
+  // Lay id Linh Thach dang co trong bag (mortal tier) - test khong cung
+  // id, chi can 1 stack spirit_stone bat ky.
   const stack = materialBag.getAll().find((entry) => entry.material.category === 'spirit_stone')
 
   if (!stack) {
@@ -212,14 +212,14 @@ function requireSpiritStoneIdForLevel(materialBag: MaterialBag): string {
   return stack.material.id
 }
 
-// Guard chống regression: slot state mặc định phải có streak 0.
+// Guard chong regression: slot state mac dinh phai co streak 0.
 describe('EquipmentSlotState — enhanceFailStreak default (Task 10)', () => {
   it('createDefaultSlotState init enhanceFailStreak = 0', () => {
     expect(createDefaultSlotState('weapon').enhanceFailStreak).toBe(0)
   })
 })
 
-// M3 (spec 2026-09-03 talent catalog v4 §4.2) — Bach Luyen Thanh Khi:
+// M3 (spec 2026-09-03 talent catalog v4 sec4.2) - Bach Luyen Thanh Khi:
 // enhance NEVER fails; counter-cost x3 materials + x3 spirit stone per
 // attempt vs a normal player (applied on top of the resolved cost).
 describe('EquipmentSystem — Bach Luyen Thanh Khi (M3 spec §4.2)', () => {
@@ -230,7 +230,7 @@ describe('EquipmentSystem — Bach Luyen Thanh Khi (M3 spec §4.2)', () => {
 
     system.setEnhancePolicy({ alwaysSucceed: true, costMultiplier: 3 })
 
-    // L1 rate 100 (success), L2 rate 96 + L3 rate 92 — van success nho policy.
+    // L1 rate 100 (success), L2 rate 96 + L3 rate 92 - van success nho policy.
     for (let i = 0; i < 3; i++) {
       const result = system.enhance('weapon', player.realmId, bag, registry, materialBag, slotManager, affixRegistry)
       expect(result.ok).toBe(true)
@@ -277,7 +277,7 @@ describe('EquipmentSystem — Bach Luyen Thanh Khi (M3 spec §4.2)', () => {
 
     system.setEnhancePolicy({ alwaysSucceed: true, costMultiplier: 3 })
 
-    // L0 → multiplier (0+1)=1 → materials 2*3, spirit 10*3.
+    // L0 -> multiplier (0+1)=1 -> materials 2*3, spirit 10*3.
     expect(system.getEnhanceCost('weapon', player.realmId, bag, registry, slotManager)).toEqual([
       { materialId: ore.material.id, amount: 6 },
     ])
@@ -303,9 +303,9 @@ describe('EquipmentSystem — Bach Luyen Thanh Khi (M3 spec §4.2)', () => {
   })
 })
 
-// Guardrail first-pass (spec §8) — E[attempts] baseline theo curve + pity
-// vs chi phí chắc chắn x3: talent KHÔNG được rẻ hơn baseline ở dải đầu
-// (rate cao) và không được đắt hơn x3 lần chi phí một lần ở mọi dải.
+// Guardrail first-pass (spec sec8) - E[attempts] baseline theo curve + pity
+// vs chi phi chac chan x3: talent KHONG duoc re hon baseline o dai dau
+// (rate cao) va khong duoc dat hon x3 lan chi phi mot lan o moi dai.
 describe('Bách Luyện balance guardrail (spec §8)', () => {
   it('expected cost/level: talent = 3× single-attempt ở mọi level; baseline ≥ 1× và ≤ pity-cap', async () => {
     const { enhanceSuccessRate, ENHANCE_PITY_THRESHOLD, MAX_SLOT_ENHANCE_LEVEL } = await import('./EnhanceCurve')
@@ -332,14 +332,14 @@ describe('Bách Luyện balance guardrail (spec §8)', () => {
       const rate = enhanceSuccessRate(level)
       const baselineAttempts = expectedAttempts(rate, ENHANCE_PITY_THRESHOLD)
 
-      // Talent pays exactly 3x one attempt — deterministic.
+      // Talent pays exactly 3x one attempt - deterministic.
       const talentCostRatio = 3
 
       // Baseline expected attempts never below 1 (never cheaper than one try).
       expect(baselineAttempts).toBeGreaterThanOrEqual(1)
 
       // Spec intent: at high-rate early levels the talent pays MORE than
-      // baseline expected cost — the guarantee is a premium, not a freebie.
+      // baseline expected cost - the guarantee is a premium, not a freebie.
       if (rate >= 95) {
         expect(baselineAttempts).toBeLessThan(talentCostRatio)
       }

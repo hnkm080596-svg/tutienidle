@@ -15,6 +15,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import {
   CULTIVATION_PATH_MODULES,
+  declaresElementAxis,
   type CultivationPathId,
   type PathWayDefinition,
   type CultivationWayId,
@@ -25,6 +26,9 @@ import {
   isActivePath,
   listOfferableWays,
 } from '@/core/player/CultivationPathSystem'
+import { BETA_PLAYABLE_ELEMENTS, isBetaWay, isScopeHidden } from '@/core/betaScope'
+import type { ElementType } from '@/core/element/ElementType'
+import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -61,8 +65,11 @@ const availableWays = computed(() => {
   // M2 -- offers are (path, way) pairs from the authority. Ineligible
   // ways stay hidden (pre-framework omission behavior preserved); each
   // row carries the resolved way definition for display.
+  // BETA SCOPE LOCK v2 (phase-2): the ritual's offer list is the beta
+  // allow-list - a non-beta way can never ride this surface even when
+  // the underlying offer authority is re-enabled.
   return listOfferableWays(player.$state)
-    .filter((offer) => offer.eligible)
+    .filter((offer) => offer.eligible && isBetaWay(offer.wayId))
     .map((offer) => ({
       pathId: offer.pathId,
       wayId: offer.wayId,
@@ -98,9 +105,9 @@ function choiceKitLine(way: PathWayDefinition): string {
     : ''
 }
 
-// Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
-// (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
-// thay vì browser confirm() mặc định).
+// Thay window.confirm() native - modal xac nhan dong bo hoa qua state
+// (giu nguyen yeu cau "lua chon KHONG the doi lai" bang modal rieng
+// thay vi browser confirm() mac dinh).
 const pendingChoice = ref<{ pathId: CultivationPathId; wayId: CultivationWayId } | null>(null)
 
 const pendingWay = computed(() =>
@@ -111,12 +118,61 @@ const pendingWay = computed(() =>
 
 const pendingPathName = computed(() => pendingWay.value?.name ?? '')
 
+// BETA SCOPE LOCK v2 (phase-2) - the Ngu Hanh ritual commits way +
+// element in ONE atomic domain op, so its confirm step is the element
+// pick rather than the generic modal. The commit feeds
+// commitFiveElementInitiation() exactly once with the picked element.
+// The element step is data-driven: any way declaring an element
+// subpath axis gets it (today: spell_pathway) - no literal way ids.
+const pendingWayHasElementAxis = computed(
+  () => declaresElementAxis(pendingWay.value),
+)
+const elementChoices = [...BETA_PLAYABLE_ELEMENTS]
+const initiationError = ref('')
+
+function elementLabel(element: ElementType): string {
+  return ELEMENT_LABELS[element]
+}
+
 function choosePath(pathId: CultivationPathId, wayId: CultivationWayId) {
+  initiationError.value = ''
   pendingChoice.value = { pathId, wayId }
 }
 
 function cancelChoosePath() {
+  initiationError.value = ''
   pendingChoice.value = null
+}
+
+function commitInitiation(element: ElementType) {
+  // Capture the way name BEFORE clearing pendingChoice - pendingPathName
+  // derives from it and would read '' by announcement time.
+  const wayName = pendingPathName.value
+  const realmIdBefore = player.realmId
+
+  const result = gameManager.realmAdvanceOps.commitFiveElementInitiation(element, player.$state)
+
+  if (!result.ok) {
+    // Every preflight reason maps to a locale key; an unmapped future
+    // reason falls back to the generic failure line.
+    const key = `panels.quanKhi.initiationFailed.${result.reason}`
+    initiationError.value = te(key) ? t(key) : t('panels.quanKhi.initiationFailed.commit_failed')
+    useAudioStore().cue('ui.error')
+    return
+  }
+
+  useAudioStore().cue('progress.path_choose')
+  pendingChoice.value = null
+  bumpState()
+
+  if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
+    useWorldAnnouncementStore().show(
+      t('panels.quanKhi.world.ceremonyTitle'),
+      t('panels.quanKhi.world.ceremonyBody', { name: wayName }),
+    )
+  }
+
+  close()
 }
 
 function confirmChoosePath() {
@@ -138,9 +194,9 @@ function confirmChoosePath() {
   if (gameManager.realmAdvanceOps.chooseCultivationPath(choice.pathId, choice.wayId, player.$state)) {
     bumpState()
 
-    // Nghi Lễ Nhập Môn — chọn path VỪA LÀ hành động đột phá Phàm Nhân
-    // -> Luyện Khí (xem GameManager.chooseCultivationPath()), xứng đáng
-    // 1 world announcement giống mọi lần đổi đại cảnh giới khác.
+    // Nghi Le Nhap Mon - chon path VUA LA hanh dong dot pha Pham Nhan
+    // -> Luyen Khi (xem GameManager.chooseCultivationPath()), xung dang
+    // 1 world announcement giong moi lan doi dai canh gioi khac.
     if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
       useWorldAnnouncementStore().show(
         t('panels.quanKhi.world.ceremonyTitle'),
@@ -156,18 +212,21 @@ function close() {
   ui.closeHomeOverlays()
 }
 
-// Kiem Tu specialization card below — shown only after the player has
+// Kiem Tu specialization card below - shown only after the player has
 // chosen the sword path (read-only display; the way was locked at
-// the Initiation Ritual — there is no in-panel conversion).
+// the Initiation Ritual - there is no in-panel conversion).
 const isSwordPath = computed(() => {
   stateVersion.value
 
   // P1 - the generic authority read resolves the committed pair through
   // the catalog: a way-less/corrupt sword save is NOT kiem (fail closed).
-  return isActivePath(player, 'sword')
+  // BETA SCOPE LOCK - a carried way_out_of_scope sword save keeps the
+  // path flag, but every sword-way surface stays scope-hidden (no spec
+  // card, no preset editor).
+  return isActivePath(player, 'sword') && !isScopeHidden('swordPath')
 })
 
-// Cultivation Path Framework (M6/M9) — the sword/hidden way is canonical on
+// Cultivation Path Framework (M6/M9) - the sword/hidden way is canonical on
 // PlayerData.cultivationWay. P1 - read through the declared capability:
 // 'sword.sword_riding' only resolves for the ('sword','hidden_sword_pathway') pair.
 const swordPathWay = computed(() => {
@@ -182,9 +241,9 @@ const specNameDisplay = computed(() =>
     : t('panels.quanKhi.specNames.kiemPho'),
 )
 
-// Kiem Tu Reimagined (spec §11) — out-of-combat Kiem Pho preset editor.
+// Kiem Tu Reimagined (spec sec11) - out-of-combat Kiem Pho preset editor.
 // Direct-op editing: every click goes through setKiemPhoPreset() so
-// PlayerData stays the single source of truth — no draft copy to sync.
+// PlayerData stays the single source of truth - no draft copy to sync.
 const orbPalette = Object.keys(KIEM_PHO_ORBS) as OrbId[]
 
 const realmIndex = computed(() => {
@@ -249,7 +308,30 @@ function removeOrbAt(index: number) {
     <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
       <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 
-      <div class="quan-khi-panel__choices">
+      <!-- BETA SCOPE LOCK v2 (phase-2) - the spell way's element pick:
+           one atomic commit, not a way pick + a later element choice. -->
+      <div v-if="pendingChoice !== null && pendingWayHasElementAxis" class="quan-khi-panel__element-step">
+        <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.elementPick.hint') }}</p>
+        <div class="quan-khi-panel__element-grid">
+          <GameButton
+            v-for="element in elementChoices"
+            :key="element"
+            class="quan-khi-panel__element-btn"
+            variant="danger"
+            size="sm"
+            :disabled="cooldownSeconds > 0"
+            @click="commitInitiation(element)"
+          >
+            {{ elementLabel(element) }}
+          </GameButton>
+        </div>
+        <p v-if="initiationError" class="quan-khi-panel__element-error">{{ initiationError }}</p>
+        <GameButton variant="ghost" size="sm" @click="cancelChoosePath">
+          {{ t('panels.quanKhi.sections.elementPick.back') }}
+        </GameButton>
+      </div>
+
+      <div v-else class="quan-khi-panel__choices">
         <template v-for="kit in availableWays" :key="`${kit.pathId}/${kit.wayId}`">
           <!-- Sealed hidden-path card (Task 16, M9) -- renders for any
                way declaring sealedOffer (today: hidden_spell_pathway); names the
@@ -355,7 +437,7 @@ function removeOrbAt(index: number) {
     </div>
 
     <ConfirmModal
-      :open="pendingChoice !== null"
+      :open="pendingChoice !== null && !pendingWayHasElementAxis"
       :title="t('panels.quanKhi.messages.confirmPathTitle')"
       :message="pendingWay?.sealedOffer
         ? t('panels.quanKhi.messages.confirmPathHiddenBody', { name: pendingPathName })
@@ -517,6 +599,34 @@ function removeOrbAt(index: number) {
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--gold-500);
+}
+
+/* BETA SCOPE LOCK v2 (phase-2) - element pick step of the atomic
+   initiation. */
+.quan-khi-panel__element-step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quan-khi-panel__element-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.quan-khi-panel__element-btn {
+  padding: 10px 4px;
+  background: linear-gradient(180deg, var(--crimson), var(--ink-800));
+  border: 1px solid var(--chrome-500);
+  color: var(--text-primary);
+}
+
+.quan-khi-panel__element-error {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--crimson);
+  text-align: center;
 }
 
 /* Sealed hidden-path card (Task 16) -- distinct frame so the ritual

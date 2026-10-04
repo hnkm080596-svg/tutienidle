@@ -41,7 +41,7 @@ describe('toTurnBattleParticipant adapter', () => {
   })
 
   it('a resolved domain list grants the declared active domains', () => {
-    // M5 — the adapter takes the way-resolved domain list; path-id ->
+    // M5 - the adapter takes the way-resolved domain list; path-id ->
     // domain mapping lives upstream (resolveActiveWayStatDomains).
     const participant = toTurnBattleParticipant(entity(), 0, BASIC, ['spell'])
 
@@ -141,7 +141,7 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
   it('override takes precedence over the domain slot (Pháp Tu no longer silently empty)', () => {
     const combatEntity = entity()
 
-    // The domain list only declares stat-domain ownership — the
+    // The domain list only declares stat-domain ownership - the
     // special/ultimate slots come solely from the resolved override.
     const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, ['spell'], { special: SPECIAL })
 

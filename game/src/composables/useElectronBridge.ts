@@ -4,36 +4,79 @@ import { useGameManager } from './useGameState'
 import { i18n } from '@/i18n'
 import type { GameManager } from '../core/game/GameManager'
 import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSource'
+import type { FlushResult, QuitFlushFailedNotice } from '../shared/session/FlushResult'
+import type { UpdateInstallFailedNotice, UpdateInstallRequest, UpdateInstallResult } from '../shared/update/UpdateState'
+import type { DiagnosticExportResult } from '../main-process/DiagnosticBundle'
+import { recordDiagnostic } from '../services/diagnostics/DiagnosticRecorder'
+import type { GuestCredentialBridge } from '../services/supabase/SupabaseSession'
 
-// Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
-// (2026-08-24) — cầu nối renderer ↔ main process, CHỈ tồn tại khi chạy
-// trong bản Electron (window.electronAPI do electron/preload.ts expose qua
-// contextBridge — interface bên dưới PHẢI khớp đúng shape object export ở
-// đó). Bản build web thường (npm run dev/build) không có window.electronAPI
-// -> mọi hàm ở đây no-op ngay, không ảnh hưởng gì tới target web.
+// Uncommitted audit followup plan, Uu tien 2 "xu ly khi dong goi Electron"
+// (2026-08-24) - cau noi renderer <-> main process, CHI ton tai khi chay
+// trong ban Electron (window.electronAPI do electron/preload.ts expose qua
+// contextBridge - interface ben duoi PHAI khop dung shape object export o
+// do). Ban build web thuong (npm run dev/build) khong co window.electronAPI
+// -> moi ham o day no-op ngay, khong anh huong gi toi target web.
 //
-// suspend/resume is for logging/observation ONLY - it carries no
-// correctness obligation. GameClock (core/idle/GameClock.ts) already
-// self-corrects via Date.now() diff regardless of
-// interruption reasons (throttle, minimize, OS sleep...); core does NOT
-// depend on this event for correct catch-up (see
-// GameManager.updateBattleFixedStep()). Do NOT wire this event into
-// OfflineProgressSystem - that system runs once at boot load (app
-// restart), not for mid-session interruptions.
+// B1-D quits the comment's old claim: the quit flush is now a
+// RESULT-BEARING protocol - 'app:before-quit-flush' carries a requestId,
+// the renderer answers 'app:flush-result' {requestId, status}, and the
+// main side closes ONLY on 'saved' bound to the pending attempt. A
+// failed/blocked/timeout attempt comes back as 'app:flush-failed' and the
+// user picks retry / cancel / force-close - an unsuccessful flush can
+// never reach close (the updater install path consumes the same contract).
+//
+// system:suspend/resume feed the B1-D authority admission:
+// suspend invalidates admission immediately, resume drives the reconnect
+// pipeline. Where no authority is bound (local mode) they stay
+// log-only - GameClock self-corrects via Date.now() diff regardless.
 export interface ElectronBridgeAPI {
   isElectron: true
-  // Mỗi onX trả về hàm unsubscribe (preload.ts gỡ đúng ipcRenderer handler
-  // đã đăng ký) — teardown gọi được, không chồng listener qua HMR/remount
+  // Moi onX tra ve ham unsubscribe (preload.ts go dung ipcRenderer handler
+  // da dang ky) - teardown goi duoc, khong chong listener qua HMR/remount
   // (ARCH-013/L04).
   onSystemSuspend(callback: (timestamp: number) => void): () => void
   onSystemResume(callback: (timestamp: number) => void): () => void
-  onBeforeQuitFlush(callback: () => void): () => void
-  notifyFlushComplete(): void
-  // Task 7 (2026-09-10) — main-process clock host bridge, consumed by
+  onBeforeQuitFlush(callback: (requestId: string) => void): () => void
+  /** Result-bearing reply bound to the pending request id. */
+  notifyFlushResult(result: FlushResult): void
+  /** Main rejected/timed-out the pending attempt: retry / cancel / force-close. */
+  onFlushFailed(callback: (notice: QuitFlushFailedNotice) => void): () => void
+  retryQuitFlush(requestId: string): void
+  cancelQuitClose(requestId: string): void
+  forceQuitClose(requestId: string): void
+  // BETA-FINAL PR11 / spec B8 - diagnostics bridge; must match the fields
+  // added in electron/preload.ts. The export result shape is defined
+  // main-side (src/main-process/DiagnosticBundle.ts).
+  reportDiagnosticEvent(event: unknown): void
+  getDiagnosticReportId(): Promise<string>
+  exportDiagnostics(
+    context: unknown,
+  ): Promise<DiagnosticExportResult | { status: 'cancelled' }>
+  // BETA-FINAL PR12 / spec B6 - the allowlisted update surface. Only the
+  // sanitized UpdateState projection and the request/result handshake
+  // cross the bridge; there is no setFeedURL, path or publisher escape
+  // hatch. Shape must match the update block in electron/preload.ts.
+  getUpdateState(): Promise<unknown>
+  onUpdateState(callback: (state: unknown) => void): () => void
+  checkForUpdate(): void
+  downloadUpdate(): void
+  cancelUpdateDownload(): void
+  /** Carries the authority generation captured at click time; the install
+   *  result must quote the pending requestId AND this generation. */
+  requestUpdateInstall(generation: number): void
+  onUpdatePrepareInstall(callback: (request: UpdateInstallRequest) => void): () => void
+  notifyUpdateInstallResult(result: UpdateInstallResult): void
+  onUpdateInstallFailed(callback: (notice: UpdateInstallFailedNotice) => void): () => void
+  // Task 7 (2026-09-10) - main-process clock host bridge, consumed by
   // MainProcessClockSource (src/presentation/clock/). Shape must match
   // CombatClockBridge exactly; kept as that imported type rather than
   // redeclared here so the two cannot drift.
   combatClock: CombatClockBridge
+  // B1.8 - durable guest credential seam (OS-protected, main-owned).
+  // Operations only: the renderer never sees the file path or raw bytes.
+  // Absent on older preloads; SupabaseSession treats a missing bridge as
+  // 'no durable store', which keeps browser behavior session-scoped.
+  guestCredentials?: GuestCredentialBridge
 }
 
 declare global {
@@ -42,17 +85,39 @@ declare global {
   }
 }
 
-// `gameManagerOverride` — cùng lý do useBreakthrough.ts's tham số cùng tên:
-// App.vue gọi composable này trên CHÍNH cây component đã provide()
-// GameManager ra, useGameManager() inject bên trong sẽ throw nếu tự gọi
-// trên chính App.vue — truyền thẳng instance cục bộ để bỏ qua inject.
+/** B1-D authority handlers the bridge drives; every field optional so
+ *  local/test callers keep working without a remote authority bound. */
+export interface ElectronBridgeHandlers {
+  /** The result-bearing flush (OnlineSessionController.flush). When
+   *  absent the bridge falls back to a plain player.save, still reply-
+   *  bound to the request - there is no silent local fallback. */
+  flush?: (requestId: string) => Promise<FlushResult>
+  /** Main-side notice that the pending attempt failed (bad result or
+   *  timeout); the caller surfaces the retry/cancel/force-close offer. */
+  onFlushFailed?: (notice: QuitFlushFailedNotice) => void
+  /** OS suspend: the authority invalidates admission NOW. */
+  suspend?: () => void
+  /** OS resume: the authority starts revalidation before the sim resumes. */
+  resume?: () => void
+}
+
+// `gameManagerOverride` - cung ly do useBreakthrough.ts's tham so cung ten:
+// App.vue goi composable nay tren CHINH cay component da provide()
+// GameManager ra, useGameManager() inject ben trong se throw neu tu goi
+// tren chinh App.vue - truyen thang instance cuc bo de bo qua inject.
 //
-// Trả về disposer gỡ cả 3 subscription (ARCH-013/L04): trước đây các
-// ipcRenderer.on này không có đường gỡ — App unmount/HMR để lại handler
-// mồ côi, và mount lại sẽ đăng ký TRÙNG (quit-flush save chạy kép).
-// Caller giữ disposer; gọi lại useElectronBridge sau khi đã dispose, hoặc
-// dispose trước khi subscribe lần nữa.
-export function useElectronBridge(gameManagerOverride?: GameManager): (() => void) | undefined {
+// Tra ve disposer go ca 3 subscription (ARCH-013/L04): truoc day cac
+// ipcRenderer.on nay khong co duong go - App unmount/HMR de lai handler
+// mo coi, va mount lai se dang ky TRUNG (quit-flush save chay kep).
+// Caller giu disposer; goi lai useElectronBridge sau khi da dispose, hoac
+// dispose truoc khi subscribe lan nua.
+//
+// B1-D adds the authority-driven handlers (suspend/resume/quit flush) to
+// the same disposer contract - every subscription tears down together.
+export function useElectronBridge(
+  gameManagerOverride?: GameManager,
+  handlers?: ElectronBridgeHandlers,
+): (() => void) | undefined {
   const electronAPI = window.electronAPI
 
   if (!electronAPI) {
@@ -63,46 +128,108 @@ export function useElectronBridge(gameManagerOverride?: GameManager): (() => voi
   const notification = useNotificationStore()
   const gameManager = gameManagerOverride ?? useGameManager()
 
-  // Autosave khi đóng cửa sổ (electron/main.ts's bindQuitFlush()) — tái
-  // dùng ĐÚNG action save() đã có (SettingsPanel.vue's nút Save gọi cùng
-  // hàm này), không tạo cơ chế save mới.
-  const offBeforeQuitFlush = electronAPI.onBeforeQuitFlush(() => {
-    // Audit fix 2026-08-31 — PHẢI đợi write xong: player.save chạy async qua
-    // cloudSaveCoordinator → LocalCloudSaveService; flush-complete trước đó
-    // khiến main process đóng app tin rằng đã lưu (silent data loss khi
-    // quota fail). IIFE async vì ipcRenderer.on callback không handle
-    // promise; FLUSH_TIMEOUT_MS (main.ts) vẫn là backstop nếu save treo.
+  // B1-D result-bearing quit flush (replaces the untyped notify-in-finally
+  // ACK): drains the ONE save queue through the authority flush (or the
+  // plain save path in local mode) and replies bound to the requestId.
+  const offBeforeQuitFlush = electronAPI.onBeforeQuitFlush((requestId) => {
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'info',
+      category: 'quit-flush',
+      code: 'FLUSH_REQUESTED',
+      message: 'quit flush requested',
+      correlationId: requestId === '' ? undefined : requestId,
+      details: { requestId },
+    })
     void (async () => {
-      try {
-        const result = await player.save(gameManager)
-
-        // The write result is the acknowledgement contract: a resolved
-        // non-ok status is still a failed save and must be logged +
-        // surfaced. notifyFlushComplete stays in finally - the close is
-        // never blocked by a save failure (the 2s main timeout backstops).
-        if (result.status !== 'ok') {
-          console.error('[electron] quit flush save failed', result)
-          notification.push('error', i18n.global.t('panels.settings.notifications.saveFailed'))
+      const result = await (async (): Promise<FlushResult> => {
+        if (handlers?.flush) {
+          return handlers.flush(requestId)
         }
-      } catch (error: unknown) {
-        console.error('[electron] quit flush save failed', error)
-        notification.push('error', i18n.global.t('panels.settings.notifications.saveFailed'))
-      } finally {
-        electronAPI.notifyFlushComplete()
-      }
+        try {
+          const write = await player.save(gameManager)
+          if (write.status === 'ok') {
+            return { status: 'saved', requestId, generation: 0, revision: write.revision }
+          }
+          console.error('[electron] quit flush save failed', write)
+          notification.push('error', i18n.global.t('panels.settings.notifications.saveFailed'))
+          return {
+            status: 'failed',
+            requestId,
+            generation: 0,
+            code: write.status === 'conflict' ? 'SAVE_CONFLICT' : 'FLUSH_FAILED',
+          }
+        } catch (error: unknown) {
+          console.error('[electron] quit flush save failed', error)
+          notification.push('error', i18n.global.t('panels.settings.notifications.saveFailed'))
+          return { status: 'failed', requestId, generation: 0, code: 'FLUSH_FAILED' }
+        }
+      })()
+      recordDiagnostic({
+        source: 'renderer',
+        severity: result.status === 'saved' ? 'info' : 'error',
+        category: 'quit-flush',
+        code: `FLUSH_${result.status.toUpperCase()}`,
+        message: `quit flush ${result.status}`,
+        correlationId: result.requestId,
+        revision: result.status === 'saved' ? result.revision : undefined,
+        details: {
+          requestId: result.requestId,
+          status: result.status,
+          generation: result.generation,
+          ...(result.status === 'saved' ? { revision: result.revision } : { code: result.code }),
+        },
+      })
+      electronAPI.notifyFlushResult(result)
     })()
   })
 
+  const offFlushFailed = handlers?.onFlushFailed
+    ? electronAPI.onFlushFailed((notice) => {
+        recordDiagnostic({
+          source: 'renderer',
+          severity: 'error',
+          category: 'quit-flush',
+          code: 'FLUSH_FAILED_NOTICE',
+          message: `quit flush failed (${notice.status})`,
+          correlationId: notice.requestId,
+          details: {
+            requestId: notice.requestId,
+            status: notice.status,
+            ...(notice.code !== undefined ? { code: notice.code } : {}),
+          },
+        })
+        handlers.onFlushFailed?.(notice)
+      })
+    : () => {}
+
   const offSystemSuspend = electronAPI.onSystemSuspend(timestamp => {
     console.info('[electron] system suspend', new Date(timestamp).toISOString())
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'info',
+      category: 'lifecycle',
+      code: 'SYSTEM_SUSPEND',
+      message: 'system suspended',
+    })
+    handlers?.suspend?.()
   })
 
   const offSystemResume = electronAPI.onSystemResume(timestamp => {
     console.info('[electron] system resume', new Date(timestamp).toISOString())
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'info',
+      category: 'lifecycle',
+      code: 'SYSTEM_RESUME',
+      message: 'system resumed',
+    })
+    handlers?.resume?.()
   })
 
   return () => {
     offBeforeQuitFlush()
+    offFlushFailed()
     offSystemSuspend()
     offSystemResume()
   }

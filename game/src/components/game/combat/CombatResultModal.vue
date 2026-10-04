@@ -5,11 +5,11 @@ import { useUiStore } from '@/stores/ui'
 import CombatVictoryPanel from './CombatVictoryPanel.vue'
 import CombatDefeatPanel from './CombatDefeatPanel.vue'
 
-// Combat UI Redesign mục 14/18 — CHỈ hiện cho trận Stage (qua
-// StageSelectPanel.vue), KHÔNG hiện cho Tribulation (Đột Phá đã có
-// luồng kết quả riêng — WorldAnnouncement + mất tu vi/buff phạt, xem
-// useTribulation.ts) — 2 lớp kết quả chồng nhau sẽ rối, xem
-// ui.combatOrigin's ghi chú trong stores/ui.ts.
+// Combat UI Redesign muc 14/18 - CHI hien cho tran Stage (qua
+// StageSelectPanel.vue), KHONG hien cho Tribulation (Dot Pha da co
+// luong ket qua rieng - WorldAnnouncement + mat tu vi/buff phat, xem
+// useTribulation.ts) - 2 lop ket qua chong nhau se roi, xem
+// ui.combatOrigin's ghi chu trong stores/ui.ts.
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const ui = useUiStore()
@@ -40,7 +40,7 @@ const outcome = computed(() => {
 .combat-result-modal {
   position: absolute;
   inset: 0;
-  /* Trên status bar (z-11) + AI panel/build HUD (z-12) để backdrop phủ mờ chúng. */
+  /* Tren status bar (z-11) + AI panel/build HUD (z-12) de backdrop phu mo chung. */
   z-index: 30;
   display: flex;
   align-items: center;

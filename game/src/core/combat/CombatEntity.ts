@@ -20,39 +20,39 @@ export interface CombatEntity {
 
   type: CombatEntityType
 
-  // Stats trước khi cộng buff phát sinh trong trận (talisman, skill
-  // buff/debuff...). `stats` là giá trị hiệu lực hiện tại, được
-  // BattleSystem recompute mỗi tick từ baseStats + buff đang active
-  // trên entity này — xem Battle.playerBuffs/enemyBuffs.
+  // Stats truoc khi cong buff phat sinh trong tran (talisman, skill
+  // buff/debuff...). `stats` la gia tri hieu luc hien tai, duoc
+  // BattleSystem recompute moi tick tu baseStats + buff dang active
+  // tren entity nay - xem Battle.playerBuffs/enemyBuffs.
   baseStats: Stats
 
   stats: Stats
 
-  // Snapshot level của các skill đã học lúc bắt đầu trận. Skill vẫn nhận XP
-  // và level-up trong progression, nhưng damage trong trận đọc snapshot này
-  // để build mới chỉ có hiệu lực từ trận kế tiếp.
+  // Snapshot level cua cac skill da hoc luc bat dau tran. Skill van nhan XP
+  // va level-up trong progression, nhung damage trong tran doc snapshot nay
+  // de build moi chi co hieu luc tu tran ke tiep.
   skillLevels?: Readonly<Record<string, number>>
 
   currentHp: number
 
   maxHp: number
 
-  // MP là state "sống" giống currentHp — chỉ tồn tại trong lúc
-  // battle, không persist vào PlayerData (xem ghi chú trong
+  // MP la state "song" giong currentHp - chi ton tai trong luc
+  // battle, khong persist vao PlayerData (xem ghi chu trong
   // core/player/Player.ts).
   currentMp: number
 
-  // Phap Tu Reimagined Task 8 — The pool, BATTLE-INSTANCE SCOPED
+  // Phap Tu Reimagined Task 8 - The pool, BATTLE-INSTANCE SCOPED
   // (breaking lifecycle change): resets to 0 at every fresh
   // participant build and every auto-repeat cycle
   // (resetBattleScopedResources), for every path sharing the pool
   // (Phap Tu, Bat Kiem). No PlayerData persistence, no cross-cycle
   // carry. Gains are skill-authored (TurnSkillDefinition.
   // theGainOnLandedCast - once per cast, never per
-  // target). Optional — readers use `?? 0`.
+  // target). Optional - readers use `?? 0`.
   currentThe?: number
   // Battle snapshot of the The cap (undefined => MAX_THE). Derived once
-  // at participant build — two disjoint producers, one per path:
+  // at participant build - two disjoint producers, one per path:
   // spell via resolveMaxThe(player) (spell_pathway cap is a flat
   // SPELL_PATH_MAX_THE=5); ung_the via the kit-baked flat MAX_THE
   // (buildTheTuAnKit stamps maxThe: MAX_THE - there is no node-bonus
@@ -67,7 +67,7 @@ export interface CombatEntity {
   // cap, not to rely on either fallback.
   maxThe?: number
 
-  // The Tu Reimagined (spec 2026-09-15 D7/section 7.13) — momentum resource
+  // The Tu Reimagined (spec 2026-09-15 D7/section 7.13) - momentum resource
   // retired: the hidden path fuels reactive checks from currentThe, and
   // the visible path has no pool resource at all.
 
@@ -76,92 +76,92 @@ export interface CombatEntity {
   // reset to 0 when a new combatant is built for the battle.
   currentWard: number
 
-  // The Tu Reimagined (plan Task 11, spec 2026-09-15 D3) — Sơn Nhạc
+  // The Tu Reimagined (plan Task 11, spec 2026-09-15 D3) - Son Nhac
   // external ward: a SEPARATE, protection-only absorb pool granted by an
   // external source. Distinct from currentWard on purpose: it is exempt
   // from wardMax/regen, absorbs BEFORE the native ward, never feeds
   // spendWard, and its existence is bound to the granting marker
-  // instance (reconciled per-source — newest grant replaces wholesale).
+  // instance (reconciled per-source - newest grant replaces wholesale).
   externalWard?: { sourceId: string; amount: number }
 
-  // Phap Tu (Tho Tu, 2026-08-15) — holder turns elapsed since the last
+  // Phap Tu (Tho Tu, 2026-08-15) - holder turns elapsed since the last
   // LANDED hit on this entity (reset to 0 in CombatSystem.resolveAttack;
-  // incremented once per declareActorAction — follow-up bypass declares
+  // incremented once per declareActorAction - follow-up bypass declares
   // count too). Gates ward regen via WARD_REGEN_DELAY_TURNS in
   // TurnBattleSystem. Unit changed seconds -> holder-turns in M8
   // (ARCH-003); the legacy seconds-based gate lived in the retired
   // engine's updateRegen.
   turnsSinceLastHitLanded: number
 
-  // Vị trí (0-based) trong REALMS — dùng để tính Realm Pressure giữa
-  // 2 bên combat (xem RealmPressure.ts). Cùng ý nghĩa với
-  // realmSystem.getRealmIndex(), tính sẵn lúc convert sang CombatEntity
-  // để CombatSystem không phải biết về PlayerData/Enemy.
+  // Vi tri (0-based) trong REALMS - dung de tinh Realm Pressure giua
+  // 2 ben combat (xem RealmPressure.ts). Cung y nghia voi
+  // realmSystem.getRealmIndex(), tinh san luc convert sang CombatEntity
+  // de CombatSystem khong phai biet ve PlayerData/Enemy.
   realmIndex: number
 
-  // Bậc Nhập Đạo (1-6, xem core/player/Player.ts's breakthroughGrade) —
-  // giảm Realm Pressure chịu/gây ra (xem RealmPressure.ts). CHỈ player
-  // có giá trị (enemyToCombatEntity() để undefined) — enemy không có
-  // khái niệm "chất lượng đột phá".
+  // Bac Nhap Dao (1-6, xem core/player/Player.ts's breakthroughGrade) -
+  // giam Realm Pressure chiu/gay ra (xem RealmPressure.ts). CHI player
+  // co gia tri (enemyToCombatEntity() de undefined) - enemy khong co
+  // khai niem "chat luong dot pha".
   breakthroughGrade?: number
 
-  // Vị trí world-space trên trục X (đơn vị chung — xem
-  // core/battle/BattleLane.ts) — dùng cho né/đuổi thật theo khoảng
-  // cách (BattleSystem.resolveMovement()) và va chạm action impact
-  // (ActionImpactSystem). Không có trục Y — sân đấu chỉ 1 chiều ngang.
+  // Vi tri world-space tren truc X (don vi chung - xem
+  // core/battle/BattleLane.ts) - dung cho ne/duoi that theo khoang
+  // cach (BattleSystem.resolveMovement()) va va cham action impact
+  // (ActionImpactSystem). Khong co truc Y - san dau chi 1 chieu ngang.
   x: number
 
-  // Combat Grid Rework (2026-08-24) — `row` là LANE thật trên grid
-  // 10×16 (xem BattleGrid.ts): targeting/AOE query đọc row + column
-  // (column = làm tròn `x`). Player đứng ở HERO_LANE_INDEX đại diện;
-  // quái random mỗi lần spawn trừ Boss luôn HERO_LANE_INDEX.
+  // Combat Grid Rework (2026-08-24) - `row` la LANE that tren grid
+  // 10x16 (xem BattleGrid.ts): targeting/AOE query doc row + column
+  // (column = lam tron `x`). Player dung o HERO_LANE_INDEX dai dien;
+  // quai random moi lan spawn tru Boss luon HERO_LANE_INDEX.
   row: LaneIndex
 
   alive: boolean
 
-  // Cờ Elite ("Tinh Anh") cho Combat HUD (thanh máu luôn hiện) — set
-  // khi tag tinh_anh gắn qua applyEnemyTags (core/enemy/EnemyTag.ts).
-  // Player luôn falsy (không set trong playerToCombatEntity()).
+  // Co Elite ("Tinh Anh") cho Combat HUD (thanh mau luon hien) - set
+  // khi tag tinh_anh gan qua applyEnemyTags (core/enemy/EnemyTag.ts).
+  // Player luon falsy (khong set trong playerToCombatEntity()).
   isElite?: boolean
 
-  // Core Loop Foundation checklist (Mục BOSS) — tier RIÊNG, tách hẳn
-  // isElite (xem createBossVariant()). Combat HUD ưu tiên hiện Boss
-  // trước Elite nếu cả 2 cùng có mặt.
+  // Core Loop Foundation checklist (Muc BOSS) - tier RIENG, tach han
+  // isElite (xem createBossVariant()). Combat HUD uu tien hien Boss
+  // truoc Elite neu ca 2 cung co mat.
   isBoss?: boolean
 
-  // Nhãn hành vi nhẹ (Mục MONSTER) — đọc bởi BattleSystem.
-  // resolveMovement()/updateEnemyAttacks(). Không set = 'melee'.
+  // Nhan hanh vi nhe (Muc MONSTER) - doc boi BattleSystem.
+  // resolveMovement()/updateEnemyAttacks(). Khong set = 'melee'.
   archetype?: EnemyArchetype
 
-  // Đột Phá Trúc Cơ (Phase 4) — mốc HP leo thang sức mạnh của quái
-  // Kiếp, xem BattleSystem.updateTribulationPhases(). Combat Rework
-  // Phase 4 generic hoá field này cho Boss thường luôn (xem
+  // Dot Pha Truc Co (Phase 4) - moc HP leo thang suc manh cua quai
+  // Kiep, xem BattleSystem.updateTribulationPhases(). Combat Rework
+  // Phase 4 generic hoa field nay cho Boss thuong luon (xem
   // TribulationPhase.ts).
   tribulationPhases?: TribulationPhase[]
 
-  // Combat Rework Phase 4 (Boss Mechanics) — DPS check, xem
+  // Combat Rework Phase 4 (Boss Mechanics) - DPS check, xem
   // TribulationPhase.ts's BossEnrage, BattleSystem.updateEnrage().
   enrage?: BossEnrage
 
-  // Turn-based boss enrage (Phase A2, 2026-09-07) — see Enemy.ts's
+  // Turn-based boss enrage (Phase A2, 2026-09-07) - see Enemy.ts's
   // bossTrigger for the full comment; threaded here unchanged via
   // enemyToCombatEntity(), read by TurnBattleAdapter.toTurnBattleParticipant().
   bossTrigger?: { afterTurns: number; buffDefinitionId: string }
 
-  // Combat Balance Pass (2026-08-29, plan §3.6) — action đặc biệt data-
-  // driven thay basic attack cứng (xem core/enemy/Enemy.ts's
-  // EnemySpecialAttack). Thread từ Enemy qua enemyToCombatEntity(), đọc
-  // tại TurnBattleSystem.declareActorAction() (everyNth counter).
-  // undefined = quái chỉ basic attack.
+  // Combat Balance Pass (2026-08-29, plan sec3.6) - action dac biet data-
+  // driven thay basic attack cung (xem core/enemy/Enemy.ts's
+  // EnemySpecialAttack). Thread tu Enemy qua enemyToCombatEntity(), doc
+  // tai TurnBattleSystem.declareActorAction() (everyNth counter).
+  // undefined = quai chi basic attack.
   specialAttacks?: EnemySpecialAttack[]
 
-  // Thể Tu (Combat Rework Phase 7) — thanh máu phụ CHỐNG PHÁ, tách
-  // hẳn currentHp: Thể Tu skill (Skill.breakDamagePerHit) trừ riêng
-  // thanh này mỗi đòn trúng, KHÔNG qua Damage Engine/mitigation (giống
-  // tinh thần Detonate — bỏ qua Armor/Resistance). Chạm 0 thì Stagger
-  // (áp ailment 'choang' có sẵn) rồi reset về breakGaugeMax, xem
-  // BattleSystem's missile-resolve callback. undefined = entity này
-  // không có Break (quái thường/player) — CHỈ Boss/quái lớn khai.
+  // The Tu (Combat Rework Phase 7) - thanh mau phu CHONG PHA, tach
+  // han currentHp: The Tu skill (Skill.breakDamagePerHit) tru rieng
+  // thanh nay moi don trung, KHONG qua Damage Engine/mitigation (giong
+  // tinh than Detonate - bo qua Armor/Resistance). Cham 0 thi Stagger
+  // (ap ailment 'choang' co san) roi reset ve breakGaugeMax, xem
+  // BattleSystem's missile-resolve callback. undefined = entity nay
+  // khong co Break (quai thuong/player) - CHI Boss/quai lon khai.
   breakGaugeMax?: number
 
   currentBreakGauge?: number

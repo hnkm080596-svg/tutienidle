@@ -1,4 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+  isBetaQuestEnabled: () => true,
+  betaRecipeFamilyOfId: () => 'tu_linh_dan',
+}))
+
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -7,12 +19,13 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import { alchemyJobFixture } from '../alchemy/AlchemyJob.fixture'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// ARCH-008 (M10) — authored-parity regression matrix through REAL
+// ARCH-008 (M10) - authored-parity regression matrix through REAL
 // GameManager entry points (not converter isolation):
 //  - BASIC_PROGRESS: production basic consumes canonical resolved skill
-//    output — tram's per-cast flat bonus (L3 @ 10000 casts => x1001)
+//    output - tram's per-cast flat bonus (L3 @ 10000 casts => x1001)
 //    reaches the participant basic, and the mortal kit reports 'tram'
 //    so skillCastCounts accrue toward the bat_kiem route gate.
 //  - SPECIALIZATION_DURATION: authored buff-effect duration rides
@@ -74,7 +87,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const basic = gameManager.getTurnBattle()!.players[0]!.basic!
 
     // Post-path tram is locked (K3): participant.basic stays the inert
-    // static fallback — the Kiem Pho provider (Task 6) OWNS the slot via
+    // static fallback - the Kiem Pho provider (Task 6) OWNS the slot via
     // dynamicBasic, so authored per-cast scaling never reaches combat.
     expect(basic.id).toBe('tram')
     expect(basic.damage?.kind).toBe('physical')
@@ -310,7 +323,10 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
     expect(result.reason).toBe('retired')
   })
 
-  it('an alchemy job started BEFORE retirement still settles and delivers the pill', () => {
+  it('an alchemy job started BEFORE retirement PARKS under the scope lock (retired + scope-hidden family)', () => {
+    // Contract revision (F-TC6-4): the pre-scope-lock rule let in-flight
+    // retired jobs settle; hoi_xuan_dan is ALSO a scope-hidden family,
+    // so the persisted job parks - record intact, no pill minted.
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
 
@@ -319,15 +335,19 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
     const recipe = alchemyRecipes.find((candidate) => candidate.id === 'alchemy_hoi_xuan_dan_mortal')!
 
     gameManager.alchemySystem.restoreJobs([
-      {
-        jobId: 'legacy_hoi_xuan_job',
-        recipeId: recipe.id,
-        pillId: recipe.pillId,
-        herbMaterialId: 'hoi_xuan_thao_mortal_decade',
-        startedAtMs: 1_000,
-        completesAtMs: 2_000,
-        roomLevelAtStart: 1,
-      },
+      alchemyJobFixture(
+        {
+          jobId: 'legacy_hoi_xuan_job',
+          recipeId: recipe.id,
+          pillId: recipe.pillId,
+          herbMaterialId: 'hoi_xuan_thao_mortal_decade',
+          startedAtMs: 1_000,
+          completesAtMs: 2_000,
+          roomLevelAtStart: 1,
+        },
+        undefined,
+        recipe,
+      ),
     ])
 
     const settled = gameManager.alchemySystem.settleOffline(
@@ -337,8 +357,9 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
       200,
     )
 
-    expect(settled).toBe(1)
-    expect(gameManager.pillBag.getAmount(recipe.pillId)).toBeGreaterThan(0)
+    expect(settled).toBe(0)
+    expect(gameManager.pillBag.getAmount(recipe.pillId)).toBe(0)
+    expect(gameManager.alchemySystem.getJobs()).toHaveLength(1)
   })
 
   it('AlchemySystem.startJob rejects a retired recipe directly — not only the ops gate', () => {

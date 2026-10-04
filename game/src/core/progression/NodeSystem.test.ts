@@ -19,9 +19,9 @@ import { NodeRegistry } from './NodeRegistry'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import type { ProgressionNode } from './ProgressionNode'
 
-// combat-skill-flow-element-power-dot-plan.md §6 + §9 — hạ tầng node
-// LEVEL dùng chung (nodeLevels là nguồn sự thật; modifier suy ra qua
-// aggregator, không push vĩnh viễn).
+// combat-skill-flow-element-power-dot-plan.md sec6 + sec9 - ha tang node
+// LEVEL dung chung (nodeLevels la nguon su that; modifier suy ra qua
+// aggregator, khong push vinh vien).
 
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
   return { ...createDefaultPlayer(), ...overrides }
@@ -238,13 +238,13 @@ describe('purchaseNode / upgradeNode (plan §6.1)', () => {
     expect(player.skillInsight).toBe(2)
     expect(getNodeLevel(player, 'test_minor')).toBe(1)
     expect(player.purchasedNodeIds).toEqual(['test_minor'])
-    // §6.8 — modifiers KHÔNG nằm trong player.modifiers nữa.
+    // sec6.8 - modifiers KHONG nam trong player.modifiers nua.
     expect(player.modifiers).toEqual([])
   })
 
-  // E-8 (2026-09-03) — selectsSpecialization là effect THUẦN DATA (wire
-  // SkillSystem ở GameManager.purchaseNode, không phải NodeSystem thuần)
-  // — NodeSystem chỉ cần mua được node mang effect này.
+  // E-8 (2026-09-03) - selectsSpecialization la effect THUAN DATA (wire
+  // SkillSystem o GameManager.purchaseNode, khong phai NodeSystem thuan)
+  // - NodeSystem chi can mua duoc node mang effect nay.
   it('node có selectsSpecialization mua bình thường (effect data-only)', () => {
     const player = playerWith({ skillInsight: 5 })
 
@@ -265,7 +265,7 @@ describe('purchaseNode / upgradeNode (plan §6.1)', () => {
 
     expect(purchaseNode(player, node)).toBe(true)
 
-    // Dãy 1,1,1,2,2,2,3,3,3,4 — tổng 22 cho level 10.
+    // Day 1,1,1,2,2,2,3,3,3,4 - tong 22 cho level 10.
     let spent = 1
 
     while (upgradeNode(player, node)) {
@@ -305,17 +305,17 @@ describe('aggregator (plan §6.8) — hiệu lực suy ra từ (registry, nodeLe
       upgradeNode(playerA, powerNode())
     }
 
-    // Nâng lẻ tẻ tới level 5...
+    // Nang le te toi level 5...
     const playerB = playerWith({ skillInsight: 100, nodeLevels: { test_power: 5 } })
 
-    // ...cùng kết quả với nâng tuần tự.
+    // ...cung ket qua voi nang tuan tu.
     expect(getNodeLevel(playerB, 'test_power')).toBe(getNodeLevel(playerA, 'test_power'))
 
     const modsA = aggregateNodeStatModifiers(registryA, playerA)
     const modsB = aggregateNodeStatModifiers(registryA, playerB)
 
     expect(modsA).toHaveLength(1)
-    expect(modsA[0]!.flat).toBe(10) // 2 + 2 × 4
+    expect(modsA[0]!.flat).toBe(10) // 2 + 2 x 4
     expect(modsB[0]!.flat).toBe(modsA[0]!.flat)
   })
 
@@ -354,7 +354,7 @@ describe('canPurchaseNode', () => {
   })
 })
 
-// requiredCultivationPath ownership gate — a path-tagged node must be
+// requiredCultivationPath ownership gate - a path-tagged node must be
 // inert for every other path at purchase, upgrade, and aggregation
 // (the render layer is not the gameplay authority).
 describe('nodePathApplies — cultivation path ownership gate', () => {
@@ -466,7 +466,7 @@ describe('devResetBranch (plan §6.10)', () => {
 
     const player = playerWith({ skillInsight: 100 })
 
-    // Chi tiêu thực tế: root (cost 0) + power (1+1+1+1) + child (1+1).
+    // Chi tieu thuc te: root (cost 0) + power (1+1+1+1) + child (1+1).
     expect(purchaseNode(player, root)).toBe(true)
 
     expect(purchaseNode(player, power)).toBe(true)
@@ -483,7 +483,7 @@ describe('devResetBranch (plan §6.10)', () => {
 
     const refund = devResetBranch(player, registry, 'test_branch')
 
-    // power level 4: 1+1+1+2 = 5; child level 2: 1+1 = 2 → refund 7.
+    // power level 4: 1+1+1+2 = 5; child level 2: 1+1 = 2 -> refund 7.
     expect(refund).toBe(7)
 
     expect(player.skillInsight).toBe(before + refund)
@@ -499,7 +499,7 @@ describe('devResetBranch (plan §6.10)', () => {
     const player = playerWith({
       skillInsight: 100,
 
-      // Chỉ còn child có level — cha đã về 0 trước đó.
+      // Chi con child co level - cha da ve 0 truoc do.
       nodeLevels: { branch_child: 2 },
     })
 
@@ -507,11 +507,11 @@ describe('devResetBranch (plan §6.10)', () => {
 
     const refund = devResetBranch(player, registry, 'other_branch')
 
-    // other_branch không tồn tại → refund 0, KHÔNG đụng state.
+    // other_branch khong ton tai -> refund 0, KHONG dung state.
     expect(refund).toBe(0)
     expect(getNodeLevel(player, 'branch_child')).toBe(2)
 
-    // Reset đúng nhánh chứa cha (test_branch) → child mồ côi cũng bị gỡ.
+    // Reset dung nhanh chua cha (test_branch) -> child mo coi cung bi go.
     const refund2 = devResetBranch(player, registry, 'test_branch')
 
     expect(refund2).toBe(1 + 1)

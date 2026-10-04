@@ -1,0 +1,142 @@
+{
+  "findings": [
+    {
+      "id": "TC8-1",
+      "title": "breakthroughGrade magnitude unchecked -> realm-passive builder emits unbounded stats",
+      "severity": "Critical",
+      "confidence": "probe-verified",
+      "surface": "player.breakthroughGrade (validator ~L534 requireNonNegativeNumber only) -> RealmPassives.buildNhapDaoModifiers percent = grade * 0.03 -> resolvePlayerStatAssembly rebuilds authored id with unbounded percent",
+      "mechanism": "Legit writer (GameManagerRealmAdvanceOps:502) clamps grade to [1,6]; validator accepts any non-negative number. Emit reads player.breakthroughGrade straight into percent, so the forge lands verbatim through the rebuild-don't-trust path - the authored-id lookup emits the builder output computed from the forged field.",
+      "repro_evidence": "A1: breakthroughGrade=1e9 -> shape.ok=true, restore=ok, live maxHp=3,240,000,108 vs clean 108 (+3e7 * 0.03 = +30 million percent). A2: mortal breakthroughGrade=100 -> maxHp=432 vs clean 108 (also proves mortal can hold the qi_refining marker)."
+    },
+    {
+      "id": "TC8-2",
+      "title": "grantedRealmPassiveIds marker has no realm eligibility -> dormant kien_co passive emits on mortal/qi_refining",
+      "severity": "High",
+      "confidence": "probe-verified",
+      "surface": "player.grantedRealmPassiveIds + player.highestFoundationAchieved (validator enum-checks 'heaven' but never checks the player actually reached foundation_establishment) -> buildKienCoModifiers percent 0.1 on 5 MAIN_STAT_KEYS",
+      "mechanism": "Validator requires marker->modifier id coherence but not that the marker's realm was earned; highestFoundationAchieved is a free-text enum field. On mortal/qi_refining the emitted builder reads the forged enum and mints +10% on all five main stats.",
+      "repro_evidence": "B1: mortal save + kien_co 'heaven' -> restore=ok, strength=11 vs clean-booted 10 (5 kien_co modifiers emitted). B2: qi_refining + 'heaven' -> strength=33 vs 30."
+    },
+    {
+      "id": "TC8-3",
+      "title": "loi_kiep persisted percent pushed verbatim (bound 0.9 vs beta-legit ~0.2)",
+      "severity": "High",
+      "confidence": "probe-verified",
+      "surface": "player.modifiers sourceType 'talent' sourceId 'loi_kiep' -> resolvePlayerStatAssembly pushes the persisted modifier when 'loi_kiep' is in selectedTalentIds; validator bound LOI_KIEP_MAX_PERCENT=0.9",
+      "mechanism": "Beta legit path reaches only ~0.2 (quan_khi + truc_co transitions), but the boundary allows 0.9 and emit pushes the persisted percent unchanged - no recomputation against actual tribulation history. Ownership claim is easy: loi_kiep is a beta creation talent, selectable at save-time.",
+      "repro_evidence": "C1: qi_refining, selectedTalentIds=['loi_kiep'], percent=0.9 -> strength=1.9 vs clean 1 (+90% on all 5 mains)."
+    },
+    {
+      "id": "TC8-4",
+      "title": "persisted skill combat scalars (cooldown/cost/resourceType/target/targeting/maxLevel/requiredRealm*) not re-derived at restore",
+      "severity": "High",
+      "confidence": "probe-verified",
+      "surface": "skills[] entries -> GameManagerSaveRestore skill restore re-derives name/desc/level/effects/triggers/passiveModifiers/specializations only; cooldown/cost/resourceType/target/targeting survive -> toTurnSkillDefinition reads them verbatim",
+      "mechanism": "Any learned-skill entry carries live combat scalars the template no longer controls: zero cooldown, free cost, changed target scope, all_lanes targeting with radius/maxTargets widened.",
+      "repro_evidence": "D1: linh_bao persisted cooldown=0 (authored 1) + targeting {shape:'all_lanes',columnRadius:3,maxTargets:99} (authored none) -> live turn def cooldownTurns=0, targeting=all_lanes."
+    },
+    {
+      "id": "TC8-5",
+      "title": "skill totalExperience -> unbounded precursor flat damage (no cap in getPrecursorFlatDamageBonus)",
+      "severity": "Critical",
+      "confidence": "probe-verified",
+      "surface": "skills[].totalExperience survives restore -> SkillSystem.getEffectiveSkill scaleDamageValue for precursor ids (tram/linh_bao/huy_quyen): value + floor(totalExperience / PRECURSOR_FLAT_DAMAGE_CASTS), unbounded",
+      "mechanism": "Cast-count progression is stored as raw totalExperience with no authored ceiling; the damage bonus divides it by a constant. Forging 1e9 casts mints +1e8 flat damage on the first hit.",
+      "repro_evidence": "D2: linh_bao.totalExperience=1e9 -> effective trigger action value=100,000,001 (base 1 + forged 1e8 bonus)."
+    },
+    {
+      "id": "TC8-6",
+      "title": "skills[] accepts any registered id with no scope/kit membership check -> dormant golden_core passive becomes live",
+      "severity": "High",
+      "confidence": "probe-verified",
+      "surface": "validateSkillEntries checks only id-is-string + retired keys; skillManager.getPassiveSkills() feeds PassiveSystem emit (in-battle stacking) without requiredRealmId/way membership validation",
+      "mechanism": "Claiming passive_kim_dan_chi_quang (requiredRealmId 'golden_core', beyond beta scope) on a qi_refining save installs the passive: it stacks in battle on its trigger like a legitimately learned skill.",
+      "repro_evidence": "D3: skills[] += passive_kim_dan_chi_quang -> restore=ok, live passives=['passive_kim_dan_chi_quang']."
+    },
+    {
+      "id": "TC8-7",
+      "title": "perfectClearSeconds magnitude unbounded -> auto-farm reward flood / restore-path DoS",
+      "severity": "High",
+      "confidence": "probe-verified",
+      "surface": "player.perfectClearSeconds[stageId] (isValidCycleSeconds: finite && >0 only, no floor) -> settleAutoFarmOffline completedCycles = floor(elapsedMs / (cycleSeconds/2*1000))",
+      "mechanism": "A plausible 24h offline window times an absurdly small cycle mints reward cycles: 0.001s -> 2000 reward rolls per offline second; 1e-9 -> ~1.7e14 iterations = settle hang on every load.",
+      "repro_evidence": "E1: cycleSeconds=0.001, elapsed=1s -> 2000 processDefeatedEnemies calls (honest bound ~1)."
+    },
+    {
+      "id": "TC8-8",
+      "title": "persistentTimedEffects expiry unbounded -> permanent tu_linh_tran buff (writer caps at 24h)",
+      "severity": "Medium",
+      "confidence": "probe-verified",
+      "surface": "persistentTimedEffects[].expiresAtMs (finite-checked only, writer bound TU_LINH_TRAN_DURATION_MS=24h ignored) -> getActiveCultivationSpeedPercent sums any effect with expiresAtMs>now",
+      "mechanism": "expiresAtMs=1e15 keeps the 25% cultivation speed buff permanently; same hole applies to pill-regen entries (bounded modifiers but unbounded expiry).",
+      "repro_evidence": "F1: expiresAtMs=1e15 -> active percent 0.25 at now AND at now+24h+1 (should be 0)."
+    },
+    {
+      "id": "TC8-9",
+      "title": "forged committedOutcome victory settles a breakthrough never fought (eligibility inputs forgeable in same save)",
+      "severity": "High",
+      "confidence": "probe-verified",
+      "surface": "tribulation.committedOutcome (restoreRuntime restores verbatim; settleOutcome re-checks canTriggerBreakthrough against player.realmLevel/completedStageIds - both forgeable in the same save) -> resolveVictory writes realm + entitlement + loi_kiep modifiers",
+      "mechanism": "Gate re-check is honest but its evidence is inside the hostile payload: forge realmLevel=12 + completedStageIds ['qi_refining_abyssal_pool'] + outcome 'victory' -> full consequence set applies (realm advance, talent entitlement, 5 loi_kiep stat mods) with no battle ever run.",
+      "repro_evidence": "G1: qi_refining save + committedOutcome victory 'earth' -> settle='victory', realm=foundation_establishment, pendingTalentEntitlement=foundation_establishment, 5 loi_kiep modifiers persisted."
+    },
+    {
+      "id": "TC8-10",
+      "title": "dormant-realm save validates and loads under beta lock (no realmIndex bound vs beta ceiling)",
+      "severity": "Medium",
+      "confidence": "probe-verified",
+      "surface": "player.realmId realmIndex check vs authored realm catalog only - 'golden_core' (realm index beyond foundation_establishment, the beta cap) accepted end-to-end",
+      "mechanism": "Nothing on the boundary compares claimed realm to the playable slice ceiling; combined with TC8-2/TC8-9 machinery, a save can claim post-beta state and load as if earned. Downstream consumers tolerate the id (no crash) - the dormant record is live as player state.",
+      "repro_evidence": "H1: committed golden_core save -> shape.ok=true, acceptable=true, restore=ok."
+    },
+    {
+      "id": "TC8-11",
+      "title": "equipment affix list unbounded by GLOBAL_MAX_AFFIXES and slot-ineligible affixes emit",
+      "severity": "High",
+      "confidence": "probe-verified",
+      "surface": "equipment[].affixes[] (validator: affixId non-empty + tier int>0 + value finite only - no count cap, no affix.slots eligibility check, no quality coherence) -> EquipmentSystem.applyModifiers emits every line via normalizeRolledAffixValue clamp",
+      "mechanism": "Authored roll bounds (<=8 affixes, per-slot affix pools) are never enforced at the save boundary. A weapon carries helmet/necklace-only prefix_ward (wardMax) plus 8 extra max_hp lines; values clamp to authored tier ranges so each forged line still emits a legit-looking magnitude.",
+      "repro_evidence": "I1: base_kiem weapon + 9 affixes incl. prefix_ward -> wardMax=95 (clean 0), maxHp=188 vs clean 108."
+    },
+    {
+      "id": "TC8-12",
+      "title": "quest progress forge -> authored reward pays out (no progress bound, no evidence chain)",
+      "severity": "Medium",
+      "confidence": "probe-verified",
+      "surface": "quests.active[].progress (finite-checked, no bound vs condition.amount) -> QuestSystem.resolveClaimable = progress>=amount && !claimed && beta-enabled (+material for collect type)",
+      "mechanism": "kill_wild_wolf_10 forged to progress=10 becomes claimable; 99999 also accepted. Reward = 25 spirit stones per forged completion claim, repeatable over non-'once' cadences elsewhere in the catalog.",
+      "repro_evidence": "J1: progress=10 -> canClaim=true (honest bound: unearned progress must not claim). K-boundary: progress=99999 -> shape.ok=true."
+    },
+    {
+      "id": "TC8-13",
+      "title": "boundary permissiveness: values no writer produces are accepted (inert at emit, still unflagged)",
+      "severity": "Low",
+      "confidence": "probe-verified",
+      "surface": "shape validation accepts negative realm-passive payload percent (-0.5), negative equipment affix value (-99), unknown selectedTalentIds id ('fake_talent_x')",
+      "mechanism": "Each payload is structurally plausible but impossible for any current writer. Emit paths are honest (realm payloads rebuild authored values; affix values clamp to tier; unknown talent id matches no effect registry), so no live delta - but the validator stores forged records without flagging, inflating save surface for future consumers.",
+      "repro_evidence": "K-boundary: all three -> shape.ok=true, acceptable=true. Live-effect check folded into A/B/I emit probes (no forged magnitude emitted)."
+    }
+  ],
+  "probes_run": 35,
+  "invariants_checked": [
+    "version pinning: CURRENT_SAVE_VERSION-1 hard-rejects (Z1 PASS)",
+    "emit rebuild-don't-trust: meridian bat-mach claim without opened meridian stripped at restore (Z2 PASS)",
+    "mortal creation contract: mortal save without linh_bao pick rejected (Z3 PASS)",
+    "auto-farm liveness: forged autoFarmStage without perfect-clear drops at reconcile (E2 PASS)",
+    "attributePoints bound vs cultivation tier: -5, 'ten', array, and 999@level1 all rejected (K PASS x4)",
+    "shape rejects wrong types: realmId unknown, realmLevel -3, modifiers null, lastSavedAt NaN (K PASS x4)",
+    "unknown material id / 1e18 quantity rejected (K PASS x2)",
+    "mixed-state coherence: kien_co payload without grant marker rejected; marker without payload rejected (K PASS x2)",
+    "builder-input bound: breakthroughGrade NOT bounded [1,6] -> lands (TC8-1)",
+    "realm-eligibility on passive markers -> not enforced (TC8-2)",
+    "persisted-talent-percent bound vs actual tribulation history -> trusted verbatim (TC8-3)",
+    "skill scalar re-derivation -> combat fields survive (TC8-4), totalExperience unbounded (TC8-5), dormant passive membership unchecked (TC8-6)",
+    "timed-effect writer bounds -> expiry unbounded (TC8-8)",
+    "tribulation outcome integrity -> claim settles with forged eligibility (TC8-9)",
+    "beta realm ceiling -> dormant realm loads (TC8-10)",
+    "equipment roll bounds -> count/slot/pool/quality not enforced (TC8-11)",
+    "quest progress bound -> none (TC8-12)"
+  ],
+  "notes": "Probes: /tmp/tc8-hostile-save-probes.test.ts via /tmp/vitest.tc8.config.mts (npx vitest run --config). 35 cases; 14 live-effect landings + 4 permissiveness acceptances asserted as defects; 17 boundary cases confirmed honest. Full output: /tmp/tc8-run6.log. The rebuild-don't-trust emit design is correctly implemented for modifier VALUES (realm/meridian/equipment-forged percents get rebuilt or clamped) - the consistent defect class is unbounded BUILDER INPUTS (breakthroughGrade, highestFoundationAchieved, totalExperience, perfectClearSeconds, expiresAtMs) and missing OWNERSHIP/membership gates (kien_co realm eligibility, dormant skill ids, affix slot pools, quest evidence, dormant realm id, tribulation outcome identity). No production files modified; no commits."
+}

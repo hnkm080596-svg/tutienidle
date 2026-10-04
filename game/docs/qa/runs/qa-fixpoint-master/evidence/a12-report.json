@@ -1,0 +1,14 @@
+{
+ "verdict": "FINDINGS",
+ "reviewer": "devin-a6480090aa1f4c67acea8d45da740ed1",
+ "pinnedCommit": "d22d3c72",
+ "role": "AUTHORITY-seam blind review (persisted-state writers, saveShapeValidation.ts)",
+ "probeFile": "game/src/probes/scopeAuthoritySeam.probe.test.ts (child VM, in-tree ASCII)",
+ "summary": "4 confirmed defect surfaces - fabricated claims passing validateGameSaveShape minting live effects: (1) highestFoundationAchieved earth/heaven (kien_co +5/+10% on all mains), (2) breakthroughGrade not replayed vs completedTiers (nhap_dao +18% vs +3%), (3) committedOutcome.grade earth/heaven settles realm+talent+loi_kiep, (4) alchemyJobs herbVariant/duration/startedAt/concurrency unbounded (free Truc Co pill).",
+ "findings": [
+  {"id": "F1", "severity": "High", "surface": "player.highestFoundationAchieved", "title": "earth/heaven grades unwritable under beta mint +5%/+10% permanent on all mains"},
+  {"id": "F2", "severity": "High", "surface": "player.breakthroughGrade", "title": "never replayed vs body_refinement.completedTiers - grade 6 mints +18%"},
+  {"id": "F3", "severity": "High", "surface": "tribulation.committedOutcome.grade", "title": "heaven grade settles real realm entry + entitlement + loi_kiep"},
+  {"id": "F4", "severity": "Medium", "surface": "save.alchemyJobs fields", "title": "herbMaterialId/duration/startedAt/concurrentJobs unbounded - free breakthrough pill"}
+ ]
+}

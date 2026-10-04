@@ -4,9 +4,9 @@ import { usePlayerStore } from './player'
 import { createBaseStats } from '../core/stats/StatBlock'
 import type { GameSave } from '../services/save/SaveSystem'
 
-// QA-002 (Task 9.2) — restoreFromSave phải idempotent theo payload: cùng
-// save gọi lại = no-op, save khác = áp đầy đủ. Helper nội bộ (pattern
-// player.aiStrategy.test.ts) — đủ shape để action không crash, KHÔNG đi
+// QA-002 (Task 9.2) - restoreFromSave phai idempotent theo payload: cung
+// save goi lai = no-op, save khac = ap day du. Helper noi bo (pattern
+// player.aiStrategy.test.ts) - du shape de action khong crash, KHONG di
 // qua loadGame/validator.
 function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
   const base = {
@@ -42,10 +42,10 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
   return { player: { ...base, ...playerOverrides } } as unknown as GameSave
 }
 
-// Đồng hồ giả — 2 lần restore liên tiếp trong test thật sẽ chạy cách nhau
-// vài ms nên không mock Date.now thì pre-fix không thất bại ổn định (elapsed
-// gần như 0). Kiểm soát currentMs để khoảng offline là số nguyên xác định
-// (dưới trần Phàm Nhân tầng 1 = 600 → không bị clamp che mất double-credit).
+// Dong ho gia - 2 lan restore lien tiep trong test that se chay cach nhau
+// vai ms nen khong mock Date.now thi pre-fix khong that bai on dinh (elapsed
+// gan nhu 0). Kiem soat currentMs de khoang offline la so nguyen xac dinh
+// (duoi tran Pham Nhan tang 1 = 600 -> khong bi clamp che mat double-credit).
 let currentMs = 1_725_160_000_000
 
 describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
@@ -86,7 +86,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     const first = player.restoreFromSave(save)
     const cultivationAfterFirst = player.cultivation
 
-    currentMs += 10_000 // thời gian trôi — payload Y HỆT vẫn phải được nhận diện là no-op
+    currentMs += 10_000 // thoi gian troi - payload Y HET van phai duoc nhan dien la no-op
 
     const second = player.restoreFromSave(save)
 
@@ -101,13 +101,13 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     player.restoreFromSave(save1)
 
     currentMs += 30_000
-    // lastSavedAt = T0 + 30s - 60s = T0 - 30s — khác hẳn save1 (T0 - 60s)
+    // lastSavedAt = T0 + 30s - 60s = T0 - 30s - khac han save1 (T0 - 60s)
     const save2 = buildMinimalSave({ lastSavedAt: currentMs - 60_000, cultivationPerSecond: 20 })
     const result = player.restoreFromSave(save2)
 
     expect(result.cultivation).toBe(600) // 20/s * 60s = 1200 theoretical, clamped at mortal L1 required = 600
     expect(result.elapsedSeconds).toBe(60)
-    expect(player.cultivationPerSecond).toBe(20) // Object.assign của save2 đã chạy
+    expect(player.cultivationPerSecond).toBe(20) // Object.assign cua save2 da chay
   })
 
   // EM-02 - the save's cultivationPerSecond already folds the Tu Linh
@@ -117,7 +117,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     const player = usePlayerStore()
     const windowMs = 30_000
     const save = buildMinimalSave({
-      // base rate 10/s x (1 + 1.0) buff -> snapshot 20/s.
+      // base rate 16/s x (1 + 0.25) buff -> snapshot 20/s.
       cultivationPerSecond: 20,
       lastSavedAt: currentMs - windowMs,
       persistentTimedEffects: [
@@ -127,7 +127,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           effectGroup: 'tu_linh_tran',
           appliedAtMs: currentMs - windowMs - 10_000,
           expiresAtMs: currentMs - windowMs + 10_000, // dies after 10s offline
-          cultivationSpeedPercent: 1,
+          cultivationSpeedPercent: 0.25,
           modifiers: [],
         },
       ],
@@ -135,8 +135,8 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     const result = player.restoreFromSave(save)
 
-    // 10*(1+1)*10s + 10*20s = 400 (< cap 600); pre-fix = 20*30 = 600.
-    expect(result.cultivation).toBe(400)
+    // 20*10s + 16*20s = 520 (< cap 600); pre-fix = 20*30 = 600.
+    expect(result.cultivation).toBe(520)
     expect(result.elapsedSeconds).toBe(30)
   })
 
@@ -152,7 +152,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           effectGroup: 'tu_linh_tran',
           appliedAtMs: 0,
           expiresAtMs: currentMs - 200_000, // dies before the save
-          cultivationSpeedPercent: 1,
+          cultivationSpeedPercent: 0.25,
           modifiers: [],
         },
       ],
@@ -176,7 +176,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           effectGroup: 'tu_linh_tran',
           appliedAtMs: 0,
           expiresAtMs: currentMs + 999_000_000, // still live past window end
-          cultivationSpeedPercent: 1,
+          cultivationSpeedPercent: 0.25,
           modifiers: [],
         },
       ],
@@ -192,7 +192,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
   it('guard không phá normalization: nodeLevels fallback vẫn chạy', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({})
-    save.player.nodeLevels = undefined as never // simulate save cũ thiếu field
+    save.player.nodeLevels = undefined as never // simulate save cu thieu field
 
     player.restoreFromSave(save)
 
@@ -241,9 +241,11 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     player.restoreFromSave(save)
 
-    // Current-shape keys survive; every legacy/retired key drops -
-    // 'attack' is NOT renamed to might, it is gone.
-    expect(player.baseStats.defense).toBe(7)
+    // Current-shape main keys survive within cap; non-main keys hold
+    // only authored defaults (no persisted writer exists), and every
+    // legacy/retired key drops - 'attack' is NOT renamed to might, it
+    // is gone.
+    expect(player.baseStats.defense).toBe(createBaseStats().defense)
     expect(player.baseStats.might).toBe(createBaseStats().might)
     expect('attack' in player.baseStats).toBe(false)
     expect('maxMpPercent' in player.baseStats).toBe(false)
@@ -253,7 +255,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.persistentTimedEffects[0]!.modifiers).toEqual([])
   })
 
-  // M1 (ARCH-001) — the player slice is REPLACE semantics too: fields the
+  // M1 (ARCH-001) - the player slice is REPLACE semantics too: fields the
   // payload does not declare must reset to defaults instead of keeping the
   // previous session's values (a bare Object.assign merge leaked them).
   it('fields absent from the payload reset to defaults — no stale optional state survives a restore', () => {
@@ -282,7 +284,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.companions).toEqual([])
   })
 
-  // M1 (ARCH-001) — identity commits only AFTER the whole apply succeeds:
+  // M1 (ARCH-001) - identity commits only AFTER the whole apply succeeds:
   // a throw mid-restore must leave the payload uncommitted so a retry with
   // the same payload re-applies instead of being skipped by the guard.
   it('a failure before apply completes does not commit identity — the same payload retries cleanly', () => {
@@ -300,19 +302,19 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     const result = player.restoreFromSave(save)
     expect(player.name).toBe('retry-me')
 
-    // Identity committed on success — a third call converges via the guard.
+    // Identity committed on success - a third call converges via the guard.
     expect(player.restoreFromSave(save)).toEqual(result)
   })
 
-  // Mission A6 — foreign keys trong payload KHÔNG được vào $state: spread
-  // `...clonedPlayer` trước đây đưa cả key lạ lên store, rồi buildGameSave
-  // serialize lại → key rác tự nhân bản qua mọi save kế tiếp.
+  // Mission A6 - foreign keys trong payload KHONG duoc vao $state: spread
+  // `...clonedPlayer` truoc day dua ca key la len store, roi buildGameSave
+  // serialize lai -> key rac tu nhan ban qua moi save ke tiep.
   it('foreign keys trong save.player bị drop — không vào $state, không re-save', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({ name: 'clean' })
 
-    // Keys không khai báo trong PlayerData — mô phỏng save bị sửa tay /
-    // payload lạ.
+    // Keys khong khai bao trong PlayerData - mo phong save bi sua tay /
+    // payload la.
     const polluted = save.player as unknown as Record<string, unknown>
     polluted.__evil = { nested: true }
     polluted.unknownTopLevel = 'x'
@@ -325,7 +327,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(state.__evil).toBeUndefined()
     expect(state.unknownTopLevel).toBeUndefined()
     expect((state.baseStats as Record<string, unknown>).__evilStat).toBeUndefined()
-    expect(player.name).toBe('clean') // field hợp lệ vẫn restore
+    expect(player.name).toBe('clean') // field hop le van restore
   })
 
   // Mutation finding F-MUT-RESTORE-PURGE (beta-release-2026-09-29): the

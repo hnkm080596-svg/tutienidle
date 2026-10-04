@@ -9,6 +9,7 @@
     "scripts/**/*.ts",
     "cypress.config.*",
     "playwright.config.*",
+    "playwright.supabase.config.ts",
     "eslint.config.*",
     "tests/e2e/**/*",
     "electron/**/*.ts"

@@ -5,6 +5,7 @@ import { getSkillInsightReward } from '../reward/SkillInsightBalance'
 import { getRealmRewardMultiplier } from '../reward/RealmRewardScale'
 import {
   getHealOnKillMaxHpPercent,
+  getInsightBaseMultiplier,
   getInsightGainMultiplier,
   getSpiritStoneGainMultiplier,
 } from '../talent/TalentEffects'
@@ -33,6 +34,7 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
 import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
+import { isScopeHidden } from '../betaScope'
 import {
   isBreakthroughAcquisitionEnabled,
   isCompanionPullTokenSourceSuppressed,
@@ -341,7 +343,7 @@ export class BattleLootSystem {
           const baseSkillInsight = getSkillInsightReward(rewards)
           const skillInsightGained =
             baseSkillInsight > 0 && this.player
-              ? Math.floor(baseSkillInsight * getInsightGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels))
+              ? Math.floor(baseSkillInsight * getInsightBaseMultiplier(this.player.selectedTalentIds, this.player.talentLevels) * getInsightGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels))
               : 0
 
           if (skillInsightGained > 0 && this.player) {
@@ -373,7 +375,12 @@ export class BattleLootSystem {
           // re-resolved per kill (snapshot semantics): a mid-battle
           // formation change only affects the NEXT kill.
           const player = this.player
-          if (player && player.companions.length > 0) {
+          // BETA SCOPE LOCK v2 sec.14 - companion battle EXP is domain
+          // ACCESS (same class as grantArtifactExperience above): it
+          // closes when the domain is scope-hidden, including for a
+          // grandfathered save still carrying companion instances and a
+          // persisted loadout. Ownership data itself is never touched.
+          if (player && player.companions.length > 0 && !isScopeHidden('companion')) {
             const expPerKill = companionBattleExpPerKill(
               stage?.requiredRealmId ?? enemy.realmId,
             )
@@ -581,6 +588,12 @@ export class BattleLootSystem {
             ) {
               break
             }
+
+            // Physique essences fund the realm body chapters
+            // (body_refinement -> meridian -> zhou_tian chain that the
+            // Kien Co breakthrough GRADE consumes, plus the beta-enabled
+            // thong_mach_dan spend): beta-live progression, not the
+            // scope-hidden The Tu way - the faucet stays open.
 
             const amount = drop.amount
 

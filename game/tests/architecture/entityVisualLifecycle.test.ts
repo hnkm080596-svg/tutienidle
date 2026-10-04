@@ -1,13 +1,13 @@
 /**
- * Guard — per-combatant sprite visibility has exactly one owner:
+ * Guard - per-combatant sprite visibility has exactly one owner:
  * `combat/combat-entity-visual-lifecycle.ts` decides, and
  * `combat/combat-grid-view.ts` applies (it owns the sprite parts).
  *
  * Sources of authority:
- * - docs/qa/2026-09-12-hp-bar-visibility-quick.md — the user-reported bug:
+ * - docs/qa/2026-09-12-hp-bar-visibility-quick.md - the user-reported bug:
  *   toggling only sprite.rect left label/shadow/health-bar floating on the
  *   field during intro/countdown.
- * - docs/roadmap.md "CombatScene rule" — CombatScene-owned lifecycle state
+ * - docs/roadmap.md "CombatScene rule" - CombatScene-owned lifecycle state
  *   extracts into a helper class (same precedent as combat-cast-bar.ts /
  *   combat-position-interpolation.ts) once evidence supports it.
  *
@@ -25,7 +25,7 @@ const SCENES_DIR = join(process.cwd(), 'src/game/scenes')
 const GRID_VIEW = 'combat-grid-view.ts'
 const LIFECYCLE = 'combat-entity-visual-lifecycle.ts'
 // PlayerHudLayer owns its own screen-space HUD group (background/fill/label
-// there are bar chrome, not entity-sprite parts) — outside this contract.
+// there are bar chrome, not entity-sprite parts) - outside this contract.
 const HUD_LAYER = 'PlayerHudLayer.ts'
 
 function stripComments(raw: string): string {

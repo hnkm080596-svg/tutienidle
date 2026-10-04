@@ -3,9 +3,9 @@ import { nextTick, onBeforeUnmount, toValue, watch, type MaybeRefOrGetter } from
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
 
 /**
- * Focus management dùng chung cho dialog primitives (QA-003, Task 9.3):
- * focus-on-open → Tab cycle trong card → Escape callback → restore trigger.
- * Gắn 1 lần ở OverlayPanel/ConfirmModal — mọi consumer kế thừa.
+ * Focus management dung chung cho dialog primitives (QA-003, Task 9.3):
+ * focus-on-open -> Tab cycle trong card -> Escape callback -> restore trigger.
+ * Gan 1 lan o OverlayPanel/ConfirmModal - moi consumer ke thua.
  */
 export function useDialogFocus(
   cardRef: MaybeRefOrGetter<HTMLElement | null>,
@@ -25,8 +25,8 @@ export function useDialogFocus(
     if (isOpen) {
       const activeElement = document.activeElement
       const activeInCard = activeElement instanceof HTMLElement && toValue(cardRef)?.contains(activeElement) === true
-      // Re-open guard: focus đã nằm trong card (same-tick bounce) → giữ trigger gốc,
-      // không ghi đè bằng phần tử trong dialog (restore sẽ bị skip vì contains guard).
+      // Re-open guard: focus da nam trong card (same-tick bounce) -> giu trigger goc,
+      // khong ghi de bang phan tu trong dialog (restore se bi skip vi contains guard).
       if (lastTrigger === null || !activeInCard) {
         lastTrigger = activeElement instanceof HTMLElement ? activeElement : null
       }
@@ -41,9 +41,9 @@ export function useDialogFocus(
           return
         }
         if (event.key !== 'Tab') return
-        // Tab luôn bị chặn native trước early-return: dialog không có focusable
-        // cũng KHÔNG cho Tab thoát containment (focus giữ nguyên tại chỗ).
-        // stopPropagation: window-level listeners (DongFuCommandWheel Tab
+        // Tab luon bi chan native truoc early-return: dialog khong co focusable
+        // cung KHONG cho Tab thoat containment (focus giu nguyen tai cho).
+        // stopPropagation: window-level listeners (DongFuStage Tab
         // toggle) must not see a Tab consumed by dialog containment.
         event.preventDefault()
         event.stopPropagation()

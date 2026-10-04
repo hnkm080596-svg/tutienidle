@@ -1,22 +1,35 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises dormant alchemy
+// recipes' ENABLED implementation (sec.12: dormant, not deleted), so
+// the scope authority reports every recipe id as a beta family here.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+  betaRecipeFamilyOfId: () => 'tu_linh_dan',
+}))
+
 import {
   AlchemySystem,
   resolveFuelWood,
   jobSuccessPercent,
+  alchemyJobReservationDigest,
   alchemyRoomSuccessBonus,
   alchemySecondsFor,
   ALCHEMY_SUCCESS_BONUS_PERCENT,
   ALCHEMY_SPEED_MULTIPLIERS,
 } from './AlchemySystem'
 import type { ActiveAlchemyJob, AlchemyRecipe } from './AlchemySystem'
+import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { PillBag } from '../pill/PillBag'
 import { MaterialBag } from '../material/MaterialBag'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import type { Material } from '../material/Material'
 import type { Pill } from '../pill/Pill'
 
-// successBonusPercentPoints — flat % bonus cộng vào totalPercent TRƯỚC khi
-// tách guaranteed/extra, giữ cap 300 (talent-direction-choice-plan §6).
+// successBonusPercentPoints - flat % bonus cong vao totalPercent TRUOC khi
+// tach guaranteed/extra, giu cap 300 (talent-direction-choice-plan sec6).
 const RECIPE: AlchemyRecipe = {
   id: 'recipe_test',
   pillId: 'pill_test',
@@ -30,7 +43,7 @@ const RECIPE: AlchemyRecipe = {
 }
 
 function makeJob(overrides: Partial<ActiveAlchemyJob> = {}): ActiveAlchemyJob {
-  return {
+  const job: ActiveAlchemyJob = {
     jobId: 'job_test',
     recipeId: RECIPE.id,
     pillId: RECIPE.pillId,
@@ -38,8 +51,21 @@ function makeJob(overrides: Partial<ActiveAlchemyJob> = {}): ActiveAlchemyJob {
     startedAtMs: 0,
     completesAtMs: 1_000,
     roomLevelAtStart: 1,
+    reservation: {
+      woodId: buildProfessionMaterialId('wood', RECIPE.fuelWoodRealmId, 'decade'),
+      fuelWoodAmount: RECIPE.fuelWoodAmount,
+      spiritStoneCost: RECIPE.spiritStoneCost,
+      herbAmount: RECIPE.herbAmount,
+      specialIngredients: [],
+      costScale: 1,
+      digest: 0,
+    },
     ...overrides,
   }
+
+  job.reservation = { ...job.reservation, digest: alchemyJobReservationDigest(job, job.reservation) }
+
+  return job
 }
 
 function makeSystemWithJob(job: ActiveAlchemyJob = makeJob()): {
@@ -71,7 +97,7 @@ describe('AlchemySystem — jobSuccessPercent', () => {
     }
     const job = makeJob({ herbMaterialId: 'herb_myriad', roomLevelAtStart: 5 })
 
-    // base 100 + room 5 bonus 20 + talent 200 → clamp 300
+    // base 100 + room 5 bonus 20 + talent 200 -> clamp 300
     expect(jobSuccessPercent(job, myriadRecipe, 200)).toBe(300)
   })
 })
@@ -98,7 +124,7 @@ describe('AlchemySystem — tick với bonus thiên phú', () => {
   it('bonus đẩy total qua 100 — guaranteed pill tăng tương ứng', () => {
     const { system, bag } = makeSystemWithJob()
 
-    // 30 + 75 = 105 → guaranteed 1, extra chance 5% (roll 0.5 trượt extra)
+    // 30 + 75 = 105 -> guaranteed 1, extra chance 5% (roll 0.5 truot extra)
     system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.5, 75)
 
     expect(bag.getAmount(RECIPE.pillId)).toBe(1)
@@ -152,7 +178,7 @@ describe('AlchemySystem — job không resolve được recipe/pill (review 2026
     expect(events[0]?.success).toBe(false)
     expect(events[0]?.pills).toBe(0)
 
-    // Job đã xử lý xong (không treo vĩnh viễn).
+    // Job da xu ly xong (khong treo vinh vien).
     expect(system.getJobs()).toHaveLength(0)
   })
 
@@ -291,7 +317,7 @@ describe('AlchemySystem — resolveFuelWood nhiên liệu CÙNG realm + CÙNG ag
 })
 
 describe('AlchemySystem — nhiên liệu phải cùng tuổi với thảo được chọn (gp123 6E)', () => {
-  /** Recipe thảo vạn niên + bag chỉ chứa một loại gỗ (đúng hoặc bậc thấp hơn). */
+  /** Recipe thao van nien + bag chi chua mot loai go (dung hoac bac thap hon). */
   function myriadContext(woodId: 'mortal_wood_myriad_year' | 'mortal_wood_decade') {
     const recipe: AlchemyRecipe = {
       ...RECIPE,
@@ -587,7 +613,7 @@ describe('alchemy success split - preview uses the authority (AR-23 4b)', () => 
   })
 })
 
-// M3 (spec 2026-09-03 talent catalog v4 §4.2) — Hoa Hau Thong Than:
+// M3 (spec 2026-09-03 talent catalog v4 sec4.2) - Hoa Hau Thong Than:
 // x2 fuel wood + x2 spirit stone at startJob reserve; x2 pill yield at
 // settle; +50% pill potency lives at the PillSystem consumption seam.
 describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
@@ -604,7 +630,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
 
     expect(result.ok).toBe(true)
     expect(bag.getAmount('mortal_wood_decade')).toBe(0)
-    // Thao duoc giu nguyen herbAmount — spec chi nhan go + Linh Thach.
+    // Thao duoc giu nguyen herbAmount - spec chi nhan go + Linh Thach.
     expect(bag.getAmount('herb_decade')).toBe(0)
     expect(system.getJobs()).toHaveLength(1)
   })
@@ -624,7 +650,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
   it('costMultiplier 2 — Linh Thạch check theo giá nhân (đủ giá gốc vẫn thiếu)', () => {
     const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext({
       spiritStoneCost: 5,
-      woodOnHand: WOOD_AMOUNT * 2, // du go cho gia x2 — fail phai do stone
+      woodOnHand: WOOD_AMOUNT * 2, // du go cho gia x2 - fail phai do stone
     })
 
     const result = system.startJob(recipe, 'herb_decade', bag, registry, 5, 1, 1_000, maxConcurrentJobs, 2)
@@ -636,7 +662,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
   it('pillYieldMultiplier 2 — mẻ thành công ra đan đôi (guaranteed 1 → 2 viên)', () => {
     const { system, bag } = makeSystemWithJob()
 
-    // total 100% → guaranteed 1, yield x2 → 2 vien.
+    // total 100% -> guaranteed 1, yield x2 -> 2 vien.
     system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.5, 70, 2)
 
     expect(bag.getAmount(RECIPE.pillId)).toBe(2)
@@ -705,7 +731,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
     const result = ops.startAlchemyJob(recipeWithCost.id, 'herb_decade', player)
 
     expect(result.ok).toBe(true)
-    // x2 stone (10 → 20), x2 wood (1 → 2), herb khong nhan.
+    // x2 stone (10 -> 20), x2 wood (1 -> 2), herb khong nhan.
     expect(materialBag.getAmount(spiritStoneId)).toBe(80)
     expect(materialBag.getAmount('mortal_wood_decade')).toBe(8)
     expect(materialBag.getAmount('herb_decade')).toBe(9)
@@ -756,7 +782,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
   })
 })
 
-// M3 preview parity (AR-23) — preview must show the talent-scaled cost +
+// M3 preview parity (AR-23) - preview must show the talent-scaled cost +
 // yield the same way startJob/tick will actually charge/pay.
 describe('AlchemySystem — preview với Hoa Hau Thong Than (M3)', () => {
   function opsWithPlayer(talentIds: string[]) {
@@ -782,7 +808,7 @@ describe('AlchemySystem — preview với Hoa Hau Thong Than (M3)', () => {
     expect(preview!.fuelWoodAmount).toBe(RECIPE.fuelWoodAmount * 2)
     expect(preview!.spiritStoneCost).toBe(20)
     expect(preview!.yieldMultiplier).toBe(2)
-    // total 50% (decade 30 + room5 20) → guaranteed 0, extra 50% cho 2 vien.
+    // total 50% (decade 30 + room5 20) -> guaranteed 0, extra 50% cho 2 vien.
     expect(preview!.guaranteedPills).toBe(0)
     expect(preview!.extraPillYield).toBe(2)
   })

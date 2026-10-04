@@ -1,9 +1,9 @@
-// Task 19 (item-grade-quality-rework, rework P6) — extracted shared
+// Task 19 (item-grade-quality-rework, rework P6) - extracted shared
 // helper used identically by EnhanceTab/WashTab/RefineTab: "equipped
 // slot metadata" (name/icon/tooltip/rank) built off gameManager.equipmentBag,
 // plus the "6 slots always exist" row shape shared by Wash/Refine.
 // Kept as an importable composable (not provide/inject) per Task 19 brief
-// item 6 — each tab imports what it needs itself.
+// item 6 - each tab imports what it needs itself.
 import { computed, type ComputedRef, type Ref } from 'vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
@@ -35,19 +35,19 @@ export interface EquippedRow {
 
   nameSegments: ReturnType<typeof composeEquipmentNameSegments>
 
-  // Audit fix 2026-08-31 — registry miss (itemId lạ) → không có tooltip
-  // (buildEquipmentTooltip đòi template thật); template consumers đã
-  // fallback `?.tooltip ?? { title/description slot trống }`.
+  // Audit fix 2026-08-31 - registry miss (itemId la) -> khong co tooltip
+  // (buildEquipmentTooltip doi template that); template consumers da
+  // fallback `?.tooltip ?? { title/description slot trong }`.
   tooltip?: ReturnType<typeof buildEquipmentTooltip>
 
-  // Rework P6 (item-grade-quality-rework, final-review round 2) — renamed
+  // Rework P6 (item-grade-quality-rework, final-review round 2) - renamed
   // from qualityRank/rarityRank (which held content INVERSE to their
   // names: qualityRank was actually the GRADE rank, rarityRank was the
-  // QUALITY rank — leftover from the deleted rarity axis). Field names
+  // QUALITY rank - leftover from the deleted rarity axis). Field names
   // now match content; SlotView's own props (equipmentQualityRank/
-  // rarityRank) are UNCHANGED — see the template bindings in
-  // WashTab/RefineTab/EnhanceTab/DissolveTab.vue that map gradeRank→
-  // equipment-quality-rank and qualityRank→rarity-rank.
+  // rarityRank) are UNCHANGED - see the template bindings in
+  // WashTab/RefineTab/EnhanceTab/DissolveTab.vue that map gradeRank->
+  // equipment-quality-rank and qualityRank->rarity-rank.
   gradeRank: number
 
   qualityRank: number
@@ -62,9 +62,9 @@ export function useEquippedRows() {
     stateVersion.value
 
     return gameManager.equipmentBag.getEquipped().map((instance) => {
-      // Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId
-      // lạ (data edit/save lệch) từng chết cả panel qua ErrorBoundary;
-      // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts).
+      // Audit fix 2026-08-31 - equipmentRegistry.get() THROW voi itemId
+      // la (data edit/save lech) tung chet ca panel qua ErrorBoundary;
+      // getEquipmentTemplate() tra an toan tra undefined (GameManager.ts).
       const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
       // G1 (Mission G Task 37) - the tooltip contract requires the
@@ -90,15 +90,15 @@ export function useEquippedRows() {
 
         icon: instance.icon ?? template?.icon,
 
-        // Registry miss → hiển thị itemId thô (pattern
+        // Registry miss -> hien thi itemId tho (pattern
         // EquipmentBagSection.vue:82-84); composeEquipmentNameSegments
-        // KHÔNG nhận template nullable nên gọi có điều kiện.
+        // KHONG nhan template nullable nen goi co dieu kien.
         nameSegments: template
           ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
           : [{ text: instance.itemId }],
 
-        // buildEquipmentTooltip đòi template thật — registry miss thì
-        // KHÔNG có tooltip (SlotView tooltip optional), không chết panel.
+        // buildEquipmentTooltip doi template that - registry miss thi
+        // KHONG co tooltip (SlotView tooltip optional), khong chet panel.
         // G1 (Task 37): the quote is required too - a miss means malformed
         // item data, same drop rule.
         tooltip: template && mainStatRangeQuote
@@ -127,9 +127,9 @@ export function useEquippedRows() {
 }
 
 /**
- * 6 Ô TRANG BỊ LUÔN TỒN TẠI (2026-08-30 spec) — tham chiếu trực tiếp
- * equipped-or-trống theo SLOT, dùng CHUNG cho cả tab Tẩy/Tinh Luyện
- * (Cường Hóa dùng enhanceRows cùng shape/mục đích riêng, không dùng cái này).
+ * 6 O TRANG BI LUON TON TAI (2026-08-30 spec) - tham chieu truc tiep
+ * equipped-or-trong theo SLOT, dung CHUNG cho ca tab Tay/Tinh Luyen
+ * (Cuong Hoa dung enhanceRows cung shape/muc dich rieng, khong dung cai nay).
  */
 export interface HallSlotRow {
   slot: EquipmentSlot
@@ -145,9 +145,9 @@ export function useHallSlotRows(equippedRows: ComputedRef<EquippedRow[]>) {
   })
 }
 
-/** Điểm Rèn PER-ITEM (rework 2026-08-26) = "Tình trạng rèn" trong tooltip
- * — forgeUsesRemaining / forgeUsesTotal. Tẩy/Tinh Luyện tiêu thụ ngân
- * sách này của CHÍNH món đồ. Dùng chung cho Wash/Refine tab. */
+/** Diem Ren PER-ITEM (rework 2026-08-26) = "Tinh trang ren" trong tooltip
+ * - forgeUsesRemaining / forgeUsesTotal. Tay/Tinh Luyen tieu thu ngan
+ * sach nay cua CHINH mon do. Dung chung cho Wash/Refine tab. */
 export function useItemRenState(selectedInstanceId: Ref<string | null> | ComputedRef<string | null>) {
   const gameManager = useGameManager()
 

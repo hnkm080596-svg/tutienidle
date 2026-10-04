@@ -3,10 +3,10 @@ import { expect, test } from './fixtures'
 import { assertNoBrowserErrors, collectBrowserErrors, waitForPresentationIdle } from './helpers'
 
 /**
- * UI/UX QA remediation (Task 10, 2026-09-07) — keyboard-only journey:
- * auth → character creation → home đều thao tác được bằng bàn phím
- * (Enter/Space kích hoạt, Tab di chuyển, focus visible qua activeElement).
- * Cùng fixture: console/pageerror gate (QA-002).
+ * UI/UX QA remediation (Task 10, 2026-09-07) - keyboard-only journey:
+ * auth -> character creation -> home deu thao tac duoc bang ban phim
+ * (Enter/Space kich hoat, Tab di chuyen, focus visible qua activeElement).
+ * Cung fixture: console/pageerror gate (QA-002).
  */
 test.describe('Keyboard accessibility journey', () => {
   test('auth + character creation operable by keyboard only', async ({ page }) => {
@@ -14,8 +14,8 @@ test.describe('Keyboard accessibility journey', () => {
 
     test.setTimeout(120_000)
 
-    // KHÔNG dùng bootToGuestHome (nó click guest bằng mouse) — spec này
-    // kiểm chứng chính luồng auth bằng bàn phím.
+    // KHONG dung bootToGuestHome (no click guest bang mouse) - spec nay
+    // kiem chung chinh luong auth bang ban phim.
     await page.goto('/')
 
     const auth = page.getByTestId('auth-screen')
@@ -26,9 +26,9 @@ test.describe('Keyboard accessibility journey', () => {
     // transition is revealed (spec S9). Wait for the reveal before typing.
     await waitForPresentationIdle(page)
 
-    // Auth screen: guest button là focusable thứ 4 (tab login + tab register
-    // + input id + input password + guest). Tab từng bước — SAU mỗi Tab kiểm
-    // tra activeElement (thứ tự: check → press, do lần Tab đầu nhảy từ body).
+    // Auth screen: guest button la focusable thu 4 (tab login + tab register
+    // + input id + input password + guest). Tab tung buoc - SAU moi Tab kiem
+    // tra activeElement (thu tu: check -> press, do lan Tab dau nhay tu body).
     let activated = false
 
     for (let i = 0; i < 8 && !activated; i++) {
@@ -51,27 +51,22 @@ test.describe('Keyboard accessibility journey', () => {
     await expect(page.getByTestId('character-creation-screen')).toBeVisible({ timeout: 15_000 })
     await waitForPresentationIdle(page)
 
-    // Character creation: name input bằng keyboard, continue bằng Enter.
+    // Character creation: name input bang keyboard, continue bang Enter.
     await page.getByTestId('creation-name-input').fill('Keyboard Hero')
     await page.keyboard.press('Tab')
 
     await expect(page.locator('[data-testid^="creation-talent-"]').first()).toBeVisible({ timeout: 10_000 })
 
-    // Chọn talent bằng keyboard: focus card đầu + Enter (button/card).
+    // Chon talent bang keyboard: focus card dau + Enter (button/card).
     const talentCard = page.locator('[data-testid^="creation-talent-"]').first()
     await talentCard.focus()
-    await page.keyboard.press('Enter')
-
-    // Starting-skill pick (BETA-CREATION): select tram via keyboard.
-    const skillCard = page.getByTestId('creation-skill-tram')
-    await skillCard.focus()
     await page.keyboard.press('Enter')
 
     await expect(page.getByTestId('creation-finish')).toBeEnabled({ timeout: 5_000 })
     await page.getByTestId('creation-finish').focus()
     await page.keyboard.press('Enter')
 
-    // Home hiện sau boot — dismiss tutorial nếu có (keyboard: Enter = Bỏ Qua).
+    // Home hien sau boot - dismiss tutorial neu co (keyboard: Enter = Bo Qua).
     await expect(page.locator('.game-root')).toBeVisible({ timeout: 30_000 })
     await waitForPresentationIdle(page)
 

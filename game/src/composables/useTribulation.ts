@@ -20,8 +20,8 @@ import { i18n } from '@/i18n'
 // scene exit, route home, panel navigation. Zero player-state writes here.
 
 // Tr?m gate (blockIfNoBasicAttack, 2026-08-20 -> gap 2026-08-21) - PhA?p
-// Tu t? h?c + trang b? S?N 1 chiA?u c? b?n ngay lA?c ch?n path, tA�nh
-// hu?ng "chua trang b? gA�" khA4ng cA2n x?y ra.
+// Tu t? h?c + trang b? S?N 1 chiA?u c? b?n ngay lA?c ch?n path, tAnh
+// hu?ng "chua trang b? gA" khA4ng cA2n x?y ra.
 
 /**
  * Bam nut dot pha (Quan Khi / Truc Co / Do Kiep sau Truc Co). Tu
@@ -102,7 +102,10 @@ function presentOutcome(result: TribulationOutcomeResult): void {
   )
 
   if (result.kind === 'victory' && result.standalonePanel) {
-    ui.standalonePanel = result.standalonePanel
+    // F-TRB-RECEIPT: route through the gated opener - a direct
+    // standalonePanel write bypasses isBetaStandalonePanel and could
+    // mount a scope-hidden panel from a persisted receipt.
+    ui.openStandalonePanel(result.standalonePanel)
   }
 }
 

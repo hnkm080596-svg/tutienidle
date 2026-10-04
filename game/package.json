@@ -1,7 +1,12 @@
 {
   "name": "tien-hiep-idle",
-  "version": "0.0.0",
+  "version": "0.1.0-beta.0",
+  "productName": "Tien Hiep Idle",
+  "description": "Tien Hiep Idle - cultivation idle RPG (Windows closed beta)",
   "private": true,
+  "author": {
+    "name": "fdlmg-tutienidle"
+  },
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -17,6 +22,7 @@
     "lab": "vitest run --config vitest.lab.config.mts",
     "lab:watch": "vitest --config vitest.lab.config.mts",
     "test:e2e": "playwright test",
+    "test:supabase": "node scripts/supabase/run-contract.mjs",
     "check:bundle-split": "node scripts/check-bundle-split.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -26,7 +32,13 @@
     "assets:ink-ui:check": "node scripts/build-ink-wash-assets.mjs --check",
     "electron:dev": "cross-env ELECTRON=1 vite",
     "dist:win": "cross-env ELECTRON=1 npm run build && electron-builder --win",
-    "qa:internal": "node scripts/qa/cli.mjs"
+    "inspect:package": "node scripts/release/inspect-package.mjs --input release",
+    "release:manifest": "node scripts/release/manifest.mjs --input release",
+    "release:publish": "node scripts/release/publish-candidate.mjs --manifest release/release-manifest.json",
+    "signing:preflight": "node scripts/release/signing-preflight.mjs",
+    "signing:preflight:release": "node scripts/release/signing-preflight.mjs --require-signing",
+    "qa:internal": "node scripts/qa/cli.mjs",
+    "test:release": "node --test \"scripts/release/*.test.mjs\""
   },
   "dependencies": {
     "@floating-ui/vue": "^2.0.1",
@@ -39,7 +51,9 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@tsconfig/node24": "^24.0.4",
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^24.13.3",
+    "@types/pg": "^8.15.6",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/eslint-config-typescript": "^14.9.0",
     "@vue/tsconfig": "^0.9.1",
@@ -49,11 +63,14 @@
     "cross-env": "^10.1.0",
     "electron": "^43.4.1",
     "electron-builder": "^26.15.3",
+    "electron-updater": "6.8.9",
     "eslint": "^10.9.1",
     "eslint-plugin-vue": "^10.10.0",
     "jsdom": "^30.0.1",
     "npm-run-all2": "^9.0.2",
+    "pg": "^8.22.0",
     "prettier": "3.9.5",
+    "sharp": "0.34.5",
     "typescript": "~6.0.0",
     "typescript-eslint": "^8.68.0",
     "vite": "^8.2.2",

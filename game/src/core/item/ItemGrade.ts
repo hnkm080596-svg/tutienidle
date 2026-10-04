@@ -1,13 +1,13 @@
 import type { NameSegment } from './NameSegment'
 
-// Terminology align (2026-09-02, user schema chốt): thang 5 bậc này là
-// trục CHẤT (chất lượng) cho Đan dược — nhãn hiển thị "Hoàng Chất→Tiên
-// Chất" khớp ITEM_QUALITY_LABELS của trang bị. Trục "Phẩm" (Cảnh giới
-// tương quan, 10 bậc) nằm ở ProfessionGrade; Đan có professionGrade
-// riêng (Pill.professionGrade, UI ưu tiên hiển thị). Tên type/field/
-// values GIỮ NGUYÊN (không vỡ save/loot/data), chỉ đổi label text.
-// N5 (naming-conventions): display string đổi vì user chốt terminology,
-// không phải rename cơ học.
+// Terminology align (2026-09-02, user schema chot): thang 5 bac nay la
+// truc CHAT (chat luong) cho Dan duoc - nhan hien thi "Hoang Chat->Tien
+// Chat" khop ITEM_QUALITY_LABELS cua trang bi. Truc "Pham" (Canh gioi
+// tuong quan, 10 bac) nam o ProfessionGrade; Dan co professionGrade
+// rieng (Pill.professionGrade, UI uu tien hien thi). Ten type/field/
+// values GIU NGUYEN (khong vo save/loot/data), chi doi label text.
+// N5 (naming-conventions): display string doi vi user chot terminology,
+// khong phai rename co hoc.
 export type ItemGrade = 'hoang' | 'huyen' | 'dia' | 'thien' | 'tien'
 
 export const ITEM_GRADE_ORDER: ItemGrade[] = ['hoang', 'huyen', 'dia', 'thien', 'tien']

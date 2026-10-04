@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM, unlockedOrbs, type OrbId } from './KiemPhoOrbs'
 
-// Kiem Tu Reimagined Task 3 — five Kiem Pho orb defs + realm unlock
-// table (spec 2026-09-15 §3). Orb ids are canonical in KiemTuState.ts
+// Kiem Tu Reimagined Task 3 - five Kiem Pho orb defs + realm unlock
+// table (spec 2026-09-15 sec3). Orb ids are canonical in KiemTuState.ts
 // and re-exported here.
 
 describe('KIEM_PHO_ORBS', () => {

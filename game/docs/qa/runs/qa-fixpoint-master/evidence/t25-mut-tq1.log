@@ -1,0 +1,369 @@
+=== MUTANT tq1 applied ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (47 tests | 17 failed) 56ms
+     × sword_pathway combat build falls back to the generic kit 6ms
+     × chooseCultivationPath rejects a non-beta way pair before any other check 4ms
+     × canPurchaseNode / purchaseNode / upgradeNode all reject dormant-tree nodes 2ms
+     × respecNodeTree refuses a save holding dormant records - dormant insight is never refunded 1ms
+     × a committed hidden_spell save with its aura passive still emits no aura entryBuffs 2ms
+     × canUpgradeNode and levelUpSkill reject a dormant way core on a carried save 1ms
+     × learnSkill rejects hidden-kit skill ids even on a clean beta save 2ms
+     × setKiemPhoPreset fails closed under beta scope and leaves the preset untouched 1ms
+     × a flagged body-path save emits no way facet modifiers in stat assembly 0ms
+     × a flagged hidden-spell save emits no way statModifiers via the cultivation_path channel 1ms
+     × a dormant way technique emits no tier modifiers; the beta way technique still emits 3ms
+     × a learned dormant-way passive emits no scaled modifiers; unowned passives still emit 1ms
+     × tryAdvanceTechniqueGrade refuses a dormant technique and debits no stones 1ms
+     × a hidden_spell save mints no realm-reward nodes through the restore replay (F-A3-01) 0ms
+     × a hidden_spell save mints no realm-reward nodes at the realm-entry grant (F-A3-01) 1ms
+     × a hidden_spell save learns no way-authored ladder passive at realm entry (F-A3-02) 1ms
+     × a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03) 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: a way_out_of_scope save must not execute its dormant kit (F-TRI-2) > sword_pathway combat build falls back to the generic kit
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:230:41
+    228|
+    229|     // The save is flagged unsupported through the canonical reader.
+    230|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    231|
+    232|     const runtime = resolveCultivationPathRuntime(p, runtimeDeps)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > path authority: the ritual gate fails closed for dormant ways (I-PA-1) > chooseCultivationPath rejects a non-beta way pair before any other check
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:273:92
+    271|     const p = player({ realmLevel: 12 })
+    272|
+    273|     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', …
+       |                                                                                            ^
+    274|     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', '…
+    275|     // spell_pathway carries an element axis - it also fails closed he…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way node trees refuse insight writes on a carried save (F-CA-1) > canPurchaseNode / purchaseNode / upgradeNode all reject dormant-tree nodes
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:303:68
+    301|     expect(gameManager.progressionOps.canPurchaseNode('thich_can', p))…
+    302|     expect(gameManager.progressionOps.purchaseNode('thich_can', p)).to…
+    303|     expect(gameManager.progressionOps.upgradeNode('thich_can', p)).toB…
+       |                                                                    ^
+    304|     expect(p.skillInsight).toBe(insightBefore)
+    305|     expect(p.nodeLevels).toEqual({ thich_can: 1 })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way node trees refuse insight writes on a carried save (F-CA-1) > respecNodeTree refuses a save holding dormant records - dormant insight is never refunded
+AssertionError: expected 2 to be null
+
+- Expected:
+null
+
++ Received:
+2
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:314:58
+    312|     const p = swordSave({ thich_can: 2 })
+    313|
+    314|     expect(gameManager.progressionOps.respecNodeTree(p)).toBeNull()
+       |                                                          ^
+    315|     // The preview refuses too: a null preview means no fabricated
+    316|     // 'reset 0 / refund 0' confirm dialog can mount (verdict-vs-render
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: hidden-way reaction aura never enters the entry-buff layer (F-A2-1) > a committed hidden_spell save with its aura passive still emits no aura entryBuffs
+Error: [GameManager] hidden_spell_pathway kit incomplete — missing learned skills: van_phap_tuy_tam, da_phap_lien_tuyen, ngo_dao_hon_don
+ ❯ assertNgoDaoKitLearned src/core/player/CultivationPathRegistry.ts:94:11
+     92|
+     93|   if (missing.length > 0) {
+     94|     throw new Error(
+       |           ^
+     95|       `[GameManager] hidden_spell_pathway kit incomplete — missing lea…
+     96|     )
+ ❯ Object.resolveBasic src/core/player/CultivationPathRegistry.ts:436:7
+ ❯ resolveCombatSkillRoles src/core/player/CultivationPathRoles.ts:36:25
+ ❯ resolveCombatBuild src/core/game/CombatBuild.ts:234:32
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:393:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant-kit skill cores reject insight spends and learns (F-A2-2 / F-A2-3) > canUpgradeNode and levelUpSkill reject a dormant way core on a carried save
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:413:75
+    411|     })
+    412|
+    413|     expect(gameManager.progressionOps.canUpgradeNode('core_tham_the', …
+       |                                                                           ^
+    414|     expect(gameManager.progressionOps.levelUpSkill('tham_the', p)).toB…
+    415|     // Dormant core holding fails respec closed the same as a dormant …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant-kit skill cores reject insight spends and learns (F-A2-2 / F-A2-3) > learnSkill rejects hidden-kit skill ids even on a clean beta save
+AssertionError: learn van_phap_tuy_tam: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:427:82
+    425|
+    426|     for (const id of ['van_phap_tuy_tam', 'da_phap_lien_tuyen', 'ngo_d…
+    427|       expect(gameManager.progressionOps.learnSkill(id, player()), `lea…
+       |                                                                                  ^
+    428|     }
+    429|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: a carried sword save cannot drive sword machinery (F-B-2) > setKiemPhoPreset fails closed under beta scope and leaves the preset untouched
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:465:41
+    463|     })
+    464|
+    465|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    466|     // The capability resolver itself fails closed on the dormant way
+    467|     // (B17 wave: resolvePathCapabilities is way-admission gated) - the
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > a flagged body-path save emits no way facet modifiers in stat assembly
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:541:41
+    539|     })
+    540|
+    541|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    542|
+    543|     const { wayFacetModifiers } = resolvePlayerStatAssembly(p, [])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > a flagged hidden-spell save emits no way statModifiers via the cultivation_path channel
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:556:50
+    554|     })
+    555|
+    556|     expect(unsupportedReleaseReason(hiddenSave)).toBe('way_out_of_scop…
+       |                                                  ^
+    557|     expect(getCultivationPathStatModifiers(hiddenSave)).toEqual([])
+    558|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > a dormant way technique emits no tier modifiers; the beta way technique still emits
+AssertionError: expected [ { …(5) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "flat": 2,
++     "id": "technique-tier:diamond_body_art:hpRegen",
++     "sourceId": "diamond_body_art",
++     "sourceType": "technique",
++     "stat": "hpRegenPerTurn",
++   },
++ ]
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:585:7
+    583|     expect(
+    584|       dormantChannels.find((c) => c.channel === 'technique_tier')!.mod…
+    585|     ).toEqual([])
+       |       ^
+    586|
+    587|     const spellSave = player({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > a learned dormant-way passive emits no scaled modifiers; unowned passives still emit
+AssertionError: expected { …(8) } to be undefined
+
+- Expected:
+undefined
+
++ Received:
+{
+  "flat": 0,
+  "id": "passive_kiem_tam_lanh_liet_crit_damage",
+  "maxStacks": 30,
+  "percent": 0.01,
+  "sourceId": "passive_kiem_tam_lanh_liet",
+  "sourceType": "skill",
+  "stacks": 0,
+  "stat": "criticalDamage",
+}
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:611:75
+    609|     )
+    610|     const mods = gameManager.skillSystem.getScaledPassiveModifiers()
+    611|     expect(mods.find((m) => m.sourceId === 'passive_kiem_tam_lanh_liet…
+       |                                                                           ^
+    612|
+    613|     gameManager.skillManager.add(SKILLS.find((s) => s.id === 'passive_…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > tryAdvanceTechniqueGrade refuses a dormant technique and debits no stones
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:644:69
+    642|     gameManager.materialBag.add(stoneMaterial, 1000)
+    643|
+    644|     expect(gameManager.realmAdvanceOps.tryAdvanceTechniqueGrade(p)).to…
+       |                                                                     ^
+    645|     expect(gameManager.materialBag.getAmount(stoneId)).toBe(1000)
+    646|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save mints no realm-reward nodes through the restore replay (F-A3-01)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:842:41
+    840|       realmId: 'foundation_establishment',
+    841|     })
+    842|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    843|
+    844|     const gameManager = managerWithNodes()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save mints no realm-reward nodes at the realm-entry grant (F-A3-01)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:862:7
+    860|     expect(
+    861|       gameManager.realmAdvanceOps.grantCultivationPathRealmReward(p, '…
+    862|     ).toBe(false)
+       |       ^
+    863|     expect(p.nodeLevels ?? {}).toEqual({})
+    864|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save learns no way-authored ladder passive at realm entry (F-A3-02)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:892:67
+    890|     gameManager.realmAdvanceOps.syncRealmPassive(p)
+    891|
+    892|     expect(gameManager.skillManager.has('passive_truc_co_y_chi')).toBe…
+       |                                                                   ^
+    893|   })
+    894|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:920:41
+    918|       realmLevel: 12,
+    919|     })
+    920|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    921|     // The capability resolver now fails closed on the dormant way
+    922|     // (B17 wave) - realm-advance machinery fails closed through the
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  17 failed | 30 passed (47)
+   Start at  20:05:32
+   Duration  1.80s (transform 1.28s, setup 214ms, import 1.38s, tests 56ms, environment 0ms)
+
+EXIT=1

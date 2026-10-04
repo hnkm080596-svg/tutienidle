@@ -1,6 +1,6 @@
-// Buff bar (2026-09-02) — preset theo buff id + shape phân loại
-// (circle=buff, diamond=CC/DoT, square=stat debuff) — không convey nghĩa
-// chỉ bằng màu. Placeholder polarity cuối: buff xanh, debuff đỏ.
+// Buff bar (2026-09-02) - preset theo buff id + shape phan loai
+// (circle=buff, diamond=CC/DoT, square=stat debuff) - khong convey nghia
+// chi bang mau. Placeholder polarity cuoi: buff xanh, debuff do.
 import { describe, expect, it } from 'vitest'
 import {
   getStatusVfxPreset,

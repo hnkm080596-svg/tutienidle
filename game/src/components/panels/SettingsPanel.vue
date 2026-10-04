@@ -1,33 +1,47 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
-import { useAudioStore } from '@/stores/audio'
 import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
-import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
-import { LOCALE_OPTIONS, saveLocale, type AppLocale } from '@/composables/locale'
+import { validateRecoveryData } from '@/services/save/recoveryApi'
+import { cloudSaveCoordinator } from '@/services/cloudSave/CloudSaveServiceFactory'
+import { observeAuthoritySaveResult } from '@/composables/useOnlineAuthority'
+import { loadUiScale, saveUiScale } from '@/composables/uiScale'
+import { saveLocale, type AppLocale } from '@/composables/locale'
+import { useActiveUpdates } from '@/composables/useUpdates'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import GameButton from '@/components/common/GameButton.vue'
-import Chip from '@/components/common/primitives/Chip.vue'
+import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
+import GuestAbandonDialog from '@/components/panels/GuestAbandonDialog.vue'
+import SettingsNavRail from '@/components/scenes/settings/SettingsNavRail.vue'
+import SettingsSaveSection from '@/components/scenes/settings/SettingsSaveSection.vue'
+import SettingsUiScaleSection from '@/components/scenes/settings/SettingsUiScaleSection.vue'
+import SettingsLanguageSection from '@/components/scenes/settings/SettingsLanguageSection.vue'
+import SettingsAudioSection from '@/components/scenes/settings/SettingsAudioSection.vue'
+import SettingsFeedbackSection from '@/components/scenes/settings/SettingsFeedbackSection.vue'
+import SettingsAccountSection from '@/components/scenes/settings/SettingsAccountSection.vue'
+import SettingsUpdateSection from '@/components/scenes/settings/SettingsUpdateSection.vue'
+import SettingsBuildSection from '@/components/scenes/settings/SettingsBuildSection.vue'
+import { readSupabaseSession } from '@/services/supabase/SupabaseSession'
+import { requestSessionLogout } from '@/composables/useSessionAccount'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
-const audio = useAudioStore()
 const { t, locale } = useI18n()
 
-// W3: one slider per audio channel (field = store state, channel = bus id).
-const AUDIO_CHANNELS = [
-  { field: 'musicVolume', channel: 'music', labelKey: 'musicVolume' },
-  { field: 'sfxVolume', channel: 'sfx', labelKey: 'sfxVolume' },
-  { field: 'uiVolume', channel: 'ui', labelKey: 'uiVolume' },
-] as const
+// B1.9a - under the remote authority the panel's recovery actions keep
+// different semantics: manual import validates/exports the file instead
+// of overwriting (no client-side path can replace the cloud row), reset
+// clears the local cache so the authoritative load restores from cloud,
+// and export stamps its provenance + revision onto the filename.
+const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authoritative'
 
-// Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
-// pending-action: mở ConfirmModal, hành động thật chỉ chạy khi
-// resolvePendingConfirm() (nút "Xác Nhận") được gọi.
+// Thay window.confirm() native - modal xac nhan dong bo hoa bang
+// pending-action: mo ConfirmModal, hanh dong that chi chay khi
+// resolvePendingConfirm() (nut "Xac Nhan") duoc goi.
 const pendingConfirm = ref<null | { title: string; message: string; danger: boolean; onConfirm: () => void }>(null)
 
 function requestConfirm(title: string, message: string, onConfirm: () => void, danger = false) {
@@ -43,7 +57,7 @@ function cancelPendingConfirm() {
   pendingConfirm.value = null
 }
 
-// WS8 — cỡ chữ giao diện (chỉ scale semantic tokens, không zoom canvas).
+// WS8 - co chu giao dien (chi scale semantic tokens, khong zoom canvas).
 const uiScale = ref<number>(loadUiScale())
 
 function handleUiScale(scale: number) {
@@ -57,11 +71,26 @@ function handleLocale(next: AppLocale) {
 
 const lastSavedLabel = ref('')
 
-// Lưu thủ công phải await và kiểm tra kết quả — trước đây toast
-// "Đã lưu tiến trình" hiện cả khi writeGameSave fail (quota), người
-// chơi tưởng tiến trình đã an toàn rồi đóng tab mất trắng.
+// BETA-FINAL PR12 - the bound update surface (null on web builds; the
+// section hides itself then). Renders the sanitized UpdateState only.
+const updates = useActiveUpdates()
+const updateState = computed(() => updates?.state.value ?? null)
+const updatePhase = computed(() => updateState.value?.phase ?? null)
+const updateProgressPercent = computed(() => Math.round(updateState.value?.progress?.percent ?? 0))
+
+// BETA-FINAL PR13 / spec B7 - feedback intake lives here as a normal
+// settings surface; the dialog itself owns draft/idempotency/result state.
+const feedbackOpen = ref(false)
+
+// Luu thu cong phai await va kiem tra ket qua - truoc day toast
+// "Da luu tien trinh" hien ca khi writeGameSave fail (quota), nguoi
+// choi tuong tien trinh da an toan roi dong tab mat trang.
 async function handleSave() {
   const result = await player.save(gameManager)
+
+  // B1-D: every save outcome reports to the admission authority (remote
+  // mode only - the call is a no-op when no remote session is bound).
+  observeAuthoritySaveResult(result)
 
   if (result.status === 'ok') {
     lastSavedLabel.value = new Date().toLocaleTimeString('vi-VN')
@@ -70,18 +99,18 @@ async function handleSave() {
   } else {
     lastSavedLabel.value = t('panels.settings.notifications.saveFailedShort')
 
-    // Audit fix 2026-08-31 — kind 'error' (đỏ) đồng nhất App.vue autosave
-    // fail; kind 'save' (xanh nhạt) làm người chơi bỏ qua mất nguy cơ.
+    // Audit fix 2026-08-31 - kind 'error' (do) dong nhat App.vue autosave
+    // fail; kind 'save' (xanh nhat) lam nguoi choi bo qua mat nguy co.
     notification.push('error', t('panels.settings.notifications.saveFailed'))
   }
 }
 
 function handleLoad() {
-  // GameManager.restoreFromSave() cộng dồn (materials/pills/talismans/
-  // equipment dùng .add(), không clear trước) — gọi lại giữa phiên
-  // đang chạy sẽ NHÂN ĐÔI tài nguyên thay vì thay thế. Reload tái
-  // dùng đúng luồng onMounted() (đã đúng) thay vì phải viết clear()
-  // cho từng Manager — rủi ro thấp hơn nhiều.
+  // GameManager.restoreFromSave() cong don (materials/pills/talismans/
+  // equipment dung .add(), khong clear truoc) - goi lai giua phien
+  // dang chay se NHAN DOI tai nguyen thay vi thay the. Reload tai
+  // dung dung luong onMounted() (da dung) thay vi phai viet clear()
+  // cho tung Manager - rui ro thap hon nhieu.
   requestConfirm(
     t('panels.settings.confirm.reloadTitle'),
     t('panels.settings.confirm.reloadBody'),
@@ -89,23 +118,34 @@ function handleLoad() {
   )
 }
 
-// Xuất save hiện tại — save() trước để file tải về phản ánh đúng
-// tiến trình tại thời điểm bấm, không phải lần save gần nhất.
+// Xuat save hien tai - save() truoc de file tai ve phan anh dung
+// tien trinh tai thoi diem bam, khong phai lan save gan nhat.
 async function handleExport() {
-  // PHẢI await — writeGameSave chạy trong microtask (cloudSaveCoordinator
-  // → LocalCloudSaveService.save đều async); đọc localStorage ngay sau lời
-  // gọi sync sẽ lấy save 15s cũ (bug audit 2026-08-31).
+  // PHAI await - writeGameSave chay trong microtask (cloudSaveCoordinator
+  // -> LocalCloudSaveService.save deu async); doc localStorage ngay sau loi
+  // goi sync se lay save 15s cu (bug audit 2026-08-31).
   const result = await player.save(gameManager)
+
+  observeAuthoritySaveResult(result)
 
   if (result.status !== 'ok') {
     notification.push('error', t('panels.settings.notifications.exportFailed'))
     return
   }
 
-  const raw = getRawSave()
+  // B1-C: remote mode exports the server-ACKed envelope (payload +
+  // revision bound as one identity); local mode's slot is the same
+  // facade. getRawSave stays as a legacy fallback only.
+  const cached = await cloudSaveCoordinator.readCachedSave()
+  const raw = cached?.raw ?? getRawSave()
 
   if (raw) {
-    exportSaveToFile(raw)
+    exportSaveToFile(
+      raw,
+      remoteAuthoritative
+        ? { source: 'cloud', revision: cached?.revision ?? cloudSaveCoordinator.getRevision() }
+        : { source: 'local', revision: cached?.revision ?? cloudSaveCoordinator.getRevision() },
+    )
   }
 }
 
@@ -121,19 +161,39 @@ function handleImportFile(event: Event) {
 
   requestConfirm(
     t('panels.settings.confirm.importTitle'),
-    t('panels.settings.confirm.importBody'),
+    remoteAuthoritative
+      ? t('panels.settings.confirm.importBodyRemote')
+      : t('panels.settings.confirm.importBody'),
     () => {
       const reader = new FileReader()
 
       reader.onload = () => {
-        const ok = importSaveRaw(String(reader.result))
+        const rawText = String(reader.result)
+
+        if (remoteAuthoritative) {
+          // Remote mode: validate the recovery file only. A consumable
+          // payload is exported back normalized (identified by source +
+          // revision); the cloud row and the local cache stay untouched.
+          const validation = validateRecoveryData(rawText)
+
+          if (validation.status === 'valid') {
+            exportSaveToFile(validation.normalizedRaw, { source: 'recovery-import' })
+            notification.push('save', t('panels.settings.notifications.importValidatedRemote'))
+          } else {
+            notification.push('error', t('panels.settings.errors.invalidSaveFile'))
+          }
+
+          return
+        }
+
+        const ok = importSaveRaw(rawText)
 
         if (ok) {
           window.location.reload()
         } else {
-          // UI-007 (Task 5) — window.alert native → toast store (in-game
-          // feedback, tự biến mất, không chặn luồng; giữ import input
-          // reset để retry ngay).
+          // UI-007 (Task 5) - window.alert native -> toast store (in-game
+          // feedback, tu bien mat, khong chan luong; giu import input
+          // reset de retry ngay).
           notification.push('error', t('panels.settings.errors.invalidSaveFile'))
         }
       }
@@ -145,150 +205,181 @@ function handleImportFile(event: Event) {
 
 function handleReset() {
   requestConfirm(
-    t('panels.settings.confirm.resetTitle'),
-    t('panels.settings.confirm.resetBody'),
-    // App phải dừng interval/pagehide autosave TRƯỚC khi xoá; nếu panel tự
-    // reload, pagehide ghi lại chính save vừa xoá.
+    remoteAuthoritative
+      ? t('panels.settings.confirm.resetCloudTitle')
+      : t('panels.settings.confirm.resetTitle'),
+    remoteAuthoritative
+      ? t('panels.settings.confirm.resetCloudBody')
+      : t('panels.settings.confirm.resetBody'),
+    // App phai dung interval/pagehide autosave TRUOC khi xoa; neu panel tu
+    // reload, pagehide ghi lai chinh save vua xoa.
     () => window.dispatchEvent(new Event(SAVE_RESET_REQUEST_EVENT)),
     true,
   )
 }
+
+// B1.8/B1.9 - account surface (remote mode only): the guest -> registered
+// upgrade card with its pending-confirm state, and the ordered logout.
+// The ordered legs live in useSessionAccount; the return-to-auth teardown
+// is bound by App.vue, so a successful requestSessionLogout unmounts this
+// panel with the rest of the game tree.
+const storedAccount = ref(remoteAuthoritative ? readSupabaseSession() : null)
+const accountIsGuest = computed(() => !storedAccount.value || storedAccount.value.mode === 'guest')
+const pendingUpgradeLoginId = computed(() => storedAccount.value?.pendingUpgrade?.loginId)
+const showAccountUpgrade = ref(!!pendingUpgradeLoginId.value)
+
+/** A finalize inside the panel flips account_kind; re-read the session so
+ *  the account surface (note text, logout path) stops treating the now-
+ *  registered account as a guest. */
+function refreshStoredAccount() {
+  storedAccount.value = remoteAuthoritative ? readSupabaseSession() : null
+}
+
+// 'abandon' = guest sole-credential warning (multi-action dialog);
+// 'unsynced' = flush failed, offer retry or explicit unsynced abandon.
+// Registered logout reuses the shared requestConfirm chrome.
+const logoutDialog = ref<'none' | 'abandon' | 'unsynced'>('none')
+const logoutBusy = ref(false)
+
+function startLogout() {
+  refreshStoredAccount()
+  if (accountIsGuest.value) {
+    logoutDialog.value = 'abandon'
+    return
+  }
+  requestConfirm(
+    t('panels.settings.confirm.logoutTitle'),
+    t('panels.settings.confirm.logoutBody'),
+    () => void runLogout(),
+    true,
+  )
+}
+
+async function runLogout(acknowledgeUnsynced = false) {
+  if (logoutBusy.value) return
+  logoutBusy.value = true
+
+  const result = await requestSessionLogout({ acknowledgeUnsynced })
+
+  logoutBusy.value = false
+  if (result.status === 'done') {
+    // The bound teardown already routed to auth; drop the dialog state so
+    // a remount of this panel never sees a stale modal.
+    logoutDialog.value = 'none'
+    return
+  }
+
+  // flush-blocked: pending writes could not reach the cloud - the spec's
+  // retry / explicit-unsynced-abandon fork.
+  logoutDialog.value = 'unsynced'
+}
+
+function onAbandonUpgrade() {
+  logoutDialog.value = 'none'
+  showAccountUpgrade.value = true
+}
+
+function onAbandonExport() {
+  void handleExport()
+}
+
+// Huyen Kim scene 17: left seal nav + right workspace. Sections map to
+// real surfaces only - reserved categories (Graphics Quality etc.)
+// render nothing. Account/Update hide themselves with their data.
+type SettingsSection = 'general' | 'display' | 'audio' | 'account' | 'update' | 'support'
+const activeSection = ref<SettingsSection>('general')
+
+function onSelectSection(id: string) {
+  activeSection.value = id as SettingsSection
+}
+const navSections = computed(() => {
+  const list: Array<{ id: SettingsSection; label: string }> = [
+    { id: 'general', label: t('panels.settings.sections.save') },
+    { id: 'display', label: t('panels.settings.sections.display') },
+    { id: 'audio', label: t('panels.settings.sections.audio') },
+  ]
+  if (remoteAuthoritative) {
+    list.push({ id: 'account', label: t('panels.settings.sections.account') })
+  }
+  if (updateState.value !== null && updatePhase.value !== 'unsupported') {
+    list.push({ id: 'update', label: t('panels.settings.update.title') })
+  }
+  list.push({ id: 'support', label: t('panels.settings.sections.support') })
+  return list
+})
+// Scene 17 grammar: audio/ui sliders wear the slider-track + slider-thumb
+// chrome when the PNGs are ready; the native range keeps working as fallback.
+const sliderTrackUrl = hkChromeUrl('slider-track')
+const sliderThumbUrl = hkChromeUrl('slider-thumb')
+const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
+  sliderTrackUrl && sliderThumbUrl
+    ? {
+        '--hk-slider-track': `url("${sliderTrackUrl}")`,
+        '--hk-slider-thumb': `url("${sliderThumbUrl}")`,
+      }
+    : undefined,
+)
 </script>
 
 <template>
-  <div class="settings-panel paper-on-dark">
-    <p class="settings-panel__warning">
-      {{ t('panels.settings.autosaveNote') }}
-    </p>
+  <div class="settings-panel" :class="{ 'has-hk-slider': Boolean(sliderChromeStyle) }" :style="sliderChromeStyle">
+    <!-- Scene 17: left vertical seal navigation. -->
+    <SettingsNavRail
+      :sections="navSections"
+      :active-id="activeSection"
+      :label="t('panels.settings.sections.navAria')"
+      @select="onSelectSection"
+    />
 
-    <!-- Sectioned grid (ui-audit creation-meta): the actions column was
-         a lone 360px strip inside a min(1120px) overlay - group the four
-         setting clusters into equal cards that fill the space. -->
-    <div class="settings-panel__grid">
-      <section class="settings-panel__section" :aria-label="t('panels.settings.sections.saveAria')">
-        <h4>{{ t('panels.settings.sections.save') }}</h4>
+    <!-- Right workspace: the active category only. -->
+    <div class="settings-panel__workspace scrollfade">
+      <SettingsSaveSection
+        v-if="activeSection === 'general'"
+        :remote-authoritative="remoteAuthoritative"
+        @save="handleSave"
+        @load="handleLoad"
+        @export="handleExport"
+        @import-file="handleImportFile"
+        @reset="handleReset"
+      />
 
-        <div class="settings-panel__actions">
-          <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
+      <template v-if="activeSection === 'display'">
+        <SettingsUiScaleSection :ui-scale="uiScale" @select="handleUiScale" />
+        <SettingsLanguageSection :locale="(locale as AppLocale)" @select="handleLocale" />
+      </template>
 
-          <GameButton variant="secondary" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
+      <SettingsAudioSection v-if="activeSection === 'audio'" />
 
-          <GameButton variant="secondary" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
+      <SettingsFeedbackSection v-if="activeSection === 'support'" @open="feedbackOpen = true" />
 
-          <label class="settings-panel__import">
-            {{ t('panels.settings.actions.import') }}
-            <input type="file" accept="application/json" @change="handleImportFile" />
-          </label>
+      <SettingsAccountSection
+        v-if="remoteAuthoritative && activeSection === 'account'"
+        v-model:show-upgrade="showAccountUpgrade"
+        :account-is-guest="accountIsGuest"
+        :pending-upgrade-login-id="pendingUpgradeLoginId"
+        :logout-busy="logoutBusy"
+        @logout="startLogout"
+        @finalized="refreshStoredAccount"
+      />
 
-          <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
-            {{ t('panels.settings.actions.reset') }}
-          </GameButton>
-        </div>
-      </section>
+      <SettingsUpdateSection
+        v-if="activeSection === 'update' && updateState !== null && updatePhase !== 'unsupported'"
+        :current-version="updateState.currentVersion"
+        :phase="updatePhase"
+        :candidate-version="updateState.candidate?.version"
+        :progress-percent="updateProgressPercent"
+        @download="updates?.download()"
+        @cancel="updates?.cancelDownload()"
+        @install="updates?.install()"
+        @check="updates?.check()"
+      />
 
-    <!-- WS8 — cỡ chữ giao diện: chỉ scale typography/control tokens,
-         không đụng canvas/khung layout. Áp dụng tức thời + lưu local. -->
-    <section class="settings-panel__section settings-panel__ui-scale" :aria-label="t('panels.settings.sections.uiScaleAria')">
-      <h4>{{ t('panels.settings.sections.uiScale') }}</h4>
-
-      <div class="settings-panel__ui-scale-options">
-        <Chip
-          v-for="option in UI_SCALE_OPTIONS"
-          :key="option"
-          class="settings-panel__ui-scale-option"
-          :active="uiScale === option"
-          @click="handleUiScale(option)"
-        >
-          {{ Math.round(option * 100) }}%
-        </Chip>
-      </div>
-    </section>
-
-    <!-- Audio - on/off + master/channel volumes (0-100%) + reduced shake. Persisted via useAudioStore. -->
-    <section class="settings-panel__section settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
-      <h4>{{ t('panels.settings.sections.audio') }}</h4>
-
-      <div class="settings-panel__audio-row">
-        <Chip
-          class="settings-panel__audio-toggle"
-          :active="audio.enabled"
-          :aria-pressed="audio.enabled"
-          data-testid="settings-audio-toggle"
-          @click="audio.setEnabled(!audio.enabled)"
-        >
-          {{ audio.enabled ? t('panels.settings.audio.on') : t('panels.settings.audio.off') }}
-        </Chip>
-
-        <label class="settings-panel__audio-volume">
-          {{ t('panels.settings.audio.volume') }}
-          <input
-            type="range"
-            min="0"
-            max="100"
-            :value="Math.round(audio.masterVolume * 100)"
-            :disabled="!audio.enabled"
-            data-testid="settings-audio-volume"
-            @input="audio.setMasterVolume(Number(($event.target as HTMLInputElement).value) / 100)"
-          />
-          <span class="settings-panel__audio-volume-value">{{ Math.round(audio.masterVolume * 100) }}%</span>
-        </label>
-      </div>
-
-      <div class="settings-panel__audio-row">
-        <label
-          v-for="channel in AUDIO_CHANNELS"
-          :key="channel.field"
-          class="settings-panel__audio-volume"
-        >
-          {{ t(`panels.settings.audio.${channel.labelKey}`) }}
-          <input
-            type="range"
-            min="0"
-            max="100"
-            :value="Math.round(audio[channel.field] * 100)"
-            :disabled="!audio.enabled"
-            :data-testid="`settings-audio-${channel.field}`"
-            @input="audio.setChannelVolume(channel.channel, Number(($event.target as HTMLInputElement).value) / 100)"
-          />
-          <span class="settings-panel__audio-volume-value">{{ Math.round(audio[channel.field] * 100) }}%</span>
-        </label>
-      </div>
-
-      <div class="settings-panel__audio-row">
-        <Chip
-          class="settings-panel__audio-toggle"
-          :active="audio.reducedShake"
-          :aria-pressed="audio.reducedShake"
-          data-testid="settings-reduced-shake"
-          @click="audio.setReducedShake(!audio.reducedShake)"
-        >
-          {{ t('panels.settings.audio.reducedShake') }}
-        </Chip>
-      </div>
-    </section>
-
-    <!-- Language - UI locale, persisted via composables/locale. -->
-    <section class="settings-panel__section settings-panel__language" :aria-label="t('panels.settings.sections.languageAria')">
-      <h4>{{ t('panels.settings.sections.language') }}</h4>
-
-      <p class="settings-panel__section-note">{{ t('panels.settings.language.note') }}</p>
-
-      <div class="settings-panel__language-options">
-        <Chip
-          v-for="option in LOCALE_OPTIONS"
-          :key="option"
-          class="settings-panel__language-option"
-          :active="locale === option"
-          :data-testid="`settings-locale-${option}`"
-          @click="handleLocale(option)"
-        >
-          {{ t(`panels.settings.language.names.${option}`) }}
-        </Chip>
-      </div>
-    </section>
+      <SettingsBuildSection v-if="activeSection === 'support'" />
     </div>
 
     <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
+
+    <FeedbackDialog :open="feedbackOpen" @close="feedbackOpen = false" />
 
     <ConfirmModal
       :open="pendingConfirm !== null"
@@ -298,170 +389,62 @@ function handleReset() {
       @confirm="resolvePendingConfirm"
       @cancel="cancelPendingConfirm"
     />
+
+    <!-- B1.9 - guest-abandon: explains sole-credential loss, offers
+         upgrade / export / cancel before the destructive choice. -->
+    <GuestAbandonDialog
+      :open="logoutDialog === 'abandon'"
+      :busy="logoutBusy"
+      @upgrade="onAbandonUpgrade"
+      @export="onAbandonExport"
+      @abandon="void runLogout()"
+      @cancel="logoutDialog = 'none'"
+    />
+
+    <!-- B1.9 - flush failed: retry the ordered logout or take the
+         explicit unsynced-progress acknowledgement. -->
+    <ConfirmModal
+      :open="logoutDialog === 'unsynced'"
+      :title="t('panels.settings.confirm.logoutUnsyncedTitle')"
+      :message="t('panels.settings.confirm.logoutUnsyncedBody')"
+      :confirm-label="t('panels.settings.confirm.logoutUnsyncedConfirm')"
+      danger
+      @confirm="void runLogout(true)"
+      @cancel="logoutDialog = 'none'"
+    />
   </div>
 </template>
 
 <style scoped>
+/* Scene 17: left seal nav | right workspace (imperial scroll content). */
 .settings-panel {
-  padding: 12px;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(140px, 190px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 6px 2px;
   color: var(--paper-text);
   font-size: var(--text-body);
 }
 
-.settings-panel__warning {
-  color: var(--paper-text-soft);
-  border: 1px solid var(--paper-line);
-  background: color-mix(in srgb, var(--paper-100) 45%, transparent);
-  border-radius: 2px;
-  padding: 8px;
-  margin: 0 0 12px;
-}
-
-.settings-panel__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
-  align-items: start;
-}
-
-.settings-panel__section {
-  padding: 14px;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--paper-100) 35%, transparent);
-}
-
-.settings-panel__section h4 {
-  margin: 0 0 10px;
-  color: var(--paper-text);
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  letter-spacing: 0.05em;
-}
-
-.settings-panel__section-note {
-  margin: 0 0 10px;
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-.settings-panel__actions {
+.settings-panel__workspace {
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  gap: 14px;
+  padding: 4px 8px;
 }
 
-.settings-panel__actions > .game-button,
-.settings-panel__actions > .settings-panel__import {
-  width: 100%;
-}
-
-.settings-panel__import {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap-min);
-  padding: 8px 14px;
-  overflow: hidden;
-  text-align: center;
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  background: var(--ink-800);
-  color: var(--text-primary);
-}
-
-.settings-panel__import input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+@container (max-width: 760px) {
+  .settings-panel { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .settings-panel :deep(.settings-panel__nav) { flex-direction: row; flex-wrap: wrap; }
 }
 
 .settings-panel__hint {
   color: var(--jade);
   margin: 8px 0 0;
-}
-
-/* WS8 — chọn cỡ chữ giao diện. */
-.settings-panel__ui-scale h4 {
-  margin: 0 0 8px;
-}
-
-.settings-panel__ui-scale-options {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.settings-panel__ui-scale-option {
-  padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
-  font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
-}
-
-.settings-panel__ui-scale-option:hover {
-  border-color: var(--chrome-500);
-}
-
-/* Audio — on/off + master volume. */
-.settings-panel__audio h4 {
-  margin: 0 0 8px;
-  color: var(--paper-text);
-}
-
-.settings-panel__audio-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.settings-panel__audio-toggle {
-  padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
-  font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
-}
-
-.settings-panel__audio-volume {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--paper-text);
-}
-
-.settings-panel__audio-volume input[type='range'] {
-  width: 140px;
-  accent-color: var(--gold);
-}
-
-.settings-panel__audio-volume-value {
-  min-width: 3ch;
-  text-align: right;
-  color: var(--paper-text-soft);
-}
-
-/* Language - chip row in the same rhythm as ui-scale options. */
-.settings-panel__language-options {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.settings-panel__language-option {
-  padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
-  font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
-}
-
-.settings-panel__language-option:hover {
-  border-color: var(--chrome-500);
 }
 </style>

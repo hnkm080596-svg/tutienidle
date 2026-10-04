@@ -28,7 +28,7 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
-import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
+import { isBetaMortalStarterId, isScopeHidden } from '../betaScope'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
@@ -45,6 +45,27 @@ import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { NGU_KIEM_EVOLUTION_NODE_IDS } from '../../data/progression/KiemTuNodes'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import {
+  activeElementTreeFor as betaActiveElementTreeFor,
+  betaCombatRolesFor as betaCombatRolesForDomain,
+  betaCombatSurfacesFor as betaCombatSurfacesForDomain,
+  betaSkillTreeFor as betaSkillTreeForDomain,
+  betaNodeWriteAdmitted,
+  betaSkillAdmitted,
+  type BetaCombatRoleEntry,
+  type BetaPrecursorSurfaceVerdict,
+  type BetaSkillTree,
+  type BetaSkillTreeNode,
+} from '../betaScopeSkillDomain'
+import {
+  betaCompletionFor as betaCompletionForDomain,
+  betaNextRealmSurfaceFor as betaNextRealmSurfaceForDomain,
+  betaSupportedFor as betaSupportedForDomain,
+  unsupportedReleaseReason as unsupportedReleaseReasonDomain,
+  type BetaCompletion,
+  type BetaNextRealmSurface,
+  type BetaUnsupportedReason,
+} from '../betaScopeSurface'
 import { commitSpellPathElement } from '../phap-tu/PhapTuState'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -176,6 +197,12 @@ export class GameManagerProgressionOps {
       return false
     }
 
+    // Beta scope gate - a scope-hidden skill id stays unlearnable on
+    // every save; dormant way kits never mint through this seam.
+    if (!betaSkillAdmitted(skillId)) {
+      return false
+    }
+
     const template = this.deps.skillTemplates.get(skillId)
 
     if (!template) {
@@ -298,6 +325,16 @@ export class GameManagerProgressionOps {
     }
 
     if (!this.deps.nodeRegistry.has(nodeId)) {
+      return false
+    }
+
+    const candidateNode = this.deps.nodeRegistry.get(nodeId)
+
+    // BETA SCOPE LOCK - a node on a dormant way's tree (or a hidden
+    // branch tag) is scope-hidden for every player: a carried
+    // way_out_of_scope save cannot spend insight on a kit the gated
+    // combat runtime never executes.
+    if (!betaNodeWriteAdmitted(candidateNode)) {
       return false
     }
 
@@ -496,6 +533,17 @@ export class GameManagerProgressionOps {
     if (this.deps.isTurnBattleInProgress()) {
       return false
     }
+    // BETA SCOPE LOCK v2 (phase-2) - an element commits ONLY inside the
+    // in-flight commitFiveElementInitiation transaction: that op applies
+    // the path choice while the player is still mortal, so 'mortal' is
+    // the precise discriminator between its element leg and any later
+    // direct call (a qi_refining caller must already hold - or have
+    // bypassed - the atomic commit). Post-path commits via this seam
+    // are gone.
+    if (player.realmId !== 'mortal') {
+      return false
+    }
+
     // Cultivation Path Framework (M4, R6): element machinery is
     // spell_pathway-only - P1 - the declared 'spell.elemental_casting'
     // capability is the gate, so the post-M7 collapsed ('spell',
@@ -545,6 +593,13 @@ export class GameManagerProgressionOps {
 
     for (const skillId of root.effect.unlocksSkillIds ?? []) {
       this.learnSkill(skillId, player)
+      // Same mid-flight verification as the way-kit leg: a learn that
+      // cannot land must fail the element leg so the enclosing
+      // initiation transaction rolls back instead of committing an
+      // element without its basic.
+      if (!this.deps.skillManager.has(skillId)) {
+        return false
+      }
     }
 
     for (const skillId of root.effect.grantsSkillCoreIds ?? []) {
@@ -572,7 +627,15 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    return upgradeNodeSystem(player, this.deps.nodeRegistry.get(nodeId), this.deps.sessionRng)
+    const node = this.deps.nodeRegistry.get(nodeId)
+
+    // Same beta scope gate as purchaseNode - a dormant-tree node never
+    // takes insight, whether the levels arrived pre-beta or by save.
+    if (!betaNodeWriteAdmitted(node)) {
+      return false
+    }
+
+    return upgradeNodeSystem(player, node, this.deps.sessionRng)
   }
 
   getNodeLevel(nodeId: string, player: PlayerData): number {
@@ -608,13 +671,23 @@ export class GameManagerProgressionOps {
 
     const node = this.deps.nodeRegistry.get(nodeId)
 
+    // The UI verdict must agree with purchaseNode - a dormant-tree node
+    // can never report purchasable.
+    if (!betaNodeWriteAdmitted(node)) {
+      return false
+    }
+
     return canPurchaseNodeSystem(player, node)
   }
 
   canUpgradeNode(nodeId: string, player: PlayerData): boolean {
-    return (
-      this.deps.nodeRegistry.has(nodeId) && canUpgradeNodeSystem(player, this.deps.nodeRegistry.get(nodeId))
-    )
+    // Same admission as upgradeNode - the verdict seam must agree with
+    // the write seam, core-node dormant kits included.
+    const node = this.deps.nodeRegistry.has(nodeId)
+      ? this.deps.nodeRegistry.get(nodeId)
+      : undefined
+
+    return node !== undefined && betaNodeWriteAdmitted(node) && canUpgradeNodeSystem(player, node)
   }
 
   /**
@@ -623,6 +696,19 @@ export class GameManagerProgressionOps {
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
   devResetBranch(branchTag: string, player: PlayerData): number | null {
+    // Same dormant-save refusal as respecNodeTree: every branchTag root
+    // lives on a dormant tree, so a reset would refund dormant records
+    // into live insight. has() guards the throwing get() - save
+    // validation tolerates ghost nodeLevels ids by design.
+    const holdsDormant = Object.keys(player.nodeLevels ?? {}).some((id) =>
+      this.deps.nodeRegistry.has(id) &&
+      !betaNodeWriteAdmitted(this.deps.nodeRegistry.get(id)),
+    )
+
+    if (holdsDormant) {
+      return null
+    }
+
     // Same out-of-combat contract as respecNodeTree: node
     // investment is static during battle, so a mid-battle reset is
     // refused even though this op is dev-console only today.
@@ -644,7 +730,21 @@ export class GameManagerProgressionOps {
    * via selectSpellPathElement only) exempts them from the reset, so a
    * respec can never strand a committed element without its root.
    */
-  previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview {
+  previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview | null {
+    // The preview shares respecNodeTree's admission gate: dormant-tree
+    // holdings refuse the respec, so a null preview keeps the confirm
+    // dialog honest (verdict-vs-render parity on the read side). has()
+    // guards the throwing get() - save validation tolerates ghost
+    // nodeLevels ids (retired nodes) by design.
+    const holdsDormantPreview = Object.keys(player.nodeLevels ?? {}).some((id) =>
+      this.deps.nodeRegistry.has(id) &&
+      !betaNodeWriteAdmitted(this.deps.nodeRegistry.get(id)),
+    )
+
+    if (holdsDormantPreview) {
+      return null
+    }
+
     // JSON round-trip (not structuredClone): callers hand in the Pinia
     // reactive state; PlayerData is what the save system serializes.
     const sim = JSON.parse(JSON.stringify(player)) as PlayerData
@@ -784,6 +884,20 @@ export class GameManagerProgressionOps {
    * the refunded Insight, or null when rejected in battle.
    */
   respecNodeTree(player: PlayerData, scope?: { rootId?: string }): number | null {
+    // BETA SCOPE LOCK - a respec that would reset dormant-tree records
+    // refunds their insight into the live economy: refuse the whole op
+    // so a carried save's dormant levels stay intact, never monetized.
+    // has() guards the throwing get() - save validation tolerates
+    // ghost nodeLevels ids (retired nodes) by design.
+    const holdsDormant = Object.keys(player.nodeLevels ?? {}).some((id) =>
+      this.deps.nodeRegistry.has(id) &&
+      !betaNodeWriteAdmitted(this.deps.nodeRegistry.get(id)),
+    )
+
+    if (holdsDormant) {
+      return null
+    }
+
     if (this.deps.isTurnBattleInProgress()) {
       return null
     }
@@ -813,6 +927,12 @@ export class GameManagerProgressionOps {
     // Same battle gate as purchaseNode/upgradeNode - the core upgrade
     // below writes player.nodeLevels mid-fight would never apply.
     if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
+    // Beta scope gate - leveling a dormant way's kit skill spends
+    // insight into a kit the gated combat runtime never executes.
+    if (!betaSkillAdmitted(skillId)) {
       return false
     }
 
@@ -860,6 +980,13 @@ export class GameManagerProgressionOps {
    * the cost on a disabled button; affordability is canUpgrade's job.
    */
   getSkillCoreUpgradeCost(skillId: string, player: PlayerData): number | undefined {
+    // F-B8-1: a dormant kit's native core is scope-hidden - never
+    // preview an upgrade cost for it (levelUpSkill refuses anyway, so a
+    // cost here would be an enabled-but-dead affordance).
+    if (!betaSkillAdmitted(skillId)) {
+      return undefined
+    }
+
     const coreId = skillCoreNodeId(skillId)
 
     if (!this.deps.nodeRegistry.has(coreId)) {
@@ -922,6 +1049,11 @@ export class GameManagerProgressionOps {
    * (spec sec.4.3a - a held entry IS learned). The realm term mirrors
    * the v82 save preflight (mortal = realmId 'mortal' + pathless) so a
    * write can never produce a state restore would reject.
+   *
+   * BETA SCOPE LOCK v2 (phase-2): the pick itself is fixed - only
+   * 'linh_bao' is a writable starter. tram/huy_quyen stay learnable
+   * precursors but every write path (boot seam, repick, direct-API
+   * injection) fails closed here at the single admission point.
    */
   setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
     // the pick binds the kit at battle build - mid-battle writes are
@@ -935,6 +1067,11 @@ export class GameManagerProgressionOps {
     }
 
     if (!isMortalPrecursorSkillId(skillId)) {
+      return false
+    }
+
+    // Beta scope gate: the starter pick is fixed to 'linh_bao'.
+    if (!isBetaMortalStarterId(skillId)) {
       return false
     }
 
@@ -997,6 +1134,59 @@ export class GameManagerProgressionOps {
   }
 
   /**
+   * BETA SCOPE LOCK v2 Phase-3 - UI reach for the canonical combat/skill
+   * read-models (core/betaScopeSkillDomain.ts). Same binding pattern as
+   * getResolvedSkillRoles: the domain reads stay pure; only
+   * learned-skill membership is injected here (SkillManager stays the
+   * owner). The frontend renders these verdicts - it must never rederive
+   * rail/tree visibility from realm + skill registry.
+   */
+  betaCombatRolesFor(player: PlayerData): BetaCombatRoleEntry[] {
+    return betaCombatRolesForDomain(player, {
+      hasSkill: (skillId) => this.deps.skillManager.has(skillId),
+    })
+  }
+
+  betaSkillTreeFor(
+    player: PlayerData,
+    tree?: readonly ProgressionNode[],
+  ): BetaSkillTree {
+    return betaSkillTreeForDomain(player, tree)
+  }
+
+  betaActiveElementTreeFor(player: PlayerData): BetaSkillTreeNode[] {
+    return betaActiveElementTreeFor(player)
+  }
+
+  betaCombatSurfacesFor(player: PlayerData): BetaPrecursorSurfaceVerdict[] {
+    return betaCombatSurfacesForDomain(player, {
+      hasSkill: (skillId) => this.deps.skillManager.has(skillId),
+    })
+  }
+
+  /**
+   * BETA SCOPE LOCK v2 Phase-6 - UI reach for the global-surface
+   * read-models (core/betaScopeSurface.ts). All four are PlayerData-pure
+   * queries; the bindings give the frontend the same GameManager seam
+   * the Phase-3 read-models use.
+   */
+  betaCompletionFor(player: PlayerData): BetaCompletion {
+    return betaCompletionForDomain(player)
+  }
+
+  betaNextRealmSurfaceFor(player: PlayerData): BetaNextRealmSurface | null {
+    return betaNextRealmSurfaceForDomain(player)
+  }
+
+  betaSupportedFor(player: PlayerData): boolean {
+    return betaSupportedForDomain(player)
+  }
+
+  unsupportedReleaseReason(player: PlayerData): BetaUnsupportedReason | null {
+    return unsupportedReleaseReasonDomain(player)
+  }
+
+  /**
    * Kiem Tu Reimagined (spec sec.6) - write the sword_pathway preset. Persisted on
    * PlayerData.swordPath.preset; the battle cursor/log are runtime-only and
    * never persist. Out-of-combat only: a mid-battle rewrite would desync
@@ -1007,6 +1197,12 @@ export class GameManagerProgressionOps {
     // discriminator became cultivationWay; preset is sword_pathway machinery).
     // P1 - the 'sword.sword_scroll' capability carries that membership.
     if (!player.swordPath || !hasStaticPathCapability(player, 'sword.sword_scroll')) {
+      return false
+    }
+
+    // BETA SCOPE LOCK - preset writes are sword-way machinery: a carried
+    // way_out_of_scope save must not mint edits on the dormant path.
+    if (isScopeHidden('swordPath')) {
       return false
     }
 
@@ -1059,6 +1255,13 @@ export class GameManagerProgressionOps {
     // would disagree with the clawback leg on diverged crafted saves.
     // Any owned claimant authorizes the spec (first registry hit is not
     // the only legitimate owner when nodes share a claim).
+    // BETA SCOPE LOCK - a spec claimed only by dormant-tree nodes is
+    // dormant machinery: no beta player can hold the claim, and a
+    // carried save's dormant claimant must not unfreeze it.
+    if (claimants.length > 0 && claimants.every((claimant) => !betaNodeWriteAdmitted(claimant))) {
+      return false
+    }
+
     if (claimants.length > 0 && !claimants.some((claimant) => ownedNodeIds(player).includes(claimant.id))) {
       return false
     }

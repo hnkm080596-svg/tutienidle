@@ -1,18 +1,18 @@
 import { onUnmounted, ref } from 'vue'
 
-// CombatVictoryPanel.vue / CombatDefeatPanel.vue chia sẻ ĐÚNG 1 khuôn: đếm
-// ngược N giây rồi tự chạy 1 hành động — trước đây mỗi panel tự viết lại
-// setInterval/clearInterval riêng (tên biến khác nhau nhưng cùng logic),
-// dễ lệch khi sửa (vd đổi tick interval) chỉ ở 1 trong 2 bản copy.
+// CombatVictoryPanel.vue / CombatDefeatPanel.vue chia se DUNG 1 khuon: dem
+// nguoc N giay roi tu chay 1 hanh dong - truoc day moi panel tu viet lai
+// setInterval/clearInterval rieng (ten bien khac nhau nhung cung logic),
+// de lech khi sua (vd doi tick interval) chi o 1 trong 2 ban copy.
 //
-// Uncommitted audit followup plan, mục "Countdown auto retry dùng deadline
-// thực" (2026-08-24) — trước đây mỗi callback setInterval trừ cứng 1 giây
-// bất kể thời gian thực đã trôi qua bao lâu. Khi tab bị trình duyệt
-// throttle (nền/minimize), callback fire thưa hơn 1s/lần nên đếm ngược
-// kéo dài sai thực tế. Giờ neo theo deadline = timestamp thực (cùng
-// nguyên tắc "diff theo Date.now()" như GameClock, xem core/idle/
-// GameClock.ts) — mỗi callback tính lại remaining từ deadline, không phụ
-// thuộc số lần callback đã fire.
+// Uncommitted audit followup plan, muc "Countdown auto retry dung deadline
+// thuc" (2026-08-24) - truoc day moi callback setInterval tru cung 1 giay
+// bat ke thoi gian thuc da troi qua bao lau. Khi tab bi trinh duyet
+// throttle (nen/minimize), callback fire thua hon 1s/lan nen dem nguoc
+// keo dai sai thuc te. Gio neo theo deadline = timestamp thuc (cung
+// nguyen tac "diff theo Date.now()" nhu GameClock, xem core/idle/
+// GameClock.ts) - moi callback tinh lai remaining tu deadline, khong phu
+// thuoc so lan callback da fire.
 export function useAutoRetryCountdown(seconds: number, onComplete: () => void | Promise<void>) {
   const remaining = ref(seconds)
   let handle: ReturnType<typeof setInterval> | undefined
@@ -37,14 +37,14 @@ export function useAutoRetryCountdown(seconds: number, onComplete: () => void | 
 
     stop()
 
-    // Callback có thể quay lại trễ (throttle) đúng lúc deadline vừa qua —
-    // đảm bảo onComplete() chỉ chạy đúng 1 lần dù tick() có bị gọi lại.
+    // Callback co the quay lai tre (throttle) dung luc deadline vua qua -
+    // dam bao onComplete() chi chay dung 1 lan du tick() co bi goi lai.
     if (completed) {
       return
     }
 
     completed = true
-    // onComplete may be async (B4 — refight awaits runAdmitted). A
+    // onComplete may be async (B4 - refight awaits runAdmitted). A
     // rejection must be logged, not surface as an unhandled rejection from
     // a timer callback.
     void Promise.resolve(onComplete()).catch((error: unknown) => {
@@ -53,9 +53,9 @@ export function useAutoRetryCountdown(seconds: number, onComplete: () => void | 
   }
 
   function start() {
-    // 9.9 — restart an toàn, không orphan interval: start() gọi khi đang
-    // chạy phải clear interval cũ trước khi lập lịch mới (interval cũ nếu
-    // giữ lại sẽ tick mãi, dùng chung deadline/completed với interval mới).
+    // 9.9 - restart an toan, khong orphan interval: start() goi khi dang
+    // chay phai clear interval cu truoc khi lap lich moi (interval cu neu
+    // giu lai se tick mai, dung chung deadline/completed voi interval moi).
     stop()
 
     completed = false

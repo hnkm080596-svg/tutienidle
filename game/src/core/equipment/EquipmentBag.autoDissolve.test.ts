@@ -5,10 +5,10 @@ import type { EquipmentInstance } from './EquipmentInstance'
 import { makeInstance as makeEquipmentInstance } from './EquipmentInstance.fixture'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
-// Cap mềm + auto Hóa Luyện (audit 2026-08-31) — túi trang bị không giới
-// hạn từng làm save phình dần vượt localStorage quota. Vượt cap → item
-// "rác" nhất (không trang bị/lock/favorite, phẩm chất thấp nhất) bị tự
-// Hóa Luyện, rewards Tinh Hoa trả về CHO CALLER cộng.
+// Cap mem + auto Hoa Luyen (audit 2026-08-31) - tui trang bi khong gioi
+// han tung lam save phinh dan vuot localStorage quota. Vuot cap -> item
+// "rac" nhat (khong trang bi/lock/favorite, pham chat thap nhat) bi tu
+// Hoa Luyen, rewards Tinh Hoa tra ve CHO CALLER cong.
 
 function makeInstance(id: string, opts: Partial<EquipmentInstance> = {}): EquipmentInstance {
   return makeEquipmentInstance({
@@ -72,8 +72,8 @@ describe('EquipmentBag — soft cap + auto-dissolve', () => {
     expect(bag.getAll().some((instance) => instance.instanceId === 'new_high')).toBe(true)
     expect(bag.getAll().some((instance) => instance.instanceId === 'fill_0')).toBe(false)
     expect(rewards.length).toBeGreaterThan(0)
-    // Mọi Phẩm cùng trả Luyện Khí Tinh Hoa; amount = range.min của Chất
-    // 'hoang' (auto-dissolve deterministic, không roll random).
+    // Moi Pham cung tra Luyen Khi Tinh Hoa; amount = range.min cua Chat
+    // 'hoang' (auto-dissolve deterministic, khong roll random).
     expect(rewards[0]!.materialId).toBe(LUYEN_KHI_TINH_HOA_ID)
     expect(rewards[0]!.amount).toBe(1)
   })
@@ -95,12 +95,12 @@ describe('EquipmentBag — soft cap + auto-dissolve', () => {
       bag.add(makeInstance(`fill_${i}`, { quality: 'hoang' }))
     }
 
-    // Vượt cap 1 — immediate auto-dissolve chạy NGAY trong add():
-    // candidates là các fill_* quality thấp nhất, 'protected' đang
-    // trang bị nên KHÔNG BAO GIỜ bị chọn.
+    // Vuot cap 1 - immediate auto-dissolve chay NGAY trong add():
+    // candidates la cac fill_* quality thap nhat, 'protected' dang
+    // trang bi nen KHONG BAO GIO bi chon.
     bag.add(makeInstance('protected', { quality: 'hoang', equipped: true }))
 
-    // Giờ vượt cap 2 lần nữa
+    // Gio vuot cap 2 lan nua
     const rewards = bag.add(makeInstance('extra', { quality: 'tien' }))
 
     const after = bag.getAll()

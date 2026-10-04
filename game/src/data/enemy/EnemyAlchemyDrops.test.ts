@@ -17,7 +17,7 @@ const LEGACY_ALCHEMY_MATERIALS = new Set([
 ])
 
 // Drop-system (2026-09-12): material drops now live in stage tables,
-// family tables and per-enemy signatureDrops — the ban must cover all
+// family tables and per-enemy signatureDrops - the ban must cover all
 // three or a legacy herb could sneak back in through an unwatched source.
 describe('Enemy drops — luyện đan rework', () => {
   it('không nguồn drop nào (stage/family/signature) còn rơi linh thảo legacy', () => {

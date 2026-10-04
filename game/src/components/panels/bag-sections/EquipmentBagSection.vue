@@ -24,8 +24,8 @@ import type { SlotPresentationState } from '@/components/common/SlotTypes'
 
 const { t } = useI18n()
 
-// Grid responsive theo chiều rộng thật — xem ghi chú đầy đủ ở
-// useBagGridLayout.ts/MaterialBagSection.vue (cùng pattern áp cho cả
+// Grid responsive theo chieu rong that - xem ghi chu day du o
+// useBagGridLayout.ts/MaterialBagSection.vue (cung pattern ap cho ca
 // bag-sections).
 const { gridRef, pageSize, gridStyle } = useBagGridLayout()
 
@@ -63,13 +63,13 @@ const SORT_OPTIONS: Array<BagSortOption & { value: EquipmentSortMode }> = [
 const entries = computed<EquipmentEntry[]>(() => {
   stateVersion.value
 
-  // Chỉ hiện đồ CHƯA trang bị (bấm để trang bị).
+  // Chi hien do CHUA trang bi (bam de trang bi).
   const instances = gameManager.equipmentBag.getAll().filter((instance) => !instance.equipped)
 
   return instances.map((instance) => {
-    // Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId
-    // lạ (data edit/save lệch) từng chết cả panel qua ErrorBoundary;
-    // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts).
+    // Audit fix 2026-08-31 - equipmentRegistry.get() THROW voi itemId
+    // la (data edit/save lech) tung chet ca panel qua ErrorBoundary;
+    // getEquipmentTemplate() tra an toan tra undefined (GameManager.ts).
     const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
     const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
@@ -94,15 +94,15 @@ const entries = computed<EquipmentEntry[]>(() => {
       ? gameManager.equipmentSystem.quoteMainStatRange(equippedComparison, gameManager.equipmentRegistry)
       : undefined
 
-    // Registry miss → hiển thị itemId thô thay vì chết cả màn hình
+    // Registry miss -> hien thi itemId tho thay vi chet ca man hinh
     // (pattern EquipmentHallPanel.vue:126 `template?.name ?? instance.itemId`).
     const displayName = template?.name ?? instance.itemId
 
-    // Tên ghép động (2026-08-15) — Phẩm · Set (nếu có) · Địa Giới+Tên
-    // gốc, xem EquipmentNaming.ts. "(đang mặc)" nối thêm làm segment
-    // riêng (màu mặc định), giữ nguyên hành vi cũ. Registry miss chỉ
-    // hiện itemId thô — composeEquipmentNameSegments KHÔNG nhận
-    // template nullable nên gọi có điều kiện (pattern
+    // Ten ghep dong (2026-08-15) - Pham * Set (neu co) * Dia Gioi+Ten
+    // goc, xem EquipmentNaming.ts. "(dang mac)" noi them lam segment
+    // rieng (mau mac dinh), giu nguyen hanh vi cu. Registry miss chi
+    // hien itemId tho - composeEquipmentNameSegments KHONG nhan
+    // template nullable nen goi co dieu kien (pattern
     // EquipmentHallPanel.vue:138-140).
     const nameSegments = template
       ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
@@ -112,11 +112,11 @@ const entries = computed<EquipmentEntry[]>(() => {
       nameSegments.push({ text: '(đang mặc)' })
     }
 
-    // Slot Revamp (mục 17.7 "Equipment bag: Quality, Rarity, equipped,
-    // comparison") — equipped chỉ là marker nhỏ (không đổi nền). So sánh
-    // chi tiết hiện chỉ được lộ trong tooltip advanced khi giữ Alt; chưa có
-    // nút/toggle bật mũi tên ▲/▼ trực tiếp trên slot. Vì vậy không tự gán
-    // state.comparison cho tới khi UX toggle đó được thiết kế và triển khai.
+    // Slot Revamp (muc 17.7 "Equipment bag: Quality, Rarity, equipped,
+    // comparison") - equipped chi la marker nho (khong doi nen). So sanh
+    // chi tiet hien chi duoc lo trong tooltip advanced khi giu Alt; chua co
+    // nut/toggle bat mui ten ^/v truc tiep tren slot. Vi vay khong tu gan
+    // state.comparison cho toi khi UX toggle do duoc thiet ke va trien khai.
     const state: SlotPresentationState = {}
 
     if (instance.equipped) {
@@ -147,11 +147,11 @@ const entries = computed<EquipmentEntry[]>(() => {
 
         state,
 
-        // slotState (Cường Hóa) gắn theo SLOT chứ không theo instance
-        // (xem EquipmentSlotState.ts) — chỉ có ý nghĩa THẬT SỰ thuộc về
-        // món đồ này khi nó đang được trang bị. Registry miss → không
-        // tooltip (buildEquipmentTooltip đòi template thật, BagCell.tooltip
-        // optional) — cell vẫn hiển thị, không chết panel.
+        // slotState (Cuong Hoa) gan theo SLOT chu khong theo instance
+        // (xem EquipmentSlotState.ts) - chi co y nghia THAT SU thuoc ve
+        // mon do nay khi no dang duoc trang bi. Registry miss -> khong
+        // tooltip (buildEquipmentTooltip doi template that, BagCell.tooltip
+        // optional) - cell van hien thi, khong chet panel.
         tooltip: template && mainStatRangeQuote
           ? buildEquipmentTooltip(
               instance,
@@ -205,7 +205,7 @@ function toggleGroup(value: EquipmentSlot | 'all') {
   activeGroup.value = activeGroup.value === value ? 'all' : value
 }
 
-// Tiêu chí Trang Bị (plan Workstream E) — mặc định/quality/rarity/
+// Tieu chi Trang Bi (plan Workstream E) - mac dinh/quality/rarity/
 // realm/slot/name/forge.
 const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: EquipmentEntry, b: EquipmentEntry) => number> = {
   quality: (a, b) =>
@@ -229,7 +229,7 @@ const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: E
   forge: (a, b) => compareNumber(a.instance.forgeUsesRemaining, b.instance.forgeUsesRemaining),
 }
 
-// Sort chạy trên bản copy của list ĐÃ LỌC TRƯỚC pagination.
+// Sort chay tren ban copy cua list DA LOC TRUOC pagination.
 const cells = computed<BagCell[]>(() => {
   const sortState = ui.bagSorts.equipment
 

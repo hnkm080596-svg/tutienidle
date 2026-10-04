@@ -20,11 +20,11 @@ import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 
 /**
- * TINH LUYỆN (plan §7.4) — tách khỏi EquipmentSystem (large-file-split,
- * cùng pattern Task 8 EquipmentWash.ts): hành vi giữ NGUYÊN 1:1, chỉ đổi
- * chỗ ở. Refine vẫn cần vài mảnh của EquipmentSystem (cost discount,
- * forge-use points, ModifierSystem riêng, pending-preview slot) — nhận
- * qua `RefineDeps` do EquipmentSystem tự bind (`this.X`).
+ * TINH LUYEN (plan sec7.4) - tach khoi EquipmentSystem (large-file-split,
+ * cung pattern Task 8 EquipmentWash.ts): hanh vi giu NGUYEN 1:1, chi doi
+ * cho o. Refine van can vai manh cua EquipmentSystem (cost discount,
+ * forge-use points, ModifierSystem rieng, pending-preview slot) - nhan
+ * qua `RefineDeps` do EquipmentSystem tu bind (`this.X`).
  */
 export interface RefineDeps {
   applyCostDiscount: (amount: number) => number
@@ -33,14 +33,14 @@ export interface RefineDeps {
 
   spendItemRefinementPoints: (instance: EquipmentInstance, amount: number) => void
 
-  /** No-op nếu instance chưa equipped — khớp guard gốc trong commitRefineValues(). */
+  /** No-op neu instance chua equipped - khop guard goc trong commitRefineValues(). */
   refreshEquippedModifiers: (
     instance: EquipmentInstance,
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ) => void
 
-  /** Instance-owned pending slot (precedent R9/AR-21: slot chết cùng system instance). */
+  /** Instance-owned pending slot (precedent R9/AR-21: slot chet cung system instance). */
   refinePendingSlot: RefinePendingSlotAccessor
 }
 
@@ -84,7 +84,7 @@ export interface RefinePendingSlotAccessor {
   set(next: PendingRefinePreview | null): void
 }
 
-/** Khí Đường chỉ hiển thị một Refine preview tại một thời điểm. */
+/** Khi Duong chi hien thi mot Refine preview tai mot thoi diem. */
 export function createRefinePendingSlotAccessor(): RefinePendingSlotAccessor {
   let slot: PendingRefinePreview | null = null
 
@@ -99,14 +99,14 @@ export function createRefinePendingSlotAccessor(): RefinePendingSlotAccessor {
 }
 
 /**
- * TINH LUYỆN (2026-08-25, resource-professions-rework plan §7.4) —
- * giữ NGUYÊN identity của mọi substat, tăng GIÁ TRỊ từng dòng
- * KHÔNG khóa trong khoảng 5–20% (clamp trong min/max hợp lệ của
- * tier). Khóa L dòng → cost Linh Thạch hệ số N + L; KHÔNG
- * cho khóa toàn bộ.
+ * TINH LUYEN (2026-08-25, resource-professions-rework plan sec7.4) -
+ * giu NGUYEN identity cua moi substat, tang GIA TRI tung dong
+ * KHONG khoa trong khoang 5-20% (clamp trong min/max hop le cua
+ * tier). Khoa L dong -> cost Linh Thach he so N + L; KHONG
+ * cho khoa toan bo.
  *
- * Chi phí bắt buộc: 1 lượt Rèn + Luyện Khí Tinh Hoa theo Chất
- * + Linh Thạch phổ thông (đơn giá × N + L).
+ * Chi phi bat buoc: 1 luot Ren + Luyen Khi Tinh Hoa theo Chat
+ * + Linh Thach pho thong (don gia x N + L).
  */
 export function refineAffixValues(
   instanceId: string,
@@ -138,9 +138,9 @@ export function refineAffixValues(
 }
 
 /**
- * Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế preview/
- * commit với previewWashAffixes/commitWashAffixes: roll + validate + TRỪ
- * COST giống refineAffixValues() nhưng KHÔNG ghi value mới vào instance.
+ * Xem truoc Tinh Luyen (2026-08-30, UI "giu/bo") - cung co che preview/
+ * commit voi previewWashAffixes/commitWashAffixes: roll + validate + TRU
+ * COST giong refineAffixValues() nhung KHONG ghi value moi vao instance.
  */
 export function previewRefineValues(
   instanceId: string,
@@ -164,7 +164,7 @@ export function previewRefineValues(
   )
 }
 
-/** Hủy capability Refine đang chờ; UI gọi khi người chơi bấm Bỏ/đổi context. */
+/** Huy capability Refine dang cho; UI goi khi nguoi choi bam Bo/doi context. */
 export function discardRefinePreview(
   deps: RefineDeps,
   instanceId?: string,
@@ -177,7 +177,7 @@ export function discardRefinePreview(
 }
 
 /**
- * M1 (ARCH-001) — unconditional invalidation for session restore: the
+ * M1 (ARCH-001) - unconditional invalidation for session restore: the
  * item set is being replaced wholesale, so whatever pending paid preview
  * exists dies with the old set (its instance binding can silently
  * resolve to a different restored object). Distinct from
@@ -187,7 +187,7 @@ export function invalidatePendingRefinePreview(deps: RefineDeps): void {
   deps.refinePendingSlot.set(null)
 }
 
-/** Chốt đúng một lần payload do previewRefineValues/refineAffixValues vừa tạo. */
+/** Chot dung mot lan payload do previewRefineValues/refineAffixValues vua tao. */
 export function commitRefineValues(
   instanceId: string,
   values: readonly RefineValueEntry[],
@@ -198,7 +198,7 @@ export function commitRefineValues(
 ): { ok: boolean; reason?: string } {
   const pending = deps.refinePendingSlot.get()
 
-  // Một commit attempt luôn tiêu capability nội bộ, kể cả item đã biến mất.
+  // Mot commit attempt luon tieu capability noi bo, ke ca item da bien mat.
   deps.refinePendingSlot.set(null)
 
   const instance = inventory.get(instanceId)
@@ -255,8 +255,8 @@ function rollRefineValues(
   deps: RefineDeps,
   _random: () => number = Math.random,
 ): { ok: true; values: RefineValueEntry[] } | { ok: false; reason: string } {
-  // Mọi attempt mới thay thế capability cũ, kể cả attempt này bị từ chối.
-  // Vì vậy preview lỗi không thể làm sống lại một payload đã trả phí trước đó.
+  // Moi attempt moi thay the capability cu, ke ca attempt nay bi tu choi.
+  // Vi vay preview loi khong the lam song lai mot payload da tra phi truoc do.
   deps.refinePendingSlot.set(null)
 
   const instance = inventory.get(instanceId)
@@ -265,8 +265,8 @@ function rollRefineValues(
     return { ok: false, reason: 'not_found' }
   }
 
-  // Guard nhất quán với Hóa Luyện (§7.5) — item locked/favorite
-  // không được Tinh Luyện.
+  // Guard nhat quan voi Hoa Luyen (sec7.5) - item locked/favorite
+  // khong duoc Tinh Luyen.
   if (instance.locked) {
     return { ok: false, reason: 'locked' }
   }
@@ -281,7 +281,7 @@ function rollRefineValues(
     return { ok: false, reason: 'no_affixes' }
   }
 
-  // Validate locks: unique, in-range, ≤ max, và không được khóa toàn bộ.
+  // Validate locks: unique, in-range, <= max, va khong duoc khoa toan bo.
   const uniqueLocks = Array.from(new Set(lockedIndices)).filter(
     (index) => Number.isInteger(index) && index >= 0 && index < lineCount,
   )
@@ -360,8 +360,8 @@ function rollRefineValues(
     return { ok: false, reason: 'missing_spirit_stone' }
   }
 
-  // Roll giá trị mới cho từng dòng eligible KHÔNG khóa. Mỗi dòng
-  // tăng 5–20% từ giá trị hiệu lực riêng rồi clamp theo tier.
+  // Roll gia tri moi cho tung dong eligible KHONG khoa. Moi dong
+  // tang 5-20% tu gia tri hieu luc rieng roi clamp theo tier.
   const newValues = new Map<number, number>()
 
   for (const { index, current, tierMin, tierMax } of eligibleLines) {
@@ -380,17 +380,17 @@ function rollRefineValues(
 
   const membershipGeneration = inventory.getMembershipGeneration(instance)
 
-  // Lookup đã chứng minh instance đang là exact live object trong bag. Guard
-  // này nằm trước transaction để một EquipmentBag sai contract vẫn không
-  // thể làm mất tài nguyên.
+  // Lookup da chung minh instance dang la exact live object trong bag. Guard
+  // nay nam truoc transaction de mot EquipmentBag sai contract van khong
+  // the lam mat tai nguyen.
   if (membershipGeneration === undefined) {
     return { ok: false, reason: 'not_found' }
   }
 
-  // Trừ cost NGAY (mỗi lần roll/preview đều trả phí, xem ghi chú
-  // previewRefineValues) — KHÔNG ghi value vào instance ở đây nữa,
-  // commitRefineValues() làm việc đó khi người chơi bấm "Giữ". Cost
-  // Tinh Hoa leo thang theo Chất; lượt Rèn luôn trừ đúng 1.
+  // Tru cost NGAY (moi lan roll/preview deu tra phi, xem ghi chu
+  // previewRefineValues) - KHONG ghi value vao instance o day nua,
+  // commitRefineValues() lam viec do khi nguoi choi bam "Giu". Cost
+  // Tinh Hoa leo thang theo Chat; luot Ren luon tru dung 1.
   deps.spendItemRefinementPoints(instance, 1)
 
   materialBag.remove(SPIRIT_STONE_MATERIAL_ID, spiritStoneCost)

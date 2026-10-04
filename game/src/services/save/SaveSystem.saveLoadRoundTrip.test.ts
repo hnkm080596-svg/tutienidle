@@ -1,12 +1,22 @@
-// Task 3 (perf-optimize-pass) — round-trip thật qua localStorage:
-// buildGameSave() -> writeGameSave() -> loadGame() phải trả về CHÍNH XÁC
-// dữ liệu đã ghi (deep equal), chứng minh việc tối ưu double-serialize
-// (nếu có) không đổi shape lưu ra. Test thứ hai khoá lại lý do
-// structuredClone(quests) tồn tại trong buildGameSave(): questManager.getState()
-// trả về tham chiếu sống — mutate SAU buildGameSave() không được phép rò
-// vào save đã build.
+// Task 3 (perf-optimize-pass) - round-trip that qua localStorage:
+// buildGameSave() -> writeGameSave() -> loadGame() phai tra ve CHINH XAC
+// du lieu da ghi (deep equal), chung minh viec toi uu double-serialize
+// (neu co) khong doi shape luu ra. Test thu hai khoa lai ly do
+// structuredClone(quests) ton tai trong buildGameSave(): questManager.getState()
+// tra ve tham chieu song - mutate SAU buildGameSave() khong duoc phep ro
+// vao save da build.
 import { primeMortalCreationPick } from './GameSave.fixture'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
@@ -16,8 +26,8 @@ import { buildings } from '../../data/building/buildings'
 import type { Quest } from '../../core/quest/Quest'
 import { buildGameSave, loadGame, writeGameSave } from './SaveSystem'
 
-// vitest.config chạy environment: 'node' — localStorage in-memory tối
-// thiểu, cùng convention SaveSystem.test.ts.
+// vitest.config chay environment: 'node' - localStorage in-memory toi
+// thieu, cung convention SaveSystem.test.ts.
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()
 
@@ -96,13 +106,14 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
       return
     }
 
-    // So sánh sâu với dữ liệu đã build TRƯỚC khi ghi — bảo đảm
-    // write/load không đổi shape, kể cả field quests (structuredClone).
+    // So sanh sau voi du lieu da build TRUOC khi ghi - bao dam
+    // write/load khong doi shape, ke ca field quests (structuredClone).
     expect(outcome.save).toEqual(save)
     expect(outcome.save.quests).toEqual({
       active: [{ questId: TEST_QUEST.id, progress: 2, claimed: false }],
       completedOnceIds: ['some_other_once_quest'],
       lastDailyResetAtMs: 0,
+      questFlags: [],
     })
   })
 
@@ -117,15 +128,15 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     const save = buildGameSave(player, gameManager)
     const questsSnapshotBeforeMutation = structuredClone(save.quests)
 
-    // Mô phỏng đúng kịch bản comment mô tả: một write khác (vd
-    // CloudSaveCoordinator retry sau conflict, cách await) mutate
-    // questManager SAU khi save đã build nhưng TRƯỚC khi ghi thật.
+    // Mo phong dung kich ban comment mo ta: mot write khac (vd
+    // CloudSaveCoordinator retry sau conflict, cach await) mutate
+    // questManager SAU khi save da build nhung TRUOC khi ghi that.
     gameManager.questManager.incrementProgress(TEST_QUEST.id, 999)
     gameManager.questManager.markCompletedOnce('mutated_after_build')
 
-    // Nếu buildGameSave() không structuredClone quests, save.quests sẽ
-    // là CHÍNH tham chiếu live và đã bị mutate ở trên — assert nó KHÔNG
-    // đổi, tức là save đã build vẫn là snapshot đúng thời điểm.
+    // Neu buildGameSave() khong structuredClone quests, save.quests se
+    // la CHINH tham chieu live va da bi mutate o tren - assert no KHONG
+    // doi, tuc la save da build van la snapshot dung thoi diem.
     expect(save.quests).toEqual(questsSnapshotBeforeMutation)
 
     const writeResult = writeGameSave(save)
@@ -144,16 +155,18 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
-    // F-W-16: capacity derives from the CHQ instance - level 2 -> 5.
+    // F-W-16: capacity derives from the CHQ instance - level 1 -> 3.
     gameManager.buildingManager.add({
       instanceId: 'b-chq',
       buildingId: 'chi_hien_quan',
-      level: 2,
+      // F-SCOPE-3: level 2 needs realm tier 2 (qi_refining) - the
+      // default mortal player only carries level 1 (capacity 3).
+      level: 1,
       lastCollectedAt: Date.now(),
     })
     gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)
 
-    gameManager.decomposeSystem.updateCapacity(5)
+    gameManager.decomposeSystem.updateCapacity(3)
     gameManager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
     gameManager.decomposeSystem.tick(Date.now()) // start the cycle timer
 
@@ -187,7 +200,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     fresh.setActivePlayer(freshPlayer)
     const restoredModifiers = fresh.saveOps.restoreFromSave(outcome.save as ReturnType<typeof buildGameSave>)
     expect(Array.isArray(restoredModifiers)).toBe(true)
-    expect(freshPlayer.autoWorkerCapacity).toBe(5)
+    expect(freshPlayer.autoWorkerCapacity).toBe(3)
     expect(fresh.decomposeSystem.getSettings()).toEqual({
       gradeFilter: 'all',
       ageFilter: 'decade',
@@ -203,11 +216,13 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
-    // F-W-16: capacity derives from the CHQ instance - level 2 -> 5.
+    // F-W-16: capacity derives from the CHQ instance - level 1 -> 3.
     gameManager.buildingManager.add({
       instanceId: 'b-chq',
       buildingId: 'chi_hien_quan',
-      level: 2,
+      // F-SCOPE-3: level 2 needs realm tier 2 (qi_refining) - the
+      // default mortal player only carries level 1 (capacity 3).
+      level: 1,
       lastCollectedAt: Date.now(),
     })
     gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)

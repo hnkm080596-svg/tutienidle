@@ -1,13 +1,13 @@
 import type { ProductionCycle } from './ProductionTypes'
 import { computeCycleSeconds } from './ProductionBalance'
 
-// large-file-split — cycle factory duoc dung chung boi ProductionSystem
+// large-file-split - cycle factory duoc dung chung boi ProductionSystem
 // (online start) va ProductionOffline.ts (offline catch-up); leaf module
 // de tranh cycle giua 2 file do.
 
 /**
- * Version bảng reward hiện hành — bump khi đổi balance data để cycle
- * đang chạy vẫn roll theo bảng cũ (snapshot §4.1).
+ * Version bang reward hien hanh - bump khi doi balance data de cycle
+ * dang chay van roll theo bang cu (snapshot sec4.1).
  */
 export const REWARD_TABLE_VERSION = 1
 

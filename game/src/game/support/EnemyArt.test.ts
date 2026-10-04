@@ -5,8 +5,8 @@ import {
   resolveEnemyTextureKey,
 } from './EnemyArt'
 
-// Mortal enemy art batch (plan) — map id runtime → texture, prefix match
-// xử lý id spawn `<templateId>_<uuid>`.
+// Mortal enemy art batch (plan) - map id runtime -> texture, prefix match
+// xu ly id spawn `<templateId>_<uuid>`.
 describe('EnemyArt — resolveEnemyTextureKey', () => {
   it('id template khớp trực tiếp', () => {
     expect(resolveEnemyTextureKey('mortal_wild_boar')).toBe('mortal-wild-boar-v1')
@@ -18,7 +18,7 @@ describe('EnemyArt — resolveEnemyTextureKey', () => {
   it('id spawn kèm uuid — longest-prefix match không nhầm base với ferocious', () => {
     expect(resolveEnemyTextureKey('mortal_wild_boar_ab12cd34')).toBe('mortal-wild-boar-v1')
 
-    // Ferocious PHẢI khớp bản ferocious (dài hơn đứng trước trong bảng).
+    // Ferocious PHAI khop ban ferocious (dai hon dung truoc trong bang).
     expect(resolveEnemyTextureKey('mortal_ferocious_wild_boar_ff09')).toBe(
       'mortal-ferocious-wild-boar-v1',
     )

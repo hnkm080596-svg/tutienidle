@@ -1,0 +1,87 @@
+=== EV-MUT-TQ-1 fixture-mutant T7 2026-10-01T04:15:38.163914Z ===
+vanceTechniqueGrade(p)).to…
+       |                                                                     ^
+    622|     expect(gameManager.materialBag.getAmount(stoneId)).toBe(1000)
+    623|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save mints no realm-reward nodes through the restore replay (F-A3-01)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:816:41
+    814|       realmId: 'foundation_establishment',
+    815|     })
+    816|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    817|
+    818|     const gameManager = managerWithNodes()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save mints no realm-reward nodes at the realm-entry grant (F-A3-01)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:836:7
+    834|     expect(
+    835|       gameManager.realmAdvanceOps.grantCultivationPathRealmReward(p, '…
+    836|     ).toBe(false)
+       |       ^
+    837|     expect(p.nodeLevels ?? {}).toEqual({})
+    838|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save learns no way-authored ladder passive at realm entry (F-A3-02)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:866:67
+    864|     gameManager.realmAdvanceOps.syncRealmPassive(p)
+    865|
+    866|     expect(gameManager.skillManager.has('passive_truc_co_y_chi')).toBe…
+       |                                                                   ^
+    867|   })
+    868|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:894:41
+    892|       realmLevel: 12,
+    893|     })
+    894|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    895|     expect(hasStaticPathCapability(p, 'sword.sword_riding')).toBe(true)
+    896|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+
+DETECTOR_EXIT=1  (nonzero = mutant killed the suite = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

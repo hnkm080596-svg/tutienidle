@@ -6,8 +6,8 @@ import { test as base } from '@playwright/test'
  * src/assets/theme.css:10 @imports a Google Fonts stylesheet at runtime.
  * Where external requests are blocked (the 2026-09-14 audit environment
  * answered with ERR_NETWORK_ACCESS_DENIED) the failed stylesheet surfaces
- * as a console error — which trips collectBrowserErrors() /
- * assertNoBrowserErrors() in gated specs — and a request that hangs
+ * as a console error - which trips collectBrowserErrors() /
+ * assertNoBrowserErrors() in gated specs - and a request that hangs
  * instead of failing stalls page load for EVERY spec.
  *
  * Fulfilling the stylesheet request with an empty 200 keeps the suite
@@ -17,7 +17,7 @@ import { test as base } from '@playwright/test'
  * --font-body). Asserted behavior does not depend on font glyphs.
  *
  * Product question (tracked in docs/qa/2026-09-14-e2e-baseline.md):
- * self-hosting the fonts would benefit real offline players too — that is
+ * self-hosting the fonts would benefit real offline players too - that is
  * a product decision; this fixture only removes the test-suite's
  * dependence on external network reachability.
  */

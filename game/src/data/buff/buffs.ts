@@ -9,10 +9,10 @@ import { REACTION_STATUS_BUFFS } from './ReactionStatusBuffs'
 import { COMPANION_BUFFS } from './CompanionBuffs'
 import { PHAP_TU_TRANG_BUFFS } from './PhapTuTrangBuffs'
 
-// Đột Phá Trúc Cơ (Phase 5) — áp lên buff PERSISTENT ngoài trận
-// (GameManager.applyPersistentBuff()) khi thất bại Độ Kiếp (mục 13
-// spec `breakthrough`) — phạt có cảm giác nhưng không huỷ hoại, KHÔNG
-// reset cảnh giới. Xem composables/useTribulation.ts.
+// Dot Pha Truc Co (Phase 5) - ap len buff PERSISTENT ngoai tran
+// (GameManager.applyPersistentBuff()) khi that bai Do Kiep (muc 13
+// spec `breakthrough`) - phat co cam giac nhung khong huy hoai, KHONG
+// reset canh gioi. Xem composables/useTribulation.ts.
 // buff2 migration (M4): a persistent wall debuff -- 'seconds' clock
 // (advanced by onTimePassed), NOT a battle ailment. Session-scoped by
 // design: the buff2 persistent pool has no save seam, so a reload
@@ -36,7 +36,7 @@ export const KIEP_THUONG_DEBUFF: BuffDefinition = {
 
 // Tran Phap formation buffs (B2, 2026-09-14) - one shared battle-long buff
 // per formation, applied to every placed combatant at battle start by
-// buildTurnBattle(). Spec 2026-09-05 §2.5: fewer slots = stronger buff.
+// buildTurnBattle(). Spec 2026-09-05 sec2.5: fewer slots = stronger buff.
 export const TRAN_PHAP_DOC_HANH_BUFF: BuffDefinition = {
   id: 'tran_phap_doc_hanh_buff',
   name: 'Độc Hành Khí Tức',
@@ -118,19 +118,19 @@ export const TRAN_PHAP_CUU_CUNG_BUFF: BuffDefinition = {
 // data/skill/Skills.ts). Applied to the per-entity buff pool inside a
 // battle (Battle.playerBuffs/enemyBuffs) - not persistent out-of-battle
 // buffs.
-// Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 5.3): sword_wound (thuộc
-// Thái Hư Nhất Kiếm) và phieu_van_bo_buff (thuộc Phiêu Vân Bộ) đã
-// dọn CÙNG skill — 2 skill chuyển thành passive node route BK, không
-// còn effect nào tham chiếu.
+// Kiem The / Kiem Y (spec 2026-08-29 muc 5.3): sword_wound (thuoc
+// Thai Hu Nhat Kiem) va phieu_van_bo_buff (thuoc Phieu Van Bo) da
+// don CUNG skill - 2 skill chuyen thanh passive node route BK, khong
+// con effect nao tham chieu.
 //
-// Unified Buff System (Task 7, 2026-09-01) — Ailment/AilmentTemplate
-// (data/ailment/ailments.ts, core/ailment/*) hợp nhất vào đúng shape
-// `BuffDefinition` này: 'dot'/'cc'/'modifier' category cũ trở thành
-// entries trong `effects[]`, onHitChance/onHitAppliesAilmentId trở
-// thành 1 effect 'onHitProc' THÊM vào (không phải definition riêng).
-// Số liệu port BYTE-FOR-BYTE từ ailments.ts — không đổi balance.
-// ailments.ts CHƯA xoá (Task 16 mới xoá, sau khi mọi consumer
-// chuyển hẳn sang BuffRegistry).
+// Unified Buff System (Task 7, 2026-09-01) - Ailment/AilmentTemplate
+// (data/ailment/ailments.ts, core/ailment/*) hop nhat vao dung shape
+// `BuffDefinition` nay: 'dot'/'cc'/'modifier' category cu tro thanh
+// entries trong `effects[]`, onHitChance/onHitAppliesAilmentId tro
+// thanh 1 effect 'onHitProc' THEM vao (khong phai definition rieng).
+// So lieu port BYTE-FOR-BYTE tu ailments.ts - khong doi balance.
+// ailments.ts CHUA xoa (Task 16 moi xoa, sau khi moi consumer
+// chuyen han sang BuffRegistry).
 export const buffs: BuffDefinition[] = [
   KIEP_THUONG_DEBUFF,
   TRAN_PHAP_DOC_HANH_BUFF,
@@ -152,7 +152,7 @@ export const buffs: BuffDefinition[] = [
 ]
 
 
-// Talent v4 — named exports cho consumer test/wiring (pattern
-// KIEP_THUONG_DEBUFF): định nghĩa Tử Sinh Ngộ nằm trong mảng `buffs` ở
-// trên; export này tra lại CHÍNH xác object đó (không định nghĩa lần 2).
+// Talent v4 - named exports cho consumer test/wiring (pattern
+// KIEP_THUONG_DEBUFF): dinh nghia Tu Sinh Ngo nam trong mang `buffs` o
+// tren; export nay tra lai CHINH xac object do (khong dinh nghia lan 2).
 export const TU_SINH_NGO_BUFF: BuffDefinition = buffs.find((buff) => buff.id === 'tu_sinh_ngo')!

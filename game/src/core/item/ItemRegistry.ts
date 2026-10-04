@@ -5,11 +5,11 @@ import { TalismanRegistry } from '../talisman/TalismanRegistry'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 
 /**
- * Facade tra cứu item theo id trên toàn bộ 4 hệ thống con
- * (equipment/pill/talisman/material) mà không cần biết trước item
- * thuộc loại nào — chỗ duy nhất "quản lý toàn bộ Item của game".
- * Từng hệ thống con vẫn giữ registry/inventory riêng, ItemRegistry
- * không thay thế mà chỉ gộp lại một điểm tra cứu chung.
+ * Facade tra cuu item theo id tren toan bo 4 he thong con
+ * (equipment/pill/talisman/material) ma khong can biet truoc item
+ * thuoc loai nao - cho duy nhat "quan ly toan bo Item cua game".
+ * Tung he thong con van giu registry/inventory rieng, ItemRegistry
+ * khong thay the ma chi gop lai mot diem tra cuu chung.
  */
 export class ItemRegistry {
   constructor(

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// Spec C §3.1 — the reward gourd's source point comes from the same
+// Spec C sec3.1 - the reward gourd's source point comes from the same
 // bodyAnchorScreen() rule as everything else, not a player-only anchor plus
 // a hardcoded enemy fallback. Harness pattern matches
 // CombatScene.bodyAnchors.test.ts.

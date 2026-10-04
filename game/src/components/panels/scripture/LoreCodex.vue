@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Tàng Kinh Các (Home Hub Phase 7) — grid vật phẩm lore SỞ HỮU
-// (category 'other', vô thưởng vô phạt — xem data/materials/materials.ts's
-// Tàn Quyển Trúc Cơ/Ngọc Giản Cũ/Nhật Ký Tu Sĩ/Mảnh Bia), click mở
-// LoreCodexModal (Phase 2) đọc trọn mô tả — CHỈ hiện item ĐÃ NHẶT
+// Tang Kinh Cac (Home Hub Phase 7) - grid vat pham lore SO HUU
+// (category 'other', vo thuong vo phat - xem data/materials/materials.ts's
+// Tan Quyen Truc Co/Ngoc Gian Cu/Nhat Ky Tu Si/Manh Bia), click mo
+// LoreCodexModal (Phase 2) doc tron mo ta - CHI hien item DA NHAT
 // duoc, khong liet ke toan bo danh sach da co (dung tinh than "manh
 // moi phai tu tim thay", khong phai browse catalog biet truoc).
 import { computed, ref } from 'vue'
@@ -12,8 +12,11 @@ import EmptyState from '../../common/primitives/EmptyState.vue'
 import LoreCodexModal from '../LoreCodexModal.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePanelPagination } from '@/composables/usePanelPagination'
+import { betaMaterialStackVisible } from '@/core/betaScope'
+import { usePlayerStore } from '@/stores/player'
 
 const gameManager = useGameManager()
+const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 const { t } = useI18n()
 
@@ -24,6 +27,9 @@ const loreItems = computed(() => {
 
   return gameManager.materialBag.getAll()
     .filter(stack => stack.material.category === 'other')
+    // same suppressed-faucet verdict as the bag section - a below-unlock
+    // realm keeps the record but must not see the dormant domain row.
+    .filter(stack => betaMaterialStackVisible(stack.material, player.realmId))
     .map(stack => ({
       key: stack.material.id,
       label: stack.material.name,
@@ -35,8 +41,8 @@ const loreItems = computed(() => {
     }))
 })
 
-// Fit-refactor đợt 5 — grid manh mối phân trang theo ngân sách chiều cao
-// + chiều rộng (slot 56px + gap 6px = 62px/ô), không scroll.
+// Fit-refactor dot 5 - grid manh moi phan trang theo ngan sach chieu cao
+// + chieu rong (slot 56px + gap 6px = 62px/o), khong scroll.
 const {
   containerEl: loreGridEl,
   currentPage: lorePage,

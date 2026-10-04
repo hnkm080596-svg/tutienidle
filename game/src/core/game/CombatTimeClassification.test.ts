@@ -117,7 +117,7 @@ describe('combat time classification', () => {
       'src/core/battle/turn/ActionGauge.ts',
       // BuffSystem.ts is deliberately NOT scanned: after R13 retired the
       // turn/TurnBuffSystem.ts alias, the canonical class is dual-clock by
-      // design — update() ticks holder turns while updateTime(deltaSeconds)
+      // design - update() ticks holder turns while updateTime(deltaSeconds)
       // is the documented wall-clock path for out-of-battle persistent
       // buffs. A zero-"seconds" rule cannot apply to it.
     ]

@@ -1,10 +1,10 @@
-// Combat UI Redesign — trước đây không có nơi nào gom lại "trận này
-// kiếm được gì": GameManager.grantItemDrops()/giveReward() cộng thẳng
-// vào bag/player mỗi lần quái chết, chỉ để lại toast rời rạc
-// (pendingNotifications, bị xoá mỗi tick). CombatVictoryPanel/
-// CombatDefeatPanel cần 1 bản TÍCH LUỸ theo từng trận để hiện lại lúc
-// kết thúc — accumulator này sống trong GameManager, reset mỗi khi 1
-// trận mới bắt đầu (xem GameManager.startBattle()).
+// Combat UI Redesign - truoc day khong co noi nao gom lai "tran nay
+// kiem duoc gi": GameManager.grantItemDrops()/giveReward() cong thang
+// vao bag/player moi lan quai chet, chi de lai toast roi rac
+// (pendingNotifications, bi xoa moi tick). CombatVictoryPanel/
+// CombatDefeatPanel can 1 ban TICH LUY theo tung tran de hien lai luc
+// ket thuc - accumulator nay song trong GameManager, reset moi khi 1
+// tran moi bat dau (xem GameManager.startBattle()).
 export interface BattleRewardSummary {
   techniqueMastery: number
 
@@ -12,10 +12,10 @@ export interface BattleRewardSummary {
 
   spiritStone: number
 
-  // Bản Mệnh Pháp Bảo (doc §5.2/§12.2) — EXP artifact cấp khi reward
-  // của quái chết được xử lý thành công, cùng nguồn/nhịp với
-  // skillInsight (BattleLootSystem.processDefeatedEnemies()). Đoán Bảo
-  // Thạch KHÔNG có field riêng — đi qua `items[]` với kind 'material'.
+  // Ban Menh Phap Bao (doc sec5.2/sec12.2) - EXP artifact cap khi reward
+  // cua quai chet duoc xu ly thanh cong, cung nguon/nhip voi
+  // skillInsight (BattleLootSystem.processDefeatedEnemies()). Doan Bao
+  // Thach KHONG co field rieng - di qua `items[]` voi kind 'material'.
   artifactInsight: number
 
   items: BattleRewardItem[]

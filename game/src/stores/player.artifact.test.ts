@@ -4,9 +4,9 @@ import { usePlayerStore } from './player'
 import type { GameSave } from '../services/save/SaveSystem'
 import { createDefaultArtifactProgress } from '../core/artifact/ArtifactProgression'
 
-// Bản Mệnh Pháp Bảo (doc §10.2) — restoreFromSave() phải tự sửa mọi
-// invariant sai của player.artifact ngay sau blind Object.assign(),
-// cùng pattern player.aiStrategy.test.ts's combatAiStrategy fallback.
+// Ban Menh Phap Bao (doc sec10.2) - restoreFromSave() phai tu sua moi
+// invariant sai cua player.artifact ngay sau blind Object.assign(),
+// cung pattern player.aiStrategy.test.ts's combatAiStrategy fallback.
 function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
   const base = {
     name: 'Test',

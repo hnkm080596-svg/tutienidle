@@ -1,20 +1,20 @@
-// Task 14 (rework P4, 2026-09-01, spec item-grade-quality-model §5.6) —
-// Tab Phân Giải engine: phân giải Linh Khoáng thành Luyện Khí Tinh Hoa.
+// Task 14 (rework P4, 2026-09-01, spec item-grade-quality-model sec5.6) -
+// Tab Phan Giai engine: phan giai Linh Khoang thanh Luyen Khi Tinh Hoa.
 //
-// Nguyên tắc (user-approved):
-// - Nguồn DUY NHẤT của tinh hoa ngoài Hóa Luyện trang bị.
-// - Settings người chơi: lọc phẩm, lọc chất, số nhân công (pool chung,
-//   capacity do GameManager cấp — pattern autoWorkerCapacity).
-// - Chạy như production cycle (tick theo nowMs, không instant) — khớp
-//   kiến trúc ProductionSystem và quy tắc cân bằng 6F per-worker.
-// - Output tuyến tính: base(grade) × hệ_số(age) × workers.
-//   base = 1 + gradeIndex × 0.5; hệ số tuổi = 2^ageIndex.
-//   (Khởi điểm — tuning sau playtest theo 6F "sản xuất ≤ tiêu thụ
-//   trên mỗi nhân công, cùng phẩm cùng chất".)
+// Nguyen tac (user-approved):
+// - Nguon DUY NHAT cua tinh hoa ngoai Hoa Luyen trang bi.
+// - Settings nguoi choi: loc pham, loc chat, so nhan cong (pool chung,
+//   capacity do GameManager cap - pattern autoWorkerCapacity).
+// - Chay nhu production cycle (tick theo nowMs, khong instant) - khop
+//   kien truc ProductionSystem va quy tac can bang 6F per-worker.
+// - Output tuyen tinh: base(grade) x he_so(age) x workers.
+//   base = 1 + gradeIndex x 0.5; he so tuoi = 2^ageIndex.
+//   (Khoi diem - tuning sau playtest theo 6F "san xuat <= tieu thu
+//   tren moi nhan cong, cung pham cung chat".)
 //
-// Ore id convention (gp123 6E C2): `<realmId>_ore_<age>` (age ∈
-// decade..thuong_co — materials.ts generator trục tuổi thống nhất).
-// Grade của ore suy từ realmId qua PROFESSION_GRADE_BY_REALM.
+// Ore id convention (gp123 6E C2): `<realmId>_ore_<age>` (age in
+// decade..thuong_co - materials.ts generator truc tuoi thong nhat).
+// Grade cua ore suy tu realmId qua PROFESSION_GRADE_BY_REALM.
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { HERB_AGES } from './ProductionTypes'
 import type { HerbAge } from './ProductionTypes'
@@ -25,6 +25,7 @@ import {
 } from '../profession/ProfessionGrade'
 import type { MaterialBag } from '../material/MaterialBag'
 import { PRODUCTION_OFFLINE_CAP_SECONDS } from './ProductionBalance'
+import { isScopeHidden } from '../betaScope'
 
 export interface DecomposeSettings {
   gradeFilter: ProfessionGrade | 'all'
@@ -50,7 +51,7 @@ export interface DecomposeSaveState {
 
 const DEFAULT_CYCLE_SECONDS = 30
 
-/** Khoáng tiêu thụ mỗi worker mỗi lượt. */
+/** Khoang tieu thu moi worker moi luot. */
 const ORE_PER_WORKER_PER_CYCLE = 2
 
 export class DecomposeSystem {
@@ -91,11 +92,27 @@ export class DecomposeSystem {
     return this.capacity
   }
 
+  /**
+   * BETA SCOPE LOCK v2 sec.11 - the consumer-facing settings read model.
+   * While equipmentOreDecompose is scope-hidden the worker claim reports 0
+   * so the shared worker pool (resolveProductionWorkerCapacity, fed from
+   * this accessor every tick) routes the WHOLE capacity to production.
+   * Persistence is unaffected: getSaveState reads the raw `this.settings`.
+   */
   getSettings(): DecomposeSettings {
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return { ...this.settings, workers: 0 }
+    }
+
     return { ...this.settings }
   }
 
   setSetting(patch: Partial<DecomposeSettings>): void {
+    // BETA SCOPE LOCK v2 - hidden tab writes fail closed (direct API too).
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return
+    }
+
     this.settings = {
       gradeFilter: patch.gradeFilter ?? this.settings.gradeFilter,
       ageFilter: patch.ageFilter ?? this.settings.ageFilter,
@@ -113,6 +130,11 @@ export class DecomposeSystem {
    * (A9: oreMatchesFilter stays the single implementation).
    */
   listMatchingOres(): DecomposeOutputEntry[] {
+    // BETA SCOPE LOCK v2 - the hidden tab's query fails closed as well.
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return []
+    }
+
     return this.bag
       .getAll()
       .filter((stack) =>
@@ -122,11 +144,17 @@ export class DecomposeSystem {
   }
 
   /**
-   * Tick theo thời gian thực (nowMs). Đủ chu kỳ và workers > 0 → chạy
-   * MỘT lượt phân giải (catch-up một lượt nếu trễ nhiều — idle-friendly,
-   * không nhân burst).
+   * Tick theo thoi gian thuc (nowMs). Du chu ky va workers > 0 -> chay
+   * MOT luot phan giai (catch-up mot luot neu tre nhieu - idle-friendly,
+   * khong nhan burst).
    */
   tick(nowMs: number): void {
+    // BETA SCOPE LOCK v2 - the cycle engine never runs while the tab is
+    // scope-hidden; restored `started`/`nextCycleAt` state is left intact.
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return
+    }
+
     if (this.settings.workers <= 0) {
       this.started = false
 
@@ -135,8 +163,8 @@ export class DecomposeSystem {
 
     if (!this.started) {
       this.started = true
-      // Chu kỳ ĐẦU hoàn thành tại nowMs + cycleMs — tick giữa chừng
-      // (0 → 29_999s) chưa đủ một lượt.
+      // Chu ky DAU hoan thanh tai nowMs + cycleMs - tick giua chung
+      // (0 -> 29_999s) chua du mot luot.
       this.nextCycleAt = nowMs + this.cycleMs
 
       return
@@ -144,7 +172,7 @@ export class DecomposeSystem {
 
     if (nowMs < this.nextCycleAt) {
       // Mission A review (MA-R3-02): no legit writer emits a deadline
-      // further than one cycle out — a stale/crafted far-future value
+      // further than one cycle out - a stale/crafted far-future value
       // would stall decompose indefinitely, so rebase instead.
       if (this.nextCycleAt - nowMs > this.cycleMs) {
         this.nextCycleAt = nowMs + this.cycleMs
@@ -153,8 +181,8 @@ export class DecomposeSystem {
       return
     }
 
-    // Catch-up một lượt (idle không burst) — lượt tiếp theo từ hiện tại.
-    // MA-R3-01: rebase to now + cycleMs, not nextCycleAt + cycleMs —
+    // Catch-up mot luot (idle khong burst) - luot tiep theo tu hien tai.
+    // MA-R3-01: rebase to now + cycleMs, not nextCycleAt + cycleMs -
     // the old form advanced a late deadline by only one cycle, so a
     // long-ago deadline replayed the whole backlog one run per tick
     // (a burst spread across frames). Offline backlog belongs to
@@ -190,7 +218,7 @@ export class DecomposeSystem {
    * Restored workers clamp to the CURRENT capacity (a stale save must
    * not resurrect workers above the live CHQ ceiling).
    *
-   * M1 (ARCH-001) — an absent slice (`undefined`, old saves without the
+   * M1 (ARCH-001) - an absent slice (`undefined`, old saves without the
    * field) resets to DEFAULTS like every other owner instead of keeping
    * the previous session's settings.
    *
@@ -212,7 +240,7 @@ export class DecomposeSystem {
     // but a bypassed payload must still not poison the timer or the
     // per-cycle consumption math (NaN nextCycleAt = per-tick runaway,
     // NaN workers = NaN target inside runOneCycle). A null settings
-    // sub-object would throw on property read — fall back to defaults.
+    // sub-object would throw on property read - fall back to defaults.
     const sourceSettings =
       typeof source.settings === 'object' && source.settings !== null
         ? source.settings
@@ -244,6 +272,11 @@ export class DecomposeSystem {
    * nextCycleAt, so a repeated call over the same window settles 0.
    */
   settleOffline(nowMs: number, offlineSinceMs: number): number {
+    // BETA SCOPE LOCK v2 - offline cycles cannot accrue while hidden.
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return 0
+    }
+
     if (this.settings.workers <= 0 || !this.started) {
       return 0
     }
@@ -314,7 +347,7 @@ export class DecomposeSystem {
     }
   }
 
-  /** Output = floor(consumed/target × base(grade) × hệ_số(age) × workers). */
+  /** Output = floor(consumed/target x base(grade) x he_so(age) x workers). */
   private outputForOre(oreId: string, consumed: number, workers: number): number {
     const parsed = parseOre(oreId)
 
@@ -336,7 +369,7 @@ export class DecomposeSystem {
 
     const fullOutput = base * ageFactor * workers
 
-    // Fairness ceil — phần khoáng lẻ không bị浪费.
+    // Fairness ceil - phan khoang le khong bi.
     return Math.ceil((consumed / target) * fullOutput)
   }
 
@@ -363,12 +396,12 @@ export class DecomposeSystem {
   }
 }
 
-// Regex biên dịch MỘT LẦN — parseOre chạy mỗi stack mỗi tick phân giải.
+// Regex bien dich MOT LAN - parseOre chay moi stack moi tick phan giai.
 // Inverse of buildProfessionMaterialId('ore', realm, age) - the
 // constructor in ProfessionMaterial.ts owns this grammar.
 const ORE_ID_PATTERN = new RegExp(`^(.+)_ore_(${HERB_AGES.join('|')})$`)
 
-/** `<realmId>_ore_<age>` → { grade, age } | null (gp123 6E C2: trục tuổi). */
+/** `<realmId>_ore_<age>` -> { grade, age } | null (gp123 6E C2: truc tuoi). */
 export function parseOre(oreId: string): { grade: ProfessionGrade; age: HerbAge } | null {
   const match = ORE_ID_PATTERN.exec(oreId)
 

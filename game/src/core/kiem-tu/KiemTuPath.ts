@@ -33,7 +33,7 @@ import { REALMS } from '../../data/realms/realm'
 // NguKiemDao) can consume the way predicates without a runtime cycle.
 
 /**
- * Structural read shape for the way predicates — PlayerData and the
+ * Structural read shape for the way predicates - PlayerData and the
  * presentation-side player slices (e.g. KiemBarPlayerState) both
  * satisfy it; the fields stay nullable because slices keep the
  * persisted `| null` convention.
@@ -44,7 +44,7 @@ export interface SwordPathWayRead {
 }
 
 /**
- * M8 — the module-owned state-slice factory, invoked by
+ * M8 - the module-owned state-slice factory, invoked by
  * CultivationPathSystem.applyPathChoice via the module contract
  * (createInitialState). The canonical fresh player.swordPath is
  * way-agnostic: the Kiem Y / Kiem Dao fields start at hidden_sword_pathway's defaults
@@ -187,13 +187,13 @@ export function validateSwordPathPersistedState(
 }
 
 /**
- * sword_pathway membership — the gate for ALL Kiem Pho machinery: the preset
+ * sword_pathway membership - the gate for ALL Kiem Pho machinery: the preset
  * write op (setKiemPhoPreset), the KiemPho dynamicBasic provider, the
  * preset HUD/editor surfaces, and the sword_pathway node subtree.
  *
  * Reads the RAW fields, same contract as NodeSystem.nodeWayApplies:
  * cultivationWay is authoritative once the ritual writes it. A
- * legacy-shaped player (cultivationPath only, no way) is NOT sword_pathway —
+ * legacy-shaped player (cultivationPath only, no way) is NOT sword_pathway -
  * the gate fails closed so way machinery never runs for a state the
  * path authority did not commit.
  */
@@ -202,11 +202,11 @@ export function isSwordPathway(player: SwordPathWayRead | null | undefined): boo
 }
 
 /**
- * hidden_sword_pathway membership — the gate for the hidden way's machinery: the
+ * hidden_sword_pathway membership - the gate for the hidden way's machinery: the
  * NguKiemDao economy (gainKiemY/merge), the
  * NguKiemDaoProvider attach, the evolution-spine grant chain, and the hidden_sword_pathway
  * node subtree. sword never had a hidden-variant path id, so a
- * single era exists: ('sword', 'hidden_sword_pathway') — the WAY id is the check.
+ * single era exists: ('sword', 'hidden_sword_pathway') - the WAY id is the check.
  */
 export function isHiddenSwordPathway(player: SwordPathWayRead | null | undefined): boolean {
   return player?.cultivationPath === 'sword' && player?.cultivationWay === 'hidden_sword_pathway'

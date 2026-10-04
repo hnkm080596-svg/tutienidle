@@ -1,11 +1,18 @@
-# Cloud save adapter boundary (R10, AR-15 local scope)
+# Cloud save adapter boundary (R10, AR-15 + beta-final B1)
 
-`cloudSaveCoordinator` (see `CloudSaveServiceFactory.ts`) always wraps a
-`LocalCloudSaveService`. There is no environment/config branching to a
-remote adapter today — the factory unconditionally constructs the local
-one. `CloudSaveService.capability` is `'local-only'`, and `CloudSaveServiceFactory.test.ts`
-guards this: it fails immediately if the factory ever starts returning
-anything else without a deliberate, separately-scoped change here.
+`cloudSaveCoordinator` is composed by the single backend bundle
+(`services/backend/backendBundle.ts`, explicit `VITE_BACKEND_MODE = mock | supabase`).
+There is no environment/config branching inside
+`CloudSaveServiceFactory.ts` — the factory re-exports whatever the bundle
+resolved, and the bundle only ever produces ONE compatible shape
+(auth + character-creation + cloud-save services) per mode.
+
+## Mode `mock` — local-only boundary (unchanged invariants)
+
+`LocalCloudSaveService` under the hood. `CloudSaveService.capability` is
+`'local-only'`, and `CloudSaveServiceFactory.test.ts` still guards this:
+the test environment resolves the mock composition, so any regression
+that made the default export remote-capable fails immediately.
 
 "Local-only" specifically means:
 
@@ -18,13 +25,60 @@ anything else without a deliberate, separately-scoped change here.
   comment in `LocalCloudSaveService.save()`). Two tabs/processes writing at
   the same instant is last-writer-wins, not a real transaction.
 - **Transport:** none. Everything is synchronous local disk I/O wrapped in
-  `Promise`s to match the `CloudSaveService` interface shape a remote
-  adapter would eventually need.
+  `Promise`s to match the `CloudSaveService` interface shape.
+- **Conflict semantics:** `CloudSaveCoordinator` resyncs the latest local
+  revision and retries once (`recoveredFromConflict`) — a storage-level
+  CAS repair, not a network race.
 
-**Auth is a separate product boundary.** `services/auth/*` /
-`services/supabase/*` (character creation, Supabase-backed accounts) do
-**not** imply an account-bound cloud *save* path — that would be a new,
-explicitly-scoped remote-adapter mission (new `CloudSaveService`
-implementation, real transactional writes, conflict UX, migration of the
-local save on first login). Do not wire one in by branching inside
-`CloudSaveServiceFactory.ts` without that scope.
+## Mode `supabase` — remote-authoritative boundary (B1.5–B1.9)
+
+`SupabaseCloudSaveService` under the hood. `capability` is
+`'remote-authoritative'`; the server RPC surface owns admission, revision
+CAS, and idempotent commit. Everything the client does is mapping and
+caching — never an independent authority:
+
+- **Load:** `load_game_state(p_session_id)` is the authoritative boot
+  read. The old newest-wins login reconciliation (`SupabaseRemoteSave`)
+  is retired — two remote mechanisms may not coexist. Statuses map to the
+  `CloudSaveLoadResult` union, including `uninitialized` (character row
+  exists, no save row — rebuild the starter snapshot) and `deleted`
+  (terminal, no recovery surface).
+- **Write:** `write_character_save` CAS via `expectedRevision` +
+  `mutationId` + server-issued `timeCheckpoint` (checkpoint anchored by
+  the load, or `heartbeat_session` when a save-first path needs one —
+  never fabricated).
+- **Conflict:** TERMINAL. `CloudSaveCoordinator` returns the result
+  unchanged for `remote-authoritative` capability — no re-sync, no retry
+  write (B1.6). Recovery is a fresh authoritative load.
+- **Cache:** localStorage keeps only server-ACKed bytes + revision
+  (revision-first ordering). The cache is a mirror, never a source of
+  truth — read only by the export/status seams, never by `load()` for
+  authority. PR4 replaces this transitional split-key form with the
+  identity-bound envelope.
+- **Client pipeline parity:** a downloaded payload passes the SAME
+  version gate → shape validation → normalization → acceptance gate as a
+  local load. A payload the server committed but this build cannot
+  consume surfaces as `incompatible`/`corrupted` with raw preserved for
+  recovery — never silently restored.
+- **Recovery surfaces:** manual import in remote mode validates/exports
+  the file only (`services/save/recoveryApi.ts`) — no client-side path
+  may overwrite the cloud row. Cache reset clears local keys and
+  restores whatever the authoritative row holds; exports stamp
+  source + revision onto the artifact filename.
+- **Errors:** PostgREST/guard raises (errcode `28000`) and HTTP classes
+  map onto `BackendErrorCode` (`SESSION_REVOKED`, `PROTOCOL_OUTDATED`,
+  `AUTH_EXPIRED`, `SERVER_ERROR`, `NETWORK_UNAVAILABLE`, `SAVE_INVALID`,
+  `SAVE_TOO_LARGE`, `CONFIGURATION_ERROR`); server `REJECTED` codes keep
+  their meaning through `detail`.
+
+**Release admission stays `blocked`.** PR4–PR6 landed the durable journal,
+online admission, and identity surfaces; PR7 (B1-F) staged the compatibility
+matrix + cutover runbook and proved the contract on the staging project
+(`beta_contract_phase() = 'cutover'` there). What still holds the gate:
+the **beta project cutover is UNSEALED** (no DB deployment authority yet —
+the runbook in `docs/operations/beta/backend-cutover.md` is the executable
+procedure for it), EXT-05 device-level two-device proof on real installs,
+and the signed release candidate at PR15. The composition resolves and is
+testable, but it is not launchable. Gate-lift criteria + the client SHA /
+migration hashes they bind to are recorded in
+`docs/qa/runs/beta-final-b1/admission-record.md`.

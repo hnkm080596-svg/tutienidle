@@ -62,12 +62,12 @@ export interface ItemQualityAffixSlots {
   suffix: number
 }
 
-// Số slot Prefix/Suffix tối đa theo quality — bậc giữa (dia) lệch
-// prefix trước suffix (2/1) trước khi đối xứng lại ở thien (2/2) rồi
-// tien (3/3), tránh 1 bước nhảy đột ngột. Chuyển từ
+// So slot Prefix/Suffix toi da theo quality - bac giua (dia) lech
+// prefix truoc suffix (2/1) truoc khi doi xung lai o thien (2/2) roi
+// tien (3/3), tranh 1 buoc nhay dot ngot. Chuyen tu
 // EquipmentRarity.ts/ItemGradeRefs.ts (item-grade-quality-rework Task
-// 22) — cùng convention ITEM_QUALITY_* với các bảng balance khác trong
-// module này.
+// 22) - cung convention ITEM_QUALITY_* voi cac bang balance khac trong
+// module nay.
 export const ITEM_QUALITY_AFFIX_SLOTS: Record<ItemQuality, ItemQualityAffixSlots> = {
   hoang: { prefix: 0, suffix: 0 },
   huyen: { prefix: 1, suffix: 1 },
@@ -76,9 +76,9 @@ export const ITEM_QUALITY_AFFIX_SLOTS: Record<ItemQuality, ItemQualityAffixSlots
   tien: { prefix: 3, suffix: 3 },
 }
 
-// "Exalted Affix" — CHỈ quality tien mới có cơ hội roll thêm 1 affix
-// bonus từ pool 'supreme' (bỏ qua giới hạn slot bình thường ở trên) —
-// vẫn random, không phải item cố định. Chuyển từ EquipmentRarity.ts
+// "Exalted Affix" - CHI quality tien moi co co hoi roll them 1 affix
+// bonus tu pool 'supreme' (bo qua gioi han slot binh thuong o tren) -
+// van random, khong phai item co dinh. Chuyen tu EquipmentRarity.ts
 // (item-grade-quality-rework Task 22).
 export const ITEM_QUALITY_EXALTED_AFFIX_CHANCE = 0.15
 
@@ -88,8 +88,8 @@ export const ITEM_QUALITY_EXALTED_AFFIX_CHANCE = 0.15
  * The quality ladder is rolled at fixed weights and that roll stays owned by
  * this system; a drop only ever nudges the result. Only equipment has a
  * quality ladder at all, so this is the single place a stacked kill can turn
- * into a better item. (large-file-split: moved from EquipmentSystem.ts —
- * pure function over ITEM_QUALITY_ORDER, sống cùng bảng balance.)
+ * into a better item. (large-file-split: moved from EquipmentSystem.ts -
+ * pure function over ITEM_QUALITY_ORDER, song cung bang balance.)
  */
 export function applyQualityBonusSteps(quality: ItemQuality, steps: number): ItemQuality {
   if (steps <= 0) {

@@ -12,7 +12,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 
-// Mission C (spec C1/C2) — the fresh-battle lifecycle contract.
+// Mission C (spec C1/C2) - the fresh-battle lifecycle contract.
 // beginBattleCycle(policy) is the single lifecycle owner; the four entry
 // paths (startBattle, startBattleWithPlayer, startStage,
 // restartTurnBattleCycle) all delegate to it and must produce an
@@ -92,7 +92,7 @@ function expectFreshPlayerSide(gameManager: GameManager) {
 }
 
 // Advance the real update loop until getTurnBattle() returns a NEW battle
-// object — beginBattleCycle always builds a fresh TurnBattle, so a
+// object - beginBattleCycle always builds a fresh TurnBattle, so a
 // reference change IS the cycle boundary (this assertion is itself part
 // of the contract).
 function fightUntilNextBattle(gameManager: GameManager, combatSource: ManualClockSource) {
@@ -354,7 +354,7 @@ describe('session RNG (spec C3) — one seeded source owns every combat roll', (
         turns: battle?.totalTurnsElapsed ?? 0,
         playerHp: battle?.players[0]?.entity.currentHp,
         enemies: battle?.enemies.map(e => ({
-          // Entity ids embed a crypto UUID — outside the session-RNG
+          // Entity ids embed a crypto UUID - outside the session-RNG
           // contract (identity, not a roll). Compare the template prefix.
           id: e.entity.id.replace(/_[0-9a-f-]+$/, ''),
           x: e.entity.x, row: e.entity.row,

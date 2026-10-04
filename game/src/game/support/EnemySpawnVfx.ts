@@ -1,14 +1,14 @@
-// EnemySpawnVfx (2026-08-24) — hiệu ứng "telegraph → xuất hiện" cho luồng
-// spawn quái trong sân, cùng tổ chức với ActionImpactVfx:
-// - MỘT handle/logical instance cho MỘT pending spawn: 2 Graphics (ground
-//   pháp trận + cột linh khí thẳng đứng) và KHÔNG self-tween — update()
-//   được scene drive theo progress từ SNAPSHOT positions (an toàn khi
-//   scene vừa khởi tạo/resize/auto-repeat, xem BattlePositionsEvent).
-// - Toạ độ chiếu LẤY MỚI mỗi lần paint qua projection.gridToScreen() —
-//   resize giữa animation tự vẽ đúng vị trí mới.
-// - complete(): flash ngắn rồi tự dọn; destroy(): dọn NGAY (battle reset/
-//   scene shutdown). Upright depth do scene tính (uprightVfxDepth) để
-//   không xuyên sai qua entity.
+// EnemySpawnVfx (2026-08-24) - hieu ung "telegraph -> xuat hien" cho luong
+// spawn quai trong san, cung to chuc voi ActionImpactVfx:
+// - MOT handle/logical instance cho MOT pending spawn: 2 Graphics (ground
+//   phap tran + cot linh khi thang dung) va KHONG self-tween - update()
+//   duoc scene drive theo progress tu SNAPSHOT positions (an toan khi
+//   scene vua khoi tao/resize/auto-repeat, xem BattlePositionsEvent).
+// - Toa do chieu LAY MOI moi lan paint qua projection.gridToScreen() -
+//   resize giua animation tu ve dung vi tri moi.
+// - complete(): flash ngan roi tu don; destroy(): don NGAY (battle reset/
+//   scene shutdown). Upright depth do scene tinh (uprightVfxDepth) de
+//   khong xuyen sai qua entity.
 import Phaser from 'phaser'
 import type {
   EnemySpawnVfxPresetId,
@@ -17,7 +17,7 @@ import type {
 import { DEPTH_GROUND_VFX } from './BattleLayers'
 import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 
-/** Preset spawn telegraph — quái theo cấp bậc + preset riêng cho Player. */
+/** Preset spawn telegraph - quai theo cap bac + preset rieng cho Player. */
 export type SpawnVfxPresetId = EnemySpawnVfxPresetId | PlayerSpawnVfxPresetId
 
 interface SpawnPresetStyle {
@@ -33,13 +33,13 @@ const SPAWN_PRESET_STYLES: Record<SpawnVfxPresetId, SpawnPresetStyle> = {
 }
 
 export interface EnemySpawnVfxHandle {
-  /** progress ∈ [0,1] từ snapshot positions — repaint toàn bộ hiệu ứng. */
+  /** progress in [0,1] tu snapshot positions - repaint toan bo hieu ung. */
   update(progress: number): void
 
-  /** Flash materialize ngắn rồi TỰ destroy (gọi khi id rời snapshot). */
+  /** Flash materialize ngan roi TU destroy (goi khi id roi snapshot). */
   complete(): void
 
-  /** Dọn NGAY không flash (battle reset / scene shutdown). */
+  /** Don NGAY khong flash (battle reset / scene shutdown). */
   destroy(): void
 }
 
@@ -49,7 +49,7 @@ export interface EnemySpawnVfxParams {
   row: number
   column: number
   presetId: SpawnVfxPresetId
-  /** Depth cột linh khí — scene tính bằng uprightVfxDepth (occlusion). */
+  /** Depth cot linh khi - scene tinh bang uprightVfxDepth (occlusion). */
   uprightDepth: number
 }
 
@@ -69,7 +69,7 @@ export function spawnEnemySpawnVfx(params: EnemySpawnVfxParams): EnemySpawnVfxHa
       return
     }
 
-    // Chiếu MỚI mỗi paint — resize/viewport đổi vẫn đúng ô.
+    // Chieu MOI moi paint - resize/viewport doi van dung o.
     const anchor = projection.gridToScreen(row, column)
     const cell = projection.cellSizeAt(row)
     const radius = cell.width * 0.55 * style.radiusScale
@@ -77,7 +77,7 @@ export function spawnEnemySpawnVfx(params: EnemySpawnVfxParams): EnemySpawnVfxHa
 
     ground.clear()
 
-    // Vòng pháp trận sát mặt đất: ellipse DẸT theo cell + fill sáng dần.
+    // Vong phap tran sat mat dat: ellipse DET theo cell + fill sang dan.
     ground.lineStyle(2, style.color, 0.35 + 0.55 * p)
     ground.strokeEllipse(anchor.x, anchor.y, radius * 2, radius * 0.8)
     ground.lineStyle(1.5, style.color, 0.25 + 0.45 * p)
@@ -88,7 +88,7 @@ export function spawnEnemySpawnVfx(params: EnemySpawnVfxParams): EnemySpawnVfxHa
       ground.fillEllipse(anchor.x, anchor.y, radius * 1.9 * p, radius * 0.76 * p)
     }
 
-    // Pulse lan tỏa — 3 vòng trong suốt telegraph (p*3 chu kỳ).
+    // Pulse lan toa - 3 vong trong suot telegraph (p*3 chu ky).
     const pulsePhase = (p * 3) % 1
 
     if (p > 0.02 && pulsePhase > 0.01) {
@@ -101,7 +101,7 @@ export function spawnEnemySpawnVfx(params: EnemySpawnVfxParams): EnemySpawnVfxHa
       )
     }
 
-    // Lõi sáng dần chuẩn bị materialize.
+    // Loi sang dan chuan bi materialize.
     if (p > 0.6) {
       const coreAlpha = (p - 0.6) / 0.4
 
@@ -109,7 +109,7 @@ export function spawnEnemySpawnVfx(params: EnemySpawnVfxParams): EnemySpawnVfxHa
       ground.fillEllipse(anchor.x, anchor.y, radius * 0.9 * coreAlpha, radius * 0.36 * coreAlpha)
     }
 
-    // Cột linh khí thẳng đứng — chùm hạt sáng bay lên dần theo p.
+    // Cot linh khi thang dung - chum hat sang bay len dan theo p.
     upright.clear()
 
     const moteCount = 5
@@ -130,7 +130,7 @@ export function spawnEnemySpawnVfx(params: EnemySpawnVfxParams): EnemySpawnVfxHa
       )
     }
 
-    // Đỉnh cột đậm dần gần materialize.
+    // Dinh cot dam dan gan materialize.
     if (p > 0.3) {
       upright.fillStyle(style.color, 0.35 * ((p - 0.3) / 0.7))
       upright.fillEllipse(anchor.x, anchor.y - cell.height * 2.2, radius * 0.5, radius * 0.9)

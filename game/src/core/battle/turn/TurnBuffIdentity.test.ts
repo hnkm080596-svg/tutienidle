@@ -8,21 +8,21 @@ import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 
-// ARCH-009 (M9) — buff identity repair, driven through the REAL
+// ARCH-009 (M9) - buff identity repair, driven through the REAL
 // TurnBattleSystem + BUFF_REGISTRY (no helper-only shortcuts):
 //
 //  - ON_HIT_POOL (AUD-C04): an onHitProc buff held by the attacker writes
 //    its proc result into the VICTIM's pool with sourceId=attacker and
-//    targetId=victim — the holder is never stunned by its own proc.
+//    targetId=victim - the holder is never stunned by its own proc.
 //  - MULTISOURCE_REACTION (AUD-C08): reaction consumption removes the
-//    EXACT matched ingredient instance — a fire DoT applied by the player
+//    EXACT matched ingredient instance - a fire DoT applied by the player
 //    is consumed once and cannot feed a second reaction triggered by a
 //    companion's water hit.
-//  - CC_SCOPE: target-scoped cc queries — a cc buff aimed at another
+//  - CC_SCOPE: target-scoped cc queries - a cc buff aimed at another
 //    entity inside a pool must not control the pool holder.
 //  - MULTI_SOURCE_SELECTION: when several sources supply a valid
 //    ingredient, the OLDEST applied instance is consumed (pool insertion
-//    order — see ElementReaction.ts's consumption contract).
+//    order - see ElementReaction.ts's consumption contract).
 
 // Test fixtures: the engine keeps the on_hit_proc mechanism but no
 // production def carries it after the legacy ailment migration. These
@@ -180,7 +180,7 @@ describe('ARCH-009 (M9) — on-hit proc writes to the VICTIM pool (AUD-C04)', ()
   // holder-attacks -> victim-applies is the AUTHORED contract
   // (docs/systems/buffs.md:18; LegacyBuffs.ts:225-228 marks the port
   // "dung brief"). `thach_hoa` on an enemy intentionally lets that
-  // enemy's hits stun the player. The audit claim is recorded as STALE —
+  // enemy's hits stun the player. The audit claim is recorded as STALE -
   // do not flip the data. If a future design wants struck-direction
   // semantics, the mechanism is a NEW `onStruckProc` effect type, not a
   // data flip.

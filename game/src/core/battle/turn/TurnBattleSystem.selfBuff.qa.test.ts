@@ -93,7 +93,7 @@ function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEn
   } as CombatEntity
 
   // ARCH-002 (M7 R1): refreshParticipantStats reconciles entity.maxHp from
-  // entity.stats.maxHp and clamps currentHp — the fixture's declared vitals
+  // entity.stats.maxHp and clamps currentHp - the fixture's declared vitals
   // ceiling must exist in the resolved/base stats or refresh reverts it.
   entity.baseStats = (overrides.baseStats ?? overrides.stats ?? entity.baseStats) as CombatEntity['baseStats']
   const ceiling = Math.max(entity.maxHp, entity.currentHp)
@@ -217,7 +217,7 @@ describe('AR-03: Self-buff execution and leech healing', () => {
 
     // Pin the hit/crit dice (fd22f2b6 discipline): base stats carry 5%
     // criticalRate and rating-based hit chance, so an unpinned resolve can
-    // miss or crit — this suite flaked as "expected 500 to be greater than
+    // miss or crit - this suite flaked as "expected 500 to be greater than
     // 500" when the attack missed and leech healed 0. 0.5 lands the hit
     // without a crit for the default rating spread.
     const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5)

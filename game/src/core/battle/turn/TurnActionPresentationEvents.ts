@@ -52,7 +52,7 @@ export interface TurnActionImpactParams {
 
   primaryTargetId: string
 
-  /** Ô neo VFX — snapshot vị trí primary target tại thời điểm impact. */
+  /** O neo VFX - snapshot vi tri primary target tai thoi diem impact. */
   anchorCell: GridPosition
 
   affectedArea: CellArea & { shape: ActionTargetingShape }
@@ -96,6 +96,10 @@ export interface TurnBattleEntityVisualState {
   column: number
   currentHp: number
   maxHp: number
+  // MP cung la live vitals nhu HP - mang theo de presentation seed HUD
+  // ngay tu snapshot dau (truoc entity_vitals_changed dau tien).
+  currentMp: number
+  maxMp: number
   alive: boolean
   isBoss: boolean
 }
@@ -103,27 +107,27 @@ export interface TurnBattleEntityVisualState {
 export interface TurnBattleEntitySnapshotEvent {
   players: TurnBattleEntityVisualState[]
   enemies: TurnBattleEntityVisualState[]
-  /** Turn-Based Wave Redesign (2026-09-06) — quái đang telegraph, CHƯA vào battle.enemies. */
+  /** Turn-Based Wave Redesign (2026-09-06) - quai dang telegraph, CHUA vao battle.enemies. */
   pendingEnemySpawns: PendingSpawnVisualState[]
   /**
    * Battle phase at snapshot time. Needed because `countdownProgress` ===
-   * undefined carries TWO different meanings — 'intro' (countdown has not
+   * undefined carries TWO different meanings - 'intro' (countdown has not
    * started yet: keep combatants HIDDEN) vs 'fighting'/terminal (countdown
-   * finished: REVEAL) — and presentation must not infer it itself (A7:
+   * finished: REVEAL) - and presentation must not infer it itself (A7:
    * the engine is the authority).
    */
   phase: TurnBattleState
-  /** Chỉ có mặt khi battle.state === 'countdown'; 0→1 hết 3s countdown. */
+  /** Chi co mat khi battle.state === 'countdown'; 0->1 het 3s countdown. */
   countdownProgress?: number
 }
 
-/** Turn-Based Wave Redesign (2026-09-06) — trạng thái hiển thị của 1 quái đang telegraph. */
+/** Turn-Based Wave Redesign (2026-09-06) - trang thai hien thi cua 1 quai dang telegraph. */
 export interface PendingSpawnVisualState {
   id: string
   row: number
   column: number
   isBoss: boolean
-  /** 0 = vừa queue, 1 = sắp materialize (tick kế tiếp vào battle.enemies). */
+  /** 0 = vua queue, 1 = sap materialize (tick ke tiep vao battle.enemies). */
   progress: number
   presetId: EnemySpawnVfxPresetId
 }
@@ -160,11 +164,13 @@ function toVisualState(participant: TurnBattleParticipant): TurnBattleEntityVisu
     column: position.column,
     currentHp: participant.entity.currentHp,
     maxHp: participant.entity.maxHp,
+    currentMp: participant.entity.currentMp,
+    maxMp: participant.entity.stats.maxMp,
     alive: participant.entity.alive,
-    // Fix round 1 (Task 5 review) — CombatEntity.isBoss là optional (chỉ set
-    // cho enemy spawn qua legacy spawner); mặc định false khớp với cách
-    // legacy/BattleSystem.ts (dòng 621/810/831) đã coerce isBoss ?? false
-    // khi build EnemySpawnedEvent, giữ nhất quán 2 nguồn dữ liệu.
+    // Fix round 1 (Task 5 review) - CombatEntity.isBoss la optional (chi set
+    // cho enemy spawn qua legacy spawner); mac dinh false khop voi cach
+    // legacy/BattleSystem.ts (dong 621/810/831) da coerce isBoss ?? false
+    // khi build EnemySpawnedEvent, giu nhat quan 2 nguon du lieu.
     isBoss: participant.entity.isBoss ?? false,
   }
 }
@@ -182,11 +188,11 @@ export function buildTurnBattleEntitySnapshot(battle: TurnBattle): TurnBattleEnt
   }
 }
 
-// Combat Art Pipeline (2026-09-05) — thay thế bridge 'positions' đã chết của
-// legacy real-time engine (legacy/BattleSystem.ts không còn được tick cho
-// turn-based combat). Đọc TRỰC TIẾP từ TurnBattle.players/enemies mỗi fixed
-// step trong lúc 'fighting' — không phụ thuộc emitPositions()/update() của
-// legacy engine. GameManager gọi hàm này (Task 5 sẽ nối CombatScene nghe).
+// Combat Art Pipeline (2026-09-05) - thay the bridge 'positions' da chet cua
+// legacy real-time engine (legacy/BattleSystem.ts khong con duoc tick cho
+// turn-based combat). Doc TRUC TIEP tu TurnBattle.players/enemies moi fixed
+// step trong luc 'fighting' - khong phu thuoc emitPositions()/update() cua
+// legacy engine. GameManager goi ham nay (Task 5 se noi CombatScene nghe).
 export function emitTurnBattleEntitySnapshot(eventBus: EventBus, battle: TurnBattle): void {
   eventBus.emit('turn_battle_entity_snapshot', buildTurnBattleEntitySnapshot(battle))
 }

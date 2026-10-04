@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
-// Fix round 1 (2026-09-06, freeze-fix review) — coverage cho
-// countdownTurnsRemaining trong CombatCountdownOverlay.vue. Trận
-// turn-based (đường DUY NHẤT còn dùng cho Stage) đếm countdown bằng SỐ
-// LƯỢT pacing — overlay quy đổi /10 ra giây hiển thị. M13: mock giờ là
-// TurnBattle thật qua getTurnBattle() (nhánh countdownSecondsRemaining
-// của engine real-time đã xoá cùng getBattle() cast).
-// Mount theo pattern project (createApp + h + provide, KHÔNG
-// @vue/test-utils — xem CombatExitConfirmModal.test.ts).
+// Fix round 1 (2026-09-06, freeze-fix review) - coverage cho
+// countdownTurnsRemaining trong CombatCountdownOverlay.vue. Tran
+// turn-based (duong DUY NHAT con dung cho Stage) dem countdown bang SO
+// LUOT pacing - overlay quy doi /10 ra giay hien thi. M13: mock gio la
+// TurnBattle that qua getTurnBattle() (nhanh countdownSecondsRemaining
+// cua engine real-time da xoa cung getBattle() cast).
+// Mount theo pattern project (createApp + h + provide, KHONG
+// @vue/test-utils - xem CombatExitConfirmModal.test.ts).
 import { describe, expect, it, afterEach } from 'vitest'
 import { createApp, h, ref } from 'vue'
 import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
@@ -59,7 +59,7 @@ describe('CombatCountdownOverlay — countdown field fix (2026-09-06)', () => {
       countdownTurnsRemaining: 30,
     } as Partial<TurnBattle>)
 
-    // 30 lượt / 10 = 3 giây → Math.ceil(3) = "3".
+    // 30 luot / 10 = 3 giay -> Math.ceil(3) = "3".
     expect(overlay.number()).toBe('3')
 
     overlay.unmount()
@@ -71,7 +71,7 @@ describe('CombatCountdownOverlay — countdown field fix (2026-09-06)', () => {
       countdownTurnsRemaining: 1,
     } as Partial<TurnBattle>)
 
-    // 1 lượt / 10 = 0.1 giây → Math.ceil(0.1) = 1.
+    // 1 luot / 10 = 0.1 giay -> Math.ceil(0.1) = 1.
     expect(overlay.number()).toBe('1')
 
     overlay.unmount()

@@ -1,8 +1,8 @@
 /**
- * Guard (V1, V2) — the dynamic layer does not reach up into the static one.
+ * Guard (V1, V2) - the dynamic layer does not reach up into the static one.
  *
  * Spec: docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md
- * §3.2 and §7.
+ * sec3.2 and sec7.
  *
  * `src/game/` draws. It may not import Vue's reactivity or a Pinia store: a
  * scene that watches a store has made the canvas depend on DOM state, and the
@@ -16,7 +16,7 @@
  *     `src/data/ui/`) imported two panel-id types from '@/stores/ui'
  *
  * The second was type-only, so it emitted no runtime edge. It is still a
- * violation: §3.2 governs direction, and a type-only import is precisely how a
+ * violation: sec3.2 governs direction, and a type-only import is precisely how a
  * runtime one later arrives without anyone noticing the direction was already
  * wrong.
  *
@@ -34,9 +34,9 @@ const GAME_PREFIX = 'game/'
 const GAME_FILES = srcCorpus(SRC_DIR).filter((file) => file.fromSrc.startsWith(GAME_PREFIX))
 
 /**
- * `from 'vue'` / `from "@/stores/…"`, in a static import or a re-export, with
+ * `from 'vue'` / `from "@/stores/..."`, in a static import or a re-export, with
  * or without the `type` modifier. Bare `import 'x'` too, though it carries no
- * binding — a side-effecting store import would still be the wrong direction.
+ * binding - a side-effecting store import would still be the wrong direction.
  */
 function importsFrom(text: string, pattern: string): boolean {
   const quoted = `['"]${pattern}['"]`
@@ -85,7 +85,7 @@ describe('frontend import direction', () => {
   it(
     'the static layer reaches into src/game/ only where it is recorded',
     () => {
-      // The MIRROR of the rule above, and §10.5a of the spec: "No Vue file
+      // The MIRROR of the rule above, and sec10.5a of the spec: "No Vue file
       // imports from src/game/". It is now ZERO, having started at nine
       // modules, each given a home that matches what it is:
       //

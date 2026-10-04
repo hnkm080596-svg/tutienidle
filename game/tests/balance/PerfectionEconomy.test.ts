@@ -132,7 +132,7 @@ describe('cross-run consistency', () => {
     const perfection = measurePerfectionRun(11)
     expect(normal.realmId).toBe('qi_refining')
     expect(perfection.realmId).toBe('mortal')
-    // Same mortal prefix under identical parity → the shared window of
+    // Same mortal prefix under identical parity -> the shared window of
     // the two runs sees comparable kill/economy magnitudes.
     expect(normal.enemiesDefeated).toBeGreaterThan(0)
     expect(perfection.enemiesDefeated).toBeGreaterThan(normal.enemiesDefeated)

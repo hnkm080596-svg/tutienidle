@@ -1,21 +1,32 @@
 <script setup lang="ts">
 import { computed, type CSSProperties } from 'vue'
 import type { InkWashUiAssetId } from '@/assets/inkWashUi'
+import { chromeSlice, HUYEN_KIM_CHROME } from '@/ui/huyenKimChrome'
 
-// Pure-CSS "ink & paper" chrome (2026-08-30) — asset PNG ink-wash gốc bị
-// ẩn vĩnh viễn (không quan tâm khôi phục), nên component này không còn
-// đọc inkWashUi.ts nữa: mỗi assetId map thẳng sang 1 class vẽ bằng
-// gradient/box-shadow/pseudo-element bên dưới. Giữ NGUYÊN prop API cũ
-// (assetId/layer/opacity/tintVar/thickness) nên GamePanel/GameButton/
-// OverlayPanel/Chip/Tooltip/... không cần sửa gì.
+// Pure-CSS "ink & paper" chrome (2026-08-30) - asset PNG ink-wash goc bi
+// an vinh vien (khong quan tam khoi phuc), nen component nay khong con
+// doc inkWashUi.ts nua: moi assetId map thang sang 1 class ve bang
+// gradient/box-shadow/pseudo-element ben duoi. Giu NGUYEN prop API cu
+// (assetId/layer/opacity/tintVar/thickness) nen GamePanel/GameButton/
+// OverlayPanel/Chip/Tooltip/... khong can sua gi.
+//
+// Huyen Kim phase 1: `chromeId` opts into the new manifest slots
+// (huyenKimChrome.ts). A 'ready' slot renders real border-image art
+// (mask-box-image when tinted); a 'pending' slot renders the --hk-*
+// CSS fallback (hk-fill for fill/stretch centers, hk-frame for
+// transparent centers) and MUST NOT fetch a file.
 const props = withDefaults(defineProps<{
-  assetId: InkWashUiAssetId
+  assetId?: InkWashUiAssetId
+  /** Huyen Kim chrome slot id - takes precedence over assetId. */
+  chromeId?: string
   layer?: 'surface' | 'frame'
   opacity?: number
   tintVar?: string
-  /** Override bề dày viền vẽ (px) khi khung chuẩn quá dày cho chỗ nhỏ. */
+  /** Override be day vien ve (px) khi khung chuan qua day cho cho nho. */
   thickness?: number
 }>(), {
+  assetId: undefined,
+  chromeId: undefined,
   layer: 'surface',
   opacity: 1,
   tintVar: undefined,
@@ -27,6 +38,56 @@ const resolvedTint = computed(() => (
     ? (props.tintVar.startsWith('--') ? `var(${props.tintVar})` : props.tintVar)
     : undefined
 ))
+
+const chrome = computed(() => (props.chromeId ? chromeSlice(props.chromeId) : null))
+const chromeMeta = computed(() => (props.chromeId ? HUYEN_KIM_CHROME[props.chromeId] : undefined))
+
+// The --hk-* fallback class also stays UNDER ready art: if an engine
+// cannot raster the border-image/mask layer, the token surface/ring is
+// still painted instead of an invisible chrome.
+const chromeFallbackClass = computed(() => {
+  if (!props.chromeId) return ''
+  return chromeMeta.value?.center === 'transparent'
+    ? 'ink-nine-slice--hk-frame'
+    : 'ink-nine-slice--hk-fill'
+})
+
+// Ready chrome art: untinted slots render via border-image (the PNG keeps
+// its own colors); tintable slots are grayscale sheets, so the tint is
+// painted through -webkit-mask-box-image using the sheet as alpha mask.
+// tintable:false slots ignore tintVar - the art carries its own colors.
+const chromeArtStyle = computed<Record<string, string> | null>(() => {
+  const c = chrome.value
+  if (!c) return null
+  const { left, right, top, bottom } = c.slices
+  const meta = chromeMeta.value
+  const fill = meta?.center === 'transparent' ? '' : ' fill'
+  const repeat = meta?.edgeMode === 'tile' ? 'round' : 'stretch'
+  const slice = `${top} ${right} ${bottom} ${left}${fill}`
+  const width = `${top}px ${right}px ${bottom}px ${left}px`
+  const source = `image-set(url("${c.url1x}") 1x, url("${c.url2x}") 2x)`
+  const tint = meta?.tintable === false ? undefined : resolvedTint.value
+  const art: Record<string, string> = tint
+    ? {
+        background: tint,
+        WebkitMaskBoxImageSource: source,
+        WebkitMaskBoxImageSlice: slice,
+        WebkitMaskBoxImageWidth: width,
+        WebkitMaskBoxImageRepeat: repeat,
+        WebkitMaskBoxImageOutset: '0',
+      }
+    : {
+        borderStyle: 'solid',
+        borderColor: 'transparent',
+        borderWidth: width,
+        borderImageSource: source,
+        borderImageSlice: slice,
+        borderImageWidth: width,
+        borderImageRepeat: repeat,
+        borderImageOutset: '0',
+      }
+  return art
+})
 
 const style = computed<CSSProperties>(() => {
   const vars: CSSProperties = {
@@ -40,6 +101,9 @@ const style = computed<CSSProperties>(() => {
   if (props.thickness !== undefined) {
     ;(vars as Record<string, string>)['--ink-slice-ring-w'] = `${props.thickness}px`
   }
+  if (chromeArtStyle.value) {
+    Object.assign(vars, chromeArtStyle.value)
+  }
   return vars
 })
 </script>
@@ -49,10 +113,12 @@ const style = computed<CSSProperties>(() => {
     class="ink-nine-slice"
     :class="[
       `ink-nine-slice--${layer}`,
-      `ink-nine-slice--${assetId}`,
-      { 'ink-nine-slice--tinted': Boolean(resolvedTint) },
+      assetId && !chromeId ? `ink-nine-slice--${assetId}` : '',
+      chromeFallbackClass,
+      { 'ink-nine-slice--tinted': Boolean(resolvedTint), 'ink-nine-slice--hk': Boolean(chromeId) },
     ]"
     :data-ink-slice="assetId"
+    :data-hk-slice="chromeId"
     aria-hidden="true"
     :style="style"
   />
@@ -68,8 +134,41 @@ const style = computed<CSSProperties>(() => {
 }
 
 /* ============================================================
-   Paper surfaces — DARK MODE (2026-08-31). Chuyển từ giấy dó sáng sang
-   mực đậm + vignette vàng nhạt để đồng bộ theme.css surface-*.
+   Huyen Kim pending-art fallbacks (--hk-* tokens). Override points:
+   --hk-slice-surface lifts the fill level (raised/overlay),
+   --ink-slice-tint + --ink-slice-ring-w retint/recolor the ring.
+   ============================================================ */
+.ink-nine-slice--hk-fill {
+  background: linear-gradient(
+    175deg,
+    color-mix(in srgb, var(--hk-slice-surface, var(--hk-surface-overlay)) 100%, transparent),
+    color-mix(in srgb, var(--hk-slice-surface, var(--hk-surface-raised)) 92%, var(--hk-surface-base))
+  );
+  box-shadow:
+    inset 0 0 0 1px var(--ink-slice-tint, var(--hk-border-muted)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.ink-nine-slice--hk-fill.ink-nine-slice--tinted {
+  background: linear-gradient(
+    175deg,
+    color-mix(in srgb, var(--ink-slice-tint) 26%, var(--hk-slice-surface, var(--hk-surface-raised))),
+    color-mix(in srgb, var(--ink-slice-tint) 14%, var(--hk-slice-surface, var(--hk-surface-base)))
+  );
+  box-shadow:
+    inset 0 0 0 1px var(--ink-slice-tint),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.ink-nine-slice--hk-frame {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ink-slice-tint, var(--hk-gold-muted)) 40%, transparent),
+    inset 0 0 0 var(--ink-slice-ring-w, 1.5px) var(--ink-slice-tint, var(--hk-border-active));
+}
+
+/* ============================================================
+   Paper surfaces - DARK MODE (2026-08-31). Chuyen tu giay do sang sang
+   muc dam + vignette vang nhat de dong bo theme.css surface-*.
    ============================================================ */
 .ink-nine-slice--surface-m-paper {
   background:
@@ -101,11 +200,11 @@ const style = computed<CSSProperties>(() => {
 }
 
 /* ============================================================
-   Ink-brush frames — viền mực, tâm trong suốt (KHÔNG lấp nền), vẽ trên
-   surface nhưng dưới nội dung (z-index qua layer="frame").
-   DARK MODE: viền mặc định chuyển từ --brush-600 (nâu ấm) sang
-   --chrome-500 (ngà lạnh) để hài hòa với nền mực; vàng ở ring-ceremony
-   giữ nguyên (đó là dấu hiệu "nghi lễ", không thuộc về ink-brush).
+   Ink-brush frames - vien muc, tam trong suot (KHONG lap nen), ve tren
+   surface nhung duoi noi dung (z-index qua layer="frame").
+   DARK MODE: vien mac dinh chuyen tu --brush-600 (nau am) sang
+   --chrome-500 (nga lanh) de hai hoa voi nen muc; vang o ring-ceremony
+   giu nguyen (do la dau hieu "nghi le", khong thuoc ve ink-brush).
    ============================================================ */
 .ink-nine-slice--frame-xs-ink-line {
   box-shadow: inset 0 0 0 var(--ink-slice-ring-w, 1.5px) var(--ink-slice-tint, var(--chrome-500));
@@ -136,10 +235,10 @@ const style = computed<CSSProperties>(() => {
 }
 
 /* ============================================================
-   Button skins — layer="surface" (không có surface riêng cho nút, nên
-   phải tự lấp nền), trừ ghost dùng frame-xs-ink-line (viền không nền).
-   DARK MODE: primary đổi từ gradient giấy sáng sang gradient mực nâng;
-   ink/secondary giữ ý niệm (đậm hơn, cùng họ surface-*).
+   Button skins - layer="surface" (khong co surface rieng cho nut, nen
+   phai tu lap nen), tru ghost dung frame-xs-ink-line (vien khong nen).
+   DARK MODE: primary doi tu gradient giay sang sang gradient muc nang;
+   ink/secondary giu y niem (dam hon, cung ho surface-*).
    ============================================================ */
 .ink-nine-slice--button-s-paper {
   background: linear-gradient(180deg, var(--surface-600), var(--surface-800));

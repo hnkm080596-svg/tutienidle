@@ -1,5 +1,5 @@
-// Registry ArtifactId -> ArtifactDefinition (doc §13) — hiện chỉ có
-// Ngũ Hành Châu; Kiếm Tu/Thể Tu chưa có definition (không tạo placeholder).
+// Registry ArtifactId -> ArtifactDefinition (doc sec13) - hien chi co
+// Ngu Hanh Chau; Kiem Tu/The Tu chua co definition (khong tao placeholder).
 import type { ArtifactDefinition, ArtifactId } from '../../core/artifact/Artifact'
 import { NGU_HANH_CHAU_DEFINITION } from './NguHanhChau'
 

@@ -1,9 +1,9 @@
-// R10 (AR-12, S4) — offline settle must run exactly once per payload.
+// R10 (AR-12, S4) - offline settle must run exactly once per payload.
 // GameManagerSaveRestore.restoreFromSave() gates production/decompose/
 // auto-farm/alchemy offline settlement purely on wall-clock elapsed time
-// since save.player.lastSavedAt (elapsedOfflineSeconds > 60) — it never
+// since save.player.lastSavedAt (elapsedOfflineSeconds > 60) - it never
 // checked whether THIS EXACT payload had already been settled. A repeated
-// call with the identical save (boot retry, reload race — the same
+// call with the identical save (boot retry, reload race - the same
 // scenario S2/S3 close for the player store and bag replacement) would
 // re-run the same offline settlement and grant the same rewards again.
 import { withMortalCreationPick } from '../../services/save/GameSave.fixture'

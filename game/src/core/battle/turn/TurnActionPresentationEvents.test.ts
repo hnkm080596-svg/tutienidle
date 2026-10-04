@@ -14,8 +14,8 @@ import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
 
-// Fixture helpers — copy y hệt shape dùng trong TurnBattleSystem.followUpQueue.test.ts
-// (per-file fixture convention của test suite này).
+// Fixture helpers - copy y het shape dung trong TurnBattleSystem.followUpQueue.test.ts
+// (per-file fixture convention cua test suite nay).
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
   return {
@@ -33,9 +33,9 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
   }
 }
 
-// Action Playback Task 4 — presentation event emitter: GameManager là sole
-// caller; CombatScene là sole listener. Reuse 'attack'/'action_impact' event
-// names/shapes để CombatScene handlers hiện có hoạt động không sửa.
+// Action Playback Task 4 - presentation event emitter: GameManager la sole
+// caller; CombatScene la sole listener. Reuse 'attack'/'action_impact' event
+// names/shapes de CombatScene handlers hien co hoat dong khong sua.
 
 describe('TurnActionPresentationEvents', () => {
   it('emitTurnReady emits turn_ready with actorId', () => {
@@ -148,8 +148,8 @@ describe('TurnActionPresentationEvents', () => {
       emitTurnBattleEntitySnapshot(eventBus, battle)
 
       expect(received).toHaveLength(1)
-      expect(received[0]!.players).toEqual([{ id: 'player', name: 'Player', row: 4, column: 1, currentHp: 80, maxHp: 100, alive: true, isBoss: false }])
-      expect(received[0]!.enemies).toEqual([{ id: 'enemy', name: 'Boss Enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, alive: false, isBoss: true }])
+      expect(received[0]!.players).toEqual([{ id: 'player', name: 'Player', row: 4, column: 1, currentHp: 80, maxHp: 100, currentMp: 0, maxMp: 0, alive: true, isBoss: false }])
+      expect(received[0]!.enemies).toEqual([{ id: 'enemy', name: 'Boss Enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, currentMp: 0, maxMp: 0, alive: false, isBoss: true }])
     })
 
     it('defaults isBoss to false when CombatEntity.isBoss is undefined', () => {
@@ -322,6 +322,8 @@ describe('TurnActionPresentationEvents', () => {
         column: 0,
         currentHp: 10,
         maxHp: 10,
+        currentMp: 0,
+        maxMp: 0,
         alive: true,
         isBoss: false,
       })

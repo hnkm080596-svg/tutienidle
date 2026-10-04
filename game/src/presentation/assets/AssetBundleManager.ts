@@ -12,6 +12,7 @@
  */
 
 import type { AssetPort, RouteRequest } from '../PresentationContracts'
+import { resolveAssetUrl } from './AssetBaseUrl'
 import {
   enumerateResources,
   getBundleDescriptors,
@@ -53,7 +54,7 @@ export function defaultDomAudioLoader(
     for (const url of urls) {
       if (signal?.aborted) throw new Error(`Load aborted: ${url}`)
       try {
-        const res = await fetch(url, { signal })
+        const res = await fetch(resolveAssetUrl(url), { signal })
         if (!res.ok) throw new Error(`Audio fetch failed ${res.status}: ${url}`)
         return await res.arrayBuffer()
       } catch (err) {
@@ -139,7 +140,7 @@ export class AssetBundleManager implements AssetPort {
   // immediately without re-fetching a known-missing file.
   private readonly missingResources = new Map<string, number>()
   private readonly inFlightLoads = new Map<string, Promise<void>>()
-  /** DOM-lane keys inside loadedResources — they survive loader-scene swaps
+  /** DOM-lane keys inside loadedResources - they survive loader-scene swaps
    *  (browser cache / AudioManager bytes are scene-independent). */
   private readonly domLoadedKeys = new Set<string>()
   // DOM image/audio loads are scene-independent (browser cache /
@@ -153,7 +154,7 @@ export class AssetBundleManager implements AssetPort {
     onAbort: () => void
   }>()
   private disposed = false
-  // ARCH-013/L04 — loadedResources records what the CURRENT loader's cache
+  // ARCH-013/L04 - loadedResources records what the CURRENT loader's cache
   // holds. setLoaderScene/dispose bump this; a physical load that resolves
   // afterward must not publish into a cache it was cleared out of (the old
   // continuation would resurrect keys the swap deliberately dropped while
@@ -360,7 +361,7 @@ export class AssetBundleManager implements AssetPort {
 
     const runLoad = async (): Promise<void> => {
       try {
-        await this.domImageLoader(desc.url)
+        await this.domImageLoader(resolveAssetUrl(desc.url))
         // No loaderGeneration fence here: a DOM image's result lives in the
         // browser cache, not in the loader scene's texture cache, so a
         // setLoaderScene/dispose during the await cannot make it stale. The
@@ -373,7 +374,7 @@ export class AssetBundleManager implements AssetPort {
         }
       } finally {
         // Identity-guarded delete: a NEW load may already have registered
-        // its own entry for this key — a stale continuation must not
+        // its own entry for this key - a stale continuation must not
         // remove it.
         if (this.domInFlightLoads.get(desc.key) === loadPromise) {
           this.domInFlightLoads.delete(desc.key)
@@ -390,7 +391,7 @@ export class AssetBundleManager implements AssetPort {
   /**
    * Optional lane (Sound System W4): identical dedupe/inFlight mechanics as
    * loadSingleDomImage, but a load failure marks the key missing and
-   * RESOLVES — audio must never reject a route the way a missing texture
+   * RESOLVES - audio must never reject a route the way a missing texture
    * does. Decoded bytes hand to AudioManager's decode cache.
    */
   private loadSingleDomAudio(
@@ -447,7 +448,7 @@ export class AssetBundleManager implements AssetPort {
 
     this.domInFlightLoads.set(desc.key, loadPromise)
     // The promise itself never rejects (fail-soft), but wrapWithSignal can
-    // reject on caller abort — callers of an OPTIONAL lane must not see a
+    // reject on caller abort - callers of an OPTIONAL lane must not see a
     // rejection either, so swallow it.
     return this.wrapWithSignal(loadPromise, signal).catch(() => undefined)
   }
@@ -462,7 +463,7 @@ export class AssetBundleManager implements AssetPort {
       return Promise.resolve()
     }
 
-    // Reached after an await boundary — the waitForLoaderScene in
+    // Reached after an await boundary - the waitForLoaderScene in
     // ensureLoaded may have resolved while the caller's signal aborted.
     // Checking before the batch starts keeps an already-dead transition
     // from spending a fresh physical load on the new loader (its
@@ -483,7 +484,7 @@ export class AssetBundleManager implements AssetPort {
       try {
         await loader.loadDescriptors(uncommitted)
         // Generation fence (unlike the DOM path): these keys were written
-        // into the OLD scene's texture cache — the new loader does not hold
+        // into the OLD scene's texture cache - the new loader does not hold
         // them, so they must not be published (or claimed as success).
         if (generation !== this.loaderGeneration) {
           throw new Error('Asset load superseded by loader swap')

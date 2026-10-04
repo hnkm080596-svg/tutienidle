@@ -168,12 +168,12 @@ export class GameManagerTurnBattlePresentationOps {
     this.runtime.acknowledgeTurnReady(token)
   }
 
-  /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
+  /** Phaser goi tai impact frame (lunge tween xong) -> ap damage, phat VFX. */
   acknowledgeActionImpact(token?: string): void {
     this.runtime.acknowledgeActionImpact(token)
   }
 
-  /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
+  /** Phaser goi khi VFX tween xong -> turn cleanup, phat standby tail. */
   acknowledgeActionComplete(token?: string): void {
     this.runtime.acknowledgeActionComplete(token)
   }
@@ -187,10 +187,10 @@ export class GameManagerTurnBattlePresentationOps {
   }
 
   /**
-   * Slice 7 — presentation facade: buildTurnSkillPresentation cho trận
-   * turn hiện tại (isPlayerTurnPaused = manual pause đang chờ choice).
-   * Party (Task 10): khi pause, presentation theo PAUSED ACTOR (bất kỳ
-   * party member nào), không cố định players[0].
+   * Slice 7 - presentation facade: buildTurnSkillPresentation cho tran
+   * turn hien tai (isPlayerTurnPaused = manual pause dang cho choice).
+   * Party (Task 10): khi pause, presentation theo PAUSED ACTOR (bat ky
+   * party member nao), khong co dinh players[0].
    */
   buildTurnSkillPresentation(
     battle: TurnBattle,

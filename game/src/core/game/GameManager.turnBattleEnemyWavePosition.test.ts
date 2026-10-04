@@ -9,17 +9,17 @@ import { SKILLS } from '../../data/skill/Skills'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { ENEMY_SIDE_REGION } from '../battle/BattlefieldRegions'
 
-// Bug fix (2026-09-06, user report "quái vẫn spawn góc trên bên trái thay
-// vì bên sân của chúng, bắt đầu từ con quái thứ 2") — startStage()/
-// restartTurnBattleCycle() truyền 1 factory `spawnEnemy` cho
-// TurnBattleSystem để spawn quái thứ 2 trở đi giữa wave (quái ĐẦU TIÊN đi
-// qua buildTurnBattle(), nơi ĐÃ gọi resolveEnemySpawnPosition() đúng).
-// Factory đó trước fix KHÔNG hề gọi resolveEnemySpawnPosition() — entity
-// giữ nguyên x:0/row:0 mặc định của enemyToCombatEntity() (Enemy.ts), tức
-// góc trên-trái của lưới, thay vì random trong ENEMY_SIDE_REGION
-// (columnMin 7). Test này ghi lại vị trí spawn CỦA TỪNG quái (theo id, kể
-// cả quái đã chết/bị thay id khác) và khẳng định KHÔNG quái nào — kể cả
-// quái thứ 2, 3 trở đi — spawn ở cột 0.
+// Bug fix (2026-09-06, user report "quai van spawn goc tren ben trai thay
+// vi ben san cua chung, bat dau tu con quai thu 2") - startStage()/
+// restartTurnBattleCycle() truyen 1 factory `spawnEnemy` cho
+// TurnBattleSystem de spawn quai thu 2 tro di giua wave (quai DAU TIEN di
+// qua buildTurnBattle(), noi DA goi resolveEnemySpawnPosition() dung).
+// Factory do truoc fix KHONG he goi resolveEnemySpawnPosition() - entity
+// giu nguyen x:0/row:0 mac dinh cua enemyToCombatEntity() (Enemy.ts), tuc
+// goc tren-trai cua luoi, thay vi random trong ENEMY_SIDE_REGION
+// (columnMin 7). Test nay ghi lai vi tri spawn CUA TUNG quai (theo id, ke
+// ca quai da chet/bi thay id khac) va khang dinh KHONG quai nao - ke ca
+// quai thu 2, 3 tro di - spawn o cot 0.
 describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', () => {
   it('mọi quái trong wave (kể cả quái thứ 2 trở đi) spawn trong ENEMY_SIDE_REGION, không dính góc trên-trái (x=0)', () => {
     const gameManager = new GameManager()
@@ -36,7 +36,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
       realmId: 'mortal',
       lane: 'ground',
       statsInput: {
-        // HP cực thấp — chết nhanh để wave spawn nhiều lượt trong ít tick.
+        // HP cuc thap - chet nhanh de wave spawn nhieu luot trong it tick.
         maxHp: 1,
         might: 0,
         attackSpeed: 1,
@@ -53,8 +53,8 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
       description: '',
       floor: 1,
       enemyPool: [{ enemyId: mob.id, weight: 1 }],
-      // KHÔNG có bossEnemyId — effectiveTotalEnemyCount() giữ nguyên 5,
-      // đủ để quan sát quái thứ 2+ (yêu cầu tối thiểu để bug lộ ra).
+      // KHONG co bossEnemyId - effectiveTotalEnemyCount() giu nguyen 5,
+      // du de quan sat quai thu 2+ (yeu cau toi thieu de bug lo ra).
       totalEnemyCount: 5, waves: [5],
       spawnIntervalSeconds: 0,
     }
@@ -65,12 +65,12 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     const player = createDefaultPlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, might: 999  })
 
-    expect(gameManager.progressionOps.learnSkill('tram', player)).toBe(true)
-    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('linh_bao', player)).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(true)
 
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
 
-    // id -> x (column) tại lần đầu thấy id đó trong turn battle.
+    // id -> x (column) tai lan dau thay id do trong turn battle.
     const seenAtSpawn = new Map<string, number>()
 
     for (let index = 0; index < 400; index++) {
@@ -87,8 +87,8 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
       }
     }
 
-    // Phải quan sát được ít nhất quái #1 và #2 (wave 5 con, HP=1, might=999
-    // — thừa thời gian để spawn tối thiểu 2 con trong 400 tick).
+    // Phai quan sat duoc it nhat quai #1 va #2 (wave 5 con, HP=1, might=999
+    // - thua thoi gian de spawn toi thieu 2 con trong 400 tick).
     expect(seenAtSpawn.size).toBeGreaterThanOrEqual(2)
 
     for (const x of seenAtSpawn.values()) {

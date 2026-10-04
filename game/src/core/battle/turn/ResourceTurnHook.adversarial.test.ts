@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 
-// QA adversarial probe (2026-09-04 quick review) — attack operator: value
-// mutation (NaN/Infinity truyền qua amount). Invariant boundedness: stat
-// phải giữ giá trị hữu hạn sau khi áp delta, hoặc bị clamp về min/max.
+// QA adversarial probe (2026-09-04 quick review) - attack operator: value
+// mutation (NaN/Infinity truyen qua amount). Invariant boundedness: stat
+// phai giu gia tri huu han sau khi ap delta, hoac bi clamp ve min/max.
 describe('ResourceTurnHook adversarial: non-finite delta', () => {
   it('amount=NaN không tạo ra stat NaN', () => {
     const result = applyTurnStartDeltas({ kimThe: 5 }, [{ stat: 'kimThe', amount: NaN, min: 0 }])

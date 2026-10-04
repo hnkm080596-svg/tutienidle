@@ -18,7 +18,7 @@ describe('useBagSort — sort model (plan Workstream E)', () => {
 
     const sorted = stableSort(rows, (a, b) => (a.amount ?? 0) - (b.amount ?? 0))
 
-    // amount bằng nhau giữ original relative order.
+    // amount bang nhau giu original relative order.
     expect(sorted.map((row) => row.name)).toEqual(['b', 'd', 'a', 'c'])
   })
 

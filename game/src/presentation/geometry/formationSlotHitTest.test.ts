@@ -1,12 +1,12 @@
-// Phase 3 — the drop target must be the slot the player sees.
+// Phase 3 - the drop target must be the slot the player sees.
 //
 // V8 fixed the *shapes*. This file asserts the property those shapes exist to
 // deliver: a pointer landing on a drawn cell drops onto that cell, at any
 // rendered size, and a pointer off the road drops onto nothing.
 //
 // None of this is testable through the DOM in jsdom: `clip-path` hit-testing is
-// a browser behaviour jsdom does not implement. What IS testable — and is what
-// would actually break — is the geometry the browser is handed. If the polygons
+// a browser behaviour jsdom does not implement. What IS testable - and is what
+// would actually break - is the geometry the browser is handed. If the polygons
 // tile the grid one-to-one with the projection's own inverse, then whatever
 // polygon the browser picks is the cell the projection agrees on.
 import { describe, expect, it } from 'vitest'
@@ -113,7 +113,7 @@ describe('formation slot hit-testing', () => {
   it('percentage placement survives the canvas being scaled to fit', () => {
     // The panel CSS-scales the canvas down (measured: 420x480 -> 362x414). If
     // the overlay were placed in pixels it would keep its original size and the
-    // drop targets would drift — the defect V8 was, in a new form.
+    // drop targets would drift - the defect V8 was, in a new form.
     const rendered = { width: 362, height: 414 }
     const factorX = rendered.width / FORMATION_CANVAS_WIDTH
     const factorY = rendered.height / FORMATION_CANVAS_HEIGHT

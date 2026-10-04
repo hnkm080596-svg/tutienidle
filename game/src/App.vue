@@ -3,8 +3,15 @@ import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
+import { OVERLAY_LAYERS } from './core/presentation/OverlayLayers'
+import { bindOnlineAuthority, observeAuthoritySaveResult, unbindOnlineAuthority } from './composables/useOnlineAuthority'
+import { bindSessionTeardown, unbindSessionTeardown } from './composables/useSessionAccount'
 import { GameManager } from './core/game/GameManager'
-import { applyCreationProfile, bootstrapEarlyGamePlayer } from './core/game/EarlyGameBootstrap'
+import {
+  initializeCharacter,
+  initializationMetadataFromRemote,
+  type CharacterInitializationMetadata,
+} from './services/character/initializeCharacter'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
 import {
   PHASER_SCENE_ADAPTER_KEY,
@@ -23,6 +30,7 @@ import { bindPresentationActive } from './presentation/bindPresentationActive'
 import { bindCombatAudio } from './presentation/audio/combatAudioBinding'
 import { bindUiAudio } from './presentation/audio/uiAudioBinding'
 import { bindAmbientAudio } from './presentation/audio/ambientAudioDriver'
+import { bindArtWarm } from './presentation/assets/artWarmWiring'
 import { AudioManager } from './core/audio/AudioManager'
 import { setReducedShakeEnabled } from './presentation/vfx/screenShakePolicy'
 import { useAudioStore } from './stores/audio'
@@ -33,6 +41,7 @@ import { isBattleInProgress } from './core/battle/BattleTypes'
 import { registerEnemySpawnDebug } from './core/dev/enemySpawnDebug'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
+import { bindUpdateSurface, unbindUpdateSurface, useUpdates } from './composables/useUpdates'
 import { useCombatPause } from './composables/useCombatPause'
 import { useNotificationStore } from './stores/notification'
 import { useI18n } from 'vue-i18n'
@@ -41,7 +50,12 @@ import { useSaveIssueStore } from './stores/saveIssue'
 import { installAutomationFlagsPersistence } from './stores/uiFlagsPersistence'
 import { useAppLifecycle, type BootOutcome } from './composables/useAppLifecycle'
 import { hasResumeCandidate, markResetNotice } from './composables/resumeSession'
-import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'
+import { accountIdForSession, setSaveAccountId, resolveSaveKey } from './services/save/saveKeys'
+import {
+  getDiagnosticRecorder,
+  recordDiagnostic,
+} from './services/diagnostics/DiagnosticRecorder'
+import { recordSaveOutcome } from './services/diagnostics/recordSaveOutcome'
 import type { AuthSession } from './services/auth/AuthService'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
@@ -50,8 +64,11 @@ import CombatPauseOverlay from './components/game/combat/CombatPauseOverlay.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
+import UpdateBanner from './components/common/UpdateBanner.vue'
 import SaveIncompatibleScreen from './components/common/SaveIncompatibleScreen.vue'
+import BetaCompletionModal from './components/common/BetaCompletionModal.vue'
 import AuthEntryScreen from './components/onboarding/AuthEntryScreen.vue'
+import OnboardingStage from './components/onboarding/OnboardingStage.vue'
 import CharacterCreationScreen, {
   type CharacterCreationPayload,
 } from './components/onboarding/CharacterCreationScreen.vue'
@@ -74,12 +91,29 @@ import { ALL_PROGRESSION_NODES } from './data/progression/ProgressionNodeCatalog
 import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
-import { cloudSaveCoordinator, remoteSaveSync } from './services/cloudSave/CloudSaveServiceFactory'
+import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
+import { backendBundle, backendComposition, backendFatal } from './services/backend/backendBundle'
 import {
   deleteSave,
   restoreGameSession,
   SAVE_RESET_REQUEST_EVENT,
 } from './services/save/SaveSystem'
+import {
+  OnlineSessionController,
+  type AuthorityState,
+} from './services/session/OnlineSessionController'
+import { runReconnectPipeline } from './services/session/reconnectPipeline'
+import {
+  readSupabaseSession,
+  resolveSupabaseSession,
+} from './services/supabase/SupabaseSession'
+import type { QuitFlushFailedNotice } from './shared/session/FlushResult'
+import {
+  bindFeedbackProviders,
+  bindFeedbackService,
+  unbindFeedbackProviders,
+  unbindFeedbackService,
+} from './services/feedback/FeedbackService'
 
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -105,6 +139,38 @@ const saveIssue = useSaveIssueStore()
 // Home. Set true o cuoi onMounted() sau khi moi thu (load save/dang
 // ky data/tick loop) da san sang.
 const isBooted = ref(false)
+
+// Beta scope v2 sec.H - the ending beat: once betaCompletionFor resolves
+// betaComplete, BetaCompletionModal shows until dismissed. The ack is a
+// device-local flag keyed by character name (localStorage): no
+// save-schema bump, and a second same-named character is a documented
+// edge (they simply re-see the beat if the flag was never written or
+// was cleared). Same flag-name pattern as tutienidle.audio.v2.
+const BETA_COMPLETION_ACK_PREFIX = 'tutienidle.betaCompletionAck.v1.'
+
+const betaCompletionAcked = ref(false)
+
+const betaCompletionAckKey = computed(() => `${BETA_COMPLETION_ACK_PREFIX}${player.name}`)
+
+const showBetaCompletion = computed(
+  () =>
+    !betaCompletionAcked.value &&
+    typeof localStorage !== 'undefined' &&
+    localStorage.getItem(betaCompletionAckKey.value) !== '1' &&
+    gameManager.progressionOps.betaCompletionFor(player.$state).betaComplete,
+)
+
+function ackBetaCompletion() {
+  betaCompletionAcked.value = true
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(betaCompletionAckKey.value, '1')
+    } catch {
+      // Storage quota/privacy mode: the in-session ack still holds.
+    }
+  }
+}
 // GameClock chi do thoi gian (pure clock). GameManager chi dieu
 // phoi cac system. Viec "moi giay thi lam gi" la trach nhiem cua
 // vong lap tick() duoi day - noi duy nhat biet ca 2 ben.
@@ -149,11 +215,27 @@ const transitionOverlayRef = ref<{
   open: (id: number, signal: AbortSignal) => Promise<void>
 } | null>(null)
 
+const onboardingStageRef = ref<InstanceType<typeof OnboardingStage> | null>(null)
+const onboardingTransitionId = ref<number | null>(null)
 const curtainPort: CurtainPort = {
   close: async (id, signal) => {
+    const { currentRoute, targetRoute } = coordinator.getSnapshot()
+    const exchangesScroll = (currentRoute === 'auth' && targetRoute === 'character')
+      || (currentRoute === 'character' && targetRoute === 'auth')
+    if (exchangesScroll && onboardingStageRef.value) {
+      onboardingTransitionId.value = id
+      await onboardingStageRef.value.close(id, signal)
+      return
+    }
+    onboardingTransitionId.value = null
     await transitionOverlayRef.value?.close(id, signal)
   },
   open: async (id, signal) => {
+    if (onboardingTransitionId.value === id && onboardingStageRef.value) {
+      try { await onboardingStageRef.value.open(id, signal) }
+      finally { onboardingTransitionId.value = null }
+      return
+    }
     await transitionOverlayRef.value?.open(id, signal)
   },
 }
@@ -213,6 +295,11 @@ const unbindUiAudio = bindUiAudio(ui)
 // W8: committed route -> music slot crossfade (silent until real assets);
 // W4: same route drives the lazy audio-* bundle fetch (unlock+enabled gated).
 const unbindAmbientAudio = bindAmbientAudio(coordinator, audioStore, assetBundleManager)
+
+// Committed route -> 'ui-scenes' art warm: fetches the panel/backdrop/icon
+// art once on the first 'home' commit so later panel switches paint from
+// cache. Fire-and-forget, deduped inside the bundle manager.
+const unbindArtWarm = bindArtWarm(coordinator, assetBundleManager)
 
 watch(
   () => audioStore.reducedShake,
@@ -318,6 +405,52 @@ const entryStage = bootFlow.stage
 const bootError = ref('')
 let introHandle: number | undefined
 
+// BETA-FINAL PR11 / spec B8 - late-bind the diagnostic context now that the
+// coordinator and save coordinator exist: every recorded event then carries
+// the committed route, the coarse save revision, and one per-boot
+// correlation id. The stable report id arrives async from main (Electron);
+// the recorder's fallback id serves until it resolves (and forever on web).
+const diagnosticsRecorder = getDiagnosticRecorder()
+diagnosticsRecorder?.bindContext({
+  routeProvider: () => coordinator.getSnapshot().currentRoute,
+  revisionProvider: () => cloudSaveCoordinator.getRevision(),
+  saveHashProvider: cachedSaveHash,
+  correlationId: crypto.randomUUID(),
+})
+if (window.electronAPI?.getDiagnosticReportId) {
+  void window.electronAPI
+    .getDiagnosticReportId()
+    .then((id) => diagnosticsRecorder?.bindContext({ reportId: id }))
+    .catch(() => undefined)
+}
+
+// BETA-FINAL PR13 / spec B7 - bind the feedback intake to the bundle's
+// service (supabase adapter or the honest local stand-in) and late-bind the
+// same coarse context the diagnostics ring carries: committed route + live
+// save revision. The server re-derives owner/session/build/revision itself;
+// these providers only fill the client-side context fields.
+bindFeedbackService(backendBundle.feedbackService)
+bindFeedbackProviders({
+  route: () => coordinator.getSnapshot().currentRoute,
+  saveRevision: () => cloudSaveCoordinator.getRevision(),
+})
+
+/** SHA-256 (truncated) of the cached raw save - the manifest's coarse
+ *  corruption signal. Never the save bytes themselves. */
+async function cachedSaveHash(): Promise<string | undefined> {
+  try {
+    const raw = localStorage.getItem(resolveSaveKey())
+    if (raw === null || raw === '') return undefined
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
+    return [...new Uint8Array(digest)]
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+      .slice(0, 16)
+  } catch {
+    return undefined
+  }
+}
+
 gameManager.catalogOps.registerMaterials(materials)
 gameManager.catalogOps.registerSkillTemplates(SKILLS)
 gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -392,6 +525,17 @@ const lifecycle = useAppLifecycle({
   },
   boot: bootFlow,
   coordinator: cloudSaveCoordinator,
+  // B1-D - thin closures over the authority instance declared below: the
+  // lifecycle runs them only inside bootGame/tick calls, by which time
+  // the const is initialized (TDZ is a call-time concern, not a
+  // construction-order one).
+  authority: {
+    canMutate: () => onlineAuthority.canMutate(),
+    beginChecking: () => onlineAuthority.beginChecking(),
+    markReady: () => onlineAuthority.markReady(),
+    markFailed: (code) => onlineAuthority.markFailed(code),
+    observeSaveResult: (result) => onlineAuthority.observeSaveResult(result),
+  },
   player,
   gameManager,
   // Fix (2026-09-06) - bootGame() tu startTickLoop(tick) khi boot thanh
@@ -403,10 +547,22 @@ const lifecycle = useAppLifecycle({
   entryStage,
   // Composable giu player dang loose (khong import Pinia store type vao
   // core-facing signature) - cast TAI BIEN nay khop dung loai that.
-  restoreGameSession: (playerOwner, manager, save) =>
-    restoreGameSession(playerOwner as Parameters<typeof restoreGameSession>[0], manager, save as Parameters<typeof restoreGameSession>[2]),
+  restoreGameSession: (playerOwner, manager, save, timeAuthority) =>
+    restoreGameSession(
+      playerOwner as Parameters<typeof restoreGameSession>[0],
+      manager,
+      save as Parameters<typeof restoreGameSession>[2],
+      timeAuthority,
+    ),
   persistPlayer: async () => {
     const result = await player.save(gameManager)
+
+    // B1-D - every save outcome renews the health lease or pauses/
+    // terminates admission by its error class.
+    observeAuthoritySaveResult(result)
+
+    // B8 - non-ok save outcomes are diagnostic events (never save bytes).
+    recordSaveOutcome(result, 'autosave')
 
     // Canh bao autosave fail chi 1 lan cho moi chuoi fail - reset co khi
     // ghi thanh cong lai de chuoi fail ke tiep van duoc bao.
@@ -422,15 +578,203 @@ const lifecycle = useAppLifecycle({
   },
   onError: (message) => {
     bootError.value = message
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'error',
+      category: 'lifecycle',
+      code: 'BOOT_FAILED',
+      message,
+    })
   },
   // B2 - a retried character creation after a failed first save cannot
   // roll its starter grants back in memory; the composable calls this to
   // recover on a clean process (same convention as resetSaveFromSettings).
   hardReset: () => window.location.reload(),
-  // Spec F8 - newest-wins remote reconciliation before the local load;
-  // undefined when Supabase isn't configured (fully local boot).
-  remoteSync: remoteSaveSync,
+  // Contract sec.H - a restored save carrying out-of-scope records gets
+  // one warning toast naming the dormant slice; the records stay data.
+  unsupportedSaveNotice: (reason) =>
+    notification.push('warning', t(`save.betaUnsupported.${reason}`)),
 })
+
+// B1-D - the online-admission authority (30s heartbeat / <=40s health
+// lease / spec-ordered reconnect / result-bearing flush). In remote mode
+// probe+reconnect are bound to the supabase adapter and GoTrue refresh;
+// in local/mock mode the gate is uniform but the lease is unbounded.
+const authorityState = ref<AuthorityState>('signed-out')
+const quitFlushOffer = ref<QuitFlushFailedNotice | null>(null)
+const remoteAuthority = cloudSaveCoordinator.capability === 'remote-authoritative'
+const supabaseConfig =
+  backendComposition.status === 'ready' ? backendComposition.config : null
+
+const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
+  probe: remoteAuthority ? () => cloudSaveCoordinator.heartbeat() : undefined,
+  reconnect:
+    remoteAuthority && supabaseConfig
+      ? () =>
+          runReconnectPipeline({
+            refreshAuth: async () => {
+              const resolved = await resolveSupabaseSession(supabaseConfig)
+              if (resolved) {
+                return 'ok'
+              }
+              // The credential's presence distinguishes a transient
+              // transport failure (retained - retry later) from a proven
+              // terminal rejection (cleared inside resolveSupabaseSession).
+              return readSupabaseSession() ? 'unavailable' : 'expired'
+            },
+            heartbeat: () => cloudSaveCoordinator.heartbeat(),
+            load: () => cloudSaveCoordinator.load(),
+            expectedRevision: () => cloudSaveCoordinator.getRevision(),
+          })
+      : undefined,
+  // The ONE save queue: quit/logout/flush join the same queue a manual
+  // or autosave does - there is never a second write path.
+  flushSave: () => player.save(gameManager),
+  monotonicNow: () => performance.now(),
+  scheduleInterval: (callback, timeoutMs) => window.setInterval(callback, timeoutMs),
+  clearHandle: (handle) => window.clearInterval(handle),
+  onPause: (reason) => {
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'warning',
+      category: 'session',
+      code: 'AUTH_PAUSED',
+      message: `authority paused (${reason})`,
+      details: { reason },
+    })
+    lifecycle.pauseSimulation()
+  },
+  onResume: (lineage, save, serverAuthority) => {
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'info',
+      category: 'session',
+      code: 'AUTH_RESUMED',
+      message: `authority resumed (${lineage})`,
+      details: { lineage },
+    })
+    if (lineage === 'replaced' && save) {
+      // Zero-accrual live replacement (B1-D): queues/jobs restore from
+      // the authoritative payload with the reconnect's server clock bound
+      // as 'now' - no offline catch-up is owed (the sim stayed admitted
+      // or was paused; nothing accrued).
+      restoreGameSession(player, gameManager, save, {
+        kind: 'live-replacement',
+        nowMs: serverAuthority?.serverNowMs ?? Date.now(),
+      })
+    }
+    lifecycle.resumeSimulation()
+  },
+  onStateChange: (state) => {
+    authorityState.value = state
+    recordDiagnostic({
+      source: 'renderer',
+      severity: AUTHORITY_TERMINAL_STATES.has(state) ? 'error' : 'info',
+      category: 'session',
+      code: `AUTH_${state.toUpperCase().replace(/-/g, '_')}`,
+      message: `authority state: ${state}`,
+      details: { state },
+    })
+  },
+}))
+
+// BETA-FINAL PR12 / spec B6 - the ONE update surface: the sanitized
+// UpdateState projection plus the prepare-install handshake. Install
+// admission pauses the SIMULATION (authority.pause would bump the
+// generation and self-sabotage the request-time equality fence), drains
+// the ONE save queue through the same result-bearing flush, and installs
+// only on 'saved' - a failure keeps the candidate parked, never installs.
+const updateSurface = bindUpdateSurface(
+  useUpdates(
+    {
+      flush: (requestId) => onlineAuthority.flush(requestId),
+      pauseAdmission: () => lifecycle.pauseSimulation(),
+      resumeAdmission: () => lifecycle.resumeSimulation(),
+      generation: () => onlineAuthority.currentGeneration,
+    },
+    gameManager,
+  ),
+)
+const updateInstallFailed = computed(() => updateSurface?.installFailed.value ?? null)
+
+const AUTHORITY_TERMINAL_STATES: ReadonlySet<AuthorityState> = new Set([
+  'conflict',
+  'revoked',
+  'recovery',
+  'maintenance',
+  'update-required',
+])
+
+const authorityTerminal = computed(() => AUTHORITY_TERMINAL_STATES.has(authorityState.value))
+
+// While an authority overlay is up every surface behind it is inert:
+// pointer is already covered by the overlay element, and inert removes
+// the keyboard path too (a stale-focused button behind the overlay would
+// otherwise still fire on Enter/Tab-activation - spec: no mutation path
+// may reach the domain while admission is blocked).
+const authorityOverlayActive = computed(
+  () => isBooted.value && (authorityState.value === 'reconnecting' || authorityTerminal.value),
+)
+
+const authorityMessage = computed(() => {
+  switch (authorityState.value) {
+    case 'revoked':
+      return t('authority.revoked')
+    case 'conflict':
+      return t('authority.conflict')
+    case 'maintenance':
+      return t('authority.maintenance')
+    case 'update-required':
+      return t('authority.updateRequired')
+    default:
+      return t('authority.recovery')
+  }
+})
+
+/** The ONLY path back to auth from a terminal authority state - the
+ *  owned acknowledgement the controller requires before signing out. */
+function acknowledgeAuthority() {
+  onlineAuthority.acknowledge()
+  bootFlow.showAuth()
+}
+
+// B1.9 - the return-to-auth teardown the session-account composable
+// invokes after flush/revoke/signout/local clear. Everything a logout
+// abandons here is re-bound by the next onAuthenticated: the save queue
+// resets, the authority dies back to signed-out, and the mounted game
+// tree unmounts before the auth card returns.
+function teardownToAuth() {
+  lifecycle.stopAll()
+  onlineAuthority.stopAll()
+  cloudSaveCoordinator.reset()
+  isBooted.value = false
+  bootFlow.showAuth()
+}
+bindSessionTeardown(teardownToAuth)
+
+function retryQuitFlush() {
+  const offer = quitFlushOffer.value
+  quitFlushOffer.value = null
+  if (offer) {
+    window.electronAPI?.retryQuitFlush(offer.requestId)
+  }
+}
+
+function cancelQuitFlush() {
+  const offer = quitFlushOffer.value
+  quitFlushOffer.value = null
+  if (offer) {
+    window.electronAPI?.cancelQuitClose(offer.requestId)
+  }
+}
+
+function forceQuitFlush() {
+  const offer = quitFlushOffer.value
+  quitFlushOffer.value = null
+  if (offer) {
+    window.electronAPI?.forceQuitClose(offer.requestId)
+  }
+}
 
 // Canh bao autosave fail chi 1 lan cho moi chuoi fail - autosave chay
 // moi 15s nen neu toast moi tick thi spam; reset co khi ghi thanh cong
@@ -588,50 +932,20 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         }
       }
     },
-    onNewCharacter: () => {
-      // Nhan vat moi: hoc san skill + grant khoi dau.
-      // P7-M3 - KHONG con tam phap khoi dau: Pham Nhan khong giu
-      // canonical technique (tu_linh_quyet da retire); Way cap tai
-      // initiation ritual. BETA-CREATION: the mortal basic pick arrives
-      // from the creation screen via pendingCreationPick and is written
-      // inside the shared bootstrap seam (never a silent tram default).
-      const pick = pendingCreationPick
-      pendingCreationPick = undefined
-      if (pick === undefined) {
+    onNewCharacter: (metadata) => {
+      // Nhan vat moi / CHARACTER_UNINITIALIZED: mot starter snapshot
+      // DUY NHAT tu canonical metadata (server row thang nhat hon; nguoc
+      // lai pending creation payload cho mock/local).
+      const resolved = metadata ? initializationMetadataFromRemote(metadata) : pendingCreationMetadata
+      pendingCreationMetadata = undefined
+      if (resolved === undefined) {
         throw new Error('onNewCharacter ran without a creation pick')
       }
-      bootstrapEarlyGamePlayer(gameManager, player.$state, pick)
-
-      for (const buildingId of ['teleport_array', 'gathering_outpost']) {
-        const instance = {
-          instanceId: crypto.randomUUID(),
-          buildingId,
-          level: 1,
-          lastCollectedAt: clock.nowSeconds(),
-        }
-
-        gameManager.buildingManager.add(instance)
-        gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, instance)
-      }
-
-      // Starter pack du xay 3 base (Linh Tuyen/Khi Duong/Dan Phong) -
-      // id theo truc tuoi thong nhat (gp123 6E C2).
-      for (const [materialId, amount] of [
-        ['mortal_wood_decade', 15],
-        ['mortal_ore_decade', 6],
-      ] as const) {
-        if (gameManager.materialRegistry.has(materialId)) {
-          gameManager.materialBag.add(gameManager.materialRegistry.get(materialId), amount)
-        }
-      }
-
-      // the 3 Thanh Van sources: autoRestart on - sites start producing once
-      // workers are allocated (Mission D: workers-as-fuel, no manual start).
-      for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
-        gameManager.buildingOps.setProductionAutoRestart(definition.siteId, true)
-      }
-
-      gameManager.setActivePlayer(player.$state)
+      initializeCharacter(resolved, {
+        gameManager,
+        player: player.$state,
+        nowSeconds: () => clock.nowSeconds(),
+      })
     },
   })
 
@@ -641,12 +955,26 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
     // Dispose lan truoc neu co: boot 'entered' hai lan khong duoc chong
     // subscription.
     electronBridgeDispose?.()
-    electronBridgeDispose = useElectronBridge(gameManager)
+    electronBridgeDispose = useElectronBridge(gameManager, {
+      // B1-D - the quit/update/logout flush is the authority's
+      // result-bearing one; a failed attempt surfaces the
+      // retry/cancel/force-close offer instead of closing.
+      flush: (requestId) => onlineAuthority.flush(requestId),
+      onFlushFailed: (notice) => {
+        quitFlushOffer.value = notice
+      },
+      suspend: () => onlineAuthority.suspend(),
+      resume: () => onlineAuthority.resumeFromSuspend(),
+    })
 
     // Dev-only console helpers (spec v3 B5) - registered here so BOTH
     // new-character and restored-save entries get them; the function
-    // itself early-returns outside import.meta.env.DEV.
-    registerEnemySpawnDebug({ gameManager, player: player.$state })
+    // itself early-returns outside import.meta.env.DEV. B1.9a - mock
+    // bundle only: bypassing realm/cost gates inside a remote-committed
+    // save would poison the authoritative row.
+    if (backendBundle.mode === 'mock') {
+      registerEnemySpawnDebug({ gameManager, player: player.$state })
+    }
 
     isBooted.value = true
     lifecycle.startAutosave()
@@ -658,17 +986,24 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
 function onAuthenticated(session: AuthSession) {
   // Spec F8 - bind the save slot BEFORE boot loads: every storage path
   // resolves through resolveSaveKey() from this point on.
+  // B1-C - bump the save generation FIRST: an in-flight write from the
+  // previous session/account cannot touch the journal or cache once it
+  // resolves (reset/logout/user-switch fence), and queued writers drain
+  // instead of committing under the new account.
+  cloudSaveCoordinator.reset()
   setSaveAccountId(accountIdForSession(session))
   void bootGame(false)
 }
 
-// BETA-CREATION - the creation screen's skill pick is consumed by
-// onNewCharacter inside the boot transaction (learn precedes pick write).
-let pendingCreationPick: string | undefined
+// BETA-CREATION - the creation payload (or the canonical character the
+// RPC committed) is consumed by onNewCharacter inside the boot
+// transaction (learn precedes pick write).
+let pendingCreationMetadata: CharacterInitializationMetadata | undefined
 
 async function onCharacterCreated(payload: CharacterCreationPayload) {
-  applyCreationProfile(player.$state, payload)
-  pendingCreationPick = payload.mortalBasicSkillId
+  pendingCreationMetadata = payload.character
+    ? initializationMetadataFromRemote(payload.character)
+    : { name: payload.name, talentIds: payload.talentIds }
 
   // The first durable save now lives inside the boot transaction
   // (useAppLifecycle.bootGame): 'entered' is only returned after the write
@@ -681,11 +1016,32 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
 onMounted(() => {
   window.addEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 
+  // B1.2 - a fatal backend composition (release build without an
+  // explicit working VITE_BACKEND_MODE, mock in release, or supabase
+  // without credentials) lands on the configuration surface BEFORE
+  // auth; every service in the bundle is fail-closed as a backstop.
+  if (backendFatal) {
+    bootError.value = backendFatal.message
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'fatal',
+      category: 'lifecycle',
+      code: 'BACKEND_CONFIG_FATAL',
+      message: backendFatal.message,
+    })
+    bootFlow.fail()
+    return
+  }
+
   // ui-audit creation-meta - reload used to replay the full 3s title intro
   // even with a session+save on disk; resume candidates get a short beat.
-  introHandle = window.setTimeout(() => {
-    bootFlow.showAuth()
-  }, hasResumeCandidate() ? 450 : 3000)
+  // B1.8: async - the durable guest credential is hydrated here so the
+  // Electron restart path also earns the short intro.
+  void hasResumeCandidate().then((resumable) => {
+    introHandle = window.setTimeout(() => {
+      bootFlow.showAuth()
+    }, resumable ? 450 : 3000)
+  })
 })
 
 onUnmounted(() => {
@@ -714,6 +1070,15 @@ onUnmounted(() => {
   // Remediation Task 5 - symmetric cleanup: event-bus handlers, DOM
   // listeners, tick + autosave intervals (idempotent, goi lai mot cach an toan).
   lifecycle.stopAll()
+  // B1-D - the authority's heartbeat/retry timers die with the mount;
+  // a remount builds a fresh instance.
+  onlineAuthority.stopAll()
+  unbindFeedbackService()
+  unbindFeedbackProviders()
+  unbindOnlineAuthority(onlineAuthority)
+  updateSurface?.dispose()
+  unbindUpdateSurface(updateSurface)
+  unbindSessionTeardown(teardownToAuth)
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 
   // Presentation teardown: aborts any in-flight transition and drops every
@@ -725,6 +1090,7 @@ onUnmounted(() => {
   unbindCombatAudio()
   unbindUiAudio()
   unbindAmbientAudio()
+  unbindArtWarm()
   disarmAudioUnlockListeners()
   disarmAudioUnlock?.()
   disarmAudioUnlock = undefined
@@ -738,15 +1104,19 @@ onUnmounted(() => {
     <LoadingScreen />
   </RouteMount>
 
-  <RouteMount v-else-if="entryStage === 'auth'" route="auth">
-    <AuthEntryScreen @authenticated="onAuthenticated" />
-  </RouteMount>
-
-  <RouteMount v-else-if="entryStage === 'character'" route="character">
-    <CharacterCreationScreen
-      @back="bootFlow.showAuth"
-      @complete="onCharacterCreated"
-    />
+  <!-- auth + character share ONE persistent OnboardingStage: the curtain
+       port exchanges the scroll inside a single backdrop (see
+       onboardingTransitionId). The RouteMount sits OUTSIDE that stage and
+       re-witnesses the active route via a bound :route - RouteMount's prop
+       watch re-marks auth->character without remounting the shared tree. -->
+  <RouteMount
+    v-else-if="entryStage === 'auth' || entryStage === 'character'"
+    :route="entryStage === 'auth' ? 'auth' : 'character'"
+  >
+    <OnboardingStage ref="onboardingStageRef">
+      <AuthEntryScreen v-if="entryStage === 'auth'" @authenticated="onAuthenticated" />
+      <CharacterCreationScreen v-else @back="bootFlow.showAuth" @complete="onCharacterCreated" />
+    </OnboardingStage>
   </RouteMount>
 
   <RouteMount v-else-if="entryStage === 'error'" route="error">
@@ -759,9 +1129,11 @@ onUnmounted(() => {
     <SaveIncompatibleScreen v-if="saveIssue.status" />
 
     <main v-else class="boot-error">
-      <h1>{{ t('errors.boot.title') }}</h1>
+      <h1>{{ backendFatal ? t('errors.backendConfig.title') : t('errors.boot.title') }}</h1>
       <p>{{ bootError }}</p>
-      <button type="button" @click="bootFlow.showAuth">{{ t('errors.boot.backToAuth') }}</button>
+      <!-- No back-to-auth escape on a fatal composition: auth cannot
+           admit anything against an unconfigured backend. -->
+      <button v-if="!backendFatal" type="button" @click="bootFlow.showAuth">{{ t('errors.boot.backToAuth') }}</button>
     </main>
   </RouteMount>
 
@@ -770,8 +1142,18 @@ onUnmounted(() => {
          transition into the game has not entered). -->
     <LoadingScreen v-if="!isBooted" />
 
-    <!-- GameRoot chi hien khi boot xong -->
-    <GameRoot v-if="isBooted" />
+    <!-- GameRoot chi hien khi boot xong; inert while an authority
+         overlay owns the surface (B1-D). -->
+    <GameRoot v-if="isBooted" :inert="authorityOverlayActive" />
+
+    <!-- Beta scope v2 sec.H - the deliberate ending beat: rendered once
+         the completion read-model resolves, acknowledged per device via
+         localStorage (no save-schema impact). Sits below the authority
+         overlay and transition curtain. -->
+    <BetaCompletionModal
+      v-if="isBooted && showBetaCompletion"
+      @dismiss="ackBetaCompletion"
+    />
   </ErrorBoundary>
 
   <!-- Task 8 (A11) - the unwatched pause. Data-driven by useCombatPause()
@@ -779,19 +1161,84 @@ onUnmounted(() => {
        above: separate owner (the battle vs. the presentation coordinator),
        separate z-layer (OVERLAY_LAYERS.combatPause < curtain so the
        curtain can always cover it), neither may drive the other. -->
-  <CombatPauseOverlay v-if="isCombatPaused" @continue="continueBattle" />
+  <CombatPauseOverlay v-if="isCombatPaused" :inert="authorityOverlayActive" @continue="continueBattle" />
 
   <!-- Curtain/loading/error cover lives ABOVE every entry branch so cold boot
        and boot failures are covered too, not just in-game transitions. -->
   <PresentationTransitionOverlay
     ref="transitionOverlayRef"
+    :inert="authorityOverlayActive"
     :phase="routeAdapter.phase.value"
+    :paint-suppressed="onboardingTransitionId !== null"
     :is-locked="routeAdapter.isLocked.value"
     :error="routeAdapter.error.value"
     :can-return-home="canRecoverToHome"
     @retry="onTransitionRetry"
     @back="onTransitionBack"
   />
+
+  <!-- B1-D - the authority surface is ALWAYS blocking: while the sim is
+       paused no pointer/keyboard path may reach a mutator (spec: actions
+       cannot mutate while the overlay is visible). 'reconnecting' shows
+       the reconnect status plus the owned give-up escape back to auth;
+       terminal states require the same owned acknowledgement; the
+       quit-flush retry/cancel/force-close offer comes from Electron main. -->
+  <div v-if="authorityState === 'reconnecting' && isBooted" class="authority-overlay" :style="{ zIndex: OVERLAY_LAYERS.authority }">
+    <div class="authority-card">
+      <p>{{ t('authority.reconnecting') }}</p>
+      <button type="button" @click="acknowledgeAuthority">
+        {{ t('authority.reauth') }}
+      </button>
+    </div>
+  </div>
+
+  <div v-else-if="authorityTerminal && isBooted" class="authority-overlay" :style="{ zIndex: OVERLAY_LAYERS.authority }">
+    <div class="authority-card">
+      <p>{{ authorityMessage }}</p>
+      <button type="button" @click="acknowledgeAuthority">
+        {{ t('authority.reauth') }}
+      </button>
+      <!-- 'update-required' is terminal FOR THE SESSION - the update
+           surface stays reachable so the user can fetch the build the
+           backend demands instead of dead-ending at the gate. -->
+      <button
+        v-if="authorityState === 'update-required' && updateSurface"
+        type="button"
+        @click="updateSurface.check()"
+      >
+        {{ t('updates.check') }}
+      </button>
+    </div>
+  </div>
+
+  <div v-if="quitFlushOffer" class="authority-overlay" :style="{ zIndex: OVERLAY_LAYERS.authority }">
+    <div class="authority-card">
+      <h2>{{ t('quitFlush.title') }}</h2>
+      <p>{{ t('quitFlush.message', { code: quitFlushOffer.code ?? quitFlushOffer.status }) }}</p>
+      <div class="authority-actions">
+        <button type="button" @click="retryQuitFlush">{{ t('quitFlush.retry') }}</button>
+        <button type="button" @click="cancelQuitFlush">{{ t('quitFlush.cancel') }}</button>
+        <button type="button" @click="forceQuitFlush">{{ t('quitFlush.force') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BETA-FINAL PR12 - the install admission failed (blocked/failed
+       flush or timeout): explicit recovery only - retry mints a NEW
+       requestId; 'later' keeps the verified candidate parked. Neither
+       path turns a failed flush into an install. -->
+  <div v-if="updateInstallFailed" class="authority-overlay" :style="{ zIndex: OVERLAY_LAYERS.authority }">
+    <div class="authority-card">
+      <h2>{{ t('updates.installFailed.title') }}</h2>
+      <p>{{ t('updates.installFailed.message', { code: updateInstallFailed.code ?? updateInstallFailed.status }) }}</p>
+      <div class="authority-actions">
+        <button type="button" @click="updateSurface?.retryInstall()">{{ t('updates.installFailed.retry') }}</button>
+        <button type="button" @click="updateSurface?.later()">{{ t('updates.installFailed.later') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <UpdateBanner v-if="isBooted" />
 
   <ErrorScreen />
 </template>
@@ -830,6 +1277,40 @@ body {
   color: var(--text-secondary);
 }
 .boot-error button {
+  padding: 10px 16px;
+  border: 1px solid var(--paper-line);
+  background: var(--paper-100);
+  color: var(--paper-text);
+  cursor: pointer;
+}
+
+/* B1-D authority surface - blocking reconnect/terminal/quit-flush card. */
+.authority-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  background: rgba(20, 16, 12, 0.72);
+}
+
+.authority-card {
+  min-width: 320px;
+  max-width: 420px;
+  padding: 20px 24px;
+  background: var(--paper-50);
+  border: 1px solid var(--paper-line);
+  color: var(--paper-text);
+  text-align: center;
+}
+
+.authority-card h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  color: var(--crimson);
+}
+
+.authority-card button {
+  margin: 12px 4px 0;
   padding: 10px 16px;
   border: 1px solid var(--paper-line);
   background: var(--paper-100);

@@ -1,4 +1,4 @@
-// R5 (AR-29) — CombatPositionInterpolation encapsulates its own private interpolations map.
+// R5 (AR-29) - CombatPositionInterpolation encapsulates its own private interpolations map.
 // Manages smooth X-position interpolation segments between 'positions' snapshots.
 import Phaser from 'phaser'
 
@@ -8,13 +8,13 @@ import type { PositionInterpolation } from './combatTypes'
 export class CombatPositionInterpolation {
   private interpolationsMap = new Map<string, PositionInterpolation>()
 
-  // S3 (AR-29) — read-only exposure; mutation only via the owned
+  // S3 (AR-29) - read-only exposure; mutation only via the owned
   // setInterpolationTarget/snap/delete/clear API below.
   get interpolations(): ReadonlyMap<string, PositionInterpolation> {
     return this.interpolationsMap
   }
 
-  // R11 (AR-29) — the only host capability this mechanism consumes is the
+  // R11 (AR-29) - the only host capability this mechanism consumes is the
   // wall clock, so that is all it takes.
   constructor(private readonly now: () => number) {}
 

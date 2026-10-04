@@ -1,12 +1,12 @@
-// Accuracy vs Evasion — kiểu Last Epoch: 2 rating đấu nhau thay vì né
-// đơn phương (evasionRate cũ là xác suất 0..1, giờ là rating mở).
-// Sàn 5% để không bao giờ "chắc chắn trượt" dù evasion cực cao.
+// Accuracy vs Evasion - kieu Last Epoch: 2 rating dau nhau thay vi ne
+// don phuong (evasionRate cu la xac suat 0..1, gio la rating mo).
+// San 5% de khong bao gio "chac chan truot" du evasion cuc cao.
 const MIN_HIT_CHANCE = 0.05
 
 export function getHitChance(accuracy: number, evasion: number): number {
-  // Guard NaN/âm — accuracy = 0 VÀ evasion <= 0 cho 0/0 = NaN, lan thành
-  // Math.random() < NaN = luôn trượt (mọi đòn đánh miss). Input không hữu
-  // hạn coi như 0; cả 2 rating cùng 0 (không có gì contest) thì đòn trúng.
+  // Guard NaN/am - accuracy = 0 VA evasion <= 0 cho 0/0 = NaN, lan thanh
+  // Math.random() < NaN = luon truot (moi don danh miss). Input khong huu
+  // han coi nhu 0; ca 2 rating cung 0 (khong co gi contest) thi don trung.
   const safeAccuracy = Number.isFinite(accuracy) ? Math.max(0, accuracy) : 0
   const safeEvasion = Number.isFinite(evasion) ? Math.max(0, evasion) : 0
   const denominator = safeAccuracy + safeEvasion

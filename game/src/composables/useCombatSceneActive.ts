@@ -2,9 +2,9 @@ import { computed, inject } from 'vue'
 import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
 
 /**
- * Combat Scene (CombatSceneOverlay.vue + Phaser's CombatScene.ts) chiếm
- * TOÀN màn hình trong lúc 1 trận đang diễn ra. Single authority: the
- * presentation coordinator's active route — the coordinator already knows
+ * Combat Scene (CombatSceneOverlay.vue + Phaser's CombatScene.ts) chiem
+ * TOAN man hinh trong luc 1 tran dang dien ra. Single authority: the
+ * presentation coordinator's active route - the coordinator already knows
  * the route only commits once the combat session is attached, so a second
  * flag (ui.combatSceneDismissed) could only disagree with it. That fallback
  * was retired with the R12 cleanup.

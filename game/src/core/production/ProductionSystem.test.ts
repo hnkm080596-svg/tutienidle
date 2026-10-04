@@ -1,12 +1,24 @@
-// Production module tests (plan §12 Production):
-// - Địa Giới có đúng 1 Lâm/Quáng/Động Thiên + đúng 3 realm (validator).
-// - Weight 60/20/10 normalize; bảng không âm/tổng 0.
-// - Cycle snapshot: đột phá/nâng level giữa cycle KHÔNG đổi deadline/profile.
-// - Cùng collectionRealmId + level → cùng thời lượng, bất kể phẩm/niên đại.
-// - Settle idempotent: tick lặp không cấp đôi; Auto tạo cycle mới; Auto
-//   tắt về idle.
-// - Offline settle tuần tự trong cap, mỗi cycle seed riêng.
-import { describe, expect, it } from 'vitest'
+// Production module tests (plan sec12 Production):
+// - Dia Gioi co dung 1 Lam/Quang/Dong Thien + dung 3 realm (validator).
+// - Weight 60/20/10 normalize; bang khong am/tong 0.
+// - Cycle snapshot: dot pha/nang level giua cycle KHONG doi deadline/profile.
+// - Cung collectionRealmId + level -> cung thoi luong, bat ke pham/nien dai.
+// - Settle idempotent: tick lap khong cap doi; Auto tao cycle moi; Auto
+//   tat ve idle.
+// - Offline settle tuan tu trong cap, moi cycle seed rieng.
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+  isBetaQuestEnabled: () => true,
+  betaRecipeFamilyOfId: () => 'tu_linh_dan',
+}))
+
 import { MaterialBag } from '../material/MaterialBag'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
@@ -113,7 +125,7 @@ describe('ProductionBalance', () => {
 
     expect(profile).toEqual([60, 20, 10])
 
-    // Roll với random luôn trả 0.89 (dưới 80/90 nhưng trên 70/90) → tier 2.
+    // Roll voi random luon tra 0.89 (duoi 80/90 nhung tren 70/90) -> tier 2.
     expect(rollWeightedIndex(profile, () => 0.89)).toBe(2)
 
     expect(rollWeightedIndex(profile, () => 0.0)).toBe(0)
@@ -274,7 +286,7 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
 
     const startMs = 1_000_000_000
 
-    // Giả lập save: site autoRestart với 1 worker cycle dở dang (hoàn thành sau 100s).
+    // Gia lap save: site autoRestart voi 1 worker cycle do dang (hoan thanh sau 100s).
     system.restoreStates([
       {
         siteId: 'thanh_van_lam',
@@ -296,13 +308,13 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
       },
     ])
 
-    // Vắng 1 giờ với 1 worker capacity.
+    // Vang 1 gio voi 1 worker capacity.
     const settled = system.settleOffline(bag, registry, 'mortal', startMs + 3600_000, {
       workerCapacity: 1,
       offlineSinceMs: startMs,
     })
 
-    // 1 giờ / 100s ≈ 36 cycle (1 dở dang + ~35 mới) — cho phép sai số guard.
+    // 1 gio / 100s ~ 36 cycle (1 do dang + ~35 moi) - cho phep sai so guard.
     expect(settled).toBeGreaterThanOrEqual(30)
 
     expect(settled).toBeLessThanOrEqual(37)
@@ -334,7 +346,7 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
       offlineSinceMs: startMs,
     })
 
-    // Cap 10h / 100s = 360 cycle — không được vượt dù vắng 100 giờ.
+    // Cap 10h / 100s = 360 cycle - khong duoc vuot du vang 100 gio.
     expect(settled).toBeLessThanOrEqual(361)
   })
 })
@@ -412,14 +424,14 @@ describe('Reward rolls — phân bố (sanity thống kê)', () => {
       }
 
       for (const reward of system.rollRewards(cycle)) {
-        // Gỗ giờ roll theo tuổi (6E C2) — đếm MỌI biến thể Trúc Cơ.
+        // Go gio roll theo tuoi (6E C2) - dem MOI bien the Truc Co.
         if (reward.materialId.startsWith('foundation_establishment_wood_')) {
           highTierPicks += 1
         }
       }
     }
 
-    // Profile high 20/40/40 → tier cao ~40%+.
+    // Profile high 20/40/40 -> tier cao ~40%+.
     expect(highTierPicks).toBeGreaterThan(250)
   })
 })

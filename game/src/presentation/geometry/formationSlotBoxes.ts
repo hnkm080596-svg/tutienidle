@@ -1,10 +1,10 @@
 // Formation slot hit-zones, derived from the projection the canvas draws with.
 //
-// V8 / §3.6 of
+// V8 / sec3.6 of
 // docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md.
 //
-// This is geometry, so it lives here rather than inside the panel component —
-// §3.6's third surface is "pure functions under presentation/geometry/, which
+// This is geometry, so it lives here rather than inside the panel component -
+// sec3.6's third surface is "pure functions under presentation/geometry/, which
 // both sides import". Keeping it in the SFC would make it untestable without
 // mounting Vue, and would put shared geometry in the static layer.
 import type { ProjectionBridge } from './ProjectionBridge'
@@ -20,7 +20,7 @@ export interface SlotBox {
 }
 
 /**
- * The four corners of a grid cell, far edge first, clockwise — the same winding
+ * The four corners of a grid cell, far edge first, clockwise - the same winding
  * `combat-grid-view.ts` uses when it strokes the grid, so the DOM hit-zone and
  * the drawn cell describe the same quadrilateral.
  */
@@ -38,7 +38,7 @@ export function slotCorners(bridge: ProjectionBridge, row: number, column: numbe
  *
  * The element is sized to the polygon's bounding box rather than to the whole
  * canvas, so a label inside it centres on the cell naturally. `clip-path` then
- * cuts it down to the real trapezoid — and because clip-path clips **pointer
+ * cuts it down to the real trapezoid - and because clip-path clips **pointer
  * events** as well as paint, that trapezoid becomes the hit area. This is what
  * lets the panel keep its existing drag-and-drop handlers untouched while the
  * geometry becomes correct.
@@ -74,7 +74,7 @@ export function formationSlotBox(
  *
  * Percent, not pixels, and for a specific reason: the panel is shorter than the
  * canvas is tall, so the canvas has to be CSS-scaled to fit. A pixel overlay
- * would keep its original size while the canvas shrank underneath it — the very
+ * would keep its original size while the canvas shrank underneath it - the very
  * disagreement this work exists to remove. In percent, both scale together and
  * stay aligned at any size, with no ResizeObserver and no scale factor to keep
  * in sync.

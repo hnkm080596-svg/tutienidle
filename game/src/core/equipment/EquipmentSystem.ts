@@ -66,21 +66,22 @@ import {
   type RefineValueEntry,
 } from './EquipmentRefine'
 import { createEquipmentInstance, MAIN_STAT_REALM_SCALE } from './EquipmentRolling'
+import { isScopeHidden } from '../betaScope'
 
-// Task 8 (phase7-gamemanager-split) — rollAffixRange/normalizeRolledAffixValue/
-// getEffectiveAffixValue/GLOBAL_MAX_AFFIXES sống ở EquipmentRollPrimitives.ts
-// (dùng chung với EquipmentWash.ts); re-export lại ở đây để mọi import site
-// cũ (`from './EquipmentSystem'`) không phải đổi.
+// Task 8 (phase7-gamemanager-split) - rollAffixRange/normalizeRolledAffixValue/
+// getEffectiveAffixValue/GLOBAL_MAX_AFFIXES song o EquipmentRollPrimitives.ts
+// (dung chung voi EquipmentWash.ts); re-export lai o day de moi import site
+// cu (`from './EquipmentSystem'`) khong phai doi.
 export { GLOBAL_MAX_AFFIXES, getEffectiveAffixValue, normalizeRolledAffixValue, rollAffixRange }
 
-// Hệ số nhân thêm mỗi bậc cường hóa. Export để UI (EquipmentHallPanel's
-// Enhance preview) tính trước giá trị SAU khi cường hóa mà không phải
-// lặp lại công thức.
+// He so nhan them moi bac cuong hoa. Export de UI (EquipmentHallPanel's
+// Enhance preview) tinh truoc gia tri SAU khi cuong hoa ma khong phai
+// lap lai cong thuc.
 //
-// Task 10 (rework P3, 2026-09-01) — ENHANCE_PERCENT_PER_LEVEL (0.08) và
-// FORGE_PERCENT_PER_POINT ĐÃ XÓA: scale giờ slot-only `1 + level ×
-// ENHANCE_SLOT_SCALE (0.06)` — forgeUses là ngân sách tẩy/tinh của
-// item, KHÔNG scale. Curve mũ 0.956 + pity 10 ở EnhanceCurve.ts.
+// Task 10 (rework P3, 2026-09-01) - ENHANCE_PERCENT_PER_LEVEL (0.08) va
+// FORGE_PERCENT_PER_POINT DA XOA: scale gio slot-only `1 + level x
+// ENHANCE_SLOT_SCALE (0.06)` - forgeUses la ngan sach tay/tinh cua
+// item, KHONG scale. Curve mu 0.956 + pity 10 o EnhanceCurve.ts.
 import {
   ENHANCE_PITY_THRESHOLD,
   ENHANCE_SLOT_SCALE,
@@ -89,45 +90,45 @@ import {
 } from './EnhanceCurve'
 
 /**
- * Hệ số nhân hiệu lực của 1 instance theo SLOT enhanceLevel — dùng lại
- * y hệt trong applyModifiers() lẫn UI preview (Enhance tab), đảm bảo 2
- * nơi luôn khớp công thức.
+ * He so nhan hieu luc cua 1 instance theo SLOT enhanceLevel - dung lai
+ * y het trong applyModifiers() lan UI preview (Enhance tab), dam bao 2
+ * noi luon khop cong thuc.
  */
 export function calculateEquipmentScale(enhanceLevel: number): number {
   return 1 + enhanceLevel * ENHANCE_SLOT_SCALE
 }
 
-// large-file-split — applyQualityBonusSteps sống ở ItemQualityBalance.ts
-// (pure function trên ITEM_QUALITY_ORDER), MAIN_STAT_REALM_SCALE ở
-// EquipmentRolling.ts (dùng bởi roll pipeline), RefineValueEntry +
-// refine impls ở EquipmentRefine.ts. Re-export để import site cũ
-// (`from './EquipmentSystem'`) không phải đổi.
+// large-file-split - applyQualityBonusSteps song o ItemQualityBalance.ts
+// (pure function tren ITEM_QUALITY_ORDER), MAIN_STAT_REALM_SCALE o
+// EquipmentRolling.ts (dung boi roll pipeline), RefineValueEntry +
+// refine impls o EquipmentRefine.ts. Re-export de import site cu
+// (`from './EquipmentSystem'`) khong phai doi.
 export { applyQualityBonusSteps } from './ItemQualityBalance'
 export { MAIN_STAT_REALM_SCALE } from './EquipmentRolling'
 export type { RefineValueEntry } from './EquipmentRefine'
 
 /**
- * Modifier của equipment là "tĩnh" (xem ghi chú trong Player.ts:
- * modifiers vs externalModifiers) — chỉ đổi khi người chơi
- * equip/unequip/enhance/wash/refine/hóa luyện,
- * KHÔNG tổng hợp lại mỗi tick như Buff/Technique. EquipmentSystem
- * tự giữ một ModifierSystem riêng, add/remove theo sourceId =
- * instanceId để gỡ đúng modifier khi unequip. Caller (GameManager
- * -> player store) đọc lại qua getModifiers() và tự gán vào
- * player.modifiers sau mỗi hành động.
+ * Modifier cua equipment la "tinh" (xem ghi chu trong Player.ts:
+ * modifiers vs externalModifiers) - chi doi khi nguoi choi
+ * equip/unequip/enhance/wash/refine/hoa luyen,
+ * KHONG tong hop lai moi tick nhu Buff/Technique. EquipmentSystem
+ * tu giu mot ModifierSystem rieng, add/remove theo sourceId =
+ * instanceId de go dung modifier khi unequip. Caller (GameManager
+ * -> player store) doc lai qua getModifiers() va tu gan vao
+ * player.modifiers sau moi hanh dong.
  *
- * Chỉ số phụ là Affix (Prefix/Suffix có Tier, xem Affix.ts). Grade cố
- * định theo realm; quality Ngũ Chất quyết định số lượng/tier/pool affix
- * và hệ số implicit của item.
+ * Chi so phu la Affix (Prefix/Suffix co Tier, xem Affix.ts). Grade co
+ * dinh theo realm; quality Ngu Chat quyet dinh so luong/tier/pool affix
+ * va he so implicit cua item.
  */
 export class EquipmentSystem {
   private readonly modifierSystem = new ModifierSystem()
 
-  // Khí Đường chỉ hiển thị một Refine preview tại một thời điểm. Một capability
-  // duy nhất vừa chặn provenance tích lũy vô hạn, vừa bảo đảm attempt mới (kể cả
-  // thất bại) vô hiệu hóa payload trả phí trước đó ở bất kỳ item nào.
-  // (large-file-split: state vẫn thuộc system instance, qua accessor như
-  // washPendingSlot — impl sống ở EquipmentRefine.ts.)
+  // Khi Duong chi hien thi mot Refine preview tai mot thoi diem. Mot capability
+  // duy nhat vua chan provenance tich luy vo han, vua bao dam attempt moi (ke ca
+  // that bai) vo hieu hoa payload tra phi truoc do o bat ky item nao.
+  // (large-file-split: state van thuoc system instance, qua accessor nhu
+  // washPendingSlot - impl song o EquipmentRefine.ts.)
   private readonly refinePendingSlot = createRefinePendingSlotAccessor()
 
   // R9 (AR-21) - instance-owned pending wash slot: the paid wash result
@@ -136,11 +137,11 @@ export class EquipmentSystem {
   private readonly washPendingSlot = createWashPendingSlotAccessor()
 
   /**
-   * M1 (ARCH-001) — pending-operations invalidation hook. A session
+   * M1 (ARCH-001) - pending-operations invalidation hook. A session
    * restore replaces the item set wholesale: the pending wash ticket and
    * refine preview were issued against pre-restore item objects and must
    * not commit onto the restored set (a stale wash ticket would overwrite
-   * freshly-restored affixes — see QA-R9-001's cross-session ticket
+   * freshly-restored affixes - see QA-R9-001's cross-session ticket
    * finding). GameManagerSaveRestore calls this on every applied payload;
    * M2 (ARCH-011) additionally binds each issued ticket to its item's
    * exact-object/membership/snapshot lifetime inside EquipmentWash.ts.
@@ -159,10 +160,10 @@ export class EquipmentSystem {
   }
 
   /**
-   * Cost catalog nghề (2026-08-24, resource-professions-rework §6) —
-   * optional: resolve được → ưu tiên hơn template cost; không resolve
-   * (operation/realm chưa author) → fallback template cost legacy để
-   * data cũ/test cũ không vỡ.
+   * Cost catalog nghe (2026-08-24, resource-professions-rework sec6) -
+   * optional: resolve duoc -> uu tien hon template cost; khong resolve
+   * (operation/realm chua author) -> fallback template cost legacy de
+   * data cu/test cu khong vo.
    */
   private costCatalog?: EquipmentOperationCostCatalog
 
@@ -171,9 +172,9 @@ export class EquipmentSystem {
   }
 
   /**
-   * W5 (2026-08-27) — discount chi phí Khí Đường theo level building
-   * (equipment_hall). GameManager đồng bộ trước mỗi lần query/spend;
-   * EquipmentSystem không tự biết building để giữ core độc lập.
+   * W5 (2026-08-27) - discount chi phi Khi Duong theo level building
+   * (equipment_hall). GameManager dong bo truoc moi lan query/spend;
+   * EquipmentSystem khong tu biet building de giu core doc lap.
    */
   private costDiscountPercent = 0
 
@@ -198,7 +199,7 @@ export class EquipmentSystem {
   }
 
   /**
-   * M3 (talent v4 §4.2) — Bach Luyen Thanh Khi policy: enhance never
+   * M3 (talent v4 sec4.2) - Bach Luyen Thanh Khi policy: enhance never
    * fails; each attempt pays costMultiplier on materials + spirit stone.
    * Synced per-call by EquipmentOpsSystem (same pattern as costDiscount).
    */
@@ -210,7 +211,7 @@ export class EquipmentSystem {
     this.enhanceCostMultiplier = Math.max(1, policy.costMultiplier)
   }
 
-  /** Cost Cường Hóa sau policy talent — applied on the resolved cost. */
+  /** Cost Cuong Hoa sau policy talent - applied on the resolved cost. */
   private applyEnhanceCostPolicy(cost: { materials: RecipeMaterialCost[]; spiritStone: number }) {
     if (this.enhanceCostMultiplier <= 1) {
       return cost
@@ -234,9 +235,9 @@ export class EquipmentSystem {
   }
 
   /**
-   * Roll 1 instance mới từ template. Grade theo realm của người chơi;
-   * quality roll độc lập theo trọng số cố định và quyết định implicit,
-   * số lượng/tier/pool substat cùng ngân sách Rèn.
+   * Roll 1 instance moi tu template. Grade theo realm cua nguoi choi;
+   * quality roll doc lap theo trong so co dinh va quyet dinh implicit,
+   * so luong/tier/pool substat cung ngan sach Ren.
    */
   createInstance(
     template: Equipment,
@@ -249,13 +250,13 @@ export class EquipmentSystem {
   }
 
   /**
-   * (rework P5, Task 16) — Equipment KHÔNG có requiredRealmId trên
-   * template (khác Recipe/Building/Skill): gate không dựa vào template mà
-   * vào instance.grade (phẩm nghề set lúc rớt đồ) so với phẩm nghề hiện
-   * tại của người chơi (canUseItemGrade) — lệch bậc nào (cao hoặc thấp)
-   * cũng bị chặn, không phải "đủ hoặc cao hơn". Item ĐANG MẶC luôn
-   * idempotent ok:true bất kể lệch phẩm (tránh tự unequip đồ cũ khi
-   * cảnh giới người chơi đổi qua save/breakthrough).
+   * (rework P5, Task 16) - Equipment KHONG co requiredRealmId tren
+   * template (khac Recipe/Building/Skill): gate khong dua vao template ma
+   * vao instance.grade (pham nghe set luc rot do) so voi pham nghe hien
+   * tai cua nguoi choi (canUseItemGrade) - lech bac nao (cao hoac thap)
+   * cung bi chan, khong phai "du hoac cao hon". Item DANG MAC luon
+   * idempotent ok:true bat ke lech pham (tranh tu unequip do cu khi
+   * canh gioi nguoi choi doi qua save/breakthrough).
    */
   equip(
     instanceId: string,
@@ -285,7 +286,7 @@ export class EquipmentSystem {
       this.unequip(current.instanceId, inventory)
     }
 
-    // OPT-04 — flip qua bag API để giữ slotIndex nhất quán.
+    // OPT-04 - flip qua bag API de giu slotIndex nhat quan.
     inventory.setEquippedInternal(instance.instanceId, true)
 
     this.applyModifiers(instance, slotManager, affixRegistry)
@@ -300,7 +301,7 @@ export class EquipmentSystem {
       return false
     }
 
-    // OPT-04 — flip qua bag API để giữ slotIndex nhất quán.
+    // OPT-04 - flip qua bag API de giu slotIndex nhat quan.
     inventory.setEquippedInternal(instance.instanceId, false)
 
     this.modifierSystem.removeBySource(instance.instanceId)
@@ -309,10 +310,10 @@ export class EquipmentSystem {
   }
 
   /**
-   * ĐIỂM RÈN của món đồ = forgeUsesRemaining hiện tại —
-   * CHÍNH LÀ "Tình trạng rèn x/y" trong tooltip, KHÔNG phải pool nào
-   * khác. Tẩy Luyện/Tinh Luyện tiêu thụ tài nguyên này; item sinh ra
-   * với tình trạng ĐẦY (xem createInstance).
+   * DIEM REN cua mon do = forgeUsesRemaining hien tai -
+   * CHINH LA "Tinh trang ren x/y" trong tooltip, KHONG phai pool nao
+   * khac. Tay Luyen/Tinh Luyen tieu thu tai nguyen nay; item sinh ra
+   * voi tinh trang DAY (xem createInstance).
    */
   itemRefinementPoints(instance: EquipmentInstance): number {
     return instance.forgeUsesRemaining
@@ -322,7 +323,7 @@ export class EquipmentSystem {
     instance.forgeUsesRemaining = Math.max(0, instance.forgeUsesRemaining - amount)
   }
 
-  /** registry.get() ném lỗi khi thiếu template — wrapper an toàn cho dữ liệu dev cũ. */
+  /** registry.get() nem loi khi thieu template - wrapper an toan cho du lieu dev cu. */
   private tryGetTemplate(registry: EquipmentRegistry, itemId: string): Equipment | undefined {
     try {
       return registry.get(itemId)
@@ -332,11 +333,11 @@ export class EquipmentSystem {
   }
 
   /**
-   * Slot-level rework (yêu cầu 2026-08-26) — Cường Hóa gắn SLOT, KHÔNG
-   * cần item trong slot mới được cường hóa. Trần mặc định + chi phí
-   * fallback khi không tra được catalog/template.
+   * Slot-level rework (yeu cau 2026-08-26) - Cuong Hoa gan SLOT, KHONG
+   * can item trong slot moi duoc cuong hoa. Tran mac dinh + chi phi
+   * fallback khi khong tra duoc catalog/template.
    */
-  /** Một nguồn resolve cost Cường Hóa: catalog nghi�m  template  fallback. */
+  /** Mot nguon resolve cost Cuong Hoa: catalog nghim  template  fallback. */
   private resolveEnhanceCost(
     realmId: string,
 
@@ -344,7 +345,7 @@ export class EquipmentSystem {
 
     template?: Equipment,
   ): { materials: RecipeMaterialCost[]; spiritStone: number } {
-    // M3 — Bach Luyen Thanh Khi: xN the resolved cost so preview
+    // M3 - Bach Luyen Thanh Khi: xN the resolved cost so preview
     // (getEnhanceCost/getEnhanceSpiritStoneCost) and enhance() spend the
     // same authoritative amount.
     return this.applyEnhanceCostPolicy(this.resolveEnhanceCostBase(realmId, enhanceLevel, template))
@@ -357,7 +358,7 @@ export class EquipmentSystem {
 
     template?: Equipment,
   ): { materials: RecipeMaterialCost[]; spiritStone: number } {
-    // Catalog nghề ưu tiên (plan §6) — scale theo level như template.
+    // Catalog nghe uu tien (plan sec6) - scale theo level nhu template.
     const catalogCost = this.resolveCatalogCost('enhance', realmId, { enhanceLevel })
 
     if (catalogCost) {
@@ -382,8 +383,8 @@ export class EquipmentSystem {
       }
     }
 
-    // Fallback khi không có catalog lẫn template — Linh Thạch thuần,
-    // giá tăng tuyến tính theo cấp để vẫn "phát triển được".
+    // Fallback khi khong co catalog lan template - Linh Thach thuan,
+    // gia tang tuyen tinh theo cap de van "phat trien duoc".
     return {
       materials: [],
 
@@ -392,8 +393,8 @@ export class EquipmentSystem {
   }
 
   /**
-   * Linh Thạch là MATERIAL (plan Workstream F) — mọi check/trừ của hệ
-   * equipment đi qua 2 helper này trên MaterialBag.
+   * Linh Thach la MATERIAL (plan Workstream F) - moi check/tru cua he
+   * equipment di qua 2 helper nay tren MaterialBag.
    */
   private hasSpiritStones(
     materialBag: MaterialBag,
@@ -453,7 +454,7 @@ export class EquipmentSystem {
     return this.resolveEnhanceCost(realmId, enhanceLevel, template).spiritStone
   }
 
-  /** Cost Tẩy Luyện sau discount Khí Đường; UI và transaction dùng chung. */
+  /** Cost Tay Luyen sau discount Khi Duong; UI va transaction dung chung. */
   getWashCost(quality: ItemQuality): { tinhHoa: number; spiritStone: number } {
     return {
       tinhHoa: this.applyCostDiscount(WASH_TINH_HOA_COST_BY_QUALITY[quality]),
@@ -461,7 +462,7 @@ export class EquipmentSystem {
     }
   }
 
-  /** Cost Tinh Luyện sau discount Khí Đường; UI và transaction dùng chung. */
+  /** Cost Tinh Luyen sau discount Khi Duong; UI va transaction dung chung. */
   getRefineCost(
     lineCount: number,
     lockedCount: number,
@@ -482,11 +483,11 @@ export class EquipmentSystem {
     }
   }
   /**
-   * MASTER SPEC Mục XVI — Cường Hóa gắn SLOT (đổi trang bị KHÔNG mất
-   * cấp) + slot-level rework (yêu cầu 2026-08-26): SLOT TRỐNG vẫn
-   * cường hóa được — trần mặc định DEFAULT_MAX_ENHANCE_LEVEL, chi phí
-   * resolve theo realmId hiện hành (catalog nghề → template của item
-   * đang mặc nếu có → fallback Linh Thạch thuần).
+   * MASTER SPEC Muc XVI - Cuong Hoa gan SLOT (doi trang bi KHONG mat
+   * cap) + slot-level rework (yeu cau 2026-08-26): SLOT TRONG van
+   * cuong hoa duoc - tran mac dinh DEFAULT_MAX_ENHANCE_LEVEL, chi phi
+   * resolve theo realmId hien hanh (catalog nghe -> template cua item
+   * dang mac neu co -> fallback Linh Thach thuan).
    */
   enhance(
     slot: EquipmentSlot,
@@ -520,9 +521,9 @@ export class EquipmentSystem {
     const cost = this.resolveEnhanceCost(realmId, enhanceLevel, template)
     const spiritStoneMaterialId = getSpiritStoneMaterialIdForEnhanceLevel(enhanceLevel)
 
-    // Plan Workstream F — Linh Thạch là MATERIAL: check/trừ qua
-    // MaterialBag (spiritStone trong cost chỉ còn authoring sugar được
-    // normalize tại boundary này).
+    // Plan Workstream F - Linh Thach la MATERIAL: check/tru qua
+    // MaterialBag (spiritStone trong cost chi con authoring sugar duoc
+    // normalize tai boundary nay).
     if (!this.hasSpiritStones(materialBag, cost.spiritStone, spiritStoneMaterialId)) {
       return { ok: false, reason: 'missing_spirit_stone' }
     }
@@ -544,7 +545,7 @@ export class EquipmentSystem {
     // lieu lan thu (da tru o tren), KHONG doi level.
     const successRate = enhanceSuccessRate(enhanceLevel + 1)
     const pityGuaranteed = slotState.enhanceFailStreak >= ENHANCE_PITY_THRESHOLD
-    // M3 — Bach Luyen Thanh Khi: enhance never fails while the policy is on.
+    // M3 - Bach Luyen Thanh Khi: enhance never fails while the policy is on.
     const success = pityGuaranteed || this.enhanceAlwaysSucceed || random() * 100 < successRate
 
     if (!success) {
@@ -566,18 +567,18 @@ export class EquipmentSystem {
   }
 
   /**
-   * TẦY LUYỆN (2026-08-25, resource-professions-rework plan §7.3) —
-   * reroll TOÀN BỘ identity substat: số dòng trong trần Chất,
-   * identity từ pool hợp lệ, tier weighted theo Chất. KHÔNG đổi
-   * main stat, quality, realm, cấp Cường Hóa slot.
+   * TAY LUYEN (2026-08-25, resource-professions-rework plan sec7.3) -
+   * reroll TOAN BO identity substat: so dong trong tran Chat,
+   * identity tu pool hop le, tier weighted theo Chat. KHONG doi
+   * main stat, quality, realm, cap Cuong Hoa slot.
    *
-   * Chi phí bắt buộc: 1 lượt Rèn + Luyện Khí Tinh Hoa + Linh Thạch.
-   * Validation trước, trừ toàn bộ sau khi thành công.
+   * Chi phi bat buoc: 1 luot Ren + Luyen Khi Tinh Hoa + Linh Thach.
+   * Validation truoc, tru toan bo sau khi thanh cong.
    *
-   * Task 8 (phase7-gamemanager-split) — logic thật tách sang
-   * EquipmentWash.ts (roll-affix primitives dùng chung với
-   * createInstance ở EquipmentRollPrimitives.ts); EquipmentSystem chỉ
-   * còn bind state riêng (cost discount, ModifierSystem) qua
+   * Task 8 (phase7-gamemanager-split) - logic that tach sang
+   * EquipmentWash.ts (roll-affix primitives dung chung voi
+   * createInstance o EquipmentRollPrimitives.ts); EquipmentSystem chi
+   * con bind state rieng (cost discount, ModifierSystem) qua
    * washDeps().
    */
   washAffixes(
@@ -589,6 +590,13 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
+    // BETA SCOPE LOCK v2 sec.11 - equipmentWash is scope-hidden: the
+    // domain itself fails closed so a direct call cannot bypass the
+    // hidden tab (deferred frontend never reaches this in beta anyway).
+    if (isScopeHidden('equipmentWash')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return washAffixesImpl(
       instanceId,
       inventory,
@@ -602,12 +610,12 @@ export class EquipmentSystem {
   }
 
   /**
-   * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + validate + TRỪ
-   * COST giống hệt washAffixes(), nhưng KHÔNG ghi affixes mới vào
-   * instance. R9 (AR-21): trả về một-use TICKET — affixes hiển thị đọc
-   * qua getWashPreviewAffixes(ticketId); người chơi bấm lại (ticket cũ
-   * bị thay, trả cost lần nữa, roll mới) hoặc "Giữ"
-   * (commitWashAffixes, không tốn thêm) để chốt.
+   * Xem truoc Tay Luyen (2026-08-30, UI "giu/bo") - roll + validate + TRU
+   * COST giong het washAffixes(), nhung KHONG ghi affixes moi vao
+   * instance. R9 (AR-21): tra ve mot-use TICKET - affixes hien thi doc
+   * qua getWashPreviewAffixes(ticketId); nguoi choi bam lai (ticket cu
+   * bi thay, tra cost lan nua, roll moi) hoac "Giu"
+   * (commitWashAffixes, khong ton them) de chot.
    */
   previewWashAffixes(
     instanceId: string,
@@ -617,6 +625,10 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string; ticketId?: string } {
+    if (isScopeHidden('equipmentWash')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return previewWashAffixesImpl(
       instanceId,
       inventory,
@@ -628,18 +640,24 @@ export class EquipmentSystem {
     )
   }
 
-  /** R9 (AR-21) — display copy of the pending roll (never authoritative). */
+  /** R9 (AR-21) - display copy of the pending roll (never authoritative). */
   getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
+    // Scope-hidden wash cannot mint a ticket, but fail closed anyway -
+    // a lingering pre-flag ticket must not render through the domain API.
+    if (isScopeHidden('equipmentWash')) {
+      return undefined
+    }
+
     return getWashPreviewAffixesImpl(this.washPendingSlot, ticketId)
   }
 
-  /** R9 (AR-21) — drop the pending wash ticket (UI cancel/re-roll). */
+  /** R9 (AR-21) - drop the pending wash ticket (UI cancel/re-roll). */
   discardWashTicket(ticketId: string): void {
     discardWashTicketImpl(this.washPendingSlot, ticketId)
   }
 
   /**
-   * R9 (AR-23 4c) — authoritative main-stat range quote. The tooltip used
+   * R9 (AR-23 4c) - authoritative main-stat range quote. The tooltip used
    * to reproduce the quality/realm scaling here; now it renders this
    * read model instead. Mirrors the createInstance roll pipeline:
    * range x qualityMultiplier x (1 + globalLevel x MAIN_STAT_REALM_SCALE).
@@ -672,9 +690,9 @@ export class EquipmentSystem {
   }
 
   /**
-   * Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost
-   * lần nữa. R9 (AR-21): commit nhận TICKET ID, affixes áp vào instance
-   * là bản domain-owned; mọi attempt tiêu ticket (refine precedent).
+   * Chot ket qua da preview (previewWashAffixes) - khong kiem tra/tru cost
+   * lan nua. R9 (AR-21): commit nhan TICKET ID, affixes ap vao instance
+   * la ban domain-owned; moi attempt tieu ticket (refine precedent).
    */
   commitWashAffixes(
     instanceId: string,
@@ -683,6 +701,10 @@ export class EquipmentSystem {
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ): { ok: boolean; reason?: string } {
+    if (isScopeHidden('equipmentWash')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return commitWashAffixesImpl(
       instanceId,
       ticketId,
@@ -693,7 +715,7 @@ export class EquipmentSystem {
     )
   }
 
-  /** Deps injection cho EquipmentWash.ts — xem ghi chú washAffixes(). */
+  /** Deps injection cho EquipmentWash.ts - xem ghi chu washAffixes(). */
   private washDeps(): WashDeps {
     return {
       tryGetTemplate: (registry, itemId) => this.tryGetTemplate(registry, itemId),
@@ -718,14 +740,14 @@ export class EquipmentSystem {
   }
 
   /**
-   * TINH LUYỆN (2026-08-25, resource-professions-rework plan §7.4) —
-   * giữ NGUYÊN identity của mọi substat, tăng GIÁ TRỊ từng dòng
-   * KHÔNG khóa trong khoảng 5–20% (clamp trong min/max hợp lệ của
-   * tier). Khóa L dòng → cost Linh Thạch hệ số N + L; KHÔNG
-   * cho khóa toàn bộ.
+   * TINH LUYEN (2026-08-25, resource-professions-rework plan sec7.4) -
+   * giu NGUYEN identity cua moi substat, tang GIA TRI tung dong
+   * KHONG khoa trong khoang 5-20% (clamp trong min/max hop le cua
+   * tier). Khoa L dong -> cost Linh Thach he so N + L; KHONG
+   * cho khoa toan bo.
    *
-   * Chi phí bắt buộc: 1 lượt Rèn + Luyện Khí Tinh Hoa theo Chất
-   * + Linh Thạch phổ thông (đơn giá × N + L).
+   * Chi phi bat buoc: 1 luot Ren + Luyen Khi Tinh Hoa theo Chat
+   * + Linh Thach pho thong (don gia x N + L).
    */
   refineAffixValues(
     instanceId: string,
@@ -737,6 +759,12 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     _random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
+    // BETA SCOPE LOCK v2 sec.11 - equipmentRefine is scope-hidden
+    // (domain-level fail closed, same contract as washAffixes above).
+    if (isScopeHidden('equipmentRefine')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return refineAffixValuesImpl(
       instanceId,
       lockedIndices,
@@ -751,9 +779,9 @@ export class EquipmentSystem {
   }
 
   /**
-   * Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế preview/
-   * commit với previewWashAffixes/commitWashAffixes: roll + validate + TRỪ
-   * COST giống refineAffixValues() nhưng KHÔNG ghi value mới vào instance.
+   * Xem truoc Tinh Luyen (2026-08-30, UI "giu/bo") - cung co che preview/
+   * commit voi previewWashAffixes/commitWashAffixes: roll + validate + TRU
+   * COST giong refineAffixValues() nhung KHONG ghi value moi vao instance.
    */
   previewRefineValues(
     instanceId: string,
@@ -764,6 +792,10 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string; values?: RefineValueEntry[] } {
+    if (isScopeHidden('equipmentRefine')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return previewRefineValuesImpl(
       instanceId,
       lockedIndices,
@@ -776,12 +808,12 @@ export class EquipmentSystem {
     )
   }
 
-  /** Hủy capability Refine đang chờ; UI gọi khi người chơi bấm Bỏ/đổi context. */
+  /** Huy capability Refine dang cho; UI goi khi nguoi choi bam Bo/doi context. */
   discardRefinePreview(instanceId?: string): void {
     discardRefinePreviewImpl(this.refineDeps(), instanceId)
   }
 
-  /** Chốt đúng một lần payload do previewRefineValues/refineAffixValues vừa tạo. */
+  /** Chot dung mot lan payload do previewRefineValues/refineAffixValues vua tao. */
   commitRefineValues(
     instanceId: string,
     values: readonly RefineValueEntry[],
@@ -789,6 +821,10 @@ export class EquipmentSystem {
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ): { ok: boolean; reason?: string } {
+    if (isScopeHidden('equipmentRefine')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return commitRefineValuesImpl(
       instanceId,
       values,
@@ -799,7 +835,7 @@ export class EquipmentSystem {
     )
   }
 
-  /** Deps injection cho EquipmentRefine.ts — cùng pattern washDeps(). */
+  /** Deps injection cho EquipmentRefine.ts - cung pattern washDeps(). */
   private refineDeps(): RefineDeps {
     return {
       applyCostDiscount: (amount) => this.applyCostDiscount(amount),
@@ -822,14 +858,14 @@ export class EquipmentSystem {
   }
 
   /**
-   * HÓA LUYỆN (2026-08-25, resource-professions-rework plan §7.5) —
-   * phân giải DESTRUCTIVE trang bị thành Tinh Hoa theo tier cảnh giới
-   * và quality. Batch all-or-nothing: không xoá một phần item nếu cộng
-   * reward thất bại. Không tiêu hao Điểm Rèn.
+   * HOA LUYEN (2026-08-25, resource-professions-rework plan sec7.5) -
+   * phan giai DESTRUCTIVE trang bi thanh Tinh Hoa theo tier canh gioi
+   * va quality. Batch all-or-nothing: khong xoa mot phan item neu cong
+   * reward that bai. Khong tieu hao Diem Ren.
    *
-   * Guards (§7.5): item đang trang bị / locked / favorite bị từ chối.
-   * Số Tinh Hoa theo bảng ITEM_QUALITY_ESSENCE_RANGE; mọi Phẩm trang bị
-   * cùng trả một loại Luyện Khí Tinh Hoa.
+   * Guards (sec7.5): item dang trang bi / locked / favorite bi tu choi.
+   * So Tinh Hoa theo bang ITEM_QUALITY_ESSENCE_RANGE; moi Pham trang bi
+   * cung tra mot loai Luyen Khi Tinh Hoa.
    */
   dissolveInstances(
     instanceIds: readonly string[],
@@ -861,10 +897,10 @@ export class EquipmentSystem {
   }
 
   /**
-   * Build lại modifierSystem nội bộ từ toàn bộ instance đang
-   * equipped trong inventory — cần gọi sau khi nạp EquipmentBag
-   * từ save, vì modifierSystem là state trong bộ nhớ của
-   * EquipmentSystem, không tự phục hồi theo EquipmentBag.
+   * Build lai modifierSystem noi bo tu toan bo instance dang
+   * equipped trong inventory - can goi sau khi nap EquipmentBag
+   * tu save, vi modifierSystem la state trong bo nho cua
+   * EquipmentSystem, khong tu phuc hoi theo EquipmentBag.
    */
   refreshModifiers(
     inventory: EquipmentBag,
@@ -879,11 +915,11 @@ export class EquipmentSystem {
   }
 
   /**
-   * Build modifier từ chỉ số ĐÃ ROLL của instance (Implicit/mainStat +
-   * affixes), nhân hệ số theo enhanceLevel (đọc từ SLOT, Phase 9) +
-   * forgePoints (item-level, Equipment Rework) — 2 trục cộng dồn cùng
-   * lúc. Formation (Khắc Trận) được áp riêng qua GameManager.
-   * getAggregatedModifiers(), không nằm trong hàm này.
+   * Build modifier tu chi so DA ROLL cua instance (Implicit/mainStat +
+   * affixes), nhan he so theo enhanceLevel (doc tu SLOT, Phase 9) +
+   * forgePoints (item-level, Equipment Rework) - 2 truc cong don cung
+   * luc. Formation (Khac Tran) duoc ap rieng qua GameManager.
+   * getAggregatedModifiers(), khong nam trong ham nay.
    */
   private applyModifiers(
     instance: EquipmentInstance,

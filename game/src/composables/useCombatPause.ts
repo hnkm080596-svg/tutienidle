@@ -15,7 +15,7 @@ interface Options {
 }
 
 /**
- * An unwatched battle pauses visibly and waits for Continue (spec §6.1, A11).
+ * An unwatched battle pauses visibly and waits for Continue (spec sec6.1, A11).
  *
  * Returning to the tab deliberately does NOT resume: the player must see what
  * they are resuming into. This is what makes "combat has no catch-up" (A10)

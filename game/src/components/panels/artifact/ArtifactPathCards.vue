@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// Bản Mệnh Pháp Bảo — vùng 4 (doc §12.1): 3 card Công/Thủ/Khống, bậc
-// milestone 1/3/6/12/18, active state + nút chọn/đổi. Visual kiểu
-// button-card (class is-selected/CSS var màu),
-// nhưng LỰA CHỌN NÀY reversible-outside-combat (doc §7.1) nên KHÔNG
-// dùng window.confirm như QuanKhiPanel.vue's lựa chọn vĩnh viễn.
+// Ban Menh Phap Bao - vung 4 (doc sec12.1): 3 card Cong/Thu/Khong, bac
+// milestone 1/3/6/12/18, active state + nut chon/doi. Visual kieu
+// button-card (class is-selected/CSS var mau),
+// nhung LUA CHON NAY reversible-outside-combat (doc sec7.1) nen KHONG
+// dung window.confirm nhu QuanKhiPanel.vue's lua chon vinh vien.
 import type { ArtifactPath, ArtifactPathDefinition } from '@/core/artifact/Artifact'
 
 const PATH_COLOR_VAR: Record<ArtifactPath, string> = {

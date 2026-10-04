@@ -1,13 +1,13 @@
-// Di chuyển PNG (+ JSON atlas đi kèm, xem ghi chú ROUTABLE_EXTENSIONS)
-// từ asset-drop/ (thư mục thả file phẳng, xem asset-drop/README.md)
-// vào đúng vị trí trong public/assets/, dựa thuần vào TÊN FILE — không
-// cần bảng tra thủ công. Quy ước: `__` trong tên file = dấu `/` trong
-// đường dẫn đích. Ví dụ:
+// Di chuyen PNG (+ JSON atlas di kem, xem ghi chu ROUTABLE_EXTENSIONS)
+// tu asset-drop/ (thu muc tha file phang, xem asset-drop/README.md)
+// vao dung vi tri trong public/assets/, dua thuan vao TEN FILE - khong
+// can bang tra thu cong. Quy uoc: `__` trong ten file = dau `/` trong
+// duong dan dich. Vi du:
 //   frames__pham_khi.png              -> public/assets/frames/pham_khi.png
 //   equipment__quality-backdrop__bao_khi.png
 //                                      -> public/assets/equipment/quality-backdrop/bao_khi.png
 //
-// Chạy: npm run assets:route
+// Chay: npm run assets:route
 
 import { readdirSync, mkdirSync, renameSync, existsSync } from 'node:fs'
 import { join, dirname, extname, resolve, sep } from 'node:path'
@@ -17,10 +17,10 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 const DROP_DIR = join(ROOT, 'asset-drop')
 const DEST_ROOT = join(ROOT, 'public', 'assets')
 
-// .json — atlas TexturePacker đi kèm 1 spritesheet .png (vd
-// idle.png/idle.json, xem MainScene.ts's preload()) — phải route CÙNG
-// file .png tương ứng để Phaser load.multiatlas() tìm thấy cả 2 cạnh
-// nhau ở đích.
+// .json - atlas TexturePacker di kem 1 spritesheet .png (vd
+// idle.png/idle.json, xem MainScene.ts's preload()) - phai route CUNG
+// file .png tuong ung de Phaser load.multiatlas() tim thay ca 2 canh
+// nhau o dich.
 const ROUTABLE_EXTENSIONS = ['.png', '.json']
 
 const files = readdirSync(DROP_DIR).filter((f) => ROUTABLE_EXTENSIONS.includes(extname(f).toLowerCase()))
@@ -35,11 +35,11 @@ let skipped = 0
 
 for (const file of files) {
   const ext = extname(file)
-  const relParts = file.slice(0, -ext.length).split('__') // bỏ đuôi file, tách theo "__"
+  const relParts = file.slice(0, -ext.length).split('__') // bo duoi file, tach theo "__"
   const destPath = join(DEST_ROOT, ...relParts) + ext
   const srcPath = join(DROP_DIR, file)
 
-  // Asset containment (R14): relParts comes from the EXTERNAL filename —
+  // Asset containment (R14): relParts comes from the EXTERNAL filename -
   // a part like `..` (or an absolute segment) would escape DEST_ROOT via
   // join()'s normalisation. Resolve and require the destination to stay
   // strictly under the asset root before touching the filesystem.

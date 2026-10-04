@@ -1,21 +1,19 @@
-import { useGameManager } from './useGameState'
+import { useGameManager, useStateVersion } from './useGameState'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
+import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
 import type { Building } from '@/core/building/Building'
 
-// Building navigation controller (plan Workstream C) — logic điều hướng
-// DUY NHẤT dùng chung cho HAI entry point của building thật: hotspot
-// trên background và shortcut ring 3 của command wheel. Không entry nào
-// tự giữ navigation riêng.
+// Building navigation controller (plan Workstream C) - logic dieu huong
+// DUY NHAT dung chung cho HAI entry point cua building that: hotspot
+// tren background va shortcut ring 3 cua command wheel. Khong entry nao
+// tu giu navigation rieng.
 //
-// Quy tắc:
-// - Chưa xây → mở popover xây dựng (shared popover authority).
-// - Đã xây + functionType → mở panel chức năng (leftPanelMode).
-// - Đã xây + functionType (bao gồm Linh Tuyền) → LeftPanel.
-// - Resource building tương lai không có functionType → popover fallback.
-// - CHỈ MỘT BuildingDetailPopover ở GameRoot, điều khiển qua
-//   ui.activeBuildingPopoverId.
+// Quy tac (post default-built 2026-10-03): moi building luon co instance
+// lv1 - khong con trang thai chua xay, khong con popover xay dung.
+// - functionType -> mo panel chuc nang (leftPanelMode).
+// - Building khong functionType -> khong mo gi (hien chua co loai nao).
 
-/** Trình bày building cho hotspot/wheel — suy ra từ state hiện hành. */
+/** Trinh bay building cho hotspot/wheel - suy ra tu state hien hanh. */
 export interface BuildingPresentation {
   template: Building | undefined
 
@@ -27,9 +25,9 @@ export interface BuildingPresentation {
 }
 
 /**
- * Trạng thái badge nameplate (plan ui-discoverability §3.1) — suy ra THUẦN
- * từ BuildingSystem/ProductionSystem state hiện hành, không có store mới.
- * Ưu tiên: locked > ready > active > upgradeable > default.
+ * Trang thai badge nameplate (plan ui-discoverability sec3.1) - suy ra THUAN
+ * tu BuildingSystem/ProductionSystem state hien hanh, khong co store moi.
+ * Uu tien: locked > ready > active > upgradeable > default.
  */
 export type BuildingBadgeStatus =
   | 'locked'
@@ -41,7 +39,7 @@ export type BuildingBadgeStatus =
 export function useBuildingNavigation() {
   const gameManager = useGameManager()
 
-  const ui = useUiStore()
+  const { bumpState } = useStateVersion()
 
   function getBuildingPresentation(buildingId: string): BuildingPresentation {
     const template = gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === buildingId)
@@ -66,15 +64,19 @@ export function useBuildingNavigation() {
   }
 
   /**
-   * Badge trạng thái nameplate (plan ui-discoverability §3.1) — ĐỌC THUẦN
-   * từ system hiện có qua GameManager facade, không mutate gì:
-   * - locked: chưa có instance (canBuild ĐÚNG nguồn sự thật với popover).
-   * - ready: resource building (Linh Tuyền) có sản lượng claim được
-   *   (getStoredAmount ≥ 1, cùng nguồn với nút thu hoạch popover).
-   * - active: đang có job chạy — vòng job DUY NHẤT của building là luyện
-   *   đan pill_room (AlchemySystem qua getAlchemyJobs()).
-   * - upgradeable: built + chưa max + đủ nguyên liệu nâng KẾ TIẾP
-   *   (upgradeCost[level], cùng luật cost index với BuildingSystem.upgrade()).
+   * Badge trang thai nameplate (plan ui-discoverability sec3.1) - DOC THUAN
+   * tu system hien co qua GameManager facade, khong mutate gi:
+   * - locked: chua co instance (can xay ra duy nhat voi save cu chua
+   *   reconcile / id khong dang ky).
+   * - ready: resource building (Linh Tuyen) day kho san luong -
+   *   BuildingSystem.isStorageFull (cham tran tich luy thuc te).
+   * - active: dang co job chay - vong job DUY NHAT cua building la luyen
+   *   dan pill_room (AlchemySystem qua getAlchemyJobs()).
+   * - upgradeable: built + chua max + du nguyen lieu nang KE TIEP
+   *   (upgradeCost[level], cung luat cost index voi BuildingSystem.upgrade()).
+   *   Doc qua quoteBuildingUpgrade - cung authority voi nut Nang cap:
+   *   hasNextLevel + meetsRealmRequirement + canAfford, nen badge chi
+   *   sang khi nut thuc su an duoc (realm-gated thi an han).
    */
   function getBuildingStatus(buildingId: string): BuildingBadgeStatus {
     const template = gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === buildingId)
@@ -86,9 +88,7 @@ export function useBuildingNavigation() {
     }
 
     if (template.producesMaterialId) {
-      const stored = gameManager.buildingOps.getBuildingStoredAmount(instance.instanceId, Date.now() / 1000)
-
-      if (stored >= 1) {
+      if (gameManager.buildingOps.isBuildingStorageFull(instance.instanceId, Date.now() / 1000)) {
         return 'ready'
       }
     }
@@ -97,44 +97,67 @@ export function useBuildingNavigation() {
       return 'active'
     }
 
-    if (instance.level < template.maxLevel) {
-      const cost = template.upgradeCost[instance.level] ?? []
+    const quote = gameManager.buildingOps.quoteBuildingUpgrade(instance.instanceId)
 
-      if (cost.every((entry) => gameManager.materialBag.has(entry.materialId, entry.amount))) {
-        return 'upgradeable'
-      }
+    if (quote && quote.hasNextLevel && quote.meetsRealmRequirement && quote.canAfford) {
+      return 'upgradeable'
     }
 
     return 'default'
   }
 
+  /**
+   * Write path DUY NHAT cho nang cap cong trinh tu moi entry point
+   * (chip tren plaque ngoai dong phu + nut trong panel): predicate gioi
+   * han la quoteBuildingUpgrade - cung 3 co upgrade() ap, khong re-derive
+   * cost/dieu kien o day. Tra ve false khi khong con upgradeable.
+   */
+  function upgradeBuilding(buildingId: string): boolean {
+    const instance = gameManager.buildingManager.getByBuildingId(buildingId)
+
+    if (!instance) {
+      return false
+    }
+
+    const quote = gameManager.buildingOps.quoteBuildingUpgrade(instance.instanceId)
+
+    if (!quote || !quote.hasNextLevel || !quote.meetsRealmRequirement || !quote.canAfford) {
+      return false
+    }
+
+    if (!gameManager.buildingOps.upgradeBuilding(instance.instanceId)) {
+      return false
+    }
+
+    bumpState()
+
+    return true
+  }
+
   function openBuilding(buildingId: string): void {
+    // BETA SCOPE LOCK v2 (Phase-6): the single navigation funnel fails
+    // closed - a scope-hidden building (chi_hien_quan) opens no
+    // function panel from ANY caller (hotspot, wheel, deep-link).
+    if (!isBetaBuildingSurface(buildingId)) {
+      return
+    }
+
     const presentation = getBuildingPresentation(buildingId)
 
     if (!presentation.template) {
       return
     }
 
-    // Chưa xây → popover xây dựng.
-    if (!presentation.isBuilt) {
-      ui.openBuildingPopover(buildingId)
-
-      return
-    }
-
-    // Đã xây + functionType → mở thẳng panel chức năng.
+    // Da xay + functionType -> mo thang panel chuc nang.
     if (presentation.template.functionType) {
-      ui.openLeftPanel(presentation.template.functionType as Exclude<LeftPanelMode, null>)
-
-      return
+      useUiStore().openLeftPanel(presentation.template.functionType as Exclude<LeftPanelMode, null>)
     }
-
-    // Resource building (Linh Tuyền) → popover thu hoạch/nâng cấp.
-    ui.openBuildingPopover(buildingId)
   }
 
   return {
     openBuilding,
+
+    upgradeBuilding,
 
     getBuildingPresentation,
 

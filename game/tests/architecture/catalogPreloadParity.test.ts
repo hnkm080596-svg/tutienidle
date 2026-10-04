@@ -1,17 +1,17 @@
 /**
- * R14.6b guard — catalog/preload parity (roadmap R14, A10: "asset
+ * R14.6b guard - catalog/preload parity (roadmap R14, A10: "asset
  * resolution/preload enumeration derives from one canonical catalog").
  *
- * What exists already (AssetBundleCatalog.test.ts): catalog descriptors ⊇
+ * What exists already (AssetBundleCatalog.test.ts): catalog descriptors superset
  * keys queued by queueCombatAssets(). This file adds the missing direction
  * and the stray-load scan:
  *
  * - Exact key-set equality between queueCombatAssets() and the combat
- *   bundle — a divergence either way means a texture is loaded that the
+ *   bundle - a divergence either way means a texture is loaded that the
  *   bundle manager does not know, or catalogued but never ensured for the
  *   transitional preload net.
  * - Every literal `load.*` URL in production source must be enumerated by
- *   some bundle — a hardcoded path that no bundle owns is an untracked load.
+ *   some bundle - a hardcoded path that no bundle owns is an untracked load.
  * - Non-literal `load.*` call sites are pinned to the canonical feeders
  *   (queueCombatAssets descriptors, the catalog-driven AssetLoaderScene,
  *   canonical list functions). A new ad-hoc load site fails until it is
@@ -27,7 +27,7 @@ import {
 } from '@/presentation/assets/AssetBundleCatalog'
 
 const GAME_ROOT = process.cwd()
-const ALL_BUNDLES = ['core-ui', 'home', 'combat', 'tribulation'] as const
+const ALL_BUNDLES = ['core-ui', 'home', 'combat', 'tribulation', 'ui-chrome', 'ui-scenes'] as const
 
 function queuedCombatKeys(): Set<string> {
   const keys = new Set<string>()
@@ -97,12 +97,12 @@ describe('R14.6b — no stray preload enumeration outside the catalog', () => {
     // - CombatPreload: the transitional net, descriptor-fed (queueOnce).
     // - AssetLoaderScene: the catalog-driven loader itself.
     // - InkWashUiPhaser: atlas loader fed by its own exported URL constants.
-    // - CombatScene: Thanh Van variant swap — args come from
+    // - CombatScene: Thanh Van variant swap - args come from
     //   thanhVanLoadList(variant), the same source the catalog enumerates.
     // - TranPhapCombatPreviewScene: PLACEHOLDER_* constants declared by the
     //   combat presentation catalogue (enumerated in the combat bundle).
     // - TribulationPreload: descriptor-fed net reading
-    //   getTribulationDescriptors() — the same enumeration the bundle uses.
+    //   getTribulationDescriptors() - the same enumeration the bundle uses.
     // - HoaCauLabPlayback: development-only preview loads the same character
     //   catalogue clip and HOA_CAU_VFX_ASSETS descriptors as CombatPreload.
     const allowedFeeders = new Set([

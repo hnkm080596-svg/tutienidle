@@ -1,4 +1,4 @@
-// M11 (ARCH-007) — per-lane offline worker settlement parity.
+// M11 (ARCH-007) - per-lane offline worker settlement parity.
 // Oracle: audit AUD-E01 (docs/qa/2026-09-14-audit-economy-review.md).
 // Invariant: each worker lane completes on ITS OWN deadline; partial
 // work across lanes never synthesizes a completed cycle; identical
@@ -128,7 +128,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
       workerAssignments: new Map([[SITE, 2]]),
     })
 
-    // Both saved lanes completed inside the window — exactly once each.
+    // Both saved lanes completed inside the window - exactly once each.
     expect(settled).toBe(2)
     expect(system.drainSettlementEvents()).toHaveLength(2)
 
@@ -187,7 +187,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     expect(settled).toBeGreaterThan(0)
 
     // Every retained pending cycle is genuinely in-flight (due in the
-    // future) — nothing past-due lingers for a free online grant, and
+    // future) - nothing past-due lingers for a free online grant, and
     // both lanes keep a live chain tail (capacity stays reserved).
     expect(pendingDues(system)).toHaveLength(2)
     for (const due of pendingDues(system)) {
@@ -200,7 +200,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     const start = 1_000_000
     const assignments = new Map([[SITE, 2]])
 
-    // First absence: T -> T+65s — nothing due, both lanes retained.
+    // First absence: T -> T+65s - nothing due, both lanes retained.
     const first = createSystem()
     first.restoreStates(
       siteState([
@@ -215,7 +215,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     })
     expect(settledFirst).toBe(0)
 
-    // Save again (detached snapshot) and restore into a fresh system —
+    // Save again (detached snapshot) and restore into a fresh system -
     // the second absence T+65s -> T+165s must settle each lane once.
     const savedAgain = structuredClone(first.getAllStates())
     const keptIds = (savedAgain[0]!.workerCycles ?? []).map((cycle) => cycle.cycleId).sort()
@@ -231,7 +231,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     expect(settledSecond).toBe(2)
     expect(pendingDues(second)).toEqual([start + 200_000, start + 200_000])
 
-    // Third absence settles the chains once more — total granted equals
+    // Third absence settles the chains once more - total granted equals
     // 2 lanes x 2 completions (at +100s and +200s), no pooling residue.
     const third = createSystem()
     third.restoreStates(structuredClone(second.getAllStates()))
@@ -276,7 +276,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
 
     // The online tick grants each kept cycle exactly once at its deadline;
     // the freed lanes drain now and refill on the NEXT tick (top-up-then-
-    // settle order — identical to the pre-M11 online semantics).
+    // settle order - identical to the pre-M11 online semantics).
     system.tickWorkers(start + 101_000, bag, registry, REALM, 2, assignments)
     expect(system.drainSettlementEvents()).toHaveLength(2)
     expect(pendingDues(system)).toEqual([])
@@ -298,7 +298,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     ])
 
     // Online driver: observe at every completion instant (the dense limit
-    // of the per-tick loop — refill happens at the same instant).
+    // of the per-tick loop - refill happens at the same instant).
     const online = createSystem()
     const onlineBag = createBag()
     online.restoreStates(structuredClone(saved))
@@ -353,7 +353,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
 
     // Lane A: completes at +100s, +200s (2). Lane B (empty at save):
     // starts at T, completes at +100s, +200s (2). Total 4, each lane
-    // advanced independently — no pooling of partial work.
+    // advanced independently - no pooling of partial work.
     expect(settled).toBe(4)
     expect(pendingDues(system)).toEqual([start + 300_000, start + 300_000])
   })
@@ -366,7 +366,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
 
     // 370 saved past-due lanes (all due T+100s) on a 2-slot site: the
     // shared 10h budget pays 360 completions; the remaining 10 saved
-    // cycles are FORFEITED — dropped without reward, never left pending.
+    // cycles are FORFEITED - dropped without reward, never left pending.
     const backlog = Array.from({ length: capCycles + 10 }, (_, index) =>
       makeWorkerCycle(SITE, start, start + 100_000, `backlog_${index}`),
     )
@@ -384,7 +384,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     expect(system.drainSettlementEvents()).toHaveLength(capCycles)
 
     // No saved backlog id survives; only the two live chain tails remain,
-    // strictly in the future — nothing past-due lingers for a free
+    // strictly in the future - nothing past-due lingers for a free
     // online grant outside the cap.
     const pending = system.getState(SITE)!.workerCycles ?? []
     expect(pending).toHaveLength(2)
@@ -428,7 +428,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     const now = start + 150_000
     // lam explicitly assigned 0 workers -> 0 slots; leftover capacity
     // stays idle (no unassigned site). Saved in-flight lanes still
-    // complete on their own deadline — identical online and offline.
+    // complete on their own deadline - identical online and offline.
     const zeroSlot = new Map([[SITE, 0]])
     const saved = siteState([
       makeWorkerCycle(SITE, start, start + 100_000, 'lane_a'),

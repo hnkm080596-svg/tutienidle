@@ -8,9 +8,9 @@ import type { Skill } from '../skill/Skill'
 import { createDefaultPlayer } from '../player/Player'
 import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 
-// Slice 7 (Completion Task 10) — manual mode: khi bật, engine PAUSE khi
-// tới lượt player và chờ submitTurnChoice() trước khi resolve; enemy và
-// auto mode KHÔNG BAO GIỜ pause (auto = cùng engine chạy nhanh hơn).
+// Slice 7 (Completion Task 10) - manual mode: khi bat, engine PAUSE khi
+// toi luot player va cho submitTurnChoice() truoc khi resolve; enemy va
+// auto mode KHONG BAO GIO pause (auto = cung engine chay nhanh hon).
 
 const ENEMY_STATS_INPUT = {
   maxHp: 10_000_000,
@@ -151,13 +151,13 @@ describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
 
     expect(submitted).toBe(true)
 
-    // Submit resolve NGAY 1 lượt player (turn mới +1) không cần chờ tick.
+    // Submit resolve NGAY 1 luot player (turn moi +1) khong can cho tick.
     const turnsAfterSubmit = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
 
     expect(turnsAfterSubmit).toBeGreaterThanOrEqual(1)
 
-    // Sau submit, engine peek tiếp → pause lại chờ choice kế (manual mode
-    // vẫn bật). 10 tick không resolve thêm gì khi pause.
+    // Sau submit, engine peek tiep -> pause lai cho choice ke (manual mode
+    // van bat). 10 tick khong resolve them gi khi pause.
     for (let i = 0; i < 10; i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
@@ -203,7 +203,7 @@ describe('manual mode — committed queued executions auto-resolve (Mission C co
     expect(gameManager.getTurnBattle()!.totalTurnsElapsed ?? 0).toBe(turnsAtSubmit + 1)
 
     // The queued repeat execution must drain on a later step WITHOUT the
-    // engine parking on AWAITING_INPUT in between — the first elapsed
+    // engine parking on AWAITING_INPUT in between - the first elapsed
     // increment after submit is that committed execution.
     let sawAwaiting = false
     let queuedResolved = false

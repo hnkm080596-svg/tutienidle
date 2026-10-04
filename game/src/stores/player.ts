@@ -12,12 +12,15 @@ import {
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow } from '../core/economy/TuLinhTranBalance'
-import { buildGameSave, computeRestoreIdentity, type GameSave } from '../services/save/SaveSystem'
+import { buildGameSave, computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
+import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
+import { MAIN_STAT_KEYS } from '@/core/stats/StatTypes'
+import type { StatType } from '@/core/stats/StatTypes'
 import type { GameManager } from '@/core/game/GameManager'
-import { getRequiredCultivation } from '@/core/realm/realmSystem'
+import { getCurrentRealm, getRequiredCultivation } from '@/core/realm/realmSystem'
 import { cultivateTick } from '@/core/cultivation/CultivationTick'
 import { accrueCultivationInsight } from '@/core/cultivation/CultivationInsight'
 import type { StatModifier } from '@/core/stats/StatCalculator'
@@ -28,27 +31,27 @@ import {
 } from '@/core/player/PlayerVisualForm'
 
 // Dirty-check cho setExternalModifiers (perf-optimize-pass Task 5).
-// App.vue gọi setExternalModifiers() MỖI TICK (10Hz) với mảng MỚI do
-// GameManager.getAggregatedModifiers() dựng lại; gán reference mới làm
-// getter `finalStats` invalidate mỗi tick dù nội dung buff/technique
-// không đổi -> mọi consumer tính lại vô ích. Ở đây giữ lại "chữ ký" nội
-// dung của lần gán gần nhất để bỏ qua các lần gán trùng nội dung.
+// App.vue goi setExternalModifiers() MOI TICK (10Hz) voi mang MOI do
+// GameManager.getAggregatedModifiers() dung lai; gan reference moi lam
+// getter `finalStats` invalidate moi tick du noi dung buff/technique
+// khong doi -> moi consumer tinh lai vo ich. O day giu lai "chu ky" noi
+// dung cua lan gan gan nhat de bo qua cac lan gan trung noi dung.
 //
-// Vì sao SNAPSHOT theo GIÁ TRỊ (string) chứ không deep-compare với
-// `this.externalModifiers`: nguồn modifier (BuffSystem/SkillSystem) có
-// thể trả về CHÍNH object cũ và mutate tại chỗ (vd stacks đổi). Khi đó
-// hai bên của phép so sánh trỏ cùng object nên deep-compare luôn thấy
-// "giống nhau" và ta sẽ bỏ sót thay đổi thật. Chữ ký copy giá trị ra
-// string nên bắt được đúng trường hợp này.
+// Vi sao SNAPSHOT theo GIA TRI (string) chu khong deep-compare voi
+// `this.externalModifiers`: nguon modifier (BuffSystem/SkillSystem) co
+// the tra ve CHINH object cu va mutate tai cho (vd stacks doi). Khi do
+// hai ben cua phep so sanh tro cung object nen deep-compare luon thay
+// "giong nhau" va ta se bo sot thay doi that. Chu ky copy gia tri ra
+// string nen bat duoc dung truong hop nay.
 //
-// WeakMap theo store instance (KHÔNG phải biến module dùng chung) để
+// WeakMap theo store instance (KHONG phai bien module dung chung) de
 // m-i pinia instance - nh-t l- trong test, m-i test t-o pinia m-i - c-
-// snapshot riêng, và snapshot tự thu hồi cùng store. Không đụng vào
+// snapshot rieng, va snapshot tu thu hoi cung store. Khong dung vao
 // state/save shape.
 interface ExternalModifierSnapshot {
-  // Đúng giá trị mà state đang giữ sau lần gán gần nhất (proxy reactive
-  // của Pinia). Nếu nơi khác thay mảng này (load save, $reset, $patch)
-  // thì reference lệch -> ta gán lại thay vì tin vào chữ ký cũ.
+  // Dung gia tri ma state dang giu sau lan gan gan nhat (proxy reactive
+  // cua Pinia). Neu noi khac thay mang nay (load save, $reset, $patch)
+  // thi reference lech -> ta gan lai thay vi tin vao chu ky cu.
   applied: StatModifier[]
 
   signature: string
@@ -56,16 +59,16 @@ interface ExternalModifierSnapshot {
 
 const lastExternalModifiers = new WeakMap<object, ExternalModifierSnapshot>()
 
-// QA-002 idempotency (Task 9.2) — payload-identity guard cho
-// restoreFromSave(), cùng pattern lastExternalModifiers phía trên:
-// WeakMap theo store instance, non-reactive, không persist vào save
-// (dev phase — không migration). Lưu kết quả OfflineResult của lần
-// restore gần nhất; cùng payload gọi lại = no-op trả Y HỆT kết quả đó
-// (chống double-credit offline cultivation + double Object.assign khi
-// boot flow bị retry/recovery chạy 2 lần), payload KHÁC = áp đầy đủ
-// (boot lại với save mới hơn vẫn hoạt động). Identity là
-// `lastSavedAt|cultivation` từ save — cặp giá trị này khác hàm ý save
-// đã đổi (lần save sau luôn có lastSavedAt mới hơn).
+// QA-002 idempotency (Task 9.2) - payload-identity guard cho
+// restoreFromSave(), cung pattern lastExternalModifiers phia tren:
+// WeakMap theo store instance, non-reactive, khong persist vao save
+// (dev phase - khong migration). Luu ket qua OfflineResult cua lan
+// restore gan nhat; cung payload goi lai = no-op tra Y HET ket qua do
+// (chong double-credit offline cultivation + double Object.assign khi
+// boot flow bi retry/recovery chay 2 lan), payload KHAC = ap day du
+// (boot lai voi save moi hon van hoat dong). Identity la
+// `lastSavedAt|cultivation` tu save - cap gia tri nay khac ham y save
+// da doi (lan save sau luon co lastSavedAt moi hon).
 interface RestoredPayloadSnapshot {
   identity: string
 
@@ -74,17 +77,17 @@ interface RestoredPayloadSnapshot {
 
 const lastRestoredPayloads = new WeakMap<object, RestoredPayloadSnapshot>()
 
-// Ký tự điều khiển làm dấu phân cách — không bao giờ xuất hiện trong
-// id/sourceId/stat/tag (toàn chuỗi định danh do code sinh), nên hai mảng
-// khác nội dung không thể vô tình trùng chữ ký vì ghép chuỗi.
+// Ky tu dieu khien lam dau phan cach - khong bao gio xuat hien trong
+// id/sourceId/stat/tag (toan chuoi dinh danh do code sinh), nen hai mang
+// khac noi dung khong the vo tinh trung chu ky vi ghep chuoi.
 const SIGNATURE_SEPARATOR = '\u0001'
 
-// "Nội dung giống hệt" = cùng số lượng, cùng THỨ TỰ, và từng entry khớp
-// TOÀN BỘ field của StatModifier có ảnh hưởng tới calculateStats
-// (id/sourceId/sourceType/stat/tag + 7 field số). Thứ tự được tính vào
-// vì mảng này được spread thẳng vào pipeline; giữ chặt hơn cần thiết ở
-// chỗ này chỉ khiến ta gán lại thừa (an toàn), không bao giờ bỏ sót.
-// `?? ''` phân biệt được 0 ("0") với undefined ("").
+// "Noi dung giong het" = cung so luong, cung THU TU, va tung entry khop
+// TOAN BO field cua StatModifier co anh huong toi calculateStats
+// (id/sourceId/sourceType/stat/tag + 7 field so). Thu tu duoc tinh vao
+// vi mang nay duoc spread thang vao pipeline; giu chat hon can thiet o
+// cho nay chi khien ta gan lai thua (an toan), khong bao gio bo sot.
+// `?? ''` phan biet duoc 0 ("0") voi undefined ("").
 function externalModifierSignature(modifiers: StatModifier[]): string {
   const parts: (string | number)[] = [modifiers.length]
 
@@ -96,7 +99,7 @@ function externalModifierSignature(modifiers: StatModifier[]): string {
       modifier.stat,
       modifier.tag ?? '',
       // stat-system-reimagined review fix: domain decides whether the
-      // gate delivers a gated-stat modifier — same-fields-different-
+      // gate delivers a gated-stat modifier - same-fields-different-
       // domain MUST break the signature or the new grant never lands.
       modifier.domain ?? '',
       modifier.flat ?? '',
@@ -120,33 +123,34 @@ export const usePlayerStore = defineStore('player', {
       return getRequiredCultivation(state.realmId, state.realmLevel)
     },
 
-    // Dùng lại đúng công thức cultivationRequired — trước đây tự tính
-    // "realmLevel * 100" (sai, không khớp getRequiredCultivation thật
-    // sự dùng ở nơi khác), nay chỉ còn 1 nguồn công thức duy nhất.
+    // Dung lai dung cong thuc cultivationRequired - truoc day tu tinh
+    // "realmLevel * 100" (sai, khong khop getRequiredCultivation that
+    // su dung o noi khac), nay chi con 1 nguon cong thuc duy nhat.
     cultivationProgress(): number {
       return Math.min(this.cultivation / this.cultivationRequired, 1)
     },
 
-    // Stats cuối cùng = baseStats + modifiers (equipment/talent, tĩnh)
-    // + externalModifiers (buff/technique, do GameManager gộp mỗi tick).
-    // Đây là nguồn duy nhất UI/CombatEntity nên đọc.
-    // ARCH-002 (M7): formula lives in resolvePlayerFinalStats() — the same
+    // Stats cuoi cung = baseStats + modifiers (equipment/talent, tinh)
+    // + externalModifiers (buff/technique, do GameManager gop moi tick).
+    // Day la nguon duy nhat UI/CombatEntity nen doc.
+    // ARCH-002 (M7): formula lives in resolvePlayerFinalStats() - the same
     // owner the battle entry path resolves through (post-reset, fresh
     // aggregation instead of this mirror field).
     finalStats(state) {
       return resolvePlayerFinalStats(state, state.externalModifiers)
     },
 
-    // The character's visual form — derived FROM the entity itself
+    // The character's visual form - derived FROM the entity itself
     // (realmId + cultivationPath), one single source. Everywhere the
     // character appears reads from here: PhaserCanvas writes the registry
     // gate for CombatScene/MainScene, TranPhapPanel sends it to the
     // preview scene. Art content (textures/anchors) lives in
-    // PLAYER_VISUAL_PROFILES on the presentation side — this is only the id.
+    // PLAYER_VISUAL_PROFILES on the presentation side - this is only the id.
     visualProfileId(state): PlayerVisualProfileId {
       return resolvePlayerVisualProfileId({
         realmId: state.realmId,
         cultivationPath: state.cultivationPath,
+        cultivationWay: state.cultivationWay ?? undefined,
       })
     },
 
@@ -185,22 +189,22 @@ export const usePlayerStore = defineStore('player', {
       return breakthroughSystem(this)
     },
 
-    // Gọi bởi App.vue mỗi tick với kết quả từ
-    // GameManager.getAggregatedModifiers(). Store không tự tính
-    // buff/technique modifier, chỉ lưu lại để finalStats dùng.
-    // Dirty-check (perf-optimize-pass Task 5, xem ghi chú đầu file):
-    // KHÔNG gán reference mới nếu nội dung y hệt lần gán trước — giữ
-    // nguyên object cũ để getter `finalStats` (và mọi computed phái
-    // sinh) không invalidate 10 lần/giây khi buff/technique không đổi.
+    // Goi boi App.vue moi tick voi ket qua tu
+    // GameManager.getAggregatedModifiers(). Store khong tu tinh
+    // buff/technique modifier, chi luu lai de finalStats dung.
+    // Dirty-check (perf-optimize-pass Task 5, xem ghi chu dau file):
+    // KHONG gan reference moi neu noi dung y het lan gan truoc - giu
+    // nguyen object cu de getter `finalStats` (va moi computed phai
+    // sinh) khong invalidate 10 lan/giay khi buff/technique khong doi.
     setExternalModifiers(modifiers: StatModifier[]) {
       const previous = lastExternalModifiers.get(this)
 
       const signature = externalModifierSignature(modifiers)
 
-      // `previous.applied === this.externalModifiers` bảo đảm chỉ bỏ qua
-      // khi state VẪN đang giữ đúng mảng ta gán lần trước — nếu load
-      // save/$reset/$patch đã thay mảng khác thì chữ ký cũ vô nghĩa,
-      // phải gán lại.
+      // `previous.applied === this.externalModifiers` bao dam chi bo qua
+      // khi state VAN dang giu dung mang ta gan lan truoc - neu load
+      // save/$reset/$patch da thay mang khac thi chu ky cu vo nghia,
+      // phai gan lai.
       if (
         previous !== undefined &&
         previous.signature === signature &&
@@ -211,19 +215,20 @@ export const usePlayerStore = defineStore('player', {
 
       this.externalModifiers = modifiers
 
-      // Lưu lại ĐÚNG giá trị state trả về (proxy reactive của Pinia),
-      // không phải `modifiers` thô, để phép so sánh reference ở trên
-      // đúng ở tick sau.
+      // Luu lai DUNG gia tri state tra ve (proxy reactive cua Pinia),
+      // khong phai `modifiers` tho, de phep so sanh reference o tren
+      // dung o tick sau.
       lastExternalModifiers.set(this, { applied: this.externalModifiers, signature })
     },
 
-    // Modifier "tĩnh" từ equipment (xem ghi chú kiểu PlayerData).
-    // Gọi ngay sau equip/unequip/enhance, không phải mỗi tick —
-    // khác setExternalModifiers ở trên. player.modifiers là bucket
-    // DÙNG CHUNG cho nhiều nguồn tĩnh khác (realm passive, Luyện Thể,
-    // pill vĩnh viễn — phân biệt qua sourceType/id prefix), nên chỉ
-    // được thay THẾ phần sourceType 'equipment', không được gán đè cả
-    // mảng — gán đè từng xoá sạch mọi nguồn khác mỗi lần equip/reload.
+    // Modifier "tinh" tu equipment (xem ghi chu kieu PlayerData).
+    // Goi ngay sau equip/unequip/enhance, khong phai moi tick -
+    // khac setExternalModifiers o tren. player.modifiers is the SHARED
+    // bucket for many static sources (realm passive, Luyen The -
+    // distinguished by sourceType/id prefix; permanent pills now write
+    // baseStats directly, no longer a modifier bucket), so it may only
+    // duoc thay THE phan sourceType 'equipment', khong duoc gan de ca
+    // mang - gan de tung xoa sach moi nguon khac moi lan equip/reload.
     setEquipmentModifiers(modifiers: StatModifier[]) {
       this.modifiers = [
         ...this.modifiers.filter(modifier => modifier.sourceType !== 'equipment'),
@@ -231,13 +236,13 @@ export const usePlayerStore = defineStore('player', {
       ]
     },
 
-    // Nhận gameManager từ App.vue thay vì tự giữ instance trong
-    // store — GameManager không phải reactive state của Vue (xem
-    // ghi chú trong GameManager.ts/App.vue), store chỉ pass-through.
+    // Nhan gameManager tu App.vue thay vi tu giu instance trong
+    // store - GameManager khong phai reactive state cua Vue (xem
+    // ghi chu trong GameManager.ts/App.vue), store chi pass-through.
     save(gameManager: GameManager) {
-      // lastSavedAt phải được cập nhật TRƯỚC khi ghi file,
-      // nếu không offline progress lần sau sẽ bị tính dư
-      // (vì file lưu mốc thời gian cũ hơn thời điểm save thật).
+      // lastSavedAt phai duoc cap nhat TRUOC khi ghi file,
+      // neu khong offline progress lan sau se bi tinh du
+      // (vi file luu moc thoi gian cu hon thoi diem save that).
       this.lastSavedAt = Date.now()
 
    // R10 (AR-12): this.$state is a live reactive Pinia proxy -
@@ -248,23 +253,36 @@ export const usePlayerStore = defineStore('player', {
       return cloudSaveCoordinator.save(buildGameSave(this.$state, gameManager))
     },
 
-    restoreFromSave(save: GameSave) {
-      // R10 (AR-12) — payload-identity guard: WHOLE-payload hash (qua
-      // computeRestoreIdentity — exclude lastSavedAt), không còn
-      // fingerprint 2-field. Cùng save gọi lại = no-op; save KHÁC (dù
-      // cùng lastSavedAt|cultivation) áp đầy đủ.
+    restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority) {
+      // R10 (AR-12) - payload-identity guard: WHOLE-payload hash (qua
+      // computeRestoreIdentity - exclude lastSavedAt), khong con
+      // fingerprint 2-field. Cung save goi lai = no-op; save KHAC (du
+      // cung lastSavedAt|cultivation) ap day du.
       const payloadIdentity = computeRestoreIdentity(save)
       const previousRestore = lastRestoredPayloads.get(this)
 
       if (previousRestore !== undefined && previousRestore.identity === payloadIdentity) {
-        return previousRestore.offline // elapsed 0 — no-op đúng nghĩa, trả lại kết quả lần trước
+        return previousRestore.offline // elapsed 0 - no-op dung nghia, tra lai ket qua lan truoc
       }
 
-      // GameClock là nguồn duy nhất tính thời gian offline.
-      // lastSavedAt của save file chính là lastOnlineAt của GameClockState.
-      const { offlineSeconds } = calculateOfflineTime({
-        lastOnlineAt: save.player.lastSavedAt,
-      })
+      // GameClock la nguon duy nhat tinh thoi gian offline.
+      // lastSavedAt cua save file chinh la lastOnlineAt cua GameClockState.
+      // B1-D - under remote authority the accrual bound is the SERVER
+      // window (progression_cutoff_at -> serverNowUtc), never the client
+      // clock or the editable payload marker; a live replacement accrues
+      // zero by definition. The bound still flows through
+      // calculateOfflineTime so the max cap applies.
+      const offlineSeconds =
+        timeAuthority?.kind === 'cold-boot'
+          ? calculateOfflineTime(
+              { lastOnlineAt: timeAuthority.sinceMs },
+              timeAuthority.untilMs,
+            ).offlineSeconds
+          : timeAuthority?.kind === 'live-replacement'
+            ? 0
+            : calculateOfflineTime({
+                lastOnlineAt: save.player.lastSavedAt,
+              }).offlineSeconds
 
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x
@@ -287,31 +305,31 @@ export const usePlayerStore = defineStore('player', {
         ),
       }
 
-      // R10 (AR-12, S4 follow-up) — deep-clone before assigning: a plain
+      // R10 (AR-12, S4 follow-up) - deep-clone before assigning: a plain
       // Object.assign shallow-copies nested fields (baseStats, modifiers,
       // ...), so this.baseStats becomes the SAME object as
       // save.player.baseStats. A later in-place store mutation then
       // leaked back into the
-      // caller's `save` object — corrupting it for any later reuse (the
+      // caller's `save` object - corrupting it for any later reuse (the
       // payload-identity guard above included: a second restoreFromSave
       // call with the SAME `save` reference would see a hash that changed
       // out from under it and wrongly treat it as a new payload). A
       // restore input must be treated as a value, same principle as
       // buildGameSave's snapshot-is-a-value fix (S1).
       //
-      // M1 (ARCH-001) — the player slice is REPLACE semantics, not merge:
+      // M1 (ARCH-001) - the player slice is REPLACE semantics, not merge:
       // overlay the payload onto createDefaultPlayer() so fields the save
       // does not declare reset to defaults instead of keeping the previous
       // session's values, then drop state keys the result does not have
       // (any dynamic $state key outside PlayerData would otherwise survive
-      // a restore — a plain assign only overwrites, never removes).
+      // a restore - a plain assign only overwrites, never removes).
       const clonedPlayer = structuredClone(save.player)
 
-      // Mission A6 — whitelist before the spread: only keys declared by
+      // Mission A6 - whitelist before the spread: only keys declared by
       // createDefaultPlayer() may enter $state. A foreign key in the
       // payload (hand-edited save, foreign payload) would otherwise be
       // spread onto the store AND re-serialized by every later
-      // buildGameSave — self-replicating junk.
+      // buildGameSave - self-replicating junk.
       const allowedPlayerKeys = new Set(Object.keys(createDefaultPlayer()))
 
       for (const key of Object.keys(clonedPlayer)) {
@@ -327,7 +345,14 @@ export const usePlayerStore = defineStore('player', {
       const filteredBaseStats: Record<string, number> = {}
 
       for (const [key, value] of Object.entries(clonedPlayer.baseStats)) {
-        if (allowedStatKeys.has(key)) {
+        if (
+          allowedStatKeys.has(key) &&
+          Number.isFinite(value) &&
+          value >= 0 &&
+          // Main stats are indivisible points (level-up and pills only
+          // ever grant integers) - a fractional claim is crafted data.
+          (!(MAIN_STAT_KEYS as readonly string[]).includes(key) || Number.isInteger(value))
+        ) {
           filteredBaseStats[key] = value
         }
       }
@@ -345,6 +370,62 @@ export const usePlayerStore = defineStore('player', {
         }),
       }
 
+      // Retired pill-permanent:<stat> flat modifiers (pre-rework saves)
+      // are folded into baseStats once, then dropped below: the bucket
+      // must not keep paying while the cap gate only reads baseStats,
+      // and the earned points stay visible to every baseStats reader.
+      // Only MAIN_STAT_KEYS fold - every legit legacy entry was a
+      // main-stat grant, so the shared effective cap binds every fold.
+      const isRetiredPillPermanent = (modifier: StatModifier | null | undefined): boolean =>
+        typeof modifier?.id === 'string' && modifier.id.startsWith('pill-permanent:')
+      const mainCap = getEffectiveMainStatCap(restoredPlayer)
+      const foldedRetiredIds = new Set<string>()
+      const foldRetiredPillPermanents = (modifiers: StatModifier[] | undefined): void => {
+        for (const modifier of modifiers ?? []) {
+          // Only main-stat zombies fold: pill-permanent:* was always a
+          // main-stat grant channel, so a non-main claim (domain stat,
+          // foreign key) is crafted data, not a legacy save.
+          if (
+            !isRetiredPillPermanent(modifier) ||
+            !(MAIN_STAT_KEYS as readonly string[]).includes(modifier.stat)
+          ) {
+            continue
+          }
+          // A legacy save could carry the same entry in two buckets;
+          // the fold credits it once. An invalid-flat copy does not
+          // consume the id - a later valid copy still credits.
+          if (foldedRetiredIds.has(modifier.id)) {
+            continue
+          }
+          const gain = modifier.flat ?? 0
+          if (!Number.isFinite(gain) || gain <= 0) {
+            continue
+          }
+          foldedRetiredIds.add(modifier.id)
+          const key = modifier.stat
+          restoredPlayer.baseStats[key] = Math.min(
+            mainCap,
+            (restoredPlayer.baseStats[key] ?? 0) + gain,
+          )
+        }
+      }
+
+      // Same one-shot fold in every static-modifier bucket a legacy
+      // save could carry: player.modifiers, player.externalModifiers
+      // and persistentTimedEffects[].modifiers are all filtered by
+      // isCurrentShapeModifier below, so a folded zombie is dropped
+      // from whichever channel carried it.
+      foldRetiredPillPermanents(restoredPlayer.modifiers)
+      foldRetiredPillPermanents(restoredPlayer.externalModifiers)
+      for (const effect of restoredPlayer.persistentTimedEffects ?? []) {
+        foldRetiredPillPermanents(effect?.modifiers)
+      }
+
+      // The main-stat clamp runs AFTER normalizeArtifactProgress below:
+      // the effective cap depends on the realm, and a crafted save can
+      // pair a big realm claim with a big stat claim - normalize fixes
+      // the realm first, then the clamp reads the corrected cap.
+
       // Same whitelist for StatModifier.stat fields persisted on the
       // player slice - a modifier whose stat is not a current StatType
       // drops (never renamed), and a modifier on a domain-gated stat
@@ -352,6 +433,12 @@ export const usePlayerStore = defineStore('player', {
       // wrong tag would be rejected by applyDomainGate on every
       // recompute, so the inert zombie is dropped at restore instead.
       const isCurrentShapeModifier = (modifier: StatModifier): boolean => {
+        if (modifier === null || typeof modifier !== 'object') {
+          return false
+        }
+        if (isRetiredPillPermanent(modifier)) {
+          return false
+        }
         if (!allowedStatKeys.has(modifier.stat)) {
           return false
         }
@@ -360,15 +447,24 @@ export const usePlayerStore = defineStore('player', {
       }
 
       restoredPlayer.modifiers = (restoredPlayer.modifiers ?? []).filter(isCurrentShapeModifier)
-      restoredPlayer.externalModifiers = (restoredPlayer.externalModifiers ?? []).filter(
-        isCurrentShapeModifier,
-      )
+      // externalModifiers is the per-tick aggregate mirror the
+      // GameManager rewrites every tick from live buff/technique
+      // sources - it holds no persisted authority of its own, so the
+      // restored copy clears here and repopulates on the next tick.
+      restoredPlayer.externalModifiers = []
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
           ...effect,
           modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
         }),
       )
+
+      // Reject a nonsense realmId BEFORE the assign lands it: a crafted
+      // save with an unresolvable realm survives Object.assign then
+      // throws inside addCultivation below - leaving the live store
+      // poisoned and the payload uncommitted, so every retry replays
+      // the crash. Fail before the payload mutates anything.
+      getCurrentRealm(restoredPlayer.realmId)
 
       for (const key of Object.keys(this.$state)) {
         if (!(key in restoredPlayer)) {
@@ -378,21 +474,21 @@ export const usePlayerStore = defineStore('player', {
 
       Object.assign(this, restoredPlayer)
 
-      // Node level (plan §6.1) — save cũ giữa v46 thiếu object này;
-      // thiếu = chưa lĩnh ngộ node nào, KHÔNG được để undefined kẹo
-      // getNodeLevel/aggregate crash toàn UI (nguyên nhân "không xóa
-      // được save" — app chết trước khi tới được Settings).
+      // Node level (plan sec6.1) - save cu giua v46 thieu object nay;
+      // thieu = chua linh ngo node nao, KHONG duoc de undefined keo
+      // getNodeLevel/aggregate crash toan UI (nguyen nhan "khong xoa
+      // duoc save" - app chet truoc khi toi duoc Settings).
       this.nodeLevels ??= {}
       this.purchasedNodeIds ??= []
 
-      // Combat AI strategy (plan §10.2) — save không có field hoặc giá
-      // trị sai dùng default 'nearest'. Không migration (development
-      // build), fallback đủ cho development save.
+      // Combat AI strategy (plan sec10.2) - save khong co field hoac gia
+      // tri sai dung default 'nearest'. Khong migration (development
+      // build), fallback du cho development save.
       this.combatAiStrategy = isCombatAiStrategy(save.player.combatAiStrategy)
         ? save.player.combatAiStrategy
         : DEFAULT_COMBAT_AI_STRATEGY
 
-      // Route the offline grant through addCultivation() — same
+      // Route the offline grant through addCultivation() - same
       // clamp-at-required rule as before (the old `+=` then
       // Math.min was a copy of that rule), plus the M2 Hai Nap
       // overflow bank.
@@ -409,17 +505,41 @@ export const usePlayerStore = defineStore('player', {
       // wrong whenever the cap binds. Store and return the real delta.
       const offlineResult = { ...offline, cultivation: offlineGained }
 
-      // M2 — Ngo Dao (spec §4.3 row 20): the insight_per_cultivation
+      // M2 - Ngo Dao (spec sec4.3 row 20): the insight_per_cultivation
       // accumulator settles the offline grant too, through the SAME
       // threshold/counters as the online cultivate() path.
       accrueCultivationInsight(this, offlineGained)
 
-      // Bản Mệnh Pháp Bảo (doc §10.2) — sửa mọi invariant sai ngay sau
-      // blind Object.assign() ở trên: nghề không khớp, thiếu state dù
-      // đủ gate, grade/path sai enum, realm/level/EXP vượt trần.
+      // Ban Menh Phap Bao (doc sec10.2) - sua moi invariant sai ngay sau
+      // blind Object.assign() o tren: nghe khong khop, thieu state du
+      // du gate, grade/path sai enum, realm/level/EXP vuot tran.
       normalizeArtifactProgress(this)
 
-      // M1 (ARCH-001) — commit the payload identity only AFTER the whole
+      // Value-domain coherence on the persisted pool: the base-stat
+      // record rebuilds onto authored defaults - main stats clamp to
+      // the shared cap (a save claiming more is corrupt or crafted -
+      // same bound every legitimate writer already enforces), and every
+      // non-main key resets to its authored initial value because no
+      // persisted writer ever changes them (attribute allocation and
+      // permanent_stat pills write MAIN_STAT_KEYS only). Runs AFTER
+      // normalize: the cap is realm-derived, so the clamp reads the
+      // corrected realm claim, not the crafted one.
+      const normalizedCap = getEffectiveMainStatCap(this)
+      const authoredBaseStats = createBaseStats()
+      const authoredKeys = new Set(Object.keys(authoredBaseStats))
+      const mainKeys = new Set<string>(MAIN_STAT_KEYS)
+      for (const key of Object.keys(this.baseStats)) {
+        if (!authoredKeys.has(key)) {
+          delete (this.baseStats as Record<string, number>)[key]
+        }
+      }
+      for (const key of Object.keys(authoredBaseStats) as StatType[]) {
+        this.baseStats[key] = mainKeys.has(key)
+          ? Math.min(normalizedCap, this.baseStats[key])
+          : authoredBaseStats[key]
+      }
+
+      // M1 (ARCH-001) - commit the payload identity only AFTER the whole
       // apply succeeded: a mid-restore throw leaves it uncommitted so a
       // retry with the same payload re-applies instead of being skipped
       // by the guard above.

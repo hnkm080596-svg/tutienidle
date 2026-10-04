@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Primitive khối trống — thay ~13 div empty tự viết ("Chưa có...",
-// "Chọn một... để xem"). size sm/md/lg điều padding; framed thêm viền
+// Primitive khoi trong - thay ~13 div empty tu viet ("Chua co...",
+// "Chon mot... de xem"). size sm/md/lg dieu padding; framed them vien
 // dashed (EquipmentHall empty-state).
 withDefaults(defineProps<{
   size?: 'sm' | 'md' | 'lg'
@@ -25,16 +25,16 @@ export default { name: 'EmptyState' }
 .empty-state {
   margin: 0;
   text-align: center;
-  color: var(--paper-text-muted);
+  color: var(--hk-text-muted);
   font-size: var(--text-sm);
 }
 
-.empty-state--sm { padding: 8px 4px; }
-.empty-state--md { padding: 16px 8px; }
-.empty-state--lg { padding: 24px 8px; font-size: var(--text-body); }
+.empty-state--sm { padding: var(--hk-space-3) var(--hk-space-2); }
+.empty-state--md { padding: var(--hk-space-5) var(--hk-space-3); }
+.empty-state--lg { padding: var(--hk-space-6) var(--hk-space-3); font-size: var(--text-body); }
 
 .empty-state--framed {
-  border: 1px dashed var(--paper-line);
-  border-radius: var(--radius-sm);
+  border: 1px dashed var(--hk-border-muted);
+  border-radius: var(--hk-radius-sm);
 }
 </style>

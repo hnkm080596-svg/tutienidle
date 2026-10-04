@@ -3,84 +3,88 @@ import {
   loadPersistedUiAutomationFlags,
   savePersistedUiAutomationFlags,
 } from './uiFlagsPersistence'
+import {
+  isBetaLeftPanelMode,
+  isBetaStandalonePanel,
+} from '@/core/betaScopeSurface'
 
-// "Trang chức năng" chiếm 100% panel trái, chỉ 1 trang hiện tại 1
-// thời điểm — 'inventory' còn có thêm khối Equipment cố định 30%
-// phía trên (xem LeftPanel.vue). Panel phải KHÔNG còn giữ nội dung
-// chức năng nào nên không còn RightPanelMode nữa. 'building' — trang
-// riêng 100%, không có khối Equipment (không liên quan trang bị).
+// "Trang chuc nang" chiem 100% panel trai, chi 1 trang hien tai 1
+// thoi diem - 'inventory' con co them khoi Equipment co dinh 30%
+// phia tren (xem LeftPanel.vue). Panel phai KHONG con giu noi dung
+// chuc nang nao nen khong con RightPanelMode nua. 'building' - trang
+// rieng 100%, khong co khoi Equipment (khong lien quan trang bi).
 //
-// Home Hub (beta plan) — 5 mode MỚI thay nội dung 'crafting' cũ (đã
-// xoá hẳn cùng CraftingPanel.vue/CraftTabs.vue ở Phase 8, tách theo
-// khu vực: equipment_hall=Khí Đường, formation_altar=Trận Đài,
-// talisman_institute=Phù Viện, pill_room=Đan Phòng,
-// scripture_pavilion=Tàng Kinh Các, hoàn toàn mới). 'character' giữ
-// nguyên (Động Phủ, chỉ enhance nội dung).
-// Thám Hiểm rework (2026-08-14) — 'building' (Kiến Trúc, panel liệt kê
-// phẳng mọi Building) và 'asset_reference' (dev-only, không thuộc nav
-// người chơi) bị GỠ KHỎI union này — Kiến Trúc bị thay hoàn toàn bởi
-// icon Building đặt trong Home Scene (xem HomeBuildingIcons.vue).
-// 'exploration' GIỮ NGUYÊN key (label giờ "Sản Xuất") — đây là hệ Thu
-// Thập nguyên liệu tự động cũ, KHÔNG phải Thám Hiểm mới.
-// 'stage_select' MỚI — màn hình chọn Địa Giới → Màn → chế độ trước khi
-// vào trận (core/stage/Zone.ts), thay cho nút "Chiến Đấu" cũ.
-// 'loadout' đã GỠ (2026-08-20) — Kỹ Năng/Tâm Pháp tách khỏi LeftPanel
-// thành 2 overlay riêng, xem `standalonePanel` bên dưới thay vì đây.
-// (2026-08-25, resource-professions-rework plan §9/§10.1) — bỏ
-// 'formation_altar'/'talisman_institute' (Phù/Trận khai tử). 'exploration'
-// giữ key, đổi label "Sản Xuất" — render ProductionPanel (Lâm/Quáng/
-// Động Thiên).
-// Command-wheel plan (2026-08-26) — NavMenuOverlay/DongFuTopBar/
-// BottomBar đã xoá: mọi entry chức năng đi qua command wheel
-// (DongFuCommandWheel.vue) hoặc hotspot building.
+// Home Hub (beta plan) - 5 mode MOI thay noi dung 'crafting' cu (da
+// xoa han cung CraftingPanel.vue/CraftTabs.vue o Phase 8, tach theo
+// khu vuc: equipment_hall=Khi Duong, formation_altar=Tran Dai,
+// talisman_institute=Phu Vien, pill_room=Dan Phong,
+// scripture_pavilion=Tang Kinh Cac, hoan toan moi). 'character' giu
+// nguyen (Dong Phu, chi enhance noi dung).
+// Tham Hiem rework (2026-08-14) - 'building' (Kien Truc, panel liet ke
+// phang moi Building) va 'asset_reference' (dev-only, khong thuoc nav
+// nguoi choi) bi GO KHOI union nay - Kien Truc bi thay hoan toan boi
+// icon Building dat trong Home Scene (xem scenes/dong-fu/DongFuStage.vue).
+// 'exploration' GIU NGUYEN key (label gio "San Xuat") - day la he Thu
+// Thap nguyen lieu tu dong cu, KHONG phai Tham Hiem moi.
+// 'stage_select' MOI - man hinh chon Dia Gioi -> Man -> che do truoc khi
+// vao tran (core/stage/Zone.ts), thay cho nut "Chien Dau" cu.
+// 'loadout' da GO (2026-08-20) - Ky Nang/Tam Phap tach khoi LeftPanel
+// thanh 2 overlay rieng, xem `standalonePanel` ben duoi thay vi day.
+// (2026-08-25, resource-professions-rework plan sec9/sec10.1) - bo
+// 'formation_altar'/'talisman_institute' (Phu/Tran khai tu). 'exploration'
+// giu key, doi label "San Xuat" - render ProductionPanel (Lam/Quang/
+// Dong Thien).
+// Command-wheel plan (2026-08-26) - NavMenuOverlay/TopBar/
+// BottomBar da xoa: moi entry chuc nang di qua command wheel
+// (slot wheel trong scenes/dong-fu/DongFuStage.vue) hoac plaque building.
 // Declared in `presentation/contracts/panelIds.ts` and re-exported here, so
-// that `src/game/` can name a panel without importing a Pinia store (V2/§3.2).
+// that `src/game/` can name a panel without importing a Pinia store (V2/sec3.2).
 // Every existing `from '@/stores/ui'` import keeps working.
 export type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
 import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
 
-// Phù/Trận legacy khai tử — bag chỉ còn 3 tab.
+// Phu/Tran legacy khai tu - bag chi con 3 tab.
 export type BagTab = 'equipment' | 'material' | 'pill'
-// 'passive' đã gỡ (2026-08-20) — 9 ô Passive Cảnh Giới dời sang
-// CharacterPanel.vue (useRealmStatPassives.ts).
+// 'passive' da go (2026-08-20) - 9 o Passive Canh Gioi doi sang
+// RealmPanel.vue (useRealmStatPassives.ts).
 
 // Ky Nang overlay dung DOC LAP voi LeftPanel (2026-08-20) -
 // SkillPathPanel.vue, cung pattern BreakthroughRequirementPanel.vue
 // (overlay toan man hinh, mount thang trong GameRoot.vue, KHONG qua
 // leftPanelMode). Union rieng (khong gop vao LeftPanelMode) vi panel
 // nay khong thuoc nhom "trang chuc nang chiem 100% panel trai" o dau
-// file. P7-M7 - 'technique'/'luyen_the' da go: canonical technique
-// hien thi trong SkillPathPanel's TechniqueBand, body progression
-// trong RealmPanel's body sections.
+// file. Huyen Kim P6 - 'technique' lai mo thanh standalone
+// (TechniquePanel.vue) cung 'body' (BodyPanel.vue); canonical
+// technique surface da roi SkillPathPanel sang scene rieng.
 //
-// Realm Passive & Pressure System (2026-08-20) — 'realm'
-// (RealmPanel.vue, kế thừa RealmPassivePanel.vue đã gỡ — tách khỏi
-// CharacterPanel.vue's "Passive Cảnh Giới" cũ + nội dung Nhập Đạo/Kiến
+// Realm Passive & Pressure System (2026-08-20) - 'realm'
+// (RealmPanel.vue, ke thua RealmPassivePanel.vue da go - tach khoi
+// CharacterPanel.vue's "Passive Canh Gioi" cu + noi dung Nhap Dao/Kien
 // Co MOI) - cung pattern panel tren. 'quan_khi' (QuanKhiPanel.vue,
-// follow-up cùng ngày) — tách
-// path-choices ("Bước Vào Pháp Tu/Kiếm Tu") khỏi CharacterPanel.vue,
-// mở qua nút "Quán Khí" bên cạnh Đột Phá thay vì liệt kê thẳng.
-// 'quest' (QuestPanel.vue, Quest System v1) — panel Nhiệm Vụ độc lập,
-// mở qua command wheel giống các panel standalone khác ở trên.
-// 'artifact' (ArtifactPanel.vue, Bản Mệnh Pháp Bảo, 2026-08-27) — cùng
-// pattern các panel standalone trên, mở qua command wheel khi player
-// đạt Trúc Cơ (xem game/support/commandWheelCatalog.ts's slot phap_bao).
-// 'tran_phap' (TranPhapPanel.vue, Trận Pháp — Combat Art Roster spec,
-// 2026-09-05) — panel kéo-thả gán companion/player vào lưới 6x6 cục bộ
-// của trận pháp đang chọn, mở qua command wheel slot formation_slot.
+// follow-up cung ngay) - tach
+// path-choices ("Buoc Vao Phap Tu/Kiem Tu") khoi CharacterPanel.vue,
+// mo qua nut "Quan Khi" ben canh Dot Pha thay vi liet ke thang.
+// 'quest' (QuestPanel.vue, Quest System v1) - panel Nhiem Vu doc lap,
+// mo qua command wheel giong cac panel standalone khac o tren.
+// 'artifact' (ArtifactPanel.vue, Ban Menh Phap Bao, 2026-08-27) - cung
+// pattern cac panel standalone tren, mo qua command wheel khi player
+// dat Truc Co (xem game/support/commandWheelCatalog.ts's slot phap_bao).
+// 'tran_phap' (TranPhapPanel.vue, Tran Phap - Combat Art Roster spec,
+// 2026-09-05) - panel keo-tha gan companion/player vao luoi 6x6 cuc bo
+// cua tran phap dang chon, mo qua command wheel slot formation_slot.
 
 export type BattleRunMode = 'manual' | 'repeat' | 'progress' | 'perfect_farm'
 
 /**
- * Slice 7 (2026-09-04) — chế độ input giữa trận: 'auto' = engine không
- * bao giờ pause (auto-priority như thường); 'manual' = pause khi tới
- * lượt player chờ chọn skill qua 3 nút. Trục RIÊNG khỏi `BattleRunMode`
- * (flag đó governs hành vi ranh giới stage: auto-refight/auto-progress —
- * KHÔNG tái sử dụng ý nghĩa chuỗi 'manual' giữa 2 flag).
+ * Slice 7 (2026-09-04) - che do input giua tran: 'auto' = engine khong
+ * bao gio pause (auto-priority nhu thuong); 'manual' = pause khi toi
+ * luot player cho chon skill qua 3 nut. Truc RIENG khoi `BattleRunMode`
+ * (flag do governs hanh vi ranh gioi stage: auto-refight/auto-progress -
+ * KHONG tai su dung y nghia chuoi 'manual' giua 2 flag).
  */
 export type CombatInputMode = 'manual' | 'auto'
 
-// ================= Sort Hành Trang (plan Workstream E) =================
+// ================= Sort Hanh Trang (plan Workstream E) =================
 export type SortDirection = 'asc' | 'desc'
 
 export interface BagSortState<TMode extends string = string> {
@@ -89,7 +93,7 @@ export interface BagSortState<TMode extends string = string> {
   direction: SortDirection
 }
 
-// Tiêu chí sort RIÊNG từng tab kho.
+// Tieu chi sort RIENG tung tab kho.
 export type EquipmentSortMode =
   'default' | 'quality' | 'rarity' | 'realm' | 'slot' | 'name' | 'forge'
 
@@ -108,10 +112,10 @@ export interface BagSortStateMap {
 }
 
 export const useUiStore = defineStore('ui', {
-  // Automation flags (battleRunMode) được HYDRATE từ localStorage qua
-  // uiFlagsPersistence.ts — người chơi yêu cầu "lưu lại flag của các
-  // trạng thái tự động" nên chúng sống qua reload (2026-08-26). Các
-  // flag còn lại vẫn transient theo phiên.
+  // Automation flags (battleRunMode) duoc HYDRATE tu localStorage qua
+  // uiFlagsPersistence.ts - nguoi choi yeu cau "luu lai flag cua cac
+  // trang thai tu dong" nen chung song qua reload (2026-08-26). Cac
+  // flag con lai van transient theo phien.
   state: () => {
     const automation = loadPersistedUiAutomationFlags()
 
@@ -120,26 +124,20 @@ export const useUiStore = defineStore('ui', {
 
     characterOverlayOpen: false,
 
-    // Detail stat card - small card docked at the right edge of the
-    // Character drawer (LeftPanel), toggled by a button in
-    // CharacterPanel. Transient per session, NOT persisted to save.
-    characterDetailOpen: false,
+    // Which imperial scroll the home overlay currently shows:
+    // 'character' (scene 04) or 'inventory' (scene 09). The boolean above
+    // keeps governing whether the overlay is open at all.
+    characterSceneTab: 'character' as 'character' | 'inventory',
 
-    // Command wheel (dong-fu-command-wheel plan) — mở/đóng bằng click
-    // nhân vật tu luyện giữa Động Phủ; Escape/click vùng trống đóng.
-    // Transient theo phiên, KHÔNG lưu save.
+    // Command wheel (dong-fu-command-wheel plan) - mo/dong bang click
+    // nhan vat tu luyen giua Dong Phu; Escape/click vung trong dong.
+    // Transient theo phien, KHONG luu save.
     isCommandWheelOpen: false,
-
-    // Shared popover authority (plan Workstream C) — CHỈ MỘT
-    // BuildingDetailPopover ở tầng GameRoot, id building đang hiển thị
-    // popover. null = đóng. Cả hotspot lẫn command wheel cùng ghi vào
-    // đây qua composables/useBuildingNavigation.ts.
-    activeBuildingPopoverId: null as string | null,
 
     activeBagTab: 'material' as BagTab,
 
-    // Sort theo từng tab (plan Workstream E) — chỉ sống trong phiên chơi,
-    // KHÔNG ghi vào game save. Đổi mode tự reset direction về 'asc'.
+    // Sort theo tung tab (plan Workstream E) - chi song trong phien choi,
+    // KHONG ghi vao game save. Doi mode tu reset direction ve 'asc'.
     bagSorts: {
       equipment: { mode: 'default', direction: 'asc' },
       material: { mode: 'default', direction: 'asc' },
@@ -155,39 +153,39 @@ export const useUiStore = defineStore('ui', {
 
     battleRunMode: automation.battleRunMode ?? 'manual',
 
-    // Slice 7 — combat input mode, persist cùng nhóm automation flags.
+    // Slice 7 - combat input mode, persist cung nhom automation flags.
     combatInputMode: automation.combatInputMode ?? 'auto',
 
-    // (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện Thể tự đầu tư qua
-    // essence stream (App.vue), không còn flag auto.
+    // (2026-08-30) isAutoConsumeTinhHoa da GO - Luyen The tu dau tu qua
+    // essence stream (App.vue), khong con flag auto.
 
-    // Thám Hiểm rework — Địa Giới + Màn đang chọn để đánh (App.vue's
-    // fightStage() đọc 2 field này thay vì hardcode STAGES[0]) + chế
-    // độ Auto-refight ứng xử ra sao khi thắng (xem
-    // GameManager.getNextStageInZone() — cần selectedZoneId để biết
-    // tìm Màn kế tiếp trong ĐÚNG Địa Giới nào).
-    // battleRunMode: 2026-08-26 ĐƯỢC LƯU qua localStorage (automation
-    // flags); selected* vẫn transient theo phiên chơi hiện tại.
+    // Tham Hiem rework - Dia Gioi + Man dang chon de danh (App.vue's
+    // fightStage() doc 2 field nay thay vi hardcode STAGES[0]) + che
+    // do Auto-refight ung xu ra sao khi thang (xem
+    // GameManager.getNextStageInZone() - can selectedZoneId de biet
+    // tim Man ke tiep trong DUNG Dia Gioi nao).
+    // battleRunMode: 2026-08-26 DUOC LUU qua localStorage (automation
+    // flags); selected* van transient theo phien choi hien tai.
     selectedZoneId: null as string | null,
 
     selectedStageId: null as string | null,
 
-    // Nguồn gốc trận đang/vừa diễn ra — Stage (qua StageSelectPanel) có
-    // CombatResultModal riêng (reward/Đánh Lại/Tiếp Tục theo đúng spec);
-    // Tribulation (Đột Phá) đã có luồng thắng/thua RIÊNG từ trước (xem
+    // Nguon goc tran dang/vua dien ra - Stage (qua StageSelectPanel) co
+    // CombatResultModal rieng (reward/Danh Lai/Tiep Tuc theo dung spec);
+    // Tribulation (Dot Pha) da co luong thang/thua RIENG tu truoc (xem
     // useTribulation.ts's resolveVictory/resolveDefeat + World
-    // Announcement) — Combat Scene vẫn hiện chiến trường cho Tribulation
-    // nhưng KHÔNG hiện CombatResultModal (tránh hiện 2 lớp kết quả chồng
-    // nhau). null = chưa từng có trận nào.
+    // Announcement) - Combat Scene van hien chien truong cho Tribulation
+    // nhung KHONG hien CombatResultModal (tranh hien 2 lop ket qua chong
+    // nhau). null = chua tung co tran nao.
     combatOrigin: null as 'stage' | 'tribulation' | null,
     }
   },
 
   actions: {
     /**
-     * Ghi snapshot automation flags vào localStorage — gọi từ các action
-     * đổi flag; mutation TRỰC TIẾP từ panel được bắt bởi $subscribe ở
-     * App.vue (cùng hàm save, hai đường vào một đích).
+     * Ghi snapshot automation flags vao localStorage - goi tu cac action
+     * doi flag; mutation TRUC TIEP tu panel duoc bat boi $subscribe o
+     * App.vue (cung ham save, hai duong vao mot dich).
      */
     persistAutomationFlags() {
       savePersistedUiAutomationFlags({
@@ -196,15 +194,24 @@ export const useUiStore = defineStore('ui', {
       })
     },
 
-    // Bấm lại chức năng đang mở sẽ đóng, bấm chức năng khác tự thay
-    // thế (không cần tự đóng cái cũ thủ công).
+    // Bam lai chuc nang dang mo se dong, bam chuc nang khac tu thay
+    // the (khong can tu dong cai cu thu cong).
     toggleLeft(mode: Exclude<LeftPanelMode, null>) {
+      // BETA SCOPE LOCK v2 (Phase-6): a scope-hidden mode (worker_lodge)
+      // toggles nothing - deep links fail closed.
+      if (!isBetaLeftPanelMode(mode)) {
+        return
+      }
+
       if (mode === 'character' || mode === 'inventory') {
-        const shouldClose = this.characterOverlayOpen
+        const shouldClose =
+          this.characterOverlayOpen && this.characterSceneTab === mode
         this.closeHomeOverlays()
         this.characterOverlayOpen = !shouldClose
-        if (this.characterOverlayOpen) this.activeBagTab = 'equipment'
-        else this.characterDetailOpen = false
+        if (this.characterOverlayOpen) {
+          this.characterSceneTab = mode
+          this.activeBagTab = 'equipment'
+        }
         return
       }
       const shouldClose = this.leftPanelMode === mode
@@ -217,9 +224,15 @@ export const useUiStore = defineStore('ui', {
     },
 
     openLeftPanel(mode: Exclude<LeftPanelMode, null>) {
+      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden mode no-ops.
+      if (!isBetaLeftPanelMode(mode)) {
+        return
+      }
+
       if (mode === 'character' || mode === 'inventory') {
         this.closeHomeOverlays()
         this.characterOverlayOpen = true
+        this.characterSceneTab = mode
         this.activeBagTab = 'equipment'
         return
       }
@@ -229,22 +242,23 @@ export const useUiStore = defineStore('ui', {
     },
 
     openStandalonePanel(panel: Exclude<StandalonePanel, null>) {
+      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden panels
+      // (artifact / tran_phap / companion) fail closed - no caller can
+      // open them through this seam.
+      if (!isBetaStandalonePanel(panel)) {
+        return
+      }
+
       this.closeHomeOverlays()
 
       this.standalonePanel = panel
     },
 
-    toggleCharacterDetail() {
-      this.characterDetailOpen = !this.characterDetailOpen
-    },
-
-    /** Đóng toàn bộ chrome/overlay của Động Phủ khi click nền chính. */
+    /** Dong toan bo chrome/overlay cua Dong Phu khi click nen chinh. */
     closeHomeOverlays() {
       this.leftPanelMode = null
       this.characterOverlayOpen = false
-      this.characterDetailOpen = false
       this.standalonePanel = null
-      this.activeBuildingPopoverId = null
       this.isCommandWheelOpen = false
     },
 
@@ -263,22 +277,12 @@ export const useUiStore = defineStore('ui', {
       this.isCommandWheelOpen = false
     },
 
-    openBuildingPopover(buildingId: string) {
-      this.closeHomeOverlays()
-
-      this.activeBuildingPopoverId = buildingId
-    },
-
-    closeBuildingPopover() {
-      this.activeBuildingPopoverId = null
-    },
-
     setActiveBagTab(tab: BagTab) {
       this.activeBagTab = tab
     },
 
-    // Đổi tiêu chí sort của một tab — direction reset về 'asc' và UI
-    // section tự gọi resetPage() (watch trên bagSorts) quay về trang đầu.
+    // Doi tieu chi sort cua mot tab - direction reset ve 'asc' va UI
+    // section tu goi resetPage() (watch tren bagSorts) quay ve trang dau.
     setBagSortMode<K extends keyof BagSortStateMap>(
       tab: K,
 
@@ -301,7 +305,7 @@ export const useUiStore = defineStore('ui', {
       sort.direction = sort.direction === 'asc' ? 'desc' : 'asc'
     },
 
-    // Action "Mặc định" — trả lại original order.
+    // Action "Mac dinh" - tra lai original order.
     resetBagSort(tab: BagTab) {
       const sort = this.bagSorts[tab] as BagSortState
 
@@ -310,10 +314,19 @@ export const useUiStore = defineStore('ui', {
       sort.direction = 'asc'
     },
 
-    // Cùng pattern toggleLeft() — bấm lại panel đang mở sẽ đóng, bấm
-    // panel khác tự thay thế (Kỹ Năng/Tâm Pháp loại trừ lẫn nhau, không
-    // mở đồng thời).
+    // Cung pattern toggleLeft() - bam lai panel dang mo se dong, bam
+    // panel khac tu thay the (Ky Nang/Tam Phap loai tru lan nhau, khong
+    // mo dong thoi).
     toggleStandalonePanel(panel: Exclude<StandalonePanel, null>) {
+      // BETA SCOPE LOCK v2 (Phase-6): a scope-hidden panel can only
+      // close (never open).
+      if (!isBetaStandalonePanel(panel)) {
+        if (this.standalonePanel === panel) {
+          this.standalonePanel = null
+        }
+        return
+      }
+
       this.standalonePanel = this.standalonePanel === panel ? null : panel
     },
 
@@ -329,10 +342,10 @@ export const useUiStore = defineStore('ui', {
       this.persistAutomationFlags()
     },
 
-    // Records which domain flow produced the current combat — read by
+    // Records which domain flow produced the current combat - read by
     // CombatResultModal/CombatExitConfirmModal to gate stage-only result
     // UI. Scene visibility itself is owned by the coordinator route
-    // (useCombatSceneActive/useStageActive) — the old dismissed/active
+    // (useCombatSceneActive/useStageActive) - the old dismissed/active
     // flags were removed with the R12 cleanup.
     enterCombatScene(origin: 'stage' | 'tribulation') {
       this.combatOrigin = origin

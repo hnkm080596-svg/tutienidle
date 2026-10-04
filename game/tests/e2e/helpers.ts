@@ -8,9 +8,9 @@ export const GUEST_SAVE_KEY = 'tien-hiep-idle-save:guest'
 
 /**
  * Boot the app fresh: goto '/', wait out the intro loading screen (~3s in
- * App.vue), then click "Chơi ngay" (guest auth).
+ * App.vue), then click "Choi ngay" (guest auth).
  *
- * NOTE: intentionally NO localStorage-clearing init script — Playwright
+ * NOTE: intentionally NO localStorage-clearing init script - Playwright
  * gives each test a fresh context (empty localStorage already), and an
  * init script would also run on page.reload(), wiping the save the
  * save-reload spec needs to restore.
@@ -23,14 +23,15 @@ export async function bootToGuestHome(page: Page): Promise<void> {
   const auth = page.getByTestId('auth-screen')
   await expect(auth).toBeVisible({ timeout: 15_000 })
 
-  // "Chơi ngay" (guest) skips credentials; MockAuthService resolves after 250ms.
+  // "Choi ngay" (guest) skips credentials; MockAuthService resolves after 250ms.
   await page.getByTestId('auth-guest-button').click()
 }
 
 /**
  * Creates a character through the ONE unified screen (BETA-CREATION):
- * name + 1 talent + 1 starting-skill pick -> finish. The attribute
- * allocation step no longer exists - base stats default to 1/1/1/1/1.
+ * name + 1 talent pick -> finish. The attribute allocation step and the
+ * mortal starter-skill pick no longer exist - base stats default to
+ * 1/1/1/1/1 and tram remains the default basic.
  *
  * Prerequisite: guest auth done (bootToGuestHome).
  */
@@ -46,10 +47,7 @@ export async function createCharacterThroughUi(page: Page, name: string): Promis
   await expect(talentCards.first()).toBeVisible({ timeout: 10_000 })
   await talentCards.first().click()
 
-  // Starting skill - tram (Huy Kiem) keeps the historical basic.
-  await page.getByTestId('creation-skill-tram').click()
-
-  // Finish - enabled once name + talent + skill are all satisfied.
+  // Finish - enabled once name + talent are both satisfied.
   await expect(page.getByTestId('creation-finish')).toBeEnabled({ timeout: 5_000 })
   await page.getByTestId('creation-finish').click()
 }
@@ -66,7 +64,7 @@ export async function waitForPresentationIdle(page: Page, timeout = 30_000): Pro
 }
 
 /**
- * Wait for the game home (Động Phủ) to be visible after character creation.
+ * Wait for the game home (Dong Phu) to be visible after character creation.
  * The home appears when entryStage === 'game' and isBooted === true.
  * Dismisses the tutorial overlay if it appears.
  */
@@ -94,7 +92,7 @@ export async function enterHome(page: Page): Promise<void> {
 }
 
 /**
- * After a reload the app goes intro → auth again (entryStage 'intro').
+ * After a reload the app goes intro -> auth again (entryStage 'intro').
  * Authenticate as guest again; bootGame(false) restores the saved character
  * (it does NOT create a new one when a valid save exists).
  */
@@ -107,36 +105,36 @@ export async function reauthAndEnterHome(page: Page): Promise<void> {
 }
 
 /**
- * Open the Cài Đặt panel and click the manual save button.
+ * Open the Cai Dat panel and click the manual save button.
  */
 export async function openSettingsAndSave(page: Page): Promise<void> {
-  // Tab to open command wheel, then click Cài Đặt slot.
+  // Tab to open command wheel, then click Cai Dat slot.
   await page.keyboard.press('Tab')
   const settingsSlot = page.locator('[data-wheel-slot="settings"]')
   await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
   await settingsSlot.click()
 
-  // Settings overlay opens → click "Lưu Tiến Trình".
+  // Settings overlay opens -> click "Luu Tien Trinh".
   const saveButton = page.getByTestId('settings-save-button')
   await expect(saveButton).toBeVisible({ timeout: 10_000 })
   await saveButton.click()
 }
 
 /**
- * UI/UX QA remediation (Task 10, 2026-09-07) — shared fixture helpers:
+ * UI/UX QA remediation (Task 10, 2026-09-07) - shared fixture helpers:
  * console/pageerror/request-failure gate + keyboard journey support.
  */
 
-/** Loại lỗi cho phép (documented intentional) — thêm theo evidence. */
+/** Loai loi cho phep (documented intentional) - them theo evidence. */
 const ALLOWED_CONSOLE_PATTERNS: RegExp[] = [
   // Devtools panel dev-only warnings
   /^\\[vite\\]/,
 ]
 
 /**
- * Đăng ký listener thu thập console error/pageerror/request failure ngay
- * sau khi tạo page — gọi ĐẦU TIÊN trong test. Assert bằng
- * assertNoBrowserErrors() ở cuối test.
+ * Dang ky listener thu thap console error/pageerror/request failure ngay
+ * sau khi tao page - goi DAU TIEN trong test. Assert bang
+ * assertNoBrowserErrors() o cuoi test.
  */
 export function collectBrowserErrors(page: import('@playwright/test').Page): {
   errors: string[]
@@ -165,8 +163,8 @@ export function collectBrowserErrors(page: import('@playwright/test').Page): {
 }
 
 /**
- * Assert 0 unexpected console/page errors. Failed requests chỉ báo cáo
- * (dev server asset 404 được cover bởi network-failure spec riêng).
+ * Assert 0 unexpected console/page errors. Failed requests chi bao cao
+ * (dev server asset 404 duoc cover boi network-failure spec rieng).
  */
 export function assertNoBrowserErrors(collected: {
   errors: string[]

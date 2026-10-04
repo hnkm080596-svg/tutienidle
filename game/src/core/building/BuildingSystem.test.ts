@@ -202,7 +202,7 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     const s = spring()
     const instance = springInstance(9)
 
-    // 10h = 600 phÃºt â†’ capacity â‰ˆ rate/phÃºt Ã— 600
+    // 10h = 600 phut -> capacity ~ rate/phut x 600
     const ratePerMinute = system.getRatePerMinute(instance, s, 'qi_refining')
     expect(system.getCapacity(instance, s, 'qi_refining')).toBeCloseTo(ratePerMinute * 600, 0)
   })
@@ -215,6 +215,30 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     const capacity = system.getCapacity(instance, s, 'qi_refining')
 
     expect(stored).toBe(capacity)
+  })
+
+  it('isStorageFull: L1 mortal full sau 10h (capacity ceil > yield 1 chut)', () => {
+    const s = spring()
+    const instance = { ...springInstance(1), lastCollectedAt: 0 }
+
+    // mortal L1: yield 10h = 1269.23... -> capacity ceil len 1270,
+    // stored khong bao gio cham capacity - phai dat "day" qua
+    // attainable max (min(capacity, capOffline * rate)).
+    expect(system.isStorageFull(instance, s, 36_000, 'mortal')).toBe(true)
+    expect(system.isStorageFull(instance, s, 36_000 - 1, 'mortal')).toBe(false)
+    expect(system.isStorageFull(instance, s, 3_600, 'mortal')).toBe(false)
+  })
+
+  it('isStorageFull: L9 qi_refining full dung tai tran 10h', () => {
+    const s = spring()
+    const instance = { ...springInstance(9), lastCollectedAt: 0 }
+
+    expect(system.isStorageFull(instance, s, 36_000, 'qi_refining')).toBe(true)
+    expect(system.isStorageFull(instance, s, 36_000 - 1, 'qi_refining')).toBe(false)
+  })
+
+  it('isStorageFull: building khong san xuat -> false', () => {
+    expect(system.isStorageFull(instanceAt(5), TEMPLATE, 999_999)).toBe(false)
   })
 
   it('storage tÄƒng theo realm (foundation > qi > mortal)', () => {
@@ -239,16 +263,16 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
 
     manager.add(instance)
 
-    // Rate L1 mortal â‰ˆ 0.03526/s â†’ 100s tÃ­ch â‰ˆ 3.53 (3 nguyÃªn + 0.53 láº»).
+    // Rate L1 mortal ~ 0.03526/s -> 100s tich ~ 3.53 (3 nguyen + 0.53 le).
     const first = system.claim('i1', registry, manager, 100, 'mortal')
 
     expect(first.amount).toBe(3)
 
-    // Pháº§n láº» Ä‘Æ°á»£c giá»¯: má»‘c lÃ¹i vá» quÃ¡ khá»©, KHÃ”NG reset vá» currentTime.
+    // Phan le duoc giu: moc lui ve qua khu, KHONG reset ve currentTime.
     expect(manager.get('i1')!.lastCollectedAt).toBeLessThan(100)
     expect(manager.get('i1')!.lastCollectedAt).toBeGreaterThan(0)
 
-    // Claim láº§n 2 á»Ÿ t=200: nháº­n cáº£ pháº§n láº» cÅ© â†’ tá»•ng 2 láº§n = floor(200 Ã— rate) = 7.
+    // Claim lan 2 o t=200: nhan ca phan le cu -> tong 2 lan = floor(200 x rate) = 7.
     const second = system.claim('i1', registry, manager, 200, 'mortal')
 
     expect(second.amount).toBe(4)
@@ -266,7 +290,7 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
 
     manager.add(instance)
 
-    // 10s Ã— 0.035 â‰ˆ 0.35 < 1 â†’ chÆ°a claim Ä‘Æ°á»£c.
+    // 10s x 0.035 ~ 0.35 < 1 -> chua claim duoc.
     const result = system.claim('i1', registry, manager, 10, 'mortal')
 
     expect(result.amount).toBe(0)
@@ -317,15 +341,21 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     expect(manager.get('i1')!.accrualRealmId).toBe('qi_refining')
   })
 
-  it('build moi pin accrualRealmId = realm luc xay', () => {
+  it('ensureAllBuilt grant lv1 + pin accrualRealmId = realm hien tai, idempotent', () => {
     const registry = new BuildingRegistry()
     const manager = new BuildingManager()
-    const bag = new MaterialBag()
     registry.register({ ...spring(), upgradeCost: [[]] })
 
-    const player = { realmId: 'mortal' } as never
-    const built = system.build('gathering_outpost', registry, manager, player, bag, 1_000)
+    const added = system.ensureAllBuilt(registry, manager, 1_000, 'mortal')
 
-    expect(built?.accrualRealmId).toBe('mortal')
+    expect(added).toHaveLength(1)
+    expect(added[0]?.level).toBe(1)
+    expect(added[0]?.lastCollectedAt).toBe(1_000)
+    expect(added[0]?.accrualRealmId).toBe('mortal')
+    expect(manager.getByBuildingId('gathering_outpost')).toBe(added[0])
+
+    // Idempotent - instance da co thi khong them nua.
+    expect(system.ensureAllBuilt(registry, manager, 2_000, 'mortal')).toEqual([])
+    expect(manager.getAll()).toHaveLength(1)
   })
 })

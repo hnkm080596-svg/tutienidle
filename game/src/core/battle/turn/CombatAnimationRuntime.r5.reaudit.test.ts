@@ -8,10 +8,10 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { toTurnBattleParticipant } from '../../game/TurnBattleAdapter'
 import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
 
-// Combat Runtime Separation (Task 1, 2026-09-07) — CombatAnimationRuntime
+// Combat Runtime Separation (Task 1, 2026-09-07) - CombatAnimationRuntime
 // owns the presentation-ack timing state extracted from GameManager (P17).
 // Fixture below mirrors the createCombatant()/participant() convention
-// already used by TurnBattleSystem.test.ts — a real CombatSystem +
+// already used by TurnBattleSystem.test.ts - a real CombatSystem +
 // TurnBattleSystem so declareActorAction/applyActionImpact/completeAction
 // run for real (no mocking the business logic the runtime delegates to).
 

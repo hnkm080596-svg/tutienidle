@@ -52,6 +52,10 @@ import {
   TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM,
   TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK,
 } from '../../data/tribulation/TribulationChapters'
+import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
+import { canTriggerBreakthrough } from '../realm/BreakthroughGate'
+import { isBetaFeature } from '../betaScope'
+import { verifyTribulationCommitWitness } from './TribulationCommitWitness'
 
 /** Victory outcome facts for presentation. */
 export interface TribulationVictoryResult {
@@ -157,6 +161,46 @@ export class TribulationOutcomeService {
     }
 
     if (committed.settlementError) {
+      return null
+    }
+
+    // BETA SCOPE LOCK - a carried committedOutcome re-authorizes a
+    // dormant realm transition: the scope verdict is enforced at
+    // start() but restore/settle used to trust persisted intent
+    // verbatim. The verdict is re-derived here so a dormant or forged
+    // record stays pending (inert data) instead of settling realm
+    // entries, passives, penalties, or hidden-lineage writes. A hidden
+    // type parks while hiddenContent is scope-hidden; it settles
+    // normally whenever the feature is admitted.
+    const hiddenDormant =
+      committed.breakthroughType !== 'normal' && !isBetaFeature('hiddenContent')
+    // The record is also re-checked against the breakthrough gate
+    // itself: start() requires the ordinary requirements (level,
+    // chapter clear) and the hidden predicate only ADDS inputs on top,
+    // so a committedOutcome on a player who could not have entered the
+    // battle is an impossible claim. Requirements are monotonic
+    // (levels/stage clears never shrink), so the settle-time read
+    // matches the start-time read for an honest record.
+    if (
+      hiddenDormant ||
+      !isRealmTransitionEnabled(player.realmId, committed.targetRealmId) ||
+      !canTriggerBreakthrough(player)
+    ) {
+      return null
+    }
+
+    // F-TRB-FORGE - the record is also provenance-bound now: settle
+    // replays the commit witness commitOutcome stamped (run facts folded
+    // into the digest) and requires the departing realm it names to be
+    // the realm the player is still in - a real run departs the realm
+    // this settle leaves behind. A fabricated record whose witness was
+    // never produced by commitOutcome stays pending (inert data)
+    // instead of minting the free breakthrough.
+    if (
+      verifyTribulationCommitWitness(committed) !== null ||
+      committed.witness.departingRealmId !== player.realmId ||
+      !isRealmTransitionEnabled(committed.witness.departingRealmId, committed.targetRealmId)
+    ) {
       return null
     }
 

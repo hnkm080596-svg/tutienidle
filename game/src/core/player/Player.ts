@@ -1,7 +1,12 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
 import { collectActiveWayStatModifiers } from './CultivationPathSystem'
 import { collectBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
+import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
+import { MERIDIANS } from '../../data/realm/Meridians'
+import { isBetaFeature } from '../betaScope'
+import { getHiddenBreakthroughRealmIds } from '../realm/hidden/HiddenLineage'
 import { asBaseStats, createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
+import type { StatType } from '../stats/StatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
 import {
@@ -515,11 +520,118 @@ export function createDefaultPlayer(): PlayerData {
 export function resolvePlayerStatAssembly(
   player: PlayerData,
   externalModifiers: StatModifier[],
-): { stats: Stats; wayFacetModifiers: readonly StatModifier[] } {
-  const allModifiers = [
-    ...player.modifiers,
-    ...externalModifiers,
-  ]
+): {
+  stats: Stats
+  wayFacetModifiers: readonly StatModifier[]
+  // Attribution read-model fields (character board source hover):
+  // the exact base + modifier list the canonical formula consumed,
+  // plus the body-refinement slice so 'Luyen The' is separable from
+  // the persisted raw base.
+  pipelineBase: BaseStats
+  bodyBaseDeltas: Partial<Record<StatType, number>>
+  modifiers: readonly StatModifier[]
+} {
+  // Persisted realm-sourced modifiers reconcile against the CURRENT
+  // scope verdict: realm-passive entries granted through a hidden
+  // breakthrough stay recorded on flagged saves but emit nothing while
+  // hiddenContent is locked. The body chain (meridian and siblings) is
+  // live scope, so its channel reconciles against opened records.
+  // Records are never scrubbed on restore.
+  const hiddenRealmIds = isBetaFeature('hiddenContent')
+    ? undefined
+    : new Set(getHiddenBreakthroughRealmIds(player))
+
+  // F-TC6-2/F-TC6-9 rebuild-don't-trust: a persisted realm-sourced
+  // payload is a claim, not evidence. The marker grants ownership of
+  // the passive; the EMITTED numbers come from the authored builder
+  // (enhanced variant when this realm was hidden-broken and the
+  // feature is live). A meridian claim emits only the canonical
+  // 'bat-mach:<id>:<stat>' entry on an OPENED meridian at the
+  // authored percent - a forged id/shape survives the bat-mach:
+  // prefix strip, so it must drop here rather than stay live on
+  // unlock. A persisted id that no builder emits is forged and drops
+  // out.
+  const allModifiers: StatModifier[] = []
+  for (const modifier of player.modifiers) {
+    if (modifier.sourceType === 'equipment') {
+      // The equipment slice is rebuilt from equipped items at every
+      // restore (setEquipmentModifiers) - a forged entry is
+      // self-scrubbed before it can emit.
+      allModifiers.push(modifier)
+      continue
+    }
+    if (modifier.sourceType === 'talent') {
+      // The only persisted talent-sourced writer is the loi kiep
+      // outcome grant - and it only exists while the player HOLDS
+      // the loi_kiep talent. A claim without that ownership witness
+      // is a forged entry (F-TC6-1).
+      if (
+        modifier.sourceId === 'loi_kiep' &&
+        (player.selectedTalentIds?.includes('loi_kiep') ?? false)
+      ) {
+        allModifiers.push(modifier)
+      }
+      continue
+    }
+    if (modifier.sourceType !== 'realm') {
+      // No current-version writer persists any other sourceType
+      // (skill/technique/buff/pill/etc. are node/way/channel
+      // derivations, never pushed) - a persisted claim is forged.
+      continue
+    }
+    const passive = REALM_PASSIVES.find((entry) => entry.sourceId === modifier.sourceId)
+    if (passive !== undefined) {
+      // A passive-sourced entry without the grant marker is a forged
+      // payload - grantRealmPassive writes both slices atomically, so
+      // a real save always carries them together.
+      if (!player.grantedRealmPassiveIds.includes(passive.id)) {
+        continue
+      }
+      // F-TC8-2: marker realm-order eligibility - grantRealmPassive
+      // only writes the marker on a realm advance INTO that realm, so
+      // a marker indexed above the player's own realm is an impossible
+      // grant and the passive stays inert.
+      if (getRealmIndex(passive.id) > getRealmIndex(player.realmId)) {
+        continue
+      }
+      if (hiddenRealmIds !== undefined && hiddenRealmIds.has(passive.id)) {
+        continue
+      }
+      const built =
+        getHiddenBreakthroughRealmIds(player).includes(passive.id) &&
+        passive.buildEnhancedModifiers !== undefined
+          ? passive.buildEnhancedModifiers(player)
+          : passive.buildModifiers(player)
+      const authored = built.find((candidate) => candidate.id === modifier.id)
+      if (authored !== undefined) {
+        allModifiers.push(authored)
+      }
+      continue
+    }
+    const meridian = MERIDIANS.find((entry) => entry.id === modifier.sourceId)
+    if (meridian !== undefined) {
+      if (!player.bodyProgression.meridian.openedIds.includes(meridian.id)) {
+        continue
+      }
+      const authored = meridian.stats
+        .map((stat) => ({
+          id: `bat-mach:${meridian.id}:${stat}`,
+          sourceId: meridian.id,
+          sourceType: 'realm' as const,
+          stat,
+          percent: meridian.percentAtFullTier,
+        }))
+        .find((candidate) => candidate.id === modifier.id)
+      if (authored !== undefined) {
+        allModifiers.push(authored)
+      }
+      continue
+    }
+    // Realm-sourced persisted writers are exactly the passives above
+    // and the meridian chapter - the phap tu/spell channels emit
+    // derived modifiers, so any other persisted realm claim is forged.
+  }
+  allModifiers.push(...externalModifiers)
 
   // P7-M-F (D1) - assembledBase: Body Refinement contributes FLAT BASE
   // STAT deltas, merged additively per key ONTO the persisted raw
@@ -529,7 +641,8 @@ export function resolvePlayerStatAssembly(
   // mutated, so saves, mortal perfection's persisted-base read, and
   // restore rehydration are unaffected.
   const assembledBase = { ...player.baseStats }
-  for (const [stat, delta] of statDeltaEntries(collectBodyBaseStatDeltas(player))) {
+  const bodyBaseDeltas = collectBodyBaseStatDeltas(player)
+  for (const [stat, delta] of statDeltaEntries(bodyBaseDeltas)) {
     assembledBase[stat] += delta
   }
   const pipelineBase = asBaseStats(assembledBase)
@@ -546,9 +659,14 @@ export function resolvePlayerStatAssembly(
   const attributeTotals = resolveAttributeTotals(pipelineBase, allModifiers)
   const pathModifiers = collectActiveWayStatModifiers(player, attributeTotals)
 
+  const modifiers = [...allModifiers, ...pathModifiers]
+
   return {
-    stats: calculateStats(pipelineBase, [...allModifiers, ...pathModifiers]),
+    stats: calculateStats(pipelineBase, modifiers),
     wayFacetModifiers: pathModifiers,
+    pipelineBase,
+    bodyBaseDeltas,
+    modifiers,
   }
 }
 

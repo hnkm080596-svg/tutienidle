@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// ARCH-005 (M12) — real-engine HUD invalidation regression.
+// ARCH-005 (M12) - real-engine HUD invalidation regression.
 //
 // The 2026-09-14 Edge probe found the skill bar invisible in live combat:
 // TurnCombatSkillBar stayed `isBattleFighting:false` while the engine
@@ -9,7 +9,7 @@
 // to the same reference forever and derived projections never invalidate.
 //
 // This test mounts the REAL consumers (TurnCombatSkillBar + BattleLogPanel
-// + TurnOrderStrip) against a REAL GameManager + ManualClockSource — the
+// + TurnOrderStrip) against a REAL GameManager + ManualClockSource - the
 // same domain object, the same in-place mutations, the same shared
 // stateVersion bridge App.vue drives. It asserts:
 //   countdown/intro -> HUD hidden
@@ -187,7 +187,9 @@ describe('ARCH-005 (M12) — combat HUD reactivity over the in-place-mutated Tur
     await bump()
 
     expect(container.querySelector('.turn-combat-skill-bar')).not.toBeNull()
-    expect(container.querySelectorAll('.turn-combat-skill-bar__slot-button')).toHaveLength(3)
+    // Mortal rail = basic + progression-locked special; the ultimate
+    // role is scope-hidden and never renders a slot.
+    expect(container.querySelectorAll('.turn-combat-skill-bar__slot-button')).toHaveLength(2)
     expect(container.querySelector('.turn-order-strip')).not.toBeNull()
 
     // Auto turns append battle.log in place; the panel surfaces after bump.

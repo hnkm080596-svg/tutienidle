@@ -1,9 +1,9 @@
-// BUILDing spec mục 3-4/15-16 — mỗi cấp Building crafting-station có
-// thể mở/cải thiện MỘT HAY NHIỀU hiệu ứng feed vào Function xử lý
-// (Đan Phòng/Trận Đài/Phù Viện/Khí Đường). KHÔNG dùng chung 1 công
-// thức cứng cho mọi Building (đó là lỗi hệ thống resource/processing
-// cũ — xem LEVEL_BONUS_PER_LEVEL trong BuildingSystem.ts, giữ nguyên
-// riêng cho 3 building cũ, không áp dụng effect này).
+// BUILDing spec muc 3-4/15-16 - moi cap Building crafting-station co
+// the mo/cai thien MOT HAY NHIEU hieu ung feed vao Function xu ly
+// (Dan Phong/Tran Dai/Phu Vien/Khi Duong). KHONG dung chung 1 cong
+// thuc cung cho moi Building (do la loi he thong resource/processing
+// cu - xem LEVEL_BONUS_PER_LEVEL trong BuildingSystem.ts, giu nguyen
+// rieng cho 3 building cu, khong ap dung effect nay).
 export type BuildingLevelEffect =
   | { kind: 'craft_time_reduction'; percent: number }
   | { kind: 'craft_quality_bonus'; percent: number }
@@ -15,7 +15,7 @@ export interface BuildingLevelDef {
 
   effects: BuildingLevelEffect[]
 
-  // Hiện trong UI kiểu "Lv.3 → +1 job đồng thời" (spec mục 4 ví dụ).
+  // Hien trong UI kieu "Lv.3 -> +1 job dong thoi" (spec muc 4 vi du).
   description?: string
 }
 

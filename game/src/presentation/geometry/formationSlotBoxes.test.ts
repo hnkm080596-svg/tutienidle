@@ -1,4 +1,4 @@
-// V8 — the DOM hit-zone and the drawn cell must describe the same shape.
+// V8 - the DOM hit-zone and the drawn cell must describe the same shape.
 //
 // This is the assertion the Formation panel had no way to make before: its DOM
 // grid was a uniform 56x56 CSS grid, and the canvas beneath drew perspective

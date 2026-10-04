@@ -1,5 +1,5 @@
-// Kiem Tu Reimagined Task 7 — direct coverage for makeKiemBarReader
-// (battle/player → KiemBarSnapshot mapping). Structural fakes only —
+// Kiem Tu Reimagined Task 7 - direct coverage for makeKiemBarReader
+// (battle/player -> KiemBarSnapshot mapping). Structural fakes only -
 // no Pinia/Phaser (same harness shape as the retired route test).
 import { describe, expect, it } from 'vitest'
 import { MAX_THE } from '@/core/combat/CombatTypes'
@@ -119,7 +119,7 @@ describe('makeKiemBarReader — sword_pathway (Kiem Pho) mapping', () => {
       kiemDaoCount: 3,
       kiemDaoBase: 1.9,
     }
-    // golden_core = realmIndex 3 → forgeCost(3) = 16_899.
+    // golden_core = realmIndex 3 -> forgeCost(3) = 16_899.
     const reader = makeReader(fakeBattle('fighting'), {
       realmId: 'golden_core',
       cultivationPath: 'sword',

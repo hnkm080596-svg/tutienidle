@@ -1,75 +1,160 @@
+import type { QuitFlushFailedNotice, QuitFlushResultMessage } from '../shared/session/FlushResult'
+
 /**
- * Quit-flush close handler for the Electron main process. Extracted from
- * electron/main.ts so this glue has test coverage - main.ts itself has
- * none (same precedent as combatClockHost.ts). The renderer saves on
- * 'app:before-quit-flush' and acks via 'app:flush-complete'; a timeout
- * backstop closes anyway if the ack never arrives.
+ * B1-D - the result-bearing quit flush (replaces the untyped
+ * 'app:flush-complete' ACK + unconditional 2s auto-close).
  *
- * Two WeakSets split the two reasons a 'close' event must be ignored:
- * - flushedWindows: finish() already ran and called win.close() - this
- *   re-entrant event is the intended final close, let it through.
- * - flushingWindows: a second user close landed during the flush window.
- *   It must stay blocked (preventDefault) but must NOT re-send the flush
- *   request or stack a second 'app:flush-complete' listener - the in-flight
- *   finish() still owns the close.
+ * Protocol per close request:
+ *   main -> renderer 'app:before-quit-flush'  { requestId }
+ *   renderer -> main 'app:flush-result'       { requestId, generation,
+ *                                             status, revision?, code? }
+ *   close       : only on status 'saved' whose requestId matches the
+ *                 PENDING attempt AND whose sender is that window's own
+ *                 webContents - a late ack or a forged sender can never
+ *                 close the window.
+ *   failure     : 'blocked'/'failed'/timeout -> 'app:flush-failed'
+ *                 { requestId, status, code } to the renderer, which
+ *                 offers retry (a NEW requestId), cancel, or
+ *                 'app:force-close'. A timeout NEVER closes the window.
+ *
+ * The renderer's flush is the OnlineSessionController's result-bearing
+ * flush: it drains the one save queue and waits for the remote ack, so
+ * the updater install path (PR12) consumes the same contract - an
+ * unsuccessful flush can never reach close/install.
  */
-export const FLUSH_TIMEOUT_MS = 2000
 
 export interface QuitFlushWindow {
-  webContents: { send(channel: 'app:before-quit-flush'): void }
-  close(): void
+  webContents: {
+    send: (channel: string, payload?: unknown) => void
+  }
+  close: () => void
 }
 
 export interface QuitFlushCloseEvent {
-  preventDefault(): void
+  preventDefault: () => void
 }
 
 export interface QuitFlushIpcMain {
-  once(channel: string, listener: () => void): void
-  removeListener(channel: string, listener: () => void): void
+  on: (channel: string, listener: (event: unknown, payload: unknown) => void) => void
+  removeListener: (channel: string, listener: (...args: unknown[]) => void) => void
 }
 
-export function createQuitFlush(deps: {
+export interface QuitFlushDeps {
   ipcMain: QuitFlushIpcMain
+  /** The flush request deadline; timeout notifies the renderer (no close). */
   timeoutMs?: number
-}): (win: QuitFlushWindow, event: QuitFlushCloseEvent) => void {
+  /** Test seam for deterministic request ids. */
+  requestIdFactory?: () => string
+}
+
+export const FLUSH_TIMEOUT_MS = 10_000
+
+export function createQuitFlush(deps: QuitFlushDeps): (win: QuitFlushWindow, event: QuitFlushCloseEvent) => void {
   const timeoutMs = deps.timeoutMs ?? FLUSH_TIMEOUT_MS
-  const flushedWindows = new WeakSet<QuitFlushWindow>()
-  const flushingWindows = new WeakSet<QuitFlushWindow>()
+  const mintRequestId = deps.requestIdFactory ?? (() => crypto.randomUUID())
 
-  return function bindQuitFlush(win, event) {
-    if (flushedWindows.has(win)) {
-      return
+  const flushed = new WeakSet<QuitFlushWindow>()
+  const pending = new WeakMap<QuitFlushWindow, { requestId: string; timeout: ReturnType<typeof setTimeout> }>()
+  /** The most recent FAILED attempt per window - retry/cancel/force-close
+   *  must quote its requestId or they are ignored (late/forged ack). */
+  const failed = new WeakMap<QuitFlushWindow, { requestId: string }>()
+  /** webContents identity -> window, for BOTH pending and failed attempts;
+   *  deleted only on close/cancel - a forged sender resolves nothing. */
+  const windowBySender = new Map<unknown, QuitFlushWindow>()
+
+  function resolveWindow(event: unknown): QuitFlushWindow | undefined {
+    return windowBySender.get((event as { sender?: unknown }).sender)
+  }
+
+  function unbindWindow(win: QuitFlushWindow): void {
+    const entry = pending.get(win)
+    if (entry) {
+      clearTimeout(entry.timeout)
+      pending.delete(win)
     }
+    windowBySender.delete(win.webContents)
+  }
 
-    event.preventDefault()
-
-    if (flushingWindows.has(win)) {
-      return
+  function markFailed(win: QuitFlushWindow, notice: QuitFlushFailedNotice): void {
+    const entry = pending.get(win)
+    if (entry) {
+      clearTimeout(entry.timeout)
+      pending.delete(win)
     }
+    failed.set(win, { requestId: notice.requestId })
+    win.webContents.send('app:flush-failed', notice)
+  }
 
-    flushingWindows.add(win)
+  function issueRequest(win: QuitFlushWindow): void {
+    const requestId = mintRequestId()
+    const timeout = setTimeout(() => {
+      markFailed(win, { requestId, status: 'timeout', code: 'FLUSH_TIMEOUT' })
+    }, timeoutMs)
+    pending.set(win, { requestId, timeout })
+    windowBySender.set(win.webContents, win)
+    win.webContents.send('app:before-quit-flush', { requestId })
+  }
 
-    let settled = false
+  deps.ipcMain.on('app:flush-result', (event, payload) => {
+    const result = payload as QuitFlushResultMessage
+    const win = resolveWindow(event)
+    if (!win) return
+    const entry = pending.get(win)
+    if (!entry || result.requestId !== entry.requestId) return
 
-    const finish = () => {
-      if (settled) {
-        return
-      }
-
-      settled = true
-
-      clearTimeout(timeoutHandle)
-      deps.ipcMain.removeListener('app:flush-complete', finish)
-
-      flushingWindows.delete(win)
-      flushedWindows.add(win)
+    if (result.status === 'saved') {
+      unbindWindow(win)
+      flushed.add(win)
       win.close()
+      return
     }
 
-    deps.ipcMain.once('app:flush-complete', finish)
-    win.webContents.send('app:before-quit-flush')
+    markFailed(win, {
+      requestId: entry.requestId,
+      status: result.status,
+      code: result.code,
+    })
+  })
 
-    const timeoutHandle = setTimeout(finish, timeoutMs)
+  deps.ipcMain.on('app:flush-retry', (event, payload) => {
+    const win = resolveWindow(event)
+    const body = payload as { requestId?: string } | undefined
+    const last = win ? failed.get(win) : undefined
+    if (!win || !last || body?.requestId !== last.requestId) return
+    failed.delete(win)
+    issueRequest(win)
+  })
+
+  deps.ipcMain.on('app:force-close', (event, payload) => {
+    const win = resolveWindow(event)
+    const body = payload as { requestId?: string } | undefined
+    const last = win ? failed.get(win) : undefined
+    if (!win || !last || body?.requestId !== last.requestId) return
+    failed.delete(win)
+    unbindWindow(win)
+    flushed.add(win)
+    win.close()
+  })
+
+  deps.ipcMain.on('app:close-cancel', (event, payload) => {
+    const win = resolveWindow(event)
+    const body = payload as { requestId?: string } | undefined
+    const last = win ? failed.get(win) : undefined
+    if (!win || !last || body?.requestId !== last.requestId) return
+    failed.delete(win)
+    unbindWindow(win)
+  })
+
+  return function onWindowClose(win: QuitFlushWindow, event: QuitFlushCloseEvent): void {
+    if (flushed.has(win)) {
+      return
+    }
+    event.preventDefault()
+    // One attempt at a time: a second close event while a flush is pending
+    // or the failed-offer is up just waits on the same attempt.
+    if (pending.has(win) || failed.has(win)) {
+      return
+    }
+    issueRequest(win)
   }
 }

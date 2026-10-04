@@ -1,9 +1,9 @@
-// Registry tra cứu template theo id cho data tĩnh (Skill/Technique/
-// Enemy/Stage) — thay 4 Map trần trước đây trong GameManager để cùng
-// pattern với các Registry còn lại (MaterialRegistry...). Khác biệt
-// cố ý so với Registry "instance": get() trả `T | undefined` thay vì
-// throw — caller GameManager tự xử lý template thiếu (id lạ từ node/
-// stage data phải graceful, không crash tick loop).
+// Registry tra cuu template theo id cho data tinh (Skill/Technique/
+// Enemy/Stage) - thay 4 Map tran truoc day trong GameManager de cung
+// pattern voi cac Registry con lai (MaterialRegistry...). Khac biet
+// co y so voi Registry "instance": get() tra `T | undefined` thay vi
+// throw - caller GameManager tu xu ly template thieu (id la tu node/
+// stage data phai graceful, khong crash tick loop).
 export class TemplateRegistry<T> {
   private readonly templates = new Map<string, T>()
 
@@ -17,5 +17,9 @@ export class TemplateRegistry<T> {
 
   has(id: string): boolean {
     return this.templates.has(id)
+  }
+
+  getAll(): T[] {
+    return Array.from(this.templates.values())
   }
 }

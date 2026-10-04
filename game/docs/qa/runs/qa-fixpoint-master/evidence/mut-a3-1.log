@@ -1,0 +1,79 @@
+=== EV-MUT-A3-1 T7: A3/T2 wave gates neutered 2026-10-01T04:17:12.124531Z ===
+applied 4/8 neuters across 4 files
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (40 tests | 3 failed) 44ms
+     × a hidden_spell save learns no way-authored ladder passive at realm entry (F-A3-02) 7ms
+     × a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03) 1ms
+     × a carried pham_nhan_chi_cot record applies no cultivation speed 1ms
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 37 passed (40)
+   Start at  04:17:13
+   Duration  1.79s (transform 1.30s, setup 203ms, import 1.41s, tests 44ms, environment 0ms)
+
+efore)
+    902|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: a non-beta talent record emits nothing through the effect seam (F-A3-08) > a carried pham_nhan_chi_cot record applies no cultivation speed
+AssertionError: expected 0.75 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 0.75
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:910:77
+    908|     const p = player({ selectedTalentIds: ['pham_nhan_chi_cot'] })
+    909|
+    910|     expect(getCultivationSpeedPercent(p.selectedTalentIds, p.talentLev…
+       |                                                                             ^
+    911|     expect(collectTalentEffects(p.selectedTalentIds, p.talentLevels)).…
+    912|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+DETECTOR_EXIT=1 (nonzero = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED
+
+=== EV-MUT-A3-1b T7: A3-01 realm-replay + T2-1 has-guard neuters (top-up) ===
+applied neuters (replaced up to 4 sites)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (40 tests | 3 failed) 46ms
+     × a hidden_spell save mints no realm-reward nodes through the restore replay (F-A3-01) 7ms
+     × a hidden_spell save mints no realm-reward nodes at the realm-entry grant (F-A3-01) 1ms
+     × preview + respec tolerate retired node ids the validator tolerates 1ms
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 37 passed (40)
+   Start at  04:17:28
+   Duration  1.77s (transform 1.29s, setup 204ms, import 1.40s, tests 46ms, environment 0ms)
+
+or: expected [Function] to not throw an error but 'Error: ProgressionNode not found: kie…' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"Error: ProgressionNode not found: kiem_tran_luoi_kiem"
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:934:71
+    932|     const gameManager = new GameManager()
+    933|
+    934|     expect(() => gameManager.progressionOps.previewNodeRespec(p)).not.…
+       |                                                                       ^
+    935|     expect(() => gameManager.progressionOps.respecNodeTree(p)).not.toT…
+    936|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+DETECTOR_EXIT=1 (nonzero = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

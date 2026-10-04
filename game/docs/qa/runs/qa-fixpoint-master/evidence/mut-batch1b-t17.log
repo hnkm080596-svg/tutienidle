@@ -1,0 +1,76 @@
+===== MUT-PA-1b :: way-gate-removed in chooseCultivationPath (line ~327)
+MUT-PA-1b: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (46 tests | 1 failed) 56ms
+     × chooseCultivationPath rejects a non-beta way pair before any other check 11ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 45 passed (46)
+   Start at  11:27:52
+   Duration  5.72s (transform 4.81s, setup 886ms, import 4.54s, tests 56ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > path authority: the ritual gate fails closed for dormant ways (I-PA-1) > chooseCultivationPath rejects a non-beta way pair before any other check
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:272:92
+    270|     const p = player({ realmLevel: 12 })
+    271|
+    272|     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', …
+       |                                                                                            ^
+    273|     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', '…
+    274|     // spell_pathway carries an element axis - it also fails closed he…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-EC-1b :: orphan-sink: dead material sink on live recipe
+MUT-EC-1b: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaEconomyCensus.test.ts (6 tests | 1 failed) 14ms
+     × every material consumed by a beta-realm purpose sink has a live beta source or an exemption 7ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  11:27:59
+   Duration  937ms (transform 662ms, setup 462ms, import 296ms, tests 14ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaEconomyCensus.test.ts > sec.17 beta economy census - no orphan source, no orphan sink > every material consumed by a beta-realm purpose sink has a live beta source or an exemption
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "dead_census_orphan (sinks: recipe:alchemy_truc_co_dan:special)",
++ ]
+
+ ❯ tests/architecture/betaEconomyCensus.test.ts:295:21
+    293|       }
+    294|     }
+    295|     expect(orphans).toEqual([])
+       |                     ^
+    296|   })
+    297|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+
+Corpus: 2 mutants, 2 KILLED_EXPECTED, 0 SURVIVED

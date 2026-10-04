@@ -1,0 +1,18 @@
+T15 fix wave (4c691c7e) pin evidence:
+- tests/architecture/tc6ForgedSaveFalsification.qa.test.ts adopted (25
+  probes flipped to fixed contracts, all green).
+- F-TC6-1: loi_kiep claim requires selectedTalentIds witness + canonical
+  id/stat + percent-only in [0, 0.1*REALM_TIERS.length].
+- F-TC6-2: realm-passive persisted payloads rebuilt from authored builder
+  at emit; enhanced variant only on hidden-broken realm + feature live.
+- F-TC6-3: hasHiddenProgressionState true for highestFoundationAchieved
+  'great_dao'; kien_co emit suppressed under lock.
+- F-TC6-4: retired+dormant alchemy jobs park at settle (retired exemption
+  dropped); ARCH-008 parked contract test.
+- F-TC6-5: getEffectiveRate/getEffectiveCapacity clamp level to
+  template.maxLevel (defense-in-depth over F-A8-2 shape bound).
+- F-TC6-6: attributePoints > getGlobalCultivationLevel(realm,level) -> issue.
+- F-TC6-8: dormant-family timed-effect check ordered before regen-shape.
+- F-TC6-9: meridian claims require openedIds + canonical
+  'bat-mach:<id>:<stat>' + authored percentAtFullTier.
+- F-TC6-7 RESIDUAL PIN: progress survives verbatim (no ledger exists).

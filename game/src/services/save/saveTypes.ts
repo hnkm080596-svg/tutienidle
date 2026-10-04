@@ -75,8 +75,9 @@ export interface FormationStackSave {
 // `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + them
 // field `rarity: EquipmentRarity` (xem core/equipment/EquipmentRarity.ts).
 // version 10: Dot Pha Truc Co (Phase 1) - xoa PlayerData.pillUsageCount
-// + Pill.usageLimit, thay bang tran theo canh gioi (RealmData.attributeCap,
-// xem PillSystem.canUse()).
+// + Pill.usageLimit, thay bang tran theo canh gioi (luc do la
+// RealmData.attributeCap - truong da bo, tran hien tai doc qua
+// getEffectiveMainStatCap).
 // version 11: Dot Pha Truc Co (Phase 5) - them
 // PlayerData.highestFoundationAchieved (muc 16 spec `breakthrough`).
 // version 12: Home Hub (Phase 2).
@@ -88,8 +89,8 @@ export interface FormationStackSave {
 // luot/loai). buildings: BuildingInstance[] gio co the chua 4
 // building crafting_station moi (pill_room/formation_altar/
 // talisman_institute/equipment_hall - truoc day 4 panel nay KHONG
-// gan Building nao, gio bat buoc xay truoc khi dung, xem
-// BuildingConstructionGate.vue).
+// gan Building nao, luc do bat buoc xay truoc khi dung; co che xay
+// da bo 2026-10-03 - moi building mac dinh lv1).
 // version 15: Equipment Rework - equipment: EquipmentInstance[] doi
 // field: `rarity` gio la 1 trong 4 gia tri moi (vo_duyen/tieu_duyen/
 // ky_duyen/thien_duyen, bo han 'normal'/'magic'/'rare'/'exalted'/
@@ -197,7 +198,9 @@ export interface GameSave {
   /** v44: job luyen dan dang chay (plan sec.8.2). */
   alchemyJobs?: AlchemyJobSave[]
 
-  /** v51: state Quest System (active progress + completedOnceIds + daily reset moc). */
+  /** v51: state Quest System (active progress + completedOnceIds +
+   *  questFlags witness + daily reset moc). questFlags optional - saves
+   *  predating flag quests lack the slice. */
   quests?: QuestManagerState
 
   /** R7 (AR-08): decompose settings + cycle timer. Optional - old
@@ -224,16 +227,48 @@ export interface TribulationSaveSlice {
     // here - a hidden breakthrough records it via breakthroughType.
     grade: ResolvableKienCoGrade
     breakthroughType: BreakthroughType
+    // F-TRB-FORGE - provenance witness the commit site stamps (mirror
+    // cua TribulationCommitWitness trong core/tribulation; services
+    // khong import core cho shape, nen khai bao lai cung fields).
+    witness: {
+      departingRealmId: string
+      chapterIndex: number
+      chaptersTotal: number
+      lightningStrikesTaken: number
+      attemptSeed: number
+      digest: number
+    }
     receipt: TribulationOutcomeResult | null
     settlementError: boolean
   }
   cooldownUntil?: number
 }
 
+/**
+ * B1-D - the explicit authorized time context for a restore. Under remote
+ * authority the client clock and the payload's editable timestamps are
+ * NEVER the accrual bound: the server stamps progression_cutoff_at and
+ * serverNowUtc, and only the window between them may accrue.
+ *
+ * - 'cold-boot': accrue the authorized window. `sinceMs`/`untilMs` are
+ *   SERVER epoch values (progression_cutoff_at -> serverNowUtc); the
+ *   owner converts them into a duration and positions the settle window
+ *   inside the payload's own epoch (lastSavedAt + elapsed), so persisted
+ *   client-epoch deadlines keep working.
+ * - 'live-replacement': a divergent remote state was loaded while the
+ *   client was live. Zero accrual - queues/jobs restore but never catch
+ *   up over the paused window. `nowMs` anchors live-resume clocks.
+ *
+ * Undefined = legacy local semantics (client clock owns the window).
+ */
+export type RestoreTimeAuthority =
+  | { kind: 'cold-boot'; sinceMs: number; untilMs: number }
+  | { kind: 'live-replacement'; nowMs: number }
+
 export interface GameSessionPlayerOwner {
   readonly $state: PlayerData
 
-  restoreFromSave(save: GameSave): OfflineResult
+  restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority): OfflineResult
 
   setEquipmentModifiers(modifiers: StatModifier[]): void
 }
@@ -322,6 +357,25 @@ export interface ProductionSiteStateSave {
   hiddenChannelCycles?: Record<string, number>
 }
 
+/** F-ALCH-JOB-FORGE - persisted reservation witness: the exact inputs
+ * startJob reserved when the job began (mirror cua AlchemyJobReservation
+ * trong core/alchemy - cung fields, khong import nguoc). */
+export interface AlchemyJobReservationSave {
+  woodId: string
+
+  fuelWoodAmount: number
+
+  spiritStoneCost: number
+
+  herbAmount: number
+
+  specialIngredients: readonly { materialId: string; amount: number }[]
+
+  costScale: number
+
+  digest: number
+}
+
 /** Shape persist cua ActiveAlchemyJob - khop core/alchemy. */
 export interface AlchemyJobSave {
   jobId: string
@@ -337,5 +391,7 @@ export interface AlchemyJobSave {
   completesAtMs: number
 
   roomLevelAtStart: number
+
+  reservation: AlchemyJobReservationSave
 }
 

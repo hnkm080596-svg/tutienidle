@@ -1,15 +1,15 @@
-// ProjectionBridge — the read-only view of a battle grid projection that the
+// ProjectionBridge - the read-only view of a battle grid projection that the
 // STATIC layer is allowed to hold.
 //
-// Spec §4.4 of
+// Spec sec4.4 of
 // docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md.
 //
 // Why this exists at all, given BattleGridProjection is already a plain object
 // the DOM could import directly: `BattleGridProjection` has `resize()`. Handing
 // the raw projection to a Vue component hands it the power to resize the very
-// geometry the canvas is drawing with — and a projection resized by the DOM
+// geometry the canvas is drawing with - and a projection resized by the DOM
 // while the canvas believes otherwise is precisely the "two layers disagree
-// about geometry" failure that §3.5 exists to forbid. The bridge is that same
+// about geometry" failure that sec3.5 exists to forbid. The bridge is that same
 // mathematics with the mutating half removed.
 //
 // It adds no maths. Both directions already existed and were already correct;
@@ -37,13 +37,13 @@ export interface ProjectedPoint extends ScreenPoint {
 /**
  * Read-only projection access for the static layer.
  *
- * **Coordinate space.** Every `ScreenPoint` here is in *canvas* pixels — the
+ * **Coordinate space.** Every `ScreenPoint` here is in *canvas* pixels - the
  * same space the projection itself uses, which is the canvas's declared
  * `width`/`height`. A DOM pointer event is in *CSS* pixels relative to its
  * target. Those two spaces coincide only while the canvas is rendered at its
  * declared size. Converting between them is the caller's job and belongs to
  * whoever owns the layout; this bridge deliberately does not guess at it,
- * because guessing is the defect (§3.5). See V8 in the spec — the Formation
+ * because guessing is the defect (sec3.5). See V8 in the spec - the Formation
  * panel's layout is presently wrong in exactly this way, and its own plan owns
  * the conversion.
  */
@@ -51,10 +51,10 @@ export interface ProjectionBridge {
   readonly rows: number
   readonly columns: number
 
-  /** Cell → canvas point. Accepts fractional row/column for cell corners. */
+  /** Cell -> canvas point. Accepts fractional row/column for cell corners. */
   gridToScreen(grid: GridPosition): ProjectedPoint
 
-  /** Canvas point → cell. `null` when the point is off the playable surface. */
+  /** Canvas point -> cell. `null` when the point is off the playable surface. */
   screenToGridUnclamped(screen: ScreenPoint): GridPosition | null
 
   /** Is this canvas point on the playable surface at all? */
@@ -65,7 +65,7 @@ export interface ProjectionBridge {
  * Wraps a projection. Holds no geometry of its own: every call delegates, so a
  * projection that has been resized is immediately reflected here. A bridge that
  * cached anything would be a second copy of the geometry, free to disagree with
- * the canvas — the thing this whole mechanism is meant to prevent.
+ * the canvas - the thing this whole mechanism is meant to prevent.
  */
 export function createProjectionBridge(projection: BattleGridProjection): ProjectionBridge {
   return {

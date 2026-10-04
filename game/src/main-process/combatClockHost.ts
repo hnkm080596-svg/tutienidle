@@ -73,7 +73,7 @@ export function createCombatClockHost(): CombatClockHost {
     },
 
     reset() {
-      // Looks redundant next to the per-tick `last = now` above — it isn't.
+      // Looks redundant next to the per-tick `last = now` above - it isn't.
       // That per-tick update tracks the *interval*'s own cadence; this is a
       // deliberate external re-anchor called from the OS 'resume' signal
       // (see attachPowerMonitorToClockHost below), so the tick right after a

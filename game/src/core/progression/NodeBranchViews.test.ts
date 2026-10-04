@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from './NodeBranchViews'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 
-// Phap Tu Reimagined (Task 16) — the reworked tree tags nodes by
+// Phap Tu Reimagined (Task 16) - the reworked tree tags nodes by
 // elementTag/routeTag, so every view is single-tag: element views
 // render `elementTag === view`, Kiem Tu routes render
 // `branchTag === view`. The thuan_*/lap_dao family is retired.

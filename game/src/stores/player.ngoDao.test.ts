@@ -3,10 +3,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
 import { getTalentDefinition } from '../data/talent/Talents'
 
-// Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — tu luyện ONLINE
-// tích luỹ tu vi đổi Cảm Ngộ Kỹ năng theo ngưỡng cultivationPerInsight
-// (2000). Dùng qi_refining tầng 1 (required 13200) để cultivate() không
-// bị clamp ở trần đột phá trong phạm vi test.
+// Thien phu Ngo Dao (talent-direction-choice-plan sec6) - tu luyen ONLINE
+// tich luy tu vi doi Cam Ngo Ky nang theo nguong cultivationPerInsight
+// (2000). Dung qi_refining tang 1 (required 13200) de cultivate() khong
+// bi clamp o tran dot pha trong pham vi test.
 describe('player store — thiên phú Ngộ Đạo (insight_per_cultivation)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -25,7 +25,7 @@ describe('player store — thiên phú Ngộ Đạo (insight_per_cultivation)', 
   it('không có thiên phú — tu luyện không sinh Cảm Ngộ Kỹ năng', () => {
     const store = storeAtQiRefining()
 
-    store.cultivate(500) // 10/s × 500s = 5000 tu vi
+    store.cultivate(500) // 10/s x 500s = 5000 tu vi
 
     expect(store.skillInsight).toBe(0)
     expect(store.totalSkillInsightGained).toBe(0)
@@ -52,7 +52,7 @@ describe('player store — thiên phú Ngộ Đạo (insight_per_cultivation)', 
     expect(store.skillInsight).toBe(0)
     expect(store.cultivationInsightAccumulator).toBe(1000)
 
-    store.cultivate(100) // +1000 → đủ 2000
+    store.cultivate(100) // +1000 -> du 2000
 
     expect(store.skillInsight).toBe(1)
     expect(store.cultivationInsightAccumulator).toBe(0)
@@ -62,7 +62,7 @@ describe('player store — thiên phú Ngộ Đạo (insight_per_cultivation)', 
     const store = storeAtQiRefining()
 
     store.selectedTalentIds = ['ngo_dao']
-    store.cultivate(500) // 5000 tu vi → 2 Cảm Ngộ, dư 1000
+    store.cultivate(500) // 5000 tu vi -> 2 Cam Ngo, du 1000
 
     expect(store.skillInsight).toBe(2)
     expect(store.totalSkillInsightGained).toBe(2)
@@ -73,25 +73,25 @@ describe('player store — thiên phú Ngộ Đạo (insight_per_cultivation)', 
     const store = storeAtQiRefining()
 
     store.selectedTalentIds = ['ngo_dao']
-    store.cultivation = 12_000 // required qi_refining 1 = 13200 → chỉ còn cộng được 1200
+    store.cultivation = 12_000 // required qi_refining 1 = 13200 -> chi con cong duoc 1200
 
-    store.cultivate(500) // muốn cộng 5000 nhưng clamp ở 1200
+    store.cultivate(500) // muon cong 5000 nhung clamp o 1200
 
     expect(store.skillInsight).toBe(0)
     expect(store.cultivationInsightAccumulator).toBe(1200)
   })
 
-  // Audit fix 2026-08-31 — talent data edit (mod/save hand-edit) đặt
-  // cultivationPerInsight: 0 từng tạo infinite loop trong cultivate():
-  // while (accumulator >= 0) không bao giờ sai nên accumulator -= 0 lặp
-  // vĩnh viễn, freeze tick 100ms. Guard `> 0` phải chặn hoàn toàn nhánh
-  // insight khi ngưỡng không hợp lệ (0).
+  // Audit fix 2026-08-31 - talent data edit (mod/save hand-edit) dat
+  // cultivationPerInsight: 0 tung tao infinite loop trong cultivate():
+  // while (accumulator >= 0) khong bao gio sai nen accumulator -= 0 lap
+  // vinh vien, freeze tick 100ms. Guard `> 0` phai chan hoan toan nhanh
+  // insight khi nguong khong hop le (0).
   it('ngưỡng 0 (data edit cultivationPerInsight: 0) — KHÔNG treo, bỏ hẳn nhánh insight', () => {
     const store = storeAtQiRefining()
 
-    // Giả lập talent data edit: mutate definition của ngo_dao trong catalog
-    // (module-level, chạy trước khi cultivate đọc effect). Khôi phục sau
-    // test để không rò rỉ sang test khác.
+    // Gia lap talent data edit: mutate definition cua ngo_dao trong catalog
+    // (module-level, chay truoc khi cultivate doc effect). Khoi phuc sau
+    // test de khong ro ri sang test khac.
     const talent = getTalentDefinition('ngo_dao')!
     const effect = talent.effects.find(
       (candidate): candidate is Extract<(typeof talent.effects)[number], { kind: 'insight_per_cultivation' }> =>
@@ -102,7 +102,7 @@ describe('player store — thiên phú Ngộ Đạo (insight_per_cultivation)', 
 
     try {
       store.selectedTalentIds = ['ngo_dao']
-      store.cultivate(500) // 5000 tu vi — trước guard: treo while-loop
+      store.cultivate(500) // 5000 tu vi - truoc guard: treo while-loop
 
       expect(store.skillInsight).toBe(0)
       expect(store.totalSkillInsightGained).toBe(0)

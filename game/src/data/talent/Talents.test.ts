@@ -9,12 +9,12 @@ import {
 import { TALENT_PASSIVE_SKILLS } from '../skill/TalentPassives'
 import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 
-// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md) — pool roll:
-// 11 combat + 5 tu luyện M2 + 2 sản xuất M3 + Phàm Cốt (easter egg).
-// 13 id v3 retired — không còn resolve (spec §4.4).
+// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md) - pool roll:
+// 11 combat + 5 tu luyen M2 + 2 san xuat M3 + Pham Cot (easter egg).
+// 13 id v3 retired - khong con resolve (spec sec4.4).
 
-// 13 id catalog v3 đã retire (spec §4.4) — giữ list ở test để khóa hành
-// vi "không resolve", không để dữ liệu chết lọt lại catalog.
+// 13 id catalog v3 da retire (spec sec4.4) - giu list o test de khoa hanh
+// vi "khong resolve", khong de du lieu chet lot lai catalog.
 const RETIRED_V4_TALENT_IDS = [
   'tien_thien_dao_the',
   'nghich_thien',
@@ -47,8 +47,8 @@ describe('catalog v4 invariants (M1 combat)', () => {
   })
 
   it('ngân sách power (spec §4.1 §5) — 5 công + 5 thủ + Bất Tử Thể giữ, weight đúng thang rarity', () => {
-    // Thang weight cũ (spec §4 dòng đầu): di w1 / thiên w4 / địa w12 /
-    // linh w28 / phàm w55. Mỗi talent map đúng rarity của nó.
+    // Thang weight cu (spec sec4 dong dau): di w1 / thien w4 / dia w12 /
+    // linh w28 / pham w55. Moi talent map dung rarity cua no.
     const WEIGHT_BY_RARITY: Record<TalentRarity, number> = {
       di: 1,
       thien: 4,
@@ -61,7 +61,7 @@ describe('catalog v4 invariants (M1 combat)', () => {
       expect(talent.weight).toBe(WEIGHT_BY_RARITY[talent.rarity])
     }
 
-    // Đúng cơ cấu 11 combat (5 công + 5 thủ + Bất Tử Thể) + Phàm Cốt.
+    // Dung co cau 11 combat (5 cong + 5 thu + Bat Tu The) + Pham Cot.
     const combatIds = [
       'kiem_quang',
       'pha_giap',
@@ -76,8 +76,8 @@ describe('catalog v4 invariants (M1 combat)', () => {
       'bat_tu_the',
     ]
 
-    // Thẻ phân loại UI theo quy ước sẵn có: nhóm công mang 'combat',
-    // nhóm thủ mang 'defense' (metadata, không thuộc ngân sách §5).
+    // The phan loai UI theo quy uoc san co: nhom cong mang 'combat',
+    // nhom thu mang 'defense' (metadata, khong thuoc ngan sach sec5).
     for (const id of combatIds) {
       const talent = getTalentDefinition(id)
 
@@ -95,15 +95,15 @@ describe('catalog v4 invariants (M1 combat)', () => {
 
   it('mô tả theo template 3 phần — có số liệu cơ chế + chi phí đối trọng (trừ Phàm Cốt verbatim)', () => {
     for (const talent of CHARACTER_CREATION_TALENTS) {
-      // Phàm Cốt là easter egg — description verbatim cấm sửa (spec §4
-      // hàng cuối), không áp template.
+      // Pham Cot la easter egg - description verbatim cam sua (spec sec4
+      // hang cuoi), khong ap template.
       if (talent.id === 'pham_cot') {
         continue
       }
 
-      // Phần 2: cơ chế bằng số (ít nhất 1 chữ số).
+      // Phan 2: co che bang so (it nhat 1 chu so).
       expect(talent.description).toMatch(/\d/)
-      // Phần 3: chi phí/rủi ro đối trọng nêu rõ (giảm/tốn/mất/không/khó/chậm...).
+      // Phan 3: chi phi/rui ro doi trong neu ro (giam/ton/mat/khong/kho/cham...).
       expect(talent.description.length).toBeGreaterThan(40)
     }
   })

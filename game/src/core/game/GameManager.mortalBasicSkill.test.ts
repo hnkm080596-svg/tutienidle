@@ -8,11 +8,19 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { unlockAllWaysForTests } from './__fixtures__/betaWaysUnlock'
 
 // P7-M4 - the mortal basic pick is persisted PlayerData
 // (mortalBasicSkillId) written through the ONE role-write op. The
 // mortal runtime resolves it; post-path the pick is cleared and the
 // op rejects.
+//
+// BETA SCOPE LOCK v2 (phase-2): the pick is fixed to 'linh_bao' -
+// BETA_MORTAL_STARTER_SKILL_ID is the only id the starter admission
+// op will write, and this suite's sword/body ritual callers unlock
+// the non-beta ways for the file's duration (vitest isolates modules
+// per file).
+unlockAllWaysForTests()
 function setup() {
   const gameManager = new GameManager()
 
@@ -38,24 +46,16 @@ const ENEMY = defineEnemy({
 // seam: the screen's choice becomes the persisted mortalBasicSkillId and
 // the runtime default is never silently chosen for a fresh character.
 describe('bootstrapEarlyGamePlayer — creation pick write', () => {
-  it('learns all three precursors and writes the chosen starting basic', () => {
+  it('learns all three precursors and pins the beta starter', () => {
     const gameManager = setup()
     const player = createDefaultPlayer()
 
-    bootstrapEarlyGamePlayer(gameManager, player, 'linh_bao')
+    bootstrapEarlyGamePlayer(gameManager, player)
 
     for (const id of ['tram', 'linh_bao', 'huy_quyen']) {
       expect(gameManager.skillManager.has(id)).toBe(true)
     }
     expect(player.mortalBasicSkillId).toBe('linh_bao')
-  })
-
-  it('throws on an invalid pick — post-learn a legal pick cannot fail', () => {
-    const gameManager = setup()
-    const player = createDefaultPlayer()
-
-    expect(() => bootstrapEarlyGamePlayer(gameManager, player, 'hoa_cau_thuat')).toThrow()
-    expect(player.mortalBasicSkillId).toBeUndefined()
   })
 
   it('throws fail-closed when any precursor learn fails', () => {
@@ -67,7 +67,7 @@ describe('bootstrapEarlyGamePlayer — creation pick write', () => {
       skillId === 'huy_quyen' ? false : originalLearn(skillId, p),
     )
 
-    expect(() => bootstrapEarlyGamePlayer(gameManager, player, 'tram')).toThrow(/precursor learn failed/i)
+    expect(() => bootstrapEarlyGamePlayer(gameManager, player)).toThrow(/precursor learn failed/i)
     expect(player.mortalBasicSkillId).toBeUndefined()
   })
 })
@@ -76,7 +76,7 @@ describe('applyCreationProfile — name + talent only', () => {
   it('writes name and talents; base stats stay the 1/1/1/1/1 default and the pick is untouched', () => {
     const player = createDefaultPlayer()
 
-    applyCreationProfile(player, { name: 'Lạc Vân', talentIds: ['tc_a'], mortalBasicSkillId: 'huy_quyen' })
+    applyCreationProfile(player, { name: 'Lạc Vân', talentIds: ['tc_a'] })
 
     expect(player.name).toBe('Lạc Vân')
     expect(player.selectedTalentIds).toEqual(['tc_a'])
@@ -123,6 +123,19 @@ describe('setMortalBasicSkill — the only role write', () => {
 
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'huy_quyen')).toBe(false)
     expect(player.mortalBasicSkillId).toBeUndefined()
+  })
+
+  it('BETA SCOPE LOCK - rejects every non-beta starter even when learned (direct-API injection)', () => {
+    const gameManager = setup()
+
+    for (const skillId of ['tram', 'huy_quyen']) {
+      const player = createDefaultPlayer()
+      gameManager.progressionOps.learnSkill(skillId, player)
+      gameManager.progressionOps.learnSkill('linh_bao', player)
+
+      expect(gameManager.progressionOps.setMortalBasicSkill(player, skillId)).toBe(false)
+      expect(player.mortalBasicSkillId).toBeUndefined()
+    }
   })
 })
 
@@ -190,13 +203,13 @@ describe('ritual starter guarantee', () => {
 
     const player = createDefaultPlayer()
     player.realmLevel = 12
-    player.mortalBasicSkillId = 'tram'
+    player.mortalBasicSkillId = 'linh_bao'
 
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)).toBe(false)
     expect(player.cultivationPath).toBeUndefined()
     expect(player.cultivationWay).toBeUndefined()
     expect(player.realmId).toBe('mortal')
-    expect(player.mortalBasicSkillId).toBe('tram')
+    expect(player.mortalBasicSkillId).toBe('linh_bao')
   })
 })
 

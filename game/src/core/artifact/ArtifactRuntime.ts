@@ -1,8 +1,8 @@
-// Bản Mệnh Pháp Bảo — state runtime CHỈ sống trong 1 Battle, không
-// persist (doc §11). Snapshot level/grade/path/rotationElements lúc
-// trận bắt đầu — đổi hướng/nâng phẩm/element giữa trận chỉ có hiệu
-// lực từ trận kế, khớp đúng thiết kế (GameManager.setArtifactPath()/
-// tryUpgradeArtifactGrade() đã chặn đổi giữa combat).
+// Ban Menh Phap Bao - state runtime CHI song trong 1 Battle, khong
+// persist (doc sec11). Snapshot level/grade/path/rotationElements luc
+// tran bat dau - doi huong/nang pham/element giua tran chi co hieu
+// luc tu tran ke, khop dung thiet ke (GameManager.setArtifactPath()/
+// tryUpgradeArtifactGrade() da chan doi giua combat).
 import type { ArtifactGrade, ArtifactId, ArtifactPath, ArtifactProgress } from './Artifact'
 import type { ElementType } from '../element/ElementType'
 
@@ -14,19 +14,19 @@ export interface ArtifactRuntimeSnapshot {
 
   /** Elements the artifact rotates through on activation. When this lane is
    *  ported to the turn engine, derive from player.spellPath.element (a spell
-   *  holder has exactly 1 element) — the equippedElements loadout authority
+   *  holder has exactly 1 element) - the equippedElements loadout authority
    *  was retired in Task 14. */
   rotationElements: ElementType[]
 }
 
-/** Per-target ICD cho nhánh Khống (doc §8.4) — keyed theo targetId. */
+/** Per-target ICD cho nhanh Khong (doc sec8.4) - keyed theo targetId. */
 export interface ArtifactTargetControlState {
-  /** Số hit artifact đã trúng target này trong cửa sổ hiện tại (Ngũ Hành Phược, tầng 6). */
+  /** So hit artifact da trung target nay trong cua so hien tai (Ngu Hanh Phuoc, tang 6). */
   hitsInWindow: number
 
   windowRemainingSeconds: number
 
-  /** ICD trước khi được phép áp Trói Chân lại lên CHÍNH target này — chặn root-lock. */
+  /** ICD truoc khi duoc phep ap Troi Chan lai len CHINH target nay - chan root-lock. */
   reapplyCooldownRemainingSeconds: number
 }
 
@@ -42,22 +42,22 @@ export interface ArtifactRuntime {
 
   activationCount: number
 
-  /** Con trỏ vòng xoay Ngũ Hành — index vào snapshot.rotationElements (đã lọc theo NGU_HANH_ROTATION_ORDER). */
+  /** Con tro vong xoay Ngu Hanh - index vao snapshot.rotationElements (da loc theo NGU_HANH_ROTATION_ORDER). */
   elementCursor: number
 
   perTargetControl: Record<string, ArtifactTargetControlState>
 
   lastBattleDamage: number
 
-  // Công tầng 12 "Ngũ Hành Cộng Minh" — 2 hành khác nhau trúng CÙNG
-  // target trong 1 activation giảm 10% chu kỳ KẾ, tối đa 1 lần/activation.
+  // Cong tang 12 "Ngu Hanh Cong Minh" - 2 hanh khac nhau trung CUNG
+  // target trong 1 activation giam 10% chu ky KE, toi da 1 lan/activation.
   currentActivationHits: ArtifactActivationHit[]
   crossElementBonusAppliedThisActivation: boolean
   pendingCycleReductionPercent: number
 
-  // Thủ tầng 12 "Sinh Sinh Bất Tức" — phát hiện ward (do chính artifact
-  // cấp ở tầng 3) VỪA vỡ bằng cách so currentWard tick này với tick
-  // trước, không hook vào pipeline ward-break chung (không đổi
+  // Thu tang 12 "Sinh Sinh Bat Tuc" - phat hien ward (do chinh artifact
+  // cap o tang 3) VUA vo bang cach so currentWard tick nay voi tick
+  // truoc, khong hook vao pipeline ward-break chung (khong doi
   // CombatSystem.resolveActionHit()).
   lastObservedPlayerWard: number
   wardBreakRecoveryCooldownRemainingSeconds: number

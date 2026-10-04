@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Primitive hàng label — value dùng cho mọi bảng chỉ số 2 cột (đang lặp
-// ~14 chỗ). Value luôn tabular-nums; tone khớp hệ tone của Tooltip.
-// Nội dung value qua slot (cho span màu riêng); label qua prop.
+// Primitive hang label - value dung cho moi bang chi so 2 cot (dang lap
+// ~14 cho). Value luon tabular-nums; tone khop he tone cua Tooltip.
+// Noi dung value qua slot (cho span mau rieng); label qua prop.
 withDefaults(defineProps<{
   label: string
   tone?: 'default' | 'positive' | 'negative' | 'warning' | 'muted'
@@ -28,26 +28,26 @@ export default { name: 'StatRow' }
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-2);
+  gap: var(--hk-space-2);
   padding: 3px 4px;
 }
 
 .stat-row--bordered {
-  border-bottom: 1px solid var(--paper-line-soft);
+  border-bottom: 1px solid var(--hk-border-muted);
 }
 
 .stat-row__label {
-  color: var(--paper-text-soft);
+  color: var(--hk-text-secondary);
 }
 
 .stat-row__value {
-  color: var(--paper-text);
+  color: var(--hk-text-primary);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-.stat-row--positive .stat-row__value { color: var(--jade); }
-.stat-row--negative .stat-row__value { color: var(--crimson); }
-.stat-row--warning .stat-row__value { color: var(--gold-700); }
-.stat-row--muted .stat-row__value { color: var(--paper-text-muted); }
+.stat-row--positive .stat-row__value { color: var(--hk-jade); }
+.stat-row--negative .stat-row__value { color: var(--hk-cinnabar); }
+.stat-row--warning .stat-row__value { color: var(--hk-gold); }
+.stat-row--muted .stat-row__value { color: var(--hk-text-muted); }
 </style>

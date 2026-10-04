@@ -33,12 +33,12 @@ describe('TranPhapCombatPreviewScene — standing-slot grid size (standing-slot 
   })
 })
 
-// Real-art wiring (2026-09-14) — the preview used to hardcode the placeholder
+// Real-art wiring (2026-09-14) - the preview used to hardcode the placeholder
 // sheet for EVERY combatant even though the player has real profile art. The
 // panel now sends { assignments, playerProfileId } and the scene resolves the
-// player's current profile PNG — static art exactly like CombatScene's
+// player's current profile PNG - static art exactly like CombatScene's
 // static-art path; combatants with no registered presentation
-// (companions — no art exists yet) keep the placeholder idle animation.
+// (companions - no art exists yet) keep the placeholder idle animation.
 describe('TranPhapCombatPreviewScene — real art resolution', () => {
   function fakeSprite(id: string, textureKey = 'ph'): EntitySprite {
     const played: string[] = []

@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
+import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 
@@ -73,7 +74,7 @@ describe('restore identity (AR-12)', () => {
     expect(computeRestoreIdentity(saveA)).not.toBe(computeRestoreIdentity(saveB))
   })
 
-  // M1 (ARCH-001) — every meaningful GameSave slice must contribute to
+  // M1 (ARCH-001) - every meaningful GameSave slice must contribute to
   // the restore identity: a payload that differs ONLY in one slice is a
   // different payload and must not be skipped by the idempotency guard.
   it.each([
@@ -107,10 +108,10 @@ describe('restore identity (AR-12)', () => {
       save.productionSites = [{ siteId: 'site-1', level: 2, autoRestart: true }]
     }],
     ['alchemyJobs', (save: GameSave) => {
-      save.alchemyJobs = [{
+      save.alchemyJobs = [alchemyJobFixture({
         jobId: 'j1', recipeId: 'r1', pillId: 'p1', herbMaterialId: 'h1',
         startedAtMs: 0, completesAtMs: 1, roomLevelAtStart: 1,
-      }]
+      })]
     }],
     ['quests', (save: GameSave) => {
       save.quests = { active: [{ questId: 'q1', progress: 1, claimed: false }], completedOnceIds: [], lastDailyResetAtMs: 0 }
@@ -171,7 +172,7 @@ describe('restore identity (AR-12)', () => {
     // as save.player.baseStats). A later in-place store mutation
     // (attackRange normalization) would then corrupt the caller's `save`
     // object, changing what a second restoreFromSave(save) call with the
-    // SAME reference computes as its identity — silently defeating the
+    // SAME reference computes as its identity - silently defeating the
     // payload-identity guard itself. Restore input must be a value.
     const { usePlayerStore } = await import('../../stores/player')
     const { createPinia, setActivePinia } = await import('pinia')
@@ -185,7 +186,7 @@ describe('restore identity (AR-12)', () => {
     const first = store.restoreFromSave(save)
 
     // The restore's own normalization step mutates store.baseStats.attackRange
-    // — this must not be visible through save.player.baseStats afterward.
+    // - this must not be visible through save.player.baseStats afterward.
     expect(save.player.baseStats).toEqual(baseStatsSnapshot)
 
     const second = store.restoreFromSave(save)

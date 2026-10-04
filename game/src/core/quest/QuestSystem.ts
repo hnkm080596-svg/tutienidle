@@ -1,4 +1,4 @@
-import type { Quest, QuestCondition } from './Quest'
+import type { Quest, QuestCondition, QuestItemReward } from './Quest'
 import type { QuestRegistry } from './QuestRegistry'
 import type { QuestManager } from './QuestManager'
 import type { QuestProgress } from './QuestProgress'
@@ -14,8 +14,9 @@ import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PillRegistry } from '../pill/PillRegistry'
 import type { PillBag } from '../pill/PillBag'
-// 9.8 — CHỈ import TYPE (không runtime import core/game) tránh dependency
-// cycle: NotificationQueue sống ở core/game nhưng event type thuần.
+import { isBetaQuestEnabled } from '../betaScope'
+// 9.8 - CHI import TYPE (khong runtime import core/game) tranh dependency
+// cycle: NotificationQueue song o core/game nhung event type thuan.
 import type { NotificationEvent } from '../notification/NotificationEvent'
 import type { Material } from '../material/Material'
 
@@ -27,8 +28,8 @@ export interface QuestBagDeps {
   pillRegistry: PillRegistry
   pillBag: PillBag
 
-  // 9.8 (optional) — caller có notification sink thì push toast khi
-  // reward material tràn túi; không có thì bỏ qua (test/mock path).
+  // 9.8 (optional) - caller co notification sink thi push toast khi
+  // reward material tran tui; khong co thi bo qua (test/mock path).
   notifications?: { push: (event: NotificationEvent) => void }
 
   // M-F-BODY-PERFECTION (optional) - the ONE material-landing funnel.
@@ -45,12 +46,95 @@ export interface QuestBagDeps {
   playerRealmId?: string
 }
 
-function isUnlocked(quest: Quest, player: PlayerData): boolean {
+function isUnlocked(quest: Quest, player: PlayerData, manager: QuestManager): boolean {
+  // BETA SCOPE LOCK v2 sec.15 - the beta admission predicate composes at
+  // the single activation seam: daily cadence and off-roster kill quests
+  // never activate, and the reconcile inverse pass deactivates stale
+  // progress for them automatically.
+  //
+  // Progression gates (requiredRealmId, unlocksAfterQuestId) gate NEW
+  // ADMISSION only - an entry already in `active` is judged by
+  // staysLive() instead. Chain clause (mainline): a quest gated by
+  // unlocksAfterQuestId stays locked until its predecessor sits in
+  // completedOnceIds - the durable witness written exactly once at claim.
   return (
+    staysLive(quest) &&
     (!quest.requiredRealmId ||
       getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)) &&
-    !questIsTokenOnlySource(quest)
+    (quest.unlocksAfterQuestId === undefined ||
+      manager.isCompletedOnce(quest.unlocksAfterQuestId))
   )
+}
+
+// Retention predicate for the reconcile inverse pass. An in-flight,
+// progress-bearing row is never evicted by a progression gate: the chain
+// gate guards admission only (a pre-fold carried save keeps its partial
+// collect progress until the chain reaches it), and a realm gate added
+// after a save was written must not wipe that save's in-flight work
+// either - the row stays and completes at the gated realm. Only
+// product-level retirement still evicts: scope-hidden quests (BETA
+// SCOPE LOCK v2 sec.15) and suppressed token-faucet quests have no live
+// counter left at all.
+function staysLive(quest: Quest): boolean {
+  return isBetaQuestEnabled(quest) && !questIsTokenOnlySource(quest)
+}
+
+/**
+ * BETA FE-CONTRACT (work-order sec.4B) - the ONE ReleasePolicy
+ * admission predicate for a quest item-drop reward line. claim()
+ * applies it before delivering a drop; the quest read-model emits only
+ * admitted lines as the reward preview. A line this rejects is never
+ * previewed and never delivered - the frontend never reconstructs
+ * admission itself (A9: same predicates, never a second copy).
+ * Unknown item ids fail closed.
+ */
+export function isQuestRewardDropAdmitted(
+  drop: QuestItemReward,
+  registries: Pick<QuestBagDeps, 'materialRegistry' | 'pillRegistry'>,
+  playerRealmId: string | undefined,
+): boolean {
+  if (drop.kind === 'material') {
+    if (!registries.materialRegistry.has(drop.itemId)) {
+      return false
+    }
+
+    const template = registries.materialRegistry.get(drop.itemId)
+
+    // M-F-CEILING - breakthrough-scoped reward stays dormant while
+    // release policy closes the transition into its tagged realm.
+    if (!isBreakthroughAcquisitionEnabled(template.breakthroughRealmId)) {
+      return false
+    }
+
+    // M-F-COMPANION-GIFT - censused pull-token reward lines stay dormant
+    // while the pull pool is closed; sibling lines still land.
+    if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
+      return false
+    }
+
+    // M-F-ARTIFACT-DEFER - domain-scoped reward materials
+    // (doan_bao_thach) compose the window+reach rule against the
+    // claiming player's realm - same gate as grantResolvedDrops.
+    if (!isDomainScopedAcquisitionEnabled(template.domainUnlockRealmId, playerRealmId)) {
+      return false
+    }
+
+    return true
+  }
+
+  if (drop.kind === 'pill') {
+    if (!registries.pillRegistry.has(drop.itemId)) {
+      return false
+    }
+
+    // M-F-CEILING - same release-policy suppression as the material
+    // branch above.
+    return isBreakthroughAcquisitionEnabled(
+      registries.pillRegistry.get(drop.itemId).breakthroughRealmId,
+    )
+  }
+
+  return false
 }
 
 // M-F-COMPANION-GIFT - a quest whose ENTIRE reward set is censused
@@ -75,8 +159,8 @@ function dayBucket(ms: number): number {
 }
 
 /**
- * Quest KHÔNG giữ state nội bộ (giống BuildingSystem) — registry/
- * manager/bags truyền theo từng method.
+ * Quest KHONG giu state noi bo (giong BuildingSystem) - registry/
+ * manager/bags truyen theo tung method.
  */
 export class QuestSystem {
   /**
@@ -94,7 +178,7 @@ export class QuestSystem {
     player: PlayerData,
   ): void {
     for (const quest of registry.getAll()) {
-      if (!isUnlocked(quest, player)) {
+      if (!isUnlocked(quest, player, manager)) {
         continue
       }
 
@@ -105,15 +189,16 @@ export class QuestSystem {
       manager.ensureActive(quest)
     }
 
-    // P7-M9 - the inverse pass: a quest whose gate is no longer
-    // satisfied must not keep stale active progress (e.g. restored from
-    // a save written before its realm gate existed). Dropping it here -
-    // the same lifecycle seam that activates - keeps progress events and
-    // claims ineligible without touching their player-free signatures.
-    // Progress re-arms from zero if the quest ever becomes eligible
-    // again; 'once' completions are tracked separately and unaffected.
+    // P7-M9 - the inverse pass, narrowed to product retirement
+    // (QA-2026-10-03-1): only a quest the product itself no longer
+    // offers (scope-hidden or suppressed token faucet) loses its
+    // active row here. Progression gates no longer evict - an
+    // in-flight row stays live until claimed (e.g. a carried save's
+    // fold-in collect quest keeps its progress until the chain
+    // reaches it). 'once' completions are tracked separately in
+    // completedOnceIds and are unaffected.
     for (const progress of [...manager.getActive()]) {
-      if (registry.has(progress.questId) && !isUnlocked(registry.get(progress.questId), player)) {
+      if (registry.has(progress.questId) && !staysLive(registry.get(progress.questId))) {
         manager.deactivate(progress.questId)
       }
     }
@@ -141,6 +226,13 @@ export class QuestSystem {
         continue
       }
 
+      // BETA SCOPE LOCK v2 sec.15 - scope-hidden quests never render in
+      // the active projection even if stale progress exists between
+      // reconcile runs (still read-only: no state is touched here).
+      if (!isBetaQuestEnabled(quest)) {
+        continue
+      }
+
       result.push({ quest, progress })
     }
 
@@ -164,6 +256,12 @@ export class QuestSystem {
     const quest = registry.get(questId)
     const progress = manager.getProgress(questId)
 
+    // BETA SCOPE LOCK v2 sec.15 - claim fails closed on a scope-hidden
+    // quest even if stale progress sits claimable (pre-flag saves).
+    if (!isBetaQuestEnabled(quest)) {
+      return undefined
+    }
+
     if (!progress || progress.claimed || progress.progress < quest.condition.amount) {
       return undefined
     }
@@ -185,8 +283,8 @@ export class QuestSystem {
   }
 
   /**
-   * Turn-in: collect quest tiêu hao vật phẩm khỏi bag khi claim. Trả
-   * false nếu canClaim() false (chống double-claim, idempotent).
+   * Turn-in: collect quest tieu hao vat pham khoi bag khi claim. Tra
+   * false neu canClaim() false (chong double-claim, idempotent).
    */
   claim(
     registry: QuestRegistry,
@@ -218,28 +316,16 @@ export class QuestSystem {
     for (const drop of quest.reward.itemDrops ?? []) {
       const amount = drop.amount ?? 1
 
+      // sec.4B - ONE admission predicate shared with the quest surface
+      // read-model (release windows, pull-token suppression, domain
+      // scoping, unknown ids) - this loop never re-derives policy.
+      if (!isQuestRewardDropAdmitted(drop, bags, bags.playerRealmId)) {
+        continue
+      }
+
       if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
-        // 9.8 — tràn túi: quest chỉ tính delivered; push toast khi có sink.
+        // 9.8 - tran tui: quest chi tinh delivered; push toast khi co sink.
         const template: Material = bags.materialRegistry.get(drop.itemId)
-
-        // M-F-CEILING - a breakthrough-scoped reward stays dormant while
-        // release policy closes the transition into its tagged realm.
-        if (!isBreakthroughAcquisitionEnabled(template.breakthroughRealmId)) {
-          continue
-        }
-
-        // M-F-COMPANION-GIFT - censused pull-token reward lines stay
-        // dormant while the pull pool is closed; sibling lines still land.
-        if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
-          continue
-        }
-
-        // M-F-ARTIFACT-DEFER - domain-scoped reward materials (doan_bao_thach)
-        // additionally compose the window+reach rule against the claiming
-        // player's realm - same gate as grantResolvedDrops.
-        if (!isDomainScopedAcquisitionEnabled(template.domainUnlockRealmId, bags.playerRealmId)) {
-          continue
-        }
 
         const overflow = bags.materialBag.add(template, amount)
 
@@ -256,8 +342,8 @@ export class QuestSystem {
         }
 
         if (overflow > 0 && bags.notifications) {
-          // Event dựng inline (fallback message vi — convention core):
-          // chỉ import TYPE NotificationEvent, không runtime import.
+          // Event dung inline (fallback message vi - convention core):
+          // chi import TYPE NotificationEvent, khong runtime import.
           const overflowEvent: NotificationEvent = {
             kind: 'warning',
 
@@ -276,12 +362,6 @@ export class QuestSystem {
         // R9 (AR-34) - pill drops surface the delivery receipt too: quest
         // rewards must not silently lose pills to a full bag.
         const pillTemplate = bags.pillRegistry.get(drop.itemId)
-
-        // M-F-CEILING - same release-policy suppression as the material
-        // branch above.
-        if (!isBreakthroughAcquisitionEnabled(pillTemplate.breakthroughRealmId)) {
-          continue
-        }
 
         const pillOverflow = bags.pillBag.add(pillTemplate, amount)
 
@@ -311,10 +391,10 @@ export class QuestSystem {
   }
 
   /**
-   * So sánh day-bucket UTC hiện tại với lastDailyResetAtMs — qua ngày
-   * mới thì xoá progress 'daily' chưa claim + reset mốc. Không random
-   * chọn quest (v1): "daily board" = mọi quest cadence 'daily' đang mở
-   * khoá theo cảnh giới người chơi.
+   * So sanh day-bucket UTC hien tai voi lastDailyResetAtMs - qua ngay
+   * moi thi xoa progress 'daily' chua claim + reset moc. Khong random
+   * chon quest (v1): "daily board" = moi quest cadence 'daily' dang mo
+   * khoa theo canh gioi nguoi choi.
    */
   checkAndResetDaily(
     registry: QuestRegistry,
@@ -328,7 +408,7 @@ export class QuestSystem {
 
     const dailyQuestIds = registry
       .getAll()
-      .filter((quest) => quest.cadence === 'daily' && isUnlocked(quest, player))
+      .filter((quest) => quest.cadence === 'daily' && isUnlocked(quest, player, manager))
       .map((quest) => quest.id)
 
     manager.resetDaily(dailyQuestIds, now)
@@ -337,9 +417,9 @@ export class QuestSystem {
   }
 
   /**
-   * Gọi từ BattleLootSystem.processDefeatedEnemies() mỗi lần quái chết
-   * thật sự cấp thưởng (Kiếp không tính). Tăng progress mọi kill-quest
-   * ĐANG active, chưa claim, có enemyId/zoneId khớp (hoặc bỏ trống).
+   * Goi tu BattleLootSystem.processDefeatedEnemies() moi lan quai chet
+   * that su cap thuong (Kiep khong tinh). Tang progress moi kill-quest
+   * DANG active, chua claim, co enemyId/zoneId khop (hoac bo trong).
    */
   onEnemyDefeated(
     registry: QuestRegistry,
@@ -371,13 +451,13 @@ export class QuestSystem {
   }
 
   /**
-   * Gọi MỖI KHI material vào túi người chơi (production settle, loot quái,
-   * claim toà nhà, Hóa Luyện, quest turn-in trả item...) — tăng progress
-   * collect-quest ĐANG active, chưa claim, có materialId khớp.
+   * Goi MOI KHI material vao tui nguoi choi (production settle, loot quai,
+   * claim toa nha, Hoa Luyen, quest turn-in tra item...) - tang progress
+   * collect-quest DANG active, chua claim, co materialId khop.
    *
-   * KHÔNG gọi khi restore từ save (double-count) — review 2026-08-28 bug #3:
-   * trước đây collect-quest không có hook nào nên progress mãi 0/N,
-   * reward không bao giờ claim được.
+   * KHONG goi khi restore tu save (double-count) - review 2026-08-28 bug #3:
+   * truoc day collect-quest khong co hook nao nen progress mai 0/N,
+   * reward khong bao gio claim duoc.
    */
   onMaterialCollected(
     registry: QuestRegistry,
@@ -405,6 +485,40 @@ export class QuestSystem {
       }
 
       manager.incrementProgress(progress.questId, amount)
+    }
+  }
+
+  /**
+   * Goi tu domain seam khi mot feature-witness xay ra (alchemy settle
+   * thanh cong -> QUEST_FLAG_ALCHEMY_CRAFTED). Records the durable
+   * witness (questFlags) and increments every ACTIVE, unclaimed
+   * flag-quest whose flagId matches - same activation-counts rule as
+   * onEnemyDefeated/onMaterialCollected: a flag landing before the
+   * quest activates earns no retroactive credit.
+   */
+  onFlag(
+    registry: QuestRegistry,
+    manager: QuestManager,
+    flagId: string,
+  ): void {
+    manager.markQuestFlag(flagId)
+
+    for (const progress of manager.getActive()) {
+      if (progress.claimed || !registry.has(progress.questId)) {
+        continue
+      }
+
+      const condition: QuestCondition = registry.get(progress.questId).condition
+
+      if (condition.kind !== 'flag') {
+        continue
+      }
+
+      if (condition.flagId !== flagId) {
+        continue
+      }
+
+      manager.incrementProgress(progress.questId, 1)
     }
   }
 }

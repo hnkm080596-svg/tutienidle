@@ -4,10 +4,10 @@ import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 import type { EntityVitalsChangedEvent, VitalsChangeReason } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import {
-  addInkWashNineSlice,
   queueInkWashUiAtlas,
 } from '@/game/support/InkWashUiPhaser'
 import { queueTribulationAssets } from '@/game/support/TribulationPreload'
+import { TRIBULATION_SCENE_ASSET_IDS } from '@/presentation/assets/AssetBundleCatalog'
 import { applyScreenShake } from '@/presentation/vfx/screenShakePolicy'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import {
@@ -45,25 +45,40 @@ export function vitalsDamageAmount(event: EntityVitalsChangedEvent): number | nu
   return lost > 0 ? lost : null
 }
 
+const TRIBULATION_ART_WIDTH = 1672
+const TRIBULATION_ART_HEIGHT = 941
+
+// Depth contract: rect bg < storm-far < dais < player < storm-near <
+// vignette < lightning(10)/damage text < title(21). Runtime
+// characters, strikes, meters and results stay gameplay-owned above.
+const TRIBULATION_DEPTH = {
+  stormFar: 1,
+  dais: 2,
+  player: 3,
+  stormNear: 4,
+  vignette: 5,
+  title: 21,
+} as const
+
 export class TribulationScene extends Phaser.Scene {
   private player?: Phaser.GameObjects.Sprite
-  private viewportFrame?: Phaser.GameObjects.NineSlice
+  private envImages: Phaser.GameObjects.Image[] = []
   private eventBus?: EventBus
   private lightningHandler = () => this.strikeLightning()
   private vitalsHandler = (event: EntityVitalsChangedEvent) => {
-    // Bất Tử Thể có thể cứu player sau event killed=true (CombatSystem
-    // phát event hiệu chỉnh killed=false ngay sau guard) — alpha phải
-    // phản ánh trạng thái CUỐI của event, không chỉ chiều chết.
+    // Bat Tu The co the cuu player sau event killed=true (CombatSystem
+    // phat event hieu chinh killed=false ngay sau guard) - alpha phai
+    // phan anh trang thai CUOI cua event, khong chi chieu chet.
     if (event.entityId === 'player') this.player?.setAlpha(event.killed ? 0.35 : 1)
     const damage = vitalsDamageAmount(event)
     if (damage !== null) this.showDamage(damage)
   }
   private resizeHandler = (gameSize: ResizeSize) => {
-    this.viewportFrame?.setSize(Math.max(0, gameSize.width - 24), Math.max(0, gameSize.height - 24))
+    this.layoutEnvironment(gameSize.width, gameSize.height)
   }
   private shutdownHandler = () => {
     this.scale.off('resize', this.resizeHandler)
-    this.viewportFrame = undefined
+    this.envImages = []
     this.unsubscribe()
   }
 
@@ -94,19 +109,29 @@ export class TribulationScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale
     this.add.rectangle(width / 2, height / 2, width, height, 0x050812)
-    this.viewportFrame = addInkWashNineSlice(this, {
-      id: 'frame-xl-ceremony',
-      x: 12,
-      y: 12,
-      width: width - 24,
-      height: height - 24,
-      origin: 0,
-    })
-    this.add.circle(width / 2, height * 0.62, Math.min(width, height) * 0.2, 0x273064, 0.35)
-      .setStrokeStyle(3, 0x879cff, 0.7)
+
+    // Huyen Kim tribulation-environment-kit (stable art, A10 catalog-fed):
+    // storm-far + dais sit behind the runtime character, storm-near and
+    // the sky vignette ride above it. The placeholder ink dais circle is
+    // retired - the stable dais is the canonical substrate now.
+    for (const assetId of TRIBULATION_SCENE_ASSET_IDS) {
+      const key = `hk-${assetId}`
+      if (!this.textures.exists(key)) continue
+      const image = this.add.image(0, 0, key)
+      if (assetId === 'tribulation-storm-far') image.setDepth(TRIBULATION_DEPTH.stormFar).setOrigin(0.5, 0)
+      else if (assetId === 'tribulation-dais') image.setDepth(TRIBULATION_DEPTH.dais).setOrigin(0.5, 1)
+      else if (assetId === 'tribulation-storm-near') image.setDepth(TRIBULATION_DEPTH.stormNear).setOrigin(0.5, 0)
+      else image.setDepth(TRIBULATION_DEPTH.vignette).setOrigin(0.5, 0.5)
+      this.envImages.push(image)
+    }
+    this.layoutEnvironment(width, height)
+
+    // No chrome frame: the tribulation scene is route-owned full-bleed
+    // storm vista (spec 14), not a scroll - a ceremony frame around the
+    // viewport read as a stray ring.
     this.add.text(width / 2, height * 0.17, 'THIÊN KIẾP', {
       fontFamily: 'serif', fontSize: '32px', color: '#ddecff', letterSpacing: 8,
-    }).setOrigin(0.5).setShadow(0, 0, '#72bfff', 16)
+    }).setOrigin(0.5).setShadow(0, 0, '#72bfff', 16).setDepth(TRIBULATION_DEPTH.title)
 
     if (ENTITY_ART_MODE === 'animated') {
       if (!this.anims.exists(CULTIVATE_KEY)) {
@@ -121,6 +146,7 @@ export class TribulationScene extends Phaser.Scene {
       this.player = this.add.sprite(width / 2, height * 0.62, CULTIVATE_KEY, 'frame_000.png')
         .play(CULTIVATE_KEY)
         .setDisplaySize(128, 132)
+        .setDepth(TRIBULATION_DEPTH.player)
     } else {
       // Static mode - the profile's cultivate PNG; size from the live source
       // image so a differently-shaped artwork never distorts.
@@ -132,6 +158,7 @@ export class TribulationScene extends Phaser.Scene {
       const textureKey = getCultivateTexture(profile, cultivationWay).key
 
       this.player = this.add.sprite(width / 2, height * 0.62, textureKey)
+        .setDepth(TRIBULATION_DEPTH.player)
 
       const source = this.textures.get(textureKey).getSourceImage()
       const sourceW = 'width' in source ? Number(source.width) : 128
@@ -157,6 +184,30 @@ export class TribulationScene extends Phaser.Scene {
     })
 
     this.events.once('shutdown', this.shutdownHandler)
+  }
+
+  /**
+   * Environment layout (stable art contract): storm bands contain-fit the
+   * canvas width anchored north; the dais contain-fits width anchored
+   * south; the vignette cover-fits the whole canvas centered.
+   */
+  private layoutEnvironment(width: number, height: number): void {
+    const widthScale = width / TRIBULATION_ART_WIDTH
+    const coverScale = Math.max(widthScale, height / TRIBULATION_ART_HEIGHT)
+
+    for (const image of this.envImages) {
+      const key = image.texture.key
+      if (key === 'hk-tribulation-sky-vignette') {
+        image.setDisplaySize(TRIBULATION_ART_WIDTH * coverScale, TRIBULATION_ART_HEIGHT * coverScale)
+        image.setPosition(width / 2, height / 2)
+      } else if (key === 'hk-tribulation-dais') {
+        image.setDisplaySize(TRIBULATION_ART_WIDTH * widthScale, TRIBULATION_ART_HEIGHT * widthScale)
+        image.setPosition(width / 2, height)
+      } else {
+        image.setDisplaySize(TRIBULATION_ART_WIDTH * widthScale, TRIBULATION_ART_HEIGHT * widthScale)
+        image.setPosition(width / 2, 0)
+      }
+    }
   }
 
   private strikeLightning() {

@@ -5,9 +5,9 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 
-// Action Playback Task 3 — equivalence tests cho split
-// resolveActorTurn() → declareActorAction() / applyActionImpact() /
-// completeAction(). Mọi test pin hành vi PHẢI GIỮ NGUYÊN của wrapper cũ.
+// Action Playback Task 3 - equivalence tests cho split
+// resolveActorTurn() -> declareActorAction() / applyActionImpact() /
+// completeAction(). Moi test pin hanh vi PHAI GIU NGUYEN cua wrapper cu.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -20,7 +20,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   } as CombatEntity
 
   // ARCH-002 (M7 R1): refreshParticipantStats re-derives entity.stats from
-  // baseStats and reconciles entity.maxHp from stats.maxHp — mirror an
+  // baseStats and reconciles entity.maxHp from stats.maxHp - mirror an
   // injected stats override into the base and carry the declared vitals
   // ceiling into both views or the first refresh reverts/clamps it.
   entity.baseStats = (overrides.baseStats ?? overrides.stats ?? entity.baseStats) as CombatEntity['baseStats']
@@ -156,7 +156,7 @@ describe('TurnBattleSystem — playback edge cases (Remediation Task 7)', () => 
     const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
 
-    // Target chết NGAY TRƯỚC impact (ví dụ DoT/respawn giữa chừng).
+    // Target chet NGAY TRUOC impact (vi du DoT/respawn giua chung).
     enemyEntity.currentHp = 0
     enemyEntity.alive = false
 
@@ -189,9 +189,9 @@ describe('TurnBattleSystem — playback edge cases (Remediation Task 7)', () => 
     const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
 
-    // Miss deterministic: đè rollHit qua prototype của CombatSystem —
-    // private method nhưng runtime JS không khóa; truy cập qua prototype
-    // instance lấy từ constructor mới tương đương (cùng class).
+    // Miss deterministic: de rollHit qua prototype cua CombatSystem -
+    // private method nhung runtime JS khong khoa; truy cap qua prototype
+    // instance lay tu constructor moi tuong duong (cung class).
     const probe = new CombatSystem(new EventBus())
     const proto = Object.getPrototypeOf(probe) as unknown as Record<string, unknown>
     const originalRollHit = proto.rollHit as ((source: unknown, target: unknown) => boolean) | undefined
@@ -207,10 +207,10 @@ describe('TurnBattleSystem — playback edge cases (Remediation Task 7)', () => 
       const { targetIds } = system.applyActionImpact(battle, declared)
       const result = system.completeAction(battle, actor, declared, targetIds)
 
-      expect(hitRolled).toBe(true) // rollHit thật sự được gọi — mock đúng chỗ
+      expect(hitRolled).toBe(true) // rollHit that su duoc goi - mock dung cho
 
-      // Miss → 0 damage nhưng battle vẫn tiến hành (turn elapsed, state
-      // fighting — playback không kẹt vì một đòn miss).
+      // Miss -> 0 damage nhung battle van tien hanh (turn elapsed, state
+      // fighting - playback khong ket vi mot don miss).
       expect(enemyEntity.currentHp).toBe(hpBefore)
       expect(result.state).toBe('fighting')
       expect(battle.totalTurnsElapsed).toBe(1)
@@ -229,7 +229,7 @@ describe('TurnBattleSystem — playback edge cases (Remediation Task 7)', () => 
     const declared = system.declareActorAction(battle, actor)
     const { targetIds } = system.applyActionImpact(battle, declared)
 
-    // Battle reset giữa chừng (stage restart) — log/turns reset về 0.
+    // Battle reset giua chung (stage restart) - log/turns reset ve 0.
     battle.totalTurnsElapsed = 0
     battle.log = []
 

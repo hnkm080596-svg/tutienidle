@@ -1,10 +1,10 @@
-﻿// Projection layer 2.5D â€” test THUáº¦N TOÃN khÃ´ng cáº§n Phaser/canvas:
-// - round-trip gridToScreen âˆ˜ screenToGrid pháº£i lÃ  Ä‘á»“ng nháº¥t trÃªn toÃ n
-//   domain lÆ°á»›i (ká»ƒ cáº£ cá»™t spawn offscreen 16 vÃ  biÃªn Â±0.5).
-// - resize pháº£i giá»¯ tÃ­nh nghá»‹ch Ä‘áº£o vÃ  bÃ¡m Ä‘Ãºng insets viewport má»›i.
-// - 'flat' pháº£i tÃ¡i táº¡o CHÃNH XÃC cÃ´ng thá»©c legacy cá»§a CombatScene cÅ©
-//   (cellSize = min((w-24)/COLS, availH/ROWS)...) â€” Ä‘Ã¢y lÃ  báº£o chá»©ng
-//   parity cho renderer cÅ© sau feature flag.
+﻿// Projection layer 2.5D - test THUAN TOAN khong can Phaser/canvas:
+// - round-trip gridToScreen o screenToGrid phai la dong nhat tren toan
+//   domain luOi (ke ca cot spawn offscreen 16 va bien +/-0.5).
+// - resize phai giu tinh nghIch dao va bam dung insets viewport mOi.
+// - 'flat' phai tai tao CHINH XAC cong thuc legacy cua CombatScene cu
+//   (cellSize = min((w-24)/COLS, availH/ROWS)...) - day la bao chung
+//   parity cho renderer cu sau feature flag.
 import { describe, expect, it } from 'vitest'
 import {
   GRID_COLUMN_COUNT,
@@ -54,14 +54,14 @@ describe('BattleGridProjection â€” perspective', () => {
     const farCenter = projection.gridToScreen(0, 0)
     const q = 1 + PERSPECTIVE_STRENGTH
 
-    // HÃ ng gáº§n náº±m DÆ¯á»šI hÃ ng xa trÃªn mÃ n hÃ¬nh.
+    // HA ng gaosecn nao+/-m DAE-a"sI hA ng xa trAan mA n hA!nh.
     expect(nearCenter.y).toBeGreaterThan(farCenter.y)
     expect(farCenter.y).toBeGreaterThanOrEqual(VIEWPORT.topInset)
     expect(nearCenter.y).toBeLessThanOrEqual(VIEWPORT.height - VIEWPORT.bottomInset)
 
-    // Scale theo cÃ´ng thá»©c Ä‘Ã³ng: 1/denom(v)Â² vá»›i v = (row+0.5)/ROWS â€”
-    // tÃ¢m hÃ ng cuá»‘i v=0.95, tÃ¢m hÃ ng Ä‘áº§u v=0.05; mÃ©p dÆ°á»›i band (v=1)
-    // chuáº©n hÃ³a Ä‘Ãºng báº±ng 1.
+    // Scale theo cong thuc dong: 1/denom(v)2 vOi v = (row+0.5)/ROWS -
+    // tam hang cuoi v=0.95, tam hang dau v=0.05; mep duOi band (v=1)
+    // chuan hoa dung bang 1.
     expect(nearCenter.scale).toBeCloseTo(1 / (q + (1 - q) * 0.95) ** 2, 9)
     expect(farCenter.scale).toBeCloseTo(1 / (q + (1 - q) * 0.05) ** 2, 9)
     expect(nearCenter.scale).toBeGreaterThan(farCenter.scale)
@@ -81,7 +81,7 @@ describe('BattleGridProjection â€” perspective', () => {
 
     expect(nearWidth).toBeGreaterThan(farWidth * 1.5)
 
-    // Cáº¡nh gáº§n khÃ­t viewport trá»« margin hai bÃªn.
+    // Canh gan khit viewport tru margin hai ben.
     expect(nearWidth).toBeLessThanOrEqual(VIEWPORT.width - PERSPECTIVE_SIDE_MARGIN * 2 + 1e-6)
   })
 
@@ -94,7 +94,7 @@ describe('BattleGridProjection â€” perspective', () => {
     expect(nearCell.width).toBeGreaterThan(farCell.width)
     expect(nearCell.height).toBeGreaterThan(farCell.height)
 
-    // Tá»‰ lá»‡ h/w cá»§a cell KHÃ”NG Ä‘á»•i theo hÃ ng (nÃ©n phá»‘i cáº£nh Ä‘á»“ng nháº¥t).
+    // Ti le h/w cua cell KHONG doi theo hang (nen phoi canh dong nhat).
     const nearRatio = nearCell.height / nearCell.width
     const farRatio = farCell.height / farCell.width
 
@@ -112,8 +112,8 @@ describe('BattleGridProjection â€” perspective', () => {
   })
 
   it('bá»‘ cá»¥c "ná»­a trÃªn phong cáº£nh, ná»­a dÆ°á»›i con Ä‘Æ°á»ng" (clamp thÃ­ch á»©ng á»Ÿ mÃ n tháº¥p)', () => {
-    // VIEWPORT 720p: bÄƒng trá»‘ng 570px â€” desired scenery 285 nhÆ°ng road chá»‰
-    // cÃ²n 285 < min 320 â‡’ clamp vá» scenery 250 / road 320.
+    // VIEWPORT 720p: bang trong 570px - desired scenery 285 nhung road chi
+    // con 285 < min 320 => clamp ve scenery 250 / road 320.
     const projection = createBattleGridProjection('perspective', VIEWPORT)
     const bounds = projection.bounds()
 
@@ -121,7 +121,7 @@ describe('BattleGridProjection â€” perspective', () => {
     expect(bounds.bottom).toBe(VIEWPORT.height - VIEWPORT.bottomInset)
     expect(bounds.bottom - bounds.top).toBe(PERSPECTIVE_MIN_ROAD_HEIGHT)
 
-    // MÃ n Ä‘á»§ cao: Ä‘Ãºng 50/50 thuáº§n.
+    // Man du cao: dung 50/50 thuan.
     const tallProjection = createBattleGridProjection('perspective', {
       width: 1600,
       height: 1000,
@@ -137,20 +137,20 @@ describe('BattleGridProjection â€” perspective', () => {
       9,
     )
 
-    // Máº·t Ä‘Æ°á»ng luÃ´n náº±m TRONG bÄƒng trá»‘ng, khÃ´ng trÃ n lÃªn HUD.
+    // Mat duong luon nam TRONG bang trong, khong tran len HUD.
     expect(bounds.top).toBeGreaterThanOrEqual(VIEWPORT.topInset)
   })
 
   it('adaptive scenery: mÃ n tháº¥p giá»¯ road tá»‘i thiá»ƒu, mÃ n cao giá»¯ 50/50', () => {
-    // BÄƒng trá»‘ng 470px â€” desired scenery 235 nhÆ°ng road chá»‰ cÃ²n 235 < min
-    // 320 â‡’ clamp: scenery 150, road Ä‘á»§ 320.
+    // Bang trong 470px - desired scenery 235 nhung road chi con 235 < min
+    // 320 => clamp: scenery 150, road du 320.
     const shortViewport = { width: 1280, height: 640, topInset: 100, bottomInset: 70 }
     const shortGeometry = computePerspectiveGeometry(shortViewport)
 
     expect(shortGeometry.roadHeight).toBe(PERSPECTIVE_MIN_ROAD_HEIGHT)
     expect(shortGeometry.sceneryHeight).toBe(470 - PERSPECTIVE_MIN_ROAD_HEIGHT)
 
-    // BÄƒng trá»‘ng dÆ° Ä‘á»‹a (850px) â€” 50/50 chuáº©n, chÆ°a cháº¡m clamp.
+    // Bang trong du dIa (850px) - 50/50 chuan, chua cham clamp.
     const tallGeometry = computePerspectiveGeometry({
       width: 1600,
       height: 1000,
@@ -161,7 +161,7 @@ describe('BattleGridProjection â€” perspective', () => {
     expect(tallGeometry.roadHeight).toBeCloseTo(850 * (1 - PERSPECTIVE_SCENERY_RATIO), 9)
     expect(tallGeometry.sceneryHeight).toBeCloseTo(850 * PERSPECTIVE_SCENERY_RATIO, 9)
 
-    // Projection tiÃªu thá»¥ geometry: road band khá»›p clamp.
+    // Projection tieu thu geometry: road band khOp clamp.
     const shortProjection = createBattleGridProjection('perspective', shortViewport)
     const shortBounds = shortProjection.bounds()
 
@@ -184,23 +184,23 @@ describe('BattleGridProjection â€” perspective', () => {
     const roadY = bounds.top + (bounds.bottom - bounds.top) * 0.75
     const skyY = VIEWPORT.topInset + (bounds.top - VIEWPORT.topInset) / 2
 
-    // Giá»¯a sÃ¢n.
+    // Giua san.
     expect(projection.containsScreenPoint(VIEWPORT.width / 2, roadY)).toBe(true)
 
-    // VÃ¹ng phong cáº£nh giá»¯a 2 HUD (khÃ´ng Ä‘Æ°á»£c "káº¹t" vá» hÃ ng biÃªn).
+    // Vung phong canh giua 2 HUD (khong duoc "ket" ve hang bien).
     expect(projection.containsScreenPoint(VIEWPORT.width / 2, skyY)).toBe(false)
 
-    // TrÃªn HUD / dÆ°á»›i sÃ¢n.
+    // Tren HUD / duOi san.
     expect(projection.containsScreenPoint(VIEWPORT.width / 2, VIEWPORT.topInset - 10)).toBe(false)
     expect(projection.containsScreenPoint(VIEWPORT.width / 2, VIEWPORT.height - 5)).toBe(false)
 
-    // NgoÃ i cáº¡nh gáº§n táº¡i hÃ ng cuá»‘i (trapezoid thu háº¹p vá» xa).
+    // Ngoai canh gan tai hang cuoi (trapezoid thu hep ve xa).
     const nearHalfWidth = (VIEWPORT.width - PERSPECTIVE_SIDE_MARGIN * 2) / 2
     expect(
       projection.containsScreenPoint(VIEWPORT.width / 2 + nearHalfWidth + 8, bounds.bottom - 1),
     ).toBe(false)
 
-    // Trong lÆ°á»›i á»Ÿ hÃ ng xa (cáº¡nh háº¹p) váº«n true.
+    // Trong luOi o hang xa (canh hep) van true.
     const farHalfWidth = nearHalfWidth / (1 + PERSPECTIVE_STRENGTH) ** 2
     expect(
       projection.containsScreenPoint(VIEWPORT.width / 2 + farHalfWidth - 4, bounds.top + 1),
@@ -300,9 +300,9 @@ describe('rightInset â€” reserves screen space on the right without changin
     expect(boundsWithInset.right).toBeLessThanOrEqual(1600 - 400)
     expect(boundsWithInset.right).toBeLessThan(boundsNoInset.right)
 
-    // bounds().centerX pháº£i pháº£n Ã¡nh khoáº£ng [left, right] ÄÃƒ co/dá»‹ch â€”
-    // KHÃ”NG Ä‘Æ°á»£c bÃ¡o tÃ¢m full-viewport (regression Important #1: centerX
-    // trÆ°á»›c Ä‘Ã¢y tÃ­nh tháº³ng tá»« viewport.width, bá» qua rightInset).
+    // bounds().centerX phai phan anh khoang [left, right] DA co/dIch -
+    // KHONG duoc bao tam full-viewport (regression Important #1: centerX
+    // truOc day tinh thang tu viewport.width, bo qua rightInset).
     expect(boundsWithInset.centerX).toBeCloseTo(
       (boundsWithInset.left + boundsWithInset.right) / 2,
       9,
@@ -319,11 +319,11 @@ describe('rightInset â€” reserves screen space on the right without changin
 
     expect(pointWithInset.x).toBeLessThan(pointNoInset.x)
 
-    // Important #3: Ä‘iá»ƒm giá»¯a lá»‡ch KHÃ”NG chá»©ng minh nearWidth co láº¡i â€” chá»‰
-    // cáº§n centerX dá»‹ch trÃ¡i Ä‘Ã£ Ä‘á»§ lÃ m x giáº£m á»Ÿ cá»™t 8/16 (há»‡ sá»‘ +0.03125).
-    // Äo Sáº¢I NGANG giá»¯a 2 cá»™t biÃªn (0 vÃ  15) cÃ¹ng hÃ ng: náº¿u chá»‰ centerX
-    // dá»‹ch mÃ  nearWidth KHÃ”NG co (regression giáº£ Ä‘á»‹nh trong review), span
-    // nÃ y giá»¯ nguyÃªn. Pháº£i THU Háº¸P tháº­t sá»± khi rightInset cÃ³ máº·t.
+    // Important #3: diem giua lech KHONG chung minh nearWidth co lai - chi
+    // can centerX dIch trai da du lam x giam o cot 8/16 (he so +0.03125).
+    // Do SAI NGANG giua 2 cot bien (0 va 15) cung hang: neu chi centerX
+    // dIch ma nearWidth KHONG co (regression gia dInh trong review), span
+    // nay giu nguyen. Phai THU HEP that su khi rightInset co mat.
     const spanNoInset = Math.abs(
       noInset.gridToScreen(GRID_ROW_COUNT - 1, GRID_COLUMN_COUNT - 1).x -
         noInset.gridToScreen(GRID_ROW_COUNT - 1, 0).x,
@@ -335,10 +335,10 @@ describe('rightInset â€” reserves screen space on the right without changin
 
     expect(spanWithInset).toBeLessThan(spanNoInset)
 
-    // Khá»›p chÃ­nh xÃ¡c cÃ´ng thá»©c ká»³ vá»ng: nearWidth = availableWidth - 2*margin,
-    // span Ä‘o á»Ÿ row GRID_ROW_COUNT-1 nÃªn cÃ²n nhÃ¢n thÃªm scale(v=0.95) â€” chÆ°a
-    // = 1 (chá»‰ = 1 Ä‘Ãºng táº¡i mÃ©p dÆ°á»›i band v=1, xem test "foot anchor" phÃ­a
-    // trÃªn) â€” pháº£i nhÃ¢n Ä‘Ãºng há»‡ sá»‘ scale má»›i khá»›p gridToScreen tháº­t.
+    // KhOp chinh xac cong thuc ky vong: nearWidth = availableWidth - 2*margin,
+    // span do o row GRID_ROW_COUNT-1 nen con nhan them scale(v=0.95) - chua
+    // = 1 (chi = 1 dung tai mep duOi band v=1, xem test "foot anchor" phia
+    // tren) - phai nhan dung he so scale mOi khOp gridToScreen that.
     const q = 1 + PERSPECTIVE_STRENGTH
     const v = (GRID_ROW_COUNT - 1 + 0.5) / GRID_ROW_COUNT
     const scaleAtNearRow = 1 / (q + (1 - q) * v) ** 2
@@ -359,9 +359,9 @@ describe('rightInset â€” reserves screen space on the right without changin
 
 describe('degenerate rightInset â€” width kháº£ dá»¥ng gáº§n/báº±ng 0 váº«n ra hÃ¬nh há»c há»£p lá»‡', () => {
   it('flat: rightInset gáº§n báº±ng viewport width váº«n cho cellSizePx dÆ°Æ¡ng, há»¯u háº¡n', () => {
-    // availableWidth = 1600 - 1590 = 10 < 24 â‡’ (availableWidth - 24) Ã‚M
-    // trÆ°á»›c khi cÃ³ clamp Math.max(1, ...) (Important #2) â€” cellSizePx sáº½
-    // ra Ã¢m vÃ  Ä‘áº£o trá»¥c x thay vÃ¬ co lÆ°á»›i há»£p lÃ½.
+    // availableWidth = 1600 - 1590 = 10 < 24 => (availableWidth - 24) AM
+    // truOc khi co clamp Math.max(1, ...) (Important #2) - cellSizePx se
+    // ra am va dao truc x thay vi co luOi hop ly.
     const projection = createBattleGridProjection('flat', {
       width: 1600,
       height: 900,
@@ -376,8 +376,8 @@ describe('degenerate rightInset â€” width kháº£ dá»¥ng gáº§n/báº
     expect(cell.height).toBeGreaterThan(0)
     expect(Number.isFinite(cell.height)).toBe(true)
 
-    // Trá»¥c x KHÃ”NG Ä‘Æ°á»£c Ä‘áº£o ngÆ°á»£c: cá»™t tÄƒng â‡’ x pháº£i tÄƒng (hoáº·c giá»¯
-    // nguyÃªn á»Ÿ size sÃ n 1px), khÃ´ng bao giá» giáº£m.
+    // Truc x KHONG duoc dao nguoc: cot tang => x phai tang (hoac giu
+    // nguyen o size san 1px), khong bao gio giam.
     const left = projection.gridToScreen(0, 0)
     const right = projection.gridToScreen(0, GRID_COLUMN_COUNT - 1)
 
@@ -446,9 +446,9 @@ describe('BattleGridProjection â€” flat (parity renderer cÅ©)', () => {
 
     const point = projection.gridToScreen(4, 7)
 
-    // worldToScreenX(x) cÅ© = gridLeft + (x + 0.5) * cellSize.
+    // worldToScreenX(x) cu = gridLeft + (x + 0.5) * cellSize.
     expect(point.x).toBeCloseTo(expectedLeft + (7 + 0.5) * expectedCellSize, 9)
-    // laneRowCenterY[row] cÅ© = gridTop + cellSize * (row + 0.5).
+    // laneRowCenterY[row] cu = gridTop + cellSize * (row + 0.5).
     expect(point.y).toBeCloseTo(expectedTop + (4 + 0.5) * expectedCellSize, 9)
     expect(point.scale).toBe(1)
 
@@ -471,16 +471,16 @@ describe('BattleGridProjection â€” flat (parity renderer cÅ©)', () => {
       }
     }
 
-    // TÃ¢m Ã´ (r,c) quy ngÆ°á»£c pháº£i rÆ¡i Ä‘Ãºng lane r / column c khi Ä‘i qua
-    // CHÃNH helpers cá»§a core (getLaneFromWorldY/getColumnFromWorldX) â€”
-    // cÃ¹ng code path mÃ  onPointerMove sáº½ dÃ¹ng.
+    // Tam o (r,c) quy nguoc phai roi dung lane r / column c khi di qua
+    // CHINH helpers cua core (getLaneFromWorldY/getColumnFromWorldX) -
+    // cung code path ma onPointerMove se dung.
     const center = projection.gridToScreen(3, 6)
     const hit = projection.screenToGrid(center.x, center.y)
 
     expect(getLaneFromWorldY(hit.row)).toBe(3)
     expect(getColumnFromWorldX(hit.column)).toBe(6)
 
-    // Lá»‡ch ná»­a cell trong Ã´ váº«n thuá»™c column Ä‘Ã³ (occupancy semantics).
+    // Lech nua cell trong o van thuoc column do (occupancy semantics).
     const offCenter = projection.screenToGrid(
       center.x + 0.3 * projection.cellSizeAt(0).width,
       center.y,
@@ -532,11 +532,11 @@ describe('BattleGridProjection â€” configurable grid size (Battlefield Pers
     expect(small.rows).toBe(6)
     expect(small.columns).toBe(6)
 
-    // Hàng gần (row 5) phải có scale LỚN HƠN hàng xa (row 0) — xác nhận
-    // công thức đọc this.rows (6) chứ không phải hằng số 10 cứng: nếu đọc
-    // 10 thì v(5) = 0.55 thay vì 0.9167, scale phân bố hoàn toàn khác.
-    // (Lưu ý: scale chỉ đạt đúng 1 tại mép dưới v=1 — tâm ô cuối
-    // v = 5.5/6 ≈ 0.917 nên scale < 1, đúng theo công thức blend combat.)
+    // Hang gan (row 5) phai co scale LON HON hang xa (row 0) - xac nhan
+    // cong thuc doc this.rows (6) chu khong phai hang so 10 cung: neu doc
+    // 10 thi v(5) = 0.55 thay vi 0.9167, scale phan bo hoan toan khac.
+    // (Luu y: scale chi dat dung 1 tai mep duoi v=1 - tam o cuoi
+    // v = 5.5/6 ~ 0.917 nen scale < 1, dung theo cong thuc blend combat.)
     const near = small.gridToScreen(5, 0)
     const far = small.gridToScreen(0, 0)
 
@@ -558,9 +558,9 @@ describe('BattleGridProjection â€” configurable grid size (Battlefield Pers
     const customFloor = computePerspectiveGeometry(shortViewport, 140)
 
     expect(customFloor.roadHeight).toBeGreaterThanOrEqual(140)
-    // sÃ n máº·c Ä‘á»‹nh (320) trÃªn viewport 480px cao buá»™c roadHeight sÃ¡t má»©c
-    // sÃ n 320 â€” chá»©ng minh tham sá»‘ minRoadHeight THá»°C Sá»° Ä‘á»•i káº¿t quáº£,
-    // khÃ´ng pháº£i no-op.
+    // san mac dInh (320) tren viewport 480px cao buoc roadHeight sat muc
+    // san 320 - chung minh tham so minRoadHeight THUC SU doi ket qua,
+    // khong phai no-op.
     expect(defaultFloor.roadHeight).not.toBeCloseTo(customFloor.roadHeight, 0)
   })
 
@@ -568,10 +568,10 @@ describe('BattleGridProjection â€” configurable grid size (Battlefield Pers
     const shortViewport = { width: 420, height: 480, topInset: 0, bottomInset: 0 }
     const projection = createBattleGridProjection('perspective', shortViewport, 6, 6, 140)
 
-    // bounds().top ≈ horizonY — với sàn THẤP hơn (140 < 320), scenery
-    // được chiếm nhiều hơn trước khi chạm sàn → horizonY CAO hơn (số lớn
-    // hơn = thấp hơn trên màn hình). Ngược chiều với sàn 320 buộc
-    // horizonY sát đỉnh (scenery nén).
+    // bounds().top ~ horizonY - voi san THAP hon (140 < 320), scenery
+    // duoc chiem nhieu hon truoc khi cham san -> horizonY CAO hon (so lon
+    // hon = thap hon tren man hinh). Nguoc chieu voi san 320 buoc
+    // horizonY sat dinh (scenery nen).
     const defaultFloorProjection = createBattleGridProjection('perspective', shortViewport, 6, 6)
 
     expect(projection.bounds().top).toBeGreaterThan(defaultFloorProjection.bounds().top)

@@ -1,7 +1,7 @@
-// EnemySpawnPlacement — pure enemy spawn position resolver, resolved
-// inside ENEMY_SIDE_REGION (Combat Art Pipeline spec §6/§7, 2026-09-05).
+// EnemySpawnPlacement - pure enemy spawn position resolver, resolved
+// inside ENEMY_SIDE_REGION (Combat Art Pipeline spec sec6/sec7, 2026-09-05).
 // Boss ALWAYS takes the region center. Regular enemies land on one of
-// the 9 standing slots (standing-slot model, 2026-09-07) — multiple
+// the 9 standing slots (standing-slot model, 2026-09-07) - multiple
 // enemies MAY share a cell across DIFFERENT waves; the resolver never
 // returns null.
 //
@@ -24,7 +24,7 @@ import {
 export interface EnemySpawnPlacementInput {
   isBoss: boolean
 
-  /** External RNG (Math.random or seeded) — keeps tests deterministic. */
+  /** External RNG (Math.random or seeded) - keeps tests deterministic. */
   random: () => number
 }
 

@@ -1,10 +1,10 @@
 import { expect, test } from './fixtures'
 
 /**
- * UI/UX QA remediation (Task 10, 2026-09-07) — reduced motion: với
- * `prefers-reduced-motion: reduce`, các animation CSS chính (loading
- * pulse, game-button spinner, realm aura, menu glow) phải đứng yên
- * (animation-duration ~0 / không chạy). Kiểm tra qua getComputedStyle.
+ * UI/UX QA remediation (Task 10, 2026-09-07) - reduced motion: voi
+ * `prefers-reduced-motion: reduce`, cac animation CSS chinh (loading
+ * pulse, game-button spinner, realm aura, menu glow) phai dung yen
+ * (animation-duration ~0 / khong chay). Kiem tra qua getComputedStyle.
  */
 test.describe('Reduced motion', () => {
   test('animations disabled under prefers-reduced-motion: reduce', async ({ page }) => {
@@ -12,7 +12,7 @@ test.describe('Reduced motion', () => {
 
     await page.goto('/')
 
-    // LoadingScreen pulse (hiện trong intro — trước auth).
+    // LoadingScreen pulse (hien trong intro - truoc auth).
     const pulse = page.locator('.loading-screen__pulse')
     const pulseVisible = await pulse.isVisible({ timeout: 5_000 }).catch(() => false)
 
@@ -21,7 +21,7 @@ test.describe('Reduced motion', () => {
       expect(animationName, 'loading pulse phải tắt animation khi reduce').toBe('none')
     }
 
-    // Auth screen vẫn hiện bình thường (không bị reduced-motion chặn).
+    // Auth screen van hien binh thuong (khong bi reduced-motion chan).
     await expect(page.getByTestId('auth-screen')).toBeVisible({ timeout: 15_000 })
   })
 })

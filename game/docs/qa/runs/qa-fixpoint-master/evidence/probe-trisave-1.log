@@ -1,0 +1,63 @@
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (10 tests | 2 failed) 25ms
+     × usePillDetailed rejects a dormant-family pill without consuming it 9ms
+     × sword_pathway combat build falls back to the generic kit 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant-family pills on a carried save stay inert (F-TRI-1) > usePillDetailed rejects a dormant-family pill without consuming it
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:131:23
+    129|     const result = gameManager.pillOps.usePillDetailed('phi_van_dan_mo…
+    130|
+    131|     expect(result.ok).toBe(false)
+       |                       ^
+    132|     expect(result.reason).toBe('scope_hidden')
+    133|     expect(gameManager.pillBag.getAmount('phi_van_dan_mortal')).toBe(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: a way_out_of_scope save must not execute its dormant kit (F-TRI-2) > sword_pathway combat build falls back to the generic kit
+AssertionError: expected { id: 'tram', cooldownTurns: +0, …(2) } to be { id: 'generic_physical', …(3) } // Object.is equality
+
+- Expected
++ Received
+
+@@ -2,10 +2,10 @@
+    "cooldownTurns": 0,
+    "damage": {
+      "kind": "physical",
+      "multiplier": 1,
+    },
+-   "id": "generic_physical",
++   "id": "tram",
+    "targeting": {
+      "shape": "single",
+    },
+  }
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:194:29
+    192|     // Dormant-way kit must not execute - same ACCESS seam class as the
+    193|     // companion/formation gating below it in resolveCombatBuild.
+    194|     expect(build.kit.basic).toBe(GENERIC_PHYSICAL_BASIC)
+       |                             ^
+    195|     expect(build.kit.special).toBeUndefined()
+    196|     expect(build.kit.ultimate).toBeUndefined()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  00:03:11
+   Duration  1.90s (transform 1.40s, setup 262ms, import 1.47s, tests 25ms, environment 0ms)
+

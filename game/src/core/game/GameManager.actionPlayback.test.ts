@@ -8,9 +8,9 @@ import type { Skill } from '../skill/Skill'
 import { createDefaultPlayer } from '../player/Player'
 import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 
-// Action Playback Task 6 — GameManager presentation orchestration:
-// presentationActive=false (default) → hành vi cũ nguyên vẹn; true →
-// 5-phase state machine với 3 acknowledge methods.
+// Action Playback Task 6 - GameManager presentation orchestration:
+// presentationActive=false (default) -> hanh vi cu nguyen ven; true ->
+// 5-phase state machine voi 3 acknowledge methods.
 
 const ENEMY_STATS = {
   maxHp: 1_000_000,
@@ -19,7 +19,7 @@ const ENEMY_STATS = {
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
-  // Determinism fix (fix round 1) — see root-cause note in battleReady()
+  // Determinism fix (fix round 1) - see root-cause note in battleReady()
   // below. Guarantees the player's attack always hits this dummy.
   evasionRate: 0,
 }
@@ -88,7 +88,7 @@ function battleReady(): { gameManager: GameManager; combatSource: ManualClockSou
     combatSource.advance(COMBAT_STEP_SECONDS)
   }
 
-  // True root cause of the ~4/15 flake (fix round 1 — the previously
+  // True root cause of the ~4/15 flake (fix round 1 - the previously
   // reported diagnosis, "enemy spawn row randomized out of the player's
   // targeting row," does NOT hold: selectTarget() in TurnBattleSystem.ts
   // falls back to the nearest living opponent on ANY row when nobody
@@ -99,9 +99,9 @@ function battleReady(): { gameManager: GameManager; combatSource: ManualClockSou
   // call rolls `Math.random() < getHitChance(accuracy, evasion)` (see
   // combat/CombatSystem.ts, combat/Accuracy.ts). EnemyStatInput's default
   // evasionRate is 25 (EnemyStatInput.ts) against the player's default
-  // accuracyRating of 100 → hitChance = 100/125 = 0.80, i.e. a genuine ~20%
+  // accuracyRating of 100 -> hitChance = 100/125 = 0.80, i.e. a genuine ~20%
   // chance any single acknowledged attack MISSES and leaves currentHp
-  // unchanged — exactly the "expected 1000000 to be less than 1000000"
+  // unchanged - exactly the "expected 1000000 to be less than 1000000"
   // failure observed. ENEMY_STATS.evasionRate is now pinned to 0 above so
   // hitChance = 100/100 = 1.0 (always hits), making every single-attack
   // damage assertion in this file deterministic without touching Math.random
@@ -120,7 +120,7 @@ describe('GameManager — presentation orchestration (presentationActive=false d
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
-    // Speed 100 → ~10 ticks = 1 turn. Sau 20 ticks ≥ 1 turn đã resolve.
+    // Speed 100 -> ~10 ticks = 1 turn. Sau 20 ticks >= 1 turn da resolve.
     expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBeGreaterThan(0)
   })
 })
@@ -216,7 +216,7 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
     }
 
     // 5-phase machine: tick emit turn_ready (pendingReadyActor); Phaser ack
-    // → manual player actor rơi vào awaitedManualActor pause (Slice 7 flow).
+    // -> manual player actor roi vao awaitedManualActor pause (Slice 7 flow).
     const token = gameManager.getPendingPlaybackToken()!
     gameManager.acknowledgeTurnReady(token)
 
@@ -224,7 +224,7 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
 
     gameManager.submitTurnChoice('basic')
 
-    // Chưa complete — pendingDeclaredAction đang chờ acknowledgeActionImpact.
+    // Chua complete - pendingDeclaredAction dang cho acknowledgeActionImpact.
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
   })
 })
@@ -304,7 +304,7 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     const hpAfterFirst = enemy.currentHp
     const eventsAfterFirst = impactEvents.length
 
-    // Duplicate — pendingDeclaredAction đã null → no-op.
+    // Duplicate - pendingDeclaredAction da null -> no-op.
     gameManager.acknowledgeActionImpact(token)
     gameManager.acknowledgeActionImpact(token)
 
@@ -331,7 +331,7 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
 
     expect(turnsAfterFirst).toBe(1)
 
-    // Duplicate — pendingImpact đã null → no-op.
+    // Duplicate - pendingImpact da null -> no-op.
     gameManager.acknowledgeActionComplete(token)
     gameManager.acknowledgeActionComplete(token)
 
@@ -347,7 +347,7 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     const enemy = gameManager.getTurnBattle()!.enemies[0]!.entity
     const hpBefore = enemy.currentHp
 
-    // Chưa ack ready → không có pendingDeclaredAction → impact no-op.
+    // Chua ack ready -> khong co pendingDeclaredAction -> impact no-op.
     const token = gameManager.getPendingPlaybackToken()!
     gameManager.acknowledgeActionImpact(token)
 
@@ -360,11 +360,11 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     gameManager.setPresentationActive(true)
     for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
 
-    // Không truyền token — bị reject theo F5
+    // Khong truyen token - bi reject theo F5
     gameManager.acknowledgeTurnReady()
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
 
-    // Truyền token đúng — accept
+    // Truyen token dung - accept
     const token = gameManager.getPendingPlaybackToken()!
     gameManager.acknowledgeTurnReady(token)
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)

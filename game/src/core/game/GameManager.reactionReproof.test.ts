@@ -1,4 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 - companion + formation domains are scope-hidden in
+// the beta build. This file keeps exercising the dormant build's enabled
+// semantics by stubbing the scope flags open (dormant-system convention).
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { SKILLS } from '../../data/skill/Skills'
@@ -26,6 +36,7 @@ import type { ResolvedCombatOperation } from '../battle/contracts/operations'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from './__fixtures__/betaWaysUnlock'
 
 // Canonical-seals/reaction megaplan S4 (plan sec.11) -- the
 // PRODUCTION-DATA re-proof matrix. The fixture-level reaction suite
@@ -974,9 +985,7 @@ describe('S4 -- capability isolation', () => {
     // The REAL spell_pathway ritual: grants the element kit (the strict
     // authored-basic gate requires it) and leaves no aura -- the
     // visible path never carries van_phap_than_hoa.
-    expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player),
-    ).toBe(true)
+    commitSpellInitiationForTest(gameManager, player)
     gameManager.startBattleWithPlayer(player, spawnDummy())
 
     const battle = gameManager.getTurnBattle()!

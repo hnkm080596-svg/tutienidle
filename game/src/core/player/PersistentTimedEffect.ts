@@ -1,11 +1,11 @@
-// PersistentTimedEffect (2026-08-24, resource-professions-rework §5.4) —
-// modifier sống theo THỜI GIAN THỰC với deadline TUYỆT ĐỐI:
-// - `expiresAtMs` là AUTHORITY; mọi nơi khác (UI countdown) chỉ suy ra
-//   remaining — đóng game/offline vẫn làm thời hạn trôi qua.
-// - KHÔNG bao giờ vào CombatEntity.baseStats (tránh buff hết hạn mà stat
-//   bị đóng băng đến hết trận) — combat recompute nhận qua provider từ
-//   GameManager mỗi tick (xem BattleSystem.updateStatsFromModifiers()).
-// - Save trong player.persistentTimedEffects; load bỏ effect đã hết hạn.
+// PersistentTimedEffect (2026-08-24, resource-professions-rework sec5.4) -
+// modifier song theo THOI GIAN THUC voi deadline TUYET DOI:
+// - `expiresAtMs` la AUTHORITY; moi noi khac (UI countdown) chi suy ra
+//   remaining - dong game/offline van lam thoi han troi qua.
+// - KHONG bao gio vao CombatEntity.baseStats (tranh buff het han ma stat
+//   bi dong bang den het tran) - combat recompute nhan qua provider tu
+//   GameManager moi tick (xem BattleSystem.updateStatsFromModifiers()).
+// - Save trong player.persistentTimedEffects; load bo effect da het han.
 import type { StatModifier } from '../stats/StatCalculator'
 
 export interface PersistentTimedEffect {
@@ -14,8 +14,8 @@ export interface PersistentTimedEffect {
   sourceItemId: string
 
   /**
-   * Nhóm stack (vd 'pill_regen') — uống lại cùng nhóm: refresh deadline
-   * (max) và giữ giá trị mạnh hơn, KHÔNG cộng dồn (stack policy MVP).
+   * Nhom stack (vd 'pill_regen') - uong lai cung nhom: refresh deadline
+   * (max) va giu gia tri manh hon, KHONG cong don (stack policy MVP).
    */
   effectGroup?: string
 
@@ -28,10 +28,10 @@ export interface PersistentTimedEffect {
   modifiers: StatModifier[]
 
   /**
-   * economy-fixes-sinks-plan §3.2 B1 (2026-08-29) — Tụ Linh Trận: % tốc
-   * độ tu luyện tạm thời. KHÔNG phải StatModifier (tốc độ tu luyện không
-   * còn là stat pipeline — read riêng ở stores/player.ts's cultivate()).
-   * undefined = effect này không buff tu luyện.
+   * economy-fixes-sinks-plan sec3.2 B1 (2026-08-29) - Tu Linh Tran: % toc
+   * do tu luyen tam thoi. KHONG phai StatModifier (toc do tu luyen khong
+   * con la stat pipeline - read rieng o stores/player.ts's cultivate()).
+   * undefined = effect nay khong buff tu luyen.
    */
   cultivationSpeedPercent?: number
 }

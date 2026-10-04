@@ -3,10 +3,10 @@ import { expect, test } from './fixtures'
 import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
 
 /**
- * E2E lifecycle spec 2/3 (tech-debt-test-coverage-plan.md §3.3) — tạo
- * nhân vật qua UI thật (tên → 1 thiên phú → phân bổ 5 điểm) → vào Động
- * Phủ → mở Truyền Tống Trận (chọn màn) → Bắt Đầu → chờ kết quả
- * Thắng/Thua hiện trên DOM (không assert pixel canvas).
+ * E2E lifecycle spec 2/3 (tech-debt-test-coverage-plan.md sec3.3) - tao
+ * nhan vat qua UI that (ten -> 1 thien phu -> phan bo 5 diem) -> vao Dong
+ * Phu -> mo Truyen Tong Tran (chon man) -> Bat Dau -> cho ket qua
+ * Thang/Thua hien tren DOM (khong assert pixel canvas).
  */
 test.describe('Create character to combat', () => {
   test('creates a character, starts a stage battle and shows a result', async ({ page }) => {
@@ -16,12 +16,12 @@ test.describe('Create character to combat', () => {
 
     await createCharacterThroughUi(page, 'E2E Chiến Đầu')
 
-    // Đã vào Động Phủ: LeftPanel chrome + command wheel exists (DOM, not canvas).
+    // Da vao Dong Phu: LeftPanel chrome + command wheel exists (DOM, not canvas).
     await enterHome(page)
 
-    // Mở màn chọn ải qua command wheel slot Truyền Tống Trận (data-wheel-slot attr).
+    // Mo man chon ai qua command wheel slot Truyen Tong Tran (data-wheel-slot attr).
     // Phaser canvas click risk: AVOID clicking the canvas character trigger; instead
-    // use the keyboard shortcut Tab (DongFuCommandWheel.vue listens for Tab keydown)
+    // use the keyboard shortcut Tab (DongFuStage.vue listens for Tab keydown)
     // to open the command wheel deterministically.
     await page.keyboard.press('Tab')
 
@@ -29,16 +29,16 @@ test.describe('Create character to combat', () => {
     await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
     await teleportSlot.click()
 
-    // Stage select overlay opens (functionType 'stage_select').
-    const overlay = page.getByTestId('function-overlay-panel')
+    // Son Ha Do exploration scene opens (functionType 'stage_select').
+    const overlay = page.locator('.exploration-scene')
     await expect(overlay).toBeVisible({ timeout: 10_000 })
 
-    // A stage is auto-selected (selectFirstStageInChapter). Bắt Đầu should enable.
+    // A stage is auto-selected (first unlocked in zone). Bat Dau should enable.
     const startButton = page.getByTestId('stage-start-button')
     await expect(startButton).toBeEnabled({ timeout: 10_000 })
     await startButton.click()
 
-    // Combat scene takes over the full screen — top bar shows zone + progress text.
+    // Combat scene takes over the full screen - top bar shows zone + progress text.
     const combatTopBar = page.locator('.combat-top-bar')
     await expect(combatTopBar).toBeVisible({ timeout: 15_000 })
     await expect(combatTopBar.getByText('quái')).toBeVisible()
@@ -57,7 +57,7 @@ test.describe('Create character to combat', () => {
       })
       .toBe(true)
 
-    // DOM assertion on the outcome — victory OR defeat, both end the battle.
+    // DOM assertion on the outcome - victory OR defeat, both end the battle.
     const victory = page.locator('.combat-victory-panel')
     const defeat = page.locator('.combat-defeat-panel')
     await expect

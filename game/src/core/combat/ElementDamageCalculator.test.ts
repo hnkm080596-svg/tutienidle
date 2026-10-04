@@ -28,13 +28,13 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   }
 }
 
-// Spec 2026-08-30-phap-tu-dao-sac §5 — describe Phong/Lôi (wind/
-// lightning) đã xoá cùng ElementType: pipeline ElementDamageCalculator
-// giờ chỉ còn Ngũ Hành + Hỗn Nguyên, test tương ứng bỏ theo.
+// Spec 2026-08-30-phap-tu-dao-sac sec5 - describe Phong/Loi (wind/
+// lightning) da xoa cung ElementType: pipeline ElementDamageCalculator
+// gio chi con Ngu Hanh + Hon Nguyen, test tuong ung bo theo.
 
-// combat-skill-flow-element-power-dot-plan.md §3.1/§9 — nguồn damage nền
-// dùng chung ATK + Power hệ; mixed component KHÔNG cộng hai lần ATK
-// (tổng hệ số ATK đúng bằng tổng ratio).
+// combat-skill-flow-element-power-dot-plan.md sec3.1/sec9 - nguon damage nen
+// dung chung ATK + Power he; mixed component KHONG cong hai lan ATK
+// (tong he so ATK dung bang tong ratio).
 describe('ElementDamageCalculator — Skill Power nền dùng chung (plan §3)', () => {
   it('Pure Fire dùng đúng (ATK + FirePower) × (1 - kháng)', () => {
     const source = createCombatant({
@@ -47,7 +47,7 @@ describe('ElementDamageCalculator — Skill Power nền dùng chung (plan §3)',
 
     const damage = calculateElementComponentDamage(source, target, 'fire')
 
-    // Kháng 20 rating → mitigation theo Resistance.ts (penetration 0).
+    // Khang 20 rating -> mitigation theo Resistance.ts (penetration 0).
     const unmitigated = calculateElementComponentDamage(source, target, 'fire', true)
 
     expect(unmitigated).toBe(100)
@@ -73,7 +73,7 @@ describe('ElementDamageCalculator — Skill Power nền dùng chung (plan §3)',
       { kind: 'element', element: 'fire', ratio: 0.8 },
     ]
 
-    // Target không giáp → physical không bị giảm; fire 0 kháng.
+    // Target khong giap -> physical khong bi giam; fire 0 khang.
     const total = calculateSkillBaseDamage(source, noArmorTarget, components, true)
 
     expect(total).toBeCloseTo(might * 0.2 + (might + 40) * 0.8, 5)
@@ -92,10 +92,10 @@ describe('ElementDamageCalculator — Skill Power nền dùng chung (plan §3)',
   })
 
   it('Primordial ATK + primordialPower và elemental power QUA MỘT helper nền dùng chung (2026-08-26)', () => {
-    // Trước đây calculateBaseDamage('primordial') tự cộng tay
-    // might + primordialPower trong khi elementalBasePower() cộng riêng
-    // might + `${element}Power` — hai công thức độc lập dễ lệch. Giờ cả
-    // hai đều qua baseMightPlusPower().
+    // Truoc day calculateBaseDamage('primordial') tu cong tay
+    // might + primordialPower trong khi elementalBasePower() cong rieng
+    // might + `${element}Power` - hai cong thuc doc lap de lech. Gio ca
+    // hai deu qua baseMightPlusPower().
     const source = createCombatant({
       stats: createBaseStats({ might: 25, primordialPower: 15, firePower: 40 }),
     })

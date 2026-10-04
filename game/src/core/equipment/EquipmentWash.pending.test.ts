@@ -6,7 +6,17 @@
 // M2 (ARCH-011 / AUD-E02) - the ticket additionally binds the EXACT item
 // object + bag-membership generation + issued-at snapshot, and commit
 // revalidates locked/favorite eligibility on the current item.
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { EquipmentSystem } from './EquipmentSystem'
 import { EquipmentBag } from './EquipmentBag'
 import { EquipmentRegistry } from './EquipmentRegistry'
@@ -285,7 +295,7 @@ describe('M2 (ARCH-011 / AUD-E02) - ticket binds the exact item lifetime', () =>
     expect(commit.reason).toBe('locked')
     expect(replacement.affixes).toEqual(replacementAffixes)
 
-    // The attempt consumed the ticket — replay cannot reach the replacement.
+    // The attempt consumed the ticket - replay cannot reach the replacement.
     expect(commitOn(ctx, original.instanceId, preview.ticketId).ok).toBe(false)
   })
 

@@ -1,9 +1,9 @@
-// combat-telegraph (Wave-3 large-file split) — tach tu CombatScene.ts.
+// combat-telegraph (Wave-3 large-file split) - tach tu CombatScene.ts.
 // Countdown-telegraph chase: the party's shared countdownProgress arrives as
 // snapshots; this module owns the from/to/segment interpolation that closes
 // the distance every render frame.
 //
-// R11 (AR-29) — the chase state (target/shown/segment/snapshotAt) moved INTO
+// R11 (AR-29) - the chase state (target/shown/segment/snapshotAt) moved INTO
 // this module; the host only supplies the clock and the read-only VFX handle
 // map the chase drives. The scene no longer owns telegraph fields.
 import Phaser from 'phaser'
@@ -12,7 +12,7 @@ import type { EnemySpawnVfxHandle } from '@/game/support/EnemySpawnVfx'
 import { MAX_SEGMENT_DURATION_MS, MIN_SEGMENT_DURATION_MS } from './combatConstants'
 
 /**
- * The narrow capability the telegraph needs from its host — a wall-clock and
+ * The narrow capability the telegraph needs from its host - a wall-clock and
  * the live countdown-VFX handle map (owned by the scene's entity-visual
  * lifecycle, iterated read-only here).
  */
@@ -32,7 +32,7 @@ export class CombatTelegraph {
   }
   private snapshotAtValue: number | undefined = undefined
 
-  // S3/R11 (AR-29) — read-only exposure; mutation only via the owned
+  // S3/R11 (AR-29) - read-only exposure; mutation only via the owned
   // advance/setTarget/reset API below.
   get target(): number {
     return this.targetValue
@@ -45,18 +45,18 @@ export class CombatTelegraph {
   constructor(private readonly host: TelegraphHost) {}
 
   /**
-   * Task 9 (telegraph interpolation) — closes the distance between the last
+   * Task 9 (telegraph interpolation) - closes the distance between the last
    * shown progress and the latest snapshot target every render frame. This
    * is art, not mechanism: it never writes combat state, only reads the
    * owned segment (set by setTarget from the snapshot) and repaints the VFX
    * handles already owned by the countdown telegraph.
    *
-   * Progress comes from absolute elapsed time over the segment — clamped to
-   * 1 — exactly like `CombatPositionInterpolation.interpolate()`
+   * Progress comes from absolute elapsed time over the segment - clamped to
+   * 1 - exactly like `CombatPositionInterpolation.interpolate()`
    * (combat-position-interpolation.ts), NOT a per-frame exponential chase:
    * that formula never reached its target and closed a different fraction
    * of the remaining distance per wall-clock window at different frame
-   * rates, violating §4.4.
+   * rates, violating sec4.4.
    */
   advance(): void {
     if (this.host.turnCountdownSpawnVfxHandles.size === 0) {
@@ -84,7 +84,7 @@ export class CombatTelegraph {
 
   /**
    * Store the latest countdownProgress as a chase target instead of painting
-   * it directly — mirrors `CombatPositionInterpolation.setInterpolationTarget`
+   * it directly - mirrors `CombatPositionInterpolation.setInterpolationTarget`
    * (segment from current visual value to the new target, duration from the
    * actual inter-snapshot cadence, floored at MIN_SEGMENT_DURATION_MS).
    */
@@ -92,7 +92,7 @@ export class CombatTelegraph {
     const now = this.host.time.now
 
     if (this.snapshotAtValue === undefined) {
-      // First value since the countdown started (or since the last flush) —
+      // First value since the countdown started (or since the last flush) -
       // nothing to chase from yet; snap so advance() has a real baseline
       // instead of chasing from a stale/zeroed segment.
       this.segment = {
@@ -128,7 +128,7 @@ export class CombatTelegraph {
     this.targetValue = target
   }
 
-  /** Zeroes the telegraph's target/shown/segment state — see call sites. */
+  /** Zeroes the telegraph's target/shown/segment state - see call sites. */
   reset(): void {
     this.targetValue = 0
     this.shownValue = 0

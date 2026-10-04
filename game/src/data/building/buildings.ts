@@ -4,8 +4,8 @@ import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { REALM_TIERS, getRealmIdForTier } from '@/core/realm/RealmTierMap'
 import { buildProfessionMaterialId } from '@/core/profession/ProfessionMaterial'
 
-// gp123 6E (task C2): thang tuổi gỗ/khoáng theo tier — dùng trục tuổi
-// thống nhất (decade..thuong_co) thay hậu tố phẩm hoang..tien cũ.
+// gp123 6E (task C2): thang tuoi go/khoang theo tier - dung truc tuoi
+// thong nhat (decade..thuong_co) thay hau to pham hoang..tien cu.
 const AGE_BY_TIER: Record<number, 'decade' | 'century' | 'millennium' | 'myriad_year' | 'thuong_co'> = {
   1: 'decade',
   2: 'decade',
@@ -32,11 +32,11 @@ function extendCosts(firstThree: Building['upgradeCost'], baseAmount: number): B
   return [...firstThree, ...future]
 }
 
-// W5 (2026-08-27) — repurpose building levels:
-// - Khí Đường: mỗi cấp từ 2 trở đi giảm 3% chi phí Cường Hóa/Tẩy
-//   Luyện/Tinh Luyện (trần 24% ở level 9).
-// - Đan Phòng: level 3/6/9 mở thêm 1 slot luyện đan đồng thời
-//   (baseline 1 slot, trần 4 slot).
+// W5 (2026-08-27) - repurpose building levels:
+// - Khi Duong: moi cap tu 2 tro di giam 3% chi phi Cuong Hoa/Tay
+//   Luyen/Tinh Luyen (tran 24% o level 9).
+// - Dan Phong: level 3/6/9 mo them 1 slot luyen dan dong thoi
+//   (baseline 1 slot, tran 4 slot).
 function equipmentHallLevels(): BuildingLevelDef[] {
   return Array.from({ length: 9 }, (_, index) => {
     const level = index + 1
@@ -62,20 +62,20 @@ function pillRoomLevels(): BuildingLevelDef[] {
   })
 }
 
-// Buildings (2026-08-25, resource-professions-rework plan §2) — vòng
-// sản xuất KHÔNG còn building trung gian: herb_garden (Linh Thảo
-// Viên), smelter (Lò Luyện), artisan_workshop (Thiên Công Phường),
-// formation_altar (Trận Đài), talisman_institute (Phù Viện) đã bị loại
-// bỏ. Nguyên liệu đến thẳng từ ProductionSite (core/production).
+// Buildings (2026-08-25, resource-professions-rework plan sec2) - vong
+// san xuat KHONG con building trung gian: herb_garden (Linh Thao
+// Vien), smelter (Lo Luyen), artisan_workshop (Thien Cong Phuong),
+// formation_altar (Tran Dai), talisman_institute (Phu Vien) da bi loai
+// bo. Nguyen lieu den thang tu ProductionSite (core/production).
 //
-// Chi phí xây/nâng dùng GỖ từ Thanh Vân Lâm (`<realm>_wood_<age>`, trục
-// tuổi thống nhất gp123 6E C2) + nguyên liệu khác — sink chính của Lâm
-// (plan §5.2). Tàng Kinh Các KHÔNG phải building (dong-fu-command-wheel
+// Chi phi xay/nang dung GO tu Thanh Van Lam (`<realm>_wood_<age>`, truc
+// tuoi thong nhat gp123 6E C2) + nguyen lieu khac - sink chinh cua Lam
+// (plan sec5.2). Tang Kinh Cac KHONG phai building (dong-fu-command-wheel
 // plan Workstream C).
 export const buildings: Building[] = [
-  // Khai Vật Đường — gate Sản Xuất + LINH MẠCH (chi-hien-quan spec
-  // 2026-09-02): chức năng ngưng tụ Linh Thạch của Linh Tuyền (đã xóa)
-  // chuyển vào đây — cùng engine rate/storage, truy vấn qua
+  // Khai Vat Duong - gate San Xuat + LINH MACH (chi-hien-quan spec
+  // 2026-09-02): chuc nang ngung tu Linh Thach cua Linh Tuyen (da xoa)
+  // chuyen vao day - cung engine rate/storage, truy van qua
   // BuildingSystem conditions theo id 'gathering_outpost'.
   {
     id: 'gathering_outpost',
@@ -91,8 +91,8 @@ export const buildings: Building[] = [
 
     maxLevel: 9,
 
-    // Linh mạch — engine thạch offline cũ của Linh Tuyền (rate scale
-    // theo realm trong BuildingSystem, level max ≈ 5% farm online).
+    // Linh mach - engine thach offline cu cua Linh Tuyen (rate scale
+    // theo realm trong BuildingSystem, level max ~ 5% farm online).
     producesMaterialId: SPIRIT_STONE_MATERIAL_ID,
 
     baseProductionRate: 5.5 / 60 / 2.6,
@@ -108,8 +108,8 @@ export const buildings: Building[] = [
     ], 4),
   },
 
-  // Khí Đường — gate + nâng cấp bốn operation (Cường Hóa/Tẩy Luyện/
-  // Tinh Luyện/Hóa Luyện, plan §7).
+  // Khi Duong - gate + nang cap bon operation (Cuong Hoa/Tay Luyen/
+  // Tinh Luyen/Hoa Luyen, plan sec7).
   {
     id: 'equipment_hall',
 
@@ -127,8 +127,8 @@ export const buildings: Building[] = [
 
     functionType: 'equipment_hall',
 
-    // Ngày 1-2 (Equipment) — gần như miễn phí, không được chặn nhịp độ
-    // trang bị đầu game.
+    // Ngay 1-2 (Equipment) - gan nhu mien phi, khong duoc chan nhip do
+    // trang bi dau game.
     upgradeCost: extendCosts([
       [{ materialId: 'mortal_wood_decade', amount: 3 }],
       [
@@ -141,8 +141,8 @@ export const buildings: Building[] = [
     levels: equipmentHallLevels(),
   },
 
-  // Đan Phòng — gate luyện đan (alchemy jobs, plan §8); level quyết
-  // định speed/success bonus riêng (xem core/alchemy/AlchemyBalance.ts).
+  // Dan Phong - gate luyen dan (alchemy jobs, plan sec8); level quyet
+  // dinh speed/success bonus rieng (xem core/alchemy/AlchemyBalance.ts).
   {
     id: 'pill_room',
 
@@ -160,8 +160,8 @@ export const buildings: Building[] = [
 
     functionType: 'pill_room',
 
-    // Ngày 3-5 (Đan) — cao hơn Khí Đường một chút nhưng vẫn rẻ hơn nhiều
-    // lần chi phí luyện đan.
+    // Ngay 3-5 (Dan) - cao hon Khi Duong mot chut nhung van re hon nhieu
+    // lan chi phi luyen dan.
     upgradeCost: extendCosts([
       [
         { materialId: 'mortal_wood_decade', amount: 5 },
@@ -174,7 +174,7 @@ export const buildings: Building[] = [
     levels: pillRoomLevels(),
   },
 
-  // Truyền Tống Trận — gate Thám Hiểm (combat stage select).
+  // Truyen Tong Tran - gate Tham Hiem (combat stage select).
   {
     id: 'teleport_array',
 
@@ -195,12 +195,12 @@ export const buildings: Building[] = [
     upgradeCost: [[{ materialId: 'mortal_wood_decade', amount: 3 }]],
   },
 
-  // Ký Bảo Các — building CHUYÊN cho mọi cơ chế "đổi/bán" (2026-08-30,
-  // bug report: exchange bị nhét nhầm vào Linh Tuyền/Sản Xuất — building
-  // không chuyên). Gộp Hóa Bán (VendorSystem) + quy đổi phẩm Linh Thạch +
-  // quy đổi cảnh giới nguyên liệu (xem VendorPanel.vue). Không có tiến
-  // trình nâng cấp ý nghĩa (vendor không "mạnh hơn" theo cấp) nên
-  // maxLevel: 1, giống Truyền Tống Trận.
+  // Ky Bao Cac - building CHUYEN cho moi co che "doi/ban" (2026-08-30,
+  // bug report: exchange bi nhet nham vao Linh Tuyen/San Xuat - building
+  // khong chuyen). Gop Hoa Ban (VendorSystem) + quy doi pham Linh Thach +
+  // quy doi canh gioi nguyen lieu (xem VendorPanel.vue). Khong co tien
+  // trinh nang cap y nghia (vendor khong "manh hon" theo cap) nen
+  // maxLevel: 1, giong Truyen Tong Tran.
   {
     id: 'vendor',
 
@@ -224,9 +224,9 @@ export const buildings: Building[] = [
     upgradeCost: [[{ materialId: 'mortal_wood_decade', amount: 3 }]],
   },
 
-  // Chiêu Hiền Quán (chi-hien-quan spec 2026-09-02) — NGUỒN NHÂN CÔNG
-  // DUY NHẤT: capacity = 1 + level × 2 (getWorkerCapacityForLevel trong
-  // core/production/WorkerCapacity.ts). Cost bands khởi điểm — tuning
+  // Chieu Hien Quan (chi-hien-quan spec 2026-09-02) - NGUON NHAN CONG
+  // DUY NHAT: capacity = 1 + level x 2 (getWorkerCapacityForLevel trong
+  // core/production/WorkerCapacity.ts). Cost bands khoi diem - tuning
   // sau playtest.
   {
     id: 'chi_hien_quan',

@@ -24,14 +24,14 @@ const SAVE_REVISION_KEY = resolveRevisionKey()
 const BACKUP_KEY = resolveBackupKey()
 const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY = resolveImportHandoffKey()
 
-// Fixture tối thiểu hợp lệ — writeGameSave không validate shape (việc
-// của loadGame/importSaveRaw), chỉ cần object JSON-stringify được.
+// Fixture toi thieu hop le - writeGameSave khong validate shape (viec
+// cua loadGame/importSaveRaw), chi can object JSON-stringify duoc.
 // v82 contract (F-INT-03): importSaveRaw now gates acceptance, so the
 // fixture must be a legal save - pick + learned entry + core grant.
 function minimalSave(): GameSave {
   const player = createDefaultPlayer()
 
-  player.mortalBasicSkillId = 'tram'
+  player.mortalBasicSkillId = 'linh_bao'
   player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
   player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
 
@@ -67,8 +67,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  // Hoàn prototype setItem đã bị mock bằng vi.spyOn — không restore thì
-  // mọi test sau trong file này (và suite) kế thừa mock rò rỉ.
+  // Hoan prototype setItem da bi mock bang vi.spyOn - khong restore thi
+  // moi test sau trong file nay (va suite) ke thua mock ro ri.
   vi.restoreAllMocks()
 })
 
@@ -103,9 +103,9 @@ describe('writeGameSave — SaveWriteResult (quota handling, audit C1a)', () => 
   })
 })
 
-// Mission A5 — mọi đường ghi/xoá storage recovery cũng phải qua
-// try/catch như writeGameSave: private mode / quota throw SecurityError
-// hoặc QuotaExceededError và UI không được crash.
+// Mission A5 - moi duong ghi/xoa storage recovery cung phai qua
+// try/catch nhu writeGameSave: private mode / quota throw SecurityError
+// hoac QuotaExceededError va UI khong duoc crash.
 describe('recovery storage ops — exception-safe (Mission A5)', () => {
   it('backupCurrentSave trả false — KHÔNG throw — khi setItem throw', () => {
     localStorage.setItem(SAVE_KEY, '{"version":1}')
@@ -122,7 +122,7 @@ describe('recovery storage ops — exception-safe (Mission A5)', () => {
   })
 
   it('restoreBackup trả false — KHÔNG throw — khi setItem throw', () => {
-    // BACKUP_KEY là private constant trong SaveSystem — literal khớp.
+    // BACKUP_KEY la private constant trong SaveSystem - literal khop.
     localStorage.setItem(BACKUP_KEY, '{"version":1}')
 
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
@@ -147,8 +147,8 @@ describe('recovery storage ops — exception-safe (Mission A5)', () => {
     const validRaw = JSON.stringify(minimalSave())
     const original = Storage.prototype.setItem
 
-    // Chỉ chặn write vào SAVE_KEY — handoff marker/backup vẫn chạy được,
-    // để test đúng nhánh "final write throw".
+    // Chi chan write vao SAVE_KEY - handoff marker/backup van chay duoc,
+    // de test dung nhanh "final write throw".
 
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
       this: Storage,
@@ -185,7 +185,7 @@ describe('recovery storage ops — exception-safe (Mission A5)', () => {
       return original.call(this, key, value)
     })
 
-    // Không backup được → KHÔNG ghi đè save duy nhất khi chưa có
+    // Khong backup duoc -> KHONG ghi de save duy nhat khi chua co
     // safety net.
     expect(importSaveRaw(validRaw())).toBe(false)
     expect(localStorage.getItem(SAVE_KEY)).toBe(currentRaw)
@@ -235,9 +235,9 @@ describe('Mission A review — storage failure matrix (getItem/removeItem)', () 
     })
 
     expect(deleteSave()).toBe(false)
-    // Save còn nguyên — caller KHÔNG được reload.
+    // Save con nguyen - caller KHONG duoc reload.
     expect(localStorage.getItem(SAVE_KEY)).not.toBeNull()
-    // Partial-delete tránh tối đa: handoff + revision vẫn được dọn.
+    // Partial-delete tranh toi da: handoff + revision van duoc don.
     expect(localStorage.getItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY)).toBeNull()
     expect(localStorage.getItem(SAVE_REVISION_KEY)).toBeNull()
   })
@@ -259,7 +259,7 @@ describe('Mission A review — storage failure matrix (getItem/removeItem)', () 
 
     expect(restoreBackup()).toBe(false)
     // Reorder (MA-R2-03): handoff cleanup runs before the write, so a
-    // throw leaves the real save untouched — false means "nothing
+    // throw leaves the real save untouched - false means "nothing
     // restored", not "restored but cleanup failed".
     expect(localStorage.getItem(SAVE_KEY)).toBe('{"version":2,"keep":true}')
   })

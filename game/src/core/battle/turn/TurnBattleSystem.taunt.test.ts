@@ -13,7 +13,7 @@ import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// The Tu Reimagined (plan Task 10, D6/INV-11) — khiem_khich is a
+// The Tu Reimagined (plan Task 10, D6/INV-11) - khiem_khich is a
 // debuff on the ACTING entity; its sourceId is the taunter's entity id.
 // selectTarget reads the ACTOR's own instance set first: a living taunter
 // in the opposing side is force-targeted; dead/missing falls through to
@@ -82,9 +82,9 @@ function tauntLookup(runtime: TurnRuntimeFixture) {
 }
 
 // Two player-side units: 'near' sits on the actor's row close by;
-// 'taunter' sits far off-row — positional selection would always pick
+// 'taunter' sits far off-row - positional selection would always pick
 // 'near', so any return of 'taunter' proves the forced re-aim.
-// speed on the ENTITY stats — refreshParticipantStats rewrites
+// speed on the ENTITY stats - refreshParticipantStats rewrites
 // participant.speed from entity.stats.speed every step.
 function makeSides(actorSpeed = 10) {
   const taunter = createCombatant({ id: 'taunter', type: 'player', x: 0, row: 8 }, 1)

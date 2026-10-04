@@ -1,0 +1,280 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-REPLAY-SEAM-UNGATED",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A3-01",
+     "F-A3-02",
+     "F-A3-03"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A3-FIX",
+     "EV-MUT-A3-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "escapeReason": "realm-reward replay/reconcile seams read the persisted way record and re-executed dormant grants; the contract describes dormancy as inert-but-preserved, so seams must gate BEFORE reading the record | detector gap: restore-path probes only covered a dormant FEATURE save, not a dormant WAY save",
+    "applicability": [
+     "restore/reconcile/realm-transition seams that read persisted scope-hidden records"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "assert inactive-way saves mint zero realmRewards nodes/passives on reconcile+grant+realm-advance; enumerate every seam that re-reads a preserved dormant record"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DORMANT-SOLE-SOURCE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B3-01"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A3-FIX",
+     "EV-MUT-A3-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [
+     "I-EC-1",
+     "I-SS-1"
+    ],
+    "escapeReason": "a beta-live consumer derived its only upstream from a scope-hidden system -> the whole visible loop was dead on legal saves | detector gap: the dormant-field census checked for leaks FROM dormant state, not for live features DEPENDING on dormant state",
+    "applicability": [
+     "any beta surface whose single upstream is a scope-hidden producer"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "for each scope-hidden producer, census live consumers and give the consumer a legal fallback (flat beta value), not just a gate"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DORMANT-PERSISTED-OVERRIDE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B3-02",
+     "F-B3-04"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A3-FIX",
+     "EV-MUT-A3-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-EC-1"
+    ],
+    "escapeReason": "persisted dormant records overrode live beta values (worker capacity, job-slot budget) - dormancy read through carried state instead of being ignored | detector gap: hostile-save probes covered dormant FIELDS but not dormant RECORDS inside live aggregates",
+    "applicability": [
+     "aggregates that mix live + scope-hidden records (capacity pools, job slots)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "when a scope-hidden slice is preserved, every aggregate that iterates it must filter by the admission predicate, not by presence"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DORMANT-RENDER-SEAM",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B3-03",
+     "F-B3-05",
+     "F-B3-06"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A3-FIX",
+     "EV-MUT-A3-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "READ_MODEL",
+    "missedInvariantIds": [
+     "I-UH-1",
+     "I-RM-1"
+    ],
+    "escapeReason": "render surfaces mounted dormant blocks (allocation UI, toast identity, extra-source binding) on flagged saves without consulting the scope verdict | Low/Nit deferred per ruling",
+    "applicability": [
+     "panel/notification surfaces that bind raw persisted records"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "gate dormant-slice render blocks on betaSurfaceVisible; surfaces may not name dormant identities"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EFFECT-LOOKUP-UNROSTERED",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A3-08"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A3-FIX",
+     "EV-MUT-A3-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-PA-1"
+    ],
+    "escapeReason": "talent effect lookup resolved any catalog id - a talent whose ONLY acquisition path is excluded still emitted effects on carried saves | detector gap: the rosters existed for ways/features but no talent roster existed; effect emitter had no admission check",
+    "applicability": [
+     "every effect emitter that resolves a catalog id from persisted state"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "beta admission rosters must cover every persisted id-space that an effect emitter can resolve (ways, features, talents, recipes, nodes)"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEAD-GUARD-GET",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC2-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A3-FIX",
+     "EV-MUT-A3-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "READ_MODEL",
+    "missedInvariantIds": [
+     "I-SF-1",
+     "I-DS-1"
+    ],
+    "escapeReason": "registry.get() throwing on unknown ids sat behind a !==undefined guard that could never fail - validator-tolerated ghost ids crashed the respec UI | detector gap: save-shape validation tolerates foreign ids but no probe crossed a tolerated id into a live op",
+    "applicability": [
+     "any code that probes the NodeRegistry (or other throwing registries) from persisted ids"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "use has() before get() on every throwing registry probed from save data; fuzz each tolerated-but-foreign persisted field through the ops that read it"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEFERRED-A3-LOW",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A3-04",
+     "F-A3-05",
+     "F-A3-06",
+     "F-A3-07"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A3-FIX",
+     "EV-MUT-A3-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [],
+    "escapeReason": "write-only dormant mint, capability-bridge HUD render, dev-only reset refund and a latent ungated grant seam - all Low/Nit, deferred per the Medium+-only ruling",
+    "applicability": [
+     "dormant-way saves, capability-gated HUD bridges, devtool ops"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "next scope revision should still pin write-only mints + capability bridges; latent seams get admission predicates when they gain dormant inputs"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

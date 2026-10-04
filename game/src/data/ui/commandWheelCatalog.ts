@@ -1,10 +1,10 @@
 // Command wheel catalog (dong-fu-command-wheel-inventory-spirit-stone-
-// plan.md Workstream B) — nguồn DUY NHẤT cho các shortcut của wheel
-// nhiều tầng. Thuần data: KHÔNG import GameManager/store runtime;
-// `available` là closure hằng (future slot → false, không render nút).
-// Building ring KHÔNG liệt kê id trùng lặp nơi khác — hotspot layer và
-// wheel cùng đọc catalog này (P2 cleanup: catalog là nguồn duy nhất cho
-// building id dùng chung trong UI mới).
+// plan.md Workstream B) - nguon DUY NHAT cho cac shortcut cua wheel
+// nhieu tang. Thuan data: KHONG import GameManager/store runtime;
+// `available` la closure hang (future slot -> false, khong render nut).
+// Building ring KHONG liet ke id trung lap noi khac - hotspot layer va
+// wheel cung doc catalog nay (P2 cleanup: catalog la nguon duy nhat cho
+// building id dung chung trong UI moi).
 import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
 
 export type PanelTarget =
@@ -22,28 +22,28 @@ export interface CommandWheelSlot {
 
   target?: PanelTarget
 
-  /** Ring 3 — mở popover xây/nâng cấp hoặc panel chức năng qua controller. */
+  /** Ring 3 - mo panel chuc nang cua cong trinh qua controller. */
   buildingId?: string
 
-  /** false = future slot, KHÔNG render nút. */
+  /** false = future slot, KHONG render nut. */
   available: () => boolean
 
   /**
-   * Bản Mệnh Pháp Bảo (2026-08-27) — slot RENDER được nhưng tạm thời
-   * không bấm được (vd nghề chưa có definition), khác hẳn `available`
-   * (tồn tại tính năng hay chưa). Nhận `context` làm THAM SỐ thay vì tự
-   * đọc store/GameManager bên trong catalog — giữ đúng quy ước "catalog
-   * thuần data, không import runtime" ở đầu file; DongFuCommandWheel.vue
-   * tự build context rồi truyền vào. Trả về chuỗi lý do (hiện tooltip) hoặc
-   * null nếu không bị disable.
+   * Ban Menh Phap Bao (2026-08-27) - slot RENDER duoc nhung tam thoi
+   * khong bam duoc (vd nghe chua co definition), khac han `available`
+   * (ton tai tinh nang hay chua). Nhan `context` lam THAM SO thay vi tu
+   * doc store/GameManager ben trong catalog - giu dung quy uoc "catalog
+   * thuan data, khong import runtime" o dau file; DongFuStage.vue
+   * tu build context roi truyen vao. Tra ve chuoi ly do (hien tooltip) hoac
+   * null neu khong bi disable.
    */
   disabledReason?: (context: CommandWheelDisabledContext) => string | null
 }
 
-/** Context runtime tối thiểu cho disabledReason() — mở rộng dần khi có slot mới cần. */
+/** Context runtime toi thieu cho disabledReason() - mo rong dan khi co slot moi can. */
 export interface CommandWheelDisabledContext {
   // P7-M9 + M-F-CEILING: per-domain unlock booleans resolved in
-  // DongFuCommandWheel.vue from the AUTHORITATIVE domain predicates
+  // DongFuStage.vue from the AUTHORITATIVE domain predicates
   // (isArtifactDomainUnlocked / isCompanionDomainUnlocked /
   // isFormationUnlocked) - the slots must not key off raw realm presence
   // or the wheel drifts from the domain gate when a threshold (or the
@@ -75,18 +75,18 @@ const ALWAYS_AVAILABLE = () => true
 export const RELEASE_UNAVAILABLE_REASON = 'Chưa mở trong bản hiện tại'
 
 /**
- * Bố cục 4 vòng (plan "Kiến trúc UI đích"):
- * - Ring 1 cốt lõi — Nhân Vật/Kho/Kỹ Năng/Tâm Pháp ở 4 đường chéo.
- * - Ring 2 hệ thống phát triển — Luyện Thể/Realm Passive + future slots
- *   (Pháp Bảo/Phù/Trận) KHÔNG render. Quán Khí đã gỡ khỏi wheel — mở
- *   qua nút riêng trong Character Panel khi đạt điều kiện.
- * - Ring 3 building thật — 5 công trình, còn hotspot trên background
+ * Bo cuc 4 vong (plan "Kien truc UI dich"):
+ * - Ring 1 cot loi - Nhan Vat/Kho/Ky Nang/Tam Phap o 4 duong cheo.
+ * - Ring 2 he thong phat trien - Luyen The/Realm Passive + future slots
+ *   (Phap Bao/Phu/Tran) KHONG render. Quan Khi da go khoi wheel - mo
+ *   qua nut rieng trong Character Panel khi dat dieu kien.
+ * - Ring 3 building that - 5 cong trinh, con hotspot tren background
  *   song song (Workstream C dual-entry).
- * - Ring 4 hệ thống — Tàng Kinh Các TRÁI / Cài Đặt PHẢI đối xứng ngang,
- *   luôn khả dụng, không phải building.
+ * - Ring 4 he thong - Tang Kinh Cac TRAI / Cai Dat PHAI doi xung ngang,
+ *   luon kha dung, khong phai building.
  */
 export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
-  // ---- Ring 1 — cốt lõi ----
+  // ---- Ring 1 - cot loi ----
   {
     id: 'character',
     ring: 1,
@@ -109,7 +109,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     available: ALWAYS_AVAILABLE,
   },
 
-  // ---- Ring 2 — hệ thống phát triển ----
+  // ---- Ring 2 - he thong phat trien ----
   {
     id: 'quest',
     ring: 2,
@@ -117,10 +117,10 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     target: { kind: 'standalone', panel: 'quest' },
     available: ALWAYS_AVAILABLE,
   },
-  // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED (khác talisman_slot bên
-  // dưới, vẫn future). Render ngay cả trước Trúc Cơ/ với nghề chưa có
-  // definition — disabledReason() chặn bấm + giải thích lý do, đúng
-  // doc §12.1 (khác ẩn hẳn nút).
+  // Ban Menh Phap Bao (2026-08-27) - SHIPPED (khac talisman_slot ben
+  // duoi, van future). Render ngay ca truoc Truc Co/ voi nghe chua co
+  // definition - disabledReason() chan bam + giai thich ly do, dung
+  // doc sec12.1 (khac an han nut).
   {
     id: 'phap_bao',
     ring: 2,
@@ -146,15 +146,15 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
       return null
     },
   },
-  // Future slot — tồn tại trong catalog nhưng KHÔNG render nút.
+  // Future slot - ton tai trong catalog nhung KHONG render nut.
   {
     id: 'talisman_slot',
     ring: 2,
     labelKey: 'panels.wheel.slots.talisman_slot',
     available: NEVER_AVAILABLE,
   },
-  // Trận Pháp (Combat Art Roster spec, 2026-09-05) — SHIPPED, mở
-  // TranPhapPanel.vue để kéo-thả gán player/companion vào lưới 6x6.
+  // Tran Phap (Combat Art Roster spec, 2026-09-05) - SHIPPED, mo
+  // TranPhapPanel.vue de keo-tha gan player/companion vao luoi 6x6.
   // P7-M9 (decisions D3 + M9-F1): Tran unlocks with party/companion progression
   // at Truc Co - renders with a lock badge before that (phap_bao precedent).
   {
@@ -189,7 +189,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     },
   },
 
-  // ---- Ring 3 — building thật (dual-entry với hotspot background) ----
+  // ---- Ring 3 - building that (dual-entry voi hotspot background) ----
   {
     id: 'teleport_array',
     ring: 3,
@@ -226,12 +226,12 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     available: ALWAYS_AVAILABLE,
   },
 
-  // ---- Ring 4 — hệ thống (đối xứng ngang, ngang hàng Cài Đặt) ----
+  // ---- Ring 4 - he thong (doi xung ngang, ngang hang Cai Dat) ----
   {
     id: 'scripture_pavilion',
     ring: 4,
     labelKey: 'panels.wheel.slots.scripture_pavilion',
-    // KHÔNG qua building controller — entry duy nhất là shortcut này.
+    // KHONG qua building controller - entry duy nhat la shortcut nay.
     target: { kind: 'left_panel', mode: 'scripture_pavilion' },
     available: ALWAYS_AVAILABLE,
   },
@@ -244,7 +244,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   },
 ]
 
-/** Id building thật ở ring 3 — hotspot layer dùng chung danh sách này. */
+/** Id building that o ring 3 - hotspot layer dung chung danh sach nay. */
 export const RING_3_BUILDING_IDS: string[] = COMMAND_WHEEL_SLOTS
   .filter((slot) => slot.buildingId !== undefined)
   .map((slot) => slot.buildingId as string)

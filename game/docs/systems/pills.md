@@ -15,16 +15,16 @@ Core: `core/pill/Pill.ts`, `PillEffect.ts`, `PillSystem.ts`, `PillBag.ts`, `Pill
 | `heal` | hồi HP tức thì `value` |
 | `cultivation` | +`cultivationPercent` × required của realm hiện tại (qua `addCultivation` — vẫn cap) |
 | `buff` | áp `BuffDefinition` mang sẵn trong effect |
-| `permanent_stat` | +`value` vĩnh viễn lên `stat` — bucket `pill-permanent:${stat}` trong `player.modifiers` |
-| `random_main_stat` | +flat lên 1 main stat ngẫu nhiên |
+| `permanent_stat` | +`value` vĩnh viễn lên `stat` — ghi THẲNG vào `player.baseStats` (ruling 2026-09-29: chỉ level-up + đan dược được ghi baseStats; bucket modifier `pill-permanent:*` đã retire) |
+| `random_main_stat` | +1 lên 1 main stat ngẫu nhiên chưa cap — cũng ghi `baseStats` |
 | `regen` | hồi `hpPerSecond`/`mpPerSecond` trong `durationSeconds`; `effectGroup` nhóm stack (cùng nhóm refresh deadline, `stackable` cho uống lại cộng thời lượng) |
 | `skill_insight` | +flat Cảm ngộ Kỹ năng |
 
 ## Dùng đan — `PillSystem.use`
 
 - `PillTarget` adapter (`addCultivation`/`heal`/`applyBuff`) — PillSystem không giữ PlayerData/CombatEntity; caller cung cấp (ngoài trận: player store; trong trận: CombatEntity).
-- Gate: `wrong_realm` (pill có `realmId` ≠ realm player), `all_main_stats_capped`, `requires_phap_tu`.
-- **Permanent stat cap**: tổng cộng dồn mọi pill cùng 1 stat (bucket `pill-permanent:${stat}`) không vượt `RealmData.attributeCap` của realm hiện tại; `clampToRealmCap` cắt phần dư.
+- Gate: `wrong_realm` (pill có `realmId` ≠ realm player), `all_main_stats_capped`, `requires_phap_tu`, `cap` (stat đích đã chạm trần).
+- **Stat cap**: đan stat cộng vào `baseStats` nên chung một trần với điểm level-up — `getEffectiveMainStatCap(player)` (đã gồm bonus trần từ hidden body); uống vượt trần bị từ chối (`cap`), đan ở lại túi.
 
 ## Pill families (`PILL_FAMILIES`)
 
@@ -46,6 +46,6 @@ Grade theo tier: `hoang, hoang, huyen, huyen, dia, dia, thien, thien, tien` — 
 ## Liên quan
 
 - [alchemy.md](./alchemy.md) — luyện đan (recipe = family × herb).
-- [stats.md](./stats.md) — `pill-permanent:*` modifier.
+- [stats.md](./stats.md) — `baseStats` + `getEffectiveMainStatCap`.
 - [buffs.md](./buffs.md) — effect `buff`.
 - [inventory.md](./inventory.md) — PillBag.

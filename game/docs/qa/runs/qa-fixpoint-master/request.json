@@ -1,0 +1,60 @@
+{
+  "runId": "qa-fixpoint-master",
+  "productRoot": ".",
+  "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game",
+  "branch": "devin/qa-fixpoint",
+  "base": "origin/master",
+  "head": "HEAD",
+  "authorizedRepairs": ["*"],
+  "nonGoals": [
+    "merge/deploy/release publish (draft PR only)",
+    "Low/Nit production repairs — user ruling: fix Medium+ only; Low/Nit recorded as deferred exceptions",
+    "full golden-bug corpus benchmark replay — representative subset replayed inside declared attack surfaces; unreplayed cases recorded as benchmark gaps"
+  ],
+  "contractPaths": [
+    "../AGENTS.md",
+    "docs/design/frontend-contract.md",
+    "docs/qa/protocol/README.md",
+    "docs/qa/protocol/defect-taxonomy.md",
+    "docs/qa/protocol/ledger-schema.md",
+    "docs/qa/protocol/agent-instructions.md",
+    "docs/qa/protocol/learning.md",
+    "package.json"
+  ],
+  "attackModelPath": "attack-model.json",
+  "environmentPath": "environment.json",
+  "extraExclude": [
+    "docs/c2c/",
+    "docs/p7/",
+    "docs/superpowers/",
+    "play-",
+    "verify-",
+    ".codegraph/",
+    "art-source/",
+    "asset-drop/"
+  ],
+  "requiredReadiness": false,
+  "capacityLimit": 5,
+  "requiredDomains": [
+    "creation-contract",
+    "initiation-atomicity",
+    "path-authority",
+    "scope-verdict",
+    "authority-seam",
+    "dormant-systems",
+    "read-model",
+    "combat-rail",
+    "precursor-growth",
+    "stage-state",
+    "economy-census",
+    "save-safety",
+    "persistence-migration",
+    "enemy-content",
+    "ui-honesty",
+    "release-trust",
+    "tooling-security",
+    "concurrency",
+    "test-quality",
+    "qa-integrity"
+  ]
+}

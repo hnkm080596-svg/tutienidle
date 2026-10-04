@@ -5,7 +5,7 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 
-// QA adversarial probes (2026-09-04 quick review) — Slice 5 wave/stage.
+// QA adversarial probes (2026-09-04 quick review) - Slice 5 wave/stage.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
@@ -62,7 +62,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 5, undefined, spawnEnemy)
     const result = system.runToCompletion(battle)
 
-    // 1 dmg vs 1M hp — stalemate: cap 5 steps terminates an toàn ở defeat.
+    // 1 dmg vs 1M hp - stalemate: cap 5 steps terminates an toan o defeat.
     expect(result).toBe('defeat')
     expect(battle.enemies.length).toBeLessThanOrEqual(6)
   })
@@ -86,14 +86,14 @@ describe('Slice 5 adversarial (QA probes)', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
-    // Turn-Based Wave Redesign (2026-09-06) — spawn chuyển sang tickPacing:
-    // giết enemyA (sân trống, waveIndex 0 < 1, spawnedCount 1 < 2) rồi
-    // tickPacing → wave mới queue qua telegraph → spawnEnemy chạy.
+    // Turn-Based Wave Redesign (2026-09-06) - spawn chuyen sang tickPacing:
+    // giet enemyA (san trong, waveIndex 0 < 1, spawnedCount 1 < 2) roi
+    // tickPacing -> wave moi queue qua telegraph -> spawnEnemy chay.
     enemyA.alive = false
     battle.enemies = []
     system.tickPacing(battle)
 
-    // buff2 M4: no per-participant pool exists — instance identity lives
+    // buff2 M4: no per-participant pool exists - instance identity lives
     // in the shared store keyed by targetId. The invariant that remains:
     // the spawned participant is a fresh object queued by the telegraph
     // (no state leaks across the spawn boundary).
@@ -114,7 +114,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
 
     const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 20).resolveNextStep(battle)
 
-    // Sân trống + mọi enemy đã spawn (0/0) → victory ngay.
+    // San trong + moi enemy da spawn (0/0) -> victory ngay.
     expect(step.state).toBe('victory')
   })
 })

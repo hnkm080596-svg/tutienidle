@@ -1,8 +1,18 @@
 // @vitest-environment jsdom
-// Task 19 (item-grade-quality-rework, rework P6) — WashTab extracted from
+// Task 19 (item-grade-quality-rework, rework P6) - WashTab extracted from
 // EquipmentHallPanel.test.ts. WashTab injects HALL_SELECTION_KEY (shared
-// with RefineTab) — test harness provides it like the shell does.
+// with RefineTab) - test harness provides it like the shell does.
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import WashTab from './WashTab.vue'
@@ -99,7 +109,7 @@ describe('WashTab — Tẩy Luyện', () => {
       manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
     })
 
-    // Chọn slot đang mặc.
+    // Chon slot dang mac.
     const slots = mounted.container.querySelectorAll(
       '[aria-label="Chọn trang bị để tẩy luyện"] .slot-view',
     )
@@ -130,15 +140,15 @@ describe('WashTab — Tẩy Luyện', () => {
     const card = mounted.container.querySelector('.qi-hall__preview-card')
     expect(card).not.toBeNull()
 
-    // Ngân sách rèn: Hoàng Chất có 5 lượt, mỗi wash trừ 1 lượt.
-    // giờ là dòng chú thích trên đầu card, không còn là 1 hàng trong bảng.
+    // Ngan sach ren: Hoang Chat co 5 luot, moi wash tru 1 luot.
+    // gio la dong chu thich tren dau card, khong con la 1 hang trong bang.
     const caption = card!.querySelector('.qi-hall__col-title')
     expect(caption?.textContent).toContain('Điểm Rèn')
     expect(caption?.textContent).toContain('5/5')
     expect(caption?.textContent).toContain('4/5')
 
-    // Fixture item không có affix nào (affixes: []) — không có gì để so
-    // sánh theo dòng nên KHÔNG hiện bảng, chỉ hiện thông báo trống.
+    // Fixture item khong co affix nao (affixes: []) - khong co gi de so
+    // sanh theo dong nen KHONG hien bang, chi hien thong bao trong.
     expect(card!.querySelector('[aria-label="So sánh trước và sau Tẩy Luyện"]')).toBeNull()
     expect(card!.textContent).toContain('Chưa có dòng phụ')
 

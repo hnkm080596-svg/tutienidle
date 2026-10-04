@@ -40,7 +40,7 @@ describe('bodyAnchor', () => {
   it('front and back SWAP when facing does, so an enemy faces the player', () => {
     // The one piece of state in an otherwise pure derivation. Getting it
     // backwards puts every enemy's effects behind it, which looks deliberate
-    // until somebody stares at it (Spec C §4.2).
+    // until somebody stares at it (Spec C sec4.2).
     const left = body({ facing: 'left' })
 
     expect(bodyAnchor('front', left).x).toBe(80)
@@ -63,8 +63,8 @@ describe('bodyAnchor', () => {
   })
 
   it('two differently-sized entities at different cells each get their own anchors, not shared state', () => {
-    // Spec C §5: "one mechanism" for every entity means the formula is the
-    // same, not that two DIFFERENT bodies produce the same numbers — a wolf
+    // Spec C sec5: "one mechanism" for every entity means the formula is the
+    // same, not that two DIFFERENT bodies produce the same numbers - a wolf
     // half the player's height at a different foot position must not leak
     // the player's geometry (or vice versa) through any shared/global state.
     const wolf = body({ footX: 100, footY: 200, personWidth: 40, personHeight: 80, facing: 'left' })

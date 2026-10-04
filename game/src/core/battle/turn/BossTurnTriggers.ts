@@ -1,7 +1,7 @@
-// Turn-Based Combat Foundation (spec Phần 5) — thay enrage.afterSeconds
-// cũ: đếm theo TỔNG SỐ LƯỢT đã trôi qua từ đầu trận (không phải lượt
-// riêng của boss), khớp cadence "đánh hết wave mới spawn wave mới".
-// D2 revision contract (2026-09-12): "lượt" = ATB round (roundsElapsed —
+// Turn-Based Combat Foundation (spec Phan 5) - thay enrage.afterSeconds
+// cu: dem theo TONG SO LUOT da troi qua tu dau tran (khong phai luot
+// rieng cua boss), khop cadence "danh het wave moi spawn wave moi".
+// D2 revision contract (2026-09-12): "luot" = ATB round (roundsElapsed -
 // one boundary per all-alive-participants-acted), the same unit
 // perfectClearTurnLimit and Sudden Death use. The caller passes
 // battle.roundsElapsed; the raw totalTurnsElapsed actor-action counter

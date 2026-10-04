@@ -7,29 +7,32 @@ import type {
   ProductionCycleSave,
   ProductionSiteStateSave,
   RestoreGameSessionResult,
+  RestoreTimeAuthority,
 } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
+import { exportFilename, type ExportProvenance } from './recoveryApi'
 import {
   isSaveAcceptable,
   staticSaveAcceptanceCatalogs,
 } from './saveAcceptance'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import {
+  listSaveEnvelopeKeys,
   resolveBackupKey,
   resolveImportHandoffKey,
   resolveRevisionKey,
   resolveSaveKey,
 } from './saveKeys'
 
-// large-file-split — save-shape interfaces (GameSave, stack saves,
+// large-file-split - save-shape interfaces (GameSave, stack saves,
 // production/alchemy save states, restore contract) live in
 // saveTypes.ts; re-exported so existing `from './SaveSystem'` imports
 // keep working unchanged.
 export * from './saveTypes'
 
-// Re-export cho mọi consumer cũ (SupabaseCharacterCreationService, tests...)
-// — nguồn sự thật của version nằm ở saveVersion.ts để tránh circular
-// import với saveShapeValidation.ts.
+// Re-export cho moi consumer cu (SupabaseCharacterCreationService, tests...)
+// - nguon su that cua version nam o saveVersion.ts de tranh circular
+// import voi saveShapeValidation.ts.
 export { CURRENT_SAVE_VERSION }
 
 // Storage keys are per-account since Mission F (spec F8) - every path
@@ -37,230 +40,230 @@ export { CURRENT_SAVE_VERSION }
 // guest slot when unauthenticated). The comments below keep documenting
 // the backup/handoff/revision *purpose*; the key shape lives there.
 
-// Phase 5 (Reliability) — bản sao save TRƯỚC lần ghi đè/xoá gần nhất
-// (deleteSave()), không phải lịch sử nhiều bản. Mục đích duy nhất:
-// nếu người chơi bấm "Xoá & Bắt Đầu Mới" nhầm trên save không tương
-// thích, dữ liệu cũ vẫn còn 1 bước để cứu qua restoreBackup() —
-// KHÔNG thay thế Export (export mới là nơi an toàn thật sự, backup
-// này nằm cùng localStorage nên mất theo nếu người dùng xoá site data).
+// Phase 5 (Reliability) - ban sao save TRUOC lan ghi de/xoa gan nhat
+// (deleteSave()), khong phai lich su nhieu ban. Muc dich duy nhat:
+// neu nguoi choi bam "Xoa & Bat Dau Moi" nham tren save khong tuong
+// thich, du lieu cu van con 1 buoc de cuu qua restoreBackup() -
+// KHONG thay the Export (export moi la noi an toan that su, backup
+// nay nam cung localStorage nen mat theo neu nguoi dung xoa site data).
 
-// Import current-version có equipment legacy phải normalize TRƯỚC khi ghi,
-// nên reload sau import không thể tự đếm lại entry đã bỏ. Handoff one-shot
-// này giữ counter cùng CHÍNH XÁC normalized payload để không gán nhầm cho
-// một save khác được ghi xen giữa; nó không nằm trong GameSave schema.
+// Import current-version co equipment legacy phai normalize TRUOC khi ghi,
+// nen reload sau import khong the tu dem lai entry da bo. Handoff one-shot
+// nay giu counter cung CHINH XAC normalized payload de khong gan nham cho
+// mot save khac duoc ghi xen giua; no khong nam trong GameSave schema.
 
-// Revision phục vụ CAS optimistic-concurrency của cloud-save adapter
-// (xem services/cloudSave/). Đặt ở đây (thay vì trong LocalCloudSaveService)
-// để deleteSave() có thể xoá cùng lúc, tránh để lại revision cũ sau khi
-// save chính đã bị xoá — nếu không, nhân vật mới tạo sẽ CAS-fail ngay
-// lần save đầu tiên ("Save đã thay đổi ở một phiên khác.").
+// Revision phuc vu CAS optimistic-concurrency cua cloud-save adapter
+// (xem services/cloudSave/). Dat o day (thay vi trong LocalCloudSaveService)
+// de deleteSave() co the xoa cung luc, tranh de lai revision cu sau khi
+// save chinh da bi xoa - neu khong, nhan vat moi tao se CAS-fail ngay
+// lan save dau tien ("Save da thay doi o mot phien khac.").
 
-// v23: Thiên Công Phường rework — thêm building 'artisan_workshop',
-// xoá hẳn exploration 'myriad-demon-forest' (Vạn Yêu Lâm), thêm
-// 'wood-spirit-forest' (Mộc Lâm). Save cũ (version < 23) KHÔNG tương
-// thích, không viết migration — save cũ có thể đang chạy dở
-// exploration 'myriad-demon-forest' (nạp thẳng sẽ ORPHAN entry đó
-// trong ExplorationManager: không throw, nhưng chiếm vĩnh viễn 1 slot
-// concurrent mà không cách nào thu hoạch/huỷ vì id không còn trong
+// v23: Thien Cong Phuong rework - them building 'artisan_workshop',
+// xoa han exploration 'myriad-demon-forest' (Van Yeu Lam), them
+// 'wood-spirit-forest' (Moc Lam). Save cu (version < 23) KHONG tuong
+// thich, khong viet migration - save cu co the dang chay do
+// exploration 'myriad-demon-forest' (nap thang se ORPHAN entry do
+// trong ExplorationManager: khong throw, nhung chiem vinh vien 1 slot
+// concurrent ma khong cach nao thu hoach/huy vi id khong con trong
 // registry).
-// version 24: Pháp Tu Redesign (magicpath) — player: PlayerData thêm 3
-// field BẮT BUỘC MỚI `skillPoints: number`/`unlockedElements: ElementType[]`/
-// `equippedElements: ElementType[]` (cả hai đã retired cùng
-// ElementLoadout ở Phap Tu Reimagined Task 14 — element authority giờ
-// là `player.spellPath.element`), CỘNG THÊM baseStats (Stats) lúc đó có
-// thêm 6 field wind/lightning (đã bị XOÁ lại ở spec
-// 2026-08-30-phap-tu-dao-sac §5 — bỏ Phong/Lôi toàn hệ). Lịch sử
-// version giữ nguyên để truy vết.
-// Save cũ thiếu các field này — không viết migration, cùng convention
-// mọi version trước.
-// version 25: Pháp Tu Redesign — Node Tree, player: PlayerData thêm
-// field BẮT BUỘC MỚI `purchasedNodeIds: string[]` (xem
-// core/progression/NodeSystem.ts). CỘNG THÊM baseStats (Stats) thêm
-// `manaShieldPercent` (Mana Shield). Save cũ thiếu các field này —
-// không viết migration, cùng convention mọi version trước.
-// version 26: Pháp Tu Redesign — Tâm Pháp không còn cộng chỉ số dưới
-// bất kỳ hình thức nào (xoá `modifiers`/`mechanic`/`breakthroughEffect`
-// khỏi Technique.ts) VÀ `cultivationRate` bị xoá HOÀN TOÀN khỏi Stats
-// (baseStats mất field này, tốc độ tu luyện giờ cố định — xem
-// core/realm/realmSystem.ts's BASE_CULTIVATION_PER_SECOND). Save cũ có
-// `technique.modifiers`/`mechanic`/`breakthroughEffect` VÀ
-// `baseStats.cultivationRate` KHÔNG khớp shape mới — không viết
-// migration, cùng convention mọi version trước.
-// version 27: Pháp Tu Redesign — gộp 5 CultivationPathId Ngũ Hành
-// (phap_tu_hoa/moc/thuy/kim/tho) thành 1 "spell" duy nhất (xem
-// CultivationPathKit.ts) VÀ player: PlayerData xoá field
-// `totalMonstersKilled` (mồ côi, xem RewardSystem.ts). Save cũ có
-// `player.cultivationPath` là 1 trong 5 giá trị cũ (KHÔNG còn hợp lệ
-// trong union mới) — không viết migration, cùng convention mọi version
-// trước.
+// version 24: Phap Tu Redesign (magicpath) - player: PlayerData them 3
+// field BAT BUOC MOI `skillPoints: number`/`unlockedElements: ElementType[]`/
+// `equippedElements: ElementType[]` (ca hai da retired cung
+// ElementLoadout o Phap Tu Reimagined Task 14 - element authority gio
+// la `player.spellPath.element`), CONG THEM baseStats (Stats) luc do co
+// them 6 field wind/lightning (da bi XOA lai o spec
+// 2026-08-30-phap-tu-dao-sac sec5 - bo Phong/Loi toan he). Lich su
+// version giu nguyen de truy vet.
+// Save cu thieu cac field nay - khong viet migration, cung convention
+// moi version truoc.
+// version 25: Phap Tu Redesign - Node Tree, player: PlayerData them
+// field BAT BUOC MOI `purchasedNodeIds: string[]` (xem
+// core/progression/NodeSystem.ts). CONG THEM baseStats (Stats) them
+// `manaShieldPercent` (Mana Shield). Save cu thieu cac field nay -
+// khong viet migration, cung convention moi version truoc.
+// version 26: Phap Tu Redesign - Tam Phap khong con cong chi so duoi
+// bat ky hinh thuc nao (xoa `modifiers`/`mechanic`/`breakthroughEffect`
+// khoi Technique.ts) VA `cultivationRate` bi xoa HOAN TOAN khoi Stats
+// (baseStats mat field nay, toc do tu luyen gio co dinh - xem
+// core/realm/realmSystem.ts's BASE_CULTIVATION_PER_SECOND). Save cu co
+// `technique.modifiers`/`mechanic`/`breakthroughEffect` VA
+// `baseStats.cultivationRate` KHONG khop shape moi - khong viet
+// migration, cung convention moi version truoc.
+// version 27: Phap Tu Redesign - gop 5 CultivationPathId Ngu Hanh
+// (phap_tu_hoa/moc/thuy/kim/tho) thanh 1 "spell" duy nhat (xem
+// CultivationPathKit.ts) VA player: PlayerData xoa field
+// `totalMonstersKilled` (mo coi, xem RewardSystem.ts). Save cu co
+// `player.cultivationPath` la 1 trong 5 gia tri cu (KHONG con hop le
+// trong union moi) - khong viet migration, cung convention moi version
+// truoc.
 // version 28 (2026-08-20): Character/Cultivation/Skill/Inventory rework
-// — player: PlayerData thêm field BẮT BUỘC MỚI `techniqueExperience:
-// number` (thanh kinh nghiệm riêng của Tâm Pháp, xem
-// core/technique/TechniqueTier.ts). Save cũ thiếu field này — không
-// viết migration, cùng convention mọi version trước.
-// version 29 (2026-08-20): Realm Passive & Pressure System — player:
-// PlayerData thêm 4 field BẮT BUỘC MỚI `bodyRefinementCompletedTiers`/
+// - player: PlayerData them field BAT BUOC MOI `techniqueExperience:
+// number` (thanh kinh nghiem rieng cua Tam Phap, xem
+// core/technique/TechniqueTier.ts). Save cu thieu field nay - khong
+// viet migration, cung convention moi version truoc.
+// version 29 (2026-08-20): Realm Passive & Pressure System - player:
+// PlayerData them 4 field BAT BUOC MOI `bodyRefinementCompletedTiers`/
 // `bodyRefinementCurrentTierProgress`/`breakthroughGrade`/
-// `grantedRealmPassiveIds` (Luyện Thể Phàm Nhân + Nhập Đạo/Kiến Cơ, xem
-// core/realm/BodyRefinementSystem.ts/RealmPassiveSystem.ts). Save cũ thiếu
-// các field này — không viết migration, cùng convention mọi version
-// trước.
-// version 30 (2026-08-21): Hỏa FirePath redesign (Plans/FirePath) —
-// baseStats (Stats) thêm field BẮT BUỘC MỚI `projectileSpeedPercent`
-// (Tật Hỏa minor; MissileSystem sau đó đã xóa, xem ActionImpactSystem).
-// Save cũ thiếu field này — không viết migration, cùng convention mọi
-// version trước.
-// version 31 (2026-08-21): Hỏa Trúc Cơ hoàn thiện (Plans/FirePath mục
-// 5-9) — baseStats (Stats) thêm 4 field BẮT BUỘC MỚI
+// `grantedRealmPassiveIds` (Luyen The Pham Nhan + Nhap Dao/Kien Co, xem
+// core/realm/BodyRefinementSystem.ts/RealmPassiveSystem.ts). Save cu thieu
+// cac field nay - khong viet migration, cung convention moi version
+// truoc.
+// version 30 (2026-08-21): Hoa FirePath redesign (Plans/FirePath) -
+// baseStats (Stats) them field BAT BUOC MOI `projectileSpeedPercent`
+// (Tat Hoa minor; MissileSystem sau do da xoa, xem ActionImpactSystem).
+// Save cu thieu field nay - khong viet migration, cung convention moi
+// version truoc.
+// version 31 (2026-08-21): Hoa Truc Co hoan thien (Plans/FirePath muc
+// 5-9) - baseStats (Stats) them 4 field BAT BUOC MOI
 // `elementApplicationPercent`/`reactionEffectPercent`/
-// `hoaTheGainPerCast`/`hoaTheDecayReductionPercent` (Dẫn Hỏa/Hỏa
-// Nguyên/Cộng Minh/Tụ Hỏa/Hỏa Mạch/Tụ Viêm, xem data/progression/
-// PhapTuNodes.ts). Save cũ thiếu các field này — không viết migration,
-// cùng convention mọi version trước.
-// version 32 (2026-08-21): Thủy waterpath hoàn thiện (Plans/waterpath)
-// — baseStats (Stats) thêm 2 field BẮT BUỘC MỚI `thuyThePercent`/
-// `waterReactionExtensionSeconds` (Tụ Thủy/Thủy Mạch/Nhu Lưu/Dẫn Lưu,
-// xem data/progression/PhapTuNodes.ts). Save cũ thiếu các field này —
-// không viết migration, cùng convention mọi version trước.
-// version 33 (2026-08-21): Mộc PoisonPath hoàn thiện (Plans/PoisonPath)
-// — baseStats (Stats) thêm 4 field BẮT BUỘC MỚI `ailmentDurationPercent`/
+// `hoaTheGainPerCast`/`hoaTheDecayReductionPercent` (Dan Hoa/Hoa
+// Nguyen/Cong Minh/Tu Hoa/Hoa Mach/Tu Viem, xem data/progression/
+// PhapTuNodes.ts). Save cu thieu cac field nay - khong viet migration,
+// cung convention moi version truoc.
+// version 32 (2026-08-21): Thuy waterpath hoan thien (Plans/waterpath)
+// - baseStats (Stats) them 2 field BAT BUOC MOI `thuyThePercent`/
+// `waterReactionExtensionSeconds` (Tu Thuy/Thuy Mach/Nhu Luu/Dan Luu,
+// xem data/progression/PhapTuNodes.ts). Save cu thieu cac field nay -
+// khong viet migration, cung convention moi version truoc.
+// version 33 (2026-08-21): Moc PoisonPath hoan thien (Plans/PoisonPath)
+// - baseStats (Stats) them 4 field BAT BUOC MOI `ailmentDurationPercent`/
 // `poisonRootPercentPerStack`/`poisonRootMaxStacks`/
-// `poisonRootThresholdBonusPercent` (Độc Tức/Độc Trường/Độc Căn/Độc
-// Uyên/Độc Mạch, xem data/progression/PhapTuNodes.ts). Save cũ thiếu
-// các field này — không viết migration, cùng convention mọi version
-// trước.
-// version 34 (2026-08-21): Thổ EarthPath hoàn thiện (Plans/EarthPath) —
-// baseStats (Stats) thêm 5 field BẮT BUỘC MỚI `earthAoeRadius`/
+// `poisonRootThresholdBonusPercent` (Doc Tuc/Doc Truong/Doc Can/Doc
+// Uyen/Doc Mach, xem data/progression/PhapTuNodes.ts). Save cu thieu
+// cac field nay - khong viet migration, cung convention moi version
+// truoc.
+// version 34 (2026-08-21): Tho EarthPath hoan thien (Plans/EarthPath) -
+// baseStats (Stats) them 5 field BAT BUOC MOI `earthAoeRadius`/
 // `earthAoeSecondaryDamagePercent`/`earthKnockbackDistance`/
-// `skillImpactPercent`/`thoTheGainPerCast` (Thổ Thế/Chấn Lực/Chấn Vực/
-// Trọng Thổ, xem data/progression/PhapTuNodes.ts). Save cũ thiếu các
-// field này — không viết migration, cùng convention mọi version trước.
-// version 35 (2026-08-21): Kim KimPath hoàn thiện (Plans/KimPath) —
-// baseStats (Stats) thêm 5 field BẮT BUỘC MỚI `kimTheGainPerProc`/
+// `skillImpactPercent`/`thoTheGainPerCast` (Tho The/Chan Luc/Chan Vuc/
+// Trong Tho, xem data/progression/PhapTuNodes.ts). Save cu thieu cac
+// field nay - khong viet migration, cung convention moi version truoc.
+// version 35 (2026-08-21): Kim KimPath hoan thien (Plans/KimPath) -
+// baseStats (Stats) them 5 field BAT BUOC MOI `kimTheGainPerProc`/
 // `kimTheDotDamagePercentPerStack`/
 // `kimTheDotResistancePenetrationPercentPerStack`/`kimTheMaxStacksBonus`/
-// `metalAilmentPotencyPercent` (Kim Thế/Kim Uyên/Huyết Ấn/Huyết Lưu,
-// xem data/progression/PhapTuNodes.ts). Đây cũng là hành CUỐI CÙNG
-// trong Ngũ Hành hoàn tất redesign (Hỏa/Thủy/Mộc/Thổ/Kim). Save cũ
-// thiếu các field này — không viết migration, cùng convention mọi
-// version trước.
-// version 36 (2026-08-21): Plans/magicpathgeneral — Reaction Engine
+// `metalAilmentPotencyPercent` (Kim The/Kim Uyen/Huyet An/Huyet Luu,
+// xem data/progression/PhapTuNodes.ts). Day cung la hanh CUOI CUNG
+// trong Ngu Hanh hoan tat redesign (Hoa/Thuy/Moc/Tho/Kim). Save cu
+// thieu cac field nay - khong viet migration, cung convention moi
+// version truoc.
+// version 36 (2026-08-21): Plans/magicpathgeneral - Reaction Engine
 // transaction refactor + DOT RES + Poison Recovery. baseStats (Stats)
-// thêm 2 field BẮT BUỘC MỚI `dotResistancePercent`/
+// them 2 field BAT BUOC MOI `dotResistancePercent`/
 // `poisonRecoveryPercent` (xem core/combat/CombatSystem.ts's
-// applyDotDamage(), core/stats/StatTypes.ts). CŨNG đổi tên hiển
-// (2026-09-14 note: poisonRecoveryPercent has since retired — saves
+// applyDotDamage(), core/stats/StatTypes.ts). CUNG doi ten hien
+// (2026-09-14 note: poisonRecoveryPercent has since retired - saves
 // carrying it drop the key via the baseStats whitelist at restore.)
-// thị "Độc Căn" <-> "Mộc Thế" cho đúng semantic (KHÔNG đổi field/id
-// nào — save cũ tương thích với riêng phần này). Save cũ thiếu 2 field
-// Stats mới — không viết migration, cùng convention mọi version trước.
-// version 37 (2026-08-21): Plans/magicpathgeneral Phase 13 — Huyết
-// Phá (Kim Tu). baseStats (Stats) thêm 2 field BẮT BUỘC MỚI
-// `huyetPhaGainPerProc`/`huyetPhaBurstDamage` (node "Huyết Phá", xem
-// data/progression/PhapTuNodes.ts). `CombatEntity.currentHuyetPha` là
-// optional/runtime-only, KHÔNG persist (không cần bump vì lý do này).
-// Save cũ thiếu 2 field Stats mới — không viết migration, cùng
-// convention mọi version trước.
+// thi "Doc Can" <-> "Moc The" cho dung semantic (KHONG doi field/id
+// nao - save cu tuong thich voi rieng phan nay). Save cu thieu 2 field
+// Stats moi - khong viet migration, cung convention moi version truoc.
+// version 37 (2026-08-21): Plans/magicpathgeneral Phase 13 - Huyet
+// Pha (Kim Tu). baseStats (Stats) them 2 field BAT BUOC MOI
+// `huyetPhaGainPerProc`/`huyetPhaBurstDamage` (node "Huyet Pha", xem
+// data/progression/PhapTuNodes.ts). `CombatEntity.currentHuyetPha` la
+// optional/runtime-only, KHONG persist (khong can bump vi ly do nay).
+// Save cu thieu 2 field Stats moi - khong viet migration, cung
+// convention moi version truoc.
 // version 38: progression/combat rework. No migration: development saves
 // from earlier schemas are intentionally rejected.
 // version 40 (skill-insight-and-auto-combat-hud-plan.md): PlayerData's
-// `skillPoints` XOÁ HẲN, thay bằng `skillInsight`/`totalSkillInsightGained`
-// (nhận từ chiến đấu, không còn cấp khi đột phá tiểu cảnh giới, xem
-// CultivationSystem.breakthrough()). ProgressionNode.cost đổi tên thành
-// insightCost. Skill.experience/experienceRequired (XP-per-cast) đã xoá
+// `skillPoints` XOA HAN, thay bang `skillInsight`/`totalSkillInsightGained`
+// (nhan tu chien dau, khong con cap khi dot pha tieu canh gioi, xem
+// CultivationSystem.breakthrough()). ProgressionNode.cost doi ten thanh
+// insightCost. Skill.experience/experienceRequired (XP-per-cast) da xoa
 // entirely - skill upgrades now spend skillInsight via Core Node level (M-QI-05).
-// Save cũ thiếu/lệch field — không viết migration, cùng convention mọi
-// version trước.
+// Save cu thieu/lech field - khong viet migration, cung convention moi
+// version truoc.
 // version 41 (Milestone naming pass 2026-08-24, xem
-// docs/naming-conventions.md) — đổi TOÀN BỘ id values/fields lưu trong
-// save theo quy ước naming mới: realm 'pham_nhan'→'mortal',
-// 'foundation'→'foundation_establishment'; grade 5 phẩm
-// 'hoang_pham'→'hoang'… + field 'pham'→'grade' (Pill/Talisman/Formation);
-// skills/techniques/materials/buildings theo bảng mapping N2b; fields
-// Luyện Thể 'luyenThe*'→'bodyRefinement*'. Save v40 KHÔNG tương thích —
-// không viết migration, cùng convention mọi version trước.
-// Export cho các service ngoài (ví dụ SupabaseCharacterCreationService
-// gửi p_schema_version khi tạo nhân vật) — đảm bảo mọi nơi cùng tham chiếu
-// MỘT nguồn chân lý về version schema, không tự hardcode số.
-// version 42 (Combat Grid Rework 2026-08-24) — xoá stat
-// projectileSpeedPercent khỏi baseStats (StatBlock) cùng hệ affix/node/
-// enemy-input liên quan; thay thế theo ngữ cảnh: node pháp thuật ->
-// castSpeedPercent, affix vật lý -> attackSpeed/cooldown. Save v41
-// KHÔNG tương thích — không migration, cùng convention.
-// version 43 (2026-08-24, resource-professions-rework): MIGRATION ĐẦU
-// TIÊN được viết (phá convention "không migration" — plan §9 yêu cầu
-// migrate không mất progression):
-// - player.persistentTimedEffects: mặc định [] (timed effect regen).
-// - materials map id cũ → mới: linh_thao_chung→mortal_herb_common_raw,
-//   quang_sat→mortal_ore_common_raw, thanh_linh_moc→mortal_wood_common_raw,
-//   huyen_thiet→mortal_ore_common_processed, phu_chi→mortal_wood_common_processed
-//   (gộp amount nếu trùng id đích).
+// docs/naming-conventions.md) - doi TOAN BO id values/fields luu trong
+// save theo quy uoc naming moi: realm 'pham_nhan'->'mortal',
+// 'foundation'->'foundation_establishment'; grade 5 pham
+// 'hoang_pham'->'hoang'... + field 'pham'->'grade' (Pill/Talisman/Formation);
+// skills/techniques/materials/buildings theo bang mapping N2b; fields
+// Luyen The 'luyenThe*'->'bodyRefinement*'. Save v40 KHONG tuong thich -
+// khong viet migration, cung convention moi version truoc.
+// Export cho cac service ngoai (vi du SupabaseCharacterCreationService
+// gui p_schema_version khi tao nhan vat) - dam bao moi noi cung tham chieu
+// MOT nguon chan ly ve version schema, khong tu hardcode so.
+// version 42 (Combat Grid Rework 2026-08-24) - xoa stat
+// projectileSpeedPercent khoi baseStats (StatBlock) cung he affix/node/
+// enemy-input lien quan; thay the theo ngu canh: node phap thuat ->
+// castSpeedPercent, affix vat ly -> attackSpeed/cooldown. Save v41
+// KHONG tuong thich - khong migration, cung convention.
+// version 43 (2026-08-24, resource-professions-rework): MIGRATION DAU
+// TIEN duoc viet (pha convention "khong migration" - plan sec9 yeu cau
+// migrate khong mat progression):
+// - player.persistentTimedEffects: mac dinh [] (timed effect regen).
+// - materials map id cu -> moi: linh_thao_chung->mortal_herb_common_raw,
+//   quang_sat->mortal_ore_common_raw, thanh_linh_moc->mortal_wood_common_raw,
+//   huyen_thiet->mortal_ore_common_processed, phu_chi->mortal_wood_common_processed
+//   (gop amount neu trung id dich).
 // - legacy pills map to the nearest effect: healing->pill_regen_mortal,
 //   cultivation->pill_cultivation_mortal; permanent/buff do NOT become
 //   +1 Main Stat (wrong semantics - plan sec.9) but refund 100 Linh
 //   Thach/stack into player.spiritStone.
 // Migration IDEMPOTENT: running twice does not double the refund.
-// version 44 (2026-08-25, resource-professions-rework plan §10 — rework
-// vòng kinh tế "Địa Giới → Lâm/Quáng/Động Thiên → Bag"):
-// - materials: map cặp raw/processed cũ về material TRỰC TIẾP mới theo
-//   bảng quy đổi cố định (không parse tên ID ngoài pattern đã chốt):
-//   wood_*_raw/processed → `<realm>_wood_decade`; ore_*_raw/processed →
-//   `<realm>_ore_decade` (gp123 6E C2: trục tuổi thống nhất); herb_*_raw/processed → thảo Động Thiên decade
-//   đầu tiên của realm tương ứng (không xác định được đan phương cũ).
+// version 44 (2026-08-25, resource-professions-rework plan sec10 - rework
+// vong kinh te "Dia Gioi -> Lam/Quang/Dong Thien -> Bag"):
+// - materials: map cap raw/processed cu ve material TRUC TIEP moi theo
+//   bang quy doi co dinh (khong parse ten ID ngoai pattern da chot):
+//   wood_*_raw/processed -> `<realm>_wood_decade`; ore_*_raw/processed ->
+//   `<realm>_ore_decade` (gp123 6E C2: truc tuoi thong nhat); herb_*_raw/processed -> thao Dong Thien decade
+//   dau tien cua realm tuong ung (khong xac dinh duoc dan phuong cu).
 // - Phu/Tran legacy RETIRED (sec.10.1): talismans/formations in the Bag
 //   + socket state on slots convert to Linh Thach per the compensation
 //   table (common 200 / uncommon 500 / rare 1200); all socket state is
 //   dropped. Rolled affixes on equipment are KEPT (sec.10.1.5).
-// - Buildings trung gian bị loại bỏ (herb_garden/smelter/
-//   artisan_workshop/formation_altar/talisman_institute): hoàn trả Linh
-//   Thạch theo bảng cố định /level; strip gardenPlots/processingJobs.
-// - Tạo productionSites (3 nguồn Thanh Vân level 1, idle) + alchemyJobs
-//   rỗng + Điểm Rèn per-item (đã chuyển sang EquipmentInstance, v46).
-// - Exploration/crafts legacy bỏ khỏi schema (hệ thống đã xoá).
+// - Buildings trung gian bi loai bo (herb_garden/smelter/
+//   artisan_workshop/formation_altar/talisman_institute): hoan tra Linh
+//   Thach theo bang co dinh /level; strip gardenPlots/processingJobs.
+// - Tao productionSites (3 nguon Thanh Van level 1, idle) + alchemyJobs
+//   rong + Diem Ren per-item (da chuyen sang EquipmentInstance, v46).
+// - Exploration/crafts legacy bo khoi schema (he thong da xoa).
 // version 45 (2026-08-26, combat-gate-teleport-autocast-rework): player:
-// PlayerData thêm field BẮT BUỘC MỚI `combatAiStrategy: CombatAiStrategy`
+// PlayerData them field BAT BUOC MOI `combatAiStrategy: CombatAiStrategy`
 // (AI target strategy, xem core/battle/CombatAiStrategy.ts). Restore
-// validate: thiếu/sai → fallback 'nearest' (plan §10.2 — development
-// build, KHÔNG viết migration). Save cũ (v44) không tương thích theo
-// convention "mỗi thay đổi schema đều bump".
-// version 46 (2026-08-26, điểm rèn per-item rework): PlayerData XOÁ
-// refinementPoints/lastRefinementRegenAtMs (pool chung + regen); Điểm Rèn
-// per-item DÙNG LẠI forgePoints/forgePotential có sẵn trên instance
-// (tooltip "Tình trạng rèn x/y") — Tẩy/Tinh Luyện trừ thẳng forgePoints.
-// Save v45 không tương thích theo convention development build — không migration.
-// version 47 (2026-08-26, node level plan §6.1): PlayerData thêm field
-// BẮT BUỘC MỚI `nodeLevels: Record<string, number>` (nguồn sự thật cấp
-// node, xem core/progression/NodeSystem.ts). Save v46 CŨ (trước khi có
-// field giữa chuỗi v46) thiếu nodeLevels — từng gây crash getNodeLevel
-// lúc boot khiến người chơi không thể tới Settings để Xoá Save; giờ
-// route thẳng qua SaveIncompatibleScreen (Xuất/Xoá) đúng UX recovery.
+// validate: thieu/sai -> fallback 'nearest' (plan sec10.2 - development
+// build, KHONG viet migration). Save cu (v44) khong tuong thich theo
+// convention "moi thay doi schema deu bump".
+// version 46 (2026-08-26, diem ren per-item rework): PlayerData XOA
+// refinementPoints/lastRefinementRegenAtMs (pool chung + regen); Diem Ren
+// per-item DUNG LAI forgePoints/forgePotential co san tren instance
+// (tooltip "Tinh trang ren x/y") - Tay/Tinh Luyen tru thang forgePoints.
+// Save v45 khong tuong thich theo convention development build - khong migration.
+// version 47 (2026-08-26, node level plan sec6.1): PlayerData them field
+// BAT BUOC MOI `nodeLevels: Record<string, number>` (nguon su that cap
+// node, xem core/progression/NodeSystem.ts). Save v46 CU (truoc khi co
+// field giua chuoi v46) thieu nodeLevels - tung gay crash getNodeLevel
+// luc boot khien nguoi choi khong the toi Settings de Xoa Save; gio
+// route thang qua SaveIncompatibleScreen (Xuat/Xoa) dung UX recovery.
 // version 48 (2026-08-26, dong-fu-command-wheel-inventory-spirit-stone
-// plan Workstream F): PlayerData XOÁ field `spiritStone` — Linh Thạch
-// là MATERIAL trong MaterialBag (stack 'spirit_stone', xem
-// core/material/SpiritStoneMaterial.ts), KHÔNG migration (development
-// phase). Save v47 và mọi version cũ hơn → 'incompatible'.
-// version 49: catalog đan/linh thảo được thay bằng đúng tám họ theo phẩm.
-// Development build không migration: save v48 trở xuống buộc reset rõ ràng.
-// version 50: loại hoàn toàn Linh Chi/Quế/Cúc Hoa và mọi linh thảo
-// luyện đan legacy khỏi registry/drop table runtime. Save v49 có thể
-// còn stack legacy nên buộc reset, không migration trong development.
-// version 51 (2026-08-27, Quest System v1): GameSave thêm field MỚI
+// plan Workstream F): PlayerData XOA field `spiritStone` - Linh Thach
+// la MATERIAL trong MaterialBag (stack 'spirit_stone', xem
+// core/material/SpiritStoneMaterial.ts), KHONG migration (development
+// phase). Save v47 va moi version cu hon -> 'incompatible'.
+// version 49: catalog dan/linh thao duoc thay bang dung tam ho theo pham.
+// Development build khong migration: save v48 tro xuong buoc reset ro rang.
+// version 50: loai hoan toan Linh Chi/Que/Cuc Hoa va moi linh thao
+// luyen dan legacy khoi registry/drop table runtime. Save v49 co the
+// con stack legacy nen buoc reset, khong migration trong development.
+// version 51 (2026-08-27, Quest System v1): GameSave them field MOI
 // `quests?: QuestManagerState` (active quest progress + completedOnceIds
-// + lastDailyResetAtMs, xem core/quest/QuestManager.ts). Không migration
-// (development phase) — save v50 và cũ hơn -> 'incompatible', buộc
-// Xuất/Xoá qua SaveIncompatibleScreen.
-// version 52 (2026-08-28, talent-direction-choice-plan §6): PlayerData
-// thêm field `cultivationInsightAccumulator: number` (thiên phú Ngộ Đạo
-// tích luỹ tu vi đổi Cảm Ngộ Kỹ năng, xem stores/player.ts's cultivate()).
-// Không migration (development phase) — save v51 và cũ hơn -> 'incompatible'.
+// + lastDailyResetAtMs, xem core/quest/QuestManager.ts). Khong migration
+// (development phase) - save v50 va cu hon -> 'incompatible', buoc
+// Xuat/Xoa qua SaveIncompatibleScreen.
+// version 52 (2026-08-28, talent-direction-choice-plan sec6): PlayerData
+// them field `cultivationInsightAccumulator: number` (thien phu Ngo Dao
+// tich luy tu vi doi Cam Ngo Ky nang, xem stores/player.ts's cultivate()).
+// Khong migration (development phase) - save v51 va cu hon -> 'incompatible'.
 //
-// 2026-08-28 (save-shape-validation-plan.md, KHÔNG bump version vì không
-// đổi schema): loadGame()/importSaveRaw() chạy validateGameSaveShape()
-// sau khi version khớp — save đúng version nhưng thiếu/hỏng field bắt
-// buộc trả 'corrupted' (load) hoặc bị từ chối (import) thay vì crash
-// boot ở restoreFromSave() hay NaN cultivation vĩnh viễn.
+// 2026-08-28 (save-shape-validation-plan.md, KHONG bump version vi khong
+// doi schema): loadGame()/importSaveRaw() chay validateGameSaveShape()
+// sau khi version khop - save dung version nhung thieu/hong field bat
+// buoc tra 'corrupted' (load) hoac bi tu choi (import) thay vi crash
+// boot o restoreFromSave() hay NaN cultivation vinh vien.
 
-/** Settings phát sự kiện này để App dừng autosave trước khi xóa save. */
+/** Settings phat su kien nay de App dung autosave truoc khi xoa save. */
 export const SAVE_RESET_REQUEST_EVENT = 'tien-hiep:reset-save-requested'
 
 /**
@@ -271,6 +274,7 @@ export function restoreGameSession(
   player: GameSessionPlayerOwner,
   gameManager: GameManager,
   save: GameSave,
+  timeAuthority?: RestoreTimeAuthority,
 ): RestoreGameSessionResult {
   try {
     gameManager.saveOps.preflightSaveRegistryReferences(save)
@@ -281,16 +285,23 @@ export function restoreGameSession(
     }
   }
 
-  // M1 (ARCH-001) — a mid-restore failure is a handled rejection, not an
+  // M1 (ARCH-001) - a mid-restore failure is a handled rejection, not an
   // uncaught boot exception. Identity hashes commit only after each owner
   // finished applying, so retrying the same payload re-applies the
   // un-committed slices instead of skipping them.
   try {
-    const offline = player.restoreFromSave(save)
+    const offline = player.restoreFromSave(save, timeAuthority)
 
     gameManager.setActivePlayer(player.$state)
 
-    const equipmentModifiers = gameManager.saveOps.restoreFromSave(save)
+    const equipmentModifiers = gameManager.saveOps.restoreFromSave(save, timeAuthority)
+
+    // Default-built (2026-10-03) - save cu co the thieu building: grant
+    // lv1 cho moi building con thieu SAU khi slice restore xong. Dat o
+    // session seam (khong phai restoreFromSave) de giu contract
+    // "moi slice = replacement thuan" cua M1; moi duong load save thuc
+    // deu di qua day. Idempotent - retry cung payload khong them lan 2.
+    gameManager.buildingOps.reconcileBuildings(player.$state, Date.now() / 1000)
 
     player.setEquipmentModifiers(equipmentModifiers)
 
@@ -304,19 +315,19 @@ export function restoreGameSession(
 }
 
 /**
- * M1 (ARCH-001) — the snapshot-boundary detach. EVERY GameSave slice
+ * M1 (ARCH-001) - the snapshot-boundary detach. EVERY GameSave slice
  * must be a detached VALUE: mutating live manager state after the build,
  * or mutating the built save itself, must never reach the other side.
  *
  * JSON round-trip, NOT structuredClone: a save is also built from a
  * Pinia store's reactive $state (the player slice), and structuredClone
- * has no concept of Proxy exotic objects at ANY nesting depth — it throws
+ * has no concept of Proxy exotic objects at ANY nesting depth - it throws
  * DataCloneError the moment it meets one, including a nested field Vue
  * only wrapped in a Proxy lazily after some earlier getter/computed
- * touched it during actual gameplay (toRaw() alone is not sufficient —
+ * touched it during actual gameplay (toRaw() alone is not sufficient -
  * it only unwraps the outermost proxy). JSON.stringify/parse reads
  * through Proxies transparently at any depth, and the built save is
- * exactly what writeGameSave() serializes to localStorage anyway — the
+ * exactly what writeGameSave() serializes to localStorage anyway - the
  * in-memory snapshot now equals its persisted form byte-for-byte.
  */
 function detachSaveValue<T>(value: T): T {
@@ -334,7 +345,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     },
 
     // Manager getters intentionally return LIVE domain objects for
-    // gameplay consumers — the detach happens HERE, at the save
+    // gameplay consumers - the detach happens HERE, at the save
     // boundary, so every slice in the returned save is a value copy.
     techniques: detachSaveValue(gameManager.techniqueManager.getAll()),
 
@@ -354,7 +365,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
       amount: stack.amount,
     }))),
 
-    // Phù/Trận khai tử (§10.1) — bag không còn; mảng rỗng giữ shape save.
+    // Phu/Tran khai tu (sec10.1) - bag khong con; mang rong giu shape save.
     talismans: [],
 
     formations: [],
@@ -372,7 +383,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
       workerCycles: state.workerCycles?.length ? state.workerCycles : undefined,
 
-      // Mission A2 — manual allocation must persist; runtime-only
+      // Mission A2 - manual allocation must persist; runtime-only
       // activeWorkerSlots stays derived from live capacity (not saved).
       assignedWorkers: state.assignedWorkers,
 
@@ -404,9 +415,9 @@ export function writeGameSave(save: GameSave): SaveWriteResult {
     localStorage.setItem(resolveSaveKey(), JSON.stringify(save))
     return { status: 'ok' }
   } catch (error: unknown) {
-    // QuotaExceededError (DOMException name) — save vượt ~5MB localStorage.
-    // Không throw: caller (CloudSaveCoordinator → autosave) quyết định cách
-    // báo cho người chơi thay vì chết im lặng giữa tick.
+    // QuotaExceededError (DOMException name) - save vuot ~5MB localStorage.
+    // Khong throw: caller (CloudSaveCoordinator -> autosave) quyet dinh cach
+    // bao cho nguoi choi thay vi chet im lang giua tick.
     const name = error instanceof DOMException ? error.name : String(error)
     if (name === 'QuotaExceededError' || name === 'NS_ERROR_DOM_QUOTA_REACHED') {
       return { status: 'failed', reason: 'quota' }
@@ -415,12 +426,12 @@ export function writeGameSave(save: GameSave): SaveWriteResult {
   }
 }
 
-// Phase 5 (Reliability, mục XVI) — trước đây version không khớp hoặc
-// JSON hỏng đều trả về null giống hệt "chưa từng có save", khiến
-// App.vue coi là nhân vật mới và ÂM THẦM ghi đè save cũ ở lần save()
-// kế tiếp. Giờ phân biệt rõ 3 trường hợp để App.vue chặn boot, báo
-// người chơi, và để họ tự quyết (Export/Xoá) thay vì mất trắng không
-// biết vì sao — xem SaveIncompatibleScreen.vue.
+// Phase 5 (Reliability, muc XVI) - truoc day version khong khop hoac
+// JSON hong deu tra ve null giong het "chua tung co save", khien
+// App.vue coi la nhan vat moi va AM THAM ghi de save cu o lan save()
+// ke tiep. Gio phan biet ro 3 truong hop de App.vue chan boot, bao
+// nguoi choi, va de ho tu quyet (Export/Xoa) thay vi mat trang khong
+// biet vi sao - xem SaveIncompatibleScreen.vue.
 export type LoadOutcome =
   | { status: 'empty' }
   // `raw` rides along so a rejected-after-shape save can still be
@@ -430,7 +441,7 @@ export type LoadOutcome =
   | { status: 'ok'; save: GameSave; discardedEquipmentCount: number; raw: string }
   | { status: 'incompatible'; foundVersion: number | undefined; raw: string }
   | { status: 'corrupted'; raw: string }
-  // Mission A review (MA-R2-02) — storage access itself threw
+  // Mission A review (MA-R2-02) - storage access itself threw
   // (SecurityError/denied). Deliberately NOT 'empty': callers must not
   // start a new character over an unreadable existing save.
   | { status: 'storage_unavailable' }
@@ -484,12 +495,12 @@ export function inspectLocalSave(): InspectedSave {
   }
 
   // Development-phase policy (dong-fu-command-wheel-inventory-spirit-
-  // stone-plan.md §"Chính sách migration") — KHÔNG còn auto-migration
-  // nào: mọi version cũ hơn CURRENT_SAVE_VERSION trả về 'incompatible'
-  // để SaveIncompatibleScreen cho phép Export/Xoá. Điều này bảo đảm
-  // không bao giờ có writeGameSave() phát sinh từ loadGame() (trước đây
-  // nhánh v42/v43 ghi đè save gốc mà không backup và gắn thẳng version
-  // hiện hành dù thiếu field của schema mới).
+  // stone-plan.md sec"Chinh sach migration") - KHONG con auto-migration
+  // nao: moi version cu hon CURRENT_SAVE_VERSION tra ve 'incompatible'
+  // de SaveIncompatibleScreen cho phep Export/Xoa. Dieu nay bao dam
+  // khong bao gio co writeGameSave() phat sinh tu loadGame() (truoc day
+  // nhanh v42/v43 ghi de save goc ma khong backup va gan thang version
+  // hien hanh du thieu field cua schema moi).
   if (foundVersion !== CURRENT_SAVE_VERSION) {
     return {
       status: 'incompatible',
@@ -498,10 +509,10 @@ export function inspectLocalSave(): InspectedSave {
     }
   }
 
-  // save-shape-validation-plan.md §3.4 — version khớp CHƯA đủ: save thiếu
-  // array/field bắt buộc (vd player.nodeLevels thời v47) từng gây crash
-  // boot hoặc NaN cultivation vĩnh viễn ở restoreFromSave(). Phát hiện
-  // có chủ đích tại đây để SaveIncompatibleScreen xử lý (Xuất/Xoá).
+  // save-shape-validation-plan.md sec3.4 - version khop CHUA du: save thieu
+  // array/field bat buoc (vd player.nodeLevels thoi v47) tung gay crash
+  // boot hoac NaN cultivation vinh vien o restoreFromSave(). Phat hien
+  // co chu dich tai day de SaveIncompatibleScreen xu ly (Xuat/Xoa).
   const shape = validateGameSaveShape(parsed)
 
   if (!shape.ok) {
@@ -537,7 +548,7 @@ export function loadGame(): LoadOutcome {
 
   const raw = inspected.raw
 
-  // Handoff marker is auxiliary — a read failure degrades to "no
+  // Handoff marker is auxiliary - a read failure degrades to "no
   // marker" (count lost, save still loads) instead of failing the load.
   let importedHandoffRaw: string | null = null
 
@@ -573,16 +584,16 @@ export function loadGame(): LoadOutcome {
       importedDiscardedCount = importedHandoff.discardedEquipmentCount
     }
 
-    // OPT-06 — removeItem chạy SAU khi đọc + consume xong (trước đây
-    // xóa ngay trước khi parse). Chỉ chạm storage khi key thực sự tồn
-    // tại; handoff không còn giá trị sử dụng sau load hợp lệ nên vẫn
-    // bị xóa kể cả khi marker lệch normalizedRaw (rác). Ý đồ cũ giữ
-    // nguyên: mọi đường return trước (parse fail, version, shape) nằm
-    // TRƯỚC block này nên handoff còn nguyên cho lần load hợp lệ.
+    // OPT-06 - removeItem chay SAU khi doc + consume xong (truoc day
+    // xoa ngay truoc khi parse). Chi cham storage khi key thuc su ton
+    // tai; handoff khong con gia tri su dung sau load hop le nen van
+    // bi xoa ke ca khi marker lech normalizedRaw (rac). Y do cu giu
+    // nguyen: moi duong return truoc (parse fail, version, shape) nam
+    // TRUOC block nay nen handoff con nguyen cho lan load hop le.
     try {
       localStorage.removeItem(resolveImportHandoffKey())
     } catch {
-      // Marker persists harmlessly — next valid load consumes/removes it.
+      // Marker persists harmlessly - next valid load consumes/removes it.
     }
   }
 
@@ -595,11 +606,11 @@ export function loadGame(): LoadOutcome {
   }
 }
 
-// Sao lưu save hiện có vào BACKUP_KEY — gọi TRƯỚC mọi thao tác có
-// thể xoá/ghi đè save chính (deleteSave(), importSaveRaw()), để luôn
-// còn 1 bước lùi qua restoreBackup() nếu người chơi bấm nhầm.
-// Mission A5 — storage throw (quota/SecurityError) thì trả false thay
-// vì làm caller crash: backup là best-effort, không được phá flow chính.
+// Sao luu save hien co vao BACKUP_KEY - goi TRUOC moi thao tac co
+// the xoa/ghi de save chinh (deleteSave(), importSaveRaw()), de luon
+// con 1 buoc lui qua restoreBackup() neu nguoi choi bam nham.
+// Mission A5 - storage throw (quota/SecurityError) thi tra false thay
+// vi lam caller crash: backup la best-effort, khong duoc pha flow chinh.
 export function backupCurrentSave(): boolean {
   try {
     const raw = localStorage.getItem(resolveSaveKey())
@@ -638,37 +649,44 @@ export function restoreBackup(): boolean {
       return false
     }
 
-    // Xoá handoff TRƯỚC khi ghi: nếu removeItem throw thì SAVE_KEY còn
-    // nguyên và `false` phản ánh đúng "chưa restore gì" (ghi trước xoá
-    // sau sẽ báo false dù backup đã được restore).
+    // Xoa handoff TRUOC khi ghi: neu removeItem throw thi SAVE_KEY con
+    // nguyen va `false` phan anh dung "chua restore gi" (ghi truoc xoa
+    // sau se bao false du backup da duoc restore).
     localStorage.removeItem(resolveImportHandoffKey())
     localStorage.setItem(resolveSaveKey(), raw)
 
     return true
   } catch {
-    // Mission A5 — storage throw → báo thất bại thay vì crash recovery UI.
+    // Mission A5 - storage throw -> bao that bai thay vi crash recovery UI.
     return false
   }
 }
 
-// Mission A review (MA-R2-01) — returns observable success: callers
+// Mission A review (MA-R2-01) - returns observable success: callers
 // must only reload on `true`, otherwise a swallowed removeItem failure
 // would reload into the same corrupt save the user just tried to
-// delete. Every key is attempted even when one throws — aborting the
+// delete. Every key is attempted even when one throws - aborting the
 // loop early could leave a stale SAVE_REVISION_KEY that fails the next
 // character's first CAS write.
 export function deleteSave(): boolean {
-  // Best-effort: backup fail (quota/SecurityError) KHÔNG chặn xoá —
-  // người chơi đã xác nhận mất save.
+  // Best-effort: backup fail (quota/SecurityError) KHONG chan xoa -
+  // nguoi choi da xac nhan mat save.
   void backupCurrentSave()
 
   let ok = true
 
-  for (const key of [
+  // B1-C: a user-confirmed reset also drops the remote-mode durable
+  // envelopes (pending journal / acked cache / quarantine) bound to this
+  // account - the server row stays the authority, and dropping the
+  // journal releases a permanently-unresolved pending for export-or-drop.
+  const keys = [
     resolveSaveKey(),
     resolveImportHandoffKey(),
     resolveRevisionKey(),
-  ]) {
+    ...listSaveEnvelopeKeys(),
+  ]
+
+  for (const key of keys) {
     try {
       localStorage.removeItem(key)
     } catch {
@@ -679,30 +697,33 @@ export function deleteSave(): boolean {
   return ok
 }
 
-// Tải save hiện có (bất kể đọc được hay không) xuống file .json —
-// đường thoát an toàn thật sự cho save không tương thích/hỏng, vì
-// BACKUP_KEY vẫn nằm trong cùng localStorage nên mất theo nếu người
-// dùng xoá site data.
-export function exportSaveToFile(raw: string) {
+// Tai save hien co (bat ke doc duoc hay khong) xuong file .json -
+// duong thoat an toan that su cho save khong tuong thich/hong, vi
+// BACKUP_KEY van nam trong cung localStorage nen mat theo neu nguoi
+// dung xoa site data.
+// `provenance` (B1.9a) stamps source + revision onto the filename so a
+// cloud-acked export is distinguishable from a local-slot or
+// validated-import one.
+export function exportSaveToFile(raw: string, provenance?: ExportProvenance) {
   const blob = new Blob([raw], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
 
   const link = document.createElement('a')
 
   link.href = url
-  link.download = `tien-hiep-idle-save-${Date.now()}.json`
+  link.download = exportFilename(provenance, Date.now())
   link.click()
 
   URL.revokeObjectURL(url)
 }
 
-// Nhập save từ nội dung file .json do người chơi chọn — kiểm tra parse
-// được + có field `version`/`player`, và nếu là save ĐÚNG version hiện
-// hành thì phải nguyên shape (validateGameSaveShape) mới cho ghi — chặn
-// ghi đè save tốt bằng một save hỏng ngay tại cửa nhập. Save version
-// KHÁC vẫn được ghi (loadGame() lần reload kế sẽ phân loại 'incompatible'
-// và cho Export/Xoá qua SaveIncompatibleScreen — đúng flow recovery hiện
-// có). Backup save hiện tại (nếu có) trước khi ghi đè.
+// Import a player-chosen .json save: parse must succeed and `version`/`player`
+// fields must exist; a save at EXACTLY the current version must also pass
+// validateGameSaveShape before writing - stops a broken save overwriting a
+// good one at the import gate. A DIFFERENT version is still written (the
+// reload's loadGame() then classifies it 'incompatible' and offers
+// Export/Delete via SaveIncompatibleScreen - the existing recovery flow).
+// Back up the current save (if any) before overwriting.
 export function importSaveRaw(raw: string): boolean {
   let parsed: unknown
   let normalizedRaw = raw
@@ -723,8 +744,8 @@ export function importSaveRaw(raw: string): boolean {
     return false
   }
 
-  // Chỉ enforce shape khi đúng version hiện hành — save version khác để
-  // loadGame() xử lý 'incompatible' (không chặn đường recovery của user).
+  // Enforce shape only at the current version - other versions are left
+  // for loadGame()'s 'incompatible' path (keeps the user's recovery route).
   if ((parsed as { version?: unknown }).version === CURRENT_SAVE_VERSION) {
     const shape = validateGameSaveShape(parsed)
 
@@ -745,9 +766,10 @@ export function importSaveRaw(raw: string): boolean {
     discardedEquipmentCount = shape.discardedEquipmentCount
   }
 
-  // Chuẩn bị handoff TRƯỚC khi đụng backup/save chính. Nếu storage không
-  // nhận được marker thì import thất bại nguyên vẹn thay vì thay save nhưng
-  // làm mất counter. Exact normalizedRaw ràng buộc marker với đúng payload.
+  // Prepare the handoff BEFORE touching backup/main save. If storage
+  // cannot accept the marker the import fails intact rather than writing
+  // a save but losing the counter. Exact normalizedRaw binds the marker
+  // to the right payload.
   // Snapshot the prior marker first: a pending marker written by the
   // other seam (remote pull writes it after its save) belongs to the
   // CURRENT save, so a later abort must restore it.
@@ -782,7 +804,7 @@ export function importSaveRaw(raw: string): boolean {
     return false
   }
 
-  // Mission A5 — backup failure aborts the import intact: overwriting
+  // Mission A5 - backup failure aborts the import intact: overwriting,
   // the only save without a written safety net is the unsafe outcome,
   // so a failed backup returns false with SAVE_KEY untouched.
   if (!backupCurrentSave()) {

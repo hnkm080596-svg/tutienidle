@@ -17,7 +17,7 @@ import { ELEMENT_LABELS } from '../../core/element/ElementLabels'
 // tu_the/truong_the The lanes, all routeTag'd dot/no specializations,
 // and linh_ngo_<godUlt> (no ultimate slot in the new kit).
 
-/** Goc hanh — id giu nguyen tu cay cu de presentation/da ton tai giu ten. */
+/** Goc hanh - id giu nguyen tu cay cu de presentation/da ton tai giu ten. */
 export const PHAP_TU_ELEMENT_ROOT_IDS: Record<ElementType, string> = {
   fire: 'hoa_linh_ngo',
   water: 'thuy_linh_ngo',
@@ -57,7 +57,7 @@ function elementRoot(element: ElementType): ProgressionNode {
   return {
     id: rootId,
     name: `${ELEMENT_LABELS[element]} Linh Ngộ`,
-    description: `Mở hành ${ELEMENT_LABELS[element]} — chọn nguyên tố Pháp Tu (nguyên tử, qua selectSpellPathElement).`,
+    description: `Mở hành ${ELEMENT_LABELS[element]} — chọn nguyên tố Pháp Tu (nguyên tử, qua nghi lễ nhập môn Ngũ Hành).`,
     type: 'major',
     role: 'root',
     insightCost: 0,
@@ -112,7 +112,7 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
       ],
     ),
 
-    // Special unlock (spec sec.1.4) — realm gate Truc Co
+    // Special unlock (spec sec.1.4) - realm gate Truc Co
     // (foundation_establishment): grants the Phap Trang special and the
     // Linh Luc Ho The damage-reduction cap in one purchase. No god-ult
     // node follows it; the kit ends at the special.

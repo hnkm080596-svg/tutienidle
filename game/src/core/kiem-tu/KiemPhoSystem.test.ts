@@ -12,10 +12,10 @@ import {
 import type { OrbId } from './KiemTuState'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
 
-// Kiem Tu Reimagined Task 4 — KiemPhoSystem matcher core (spec
-// 2026-09-15 §4.1): preset cursor, <=5-entry cast log, longest-first
+// Kiem Tu Reimagined Task 4 - KiemPhoSystem matcher core (spec
+// 2026-09-15 sec4.1): preset cursor, <=5-entry cast log, longest-first
 // TAIL match gated by realmComboMax, full reset on fire. The combo
-// TABLE is Task-5 data — matcher tests inject fixture combos (A6: core
+// TABLE is Task-5 data - matcher tests inject fixture combos (A6: core
 // never imports data).
 
 function hienPlayer(preset: OrbId[], realmId = 'qi_refining'): PlayerData {
@@ -32,7 +32,7 @@ function hienPlayer(preset: OrbId[], realmId = 'qi_refining'): PlayerData {
   return player
 }
 
-// Fixture combos — real patterns land in Task 5's KIEM_PHO_COMBOS.
+// Fixture combos - real patterns land in Task 5's KIEM_PHO_COMBOS.
 const COMBO_LEN3: KiemPhoCombo = {
   id: 'test_len3', name: 'Test Len3',
   pattern: ['orb_dam', 'orb_dam', 'orb_dam'],
@@ -140,7 +140,7 @@ describe('recordCastAndMatch', () => {
     recordCastAndMatch(state, 'orb_dam', COMBOS)
     recordCastAndMatch(state, 'orb_dam', COMBOS)
     recordCastAndMatch(state, 'orb_dam', COMBOS) // fires, log cleared
-    // one more cast cannot re-fire — log only holds 1 entry
+    // one more cast cannot re-fire - log only holds 1 entry
     expect(recordCastAndMatch(state, 'orb_dam', COMBOS)).toBeNull()
     expect(state.log).toEqual(['orb_dam'])
   })

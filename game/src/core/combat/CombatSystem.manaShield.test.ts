@@ -5,9 +5,9 @@ import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  // dexterity:0/evasionRate:0 — hit chance 100% đảm bảo, cùng lý do đã
-  // ghi trong BattleSystem.swordPath.test.ts (calculateStats() tự cộng
-  // thêm evasionRate dẫn xuất từ dexterity).
+  // dexterity:0/evasionRate:0 - hit chance 100% dam bao, cung ly do da
+  // ghi trong BattleSystem.swordPath.test.ts (calculateStats() tu cong
+  // them evasionRate dan xuat tu dexterity).
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
@@ -30,9 +30,9 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   }
 }
 
-// Pháp Tu Redesign (magicpath) — "linh lực giảm sát thương nhận vào":
-// currentMp giảm sát thương theo %, phần giảm đó THẬT SỰ trừ vào mana
-// (không free), tràn ngược lại HP khi hết mana.
+// Phap Tu Redesign (magicpath) - "linh luc giam sat thuong nhan vao":
+// currentMp giam sat thuong theo %, phan giam do THAT SU tru vao mana
+// (khong free), tran nguoc lai HP khi het mana.
 describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
   it('manaShieldPercent=0 (mặc định) — không đổi hành vi cũ, toàn bộ damage vào HP', () => {
     const combat = new CombatSystem(new EventBus())
@@ -72,13 +72,13 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
     const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, manaShieldPercent: 1, maxMp: 10 })
-    // Mana rất ít so với damage sắp nhận — không đủ che hết dù
+    // Mana rat it so voi damage sap nhan - khong du che het du
     // manaShieldPercent=100%.
     const target = createCombatant({ id: 'target', stats: targetStats, currentHp: 1000, maxHp: 1000, currentMp: 10 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
-    // Chỉ che được đúng bằng lượng mana đang có, không hơn.
+    // Chi che duoc dung bang luong mana dang co, khong hon.
     expect(result.manaShieldAbsorbed).toBe(10)
     expect(target.currentMp).toBe(0)
     expect(target.currentHp).toBe(1000 - (result.finalDamage - 10))
@@ -102,7 +102,7 @@ describe('CombatSystem — Mana Shield (Pháp Tu Redesign, magicpath)', () => {
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
-    // Ward thừa sức che HẾT đòn này -> không còn gì cho Mana Shield xử lý.
+    // Ward thua suc che HET don nay -> khong con gi cho Mana Shield xu ly.
     expect(result.wardAbsorbed).toBe(result.finalDamage)
     expect(result.manaShieldAbsorbed).toBe(0)
     expect(target.currentMp).toBe(500)

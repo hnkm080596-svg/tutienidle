@@ -13,16 +13,16 @@ export interface PillFamilyDefinition {
   herbName: string
   effect: PillFamilyEffect
   /**
-   * M10 (ARCH-008) — user-locked retirement (2026-09-14): a retired family
+   * M10 (ARCH-008) - user-locked retirement (2026-09-14): a retired family
    * keeps its data (herb chain, bag entries on old saves, in-flight alchemy
    * jobs resolve) but is explicitly UNAVAILABLE on craftable + usable
-   * surfaces — generated recipes/pills carry `retired: true`, the craft
+   * surfaces - generated recipes/pills carry `retired: true`, the craft
    * gate and the consume gate both reject it.
    */
   retired?: boolean
 }
 
-/** Nguồn sự thật duy nhất cho tám loại đan và tám loại linh thảo tương ứng. */
+/** Nguon su that duy nhat cho tam loai dan va tam loai linh thao tuong ung. */
 export const PILL_FAMILIES: readonly PillFamilyDefinition[] = [
   { id: 'tu_linh_dan', name: 'Tụ Linh Đan', herbId: 'tu_linh_thao', herbName: 'Tụ Linh Thảo', effect: { kind: 'cultivation' } },
   // Hoi Xuan Dan - retired 2026-09-14 per user decision (ARCH-008 / M10);

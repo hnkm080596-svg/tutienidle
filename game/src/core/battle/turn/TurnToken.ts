@@ -61,7 +61,7 @@ export class TurnToken {
   }
 
   /**
-   * Returns the token to IDLE. Called by startStage (spec 3.3) — without
+   * Returns the token to IDLE. Called by startStage (spec 3.3) - without
    * this, a battle that ended in COMBAT_OVER leaves a terminal token for the
    * next battle, whose first claim() is then rejected and which never starts.
    */

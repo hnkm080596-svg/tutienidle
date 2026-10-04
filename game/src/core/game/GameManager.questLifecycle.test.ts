@@ -3,9 +3,21 @@
 // NOT on panel reads. These tests drive the REAL manager and never
 // open the quest UI.
 import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+  isBetaQuestEnabled: () => true,
+}))
+
 import { GameManager } from './GameManager'
 import { QUESTS } from '../../data/quest/quests'
+import type { Quest } from '../quest/Quest'
 import { createDefaultPlayer } from '../player/Player'
 import type { PlayerData } from '../player/Player'
 import type { GameSave } from '../../services/save/SaveSystem'
@@ -21,7 +33,13 @@ function makeManager(): { manager: GameManager; player: PlayerData } {
 
 describe('GameManager quest lifecycle wiring (AR-09)', () => {
   it('kill counts on a fresh session BEFORE any QuestPanel read', () => {
-    const { manager } = makeManager()
+    const { manager, player } = makeManager()
+
+    // kill_wild_wolf_10 is realm-gated to qi_refining (F2 fix - it
+    // auto-admitted at mortal creation as a dead 0/10 row while its
+    // target only spawns in the Quat stages); the fixture bumps the
+    // realm so the same no-UI counting seam stays exercised.
+    player.realmId = 'qi_refining'
 
     // No getActiveQuests() call anywhere in this test. The first update
     // tick is the boot-time reconciliation trigger.
@@ -38,9 +56,21 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
   })
 
   it('daily rollover mid-session repopulates the board without UI', () => {
+    // BETA SCOPE LOCK v2 sec.15 - every authored daily retired, so a
+    // fabricated registry daily keeps the dormant rollover machinery
+    // covered (the same seam dailies return through post-beta).
+    const testDaily: Quest = {
+      id: 'daily_test_rollover',
+      name: 'Test Daily',
+      description: '',
+      cadence: 'daily',
+      condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 3 },
+      reward: { reward: { skillInsight: 5 } },
+    }
     const { manager, player } = makeManager()
+    manager.questRegistry.register(testDaily)
     manager.tickOps.update(1)
-    expect(manager.questManager.getProgress('daily_kill_bandit_15')).toBeDefined()
+    expect(manager.questManager.getProgress('daily_test_rollover')).toBeDefined()
 
     // Simulate the next wall-clock day: checkAndResetDaily accepts a
     // `now` argument through the system (the tick path passes
@@ -55,11 +85,11 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
     )
     expect(reset).toBe(true)
     // Reset clears the daily entry...
-    expect(manager.questManager.getProgress('daily_kill_bandit_15')).toBeUndefined()
+    expect(manager.questManager.getProgress('daily_test_rollover')).toBeUndefined()
     // ...and the lifecycle reconciliation rebuilds today's board.
     manager.tickOps.reconcileQuestLifecycle()
-    expect(manager.questManager.getProgress('daily_kill_bandit_15')).toBeDefined()
-    expect(manager.questManager.getProgress('daily_kill_bandit_15')!.progress).toBe(0)
+    expect(manager.questManager.getProgress('daily_test_rollover')).toBeDefined()
+    expect(manager.questManager.getProgress('daily_test_rollover')!.progress).toBe(0)
   })
 
   it('restore from save reconciles quests without UI', () => {
@@ -98,6 +128,9 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
     expect(lockedBefore).toBeUndefined()
 
     player.realmId = 'foundation_establishment'
+    // main_14 is realm-gated AND chain-gated: the realm transition
+    // admits it only with its predecessor already witnessed complete.
+    manager.questManager.markCompletedOnce('main_13_giao_xa_uyen_dam')
     manager.tickOps.markQuestRealmTransition()
     manager.tickOps.update(1)
 
@@ -107,14 +140,7 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
       .map((q) => q.id)
     expect(unlockedIds.length).toBeGreaterThan(0)
     for (const id of unlockedIds) {
-      // M-F-COMPANION-GIFT: the daily token faucet is a token-only source -
-      // whole-quest suppressed at origination, so it never activates. Every
-      // other foundation-locked quest unlocks on the transition.
-      if (id === 'daily_chieu_hien_lenh') {
-        expect(manager.questManager.getProgress(id)).toBeUndefined()
-      } else {
-        expect(manager.questManager.getProgress(id)).toBeDefined()
-      }
+      expect(manager.questManager.getProgress(id)).toBeDefined()
     }
   })
 })

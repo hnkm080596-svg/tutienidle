@@ -42,11 +42,11 @@ export const STAT_DOMAIN: Partial<Record<StatType, StatDomain>> = {
   linhLucHoTheCap: 'spell',
   reactionEffectPercent: 'spell',
 
-  // The Tu Reimagined (spec 2026-09-15 section 3.3, T8) — block and
+  // The Tu Reimagined (spec 2026-09-15 section 3.3, T8) - block and
   // endurance are body-path identity: only body-domain modifiers may
   // move them, and hidden_body's three reactive chances accept only
   // hidden_body-domain emission (which in practice is the attribute
-  // deriver — INV-13 forbids authored modifiers for them entirely).
+  // deriver - INV-13 forbids authored modifiers for them entirely).
   blockChance: 'body',
   blockEffectiveness: 'body',
   enduranceThreshold: 'body',
@@ -97,7 +97,7 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
     { file: 'data/buff/LegacyBuffs.ts', stats: ['manaRegenPerTurn'] },
   ],
 
-  // The Tu Reimagined (T8) — two separate domains: 'body' owns the
+  // The Tu Reimagined (T8) - two separate domains: 'body' owns the
   // visible path's defensive stats (block/endurance migration in Task 3)
   // and kit-authored modifiers; 'hidden_body' owns the hidden path's
   // reactive chance stats (counterChance/protectChance/followUpChance).
@@ -105,7 +105,7 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
     { file: 'data/progression/TheTu*' },
     { file: 'data/skill/TheTu*' },
     { file: 'data/buff/TheTu*' },
-    // Techniques.ts houses kim_cang_bat_hoai_the — its block/endurance
+    // Techniques.ts houses kim_cang_bat_hoai_the - its block/endurance
     // stat rows are body emissions by content ownership.
     {
       file: 'data/technique/Techniques.ts',
@@ -136,7 +136,7 @@ export const DOMAIN_SOURCE_WHITELIST: Record<
 // Cultivation path -> owned combat stat domains: the WAY stat facet
 // (PathWayDefinition.stats.domains) is the single authority, read
 // through resolveActiveWayStatDomains (M7 removed the path-keyed
-// CULTIVATION_PATH_STAT_DOMAINS map — domain ownership is way-scoped:
+// CULTIVATION_PATH_STAT_DOMAINS map - domain ownership is way-scoped:
 // hidden_spell_pathway under spell owns 'spell', hidden_body_pathway under body owns
 // 'hidden_body'). Meta domains (production/cultivation/equipment_meta/
 // artifact/realm) never appear there.
@@ -159,7 +159,7 @@ export function clearDomainViolations(): void {
 }
 
 // Dev/test detection follows the codebase's import.meta.env.DEV guard
-// pattern (DevMode.ts), extended with MODE === 'test' so Vitest runs
+// pattern, extended with MODE === 'test' so Vitest runs
 // (where DEV semantics may vary) also fail fast.
 function isDevOrTestEnv(): boolean {
   return import.meta.env.DEV === true || import.meta.env.MODE === 'test'

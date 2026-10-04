@@ -1,21 +1,21 @@
 // @vitest-environment jsdom
 //
-// Audit fix 2026-08-31 (H4) — usePanelPagination: container có thể nằm
-// trong v-if/v-else nên KHÔNG tồn tại lúc onMounted (tab Hóa Luyện của
-// EquipmentHallPanel chỉ render khi activeTab === 'dissolve'; LoreCodex
-// grid chỉ render khi có items). Observer phải attach KHI ref containerEl
-// được gán (bất kể lúc nào trong đời component), thay vì chỉ thử đúng 1
-// lần ở mount — nếu không availableHeight kẹt 0 → pageSize = 1 vĩnh viễn.
+// Audit fix 2026-08-31 (H4) - usePanelPagination: container co the nam
+// trong v-if/v-else nen KHONG ton tai luc onMounted (tab Hoa Luyen cua
+// EquipmentHallPanel chi render khi activeTab === 'dissolve'; LoreCodex
+// grid chi render khi co items). Observer phai attach KHI ref containerEl
+// duoc gan (bat ke luc nao trong doi component), thay vi chi thu dung 1
+// lan o mount - neu khong availableHeight ket 0 -> pageSize = 1 vinh vien.
 //
-// KHÔNG có @vue/test-utils trong devDeps → mount thủ công createApp
-// (cùng pattern useStageActive.resultLifecycle.test.ts).
+// KHONG co @vue/test-utils trong devDeps -> mount thu cong createApp
+// (cung pattern useStageActive.resultLifecycle.test.ts).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, createApp, h, nextTick, ref } from 'vue'
 import { usePanelPagination } from './usePanelPagination'
 
-// jsdom không có ResizeObserver thật — stub global bằng class mock:
-// constructor giữ callback để test tự fire entry, observe/disconnect/
-// unobserve là vi.fn(), static instances để lấy instance cuối.
+// jsdom khong co ResizeObserver that - stub global bang class mock:
+// constructor giu callback de test tu fire entry, observe/disconnect/
+// unobserve la vi.fn(), static instances de lay instance cuoi.
 class MockResizeObserver {
   static instances: MockResizeObserver[] = []
 
@@ -43,9 +43,9 @@ function mountHost() {
       const { containerEl, pageSize } = usePanelPagination(rowCount, 80)
 
       return () => [
-        // Container như tab Hóa Luyện: chỉ tồn tại khi show = true.
+        // Container nhu tab Hoa Luyen: chi ton tai khi show = true.
         show.value ? h('div', { ref: containerEl }) : null,
-        // Render pageSize ra text để assert không cần expose.
+        // Render pageSize ra text de assert khong can expose.
         h('div', String(pageSize.value)),
       ]
     },
@@ -74,12 +74,12 @@ describe('usePanelPagination — attach observer reactive (H4)', () => {
 
     const host = mountHost()
 
-    // Chưa show container → availableHeight = 0 → pageSize fallback 6
-    // (T2.3 2026-09-01: fallback 1 khiến grid overflow:hidden giấu
-    // toàn bộ items ngoài trang 1 khi observer chưa fire).
+    // Chua show container -> availableHeight = 0 -> pageSize fallback 6
+    // (T2.3 2026-09-01: fallback 1 khien grid overflow:hidden giau
+    // toan bo items ngoai trang 1 khi observer chua fire).
     expect(host.root.textContent).toBe('6')
 
-    // Show container (như đổi sang tab Hóa Luyện) → ref gán → observer attach.
+    // Show container (nhu doi sang tab Hoa Luyen) -> ref gan -> observer attach.
     host.show.value = true
     await nextTick()
     await nextTick()
@@ -89,7 +89,7 @@ describe('usePanelPagination — attach observer reactive (H4)', () => {
     expect(observer).toBeDefined()
     expect(observer!.observe).toHaveBeenCalledTimes(1)
 
-    // Giả lập ResizeObserver entry: container cao 400px → floor(400/80) = 5.
+    // Gia lap ResizeObserver entry: container cao 400px -> floor(400/80) = 5.
     observer!.callback(
       [{ contentRect: { height: 400 } } as unknown as ResizeObserverEntry],
       observer as unknown as ResizeObserver,

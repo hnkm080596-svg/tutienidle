@@ -1,0 +1,6 @@
+{
+  "runPatch": {
+    "siblingSearch": "backfill on 13 CLOSED T19 findings"
+  },
+  "reason": "MC5 requires sibling-search evidence on CLOSED findings; record path is immutable once terminal, so the wave's enumerated seam census is backfilled via migration"
+}

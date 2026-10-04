@@ -6,11 +6,12 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useTribulation } from '@/composables/useTribulation'
 import { projectTechniqueCompletion } from '@/core/technique/TechniqueProgression'
+import { betaTechniqueAdmitted } from '@/core/betaScopeSkillDomain'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import GameButton from '@/components/common/GameButton.vue'
 
-// Task 9.1 — panel xác nhận đơn giản: cảnh báo "không thể mặc trang bị
-// khi độ kiếp" + 2 nút. Auto-unequip do triggerBreakthrough() lo.
+// Task 9.1 - panel xac nhan don gian: canh bao "khong the mac trang bi
+// khi do kiep" + 2 nut. Auto-unequip do triggerBreakthrough() lo.
 const { t } = useI18n()
 const store = useBreakthroughRequirementStore()
 const player = usePlayerStore()
@@ -27,7 +28,7 @@ const techniqueCompletionWarning = computed(() => {
   stateVersion.value
 
   const technique = gameManager.techniqueManager.getActive()
-  if (!technique) return undefined
+  if (!technique || !betaTechniqueAdmitted(technique.id)) return undefined
 
   const outcome = projectTechniqueCompletion(technique, player.$state.realmLevel)
 

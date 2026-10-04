@@ -1,0 +1,11 @@
+=== huyKiem-prop (T7 rebind, Thu Oct  1 04:12:09 UTC 2026) ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  04:12:10
+   Duration  570ms (transform 337ms, setup 208ms, import 210ms, tests 25ms, environment 0ms)
+
+EXIT=0

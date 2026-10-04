@@ -49,19 +49,19 @@ describe('bindUiAudio', () => {
     unbind()
   })
 
-  it('treats overlay/detail/standalone fields as one ordered panel signature', () => {
+  it('treats overlay/standalone fields as one ordered panel signature', () => {
     const ui = useUiStore()
     const unbind = bindUiAudio(ui)
 
     ui.characterOverlayOpen = true
     expect(cues()).toEqual(['ui.panel.open'])
 
-    // Detail takes precedence over overlay - swap still reads close+open.
-    ui.characterDetailOpen = true
+    // Overlay takes precedence over standalone - swap still reads close+open.
+    ui.characterOverlayOpen = false
+    ui.standalonePanel = 'realm'
     expect(cues()).toEqual(['ui.panel.open', 'ui.panel.close', 'ui.panel.open'])
 
-    ui.characterDetailOpen = false
-    ui.characterOverlayOpen = false
+    ui.standalonePanel = null
     unbind()
   })
 

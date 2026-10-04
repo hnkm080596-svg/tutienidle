@@ -1,8 +1,8 @@
-// Placeholder art cho building "vendor" (Ký Bảo Các, 2026-08-30) — user
-// sẽ cung cấp asset thật sau qua asset-drop/ + npm run assets:route.
-// Placeholder này CHỈ để dongFuBuildingAssets.test.ts (RGBA 1254x1254,
-// đúng 4 file kỹ thuật/building) không đỏ trong lúc chờ ảnh thật — xoá/
-// ghi đè trực tiếp khi có asset thật, không cần sửa code nơi khác.
+// Placeholder art cho building "vendor" (Ky Bao Cac, 2026-08-30) - user
+// se cung cap asset that sau qua asset-drop/ + npm run assets:route.
+// Placeholder nay CHI de dongFuBuildingAssets.test.ts (RGBA 1254x1254,
+// dung 4 file ky thuat/building) khong do trong luc cho anh that - xoa/
+// ghi de truc tiep khi co asset that, khong can sua code noi khac.
 import { createCanvas } from 'canvas'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -14,7 +14,7 @@ const OUT_DIR = path.join(
   '../public/assets/buildings/dong-fu/v2/vendor',
 )
 
-// Khớp visualBounds trong DongFuBuildingArt.ts: x150 y200 w950 h850.
+// Khop visualBounds trong DongFuBuildingArt.ts: x150 y200 w950 h850.
 const BOUNDS = { x: 150, y: 200, width: 950, height: 850 }
 
 mkdirSync(OUT_DIR, { recursive: true })
@@ -26,8 +26,8 @@ function save(name, draw) {
   writeFileSync(path.join(OUT_DIR, name), canvas.toBuffer('image/png'))
 }
 
-// base.png — hình quầy hàng đơn giản (mái + quầy + 2 cột), tông vàng đồng
-// khác biệt các building khác để dễ nhận trên map trong lúc chờ art thật.
+// base.png - hinh quay hang don gian (mai + quay + 2 cot), tong vang dong
+// khac biet cac building khac de de nhan tren map trong luc cho art that.
 save('base.png', (ctx) => {
   const { x, y, width, height } = BOUNDS
   const roofH = height * 0.32
@@ -52,8 +52,8 @@ save('base.png', (ctx) => {
   ctx.fillRect(x + width * 0.67, y + height - counterH * 0.55, width * 0.18, counterH * 0.55)
 })
 
-// silhouette-mask.png — cùng hình dạng base nhưng đặc 1 màu (dùng cho
-// glow outline khi hover/selected qua filter sepia trong DongFuBuildingSprite).
+// silhouette-mask.png - cung hinh dang base nhung dac 1 mau (dung cho
+// glow outline khi hover/selected qua filter sepia tren plaque).
 save('silhouette-mask.png', (ctx) => {
   const { x, y, width, height } = BOUNDS
   const roofH = height * 0.32
@@ -68,7 +68,7 @@ save('silhouette-mask.png', (ctx) => {
   ctx.fillRect(x + width * 0.05, y + roofH, width * 0.9, height - roofH)
 })
 
-// ground-shadow.png — bóng bầu dục mờ dưới chân building.
+// ground-shadow.png - bong bau duc mo duoi chan building.
 save('ground-shadow.png', (ctx) => {
   const { x, y, width, height } = BOUNDS
   const cx = x + width / 2
@@ -86,8 +86,8 @@ save('ground-shadow.png', (ctx) => {
   ctx.fill()
 })
 
-// locked-overlay.png — phủ tối vùng building khi CHƯA xây (chỉ hiện khi
-// status === 'locked', xem DongFuBuildingSprite.vue).
+// locked-overlay.png - phu toi vung building khi CHUA xay (chi hien khi
+// status === 'locked' tren plaque cong trinh).
 save('locked-overlay.png', (ctx) => {
   const { x, y, width, height } = BOUNDS
 

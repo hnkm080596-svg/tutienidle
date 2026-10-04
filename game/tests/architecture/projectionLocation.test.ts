@@ -1,11 +1,11 @@
 /**
- * Guard (V7) — grid projection is a PRESENTATION asset, not a Phaser one.
+ * Guard (V7) - grid projection is a PRESENTATION asset, not a Phaser one.
  *
  * Spec: docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md
- * §2.2 and §6/V7.
+ * sec2.2 and sec6/V7.
  *
  * The canvas draws with the projection and the DOM must hit-test with it, so
- * under §3.4 it cannot live in either layer: a DOM overlay importing from
+ * under sec3.4 it cannot live in either layer: a DOM overlay importing from
  * `src/game/` would be the static layer reaching into the dynamic one. It lives
  * in `src/presentation/geometry/`, and this pins it there.
  *
@@ -76,7 +76,7 @@ describe('projection lives in presentation/geometry', () => {
     () => {
       // A definition, not a use: the class, the factory, or the interface.
       // Renaming the class alone is still caught by the factory clause, and
-      // vice versa — a single-clause grep would slip past a rename.
+      // vice versa - a single-clause grep would slip past a rename.
       const definesProjection =
         /(?:class\s+\w*GridProjection\b|export\s+function\s+createBattleGridProjection\b|export\s+interface\s+BattleGridProjection\b)/
 

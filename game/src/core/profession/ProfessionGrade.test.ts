@@ -1,5 +1,5 @@
-// Mapping realm → phẩm nghề phải 1-1 đủ MƯỜI realm, khớp REALMS data
-// (plan §11: "Mười realm map một-một sang Cửu…Tiên, không trùng/missing").
+// Mapping realm -> pham nghe phai 1-1 du MUOI realm, khop REALMS data
+// (plan sec11: "Muoi realm map mot-mot sang Cuu...Tien, khong trung/missing").
 import { describe, expect, it } from 'vitest'
 import { REALMS } from '../../data/realms/realm'
 import type { ProfessionGrade } from './ProfessionGrade'

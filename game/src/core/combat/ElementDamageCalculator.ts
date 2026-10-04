@@ -5,20 +5,20 @@ import { baseMightPlusPower, calculateBaseDamage } from './DamageCalculator'
 import { getResistanceMitigationPercent } from './Resistance'
 
 /**
- * 1 hành = 1 damage type ĐỘC LẬP kiểu Last Epoch — không còn chu kỳ
- * sinh/khắc (đã xoá ElementRelation.ts/ElementAffinity.ts). Power →
- * Resistance(có trần, xem Resistance.ts) → xong. "Độ thiên hành"
- * khuếch đại Power cũ (ElementAffinity) đã chuyển hẳn sang Linh Căn
- * (Attunement — xem StatCalculator.ts's deriveAttributeModifiers()),
- * nên Power ở đây đã BAO GỒM sẵn phần khuếch đại đó, không cần tính
- * thêm gì nữa.
+ * 1 hanh = 1 damage type DOC LAP kieu Last Epoch - khong con chu ky
+ * sinh/khac (da xoa ElementRelation.ts/ElementAffinity.ts). Power ->
+ * Resistance(co tran, xem Resistance.ts) -> xong. "Do thien hanh"
+ * khuech dai Power cu (ElementAffinity) da chuyen han sang Linh Can
+ * (Attunement - xem StatCalculator.ts's deriveAttributeModifiers()),
+ * nen Power o day da BAO GOM san phan khuech dai do, khong can tinh
+ * them gi nua.
  *
- * combat-skill-flow-element-power-dot-plan.md §3.1 — nguồn damage nền
- * của component nguyên tố đổi thành `ATK + ElementPower[element]` để
- * ATK và tiến trình trang bị đóng góp cho Pháp Tu thay vì chỉ đọc
- * Power nền gần bằng 0. Helper DÙNG CHUNG bởi direct hit lẫn DoT
- * snapshot (AilmentSystem.calculateDamagePerSecond) — tách 1 điểm duy
- * nhất để hai pipeline không thể lệch công thức về sau.
+ * combat-skill-flow-element-power-dot-plan.md sec3.1 - nguon damage nen
+ * cua component nguyen to doi thanh `ATK + ElementPower[element]` de
+ * ATK va tien trinh trang bi dong gop cho Phap Tu thay vi chi doc
+ * Power nen gan bang 0. Helper DUNG CHUNG boi direct hit lan DoT
+ * snapshot (AilmentSystem.calculateDamagePerSecond) - tach 1 diem duy
+ * nhat de hai pipeline khong the lech cong thuc ve sau.
  */
 export function elementalBasePower(source: CombatEntity, element: ElementType): number {
   return baseMightPlusPower(source.stats.might, source.stats[`${element}Power`])
@@ -45,10 +45,10 @@ export function calculateElementComponentDamage(
 }
 
 /**
- * Base damage (TRƯỚC multiplier/crit — xem
- * CombatSystem.resolveHit()) cho 1 component trong skill nhiều
- * component (vd 20% Physical + 80% Fire). 'primordial' (Hỗn Nguyên)
- * bỏ qua mọi mitigation, đúng như calculateBaseDamage() đã xử lý.
+ * Base damage (TRUOC multiplier/crit - xem
+ * CombatSystem.resolveHit()) cho 1 component trong skill nhieu
+ * component (vd 20% Physical + 80% Fire). 'primordial' (Hon Nguyen)
+ * bo qua moi mitigation, dung nhu calculateBaseDamage() da xu ly.
  */
 export function calculateComponentDamage(
   source: CombatEntity,
@@ -76,11 +76,11 @@ export function calculateComponentDamage(
 }
 
 /**
- * Tổng base damage (trước multiplier/crit) của toàn bộ component
- * trong 1 skill — CombatSystem.resolveHit() áp multiplier/crit/
- * block/endurance/ward/leech lên đúng 1 số tổng này, thống
- * nhất với đường đi của damage type đơn giản (physical/primordial),
- * không tách riêng nữa.
+ * Tong base damage (truoc multiplier/crit) cua toan bo component
+ * trong 1 skill - CombatSystem.resolveHit() ap multiplier/crit/
+ * block/endurance/ward/leech len dung 1 so tong nay, thong
+ * nhat voi duong di cua damage type don gian (physical/primordial),
+ * khong tach rieng nua.
  */
 export function calculateSkillBaseDamage(
   source: CombatEntity,

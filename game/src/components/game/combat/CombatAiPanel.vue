@@ -1,11 +1,11 @@
 <script setup lang="ts">
-// Combat AI strategy panel (combat-gate-teleport-autocast plan §11.1) —
-// bảng AI nằm TRỰC TIẾP ở góc trái battlefield trong Combat Scene.
-// PlayerData là nguồn sự thật duy nhất: đổi option gọi API có validate
-// (GameManager.setCombatAiStrategy) rồi bumpState() — tự lưu qua save
-// scheduling hiện có (autosave/visibilitychange). Panel là lớp overlay
-// RIÊNG, chỉ nó nhận pointer events, không chặn battlefield và không
-// làm đổi combat insets (plan §11.2).
+// Combat AI strategy panel (combat-gate-teleport-autocast plan sec11.1) -
+// bang AI nam TRUC TIEP o goc trai battlefield trong Combat Scene.
+// PlayerData la nguon su that duy nhat: doi option goi API co validate
+// (GameManager.setCombatAiStrategy) roi bumpState() - tu luu qua save
+// scheduling hien co (autosave/visibilitychange). Panel la lop overlay
+// RIENG, chi no nhan pointer events, khong chan battlefield va khong
+// lam doi combat insets (plan sec11.2).
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'

@@ -1,12 +1,12 @@
-// CombatAiStrategy (plan §7) — chiến lược AI chọn mục tiêu của Player,
-// dùng chung cho core (BattleSystem targeting/teleport), UI (Combat AI
-// panel) và save (PlayerData.combatAiStrategy). Comparator THUẦN, tie-break
-// deterministic bắt buộc:
-//   1. Quy tắc chính của strategy
-//   2. Chebyshev distance tại vị trí avatar hiện tại
-//   3. Row tăng dần
-//   4. Column tăng dần
-//   5. Entity ID theo thứ tự chuỗi
+// CombatAiStrategy (plan sec7) - chien luoc AI chon muc tieu cua Player,
+// dung chung cho core (BattleSystem targeting/teleport), UI (Combat AI
+// panel) va save (PlayerData.combatAiStrategy). Comparator THUAN, tie-break
+// deterministic bat buoc:
+//   1. Quy tac chinh cua strategy
+//   2. Chebyshev distance tai vi tri avatar hien tai
+//   3. Row tang dan
+//   4. Column tang dan
+//   5. Entity ID theo thu tu chuoi
 import type { CombatEntity } from '../combat/CombatEntity'
 import { entityGridPosition, getChebyshevDistance } from './BattleGrid'
 
@@ -27,7 +27,7 @@ export const COMBAT_AI_STRATEGIES: readonly CombatAiStrategy[] = [
   'highest_hp',
 ]
 
-/** Validator dùng chung save/UI — giá trị sai/thiếu → fallback default. */
+/** Validator dung chung save/UI - gia tri sai/thieu -> fallback default. */
 export function isCombatAiStrategy(value: unknown): value is CombatAiStrategy {
   return typeof value === 'string' && COMBAT_AI_STRATEGIES.includes(value as CombatAiStrategy)
 }
@@ -35,7 +35,7 @@ export function isCombatAiStrategy(value: unknown): value is CombatAiStrategy {
 export interface RankedTarget {
   entity: CombatEntity
 
-  /** Chebyshev distance từ avatar Player tới target tại thời điểm chấm điểm. */
+  /** Chebyshev distance tu avatar Player toi target tai thoi diem cham diem. */
   distance: number
 }
 
@@ -46,9 +46,9 @@ function rankKey(target: RankedTarget): string {
 }
 
 /**
- * Sắp candidate theo strategy + tie-break deterministic bắt buộc
- * (plan §2.7): quy tắc chính → Chebyshev distance → row tăng dần →
- * column tăng dần → entity id chuỗi.
+ * Sap candidate theo strategy + tie-break deterministic bat buoc
+ * (plan sec2.7): quy tac chinh -> Chebyshev distance -> row tang dan ->
+ * column tang dan -> entity id chuoi.
  */
 export function rankTargetsByStrategy(
   candidates: RankedTarget[],
@@ -85,7 +85,7 @@ export function rankTargetsByStrategy(
       return primary
     }
 
-    // Tie-break còn lại: distance → row → column → id.
+    // Tie-break con lai: distance -> row -> column -> id.
     const byDistance = a.distance - b.distance
 
     if (byDistance !== 0) {
@@ -97,8 +97,8 @@ export function rankTargetsByStrategy(
 }
 
 /**
- * Điểm Chebyshev từ avatar Player tới 1 enemy — DÙNG CHUNG cho cả ranking
- * lẫn teleport simulation để không có nơi nào tự tính khoảng cách riêng.
+ * Diem Chebyshev tu avatar Player toi 1 enemy - DUNG CHUNG cho ca ranking
+ * lan teleport simulation de khong co noi nao tu tinh khoang cach rieng.
  */
 export function chebyshevDistanceToEnemy(
   player: Pick<CombatEntity, 'x' | 'row'>,

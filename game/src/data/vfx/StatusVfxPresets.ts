@@ -1,7 +1,7 @@
-// Buff bar (2026-09-02) — preset theo buff id: color + shape phân loại
-// (circle = buff, diamond = CC/DoT, square = statModifier debuff). Không
-// convey nghĩa CHỈ bằng màu (UX guideline) — shape là kênh thứ hai.
-// Placeholder = hình học thuần; asset thật thay sau không đụng layout.
+// Buff bar (2026-09-02) - preset theo buff id: color + shape phan loai
+// (circle = buff, diamond = CC/DoT, square = statModifier debuff). Khong
+// convey nghia CHI bang mau (UX guideline) - shape la kenh thu hai.
+// Placeholder = hinh hoc thuan; asset that thay sau khong dung layout.
 export type StatusIconShape = 'circle' | 'diamond' | 'square'
 
 export interface StatusVfxPreset {
@@ -14,7 +14,7 @@ export const DEBUFF_PLACEHOLDER_COLOR = 0xe5484d
 const CC_COLOR = 0xffd54f
 
 const STATUS_PRESETS: Record<string, StatusVfxPreset> = {
-  // CC — diamond (kế thừa hình icon cũ)
+  // CC - diamond (ke thua hinh icon cu)
   choang: { color: CC_COLOR, shape: 'diamond' },
   dong_bang: { color: 0x8be9fd, shape: 'diamond' },
   troi_chan: { color: CC_COLOR, shape: 'diamond' },
@@ -33,7 +33,7 @@ const STATUS_PRESETS: Record<string, StatusVfxPreset> = {
   // Ngo Dao aura (S3) -- circle buff, violet: the reaction-capability
   // marker the whole allied party carries.
   van_phap_than_hoa: { color: 0x9d7bff, shape: 'circle' },
-  // statModifier debuff — square
+  // statModifier debuff - square
   lam_cham: { color: DEBUFF_PLACEHOLDER_COLOR, shape: 'square' },
   han_khi: { color: 0x8be9fd, shape: 'square' },
   cuong_bao: { color: 0xff7a45, shape: 'square' },
@@ -41,23 +41,23 @@ const STATUS_PRESETS: Record<string, StatusVfxPreset> = {
   uy_ap: { color: DEBUFF_PLACEHOLDER_COLOR, shape: 'square' },
   giap_ran: { color: DEBUFF_PLACEHOLDER_COLOR, shape: 'square' },
   van_kiem_vu: { color: DEBUFF_PLACEHOLDER_COLOR, shape: 'square' },
-  // buff tạm — circle
+  // buff tam - circle
   thach_giap_buff: { color: BUFF_PLACEHOLDER_COLOR, shape: 'circle' },
 }
 
 export function getStatusVfxPreset(buffId: string, polarity?: 'buff' | 'debuff'): StatusVfxPreset {
-  // 1. Map trực tiếp theo id
+  // 1. Map truc tiep theo id
   if (STATUS_PRESETS[buffId]) {
     return STATUS_PRESETS[buffId]!
   }
 
-  // 2. Regex heuristic cũ — id lạ mô tả nguyên tố (compat data tương lai)
+  // 2. Regex heuristic cu - id la mo ta nguyen to (compat data tuong lai)
   if (/burn|fire|hot/.test(buffId)) return { color: 0xff7a45, shape: 'diamond' }
   if (/poison|toxic|wood/.test(buffId)) return { color: 0x58e878, shape: 'diamond' }
   if (/bleed|huyet|blood/.test(buffId)) return { color: 0xe5484d, shape: 'diamond' }
   if (/chill|frost|water/.test(buffId)) return { color: 0x58c8ff, shape: 'diamond' }
 
-  // 3. Polarity fallback cuối — placeholder đỏ/xanh (mặc định đỏ cảnh báo)
+  // 3. Polarity fallback cuoi - placeholder do/xanh (mac dinh do canh bao)
   return {
     color: polarity === 'buff' ? BUFF_PLACEHOLDER_COLOR : DEBUFF_PLACEHOLDER_COLOR,
     shape: 'circle',

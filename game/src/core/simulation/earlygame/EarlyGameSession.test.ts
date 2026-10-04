@@ -16,7 +16,6 @@ import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../../data/realm/BodyRefinemen
 const PINNED = {
   name: 'probe',
   talentIds: ['hap_linh'], // combat passive - no cultivation/insight/economy subsidy
-  mortalBasicSkillId: 'tram',
 }
 
 function grindToBreakthrough(s: EarlyGameSession) {
@@ -36,7 +35,7 @@ describe('EarlyGameSession', () => {
     // BETA-CREATION - no creation allocation: base stats are the 1/1/1/1/1 default.
     expect(s.player.baseStats.strength).toBe(1)
     expect(s.player.baseStats.vitality).toBe(1)
-    expect(s.player.mortalBasicSkillId).toBe('tram')
+    expect(s.player.mortalBasicSkillId).toBe('linh_bao')
     expect(s.player.cultivationPath).toBeUndefined()
     // hap_linh is a combat passive: no speed/ramp/insight subsidy.
     s.cultivate(1)
@@ -63,17 +62,13 @@ describe('EarlyGameSession', () => {
     const s = new EarlyGameSession({ seed: 11, profile: PINNED })
     const report = runLoop(s, CANONICAL_EARLY_LOOP)
     console.log('LOOP\n' + JSON.stringify(report, null, 1))
-    const dong5Index = report.steps.findIndex(
-      (r) => r.step.kind === 'stage_until_victory' && r.step.stageId === 'mortal_dong_5',
-    )
-    // Characterization: every step before the wall succeeds, and the
-    // wall is exactly mortal_dong_5 under the M3 no-starter-technique model.
-    expect(dong5Index).toBeGreaterThan(0)
-    expect(report.failedAt).toBe(dong5Index)
-    expect(report.snapshot.completedStageIds).toContain('mortal_dong_4')
-    // TODO(balance): expect(report.failedAt).toBeNull()
-    // expect(report.snapshot.cultivationPath).toBe('sword')
-    // expect(report.snapshot.completedStageIds).toContain('qi_refining_forest')
+    // Phase-8 tuning landed 2026-09-30: the dong-band enemy pacing
+    // retune plus the loop's grind_to_level-12 repetition let the
+    // fresh linh_bao mortal clear the mortal chapter, commit
+    // spell_pathway, and clear qi_refining_forest. failedAt is null.
+    expect(report.failedAt).toBeNull()
+    expect(report.snapshot.cultivationPath).toBe('spell')
+    expect(report.snapshot.completedStageIds).toContain('qi_refining_forest')
   })
 
   it('persists one player/GameManager across the whole session', () => {

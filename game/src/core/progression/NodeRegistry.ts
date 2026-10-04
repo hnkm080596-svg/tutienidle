@@ -1,9 +1,9 @@
 import type { ProgressionNode } from './ProgressionNode'
 
-// Cùng pattern mọi Registry khác trong project (BuffRegistry/
-// AilmentRegistry/...) — id trùng thì throw lúc register (bug data,
-// nên fail sớm), get() throw nếu không tồn tại (caller phải chắc chắn
-// đã register trước khi tra).
+// Cung pattern moi Registry khac trong project (BuffRegistry/
+// AilmentRegistry/...) - id trung thi throw luc register (bug data,
+// nen fail som), get() throw neu khong ton tai (caller phai chac chan
+// da register truoc khi tra).
 export class NodeRegistry {
   private readonly nodes = new Map<string, ProgressionNode>()
 

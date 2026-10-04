@@ -1,13 +1,13 @@
-// ProfessionGrade (2026-08-24) — thang phẩm NGHỀ theo đại cảnh giới cho
-// toàn bộ kinh tế Khai Thác/Tứ Nghệ (Đan/Phù/Trận/recipe/validator/UI).
+// ProfessionGrade (2026-08-24) - thang pham NGHE theo dai canh gioi cho
+// toan bo kinh te Khai Thac/Tu Nghe (Dan/Phu/Tran/recipe/validator/UI).
 //
-// KHÔNG tái sử dụng thang Ngũ Phẩm (ItemGrade) của Equipment/Talisman —
-// "phẩm nghề theo cảnh giới" và "độ hiếm trang bị" là hai trục khác nhau
-// (resource-professions-rework-plan.md §3.1/§13). Bảng
-// PROFESSION_GRADE_BY_REALM là NGUỒN SỰ THẬT DUY NHẤT — không suy phẩm
-// từ index rải rác tại call site.
+// KHONG tai su dung thang Ngu Pham (ItemGrade) cua Equipment/Talisman -
+// "pham nghe theo canh gioi" va "do hiem trang bi" la hai truc khac nhau
+// (resource-professions-rework-plan.md sec3.1/sec13). Bang
+// PROFESSION_GRADE_BY_REALM la NGUON SU THAT DUY NHAT - khong suy pham
+// tu index rai rac tai call site.
 
-/** Thang Cửu Phẩm (thấp nhất) → Tiên Phẩm (cao nhất). */
+/** Thang Cuu Pham (thap nhat) -> Tien Pham (cao nhat). */
 export type ProfessionGrade =
   | 'cuu_pham'
   | 'bat_pham'
@@ -20,7 +20,7 @@ export type ProfessionGrade =
   | 'nhat_pham'
   | 'tien_pham'
 
-/** Thứ tự tăng dần: Cửu Phẩm (index 0) → Tiên Phẩm (index 9). */
+/** Thu tu tang dan: Cuu Pham (index 0) -> Tien Pham (index 9). */
 export const PROFESSION_GRADE_ORDER: readonly ProfessionGrade[] = [
   'cuu_pham',
   'bat_pham',
@@ -34,7 +34,7 @@ export const PROFESSION_GRADE_ORDER: readonly ProfessionGrade[] = [
   'tien_pham',
 ]
 
-/** Mapping cố định realm → phẩm nghề (plan §3.1). Nguồn sự thật duy nhất. */
+/** Mapping co dinh realm -> pham nghe (plan sec3.1). Nguon su that duy nhat. */
 export const PROFESSION_GRADE_BY_REALM: Readonly<Record<string, ProfessionGrade>> = {
   mortal: 'cuu_pham',
   qi_refining: 'bat_pham',
@@ -48,7 +48,7 @@ export const PROFESSION_GRADE_BY_REALM: Readonly<Record<string, ProfessionGrade>
   tribulation: 'tien_pham',
 }
 
-/** Tên hiển thị — UI dùng, không ghép từ id. */
+/** Ten hien thi - UI dung, khong ghep tu id. */
 export const PROFESSION_GRADE_NAMES: Readonly<Record<ProfessionGrade, string>> = {
   cuu_pham: 'Cửu Phẩm',
   bat_pham: 'Bát Phẩm',
@@ -95,7 +95,7 @@ export function realmFromGrade(grade: ProfessionGrade): string {
   return realmId
 }
 
-/** So sánh thứ tự phẩm nghề: âm nếu a < b, dương nếu a > b, 0 nếu bằng. */
+/** So sanh thu tu pham nghe: am neu a < b, duong neu a > b, 0 neu bang. */
 export function compareProfessionGrades(a: ProfessionGrade, b: ProfessionGrade): number {
   return PROFESSION_GRADE_ORDER.indexOf(a) - PROFESSION_GRADE_ORDER.indexOf(b)
 }

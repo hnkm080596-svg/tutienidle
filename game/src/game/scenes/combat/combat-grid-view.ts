@@ -1,7 +1,7 @@
-﻿// combat-grid-view (ui-discoverability-refactor-plan.md Â§3.2) â€” tÃ¡ch tá»«
+﻿// combat-grid-view (ui-discoverability-refactor-plan.md sec3.2) - tach tu
 // CombatScene.ts: 2.5D GRID PROJECTION, depth layers, entity sprite
-// lifecycle/size/position. Module nháº­n dependency tÆ°á»ng minh qua `scene`
-// â€” má»i cross-call Ä‘i qua scene delegate Ä‘á»ƒ giá»¯ seam test.
+// lifecycle/size/position. Module nhan dependency tuong minh qua `scene`
+// - moi cross-call di qua scene delegate de giu seam test.
 import Phaser from 'phaser'
 
 import type { LaneIndex } from '@/core/battle/BattleLane'
@@ -45,7 +45,7 @@ import type { EnemyHealthBar, EntitySprite } from './combatTypes'
  * An ANIMATED entity draws atlas frames, so its size must come from the clip's
  * `sourceSize`, not from the entity's static PNG. A static entity keeps its
  * texture's own size. `undefined` falls back to `host.playerSourceSize`, which
- * is what a profile with no catalogue entry gets — the pre-existing behaviour.
+ * is what a profile with no catalogue entry gets - the pre-existing behaviour.
  */
 function playerArtSourceSize(entityKey: string): { w: number; h: number } | undefined {
   const presentation = presentationFor(entityKey)
@@ -83,7 +83,7 @@ function artExtentFor(entityKey: string): { x: number; y: number; w: number; h: 
  * than a precaution: runtime enemy ids share a long template prefix and differ
  * only in their tail, so `hash * 31 + char` leaves adjacent ids one apart, and
  * one part in 100000 of a 2.2s period rounds to the same millisecond. Two wolves
- * spawned in a row then breathe in perfect lockstep — the exact failure the
+ * spawned in a row then breathe in perfect lockstep - the exact failure the
  * jitter exists to prevent.
  *
  * The finalizer below (xorshift-multiply, as in MurmurHash3's avalanche) makes a
@@ -103,12 +103,12 @@ function phaseDelayMs(id: string, periodMs: number): number {
   return Math.abs(hash) % Math.max(1, Math.round(periodMs))
 }
 
-// BÃ³ng ellipse dÆ°á»›i chÃ¢n â€” dáº¹t theo trá»¥c sÃ¢u (copy tá»« CombatScene).
+// Bong ellipse duOi chan - det theo truc sau (copy tu CombatScene).
 const SHADOW_WIDTH_RATIO = 1.12
 const SHADOW_HEIGHT_RATIO = 0.34
 
 /**
- * Synthetic extent for a Rectangle-fallback entity — it has no authored art
+ * Synthetic extent for a Rectangle-fallback entity - it has no authored art
  * box, so its anchors are sized as if the art filled the whole box (Finding 1,
  * final whole-branch review). Only `personWidth`/`personHeight` are read from
  * the result; `boxWidth`/`boxHeight` are discarded since Rectangle DRAWING
@@ -129,9 +129,9 @@ export class CombatGridView {
 
     graphics.clear()
 
-    // Thanh VÃ¢n art mount (yÃªu cáº§u 2026-08-26) â€” art Ä‘Ã£ cÃ³ battle-ground
-    // riÃªng ("No layer contains a battle grid") nÃªn KHÃ”NG váº½ Ä‘Æ°á»ng chia Ã´
-    // Ä‘Ã¨ lÃªn; giá»¯ grid Ä‘á»™ng cho flat mode dev fallback.
+    // Thanh Van art mount (yeu cau 2026-08-26) - art da co battle-ground
+    // rieng ("No layer contains a battle grid") nen KHONG ve duong chia o
+    // de len; giu grid dong cho flat mode dev fallback.
     if (this.host.usingArtBackdrop) {
       return
     }
@@ -167,7 +167,7 @@ export class CombatGridView {
     }
 
     if (!isFlat) {
-      // Viá»n ngoÃ i + vÃ¹ng cá»•ng hero nháº¥n nháº¹ mÃ u phe ta.
+      // Vien ngoai + vung cong hero nhan nhe mau phe ta.
       const corners = [
         projection.gridToScreen(-0.5, -0.5),
         projection.gridToScreen(-0.5, projection.columns - 0.5),
@@ -178,22 +178,22 @@ export class CombatGridView {
       graphics.lineStyle(1.5, PERSPECTIVE_BORDER_COLOR, PERSPECTIVE_BORDER_ALPHA)
       graphics.strokePoints(toVector2Points(corners), true, true)
 
-      // Viền ngoài lưới perspective — dùng chung cho combat thật lẫn panel.
-      // (Cổng phòng thủ HERO_COLUMN đã XÓA 2026-09-06: obsolete, cơ chế
-      // real-time cũ "quái tiếp cận cổng" không còn tồn tại dưới turn-based.)
+      // Vien ngoai luoi perspective - dung chung cho combat that lan panel.
+      // (Cong phong thu HERO_COLUMN da XOA 2026-09-06: obsolete, co che
+      // real-time cu "quai tiep can cong" khong con ton tai duoi turn-based.)
     }
   }
 
-  // Rectangle (enemy) cáº§n width/height + updateDisplayOrigin() (mutate
-  // geometry trá»±c tiáº¿p); Sprite (player) cáº§n setDisplaySize() vá»›i Tá»ˆ Lá»†
-  // ÄÃšNG cá»§a artwork gá»‘c (playerSourceSize theo profile hiá»‡n hÃ nh â€”
-  // body-anchor plan Â§4.3), náº¿u khÃ´ng nhÃ¢n váº­t sáº½ mÃ©o hÃ¬nh khi Ã©p cÃ¹ng
-  // characterWidth/Height hÃ¬nh vuÃ´ng-ish cá»§a enemy.
+  // Rectangle (enemy) can width/height + updateDisplayOrigin() (mutate
+  // geometry truc tiep); Sprite (player) can setDisplaySize() vOi TI LE
+  // AAsNG ca"seca artwork ga"'c (playerSourceSize theo profile hia"+n hA nh aEUR"
+  // body-anchor plan sec4.3), neu khong nhan vat se meo hinh khi ep cung
+  // characterWidth/Height hinh vuong-ish cua enemy.
   //
-  // Perspective: baseline chá»‰ lÃ  kÃ­ch thÆ°á»›c á»Ÿ hÃ ng hiá»‡n hÃ nh â€” co giÃ£n
-  // theo chiá»u sÃ¢u diá»…n ra trong applyEntityDepthScale() má»—i láº§n chiáº¿u.
+  // Perspective: baseline chi la kich thuOc o hang hien hanh - co gian
+  // theo chieu sau dien ra trong applyEntityDepthScale() moi lan chieu.
   /**
-   * Spec C §4.3 — one place that turns a sprite into a size.
+   * Spec C sec4.3 - one place that turns a sprite into a size.
    *
    * `sizeMultiplier` is the OLD field and keeps its stored values (2 for a
    * person, 4 for a boss); `classFactor` is what the resolver speaks, where a
@@ -209,7 +209,7 @@ export class CombatGridView {
    * needed here.
    *
    * The two `sprite.kind === 'sprite'` callers only reach this when
-   * `sprite.extent` is defined — see the ruling in the task brief: the Tran
+   * `sprite.extent` is defined - see the ruling in the task brief: the Tran
    * Phap preview panel's host-fallback sprites have no `extent` and must
    * keep their pre-existing flat formula unchanged, because that panel
    * precomputes its own characterWidth/Height and a classFactor of 0.5
@@ -280,10 +280,10 @@ export class CombatGridView {
 
     // Finding 1 (final whole-branch review): a Rectangle has no `extent`, so
     // it never went through `entityDisplaySize` and `bodyBoxFor` fell back to
-    // `characterHeight` — half the resolver's real personHeight and with no
+    // `characterHeight` - half the resolver's real personHeight and with no
     // depth factor. Anchors must be uniform across sprite/rect/static per the
-    // design's own claim (Spec C §3.1), so compute them here too. This does
-    // NOT touch how the Rectangle is DRAWN — `rect.width/height` above stay
+    // design's own claim (Spec C sec3.1), so compute them here too. This does
+    // NOT touch how the Rectangle is DRAWN - `rect.width/height` above stay
     // untouched because TranPhapCombatPreviewScene renders through this same
     // path and precomputes its own sizing (see `entityDisplaySize`'s doc).
     const anchorSize = this.entityDisplaySize(sprite, 1, RECT_ANCHOR_EXTENT)
@@ -293,11 +293,11 @@ export class CombatGridView {
   }
 
   /**
-   * Ãp scale chiá»u sÃ¢u cho entity: kÃ­ch thÆ°á»›c = baseline Ã— depthScale Ã—
-   * sizeMultiplier (player Ã—2, enemy PNG Ã—2 â€” multiplier NHÃ‚N Má»˜T Láº¦N
-   * duy nháº¥t táº¡i Ä‘Ã¢y, khÃ´ng cá»™ng dá»“n qua resize/tween) Ã— boost (pop ChÃ­
-   * Máº¡ng/spawn fade-in), ghi vÃ o GEOMETRY/scale cá»§a GameObject nÃªn tween
-   * cÅ© váº«n hoáº¡t Ä‘á»™ng; bÃ³ng ellipse dÆ°á»›i chÃ¢n co giÃ£n theo.
+   * Ap scale chieu sau cho entity: kich thuOc = baseline x depthScale x
+   * sizeMultiplier (player x2, enemy PNG x2 - multiplier NHAN MOT LAN
+   * duy nhat tai day, khong cong don qua resize/tween) x boost (pop Chi
+   * Mang/spawn fade-in), ghi vao GEOMETRY/scale cua GameObject nen tween
+   * cu van hoat dong; bong ellipse duOi chan co gian theo.
    */
   applyEntityDepthScale(sprite: EntitySprite, depthScale: number) {
     const effectiveScale = Math.max(0.05, depthScale * sprite.boost.value)
@@ -335,8 +335,8 @@ export class CombatGridView {
       }
 
       // Finding 1 (final whole-branch review): see the matching comment in
-      // applySpriteSize() — same reasoning, but here `effectiveScale` is the
-      // depth factor this branch already computed (depthScale × boost), so
+      // applySpriteSize() - same reasoning, but here `effectiveScale` is the
+      // depth factor this branch already computed (depthScale x boost), so
       // the Rectangle's anchors scale with depth exactly like a sprite's do.
       // rect.width/height above are left untouched (drawing stays as-is).
       const anchorSize = this.entityDisplaySize(sprite, effectiveScale, RECT_ANCHOR_EXTENT)
@@ -352,9 +352,9 @@ export class CombatGridView {
     }
   }
 
-  // Äá»‰nh Ä‘áº§u sprite theo anchor hiá»‡n hÃ nh â€” má»i chrome treo trÃªn Ä‘áº§u
-  // (HP bar / cast bar / DOT icon / text bay) Ä‘i qua Ä‘Ã¢y Ä‘á»ƒ khÃ´ng phá»¥
-  // thuá»™c origin (foot anchor á»Ÿ perspective, center anchor á»Ÿ flat).
+  // Dinh dau sprite theo anchor hien hanh - moi chrome treo tren dau
+  // (HP bar / cast bar / DOT icon / text bay) di qua day de khong phu
+  // thuoc origin (foot anchor o perspective, center anchor o flat).
   entityHeadY(sprite: EntitySprite): number {
     const displayHeight = sprite.rect.displayHeight
 
@@ -372,13 +372,13 @@ export class CombatGridView {
 
     sprite.columnFloat = worldColumn
 
-    // offsetX (lunge/recoil/nÃ©) tÃ­nh báº±ng px chuáº©n hÃ³a á»Ÿ hÃ ng gáº§n â€” nhÃ¢n
-    // depth scale Ä‘á»ƒ Ä‘Ã²n Ä‘Ã¡nh á»Ÿ xa cÅ©ng Ä‘Ãºng tá»· lá»‡ phá»‘i cáº£nh. Walk sway/
-    // bob/tilt ÄÃƒ XÃ“A Háº¾N (2026-08-26): di chuyá»ƒn bÃ¬nh thÆ°á»ng luÃ´n Ä‘áº·t
-    // sprite táº¡i tá»a Ä‘á»™ chiáº¿u tháº³ng, rotation 0 (chá»‰ death tween xoay).
+    // offsetX (lunge/recoil/ne) tinh bang px chuan hoa o hang gan - nhan
+    // depth scale de don danh o xa cung dung ty le phoi canh. Walk sway/
+    // bob/tilt DA XOA HEN (2026-08-26): di chuyen binh thuong luon dat
+    // sprite tai toa do chieu thang, rotation 0 (chi death tween xoay).
     const screenX = point.x + sprite.offsetX * point.scale
 
-    // Spec B §4.3 — the idle bob, in SCREEN pixels and deliberately NOT scaled
+    // Spec B sec4.3 - the idle bob, in SCREEN pixels and deliberately NOT scaled
     // by `point.scale`. Scaling it by depth is more correct perspective and was
     // explicitly not wanted: a far enemy is already small, and shrinking its
     // motion too makes it read as frozen.
@@ -391,16 +391,16 @@ export class CombatGridView {
     if (this.host.isPerspective) {
       this.applyEntityDepthScale(sprite, point.scale)
 
-      // Foot anchor: origin (0.5, 1) Ä‘áº·t táº¡i Ä‘iá»ƒm chÃ¢n Ä‘áº¥t cá»§a Ã´.
+      // Foot anchor: origin (0.5, 1) dat tai diem chan dat cua o.
       sprite.rect.setPosition(screenX, screenY)
       sprite.shadow?.setPosition(screenX, point.y)
       sprite.footY = point.y
       sprite.label.setPosition(screenX, point.y + 6)
     } else {
-      // Flat giá»¯ nguyÃªn tá»«ng pixel hÃ nh vi legacy (center anchor); boost
-      // ChÃ­ Máº¡ng Ã¡p qua setScale vÃ¬ geometry flat lÃ  tÄ©nh. setScale PHáº¢I
-      // cháº¡y vÃ´ Ä‘iá»u kiá»‡n: tween yoyo káº¿t thÃºc giá»¯a 2 frame, frame káº¿
-      // value===1 nhÆ°ng rect váº«n giá»¯ scale frame trÆ°á»›c náº¿u bá» qua.
+      // Flat giu nguyen tung pixel hanh vi legacy (center anchor); boost
+      // Chi Mang ap qua setScale vi geometry flat la tinh. setScale PHAI
+      // chay vo dieu kien: tween yoyo ket thuc giua 2 frame, frame ke
+      // value===1 nhung rect van giu scale frame truOc neu bo qua.
       sprite.rect.setPosition(screenX, screenY)
       sprite.rect.setScale(sprite.boost.value)
       sprite.label.setPosition(screenX, point.y + sprite.rect.displayHeight / 2 + 4)
@@ -566,13 +566,13 @@ export class CombatGridView {
         color,
         offsetX: 0,
         row,
-        // The box the art this sprite DRAWS is authored in — not the entity's
+        // The box the art this sprite DRAWS is authored in - not the entity's
         // static PNG.
         //
         // Measured defect, 2026-09-11: the player's display size came from
         // `playerSourceSize` (the profile PNG, 1312x1199) while the sprite drew
         // an atlas frame authored at 200x350, so `applySpriteSize` forced a
-        // 1.094 aspect onto 0.571 art — 3.44x too wide on screen. Spec B moved
+        // 1.094 aspect onto 0.571 art - 3.44x too wide on screen. Spec B moved
         // what the sprite draws and left what sizes it behind.
         sourceSize: drawSourceSize,
         extent: drawExtent,
@@ -690,10 +690,10 @@ export class CombatGridView {
         row,
         sourceSize: { ...drawSourceSize },
         extent: drawExtent,
-        // Enemy art x2; Boss Ã—2 quy táº¯c enemy thÆ°á»ng (2026-09-05) â€” khÃ´ng
-        // cÃ²n dÃ¹ng CÃ™NG multiplier nhÆ° trÆ°á»›c (xem
-        // CombatScene.enemyScale.test.ts). BÃ³ng ellipse dÆ°á»›i chÃ¢n nhÃ¢n
-        // theo cÃ¹ng multiplier trong applyEntityDepthScale().
+        // Enemy art x2; Boss x2 quy tac enemy thuong (2026-09-05) - khong
+        // con dung CUNG multiplier nhu truOc (xem
+        // CombatScene.enemyScale.test.ts). Bong ellipse duOi chan nhan
+        // theo cung multiplier trong applyEntityDepthScale().
         sizeMultiplier: health?.isBoss ? BOSS_DISPLAY_SCALE_MULTIPLIER : ENEMY_DISPLAY_SCALE_MULTIPLIER,
         boost: { value: 1 },
         footY: 0,
@@ -737,14 +737,14 @@ export class CombatGridView {
         color,
         offsetX: 0,
         row,
-        // sizeMultiplier: 1 (KHÔNG ENEMY_DISPLAY_SCALE_MULTIPLIER) — nhánh
-        // này chỉ có panel Trận Pháp chạm tới (combat thật luôn nhận
-        // fallbackSpriteTextureKey() === undefined, xem branch trước đó);
-        // panel tự set characterWidth/Height BẰNG ĐÚNG kích thước sprite
-        // mong muốn (0.8 × cell, xem TranPhapCombatPreviewScene, Task 4) —
-        // applySpriteSize()'s flat formula là characterHeight ×
-        // sizeMultiplier, nên multiplier phải là 1 để không nhân đôi kích
-        // thước đã tính sẵn.
+        // sizeMultiplier: 1 (KHONG ENEMY_DISPLAY_SCALE_MULTIPLIER) - nhanh
+        // nay chi co panel Tran Phap cham toi (combat that luon nhan
+        // fallbackSpriteTextureKey() === undefined, xem branch truoc do);
+        // panel tu set characterWidth/Height BANG DUNG kich thuoc sprite
+        // mong muon (0.8 x cell, xem TranPhapCombatPreviewScene, Task 4) -
+        // applySpriteSize()'s flat formula la characterHeight x
+        // sizeMultiplier, nen multiplier phai la 1 de khong nhan doi kich
+        // thuoc da tinh san.
         sizeMultiplier: 1,
         boost: { value: 1 },
         footY: 0,
@@ -769,9 +769,9 @@ export class CombatGridView {
 
     this.host.physics.add.existing(rect)
 
-    // QuÃ¡i hiá»‡n váº«n lÃ  Rectangle mÃ u (chÆ°a cÃ³ atlas Ä‘á»‹nh hÆ°á»›ng) â€” khi
-    // cÃ³ sprite riÃªng chá»‰ cáº§n setFlipX(true) á»Ÿ Ä‘Ã¢y, khÃ´ng cáº§n spritesheet
-    // má»›i cho chiá»u ngÆ°á»£c (plan: flip báº±ng Phaser).
+    // Quai hien van la Rectangle mau (chua co atlas dInh huOng) - khi
+    // co sprite rieng chi can setFlipX(true) o day, khong can spritesheet
+    // mOi cho chieu nguoc (plan: flip bang Phaser).
     if (this.host.isPerspective) {
       rect.setOrigin(0.5, 1)
     }
@@ -808,10 +808,10 @@ export class CombatGridView {
       color,
       offsetX: 0,
       row,
-      // Fallback Rectangle: giá»¯ nguyÃªn size 1 cho quÃ¡i thÆ°á»ng (chÆ°a cÃ³ art) Ä‘á»ƒ
-      // khÃ´ng Ä‘á»•i hÃ¬nh áº£nh hiá»‡n táº¡i; nhÆ°ng Boss váº«n pháº£i to hÆ¡n quÃ¡i thÆ°á»ng dÃ¹
-      // rÆ¡i vÃ o nhÃ¡nh fallback â€” náº¿u khÃ´ng sáº½ NHá»Ž HÆ N quÃ¡i thÆ°á»ng cÃ³ texture
-      // (2x), ngÆ°á»£c háº³n Ã½ Ä‘á»“ "Boss to hÆ¡n" (review round 1, task 9.5).
+      // Fallback Rectangle: giu nguyen size 1 cho quai thuong (chua co art) de
+      // khong doi hinh anh hien tai; nhung Boss van phai to hon quai thuong du
+      // roi vao nhanh fallback - neu khong se NHO HON quai thuong co texture
+      // (2x), nguoc han y do "Boss to hon" (review round 1, task 9.5).
       sizeMultiplier: health?.isBoss ? BOSS_DISPLAY_SCALE_MULTIPLIER : 1,
       boost: { value: 1 },
       footY: 0,
@@ -847,19 +847,19 @@ export class CombatGridView {
   }
 
   /**
-   * Spec B §4.3/§6 B6 — start the idle bob for a `kind: 'static'` entity.
+   * Spec B sec4.3/sec6 B6 - start the idle bob for a `kind: 'static'` entity.
    *
-   * §3.2 described enemies as static "như hiện tại". They were not: walk sway/
+   * sec3.2 described enemies as static "nhu hien tai". They were not: walk sway/
    * bob/tilt were deleted outright on 2026-08-26, leaving rotation 0 and a
    * straight projected position. So "static plus a slight shake" is a TARGET
    * state, and this is the half that had to be added rather than removed.
    *
-   * It costs no art — the whole point of the economy in §3.2.
+   * It costs no art - the whole point of the economy in sec3.2.
    *
    * PHASE comes from the runtime id, not from the texture key, and that
    * distinction is the difference between working and not: five `mortal_wild_boar`
    * share one texture key, so a per-key phase would make a row of five wolves
-   * breathe as one organism — which reads worse than not breathing at all. The
+   * breathe as one organism - which reads worse than not breathing at all. The
    * catalogue varies the PERIOD per species; the delay below varies the phase per
    * individual.
    */
@@ -953,14 +953,14 @@ export class CombatGridView {
     sprite.boost.value = 1
     sprite.offsetX = 0
 
-    // KÃ­ch thÆ°á»›c/foot point Ã¡p láº¡i ngay Ä‘á»ƒ khÃ´ng chá» frame káº¿ (reset
-    // hiá»‡n chá»‰ dÃ¹ng cho player).
+    // Kich thuOc/foot point ap lai ngay de khong cho frame ke (reset
+    // hien chi dung cho player).
     this.applySpriteSize(sprite)
 
     if (sprite === this.host.sprites.get(PLAYER_ID)) {
-      // PositionInterpolation (không unknown) — resetVisual chỉ đọc toX;
-      // CombatScene thật giữ Map<string, PositionInterpolation>, panel
-      // giữ Map rỗng (get luôn undefined, block này không chạy).
+      // PositionInterpolation (khong unknown) - resetVisual chi doc toX;
+      // CombatScene that giu Map<string, PositionInterpolation>, panel
+      // giu Map rong (get luon undefined, block nay khong chay).
       const entry = this.host.interpolations.get(PLAYER_ID) as
         | { toX: number }
         | undefined

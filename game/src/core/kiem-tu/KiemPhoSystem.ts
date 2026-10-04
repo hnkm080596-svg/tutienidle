@@ -5,20 +5,20 @@ import { getRealmIndex } from '../realm/realmSystem'
 import { unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
 import { ailmentInteractionPhase, type SkillAilmentInteraction } from '../skill/SkillEffect'
 
-// Kiem Tu Reimagined Task 4 (spec 2026-09-15 §4) — KiemPhoSystem: the
+// Kiem Tu Reimagined Task 4 (spec 2026-09-15 sec4) - KiemPhoSystem: the
 // sword_pathway battle-runtime matcher. Owns preset snapshot + cursor + cast log
 // + tail-match. State here is BATTLE-RUNTIME only (A3): the preset is
-// persisted on PlayerData.swordPath.preset, the cursor/log are not — each
+// persisted on PlayerData.swordPath.preset, the cursor/log are not - each
 // battle starts at slot 1 with an empty log.
 //
-// The combo TABLE is data (Task 5, data/skill/KiemPhoCombos.ts) — this
+// The combo TABLE is data (Task 5, data/skill/KiemPhoCombos.ts) - this
 // file never imports it (A6). recordCastAndMatch takes the table as a
 // parameter so the mechanism stays below the content layer.
 
-/** Spec §4.2 — combo definition shape. `presetId` is REQUIRED and
+/** Spec sec4.2 - combo definition shape. `presetId` is REQUIRED and
  *  unique per combo: the fired payload is the ONLY discovery signal
- *  (K11/INV-7) — two combos sharing a preset are indistinguishable.
- *  `name` is a data/debug label ONLY — K11 forbids surfacing it in
+ *  (K11/INV-7) - two combos sharing a preset are indistinguishable.
+ *  `name` is a data/debug label ONLY - K11 forbids surfacing it in
  *  combat presentation (no combo id resolves to display text). */
 export interface KiemPhoCombo {
   id: string
@@ -26,7 +26,7 @@ export interface KiemPhoCombo {
   pattern: OrbId[]
   presetId: CombatVfxPresetId
   damage?: { multiplier: number }
-  /** Resolved buff collection — a combo may carry several authored
+  /** Resolved buff collection - a combo may carry several authored
    *  buffs and multiple capstone modifiers may each contribute one.
    *  Entries with the same definitionId merge their stacks. */
   appliesBuffs?: { definitionId: string; target: 'self' | 'target'; stacks?: number }[]
@@ -44,9 +44,9 @@ export interface KiemPhoCombo {
   ailmentInteractions?: readonly SkillAilmentInteraction[]
 }
 
-/** Spec §4.2 — the ONLY way a node may alter a combo. Run order is
- *  priority ASC then nodeId ASC — never purchase order (same build,
- *  same result regardless of history). apply() returns a DERIVED copy —
+/** Spec sec4.2 - the ONLY way a node may alter a combo. Run order is
+ *  priority ASC then nodeId ASC - never purchase order (same build,
+ *  same result regardless of history). apply() returns a DERIVED copy -
  *  mutating the canonical combo would leak the buff into later casts. */
 export interface KiemPhoComboModifier {
   nodeId: string
@@ -58,7 +58,7 @@ export interface KiemPhoComboModifier {
 export interface KiemPhoBattleState {
   /** Snapshot of PlayerData.swordPath.preset at battle start. */
   preset: OrbId[]
-  /** 0-based auto-cast cursor — each battle starts at 0. */
+  /** 0-based auto-cast cursor - each battle starts at 0. */
   cursor: number
   /** Last-5 orb cast log; cleared entirely on combo fire. */
   log: OrbId[]
@@ -66,7 +66,7 @@ export interface KiemPhoBattleState {
   comboMaxLength: 3 | 4 | 5
 }
 
-/** K12 — combo length cap by realm: <3→3, 3..5→4, >=6→5. realmIndex is
+/** K12 - combo length cap by realm: <3->3, 3..5->4, >=6->5. realmIndex is
  *  the existing 0-based index (mortal=0, qi_refining=1, ...). */
 export function realmComboMax(realmIndex: number): 3 | 4 | 5 {
   if (realmIndex < 3) return 3
@@ -74,7 +74,7 @@ export function realmComboMax(realmIndex: number): 3 | 4 | 5 {
   return 5
 }
 
-/** Preset legality (spec §6): 1..9 orbs, every orb unlocked at the
+/** Preset legality (spec sec6): 1..9 orbs, every orb unlocked at the
  *  player's realm. Enforced by the setKiemPhoPreset op (Task 7). */
 export function validatePreset(preset: OrbId[], realmIndex: number): boolean {
   if (preset.length < 1 || preset.length > 9) return false
@@ -82,7 +82,7 @@ export function validatePreset(preset: OrbId[], realmIndex: number): boolean {
   return preset.every(orb => unlocked.has(orb))
 }
 
-/** Battle-start snapshot. Hien-only — callers must check
+/** Battle-start snapshot. Hien-only - callers must check
  *  isSwordPathway(player) before constructing (M6: way membership). */
 export function initKiemPhoBattle(player: PlayerData): KiemPhoBattleState {
   const swordPath = player.swordPath
@@ -100,8 +100,8 @@ export function initKiemPhoBattle(player: PlayerData): KiemPhoBattleState {
   }
 }
 
-/** Auto-cast pick (spec §4.1): preset[cursor], cursor advances mod
- *  preset.length. Manual picks do NOT call this — they leave the cursor
+/** Auto-cast pick (spec sec4.1): preset[cursor], cursor advances mod
+ *  preset.length. Manual picks do NOT call this - they leave the cursor
  *  where auto left it. */
 export function nextOrb(state: KiemPhoBattleState): OrbId | undefined {
   if (state.preset.length === 0) return undefined
@@ -123,13 +123,13 @@ function tailEquals(log: OrbId[], pattern: OrbId[]): boolean {
 
 /** Append the cast orb to the log, then longest-first tail-match down
  *  to len 3, capped by realmComboMax. First match fires and CLEARS the
- *  whole log — a combo can never chain into a second combo on the same
- *  cast (one fire per cast by construction, spec §4.1).
+ *  whole log - a combo can never chain into a second combo on the same
+ *  cast (one fire per cast by construction, spec sec4.1).
  *
- *  `combos` is the authored table — injected, not imported (A6).
- *  `modifiers` are the purchased-node capstone hooks (spec §4.2): on a
+ *  `combos` is the authored table - injected, not imported (A6).
+ *  `modifiers` are the purchased-node capstone hooks (spec sec4.2): on a
  *  match they run sorted `priority ASC, nodeId ASC`, each `apply`
- *  receiving the running DERIVED copy — the canonical table entry is
+ *  receiving the running DERIVED copy - the canonical table entry is
  *  never mutated. */
 export function recordCastAndMatch(
   state: KiemPhoBattleState,

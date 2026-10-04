@@ -11,8 +11,8 @@ import type { Building } from '@/core/building/Building'
 import type { Material } from '@/core/material/Material'
 import { i18n } from '@/i18n'
 
-// i18n (task 2.2 lô 3) — component render qua t() nên assertion qua
-// i18n.global.t(key) thay vì raw vi string (pattern HomeResourceStrip.test).
+// i18n (task 2.2 lo 3) - component render qua t() nen assertion qua
+// i18n.global.t(key) thay vi raw vi string (pattern HomeResourceStrip.test).
 function t(key: string, params?: Record<string, unknown>): string {
   return (i18n.global as unknown as { t: (k: string, p?: Record<string, unknown>) => string }).t(key, params)
 }
@@ -95,9 +95,9 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
     const heading = mounted.container.querySelector<HTMLElement>('.overlay-panel__heading')!
     const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
 
-    // Tên công trình CHỈ hiện MỘT LẦN DUY NHẤT, trong chính title bar —
-    // không còn dải header con riêng bên dưới (BuildingPanelHeader.vue
-    // đã bị xoá hẳn, thay bằng slot #heading/#header-actions của
+    // Ten cong trinh CHI hien MOT LAN DUY NHAT, trong chinh title bar -
+    // khong con dai header con rieng ben duoi (BuildingPanelHeader.vue
+    // da bi xoa han, thay bang slot #heading/#header-actions cua
     // OverlayPanel qua useBuildingHeaderState).
     expect(mounted.container.querySelector('.building-panel-header')).toBeNull()
     expect(heading.querySelector('.building-heading__art')).not.toBeNull()
@@ -108,7 +108,6 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
     const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
     expect(upgradeButton).not.toBeNull()
     expect(actions.textContent).toContain(t('layout.functionOverlay.upgrade'))
-    expect(mounted.container.querySelector('.construction-gate__upgrade')).toBeNull()
     expect(mounted.container.querySelectorAll('.building-heading__upgrade')).toHaveLength(1)
 
     expect(mounted.container.querySelector('.worker-lodge-panel')).not.toBeNull()
@@ -122,18 +121,16 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
     mounted.unmount()
   })
 
-  it('header mirrors the buildingOps quote — realm-gated next level disables upgrade and names the required realm', async () => {
-    // Mission G Task 36 - mortal (tier 1) cannot take a level-2 building;
-    // the disabled state and label must come from quoteBuildingUpgrade,
-    // not a panel-side formula.
+  it('header mirrors the buildingOps quote — realm-gated next level ẨN HẲN nút nâng cấp (không còn disabled)', async () => {
+    // Owner scope 2026-10-03: "nang cap hien khi du dieu kien" - mot
+    // building bi realm-gate (mortal tier 1 < lv2) khong render nut
+    // disabled nua ma AN HAN, giong chip tren plaque chi xuat hien khi
+    // status === 'upgradeable' (quoteBuildingUpgrade la authority chung).
     const mounted = mountSpringPanel('mortal')
     const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
-    const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
 
-    expect(upgradeButton.disabled).toBe(true)
-    expect(upgradeButton.title).toContain(
-      t('layout.functionOverlay.requiredRealm', { realm: 'Luyện Khí' }),
-    )
+    expect(actions.querySelector('.building-heading__upgrade')).toBeNull()
+    expect(actions.querySelector('.building-upgrade')).toBeNull()
 
     mounted.unmount()
   })

@@ -3,7 +3,7 @@ import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import { calculateStats, type StatModifier } from '../../stats/StatCalculator'
 import { createBaseStats } from '../../stats/StatBlock'
 
-// R2 (AR-02) — recomputeEffectiveStats now treats its first argument as an
+// R2 (AR-02) - recomputeEffectiveStats now treats its first argument as an
 // ALREADY-RESOLVED base (attribute derivation happened exactly once when
 // the entity was built). Fixture mirrors the audit probe: raw might 10 +
 // strength 100 resolves to might 70; an in-battle +50% might buff must
@@ -20,7 +20,7 @@ function buffModifier(overrides: Partial<StatModifier> & { stat: StatModifier['s
 
 function attackBuffModifiers(percent: number, stacks: number): StatModifier[] {
   // buff2 getStatModifiers folds instance stacks onto the returned
-  // modifier — the query output, not the pool, is the function's input.
+  // modifier - the query output, not the pool, is the function's input.
   return [
     buffModifier({ stat: 'might', percent, stacks }),
   ]
@@ -32,7 +32,7 @@ describe('recomputeEffectiveStats (R2 effective boundary)', () => {
     const resolved = calculateStats(raw, [])
     expect(resolved.might).toBe(70)
 
-    // 2 stacks × +50% increased pool → 70 × (1 + 0.5 + 0.5) = 140.
+    // 2 stacks x +50% increased pool -> 70 x (1 + 0.5 + 0.5) = 140.
     const effective = recomputeEffectiveStats(resolved, attackBuffModifiers(0.5, 2))
     expect(effective.might).toBe(140)
   })
@@ -47,7 +47,7 @@ describe('recomputeEffectiveStats (R2 effective boundary)', () => {
 
 describe('recomputeEffectiveStats', () => {
   it('folds active statModifier buff effects into the resolved base via the effective pipeline', () => {
-    // R2: the input is a RESOLVED base — attribute derivation must NOT
+    // R2: the input is a RESOLVED base - attribute derivation must NOT
     // run again, so the old strength-derivation expectations (+0.6) are
     // gone. Resolved might 100 + flat buff 50 = 150 exactly.
     const base = createBaseStats({ might: 100 })
@@ -60,7 +60,7 @@ describe('recomputeEffectiveStats', () => {
   })
 
   it('returns resolved base unchanged when no statModifier buffs are active', () => {
-    // R2: no re-derivation — the resolved snapshot comes back untouched.
+    // R2: no re-derivation - the resolved snapshot comes back untouched.
     const base = createBaseStats({ might: 100 })
 
     const effective = recomputeEffectiveStats(base, [])
@@ -69,7 +69,7 @@ describe('recomputeEffectiveStats', () => {
   })
 
   it('percent statModifier folds multiplicatively with the resolved base', () => {
-    // R2: (100 resolved) × (1 + 0.5) = 150 — attribute derivation no
+    // R2: (100 resolved) x (1 + 0.5) = 150 - attribute derivation no
     // longer inflates the base before the percent fold.
     const base = createBaseStats({ might: 100 })
 

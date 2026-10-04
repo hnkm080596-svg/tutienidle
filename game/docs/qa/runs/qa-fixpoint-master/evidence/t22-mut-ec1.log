@@ -1,0 +1,79 @@
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaEconomyCensus.test.ts (6 tests | 1 failed) 16ms
+     × every material consumed by a beta-realm purpose sink has a live beta source or an exemption 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaEconomyCensus.test.ts > sec.17 beta economy census - no orphan source, no orphan sink > every material consumed by a beta-realm purpose sink has a live beta source or an exemption
+AssertionError: expected [ …(45) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "hoa_tuyet_lien_mortal_decade (sinks: recipe:alchemy_tu_linh_dan_mortal:herb,recipe:alchemy_hoi_linh_dan_mortal:herb,recipe:alchemy_khai_linh_dan_mortal:herb)",
++   "hoa_tuyet_lien_mortal_century (sinks: recipe:alchemy_tu_linh_dan_mortal:herb,recipe:alchemy_hoi_linh_dan_mortal:herb,recipe:alchemy_khai_linh_dan_mortal:herb)",
++   "hoa_tuyet_lien_mortal_millennium (sinks: recipe:alchemy_tu_linh_dan_mortal:herb,recipe:alchemy_hoi_linh_dan_mortal:herb,recipe:alchemy_khai_linh_dan_mortal:herb)",
++   "hoa_tuyet_lien_mortal_myriad_year (sinks: recipe:alchemy_tu_linh_dan_mortal:herb,recipe:alchemy_hoi_linh_dan_mortal:herb,recipe:alchemy_khai_linh_dan_mortal:herb)",
++   "hoa_tuyet_lien_mortal_thuong_co (sinks: recipe:alchemy_tu_linh_dan_mortal:herb,recipe:alchemy_hoi_linh_dan_mortal:herb,recipe:alchemy_khai_linh_dan_mortal:herb)",
++   "hoa_tuyet_lien_qi_refining_decade (sinks: recipe:alchemy_tu_linh_dan_qi_refining:herb,recipe:alchemy_hoi_linh_dan_qi_refining:herb,recipe:alchemy_khai_linh_dan_qi_refining:herb)",
++   "hoa_tuyet_lien_qi_refining_century (sinks: recipe:alchemy_tu_linh_dan_qi_refining:herb,recipe:alchemy_hoi_linh_dan_qi_refining:herb,recipe:alchemy_khai_linh_dan_qi_refining:herb)",
++   "hoa_tuyet_lien_qi_refining_millennium (sinks: recipe:alchemy_tu_linh_dan_qi_refining:herb,recipe:alchemy_hoi_linh_dan_qi_refining:herb,recipe:alchemy_khai_linh_dan_qi_refining:herb)",
++   "hoa_tuyet_lien_qi_refining_myriad_year (sinks: recipe:alchemy_tu_linh_dan_qi_refining:herb,recipe:alchemy_hoi_linh_dan_qi_refining:herb,recipe:alchemy_khai_linh_dan_qi_refining:herb)",
++   "hoa_tuyet_lien_qi_refining_thuong_co (sinks: recipe:alchemy_tu_linh_dan_qi_refining:herb,recipe:alchemy_hoi_linh_dan_qi_refining:herb,recipe:alchemy_khai_linh_dan_qi_refining:herb)",
++   "hoa_tuyet_lien_foundation_establishment_decade (sinks: recipe:alchemy_tu_linh_dan_foundation_establishment:herb,recipe:alchemy_hoi_linh_dan_foundation_establishment:herb,recipe:alchemy_khai_linh_dan_foundation_establishment:herb)",
++   "hoa_tuyet_lien_foundation_establishment_century (sinks: recipe:alchemy_tu_linh_dan_foundation_establishment:herb,recipe:alchemy_hoi_linh_dan_foundation_establishment:herb,recipe:alchemy_khai_linh_dan_foundation_establishment:herb)",
++   "hoa_tuyet_lien_foundation_establishment_millennium (sinks: recipe:alchemy_tu_linh_dan_foundation_establishment:herb,recipe:alchemy_hoi_linh_dan_foundation_establishment:herb,recipe:alchemy_khai_linh_dan_foundation_establishment:herb)",
++   "hoa_tuyet_lien_foundation_establishment_myriad_year (sinks: recipe:alchemy_tu_linh_dan_foundation_establishment:herb,recipe:alchemy_hoi_linh_dan_foundation_establishment:herb,recipe:alchemy_khai_linh_dan_foundation_establishment:herb)",
++   "hoa_tuyet_lien_foundation_establishment_thuong_co (sinks: recipe:alchemy_tu_linh_dan_foundation_establishment:herb,recipe:alchemy_hoi_linh_dan_foundation_establishment:herb,recipe:alchemy_khai_linh_dan_foundation_establishment:herb)",
++   "hoa_tuyet_lien_golden_core_decade (sinks: recipe:alchemy_tu_linh_dan_golden_core:herb,recipe:alchemy_hoi_linh_dan_golden_core:herb,recipe:alchemy_khai_linh_dan_golden_core:herb)",
++   "hoa_tuyet_lien_golden_core_century (sinks: recipe:alchemy_tu_linh_dan_golden_core:herb,recipe:alchemy_hoi_linh_dan_golden_core:herb,recipe:alchemy_khai_linh_dan_golden_core:herb)",
++   "hoa_tuyet_lien_golden_core_millennium (sinks: recipe:alchemy_tu_linh_dan_golden_core:herb,recipe:alchemy_hoi_linh_dan_golden_core:herb,recipe:alchemy_khai_linh_dan_golden_core:herb)",
++   "hoa_tuyet_lien_golden_core_myriad_year (sinks: recipe:alchemy_tu_linh_dan_golden_core:herb,recipe:alchemy_hoi_linh_dan_golden_core:herb,recipe:alchemy_khai_linh_dan_golden_core:herb)",
++   "hoa_tuyet_lien_golden_core_thuong_co (sinks: recipe:alchemy_tu_linh_dan_golden_core:herb,recipe:alchemy_hoi_linh_dan_golden_core:herb,recipe:alchemy_khai_linh_dan_golden_core:herb)",
++   "hoa_tuyet_lien_nascent_soul_decade (sinks: recipe:alchemy_tu_linh_dan_nascent_soul:herb,recipe:alchemy_hoi_linh_dan_nascent_soul:herb,recipe:alchemy_khai_linh_dan_nascent_soul:herb)",
++   "hoa_tuyet_lien_nascent_soul_century (sinks: recipe:alchemy_tu_linh_dan_nascent_soul:herb,recipe:alchemy_hoi_linh_dan_nascent_soul:herb,recipe:alchemy_khai_linh_dan_nascent_soul:herb)",
++   "hoa_tuyet_lien_nascent_soul_millennium (sinks: recipe:alchemy_tu_linh_dan_nascent_soul:herb,recipe:alchemy_hoi_linh_dan_nascent_soul:herb,recipe:alchemy_khai_linh_dan_nascent_soul:herb)",
++   "hoa_tuyet_lien_nascent_soul_myriad_year (sinks: recipe:alchemy_tu_linh_dan_nascent_soul:herb,recipe:alchemy_hoi_linh_dan_nascent_soul:herb,recipe:alchemy_khai_linh_dan_nascent_soul:herb)",
++   "hoa_tuyet_lien_nascent_soul_thuong_co (sinks: recipe:alchemy_tu_linh_dan_nascent_soul:herb,recipe:alchemy_hoi_linh_dan_nascent_soul:herb,recipe:alchemy_khai_linh_dan_nascent_soul:herb)",
++   "hoa_tuyet_lien_soul_transformation_decade (sinks: recipe:alchemy_tu_linh_dan_soul_transformation:herb,recipe:alchemy_hoi_linh_dan_soul_transformation:herb,recipe:alchemy_khai_linh_dan_soul_transformation:herb)",
++   "hoa_tuyet_lien_soul_transformation_century (sinks: recipe:alchemy_tu_linh_dan_soul_transformation:herb,recipe:alchemy_hoi_linh_dan_soul_transformation:herb,recipe:alchemy_khai_linh_dan_soul_transformation:herb)",
++   "hoa_tuyet_lien_soul_transformation_millennium (sinks: recipe:alchemy_tu_linh_dan_soul_transformation:herb,recipe:alchemy_hoi_linh_dan_soul_transformation:herb,recipe:alchemy_khai_linh_dan_soul_transformation:herb)",
++   "hoa_tuyet_lien_soul_transformation_myriad_year (sinks: recipe:alchemy_tu_linh_dan_soul_transformation:herb,recipe:alchemy_hoi_linh_dan_soul_transformation:herb,recipe:alchemy_khai_linh_dan_soul_transformation:herb)",
++   "hoa_tuyet_lien_soul_transformation_thuong_co (sinks: recipe:alchemy_tu_linh_dan_soul_transformation:herb,recipe:alchemy_hoi_linh_dan_soul_transformation:herb,recipe:alchemy_khai_linh_dan_soul_transformation:herb)",
++   "hoa_tuyet_lien_void_refinement_decade (sinks: recipe:alchemy_tu_linh_dan_void_refinement:herb,recipe:alchemy_hoi_linh_dan_void_refinement:herb,recipe:alchemy_khai_linh_dan_void_refinement:herb)",
++   "hoa_tuyet_lien_void_refinement_century (sinks: recipe:alchemy_tu_linh_dan_void_refinement:herb,recipe:alchemy_hoi_linh_dan_void_refinement:herb,recipe:alchemy_khai_linh_dan_void_refinement:herb)",
++   "hoa_tuyet_lien_void_refinement_millennium (sinks: recipe:alchemy_tu_linh_dan_void_refinement:herb,recipe:alchemy_hoi_linh_dan_void_refinement:herb,recipe:alchemy_khai_linh_dan_void_refinement:herb)",
++   "hoa_tuyet_lien_void_refinement_myriad_year (sinks: recipe:alchemy_tu_linh_dan_void_refinement:herb,recipe:alchemy_hoi_linh_dan_void_refinement:herb,recipe:alchemy_khai_linh_dan_void_refinement:herb)",
++   "hoa_tuyet_lien_void_refinement_thuong_co (sinks: recipe:alchemy_tu_linh_dan_void_refinement:herb,recipe:alchemy_hoi_linh_dan_void_refinement:herb,recipe:alchemy_khai_linh_dan_void_refinement:herb)",
++   "hoa_tuyet_lien_mahayana_decade (sinks: recipe:alchemy_tu_linh_dan_mahayana:herb,recipe:alchemy_hoi_linh_dan_mahayana:herb,recipe:alchemy_khai_linh_dan_mahayana:herb)",
++   "hoa_tuyet_lien_mahayana_century (sinks: recipe:alchemy_tu_linh_dan_mahayana:herb,recipe:alchemy_hoi_linh_dan_mahayana:herb,recipe:alchemy_khai_linh_dan_mahayana:herb)",
++   "hoa_tuyet_lien_mahayana_millennium (sinks: recipe:alchemy_tu_linh_dan_mahayana:herb,recipe:alchemy_hoi_linh_dan_mahayana:herb,recipe:alchemy_khai_linh_dan_mahayana:herb)",
++   "hoa_tuyet_lien_mahayana_myriad_year (sinks: recipe:alchemy_tu_linh_dan_mahayana:herb,recipe:alchemy_hoi_linh_dan_mahayana:herb,recipe:alchemy_khai_linh_dan_mahayana:herb)",
++   "hoa_tuyet_lien_mahayana_thuong_co (sinks: recipe:alchemy_tu_linh_dan_mahayana:herb,recipe:alchemy_hoi_linh_dan_mahayana:herb,recipe:alchemy_khai_linh_dan_mahayana:herb)",
++   "hoa_tuyet_lien_tribulation_decade (sinks: recipe:alchemy_tu_linh_dan_tribulation:herb,recipe:alchemy_hoi_linh_dan_tribulation:herb,recipe:alchemy_khai_linh_dan_tribulation:herb)",
++   "hoa_tuyet_lien_tribulation_century (sinks: recipe:alchemy_tu_linh_dan_tribulation:herb,recipe:alchemy_hoi_linh_dan_tribulation:herb,recipe:alchemy_khai_linh_dan_tribulation:herb)",
++   "hoa_tuyet_lien_tribulation_millennium (sinks: recipe:alchemy_tu_linh_dan_tribulation:herb,recipe:alchemy_hoi_linh_dan_tribulation:herb,recipe:alchemy_khai_linh_dan_tribulation:herb)",
++   "hoa_tuyet_lien_tribulation_myriad_year (sinks: recipe:alchemy_tu_linh_dan_tribulation:herb,recipe:alchemy_hoi_linh_dan_tribulation:herb,recipe:alchemy_khai_linh_dan_tribulation:herb)",
++   "hoa_tuyet_lien_tribulation_thuong_co (sinks: recipe:alchemy_tu_linh_dan_tribulation:herb,recipe:alchemy_hoi_linh_dan_tribulation:herb,recipe:alchemy_khai_linh_dan_tribulation:herb)",
++ ]
+
+ ❯ tests/architecture/betaEconomyCensus.test.ts:295:21
+    293|       }
+    294|     }
+    295|     expect(orphans).toEqual([])
+       |                     ^
+    296|   })
+    297|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  16:39:08
+   Duration  473ms (transform 266ms, setup 210ms, import 131ms, tests 16ms, environment 0ms)
+

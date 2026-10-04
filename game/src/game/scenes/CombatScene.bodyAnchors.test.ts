@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// Spec C §4.2 — the scene turns an entity id into a body box and asks
+// Spec C sec4.2 - the scene turns an entity id into a body box and asks
 // combatBodyAnchors for a point. No Phaser runtime needed: the sprite's
 // personWidth/personHeight are set by the grid view (Task 3) and read here.
 import { describe, expect, it } from 'vitest'
@@ -59,7 +59,7 @@ describe('CombatScene.bodyAnchorScreen()', () => {
   it('a Rectangle fallback gets REAL anchors from entityDisplaySize, not the pre-fix half-height default', () => {
     // Finding 1, final whole-branch review: the old version of this test
     // hand-set personWidth: 40, personHeight: 120 on the fixture and only
-    // THEN flipped `kind` to 'rect' — a state production never produces
+    // THEN flipped `kind` to 'rect' - a state production never produces
     // (personWidth/personHeight are written by the sizing methods, which used
     // to skip the Rectangle branch entirely). It asserted nothing about the
     // fix. This version starts as a real Rectangle with NO personWidth/

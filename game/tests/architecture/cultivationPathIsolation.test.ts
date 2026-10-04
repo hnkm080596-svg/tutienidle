@@ -1,5 +1,5 @@
 /**
- * Cultivation Path Framework isolation guard (M10, spec §28).
+ * Cultivation Path Framework isolation guard (M10, spec sec28).
  *
  * The framework's core law: generic systems MUST NOT branch on concrete
  * path/way identity. Path/way modules may know their own ids; content
@@ -7,13 +7,13 @@
  *
  * Two checks, both dependency/branch-level rather than literal-grep:
  *
- * 1. MODULE ISOLATION (dependency direction, A6) — a path module
+ * 1. MODULE ISOLATION (dependency direction, A6) - a path module
  *    (core/kiem-tu, core/phap-tu, core/the-tu) never imports upward into
  *    orchestration/presentation/persistence, and never imports a sibling
  *    path module. The catalog (core/player/CultivationPathKit) is the
  *    single aggregation point allowed to know every module.
  *
- * 2. IDENTITY-BRANCHING — outside the authority dir (core/player), the
+ * 2. IDENTITY-BRANCHING - outside the authority dir (core/player), the
  *    three module dirs, save shape validation, and tests, no file may
  *    compare cultivationPath / cultivationWay / pathId / wayId (or a
  *    getActivePath()/getActiveWay() read) to a concrete literal, nor
@@ -31,7 +31,7 @@ const SRC = join(GAME_ROOT, 'src')
 const PATH_MODULE_DIRS = ['core/kiem-tu/', 'core/phap-tu/', 'core/the-tu/'] as const
 
 // ---------------------------------------------------------------------------
-// Check 1 — module isolation
+// Check 1 - module isolation
 // ---------------------------------------------------------------------------
 
 const UPWARD_LAYERS = [
@@ -78,11 +78,11 @@ function resolveToSrc(specifier: string, fromFile: string): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Check 2 — identity branching
+// Check 2 - identity branching
 // ---------------------------------------------------------------------------
 
 // Path + way literals, longest-first so '_an' remnants match before
-// their base prefixes inside the quoted alternation. P7-M1 — the
+// their base prefixes inside the quoted alternation. P7-M1 - the
 // canonical English ids join the retired VN set: the guard covers
 // both so no literal of EITHER vocabulary may branch on identity.
 const CONCRETE_ID = String.raw`(?:hidden_sword_pathway|hidden_spell_pathway|hidden_body_pathway|sword_pathway|spell_pathway|body_pathway|kiem_tu_an|phap_tu_an|the_tu_an|kiem_tu|phap_tu|the_tu|ngu_hanh|ngo_dao|ung_the|hien|ngu|sword|spell|body)`
@@ -114,16 +114,16 @@ const BRANCH_EXEMPT_PREFIXES: readonly string[] = [
 ]
 
 // ---------------------------------------------------------------------------
-// Check 3 — predicate/seam import allowlist (review cycle 2, F3)
+// Check 3 - predicate/seam import allowlist (review cycle 2, F3)
 // ---------------------------------------------------------------------------
 // Value-level imports from a path module are the accepted seam shape
-// (predicates, economy ops, providers) — but each site is an intentional
+// (predicates, economy ops, providers) - but each site is an intentional
 // cross-system coupling and must be visible. A NEW import site outside
 // this allowlist fails here instead of sneaking into review.
 // Type-only imports are data contracts (OrbId, PhapTuState, ...) and
 // stay free.
 const SEAM_ALLOWLIST_DIRS: readonly string[] = [
-  // Orchestration layer — the battle-provider/ritual seams are owned here.
+  // Orchestration layer - the battle-provider/ritual seams are owned here.
   'core/game/',
   // Presentation may render per-way UI through module predicates.
   'components/',
@@ -132,7 +132,7 @@ const SEAM_ALLOWLIST_DIRS: readonly string[] = [
 ]
 
 const SEAM_ALLOWLIST_FILES: readonly string[] = [
-  // Typed NodeEffect channels (elementTag/routeTag, kiemDaoCap) — the
+  // Typed NodeEffect channels (elementTag/routeTag, kiemDaoCap) - the
   // spec-accepted per-path consumer fields.
   'core/progression/NodeSystem.ts',
   // PhapTuRoutes value helpers for cast-leveled phap machinery.
@@ -184,7 +184,7 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
 // persisted slice are slice inference outside the owners. The canonical
 // reads (getActiveElement/getActiveRoute/getSwordScrollPreset) and capability
 // checks in core/player are the only generic path into spellPath/swordPath.
-// P7-M1 — retired field names stay in the pattern so legacy reads can't
+// P7-M1 - retired field names stay in the pattern so legacy reads can't
 // resurface unchecked.
 // ---------------------------------------------------------------------------
 const SLICE_READ_PATTERN = /\.(?:swordPath|spellPath|kiemTu|phapTu)\b/

@@ -10,8 +10,8 @@ import {
 import { entityGridPosition, getChebyshevDistance } from './BattleGrid'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-// AI target strategy (plan §2.7/§7.1): đủ năm strategy, tie-break
-// deterministic theo distance → row → column → id, validator dùng chung
+// AI target strategy (plan sec2.7/sec7.1): du nam strategy, tie-break
+// deterministic theo distance -> row -> column -> id, validator dung chung
 // cho core/UI/save.
 function enemy(
   id: string,
@@ -87,7 +87,7 @@ describe('rankTargetsByStrategy — quy tắc chính', () => {
 
     const lowest = rankTargetsByStrategy(ranked(woundedFar, woundedNear, healthy), 'lowest_hp')
 
-    // Hòa HP 30 → tie-break distance: gần hơn trước.
+    // Hoa HP 30 -> tie-break distance: gan hon truoc.
     expect(lowest[0]!.entity.id).toBe('wounded_near')
 
     const highest = rankTargetsByStrategy(ranked(woundedNear, healthy), 'highest_hp')
@@ -98,16 +98,16 @@ describe('rankTargetsByStrategy — quy tắc chính', () => {
 
 describe('rankTargetsByStrategy — tie-break deterministic bắt buộc (plan §2.7)', () => {
   it('cùng quy tắc chính + cùng distance → row tăng dần rồi column tăng dần rồi id chuỗi', () => {
-    // Cùng distance 1 từ avatar (4,1): các ô kề Chebyshev.
+    // Cung distance 1 tu avatar (4,1): cac o ke Chebyshev.
     const b = enemy('b', 3, 2)
     const a = enemy('a', 3, 0)
     const c = enemy('c', 5, 2)
 
     const result = rankTargetsByStrategy(ranked(b, a, c), 'nearest')
 
-    // distance: a=(|−1|,1)=1? col 0 dist |0−1|=1, row 3 diff 1 → 1;
-    // b=(row −1=1, col 1)=1; c=(1,1)=1 → hòa toàn bộ → row asc: a,b (row 3)
-    // trước c (row 5); cùng row 3 → column asc: a (col 0) trước b (col 2).
+    // distance: a=(|-1|,1)=1? col 0 dist |0-1|=1, row 3 diff 1 -> 1;
+    // b=(row -1=1, col 1)=1; c=(1,1)=1 -> hoa toan bo -> row asc: a,b (row 3)
+    // truoc c (row 5); cung row 3 -> column asc: a (col 0) truoc b (col 2).
     expect(result.map((entry) => entry.entity.id)).toEqual(['a', 'b', 'c'])
   })
 

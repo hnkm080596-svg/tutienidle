@@ -5,6 +5,7 @@
 import type Phaser from 'phaser'
 import { getTribulationDescriptors } from '@/presentation/assets/AssetBundleCatalog'
 import { INK_WASH_UI_ATLAS_KEY } from '@/game/support/InkWashUiPhaser'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 /**
  * Queue the mode-appropriate tribulation assets. The ink-wash atlas is
@@ -28,19 +29,23 @@ export function queueTribulationAssets(scene: Phaser.Scene): void {
 
     switch (d.kind) {
       case 'image':
-        scene.load.image(d.key, d.url)
+        scene.load.image(d.key, resolveAssetUrl(d.url))
         break
       case 'spritesheet':
-        scene.load.spritesheet(d.key, d.url, {
+        scene.load.spritesheet(d.key, resolveAssetUrl(d.url), {
           frameWidth: d.frameWidth,
           frameHeight: d.frameHeight,
         })
         break
       case 'atlas':
-        scene.load.atlas(d.key, d.textureUrl, d.atlasUrl)
+        scene.load.atlas(d.key, resolveAssetUrl(d.textureUrl), resolveAssetUrl(d.atlasUrl))
         break
       case 'multiatlas':
-        scene.load.multiatlas(d.key, d.jsonUrl, d.basePath)
+        scene.load.multiatlas(
+          d.key,
+          resolveAssetUrl(d.jsonUrl),
+          d.basePath === undefined ? undefined : resolveAssetUrl(d.basePath),
+        )
         break
     }
   }

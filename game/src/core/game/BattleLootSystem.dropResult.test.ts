@@ -1,11 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import {
   createLootTestSetup,
   TEST_EQUIPMENT_TEMPLATE,
 } from './battleLootTestSetup'
 
 // Drop-system Task 8 (2026-09-12): BattleLootSystem consumes the
-// DropResult that resolveDrops already decided — stage/family tables and
+// DropResult that resolveDrops already decided - stage/family tables and
 // signature drops are the source of truth, enemy.rewards is no longer a
 // loot table. These tests pin that boundary: WHAT drops comes from the
 // resolver, HOW it lands (bags, toasts, particles, summary) stays here.
@@ -17,7 +27,7 @@ describe('BattleLootSystem — DropResult consumer', () => {
   it('grants what the resolver returned, not what the enemy authored', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, materialBag, giveReward, loot, gainMastery } = createLootTestSetup({
-      // Old-style per-enemy rewards are deliberately empty/zero — if any
+      // Old-style per-enemy rewards are deliberately empty/zero - if any
       // loot still flows, it came from the tables, not from the enemy.
       rewards: { techniqueMastery: 0, spiritStone: 0 },
       realmId: 'mortal',

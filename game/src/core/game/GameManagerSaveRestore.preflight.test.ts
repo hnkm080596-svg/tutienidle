@@ -1,10 +1,10 @@
-// R10 (AR-12, S4) — preflight coverage. Before this repair,
+// R10 (AR-12, S4) - preflight coverage. Before this repair,
 // preflightSaveRegistryReferences() only validated equipment/affix
 // references; save.materials/save.pills/save.buildings with an unknown
 // (removed-from-registry) ID were silently DROPPED by the restore loops'
 // `if (registry.has(id))` guards instead of being rejected up front. Per
 // the project's established registry-drift principle (QA-2026-09-01-013):
-// silently filtering an owned current entry is data loss, not recovery —
+// silently filtering an owned current entry is data loss, not recovery -
 // registry drift must hard-fail before any owner mutation, the same
 // contract equipment already had.
 import { describe, expect, it } from 'vitest'

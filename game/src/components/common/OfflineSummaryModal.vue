@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// Beta Phase 4 (mục XIV tài liệu) — thay console.log('Offline:'...) cũ
-// trong App.vue's onMounted(). Chỉ hiện Thời gian + Tu vi — hệ thống
-// offline hiện tại (core/idle/OfflineProgressSystem.ts) CHỈ tích tu
-// vi, không có material/tài nguyên nào khác để hiện thêm (mockup mục
-// XIV có "+ Tài nguyên/+ Progress" nhưng đó là ví dụ minh hoạ, không
-// phải data thật đang có).
+// Beta Phase 4 (muc XIV tai lieu) - thay console.log('Offline:'...) cu
+// trong App.vue's onMounted(). Chi hien Thoi gian + Tu vi - he thong
+// offline hien tai (core/idle/OfflineProgressSystem.ts) CHI tich tu
+// vi, khong co material/tai nguyen nao khac de hien them (mockup muc
+// XIV co "+ Tai nguyen/+ Progress" nhung do la vi du minh hoa, khong
+// phai data that dang co).
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { useI18n } from 'vue-i18n'
@@ -16,9 +16,9 @@ import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useAudioStore } from '@/stores/audio'
 
-// UI-005 (Task 3, 2026-09-07) — Offline summary là blocking dialog thật:
+// UI-005 (Task 3, 2026-09-07) - Offline summary la blocking dialog that:
 // role="dialog" + aria-modal + focus trap/restore qua useDialogFocus
-// (UI-015: người chơi phải chủ động Continue, background không bấm được).
+// (UI-015: nguoi choi phai chu dong Continue, background khong bam duoc).
 const props = defineProps<{
   elapsedSeconds: number
 
@@ -65,12 +65,12 @@ const titleId = useId()
       <ul class="offline-summary__rows">
         <StatRow :label="t('combat.offline.labels.duration')">{{ formatDuration(props.elapsedSeconds) }}</StatRow>
 
-        <!-- Chỉ Thời gian + Tu vi — core/idle/OfflineProgressSystem.ts
-             CHỈ tính cultivationPerSecond * elapsedSeconds, không có
-             nguồn thu offline nào khác trong game logic hiện tại. Mở
-             rộng OfflineSummaryData (stores/offlineSummary.ts) + thêm
-             row tương ứng nếu sau này OfflineProgressSystem có nguồn
-             thu mới. -->
+        <!-- Chi Thoi gian + Tu vi - core/idle/OfflineProgressSystem.ts
+             CHI tinh cultivationPerSecond * elapsedSeconds, khong co
+             nguon thu offline nao khac trong game logic hien tai. Mo
+             rong OfflineSummaryData (stores/offlineSummary.ts) + them
+             row tuong ung neu sau nay OfflineProgressSystem co nguon
+             thu moi. -->
         <StatRow :label="t('combat.offline.labels.cultivation')" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
       </ul>
 
@@ -83,7 +83,7 @@ const titleId = useId()
 .offline-summary {
   position: absolute;
   inset: 0;
-  /* z-index via OVERLAY_LAYERS.modal (inline style) — single source for
+  /* z-index via OVERLAY_LAYERS.modal (inline style) - single source for
      the app-level overlay order; the curtain must cover this modal. */
   display: flex;
   align-items: center;
@@ -92,12 +92,12 @@ const titleId = useId()
 }
 
 /* M-tier InkNineSlice (surface-m-paper + frame-m-seal-corner) thay
-   cho GamePanel ornate (frame-xl-ceremony, slice 80px) — khung XL vẽ
-   đè lên nội dung ở card nhỏ 320px vì băng khung 80px mỗi bên không
-   còn chỗ cho padding hợp lý. thickness="18" (thay vì slice gốc 32px)
-   thu nhỏ mực vẽ lại — 32px nguyên bản quá dày với card 320-420px,
-   nuốt gần hết cạnh thành 1 dải đen. Padding nới thêm để chữ lùi hẳn
-   vào trong, không còn sát viền mực. */
+   cho GamePanel ornate (frame-xl-ceremony, slice 80px) - khung XL ve
+   de len noi dung o card nho 320px vi bang khung 80px moi ben khong
+   con cho cho padding hop ly. thickness="18" (thay vi slice goc 32px)
+   thu nho muc ve lai - 32px nguyen ban qua day voi card 320-420px,
+   nuot gan het canh thanh 1 dai den. Padding noi them de chu lui han
+   vao trong, khong con sat vien muc. */
 .offline-summary__panel {
   position: relative;
   isolation: isolate;

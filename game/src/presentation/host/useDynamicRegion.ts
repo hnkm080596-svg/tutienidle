@@ -1,17 +1,17 @@
-// useDynamicRegion — the mechanics of hosting a dynamic region.
+// useDynamicRegion - the mechanics of hosting a dynamic region.
 //
 // Mechanism 2 of
-// docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md §5.
+// docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md sec5.
 //
 // `PhaserCanvas.vue` and `TranPhapPanel.vue` each hand-rolled construction,
 // dynamic import, resize observation, teardown and error handling, in two
-// different bodies of code. Neither was wrong. But under §2 a static shell
+// different bodies of code. Neither was wrong. But under sec2 a static shell
 // hosting a dynamic region is the STANDARD composition, so the third and fourth
-// region would each have been a third and fourth copy — and Mission 0 §13 warns
+// region would each have been a third and fourth copy - and Mission 0 sec13 warns
 // specifically that reusing a renderer does not make a hosting lifecycle
 // correct.
 //
-// What this is not (§5.3): a scene abstraction, a renderer wrapper, or a second
+// What this is not (sec5.3): a scene abstraction, a renderer wrapper, or a second
 // coordinator. `GamePresentationCoordinator` keeps route and readiness
 // authority untouched. This owns hosting mechanics only; what a region draws is
 // entirely the scene's business.
@@ -23,7 +23,7 @@ export type SceneCtor = new (...args: never[]) => Phaser.Scene
 
 export interface DynamicRegionModules {
   /**
-   * Phaser's default export — `(await import('phaser')).default`.
+   * Phaser's default export - `(await import('phaser')).default`.
    *
    * Typed structurally rather than as `typeof import('phaser')`: in this
    * project that expression resolves to the ambient `Phaser` NAMESPACE, which
@@ -52,7 +52,7 @@ export interface DynamicRegionOptions {
 
   /**
    * Fixed pixel size. Omit to take the size from the container and track it
-   * with a `ResizeObserver` — the combat canvas does the latter, the Formation
+   * with a `ResizeObserver` - the combat canvas does the latter, the Formation
    * preview the former.
    */
   size?: { width: number; height: number }
@@ -64,8 +64,8 @@ export interface DynamicRegionOptions {
   seed?: (registry: GateRegistry) => (() => void) | void
 
   /**
-   * Assert every required gate key is present once `seed` has run (§4.2). Off
-   * by default: a region that seeds nothing — the Formation preview — is a
+   * Assert every required gate key is present once `seed` has run (sec4.2). Off
+   * by default: a region that seeds nothing - the Formation preview - is a
    * legitimate configuration, not a wiring bug.
    */
   validateSeed?: boolean
@@ -78,12 +78,12 @@ export interface DynamicRegionOptions {
    *
    * Deliberately takes no argument: this is the moment a shell wants to push
    * initial state, and handing it the `Phaser.Game` to do so would hand back
-   * exactly what §3.6 removes. Use `dispatch`.
+   * exactly what sec3.6 removes. Use `dispatch`.
    *
    * Note the game-level `ready` event is NOT this moment: Phaser fires it
    * before scene `create()` whenever a scene preloads files (the async
    * loader runs after `ready`). This callback waits for every scene's own
-   * `create` event, and `dispatch` queues until the same point — so initial
+   * `create` event, and `dispatch` queues until the same point - so initial
    * state pushed here actually reaches the scene's subscriptions.
    */
   onReady?: () => void
@@ -108,7 +108,7 @@ export interface DynamicRegion {
   /**
    * Begin the dynamic import and construct. Explicit rather than automatic,
    * because the two regions start at different moments: the combat canvas on
-   * mount, the Formation preview when its panel opens. §5.2 did not list this;
+   * mount, the Formation preview when its panel opens. sec5.2 did not list this;
    * the Formation panel is why it exists.
    */
   start(): void
@@ -116,12 +116,12 @@ export interface DynamicRegion {
   destroy(): void
 
   /**
-   * Send a scoped event to the region (§3.6, surface two). The shell addresses
+   * Send a scoped event to the region (sec3.6, surface two). The shell addresses
    * the REGION, never a scene object: a shell holding a scene can call every
    * public method on it and nobody reviews that.
    *
    * Events sent before the region's scenes have run `create()` are queued and
-   * replayed in order once they have — a pre-boot emit would otherwise be
+   * replayed in order once they have - a pre-boot emit would otherwise be
    * dropped silently (the "units sometimes never appear" class of defect).
    */
   dispatch(event: string, payload?: unknown): void
@@ -135,14 +135,14 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
   let resizeObserver: ResizeObserver | null = null
   let seedCleanup: (() => void) | null = null
   // Dispatches sent before the region can hear them (scenes not yet
-  // created) — replayed in order once every scene has run create().
+  // created) - replayed in order once every scene has run create().
   let pendingDispatches: Array<{ event: string; payload: unknown }> = []
   let regionReady = false
   // The generation an in-flight import belongs to, null when none. Dedupes
   // repeat start() calls against the CURRENT generation only: a start after
   // teardown (generation bumped) or after a failure (game still null) is a
-  // legitimate NEW attempt — that is how panel reopen and the coordinator
-  // retry hook recover a dead host — while a second start during the same
+  // legitimate NEW attempt - that is how panel reopen and the coordinator
+  // retry hook recover a dead host - while a second start during the same
   // pending import must not run a parallel bootstrap.
   let pendingBootGeneration: number | null = null
 
@@ -196,7 +196,7 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
 
         bootError.value = message
       } finally {
-        // Clear only OUR marker — a newer attempt may already have
+        // Clear only OUR marker - a newer attempt may already have
         // overwritten it (teardown bumped the generation mid-import, then a
         // restart began); clearing theirs would re-admit a parallel boot.
         if (pendingBootGeneration === bootGeneration) {
@@ -248,7 +248,7 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
     // Game 'ready' is NOT scene readiness: SceneManager.bootQueue runs ON
     // 'ready', and a scene with files to preload finishes create() later.
     // onReady (and the dispatch queue) wait for each scene's own 'create'
-    // event — the point where its subscriptions actually exist.
+    // event - the point where its subscriptions actually exist.
     const readyGeneration = generation.value
 
     created.events.once('ready', () => {
@@ -263,7 +263,7 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
       // Only scenes Phaser is actually booting count: scenes registered in
       // the config but not started (autoStart false, e.g. a combat scene
       // kept dormant until a later scene.start()) stay at status PENDING
-      // and their create() may never run for this region's lifetime —
+      // and their create() may never run for this region's lifetime -
       // waiting on them would deadlock onReady and the dispatch queue.
       const scenes = created.scene.scenes.filter(
         (scene) => scene.sys.settings.status > 0,
@@ -334,7 +334,7 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
 
   /**
    * Teardown order is part of the contract, not an implementation detail
-   * (§5.2). A teardown that destroys the game before invalidating in-flight
+   * (sec5.2). A teardown that destroys the game before invalidating in-flight
    * work leaves a resolved dynamic import writing into a destroyed container.
    */
   function teardownResources(): void {

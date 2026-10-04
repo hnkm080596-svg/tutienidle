@@ -23,17 +23,19 @@ import {
   type FilteredMaterial,
   type MaterialGroup,
 } from '@/composables/useBagFilter'
-import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
-import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
-import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
-import { professionGradeRank } from '@/core/profession/slotRank'
+import { betaMaterialStackVisible } from '@/core/betaScope'
+import { usePlayerStore } from '@/stores/player'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
-import type { GradedItemTooltipContent } from '@/composables/useTooltip'
+import { createMaterialTooltipBuilder, materialRealmLabel, professionRankOfMaterial } from '@/composables/useMaterialTooltip'
 
 const { t } = useI18n()
 
-// Thứ tự cố định cho sort theo Phân loại/Nguồn (asc).
+// Canonical material item-info card - shared with drop previews
+// (exploration reward cells) via the extracted builder factory.
+const buildTooltip = createMaterialTooltipBuilder(t)
+
+// Thu tu co dinh cho sort theo Phan loai/Nguon (asc).
 const CATEGORY_ORDER: MaterialCategory[] = [
   'herb', 'wood', 'ore', 'monster_core', 'spirit_stone', 'essence', 'byproduct', 'other',
 ]
@@ -62,24 +64,6 @@ function accentFor(material: Material): string | undefined {
 
 const SOURCE_ORDER: Material['sourceType'][] = ['boss', 'monster', 'building', 'exploration']
 
-const SOURCE_LABELS = computed<Record<Material['sourceType'], string>>(() => ({
-  boss: t('panels.bag.tooltip.sourceTypes.boss'),
-  monster: t('panels.bag.tooltip.sourceTypes.monster'),
-  building: t('panels.bag.tooltip.sourceTypes.building'),
-  exploration: t('panels.bag.tooltip.sourceTypes.exploration'),
-}))
-
-const CATEGORY_LABELS = computed<Record<MaterialCategory, string>>(() => ({
-  herb: t('panels.bag.tooltip.categories.herb'),
-  wood: t('panels.bag.tooltip.categories.wood'),
-  ore: t('panels.bag.tooltip.categories.ore'),
-  monster_core: t('panels.bag.tooltip.categories.monsterCore'),
-  spirit_stone: SPIRIT_STONE_LABEL,
-  essence: t('panels.bag.tooltip.categories.essence'),
-  byproduct: t('panels.bag.tooltip.categories.byproduct'),
-  other: t('panels.bag.tooltip.categories.other'),
-}))
-
 const SORT_OPTIONS = computed<Array<BagSortOption & { value: MaterialSortMode }>>(() => [
   { value: 'category', label: t('panels.bag.sort.category') },
   { value: 'years', label: t('panels.bag.sort.years') },
@@ -93,95 +77,20 @@ const SORT_OPTIONS = computed<Array<BagSortOption & { value: MaterialSortMode }>
   { value: 'source', label: t('panels.bag.sort.source') },
 ])
 
-// Nhãn cảnh giới cho tooltip — người chơi không phân biệt được màu
-// (color-blind) vẫn đọc được realm trên tooltip (spec §"Cảnh giới").
-const REALM_LABELS = computed<Record<string, string>>(() => ({
-  mortal: t('panels.bag.tooltip.realms.mortal'),
-  qi_refining: t('panels.bag.tooltip.realms.qiRefining'),
-  foundation_establishment: t('panels.bag.tooltip.realms.foundationEstablishment'),
-  golden_core: t('panels.bag.tooltip.realms.goldenCore'),
-  nascent_soul: t('panels.bag.tooltip.realms.nascentSoul'),
-  soul_transformation: t('panels.bag.tooltip.realms.soulTransformation'),
-  void_refinement: t('panels.bag.tooltip.realms.voidRefinement'),
-  body_integration: t('panels.bag.tooltip.realms.bodyIntegration'),
-  mahayana: t('panels.bag.tooltip.realms.mahayana'),
-  tribulation: t('panels.bag.tooltip.realms.tribulation'),
-}))
-
-const AGE_LABELS = computed<Record<string, string>>(() => ({
-  decade: t('panels.bag.tooltip.ages.decade'),
-  century: t('panels.bag.tooltip.ages.century'),
-  millennium: t('panels.bag.tooltip.ages.millennium'),
-  myriad_year: t('panels.bag.tooltip.ages.myriadYear'),
-  thuong_co: t('panels.bag.tooltip.ages.thuongCo'),
-}))
-
-function buildTooltip(material: Material, owned: number): GradedItemTooltipContent {
-  const realmId = material.profession?.realmId
-  const realmText = realmId ? REALM_LABELS.value[realmId] : undefined
-  const rank = professionRankOf(material)
-
-  const rows = [
-    { label: t('panels.bag.tooltip.category'), value: CATEGORY_LABELS.value[material.category] },
-    { label: t('panels.bag.tooltip.source'), value: SOURCE_LABELS.value[material.sourceType] },
-    // Realm text IS the material's Pham axis - carry its rank color
-    // (user ruling: every Pham/Chat text shows in its set color).
-    ...(realmText ? [{ label: t('panels.bag.tooltip.realm'), value: realmText, colorVar: rank !== undefined ? `--rank-color-${rank}` : undefined }] : []),
-  ]
-
-  if (material.profession?.age) {
-    rows.push({
-      label: t('panels.bag.tooltip.age'),
-      value: AGE_LABELS.value[material.profession.age] ?? t('panels.bag.tooltip.yearsSuffix', { count: material.years ?? 0 }),
-    })
-  } else if (material.years !== undefined) {
-    rows.push({ label: t('panels.bag.tooltip.age'), value: t('panels.bag.tooltip.yearsSuffix', { count: material.years }) })
-  }
-  if (material.element !== undefined)
-    rows.push({ label: t('panels.bag.tooltip.element'), value: ELEMENT_LABELS[material.element] })
-
-  return {
-    kind: 'material',
-    name: material.name,
-
-    // Single title color = the material's Pham rank color (spec
-    // section 2) - materials have no Chat axis so the Pham ramp is the
-    // name color.
-    nameColorVar: rank !== undefined ? `--rank-color-${rank}` : undefined,
-
-    // Static SlotView header (spec section 3): same signals the bag
-    // cell binds - Pham seal via the 10-step rarity scale, realm in
-    // aria.
-    slotPreview: {
-      icon: material.icon,
-      label: material.name,
-      accessibleLabel: realmText ? `${material.name}, ${realmText}` : material.name,
-      rarityRank: rank,
-      rarityRankScale: 10,
-    },
-
-    imagePath: material.icon,
-    // Pham rank (10-step ramp) - feeds the tooltip aura color; materials
-    // have no Chat axis so gradeKey stays unset (2026-09-14 ruling).
-    gradeRank: rank,
-    // Spec: "So huu: N" renders only when the player owns at least one -
-    // never emit a zero count.
-    ownedCount: owned > 0 ? owned : undefined,
-    description: material.description,
-    sections: [{ label: t('panels.bag.tooltip.section'), rows }],
-  }
-}
+// Material item-info card builder now lives in useMaterialTooltip.ts -
+// see createMaterialTooltipBuilder above.
 
 const ui = useUiStore()
 
 const gameManager = useGameManager()
+const player = usePlayerStore()
 
 const { stateVersion } = useStateVersion()
 
-// Grid responsive theo CHIỀU RỘNG THẬT của .bag-section__grid (đo qua
-// ResizeObserver, xem useBagGridLayout.ts) — cột/kích thước ô tự tính
-// lại mỗi khi container resize, KHÔNG còn 1 slotPx cố định suy từ %
-// chiều cao panel như bản cũ.
+// Grid responsive theo CHIEU RONG THAT cua .bag-section__grid (do qua
+// ResizeObserver, xem useBagGridLayout.ts) - cot/kich thuoc o tu tinh
+// lai moi khi container resize, KHONG con 1 slotPx co dinh suy tu %
+// chieu cao panel nhu ban cu.
 const { gridRef, pageSize, gridStyle } = useBagGridLayout()
 
 interface MaterialEntry {
@@ -190,22 +99,6 @@ interface MaterialEntry {
   material: Material
 
   amount: number
-}
-
-// Màu theo phẩm nghề cảnh giới (spec 2026-08-30-unify-material-quality-
-// names-design.md): nhìn TÊN biết tuổi/chất, nhìn MÀU (tên + khung) biết
-// realm. Material không có profession meta (linh thạch, legacy...) không
-// tô — undefined = màu mặc định.
-function professionRankOf(material: Material): number | undefined {
-  const realmId = material.profession?.realmId
-
-  if (!realmId) {
-    return undefined
-  }
-
-  const grade = getProfessionGradeForRealm(realmId)
-
-  return grade ? professionGradeRank(grade) : undefined
 }
 
 // Material name segments - text structure only (item-info-card spec
@@ -222,7 +115,7 @@ function materialNameSegments(material: Material, trailing?: { text: string }) {
 // Pham axis.
 function materialAccessibleLabel(name: string, material: Material): string {
   const realmId = material.profession?.realmId
-  const realmText = realmId ? REALM_LABELS.value[realmId] : undefined
+  const realmText = materialRealmLabel(realmId, t)
 
   return realmText ? `${name}, ${realmText}` : name
 }
@@ -230,7 +123,18 @@ function materialAccessibleLabel(name: string, material: Material): string {
 const entries = computed<MaterialEntry[]>(() => {
   stateVersion.value
 
-  return gameManager.materialBag.getAll().map((stack) => ({
+  // BETA SCOPE LOCK v2 - a source-suppressed material (the companion
+  // pull token, whose recurring faucets are all gated at the policy
+  // layer) renders in no live bag cell: CurrencyHud already censors the
+  // same id, and the bag agrees rather than presenting a live surface
+  // for a scope-hidden domain. Banked balances stay persisted, never
+  // deleted.
+  return gameManager.materialBag.getAll()
+    // suppressed faucets - pull token permanently, domain-scoped
+    // materials until the shared unlock realm - are persisted but must
+    // not brand on a beta surface.
+    .filter((stack) => betaMaterialStackVisible(stack.material, player.realmId))
+    .map((stack) => ({
     material: stack.material,
 
     amount: stack.amount,
@@ -248,14 +152,14 @@ const entries = computed<MaterialEntry[]>(() => {
 
       icon: stack.material.icon,
 
-      tooltip: buildTooltip(stack.material, stack.amount),
+      tooltip: buildTooltip(stack.material, { owned: stack.amount }),
 
-      rarityRank: professionRankOf(stack.material),
+      rarityRank: professionRankOfMaterial(stack.material),
 
-      // Material chỉ có 1 trục rank (Phẩm Nghề, 1-10) — feed vào prop
-      // rarityRank (mặc định trần 5, thang itemQualityRank equipment)
-      // nên PHẢI kèm rarityRankScale: 10, nếu không rank 5 (Ngũ Phẩm,
-      // giữa thang) bị hiểu nhầm là kịch trần (Fix 1, final review).
+      // Material chi co 1 truc rank (Pham Nghe, 1-10) - feed vao prop
+      // rarityRank (mac dinh tran 5, thang itemQualityRank equipment)
+      // nen PHAI kem rarityRankScale: 10, neu khong rank 5 (Ngu Pham,
+      // giua thang) bi hieu nham la kich tran (Fix 1, final review).
       rarityRankScale: 10,
 
       nameSegments: materialNameSegments(stack.material),
@@ -263,22 +167,22 @@ const entries = computed<MaterialEntry[]>(() => {
   }))
 })
 
-// ================= Filter/search/gộp họ (plan §3.2 B4) =================
-// State filter sống trong phiên (cùng nhóm transient với bagSorts,
-// KHÔNG ghi save). Filter chạy TRƯỚC sort + pagination.
+// ================= Filter/search/gop ho (plan sec3.2 B4) =================
+// State filter song trong phien (cung nhom transient voi bagSorts,
+// KHONG ghi save). Filter chay TRUOC sort + pagination.
 const searchQuery = ref('')
 
 const activeGroup = ref<MaterialGroup | 'all'>('all')
 
-// entries map về shape {material, amount} — composable không biết BagCell.
+// entries map ve shape {material, amount} - composable khong biet BagCell.
 const filterInput = computed(() =>
   entries.value.map((entry) => ({ material: entry.material, amount: entry.amount })),
 )
 
 const { filtered, visibleCount } = useBagFilter(filterInput, { searchQuery, activeGroup })
 
-// Material của 1 ô họ thảo: biến thể niên đại CAO NHẤT làm đại diện
-// tooltip/icon (badge đã hiện realm + niên đại rộng nhất trên ô).
+// Material cua 1 o ho thao: bien the nien dai CAO NHAT lam dai dien
+// tooltip/icon (badge da hien realm + nien dai rong nhat tren o).
 function representativeMaterial(item: FilteredMaterial): Material {
   const variants = item.family?.variants
 
@@ -293,9 +197,9 @@ function representativeMaterial(item: FilteredMaterial): Material {
   { material: variants[0]!.material, amount: 0 }).material
 }
 
-// Badge họ: composable ghép sẵn "{realmVi} · {badgeKey}" — tách lấy KEY
-// bậc tuổi rồi t() (realm ghép sẵn là tên data vi; các realm đã có đủ
-// nhãn trong locale nếu cần tách sau).
+// Badge ho: composable ghep san "{realmVi} * {badgeKey}" - tach lay KEY
+// bac tuoi roi t() (realm ghep san la ten data vi; cac realm da co du
+// nhan trong locale neu can tach sau).
 function familyBadgeLabel(item: FilteredMaterial): string {
   const badge = item.family?.badgeLabel ?? ''
   const separator = badge.indexOf(' · ')
@@ -308,11 +212,11 @@ function familyBadgeLabel(item: FilteredMaterial): string {
 function familyCell(item: FilteredMaterial): MaterialBagCell {
   const material = representativeMaterial(item)
 
-  // Ô họ hiển thị TÊN GỐC (không prefix tuổi — badge đã ghi
-  // realm · bậc cao nhất, tránh lặp tuổi hai lần trên cùng ô).
+  // O ho hien thi TEN GOC (khong prefix tuoi - badge da ghi
+  // realm * bac cao nhat, tranh lap tuoi hai lan tren cung o).
   const baseLabel = baseNameFor(material)
 
-  const baseRank = professionRankOf(material)
+  const baseRank = professionRankOfMaterial(material)
 
   const badge = familyBadgeLabel(item)
 
@@ -331,7 +235,7 @@ function familyCell(item: FilteredMaterial): MaterialBagCell {
 
     accentVar: accentFor(material),
 
-    tooltip: buildTooltip(material, item.amount),
+    tooltip: buildTooltip(material, { owned: item.amount }),
 
     rarityRank: baseRank,
 
@@ -341,9 +245,9 @@ function familyCell(item: FilteredMaterial): MaterialBagCell {
   }
 }
 
-// Ô filter bar: tìm kiếm theo tên + chip nhóm (bấm lại chip đang chọn
-// để bỏ filter nhóm). Nhãn chip qua key-mapping composable (useBagFilter
-// không import i18n) → t(key).
+// O filter bar: tim kiem theo ten + chip nhom (bam lai chip dang chon
+// de bo filter nhom). Nhan chip qua key-mapping composable (useBagFilter
+// khong import i18n) -> t(key).
 const GROUP_CHIPS = computed<Array<{ value: MaterialGroup | 'all'; label: string }>>(() => [
   { value: 'all', label: t('panels.bag.groups.all') },
   ...MATERIAL_GROUPS.map((group) => ({ value: group, label: t(groupLabelKey(group)) })),
@@ -353,9 +257,9 @@ function toggleGroup(value: MaterialGroup | 'all') {
   activeGroup.value = activeGroup.value === value ? 'all' : value
 }
 
-// ================= Sort (giữ nguyên hành vi Workstream E) =================
-// Filter chạy TRƯỚC sort; sort trên MỘT BẢN COPY (stableSort) rồi mới
-// pagination. Họ thảo đã gộp sort theo tên họ.
+// ================= Sort (giu nguyen hanh vi Workstream E) =================
+// Filter chay TRUOC sort; sort tren MOT BAN COPY (stableSort) roi moi
+// pagination. Ho thao da gop sort theo ten ho.
 const MATERIAL_COMPARATORS: Record<Exclude<MaterialSortMode, 'default'>, (a: FilteredMaterial, b: FilteredMaterial) => number> = {
   category: (a, b) =>
     CATEGORY_ORDER.indexOf(a.material.category) - CATEGORY_ORDER.indexOf(b.material.category),
@@ -370,9 +274,9 @@ const MATERIAL_COMPARATORS: Record<Exclude<MaterialSortMode, 'default'>, (a: Fil
     SOURCE_ORDER.indexOf(a.material.sourceType) - SOURCE_ORDER.indexOf(b.material.sourceType),
 }
 
-// Ghim Linh Thạch ở ô đầu (plan Workstream D) — chạy TRƯỚC comparator
-// sort thường, KHÔNG qua withDirection(), áp dụng ở MỌI mode (kể cả
-// default) và cả hai direction.
+// Ghim Linh Thach o o dau (plan Workstream D) - chay TRUOC comparator
+// sort thuong, KHONG qua withDirection(), ap dung o MOI mode (ke ca
+// default) va ca hai direction.
 function comparePinned(a: FilteredMaterial, b: FilteredMaterial): number {
   const aPinned = a.material.category === 'spirit_stone'
   const bPinned = b.material.category === 'spirit_stone'
@@ -406,8 +310,8 @@ const cells = computed<MaterialBagCell[]>(() => {
           amount: item.amount,
           icon: item.material.icon,
           accentVar: accentFor(item.material),
-          tooltip: buildTooltip(item.material, item.amount),
-          rarityRank: professionRankOf(item.material),
+          tooltip: buildTooltip(item.material, { owned: item.amount }),
+          rarityRank: professionRankOfMaterial(item.material),
           rarityRankScale: 10,
           nameSegments: materialNameSegments(item.material),
         },
@@ -416,7 +320,7 @@ const cells = computed<MaterialBagCell[]>(() => {
 
 const { currentPage, totalPages, goToPage, resetPage, gridCells } = useBagPagination(cells, pageSize)
 
-// Đổi mode/direction/filter → quay về trang đầu.
+// Doi mode/direction/filter -> quay ve trang dau.
 watch(
   () => ({ ...ui.bagSorts.material }),
   () => resetPage(),

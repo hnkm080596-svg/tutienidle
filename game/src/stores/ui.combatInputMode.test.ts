@@ -7,9 +7,9 @@ import {
   loadPersistedUiAutomationFlags,
 } from './uiFlagsPersistence'
 
-// Slice 7 plan Task 3 — combatInputMode (manual/auto): trục RIÊNG khỏi
+// Slice 7 plan Task 3 - combatInputMode (manual/auto): truc RIENG khoi
 // battleRunMode (manual/repeat/progress governs stage-boundary behavior).
-// Persist qua uiFlagsPersistence (per-device localStorage, cùng pattern).
+// Persist qua uiFlagsPersistence (per-device localStorage, cung pattern).
 
 describe('ui.combatInputMode (Slice 7 Task 3)', () => {
   beforeEach(() => {

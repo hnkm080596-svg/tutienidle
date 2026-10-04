@@ -1,7 +1,7 @@
 /**
- * 1 dòng Affix ĐÃ ROLL trên 1 EquipmentInstance cụ thể — value đã
- * roll sẵn trong range của đúng tier đó (xem AffixTierDef trong
- * Affix.ts), không tính lại mỗi lần đọc.
+ * 1 dong Affix DA ROLL tren 1 EquipmentInstance cu the - value da
+ * roll san trong range cua dung tier do (xem AffixTierDef trong
+ * Affix.ts), khong tinh lai moi lan doc.
  */
 export interface RolledAffix {
   affixId: string

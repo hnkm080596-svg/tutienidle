@@ -17,7 +17,6 @@ interface PanelSnapshot {
   leftPanelMode: string | null
   standalonePanel: string | null
   characterOverlayOpen: boolean
-  characterDetailOpen: boolean
   isCommandWheelOpen: boolean
 }
 
@@ -26,13 +25,11 @@ function snapshotOf(store: UiStore): PanelSnapshot {
     leftPanelMode: store.leftPanelMode,
     standalonePanel: store.standalonePanel,
     characterOverlayOpen: store.characterOverlayOpen,
-    characterDetailOpen: store.characterDetailOpen,
     isCommandWheelOpen: store.isCommandWheelOpen,
   }
 }
 
 function panelKey(s: PanelSnapshot): string | null {
-  if (s.characterDetailOpen) return 'detail'
   if (s.characterOverlayOpen) return 'overlay'
   if (s.standalonePanel !== null) return `standalone:${s.standalonePanel}`
   if (s.leftPanelMode !== null) return `left:${s.leftPanelMode}`
@@ -48,7 +45,7 @@ export function bindUiAudio(uiStore: UiStore): () => void {
   const audio = AudioManager.getInstance()
   let prev = snapshotOf(uiStore)
 
-  // flush:'sync' — cues must land inside the pointer gesture that caused
+  // flush:'sync' - cues must land inside the pointer gesture that caused
   // the transition; 'pre' would batch past the autoplay window.
   return uiStore.$subscribe(
     () => {

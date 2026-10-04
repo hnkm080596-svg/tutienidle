@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
+// Ban Menh Phap Bao (2026-08-27, foundation-artifact-system-plan.md
 // muc 12.1) - panel standalone, cung pattern QuestPanel.vue/SkillPathPanel.vue.
-// Phải render đúng state "nghề chưa có definition" (Kiếm Tu, doc §4)
-// không crash khi player.artifact undefined.
+// Phai render dung state "nghe chua co definition" (Kiem Tu, doc sec4)
+// khong crash khi player.artifact undefined.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
@@ -45,8 +45,8 @@ const artifactId = computed(() => {
 const definition = computed(() => (artifactId.value ? ARTIFACTS[artifactId.value] : undefined))
 
 const cultivationPathLabel = computed(() => {
-  // M5 — the active way (cultivationWay authoritative) names the path,
-  // so a collapsed ('body','hidden_body_pathway') save labels Ứng Thế correctly.
+  // M5 - the active way (cultivationWay authoritative) names the path,
+  // so a collapsed ('body','hidden_body_pathway') save labels Ung The correctly.
   const way = getActiveWayDefinition(player)
 
   return way?.name ?? t('panels.artifact.noPath')
@@ -78,7 +78,7 @@ const expStatus = computed(() =>
 
 const gradeLabel = computed(() => (artifact.value ? ARTIFACT_GRADE_LABELS[artifact.value.grade] : ''))
 
-// Artifact Pham is a 5-step axis — same ramp positions the Chat
+// Artifact Pham is a 5-step axis - same ramp positions the Chat
 // 5-step uses (--rank-color-1/3/5/7/9) so grade text matches item
 // colors (user ruling: every Pham/Chat text carries its set color).
 const gradeColorVar = computed(() =>

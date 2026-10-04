@@ -6,12 +6,12 @@ export interface TutorialStep {
   bodyKey: string
 }
 
-// Beta Phase 4 (mục XV tài liệu) — carousel giải thích core loop,
-// KHÔNG ép người chơi thực sự bấm đúng nút mới qua bước (xem Context
-// trong kế hoạch — Combat/Loot chưa có instrumentation để "biết"
-// người chơi vừa làm xong 1 bước). Nội dung THUẦN hướng dẫn cách
-// chơi — TUYỆT ĐỐI không nhắc Đại Đạo/Căn Cơ/hidden condition/vượt
-// tầng bí mật, đúng "Tutorial dạy cách chơi, không dạy bí mật".
+// Beta Phase 4 (muc XV tai lieu) - carousel giai thich core loop,
+// KHONG ep nguoi choi thuc su bam dung nut moi qua buoc (xem Context
+// trong ke hoach - Combat/Loot chua co instrumentation de "biet"
+// nguoi choi vua lam xong 1 buoc). Noi dung THUAN huong dan cach
+// choi - TUYET DOI khong nhac Dai Dao/Can Co/hidden condition/vuot
+// tang bi mat, dung "Tutorial day cach choi, khong day bi mat".
 export const TUTORIAL_STEPS: TutorialStep[] = Array.from({ length: 9 }, (_, index) => ({
   titleKey: `tutorial.steps.${index + 1}.title`,
   bodyKey: `tutorial.steps.${index + 1}.body`,

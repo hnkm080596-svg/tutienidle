@@ -1,9 +1,9 @@
 /**
- * B2 balance sweep (2026-09-14) — real-engine feasibility check for all
+ * B2 balance sweep (2026-09-14) - real-engine feasibility check for all
  * 30 chapter floors. For each stage, builds a player the unlock gate
  * allows and runs the real TurnBattleSystem. Prints a per-floor table:
  * outcome, rounds, player HP remaining, player/enemy stat lines.
- * Analysis artifact, not a CI assertion — numbers feed
+ * Analysis artifact, not a CI assertion - numbers feed
  * docs/qa/2026-09-14-beta-b2-balance.md.
  *
  * Two player models per floor:
@@ -50,7 +50,7 @@ interface SimResult {
 
 function runFloor(lab: Lab, stage: Stage): SimResult {
   const stats = lab.stats()
-  // ARCH-002 (M7): startStage resolves stats internally from the player —
+  // ARCH-002 (M7): startStage resolves stats internally from the player -
   // the lab.stats() snapshot is report-only, not a call argument.
   const started = lab.manager.turnBattleOps.startStage(lab.player, stage, false)
   if (!started) {
@@ -108,7 +108,7 @@ function buildPlayer(lab: Lab, realmId: string, floor: number, geared: boolean, 
     }
   }
 
-  // Equipment modifiers are static — the store layer mirrors
+  // Equipment modifiers are static - the store layer mirrors
   // equipmentOps.getEquipmentModifiers() into player.modifiers after
   // each equip; the lab has no store so we do the same sync here.
   lab.player.modifiers = lab.manager.equipmentOps.getEquipmentModifiers()

@@ -1,0 +1,106 @@
+{
+  "review": "b18-consumer-seam",
+  "commit": "af3666e7a3b987c270d7acdeb4fe3f91166be4db",
+  "probe": "tests/architecture/b18ConsumerHonesty.qa.test.ts (4 failing DEFECT repros + 5 passing controls/observations)",
+  "findings": [
+    {
+      "id": "B18-01",
+      "severity": "Medium",
+      "surface": "src/components/panels/scripture/LoreCodex.vue (Scripture Pavilion, left_panel mode 'scripture_pavilion' - beta-admitted)",
+      "repro": "Hostile save with materialBag {chieu_hien_lenh: 5} (carried pre-lock pull tokens). SSR-mount LoreCodex: HTML contains 'Chieu Hien Lenh' slot; its description text names Chieu Hien Quan and companion pulls. Failing assertion in b18ConsumerHonesty.qa.test.ts.",
+      "mint_path": "loreItems = materialBag.getAll().filter(stack => stack.material.category === 'other') - the only live consumer that reads the material bag without isCompanionPullTokenSourceSuppressed (the predicate MaterialBagSection:240, QuestPanel:63, QuestSystem.ts and CurrencyHud's companion gate all apply). Ad-hoc parallel read that disagrees with the shared predicate.",
+      "disposition": "confirmed",
+      "sibling_surface": "B18-02 (BagGrid material-tab count, same unfiltered getAll class). No other live surface reads the token: CurrencyHud companionChips requires isBetaFeature('companion'); ChieuMoTab and ArtifactPanel are scope-hidden panels; CompanionPanel feedable-filter is on a scope-hidden panel; VendorPanel sellable categories exclude 'other'.",
+      "notes": "Dormant branding on a beta-live surface for a flagged-but-playable save (contract sec.H: save still loads). The token is display-suppressed everywhere else - this is the one disagreement."
+    },
+    {
+      "id": "B18-02",
+      "severity": "Medium",
+      "surface": "src/components/panels/BagGrid.vue header count (live bag overlay, 'material' tab)",
+      "repro": "Same hostile bag {chieu_hien_lenh: 5}. SSR-mount BagGrid with activeBagTab='material': header renders '1 mon' while the grid renders 0 items. Failing assertion in probe file (count '1' vs expected '0').",
+      "mint_path": "BAG_COUNTS.material = materialBag.getAll().length - unfiltered. The adjacent 'pill' count applies scopeHiddenPillFamilyOfId with the comment 'the tab count must agree with what the grid can render' - the material count misses the equivalent isCompanionPullTokenSourceSuppressed filter.",
+      "disposition": "confirmed",
+      "sibling_surface": "B18-01 (same unfiltered getAll class, different channel). equipment count is honest (no suppressed equipment ids exist). pill count is correctly filtered.",
+      "notes": "Phantom count: a suppressed-source stack inflates a live badge while producing no visible item - half-rendered honesty state."
+    },
+    {
+      "id": "B18-03",
+      "severity": "Medium",
+      "surface": "src/components/panels/SkillPathPanel.vue wayIdentity subtitle (standalone panel 'skill' - beta-admitted)",
+      "repro": "Hostile save {cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway'} (way_out_of_scope per unsupportedReleaseReason, save still loads). SSR-mount SkillPathPanel: subtitle span renders 'Kiem Tu An - Van Kiem Quyet'. Failing assertion in probe file.",
+      "mint_path": "wayIdentity = getActiveWayDefinition(player)?.name ?? mortalName - the panel chrome reads the committed way name ungated, while every entry surface below (skillPathEntries via betaSkillAdmitted, showTree via betaWayAdmitted) correctly collapses. Panel opens via the admitted 'skill' standalone seam so the dormant way name is the only thing the save paints.",
+      "disposition": "confirmed",
+      "sibling_surface": "getActiveWayDefinition consumers: ArtifactPanel.vue:50 (scope-hidden panel, inert); CharacterPanel.vue:55 drives only the --aura tint (B18-05, Low). QuanKhiPanel correctly double-gates sword content via isActivePath && !isScopeHidden('swordPath').",
+      "notes": "Dormant branding on live chrome - the only element of the panel a carried dormant-way save can paint."
+    },
+    {
+      "id": "B18-04",
+      "severity": "Medium",
+      "surface": "getCultivateTexture override consumed by PlayerPortrait variant='cultivate' (DongFuScene.vue:259 home figure, RealmPanel.vue:91) and Phaser MainScene.ts:336 / TribulationScene.ts:128 via the 'playerCultivationWay' gate",
+      "repro": "Hostile save {cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway'}. SSR-mount PlayerPortrait cultivate variant: img src = '/assets/characters/player/phap-tu/player-phap-tu-an-cultivate-van-dao-v1.png' (dormant hidden-way art). Failing assertion in probe file; resolver-level assertion documents the MainScene/TribulationScene feed.",
+      "mint_path": "CULTIVATE_TEXTURE_OVERRIDES['hidden_spell_pathway'] in PlayerVisualProfiles.ts:207 - getCultivateTexture applies the override for any way value with no isBetaWay admission; PhaserCanvas.vue:110 publishes raw player.cultivationWay to the gate unfiltered; hidden_spell_pathway is not in BETA_WAYS.",
+      "disposition": "confirmed",
+      "sibling_surface": "All getCultivateTexture consumers feed the raw way: PlayerPortrait (cultivate variant x2 live mounts), MainScene cultivate pose, TribulationScene figure. portrait variant uses profile.combatTextureUrl (honest). Other dormant ways have no override entry (inert for sword/body).",
+      "notes": "The carried sealed-offer save repaints the home-scene player figure with the hidden way's art - the most prominent dormant-branding leak found."
+    },
+    {
+      "id": "B18-05",
+      "severity": "Low",
+      "surface": "src/components/panels/CharacterPanel.vue characterAuraColor (--aura)",
+      "repro": "Hostile save {cultivationPath: 'sword', cultivationWay: 'sword_pathway'}. SSR-mount CharacterPanel: figure div carries '--aura: var(--el-metal)' from chosenKit.element (observation probe passes, documenting the tint).",
+      "mint_path": "chosenKit = getActiveWayDefinition(player) ungated; element is a fixed metal declaration on sword_pathway - a subtle color cue, no branding text or imagery.",
+      "disposition": "deferred",
+      "sibling_surface": "Same getActiveWayDefinition read as B18-03; hidden_sword_pathway declares no element so only sword_pathway/body-with-element saves tint.",
+      "notes": "Color-only dormant cue on a live card. Deferred: no name/branding, arguable as generic element styling."
+    },
+    {
+      "id": "B18-06",
+      "severity": "Low",
+      "surface": "src/components/game/combat/RewardList.vue line 21 (summary.artifactInsight row)",
+      "repro": "None found - no beta writer produces nonzero artifactInsight in a battle summary, so the row cannot render under the lock.",
+      "mint_path": "v-if='summary.artifactInsight > 0' - latent display arm for the artifact domain.",
+      "disposition": "deferred",
+      "sibling_surface": "Other summary rows (cultivation, loot, duyen) all read live beta fields.",
+      "notes": "Latent/inert surface; same-value forged counters are a known human-accepted residual."
+    },
+    {
+      "id": "B18-07",
+      "severity": "Nit",
+      "surface": "src/components/panels/WorkerLodgePanel.vue visibleTabs",
+      "repro": "None reachable - worker_lodge left-panel mode is scope-hidden, so the panel never mounts in beta.",
+      "mint_path": "visibleTabs = isCompanionDomainUnlocked(player.realmId) ? TABS : [nhan_cong] - an ad-hoc parallel check instead of the shared getWorkerLodgeSurfaceModel predicate; the predicate is beta-aware (composes isBetaFeature('companion')) so it cannot disagree under the lock.",
+      "disposition": "deferred",
+      "sibling_surface": "ChieuMoTab pull-token read inside the same unmountable panel.",
+      "notes": "Predicate is beta-aware and the panel is unreachable - inert divergence only."
+    },
+    {
+      "id": "B18-08",
+      "severity": "Nit",
+      "surface": "src/components/panels/skill-path/NodeTreePanel.vue + src/components/game/combat/CombatTopBar.vue hiddenTrial",
+      "repro": "None found. NodeTreePanel filters levelsSkillId/rewardOnly/revealWhen/nodeWayApplies but not the betaSkillTreeFor catalog predicate - latent because authored dormant nodes carry requiredWay stamps that nodeWayApplies already rejects. CombatTopBar.getActiveHiddenTrial reads live battle state only; no beta path spawns a hidden trial and combat state is not persisted.",
+      "mint_path": "Secondary predicate divergence / runtime-only reads with no persisted hostile input.",
+      "disposition": "deferred",
+      "sibling_surface": "SkillRoleStrip uses the shared betaCombatRolesFor tri-state correctly; TheTuTreePanel/SkillConnections render only gated parent data.",
+      "notes": "Latent - recorded per protocol, no deterministic hostile state can reach them."
+    }
+  ],
+  "verified_clean_consumers": [
+    "CurrencyHud (companionChips double-gated isBetaFeature+isCompanionDomainUnlocked)",
+    "MaterialBagSection / PillBagSection / BagGrid pill count (shared suppression predicates applied)",
+    "QuestPanel + QuestSystem (isBetaQuestEnabled + suppressed-source drop filters, same-predicate re-check)",
+    "QuanKhiPanel (isBetaWay offer filter, BETA_PLAYABLE_ELEMENTS, isSwordPath double gate)",
+    "SkillPathPanel entries/tree/technique band (betaSkillAdmitted/betaWayAdmitted/betaTechniqueAdmitted)",
+    "SkillRoleStrip (betaCombatRolesFor tri-state)",
+    "RealmPanel + BodyRefinement/Meridian/ZhouTian sections (betaHiddenRealmRecordFor, isNghichChuTianRevealed)",
+    "EquipmentHallPanel tabs (isBetaEquipmentTab), VendorPanel (category-gated sellables)",
+    "StageSelectPanel (no dormant zone/stage content exists in catalog)",
+    "AlchemyView recipes+jobs (betaRecipeFamilyOfId filter; dormant in-flight job settles invisibly)",
+    "TurnCombatSkillBar + CombatSkillDockPanel (resolvePathCapabilities empty-set collapse)",
+    "TalentEntitlementModal + CharacterCreationScreen talent rolls (isBetaTalentId/isBetaCreationTalentId double gates)",
+    "kiemBarBridge/theBarBridge/hoTheBridge (hasStaticPathCapability admission)",
+    "DongFuCommandWheel + HomeBuildingIcons + BuildingDetailPopover + useBuildingNavigation (isBetaBuildingSurface)",
+    "GameRoot mountedStandalone chokepoint (isBetaStandalonePanel second guard)",
+    "OfflineSummaryModal, BetaCompletionModal, RightPanel, CharacterDetailCard, ProductionPanel manualWorkforce gate, BreakthroughRequirementPanel (betaTechniqueAdmitted), LoreCodexModal, Tooltip/useTooltip (generic content feeds)"
+  ],
+  "access_limitations": "Vitest runs in node env - component evidence produced via createSSRApp + renderToString with the same provide seams App.vue uses, plus a JSDOM shim for useDialogFocus. Phaser scenes (MainScene/TribulationScene) cannot be SSR-mounted; their dormant-art feed is documented at the resolver level (getCultivateTexture assertion) plus the gate-write site. No prior QA findings read (blind review)."
+}

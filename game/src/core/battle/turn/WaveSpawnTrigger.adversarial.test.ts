@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { shouldStartNextWave, isStageComplete } from './WaveSpawnTrigger'
 
-// QA adversarial probes (2026-09-04 quick review) — WaveSpawnTrigger.
-// Migrated 2026-09-06 (Turn-Based Wave Redesign): shouldSpawnNextEnemy →
+// QA adversarial probes (2026-09-04 quick review) - WaveSpawnTrigger.
+// Migrated 2026-09-06 (Turn-Based Wave Redesign): shouldSpawnNextEnemy ->
 // shouldStartNextWave (wave-batch model); isStageComplete gains pendingCount.
 
 describe('WaveSpawnTrigger adversarial (QA probes)', () => {
   it('INV-WST-1: giá trị âm không được hiểu là "sân trống hợp lệ" cho spawn', () => {
-    // aliveCount/pendingCount âm là input lỗi (không có caller thật trả âm) —
-    // defensive: shouldStartNextWave phải false (không spawn wave mới).
+    // aliveCount/pendingCount am la input loi (khong co caller that tra am) -
+    // defensive: shouldStartNextWave phai false (khong spawn wave moi).
     expect(shouldStartNextWave(-1, 0, 0, 3)).toBe(false)
     expect(shouldStartNextWave(0, -1, 0, 3)).toBe(false)
   })
 
   it('INV-WST-2: isStageComplete với đầu vào âm — không complete', () => {
     expect(isStageComplete(-1, 5, 0, 0)).toBe(false)
-    expect(isStageComplete(5, -1, 0, 0)).toBe(true) // 5 >= -1 — caller lỗi, nhưng hàm vẫn nhất quán (>=)
+    expect(isStageComplete(5, -1, 0, 0)).toBe(true) // 5 >= -1 - caller loi, nhung ham van nhat quan (>=)
   })
 
   it('INV-WST-3: ranh giới waveIndex = waveCount - 1 + sân trống → spawn wave cuối', () => {
@@ -24,7 +24,7 @@ describe('WaveSpawnTrigger adversarial (QA probes)', () => {
   })
 
   it('INV-WST-4: mutual exclusion with consistent data (spawnedCount < total iff waves remain), never spawns when complete', () => {    // Turn-Based Wave model: spawnedCount increments per waveIndex (sum of waves[0..i]).
-    // spawnedCount < total iff waveIndex < waveCount — the two conditions cannot both
+    // spawnedCount < total iff waveIndex < waveCount - the two conditions cannot both
     // be true when data is consistent (invariant: sum(waves) === totalEnemyCount).
     const waves = [3, 2]
     const total = 5

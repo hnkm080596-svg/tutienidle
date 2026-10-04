@@ -8,6 +8,16 @@
 // test-only mutation convention as the COMPANIONS catalog fixtures).
 import { describe, expect, it, vi } from 'vitest'
 
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
+
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import type { GrottoChannel } from '../../data/drop/HiddenMaterialChannels'
@@ -131,10 +141,17 @@ describe('P13 runtime - real stage loop: substituted spawn -> kill -> signature 
     player.hiddenBeastKills[channel.id] = channel.killThreshold
     manager.setBattleRngFactory(() => new FunctionCombatRng(() => 0))
 
+    // BETA SCOPE LOCK v2 funnel: the substituted identity must be in the
+    // stage's own spawnable set, so the fixture pool DECLARES huyet_mong
+    // - at weight 0 the direct roll can never pick it, leaving the
+    // channel substitution the only path that surfaces it.
     const lqStage: Stage = {
       id: 'p13_lq_stage', name: 'P13 LQ Stage', description: '',
       floor: 1, requiredRealmId: 'qi_refining',
-      enemyPool: [{ enemyId: FRAGILE.id, weight: 1 }],
+      enemyPool: [
+        { enemyId: FRAGILE.id, weight: 1 },
+        { enemyId: 'huyet_mong', weight: 0 },
+      ],
       totalEnemyCount: 1, waves: [1],
       spawnIntervalSeconds: 0,
     }

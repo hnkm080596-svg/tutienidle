@@ -27,8 +27,8 @@ const BACKUP_KEY = resolveBackupKey()
 const SAVE_REVISION_KEY = resolveRevisionKey()
 const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY = resolveImportHandoffKey()
 
-// vitest.config chạy environment: 'node' — không có localStorage thật,
-// polyfill in-memory tối thiểu đủ cho SaveSystem (chỉ dùng getItem/
+// vitest.config chay environment: 'node' - khong co localStorage that,
+// polyfill in-memory toi thieu du cho SaveSystem (chi dung getItem/
 // setItem/removeItem).
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()
@@ -63,9 +63,9 @@ beforeEach(() => {
   setSaveAccountId(null)
 })
 
-// Fixture hợp lệ đầy đủ theo shape GameSave hiện hành — từ
-// save-shape-validation-plan.md, loadGame() giờ validate shape nên
-// fixture tối thiểu { version, player: { name } } không còn đủ.
+// Fixture hop le day du theo shape GameSave hien hanh - tu
+// save-shape-validation-plan.md, loadGame() gio validate shape nen
+// fixture toi thieu { version, player: { name } } khong con du.
 function validGameSave(name?: string): GameSave {
   const player = createDefaultPlayer()
 
@@ -76,9 +76,9 @@ function validGameSave(name?: string): GameSave {
   // v82 mortal boundary contract (F-INT-03 import gate): the fixture
   // doubles as a legal creation output - pick + learned entry + core
   // grant, same shape the SupabaseRemoteSave fixture uses.
-  player.mortalBasicSkillId = 'tram'
-  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
-  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
+  player.mortalBasicSkillId = 'linh_bao'
+  player.nodeLevels = { ...player.nodeLevels, core_linh_bao: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_linh_bao']
 
   return {
     version: CURRENT_SAVE_VERSION,
@@ -86,8 +86,8 @@ function validGameSave(name?: string): GameSave {
     techniques: [],
     skills: [
       {
-        id: 'tram',
-        name: 'Trảm',
+        id: 'linh_bao',
+        name: 'Linh Bão',
         description: 'creation pick',
         type: 'active',
         level: 1,
@@ -225,8 +225,8 @@ describe('loadGame — shape validation (save-shape-validation-plan.md)', () => 
       quality: 'hoang',
       mainStat: { stat: 'might', flat: 1 },
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
-      forgeUsesTotal: 6,
-      forgeUsesRemaining: 6,
+      forgeUsesTotal: 5,
+      forgeUsesRemaining: 5,
     }]
     localStorage.setItem(SAVE_KEY, JSON.stringify(save))
 
@@ -321,9 +321,9 @@ describe('backup / restore', () => {
     expect(localStorage.getItem(BACKUP_KEY)).toBe(VALID_RAW)
   })
 
-  // Fix (2026-08-24) — xoá save phải xoá cả revision key, nếu không
-  // revision tồn dư khiến lần CAS đầu của nhân vật mới fail ("Save đã
-  // thay đổi ở một phiên khác.").
+  // Fix (2026-08-24) - xoa save phai xoa ca revision key, neu khong
+  // revision ton du khien lan CAS dau cua nhan vat moi fail ("Save da
+  // thay doi o mot phien khac.").
   it('deleteSave() xoá cả SAVE_REVISION_KEY để revision không tồn dư', () => {
     localStorage.setItem(SAVE_KEY, VALID_RAW)
     localStorage.setItem(SAVE_REVISION_KEY, '12')
@@ -331,6 +331,26 @@ describe('backup / restore', () => {
     deleteSave()
 
     expect(localStorage.getItem(SAVE_REVISION_KEY)).toBeNull()
+  })
+
+  it('deleteSave() drops this account\'s B1-C envelopes but keeps another account\'s', () => {
+    // B1-C (PR4): a user-confirmed reset must release the durable remote
+    // envelopes (pending journal / acked cache / quarantine) bound to the
+    // resolved account - never another account's, never another env's.
+    const envA = 'beta:example'
+    const envB = 'staging:example'
+    localStorage.setItem(`${'tien-hiep-idle-save-journal'}:${envA}:guest`, 'j')
+    localStorage.setItem(`${'tien-hiep-idle-save-acked'}:${envA}:guest`, 'a')
+    localStorage.setItem(`${'tien-hiep-idle-save-quarantine'}:${envB}:guest`, 'q')
+    localStorage.setItem(`${'tien-hiep-idle-save-journal'}:${envA}:u-other`, 'j2')
+
+    deleteSave()
+
+    expect(localStorage.getItem(`${'tien-hiep-idle-save-journal'}:${envA}:guest`)).toBeNull()
+    expect(localStorage.getItem(`${'tien-hiep-idle-save-acked'}:${envA}:guest`)).toBeNull()
+    expect(localStorage.getItem(`${'tien-hiep-idle-save-quarantine'}:${envB}:guest`)).toBeNull()
+    // Cross-account isolation: u-other's pending record survives intact.
+    expect(localStorage.getItem(`${'tien-hiep-idle-save-journal'}:${envA}:u-other`)).toBe('j2')
   })
 
   it('restoreBackup() ghi backup trở lại SAVE_KEY', () => {
@@ -379,7 +399,7 @@ describe('importSaveRaw', () => {
 
     expect(importSaveRaw(brokenRaw)).toBe(false)
 
-    // Save tốt ban đầu KHÔNG bị ghi đè.
+    // Save tot ban dau KHONG bi ghi de.
     expect(getRawSave()).toBe(VALID_RAW)
     expect(localStorage.getItem(BACKUP_KEY)).toBeNull()
   })
@@ -399,7 +419,7 @@ describe('importSaveRaw', () => {
     const pickless = validGameSave()
 
     delete pickless.player.mortalBasicSkillId
-    delete pickless.player.nodeLevels.core_tram
+    delete pickless.player.nodeLevels.core_linh_bao
     pickless.player.purchasedNodeIds = []
     pickless.skills = []
 

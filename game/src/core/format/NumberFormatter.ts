@@ -1,12 +1,12 @@
-// Phase 5 (Reliability, mục XVII spec) — NumberFormatter dùng chung
-// cho mọi số lớn hiển thị trong UI (Linh lực, Damage, HP, Cost,
-// Currency, EXP, Resource). Quy tắc: dưới 10,000 hiện nguyên số có
-// dấu phẩy; từ 10,000 trở lên rút gọn theo hậu tố K/M/B/T (làm tròn
-// 2 chữ số thập phân, bỏ số 0 thừa ở cuối); từ 1e15 trở lên (vượt
-// quá T, game không đặt tên tiếp) chuyển sang ký hiệu khoa học.
-// activateAt: ngưỡng bắt đầu dùng hậu tố này (KHÔNG phải số chia) —
-// K chỉ kích hoạt từ 10,000 trở lên dù chia cho 1,000, để 1,250 vẫn
-// hiện nguyên dạng thay vì "1.25K".
+// Phase 5 (Reliability, muc XVII spec) - NumberFormatter dung chung
+// cho moi so lon hien thi trong UI (Linh luc, Damage, HP, Cost,
+// Currency, EXP, Resource). Quy tac: duoi 10,000 hien nguyen so co
+// dau phay; tu 10,000 tro len rut gon theo hau to K/M/B/T (lam tron
+// 2 chu so thap phan, bo so 0 thua o cuoi); tu 1e15 tro len (vuot
+// qua T, game khong dat ten tiep) chuyen sang ky hieu khoa hoc.
+// activateAt: nguong bat dau dung hau to nay (KHONG phai so chia) -
+// K chi kich hoat tu 10,000 tro len du chia cho 1,000, de 1,250 van
+// hien nguyen dang thay vi "1.25K".
 const SUFFIX_TIERS: Array<{ activateAt: number; divisor: number; suffix: string }> = [
   { activateAt: 1e12, divisor: 1e12, suffix: 'T' },
   { activateAt: 1e9, divisor: 1e9, suffix: 'B' },

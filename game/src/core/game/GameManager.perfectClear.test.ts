@@ -1,4 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 - companion + formation domains are scope-hidden in
+// the beta build. This file keeps exercising the dormant build's enabled
+// semantics by stubbing the scope flags open (dormant-system convention).
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -8,16 +18,16 @@ import type { Stage } from '../stage/Stage'
 import { COMPANIONS } from '../../data/companion/Companions'
 import type { CompanionDefinition } from '../../data/companion/Companions'
 
-// Auto-farm spec Task 3 — Hoàn Mỹ condition trên turn-based victory:
+// Auto-farm spec Task 3 - Hoan My condition tren turn-based victory:
 // record perfectClearStageIds + perfectClearSeconds khi HP loss <=75%
-// VÀ turns < stage.perfectClearTurnLimit. Ghi 1 LẦN (không overwrite).
+// VA turns < stage.perfectClearTurnLimit. Ghi 1 LAN (khong overwrite).
 //
-// STATUS (2026-09-04): mechanism recordPerfectClearIfEligible đã wire
-// vào grantTurnBattleRewards victory block + turnBattleStartedAtMs ở
-// startStage — NHƯNG tests này đang tạm disable (describe.skip): victory
-// block chạy (emitted=true) nhưng record không ghi — 1 subtle flow issue
-// chưa root-cause sau nhiều hypothesis (systematic-debugging rule: >3
-// attempts → stop). Follow-up: debug riêng với victory-block tracing.
+// STATUS (2026-09-04): mechanism recordPerfectClearIfEligible da wire
+// vao grantTurnBattleRewards victory block + turnBattleStartedAtMs o
+// startStage - NHUNG tests nay dang tam disable (describe.skip): victory
+// block chay (emitted=true) nhung record khong ghi - 1 subtle flow issue
+// chua root-cause sau nhieu hypothesis (systematic-debugging rule: >3
+// attempts -> stop). Follow-up: debug rieng voi victory-block tracing.
 describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
   const DUMMY_ENEMY = defineEnemy({
     id: 'perfect_dummy',

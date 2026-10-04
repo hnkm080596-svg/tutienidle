@@ -9,10 +9,10 @@ import { toTurnBattleParticipant } from '../../game/TurnBattleAdapter'
 import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
 
-// Combat Runtime Separation (Task 1, 2026-09-07) — CombatAnimationRuntime
+// Combat Runtime Separation (Task 1, 2026-09-07) - CombatAnimationRuntime
 // owns the presentation-ack timing state extracted from GameManager (P17).
 // Fixture below mirrors the createCombatant()/participant() convention
-// already used by TurnBattleSystem.test.ts — a real CombatSystem +
+// already used by TurnBattleSystem.test.ts - a real CombatSystem +
 // TurnBattleSystem so declareActorAction/applyActionImpact/completeAction
 // run for real (no mocking the business logic the runtime delegates to).
 
@@ -302,7 +302,7 @@ describe('CombatAnimationRuntime', () => {
 
     runtime.acknowledgeTurnReady('some-other-stale-token')
 
-    // Stale ack ignored — actor still pending in the ready phase.
+    // Stale ack ignored - actor still pending in the ready phase.
     expect(runtime.getAnimationState('player')).toBe('standby')
     expect(runtime.getPendingPlaybackToken()).toBe(currentToken)
   })
@@ -422,7 +422,7 @@ describe('CombatAnimationRuntime', () => {
 
     expect(runtime.isActionPlaybackWaiting()).toBe(false)
 
-    // Idempotent — calling again does nothing further.
+    // Idempotent - calling again does nothing further.
     runtime.setPresentationActive(false)
 
     expect(runtime.isActionPlaybackWaiting()).toBe(false)
@@ -516,7 +516,7 @@ describe('CombatAnimationRuntime', () => {
       getTurnBattle: () => battle,
     })
 
-    // Reassign to a brand-new instance AFTER the runtime was constructed —
+    // Reassign to a brand-new instance AFTER the runtime was constructed -
     // mirrors a stage restart happening mid-session.
     const nextTurnBattleSystem = new TurnBattleSystem(combatSystem)
     const declareSpy = vi.spyOn(nextTurnBattleSystem, 'declareActorAction')

@@ -68,9 +68,16 @@ export const CANONICAL_EARLY_LOOP: readonly LoopStep[] = [
   { kind: 'growth_cycle', runs: 5 },
   { kind: 'stage_until_victory', stageId: 'mortal_dong_10', maxAttempts: 8 },
   { kind: 'growth_cycle', runs: 10 },
+  // Quan Khi gates at mortal:12; a real player hitting the realm
+  // refusal grinds cultivation to the gate, same as every floor gate.
+  { kind: 'grind_to_level', level: 12 },
   { kind: 'tribulation', targetRealmId: 'qi_refining' },
-  { kind: 'ritual', path: 'sword', way: 'sword_pathway' },
-  { kind: 'purchase_node', nodeId: 'thich_can' },
+  // Beta scope: spell_pathway is the only beta way; the ritual routes
+  // through the atomic initiation transaction (fire).
+  { kind: 'ritual', path: 'spell', way: 'spell_pathway' },
+  // Beta scope: thich_can was a kiem_tu node - the spell-side insight
+  // purchase is the committed element's growth node.
+  { kind: 'purchase_node', nodeId: 'fire_ailment_mastery' },
   { kind: 'stage_until_victory', stageId: 'qi_refining_forest', maxAttempts: 10 },
 ]
 

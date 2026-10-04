@@ -2,9 +2,9 @@
  * R14 guard (R12/AR-30 enemy-art enumeration ownership).
  *
  * `MORTAL_ENEMY_TEMPLATE_IDS` in `src/game/support/EnemyArt.ts` is the single
- * canonical enumeration of mortal enemy template art. Both consumers —
+ * canonical enumeration of mortal enemy template art. Both consumers -
  * `CombatPreload` (transitional preload net) and
- * `CombatPresentationCatalogue` (animation presentation catalogue) — must
+ * `CombatPresentationCatalogue` (animation presentation catalogue) - must
  * import it rather than declare their own copy. The defect this protects:
  * three identical 20-entry id lists drifting apart when a new enemy is
  * added (preload loads a texture the catalogue never presents, or the

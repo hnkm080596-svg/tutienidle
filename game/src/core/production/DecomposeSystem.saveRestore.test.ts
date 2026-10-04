@@ -2,7 +2,17 @@
 // Processing state (settings + cycle timer) joins GameSave; restore
 // clamps to live capacity; a repeated settle over the same window
 // must not double-award (A3 restore semantics).
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { DecomposeSystem } from './DecomposeSystem'
 import { MaterialBag } from '../material/MaterialBag'
 import { materials } from '../../data/materials/materials'
@@ -78,7 +88,7 @@ describe('DecomposeSystem save/restore (AR-08)', () => {
 
     expect(Number.isFinite(system.getSaveState().nextCycleAt)).toBe(true)
 
-    // Two ticks past the old deadline run at most the settled cycles —
+    // Two ticks past the old deadline run at most the settled cycles -
     // never a per-tick runaway.
     system.tick(31_000)
     system.tick(31_500)

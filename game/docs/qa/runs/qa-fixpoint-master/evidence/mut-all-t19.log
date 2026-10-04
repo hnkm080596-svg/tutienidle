@@ -1,0 +1,24 @@
+# T19 mutation corpus — TC8/B10/A10 fix wave pins (mutant must FAIL the pin suite)
+# State: devin/qa-fixpoint @ a2bd826f (9522454d T19a + a2bd826f T19b)
+# Runner: /tmp/t19-mutants.sh + inline python patches; each entry =
+#   revert/neuter one new gate -> npx vitest run betaWriterBoundsTc8.qa.test.ts betaConsumerSeamsB8.qa.test.ts
+KILLED m1-grade            breakthroughGrade>6 bound neutered (>999)
+KILLED m2-marker-boundary  marker realm-order check neutered
+KILLED m3-marker-emit      Player.ts emit-side realm-order check removed
+KILLED m4-foundation       highestFoundationAchieved<foundation check removed
+KILLED m5-loi-kiep         realm-scaled bound reverted to flat 0.9
+KILLED m6-skill-restore    template-rebuild reverted to clone-trust
+KILLED m7-passive-gate     betaSkillAdmitted gates removed in PassiveSystem
+KILLED m8-pcs-boundary     perfectClearSeconds floor <1 -> <=0
+KILLED m9-autofarm-floor   isValidCycleSeconds >=1 reverted to >0
+KILLED m10-tulinh-duration TU_LINH_TRAN duration bound x1000
+KILLED m11-affix-count     GLOBAL_MAX_AFFIXES bound neutered (self-rejecting fixture found+fixed, then KILLED)
+KILLED m12-affix-slot      slot eligibility check neutered (fixture fix, then KILLED)
+KILLED m13-decompose       dormant_decompose_state gate removed
+KILLED m14-talent          dormant_talent_state gate removed
+KILLED m15-panel-filter    CharacterPanel isBetaTalentId filter removed
+KILLED m16-talent-pool     pool-realm bound neutered (>99)
+KILLED m17-skill-realm     template.requiredRealmId membership bound neutered
+KILLED m18-stage-realm     stage.requiredRealmId clear-claim bound neutered
+KILLED m19-autofarm-realm  autoFarmStage stage realm bound neutered
+RESULT: 19/19 mutants KILLED; pins green on restored state (34/34)

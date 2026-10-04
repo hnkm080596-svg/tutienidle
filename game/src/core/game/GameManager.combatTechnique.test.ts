@@ -5,7 +5,7 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 import { calculateStats, type StatModifier } from '../stats/StatCalculator'
 
-// stat-system-reimagined Task 3 (D16/D17) — the old fixed +2 range
+// stat-system-reimagined Task 3 (D16/D17) - the old fixed +2 range
 // combatModifiers retired with the attackRange stat; the technique MP
 // tier fields are now plain authoring percents emitted as
 // {stat, percent, domain:'spell'} modifiers so the Task-7 domain gate

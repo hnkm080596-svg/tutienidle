@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 //
-// Regression (review 2026-08-26): App.vue từng bị xóa mất lệnh
-// gameManager.catalogOps.registerBuffs(buffs) — buffRegistry rỗng tại runtime trong
+// Regression (review 2026-08-26): App.vue tung bi xoa mat lenh
+// gameManager.catalogOps.registerBuffs(buffs) - buffRegistry rong tai runtime trong
 // khi turn engine resolve effect 'buff'/'debuff' qua
-// buffRegistry.get() (THROW khi thiếu) → cast skill đầu tiên crash giữa
-// trận. Test này khóa tính nhất quán dữ liệu: MỌI buffId được tham
-// chiếu bởi skill effect PHẢI tồn tại trong data
-// buff — nếu data thêm tham chiếu mới mà quên đăng ký, test bắt ngay.
+// buffRegistry.get() (THROW khi thieu) -> cast skill dau tien crash giua
+// tran. Test nay khoa tinh nhat quan du lieu: MOI buffId duoc tham
+// chieu boi skill effect PHAI ton tai trong data
+// buff - neu data them tham chieu moi ma quen dang ky, test bat ngay.
 import { describe, expect, it } from 'vitest'
 import { buffs } from './buffs'
 import { SKILLS } from '../skill/Skills'
@@ -27,7 +27,7 @@ function collectSkillBuffIds(): string[] {
   for (const skill of SKILLS) {
     ids.push(...collectBuffIds(skill.effects))
 
-    // Specialization dùng effectsOverride thay thế toàn bộ effects gốc
+    // Specialization dung effectsOverride thay the toan bo effects goc
     // (xem SkillSystem.getEffectiveSkill()).
     for (const specialization of skill.specializations ?? []) {
       ids.push(...collectBuffIds(specialization.effectsOverride))
@@ -41,10 +41,10 @@ describe('data/buff — mọi buffId tham chiếu phải tồn tại trong regis
   it('skill effects (kể cả effectsOverride) chỉ tham chiếu buff đã khai báo', () => {
     const referenced = collectSkillBuffIds()
 
-    // Kiếm Thế / Kiếm Ý (spec 2026-08-29): skill buff-carrying (Thái Hư
-    // Nhất Kiếm/Phiêu Vân Bộ) đã chuyển thành passive node — hiện KHÔNG
-    // còn skill nào tham chiếu buff. Invariant vẫn giữ: nếu sau này
-    // thêm tham chiếu mới mà quên khai báo, test bắt ngay.
+    // Kiem The / Kiem Y (spec 2026-08-29): skill buff-carrying (Thai Hu
+    // Nhat Kiem/Phieu Van Bo) da chuyen thanh passive node - hien KHONG
+    // con skill nao tham chieu buff. Invariant van giu: neu sau nay
+    // them tham chieu moi ma quen khai bao, test bat ngay.
     const missing = [...new Set(referenced)].filter((id) => !BUFF_IDS.has(id))
 
     expect(missing).toEqual([])

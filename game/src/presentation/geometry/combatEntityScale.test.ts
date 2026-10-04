@@ -20,7 +20,7 @@ function enemyInput(overrides: Partial<EntityScaleInput> = {}): EntityScaleInput
 
 describe('resolveEntityDisplaySize', () => {
   it('reproduces the existing enemy size exactly — this change is a no-op for real art', () => {
-    // Spec C §3.2: PERSON_HEIGHT_IN_CELLS is 0.92 x 2, the product of the two
+    // Spec C sec3.2: PERSON_HEIGHT_IN_CELLS is 0.92 x 2, the product of the two
     // magic numbers already in the tree. Enemies must not move by a pixel, which
     // is what makes a visible change in step 3 attributable to the player alone.
     const size = resolveEntityDisplaySize(enemyInput())
@@ -68,7 +68,7 @@ describe('resolveEntityDisplaySize', () => {
   })
 
   it('person width comes from the cell, not from the art', () => {
-    // Spec C §3.2: front/back anchors use this, and it must not depend on how
+    // Spec C sec3.2: front/back anchors use this, and it must not depend on how
     // wide a particular drawing happens to be.
     const wide = resolveEntityDisplaySize(enemyInput({ sourceSize: { w: 2000, h: 350 } }))
     const narrow = resolveEntityDisplaySize(enemyInput({ sourceSize: { w: 100, h: 350 } }))
@@ -77,11 +77,11 @@ describe('resolveEntityDisplaySize', () => {
   })
 
   it('reproduces the pre-spec-C formula exactly for untrimmed art', () => {
-    // Spec C §3.2's calibration claim, exercised THROUGH the function rather
+    // Spec C sec3.2's calibration claim, exercised THROUGH the function rather
     // than restated as a constant: the old chain was
     //   characterHeight (nearCellWidth * 0.92) * depthScale * sizeMultiplier (2)
     // and PERSON_HEIGHT_IN_CELLS exists to reproduce it. Deriving the expected
-    // value from the OLD factors is what makes this a guard and not an echo —
+    // value from the OLD factors is what makes this a guard and not an echo -
     // if PERSON_HEIGHT_IN_CELLS drifts from 0.92 x 2, or the function stops
     // multiplying by it, this fails.
     const nearCellWidth = 94.49

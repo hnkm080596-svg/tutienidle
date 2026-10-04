@@ -1,0 +1,6 @@
+MUTANT SWEEP - F-B5-1 workforce flag gap (5970892c)
+Mutant: remove autoWorkerCapacity>0 -> manual_workforce_state detection
+  from betaScopeSurface.unsupportedReleaseReason
+Method: python source-edit + vitest pin suite, then revert
+Result: workforceFlag KILLED_EXPECTED (betaDormantSaveLeak pin trips)
+Corpus: 1 mutant, 1 KILLED_EXPECTED, 0 SURVIVED

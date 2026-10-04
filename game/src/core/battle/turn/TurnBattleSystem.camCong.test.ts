@@ -1,5 +1,5 @@
 // TurnBattleSystem.camCong.test.ts -- megaplan M4 step 4 (spec sec.81
-// / contract sec.101): Cấm Công as an action-tag restriction inside the
+// / contract sec.101): Cam Cong as an action-tag restriction inside the
 // live turn-selection path. The seal forbids 'attack'-tagged actions
 // only -- heal/buff/cleanse actions stay legal, a fully-sealed actor
 // declares an EMPTY turn (action null, skillId '', NOT ccBlocked).

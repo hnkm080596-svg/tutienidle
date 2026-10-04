@@ -1,4 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 - companion + formation domains are scope-hidden in
+// the beta build. This file keeps exercising the dormant build's enabled
+// semantics by stubbing the scope flags open (dormant-system convention).
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
@@ -14,7 +24,7 @@ import type { TranPhapDefinition } from '../../data/formation/TranPhap'
 // DEFAULT_PARTY_FORMATION. Legacy BattleSystem.start() unconditionally
 // writes HERO_LANE_INDEX/HERO_COLUMN onto the same CombatEntity right before
 // buildTurnBattle() runs, so without the formation-lookup block the entity
-// would still land on HERO_LANE_INDEX/HERO_COLUMN — a formation-agnostic
+// would still land on HERO_LANE_INDEX/HERO_COLUMN - a formation-agnostic
 // buildTurnBattle() would fail the assertions below instead of coincidentally
 // passing. MOCK_ROW/MOCK_COLUMN stay inside PLAYER_SIDE_REGION (rows 3-8,
 // columns 0-5).
@@ -22,7 +32,7 @@ vi.mock('./PartyFormation', () => ({
   DEFAULT_PARTY_FORMATION: [{ combatantId: 'player', row: 6, column: 3 }],
 }))
 
-// Mirror of the literals baked into the vi.mock factory above — vi.mock is
+// Mirror of the literals baked into the vi.mock factory above - vi.mock is
 // hoisted above top-level const declarations, so the factory cannot close
 // over named constants; keep these in sync with the object literal above.
 const MOCK_ROW = 6
@@ -58,17 +68,17 @@ describe('GameManager.buildTurnBattle — reads DEFAULT_PARTY_FORMATION when no 
     expect(battle.players[0]!.id).toBe('player')
     expect(battle.players[0]!.entity.row).toBe(MOCK_ROW)
     expect(battle.players[0]!.entity.x).toBe(MOCK_COLUMN)
-    // Sanity: the mocked slot really is different from the legacy default —
+    // Sanity: the mocked slot really is different from the legacy default -
     // otherwise this assertion would pass for the wrong reason.
     expect(MOCK_ROW).not.toBe(HERO_LANE_INDEX)
     expect(MOCK_COLUMN).not.toBe(HERO_COLUMN)
   })
 })
 
-// Task 19 — buildTurnBattle() phải đọc player.formationLoadout THẬT (qua
-// resolvePartyFormation(), Task 18) khi có, thay vì luôn fallback về
-// DEFAULT_PARTY_FORMATION (mocked ở trên); đồng thời phải tạo participant
-// cho companion đã gán vào 1 ô của formationLoadout.
+// Task 19 - buildTurnBattle() phai doc player.formationLoadout THAT (qua
+// resolvePartyFormation(), Task 18) khi co, thay vi luon fallback ve
+// DEFAULT_PARTY_FORMATION (mocked o tren); dong thoi phai tao participant
+// cho companion da gan vao 1 o cua formationLoadout.
 const TEST_COMPANION_DEFINITION = {
   id: 'test_companion_for_formation',
   name: 'Formation Test Companion',
@@ -86,10 +96,10 @@ const TEST_COMPANION_DEFINITION = {
 
 describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, includes companions', () => {
   it('places player + a companion at their configured cells, both in turnBattle.players', () => {
-    // COMPANIONS rỗng ở giai đoạn này của plan (nội dung roster ship sau) —
-    // đẩy tạm 1 definition test-only vào mảng cho thời lượng test này,
-    // giống cách các test khác trong codebase đăng ký fixture dùng-1-lần
-    // thay vì phụ thuộc vào nội dung thật.
+    // COMPANIONS rong o giai doan nay cua plan (noi dung roster ship sau) -
+    // day tam 1 definition test-only vao mang cho thoi luong test nay,
+    // giong cach cac test khac trong codebase dang ky fixture dung-1-lan
+    // thay vi phu thuoc vao noi dung that.
     ;(COMPANIONS as unknown as (typeof COMPANIONS)[number][]).push(TEST_COMPANION_DEFINITION)
 
     try {
@@ -97,10 +107,10 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
       const playerEntity = createPlayer()
       const playerData = createDefaultPlayer()
 
-      // formationLoadout phải set TRƯỚC setActivePlayer/startBattle —
-      // GameManager.setActivePlayer() giữ THAM CHIẾU TRỰC TIẾP tới
-      // PlayerData (không copy), nên buildTurnBattle() (chạy trong
-      // startBattle()) đọc thấy đúng object đã mutate ở đây.
+      // formationLoadout phai set TRUOC setActivePlayer/startBattle -
+      // GameManager.setActivePlayer() giu THAM CHIEU TRUC TIEP toi
+      // PlayerData (khong copy), nen buildTurnBattle() (chay trong
+      // startBattle()) doc thay dung object da mutate o day.
       playerData.formationLoadout = {
         formationId: 'test_formation',
         assignments: [
@@ -129,8 +139,8 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
         expect.arrayContaining(['player', 'test_companion_for_formation']),
       )
     } finally {
-      // Dọn fixture khỏi mảng module-level dùng chung — tránh rò rỉ sang
-      // test khác chạy sau trong cùng process (vitest có thể share module).
+      // Don fixture khoi mang module-level dung chung - tranh ro ri sang
+      // test khac chay sau trong cung process (vitest co the share module).
       const index = COMPANIONS.findIndex((c) => c.id === TEST_COMPANION_DEFINITION.id)
       if (index >= 0) {
         ;(COMPANIONS as unknown as (typeof COMPANIONS)[number][]).splice(index, 1)
@@ -139,12 +149,12 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
   })
 })
 
-// Review Task 19 (finding Important) — BUFF_REGISTRY.get() throw nếu
-// definitionId của trận pháp không resolve được (gõ sai id, hoặc buff chưa
-// kịp thêm vào buffs.ts). Trước fix này, throw đó văng thẳng ra khỏi
-// buildTurnBattle() và làm SẬP CẢ TRẬN ĐẤU. Test này xác nhận trận vẫn
-// build được bình thường — chỉ mất đúng 1 buff, không throw — giống tinh
-// thần "skip gracefully" mà companion resolution đã làm.
+// Review Task 19 (finding Important) - BUFF_REGISTRY.get() throw neu
+// definitionId cua tran phap khong resolve duoc (go sai id, hoac buff chua
+// kip them vao buffs.ts). Truoc fix nay, throw do vang thang ra khoi
+// buildTurnBattle() va lam SAP CA TRAN DAU. Test nay xac nhan tran van
+// build duoc binh thuong - chi mat dung 1 buff, khong throw - giong tinh
+// than "skip gracefully" ma companion resolution da lam.
 const TEST_FORMATION_WITH_MISSING_BUFF: TranPhapDefinition = {
   id: 'test_formation_missing_buff',
   name: 'Formation Missing Buff Test',
@@ -155,9 +165,9 @@ const TEST_FORMATION_WITH_MISSING_BUFF: TranPhapDefinition = {
 
 describe('GameManager.buildTurnBattle — formation buff definitionId không resolve được', () => {
   it('không throw, trận vẫn build bình thường khi BUFF_REGISTRY.get() thất bại', () => {
-    // TRAN_PHAP_FORMATIONS rỗng ở giai đoạn này của plan (nội dung roster
-    // ship sau) — đẩy tạm 1 definition test-only vào mảng, giống pattern
-    // COMPANIONS ở test phía trên.
+    // TRAN_PHAP_FORMATIONS rong o giai doan nay cua plan (noi dung roster
+    // ship sau) - day tam 1 definition test-only vao mang, giong pattern
+    // COMPANIONS o test phia tren.
     ;(TRAN_PHAP_FORMATIONS as unknown as TranPhapDefinition[]).push(TEST_FORMATION_WITH_MISSING_BUFF)
 
     try {
@@ -179,8 +189,8 @@ describe('GameManager.buildTurnBattle — formation buff definitionId không res
       expect(battle!.players).toHaveLength(1)
       expect(battle!.players[0]!.id).toBe('player')
     } finally {
-      // Dọn fixture khỏi mảng module-level dùng chung — tránh rò rỉ sang
-      // test khác chạy sau trong cùng process (vitest có thể share module).
+      // Don fixture khoi mang module-level dung chung - tranh ro ri sang
+      // test khac chay sau trong cung process (vitest co the share module).
       const index = TRAN_PHAP_FORMATIONS.findIndex((f) => f.id === TEST_FORMATION_WITH_MISSING_BUFF.id)
       if (index >= 0) {
         ;(TRAN_PHAP_FORMATIONS as unknown as TranPhapDefinition[]).splice(index, 1)

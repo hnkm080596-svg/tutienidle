@@ -1,7 +1,7 @@
-// Event carry vị trí/kết thúc trận — nguồn DUY NHẤT để view (Phaser
-// MainScene.ts) biết vị trí player/quái, KHÔNG được cầm tham chiếu
-// trực tiếp GameManager/BattleSystem (xem ghi chú kiến trúc trong kế
-// hoạch: core ↔ Phaser chỉ giao tiếp qua EventBus).
+// Event carry vi tri/ket thuc tran - nguon DUY NHAT de view (Phaser
+// MainScene.ts) biet vi tri player/quai, KHONG duoc cam tham chieu
+// truc tiep GameManager/BattleSystem (xem ghi chu kien truc trong ke
+// hoach: core <-> Phaser chi giao tiep qua EventBus).
 
 import type { LaneIndex } from './BattleLane'
 import type { CellArea, GridPosition } from './BattleGrid'
@@ -14,14 +14,14 @@ import type {
 import type { ArtifactId } from '../artifact/Artifact'
 
 /**
- * Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
- * §11) — attribution AN TOÀN cho 1 action_impact, để renderer chọn
- * VFX đúng nguồn và summary ghi đúng damage artifact. Threading hiện
- * CHỈ thật sự set ở nhánh 'artifact' (ArtifactSystem.ts — dormant, M13) — basic
- * attack/skill/enemy vẫn nhận diện qua field cũ (HitResolveOptions.
- * skillId, sourceId so với battle.player.id) nên KHÔNG cần backfill
- * origin cho các nhánh đó ngay bây giờ; union đủ 4 kind để mở rộng
- * dần không phải đổi shape lần nữa.
+ * Ban Menh Phap Bao (2026-08-27, foundation-artifact-system-plan.md
+ * sec11) - attribution AN TOAN cho 1 action_impact, de renderer chon
+ * VFX dung nguon va summary ghi dung damage artifact. Threading hien
+ * CHI that su set o nhanh 'artifact' (ArtifactSystem.ts - dormant, M13) - basic
+ * attack/skill/enemy van nhan dien qua field cu (HitResolveOptions.
+ * skillId, sourceId so voi battle.player.id) nen KHONG can backfill
+ * origin cho cac nhanh do ngay bay gio; union du 4 kind de mo rong
+ * dan khong phai doi shape lan nua.
  */
 export type CombatActionOrigin =
   | { kind: 'basic_attack' }
@@ -36,8 +36,8 @@ export interface BattlePositionsEvent {
   playerX: number
 
   /**
-   * Row thật của avatar Player (plan §2.2) — teleport đổi row tức thời,
-   * renderer snap sprite tới projected cell mới.
+   * Row that cua avatar Player (plan sec2.2) - teleport doi row tuc thoi,
+   * renderer snap sprite toi projected cell moi.
    */
   playerRow: LaneIndex
 
@@ -46,14 +46,14 @@ export interface BattlePositionsEvent {
   playerMaxHp: number
 
   /**
-   * Targetability (plan §5.4) — false khi Player đang chờ telegraph
-   * spawn; renderer KHÔNG hiện sprite Player trong trạng thái này.
+   * Targetability (plan sec5.4) - false khi Player dang cho telegraph
+   * spawn; renderer KHONG hien sprite Player trong trang thai nay.
    */
   playerMaterialized: boolean
 
   /**
-   * Telegraph spawn của avatar Player tại projected cell — vẽ VFX
-   * telegraph rồi materialize sprite khi biến mất khỏi snapshot.
+   * Telegraph spawn cua avatar Player tai projected cell - ve VFX
+   * telegraph roi materialize sprite khi bien mat khoi snapshot.
    */
   playerSpawn?: {
     row: LaneIndex
@@ -62,10 +62,10 @@ export interface BattlePositionsEvent {
     presetId: PlayerSpawnVfxPresetId
   }
 
-  // Chỉ gồm quái CÒN SỐNG — quái chết tự "biến mất" khỏi payload,
-  // MainScene coi đó là tín hiệu ngừng cập nhật vị trí (đóng băng
-  // cho tween chết chạy), khỏi cần thêm cờ alive riêng. `lane` chỉ để
-  // MainScene tính vị trí Y hiển thị — không ảnh hưởng combat.
+  // Chi gom quai CON SONG - quai chet tu "bien mat" khoi payload,
+  // MainScene coi do la tin hieu ngung cap nhat vi tri (dong bang
+  // cho tween chet chay), khoi can them co alive rieng. `lane` chi de
+  // MainScene tinh vi tri Y hien thi - khong anh huong combat.
   enemies: {
     id: string
     name: string
@@ -77,12 +77,12 @@ export interface BattlePositionsEvent {
   }[]
 
   /**
-   * Spawn telegraph (2026-08-24) — quái đang đếm ngược "telegraph → xuất
-   * hiện". Dùng SNAPSHOT (không chỉ event tức thời) để hiệu ứng không mất
-   * khi CombatScene vừa khởi tạo, resize giữa animation, auto-repeat bắt
-   * đầu trận mới trong cùng scene, hay 1 frame nhận nhiều event vị trí.
-   * `progress` ∈ [0,1] — 0 mới đặt lịch, 1 sắp materialize. Renderer
-   * reconcile theo `id`: id biến mất khỏi mảng = materialize xong.
+   * Spawn telegraph (2026-08-24) - quai dang dem nguoc "telegraph -> xuat
+   * hien". Dung SNAPSHOT (khong chi event tuc thoi) de hieu ung khong mat
+   * khi CombatScene vua khoi tao, resize giua animation, auto-repeat bat
+   * dau tran moi trong cung scene, hay 1 frame nhan nhieu event vi tri.
+   * `progress` in [0,1] - 0 moi dat lich, 1 sap materialize. Renderer
+   * reconcile theo `id`: id bien mat khoi mang = materialize xong.
    */
   spawningEnemies?: {
     id: string
@@ -102,11 +102,11 @@ export interface BattleEndEvent {
 }
 
 /**
- * kind 'essence' (2026-08-30) — Tinh Hoa Phàm Thể rơi từ quái: chuỗi
- * particle bay thẳng VỀ NGƯỜI CHƠI (không về hồ lô), mote cuối chạm
- * người chơi mới nạp tiến độ Luyện Thể (xem combat-essence-stream.ts +
- * App.vue essenceArrivals drain). Rendering tự hủy khi scene không
- * active — chỉ là presentation, bỏ qua không mất loot.
+ * kind 'essence' (2026-08-30) - Tinh Hoa Pham The roi tu quai: chuoi
+ * particle bay thang VE NGUOI CHOI (khong ve ho lo), mote cuoi cham
+ * nguoi choi moi nap tien do Luyen The (xem combat-essence-stream.ts +
+ * App.vue essenceArrivals drain). Rendering tu huy khi scene khong
+ * active - chi la presentation, bo qua khong mat loot.
  */
 export interface BattleRewardParticleEvent {
   sourceId: string
@@ -114,7 +114,7 @@ export interface BattleRewardParticleEvent {
   color: number
 }
 
-/** Event scene → App.vue khi chuỗi essence hoàn tất (1 lần/drop event). */
+/** Event scene -> App.vue khi chuoi essence hoan tat (1 lan/drop event). */
 export const ESSENCE_STREAM_ARRIVAL_EVENT = 'essence_stream_arrival'
 
 // ================= Combat Grid Rework (2026-08-24) =================
@@ -132,14 +132,14 @@ export interface ActionImpactEvent {
 
   actionId: string
 
-  /** Lần chạy cụ thể (mỗi windup hoàn tất = 1 instance mới). */
+  /** Lan chay cu the (moi windup hoan tat = 1 instance moi). */
   actionInstanceId: string
 
   sourceId: string
 
   primaryTargetId: string
 
-  /** Ô neo VFX — snapshot vị trí primary target tại thời điểm impact. */
+  /** O neo VFX - snapshot vi tri primary target tai thoi diem impact. */
   anchorCell: GridPosition
 
   affectedTargetIds: string[]
@@ -150,17 +150,17 @@ export interface ActionImpactEvent {
 
   affectedArea: CellArea & { shape: ActionTargetingShape }
 
-  /** Số hit lên mỗi target (multi-hit) — preset dùng để đếm pulse. */
+  /** So hit len moi target (multi-hit) - preset dung de dem pulse. */
   hitCount: number
 
   presetId: CombatVfxPresetId
 
-  /** Bản Mệnh Pháp Bảo — undefined = basic attack/skill/enemy như cũ. */
+  /** Ban Menh Phap Bao - undefined = basic attack/skill/enemy nhu cu. */
   origin?: CombatActionOrigin
 }
 
-/** DOT/persistent status VFX gắn THEO TARGET — dedupe theo
- * (targetId + dotType + source), reapply = refresh, không spawn mới mỗi tick. */
+/** DOT/persistent status VFX gan THEO TARGET - dedupe theo
+ * (targetId + dotType + source), reapply = refresh, khong spawn moi moi tick. */
 export interface StatusVfxAttachedEvent {
   type: 'status_vfx_attached'
 
@@ -174,13 +174,13 @@ export interface StatusVfxAttachedEvent {
 
   durationSeconds: number
 
-  /** Buff bar (2026-09-02) — tên hiển thị (tooltip/floating text). */
+  /** Buff bar (2026-09-02) - ten hien thi (tooltip/floating text). */
   buffName?: string
 
-  /** Buff bar — màu placeholder xanh/đỏ + hình circle/diamond. */
+  /** Buff bar - mau placeholder xanh/do + hinh circle/diamond. */
   polarity?: 'buff' | 'debuff'
 
-  /** Buff bar — duration Infinity → hàng permanent, không timer. */
+  /** Buff bar - duration Infinity -> hang permanent, khong timer. */
   permanent?: boolean
 
   /** Periodic-damage flag - lets audio/VFX tell a real DoT from a plain buff/debuff (dotType alone is just a definitionId). */
@@ -202,7 +202,7 @@ export interface StatusVfxRemovedEvent {
 
   statusInstanceId: string
 
-  /** Target chết / cleanse / hết hạn — renderer tự dọn đúng instance. */
+  /** Target chet / cleanse / het han - renderer tu don dung instance. */
   reason: 'expired' | 'cleansed' | 'target_dead'
 }
 

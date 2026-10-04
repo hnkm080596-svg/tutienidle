@@ -1,8 +1,8 @@
-// ProductionCatalog (plan §3/§5/§6) — Địa Giới Thanh Vân duy nhất trong
-// scope hiện tại (§3.1): Phàm Nhân/Luyện Khí/Trúc Cơ, đúng một Lâm,
-// một Quáng, một Động Thiên. Contract dùng catalog để mở rộng Địa Giới
-// sau này mà không sửa engine. Validator từ chối Địa Giới thiếu nguồn,
-// trùng loại hoặc sai số realm.
+// ProductionCatalog (plan sec3/sec5/sec6) - Dia Gioi Thanh Van duy nhat trong
+// scope hien tai (sec3.1): Pham Nhan/Luyen Khi/Truc Co, dung mot Lam,
+// mot Quang, mot Dong Thien. Contract dung catalog de mo rong Dia Gioi
+// sau nay ma khong sua engine. Validator tu choi Dia Gioi thieu nguon,
+// trung loai hoac sai so realm.
 
 import { getRealmIndex } from '../realm/realmSystem'
 import type {
@@ -34,13 +34,13 @@ export const TERRITORY_THANH_VAN: TerritoryDefinition = {
 }
 
 // =========================
-// Ba nguồn sản xuất của Thanh Vân — level riêng, giữ level khi đột phá
-// (§3.2). Upgrade cost bằng Gỗ cùng realm + Linh Thạch (sink chính của
-// Lâm §5.2).
+// Ba nguon san xuat cua Thanh Van - level rieng, giu level khi dot pha
+// (sec3.2). Upgrade cost bang Go cung realm + Linh Thach (sink chinh cua
+// Lam sec5.2).
 // =========================
 
 const SITE_UPGRADE_COSTS = (): ProductionSiteDefinition['upgradeCosts'] => {
-  // Thang tuổi theo tier — KHỚP 1:1 với AGE_BY_TIER của
+  // Thang tuoi theo tier - KHOP 1:1 voi AGE_BY_TIER cua
   // data/building/buildings.ts (tier 2=decade, 3-4=century,
   // 5-6=millennium, 7-8=myriad_year, 9=thuong_co).
   const ageByTier: Record<number, (typeof HERB_AGES)[number]> = {
@@ -106,31 +106,31 @@ export const THANH_VAN_PRODUCTION_SITES: readonly ProductionSiteDefinition[] = [
 ]
 
 // =========================
-// Reward catalogs (§5.2/§5.3/§6.1)
+// Reward catalogs (sec5.2/sec5.3/sec6.1)
 // =========================
 
-/** Lâm: đúng một loại gỗ theo realm × 5 tuổi (§5.2 + gp123 6E C2). */
+/** Lam: dung mot loai go theo realm x 5 tuoi (sec5.2 + gp123 6E C2). */
 export const THANH_VAN_FOREST_REWARDS: readonly ForestRewardDefinition[] = TERRITORY_THANH_VAN.realmIds.flatMap(
   (realmId) =>
     HERB_AGES.map((age) => ({
       materialId: buildProfessionMaterialId('wood', realmId, age),
       realmId,
       age,
-      // Số lượng theo tuổi nằm ở balance; definition giữ 0 để resolver
-      // tra MATERIAL_AGE_AMOUNTS — tránh lệch hai nguồn sự thật.
+      // So luong theo tuoi nam o balance; definition giu 0 de resolver
+      // tra MATERIAL_AGE_AMOUNTS - tranh lech hai nguon su that.
       amount: 0,
     })),
 )
 
-/** Quáng: ba realm tier × năm tuổi (§5.3 + gp123 6E C2). */
+/** Quang: ba realm tier x nam tuoi (sec5.3 + gp123 6E C2). */
 export const THANH_VAN_MINE_REWARDS: readonly MineRewardDefinition[] = HERB_AGES.flatMap(
   (age) =>
     TERRITORY_THANH_VAN.realmIds.map((realmId) => ({
       materialId: buildProfessionMaterialId('ore', realmId, age),
       realmId,
       age,
-      // Số lượng theo tuổi nằm ở balance; definition giữ 0 để resolver
-      // tra MATERIAL_AGE_AMOUNTS — tránh lệch hai nguồn sự thật.
+      // So luong theo tuoi nam o balance; definition giu 0 de resolver
+      // tra MATERIAL_AGE_AMOUNTS - tranh lech hai nguon su that.
       amount: 0,
     })),
 )
@@ -150,7 +150,7 @@ export interface GrottoHerbBase {
 
   name: string
 
-  /** Đan phương (alchemy recipe id) duy nhất nuôi bởi thảo này. */
+  /** Dan phuong (alchemy recipe id) duy nhat nuoi boi thao nay. */
   pillRecipeId: string
 
   realmId: string
@@ -180,7 +180,7 @@ export const THANH_VAN_GROTTO_HERBS: readonly GrottoHerbDefinition[] =
   )
 
 // =========================
-// Validator (§3.1): từ chối Địa Giới thiếu nguồn/trùng loại/sai realm.
+// Validator (sec3.1): tu choi Dia Gioi thieu nguon/trung loai/sai realm.
 // =========================
 
 export interface TerritoryValidationResult {
@@ -228,7 +228,7 @@ export function validateTerritory(
     }
   }
 
-  // Rewards phải phủ đủ 3 realm tier của Địa Giới.
+  // Rewards phai phu du 3 realm tier cua Dia Gioi.
   for (const realmId of territory.realmIds) {
     if (!forestRewards.some((reward) => reward.realmId === realmId)) {
       errors.push(`Lâm ${territory.id}: thiếu gỗ cho tier ${realmId}`)
@@ -243,7 +243,7 @@ export function validateTerritory(
     }
   }
 
-  // Realm của reward phải thuộc Địa Giới.
+  // Realm cua reward phai thuoc Dia Gioi.
   for (const reward of [...forestRewards, ...mineRewards, ...grottoHerbs]) {
     if (!territory.realmIds.includes(reward.realmId)) {
       errors.push(`${territory.id}: reward ${reward.materialId} ngoài phạm vi Địa Giới`)
@@ -253,7 +253,7 @@ export function validateTerritory(
   return { valid: errors.length === 0, errors }
 }
 
-/** Kiểm tra bất biến trọng số giảm dần (§5.3/§6.2) — gọi ở data integrity test. */
+/** Kiem tra bat bien trong so giam dan (sec5.3/sec6.2) - goi o data integrity test. */
 export function validateWeightOrdering(): string[] {
   const errors: string[] = []
 
@@ -280,7 +280,7 @@ export function validateWeightOrdering(): string[] {
   return errors
 }
 
-/** Guard realm index dùng chung — tránh import vòng từ realmSystem ở vài nơi. */
+/** Guard realm index dung chung - tranh import vong tu realmSystem o vai noi. */
 export function realmSortKey(realmId: string): number {
   try {
     return getRealmIndex(realmId)

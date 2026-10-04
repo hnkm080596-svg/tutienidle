@@ -10,8 +10,10 @@ import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
 import { SWORD_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 
-// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
+// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD - the dep
 // surface is stubbed; nothing here is invoked for this path.
 const PATH_RUNTIME_STUB_DEPS = {
   skillManager: {},
@@ -22,7 +24,7 @@ const PATH_RUNTIME_STUB_DEPS = {
   getSpellPathElement: () => undefined,
 } as unknown as CultivationPathRuntimeDeps
 
-// Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) — path choice commits
+// Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) - path choice commits
 // way 'sword_pathway' with the canonical fresh state; NO route lock, no
 // legacy skill grants, no keystone purchase. Mortal precursor skills
 // (the whole set, table-driven) become uncastable/unequippable the
@@ -81,10 +83,15 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
     expect(gameManager.techniqueManager.getActive()?.id).toBe('sword_control_art')
   })
 
-  it('chooseCultivationPath(spell) leaves swordPath undefined', () => {
+  it('commitFiveElementInitiation(spell) leaves swordPath undefined', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
+    // spell_pathway is beta-only and commits via the atomic element
+    // transaction: needs the phap_tu node catalog + the linh_bao Lv3
+    // offer gate satisfied.
+    gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+    player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.commitFiveElementInitiation('fire', player).ok).toBe(true)
     expect(player.swordPath).toBeUndefined()
   })
 
@@ -116,8 +123,12 @@ describe('K3 — mortal precursor pick lock post-path', () => {
 
   it('precursor pick still works for a mortal (no path chosen)', () => {
     const { gameManager, player } = setupMortalWithPathReady(0)
+    // Beta scope: 'linh_bao' is the only writable starter; it still has
+    // to satisfy the learned=>core leg of the pick contract.
+    player.nodeLevels.core_linh_bao = 1
+    gameManager.progressionOps.learnSkill('linh_bao', player)
 
-    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(true)
   })
 
   it('sword basic no longer resolves to authored tram (mortal-only)', () => {
@@ -127,9 +138,9 @@ describe('K3 — mortal precursor pick lock post-path', () => {
 
     // The authored-skill seam: post-path, no Skill object backs the
     // basic (orbs take over at Task 6; the static SWORD_BASIC fallback
-    // — which coincidentally carries id 'tram' — is a separate def with
+    // - which coincidentally carries id 'tram' - is a separate def with
     // no authored scaling/cast-count semantics). Mission C Task 9 moved
-    // the resolution behind the path-runtime boundary — assert through
+    // the resolution behind the path-runtime boundary - assert through
     // it: the resolved basic IS the static authored def, by identity.
     const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)
 

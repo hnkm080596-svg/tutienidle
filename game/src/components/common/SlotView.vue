@@ -22,12 +22,12 @@ import type { SlotBadge, SlotPresentationState, SlotVariant } from './SlotTypes'
 // frame's original purpose (a decorative border for a LARGE panel, not
 // a repeated per-cell ornament).
 const props = defineProps<{
-  /** Item mà Slot đang chứa. null = slot trống — filled/empty suy trực
-   * tiếp từ đây, KHÔNG có prop `hasItem` riêng. */
+  /** Item ma Slot dang chua. null = slot trong - filled/empty suy truc
+   * tiep tu day, KHONG co prop `hasItem` rieng. */
   item: T | null
 
-  /** PNG icon trong suốt của item — không có/lỗi tải thì rơi về
-   * monogram CSS (chữ cái đầu `label`). */
+  /** PNG icon trong suot cua item - khong co/loi tai thi roi ve
+   * monogram CSS (chu cai dau `label`). */
   icon?: string
 
   label?: string
@@ -54,13 +54,13 @@ const props = defineProps<{
    * match the item name color. */
   rarityRank?: number
 
-  /** Trần (max) của thang `rarityRank` — mặc định 5 (itemQualityRank,
-   * Hoàng→Tiên) cho MỌI caller equipment hiện có. Material chỉ có 1 trục
-   * rank (professionRankOf, 1-10) nên khi feed rank đó vào `rarityRank`
-   * phải truyền kèm `rarityRankScale: 10`, nếu không rank=5 (Ngũ Phẩm,
-   * giữa thang) sẽ bị hiểu nhầm là kịch trần (Fix 1, final review
-   * item-grade-quality-rework — MaterialBagSection.vue từng feed rank
-   * 1-10 vào prop 1-5 này). */
+  /** Tran (max) cua thang `rarityRank` - mac dinh 5 (itemQualityRank,
+   * Hoang->Tien) cho MOI caller equipment hien co. Material chi co 1 truc
+   * rank (professionRankOf, 1-10) nen khi feed rank do vao `rarityRank`
+   * phai truyen kem `rarityRankScale: 10`, neu khong rank=5 (Ngu Pham,
+   * giua thang) se bi hieu nham la kich tran (Fix 1, final review
+   * item-grade-quality-rework - MaterialBagSection.vue tung feed rank
+   * 1-10 vao prop 1-5 nay). */
   rarityRankScale?: 5 | 10
 
   state?: SlotPresentationState
@@ -69,7 +69,7 @@ const props = defineProps<{
 
   tooltip?: TooltipContent
 
-  /** Tên truy cập — mặc định dùng `label` nếu không truyền riêng. */
+  /** Ten truy cap - mac dinh dung `label` neu khong truyen rieng. */
   accessibleLabel?: string
 
   /** Show the name caption under the cell - OFF by default (2026-09-15
@@ -98,8 +98,8 @@ function monogram(label?: string): string {
   return label?.trim().charAt(0).toUpperCase() ?? ''
 }
 
-// Icon lỗi tải (404/hỏng) — ẩn hẳn <img>, để monogram fallback hiện
-// qua. Reset lại mỗi khi đổi sang icon khác (đổi item trong cùng ô).
+// Icon loi tai (404/hong) - an han <img>, de monogram fallback hien
+// qua. Reset lai moi khi doi sang icon khac (doi item trong cung o).
 const failedIconSrc = ref<string | null>(null)
 
 watch(() => props.icon, () => {
@@ -147,11 +147,11 @@ const sealRank = computed(() => {
   return undefined
 })
 const sealOrdinal = computed(() => (sealRank.value ? PROFESSION_GRADE_SEAL_ORDINALS[sealRank.value - 1] : undefined))
-// Trần itemQualityRank = 5 (Tiên Chất) — KHÔNG còn 9 (model cũ rải
-// 1-3-5-7-9 đã bỏ, xem normalizeSlotRank.ts). rarityRankScale cho phép
-// caller feed 1 thang rank KHÁC (vd Material professionRankOf 1-10) vào
-// cùng prop `rarityRank` mà vẫn so đúng trần của thang đó — mặc định 5
-// giữ nguyên hành vi mọi caller equipment hiện có (Fix 1, final review).
+// Tran itemQualityRank = 5 (Tien Chat) - KHONG con 9 (model cu rai
+// 1-3-5-7-9 da bo, xem normalizeSlotRank.ts). rarityRankScale cho phep
+// caller feed 1 thang rank KHAC (vd Material professionRankOf 1-10) vao
+// cung prop `rarityRank` ma van so dung tran cua thang do - mac dinh 5
+// giu nguyen hanh vi moi caller equipment hien co (Fix 1, final review).
 const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === (props.rarityRankScale ?? 5))
 
 // Quality aura (user art pass 2026-09): the repurposed border-beam is no
@@ -171,9 +171,9 @@ const qualityAuraTier = computed(() => {
 })
 
 // ============================================================
-// PRECEDENCE (mục 17.2) — locked chặn interaction+validation; disabled
-// chặn click nhưng KHÔNG chặn validation; processing chặn click,
-// giữ nguyên Quality/Rarity; selected không che validation.
+// PRECEDENCE (muc 17.2) - locked chan interaction+validation; disabled
+// chan click nhung KHONG chan validation; processing chan click,
+// giu nguyen Quality/Rarity; selected khong che validation.
 // ============================================================
 
 const availability = computed(() => props.state?.availability ?? 'available')
@@ -205,9 +205,9 @@ const validationGlyph = computed(() => {
   }
 })
 
-// aria-disabled + click-guard THAY vì `disabled` thật — locked/disabled
-// vẫn phải giữ được focus/hover để tooltip giải thích điều kiện (mục
-// 17.4/17.5), native `disabled` sẽ chặn luôn cả việc đó.
+// aria-disabled + click-guard THAY vi `disabled` that - locked/disabled
+// van phai giu duoc focus/hover de tooltip giai thich dieu kien (muc
+// 17.4/17.5), native `disabled` se chan luon ca viec do.
 function handleClick() {
   if (props.static) return
   if (isBlocked.value) return
@@ -256,7 +256,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       <span v-else-if="filled" class="slot-view__monogram" aria-hidden="true">{{ monogram(label) }}</span>
     </span>
 
-    <!-- layer 4: validation glyph (màu KHÔNG phải tín hiệu duy nhất) -->
+    <!-- layer 4: validation glyph (mau KHONG phai tin hieu duy nhat) -->
     <span v-if="validation !== 'neutral'" class="slot-view__validation-glyph" aria-hidden="true">{{ validationGlyph }}</span>
 
     <!-- layer 6: marker + comparison + custom badges -->
@@ -315,6 +315,20 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
    ============================================================ */
 
 .slot-view {
+  /* Huyen Kim rebind of the --slot-* semantic channel (theme.css still
+     declares the paper-era defaults for any out-of-scope reader; the
+     component owns its own values now). --slot-rarity-color stays the
+     caller-driven rank channel. */
+  --slot-border: var(--hk-border-muted);
+  --slot-border-filled: var(--hk-border-active);
+  --slot-hover: var(--hk-gold);
+  --slot-selected: var(--hk-gold-bright);
+  --slot-valid: var(--hk-jade);
+  --slot-invalid: var(--hk-cinnabar);
+  --slot-shadow: 0 2px 10px var(--hk-shadow-low);
+  --slot-caption-bg: color-mix(in srgb, var(--hk-surface-base) 55%, transparent);
+  --slot-caption-bg-strong: color-mix(in srgb, var(--hk-surface-base) 82%, transparent);
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -324,18 +338,18 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   aspect-ratio: 1;
   padding: 0;
   border: 1px solid var(--slot-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--hk-radius-sm);
   /* Inventory backdrop ("archive base" plain dark tile) - default for
-     every item slot. Flat --surface-900 fallback (NOT the :root-resolved
+     every item slot. Flat --hk-surface-base fallback (NOT the :root-resolved
      --slot-surface gradient, which bakes cream paper vars and shows
      through the translucent arts as a light-gray fill). Square art on
      a square slot -> cover never distorts. Per-place art lives behind
      the `variant` prop (SlotTypes.ts), not consumer CSS overrides. */
   background:
     var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
-    var(--surface-900);
-  color: var(--text-primary);
-  font-family: var(--font-body);
+    var(--hk-surface-base);
+  color: var(--hk-text-primary);
+  font-family: var(--hk-font-ui);
   font-size: var(--text-sm);
   cursor: pointer;
   overflow: hidden;
@@ -344,14 +358,14 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      (cqw), not the viewport. inline-size only - height stays free for
      aspect-ratio. */
   container-type: inline-size;
-  transition: border-color 35ms linear, box-shadow 35ms linear, background-color 35ms linear;
+  transition: border-color var(--hk-motion-micro) var(--hk-ease-standard), box-shadow var(--hk-motion-micro) var(--hk-ease-standard), background-color var(--hk-motion-micro) var(--hk-ease-standard);
 }
 
 .slot-view--filled {
   background:
     var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
-    var(--surface-900);
-  border-color: var(--slot-rarity-color, var(--ink-line));
+    var(--hk-surface-raised);
+  border-color: var(--slot-rarity-color, var(--hk-border-muted));
   box-shadow: var(--slot-shadow), 0 0 8px var(--slot-rarity-color, transparent);
 }
 
@@ -359,9 +373,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   box-shadow: var(--slot-shadow), 0 0 12px var(--slot-rarity-color, var(--rank-color-5));
 }
 
-/* Bậc cao nhất (rarityRank = 5, Tiên Chất) — gradient bảy màu ở viền
-   TRÊN (mục 17.4 "solid fallback + gradient"), border-color solid ở
-   trên vẫn là fallback chính. */
+/* Bac cao nhat (rarityRank = 5, Tien Chat) - gradient bay mau o vien
+   TREN (muc 17.4 "solid fallback + gradient"), border-color solid o
+   tren van la fallback chinh. */
 .slot-view--filled.slot-view--max-rank::before {
   content: '';
   position: absolute;
@@ -412,15 +426,15 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   width: 62%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--ink-700);
-  color: var(--slot-rarity-color, var(--text-secondary));
-  font-family: var(--font-display);
+  background: var(--hk-surface-raised);
+  color: var(--slot-rarity-color, var(--hk-text-secondary));
+  font-family: var(--hk-font-display);
   font-weight: 600;
   font-size: var(--text-title);
 }
 
 /* ============================================================
-   4. VALIDATION OVERLAY — ring + glyph, KHÔNG chỉ dựa vào màu.
+   4. VALIDATION OVERLAY - ring + glyph, KHONG chi dua vao mau.
    ============================================================ */
 
 .slot-view--validation-valid {
@@ -450,13 +464,13 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 
 .slot-view--validation-valid .slot-view__validation-glyph {
   background: var(--slot-valid);
-  color: var(--ink-950);
+  color: var(--hk-surface-base);
 }
 
 .slot-view--validation-invalid .slot-view__validation-glyph,
 .slot-view--validation-missing .slot-view__validation-glyph {
   background: var(--slot-invalid);
-  color: var(--text-primary);
+  color: var(--hk-text-primary);
 }
 
 /* ============================================================
@@ -486,9 +500,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 /* ============================================================
-   5. HOVER / FOCUS / SELECTED — selected thắng hover nhưng không
-   che validation (ring validation ở trên là box-shadow riêng, ring
-   selected bên dưới là outline riêng — 2 kênh khác nhau, không đè).
+   5. HOVER / FOCUS / SELECTED - selected thang hover nhung khong
+   che validation (ring validation o tren la box-shadow rieng, ring
+   selected ben duoi la outline rieng - 2 kenh khac nhau, khong de).
    ============================================================ */
 
 .slot-view:hover:not([aria-disabled='true']) .slot-view__item-icon,
@@ -505,7 +519,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   z-index: 7;
   background: var(--slot-hover-image, url('/assets/ui/Slot/bag-slot-hover.png')) center / var(--slot-hover-fit, 100% 100%) no-repeat;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--hk-motion-micro) var(--hk-ease-standard);
   pointer-events: none;
 }
 
@@ -523,7 +537,11 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      transparent padding into its edges, so the layer overshoots the
      cell by 4% to land its bright stroke on the slot border. */
 .slot-view--item {
-  --slot-hover-image: url('/assets/ui/Slot/bag-slot-hover.png');
+  /* The old "cell select" wisp (a 1024x93 strip) squashed into square
+     cells read as a smudge inside empty slots - the clean pale-gold
+     frame is the square-cell hover art everywhere now. */
+  --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
+  --slot-hover-inset: -4%;
 }
 
 .slot-view--equipment {
@@ -563,8 +581,11 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   /* Seal-paste vermillion, lifted one step from the frame ink
      (#950100) so the thin strokes stay legible on the dark tile. */
   color: #d13a24;
-  font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', 'TW-Kai', 'DFKai-SB',
-    'AR PL KaitiM GB', 'Noto Serif CJK SC', var(--font-display);
+  /* Ma Shan Zheng / Noto Serif SC are loaded webfonts that cover the Han
+     seal numerals - the local Kai stacks below only render where a KaiTi
+     font is installed, otherwise the ordinals render as tofu boxes. */
+  font-family: 'Ma Shan Zheng', 'Kaiti SC', 'KaiTi', 'STKaiti', 'TW-Kai', 'DFKai-SB',
+    'AR PL KaitiM GB', 'Noto Serif CJK SC', 'Noto Serif SC', var(--font-display);
   font-weight: 700;
   font-size: 15cqw;
   line-height: 1;
@@ -619,8 +640,8 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view__marker--new {
-  background: var(--crimson);
-  color: var(--text-primary);
+  background: var(--hk-cinnabar);
+  color: var(--hk-text-primary);
   letter-spacing: 0.02em;
 }
 
@@ -647,9 +668,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   position: absolute;
   z-index: 6;
   padding: 0 4px;
-  border-radius: 3px;
+  border-radius: var(--hk-radius-sm);
   background: var(--slot-caption-bg-strong);
-  color: var(--text-primary);
+  color: var(--hk-text-primary);
   font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1.4;
@@ -660,8 +681,8 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 .slot-view__badge--enhance {
   bottom: 34px;
   right: 3px;
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
+  background: linear-gradient(180deg, var(--hk-gold-bright), var(--hk-gold));
+  color: var(--hk-surface-base);
 }
 
 .slot-view__badge--positive {
@@ -681,9 +702,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   right: 3px;
   bottom: 16px;
   padding: 0 4px;
-  border-radius: 3px;
+  border-radius: var(--hk-radius-sm);
   background: var(--slot-caption-bg);
-  color: var(--text-secondary);
+  color: var(--hk-text-secondary);
   font-size: var(--text-xs);
   line-height: 1.4;
   z-index: 6;
@@ -699,7 +720,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   flex: 0 0 auto;
   padding: 2px 3px;
   background: var(--slot-caption-bg);
-  color: var(--text-primary);
+  color: var(--hk-text-primary);
   font-size: var(--text-xs);
   line-height: 1.15;
   text-align: center;
@@ -744,22 +765,27 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view--veil-processing .slot-view__veil {
-  background: color-mix(in srgb, var(--ink-950) 35%, transparent);
+  background: color-mix(in srgb, var(--hk-surface-base) 35%, transparent);
 }
 
 .slot-view__spinner {
   width: 40%;
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 2px solid var(--ink-line);
-  border-top-color: var(--chrome-300);
+  border: 2px solid var(--hk-border-muted);
+  border-top-color: var(--hk-gold);
   animation: slot-spin 0.8s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .slot-view,
+  .slot-view__hover-frame {
+    transition: none;
+  }
+
   .slot-view__spinner {
     animation: none;
-    border-top-color: var(--ink-line);
+    border-top-color: var(--hk-border-muted);
     opacity: 0.7;
   }
 }

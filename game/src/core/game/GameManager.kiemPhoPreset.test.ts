@@ -8,9 +8,9 @@ import { SKILLS } from '../../data/skill/Skills'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Kiem Tu Reimagined Task 7 — the setKiemPhoPreset op contract:
+// Kiem Tu Reimagined Task 7 - the setKiemPhoPreset op contract:
 // realm-gated orb unlocks, 1..9 length, out-of-combat only, writes
-// PlayerData.swordPath.preset (the persisted field — cursor/log never
+// PlayerData.swordPath.preset (the persisted field - cursor/log never
 // persist).
 
 function makeDummyEnemy(id: string) {
@@ -63,7 +63,7 @@ describe('setKiemPhoPreset', () => {
   it('rejects orbs not yet unlocked at the player realm', () => {
     const { gameManager, player } = setup('qi_refining')
 
-    // qi_refining unlocks orb_dam only — orb_chem lands at realm index 2.
+    // qi_refining unlocks orb_dam only - orb_chem lands at realm index 2.
     expect(gameManager.progressionOps.setKiemPhoPreset(player, ['orb_chem'] as OrbId[])).toBe(false)
     expect(player.swordPath!.preset).toEqual(['orb_dam'])
   })

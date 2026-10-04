@@ -11,20 +11,20 @@ import type { ActionTargeting, CombatVfxPresetId } from '../battle/CombatAction'
 import type { TriggerBinding } from './SkillTrigger'
 
 /**
- * Skill execution policy (plan §8.1) — authored timing semantics of the
+ * Skill execution policy (plan sec8.1) - authored timing semantics of the
  * legacy real-time auto-cast engine. The turn engine does NOT consume
  * this field (turn cadence lives on TurnSkillDefinition.cooldownTurns /
  * chargeTurns); it remains authored data preserved by save-restore
  * backfill. Kinds:
- * - `attack_speed`: cadence theo Attack Speed (× multiplier), không ICD,
- *   không CDR, không cast time.
- * - `cooldown`: resolve tức thời, timer = skill.cooldown, chịu CDR.
- * - `cast_time`: niệm trước khi thi triển; cast time chịu Cast Speed,
- *   cooldown commit lúc BẮT ĐẦU niệm, chịu CDR.
- * - `attack_speed_cast`: vừa niệm vừa có nhịp tái dùng theo Attack Speed;
- *   không chịu CDR.
- * - `channel`: TỤ LỰC liên tục, không cooldown, không cast time; mỗi
- *   `tickSeconds` gây 1 phát.
+ * - `attack_speed`: cadence theo Attack Speed (x multiplier), khong ICD,
+ *   khong CDR, khong cast time.
+ * - `cooldown`: resolve tuc thoi, timer = skill.cooldown, chiu CDR.
+ * - `cast_time`: niem truoc khi thi trien; cast time chiu Cast Speed,
+ *   cooldown commit luc BAT DAU niem, chiu CDR.
+ * - `attack_speed_cast`: vua niem vua co nhip tai dung theo Attack Speed;
+ *   khong chiu CDR.
+ * - `channel`: TU LUC lien tuc, khong cooldown, khong cast time; moi
+ *   `tickSeconds` gay 1 phat.
  */
 export type SkillExecutionPolicy =
   | {
@@ -43,10 +43,10 @@ export type SkillExecutionPolicy =
       castTime: number
       attackSpeedMultiplier?: number
     }
-  // Kiếm Tu Bạt Kiếm (2026-08-28) — TỤ LỰC: không cooldown, không cast
-  // time; nhân vật ở trạng thái channel liên tục, MỖI tickSeconds gây 1
-  // phát theo effects/target của skill (BattleSystem.updateChanneling).
-  // tickSeconds chỉnh được bằng UI trong trận (3–9s, spec §4.2).
+  // Kiem Tu Bat Kiem (2026-08-28) - TU LUC: khong cooldown, khong cast
+  // time; nhan vat o trang thai channel lien tuc, MOI tickSeconds gay 1
+  // phat theo effects/target cua skill (BattleSystem.updateChanneling).
+  // tickSeconds chinh duoc bang UI trong tran (3-9s, spec sec4.2).
   | {
       kind: 'channel'
       tickSeconds: number
@@ -65,32 +65,32 @@ export interface Skill {
 
   maxLevel: number
 
-  /** XP còn lại trong cấp hiện tại; Huy Kiếm tự nhận +1 mỗi lần cast. */
+  /** XP con lai trong cap hien tai; Huy Kiem tu nhan +1 moi lan cast. */
   experience?: number
 
-  /** XP tích lũy suốt đời, dùng cho hệ số sát thương và hook mở Kiếm Tu. */
+  /** XP tich luy suot doi, dung cho he so sat thuong va hook mo Kiem Tu. */
   totalExperience?: number
 
   requiredRealmId?: string
 
   requiredRealmLevel?: number
 
-  // Authored cooldown in seconds — the turn engine consumes it as
+  // Authored cooldown in seconds - the turn engine consumes it as
   // cooldownTurns via toTurnSkillDefinition (LegacySkillAdapter, M5e);
   // runtime cooldown state
   // lives on TurnSkillSlot.remainingCooldownTurns (no Skill-side clock).
   cooldown: number
 
-  // Cast Time (2026-08-21) — giây "niệm" TRƯỚC KHI hiệu ứng thi triển.
-  // Skill execution policy rework (plan §8) — field này CHỈ còn là dữ
-  // liệu tham khảo cho skill có `execution` kind 'cast_time'/
-  // 'attack_speed_cast' (policy tự khai castTime riêng); runtime KHÔNG
-  // đọc fallback từ đây nữa. Giữ để UI/tooltip hiển thị.
+  // Cast Time (2026-08-21) - giay "niem" TRUOC KHI hieu ung thi trien.
+  // Skill execution policy rework (plan sec8) - field nay CHI con la du
+  // lieu tham khao cho skill co `execution` kind 'cast_time'/
+  // 'attack_speed_cast' (policy tu khai castTime rieng); runtime KHONG
+  // doc fallback tu day nua. Giu de UI/tooltip hien thi.
   castTime?: number
 
-  // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana,
-  // the) — 'none' thì KHÔNG khai field này (skill free,
-  // runtime không đọc cost).
+  // Luong tai nguyen can de cast, y nghia tuy resourceType (mana,
+  // the) - 'none' thi KHONG khai field nay (skill free,
+  // runtime khong doc cost).
   cost?: number
 
   target: SkillTarget
@@ -99,53 +99,53 @@ export interface Skill {
 
   passiveModifiers?: StatModifier[]
 
-  // Bắt buộc khi type === 'active', mặc định coi như 'none' nếu
-  // không set.
+  // Bat buoc khi type === 'active', mac dinh coi nhu 'none' neu
+  // khong set.
   resourceType?: SkillResourceType
 
-  // Skill execution policy (plan §8.1/§8.3) — BẮT BUỘC cho MỌI active
-  // skill; passive không dùng. Runtime chỉ đọc field này — không còn
-  // fallback isBasicAttack/castTime/path. Xem type doc phía trên.
+  // Skill execution policy (plan sec8.1/sec8.3) - BAT BUOC cho MOI active
+  // skill; passive khong dung. Runtime chi doc field nay - khong con
+  // fallback isBasicAttack/castTime/path. Xem type doc phia tren.
   execution?: SkillExecutionPolicy
 
   // ================= Combat Grid Rework (2026-08-24) =================
   targeting?: ActionTargeting
 
-  // AOE theo grid: lan quanh ô PRIMARY target. undefined/0 = single.
+  // AOE theo grid: lan quanh o PRIMARY target. undefined/0 = single.
   laneRadius?: number
 
   columnRadius?: number
 
-  // Override preset VFX impact; mặc định suy từ element.
+  // Override preset VFX impact; mac dinh suy tu element.
   vfxPresetId?: CombatVfxPresetId
 
-  // Bắt buộc khi type === 'passive' — xem PassiveSystem.
+  // Bat buoc khi type === 'passive' - xem PassiveSystem.
   passiveTrigger?: PassiveTrigger
 
-  // Talent v4 (spec 2026-09-03 §3.3 E2) — passive chỉ tích stack khi
-  // điều kiện này đúng (PassiveSystem đọc HP ratio của player qua
-  // hpReader closure; vắng reader thì coi như điều kiện thoả —
-  // defensive cho PassiveSystem dựng kiểu cũ ngoài combat).
+  // Talent v4 (spec 2026-09-03 sec3.3 E2) - passive chi tich stack khi
+  // dieu kien nay dung (PassiveSystem doc HP ratio cua player qua
+  // hpReader closure; vang reader thi coi nhu dieu kien thoa -
+  // defensive cho PassiveSystem dung kieu cu ngoai combat).
   // CP-01 - 'hpNotBelow' added for the mirrored talent pair Can Than /
   // Can Than (phan): the downside leg must apply only above the same
   // threshold, otherwise it halves the upside leg when both are live.
   passiveCondition?: { kind: 'hpBelow' | 'hpNotBelow'; percent: number }
 
-  // Talent v4 — khi 1 modifier chạm maxStacks: apply buff này lên
-  // player qua buffApplier closure rồi reset stack của modifier về 0
-  // (nhịp "tích → ngưỡng → bùng nổ → tích lại"). Vắng applier thì
-  // bùng nổ bị bỏ qua nhưng stack vẫn reset — không tích kẹt ở trần.
+  // Talent v4 - khi 1 modifier cham maxStacks: apply buff nay len
+  // player qua buffApplier closure roi reset stack cua modifier ve 0
+  // (nhip "tich -> nguong -> bung no -> tich lai"). Vang applier thi
+  // bung no bi bo qua nhung stack van reset - khong tich ket o tran.
   passiveConvertsTo?: { buffId: string }
 
-  // Pháp Tu profession-tier ladder (2026-08-14) — nhãn PHÂN LOẠI thuần
-  // UI cho passive skill (Skill.ts's Tâm Pháp summary panel nhóm
-  // passive theo hướng build) — không ảnh hưởng runtime, chỉ tổ chức
-  // hiển thị "Core/DOT/Burst" cho người chơi dễ hiểu build của mình.
+  // Phap Tu profession-tier ladder (2026-08-14) - nhan PHAN LOAI thuan
+  // UI cho passive skill (Skill.ts's Tam Phap summary panel nhom
+  // passive theo huong build) - khong anh huong runtime, chi to chuc
+  // hien thi "Core/DOT/Burst" cho nguoi choi de hieu build cua minh.
   // 'ult' (spec 2026-08-29-kiem-the-kiem-y) - Kiem Tu manual ult;
   // same presentation-only label, not role ownership.
   buildTag?: 'core' | 'dot' | 'burst' | 'ult'
 
-  // "Nộ kỹ tạm thời chưa ra mắt" (2026-08-15) — reserved flag; the
+  // "No ky tam thoi chua ra mat" (2026-08-15) - reserved flag; the
   // real-time cast gate that read it was retired with SkillSystem's
   // legacy cast APIs (9.5 #9). Data stays authored-able for UI badges
   // (isUnreleased prop on CombatSkillSlot).
@@ -156,28 +156,28 @@ export interface Skill {
   // grantsThoThePerCast (entity pools moved off CombatEntity).
 
 
-  // Thể Tu (Combat Rework Phase 7) — đánh TRÚNG thì trừ thêm N vào
-  // target.currentBreakGauge (nếu target có, xem CombatEntity.ts) —
-  // KHÔNG qua Damage Engine/mitigation, cùng tinh thần Detonate. Chạm
-  // 0 thì Stagger (áp 'choang'), xem BattleSystem's missile-resolve
+  // The Tu (Combat Rework Phase 7) - danh TRUNG thi tru them N vao
+  // target.currentBreakGauge (neu target co, xem CombatEntity.ts) -
+  // KHONG qua Damage Engine/mitigation, cung tinh than Detonate. Cham
+  // 0 thi Stagger (ap 'choang'), xem BattleSystem's missile-resolve
   // callback.
   breakDamagePerHit?: number
 
   // grantsHoaThePerCast/grantsThoThePerCast removed with the entity
   // pools (kiem-tu/phap-tu reimagined state model).
 
-  // Core Loop Foundation checklist (Mục SKILL) — danh sách lựa chọn
-  // "behavior-changing node" (template, không đổi giữa các instance
-  // nếu có nhiều — hiện game chỉ có 1 instance/skill nên không quan
-  // trọng). Không khai = skill này chưa có specialization nào.
+  // Core Loop Foundation checklist (Muc SKILL) - danh sach lua chon
+  // "behavior-changing node" (template, khong doi giua cac instance
+  // neu co nhieu - hien game chi co 1 instance/skill nen khong quan
+  // trong). Khong khai = skill nay chua co specialization nao.
   specializations?: SkillSpecialization[]
 
-  // Lựa chọn CỦA NGƯỜI CHƠI — instance-level, mặc định chưa chọn
-  // (dùng effects/passiveModifiers/passiveTrigger gốc). Xem
+  // Lua chon CUA NGUOI CHOI - instance-level, mac dinh chua chon
+  // (dung effects/passiveModifiers/passiveTrigger goc). Xem
   // SkillSystem.selectSpecialization()/getEffectiveSkill().
   selectedSpecializationId?: string
 
-  // Trigger/Action rework (2026-08-31 spec) — a skill fully migrated off
+  // Trigger/Action rework (2026-08-31 spec) - a skill fully migrated off
   // `effects` declares its behavior here instead: each binding pairs a
   // TriggerType with an ordered SkillAction list. Consumed live by the
   // turn engine via toTurnSkillDefinition in LegacySkillAdapter (the legacy

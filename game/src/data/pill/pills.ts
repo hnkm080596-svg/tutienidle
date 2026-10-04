@@ -40,8 +40,8 @@ function buildEffects(family: PillFamilyDefinition, tierIndex: number): Pill['ef
 }
 
 /**
- * Chỉ có tám LOẠI đan. Mỗi loại có chín phẩm runtime để PillBag giữ riêng
- * từng phẩm; phẩm quyết định sức mạnh và cảnh giới được phép sử dụng.
+ * Chi co tam LOAI dan. Moi loai co chin pham runtime de PillBag giu rieng
+ * tung pham; pham quyet dinh suc manh va canh gioi duoc phep su dung.
  */
 export function buildTieredPills(): Pill[] {
   return REALM_TIERS.flatMap((realmId, tierIndex) => PILL_FAMILIES.map((family) => ({
@@ -56,16 +56,16 @@ export function buildTieredPills(): Pill[] {
     professionGrade: getProfessionGradeForRealm(realmId),
     icon: `/assets/pills/${family.id}.png`,
     effects: buildEffects(family, tierIndex),
-    // M10 (ARCH-008) — retired families keep their generated pills so old
+    // M10 (ARCH-008) - retired families keep their generated pills so old
     // saves' bag entries resolve, but carry the retirement marker.
     ...(family.retired === true ? { retired: true } : {}),
   })))
 }
 
-// Đan đặc biệt (spec dot-pha-loi-kiep §4.1b) — 2 đan của gate Trúc
-// Cơ, type 'material' KHÔNG uống: Thông Mạch Đan tiêu qua
+// Dan dac biet (spec dot-pha-loi-kiep sec4.1b) - 2 dan cua gate Truc
+// Co, type 'material' KHONG uong: Thong Mach Dan tieu qua
 // meridian chapter (core/realm/body/MeridianChapter.ts), Truc Co Dan la vat chung bac
-// Địa/Thiên (CÓ trong túi lúc bấm đột phá, không tiêu).
+// Dia/Thien (CO trong tui luc bam dot pha, khong tieu).
 const SPECIAL_PILLS: Pill[] = [
   {
     id: 'thong_mach_dan',
@@ -75,7 +75,10 @@ const SPECIAL_PILLS: Pill[] = [
     grade: 'huyen',
     realmId: 'qi_refining',
     professionGrade: getProfessionGradeForRealm('qi_refining'),
-    icon: '/assets/pills/thong_mach_dan.png',
+    // No dedicated art yet - shares the Khai Linh pill orb until the
+    // thong_mach_dan illustration lands (previously pointed at a missing
+    // file and rendered a broken-image glyph in the Mach cost rows).
+    icon: '/assets/pills/khai_linh_dan.png',
     effects: [],
   },
   {
@@ -86,7 +89,9 @@ const SPECIAL_PILLS: Pill[] = [
     grade: 'huyen',
     realmId: 'qi_refining',
     professionGrade: getProfessionGradeForRealm('qi_refining'),
-    icon: '/assets/pills/truc_co_dan.png',
+    // No dedicated art yet - shares the To Cot pill orb (same missing-file
+    // defect class as thong_mach_dan).
+    icon: '/assets/pills/to_cot_dan.png',
     effects: [],
     // M-F-CEILING - held input of the Truc Co breakthrough gate; tagged
     // so release policy gates its acquisition routes.

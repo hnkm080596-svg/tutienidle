@@ -18,7 +18,7 @@ export interface RasterDefinitionFacts {
 export interface RasterImageFacts {
   width: number
   height: number
-  /** Alpha lớn nhất tìm thấy trong vùng center, 0..255. */
+  /** Alpha lon nhat tim thay trong vung center, 0..255. */
   centerAlpha: number
 }
 

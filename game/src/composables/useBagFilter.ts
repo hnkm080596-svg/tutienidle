@@ -3,13 +3,13 @@ import type { Material } from '@/core/material/Material'
 import { REALMS } from '@/data/realms/realm'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
-// Filter/search/gộp họ cho MaterialBag (economy-fixes-sinks-plan.md §3.2 B4).
-// Tách thuần function khỏi component để dễ test và tái dùng.
+// Filter/search/gop ho cho MaterialBag (economy-fixes-sinks-plan.md sec3.2 B4).
+// Tach thuan function khoi component de de test va tai dung.
 
-// Nhóm hiển thị — gộp các category material nhỏ (monster_core/
-// spirit_stone/byproduct/other) về "khác". Composable thuần function
-// KHÔNG import i18n (core/composables rule) — trả về KEY locale, consumer
-// render qua t(key) (pattern useBagFilter → MaterialBagSection).
+// Nhom hien thi - gop cac category material nho (monster_core/
+// spirit_stone/byproduct/other) ve "khac". Composable thuan function
+// KHONG import i18n (core/composables rule) - tra ve KEY locale, consumer
+// render qua t(key) (pattern useBagFilter -> MaterialBagSection).
 export type MaterialGroup = 'wood' | 'ore' | 'herb' | 'essence' | 'other'
 
 export const MATERIAL_GROUPS: readonly MaterialGroup[] = ['wood', 'ore', 'herb', 'essence', 'other']
@@ -46,11 +46,11 @@ export function ageLabelKey(age: string | undefined): string | null {
   return (age && AGE_LABEL_KEYS[age]) || null
 }
 
-// gp123 6E (task C2): Gỗ/Quáng dùng CÙNG trục tuổi với Linh Thảo — id
-// `<realm>_wood_<age>` / `<realm>_ore_<age>`. Hệ nhãn chất cũ
-// (QUALITY_LABEL_KEYS/DATA_QUALITY_LABELS/qualityRank) đã bị xóa cùng
-// id phẩm hoang..tien. Vẫn gộp theo "họ" gỗ/quáng resourceKind+realmId,
-// badge hiện bậc tuổi cao nhất đang sở hữu.
+// gp123 6E (task C2): Go/Quang dung CUNG truc tuoi voi Linh Thao - id
+// `<realm>_wood_<age>` / `<realm>_ore_<age>`. He nhan chat cu
+// (QUALITY_LABEL_KEYS/DATA_QUALITY_LABELS/qualityRank) da bi xoa cung
+// id pham hoang..tien. Van gop theo "ho" go/quang resourceKind+realmId,
+// badge hien bac tuoi cao nhat dang so huu.
 
 const REALM_NAME_BY_ID: Readonly<Record<string, string>> = Object.fromEntries(
   REALMS.map((realm) => [realm.id, realm.name]),
@@ -60,7 +60,7 @@ export function realmLabel(realmId: string): string {
   return REALM_NAME_BY_ID[realmId] ?? realmId
 }
 
-/** Normalize tên tìm kiếm: lowercase + bỏ dấu tiếng Việt (NFD strip). */
+/** Normalize ten tim kiem: lowercase + bo dau tieng Viet (NFD strip). */
 export function normalizeSearchText(value: string): string {
   return value
     .normalize('NFD')
@@ -68,7 +68,7 @@ export function normalizeSearchText(value: string): string {
     .toLowerCase()
 }
 
-/** Số niên đại để chọn badge "rộng nhất" — thiếu meta xếp thấp nhất. */
+/** So nien dai de chon badge "rong nhat" - thieu meta xep thap nhat. */
 export function ageRank(age: string | undefined): number {
   switch (age) {
     case 'decade': return 0
@@ -81,9 +81,9 @@ export function ageRank(age: string | undefined): number {
 }
 
 /**
- * Rank biến thể DÙNG CHUNG cho mọi kiểu họ gộp (thảo/gỗ/quáng theo tuổi)
- * — biến thể "cao nhất" làm đại diện icon/tooltip và badge. Material
- * không có age (vd. material legacy) xếp thấp nhất (-1).
+ * Rank bien the DUNG CHUNG cho moi kieu ho gop (thao/go/quang theo tuoi)
+ * - bien the "cao nhat" lam dai dien icon/tooltip va badge. Material
+ * khong co age (vd. material legacy) xep thap nhat (-1).
  */
 export function variantRank(material: Material): number {
   const meta = material.profession
@@ -91,17 +91,17 @@ export function variantRank(material: Material): number {
   return meta?.age !== undefined ? ageRank(meta.age) : -1
 }
 
-/** Prefix tuổi của tên material ("Thập Niên Linh Mộc" → "Thập Niên") — tên data GỐC vi, dùng để strip prefix khi hiện tên gốc họ. */
+/** Prefix tuoi cua ten material ("Thap Nien Linh Moc" -> "Thap Nien") - ten data GOC vi, dung de strip prefix khi hien ten goc ho. */
 function variantLabel(material: Material): string | undefined {
   const meta = material.profession
 
   return meta?.age !== undefined ? dataAgeLabel(meta.age, material.years) : undefined
 }
 
-// ===== Bảng nhãn DATA (vi gốc) — KHÔNG phải UI label: tên material trong
-// registry có dạng "<Tuổi> <Tên gốc>" (materials.ts), variantLabel chỉ
-// dùng để tách prefix đó. Nhãn HIỂN THỊ cho user đi qua locale key
-// (ageLabelKey + t() ở consumer). =====
+// ===== Bang nhan DATA (vi goc) - KHONG phai UI label: ten material trong
+// registry co dang "<Tuoi> <Ten goc>" (materials.ts), variantLabel chi
+// dung de tach prefix do. Nhan HIEN THI cho user di qua locale key
+// (ageLabelKey + t() o consumer). =====
 
 const DATA_AGE_LABELS: Record<string, string> = {
   decade: 'Thập Niên',
@@ -120,10 +120,10 @@ function dataAgeLabel(age: string, years: number | undefined): string | undefine
 }
 
 /**
- * Tên GỐC của họ (bỏ prefix tuổi) — tên material giờ có dạng
- * "<Tuổi> <Tên gốc>" (spec 2026-08-30-unify-material-quality-names);
- * ô gộp họ hiển thị tên gốc, tuổi/chất đã có trong badge nên không
- * lặp. Material legacy không khớp prefix nào giữ nguyên tên.
+ * Ten GOC cua ho (bo prefix tuoi) - ten material gio co dang
+ * "<Tuoi> <Ten goc>" (spec 2026-08-30-unify-material-quality-names);
+ * o gop ho hien thi ten goc, tuoi/chat da co trong badge nen khong
+ * lap. Material legacy khong khop prefix nao giu nguyen ten.
  */
 export function baseNameFor(material: Material): string {
   const label = variantLabel(material)
@@ -135,7 +135,7 @@ export function baseNameFor(material: Material): string {
   return material.name
 }
 
-/** Khoá gộp họ: thảo theo herbBaseId, gỗ/quáng theo resourceKind+realmId — undefined nếu không gộp. */
+/** Khoa gop ho: thao theo herbBaseId, go/quang theo resourceKind+realmId - undefined neu khong gop. */
 function familyKeyFor(material: Material): string | undefined {
   const meta = material.profession
 
@@ -159,7 +159,7 @@ export interface HerbVariant {
 export interface HerbFamilyGroup {
   herbBaseId: string
 
-  /** Tên hiển thị lấy từ biến thể đầu tiên gặp. */
+  /** Ten hien thi lay tu bien the dau tien gap. */
   name: string
 
   realmId: string
@@ -167,23 +167,23 @@ export interface HerbFamilyGroup {
   variants: HerbVariant[]
 
   /**
-   * Badge: "Phàm Nhân · Thập Niên" (niên đại rộng nhất họ) — GHÉP SẴN
-   * vi data realm + KEY locale bậc tuổi ("{realm} · {badgeKey}") để
-   * consumer t() 1 lần; bậc chỉ có suffix số năm thì giữ nguyên số.
+   * Badge: "Pham Nhan * Thap Nien" (nien dai rong nhat ho) - GHEP SAN
+   * vi data realm + KEY locale bac tuoi ("{realm} * {badgeKey}") de
+   * consumer t() 1 lan; bac chi co suffix so nam thi giu nguyen so.
    */
   badgeLabel: string
 }
 
 export interface FilteredMaterial {
-  /** Khóa ổn định cho grid — material riêng hoặc herbBaseId của họ. */
+  /** Khoa on dinh cho grid - material rieng hoac herbBaseId cua ho. */
   key: string
 
   material: Material
 
-  /** Tổng amount của họ thảo (cộng dồn biến thể). */
+  /** Tong amount cua ho thao (cong don bien the). */
   amount: number
 
-  /** Họ thảo đã gộp — render thành 1 ô thay cho nhiều biến thể. */
+  /** Ho thao da gop - render thanh 1 o thay cho nhieu bien the. */
   family?: HerbFamilyGroup
 }
 
@@ -194,13 +194,13 @@ export interface BagFilterOptions {
 }
 
 export interface BagFilterState {
-  /** Item đã lọc + gộp họ thảo — đưa thẳng vào sort/pagination sau đó. */
+  /** Item da loc + gop ho thao - dua thang vao sort/pagination sau do. */
   filtered: ComputedRef<FilteredMaterial[]>
 
-  /** Số ô hiển thị sau lọc/gộp — đếm UI. */
+  /** So o hien thi sau loc/gop - dem UI. */
   visibleCount: ComputedRef<number>
 
-  /** Có đang áp dụng filter nào không (search hoặc nhóm khác 'all'). */
+  /** Co dang ap dung filter nao khong (search hoac nhom khac 'all'). */
   isFiltering: ComputedRef<boolean>
 
   clear: () => void
@@ -234,22 +234,22 @@ export function useBagFilter(
     const grouped = new Map<string, FilteredMaterial>()
 
     for (const entry of entries.value) {
-      // Filter nhóm trước.
+      // Filter nhom truoc.
       const group = toMaterialGroup(entry.material.category)
 
       if (activeGroup.value !== 'all' && group !== activeGroup.value) {
         continue
       }
 
-      // Search theo tên (đã normalize bỏ dấu).
+      // Search theo ten (da normalize bo dau).
       if (query && !normalizeSearchText(entry.material.name).includes(query)) {
         continue
       }
 
       const meta = entry.material.profession
 
-      // Gộp theo HỌ: thảo theo herbBaseId, gỗ/quáng theo resourceKind+
-      // realmId — material legacy không có meta đi theo đường riêng.
+      // Gop theo HO: thao theo herbBaseId, go/quang theo resourceKind+
+      // realmId - material legacy khong co meta di theo duong rieng.
       const familyKey = familyKeyFor(entry.material)
 
       if (familyKey) {
@@ -285,8 +285,8 @@ export function useBagFilter(
       })
     }
 
-    // Badge tính SAU khi gộp đủ biến thể — niên đại rộng nhất của họ,
-    // đúng cả khi biến thể đến theo thứ tự niên đại bất kỳ.
+    // Badge tinh SAU khi gop du bien the - nien dai rong nhat cua ho,
+    // dung ca khi bien the den theo thu tu nien dai bat ky.
     const result = Array.from(grouped.values())
 
     for (const item of result) {

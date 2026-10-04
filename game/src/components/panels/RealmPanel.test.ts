@@ -50,10 +50,10 @@ describe('RealmPanel', () => {
   it('chỉ còn nút đại cảnh giới — tiểu cảnh giới tự tăng khi đủ tu vi', async () => {
     const mounted = mountRealmPanel()
     const ritualButton = () => mounted.container.querySelector<HTMLButtonElement>(
-      '.realm-panel__actions button',
+      '.realm-cta',
     )!
     const actionLabels = () => Array.from(
-      mounted.container.querySelectorAll<HTMLButtonElement>('.realm-panel__actions button'),
+      mounted.container.querySelectorAll<HTMLButtonElement>('.realm-cta'),
       button => button.textContent?.trim(),
     )
 
@@ -86,8 +86,9 @@ describe('RealmPanel', () => {
     mounted.player.realmId = 'foundation_establishment'
     await nextTick()
 
-    expect(actionLabels()).toEqual(['Kim Đan'])
-    expect(ritualButton().disabled).toBe(true)
+    // BETA SCOPE LOCK v2 (Phase-6): Truc Co -> Kim Dan is beyond the
+    // release ceiling, so no major-breakthrough CTA renders at all.
+    expect(actionLabels()).toEqual([])
     mounted.unmount()
   })
 
@@ -98,11 +99,11 @@ describe('RealmPanel', () => {
   it('hiển thị đúng 2 dòng điều kiện Trúc Cơ cho qi_refining, cập nhật trạng thái trực tiếp', async () => {
     const mounted = mountRealmPanel()
     const reqRows = () => Array.from(
-      mounted.container.querySelectorAll<HTMLElement>('.realm-requirement'),
+      mounted.container.querySelectorAll<HTMLElement>('.realm-breakthrough .realm-values > div'),
     )
-    const rowMet = (el: HTMLElement) => el.classList.contains('realm-requirement--met')
+    const rowMet = (el: HTMLElement) => el.classList.contains('met')
     const rowLabel = (el: HTMLElement) =>
-      (el.textContent ?? '').replace(/^[✓✗]/, '').replace(/\s+/g, ' ').trim()
+      (el.querySelector('dt')?.textContent ?? '').replace(/\s+/g, ' ').trim()
 
     // Mortal surfaces the Quan Khi level gate (ui-audit progression fix).
     expect(reqRows()).toHaveLength(1)
@@ -121,10 +122,9 @@ describe('RealmPanel', () => {
     expect(rowLabel(reqRows()[1]!)).toBe('Chương 10 hoàn thành')
     expect(rowMet(reqRows()[1]!)).toBe(false)
 
-    // Spec v2 sec.3.2: the block lives INSIDE realm-panel__actions, under
-    // the breakthrough button.
-    const block = mounted.container.querySelector<HTMLElement>('.realm-requirements')!
-    expect(block.parentElement?.classList.contains('realm-panel__actions')).toBe(true)
+    // The requirements block lives INSIDE the detail rail above the CTA.
+    const block = mounted.container.querySelector<HTMLElement>('.realm-breakthrough')!
+    expect(block.parentElement?.classList.contains('realm-details')).toBe(true)
 
     mounted.player.completedStageIds = ['qi_refining_abyssal_pool']
     await nextTick()
@@ -144,7 +144,7 @@ describe('RealmPanel', () => {
     mounted.player.realmLevel = 12
     await nextTick()
 
-    const block = mounted.container.querySelector<HTMLElement>('.realm-requirements')!
+    const block = mounted.container.querySelector<HTMLElement>('.realm-breakthrough')!
     expect(block).not.toBeNull()
     const text = block.textContent ?? ''
     for (const hidden of [
@@ -156,4 +156,5 @@ describe('RealmPanel', () => {
 
     mounted.unmount()
   })
+
 })

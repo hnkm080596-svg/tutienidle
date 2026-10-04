@@ -7,7 +7,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
-// Phap Tu Reimagined Task 11 (plan Task 10) — the Phap Tu An kit:
+// Phap Tu Reimagined Task 11 (plan Task 10) - the Phap Tu An kit:
 // van_phap_tuy_tam (basic) composite-picks uniformly among the element
 // basics and resolves AS the pick; da_phap_lien_tuyen (special) repeats
 // the pick exactly X times via follow-up executions; ngo_dao_hon_don
@@ -42,7 +42,7 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
   return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-/** Five distinct element-basic payloads — ids/damage identify the pick. */
+/** Five distinct element-basic payloads - ids/damage identify the pick. */
 const ELEMENT_POOL: readonly TurnSkillDefinition[] = ['fire', 'water', 'wood', 'metal', 'earth'].map(
   (element, index) => ({
     id: `${element}_basic`,
@@ -79,7 +79,7 @@ const ENEMY_BASIC: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
-/** Scripted rng — draws consumed in call order. */
+/** Scripted rng - draws consumed in call order. */
 function scriptedRng(...values: number[]): () => number {
   let index = 0
 
@@ -89,7 +89,7 @@ function scriptedRng(...values: number[]): () => number {
 function harness(rng: () => number = () => 0.5) {
   const player = createCombatant('player')
   const enemyEntity = createCombatant('enemy')
-  // Multi-hit chains (repeat + multicast) accumulate real damage — the
+  // Multi-hit chains (repeat + multicast) accumulate real damage - the
   // enemy needs a huge STAT maxHp (refreshParticipantStats clamps
   // entity.maxHp/currentHp to stats.maxHp) to survive the whole storm.
   enemyEntity.baseStats = { ...enemyEntity.baseStats, maxHp: 1_000_000_000 }
@@ -181,7 +181,7 @@ describe('An kit — repeat casts (da_phap_lien_tuyen)', () => {
   it('repeat executions never roll multicast (P15) — only the original cast chains', () => {
     // Authored with BOTH fields: the original composite cast rolls the
     // full multicast chain (3 extras at chance:1), while each repeat fire
-    // must roll NOTHING — if repeats could roll, each would add its own
+    // must roll NOTHING - if repeats could roll, each would add its own
     // 3-deep chain and the multiset below would grow.
     const special: TurnSkillDefinition = {
       ...AN_SPECIAL,
@@ -198,7 +198,7 @@ describe('An kit — repeat casts (da_phap_lien_tuyen)', () => {
       sources.push(step.execution?.source)
     }
 
-    // 1 original + 2 repeats + exactly 3 multicast extras (depth cap) —
+    // 1 original + 2 repeats + exactly 3 multicast extras (depth cap) -
     // repeats contributed zero rolls.
     expect(sources).toEqual([
       'composite',
@@ -246,14 +246,14 @@ describe('An kit — multicast (ngo_dao_hon_don)', () => {
       sources.push(step.execution?.source)
     }
 
-    // Player keeps taking normal casts (speed 100 vs enemy 1) — the
+    // Player keeps taking normal casts (speed 100 vs enemy 1) - the
     // assertion is that NONE of them spawn a multicast-sourced step.
     expect(sources).not.toContain('multicast')
     expect(sources.every((source) => source === 'composite')).toBe(true)
   })
 
   it('a miss below chance rolls again on each multicast until it fails', () => {
-    // chance 0.5 — rolls: 0.4 hit, 0.4 hit, 0.9 miss -> 2 extra executions.
+    // chance 0.5 - rolls: 0.4 hit, 0.4 hit, 0.9 miss -> 2 extra executions.
     const basic: TurnSkillDefinition = {
       ...AN_BASIC,
       multicast: { chance: 0.5, maxExtraCasts: 3 },

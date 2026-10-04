@@ -1,12 +1,12 @@
 <script setup lang="ts">
-// Slice 7 extension (Completion Task 11) - battle log panel: nhật ký text
-// từng lượt (turn-based rất hợp log rời rạc). Newest-last theo thứ tự
-// append; giới hạn hiển thị 30 dòng cuối để không phình DOM.
+// Slice 7 extension (Completion Task 11) - battle log panel: nhat ky text
+// tung luot (turn-based rat hop log roi rac). Newest-last theo thu tu
+// append; gioi han hien thi 30 dong cuoi de khong phinh DOM.
 //
-// UI-013/Task 8 (2026-09-07) — dock mép phải đè lên log (z stacking đã
-// xác nhận ở 9.7): log giờ CÓ nút collapse (che/bung) để người chơi tự
-// giải phóng vùng nhìn khi dock che; đóng mặc định khi trận đấu bắt đầu
-// bù look, log vẫn đầy đủ khi bung. Long message tự wrap (UI-006).
+// UI-013/Task 8 (2026-09-07) - dock mep phai de len log (z stacking da
+// xac nhan o 9.7): log gio CO nut collapse (che/bung) de nguoi choi tu
+// giai phong vung nhin khi dock che; dong mac dinh khi tran dau bat dau
+// bu look, log van day du khi bung. Long message tu wrap (UI-006).
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
@@ -18,7 +18,7 @@ const MAX_VISIBLE = 30
 
 const { isBattleFighting, logEntries, participantNameOf } = useTurnBattleInfo()
 const { t } = useI18n()
-// ARCH-005 (M12): battle.log is append-only MUTATED in place — logEntries
+// ARCH-005 (M12): battle.log is append-only MUTATED in place - logEntries
 // resolves to the same array reference on every version bump, so a
 // computed chained on it alone is never re-invalidated (log panel could
 // stay hidden/frozen while entries accumulate). Read the version signal
@@ -86,12 +86,14 @@ function describe(entry: BattleLogEntry): string {
 </template>
 
 <style scoped>
+/* Anchored inside the spec battle-log region (CombatLogFeed owns
+   the 1330/620/326/280 placement). */
 .battle-log-panel {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  max-width: 260px;
-  max-height: 200px;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -129,7 +131,7 @@ function describe(entry: BattleLogEntry): string {
 .battle-log-panel__line {
   margin: 0;
   text-shadow: 0 1px 2px rgb(0 0 0 / 80%);
-  /* UI-006 — message dài (skill name/i18n) wrap, không tràn panel. */
+  /* UI-006 - message dai (skill name/i18n) wrap, khong tran panel. */
   overflow-wrap: anywhere;
 }
 </style>

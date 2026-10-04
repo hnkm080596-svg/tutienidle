@@ -1,16 +1,25 @@
 import { rollCharacterCreationTalents } from '@/data/talent/Talents'
+import { isBetaCreationTalentId } from '@/core/betaScope'
 import {
+  CHARACTER_CREATION_ROLL_SIZE,
   validateCharacterCreationDraft,
   type CharacterCreationDraft,
   type CharacterCreationService,
   type CharacterCreationValidation,
 } from './CharacterCreationService'
 
-class MockCharacterCreationService implements CharacterCreationService {
+export class MockCharacterCreationService implements CharacterCreationService {
   private availableTalentIds = new Set<string>()
 
   async rollTalents() {
+    // Beta scope: the offer list is produced here at the service seam -
+    // the roll can only return beta-admitted talents, so the UI never
+    // filters the registry itself.
+    // Offer = first ROLL_SIZE of the weighted no-replacement roll, after
+    // the beta filter so a non-beta pool hit can never shrink the offer.
     const talents = rollCharacterCreationTalents()
+      .filter(talent => isBetaCreationTalentId(talent.id))
+      .slice(0, CHARACTER_CREATION_ROLL_SIZE)
     this.availableTalentIds = new Set(talents.map(talent => talent.id))
     return talents
   }

@@ -6,7 +6,7 @@ import { SkillSystem } from './SkillSystem'
 import { createDefaultPlayer } from '../player/Player'
 import { TALENT_PASSIVE_SKILLS } from '@/data/skill/TalentPassives'
 
-// Talent v4 M2 — Pha Giap carry (spec §4.1 row 2, §7): victory banks
+// Talent v4 M2 - Pha Giap carry (spec sec4.1 row 2, sec7): victory banks
 // floor(stacks * 0.5) into player.phaGiapCarryStacks (+ the realm the
 // bank was earned in); the next battle re-seeds them onto the bound
 // passive; a realm change decays the bank to 0.

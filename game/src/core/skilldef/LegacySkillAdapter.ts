@@ -394,7 +394,7 @@ function adaptDamageOp(
   reportPrefix: string,
 ): Extract<AuthoredSkillOperation, { type: 'deal_damage' }> {
   const info = def.damage!
-  // M-QI-05 / QI-D3 — native defs carry a CONSTANT multiplier; when the
+  // M-QI-05 / QI-D3 - native defs carry a CONSTANT multiplier; when the
   // authored levelScaling metadata is present the adapter wraps it in
   // the canonical-level expression:
   //   multiplier x (1 + (max(1, skill_level) - 1) x levelScaling)
@@ -876,24 +876,24 @@ function buffList(def: TurnSkillDefinition): readonly TurnSkillBuffApplication[]
 // SkillSystem.getEffectiveSkill(); this function reads only the already-
 // resolved EffectiveSkill output.
 //
-// Strictness contract (spec §4.2):
+// Strictness contract (spec sec4.2):
 // - Explicit targetScope: 'self' vs 'enemy'.
 // - Pure buff skills ('self' with buff effects) have NO damage.
 // - Multiple debuffs and add_stack folding are mapped into appliesAilments.
 // - Leech healing (healPercentOfDamage) is preserved.
 // - Fails explicitly with an Error on unsupported effect types or invalid
-//   configurations — never silently degrades to physical ×1 might.
+//   configurations - never silently degrades to physical x1 might.
 //
-// M10 (ARCH-008) — two extensions:
+// M10 (ARCH-008) - two extensions:
 // - `appliesBuff.duration` carries the authored effect-level duration
 //   override (duong_linh_tuyen: 8 turns instead of the registry's 6).
 // - Trigger-migrated skills (tram) express their strike as a single
 //   onCast -> dealDamage binding instead of a 'damage' effect; that exact
-//   shape converts to `damage`. Anything richer throws — the engine has
+//   shape converts to `damage`. Anything richer throws - the engine has
 //   no trigger runtime.
 // - Field-level authored data the engine cannot execute (proc-grant
 //   counters, multi-hit, zone spawning, spread, ...) is REPORTED through
-//   collectUnsupportedSkillSemantics() — never silently dropped (A8).
+//   collectUnsupportedSkillSemantics() - never silently dropped (A8).
 // ---------------------------------------------------------------------------
 
 const SUPPORTED_EFFECT_TYPES = new Set(['damage', 'debuff', 'buff', 'add_stack'])
@@ -904,7 +904,7 @@ const UNSUPPORTED_EFFECT_FIELDS = [
   'realmDamageRatio',
   'skillExperienceRatio',
   'stacksPerAffectedTarget',
-  // Mission C Task 10d — real authored fields (SkillEffect.ts:11,28;
+  // Mission C Task 10d - real authored fields (SkillEffect.ts:11,28;
   // PhapTuChainSkills.ts) that the turn engine cannot execute; report
   // them instead of silently dropping.
   'scope',
@@ -928,7 +928,7 @@ const UNSUPPORTED_DEAL_DAMAGE_FIELDS = [
 ] as const
 
 /**
- * M10 (ARCH-008) — lists authored fields on the resolved skill that the
+ * M10 (ARCH-008) - lists authored fields on the resolved skill that the
  * turn engine cannot execute. Callers report these (warn/log) instead of
  * discovering them silently. Keys are stable dotted paths.
  */
@@ -985,9 +985,9 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
   let damage: ActionDamageInfo | undefined
 
   if (damageEffect) {
-    // R3 re-audit (AR-03 gap) — attributeScaling/manaScalingRatio
+    // R3 re-audit (AR-03 gap) - attributeScaling/manaScalingRatio
     // were being silently dropped here (only
-    // `.value` survived conversion), so every Pháp Tu skill's
+    // `.value` survived conversion), so every Phap Tu skill's
     // authored scaling had zero effect once cast through the turn
     // engine. `undefined` when the skill authors none, so unaffected
     // skills produce an identical damage shape to before.
@@ -1006,7 +1006,7 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
       damage = { kind: 'physical', multiplier: damageEffect.value ?? 1, scaling }
     }
   } else {
-    // M10 (ARCH-008) — trigger-migrated skills (tram) express their strike
+    // M10 (ARCH-008) - trigger-migrated skills (tram) express their strike
     // as onCast -> dealDamage rather than a 'damage' effect. Only the
     // exact single-binding/single-action shape converts; richer kits throw.
     damage = resolveTriggerDamage(skill, effective)
@@ -1072,7 +1072,7 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
     turnSkill.appliesBuffs = [{
       definitionId: buffEffect.buffId,
       target: isSelf ? 'self' : 'action_targets',
-      // M10 (ARCH-008) — authored duration override (e.g. duong_linh_tuyen
+      // M10 (ARCH-008) - authored duration override (e.g. duong_linh_tuyen
       // spec: 8) must reach BuffSystem.apply; without it the registry
       // default silently wins (5.988 instead of 7.984 under resist 0.998).
       ...(buffEffect.duration !== undefined ? { durationOverride: buffEffect.duration } : {}),
@@ -1118,10 +1118,10 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
 }
 
 /**
- * M10 (ARCH-008) — converts a trigger-migrated strike (tram's onCast ->
+ * M10 (ARCH-008) - converts a trigger-migrated strike (tram's onCast ->
  * dealDamage) into ActionDamageInfo. Strict shape: exactly one onCast
  * binding with exactly one dealDamage action. Returns undefined when the
- * skill declares no triggers at all; throws on any richer shape — the
+ * skill declares no triggers at all; throws on any richer shape - the
  * engine has no trigger runtime, so degrading would silently corrupt.
  */
 function resolveTriggerDamage(skill: Skill, effective: EffectiveSkill): ActionDamageInfo | undefined {

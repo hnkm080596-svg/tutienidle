@@ -2,11 +2,11 @@ import type { EquipmentInstance } from './EquipmentInstance'
 import type { StatModifier } from '../stats/StatCalculator'
 
 /**
- * M2 (ARCH-011) — detached issued-at shape of one EquipmentInstance.
+ * M2 (ARCH-011) - detached issued-at shape of one EquipmentInstance.
  *
  * A paid generated operation (Tinh Luyen values, Tay Luyen affixes) is
  * bound to ONE item lifetime: the exact live object in the bag, its
- * membership generation (EquipmentBag.getMembershipGeneration — the
+ * membership generation (EquipmentBag.getMembershipGeneration - the
  * exact-object capability), and this snapshot of every field the commit
  * path observes. If anything between preview and commit mutates the
  * item (affix/grade/quality/lock/favorite/forge budget/...) or swaps
@@ -115,7 +115,7 @@ export function captureEquipmentInstanceSnapshot(
 
 /**
  * True when `instance` still matches the issued-at snapshot field for
- * field. Identity/generation are NOT checked here — callers compare
+ * field. Identity/generation are NOT checked here - callers compare
  * `pending.instance === instance` and the bag membership generation
  * separately (the snapshot is a value; identity is a capability).
  */

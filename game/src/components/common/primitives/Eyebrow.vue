@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Primitive section title — chữ uppercase letter-spacing dùng làm eyebrow
-// cho mọi nhóm nội dung (đang lặp ~25 chỗ với tracking .02–.13em tùy nơi,
-// chuẩn hóa về --eyebrow-tracking default .04em).
+// Primitive section title - chu uppercase letter-spacing dung lam eyebrow
+// cho moi nhom noi dung (dang lap ~25 cho voi tracking .02-.13em tuy noi,
+// chuan hoa ve --eyebrow-tracking default .04em).
 withDefaults(defineProps<{
   as?: 'h3' | 'h4' | 'h5' | 'span' | 'p'
   tone?: 'chrome' | 'muted' | 'inherit'
@@ -28,15 +28,15 @@ export default { name: 'Eyebrow' }
   letter-spacing: var(--eyebrow-tracking, 0.04em);
   font-size: var(--text-sm);
   font-weight: 700;
-  font-family: var(--font-body);
+  font-family: var(--hk-font-ui);
 }
 
 .eyebrow--chrome {
-  color: var(--paper-eyebrow);
+  color: var(--hk-gold);
 }
 
 .eyebrow--muted {
-  color: var(--paper-text-muted);
+  color: var(--hk-text-muted);
 }
 
 .eyebrow--inherit {

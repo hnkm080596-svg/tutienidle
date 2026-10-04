@@ -1,4 +1,4 @@
-// M1 (ARCH-001) — the save/restore boundary contract, exercised through
+// M1 (ARCH-001) - the save/restore boundary contract, exercised through
 // the real GameManager + real catalogs (not helper-level checks):
 //  - every payload slice REPLACES the owner's live set (no additive merge)
 //  - absent/empty slices reset to defaults
@@ -9,6 +9,16 @@
 //  - pending paid-op tickets (equipment wash/refine) die when the item set
 //    is replaced (the M2/ARCH-011 hook)
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { createPinia, setActivePinia } from 'pinia'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
@@ -27,12 +37,13 @@ import type { Skill } from '../skill/Skill'
 import type { Technique } from '../technique/Technique'
 import type { EquipmentSlotState } from '../equipment/EquipmentSlotState'
 import type { AlchemyJobSave } from '../../services/save/saveTypes'
+import { alchemyJobReservationDigest } from '../alchemy/AlchemySystem'
 import type { Quest } from '../quest/Quest'
 import { buildGameSave, restoreGameSession, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import { usePlayerStore } from '../../stores/player'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
-import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import { resolveProductionWorkerCapacity, getWorkerCapacityForLevel } from '../production/WorkerCapacity'
 import { getRealmIndex } from '../realm/realmSystem'
 
 function makeManager(): GameManager {
@@ -84,7 +95,7 @@ function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSa
   // path - a non-mortal realm fixture never carries a pick.
   if (save.player.realmId === 'mortal' && save.player.cultivationPath === undefined) {
     if (save.player.mortalBasicSkillId === undefined) {
-      save.player.mortalBasicSkillId = 'tram'
+      save.player.mortalBasicSkillId = 'linh_bao'
     }
     if (overrides.skills === undefined) {
       save.skills = [precursorSkillEntry(save.player.mortalBasicSkillId)]
@@ -193,15 +204,34 @@ const SAVED_SLOT_STATE: EquipmentSlotState = {
   enhanceFailStreak: 2,
 }
 
-const FUTURE_JOB: AlchemyJobSave = {
-  jobId: 'saved-job',
-  recipeId: 'saved-recipe',
-  pillId: pills[0]!.id,
-  herbMaterialId: 'saved-herb',
-  startedAtMs: Date.now(),
-  completesAtMs: Date.now() + 86_400_000, // far future — never settles during the test
-  roomLevelAtStart: 1,
-}
+const FUTURE_JOB: AlchemyJobSave = (() => {
+  const jobFields = {
+    jobId: 'saved-job',
+    recipeId: 'saved-recipe',
+    pillId: pills[0]!.id,
+    herbMaterialId: 'saved-herb',
+    startedAtMs: Date.now(),
+    completesAtMs: Date.now() + 86_400_000, // far future - never settles during the test
+    roomLevelAtStart: 1,
+  }
+  const reservation = {
+    woodId: 'saved-wood',
+    fuelWoodAmount: 1,
+    spiritStoneCost: 0,
+    herbAmount: 1,
+    specialIngredients: [] as { materialId: string; amount: number }[],
+    costScale: 1,
+    digest: 0,
+  }
+
+  return {
+    ...jobFields,
+    reservation: {
+      ...reservation,
+      digest: alchemyJobReservationDigest(jobFields, reservation),
+    },
+  }
+})()
 
 function savedItem(instanceId = 'saved-item'): ReturnType<typeof makeInstance> {
   return makeInstance({
@@ -404,6 +434,7 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
       active: [],
       completedOnceIds: [],
       lastDailyResetAtMs: 0,
+      questFlags: [],
     })
   })
 
@@ -464,7 +495,7 @@ describe('M1 (ARCH-001) — the input save is a value', () => {
     const player = createDefaultPlayer()
 
     // A legacy-shaped skill (no `execution`) triggers the template
-    // backfill path — the write must land on a detached copy.
+    // backfill path - the write must land on a detached copy.
     const legacySkill = structuredClone(SKILLS.find((skill) => skill.id === 'tram') ?? SKILLS[0]!)
     delete legacySkill.execution
     legacySkill.name = 'stale saved name'
@@ -570,7 +601,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     manager.saveOps.restoreFromSave(save)
     const first = liveSnapshot(manager)
 
-    // Identical payload again — the identity guard converges.
+    // Identical payload again - the identity guard converges.
     manager.saveOps.restoreFromSave(save)
     expect(liveSnapshot(manager)).toEqual(first)
     expect(manager.equipmentBag.getAll()).toHaveLength(1)
@@ -610,7 +641,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     manager.setActivePlayer(player)
     const save = populatedSave(manager, player)
 
-    // Inject a one-shot fault into the buildings slice owner — slices
+    // Inject a one-shot fault into the buildings slice owner - slices
     // restored earlier in the chain (skills, bags, equipment) have
     // already applied when it throws.
     vi.spyOn(manager.buildingManager, 'restore').mockImplementationOnce(() => {
@@ -620,7 +651,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow('injected mid-restore failure')
 
     // Partial apply is observable, and the payload must NOT be marked
-    // applied — the retry below has to run the full restore again.
+    // applied - the retry below has to run the full restore again.
     expect(manager.materialBag.getAmount(materials[0]!.id)).toBe(7)
     expect(manager.buildingManager.getAll()).toEqual([])
 
@@ -628,7 +659,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
 
     expect(Array.isArray(modifiers)).toBe(true)
     expect(manager.buildingManager.getAll().map((instance) => instance.instanceId)).toEqual(['b1'])
-    // Retry re-applied from cleared state — no doubled materials.
+    // Retry re-applied from cleared state - no doubled materials.
     expect(manager.materialBag.getAmount(materials[0]!.id)).toBe(7)
     expect(manager.skillManager.getAll().map((skill) => skill.id)).toEqual(['saved_skill'])
     expect(manager.equipmentBag.getAll().map((instance) => instance.instanceId)).toEqual(['saved-item'])
@@ -653,11 +684,45 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     expect(first.status).toBe('rejected')
 
     // The player slice already applied+committed; the manager payload did
-    // not — retry must run the manager restore, not skip it.
+    // not - retry must run the manager restore, not skip it.
     const retry = restoreGameSession(playerStore, manager, save)
     expect(retry.status).toBe('ok')
-    expect(manager.buildingManager.getAll().map((instance) => instance.instanceId)).toEqual(['b1'])
+    // Default-built (2026-10-03) - the session seam grants every missing
+    // registered building at lv1, so the slice converges to the full
+    // catalog (the declared b1 plus the granted ids).
+    expect(manager.buildingManager.getAll().map((instance) => instance.instanceId)).toContain('b1')
+    expect(manager.buildingManager.getAll().map((instance) => instance.buildingId).sort()).toEqual(
+      buildings.map((entry) => entry.id).sort(),
+    )
     expect(playerStore.name).toBe(save.player.name)
+  })
+
+  it('restoreGameSession grants missing registered buildings at lv1 (default-built, idempotent)', () => {
+    setActivePinia(createPinia())
+    const playerStore = usePlayerStore()
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    // Old-save shape: the buildings slice predates the default-built
+    // world - every registered building must appear at lv1 on load.
+    const save = populatedSave(manager, player)
+    save.buildings = []
+
+    const result = restoreGameSession(playerStore, manager, save)
+    expect(result.status).toBe('ok')
+
+    const ids = manager.buildingManager.getAll().map((instance) => instance.buildingId).sort()
+    expect(ids).toEqual(buildings.map((entry) => entry.id).sort())
+    for (const instance of manager.buildingManager.getAll()) {
+      expect(instance.level).toBe(1)
+    }
+
+    // A carried instance keeps its level - grant is fill-only, not reset.
+    const save2 = populatedSave(manager, player)
+    save2.buildings = [{ instanceId: 'chq-2', buildingId: 'chi_hien_quan', level: 5, lastCollectedAt: 0 }]
+    expect(restoreGameSession(playerStore, manager, save2).status).toBe('ok')
+    expect(manager.buildingManager.getByBuildingId('chi_hien_quan')!.level).toBe(5)
+    expect(playerStore.autoWorkerCapacity).toBe(getWorkerCapacityForLevel(5))
   })
 })
 
@@ -678,10 +743,10 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     // and the canonical core grant alongside them (three-channel write).
     // Direct fixture writes - this manager registers no progression
     // nodes, so the learn op cannot run here.
-    player.mortalBasicSkillId = 'tram'
-    player.nodeLevels['core_tram'] = 1
-    player.purchasedNodeIds.push('core_tram')
-    manager.skillManager.add(precursorSkillEntry('tram'))
+    player.mortalBasicSkillId = 'linh_bao'
+    player.nodeLevels['core_linh_bao'] = 1
+    player.purchasedNodeIds.push('core_linh_bao')
+    manager.skillManager.add(precursorSkillEntry('linh_bao'))
     const save = seedWashableItem(manager, player)
 
     const preview = manager.equipmentOps.previewWashItem('wash-boundary-item')
@@ -690,7 +755,7 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     manager.saveOps.restoreFromSave(save)
 
     // The item still exists post-restore, so the rejection proves the
-    // ticket was invalidated — not that the item went missing.
+    // ticket was invalidated - not that the item went missing.
     expect(manager.equipmentBag.has('wash-boundary-item')).toBe(true)
     expect(manager.equipmentOps.commitWashItem('wash-boundary-item', preview.ticketId!)).toEqual({
       ok: false,
@@ -698,7 +763,7 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     })
   })
 
-  // M2 (ARCH-011 / AUD-E02) — the E02 loop through the real restore path:
+  // M2 (ARCH-011 / AUD-E02) - the E02 loop through the real restore path:
   // the payload carries the SAME instanceId but a different affix shape.
   // Restore replaces the bag with a detached clone (different object, new
   // membership generation), so the pre-restore paid roll must not land on
@@ -733,10 +798,10 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
   it('a session restore clears a pending refine preview — commit rejects invalid_refine_preview', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.mortalBasicSkillId = 'tram'
-    player.nodeLevels['core_tram'] = 1
-    player.purchasedNodeIds.push('core_tram')
-    manager.skillManager.add(precursorSkillEntry('tram'))
+    player.mortalBasicSkillId = 'linh_bao'
+    player.nodeLevels['core_linh_bao'] = 1
+    player.purchasedNodeIds.push('core_linh_bao')
+    manager.skillManager.add(precursorSkillEntry('linh_bao'))
     const save = seedWashableItem(manager, player)
 
     const preview = manager.equipmentOps.previewRefineItem('wash-boundary-item', [])
@@ -752,12 +817,12 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
   })
 })
 
-// Stat-key restore contract (post-Mission-G) — saves written before the
+// Stat-key restore contract (post-Mission-G) - saves written before the
 // stat-key rename keep legacy stat keys inside skills[] entries.
 // gradeEffects/combatModifiers/passiveModifiers/specializations are
 // authored data: restore re-derives them from the registered template
 // (same contract as name/description), so stale keys can't stay inert.
-// P7-M3 — a technique entry with NO registered template is no longer a
+// P7-M3 - a technique entry with NO registered template is no longer a
 // silent drop: the v70 holder contract rejects the whole save in the
 // preflight. Skills keep the drop rule.
 describe('stat-key handling on techniques[]/skills[] restore', () => {
@@ -765,7 +830,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     const manager = makeManager()
     const player = swordCommittedPlayer()
 
-    // Save authored with stale/unknown gradeEffects keys — restore must
+    // Save authored with stale/unknown gradeEffects keys - restore must
     // re-derive the authored table from the template, not trust the
     // persisted copy.
     const stale = structuredClone(SAVED_TECHNIQUE)
@@ -791,7 +856,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     )
     ;(legacy.passiveModifiers![0] as { stat: string }).stat = 'attack'
 
-    manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy, precursorSkillEntry('tram')] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy, precursorSkillEntry('linh_bao')] }))
 
     const restored = manager.skillManager.get('passive_linh_khi_cam_ung')!
     expect(restored.passiveModifiers![0]!.stat).toBe('might')
@@ -806,7 +871,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     const player = createDefaultPlayer()
 
     // Save written while da_phap_lien_tuyen was authored with an empty
-    // effects[] shell — the converter gate then rejects every An battle.
+    // effects[] shell - the converter gate then rejects every An battle.
     // effects is authored data, so restore must re-derive it from the
     // registered template like execution/targeting/passiveModifiers.
     const stale = structuredClone(
@@ -814,7 +879,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     )
     stale.effects = []
 
-    manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale, precursorSkillEntry('tram')] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale, precursorSkillEntry('linh_bao')] }))
 
     const restored = manager.skillManager.get('da_phap_lien_tuyen')!
     expect(restored.effects).toEqual(
@@ -839,12 +904,12 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
       },
     ]
 
-    // A valid sibling entry still restores — the drop is per-entry.
+    // A valid sibling entry still restores - the drop is per-entry.
     const validSkill = structuredClone(SAVED_SKILL)
 
     manager.saveOps.restoreFromSave(
       baseSave(player, {
-        skills: [orphanSkill, validSkill, precursorSkillEntry('tram')],
+        skills: [orphanSkill, validSkill, precursorSkillEntry('linh_bao')],
       }),
     )
 
@@ -853,7 +918,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
   })
 })
 
-// P7-M3 (v70) — technique holder contract preflight: 0-or-1 entries,
+// P7-M3 (v70) - technique holder contract preflight: 0-or-1 entries,
 // the single entry must equal the committed way's techniqueId, a
 // way-less player must carry none, and rank/mastery/grade/quality must
 // be valid (rank cap 10 => mastery 0). Every rejection happens BEFORE
@@ -1085,8 +1150,22 @@ describe('v75 technique gradeHistory coherence preflight', () => {
 // contract violation - reject, never silently default to tram). The
 // pick must also be LEARNED (id membership in the skills payload).
 describe('v82 mortalBasicSkillId preflight', () => {
-  it.each(['tram', 'linh_bao', 'huy_quyen'])(
-    'restores a mortal save carrying a learned, valid pick (%s)',
+  it('restores a mortal save carrying a learned, valid pick (linh_bao)', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.mortalBasicSkillId = 'linh_bao'
+    const save = baseSave(player, {
+      skills: [{ ...structuredClone(SAVED_SKILL), id: 'linh_bao' }],
+    })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
+  })
+
+  // BETA SCOPE LOCK v2: 'tram'/'huy_quyen' stay legal precursors but
+  // are never a legal pick - the only writable starter is the fixed
+  // beta constant, so a save carrying either pick fails closed.
+  it.each(['tram', 'huy_quyen'])(
+    'rejects a mortal save whose pick is the non-beta starter (%s)',
     (skillId) => {
       const manager = makeManager()
       const player = createDefaultPlayer()
@@ -1095,7 +1174,8 @@ describe('v82 mortalBasicSkillId preflight', () => {
         skills: [{ ...structuredClone(SAVED_SKILL), id: skillId }],
       })
 
-      expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
+      expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/beta starter/i)
+      expect(manager.skillManager.getAll()).toEqual([])
     },
   )
 
@@ -1125,11 +1205,11 @@ describe('v82 mortalBasicSkillId preflight', () => {
   it('rejects a learned pick missing its core grant', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.mortalBasicSkillId = 'tram'
+    player.mortalBasicSkillId = 'linh_bao'
     const save = baseSave(player, {
-      skills: [precursorSkillEntry('tram')],
+      skills: [precursorSkillEntry('linh_bao')],
     })
-    delete save.player.nodeLevels['core_tram']
+    delete save.player.nodeLevels['core_linh_bao']
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/missing core grant/i)
     expect(manager.skillManager.getAll()).toEqual([])
@@ -1153,7 +1233,7 @@ describe('v82 mortalBasicSkillId preflight', () => {
   it('rejects a post-path pick before any owner mutation', () => {
     const manager = makeManager()
     const player = swordCommittedPlayer()
-    player.mortalBasicSkillId = 'huy_quyen'
+    player.mortalBasicSkillId = 'linh_bao'
     const save = baseSave(player, {
       techniques: [structuredClone(SAVED_TECHNIQUE)],
       skills: [structuredClone(SAVED_SKILL)],
@@ -1173,9 +1253,9 @@ describe('v82 mortalBasicSkillId preflight', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
-    player.mortalBasicSkillId = 'tram'
+    player.mortalBasicSkillId = 'linh_bao'
     const save = baseSave(player, {
-      skills: [{ ...structuredClone(SAVED_SKILL), id: 'tram' }],
+      skills: [{ ...structuredClone(SAVED_SKILL), id: 'linh_bao' }],
     })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/missing cultivationPath/i)
@@ -1200,9 +1280,9 @@ describe('v82 mortalBasicSkillId preflight', () => {
   it('rejects a learned sibling precursor missing its core grant', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.mortalBasicSkillId = 'tram'
+    player.mortalBasicSkillId = 'linh_bao'
     const save = baseSave(player, {
-      skills: [precursorSkillEntry('tram'), precursorSkillEntry('linh_bao')],
+      skills: [precursorSkillEntry('linh_bao'), precursorSkillEntry('tram')],
     })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(
@@ -1240,7 +1320,7 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
     corrupt(player)
-    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('tram')] })
+    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('linh_bao')] })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/BodyProgression integrity/i)
     // Zero-mutation: preflight threw before the skills slice replaced
@@ -1259,6 +1339,9 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     // M-F-CHU-THIEN (C2C-64): opened meridians also need the completed
     // refinement predecessor (+ the mirrored bao grade) to stay
     // coherent; residue at 6/6 would itself be a violation.
+    // F-TC15 pacing: 2 openings producible in-page at realmLevel 4
+    // (doi_mach's authored requirement).
+    mid.realmLevel = 4
     mid.physiqueGrade = 'bao'
     mid.bodyProgression.body_refinement.completedTiers = 6
     mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
@@ -1276,6 +1359,9 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     // M-E (D2): the meridian progress below is only legit with the
     // qi_refining page unlocked. M-F-CHU-THIEN (C2C-64): it also needs
     // the completed refinement predecessor + mirrored bao grade.
+    // F-TC15 pacing: the single opening is producible at realmLevel
+    // 2 (nham_mach's authored requirement).
+    player.realmLevel = 2
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = ['nham_mach']
@@ -1395,7 +1481,7 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
     const crafted = swordCommittedPlayer()
     corrupt(crafted)
     const save = baseSave(crafted, {
-      skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('tram')],
+      skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('linh_bao')],
       techniques: [committedTechniqueSlice(crafted)],
     })
 

@@ -1,16 +1,16 @@
-// TranPhapCombatPreviewScene (Battlefield Slot spec, 2026-09-06) — thay
+// TranPhapCombatPreviewScene (Battlefield Slot spec, 2026-09-06) - thay
 // TranPhapPreviewScene (2026-09-06, formation combat preview tooling):
-// scene Phaser RIÊNG (Phaser.Game riêng, TextureManager riêng — không có
-// nguy cơ đụng key dù dùng lại ĐÚNG PLACEHOLDER_SHEET_KEY), nhưng giờ
-// implements CombatGridViewHost và dùng ĐÚNG CombatGridView mà combat
-// thật dùng (spec §4) — thay vì tự viết lại logic sprite/animation. Vẽ
-// lưới 3x3 standing-slot ở 2.5D perspective (isPerspective: true —
-// Battlefield Perspective Panel 2026-09-06) + 2 lớp nền sky/ground cho
-// art thật sau này. Tương tác kéo-thả KHÔNG nằm ở đây — canvas này thuần
-// hiển thị, overlay HTML trong suốt (TranPhapPanel.vue, không đổi) mới là
-// drop target thật.
+// scene Phaser RIENG (Phaser.Game rieng, TextureManager rieng - khong co
+// nguy co dung key du dung lai DUNG PLACEHOLDER_SHEET_KEY), nhung gio
+// implements CombatGridViewHost va dung DUNG CombatGridView ma combat
+// that dung (spec sec4) - thay vi tu viet lai logic sprite/animation. Ve
+// luoi 3x3 standing-slot o 2.5D perspective (isPerspective: true -
+// Battlefield Perspective Panel 2026-09-06) + 2 lop nen sky/ground cho
+// art that sau nay. Tuong tac keo-tha KHONG nam o day - canvas nay thuan
+// hien thi, overlay HTML trong suot (TranPhapPanel.vue, khong doi) moi la
+// drop target that.
 // Standing-slot rework (2026-09-07): grid resolution reads the shared
-// STANDING_SLOT_COUNT (3) from BattlefieldRegions — single source of
+// STANDING_SLOT_COUNT (3) from BattlefieldRegions - single source of
 // truth shared with FormationPlacement/EnemySpawnPlacement. Removed:
 // PREVIEW_CELL_SIZE, PREVIEW_GRID_SIZE, previewCellTopLeft() (dead code).
 import Phaser from 'phaser'
@@ -35,6 +35,7 @@ import type { FormationAssignmentsPayload } from '@/presentation/contracts/regio
 import { PLAYER_ID } from './combat/combatConstants'
 import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
 import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import type { LaneIndex } from '@/core/battle/BattleLane'
@@ -64,18 +65,18 @@ const PANEL_SKY_COLOR = 0x22283a
 const PANEL_GROUND_COLOR = 0x1a1a1a
 
 export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGridViewHost {
-  // Battlefield Perspective Panel (2026-09-06) — chuyển từ flat sang
+  // Battlefield Perspective Panel (2026-09-06) - chuyen tu flat sang
   // perspective; combat-grid-view.ts's applySpriteSize()/positionSprite()
-  // tự rẽ nhánh áp dụng applyEntityDepthScale() khi cờ này true (đã build
-  // sẵn từ Part 1, không cần sửa gì thêm ở 2 hàm đó).
+  // tu re nhanh ap dung applyEntityDepthScale() khi co nay true (da build
+  // san tu Part 1, khong can sua gi them o 2 ham do).
   readonly isPerspective = true
   projection: BattleGridProjection | undefined
   gridGraphics: Phaser.GameObjects.Graphics | undefined
   readonly usingArtBackdrop = false
-  // arenaRect luôn undefined ở panel (chỉ combat thật's flat mode dùng nó
-  // để CombatGridView.redrawGridLines() phân biệt flat/perspective qua
-  // Boolean(this.host.arenaRect) — panel LUÔN perspective nên giữ
-  // undefined là đúng, KHÔNG gán Rectangle nào vào field này).
+  // arenaRect luon undefined o panel (chi combat that's flat mode dung no
+  // de CombatGridView.redrawGridLines() phan biet flat/perspective qua
+  // Boolean(this.host.arenaRect) - panel LUON perspective nen giu
+  // undefined la dung, KHONG gan Rectangle nao vao field nay).
   arenaRect: Phaser.GameObjects.Rectangle | undefined
   private skyLayer: Phaser.GameObjects.Rectangle | undefined
   private groundLayer: Phaser.GameObjects.Rectangle | undefined
@@ -85,17 +86,17 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   // PREVIEW_CELL_SIZE constant.
   characterWidth = (PANEL_WIDTH / STANDING_SLOT_COUNT) * 0.8
   characterHeight = (PANEL_WIDTH / STANDING_SLOT_COUNT) * 0.8
-  // Không dùng khi isPerspective=false (applySpriteSize() nhánh flat đọc
-  // characterWidth/Height trực tiếp) — giữ 1:1 để tránh chia 0 nếu code
-  // sau này lỡ đọc tới.
+  // Khong dung khi isPerspective=false (applySpriteSize() nhanh flat doc
+  // characterWidth/Height truc tiep) - giu 1:1 de tranh chia 0 neu code
+  // sau nay lo doc toi.
   // The authored box of the placeholder atlas every combatant in this panel
-  // draws. Was `{ w: 1, h: 1 }` — a square, which forced a 1.0 aspect onto art
+  // draws. Was `{ w: 1, h: 1 }` - a square, which forced a 1.0 aspect onto art
   // authored at 200x350 and rendered every figure ~1.8x too wide. Same class of
   // defect as the player's in `combat-grid-view.ts`, found by the same
   // measurement on 2026-09-11: what a sprite DRAWS and what SIZES it had drifted
   // apart.
   // The player's visual form is DERIVED from the entity (player store getter
-  // `visualProfileId` -> payload below), not hardcoded — the same id CombatScene
+  // `visualProfileId` -> payload below), not hardcoded - the same id CombatScene
   // receives through the registry gate. `mortal` is only the pre-payload
   // default; syncAssignments() updates it on every assignments event.
   private currentProfileId: PlayerVisualProfileId = 'mortal'
@@ -122,8 +123,8 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   sprites = new Map<string, EntitySprite>()
   entityFootMinY = 0
   entityFootMaxY = 1
-  // resetVisual() không dùng ở panel — Map rỗng thoả type, .get() luôn
-  // undefined (đã guard sẵn trong CombatGridView.resetVisual()).
+  // resetVisual() khong dung o panel - Map rong thoa type, .get() luon
+  // undefined (da guard san trong CombatGridView.resetVisual()).
   readonly interpolations = new Map<string, unknown>()
 
   private gridView!: CombatGridView
@@ -154,7 +155,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
           }
 
           queued.add(clip.sheetKey)
-          this.load.atlas(clip.sheetKey, clip.sheetUrl, clip.atlasUrl)
+          this.load.atlas(clip.sheetKey, resolveAssetUrl(clip.sheetUrl), resolveAssetUrl(clip.atlasUrl))
         }
       }
 
@@ -163,11 +164,11 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
 
     // Static mode - the placeholder silhouette plus every profile's combat
     // PNG (same source CombatScene's bundle queues).
-    this.load.image(PLACEHOLDER_STATIC_TEXTURE_KEY, PLACEHOLDER_STATIC_TEXTURE_URL)
+    this.load.image(PLACEHOLDER_STATIC_TEXTURE_KEY, resolveAssetUrl(PLACEHOLDER_STATIC_TEXTURE_URL))
 
     for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
       if (!this.textures.exists(profile.combatTextureKey)) {
-        this.load.image(profile.combatTextureKey, profile.combatTextureUrl.replace(/^\/+/, ''))
+        this.load.image(profile.combatTextureKey, resolveAssetUrl(profile.combatTextureUrl))
       }
     }
 
@@ -188,7 +189,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
         }
 
         characterSheets.add(range.sheetKey)
-        this.load.atlas(range.sheetKey, range.sheetUrl, range.atlasUrl)
+        this.load.atlas(range.sheetKey, resolveAssetUrl(range.sheetUrl), resolveAssetUrl(range.atlasUrl))
       }
     }
 
@@ -196,7 +197,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     // atlas miss, for both registries.
     for (const variant of [...Object.values(MONSTER_ART), ...Object.values(CHARACTER_ART)]) {
       if (!this.textures.exists(variant.avatarKey)) {
-        this.load.image(variant.avatarKey, variant.avatarUrl)
+        this.load.image(variant.avatarKey, resolveAssetUrl(variant.avatarUrl))
       }
     }
   }
@@ -204,7 +205,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   create(): void {
     this.gridView = new CombatGridView(this)
 
-    // V10 / §3.6 surface two: the shell addresses the REGION, not this object.
+    // V10 / sec3.6 surface two: the shell addresses the REGION, not this object.
     // Subscribing here rather than exposing a method means the shell can send
     // what this file names and nothing else. Unsubscribed on shutdown, because
     // the emitter is the Game's and outlives a scene restart.
@@ -215,18 +216,18 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
 
     const geometry = formationPerspectiveGeometry()
 
-    // 2 lớp nền phẳng (sky/ground) — KHÔNG dùng attachBattlefieldBackdrop()
-    // của combat thật (sao/trăng/núi/đá quá cầu kỳ cho panel test, và
-    // cũng hardcode GRID_ROW_COUNT/COLUMN_COUNT). Đặt tên rõ ràng để sau
-    // này thay Rectangle bằng Image thật chỉ cần đổi loại GameObject, giữ
-    // nguyên vị trí gọi.
+    // 2 lop nen phang (sky/ground) - KHONG dung attachBattlefieldBackdrop()
+    // cua combat that (sao/trang/nui/da qua cau ky cho panel test, va
+    // cung hardcode GRID_ROW_COUNT/COLUMN_COUNT). Dat ten ro rang de sau
+    // nay thay Rectangle bang Image that chi can doi loai GameObject, giu
+    // nguyen vi tri goi.
     this.skyLayer = this.add.rectangle(0, 0, PANEL_WIDTH, geometry.horizonY, PANEL_SKY_COLOR).setOrigin(0, 0)
     this.groundLayer = this.add
       .rectangle(0, geometry.horizonY, PANEL_WIDTH, geometry.roadHeight, PANEL_GROUND_COLOR)
       .setOrigin(0, 0)
 
-    // Same factory the shell calls (FormationCanvasSpec) — the five parameters
-    // are declared once and neither layer restates them (§3.6.2).
+    // Same factory the shell calls (FormationCanvasSpec) - the five parameters
+    // are declared once and neither layer restates them (sec3.6.2).
     this.projection = createFormationProjection()
     this.gridGraphics = this.add.graphics()
     this.gridView.redrawGridLines()
@@ -274,21 +275,21 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   }
 
   /**
-   * Diff theo combatantId qua chính CombatGridView.getOrCreateSprite() —
-   * KHÔNG tự viết lại logic tạo/xoá sprite: entity còn trong assignment
-   * mới → getOrCreateSprite() no-op nếu id đã có trong this.sprites (chỉ
-   * reposition), animation KHÔNG bị ngắt/reset (đây chính là fix cho bug
-   * "animation reset về 0 mỗi lần kéo-thả 1 entity", 2026-09-06); entity
-   * biến mất → destroyEntitySprite() qua CombatGridView; entity mới xuất
-   * hiện → getOrCreateSprite() tạo sprite mới, play() từ frame 0 (đúng —
-   * chưa từng animate trong panel này).
+   * Diff theo combatantId qua chinh CombatGridView.getOrCreateSprite() -
+   * KHONG tu viet lai logic tao/xoa sprite: entity con trong assignment
+   * moi -> getOrCreateSprite() no-op neu id da co trong this.sprites (chi
+   * reposition), animation KHONG bi ngat/reset (day chinh la fix cho bug
+   * "animation reset ve 0 moi lan keo-tha 1 entity", 2026-09-06); entity
+   * bien mat -> destroyEntitySprite() qua CombatGridView; entity moi xuat
+   * hien -> getOrCreateSprite() tao sprite moi, play() tu frame 0 (dung -
+   * chua tung animate trong panel nay).
    */
   private readonly assignmentsHandler = (
     payload: FormationSlotAssignment[] | FormationAssignmentsPayload,
   ) => this.syncAssignments(payload)
 
   syncAssignments(payload: FormationSlotAssignment[] | FormationAssignmentsPayload): void {
-    // Phaser event payloads are untyped at runtime — accept the current
+    // Phaser event payloads are untyped at runtime - accept the current
     // snapshot shape and the legacy bare array, ignore anything else.
     let assignments: FormationSlotAssignment[]
     let profileId: PlayerVisualProfileId | undefined
@@ -321,7 +322,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     for (const assignment of assignments) {
       // The player's visual form can change while the panel is open (the
       // panel re-dispatches on player.visualProfileId changes). Rebuild the
-      // sprite so it picks up the new profile PNG — same outcome as
+      // sprite so it picks up the new profile PNG - same outcome as
       // CombatScene.applyPlayerVisualProfile's setTexture + re-size.
       if (assignment.combatantId === PLAYER_ID) {
         const existing = this.sprites.get(PLAYER_ID)
@@ -391,7 +392,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
 
       // Cell->cell drags reuse the existing sprite: getOrCreateSprite's
       // early-return keeps the ORIGINAL row, and positionSprite projects
-      // gridToScreen(sprite.row, column) — refresh it or the unit draws in
+      // gridToScreen(sprite.row, column) - refresh it or the unit draws in
       // its old cell while the DOM grid shows the new one.
       sprite.row = assignment.row as LaneIndex
 

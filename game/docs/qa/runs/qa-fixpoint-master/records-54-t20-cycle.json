@@ -1,0 +1,38 @@
+{
+ "records": [
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CY-SEQ-16",
+    "state": {
+     "productStateId": "c521ac4278bf1126d0bfe9421d02b2c851d4a53cd3e8727eff49b5e30094a5da",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "FINDINGS",
+    "reviewIds": [
+     "RV-ADV-TC9",
+     "RV-ADV-B11",
+     "RV-ADV-A11",
+     "RV-CLOSURE-16"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PROBE-TC9",
+     "EV-REPORT-TC9",
+     "EV-PROBE-A11",
+     "EV-REPORT-A11",
+     "EV-PROBE-B11",
+     "EV-REPORT-B11",
+     "EV-PIN-T20",
+     "EV-MUT-T20",
+     "EV-VERIFY-T20"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-10-01T12:42:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z"
+   }
+  }
+ ]
+}

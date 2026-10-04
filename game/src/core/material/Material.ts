@@ -2,23 +2,23 @@ import type { ProfessionMaterialMeta } from '../profession/ProfessionMaterial'
 import type { SourceType } from './SourceType'
 import type { ElementType } from '../element/ElementType'
 
-// "tunghematandsuch" pass (2026-08-14) — thêm 'wood' (Linh Mộc, chế
-// Phù) và 'byproduct' (Bụi Cốt/Tinh Luyện Cốt, phế liệu từ Luyện
-// Khí/Cường Hóa) — 2 nhóm mới hoàn toàn, chưa có category nào khớp.
+// "tunghematandsuch" pass (2026-08-14) - them 'wood' (Linh Moc, che
+// Phu) va 'byproduct' (Bui Cot/Tinh Luyen Cot, phe lieu tu Luyen
+// Khi/Cuong Hoa) - 2 nhom moi hoan toan, chua co category nao khop.
 export type MaterialCategory =
   'herb' | 'wood' | 'ore' | 'monster_core' | 'spirit_stone' | 'essence' | 'byproduct' | 'other'
 
 /**
- * "tunghematandsuch" pass (mục 3) — cố ý giữ TỐI GIẢN
- * (name/category/years/element/sourceType/description), KHÔNG thêm
- * Rarity/Quality/Grade/Purity/Potential — tránh lặp lại chồng chéo
- * Quality+Rarity+phẩm chất+niên đại mà tài liệu cảnh báo. `grade:
- * number` cũ đã XOÁ (confirmed không nơi nào trong code đọc field
- * này, thuần authoring — không mất logic gì). Tài liệu còn đề xuất
- * `BaseValue` (giá trị kinh tế) nhưng game CHƯA có hệ thống vendor/
- * pricing nào tiêu thụ nó — bỏ qua field này, tránh lặp lại lỗi
- * "material chết" (field không ai đọc) đã rút kinh nghiệm ở lượt
- * naming-principles trước.
+ * "tunghematandsuch" pass (muc 3) - co y giu TOI GIAN
+ * (name/category/years/element/sourceType/description), KHONG them
+ * Rarity/Quality/Grade/Purity/Potential - tranh lap lai chong cheo
+ * Quality+Rarity+pham chat+nien dai ma tai lieu canh bao. `grade:
+ * number` cu da XOA (confirmed khong noi nao trong code doc field
+ * nay, thuan authoring - khong mat logic gi). Tai lieu con de xuat
+ * `BaseValue` (gia tri kinh te) nhung game CHUA co he thong vendor/
+ * pricing nao tieu thu no - bo qua field nay, tranh lap lai loi
+ * "material chet" (field khong ai doc) da rut kinh nghiem o luot
+ * naming-principles truoc.
  */
 export interface Material {
   id: string
@@ -27,36 +27,36 @@ export interface Material {
 
   category: MaterialCategory
 
-  // "Niên đại" (tài liệu mục 1-2, 6-7) — trục sức mạnh của nguyên liệu
-  // tự nhiên (Linh Thảo/Linh Mộc/Linh Thiết), KHÔNG phải 1 loại
-  // Quality riêng — quyết định TRẦN phẩm cấp tối đa mà 1 công thức
-  // dùng nguyên liệu này có thể đạt tới (xem data/alchemy/alchemyRecipes.ts).
-  // Không khai = không áp dụng trục niên đại (material Yêu Tài/phế
-  // liệu/currency đặc thù khác).
+  // "Nien dai" (tai lieu muc 1-2, 6-7) - truc suc manh cua nguyen lieu
+  // tu nhien (Linh Thao/Linh Moc/Linh Thiet), KHONG phai 1 loai
+  // Quality rieng - quyet dinh TRAN pham cap toi da ma 1 cong thuc
+  // dung nguyen lieu nay co the dat toi (xem data/alchemy/alchemyRecipes.ts).
+  // Khong khai = khong ap dung truc nien dai (material Yeu Tai/phe
+  // lieu/currency dac thu khac).
   years?: number
 
   element?: ElementType
 
-  // Nguồn CHÍNH của material này (MASTER SPEC Mục II-V) — xem
-  // SourceType.ts's ghi chú: nhãn phân loại, không phải ràng buộc
-  // cứng chỉ nguồn đó mới được rơi.
+  // Nguon CHINH cua material nay (MASTER SPEC Muc II-V) - xem
+  // SourceType.ts's ghi chu: nhan phan loai, khong phai rang buoc
+  // cung chi nguon do moi duoc roi.
   sourceType: SourceType
 
   description?: string
 
-  // Metadata nghề (2026-08-24, resource-professions-rework plan §4.1) —
-  // optional nên save/legacy material không có vẫn load bình thường;
-  // consumer mới (catalog/reward/recipe/validator) bắt buộc material có
-  // meta đầy đủ.
+  // Metadata nghe (2026-08-24, resource-professions-rework plan sec4.1) -
+  // optional nen save/legacy material khong co van load binh thuong;
+  // consumer moi (catalog/reward/recipe/validator) bat buoc material co
+  // meta day du.
   profession?: ProfessionMaterialMeta
 
-  // PNG icon của template; không nằm trong save stack nên có thể bổ sung
-  // dần mà không cần migration.
+  // PNG icon cua template; khong nam trong save stack nen co the bo sung
+  // dan ma khong can migration.
   icon?: string
 
-  // Trần stack riêng (plan Workstream F) — undefined = MAX_STACK_AMOUNT
-  // chung. Linh Thạch đặt MAX_SAFE_INTEGER vì chi phí Đột Phá scale tới
-  // hàng tỷ; MaterialBag.add() đọc field này lúc clamp.
+  // Tran stack rieng (plan Workstream F) - undefined = MAX_STACK_AMOUNT
+  // chung. Linh Thach dat MAX_SAFE_INTEGER vi chi phi Dot Pha scale toi
+  // hang ty; MaterialBag.add() doc field nay luc clamp.
   stackLimit?: number
 
   // M-F-CEILING - realm this material's breakthrough prepares for (e.g.

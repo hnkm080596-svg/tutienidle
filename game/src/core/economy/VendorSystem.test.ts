@@ -138,9 +138,9 @@ describe('VendorBalance — bảng giá Hóa Bán', () => {
 
   it('Luyện Khí Tinh Hoa — giá theo realm tier của bối cảnh bán', () => {
     // Reachable realms (SUPPORTED_PROFESSION_REALMS caps at
-    // foundation_establishment): mortal→5·1, qi_refining→5·3, fe→5·9.
-    // Post-beta realms follow getRealmTier: tribulation 9→8 and
-    // body_integration folds onto mahayana's shared tier (8→7) — an
+    // foundation_establishment): mortal->5*1, qi_refining->5*3, fe->5*9.
+    // Post-beta realms follow getRealmTier: tribulation 9->8 and
+    // body_integration folds onto mahayana's shared tier (8->7) - an
     // intended alignment with the shared-tier decision, unreachable
     // today.
     const expectedIndex: Record<string, number> = {
@@ -247,8 +247,8 @@ function setupVendor(extraMaterials: readonly Material[] = [], recipes: readonly
 
 describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () => {
   it('atomic round trip: bán herb hạ (phàm nhân) TỪ luyện khí — trừ nguyên liệu, cộng đúng số Linh Thạch', () => {
-    // gp123 6G: chỉ thu mua phẩm THẤP HƠN cảnh giới người chơi — herb phàm
-    // nhân phải bán từ bối cảnh luyện khí trở lên.
+    // gp123 6G: chi thu mua pham THAP HON canh gioi nguoi choi - herb pham
+    // nhan phai ban tu boi canh luyen khi tro len.
     const { vendor, bag, registry } = setupVendor()
 
     bag.add(registry.get('herb_a_decade'), 10)
@@ -331,12 +331,12 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
 
     bag.add(soloHerb, 10)
 
-    // Bán 9 (còn 1) — vẫn ổn (phẩm thảo phàm nhân < cảnh giới luyện khí).
+    // Ban 9 (con 1) - van on (pham thao pham nhan < canh gioi luyen khi).
     const partial = vendor.sellMaterial(bag, 'solo_herb_decade', 9, 'qi_refining')
 
     expect(partial.ok).toBe(true)
 
-    // Bán nốt 1 → bag trống thảo duy nhất → từ chối.
+    // Ban not 1 -> bag trong thao duy nhat -> tu choi.
     const final = vendor.sellMaterial(bag, 'solo_herb_decade', 1, 'qi_refining')
 
     expect(final.ok).toBe(false)
@@ -359,8 +359,8 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
   })
 
   it('bán herb luyện khí (bát phẩm) TỪ trúc cơ — nhận Linh Thạch Hạ (factor 1)', () => {
-    // Herb luyện khí decade: 2 × 3 = 6 hạ/đơn vị. 100 đơn vị = 600 hạ,
-    // tier người chơi (3) < 4 → factor 1 → 600 Hạ.
+    // Herb luyen khi decade: 2 x 3 = 6 ha/don vi. 100 don vi = 600 ha,
+    // tier nguoi choi (3) < 4 -> factor 1 -> 600 Ha.
     const qiHerb = herb('h_qi_decade', 'decade', 'qi_refining')
 
     const { vendor, bag } = setupVendor([qiHerb])
@@ -376,7 +376,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
   })
 
   it('bán herb kim đan (lục phẩm) TỪ nguyên anh — nhận Linh Thạch Trung (factor 100)', () => {
-    // Herb kim đan decade: 2 × 27 = 54 hạ/đơn vị. 100 đơn vị = 5400 hạ
+    // Herb kim dan decade: 2 x 27 = 54 ha/don vi. 100 don vi = 5400 ha
     // / 100 = 54 Trung.
     const gcHerb = herb('h_gc_decade', 'decade', 'golden_core')
 
@@ -392,9 +392,9 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
   })
 
   it('bán herb vô lượng (tam phẩm) TỪ hợp thể — nhận Linh Thạch Thượng (factor 30 000)', () => {
-    // Herb vô lượng decade: 2 × 729 = 1458 hạ/đơn vị. 1000 đơn vị =
-    // 1 458 000 hạ / 30 000 = 48 Thượng. StackLimit mặc định 1000 nên add
-    // 1000 để test đường code factor.
+    // Herb vo luong decade: 2 x 729 = 1458 ha/don vi. 1000 don vi =
+    // 1 458 000 ha / 30 000 = 48 Thuong. StackLimit mac dinh 1000 nen add
+    // 1000 de test duong code factor.
     const vrHerb = herb('h_vr_decade', 'decade', 'void_refinement')
 
     const { vendor, bag } = setupVendor([vrHerb])
@@ -408,10 +408,10 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
     expect(bag.getAmount(SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID)).toBe(48)
   })
 
-  // gp123 6G — gate thu mua theo phẩm: chỉ material phẩm NGHỀ thấp hơn
-  // cảnh giới người chơi mới bán được. Phẩm suy từ profession.realmId
-  // (nguồn sự thật PROFESSION_GRADE_BY_REALM) — herb/gỗ/khoáng đều có
-  // meta nghề; essence/byproduct không có meta đủ tốt → không bán được.
+  // gp123 6G - gate thu mua theo pham: chi material pham NGHE thap hon
+  // canh gioi nguoi choi moi ban duoc. Pham suy tu profession.realmId
+  // (nguon su that PROFESSION_GRADE_BY_REALM) - herb/go/khoang deu co
+  // meta nghe; essence/byproduct khong co meta du tot -> khong ban duoc.
   describe('gp123 6G — gate phẩm theo cảnh giới người chơi', () => {
     it('phẩm THẤP HƠN cảnh giới người chơi → bán được, giá đúng bảng', () => {
       const { vendor, bag, registry } = setupVendor()
@@ -422,7 +422,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
 
       expect(result.ok).toBe(true)
 
-      // 10 × 2 hạ (bảng, không nhân growth — giá là thuộc tính material).
+      // 10 x 2 ha (bang, khong nhan growth - gia la thuoc tinh material).
       expect(result.gained).toBe(20)
       expect(bag.getAmount('herb_a_decade')).toBe(0)
       expect(bag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(20)
@@ -455,9 +455,9 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
       expect(bag.getAmount('h_qi_decade')).toBe(10)
     })
 
-    // Lọc rows qua getVendorSellableRows(bag, realm) nằm ở GameManager
-    // (VendorSystem chỉ có getUnitSellPrice đã gate) — xem
-    // GameManager.vendor.test.ts 'người chơi luyện khí KHÔNG thấy...'.
+    // Loc rows qua getVendorSellableRows(bag, realm) nam o GameManager
+    // (VendorSystem chi co getUnitSellPrice da gate) - xem
+    // GameManager.vendor.test.ts 'nguoi choi luyen khi KHONG thay...'.
 
     it('essence/byproduct không có meta nghề → không bán được (không suy được phẩm)', () => {
       const essence: Material = {
@@ -488,7 +488,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
 
       expect(result.ok).toBe(true)
 
-      // Gỗ thập niên: 2 hạ/đơn vị × 10 = 20 hạ.
+      // Go thap nien: 2 ha/don vi x 10 = 20 ha.
       expect(result.gained).toBe(20)
     })
 
@@ -526,10 +526,10 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
   })
 
   it('getUnitSellPrice (system) gate theo cảnh giới người chơi', () => {
-    // Phẩm material (phàm nhân) < người chơi (luyện khí) → có giá.
+    // Pham material (pham nhan) < nguoi choi (luyen khi) -> co gia.
     expect(vendorSystemForGate().getUnitSellPrice('herb_a_decade', 'qi_refining')).toBeDefined()
 
-    // Phẩm bằng → undefined (bị gate loại khỏi rows).
+    // Pham bang -> undefined (bi gate loai khoi rows).
     expect(vendorSystemForGate().getUnitSellPrice('herb_a_decade', 'mortal')).toBeUndefined()
   })
 })

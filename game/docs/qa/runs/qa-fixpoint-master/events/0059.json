@@ -1,0 +1,8 @@
+{
+  "op": "t11-ledger-fixup",
+  "ops": [
+    "evidence EV-FINAL-VERIFY-T10",
+    "evidence EV-FINAL-VERIFY-T11",
+    "lesson dup links"
+  ]
+}

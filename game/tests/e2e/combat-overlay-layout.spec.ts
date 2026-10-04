@@ -3,13 +3,13 @@ import { expect, test, type Page } from './fixtures'
 import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
 
 /**
- * T8.3 (2026-09-02) — combat overlay layout smoke: sau khi vào trận,
- * các panel overlay neo ĐÚNG vị trí và không đè nhau:
- * - root phủ toàn viewport (full-canvas coverage)
- * - AI panel (bảng chọn mục tiêu) neo trái-trên, nằm trong battlefield
- * - Build HUD neo giữa-dưới, không xâm phạm vùng HUD canvas trái-dưới
- * Chạy ở 3 viewports (desktop/compact/tall) — screenshot kèm theo.
- * Không assert pixel canvas — chỉ DOM geometry (boundingBox).
+ * T8.3 (2026-09-02) - combat overlay layout smoke: sau khi vao tran,
+ * cac panel overlay neo DUNG vi tri va khong de nhau:
+ * - root phu toan viewport (full-canvas coverage)
+ * - AI panel (bang chon muc tieu) neo trai-tren, nam trong battlefield
+ * - Build HUD neo giua-duoi, khong xam pham vung HUD canvas trai-duoi
+ * Chay o 3 viewports (desktop/compact/tall) - screenshot kem theo.
+ * Khong assert pixel canvas - chi DOM geometry (boundingBox).
  */
 const VIEWPORTS = [
   { name: 'desktop', width: 1600, height: 900 },
@@ -17,7 +17,7 @@ const VIEWPORTS = [
   { name: 'tall', width: 900, height: 1200 },
 ] as const
 
-/** Vào được trận: guest → tạo NV → home → teleport → Bắt đầu. */
+/** Vao duoc tran: guest -> tao NV -> home -> teleport -> Bat dau. */
 async function enterBattle(page: Page, name: string): Promise<void> {
   await bootToGuestHome(page)
   await createCharacterThroughUi(page, name)
@@ -48,7 +48,7 @@ test.describe('Combat overlay layout (T8.3)', () => {
 
       await enterBattle(page, `T83 ${viewport.name}`)
 
-      // Root phủ toàn viewport (T8.1 regression guard — từng bị xóa styles).
+      // Root phu toan viewport (T8.1 regression guard - tung bi xoa styles).
       const root = page.locator('.combat-scene-overlay')
       await expect(root).toBeVisible()
       const rootBox = await root.boundingBox()
@@ -56,7 +56,7 @@ test.describe('Combat overlay layout (T8.3)', () => {
       expect(rootBox!.width).toBe(viewport.width)
       expect(rootBox!.height).toBe(viewport.height)
 
-      // AI panel neo trái-trên, NẰM TRONG viewport (không tràn flow).
+      // AI panel neo trai-tren, NAM TRONG viewport (khong tran flow).
       const aiPanel = page.locator('.combat-scene-overlay__ai-panel')
       await expect(aiPanel).toBeVisible()
       const aiBox = await aiPanel.boundingBox()
@@ -66,18 +66,18 @@ test.describe('Combat overlay layout (T8.3)', () => {
       expect(aiBox!.x + aiBox!.width).toBeLessThanOrEqual(viewport.width)
       expect(aiBox!.y + aiBox!.height).toBeLessThanOrEqual(viewport.height)
 
-      // Combat Art Pipeline Task 7 (2026-09-05) — Build HUD + skill bar rời
-      // slot bottom-center cũ (class `combat-scene-overlay__build-hud`, đã
-      // XÓA) vào CombatSkillDockPanel.vue (`.combat-skill-dock-panel`), dock
-      // neo MÉP PHẢI. Vùng HUD canvas trái-dưới: chỉ content-có-chứa (con
-      // dock thực — TurnCombatSkillBar) mới cần né, còn container tự nó đã ở
-      // bên phải nên không đè trái-dưới — đo con đầu tiên thay vì container.
+      // Combat Art Pipeline Task 7 (2026-09-05) - Build HUD + skill bar roi
+      // slot bottom-center cu (class `combat-scene-overlay__build-hud`, da
+      // XOA) vao CombatSkillDockPanel.vue (`.combat-skill-dock-panel`), dock
+      // neo MEP PHAI. Vung HUD canvas trai-duoi: chi content-co-chua (con
+      // dock thuc - TurnCombatSkillBar) moi can ne, con container tu no da o
+      // ben phai nen khong de trai-duoi - do con dau tien thay vi container.
       //
-      // Layout fix (2026-09-06) — dock KHÔNG còn full-height (top:0) như
-      // comment cũ mô tả: đè lên enemy counter mép phải của TopBar là bug
-      // đã được review phát hiện. Nay `top: var(--combat-topbar-h)` — dock
-      // bắt đầu ngay dưới TopBar. Assert thêm: dock không còn bắt đầu ở
-      // y=0 mà bắt đầu từ (hoặc sau) mép dưới TopBar thật.
+      // Layout fix (2026-09-06) - dock KHONG con full-height (top:0) nhu
+      // comment cu mo ta: de len enemy counter mep phai cua TopBar la bug
+      // da duoc review phat hien. Nay `top: var(--combat-topbar-h)` - dock
+      // bat dau ngay duoi TopBar. Assert them: dock khong con bat dau o
+      // y=0 ma bat dau tu (hoac sau) mep duoi TopBar that.
       const combatTopBar = page.locator('.combat-top-bar')
       const topBarBox = await combatTopBar.boundingBox()
       expect(topBarBox).not.toBeNull()
@@ -91,13 +91,16 @@ test.describe('Combat overlay layout (T8.3)', () => {
 
       const contentBox = await skillDock.locator('*').first().boundingBox()
       expect(contentBox).not.toBeNull()
-      const canvasHudZoneRight = 210
-      const canvasHudZoneTop = viewport.height - 100
+      // Spec 13 player-hud zone is canvas-left TOP (16/72 of 1672x941) -
+      // the dock is right-edge so the guard still only needs the left
+      // strip + spec band height.
+      const canvasHudZoneRight = 350
+      const canvasHudZoneBottom = viewport.height * (202 / 941)
       const overlapsCanvasHud =
         contentBox!.x < canvasHudZoneRight &&
         contentBox!.x + contentBox!.width > 0 &&
-        contentBox!.y + contentBox!.height > canvasHudZoneTop
-      expect(overlapsCanvasHud, 'Skill dock content must not overlap canvas HUD zone (bottom-left)').toBe(false)
+        contentBox!.y < canvasHudZoneBottom
+      expect(overlapsCanvasHud, 'Skill dock content must not overlap canvas HUD zone (top-left)').toBe(false)
 
       await page.screenshot({
         path: testInfo.outputPath(`overlay-${viewport.name}.png`),

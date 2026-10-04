@@ -7,7 +7,7 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 
-// QA adversarial probes (2026-09-04 quick review) — Slice 4 resource/boss.
+// QA adversarial probes (2026-09-04 quick review) - Slice 4 resource/boss.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
@@ -28,7 +28,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     row: 2,
     alive: true,
     ...overrides,
-    // ARCH-002 (M7): entity.stats is derived from baseStats every refresh —
+    // ARCH-002 (M7): entity.stats is derived from baseStats every refresh -
     // an injected `stats` override must become the resolved base as well.
     baseStats: overrides.baseStats ?? overrides.stats ?? stats,
   } as CombatEntity
@@ -138,9 +138,9 @@ describe('Slice 4 adversarial (QA probes)', () => {
       combatSystem: combat,
     })
 
-    // Chờ enemy thật sự tới lượt — ATB gauge: player speed 10 tích nhanh
-    // hơn nên hành động nhiều lần trước; boss trigger chỉ check khi
-    // CHÍNH enemy làm actor (đúng thiết kế — trigger của boss gắn lượt boss).
+    // Cho enemy that su toi luot - ATB gauge: player speed 10 tich nhanh
+    // hon nen hanh dong nhieu lan truoc; boss trigger chi check khi
+    // CHINH enemy lam actor (dung thiet ke - trigger cua boss gan luot boss).
     const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
     for (let i = 0; i < 6; i++) {
       const step = system.resolveNextStep(battle)
@@ -156,7 +156,7 @@ describe('Slice 4 adversarial (QA probes)', () => {
   })
 
   it('INV-S4-4: resource tick KHÔNG chạy cho actor khác — chỉ owner của pool', () => {
-    // R2 (AR-05): effective speed lives on entity.stats — the participant
+    // R2 (AR-05): effective speed lives on entity.stats - the participant
     // speed cache is synced from it. Fixtures must set speed there (the
     // adapter copies entity.stats.speed into participant.speed).
     const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, speed: 1 }) })
@@ -170,7 +170,7 @@ describe('Slice 4 adversarial (QA probes)', () => {
 
     const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 100, 1)], state: 'fighting' }
 
-    // Enemy speed 100 đi trước — player resources KHÔNG được tick ở step này.
+    // Enemy speed 100 di truoc - player resources KHONG duoc tick o step nay.
     new TurnBattleSystem(new CombatSystem(new EventBus())).resolveNextStep(battle)
 
     expect(playerP.resources.values.mana_pool).toBe(10)

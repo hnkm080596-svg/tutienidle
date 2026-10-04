@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Task 19 (item-grade-quality-rework, rework P6) — Tab Tinh Luyện
+// Task 19 (item-grade-quality-rework, rework P6) - Tab Tinh Luyen
 // extracted from EquipmentHallPanel.vue shell. Preview state
-// (pendingRefineValues, lockedIndices) is now LOCAL — v-if unmount on
+// (pendingRefineValues, lockedIndices) is now LOCAL - v-if unmount on
 // tab switch resets it automatically (matching old switchTab()'s manual
 // clearPendingRefinePreview() call); onBeforeUnmount still discards the
 // paid-for core preview so an overlay remount can't reuse a stale payload.
@@ -97,14 +97,14 @@ const selectedAffixes = computed(() => {
 
       tier: rolled.tier,
 
-      // Stat key để formatStat chọn độ chính xác đúng loại stat (bug
-      // 2026-08-30: toFixed(1) ép attackSpeed 0.015 thành "0.0").
+      // Stat key de formatStat chon do chinh xac dung loai stat (bug
+      // 2026-08-30: toFixed(1) ep attackSpeed 0.015 thanh "0.0").
       stat: affix?.stat,
     }
   })
 })
 
-/** Giá trị hiệu lực hiện tại của 1 dòng affix (cột "Hiện tại" Tinh Luyện). */
+/** Gia tri hieu luc hien tai cua 1 dong affix (cot "Hien tai" Tinh Luyen). */
 function currentAffixValue(index: number): number | null {
   if (!selectedInstanceId.value) {
     return null
@@ -131,7 +131,7 @@ function toggleLock(index: number) {
   if (position >= 0) {
     lockedIndices.value.splice(position, 1)
   } else if (lockedIndices.value.length < 3) {
-    // Không cho khóa toàn bộ: tối đa N-1 (và ≤3).
+    // Khong cho khoa toan bo: toi da N-1 (va <=3).
     if (lockedIndices.value.length + 1 < selectedAffixes.value.length) {
       lockedIndices.value.push(index)
     }
@@ -217,8 +217,8 @@ function doRefineKeep() {
   const instanceId = selectedRow.value.instanceId
   const values = pendingRefineValues.value
 
-  // commit attempt luôn tiêu capability core, nên local preview cũng phải biến
-  // mất kể cả commit bị từ chối do state vừa thay đổi.
+  // commit attempt luon tieu capability core, nen local preview cung phai bien
+  // mat ke ca commit bi tu choi do state vua thay doi.
   pendingRefineValues.value = null
   refineCommit(instanceId, values)
 }
@@ -265,9 +265,9 @@ const refineRenAfter = computed(() =>
     </div>
 
     <div v-if="selectedRow" class="qi-hall__split-right">
-      <!-- Card duy nhất (2026-08-30 spec, khớp đúng Cường Hóa đã duyệt)
-           — cột "Khóa" gộp thẳng vào bảng thay vì tách 2 cột flex
-           riêng, Điểm Rèn làm dòng chú thích. -->
+      <!-- Card duy nhat (2026-08-30 spec, khop dung Cuong Hoa da duyet)
+           - cot "Khoa" gop thang vao bang thay vi tach 2 cot flex
+           rieng, Diem Ren lam dong chu thich. -->
       <div class="qi-hall__preview-card">
         <p v-if="itemRenState" class="qi-hall__col-title">
           {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }} {{ t('panels.equipmentHall.labels.levelArrow') }} {{ refineRenAfter }}/{{ itemRenState.max }}
@@ -308,11 +308,11 @@ const refineRenAfter = computed(() =>
         <p v-else class="qi-hall__empty">{{ t('panels.equipmentHall.empty.noAffixesToRefine') }}</p>
       </div>
 
-      <!-- Bỏ jargon nội bộ "Cost hệ số N+L" + Điểm Rèn trùng dòng chú
-           thích đầu card (2026-08-30, bug report) — chỉ còn quy tắc
-           tăng 5–20% cho dòng đủ điều kiện, không khóa, clamp trần tier
-           (không hiển thị ở đâu khác) và chi phí Tinh Hoa/Linh
-           Thạch thật sự chưa có chỗ nào hiện. -->
+      <!-- Bo jargon noi bo "Cost he so N+L" + Diem Ren trung dong chu
+           thich dau card (2026-08-30, bug report) - chi con quy tac
+           tang 5-20% cho dong du dieu kien, khong khoa, clamp tran tier
+           (khong hien thi o dau khac) va chi phi Tinh Hoa/Linh
+           Thach that su chua co cho nao hien. -->
       <p class="qi-hall__info-row qi-hall__costline">
         {{ t('panels.equipmentHall.labels.refineRule') }} {{ refineCost.essenceUnits }} {{ t('panels.equipmentHall.labels.essenceName') }}
         ({{ t('panels.equipmentHall.labels.ownedPrefix') }} {{ refineEssenceOwned }}) · {{ refineCost.spiritStone }} {{ refineSpiritStoneCostName }}

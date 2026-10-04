@@ -1,5 +1,15 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, afterEach } from 'vitest'
+
+// BETA SCOPE LOCK v2 - companion + formation domains are scope-hidden in
+// the beta build. This file keeps exercising the dormant build's enabled
+// semantics by stubbing the scope flags open (dormant-system convention).
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
@@ -11,7 +21,7 @@ import type { BattleLootSystem } from './BattleLootSystem'
 
 // Drop-system Task 9 (2026-09-12): the auto-farm shim runs on the IDLE
 // channel (spec E10/E11). Idle keeps the boss modifier (a stage property)
-// but strips the tinh_anh tag and every chance<1 signature drop — idle is
+// but strips the tinh_anh tag and every chance<1 signature drop - idle is
 // a background progression channel, never the farm ceiling.
 
 const PROBE_MATERIAL = {

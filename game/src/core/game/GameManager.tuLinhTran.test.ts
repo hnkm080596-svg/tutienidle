@@ -86,8 +86,8 @@ describe('GameManager.activateTuLinhTran — economy-fixes-sinks-plan §3.2 B1',
       balanceBeforeSecond - costAfterFirst.amount,
     )
 
-    // Stack policy MVP (refresh cùng group) — vẫn CHỈ 1 effect, deadline
-    // được refresh về now + duration.
+    // Stack policy MVP (refresh cung group) - van CHI 1 effect, deadline
+    // duoc refresh ve now + duration.
     expect(player.persistentTimedEffects).toHaveLength(1)
     expect(player.persistentTimedEffects[0]!.expiresAtMs).toBe(now + TU_LINH_TRAN_DURATION_MS)
   })
@@ -103,7 +103,7 @@ describe('GameManager.activateTuLinhTran — economy-fixes-sinks-plan §3.2 B1',
 
     expect(gameManager.effectOps.activateTuLinhTran(player, now).ok).toBe(true)
 
-    // Đủ lâu để effect đầu hết hạn.
+    // Du lau de effect dau het han.
     const afterExpiry = now + TU_LINH_TRAN_DURATION_MS + 1
 
     gameManager.effectOps.tickTimedEffects(player, afterExpiry)

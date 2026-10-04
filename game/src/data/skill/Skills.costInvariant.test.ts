@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { SKILLS } from './Skills'
 
-// Combat Balance Pass (2026-08-29) — Task 2 "dọn dữ liệu cost chết".
-// Quyết định người dùng: mana KHÔNG phải tài nguyên cast skill (mana là
-// Linh lực hộ thể — manaShieldPercent). Invariant này chống hồi quy dữ
-// liệu cost/resourceType: một skill khai cost thật PHẢI có resourceType
-// tương ứng để cost có nghĩa, và skill không tốn tài nguyên KHÔNG được
-// khai cost (tránh noise khi đọc data).
+// Combat Balance Pass (2026-08-29) - Task 2 "don du lieu cost chet".
+// Quyet dinh nguoi dung: mana KHONG phai tai nguyen cast skill (mana la
+// Linh luc ho the - manaShieldPercent). Invariant nay chong hoi quy du
+// lieu cost/resourceType: mot skill khai cost that PHAI co resourceType
+// tuong ung de cost co nghia, va skill khong ton tai nguyen KHONG duoc
+// khai cost (tranh noise khi doc data).
 describe('Skills cost/resourceType invariant', () => {
   it('mọi skill khai cost > 0 đều có resourceType thật (không phải none)', () => {
     for (const skill of SKILLS) {

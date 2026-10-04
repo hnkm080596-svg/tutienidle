@@ -10,7 +10,14 @@ import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
 import { PillBag } from '../pill/PillBag'
 import { NotificationQueue } from './NotificationQueue'
+import type { Enemy } from '../enemy/Enemy'
 import type { PlayerData } from '../player/Player'
+import {
+  betaQuestSurfaceFor,
+  type BetaQuestSurfaceDeps,
+  type BetaQuestSurfaceModel,
+} from '../betaScopeQuestDomain'
+import { getRealmIndex } from '../realm/realmSystem'
 
 export interface GameManagerQuestOpsDeps {
   questSystem: QuestSystem
@@ -22,6 +29,10 @@ export interface GameManagerQuestOpsDeps {
   pillRegistry: PillRegistry
   pillBag: PillBag
   notifications: NotificationQueue
+  // sec.4B - enemy display names for kill-quest target labels
+  // (catalogOps owns the template lookup; injected to keep the ops
+  // deps explicit, same convention as HiddenBeastSystem's binding).
+  getEnemyTemplate: (enemyId: string) => Enemy | undefined
   // GameManager giu activePlayer nhu field mutable (setActivePlayer) - doc
   // LIVE qua closure thay vi snapshot tai constructor time, giong
   // GameManagerBuildingOps.
@@ -80,6 +91,122 @@ export class GameManagerQuestOps {
     return this.deps.questSystem.getActiveQuests(this.deps.questRegistry, this.deps.questManager, player)
   }
 
+  /**
+   * BETA FE-CONTRACT (work-order sec.4B) - canonical Quest surface
+   * read-model. The frontend renders these rows and never imports
+   * ReleasePolicy, never re-derives reward admission, target labels,
+   * the collect shortfall, or claimability. Pure query - questOps
+   * owns the material/enemy/bag reads; nothing here writes state.
+   * Beta admits once-quests only (getActiveQuests already filters
+   * isBetaQuestEnabled) - the cadence filter is a fail-closed pin, not
+   * a grouping rule.
+   */
+  getBetaQuestSurfaceModels(): BetaQuestSurfaceModel[] {
+    const player = this.deps.getActivePlayer()
+
+    if (!player) {
+      return []
+    }
+
+    const surfaceDeps: BetaQuestSurfaceDeps = {
+      materialRegistry: this.deps.materialRegistry,
+      materialBag: this.deps.materialBag,
+      pillRegistry: this.deps.pillRegistry,
+      pillBag: this.deps.pillBag,
+      enemyName: (enemyId) => this.deps.getEnemyTemplate(enemyId)?.name,
+    }
+
+    const models = this.getActiveQuests()
+      .filter(({ quest }) => quest.cadence === 'once')
+      .map(({ quest, progress }) =>
+        betaQuestSurfaceFor(quest, progress, player, surfaceDeps),
+      )
+
+    // Mainline (Chinh Tuyen) ordering: chain members emit first, in
+    // unlocksAfterQuestId walk order - the chain is linear so the walk
+    // depth IS the display order. Members the walk cannot reach append
+    // in registry order (registration is the authored sequence).
+    const chainQuests = this.deps.questRegistry
+      .getAll()
+      .filter((quest) => quest.chainId === 'mainline')
+    const byId = new Map(models.map((model) => [model.id, model]))
+    const chainOrder = this.mainlineChainOrder(chainQuests)
+
+    const ordered: BetaQuestSurfaceModel[] = []
+    for (const quest of chainOrder) {
+      const model = byId.get(quest.id)
+      if (model) {
+        ordered.push(model)
+        byId.delete(quest.id)
+      }
+    }
+    for (const model of byId.values()) {
+      ordered.push(model)
+    }
+
+    // Locked preview (design sec.4): the first chain member that is
+    // neither active nor completed renders as a read-only dimmed row at
+    // the chain tail, with the gates that still hold it. Pure read -
+    // never admits, never mutates.
+    const completed = new Set(this.deps.questManager.getState().completedOnceIds)
+    const preview = chainOrder.find(
+      (quest) => !models.some((model) => model.id === quest.id) && !completed.has(quest.id),
+    )
+    if (preview) {
+      ordered.splice(
+        chainOrder.filter((quest) => models.some((model) => model.id === quest.id)).length,
+        0,
+        this.lockedPreviewFor(preview, player, surfaceDeps, completed),
+      )
+    }
+
+    return ordered
+  }
+
+  private mainlineChainOrder(chainQuests: Quest[]): Quest[] {
+    const reached = new Set<Quest>()
+    let cursor = chainQuests.find((quest) => quest.unlocksAfterQuestId === undefined)
+    while (cursor) {
+      reached.add(cursor)
+      const next = chainQuests.find((quest) => quest.unlocksAfterQuestId === cursor!.id)
+      cursor = next && !reached.has(next) ? next : undefined
+    }
+    return [...reached, ...chainQuests.filter((quest) => !reached.has(quest))]
+  }
+
+  private lockedPreviewFor(
+    quest: Quest,
+    player: PlayerData,
+    deps: BetaQuestSurfaceDeps,
+    completed: ReadonlySet<string>,
+  ): BetaQuestSurfaceModel {
+    const model = betaQuestSurfaceFor(
+      quest,
+      { questId: quest.id, progress: 0, claimed: false },
+      player,
+      deps,
+    )
+    const lockedPreview: BetaQuestSurfaceModel['lockedPreview'] = {}
+
+    if (
+      quest.unlocksAfterQuestId !== undefined &&
+      !completed.has(quest.unlocksAfterQuestId) &&
+      this.deps.questRegistry.has(quest.unlocksAfterQuestId)
+    ) {
+      lockedPreview.afterQuestName = this.deps.questRegistry.get(quest.unlocksAfterQuestId).name
+    }
+
+    if (
+      quest.requiredRealmId !== undefined &&
+      getRealmIndex(player.realmId) < getRealmIndex(quest.requiredRealmId)
+    ) {
+      lockedPreview.requiredRealmId = quest.requiredRealmId
+    }
+
+    model.lockedPreview = lockedPreview
+    return model
+  }
+
   canClaimQuest(questId: string): boolean {
     return this.deps.questSystem.canClaim(
       this.deps.questRegistry,
@@ -128,6 +255,16 @@ export class GameManagerQuestOps {
     if (claimed) {
       const quest = this.deps.questRegistry.get(questId)
       this.deps.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
+
+      // Mainline chain admission (AR-09): the claim just wrote the
+      // completedOnceIds witness, so a chained successor is eligible
+      // NOW - reconcile inside the same gesture, same lifecycle seam
+      // as every other trigger (idempotent registry scan).
+      this.deps.questSystem.reconcileActiveQuests(
+        this.deps.questRegistry,
+        this.deps.questManager,
+        player,
+      )
     }
 
     return claimed

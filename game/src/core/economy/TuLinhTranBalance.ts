@@ -3,8 +3,8 @@ import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { SPIRIT_STONE_CONVERSION_RATIO } from '../material/SpiritStoneMaterial'
 
-// economy-fixes-sinks-plan §3.2 B1 (2026-08-29) — Tụ Linh Trận:
-// đổi Linh Thạch lấy % tốc độ tu luyện tạm thời (buff 24h).
+// economy-fixes-sinks-plan sec3.2 B1 (2026-08-29) - Tu Linh Tran:
+// doi Linh Thach lay % toc do tu luyen tam thoi (buff 24h).
 export const TU_LINH_TRAN_EFFECT_GROUP = 'tu_linh_tran'
 export const TU_LINH_TRAN_DURATION_MS = 24 * 60 * 60 * 1000
 export const TU_LINH_TRAN_BUFF_PERCENT = 0.25
@@ -41,7 +41,18 @@ export function getActiveCultivationSpeedPercent(
   nowMs: number,
 ): number {
   return effects
-    .filter((e) => e.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && e.expiresAtMs > nowMs)
+    .filter(
+      (e) =>
+        e.effectGroup === TU_LINH_TRAN_EFFECT_GROUP &&
+        e.expiresAtMs > nowMs &&
+        // F-A7-2: the only writer of this group is activateTuLinhTran -
+        // an entry claiming another source, or a percent outside the
+        // authored bound, is a fabricated record and emits nothing.
+        e.sourceItemId === 'tu_linh_tran' &&
+        typeof e.cultivationSpeedPercent === 'number' &&
+        e.cultivationSpeedPercent > 0 &&
+        e.cultivationSpeedPercent <= TU_LINH_TRAN_BUFF_PERCENT,
+    )
     .reduce((sum, e) => sum + (e.cultivationSpeedPercent ?? 0), 0)
 }
 

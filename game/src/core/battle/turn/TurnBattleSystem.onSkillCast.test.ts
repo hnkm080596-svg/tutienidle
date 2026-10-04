@@ -8,10 +8,10 @@ import { createBaseStats } from '../../stats/StatBlock'
 import type { BuffDefinitionId } from '../contracts/ids'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// 9.5 #9 — cast counting revived on the turn engine. The engine fires
+// 9.5 #9 - cast counting revived on the turn engine. The engine fires
 // onSkillCast(actor, skillId) once per COMMITTED action (same point as
 // commitAction): normal casts and charge-initiation count; charge
-// ticks/resolution and CC-blocked turns do not. The engine is generic —
+// ticks/resolution and CC-blocked turns do not. The engine is generic -
 // it reports every actor's cast; consumers (GameManagerTurnBattleOps)
 // filter to the primary player.
 
@@ -131,7 +131,7 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
     const onSkillCast = vi.fn()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, undefined, onSkillCast)
 
-    // Lượt 1: charge-init — cast commits (cooldown + resource), callback fires.
+    // Luot 1: charge-init - cast commits (cooldown + resource), callback fires.
     const initDeclared = system.declareActorAction(battle, playerParticipant)
     expect(initDeclared.skillId).toBe('fixture_charge')
     system.applyActionImpact(battle, initDeclared)
@@ -140,13 +140,13 @@ describe('TurnBattleSystem.onSkillCast — committed-cast callback', () => {
     expect(onSkillCast).toHaveBeenCalledWith(playerParticipant, 'fixture_charge')
     expect(playerParticipant.special.remainingCooldownTurns).toBe(5)
 
-    // Lượt 2: charge tick — không cast mới.
+    // Luot 2: charge tick - khong cast moi.
     const tickDeclared = system.declareActorAction(battle, playerParticipant)
     expect(tickDeclared.isCharging).toBe(true)
     system.applyActionImpact(battle, tickDeclared)
     expect(onSkillCast).toHaveBeenCalledTimes(1)
 
-    // Lượt 3: charge-resolve — hit lands, nhưng cast đã tính ở initiation.
+    // Luot 3: charge-resolve - hit lands, nhung cast da tinh o initiation.
     const resolveDeclared = system.declareActorAction(battle, playerParticipant)
     expect(resolveDeclared.chargeResolved).toBe(true)
     system.applyActionImpact(battle, resolveDeclared)

@@ -59,3 +59,7 @@ independence evidence is missing by construction (see below).
 - PR #54 (pill base-stat fix) lives on a separate branch/worktree; this run
   audited `qa/beta-2026-09-29` at f1049b5e plus the QA-scope test additions
   only. Merge status not asserted here.
+
+## Ledger integrity repair — 2026-09-29 (cloud coordinator)
+
+Merge of `origin/master` surfaced 6 MC1 hash mismatches on `EV-S4-*` evidence. Cause: the run was produced on a CRLF checkout; recorded artifact hashes cover CRLF bytes while git normalized blobs to LF on commit. Verified `recorded_hash(file_crlf) == artifactHash` for all six entries — content identical modulo line endings, no tampering. Repair direction: recorded `artifactHash` values recomputed against the committed LF blobs (ledger.json only; files untouched). `validate` now clean.

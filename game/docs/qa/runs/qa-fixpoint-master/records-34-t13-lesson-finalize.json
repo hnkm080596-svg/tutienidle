@@ -1,0 +1,43 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-PARTIAL-GATE-COVERAGE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B7-1",
+     "F-B7-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-A7TC5"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "escapeReason": "the isBetaTalentId/isBetaFeature gates existed on the observed read paths (collectTalentEffects, hidden-lineage reads) but the symmetric write/resolve paths (getUpgradeableTalentIds, resolveTalentEntitlement UPGRADE, closeHiddenLineage, recordHiddenBreakthrough) were left ungated - the fix pattern gated the leak that was seen, not the full entry-point set",
+    "applicability": [
+     "any scope gate applied to one member of a symmetric entry-point set (read/write/resolve/upgrade/close)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "when gating a record type, enumerate every public mutator/resolver that can reach it and gate the full set, not only the observed leak"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

@@ -22,6 +22,8 @@ import {
   type TalentEntitlementDecision,
 } from '@/core/talent/TalentEntitlement'
 import { getTalentDefinition } from '@/data/talent/Talents'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
+import { talentSymbolId } from '@/presentation/huyenKim/StableSceneArt'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useDialogFocus } from '@/composables/useDialogFocus'
@@ -125,7 +127,7 @@ function decide(decision: TalentEntitlementDecision): void {
             @click="decide({ kind: 'new', talentId: talent.id })"
           >
             <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span>
-            <h5>{{ talent.name }}</h5>
+            <h5><HuyenKimSymbol :name="talentSymbolId(talent.id)" /> {{ talent.name }}</h5>
             <p>{{ talent.description }}</p>
             <small>{{ talent.tags[0] }}</small>
           </button>
@@ -145,7 +147,7 @@ function decide(decision: TalentEntitlementDecision): void {
             @click="decide({ kind: 'upgrade', talentId: row.talent.id })"
           >
             <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[row.talent.rarity] }}</span>
-            <h5>{{ row.talent.name }}</h5>
+            <h5><HuyenKimSymbol :name="talentSymbolId(row.talent.id)" /> {{ row.talent.name }}</h5>
             <span class="upgrade-card__level">{{ t('tribulation.entitlement.levelArrow', { current: row.level, next: row.nextLevel }) }}</span>
             <p>{{ row.talent.description }}</p>
           </button>

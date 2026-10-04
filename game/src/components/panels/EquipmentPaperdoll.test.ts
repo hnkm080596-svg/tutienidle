@@ -54,9 +54,9 @@ afterEach(() => { document.body.innerHTML = '' })
 
 describe('EquipmentPaperdoll — registry miss an toàn', () => {
   it('itemId lạ (registry miss) không chết paperdoll — slot vẫn render, caption dùng itemId thô', async () => {
-    // Audit fix 2026-08-31 — equipmentRegistry.get() throw với itemId lạ
-    // (data edit/save lệch) chết cả khối trang bị qua ErrorBoundary;
-    // computed/helper phải tra an toàn + fallback hiển thị (pattern
+    // Audit fix 2026-08-31 - equipmentRegistry.get() throw voi itemId la
+    // (data edit/save lech) chet ca khoi trang bi qua ErrorBoundary;
+    // computed/helper phai tra an toan + fallback hien thi (pattern
     // Task 13 EquipmentBagSection.vue).
     const mounted = mountPaperdoll((manager) => {
       manager.equipmentBag.add(equipmentInstance('ghost-item', 'nonexistent_item'))
@@ -64,7 +64,7 @@ describe('EquipmentPaperdoll — registry miss an toàn', () => {
 
     await nextTick()
 
-    // 6 slot luôn render — không throw.
+    // 6 slot luon render - khong throw.
     const slots = mounted.container.querySelectorAll('.paperdoll__slot')
 
     expect(slots).toHaveLength(6)

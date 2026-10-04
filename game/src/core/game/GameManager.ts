@@ -102,6 +102,7 @@ import { GameManagerPersistentEffectOps } from './GameManagerPersistentEffectOps
 import { GameManagerEconomyOps } from './GameManagerEconomyOps'
 import { GameManagerPillOps } from './GameManagerPillOps'
 import { GameManagerTickOps } from './GameManagerTickOps'
+import { GameManagerStageOps } from './GameManagerStageOps'
 import { GameManagerTurnBattleOps, type ResumePlayback } from './GameManagerTurnBattleOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
@@ -495,6 +496,13 @@ export class GameManager {
   // Public: callers use gameManager.tickOps.* directly (no facade).
   readonly tickOps: GameManagerTickOps
 
+  // Stage surface read-model (BETA SCOPE LOCK v2 section 9): one stable
+  // projection per stage for presentation - state/enemy/reward/
+  // auto-farm/start-availability/disabled-reason composed from the
+  // owning authorities.
+  // Public: callers use gameManager.stageOps.* directly (no facade).
+  readonly stageOps: GameManagerStageOps
+
   // Hidden beast (spec dot-pha-loi-kiep sec.4.1c) - the 1000-kill
   // Qi Refining window.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -672,6 +680,7 @@ export class GameManager {
       pillRegistry: this.pillRegistry,
       pillSystem: this.pillSystem,
       applyTimedEffect: (player, effect) => this.effectOps.applyTimedEffect(player, effect),
+      isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
     })
 
     this.hiddenBeastSystem = new HiddenBeastSystem({
@@ -723,6 +732,7 @@ export class GameManager {
     this.tribulationDirector = new TribulationDirector({
       eventBus: this.eventBus,
       sessionAllocator: this.sessionAllocator,
+      rng: () => this.sessionRng(),
     })
 
     this.equipmentOps = new EquipmentOpsSystem({
@@ -776,6 +786,7 @@ export class GameManager {
       pillRegistry: this.pillRegistry,
       pillBag: this.pillBag,
       notifications: this.notifications,
+      getEnemyTemplate: (enemyId) => this.catalogOps.getEnemyTemplate(enemyId),
       getActivePlayer: () => this.activePlayer,
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
     })
@@ -915,6 +926,22 @@ export class GameManager {
       tribulationDirector: this.tribulationDirector,
       sessionRng: () => this.sessionRng(),
     })
+
+    // Stage surface read-model - constructed LAST: it only delegates to
+    // the owning authorities (catalogOps unlock/lock-reason, stageWaves
+    // admission probe, autoFarmOps eligibility) so it needs them all
+    // initialized.
+    this.stageOps = new GameManagerStageOps({
+      stageTemplates: this.stageTemplates,
+      zoneRegistry: this.zoneRegistry,
+      enemyTemplates: this.enemyTemplates,
+      isStageUnlocked: (stageId, player) => this.catalogOps.isStageUnlocked(stageId, player),
+      stageLockReasonCode: (stageId, player) =>
+        this.catalogOps.stageLockReasonCode(stageId, player),
+      canStart: (player, stage) => this.stageWaves.canStart(player, stage),
+      isAutoFarmStageEligible: (player, stageId) =>
+        this.turnBattleOps.autoFarmOps.isAutoFarmStageEligible(player, stageId),
+    })
   }
 
   // Skill/Technique khong "register" san co toan bo danh sach goc
@@ -980,7 +1007,7 @@ export class GameManager {
    * active - fail closed, same as the resolver.
    */
   /** Presentation-gate query (FE-06): active player's authored name for
-      scene nameplates — null when no player is active. */
+      scene nameplates - null when no player is active. */
   getActivePlayerName(): string | null {
     return this.activePlayer?.name ?? null
   }
@@ -1074,7 +1101,7 @@ export class GameManager {
     this.battleLoot.setLootRng(rng)
   }
 
-  // F-W-7 session rng seam — one injectable stream for non-combat,
+  // F-W-7 session rng seam - one injectable stream for non-combat,
   // non-loot rolls (alchemy yields, Van Dao free-purchase, hidden-beast
   // substitution, breakthrough talent draw). `undefined` restores
   // Math.random. Deterministic harnesses pin it like setLootRng.

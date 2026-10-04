@@ -1,6 +1,6 @@
-// 6A-T1 (2026-09-01) — event 'heal' mới: emit từ applyHealing với reason
-// 'healing' | 'leech' (KHÔNG 'regen' — spam mỗi tick), amount > 0.
-// Floating "+N" xanh trong CombatScene consume event này (Task 2).
+// 6A-T1 (2026-09-01) - event 'heal' moi: emit tu applyHealing voi reason
+// 'healing' | 'leech' (KHONG 'regen' - spam moi tick), amount > 0.
+// Floating "+N" xanh trong CombatScene consume event nay (Task 2).
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { EntityVitalsSystem } from './EntityVitalsSystem'
 import type { EventBus } from '../events/EventBus'
@@ -77,7 +77,7 @@ describe('EntityVitalsSystem — heal event (6A-T1)', () => {
     system.applyHealing(makeTarget(), 10, 'regen')
 
     expect(events.filter((e) => e.type === 'heal')).toHaveLength(0)
-    // vitals_changed vẫn emit như cũ — chỉ heal event bị lọc
+    // vitals_changed van emit nhu cu - chi heal event bi loc
     expect(events.filter((e) => e.type === 'entity_vitals_changed')).toHaveLength(1)
   })
 
@@ -94,7 +94,7 @@ describe('EntityVitalsSystem — heal event (6A-T1)', () => {
     const { bus, events } = makeBus()
     const system = new EntityVitalsSystem(bus)
 
-    // reaction-heal tương lai nếu đổi reason vẫn an toàn: chỉ healing/leech mở
+    // reaction-heal tuong lai neu doi reason van an toan: chi healing/leech mo
     system.applyHealing(makeTarget(), 10, 'reaction')
 
     expect(events.filter((e) => e.type === 'heal')).toHaveLength(0)

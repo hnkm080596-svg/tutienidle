@@ -1,13 +1,13 @@
-// Phap Tu Reimagined Task 11 — Phap Tu An kit resolution semantics.
+// Phap Tu Reimagined Task 11 - Phap Tu An kit resolution semantics.
 // Task 7 created the Skill shells in CoreSkills.ts; this module authors
 // the TURN-side behavior attached at battle build by GameManager:
 //
-// - van_phap_tuy_tam (basic): compositePicks 'element_basic' — every cast
+// - van_phap_tuy_tam (basic): compositePicks 'element_basic' - every cast
 //   resolves AS a uniform-random pick among the 5 element basics.
-// - da_phap_lien_tuyen (special): same pick + repeatCasts — fires exactly
+// - da_phap_lien_tuyen (special): same pick + repeatCasts - fires exactly
 //   AN_SPECIAL_FIRES executions per cast, each independently re-rolled.
 // - ngo_dao_hon_don (dao passive, no button): `multicast` attached to the
-//   An basic — each basic execution may chain extra casts, depth-capped.
+//   An basic - each basic execution may chain extra casts, depth-capped.
 //
 // The element pool is NOT authored here (review fix, HIGH-1): a static
 // duplicate of the five basics had already drifted from the authored
@@ -15,7 +15,7 @@
 // no entry carried authored manaScalingRatio/attributeScaling).
 // GameManager builds the pool through the canonical
 // SkillSystem.getEffectiveSkill -> toTurnSkillDefinition pipeline and
-// injects it — one source of truth for "what a spell basic does".
+// injects it - one source of truth for "what a spell basic does".
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
 import { MAX_MULTICAST } from '../../core/battle/turn/TurnSkillAction'
 
@@ -47,7 +47,7 @@ export function applyAnKitToBasic(
 }
 
 /**
- * da_phap_lien_tuyen — composite pick + repeatCasts. repeatCasts counts
+ * da_phap_lien_tuyen - composite pick + repeatCasts. repeatCasts counts
  * the EXTRA executions after the original: AN_SPECIAL_FIRES - 1 repeats
  * + the original = exactly AN_SPECIAL_FIRES fires per cast.
  */

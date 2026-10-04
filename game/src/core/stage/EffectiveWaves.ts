@@ -1,8 +1,8 @@
-// EffectiveWaves (Turn-Based Wave Redesign, 2026-09-06) — mirror đúng
-// EffectiveEnemyCount.ts's floor-10 solo-boss override, áp cho waves[]
-// thay vì totalEnemyCount. Boss CHỈ xuất hiện ở floor 10 (xem
-// StageWaveSystem.pickEnemyForSpawn()'s "DESIGN: boss chỉ xuất hiện ở
-// tầng 10" comment) — floor 10 LUÔN là 1 wave duy nhất, 1 quái.
+// EffectiveWaves (Turn-Based Wave Redesign, 2026-09-06) - mirror dung
+// EffectiveEnemyCount.ts's floor-10 solo-boss override, ap cho waves[]
+// thay vi totalEnemyCount. Boss CHI xuat hien o floor 10 (xem
+// StageWaveSystem.pickEnemyForSpawn()'s "DESIGN: boss chi xuat hien o
+// tang 10" comment) - floor 10 LUON la 1 wave duy nhat, 1 quai.
 import type { Stage } from './Stage'
 
 export function effectiveWaves(stage: Stage): number[] {

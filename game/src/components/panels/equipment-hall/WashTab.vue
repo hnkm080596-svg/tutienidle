@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Task 19 (item-grade-quality-rework, rework P6) — Tab Tẩy Luyện
+// Task 19 (item-grade-quality-rework, rework P6) - Tab Tay Luyen
 // extracted from EquipmentHallPanel.vue shell. Preview state
-// (pendingWashAffixes) is now LOCAL — v-if unmount on tab switch resets
+// (pendingWashAffixes) is now LOCAL - v-if unmount on tab switch resets
 // it automatically, matching the manual reset the old switchTab() did.
 import { computed, inject, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -47,10 +47,10 @@ const selectedRow = computed(
   () => equippedRows.value.find((row) => row.instanceId === selectedInstanceId.value) ?? null,
 )
 
-// Preview đang chờ "giữ/bỏ" (2026-08-30 spec) — LOCAL (v-if unmount tự
-// reset khi đổi tab, giữ đúng semantics switchTab() cũ).
-// R9 (AR-21): chỉ giữ TICKET ID + display copy; affixes authoritative
-// nằm trong domain — UI không thể fabricate kết quả commit.
+// Preview dang cho "giu/bo" (2026-08-30 spec) - LOCAL (v-if unmount tu
+// reset khi doi tab, giu dung semantics switchTab() cu).
+// R9 (AR-21): chi giu TICKET ID + display copy; affixes authoritative
+// nam trong domain - UI khong the fabricate ket qua commit.
 const pendingWashTicket = ref<string | null>(null)
 
 const pendingWashAffixes = computed<RolledAffix[]>(() =>
@@ -193,7 +193,7 @@ interface AffixCompareRow {
   hasTicket: boolean
 }
 
-/** Tẩy Luyện reroll TOÀN BỘ affix (đổi cả identity) — mỗi dòng so sánh
+/** Tay Luyen reroll TOAN BO affix (doi ca identity) - moi dong so sanh
  * by EXACT index position between current affixes and the pending preview.
  * T4-33: rows cover BOTH lists - a roll with more lines than the item
  * currently has must still show the extra rolled line, and a roll that
@@ -246,9 +246,9 @@ const washRenAfter = computed(() =>
     </div>
 
     <div v-if="selectedRow" class="qi-hall__split-right">
-      <!-- Card duy nhất (2026-08-30 spec, khớp đúng Cường Hóa đã duyệt)
-           — Điểm Rèn làm dòng chú thích, mỗi dòng phụ 1 hàng thật
-           trong bảng, không còn 2 cột flex + bảng meta tách rời. -->
+      <!-- Card duy nhat (2026-08-30 spec, khop dung Cuong Hoa da duyet)
+           - Diem Ren lam dong chu thich, moi dong phu 1 hang that
+           trong bang, khong con 2 cot flex + bang meta tach roi. -->
       <div class="qi-hall__preview-card">
         <p v-if="itemRenState" class="qi-hall__col-title">
           {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }} {{ t('panels.equipmentHall.labels.levelArrow') }} {{ washRenAfter }}/{{ itemRenState.max }}
@@ -284,9 +284,9 @@ const washRenAfter = computed(() =>
       </div>
 
       <div class="qi-hall__info-row">
-        <!-- Điểm Rèn tốn mỗi lượt đã hiện ở dòng chú thích đầu card
-             (2026-08-30, bug report: trùng lặp) — costline chỉ còn chi
-             phí KHÁC (Linh Thạch) chưa hiện ở đâu. -->
+        <!-- Diem Ren ton moi luot da hien o dong chu thich dau card
+             (2026-08-30, bug report: trung lap) - costline chi con chi
+             phi KHAC (Linh Thach) chua hien o dau. -->
         <p class="qi-hall__costline">
           {{ t('panels.equipmentHall.labels.costPerUse') }} {{ washCost.tinhHoa }} {{ t('panels.equipmentHall.labels.essenceName') }}
           ({{ t('panels.equipmentHall.labels.ownedPrefix') }} {{ washEssenceOwned }}) · {{ washCost.spiritStone }} {{ washSpiritStoneCostName }}

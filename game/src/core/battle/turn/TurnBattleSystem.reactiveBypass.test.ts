@@ -233,7 +233,7 @@ describe('reactive bypass contract (spec 7.1)', () => {
     playerP.thamTargetId = 'enemy' // the defender OBSERVES the attacker
     playerP.entity.currentThe = 15 // exactly the proc cost
 
-    // Speed lives on baseStats — refreshParticipantStats recomputes
+    // Speed lives on baseStats - refreshParticipantStats recomputes
     // entity.stats from baseStats + modifiers every pacing step.
     enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, speed: 30 })
     enemyP.entity.stats = { ...enemyP.entity.stats, speed: 30 }
@@ -241,7 +241,7 @@ describe('reactive bypass contract (spec 7.1)', () => {
     playerP.entity.baseStats = asBaseStats({ ...playerP.entity.baseStats, speed: 1 })
     playerP.entity.stats = { ...playerP.entity.stats, speed: 1 }
     playerP.speed = 1
-    // MIN_HIT_CHANCE floors every attack at 5% — a 0.999 roll dodges;
+    // MIN_HIT_CHANCE floors every attack at 5% - a 0.999 roll dodges;
     // the proc roll then needs < 0.6 (counterChance clamps at 0.60).
     vi.spyOn(Math, 'random').mockReturnValueOnce(0.999).mockReturnValue(0)
 
@@ -269,7 +269,7 @@ describe('reactive bypass contract (spec 7.1)', () => {
     playerP.thamTargetId = 'enemy' // the defender OBSERVES the attacker
     playerP.entity.currentThe = 100
 
-    // Speed lives on baseStats — refreshParticipantStats recomputes
+    // Speed lives on baseStats - refreshParticipantStats recomputes
     // entity.stats from baseStats + modifiers every pacing step.
     enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, speed: 30 })
     enemyP.entity.stats = { ...enemyP.entity.stats, speed: 30 }

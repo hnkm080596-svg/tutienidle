@@ -1,0 +1,24 @@
+{
+  "applied": [
+    "evidence:EV-MUT-IA-1",
+    "mutation:MUT-IA-1",
+    "evidence:EV-MUT-PA-1",
+    "mutation:MUT-PA-1",
+    "evidence:EV-MUT-SV-1",
+    "mutation:MUT-SV-1",
+    "evidence:EV-MUT-AS-1",
+    "mutation:MUT-AS-1",
+    "evidence:EV-MUT-DS-1",
+    "mutation:MUT-DS-1",
+    "evidence:EV-MUT-RM-1",
+    "mutation:MUT-RM-1",
+    "evidence:EV-MUT-CR-1",
+    "mutation:MUT-CR-1",
+    "evidence:EV-MUT-PG-1",
+    "mutation:MUT-PG-1",
+    "evidence:EV-MUT-EC-1",
+    "mutation:MUT-EC-1",
+    "evidence:EV-MUT-SF-1",
+    "mutation:MUT-SF-1"
+  ]
+}

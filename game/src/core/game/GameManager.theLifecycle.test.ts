@@ -7,10 +7,10 @@ import type { Stage } from '../stage/Stage'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-// Phap Tu Reimagined Task 8 (INV-14) — BREAKING LIFECYCLE CHANGE:
+// Phap Tu Reimagined Task 8 (INV-14) - BREAKING LIFECYCLE CHANGE:
 // currentThe is strictly battle-instance scoped. It resets to 0 on
 // every fresh participant construction AND on every auto-repeat
-// restartTurnBattleCycle (which reuses previous.players wholesale —
+// restartTurnBattleCycle (which reuses previous.players wholesale -
 // "HP/resources carry over" does NOT include the The pool anymore).
 // The reset is path-blind: Bat Kiem or any path sharing currentThe
 // follows the identical contract. No PlayerData persistence, no

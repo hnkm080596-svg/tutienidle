@@ -12,7 +12,7 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 
-// QA adversarial probes (2026-09-04 quick review) — Slice 2 skill actions.
+// QA adversarial probes (2026-09-04 quick review) - Slice 2 skill actions.
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
@@ -103,7 +103,7 @@ describe('Slice 2 adversarial (QA probes)', () => {
     const primary = participant({ id: 'primary', entity: entity({ id: 'primary', x: 2, row: 2 }) })
     const other = participant({ id: 'other', entity: entity({ id: 'other', x: 3, row: 3 }) })
 
-    // cross radius 0: chỉ đúng ô anchor — other (chéo) bị loại.
+    // cross radius 0: chi dung o anchor - other (cheo) bi loai.
     const affected = collectTurnTargets(primary, [primary, other], { shape: 'cross', laneRadius: 0 })
 
     expect(affected.map((p) => p.id)).toEqual(['primary'])

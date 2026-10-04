@@ -17,14 +17,14 @@ import { BuildingRegistry } from '../building/BuildingRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
-import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import { applyAllBodyModifiers } from '../realm/body/BodyProgressionSystem'
 import type { StatModifier } from '../stats/StatCalculator'
-import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
+import { computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
 import { assertSaveAcceptable } from '../../services/save/saveAcceptance'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
@@ -142,7 +142,7 @@ export class GameManagerSaveRestore {
    * Returns the latest equipment modifiers so the caller can synchronize them
    * into player.modifiers; EquipmentSystem does not own the player store.
    */
-  restoreFromSave(save: GameSave): StatModifier[] {
+  restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority): StatModifier[] {
     this.preflightSaveRegistryReferences(save)
 
     // R10 (AR-12, S4) - converge on a repeated identical payload (boot
@@ -201,60 +201,25 @@ export class GameManagerSaveRestore {
     this.deps.techniqueSystem.restore(restoredTechniques)
 
     const restoredSkills = save.skills.flatMap((savedSkill) => {
-      const skill = structuredClone(savedSkill)
-
-      // Execution policy rework + development-build no-migration (2026-
-      // 08-26): save cua nhan vat CU luu skill object nguyen trang truoc
-      // khi co field `execution` bat buoc - scheduler thong nhat BO QUA
-      // moi active thieu execution ("khong cast gi" du tele/di chuyen
-      // van chay). Doi chieu template da dang ky de hoi phuc AUTHORED
-      // combat data (execution/targeting/AOE/VFX preset), giu NGUYEN
-      // progression state cua instance (level/cooldown/specialization).
-      // Template thieu thi entry bi drop (dev-stage
-      // rule: khong migrate, khong giu object mo coi).
-      const template = this.deps.skillTemplates.get(skill.id)
+      // Rebuild-don't-trust (F-TC8-4): every combat-authored field is
+      // re-derived from the registered template - a persisted scalar
+      // (cooldown/cost/target/targeting/requiredRealmId/...) is a claim,
+      // not an authority. The only fields kept from the save record are
+      // instance-progress state: experience/totalExperience counters
+      // and selectedSpecializationId. Template thieu thi entry bi drop
+      // (dev-stage rule: khong migrate, khong giu object mo coi).
+      const template = this.deps.skillTemplates.get(savedSkill.id)
 
       if (!template) {
         return []
       }
 
-      if (!skill.execution && template.execution) {
-        skill.execution = structuredClone(template.execution)
+      const skill: Skill = {
+        ...structuredClone(template),
+        experience: savedSkill.experience,
+        totalExperience: savedSkill.totalExperience,
+        selectedSpecializationId: savedSkill.selectedSpecializationId,
       }
-
-      if (!skill.targeting && template.targeting) {
-        skill.targeting = structuredClone(template.targeting)
-      }
-
-      // Text-refresh-on-load: name/description la du lieu HIEN THI THUAN
-      // (khong phai progression), nen luon dong bo lai tu template dang
-      // dang ky thay vi giu nguyen ban da dong bang trong save cu. Vi du
-      // that da gap: 1 save cu tung luu "Huy Kiem" luc description bi
-      // hong encoding (mojibake) -- sua Skills.ts khong tu hoi phuc cac
-      // save da luu truoc do neu thieu buoc nay.
-      skill.name = template.name
-      skill.description = template.description
-
-      // passiveModifiers/specializations are authored data owned by the
-      // template; re-derive so stale authored fields frozen in the save
-      // don't stay inert. selectedSpecializationId lives on the instance
-      // (progression) and is untouched.
-      skill.passiveModifiers = structuredClone(template.passiveModifiers)
-      skill.specializations = structuredClone(template.specializations)
-
-      // M-QI-05 - level is frozen authored data too: the canonical live
-      // level is nodeLevels[core_<id>], so a save's stored `level` must
-      // never survive as a second authority.
-      skill.level = template.level
-
-      // effects/triggers are the same authored-combat-data class:
-      // nothing mutates them on the instance (progression lives in
-      // level/selectedSpecializationId; specialization overrides ride
-      // on `specializations` above). A save frozen with a stale shell
-      // (e.g. da_phap_lien_tuyen's empty effects[] pre-fix) must
-      // re-derive, not stay broken through every future battle.
-      skill.effects = structuredClone(template.effects)
-      skill.triggers = structuredClone(template.triggers)
 
       return [skill]
     })
@@ -394,15 +359,28 @@ export class GameManagerSaveRestore {
     // state so saved workers clamp against the real ceiling, settle
     // the offline window under the shared cap concept, and deliver
     // output through the SAME delivery/overflow path as the tick.
-    this.deps.decomposeSystem.updateCapacity(offlinePlayer?.autoWorkerCapacity ?? 0)
+    this.deps.decomposeSystem.updateCapacity(betaEffectiveWorkerCapacity(offlinePlayer?.autoWorkerCapacity ?? 0))
     this.deps.decomposeSystem.restore(save.decompose)
 
-    if (offlinePlayer) {
-      const elapsedOfflineSeconds = Math.max(
-        0,
-        (Date.now() - (save.player.lastSavedAt ?? Date.now())) / 1000,
-      )
+    // B1-D - the settle window is the authorized context, never a
+    // Date.now()/lastSavedAt read of our own: 'cold-boot' accrues the
+    // SERVER-authorized duration (progression_cutoff_at -> serverNowUtc)
+    // positioned inside the payload's own epoch (lastSavedAt + elapsed),
+    // 'live-replacement' accrues zero, undefined keeps legacy local
+    // semantics. The 60s gate and the formula/cap owners are unchanged.
+    const elapsedOfflineSeconds =
+      timeAuthority?.kind === 'live-replacement'
+        ? 0
+        : timeAuthority?.kind === 'cold-boot'
+          ? Math.max(0, (timeAuthority.untilMs - timeAuthority.sinceMs) / 1000)
+          : Math.max(0, (Date.now() - (save.player.lastSavedAt ?? Date.now())) / 1000)
 
+    // End of the authorized window expressed in the payload's epoch -
+    // identical to Date.now() in the legacy branch.
+    const settleNowMs = (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000
+    const offlineSinceMs = save.player.lastSavedAt ?? settleNowMs
+
+    if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {
         // T3 (economy-ecosystem-plan) - worker chay offline nhu slot tay
         // trong cap: truyen capacity + moc bat dau vang mat de settle
@@ -411,21 +389,18 @@ export class GameManagerSaveRestore {
           this.deps.materialBag,
           this.deps.materialRegistry,
           offlinePlayer.realmId,
-          Date.now(),
+          settleNowMs,
           {
             workerCapacity: resolveProductionWorkerCapacity(
-              offlinePlayer.autoWorkerCapacity ?? 0,
+              betaEffectiveWorkerCapacity(offlinePlayer.autoWorkerCapacity ?? 0),
               this.deps.decomposeSystem.getSettings().workers,
             ),
-            offlineSinceMs: save.player.lastSavedAt ?? Date.now(),
+            offlineSinceMs,
             workerAssignments: this.deps.getWorkerAssignments(),
           },
         )
 
-        this.deps.decomposeSystem.settleOffline(
-          Date.now(),
-          save.player.lastSavedAt ?? Date.now(),
-        )
+        this.deps.decomposeSystem.settleOffline(settleNowMs, offlineSinceMs)
 
         for (const entry of this.deps.decomposeSystem.drainOutput()) {
           this.deps.deliverDecomposeOutput(entry)
@@ -435,6 +410,11 @@ export class GameManagerSaveRestore {
         // reward offline: roll cac chu ky auto-farm da troi trong cua so
         // offline (cung gate >60s voi Production catch-up).
         this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
+      } else if (timeAuthority?.kind === 'live-replacement' && offlinePlayer.autoFarmStage) {
+        // B1-D zero-accrual live replacement: an armed farm's saved anchor
+        // must not mint the paused gap on the next live tick - re-anchor
+        // at resume time without rolling any cycle.
+        this.deps.settleAutoFarmOffline(offlinePlayer, 0)
       }
 
       // Mission B audit - re-acquire the StageManager lease for a persisted
@@ -446,14 +426,16 @@ export class GameManagerSaveRestore {
       this.deps.reconcileAutoFarmRuntime(offlinePlayer)
     }
 
-    // Dan Phong offline settle (S8.2).
+    // Dan Phong offline settle (S8.2). B1-D: the same authorized window
+    // end - a live replacement delivers only jobs already complete at the
+    // snapshot, and a cold-boot window stops at the server-stamped bound.
     this.deps.alchemySystem.restoreJobs((save.alchemyJobs ?? []) as ActiveAlchemyJob[])
 
     this.deps.alchemySystem.settleOffline(
       this.deps.pillBag,
       (pillId) =>
         this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
-      Date.now(),
+      settleNowMs,
       0,
       // M3 - Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
       getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds, this.deps.getActivePlayer()?.talentLevels)?.yieldMultiplier ?? 1,
@@ -473,9 +455,9 @@ export class GameManagerSaveRestore {
       applyAllBodyModifiers(bodyPlayer)
     }
 
-    // F-W-5 (v82) - tribulation runtime: khôi phục committed outcome +
-    // cooldown sau khi mọi slice domain đã nạp (director không phụ
-    // thuộc thứ tự domain khác nhưng đặt cuối cho đúng boundary).
+    // F-W-5 (v82) - tribulation runtime: khoi phuc committed outcome +
+    // cooldown sau khi moi slice domain da nap (director khong phu
+    // thuoc thu tu domain khac nhung dat cuoi cho dung boundary).
     this.deps.tribulationDirector.restoreRuntime(save.tribulation)
 
     // F-PT-A9-1 - realm-entry rewards replay BEFORE quest lifecycle so

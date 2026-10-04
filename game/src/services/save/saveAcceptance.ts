@@ -1,7 +1,7 @@
 // Save acceptance predicate - ONE authority for every registry-backed
 // and progression-canonicality check the boot restore preflight runs.
 // Extracted (BETA-CREATION, qa-authority-01) so the remote newest-wins
-// gate (SupabaseRemoteSave) can apply the IDENTICAL acceptance set the
+// gate (SupabaseCloudSaveService) can apply the IDENTICAL acceptance set the
 // boot restore does: a payload the boot restore would reject must
 // count as "no remote", otherwise newest-wins resurrects poison on
 // every login and the local delete recovery can never converge.
@@ -42,6 +42,7 @@ import { affixes } from '../../data/equipment/affixes'
 import { pills } from '../../data/pill/pills'
 import { buildings } from '../../data/building/buildings'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
+import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 
 /**
  * Lookup surface the predicate needs - nothing more. Boot restore
@@ -236,6 +237,27 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
   // before any owner mutation.
   assertHiddenPerfectionIntegrity(save.player)
 
+  // element-root claim (F-A19-1) - each PHAP_TU_ELEMENT_ROOT_IDS root
+  // is minted only inside the atomic commit that writes
+  // spellPath.element. An owned root whose owning element differs
+  // (element null or foreign) is unproducible: it also bricks every
+  // initiation probe, so a mortal save claiming one can never commit.
+  // getActiveElement is the canonical element read - it resolves only
+  // on the committed element-axis pair, so a hostile/missing slice or
+  // foreign way fails closed.
+  const committedElement = getActiveElement(save.player)
+  const nodeLevelRecords = save.player.nodeLevels
+  if (nodeLevelRecords !== undefined && nodeLevelRecords !== null) {
+    for (const [element, rootId] of Object.entries(PHAP_TU_ELEMENT_ROOT_IDS)) {
+      const claimed = nodeLevelRecords[rootId]
+      if (typeof claimed === 'number' && claimed >= 1 && committedElement !== element) {
+        throw new Error(
+          `element root claim '${rootId}' requires committed element '${element}'`,
+        )
+      }
+    }
+  }
+
   // spell element <-> kit coherence - the element commit grants the
   // element's basic atomically (resolveAuthoredBasic throws on a
   // missing required basic at battle build). A save carrying the axis
@@ -295,7 +317,7 @@ let staticCatalogs: SaveAcceptanceCatalogs | undefined
 
 /**
  * Catalog id lookups built from the same data arrays App.vue registers
- * into the live registries at boot — the remote gate's acceptance
+ * into the live registries at boot - the remote gate's acceptance
  * surface must mirror the boot gate's, so a poisoned remote payload is
  * classified 'no remote' for EVERY preflight class, not just the ones
  * that need no lookup. Lazy singleton: read-only id sets.

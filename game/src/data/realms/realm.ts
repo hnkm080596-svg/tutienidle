@@ -16,21 +16,14 @@ export interface RealmData {
   // curve. x = 1 day -> Luyen Khi = 10 days, each later major realm x3
   // the previous.
   realmDurationMultiplier?: number
-
-  // Trần tổng bonus vĩnh viễn (cộng dồn qua các pill permanent_stat
-  // cùng target 1 stat) mà nhân vật có thể hấp thu ở cảnh giới này —
-  // undefined = cảnh giới chưa thiết kế trần, không giới hạn. Thay
-  // thế cơ chế Pill.usageLimit cũ (giới hạn theo số lần uống 1 pill
-  // cụ thể) — xem PillSystem.canUse().
-  attributeCap?: number
 }
 
 export const REALMS: RealmData[] = [
-  // PRODUCT SCOPE: progression hiện chỉ được thiết kế và cân bằng tới
-  // Trúc Cơ tầng 18. Các cảnh giới từ Kim Đan trở đi mới là dữ liệu giữ chỗ;
-  // không được dùng maxLevel/gate của chúng để suy ra rằng người chơi hiện có
-  // thể tiến xa hơn Trúc Cơ. Khi mở rộng scope phải thiết kế lại gate đại cảnh
-  // giới, thời gian tu luyện, nội dung và test progression cùng lúc.
+  // PRODUCT SCOPE: progression hien chi duoc thiet ke va can bang toi
+  // Truc Co tang 18. Cac canh gioi tu Kim Dan tro di moi la du lieu giu cho;
+  // khong duoc dung maxLevel/gate cua chung de suy ra rang nguoi choi hien co
+  // the tien xa hon Truc Co. Khi mo rong scope phai thiet ke lai gate dai canh
+  // gioi, thoi gian tu luyen, noi dung va test progression cung luc.
   // Pham Nhan (2026-08-16) - the LOWEST major realm, placed BEFORE
   // qi_refining in this array (getRealmIndex()/getGlobalCultivationLevel()
   // are purely index-driven, automatically correct when prepended - no
@@ -43,32 +36,29 @@ export const REALMS: RealmData[] = [
   {
     id: 'mortal',
     name: 'Phàm Nhân',
-    // 10 -> 18 (2026-08-20, Realm Passive & Pressure follow-up) — Quán
-    // Khí (chọn Pháp Tu/Kiếm Tu) giờ mở qua tribulation qi_refining,
-    // KHÔNG còn bắt buộc
-    // maxLevel — 18 chừa 6 tầng đệm (12-18) để chơi tiếp Luyện Thể
-    // (tầng cuối Luyện Mạch cũng mở ở 12, xem data/realm/LuyenThe.ts)
-    // hoặc grind thêm điểm thuộc tính trước khi quyết định Quán Khí.
+    // 10 -> 18 (2026-08-20, Realm Passive & Pressure follow-up) - Quan
+    // Khi (chon Phap Tu/Kiem Tu) gio mo qua tribulation qi_refining,
+    // KHONG con bat buoc
+    // maxLevel - 18 chua 6 tang dem (12-18) de choi tiep Luyen The
+    // (tang cuoi Luyen Mach cung mo o 12, xem data/realm/LuyenThe.ts)
+    // hoac grind them diem thuoc tinh truoc khi quyet dinh Quan Khi.
     maxLevel: 18,
-    baseCultivationMinutes: 1,
-    attributeCap: 10,
+    baseCultivationMinutes: 1
   },
 
   {
     id: 'qi_refining',
     name: 'Luyện Khí',
     maxLevel: 18,
-    baseCultivationMinutes: 22,
-    attributeCap: 20,
+    baseCultivationMinutes: 22
   },
 
   {
     id: 'foundation_establishment',
     name: 'Trúc Cơ',
-    // Mốc kết thúc nội dung progression hiện tại, không có đột phá Kim Đan.
+    // Moc ket thuc noi dung progression hien tai, khong co dot pha Kim Dan.
     maxLevel: 18,
-    baseCultivationMinutes: 64,
-    attributeCap: 100,
+    baseCultivationMinutes: 64
   },
 
   {

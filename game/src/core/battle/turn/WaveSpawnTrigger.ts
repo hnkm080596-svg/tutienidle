@@ -1,7 +1,7 @@
-// Turn-Based Combat — wave-spawn decision (spec:
+// Turn-Based Combat - wave-spawn decision (spec:
 // 2026-09-06-turn-based-wave-spawn-vfx-design.md). shouldSpawnNextEnemy()
 // (1 enemy at a time) is REPLACED by shouldStartNextWave() (whole wave at
-// once) — the old function is deleted, not deprecated, since nothing else
+// once) - the old function is deleted, not deprecated, since nothing else
 // calls it after TurnBattleSystem.ts (Task 3) migrates.
 
 /**

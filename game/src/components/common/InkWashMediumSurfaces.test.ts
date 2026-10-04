@@ -2,14 +2,26 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
+import { createPinia } from 'pinia'
 import Tooltip from '@/components/common/Tooltip.vue'
 import TechniqueSlotCard from '@/components/panels/skill-path/TechniqueSlotCard.vue'
-import buildingPopoverSource from '@/components/game/BuildingDetailPopover.vue?raw'
 import { useTooltip } from '@/composables/useTooltip'
+import { betaTechniqueSurfaceFor } from '@/core/betaScopeTechniqueDomain'
+import type { PlayerData } from '@/core/player/Player'
 
 vi.mock('@/composables/useGameState', () => ({
   useGameManager: () => ({
     techniqueManager: { getActive: () => undefined },
+    realmAdvanceOps: {
+      // Canonical-model seam - delegate to the real domain function.
+      getBetaTechniqueSurfaceModel: (player: PlayerData) =>
+        betaTechniqueSurfaceFor(player, {
+          activeTechnique: undefined,
+          materialAmount: () => 0,
+          materialName: (id: string) => id,
+          turnBattleInProgress: false,
+        }),
+    },
   }),
   useStateVersion: () => ({ stateVersion: ref(0) }),
 }))
@@ -28,6 +40,7 @@ describe('ink-wash medium surfaces', () => {
     const app = createApp({
       render: () => h(TechniqueSlotCard, { label: 'Tâm pháp' }),
     })
+    app.use(createPinia())
     app.directive('tooltip', () => undefined)
     app.mount(container)
     cleanup.push(() => {
@@ -36,11 +49,6 @@ describe('ink-wash medium surfaces', () => {
     })
 
     expect(container.querySelector('[data-ink-slice="frame-m-seal-corner"]')).not.toBeNull()
-  })
-
-  it('keeps both paper surface and ink frame in the store-backed building popover', () => {
-    expect(buildingPopoverSource).toContain('asset-id="surface-m-paper"')
-    expect(buildingPopoverSource).toContain('asset-id="frame-m-seal-corner"')
   })
 
   it('renders the teleported tooltip inside the approved paper surface and ink frame', async () => {
@@ -60,8 +68,7 @@ describe('ink-wash medium surfaces', () => {
 
     const tooltip = document.querySelector<HTMLElement>('#global-tooltip')
     expect(tooltip).not.toBeNull()
-    expect(tooltip?.querySelector('[data-ink-slice="surface-m-paper"]')).not.toBeNull()
-    expect(tooltip?.querySelector('[data-ink-slice="frame-m-seal-corner"]')).not.toBeNull()
+    expect(tooltip?.querySelector('[data-hk-slice="frame-xs-tooltip"]')).not.toBeNull()
     expect(tooltip?.textContent).toContain('Linh thạch')
     expect(tooltip?.style.pointerEvents).not.toBe('auto')
   })

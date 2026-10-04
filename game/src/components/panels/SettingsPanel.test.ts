@@ -8,6 +8,7 @@ import { GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { useNotificationStore } from '@/stores/notification'
 import { i18n } from '@/i18n'
+import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -27,9 +28,9 @@ describe('SettingsPanel reset save', () => {
     window.addEventListener(SAVE_RESET_REQUEST_EVENT, requested)
     app.mount(container)
 
-    // ConfirmModal thay window.confirm() native (UI/UX rework) — bấm nút
-    // reset chỉ MỞ modal, phải bấm "Xác Nhận" trong ConfirmModal mới thật
-    // sự dispatch event.
+    // ConfirmModal thay window.confirm() native (UI/UX rework) - bam nut
+    // reset chi MO modal, phai bam "Xac Nhan" trong ConfirmModal moi that
+    // su dispatch event.
     container.querySelector<HTMLButtonElement>('.settings-panel__danger')!.click()
     await nextTick()
 
@@ -78,10 +79,10 @@ describe('SettingsPanel — toast kind khi save thất bại', () => {
   }
 
   it('Lưu thất bại (quota) → toast kind "error" đỏ, không còn kind "save" xanh', async () => {
-    // Audit fix 2026-08-31 — Task 2 để failure toast kind 'save' (màu
-    // xanh nhạt) trong khi App.vue autosave fail push kind 'error'
-    // (đỏ); thông báo thất bại phải đồng nhất màu đỏ để người chơi
-    // nhận biết mất nguy cơ.
+    // Audit fix 2026-08-31 - Task 2 de failure toast kind 'save' (mau
+    // xanh nhat) trong khi App.vue autosave fail push kind 'error'
+    // (do); thong bao that bai phai dong nhat mau do de nguoi choi
+    // nhan biet mat nguy co.
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('quota exceeded', 'QuotaExceededError')
     })
@@ -91,17 +92,77 @@ describe('SettingsPanel — toast kind khi save thất bại', () => {
 
     mounted.saveButton().click()
 
-    // handleSave await cả chuỗi coordinator → service → writeGameSave;
-    // setTimeout(0) chờ hết chuỗi microtask trước khi assert.
+    // handleSave await ca chuoi coordinator -> service -> writeGameSave;
+    // setTimeout(0) cho het chuoi microtask truoc khi assert.
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    // Failure toast phải là kind 'error' (đỏ), không phải 'save' (xanh).
+    // Failure toast phai la kind 'error' (do), khong phai 'save' (xanh).
     const failureToast = notification.toasts.find(
       (toast) => toast.message.includes('Không lưu được'),
     )
 
     expect(failureToast).toBeDefined()
     expect(failureToast!.kind).toBe('error')
+
+    mounted.unmount()
+  })
+})
+
+// BETA-FINAL PR1 / spec B2 - Settings shows the injected build identity;
+// the rendered values must equal the manifest fields verbatim.
+describe('SettingsPanel — build identity section', () => {
+  function mountPanel() {
+    const container = document.createElement('div')
+    const app = createApp({ render: () => h(SettingsPanel) })
+
+    document.body.appendChild(container)
+    app.use(createPinia())
+    app.use(i18n)
+    app.provide(GAME_MANAGER_KEY, new GameManager())
+    app.mount(container)
+
+    return {
+      container,
+      unmount: () => {
+        app.unmount()
+        container.remove()
+      },
+    }
+  }
+
+  it('renders every manifest field in the Build section', async () => {
+    const mounted = mountPanel()
+    const { container } = mounted
+
+    // Scene 17 recompose: Build lives under the Support nav section.
+    container
+      .querySelector<HTMLButtonElement>('[data-section="support"]')!
+      .click()
+    await nextTick()
+
+    const value = (testid: string) =>
+      container.querySelector<HTMLElement>(`[data-testid="${testid}"]`)!.textContent
+
+    expect(value('build-version')).toBe(BUILD_IDENTITY.appVersion)
+    expect(value('build-id')).toBe(BUILD_IDENTITY.buildId)
+    expect(value('build-commit')).toBe(shortGitSha())
+    expect(value('build-schema')).toBe(String(BUILD_IDENTITY.saveSchemaVersion))
+    expect(value('build-environment')).toBe(BUILD_IDENTITY.backendEnvironment)
+    expect(value('build-channel')).toBe(BUILD_IDENTITY.releaseChannel)
+    expect(value('build-built-at')).toBe(BUILD_IDENTITY.builtAtUtc)
+
+    mounted.unmount()
+  })
+
+  it('shows the short sha, not the full 40-char sha', async () => {
+    const mounted = mountPanel()
+
+    mounted.container
+      .querySelector<HTMLButtonElement>('[data-section="support"]')!
+      .click()
+    await nextTick()
+
+    expect(mounted.container.textContent).not.toContain(BUILD_IDENTITY.gitSha)
 
     mounted.unmount()
   })

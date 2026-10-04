@@ -23,6 +23,7 @@ const props = withDefaults(
     isLocked?: boolean
     error?: CoordinatorError | null
     canReturnHome?: boolean
+    paintSuppressed?: boolean
   }>(),
   {
     phase: 'idle',
@@ -187,6 +188,7 @@ defineExpose({
     :class="{
       'is-locked': isLocked || curtainState !== 'opened' || error !== null,
       'is-curtain-closed': curtainState === 'closed' || curtainState === 'closing',
+      'is-paint-suppressed': paintSuppressed,
     }"
     :data-phase="phase"
     :data-curtain="curtainState"
@@ -253,7 +255,7 @@ defineExpose({
 .presentation-overlay {
   position: fixed;
   inset: 0;
-  /* z-index comes from OVERLAY_LAYERS.curtain (inline style) — the curtain
+  /* z-index comes from OVERLAY_LAYERS.curtain (inline style) - the curtain
      is the TOPMOST app layer: while closed it must cover every other
      panel, including modals, toasts, the save gate and the error screen. */
   pointer-events: none;
@@ -263,6 +265,9 @@ defineExpose({
 .presentation-overlay.is-locked {
   pointer-events: auto;
 }
+
+.presentation-overlay.is-paint-suppressed .curtain-panel,
+.presentation-overlay.is-paint-suppressed .transition-overlay__loading { visibility: hidden; }
 
 .curtain-panel {
   position: absolute;

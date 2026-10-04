@@ -100,7 +100,7 @@ function makeBattle(enemyCount = 1): {
   combat: CombatSystem
   runtime: TurnRuntimeFixture
 } {
-  // High maxHp on both sides — a x1 basic must never one-shot (the enemy
+  // High maxHp on both sides - a x1 basic must never one-shot (the enemy
   // has to survive to take its turn).
   const player = createCombatant({ id: 'ung', type: 'player', currentHp: 100_000, maxHp: 100_000 }, 10)
   const enemy = createCombatant({ id: 'enemy', currentHp: 100_000, maxHp: 100_000 }, 9)

@@ -1,0 +1,60 @@
+{
+  "reviewer": "TC16",
+  "role": "blind terminal falsification sweep on frozen candidate",
+  "commit": "ab0b135e021dbc915821c0855de3d395ce82a5ce",
+  "branch": "devin/qa-fixpoint",
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "F-TC16-EQ-DUPSLOT",
+      "severity": "Nit",
+      "status": "documented-inert-admission",
+      "surface": "save shape gate vs EquipmentBag.indexEquipped (restore mint path)",
+      "repro": "For a mortal save, persist two equipment entries with distinct instanceIds, both equipped:true on the same slot (e.g. two base_kiem with might+10 mainStat). validateGameSaveShape admits the payload.",
+      "mintPath": "player.restoreFromSave -> equipmentBag.add each entry -> indexEquipped flips the first same-slot entry equipped=false -> refreshModifiers -> getEquipped() mints modifiers for at most one item per slot.",
+      "evidence": "tests/architecture/tc16Falsification.qa.test.ts F-TC16-EQ-DUPSLOT: restore mints modifiers for at most one of the dup-slot entries (passes). The admission is tolerable only because indexEquipped self-heals; a shape-level dup-slot bound would close the seam formally but is not required for correctness today.",
+      "confidence": "high - deterministic runtime evidence both directions"
+    },
+    {
+      "id": "F-TC16-TRIB-SKIPREALM",
+      "severity": "Nit",
+      "status": "documented-inert-admission",
+      "surface": "tribulation committedOutcome shape gate vs TribulationOutcomeService.settleOutcome",
+      "repro": "For a mortal save, persist save.tribulation.committedOutcome {outcome:'victory', targetRealmId:'golden_core', grade:'human', breakthroughType:'normal'} - a victory receipt skipping the qi_refining rung that no writer can produce (start() requires adjacency + canTriggerBreakthrough). validateGameSaveShape admits it (no adjacency bound at the gate).",
+      "mintPath": "tribulationDirector.restoreRuntime re-presents the receipt slot -> settleOutcome re-derives hiddenDormant, isRealmTransitionEnabled(player.realmId, targetRealmId) and canTriggerBreakthrough(player) before applying victory/defeat -> returns null; realm and grantedRealmPassiveIds unchanged.",
+      "evidence": "tests/architecture/tc16Falsification.qa.test.ts F-TC16-TRIB-SKIPREALM: settle returns null, realm unchanged, no realm passives minted (passes).",
+      "confidence": "high - deterministic runtime evidence"
+    },
+    {
+      "id": "F-TC16-ALCHEMY-RECIPE-MISMATCH",
+      "severity": "Nit",
+      "status": "verified-defended",
+      "surface": "alchemyJobs pillId denormalization",
+      "repro": "Forge an alchemy job under live recipe alchemy_tu_linh_dan_mortal claiming pillId phi_van_dan_mortal (dormant family).",
+      "mintPath": "validateAlchemyJobsSave pins pillId === recipe.pillId (F-A7-3) and herbMaterialId membership + authored span; settle re-derives the deliverable from the recipe, never the persisted pillId.",
+      "evidence": "tests/architecture/tc16Falsification.qa.test.ts F-TC16-ALCHEMY-RECIPE-MISMATCH: shape gate rejects (passes).",
+      "confidence": "high"
+    }
+  ],
+  "swept_no_qualifying_defect": [
+    "quests.active / quest progress / completedOnceIds - shape-only plus writer-producible counters (excluded residual class); daily cadence absent from catalog; kill-quest admission re-gated by isBetaQuestEnabled",
+    "forged lastSavedAt / timestamp claims - offline accrual capped at PRODUCTION_OFFLINE_CAP_SECONDS (10h) and DEFAULT_MAX_OFFLINE_SECONDS (24h), auto-farm additionally requires perfectClearStageIds membership + isValidCycleSeconds + resolveValidAutoFarmStage",
+    "persistentTimedEffects - tu_linh_tran writer bound (group, span, percent ceiling); pill regen bound to authored regenEffect shape incl. single manaRegenPerTurn flat <= mpPerSecond*1.5; dormant-family sourceItemId rejected; appliedAtMs > lastSavedAt rejected",
+    "player.externalModifiers - shape-checked then reset to [] on restore; per-tick mirror only",
+    "nodeLevels cross-way claims - nodePathApplies/nodeWayApplies enforced at purchase AND aggregation, wrong-path levels cannot aggregate; core_/talent/prereq/realm canonicality replayed; purchasedNodeIds mirror verified",
+    "phaGiapCarryStacks - banked stacks only resolve via getPassiveStackCarry (requires owned pha_giap talent); seed clamps to modifier maxStacks so over-bank mints nothing beyond producible stacks; realm mismatch zeroes the bank",
+    "alchemyJobs - slot ceiling from persisted pill_room level (0 room => maxJobs 0 rejects any job); roomLevelAtStart/startedAt/span/pillId/herb bounds; dormant-family jobs park at tick; settle re-derives pill from recipe",
+    "production cycles/sites - realm pin, forward span, span==computeCycleSeconds, startedAt<=lastSavedAt, site level/realm bounds, lane ceiling via chi_hien_quan",
+    "autoWorkerCapacity - requires chi_hien_quan instance",
+    "buildings - dup instanceId, single-instance, maxLevel, realmTier, accrualRealmId pin",
+    "tribulation slice - cooldown span bound to lastSavedAt+300s; grade <= persistedResolvableFoundationRank; great_dao rejected; receipt enum; hidden type parks while hiddenContent locked",
+    "equipment - soft-cap, foreign slot, grade-vs-realm for equipped, affix envelope/dup/tier/pool, bag dedup by instanceId",
+    "skills - dup id rejected, core coverage (learned->core, way->cores, node grants), F-SKL-1 producing-writer requirement, realm-earnability on requiredRealmId templates, mortalBoundaryContractViolation",
+    "techniques - holder contract (exactly 1, id==way.techniqueId, canonical grade/rank/mastery/gradeHistory)",
+    "mortal boundary - cultivationPath/Way cannot be set at realmId mortal",
+    "hidden perfection lineage - strict-prefix ordering + boundary holds",
+    "devtools/window hooks - all import.meta.env.DEV-gated (DevMode, enemySpawnDebug)",
+    "recoveryApi import/export - runs the same validate+acceptance pipeline",
+    "restoreGameSession - replacement semantics (bag clears, technique/skill template re-derivation), auto-dissolve overflow mints luyen_khi_tinh_hoa only, reconcile seams (quest lifecycle, realm rewards, spec claims, way grants) replay authored rules"
+  ]
+}

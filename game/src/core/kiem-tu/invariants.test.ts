@@ -350,7 +350,7 @@ describe('INV-7 — hardcore discovery', () => {
       'src/core/audio/AudioCueManifest.ts',
     ]
     const violations: string[] = []
-    // A hardcoded literal bypasses the import scan — quote-delimited
+    // A hardcoded literal bypasses the import scan - quote-delimited
     // matching keeps presetId strings ('kiem_combo_nhat_tuyen', the
     // LEGITIMATE discovery signal in VFX/impact types) distinct from
     // the bare combo id ('nhat_tuyen') or name, which must never leak.
@@ -828,7 +828,7 @@ describe('INV-15 — precursor lock (K3)', () => {
       player.skillCastCounts = { tram: 0 }
       gameManager.setActivePlayer(player)
       gameManager.progressionOps.learnSkill('tram', player)
-      gameManager.progressionOps.setMortalBasicSkill(player, 'tram')
+      gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')
 
       expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
       expect(gameManager.progressionOps.setMortalBasicSkill(player, skillId)).toBe(false)

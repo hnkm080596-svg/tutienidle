@@ -1,9 +1,9 @@
 import type { NotificationEvent } from './NotificationEvent'
 
-// Task A6 (roadmap 9.8) — toast tràn MaterialBag: bag.add() clamp tại
-// stackLimit và trả lượng bị MẤT; mọi caller đường reward push event
-// này thay vì mất lặng lẽ. message vi là fallback, App.vue render qua
-// t('bag.overflow', params) khi locale có key.
+// Task A6 (roadmap 9.8) - toast tran MaterialBag: bag.add() clamp tai
+// stackLimit va tra luong bi MAT; moi caller duong reward push event
+// nay thay vi mat lang le. message vi la fallback, App.vue render qua
+// t('bag.overflow', params) khi locale co key.
 export function createBagOverflowEvent(
   materialName: string,
   lostAmount: number,

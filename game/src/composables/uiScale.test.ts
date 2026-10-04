@@ -3,7 +3,7 @@ import { DEFAULT_UI_SCALE, UI_SCALE_OPTIONS, applyUiScale, initUiScale, loadUiSc
 
 const STORAGE_KEY = 'tien-hiep-idle-ui-scale'
 
-// environment node — polyfill localStorage tối thiểu (cùng pattern
+// environment node - polyfill localStorage toi thieu (cung pattern
 // SaveSystem.test.ts) + documentElement stub cho setProperty.
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()

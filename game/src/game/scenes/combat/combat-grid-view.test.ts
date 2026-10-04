@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 //
-// combat-grid-view.test.ts — regression thật cho Task 9.5: sprite-creation
-// path (getOrCreateSprite) phải chọn ĐÚNG sizeMultiplier theo cờ isBoss của
-// entity spawn, KHÔNG phải giá trị fixture gán tay như
-// CombatScene.enemyScale.test.ts (test đó chỉ khoá applyEntityDepthScale()
-// pass-through, không chạm production creation code — xem task-9-brief.md).
+// combat-grid-view.test.ts - regression that cho Task 9.5: sprite-creation
+// path (getOrCreateSprite) phai chon DUNG sizeMultiplier theo co isBoss cua
+// entity spawn, KHONG phai gia tri fixture gan tay nhu
+// CombatScene.enemyScale.test.ts (test do chi khoa applyEntityDepthScale()
+// pass-through, khong cham production creation code - xem task-9-brief.md).
 //
-// Battlefield Slot (2026-09-06) — constructor giờ nhận CombatGridViewHost
-// (không còn CombatScene cụ thể) nên fake host phải khai đủ
-// fallbackSpriteTextureKey() — combat thật LUÔN trả undefined, xem
+// Battlefield Slot (2026-09-06) - constructor gio nhan CombatGridViewHost
+// (khong con CombatScene cu the) nen fake host phai khai du
+// fallbackSpriteTextureKey() - combat that LUON tra undefined, xem
 // CombatScene.fallbackSpriteTextureKey().
 import { describe, expect, it, vi } from 'vitest'
 import { CombatGridView } from './combat-grid-view'
@@ -18,11 +18,11 @@ import { CHARACTER_ART } from '@/game/support/CharacterArt'
 import type { CombatGridViewHost } from './CombatGridViewHost'
 
 /**
- * Fake host tối giản — chỉ implement đúng bề mặt API mà
- * CombatGridView.getOrCreateSprite() (nhánh enemy CÓ texture thật) chạm
- * tới. applySpriteSize/updateEnemyHealthBar gán SAU khi gridView đã tồn
- * tại vì getOrCreateSprite() gọi ngược `this.applySpriteSize(...)` (các
- * method của CHÍNH CombatGridView — trước đây uỷ quyền qua CombatScene,
+ * Fake host toi gian - chi implement dung be mat API ma
+ * CombatGridView.getOrCreateSprite() (nhanh enemy CO texture that) cham
+ * toi. applySpriteSize/updateEnemyHealthBar gan SAU khi gridView da ton
+ * tai vi getOrCreateSprite() goi nguoc `this.applySpriteSize(...)` (cac
+ * method cua CHINH CombatGridView - truoc day uy quyen qua CombatScene,
  * xem Battlefield Slot Task 2).
  */
 function createFakeScene() {
@@ -37,7 +37,7 @@ function createFakeScene() {
       setDisplaySize: vi.fn(() => obj),
       destroy: () => obj,
       // positionSprite() writes here. Captured so a test can read where the
-      // body actually landed (Spec B §4.3's idle bob).
+      // body actually landed (Spec B sec4.3's idle bob).
       setPosition: vi.fn(() => obj),
       displayHeight: 0,
     }
@@ -61,11 +61,11 @@ function createFakeScene() {
     },
     physics: { add: { existing: vi.fn() } },
     textures: { exists: () => true },
-    // Spec B §4.3 — enemies now start an idle-bob tween on creation. The host
+    // Spec B sec4.3 - enemies now start an idle-bob tween on creation. The host
     // interface always declared `tweens`; this fixture simply never supplied it,
     // and the cast below hid that until something read it.
     tweens: { add: vi.fn(), killTweensOf: vi.fn() },
-    // CombatGridViewHost.startEntityIdle — kicks the entity's idle state after
+    // CombatGridViewHost.startEntityIdle - kicks the entity's idle state after
     // creation (clip in animated mode, no-op where a static bob already runs).
     startEntityIdle: vi.fn(),
     fallbackSpriteTextureKey: () => undefined,
@@ -120,10 +120,10 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
   })
 
   it('id ngoài batch → placeholder sprite CÙNG MODE (uniformity 2026-09-19): Boss vẫn KHÔNG được nhỏ hơn enemy thường — round 1 review, tránh inversion', () => {
-    // resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art →
-    // entity key rơi về PLACEHOLDER_ENTITY_KEY, render placeholder texture
-    // của mode hiện hành thay vì Rectangle (Rectangle chỉ còn double-
-    // fallback khi cả placeholder texture cũng thiếu).
+    // resolveEnemyTextureKey() tra falsy cho id khong nam trong batch art ->
+    // entity key roi ve PLACEHOLDER_ENTITY_KEY, render placeholder texture
+    // cua mode hien hanh thay vi Rectangle (Rectangle chi con double-
+    // fallback khi ca placeholder texture cung thieu).
     const { gridView } = createFakeScene()
 
     const bossSprite = gridView.getOrCreateSprite('unknown_id_no_art_boss', 0xd94a4a, 'Boss X', 4, {
@@ -134,12 +134,12 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
 
     expect(bossSprite.kind).toBe('sprite')
     expect(bossSprite.sizeMultiplier).toBe(BOSS_DISPLAY_SCALE_MULTIPLIER)
-    // Không được nhỏ hơn enemy thường CÓ texture (nhánh sprite, ×2) — đây
-    // chính là bug bị lật ngược mà review round 1 tìm ra.
+    // Khong duoc nho hon enemy thuong CO texture (nhanh sprite, x2) - day
+    // chinh la bug bi lat nguoc ma review round 1 tim ra.
     expect(bossSprite.sizeMultiplier).toBeGreaterThanOrEqual(ENEMY_DISPLAY_SCALE_MULTIPLIER)
 
-    // Enemy thường cùng nhánh placeholder giữ ENEMY multiplier như mọi
-    // entity có texture — đồng nhất với quái có art thật.
+    // Enemy thuong cung nhanh placeholder giu ENEMY multiplier nhu moi
+    // entity co texture - dong nhat voi quai co art that.
     const regularSprite = gridView.getOrCreateSprite('unknown_id_no_art_regular', 0xd94a4a, 'Regular X', 4, {
       currentHp: 100,
       maxHp: 100,
@@ -163,9 +163,9 @@ describe('CombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey()
   })
 
   it('placeholder texture cũng thiếu + host trả undefined (như CombatScene thật) → Rectangle double-fallback — KHÔNG regression cho combat thật', () => {
-    // Uniformity 2026-09-19: id ngoài batch giờ render placeholder texture
-    // CÙNG MODE thay vì Rectangle — Rectangle chỉ còn là double-fallback khi
-    // cả placeholder texture cũng không load được.
+    // Uniformity 2026-09-19: id ngoai batch gio render placeholder texture
+    // CUNG MODE thay vi Rectangle - Rectangle chi con la double-fallback khi
+    // ca placeholder texture cung khong load duoc.
     const { scene, gridView } = createFakeScene()
 
     scene.textures = { exists: () => false }
@@ -347,10 +347,10 @@ describe('CombatGridView.redrawGridLines() — kích thước lưới lấy từ
 })
 
 // ---------------------------------------------------------------------------
-// Spec B §4.3/§6 B6 — the idle bob
+// Spec B sec4.3/sec6 B6 - the idle bob
 // ---------------------------------------------------------------------------
 //
-// §3.2 described enemies as static "như hiện tại". They were not: walk sway/
+// sec3.2 described enemies as static "nhu hien tai". They were not: walk sway/
 // bob/tilt were deleted outright on 2026-08-26, leaving rotation 0 and a
 // straight projected position. So "static plus a slight shake" is a TARGET
 // state, and these tests cover the half that had to be ADDED, not removed.
@@ -510,7 +510,7 @@ describe('CombatGridView — size is the character, not the box (Spec C §3.2)',
       .setDisplaySize.mock.calls.at(-1)![1] as number
 
     // The boar's PNG is untrimmed, so its box IS its character height. Spec C
-    // §3.2's calibration says that must stay 122.98 at this depth.
+    // sec3.2's calibration says that must stay 122.98 at this depth.
     expect(boxHeight).toBeCloseTo(122.98, 0)
   })
 })

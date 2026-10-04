@@ -1,0 +1,11 @@
+=== useAppLifecycle (T7 rebind, Thu Oct  1 04:11:53 UTC 2026) ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  45 passed (45)
+   Start at  04:11:54
+   Duration  1.29s (transform 330ms, setup 211ms, import 263ms, tests 114ms, environment 577ms)
+
+EXIT=0

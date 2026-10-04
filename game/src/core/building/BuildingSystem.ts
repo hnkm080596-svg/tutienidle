@@ -3,21 +3,11 @@ import type { BuildingInstance } from './BuildingInstance'
 import { BuildingRegistry } from './BuildingRegistry'
 import { BuildingManager } from './BuildingManager'
 import type { MaterialBag } from '../material/MaterialBag'
-import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { CraftModifiers } from './BuildingLevelEffect'
-import { isTestModeUnlockAll } from '../dev/DevMode'
 import { getRealmIdForTier, getRealmTier } from '../realm/RealmTierMap'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { PRODUCTION_OFFLINE_CAP_SECONDS } from '../production/ProductionBalance'
-
-// Lý do từ chối xây — UI (popover/toast) dùng để báo người chơi thay vì
-// im lặng (fix "không thể xây dựng" không rõ nguyên nhân, 2026-08-26).
-export type BuildRejectReason =
-  | 'unknown_building'
-  | 'already_built'
-  | 'realm_locked'
-  | 'missing_materials'
 
 const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
   timeReductionPercent: 0,
@@ -29,20 +19,20 @@ const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
   equipmentCostDiscountPercent: 0,
 }
 
-// Trần offline production — dùng CHUNG một hằng số với production
-// (PRODUCTION_OFFLINE_CAP_SECONDS, ProductionBalance.ts) để Linh Tuyền và
-// slot sản xuất không bao giờ lệch cap (review 2026-08-28,
-// economy-ecosystem-plan T8: trước đây khai báo trùng 2 nơi).
+// Tran offline production - dung CHUNG mot hang so voi production
+// (PRODUCTION_OFFLINE_CAP_SECONDS, ProductionBalance.ts) de Linh Tuyen va
+// slot san xuat khong bao gio lech cap (review 2026-08-28,
+// economy-ecosystem-plan T8: truoc day khai bao trung 2 noi).
 
-// Rate/Capacity tăng tuyến tính theo level — +20%/level.
+// Rate/Capacity tang tuyen tinh theo level - +20%/level.
 const LEVEL_BONUS_PER_LEVEL = 0.2
 
-// Linh Tuyền — engine thạch offline chính (balance playtest 2026-08-28).
-// Mục tiêu sản lượng ở level MAX = 5% rate farm online của realm, tương
-// đương ~30 phút farm cho mỗi 10h offline (đúng cap). Đơn vị: thạch/phút.
-// Realm trên Trúc Cơ scale ×3 mỗi bậc (khớp getRealmRewardMultiplier bên
-// core/reward/RealmRewardScale.ts — farm online cũng tăng ×3 nên offline giữ
-// tỉ lệ 5%).
+// Linh Tuyen - engine thach offline chinh (balance playtest 2026-08-28).
+// Muc tieu san luong o level MAX = 5% rate farm online cua realm, tuong
+// duong ~30 phut farm cho moi 10h offline (dung cap). Don vi: thach/phut.
+// Realm tren Truc Co scale x3 moi bac (khop getRealmRewardMultiplier ben
+// core/reward/RealmRewardScale.ts - farm online cung tang x3 nen offline giu
+// ti le 5%).
 const SPIRIT_SPRING_TARGET_PER_MINUTE: Record<string, number> = {
   mortal: 5.5,
   qi_refining: 31,
@@ -76,105 +66,81 @@ function getSpiritSpringTargetRatePerMinute(realmId: string | undefined): number
 }
 
 /**
- * Building KHÔNG giữ state nội bộ (giống EquipmentSystem) — bag/
- * registry/manager truyền theo từng method, để GameManager tự quản
- * lý instance của các Manager/Registry đó (đúng kiến trúc project).
+ * Building KHONG giu state noi bo (giong EquipmentSystem) - bag/
+ * registry/manager truyen theo tung method, de GameManager tu quan
+ * ly instance cua cac Manager/Registry do (dung kien truc project).
  *
- * (2026-08-25, resource-professions-rework plan §2) — sau rework chỉ
- * còn Linh Tuyền (producesSpiritStone): vòng sản xuất nguyên liệu đã
- * chuyển sang ProductionSystem, processing jobs/garden đã bị loại bỏ.
+ * (2026-08-25, resource-professions-rework plan sec2) - sau rework chi
+ * con Linh Tuyen (producesSpiritStone): vong san xuat nguyen lieu da
+ * chuyen sang ProductionSystem, processing jobs/garden da bi loai bo.
  */
+/**
+ * F-TC5-1: the accrual realm pin is only ever written from the player's
+ * realm when an instance is created (EM-01). A pin that resolves above the
+ * current realm - or to no known realm - is a forged accrual window;
+ * clamp it to the current realm instead of minting the fabricated
+ * window's tier and rate.
+ */
+function resolveAccrualRealmId(
+  instance: BuildingInstance,
+  currentRealmId?: string,
+): string | undefined {
+  const pinned = instance.accrualRealmId ?? currentRealmId
+
+  if (pinned === undefined || currentRealmId === undefined) {
+    return pinned
+  }
+
+  const pinnedIndex = getRealmIndex(pinned)
+
+  if (pinnedIndex < 0 || pinnedIndex > getRealmIndex(currentRealmId)) {
+    return currentRealmId
+  }
+
+  return pinned
+}
+
 export class BuildingSystem {
   /**
-   * Check chi tiết kèm lý do — UI/toast báo đúng nguyên nhân thay vì
-   * im lặng; canBuild() boolean wrapper giữ cho caller cũ.
+   * Default-built reconcile (2026-10-03): every registered building
+   * exists at level 1 by default - there is no build action and no
+   * 'unbuilt' state. Called once after character init and after each
+   * save restore so old saves gain any missing building. Idempotent:
+   * skips buildings that already own an instance. Returns the newly
+   * added instances so callers can run side-effects (CHQ capacity).
    */
-  canBuildDetailed(
-    buildingId: string,
+  ensureAllBuilt(
     registry: BuildingRegistry,
     manager: BuildingManager,
-    player: PlayerData,
-    materialBag: MaterialBag,
-  ): { ok: boolean; reason?: BuildRejectReason } {
-    if (!registry.has(buildingId)) {
-      return { ok: false, reason: 'unknown_building' }
-    }
-
-    const template = registry.get(buildingId)
-
-    // Crafting-station (BUILDing spec) chỉ xây được 1 lần/loại.
-    if (template.category === 'crafting_station' && manager.getByBuildingId(buildingId)) {
-      return { ok: false, reason: 'already_built' }
-    }
-
-    // Cờ test (2026-08-20, override qua localStorage từ 2026-08-26) —
-    // bỏ qua gate cảnh giới/nguyên liệu để test chức năng.
-    if (isTestModeUnlockAll()) {
-      return { ok: true }
-    }
-
-    if (
-      template.requiredRealmId &&
-      getRealmIndex(player.realmId) < getRealmIndex(template.requiredRealmId)
-    ) {
-      return { ok: false, reason: 'realm_locked' }
-    }
-
-    const cost = template.upgradeCost[0] ?? []
-
-    if (!cost.every((entry) => materialBag.has(entry.materialId, entry.amount))) {
-      return { ok: false, reason: 'missing_materials' }
-    }
-
-    return { ok: true }
-  }
-
-  canBuild(
-    buildingId: string,
-    registry: BuildingRegistry,
-    manager: BuildingManager,
-    player: PlayerData,
-    materialBag: MaterialBag,
-  ): boolean {
-    return this.canBuildDetailed(buildingId, registry, manager, player, materialBag).ok
-  }
-
-  build(
-    buildingId: string,
-    registry: BuildingRegistry,
-    manager: BuildingManager,
-    player: PlayerData,
-    materialBag: MaterialBag,
     currentTime: number,
-  ): BuildingInstance | null {
-    if (!this.canBuild(buildingId, registry, manager, player, materialBag)) {
-      return null
+    realmId?: string,
+  ): BuildingInstance[] {
+    const added: BuildingInstance[] = []
+
+    for (const template of registry.getAll()) {
+      if (manager.getByBuildingId(template.id)) {
+        continue
+      }
+
+      const instance: BuildingInstance = {
+        instanceId: crypto.randomUUID(),
+
+        buildingId: template.id,
+
+        level: 1,
+
+        lastCollectedAt: currentTime,
+
+        // EM-01 - the first accrual window runs under the current realm.
+        accrualRealmId: realmId,
+      }
+
+      manager.add(instance)
+
+      added.push(instance)
     }
 
-    const template = registry.get(buildingId)
-
-    const cost = template.upgradeCost[0] ?? []
-
-    for (const entry of cost) {
-      materialBag.remove(entry.materialId, entry.amount)
-    }
-
-    const instance: BuildingInstance = {
-      instanceId: crypto.randomUUID(),
-
-      buildingId,
-
-      level: 1,
-
-      lastCollectedAt: currentTime,
-
-      // EM-01 - the first accrual window runs under the build-time realm.
-      accrualRealmId: player.realmId,
-    }
-
-    manager.add(instance)
-
-    return instance
+    return added
   }
 
   upgrade(
@@ -202,8 +168,9 @@ export class BuildingSystem {
       return false
     }
 
-    // upgradeCost[0] = chi phí xây (level 0->1, đã trả lúc build()),
-    // upgradeCost[level] = chi phí nâng từ level hiện tại lên level+1.
+    // upgradeCost index = level hien tai (row 0 tro thanh du lieu thua
+    // tu khi co che xay bi bo - building mac dinh lv1); cost tra cho
+    // level -> level+1.
     const cost = template.upgradeCost[instance.level] ?? []
 
     if (!cost.every((entry) => materialBag.has(entry.materialId, entry.amount))) {
@@ -272,9 +239,9 @@ export class BuildingSystem {
   }
 
   /**
-   * BUILDing spec mục 15-16 — cộng dồn effects của MỌI level đã đạt
-   * (level ≤ instance.level). `template.levels` phải sắp theo level
-   * tăng dần để "level cao nhất đã đạt" xử lý sau cùng.
+   * BUILDing spec muc 15-16 - cong don effects cua MOI level da dat
+   * (level <= instance.level). `template.levels` phai sap theo level
+   * tang dan de "level cao nhat da dat" xu ly sau cung.
    */
   getCraftModifiers(instance: BuildingInstance, template: Building): CraftModifiers {
     if (!template.levels) {
@@ -305,17 +272,23 @@ export class BuildingSystem {
   }
 
   private getEffectiveRate(template: Building, level: number, realmId?: string): number {
-    // Linh mạch (chi-hien-quan spec) — engine Linh Tuyền cũ, nguồn giờ là
-    // gathering_outpost (building spirit_spring đã xóa khỏi data).
+    // F-TC6-5: a forged/unsupported level cannot mint unbounded yield -
+    // the authored table tops out at template.maxLevel, so effective
+    // level clamps there (the boundary validator already rejects, this
+    // is the emit-side defence).
+    const effectiveLevel = Math.min(level, template.maxLevel)
+
+    // Linh mach (chi-hien-quan spec) - engine Linh Tuyen cu, nguon gio la
+    // gathering_outpost (building spirit_spring da xoa khoi data).
     if (template.id === 'gathering_outpost') {
-      return this.getSpiritSpringRatePerSecond(template, level, realmId)
+      return this.getSpiritSpringRatePerSecond(template, effectiveLevel, realmId)
     }
 
-    return (template.baseProductionRate ?? 0) * (1 + (level - 1) * LEVEL_BONUS_PER_LEVEL)
+    return (template.baseProductionRate ?? 0) * (1 + (effectiveLevel - 1) * LEVEL_BONUS_PER_LEVEL)
   }
 
-  // Linh Tuyền — rate neo theo realm (bảng SPIRIT_SPRING_TARGET_PER_MINUTE),
-  // level scaling giữ +20%/level; level MAX đạt đúng target 5% farm online.
+  // Linh Tuyen - rate neo theo realm (bang SPIRIT_SPRING_TARGET_PER_MINUTE),
+  // level scaling giu +20%/level; level MAX dat dung target 5% farm online.
   private getSpiritSpringRatePerSecond(template: Building, level: number, realmId?: string): number {
     const targetPerMinute = getSpiritSpringTargetRatePerMinute(realmId)
     const maxLevelMultiplier = 1 + (template.maxLevel - 1) * LEVEL_BONUS_PER_LEVEL
@@ -325,23 +298,25 @@ export class BuildingSystem {
   }
 
   private getEffectiveCapacity(template: Building, level: number, realmId?: string): number {
+    const effectiveLevel = Math.min(level, template.maxLevel)
+
     if (template.id === 'gathering_outpost') {
-      // Storage = đúng 10h sản lượng ở level/realm đó để offline không bao
-      // giờ cap TRƯỚC cap thời gian (2026-08-28 — thay 100^level cũ khiến
-      // L1 chỉ chứa 100 thạch, đầy sau ~47 phút). Epsilon chặn float drift
-      // (rate×36000 = 18600.000000000004 không bị ceil lên 18601).
-      const tenHourYield = this.getSpiritSpringRatePerSecond(template, level, realmId) * PRODUCTION_OFFLINE_CAP_SECONDS
+      // Storage = dung 10h san luong o level/realm do de offline khong bao
+      // gio cap TRUOC cap thoi gian (2026-08-28 - thay 100^level cu khien
+      // L1 chi chua 100 thach, day sau ~47 phut). Epsilon chan float drift
+      // (ratex36000 = 18600.000000000004 khong bi ceil len 18601).
+      const tenHourYield = this.getSpiritSpringRatePerSecond(template, effectiveLevel, realmId) * PRODUCTION_OFFLINE_CAP_SECONDS
       return Math.ceil(tenHourYield - 1e-6)
     }
 
-    return template.baseStorageCapacity * (1 + (level - 1) * LEVEL_BONUS_PER_LEVEL)
+    return template.baseStorageCapacity * (1 + (effectiveLevel - 1) * LEVEL_BONUS_PER_LEVEL)
   }
 
   /**
-   * Sản lượng ĐÃ TÍCH LUỸ tính THUẦN từ thời gian trôi qua kể từ lần
-   * thu hoạch gần nhất — không mutate gì, dùng cả cho UI hiển thị lẫn
-   * claim() thật bên dưới. Chỉ áp dụng cho resource building (Linh
-   * Tuyền) sau rework.
+   * San luong DA TICH LUY tinh THUAN tu thoi gian troi qua ke tu lan
+   * thu hoach gan nhat - khong mutate gi, dung ca cho UI hien thi lan
+   * claim() that ben duoi. Chi ap dung cho resource building (Linh
+   * Tuyen) sau rework.
    */
   getStoredAmount(
     instance: BuildingInstance,
@@ -362,7 +337,7 @@ export class BuildingSystem {
       // EM-01 - rate/capacity follow the realm the window accrued under,
       // not the claim-time realm: a breakthrough inside the window must
       // not retroactively reprice the whole backlog.
-      const accrualRealmId = instance.accrualRealmId ?? realmId
+      const accrualRealmId = resolveAccrualRealmId(instance, realmId)
       const rate = this.getEffectiveRate(template, instance.level, accrualRealmId)
       const capacity = this.getEffectiveCapacity(template, instance.level, accrualRealmId)
 
@@ -376,19 +351,45 @@ export class BuildingSystem {
   // getStoredAmount/claim so they always agree (2026-08-28). EM-01: same
   // accrualRealmId pin - the UI number is exactly what claim() will pay.
   getCapacity(instance: BuildingInstance, template: Building, realmId?: string): number {
-    return this.getEffectiveCapacity(template, instance.level, instance.accrualRealmId ?? realmId)
+    return this.getEffectiveCapacity(template, instance.level, resolveAccrualRealmId(instance, realmId))
   }
 
   getRatePerMinute(instance: BuildingInstance, template: Building, realmId?: string): number {
-    return this.getEffectiveRate(template, instance.level, instance.accrualRealmId ?? realmId) * 60
+    return this.getEffectiveRate(template, instance.level, resolveAccrualRealmId(instance, realmId)) * 60
   }
 
   /**
-   * Resolve materialId mà claim() sẽ trả — linh mạch Khai Vật Đường cấp
-   * Linh Thạch đúng PHẨM theo realm thu thập, building khác dùng template.
-   * Tách riêng để caller (GameManager.collectBuilding) pre-check registry
-   * TRƯỚC khi claim reset mốc thời gian — tránh mất sản lượng nếu id không
-   * resolve được (review 2026-08-28).
+   * "Day kho" cho resource building = san luong cham tran TICH LUY THUC
+   * TE - muc toi da la min(capacity, capOffline * rate). Linh mach
+   * gathering_outpost duoc thiet ke capacity = ceil(10h yield) nen luon
+   * con ~1 don vi headroom so voi muc tich luy toi da: so sanh thang
+   * voi capacity se khong bao gio dat "day". Non-producer tra false.
+   */
+  isStorageFull(
+    instance: BuildingInstance,
+    template: Building,
+    currentTime: number,
+    realmId?: string,
+  ): boolean {
+    const accrualRealmId = resolveAccrualRealmId(instance, realmId)
+    const attainable = Math.min(
+      this.getEffectiveCapacity(template, instance.level, accrualRealmId),
+      PRODUCTION_OFFLINE_CAP_SECONDS * this.getEffectiveRate(template, instance.level, accrualRealmId),
+    )
+
+    if (attainable <= 0) {
+      return false
+    }
+
+    return this.getStoredAmount(instance, template, currentTime, accrualRealmId) >= attainable
+  }
+
+  /**
+   * Resolve materialId ma claim() se tra - linh mach Khai Vat Duong cap
+   * Linh Thach dung PHAM theo realm thu thap, building khac dung template.
+   * Tach rieng de caller (GameManager.collectBuilding) pre-check registry
+   * TRUOC khi claim reset moc thoi gian - tranh mat san luong neu id khong
+   * resolve duoc (review 2026-08-28).
    */
   resolveProducesMaterialId(template: Building, currentRealmId?: string): string | undefined {
     return template.id === 'gathering_outpost' && currentRealmId
@@ -397,16 +398,16 @@ export class BuildingSystem {
   }
 
   /**
-   * Thu hoạch — resource building (Linh Tuyền): cộng phần nguyên (floor)
-   * sản lượng đã tích luỹ vào MaterialBag qua GameManager (claim chỉ
-   * trả amount + materialId, không cầm bag/registry material — plan
-   * Workstream F: Linh Thạch là MATERIAL thật trong MaterialBag).
+   * Thu hoach - resource building (Linh Tuyen): cong phan nguyen (floor)
+   * san luong da tich luy vao MaterialBag qua GameManager (claim chi
+   * tra amount + materialId, khong cam bag/registry material - plan
+   * Workstream F: Linh Thach la MATERIAL that trong MaterialBag).
    *
-   * Giữ PHẦN LẺ (review 2026-08-28): thay vì reset mốc về currentTime
-   * (mất tới ~0.99 đơn vị mỗi lần claim), mốc được LÙI về quá khứ đúng
-   * bằng thời gian đã sản xuất phần lẻ còn lại — lần claim kế tiếp sẽ
-   * cộng dồn tiếp phần đó. Phần thời gian vượt sức chứa vẫn coi như mất
-   * (đúng "Production Paused khi đầy").
+   * Giu PHAN LE (review 2026-08-28): thay vi reset moc ve currentTime
+   * (mat toi ~0.99 don vi moi lan claim), moc duoc LUI ve qua khu dung
+   * bang thoi gian da san xuat phan le con lai - lan claim ke tiep se
+   * cong don tiep phan do. Phan thoi gian vuot suc chua van coi nhu mat
+   * (dung "Production Paused khi day").
    */
   claim(
     instanceId: string,
@@ -435,12 +436,12 @@ export class BuildingSystem {
       return { amount: 0 }
     }
 
-    // Giữ phần lẻ: lùi mốc về quá khứ đúng bằng thời gian sản xuất phần
-    // lẻ (stored - amount), thay vì reset về currentTime làm mất phần đó.
+    // Giu phan le: lui moc ve qua khu dung bang thoi gian san xuat phan
+    // le (stored - amount), thay vi reset ve currentTime lam mat phan do.
     // EM-01 - rate/material tier still follow the just-ended window's
     // realm (pin), then the pin moves to the current realm for the next
     // accrual window.
-    const accrualRealmId = instance.accrualRealmId ?? currentRealmId
+    const accrualRealmId = resolveAccrualRealmId(instance, currentRealmId)
     const rate = this.getEffectiveRate(template, instance.level, accrualRealmId)
 
     const fraction = stored - amount

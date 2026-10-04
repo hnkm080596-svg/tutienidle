@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { ELEMENT_ORDER } from './ElementLabels'
 import { KHAC_OVERCOMES, SINH_CYCLE, khacOvercomer, relationOf } from './WuxingRelations'
 
-// Phap Tu Reimagined Task 5 — the generic Ngũ Hành primitive. Sinh
-// beneficiary and Khắc overcomer are DIRECTIONAL (cycle tables), never
+// Phap Tu Reimagined Task 5 - the generic Ngu Hanh primitive. Sinh
+// beneficiary and Khac overcomer are DIRECTIONAL (cycle tables), never
 // inferred from application order.
 describe('WuxingRelations', () => {
   it('exactly 5 sinh + 5 khac unordered pairs over 5 elements', () => {

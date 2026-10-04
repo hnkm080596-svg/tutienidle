@@ -16,8 +16,8 @@ describe('EquipmentSlotManager', () => {
     expect(manager.getAll()).toHaveLength(EQUIPMENT_SLOTS.length)
   })
 
-  // 9.10 defense-in-depth — save data có thể mang slot id lạ (save cũ /
-  // lỗi data); restore không được thêm slot mới vào map cố định 6 slot.
+  // 9.10 defense-in-depth - save data co the mang slot id la (save cu /
+  // loi data); restore khong duoc them slot moi vao map co dinh 6 slot.
   it('restore skip entry có slot không thuộc EQUIPMENT_SLOTS — không throw, không thêm slot mới', () => {
     const manager = new EquipmentSlotManager()
     const weapon = createDefaultSlotState('weapon')

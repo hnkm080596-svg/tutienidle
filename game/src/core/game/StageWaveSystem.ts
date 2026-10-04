@@ -12,6 +12,7 @@ import type { EnemySystem } from '../enemy/EnemySystem'
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { HiddenBeastSystem } from './HiddenBeastSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
+import { stageSpawnableEnemyIds } from '../stage/StageSpawnableEnemies'
 
 export interface StageWaveSystemDeps {
   eventBus: EventBus
@@ -20,16 +21,16 @@ export interface StageWaveSystemDeps {
   stageSystem: StageSystem
   stageTemplates: TemplateRegistry<Stage>
   enemyTemplates: TemplateRegistry<Enemy>
-  // Gate mở màn (realm gate + tuyến zone) — GameManager cung cấp closure
-  // vì isStageUnlocked cần cả stageTemplates lẫn zoneRegistry.
+  // Gate mo man (realm gate + tuyen zone) - GameManager cung cap closure
+  // vi isStageUnlocked can ca stageTemplates lan zoneRegistry.
   isStageUnlocked: (stageId: string, player: PlayerData) => boolean
-  // Khởi trận với player thật (snapshot skill/stats) — GameManager cung cấp
-  // startBattleWithPlayer để không phải inject skill systems. ARCH-002 (M7):
-  // stats are resolved inside the battle ops after the passive reset — the
+  // Khoi tran voi player that (snapshot skill/stats) - GameManager cung cap
+  // startBattleWithPlayer de khong phai inject skill systems. ARCH-002 (M7):
+  // stats are resolved inside the battle ops after the passive reset - the
   // caller no longer passes a snapshot.
   launchBattle: (player: PlayerData, enemy: Enemy) => void
-  // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — roll trà trộn pool spawn
-  // Luyện Khí khi cửa sổ 1000 kill mở.
+  // Quai an (spec dot-pha-loi-kiep sec4.1c) - roll tra tron pool spawn
+  // Luyen Khi khi cua so 1000 kill mo.
   hiddenBeast: HiddenBeastSystem
   // Session rng seam (F-W-7) - optional injectable stream so harnesses
   // pin the hidden-substitution roll.
@@ -75,10 +76,10 @@ export class StageWaveSystem {
   }
 
   /**
-   * Điểm vào DUY NHẤT để bắt đầu 1 màn. Quái đầu tiên spawn ngay trong
-   * lệnh gọi này (qua launchBattle — tự nhiên tái dùng
-   * passiveSystem.resetStacks() bên trong, đúng điểm reset stack 1 LẦN/
-   * màn chứ không phải mỗi wave).
+   * Diem vao DUY NHAT de bat dau 1 man. Quai dau tien spawn ngay trong
+   * lenh goi nay (qua launchBattle - tu nhien tai dung
+   * passiveSystem.resetStacks() ben trong, dung diem reset stack 1 LAN/
+   * man chu khong phai moi wave).
    *
    * Transactional (Mission C audit): the lease is acquired first, then
    * pick + launch run; ANY failure - refused pick, thrown pick, thrown
@@ -140,15 +141,15 @@ export class StageWaveSystem {
     this.repeatStageContinuously = false
   }
 
-  // C1 (2026-09-08) — the legacy real-time spawn loop (update()) and
+  // C1 (2026-09-08) - the legacy real-time spawn loop (update()) and
   // resolveBossSummons() are REMOVED: neither was called from any prod
   // caller since the Slice 6 cutover (turn-based wave spawning lives in
   // TurnBattleSystem.tickPacing via the spawnEnemy factory). The live
   // surface is start/stopRepeat/getProgress/pickEnemyForTurnSpawn below.
 
-  // Người chơi CHỦ ĐỘNG thoát trận giữa chừng / player chết — dừng stage
-  // và tắt auto-repeat. Phần thưởng đã kiếm được KHÔNG mất (loot cấp theo
-  // từng quái chết, xem BattleLootSystem.processDefeatedEnemies()).
+  // Nguoi choi CHU DONG thoat tran giua chung / player chet - dung stage
+  // va tat auto-repeat. Phan thuong da kiem duoc KHONG mat (loot cap theo
+  // tung quai chet, xem BattleLootSystem.processDefeatedEnemies()).
   stopRepeat() {
     // Capability release - frees the slot ONLY if this stage run still
     // owns it. A lease that died externally (or a slot now held by a
@@ -174,7 +175,7 @@ export class StageWaveSystem {
     return this.deps.stageManager.owns(this.stageLease)
   }
 
-  // Phase A0 (2026-09-07) — the `alive` field is REMOVED from this shape:
+  // Phase A0 (2026-09-07) - the `alive` field is REMOVED from this shape:
   // it used to read the legacy battleSystem's enemy list, which is always
   // empty during real turn-based gameplay (HUD counter stuck at 0).
   // GameManager.getStageProgress() now composes the live count itself from
@@ -197,29 +198,29 @@ export class StageWaveSystem {
     return {
       spawned: active.spawnedCount,
 
-      // Đọc effectiveTotalEnemyCount thay vì stage.totalEnemyCount thô —
-      // progress hiển thị (CombatTopBar.vue) phải khớp con số THẬT dùng
-      // để quyết định victory (xem update() ở trên), không thì stage
-      // Boss hiện "1/5" thay vì "1/1" dù trận đã thắng.
+      // Doc effectiveTotalEnemyCount thay vi stage.totalEnemyCount tho -
+      // progress hien thi (CombatTopBar.vue) phai khop con so THAT dung
+      // de quyet dinh victory (xem update() o tren), khong thi stage
+      // Boss hien "1/5" thay vi "1/1" du tran da thang.
       total: effectiveTotalEnemyCount(stage),
     }
   }
 
   /**
-   * Roll 1 entry trong enemyPool theo weight, tra template, rồi roll
-   * riêng `eliteChance` của ĐÚNG entry đó — trúng thì gắn tag tinh_anh
-   * lên bản spawn (stat/prefix/flag qua applyEnemyTags, xem
-   * core/enemy/EnemyTag.ts) thay vì trả bản thường. `eliteChance` nghĩa
-   * mới (spec v3 B9): chance to attach the tinh_anh tag. Dùng chung cho
-   * quái ĐẦU (start) lẫn quái spawn giữa chừng (update).
+   * Roll 1 entry trong enemyPool theo weight, tra template, roi roll
+   * rieng `eliteChance` cua DUNG entry do - trung thi gan tag tinh_anh
+   * len ban spawn (stat/prefix/flag qua applyEnemyTags, xem
+   * core/enemy/EnemyTag.ts) thay vi tra ban thuong. `eliteChance` nghia
+   * moi (spec v3 B9): chance to attach the tinh_anh tag. Dung chung cho
+   * quai DAU (start) lan quai spawn giua chung (update).
    *
-   * `isFinalSpawn` — Core Loop Foundation checklist (Mục BOSS): lượt
-   * spawn CUỐI của stage có bossEnemyId LUÔN LÀ Boss, bỏ qua roll
-   * enemyPool cho phần template (Boss KHÔNG ngẫu nhiên như tag).
+   * `isFinalSpawn` - Core Loop Foundation checklist (Muc BOSS): luot
+   * spawn CUOI cua stage co bossEnemyId LUON LA Boss, bo qua roll
+   * enemyPool cho phan template (Boss KHONG ngau nhien nhu tag).
    *
-   * `options.allowTags` — spec v3 D5: tag chỉ roll ở kênh ACTIVE; idle
-   * (auto-farm cycle) pass `allowTags: false` nên không bao giờ gắn tag.
-   * Boss vẫn áp unconditional ở cả 2 kênh (D4).
+   * `options.allowTags` - spec v3 D5: tag chi roll o kenh ACTIVE; idle
+   * (auto-farm cycle) pass `allowTags: false` nen khong bao gio gan tag.
+   * Boss van ap unconditional o ca 2 kenh (D4).
    */
   private pickEnemyForSpawn(
     stage: Stage,
@@ -228,22 +229,22 @@ export class StageWaveSystem {
   ): Enemy | undefined {
     const floor = stage.floor ?? stage.requiredRealmLevel
 
-    // Các chapter có thể tạm tái dùng encounter pool của chapter trước.
-    // Combat vẫn phải dùng cảnh giới của stage để Realm Pressure không biến
-    // quái Trúc Cơ thành quái Luyện Khí dưới tên khác.
+    // Cac chapter co the tam tai dung encounter pool cua chapter truoc.
+    // Combat van phai dung canh gioi cua stage de Realm Pressure khong bien
+    // quai Truc Co thanh quai Luyen Khi duoi ten khac.
     const applyStageRealm = (enemy: Enemy): Enemy =>
       stage.requiredRealmId ? { ...enemy, realmId: stage.requiredRealmId } : enemy
 
-    // DESIGN: boss chỉ xuất hiện ở tầng 10 (tầng cuối chương). bossEnemyId trên
-    // các stage 1-9 hiện là metadata/reserved data, không phải lệnh spawn boss.
-    // Không bỏ guard này chỉ vì stage 1-9 cũng khai bossEnemyId.
+    // DESIGN: boss chi xuat hien o tang 10 (tang cuoi chuong). bossEnemyId tren
+    // cac stage 1-9 hien la metadata/reserved data, khong phai lenh spawn boss.
+    // Khong bo guard nay chi vi stage 1-9 cung khai bossEnemyId.
     if (isFinalSpawn && floor === 10 && stage.bossEnemyId) {
       const bossTemplate = this.deps.enemyTemplates.get(stage.bossEnemyId)
 
       if (bossTemplate) {
         const boss = createBossVariant(bossTemplate)
 
-        // Spec v3 section 2.2 — active floor 10 can still stack the
+        // Spec v3 section 2.2 - active floor 10 can still stack the
         // tinh_anh tag ON TOP of the boss variant (~10% boss+tinh_anh).
         // The chance comes from the boss species' own pool entry (the
         // builder authors bossEnemyId === the elite pool species); idle
@@ -264,23 +265,27 @@ export class StageWaveSystem {
       return undefined
     }
 
-    // Tag roll — ACTIVE only (spec v3 D5): eliteChance is the chance to
+    // Tag roll - ACTIVE only (spec v3 D5): eliteChance is the chance to
     // attach the tinh_anh tag; idle passes allowTags: false.
     if (options?.allowTags !== false && entry.eliteChance && rollChance(entry.eliteChance, options?.rng)) {
       return applyStageRealm(applyEnemyTags(template, ['tinh_anh'], ENEMY_TAGS))
     }
 
-    // Quái ẩn trà trộn (spec dot-pha-loi-kiep §4.1c) — chỉ stage Luyện
-    // Khí + cửa sổ 1000 kill mở; roll 5% thay thế quái pool bằng Huyết Mông.
+    // Quai an tra tron (spec dot-pha-loi-kiep sec4.1c) - chi stage Luyen
+    // Khi + cua so 1000 kill mo; roll 5% thay the quai pool bang Huyet Mong.
     // Stage khong khai bao requiredRealmId thi khong thuoc band nao -
     // pass raw, khong ngam coi nhu Luyen Khi.
+    // BETA SCOPE LOCK v2 funnel: the stage pool is the single allow-list
+    // - a substitution may only surface an identity the stage declares
+    // spawnable. Beta stages never declare a hidden beast, so the
+    // substitution can never fire on them (matches hiddenContent: false).
     if (this.activeStagePlayer) {
       const hidden = this.deps.hiddenBeast.maybeReplaceSpawn(
         this.activeStagePlayer,
         stage.requiredRealmId,
         options?.rng ?? this.deps.sessionRng,
       )
-      if (hidden) {
+      if (hidden && stageSpawnableEnemyIds(stage).has(hidden.id)) {
         return applyStageRealm(hidden)
       }
     }
@@ -290,10 +295,10 @@ export class StageWaveSystem {
 
   /**
    * Slice 6 cutover (Completion Task 8): public wrapper cho TurnBattle's
-   * spawnEnemy factory — dùng chung nguyên logic roll thật (boss-at-10 +
-   * pool roll + tag roll + hidden beast + realm override). KHÔNG đổi
-   * logic, chỉ expose pickEnemyForSpawn cho adapter ngoài. `allowTags`
-   * mặc định true (active); idle (auto-farm) truyền false (spec v3 D5).
+   * spawnEnemy factory - dung chung nguyen logic roll that (boss-at-10 +
+   * pool roll + tag roll + hidden beast + realm override). KHONG doi
+   * logic, chi expose pickEnemyForSpawn cho adapter ngoai. `allowTags`
+   * mac dinh true (active); idle (auto-farm) truyen false (spec v3 D5).
    */
   pickEnemyForTurnSpawn(
     stage: Stage,

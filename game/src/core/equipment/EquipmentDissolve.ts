@@ -12,18 +12,18 @@ export interface DissolveResult {
 }
 
 /**
- * HÓA LUYỆN (plan §7.5) — chuyển đổi hàng loạt equipment instance thành
- * Luyện Khí Tinh Hoa. Tách khỏi EquipmentSystem (Task 9, perf-optimize-pass
- * Phase 5, sibling-file split) — hành vi giữ NGUYÊN 1:1, chỉ đổi chỗ ở.
+ * HOA LUYEN (plan sec7.5) - chuyen doi hang loat equipment instance thanh
+ * Luyen Khi Tinh Hoa. Tach khoi EquipmentSystem (Task 9, perf-optimize-pass
+ * Phase 5, sibling-file split) - hanh vi giu NGUYEN 1:1, chi doi cho o.
  *
- * Guards (§7.5): item đang trang bị / locked / favorite bị từ chối.
- * Số Tinh Hoa theo bảng ITEM_QUALITY_ESSENCE_RANGE; mọi Phẩm trang bị
- * cùng trả một loại Luyện Khí Tinh Hoa.
+ * Guards (sec7.5): item dang trang bi / locked / favorite bi tu choi.
+ * So Tinh Hoa theo bang ITEM_QUALITY_ESSENCE_RANGE; moi Pham trang bi
+ * cung tra mot loai Luyen Khi Tinh Hoa.
  *
- * `discardRefinePreview` là callback do EquipmentSystem truyền vào — huỷ
- * pending Refine preview (state của EquipmentSystem, KHÔNG thuộc dissolve)
- * trước khi item bị xoá khỏi túi, giữ đúng hành vi gốc mà không cần
- * dissolve biết về pendingRefinePreview.
+ * `discardRefinePreview` la callback do EquipmentSystem truyen vao - huy
+ * pending Refine preview (state cua EquipmentSystem, KHONG thuoc dissolve)
+ * truoc khi item bi xoa khoi tui, giu dung hanh vi goc ma khong can
+ * dissolve biet ve pendingRefinePreview.
  */
 export function dissolveInstances(
   instanceIds: readonly string[],
@@ -35,8 +35,8 @@ export function dissolveInstances(
     return { ok: false, reason: 'empty_selection' }
   }
 
-  // Dedupe — selection trùng id (UI double-submit/race) từng khiến pass 1
-  // tính reward 2 lần trong khi pass 2 chỉ remove 1 lần → nhân bản Tinh
+  // Dedupe - selection trung id (UI double-submit/race) tung khien pass 1
+  // tinh reward 2 lan trong khi pass 2 chi remove 1 lan -> nhan ban Tinh
   // Hoa (review 2026-08-28).
   const uniqueIds = Array.from(new Set(instanceIds))
 
@@ -44,7 +44,7 @@ export function dissolveInstances(
 
   const rewards: Array<{ materialId: string; amount: number }> = []
 
-  // Pass 1 — validate TOÀN BỘ selection + tính trước rewards.
+  // Pass 1 - validate TOAN BO selection + tinh truoc rewards.
   for (const instanceId of uniqueIds) {
     const instance = inventory.get(instanceId)
 
@@ -77,8 +77,8 @@ export function dissolveInstances(
     rewards.push({ materialId: LUYEN_KHI_TINH_HOA_ID, amount })
   }
 
-  // Pass 2 — all-or-nothing transaction: xoá đúng item rồi cộng
-  // Tinh Hoa trong cùng thao tác (§7.5).
+  // Pass 2 - all-or-nothing transaction: xoa dung item roi cong
+  // Tinh Hoa trong cung thao tac (sec7.5).
   for (const instance of instances) {
     discardRefinePreview(instance.instanceId)
     inventory.remove(instance.instanceId)
@@ -88,7 +88,7 @@ export function dissolveInstances(
 }
 
 /**
- * R9 (AR-23 4d) — authoritative dissolve quote. Same validation as
+ * R9 (AR-23 4d) - authoritative dissolve quote. Same validation as
  * dissolveInstances (dedupe + rejection), aggregation into per-material
  * min/max ranges; read-only (no state mutation, no preview discard).
  */

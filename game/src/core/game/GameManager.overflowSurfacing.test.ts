@@ -1,8 +1,8 @@
-// Task A6 (roadmap 9.8) — surface MaterialBag.add() overflow at reward
-// call sites: collectBuilding phải (1) clamp bag tại stackLimit, (2) push
-// notification 'bag.overflow' với lượng TRÀN bị mất, (3) quest hook chỉ
-// tính lượng THỰC SỰ vào túi (delivered = claimed − overflow). Restore
-// save quá cap phải gom đúng MỘT event mỗi loại material tràn.
+// Task A6 (roadmap 9.8) - surface MaterialBag.add() overflow at reward
+// call sites: collectBuilding phai (1) clamp bag tai stackLimit, (2) push
+// notification 'bag.overflow' voi luong TRAN bi mat, (3) quest hook chi
+// tinh luong THUC SU vao tui (delivered = claimed - overflow). Restore
+// save qua cap phai gom dung MOT event moi loai material tran.
 import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
@@ -15,6 +15,8 @@ import type { Building } from '../building/Building'
 import type { Quest } from '../quest/Quest'
 import type { Pill } from '../pill/Pill'
 import type { AlchemyRecipe, ActiveAlchemyJob } from '../alchemy/AlchemySystem'
+import { alchemyJobReservationDigest } from '../alchemy/AlchemySystem'
+import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 
 const OVERFLOW_MATERIAL: Material = {
@@ -132,17 +134,17 @@ describe('GameManager — bag overflow surfacing (9.8)', () => {
   })
 })
 
-// ARCH-012 (M12) — production/alchemy settle events are RECEIPTS
+// ARCH-012 (M12) - production/alchemy settle events are RECEIPTS
 // (amount/overflow, pills/delivered/overflow). The notification adapter in
 // GameManagerTickOps must surface DELIVERED quantity and route the lost
-// part through the shared bag.overflow notification — before the fix it
+// part through the shared bag.overflow notification - before the fix it
 // toasted the rolled amount even when the bag absorbed nothing.
 describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', () => {
   it('production cycle vào bag ĐẦY → cap giữ nguyên, KHÔNG có loot toast, bag.overflow ghi lượng mất, quest progress = 0', () => {
     const manager = new GameManager()
     const player: PlayerData = createDefaultPlayer()
 
-    // Real material data — the cycle roll resolves a real materialId and
+    // Real material data - the cycle roll resolves a real materialId and
     // grantCycleRewards skips unregistered ids entirely.
     manager.catalogOps.registerMaterials(materials)
     manager.setActivePlayer(player)
@@ -325,15 +327,30 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
       baseDurationSeconds: 1,
     }
 
-    const makeJob = (jobId: string, recipeId = OVERFLOW_RECIPE.id): ActiveAlchemyJob => ({
-      jobId,
-      recipeId,
-      pillId: OVERFLOW_PILL.id,
-      herbMaterialId: 'test_herb_myriad',
-      startedAtMs: 0,
-      completesAtMs: 1, // already due on the first update tick
-      roomLevelAtStart: 1,
-    })
+    const makeJob = (jobId: string, recipeId = OVERFLOW_RECIPE.id): ActiveAlchemyJob => {
+      const job: ActiveAlchemyJob = {
+        jobId,
+        recipeId,
+        pillId: OVERFLOW_PILL.id,
+        herbMaterialId: 'test_herb_myriad',
+        startedAtMs: 0,
+        completesAtMs: 1, // already due on the first update tick
+        roomLevelAtStart: 1,
+        reservation: {
+          woodId: buildProfessionMaterialId('wood', OVERFLOW_RECIPE.fuelWoodRealmId, 'myriad_year'),
+          fuelWoodAmount: OVERFLOW_RECIPE.fuelWoodAmount,
+          spiritStoneCost: OVERFLOW_RECIPE.spiritStoneCost,
+          herbAmount: OVERFLOW_RECIPE.herbAmount,
+          specialIngredients: [],
+          costScale: 1,
+          digest: 0,
+        },
+      }
+
+      job.reservation = { ...job.reservation, digest: alchemyJobReservationDigest(job, job.reservation) }
+
+      return job
+    }
 
     const manager = new GameManager()
     const player: PlayerData = createDefaultPlayer()
@@ -359,7 +376,7 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
 
     const events = manager.drainNotifications()
 
-    // Exactly ONE delivered toast (x1), not two — job 2 delivered nothing.
+    // Exactly ONE delivered toast (x1), not two - job 2 delivered nothing.
     const successToasts = events.filter(
       (event) => event.kind === 'craft' && event.message === `${OVERFLOW_PILL.name} x1`,
     )

@@ -5,7 +5,7 @@ import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
 import { herbBaseId, herbMaterialId } from '@/core/profession/ProfessionMaterial'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
-/** Biến thể phủ ĐỦ trục HerbAge (5 bậc — gp123 6E C1, thuong_co craftable). */
+/** Bien the phu DU truc HerbAge (5 bac - gp123 6E C1, thuong_co craftable). */
 function grottoVariants(baseId: string): AlchemyHerbVariant[] {
   return HERB_AGES.map((age) => ({
     materialId: herbMaterialId(baseId, age),
@@ -14,7 +14,7 @@ function grottoVariants(baseId: string): AlchemyHerbVariant[] {
   }))
 }
 
-/** Tám đan phương mỗi phẩm; UI chỉ hiện tám công thức của phẩm hiện tại. */
+/** Tam dan phuong moi pham; UI chi hien tam cong thuc cua pham hien tai. */
 const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierIndex) =>
   PILL_FAMILIES.map((family) => ({
     id: `alchemy_${family.id}_${realmId}`,
@@ -26,16 +26,16 @@ const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierInde
     fuelWoodAmount: 2 + Math.floor(tierIndex / 2),
     spiritStoneCost: Math.round(50 * Math.pow(2, tierIndex)),
     baseDurationSeconds: Math.round(600 * Math.pow(1.45, tierIndex)),
-    // M10 (ARCH-008) — retired families (Hoi Xuan Dan) keep their recipes
+    // M10 (ARCH-008) - retired families (Hoi Xuan Dan) keep their recipes
     // resolvable for in-flight settle, but new jobs are rejected.
     ...(family.retired === true ? { retired: true } : {}),
   })),
 )
 
-// Đan đặc biệt (spec dot-pha-loi-kiep §4.1b) — 2 đan của gate Trúc Cơ,
-// ngoài hệ 8-đan-phẩm theo PILL_FAMILIES. Nguyên liệu chính là Yêu Đan
-// (boss Luyện Khí tầng 10) + thảo realm 2 + Linh Thạch. Số liệu
-// first-pass, playtest chỉnh (spec §9).
+// Dan dac biet (spec dot-pha-loi-kiep sec4.1b) - 2 dan cua gate Truc Co,
+// ngoai he 8-dan-pham theo PILL_FAMILIES. Nguyen lieu chinh la Yeu Dan
+// (boss Luyen Khi tang 10) + thao realm 2 + Linh Thach. So lieu
+// first-pass, playtest chinh (spec sec9).
 export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
   {
     id: 'alchemy_thong_mach_dan',

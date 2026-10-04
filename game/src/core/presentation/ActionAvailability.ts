@@ -1,7 +1,7 @@
-// Workstream A (gameplay-ui-feedback-responsive-cleanup-plan.md §4.1) —
-// view model dùng chung cho mọi action gameplay: preview điều kiện +
-// mapping reason code -> locale key (i18n). Core operation vẫn
-// trả { ok, reason } thô; lớp Vue dùng actionFailureKey() + t() để dịch.
+// Workstream A (gameplay-ui-feedback-responsive-cleanup-plan.md sec4.1) -
+// view model dung chung cho moi action gameplay: preview dieu kien +
+// mapping reason code -> locale key (i18n). Core operation van
+// tra { ok, reason } tho; lop Vue dung actionFailureKey() + t() de dich.
 export interface ActionRequirementLine {
   code: string
 
@@ -20,10 +20,10 @@ export interface ActionAvailability {
   requirements: ActionRequirementLine[]
 }
 
-// Bảng mapping tập trung cho MỌI reason code hiện có trong EquipmentSystem
-// (enhance/washAffixes/refineAffixValues/dissolveInstances) — thêm reason
-// mới ở core thì thêm dòng ở đây, không được để lọt codename ra UI.
-// Core KHÔNG giữ label vi — chuỗi hiển thị nằm ở locales (vi.json/en.json).
+// Bang mapping tap trung cho MOI reason code hien co trong EquipmentSystem
+// (enhance/washAffixes/refineAffixValues/dissolveInstances) - them reason
+// moi o core thi them dong o day, khong duoc de lot codename ra UI.
+// Core KHONG giu label vi - chuoi hien thi nam o locales (vi.json/en.json).
 export const ACTION_FAILURE_FALLBACK_KEY = 'actionFailure.fallback'
 
 export const ACTION_FAILURE_UNKNOWN_KEY = 'actionFailure.unknown'
@@ -54,8 +54,8 @@ export const ACTION_FAILURE_KEYS: Record<string, string> = {
   grade_mismatch: 'actionFailure.grade_mismatch',
 }
 
-/** Không để lọt reason thô ra UI người chơi — luôn qua mapping key này.
- *  Trả null khi KHÔNG có reason (caller tự chọn fallback key). */
+/** Khong de lot reason tho ra UI nguoi choi - luon qua mapping key nay.
+ *  Tra null khi KHONG co reason (caller tu chon fallback key). */
 export function actionFailureKey(reason: string | undefined): string | null {
   if (!reason) {
     return null
@@ -64,7 +64,7 @@ export function actionFailureKey(reason: string | undefined): string | null {
   return ACTION_FAILURE_KEYS[reason] ?? ACTION_FAILURE_UNKNOWN_KEY
 }
 
-/** Helper build 1 requirement line so component không tự ghép chuỗi. */
+/** Helper build 1 requirement line so component khong tu ghep chuoi. */
 export function requirementLine(
   code: string,
   label: string,

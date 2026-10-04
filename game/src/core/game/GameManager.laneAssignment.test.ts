@@ -6,10 +6,10 @@ import { CENTER_LANE_INDEX } from '../battle/BattleLane'
 import { ENEMY_SIDE_REGION, centerOfRegion } from '../battle/BattlefieldRegions'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-// Top-down 5-spawnedLane (2026-08-22) — Boss LUÔN đứng spawnedLane giữa (CENTER_LANE_INDEX),
-// quái thường random mỗi lần spawn. Gán spawnedLane xảy ra ở GameManager.startBattle()/
-// updateStageProgress() (SAU enemyToCombatEntity(), ghi đè placeholder spawnedLane:0 —
-// xem Enemy.ts's enemyToCombatEntity()), không phải ở core Enemy/EnemyDefinition.
+// Top-down 5-spawnedLane (2026-08-22) - Boss LUON dung spawnedLane giua (CENTER_LANE_INDEX),
+// quai thuong random moi lan spawn. Gan spawnedLane xay ra o GameManager.startBattle()/
+// updateStageProgress() (SAU enemyToCombatEntity(), ghi de placeholder spawnedLane:0 -
+// xem Enemy.ts's enemyToCombatEntity()), khong phai o core Enemy/EnemyDefinition.
 const MINIMAL_STATS_INPUT = {
   maxHp: 100,
   might: 0,
@@ -50,16 +50,16 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
       name: 'Boss',
       level: 1,
       realmId: 'qi_refining',
-      // EnemyLane authored 'air' — CỐ TÌNH khác trung tâm vùng địch, chứng
-      // minh field authored này không còn quyết định vị trí hiển thị.
+      // EnemyLane authored 'air' - CO TINH khac trung tam vung dich, chung
+      // minh field authored nay khong con quyet dinh vi tri hien thi.
       lane: 'air',
       statsInput: MINIMAL_STATS_INPUT,
       rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
-    // Battlefield region redesign (spec §6, 2026-09-05) — Boss không còn
-    // đứng cùng hàng player (CENTER_LANE_INDEX/HERO_LANE_INDEX) mà LUÔN ở
-    // trung tâm ENEMY_SIDE_REGION (xem BattlefieldRegions.ts).
+    // Battlefield region redesign (spec sec6, 2026-09-05) - Boss khong con
+    // dung cung hang player (CENTER_LANE_INDEX/HERO_LANE_INDEX) ma LUON o
+    // trung tam ENEMY_SIDE_REGION (xem BattlefieldRegions.ts).
     const expectedBossPosition = centerOfRegion(ENEMY_SIDE_REGION)
 
     for (let i = 0; i < 30; i++) {
@@ -67,8 +67,8 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
 
       gameManager.startBattle(createPlayer(), boss)
 
-      // Slice 6 cutover: spawn TỨC THỜI trong TurnBattle (không còn telegraph
-      // pendingSpawns của hệ real-time) — đọc row từ enemy participant.
+      // Slice 6 cutover: spawn TUC THOI trong TurnBattle (khong con telegraph
+      // pendingSpawns cua he real-time) - doc row tu enemy participant.
       expect(gameManager.getTurnBattle()!.enemies[0]!.entity.row).toBe(expectedBossPosition.row)
       expect(gameManager.getTurnBattle()!.enemies[0]!.entity.x).toBe(expectedBossPosition.column)
     }
@@ -100,9 +100,9 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
       seenLanes.add(row)
     }
 
-    // 100 lần random trên các hàng của ENEMY_SIDE_REGION — xác suất TOÀN BỘ
-    // đều trùng 1 giá trị gần như bằng 0, nên >1 giá trị khác nhau chứng
-    // minh THẬT SỰ random (không phải luôn trả về 1 hằng số cố định).
+    // 100 lan random tren cac hang cua ENEMY_SIDE_REGION - xac suat TOAN BO
+    // deu trung 1 gia tri gan nhu bang 0, nen >1 gia tri khac nhau chung
+    // minh THAT SU random (khong phai luon tra ve 1 hang so co dinh).
     expect(seenLanes.size).toBeGreaterThan(1)
   })
 })

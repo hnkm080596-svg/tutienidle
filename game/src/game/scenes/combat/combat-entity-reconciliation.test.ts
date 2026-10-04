@@ -10,6 +10,8 @@ function state(overrides: Partial<TurnBattleEntityVisualState> = {}): TurnBattle
     column: 10,
     currentHp: 50,
     maxHp: 100,
+    currentMp: 0,
+    maxMp: 0,
     alive: true,
     isBoss: false,
     ...overrides,
@@ -66,7 +68,7 @@ describe('planCombatantSpriteReconciliation', () => {
       state({ id: 'enemy-1', currentHp: 40 }), // update
       state({ id: 'enemy-4', currentHp: 100 }), // create
       state({ id: 'enemy-2', alive: false }), // remove (dead)
-      // enemy-3 absent entirely — remove
+      // enemy-3 absent entirely - remove
     ]
 
     const actions = planCombatantSpriteReconciliation(known, states)
@@ -114,8 +116,8 @@ describe('planCombatantSpriteReconciliation', () => {
   it('does not let a dead-on-arrival id suppress actions for other ids in the same snapshot', () => {
     const known = new Set(['enemy-2'])
     const states = [
-      state({ id: 'enemy-1', alive: false }), // unknown + dead → no action
-      state({ id: 'enemy-2', currentHp: 10 }), // known + alive → update
+      state({ id: 'enemy-1', alive: false }), // unknown + dead -> no action
+      state({ id: 'enemy-2', currentHp: 10 }), // known + alive -> update
     ]
 
     const actions = planCombatantSpriteReconciliation(known, states)

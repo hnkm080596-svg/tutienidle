@@ -18,6 +18,7 @@ import {
 } from '../player/CultivationPathSystem'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
+import { betaNodeWriteAdmitted, betaTechniqueAdmitted } from '../betaScopeSkillDomain'
 import type { ResolvedModifierChannel } from './CombatBuild'
 import type { SkillSystem } from '../skill/SkillSystem'
 import type { StatModifier } from '../stats/StatCalculator'
@@ -81,14 +82,14 @@ export class GameManagerPersistentEffectOps {
       ...this.deps.skillSystem.getScaledPassiveModifiers(),
       ...(player ? this.getTechniqueTierModifiers(player) : []),
       ...(player ? getCultivationPathStatModifiers(player) : []),
-      // Node levels (plan §6.8) - node modifiers derived from (registry,
+      // Node levels (plan sec6.8) - node modifiers derived from (registry,
       // nodeLevels), scaled by current level; no longer inside
       // player.modifiers.
-      ...(player ? aggregateNodeStatModifiers(this.deps.nodeRegistry, player) : []),
-      // combat-gate-teleport-autocast plan §9 - combatModifiers of the
+      ...(player ? this.admittedNodeModifiers(player) : []),
+      // combat-gate-teleport-autocast plan sec9 - combatModifiers of the
       // way-owned technique: fixed, band-independent, while the way owns it.
       // This is the ONLY aggregation path so it is never double-counted.
-      // (No technique currently declares combatModifiers — the old +2
+      // (No technique currently declares combatModifiers - the old +2
       // range grant retired with the attackRange stat in Task 3/D16.)
       ...this.getTechniqueCombatModifiers(),
     ]
@@ -120,7 +121,7 @@ export class GameManagerPersistentEffectOps {
     return [
       { channel: 'technique_tier', partition: 'static', modifiers: this.getTechniqueTierModifiers(player) },
       { channel: 'cultivation_path', partition: 'static', modifiers: getCultivationPathStatModifiers(player) },
-      { channel: 'node_levels', partition: 'static', modifiers: aggregateNodeStatModifiers(this.deps.nodeRegistry, player) },
+      { channel: 'node_levels', partition: 'static', modifiers: this.admittedNodeModifiers(player) },
       { channel: 'technique_combat', partition: 'static', modifiers: this.getTechniqueCombatModifiers() },
     ]
   }
@@ -146,6 +147,12 @@ export class GameManagerPersistentEffectOps {
   private getTechniqueCombatModifiers(): StatModifier[] {
     const technique = this.deps.techniqueManager.getActive()
 
+    // BETA SCOPE LOCK - dormant way's technique stays inert (same
+    // admission read as the tier channel).
+    if (technique !== undefined && !betaTechniqueAdmitted(technique.id)) {
+      return []
+    }
+
     if (!technique?.combatModifiers) {
       return []
     }
@@ -163,8 +170,22 @@ export class GameManagerPersistentEffectOps {
    * step). Task 3 (D17): MP-pool modifiers carry domain:'spell' so the
    * Task-7 gate accepts them once maxMp/manaRegenPerTurn are gated.
    */
+  /** Node-level modifiers restricted to scope-admitted nodes. */
+  private admittedNodeModifiers(player: PlayerData): StatModifier[] {
+    return aggregateNodeStatModifiers(
+      { getAll: () => this.deps.nodeRegistry.getAll().filter(betaNodeWriteAdmitted) },
+      player,
+    )
+  }
+
   private getTechniqueTierModifiers(player: PlayerData): StatModifier[] {
     const technique = this.deps.techniqueManager.getActive()
+
+    // BETA SCOPE LOCK - a dormant way's canonical technique emits no
+    // tier effects on a carried way_out_of_scope save.
+    if (technique !== undefined && !betaTechniqueAdmitted(technique.id)) {
+      return []
+    }
 
     const effect = technique ? getTechniqueEffects(technique) : undefined
 
@@ -196,7 +217,7 @@ export class GameManagerPersistentEffectOps {
 
     // MP is a spell-domain resource (D9): emit the MP family only when
     // the player's active WAY owns that stat domain (both spell ways
-    // declare 'spell' via their stat facet — M7 routes this through
+    // declare 'spell' via their stat facet - M7 routes this through
     // resolveActiveWayStatDomains, the facet authority). applyDomainGate
     // checks stat<->modifier domain match, never path ownership -- this
     // emission gate is the credential check it cannot perform, so a
@@ -271,7 +292,7 @@ export class GameManagerPersistentEffectOps {
   }
 
   /**
-   * Stack policy MVP (plan §5.4): same effectGroup -> refresh deadline
+   * Stack policy MVP (plan sec5.4): same effectGroup -> refresh deadline
    * (max) and keep the stronger value per-modifier; different group ->
    * append new.
    *
@@ -342,7 +363,7 @@ export class GameManagerPersistentEffectOps {
   }
 
   /**
-   * TU LINH TRAN (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) - the
+   * TU LINH TRAN (economy-fixes-sinks-plan sec3.2 B1, 2026-08-29) - the
    * spirit-stone sink buying % cultivation speed for 24h. Cost scales
    * with the number of active effects in the SAME group (expiresAtMs >
    * now); only ONE effect of that group exists at a time
@@ -383,7 +404,7 @@ export class GameManagerPersistentEffectOps {
 
   /**
    * Applies a PERSISTENT (out-of-battle) buff/debuff to the player - used
-   * for Kiep Thuong on a failed Tribulation (§13 of the `breakthrough`
+   * for Kiep Thuong on a failed Tribulation (sec13 of the `breakthrough`
    * spec). Same buffSystem/buffManager feeding getAggregatedModifiers()
    * each tick (same mechanism as PillSystem's 'buff' effect).
    */

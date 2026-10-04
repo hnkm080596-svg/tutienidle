@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 //
-// Vòng đời variant mới (yêu cầu 2026-08-26):
-// - Boot: peekThanhVanVariant() trả PRESET CỐ ĐỊNH spring/morning
-//   (trận đầu dùng ngay), KHÔNG random; override QA cụ thể vẫn khóa.
-// - battle_end: selectNextThanhVanVariant() chọn variant KẾ TIẾP khác
-//   variant hiện tại (mỗi chiều); override cụ thể khóa chiều đó.
-// - commitThanhVanVariant() cập nhật cache phiên sau khi swap xong.
+// Variant lifecycle (requirement 2026-08-26):
+// - Boot: peekThanhVanVariant() returns the FIXED autumn/night preset
+//   (first battle uses it directly), no random; concrete QA overrides lock.
+// - battle_end: selectNextThanhVanVariant() picks the NEXT variant
+//   different from current (per axis); concrete overrides lock that axis.
+// - commitThanhVanVariant() updates the session cache after the swap.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 function setOverride(key: string, value: string | null) {
@@ -16,8 +16,8 @@ function setOverride(key: string, value: string | null) {
   }
 }
 
-// Cache variant là state module-level — nạp lại module cho mỗi test để
-// mô phỏng đúng lúc "boot"/phiên trang mới.
+// Cache variant la state module-level - nap lai module cho moi test de
+// mo phong dung luc "boot"/phien trang moi.
 async function loadModule() {
   vi.resetModules()
 
@@ -33,17 +33,17 @@ afterEach(() => {
 })
 
 describe('ThanhVanArt — boot preset cố định', () => {
-  it('DEFAULT_THANH_VAN_VARIANT là spring/morning', async () => {
+  it('DEFAULT_THANH_VAN_VARIANT là autumn/night (moonlit Huyen Kim kit)', async () => {
     const { DEFAULT_THANH_VAN_VARIANT } = await loadModule()
 
-    expect(DEFAULT_THANH_VAN_VARIANT).toEqual({ season: 'spring', time: 'morning' })
+    expect(DEFAULT_THANH_VAN_VARIANT).toEqual({ season: 'autumn', time: 'night' })
   })
 
   it('boot không override → peek trả preset mặc định (KHÔNG random), ổn định qua nhiều lần gọi', async () => {
     const { peekThanhVanVariant } = await loadModule()
 
     for (let i = 0; i < 5; i++) {
-      expect(peekThanhVanVariant()).toEqual({ season: 'spring', time: 'morning' })
+      expect(peekThanhVanVariant()).toEqual({ season: 'autumn', time: 'night' })
     }
   })
 
@@ -54,7 +54,7 @@ describe('ThanhVanArt — boot preset cố định', () => {
 
     const { peekThanhVanVariant } = await loadModule()
 
-    expect(peekThanhVanVariant()).toEqual({ season: 'spring', time: 'morning' })
+    expect(peekThanhVanVariant()).toEqual({ season: 'autumn', time: 'night' })
   })
 
   it('override QA CỤ THỂ khóa variant boot (preview/QA vẫn dùng được)', async () => {
@@ -74,8 +74,8 @@ describe('ThanhVanArt — chọn variant trận kế tiếp (battle_end)', () =>
 
     const current = { season: 'spring' as const, time: 'noon' as const }
 
-    // Mock phân bố: random luôn về index 0 của pool đã lọc — kết quả
-    // phải xác định và khác current ở CẢ HAI chiều.
+    // Mock phan bo: random luon ve index 0 cua pool da loc - ket qua
+    // phai xac dinh va khac current o CA HAI chieu.
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     for (let i = 0; i < 8; i++) {
@@ -108,7 +108,7 @@ describe('ThanhVanArt — chọn variant trận kế tiếp (battle_end)', () =>
       seenSeasons.add(next.season)
     }
 
-    // Pool 3 mùa còn lại — 24 lần gần như chắc chắn gặp >1 mùa.
+    // Pool 3 mua con lai - 24 lan gan nhu chac chan gap >1 mua.
     expect(seenSeasons.size).toBeGreaterThan(1)
   })
 
@@ -122,10 +122,10 @@ describe('ThanhVanArt — chọn variant trận kế tiếp (battle_end)', () =>
     for (let i = 0; i < 12; i++) {
       const next = selectNextThanhVanVariant(current)
 
-      // Chiến khóa theo override cũ còn dính trong localStorage…
+      // Chien khoa theo override cu con dinh trong localStorage...
       expect(next.season).toBe('winter')
 
-      // …nhưng chiều không khóa vẫn tránh giá trị hiện tại.
+      // ...nhung chieu khong khoa van tranh gia tri hien tai.
       expect(next.time).not.toBe(current.time)
     }
   })
@@ -135,7 +135,7 @@ describe('ThanhVanArt — cache phiên theo swap', () => {
   it('commitThanhVanVariant cập nhật cache — peek kế tiếp trả variant vừa commit', async () => {
     const { peekThanhVanVariant, commitThanhVanVariant } = await loadModule()
 
-    expect(peekThanhVanVariant()).toEqual({ season: 'spring', time: 'morning' })
+    expect(peekThanhVanVariant()).toEqual({ season: 'autumn', time: 'night' })
 
     commitThanhVanVariant({ season: 'summer', time: 'night' })
 
@@ -151,7 +151,7 @@ describe('ThanhVanArt — cache phiên theo swap', () => {
 
     expect(mod.peekThanhVanVariant()).toEqual({ season: 'summer', time: 'noon' })
 
-    // Phiên trang mới (reload module) — override khóa lại từ đầu.
+    // Phien trang moi (reload module) - override khoa lai tu dau.
     const fresh = await loadModule()
 
     expect(fresh.peekThanhVanVariant().season).toBe('winter')

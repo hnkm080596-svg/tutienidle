@@ -5,11 +5,11 @@ import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Equipment } from '../equipment/Equipment'
 
-// Uncommitted audit followup plan, mục "Đồng nhất thông báo trang bị rơi
-// ngẫu nhiên" (2026-08-24) — đường "rớt đồ NGẪU NHIÊN" giờ là pool entry
+// Uncommitted audit followup plan, muc "Dong nhat thong bao trang bi roi
+// ngau nhien" (2026-08-24) - duong "rot do NGAU NHIEN" gio la pool entry
 // 'equipment_any' trong stage table (drop-system 2026-09-12): resolver
-// chọn nó, grantResolvedDrops rút template từ equipmentRegistry. Toast
-// 'loot' phải đi kèm bag + battle summary đúng 1 lần mỗi món.
+// chon no, grantResolvedDrops rut template tu equipmentRegistry. Toast
+// 'loot' phai di kem bag + battle summary dung 1 lan moi mon.
 const TEST_EQUIPMENT: Equipment = {
   id: 'random_drop_test_sword',
   name: 'Kiếm',
@@ -25,9 +25,9 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
   })
 
   it('bag, battle summary và loot notification chỉ cộng đúng 1 lần khi quái chết', () => {
-    // rng 0.8: guaranteed tinh_hoa (0.7) trượt; pool roll 0.8*35=28 trên
-    // bảng mortal -> qua base_kiem (w15) -> rơi vào equipment_any (w20)
-    // -> randomInt(0.8) chọn index 0 = template test duy nhất.
+    // rng 0.8: guaranteed tinh_hoa (0.7) truot; pool roll 0.8*35=28 tren
+    // bang mortal -> qua base_kiem (w15) -> roi vao equipment_any (w20)
+    // -> randomInt(0.8) chon index 0 = template test duy nhat.
     vi.spyOn(Math, 'random').mockReturnValue(0.8)
 
     const gameManager = new GameManager()
@@ -47,16 +47,16 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
         maxHp: 1, might: 0, attackSpeed: 1,
         criticalRate: 0, criticalDamage: 1.5, armor: 0,
       },
-      // KHÔNG khai signatureDrops — cô lập đúng đường equipment_any của
-      // stage pool (quái thường = 1 pool draw → đúng 1 món).
+      // KHONG khai signatureDrops - co lap dung duong equipment_any cua
+      // stage pool (quai thuong = 1 pool draw -> dung 1 mon).
       rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
 
     gameManager.startBattleWithPlayer(player, enemy)
-    combatSource.advance(3) // bỏ qua countdown 3s trước trận
+    combatSource.advance(3) // bo qua countdown 3s truoc tran
 
-    // Giết quái trực tiếp — không cần chờ player tự đánh (không equip
-    // skill nào trong test này), grantBattleRewardIfNeeded() chỉ đọc
+    // Giet quai truc tiep - khong can cho player tu danh (khong equip
+    // skill nao trong test nay), grantBattleRewardIfNeeded() chi doc
     // battleEnemy.entity.alive.
     const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!
     battleEnemy.entity.currentHp = 0

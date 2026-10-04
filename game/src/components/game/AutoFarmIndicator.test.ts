@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// B5 (audit T1-6) — the armed auto-farm holds the single StageManager
+// B5 (audit T1-6) - the armed auto-farm holds the single StageManager
 // slot, so the indicator is the player's only visible stop path. Mount
-// harness per StageSelectPanel.test.ts (createApp + h + provide — no
+// harness per StageSelectPanel.test.ts (createApp + h + provide - no
 // @vue/test-utils).
 import { describe, expect, it } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
@@ -19,7 +19,7 @@ function mountIndicator() {
 
   const manager = {
     catalogOps: {
-      // Real STAGES contain no 'farm_stage' — the fixture registers the
+      // Real STAGES contain no 'farm_stage' - the fixture registers the
       // name the label assertion expects (raw-id fallback would differ
       // case-sensitively).
       getStage: (stageId: string) =>

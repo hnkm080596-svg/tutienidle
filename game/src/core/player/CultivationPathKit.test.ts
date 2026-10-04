@@ -12,7 +12,7 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 
-// Cultivation Path Framework (spec 2026-09-16, M1+M7) — the kit catalog
+// Cultivation Path Framework (spec 2026-09-16, M1+M7) - the kit catalog
 // evolved in place into the path/way module catalog. These tests pin
 // the catalog contract: exactly 3 base path ids, way definitions carry
 // the former kit fields, and the legacy 5-id union + its era adapters
@@ -106,7 +106,7 @@ describe('way definitions — authored content carried over from kits', () => {
     // the artifact record on the shared unlock declaration (Kim Dan).
     expect(way?.realmRewards?.foundation_establishment).toEqual({
       passiveSkillId: 'passive_truc_co_y_chi',
-      // Three-path design (2026-09-25, sec.4-b) — mastery per element
+      // Three-path design (2026-09-25, sec.4-b) - mastery per element
       // at the Truc Co breakthrough; the_thuc_tinh The-pool grant is
       // retired (flat cap 5 via resolveMaxThe, spec D1).
       grantedNodeLevels: {
