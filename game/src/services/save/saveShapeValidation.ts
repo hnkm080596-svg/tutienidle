@@ -49,6 +49,7 @@ import { STAGES } from '../../data/stage/Stages'
 import { zones } from '../../data/stage/Zones'
 import { BREAKTHROUGH_TALENT_POOLS } from '../../data/talent/BreakthroughTalentPools'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { MORTAL_TIEN_THAN_NODES } from '../../data/progression/MortalTienThanNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
@@ -233,6 +234,7 @@ const PROGRESSION_NODE_BY_ID = new Map(
     ...THE_TU_NODES,
     ...THE_TU_AN_NODES,
     ...SKILL_CORE_NODES,
+    ...MORTAL_TIEN_THAN_NODES,
   ].map((node) => [node.id, node]),
 )
 

@@ -266,6 +266,9 @@ export interface BetaSkillTreeNode {
   levelGates: BetaSkillNodeGate[]
   /** Skills the node grants (unlocksSkillIds + grantsSkillCoreIds). */
   grantsSkillIds: string[]
+  /** Info-anchor node: rendered for readability, never purchasable -
+      the named skill's own channel (casts/grants) owns its level. */
+  infoSkillId?: string
 }
 
 /**
@@ -304,6 +307,31 @@ function betaDormantTreeViewTags(): ReadonlySet<string> {
 // authoritative for both consumers.
 export function betaNodeTreeRenderable(node: ProgressionNode): boolean {
   return !(node.rewardOnly === true || node.grantedOnly === true || node.levelsSkillId !== undefined)
+}
+
+/**
+ * Mortal tree-surface admission: pre-initiation the player owns no
+ * path/way, so no pathway-scoped tag set applies - the surface admits
+ * only the branches that carry a renderable info anchor (the mortal
+ * precursor skills' readable seats on the 'tien_than' branch tag).
+ * Every node on an admitted branch still carries its own mortal
+ * 'initiation-pending' verdict; nothing here unlocks purchase.
+ */
+export function betaMortalTreeViewTags(
+  tree: readonly ProgressionNode[],
+): ReadonlySet<string> {
+  const tags = new Set<string>()
+  for (const node of tree) {
+    const viewTag = node.elementTag ?? node.branchTag
+    if (
+      node.infoSkillId !== undefined &&
+      viewTag !== undefined &&
+      betaNodeTreeRenderable(node)
+    ) {
+      tags.add(viewTag)
+    }
+  }
+  return tags
 }
 
 export function betaTreeNodeAdmitted(node: ProgressionNode): boolean {
@@ -416,6 +444,9 @@ export interface BetaSkillTree {
   element: ElementType | null
   realmId: string
   way: CultivationWayId | null
+  /** Pre-initiation mortal (realmId 'mortal' + no path/way pair) -
+      the surface uses this to admit the info-anchor branches. */
+  mortal: boolean
   /** Committed way's display name; null when way is null. */
   wayName: string | null
   /** The committed way's declared nodeTreeTag (which fixed tree this
@@ -428,6 +459,15 @@ export interface BetaSkillTree {
   /** Every tree-catalog node with its verdict - scope-hidden entries are
       emitted explicitly; renderable nodes are state !== 'scope-hidden'. */
   nodes: BetaSkillTreeNode[]
+}
+
+/** Pre-initiation mortal: realm mortal AND no committed path/way pair. */
+function isPreInitiationMortal(player: PlayerData): boolean {
+  return (
+    player.realmId === 'mortal' &&
+    player.cultivationPath === undefined &&
+    player.cultivationWay === undefined
+  )
 }
 
 function gateTargets(prerequisite: NodePrerequisite): string[] {
@@ -498,6 +538,7 @@ function treeNodeFor(
     nodeType: node.type,
     role: node.role,
     elementTag: node.elementTag,
+    infoSkillId: node.infoSkillId,
     state: 'scope-hidden',
     level,
     maxLevel: getNodeMaxLevel(node),
@@ -525,10 +566,7 @@ function treeNodeFor(
   }
 
   const mortalRealm = player.realmId === 'mortal'
-  const mortal =
-    mortalRealm &&
-    player.cultivationPath === undefined &&
-    player.cultivationWay === undefined
+  const mortal = isPreInitiationMortal(player)
 
   if (mortalRealm && !mortal) {
     // mortal + a committed pair is contradictory (mortalBoundaryContractViolation)
@@ -576,6 +614,14 @@ function treeNodeFor(
     node.elementTag !== committedElement
   ) {
     return { ...entry, state: 'scope-hidden', reason: 'other-element-branch' }
+  }
+
+  // Info anchors render for readability only - the mirrored skill's own
+  // channel (casts/grants) owns any level, never Insight; the verdict
+  // must not read 'available'/'purchasable' or let a dirty level in
+  // nodeLevels pass for 'purchased'.
+  if (node.infoSkillId !== undefined) {
+    return { ...entry, state: 'progression-locked', reason: 'info-only' }
   }
 
   if (level >= 1) {
@@ -634,6 +680,7 @@ export function betaSkillTreeFor(
         ? wayDefinition?.nodeTreeTag
         : undefined,
     elementCasting: hasStaticPathCapability(player, 'spell.elemental_casting'),
+    mortal: isPreInitiationMortal(player),
     nodes: tree.map((node) => treeNodeFor(player, node, committedElement, way)),
   }
 }

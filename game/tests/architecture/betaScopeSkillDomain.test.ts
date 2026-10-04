@@ -21,11 +21,13 @@ import {
   activeElementTreeFor,
   betaCombatRolesFor,
   betaCombatSurfacesFor,
+  betaMortalTreeViewTags,
   betaSkillTreeFor,
   type BetaSkillTreeNode,
 } from '@/core/betaScopeSkillDomain'
 import { SPELL_KIT_IDS } from '@/data/skill/Skills'
 import { PHAP_TU_NODES } from '@/data/progression/PhapTuNodes'
+import { MORTAL_TIEN_THAN_NODES } from '@/data/progression/MortalTienThanNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -337,6 +339,54 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
         expect(node.reason).toBe('initiation-pending')
       }
     }
+  })
+
+  it('mortal tree surface admits only the info-anchor branch (tien_than precursor trio)', () => {
+    const mortal = betaSkillTreeFor(mortalPlayer(), MORTAL_TIEN_THAN_NODES)
+
+    expect(mortal.mortal).toBe(true)
+    expect([...betaMortalTreeViewTags(MORTAL_TIEN_THAN_NODES)]).toEqual([
+      'tien_than',
+    ])
+
+    for (const seatId of ['tram_tien_than', 'linh_bao_tien_than', 'huy_quyen_tien_than']) {
+      const seat = nodeById(mortal.nodes, seatId)
+      expect(seat.state).toBe('progression-locked')
+      expect(seat.reason).toBe('initiation-pending')
+      expect(seat.infoSkillId).toBeDefined()
+      expect(seat.canUpgrade).toBe(false)
+    }
+  })
+
+  it('info anchor: renderable for every in-scope player but never purchasable', () => {
+    const tree = [...PHAP_TU_NODES, ...MORTAL_TIEN_THAN_NODES]
+
+    // Uncommitted spell player browsing the element picker still reads it.
+    const uncommitted = betaSkillTreeFor(spellPlayer(), tree)
+    const seat = nodeById(uncommitted.nodes, 'linh_bao_tien_than')
+    expect(seat.state).toBe('progression-locked')
+    expect(seat.reason).toBe('info-only')
+
+    // Committed fire: same info-only verdict, no Insight channel.
+    const committed = betaSkillTreeFor(spellPlayer({ skillInsight: 50 }, 'fire'), tree)
+    const committedSeat = nodeById(committed.nodes, 'linh_bao_tien_than')
+    expect(committedSeat.state).toBe('progression-locked')
+    expect(committedSeat.reason).toBe('info-only')
+    expect(committedSeat.canUpgrade).toBe(false)
+
+    // Other-element commit: the way-less seat is not element-branched -
+    // its row stays info-only (the surface only renders tien_than for
+    // mortals, so it is never drawn on the water tree).
+    const water = betaSkillTreeFor(spellPlayer({}, 'water'), tree)
+    const waterSeat = nodeById(water.nodes, 'linh_bao_tien_than')
+    expect(waterSeat.state).toBe('progression-locked')
+    expect(waterSeat.reason).toBe('info-only')
+
+    // Non-beta way: the whole surface fails closed, anchor included.
+    const sword = betaSkillTreeFor(swordPlayer(), tree)
+    expect(nodeById(sword.nodes, 'linh_bao_tien_than').state).toBe(
+      'scope-hidden',
+    )
   })
 
   it('corrupt mortal + cultivationPath save: every node is scope-hidden, nothing purchasable', () => {

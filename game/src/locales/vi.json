@@ -256,7 +256,8 @@
           "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         },
-        "upgradeGateHeader": "Nâng cấp bị chặn:"
+        "upgradeGateHeader": "Nâng cấp bị chặn:",
+        "infoOnly": "Kỹ năng tiền thân — chỉ để xem; tự lên cấp theo số lần xuất chiêu, không thể lĩnh ngộ hay nâng cấp bằng Cảm Ngộ."
       },
       "elementTabs": {
         "aria": "Chọn Hành Pháp Tu"
@@ -2020,6 +2021,7 @@
     "tree": "Linh Mạch Kỹ Năng",
     "levelLabel": "Cấp",
     "grants": "Kỹ năng",
+    "infoCasts": "Số lần xuất chiêu",
     "effects": "Hiệu Ứng",
     "conditions": "Điều Kiện",
     "noConditions": "Không có điều kiện bổ sung.",
