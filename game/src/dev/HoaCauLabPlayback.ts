@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
 import { clipImpactMs } from '@/presentation/art/CombatEntityPresentation'
-import { HOA_CAU_VFX_ASSETS, HOA_THE_PREVIEW_ASSET } from '@/game/support/HoaCauVfxAssets'
+import { HOA_CAU_VFX_ASSETS, HOA_THE_ASSET } from '@/game/support/HoaCauVfxAssets'
 import { HoaCauFireballPresentation, hoaCauHandAnchor } from '@/game/support/skill-vfx/HoaCauFireballPresentation'
 import { hoaCauTiming } from '@/game/support/skill-vfx/HoaCauFireballTimeline'
 
@@ -29,8 +29,8 @@ export class HoaCauLabPlayback {
     }
     for (let stack = 0; stack <= 5; stack++)
       scene.load.svg(`phap-the-${stack}`, `/assets/vfx/hoa-cau-thuat/phap-the/phap-the-${stack}.svg`)
-    scene.load.atlas(HOA_THE_PREVIEW_ASSET.key,
-      HOA_THE_PREVIEW_ASSET.textureUrl, HOA_THE_PREVIEW_ASSET.atlasUrl)
+    scene.load.atlas(HOA_THE_ASSET.key,
+      HOA_THE_ASSET.textureUrl, HOA_THE_ASSET.atlasUrl)
   }
 
   private readonly actor: Phaser.GameObjects.Sprite
@@ -59,7 +59,7 @@ export class HoaCauLabPlayback {
     this.auraFront = scene.add.sprite(210, 325, HOA_CAU_VFX_ASSETS.tamMuoiAuraFront.key, 'frame_0')
       .setOrigin(0.5, 1).setScale(0.95).setDepth(590.5)
       .setBlendMode(Phaser.BlendModes.ADD).setVisible(false)
-    this.hoaThe = scene.add.sprite(235, 85, HOA_THE_PREVIEW_ASSET.key, 'frame_0')
+    this.hoaThe = scene.add.sprite(235, 85, HOA_THE_ASSET.key, 'frame_0')
       .setScale(0.26).setDepth(610).setVisible(false)
     this.phapTheGlyph = scene.add.image(235, 85, 'phap-the-0')
       .setScale(0.21).setDepth(610).setVisible(false)
@@ -116,8 +116,8 @@ export class HoaCauLabPlayback {
     const burnLoopFrames = 18
     const burnLoopMs = 900
     if (this.hoaTheMs < revealMs)
-      return Math.min(HOA_THE_PREVIEW_ASSET.lastFrame,
-        Math.floor(this.hoaTheMs / revealMs * (HOA_THE_PREVIEW_ASSET.lastFrame + 1)))
+      return Math.min(HOA_THE_ASSET.lastFrame,
+        Math.floor(this.hoaTheMs / revealMs * (HOA_THE_ASSET.lastFrame + 1)))
     return 18 + Math.floor((this.hoaTheMs - revealMs) / burnLoopMs * burnLoopFrames) % burnLoopFrames
   }
 

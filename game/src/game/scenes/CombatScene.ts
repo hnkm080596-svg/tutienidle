@@ -35,7 +35,8 @@ import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometr
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
-import { readTheBar } from '@/presentation/bridges/theBarBridge'
+import { readTheBar, type TheBarSnapshot } from '@/presentation/bridges/theBarBridge'
+import { HOA_THE_ASSET } from '@/game/support/HoaCauVfxAssets'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -616,6 +617,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private _hoaCauPresentation?: HoaCauFireballPresentation
   private _tamMuoiAuraPresentation?: TamMuoiAuraPresentation
 
+  // Phap The seal (fire-path surface, beta scope): stacks 1-4 light the
+  // authored fire glyph stroke by stroke; at 5 the seal swaps to the Arcadia
+  // living flame for as long as currentThe stays at the threshold.
+  private phapTheGlyph?: Phaser.GameObjects.Image
+  private hoaTheSeal?: Phaser.GameObjects.Sprite
+  private hoaTheSealMs = 0
+
   private get hoaCauPresentation(): HoaCauFireballPresentation {
     if (!this._hoaCauPresentation) {
       this._hoaCauPresentation = new HoaCauFireballPresentation({
@@ -1130,6 +1138,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // Task 16 - The bar (Phap Tu) same poll pattern.
     this.pollTheBar()
 
+    // Phap The seal burn loop rides the same frame clock as the bar poll.
+    const seal = this.hoaTheSeal
+    if (seal?.visible) {
+      this.hoaTheSealMs += delta
+      seal.setFrame(`frame_${this.hoaTheSealFrame()}`)
+    }
+
     // Task 9 - party countdown telegraph chases its snapshot target on
     // Phaser's own render clock, independent of how often CombatClock
     // happens to publish a new countdownProgress (game/docs/superpowers/
@@ -1172,6 +1187,63 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     } else {
       this.playerHud?.updateThe(0, 0, 0, false)
     }
+    this.updatePhapTheSeal(the)
+  }
+
+  private phapTheSealObjects(): { glyph: Phaser.GameObjects.Image; seal: Phaser.GameObjects.Sprite } {
+    if (!this.phapTheGlyph) {
+      this.phapTheGlyph = this.add.image(0, 0, 'phap-the-0').setVisible(false)
+      this.hoaTheSeal = this.add.sprite(0, 0, HOA_THE_ASSET.key, 'frame_0').setVisible(false)
+    }
+    return { glyph: this.phapTheGlyph, seal: this.hoaTheSeal! }
+  }
+
+  /** Paints the seal over the player's head: glyph `phap-the-N` mirrors
+      the live the.current read (same snapshot the HUD bar paints), and at
+      the empowerment threshold the glyph yields to the living-flame seal.
+      threshold 0 means the running basic carries no empowerment (body path /
+      un-committed path) so the seal stays off entirely. */
+  private updatePhapTheSeal(the: TheBarSnapshot | null): void {
+    const box = the !== null && the.threshold > 0 ? this.bodyBoxFor(PLAYER_ID) : undefined
+    if (!box || the === null) {
+      this.phapTheGlyph?.setVisible(false)
+      this.hoaTheSeal?.setVisible(false)
+      return
+    }
+    const { glyph, seal } = this.phapTheSealObjects()
+    const stacks = Math.max(0, Math.min(5, Math.trunc(the.current)))
+    const height = box.personHeight
+    const x = box.footX + height * 0.1
+    const y = box.footY - height * 0.99
+    const depth = ((this.sprites.get(PLAYER_ID)?.rect as { depth?: number } | undefined)?.depth ?? 0) + 1
+    if (stacks >= 5) {
+      if (!seal.visible) this.hoaTheSealMs = 0
+      glyph.setVisible(false)
+      seal.setPosition(x, y).setScale((height * 0.26) / 256).setDepth(depth).setVisible(true)
+    } else {
+      seal.setVisible(false)
+      glyph.setTexture(`phap-the-${stacks}`)
+        .setPosition(x, y).setScale((height * 0.21) / 256).setDepth(depth).setVisible(true)
+    }
+  }
+
+  /** Seal timing mirrors the authored clip: one 2400ms reveal across the
+      full sheet, then the 18-frame burn tail loops at 900ms. Reduced
+      motion parks on the tail's first frame. */
+  private hoaTheSealFrame(): number {
+    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return 18
+    }
+    const revealMs = 2400
+    const burnLoopFrames = 18
+    const burnLoopMs = 900
+    if (this.hoaTheSealMs < revealMs) {
+      return Math.min(
+        HOA_THE_ASSET.lastFrame,
+        Math.floor((this.hoaTheSealMs / revealMs) * (HOA_THE_ASSET.lastFrame + 1)),
+      )
+    }
+    return 18 + Math.floor(((this.hoaTheSealMs - revealMs) / burnLoopMs) * burnLoopFrames) % burnLoopFrames
   }
 
   /**

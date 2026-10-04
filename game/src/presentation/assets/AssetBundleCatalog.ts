@@ -78,7 +78,7 @@ import { pills } from '@/data/pill/pills'
 import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
 import { TECHNIQUES } from '@/data/technique/Techniques'
 import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
-import { hoaCauCombatDescriptors } from '@/game/support/HoaCauVfxAssets'
+import { hoaCauCombatDescriptors, phapTheCombatDescriptors } from '@/game/support/HoaCauVfxAssets'
 import { linhBaoCombatDescriptors } from '@/game/support/LinhBaoVfxAssets'
 import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
 
@@ -352,7 +352,7 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
-  for (const descriptor of [...hoaCauCombatDescriptors(), ...linhBaoCombatDescriptors()]) {
+  for (const descriptor of [...hoaCauCombatDescriptors(), ...linhBaoCombatDescriptors(), ...phapTheCombatDescriptors()]) {
     if (seenKeys.has(descriptor.key)) continue
     seenKeys.add(descriptor.key)
     descriptors.push(descriptor)

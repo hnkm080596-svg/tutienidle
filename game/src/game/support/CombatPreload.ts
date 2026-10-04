@@ -35,7 +35,7 @@ import {
   type CombatAnimationCatalogue,
 } from '@/presentation/art/CombatEntityPresentation'
 import { CULTIVATE_TEXTURE_OVERRIDES } from '@/presentation/art/PlayerVisualProfiles'
-import { hoaCauCombatDescriptors } from './HoaCauVfxAssets'
+import { hoaCauCombatDescriptors, phapTheCombatDescriptors } from './HoaCauVfxAssets'
 import { linhBaoCombatDescriptors } from './LinhBaoVfxAssets'
 import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
 
@@ -201,10 +201,11 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
     queueAtlasOnce(clips)
   }
 
-  for (const asset of [...hoaCauCombatDescriptors(), ...linhBaoCombatDescriptors()]) {
+  for (const asset of [...hoaCauCombatDescriptors(), ...linhBaoCombatDescriptors(), ...phapTheCombatDescriptors()]) {
     if (queuedKeys.has(asset.key) || scene.textures.exists(asset.key)) continue
     queuedKeys.add(asset.key)
-    scene.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
+    if (asset.kind === 'atlas') scene.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
+    else scene.load.image(asset.key, asset.url)
   }
 
   // Monster attack VFX sweep (2026-10-04) - preset-bound attack sheets

@@ -52,8 +52,11 @@ export const HOA_CAU_VFX_ASSETS = {
   },
 } as const
 
-/** Stroke-by-stroke fire seal; preview-only until its skill slot is approved. */
-export const HOA_THE_PREVIEW_ASSET = {
+/** The 5th-stack Phap The seal - the authored Arcadia living flame that
+    replaces the static glyph while `currentThe >= theThreshold` holds.
+    Timeline: a 2400ms reveal across the full sheet, then frames 18..35
+    loop at 900ms for the burn tail (mirrors the dev-lab driver). */
+export const HOA_THE_ASSET = {
   key: 'hoa-the-fire-stroke',
   textureUrl: '/assets/vfx/hoa-cau-thuat/fire-stroke/hoa-the.png',
   atlasUrl: '/assets/vfx/hoa-cau-thuat/fire-stroke/hoa-the.json',
@@ -61,8 +64,12 @@ export const HOA_THE_PREVIEW_ASSET = {
   lastFrame: 35,
 } as const
 
+/** Stroke-count glyph states the seal reads 0..5; stack 5 swaps to
+    HOA_THE_ASSET at runtime (the glyph file still exists for tooling). */
+export const PHAP_THE_GLYPH_COUNT = 6
+
 export type HoaCauAsset = typeof HOA_CAU_VFX_ASSETS[keyof typeof HOA_CAU_VFX_ASSETS]
-  | typeof HOA_THE_PREVIEW_ASSET
+  | typeof HOA_THE_ASSET
 
 /** Both aura layers loop once per this many ms (authored ~30fps sheets). */
 export const TAM_MUOI_AURA_LOOP_MS = 1200
@@ -74,4 +81,23 @@ export function hoaCauCombatDescriptors() {
     textureUrl,
     atlasUrl,
   }))
+}
+
+/** Phap The seal art: the six stroke-state glyphs (svg images) plus the
+    Arcadia living-flame sheet the 5th stack swaps in. */
+export function phapTheCombatDescriptors() {
+  const glyphs = Array.from({ length: PHAP_THE_GLYPH_COUNT }, (_, stack) => ({
+    kind: 'image' as const,
+    key: `phap-the-${stack}`,
+    url: `/assets/vfx/hoa-cau-thuat/phap-the/phap-the-${stack}.svg`,
+  }))
+  return [
+    ...glyphs,
+    {
+      kind: 'atlas' as const,
+      key: HOA_THE_ASSET.key,
+      textureUrl: HOA_THE_ASSET.textureUrl,
+      atlasUrl: HOA_THE_ASSET.atlasUrl,
+    },
+  ]
 }

@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
+import { registerTheBarReader, type TheBarSnapshot } from '@/presentation/bridges/theBarBridge'
+import type { GateRegistry } from '@/presentation/gate/PresentationGate'
 import type { SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import type { EntitySprite } from './combat/combatTypes'
 
@@ -141,5 +143,96 @@ describe('CombatScene shared skill playback wiring', () => {
     expect(port.acknowledgeActionImpact).not.toHaveBeenCalled()
     expect(port.acknowledgeActionComplete).toHaveBeenCalledExactlyOnceWith(ref.token)
     expect(scene.skillVfxDebug.pool.active).toBe(0)
+  })
+})
+
+describe('Phap The seal (fire empowerment surface)', () => {
+  const theSnapshot = (current: number, threshold = 5): TheBarSnapshot =>
+    ({ current, max: 5, threshold, phapTheActive: current >= threshold, label: 'Thế' })
+
+  function sealFixture(current: number | null, threshold = 5) {
+    const { scene } = fixture()
+    const chain = () => {
+      const obj: Record<string, any> = { visible: false }
+      for (const method of ['setTexture', 'setPosition', 'setScale', 'setDepth', 'setFrame']) {
+        obj[method] = vi.fn(() => obj)
+      }
+      obj.setVisible = vi.fn((value: boolean) => { obj.visible = value; return obj })
+      return obj
+    }
+    const glyph = chain()
+    const seal = chain()
+    scene.add.image = vi.fn(() => glyph)
+    scene.add.sprite = vi.fn(() => seal)
+    scene.registry = new Map()
+    scene.sprites.set('player', spriteStub(50))
+    if (current !== null) {
+      registerTheBarReader(scene.registry as unknown as GateRegistry, () => theSnapshot(current, threshold))
+    }
+    return { scene, glyph, seal }
+  }
+
+  it('hides both seal objects when the reader reports nothing or a non-empowerment basic', () => {
+    const missing = sealFixture(null)
+    missing.scene.pollTheBar()
+    expect(missing.glyph.visible).toBe(false)
+    expect(missing.seal.visible).toBe(false)
+
+    const thểTu = sealFixture(3, 0)
+    thểTu.scene.pollTheBar()
+    expect(thểTu.glyph.visible).toBe(false)
+    expect(thểTu.seal.visible).toBe(false)
+  })
+
+  it('lights the glyph stroke-by-stroke with the live the.current read', () => {
+    const { scene, glyph, seal } = sealFixture(3)
+    scene.pollTheBar()
+    expect(glyph.setTexture).toHaveBeenCalledWith('phap-the-3')
+    expect(glyph.visible).toBe(true)
+    expect(seal.visible).toBe(false)
+  })
+
+  it('swaps to the Arcadia living flame at 5 stacks and back below it', () => {
+    const { scene, glyph, seal } = sealFixture(5)
+    scene.pollTheBar()
+    expect(glyph.visible).toBe(false)
+    expect(seal.visible).toBe(true)
+    expect(scene.hoaTheSealMs).toBe(0)
+
+    registerTheBarReader(scene.registry as unknown as GateRegistry, () => theSnapshot(2))
+    scene.pollTheBar()
+    expect(seal.visible).toBe(false)
+    expect(glyph.setTexture).toHaveBeenLastCalledWith('phap-the-2')
+    expect(glyph.visible).toBe(true)
+
+    registerTheBarReader(scene.registry as unknown as GateRegistry, () => null)
+    scene.pollTheBar()
+    expect(glyph.visible).toBe(false)
+    expect(seal.visible).toBe(false)
+  })
+
+  it('advances the burn loop in update() once the seal is lit', () => {
+    const { scene, seal } = sealFixture(5)
+    // update() reads several getter-only collaborators; shadow them on the
+    // instance so the frame clock reaches the seal advance.
+    Object.defineProperty(scene, 'castBars', { value: new Map() })
+    Object.defineProperty(scene, 'telegraph', { value: { advance: vi.fn() } })
+    Object.defineProperty(scene, 'isPerspective', { value: false })
+    scene.updateStatusIconPositions = vi.fn()
+    scene.flushDueDotTexts = vi.fn()
+    scene.pollTheBar()
+    scene.update(0, 16)
+    expect(seal.setFrame).toHaveBeenCalledWith('frame_0')
+  })
+
+  it('seal frame math: 2400ms reveal across the sheet, then the 18-frame tail loops at 900ms', () => {
+    const { scene } = sealFixture(0)
+    scene.phapTheSealObjects()
+    scene.hoaTheSealMs = 0
+    expect(scene.hoaTheSealFrame()).toBe(0)
+    scene.hoaTheSealMs = 2400
+    expect(scene.hoaTheSealFrame()).toBe(18)
+    scene.hoaTheSealMs = 3300
+    expect(scene.hoaTheSealFrame()).toBe(18)
   })
 })
