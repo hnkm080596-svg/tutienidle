@@ -488,7 +488,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       stacks: number
       buffName?: string
       remainingTime?: number
-      icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc
+      icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc | Phaser.GameObjects.Image
       stackLabel: Phaser.GameObjects.Text
     }
   >()

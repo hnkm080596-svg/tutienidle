@@ -81,6 +81,7 @@ import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 import { hoaCauCombatDescriptors, phapTheCombatDescriptors } from '@/game/support/HoaCauVfxAssets'
 import { linhBaoCombatDescriptors } from '@/game/support/LinhBaoVfxAssets'
 import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
+import { STATUS_ICON_TEXTURES } from '@/data/vfx/StatusVfxPresets'
 
 export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
 
@@ -356,6 +357,12 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     if (seenKeys.has(descriptor.key)) continue
     seenKeys.add(descriptor.key)
     descriptors.push(descriptor)
+  }
+
+  // Minh-drawn status icons (hoa tu wave, 2026-10-05) - combat bundle
+  // must cover the keys queueCombatAssets enumerates (parity guard).
+  for (const icon of STATUS_ICON_TEXTURES) {
+    addImage(icon.textureKey, icon.url)
   }
 
   // Monster attack VFX sweep (2026-10-04) - preset-bound attack sheets

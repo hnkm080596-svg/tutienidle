@@ -38,6 +38,7 @@ import { CULTIVATE_TEXTURE_OVERRIDES } from '@/presentation/art/PlayerVisualProf
 import { hoaCauCombatDescriptors, phapTheCombatDescriptors } from './HoaCauVfxAssets'
 import { linhBaoCombatDescriptors } from './LinhBaoVfxAssets'
 import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
+import { STATUS_ICON_TEXTURES } from '@/data/vfx/StatusVfxPresets'
 
 // The mortal entity key - the shared player fallback. MainScene keeps its
 // own atlas; the scenes intentionally use separate texture keys. Re-exported
@@ -206,6 +207,12 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
     queuedKeys.add(asset.key)
     if (asset.kind === 'atlas') scene.load.atlas(asset.key, asset.textureUrl, asset.atlasUrl)
     else scene.load.image(asset.key, asset.url)
+  }
+
+  // Minh-drawn status icons (hoa tu wave, 2026-10-05): statuses whose
+  // preset carries textureKey draw real art instead of primitive shapes.
+  for (const icon of STATUS_ICON_TEXTURES) {
+    queueOnce(icon.textureKey, icon.url)
   }
 
   // Monster attack VFX sweep (2026-10-04) - preset-bound attack sheets

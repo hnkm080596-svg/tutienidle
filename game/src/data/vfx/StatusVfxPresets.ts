@@ -7,7 +7,27 @@ export type StatusIconShape = 'circle' | 'diamond' | 'square'
 export interface StatusVfxPreset {
   color: number
   shape: StatusIconShape
+  /**
+   * Minh-drawn status icon (2026-10-05): Phaser texture key of the real
+   * art queued by queueCombatAssets. When set AND the texture exists the
+   * spawner draws an Image instead of the primitive shape; absent/unknown
+   * keys degrade to shape+color as before.
+   */
+  textureKey?: string
 }
+
+// Minh-drawn status icons (hoa tu wave) - CombatPreload + the combat
+// bundle enumerate this list, so it is the single authority for which
+// status ids carry real art.
+export interface StatusIconTexture {
+  textureKey: string
+  url: string
+}
+
+export const STATUS_ICON_TEXTURES: readonly StatusIconTexture[] = [
+  { textureKey: 'status-icon-hoa_an', url: 'assets/skills/hoa_an.png' },
+  { textureKey: 'status-icon-tam_muoi', url: 'assets/skills/tam_muoi.png' },
+]
 
 export const BUFF_PLACEHOLDER_COLOR = 0x58e878
 export const DEBUFF_PLACEHOLDER_COLOR = 0xe5484d
@@ -19,7 +39,7 @@ const STATUS_PRESETS: Record<string, StatusVfxPreset> = {
   dong_bang: { color: 0x8be9fd, shape: 'diamond' },
   troi_chan: { color: CC_COLOR, shape: 'diamond' },
   // Canonical seals -- diamond, element-colored (canonical-seals S1)
-  hoa_an: { color: 0xff7a45, shape: 'diamond' },
+  hoa_an: { color: 0xff7a45, shape: 'diamond', textureKey: 'status-icon-hoa_an' },
   doc_can: { color: 0x58e878, shape: 'diamond' },
   liet_thuong: { color: 0xe5484d, shape: 'diamond' },
   han_tuc: { color: 0x58c8ff, shape: 'diamond' },
@@ -33,6 +53,8 @@ const STATUS_PRESETS: Record<string, StatusVfxPreset> = {
   // Ngo Dao aura (S3) -- circle buff, violet: the reaction-capability
   // marker the whole allied party carries.
   van_phap_than_hoa: { color: 0x9d7bff, shape: 'circle' },
+  // Ngu Diem window buff (fire way renames) -- circle; real art from Minh.
+  tam_muoi: { color: 0xffb545, shape: 'circle', textureKey: 'status-icon-tam_muoi' },
   // statModifier debuff - square
   lam_cham: { color: DEBUFF_PLACEHOLDER_COLOR, shape: 'square' },
   han_khi: { color: 0x8be9fd, shape: 'square' },

@@ -25,8 +25,11 @@ interface FakeGameObject {
   visible: boolean
   destroyed: boolean
   text: string
+  displayWidth: number
+  displayHeight: number
   setAngle(deg: number): FakeGameObject
   setDepth(): FakeGameObject
+  setDisplaySize(w: number, h: number): FakeGameObject
   setPosition(x: number, y: number): FakeGameObject
   setOrigin(): FakeGameObject
   setVisible(v: boolean): FakeGameObject
@@ -44,11 +47,18 @@ function makeFakeGameObject(initialText = ''): FakeGameObject {
     visible: true,
     destroyed: false,
     text: initialText,
+    displayWidth: 0,
+    displayHeight: 0,
     setAngle(deg: number) {
       obj.angle = deg
       return obj
     },
     setDepth() {
+      return obj
+    },
+    setDisplaySize(w: number, h: number) {
+      obj.displayWidth = w
+      obj.displayHeight = h
       return obj
     },
     setPosition(x: number, y: number) {
@@ -85,15 +95,25 @@ interface FakeSprite {
   rect: { x: number; y: number; displayHeight: number }
 }
 
-function makeFakeScene(viewport: { width: number; height: number }, sprites: Map<string, FakeSprite>) {
+function makeFakeScene(
+  viewport: { width: number; height: number },
+  sprites: Map<string, FakeSprite>,
+  loadedTextures: readonly string[] = [],
+) {
   const created: FakeGameObject[] = []
+  const images: Array<{ x: number; y: number; key: string }> = []
+  const loaded = new Set(loadedTextures)
 
   return {
     created,
+    images,
     statuses: new Map<string, unknown>(),
     spriteFor: (id: string) => sprites.get(id),
     isPerspective: true,
     scale: viewport,
+    textures: {
+      exists: (key: string) => loaded.has(key),
+    },
     add: {
       rectangle() {
         const obj = makeFakeGameObject()
@@ -102,6 +122,12 @@ function makeFakeScene(viewport: { width: number; height: number }, sprites: Map
       },
       circle() {
         const obj = makeFakeGameObject()
+        created.push(obj)
+        return obj
+      },
+      image(x: number, y: number, key: string) {
+        const obj = makeFakeGameObject()
+        images.push({ x, y, key })
         created.push(obj)
         return obj
       },
@@ -188,6 +214,35 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     const entry = scene.statuses.get('player:thach_giap_buff:src') as { icon: FakeGameObject }
 
     expect(entry.icon.angle).toBe(0)
+  })
+
+  // Minh-drawn status icons (2026-10-05): preset textureKey + loaded texture
+  // -> real Image sized to STATUS_ICON_SIZE; no 45-degree diamond rotation.
+  it('loaded icon texture → Image keyed by preset (no primitive shape)', () => {
+    scene = makeFakeScene({ width: 800, height: 600 }, new Map([['enemy', ENEMY_SPRITE]]), [
+      'status-icon-hoa_an',
+    ])
+    spawner = new CombatVfxSpawner(scene as unknown as never)
+
+    spawner.onStatusAttached(makeEvent())
+
+    expect(scene.images).toEqual([{ x: 0, y: 0, key: 'status-icon-hoa_an' }])
+
+    const entry = scene.statuses.get('enemy:hoa_an:src') as { icon: FakeGameObject }
+
+    expect(entry.icon.displayWidth).toBe(STATUS_ICON_SIZE)
+    expect(entry.icon.displayHeight).toBe(STATUS_ICON_SIZE)
+    expect(entry.icon.angle).toBe(0)
+  })
+
+  it('icon texture missing → primitive diamond fallback (art absent)', () => {
+    spawner.onStatusAttached(makeEvent())
+
+    expect(scene.images).toEqual([])
+
+    const entry = scene.statuses.get('enemy:hoa_an:src') as { icon: FakeGameObject }
+
+    expect(entry.icon.angle).toBe(45)
   })
 
   it('stacks > 1 → stack label hiện số', () => {
