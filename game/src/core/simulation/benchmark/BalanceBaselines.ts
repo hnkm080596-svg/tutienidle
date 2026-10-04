@@ -168,7 +168,11 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     // BETA SCOPE LOCK v2 (phase-2): the element rides the atomic
     // initiation (commitFiveElementInitiation) - no post-ritual write.
     ritual: { pathId: 'spell', wayId: 'spell_pathway', element: 'fire' },
-    postRitual: [],
+    // Hoa The gate (Minh ruling 2026-10-04): the pool is node-locked, so
+    // the benchmark player opens hoa_the like a real qi_refining fire
+    // cultivator - otherwise theGained can never mint (dead channel) and
+    // no empowered cast ever fires.
+    postRitual: [{ type: 'purchase_node', nodeId: 'hoa_the' }],
     // Element-basic damage ops carry the element skill id as originId.
     // Only the recipe-resolved live set is kit: the committed element
     // resolves hoa_cau_thuat at qi_refining - any other element id on
