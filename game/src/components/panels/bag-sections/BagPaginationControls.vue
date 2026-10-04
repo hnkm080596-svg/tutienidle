@@ -155,7 +155,9 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <div ref="menuRoot" class="bag-pagination__sort">
+    <!-- wave B: hosts without a sort axis (DissolveTab reuse) pass an
+         empty sortOptions - the whole sort cluster is hidden then. -->
+    <div v-if="sortOptions.length" ref="menuRoot" class="bag-pagination__sort">
       <button
         type="button"
         class="bag-pagination__sort-btn"
@@ -180,6 +182,7 @@ onBeforeUnmount(() => {
       </button>
 
       <div v-if="isMenuOpen" class="bag-pagination__menu" role="menu">
+        <InkNineSlice chrome-id="frame-xs-tooltip" layer="surface" />
         <button
           type="button"
           role="menuitem"
@@ -301,6 +304,8 @@ onBeforeUnmount(() => {
   z-index: 2;
 }
 
+/* wave B chrome: drawn frame-xs-tooltip card owns the menu shell -
+   the slice fills the surface, items keep text-only styling. */
 .bag-pagination__menu {
   position: absolute;
   right: 0;
@@ -309,14 +314,14 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   min-width: 168px;
-  padding: 4px;
-  background: var(--ink-900);
-  border: 1px solid var(--chrome-500);
+  padding: 8px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
 }
 
 .bag-pagination__menu button {
+  position: relative;
+  z-index: 2;
   min-height: var(--tap-min);
   padding: 0 10px;
   text-align: left;

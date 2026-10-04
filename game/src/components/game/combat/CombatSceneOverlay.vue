@@ -20,6 +20,7 @@ import CombatAiRail from '@/components/scenes/combat/CombatAiRail.vue'
 import CombatActionDock from '@/components/scenes/combat/CombatActionDock.vue'
 import CombatLogFeed from '@/components/scenes/combat/CombatLogFeed.vue'
 import CombatModalLayer from '@/components/scenes/combat/CombatModalLayer.vue'
+import CombatPlayerCard from '@/components/game/combat/hud/CombatPlayerCard.vue'
 import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 
@@ -109,6 +110,11 @@ onUnmounted(() => {
     <CombatActionDock :fighting="isBattleFighting" />
 
     <div class="combat-scene-overlay__battlefield">
+      <!-- ui-combat reskin (2026-10-04) - the framed player vitals card
+           top-left (mock: avatar + HP/MP + resource + buff chips); it
+           replaces the retired canvas PlayerHudLayer. -->
+      <CombatPlayerCard />
+
       <!-- Combat AI panel - goc TRAI battlefield, chi panel nhan pointer. -->
       <CombatAiRail class="combat-scene-overlay__ai-panel" />
     </div>
@@ -152,16 +158,19 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Spec 10 ai-panel 16/140/228/280 on the 1672x941 canvas: left
-   0.96vw, canvas-top 14.88vh (the battlefield starts under the top
-   bar, so subtract --combat-topbar-h), 13.64vw wide, capped at
-   29.76vh tall with internal scroll. */
+/* ui-combat reskin (2026-10-04): mock ui-combat.html anchors the AI
+   panel at left:22 top:198 of the 1366x768 canvas (~25.8vh), BELOW the
+   player card it must no longer overlap. Ours sits a touch lower
+   (~28vh) so the slightly taller real player card clears it - and the
+   max() floor keeps it under the card even on short viewports where
+   28vh lands above the card's ~1.8vh+190px bottom edge.
+   left 0.96vw / width 13.64vw / scroll cap stay from spec 10. */
 .combat-scene-overlay__ai-panel {
   position: absolute;
   left: 0.96vw;
-  top: calc(14.88vh - var(--combat-topbar-h));
+  top: calc(max(28vh, 1.8vh + 190px) - var(--combat-topbar-h));
   width: 13.64vw;
-  max-height: 29.76vh;
+  max-height: 40vh;
   overflow-y: auto;
   z-index: 12;
 }

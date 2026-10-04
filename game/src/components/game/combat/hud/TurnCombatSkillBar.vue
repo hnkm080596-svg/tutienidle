@@ -11,13 +11,12 @@
 // skillName/skillDescription from TurnSkillDisplayMeta; the role label
 // (Common/Special) is the empty-slot fallback. Tooltips go through
 // CombatSkillSlot's tooltipOverride.
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
-import { useUiStore } from '@/stores/ui'
 
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { BetaPrecursorSurfaceId } from '@/core/betaScopeSkillDomain'
@@ -29,19 +28,10 @@ import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 const { t } = useI18n()
 
-// Scene 13 spec: role orbs ride inside the skill-orb-frame chrome ring;
-// the auto/manual toggle wears the toggle-track + slider-thumb chrome.
+// Scene 13 spec: role orbs ride inside the skill-orb-frame chrome ring.
+// The auto/manual toggle moved to CombatTopBar in the ui-combat reskin
+// (2026-10-04) - the dock now carries orbs + the awaiting hint only.
 const skillOrbFrameUrl = hkChromeUrl('skill-orb-frame')
-const toggleTrackUrl = hkChromeUrl('toggle-track')
-const sliderThumbUrl = hkChromeUrl('slider-thumb')
-const toggleChromeStyle = computed<Record<string, string> | undefined>(() =>
-  toggleTrackUrl && sliderThumbUrl
-    ? {
-        '--hk-toggle-track': `url("${toggleTrackUrl}")`,
-        '--hk-slider-thumb': `url("${sliderThumbUrl}")`,
-      }
-    : undefined,
-)
 
 function roleLabel(role: TurnSkillSlotRole): string {
   return t(`combat.overlay.skillBar.roles.${role}`)
@@ -58,10 +48,6 @@ function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefin
   return { title: entry.skillName, description: entry.skillDescription }
 }
 
-// Slice 7 master plan Task 9 - mode toggle doc/ghi ui.combatInputMode
-// (persist per-device), dong bo GameManager flag (plain class, khong
-// import Pinia - UI layer goi setter, cung pattern battleRunMode).
-const ui = useUiStore()
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
@@ -115,20 +101,6 @@ const anEmblemTooltip = computed<TooltipContent | undefined>(() => {
   const meta = anEmblemMeta.value
 
   return meta ? { title: meta.name, description: meta.description } : undefined
-})
-
-const isManualMode = computed(() => ui.combatInputMode === 'manual')
-
-function setManualMode(enabled: boolean): void {
-  ui.setCombatInputMode(enabled ? 'manual' : 'auto')
-
-  gameManager.setBattleManualMode(enabled)
-}
-
-// Sync persisted mode -> GameManager khi bar mount lan dau (reload page:
-// ui flag persist, GameManager flag mac dinh false).
-onMounted(() => {
-  gameManager.setBattleManualMode(ui.combatInputMode === 'manual')
 })
 
 const visible = computed(() => isBattleFighting.value)
@@ -260,15 +232,6 @@ function onDynamicBasicClick(defId: string): void {
       </div>
     </div>
 
-    <label class="turn-combat-skill-bar__mode-toggle" :class="{ 'has-hk-toggle': Boolean(toggleChromeStyle) }" :style="toggleChromeStyle">
-      <input
-        type="checkbox"
-        :checked="isManualMode"
-        @change="setManualMode(($event.target as HTMLInputElement).checked)"
-      />
-      <span>{{ t('combat.overlay.skillBar.manualToggle') }}</span>
-    </label>
-
     <span v-if="isAwaitingChoice" class="turn-combat-skill-bar__awaiting">{{ t('combat.overlay.skillBar.awaitingChoice') }}</span>
   </div>
 </template>
@@ -280,6 +243,11 @@ function onDynamicBasicClick(defId: string): void {
   align-items: center;
   gap: 8px;
   pointer-events: auto;
+  /* ui-combat reskin: mock orbs are ~96px on the 1366 canvas -> clamp
+     the shared token between the old 64px and the mock's footprint so
+     small viewports still fit the dock. Set on the bar so slots AND the
+     emblem inherit it. */
+  --combat-skill-slot-size: clamp(64px, 5.9vw, 96px);
 }
 
 .turn-combat-skill-bar__slots {
@@ -299,6 +267,16 @@ function onDynamicBasicClick(defId: string): void {
   border: none;
   background: none;
   cursor: pointer;
+}
+
+/* ui-combat reskin bug 1: the slot caption clipped long skill names
+   ('Hoa Ca...') - allow it to wrap onto a second line inside the slot
+   instead of nowrap+ellipsis. */
+.turn-combat-skill-bar__slot-button :deep(.slot-view__caption) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.1;
 }
 
 .turn-combat-skill-bar__slot-button:disabled {
@@ -352,48 +330,6 @@ function onDynamicBasicClick(defId: string): void {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted, #999);
-}
-
-.turn-combat-skill-bar__mode-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--text-xs, 12px);
-  color: var(--text-muted, #999);
-  cursor: pointer;
-}
-
-/* toggle-track + slider-thumb chrome (scene 13 / settings grammar). */
-.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox'] {
-  -webkit-appearance: none;
-  appearance: none;
-  position: relative;
-  width: 46px;
-  height: 23px;
-  margin: 0;
-  background: var(--hk-toggle-track) center / 100% 100% no-repeat;
-  cursor: pointer;
-}
-
-.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 3px;
-  width: 19px;
-  height: 19px;
-  transform: translateY(-50%);
-  background: var(--hk-slider-thumb) center / contain no-repeat;
-  transition: left 0.16s ease;
-}
-
-.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']:checked::after {
-  left: 24px;
-}
-
-.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']:focus-visible {
-  outline: 2px solid var(--hk-gold, #d8b45a);
-  outline-offset: 2px;
 }
 
 .turn-combat-skill-bar__awaiting {
