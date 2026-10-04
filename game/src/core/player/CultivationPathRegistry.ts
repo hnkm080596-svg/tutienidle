@@ -39,6 +39,7 @@ import {
   HIDDEN_SPELL_SPECIAL_ID,
 } from '../phap-tu/PhapTuPath'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
+import { isBetaElement } from '../betaScope'
 import {
   HOA_THE_NODE_ID,
   THE_GAIN_CHANCE_PER_LEVEL,
@@ -324,7 +325,10 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
-      const element = deps.getSpellPathElement()
+      const committedElement = deps.getSpellPathElement()
+      // Beta scope: a carried save may commit an out-of-scope element - the
+      // engine must not cast its kit, so it resolves as uncommitted.
+      const element = committedElement !== undefined && isBetaElement(committedElement) ? committedElement : undefined
       const authoredBasicId = element ? SPELL_KIT_IDS[element]?.[0] : undefined
 
       const resolved =
@@ -413,7 +417,8 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       }
     },
     resolveSpecialUltimate() {
-      const element = deps.getSpellPathElement()
+      const committedElement = deps.getSpellPathElement()
+      const element = committedElement !== undefined && isBetaElement(committedElement) ? committedElement : undefined
 
       if (!element) {
         return {}

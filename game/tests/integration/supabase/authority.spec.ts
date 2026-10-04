@@ -514,7 +514,9 @@ test('payload: schema gate, shape checks, identity binding, byte ceiling', async
   expect(wrongTalent.body.code).toBe('SAVE_INVALID')
   const wrongSkill = await writeSave(env, user.token, {
     sessionId: sid, expectedRevision: 0,
-    payload: { ...payload, player: { ...(payload.player as object), mortalBasicSkillId: 'linh_bao' } },
+    // must differ from the character's admitted starter pick ('linh_bao'
+    // under beta scope) so identity binding rejects the write.
+    payload: { ...payload, player: { ...(payload.player as object), mortalBasicSkillId: 'tram' } },
     mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
   })
   expect(wrongSkill.body.code).toBe('SAVE_INVALID')

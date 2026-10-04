@@ -248,7 +248,9 @@ export async function provisionCharacter(
     p_roll_id: roll.body.rollId,
     p_name: name,
     p_talent_ids: [talentId],
-    p_mortal_basic_skill_id: 'tram',
+    // Beta scope: server admits only 'linh_bao' as the mortal starter pick
+    // (migration 202609300005 mirrors betaScope.ts BETA_MORTAL_STARTER_SKILL_ID).
+    p_mortal_basic_skill_id: 'linh_bao',
   })
   if (created.status !== 200 || created.body?.status !== 'CREATED') {
     throw new Error(`create_character failed: ${created.status} ${JSON.stringify(created.body)}`)

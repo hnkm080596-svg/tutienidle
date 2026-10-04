@@ -50,6 +50,7 @@ export function createEquipmentInstance(
   affixRegistry: AffixRegistry,
   zoneId?: string,
   qualityBonusSteps = 0,
+  rng: () => number = Math.random,
 ): EquipmentInstance {
   assertValidEquipmentMainStats(template)
 
@@ -58,9 +59,9 @@ export function createEquipmentInstance(
     throw new Error(`Missing profession grade for equipment realm ${player.realmId}`)
   }
 
-  const quality = applyQualityBonusSteps(rollItemQuality(), qualityBonusSteps)
+  const quality = applyQualityBonusSteps(rollItemQuality(rng), qualityBonusSteps)
 
-  const mainStat = rollMainStat(template, grade, player, quality)
+  const mainStat = rollMainStat(template, grade, player, quality, undefined, rng)
 
   const forgeUses = ITEM_QUALITY_FORGE_USES[quality]
 
@@ -82,11 +83,11 @@ export function createEquipmentInstance(
 
     zoneId,
 
-    icon: rollIcon(template),
+    icon: rollIcon(template, rng),
 
     mainStat,
 
-    affixes: rollAffixes(template, mainStat.stat, quality, affixRegistry),
+    affixes: rollAffixes(template, mainStat.stat, quality, affixRegistry, rng),
 
     forgeUsesTotal: forgeUses,
 
@@ -94,17 +95,18 @@ export function createEquipmentInstance(
   }
 }
 
-function rollIcon(template: Equipment): string | undefined {
+function rollIcon(template: Equipment, rng: () => number): string | undefined {
   const pool = template.iconPool?.filter(Boolean) ?? []
-  return pool.length > 0 ? pool[randomInt(0, pool.length - 1)] : template.icon
+  return pool.length > 0 ? pool[randomInt(0, pool.length - 1, rng)] : template.icon
 }
 
-function rollItemQuality(): ItemQuality {
+function rollItemQuality(rng: () => number): ItemQuality {
   return weightedRandom(
     ITEM_QUALITY_ORDER.map((quality) => ({
       value: quality,
       weight: ITEM_QUALITY_DROP_WEIGHT[quality],
     })),
+    rng,
   )
 }
 
@@ -121,18 +123,19 @@ function rollMainStat(
   grade: EquipmentInstance['grade'],
   player: PlayerData,
   quality: ItemQuality,
-  retainedStat?: StatType,
+  retainedStat: StatType | undefined,
+  rng: () => number,
 ): StatModifier {
   const range = retainedStat
     ? template.mainStats.find((candidate) => candidate.stat === retainedStat)
-    : template.mainStats[randomInt(0, template.mainStats.length - 1)]
+    : template.mainStats[randomInt(0, template.mainStats.length - 1, rng)]
   if (!range) {
     throw new Error(`Missing main stat range ${retainedStat ?? ''} for equipment ${template.id}`)
   }
   const stat = range.stat
   const qualityMultiplier = ITEM_QUALITY_IMPLICIT_MULTIPLIER[quality]
 
-  const base = rollAffixRange(range.min * qualityMultiplier, range.max * qualityMultiplier)
+  const base = rollAffixRange(range.min * qualityMultiplier, range.max * qualityMultiplier, rng)
 
   const globalLevel = getGlobalCultivationLevel(realmFromGrade(grade), player.realmLevel)
 
@@ -167,9 +170,10 @@ function rollAffixes(
   mainStat: StatType,
   quality: ItemQuality,
   affixRegistry: AffixRegistry,
+  rng: () => number,
 ): RolledAffix[] {
   const countRange = ITEM_QUALITY_SUBSTATS_RANGE[quality]
-  const count = randomInt(countRange.min, countRange.max)
+  const count = randomInt(countRange.min, countRange.max, rng)
   const prefixCount = Math.ceil(count / 2)
   const suffixCount = Math.floor(count / 2)
   const requestedKinds: AffixKind[] = [
@@ -190,13 +194,14 @@ function rollAffixes(
   // Resolve and reserve the compatible bonus before base rolls so a
   // supreme base candidate cannot consume the only valid Exalted stat.
   let exalted: RolledAffix | null = null
-  if (quality === 'tien' && rollChance(ITEM_QUALITY_EXALTED_AFFIX_CHANCE)) {
+  if (quality === 'tien' && rollChance(ITEM_QUALITY_EXALTED_AFFIX_CHANCE, rng)) {
     exalted = rollEligibleAffixAtTier(
       template,
       ITEM_QUALITY_AFFIX_TIER.tien,
       ['supreme'],
       excludeStats,
       affixRegistry,
+      rng,
     )
 
     if (exalted) {
@@ -211,6 +216,7 @@ function rollAffixes(
     unlockedPools,
     excludeStats,
     affixRegistry,
+    rng,
   )
 
   if (exalted) {
@@ -227,6 +233,7 @@ function rollAffixesWithKindFallback(
   pools: AffixPool[],
   excludeStats: StatType[],
   affixRegistry: AffixRegistry,
+  rng: () => number,
 ): RolledAffix[] {
   const result: RolledAffix[] = []
 
@@ -242,8 +249,9 @@ function rollAffixesWithKindFallback(
         pools,
         excludeStats,
         affixRegistry,
+        rng,
       ) ??
-      rollEligibleAffix(template, fallbackKind, maxTier, pools, excludeStats, affixRegistry)
+      rollEligibleAffix(template, fallbackKind, maxTier, pools, excludeStats, affixRegistry, rng)
 
     if (!rolled) {
       break
@@ -273,6 +281,7 @@ function rollEligibleAffix(
   pools: AffixPool[],
   excludeStats: StatType[],
   affixRegistry: AffixRegistry,
+  rng: () => number,
 ): RolledAffix | null {
   const candidates = filterEligibleAffixes(
     affixRegistry.getByKind(kind),
@@ -285,23 +294,23 @@ function rollEligibleAffix(
     return null
   }
 
-  const affix = candidates[randomInt(0, candidates.length - 1)]!
+  const affix = candidates[randomInt(0, candidates.length - 1, rng)]!
 
-  return rollAffixValue(affix, maxTier)
+  return rollAffixValue(affix, maxTier, rng)
 }
 
-function rollAffixValue(affix: Affix, maxTier: number): RolledAffix | null {
+function rollAffixValue(affix: Affix, maxTier: number, rng: () => number): RolledAffix | null {
   const eligibleTiers = affix.tiers.filter((tierDef) => tierDef.tier <= maxTier)
 
   if (eligibleTiers.length === 0) {
     return null
   }
 
-  const tierDef = eligibleTiers[randomInt(0, eligibleTiers.length - 1)]!
+  const tierDef = eligibleTiers[randomInt(0, eligibleTiers.length - 1, rng)]!
 
   return {
     affixId: affix.id,
     tier: tierDef.tier,
-    value: rollAffixRange(tierDef.min, tierDef.max),
+    value: rollAffixRange(tierDef.min, tierDef.max, rng),
   }
 }

@@ -27,6 +27,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { GameManager } from '../../src/core/game/GameManager'
+import { defineEnemy } from '../../src/core/enemy/Enemy'
 import {
   createDefaultPlayer,
   resolvePlayerStatAssembly,
@@ -568,6 +569,38 @@ describe('beta scope - initiation atomicity', () => {
     const result = gameManager.realmAdvanceOps.commitFiveElementInitiation('fire', player)
     expect(result.ok).toBe(false)
     expect(player).toEqual(before)
+  })
+
+  it('a carried out-of-scope element resolves as uncommitted in combat', () => {
+    const { gameManager, player } = committedContext()
+    // A save written before the lock carries spellPath.element + its
+    // learned kit; the atomic commit cannot retro-reject it, so the
+    // engine must resolve the kit as uncommitted - the same verdict the
+    // rail read-model reports (starter basic, no special).
+    player.spellPath.element = 'water'
+    const enemy = defineEnemy({
+      id: 'carried_element_probe',
+      name: 'Probe',
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: {
+        maxHp: 1_000_000,
+        might: 0,
+        attackSpeed: 1,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+        evasionRate: 0,
+      },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
+    })
+
+    gameManager.startBattleWithPlayer(player, enemy)
+    const build = gameManager.getTurnBattle()!.players[0]!
+
+    expect(build.basic!.id).toBe('linh_bao')
+    expect(build.special).toBeUndefined()
   })
 })
 

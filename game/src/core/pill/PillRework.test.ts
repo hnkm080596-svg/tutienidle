@@ -6,7 +6,7 @@ import {
   THANH_VAN_GROTTO_HERB_BASES,
   THANH_VAN_GROTTO_HERBS,
 } from '@/core/production/ProductionCatalog'
-import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import { isPillFamilyRecipeLiveAtRealm, PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 describe('Đan dược 9 phẩm', () => {
   it('chỉ có đúng 8 loại, mỗi loại có 9 phẩm runtime', () => {
@@ -35,15 +35,27 @@ describe('Đan dược 9 phẩm', () => {
       expect(alchemyRecipes.some(recipe => recipe.pillId === `${family.id}_mortal`)).toBe(true)
     }
 
-    // QI-D8 - the live grotto pool only grows non-retired families
-    // (Hoi Xuan Thao is deferred: identity kept, generation pruned).
-    const liveFamilies = PILL_FAMILIES.filter((family) => family.retired !== true)
+    // QI-D8 - the live grotto pool only grows families whose recipe is
+    // live at that realm (Hoi Xuan Thao fully deferred; Hoi Linh Thao is
+    // also realm-retired at mortal - its mp_regen recipe is a dead craft
+    // while spell stats stay 0, so the pool stops minting orphan herbs;
+    // shared predicate in PillFamilies).
+    const mortalLiveFamilies = PILL_FAMILIES.filter((family) => isPillFamilyRecipeLiveAtRealm(family, 'mortal'))
 
-    for (const family of liveFamilies) {
+    for (const family of mortalLiveFamilies) {
       expect(THANH_VAN_GROTTO_HERB_BASES.some(herb => herb.baseId === `${family.herbId}_mortal`)).toBe(true)
     }
 
-    expect(new Set(THANH_VAN_GROTTO_HERB_BASES.map((herb) => herb.name))).toHaveLength(liveFamilies.length)
+    // The pool spans every Thanh Van realm, and hoi_linh is live at all
+    // non-mortal realms - so the distinct herb-name count is families live
+    // at ANY territory realm, not just mortal.
+    const anyRealmLiveFamilies = PILL_FAMILIES.filter((family) =>
+      THANH_VAN_GROTTO_HERB_BASES.some(
+        (herb) => herb.baseId.startsWith(`${family.herbId}_`),
+      ),
+    )
+    expect(anyRealmLiveFamilies).toHaveLength(7)
+    expect(new Set(THANH_VAN_GROTTO_HERB_BASES.map((herb) => herb.name))).toHaveLength(anyRealmLiveFamilies.length)
 
     expect(THANH_VAN_GROTTO_HERB_BASES.some((herb) => herb.baseId.startsWith('hoi_xuan_thao_'))).toBe(false)
     expect(THANH_VAN_GROTTO_HERBS.some((herb) => herb.materialId.startsWith('hoi_xuan_thao_'))).toBe(false)

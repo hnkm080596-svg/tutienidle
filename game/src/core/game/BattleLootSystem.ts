@@ -524,7 +524,7 @@ export class BattleLootSystem {
         : (() => {
             const pool = this.deps.equipmentRegistry.getAll()
 
-            return pool.length > 0 ? pool[randomInt(0, pool.length - 1)] : undefined
+            return pool.length > 0 ? pool[randomInt(0, pool.length - 1, this.lootRng)] : undefined
           })()
 
       if (!template) {
@@ -537,6 +537,7 @@ export class BattleLootSystem {
         this.deps.affixRegistry,
         zoneId,
         qualityBonusSteps,
+        this.lootRng,
       )
 
       this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
