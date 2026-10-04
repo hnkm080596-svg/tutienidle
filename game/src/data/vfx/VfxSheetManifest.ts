@@ -78,6 +78,17 @@ export const VFX_SHEET_BINDINGS: Partial<Record<CombatVfxPresetId, VfxSheetBindi
   // Authored heavy slam - shock ring, debris, dim flash
   // (art/vfx/mob-attacks/Boss Ground Slam.json); mud golem slam.
   boss_ground_slam: binding('vfx-sheet-mob-slam', 'boss-ground-slam', 0, 12, 30, 160, true, '/assets/vfx/mob-boss-ground-slam'),
+  // Monster attack VFX batch 2 (2026-10-04) - authored atlases wired at
+  // preset level so the dev lab and the e2e sweep can play them; no
+  // enemy attackPresetId references these yet.
+  bite_multi: binding('vfx-sheet-mob-bite-multi', 'bite-multi', 0, 16, 30, 140, false, '/assets/vfx/mob-bite-multi'),
+  ram: binding('vfx-sheet-mob-ram', 'ram', 0, 11, 30, 150, false, '/assets/vfx/mob-ram'),
+  ram_multi: binding('vfx-sheet-mob-ram-multi', 'ram-multi', 0, 16, 30, 150, false, '/assets/vfx/mob-ram-multi'),
+  stomp: binding('vfx-sheet-mob-stomp', 'stomp', 0, 12, 30, 150, true, '/assets/vfx/mob-stomp'),
+  stomp_multi: binding('vfx-sheet-mob-stomp-multi', 'stomp-multi', 0, 17, 30, 160, true, '/assets/vfx/mob-stomp-multi'),
+  slash_vertical: binding('vfx-sheet-mob-slash-v', 'slash-vertical', 0, 10, 30, 140, false, '/assets/vfx/mob-slash-vertical'),
+  slash_horizontal: binding('vfx-sheet-mob-slash-h', 'slash-horizontal', 0, 10, 30, 140, false, '/assets/vfx/mob-slash-horizontal'),
+  slash_multi: binding('vfx-sheet-mob-slash-multi', 'slash-multi', 0, 14, 30, 150, false, '/assets/vfx/mob-slash-multi'),
 }
 
 export function vfxSheetCombatDescriptors() {

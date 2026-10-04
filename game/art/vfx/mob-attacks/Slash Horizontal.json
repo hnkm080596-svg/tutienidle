@@ -1,0 +1,462 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_slash_horizontal",
+    "name": "Mob Slash Horizontal",
+    "comp": {
+      "w": 256,
+      "h": 192,
+      "dur": 0.36,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 55
+    },
+    "exp": {
+      "cols": 4,
+      "rows": 3,
+      "frames": 11,
+      "cellW": 256,
+      "cellH": 192,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_slashh_blade_33be2bcc3d55",
+        "name": "mob slashh blade",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_sh_sparks",
+        "name": "Cut Sparks",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.36,
+        "em": {
+          "x": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": -26
+              },
+              {
+                "t": 0.13,
+                "v": 24
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": -6
+              },
+              {
+                "t": 0.13,
+                "v": 8
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 14,
+          "sy": 10,
+          "dir": "dir",
+          "angle": 15,
+          "spread": 60,
+          "speed": 270,
+          "speedRnd": 0.5,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.07,
+              "n": 8
+            },
+            {
+              "t": 0.12,
+              "n": 6
+            }
+          ],
+          "seed": 67,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.26,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 9,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.55,
+                "v": 0.7
+              },
+              {
+                "t": 1,
+                "v": 0.05
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.55,
+                "v": 0.95
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  255,
+                  245
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  255,
+                  160,
+                  110
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  200,
+                  50,
+                  40
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0,
+          "spin": 0,
+          "spinRnd": 0,
+          "alignVel": true,
+          "stretch": 1.9,
+          "gravX": 0,
+          "gravY": 160,
+          "drag": 2.6,
+          "turbAmp": 8,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.45,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_sh_blade_glow",
+        "name": "Blade Edge",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.05,
+              "v": 0.9
+            },
+            {
+              "t": 0.17,
+              "v": 0.85
+            },
+            {
+              "t": 0.25,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_slashh_blade_33be2bcc3d55",
+            "p": {}
+          },
+          "size": 196,
+          "x": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": -48
+              },
+              {
+                "t": 0.12,
+                "v": -4
+              },
+              {
+                "t": 0.19,
+                "v": 38
+              }
+            ]
+          },
+          "y": -2,
+          "rot": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": -18
+              },
+              {
+                "t": 0.1,
+                "v": 8
+              },
+              {
+                "t": 0.17,
+                "v": 30
+              }
+            ]
+          },
+          "scale": 1.1,
+          "aspect": 1,
+          "color": [
+            255,
+            190,
+            150
+          ],
+          "squash": 0,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_sh_blade",
+        "name": "Blade Cut",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.05,
+              "v": 1
+            },
+            {
+              "t": 0.17,
+              "v": 0.95
+            },
+            {
+              "t": 0.24,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_slashh_blade_33be2bcc3d55",
+            "p": {}
+          },
+          "size": 185,
+          "x": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": -48
+              },
+              {
+                "t": 0.12,
+                "v": -4
+              },
+              {
+                "t": 0.19,
+                "v": 38
+              }
+            ]
+          },
+          "y": -2,
+          "rot": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": -18
+              },
+              {
+                "t": 0.1,
+                "v": 8
+              },
+              {
+                "t": 0.17,
+                "v": 30
+              }
+            ]
+          },
+          "scale": 1,
+          "aspect": 1,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_sh_afterglow",
+        "name": "Cut Afterglow",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.16,
+              "v": 0
+            },
+            {
+              "t": 0.2,
+              "v": 0.4
+            },
+            {
+              "t": 0.34,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_slashh_blade_33be2bcc3d55",
+            "p": {}
+          },
+          "size": 185,
+          "x": 6,
+          "y": 2,
+          "rot": 8,
+          "scale": 0.98,
+          "aspect": 1,
+          "color": [
+            255,
+            120,
+            90
+          ],
+          "squash": 0,
+          "glow": 0.3,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_sh_flash",
+        "name": "Contact Flash",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.07,
+              "v": 0
+            },
+            {
+              "t": 0.1,
+              "v": 0.8
+            },
+            {
+              "t": 0.2,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 120,
+          "x": -4,
+          "y": -2,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.07,
+                "v": 0.4
+              },
+              {
+                "t": 0.14,
+                "v": 1.4
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            244,
+            230
+          ],
+          "squash": 0,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_slashh_blade_33be2bcc3d55": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPHBhdGggZD0iTTE4IDE0OCBDODYgOTYgMTcwIDk2IDIzOCAxNDAgQzE3MiAxMjggOTIgMTU2IDE4IDE0OCBaIiBmaWxsPSIjZmZmNGU4IiBzdHJva2U9IiNiNDI4MjAiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0xOCAxNDggQzg2IDk2IDE3MCA5NiAyMzggMTQwIEMxNzYgMTE4IDk0IDEzOCAyNiAxNDYgWiIgZmlsbD0iI2ZmZmZmZiIvPgogIDxwYXRoIGQ9Ik0xOCAxNDggQzgwIDExMCAxNTYgMTA4IDIyNiAxMzQgQzE2MiAxMjIgOTAgMTQyIDI0IDE0NiBaIiBmaWxsPSIjZmY1YTNjIiBvcGFjaXR5PSIwLjU1Ii8+Cjwvc3ZnPg=="
+  }
+}

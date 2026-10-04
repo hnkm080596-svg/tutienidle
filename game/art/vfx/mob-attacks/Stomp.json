@@ -1,0 +1,635 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_stomp",
+    "name": "Mob Stomp",
+    "comp": {
+      "w": 256,
+      "h": 192,
+      "dur": 0.42,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 32
+    },
+    "exp": {
+      "cols": 5,
+      "rows": 3,
+      "frames": 13,
+      "cellW": 256,
+      "cellH": 192,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_stomp_sole_11f27c8fcadf",
+        "name": "mob stomp sole",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_stomp_sole",
+        "name": "Dropping Sole",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.045,
+              "v": 1
+            },
+            {
+              "t": 0.34,
+              "v": 1
+            },
+            {
+              "t": 0.42,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_stomp_sole_11f27c8fcadf",
+            "p": {}
+          },
+          "size": 210,
+          "x": 0,
+          "y": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": -160
+              },
+              {
+                "t": 0.13,
+                "v": 10
+              },
+              {
+                "t": 0.42,
+                "v": 10
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 0.9
+              },
+              {
+                "t": 0.13,
+                "v": 1
+              },
+              {
+                "t": 0.155,
+                "v": 0.86
+              },
+              {
+                "t": 0.24,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0.62,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_stomp_dent",
+        "name": "Ground Dent",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.12,
+              "v": 0
+            },
+            {
+              "t": 0.16,
+              "v": 0.55
+            },
+            {
+              "t": 0.36,
+              "v": 0.5
+            },
+            {
+              "t": 0.42,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 120,
+          "x": 0,
+          "y": 66,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.12,
+                "v": 0.5
+              },
+              {
+                "t": 0.18,
+                "v": 1.1
+              },
+              {
+                "t": 0.42,
+                "v": 1.3
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            40,
+            26,
+            16
+          ],
+          "squash": 0.55,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_stomp_flash",
+        "name": "Impact Flash",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.125,
+              "v": 0
+            },
+            {
+              "t": 0.15,
+              "v": 0.85
+            },
+            {
+              "t": 0.26,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 150,
+          "x": 0,
+          "y": 46,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.125,
+                "v": 0.4
+              },
+              {
+                "t": 0.18,
+                "v": 1.5
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            232,
+            190
+          ],
+          "squash": 0.4,
+          "glow": 0.45,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_stomp_ring",
+        "name": "Dust Ring",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.125,
+              "v": 0
+            },
+            {
+              "t": 0.16,
+              "v": 0.7
+            },
+            {
+              "t": 0.38,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "ring",
+            "p": {
+              "th": 0.16
+            }
+          },
+          "size": 190,
+          "x": 0,
+          "y": 58,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.125,
+                "v": 0.25
+              },
+              {
+                "t": 0.38,
+                "v": 2.2
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            238,
+            196,
+            130
+          ],
+          "squash": 0.5,
+          "glow": 0.3,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_stomp_dust",
+        "name": "Dust Cloud",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "em": {
+          "x": 0,
+          "y": 56,
+          "shape": "ring",
+          "sx": 14,
+          "sy": 5,
+          "dir": "out",
+          "angle": -90,
+          "spread": 30,
+          "speed": 165,
+          "speedRnd": 0.35,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.13,
+              "n": 13
+            },
+            {
+              "t": 0.18,
+              "n": 7
+            }
+          ],
+          "seed": 47,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.45,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "smoke",
+            "p": {}
+          },
+          "size": 24,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.45,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 1.35
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0.8
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  226,
+                  194,
+                  144
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  176,
+                  138,
+                  92
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  122,
+                  92,
+                  60
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 30,
+          "spinRnd": 0.5,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": -16,
+          "drag": 2.2,
+          "turbAmp": 14,
+          "turbFreq": 1.2,
+          "squash": 0.4,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_stomp_rocks",
+        "name": "Thrown Rocks",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "em": {
+          "x": 0,
+          "y": 54,
+          "shape": "point",
+          "sx": 10,
+          "sy": 5,
+          "dir": "dir",
+          "angle": -90,
+          "spread": 75,
+          "speed": 220,
+          "speedRnd": 0.45,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.13,
+              "n": 10
+            }
+          ],
+          "seed": 53,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.5,
+          "lifeRnd": 0.3,
+          "sprite": {
+            "kind": "shape",
+            "id": "shard",
+            "p": {}
+          },
+          "size": 10,
+          "sizeRnd": 0.45,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.8,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.75,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  158,
+                  114,
+                  68
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  112,
+                  78,
+                  46
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  72,
+                  48,
+                  30
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 180,
+          "spinRnd": 0.8,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": 400,
+          "drag": 0.4,
+          "turbAmp": 10,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_stomp_shadow",
+        "name": "Sole Shadow",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.42,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.02,
+              "v": 0
+            },
+            {
+              "t": 0.1,
+              "v": 0.35
+            },
+            {
+              "t": 0.13,
+              "v": 0.55
+            },
+            {
+              "t": 0.3,
+              "v": 0.4
+            },
+            {
+              "t": 0.42,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 150,
+          "x": 0,
+          "y": 64,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.02,
+                "v": 1.3
+              },
+              {
+                "t": 0.13,
+                "v": 0.9
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            22,
+            14,
+            9
+          ],
+          "squash": 0.5,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_stomp_sole_11f27c8fcadf": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGcgZmlsbD0iIzNkMjQxNiIgc3Ryb2tlPSIjMTgwYzA1IiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPGVsbGlwc2UgY3g9Ijg2IiBjeT0iODYiIHJ4PSIyMCIgcnk9IjI2Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTI4IiBjeT0iNzQiIHJ4PSIyMiIgcnk9IjI4Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTcwIiBjeT0iODYiIHJ4PSIyMCIgcnk9IjI2Ii8+CiAgICA8cmVjdCB4PSI3MCIgeT0iMTEyIiB3aWR0aD0iMTE2IiBoZWlnaHQ9Ijg0IiByeD0iMzQiIHJ5PSIzMCIvPgogIDwvZz4KICA8ZyBmaWxsPSIjNmI0NTJhIiBvcGFjaXR5PSIwLjg1Ij4KICAgIDxlbGxpcHNlIGN4PSIxMjgiIGN5PSIxNjAiIHJ4PSIzOCIgcnk9IjI0Ii8+CiAgICA8ZWxsaXBzZSBjeD0iODYiIGN5PSI4OCIgcng9IjEwIiByeT0iMTMiLz4KICAgIDxlbGxpcHNlIGN4PSIxMjgiIGN5PSI3NiIgcng9IjExIiByeT0iMTQiLz4KICAgIDxlbGxpcHNlIGN4PSIxNzAiIGN5PSI4OCIgcng9IjEwIiByeT0iMTMiLz4KICA8L2c+Cjwvc3ZnPg=="
+  }
+}

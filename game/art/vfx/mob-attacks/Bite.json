@@ -28,12 +28,12 @@
     },
     "textures": [
       {
-        "id": "tex_mob_bite_upper_e674912c6da4",
+        "id": "tex_mob_bite_upper_32f851c57919",
         "name": "mob bite upper",
         "sheet": null
       },
       {
-        "id": "tex_mob_bite_lower_00dec58e8cfc",
+        "id": "tex_mob_bite_lower_27a1890c2d88",
         "name": "mob bite lower",
         "sheet": null
       }
@@ -316,7 +316,7 @@
         "sp": {
           "sprite": {
             "kind": "tex",
-            "texId": "tex_mob_bite_upper_e674912c6da4",
+            "texId": "tex_mob_bite_upper_32f851c57919",
             "p": {}
           },
           "size": 246,
@@ -405,7 +405,7 @@
         "sp": {
           "sprite": {
             "kind": "tex",
-            "texId": "tex_mob_bite_lower_00dec58e8cfc",
+            "texId": "tex_mob_bite_lower_27a1890c2d88",
             "p": {}
           },
           "size": 246,
@@ -467,7 +467,7 @@
     ]
   },
   "tex": {
-    "tex_mob_bite_upper_e674912c6da4": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPHBhdGggZD0iTTQ2IDc0IFExMjggNDQgMjEwIDc0IEwyMDIgMTAyIFExMjggNzYgNTQgMTAyIFoiIGZpbGw9IiNhMTJhMzgiIHN0cm9rZT0iIzJjMGExNiIgc3Ryb2tlLXdpZHRoPSI5IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPGcgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMmMwYTE2IiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPHBhdGggZD0iTTY2IDk2IEw4MCAxMzAgTDk0IDk0IFoiLz4KICAgIDxwYXRoIGQ9Ik05NiA5MCBMMTEzIDE0MCBMMTMwIDg4IFoiLz4KICAgIDxwYXRoIGQ9Ik0xMjYgODggTDE0MiAxNDIgTDE1OCA5MCBaIi8+CiAgICA8cGF0aCBkPSJNMTU4IDkyIEwxNzIgMTM0IEwxODggOTYgWiIvPgogICAgPHBhdGggZD0iTTE5MiA5NiBMMjAyIDEyNCBMMjE0IDkyIFoiIGZpbGw9IiNlMmVjZjgiLz4KICA8L2c+Cjwvc3ZnPg==",
-    "tex_mob_bite_lower_00dec58e8cfc": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPHBhdGggZD0iTTUwIDE4MiBRMTI4IDIxMiAyMDYgMTgyIEwxOTggMTU0IFExMjggMTgwIDU4IDE1NCBaIiBmaWxsPSIjYTEyYTM4IiBzdHJva2U9IiMyYzBhMTYiIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzJjMGExNiIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik02MiAxNjAgTDc2IDEyNiBMOTAgMTYyIFoiLz4KICAgIDxwYXRoIGQ9Ik05NCAxNjYgTDExMCAxMTQgTDEyNiAxNjggWiIvPgogICAgPHBhdGggZD0iTTEyOCAxNjggTDE0MiAxMjAgTDE1OCAxNjYgWiIvPgogICAgPHBhdGggZD0iTTE2MCAxNjQgTDE3NiAxMTYgTDE5MCAxNjAgWiIvPgogICAgPHBhdGggZD0iTTE5MCAxNTggTDIwMCAxMzIgTDIxMiAxNjQgWiIgZmlsbD0iI2UyZWNmOCIvPgogIDwvZz4KPC9zdmc+"
+    "tex_mob_bite_upper_32f851c57919": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPHBhdGggZD0iTTQ0IDgwIFExMjggNTQgMjEyIDgwIEwyMDggOTQgUTEyOCA2OCA0OCA5NCBaIiBmaWxsPSIjYTEyYTM4IiBzdHJva2U9IiMyYzBhMTYiIHN0cm9rZS13aWR0aD0iNyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzJjMGExNiIgc3Ryb2tlLXdpZHRoPSI3IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik01MiA5MCBMNjIgMTIyIEw3MiA4OCBaIi8+CiAgICA8cGF0aCBkPSJNODUgODggTDk1IDEzMiBMMTA1IDg2IFoiLz4KICAgIDxwYXRoIGQ9Ik0xMTggODYgTDEyOCAxMzYgTDEzOCA4NiBaIi8+CiAgICA8cGF0aCBkPSJNMTUxIDg2IEwxNjEgMTMyIEwxNzEgODggWiIvPgogICAgPHBhdGggZD0iTTE4NCA4OCBMMTk0IDEyMiBMMjA0IDkwIFoiLz4KICA8L2c+Cjwvc3ZnPg==",
+    "tex_mob_bite_lower_27a1890c2d88": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPHBhdGggZD0iTTQ0IDE3NiBRMTI4IDIwMiAyMTIgMTc2IEwyMDggMTYyIFExMjggMTg4IDQ4IDE2MiBaIiBmaWxsPSIjYTEyYTM4IiBzdHJva2U9IiMyYzBhMTYiIHN0cm9rZS13aWR0aD0iNyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzJjMGExNiIgc3Ryb2tlLXdpZHRoPSI3IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik01MiAxNjYgTDYyIDEzNCBMNzIgMTY4IFoiLz4KICAgIDxwYXRoIGQ9Ik04NSAxNjggTDk1IDEyNCBMMTA1IDE3MCBaIi8+CiAgICA8cGF0aCBkPSJNMTE4IDE3MCBMMTI4IDEyMCBMMTM4IDE3MCBaIi8+CiAgICA8cGF0aCBkPSJNMTUxIDE3MCBMMTYxIDEyNCBMMTcxIDE2OCBaIi8+CiAgICA8cGF0aCBkPSJNMTg0IDE2OCBMMTk0IDEzNCBMMjA0IDE2NiBaIi8+CiAgPC9nPgo8L3N2Zz4="
   }
 }

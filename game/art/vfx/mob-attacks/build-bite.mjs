@@ -1,33 +1,10 @@
 import { curve, grad, texMeta, texPayloads, texture, track, writeOnRun } from './mob-common.mjs'
+import { JAW_LOWER_SVG, JAW_UPPER_SVG } from './mob-parts.mjs'
 
 const DOC_ID = 'fx_mob_bite'
 
-// Upper gum band: shallow downward-bowing arc with five fangs hanging from it.
-// The two centre fangs are longest so the snapped silhouette still reads as a
-// jaw at ~120 px combat size.
-const UPPER_JAW_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <path d="M46 74 Q128 44 210 74 L202 102 Q128 76 54 102 Z" fill="#a12a38" stroke="#2c0a16" stroke-width="9" stroke-linejoin="round"/>
-  <g fill="#ffffff" stroke="#2c0a16" stroke-width="8" stroke-linejoin="round">
-    <path d="M66 96 L80 130 L94 94 Z"/>
-    <path d="M96 90 L113 140 L130 88 Z"/>
-    <path d="M126 88 L142 142 L158 90 Z"/>
-    <path d="M158 92 L172 134 L188 96 Z"/>
-    <path d="M192 96 L202 124 L214 92 Z" fill="#e2ecf8"/>
-  </g>
-</svg>`
-
-// Lower jaw mirrors the upper one. The second and fourth fangs are oversized so
-// they visibly interlock between the upper teeth when the jaws meet.
-const LOWER_JAW_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <path d="M50 182 Q128 212 206 182 L198 154 Q128 180 58 154 Z" fill="#a12a38" stroke="#2c0a16" stroke-width="9" stroke-linejoin="round"/>
-  <g fill="#ffffff" stroke="#2c0a16" stroke-width="8" stroke-linejoin="round">
-    <path d="M62 160 L76 126 L90 162 Z"/>
-    <path d="M94 166 L110 114 L126 168 Z"/>
-    <path d="M128 168 L142 120 L158 166 Z"/>
-    <path d="M160 164 L176 116 L190 160 Z"/>
-    <path d="M190 158 L200 132 L212 164 Z" fill="#e2ecf8"/>
-  </g>
-</svg>`
+const UPPER_JAW_SVG = JAW_UPPER_SVG
+const LOWER_JAW_SVG = JAW_LOWER_SVG
 
 const upper = texture('mob_bite_upper', UPPER_JAW_SVG)
 const lower = texture('mob_bite_lower', LOWER_JAW_SVG)

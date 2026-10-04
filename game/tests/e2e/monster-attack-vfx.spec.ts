@@ -93,6 +93,17 @@ test.describe('Monster attack VFX sweep', () => {
       { presetId: 'water_surge', sheetKey: 'vfx-sheet-mob-water', firstFrame: 0, lastFrame: 12 },
       { presetId: 'earth_shockwave', sheetKey: 'vfx-sheet-mob-earth', firstFrame: 0, lastFrame: 12 },
       { presetId: 'boss_ground_slam', sheetKey: 'vfx-sheet-mob-slam', firstFrame: 0, lastFrame: 12 },
+      // Batch-2 authored atlases (2026-10-04): bound but not yet mapped to
+      // a monster - the same basic-presetId poke still resolves them
+      // through the production pipeline.
+      { presetId: 'bite_multi', sheetKey: 'vfx-sheet-mob-bite-multi', firstFrame: 0, lastFrame: 16 },
+      { presetId: 'ram', sheetKey: 'vfx-sheet-mob-ram', firstFrame: 0, lastFrame: 11 },
+      { presetId: 'ram_multi', sheetKey: 'vfx-sheet-mob-ram-multi', firstFrame: 0, lastFrame: 16 },
+      { presetId: 'stomp', sheetKey: 'vfx-sheet-mob-stomp', firstFrame: 0, lastFrame: 12 },
+      { presetId: 'stomp_multi', sheetKey: 'vfx-sheet-mob-stomp-multi', firstFrame: 0, lastFrame: 17 },
+      { presetId: 'slash_vertical', sheetKey: 'vfx-sheet-mob-slash-v', firstFrame: 0, lastFrame: 10 },
+      { presetId: 'slash_horizontal', sheetKey: 'vfx-sheet-mob-slash-h', firstFrame: 0, lastFrame: 10 },
+      { presetId: 'slash_multi', sheetKey: 'vfx-sheet-mob-slash-multi', firstFrame: 0, lastFrame: 14 },
     ]
 
     const samplesFor = (sheetKey: string) =>

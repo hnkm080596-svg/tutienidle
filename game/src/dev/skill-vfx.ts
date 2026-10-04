@@ -56,7 +56,11 @@ const presetGroup = document.createElement('optgroup')
 presetGroup.label = i18n.global.t('skillVfxLab.groupPresets')
 for (const id of ['slash', 'claw', 'bite', 'arcane_impact', 'fire_burst', 'water_surge',
   'earth_shockwave', 'metal_slash', 'wood_spikes', 'lightning_strike', 'wind_blade',
-  'shadow_burst', 'boss_ground_slam', 'tu_luc'])
+  'shadow_burst', 'boss_ground_slam', 'tu_luc',
+  // Batch-2 authored attacks (2026-10-04): no monster maps to these yet -
+  // listed here so the lab can preview the exported atlases.
+  'bite_multi', 'ram', 'ram_multi', 'stomp', 'stomp_multi',
+  'slash_vertical', 'slash_horizontal', 'slash_multi'])
   presetGroup.append(new Option(t(id), id))
 presetInput.append(skillGroup, mobGroup, presetGroup)
 for (const id of ['hit', 'miss', 'intercept', 'sourceDeath', 'multi', 'combo', 'empty'])

@@ -15,6 +15,17 @@ const EFFECTS = [
   { file: 'Earth Shockwave.json', id: 'fx_mob_earth_shockwave', out: 'mob-earth-shockwave', name: 'earth-shockwave' },
   { file: 'Water Surge.json', id: 'fx_mob_water_surge', out: 'mob-water-surge', name: 'water-surge' },
   { file: 'Boss Ground Slam.json', id: 'fx_mob_boss_ground_slam', out: 'mob-boss-ground-slam', name: 'boss-ground-slam' },
+  // Variant set (2026-10-04, Minh batch 2): single + multi versions of
+  // bite/ram/stomp plus directional slash cuts. Exported unbound - bindings
+  // get wired when Minh sends the preset mapping.
+  { file: 'Bite Multi.json', id: 'fx_mob_bite_multi', out: 'mob-bite-multi', name: 'bite-multi' },
+  { file: 'Ram.json', id: 'fx_mob_ram', out: 'mob-ram', name: 'ram' },
+  { file: 'Ram Multi.json', id: 'fx_mob_ram_multi', out: 'mob-ram-multi', name: 'ram-multi' },
+  { file: 'Stomp.json', id: 'fx_mob_stomp', out: 'mob-stomp', name: 'stomp' },
+  { file: 'Stomp Multi.json', id: 'fx_mob_stomp_multi', out: 'mob-stomp-multi', name: 'stomp-multi' },
+  { file: 'Slash Vertical.json', id: 'fx_mob_slash_vertical', out: 'mob-slash-vertical', name: 'slash-vertical' },
+  { file: 'Slash Horizontal.json', id: 'fx_mob_slash_horizontal', out: 'mob-slash-horizontal', name: 'slash-horizontal' },
+  { file: 'Slash Multi.json', id: 'fx_mob_slash_multi', out: 'mob-slash-multi', name: 'slash-multi' },
 ]
 
 globalThis.window = globalThis
