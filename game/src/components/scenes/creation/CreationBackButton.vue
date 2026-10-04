@@ -1,7 +1,10 @@
 <script setup lang="ts">
-// Scene 02 back affordance - top-left ghost button (region back-btn
-// 24/24/96/40 in design px) returning to the auth entry.
+// Scene 02 back affordance - top-left icon seal (region back-btn
+// 24/24/96/40 in design px) returning to the auth entry. wave B chrome:
+// drawn icon-button-utility seal + 'back' glyph replaces the bare text link.
 import { useI18n } from 'vue-i18n'
+import GameButton from '@/components/common/GameButton.vue'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 
 defineProps<{ disabled?: boolean }>()
 const emit = defineEmits<{ back: [] }>()
@@ -9,24 +12,26 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <button
+  <GameButton
     class="creation-back-button"
-    type="button"
+    variant="secondary"
+    shape="circle"
+    size="sm"
     :disabled="disabled"
+    :aria-label="t('onboarding.creation.back')"
+    :title="t('onboarding.creation.back')"
     @click="emit('back')"
   >
-    {{ t('onboarding.creation.back') }}
-  </button>
+    <HuyenKimSymbol name="back" />
+  </GameButton>
 </template>
 
 <style scoped>
 .creation-back-button {
-  border: 0;
+  width: 34px;
+  height: 34px;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
-  background: transparent;
-  color: #786441;
-  font: 12px var(--hk-font-display, Georgia, serif);
-  cursor: pointer;
 }
-.creation-back-button:focus-visible { outline: 2px solid #315f55; outline-offset: 3px; }
 </style>

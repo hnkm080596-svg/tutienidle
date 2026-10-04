@@ -67,16 +67,14 @@ function select(strategy: CombatAiStrategy) {
 </template>
 
 <style scoped>
+/* wave B chrome: the rail's surface-m-panel slice owns the shell - this
+   panel keeps content layout only (no hand border/scrim/backdrop). */
 .combat-ai-panel {
   pointer-events: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-md);
-  background: var(--scrim);
-  backdrop-filter: blur(2px);
   font-size: var(--text-xs, 0.75rem);
   color: var(--text-primary);
   user-select: none;

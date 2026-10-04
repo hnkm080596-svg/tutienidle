@@ -441,7 +441,7 @@ watch([searchQuery, activeGroup], () => resetPage())
 }
 
 .bag-section__search::placeholder {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .bag-section__search:focus-visible {

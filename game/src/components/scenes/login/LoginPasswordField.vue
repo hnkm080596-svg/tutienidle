@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 const password = defineModel<string>({ required: true })
 defineProps<{ mode: 'login' | 'register' }>()
 const { t } = useI18n()
@@ -11,6 +12,7 @@ const visible = shallowRef(false)
   <div class="auth-field-row">
     <label class="sr-only" for="auth-input-password">{{ t('onboarding.auth.labels.password') }}</label>
     <div class="auth-field">
+      <InkNineSlice chrome-id="text-field" layer="surface" />
       <svg class="auth-field__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="12" rx="1" fill="currentColor" /><path d="M8 10V6a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2" /><path d="M12 15v3" stroke="#ece1c9" stroke-width="2" /></svg>
       <input id="auth-input-password" v-model="password"
         :autocomplete="mode === 'register' ? 'new-password' : 'current-password'"

@@ -108,8 +108,8 @@ function decide(decision: TalentEntitlementDecision): void {
       aria-modal="true"
       :aria-labelledby="titleId"
     >
-      <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-      <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+      <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+      <InkNineSlice chrome-id="frame-xl-ceremony" layer="frame" />
 
       <h3 :id="titleId" class="talent-entitlement__title">{{ t('tribulation.entitlement.title') }}</h3>
       <p class="talent-entitlement__body">{{ t('tribulation.entitlement.body') }}</p>
@@ -167,20 +167,19 @@ function decide(decision: TalentEntitlementDecision): void {
   background: var(--scrim);
 }
 
-/* M-tier InkNineSlice - same surface/frame pairing as OfflineSummaryModal;
-   the dialog is wider to hold the 3-card grid but keeps the M frame band.
-   surface-m-paper paints a dark surface; the .paper-on-dark utility class
-   on the element owns the paper->surface token remap (theme.css). */
+/* wave B chrome: surface-m-panel fill + frame-xl-ceremony ring (the
+   ceremony frame owns a 72px ornamental band, so the padding clears it
+   entirely - content never touches the frame art). */
 .talent-entitlement__panel {
   position: relative;
   isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: min(560px, 94vw);
+  width: min(640px, 94vw);
   max-height: 88vh;
   overflow-y: auto;
-  padding: 44px 40px;
+  padding: 76px 74px;
   color: var(--paper-text, #211f1a);
   font-family: var(--font-body);
 }
