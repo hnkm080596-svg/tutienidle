@@ -83,7 +83,23 @@ const combatPower = computed(() => {
 
 const pathName = computed(() => {
   const pathId = player.cultivationPath as CultivationPathId | undefined
+
+  // Ly Hoa Chi Dao branding: a fire-aligned Phap Tu walks the Li trigram
+  // dao (Minh ruling 2026-10-04) - the elemental dao name replaces the
+  // generic path label on the identity plate.
+  if (pathId === 'spell' && player.spellPath?.element === 'fire') {
+    return t('character.lyHoaDao')
+  }
+
   return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('panels.skillPath.mortalName')
+})
+
+const pathVerse = computed(() => {
+  const pathId = player.cultivationPath as CultivationPathId | undefined
+
+  return pathId === 'spell' && player.spellPath?.element === 'fire'
+    ? t('character.lyHoaVerse')
+    : undefined
 })
 
 function detailRows(
@@ -151,6 +167,7 @@ const model = computed<CharacterUiModel>(() => {
     name: player.name,
     realm: `${realm.name} · ${t('panels.character.labels.realmFloor')} ${player.realmLevel}`,
     path: pathName.value,
+    pathVerse: pathVerse.value,
     combatPower: formatNumber(combatPower.value),
     stats,
     elements: ELEMENT_ORDER.map((element, index) => ({

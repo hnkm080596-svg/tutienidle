@@ -63,6 +63,8 @@ export interface CharacterUiModel {
   realm: string
   /** Resolved cultivation-path display name ('Phap Tu' / 'Kiem Tu' / ...). */
   path: string
+  /** Dao verse shown under the path name for elemental daos (Ly Hoa). */
+  pathVerse?: string
   combatPower: string
   stats: readonly CharacterUiStat[]
   elements: readonly CharacterUiElement[]
