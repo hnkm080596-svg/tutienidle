@@ -29,14 +29,14 @@ describe('getSkillCoreLevel', () => {
 })
 
 describe('getSkillCoreUpgradeCost', () => {
-  it('frozen curve 5 + 3x(L-1)', () => {
-    expect(getSkillCoreUpgradeCost(1)).toBe(5)
-    expect(getSkillCoreUpgradeCost(2)).toBe(8)
-    expect(getSkillCoreUpgradeCost(3)).toBe(11)
-    expect(getSkillCoreUpgradeCost(9)).toBe(29)
+  it('pace-retuned curve 200 + 100x(L-1) (2026-10-05)', () => {
+    expect(getSkillCoreUpgradeCost(1)).toBe(200)
+    expect(getSkillCoreUpgradeCost(2)).toBe(300)
+    expect(getSkillCoreUpgradeCost(3)).toBe(400)
+    expect(getSkillCoreUpgradeCost(9)).toBe(1000)
   })
 
   it('level 0 prices like level 1 (grant never pays, defensive read)', () => {
-    expect(getSkillCoreUpgradeCost(0)).toBe(5)
+    expect(getSkillCoreUpgradeCost(0)).toBe(200)
   })
 })

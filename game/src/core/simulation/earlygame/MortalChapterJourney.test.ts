@@ -71,8 +71,10 @@ describe('MortalChapterJourney', () => {
       expect(s.player.completedStageIds).toEqual(
         expect.arrayContaining(['mortal_dong_1']),
       )
-      // Combat income actually landed: insight earned and drops in the bag.
-      expect(s.player.skillInsight).toBeGreaterThan(0)
+      // Combat income actually landed: drops in the bag. Insight: the
+      // mortal roster mints 0 at the 0.018 re-base (mastery 5 rounds to
+      // nothing) - income starts flowing on the QI chapter.
+      expect(s.player.skillInsight).toBe(0)
       expect(s.gameManager.materialBag.getAll().length).toBeGreaterThan(0)
 
       // Gear loop (spec Leg A pin): mortal families drop equipment
@@ -202,8 +204,11 @@ describe('MortalChapterJourney', () => {
       const s = makeSession()
 
       // Drive past the ritual with a node purchase so every persisted
-      // journey field is non-trivial.
+      // journey field is non-trivial. Seed the first level's price:
+      // at this journey point natural insight sits below the 600-cost
+      // window-anchored minor by design (pace retune 2026-10-05).
       initiateAndClearFloorOne(s)
+      s.player.skillInsight += 600
       const insightBefore = s.player.skillInsight
       expect(s.purchaseNode('fire_ailment_mastery')).toBe(true)
       expect(s.player.skillInsight).toBeLessThan(insightBefore)

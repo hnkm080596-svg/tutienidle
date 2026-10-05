@@ -51,22 +51,26 @@ export interface LoopReport {
 export const CANONICAL_EARLY_LOOP: readonly LoopStep[] = [
   // The production mortal chain is 10 floors (thanh_van zone, linear
   // unlock); floor N requires realmLevel N - the loop grinds between
-  // defeats and realm-gates exactly like a real player.
+  // defeats and realm-gates exactly like a real player. Stat-wall
+  // ladder retune (2026-10-05): every floor past the tutorial pair is
+  // scaled harder, so the wall response gets deeper budgets - a real
+  // player's grind is longer, not impossible.
   { kind: 'stage_until_victory', stageId: 'mortal_dong_1', maxAttempts: 8 },
   { kind: 'allocate_all', stat: 'strength' },
   { kind: 'stage_until_victory', stageId: 'mortal_dong_2', maxAttempts: 8 },
-  { kind: 'stage_until_victory', stageId: 'mortal_dong_3', maxAttempts: 8 },
-  { kind: 'growth_cycle', runs: 5 },
-  { kind: 'stage_until_victory', stageId: 'mortal_dong_4', maxAttempts: 8 },
-  { kind: 'stage_until_victory', stageId: 'mortal_dong_5', maxAttempts: 8 },
-  { kind: 'growth_cycle', runs: 5 },
-  { kind: 'stage_until_victory', stageId: 'mortal_dong_6', maxAttempts: 8 },
-  { kind: 'stage_until_victory', stageId: 'mortal_dong_7', maxAttempts: 8 },
-  { kind: 'growth_cycle', runs: 5 },
-  { kind: 'stage_until_victory', stageId: 'mortal_dong_8', maxAttempts: 8 },
-  { kind: 'stage_until_victory', stageId: 'mortal_dong_9', maxAttempts: 8 },
-  { kind: 'growth_cycle', runs: 5 },
-  { kind: 'stage_until_victory', stageId: 'mortal_dong_10', maxAttempts: 8 },
+  { kind: 'stage_until_victory', stageId: 'mortal_dong_3', maxAttempts: 12 },
+  { kind: 'growth_cycle', runs: 8 },
+  { kind: 'stage_until_victory', stageId: 'mortal_dong_4', maxAttempts: 10 },
+  { kind: 'stage_until_victory', stageId: 'mortal_dong_5', maxAttempts: 10 },
+  { kind: 'growth_cycle', runs: 8 },
+  { kind: 'stage_until_victory', stageId: 'mortal_dong_6', maxAttempts: 10 },
+  { kind: 'stage_until_victory', stageId: 'mortal_dong_7', maxAttempts: 10 },
+  { kind: 'growth_cycle', runs: 8 },
+  { kind: 'stage_until_victory', stageId: 'mortal_dong_8', maxAttempts: 12 },
+  { kind: 'growth_cycle', runs: 16 },
+  { kind: 'stage_until_victory', stageId: 'mortal_dong_9', maxAttempts: 12 },
+  { kind: 'growth_cycle', runs: 10 },
+  { kind: 'stage_until_victory', stageId: 'mortal_dong_10', maxAttempts: 12 },
   { kind: 'growth_cycle', runs: 10 },
   // Quan Khi gates at mortal:12; a real player hitting the realm
   // refusal grinds cultivation to the gate, same as every floor gate.
@@ -78,7 +82,7 @@ export const CANONICAL_EARLY_LOOP: readonly LoopStep[] = [
   // Beta scope: thich_can was a kiem_tu node - the spell-side insight
   // purchase is the committed element's growth node.
   { kind: 'purchase_node', nodeId: 'fire_ailment_mastery' },
-  { kind: 'stage_until_victory', stageId: 'qi_refining_forest', maxAttempts: 10 },
+  { kind: 'stage_until_victory', stageId: 'qi_refining_forest', maxAttempts: 16 },
 ]
 
 export function runLoop(

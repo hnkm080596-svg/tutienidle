@@ -25,9 +25,11 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
   })
 
   it('bag, battle summary và loot notification chỉ cộng đúng 1 lần khi quái chết', () => {
-    // rng 0.8: guaranteed tinh_hoa (0.7) truot; pool roll 0.8*35=28 tren
-    // bang mortal -> qua base_kiem (w15) -> roi vao equipment_any (w20)
-    // -> randomInt(0.8) chon index 0 = template test duy nhat.
+    // Loot rng scripted qua setLootRng (Math.random van 0.8 cho combat
+    // rolls): call dau 0.8 -> guaranteed tinh_hoa (0.7) truot; pool draw
+    // 0.1 -> roll 0.1 * (20 + 113.33) ~= 13 roi vung hit 15% cua bang
+    // mortal da gate (poolDrawChance 0.15) -> equipment_any ->
+    // randomInt(0.1) chon index 0 = template test duy nhat.
     vi.spyOn(Math, 'random').mockReturnValue(0.8)
 
     const gameManager = new GameManager()
@@ -51,6 +53,9 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
       // stage pool (quai thuong = 1 pool draw -> dung 1 mon).
       rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
+
+    let lootCalls = 0
+    gameManager.setLootRng(() => (lootCalls++ === 0 ? 0.8 : 0.1))
 
     gameManager.startBattleWithPlayer(player, enemy)
     combatSource.advance(3) // bo qua countdown 3s truoc tran

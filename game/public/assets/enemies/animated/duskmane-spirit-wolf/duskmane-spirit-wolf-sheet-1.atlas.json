@@ -1,0 +1,375 @@
+{
+  "frames": {
+    "duskmane-spirit-wolf-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 230,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 230,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-002.png": {
+      "frame": {
+        "x": 236,
+        "y": 2,
+        "w": 230,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 230,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-003.png": {
+      "frame": {
+        "x": 470,
+        "y": 2,
+        "w": 229,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 229,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-004.png": {
+      "frame": {
+        "x": 704,
+        "y": 2,
+        "w": 228,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 228,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-005.png": {
+      "frame": {
+        "x": 938,
+        "y": 2,
+        "w": 225,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 225,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-006.png": {
+      "frame": {
+        "x": 1172,
+        "y": 2,
+        "w": 226,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 226,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-007.png": {
+      "frame": {
+        "x": 1406,
+        "y": 2,
+        "w": 227,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 227,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-008.png": {
+      "frame": {
+        "x": 1640,
+        "y": 2,
+        "w": 229,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 229,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-009.png": {
+      "frame": {
+        "x": 1874,
+        "y": 2,
+        "w": 230,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 230,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-010.png": {
+      "frame": {
+        "x": 2108,
+        "y": 2,
+        "w": 230,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 230,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-011.png": {
+      "frame": {
+        "x": 2342,
+        "y": 2,
+        "w": 229,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 229,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-012.png": {
+      "frame": {
+        "x": 2576,
+        "y": 2,
+        "w": 228,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 228,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-013.png": {
+      "frame": {
+        "x": 2810,
+        "y": 2,
+        "w": 225,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 225,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-014.png": {
+      "frame": {
+        "x": 3044,
+        "y": 2,
+        "w": 226,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 226,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-015.png": {
+      "frame": {
+        "x": 3278,
+        "y": 2,
+        "w": 227,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 227,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-016.png": {
+      "frame": {
+        "x": 3512,
+        "y": 2,
+        "w": 229,
+        "h": 150
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 229,
+        "h": 150
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-idle-017.png": {
+      "frame": {
+        "x": 3746,
+        "y": 2,
+        "w": 230,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 230,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    },
+    "duskmane-spirit-wolf-death-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 156,
+        "w": 230,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 230,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "duskmane-spirit-wolf-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3978,
+      "h": 308
+    },
+    "scale": "1"
+  }
+}

@@ -135,27 +135,31 @@ export class HoaCauFireballPresentation {
     const timing = hoaCauTiming(active.impactMs)
     const sample = sampleHoaCauTimeline(active.elapsedMs, active.impactMs)
     const sourceDepth = this.surface.depth(active.cast.source)
-    // Ring count by cast tier: 1 circle = normal Ly Hoa Thuat, 2 = Phap
-    // The empowered cast, 3 = ultimate (art placeholder reuses the same
-    // sheet - a dedicated triple-ring asset lands with the ult).
+    // Ring count by cast tier: the inner seal (nearest the fire character)
+    // plays on every cast, +middle ring when empowered, +outer ring only on
+    // ultimate. The rings are authored concentric in one comp, so each tier
+    // adds its own authored ring at its own radius - no stacked copies.
     if (active.elapsedMs >= timing.portalStartMs && active.elapsedMs < timing.releaseMs) {
       const progress = (active.elapsedMs - timing.portalStartMs)
         / (timing.releaseMs - timing.portalStartMs)
       const frame = this.surface.reducedMotion ? 56 : Math.min(63, Math.floor(progress * 64))
       const ringCount = active.cast.slotRole === 'ultimate' ? 3
         : active.cast.empowered ? 2 : 1
+      const ringAssets = [HOA_CAU_VFX_ASSETS.fireCircleInner,
+        HOA_CAU_VFX_ASSETS.fireCircleMiddle, HOA_CAU_VFX_ASSETS.fireCircleOuter]
       for (let ring = 0; ring < ringCount; ring += 1) {
-        // Outer rings start on a different spin phase so the stacked
-        // circles read as two discs, not one blurred ring.
-        this.show(HOA_CAU_VFX_ASSETS.tripleCircle, frame + ring * 11, active.portalOrigin,
-          0.34 + ring * 0.12, sourceDepth - ring * 0.01, 0,
-          ring === 0 ? HOA_CAU_VFX_ASSETS.tripleCircle.key : `${HOA_CAU_VFX_ASSETS.tripleCircle.key}:ring${ring + 1}`,
-          1 - ring * 0.35, 0.55)
+        this.show(ringAssets[ring]!, frame, active.portalOrigin,
+          0.34, sourceDepth - ring * 0.01, 0, ringAssets[ring]!.key, 1, 0.55)
       }
     }
     if (sample.chargeFrame !== null) {
       const frame = this.surface.reducedMotion ? Math.max(27, Math.min(44, sample.chargeFrame)) : sample.chargeFrame
-      this.show(HOA_CAU_VFX_ASSETS.charge, frame, active.origin, 1.75, sourceDepth + 0.03)
+      // Empowered casts gather the azure charge (offline hue-shift, no
+      // runtime tint); normal casts keep the orange ball.
+      const chargeAsset = active.cast.empowered
+        ? HOA_CAU_VFX_ASSETS.chargeEmpowered
+        : HOA_CAU_VFX_ASSETS.charge
+      this.show(chargeAsset, frame, active.origin, 1.75, sourceDepth + 0.03)
     }
     if (sample.projectileProgress !== null && !active.resolved) {
       const p = sample.projectileProgress

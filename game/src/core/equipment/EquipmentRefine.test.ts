@@ -25,7 +25,7 @@ import {
   type RefineValueEntry,
 } from './EquipmentRefine'
 import {
-  REFINE_SPIRIT_STONE_PER_UNIT,
+  REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY,
   REFINE_TINH_HOA_COST_BY_QUALITY,
 } from './RefinementBalance'
 import { affixes } from '../../data/equipment/affixes'
@@ -438,7 +438,7 @@ describe('RefineDeps call contract', () => {
     )
     expect(ctx.applyCostDiscount).toHaveBeenNthCalledWith(
       2,
-      (instance.affixes.length + 1) * REFINE_SPIRIT_STONE_PER_UNIT,
+      (instance.affixes.length + 1) * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[instance.quality],
     )
     expect(ctx.spendItemRefinementPoints).toHaveBeenCalledTimes(1)
     expect(ctx.spendItemRefinementPoints).toHaveBeenCalledWith(instance, 1)

@@ -1360,6 +1360,206 @@
       "sfx": [
         "streamscale-forkman-attack.ogg"
       ]
+    },
+    "redscarf-blade-bandit": {
+      "out": "redscarf-blade-bandit",
+      "src": "hand-art/redscarf-blade-bandit",
+      "recolor": null,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.974025974025974,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      },
+      "canvasSize": {
+        "w": 744,
+        "h": 744
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "redscarf-blade-bandit-idle-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "redscarf-blade-bandit-sheet-1.png",
+          "atlas": "redscarf-blade-bandit-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "redscarf-blade-bandit-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "redscarf-blade-bandit-sheet-1.png",
+          "atlas": "redscarf-blade-bandit-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": []
+    },
+    "redscarf-blade-bandit-ferocious": {
+      "out": "redscarf-blade-bandit-ferocious",
+      "src": "hand-art/redscarf-blade-bandit",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.974025974025974,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      },
+      "canvasSize": {
+        "w": 744,
+        "h": 744
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "redscarf-blade-bandit-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "redscarf-blade-bandit-ferocious-sheet-1.png",
+          "atlas": "redscarf-blade-bandit-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "redscarf-blade-bandit-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "redscarf-blade-bandit-ferocious-sheet-1.png",
+          "atlas": "redscarf-blade-bandit-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": []
+    },
+    "duskmane-spirit-wolf": {
+      "out": "duskmane-spirit-wolf",
+      "src": "hand-art/duskmane-spirit-wolf",
+      "recolor": null,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.991304347826087,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      },
+      "canvasSize": {
+        "w": 248,
+        "h": 248
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "duskmane-spirit-wolf-idle-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "duskmane-spirit-wolf-sheet-1.png",
+          "atlas": "duskmane-spirit-wolf-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "duskmane-spirit-wolf-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "duskmane-spirit-wolf-sheet-1.png",
+          "atlas": "duskmane-spirit-wolf-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": []
+    },
+    "duskmane-spirit-wolf-ferocious": {
+      "out": "duskmane-spirit-wolf-ferocious",
+      "src": "hand-art/duskmane-spirit-wolf",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.991304347826087,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      },
+      "canvasSize": {
+        "w": 248,
+        "h": 248
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "duskmane-spirit-wolf-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "duskmane-spirit-wolf-ferocious-sheet-1.png",
+          "atlas": "duskmane-spirit-wolf-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "duskmane-spirit-wolf-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "duskmane-spirit-wolf-ferocious-sheet-1.png",
+          "atlas": "duskmane-spirit-wolf-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": []
     }
   }
 }

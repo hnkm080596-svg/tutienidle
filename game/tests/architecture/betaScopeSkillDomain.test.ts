@@ -484,7 +484,7 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
   })
 
   it('committed branch states: root purchased, growth purchasable, keystone realm-gated', () => {
-    const player = spellPlayer({ skillInsight: 10 }, 'fire')
+    const player = spellPlayer({ skillInsight: 700 }, 'fire')
     const tree = betaSkillTreeFor(player)
 
     const root = nodeById(tree.nodes, 'hoa_linh_ngo')
@@ -496,7 +496,7 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
 
     expect(mastery.state).toBe('purchasable')
     expect(mastery.affordable).toBe(true)
-    expect(mastery.nextLevelCost).toBe(1)
+    expect(mastery.nextLevelCost).toBe(600)
 
     // Realm gate (foundation_establishment) unmet at qi_refining.
     expect(keystone.state).toBe('progression-locked')
@@ -507,7 +507,7 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
     expect(
       keystone.prerequisites.find((gate) => gate.kind === 'node'),
     ).toMatchObject({ gate: 'purchase', targetIds: ['hoa_linh_ngo'], met: true })
-    expect(keystone.nextLevelCost).toBe(2)
+    expect(keystone.nextLevelCost).toBe(150_000)
     expect(keystone.grantsSkillIds).toEqual(['tam_muoi_chan_hoa'])
   })
 
@@ -534,7 +534,7 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
     expect(locked.reason).toBe('insufficient-insight')
 
     const buyable = nodeById(
-      betaSkillTreeFor(spellPlayer({ realmId: 'foundation_establishment', skillInsight: 2 }, 'fire')).nodes,
+      betaSkillTreeFor(spellPlayer({ realmId: 'foundation_establishment', skillInsight: 150_000 }, 'fire')).nodes,
       'linh_ngo_tam_muoi_chan_hoa',
     )
 

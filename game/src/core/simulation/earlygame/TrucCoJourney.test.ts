@@ -84,6 +84,7 @@ import { getRequiredCultivation } from '../../realm/realmSystem'
 import { isCompanionDomainUnlocked } from '../../companion/CompanionAvailability'
 import { isCompanionPullPoolEnabled } from '../../realm/ReleasePolicy'
 import { makeInstance } from '../../equipment/EquipmentInstance.fixture'
+import { EQUIPMENT_SLOTS } from '../../equipment/EquipmentSlotState'
 import { usePlayerStore } from '../../../stores/player'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -691,17 +692,11 @@ describe('TrucCoJourney - ordered journey', () => {
           s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
         ).toBeGreaterThanOrEqual(target)
       }
-      // Essence needed to reach the current capacity from the current
-      // step - the new per-step cost curve (design sec.11).
-      const essenceToCapacity = (): number => {
-        const state = s.player.bodyProgression.zhou_tian
-        const cap = getZhouTianCapacity(s.player)
-        let sum = 0
-        for (let step = state.completed; step < cap; step++) {
-          sum += zhouTianStepCost(step)
-        }
-        return s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID) + sum
-      }
+      // Essence for the NEXT uncompleted step - the phap essence stack
+      // caps at 1000, so farming for a whole capacity run in one bag is
+      // impossible; the invest loop farms one step's cost at a time.
+      const nextPhapStepCost = (): number =>
+        zhouTianStepCost(s.player.bodyProgression.zhou_tian.completed)
       const investZhouToCapacity = (): void => {
         const capacity = getZhouTianCapacity(s.player)
         let guard = 0
@@ -709,6 +704,7 @@ describe('TrucCoJourney - ordered journey', () => {
           s.player.bodyProgression.zhou_tian.completed < capacity &&
           guard++ < 500
         ) {
+          farmPhap(nextPhapStepCost())
           expect(s.investChapter('zhou_tian')).toBeGreaterThan(0)
         }
         expect(s.player.bodyProgression.zhou_tian.completed).toBe(
@@ -726,7 +722,6 @@ describe('TrucCoJourney - ordered journey', () => {
       // Leg C pinned observation 1 - the below-cap clamp at L1
       // (capacity 2): completed steps reached the cap, then a further
       // invest leaves completed AT the cap and debits NOTHING.
-      farmPhap(essenceToCapacity())
       investZhouToCapacity()
       expect(s.player.bodyProgression.zhou_tian.completed).toBe(2)
       const heldAtCap = phapHeld()
@@ -767,7 +762,6 @@ describe('TrucCoJourney - ordered journey', () => {
         // Honest Phap farming rides the already-cleared floor_1, then
         // the real invest seam tops completed to the new capacity.
         if (newLevel < 18) {
-          farmPhap(essenceToCapacity())
           investZhouToCapacity()
           expect(s.player.bodyProgression.zhou_tian.completed).toBe(
             Math.min(36, 2 * newLevel),
@@ -841,14 +835,25 @@ describe('TrucCoJourney - ordered journey', () => {
       // other floor enjoys (leg E.2): equip the carried drops and
       // spend the earned attribute pool. floor_10 was the only boss
       // attempted on the pre-growth state, which left the seeded
-      // battle margin RNG-exposed.
+      // battle margin RNG-exposed. Stat-wall ladder (2026-10-05): the
+      // floor-10 king scales 1.95x on top of the x7/x2 boss
+      // multipliers, so the authored rhythm now also re-farms floor_9
+      // for ore and burns it on slot enhance before the attempt.
+      for (let run = 0; run < 8; run++) {
+        if (s.runStage('foundation_floor_9') !== 'victory') break
+      }
+      s.equipAll()
+      for (const slot of EQUIPMENT_SLOTS) {
+        for (let k = 0; k < 20; k++) {
+          s.gameManager.equipmentOps.enhanceSlot(slot, s.player)
+        }
+      }
       s.equipAll()
       while (s.allocateAttribute('strength')) {}
       expect(s.runStage('foundation_floor_10')).toBe('victory')
       expect(s.player.completedStageIds.at(-1)).toBe(
         'foundation_floor_10',
       )
-      farmPhap(essenceToCapacity())
       investZhouToCapacity()
 
       for (let level = 10; level < 18; level++) {
@@ -858,7 +863,6 @@ describe('TrucCoJourney - ordered journey', () => {
         expect(s.player.realmLevel).toBe(level + 1)
         expect(s.player.attributePoints).toBeGreaterThan(pointsBefore)
         if (s.player.realmLevel < 18) {
-          farmPhap(essenceToCapacity())
           investZhouToCapacity()
         }
       }
@@ -892,24 +896,35 @@ describe('TrucCoJourney - ordered journey', () => {
         // Supplying phap commits the remaining rungs with an exact
         // debit: debited == the op's reported consumed total (no
         // surplus drawn, no substitution fill). Steps 34->36 cost
-        // zhouTianStepCost(34)+zhouTianStepCost(35) = 375.
-        s.holdMaterial(ZHOU_TIAN_CURRENCY_MATERIAL_ID, 375)
-        const phapBefore = s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
+        // zhouTianStepCost(34)+zhouTianStepCost(35) = 950+975 = 1925
+        // (2026-10-05 curve). The essence stack caps at 1000, so each
+        // step is supplied from its own full stack - like real play.
+        let supplied = 0
         let totalInvested = 0
         let zhouGuard = 0
         while (
           s.player.bodyProgression.zhou_tian.completed < 36 &&
           zhouGuard++ < 500
         ) {
+          const phapBefore = s.materialAmount(
+            ZHOU_TIAN_CURRENCY_MATERIAL_ID,
+          )
+          s.holdMaterial(
+            ZHOU_TIAN_CURRENCY_MATERIAL_ID,
+            zhouTianStepCost(s.player.bodyProgression.zhou_tian.completed),
+          )
+          supplied +=
+            s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID) - phapBefore
           const consumed = s.investChapter('zhou_tian')
           expect(consumed).toBeGreaterThan(0)
           totalInvested += consumed
         }
         expect(s.player.bodyProgression.zhou_tian.completed).toBe(36)
         expect(totalInvested).toBeGreaterThan(0)
-        expect(
-          phapBefore - s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
-        ).toBe(totalInvested)
+        // Exact debit: everything supplied was invested, nothing drawn
+        // beyond it (no surplus drawn, no substitution fill).
+        expect(totalInvested).toBe(supplied)
+        expect(s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBe(0)
         expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(
           phamHeld,
         )

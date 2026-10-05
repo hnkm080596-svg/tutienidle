@@ -14,6 +14,7 @@ import {
   type CombatAiStrategy,
 } from '../battle/CombatAiStrategy'
 import { addCultivation } from '../cultivation/CultivationSystem'
+import type { IdleSkillInsightDaily } from '../reward/SkillInsightBalance'
 
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
@@ -250,6 +251,13 @@ export interface PlayerData {
   // single-active cardinality). null = khong co auto-farm nao dang chay.
   autoFarmStage: { stageId: string; lastCheckedMs: number } | null
 
+  // Minh ruling 2026-10-05 - quota Cam ngo Ky nang cua kenh idle
+  // (auto-farm) theo ngay (SkillInsightBalance.settleIdleSkillInsightMint,
+  // day-bucket UTC lazy reset luc mint). KHONG nam tren autoFarmStage:
+  // re-arm tao marker moi se xoa counter va bo qua cap. Vang mat tren
+  // save cu -> window moi tinh tu lan mint dau.
+  idleSkillInsightDaily?: IdleSkillInsightDaily
+
   // P7-M5 - the ONE canonical body progression record (chapter-keyed:
   // body_refinement tiers + meridian openedIds today). Owned by
   // core/realm/body/BodyProgressionSystem; consumers read derived facts
@@ -410,6 +418,9 @@ export function createDefaultPlayer(): PlayerData {
     perfectClearStageIds: [],
     perfectClearSeconds: {},
     autoFarmStage: null,
+    // Same explicit-undefined rule as pendingTalentEntitlement above:
+    // the idle mint ledger is created lazily at first idle insight mint.
+    idleSkillInsightDaily: undefined,
     hasSeenTutorial: false,
 
     // PHAI khai bao tuong minh (du `undefined`) - Pinia Options Store

@@ -180,7 +180,11 @@ export class QuestManager {
 
       lastDailyResetAtMs:
         Number.isFinite(state.lastDailyResetAtMs) && state.lastDailyResetAtMs >= 0
-          ? state.lastDailyResetAtMs
+          // r11-AUT: a crafted FUTURE reset stamp freezes the daily
+          // reset forever (dayBucket(now) <= dayBucket(future) always).
+          // Clamp to now - the honest direction ("just reset") denies
+          // the exploit, unlike 0 which would grant a free reset.
+          ? Math.min(state.lastDailyResetAtMs, Date.now())
           : 0,
 
       // Same normalize contract as completedOnceIds - type-filter plus

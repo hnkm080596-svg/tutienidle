@@ -23,20 +23,22 @@ const EXPECTED_FINGERPRINTS: Record<string, Record<number, string>> = {
   'kiem_tu_ngu/durable_target': { 11: '010c23f6', 22: 'e6080b0c', 33: '5e30c54a', 44: '582d28cd', 55: 'dbb406cb', 66: '006d9fec', 77: '5bf2b7f6', 88: 'c7c86d77' },
   'kiem_tu_ngu/multi_enemy': { 11: '5ad17259', 22: '8fb4531b', 33: '779816c1', 44: '3e843010', 55: '8cd601b8', 66: '1d27f4d8', 77: '5cbe5cd5', 88: 'e27c34a9' },
   'kiem_tu_ngu/single_target': { 11: 'e65a38a1', 22: '821d0aba', 33: '6794a7b7', 44: '6b7b444b', 55: '6766573a', 66: 'd3bd4f53', 77: '0524982d', 88: '6e510c25' },
-  // DATA-SLICE TUNE 2026-10-04 (docs/balance/skills-review.md + the dated
-  // baseline delta next to it): hoa_an 0.15->0.20, tam_muoi potency
-  // 1.5->2.0, trang cost 0.30->0.15. The two spell recipes below (and
-  // only they) drift -- every other cell stays byte-identical.
-  'phap_tu_ngo_dao/attrition': { 11: '89c96945', 22: 'c5ab6a2c', 33: '307aa7d2', 44: '72dcc152', 55: 'aec6399d', 66: 'bd5b9b9d', 77: '4b86f318', 88: 'a0ee3a66' },
-  'phap_tu_ngo_dao/burst_pressure': { 11: 'fb24a3e9', 22: 'b6548536', 33: 'f99c0eba', 44: 'ba33aab6', 55: 'd64ff159', 66: 'ca1cee30', 77: '70e42708', 88: '069d54f7' },
-  'phap_tu_ngo_dao/durable_target': { 11: 'f5b8b2c5', 22: 'a3936dc3', 33: '3d4805a1', 44: '48bb3a82', 55: '45b52161', 66: '9ba2404f', 77: 'bab78471', 88: '94802645' },
-  'phap_tu_ngo_dao/multi_enemy': { 11: '8a0cf226', 22: 'ff065710', 33: 'cae6dfaa', 44: 'e538231e', 55: 'dba1af97', 66: 'ed86ee06', 77: 'd24b805c', 88: 'ee812cb6' },
-  'phap_tu_ngo_dao/single_target': { 11: '326cf562', 22: '32179a3f', 33: '4f50df11', 44: '3fea8788', 55: 'd8b024d2', 66: 'cb0d8142', 77: 'e90f9728', 88: '4cac6a6f' },
-  'phap_tu_ngu_hanh/attrition': { 11: 'ed184b98', 22: '16dc9cae', 33: 'aeeec9ca', 44: '1b34f196', 55: '22a51898', 66: '5fb34f7f', 77: '823f7d4b', 88: '34f73221' },
-  'phap_tu_ngu_hanh/burst_pressure': { 11: 'f14b45e4', 22: '0128414d', 33: 'ce3be68a', 44: '20df487a', 55: '285f2ca2', 66: 'a198ea81', 77: '6ef5d8d9', 88: '1ccda3a9' },
-  'phap_tu_ngu_hanh/durable_target': { 11: 'bdb5047b', 22: '2daf9d7c', 33: '84bd196e', 44: '69e13a68', 55: 'fd98a466', 66: '01f2664f', 77: '5dfdc31e', 88: '281b394d' },
-  'phap_tu_ngu_hanh/multi_enemy': { 11: '96317933', 22: '71b99d3c', 33: '62a590b4', 44: '0da03397', 55: 'f1d81cf9', 66: '9303badc', 77: '474150a8', 88: '86d160d7' },
-  'phap_tu_ngu_hanh/single_target': { 11: 'c6d8c2ec', 22: '4ba22abc', 33: '58989970', 44: '099d36ad', 55: '5b32e9ed', 66: 'ffa666f3', 77: 'e96ae9c4', 88: '8ca6db26' },
+  // F-SCOPE-1 BUFF 2026-10-05 (docs/balance/2026-10-05-stat-wall-ladder.md):
+  // hoa_cau_thuat hit 1 -> 1.07 (+7% fire kit damage, Minh ruling). Both
+  // spell recipes own fire surface (ngu_hanh runs hoa_cau_thuat as its
+  // kit basic; ngo_dao's kit ids include every element basic), so the
+  // two phap_tu recipes below drift -- all 20 kiem_tu/the_tu cells stay
+  // byte-identical (verified against the previous committed set).
+  'phap_tu_ngo_dao/attrition': { 11: '3cc89031', 22: '3ce75eec', 33: '4b5ee6b1', 44: '2a7a75a9', 55: '4d7bdf75', 66: 'cb96f5a3', 77: '793cac12', 88: '190b69d1' },
+  'phap_tu_ngo_dao/burst_pressure': { 11: '56b7e110', 22: '41c0ee7e', 33: '35f3019d', 44: 'bedfabac', 55: 'f31307c3', 66: 'cbecd038', 77: '265d20d2', 88: '41bf92e6' },
+  'phap_tu_ngo_dao/durable_target': { 11: '1aca4d7f', 22: '34802ef8', 33: 'a2193d60', 44: '9374862f', 55: 'ec7db432', 66: 'c86a483c', 77: 'd6c2c1a1', 88: '42e25bb5' },
+  'phap_tu_ngo_dao/multi_enemy': { 11: '961df44b', 22: '3546cf2a', 33: '9403c3ce', 44: 'bb23c613', 55: '95e5951f', 66: 'ca258967', 77: '3d6f5202', 88: '95ee58b4' },
+  'phap_tu_ngo_dao/single_target': { 11: '2eb6d12b', 22: '9f70a898', 33: 'fb08a0fc', 44: 'f741348c', 55: 'abc4380c', 66: '60015eba', 77: 'feb34db5', 88: '9c435c75' },
+  'phap_tu_ngu_hanh/attrition': { 11: '7766e506', 22: 'c85548b1', 33: '44c8b6f9', 44: 'e4dd2aa2', 55: '6b243b1f', 66: '72db8814', 77: '4afbb1c9', 88: '011b7417' },
+  'phap_tu_ngu_hanh/burst_pressure': { 11: 'fbd0b091', 22: '3df0baac', 33: 'f7a91e6a', 44: '8a55c2d8', 55: '3f574376', 66: '346ef498', 77: 'cee85415', 88: 'fead0aff' },
+  'phap_tu_ngu_hanh/durable_target': { 11: 'a1c50a94', 22: 'd066a161', 33: 'e2755490', 44: '0893d895', 55: 'b9819ab6', 66: '1c660b81', 77: 'fade618b', 88: '46a097bb' },
+  'phap_tu_ngu_hanh/multi_enemy': { 11: '86c45abc', 22: 'f400382d', 33: '6a96625d', 44: '286a1491', 55: 'e031aa03', 66: '70be7efb', 77: 'e5f5ec0f', 88: '5ef283d8' },
+  'phap_tu_ngu_hanh/single_target': { 11: '3593e45d', 22: 'd8e226f3', 33: '23ba67fe', 44: 'aa29e6cd', 55: '399f3742', 66: '77afe358', 77: '399f3742', 88: 'db95ec95' },
   'the_tu_hien/attrition': { 11: '264b5b18', 22: '3648c676', 33: '523e5af2', 44: '5b27d4fc', 55: '67698cab', 66: 'e7cec04d', 77: 'ddf7130a', 88: 'a553a49c' },
   'the_tu_hien/burst_pressure': { 11: '354eac78', 22: 'c2386a93', 33: '9ee3358c', 44: '76f0c377', 55: 'a7c6cfb6', 66: '221f701a', 77: 'df4a5579', 88: 'e67e777b' },
   'the_tu_hien/durable_target': { 11: '67047800', 22: '624522d2', 33: 'e534ed9f', 44: '502f5920', 55: '99fbd0b1', 66: '51637627', 77: 'f0d98513', 88: 'c5623218' },

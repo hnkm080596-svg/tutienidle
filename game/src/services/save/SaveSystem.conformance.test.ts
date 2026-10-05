@@ -269,6 +269,13 @@ function stripVolatile(save: GameSave): Omit<GameSave, 'player'> & {
   player: Omit<PlayerData, 'lastSavedAt'>
 } {
   const { lastSavedAt: _ignored, ...player } = save.player
+  // r12-COR: an armed farm's lastCheckedMs legitimately RE-ANCHORS on
+  // every restore that skips the >60s settle (stale-anchor mint fix) -
+  // volatile like lastSavedAt, so it is stripped for identity compare.
+  if (player.autoFarmStage) {
+    const { lastCheckedMs: _ignoredAnchor, ...stage } = player.autoFarmStage
+    player.autoFarmStage = stage as typeof player.autoFarmStage
+  }
 
   return { ...save, player }
 }

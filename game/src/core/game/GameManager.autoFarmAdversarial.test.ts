@@ -16,23 +16,25 @@ const STAGE = {
 }
 
 describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
-  it('settle tiến lastCheckedMs ĐÚNG bằng cycles đã roll (2 cycles trên 120s)', () => {
+  it('settle tiến lastCheckedMs đúng phần window hiệu lực (offline x0.5: 120s -> 60s)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     gameManager.catalogOps.registerEnemyTemplates([DUMMY])
     gameManager.catalogOps.registerStages([STAGE])
     player.perfectClearStageIds.push('adv_stage')
-    player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 100s (2026-10-05 retune)
 
     const lastCheckedMs = Date.now() - 120_000
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs }
 
-    // Settle 120s = 2 cycles (50s moi cycle) + 20s du -> lastCheckedMs tien 100s.
+    // 2026-10-05 ruling "offline 50%": 120s x AUTO_FARM_OFFLINE_EFFICIENCY 0.5 =
+    // 60s hieu luc < 100s cycle -> 0 cycles roll, anchor tien dung 60s
+    // (remainder da halve carry sang tick live; truoc ruling tien 100s).
     gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)
     const afterFirst = player.autoFarmStage!.lastCheckedMs
 
-    expect(afterFirst).toBeGreaterThanOrEqual(lastCheckedMs + 100_000 - 1000)
-    expect(afterFirst).toBeLessThanOrEqual(lastCheckedMs + 100_000 + 1000)
+    expect(afterFirst).toBeGreaterThanOrEqual(lastCheckedMs + 60_000 - 1000)
+    expect(afterFirst).toBeLessThanOrEqual(lastCheckedMs + 60_000 + 1000)
   })
 
   it('elapsed ÂM (clock rollback) → no-op, lastCheckedMs KHÔNG lùi', () => {
@@ -48,7 +50,12 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
 
     gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, -5000)
 
-    expect(player.autoFarmStage!.lastCheckedMs).toBe(lastCheckedMs)
+    // 2026-10-05: elapsed am clamp ve 0 -> anchor rebase ve now thay vi
+    // giu moc stale. Moc cu de lai ca 10s gap cho tick live mint tiep
+    // full rate (undo ca AUTO_FARM_OFFLINE_EFFICIENCY lan double-pay risk T1-12).
+    const anchor = player.autoFarmStage!.lastCheckedMs
+    expect(anchor).toBeGreaterThanOrEqual(lastCheckedMs + 9_000)
+    expect(anchor).toBeLessThanOrEqual(Date.now())
   })
 
   it('cycleSeconds NaN → no-op (boundedness)', () => {
@@ -186,16 +193,16 @@ describe('Adversarial — corrupt lastCheckedMs bound (C1)', () => {
     const ops = buildAutoFarmOps(processDefeatedEnemies)
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push('adv_stage')
-    player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 100s
     // Corrupt save: epoch timestamp. Elapsed is ~55 years -> completedCycles
     // would be ~10^8 without the clamp (pre-fix: main-thread hang).
     armFarm(ops, player, 1)
 
     ops.tickAutoFarm(player)
 
-    // 24h cap / 50s cycle = 1728 cycles max on the catch-up tick.
+    // 24h cap / 100s cycle = 864 cycles max on the catch-up tick.
     const firstTickRolls = processDefeatedEnemies.mock.calls.length
-    expect(firstTickRolls).toBeLessThanOrEqual(24 * 60 * 60 / 50 + 1)
+    expect(firstTickRolls).toBeLessThanOrEqual(24 * 60 * 60 / 100 + 1)
     expect(firstTickRolls).toBeGreaterThan(0)
     expect(Number.isFinite(player.autoFarmStage!.lastCheckedMs)).toBe(true)
 
@@ -207,6 +214,24 @@ describe('Adversarial — corrupt lastCheckedMs bound (C1)', () => {
     ops.tickAutoFarm(player)
     expect(processDefeatedEnemies.mock.calls.length).toBe(firstTickRolls)
   })
+
+  it('future-dated lastCheckedMs re-anchors to now (r11-COR-2 pin)', () => {
+    const processDefeatedEnemies = vi.fn()
+    const ops = buildAutoFarmOps(processDefeatedEnemies)
+    const player = createDefaultPlayer()
+    player.perfectClearStageIds.push('adv_stage')
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 100s
+    // Crafted/corrupt save: lastCheckedMs 1h in the future used to leave
+    // the farm idling silently until real time caught up to the forged
+    // value. Re-anchor arm recovers it to ~= now.
+    armFarm(ops, player, Date.now() + 3_600_000)
+
+    ops.tickAutoFarm(player)
+
+    expect(player.autoFarmStage!.lastCheckedMs).toBeLessThanOrEqual(Date.now() + 1)
+    expect(player.autoFarmStage!.lastCheckedMs).toBeGreaterThan(Date.now() - 60_000)
+    expect(processDefeatedEnemies).not.toHaveBeenCalled()
+  })
 })
 
 describe('tickAutoFarm — farm_cycle observation emit (Sound System W6)', () => {
@@ -215,8 +240,8 @@ describe('tickAutoFarm — farm_cycle observation emit (Sound System W6)', () =>
     const ops = buildAutoFarmOps(vi.fn(), out)
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push('adv_stage')
-    player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
-    armFarm(ops, player, Date.now() - 150_000) // 3 cycles
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 100s
+    armFarm(ops, player, Date.now() - 350_000) // 3 cycles + 50s du
 
     const seen: { type: string; stageId: string; cycles: number }[] = []
     out.eventBus.on<typeof seen[number]>('farm_cycle', (e) => seen.push(e))

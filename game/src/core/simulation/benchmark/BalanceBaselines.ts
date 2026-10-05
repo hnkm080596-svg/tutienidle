@@ -66,7 +66,7 @@ export function mortalSourcePlayer(): PlayerData {
   player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
   // cuong_chien costs 1 insight; element roots cost 0. Headroom keeps
   // future recipe writes (more nodes) from silently under-funding.
-  player.skillInsight = 50
+  player.skillInsight = 200_000
   // rollVanDaoWaive rolls Math.random only when a cost-free talent is
   // selected - empty keeps recipe purchases deterministic.
   player.selectedTalentIds = []

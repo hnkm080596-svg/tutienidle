@@ -1,0 +1,78 @@
+# Fixpoint R11 — INT (blind adversarial integration)
+
+- **Reviewer**: INT — adversarial integration facet (callers, consumers, event chains, upstream invariants, downstream behavior, re-entry, duplicate init, unexpected call ordering, cleanup after failure, retry behavior, runtime edge cases, save/load round-trips, offline/online transitions, cross-feature regressions visible only assembled).
+- **Target**: `codex/hoa-cau-fireball-vfx` @ `5805d962` ("qa(r10): adjudicated fixes — dead skillInsight field, quest ore band, fail-closed guards, shared utcDayBucket").
+- **Scope attack**: shared `utcDayBucket` round-trip across UTC midnight; `calculateOfflineTime` legacy path vs cold-boot/live-replacement (future-dated `lastSavedAt`); `poolMissWeight`/`poolDrawChance` throw consumers (scripted-rng tests, boss draws); `itemQualityCeilingForFloor` throw — every caller for NaN/Infinity reachability; `applyFloorStatScale` NaN throw — derived vs authored `statScale`; `lastCheckedMs > now` re-anchor ordering; `EnemyReward.skillInsight` removal vs validators/migrations; `collect_foundation_ore_30` materialId swap vs mid-quest players; `resolveDrops` throw vs JSON-derived pool data; `scaleQuestRewardByRealm` preview parity on 4000-cultivation reward.
+- **Evidence modes**: EXECUTED_REPRO (new `tests/architecture/fixpointR11IntEvidence.qa.test.ts` — 2 pinning probes, green, run under vitest in `.agent-worktrees/qa-int-r11`), EXECUTED_VERIFY (scoped suite rerun — 19 files / 146 tests green), SOURCE_PROOF (file:line + trigger sequence), INFERRED (labeled).
+
+## Verdict: PASS WITH GAPS — 2 Low + 1 Nit confirmed; residuals & pre-existing listed
+
+| ID | Severity | Status | Class | Surface |
+|----|----------|--------|-------|---------|
+| F-INT-11-01 | Low | Confirmed (pinning probe) | REAL_DEFECT — crafted/corrupt-save timestamp hole, sibling of the r10-fixed `lastCheckedMs > now` | `saveShapeValidation.ts:3130` + `QuestManager.restore:181` + `QuestSystem.ts:476` |
+| F-INT-11-02 | Low | Confirmed (pinning probe) | REAL_DEFECT — settle not atomic across failure; anchor written only after the mint loop (pre-existing structure, unchanged by r10) | `GameManagerAutoFarmOps.ts:214-272` + `GameManagerSaveRestore.ts:496` |
+| F-INT-11-03 | Nit | Confirmed (static) | EDGE — stale comment/assumption about table↔ceiling floor parity | `BattleLootSystem.ts` floor-resolution comment vs `:541` |
+
+---
+
+## F-INT-11-01 — Low — forged/future `quests.lastDailyResetAtMs` suppresses daily resets indefinitely
+
+- **Class**: REAL_DEFECT — same crafted-timestamp class that r10 closed for `autoFarmStage.lastCheckedMs` (`> now` re-anchor in `tickAutoFarm`); this sibling was missed.
+- **Chain of gaps** (three layers, all missing the `<= lastSavedAt`/`<= now` bound that sibling timestamps DO enforce — `appliedAtMs` `saveShapeValidation.ts:1484`, `startedAtMs` `:3334`, `expiresAtMs` `:811`):
+  1. `saveShapeValidation.ts:3130-3131` — `quests.lastDailyResetAtMs` validated as non-negative finite only.
+  2. `QuestManager.restore:181-184` — normalize clause is `Number.isFinite && >= 0`, no upper bound.
+  3. `QuestSystem.checkAndResetDaily:476` — `if (dayBucket(now) <= dayBucket(lastDailyResetAtMs)) return false` — a future-dated marker makes every later real day "not new".
+- **Trigger**: a save carrying `lastDailyResetAtMs = now + 30d` (crafted, or written under a skewed clock) → load succeeds → daily-reset gate refuses until wall time crosses the forged date. Under `utcDayBucket` (new shared convention) the comparison is day-granular — the bug suppresses ~30 days of resets.
+- **Evidence**: EXECUTED_REPRO — `tests/architecture/fixpointR11IntEvidence.qa.test.ts` > `INT-11-01`: restore accepts the forged marker verbatim; `checkAndResetDaily` at `now+2d` returns `false` despite `utcDayBucket` advancing; it releases only at `forged+1d`.
+- **Impact bound**: daily cadence is scope-hidden in beta (`isBetaQuestEnabled` returns false for `cadence==='daily'`; `betaFeatureFlags.dailyQuest === false`) → latent, no live victim today. Fix is cheap and should land BEFORE daily quests ship: either validate `<= lastSavedAt` at the boundary or re-anchor `dayBucket(lastReset) > dayBucket(now)` inside `checkAndResetDaily` (the latter mirrors the r10 autofarm fix).
+
+## F-INT-11-02 — Low — `settleAutoFarmOffline` is not atomic: mid-settle throw leaves partial mints and never re-anchors
+
+- **Class**: REAL_DEFECT — cleanup-after-failure/retry-behavior defect, **pre-existing** (structure predates this commit; r10 added the `>now` pre-anchor but did not move the success anchor).
+- **Root**: `GameManagerAutoFarmOps.ts:214-272` — `rollAutoFarmCycleReward` mints into live state inside the loop (`processDefeatedEnemies` → `giveReward`, `settleTechniqueMastery`, `settleIdleSkillInsightMint`), but `autoFarm.lastCheckedMs = Date.now() - remainder` is written only at `:272`, after the loop. A throw at cycle k propagates with cycles 1..k-1 already minted and the stale anchor untouched.
+- **Retry mechanics verified**: `restoreFromSave` commits `lastAppliedPayloadHash` only at `:496` → the uncommitted payload IS retried in full → the settle re-rolls the ENTIRE window (RNG divergence) and re-pays the settled prefix. What actually double-pays is narrow: bag/technique/quest mints self-heal because every owner restore is *replacement* (`materialBag.clear()` etc. at `:236-238`, `techniqueSystem.restore` at `:202`, `questManager.restore` at `:344`); player-resident mints survive because `player.restoreFromSave` committed its own store-level hash earlier in `restoreGameSession` — but the insight mint is clamped by the persisted daily-ledger cap, and `totalSkillInsightGained` stays consistent with minted. Net residue: the un-anchored re-roll itself + bounded insight accounting; no unbounded double-mint demonstrated.
+- **Reachability**: only via a defect inside the mint path (e.g., a dropped itemId missing from a registry — same class as the unregistered-material question this round closed as a non-issue). On boot, a deterministically-throwing save goes to `saveIssue.report('corrupted', loaded.raw)` + `boot.fail` (`useAppLifecycle.ts:472-481`) — a dead-end recovery surface; raw bytes are preserved for re-import, and the re-import re-runs the full restore (hash uncommitted).
+- **Evidence**: EXECUTED_REPRO — `INT-11-02` probe: second `processDefeatedEnemies` throws → `settleAutoFarmOffline` propagates, `lastCheckedMs` still equals the stale input, `idleSkillInsightDaily.minted > 0`; restoring the patched method and re-calling with the same elapsed mints AGAIN over the same window (minted grows), then finally anchors.
+- **Fix direction**: write the anchor in a `finally` (or anchor-before-mint with a remainder carry), matching the invariant the tick path already keeps — the window must be consumed whether or not the mint loop completes. Optionally wrap the whole offline-settle block (`GameManagerSaveRestore.ts:392-427`) so a failure in one settle doesn't strand sibling settles.
+
+## F-INT-11-03 — Nit — "table and ceiling always resolve the same floor" comment can diverge
+
+- **Class**: EDGE — stale-assumption comment, dormant by authored data today.
+- **Root**: `BattleLootSystem.ts` near `:541` — the drop table resolves `stageDropTableFor(realmId, stage.floor ?? stage.requiredRealmLevel)`-style lookup while the comment asserts both consumers see the identical floor. For a Stage with `floor` undefined but `requiredRealmLevel > 1`, the table lookup and the `itemQualityCeilingForFloor` call can disagree (one defaults to 1-band behavior, the other to the realm-level ceiling). Authored `STAGES` always carry `floor` (`defineChapterStages` stamps `index + 1`), and all three authored bands span floors 1-10 anyway → zero live divergence; the risk is only for ad-hoc/test Stage objects or a future band that doesn't cover floor 1.
+- **Fix direction**: correct the comment to state the actual shared expression, or extract one `resolveStageFloor(stage)` helper both sides consume.
+
+---
+
+## Verified-clean attack lines (evidence in place, no defect)
+
+- **utcDayBucket shared convention** — `QuestSystem.dayBucket` now delegates to `utcDayBucket` (`GameClock.ts`) and `settleIdleSkillInsightMint` buckets `nowMs` with the same function → identical day boundary on both surfaces. `idleSkillInsightDaily` is declared on `Player.ts:423` (inside the `allowedPlayerKeys` whitelist in `stores/player.ts:restoreFromSave`) and shape-validated (`saveShapeValidation.ts:~2322` non-negative `dayBucket`/`minted`) → the ledger round-trips; a save written before UTC midnight restored after keeps the OLD bucket and self-heals on the first mint (`ledger.dayBucket !== utcDayBucket(now)` → reset). Restore itself never mints insight outside `settleAutoFarmOffline`, which writes into the restore-day bucket — the whole offline window is accounted under the settle day (documented; see Gaps).
+- **calculateOfflineTime in the SaveRestore legacy path** — `Math.max(0, elapsedMs/1000)` semantics preserved: `currentTime = Math.max(lastOnlineAt, timestamp)` keeps future-dated `lastSavedAt` clamped to 0 exactly like the old inline expression; `Number.POSITIVE_INFINITY` cap matches the legacy uncapped window; NaN inputs collapse to 0 the same way. Cold-boot `(untilMs - sinceMs)/1000` and live-replacement `0` branches unchanged; `settleAutoFarmOffline` still gated on `elapsedOfflineSeconds > 60` (`:392`).
+- **lastCheckedMs > now re-anchor ordering** — `tickAutoFarm:311-316` re-anchors `!isFinite || <0 || >now` BEFORE the `completedCycles <= 0` early return → the correction persists even when nothing mints. Residual for stale-PAST values is tracked under Pre-existing (below).
+- **poolMissWeight / poolDrawChance throw consumers** — the throw is reachable only from `STAGE_DROP_TABLES` entries; the sole authored `poolDrawChance` is 0.15 on the mortal band (`StageDropTables.ts:44`); the table is code, not save-derived → **no JSON-save NaN path exists**. rng cadence unchanged (one `rng()` per pool draw; miss folded inside). Scripted-rng test consumers never pass pool chances. Boss draw (`pickBossDropPool`) doesn't read `poolDrawChance`.
+- **itemQualityCeilingForFloor throw — all call sites enumerated** — exactly one production caller: `BattleLootSystem.ts:541` via `grantResolvedDrops`, `floor = stage ? (stage.floor ?? stage.requiredRealmLevel ?? 1) : undefined` (`:387`). `undefined` → uncapped (unchanged pre/post throw — intentional for stage-less mints). Authored stages always carry `floor` → the NaN/Infinity throw is unreachable in production; only an ad-hoc Stage object with a computed `floor`/`requiredRealmLevel` could hit it — fail-closed is the right contract.
+- **applyFloorStatScale NaN throw** — sole caller `StageWaveSystem.ts:260`, `scale = stage.statScale ?? 1`; authored ladders pass `Number.isFinite && >0` at authoring (`ChapterStages.ts:130-131`) and `STAGES` are all built via `defineChapterStages` → unreachable with authored data; the guard now covers the `NaN` slip F-INT-05 pinned last round. `statScale` is a plain authored optional on `Stage` — never derived.
+- **EnemyReward.skillInsight removal** — no validator/migration expected it: `saveShapeValidation` only validates `player.skillInsight`/`totalSkillInsightGained` (`:984-1008`), which remain. `EnemyReward` objects are template-authored, never persisted → no stale save shape.
+- **collect_foundation_ore_30 materialId swap — mid-quest players** — collect progress is a `questManager` counter (persisted, untouched by the swap); the claim re-checks `materialBag.has('foundation_establishment_ore_decade', 30)` — a player who banked qi ore keeps progress but must farm the correct ore: honest re-farm, not stranding (quest has no `unlocksAfterQuestId`; only the `requiredRealmId` gate). The material IS registered (`buildProfessionMaterialId('ore','foundation_establishment','decade')` via `buildProfessionMaterials`, `materials.ts:197-200`) and drops in the foundation band (`StageDropTables.ts:88`) → the described source fills it again. INT-01's band-membership probe now passes.
+- **scaleQuestRewardByRealm preview parity** — the read-model `betaScopeQuestDomain.rewardsFor` (`:147-153`) calls the identical `scaleQuestRewardByRealm(quest.reward.reward, questRewardBandRealmId(quest, deps.questRegistry))` as `QuestSystem.claim:379` → preview shows the scaled value: `collect_foundation_ore_30` `cultivation: 4000` → `4000 × stoneCostRealmFactor('foundation_establishment') = 4000 × 50 = 200_000` in both places. `claimFor` mirrors both gates (progress + `materialBag.has`).
+
+## New/Changed QA tests
+
+- `tests/architecture/fixpointR11IntEvidence.qa.test.ts` — 2 pinning probes (INT-11-01 forged daily-reset suppression; INT-11-02 mid-settle throw leaves stale anchor + partial mints). Both green — they pin current (defective) behavior.
+
+## Gaps and Residual Risk
+
+- **Negative-path coverage on the new throws** — `poolMissWeight`, `itemQualityCeilingForFloor`, `applyFloorStatScale` all fail-closed, but no test asserts the throw itself; all three are unreachable with authored data, so absence is a coverage nit, not a defect.
+- **Offline insight mint is restore-day-bucketed** — a settle window spanning UTC midnight counts entirely toward the restore-day cap (`idleSkillInsightDaily` carries `minted` forward, does not backfill the earlier bucket). Whether cap-days should be window-days is a balance/design call, not a correctness defect — flagged once, needs a ruling only if the design intended per-crossed-day quotas.
+- **'rejected' restore leaves hybrid live state** — a mid-`restoreFromSave` throw leaves some owners applied and tail slices (tribulation runtime `:470`, realm/spec/way reconciles `:476-485`, `reconcileQuestLifecycle :491`) un-run; bounded by the fact that the boot path dead-ends into the corrupted-recovery surface without autosaving the hybrid (INFERRED — verified the `rejected` branch reports + `boot.fail`; did not trace every autosave trigger under the fail screen).
+
+## Pre-existing / out-of-scope (unchanged by this commit)
+
+- **INT-04 residual — stale-PAST `lastCheckedMs` still mints live-rate**: the r10 fix clamps `>now`/NaN/negative; a crafted or clock-rolled-back save with `lastCheckedMs = now - 24h` is still legal (`saveShapeValidation.ts:2299` non-negative only — same missing `<= lastSavedAt` bound as F-INT-11-01) and pays the window at full live rate vs the halved offline rate (existing INT-04 probe: 864 live cycles vs 432 settled). Partially mitigated, not closed.
+- **r10 F-INT-02 (dead `hoa_cau_comet` ultimate ring)** — still open; not re-pinned (data unchanged, existing probe still applies).
+- **`player.restoreFromSave` precedes `saveOps`' `assertSaveAcceptable`** (`SaveSystem.ts:293` vs `:297`) — the Pinia store mutates before the acceptance check inside `restoreFromSave`; safe only because callers run `preflightSaveRegistryReferences`/`validateSave` first — convention, not enforcement.
+- **`productionSystem.settleOffline`/`decompose` settle atomicity** — same mint-then-anchor structure class as F-INT-11-02 across the whole offline block; replacement-restore self-heals bag mints on retry, same bounded residue.
+
+## Environment / reproducibility notes
+
+- Worktree `.agent-worktrees/qa-int-r11` at `5805d962`; `game/node_modules` symlinked to the main checkout (worktree has none); `libuuid.so.1` copied into `node_modules/canvas/build/Release/` for the canvas native dep.
+- Scoped suite: `npx vitest run` over drop/quest/insight/itemQuality/autoFarm/loot adjacent files — 19 files / 146 tests green, including the r10 evidence file (INT-04 pin still asserts the residual above).

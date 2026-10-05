@@ -27,6 +27,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import { computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
 import { assertSaveAcceptable } from '../../services/save/saveAcceptance'
 import { NotificationQueue } from './NotificationQueue'
+import { calculateOfflineTime } from '../idle/GameClock'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
 import type { TribulationDirector } from '../tribulation/TribulationDirector'
@@ -367,17 +368,35 @@ export class GameManagerSaveRestore {
     // SERVER-authorized duration (progression_cutoff_at -> serverNowUtc)
     // positioned inside the payload's own epoch (lastSavedAt + elapsed),
     // 'live-replacement' accrues zero, undefined keeps legacy local
-    // semantics. The 60s gate and the formula/cap owners are unchanged.
+    // semantics. The 60s gate is unchanged. The elapsed arithmetic is
+    // owned by GameClock.calculateOfflineTime (single source - r10-AUT);
+    // each settle consumer still applies its own channel cap, so the
+    // raw window is resolved uncapped here.
     const elapsedOfflineSeconds =
       timeAuthority?.kind === 'live-replacement'
         ? 0
         : timeAuthority?.kind === 'cold-boot'
-          ? Math.max(0, (timeAuthority.untilMs - timeAuthority.sinceMs) / 1000)
-          : Math.max(0, (Date.now() - (save.player.lastSavedAt ?? Date.now())) / 1000)
+          ? calculateOfflineTime(
+              { lastOnlineAt: timeAuthority.sinceMs },
+              timeAuthority.untilMs,
+              Number.POSITIVE_INFINITY,
+            ).offlineSeconds
+          : calculateOfflineTime(
+              { lastOnlineAt: save.player.lastSavedAt ?? Date.now() },
+              Date.now(),
+              Number.POSITIVE_INFINITY,
+            ).offlineSeconds
 
     // End of the authorized window expressed in the payload's epoch -
-    // identical to Date.now() in the legacy branch.
-    const settleNowMs = (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000
+    // identical to Date.now() for honest saves (lastSavedAt + elapsed).
+    // r11-COR: clamp at Date.now() - a finite FUTURE lastSavedAt passes
+    // shape validation, yields elapsed=0, but would leave settleNowMs
+    // future-dated and feed every unconditional settle below (alchemy
+    // tick(future) minting pending jobs early - save-edit cheat).
+    const settleNowMs = Math.min(
+      (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
+      Date.now(),
+    )
     const offlineSinceMs = save.player.lastSavedAt ?? settleNowMs
 
     if (offlinePlayer) {
@@ -411,10 +430,12 @@ export class GameManagerSaveRestore {
         // reward offline: roll cac chu ky auto-farm da troi trong cua so
         // offline (cung gate >60s voi Production catch-up).
         this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
-      } else if (timeAuthority?.kind === 'live-replacement' && offlinePlayer.autoFarmStage) {
-        // B1-D zero-accrual live replacement: an armed farm's saved anchor
-        // must not mint the paused gap on the next live tick - re-anchor
-        // at resume time without rolling any cycle.
+      } else if (offlinePlayer.autoFarmStage) {
+        // Re-anchor an armed farm on EVERY restore that skipped the
+        // settle (elapsed <= 60s AND live-replacement alike - r12-COR).
+        // Without this, a crafted stale lastCheckedMs survives to the
+        // next tick and mints the gap at LIVE rate (2x the offline
+        // settle) - the anchor bound only guards the settle path.
         this.deps.settleAutoFarmOffline(offlinePlayer, 0)
       }
 

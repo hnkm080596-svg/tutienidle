@@ -13,7 +13,7 @@ import {
   REFINE_INCREASE_MAX,
   REFINE_INCREASE_MIN,
   REFINE_MAX_LOCKS,
-  REFINE_SPIRIT_STONE_PER_UNIT,
+  REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY,
   REFINE_TINH_HOA_COST_BY_QUALITY,
 } from './RefinementBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
@@ -353,7 +353,7 @@ function rollRefineValues(
   }
 
   const spiritStoneCost = deps.applyCostDiscount(
-    (lineCount + uniqueLocks.length) * REFINE_SPIRIT_STONE_PER_UNIT,
+    (lineCount + uniqueLocks.length) * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[instance.quality],
   )
 
   if (!materialBag.has(SPIRIT_STONE_MATERIAL_ID, spiritStoneCost)) {

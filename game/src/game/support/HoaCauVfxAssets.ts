@@ -9,6 +9,15 @@ export const HOA_CAU_VFX_ASSETS = {
     firstFrame: 0,
     lastFrame: 50,
   },
+  /** Same converging charge hue-shifted to azure offline - the empowered
+      (and ultimate) cast gathers a blue ball to match its azure phoenix. */
+  chargeEmpowered: {
+    key: 'hoa-cau-charge-azure',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/charge-azure/hoa-tu-charge-azure.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/charge-azure/hoa-tu-charge-azure.json',
+    firstFrame: 0,
+    lastFrame: 50,
+  },
   impact: {
     key: 'hoa-cau-fire-20',
     textureUrl: '/assets/vfx/spritesheets/火 (20).png',
@@ -16,14 +25,37 @@ export const HOA_CAU_VFX_ASSETS = {
     firstFrame: 0,
     lastFrame: 26,
   },
-  /** Portal phase for every cast - the authored Arcadia fire circle.
-      The sheet books its 62-frame loop with one blank cell at each end. */
-  tripleCircle: {
-    key: 'hoa-cau-triple-fire-circle',
-    textureUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-triple-fire-circle.png',
-    atlasUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-triple-fire-circle.json',
-    firstFrame: 1,
+  /** Portal phase per cast tier - the authored Arcadia fire circle split
+      into one atlas per concentric ring (export-arcadia-circle-rings.mjs).
+      The inner seal (nearest the fire character) plays on every cast, the
+      middle ring joins an empowered cast, the outer ring is ultimate-only.
+      All three index 0..62 so each ring keeps its authored staggered reveal
+      (frame_63 stays the trailing authored blank); litRange marks the frames
+      where pixels actually burn - blank cells before reveal / after dissolve
+      are choreography, not pad. */
+  fireCircleInner: {
+    key: 'hoa-cau-fire-circle-inner',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-fire-circle-inner.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-fire-circle-inner.json',
+    firstFrame: 0,
     lastFrame: 62,
+    litRange: [1, 62],
+  },
+  fireCircleMiddle: {
+    key: 'hoa-cau-fire-circle-middle',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-fire-circle-middle.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-fire-circle-middle.json',
+    firstFrame: 0,
+    lastFrame: 62,
+    litRange: [11, 61],
+  },
+  fireCircleOuter: {
+    key: 'hoa-cau-fire-circle-outer',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-fire-circle-outer.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/circle/hoa-cau-fire-circle-outer.json',
+    firstFrame: 0,
+    lastFrame: 62,
+    litRange: [16, 60],
   },
   /** Authored Arcadia projectile - the only fireball flight art. */
   phoenixProjectile: {

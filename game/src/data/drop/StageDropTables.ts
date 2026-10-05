@@ -37,6 +37,11 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
     // the boss branch is gone - a boss simply draws more often. The entry
     // itself now resolves through the band authority (pham band, M-QI-10).
     guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.mortal],
+    // Minh ruling 2026-10-05: mortal kills should mint equipment only
+    // ~15% of the time, not on every kill - the miss outcome is reserved
+    // inside the same single-roll draw (see DropTable.poolDrawChance),
+    // so family pool lines are gated at the same rate.
+    poolDrawChance: 0.15,
     pool: [
       // No fixed equipment entry: base_kiem already sits in the registry
       // pool equipment_any draws from, so the mortal band keeps a single
@@ -73,9 +78,14 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
       // gate is now simply which tables list it: it appears here and in no
       // lower band, so the check has nothing left to ask (spec 2.5).
       { kind: 'material', itemId: 'doan_bao_thach', amount: { min: 1, max: 3 }, weight: 25 },
-      // Ore still drops at this realm too under the old foundationBeast()
-      // helper (bossEligible branch), so it stays in this band's pool.
-      { kind: 'material', itemId: 'qi_refining_ore_decade', amount: { min: 1, max: 2 }, weight: 15 },
+      // Ore is the realm's enhance/crafting faucet. The old
+      // foundationBeast() table literally paid qi_refining_ore_decade -
+      // a dead material here since enhance costs resolve by the
+      // PLAYER's realm (foundation enhance needs
+      // foundation_establishment_ore_decade). A foundation chapter that
+      // cannot fund its own enhance is an impossible wall, so the band
+      // pays its own realm's ore.
+      { kind: 'material', itemId: 'foundation_establishment_ore_decade', amount: { min: 1, max: 2 }, weight: 15 },
       { kind: 'equipment_any', weight: 20 },
     ],
   },

@@ -1,7 +1,7 @@
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EventBus } from '../events/EventBus'
 import { randomInt } from '../reward/DropRoll'
-import { getSkillInsightReward } from '../reward/SkillInsightBalance'
+import { getSkillInsightReward, settleIdleSkillInsightMint } from '../reward/SkillInsightBalance'
 import { getRealmRewardMultiplier } from '../reward/RealmRewardScale'
 import {
   getHealOnKillMaxHpPercent,
@@ -29,6 +29,7 @@ import {
 } from '../reward/BattleRewardSummary'
 import { composeItemGradeNameSegments, type ItemGrade } from '../item/ItemGrade'
 import type { ItemQuality } from '../item/ItemQuality'
+import { itemQualityCeilingForFloor } from '../equipment/ItemQualityBalance'
 import { composeEquipmentDisplayName } from '../equipment/EquipmentNaming'
 import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
@@ -307,9 +308,10 @@ export class BattleLootSystem {
           const talentStoneMultiplier = this.player
             ? getSpiritStoneGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels)
             : 1
-          // Scale thuong theo canh gioi stage (Truc Co x3, xem
-          // RealmRewardScale) - Truc Co tai su dung enemyPool Luyen Khi
-          // nen phai nhan thuong de thu nhap khong bi khung. Nhan ca
+          // Scale thuong theo canh gioi stage (xem RealmRewardScale) -
+          // 2026-10-05 retune: beta realms pay x1, drop bands carry the
+          // era jump themselves; x3+ remains only for band-less tiers.
+          // Nhan ca
           // techniqueMastery (tac dung phu: artifact EXP + skill insight
           // tang theo o Truc Co, da duoc duyet 2026-08-28). Currency now
           // comes from the stage drop table (already multiplied by the
@@ -341,10 +343,24 @@ export class BattleLootSystem {
           // skill-insight-and-auto-combat-hud-plan.md muc 3).
           // Thien phu Dai Tri Nhuoc Ngu/Nghich Thien nhan tai day (plan S6).
           const baseSkillInsight = getSkillInsightReward(rewards)
-          const skillInsightGained =
+          let skillInsightGained =
             baseSkillInsight > 0 && this.player
               ? Math.floor(baseSkillInsight * getInsightBaseMultiplier(this.player.selectedTalentIds, this.player.talentLevels) * getInsightGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels))
               : 0
+
+          // Idle channel only (2026-10-05, Minh ruling): auto-farm
+          // insight accrues against a daily realm-band quota on the
+          // player - clamped mints read Date.now() lazily for the
+          // UTC day-bucket. The active channel skips the gate entirely
+          // (manual combat stays unbounded and reads no wall clock).
+          if (skillInsightGained > 0 && this.player && this.channel === 'idle') {
+            skillInsightGained = settleIdleSkillInsightMint(
+              this.player,
+              enemy.realmId,
+              skillInsightGained,
+              Date.now(),
+            )
+          }
 
           if (skillInsightGained > 0 && this.player) {
             this.player.skillInsight += skillInsightGained
@@ -363,6 +379,15 @@ export class BattleLootSystem {
             drops.items,
             drops.qualityBonusSteps,
             battleEnemy.entity.id,
+            // Canonical floor read (ChapterStages: requiredRealmLevel is
+            // the normalized floor; GameManagerStageOps reads it the same
+            // way). The drop table at line ~294 keys off stage.floor
+            // with its own `?? 1`, so on a stage MISSING `floor` with
+            // requiredRealmLevel > 1 the ceiling resolves a deeper floor
+            // than the table - an authored-data-only edge, dormant today
+            // (every authored Stage carries floor). A stage-less kill
+            // keeps floor undefined -> uncapped.
+            stage ? (stage.floor ?? stage.requiredRealmLevel ?? 1) : undefined,
           )
 
           this.grantArtifactExperience(enemy)
@@ -502,6 +527,7 @@ export class BattleLootSystem {
     items: ResolvedDropItem[],
     qualityBonusSteps: number,
     sourceId: string,
+    floor?: number,
   ) {
     const overflowParts: string[] = []
 
@@ -511,6 +537,11 @@ export class BattleLootSystem {
     const zoneId = activeStageId
       ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
       : undefined
+
+    // Gear-pace retune (2026-10-05): the floor the drop table already
+    // resolved on also caps the quality any equipment roll may reach
+    // (band table in ItemQualityBalance). No stage context -> no cap.
+    const maxQuality = itemQualityCeilingForFloor(floor)
 
     const grantEquipment = (templateId: string | undefined) => {
       if (!this.player) {
@@ -538,6 +569,7 @@ export class BattleLootSystem {
         zoneId,
         qualityBonusSteps,
         this.lootRng,
+        maxQuality,
       )
 
       this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))

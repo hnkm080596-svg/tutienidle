@@ -246,7 +246,7 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
     player.cultivation = 10_000
 
     const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
-    gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 350)
+    gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 1500)
 
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.grade).toBe('heaven')
@@ -265,7 +265,7 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
     )
     expect(player.cultivation).toBe(expectedCultivation)
     expect(gameManager.materialBag.getAmount(stoneId)).toBe(
-      350 - TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM['foundation_establishment']!,
+      1500 - TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM['foundation_establishment']!,
     )
     // Design sec.3.3: a FAILED attempt never closes the lineage - the
     // player retries the same hidden gate.
@@ -278,7 +278,7 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
     expect(again).toBe(result)
     expect(player.cultivation).toBe(expectedCultivation)
     expect(gameManager.materialBag.getAmount(stoneId)).toBe(
-      350 - TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM['foundation_establishment']!,
+      1500 - TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM['foundation_establishment']!,
     )
     expect(player.hiddenPerfection.lineageActive).toBe(true)
   })
@@ -338,7 +338,7 @@ describe('settleOutcome — mid-apply failure containment (M6 r1)', () => {
     player.cultivation = 10_000
 
     const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
-    gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 350)
+    gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 1500)
 
     // Fault injection: the Kiep Thuong debuff write (LAST consequence of
     // resolveDefeat) throws - cultivation + stones already landed.
@@ -368,7 +368,7 @@ describe('settleOutcome — mid-apply failure containment (M6 r1)', () => {
     const expectedCultivation = Math.floor(
       10_000 * (1 - TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM['foundation_establishment']!),
     )
-    const expectedStones = 350 - TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM['foundation_establishment']!
+    const expectedStones = 1500 - TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM['foundation_establishment']!
     expect(player.cultivation).toBe(expectedCultivation)
     expect(gameManager.materialBag.getAmount(stoneId)).toBe(expectedStones)
     expect(buffSpy).toHaveBeenCalledTimes(1)

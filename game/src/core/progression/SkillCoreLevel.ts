@@ -21,7 +21,12 @@ export function getSkillCoreLevel(player: PlayerData, skillId: string): number {
  * Frozen Insight curve for Core upgrades (re-homed verbatim from the
  * retired SkillUpgradeBalance): level L -> L+1 costs 5 + 3x(L-1).
  * Level 0 prices like level 1 - grants bypass cost entirely.
+ *
+ * Insight pace retune 2026-10-05: re-anchored to the QI-window
+ * economy (minors pay 600/level) -> 200 + 100x(L-1); maxing a core to
+ * L10 costs 5,400 - about two growth minors. Cores are the damage
+ * spine, so they price like a keystone pair, not a rounding error.
  */
 export function getSkillCoreUpgradeCost(currentLevel: number): number {
-  return 5 + 3 * Math.max(0, currentLevel - 1)
+  return 200 + 100 * Math.max(0, currentLevel - 1)
 }

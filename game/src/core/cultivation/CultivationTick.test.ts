@@ -42,16 +42,20 @@ describe('cultivateTick', () => {
     expect(gained).toBeCloseTo(BASE_CULTIVATION_PER_SECOND * 0.25 * 10)
   })
 
-  it('ho_tich_bat_phat: realm ramp multiplies the rate (lvl1 -50%, lvl6 +0%)', () => {
+  it('ho_tich_bat_phat: realm ramp multiplies the rate (lvl1 -50%, lvl11 +0%, lvl18 +35%)', () => {
     const player = createDefaultPlayer()
     player.selectedTalentIds = ['ho_tich_bat_phat']
     player.realmLevel = 1
     cultivateTick(player, 1, NOW)
     expect(player.cultivationPerSecond).toBeCloseTo(BASE_CULTIVATION_PER_SECOND * 0.5)
 
-    player.realmLevel = 6
+    player.realmLevel = 11
     cultivateTick(player, 1, NOW)
     expect(player.cultivationPerSecond).toBeCloseTo(BASE_CULTIVATION_PER_SECOND * 1.0)
+
+    player.realmLevel = 18
+    cultivateTick(player, 1, NOW)
+    expect(player.cultivationPerSecond).toBeCloseTo(BASE_CULTIVATION_PER_SECOND * 1.35)
   })
 
   it('tu_linh_tran timed effect applies only while expiresAtMs > now', () => {

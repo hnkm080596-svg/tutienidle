@@ -36,14 +36,6 @@ export interface EnemyReward {
   // TechniqueSystem.gainMastery o VICTORY (active) / per-cycle (idle).
   techniqueMastery: number
 
-  // Cam ngo Ky nang - LUON cap bat ke co trang bi tam phap hay khong
-  // (skill-insight-and-auto-combat-hud-plan.md muc 3), xem
-  // GameManager.grantBattleRewardIfNeeded(). Optional - undefined thi
-  // suy ra tu techniqueMastery qua getSkillInsightReward() (xem
-  // core/reward/SkillInsightBalance.ts), tranh phai sua lai TOAN BO
-  // data enemy hien co (72 entry) chi de them 1 con so phase-dau tam.
-  skillInsight?: number
-
   // Tu vi gio CHI den tu tu luyen (2026-08-20) - giet quai KHONG cong
   // tu vi, nen EnemyReward khong co cultivation. Quest reward van dung
   // Reward.cultivation (core/reward/Reward.ts) - do la duong rieng.

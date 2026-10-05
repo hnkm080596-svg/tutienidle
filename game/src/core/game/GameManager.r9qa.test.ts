@@ -23,6 +23,7 @@ import { equipment } from '../../data/equipment/equipment'
 import { affixes } from '../../data/equipment/affixes'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
+import { WASH_SPIRIT_STONE_COST_BY_QUALITY } from '../equipment/RefinementBalance'
 import type { PlayerData } from '../player/Player'
 import { buildGameSave } from '../../services/save/SaveSystem'
 
@@ -58,7 +59,7 @@ describe('QA R9 - wash ticket save boundary', () => {
 
     const essence = manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID)
     manager.materialBag.add(essence, 9)
-    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 100)
+    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), WASH_SPIRIT_STONE_COST_BY_QUALITY.dia)
 
     // Paid preview leaves a pending ticket in the session.
     const preview = manager.equipmentOps.previewWashItem(instance.instanceId)

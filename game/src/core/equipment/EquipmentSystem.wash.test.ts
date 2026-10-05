@@ -26,6 +26,7 @@ import { materials } from '../../data/materials/materials'
 import { SPIRIT_STONE_MATERIAL, SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { isValidEquipmentSubstat } from './EquipmentStatPolicy'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
+import { WASH_SPIRIT_STONE_COST_BY_QUALITY } from './RefinementBalance'
 
 // Task 8 (phase7-gamemanager-split) - tach nguyen ven khoi
 // EquipmentSystem.test.ts (describe 'EquipmentSystem - Tay Luyen
@@ -240,7 +241,7 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
       expect(ctx.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(
         tinhHoaBefore - tinhHoaCost,
       )
-      expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stonesBefore - 100)
+      expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stonesBefore - WASH_SPIRIT_STONE_COST_BY_QUALITY[quality])
 
       const rolledStats = instance.affixes.map((rolled) => {
         const definition = ctx.affixRegistry.get(rolled.affixId)

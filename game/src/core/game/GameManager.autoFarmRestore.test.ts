@@ -137,11 +137,38 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     const restored = restoreGameSession(playerStore, gameManager, save)
     expect(restored.status).toBe('ok')
 
-    vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
+    vi.setSystemTime(new Date('2026-09-04T10:02:00Z'))
     gameManager.tickOps.update(0.1)
 
-    // 60s elapsed vs 50s cycle -> exactly 1 cycle rolled.
+    // 120s elapsed vs 100s cycle -> exactly 1 cycle rolled.
     expect(gameManager.getBattleRewardSummary().spiritStone).toBeGreaterThan(0)
+  })
+
+  it('stale anchor + sub-60s restore re-anchors at resume (r12-COR-1 pin)', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
+
+    const { playerStore, gameManager, save } = harness()
+    // Crafted save: lastCheckedMs 24h in the past while lastSavedAt is
+    // 30s ago -> elapsed <= 60s so the settle gate skips the batch, but
+    // the stale anchor must NOT survive: the next live tick would mint
+    // 24h of cycles at FULL rate (vs the 50% offline settle).
+    save.player.autoFarmStage = {
+      stageId: FARM_STAGE.id,
+      lastCheckedMs: Date.now() - 86_400_000,
+    }
+
+    const restored = restoreGameSession(playerStore, gameManager, save)
+    expect(restored.status).toBe('ok')
+
+    // Anchor re-armed to ~= restore time (settle(0) re-anchor path).
+    const anchor = playerStore.$state.autoFarmStage!.lastCheckedMs
+    expect(anchor).toBeGreaterThan(Date.now() - 60_000)
+
+    // The immediate next tick then mints ~0 cycles, not a 24h batch.
+    vi.setSystemTime(new Date('2026-09-04T10:00:05Z'))
+    gameManager.tickOps.update(0.1)
+    expect(gameManager.getBattleRewardSummary().spiritStone).toBe(0)
   })
 
   it('fail-closed: persisted-armed without an owned lease never mints rewards', () => {

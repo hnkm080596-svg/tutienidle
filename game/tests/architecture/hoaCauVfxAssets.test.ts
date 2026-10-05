@@ -41,6 +41,10 @@ describe('Hỏa Cầu asset contract', () => {
         expect(y + h).toBeLessThanOrEqual(image.height)
         const index = Number(name.replace('frame_', ''))
         if (index < asset.firstFrame || index > asset.lastFrame) continue
+        // Per-ring circle atlases keep authored-blank choreography frames
+        // (pre-reveal / post-dissolve); litRange bounds where pixels burn.
+        const litRange = 'litRange' in asset ? asset.litRange : [asset.firstFrame, asset.lastFrame]
+        if (index < litRange[0] || index > litRange[1]) continue
         const pixels = context.getImageData(x, y, w, h).data
         let nonblank = false
         for (let offset = 3; offset < pixels.length; offset += 4) {

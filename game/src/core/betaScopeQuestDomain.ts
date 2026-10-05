@@ -15,7 +15,12 @@ import type { PillRegistry } from './pill/PillRegistry'
 import type { PlayerData } from './player/Player'
 import type { Quest } from './quest/Quest'
 import type { QuestProgress } from './quest/QuestProgress'
-import { isQuestRewardDropAdmitted } from './quest/QuestSystem'
+import {
+  isQuestRewardDropAdmitted,
+  questRewardBandRealmId,
+  scaleQuestRewardByRealm,
+} from './quest/QuestSystem'
+import type { QuestRegistry } from './quest/QuestRegistry'
 
 // ---------------------------------------------------------------------------
 // Quest surface read-model
@@ -106,6 +111,10 @@ export interface BetaQuestSurfaceDeps {
   /** Registry-resolved enemy display name; undefined = unknown id
    *  (the label falls back to the raw id, mirroring the old panel). */
   enemyName: (enemyId: string) => string | undefined
+  /** 2026-10-05 realm-band reward scaling: resolves an ungated quest's
+   *  era through its unlocksAfterQuestId chain; absent = ungated quests
+   *  preview as mortal-era (factor 1). */
+  questRegistry?: Pick<QuestRegistry, 'has' | 'get'>
 }
 
 function targetLabelFor(quest: Quest, deps: BetaQuestSurfaceDeps): string | null {
@@ -132,7 +141,16 @@ function rewardsFor(
   playerRealmId: string,
 ): BetaQuestRewardEntry[] {
   const entries: BetaQuestRewardEntry[] = []
-  const reward = quest.reward.reward
+  // 2026-10-05 realm-band scaling - preview must equal claim payout
+  // (QuestSystem.claim applies the same helper+resolver; A9 single
+  // predicate).
+  const reward =
+    quest.reward.reward !== undefined
+      ? scaleQuestRewardByRealm(
+          quest.reward.reward,
+          questRewardBandRealmId(quest, deps.questRegistry),
+        )
+      : undefined
 
   if (reward?.spiritStone) {
     entries.push({ kind: 'spiritStone', amount: reward.spiritStone })

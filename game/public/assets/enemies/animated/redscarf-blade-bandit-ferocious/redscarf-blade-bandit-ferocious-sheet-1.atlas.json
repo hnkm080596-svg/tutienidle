@@ -1,0 +1,375 @@
+{
+  "frames": {
+    "redscarf-blade-bandit-ferocious-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 681,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 6,
+        "w": 681,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-002.png": {
+      "frame": {
+        "x": 690,
+        "y": 2,
+        "w": 684,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 6,
+        "y": 6,
+        "w": 684,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-003.png": {
+      "frame": {
+        "x": 1378,
+        "y": 2,
+        "w": 681,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 6,
+        "w": 681,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-004.png": {
+      "frame": {
+        "x": 2066,
+        "y": 2,
+        "w": 675,
+        "h": 597
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 675,
+        "h": 597
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-005.png": {
+      "frame": {
+        "x": 2754,
+        "y": 2,
+        "w": 660,
+        "h": 597
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 0,
+        "w": 660,
+        "h": 597
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-006.png": {
+      "frame": {
+        "x": 2,
+        "y": 603,
+        "w": 657,
+        "h": 597
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": 0,
+        "w": 657,
+        "h": 597
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-007.png": {
+      "frame": {
+        "x": 690,
+        "y": 603,
+        "w": 648,
+        "h": 594
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 24,
+        "y": 3,
+        "w": 648,
+        "h": 594
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-008.png": {
+      "frame": {
+        "x": 1378,
+        "y": 603,
+        "w": 660,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 21,
+        "y": 6,
+        "w": 660,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-009.png": {
+      "frame": {
+        "x": 2066,
+        "y": 603,
+        "w": 681,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 6,
+        "w": 681,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-010.png": {
+      "frame": {
+        "x": 2754,
+        "y": 603,
+        "w": 684,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 6,
+        "y": 6,
+        "w": 684,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-011.png": {
+      "frame": {
+        "x": 2,
+        "y": 1204,
+        "w": 681,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 6,
+        "w": 681,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-012.png": {
+      "frame": {
+        "x": 690,
+        "y": 1204,
+        "w": 672,
+        "h": 597
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 672,
+        "h": 597
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-013.png": {
+      "frame": {
+        "x": 1378,
+        "y": 1204,
+        "w": 660,
+        "h": 597
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 0,
+        "w": 660,
+        "h": 597
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-014.png": {
+      "frame": {
+        "x": 2066,
+        "y": 1204,
+        "w": 657,
+        "h": 597
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": 0,
+        "w": 657,
+        "h": 597
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-015.png": {
+      "frame": {
+        "x": 2754,
+        "y": 1204,
+        "w": 648,
+        "h": 594
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 24,
+        "y": 3,
+        "w": 648,
+        "h": 594
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-016.png": {
+      "frame": {
+        "x": 2,
+        "y": 1805,
+        "w": 660,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 21,
+        "y": 6,
+        "w": 660,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-idle-017.png": {
+      "frame": {
+        "x": 690,
+        "y": 1805,
+        "w": 681,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 6,
+        "w": 681,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    },
+    "redscarf-blade-bandit-ferocious-death-001.png": {
+      "frame": {
+        "x": 1378,
+        "y": 1805,
+        "w": 681,
+        "h": 591
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 6,
+        "w": 681,
+        "h": 591
+      },
+      "sourceSize": {
+        "w": 693,
+        "h": 597
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "redscarf-blade-bandit-ferocious-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3440,
+      "h": 2404
+    },
+    "scale": "1"
+  }
+}

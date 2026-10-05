@@ -86,7 +86,7 @@ describe('CombatScene shared skill playback wiring', () => {
     scene.onSkillCast(fireCast)
     expect(created).toHaveLength(0)
     scene._hoaCauPresentation.update(625)
-    expect(created[0]?.key).toBe('hoa-cau-triple-fire-circle')
+    expect(created[0]?.key).toBe('hoa-cau-fire-circle-inner')
     expect(scene.skillVfxDebug.pool.active).toBe(0)
     scene._hoaCauPresentation.update(3062.5)
     scene.skillPlayback.update(3687.5)

@@ -26,10 +26,15 @@ Phương pháp: chơi thật trên dev server (tạo nhân vật → đi quest c
 | Cảnh giới | Thời gian/tầng | Lũy kế đến tầng 12 | Lũy kế đến tầng 18 |
 |---|---|---|---|
 | Phàm Nhân | 1-18 phút | 78 phút | 171 phút |
-| Luyện Khí | 22-39 phút | 330 phút (5.5h) | 549 phút (9.2h) |
-| Trúc Cơ | 64-81 phút | 834 phút (13.9h) | 1305 phút (21.8h) |
+| Luyện Khí | 70-87 phút | 906 phút (15.1h) | 1431 phút (~1 ngày) |
+| Trúc Cơ | 550-567 phút | 6666 phút (~4.6 ngày) | 10071 phút (~1 tuần) |
 
-Talent tốc (+10%..+75%), ramp Hậu Tích, Tu Linh Trận đẩy thực tế nhanh hơn. Đối chiếu cảm giác: Phàm Nhân đúng "tutorial nhanh", LK/TC theo chuẩn idle (giờ→ngày). **Không thấy gate cứng.**
+Retune 2026-10-05 theo chỉ đạo: Luyện Khí >= 1 ngày, Trúc Cơ >= 1 tuần ở
+tốc độ nền (baseCultivationMinutes 22->70, 64->550). Talent tốc
+(+10%..+75%), ramp Hậu Tích, Tu Linh Trận đẩy thực tế nhanh hơn (~0.6x
+khi stack đủ). Phàm Nhân giữ nguyên vai trò tutorial; Kim Đan+ đã chạy
+hệ realmDurationMultiplier (90 ngày+). Giờ mỗi cảnh giới là một "gate
+cứng" có chủ đích.
 
 ### B2. Thu nhập Insight vs giá node — outlier lớn nhất
 

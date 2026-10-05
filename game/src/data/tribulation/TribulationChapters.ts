@@ -55,8 +55,11 @@ export const TRIBULATION_DEFEAT_CULTIVATION_LOSS_FALLBACK = 0.3
 export const TRIBULATION_DEFEAT_CULTIVATION_LOSS_FLOOR = 0.2
 
 export const TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM: Record<string, number> = {
-  qi_refining: 50,
-  foundation_establishment: 200,
+  // 2026-10-05 pace retune: x5 each so the retry fee still bites at the
+  // post-retune faucet; the cultivation-bar loss above stays the real
+  // deterrent (must hurt, must not soft-lock).
+  qi_refining: 250,
+  foundation_establishment: 1000,
 }
 
 export const TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK = 2000

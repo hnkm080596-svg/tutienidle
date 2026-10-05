@@ -43,9 +43,9 @@ describe('Core Node gates', () => {
   it('getNextLevelCost uses the frozen skill curve for cores', () => {
     const node = coreNode()
 
-    expect(getNextLevelCost(node, 1)).toBe(5)
-    expect(getNextLevelCost(node, 2)).toBe(8)
-    expect(getNextLevelCost(node, 3)).toBe(11)
+    expect(getNextLevelCost(node, 1)).toBe(200)
+    expect(getNextLevelCost(node, 2)).toBe(300)
+    expect(getNextLevelCost(node, 3)).toBe(400)
   })
 
   it('canUpgradeNode gates: level0 / maxed / poor / cast-channel', () => {
@@ -53,7 +53,7 @@ describe('Core Node gates', () => {
 
     expect(canUpgradeNode(playerWith({ skillInsight: 99 }), node)).toBe(false)
 
-    const owned = playerWith({ skillInsight: 99, nodeLevels: { [node.id]: 1 } })
+    const owned = playerWith({ skillInsight: 1_000, nodeLevels: { [node.id]: 1 } })
 
     expect(canUpgradeNode(owned, node)).toBe(true)
 
@@ -73,11 +73,11 @@ describe('Core Node gates', () => {
 
   it('upgradeNode deducts 5+3(L-1) and increments nodeLevels', () => {
     const node = coreNode()
-    const player = playerWith({ skillInsight: 30, nodeLevels: { [node.id]: 2 } })
+    const player = playerWith({ skillInsight: 1_000, nodeLevels: { [node.id]: 2 } })
 
     expect(upgradeNode(player, node)).toBe(true)
     expect(player.nodeLevels[node.id]).toBe(3)
-    expect(player.skillInsight).toBe(30 - 8)
+    expect(player.skillInsight).toBe(1_000 - 300)
   })
 
   it('upgradeNode never rolls the Van Dao waive for cores', () => {
@@ -85,13 +85,13 @@ describe('Core Node gates', () => {
 
     const node = coreNode()
     const player = playerWith({
-      skillInsight: 30,
+      skillInsight: 230,
       nodeLevels: { [node.id]: 1 },
       selectedTalentIds: ['van_dao' as never],
     })
 
     expect(upgradeNode(player, node)).toBe(true)
-    expect(player.skillInsight).toBe(25)
+    expect(player.skillInsight).toBe(30)
     expect(player.nodeFreePurchaseRecord?.[node.id] ?? 0).toBe(0)
   })
 })
@@ -146,15 +146,15 @@ describe('devResetBranch — grant-owned core revoke', () => {
       purchasedNodeIds: ['cuong_chien', 'core_cuong_quyen', 'core_loan_dau'],
     })
 
-    // root cost 2 + cuong_quyen spent 5+8 + loan_dau spent 0 = 15
+    // root cost 2 + cuong_quyen spent 200+300 + loan_dau spent 0 = 502
     const refund = devResetBranch(player, registry, 'the_tu')
 
-    expect(refund).toBe(2 + 5 + 8)
+    expect(refund).toBe(2 + 200 + 300)
     expect(player.nodeLevels['cuong_chien']).toBeUndefined()
     expect(player.nodeLevels['core_cuong_quyen']).toBeUndefined()
     expect(player.nodeLevels['core_loan_dau']).toBeUndefined()
     expect(player.purchasedNodeIds).toHaveLength(0)
-    expect(player.skillInsight).toBe(15)
+    expect(player.skillInsight).toBe(502)
   })
 
   it('orphan-cascade removal also revokes granted cores', () => {
@@ -187,10 +187,10 @@ describe('devResetBranch — grant-owned core revoke', () => {
       purchasedNodeIds: ['trunk', 'child_root', 'core_orphan_skill'],
     })
 
-    // trunk 1 + child 1 + orphan_skill spent 5 = 7
+    // trunk 1 + child 1 + orphan_skill spent 200 = 202
     const refund = devResetBranch(player, registry, 'the_tu')
 
-    expect(refund).toBe(1 + 1 + 5)
+    expect(refund).toBe(1 + 1 + 200)
     expect(player.nodeLevels['core_orphan_skill']).toBeUndefined()
     expect(player.purchasedNodeIds).not.toContain('core_orphan_skill')
   })

@@ -140,6 +140,72 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(result.elapsedSeconds).toBe(30)
   })
 
+  it('forged 30-day buff window clamps to authored max at restore (r12-COR-2 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx-forged',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: currentMs - 1_000,
+          expiresAtMs: currentMs + 30 * 86_400_000, // forged 30-day deadline
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    const effect = player.persistentTimedEffects[0]!
+    // Applied clamp: expiresAtMs <= appliedAtMs + TU_LINH_TRAN_DURATION_MS (24h).
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(effect.appliedAtMs + 24 * 60 * 60 * 1000)
+  })
+
+  it('forged future appliedAtMs clamps to now at restore (r12-COR-2 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx-future',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: currentMs + 86_400_000, // forged: applied tomorrow
+          expiresAtMs: currentMs + 2 * 86_400_000,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.appliedAtMs).toBeLessThanOrEqual(currentMs)
+    // And the paired expiresAtMs stays inside the authored window.
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(effect.appliedAtMs + 24 * 60 * 60 * 1000)
+  })
+
+  it('crafted-future lastSavedAt under cold-boot mints no cultivation (r12-AUT-3 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      cultivationPerSecond: 20,
+      lastSavedAt: currentMs + 86_400_000, // forged: saved tomorrow
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 600_000,
+      untilMs: currentMs,
+    })
+
+    // offlineSeconds comes from the server window (600s > cap-free
+    // mortal gate), but the payable window clamps [now, now] -> 0.
+    expect(result.elapsedSeconds).toBe(600)
+    expect(result.cultivation).toBe(0)
+  })
+
   it('buff tu luyện đã hết hạn trước khi save → rate lưu trừ hết phần buff', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({

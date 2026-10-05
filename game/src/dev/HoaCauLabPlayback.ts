@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
+import type { ActorAnchorFact, CastSlotRole, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
 import { clipImpactMs } from '@/presentation/art/CombatEntityPresentation'
 import {
@@ -80,7 +80,7 @@ export class HoaCauLabPlayback {
     })
   }
 
-  play(landed = true, awardStackOnRelease = false, empowered = false): void {
+  play(landed = true, awardStackOnRelease = false, empowered = false, slotRole: CastSlotRole = 'basic'): void {
     this.presenter.cancel()
     this.elapsedMs = 0
     this.resolved = false
@@ -94,7 +94,7 @@ export class HoaCauLabPlayback {
       ref: { sessionId: 1, requestId: `lab-fireball-${id}`, token: `lab-fireball-${id}` },
       rootSkillId: 'hoa_cau_thuat', resolvedSkillId: 'hoa_cau_thuat',
       presetId: 'hoa_cau_comet', source, declaredTargets: [target],
-      candidateInstanceCount: 1, disposition: 'action', slotRole: 'basic',
+      candidateInstanceCount: 1, disposition: 'action', slotRole,
       empowered,
     }
     this.cast = cast

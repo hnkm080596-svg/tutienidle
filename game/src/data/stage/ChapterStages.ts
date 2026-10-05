@@ -38,6 +38,16 @@ export interface ChapterConfig {
     normals: [string, string, string]
     boss: string
   }
+
+  /**
+   * Stat-wall ladder (Minh directive 2026-10-05): 10 entries, one per
+   * floor in order - the hp/might/defense/accuracy multiplier stamped
+   * onto the stage as Stage.statScale and applied at spawn (after
+   * elite/boss multipliers). This is how a single-species chapter
+   * still demands meaningfully higher investment per floor: the same
+   * species, deeper specimens are simply stronger. Omit = flat 1.0.
+   */
+  floorStatScales?: readonly number[]
 }
 
 /**
@@ -114,6 +124,12 @@ export function defineChapterStages(config: ChapterConfig): Stage[] {
   if (config.ids.length !== 10 || config.descriptions.length !== 10) {
     throw new Error('defineChapterStages: a chapter must declare exactly 10 floors of content')
   }
+  if (config.floorStatScales && config.floorStatScales.length !== 10) {
+    throw new Error('defineChapterStages: floorStatScales must declare exactly 10 entries')
+  }
+  if (config.floorStatScales?.some((scale) => !Number.isFinite(scale) || scale <= 0)) {
+    throw new Error('defineChapterStages: floorStatScales entries must be positive finite numbers')
+  }
 
   return config.ids.map((id, index) => {
     const floor = index + 1
@@ -140,6 +156,7 @@ export function defineChapterStages(config: ChapterConfig): Stage[] {
       waves: isBossFloor ? [totalEnemyCount] : splitEvenly3(totalEnemyCount),
       spawnIntervalSeconds: SPAWN_INTERVAL_SECONDS,
       bossEnemyId: isBossFloor ? config.roster.boss : undefined,
+      statScale: config.floorStatScales?.[index] ?? 1,
       perfectClearTurnLimit: isBossFloor
         ? BOSS_PERFECT_CLEAR_ROUNDS
         : totalEnemyCount + NORMAL_PERFECT_CLEAR_ROUND_MARGIN,

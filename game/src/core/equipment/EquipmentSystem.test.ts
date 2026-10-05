@@ -39,7 +39,7 @@ import {
 } from '../material/SpiritStoneMaterial'
 import { isPercentStat } from '../stats/StatMetadata'
 import { isValidEquipmentSubstat } from './EquipmentStatPolicy'
-import { REFINE_SPIRIT_STONE_PER_UNIT } from './RefinementBalance'
+import { REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY } from './RefinementBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
 const TEMPLATE: Equipment = {
@@ -464,6 +464,26 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
       }
     },
   )
+
+  // Gear-pace retune (2026-10-05): a maxQuality ceiling drops the
+  // out-of-band qualities from the weight table entirely - the same rng
+  // that would roll 'thien' uncapped lands inside the cap instead, and
+  // bonus steps may still nudge the rolled quality upward past the cap.
+  it('caps the base quality roll at maxQuality while bonus steps still apply after', () => {
+    const { system, player, affixRegistry } = setup()
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999_999)
+    const capped = system.createInstance(TEMPLATE, player, affixRegistry, undefined, 0, undefined, 'huyen')
+    expect(capped.quality).toBe('huyen')
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999_999)
+    const uncapped = system.createInstance(TEMPLATE, player, affixRegistry, undefined, 0, undefined)
+    expect(uncapped.quality).toBe('tien')
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999_999)
+    const stepped = system.createInstance(TEMPLATE, player, affixRegistry, undefined, 2, undefined, 'huyen')
+    expect(stepped.quality).toBe('thien')
+  })
 
   it.each([
     ['hoang', 0.1, 0.99, 'basic', 1, 'advanced'],
@@ -890,7 +910,7 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
       expect(ctx.instance.forgeUsesRemaining).toBe(forgeUsesBefore - 1)
       expect(ctx.materialBag.getAmount(ctx.essenceId)).toBe(essenceBefore - tinhHoaCost)
       expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(
-        genericStonesBefore - 5 * REFINE_SPIRIT_STONE_PER_UNIT,
+        genericStonesBefore - 5 * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[quality],
       )
       expect(ctx.materialBag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)).toBe(
         middleStonesBefore,
@@ -2124,7 +2144,7 @@ describe('EquipmentSystem — chi phí Tinh Luyện theo Chất', () => {
 
     expect(system.getRefineCost(4, 1, quality)).toEqual({
       essenceUnits: tinhHoa,
-      spiritStone: 5 * REFINE_SPIRIT_STONE_PER_UNIT,
+      spiritStone: 5 * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[quality],
       spiritStoneMaterialId: SPIRIT_STONE_MATERIAL_ID,
       refinementPoints: 1,
     })
@@ -2162,7 +2182,7 @@ describe('EquipmentSystem — chi phí Tinh Luyện theo Chất', () => {
     expect(result.ok).toBe(true)
     expect(displayedCost).toEqual({
       essenceUnits: 7,
-      spiritStone: 120,
+      spiritStone: 9600,
       spiritStoneMaterialId: SPIRIT_STONE_MATERIAL_ID,
       refinementPoints: 1,
     })

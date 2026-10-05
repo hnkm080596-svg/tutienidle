@@ -28,7 +28,7 @@ import type { Equipment } from './Equipment'
 import type { EquipmentInstance } from './EquipmentInstance'
 import { makeInstance } from './EquipmentInstance.fixture'
 import { captureEquipmentInstanceSnapshot } from './EquipmentInstanceSnapshot'
-import { WASH_SPIRIT_STONE_COST, WASH_TINH_HOA_COST_BY_QUALITY } from './RefinementBalance'
+import { WASH_SPIRIT_STONE_COST_BY_QUALITY, WASH_TINH_HOA_COST_BY_QUALITY } from './RefinementBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL, SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { materials } from '../../data/materials/materials'
@@ -110,7 +110,7 @@ function setup(affixList: readonly Affix[] = STANDARD_AFFIXES): WashContext {
 
     getWashCost: (quality) => ({
       tinhHoa: WASH_TINH_HOA_COST_BY_QUALITY[quality],
-      spiritStone: WASH_SPIRIT_STONE_COST,
+      spiritStone: WASH_SPIRIT_STONE_COST_BY_QUALITY[quality],
     }),
 
     spendItemRefinementPoints: (instance, amount) => {

@@ -292,7 +292,12 @@ export class DecomposeSystem {
     // Fast-forward deadlines that predate the settle window: they are
     // forfeited, not replayed (timer still advances - a repeated call
     // over the same window settles nothing twice).
-    while (this.nextCycleAt <= windowStartMs) {
+    // r12-INT: bound the fast-forward at nowMs - deadlines past now are
+    // still pending, and a crafted-future offlineSinceMs paired with a
+    // crafted-old nextCycleAt would otherwise spin billions of no-op
+    // iterations at boot.
+    const fastForwardEndMs = Math.min(windowStartMs, nowMs)
+    while (this.nextCycleAt <= fastForwardEndMs) {
       this.nextCycleAt += this.cycleMs
     }
 

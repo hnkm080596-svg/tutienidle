@@ -47,7 +47,7 @@ const TOTAL_STEP_COST = Array.from({ length: 36 }, (_, step) => zhouTianStepCost
   .reduce((sum, cost) => sum + cost, 0)
 
 /** Essence stacks clamp at MAX_STACK_AMOUNT (1000) and the full ladder
- * costs 3690 - the real game invests across refills, so mirror that
+ * costs 19350 (2026-10-05 curve) - the real game invests across refills, so mirror that
  * loop and return total consumed. */
 function investZhouTianToDai(manager: GameManager, player: PlayerData): number {
   const essence = manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID)

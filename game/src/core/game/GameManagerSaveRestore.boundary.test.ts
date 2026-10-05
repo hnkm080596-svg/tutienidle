@@ -731,7 +731,7 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     const instance = savedItem('wash-boundary-item')
     manager.equipmentBag.add(instance)
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 9)
-    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 100)
+    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 1500)
     return buildGameSave(player, manager)
   }
 
@@ -774,7 +774,7 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     const live = savedItem('wash-boundary-item')
     manager.equipmentBag.add(live)
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 9)
-    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 100)
+    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 1500)
 
     const preview = manager.equipmentOps.previewWashItem('wash-boundary-item')
     expect(preview.ok).toBe(true)

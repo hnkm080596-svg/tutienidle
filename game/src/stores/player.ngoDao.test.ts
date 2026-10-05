@@ -73,7 +73,7 @@ describe('player store — thiên phú Ngộ Đạo (insight_per_cultivation)', 
     const store = storeAtQiRefining()
 
     store.selectedTalentIds = ['ngo_dao']
-    store.cultivation = 12_000 // required qi_refining 1 = 13200 -> chi con cong duoc 1200
+    store.cultivation = 40_800 // required qi_refining 1 = 42000 -> chi con cong duoc 1200
 
     store.cultivate(500) // muon cong 5000 nhung clamp o 1200
 

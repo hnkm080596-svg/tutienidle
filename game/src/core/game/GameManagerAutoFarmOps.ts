@@ -1,7 +1,7 @@
 import type { EventBus } from '../events/EventBus'
 import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { EnemySystem } from '../enemy/EnemySystem'
-import { DEFAULT_MAX_OFFLINE_SECONDS } from '../idle/GameClock'
+import { DEFAULT_MAX_OFFLINE_SECONDS, AUTO_FARM_OFFLINE_EFFICIENCY } from '../idle/GameClock'
 import type { PlayerData } from '../player/Player'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
@@ -20,7 +20,7 @@ import type { StageWaveSystem } from './StageWaveSystem'
  */
 function isValidCycleSeconds(cycleSeconds: number | undefined): cycleSeconds is number {
   // F-TC8-7: >= 1 second authored floor - a sub-second claim mints
-  // thousands of reward cycles per tick (cycleMs halves the value).
+  // thousands of reward cycles per tick.
   return (
     cycleSeconds !== undefined && cycleSeconds >= 1 && Number.isFinite(cycleSeconds)
   )
@@ -200,7 +200,9 @@ export class GameManagerAutoFarmOps {
   /**
    * Auto-farm Task 5 - offline catch-up on save restore: roll rewards for
    * cycles elapsed offline (the ONE exception where combat rewards are
-   * granted offline). Online cycle time (perfectClearSeconds/2); leftover
+   * granted offline). Cycle time = perfectClearSeconds (2026-10-05
+   * retune: was /2, which minted idle income at 2x live clear rate);
+   * leftover
    * time carries via lastCheckedMs advancing by exactly the settled part.
    *
    * Remediation Task 3 (2026-09-05) - BOUNDED settlement:
@@ -232,28 +234,46 @@ export class GameManagerAutoFarmOps {
       return
     }
 
+    // Non-finite elapsed (corrupt save clock) must bail BEFORE the
+    // unconditional re-anchor below - NaN would poison lastCheckedMs
+    // forever (same malformed-save contract as isValidCycleSeconds).
+    if (!Number.isFinite(elapsedOfflineSeconds)) {
+      return
+    }
+
     const cappedElapsedSeconds = Math.min(
       Math.max(0, elapsedOfflineSeconds),
       DEFAULT_MAX_OFFLINE_SECONDS,
     )
 
-    const cycleMs = (cycleSeconds / 2) * 1000
-    const elapsedMs = cappedElapsedSeconds * 1000
+    // r11-INT: the payable window is also bounded by the farm's OWN
+    // anchor. elapsedOfflineSeconds is the caller's authorized window
+    // (offline time since lastSavedAt); intersecting it with
+    // (now - lastCheckedMs) makes a retry of the SAME settle payload
+    // settle ~0 cycles - the anchor already consumed the window - so a
+    // mid-settle failure can only underpay, never double-pay. Honest
+    // windows are unaffected: a running farm's anchor tracks now.
+    const now = Date.now()
+    if (
+      !Number.isFinite(autoFarm.lastCheckedMs) ||
+      autoFarm.lastCheckedMs < 0 ||
+      autoFarm.lastCheckedMs > now
+    ) {
+      autoFarm.lastCheckedMs = now
+    }
+    const anchorGapSeconds = Math.max(0, (now - autoFarm.lastCheckedMs) / 1000)
+    const effectiveSeconds = Math.min(cappedElapsedSeconds, anchorGapSeconds)
+
+    const cycleMs = cycleSeconds * 1000
+    // 2026-10-05, Minh ruling ("offline 50%"): the window pays at
+    // AUTO_FARM_OFFLINE_EFFICIENCY before flooring into cycles, so cycle rewards
+    // - and the unsettled remainder carried into the next live tick -
+    // are all halved uniformly. The anchor MUST therefore also run on
+    // the 0-cycle path: skipping it would leave the FULL raw remainder
+    // in lastCheckedMs to mint at live rate, silently un-doing the
+    // efficiency on every sub-cycle gap.
+    const elapsedMs = effectiveSeconds * AUTO_FARM_OFFLINE_EFFICIENCY * 1000
     const completedCycles = Math.floor(elapsedMs / cycleMs)
-
-    if (completedCycles <= 0) {
-      // B1-D live replacement calls this with elapsed 0 to resume an armed
-      // farm WITHOUT catch-up: re-anchor to now so the saved lastCheckedMs
-      // cannot mint the paused gap on the next live tick.
-      if (elapsedOfflineSeconds === 0) {
-        autoFarm.lastCheckedMs = Date.now()
-      }
-      return
-    }
-
-    for (let i = 0; i < completedCycles; i++) {
-      this.rollAutoFarmCycleReward(player, stage)
-    }
 
     // T1-12 - anchor to now minus the UNSETTLED remainder, identical to
     // tickAutoFarm. A stale/corrupt persisted lastCheckedMs used to
@@ -261,7 +281,16 @@ export class GameManagerAutoFarmOps {
     // window, then the next online tickAutoFarm clamped (now - staleTs)
     // to the cap and paid the SAME window a second time (double-pay -
     // also triggered by any honest session longer than the 24h cap).
-    autoFarm.lastCheckedMs = Date.now() - (elapsedMs - completedCycles * cycleMs)
+    // elapsed 0 (B1-D resume gesture) and sub-cycle gaps land here too:
+    // anchor = now - halved remainder == now when nothing accrued.
+    // r11-INT: the anchor lands BEFORE the payout loop so a mid-loop
+    // failure loses the remaining cycles instead of replaying the whole
+    // window on next restore (underpay on crash, never double-pay).
+    autoFarm.lastCheckedMs = now - (elapsedMs - completedCycles * cycleMs)
+
+    for (let i = 0; i < completedCycles; i++) {
+      this.rollAutoFarmCycleReward(player, stage)
+    }
   }
 
   /**
@@ -300,11 +329,14 @@ export class GameManagerAutoFarmOps {
 
     // A non-finite/negative persisted lastCheckedMs must recover, not
     // freeze the feature silently: NaN makes every later elapsedMs NaN.
-    if (!Number.isFinite(autoFarm.lastCheckedMs) || autoFarm.lastCheckedMs < 0) {
+    if (!Number.isFinite(autoFarm.lastCheckedMs) || autoFarm.lastCheckedMs < 0 || autoFarm.lastCheckedMs > now) {
+      // r10-INT: a future-dated persisted/crafted timestamp also
+      // re-anchors - otherwise the farm idles silently until real time
+      // catches up to the forged value.
       autoFarm.lastCheckedMs = now
     }
 
-    const cycleMs = (cycleSeconds / 2) * 1000
+    const cycleMs = cycleSeconds * 1000
     // A corrupt save can persist a small-positive lastCheckedMs - the
     // uncapped remainder (years of "elapsed" time) turned the reward loop
     // below into ~10^8 iterations per tick. Same bound as

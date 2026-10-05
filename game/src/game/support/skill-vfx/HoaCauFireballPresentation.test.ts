@@ -45,7 +45,7 @@ describe('Hỏa Cầu Phaser handoff', () => {
     presenter.start(cast, 3687.5)
     expect(sprites).toHaveLength(0)
     presenter.update(625)
-    expect(sprites[0]?.key).toBe('hoa-cau-triple-fire-circle')
+    expect(sprites[0]?.key).toBe('hoa-cau-fire-circle-inner')
     expect(sprites[0]).toMatchObject({ x: 124, y: 100 })
     presenter.update(800)
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-charge' && sprite.visible)).toBe(true)
@@ -150,9 +150,9 @@ describe('Hỏa Cầu Phaser handoff', () => {
     const { presenter, sprites } = fixture()
     presenter.start(cast, 3687.5)
     presenter.update(625)
-    const circle = sprites.find(sprite => sprite.key === 'hoa-cau-triple-fire-circle')
-    // The sheet's occupied range is 1..62; frame_0/63 are authored blanks.
-    expect(circle).toMatchObject({ visible: true, frame: 'frame_1', x: 124, y: 100 })
+    const circle = sprites.find(sprite => sprite.key === 'hoa-cau-fire-circle-inner')
+    // Per-ring sheets index the full 0..63 timeline; frame_0 is authored t=0.
+    expect(circle).toMatchObject({ visible: true, frame: 'frame_0', x: 124, y: 100 })
     expect(circle!.scaleY / circle!.scale).toBeGreaterThan(1.5)
     presenter.update(800)
     expect(circle?.visible).toBe(true)
@@ -174,42 +174,60 @@ describe('Hỏa Cầu Phaser handoff', () => {
     expect(impact!.scale).toBeGreaterThanOrEqual(1.1)
   })
 
-  it('doubles the portal rings and flies the azure phoenix on an empowered cast', () => {
+  it('adds the middle ring and flies the azure phoenix on an empowered cast', () => {
     const { presenter, sprites } = fixture()
     presenter.start({ ...cast, empowered: true }, 3687.5)
     presenter.update(625)
-    const rings = sprites.filter(sprite => sprite.key === 'hoa-cau-triple-fire-circle' && sprite.visible)
-    // Two stacked portal discs: the normal disc plus a larger, fainter
-    // echo disc behind it (the authored "2 vong" tier).
-    expect(rings).toHaveLength(2)
-    expect(rings[1]!.scale).toBeGreaterThan(rings[0]!.scale)
-    expect(rings[1]!.alpha).toBeLessThan(rings[0]!.alpha)
-    presenter.update(2500)
+    // Two authored rings: the inner seal plus the middle ring - each from
+    // its own atlas at its own radius (the authored "2 vong" tier).
+    const ringKeys = sprites.filter(sprite => sprite.key.startsWith('hoa-cau-fire-circle-') && sprite.visible)
+      .map(sprite => sprite.key)
+    expect(ringKeys).toEqual(['hoa-cau-fire-circle-inner', 'hoa-cau-fire-circle-middle'])
+    presenter.update(800)
+    // The converging charge also burns azure on the empowered cast.
+    expect(sprites.some(sprite => sprite.key === 'hoa-cau-charge-azure' && sprite.visible)).toBe(true)
+    expect(sprites.some(sprite => sprite.key === 'hoa-cau-charge' && sprite.visible)).toBe(false)
+    presenter.update(1700)
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-phoenix-empowered' && sprite.visible)).toBe(true)
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(false)
     presenter.cancel()
-    // A normal cast still shows exactly one ring and the red comet.
+    // A normal cast still shows the inner ring, the orange charge and the
+    // red comet.
     const { presenter: plain, sprites: plainSprites } = fixture()
     plain.start(cast, 3687.5)
     plain.update(625)
-    expect(plainSprites.filter(sprite => sprite.key === 'hoa-cau-triple-fire-circle' && sprite.visible)).toHaveLength(1)
-    plain.update(2500)
+    const plainRingKeys = plainSprites.filter(sprite => sprite.key.startsWith('hoa-cau-fire-circle-') && sprite.visible)
+      .map(sprite => sprite.key)
+    expect(plainRingKeys).toEqual(['hoa-cau-fire-circle-inner'])
+    plain.update(800)
+    expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-charge' && sprite.visible)).toBe(true)
+    expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-charge-azure' && sprite.visible)).toBe(false)
+    plain.update(1700)
     expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(true)
     expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-phoenix-empowered' && sprite.visible)).toBe(false)
+  })
+
+  it('adds all three authored rings only on an ultimate cast', () => {
+    const { presenter, sprites } = fixture()
+    presenter.start({ ...cast, empowered: true, slotRole: 'ultimate' }, 3687.5)
+    presenter.update(625)
+    const ringKeys = sprites.filter(sprite => sprite.key.startsWith('hoa-cau-fire-circle-') && sprite.visible)
+      .map(sprite => sprite.key)
+    expect(ringKeys).toEqual(['hoa-cau-fire-circle-inner', 'hoa-cau-fire-circle-middle', 'hoa-cau-fire-circle-outer'])
   })
 
   it('renders the authored Arcadia set for every cast, with or without a Tam Muoi window', () => {
     const { presenter, sprites } = fixture()
     presenter.start({ ...cast, casterBuffIds: ['tam_muoi'] }, 3687.5)
     presenter.update(625)
-    expect(sprites.some(sprite => sprite.key === 'hoa-cau-triple-fire-circle' && sprite.visible)).toBe(true)
+    expect(sprites.some(sprite => sprite.key === 'hoa-cau-fire-circle-inner' && sprite.visible)).toBe(true)
     presenter.update(3687.5 - 625)
     expect(sprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(true)
 
     const { presenter: plain, sprites: plainSprites } = fixture()
     plain.start(cast, 3687.5)
     plain.update(625)
-    expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-triple-fire-circle' && sprite.visible)).toBe(true)
+    expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-fire-circle-inner' && sprite.visible)).toBe(true)
     plain.update(3687.5 - 625)
     expect(plainSprites.some(sprite => sprite.key === 'hoa-cau-phoenix-projectile' && sprite.visible)).toBe(true)
   })

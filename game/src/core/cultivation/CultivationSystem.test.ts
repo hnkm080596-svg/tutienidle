@@ -61,20 +61,20 @@ describe('Cultivation progression curve', () => {
     ['mortal', 11, 11],
     ['mortal', 12, 12],
     ['mortal', 17, 17],
-    ['qi_refining', 1, 22],
-    ['qi_refining', 11, 32],
-    ['qi_refining', 17, 38],
-    ['foundation_establishment', 1, 64],
-    ['foundation_establishment', 11, 74],
-    ['foundation_establishment', 17, 80],
+    ['qi_refining', 1, 70],
+    ['qi_refining', 11, 80],
+    ['qi_refining', 17, 86],
+    ['foundation_establishment', 1, 550],
+    ['foundation_establishment', 11, 560],
+    ['foundation_establishment', 17, 566],
   ])('%s level %i needs %i minutes', (realmId, level, minutes) => {
     expect(getRequiredCultivation(realmId, level)).toBe(minutes * 60 * BASE_CULTIVATION_PER_SECOND)
   })
 
   it.each([
     ['mortal', 66, 153],
-    ['qi_refining', 297, 510],
-    ['foundation_establishment', 759, 1224],
+    ['qi_refining', 825, 1326],
+    ['foundation_establishment', 6105, 9486],
   ])('%s keeps core and extended totals independent', (realmId, coreMinutes, fullMinutes) => {
     const sumThrough = (lastSourceLevel: number) => Array.from(
       { length: lastSourceLevel },

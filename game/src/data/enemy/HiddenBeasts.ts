@@ -72,7 +72,6 @@ export const HIDDEN_BEASTS: Enemy[] = [
     },
     rewards: {
       techniqueMastery: 0,
-      skillInsight: 0,
       spiritStone: 0,
     },
   }),
