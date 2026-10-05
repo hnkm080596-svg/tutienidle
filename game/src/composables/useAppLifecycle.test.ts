@@ -1151,7 +1151,7 @@ describe('useAppLifecycle — B1-D admission authority', () => {
     lifecycle.stopAll()
   })
 
-  // W8-COR-2 pin: the B1-D commit arm — a permanent DATA-CLASS refuse on a
+  // W8-COR-2 pin: the B1-D commit arm - a permanent DATA-CLASS refuse on a
   // live, loadable character mounts the save-issue surface at scope
   // 'remote' (remote reset is the only real un-wedge for a character whose
   // accrued write can never commit) with the refused payload as raw. Only

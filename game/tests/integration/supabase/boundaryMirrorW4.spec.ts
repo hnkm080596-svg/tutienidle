@@ -16,7 +16,7 @@
 // W4-COR-2: the create_character charset mirror `[[:alnum:] _-]` +
 // Postgres trim() rejects names the client validator
 // /^[\p{L}\p{N} _-]{2,20}$/u legitimately admits: No-category digits
-// ('A½ B' - alnum under en_US.utf8 covers L*+Nd+Nl but not No) and any
+// (vulgar-fraction No digit - alnum under en_US.utf8 covers L*+Nd+Nl but not No) and any
 // Unicode whitespace the JS trim strips but Postgres trim does not
 // (NBSP, tab). The reject arrives as CHARACTER_NAME_UNAVAILABLE, which
 // the client renders as "name taken".
@@ -115,7 +115,7 @@ test('W4-COR-2: charset mirror accepts client-valid names', async () => {
       p_mortal_basic_skill_id: 'linh_bao',
     })
     expect(res.status).toBe(200)
-    // 'A½ B' is client-legal (\p{N} covers No); ' Minh ' has NBSP padding
+    // the fraction-digit name is client-legal (\p{N} covers No); the second name has NBSP padding
     // the JS trim strips. Both must create, or at minimum fail with a
     // charset-specific code - today they return CHARACTER_NAME_UNAVAILABLE
     // which the client renders as "name taken".
