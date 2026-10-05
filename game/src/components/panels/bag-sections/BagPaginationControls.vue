@@ -9,6 +9,7 @@
 // hep: nut sort chi con icon, tooltip van mang nhan day du.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import type { SortDirection } from '@/stores/ui'
 
 export interface BagSortOption {
@@ -117,11 +118,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="bag-pagination">
-    <span class="bag-pagination__spacer" aria-hidden="true" />
+    <!-- Left rail ornament: drawn divider-ornament line + endcap
+         diamonds (ref image 2 footer chrome), centered on the
+         pagination baseline. -->
+    <span class="bag-pagination__spacer" aria-hidden="true"><InkNineSlice chrome-id="divider-ornament" layer="surface" /></span>
 
     <div class="bag-pagination__pages">
       <button type="button" :disabled="currentPage === 0" @click="emit('goToPage', currentPage - 1)">
-        ‹
+        <InkNineSlice class="bag-pagination__btn-art" chrome-id="button-compact" layer="surface" />
+        <span class="bag-pagination__btn-label">‹</span>
       </button>
 
       <button
@@ -131,7 +136,13 @@ onBeforeUnmount(() => {
         :class="{ 'is-active': currentPage === page - 1 }"
         @click="emit('goToPage', page - 1)"
       >
-        {{ page }}
+        <InkNineSlice
+          class="bag-pagination__btn-art"
+          chrome-id="button-compact"
+          layer="surface"
+          :tint-var="currentPage === page - 1 ? '--chrome-300' : undefined"
+        />
+        <span class="bag-pagination__btn-label">{{ page }}</span>
       </button>
 
       <button
@@ -139,11 +150,14 @@ onBeforeUnmount(() => {
         :disabled="currentPage === totalPages - 1"
         @click="emit('goToPage', currentPage + 1)"
       >
-        ›
+        <InkNineSlice class="bag-pagination__btn-art" chrome-id="button-compact" layer="surface" />
+        <span class="bag-pagination__btn-label">›</span>
       </button>
     </div>
 
-    <div ref="menuRoot" class="bag-pagination__sort">
+    <!-- wave B: hosts without a sort axis (DissolveTab reuse) pass an
+         empty sortOptions - the whole sort cluster is hidden then. -->
+    <div v-if="sortOptions.length" ref="menuRoot" class="bag-pagination__sort">
       <button
         type="button"
         class="bag-pagination__sort-btn"
@@ -153,6 +167,12 @@ onBeforeUnmount(() => {
         v-tooltip="t('panels.bag.sort.tooltip', { label: sortButtonLabel })"
         @click="toggleMenu"
       >
+        <InkNineSlice
+          class="bag-pagination__btn-art"
+          chrome-id="button-compact"
+          layer="surface"
+          :tint-var="activeMode !== 'default' ? '--chrome-300' : undefined"
+        />
         <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
           <path d="M6 3v14M6 17l-3-3M6 17l3-3" />
           <path d="M14 17V3M14 3l-3 3M14 3l3 3" />
@@ -162,6 +182,7 @@ onBeforeUnmount(() => {
       </button>
 
       <div v-if="isMenuOpen" class="bag-pagination__menu" role="menu">
+        <InkNineSlice chrome-id="frame-xs-tooltip" layer="surface" />
         <button
           type="button"
           role="menuitem"
@@ -198,7 +219,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .bag-pagination {
-  flex: 0 0 auto;
+  flex: 0 0 34px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -206,8 +227,13 @@ onBeforeUnmount(() => {
 }
 
 .bag-pagination__spacer {
+  position: relative;
   display: block;
+  height: 8px;
+  align-self: center;
+  opacity: 0.7;
 }
+
 
 .bag-pagination__pages {
   display: flex;
@@ -216,23 +242,43 @@ onBeforeUnmount(() => {
   gap: 4px;
 }
 
+/* Drawn button chrome (owner ruling: bag controls use button-compact
+   art, not flat CSS frames) - the InkNineSlice paints the capsule,
+   the label/arrow sit on top. button-compact needs ~32px of height
+   (16px slices) to keep its bevel. */
 .bag-pagination button {
-  min-width: 36px;
-  min-height: var(--tap-min);
+  position: relative;
+  /* >= 56px: button-compact's 28px side slices need the room. */
+  min-width: 56px;
+  min-height: 34px;
   padding: 0;
   font-size: var(--text-sm);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--chrome-100);
+  border: 0;
   cursor: pointer;
   font-family: var(--font-body);
 }
 
-.bag-pagination__pages button.is-active {
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  border-color: var(--chrome-500);
+.bag-pagination__btn-label {
+  position: relative;
+  z-index: 2;
+}
+
+.bag-pagination button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.bag-pagination__pages button.is-active .bag-pagination__btn-label,
+.bag-pagination__sort-btn.is-active .bag-pagination__sort-label,
+.bag-pagination__sort-btn.is-active svg {
+  color: #1a1208;
+}
+
+.bag-pagination button:focus-visible {
+  outline: 2px solid var(--chrome-300);
+  outline-offset: 2px;
 }
 
 /* ================= Sort control - sat phai ========================== */
@@ -248,15 +294,18 @@ onBeforeUnmount(() => {
   gap: 5px;
   min-width: 0;
   max-width: 100%;
-  padding: 0 10px;
+  padding: 0 12px;
   white-space: nowrap;
 }
 
-.bag-pagination__sort-btn.is-active {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
+.bag-pagination__sort-btn svg,
+.bag-pagination__sort-btn .bag-pagination__sort-label {
+  position: relative;
+  z-index: 2;
 }
 
+/* wave B chrome: drawn frame-xs-tooltip card owns the menu shell -
+   the slice fills the surface, items keep text-only styling. */
 .bag-pagination__menu {
   position: absolute;
   right: 0;
@@ -265,14 +314,14 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   min-width: 168px;
-  padding: 4px;
-  background: var(--ink-900);
-  border: 1px solid var(--chrome-500);
+  padding: 8px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
 }
 
 .bag-pagination__menu button {
+  position: relative;
+  z-index: 2;
   min-height: var(--tap-min);
   padding: 0 10px;
   text-align: left;

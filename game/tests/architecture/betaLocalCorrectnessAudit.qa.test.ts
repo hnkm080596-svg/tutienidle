@@ -27,6 +27,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { GameManager } from '../../src/core/game/GameManager'
+import { defineEnemy } from '../../src/core/enemy/Enemy'
 import {
   createDefaultPlayer,
   resolvePlayerStatAssembly,
@@ -38,6 +39,7 @@ import {
   lockBetaWaysForTests,
 } from '../../src/core/game/__fixtures__/betaWaysUnlock'
 import { lockBetaTalentsForTests } from '../../src/core/game/__fixtures__/betaTalentsUnlock'
+import { lockBetaElementsForTests } from '../../src/core/game/__fixtures__/betaElementsUnlock'
 import {
   BETA_MORTAL_STARTER_SKILL_ID,
   isBetaElement,
@@ -115,6 +117,7 @@ import {
 lockBetaFeaturesForTests()
 lockBetaWaysForTests()
 lockBetaTalentsForTests()
+lockBetaElementsForTests()
 
 // ---------------------------------------------------------------------------
 // Fixture builders
@@ -538,7 +541,7 @@ describe('beta scope - initiation atomicity', () => {
     const { gameManager, player } = committedContext()
     const committed = structuredClone(player)
 
-    const again = gameManager.realmAdvanceOps.commitFiveElementInitiation('water', player)
+    const again = gameManager.realmAdvanceOps.commitFiveElementInitiation('fire', player)
     expect(again.ok).toBe(false)
     // preflight ordering: not_mortal fires before already_committed on
     // a committed (qi_refining) player - either way zero drift.
@@ -546,11 +549,11 @@ describe('beta scope - initiation atomicity', () => {
     expect(player).toEqual(committed)
   })
 
-  it('every beta element is admissible; a foreign element id rejects', () => {
-    for (const el of ['fire', 'water', 'wood', 'metal', 'earth'] as const) {
-      expect(isBetaElement(el)).toBe(true)
+  it('only fire is admissible; the other elements and foreign ids reject', () => {
+    expect(isBetaElement('fire')).toBe(true)
+    for (const el of ['water', 'wood', 'metal', 'earth', 'lightning'] as const) {
+      expect(isBetaElement(el)).toBe(false)
     }
-    expect(isBetaElement('lightning')).toBe(false)
   })
 
   it('a rejected commit leaves the player untouched (snapshot audit)', () => {
@@ -566,6 +569,38 @@ describe('beta scope - initiation atomicity', () => {
     const result = gameManager.realmAdvanceOps.commitFiveElementInitiation('fire', player)
     expect(result.ok).toBe(false)
     expect(player).toEqual(before)
+  })
+
+  it('a carried out-of-scope element resolves as uncommitted in combat', () => {
+    const { gameManager, player } = committedContext()
+    // A save written before the lock carries spellPath.element + its
+    // learned kit; the atomic commit cannot retro-reject it, so the
+    // engine must resolve the kit as uncommitted - the same verdict the
+    // rail read-model reports (starter basic, no special).
+    player.spellPath.element = 'water'
+    const enemy = defineEnemy({
+      id: 'carried_element_probe',
+      name: 'Probe',
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: {
+        maxHp: 1_000_000,
+        might: 0,
+        attackSpeed: 1,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+        evasionRate: 0,
+      },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
+    })
+
+    gameManager.startBattleWithPlayer(player, enemy)
+    const build = gameManager.getTurnBattle()!.players[0]!
+
+    expect(build.basic!.id).toBe('linh_bao')
+    expect(build.special).toBeUndefined()
   })
 })
 

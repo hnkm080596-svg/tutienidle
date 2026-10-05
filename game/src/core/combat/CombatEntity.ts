@@ -155,6 +155,12 @@ export interface CombatEntity {
   // undefined = quai chi basic attack.
   specialAttacks?: EnemySpecialAttack[]
 
+  // Monster attack VFX sweep (2026-10-04) - authored VFX identity of the
+  // enemy's basic attack, threaded from Enemy.attackPresetId via
+  // enemyToCombatEntity(); the participant mint folds it into the basic
+  // TurnSkillDefinition's presetId. undefined = generic fallback.
+  attackPresetId?: import('../battle/CombatAction').CombatVfxPresetId
+
   // The Tu (Combat Rework Phase 7) - thanh mau phu CHONG PHA, tach
   // han currentHp: The Tu skill (Skill.breakDamagePerHit) tru rieng
   // thanh nay moi don trung, KHONG qua Damage Engine/mitigation (giong

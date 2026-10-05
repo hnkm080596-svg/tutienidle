@@ -1358,6 +1358,76 @@
       "portraits": {},
       "closeups": {},
       "radars": {}
+    },
+    "phap_tu_shared": {
+      "out": "phap_tu_shared",
+      "src": "user-supplied-cell-sheets",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.004098360655737705,
+        "y": 0.06349206349206349,
+        "w": 0.8073770491803278,
+        "h": 0.9126984126984127
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      },
+      "canvasSize": {
+        "w": 244,
+        "h": 252
+      },
+      "sheets": 4,
+      "clips": {
+        "idle": {
+          "framePrefix": "phap_tu_shared-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "phap_tu_shared-sheet-1.png",
+          "atlas": "phap_tu_shared-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "phap_tu_shared-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "phap_tu_shared-sheet-2.png",
+          "atlas": "phap_tu_shared-sheet-2.atlas.json",
+          "impactFrameIndex": 10
+        },
+        "death": {
+          "framePrefix": "phap_tu_shared-death-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "phap_tu_shared-sheet-4.png",
+          "atlas": "phap_tu_shared-sheet-4.atlas.json"
+        }
+      },
+      "cast": {
+        "special": {
+          "framePrefix": "phap_tu_shared-cast-special-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "phap_tu_shared-sheet-3.png",
+          "atlas": "phap_tu_shared-sheet-3.atlas.json",
+          "impactFrameIndex": 12
+        }
+      },
+      "avatar": "idle-first-frame (supplied standing reference has opaque black background)",
+      "avatarSize": {
+        "w": 244,
+        "h": 252
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
     }
   }
 }

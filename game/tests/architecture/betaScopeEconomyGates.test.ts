@@ -450,14 +450,14 @@ describe('sec.15 quest lifecycle - daily gone, targets stay completable', () => 
 
     const offRoster: Pick<Quest, 'cadence' | 'condition'> = {
       cadence: 'once',
-      condition: { kind: 'kill', enemyId: 'bandit', amount: 1 },
+      condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 1 },
     }
     expect(isBetaQuestEnabled(offRoster)).toBe(false)
-    expect(isBetaEnemyId('bandit')).toBe(false)
+    expect(isBetaEnemyId('wild_wolf')).toBe(false)
 
     const rosterKill: Pick<Quest, 'cadence' | 'condition'> = {
       cadence: 'once',
-      condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 1 },
+      condition: { kind: 'kill', enemyId: 'bandit', amount: 1 },
     }
     expect(isBetaQuestEnabled(rosterKill)).toBe(true)
 

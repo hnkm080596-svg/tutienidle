@@ -48,6 +48,10 @@ export function baseGainKeys(gains: Partial<Record<StatType, number>>): StatType
 // Caps cap so nhan (spec dot-pha-loi-kiep sec3.1 - he so x3.5/tang
 // first-pass: 50/175/615/2150/7500/26300; doi chieu tong nguon Tinh
 // Hoa farm duoc trong 18 tang Pham Nhan khi playtest).
+// balance-review 2026-10-04 (progression-review C2.5): full 6-tier
+// Thien Kien Co needed 36,790 pham-eq (~6.5k Truc Co kills) - past the
+// whole beta arc. Tiers 5-6 drop to 2500/8000 (total 13,490) so the
+// top grade is a long grind, not unreachable.
 export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
   {
     id: 'luyen_bi',
@@ -85,7 +89,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     id: 'luyen_tang',
     name: 'Luyện Tạng',
     description: 'Rèn lục phủ ngũ tạng.',
-    cap: 7500,
+    cap: 2500,
     // "Damage Reduction / Vitality" (tai lieu muc III.5) - dung
     // vitality (The Chat, tang Attribute goc) thay vi 1 stat mitigation
     // truc tiep: di qua dung pipeline deriveAttributeModifiers() san co
@@ -97,7 +101,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     id: 'luyen_mach',
     name: 'Luyện Mạch',
     description: 'Khai thông kinh mạch — chuẩn bị Nhập Đạo.',
-    cap: 26300,
+    cap: 8000,
     baseGains: { maxHp: 60, hpRegenPerTurn: 2 }, // P7-M-F PLACEHOLDER - pending dedicated balance phase
     requiredRealmLevel: 12,
   },

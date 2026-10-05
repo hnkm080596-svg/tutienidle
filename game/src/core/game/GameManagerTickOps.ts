@@ -172,6 +172,7 @@ export class GameManagerTickOps {
         activePlayer.realmId,
         productionCapacity,
         this.deps.getWorkerAssignments(),
+        this.deps.sessionRng,
       )
 
       for (const event of this.deps.productionSystem.drainSettlementEvents()) {

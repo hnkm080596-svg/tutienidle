@@ -13,6 +13,7 @@ import { masteryGrantRecord } from '../../data/progression/PhapTuRealmRewardNode
 import { ARTIFACT_UNLOCK_REALM_ID } from '../artifact/ArtifactDomain'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { MAX_THE } from '../combat/CombatTypes'
+import { isBetaElement } from '../betaScope'
 
 // Cultivation Path Framework (spec 2026-09-16, M4) - the Phap Tu path
 // module: the two way definitions + the path-domain machinery they own.
@@ -127,10 +128,30 @@ export function isSpellPathway(player: SpellPathWayRead | null | undefined): boo
 // retired; every other path keeps the shared MAX_THE default.
 export const SPELL_PATH_MAX_THE = 5
 
+/**
+ * Hoa The gate node (Minh ruling 2026-10-04): the fire The loop is
+ * node-unlocked, not element-inherent. Owning `hoa_the` level L gives
+ * a landed cast an L * THE_GAIN_CHANCE_PER_LEVEL shot at +1 The; the
+ * empowerment and the The cap come online with the same purchase.
+ */
+export const HOA_THE_NODE_ID = 'hoa_the'
+// balance-review 2026-10-04 (docs/balance/skills-review.md ngoai pham
+// vi #2): at 0.25 the lv1-3 payoff shot almost never lands inside a
+// decisive fight; 0.35 makes hoa_the lv3 a reliable empowered engine
+// while lv1-2 stay probabilistic.
+export const THE_GAIN_CHANCE_PER_LEVEL = 0.35
+
 /** Battle-scoped The-cap authority (reads onto entity.maxThe at
-    participant build via CombatBuild -> runtime.resolveMaxThe). */
-export function resolveMaxThe(player: SpellPathWayRead | null | undefined): number {
-  return isSpellPathway(player) ? SPELL_PATH_MAX_THE : MAX_THE
+    participant build via CombatBuild -> runtime.resolveMaxThe).
+    hoaTheLevel: player's level on the hoa_the gate node (0 = locked). */
+export function resolveMaxThe(
+  player: SpellPathWayRead | null | undefined,
+  hoaTheLevel = 0,
+): number {
+  if (!isSpellPathway(player)) {
+    return MAX_THE
+  }
+  return hoaTheLevel > 0 ? SPELL_PATH_MAX_THE : 0
 }
 
 /**
@@ -200,6 +221,24 @@ export function validateSpellPathPersistedState(
     emit({
       path: 'player.spellPath',
       message: "element chỉ thuộc way 'spell_pathway' của path 'spell'",
+    })
+  }
+
+  // Beta scope (fixpoint W2-3): selectSpellPathElement is mortal-gated,
+  // so a post-initiation spell_pathway save whose element is null or
+  // out-of-beta can NEVER commit - it would fight with the linh_bao
+  // starter forever while every write gate refuses its locked content.
+  // Reject the wedge at the boundary (Minh ruling: crash over silent
+  // degradation for locked-feature saves).
+  if (
+    playerPayload.cultivationPath === 'spell' &&
+    playerPayload.cultivationWay === 'spell_pathway' &&
+    playerPayload.realmId !== 'mortal' &&
+    !(typeof spellPath.element === 'string' && isBetaElement(spellPath.element))
+  ) {
+    emit({
+      path: 'player.spellPath.element',
+      message: `commit '${String(spellPath.element)}' ngoài beta scope - save không còn seam commit nào`,
     })
   }
 }

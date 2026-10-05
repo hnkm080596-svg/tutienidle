@@ -71,7 +71,10 @@ describe('Data Phap Tu kit 2-slot (Reimagine 2026-09-26)', () => {
   })
 
   it('specials: resourceType mana (Linh Lực), flat cost absent — %MaxLL stamped at seam', () => {
-    expect(PHAP_TU_TRANG_COST_PERCENT_OF_MAX).toBeCloseTo(0.3)
+    // Balance 2026-10-04 (docs/balance/skills-review.md C1): repinned
+    // 0.3 -> 0.15 -- a 30%-max-MP zero-damage window emptied the mana pool
+    // after ~3 casts; 15% matches regen over the 5-turn cooldown.
+    expect(PHAP_TU_TRANG_COST_PERCENT_OF_MAX).toBeCloseTo(0.15)
     expect(PHAP_TU_SPECIAL_COOLDOWN_TURNS).toBe(5)
     expect(PHAP_TU_SPECIAL_CAST_TIME).toBeCloseTo(1.2)
 

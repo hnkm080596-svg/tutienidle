@@ -17,6 +17,7 @@ import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
+import { getActiveElement } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
 import { MAIN_STAT_KEYS, type MainStatKey, type StatType } from '@/core/stats/StatTypes'
@@ -81,10 +82,23 @@ const combatPower = computed(() => {
   )
 })
 
+// Ly Hoa Chi Dao branding (Minh ruling 2026-10-04): a fire-committed
+// Phap Tu walks the Li-trigram dao, so the elemental dao name + verse
+// replace the generic path label on the identity plate. The committed
+// element comes through the canonical accessor - the shell never
+// reconstructs it from player state.
+const isLyHoa = computed(() => getActiveElement(player.$state) === 'fire')
+
 const pathName = computed(() => {
+  if (isLyHoa.value) {
+    return t('character.lyHoaDao')
+  }
+
   const pathId = player.cultivationPath as CultivationPathId | undefined
   return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('panels.skillPath.mortalName')
 })
+
+const pathVerse = computed(() => (isLyHoa.value ? t('character.lyHoaVerse') : undefined))
 
 function detailRows(
   categories: readonly StatCategory[],
@@ -151,6 +165,7 @@ const model = computed<CharacterUiModel>(() => {
     name: player.name,
     realm: `${realm.name} · ${t('panels.character.labels.realmFloor')} ${player.realmLevel}`,
     path: pathName.value,
+    pathVerse: pathVerse.value,
     combatPower: formatNumber(combatPower.value),
     stats,
     elements: ELEMENT_ORDER.map((element, index) => ({

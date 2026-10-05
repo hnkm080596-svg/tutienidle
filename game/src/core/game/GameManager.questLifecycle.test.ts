@@ -48,7 +48,7 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
     manager.questSystem.onEnemyDefeated(
       manager.questRegistry,
       manager.questManager,
-      'wild_wolf',
+      'bandit',
       undefined,
     )
 

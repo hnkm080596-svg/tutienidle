@@ -50,7 +50,8 @@ import { affixes } from '../../src/data/equipment/affixes'
 import { materials } from '../../src/data/materials/materials'
 import { pills } from '../../src/data/pill/pills'
 import { buildings } from '../../src/data/building/buildings'
-import { SKILLS } from '../../src/data/skill/Skills'
+import { PHAP_TU_SKILLS } from '../../src/data/skill/PhapTuSkills'
+import { SKILLS, SPELL_KIT_IDS } from '../../src/data/skill/Skills'
 import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
 import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '../../src/core/equipment/ItemQualityBalance'
@@ -422,7 +423,7 @@ describe('F-TC7-ENT: pendingTalentEntitlement is bound to the realm it minted in
       realmId: 'qi_refining',
       cultivationPath: 'spell',
       cultivationWay: 'spell_pathway',
-      spellPath: { element: null },
+      spellPath: { element: 'fire' },
       // F-REALM-1: a qi_refining claim carries the initiation grade.
       breakthroughGrade: 1,
       pendingTalentEntitlement: {
@@ -485,7 +486,10 @@ describe('F-TC7-TRIB: committedOutcome re-derives the breakthrough gate at settl
       // initiation grade (writer clamps to >= 1).
       breakthroughGrade: 1,
       mortalBasicSkillId: undefined,
-      spellPath: { element: null },
+      spellPath: { element: 'fire' },
+      // committed fire bundle: initiation-minted root + learned basic.
+      nodeLevels: { hoa_linh_ngo: 1, core_hoa_cau_thuat: 1 },
+      purchasedNodeIds: ['hoa_linh_ngo', 'core_hoa_cau_thuat'],
       ...overrides,
     })
   }
@@ -495,7 +499,7 @@ describe('F-TC7-TRIB: committedOutcome re-derives the breakthrough gate at settl
       version: CURRENT_SAVE_VERSION,
       player: { ...p, lastSavedAt: Date.now() },
       techniques: [wayTechnique(getRealmIndex('qi_refining'))],
-      skills: [],
+      skills: [structuredClone(PHAP_TU_SKILLS.find((s) => s.id === SPELL_KIT_IDS.fire[0])!)],
       materials: [],
       equipment: [],
       equipmentSlots: [],

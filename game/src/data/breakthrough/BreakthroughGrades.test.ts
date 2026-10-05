@@ -13,7 +13,7 @@ function createReadyPlayer(): PlayerData {
 
 describe('BodyRefinement caps cấp số nhân (spec §3.1)', () => {
   it('caps mới theo hệ số ×3.5 từ 50', () => {
-    expect(BODY_REFINEMENT_TIERS.map((t) => t.cap)).toEqual([50, 175, 615, 2150, 7500, 26300])
+    expect(BODY_REFINEMENT_TIERS.map((t) => t.cap)).toEqual([50, 175, 615, 2150, 2500, 8000])
   })
 })
 

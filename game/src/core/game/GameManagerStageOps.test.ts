@@ -97,7 +97,7 @@ describe('GameManagerStageOps - stage surface read-model', () => {
 
     const boss = manager.stageOps.getStageSurfaceModel('mortal_dong_10', player)!
     expect(boss.isBossFloor).toBe(true)
-    expect(boss.displayEnemy?.id).toBe('mortal_ferocious_giant_crocodile')
+    expect(boss.displayEnemy?.id).toBe('mortal_ferocious_wild_boar')
   })
 
   it('reward preview surfaces the realm band drop table', () => {

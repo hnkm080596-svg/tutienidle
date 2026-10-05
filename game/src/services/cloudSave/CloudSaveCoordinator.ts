@@ -1,5 +1,5 @@
 import type { GameSave } from '../save/SaveSystem'
-import type { CloudSaveCapability, CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
+import type { CloudSaveCapability, CloudSaveLoadResult, CloudSaveResetResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
 
 interface QueuedSave {
   /** Callers that arrived while a write was in flight all resolve with
@@ -75,6 +75,23 @@ export class CloudSaveCoordinator {
    *  adapters have no remote authority - they resolve 'ok' trivially. */
   async heartbeat(): Promise<HeartbeatOutcome> {
     return this.service.heartbeat ? this.service.heartbeat() : { status: 'ok' }
+  }
+
+  /** B1.9a: remote reset for the recovery surface. Local adapters have
+   *  no remote row - they resolve 'absent' so the caller proceeds with
+   *  the local-only reset it already performs. A successful remote
+   *  delete also resets this coordinator: the character row is gone, so
+   *  the cached revision/queue/generation no longer describe reality.
+   *  'unavailable' leaves state untouched - the remote row may still
+   *  exist. */
+  async resetCharacter(): Promise<CloudSaveResetResult> {
+    const result = this.service.resetCharacter
+      ? await this.service.resetCharacter()
+      : { status: 'absent' as const }
+    if (result.status !== 'unavailable') {
+      this.reset()
+    }
+    return result
   }
 
   async save(snapshot: GameSave): Promise<CloudSaveWriteResult> {

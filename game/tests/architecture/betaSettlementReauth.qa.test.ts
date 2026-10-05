@@ -34,6 +34,8 @@ import { equipment } from '@/data/equipment/equipment'
 import { affixes } from '@/data/equipment/affixes'
 import { buildings } from '@/data/building/buildings'
 import { SKILLS } from '@/data/skill/Skills'
+import { PHAP_TU_SKILLS } from '@/data/skill/PhapTuSkills'
+import { SPELL_KIT_IDS } from '@/data/skill/Skills'
 import { TECHNIQUES } from '@/data/technique/Techniques'
 import type { GameSave } from '@/services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '@/services/save/saveVersion'
@@ -56,6 +58,11 @@ function committedPlayer(overrides: Partial<PlayerData> = {}): PlayerData {
     cultivationPath: 'spell',
     cultivationWay: 'spell_pathway',
     mortalBasicSkillId: undefined,
+    // F-SCOPE-1 (fixpoint W2-3): the element-axis commit is atomic -
+    // beta element + its minted root + the learned basic's writer node.
+    spellPath: { element: 'fire' },
+    nodeLevels: { hoa_linh_ngo: 1, core_hoa_cau_thuat: 1 },
+    purchasedNodeIds: ['hoa_linh_ngo', 'core_hoa_cau_thuat'],
     ...overrides,
   })
 }
@@ -110,7 +117,13 @@ function baseSave(p: PlayerData, overrides: Partial<GameSave> = {}): GameSave {
     version: CURRENT_SAVE_VERSION,
     player: { ...p, lastSavedAt: Date.now() },
     techniques: [],
-    skills: [],
+    skills: p.cultivationWay === 'spell_pathway'
+      ? [
+          structuredClone(
+            PHAP_TU_SKILLS.find((skill) => skill.id === SPELL_KIT_IDS.fire[0])!,
+          ),
+        ]
+      : [],
     materials: [],
     equipment: [],
     equipmentSlots: [],

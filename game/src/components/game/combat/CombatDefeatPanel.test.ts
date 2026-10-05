@@ -18,6 +18,9 @@ interface MockGameManager {
   catalogOps: { getStage: ReturnType<typeof vi.fn> }
   turnBattleOps: { startStage: ReturnType<typeof vi.fn> }
   abandonBattle: ReturnType<typeof vi.fn>
+  materialBag: { get: ReturnType<typeof vi.fn> }
+  pillBag: { get: ReturnType<typeof vi.fn> }
+  equipmentBag: { getAll: ReturnType<typeof vi.fn> }
   eventBus: { emit: ReturnType<typeof vi.fn>; on: ReturnType<typeof vi.fn>; off: ReturnType<typeof vi.fn> }
 }
 
@@ -35,6 +38,9 @@ function makeGameManager(): MockGameManager {
     catalogOps: { getStage: vi.fn(() => undefined) },
     turnBattleOps: { startStage: vi.fn(() => false) },
     abandonBattle: vi.fn(() => false),
+    materialBag: { get: vi.fn(() => undefined) },
+    pillBag: { get: vi.fn(() => undefined) },
+    equipmentBag: { getAll: vi.fn(() => []) },
     eventBus,
   }
 }
@@ -167,6 +173,67 @@ describe('CombatDefeatPanel — B2-1 progression hint', () => {
 
     const t = (i18n.global as unknown as { t: (k: string) => string }).t
     expect(panel.container.textContent).toContain(t('combat.defeat.hintGear'))
+
+    panel.unmount()
+  })
+})
+
+// Huyen-kim reskin: partial rewards render as the shared victory tile
+// family (growth gains become symbol tiles, treasure drops keep their
+// icons/names) - ports the old RewardList coverage onto the panel.
+describe('CombatDefeatPanel — reward tiles', () => {
+  const t = (key: string): string =>
+    (i18n.global as unknown as { t: (k: string) => string }).t(key)
+
+  it('renders one tile per populated reward kind (3 growth + stone + item)', async () => {
+    const gm = makeGameManager()
+    gm.getBattleRewardSummary.mockReturnValue({
+      techniqueMastery: 1234,
+      skillInsight: 567,
+      artifactInsight: 89,
+      spiritStone: 42,
+      items: [{ itemId: 'pill-1', kind: 'pill', name: 'Luyện Khí Đan', amount: 3 }],
+    })
+    const panel = mountPanel(gm)
+    await nextTick()
+
+    const tiles = panel.container.querySelectorAll('.victory-slot')
+    expect(tiles).toHaveLength(5)
+    expect(panel.container.textContent).toContain('Luyện Khí Đan')
+
+    panel.unmount()
+  })
+
+  it('renders no tiles and collapses the reward column when summary is empty', async () => {
+    const gm = makeGameManager()
+    const panel = mountPanel(gm)
+    await nextTick()
+
+    expect(panel.container.querySelectorAll('.victory-slot')).toHaveLength(0)
+    expect(panel.container.querySelector('.combat-defeat-panel__reward-col')).toBeNull()
+
+    panel.unmount()
+  })
+
+  it('skips zero-value kinds but keeps the populated ones', async () => {
+    const gm = makeGameManager()
+    gm.getBattleRewardSummary.mockReturnValue({
+      techniqueMastery: 0,
+      skillInsight: 500,
+      artifactInsight: 0,
+      spiritStone: 0,
+      items: [
+        { itemId: 'mat-1', kind: 'material', name: 'Linh Thạch', amount: 10 },
+        { itemId: 'mat-2', kind: 'material', name: 'Minh Văn Thạch', amount: 5 },
+      ],
+    })
+    const panel = mountPanel(gm)
+    await nextTick()
+
+    const tiles = panel.container.querySelectorAll('.victory-slot')
+    expect(tiles).toHaveLength(3)
+    expect(panel.container.textContent).toContain(t('combat.rewards.skillInsight'))
+    expect(panel.container.textContent).toContain('Minh Văn Thạch')
 
     panel.unmount()
   })

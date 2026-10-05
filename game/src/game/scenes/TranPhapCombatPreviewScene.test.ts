@@ -147,7 +147,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
   })
 
   it('a profile switch between different-slug profiles rebuilds the sprite', () => {
-    // mortal->pham_nhan, phap_tu->ngu_hanh since the 2026-09-27 art wave:
+    // mortal->pham_nhan, phap_tu->phap_tu_shared:
     // the acceptable texture set differs either side of the switch, so the
     // stale sheet must be rebuilt onto the new variant's idle sheet.
     const scene = bareScene()
@@ -165,7 +165,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     expect(scene.destroyCalls).toEqual(['player'])
     expect(
       (scene.sprites.get('player')!.rect as Phaser.GameObjects.Sprite).texture.key,
-    ).toBe('ngu_hanh-sheet-1')
+    ).toBe('phap_tu_shared-sheet-1')
   })
 
   // character-art-infra: the rebuild guard must accept every texture the

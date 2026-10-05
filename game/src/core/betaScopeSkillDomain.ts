@@ -266,6 +266,12 @@ export interface BetaSkillTreeNode {
   levelGates: BetaSkillNodeGate[]
   /** Skills the node grants (unlocksSkillIds + grantsSkillCoreIds). */
   grantsSkillIds: string[]
+  /** Info-anchor node: rendered for readability, never purchasable -
+      the named skill's own channel (casts/grants) owns its level. */
+  infoSkillId?: string
+  /** Realm-reward grant node: rendered for readability on its own
+      branch; realm rewards own the level, Insight is never an input. */
+  rewardOnly?: boolean
 }
 
 /**
@@ -294,6 +300,44 @@ function betaDormantTreeViewTags(): ReadonlySet<string> {
     }
   }
 
+  return tags
+}
+
+// Grant-internal content never joins the tree surface (grantedOnly /
+// levelsSkillId cores are defensive coverage - PHAP_TU_NODES currently
+// authors none of those two). rewardOnly realm grants DO render as
+// readable seats on their own branch (Minh ruling 2026-10-04: the
+// mastery seat must be visible so the rider is inspectable); Insight
+// still cannot buy or upgrade them - canPurchaseNode / canUpgradeNode
+// reject rewardOnly upstream of this display gate. Shared with the
+// constellation layout validation so a new exclusion flag here stays
+// authoritative for both consumers.
+export function betaNodeTreeRenderable(node: ProgressionNode): boolean {
+  return !(node.grantedOnly === true || node.levelsSkillId !== undefined)
+}
+
+/**
+ * Mortal tree-surface admission: pre-initiation the player owns no
+ * path/way, so no pathway-scoped tag set applies - the surface admits
+ * only the branches that carry a renderable info anchor (the mortal
+ * precursor skills' readable seats on the 'tien_than' branch tag).
+ * Every node on an admitted branch still carries its own mortal
+ * 'initiation-pending' verdict; nothing here unlocks purchase.
+ */
+export function betaMortalTreeViewTags(
+  tree: readonly ProgressionNode[],
+): ReadonlySet<string> {
+  const tags = new Set<string>()
+  for (const node of tree) {
+    const viewTag = node.elementTag ?? node.branchTag
+    if (
+      node.infoSkillId !== undefined &&
+      viewTag !== undefined &&
+      betaNodeTreeRenderable(node)
+    ) {
+      tags.add(viewTag)
+    }
+  }
   return tags
 }
 
@@ -385,12 +429,20 @@ export function betaActiveWayAdmitted(player: PlayerData): boolean {
 
 /**
  * One write/effect admission predicate for progression ops and their
- * readers: tree-surface admission (dormant way/hidden branch tags) AND
- * skill-level admission (a core node leveling a dormant way's kit skill
- * stays rejected even though core nodes carry no view tag).
+ * readers: tree-surface admission (dormant way/hidden branch tags),
+ * skill-level admission (a core node leveling a dormant way's kit
+ * skill stays rejected even though core nodes carry no view tag), AND
+ * element admission - a node stamped for an out-of-beta element can
+ * only ever be owned by a pre-lock save, so it takes no insight and
+ * emits no effects (the combat rail already reads that commit as
+ * uncommitted).
  */
 export function betaNodeWriteAdmitted(node: ProgressionNode): boolean {
-  return betaTreeNodeAdmitted(node) && betaNodeSkillLevelAdmitted(node)
+  return (
+    betaTreeNodeAdmitted(node) &&
+    betaNodeSkillLevelAdmitted(node) &&
+    (node.elementTag === undefined || isBetaElement(node.elementTag))
+  )
 }
 
 /**
@@ -407,6 +459,9 @@ export interface BetaSkillTree {
   element: ElementType | null
   realmId: string
   way: CultivationWayId | null
+  /** Pre-initiation mortal (realmId 'mortal' + no path/way pair) -
+      the surface uses this to admit the info-anchor branches. */
+  mortal: boolean
   /** Committed way's display name; null when way is null. */
   wayName: string | null
   /** The committed way's declared nodeTreeTag (which fixed tree this
@@ -419,6 +474,15 @@ export interface BetaSkillTree {
   /** Every tree-catalog node with its verdict - scope-hidden entries are
       emitted explicitly; renderable nodes are state !== 'scope-hidden'. */
   nodes: BetaSkillTreeNode[]
+}
+
+/** Pre-initiation mortal: realm mortal AND no committed path/way pair. */
+function isPreInitiationMortal(player: PlayerData): boolean {
+  return (
+    player.realmId === 'mortal' &&
+    player.cultivationPath === undefined &&
+    player.cultivationWay === undefined
+  )
 }
 
 function gateTargets(prerequisite: NodePrerequisite): string[] {
@@ -489,6 +553,8 @@ function treeNodeFor(
     nodeType: node.type,
     role: node.role,
     elementTag: node.elementTag,
+    infoSkillId: node.infoSkillId,
+    rewardOnly: node.rewardOnly,
     state: 'scope-hidden',
     level,
     maxLevel: getNodeMaxLevel(node),
@@ -511,18 +577,12 @@ function treeNodeFor(
     ],
   }
 
-  // Grant-only content never joins the tree surface (rewardOnly realm
-  // grants; grantedOnly/levelsSkillId cores are defensive coverage -
-  // PHAP_TU_NODES currently authors none of those two).
-  if (node.rewardOnly === true || node.grantedOnly === true || node.levelsSkillId !== undefined) {
+  if (!betaNodeTreeRenderable(node)) {
     return { ...entry, state: 'scope-hidden', reason: 'grant-only-node' }
   }
 
   const mortalRealm = player.realmId === 'mortal'
-  const mortal =
-    mortalRealm &&
-    player.cultivationPath === undefined &&
-    player.cultivationWay === undefined
+  const mortal = isPreInitiationMortal(player)
 
   if (mortalRealm && !mortal) {
     // mortal + a committed pair is contradictory (mortalBoundaryContractViolation)
@@ -572,6 +632,33 @@ function treeNodeFor(
     return { ...entry, state: 'scope-hidden', reason: 'other-element-branch' }
   }
 
+  // F-READ-1 (fixpoint W2): the ops layer refuses writes on nodes the
+  // beta admission predicate rejects (catalog/pool/element locks via
+  // betaNodeWriteAdmitted); a read model that still reports such a node
+  // 'purchasable' lies about a write that can never land. Scope-hidden -
+  // dim, never a locked branch (sec.19), so the player sees one class of
+  // unbuyable: out of scope. An owned seat stays 'purchased' below -
+  // ownership is fact; the verdict never promised upgradeability.
+  if (!betaNodeWriteAdmitted(node) && level < 1) {
+    return { ...entry, state: 'scope-hidden', reason: 'non-beta-scope' }
+  }
+
+  // Info anchors render for readability only - the mirrored skill's own
+  // channel (casts/grants) owns any level, never Insight; the verdict
+  // must not read 'available'/'purchasable' or let a dirty level in
+  // nodeLevels pass for 'purchased'.
+  if (node.infoSkillId !== undefined) {
+    return { ...entry, state: 'progression-locked', reason: 'info-only' }
+  }
+
+  // Realm-reward grants read as a locked seat until the breakthrough
+  // writes them - 'grant-only' keeps 'progression-locked' legibility
+  // without implying Insight could unlock it. A granted level falls
+  // through to 'purchased' so the seat renders lit like any owned node.
+  if (node.rewardOnly === true && level < 1) {
+    return { ...entry, state: 'progression-locked', reason: 'grant-only' }
+  }
+
   if (level >= 1) {
     return { ...entry, state: 'purchased' }
   }
@@ -610,9 +697,17 @@ export function betaSkillTreeFor(
   // getActiveElement resolves only through the owning way's element axis
   // (spell_pathway); undefined covers pre-commit, off-way, and mortal
   // realm (a mortal+way corrupt save reports no committed element).
-  const committedElement =
+  const resolvedElement =
     player.realmId !== 'mortal' && way !== null && isBetaWay(way)
       ? getActiveElement(player)
+      : undefined
+  // COR-1 - a pre-lock save can carry an out-of-beta committed element
+  // (e.g. water): treat it as uncommitted so the scoped-out branch stops
+  // being purchasable/insight-charged, matching the combat rail's
+  // element-uncommitted verdict.
+  const committedElement =
+    resolvedElement !== undefined && isBetaElement(resolvedElement)
+      ? resolvedElement
       : undefined
 
   return {
@@ -628,6 +723,7 @@ export function betaSkillTreeFor(
         ? wayDefinition?.nodeTreeTag
         : undefined,
     elementCasting: hasStaticPathCapability(player, 'spell.elemental_casting'),
+    mortal: isPreInitiationMortal(player),
     nodes: tree.map((node) => treeNodeFor(player, node, committedElement, way)),
   }
 }

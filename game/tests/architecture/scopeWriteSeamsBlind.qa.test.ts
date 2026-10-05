@@ -455,7 +455,12 @@ function committedPlayer(realmId: string): PlayerData {
   const p = createDefaultPlayer()
   p.cultivationPath = 'spell'
   p.cultivationWay = 'spell_pathway'
-  p.spellPath = { element: null }
+  // W3-COR-1 - the committed pair needs the atomic commit's own
+  // witnesses (element + fire root + core node + purchased ids) so
+  // probes exercise their intended rule instead of tripping F-SCOPE-1.
+  p.spellPath = { element: 'fire' }
+  p.nodeLevels = { ...(p.nodeLevels ?? {}), hoa_linh_ngo: 1, core_hoa_cau_thuat: 1 }
+  p.purchasedNodeIds = [...(p.purchasedNodeIds ?? []), 'hoa_linh_ngo', 'core_hoa_cau_thuat']
   p.realmId = realmId
   p.realmLevel = 1
   delete p.mortalBasicSkillId
@@ -480,7 +485,19 @@ function committedSave(
     version: CURRENT_SAVE_VERSION,
     player: { ...p, lastSavedAt: Date.now() },
     techniques: [wayTechnique()],
-    skills: [],
+    skills: [
+      {
+        id: 'hoa_cau_thuat',
+        name: 'Hoa Cau Thuat',
+        description: 'commit basic',
+        type: 'active',
+        level: 1,
+        maxLevel: 10,
+        cooldown: 1,
+        target: 'enemy',
+        effects: [],
+      },
+    ],
     materials: [],
     equipment: [],
     equipmentSlots: [],

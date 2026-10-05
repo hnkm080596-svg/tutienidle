@@ -16,7 +16,7 @@
         "top": 20,
         "bottom": 20
       },
-      "center": "transparent",
+      "center": "fill",
       "edgeMode": "stretch",
       "tintable": true,
       "minimumWidth": 32,

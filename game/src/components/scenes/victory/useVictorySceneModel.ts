@@ -10,6 +10,7 @@ import type { Ref } from 'vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import type { StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { BattleRewardSummary } from '@/core/reward/BattleRewardSummary'
 import type {
@@ -18,10 +19,10 @@ import type {
   VictorySlotView,
 } from './victorySceneModel'
 
-const GROWTH_ORDER: { id: VictoryGrowthCardView['id']; accent: VictoryGrowthCardView['accent'] }[] = [
-  { id: 'techniqueMastery', accent: 'gold' },
-  { id: 'skillInsight', accent: 'jade' },
-  { id: 'artifactInsight', accent: 'cinnabar' },
+const GROWTH_ORDER: { id: VictoryGrowthCardView['id']; accent: VictoryGrowthCardView['accent']; symbol: StableSymbolId }[] = [
+  { id: 'techniqueMastery', accent: 'gold', symbol: 'technique' },
+  { id: 'skillInsight', accent: 'jade', symbol: 'skill' },
+  { id: 'artifactInsight', accent: 'cinnabar', symbol: 'equipment' },
 ]
 
 export function useVictorySceneModel(summary: Ref<BattleRewardSummary>) {
@@ -77,11 +78,12 @@ export function useVictorySceneModel(summary: Ref<BattleRewardSummary>) {
   const growth = computed<VictoryGrowthCardView[]>(() => {
     return GROWTH_ORDER
       .filter(({ id }) => summary.value[id] > 0)
-      .map(({ id, accent }) => ({
+      .map(({ id, accent, symbol }) => ({
         id,
         labelKey: `combat.rewards.${id}`,
         accent,
         amount: summary.value[id],
+        symbol,
       }))
   })
 

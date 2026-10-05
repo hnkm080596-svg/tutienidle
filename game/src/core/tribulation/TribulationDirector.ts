@@ -10,6 +10,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { EventBus } from '../events/EventBus'
 import type { TribulationOutcomeResult } from './TribulationOutcomeService'
 import { EntityVitalsSystem } from '../combat/EntityVitalsSystem'
+import { mulberry32 } from '../battle/SeededRandom'
 import {
   resolveKienCoGrade,
   type ResolvableKienCoGrade,
@@ -162,6 +163,11 @@ interface TankRuntime {
   finalStrikeFired: boolean
 }
 
+// Deterministic seed stream for constructions that bind no deps.rng
+// (unit tests) - production always binds sessionRng; Math.random must
+// never mint a witness seed.
+const FALLBACK_ATTEMPT_SEED_RNG = mulberry32(0x54d1a7c9)
+
 export class TribulationDirector {
   private readonly vitals: EntityVitalsSystem
   private active: ActiveTribulationState | null = null
@@ -287,7 +293,7 @@ export class TribulationDirector {
     // realm the run departs (only start() sees it pre-settle) and a
     // fresh per-attempt seed. commitOutcome folds both into the record.
     this.attemptRealmId = player.realmId
-    this.attemptSeed = Math.floor((this.deps.rng ?? Math.random)() * 0x7fffffff)
+    this.attemptSeed = Math.floor((this.deps.rng ?? FALLBACK_ATTEMPT_SEED_RNG)() * 0x7fffffff)
 
     this.active = {
       targetRealmId,

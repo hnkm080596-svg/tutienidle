@@ -52,13 +52,13 @@ const titleId = useId()
   <div class="offline-summary" :style="{ zIndex: OVERLAY_LAYERS.modal }">
     <section
       ref="panelRef"
-      class="offline-summary__panel paper-on-dark"
+      class="offline-summary__panel"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
     >
-      <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-      <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
       <h3 :id="titleId" class="offline-summary__title">{{ t('combat.offline.title') }}</h3>
 
@@ -91,13 +91,10 @@ const titleId = useId()
   background: var(--scrim);
 }
 
-/* M-tier InkNineSlice (surface-m-paper + frame-m-seal-corner) thay
-   cho GamePanel ornate (frame-xl-ceremony, slice 80px) - khung XL ve
-   de len noi dung o card nho 320px vi bang khung 80px moi ben khong
-   con cho cho padding hop ly. thickness="18" (thay vi slice goc 32px)
-   thu nho muc ve lai - 32px nguyen ban qua day voi card 320-420px,
-   nuot gan het canh thanh 1 dai den. Padding noi them de chu lui han
-   vao trong, khong con sat vien muc. */
+/* Huyen Kim paper chrome: surface-xl-scroll fills the card with cream
+   paper and frame-m-modal draws the 40px gold ornament band on top.
+   overflow:hidden + border-radius clips the scroll's square corner art
+   under the frame's rounded silhouette. Padding clears the band. */
 .offline-summary__panel {
   position: relative;
   isolation: isolate;
@@ -106,6 +103,8 @@ const titleId = useId()
   gap: 10px;
   min-width: min(320px, 92vw);
   padding: 44px 40px;
+  overflow: hidden;
+  border-radius: 16px;
   color: var(--paper-text, #211f1a);
   font-family: var(--font-body);
 }
@@ -125,6 +124,13 @@ const titleId = useId()
 }
 
 .offline-summary__rows {
+  /* StatRow renders --hk-text-* (light) labels/values by default; on
+     paper the tokens remap to the dark paper family so the rows stay
+     readable. --hk-jade-deep keeps the positive accent legible too. */
+  --hk-text-primary: var(--paper-text, #211f1a);
+  --hk-text-secondary: var(--paper-text-soft, #5e5a50);
+  --hk-text-muted: var(--paper-text-muted, #8f897c);
+  --hk-jade: var(--hk-jade-deep);
   list-style: none;
   margin: 0;
   padding: 0;

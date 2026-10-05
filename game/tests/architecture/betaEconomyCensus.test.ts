@@ -331,9 +331,13 @@ describe('sec.17 beta economy census - no orphan source, no orphan sink', () => 
       ]),
     )
     const familyOf = rosterFamilyPairs()
+    // Roster remap (2026-10-04): bases ride the one-family-per-realm
+    // roster - boar (mortal), bandit (qi, inherits hai+truy), wolf
+    // (foundation, inherits gioi).
     expect(poolByFamily.get(familyOf.get('mortal_wild_boar')!)).toContain('base_quan')
-    expect(poolByFamily.get(familyOf.get('giant_earthworm')!)).toContain('base_hai')
-    expect(poolByFamily.get(familyOf.get('foundation_sand_scorpion')!)).toContain('base_gioi')
+    expect(poolByFamily.get(familyOf.get('bandit')!)).toContain('base_hai')
+    expect(poolByFamily.get(familyOf.get('bandit')!)).toContain('base_truy')
+    expect(poolByFamily.get(familyOf.get('foundation_spirit_wolf')!)).toContain('base_gioi')
   })
 })
 

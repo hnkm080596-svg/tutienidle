@@ -8,7 +8,11 @@ import type { EnemyReward } from '../enemy/Enemy'
 // M2 (spec 2026-09-03 sec4.3 row 18): baseline insight economy cut ~40%
 // (1 -> 0.6) as Van Dao's declared cost - the talent's insight_gain
 // multiplier buys it back for its holder.
-export const SKILL_INSIGHT_PER_TECHNIQUE_MASTERY = 0.6
+// balance-review 2026-10-04 (docs/balance/progression-review.md C2.1):
+// at 0.6 a Luyen Khi kill mints 21-27 insight while the whole fire tree
+// costs 53 - the tree empties inside one floor and every insight_gain
+// talent reads as a trap. Cut to 0.18 so a full tree is ~8-10 kills.
+export const SKILL_INSIGHT_PER_TECHNIQUE_MASTERY = 0.18
 
 export function getSkillInsightReward(reward: Pick<EnemyReward, 'techniqueMastery' | 'skillInsight'>): number {
   if (reward.skillInsight !== undefined) {

@@ -43,6 +43,7 @@ import { pills } from '../../data/pill/pills'
 import { buildings } from '../../data/building/buildings'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
+import { isBetaElement } from '../../core/betaScope'
 
 /**
  * Lookup surface the predicate needs - nothing more. Boot restore
@@ -297,6 +298,25 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
         `hidden_spell_pathway kit coherence violated in save: missing learned skills '${missingKit.join("', '")}'`,
       )
     }
+  }
+
+  // F-SCOPE-1 (fixpoint W2-3) - a committed spell_pathway save must
+  // carry a resolvable beta-scope element. selectSpellPathElement is
+  // mortal-gated, so null can never commit and a non-beta element
+  // wedges against every write gate; the load seam rejects the pair,
+  // mirroring the shape-boundary rule in validateSpellPathPersistedState.
+  // getActiveElement is the canonical element read (P1 declared seam).
+  if (
+    save.player.cultivationPath === 'spell' &&
+    save.player.cultivationWay === 'spell_pathway' &&
+    save.player.realmId !== 'mortal' &&
+    !(committedElement !== undefined && isBetaElement(committedElement))
+  ) {
+    throw new Error(
+      `spell_pathway save carries uncommittable element '${
+        committedElement === undefined ? 'none' : committedElement
+      }' outside beta scope`,
+    )
   }
 }
 

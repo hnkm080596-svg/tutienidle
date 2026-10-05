@@ -3,6 +3,9 @@ import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
 import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentationRunner'
 import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
+import { HoaCauFireballPresentation, hoaCauHandAnchor, isHoaCauFireballCast } from '@/game/support/skill-vfx/HoaCauFireballPresentation'
+import { TamMuoiAuraPresentation, isTamMuoiAuraCast } from '@/game/support/skill-vfx/TamMuoiAuraPresentation'
+import { HOA_CAU_REFERENCE_IMPACT_MS } from '@/game/support/skill-vfx/HoaCauFireballTimeline'
 import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
 import type { EventBus, EventHandler } from '@/core/events/EventBus'
 import {
@@ -32,7 +35,13 @@ import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometr
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
-import { readTheBar } from '@/presentation/bridges/theBarBridge'
+import { readTheBar, type TheBarSnapshot } from '@/presentation/bridges/theBarBridge'
+import {
+  HOA_THE_ASSET,
+  HOA_THE_BURN_FRAME_COUNT,
+  HOA_THE_BURN_LOOP_MS,
+  HOA_THE_BURN_START_FRAME,
+} from '@/game/support/HoaCauVfxAssets'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -319,14 +328,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this._playerHud = hud
   }
 
-  private ensurePlayerHud(): PlayerHudLayer {
-    this._playerHud ??= new PlayerHudLayer(this, {
-      width: this.scale.width,
-      height: this.scale.height,
-    })
-
-    return this._playerHud
-  }
+  // ensurePlayerHud() removed (ui-combat reskin, 2026-10-04): the player
+  // HUD now lives in the DOM overlay (hud/CombatPlayerCard.vue). The
+  // getter/setter stay - tests inject fakes through them and every live
+  // consumer reads `playerHud?`, so a missing layer is a no-op, not a crash.
 
   private _castBar?: CombatCastBar
 
@@ -488,7 +493,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       stacks: number
       buffName?: string
       remainingTime?: number
-      icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc
+      icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc | Phaser.GameObjects.Image
       stackLabel: Phaser.GameObjects.Text
     }
   >()
@@ -610,6 +615,79 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private _skillPlayback?: SkillPresentationRunner
   private _skillVfxDriver?: PhaserSkillVfxDriver
+  private _hoaCauPresentation?: HoaCauFireballPresentation
+  private _tamMuoiAuraPresentation?: TamMuoiAuraPresentation
+
+  // Phap The seal (fire-path surface, beta scope): stacks 1-4 light the
+  // authored fire glyph stroke by stroke; at 5 the seal swaps to the Arcadia
+  // living flame for as long as currentThe stays at the threshold.
+  private phapTheGlyph?: Phaser.GameObjects.Image
+  private hoaTheSeal?: Phaser.GameObjects.Sprite
+  private hoaTheSealMs = 0
+
+  private get hoaCauPresentation(): HoaCauFireballPresentation {
+    if (!this._hoaCauPresentation) {
+      this._hoaCauPresentation = new HoaCauFireballPresentation({
+        anchor: fact => (fact.entityId === PLAYER_ID && this.sprites.get(fact.entityId)?.kind === 'sprite'
+          && this.sprites.get(fact.entityId)?.sourceSize?.w === 244
+          ? hoaCauHandAnchor(this.sprites.get(fact.entityId)!.rect as Phaser.GameObjects.Sprite)
+          : this.bodyAnchorScreen(fact.entityId, fact.entityId === PLAYER_ID ? 'front' : 'centre'))
+          ?? this.lastKnownScreenPositions?.get(fact.entityId)
+          ?? this.projection?.gridToScreen(fact.row, fact.column),
+        depth: fact => {
+          const foot = this.projection?.gridToScreen(fact.row, fact.column)
+          return this.isPerspective && foot
+            ? uprightVfxDepth(foot.y, this.entityFootMinY, this.entityFootMaxY, fact.column)
+            : DEPTH_UPRIGHT_VFX
+        },
+        createSprite: (key, frame) => this.add.image(0, 0, key, frame),
+        isCurrent: ref => this.gameManagerRef?.getPendingPlaybackToken() === ref.token,
+        reducedMotion: typeof matchMedia === 'function'
+          && matchMedia('(prefers-reduced-motion: reduce)').matches,
+      })
+    }
+    return this._hoaCauPresentation
+  }
+
+  private get tamMuoiAuraPresentation(): TamMuoiAuraPresentation {
+    if (!this._tamMuoiAuraPresentation) {
+      this._tamMuoiAuraPresentation = new TamMuoiAuraPresentation({
+        anchor: fact => {
+          const sprite = this.sprites.get(fact.entityId)
+          const box = this.bodyBoxFor(fact.entityId)
+          if (!sprite || !box) return undefined
+          return { x: box.footX, y: box.footY, scale: box.personHeight / 256, depth: sprite.rect.depth }
+        },
+        createSprite: (key, frame) => {
+          const image = this.add.image(0, 0, key, frame).setOrigin(0.5, 1)
+          return {
+            setFrame: value => image.setFrame(value),
+            setPosition: (x, y) => image.setPosition(x, y),
+            setVisible: value => image.setVisible(value),
+            setScale: (x, y = x) => image.setScale(x, y),
+            setAngle: value => image.setAngle(value),
+            setAlpha: value => image.setAlpha(value),
+            setDepth: value => image.setDepth(value),
+            setBlendAdd: additive => image.setBlendMode(additive ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL),
+            destroy: () => image.destroy(),
+          }
+        },
+        isCurrent: ref => this.gameManagerRef?.getPendingPlaybackToken() === ref.token,
+        // The aura outlives its cast for the whole tam_muoi window: the
+        // statuses map drops the entry the tick the window expires (or
+        // the caster dies), which is the aura's cue to drain out.
+        buffActive: fact => {
+          for (const entry of this.statuses.values()) {
+            if (entry.targetId === fact.entityId && entry.buffId === 'tam_muoi') return true
+          }
+          return false
+        },
+        reducedMotion: typeof matchMedia === 'function'
+          && matchMedia('(prefers-reduced-motion: reduce)').matches,
+      })
+    }
+    return this._tamMuoiAuraPresentation
+  }
 
   private get skillPlayback(): SkillPresentationRunner {
     if (!this._skillPlayback) {
@@ -622,6 +700,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         graphics: () => this.add.graphics(),
         anchor: anchorPoint,
         ground: fact => this.projection?.gridToScreen(fact.row, fact.column),
+        // Monster attack VFX sweep (2026-10-04) - 'sheet' cue sprite factory.
+        // Undefined return = texture not loaded (headless, missing bundle);
+        // the cue then quietly leaves the analytic primitives in place.
+        sprite: (key, frame) =>
+          this.textures.exists(key) ? this.add.image(0, 0, key, frame) : undefined,
         uprightDepth: fact => {
           const foot = this.projection?.gridToScreen(fact.row, fact.column)
           return this.isPerspective && foot
@@ -683,7 +766,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       ? this.animationPlayback.startCastPlayback(sprite, cast.source.entityId, cast)
       : { source: 'none' as const }
 
-    const castMs = playback.clip ? clipImpactMs(playback.clip) : undefined
+    const fireballCast = isHoaCauFireballCast(cast)
+    const auraCast = isTamMuoiAuraCast(cast)
+    const castMs = playback.clip ? clipImpactMs(playback.clip)
+      : fireballCast ? HOA_CAU_REFERENCE_IMPACT_MS : undefined
 
     // Unmarked-policy art debt (plan sec.33): a long clip with no authored
     // impact frame plays but reports its impact at clip end - flag it so
@@ -699,9 +785,21 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     this.skillPlayback.start(cast, port, castMs === undefined ? undefined : { castMs })
+    if (fireballCast) {
+      const timing = castMs !== undefined && castMs > 0 && castMs < 4000
+        ? castMs : getSkillPresentationRecipe(cast.presetId).castMs
+      this.hoaCauPresentation.start(cast, timing)
+    }
+    if (auraCast) {
+      const timing = castMs !== undefined && castMs > 0 && castMs < 4000
+        ? castMs : getSkillPresentationRecipe(cast.presetId).castMs
+      this.tamMuoiAuraPresentation.start(cast, timing)
+    }
   }
 
   private onSkillResolved(resolved: SkillPresentationResolved): void {
+    this._hoaCauPresentation?.resolve(resolved)
+    this._tamMuoiAuraPresentation?.resolve(resolved)
     this._skillPlayback?.resolve(resolved)
   }
 
@@ -742,6 +840,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           }
 
           if (profileId && PLAYER_VISUAL_PROFILES[profileId]) {
+            this._hoaCauPresentation?.cancel()
+            this._tamMuoiAuraPresentation?.cancel()
             this.applyPlayerVisualProfile(profileId)
           }
         },
@@ -925,7 +1025,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     // 6A-T4 - HUD player trong canvas (HP/MP/Kiem) - tao mot lan cho
     // doi scene; hien thi/an theo inBattle qua battle_start/battle_end.
-    this.ensurePlayerHud()
+    // ui-combat reskin (2026-10-04): canvas HUD khong con duoc tao - the
+    // DOM CombatPlayerCard so huu player vitals bay gio.
 
     // Initial snapshot reconciliation via GameManager query (Task 4/10)
     const gameManager = readOptionalGate(this.registry, 'gameManager')
@@ -978,6 +1079,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   update(_time: number, delta: number) {
+    this._hoaCauPresentation?.update(delta)
+    this._tamMuoiAuraPresentation?.update(delta)
     this._skillPlayback?.update(delta)
     for (const [id, sprite] of this.sprites) {
       const visualX = this.getInterpolatedX(id)
@@ -1037,6 +1140,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // Task 16 - The bar (Phap Tu) same poll pattern.
     this.pollTheBar()
 
+    // Phap The seal burn loop rides the same frame clock as the bar poll.
+    const seal = this.hoaTheSeal
+    if (seal?.visible) {
+      this.hoaTheSealMs += delta
+      seal.setFrame(`frame_${this.hoaTheSealFrame()}`)
+    }
+
     // Task 9 - party countdown telegraph chases its snapshot target on
     // Phaser's own render clock, independent of how often CombatClock
     // happens to publish a new countdownProgress (game/docs/superpowers/
@@ -1079,6 +1189,56 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     } else {
       this.playerHud?.updateThe(0, 0, 0, false)
     }
+    this.updatePhapTheSeal(the)
+  }
+
+  private phapTheSealObjects(): { glyph: Phaser.GameObjects.Image; seal: Phaser.GameObjects.Sprite } {
+    if (!this.phapTheGlyph) {
+      this.phapTheGlyph = this.add.image(0, 0, 'phap-the-0').setVisible(false)
+      this.hoaTheSeal = this.add.sprite(0, 0, HOA_THE_ASSET.key, 'frame_0').setVisible(false)
+    }
+    return { glyph: this.phapTheGlyph, seal: this.hoaTheSeal! }
+  }
+
+  /** Paints the seal over the player's head: glyph `phap-the-N` mirrors
+      the live the.current read (same snapshot the HUD bar paints), and at
+      the empowerment threshold the glyph yields to the living-flame seal.
+      threshold 0 means the running basic carries no empowerment (body path /
+      un-committed path) so the seal stays off entirely. */
+  private updatePhapTheSeal(the: TheBarSnapshot | null): void {
+    const box = the !== null && the.threshold > 0 ? this.bodyBoxFor(PLAYER_ID) : undefined
+    if (!box || the === null) {
+      this.phapTheGlyph?.setVisible(false)
+      this.hoaTheSeal?.setVisible(false)
+      return
+    }
+    const { glyph, seal } = this.phapTheSealObjects()
+    const stacks = Math.max(0, Math.min(5, Math.trunc(the.current)))
+    const height = box.personHeight
+    const x = box.footX + height * 0.1
+    const y = box.footY - height * 0.99
+    const depth = ((this.sprites.get(PLAYER_ID)?.rect as { depth?: number } | undefined)?.depth ?? 0) + 1
+    if (stacks >= 5) {
+      if (!seal.visible) this.hoaTheSealMs = 0
+      glyph.setVisible(false)
+      seal.setPosition(x, y).setScale((height * 0.26) / 256).setDepth(depth).setVisible(true)
+    } else {
+      seal.setVisible(false)
+      glyph.setTexture(`phap-the-${stacks}`)
+        .setPosition(x, y).setScale((height * 0.21) / 256).setDepth(depth).setVisible(true)
+    }
+  }
+
+  /** Tier-5 Hoa The seal: ignites INSTANTLY where the glyph stood - no
+      reveal beat. The authored burn tail loops from ms 0 at the authored
+      rate. Reduced motion parks on the tail's first frame. */
+  private hoaTheSealFrame(): number {
+    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return HOA_THE_BURN_START_FRAME
+    }
+    return HOA_THE_BURN_START_FRAME
+      + Math.floor((this.hoaTheSealMs / HOA_THE_BURN_LOOP_MS) * HOA_THE_BURN_FRAME_COUNT)
+        % HOA_THE_BURN_FRAME_COUNT
   }
 
   /**
@@ -1419,7 +1579,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     color: number,
     labelText: string,
     row: LaneIndex = HERO_LANE_INDEX,
-    health?: { currentHp: number; maxHp: number; isBoss: boolean },
+    health?: { currentHp: number; maxHp: number; isBoss: boolean; isElite?: boolean },
   ): EntitySprite {
     if (this.dyingIds.has(id)) {
       this.forceFinalizeDeath(id)
@@ -1518,6 +1678,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private clearSceneState() {
     this._skillPlayback?.cancel()
+    this._hoaCauPresentation?.destroy()
+    this._hoaCauPresentation = undefined
+    this._tamMuoiAuraPresentation?.destroy()
+    this._tamMuoiAuraPresentation = undefined
     this._skillVfxDriver?.destroy()
     this._skillPlayback = undefined
     this._skillVfxDriver = undefined
@@ -1782,6 +1946,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // presentation tao!i cha"-. Via"+c cA2n lao!i a"Y A'Acy: cha"n + load trAEdega">c variant
   // na"n cho traon Kao3/4 TIao3/4P vA  da"n DoT accumulator.
   onBattleEnd() {
+    this._hoaCauPresentation?.cancel()
+    this._tamMuoiAuraPresentation?.cancel()
     // 6A-T5 - HUD theo doi battle end.
     this._playerHud?.setVisible(false)
     this.inBattle = false
@@ -1924,6 +2090,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // no-op nao?u A'AGBP sao!ch saoun).
   onBattleStart(options?: { rebind?: boolean }) {
     this._skillPlayback?.cancel()
+    this._hoaCauPresentation?.cancel()
+    this._tamMuoiAuraPresentation?.cancel()
     // 'rebind' = in-place reattach to the SAME battle/session: the
     // driver's per-action camera latch survives so a 'complete'-phase
     // resume cannot refire an already-fired camera impulse. Anything else
@@ -2081,10 +2249,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Action Playback Task 7 (2026-09-05) - 'turn_ready': short flash/pulse
-   * tren sprite actor roi acknowledgeTurnReady() trong onComplete (5-phase
-   * machine buoc 1 -> 2). Placeholder visual don gian theo plan (khong
-   * designed visual - polish sau).
+   * Action Playback Task 7 (2026-09-05) - 'turn_ready': standby transition
+   * + short forward lean on the actor sprite, then acknowledgeTurnReady()
+   * after the beat (5-phase machine step 1 -> 2).
    */
   // Internal (module boundary - combat-action-feedback).
   private onTurnReady(event: { actorId: string }) {

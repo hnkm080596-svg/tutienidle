@@ -68,21 +68,20 @@ describe('foundation stages', () => {
 
   it('foundation_floor_10 có boss đúng', () => {
     const boss = STAGES.find((stage) => stage.id === 'foundation_floor_10')!
-    expect(boss.bossEnemyId).toBe('foundation_ferocious_flood_dragon_whelp')
+    expect(boss.bossEnemyId).toBe('foundation_ferocious_spirit_wolf')
   })
 
-  // BETA SCOPE LOCK v2: the old even/odd ferocious pair pattern is
-  // replaced by the chapter-3 roster bands - lava hound (1-3), sand
-  // scorpion (4-6), mud golem (7-9), whelp (10).
-  it('chương 3: pool theo band roster 1-3/4-6/7-9, boss tầng 10', () => {
+  // Roster remap (2026-10-04): one family per chapter - Linh Lang on
+  // every band, its king on floor 10.
+  it('chương 3: pool theo mot ho Linh Lang cho moi band, boss tang 10', () => {
     const expected: Record<number, string> = {
-      1: 'foundation_lava_hound',
-      3: 'foundation_lava_hound',
-      4: 'foundation_sand_scorpion',
-      6: 'foundation_sand_scorpion',
-      7: 'foundation_mud_golem',
-      9: 'foundation_mud_golem',
-      10: 'foundation_ferocious_flood_dragon_whelp',
+      1: 'foundation_spirit_wolf',
+      3: 'foundation_spirit_wolf',
+      4: 'foundation_spirit_wolf',
+      6: 'foundation_spirit_wolf',
+      7: 'foundation_spirit_wolf',
+      9: 'foundation_spirit_wolf',
+      10: 'foundation_ferocious_spirit_wolf',
     }
 
     for (const [floorText, species] of Object.entries(expected)) {

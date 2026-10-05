@@ -59,7 +59,11 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
         type: 'damage',
         element: 'fire',
         damageProfile: 'legacy_dot',
-        coefficient: 0.15,
+        // Balance 2026-10-04 (skills-review.md C3): 0.15 -> 0.20. Hoa An
+        // was the weakest ailment dot (han_tuc 0.25 at the same 0.5 proc)
+        // while the fire kit multiplies this channel twice (Tam Muoi
+        // potency + Phap The pulse) -- a double penalty on the payoff.
+        coefficient: 0.2,
         scaling: 'dynamic',
         timing: 'holder_turn_end',
         stackScaling: 'multiply',

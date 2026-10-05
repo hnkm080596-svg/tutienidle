@@ -39,7 +39,10 @@ import {
   HIDDEN_SPELL_SPECIAL_ID,
 } from '../phap-tu/PhapTuPath'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
+import { isBetaElement } from '../betaScope'
 import {
+  HOA_THE_NODE_ID,
+  THE_GAIN_CHANCE_PER_LEVEL,
   resolveMaxThe,
   SPELL_PATH_MAX_THE,
   isHiddenSpellPathway,
@@ -246,12 +249,13 @@ function resolveHiddenBodyKit(
 // Per-path runtime factories
 // ---------------------------------------------------------------------------
 
-function sharedMembers() {
+function sharedMembers(deps: CultivationPathRuntimeDeps) {
   return {
     // Phap Tu Reimagined -- the cap authority moved off the deleted
     // node-cap aggregator: PhapTuPath.resolveMaxThe returns 5 for
     // spell_pathway, MAX_THE elsewhere.
-    resolveMaxThe: (player: PlayerData) => resolveMaxThe(player),
+    resolveMaxThe: (player: PlayerData) =>
+      resolveMaxThe(player, deps.getNodeLevel(HOA_THE_NODE_ID, player)),
     resolveStatDomains: (player: PlayerData) => resolveActiveWayStatDomains(player),
   }
 }
@@ -265,7 +269,7 @@ function sharedMembers() {
  */
 function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(),
+    ...sharedMembers(deps),
     resolveBasic(player) {
       // P7-M4 - the persisted pick is the mortal basic; the precursor
       // whitelist + learned membership guard it. Save v82 contract: a
@@ -292,7 +296,7 @@ function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathR
 
 function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolean): CultivationPathRuntime {
   return {
-    ...sharedMembers(),
+    ...sharedMembers(deps),
     resolveBasic(player) {
       // Spec 2026-09-15 K3 - tram is a MORTAL precursor: once a path is
       // chosen it is no longer the basic. Kiem Tu basics resolve through
@@ -319,9 +323,12 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
 
 function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(),
+    ...sharedMembers(deps),
     resolveBasic(player) {
-      const element = deps.getSpellPathElement()
+      const committedElement = deps.getSpellPathElement()
+      // Beta scope: a carried save may commit an out-of-scope element - the
+      // engine must not cast its kit, so it resolves as uncommitted.
+      const element = committedElement !== undefined && isBetaElement(committedElement) ? committedElement : undefined
       const authoredBasicId = element ? SPELL_KIT_IDS[element]?.[0] : undefined
 
       const resolved =
@@ -382,14 +389,24 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       // corrupt-state GENERIC_PHYSICAL_BASIC fallback never does. Stamped on
       // `stamped` (not the return wrapper) so the empowered variant inherits
       // it through {...base}.
+      // Hoa The gate (Minh ruling 2026-10-04) - the +1 The mint and the
+      // Phap The empowerment only exist once the player owns the
+      // `hoa_the` node; the node's level sets the mint chance
+      // (lv1 = 35%, lv3 = guaranteed). Locked => no stamp, no pool, and
+      // resolveMaxThe caps the pool at 0 (see below).
+      const hoaTheLevel = deps.getNodeLevel(HOA_THE_NODE_ID, player)
       const stamped: TurnSkillDefinition =
-        resolved !== GENERIC_PHYSICAL_BASIC
-          ? { ...kitResolved, theGainOnLandedCast: 1 }
+        resolved !== GENERIC_PHYSICAL_BASIC && hoaTheLevel > 0
+          ? {
+              ...kitResolved,
+              theGainOnLandedCast: 1,
+              theGainChance: Math.min(1, hoaTheLevel * THE_GAIN_CHANCE_PER_LEVEL),
+            }
           : kitResolved
 
       return {
         ...stamped,
-        ...(isKitBasic
+        ...(isKitBasic && hoaTheLevel > 0
           ? {
               empowerment: {
                 theThreshold: SPELL_PATH_MAX_THE,
@@ -400,7 +417,8 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       }
     },
     resolveSpecialUltimate() {
-      const element = deps.getSpellPathElement()
+      const committedElement = deps.getSpellPathElement()
+      const element = committedElement !== undefined && isBetaElement(committedElement) ? committedElement : undefined
 
       if (!element) {
         return {}
@@ -431,7 +449,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
 
 function createHiddenSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(),
+    ...sharedMembers(deps),
     resolveBasic(player) {
       assertNgoDaoKitLearned(deps, player)
       return (
@@ -472,7 +490,7 @@ function createHiddenSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cult
 
 function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(),
+    ...sharedMembers(deps),
     resolveBasic(player) {
       // The Tu Reimagined (spec section 5, INV-3) - root-owned kit;
       // P7-M4 way-authored starter fallback (huy_quyen) sits between the
@@ -518,7 +536,7 @@ function createHiddenBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Culti
     return kit
   }
   return {
-    ...sharedMembers(),
+    ...sharedMembers(deps),
     resolveBasic(player) {
       // Spec section 6.1 - fixed kit granted at path choice; the built
       // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.

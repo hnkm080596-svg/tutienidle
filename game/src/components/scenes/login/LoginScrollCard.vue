@@ -37,6 +37,10 @@ import { LOGIN_ART } from './loginArt'
   flex-direction: column;
   gap: 1.6cqw;
   padding: 0 1cqw 1cqw;
+  /* Logo + primary-action art deliberately bleed past the content box on
+     the X axis; without a clip, overflow-y:auto computes overflow-x:auto
+     and paints a stray horizontal scrollbar under the guest button. */
+  overflow-x: clip;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #94754066 transparent;

@@ -272,14 +272,21 @@ export class CombatSnapshotReconcile {
           color,
           action.state.name,
           action.state.row as LaneIndex,
-          { currentHp: action.state.currentHp, maxHp: action.state.maxHp, isBoss: action.state.isBoss },
+          {
+            currentHp: action.state.currentHp,
+            maxHp: action.state.maxHp,
+            isBoss: action.state.isBoss,
+            isElite: action.state.isElite,
+          },
         )
 
         // FE-06 - the player sprite pre-exists (created hidden at scene
         // create()) so getOrCreateSprite is a no-op for it; sync the
         // authored name onto the pre-created label instead of leaving
-        // the 'Player' placeholder.
-        sprite.label.setText(action.state.name)
+        // the 'Player' placeholder. ui-combat reskin: rename goes through
+        // refitEntityLabel so the new text keeps the column-width cap
+        // (enemy names no longer collide on adjacent columns).
+        scene.gridView.refitEntityLabel(sprite, action.state.name)
 
         scene.positionInterp.snapInterpolationTarget(action.state.id, action.state.column)
         scene.positionSprite(sprite, action.state.column, action.state.id)

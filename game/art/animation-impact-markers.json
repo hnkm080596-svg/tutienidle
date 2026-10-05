@@ -18,6 +18,10 @@
     "ngu_hanh": {
       "attack": 6,
       "cast-special": 8
+    },
+    "phap_tu_shared": {
+      "attack": 10,
+      "cast-special": 12
     }
   },
   "enemies": {

@@ -509,6 +509,9 @@ describe('F-TC5-1: accrual realm pin boundary', () => {
     p.highestFoundationAchieved = 'human'
     p.cultivationPath = 'spell'
     p.cultivationWay = 'spell_pathway'
+    // A real spell_pathway save carries its committed element -
+    // null/out-of-beta commits reject at the boundary (F-SCOPE-1).
+    p.spellPath = { element: 'fire' }
     p.mortalBasicSkillId = undefined
     ;(save as Record<string, unknown>).techniques = [
       {

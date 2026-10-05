@@ -12,7 +12,7 @@
 // CombatScene.fallbackSpriteTextureKey().
 import { describe, expect, it, vi } from 'vitest'
 import { CombatGridView } from './combat-grid-view'
-import { BOSS_DISPLAY_SCALE_MULTIPLIER, ENEMY_DISPLAY_SCALE_MULTIPLIER, PLAYER_ID } from './combatConstants'
+import { BOSS_AURA_COLOR, BOSS_DISPLAY_SCALE_MULTIPLIER, ELITE_AURA_COLOR, ENEMY_DISPLAY_SCALE_MULTIPLIER, PLAYER_ID } from './combatConstants'
 import { MONSTER_ART } from '@/game/support/MonsterArt'
 import { CHARACTER_ART } from '@/game/support/CharacterArt'
 import type { CombatGridViewHost } from './CombatGridViewHost'
@@ -25,7 +25,7 @@ import type { CombatGridViewHost } from './CombatGridViewHost'
  * method cua CHINH CombatGridView - truoc day uy quyen qua CombatScene,
  * xem Battlefield Slot Task 2).
  */
-function createFakeScene() {
+function createFakeScene(options: { isPerspective?: boolean } = {}) {
   const chainable = () => {
     const obj = {
       setOrigin: () => obj,
@@ -35,6 +35,13 @@ function createFakeScene() {
       setScale: () => obj,
       updateDisplayOrigin: () => obj,
       setDisplaySize: vi.fn(() => obj),
+      // Label-fit hooks (ui-combat reskin): applyEntityLabelFit re-renders
+      // the Text to measure it - a numeric width keeps the fit trivially
+      // inside any cap.
+      setFontSize: () => obj,
+      setText: () => obj,
+      updateText: () => obj,
+      width: 0,
       destroy: () => obj,
       // positionSprite() writes here. Captured so a test can read where the
       // body actually landed (Spec B sec4.3's idle bob).
@@ -47,7 +54,7 @@ function createFakeScene() {
 
   const scene: Record<string, unknown> = {
     sprites: new Map(),
-    isPerspective: false,
+    isPerspective: options.isPerspective ?? false,
     projection: undefined,
     characterWidth: 40,
     characterHeight: 50,
@@ -57,7 +64,9 @@ function createFakeScene() {
       text: () => chainable(),
       sprite: vi.fn(() => chainable()),
       rectangle: () => chainable(),
-      ellipse: () => chainable(),
+      ellipse: vi.fn((_x: number, _y: number, _w: number, _h: number, fillColor?: number) =>
+        Object.assign(chainable(), { fillColor }),
+      ),
     },
     physics: { add: { existing: vi.fn() } },
     textures: { exists: () => true },
@@ -512,5 +521,69 @@ describe('CombatGridView — size is the character, not the box (Spec C §3.2)',
     // The boar's PNG is untrimmed, so its box IS its character height. Spec C
     // sec3.2's calibration says that must stay 122.98 at this depth.
     expect(boxHeight).toBeCloseTo(122.98, 0)
+  })
+})
+
+describe('CombatGridView — tier aura (tinh anh violet / boss gold)', () => {
+  function perspectiveHost() {
+    const { scene, gridView } = createFakeScene({ isPerspective: true })
+
+    scene.projection = {
+      rows: 10,
+      columns: 16,
+      gridToScreen: () => ({ x: 100, y: 200, scale: 0.70735 }),
+      cellSizeAt: () => ({ width: 94.49, height: 41.4 }),
+      footprintPolygon: () => [],
+    }
+
+    return { scene, gridView }
+  }
+
+  it('isElite: true → aura ellipse with the elite palette color', () => {
+    const { gridView } = perspectiveHost()
+
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_elite', 0xd94a4a, 'Elite Boar', 4, {
+      currentHp: 100,
+      maxHp: 100,
+      isBoss: false,
+      isElite: true,
+    })
+
+    expect(sprite.aura).toBeDefined()
+    expect((sprite.aura as unknown as { fillColor: number }).fillColor).toBe(ELITE_AURA_COLOR)
+  })
+
+  it('isBoss: true → aura ellipse with the boss palette color', () => {
+    const { gridView } = perspectiveHost()
+
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_boss_aura', 0xd94a4a, 'Boss', 4, {
+      currentHp: 100,
+      maxHp: 100,
+      isBoss: true,
+    })
+
+    expect((sprite.aura as unknown as { fillColor: number }).fillColor).toBe(BOSS_AURA_COLOR)
+  })
+
+  it('normal enemy → no aura; flat viewport → no aura even for elite', () => {
+    const { gridView } = perspectiveHost()
+
+    const normal = gridView.getOrCreateSprite('mortal_savage_tiger_plain', 0xd94a4a, 'Boar', 4, {
+      currentHp: 100,
+      maxHp: 100,
+      isBoss: false,
+    })
+
+    expect(normal.aura).toBeUndefined()
+
+    const { gridView: flatView } = createFakeScene()
+    const elite = flatView.getOrCreateSprite('mortal_savage_tiger_flat_elite', 0xd94a4a, 'Boar', 4, {
+      currentHp: 100,
+      maxHp: 100,
+      isBoss: false,
+      isElite: true,
+    })
+
+    expect(elite.aura).toBeUndefined()
   })
 })

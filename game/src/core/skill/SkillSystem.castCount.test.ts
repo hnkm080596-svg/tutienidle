@@ -73,7 +73,7 @@ describe('SkillSystem.recordCast — turn-engine cast counting', () => {
     expect(manager.get('test_skill')!.totalExperience).toBe(1)
   })
 
-  it('tram target-level: Lv2 tại 1000, Lv3 tại 10000, không bao giờ Lv4 (Skill.level frozen)', () => {
+  it('tram target-level: Lv2 tại 250, Lv3 tại 10000, không bao giờ Lv4 (Skill.level frozen)', () => {
     const manager = new SkillManager()
     const system = new SkillSystem(manager)
     const sink = vi.fn()
@@ -81,13 +81,13 @@ describe('SkillSystem.recordCast — turn-engine cast counting', () => {
     system.learn(SKILLS.find((skill) => skill.id === 'tram')!)
     const skill = manager.get('tram')!
 
-    for (let cast = 0; cast < 999; cast++) system.recordCast('tram')
-    expect(sink).toHaveBeenLastCalledWith('tram', 999, 1)
+    for (let cast = 0; cast < 249; cast++) system.recordCast('tram')
+    expect(sink).toHaveBeenLastCalledWith('tram', 249, 1)
 
     system.recordCast('tram')
-    expect(sink).toHaveBeenLastCalledWith('tram', 1000, 2)
+    expect(sink).toHaveBeenLastCalledWith('tram', 250, 2)
 
-    for (let cast = 1000; cast < 10000; cast++) system.recordCast('tram')
+    for (let cast = 250; cast < 10000; cast++) system.recordCast('tram')
     expect(sink).toHaveBeenLastCalledWith('tram', 10000, 3)
     expect(skill.totalExperience).toBe(10000)
 
@@ -126,11 +126,11 @@ describe('SkillSystem.recordCast — turn-engine cast counting', () => {
   })
 
   // Phap Tu Reimagined Task 2 - linh_bao/huy_quyen join tram in the
-  // CAST_LEVELING_THRESHOLDS table (same Lv2@1000/Lv3@10000 curve).
+  // CAST_LEVELING_THRESHOLDS table (same Lv2@250/Lv3@10000 curve).
   // linh_bao Lv3 is the phap_tu_an ritual gate, so cast leveling must
   // be exact.
   it.each(['linh_bao', 'huy_quyen'])(
-    '%s targets Lv2 at 1000, Lv3 at 10000 casts',
+    '%s targets Lv2 at 250, Lv3 at 10000 casts',
     (id) => {
       const manager = new SkillManager()
       const system = new SkillSystem(manager)
@@ -139,13 +139,13 @@ describe('SkillSystem.recordCast — turn-engine cast counting', () => {
       system.learn(SKILLS.find((skill) => skill.id === id)!)
       const skill = manager.get(id)!
 
-      for (let i = 0; i < 999; i++) system.recordCast(id)
-      expect(sink).toHaveBeenLastCalledWith(id, 999, 1)
+      for (let i = 0; i < 249; i++) system.recordCast(id)
+      expect(sink).toHaveBeenLastCalledWith(id, 249, 1)
 
       system.recordCast(id)
-      expect(sink).toHaveBeenLastCalledWith(id, 1000, 2)
+      expect(sink).toHaveBeenLastCalledWith(id, 250, 2)
 
-      for (let i = 1000; i < 10000; i++) system.recordCast(id)
+      for (let i = 250; i < 10000; i++) system.recordCast(id)
       expect(sink).toHaveBeenLastCalledWith(id, 10000, 3)
       expect(skill.totalExperience).toBe(10000)
     },
@@ -167,14 +167,14 @@ describe('cast channel → canonical core level (GameManager sink)', () => {
 
     expect(gameManager.progressionOps.learnSkill('tram', player)).toBe(true)
 
-    for (let cast = 0; cast < 999; cast++) gameManager.skillSystem.recordCast('tram')
+    for (let cast = 0; cast < 249; cast++) gameManager.skillSystem.recordCast('tram')
 
     expect(player.nodeLevels[skillCoreNodeId('tram')]).toBe(1)
     expect(gameManager.drainNotifications().filter((event) => event.kind === 'upgrade')).toHaveLength(0)
 
-    gameManager.skillSystem.recordCast('tram') // cast 1000 -> Lv2
+    gameManager.skillSystem.recordCast('tram') // cast 250 -> Lv2
 
-    expect(player.skillCastCounts?.['tram']).toBe(1000)
+    expect(player.skillCastCounts?.['tram']).toBe(250)
     expect(player.nodeLevels[skillCoreNodeId('tram')]).toBe(2)
     expect(gameManager.drainNotifications().filter((event) => event.kind === 'upgrade')).toHaveLength(1)
 

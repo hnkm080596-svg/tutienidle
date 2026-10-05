@@ -55,6 +55,12 @@ export type Phase =
 export type TransitionResult = Readonly<{
   status: 'entered' | 'unchanged' | 'rejected' | 'failed'
   transitionId: number
+  /** Present only on 'failed': the transition was aborted externally
+   *  (error-route preemption) rather than failing on its own steps.
+   *  Compensating callers distinguish the two: an aborted transition's
+   *  domain work is orphaned with no retry intended, while a genuine
+   *  failure keeps its session for the error surface's retry(). */
+  aborted?: boolean
 }>
 
 export interface RendererPort {

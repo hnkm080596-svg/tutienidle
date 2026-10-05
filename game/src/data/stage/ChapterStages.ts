@@ -5,13 +5,14 @@ import type { Stage, StageEnemyEntry } from '../../core/stage/Stage'
  * D9). Everything else about the 10 floors comes from the shared rules
  * inside defineChapterStages - one owner for all floor rules.
  *
- * BETA SCOPE LOCK v2: a chapter declares exactly one ROSTER - three
- * distinct normal species (floor bands A/B/C) and one act boss - so the
+ * BETA SCOPE LOCK v3 (roster remap, Minh ruling 2026-10-04): a chapter
+ * declares exactly one ROSTER - ONE species family (the same normal id
+ * on all floor bands) plus the family's king as the act boss - so the
  * stage domain data IS the allow-list: no stage can roll a species that
  * is not on its act roster. Difficulty climbs via the enemy-count
  * ladder, wave shape, and the elite-chance ramp - never via new
- * species. "Hung" elites stay a runtime modifier (tinh_anh tag), not an
- * identity.
+ * species. "Hung"/tinh anh elites stay a runtime modifier (tinh_anh
+ * tag), not an identity.
  */
 export interface ChapterConfig {
   realmId: string
@@ -29,9 +30,9 @@ export interface ChapterConfig {
   descriptions: string[]
 
   /**
-   * The act roster: three DISTINCT normal species on the floor bands
-   * 1-3 / 4-6 / 7-9 (in that order), and the act boss fought on
-   * floor 10. The boss is a fourth identity, not a band species.
+   * The act roster: ONE species family - the same normal id declared on
+   * all three floor bands 1-3 / 4-6 / 7-9, and the act boss fought on
+   * floor 10. The boss is the family's king variant, not a new species.
    */
   roster: {
     normals: [string, string, string]

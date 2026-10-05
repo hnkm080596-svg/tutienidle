@@ -1,0 +1,277 @@
+{
+  "frames": {
+    "frame_0": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_1": {
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_2": {
+      "frame": {
+        "x": 512,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_3": {
+      "frame": {
+        "x": 768,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_4": {
+      "frame": {
+        "x": 1024,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_5": {
+      "frame": {
+        "x": 0,
+        "y": 224,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_6": {
+      "frame": {
+        "x": 256,
+        "y": 224,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_7": {
+      "frame": {
+        "x": 512,
+        "y": 224,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_8": {
+      "frame": {
+        "x": 768,
+        "y": 224,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_9": {
+      "frame": {
+        "x": 1024,
+        "y": 224,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_10": {
+      "frame": {
+        "x": 0,
+        "y": 448,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_11": {
+      "frame": {
+        "x": 256,
+        "y": 448,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    },
+    "frame_12": {
+      "frame": {
+        "x": 512,
+        "y": 448,
+        "w": 256,
+        "h": 224
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 224
+      }
+    }
+  },
+  "meta": {
+    "app": "arcadia-effects",
+    "image": "boss-ground-slam.png",
+    "size": {
+      "w": 1280,
+      "h": 672
+    },
+    "scale": "1",
+    "durationMs": 440,
+    "frameRate": 29.55,
+    "frameCount": 13,
+    "transparent": true
+  }
+}

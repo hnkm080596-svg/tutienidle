@@ -57,4 +57,51 @@ export const BOSS_BUFFS: BuffDefinition[] = [
     ],
     dispellable: false,
   },
+  // Roster remap (2026-10-04): one species family per realm - the three
+  // act bosses are the family kings now (boar / bandit / spirit wolf).
+  {
+    id: 'mortal_boar_king_enrage',
+    name: 'Trư Vương Bạo Nộ',
+    description: 'Trận đấu kéo dài quá lâu — Heo Rừng Vương điên cuồng.',
+    kind: 'buff',
+    polarity: 'buff',
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh', replaceInstanceOnReapply: true },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [
+      { stat: 'might', percent: 0.5 },
+      { stat: 'speed', percent: 0.2 },
+    ],
+    dispellable: false,
+  },
+  {
+    id: 'qi_refining_bandit_king_enrage',
+    name: 'Tặc Vương Bạo Nộ',
+    description: 'Trận đấu kéo dài quá lâu — Sơn Tặc Vương điên cuồng.',
+    kind: 'buff',
+    polarity: 'buff',
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh', replaceInstanceOnReapply: true },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [
+      { stat: 'might', percent: 0.5 },
+      { stat: 'speed', percent: 0.2 },
+    ],
+    dispellable: false,
+  },
+  {
+    id: 'foundation_wolf_king_enrage',
+    name: 'Lang Vương Bạo Nộ',
+    description: 'Trận đấu kéo dài quá lâu — Linh Lang Vương điên cuồng.',
+    kind: 'buff',
+    polarity: 'buff',
+    instanceScope: 'per_source',
+    stacking: { maxStacks: 1, onReapplyStacks: 'replace', onReapplyDuration: 'refresh', replaceInstanceOnReapply: true },
+    lifetime: { clock: 'permanent', scaling: 'fixed' },
+    statModifiers: [
+      { stat: 'might', percent: 0.5 },
+      { stat: 'speed', percent: 0.2 },
+    ],
+    dispellable: false,
+  },
 ]

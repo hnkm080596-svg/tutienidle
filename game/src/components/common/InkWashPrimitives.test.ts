@@ -74,7 +74,7 @@ describe('ink-wash shared primitives', () => {
 
     expect(chip.querySelector('[data-hk-slice="seal-chip"]')).not.toBeNull()
     expect(chip.querySelector('button')?.classList.contains('is-active')).toBe(true)
-    expect(badge.querySelector('[data-ink-slice="frame-xs-ink-line"]')).not.toBeNull()
+    expect(badge.querySelector('[data-hk-slice="seal-chip"]')).not.toBeNull()
     expect(badge.textContent).toContain('3')
   })
 

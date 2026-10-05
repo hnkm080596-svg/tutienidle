@@ -311,6 +311,18 @@ export interface ProgressionNode {
    * changes aggregation - owned is owned.
    */
   grantedOnly?: boolean
+
+  /**
+   * Info-anchor node (linh_bao precursor seat, 2026-10-04) - a readable
+   * seat on the tree for a skill whose level lives OUTSIDE the node
+   * system: the node RENDERS on the tree surface (unlike the
+   * rewardOnly/grantedOnly/levelsSkillId family, which stay hidden),
+   * but is never purchased or Insight-upgraded (canPurchaseNode /
+   * canUpgradeNode reject it) and owns no `effect`. The named skill's
+   * own channel - casts, grants, its Core node - owns any level the
+   * detail surface mirrors; nothing aggregates through this node.
+   */
+  infoSkillId?: string
 }
 
 /**

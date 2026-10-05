@@ -15,8 +15,10 @@ const props = withDefaults(defineProps<{
   height?: string
   layer?: number
   // M-UI-SYSTEM: 'system' renders the card as SysPanel chrome (spec 5).
-  // Default 'ink' keeps every caller identical.
-  variant?: 'ink' | 'system'
+  // Default 'ink' keeps every caller identical. 'paper' swaps the dark
+  // surface for the cream scroll + paper text ramp - for dialogs whose
+  // content was authored for paper (FeedbackDialog).
+  variant?: 'ink' | 'system' | 'paper'
 }>(), {
   width: 'min(900px, 94vw)',
   height: 'auto',
@@ -62,7 +64,8 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
         :aria-labelledby="headingId"
       >
         <InkNineSlice v-if="variant === 'ink'" chrome-id="surface-m-panel" layer="surface" />
-        <InkNineSlice v-if="variant === 'ink'" chrome-id="frame-m-modal" layer="frame" />
+        <InkNineSlice v-if="variant === 'paper'" chrome-id="surface-xl-scroll" layer="surface" />
+        <InkNineSlice v-if="variant !== 'system'" chrome-id="frame-m-modal" layer="frame" />
         <header class="overlay-panel__header">
           <div class="overlay-panel__heading">
             <slot name="heading">
@@ -79,7 +82,7 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
              visually) so focus-on-open still lands on slotted content,
              not on this button. -->
         <GameButton
-          variant="ghost"
+          variant="secondary"
           shape="circle"
           size="sm"
           class="overlay-panel__close"
@@ -94,9 +97,16 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
 <style scoped>
 .overlay-panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 3vh 3vw; background: color-mix(in srgb, var(--hk-surface-base) 78%, transparent); backdrop-filter: blur(6px); }
 .overlay-panel__card { position: relative; isolation: isolate; max-width: 100%; max-height: 94vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; container-name: overlay-panel; color: var(--hk-text-primary); font-family: var(--hk-font-ui); background: transparent; border: 0; border-radius: var(--hk-radius-lg); box-shadow: 0 8px 32px var(--hk-shadow-high); }
+/* The paper family only belongs on the paper variant - ink stays the
+   dark surface-m-panel card and system is SysPanel chrome; both keep
+   the light --hk-* inherited color their slotted content was authored
+   against (building/vendor/lodge panels use --surface-text). */
+.overlay-panel--paper .overlay-panel__card { color: var(--paper-text, #211f1a); }
 .overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: var(--hk-space-4); padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) var(--hk-space-4); border-bottom: 1px solid var(--hk-border-muted); }
+.overlay-panel--paper .overlay-panel__header { border-bottom-color: var(--paper-line-soft, rgba(42, 41, 36, 0.22)); }
 .overlay-panel__heading { min-width: 0; margin-right: auto; }
 .overlay-panel__heading h3 { margin: 0; color: var(--hk-text-primary); font: 700 var(--text-title) var(--hk-font-display); letter-spacing: .06em; }
+.overlay-panel--paper .overlay-panel__heading h3 { color: var(--paper-text, #211f1a); }
 /* Absolute in the card's top-right corner (DOM order stays last for
    focus-on-open); GameButton supplies the ghost-circle chrome. Nested
    under the card so these overrides outrank GameButton's own scoped

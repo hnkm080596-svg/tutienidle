@@ -84,11 +84,20 @@ function makeStubs() {
         off: vi.fn(),
       },
       materialRegistry: { has: () => false },
-      materialBag: { add: vi.fn() },
-      productionSystem: { getSiteDefinitions: () => [] },
+      materialBag: { add: vi.fn(), getAll: () => [] },
+      techniqueManager: { getAll: () => [] },
+      skillManager: { getAll: () => [] },
+      equipmentBag: { getAll: () => [] },
+      pillBag: { getAll: () => [] },
+      equipmentSlotManager: { getAll: () => [] },
+      alchemySystem: { getJobs: () => [] },
+      questManager: { getState: () => ({}) },
+      decomposeSystem: { getSaveState: () => ({}) },
+      tribulationDirector: { serializeRuntime: () => ({}) },
+      productionSystem: { getSiteDefinitions: () => [], getAllStates: () => [] },
       setProductionAutoRestart: vi.fn(),
       setActivePlayer: vi.fn(),
-      buildingManager: { add: vi.fn() },
+      buildingManager: { add: vi.fn(), getAll: () => [] },
       refreshAutoWorkerCapacity: vi.fn(),
       restoreFromSave: vi.fn(),
       freezeCombat: vi.fn(),
@@ -305,7 +314,7 @@ describe('useAppLifecycle — B1-C pending load surfaces', () => {
     const outcome = await lifecycle.bootGame({ createNewCharacter: false })
 
     expect(outcome.status).toBe('failed')
-    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'pending-payload-bytes')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'pending-payload-bytes', undefined, 'local')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
     expect(stubs.onError).not.toHaveBeenCalled()
 
@@ -324,7 +333,7 @@ describe('useAppLifecycle — B1-C pending load surfaces', () => {
     const outcome = await lifecycle.bootGame({ createNewCharacter: false })
 
     expect(outcome.status).toBe('failed')
-    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'quarantined-bytes')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'quarantined-bytes', undefined, 'local')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
 
     lifecycle.stopAll()
@@ -573,7 +582,7 @@ describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
     lifecycle.stopAll()
   })
 
-  it('CHARACTER_DELETED is terminal - fail with onError, never the grant path', async () => {
+  it('CHARACTER_DELETED routes to character creation - reset_character makes tombstones restartable', async () => {
     const stubs = makeStubs()
     stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
     ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ status: 'deleted' })
@@ -583,9 +592,10 @@ describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
 
     const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter })
 
-    expect(outcome.status).toBe('failed')
-    expect(stubs.onError).toHaveBeenCalledTimes(1)
-    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(outcome.status).toBe('require-character')
+    expect(stubs.onError).not.toHaveBeenCalled()
+    expect(stubs.boot.fail).not.toHaveBeenCalled()
+    expect(stubs.boot.requireCharacter).toHaveBeenCalledTimes(1)
     expect(onNewCharacter).not.toHaveBeenCalled()
     expect(stubs.boot.enterGame).not.toHaveBeenCalled()
 
@@ -803,10 +813,13 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
 
   it('new character save non-ok → outcome failed, boot.fail + onError, tick loop and clock NEVER start', async () => {
     const stubs = makeStubs()
+    // Retryable (transient) reject keeps the generic fail path; a
+    // permanent reject would instead arm the remote recovery surface
+    // (W5-AUT-1) - pinned in w5aut.repro.test.ts.
     ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
       status: 'unavailable',
       message: 'storage blocked',
-      retryable: false,
+      retryable: true,
     })
     const lifecycle = makeLifecycle(stubs)
 
@@ -816,6 +829,7 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
     expect(stubs.boot.enterGame).not.toHaveBeenCalled()
     expect(stubs.onError).toHaveBeenCalledWith('storage blocked')
+    expect(stubs.saveIssue.report).not.toHaveBeenCalled()
     expect(lifecycle.getTickHandle()).toBeUndefined()
     expect(stubs.clock.start).not.toHaveBeenCalled()
     expect(stubs.intervals).toHaveLength(0)
@@ -1136,6 +1150,81 @@ describe('useAppLifecycle — B1-D admission authority', () => {
 
     lifecycle.stopAll()
   })
+
+  // W8-COR-2 pin: the B1-D commit arm - a permanent DATA-CLASS refuse on a
+  // live, loadable character mounts the save-issue surface at scope
+  // 'remote' (remote reset is the only real un-wedge for a character whose
+  // accrued write can never commit) with the refused payload as raw. Only
+  // the positive data-class set arms (W8-AUT-1).
+  it.each(['SAVE_INVALID', 'SAVE_TOO_LARGE'] as const)(
+    'remote-authoritative ok boot: permanent commit refuse (%s) arms the remote save-issue surface',
+    async (code) => {
+      const stubs = makeStubs()
+      stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+      ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
+        status: 'ok',
+        revision: 5,
+        save: { player: { lastSavedAt: 1_000 } },
+        serverAuthority: { serverNowMs: 3_000 },
+      })
+      ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+        status: 'unavailable',
+        retryable: false,
+        code,
+      })
+
+      const lifecycle = makeLifecycle(stubs)
+      const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+      expect(outcome.status).toBe('failed')
+      expect(stubs.saveIssue.report).toHaveBeenCalledWith(
+        'corrupted',
+        expect.any(String),
+        undefined,
+        'remote',
+      )
+      // Export salvages the refused accrued payload, not empty bytes.
+      const raw = ((stubs.saveIssue.report as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] ?? '') as string
+      expect(raw.length).toBeGreaterThan(0)
+      expect(stubs.onError).not.toHaveBeenCalled()
+      // Both armed codes are already 'recovery' via observeSaveResult -
+      // no duplicate markFailed (W7-INT-8).
+      expect(stubs.authority.markFailed).not.toHaveBeenCalled()
+      lifecycle.stopAll()
+    },
+  )
+
+  // Everything outside the data-class set keeps the generic failure
+  // shape - SERVER_ERROR-bucket refuses can mean the save already landed
+  // or a local fault (W8-AUT-1), auth/transport/protocol codes keep their
+  // own terminal surfaces, and an uncoded fault is unreachable for a
+  // remote-reset remedy.
+  it.each(['SESSION_REVOKED', 'SERVER_ERROR', undefined] as const)(
+    'remote-authoritative ok boot: non-data commit refuse (%s) does NOT arm the save-issue surface',
+    async (code) => {
+      const stubs = makeStubs()
+      stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+      ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
+        status: 'ok',
+        revision: 5,
+        save: { player: { lastSavedAt: 1_000 } },
+        serverAuthority: { serverNowMs: 3_000 },
+      })
+      ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+        status: 'unavailable',
+        retryable: false,
+        code,
+      })
+
+      const lifecycle = makeLifecycle(stubs)
+      const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+      expect(outcome.status).toBe('failed')
+      expect(stubs.saveIssue.report).not.toHaveBeenCalled()
+      expect(stubs.onError).toHaveBeenCalledTimes(1)
+      lifecycle.stopAll()
+    },
+  )
 
   it('pauseSimulation stops the clock + freezes combat; resumeSimulation re-anchors and resumes', async () => {
     const stubs = makeStubs()

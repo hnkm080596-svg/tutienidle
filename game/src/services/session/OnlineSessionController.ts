@@ -89,7 +89,10 @@ export interface OnlineSessionControllerDeps {
     lineage: 'same' | 'replaced',
     save?: GameSave,
     serverAuthority?: { cutoffMs?: number; serverNowMs: number },
-  ) => void
+  // Awaited: an async implementation's rejection is classified by the
+  // same catch path a synchronous throw takes, and markReady waits for
+  // the restore to actually land (W7-COR-4).
+  ) => void | Promise<void>
   onStateChange?: (state: AuthorityState) => void
   heartbeatIntervalMs?: number
   healthLeaseMs?: number
@@ -99,6 +102,9 @@ export interface OnlineSessionControllerDeps {
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000
 const DEFAULT_HEALTH_LEASE_MS = 40_000
 const DEFAULT_RECONNECT_RETRY_MS = 10_000
+/** Consecutive onResume throws before a deterministic resume fault
+ *  escalates from 'reconnecting' (retry-forever) to 'recovery'. */
+const RESUME_FAILURE_BUDGET = 3
 
 const TERMINAL_STATES: ReadonlySet<AuthorityState> = new Set([
   'conflict',
@@ -148,6 +154,7 @@ export class OnlineSessionController {
   private heartbeatHandle: number | undefined
   private retryHandle: number | undefined
   private reconnectInFlight = false
+  private resumeFailureStreak = 0
 
   private readonly heartbeatIntervalMs: number
   private readonly healthLeaseMs: number
@@ -194,15 +201,23 @@ export class OnlineSessionController {
       return
     }
     this.generation++
+    // A fresh admission owns a fresh resume-failure budget - a prior
+    // session's throws must not shorten this one's retry runway.
+    this.resumeFailureStreak = 0
+    // A retry armed by a paused prior session is inert under the
+    // 'reconnecting' guard but is residue - drop it on entry (W9-INT-3).
+    this.clearRetry()
     this.transition('checking')
   }
 
-  /** Admission checks passed: renew the lease and arm the heartbeat. */
+  /** Admission checks passed: renew the lease and arm the heartbeat. The
+   *  timers arm BEFORE the 'ready' fan-out: a throwing onStateChange must
+   *  not leave 'ready' with the watchdog disarmed and a dead retry armed. */
   markReady(): void {
     this.renewHealthLease()
-    this.transition('ready')
     this.armHeartbeat()
     this.clearRetry()
+    this.transition('ready')
   }
 
   /** A boot admission check failed - record the failure class. The boot
@@ -227,10 +242,13 @@ export class OnlineSessionController {
       return
     }
     this.generation++
-    this.transition('reconnecting')
+    // Owned cleanup + cadence BEFORE the dep fan-out: a throwing
+    // onStateChange/onPause must not strand 'reconnecting' without the
+    // armed retry (W8-AUT-3 - same class as enterTerminal's ordering).
     this.clearHeartbeat()
-    this.deps.onPause?.(reason)
     this.armRetry()
+    this.transition('reconnecting')
+    this.deps.onPause?.(reason)
     if (this.deps.reconnect) {
       void this.attemptReconnect()
     }
@@ -329,6 +347,7 @@ export class OnlineSessionController {
       return
     }
     this.generation++
+    this.resumeFailureStreak = 0
     this.clearHeartbeat()
     this.clearRetry()
     this.transition('signed-out')
@@ -356,9 +375,13 @@ export class OnlineSessionController {
       return
     }
     this.generation++
-    this.transition(state)
+    // Owned cleanup BEFORE the notification fan-out: transition assigns
+    // the state then calls onStateChange - a throwing dep callback used
+    // to skip clearRetry, leaving the retry cadence armed behind a
+    // nominal terminal and letting a queued tick revive it (W8-AUT-3).
     this.clearHeartbeat()
     this.clearRetry()
+    this.transition(state)
     // Terminal states still freeze the simulation until the owned
     // acknowledgement; onPause is idempotent on the lifecycle side.
     this.deps.onPause?.('terminal')
@@ -448,32 +471,94 @@ export class OnlineSessionController {
     if (this.reconnectInFlight) {
       return
     }
-    // Local-only mode has no remote to revalidate: resuming is immediate
-    // once the caller asks (OS resume path); a plain pause() still holds.
+    // Terminal states own the retry UX through acknowledge() - a leaked
+    // armed-tick (e.g. a dep callback that threw before clearRetry ran)
+    // must never revive a nominal terminal back to 'ready' (W8-AUT-3).
+    if (this.state !== 'reconnecting') {
+      return
+    }
+    const generation = this.generation
+    // The in-flight guard covers BOTH branches: the contract now admits
+    // Promise-returning onResume, and even a synchronous one suspends to
+    // a microtask inside the await - a suspend/resume burst in that
+    // window must not re-enter a pending restore (W8-COR-3).
+    this.reconnectInFlight = true
     if (!this.deps.reconnect) {
-      this.markReady()
-      this.deps.onResume?.('same')
+      // markReady runs only after onResume finishes: a throwing resume
+      // must not leave a 'ready' session whose restore never landed.
+      // The generation guard also lets a rejecting resume (markFailed
+      // inside onResume) win - the failure stays authoritative. A throw
+      // (from onResume or from markReady's own state-change fan-out) is
+      // classified like 'unavailable': stay 'reconnecting' until the
+      // resume-failure budget escalates a deterministic thrower to
+      // 'recovery' - gated on the same generation so a deliberate exit
+      // parked inside onResume is not dragged back out.
+      try {
+        await this.deps.onResume?.('same')
+        this.resumeFailureStreak = 0
+        if (generation === this.generation) {
+          this.markReady()
+        }
+      } catch {
+        this.resumeFailureStreak++
+        if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET && generation === this.generation) {
+          this.markFailed('recovery')
+        }
+      } finally {
+        this.reconnectInFlight = false
+      }
       return
     }
 
-    const generation = this.generation
-    this.reconnectInFlight = true
     try {
       const outcome = await this.deps.reconnect()
       if (generation !== this.generation) {
         return
       }
       if (outcome.status === 'resumed') {
-        this.markReady()
-        this.deps.onResume?.(outcome.lineage, outcome.save, outcome.serverAuthority)
+        // Same ordering: resume restores state first; only then may the
+        // mutation gate open. A throw is classified 'unavailable' -
+        // the session stays 'reconnecting' and retries - but a
+        // deterministic thrower hits the resume-failure budget and
+        // escalates to 'recovery' instead of churning the reconnect
+        // RPC forever, under the same generation fence the success path
+        // applies. A rejecting resume calls markFailed (which bumps
+        // generation), so only an untouched controller earns markReady.
+        try {
+          await this.deps.onResume?.(outcome.lineage, outcome.save, outcome.serverAuthority)
+          this.resumeFailureStreak = 0
+          if (generation === this.generation) {
+            this.markReady()
+          }
+        } catch {
+          this.resumeFailureStreak++
+          if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET && generation === this.generation) {
+            this.markFailed('recovery')
+          }
+        }
         return
       }
       if (outcome.status === 'terminal') {
+        // The streak is consumed only by a resume that ran and succeeded
+        // (inside the 'resumed' branch). A 'terminal' exits through
+        // enterTerminal with its own generation bump; resetting here is
+        // bookkeeping for completeness only. Crucially, 'unavailable'
+        // must NOT reset: it is neither a throw nor a success, and
+        // zeroing it lets a deterministic thrower interleaved with
+        // transport-unavailable outcomes evade the churn bound forever
+        // (W8-INT-1).
+        this.resumeFailureStreak = 0
         this.enterTerminal(outcome.state)
       }
       // 'unavailable' stays 'reconnecting' - the retry interval fires again.
     } catch {
-      // A throwing pipeline is still 'unavailable' - keep retrying.
+      // A throwing pipeline is classified 'unavailable' too - but an
+      // always-throwing reconnect dep would churn the RPC cadence
+      // forever, so it shares the resume-failure budget.
+      this.resumeFailureStreak++
+      if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET && generation === this.generation) {
+        this.markFailed('recovery')
+      }
     } finally {
       this.reconnectInFlight = false
     }

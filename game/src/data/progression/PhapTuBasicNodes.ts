@@ -131,19 +131,40 @@ function capstone(
 
 function buildFire(): ProgressionNode[] {
   return [
+    // Hoa The gate (Minh ruling 2026-10-04): the The loop does NOT come
+    // with the element - this node unlocks it. Level = the chance a
+    // landed Ly Hoa cast mints +1 The (lv1 = 35%, lv3 = 100% certain).
+    // The mechanic is read straight off player.nodeLevels at kit build
+    // (CultivationPathRegistry), like the evolution/cascade markers --
+    // statModifiers stay empty so nothing double-counts the chance.
+    {
+      id: 'hoa_the',
+      name: 'Hỏa Thế',
+      description:
+        'Mở khóa Hỏa Thế — mỗi cấp +35% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng (cấp 3 = chắc chắn). Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: 1,
+      maxLevel: 4,
+      upgradeCost: { base: 1, perLevel: 2 },
+      levelGates: MINOR_TIER_GATES_4,
+      prerequisites: [{ kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS.fire }],
+      elementTag: 'fire',
+      effect: {},
+    },
     powerNode(
       'hoa_diem_chuan',
       'Diễm Chuẩn',
-      '+2% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
       'fire',
-      [stat('hoa_diem_chuan', 'elementApplicationPercent', 0.02)],
+      [stat('hoa_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'hoa_an_sau',
       'Hỏa Ấn Sâu',
-      '+2% uy lực tật trạng mỗi cấp.',
+      '+2.5% uy lực tật trạng mỗi cấp.',
       'fire',
-      [stat('hoa_an_sau', 'ailmentPotencyPercent', 0.02)],
+      [stat('hoa_an_sau', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'hoa_nhiet_keo',
@@ -165,14 +186,14 @@ function buildFire(): ProgressionNode[] {
       'fire',
       'hoa_tu_diem',
       'Tụ Diễm',
-      'Hỏa Cầu tụ một điểm — sát thương cao hơn, Thiêu Đốt dễ trúng.',
+      'Ly Hỏa tụ một điểm — sát thương cao hơn, Hỏa Ấn dễ trúng.',
       'hoa_nhiet_keo',
     ),
     capstone(
       'fire',
       'hoa_tan_diem',
       'Tán Diễm',
-      'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Thiêu Đốt khó trúng hơn.',
+      'Ly Hỏa tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
       'hoa_diem_tham',
     ),
   ]
@@ -183,23 +204,23 @@ function buildWater(): ProgressionNode[] {
     powerNode(
       'thuy_diem_chuan',
       'Lưu Chuẩn',
-      '+2% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
       'water',
-      [stat('thuy_diem_chuan', 'elementApplicationPercent', 0.02)],
+      [stat('thuy_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'thuy_te_dam',
       'Tê Đẫm',
-      '+2% uy lực tật trạng mỗi cấp.',
+      '+2.5% uy lực tật trạng mỗi cấp.',
       'water',
-      [stat('thuy_te_dam', 'ailmentPotencyPercent', 0.02)],
+      [stat('thuy_te_dam', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'thuy_luu_tich',
       'Lưu Tích',
-      '+2% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
       'water',
-      [stat('thuy_luu_tich', 'ailmentDurationPercent', 0.02)],
+      [stat('thuy_luu_tich', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'thuy_nhiet_tri',
@@ -241,16 +262,16 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_sau',
       'Độc Sâu',
-      '+2% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
       'wood',
-      [stat('moc_doc_sau', 'ailmentPotencyPercent', 0.02)],
+      [stat('moc_doc_sau', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_dien',
       'Độc Diễn',
-      '+2% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
       'wood',
-      [stat('moc_doc_dien', 'ailmentDurationPercent', 0.02)],
+      [stat('moc_doc_dien', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_tham',
@@ -271,16 +292,16 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_nhuan',
       'Độc Nhuần',
-      '+2% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
       'wood',
-      [stat('moc_doc_nhuan', 'ailmentDurationPercent', 0.02)],
+      [stat('moc_doc_nhuan', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_tu',
       'Độc Tú',
-      '+2% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
       'wood',
-      [stat('moc_doc_tu', 'ailmentPotencyPercent', 0.02)],
+      [stat('moc_doc_tu', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_am',
@@ -320,16 +341,16 @@ function buildMetal(): ProgressionNode[] {
     powerNode(
       'kim_diem_chuan',
       'Điểm Chuẩn',
-      '+2% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
       'metal',
-      [stat('kim_diem_chuan', 'elementApplicationPercent', 0.02)],
+      [stat('kim_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'kim_liet_huyet',
       'Liệt Huyết',
-      '+2% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
       'metal',
-      [stat('kim_liet_huyet', 'ailmentPotencyPercent', 0.02)],
+      [stat('kim_liet_huyet', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'kim_diem_tham',
@@ -361,9 +382,9 @@ function buildEarth(): ProgressionNode[] {
     powerNode(
       'tho_tran_sau',
       'Trần Sâu',
-      '+2% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
       'earth',
-      [stat('tho_tran_sau', 'ailmentDurationPercent', 0.02)],
+      [stat('tho_tran_sau', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'tho_tran_cung',

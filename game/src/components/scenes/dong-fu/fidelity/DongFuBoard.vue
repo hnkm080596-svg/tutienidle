@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import DongFuArtFrame from './DongFuArtFrame.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { symbolUrl, type DongFuUiOpportunity } from './dongFuUi'
 defineProps<{ entries: readonly DongFuUiOpportunity[]; open: boolean }>()
 const emit = defineEmits<{ action: [id: string]; toggle: [] }>()
@@ -8,7 +8,7 @@ const { t } = useI18n()
 </script>
 <template>
   <aside class="df-board" :class="{ 'is-collapsed': !open }">
-    <DongFuArtFrame :border-width="48" />
+    <InkNineSlice chrome-id="surface-l-drawer" layer="surface" />
     <button class="df-board__heading" :aria-label="t(open ? 'home.thienCo.collapse' : 'home.thienCo.expand')" :aria-expanded="open" @click="emit('toggle')"><span>{{ t('home.thienCo.title') }}</span><span class="df-board__chevron" aria-hidden="true">{{ open ? '‹' : '›' }}</span></button>
     <div v-show="open" class="df-board__entries">
       <p v-if="!entries.length" class="df-board__empty">{{ t('home.thienCo.empty') }}</p>
@@ -21,7 +21,10 @@ const { t } = useI18n()
   </aside>
 </template>
 <style scoped>
-.df-board { position: absolute; z-index: 5; right: 10px; top: 75px; width: 314px; min-height: 68px; max-height: 375px; padding: 13px 23px 24px; }
+.df-board { position: absolute; isolation: isolate; z-index: 5; right: 10px; top: 75px; width: 314px; min-height: 68px; max-height: 375px; padding: 13px 23px 24px; }
+/* wave B chrome: surface-l-drawer paints the dark card; content sits
+   above the slice. */
+.df-board > :not(.ink-nine-slice) { position: relative; z-index: 2; }
 .df-board.is-collapsed { height: 68px; }
 .df-board__heading { position: relative; width: 100%; background: transparent; border: 0; border-bottom: 1px solid #c9a66a80; color: var(--df-gold-light); font-size: 25px; font-style: italic; line-height: 36px; cursor: pointer; padding: 0 12px 6px; text-align: left; }
 .df-board__chevron { position: absolute; right: 0; font-style: normal; }
@@ -36,5 +39,7 @@ const { t } = useI18n()
 .df-board__copy { flex: 1; min-width: 0; display: grid; gap: 3px; padding: 6px 0; }
 .df-board__copy strong { font-size: 15px; line-height: 19px; font-weight: 500; color: #e1c98c; }
 .df-board__copy small { font-size: 11px; line-height: 15px; color: #c4c4ad; }
-.df-board__go { flex: 0 0 53px; height: 29px; border: 1px solid #8e6b32; color: #352414; background: linear-gradient(#ffecaf,#d6af60); clip-path: polygon(9% 0,91% 0,100% 50%,91% 100%,9% 100%,0 50%); cursor: pointer; font-size: 13px; }
+/* 72px basis: 'Nang cap'/'Nhan thuong' no longer clip at the hexagon
+   corners (the old 53px cut glyphs mid-stroke). */
+.df-board__go { flex: 0 0 72px; height: 29px; border: 1px solid #8e6b32; color: #352414; background: linear-gradient(#ffecaf,#d6af60); clip-path: polygon(9% 0,91% 0,100% 50%,91% 100%,9% 100%,0 50%); cursor: pointer; font-size: 12px; white-space: nowrap; }
 </style>

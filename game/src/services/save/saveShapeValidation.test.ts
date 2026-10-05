@@ -215,6 +215,12 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     if (pathId === 'sword') {
       player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
     }
+    if (wayId === 'spell_pathway') {
+      // F-SCOPE-1: the element-axis commit always carries a beta-scope
+      // element (the atomic ritual mints it); a committed pair without
+      // one is unproducible and rejected.
+      player.spellPath = { element: 'fire' }
+    }
 
     const way = Object.values(
       CULTIVATION_PATH_MODULES[pathId as CultivationPathId].ways,
@@ -401,8 +407,12 @@ describe('validateGameSaveShape — spellPath element-only (route retired)', () 
     expect(pathsOf(result)).toContain('player.spellPath')
   })
 
-  it('chấp nhận {element: null} và element hợp lệ trên spell_pathway', () => {
-    for (const spellPath of [{ element: null }, { element: 'fire' }]) {
+  // F-SCOPE-1: {element: null} on a committed pair is unproducible -
+  // selectSpellPathElement only runs inside the mortal->qi_refining
+  // ritual commit, so post-ritual null can never be legitimately
+  // produced and is rejected at the boundary.
+  it('từ chối {element: null} trên spell_pathway đã commit, chấp nhận element beta', () => {
+    const makeSave = (spellPath: { element: string | null }) => {
       const save = validSave()
 
       ;(save.player as Record<string, unknown>).realmId = 'qi_refining'
@@ -411,9 +421,14 @@ describe('validateGameSaveShape — spellPath element-only (route retired)', () 
       ;(save.player as Record<string, unknown>).cultivationPath = 'spell'
       ;(save.player as Record<string, unknown>).cultivationWay = 'spell_pathway'
       ;(save.player as Record<string, unknown>).spellPath = spellPath
-
-      expect(validateGameSaveShape(save).ok).toBe(true)
+      return save
     }
+
+    const nullResult = validateGameSaveShape(makeSave({ element: null }))
+    expect(nullResult.ok).toBe(false)
+    expect(pathsOf(nullResult)).toContain('player.spellPath.element')
+
+    expect(validateGameSaveShape(makeSave({ element: 'fire' })).ok).toBe(true)
   })
 
   it.each([

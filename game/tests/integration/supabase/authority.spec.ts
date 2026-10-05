@@ -30,6 +30,9 @@ import {
   activeSessionCount,
   uniqueName,
   type ContractEnv,
+  type ServerCheckpoint,
+  realmReceipts,
+  realmTechniques,
 } from './fixture'
 import { CloudSaveCoordinator } from '../../../src/services/cloudSave/CloudSaveCoordinator'
 import { PendingSaveJournal, buildPendingSaveRecord } from '../../../src/services/cloudSave/PendingSaveJournal'
@@ -514,18 +517,86 @@ test('payload: schema gate, shape checks, identity binding, byte ceiling', async
   expect(wrongTalent.body.code).toBe('SAVE_INVALID')
   const wrongSkill = await writeSave(env, user.token, {
     sessionId: sid, expectedRevision: 0,
-    payload: { ...payload, player: { ...(payload.player as object), mortalBasicSkillId: 'linh_bao' } },
+    // must differ from the character's admitted starter pick ('linh_bao'
+    // under beta scope) so identity binding rejects the write.
+    payload: { ...payload, player: { ...(payload.player as object), mortalBasicSkillId: 'tram' } },
     mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
   })
   expect(wrongSkill.body.code).toBe('SAVE_INVALID')
 
   // post-initiation shape: mortalBasicSkillId absent is legal
-  const noMortal = { ...payload, player: { name: character.name, selectedTalentIds: [...character.selectedTalentIds] } }
+  const noMortal = {
+    ...payload,
+    player: {
+      name: character.name,
+      selectedTalentIds: [...character.selectedTalentIds],
+      // post-initiation claim - realm witness plus its receipts
+      realmId: 'qi_refining',
+      ...realmReceipts('qi_refining'),
+    },
+    techniques: realmTechniques('qi_refining'),
+  }
   const wNoMortal = await writeSave(env, user.token, {
     sessionId: sid, expectedRevision: 0, payload: noMortal,
     mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
   })
   expect(wNoMortal.body.status).toBe('COMMITTED')
+
+  // AUT-AUTH-1: breakthrough entitlements legitimately grow
+  // selectedTalentIds past the creation pick - the server mirror binds
+  // identity via containment, not set-equality, so a grown list at
+  // qi_refining (ceiling = 1 + realmIndex 1 = 2) must commit. The grown
+  // id is a real qi_refining POOL pick (lk_*): a second creation-catalog
+  // id was never a legal growth (F-TAL-1 creation count = 1).
+  const grown = {
+    ...payload,
+    player: {
+      ...(payload.player as object),
+      selectedTalentIds: [...character.selectedTalentIds, 'lk_linh_mach'],
+      realmId: 'qi_refining',
+      ...realmReceipts('qi_refining'),
+    },
+    techniques: realmTechniques('qi_refining'),
+  }
+  const wGrown = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 1, payload: grown,
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(wGrown.body.status).toBe('COMMITTED')
+  // past the earnability ceiling still rejects (3 talents > ceiling 2)
+  const overCeiling = {
+    ...grown,
+    player: {
+      ...(grown.player as object),
+      selectedTalentIds: [...character.selectedTalentIds, 'lk_linh_mach', 'lk_dung_nap'],
+    },
+  }
+  const wCeil = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 2, payload: overCeiling,
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(wCeil.body.code).toBe('SAVE_INVALID')
+  // a grown list that dropped the creation pick still rejects (identity)
+  const droppedPick = {
+    ...grown,
+    player: { ...(grown.player as object), selectedTalentIds: ['lk_linh_mach', 'lk_dung_nap'] },
+  }
+  const wDropped = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 2, payload: droppedPick,
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(wDropped.body.code).toBe('SAVE_INVALID')
+  // duplicated pool ids still reject (one id per slot) - realm bumped so
+  // the count is inside the ceiling and the dup check is the rejector
+  const dupIds = {
+    ...grown,
+    player: { ...(grown.player as object), selectedTalentIds: [...character.selectedTalentIds, 'lk_linh_mach', 'lk_linh_mach'], realmId: 'foundation_establishment' },
+  }
+  const wDup = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 2, payload: dupIds,
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(wDup.body.code).toBe('SAVE_INVALID')
 
   // byte ceiling, enforced without mutation: temporarily lower the configured
   // ceiling so the test is independent of transport body limits.
@@ -534,21 +605,164 @@ test('payload: schema gate, shape checks, identity binding, byte ceiling', async
   )
   try {
     const big = await writeSave(env, user.token, {
-      sessionId: sid, expectedRevision: 1,
+      sessionId: sid, expectedRevision: 2,
       payload: { ...payload, notes: 'x'.repeat(4096) },
       mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
     })
     expect(big.body.status).toBe('REJECTED')
     expect(big.body.code).toBe('SAVE_TOO_LARGE')
     const row = await saveRow(pg, character.id)
-    expect(row.save_revision).toBe(1)
+    expect(row.save_revision).toBe(2)
     expect(row.payload.notes).toBeUndefined()
   } finally {
     await pg.query(
       `update public.backend_config set value = jsonb_set(value, '{maxSavePayloadBytes}', '4194304') where key = 'limits'`,
     )
   }
-  expect(await receiptRows(pg, user.userId)).toHaveLength(1)
+  expect(await receiptRows(pg, user.userId)).toHaveLength(2)
+})
+
+// ---------------------------------------------------------------------------
+// W2 (fixpoint 2026-10-05): the server mirror now carries the rest of
+// F-TAL-1 - the parked ban, the great-dao witness, the creation-catalog
+// cap, the pool-realm gate, and the pham_cot conversion tolerance.
+// ---------------------------------------------------------------------------
+
+test('save authority: locked + witnessed talent rules mirror F-TAL-1', async () => {
+  const { user, sid, character } = await authedUserWithCharacter()
+  const ls = await loadState(env, user.token, sid)
+  const cp = ls.serverCheckpoint as ServerCheckpoint
+  const pick = character.selectedTalentIds[0]!
+  const withPlayer = (extra: Record<string, unknown>) =>
+    buildSavePayload(character, {
+      player: {
+        name: character.name,
+        selectedTalentIds: [pick],
+        ...realmReceipts(extra.realmId),
+        ...extra,
+      },
+      techniques: realmTechniques(extra.realmId),
+    })
+  const write = (payload: Record<string, unknown>, rev = 0) =>
+    writeSave(env, user.token, {
+      sessionId: sid, expectedRevision: rev, payload,
+      mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+    })
+
+  // parked talents carry weight 0 - no writer can have granted one
+  const parked = await write(withPlayer({
+    selectedTalentIds: [pick, 'tran_tam'], realmId: 'qi_refining',
+  }))
+  expect(parked.body.code).toBe('SAVE_INVALID')
+
+  // great-dao reward without the conversion witness
+  const noWitness = await write(withPlayer({
+    selectedTalentIds: [pick, 'pham_nhan_chi_cot'], realmId: 'qi_refining',
+  }))
+  expect(noWitness.body.code).toBe('SAVE_INVALID')
+
+  // two creation-catalog ids - creation resolves exactly one pick even
+  // though the tribulation ceiling would allow ten total
+  const twoCreation = await write(withPlayer({
+    selectedTalentIds: [pick, 'kiem_quang', 'trong_kich'], realmId: 'tribulation',
+  }))
+  expect(twoCreation.body.code).toBe('SAVE_INVALID')
+
+  // a pool pick above the player realm is fabricated (tc_* mints at
+  // foundation_establishment, index 2)
+  const lowRealm = await write(withPlayer({
+    selectedTalentIds: [pick, 'tc_dia_can'], realmId: 'qi_refining',
+  }))
+  expect(lowRealm.body.code).toBe('SAVE_INVALID')
+
+  // control: the same list at the pool realm commits
+  const atPool = await write(withPlayer({
+    selectedTalentIds: [pick, 'tc_dia_can'], realmId: 'foundation_establishment',
+  }))
+  expect(atPool.body.status).toBe('COMMITTED')
+
+  // control: the witnessed reward commits alongside the creation pick
+  const witnessed = await write(withPlayer({
+    selectedTalentIds: [pick, 'pham_nhan_chi_cot'],
+    realmId: 'foundation_establishment', highestFoundationAchieved: 'great_dao',
+  }), 1)
+  expect(witnessed.body.status).toBe('COMMITTED')
+})
+
+test('save authority: pham_cot conversion tolerance + roll draw order', async () => {
+  // A character whose recorded creation pick IS pham_cot - provisioned
+  // directly so the recorded pick is deterministic (create_character
+  // picks from a random roll).
+  const user = await createRegisteredUser(env, pg)
+  const sid = await claimSession(env, user.token, { buildId: BUILD })
+
+  // the pick must come from the offered slice (first three of the roll)
+  // - a crafted client reaching for any of the other six rejects
+  const probeRoll = await rpc(env, user.token, 'create_talent_roll', { p_session_id: sid })
+  const outsideOffer = (probeRoll.body.talents as { id: string }[])[5]!.id
+  const sneakyPick = await rpc(env, user.token, 'create_character', {
+    p_session_id: sid,
+    p_roll_id: probeRoll.body.rollId,
+    p_name: uniqueName('SK'),
+    p_talent_ids: [outsideOffer],
+    p_mortal_basic_skill_id: 'linh_bao',
+  })
+  expect(sneakyPick.body.code).toBe('INVALID_TALENT_SELECTION')
+
+  const name = uniqueName('PC')
+  const charRow = await pg.query(
+    `insert into public.characters(user_id, name, normalized_name, selected_talent_ids, base_attributes, mortal_basic_skill_id)
+     values ($1,$2,lower($2),'{pham_cot}','{"strength":1,"dexterity":1,"intelligence":1,"attunement":1,"vitality":1}'::jsonb,'linh_bao')
+     returning id`,
+    [user.userId, name],
+  )
+  const character = {
+    id: charRow.rows[0].id as string,
+    name,
+    selectedTalentIds: ['pham_cot'],
+    mortalBasicSkillId: 'linh_bao' as string | null,
+    baseAttributes: {},
+    realmId: 'mortal',
+    realmLevel: 1,
+  }
+  const ls = await loadState(env, user.token, sid)
+  const cp = ls.serverCheckpoint as ServerCheckpoint
+  const write = (payload: Record<string, unknown>, rev = 0) =>
+    writeSave(env, user.token, {
+      sessionId: sid, expectedRevision: rev, payload,
+      mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+    })
+
+  // dropping the pick without the great_dao witness still rejects
+  const noWitness = await write(buildSavePayload(character, {
+    player: {
+      name, selectedTalentIds: ['pham_nhan_chi_cot'], realmId: 'foundation_establishment',
+    },
+  }))
+  expect(noWitness.body.code).toBe('SAVE_INVALID')
+
+  // the witnessed conversion commits: containment tolerates the swap
+  const converted = await write(buildSavePayload(character, {
+    player: {
+      name, selectedTalentIds: ['pham_nhan_chi_cot'],
+      realmId: 'foundation_establishment',
+      ...realmReceipts('foundation_establishment'),
+      highestFoundationAchieved: 'great_dao',
+    },
+    techniques: realmTechniques('foundation_establishment'),
+  }))
+  expect(converted.body.status).toBe('COMMITTED')
+
+  // the roll serves talents in draw order - create_character commits
+  // the first three, so response order must equal stored talent_ids.
+  const roll = await rpc(env, user.token, 'create_talent_roll', { p_session_id: sid })
+  expect(roll.body.rollId).toBeTruthy()
+  const rollRow = await pg.query(
+    `select talent_ids from public.talent_rolls where id = $1`, [roll.body.rollId],
+  )
+  expect(
+    (roll.body.talents as { id: string }[]).map((t) => t.id),
+  ).toEqual(rollRow.rows[0].talent_ids)
 })
 
 // ---------------------------------------------------------------------------

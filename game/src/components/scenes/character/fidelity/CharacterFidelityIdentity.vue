@@ -10,6 +10,7 @@ const { t } = useI18n()
     <h1 class="cf-name">{{ model.name }}<span class="cf-seal" aria-hidden="true">◆</span></h1>
     <p class="cf-realm">{{ model.realm }}</p>
     <p class="cf-path"><img :src="symbolUrl('technique')" alt="">{{ t('character.path') }}: {{ model.path }}</p>
+    <p v-if="model.pathVerse" class="cf-path-verse">{{ model.pathVerse }}</p>
     <div class="cf-power"><small>{{ t('character.power') }}</small><strong>{{ model.combatPower }}</strong></div>
   </header>
 </template>
@@ -20,6 +21,7 @@ const { t } = useI18n()
 .cf-realm { font-size: 16px; margin: 10px 0 15px; padding-bottom: 12px; border-bottom: 1px solid #a08a5570; }
 .cf-path { display: flex; gap: 9px; align-items: center; font-size: 14px; margin: 0 0 34px; }
 .cf-path img { width: 21px; height: 21px; }
+.cf-path-verse { margin: -26px 0 30px 30px; font-size: 11px; letter-spacing: 0.5px; color: #8a5a3a; }
 .cf-power { display: grid; gap: 5px; padding: 0; }
 .cf-power small { font-size: 15px; color: #746044; }
 .cf-power strong { font-size: 37px; font-weight: 500; line-height: 44px; color: #4b3420; font-variant-numeric: tabular-nums; }

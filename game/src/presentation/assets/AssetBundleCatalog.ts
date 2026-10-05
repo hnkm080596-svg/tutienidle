@@ -78,6 +78,10 @@ import { pills } from '@/data/pill/pills'
 import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
 import { TECHNIQUES } from '@/data/technique/Techniques'
 import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
+import { hoaCauCombatDescriptors, phapTheCombatDescriptors } from '@/game/support/HoaCauVfxAssets'
+import { linhBaoCombatDescriptors } from '@/game/support/LinhBaoVfxAssets'
+import { vfxSheetCombatDescriptors } from '@/data/vfx/VfxSheetManifest'
+import { STATUS_ICON_TEXTURES } from '@/data/vfx/StatusVfxPresets'
 
 export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
 
@@ -349,6 +353,26 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
+  for (const descriptor of [...hoaCauCombatDescriptors(), ...linhBaoCombatDescriptors(), ...phapTheCombatDescriptors()]) {
+    if (seenKeys.has(descriptor.key)) continue
+    seenKeys.add(descriptor.key)
+    descriptors.push(descriptor)
+  }
+
+  // Minh-drawn status icons (hoa tu wave, 2026-10-05) - combat bundle
+  // must cover the keys queueCombatAssets enumerates (parity guard).
+  for (const icon of STATUS_ICON_TEXTURES) {
+    addImage(icon.textureKey, icon.url)
+  }
+
+  // Monster attack VFX sweep (2026-10-04) - preset-bound attack sheets
+  // (VfxSheetManifest); 'sheet' impact cues read these texture keys.
+  for (const descriptor of vfxSheetCombatDescriptors()) {
+    if (seenKeys.has(descriptor.key)) continue
+    seenKeys.add(descriptor.key)
+    descriptors.push(descriptor)
+  }
+
   return descriptors
 }
 
@@ -563,6 +587,9 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png',
   '/assets/ui/huyen-kim/ornaments/divider-ornament@2x.png',
   '/assets/ui/huyen-kim/scene/character-v2/figure.png',
+  // CharacterFidelityFigure hand flame - Fire 9 sheet played on the
+  // figure's hand socket via EntitySpriteCanvas.
+  '/assets/vfx/spritesheets/火 (9).png',
   '/assets/ui/huyen-kim/scene/dong-fu-v2/rear.png',
   '/assets/ui/huyen-kim/scene/dong-fu-v2/foreground.png',
   '/assets/ui/huyen-kim/scene/dong-fu-v2/cultivator.png',
@@ -576,6 +603,10 @@ const UI_SCENE_SINGLE_URLS = [
   // CombatPreview portrait - enemy battle-status avatar fetched as a
   // DOM image by the ui-preview page.
   '/assets/characters/animated/zuofeng/avatar/zuofeng-battle-status-avatar.png',
+  // CharacterFidelityFigure hand-flame - Fire 9 sheetUrl quoted as a
+  // literal by the Nhan Vat tab figure (component art path, no registry
+  // owner) - pinned by the domArtLiteralCoverage guard.
+  '/assets/vfx/spritesheets/火 (9).png',
 ] as const
 
 /**

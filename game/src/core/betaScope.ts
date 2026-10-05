@@ -50,13 +50,9 @@ export const BETA_PLAYABLE_WAYS: ReadonlySet<CultivationWayId> = new Set([
   'spell_pathway',
 ])
 
-/** All five Ngu Hanh elements stay playable in beta. */
+/** Beta opens the fire element only; the other four stay locked. */
 export const BETA_PLAYABLE_ELEMENTS: ReadonlySet<ElementType> = new Set([
   'fire',
-  'water',
-  'wood',
-  'metal',
-  'earth',
 ])
 
 /** Beta-offerable way check - the ritual/path admission gate. */
@@ -282,10 +278,12 @@ export function betaSurfaceVisible(
 // ---------------------------------------------------------------------------
 
 /**
- * Canonical beta enemy roster - 12 identities, 3 normals + 1 boss per
- * act, matching the 3-chapter x 10-floor stage model (floor 10 carries
- * the act boss). Phase-4 consumers gate stages, spawns, drops, quests,
- * and art enumeration against this list.
+ * Canonical beta enemy roster - 6 identities, 1 normal + 1 boss per
+ * act (roster remap, Minh ruling 2026-10-04: one species family per
+ * realm - normal + tinh anh tag + king boss all share the family),
+ * matching the 3-chapter x 10-floor stage model (floor 10 carries the
+ * act boss). Phase-4 consumers gate stages, spawns, drops, quests, and
+ * art enumeration against this list.
  */
 export type BetaActId = 1 | 2 | 3
 
@@ -298,26 +296,20 @@ export interface BetaEnemyEntry {
 }
 
 export const BETA_ENEMY_ROSTER: readonly BetaEnemyEntry[] = [
-  // Act I - mortal (Thanh Van mortal caves)
+  // Act I - mortal (Thanh Van mortal caves): ho Heo Rung
   { id: 'mortal_wild_boar', act: 1, role: 'normal' },
-  { id: 'mortal_savage_tiger', act: 1, role: 'normal' },
-  { id: 'mortal_water_wolf', act: 1, role: 'normal' },
-  { id: 'mortal_ferocious_giant_crocodile', act: 1, role: 'boss' },
-  // Act II - qi_refining
-  { id: 'wild_wolf', act: 2, role: 'normal' },
-  { id: 'flame_fox', act: 2, role: 'normal' },
-  { id: 'giant_earthworm', act: 2, role: 'normal' },
-  { id: 'ferocious_flood_serpent', act: 2, role: 'boss' },
-  // Act III - foundation_establishment
-  { id: 'foundation_lava_hound', act: 3, role: 'normal' },
-  { id: 'foundation_sand_scorpion', act: 3, role: 'normal' },
-  { id: 'foundation_mud_golem', act: 3, role: 'normal' },
-  { id: 'foundation_ferocious_flood_dragon_whelp', act: 3, role: 'boss' },
+  { id: 'mortal_ferocious_wild_boar', act: 1, role: 'boss' },
+  // Act II - qi_refining: ho Son Tac
+  { id: 'bandit', act: 2, role: 'normal' },
+  { id: 'ferocious_bandit', act: 2, role: 'boss' },
+  // Act III - foundation_establishment: ho Linh Lang
+  { id: 'foundation_spirit_wolf', act: 3, role: 'normal' },
+  { id: 'foundation_ferocious_spirit_wolf', act: 3, role: 'boss' },
 ]
 
 export const BETA_ACT_COUNT = 3
 export const BETA_FLOORS_PER_ACT = 10
-export const BETA_NORMALS_PER_ACT = 3
+export const BETA_NORMALS_PER_ACT = 1
 export const BETA_BOSSES_PER_ACT = 1
 
 const BETA_ENEMY_INDEX = new Map<BetaEnemyEntry['id'], BetaEnemyEntry>(

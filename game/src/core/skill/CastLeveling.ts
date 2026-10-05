@@ -11,10 +11,14 @@
 // getCastLeveledSkillLevel, and NodeSystem reads this table directly -
 // keeping it on SkillSystem would make NodeSystem pull the whole skill
 // graph just to read thresholds. This module imports nothing.
+// balance-review 2026-10-04 (docs/balance/progression-review.md C2.4):
+// ~19 casts per floor made lv2@1000 unreachable inside a chapter
+// (~52 floors). lv2@250 lands around one chapter of use; lv3@10000
+// stays - it is the deliberate hidden-pathway gate threshold.
 export const CAST_LEVELING_THRESHOLDS: Record<string, { lv2: number; lv3: number }> = {
-  tram:      { lv2: 1000, lv3: 10000 },
-  linh_bao:  { lv2: 1000, lv3: 10000 },
-  huy_quyen: { lv2: 1000, lv3: 10000 },
+  tram:      { lv2: 250, lv3: 10000 },
+  linh_bao:  { lv2: 250, lv3: 10000 },
+  huy_quyen: { lv2: 250, lv3: 10000 },
 }
 
 /**

@@ -1,5 +1,5 @@
 // combat-action-feedback (Wave-3 large-file split) - split from CombatScene.ts.
-// Hit/critical/dodge flashes and floating text, turn_ready pulse ack, and the
+// Hit/critical/dodge flashes and floating text, turn_ready lean + ack, and the
 // standby tail. The actor lunge and the action_impact visual moved to the
 // shared skill presentation runner, which owns both action ACKs; the legacy
 // attack/action_impact feed keeps no production subscribers here.
@@ -12,6 +12,8 @@ import {
   HIT_RECOIL_DURATION_MS,
   HIT_RECOIL_PX,
   PLAYER_ID,
+  TURN_READY_LEAN_MS,
+  TURN_READY_LEAN_PX,
 } from './combatConstants'
 import type { StatusVfxAttachedEvent } from '@/core/battle/BattleEvents'
 
@@ -85,10 +87,11 @@ export class CombatActionFeedback {
   }
 
   /**
-   * Action Playback Task 7 (2026-09-05) - 'turn_ready': short flash/pulse
-   * tren sprite actor roi acknowledgeTurnReady() trong onComplete (5-phase
-   * machine buoc 1 -> 2). Placeholder visual don gian theo plan (khong
-   * designed visual - polish sau).
+   * Action Playback Task 7 (2026-09-05) - 'turn_ready': standby transition
+   * plus a short forward lean on the shared offsetX impulse channel, then
+   * acknowledgeTurnReady() on the same wall-clock beat (5-phase machine
+   * step 1 -> 2). The boost scale punch it replaces read as a grow/shrink
+   * defect on every actor (player and monsters alike).
    */
   onTurnReady(event: { actorId: string }) {
     const scene = this.scene
@@ -107,23 +110,19 @@ export class CombatActionFeedback {
     // straight to standby (playback resolves the fallback).
     scene.playCombatAnimation(sprite, event.actorId, 'idle_to_standby')
 
-    // Pop qua boost object - projection ghi scale moi frame nen tween
-    // scale truc tiep tren rect bi ghi de (xem onCritical). boost nhan
-    // vao kich thuoc cuoi o applyEntityDepthScale() / setScale (flat).
-    scene.tweens.killTweensOf(sprite.boost)
-    sprite.boost.value = 1
+    // Forward lean = the turn-start emphasis, riding the offsetX channel
+    // hit recoil / dodge / cast actor-impulse already reuse; direction
+    // follows the scene facing convention (player +x, enemy -x).
+    scene.playHorizontalImpulse(
+      sprite,
+      (event.actorId === PLAYER_ID ? 1 : -1) * TURN_READY_LEAN_PX,
+      TURN_READY_LEAN_MS,
+    )
 
-    scene.tweens.add({
-      targets: sprite.boost,
-      value: 1.15,
-      duration: 250, // was 90 -- too fast to observe (2026-09-07 playtest)
-      yoyo: true,
-      ease: 'Quad.easeOut',
-      onComplete: () => {
-        sprite.boost.value = 1
-
-        port?.acknowledgeTurnReady(token)
-      },
+    // Ack on the same beat the removed boost yoyo used (2 x TURN_READY_LEAN_MS),
+    // so the ready phase paces declare exactly as before.
+    scene.time.delayedCall(TURN_READY_LEAN_MS * 2, () => {
+      port?.acknowledgeTurnReady(token)
     })
   }
 

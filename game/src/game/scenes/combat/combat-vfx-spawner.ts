@@ -42,7 +42,7 @@ interface StatusEntry {
   stacks: number
   buffName?: string
   remainingTime?: number
-  icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc
+  icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc | Phaser.GameObjects.Image
   stackLabel: Phaser.GameObjects.Text
 }
 
@@ -161,12 +161,19 @@ export class CombatVfxSpawner {
     // Buff bar (2026-09-02) - shape taxonomy: circle=buff, diamond=CC/DoT
     // (ke thua hinh cu), square=statModifier debuff. Icon tao tai (0,0) -
     // updateStatusIconPositions() dat vi tri row moi frame.
-    const icon =
-      preset.shape === 'circle'
+    // Minh-drawn art (2026-10-05): preset.textureKey renders the real icon
+    // when the combat bundle loaded it; otherwise primitive as before.
+    const textureKey = preset.textureKey
+    const useArt = textureKey !== undefined && (this.scene.textures?.exists(textureKey) ?? false)
+    const icon = useArt
+      ? this.scene.add
+          .image(0, 0, textureKey)
+          .setDisplaySize(STATUS_ICON_SIZE, STATUS_ICON_SIZE)
+      : preset.shape === 'circle'
         ? this.scene.add.circle(0, 0, STATUS_ICON_SIZE / 2, preset.color)
         : this.scene.add.rectangle(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE, preset.color)
 
-    if (preset.shape === 'diamond') {
+    if (!useArt && preset.shape === 'diamond') {
       icon.setAngle(45)
     }
 
@@ -341,7 +348,10 @@ export class CombatVfxSpawner {
     if (sprite.kind === 'sprite') {
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
-      gameSprite.setTint(color)
+      // FILL tint: uniform silhouette flash - the multiply tint left dark
+      // pixels dark, so the hit read as patchy red blocks on the art.
+      // clearTint() restores MULTIPLY.
+      gameSprite.setTint(color).setTintMode(Phaser.TintModes.FILL)
 
       this.scene.time.delayedCall(duration, () => gameSprite.clearTint())
 

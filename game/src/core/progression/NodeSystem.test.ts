@@ -11,6 +11,7 @@ import {
   grantSkillCore,
   hasPrerequisite,
   purchaseNode,
+  revokeNodeOwnership,
   respecNodeTree,
   upgradeNode,
 } from './NodeSystem'
@@ -969,5 +970,55 @@ describe('getNodeMaxLevel', () => {
     expect(getNodeMaxLevel(minorNode())).toBe(1)
     expect(getNodeMaxLevel(minorNode({ maxLevel: 0 }))).toBe(1)
     expect(getNodeMaxLevel(minorNode({ maxLevel: 7 }))).toBe(7)
+  })
+})
+
+describe('infoSkillId - info-anchor nodes (2026-10-04)', () => {
+  const infoNode = () =>
+    minorNode({
+      id: 'info_seat',
+      name: 'Info Seat',
+      type: 'major',
+      insightCost: 0,
+      maxLevel: 1,
+      effect: {},
+      infoSkillId: 'linh_bao',
+    })
+
+  it('purchase is rejected even with insight and every gate met', () => {
+    const player = playerWith({ skillInsight: 50 })
+    const node = infoNode()
+
+    expect(canPurchaseNode(player, node)).toBe(false)
+    expect(purchaseNode(player, node)).toBe(false)
+    expect(player.nodeLevels[node.id]).toBeUndefined()
+    expect(player.skillInsight).toBe(50)
+  })
+
+  it('upgrade is rejected even when a corrupt save injects a level', () => {
+    const player = playerWith({
+      skillInsight: 50,
+      nodeLevels: { info_seat: 1 },
+      purchasedNodeIds: ['info_seat'],
+    })
+    const node = infoNode()
+
+    expect(canUpgradeNode(player, node)).toBe(false)
+    expect(upgradeNode(player, node)).toBe(false)
+    expect(player.nodeLevels[node.id]).toBe(1)
+  })
+
+  it('revokeNodeOwnership refuses to strip an injected level', () => {
+    const registry = new NodeRegistry()
+    const node = infoNode()
+    registry.register(node)
+
+    const player = playerWith({
+      nodeLevels: { info_seat: 2 },
+      purchasedNodeIds: ['info_seat'],
+    })
+
+    expect(revokeNodeOwnership(player, node, registry)).toBe(0)
+    expect(player.nodeLevels[node.id]).toBe(2)
   })
 })

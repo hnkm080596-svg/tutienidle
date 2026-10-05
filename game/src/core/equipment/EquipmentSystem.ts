@@ -245,8 +245,9 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     zoneId?: string,
     qualityBonusSteps = 0,
+    rng?: () => number,
   ): EquipmentInstance {
-    return createEquipmentInstance(template, player, affixRegistry, zoneId, qualityBonusSteps)
+    return createEquipmentInstance(template, player, affixRegistry, zoneId, qualityBonusSteps, rng)
   }
 
   /**

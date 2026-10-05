@@ -240,7 +240,7 @@ export function betaHiddenRealmRecordFor(
  * The id is pinned to the roster's act-3 boss by spec test; update the
  * roster authority and this literal together.
  */
-export const BETA_FINAL_BOSS_ENEMY_ID = 'foundation_ferocious_flood_dragon_whelp'
+export const BETA_FINAL_BOSS_ENEMY_ID = 'foundation_ferocious_spirit_wolf'
 
 export interface BetaCompletion {
   /** The act-3 final boss stage has been cleared. */
@@ -310,6 +310,13 @@ export interface BetaUnsupportedSaveSlices {
       workers?: unknown
     } | Record<string, unknown>
   } | null
+  /**
+   * The artifact record AS CARRIED in the payload. normalizeArtifactProgress
+   * drops records the current path cannot own before this read-model runs,
+   * so artifact_owned must look at the carried slice, not the restored
+   * field - a carried dormant record is flagged, never silently dropped.
+   */
+  carriedArtifact?: unknown
 }
 
 /**
@@ -341,7 +348,7 @@ export function unsupportedReleaseReason(
     return 'companion_owned'
   }
 
-  if (player.artifact !== undefined) {
+  if (player.artifact !== undefined || saveSlices?.carriedArtifact != null) {
     return 'artifact_owned'
   }
 

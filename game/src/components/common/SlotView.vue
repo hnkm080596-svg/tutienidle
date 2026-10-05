@@ -5,6 +5,7 @@ import { PROFESSION_GRADE_SEAL_ORDINALS } from '@/core/profession/ProfessionGrad
 import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge, SlotPresentationState, SlotVariant } from './SlotTypes'
+import InkNineSlice from './primitives/InkNineSlice.vue'
 
 // Slot presentation (tooltip-revamp-plan.md section 17 + user art pass
 // 2026-09). Art layers: backdrop per variant (SlotTypes.ts SlotVariant
@@ -16,11 +17,12 @@ import type { SlotBadge, SlotPresentationState, SlotVariant } from './SlotTypes'
 // (availability/interaction/validation/marker/comparison) - NOT a list
 // of loose booleans.
 //
-// InkNineSlice frame-s-slot REMOVED (2026-08-30) - the brush ink-wash
-// repeated on EVERY slot (paperdoll + the whole Kho Vat grid, dozens of
-// cells per screen) felt noisy/cluttered in a dense grid, far from the
-// frame's original purpose (a decorative border for a LARGE panel, not
-// a repeated per-cell ornament).
+// InkNineSlice frame-s-slot was REMOVED 2026-08-30 as a universal slot
+// frame (noisy when repeated), then RE-ADMITTED 2026-10-04 by owner
+// ruling as the 'bag' variant: the dense Kho Vat / Trang Bi inventory
+// cells must use the drawn frame-s-slot chrome instead of flat CSS
+// frames. It stays confined to that variant - 'item'/'equipment'
+// everywhere else keep the flat-tile look.
 const props = defineProps<{
   /** Item ma Slot dang chua. null = slot trong - filled/empty suy truc
    * tiep tu day, KHONG co prop `hasItem` rieng. */
@@ -246,6 +248,16 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     v-tooltip="props.static ? undefined : tooltipContent"
     @click="handleClick"
   >
+    <!-- layer 0.9 (variant 'bag' only): drawn ornate cell frame -
+         huyen-kim chrome frame-s-slot, per the 2026-10-04 owner
+         ruling. Sits over the dark tile, under the content. -->
+    <InkNineSlice
+      v-if="props.variant === 'bag'"
+      class="slot-view__frame-art"
+      chrome-id="frame-s-slot"
+      layer="frame"
+    />
+
     <!-- layer 1.5: Pham seal - carved seal-frame art + Han grade
          glyph (replaces the underlay wash). -->
     <span v-if="filled && sealOrdinal" class="slot-view__seal" aria-hidden="true">{{ sealOrdinal }}</span>
@@ -536,18 +548,34 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      pale-gold frame on hover. The gold frame art bakes ~2-3%
      transparent padding into its edges, so the layer overshoots the
      cell by 4% to land its bright stroke on the slot border. */
-.slot-view--item {
-  /* The old "cell select" wisp (a 1024x93 strip) squashed into square
-     cells read as a smudge inside empty slots - the clean pale-gold
-     frame is the square-cell hover art everywhere now. */
+/* All variants share the pale-gold hover frame: the old "cell select"
+   wisp (a 1024x93 strip) squashed into square cells read as a smudge
+   inside empty slots - the clean pale-gold frame is the square-cell
+   hover art everywhere now. */
+.slot-view--item,
+.slot-view--equipment,
+.slot-view--bag,
+.slot-view--bag.slot-view--filled {
   --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
   --slot-hover-inset: -4%;
 }
 
 .slot-view--equipment {
   --slot-bg-image: url('/assets/ui/Slot/slot-backdrop.png');
-  --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
-  --slot-hover-inset: -4%;
+}
+
+/* 'bag' variant: the ornate frame is DRAWN art (frame-s-slot chrome),
+   so the flat CSS border steps aside (the art owns the cell edge);
+   rarity still reads through the ::after glow, the box-shadow aura,
+   the max-rank bar, and the shared pale-gold hover frame. */
+.slot-view--bag,
+.slot-view--bag.slot-view--filled {
+  border-color: transparent;
+}
+.slot-view--bag .slot-view__frame-art {
+  /* frame-s-slot min size is 32px - bag cells are ~55-96px, always
+     inside the art's range. */
+  border-radius: 0;
 }
 
 .slot-view:focus-visible {

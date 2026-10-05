@@ -102,6 +102,7 @@ export interface TurnBattleEntityVisualState {
   maxMp: number
   alive: boolean
   isBoss: boolean
+  isElite: boolean
 }
 
 export interface TurnBattleEntitySnapshotEvent {
@@ -172,6 +173,9 @@ function toVisualState(participant: TurnBattleParticipant): TurnBattleEntityVisu
     // legacy/BattleSystem.ts (dong 621/810/831) da coerce isBoss ?? false
     // khi build EnemySpawnedEvent, giu nhat quan 2 nguon du lieu.
     isBoss: participant.entity.isBoss ?? false,
+    // Same optional-field coercion as isBoss: tinh_anh tags set isElite
+    // through applyEnemyTags, plain mobs carry undefined.
+    isElite: participant.entity.isElite ?? false,
   }
 }
 

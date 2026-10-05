@@ -308,7 +308,7 @@ describe('hidden progression domain gates', () => {
 
 describe('betaScopeSurface - Beta Complete beat', () => {
   it('BETA_FINAL_BOSS_ENEMY_ID is the act-3 roster boss', () => {
-    expect(BETA_FINAL_BOSS_ENEMY_ID).toBe('foundation_ferocious_flood_dragon_whelp')
+    expect(BETA_FINAL_BOSS_ENEMY_ID).toBe('foundation_ferocious_spirit_wolf')
     const act3Bosses = BETA_ENEMY_ROSTER.filter(
       (entry) => entry.act === 3 && entry.role === 'boss',
     )
@@ -409,6 +409,19 @@ describe('betaScopeSurface - save safety read-model', () => {
       formationLoadout: { formationId: 'f1', assignments: [] } as FormationLoadout,
     })
     expect(unsupportedReleaseReason(withFormation)).toBe('formation_loadout')
+  })
+
+  it('flags a carried artifact even when restore already dropped the record', () => {
+    // normalizeArtifactProgress wipes records the current path cannot own
+    // BEFORE this read-model runs - the notice must inspect the carried
+    // slice so the drop is flagged, never silent.
+    const dropped = player()
+    expect(dropped.artifact).toBeUndefined()
+    expect(
+      unsupportedReleaseReason(dropped, {
+        carriedArtifact: { artifactId: 'ngu_hanh_chau', realmId: 'mortal', realmLevel: 1, experience: 0, grade: 'pham' },
+      }),
+    ).toBe('artifact_owned')
   })
 
   it('reports the highest-precedence reason only', () => {

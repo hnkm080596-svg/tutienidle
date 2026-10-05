@@ -1,6 +1,7 @@
 import { defineEnemy } from '../../core/enemy/Enemy'
 import type { Enemy } from '../../core/enemy/Enemy'
 import type { EnemySpecialAttack } from '../../core/enemy/Enemy'
+import type { CombatVfxPresetId } from '../../core/battle/CombatAction'
 import type { TribulationPhase, BossEnrage } from '../../core/enemy/TribulationPhase'
 import type { SignatureDrop } from '../../core/drop/DropTable'
 
@@ -120,6 +121,9 @@ function foundationBeast(params: {
   // to defineEnemy() unchanged. Separate from the legacy `enrage` above.
   bossTrigger?: { afterTurns: number; buffDefinitionId: string }
   specialAttacks?: EnemySpecialAttack[]
+  // Monster attack VFX sweep (2026-10-04) - basic attack's authored VFX
+  // identity; threaded to defineEnemy() unchanged.
+  attackPresetId?: CombatVfxPresetId
   // Per-enemy named drops (Task 6: floor-10 boss Chieu Hien Lenh) -
   // threaded to defineEnemy() unchanged, resolved by resolveDrops.
   signatureDrops?: SignatureDrop[]
@@ -155,6 +159,7 @@ function foundationBeast(params: {
     enrage: params.enrage,
     bossTrigger: params.bossTrigger,
     specialAttacks: params.specialAttacks,
+    attackPresetId: params.attackPresetId,
     signatureDrops: params.signatureDrops,
     family: params.family,
     statsInput: {
@@ -244,6 +249,7 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'fire',
     power: 11,
     resistance: 11,
+    attackPresetId: 'fire_burst',
   }),
   foundationBeast({
     id: 'foundation_sand_scorpion',
@@ -258,6 +264,7 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     // BETA SCOPE LOCK v2 Phase-5 - roster species carrying the
     // re-sourced base_gioi family drop (was metal_beetle's pool).
     family: 'sand_scorpion',
+    attackPresetId: 'claw',
   }),
   foundationBeast({
     id: 'foundation_ferocious_lava_hound',
@@ -307,6 +314,7 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'earth',
     power: 12,
     resistance: 16,
+    attackPresetId: 'boss_ground_slam',
   }),
   foundationBeast({
     id: 'foundation_ferocious_rock_tortoise',
@@ -432,6 +440,9 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     // TurnBattleSystem's specialAttackCounter), so this existing example
     // is live in turn-based combat as of A3.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
+    // Dragon whelp rends with its claws between the authored water
+    // special casts.
+    attackPresetId: 'claw',
     statsInput: {
       // Beta P8 (2026-09-30) - literal stats replace the shared
       // foundationBeast formula for the act-3 boss only. The formula
@@ -458,6 +469,91 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     signatureDrops: [
       // Companion gacha (Task 6) - chapter-3 floor-10 boss drops 3x
       // Chieu Hien Lenh; boss-only via requiresModifier.
+      { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 3, max: 3 }, chance: 1, requiresModifier: 'boss' },
+    ],
+  }),
+
+  // --- Roster remap (2026-10-04): moi canh gioi chi mot loai quai.
+  // Truc Co = ho Linh Lang: normal + tinh anh (tinh_anh tag roll luc
+  // spawn, khong phai id rieng) + Linh Lang Vuong boss tang 10. ---
+  // Balance retune (2026-10-04, docs/balance/enemies-review.md): the
+  // roster remap put ONE wolf id on all 10 floors. At t4 (684hp) a real
+  // post-initiation entrant kills ~1-3 wolves per attempt and never
+  // clears any floor (0 wins in 100+ measured runs); at t2 (518hp) the
+  // same. perfectClearTurnLimit=20 for 10 wolves implies ~2 rounds per
+  // kill - the entrant's atk ~85-110 wants mob EHP ~170-230, which the
+  // foundationBeast formula cannot reach (t:1 = 450). Literal block,
+  // same as the Linh Lang Vuong boss below: hp ~1.5x bandit keeps the
+  // authored realm-jump slope (boar->bandit was 2.2x), might/armor
+  // mid-way between bandit and the old t4 so wolf hits still threaten
+  // on defense-light builds.
+  defineEnemy({
+    id: 'foundation_spirit_wolf',
+    name: 'Linh Lang',
+    level: 2,
+    realmId: 'foundation_establishment',
+    lane: 'ground',
+    archetype: 'melee',
+    family: 'wolf',
+    attackPresetId: 'bite',
+    statsInput: {
+      maxHp: 190,
+      might: 30,
+      attackSpeed: 1.2,
+      criticalRate: 0.08,
+      criticalDamage: 2,
+      armor: 15,
+      evasionRate: 20,
+      resistances: { wood: 12 },
+      elemental: { element: 'wood', power: 12 },
+    },
+    rewards: {
+      techniqueMastery: 52,
+      spiritStone: 12,
+    },
+  }),
+  defineEnemy({
+    id: 'foundation_ferocious_spirit_wolf',
+    name: 'Linh Lang Vương',
+    level: 10,
+    realmId: 'foundation_establishment',
+    lane: 'ground',
+    archetype: 'melee',
+    family: 'wolf',
+    attackPresetId: 'bite',
+    // Bite flurry finisher every 4th own action - same cadence the
+    // chapter-3 boss slot carried before (whelp water_surge). Batch-2
+    // VFX (2026-10-04): renders the authored multi-bite - Minh's mapping.
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'bite_multi' }],
+    // Turn-based enrage trigger; buff resolves through BUFF_REGISTRY.
+    bossTrigger: { afterTurns: 60, buffDefinitionId: 'foundation_wolf_king_enrage' },
+    statsInput: {
+      // Boss-tier literal (same shell the flood-dragon whelp carried):
+      // createBossVariant x7 hp / x2 might / x1.2 armor lands the duel
+      // in the ~13-cast window a strong foundation kit wins narrowly.
+      // Retune (2026-10-04, docs/balance/enemies-review.md): the literal
+      // was sized against the old t4 wolf (684 hp). With the normal at
+      // 190 hp, 550 made the king ~2.9x the mob baseline; 420 keeps a
+      // ~2.2x boss-shell ratio so the floor-10 duel stays a cap-check,
+      // not an out-of-reach wall.
+      maxHp: 420,
+      might: 35,
+      attackSpeed: 1.2,
+      criticalRate: 0.08,
+      criticalDamage: 2,
+      armor: 30,
+      evasionRate: 20,
+      // Uniform across the five elements (stage-boss fairness).
+      resistances: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
+      elemental: { element: 'wood', power: 14 },
+    },
+    rewards: {
+      techniqueMastery: 100,
+      spiritStone: 28,
+    },
+    signatureDrops: [
+      // Chieu Hien Lenh keeps its only beta source - same guaranteed
+      // boss drop the whelp used to carry.
       { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 3, max: 3 }, chance: 1, requiresModifier: 'boss' },
     ],
   }),

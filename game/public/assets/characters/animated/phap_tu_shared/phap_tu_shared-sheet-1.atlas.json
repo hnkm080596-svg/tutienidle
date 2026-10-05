@@ -1,0 +1,675 @@
+{
+  "frames": {
+    "phap_tu_shared-idle-001.png": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-002.png": {
+      "frame": {
+        "x": 244,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-003.png": {
+      "frame": {
+        "x": 488,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-004.png": {
+      "frame": {
+        "x": 732,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-005.png": {
+      "frame": {
+        "x": 976,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-006.png": {
+      "frame": {
+        "x": 1220,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-007.png": {
+      "frame": {
+        "x": 0,
+        "y": 252,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-008.png": {
+      "frame": {
+        "x": 244,
+        "y": 252,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-009.png": {
+      "frame": {
+        "x": 488,
+        "y": 252,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-010.png": {
+      "frame": {
+        "x": 732,
+        "y": 252,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-011.png": {
+      "frame": {
+        "x": 976,
+        "y": 252,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-012.png": {
+      "frame": {
+        "x": 1220,
+        "y": 252,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-013.png": {
+      "frame": {
+        "x": 0,
+        "y": 504,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-014.png": {
+      "frame": {
+        "x": 244,
+        "y": 504,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-015.png": {
+      "frame": {
+        "x": 488,
+        "y": 504,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-016.png": {
+      "frame": {
+        "x": 732,
+        "y": 504,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-017.png": {
+      "frame": {
+        "x": 976,
+        "y": 504,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-018.png": {
+      "frame": {
+        "x": 1220,
+        "y": 504,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-019.png": {
+      "frame": {
+        "x": 0,
+        "y": 756,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-020.png": {
+      "frame": {
+        "x": 244,
+        "y": 756,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-021.png": {
+      "frame": {
+        "x": 488,
+        "y": 756,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-022.png": {
+      "frame": {
+        "x": 732,
+        "y": 756,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-023.png": {
+      "frame": {
+        "x": 976,
+        "y": 756,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-024.png": {
+      "frame": {
+        "x": 1220,
+        "y": 756,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-025.png": {
+      "frame": {
+        "x": 0,
+        "y": 1008,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-026.png": {
+      "frame": {
+        "x": 244,
+        "y": 1008,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-027.png": {
+      "frame": {
+        "x": 488,
+        "y": 1008,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-028.png": {
+      "frame": {
+        "x": 732,
+        "y": 1008,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-029.png": {
+      "frame": {
+        "x": 976,
+        "y": 1008,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-030.png": {
+      "frame": {
+        "x": 1220,
+        "y": 1008,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-031.png": {
+      "frame": {
+        "x": 0,
+        "y": 1260,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-032.png": {
+      "frame": {
+        "x": 244,
+        "y": 1260,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    },
+    "phap_tu_shared-idle-033.png": {
+      "frame": {
+        "x": 488,
+        "y": 1260,
+        "w": 244,
+        "h": 252
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 252
+      },
+      "sourceSize": {
+        "w": 244,
+        "h": 252
+      }
+    }
+  },
+  "meta": {
+    "app": "index-phap-tu-shared-art.mjs",
+    "version": "1.0",
+    "image": "phap_tu_shared-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1464,
+      "h": 1512
+    },
+    "scale": "1"
+  }
+}

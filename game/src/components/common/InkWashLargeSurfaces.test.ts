@@ -39,10 +39,25 @@ describe('ink-wash large surfaces', () => {
     const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!
 
     expect(dialog.getAttribute('aria-modal')).toBe('true')
+    expect(overlay.classList.contains('overlay-panel--ink')).toBe(true)
+    // The default ink variant keeps the dark panel surface - only the
+    // opt-in 'paper' variant paints the cream scroll, so legacy panels
+    // authored with light --surface-* text stay readable.
     expect(dialog.querySelector('[data-hk-slice="surface-m-panel"]')).not.toBeNull()
     expect(dialog.querySelector('[data-hk-slice="frame-m-modal"]')).not.toBeNull()
     overlay.click()
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders the cream scroll surface only on the paper variant', () => {
+    const container = mount(OverlayPanel, { open: true, title: 'Đối thoại', variant: 'paper' })
+    const overlay = container.querySelector<HTMLElement>('.overlay-panel')!
+    const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!
+
+    expect(overlay.classList.contains('overlay-panel--paper')).toBe(true)
+    expect(dialog.querySelector('[data-hk-slice="surface-xl-scroll"]')).not.toBeNull()
+    expect(dialog.querySelector('[data-hk-slice="frame-m-modal"]')).not.toBeNull()
+    expect(dialog.querySelector('[data-hk-slice="surface-m-panel"]')).toBeNull()
   })
 
   it('adds ceremonial layers without removing modal and combat actions', () => {
@@ -50,10 +65,13 @@ describe('ink-wash large surfaces', () => {
     // it intentionally no longer carries the XL ink layers, so only the
     // combat victory/defeat panels stay in this ceremonial assertion.
     for (const source of [victorySurfaceSource, defeatSource]) {
-      // XL scroll surface migrated to the Huyen Kim chrome registry;
-      // the ceremony frame stays on the legacy ink-wash asset id.
-      expect(source).toContain('chrome-id="surface-xl-scroll"')
-      expect(source).toContain('asset-id="frame-xl-ceremony"')
+      // Huyen-kim reskin: the paper body AND the ceremony frame both come
+      // from the chrome registry now (no legacy ink-wash asset ids).
+      expect(source).toContain('chrome-id="imperial-scroll-body"')
+      expect(source).toContain('chrome-id="frame-xl-ceremony"')
+      expect(source).toContain('chrome-id="scroll-title-plaque"')
+      expect(source).not.toContain('paper-on-dark')
+      expect(source).not.toContain('asset-id=')
     }
     expect(confirmSource).toContain("emit('confirm')")
     expect(victorySource).toContain('startAutoRefightCountdown')

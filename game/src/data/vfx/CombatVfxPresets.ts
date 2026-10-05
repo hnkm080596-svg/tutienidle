@@ -30,6 +30,9 @@ export const COMBAT_VFX_PRESETS = {
   ngu_kiem_flight: { id: 'ngu_kiem_flight', color: 0xaeeaff, space: 'upright', areaScale: 1, durationMs: 250 },
   slash: { id: 'slash', color: 0xeaf6ff, space: 'upright', areaScale: 1, durationMs: 230 },
   claw: { id: 'claw', color: 0xffb0a0, space: 'upright', areaScale: 1, durationMs: 230 },
+  // Monster attack VFX sweep (2026-10-04) -- bite/jaw snap for melee
+  // beasts; pale steel-blue reads as fangs against warm claw red.
+  bite: { id: 'bite', color: 0xcfe4ff, space: 'upright', areaScale: 1, durationMs: 230, signature: ['crescent', 'scar'] },
   arcane_impact: {
     id: 'arcane_impact',
     color: 0x9cecff,
@@ -108,6 +111,32 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 340,
     screenShake: { durationMs: 120, intensity: 0.004 },
   },
+  // Monster attack VFX batch 2 (2026-10-04) - authored atlases; enemies
+  // and bosses already reference them via attackPresetId/specialAttacks.
+  // durationMs covers each sheet's full frame window so the injected
+  // cue does not trim the clip.
+  bite_multi: { id: 'bite_multi', color: 0xcfe4ff, space: 'upright', areaScale: 1, durationMs: 570, signature: ['crescent', 'scar'] },
+  ram: { id: 'ram', color: 0xe8b878, space: 'upright', areaScale: 1, durationMs: 400 },
+  ram_multi: { id: 'ram_multi', color: 0xe8b878, space: 'upright', areaScale: 1, durationMs: 570 },
+  stomp: {
+    id: 'stomp',
+    color: 0xd49a55,
+    space: 'ground_projected',
+    areaScale: 1.1,
+    durationMs: 440,
+    screenShake: { durationMs: 90, intensity: 0.003 },
+  },
+  stomp_multi: {
+    id: 'stomp_multi',
+    color: 0xd49a55,
+    space: 'ground_projected',
+    areaScale: 1.2,
+    durationMs: 600,
+    screenShake: { durationMs: 90, intensity: 0.003 },
+  },
+  slash_vertical: { id: 'slash_vertical', color: 0xeaf6ff, space: 'upright', areaScale: 1, durationMs: 370 },
+  slash_horizontal: { id: 'slash_horizontal', color: 0xeaf6ff, space: 'upright', areaScale: 1, durationMs: 370 },
+  slash_multi: { id: 'slash_multi', color: 0xeaf6ff, space: 'upright', areaScale: 1, durationMs: 500 },
   // Kiem Tu Bat Kiem channel tick (Task 8, 2026-08-28) -- full-screen AoE
   // per design spec, art sau.
   tu_luc: {
@@ -444,6 +473,16 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.05,
     durationMs: 260,
     screenShake: { durationMs: 110, intensity: 0.003 },
+  },
+  // Phap Trang windows -- the aura wraps the caster's own sprite, so the
+  // preset is 'attached' with no shake; TamMuoiAuraPresentation owns the
+  // authored dien xuat and suppresses the generic recipe visuals.
+  tam_muoi_aura: {
+    id: 'tam_muoi_aura',
+    color: 0xff8c42,
+    space: 'attached',
+    areaScale: 1,
+    durationMs: 260,
   },
   thuy_tien_dart: {
     id: 'thuy_tien_dart',

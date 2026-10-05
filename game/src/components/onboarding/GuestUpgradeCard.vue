@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword } from '@/services/auth/AuthService'
 import { readSupabaseSession, storeSupabaseSession } from '@/services/supabase/SupabaseSession'
@@ -111,15 +112,18 @@ function switchIdentity() {
     <template v-if="view === 'form'">
       <p class="upgrade-card__hint">{{ t('account.upgrade.hint') }}</p>
       <form class="upgrade-card__form" @submit.prevent="submitUpgrade">
-        <input
-          v-model.trim="loginId"
-          class="upgrade-card__input"
-          autocomplete="username"
-          maxlength="20"
-          :placeholder="t('onboarding.auth.placeholders.loginId')"
-          :aria-invalid="loginId && !validId ? true : undefined"
-          data-testid="upgrade-input-id"
-        />
+        <div class="upgrade-card__field">
+          <InkNineSlice chrome-id="text-field" layer="surface" />
+          <input
+            v-model.trim="loginId"
+            class="upgrade-card__input"
+            autocomplete="username"
+            maxlength="20"
+            :placeholder="t('onboarding.auth.placeholders.loginId')"
+            :aria-invalid="loginId && !validId ? true : undefined"
+            data-testid="upgrade-input-id"
+          />
+        </div>
         <p v-if="error" class="upgrade-card__error" role="alert">{{ error }}</p>
         <GameButton variant="secondary" type="submit" :disabled="!canSubmitId" :loading="submitting" data-testid="upgrade-submit">
           {{ t('account.upgrade.submit') }}
@@ -145,15 +149,18 @@ function switchIdentity() {
     <template v-else-if="view === 'password'">
       <p class="upgrade-card__hint">{{ t('account.upgrade.passwordBody', { id: pendingId ?? '' }) }}</p>
       <form class="upgrade-card__form" @submit.prevent="submitPassword">
-        <input
-          v-model="password"
-          class="upgrade-card__input"
-          autocomplete="new-password"
-          type="password"
-          :placeholder="t('onboarding.auth.placeholders.password')"
-          :aria-invalid="password && !isValidPassword(password) ? true : undefined"
-          data-testid="upgrade-input-password"
-        />
+        <div class="upgrade-card__field">
+          <InkNineSlice chrome-id="text-field" layer="surface" />
+          <input
+            v-model="password"
+            class="upgrade-card__input"
+            autocomplete="new-password"
+            type="password"
+            :placeholder="t('onboarding.auth.placeholders.password')"
+            :aria-invalid="password && !isValidPassword(password) ? true : undefined"
+            data-testid="upgrade-input-password"
+          />
+        </div>
         <p v-if="error" class="upgrade-card__error" role="alert">{{ error }}</p>
         <GameButton variant="secondary" type="submit" :disabled="!canSubmitPassword" :loading="submitting" data-testid="upgrade-password-submit">
           {{ t('account.upgrade.passwordSubmit') }}
@@ -171,8 +178,12 @@ function switchIdentity() {
 .upgrade-card { display: grid; gap: 10px; text-align: left; }
 .upgrade-card__hint { margin: 0; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); line-height: 1.5; }
 .upgrade-card__form { display: grid; gap: 10px; }
-.upgrade-card__input { box-sizing: border-box; width: 100%; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; padding: 10px 12px; outline: none; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 86%, transparent); color: var(--paper-text, #211f1a); font-size: var(--text-sm); }
-.upgrade-card__input:focus { border-color: var(--brush-600, #5e5a50); }
+/* wave B chrome: drawn text-field slice behind a transparent input -
+   matches the login field treatment on the paper card. */
+.upgrade-card__field { position: relative; }
+.upgrade-card__field:focus-within { outline: 2px solid var(--jade, #3f7d63); outline-offset: 1px; }
+.upgrade-card__input { position: relative; z-index: 2; box-sizing: border-box; width: 100%; border: 0; border-radius: 2px; padding: 10px 12px; outline: none; background: transparent; color: var(--hk-text-primary, #ede6d6); font-size: var(--text-sm); }
+.upgrade-card__input::placeholder { color: var(--hk-text-muted, #968e72); }
 .upgrade-card__error { margin: 0; color: var(--cinnabar, #b54432); font-size: var(--text-xs); }
 .upgrade-card__row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .upgrade-card__link { border: 0; background: none; padding: 4px 0; color: var(--paper-text-muted, #6b6860); font-size: var(--text-xs); text-decoration: underline; cursor: pointer; }

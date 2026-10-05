@@ -9,7 +9,7 @@ import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { skillCoreNodeId } from '../progression/SkillCoreLevel'
 
 // The Tu Reimagined (spec 2026-09-15, T6 + section 2.3) - Task 2:
-// 1. huy_quyen is a mortal cast-leveled basic (Lv2@1k, Lv3@10k casts),
+// 1. huy_quyen is a mortal cast-leveled basic (Lv2@250, Lv3@10k casts),
 //    learned wherever tram is granted, NOT insight-upgradeable.
 // 2. hidden_body is offered at the Initiation Ritual iff huy_quyen is Lv3
 //    (live read of the skillLevels mirror at offer/choose time).
@@ -32,7 +32,7 @@ function setupMortal(huyQuyenCasts = 0) {
   player.realmId = 'mortal'
   player.realmLevel = 12
   player.skillCastCounts = { huy_quyen: huyQuyenCasts }
-  player.nodeLevels[skillCoreNodeId('huy_quyen')] = huyQuyenCasts >= 10000 ? 3 : huyQuyenCasts >= 1000 ? 2 : 1
+  player.nodeLevels[skillCoreNodeId('huy_quyen')] = huyQuyenCasts >= 10000 ? 3 : huyQuyenCasts >= 250 ? 2 : 1
 
   gameManager.progressionOps.learnSkill('tram', player)
   gameManager.progressionOps.learnSkill('huy_quyen', player)
@@ -50,7 +50,7 @@ describe('huy_quyen — mortal cast-leveled skill', () => {
     expect(skill!.maxLevel).toBe(3)
   })
 
-  it('auto-levels by cast count: Lv2 at 1000, Lv3 at 10000, never Lv4', () => {
+  it('auto-levels by cast count: Lv2 at 250, Lv3 at 10000, never Lv4', () => {
     const gameManager = setup()
     const player = createDefaultPlayer()
     gameManager.setActivePlayer(player)
@@ -58,13 +58,13 @@ describe('huy_quyen — mortal cast-leveled skill', () => {
     const skill = gameManager.skillManager.get('huy_quyen')!
     const coreId = skillCoreNodeId('huy_quyen')
 
-    for (let cast = 0; cast < 999; cast++) gameManager.skillSystem.recordCast('huy_quyen')
+    for (let cast = 0; cast < 249; cast++) gameManager.skillSystem.recordCast('huy_quyen')
     expect(player.nodeLevels[coreId]).toBe(1)
 
     gameManager.skillSystem.recordCast('huy_quyen')
     expect(player.nodeLevels[coreId]).toBe(2)
 
-    for (let cast = 1000; cast < 10000; cast++) gameManager.skillSystem.recordCast('huy_quyen')
+    for (let cast = 250; cast < 10000; cast++) gameManager.skillSystem.recordCast('huy_quyen')
     expect(player.nodeLevels[coreId]).toBe(3)
     expect(skill.totalExperience).toBe(10000)
 
@@ -77,8 +77,8 @@ describe('huy_quyen — mortal cast-leveled skill', () => {
   })
 
   it('CAST_LEVELING_THRESHOLDS covers tram + huy_quyen; HUY_QUYEN_L3_CASTS reads the table', () => {
-    expect(CAST_LEVELING_THRESHOLDS['tram']).toEqual({ lv2: 1000, lv3: 10000 })
-    expect(CAST_LEVELING_THRESHOLDS['huy_quyen']).toEqual({ lv2: 1000, lv3: 10000 })
+    expect(CAST_LEVELING_THRESHOLDS['tram']).toEqual({ lv2: 250, lv3: 10000 })
+    expect(CAST_LEVELING_THRESHOLDS['huy_quyen']).toEqual({ lv2: 250, lv3: 10000 })
     expect(HUY_QUYEN_L3_CASTS).toBe(10000)
   })
 

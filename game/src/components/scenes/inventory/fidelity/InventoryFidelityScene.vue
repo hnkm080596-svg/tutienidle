@@ -10,6 +10,7 @@ import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import type { InventoryDisplay } from './inventoryUi'
 import InventoryFidelityDetail from './InventoryFidelityDetail.vue'
 
@@ -45,7 +46,11 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <div class="inventory-content">
       <slot name="toolbar"><div class="toolbar"><nav><button v-for="id in filters" :key="id" :aria-pressed="filter===id" @click="emit('filter',id)">{{ t(`inventoryPreview.${id}`) }}</button></nav><input type="search" :value="query" :placeholder="t('inventoryPreview.search')" :aria-label="t('inventoryPreview.searchLabel')" @input="search"><button class="sort" @click="emit('sort')">{{ t('inventoryPreview.sort') }}</button></div></slot>
       <div class="workspace"><div class="bag"><slot name="grid"><div class="item-grid"><button v-for="item in items" :key="item.id" :aria-label="`${item.name} × ${item.amount}`" :aria-pressed="selected?.id===item.id" @click="emit('select',item.id)"><span class="corners" aria-hidden="true"/><img :src="item.icon" alt=""><b>{{ item.amount }}</b></button></div><p v-if="!items.length">{{ t('inventoryPreview.empty') }}</p></slot></div><InventoryFidelityDetail v-if="selected" :item="selected" @use="emit('use',$event)"/></div>
-      <p class="count"><slot name="count">{{ t('inventoryPreview.count', { n: items.length }) }}</slot></p>
+      <!-- "X mon" counter: resource-pill chrome capsule anchored
+           bottom-left of the interior, sharing the pagination row's
+           baseline (owner ruling: counter uses resource-pill art;
+           ref image 2 has it on the footer line, not its own row). -->
+      <p class="count"><InkNineSlice chrome-id="resource-pill" layer="surface" /><span class="count__label"><slot name="count">{{ t('inventoryPreview.count', { n: items.length }) }}</slot></span></p>
     </div>
 
     <p v-if="preview" class="inventory-preview">{{ t('preview') }}</p>
@@ -68,12 +73,17 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .toolbar button[aria-pressed=true]{color:#285237;border-color:#967139}
 .toolbar input{width:212px;height:36px;border:1px solid #8f744aaa;background:#f4e4bb66;padding:0 12px;color:#433421;font-size:13px}
 .toolbar .sort{border:1px solid #8f744a;height:36px;padding:0 17px;font-size:14px}
-.workspace{display:grid;grid-template-columns:1fr auto;gap:26px;flex:1;min-height:0}
+/* Compact bag layout (owner ruling 2026-10-04, ref image 2): flex so
+   the preview-only detail rail costs NO gap when absent, the bag
+   fills the whole row, and the count capsule overlays the pagination
+   baseline instead of owning a dead line. */
+.workspace{display:flex;flex:1;min-height:0}
+.workspace > :not(.bag){flex:0 0 auto;margin-left:26px}
 /* No internal scrolling (BagGrid pattern: the grid must fit the
    column, cells sized so the visible rows stay inside the workspace) -
    the content box already keeps the count line clear of the paper's
    bottom decorative edge. */
-.bag{overflow:hidden;padding:5px 9px 5px 3px;border-right:1px solid #97794655;min-height:0}
+.bag{flex:1;min-width:0;overflow:hidden;min-height:0}
 .item-grid{display:grid;grid-template-columns:repeat(8,76px);gap:10px}
 .item-grid button{position:relative;width:76px;height:76px;border:1px solid #a59158;background:radial-gradient(ellipse at 50% 40%,#385442,#0f251c 83%);box-shadow:inset 0 0 0 3px #06160f,0 2px 4px #43341d44;cursor:pointer}
 .item-grid img{width:62px;height:62px;object-fit:contain;filter:drop-shadow(0 2px 5px #000)}
@@ -82,7 +92,8 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .item-grid button[aria-pressed=true]{outline:2px solid #d3aa55;outline-offset:2px;filter:brightness(1.2)}
 .item-grid button:hover{filter:brightness(1.2)}
 .item-grid button:focus-visible,.toolbar button:focus-visible{outline:2px solid #806126;outline-offset:3px}
-.count{font-size:12px;margin:10px 0 0}
+.count{position:absolute;left:0;bottom:0;margin:0;min-width:72px;height:30px;font-size:12px;color:#e8d9ae;text-align:center;line-height:30px}
+.count .count__label{position:relative;z-index:2;padding:0 12px}
 .inventory-preview{position:absolute;left:235px;top:713px;margin:0;font-size:10px;line-height:15px;color:#7d6a45}
 .inventory-notice{position:absolute;left:700px;top:710px;width:675px;height:28px;margin:0;text-align:right;font-size:12px;color:#62512d}
 </style>

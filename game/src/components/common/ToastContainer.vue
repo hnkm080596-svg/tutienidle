@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNotificationStore } from '@/stores/notification'
 import GameButton from '@/components/common/GameButton.vue'
@@ -51,8 +51,6 @@ const KIND_COLOR: Record<NotificationKind, string> = {
 // .game-root (xem GameRoot.vue), window.innerHeight la dung don vi.
 // Chieu cao item lay du ra (46px) vi loot toast kem icon + noi dung
 // hai dong render ~40-44px thuc te, khong phai 32px nhu toast chu tron.
-const TOAST_TOP_OFFSET_PX = 24
-const TOAST_BOTTOM_MARGIN_PX = 24
 const TOAST_ITEM_HEIGHT_PX = 46
 const TOAST_GAP_PX = 4
 
@@ -61,20 +59,45 @@ const TOAST_GAP_PX = 4
 // down the right edge (e.g. on victory loot bursts).
 const TOAST_MAX_VISIBLE = 6
 
-function updateMaxVisible() {
-  const availableHeight = window.innerHeight - TOAST_TOP_OFFSET_PX - TOAST_BOTTOM_MARGIN_PX
+// Toast anchor: the design canvas (1440x810, scaled + letterboxed by
+// SceneDesignCanvas) - a fixed real-pixel top/right landed the pills on
+// the utility-seal band (df-hud ends at design y 95) and the quest board
+// below it (design y ~200). Same scale/letterbox math maps the
+// design-space corner under both into viewport pixels.
+const TOAST_DESIGN_WIDTH = 1440
+const TOAST_DESIGN_HEIGHT = 810
+const TOAST_DESIGN_TOP_PX = 204
+const TOAST_DESIGN_RIGHT_PX = 18
+const TOAST_BOTTOM_MARGIN_PX = 24
+
+const anchorTopPx = ref(24)
+const anchorRightPx = ref(24)
+
+function updateAnchor() {
+  const scale = Math.min(
+    window.innerWidth / TOAST_DESIGN_WIDTH,
+    window.innerHeight / TOAST_DESIGN_HEIGHT,
+  )
+  const offsetX = (window.innerWidth - TOAST_DESIGN_WIDTH * scale) / 2
+  const offsetY = (window.innerHeight - TOAST_DESIGN_HEIGHT * scale) / 2
+
+  anchorTopPx.value = offsetY + TOAST_DESIGN_TOP_PX * scale
+  anchorRightPx.value = offsetX + TOAST_DESIGN_RIGHT_PX * scale
+
+  const canvasBottomPx = offsetY + TOAST_DESIGN_HEIGHT * scale
+  const availableHeight = canvasBottomPx - anchorTopPx.value - TOAST_BOTTOM_MARGIN_PX
   const maxVisible = Math.floor((availableHeight + TOAST_GAP_PX) / (TOAST_ITEM_HEIGHT_PX + TOAST_GAP_PX))
 
-  notification.setMaxVisible(Math.min(maxVisible, TOAST_MAX_VISIBLE))
+  notification.setMaxVisible(Math.max(1, Math.min(maxVisible, TOAST_MAX_VISIBLE)))
 }
 
 onMounted(() => {
-  updateMaxVisible()
-  window.addEventListener('resize', updateMaxVisible)
+  updateAnchor()
+  window.addEventListener('resize', updateAnchor)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateMaxVisible)
+  window.removeEventListener('resize', updateAnchor)
 })
 
 // The "Chat - Name" naming model (2026-09-14) embeds the dash inside the
@@ -88,7 +111,10 @@ function lastNameText(name: string): string {
 
 <template>
   <Teleport to="body">
-    <div class="toast-container" :style="{ zIndex: OVERLAY_LAYERS.toast }">
+    <div
+      class="toast-container"
+      :style="{ zIndex: OVERLAY_LAYERS.toast, top: `${anchorTopPx}px`, right: `${anchorRightPx}px` }"
+    >
       <TransitionGroup name="toast">
         <div
           v-for="toast in notification.toasts"
@@ -97,7 +123,7 @@ function lastNameText(name: string): string {
           :style="{ '--toast-color': toast.loot?.accentColorVar ? `var(${toast.loot.accentColorVar})` : KIND_COLOR[toast.kind] }"
           role="status"
         >
-          <InkNineSlice chrome-id="frame-xs-tooltip" layer="surface" tint-var="var(--toast-color)" />
+          <InkNineSlice chrome-id="frame-xs-tooltip" layer="surface" />
           <!-- UI-006 (Task 4, 2026-09-07) - toast message la live region
                (role="status"), dismiss la NUT RIENG (keyboard/SR reachable)
                thay vi click div toan toast. -->
@@ -146,9 +172,8 @@ function lastNameText(name: string): string {
 <style scoped>
 .toast-container {
   position: fixed;
-  top: 24px;
-  right: 24px;
-  /* z-index via OVERLAY_LAYERS.toast (inline style). */
+  /* top/right + z-index inline: the anchor tracks the scaled design
+     canvas corner (see updateAnchor() above). */
   display: flex;
   flex-direction: column;
   gap: 4px;

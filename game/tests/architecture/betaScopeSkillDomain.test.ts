@@ -21,11 +21,13 @@ import {
   activeElementTreeFor,
   betaCombatRolesFor,
   betaCombatSurfacesFor,
+  betaMortalTreeViewTags,
   betaSkillTreeFor,
   type BetaSkillTreeNode,
 } from '@/core/betaScopeSkillDomain'
 import { SPELL_KIT_IDS } from '@/data/skill/Skills'
 import { PHAP_TU_NODES } from '@/data/progression/PhapTuNodes'
+import { MORTAL_TIEN_THAN_NODES } from '@/data/progression/MortalTienThanNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -329,14 +331,59 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
     expect(tree.way).toBeNull()
 
     for (const node of tree.nodes) {
-      if (node.reason === 'grant-only-node') {
-        // Realm-reward grant nodes are never tree-rendered for anyone.
-        expect(node.state).toBe('scope-hidden')
-      } else {
-        expect(node.state).toBe('progression-locked')
-        expect(node.reason).toBe('initiation-pending')
-      }
+      // Realm-reward grant nodes render now (readable seats) - on a
+      // mortal they sit behind the same initiation lock as the rest.
+      expect(node.state).toBe('progression-locked')
+      expect(node.reason).toBe('initiation-pending')
     }
+  })
+
+  it('mortal tree surface admits only the info-anchor branch (tien_than precursor trio)', () => {
+    const mortal = betaSkillTreeFor(mortalPlayer(), MORTAL_TIEN_THAN_NODES)
+
+    expect(mortal.mortal).toBe(true)
+    expect([...betaMortalTreeViewTags(MORTAL_TIEN_THAN_NODES)]).toEqual([
+      'tien_than',
+    ])
+
+    for (const seatId of ['tram_tien_than', 'linh_bao_tien_than', 'huy_quyen_tien_than']) {
+      const seat = nodeById(mortal.nodes, seatId)
+      expect(seat.state).toBe('progression-locked')
+      expect(seat.reason).toBe('initiation-pending')
+      expect(seat.infoSkillId).toBeDefined()
+      expect(seat.canUpgrade).toBe(false)
+    }
+  })
+
+  it('info anchor: renderable for every in-scope player but never purchasable', () => {
+    const tree = [...PHAP_TU_NODES, ...MORTAL_TIEN_THAN_NODES]
+
+    // Uncommitted spell player browsing the element picker still reads it.
+    const uncommitted = betaSkillTreeFor(spellPlayer(), tree)
+    const seat = nodeById(uncommitted.nodes, 'linh_bao_tien_than')
+    expect(seat.state).toBe('progression-locked')
+    expect(seat.reason).toBe('info-only')
+
+    // Committed fire: same info-only verdict, no Insight channel.
+    const committed = betaSkillTreeFor(spellPlayer({ skillInsight: 50 }, 'fire'), tree)
+    const committedSeat = nodeById(committed.nodes, 'linh_bao_tien_than')
+    expect(committedSeat.state).toBe('progression-locked')
+    expect(committedSeat.reason).toBe('info-only')
+    expect(committedSeat.canUpgrade).toBe(false)
+
+    // Other-element commit: the way-less seat is not element-branched -
+    // its row stays info-only (the surface only renders tien_than for
+    // mortals, so it is never drawn on the water tree).
+    const water = betaSkillTreeFor(spellPlayer({}, 'water'), tree)
+    const waterSeat = nodeById(water.nodes, 'linh_bao_tien_than')
+    expect(waterSeat.state).toBe('progression-locked')
+    expect(waterSeat.reason).toBe('info-only')
+
+    // Non-beta way: the whole surface fails closed, anchor included.
+    const sword = betaSkillTreeFor(swordPlayer(), tree)
+    expect(nodeById(sword.nodes, 'linh_bao_tien_than').state).toBe(
+      'scope-hidden',
+    )
   })
 
   it('corrupt mortal + cultivationPath save: every node is scope-hidden, nothing purchasable', () => {
@@ -358,12 +405,8 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
 
     for (const node of tree.nodes) {
       expect(node.state).toBe('scope-hidden')
+      expect(node.reason).toBe('non-beta-way')
     }
-    expect(
-      tree.nodes.every(
-        (node) => node.reason === 'non-beta-way' || node.reason === 'grant-only-node',
-      ),
-    ).toBe(true)
   })
 
   it('uncommitted spell_pathway: the five roots are purchasable commit picks', () => {
@@ -387,28 +430,49 @@ describe('beta scope v2 phase-3 - skill tree read-model', () => {
 
     for (const node of tree.nodes) {
       if (node.elementTag === undefined) {
-        // Way-less realm-reward grants: scope-hidden as grant-only.
-        expect(node.state).toBe('scope-hidden')
-        expect(node.reason).toBe('grant-only-node')
         continue
       }
 
       if (node.elementTag === 'fire') {
-        // The element-tagged realm-reward grants (tinh_thong_*) are
-        // never tree-rendered for anyone - grant-only trumps the branch
-        // visibility check.
-        if (node.reason === 'grant-only-node') {
-          expect(node.state).toBe('scope-hidden')
-        } else {
-          expect(node.state).not.toBe('scope-hidden')
-        }
+        // Realm-reward grants render on their own branch now (readable
+        // seats) - tinh_thong_hoa must stay on the fire surface.
+        expect(node.state).not.toBe('scope-hidden')
       } else {
         expect(node.state).toBe('scope-hidden')
-        // Branch nodes hide as other-element-branch; element-tagged
-        // reward grants hide as grant-only (never tree-rendered).
-        expect(['other-element-branch', 'grant-only-node']).toContain(node.reason)
+        // Other branches - including their tinh_thong_* mastery grants -
+        // hide as other-element-branch.
+        expect(node.reason).toBe('other-element-branch')
       }
     }
+  })
+
+  it('realm-reward grant seat: ungranted reads grant-only, granted reads purchased, Insight never writes', () => {
+    // Ungranted (qi_refining, no nodeLevels entry): readable locked seat.
+    const ungranted = nodeById(
+      betaSkillTreeFor(spellPlayer({ skillInsight: 50 }, 'fire')).nodes,
+      'tinh_thong_hoa',
+    )
+    expect(ungranted.state).toBe('progression-locked')
+    expect(ungranted.reason).toBe('grant-only')
+    expect(ungranted.canUpgrade).toBe(false)
+
+    // Granted L1 by the breakthrough reward: lit like any owned node,
+    // still no Insight channel (canUpgrade rejects rewardOnly).
+    const granted = nodeById(
+      betaSkillTreeFor(
+        spellPlayer(
+          {
+            skillInsight: 50,
+            nodeLevels: { hoa_linh_ngo: 1, tinh_thong_hoa: 1 },
+          },
+          'fire',
+        ),
+      ).nodes,
+      'tinh_thong_hoa',
+    )
+    expect(granted.state).toBe('purchased')
+    expect(granted.level).toBe(1)
+    expect(granted.canUpgrade).toBe(false)
   })
 
   it('activeElementTreeFor returns exactly the renderable surface', () => {

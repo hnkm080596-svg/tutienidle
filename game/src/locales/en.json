@@ -1,18 +1,63 @@
 {
   "skillVfxLab": {
-    "title": "Training · Flying Sword",
-    "intro": "A development preview using the same playback runtime as real combat. Switch skills to compare flight, melee, area effects and healing.",
+    "title": "Training · Skill Effects",
+    "intro": "Preview skills and monster attacks without creating a character or entering combat. Monster entries play right-to-left; the Ngu Diem aura and Phap The seal ride the caster figure in every mode.",
     "back": "Enter game →",
     "play": "Cast",
     "cancel": "Cancel effect",
-    "note": "Development only · Synthetic outcomes, no damage and no save writes. Procedural Phaser Graphics, no VFX sprite download.",
+    "note": "Development only · Synthetic outcomes, no damage and no save writes. Monster entries use the exact preset authored on each enemy template; Ly Fire Art uses real sprites.",
     "skill": "Skill",
     "outcome": "Simulated outcome",
     "speed": "Playback speed",
+    "tamMuoiAura": "Ngu Diem aura",
+    "empowered": "Phap The empowered (2 rings, azure)",
+    "phapTheStacks": "Phap The · preview 0–5 stacks",
+    "scrub": "Scrub effect (ms)",
+    "hoa_cau_comet": "Ly Fire Art · Spell Cultivator",
+    "linh_bao_burst": "Linh Bao · Mortal precursor",
     "ngu_kiem_flight": "Flying Sword · Ngu Kiem",
     "slash": "Melee slash",
     "earth_shockwave": "Earth shockwave · AoE",
     "holy_radiance": "Healing",
+    "groupSkill": "Skills",
+    "groupMonsters": "Monster attacks",
+    "groupPresets": "Other presets",
+    "arcane_impact": "Arcane impact",
+    "fire_burst": "Fire burst",
+    "water_surge": "Water surge",
+    "metal_slash": "Metal slash",
+    "wood_spikes": "Wood spikes",
+    "lightning_strike": "Lightning strike",
+    "wind_blade": "Wind blade",
+    "shadow_burst": "Shadow burst",
+    "boss_ground_slam": "Ground slam",
+    "tu_luc": "Charge up",
+    "claw": "Claw strike",
+    "bite": "Bite",
+    "bite_multi": "Bite (multi)",
+    "ram": "Ram / charge hit",
+    "ram_multi": "Ram (multi)",
+    "stomp": "Stomp",
+    "stomp_multi": "Stomp (multi)",
+    "slash_vertical": "Slash (vertical)",
+    "slash_horizontal": "Slash (horizontal)",
+    "slash_multi": "Slash (multi)",
+    "mob_wild_wolf": "Wild Wolf · Bite",
+    "mob_giant_earthworm": "Earthworm · Shockwave",
+    "mob_flame_fox": "Flame Fox · Fire Burst",
+    "mob_ferocious_flood_serpent": "Flood Serpent · Water Surge",
+    "mob_mortal_wild_boar": "Wild Boar · Ram",
+    "mob_mortal_savage_tiger": "Savage Tiger · Claw",
+    "mob_mortal_water_wolf": "Water Wolf · Bite",
+    "mob_mortal_ferocious_giant_crocodile": "Giant Crocodile · Bite",
+    "mob_mortal_ferocious_wild_boar": "Boar King · Stomp",
+    "mob_ferocious_bandit": "Bandit King · Slash Flurry",
+    "mob_bandit": "Bandit · Slash",
+    "mob_foundation_spirit_wolf": "Spirit Wolf · Bite",
+    "mob_foundation_ferocious_spirit_wolf": "Spirit Wolf King · Multi-Bite",
+    "mob_foundation_lava_hound": "Lava Hound · Fire Burst",
+    "mob_foundation_sand_scorpion": "Sand Scorpion · Claw",
+    "mob_foundation_mud_golem": "Mud Golem · Ground Slam",
     "hit": "Landed hit",
     "miss": "Miss",
     "intercept": "Intercepted",
@@ -20,6 +65,12 @@
     "multi": "8 flying swords",
     "combo": "With combo",
     "empty": "No effect",
+    "raise": "Raise hand",
+    "portal": "Open magic circle",
+    "gather": "Fire gathering",
+    "projectile": "Arcadia fireball · test flight",
+    "explosion": "Fire 20 · impact",
+    "finish": "Complete",
     "release": "Release · 120 ms",
     "cruise": "Cruise · 180 ms",
     "acceleration": "Acceleration · 70 ms",
@@ -245,7 +296,9 @@
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
         },
-        "upgradeGateHeader": "Upgrade blocked:"
+        "upgradeGateHeader": "Upgrade blocked:",
+        "infoOnly": "Precursor skill - read-only; it levels itself by cast count and cannot be enlightened or upgraded with Insight.",
+        "grantOnly": "Realm breakthrough reward - read-only; it levels itself on breakthrough and cannot be enlightened or upgraded with Insight."
       },
       "elementTabs": {
         "aria": "Choose Pháp Tu element"
@@ -342,6 +395,7 @@
         },
         "elementPick": {
           "hint": "Choose the element of the Five Element Art — a permanent commitment.",
+          "lockedBeta": "Locked in beta",
           "back": "Back"
         }
       },
@@ -866,7 +920,8 @@
     },
     "hkNav": {
       "aria": "Feature navigation",
-      "body": "Dao Body"
+      "body": "Dao Body",
+      "techniqueLocked": "Technique unlocks at Qi Refining"
     },
     "decompose": {
       "labels": {
@@ -1120,7 +1175,7 @@
     },
     "overlay": {
       "aiPanel": {
-        "title": "Target AI",
+        "title": "Battle AI",
         "ariaGroup": "AI target selection strategy",
         "strategies": {
           "nearest": "Nearest",
@@ -1135,7 +1190,9 @@
           "elite_first": "Boss → Elite → normal, then sorted by distance.",
           "lowest_hp": "Targets the enemy with the lowest remaining HP.",
           "highest_hp": "Targets the enemy with the highest remaining HP."
-        }
+        },
+        "close": "Close AI panel",
+        "target": "Target priority"
       },
       "countdown": {
         "go": "To Battle!"
@@ -1154,7 +1211,11 @@
         "exit": "Leave Battle"
       },
       "topBar": {
-        "enemiesSuffix": "enemies"
+        "enemiesSuffix": "enemies",
+        "autoMode": "Auto",
+        "manualMode": "Manual",
+        "pause": "Pause",
+        "resume": "Resume"
       },
       "skillBar": {
         "roles": {
@@ -1173,6 +1234,13 @@
         "upcoming": "Next up",
         "round": "Round {current}",
         "roundWithLimit": "Round {current}/{limit}"
+      },
+      "playerCard": {
+        "title": "Character",
+        "hp": "HP",
+        "mp": "MP",
+        "ward": "Ward",
+        "effects": "Effects"
       }
     }
   },
@@ -1610,6 +1678,9 @@
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",
     "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
+    "bodyRefinementInvested": "Body Refinement +{amount} — {tier} {progress}/{cap}",
+    "bodyRefinementTierComplete": "{tier} complete!",
+    "bodyRefinementTierLocked": "{tier} needs Mortal tier {level} — {stored} essence stored",
     "autosaveFailed": "Progress could not be saved — browser storage is full. Smelt some equipment to free space.",
     "resetDeleteFailed": "Could not delete the save — the browser is refusing storage access."
   },
@@ -1792,15 +1863,15 @@
       "export": "Download Save (.json)",
       "import": "Import Another Save",
       "reset": "Delete & Start Over",
-      "resetCloud": "Reload From Cloud"
+      "resetCloud": "Delete Server Character"
     },
     "confirm": {
       "resetTitle": "Delete & Start Over",
       "resetBody": "Delete the current save and start a new character? Download your save first if you have not — this cannot be undone.",
       "importFailedTitle": "Import Failed",
       "importFailedBody": "The save file is not valid.",
-      "resetCloudTitle": "Reload From Cloud",
-      "resetCloudBody": "Clear the local cache and reload from the server? The cloud save is not deleted — if the server data is still corrupt, this screen will return."
+      "resetCloudTitle": "Delete Server Character",
+      "resetCloudBody": "PERMANENTLY delete the character and all save data on the server — this cannot be undone. Your account restarts at character creation."
     },
     "notify": {
       "deleteFailed": "Could not delete the save — the browser is refusing storage access.",
@@ -1950,6 +2021,8 @@
     "talent": "Talents",
     "elements": "Five Elements",
     "path": "Path",
+    "lyHoaDao": "Ly Hỏa Chi Đạo",
+    "lyHoaVerse": "離宮真火焚天地 · 三昧神光煉古今",
     "power": "Combat Power",
     "details": "Details",
     "combat": "Combat",
@@ -2009,6 +2082,7 @@
     "tree": "Skill Meridians",
     "levelLabel": "Level",
     "grants": "Skill",
+    "infoCasts": "Casts",
     "effects": "Effects",
     "conditions": "Requirements",
     "noConditions": "No further requirements.",
@@ -2018,7 +2092,12 @@
       "locked": "Locked"
     },
     "actionDone": "{name} updated.",
-    "actionFailed": "Action unavailable — check requirements and Insight."
+    "actionFailed": "Action unavailable — check requirements and Insight.",
+    "constellation": {
+      "legendGlyph": "Glyph stroke",
+      "legendPrereq": "Prerequisite",
+      "canvas": "{glyph} constellation"
+    }
   },
   "body": {
     "title": "Body Tempering",
@@ -2084,8 +2163,7 @@
       "accessories": "Accessories"
     },
     "workspace": {
-      "equip": "Gear",
-      "bag": "Stash"
+      "equip": "Gear"
     }
   },
   "inventoryPreview": {

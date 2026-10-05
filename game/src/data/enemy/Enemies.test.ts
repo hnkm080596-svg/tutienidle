@@ -24,6 +24,10 @@ const FOUNDATION_IDS = [
   'foundation_flood_dragon_whelp',
   'foundation_ferocious_mist_shark',
   'foundation_ferocious_flood_dragon_whelp',
+  // Roster remap (2026-10-04): the Linh Lang family - the only
+  // foundation roster species + its king boss.
+  'foundation_spirit_wolf',
+  'foundation_ferocious_spirit_wolf',
 ]
 
 describe('enemy speed band (turn-based parity rule)', () => {

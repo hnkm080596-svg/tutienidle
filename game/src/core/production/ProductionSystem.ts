@@ -362,6 +362,7 @@ export class ProductionSystem {
     currentRealmId: string,
     capacity: number,
     assignments?: Map<string, number>,
+    rng?: () => number,
   ): void {
     const activeStates = [...this.states.values()].filter(state => state.autoRestart)
 
@@ -421,6 +422,7 @@ export class ProductionSystem {
         nowMs,
         emptyLaneStartMs: nowMs,
         advanceMode: 'observe',
+        rng,
       })
 
       state.workerCycles = result.pending
@@ -458,6 +460,8 @@ export class ProductionSystem {
       /** Chi-hien-quan - assignments snapshot (tu states truoc settle) de
        *  offline khop online. */
       workerAssignments?: Map<string, number>
+      /** Seeded stream for rollSeed mints on spawned cycles. */
+      rng?: () => number
     } = {},
   ): number {
     return settleProductionOffline(

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -20,9 +20,16 @@ const { t } = useI18n()
 // B1.9a - under the remote authority the corrupt/incompatible bytes
 // live server-side. Export still preserves raw data for manual
 // recovery; import is validate+export only (it cannot overwrite the
-// cloud row); reset becomes a cloud recheck that restores whatever
-// the authoritative row holds.
+// cloud row); reset permanently deletes the server character + saves
+// (reset_character) so the next boot restarts at creation.
 const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authoritative'
+
+// The remote reset is only legal when the offending bytes actually live
+// server-side. pending-conflict/pending-quarantined report the same
+// surface but scope 'local' - the remote row is the healthy head there,
+// so the reset must stay a local-envelope clear. Computed so a re-report
+// while mounted can't leave the destructive gate on a stale scope.
+const remoteResettable = computed(() => remoteAuthoritative && saveIssue.scope === 'remote')
 
 // Thay window.confirm()/window.alert() native - modal xac nhan dong bo
 // hoa bang pending-action giong SettingsPanel.vue: mo ConfirmModal, hanh
@@ -53,24 +60,34 @@ function handleExport() {
 
 function handleReset() {
   requestConfirm(
-    remoteAuthoritative
+    remoteResettable.value
       ? t('saveIncompatible.confirm.resetCloudTitle')
       : t('saveIncompatible.confirm.resetTitle'),
-    remoteAuthoritative
+    remoteResettable.value
       ? t('saveIncompatible.confirm.resetCloudBody')
       : t('saveIncompatible.confirm.resetBody'),
     () => {
       // Mission A review - deleteSave() returns false on storage
       // failure; reloading would boot back into the same corrupt save.
-      // In remote mode this is only a CACHE reset: the authoritative
-      // load re-fetches the cloud row after reload (an unchanged
-      // corrupt row lands back on this surface).
-      if (deleteSave()) {
-        markResetNotice()
-        window.location.reload()
-      } else {
-        notification.push('error', t('saveIncompatible.notify.deleteFailed'))
-      }
+      // For a remote-scope issue the authoritative row is the corrupt
+      // one, so reset_character deletes it first; only then does the
+      // local cache reset make the reload land on character creation
+      // instead of re-loading the corrupt row.
+      void (async () => {
+        if (remoteResettable.value) {
+          const reset = await cloudSaveCoordinator.resetCharacter()
+          if (reset.status === 'unavailable') {
+            notification.push('error', reset.message || t('saveIncompatible.notify.deleteFailed'))
+            return
+          }
+        }
+        if (deleteSave()) {
+          markResetNotice()
+          window.location.reload()
+        } else {
+          notification.push('error', t('saveIncompatible.notify.deleteFailed'))
+        }
+      })()
     },
     true,
   )
@@ -125,9 +142,9 @@ function handleImport(event: Event) {
 <template>
   <div class="save-incompatible" :style="{ zIndex: OVERLAY_LAYERS.saveGate }">
     <InkWashBackdrop left-mountain right-mountain bottom-mist />
-    <div class="save-incompatible__panel paper-on-dark">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+    <div class="save-incompatible__panel">
+      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
       <h2 class="save-incompatible__title">{{ t('saveIncompatible.title') }}</h2>
 
@@ -140,15 +157,19 @@ function handleImport(event: Event) {
       </p>
 
       <div class="save-incompatible__actions">
-        <GameButton variant="secondary" @click="handleExport">{{ t('saveIncompatible.actions.export') }}</GameButton>
+        <!-- No raw bytes means nothing to export (e.g. a rejected first
+             write where no save ever persisted) - hide rather than
+             download a 0-byte file labelled as the save. -->
+        <GameButton v-if="saveIssue.raw" variant="secondary" @click="handleExport">{{ t('saveIncompatible.actions.export') }}</GameButton>
 
         <label class="save-incompatible__import">
-          {{ t('saveIncompatible.actions.import') }}
+          <InkNineSlice chrome-id="button-standard" layer="surface" />
+          <span class="save-incompatible__import-label">{{ t('saveIncompatible.actions.import') }}</span>
           <input type="file" accept="application/json" @change="handleImport" />
         </label>
 
         <GameButton variant="danger" @click="handleReset">
-          {{ remoteAuthoritative ? t('saveIncompatible.actions.resetCloud') : t('saveIncompatible.actions.reset') }}
+          {{ remoteResettable ? t('saveIncompatible.actions.resetCloud') : t('saveIncompatible.actions.reset') }}
         </GameButton>
       </div>
     </div>
@@ -180,12 +201,17 @@ function handleImport(event: Event) {
 
 .save-incompatible__panel {
   /* margin:auto - van can giua khi vua man hinh, nhung khi overflow
-     thi panel dat len tren de cuon toi duoc toan bo noi dung. */
+     thi panel dat len tren de cuon toi duoc toan bo noi dung.
+   Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll +
+   frame-m-modal band; padding clears the band and overflow:hidden +
+   border-radius clip the scroll's square corners. */
   position: relative;
   isolation: isolate;
   margin: auto;
   max-width: 460px;
-  padding: 28px 32px;
+  padding: 46px 40px;
+  overflow: hidden;
+  border-radius: 16px;
   box-shadow: var(--shadow-panel);
   text-align: center;
   font-family: var(--font-body);
@@ -217,6 +243,9 @@ function handleImport(event: Event) {
   gap: 10px;
 }
 
+/* The import affordance paints no button of its own - the drawn
+   button-standard chrome supplies the metal shell and the hidden file
+   input still owns the click target. */
 .save-incompatible__import {
   position: relative;
   overflow: hidden;
@@ -225,9 +254,7 @@ function handleImport(event: Event) {
   justify-content: center;
   min-height: var(--tap-comfortable);
   padding: var(--space-2) var(--space-4);
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line);
+  color: var(--hk-text-primary, #ede6d6);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: var(--font-body);
@@ -235,15 +262,20 @@ function handleImport(event: Event) {
   font-weight: 700;
 }
 
+.save-incompatible__import-label {
+  position: relative;
+  z-index: 3;
+}
+
 .save-incompatible__import input {
   position: absolute;
   inset: 0;
+  z-index: 4;
   opacity: 0;
   cursor: pointer;
 }
 
-.save-incompatible__import:hover {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
+.save-incompatible__import:hover .save-incompatible__import-label {
+  color: var(--hk-gold-bright, #e8c35a);
 }
 </style>

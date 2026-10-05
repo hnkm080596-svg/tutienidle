@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <g id="rune" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M128 15 L136 28 L128 38 L120 28 Z"/>
+      <path d="M128 42 L128 51 M116 42 L121 51 M140 42 L135 51"/>
+      <path d="M123 58 L128 52 L133 58"/>
+    </g>
+  </defs>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="128" cy="128" r="113" stroke-width="1.8"/>
+    <circle cx="128" cy="128" r="93" stroke-width="1.3" stroke-dasharray="25 4 4 4"/>
+    <circle cx="128" cy="128" r="74" stroke-width="1.4"/>
+    <path d="M128 56 L141 68 L128 80 L115 68 Z M200 128 L188 141 L176 128 L188 115 Z M128 200 L115 188 L128 176 L141 188 Z M56 128 L68 115 L80 128 L68 141 Z" stroke-width="2"/>
+    <path d="M128 81 L143 104 L128 94 L113 104 Z M175 128 L152 143 L162 128 L152 113 Z M128 175 L113 152 L128 162 L143 152 Z M81 128 L104 113 L94 128 L104 143 Z" stroke-width="1.4"/>
+  </g>
+  <use href="#rune"/><use href="#rune" transform="rotate(30 128 128)"/>
+  <use href="#rune" transform="rotate(60 128 128)"/><use href="#rune" transform="rotate(90 128 128)"/>
+  <use href="#rune" transform="rotate(120 128 128)"/><use href="#rune" transform="rotate(150 128 128)"/>
+  <use href="#rune" transform="rotate(180 128 128)"/><use href="#rune" transform="rotate(210 128 128)"/>
+  <use href="#rune" transform="rotate(240 128 128)"/><use href="#rune" transform="rotate(270 128 128)"/>
+  <use href="#rune" transform="rotate(300 128 128)"/><use href="#rune" transform="rotate(330 128 128)"/>
+</svg>

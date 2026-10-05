@@ -1,0 +1,5624 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "id": "fx_hoa_cau_triple_fire_circle",
+    "name": "Hoa Cau Triple Fire Circle",
+    "comp": {
+      "w": 256,
+      "h": 256,
+      "dur": 2.28,
+      "fps": 60
+    },
+    "exp": {
+      "cols": 8,
+      "rows": 8,
+      "frames": 64,
+      "cellW": 192,
+      "cellH": 192,
+      "t0": 0,
+      "t1": 2.28,
+      "mode": "rgba",
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_hc_outer_ring_5fbf558c46b9",
+        "name": "outer ring",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_ring_e9fb1496a36b",
+        "name": "middle ring",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_ring_3a5a40f11eba",
+        "name": "inner ring",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_calligraphy_28a01ccc4792",
+        "name": "calligraphy",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_01_40fa13993b49",
+        "name": "outer glyph 01",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_02_20fc48152d6e",
+        "name": "outer glyph 02",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_03_34262d553dec",
+        "name": "outer glyph 03",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_04_524ed0df8985",
+        "name": "outer glyph 04",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_05_011c58f0ff12",
+        "name": "outer glyph 05",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_06_fd8902ca59f8",
+        "name": "outer glyph 06",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_07_0c4bb5b98984",
+        "name": "outer glyph 07",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_08_3643ee43bc5b",
+        "name": "outer glyph 08",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_09_ddc565b83f73",
+        "name": "outer glyph 09",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_10_525e7095b991",
+        "name": "outer glyph 10",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_11_a40f456db74e",
+        "name": "outer glyph 11",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_12_52214902cf1a",
+        "name": "outer glyph 12",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_13_30cdd1c16e9f",
+        "name": "outer glyph 13",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_14_04b1308deb18",
+        "name": "outer glyph 14",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_15_679f0c8bcb36",
+        "name": "outer glyph 15",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_16_ee8295a6f046",
+        "name": "outer glyph 16",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_17_1c26d6d134ab",
+        "name": "outer glyph 17",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_18_54bb44047e5d",
+        "name": "outer glyph 18",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_19_60eeaac8c698",
+        "name": "outer glyph 19",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_20_49be2c73688f",
+        "name": "outer glyph 20",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_21_bc1cc0f20913",
+        "name": "outer glyph 21",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_22_1c8433b2ccb1",
+        "name": "outer glyph 22",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_23_8e27844642ed",
+        "name": "outer glyph 23",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_outer_glyph_24_6993b23a1604",
+        "name": "outer glyph 24",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_01_8da1ed252ff8",
+        "name": "middle glyph 01",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_02_8dd24f1549c1",
+        "name": "middle glyph 02",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_03_d4070318a9ec",
+        "name": "middle glyph 03",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_04_e026ee2380f3",
+        "name": "middle glyph 04",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_05_8e9012f60ce5",
+        "name": "middle glyph 05",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_06_6edb0a654ba2",
+        "name": "middle glyph 06",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_07_e4b2dec163b0",
+        "name": "middle glyph 07",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_08_73cb825487af",
+        "name": "middle glyph 08",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_09_0db16d0ac752",
+        "name": "middle glyph 09",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_10_a2c8ade5c39a",
+        "name": "middle glyph 10",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_11_6b1b467d6df0",
+        "name": "middle glyph 11",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_12_5c92b5fc0159",
+        "name": "middle glyph 12",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_13_158a128384cc",
+        "name": "middle glyph 13",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_14_549397d13770",
+        "name": "middle glyph 14",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_15_d2aed36ee0f0",
+        "name": "middle glyph 15",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_middle_glyph_16_222240563461",
+        "name": "middle glyph 16",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_01_f8a684300708",
+        "name": "inner glyph 01",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_02_5ad06efba296",
+        "name": "inner glyph 02",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_03_3e9ed66e1cad",
+        "name": "inner glyph 03",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_04_03beff30518f",
+        "name": "inner glyph 04",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_05_aba28d9838c8",
+        "name": "inner glyph 05",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_06_8a9ea747d958",
+        "name": "inner glyph 06",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_07_44118dc27f0d",
+        "name": "inner glyph 07",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_08_7f38fc783451",
+        "name": "inner glyph 08",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_09_ba1b0d033431",
+        "name": "inner glyph 09",
+        "sheet": null
+      },
+      {
+        "id": "tex_hc_inner_glyph_10_36154a82b3ce",
+        "name": "inner glyph 10",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_hc_outer_dissolve",
+        "name": "outer fire-script dissolution embers",
+        "type": "emitter",
+        "start": 2.05,
+        "end": 2.0599999999999996,
+        "blend": "add",
+        "opacity": 0.72,
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "ring",
+          "sx": 101,
+          "sy": 2,
+          "dir": "out",
+          "speed": 22,
+          "speedRnd": 0.35,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0,
+              "n": 8
+            }
+          ],
+          "seed": 2917,
+          "subStep": true
+        },
+        "pt": {
+          "life": 0.1,
+          "lifeRnd": 0.15,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 3.4,
+          "sizeRnd": 0.28,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.15
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.75
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  174,
+                  95
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  193,
+                  49,
+                  34
+                ]
+              }
+            ]
+          },
+          "drag": 2,
+          "glow": 0.22,
+          "glowSize": 1.15,
+          "glowBlur": 0.1
+        }
+      },
+      {
+        "id": "lr_hc_middle_dissolve",
+        "name": "middle fire-script dissolution embers",
+        "type": "emitter",
+        "start": 2.1,
+        "end": 2.11,
+        "blend": "add",
+        "opacity": 0.72,
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "ring",
+          "sx": 72,
+          "sy": 2,
+          "dir": "out",
+          "speed": 22,
+          "speedRnd": 0.35,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0,
+              "n": 8
+            }
+          ],
+          "seed": 2541,
+          "subStep": true
+        },
+        "pt": {
+          "life": 0.1,
+          "lifeRnd": 0.15,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 3.4,
+          "sizeRnd": 0.28,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.15
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.75
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  221,
+                  132
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  238,
+                  94,
+                  36
+                ]
+              }
+            ]
+          },
+          "drag": 2,
+          "glow": 0.22,
+          "glowSize": 1.15,
+          "glowBlur": 0.1
+        }
+      },
+      {
+        "id": "lr_hc_inner_dissolve",
+        "name": "inner fire-script dissolution embers",
+        "type": "emitter",
+        "start": 2.14,
+        "end": 2.15,
+        "blend": "add",
+        "opacity": 0.72,
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "ring",
+          "sx": 43,
+          "sy": 2,
+          "dir": "out",
+          "speed": 22,
+          "speedRnd": 0.35,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0,
+              "n": 8
+            }
+          ],
+          "seed": 2331,
+          "subStep": true
+        },
+        "pt": {
+          "life": 0.1,
+          "lifeRnd": 0.15,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 3.4,
+          "sizeRnd": 0.28,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.15
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.75
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  249,
+                  205
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  252,
+                  143,
+                  60
+                ]
+              }
+            ]
+          },
+          "drag": 2,
+          "glow": 0.22,
+          "glowSize": 1.15,
+          "glowBlur": 0.1
+        }
+      },
+      {
+        "id": "lr_hc_inner_glints",
+        "name": "White-hot inner orbit glints",
+        "type": "emitter",
+        "start": 0.2,
+        "end": 1.74,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.08,
+              "v": 0.92
+            },
+            {
+              "t": 1.54,
+              "v": 0.92
+            },
+            {
+              "t": 1.84,
+              "v": 0
+            }
+          ]
+        },
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "point",
+          "dir": "omni",
+          "speed": 0,
+          "speedRnd": 0,
+          "rate": 22,
+          "bursts": [],
+          "seed": 331,
+          "subStep": true,
+          "path": {
+            "on": true,
+            "mode": "both",
+            "closed": true,
+            "smooth": true,
+            "nodes": [
+              {
+                "x": 43,
+                "y": 0
+              },
+              {
+                "x": 37.239092362730865,
+                "y": 21.499999999999996
+              },
+              {
+                "x": 21.500000000000004,
+                "y": 37.23909236273086
+              },
+              {
+                "x": 2.6329906181668092e-15,
+                "y": 43
+              },
+              {
+                "x": -21.49999999999999,
+                "y": 37.239092362730865
+              },
+              {
+                "x": -37.239092362730865,
+                "y": 21.499999999999996
+              },
+              {
+                "x": -43,
+                "y": 5.2659812363336185e-15
+              },
+              {
+                "x": -37.23909236273087,
+                "y": -21.49999999999999
+              },
+              {
+                "x": -21.500000000000018,
+                "y": -37.23909236273086
+              },
+              {
+                "x": -7.898971854500428e-15,
+                "y": -43
+              },
+              {
+                "x": 21.500000000000004,
+                "y": -37.23909236273086
+              },
+              {
+                "x": 37.23909236273085,
+                "y": -21.500000000000018
+              }
+            ],
+            "along": "even",
+            "jitter": 0.8,
+            "aim": "tangent",
+            "attract": 1.5,
+            "lock": 0.92,
+            "flow": 38
+          }
+        },
+        "pt": {
+          "life": 0.62,
+          "lifeRnd": 0.2,
+          "sprite": {
+            "kind": "shape",
+            "id": "spark",
+            "p": {}
+          },
+          "size": 8,
+          "sizeRnd": 0.35,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.45
+              },
+              {
+                "t": 0.35,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.2
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.24,
+                "v": 0.86
+              },
+              {
+                "t": 0.68,
+                "v": 0.76
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  251,
+                  224
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  255,
+                  235,
+                  154
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  255,
+                  171,
+                  82
+                ]
+              }
+            ]
+          },
+          "drag": 0.4,
+          "glow": 0.46,
+          "glowSize": 1.35,
+          "glowBlur": 0.15
+        }
+      },
+      {
+        "id": "lr_hc_middle_glints",
+        "name": "Amber counter-orbit glints",
+        "type": "emitter",
+        "start": 0.38,
+        "end": 1.74,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.08,
+              "v": 0.92
+            },
+            {
+              "t": 1.3599999999999999,
+              "v": 0.92
+            },
+            {
+              "t": 1.6600000000000001,
+              "v": 0
+            }
+          ]
+        },
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "point",
+          "dir": "omni",
+          "speed": 0,
+          "speedRnd": 0,
+          "rate": 19,
+          "bursts": [],
+          "seed": 541,
+          "subStep": true,
+          "path": {
+            "on": true,
+            "mode": "both",
+            "closed": true,
+            "smooth": true,
+            "nodes": [
+              {
+                "x": 72,
+                "y": 0
+              },
+              {
+                "x": 62.353829072479584,
+                "y": 35.99999999999999
+              },
+              {
+                "x": 36.00000000000001,
+                "y": 62.35382907247958
+              },
+              {
+                "x": 4.408728476930472e-15,
+                "y": 72
+              },
+              {
+                "x": -35.999999999999986,
+                "y": 62.353829072479584
+              },
+              {
+                "x": -62.353829072479584,
+                "y": 35.99999999999999
+              },
+              {
+                "x": -72,
+                "y": 8.817456953860943e-15
+              },
+              {
+                "x": -62.3538290724796,
+                "y": -35.99999999999998
+              },
+              {
+                "x": -36.00000000000003,
+                "y": -62.35382907247957
+              },
+              {
+                "x": -1.3226185430791413e-14,
+                "y": -72
+              },
+              {
+                "x": 36.00000000000001,
+                "y": -62.35382907247958
+              },
+              {
+                "x": 62.35382907247956,
+                "y": -36.00000000000003
+              }
+            ],
+            "along": "even",
+            "jitter": 0.8,
+            "aim": "tangent",
+            "attract": 1.5,
+            "lock": 0.92,
+            "flow": -45
+          }
+        },
+        "pt": {
+          "life": 0.62,
+          "lifeRnd": 0.2,
+          "sprite": {
+            "kind": "shape",
+            "id": "spark",
+            "p": {}
+          },
+          "size": 8,
+          "sizeRnd": 0.35,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.45
+              },
+              {
+                "t": 0.35,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.2
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.24,
+                "v": 0.86
+              },
+              {
+                "t": 0.68,
+                "v": 0.76
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  238,
+                  169
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  255,
+                  171,
+                  68
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  226,
+                  88,
+                  39
+                ]
+              }
+            ]
+          },
+          "drag": 0.4,
+          "glow": 0.42,
+          "glowSize": 1.35,
+          "glowBlur": 0.15
+        }
+      },
+      {
+        "id": "lr_hc_outer_glints",
+        "name": "Crimson outer orbit glints",
+        "type": "emitter",
+        "start": 0.56,
+        "end": 1.74,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.08,
+              "v": 0.92
+            },
+            {
+              "t": 1.18,
+              "v": 0.92
+            },
+            {
+              "t": 1.48,
+              "v": 0
+            }
+          ]
+        },
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "point",
+          "dir": "omni",
+          "speed": 0,
+          "speedRnd": 0,
+          "rate": 17,
+          "bursts": [],
+          "seed": 917,
+          "subStep": true,
+          "path": {
+            "on": true,
+            "mode": "both",
+            "closed": true,
+            "smooth": true,
+            "nodes": [
+              {
+                "x": 101,
+                "y": 0
+              },
+              {
+                "x": 87.46856578222831,
+                "y": 50.49999999999999
+              },
+              {
+                "x": 50.500000000000014,
+                "y": 87.4685657822283
+              },
+              {
+                "x": 6.184466335694134e-15,
+                "y": 101
+              },
+              {
+                "x": -50.49999999999998,
+                "y": 87.46856578222831
+              },
+              {
+                "x": -87.46856578222831,
+                "y": 50.49999999999999
+              },
+              {
+                "x": -101,
+                "y": 1.2368932671388267e-14
+              },
+              {
+                "x": -87.46856578222832,
+                "y": -50.49999999999997
+              },
+              {
+                "x": -50.50000000000004,
+                "y": -87.46856578222828
+              },
+              {
+                "x": -1.85533990070824e-14,
+                "y": -101
+              },
+              {
+                "x": 50.500000000000014,
+                "y": -87.4685657822283
+              },
+              {
+                "x": 87.46856578222828,
+                "y": -50.50000000000004
+              }
+            ],
+            "along": "even",
+            "jitter": 0.8,
+            "aim": "tangent",
+            "attract": 1.5,
+            "lock": 0.92,
+            "flow": 52
+          }
+        },
+        "pt": {
+          "life": 0.62,
+          "lifeRnd": 0.2,
+          "sprite": {
+            "kind": "shape",
+            "id": "spark",
+            "p": {}
+          },
+          "size": 8,
+          "sizeRnd": 0.35,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.45
+              },
+              {
+                "t": 0.35,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.2
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.24,
+                "v": 0.86
+              },
+              {
+                "t": 0.68,
+                "v": 0.76
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  187,
+                  96
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  249,
+                  103,
+                  60
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  179,
+                  48,
+                  44
+                ]
+              }
+            ]
+          },
+          "drag": 0.4,
+          "glow": 0.4,
+          "glowSize": 1.35,
+          "glowBlur": 0.15
+        }
+      },
+      {
+        "id": "lr_hc_inner_energy",
+        "name": "White fire current inside inner circle",
+        "type": "emitter",
+        "start": 0.2,
+        "end": 1.74,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.12,
+              "v": 0.92
+            },
+            {
+              "t": 1.54,
+              "v": 0.92
+            },
+            {
+              "t": 1.84,
+              "v": 0
+            }
+          ]
+        },
+        "glowL": 0.32,
+        "glowLR": 7,
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "point",
+          "dir": "omni",
+          "speed": 0,
+          "speedRnd": 0,
+          "rate": 8,
+          "bursts": [],
+          "seed": 1331,
+          "subStep": true,
+          "path": {
+            "on": true,
+            "mode": "both",
+            "closed": true,
+            "smooth": true,
+            "nodes": [
+              {
+                "x": 43,
+                "y": 0
+              },
+              {
+                "x": 37.239092362730865,
+                "y": 21.499999999999996
+              },
+              {
+                "x": 21.500000000000004,
+                "y": 37.23909236273086
+              },
+              {
+                "x": 2.6329906181668092e-15,
+                "y": 43
+              },
+              {
+                "x": -21.49999999999999,
+                "y": 37.239092362730865
+              },
+              {
+                "x": -37.239092362730865,
+                "y": 21.499999999999996
+              },
+              {
+                "x": -43,
+                "y": 5.2659812363336185e-15
+              },
+              {
+                "x": -37.23909236273087,
+                "y": -21.49999999999999
+              },
+              {
+                "x": -21.500000000000018,
+                "y": -37.23909236273086
+              },
+              {
+                "x": -7.898971854500428e-15,
+                "y": -43
+              },
+              {
+                "x": 21.500000000000004,
+                "y": -37.23909236273086
+              },
+              {
+                "x": 37.23909236273085,
+                "y": -21.500000000000018
+              }
+            ],
+            "along": "even",
+            "jitter": 0.25,
+            "aim": "tangent",
+            "attract": 2,
+            "lock": 0.96,
+            "flow": 130
+          }
+        },
+        "pt": {
+          "life": 0.44,
+          "lifeRnd": 0.14,
+          "render": "trail",
+          "trailCore": 0.3,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 3.2,
+          "sizeRnd": 0.2,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.25,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.7
+              }
+            ]
+          },
+          "sizeOT": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.08
+              },
+              {
+                "t": 0.55,
+                "v": 0.65
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.22,
+                "v": 0.9
+              },
+              {
+                "t": 0.7,
+                "v": 0.85
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  255,
+                  231
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  255,
+                  233,
+                  150
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  255,
+                  162,
+                  65
+                ]
+              }
+            ]
+          },
+          "drag": 0.25,
+          "glow": 0.28,
+          "glowSize": 1.25,
+          "glowBlur": 0.12
+        }
+      },
+      {
+        "id": "lr_hc_middle_energy",
+        "name": "Amber fire current inside middle circle",
+        "type": "emitter",
+        "start": 0.38,
+        "end": 1.74,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.12,
+              "v": 0.92
+            },
+            {
+              "t": 1.3599999999999999,
+              "v": 0.92
+            },
+            {
+              "t": 1.6600000000000001,
+              "v": 0
+            }
+          ]
+        },
+        "glowL": 0.32,
+        "glowLR": 7,
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "point",
+          "dir": "omni",
+          "speed": 0,
+          "speedRnd": 0,
+          "rate": 7,
+          "bursts": [],
+          "seed": 1541,
+          "subStep": true,
+          "path": {
+            "on": true,
+            "mode": "both",
+            "closed": true,
+            "smooth": true,
+            "nodes": [
+              {
+                "x": 72,
+                "y": 0
+              },
+              {
+                "x": 62.353829072479584,
+                "y": 35.99999999999999
+              },
+              {
+                "x": 36.00000000000001,
+                "y": 62.35382907247958
+              },
+              {
+                "x": 4.408728476930472e-15,
+                "y": 72
+              },
+              {
+                "x": -35.999999999999986,
+                "y": 62.353829072479584
+              },
+              {
+                "x": -62.353829072479584,
+                "y": 35.99999999999999
+              },
+              {
+                "x": -72,
+                "y": 8.817456953860943e-15
+              },
+              {
+                "x": -62.3538290724796,
+                "y": -35.99999999999998
+              },
+              {
+                "x": -36.00000000000003,
+                "y": -62.35382907247957
+              },
+              {
+                "x": -1.3226185430791413e-14,
+                "y": -72
+              },
+              {
+                "x": 36.00000000000001,
+                "y": -62.35382907247958
+              },
+              {
+                "x": 62.35382907247956,
+                "y": -36.00000000000003
+              }
+            ],
+            "along": "even",
+            "jitter": 0.25,
+            "aim": "tangent",
+            "attract": 2,
+            "lock": 0.96,
+            "flow": -162.5
+          }
+        },
+        "pt": {
+          "life": 0.44,
+          "lifeRnd": 0.14,
+          "render": "trail",
+          "trailCore": 0.3,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 3.2,
+          "sizeRnd": 0.2,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.25,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.7
+              }
+            ]
+          },
+          "sizeOT": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.08
+              },
+              {
+                "t": 0.55,
+                "v": 0.65
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.22,
+                "v": 0.9
+              },
+              {
+                "t": 0.7,
+                "v": 0.85
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  240,
+                  182
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  255,
+                  159,
+                  50
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  240,
+                  91,
+                  32
+                ]
+              }
+            ]
+          },
+          "drag": 0.25,
+          "glow": 0.28,
+          "glowSize": 1.25,
+          "glowBlur": 0.12
+        }
+      },
+      {
+        "id": "lr_hc_outer_energy",
+        "name": "Vermilion fire current inside outer circle",
+        "type": "emitter",
+        "start": 0.56,
+        "end": 1.74,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.12,
+              "v": 0.92
+            },
+            {
+              "t": 1.18,
+              "v": 0.92
+            },
+            {
+              "t": 1.48,
+              "v": 0
+            }
+          ]
+        },
+        "glowL": 0.32,
+        "glowLR": 7,
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "point",
+          "dir": "omni",
+          "speed": 0,
+          "speedRnd": 0,
+          "rate": 6,
+          "bursts": [],
+          "seed": 1917,
+          "subStep": true,
+          "path": {
+            "on": true,
+            "mode": "both",
+            "closed": true,
+            "smooth": true,
+            "nodes": [
+              {
+                "x": 101,
+                "y": 0
+              },
+              {
+                "x": 87.46856578222831,
+                "y": 50.49999999999999
+              },
+              {
+                "x": 50.500000000000014,
+                "y": 87.4685657822283
+              },
+              {
+                "x": 6.184466335694134e-15,
+                "y": 101
+              },
+              {
+                "x": -50.49999999999998,
+                "y": 87.46856578222831
+              },
+              {
+                "x": -87.46856578222831,
+                "y": 50.49999999999999
+              },
+              {
+                "x": -101,
+                "y": 1.2368932671388267e-14
+              },
+              {
+                "x": -87.46856578222832,
+                "y": -50.49999999999997
+              },
+              {
+                "x": -50.50000000000004,
+                "y": -87.46856578222828
+              },
+              {
+                "x": -1.85533990070824e-14,
+                "y": -101
+              },
+              {
+                "x": 50.500000000000014,
+                "y": -87.4685657822283
+              },
+              {
+                "x": 87.46856578222828,
+                "y": -50.50000000000004
+              }
+            ],
+            "along": "even",
+            "jitter": 0.25,
+            "aim": "tangent",
+            "attract": 2,
+            "lock": 0.96,
+            "flow": 203.125
+          }
+        },
+        "pt": {
+          "life": 0.44,
+          "lifeRnd": 0.14,
+          "render": "trail",
+          "trailCore": 0.3,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 3.2,
+          "sizeRnd": 0.2,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.25,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.7
+              }
+            ]
+          },
+          "sizeOT": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.08
+              },
+              {
+                "t": 0.55,
+                "v": 0.65
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.22,
+                "v": 0.9
+              },
+              {
+                "t": 0.7,
+                "v": 0.85
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  199,
+                  122
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  255,
+                  99,
+                  49
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  213,
+                  51,
+                  34
+                ]
+              }
+            ]
+          },
+          "drag": 0.25,
+          "glow": 0.28,
+          "glowSize": 1.25,
+          "glowBlur": 0.12
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_01",
+        "name": "outer fire-script glyph 01",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.76,
+              "v": 0
+            },
+            {
+              "t": 0.85,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_01_40fa13993b49"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_02",
+        "name": "outer fire-script glyph 02",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.8095652173913044,
+              "v": 0
+            },
+            {
+              "t": 0.8995652173913044,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_02_20fc48152d6e"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_03",
+        "name": "outer fire-script glyph 03",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.8591304347826088,
+              "v": 0
+            },
+            {
+              "t": 0.9491304347826087,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_03_34262d553dec"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_04",
+        "name": "outer fire-script glyph 04",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.908695652173913,
+              "v": 0
+            },
+            {
+              "t": 0.998695652173913,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_04_524ed0df8985"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_05",
+        "name": "outer fire-script glyph 05",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.9582608695652174,
+              "v": 0
+            },
+            {
+              "t": 1.0482608695652174,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_05_011c58f0ff12"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_06",
+        "name": "outer fire-script glyph 06",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.0078260869565216,
+              "v": 0
+            },
+            {
+              "t": 1.0978260869565217,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_06_fd8902ca59f8"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_07",
+        "name": "outer fire-script glyph 07",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.057391304347826,
+              "v": 0
+            },
+            {
+              "t": 1.147391304347826,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_07_0c4bb5b98984"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_08",
+        "name": "outer fire-script glyph 08",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.1069565217391304,
+              "v": 0
+            },
+            {
+              "t": 1.1969565217391305,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_08_3643ee43bc5b"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_09",
+        "name": "outer fire-script glyph 09",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.1565217391304348,
+              "v": 0
+            },
+            {
+              "t": 1.2465217391304348,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_09_ddc565b83f73"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_10",
+        "name": "outer fire-script glyph 10",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.2060869565217391,
+              "v": 0
+            },
+            {
+              "t": 1.2960869565217392,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_10_525e7095b991"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_11",
+        "name": "outer fire-script glyph 11",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.2556521739130435,
+              "v": 0
+            },
+            {
+              "t": 1.3456521739130436,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_11_a40f456db74e"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_12",
+        "name": "outer fire-script glyph 12",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.3052173913043479,
+              "v": 0
+            },
+            {
+              "t": 1.395217391304348,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_12_52214902cf1a"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_13",
+        "name": "outer fire-script glyph 13",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.3547826086956523,
+              "v": 0
+            },
+            {
+              "t": 1.4447826086956523,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_13_30cdd1c16e9f"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_14",
+        "name": "outer fire-script glyph 14",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.4043478260869566,
+              "v": 0
+            },
+            {
+              "t": 1.4943478260869567,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_14_04b1308deb18"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_15",
+        "name": "outer fire-script glyph 15",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.453913043478261,
+              "v": 0
+            },
+            {
+              "t": 1.543913043478261,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_15_679f0c8bcb36"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_16",
+        "name": "outer fire-script glyph 16",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.5034782608695652,
+              "v": 0
+            },
+            {
+              "t": 1.5934782608695652,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_16_ee8295a6f046"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_17",
+        "name": "outer fire-script glyph 17",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.5530434782608695,
+              "v": 0
+            },
+            {
+              "t": 1.6430434782608696,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_17_1c26d6d134ab"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_18",
+        "name": "outer fire-script glyph 18",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.602608695652174,
+              "v": 0
+            },
+            {
+              "t": 1.692608695652174,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_18_54bb44047e5d"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_19",
+        "name": "outer fire-script glyph 19",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.6521739130434783,
+              "v": 0
+            },
+            {
+              "t": 1.7421739130434784,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_19_60eeaac8c698"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_20",
+        "name": "outer fire-script glyph 20",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.7017391304347824,
+              "v": 0
+            },
+            {
+              "t": 1.7917391304347825,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_20_49be2c73688f"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_21",
+        "name": "outer fire-script glyph 21",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.7513043478260868,
+              "v": 0
+            },
+            {
+              "t": 1.8413043478260869,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_21_bc1cc0f20913"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_22",
+        "name": "outer fire-script glyph 22",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.8008695652173912,
+              "v": 0
+            },
+            {
+              "t": 1.8908695652173912,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_22_1c8433b2ccb1"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_23",
+        "name": "outer fire-script glyph 23",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.8504347826086955,
+              "v": 0
+            },
+            {
+              "t": 1.9404347826086956,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_23_8e27844642ed"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_outer_glyph_24",
+        "name": "outer fire-script glyph 24",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.9,
+              "v": 0
+            },
+            {
+              "t": 1.99,
+              "v": 0.9
+            },
+            {
+              "t": 2.04,
+              "v": 0.9
+            },
+            {
+              "t": 2.16,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_glyph_24_6993b23a1604"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_01",
+        "name": "middle fire-script glyph 01",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.5800000000000001,
+              "v": 0
+            },
+            {
+              "t": 0.67,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_01_8da1ed252ff8"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_02",
+        "name": "middle fire-script glyph 02",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.9,
+              "v": 0
+            },
+            {
+              "t": 1.99,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_02_8dd24f1549c1"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_03",
+        "name": "middle fire-script glyph 03",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.8119999999999998,
+              "v": 0
+            },
+            {
+              "t": 1.902,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_03_d4070318a9ec"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_04",
+        "name": "middle fire-script glyph 04",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.7239999999999998,
+              "v": 0
+            },
+            {
+              "t": 1.8139999999999998,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_04_e026ee2380f3"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_05",
+        "name": "middle fire-script glyph 05",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.636,
+              "v": 0
+            },
+            {
+              "t": 1.726,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_05_8e9012f60ce5"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_06",
+        "name": "middle fire-script glyph 06",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.548,
+              "v": 0
+            },
+            {
+              "t": 1.6380000000000001,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_06_6edb0a654ba2"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_07",
+        "name": "middle fire-script glyph 07",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.46,
+              "v": 0
+            },
+            {
+              "t": 1.55,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_07_e4b2dec163b0"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_08",
+        "name": "middle fire-script glyph 08",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.3719999999999999,
+              "v": 0
+            },
+            {
+              "t": 1.462,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_08_73cb825487af"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_09",
+        "name": "middle fire-script glyph 09",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.284,
+              "v": 0
+            },
+            {
+              "t": 1.374,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_09_0db16d0ac752"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_10",
+        "name": "middle fire-script glyph 10",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.196,
+              "v": 0
+            },
+            {
+              "t": 1.286,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_10_a2c8ade5c39a"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_11",
+        "name": "middle fire-script glyph 11",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.108,
+              "v": 0
+            },
+            {
+              "t": 1.1980000000000002,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_11_6b1b467d6df0"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_12",
+        "name": "middle fire-script glyph 12",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.02,
+              "v": 0
+            },
+            {
+              "t": 1.11,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_12_5c92b5fc0159"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_13",
+        "name": "middle fire-script glyph 13",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.932,
+              "v": 0
+            },
+            {
+              "t": 1.022,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_13_158a128384cc"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_14",
+        "name": "middle fire-script glyph 14",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.8440000000000001,
+              "v": 0
+            },
+            {
+              "t": 0.934,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_14_549397d13770"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_15",
+        "name": "middle fire-script glyph 15",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.756,
+              "v": 0
+            },
+            {
+              "t": 0.846,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_15_d2aed36ee0f0"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_middle_glyph_16",
+        "name": "middle fire-script glyph 16",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.668,
+              "v": 0
+            },
+            {
+              "t": 0.758,
+              "v": 0.9
+            },
+            {
+              "t": 2.08,
+              "v": 0.9
+            },
+            {
+              "t": 2.2,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_glyph_16_222240563461"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_01",
+        "name": "inner fire-script glyph 01",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.4,
+              "v": 0
+            },
+            {
+              "t": 0.49,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_01_f8a684300708"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_02",
+        "name": "inner fire-script glyph 02",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.5666666666666667,
+              "v": 0
+            },
+            {
+              "t": 0.6566666666666666,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_02_5ad06efba296"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_03",
+        "name": "inner fire-script glyph 03",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.7333333333333334,
+              "v": 0
+            },
+            {
+              "t": 0.8233333333333334,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_03_3e9ed66e1cad"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_04",
+        "name": "inner fire-script glyph 04",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.9,
+              "v": 0
+            },
+            {
+              "t": 0.99,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_04_03beff30518f"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_05",
+        "name": "inner fire-script glyph 05",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.0666666666666667,
+              "v": 0
+            },
+            {
+              "t": 1.1566666666666667,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_05_aba28d9838c8"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_06",
+        "name": "inner fire-script glyph 06",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.2333333333333334,
+              "v": 0
+            },
+            {
+              "t": 1.3233333333333335,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_06_8a9ea747d958"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_07",
+        "name": "inner fire-script glyph 07",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.4,
+              "v": 0
+            },
+            {
+              "t": 1.49,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_07_44118dc27f0d"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_08",
+        "name": "inner fire-script glyph 08",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.5666666666666669,
+              "v": 0
+            },
+            {
+              "t": 1.656666666666667,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_08_7f38fc783451"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_09",
+        "name": "inner fire-script glyph 09",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.7333333333333334,
+              "v": 0
+            },
+            {
+              "t": 1.8233333333333335,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_09_ba1b0d033431"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_inner_glyph_10",
+        "name": "inner fire-script glyph 10",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "add",
+        "glowL": 0.55,
+        "glowLR": 4,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 1.9,
+              "v": 0
+            },
+            {
+              "t": 1.99,
+              "v": 0.9
+            },
+            {
+              "t": 2.12,
+              "v": 0.9
+            },
+            {
+              "t": 2.24,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_glyph_10_36154a82b3ce"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "lr_hc_ambient_embers",
+        "name": "Faint embers at outer seal",
+        "type": "emitter",
+        "start": 0.56,
+        "end": 1.72,
+        "blend": "screen",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.14,
+              "v": 0.46
+            },
+            {
+              "t": 1.16,
+              "v": 0.46
+            },
+            {
+              "t": 1.48,
+              "v": 0
+            }
+          ]
+        },
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "ring",
+          "sx": 119,
+          "sy": 3,
+          "dir": "out",
+          "speed": 5,
+          "speedRnd": 0.5,
+          "rate": 9,
+          "bursts": [],
+          "seed": 1209,
+          "subStep": true
+        },
+        "pt": {
+          "life": 0.38,
+          "lifeRnd": 0.25,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 4,
+          "sizeRnd": 0.3,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.55
+              },
+              {
+                "t": 0.4,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.2
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.3,
+                "v": 0.55
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  202,
+                  101
+                ]
+              },
+              {
+                "t": 0.55,
+                "c": [
+                  239,
+                  111,
+                  61
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  156,
+                  40,
+                  34
+                ]
+              }
+            ]
+          },
+          "drag": 1.5,
+          "glow": 0.28,
+          "glowSize": 1.3,
+          "glowBlur": 0.12
+        }
+      },
+      {
+        "id": "lr_hc_calligraphy",
+        "name": "Calligraphic fire character",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "normal",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.08,
+              "v": 0.08
+            },
+            {
+              "t": 0.2,
+              "v": 0.26
+            },
+            {
+              "t": 0.8,
+              "v": 0.46
+            },
+            {
+              "t": 1.4,
+              "v": 0.68
+            },
+            {
+              "t": 1.74,
+              "v": 0.82
+            },
+            {
+              "t": 2.02,
+              "v": 0.99
+            },
+            {
+              "t": 2.04,
+              "v": 1
+            },
+            {
+              "t": 2.15,
+              "v": 1
+            },
+            {
+              "t": 2.26,
+              "v": 0
+            },
+            {
+              "t": 2.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_calligraphy_28a01ccc4792"
+          },
+          "size": 68,
+          "rot": 0
+        }
+      },
+      {
+        "id": "lr_hc_center_fire",
+        "name": "Contained fire moving behind calligraphy",
+        "type": "emitter",
+        "start": 0.2,
+        "end": 1.74,
+        "blend": "add",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.16,
+              "v": 0.84
+            },
+            {
+              "t": 1.18,
+              "v": 0.84
+            },
+            {
+              "t": 1.54,
+              "v": 0.9
+            },
+            {
+              "t": 1.84,
+              "v": 0
+            }
+          ]
+        },
+        "glowL": 0.2,
+        "glowLR": 6,
+        "em": {
+          "x": 0,
+          "y": 0,
+          "shape": "point",
+          "dir": "omni",
+          "speed": 0,
+          "speedRnd": 0,
+          "rate": 28,
+          "bursts": [],
+          "seed": 2405,
+          "subStep": true,
+          "path": {
+            "on": true,
+            "mode": "both",
+            "closed": true,
+            "smooth": true,
+            "nodes": [
+              {
+                "x": 17,
+                "y": 0
+              },
+              {
+                "x": 14.722431864335459,
+                "y": 8.499999999999998
+              },
+              {
+                "x": 8.500000000000002,
+                "y": 14.722431864335457
+              },
+              {
+                "x": 1.0409497792752501e-15,
+                "y": 17
+              },
+              {
+                "x": -8.499999999999996,
+                "y": 14.722431864335459
+              },
+              {
+                "x": -14.722431864335459,
+                "y": 8.499999999999998
+              },
+              {
+                "x": -17,
+                "y": 2.0818995585505003e-15
+              },
+              {
+                "x": -14.72243186433546,
+                "y": -8.499999999999995
+              },
+              {
+                "x": -8.500000000000007,
+                "y": -14.722431864335455
+              },
+              {
+                "x": -3.1228493378257506e-15,
+                "y": -17
+              },
+              {
+                "x": 8.500000000000002,
+                "y": -14.722431864335457
+              },
+              {
+                "x": 14.722431864335451,
+                "y": -8.500000000000007
+              }
+            ],
+            "along": "even",
+            "jitter": 1,
+            "aim": "tangent",
+            "attract": 2,
+            "lock": 0.9,
+            "flow": 68
+          }
+        },
+        "pt": {
+          "life": 0.42,
+          "lifeRnd": 0.25,
+          "sprite": {
+            "kind": "shape",
+            "id": "flame",
+            "p": {
+              "taper": 0.45
+            }
+          },
+          "size": 14,
+          "sizeRnd": 0.3,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.35
+              },
+              {
+                "t": 0.4,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 0.15
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.28,
+                "v": 0.62
+              },
+              {
+                "t": 0.7,
+                "v": 0.48
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  249,
+                  214
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  255,
+                  176,
+                  63
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  230,
+                  77,
+                  28
+                ]
+              }
+            ]
+          },
+          "alignVel": true,
+          "stretch": 0.6,
+          "drag": 0.7,
+          "glow": 0.25,
+          "glowSize": 1.3,
+          "glowBlur": 0.14
+        }
+      },
+      {
+        "id": "lr_hc_center_ember",
+        "name": "Breathing ember behind fire seal",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "screen",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.2,
+              "v": 0.08
+            },
+            {
+              "t": 0.62,
+              "v": 0.2
+            },
+            {
+              "t": 1.15,
+              "v": 0.13
+            },
+            {
+              "t": 1.58,
+              "v": 0.22
+            },
+            {
+              "t": 1.74,
+              "v": 0.2
+            },
+            {
+              "t": 2.04,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 52,
+          "color": [
+            255,
+            110,
+            35
+          ],
+          "glow": 0
+        }
+      },
+      {
+        "id": "lr_hc_inner_ring",
+        "name": "Inner clockwise gold script",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "normal",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.2,
+              "v": 0
+            },
+            {
+              "t": 0.38,
+              "v": 0.62
+            },
+            {
+              "t": 1.74,
+              "v": 0.62
+            },
+            {
+              "t": 2.04,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_inner_ring_3a5a40f11eba"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.2,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 34.65
+              },
+              {
+                "t": 2.28,
+                "v": 34.65
+              }
+            ]
+          },
+          "glow": 0.12,
+          "glowSize": 1.08,
+          "glowBlur": 0.18
+        }
+      },
+      {
+        "id": "lr_hc_middle_ring",
+        "name": "Middle counterclockwise amber script",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "normal",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.38,
+              "v": 0
+            },
+            {
+              "t": 0.56,
+              "v": 0.56
+            },
+            {
+              "t": 1.74,
+              "v": 0.56
+            },
+            {
+              "t": 2.04,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_middle_ring_e9fb1496a36b"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.38,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": -38.25
+              },
+              {
+                "t": 2.28,
+                "v": -38.25
+              }
+            ]
+          },
+          "glow": 0.12,
+          "glowSize": 1.08,
+          "glowBlur": 0.18
+        }
+      },
+      {
+        "id": "lr_hc_outer_ring",
+        "name": "Outer clockwise vermilion script",
+        "type": "sprite",
+        "start": 0,
+        "end": 2.28,
+        "blend": "normal",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.56,
+              "v": 0
+            },
+            {
+              "t": 0.74,
+              "v": 0.5
+            },
+            {
+              "t": 1.74,
+              "v": 0.5
+            },
+            {
+              "t": 2.04,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_hc_outer_ring_5fbf558c46b9"
+          },
+          "size": 256,
+          "rot": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.56,
+                "v": 0
+              },
+              {
+                "t": 1.74,
+                "v": 41.484375
+              },
+              {
+                "t": 2.28,
+                "v": 41.484375
+              }
+            ]
+          },
+          "glow": 0.12,
+          "glowSize": 1.08,
+          "glowBlur": 0.18
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_hc_outer_ring_5fbf558c46b9": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY1ODMwIiBzdHJva2Utb3BhY2l0eT0iMC41Ij48Y2lyY2xlIGN4PSIxMjgiIGN5PSIxMjgiIHI9IjExMS41IiBzdHJva2Utd2lkdGg9IjYiLz48Y2lyY2xlIGN4PSIxMjgiIGN5PSIxMjgiIHI9IjkwLjUiIHN0cm9rZS13aWR0aD0iNiIvPjwvZz48cGF0aCBkPSJNMTI4IDIyIGw0IDUgLTQgNSAtNCAtNXoiIHRyYW5zZm9ybT0icm90YXRlKDAgMTI4IDEyOCkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmNTgzMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PHBhdGggZD0iTTEyOCAyMiBsNCA1IC00IDUgLTQgLTV6IiB0cmFuc2Zvcm09InJvdGF0ZSg5MCAxMjggMTI4KSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY1ODMwIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMTI4IDIyIGw0IDUgLTQgNSAtNCAtNXoiIHRyYW5zZm9ybT0icm90YXRlKDE4MCAxMjggMTI4KSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY1ODMwIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMTI4IDIyIGw0IDUgLTQgNSAtNCAtNXoiIHRyYW5zZm9ybT0icm90YXRlKDI3MCAxMjggMTI4KSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY1ODMwIiBzdHJva2Utd2lkdGg9IjEiLz48dGV4dCB4PSIxMjgiIHk9IjM0LjcwIiB0cmFuc2Zvcm09InJvdGF0ZSgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmY1ODMwIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI3MDAiPueHpjwvdGV4dD48dGV4dCB4PSIxMjgiIHk9IjM0LjcwIiB0cmFuc2Zvcm09InJvdGF0ZSgzMC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjU4MzAiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjcwMCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDQ1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7ngbw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoNjAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmY1ODMwIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI3MDAiPueEmjwvdGV4dD48dGV4dCB4PSIxMjgiIHk9IjM0LjcwIiB0cmFuc2Zvcm09InJvdGF0ZSg3NS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjU4MzAiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjcwMCI+54WJPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDkwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTA1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhLA8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTIwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhYw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTM1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhYk8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTUwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTY1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7ngbw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhYw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTk1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nh6Y8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjEwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjI1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7ngbw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjQwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjU1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7ngbw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjcwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7ngqw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjg1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7ngbw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzAwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7ngo48L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzE1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhLA8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzMwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nhr48L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzQ1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmNTgzMCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIj7nh6Y8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_ring_e9fb1496a36b": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY5YjNkIiBzdHJva2Utb3BhY2l0eT0iMC41Ij48Y2lyY2xlIGN4PSIxMjgiIGN5PSIxMjgiIHI9IjgyLjUiIHN0cm9rZS13aWR0aD0iNiIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjEyOCIgcj0iNjEuNSIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9nPjxwYXRoIGQ9Ik0xMjggNTEgbDQgNSAtNCA1IC00IC01eiIgdHJhbnNmb3JtPSJyb3RhdGUoMCAxMjggMTI4KSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY5YjNkIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMTI4IDUxIGw0IDUgLTQgNSAtNCAtNXoiIHRyYW5zZm9ybT0icm90YXRlKDkwIDEyOCAxMjgpIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZjliM2QiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0xMjggNTEgbDQgNSAtNCA1IC00IC01eiIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwIDEyOCAxMjgpIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZjliM2QiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0xMjggNTEgbDQgNSAtNCA1IC00IC01eiIgdHJhbnNmb3JtPSJyb3RhdGUoMjcwIDEyOCAxMjgpIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZjliM2QiIHN0cm9rZS13aWR0aD0iMSIvPjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmY5YjNkIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI3MDAiPueEmjwvdGV4dD48dGV4dCB4PSIxMjgiIHk9IjYzLjM1IiB0cmFuc2Zvcm09InJvdGF0ZSgyMi41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54WJPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDQ1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmOWIzZCIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iNzAwIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoNjcuNTAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmY5YjNkIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI3MDAiPueHvDwvdGV4dD48dGV4dCB4PSIxMjgiIHk9IjYzLjM1IiB0cmFuc2Zvcm09InJvdGF0ZSg5MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDExMi41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54WJPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDEzNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDE1Ny41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDE4MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54WMPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDIwMi41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54emPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDIyNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54a+PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDI0Ny41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDI3MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54a+PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDI5Mi41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDMxNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDMzNy41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjliM2QiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjcwMCI+54G8PC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_inner_ring_3a5a40f11eba": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmNGM2IiBzdHJva2Utb3BhY2l0eT0iMC41Ij48Y2lyY2xlIGN4PSIxMjgiIGN5PSIxMjgiIHI9IjUzLjUiIHN0cm9rZS13aWR0aD0iNiIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjEyOCIgcj0iMzIuNSIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9nPjxwYXRoIGQ9Ik0xMjggODAgbDQgNSAtNCA1IC00IC01eiIgdHJhbnNmb3JtPSJyb3RhdGUoMCAxMjggMTI4KSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmNGM2IiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMTI4IDgwIGw0IDUgLTQgNSAtNCAtNXoiIHRyYW5zZm9ybT0icm90YXRlKDkwIDEyOCAxMjgpIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmY0YzYiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0xMjggODAgbDQgNSAtNCA1IC00IC01eiIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwIDEyOCAxMjgpIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmY0YzYiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0xMjggODAgbDQgNSAtNCA1IC00IC01eiIgdHJhbnNmb3JtPSJyb3RhdGUoMjcwIDEyOCAxMjgpIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmY0YzYiIHN0cm9rZS13aWR0aD0iMSIvPjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmNGM2IiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMTkiIGZvbnQtd2VpZ2h0PSI3MDAiPueEmjwvdGV4dD48dGV4dCB4PSIxMjgiIHk9IjkxLjY1IiB0cmFuc2Zvcm09InJvdGF0ZSgzNi4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmY0YzYiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjcwMCI+54G8PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDcyLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZjRjNiIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIj7nhYw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMTA4LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZjRjNiIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIj7nhLA8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMTQ0LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZjRjNiIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIj7nhr48L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZjRjNiIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIj7nhYk8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMjE2LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZjRjNiIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMjUyLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZjRjNiIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIj7nhLA8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMjg4LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZjRjNiIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIj7nhr48L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMzI0LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZjRjNiIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iNzAwIj7nhLA8L3RleHQ+PC9zdmc+",
+    "tex_hc_calligraphy_28a01ccc4792": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJpbmsiIHgxPSIwIiB5MT0iMCIgeDI9IjAuNCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNmZmY0YzQiLz48c3RvcCBvZmZzZXQ9IjAuNTUiIHN0b3AtY29sb3I9IiNmZmQ0N2EiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmMzczMzQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48ZyBmaWxsPSJ1cmwoI2luaykiIHN0cm9rZT0iIzgwMjExOSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNODIgNzYgQzg0IDg4IDcyIDk5IDY4IDExMSBDNjYgMTE5IDcwIDEyNSA3NiAxMjYgQzkxIDExOSA5OSAxMDUgOTcgOTYgQzk1IDg2IDg4IDc5IDgyIDc2IFoiLz48cGF0aCBkPSJNMTY5IDc0IEMxNjcgOTIgMTc3IDEwNiAxOTEgMTE1IEMxOTcgMTEzIDE5OCAxMDcgMTkyIDEwMSBDMTgzIDkzIDE3NyA4MyAxNjkgNzQgWiIvPjxwYXRoIGQ9Ik0xMjcgNTMgQzEzNiA3MCAxMzcgOTAgMTMyIDExMSBDMTI2IDE0MSAxMDggMTY3IDc5IDE5MCBDNzAgMTk3IDYzIDE5OSA1NSAyMDUgQzc3IDIwNCA5NSAxOTcgMTExIDE4NSBDMTM5IDE2NSAxNTEgMTM1IDE0OSAxMDggQzE0OCA4NCAxMzkgNjQgMTI3IDUzIFoiLz48cGF0aCBkPSJNMTM5IDExNyBDMTQ1IDE0NCAxNTkgMTcxIDE3OCAxOTAgQzE4OSAyMDEgMjAxIDIwNSAyMTAgMjAzIEMxODQgMTg4IDE2NyAxNjggMTU0IDE0MiBDMTQ4IDEyOCAxNDQgMTIwIDEzOSAxMTcgWiIvPjwvZz48cGF0aCBkPSJNOTkgMTc0IEM4NiAxODYgNzUgMTkwIDY2IDE5NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmNWQyIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC43Ii8+PC9zdmc+",
+    "tex_hc_outer_glyph_01_40fa13993b49": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZiMDcxIiBzdHJva2Utd2lkdGg9IjMuMiIgc3Ryb2tlLW9wYWNpdHk9IjAuNDgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPueEmjwvdGV4dD48dGV4dCB4PSIxMjgiIHk9IjM0LjcwIiB0cmFuc2Zvcm09InJvdGF0ZSgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZmZiMDcxIiBzdHJva2U9IiNmZmY2ZDIiIHN0cm9rZS13aWR0aD0iMC42NSIgc3Ryb2tlLW9wYWNpdHk9IjAuOTYiPueEmjwvdGV4dD48L3N2Zz4=",
+    "tex_hc_outer_glyph_02_20fc48152d6e": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmYjA3MSIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nh6Y8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmIwNzEiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54emPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_outer_glyph_03_34262d553dec": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmYjA3MSIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmIwNzEiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54SaPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_outer_glyph_04_524ed0df8985": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoNDUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmYjA3MSIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7ngbw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoNDUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmIwNzEiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54G8PC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_outer_glyph_05_011c58f0ff12": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoNjAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmYjA3MSIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoNjAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmIwNzEiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54SaPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_outer_glyph_06_fd8902ca59f8": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoNzUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmYjA3MSIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nhYk8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoNzUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmIwNzEiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54WJPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_outer_glyph_07_0c4bb5b98984": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoOTAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmYjA3MSIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoOTAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjIiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmIwNzEiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54SaPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_outer_glyph_08_3643ee43bc5b": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTA1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDEwNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhLA8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_09_ddc565b83f73": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTIwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54WMPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDEyMC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhYw8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_10_525e7095b991": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTM1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54WJPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDEzNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhYk8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_11_a40f456db74e": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTUwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDE1MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhJo8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_12_52214902cf1a": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTY1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54G8PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDE2NS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7ngbw8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_13_30cdd1c16e9f": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54WMPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDE4MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhYw8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_14_04b1308deb18": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMTk1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54emPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDE5NS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nh6Y8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_15_679f0c8bcb36": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjEwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDIxMC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhJo8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_16_ee8295a6f046": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjI1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54G8PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDIyNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7ngbw8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_17_1c26d6d134ab": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjQwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDI0MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhJo8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_18_54bb44047e5d": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjU1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54G8PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDI1NS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7ngbw8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_19_60eeaac8c698": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjcwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54KsPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDI3MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7ngqw8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_20_49be2c73688f": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMjg1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54G8PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDI4NS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7ngbw8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_21_bc1cc0f20913": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzAwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54KOPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDMwMC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7ngo48L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_22_1c8433b2ccb1": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzE1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDMxNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhLA8L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_23_8e27844642ed": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzMwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54a+PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDMzMC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhr48L3RleHQ+PC9zdmc+",
+    "tex_hc_outer_glyph_24_6993b23a1604": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSIzNC43MCIgdHJhbnNmb3JtPSJyb3RhdGUoMzQ1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmIwNzEiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54emPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iMzQuNzAiIHRyYW5zZm9ybT0icm90YXRlKDM0NS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmYjA3MSIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nh6Y8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_01_8da1ed252ff8": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZlMjhkIiBzdHJva2Utd2lkdGg9IjMuMiIgc3Ryb2tlLW9wYWNpdHk9IjAuNDgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPueEmjwvdGV4dD48dGV4dCB4PSIxMjgiIHk9IjYzLjM1IiB0cmFuc2Zvcm09InJvdGF0ZSgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZmZlMjhkIiBzdHJva2U9IiNmZmY2ZDIiIHN0cm9rZS13aWR0aD0iMC42NSIgc3Ryb2tlLW9wYWNpdHk9IjAuOTYiPueEmjwvdGV4dD48L3N2Zz4=",
+    "tex_hc_middle_glyph_02_8dd24f1549c1": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMjIuNTAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZTI4ZCIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nhYk8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMjIuNTAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmUyOGQiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54WJPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_middle_glyph_03_d4070318a9ec": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoNDUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZTI4ZCIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoNDUuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmUyOGQiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54SaPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_middle_glyph_04_e026ee2380f3": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoNjcuNTAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZTI4ZCIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nh7w8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoNjcuNTAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmUyOGQiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54e8PC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_middle_glyph_05_8e9012f60ce5": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoOTAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZTI4ZCIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nhJo8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoOTAuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmUyOGQiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54SaPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_middle_glyph_06_6edb0a654ba2": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMTEyLjUwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54WJPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDExMi41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhYk8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_07_e4b2dec163b0": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMTM1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDEzNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhJo8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_08_73cb825487af": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMTU3LjUwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDE1Ny41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhLA8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_09_0db16d0ac752": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54WMPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDE4MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhYw8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_10_a2c8ade5c39a": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMjAyLjUwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54emPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDIwMi41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nh6Y8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_11_6b1b467d6df0": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMjI1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54a+PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDIyNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhr48L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_12_5c92b5fc0159": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMjQ3LjUwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDI0Ny41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhLA8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_13_158a128384cc": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMjcwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54a+PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDI3MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhr48L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_14_549397d13770": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMjkyLjUwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDI5Mi41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhLA8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_15_d2aed36ee0f0": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMzE1LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDMxNS4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhJo8L3RleHQ+PC9zdmc+",
+    "tex_hc_middle_glyph_16_222240563461": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI2My4zNSIgdHJhbnNmb3JtPSJyb3RhdGUoMzM3LjUwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjIxIiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmUyOGQiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54G8PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iNjMuMzUiIHRyYW5zZm9ybT0icm90YXRlKDMzNy41MDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIyMSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZTI4ZCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7ngbw8L3RleHQ+PC9zdmc+",
+    "tex_hc_inner_glyph_01_f8a684300708": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZGUwIiBzdHJva2Utd2lkdGg9IjMuMiIgc3Ryb2tlLW9wYWNpdHk9IjAuNDgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPueEmjwvdGV4dD48dGV4dCB4PSIxMjgiIHk9IjkxLjY1IiB0cmFuc2Zvcm09InJvdGF0ZSgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZmZmZGUwIiBzdHJva2U9IiNmZmY2ZDIiIHN0cm9rZS13aWR0aD0iMC42NSIgc3Ryb2tlLW9wYWNpdHk9IjAuOTYiPueEmjwvdGV4dD48L3N2Zz4=",
+    "tex_hc_inner_glyph_02_5ad06efba296": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMzYuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMTkiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmRlMCIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7ngbw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMzYuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMTkiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmZkZTAiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54G8PC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_inner_glyph_03_3e9ed66e1cad": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoNzIuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMTkiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmRlMCIgc3Ryb2tlLXdpZHRoPSIzLjIiIHN0cm9rZS1vcGFjaXR5PSIwLjQ4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIj7nhYw8L3RleHQ+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoNzIuMDAwIDEyOCAxMjgpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iU2ltU3VuLCBOb3RvIFNlcmlmIENKSyBTQywgc2VyaWYiIGZvbnQtc2l6ZT0iMTkiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiNmZmZkZTAiIHN0cm9rZT0iI2ZmZjZkMiIgc3Ryb2tlLXdpZHRoPSIwLjY1IiBzdHJva2Utb3BhY2l0eT0iMC45NiI+54WMPC90ZXh0Pjwvc3ZnPg==",
+    "tex_hc_inner_glyph_04_03beff30518f": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMTA4LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZkZTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDEwOC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmRlMCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhLA8L3RleHQ+PC9zdmc+",
+    "tex_hc_inner_glyph_05_aba28d9838c8": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMTQ0LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZkZTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54a+PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDE0NC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmRlMCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhr48L3RleHQ+PC9zdmc+",
+    "tex_hc_inner_glyph_06_8a9ea747d958": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZkZTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54WJPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDE4MC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmRlMCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhYk8L3RleHQ+PC9zdmc+",
+    "tex_hc_inner_glyph_07_44118dc27f0d": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMjE2LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZkZTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SaPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDIxNi4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmRlMCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhJo8L3RleHQ+PC9zdmc+",
+    "tex_hc_inner_glyph_08_7f38fc783451": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMjUyLjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZkZTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDI1Mi4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmRlMCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhLA8L3RleHQ+PC9zdmc+",
+    "tex_hc_inner_glyph_09_ba1b0d033431": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMjg4LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZkZTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54a+PC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDI4OC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmRlMCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhr48L3RleHQ+PC9zdmc+",
+    "tex_hc_inner_glyph_10_36154a82b3ce": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHRleHQgeD0iMTI4IiB5PSI5MS42NSIgdHJhbnNmb3JtPSJyb3RhdGUoMzI0LjAwMCAxMjggMTI4KSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlNpbVN1biwgTm90byBTZXJpZiBDSksgU0MsIHNlcmlmIiBmb250LXNpemU9IjE5IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZkZTAiIHN0cm9rZS13aWR0aD0iMy4yIiBzdHJva2Utb3BhY2l0eT0iMC40OCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+54SwPC90ZXh0Pjx0ZXh0IHg9IjEyOCIgeT0iOTEuNjUiIHRyYW5zZm9ybT0icm90YXRlKDMyNC4wMDAgMTI4IDEyOCkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJTaW1TdW4sIE5vdG8gU2VyaWYgQ0pLIFNDLCBzZXJpZiIgZm9udC1zaXplPSIxOSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmRlMCIgc3Ryb2tlPSIjZmZmNmQyIiBzdHJva2Utd2lkdGg9IjAuNjUiIHN0cm9rZS1vcGFjaXR5PSIwLjk2Ij7nhLA8L3RleHQ+PC9zdmc+"
+  }
+}

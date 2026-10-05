@@ -75,6 +75,9 @@ export interface AtlasClip {
   firstFrame: number
   lastFrame: number
 
+  /** Reuses named atlas frames in a custom order; duplicate entries hold a pose. */
+  frameSequence?: readonly number[]
+
   frameRate: number
 
   /**
@@ -267,7 +270,7 @@ export function atlasClipsOf(clips: CombatAnimationCatalogue): AtlasClip[] {
  * clip is contact-range motion.
  */
 export function clipImpactMs(clip: AtlasClip): number {
-  const frameCount = clip.lastFrame - clip.firstFrame + 1
+  const frameCount = clip.frameSequence?.length ?? clip.lastFrame - clip.firstFrame + 1
   const marker = clip.impactFrameIndex ?? frameCount - 1
   return (marker + 0.5) * (1000 / clip.frameRate)
 }

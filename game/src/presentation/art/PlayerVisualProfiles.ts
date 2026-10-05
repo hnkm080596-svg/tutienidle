@@ -71,7 +71,7 @@ export interface PlayerVisualProfile {
 const MORTAL_COMBAT_KEY = 'player-mortal-pham-nhan-v1'
 // Minh hand-drawn cultivate v2 (2026-09-27) replaces the v1 placeholder.
 const MORTAL_CULTIVATE_KEY = 'player-mortal-cultivate-v2'
-const PHAP_TU_COMBAT_KEY = 'player-phap-tu-ngu-hanh-v1'
+const PHAP_TU_COMBAT_KEY = 'player-phap-tu-shared-v1'
 const PHAP_TU_CULTIVATE_KEY = 'player-phap-tu-cultivate-ngu-hanh-v1'
 const KIEM_TU_COMBAT_KEY = 'player-kiem-tu-v1'
 const KIEM_TU_CULTIVATE_KEY = 'player-kiem-tu-cultivate-v1'
@@ -129,8 +129,8 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
     id: 'phap_tu',
 
     combatTextureKey: PHAP_TU_COMBAT_KEY,
-    combatTextureUrl: `/assets/characters/player/phap-tu/${PHAP_TU_COMBAT_KEY}.png`,
-    combatSourceSize: { w: 732, h: 756 },
+    combatTextureUrl: '/assets/characters/animated/phap_tu_shared/avatar-transparent.png',
+    combatSourceSize: { w: 244, h: 252 },
 
     // Minh hand-drawn Ngu Hanh cultivate (2026-09-27). Phap Tu An
     // (Van Dao) has a dedicated PNG on disk but no profile id - the
@@ -139,11 +139,13 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
     cultivateTextureUrl: `/assets/characters/player/phap-tu/${PHAP_TU_CULTIVATE_KEY}.png`,
     cultivateSourceSize: { w: 1254, h: 1254 },
 
-    // Art Phap Tu tay tung chu cao hon va than ao rong hon.
+    // Shared spell-cultivator avatar: hand extends to the right of the 244px cell.
     bodyAnchors: standingAnchors({
-      chest: { x: 0.5, y: 0.34 },
-      castHand: { x: 0.7, y: 0.4 },
-      offHand: { x: 0.31, y: 0.54 },
+      head: { x: 0.59, y: 0.13 },
+      chest: { x: 0.59, y: 0.36 },
+      castHand: { x: 0.74, y: 0.44 },
+      offHand: { x: 0.4, y: 0.48 },
+      feet: { x: 0.59, y: 0.97 },
     }),
 
     cultivateBodyAnchors: lotusAnchors(),

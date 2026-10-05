@@ -39,6 +39,7 @@ import { MainProcessClockSource } from './presentation/clock/MainProcessClockSou
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { registerEnemySpawnDebug } from './core/dev/enemySpawnDebug'
+import type { ElementType } from './core/element/ElementType'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
 import { bindUpdateSurface, unbindUpdateSurface, useUpdates } from './composables/useUpdates'
@@ -59,6 +60,7 @@ import { recordSaveOutcome } from './services/diagnostics/recordSaveOutcome'
 import type { AuthSession } from './services/auth/AuthService'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
+import PhapTuLabBridge from './dev/PhapTuLabBridge.vue'
 import PresentationTransitionOverlay from './components/game/PresentationTransitionOverlay.vue'
 import CombatPauseOverlay from './components/game/combat/CombatPauseOverlay.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
@@ -658,10 +660,23 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
       // the authoritative payload with the reconnect's server clock bound
       // as 'now' - no offline catch-up is owed (the sim stayed admitted
       // or was paused; nothing accrued).
-      restoreGameSession(player, gameManager, save, {
+      const restored = restoreGameSession(player, gameManager, save, {
         kind: 'live-replacement',
         nowMs: serverAuthority?.serverNowMs ?? Date.now(),
       })
+      if (restored.status === 'rejected') {
+        // Boot routes a save the restore seams refuse to the recovery
+        // surface; a live-replacement rejection is the same class - the
+        // resumed sim must not run on a payload it could not consume.
+        // fail() transitions entryStage to 'error', which is the only
+        // branch mounting SaveIncompatibleScreen - report() alone is a
+        // dead write and would leak a stale status into later boots.
+        onlineAuthority.markFailed('recovery')
+        console.warn('[resume] save rejected by restore preflight:', restored.message)
+        saveIssue.report('corrupted', JSON.stringify(save))
+        bootFlow.fail()
+        return
+      }
     }
     lifecycle.resumeSimulation()
   },
@@ -978,6 +993,45 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
 
     isBooted.value = true
     lifecycle.startAutosave()
+
+    // Phap Tu dev lab one-click entry (?lab=phap_tu): provisions the
+    // current save through the lab poke, then walks it into a real
+    // stage battle. No-ops when the lab bridge never registered the
+    // poke (production build or non-mock backend). Optional params:
+    // element (default 'fire'), stage (default foundation_floor_1),
+    // keepTalent=1 (leave the breakthrough talent modal pending),
+    // noBattle=1 (provision only), auto=1 (leave auto-battle on).
+    const labParams = new URLSearchParams(window.location.search)
+    if (labParams.get('lab') === 'phap_tu' && window.__tutienPhapTuLab) {
+      const lab = window.__tutienPhapTuLab
+      const element = (labParams.get('element') ?? 'fire') as ElementType
+      const setupResult = lab.setup({
+        element,
+        keepTalent: labParams.get('keepTalent') === '1',
+      })
+      console.info('[phap-tu-lab]', setupResult)
+      if (setupResult.startsWith('ok') && labParams.get('noBattle') !== '1') {
+        const stageId = labParams.get('stage') ?? undefined
+        const manual = labParams.get('auto') !== '1'
+        void (async () => {
+          // The coordinator rejects stage entry while a presentation
+          // transition is in flight (boot curtain), so keep retrying
+          // until the snapshot settles to idle.
+          for (let attempt = 0; attempt < 20; attempt += 1) {
+            if (presentation.getSnapshot().phase !== 'idle') {
+              await new Promise((resolve) => setTimeout(resolve, 300))
+              continue
+            }
+            const entered = await lab.battle(stageId, manual)
+            console.info('[phap-tu-lab]', entered)
+            if (entered.startsWith('entered') || !entered.startsWith('rejected')) {
+              return
+            }
+            await new Promise((resolve) => setTimeout(resolve, 300))
+          }
+        })()
+      }
+    }
   }
 
   return outcome
@@ -1239,6 +1293,8 @@ onUnmounted(() => {
   </div>
 
   <UpdateBanner v-if="isBooted" />
+
+  <PhapTuLabBridge />
 
   <ErrorScreen />
 </template>

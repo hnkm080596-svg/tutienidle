@@ -114,7 +114,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 <template>
   <div class="technique-card" :class="{ 'technique-card--hero': size === 'hero' }" v-tooltip="tooltipContent">
-    <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
+    <InkNineSlice chrome-id="frame-s-slot" layer="frame" />
     <div class="technique-card__icon-wrap">
       <!-- SS18 Dao Quyen - 10-rune rank ring around the hero icon. -->
       <TechniqueRuneRing

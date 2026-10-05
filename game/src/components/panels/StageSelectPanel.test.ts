@@ -80,8 +80,9 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     // (band order = chapter order).
     expect(mounted.container.querySelectorAll('.stage-node')).toHaveLength(30)
     expect(mounted.container.textContent).toContain('Dã Trư')
-    // BETA roster: deep-floor nodes show the band-C species.
-    expect(mounted.container.textContent).toContain('Man Hổ')
+    // Roster remap: one family per chapter - every mortal floor node
+    // shows the boar family now.
+    expect(mounted.container.textContent).toContain('Heo Rừng')
     expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
 
     // Spec v3 D9 (2026-09-11): bossEnemyId only exists on floor 10 -

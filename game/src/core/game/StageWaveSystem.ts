@@ -38,6 +38,17 @@ export interface StageWaveSystemDeps {
 }
 
 /**
+ * Final-boss elite stack chance (enemies-review 2026-10-04 + Minh ruling
+ * 2026-10-04): an elite roll on the final boss variant multiplies an
+ * already x7-hp unit by another x2.5 - at 10% per attempt that tail alone
+ * made Quat 10 outcomes seed-dice (10/10 losses vs 1-try clear). 0.03
+ * keeps the boss+tinh_anh stack as rare flavor without letting it decide
+ * the stage; expected elite count per run shifts 1.9 -> 1.83 (noise).
+ * The ~18 preceding pool spawns keep their authored eliteChance.
+ */
+const FINAL_BOSS_ELITE_STACK_CHANCE = 0.03
+
+/**
  * Wave lifecycle of one stage (2026-08-24, split from GameManager):
  * spawns on cadence (IN PARALLEL, without waiting for prior enemies to
  * die), spawns immediately if the field is empty, sets 'victory' when
@@ -245,12 +256,12 @@ export class StageWaveSystem {
         const boss = createBossVariant(bossTemplate)
 
         // Spec v3 section 2.2 - active floor 10 can still stack the
-        // tinh_anh tag ON TOP of the boss variant (~10% boss+tinh_anh).
-        // The chance comes from the boss species' own pool entry (the
-        // builder authors bossEnemyId === the elite pool species); idle
-        // never rolls (allowTags: false).
+        // tinh_anh tag ON TOP of the boss variant. The stack uses its own
+        // tightened chance (FINAL_BOSS_ELITE_STACK_CHANCE) rather than the
+        // pool entry's eliteChance - the pool value drives the ordinary
+        // ~18 spawns, idle never rolls (allowTags: false).
         const bossEntry = stage.enemyPool.find(poolEntry => poolEntry.enemyId === stage.bossEnemyId)
-        if (options?.allowTags !== false && bossEntry?.eliteChance && rollChance(bossEntry.eliteChance, options?.rng)) {
+        if (options?.allowTags !== false && bossEntry?.eliteChance && rollChance(FINAL_BOSS_ELITE_STACK_CHANCE, options?.rng)) {
           return applyStageRealm(applyEnemyTags(boss, ['tinh_anh'], ENEMY_TAGS))
         }
 

@@ -42,8 +42,8 @@ function cap(id: string, type: string, payload: unknown): CapabilityGrantDefinit
     potency (the basic carries the whenSourceBuff-gated add_modifier). */
 export const TAM_MUOI_BUFF: BuffDefinition = {
   id: 'tam_muoi',
-  name: 'Tam Muội',
-  description: 'Tam Muội Chân Hỏa thiêu đốt — Hỏa Ấn gieo trong trạng thái này mạnh hơn hẳn.',
+  name: 'Ngự Diễm',
+  description: 'Ngự dụng chân hỏa quanh thân — Hỏa Ấn gieo trong trạng thái này mạnh hơn hẳn.',
   kind: 'buff',
   polarity: 'buff',
   ...PER_SOURCE,

@@ -1,0 +1,1019 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_claw",
+    "name": "Mob Claw",
+    "comp": {
+      "w": 256,
+      "h": 192,
+      "dur": 0.36,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 55
+    },
+    "exp": {
+      "cols": 4,
+      "rows": 3,
+      "frames": 11,
+      "cellW": 256,
+      "cellH": 192,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_claw_gash_a_45c02ddc8a7f",
+        "name": "mob claw gash a",
+        "sheet": null
+      },
+      {
+        "id": "tex_mob_claw_gash_b_0292dfe9794e",
+        "name": "mob claw gash b",
+        "sheet": null
+      },
+      {
+        "id": "tex_mob_claw_gash_c_c3177cff2c19",
+        "name": "mob claw gash c",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_claw_embers",
+        "name": "Rake Embers",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.36,
+        "em": {
+          "x": {
+            "keys": [
+              {
+                "t": 0.045,
+                "v": 26
+              },
+              {
+                "t": 0.08,
+                "v": 0
+              },
+              {
+                "t": 0.115,
+                "v": -26
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.045,
+                "v": -30
+              },
+              {
+                "t": 0.08,
+                "v": -2
+              },
+              {
+                "t": 0.115,
+                "v": 26
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 12,
+          "sy": 8,
+          "dir": "dir",
+          "angle": 205,
+          "spread": 55,
+          "speed": 240,
+          "speedRnd": 0.45,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.05,
+              "n": 8
+            },
+            {
+              "t": 0.085,
+              "n": 8
+            },
+            {
+              "t": 0.12,
+              "n": 9
+            }
+          ],
+          "seed": 13,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.3,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "ember",
+            "p": {}
+          },
+          "size": 9,
+          "sizeRnd": 0.45,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.6,
+                "v": 0.7
+              },
+              {
+                "t": 1,
+                "v": 0.1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.5,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  252,
+                  240
+                ]
+              },
+              {
+                "t": 0.4,
+                "c": [
+                  255,
+                  180,
+                  100
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  200,
+                  60,
+                  40
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 60,
+          "spinRnd": 0.6,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": -40,
+          "gravY": 110,
+          "drag": 2.2,
+          "turbAmp": 10,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_claw_sparks",
+        "name": "Cut Streaks",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.36,
+        "em": {
+          "x": {
+            "keys": [
+              {
+                "t": 0.045,
+                "v": 26
+              },
+              {
+                "t": 0.08,
+                "v": 0
+              },
+              {
+                "t": 0.115,
+                "v": -26
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.045,
+                "v": -30
+              },
+              {
+                "t": 0.08,
+                "v": -2
+              },
+              {
+                "t": 0.115,
+                "v": 26
+              }
+            ]
+          },
+          "shape": "ring",
+          "sx": 14,
+          "sy": 8,
+          "dir": "dir",
+          "angle": 200,
+          "spread": 40,
+          "speed": 300,
+          "speedRnd": 0.4,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.05,
+              "n": 5
+            },
+            {
+              "t": 0.085,
+              "n": 5
+            },
+            {
+              "t": 0.12,
+              "n": 6
+            }
+          ],
+          "seed": 17,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.22,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 8,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.6,
+                "v": 0.6
+              },
+              {
+                "t": 1,
+                "v": 0.05
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.5,
+                "v": 0.85
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  255,
+                  245
+                ]
+              },
+              {
+                "t": 0.45,
+                "c": [
+                  255,
+                  160,
+                  110
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  190,
+                  40,
+                  30
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0,
+          "spin": 0,
+          "spinRnd": 0,
+          "alignVel": true,
+          "stretch": 1.8,
+          "gravX": -30,
+          "gravY": 90,
+          "drag": 2.5,
+          "turbAmp": 6,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_claw_flash",
+        "name": "Rake Hit Flash",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.115,
+              "v": 0
+            },
+            {
+              "t": 0.135,
+              "v": 0.8
+            },
+            {
+              "t": 0.24,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "star",
+            "p": {
+              "n": 6,
+              "inr": 0.25
+            }
+          },
+          "size": 92,
+          "x": -4,
+          "y": 0,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.115,
+                "v": 0.35
+              },
+              {
+                "t": 0.17,
+                "v": 1.05
+              },
+              {
+                "t": 0.26,
+                "v": 1.3
+              }
+            ]
+          },
+          "rot": 10,
+          "aspect": 1,
+          "color": [
+            255,
+            238,
+            205
+          ],
+          "squash": 0,
+          "glow": 0.5,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_claw_gash_1_bloom",
+        "name": "Gash One Bloom",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.024999999999999998,
+              "v": 0
+            },
+            {
+              "t": 0.049999999999999996,
+              "v": 0.45
+            },
+            {
+              "t": 0.16499999999999998,
+              "v": 0.38
+            },
+            {
+              "t": 0.245,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_claw_gash_c_c3177cff2c19",
+            "p": {}
+          },
+          "size": 207.76000000000002,
+          "x": {
+            "keys": [
+              {
+                "t": 0.024999999999999998,
+                "v": 36.428
+              },
+              {
+                "t": 0.185,
+                "v": 17.468
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.024999999999999998,
+                "v": -38.184
+              },
+              {
+                "t": 0.185,
+                "v": -23.304000000000002
+              }
+            ]
+          },
+          "rot": {
+            "keys": [
+              {
+                "t": 0.024999999999999998,
+                "v": 52
+              },
+              {
+                "t": 0.16499999999999998,
+                "v": 46
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.024999999999999998,
+                "v": 0.9
+              },
+              {
+                "t": 0.14500000000000002,
+                "v": 1.04
+              }
+            ]
+          },
+          "aspect": 1,
+          "color": [
+            255,
+            205,
+            150
+          ],
+          "squash": 0,
+          "glow": 0.55,
+          "glowSize": 1.7,
+          "glowBlur": 0.2,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_claw_gash_2_bloom",
+        "name": "Gash Two Bloom",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.06,
+              "v": 0
+            },
+            {
+              "t": 0.085,
+              "v": 0.45
+            },
+            {
+              "t": 0.2,
+              "v": 0.38
+            },
+            {
+              "t": 0.28,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_claw_gash_a_45c02ddc8a7f",
+            "p": {}
+          },
+          "size": 224.72,
+          "x": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": 10.428
+              },
+              {
+                "t": 0.22000000000000003,
+                "v": -8.532
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": -10.184
+              },
+              {
+                "t": 0.22000000000000003,
+                "v": 4.696
+              }
+            ]
+          },
+          "rot": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": 44
+              },
+              {
+                "t": 0.2,
+                "v": 38
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": 0.9
+              },
+              {
+                "t": 0.18,
+                "v": 1.04
+              }
+            ]
+          },
+          "aspect": 1,
+          "color": [
+            255,
+            205,
+            150
+          ],
+          "squash": 0,
+          "glow": 0.55,
+          "glowSize": 1.7,
+          "glowBlur": 0.2,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_claw_gash_3_bloom",
+        "name": "Gash Three Bloom",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.095,
+              "v": 0
+            },
+            {
+              "t": 0.12000000000000001,
+              "v": 0.45
+            },
+            {
+              "t": 0.235,
+              "v": 0.38
+            },
+            {
+              "t": 0.315,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_claw_gash_b_0292dfe9794e",
+            "p": {}
+          },
+          "size": 216.24,
+          "x": {
+            "keys": [
+              {
+                "t": 0.095,
+                "v": -15.572
+              },
+              {
+                "t": 0.255,
+                "v": -34.532
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.095,
+                "v": 17.816000000000003
+              },
+              {
+                "t": 0.255,
+                "v": 32.696
+              }
+            ]
+          },
+          "rot": {
+            "keys": [
+              {
+                "t": 0.095,
+                "v": 36
+              },
+              {
+                "t": 0.235,
+                "v": 30
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.095,
+                "v": 0.9
+              },
+              {
+                "t": 0.21500000000000002,
+                "v": 1.04
+              }
+            ]
+          },
+          "aspect": 1,
+          "color": [
+            255,
+            205,
+            150
+          ],
+          "squash": 0,
+          "glow": 0.55,
+          "glowSize": 1.7,
+          "glowBlur": 0.2,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_claw_gash_1",
+        "name": "Gash One",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.024999999999999998,
+              "v": 0
+            },
+            {
+              "t": 0.045,
+              "v": 0.85
+            },
+            {
+              "t": 0.175,
+              "v": 0.8
+            },
+            {
+              "t": 0.265,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_claw_gash_c_c3177cff2c19",
+            "p": {}
+          },
+          "size": 196,
+          "x": {
+            "keys": [
+              {
+                "t": 0.024999999999999998,
+                "v": 36.428
+              },
+              {
+                "t": 0.185,
+                "v": 17.468
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.024999999999999998,
+                "v": -38.184
+              },
+              {
+                "t": 0.185,
+                "v": -23.304000000000002
+              }
+            ]
+          },
+          "rot": {
+            "keys": [
+              {
+                "t": 0.024999999999999998,
+                "v": 52
+              },
+              {
+                "t": 0.16499999999999998,
+                "v": 46
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.024999999999999998,
+                "v": 0.88
+              },
+              {
+                "t": 0.14500000000000002,
+                "v": 1.02
+              }
+            ]
+          },
+          "aspect": 1,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_claw_gash_2",
+        "name": "Gash Two",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.06,
+              "v": 0
+            },
+            {
+              "t": 0.08,
+              "v": 0.85
+            },
+            {
+              "t": 0.21000000000000002,
+              "v": 0.8
+            },
+            {
+              "t": 0.3,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_claw_gash_a_45c02ddc8a7f",
+            "p": {}
+          },
+          "size": 212,
+          "x": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": 10.428
+              },
+              {
+                "t": 0.22000000000000003,
+                "v": -8.532
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": -10.184
+              },
+              {
+                "t": 0.22000000000000003,
+                "v": 4.696
+              }
+            ]
+          },
+          "rot": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": 44
+              },
+              {
+                "t": 0.2,
+                "v": 38
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.06,
+                "v": 0.88
+              },
+              {
+                "t": 0.18,
+                "v": 1.02
+              }
+            ]
+          },
+          "aspect": 1,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_claw_gash_3",
+        "name": "Gash Three",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.36,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.095,
+              "v": 0
+            },
+            {
+              "t": 0.115,
+              "v": 0.85
+            },
+            {
+              "t": 0.245,
+              "v": 0.8
+            },
+            {
+              "t": 0.335,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_claw_gash_b_0292dfe9794e",
+            "p": {}
+          },
+          "size": 204,
+          "x": {
+            "keys": [
+              {
+                "t": 0.095,
+                "v": -15.572
+              },
+              {
+                "t": 0.255,
+                "v": -34.532
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0.095,
+                "v": 17.816000000000003
+              },
+              {
+                "t": 0.255,
+                "v": 32.696
+              }
+            ]
+          },
+          "rot": {
+            "keys": [
+              {
+                "t": 0.095,
+                "v": 36
+              },
+              {
+                "t": 0.235,
+                "v": 30
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.095,
+                "v": 0.88
+              },
+              {
+                "t": 0.21500000000000002,
+                "v": 1.02
+              }
+            ]
+          },
+          "aspect": 1,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_claw_gash_a_45c02ddc8a7f": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdhIiB4MT0iMCIgeTE9IjAiIHgyPSIwLjE1IiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNkNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjAuMzUiIHN0b3AtY29sb3I9IiNmZmFiNWUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjc1IiBzdG9wLWNvbG9yPSIjZjIzODI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzhlMGYxYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHBhdGggZD0iTTI0MiA2OCBDMjA0IDc2IDE2OCA4OCAxNDAgMTAwIEMxMTggMTEwIDk2IDExOCA3NCAxMzAgQzUyIDE0MiAzMiAxNTYgMTggMTcwIEM1NiAxNTggMTAyIDE0MCAxNDggMTIyIEMxODggMTA3IDIyMiA4OCAyNDIgNjggWiIgZmlsbD0idXJsKCNnYSkiIGZpbGwtb3BhY2l0eT0iMC43NSIgc3Ryb2tlPSIjNTcxZTEyIiBzdHJva2Utb3BhY2l0eT0iMC4zOCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8cGF0aCBkPSJNMjMyIDgyIEMxOTYgOTAgMTYwIDEwMiAxMjggMTE2IEM5OCAxMjkgNjYgMTQ2IDQwIDE2MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZjZjhlIiBzdHJva2Utd2lkdGg9IjExIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNSIvPgogIDxwYXRoIGQ9Ik0yMzIgODIgQzE5NiA5MCAxNjAgMTAyIDEyOCAxMTYgQzk4IDEyOSA2NiAxNDYgNDAgMTYyIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmY4ZTQiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjg1Ii8+Cjwvc3ZnPg==",
+    "tex_mob_claw_gash_b_0292dfe9794e": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdiIiB4MT0iMCIgeTE9IjAiIHgyPSIwLjE1IiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNkNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjAuMzUiIHN0b3AtY29sb3I9IiNmZmFiNWUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjc1IiBzdG9wLWNvbG9yPSIjZjIzODI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzhlMGYxYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHBhdGggZD0iTTI0NCA4NCBDMjEwIDg0IDE3MiA5NCAxNDAgMTA4IEMxMDggMTIyIDc2IDE0MiA0OCAxNjAgQzM2IDE2OCAyNiAxNzggMjAgMTg4IEM1NCAxNzIgOTQgMTUyIDEzOCAxMzIgQzE4MCAxMTQgMjIwIDk4IDI0NCA4NCBaIiBmaWxsPSJ1cmwoI2diKSIgZmlsbC1vcGFjaXR5PSIwLjc1IiBzdHJva2U9IiM1NzFlMTIiIHN0cm9rZS1vcGFjaXR5PSIwLjM4IiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0yMzQgOTQgQzIwMCAxMDAgMTYyIDExMCAxMjggMTI0IEM5NiAxMzggNjQgMTU2IDQyIDE3NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZjZjhlIiBzdHJva2Utd2lkdGg9IjExIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNSIvPgogIDxwYXRoIGQ9Ik0yMzQgOTQgQzIwMCAxMDAgMTYyIDExMCAxMjggMTI0IEM5NiAxMzggNjQgMTU2IDQyIDE3NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmOGU0IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44NSIvPgo8L3N2Zz4=",
+    "tex_mob_claw_gash_c_c3177cff2c19": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdjIiB4MT0iMCIgeTE9IjAiIHgyPSIwLjE1IiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNkNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjAuMzUiIHN0b3AtY29sb3I9IiNmZmFiNWUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjc1IiBzdG9wLWNvbG9yPSIjZjIzODI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzhlMGYxYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHBhdGggZD0iTTIzOCA2MiBDMjAyIDcyIDE3MCA4NiAxNDIgMTAwIEMxMTQgMTE0IDg4IDEzMCA2NCAxNDYgQzQ4IDE1NiAzNCAxNjIgMjIgMTY0IEM1NCAxNTYgOTQgMTQyIDEzNiAxMjQgQzE3NiAxMDcgMjE2IDg0IDIzOCA2MiBaIiBmaWxsPSJ1cmwoI2djKSIgZmlsbC1vcGFjaXR5PSIwLjc1IiBzdHJva2U9IiM1NzFlMTIiIHN0cm9rZS1vcGFjaXR5PSIwLjM4IiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0yMjggNzQgQzE5NCA4NCAxNjAgOTYgMTI4IDExMCBDMTAwIDEyMiA3MiAxMzggNTAgMTU0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmNmOGUiIHN0cm9rZS13aWR0aD0iMTEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC41Ii8+CiAgPHBhdGggZD0iTTIyOCA3NCBDMTk0IDg0IDE2MCA5NiAxMjggMTEwIEMxMDAgMTIyIDcyIDEzOCA1MCAxNTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZjhlNCIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuODUiLz4KPC9zdmc+"
+  }
+}

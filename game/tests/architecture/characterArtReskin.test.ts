@@ -263,7 +263,7 @@ describe('character art reskin registry (infra)', () => {
     }
     // Minh hand-drawn sets (2026-09-27): every wired variant is animated
     // with authored clips; standby still reuses the idle range.
-    for (const slug of ['pham_nhan', 'pham_nhan_unarmed', 'ngu_kiem', 'ngu_hanh']) {
+    for (const slug of ['pham_nhan', 'pham_nhan_unarmed', 'ngu_kiem', 'phap_tu_shared']) {
       const entity = presentationFor(slug)
       expect(entity?.kind, slug).toBe('animated')
       if (entity?.kind === 'animated') {
@@ -275,12 +275,24 @@ describe('character art reskin registry (infra)', () => {
     // Art-seam wave (2026-09-29): the Minh sets carry NO ult clip - their
     // per-skill/role cast clips take the slot-role slot instead (zuofeng
     // above is the one variant keeping ult).
-    for (const slug of ['pham_nhan', 'pham_nhan_unarmed', 'ngu_kiem', 'ngu_hanh']) {
+    for (const slug of ['pham_nhan', 'pham_nhan_unarmed', 'ngu_kiem', 'phap_tu_shared']) {
       const entity = presentationFor(slug)
       if (entity?.kind === 'animated') {
         expect(entity.clips.ult, `${slug}.ult`).toBeUndefined()
       }
     }
+  })
+
+  it('shared Pháp Tu art exposes the supplied idle, attack, special cast and death sheets', () => {
+    const art = CHARACTER_ART.phap_tu_shared
+    expect(art).toBeDefined()
+    if (!art) throw new Error('phap_tu_shared art is missing')
+    expect(art.sourceSize).toEqual({ w: 244, h: 252 })
+    expect(art.clips.idle.lastFrame).toBe(33)
+    expect(art.clips.attack?.lastFrame).toBe(17)
+    expect(art.castClips?.['role:special']?.lastFrame).toBe(17)
+    expect(art.clips.death.lastFrame).toBe(17)
+    expect(resolvePlayerEntityKey('phap_tu', 'fallback')).toBe('phap_tu_shared')
   })
 
   it('per-skill castClips resolve to real clip ranges on the atlas their sheet declares', () => {
@@ -290,9 +302,14 @@ describe('character art reskin registry (infra)', () => {
     for (const variant of Object.values(CHARACTER_ART)) {
       for (const [key, range] of Object.entries(variant.castClips ?? {})) {
         // `role:` selector prefix is not part of the authored clip name.
-        expect(range.framePrefix, `${variant.slug}.castClips.${key} prefix`).toBe(
-          `${variant.slug}-cast-${key.replace(/^role:/, '')}-`,
-        )
+        const borrowedFireball = variant.slug === 'phap_tu_shared' && key === 'hoa_cau_thuat'
+        expect(range.framePrefix, `${variant.slug}.castClips.${key} prefix`).toBe(borrowedFireball
+          ? 'phap_tu_shared-attack-'
+          : `${variant.slug}-cast-${key.replace(/^role:/, '')}-`)
+        if (borrowedFireball) {
+          expect(range.frameSequence?.length).toBe(34)
+          expect(range.frameSequence?.every(index => index >= range.firstFrame && index <= range.lastFrame)).toBe(true)
+        }
         const atlas = JSON.parse(readFileSync(publicPath(range.atlasUrl), 'utf8')) as AtlasFile
         for (let index = range.firstFrame; index <= range.lastFrame; index++) {
           const name = `${range.framePrefix}${String(index).padStart(CHARACTER_ZERO_PAD, '0')}.png`
@@ -302,16 +319,16 @@ describe('character art reskin registry (infra)', () => {
     }
 
     // The wired picks (art-seam wave): unarmed linh_bao casts on sheet-2,
-    // ngu_hanh's role-keyed 'role:special' covers every element on sheet-3.
+    // phap_tu_shared's role-keyed 'role:special' covers every element on sheet-3.
     expect(CHARACTER_ART.pham_nhan_unarmed?.castClips?.linh_bao?.sheetKey).toBe(
       'pham_nhan_unarmed-sheet-2',
     )
-    expect(CHARACTER_ART.ngu_hanh?.castClips?.['role:special']?.sheetKey).toBe('ngu_hanh-sheet-3')
+    expect(CHARACTER_ART.phap_tu_shared?.castClips?.['role:special']?.sheetKey).toBe('phap_tu_shared-sheet-3')
     expect(CHARACTER_ART.pham_nhan?.castClips).toBeUndefined()
 
     // The catalogue emits them as `${slug}-cast-<clip>` anim keys (the
     // `role:` selector prefix is stripped), play-once.
-    for (const slug of ['pham_nhan_unarmed', 'ngu_hanh']) {
+    for (const slug of ['pham_nhan_unarmed', 'phap_tu_shared']) {
       const entity = animatedArtFormFor(slug)
       expect(entity?.castClips, `${slug} catalogue castClips`).toBeDefined()
       for (const [key, clip] of Object.entries(entity?.castClips ?? {})) {

@@ -64,7 +64,10 @@ test('anonymous user is a guest; unconfirmed link keeps finalize PENDING', async
   const put = await fetch(`${env.supabaseUrl}/auth/v1/user`, {
     method: 'PUT',
     headers: { apikey: env.anonKey, Authorization: `Bearer ${user.token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: `${loginId}@tutien-idle-accounts.invalid` }),
+    // Domain must pass the project's GoTrue email-domain restriction -
+    // RFC-reserved example.com is admitted (reserved = undeliverable by
+    // design); a 429 from the send quota is handled by the skip below.
+    body: JSON.stringify({ email: `${loginId}@example.com` }),
     signal: AbortSignal.timeout(15_000),
   })
   const putBody = await put.json()

@@ -67,6 +67,7 @@ import {
   type BetaUnsupportedReason,
 } from '../betaScopeSurface'
 import { commitSpellPathElement } from '../phap-tu/PhapTuState'
+import { isBetaElement } from '../betaScope'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
@@ -295,6 +296,12 @@ export class GameManagerProgressionOps {
     const core = this.resolveSkillCore(skillId)
 
     if (!core) {
+      return false
+    }
+
+    // BETA SCOPE - a scoped-out skill core cannot be granted through any
+    // writer seam (ritual way.coreSkillIds, node grantsSkillCoreIds).
+    if (!betaSkillAdmitted(skillId)) {
       return false
     }
 
@@ -554,6 +561,12 @@ export class GameManagerProgressionOps {
     }
 
     if (player.spellPath.element !== null) {
+      return false
+    }
+
+    // BETA SCOPE - fail closed on out-of-beta elements; the mortal
+    // discriminator above gates WHEN, this gates WHAT.
+    if (!isBetaElement(element)) {
       return false
     }
 

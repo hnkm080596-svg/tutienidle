@@ -9,6 +9,7 @@ import {
   purchaseNode,
 } from '../progression/NodeSystem'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { MORTAL_TIEN_THAN_NODES } from '../../data/progression/MortalTienThanNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { defineEnemy } from '../enemy/Enemy'
@@ -143,17 +144,20 @@ describe('selectSpellPathElement — spell_pathway way gate', () => {
 })
 
 describe('The cap — spell_pathway way gate', () => {
-  it('resolveMaxThe is a flat 5 for spell_pathway, MAX_THE elsewhere — ngo_dao owns no The pool', () => {
+  it('resolveMaxThe is a flat 5 for spell_pathway once hoa_the is owned; 0 while locked; MAX_THE elsewhere', () => {
     const committed = { element: 'fire' as const }
 
-    expect(resolveMaxThe(nguHanh({ spellPath: committed }))).toBe(SPELL_PATH_MAX_THE)
+    // Hoa The gate (Minh ruling 2026-10-04): the pool is node-unlocked.
+    expect(resolveMaxThe(nguHanh({ spellPath: committed }), 0)).toBe(0)
+    expect(resolveMaxThe(nguHanh({ spellPath: committed }), 1)).toBe(SPELL_PATH_MAX_THE)
+    expect(resolveMaxThe(nguHanh({ spellPath: committed }), 4)).toBe(SPELL_PATH_MAX_THE)
     expect(SPELL_PATH_MAX_THE).toBe(5)
 
     for (const make of Object.values(NGO_DAO_SHAPES)) {
-      expect(resolveMaxThe(make({ spellPath: committed }))).toBe(MAX_THE)
+      expect(resolveMaxThe(make({ spellPath: committed }), 4)).toBe(MAX_THE)
     }
 
-    expect(resolveMaxThe(createDefaultPlayer())).toBe(MAX_THE)
+    expect(resolveMaxThe(createDefaultPlayer(), 4)).toBe(MAX_THE)
   })
 })
 
@@ -162,8 +166,18 @@ describe('The cap — spell_pathway way gate', () => {
 // this surface does not depend on the bridge module.
 
 describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
-  it('every node carries requiredCultivationPath spell + requiredWay spell_pathway', () => {
-    for (const node of PHAP_TU_NODES) {
+  it('every purchasable node carries requiredCultivationPath spell + requiredWay spell_pathway', () => {
+    for (const node of [...PHAP_TU_NODES, ...MORTAL_TIEN_THAN_NODES]) {
+      // Info anchors (infoSkillId, 2026-10-04) are pathless by design:
+      // the mortal precursor seats live on the way-less 'tien_than'
+      // branch - the stamp contract applies to purchasable/progression
+      // nodes only.
+      if (node.infoSkillId !== undefined) {
+        expect(node.requiredCultivationPath, node.id).toBeUndefined()
+        expect(node.requiredWay, node.id).toBeUndefined()
+        continue
+      }
+
       expect(node.requiredCultivationPath, node.id).toBe('spell')
 
       // Three-path design (2026-09-25, sec.4-b): realm-reward grant
@@ -311,7 +325,26 @@ describe('battle build — the way drives the kit branch', () => {
     expect(() => gameManager.startBattleWithPlayer(player, dummyEnemy())).toThrow()
   })
 
-  it('spell_pathway resolves the committed element kit with The gains', () => {
+  it('spell_pathway resolves the committed element kit with The gains once hoa_the is owned', () => {
+    const gameManager = spellPathManager()
+    const player = nguHanh({ nodeLevels: { hoa_the: 4 } })
+    gameManager.setActivePlayer(player)
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', player)).toBe(true)
+
+    gameManager.startBattleWithPlayer(player, dummyEnemy())
+
+    const participant = gameManager.getTurnBattle()!.players[0]!
+    expect(participant.basic?.id).toBe('hoa_cau_thuat')
+    // Phap Tu Reimagined + Hoa The gate: +1 The on landed cast at the
+    // node's mint chance (lv4 = guaranteed); the Phap The element
+    // rider rides the empowerment channel at the flat cap of 5.
+    expect(participant.basic?.theGainOnLandedCast).toBe(1)
+    expect(participant.basic?.theGainChance).toBe(1)
+    expect(participant.basic?.empowerment?.theThreshold).toBe(SPELL_PATH_MAX_THE)
+    expect(participant.entity.maxThe).toBe(SPELL_PATH_MAX_THE)
+  })
+
+  it('without the hoa_the node the kit carries no The loop at all', () => {
     const gameManager = spellPathManager()
     const player = nguHanh()
     gameManager.setActivePlayer(player)
@@ -321,10 +354,22 @@ describe('battle build — the way drives the kit branch', () => {
 
     const participant = gameManager.getTurnBattle()!.players[0]!
     expect(participant.basic?.id).toBe('hoa_cau_thuat')
-    // Phap Tu Reimagined: +1 The on landed cast; the Phap The element
-    // rider rides the empowerment channel at the flat cap of 5.
+    expect(participant.basic?.theGainOnLandedCast).toBeUndefined()
+    expect(participant.basic?.theGainChance).toBeUndefined()
+    expect(participant.basic?.empowerment).toBeUndefined()
+    expect(participant.entity.maxThe).toBe(0)
+  })
+
+  it('the mint chance scales with the hoa_the node level', () => {
+    const gameManager = spellPathManager()
+    const player = nguHanh({ nodeLevels: { hoa_the: 1 } })
+    gameManager.setActivePlayer(player)
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', player)).toBe(true)
+
+    gameManager.startBattleWithPlayer(player, dummyEnemy())
+
+    const participant = gameManager.getTurnBattle()!.players[0]!
     expect(participant.basic?.theGainOnLandedCast).toBe(1)
-    expect(participant.basic?.empowerment?.theThreshold).toBe(SPELL_PATH_MAX_THE)
-    expect(participant.entity.maxThe).toBe(SPELL_PATH_MAX_THE)
+    expect(participant.basic?.theGainChance).toBe(0.35)
   })
 })

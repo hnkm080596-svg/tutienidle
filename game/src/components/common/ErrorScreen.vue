@@ -129,9 +129,9 @@ async function exportDiagnostics() {
 
 <template>
   <div v-if="errorStore.current" class="error-screen" :style="{ zIndex: OVERLAY_LAYERS.appError }">
-    <div class="error-screen__panel paper-on-dark">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+    <div class="error-screen__panel">
+      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
       <div class="error-screen__scroll">
         <h2 class="error-screen__title">{{ t('errors.app.title') }}</h2>
@@ -209,6 +209,9 @@ async function exportDiagnostics() {
   background: var(--scrim-heavy);
 }
 
+/* Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll +
+   frame-m-modal band; padding clears the band and overflow:hidden +
+   border-radius clip the scroll's square corners. */
 .error-screen__panel {
   position: relative;
   isolation: isolate;
@@ -216,7 +219,9 @@ async function exportDiagnostics() {
   flex-direction: column;
   max-width: 420px;
   max-height: 90vh;
-  padding: 28px 32px;
+  padding: 46px 40px;
+  overflow: hidden;
+  border-radius: 16px;
   box-shadow: var(--shadow-panel);
   text-align: center;
   font-family: var(--font-body);

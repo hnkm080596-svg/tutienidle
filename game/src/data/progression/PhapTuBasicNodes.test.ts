@@ -57,12 +57,18 @@ describe('PhapTu basic lane — reimagined contract', () => {
     }
   })
 
-  it('a maxed power node never exceeds +10% in one direction', () => {
+  it('a maxed power node stays inside its lane cap in one direction', () => {
     for (const node of BASIC_LANE_IDS) {
       const level = node.maxLevel ?? 1
+      // balance-review 2026-10-04 (progression-review C2.2): trunk nodes
+      // (no foundation gate) cap at +12.5%; the foundation-gated outer
+      // ring keeps the authored +10% ceiling.
+      const cap = node.prerequisites?.some(
+        (p) => p.kind === 'realm' && p.realmId === 'foundation_establishment',
+      ) ? 0.1 : 0.125
       for (const mod of node.effect.statModifiers ?? []) {
         const total = (mod.flat ?? 0) + (mod.perLevelFlat ?? 0) * (level - 1)
-        expect(total, `${node.id} ${mod.stat}`).toBeLessThanOrEqual(0.1 + 1e-9)
+        expect(total, `${node.id} ${mod.stat}`).toBeLessThanOrEqual(cap + 1e-9)
         // Level 1 must already pay out: per-level nodes with flat:0 are
         // a dead first purchase (engine adds perLevelFlat*(level-1)).
         const atLevelOne = (mod.flat ?? 0) + (mod.perLevelFlat ?? 0) * 0
@@ -85,15 +91,18 @@ describe('PhapTu basic lane — reimagined contract', () => {
     }
   })
 
-  it('apply-chance nodes reach a x1.10 multiplier at max (ApplicationResolver is multiplicative)', () => {
+  it('apply-chance nodes reach their authored max multiplier (ApplicationResolver is multiplicative)', () => {
     // ApplicationResolver.resolve computes chance = baseChance x (1 + pool),
-    // so the documented 'toi da +10% so voi goc' requires pool 0.10 at max.
-    const APPLY_CHANCE_NODE_IDS = [
-      'hoa_diem_chuan', 'thuy_diem_chuan', 'kim_diem_chuan',
-      'hoa_diem_tham', 'kim_diem_tham',
-    ]
+    // so each documented cap requires the matching pool at max level.
+    // balance-review 2026-10-04 (progression-review C2.2): trunk nodes
+    // rise to a +12.5% cap so they stop being the 29%-of-mastery trap;
+    // ring nodes stay at the authored +10% ceiling.
+    const APPLY_CHANCE_CAPS: Record<string, number> = {
+      hoa_diem_chuan: 0.125, thuy_diem_chuan: 0.125, kim_diem_chuan: 0.125,
+      hoa_diem_tham: 0.1, kim_diem_tham: 0.1,
+    }
 
-    for (const nodeId of APPLY_CHANCE_NODE_IDS) {
+    for (const [nodeId, expectedCap] of Object.entries(APPLY_CHANCE_CAPS)) {
       const node = PHAP_TU_NODES.find((n) => n.id === nodeId)!
 
       expect(node, nodeId).toBeDefined()
@@ -104,7 +113,7 @@ describe('PhapTu basic lane — reimagined contract', () => {
 
       const pool = (mod?.flat ?? 0) + (mod?.perLevelFlat ?? 0) * ((node.maxLevel ?? 1) - 1)
 
-      expect(pool, `${nodeId} pool at max`).toBeCloseTo(0.1, 9)
+      expect(pool, `${nodeId} pool at max`).toBeCloseTo(expectedCap, 9)
     }
   })
 

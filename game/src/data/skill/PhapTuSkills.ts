@@ -27,17 +27,24 @@ import { TRONG_THE_THRESHOLD } from '../buff/PhapTuTrangBuffs'
 // balance pass owns the final tuning).
 // ---------------------------------------------------------------------------
 
-/** Special cast cost: percent of MAX Linh Luc (spec D8, uniform 0.30).
+/** Special cast cost: percent of MAX Linh Luc (spec D8, uniform).
     Stamped as `resourceCostPercentOfMax` on the converted
     TurnSkillDefinition by the resolve seam -- Skill.cost is flat-only and
     cannot express percent-of-max, so the records below leave `cost`
-    unset. */
-export const PHAP_TU_TRANG_COST_PERCENT_OF_MAX = 0.3
+    unset.
+    Balance 2026-10-04 (skills-review.md C1): 0.30 -> 0.15. A zero-damage
+    window costing 30% max MP emptied the pool after ~3 casts and made the
+    auto scheduler burn MP on a trap button; ~15% matches MP regen over
+    the 5-turn cooldown so the window is a real rotation staple. */
+export const PHAP_TU_TRANG_COST_PERCENT_OF_MAX = 0.15
 
 /** Tam Muoi potency multiplier for own-source Hoa An applications while
     the window is up (spec D12; rides the fire basic's ailmentInteractions
-    gated by `whenSourceBuff: 'tam_muoi'`). */
-export const TAM_MUOI_POTENCY_MULTIPLIER = 1.5
+    gated by `whenSourceBuff: 'tam_muoi'`).
+    Balance 2026-10-04 (skills-review.md C2): 1.5 -> 2.0. The window's only
+    payoff is this multiplier on the weakest ailment dot at a 50% proc;
+    x1.5 returned ~10-25 dmg per window vs the ~45-90 forgone basic. */
+export const TAM_MUOI_POTENCY_MULTIPLIER = 2.0
 
 /** Thuy Phap The rider: secondary-hit coefficient vs the primary hit
     (spec D4). */
@@ -79,9 +86,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
   {
     id: 'hoa_cau_thuat',
 
-    name: 'Hỏa Cầu Thuật',
+    name: 'Ly Hỏa Thuật',
 
-    description: 'Phóng Hỏa Cầu vào mục tiêu, có cơ hội gây Thiêu Đốt.',
+    description: 'Phóng đoàn Ly Hỏa vào mục tiêu, có cơ hội gây Hỏa Ấn.',
 
     type: 'active',
 
@@ -169,7 +176,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'hoa_tu_diem',
         name: 'Tụ Diễm',
-        description: 'Hỏa Cầu tụ một điểm — đòn đánh đậm hơn, Thiêu Đốt dễ trúng.',
+        description: 'Ly Hỏa tụ một điểm — đòn đánh đậm hơn, Hỏa Ấn dễ trúng.',
         effectsOverride: [
           {
             type: 'damage',
@@ -202,7 +209,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'hoa_tan_diem',
         name: 'Tán Diễm',
-        description: 'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Thiêu Đốt khó trúng hơn.',
+        description: 'Ly Hỏa tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {
@@ -652,9 +659,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
   // ------------------------------------------------------------------
   {
     id: 'tam_muoi_chan_hoa',
-    name: 'Tam Muội Chân Hỏa',
+    name: 'Ngự Diễm',
     description:
-      'Đốt Linh Lực bật Tam Muội — Hỏa Ấn gieo trong trạng thái này mạnh hơn hẳn.',
+      'Ngự dụng chân hỏa quanh thân — Hỏa Ấn gieo trong trạng thái này mạnh hơn hẳn.',
     type: 'active',
     level: 1,
     maxLevel: 10,
@@ -664,6 +671,10 @@ export const PHAP_TU_SKILLS: Skill[] = [
     target: 'self',
     effects: [{ type: 'buff', buffId: 'tam_muoi' }],
     resourceType: 'mana',
+    // Authored aura sheets (two passes wrap the caster for the cast,
+    // ignite on release, then persist for the whole tam_muoi window) --
+    // TamMuoiAuraPresentation owns the dien xuat.
+    vfxPresetId: 'tam_muoi_aura',
   },
   {
     id: 'thanh_tuyen_duong_linh',

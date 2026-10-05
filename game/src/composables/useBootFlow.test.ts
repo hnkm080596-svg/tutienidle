@@ -84,6 +84,38 @@ describe('useBootFlow', () => {
     await vi.waitFor(() => expect(flow.stage.value).toBe('error'))
   })
 
+  it('fail() survives an in-flight transition: retries after it settles and mounts the error route', async () => {
+    let releaseClose: () => void = () => {}
+    const closeLatch = new Promise<void>((resolve) => {
+      releaseClose = resolve
+    })
+
+    const phaserAdapter = new PhaserSceneAdapter()
+    const compositeRenderer = new CompositeRenderer(phaserAdapter)
+    const coordinator = new GamePresentationCoordinator({
+      sessionPort: new PresentationSession(),
+      renderer: compositeRenderer,
+      curtain: { close: () => closeLatch, open: async () => {} },
+      assets: { ensureFor: async () => {} },
+      initialRoute: 'home',
+    })
+    const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
+    const flow = useBootFlow(coordinator, routeAdapter)
+
+    // Hold a transition in flight so the fail() request hits the
+    // coordinator's in-flight conflict rule and resolves 'rejected'.
+    void coordinator.request({ target: 'auth' })
+    await vi.waitFor(() => expect(coordinator.getSnapshot().phase).toBe('closing'))
+
+    flow.fail()
+    releaseClose()
+    // Let the in-flight transition finish its mount, then the retried
+    // error transition mounts its own target.
+    compositeRenderer.markRouteMounted('auth')
+    compositeRenderer.markRouteMounted('error')
+    await vi.waitFor(() => expect(coordinator.getSnapshot().currentRoute).toBe('error'))
+  })
+
   it('keeps the game branch mounted after a failed game transition so retry reuses the host', async () => {
     const failing = new PhaserSceneAdapter()
     const renderer = new CompositeRenderer(failing)

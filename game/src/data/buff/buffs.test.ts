@@ -23,7 +23,11 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
   // per_source, ailment resistance, dispellable).
   it('canonical seals — locked shared shape per element', () => {
     const expected: Record<string, { element: string; coefficient: number }> = {
-      hoa_an: { element: 'fire', coefficient: 0.15 },
+      // Balance 2026-10-04 (docs/balance/skills-review.md C3): repinned
+      // 0.15 -> 0.20 -- the fire kit multiplies this dot twice (Tam Muoi
+      // potency, Phap The pulse); being the weakest base was a double
+      // penalty on its own payoff channel.
+      hoa_an: { element: 'fire', coefficient: 0.2 },
       doc_can: { element: 'wood', coefficient: 0.2 },
       liet_thuong: { element: 'metal', coefficient: 0.2 },
       han_tuc: { element: 'water', coefficient: 0.25 },
@@ -44,6 +48,17 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
         damageProfile: 'legacy_dot',
       })
     }
+  })
+
+  it('invariant — Hoa An is never the weakest elemental dot', () => {
+    // The fire kit invests its whole payoff channel in this dot (Tam Muoi
+    // potency + Phap The pulse). A future retune that drops it below the
+    // sibling floor again should fail loudly here.
+    const [hoaAn, ...siblings] = ['hoa_an', 'doc_can', 'liet_thuong', 'han_tuc'].map(
+      (id) => dotOf(byId(id)).coefficient ?? 0,
+    )
+    const siblingFloor = Math.min(...siblings)
+    expect(hoaAn).toBeGreaterThanOrEqual(siblingFloor)
   })
 
   it('tran_an — PURE stacking setup state: no standalone mechanics', () => {
@@ -140,8 +155,8 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
     })
 
 
-    it('all 68 definitions are present (merged catalog: master ung-the set + PT trang windows)', () => {
-      expect(buffs).toHaveLength(68)
+    it('all 71 definitions are present (68 + 3 roster-remap king enrages)', () => {
+      expect(buffs).toHaveLength(71)
     })
   })
 

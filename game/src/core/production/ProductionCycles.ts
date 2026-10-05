@@ -25,6 +25,7 @@ export function buildProductionCycle(
   siteLevelAtStart: number,
   baseSeconds: number,
   nowMs: number,
+  rng?: () => number,
 ): ProductionCycle {
   const seconds = computeCycleSeconds(baseSeconds, siteLevelAtStart)
 
@@ -34,7 +35,7 @@ export function buildProductionCycle(
     collectionRealmId,
     siteLevelAtStart,
     rewardTableVersion: REWARD_TABLE_VERSION,
-    rollSeed: Math.floor(Math.random() * 0x7fffffff),
+    rollSeed: Math.floor((rng?.() ?? Math.random()) * 0x7fffffff),
     startedAtMs: nowMs,
     completesAtMs: nowMs + seconds * 1000,
   }

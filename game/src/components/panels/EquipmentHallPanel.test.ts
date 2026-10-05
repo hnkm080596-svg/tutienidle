@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
-// Scene-12 fidelity update: the production surface mounts the approved
-// paper composition - workspace tab bar [Trang Bi | ops | Tui Do] in
-// the right region, doll + summary through the fidelity slots. This
-// file verifies: the tab bar renders the view tab + all 5 op tabs +
-// the bag tab, switching swaps the mounted child, and each <XTab/>
-// actually mounts under its tab. Per-tab behavior tests stay in
+// Scene-12 rail rework (2026-10-04 owner ruling): the right region is
+// [Trang Bi gear grid | Cuong Hoa | Tay Luyen | Tinh Luyen | Hoa Luyen |
+// Phan Giai] - no Tui Do workspace mode, no item detail card; the gear
+// grid is the canonical EquipmentBagSection (equip-on-click, sockets
+// stay in the doll region). Scope-hidden ops keep a DISABLED shell in
+// the nav (tab shown, op locked) - this file verifies: the rail renders
+// all 6 seals, switching swaps the mounted child, locked ops are
+// disabled + refuse activation, and the equip tab mounts the gear grid.
+// Per-tab behavior tests stay in
 // src/components/panels/equipment-hall/*Tab.test.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
@@ -19,6 +22,7 @@ import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
+import { lockBetaFeaturesForTests, unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInstance {
   return makeInstance({
@@ -62,8 +66,9 @@ function mountHall(prepare?: (manager: GameManager) => void) {
   return { container, manager, unmount: () => app.unmount() }
 }
 
-// jsdom khong co ResizeObserver - usePanelPagination (tab Hoa Luyen)
-// tao observer khi container render; stub theo pattern InventorySort.test.ts.
+// jsdom khong co ResizeObserver - useBagGridLayout (gear grid) +
+// usePanelPagination (tab Hoa Luyen) tao observer khi container render;
+// stub theo pattern InventorySort.test.ts.
 beforeEach(() => {
   window.ResizeObserver = window.ResizeObserver || (class {
     observe() {}
@@ -77,11 +82,13 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks()
   document.body.innerHTML = ''
+  // The global setup unlocks all features; a test that locks must put
+  // them back so the next test mounts the admitted surface.
+  unlockAllFeaturesForTests()
 })
 
-// Workspace order: Trang Bi view tab first, then the op tabs in contract
-// order, then the Tui Do bag tab (beta gating happens in the surface;
-// the test env unlocks all).
+// Rail order (2026-10-04): Trang Bi gear grid first, then the 5 op
+// seals in contract order. No bag tab.
 const TAB = {
   equip: 0,
   enhance: 1,
@@ -89,16 +96,15 @@ const TAB = {
   refine: 3,
   dissolve: 4,
   decompose: 5,
-  bag: 6,
 } as const
 
-describe('EquipmentHallPanel - fidelity surface: workspace tabs + switching', () => {
-  it('render Trang Bi tab + du 5 op tab + Tui Do tab trong workspace', () => {
+describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
+  it('render Trang Bi tab + du 5 op tab (khong con Tui Do)', () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-workspace nav button')
 
-    expect(tabs).toHaveLength(7)
+    expect(tabs).toHaveLength(6)
     expect(Array.from(tabs).map((t) => t.textContent?.trim())).toEqual([
       'Trang Bị',
       'Cường Hóa',
@@ -106,34 +112,39 @@ describe('EquipmentHallPanel - fidelity surface: workspace tabs + switching', ()
       'Tinh Luyện',
       'Hóa Luyện',
       'Phân Giải',
-      'Túi Đồ',
     ])
 
     mounted.unmount()
   })
 
-  it('mac dinh mount item detail (Trang Bi), chua mount EnhanceTab', () => {
+  it('mac dinh mount gear grid (Trang Bi): .bag-section hien do chua mac', () => {
     const mounted = mountHall()
 
-    expect(mounted.container.querySelector('.equipment-item-detail')).not.toBeNull()
+    const grid = mounted.container.querySelector('.bag-section__grid')
+
+    expect(grid).not.toBeNull()
+    // The gear grid pads out its page; the unequipped fixture instance
+    // lands in a slot while the equipped one stays out of the bag list.
+    expect(mounted.container.querySelectorAll('.bag-section__grid .slot-view').length).toBeGreaterThan(0)
     expect(mounted.container.querySelector('[aria-label="Chọn slot cường hóa"]')).toBeNull()
 
     mounted.unmount()
   })
 
-  it('tab Cuong Hoa -> mount EnhanceTab (slot cuong hoa)', async () => {
+  it('tab Cuong Hoa -> mount EnhanceTab (slot cuong hoa), gear grid unmount', async () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-workspace nav button')
     tabs[TAB.enhance]!.click()
     await nextTick()
 
+    expect(mounted.container.querySelector('.bag-section')).toBeNull()
     expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')).toHaveLength(6)
 
     mounted.unmount()
   })
 
-  it('tab Tay Luyen -> mount WashTab (unmount detail)', async () => {
+  it('tab Tay Luyen -> mount WashTab', async () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-workspace nav button')
@@ -182,20 +193,7 @@ describe('EquipmentHallPanel - fidelity surface: workspace tabs + switching', ()
     mounted.unmount()
   })
 
-  it('tab Tui Do -> mount canonical BagGrid', async () => {
-    const mounted = mountHall()
-
-    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-workspace nav button')
-    tabs[TAB.bag]!.click()
-    await nextTick()
-
-    expect(mounted.container.querySelector('.equipment-item-detail')).toBeNull()
-    expect(mounted.container.querySelector('[data-hk-region="bag-grid"]')).not.toBeNull()
-
-    mounted.unmount()
-  })
-
-  it('tab Trang Bi quay ve detail (round-trip)', async () => {
+  it('tab Trang Bi quay ve gear grid (round-trip)', async () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-workspace nav button')
@@ -205,7 +203,32 @@ describe('EquipmentHallPanel - fidelity surface: workspace tabs + switching', ()
     await nextTick()
 
     expect(mounted.container.querySelector('[aria-label="Chọn slot cường hóa"]')).toBeNull()
-    expect(mounted.container.querySelector('.equipment-item-detail')).not.toBeNull()
+    expect(mounted.container.querySelector('.bag-section__grid')).not.toBeNull()
+
+    mounted.unmount()
+  })
+
+  it('scope-locked ops: seal hien nhung disabled, click khong mount op', async () => {
+    lockBetaFeaturesForTests()
+    const mounted = mountHall()
+
+    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-workspace nav button')
+
+    // All 6 seals still render; enhance/dissolve stay admitted (beta-
+    // shipped), wash/refine/decompose disable.
+    expect(tabs).toHaveLength(6)
+    expect(tabs[TAB.enhance]!.disabled).toBe(false)
+    expect(tabs[TAB.dissolve]!.disabled).toBe(false)
+    expect(tabs[TAB.wash]!.disabled).toBe(true)
+    expect(tabs[TAB.refine]!.disabled).toBe(true)
+    expect(tabs[TAB.decompose]!.disabled).toBe(true)
+
+    // A disabled seal cannot activate its workspace even if clicked.
+    tabs[TAB.wash]!.click()
+    await nextTick()
+
+    expect(mounted.container.querySelector('[aria-label="Chọn trang bị để tẩy luyện"]')).toBeNull()
+    expect(mounted.container.querySelector('.bag-section__grid')).not.toBeNull()
 
     mounted.unmount()
   })

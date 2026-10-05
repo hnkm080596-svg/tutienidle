@@ -1,0 +1,714 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_mob_bite",
+    "name": "Mob Bite",
+    "comp": {
+      "w": 256,
+      "h": 192,
+      "dur": 0.34,
+      "fps": 30
+    },
+    "cam": {
+      "comp": 55
+    },
+    "exp": {
+      "cols": 5,
+      "rows": 2,
+      "frames": 10,
+      "cellW": 256,
+      "cellH": 192,
+      "t0": 0,
+      "t1": -1,
+      "mode": "rgba",
+      "thr": 0,
+      "ss": 2
+    },
+    "textures": [
+      {
+        "id": "tex_mob_bite_upper_spectral_7f44c283d283",
+        "name": "mob bite upper spectral",
+        "sheet": null
+      },
+      {
+        "id": "tex_mob_bite_lower_spectral_22a08761958d",
+        "name": "mob bite lower spectral",
+        "sheet": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "lr_bite_flash",
+        "name": "Bite Flash",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.34,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.13,
+              "v": 0
+            },
+            {
+              "t": 0.155,
+              "v": 0.8
+            },
+            {
+              "t": 0.27,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "spark",
+            "p": {}
+          },
+          "size": 96,
+          "x": 0,
+          "y": -4,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.13,
+                "v": 0.4
+              },
+              {
+                "t": 0.17,
+                "v": 1
+              },
+              {
+                "t": 0.27,
+                "v": 1.3
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            240,
+            214
+          ],
+          "squash": 0,
+          "glow": 0.45,
+          "glowSize": 1.4,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_bite_bloom",
+        "name": "Amber Bloom",
+        "type": "sprite",
+        "blend": "add",
+        "start": -0.02,
+        "end": 0.34,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0.14,
+              "v": 0
+            },
+            {
+              "t": 0.175,
+              "v": 0.55
+            },
+            {
+              "t": 0.29,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 72,
+          "x": 0,
+          "y": -4,
+          "scale": {
+            "keys": [
+              {
+                "t": 0.14,
+                "v": 0.6
+              },
+              {
+                "t": 0.21,
+                "v": 1.4
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            214,
+            160
+          ],
+          "squash": 0,
+          "glow": 0.3,
+          "glowSize": 1.5,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_bite_sparks",
+        "name": "Fang Sparks",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.34,
+        "em": {
+          "x": 0,
+          "y": -4,
+          "shape": "ring",
+          "sx": 8,
+          "sy": 8,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 65,
+          "speed": 220,
+          "speedRnd": 0.45,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.15,
+              "n": 11
+            }
+          ],
+          "seed": 7,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.3,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "streak",
+            "p": {}
+          },
+          "size": 9,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.6,
+                "v": 0.7
+              },
+              {
+                "t": 1,
+                "v": 0.1
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.5,
+                "v": 0.85
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  255,
+                  255
+                ]
+              },
+              {
+                "t": 0.5,
+                "c": [
+                  255,
+                  226,
+                  176
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  222,
+                  160,
+                  92
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0,
+          "spin": 0,
+          "spinRnd": 0,
+          "alignVel": true,
+          "stretch": 1.8,
+          "gravX": 0,
+          "gravY": 60,
+          "drag": 3,
+          "turbAmp": 8,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.4,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_bite_drool",
+        "name": "Drool Flecks",
+        "type": "emitter",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.34,
+        "em": {
+          "x": 0,
+          "y": 2,
+          "shape": "ring",
+          "sx": 12,
+          "sy": 6,
+          "dir": "dir",
+          "angle": -90,
+          "spread": 60,
+          "speed": 120,
+          "speedRnd": 0.5,
+          "rate": 0,
+          "bursts": [
+            {
+              "t": 0.16,
+              "n": 4
+            }
+          ],
+          "seed": 17,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 0.42,
+          "lifeRnd": 0.35,
+          "sprite": {
+            "kind": "shape",
+            "id": "dot",
+            "p": {}
+          },
+          "size": 6,
+          "sizeRnd": 0.4,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.5,
+                "v": 0.9
+              },
+              {
+                "t": 1,
+                "v": 0.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.7,
+                "v": 0.8
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  255,
+                  238,
+                  202
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  212,
+                  168,
+                  106
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 0,
+          "spin": 0,
+          "spinRnd": 0,
+          "alignVel": false,
+          "stretch": 1.2,
+          "gravX": 0,
+          "gravY": 300,
+          "drag": 0.4,
+          "turbAmp": 6,
+          "turbFreq": 1.5,
+          "squash": 0,
+          "glow": 0.2,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      },
+      {
+        "id": "lr_bite_jaw_top",
+        "name": "Upper Fangs",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.34,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.035,
+              "v": 0.85
+            },
+            {
+              "t": 0.26,
+              "v": 0.85
+            },
+            {
+              "t": 0.335,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_bite_upper_spectral_7f44c283d283",
+            "p": {}
+          },
+          "size": 246,
+          "x": 0,
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -58
+              },
+              {
+                "t": 0.055,
+                "v": -58
+              },
+              {
+                "t": 0.15,
+                "v": -3
+              },
+              {
+                "t": 0.185,
+                "v": -8
+              },
+              {
+                "t": 0.26,
+                "v": -3
+              },
+              {
+                "t": 0.34,
+                "v": -3
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.055,
+                "v": 1.06
+              },
+              {
+                "t": 0.15,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_bite_jaw_bottom",
+        "name": "Lower Fangs",
+        "type": "sprite",
+        "blend": "normal",
+        "start": -0.02,
+        "end": 0.34,
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 0.035,
+              "v": 0.85
+            },
+            {
+              "t": 0.26,
+              "v": 0.85
+            },
+            {
+              "t": 0.335,
+              "v": 0
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "tex",
+            "texId": "tex_mob_bite_lower_spectral_22a08761958d",
+            "p": {}
+          },
+          "size": 246,
+          "x": 0,
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 58
+              },
+              {
+                "t": 0.055,
+                "v": 58
+              },
+              {
+                "t": 0.15,
+                "v": 3
+              },
+              {
+                "t": 0.185,
+                "v": 8
+              },
+              {
+                "t": 0.26,
+                "v": 3
+              },
+              {
+                "t": 0.34,
+                "v": 3
+              }
+            ]
+          },
+          "scale": {
+            "keys": [
+              {
+                "t": 0.055,
+                "v": 1.06
+              },
+              {
+                "t": 0.15,
+                "v": 1
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            255,
+            255,
+            255
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0
+        }
+      },
+      {
+        "id": "lr_bite_mist",
+        "name": "Spectral Mist",
+        "type": "emitter",
+        "blend": "screen",
+        "start": -0.02,
+        "end": 0.34,
+        "em": {
+          "x": 34,
+          "y": 0,
+          "shape": "box",
+          "sx": 80,
+          "sy": 52,
+          "dir": "dir",
+          "angle": 180,
+          "spread": 30,
+          "speed": 48,
+          "speedRnd": 0.5,
+          "rate": 16,
+          "bursts": [],
+          "seed": 23,
+          "branch": {
+            "chance": 0,
+            "spread": 35,
+            "lifeScale": 0.6,
+            "sizeScale": 0.7,
+            "speedScale": 1,
+            "maxGen": 2
+          }
+        },
+        "pt": {
+          "life": 1,
+          "lifeRnd": 0.4,
+          "sprite": {
+            "kind": "shape",
+            "id": "smoke",
+            "p": {}
+          },
+          "size": 34,
+          "sizeRnd": 0.45,
+          "sizeOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 0.5,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 1.3
+              }
+            ]
+          },
+          "opacityOL": {
+            "pts": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.25,
+                "v": 0.36
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "grad": {
+            "stops": [
+              {
+                "t": 0,
+                "c": [
+                  246,
+                  224,
+                  172
+                ]
+              },
+              {
+                "t": 0.6,
+                "c": [
+                  232,
+                  198,
+                  134
+                ]
+              },
+              {
+                "t": 1,
+                "c": [
+                  208,
+                  168,
+                  104
+                ]
+              }
+            ]
+          },
+          "tintTex": false,
+          "rot": 0,
+          "rotRnd": 1,
+          "spin": 24,
+          "spinRnd": 0.6,
+          "alignVel": false,
+          "stretch": 0,
+          "gravX": 0,
+          "gravY": -10,
+          "drag": 0.8,
+          "turbAmp": 16,
+          "turbFreq": 1.1,
+          "squash": 0.3,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15,
+          "fps": 0,
+          "render": "sprite",
+          "trailCore": 0,
+          "zigzag": 0
+        }
+      }
+    ]
+  },
+  "tex": {
+    "tex_mob_bite_upper_spectral_7f44c283d283": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGVsbGlwc2UgY3g9IjE1MiIgY3k9IjIyIiByeD0iMTIwIiByeT0iNTgiIGZpbGw9IiNlOGQ2YjQiIGZpbGwtb3BhY2l0eT0iMC4xOCIvPgogIDxwYXRoIGQ9Ik00NiA4MiBRMTI4IDU4IDIxMCA4MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZGNjOWEwIiBzdHJva2Utb3BhY2l0eT0iMC43IiBzdHJva2Utd2lkdGg9IjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0xOTYgNjIgUTIyNiA1NCAyNDQgNDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2RjYzlhMCIgc3Ryb2tlLW9wYWNpdHk9IjAuMzUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGcgZmlsbD0iI2YyZTJiYyIgZmlsbC1vcGFjaXR5PSIwLjgiIHN0cm9rZT0iIzZlNGYyYyIgc3Ryb2tlLW9wYWNpdHk9IjAuODUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICA8cGF0aCBkPSJNNTIgODQgTDU1IDEyMiBRNjYgMTAwIDc2IDg2IFoiLz4KICAgIDxwYXRoIGQ9Ik04NCA4NCBMODcgMTQwIFE5OSAxMDQgMTEwIDg2IFoiLz4KICAgIDxwYXRoIGQ9Ik0xMTYgODQgTDExOSAxNTIgUTEzMyAxMDYgMTQyIDg2IFoiLz4KICAgIDxwYXRoIGQ9Ik0xNDggODYgTDE1MSAxMzggUTE2MiAxMDQgMTcyIDg2IFoiLz4KICAgIDxwYXRoIGQ9Ik0xODAgODYgTDE4MyAxMjAgUTE5NCAxMDAgMjA0IDg2IFoiLz4KICA8L2c+Cjwvc3ZnPg==",
+    "tex_mob_bite_lower_spectral_22a08761958d": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+CiAgPGVsbGlwc2UgY3g9IjE1MiIgY3k9IjIzNCIgcng9IjEyMCIgcnk9IjU4IiBmaWxsPSIjZThkNmI0IiBmaWxsLW9wYWNpdHk9IjAuMTgiLz4KICA8cGF0aCBkPSJNNDYgMTc0IFExMjggMTk4IDIxMCAxNzQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2RjYzlhMCIgc3Ryb2tlLW9wYWNpdHk9IjAuNyIgc3Ryb2tlLXdpZHRoPSI3IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNMTk2IDE5NCBRMjI2IDIwMiAyNDQgMjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiNkY2M5YTAiIHN0cm9rZS1vcGFjaXR5PSIwLjM1IiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxnIGZpbGw9IiNmMmUyYmMiIGZpbGwtb3BhY2l0eT0iMC44IiBzdHJva2U9IiM2ZTRmMmMiIHN0cm9rZS1vcGFjaXR5PSIwLjg1IiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPHBhdGggZD0iTTUyIDE3MiBMNTUgMTM0IFE2NiAxNTYgNzYgMTcwIFoiLz4KICAgIDxwYXRoIGQ9Ik04NCAxNzIgTDg3IDExNiBROTkgMTUyIDExMCAxNzAgWiIvPgogICAgPHBhdGggZD0iTTExNiAxNzIgTDExOSAxMDQgUTEzMyAxNTAgMTQyIDE3MCBaIi8+CiAgICA8cGF0aCBkPSJNMTQ4IDE3MCBMMTUxIDExOCBRMTYyIDE1MiAxNzIgMTcwIFoiLz4KICAgIDxwYXRoIGQ9Ik0xODAgMTcwIEwxODMgMTM2IFExOTQgMTU2IDIwNCAxNzAgWiIvPgogIDwvZz4KPC9zdmc+"
+  }
+}

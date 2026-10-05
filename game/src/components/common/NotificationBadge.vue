@@ -21,7 +21,7 @@ const isVisible = () => props.variant === 'dot' || (props.count ?? 0) > 0
 
 <template>
   <span v-if="isVisible()" class="notification-badge" :class="`notification-badge--${variant}`">
-    <InkNineSlice asset-id="frame-xs-ink-line" layer="frame" tint-var="--hk-cinnabar-bright" />
+    <InkNineSlice chrome-id="seal-chip" layer="frame" tint-var="--hk-cinnabar-bright" />
     <span v-if="variant === 'count'" class="notification-badge__count">{{ displayCount() }}</span>
   </span>
 </template>

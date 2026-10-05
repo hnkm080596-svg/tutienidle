@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
+import InkNineSlice from '../../common/primitives/InkNineSlice.vue'
 import Chip from '../../common/primitives/Chip.vue'
 import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -332,13 +333,16 @@ watch([searchQuery, activeGroup], () => resetPage())
 <template>
   <div class="bag-section">
     <div class="bag-section__filters">
-      <input
-        v-model="searchQuery"
-        type="search"
-        class="bag-section__search"
-        :placeholder="t('panels.bag.search.materialPlaceholder')"
-        :aria-label="t('panels.bag.search.materialAria')"
-      >
+      <span class="bag-section__search-wrap">
+        <InkNineSlice chrome-id="text-field" layer="surface" />
+        <input
+          v-model="searchQuery"
+          type="search"
+            class="bag-section__search"
+            :placeholder="t('panels.bag.search.materialPlaceholder')"
+            :aria-label="t('panels.bag.search.materialAria')"
+          >
+      </span>
 
       <div class="bag-section__chips" role="group" :aria-label="t('panels.bag.filterAria')">
         <Chip
@@ -351,7 +355,7 @@ watch([searchQuery, activeGroup], () => resetPage())
         </Chip>
       </div>
 
-      <span class="bag-section__count">{{ visibleCount }} {{ t('panels.bag.countUnitSuffix') }}</span>
+      <span class="bag-section__count"><InkNineSlice chrome-id="resource-pill" layer="surface" /><span class="bag-section__count-label">{{ visibleCount }} {{ t('panels.bag.countUnitSuffix') }}</span></span>
     </div>
 
     <div ref="gridRef" class="bag-section__grid" :style="gridStyle">
@@ -359,6 +363,7 @@ watch([searchQuery, activeGroup], () => resetPage())
         v-for="(cell, index) in gridCells"
         :key="cell?.key ?? index"
         class="bag-section__slot"
+        variant="bag"
         :item="cell"
         :label="cell?.label"
         :accessible-label="cell?.accessibleLabel"
@@ -393,7 +398,7 @@ watch([searchQuery, activeGroup], () => resetPage())
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  gap: 6px;
+  gap: 2px;
 }
 
 .bag-section__filters {
@@ -404,27 +409,43 @@ watch([searchQuery, activeGroup], () => resetPage())
   flex-wrap: wrap;
 }
 
-.bag-section__search {
+/* Drawn field chrome (owner ruling: search uses the text-field art,
+   not a CSS frame) - wrap carries the slice, input paints on top. */
+.bag-section__search-wrap {
+  position: relative;
   flex: 1 1 120px;
   min-width: 0;
-  min-height: var(--tap-min);
+  height: 32px;
+}
+
+.bag-section__search-wrap .ink-nine-slice {
+  inset: 0;
+}
+
+.bag-section__search-wrap:focus-within {
+  outline: 2px solid var(--chrome-300);
+  outline-offset: 1px;
+}
+
+.bag-section__search {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
   padding: 0 var(--space-2);
-  background: var(--ink-800);
+  background: transparent;
   color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
+  border: 0;
   font-family: var(--font-body);
   font-size: var(--text-xs);
 }
 
 .bag-section__search::placeholder {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .bag-section__search:focus-visible {
   outline: none;
-  border-color: var(--chrome-300);
-  box-shadow: var(--focus-ring-chrome);
 }
 
 .bag-section__chips {
@@ -434,10 +455,28 @@ watch([searchQuery, activeGroup], () => resetPage())
   flex-wrap: wrap;
 }
 
+/* "N mon" counter: resource-pill chrome capsule (owner ruling) - the
+   drawn capsule carries the count, text sits on the light pill face. */
 .bag-section__count {
-  color: var(--paper-text-muted);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  height: 28px;
+  padding: 0 10px;
+  color: #e8d9ae;
   font-size: var(--text-xs);
   white-space: nowrap;
+}
+
+.bag-section__count .ink-nine-slice {
+  inset: 0;
+}
+
+.bag-section__count-label {
+  position: relative;
+  z-index: 2;
 }
 
 .bag-section__grid {

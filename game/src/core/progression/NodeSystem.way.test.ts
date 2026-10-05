@@ -177,11 +177,13 @@ describe('requiredWay — domain collectors honor the same gate', () => {
     expect(collectHiddenBodyMechanicModifiers(registry, ungThe).danTheBonus).toBe(14)
   })
 
-  it('resolveMaxThe: flat 5 for spell_pathway, MAX_THE elsewhere — the node-cap channel is retired', () => {
-    // Phap Tu Reimagined: the truong_the theCapPerLevel aggregator is
-    // gone; the cap is a pure way read (spec D1).
+  it('resolveMaxThe: spell_pathway gates the pool on the hoa_the node (0 locked → 5 owned); MAX_THE elsewhere', () => {
+    // Hoa The gate (Minh ruling 2026-10-04): the pool is node-unlocked -
+    // the truong_the theCapPerLevel aggregator stayed retired; ownership
+    // of the hoa_the node is the new unlock (spec D1 + gate ruling).
     const nguHanh = playerWith({ cultivationPath: 'spell', cultivationWay: 'spell_pathway' })
-    expect(resolveMaxThe(nguHanh)).toBe(5)
+    expect(resolveMaxThe(nguHanh)).toBe(0)
+    expect(resolveMaxThe(nguHanh, 1)).toBe(5)
 
     const ngoDao = playerWith({ cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway' })
     expect(resolveMaxThe(ngoDao)).toBe(MAX_THE)

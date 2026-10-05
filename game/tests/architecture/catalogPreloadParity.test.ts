@@ -103,6 +103,10 @@ describe('R14.6b — no stray preload enumeration outside the catalog', () => {
     //   combat presentation catalogue (enumerated in the combat bundle).
     // - TribulationPreload: descriptor-fed net reading
     //   getTribulationDescriptors() - the same enumeration the bundle uses.
+    // - HoaCauLabPlayback: development-only preview loads the same character
+    //   catalogue clip and HOA_CAU_VFX_ASSETS descriptors as CombatPreload.
+    // - dev/skill-vfx: the preview scene loads the same catalogued VFX
+    //   descriptors (linhBaoCombatDescriptors) the combat bundle enumerates.
     const allowedFeeders = new Set([
       'game/support/CombatPreload.ts',
       'game/scenes/AssetLoaderScene.ts',
@@ -110,6 +114,8 @@ describe('R14.6b — no stray preload enumeration outside the catalog', () => {
       'game/scenes/CombatScene.ts',
       'game/scenes/TranPhapCombatPreviewScene.ts',
       'game/support/TribulationPreload.ts',
+      'dev/HoaCauLabPlayback.ts',
+      'dev/skill-vfx.ts',
     ])
 
     for (const file of corpus) {

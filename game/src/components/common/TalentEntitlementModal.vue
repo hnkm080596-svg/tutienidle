@@ -103,13 +103,13 @@ function decide(decision: TalentEntitlementDecision): void {
   <div v-if="entitlement" class="talent-entitlement" :style="{ zIndex: OVERLAY_LAYERS.modal }" data-testid="talent-entitlement-modal">
     <section
       ref="panelRef"
-      class="talent-entitlement__panel paper-on-dark"
+      class="talent-entitlement__panel"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
     >
-      <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-      <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
 
       <h3 :id="titleId" class="talent-entitlement__title">{{ t('tribulation.entitlement.title') }}</h3>
       <p class="talent-entitlement__body">{{ t('tribulation.entitlement.body') }}</p>
@@ -167,20 +167,21 @@ function decide(decision: TalentEntitlementDecision): void {
   background: var(--scrim);
 }
 
-/* M-tier InkNineSlice - same surface/frame pairing as OfflineSummaryModal;
-   the dialog is wider to hold the 3-card grid but keeps the M frame band.
-   surface-m-paper paints a dark surface; the .paper-on-dark utility class
-   on the element owns the paper->surface token remap (theme.css). */
+/* Huyen Kim paper chrome: surface-xl-scroll fill + frame-m-modal ring
+   (the modal band owns ~40px, so the padding clears it entirely -
+   content never touches the frame art). border-radius + the hidden
+   x-axis clip the scroll's square corners under the rounded frame. */
 .talent-entitlement__panel {
   position: relative;
   isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: min(560px, 94vw);
+  width: min(640px, 94vw);
   max-height: 88vh;
-  overflow-y: auto;
-  padding: 44px 40px;
+  overflow: hidden auto;
+  padding: 48px 44px;
+  border-radius: 16px;
   color: var(--paper-text, #211f1a);
   font-family: var(--font-body);
 }

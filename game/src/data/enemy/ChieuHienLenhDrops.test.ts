@@ -28,7 +28,10 @@ import { createLootTestSetup } from '../../core/game/battleLootTestSetup'
 // source is ALSO suppressed at origination (quest unlock + claim item
 // filter + loot delivery) - authored data stays, tokens never land.
 const BOSS_TOKEN_AMOUNTS: Readonly<Record<string, number>> = {
+  // Roster remap (2026-10-04): the token source moved to the Linh Lang
+  // Vuong (the whelp stays in the dormant catalog with its line intact).
   foundation_ferocious_flood_dragon_whelp: 3,
+  foundation_ferocious_spirit_wolf: 3,
 }
 
 function tokenDropOf(enemyId: string) {
@@ -101,7 +104,7 @@ describe('Chieu Hien Lenh boss signatureDrops', () => {
   })
 
   it('idle channel still yields the token (chance:1 survives the E11 gate)', () => {
-    const whelp = ENEMIES.find((entry) => entry.id === 'foundation_ferocious_flood_dragon_whelp')!
+    const whelp = ENEMIES.find((entry) => entry.id === 'foundation_ferocious_spirit_wolf')!
 
     const result = resolveDrops({
       modifiers: modifiersFor({ channel: 'idle', isBoss: true, isElite: false }),
@@ -121,7 +124,7 @@ describe('Chieu Hien Lenh boss signatureDrops', () => {
   // closed. Banked tokens from before are untouched either way.
   it('the floor-10 boss token line never lands while the pull pool is closed', () => {
     const whelp = ENEMIES.find(
-      (entry) => entry.id === 'foundation_ferocious_flood_dragon_whelp',
+      (entry) => entry.id === 'foundation_ferocious_spirit_wolf',
     )!
 
     const { killEnemy, materialBag } = createLootTestSetup({

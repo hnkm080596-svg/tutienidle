@@ -14,6 +14,7 @@
 import { describe, expect, it } from 'vitest'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
 import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { lockBetaElementsForTests } from '@/core/game/__fixtures__/betaElementsUnlock'
 import {
   BETA_ACT_COUNT,
   BETA_BOSSES_PER_ACT,
@@ -49,6 +50,7 @@ import { QUESTS } from '@/data/quest/quests'
 // allow-lists, so re-pin them.
 lockBetaWaysForTests()
 lockBetaFeaturesForTests()
+lockBetaElementsForTests()
 
 describe('beta scope v2 - way and element allow-lists', () => {
   it('offers spell_pathway and only spell_pathway', () => {
@@ -74,10 +76,11 @@ describe('beta scope v2 - way and element allow-lists', () => {
     }
   })
 
-  it('keeps all five Ngu Hanh elements playable, unknown elements fail closed', () => {
-    expect(BETA_PLAYABLE_ELEMENTS.size).toBe(5)
-    for (const el of ['fire', 'water', 'wood', 'metal', 'earth']) {
-      expect(isBetaElement(el)).toBe(true)
+  it('offers fire only; the other four Ngu Hanh elements fail closed', () => {
+    expect(BETA_PLAYABLE_ELEMENTS.size).toBe(1)
+    expect(isBetaElement('fire')).toBe(true)
+    for (const el of ['water', 'wood', 'metal', 'earth']) {
+      expect(isBetaElement(el)).toBe(false)
     }
     for (const el of ['', 'wind', 'lightning', 'FIRE']) {
       expect(isBetaElement(el)).toBe(false)
@@ -158,37 +161,31 @@ describe('beta scope v2 - feature flags and lock classes', () => {
 })
 
 describe('beta scope v2 - enemy roster authority', () => {
-  it('pins the census model: 3 chapters x 10 floors, 3 normal + 1 boss per act', () => {
+  it('pins the census model: 3 chapters x 10 floors, 1 normal + 1 boss per act', () => {
     expect(BETA_ACT_COUNT).toBe(3)
     expect(BETA_FLOORS_PER_ACT).toBe(10)
-    expect(BETA_NORMALS_PER_ACT).toBe(3)
+    expect(BETA_NORMALS_PER_ACT).toBe(1)
     expect(BETA_BOSSES_PER_ACT).toBe(1)
     expect(BETA_ENEMY_ROSTER).toHaveLength(
       BETA_ACT_COUNT * (BETA_NORMALS_PER_ACT + BETA_BOSSES_PER_ACT),
     )
   })
 
-  it('contains exactly the canonical 12 identities in act order', () => {
+  it('contains exactly the canonical 6 identities in act order', () => {
     expect(BETA_ENEMY_ROSTER.map((e) => e.id)).toEqual([
       'mortal_wild_boar',
-      'mortal_savage_tiger',
-      'mortal_water_wolf',
-      'mortal_ferocious_giant_crocodile',
-      'wild_wolf',
-      'flame_fox',
-      'giant_earthworm',
-      'ferocious_flood_serpent',
-      'foundation_lava_hound',
-      'foundation_sand_scorpion',
-      'foundation_mud_golem',
-      'foundation_ferocious_flood_dragon_whelp',
+      'mortal_ferocious_wild_boar',
+      'bandit',
+      'ferocious_bandit',
+      'foundation_spirit_wolf',
+      'foundation_ferocious_spirit_wolf',
     ])
   })
 
-  it('assigns each act exactly 3 normals and 1 boss', () => {
+  it('assigns each act exactly 1 normal and 1 boss', () => {
     for (const act of [1, 2, 3] as const) {
       const entries = BETA_ENEMY_ROSTER.filter((e) => e.act === act)
-      expect(entries.filter((e) => e.role === 'normal')).toHaveLength(3)
+      expect(entries.filter((e) => e.role === 'normal')).toHaveLength(1)
       expect(entries.filter((e) => e.role === 'boss')).toHaveLength(1)
     }
   })
@@ -225,7 +222,7 @@ describe('beta scope v2 - enemy roster authority', () => {
       expect(betaActOfEnemy(entry.id)).toBe(entry.act)
     }
     // Live but out-of-scope enemies are not offered.
-    for (const id of ['bandit', 'flood_serpent', 'foundation_stone_fungus', 'mortal_giant_crocodile']) {
+    for (const id of ['wild_wolf', 'flood_serpent', 'foundation_stone_fungus', 'mortal_giant_crocodile']) {
       expect(isBetaEnemyId(id)).toBe(false)
       expect(betaActOfEnemy(id)).toBeNull()
     }
@@ -344,19 +341,19 @@ describe('beta scope v2 - equipment tabs and quest policy', () => {
     expect(
       isBetaQuestEnabled({
         cadence: 'once',
-        condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 10 },
+        condition: { kind: 'kill', enemyId: 'bandit', amount: 10 },
       }),
     ).toBe(true)
     expect(
       isBetaQuestEnabled({
         cadence: 'once',
-        condition: { kind: 'kill', enemyId: 'mortal_ferocious_giant_crocodile', amount: 1 },
+        condition: { kind: 'kill', enemyId: 'mortal_ferocious_wild_boar', amount: 1 },
       }),
     ).toBe(true)
     expect(
       isBetaQuestEnabled({
         cadence: 'once',
-        condition: { kind: 'kill', enemyId: 'bandit', amount: 15 },
+        condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 15 },
       }),
     ).toBe(false)
     expect(

@@ -3,10 +3,14 @@
 // surface (paper constellation + node detail rail) fed entirely by the
 // canonical read-models - progressionOps.betaSkillTreeFor resolves every
 // node predicate (scope-hidden/reveal gates/purchasable/canUpgrade/
-// costs), the layout reuses the same pure radial projection the retired
-// NodeTreePanel consumed, and mutations stay on useProgressionActions
+// costs), and mutations stay on useProgressionActions
 // (purchaseNode / upgradeNode / respecNodeTree). Nothing here recomputes
 // gates, costs, or pathway admission.
+//
+// Layout: branches with an authored Han-glyph constellation
+// (SkillConstellationLayouts - beta: fire only) render their authored
+// points; every other branch keeps the radial projection the retired
+// NodeTreePanel consumed, per the plan's fallback rule.
 //
 // Pathway lock (user ruling S07): the surface renders ONLY the committed
 // pathway - element pills appear solely for the elements the tree model
@@ -23,10 +27,17 @@ import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { ELEMENT_ORDER, ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { viewBranchTags } from '@/core/progression/NodeBranchViews'
+import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/CastLeveling'
+import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
+import { betaMortalTreeViewTags } from '@/core/betaScopeSkillDomain'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { layoutRadialGraph } from '@/components/panels/skill-path/skillGraphLayout'
+import {
+  constellationPointsById,
+  skillConstellationLayoutFor,
+} from '@/data/progression/SkillConstellationLayouts'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
@@ -83,14 +94,24 @@ const revealHidden = (row: BetaSkillTreeNode): boolean =>
 const nodeViewTag = (node: ProgressionNode): string | undefined => node.elementTag ?? node.branchTag
 
 // Pathway-scoped render set: spell paths take their element tags, other
-// ways their declared tree tags; mortals render nothing.
+// ways their declared tree tags; a pre-initiation mortal admits only the
+// branches carrying a renderable info anchor (betaMortalTreeViewTags -
+// the 'tien_than' precursor trio) - every node there still renders its
+// 'initiation-pending' lock.
 const pathwayRows = computed(() => {
-  const spell = elementCasting.value && wayNodeTreeTag.value === undefined
-  const tags = spell
-    ? new Set<ElementType>(ELEMENT_ORDER)
-    : wayNodeTreeTag.value !== undefined
-      ? new Set<string>(viewBranchTags(wayNodeTreeTag.value))
-      : null
+  const mortalTags = skillTree.value.mortal
+    ? betaMortalTreeViewTags(allNodes.value)
+    : null
+  const mortalView = mortalTags !== null && mortalTags.size > 0
+  const spell = mortalView || (elementCasting.value && wayNodeTreeTag.value === undefined)
+  let tags: ReadonlySet<string> | null = null
+  if (mortalView) {
+    tags = mortalTags
+  } else if (spell) {
+    tags = new Set<ElementType>(ELEMENT_ORDER)
+  } else if (wayNodeTreeTag.value !== undefined) {
+    tags = new Set<string>(viewBranchTags(wayNodeTreeTag.value))
+  }
   if (tags === null) return { spell, rows: new Map<string, BetaSkillTreeNode>(), nodes: [] as ProgressionNode[] }
 
   const nodes = allNodes.value.filter((node) => {
@@ -127,6 +148,30 @@ const elements = computed<SkillUiElement[]>(() =>
     icon: resolveAssetUrl(`/assets/ui/elements/el-${id}.png`),
   })),
 )
+
+// The glyph the selected element branch has authored, if any.
+const constellation = computed(() =>
+  pathwayRows.value.spell && selectedElement.value !== null
+    ? (skillConstellationLayoutFor(selectedElement.value) ?? null)
+    : null,
+)
+const constellationPoints = computed(() =>
+  constellation.value !== null ? constellationPointsById(constellation.value) : null,
+)
+
+// Brief "node id mid-unlock" flag - lets the constellation run the
+// parent->child energy travel + arrival pulse once per purchase.
+const unlockingId = ref('')
+let unlockTimer: number | undefined
+function flagUnlock(id: string) {
+  unlockingId.value = id
+  if (unlockTimer !== undefined) clearTimeout(unlockTimer)
+  unlockTimer = window.setTimeout(() => {
+    unlockTimer = undefined
+    unlockingId.value = ''
+  }, 1500)
+}
+onBeforeUnmount(() => { if (unlockTimer !== undefined) clearTimeout(unlockTimer) })
 
 // Rendered graph: spell paths view the selected element branch; other
 // pathways render every tag in one constellation.
@@ -224,8 +269,98 @@ function nodeIcon(node: ProgressionNode): string {
     : FALLBACK_ICON
 }
 
+// Info-anchor presentation: the node's seat renders the LIVE skill
+// state (template + core level + cast progress) and never an action -
+// the skill's own channel owns leveling, Insight is not an input.
+function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphEntry): SkillUiNode {
+  const skillId = row.infoSkillId!
+  const skill = gameManager.catalogOps.getSkillTemplate(skillId)
+  // The lit seat is the basic the mortal actually fights with (beta
+  // fixes the pick to linh_bao); the other learned-but-unpickable
+  // precursors stay visually locked - readable, never selectable.
+  const isActiveBasic = player.$state.mortalBasicSkillId === skillId
+  const coreLevel = gameManager.progressionOps.getSkillLevel(skillId, player.$state)
+  const maxLevel = gameManager.progressionOps.getSkillCoreMaxLevel(skillId)
+  const casts = player.$state.skillCastCounts?.[skillId] ?? 0
+  const thresholds = CAST_LEVELING_THRESHOLDS[skillId]
+  let nextThreshold: number | undefined
+  if (thresholds !== undefined && coreLevel < maxLevel) {
+    nextThreshold = coreLevel >= 2 ? thresholds.lv3 : thresholds.lv2
+  }
+  const position =
+    constellationPoints.value?.get(node.id) ??
+    layout.value.positions.get(node.id) ??
+    { x: 0, y: 0 }
+
+  return {
+    id: node.id,
+    name: skill?.name ?? row.name,
+    icon:
+      SKILL_ICON_MANIFEST[skillId] !== undefined
+        ? resolveAssetUrl(SKILL_ICON_MANIFEST[skillId])
+        : nodeIcon(node),
+    x: position.x,
+    y: position.y,
+    prominent: entry.depth === 0,
+    emphasis: constellationPoints.value?.get(node.id)?.emphasis ?? 'normal',
+    level: `${coreLevel} / ${maxLevel}`,
+    state: isActiveBasic ? 'learned' : 'locked',
+    description: skill?.description ?? row.description ?? '',
+    rows: [
+      { id: 'level', label: t('skill.levelLabel'), value: `${coreLevel} / ${maxLevel}` },
+      {
+        id: 'casts',
+        label: t('skill.infoCasts'),
+        value:
+          nextThreshold !== undefined
+            ? `${formatNumber(casts)} / ${formatNumber(nextThreshold)}`
+            : formatNumber(casts),
+      },
+    ],
+    conditions: [t('panels.skillPath.nodeInspector.infoOnly')],
+    costLabel: '',
+    actionLabel: '',
+    actionDisabled: true,
+    actionHint: '',
+  }
+}
+
+// Grant-seat presentation: realm-reward nodes render readable -
+// their level arrives only via breakthrough grants, so the inspector
+// shows the seat + level and never an Insight action.
+function grantUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphEntry): SkillUiNode {
+  const owned = row.level >= 1
+  const position =
+    constellationPoints.value?.get(node.id) ??
+    layout.value.positions.get(node.id) ??
+    { x: 0, y: 0 }
+
+  return {
+    id: node.id,
+    name: row.name,
+    icon: nodeIcon(node),
+    x: position.x,
+    y: position.y,
+    prominent: entry.depth === 0,
+    emphasis: constellationPoints.value?.get(node.id)?.emphasis ?? 'normal',
+    level: `${row.level} / ${row.maxLevel}`,
+    state: owned ? 'learned' : 'locked',
+    description: row.description ?? '',
+    rows: [
+      { id: 'level', label: t('skill.levelLabel'), value: `${row.level} / ${row.maxLevel}` },
+    ],
+    conditions: [t('panels.skillPath.nodeInspector.grantOnly')],
+    costLabel: '',
+    actionLabel: '',
+    actionDisabled: true,
+    actionHint: '',
+  }
+}
+
 function toUiNode(entry: GraphEntry): SkillUiNode {
   const { node, row } = entry
+  if (row.infoSkillId !== undefined) return infoUiNode(node, row, entry)
+  if (row.rewardOnly === true) return grantUiNode(node, row, entry)
   const owned = row.level >= 1
   const state: SkillUiNode['state'] = owned ? 'learned' : row.state === 'purchasable' ? 'available' : 'locked'
   const purchaseCost = row.nextLevelCost ?? node.insightCost ?? 0
@@ -243,9 +378,9 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     actionDisabled = row.state !== 'purchasable' || inBattle.value
     if (row.state === 'available') {
       actionHint = t('panels.skillPath.nodeInspector.lockedReasons.cost', { cost: purchaseCost, current: player.skillInsight })
-    } else if (row.state !== 'purchasable' && conditions.length > 0) {
-      actionHint = conditions[0]!
     }
+    // conditions[0] is already the rail's first lock line - the action
+    // hint must not repeat it under the button.
   } else {
     const maxed = row.nextLevelCost === null && !row.canUpgrade
     actionLabel = maxed
@@ -254,13 +389,13 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     if (!maxed) {
       costLabel = t('panels.skillPath.nodeInspector.cost.upgrade', { cost: row.nextLevelCost ?? 0 })
       actionDisabled = !row.canUpgrade || inBattle.value
-      if (!row.canUpgrade && conditions.length > 0) actionHint = conditions[0]!
     } else {
       actionDisabled = true
     }
   }
 
-  const position = layout.value.positions.get(node.id) ?? { x: 0, y: 0 }
+  const glyphPoint = constellationPoints.value?.get(node.id)
+  const position = glyphPoint ?? layout.value.positions.get(node.id) ?? { x: 0, y: 0 }
 
   return {
     id: node.id,
@@ -269,6 +404,7 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     x: position.x,
     y: position.y,
     prominent: entry.depth === 0,
+    emphasis: glyphPoint?.emphasis ?? 'normal',
     level: `${row.level} / ${row.maxLevel}`,
     state,
     description: row.description ?? '',
@@ -299,6 +435,7 @@ const selected = computed(() => nodes.value.find((node) => node.id === selectedI
 const insightLabel = computed(() => `${t('panels.nodeTree.labels.insight')}: ${formatNumber(player.skillInsight)}`)
 
 function onSelectElement(id: string) {
+  unlockingId.value = ''
   selectedElement.value = id as ElementType
 }
 function onSelect(id: string) {
@@ -308,6 +445,7 @@ function onUpgrade(id: string) {
   const row = rowsById.value.get(id)
   if (!row || inBattle.value) return
   const ok = row.level >= 1 ? (row.canUpgrade && upgradeNode(id)) : (row.state === 'purchasable' && purchaseNode(id))
+  if (ok) flagUnlock(id)
   flashNotice(ok ? t('skill.actionDone', { name: row.name }) : t('skill.actionFailed'))
 }
 
@@ -336,6 +474,7 @@ watch(inBattle, (engaged) => { if (engaged) pendingRespec.value = false })
 function onRespec() { if (!respecDisabled.value) pendingRespec.value = true }
 function confirmRespec() {
   pendingRespec.value = false
+  unlockingId.value = ''
   if (!inBattle.value) respecNodeTree()
 }
 </script>
@@ -355,6 +494,8 @@ function confirmRespec() {
       :respec-disabled="respecDisabled"
       :graph-size="graphSize"
       :graph-fit="graphFit"
+      :constellation="constellation"
+      :unlocking="unlockingId"
       @select="onSelect"
       @element="onSelectElement"
       @navigate="navigate"

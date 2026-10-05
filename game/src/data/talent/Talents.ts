@@ -283,6 +283,12 @@ export function getTalentDefinition(talentId: string): TalentDefinition | undefi
   return TALENTS_BY_ID.get(talentId)
 }
 
+// pham_cot giu verbatim weight 1 theo thang rarity, nghia la weighted
+// draw thuan tuy hau nhu khong bao gio tra no (order ~0.6%/lan roll).
+// La easter egg nhung phai tim duoc, nen sau draw no nhan mot ti le
+// xuat hien phang rieng - khong qua thang weight.
+export const PHAM_COT_OFFER_CHANCE = 0.15
+
 export function rollCharacterCreationTalents(count = 9): TalentDefinition[] {
   const pool = [...CHARACTER_CREATION_TALENTS]
   const result: TalentDefinition[] = []
@@ -298,6 +304,11 @@ export function rollCharacterCreationTalents(count = 9): TalentDefinition[] {
     }
 
     result.push(pool.splice(index, 1)[0]!)
+  }
+
+  if (!result.some((talent) => talent.id === 'pham_cot') && Math.random() < PHAM_COT_OFFER_CHANCE) {
+    const phamCot = pool.find((talent) => talent.id === 'pham_cot') ?? CHARACTER_CREATION_TALENTS.find((talent) => talent.id === 'pham_cot')
+    if (phamCot) result[Math.floor(Math.random() * result.length)] = phamCot
   }
 
   return result

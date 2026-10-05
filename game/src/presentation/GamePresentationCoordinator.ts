@@ -210,6 +210,22 @@ export class GamePresentationCoordinator {
       if (this.isSameRequest(request, this.inFlightRequest)) {
         return this.inFlightPromise
       }
+      // The terminal error surface always wins over a competing
+      // transition (W6-INT-1): a caller retrying 'error' can be starved
+      // forever because a competitor chained on the previous settle
+      // re-takes the slot inside the one-microtask gap before any retry
+      // continuation runs. Abort the in-flight instead of rejecting -
+      // the aborted transition lands 'failed' with aborted:true so its
+      // caller compensates accepted domain work (W7-COR-3). A settle-
+      // chained competitor can still beat the recursion to the next
+      // slot (W7-INT-4) - convergence holds because the recursion then
+      // preempts THAT landing too; preemption wins by aborting whatever
+      // lands, not by landing first.
+      if (request.target === 'error') {
+        this.currentAbortController?.abort()
+        await this.inFlightPromise.then(() => undefined, () => undefined)
+        return this.request(request)
+      }
       // Conflicting in-flight request is rejected
       return { status: 'rejected', transitionId: this.currentTransitionId }
     }
@@ -244,6 +260,15 @@ export class GamePresentationCoordinator {
         this.currentAbortController = null
       }
     }
+  }
+
+  /** Resolves once no transition is in flight. Lets a caller whose
+   *  request was rejected by the in-flight conflict rule retry after
+   *  the current transition settles, instead of dropping a terminal
+   *  route (e.g. bootFlow.fail) into dead state. */
+  whenIdle(): Promise<void> {
+    const inflight = this.inFlightPromise
+    return inflight ? inflight.then(() => undefined, () => undefined) : Promise.resolve()
   }
 
   dispose(): void {
@@ -461,6 +486,11 @@ export class GamePresentationCoordinator {
       return { status: 'entered', transitionId }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err)
+      // An externally-aborted signal (error-route preemption, dispose)
+      // distinguishes this failure from a genuine step failure: the
+      // caller's accepted domain work is orphaned with no retry intended
+      // and must be compensated, not kept for the error surface's retry.
+      const aborted = controller.signal.aborted
 
       // A deadline fires without aborting anything by itself. Abort here so
       // every scoped listener/waiter this transition registered (asset waiters,
@@ -468,9 +498,17 @@ export class GamePresentationCoordinator {
       // instead of leaking until the next transition.
       controller.abort()
 
-      // Failure detaches with 'hold' policy: never drain pending work
+      // An externally-aborted transition releases its session to headless
+      // so the domain can drain it to an outcome - a 'hold'-detached session
+      // blocks forever for callers with no compensate (tribulation
+      // soft-locks breakthrough + silently loses the unequipped gear,
+      // W8-AUT-2). Genuine failures keep 'hold' for retry()'s surface.
+      // Defense-in-depth: the drain still rides the canMutate-gated tick
+      // engine, so while an error surface is mounted the drain has no
+      // engine - the user-visible heal stays the acknowledge ->
+      // re-admission -> restoreRuntime path (W9-INT-1).
       if (holdToken) {
-        this.sessionPort.detach(holdToken, 'hold')
+        this.sessionPort.detach(holdToken, aborted ? 'headless' : 'hold')
       } else if (request.behindCurtain && curtainClosed) {
         // The domain command was rejected (or produced no session) before any
         // hold was ever taken. Corrected mental model (code review, task-2):
@@ -497,10 +535,22 @@ export class GamePresentationCoordinator {
         // curtainState ref with no transition-id/generation guard of its own.
         //
         // Use a fresh signal: the transition's own signal was just aborted
-        // above, and the curtain rejects immediately on an already-aborted one.
+        // above, and the curtain rejects immediately on an already-aborted
+        // one. Bounded like every other curtain call - a reopen that never
+        // settles would wedge inFlightPromise forever (whenIdle() and any
+        // preempting 'error' request would park on it indefinitely).
+        const reopenController = new AbortController()
         try {
-          await this.curtain.open(transitionId, new AbortController().signal)
+          await this.withTimeout(
+            this.curtain.open(transitionId, reopenController.signal),
+            DEADLINES.curtainOpen,
+            'Curtain reopen timed out',
+            reopenController.signal,
+          )
         } catch {
+          // Abort the fresh signal on timeout too, so a hung reopen's
+          // abort-listeners are released instead of leaking forever.
+          reopenController.abort()
           // Best-effort: the transition already failed for its own reason
           // above; a reopen failure must not overwrite that with a different one.
         }
@@ -519,7 +569,7 @@ export class GamePresentationCoordinator {
       }
       this.notify()
 
-      return { status: 'failed', transitionId }
+      return { status: 'failed', transitionId, aborted: aborted || undefined }
     }
   }
 

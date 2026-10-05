@@ -213,6 +213,10 @@ export class EarlyGameSession {
     // must not pin drops) - session-scoped so replay is deterministic.
     const lootRng = new SeededCombatRng(options.seed ^ 0x9e3779b9)
     this.gameManager.setLootRng(() => lootRng.roll())
+    // The session-rng channel (breakthrough talent draws, node purchases,
+    // alchemy yields, Van Dao free-purchase) gets a THIRD seeded stream.
+    const sessionRng = new SeededCombatRng(options.seed ^ 0x85ebca6b)
+    this.gameManager.setSessionRng(() => sessionRng.roll())
     // The production registration set (App.vue module scope) - the loop
     // must run the SAME catalogs the game does, or drops/buffs/equipment
     // silently no-op.

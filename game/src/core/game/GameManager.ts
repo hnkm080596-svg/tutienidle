@@ -652,6 +652,9 @@ export class GameManager {
       // constructor (same pattern as the other funnel subscribers).
       notifyMaterialGained: (materialId, amount) =>
         this.questOps.notifyMaterialGained(materialId, amount),
+      // Growth toasts (Luyen The invest feedback) drain through the same
+      // queue the loot notifications use.
+      notifications: this.notifications,
     })
 
     this.effectOps = new GameManagerPersistentEffectOps({
@@ -750,6 +753,7 @@ export class GameManager {
       notifyMaterialGained: (materialId, amount) =>
         this.questOps.notifyMaterialGained(materialId, amount),
       getActivePlayer: () => this.activePlayer,
+      sessionRng: () => this.sessionRng(),
     })
 
     this.buildingOps = new GameManagerBuildingOps({

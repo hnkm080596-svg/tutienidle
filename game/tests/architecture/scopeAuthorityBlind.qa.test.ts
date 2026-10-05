@@ -96,6 +96,9 @@ function beyondCeilingSave(realmId: string): GameSave {
     realmLevel: 1,
     cultivationPath: 'spell',
     cultivationWay: 'spell_pathway',
+    // A real spell_pathway save carries its committed element -
+    // null/out-of-beta commits reject at the boundary (F-SCOPE-1).
+    spellPath: { element: 'fire' },
     breakthroughGrade: 1,
     mortalBasicSkillId: undefined,
     highestFoundationAchieved: 'human',

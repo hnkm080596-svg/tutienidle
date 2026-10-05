@@ -15,7 +15,7 @@ import type {
 import { HERB_AGES, PRODUCTION_SITE_KINDS } from './ProductionTypes'
 import { HERB_AGE_WEIGHTS, MATERIAL_AGE_WEIGHTS } from './ProductionBalance'
 import { REALM_TIERS } from '../realm/RealmTierMap'
-import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import { isPillFamilyRecipeLiveAtRealm, PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import {
   buildProfessionMaterialId,
   herbBaseId,
@@ -159,9 +159,14 @@ export interface GrottoHerbBase {
 // QI-D8 - retired families (Hoi Xuan Dan) are deferred: identity data
 // stays resolvable, but the live Dong Thien pool stops generating their
 // herbs while no real effect/sink exists.
+// economy-review 2026-10-04: filter by the shared per-realm recipe
+// predicate (isPillFamilyRecipeLiveAtRealm) so realm-retired recipes
+// (hoi_linh_dan at mortal) stop minting orphan herbs too - before this
+// the pool only honored family-level retirement and kept dropping a
+// herb whose sole recipe could no longer be crafted or sold.
 export const THANH_VAN_GROTTO_HERB_BASES: readonly GrottoHerbBase[] =
   TERRITORY_THANH_VAN.realmIds.flatMap((realmId) =>
-    PILL_FAMILIES.filter((family) => family.retired !== true).map((family) => ({
+    PILL_FAMILIES.filter((family) => isPillFamilyRecipeLiveAtRealm(family, realmId)).map((family) => ({
       baseId: herbBaseId(family.herbId, realmId),
       name: family.herbName,
       pillRecipeId: `alchemy_${family.id}_${realmId}`,

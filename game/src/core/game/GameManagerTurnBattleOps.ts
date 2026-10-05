@@ -90,7 +90,7 @@ import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import { effectiveWaves } from '../stage/EffectiveWaves'
 import type { Stage } from '../stage/Stage'
 
-import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { enemyBasicAttackFor } from '../../data/skill/TurnBasicAttacks'
 import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../data/buff/buffs'
 import type { FormationLoadout, PlayerData } from '../player/Player'
@@ -326,17 +326,7 @@ export class GameManagerTurnBattleOps {
     // to turnBattle.players[0] so companion/enemy casts never write into
     // the player's skillCastCounts mirror or core_<id> node level).
     recordPrimaryPlayerCast?: (skillId: string) => void
-    /**
-     * Mission C Task 8 -- mints the session RNG for ONE battle cycle
-     * (combat-contract M4: typed CombatRng, consumed via roll()/
-     * rollChance()). Scope boundary: only combat rolls consume it
-     * (combat formulas, proc chances, spawn placement, pool/tag/
-     * hidden-beast picks, engine rolls). Loot/alchemy/pill economy
-     * randomness stays on Math.random deliberately -- a seeded battle
-     * must not pin drops.
-     */
-    createBattleRng?: () => CombatRng
-  }) {
+   }) {
     this.liveStatModifiers = bindLiveModifiersProvider(deps)
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
@@ -1134,7 +1124,7 @@ export class GameManagerTurnBattleOps {
   /**
    * Mission C Task 8 -- the session RNG for the CURRENT cycle, re-typed
    * to CombatRng by combat-contract M4. Minted by beginBattleCycle from
-   * deps.createBattleRng; every combat roll reads it (combat formulas
+   * battleRngFactoryOverride; every combat roll reads it (combat formulas
    * via combatSystem.setRandomSource, engine rolls via the
    * TurnBattleSystem ctor param, spawn placement + pool/tag/
    * hidden-beast picks via the spawn closures). Downstream helpers that
@@ -1179,7 +1169,7 @@ export class GameManagerTurnBattleOps {
     // FunctionCombatRng -- storing `Math.random` by reference would
     // bypass vi.spyOn interception (the sanctioned spy seam).
     return (
-      (this.battleRngFactoryOverride ?? this.deps.createBattleRng)?.() ??
+      this.battleRngFactoryOverride?.() ??
       new FunctionCombatRng(() => Math.random())
     )
   }
@@ -2028,13 +2018,15 @@ export class GameManagerTurnBattleOps {
 
       this.lastStageEnemyTemplate = template
 
+      const entity = this.placeSpawnedEnemy(
+        enemyToCombatEntity(this.deps.enemySystem.spawn(template)),
+        occupiedSlots,
+      )
+
       return toTurnBattleParticipant(
-        this.placeSpawnedEnemy(
-          enemyToCombatEntity(this.deps.enemySystem.spawn(template)),
-          occupiedSlots,
-        ),
+        entity,
         this.turnBattle?.enemies.length ?? 0,
-        GENERIC_PHYSICAL_BASIC,
+        enemyBasicAttackFor(entity),
       )
     }
   }
@@ -2151,7 +2143,7 @@ export class GameManagerTurnBattleOps {
       enemyEntity.row = position.row
       enemyEntity.x = position.column
 
-      return toTurnBattleParticipant(enemyEntity, index + 1, GENERIC_PHYSICAL_BASIC)
+      return toTurnBattleParticipant(enemyEntity, index + 1, enemyBasicAttackFor(enemyEntity))
     })
 
     return {

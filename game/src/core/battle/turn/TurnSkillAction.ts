@@ -217,6 +217,14 @@ export interface TurnSkillDefinition {
    */
   theGainOnLandedCast?: number
   /**
+   * Hoa The gate (Minh ruling 2026-10-04) - success probability of the
+   * landed-cast The mint, rolled once via CombatRng at grant time.
+   * Omitted = certain (legacy callers never roll). The spell kit stamps
+   * nodeLevel * 0.35 so a fresh Hoa The node starts unreliable (35%)
+   * and level 3 restores the guaranteed income.
+   */
+  theGainChance?: number
+  /**
    * Phap Tu Reimagined (spec D8/F10) - mana cost expressed as a
    * fraction of the caster's LIVE maxMp, evaluated at gate/consume
    * time (never frozen at build). mana-only; mutually exclusive with
