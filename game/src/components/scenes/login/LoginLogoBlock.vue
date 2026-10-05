@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { LOGIN_ART } from './loginArt'
 </script>
 
 <template>
   <header class="login-logo" data-hk-region="logo-block">
     <h1 class="login-logo__title">
-      {{ t('onboarding.auth.wordmark') }}
+      <img class="login-logo__wordmark" :src="LOGIN_ART.wordmark" alt="Tu Tiên IDLE" />
     </h1>
   </header>
 </template>
 
 <style scoped>
-.login-logo { margin: 0 -3cqw 1cqw; }
-.login-logo__title { margin: 0; color: #272317; font: 600 52px/1.25 var(--font-display, Georgia, serif); letter-spacing: -.045em; text-shadow: 0 1px #fff8e5; }
+.login-logo { margin: 0 0 1cqw; }
+.login-logo__title { margin: 0; }
+.login-logo__wordmark { display: block; width: 100%; height: auto; filter: drop-shadow(0 1px #fff8e5); }
 </style>

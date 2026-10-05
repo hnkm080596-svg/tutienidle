@@ -1278,7 +1278,7 @@
         "register": "Lập đạo danh"
       },
       "guest": {
-        "button": "Chơi khách"
+        "button": "Chơi Ngay"
       },
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
@@ -1292,7 +1292,7 @@
         "confirm": "Rời phiên khách"
       },
       "begin": "Bắt Đầu",
-      "createAccount": "Tạo Tài Khoản",
+      "createAccount": "Đăng Ký",
       "returnOpening": "Quay lại"
     },
     "creation": {
