@@ -92,14 +92,39 @@ compatibility** all verify - not just row counts.
    `manifest.dumpSha256`.
 3. **Restore data into the restore project.** Custom-format restore,
    no ownership/privilege replay (platform roles differ across projects):
-   `pg_restore --no-owner --no-privileges -d "$SUPABASE_DB_URL" /tmp/restore.dmp`
-   Expected: platform-owned objects (`auth` triggers, storage internals,
-   extension objects) may report errors; data tables must load. The first
-   drill records the exact error set that is benign vs blocking -
-   **UNSEALED** until a real run classifies it. If `pg_restore` cannot
-   reach `auth.users`/`auth.identities` as the `postgres` role, the
-   fallback is a per-table `--data-only -t` restore list; record which
-   path the drill used.
+   `pg_restore --clean --if-exists --no-owner --no-privileges -d "$SUPABASE_DB_URL" /tmp/restore.dmp`
+
+   Sealed by the 2026-10-05 drill (staging `mmuluhhlybzbcybduzzk` -> beta
+   `ohndbcpnevljwytstbxq`, pooler `postgres.<ref>` role). Verified
+   classification of the error stream:
+   - **Benign** (~630 errors, all ignored): `must be owner of
+     <auth|storage|realtime>.*`, `Non-superuser owned event trigger` -
+     managed-schema objects owned by `supabase_*_admin` roles; they cannot
+     be dropped/altered from the pooler role and the target's own managed
+     versions are already correct.
+   - **Fixable, expected**: `COPY failed for table "X": violates foreign
+     key constraint` on `auth.identities`, `auth.sessions`,
+     `auth.refresh_tokens`, `auth.mfa_amr_claims`. Single-threaded
+     pg_restore copies TABLE DATA in TOC order, not FK order, so children
+     landing before their parents fail once. Resolution: re-run
+     `pg_restore --data-only -n auth -t <failed-table> ...` after the
+     parents exist (`identities`+`sessions` first, then
+     `refresh_tokens`+`mfa_amr_claims`).
+   - **Blocking**: any COPY/INSERT failure not explained by FK ordering,
+     any public-schema row count short of the manifest.
+   - `auth.users`/`auth.identities` ARE writable as the pooler
+     `postgres.<ref>` role (the fallback per-table path was not needed).
+
+   **Mandatory post-step - re-harden the grant surface.** `--clean`
+   succeeds on `public.*` (owned by `postgres`), so public tables and
+   functions are recreated fresh and inherit Supabase default privileges
+   (execute to anon/authenticated, ALL on new tables). `--no-privileges`
+   skips the dump's ACL section, and the cutover revokes already ran
+   pre-restore - so the hardened surface is silently re-opened. After the
+   data lands, re-apply the revoke/grant tail of
+   `202609300002_beta_authority_cutover.sql` plus:
+   `revoke all on function public.get_backend_status() from public, anon;`
+   `revoke all on function public.beta_contract_phase() from public, anon;`
 4. **Freeze writes during verification** - the restore project should be
    quiet anyway; belt-and-braces:
    `node scripts/operations/backend-config.mjs --target <restore-ref> set maintenance '{"enabled":true,"message":"restore drill"}' --yes-i-mean-it`
@@ -133,12 +158,16 @@ compatibility** all verify - not just row counts.
 Abort and escalate (do not "fix" the dump) when:
 
 - counts mismatch the manifest;
-- any integrity check is non-zero - the backup itself is corrupt or the
-  export tool dropped rows;
+- any integrity check is non-zero AND does not match the same check run
+  against the source - the backup itself is corrupt or the export tool
+  dropped rows. (A flag that fires identically on source and restored
+  target is inherited source data, not a restore defect - the 2026-10-05
+  drill saw `users without identity: 135` on both, from anonymous
+  sign-ins; classify, record, continue.)
 - the ledger shows `extra-in-target` versions - the restore project was
   not clean;
-- grants are open (`saves_open`, helpers exposed) - the cutover
-  migration was not applied post-restore.
+- grants are open (`saves_open`, helpers exposed) AFTER re-applying the
+  cutover revoke tail in step 3.
 
 Record the drill in an evidence bundle (`evidence-template.md`,
 scenario `restore-drill`): manifest, `restore-verify --json` output,
@@ -172,6 +201,6 @@ doc.
 | metric | value | state |
 | --- | --- | --- |
 | RPO (data loss window) | <= 24h under daily export cadence; better if EXT-07 confirms plan PITR | `UNSEALED` pending EXT-07 + first export run |
-| RTO (time to verified restore) | measured by the first successful drill (export-complete to `restore-verify` PASS); target <= 4h | `UNSEALED` - must be measured, never estimated |
+| RTO (time to verified restore) | measured 2026-10-05: ~1.5h export-complete -> verify-clean (733 users / 598 identities / 369 saves), including first-time error triage; target <= 4h | `SEALED` - first drill |
 | session impact on recovery | all sessions revoked; players re-auth on next launch | documented behavior |
 | save compatibility on recovery | restore-verify proves `acceptedSaveSchemaVersions` still covers restored rows; the client-side reject rule is in `compatibility-and-rollback.md` | scripted |
