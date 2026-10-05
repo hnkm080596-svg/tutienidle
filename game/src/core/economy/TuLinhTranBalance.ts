@@ -2,6 +2,7 @@ import { getRealmTier } from '../realm/RealmTierMap'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { SPIRIT_STONE_CONVERSION_RATIO } from '../material/SpiritStoneMaterial'
+import { stoneCostRealmFactor } from './EconomyRealmPace'
 
 // economy-fixes-sinks-plan sec3.2 B1 (2026-08-29) - Tu Linh Tran:
 // doi Linh Thach lay % toc do tu luyen tam thoi (buff 24h).
@@ -10,18 +11,19 @@ export const TU_LINH_TRAN_DURATION_MS = 24 * 60 * 60 * 1000
 export const TU_LINH_TRAN_BUFF_PERCENT = 0.25
 export const TU_LINH_TRAN_COST_BASE = 50
 export const TU_LINH_TRAN_COST_ESCALATION = 1.5
-export const TU_LINH_TRAN_REALM_GROWTH_BASE = 3
 
+// 2026-10-05 pace retune: the realm leg of the cost moved to
+// stoneCostRealmFactor (x1 mortal / x8 qi / x50 foundation) - the old
+// x3 realm growth base is retired.
 export function getTuLinhTranCost(
   realmId: string,
   activeStacks: number,
 ): { materialId: string; amount: number } {
   const tier = getRealmTier(realmId)
-  const tierIndex = tier - 1
   const rawInHa = Math.round(
     TU_LINH_TRAN_COST_BASE *
       Math.pow(TU_LINH_TRAN_COST_ESCALATION, activeStacks) *
-      Math.pow(TU_LINH_TRAN_REALM_GROWTH_BASE, tierIndex),
+      stoneCostRealmFactor(realmId),
   )
   const materialId = getSpiritStoneMaterialIdForRealmTier(tier)
   const factor = Math.pow(SPIRIT_STONE_CONVERSION_RATIO, Math.max(0, tier - 4))

@@ -53,8 +53,8 @@ describe('TribulationChapters (spec dot-pha-loi-kiep §5.2/§5.5/§5.7)', () => 
   it('phạt tu vi giảm dần theo realm + Linh Thạch scale (spec §5.7)', () => {
     expect(TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM.qi_refining).toBe(0.5)
     expect(TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM.foundation_establishment).toBe(0.4)
-    expect(TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM.qi_refining).toBe(50)
-    expect(TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM.foundation_establishment).toBe(200)
+    expect(TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM.qi_refining).toBe(250)
+    expect(TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM.foundation_establishment).toBe(1000)
   })
 })
 

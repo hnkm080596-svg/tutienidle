@@ -21,6 +21,7 @@ import {
   herbBaseId,
   herbMaterialId,
 } from '../profession/ProfessionMaterial'
+import { stoneCostRealmFactor } from '../economy/EconomyRealmPace'
 
 export const TERRITORY_THANH_VAN: TerritoryDefinition = {
   id: 'thanh_van',
@@ -58,7 +59,9 @@ const SITE_UPGRADE_COSTS = (): ProductionSiteDefinition['upgradeCosts'] => {
     return {
       woodMaterialId: buildProfessionMaterialId('wood', realmId, ageByTier[targetTier] ?? 'decade'),
       woodAmount: Math.round(5 * Math.pow(1.65, index)),
-      spiritStone: Math.round(100 * Math.pow(2.2, index)),
+      // 2026-10-05 pace retune: upgrade fee scales with the realm whose
+      // production it unlocks (x1/x8/x50 via stoneCostRealmFactor).
+      spiritStone: Math.round(100 * Math.pow(2.2, index)) * stoneCostRealmFactor(realmId),
     }
   })
 }

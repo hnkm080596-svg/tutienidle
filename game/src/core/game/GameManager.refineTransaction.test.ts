@@ -16,6 +16,7 @@ import { materials } from '../../data/materials/materials'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
+import { REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY } from '../equipment/RefinementBalance'
 import { createDefaultPlayer } from '../player/Player'
 import { buildGameSave } from '../../services/save/SaveSystem'
 import { validateGameSaveShape } from '../../services/save/saveShapeValidation'
@@ -55,7 +56,7 @@ describe('GameManager refine transaction', () => {
     expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({ ok: true })
 
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 5)
-    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 50)
+    manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[instance.quality])
     const identityBefore = structuredClone(instance.affixes)
     const modifiersBefore = structuredClone(manager.equipmentOps.getEquipmentModifiers())
     const accuracyBefore = modifiersBefore.find(

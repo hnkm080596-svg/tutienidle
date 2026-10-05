@@ -27,9 +27,15 @@ export const ZHOU_TIAN_CURRENCY_MATERIAL_ID = 'tinh_hoa_phap_the'
 
 /** BALANCE - Tinh Hoa Phap The consumed to advance step `step` (0-indexed,
  * i.e. the advancement INTO step+1). Increasing flat curve; full 36-step
- * run totals 3690 essence. Design pins no cost shape - retune freely. */
+ * run totals 19350 essence (2026-10-05 retune; was 3690). Design pins
+ * no cost shape - retune freely. */
 export function zhouTianStepCost(step: number): number {
-  return 15 + step * 5
+  // 2026-10-05 pace retune: total chapter cost 3690 -> 19350 phap
+  // essence (~8h of measured Truc Co essence income) so Chu Thien is a
+  // real material constraint instead of a one-session checkmark.
+  // Per-step cap 975 stays under the essence stackLimit (1000) so every
+  // step remains affordable from a single full stack.
+  return 100 + step * 25
 }
 
 /** BALANCE - authored raw/base combat-stat reward of step `step`

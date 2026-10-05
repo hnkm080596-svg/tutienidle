@@ -137,10 +137,10 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     const restored = restoreGameSession(playerStore, gameManager, save)
     expect(restored.status).toBe('ok')
 
-    vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
+    vi.setSystemTime(new Date('2026-09-04T10:02:00Z'))
     gameManager.tickOps.update(0.1)
 
-    // 60s elapsed vs 50s cycle -> exactly 1 cycle rolled.
+    // 120s elapsed vs 100s cycle -> exactly 1 cycle rolled.
     expect(gameManager.getBattleRewardSummary().spiritStone).toBeGreaterThan(0)
   })
 

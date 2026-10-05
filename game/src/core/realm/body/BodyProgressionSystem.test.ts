@@ -93,8 +93,8 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     expect(player.bodyProgression.zhou_tian.completed).toBe(0)
 
     player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
-    // 50 essence buys steps 0+1 (15+20=35); the next step costs 25.
-    expect(investBodyChapterState(player, 'zhou_tian', 50, 0)).toBe(35)
+    // 225 essence buys steps 0+1 (100+125=225); the next step is 150.
+    expect(investBodyChapterState(player, 'zhou_tian', 225, 0)).toBe(225)
     expect(player.bodyProgression.zhou_tian.completed).toBe(2)
   })
 

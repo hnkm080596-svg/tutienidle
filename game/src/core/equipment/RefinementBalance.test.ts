@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   REFINE_INCREASE_MAX,
   REFINE_INCREASE_MIN,
+  REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY,
   REFINE_TINH_HOA_COST_BY_QUALITY,
-  WASH_SPIRIT_STONE_COST,
+  WASH_SPIRIT_STONE_COST_BY_QUALITY,
   WASH_TIER_WEIGHTS_BY_QUALITY,
   WASH_TINH_HOA_COST_BY_QUALITY,
 } from './RefinementBalance'
@@ -17,7 +18,22 @@ describe('RefinementBalance — five-quality wash contract', () => {
       thien: 13,
       tien: 18,
     })
-    expect(WASH_SPIRIT_STONE_COST).toBe(100)
+    // 2026-10-05 pace retune: spirit-stone fee scales with the quality
+    // whose era income pays for it.
+    expect(WASH_SPIRIT_STONE_COST_BY_QUALITY).toEqual({
+      hoang: 100,
+      huyen: 600,
+      dia: 1500,
+      thien: 4000,
+      tien: 8000,
+    })
+    expect(REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY).toEqual({
+      hoang: 50,
+      huyen: 300,
+      dia: 800,
+      thien: 2000,
+      tien: 4000,
+    })
   })
 
   it('uses quality-keyed tier 1–3 weights', () => {

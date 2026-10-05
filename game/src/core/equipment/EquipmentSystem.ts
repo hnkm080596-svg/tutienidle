@@ -32,9 +32,9 @@ import type {
   EquipmentOperationCostContext,
 } from './EquipmentOperationCostCatalog'
 import {
-  REFINE_SPIRIT_STONE_PER_UNIT,
+  REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY,
   REFINE_TINH_HOA_COST_BY_QUALITY,
-  WASH_SPIRIT_STONE_COST,
+  WASH_SPIRIT_STONE_COST_BY_QUALITY,
   WASH_TINH_HOA_COST_BY_QUALITY,
 } from './RefinementBalance'
 import { canUseItemGrade } from './canUseItem'
@@ -460,7 +460,7 @@ export class EquipmentSystem {
   getWashCost(quality: ItemQuality): { tinhHoa: number; spiritStone: number } {
     return {
       tinhHoa: this.applyCostDiscount(WASH_TINH_HOA_COST_BY_QUALITY[quality]),
-      spiritStone: this.applyCostDiscount(WASH_SPIRIT_STONE_COST),
+      spiritStone: this.applyCostDiscount(WASH_SPIRIT_STONE_COST_BY_QUALITY[quality]),
     }
   }
 
@@ -479,7 +479,9 @@ export class EquipmentSystem {
 
     return {
       essenceUnits: this.applyCostDiscount(REFINE_TINH_HOA_COST_BY_QUALITY[quality]),
-      spiritStone: this.applyCostDiscount(baseUnits * REFINE_SPIRIT_STONE_PER_UNIT),
+      spiritStone: this.applyCostDiscount(
+        baseUnits * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[quality],
+      ),
       spiritStoneMaterialId: SPIRIT_STONE_MATERIAL_ID,
       refinementPoints: 1,
     }

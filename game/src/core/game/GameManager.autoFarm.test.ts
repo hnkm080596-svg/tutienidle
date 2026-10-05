@@ -113,7 +113,7 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
 })
 
 describe('GameManager — auto-farm cycle reward rolling', () => {
-  it('roll reward khi cycleSeconds/2 trôi qua; leftover carry-over (lastCheckedMs cộng đúng phần đã roll)', () => {
+  it('roll reward khi cycleSeconds trôi qua; leftover carry-over (lastCheckedMs cộng đúng phần đã roll)', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
 
@@ -121,9 +121,9 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
-    // Troi 60s = 1 full cycle (cycleSeconds 50 -> half 50s? KHONG -
-    // spec: cycle = perfectClearSeconds/2 = 50s -> 60s = 1 cycle + 10s du).
-    vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
+    // Troi 150s = 1 full cycle + 50s du (cycle = perfectClearSeconds =
+    // 100s sau retune 2026-10-05 - idle mints at live clear rate).
+    vi.setSystemTime(new Date('2026-09-04T10:02:30Z'))
 
     gameManager.tickOps.update(0.1)
 
@@ -131,8 +131,8 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
     const summary = gameManager.getBattleRewardSummary()
 
     expect(summary.spiritStone).toBeGreaterThan(0)
-    // Leftover carry-over: lastCheckedMs tien DUNG 50_000ms (khong reset).
-    expect(player.autoFarmStage?.lastCheckedMs).toBe(Date.parse('2026-09-04T10:00:50Z'))
+    // Leftover carry-over: lastCheckedMs tien DUNG 50s du (khong reset).
+    expect(player.autoFarmStage?.lastCheckedMs).toBe(Date.parse('2026-09-04T10:01:40Z'))
   })
 
   it('KHÔNG chạy TurnBattleSystem/spawn trận visible khi auto-farm', () => {
@@ -164,8 +164,8 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, TAGGED_FARM_STAGE.id)).toBe(true)
 
-    // 60s elapsed = 1 full cycle (cycle = perfectClearSeconds/2 = 50s).
-    vi.setSystemTime(new Date('2026-09-04T10:01:00Z'))
+    // 100s elapsed = 1 full cycle (cycle = perfectClearSeconds = 100s).
+    vi.setSystemTime(new Date('2026-09-04T10:01:40Z'))
     gameManager.tickOps.update(0.1)
 
     expect(pickSpy).toHaveBeenCalled()
