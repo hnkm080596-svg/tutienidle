@@ -52,6 +52,16 @@ export interface StageDropTable extends DropTable {
     spiritStone: AmountRange
     techniqueMastery: AmountRange
   }
+
+  /**
+   * Chance that each pool draw yields an item at all. Absent or >= 1 means
+   * every draw hits (historical behaviour). Below 1, resolveDrops reserves
+   * "miss" weight inside the same single-rng() draw, so a gated band still
+   * spends exactly one roll per draw and the documented rng consumption
+   * order is unchanged. The gate covers the whole merged bag - stage and
+   * family pool lines alike.
+   */
+  poolDrawChance?: number
 }
 
 export interface FamilyDropTable extends DropTable {

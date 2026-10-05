@@ -114,9 +114,10 @@ describe('BattleLootSystem — realm reward scaling', () => {
   })
 
   it('equipment rơi qua pool draw dùng quality cho particle và rank accent', () => {
-    // rng 0.8: guaranteed tinh_hoa (0.7) truot; pool roll 0.8*35=28 ->
-    // qua base_kiem (15) -> equipment_any -> rut template tu registry.
-    vi.spyOn(Math, 'random').mockReturnValue(0.8)
+    // rng[0] 0.8: guaranteed tinh_hoa (0.7) truot. Pool draw 0.1: roll
+    // 0.1 * (20 + 113.33) ~= 13 roi vung hit 15% cua bang mortal da gate
+    // (poolDrawChance 0.15) -> equipment_any -> rut template tu registry.
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.8).mockReturnValue(0.1)
     const { killEnemy, equipmentBag, eventBus, notifications, createInstance } =
       createLootTestSetup({
         realmId: 'mortal',
