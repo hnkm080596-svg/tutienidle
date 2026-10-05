@@ -119,6 +119,12 @@ const EMISSIONS = [
     src: 'hand-art/redscarf-blade-bandit',
     recolor: FEROCIOUS,
   },
+  { out: 'duskmane-spirit-wolf', src: 'hand-art/duskmane-spirit-wolf' },
+  {
+    out: 'duskmane-spirit-wolf-ferocious',
+    src: 'hand-art/duskmane-spirit-wolf',
+    recolor: FEROCIOUS,
+  },
 ]
 
 const CLIP_ORDER = ['idle', 'attack', 'death', 'skill', 'enrage', 'stomp', 'bloodwood-devour', 'bite']
@@ -529,7 +535,7 @@ async function main() {
       Object.assign(manifest.variants, existing.variants ?? {})
     }
   }
-  for (const e of EMISSIONS.filter((e) => !ONLY || e.out === ONLY || e.out === `${ONLY}-ferocious`)) {
+  for (const e of EMISSIONS.filter((e) => !ONLY || e.out === ONLY || e.out === `${ONLY}-ferocious`)) { // --only emits base+ferocious pair
     const report = await emitVariant(e)
     manifest.variants[e.out] = report
     console.log(

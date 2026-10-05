@@ -1460,6 +1460,106 @@
         "h": 512
       },
       "sfx": []
+    },
+    "duskmane-spirit-wolf": {
+      "out": "duskmane-spirit-wolf",
+      "src": "hand-art/duskmane-spirit-wolf",
+      "recolor": null,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.991304347826087,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      },
+      "canvasSize": {
+        "w": 248,
+        "h": 248
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "duskmane-spirit-wolf-idle-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "duskmane-spirit-wolf-sheet-1.png",
+          "atlas": "duskmane-spirit-wolf-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "duskmane-spirit-wolf-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "duskmane-spirit-wolf-sheet-1.png",
+          "atlas": "duskmane-spirit-wolf-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": []
+    },
+    "duskmane-spirit-wolf-ferocious": {
+      "out": "duskmane-spirit-wolf-ferocious",
+      "src": "hand-art/duskmane-spirit-wolf",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.991304347826087,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 230,
+        "h": 150
+      },
+      "canvasSize": {
+        "w": 248,
+        "h": 248
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "duskmane-spirit-wolf-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "duskmane-spirit-wolf-ferocious-sheet-1.png",
+          "atlas": "duskmane-spirit-wolf-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "duskmane-spirit-wolf-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "duskmane-spirit-wolf-ferocious-sheet-1.png",
+          "atlas": "duskmane-spirit-wolf-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": []
     }
   }
 }

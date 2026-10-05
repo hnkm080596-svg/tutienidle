@@ -265,6 +265,20 @@ export const MONSTER_ART: Record<string, MonsterArtVariant> = {
     { idle: [1, 17, 1], death: [1, 1, 1] },
     { avatarSize: { w: 512, h: 512 } },
   ),
+  'duskmane-spirit-wolf': variant(
+    'duskmane-spirit-wolf',
+    { w: 230, h: 150 },
+    { x: 0, y: 0, w: 0.991304, h: 1 },
+    { idle: [1, 17, 1], death: [1, 1, 1] },
+    { avatarSize: { w: 512, h: 512 } },
+  ),
+  'duskmane-spirit-wolf-ferocious': variant(
+    'duskmane-spirit-wolf-ferocious',
+    { w: 230, h: 150 },
+    { x: 0, y: 0, w: 0.991304, h: 1 },
+    { idle: [1, 17, 1], death: [1, 1, 1] },
+    { avatarSize: { w: 512, h: 512 } },
+  ),
   'streamscale-forkman-floodserpent-ferocious': variant(
     'streamscale-forkman-floodserpent-ferocious',
     { w: 514, h: 463 },
@@ -314,6 +328,10 @@ export const ENEMY_RESKIN_MAP: Record<string, string> = {
   mortal_giant_crocodile: 'bloodflower-tree-fiend-mudboss',
   mortal_ferocious_giant_crocodile: 'bloodflower-tree-fiend-mudboss-ferocious',
   // foundation tier
+  // Linh Lang - Minh hand-authored pixellab idle sheet (17f idle, 1f death
+  // fade like the bandit); ferocious = the dark Linh Lang boss recolor.
+  foundation_spirit_wolf: 'duskmane-spirit-wolf',
+  foundation_ferocious_spirit_wolf: 'duskmane-spirit-wolf-ferocious',
   foundation_wood_ape: 'drybranch-treant',
   foundation_ferocious_wood_ape: 'drybranch-treant-ferocious',
   foundation_stone_fungus: 'spore-flower-spirit',
