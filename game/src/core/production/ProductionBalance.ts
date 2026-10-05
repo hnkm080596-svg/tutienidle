@@ -234,7 +234,7 @@ export function mulberry32(seed: number): () => number {
   }
 }
 
-/** Roll index theo trong so - chuan hoa tong ben trong (weights rong/tong 0 -> 0). */
+/** Roll index theo trong so - chuan hoa tong ben trong (tong <= 0 -> -1; non-finite -> throw). */
 export function rollWeightedIndex(weights: readonly number[], random: () => number): number {
   let total = 0
 
@@ -242,8 +242,19 @@ export function rollWeightedIndex(weights: readonly number[], random: () => numb
     total += Math.max(0, weight)
   }
 
+  // r13-AUT-3: Math.max(0, NaN) stays NaN, so a non-finite weight
+  // poisons the sum silently and the fall-through pays the LAST index
+  // deterministically. Align with weightedRandom/drawFromPool: fail
+  // closed on corrupted authored data.
+  if (!Number.isFinite(total)) {
+    throw new Error(`rollWeightedIndex: weights must be finite (got total ${total})`)
+  }
+
+  // An all-zero pool is a legitimate runtime outcome (realm-gating can
+  // cap every entry to 0) - return a sentinel the caller must handle
+  // instead of deterministically paying index 0 (fail-open).
   if (total <= 0) {
-    return 0
+    return -1
   }
 
   let roll = random() * total

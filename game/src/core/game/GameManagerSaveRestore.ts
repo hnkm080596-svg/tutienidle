@@ -393,15 +393,25 @@ export class GameManagerSaveRestore {
     // shape validation, yields elapsed=0, but would leave settleNowMs
     // future-dated and feed every unconditional settle below (alchemy
     // tick(future) minting pending jobs early - save-edit cheat).
+    // r13-AUT-5: under cold-boot the clamp must anchor at the
+    // server-approved window end (untilMs), not the client clock - a
+    // slow local clock would otherwise underpay the offline span the
+    // server already granted (and a fast one must not pay past it).
+    const authorityNowMs =
+      timeAuthority?.kind === 'cold-boot'
+        ? timeAuthority.untilMs
+        : timeAuthority?.kind === 'live-replacement'
+          ? timeAuthority.nowMs
+          : Date.now()
     const settleNowMs = Math.min(
       (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
-      Date.now(),
+      authorityNowMs,
     )
     // r13-COR-4: clamp the window START at now as well - a
     // crafted/skewed-future lastSavedAt otherwise positions
     // offlineSinceMs ahead of settleNowMs, confiscating every pending
     // decompose cycle and parking worker lanes in the future.
-    const offlineSinceMs = Math.min(save.player.lastSavedAt ?? settleNowMs, Date.now())
+    const offlineSinceMs = Math.min(save.player.lastSavedAt ?? settleNowMs, authorityNowMs)
 
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {

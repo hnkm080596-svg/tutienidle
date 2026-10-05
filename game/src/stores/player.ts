@@ -315,6 +315,17 @@ export const usePlayerStore = defineStore('player', {
                 lastOnlineAt: save.player.lastSavedAt,
               }).offlineSeconds
 
+      // r13-AUT-5: under remote authority the "now" every forward
+      // clamp anchors at is the server-approved window end, not the
+      // client clock - a slow local clock would underpay an approved
+      // span, a fast one must not pay past approval.
+      const authorityNowMs =
+        timeAuthority?.kind === 'cold-boot'
+          ? timeAuthority.untilMs
+          : timeAuthority?.kind === 'live-replacement'
+            ? timeAuthority.nowMs
+            : Date.now()
+
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x
       // whole-window over-grants. Re-derive the un-buffed base rate and
@@ -324,7 +335,7 @@ export const usePlayerStore = defineStore('player', {
       // otherwise pays its boost over window stretches no authored
       // duration could cover (same bound as the restore map below).
       const savedTimedEffects = (save.player.persistentTimedEffects ?? []).map(
-        (effect) => boundTimedEffectClocks(effect, Date.now()),
+        (effect) => boundTimedEffectClocks(effect, authorityNowMs),
       )
       // r12-AUT: bound the cultivation window at now on BOTH ends -
       // under cold-boot a crafted-future lastSavedAt could otherwise
@@ -332,8 +343,8 @@ export const usePlayerStore = defineStore('player', {
       // settleNowMs). The splitter sorts bounds into positive segments,
       // so a future-positioned start/end pair still mints - the start
       // must clamp too (crafted future -> degenerate now..now window).
-      const windowStartMs = Math.min(save.player.lastSavedAt, Date.now())
-      const windowEndMs = Math.min(windowStartMs + offlineSeconds * 1000, Date.now())
+      const windowStartMs = Math.min(save.player.lastSavedAt, authorityNowMs)
+      const windowEndMs = Math.min(windowStartMs + offlineSeconds * 1000, authorityNowMs)
       const percentAtSave = getActiveCultivationSpeedPercent(savedTimedEffects, windowStartMs)
       const unbuffedCultivationPerSecond = save.player.cultivationPerSecond / (1 + percentAtSave)
       const offline: OfflineResult = {
@@ -499,7 +510,7 @@ export const usePlayerStore = defineStore('player', {
       // honest ceilings; stackable chains keep their forward expiry).
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
-          ...boundTimedEffectClocks(effect, Date.now()),
+          ...boundTimedEffectClocks(effect, authorityNowMs),
           modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
         }),
       )

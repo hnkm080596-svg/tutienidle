@@ -648,7 +648,11 @@ export class ProductionSystem {
         random,
       )
 
-      const age = HERB_AGES[ageIndex] ?? 'decade'
+      // r13-AUT-3: all-zero pool returns -1 - no eligible entry pays.
+      const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
+      if (age === undefined) {
+        return []
+      }
 
       const entry = pool.find((reward) => reward.age === age)
 
@@ -677,7 +681,11 @@ export class ProductionSystem {
         random,
       )
 
-      const age = HERB_AGES[ageIndex] ?? 'decade'
+      // r13-AUT-3: all-zero pool returns -1 - no eligible entry pays.
+      const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
+      if (age === undefined) {
+        return []
+      }
 
       const entry = pool.find((reward) => reward.age === age)
 
@@ -722,7 +730,11 @@ export class ProductionSystem {
       random,
     )
 
-    const age = HERB_AGES[ageIndex] ?? 'decade'
+    // r13-AUT-3: all-zero pool returns -1 - no eligible entry pays.
+    const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
+    if (age === undefined) {
+      return []
+    }
 
     const chosen = ageVariants.find((herb) => herb.age === age) ?? ageVariants[0]
 
