@@ -36,18 +36,21 @@ import { buildGameSave } from '../services/save/SaveSystem'
  *    chay SAU onBeforeUnmount(stopAll) - listener-driven callers thi da bi
  *    go het roi nen khong co stale persist nao toi duoc do.
  */
-/** First-write failure codes whose remedy is NOT remote destruction:
- *  auth/transport/protocol/config faults have their own terminal
- *  surfaces (observeSaveResult routes them); arming a reset affordance
- *  there offers a remedy that cannot help. Every other permanent refuse
- *  class wedges the account and is armed - see the firstSave gate. */
-const NON_DATA_WEDGE_CODES: ReadonlySet<BackendErrorCode> = new Set([
-  'NETWORK_UNAVAILABLE',
-  'SESSION_REVOKED',
-  'AUTH_EXPIRED',
-  'PROTOCOL_OUTDATED',
-  'MAINTENANCE',
-  'CONFIGURATION_ERROR',
+/** Refuse codes that arm the remote-scope save-issue surface on the boot
+ *  write paths. A remote-destruction remedy is only honest for genuine
+ *  DATA-CLASS refuses - the server saying "this save's content is
+ *  unacceptable" (W8-AUT-1): rerolling/deleting the character is the one
+ *  heal left, and the exported payload preserves the refused state. The
+ *  whole SERVER_ERROR bucket (COMMITTED_MALFORMED - the save already
+ *  landed; PENDING_JOURNAL codes - local faults; CHECKPOINT codes,
+ *  CUTOFF_REGRESSION, MUTATION_ID_REUSED - transient authority rejections)
+ *  must NOT arm: remote reset there burns a healthy row or loops the
+ *  wedge. Auth/transport/protocol/config codes likewise keep their own
+ *  terminal surfaces via observeSaveResult - the generic card is honest
+ *  where remote reset could not help anyway. */
+const DATA_REFUSE_CODES: ReadonlySet<BackendErrorCode> = new Set([
+  'SAVE_INVALID',
+  'SAVE_TOO_LARGE',
 ])
 
 export interface UseAppLifecycleDeps {
@@ -545,17 +548,19 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
             // remote reset is the only real un-wedge (it deletes the
             // character whose writes can never commit), and the refused
             // payload is exported so the accrual is salvageable before
-            // that destructive last resort. A 'local' scope would lie
-            // twice: the envelope clear consumes nothing the commit uses,
-            // and the export affordance would hide. (W7-COR-1 / W8-COR-1)
+            // that destructive last resort. The arm is a positive
+            // data-class set for the same reason as the firstSave gate
+            // (W8-AUT-1): SERVER_ERROR-bucket refuses here can mean the
+            // save already landed (COMMITTED_MALFORMED) or a local fault
+            // (PENDING_JOURNAL_*) - remote destruction would burn the
+            // healthy row. observeSaveResult already entered 'recovery'
+            // for both armed codes - no duplicate markFailed (W7-INT-8).
             if (
               commit.status === 'unavailable' &&
               !commit.retryable &&
-              !(commit.code && NON_DATA_WEDGE_CODES.has(commit.code))
+              commit.code &&
+              DATA_REFUSE_CODES.has(commit.code)
             ) {
-              if (commit.code !== 'SAVE_INVALID' && commit.code !== 'SAVE_TOO_LARGE') {
-                authority.markFailed('recovery')
-              }
               let refusedPayload = ''
               try {
                 refusedPayload = JSON.stringify(buildGameSave(player.$state as PlayerData, gameManager))
@@ -662,30 +667,30 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           // A permanent first-write failure wedges the account whenever
           // the refusal is data-class: every boot re-lands
           // CHARACTER_UNINITIALIZED -> same refuse, and the generic error
-          // surface has no reset affordance. The arm is a blacklist, not
-          // a payload-code whitelist (W7-AUT-1): on a first write the
-          // character row is FRESH - it holds no saves yet - so a false-
-          // positive reset destroys nothing while a false-negative wedges
-          // permanently. The only exclusions are classes whose remedy is
-          // elsewhere (re-auth, reload, update, maintenance, config) -
-          // observeSaveResult already routed those to their own terminal.
-          // RPC payload refuses (SAVE_INVALID/SAVE_TOO_LARGE), HTTP-layer
-          // refuses (SERVER_ERROR !retryable), missing identity, and any
-          // future/unrecognized refuse code all arm by default.
+          // surface has no reset affordance. The arm is a positive
+          // data-class set (DATA_REFUSE_CODES): a first-write refuse on
+          // these codes means the starter snapshot itself is unacceptable
+          // to the server - recreating the character re-rolls the content
+          // the server refuses, the only heal that exists. Everything
+          // else (SERVER_ERROR bucket, auth/transport/protocol codes,
+          // uncoded adapter faults) stays on the generic path: remote
+          // destruction would burn a healthy row or loop the wedge
+          // (W8-AUT-1). observeSaveResult already entered 'recovery' for
+          // both armed codes - no duplicate markFailed (W7-INT-8). The
+          // refused payload rides as `raw` so Export salvages it.
           if (
             firstSave.status === 'unavailable' &&
             !firstSave.retryable &&
-            !(firstSave.code && NON_DATA_WEDGE_CODES.has(firstSave.code))
+            firstSave.code &&
+            DATA_REFUSE_CODES.has(firstSave.code)
           ) {
-            // observeSaveResult already entered 'recovery' for the two
-            // RPC payload-refuse codes - only classes it mapped elsewhere
-            // (e.g. SERVER_ERROR -> 'reconnecting') need the explicit
-            // terminal; re-entering the same terminal would double-fire
-            // the pause callback and bump generation a second time.
-            if (firstSave.code !== 'SAVE_INVALID' && firstSave.code !== 'SAVE_TOO_LARGE') {
-              authority.markFailed('recovery')
+            let refusedPayload = ''
+            try {
+              refusedPayload = JSON.stringify(buildGameSave(player.$state as PlayerData, gameManager))
+            } catch {
+              // Export degrades to hidden - the surface still mounts.
             }
-            saveIssue.report('corrupted', '', undefined, 'remote')
+            saveIssue.report('corrupted', refusedPayload, undefined, 'remote')
             boot.fail()
             return { status: 'failed' }
           }

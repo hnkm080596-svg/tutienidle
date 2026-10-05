@@ -295,3 +295,37 @@ All confirmed Medium-or-higher findings fixed: type-check clean; scoped vitest g
 
 Wave-7 totals: 4 Medium + 9 Low + 13 Nit. All Medium+ fixed @fc4e8b43 + @d0b778f0.
 Wave-8 confirmation trio dispatched on d0b778f0.
+
+### AUT (fixpoint-codex-w8-AUT.md) — FINDINGS 4 (2 Medium / 1 Low / 1 Nit)
+
+| ID | Sev | Disposition |
+|---|---|---|
+| W8-AUT-1 | Medium | FIXED: both boot-write arms flipped back to the positive data-class set DATA_REFUSE_CODES={SAVE_INVALID,SAVE_TOO_LARGE} + refused-payload export on both - SERVER_ERROR bucket/uncoded no longer arm remote destruction (COMMITTED_MALFORMED would have burned a landed save) |
+| W8-AUT-2 | Medium | FIXED: aborted transitions detach 'headless' (not 'hold') - orphan drains to an outcome, breakthrough un-wedges itself |
+| W8-AUT-3 | Low | FIXED: enterTerminal clears heartbeat+retry BEFORE the fan-out; pause arms retry before onPause; attemptReconnect state-guards 'reconnecting' - no terminal revival |
+| W8-AUT-4 | Nit | FIXED (= W8-COR-3): reconnectInFlight covers the local branch @19e35fe6 |
+
+### COR (fixpoint-codex-w8-COR.md) — FINDINGS 7 (2 Medium / 1 Low / 4 Nit)
+
+| ID | Sev | Disposition |
+|---|---|---|
+| W8-COR-1 | Medium | FIXED @19e35fe6: arm scope 'local' -> 'remote' + real refused payload as raw (remote reset is the only honest un-wedge; local reset provably re-wedged) |
+| W8-COR-2 | Medium | FIXED @19e35fe6: commit-arm parametric pins (2 armed + 3 non-armed codes, raw non-empty asserted) |
+| W8-COR-3 | Low | FIXED @19e35fe6: reconnectInFlight covers local branch |
+| W8-COR-4 | Nit | FIXED @19e35fe6: reopen controller ref kept + aborted on timeout |
+| W8-COR-5/6/7 | Nit | EXCEPTED - bounded retry-churn ceiling, direct-request compensate gap (documented), narrow throw residues |
+
+### INT (fixpoint-codex-w8-INT.md) — FINDINGS 7 (1 Medium / 3 Low / 3 Nit)
+
+| ID | Sev | Disposition |
+|---|---|---|
+| W8-INT-1 | Medium | FIXED: streak reset restricted to 'terminal' - 'unavailable' no longer erases consecutive-failure count |
+| W8-INT-2 | Low | FIXED (= W8-AUT-2): headless detach drains the tribulation orphan |
+| W8-INT-3 | Low | FIXED (= W8-COR-1) @19e35fe6 |
+| W8-INT-4 | Nit | EXCEPTED - hanging onResume latent (no production onResume returns an unsettling promise; budget is throw-only by contract) |
+| W8-INT-5 | Low | EXCEPTED - isSameRequest dropping a twin's behindCurtain is the documented dedup contract; runAdmitted callers serialize via isAdmitting so no live producer reaches it |
+| W8-INT-6 | Nit | EXCEPTED - cosmetic card-over-closed-curtain flash |
+| W8-INT-7 | Nit | EXCEPTED - latent (remote boots always bind reconnect; local mode cannot emit coded refuses) |
+
+Wave-8 totals: 5 Medium + 5 Low + 8 Nit. All Medium+ fixed @19e35fe6 + @c47d058a.
+Wave-9 confirmation trio dispatched on c47d058a.

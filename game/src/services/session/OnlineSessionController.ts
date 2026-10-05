@@ -237,10 +237,13 @@ export class OnlineSessionController {
       return
     }
     this.generation++
-    this.transition('reconnecting')
+    // Owned cleanup + cadence BEFORE the dep fan-out: a throwing
+    // onStateChange/onPause must not strand 'reconnecting' without the
+    // armed retry (W8-AUT-3 - same class as enterTerminal's ordering).
     this.clearHeartbeat()
-    this.deps.onPause?.(reason)
     this.armRetry()
+    this.transition('reconnecting')
+    this.deps.onPause?.(reason)
     if (this.deps.reconnect) {
       void this.attemptReconnect()
     }
@@ -367,9 +370,13 @@ export class OnlineSessionController {
       return
     }
     this.generation++
-    this.transition(state)
+    // Owned cleanup BEFORE the notification fan-out: transition assigns
+    // the state then calls onStateChange - a throwing dep callback used
+    // to skip clearRetry, leaving the retry cadence armed behind a
+    // nominal terminal and letting a queued tick revive it (W8-AUT-3).
     this.clearHeartbeat()
     this.clearRetry()
+    this.transition(state)
     // Terminal states still freeze the simulation until the owned
     // acknowledgement; onPause is idempotent on the lifecycle side.
     this.deps.onPause?.('terminal')
@@ -459,6 +466,12 @@ export class OnlineSessionController {
     if (this.reconnectInFlight) {
       return
     }
+    // Terminal states own the retry UX through acknowledge() - a leaked
+    // armed-tick (e.g. a dep callback that threw before clearRetry ran)
+    // must never revive a nominal terminal back to 'ready' (W8-AUT-3).
+    if (this.state !== 'reconnecting') {
+      return
+    }
     const generation = this.generation
     // The in-flight guard covers BOTH branches: the contract now admits
     // Promise-returning onResume, and even a synchronous one suspends to
@@ -520,8 +533,16 @@ export class OnlineSessionController {
         }
         return
       }
-      this.resumeFailureStreak = 0
       if (outcome.status === 'terminal') {
+        // The streak is consumed only by a resume that ran and succeeded
+        // (inside the 'resumed' branch). A 'terminal' exits through
+        // enterTerminal with its own generation bump; resetting here is
+        // bookkeeping for completeness only. Crucially, 'unavailable'
+        // must NOT reset: it is neither a throw nor a success, and
+        // zeroing it lets a deterministic thrower interleaved with
+        // transport-unavailable outcomes evade the churn bound forever
+        // (W8-INT-1).
+        this.resumeFailureStreak = 0
         this.enterTerminal(outcome.state)
       }
       // 'unavailable' stays 'reconnecting' - the retry interval fires again.

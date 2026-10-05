@@ -322,11 +322,12 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
     // refuses the starter snapshot) + boot.fail -> SaveIncompatibleScreen's
     // remote reset deletes the wedge. markFailed('recovery') is skipped
     // for this code - observeSaveResult already entered that terminal
-    // (W7-INT-8: a second identical entry double-fires onPause).
+    // (W7-INT-8: a second identical entry double-fires onPause). The
+    // refused payload rides as `raw` for Export salvage (W8-COR-1).
     expect(outcome.status).toBe('failed')
     expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
-    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', '', undefined, 'remote')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', expect.any(String), undefined, 'remote')
 
     lifecycle.stopAll()
   })
@@ -381,8 +382,12 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
     'AUTH_EXPIRED', // an expired credential
     'MAINTENANCE', // a maintenance window
     'CONFIGURATION_ERROR', // a client config fault
+    'SERVER_ERROR', // HTTP-layer/authority refuse - COMMITTED_MALFORMED,
+    // CHECKPOINT_*, PENDING_JOURNAL_*: remote destruction burns a healthy
+    // row or loops the wedge (W8-AUT-1)
+    undefined, // an uncoded adapter-side fault - remote reset cannot help
   ] as const)(
-    'CHARACTER_UNINITIALIZED + permanent %s -> generic fail only, NO remote reset arm (wrong-remedy classes, W6-COR-2 + W7-AUT-1)',
+    'CHARACTER_UNINITIALIZED + permanent %s -> generic fail only, NO remote reset arm (wrong-remedy classes, W6-COR-2 + W8-AUT-1)',
     async (code) => {
       const stubs = makeStubs()
       stubs.player.save = vi.fn(async (): Promise<import('../cloudSave/CloudSaveService').CloudSaveWriteResult> => ({
@@ -416,11 +421,13 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
       const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter: vi.fn() })
 
       // %s never proved the remote row bad - its remedy is elsewhere
-      // (re-auth / reload / update / maintenance). W6-COR-2/W6-AUT-1
-      // narrowed the arm off these classes; W7-AUT-1 re-widened it to a
-      // blacklist because on a first write the character row holds no
-      // saves - a false-positive reset destroys nothing while a false-
-      // negative wedges permanently.
+      // (re-auth / reload / update / maintenance), or it is a SERVER_ERROR
+      // bucket class where remote destruction is actively harmful
+      // (COMMITTED_MALFORMED = the save already landed, PENDING_JOURNAL_*
+      // = a local storage fault, CHECKPOINT_*/MUTATION_ID_REUSED =
+      // transient authority rejections). W8-AUT-1 narrowed the arm back
+      // to the positive data-class set: remote destruction needs the
+      // certainty that the payload itself is refused.
       expect(outcome.status).toBe('failed')
       expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
       expect(stubs.saveIssue.report).not.toHaveBeenCalled()
@@ -433,10 +440,8 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
   it.each([
     'SAVE_INVALID', // an RPC payload refuse
     'SAVE_TOO_LARGE', // an RPC size refuse
-    'SERVER_ERROR', // an HTTP-layer/authority refuse
-    undefined, // an uncoded refuse (fail-safe arm)
   ] as const)(
-    'CHARACTER_UNINITIALIZED + permanent %s -> recovery + remote arm (data-wedge classes, W7-AUT-1 blacklist)',
+    'CHARACTER_UNINITIALIZED + permanent %s -> remote arm (data-class refuses, W8-AUT-1 whitelist)',
     async (code) => {
       const stubs = makeStubs()
       stubs.player.save = vi.fn(async (): Promise<import('../cloudSave/CloudSaveService').CloudSaveWriteResult> => ({
@@ -469,20 +474,15 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
 
       const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter: vi.fn() })
 
-      // Every permanent data-class refuse wedges the account; on a first
-      // write the reset is vacuous (no saves exist), so arming is the
-      // fail-safe direction for refuse classes a whitelist would miss.
-      // markFailed('recovery') fires only for codes observeSaveResult did
-      // not already land in 'recovery' (SERVER_ERROR -> 'reconnecting',
-      // uncoded -> default) - the RPC payload-refuse pair maps there
-      // itself (W7-INT-8).
+      // A data-class refuse on a first write means the starter snapshot
+      // itself is unacceptable to the server - remote reset + recreate
+      // re-rolls the refused content, the only heal. The refused payload
+      // rides as `raw` so Export salvages it (W8-COR-1). Both armed codes
+      // are already 'recovery' via observeSaveResult - no duplicate
+      // markFailed (W7-INT-8).
       expect(outcome.status).toBe('failed')
-      if (code === 'SAVE_INVALID' || code === 'SAVE_TOO_LARGE') {
-        expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
-      } else {
-        expect(stubs.authority.markFailed).toHaveBeenCalledWith('recovery')
-      }
-      expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', '', undefined, 'remote')
+      expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
+      expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', expect.any(String), undefined, 'remote')
 
       lifecycle.stopAll()
     },

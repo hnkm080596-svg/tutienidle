@@ -498,9 +498,13 @@ export class GamePresentationCoordinator {
       // instead of leaking until the next transition.
       controller.abort()
 
-      // Failure detaches with 'hold' policy: never drain pending work
+      // An externally-aborted transition releases its session to headless
+      // so the domain drains it to an outcome - a 'hold'-detached session
+      // blocks forever for callers with no compensate (tribulation
+      // soft-locks breakthrough + silently loses the unequipped gear,
+      // W8-AUT-2). Genuine failures keep 'hold' for retry()'s surface.
       if (holdToken) {
-        this.sessionPort.detach(holdToken, 'hold')
+        this.sessionPort.detach(holdToken, aborted ? 'headless' : 'hold')
       } else if (request.behindCurtain && curtainClosed) {
         // The domain command was rejected (or produced no session) before any
         // hold was ever taken. Corrected mental model (code review, task-2):
