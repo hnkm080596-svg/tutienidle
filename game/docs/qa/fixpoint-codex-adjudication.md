@@ -127,3 +127,11 @@ Audit trio on the wave-2 aggregate; adjudicator = coordinator session.
 
 - `npm run type-check` clean; scoped vitest: save dir + architecture probes 25 files / 683 assertions green; w3int.repro pins 15/15 green.
 - Contract suite vs live staging: migration applied idempotently on both projects; fresh-install scratch applies all 13 with catalog identical to historical-upgrade.
+
+---
+
+# Fixpoint termination threshold (Minh ruling, 2026-10-05)
+
+Fix until no confirmed Medium-or-higher remains, then stop: Low/Nit
+findings are adjudicated and excepted in place — no further fix waves
+chase them. Wave-4 onward applies this threshold.
