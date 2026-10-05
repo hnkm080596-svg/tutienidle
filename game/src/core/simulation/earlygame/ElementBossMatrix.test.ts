@@ -234,36 +234,34 @@ function fightAtPoint(s: EarlyGameSession, element: ElementType, boss: BossKey):
 const ELEMENTS: ElementType[] = ['fire', 'water', 'wood', 'metal', 'earth']
 const BOSSES: BossKey[] = ['croc', 'serpent', 'whelp']
 
-// STAT-WALL FLAG (2026-10-05) - the floor-10 boss scale jump (3.6 / 2.85
-// / 1.95 on top of the x7/x2 boss multiplier) turned the act bosses
-// into real DPS-gates behind the 60s enrage. At the maxed
-// intended-point build every element still clears the early acts, but
-// these cells cannot carry the gate:
-//   - wood x croc/serpent (and wood x whelp on unlucky seeds):
-//     sustain-profile kit is ~45-50% short of
-//     the boss hp pool inside the enrage window at dia+20 + maxed
-//     attributes - an element-side burst gap, not an investment gap.
-//   - fire x serpent / earth x serpent: within ~5-11% - beatable in
-//     principle, RNG/burst-schedule dependent.
-// Pinned as the reported outcome (the walls stay per Minh's 'hard
-// gate' directive); flip back to 'victory' when the element kits or
-// the ladder are retuned. Tracked in
-// docs/balance/2026-10-05-stat-wall-ladder.md.
+// STAT-WALL FLAG (2026-10-05) - the floor-10 boss scale jump on top of
+// the x7/x2 boss multiplier turned the act bosses into real DPS-gates
+// behind the 60s enrage. Same-day soften (Minh: "rot do ngau nhien
+// cung nen du qua") dropped the serpent floor from 2.85 to 2.0, which
+// flipped the fire/wood/earth x serpent cells to victory - one of the
+// options he was weighing. Remaining pinned defeat:
+//   - wood x croc: sustain-profile kit is ~45-50% short of the boss hp
+//     pool inside the enrage window at dia+20 + maxed attributes - an
+//     element-side burst gap, not an investment gap. The croc floor
+//     (mortal_dong_10, scale 3.6) was NOT softened.
+// Pinned as the reported outcome pending Minh's pick (buff wood kit /
+// extend enrage / lower the croc coefficient / keep the defeat).
+// Tracked in docs/balance/2026-10-05-stat-wall-ladder.md.
 const EXPECTED_OUTCOME: Record<string, 'victory' | 'defeat'> = {
   'fire/croc': 'victory',
-  'fire/serpent': 'defeat',
+  'fire/serpent': 'victory',
   'fire/whelp': 'victory',
   'water/croc': 'victory',
   'water/serpent': 'victory',
   'water/whelp': 'victory',
   'wood/croc': 'defeat',
-  'wood/serpent': 'defeat',
+  'wood/serpent': 'victory',
   'wood/whelp': 'victory',
   'metal/croc': 'victory',
   'metal/serpent': 'victory',
   'metal/whelp': 'victory',
   'earth/croc': 'victory',
-  'earth/serpent': 'defeat',
+  'earth/serpent': 'victory',
   'earth/whelp': 'victory',
 }
 

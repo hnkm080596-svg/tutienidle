@@ -54,9 +54,13 @@ const QI_CHAPTER: ChapterConfig = {
   // bare mortal-entrant stat line, so the ladder starts at the authored
   // template strength; each step is a ~15-20% hp/might/defense climb so
   // every deeper floor asks for another gear/upgrade step, ending at
-  // x2.85 on the bandit king's floor (the act gate, on top of the x7/x2
-  // boss multipliers).
-  floorStatScales: [1.0, 1.2, 1.4, 1.6, 1.85, 2.05, 2.25, 2.45, 2.5, 2.85],
+  // x2.0 on the bandit king's floor (the act gate, on top of the x7/x2
+  // boss multipliers). Softened 2026-10-05 (Minh ruling: random drops
+  // must suffice, selective investment is a bonus): f4-f10 dropped
+  // further to 1.5-2.0 - each floor in the f6-f10 band rotated a
+  // 30-50-run stall across seeds (thin-gear arrival plus elite-roll
+  // luck), so the tail compresses until random drops suffice.
+  floorStatScales: [1.0, 1.2, 1.4, 1.5, 1.6, 1.65, 1.75, 1.9, 1.95, 2.0],
 }
 
 const MORTAL_CHAPTER: ChapterConfig = {
@@ -94,8 +98,10 @@ const MORTAL_CHAPTER: ChapterConfig = {
   // Stat-wall ladder: floors 1-2 stay the gentle tutorial handoff
   // (scale 1.0 - a bare pham nhan may still clear them); from floor 3
   // every floor is a real stat check demanding more gear/upgrades, up
-  // to x3.6 on the boar king's floor.
-  floorStatScales: [1.0, 1.0, 1.3, 1.55, 1.85, 2.15, 2.45, 2.8, 3.2, 3.6],
+  // to x3.6 on the boar king's floor. Softened 2026-10-05 (random-drop
+  // ruling): f8/f9 down from 2.8/3.2 to 2.7/3.0 - f9 hit the farm cap
+  // on an unlucky seed and could starve the qi entry climb downstream.
+  floorStatScales: [1.0, 1.0, 1.3, 1.55, 1.85, 2.15, 2.45, 2.7, 3.0, 3.6],
 }
 
 const FOUNDATION_CHAPTER: ChapterConfig = {
@@ -132,8 +138,14 @@ const FOUNDATION_CHAPTER: ChapterConfig = {
   },
   // Stat-wall ladder: entry already walls a fresh truc co, then each
   // floor demands a deeper that_pham + enhance investment, ending at
-  // x1.95 under the spirit wolf king's x7/x2 boss multipliers.
-  floorStatScales: [1.0, 1.05, 1.05, 1.1, 1.15, 1.25, 1.4, 1.55, 1.7, 1.95],
+  // x1.7 under the spirit wolf king's x7/x2 boss multipliers.
+  // Softened 2026-10-05 (random-drop ruling): f1 dropped to 0.6 - a
+  // fresh truc co enters the chapter with NO wearable gear (ascent
+  // invalidates the qi grade and lower-grade drops are unusable), so
+  // the entry wall must converge on a few pool-farm runs; f4-f9 band
+  // down to 1.15-1.3 - elite-roll density (19-21% x2.5hp spikes)
+  // rotated a cap-50 stall across the band on unlucky seeds.
+  floorStatScales: [0.6, 1.0, 1.05, 1.15, 1.15, 1.15, 1.2, 1.15, 1.3, 1.7],
 }
 
 export const STAGES: Stage[] = [
