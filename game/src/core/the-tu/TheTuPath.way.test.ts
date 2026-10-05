@@ -63,7 +63,9 @@ function bodyPlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   player.cultivationPath = 'body'
   player.cultivationWay = 'body_pathway'
   player.realmId = 'qi_refining'
-  player.skillInsight = 99
+  // Insight must never be the gate in a way-isolation test - cover
+  // every node price incl. the 150,000 TC majors.
+  player.skillInsight = 200_000
   Object.assign(player, overrides)
   return player
 }
@@ -74,7 +76,7 @@ function ungThePlayer(overrides: Partial<PlayerData> = {}): PlayerData {
   player.cultivationPath = 'body'
   player.cultivationWay = 'hidden_body_pathway'
   player.realmId = 'qi_refining'
-  player.skillInsight = 99
+  player.skillInsight = 200_000
   Object.assign(player, overrides)
   return player
 }

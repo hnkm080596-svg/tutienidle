@@ -213,7 +213,9 @@ export function registerPhapTuLab(deps: PhapTuLabDeps): void {
     // F-A11-3: the mint bumps totalSkillInsightGained in the same
     // statement - a bare skillInsight write reads as a fabricated
     // currency claim and the save gate rejects the provisioned save.
-    const insightTarget = Math.max(playerState.skillInsight, options.skillInsight ?? 20)
+    // Default grant covers the TC keystone price (150,000 at the
+    // 2026-10-05 insight-pace retune).
+    const insightTarget = Math.max(playerState.skillInsight, options.skillInsight ?? 150_000)
     if (insightTarget > playerState.skillInsight) {
       playerState.totalSkillInsightGained += insightTarget - playerState.skillInsight
       playerState.skillInsight = insightTarget

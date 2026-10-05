@@ -505,7 +505,7 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', hien)).toBe(false)
 
     const ngu = nguPlayer('foundation_establishment')
-    ngu.skillInsight = 500
+    ngu.skillInsight = 150_000 // ngu_kiem_lien price at the retuned cost
     // thich_can's realm gate passes at golden_core - only the way gate blocks.
     expect(gameManager.progressionOps.canPurchaseNode('thich_can', ngu)).toBe(false)
     expect(gameManager.progressionOps.purchaseNode('thich_can', ngu)).toBe(false)
