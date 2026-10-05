@@ -266,3 +266,32 @@ All confirmed Medium-or-higher findings fixed: type-check clean; scoped vitest g
 | W7-AUT-8 | Nit | FIXED: comment corrected |
 
 ### COR / INT — pending
+
+### COR (fixpoint-codex-w7-COR.md) — FINDINGS 8 (3 Medium / 2 Low / 3 Nit)
+
+| ID | Sev | Disposition |
+|---|---|---|
+| W7-COR-1 | Medium | FIXED: commit-path refuse takes the blacklist arm at scope 'local' (healthy remote head -> local-envelope clear + export, never remote reset) @d0b778f0 |
+| W7-COR-2 | Medium | FIXED: parametric pin typing (single-element rows, CloudSaveWriteResult mocks) — type-check green @d0b778f0 |
+| W7-COR-3 | Medium | FIXED: `TransitionResult.aborted` distinguishes preempted failures; runAdmitted compensates 'rejected'\|'failed&&aborted'; genuine 'failed' keeps session for retry() @d0b778f0 |
+| W7-COR-4 | Low | FIXED: `onResume` signature `void|Promise<void>` + awaited both branches @d0b778f0 |
+| W7-COR-5 | Low | FIXED (= W7-AUT-2/INT-2): streak resets at admission boundaries @fc4e8b43 |
+| W7-COR-6/7/8 | Nit | EXCEPTED — cosmetic/pre-existing notes |
+
+### INT (fixpoint-codex-w7-INT.md) — FINDINGS 10 (1 Medium / 4 Low / 5 Nit)
+
+| ID | Sev | Disposition |
+|---|---|---|
+| W7-INT-1 | Medium | FIXED (= COR-2): type-check restored @d0b778f0 |
+| W7-INT-2 | Low | FIXED (= AUT-2/COR-5) @fc4e8b43 |
+| W7-INT-3 | Low | FIXED (= AUT-5): reopen bounded by DEADLINES.curtainOpen @fc4e8b43 |
+| W7-INT-4 | Low | FIXED: ordering comment corrected (preempt wins by aborting whatever lands); 'aborted' flag lets chained callers distinguish preemption from domain failure @d0b778f0 |
+| W7-INT-5 | Nit | FIXED: fail() retries 'failed' too; breadcrumb covers rejected/failed/disposed @d0b778f0 |
+| W7-INT-6 | Nit | EXCEPTED — documented settle shapes |
+| W7-INT-7 | Nit | EXCEPTED — latent pre-existing (sync-head double-alloc); no production caller |
+| W7-INT-8 | Nit | FIXED: arm skips duplicate markFailed for codes already mapped 'recovery' @d0b778f0 |
+| W7-INT-9 | Nit | EXCEPTED — latent dedup edge, no error-target behindCurtain caller exists |
+| W7-INT-10 | Low | FIXED: fail() treats 'failed' as retryable @d0b778f0 |
+
+Wave-7 totals: 4 Medium + 9 Low + 13 Nit. All Medium+ fixed @fc4e8b43 + @d0b778f0.
+Wave-8 confirmation trio dispatched on d0b778f0.
