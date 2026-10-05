@@ -460,6 +460,11 @@ export class OnlineSessionController {
       return
     }
     const generation = this.generation
+    // The in-flight guard covers BOTH branches: the contract now admits
+    // Promise-returning onResume, and even a synchronous one suspends to
+    // a microtask inside the await - a suspend/resume burst in that
+    // window must not re-enter a pending restore (W8-COR-3).
+    this.reconnectInFlight = true
     if (!this.deps.reconnect) {
       // markReady runs only after onResume finishes: a throwing resume
       // must not leave a 'ready' session whose restore never landed.
@@ -481,11 +486,12 @@ export class OnlineSessionController {
         if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET && generation === this.generation) {
           this.markFailed('recovery')
         }
+      } finally {
+        this.reconnectInFlight = false
       }
       return
     }
 
-    this.reconnectInFlight = true
     try {
       const outcome = await this.deps.reconnect()
       if (generation !== this.generation) {

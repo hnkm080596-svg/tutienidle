@@ -84,11 +84,20 @@ function makeStubs() {
         off: vi.fn(),
       },
       materialRegistry: { has: () => false },
-      materialBag: { add: vi.fn() },
-      productionSystem: { getSiteDefinitions: () => [] },
+      materialBag: { add: vi.fn(), getAll: () => [] },
+      techniqueManager: { getAll: () => [] },
+      skillManager: { getAll: () => [] },
+      equipmentBag: { getAll: () => [] },
+      pillBag: { getAll: () => [] },
+      equipmentSlotManager: { getAll: () => [] },
+      alchemySystem: { getJobs: () => [] },
+      questManager: { getState: () => ({}) },
+      decomposeSystem: { getSaveState: () => ({}) },
+      tribulationDirector: { serializeRuntime: () => ({}) },
+      productionSystem: { getSiteDefinitions: () => [], getAllStates: () => [] },
       setProductionAutoRestart: vi.fn(),
       setActivePlayer: vi.fn(),
-      buildingManager: { add: vi.fn() },
+      buildingManager: { add: vi.fn(), getAll: () => [] },
       refreshAutoWorkerCapacity: vi.fn(),
       restoreFromSave: vi.fn(),
       freezeCombat: vi.fn(),
@@ -1139,6 +1148,79 @@ describe('useAppLifecycle — B1-D admission authority', () => {
     expect(stubs.authority.markReady).not.toHaveBeenCalled()
     expect(stubs.boot.enterGame).not.toHaveBeenCalled()
 
+    lifecycle.stopAll()
+  })
+
+  // W8-COR-2 pin: the B1-D commit arm — a permanent data-class refuse on a
+  // live, loadable character mounts the save-issue surface at scope
+  // 'remote' (remote reset is the only real un-wedge for a character whose
+  // accrued write can never commit) with the refused payload as raw.
+  it.each(['SAVE_INVALID', 'SAVE_TOO_LARGE', 'SERVER_ERROR', undefined] as const)(
+    'remote-authoritative ok boot: permanent commit refuse (%s) arms the remote save-issue surface',
+    async (code) => {
+      const stubs = makeStubs()
+      stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+      ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
+        status: 'ok',
+        revision: 5,
+        save: { player: { lastSavedAt: 1_000 } },
+        serverAuthority: { serverNowMs: 3_000 },
+      })
+      ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+        status: 'unavailable',
+        retryable: false,
+        code,
+      })
+
+      const lifecycle = makeLifecycle(stubs)
+      const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+      expect(outcome.status).toBe('failed')
+      expect(stubs.saveIssue.report).toHaveBeenCalledWith(
+        'corrupted',
+        expect.any(String),
+        undefined,
+        'remote',
+      )
+      // Export salvages the refused accrued payload, not empty bytes.
+      const raw = ((stubs.saveIssue.report as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] ?? '') as string
+      expect(raw.length).toBeGreaterThan(0)
+      expect(stubs.onError).not.toHaveBeenCalled()
+      // markFailed dedup: codes already mapped 'recovery' by
+      // observeSaveResult skip the explicit terminal entry.
+      if (code === 'SAVE_INVALID' || code === 'SAVE_TOO_LARGE') {
+        expect(stubs.authority.markFailed).not.toHaveBeenCalled()
+      } else {
+        expect(stubs.authority.markFailed).toHaveBeenCalledWith('recovery')
+      }
+      lifecycle.stopAll()
+    },
+  )
+
+  // Blacklisted codes on the commit path keep the generic failure shape -
+  // auth/transport/protocol faults have their own terminal surfaces and
+  // must not mount a remote-reset affordance.
+  it('remote-authoritative ok boot: blacklisted commit refuse does NOT arm the save-issue surface', async () => {
+    const stubs = makeStubs()
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'ok',
+      revision: 5,
+      save: { player: { lastSavedAt: 1_000 } },
+      serverAuthority: { serverNowMs: 3_000 },
+    })
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'unavailable',
+      retryable: false,
+      code: 'SESSION_REVOKED',
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.saveIssue.report).not.toHaveBeenCalled()
+    expect(stubs.onError).toHaveBeenCalledTimes(1)
     lifecycle.stopAll()
   })
 

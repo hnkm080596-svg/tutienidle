@@ -11,6 +11,7 @@ import { ESSENCE_STREAM_ARRIVAL_EVENT } from '../core/battle/BattleEvents'
 import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import { i18n } from '@/i18n'
 import { recordSaveOutcome } from '../services/diagnostics/recordSaveOutcome'
+import { buildGameSave } from '../services/save/SaveSystem'
 
 /**
  * Remediation Task 5 (2026-09-05) - App boot/tick/listener lifecycle
@@ -537,14 +538,16 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
             recordSaveOutcome(commit, 'boot-commit')
             // A permanent data-class refuse on a LIVE, loadable character
             // wedges identically to the firstSave arm (load 'ok' -> commit
-            // -> REJECTED -> generic fail, forever) but with the opposite
-            // doctrine: the committed remote head just proved healthy, so
-            // remote destruction is the WRONG remedy. Mount the same
-            // save-issue surface at scope 'local' - the destructive gate
-            // stays a local-envelope clear (self-heals to the healthy
-            // remote head) and the export affordance preserves what the
-            // accrual produced, instead of the retry-implying generic
-            // error card. (W7-COR-1)
+            // -> REJECTED -> generic fail, forever). The remote head is
+            // provably healthy (it just loaded), yet the accrued write can
+            // never land - on ANY device, since every boot re-derives the
+            // same refuse. Scope 'remote' is therefore honest here: the
+            // remote reset is the only real un-wedge (it deletes the
+            // character whose writes can never commit), and the refused
+            // payload is exported so the accrual is salvageable before
+            // that destructive last resort. A 'local' scope would lie
+            // twice: the envelope clear consumes nothing the commit uses,
+            // and the export affordance would hide. (W7-COR-1 / W8-COR-1)
             if (
               commit.status === 'unavailable' &&
               !commit.retryable &&
@@ -553,7 +556,13 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
               if (commit.code !== 'SAVE_INVALID' && commit.code !== 'SAVE_TOO_LARGE') {
                 authority.markFailed('recovery')
               }
-              saveIssue.report('corrupted', '', undefined, 'local')
+              let refusedPayload = ''
+              try {
+                refusedPayload = JSON.stringify(buildGameSave(player.$state as PlayerData, gameManager))
+              } catch {
+                // Export degrades to hidden - the surface still mounts.
+              }
+              saveIssue.report('corrupted', refusedPayload, undefined, 'remote')
               boot.fail()
               return { status: 'failed' }
             }

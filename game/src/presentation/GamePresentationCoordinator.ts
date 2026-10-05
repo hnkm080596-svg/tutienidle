@@ -531,15 +531,18 @@ export class GamePresentationCoordinator {
         // one. Bounded like every other curtain call - a reopen that never
         // settles would wedge inFlightPromise forever (whenIdle() and any
         // preempting 'error' request would park on it indefinitely).
-        const reopenSignal = new AbortController().signal
+        const reopenController = new AbortController()
         try {
           await this.withTimeout(
-            this.curtain.open(transitionId, reopenSignal),
+            this.curtain.open(transitionId, reopenController.signal),
             DEADLINES.curtainOpen,
             'Curtain reopen timed out',
-            reopenSignal,
+            reopenController.signal,
           )
         } catch {
+          // Abort the fresh signal on timeout too, so a hung reopen's
+          // abort-listeners are released instead of leaking forever.
+          reopenController.abort()
           // Best-effort: the transition already failed for its own reason
           // above; a reopen failure must not overwrite that with a different one.
         }
