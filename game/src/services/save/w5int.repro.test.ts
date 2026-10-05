@@ -197,11 +197,11 @@ describe('W5-INT repro - wave-4 onResume fix integration seams', () => {
     expect(localCall).toBeGreaterThan(-1)
     expect(remoteCall).toBeGreaterThan(-1)
     expect(tryStart).toBeGreaterThan(-1)
-    // Local-mode onResume still runs BEFORE the try opens - a throw
-    // rejects the `void`-floated attemptReconnect() promise (unhandled
-    // rejection). markReady now runs AFTER it under the generation
-    // guard, so the dead-session window is closed.
-    expect(localCall).toBeLessThan(tryStart)
+    // W6-AUT-2 fix: local-mode onResume now sits INSIDE its own
+    // try/catch - a throw is classified like 'unavailable' (stays
+    // 'reconnecting') until RESUME_FAILURE_BUDGET escalates to
+    // 'recovery'. markReady runs only after a successful call.
+    expect(localCall).toBeGreaterThan(tryStart)
     const localMarkReady = attempt.indexOf('this.markReady()', localCall)
     expect(localMarkReady).toBeGreaterThan(localCall)
     // Remote-mode onResume runs inside the try and BEFORE markReady -
@@ -209,5 +209,7 @@ describe('W5-INT repro - wave-4 onResume fix integration seams', () => {
     expect(remoteCall).toBeGreaterThan(tryStart)
     const remoteMarkReady = attempt.indexOf('this.markReady()', remoteCall)
     expect(remoteMarkReady).toBeGreaterThan(remoteCall)
+    // The failure budget exists in source: consecutive throws escalate.
+    expect(source.indexOf('RESUME_FAILURE_BUDGET')).toBeGreaterThan(-1)
   })
 })

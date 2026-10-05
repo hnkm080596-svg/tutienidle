@@ -428,4 +428,87 @@ describe('OnlineSessionController — local-only mode', () => {
     expect(pauses).toEqual([])
     expect(controller.canMutate()).toBe(true)
   })
+
+  it('a deterministically throwing local onResume escalates to recovery after the failure budget (W6-AUT-2)', async () => {
+    // Local mode has no retry cadence - each OS resume is one
+    // attemptReconnect. A throwing onResume used to escape as an
+    // unhandled rejection and wedge the session 'reconnecting' forever;
+    // the resume-failure budget now classifies a deterministic thrower
+    // terminally after 3 consecutive throws.
+    const { controller } = makeHarness({
+      reconnect: undefined,
+      onResume: () => {
+        throw new Error('broken restore')
+      },
+    })
+    controller.beginChecking()
+    controller.markReady()
+    expect(controller.authorityState).toBe('ready')
+
+    for (let i = 0; i < 3; i++) {
+      controller.suspend()
+      expect(controller.authorityState).toBe('reconnecting')
+      controller.resumeFromSuspend()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
+
+    expect(controller.authorityState).toBe('recovery')
+  })
+
+  it('a throwing remote onResume stays reconnecting until the budget, then lands recovery - no infinite RPC churn (W6-COR-4)', async () => {
+    let reconnectCalls = 0
+    const { controller, scheduler } = makeHarness({
+      reconnect: async () => {
+        reconnectCalls++
+        return { status: 'resumed', lineage: 'same' as const }
+      },
+      onResume: () => {
+        throw new Error('broken restore')
+      },
+    })
+    controller.beginChecking()
+    controller.markReady()
+    controller.pause('suspend')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(controller.authorityState).toBe('reconnecting')
+    expect(reconnectCalls).toBe(1)
+
+    // Ticks 2 and 3 complete the failure budget -> terminal 'recovery'.
+    scheduler.fire(RETRY)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(controller.authorityState).toBe('reconnecting')
+    scheduler.fire(RETRY)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(controller.authorityState).toBe('recovery')
+    expect(reconnectCalls).toBe(3)
+
+    // Terminal: the retry cadence is torn down - no more RPC churn.
+    scheduler.fire(RETRY)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(reconnectCalls).toBe(3)
+  })
+
+  it('a successful onResume resets the failure streak (W6-COR-4)', async () => {
+    let failures = 0
+    const { controller, scheduler } = makeHarness({
+      reconnect: async () => ({ status: 'resumed' as const, lineage: 'same' as const }),
+      onResume: () => {
+        failures++
+        if (failures <= 2) throw new Error('flaky')
+      },
+    })
+    controller.beginChecking()
+    controller.markReady()
+    controller.pause('suspend')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    scheduler.fire(RETRY)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    scheduler.fire(RETRY)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // Two throws then a success inside the same budget window: the
+    // session lands ready instead of escalating.
+    expect(controller.authorityState).toBe('ready')
+    expect(failures).toBe(3) // 2 throws + the successful third call
+  })
 })

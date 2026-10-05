@@ -371,6 +371,60 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
 
     lifecycle.stopAll()
   })
+
+  it.each([
+    ['SERVER_ERROR', 'unrecognized/authority REJECTED classes'],
+    ['NETWORK_UNAVAILABLE', 'a lost-ACK transport'],
+    ['SESSION_REVOKED', 'a revoked session'],
+    ['PROTOCOL_OUTDATED', 'a stale protocol'],
+  ] as const)(
+    'CHARACTER_UNINITIALIZED + permanent %s -> generic fail only, NO remote reset arm (W6-COR-2 fix)',
+    async (code) => {
+      const stubs = makeStubs()
+      stubs.player.save = vi.fn(async () => ({
+        status: 'unavailable' as const,
+        message: 'fail',
+        retryable: false,
+        code: code as import('../session/BackendStatus').BackendErrorCode,
+      }))
+      const lifecycle = useAppLifecycle({
+        clock: stubs.clock,
+        scheduleInterval: stubs.scheduleInterval,
+        clearHandle: stubs.clearHandle,
+        addEventListener: stubs.addEventListener,
+        removeEventListener: stubs.removeEventListener,
+        boot: stubs.boot,
+        coordinator: stubs.coordinator,
+        authority: stubs.authority,
+        player: stubs.player as never,
+        gameManager: stubs.gameManager,
+        tick: stubs.tick,
+        offlineSummary: stubs.offlineSummary,
+        saveIssue: stubs.saveIssue,
+        entryStage: stubs.entryStage as never,
+        restoreGameSession: stubs.restoreGameSession as never,
+        persistPlayer: stubs.persistPlayer,
+        onError: stubs.onError,
+        unsupportedSaveNotice: stubs.unsupportedSaveNotice,
+        hardReset: stubs.hardReset,
+      })
+
+      const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter: vi.fn() })
+
+      // %s never proved the remote row bad - a lost-ACK may even have
+      // COMMITTED on a healthy row. Arming remote destruction there was
+      // W6-COR-2/W6-AUT-1: only payload-reject codes (SAVE_INVALID /
+      // SAVE_TOO_LARGE) may arm the reset surface. Authority classification
+      // stays with observeSaveResult (W6-COR-3: 'revoked'/'update-required'
+      // must NOT be clobbered to 'recovery').
+      expect(outcome.status).toBe('failed')
+      expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+      expect(stubs.saveIssue.report).not.toHaveBeenCalled()
+      expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
+
+      lifecycle.stopAll()
+    },
+  )
 })
 
 // ---------------------------------------------------------------------------

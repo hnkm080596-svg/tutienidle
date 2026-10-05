@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -27,8 +27,9 @@ const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authorit
 // The remote reset is only legal when the offending bytes actually live
 // server-side. pending-conflict/pending-quarantined report the same
 // surface but scope 'local' - the remote row is the healthy head there,
-// so the reset must stay a local-envelope clear.
-const remoteResettable = remoteAuthoritative && saveIssue.scope === 'remote'
+// so the reset must stay a local-envelope clear. Computed so a re-report
+// while mounted can't leave the destructive gate on a stale scope.
+const remoteResettable = computed(() => remoteAuthoritative && saveIssue.scope === 'remote')
 
 // Thay window.confirm()/window.alert() native - modal xac nhan dong bo
 // hoa bang pending-action giong SettingsPanel.vue: mo ConfirmModal, hanh
@@ -59,10 +60,10 @@ function handleExport() {
 
 function handleReset() {
   requestConfirm(
-    remoteResettable
+    remoteResettable.value
       ? t('saveIncompatible.confirm.resetCloudTitle')
       : t('saveIncompatible.confirm.resetTitle'),
-    remoteResettable
+    remoteResettable.value
       ? t('saveIncompatible.confirm.resetCloudBody')
       : t('saveIncompatible.confirm.resetBody'),
     () => {
@@ -73,7 +74,7 @@ function handleReset() {
       // local cache reset make the reload land on character creation
       // instead of re-loading the corrupt row.
       void (async () => {
-        if (remoteResettable) {
+        if (remoteResettable.value) {
           const reset = await cloudSaveCoordinator.resetCharacter()
           if (reset.status === 'unavailable') {
             notification.push('error', reset.message || t('saveIncompatible.notify.deleteFailed'))
@@ -156,7 +157,10 @@ function handleImport(event: Event) {
       </p>
 
       <div class="save-incompatible__actions">
-        <GameButton variant="secondary" @click="handleExport">{{ t('saveIncompatible.actions.export') }}</GameButton>
+        <!-- No raw bytes means nothing to export (e.g. a rejected first
+             write where no save ever persisted) - hide rather than
+             download a 0-byte file labelled as the save. -->
+        <GameButton v-if="saveIssue.raw" variant="secondary" @click="handleExport">{{ t('saveIncompatible.actions.export') }}</GameButton>
 
         <label class="save-incompatible__import">
           <InkNineSlice chrome-id="button-standard" layer="surface" />

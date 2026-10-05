@@ -99,6 +99,9 @@ export interface OnlineSessionControllerDeps {
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000
 const DEFAULT_HEALTH_LEASE_MS = 40_000
 const DEFAULT_RECONNECT_RETRY_MS = 10_000
+/** Consecutive onResume throws before a deterministic resume fault
+ *  escalates from 'reconnecting' (retry-forever) to 'recovery'. */
+const RESUME_FAILURE_BUDGET = 3
 
 const TERMINAL_STATES: ReadonlySet<AuthorityState> = new Set([
   'conflict',
@@ -148,6 +151,7 @@ export class OnlineSessionController {
   private heartbeatHandle: number | undefined
   private retryHandle: number | undefined
   private reconnectInFlight = false
+  private resumeFailureStreak = 0
 
   private readonly heartbeatIntervalMs: number
   private readonly healthLeaseMs: number
@@ -453,8 +457,20 @@ export class OnlineSessionController {
       // markReady runs only after onResume finishes: a throwing resume
       // must not leave a 'ready' session whose restore never landed.
       // The generation guard also lets a rejecting resume (markFailed
-      // inside onResume) win - the failure stays authoritative.
-      this.deps.onResume?.('same')
+      // inside onResume) win - the failure stays authoritative. A throw
+      // is classified like 'unavailable': stay 'reconnecting' and let the
+      // retry cadence fire again, until the resume-failure budget
+      // escalates a deterministic thrower to 'recovery'.
+      try {
+        this.deps.onResume?.('same')
+      } catch {
+        this.resumeFailureStreak++
+        if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET) {
+          this.markFailed('recovery')
+        }
+        return
+      }
+      this.resumeFailureStreak = 0
       if (generation === this.generation) {
         this.markReady()
       }
@@ -469,11 +485,22 @@ export class OnlineSessionController {
       }
       if (outcome.status === 'resumed') {
         // Same ordering: resume restores state first; only then may the
-        // mutation gate open. A throw lands in the catch below and the
-        // session stays 'reconnecting' (retried), never fake-ready. A
-        // rejecting resume calls markFailed (which bumps generation), so
-        // only an untouched controller earns markReady.
-        this.deps.onResume?.(outcome.lineage, outcome.save, outcome.serverAuthority)
+        // mutation gate open. A throw is classified 'unavailable' -
+        // the session stays 'reconnecting' and retries - but a
+        // deterministic thrower hits the resume-failure budget and
+        // escalates to 'recovery' instead of churning the reconnect
+        // RPC forever. A rejecting resume calls markFailed (which bumps
+        // generation), so only an untouched controller earns markReady.
+        try {
+          this.deps.onResume?.(outcome.lineage, outcome.save, outcome.serverAuthority)
+        } catch {
+          this.resumeFailureStreak++
+          if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET) {
+            this.markFailed('recovery')
+          }
+          return
+        }
+        this.resumeFailureStreak = 0
         if (generation === this.generation) {
           this.markReady()
         }

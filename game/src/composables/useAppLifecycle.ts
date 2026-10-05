@@ -614,14 +614,21 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         if (firstSave.status !== 'ok') {
           authority.observeSaveResult(firstSave)
           recordSaveOutcome(firstSave, 'boot-first-save')
-          // A permanent first-write rejection wedges the account: every
-          // boot re-lands CHARACTER_UNINITIALIZED -> same reject, and the
-          // generic error surface has no reset affordance. Arm the
-          // recovery surface instead - remote-scope, since the
-          // authoritative side is what refuses the starter snapshot;
-          // the remote reset deletes the character row so the next boot
-          // restarts from creation.
-          if (firstSave.status === 'unavailable' && !firstSave.retryable) {
+          // A permanent first-write rejection wedges the account ONLY
+          // when the authoritative side refused the starter snapshot -
+          // every boot re-lands CHARACTER_UNINITIALIZED -> same reject.
+          // Gate on the payload-reject codes: SAVE_INVALID/SAVE_TOO_LARGE
+          // are the server's deterministic "this data can never commit";
+          // other !retryable classes (lost-ACK transport, session
+          // revoked, protocol outdated) never proved the remote row bad,
+          // so arming remote destruction there would offer the wrong
+          // remedy on a healthy account. observeSaveResult above already
+          // classified those into their own terminal states.
+          if (
+            firstSave.status === 'unavailable' &&
+            !firstSave.retryable &&
+            (firstSave.code === 'SAVE_INVALID' || firstSave.code === 'SAVE_TOO_LARGE')
+          ) {
             authority.markFailed('recovery')
             saveIssue.report('corrupted', '', undefined, 'remote')
             boot.fail()

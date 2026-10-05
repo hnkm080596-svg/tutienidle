@@ -205,3 +205,37 @@ All confirmed Medium-or-higher findings fixed and verified (type-check clean; sc
 ## Wave-5 disposition
 
 All confirmed Medium-or-higher findings fixed and verified: `npm run type-check` clean; scoped vitest 8 files / 137 assertions green (incl. flipped repro pins); live `resetCharacter.spec.ts` 2/2 on staging; migration 202610070001 applied to staging AND beta. Low/Nit excepted per the termination threshold. Wave-6 confirmation trio audits the delta; a clean wave = fixed point under Minh's ruling.
+
+# Wave 6 — adjudication (codex aggregate @1bd0763f + wave-6 fixes)
+
+## COR (0 Critical / 1 High / 2 Medium / 2 Low / 2 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W6-COR-1 `characters.user_id` carries `NOT NULL UNIQUE` (202608240001:44, never dropped) — at most ONE row per user, live OR tombstone. A tombstone-only account passed the wave-5 deleted_at-filtered existence checks then crashed on the constraint at INSERT (unique_violation -> opaque 4xx) — unrecoverable wedge for exactly the population the migration was written to recover | High | FIXED — `create_character` absorbs the tombstone (`delete ... where deleted_at is not null`) before INSERT, the same hard-delete rationale reset_character applies. New migration 202610070002, applied to staging AND beta. Live spec: tombstone -> CHARACTER_DELETED -> create_character -> CREATED, exactly one row remains |
+| W6-COR-2 (= AUT-1) `unavailable && !retryable` armed remote destruction for failure classes that never proved the remote row bad: NETWORK_UNAVAILABLE lost-ACK (may have COMMITTED on a healthy row), SERVER_ERROR incl. the 23505, SESSION_REVOKED, PROTOCOL_OUTDATED | Medium | FIXED — arm gated on payload-reject codes only: SAVE_INVALID/SAVE_TOO_LARGE are the server's deterministic "this data can never commit" verdicts. 4-code parametric pin added to w5aut.repro.test.ts |
+| W6-COR-3 unconditional `markFailed('recovery')` clobbered the terminal state `observeSaveResult` had already chosen (SESSION_REVOKED->'revoked', PROTOCOL_OUTDATED->'update-required') AND mounted remote-delete UX for an auth/protocol problem | Medium | FIXED — subsumed by the W6-COR-2 gate: markFailed('recovery') now only fires inside the payload-reject arm |
+| W6-COR-4 (= AUT-5) a throwing `onResume` now churned the full reconnect RPC every 10s forever (post-fix silent loop) | Low | FIXED — resume-failure budget (3 consecutive throws -> markFailed('recovery')); streak resets on a successful resume. Both local and remote branches. Pins added |
+| W6-COR-5 `whenIdle()` can stall forever if `curtain.open` in the error path never settles (no withTimeout) — plus bounded fail() could still dead-drop | Low | PARTIAL — fail() bound raised 3->10 + console.error breadcrumb on starvation. The curtain-open deadline is pre-existing (predates wave-5) and changes presentation semantics — EXCEPTED, recorded |
+| W6-COR-6 (= AUT-3) `remoteResettable` non-reactive const snapshot | Nit | FIXED — computed over saveIssue.scope |
+| W6-COR-7 residual races the delta neither caused nor fixed | Nit | EXCEPTED — pre-existing |
+
+## AUT (0 Critical / 1 High / 1 Medium / 3 Low / 2 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W6-AUT-1 (= COR-2) non-remote-wedge failure classes armed remote reset on healthy rows | High | FIXED — see COR-2 |
+| W6-AUT-2 local-mode `attemptReconnect`: throwing onResume escapes as unhandled rejection + permanent 'reconnecting' (no retry cadence in local mode) | Medium | FIXED — local branch wrapped in the same throw-classify path: catch -> streak++ -> 'reconnecting' until the resume budget escalates to 'recovery'. Pin added |
+| W6-AUT-3 (= COR-6) remoteResettable stale-scope gate | Low | FIXED — computed |
+| W6-AUT-4 firstSave arm reported `raw: ''` — Export downloaded a 0-byte artifact labelled as the save | Low | FIXED — Export button now `v-if="saveIssue.raw"`; a rejected first write has no bytes to export |
+| W6-AUT-5 (= COR-4) remote-branch throwing onResume = unbounded RPC churn | Low | FIXED — see COR-4 |
+| W6-AUT-6 `(deleted_at is null) desc` ordering inert under user_id UNIQUE | Nit | EXCEPTED — defensive ordering stays; after the COR-1 absorb a tombstone cannot coexist with a live row anyway |
+| W6-AUT-7 (= COR-5) fail() bounded-3 dead-drop | Nit | FIXED — see COR-5 |
+
+## INT
+
+Still in flight (session de0243ebcdea43f1b5196a1b45c859d2); findings fold into this section when the report lands — Medium+ fixes land before the wave-7 dispatch.
+
+## Wave-6 disposition
+
+All confirmed Medium-or-higher findings fixed: type-check clean; scoped vitest green (incl. 3 new resume-budget pins + 4-code parametric arm-gate pin); live spec W6-COR-1 3/3 on staging; migration 202610070002 applied to staging AND beta. Low/Nit excepted per threshold. Wave-7 confirmation trio audits the delta.
