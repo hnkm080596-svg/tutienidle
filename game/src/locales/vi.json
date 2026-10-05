@@ -1,63 +1,22 @@
 {
   "skillVfxLab": {
     "title": "Diễn võ · Hiệu ứng kỹ năng",
-    "intro": "Thử trực tiếp kỹ năng và đòn đánh quái vật mà không cần tạo nhân vật hay vào trận. Đòn quái chạy từ phía địch sang; aura Ngự Diễm và con dấu Pháp Thế bám theo nhân vật ở mọi mẫu.",
+    "intro": "Thử trực tiếp từng kỹ năng mà không cần tạo nhân vật hay vào trận. Hỏa Cầu đang thử vòng phép, projectile và aura Tam Muội Arcadia; gameplay chính chưa thay đổi.",
     "back": "Vào game →",
     "play": "Thi triển",
     "cancel": "Hủy hiệu ứng",
-    "note": "Chỉ dành cho phát triển · Kết quả giả lập, không gây sát thương và không ghi bản lưu. Đòn quái lấy đúng preset khai trên template quái vật; Ly Hỏa Thuật dùng sprite thật.",
+    "note": "Chỉ dành cho phát triển · Kết quả giả lập, không gây sát thương và không ghi bản lưu. Hỏa Cầu dùng sprite thật; các mẫu khác dùng Phaser Graphics.",
     "skill": "Kỹ năng",
     "outcome": "Kết quả giả lập",
     "speed": "Tốc độ xem",
-    "tamMuoiAura": "Aura Ngự Diễm",
-    "castTier": "Bậc Ly Hỏa · vòng",
+    "tamMuoiAura": "Aura Tam Muội",
     "phapTheStacks": "Pháp Thế · bản thử 0–5 tầng",
     "scrub": "Tua hiệu ứng (ms)",
-    "hoa_cau_comet": "Ly Hỏa Thuật · Pháp Tu",
-    "linh_bao_burst": "Linh Bạo · Phàm Nhân",
+    "hoa_cau_comet": "Hỏa Cầu Thuật · Pháp Tu",
     "ngu_kiem_flight": "Phi Kiếm · Ngự Kiếm",
     "slash": "Đòn chém",
     "earth_shockwave": "Địa chấn · AoE",
     "holy_radiance": "Hồi phục",
-    "groupSkill": "Kỹ năng",
-    "groupMonsters": "Đòn quái vật",
-    "groupPresets": "Mẫu hiệu ứng khác",
-    "arcane_impact": "Xung kích bí thuật",
-    "fire_burst": "Hỏa bộc",
-    "water_surge": "Thủy triều",
-    "metal_slash": "Kim chém",
-    "wood_spikes": "Mộc thứ",
-    "lightning_strike": "Lôi kích",
-    "wind_blade": "Phong nhận",
-    "shadow_burst": "Ám bộc",
-    "boss_ground_slam": "Địa chấn nộ",
-    "tu_luc": "Tụ lực",
-    "claw": "Trảo kích",
-    "bite": "Cắn",
-    "bite_multi": "Cắn (liên tiếp)",
-    "ram": "Húc / va chạm",
-    "ram_multi": "Húc (liên tiếp)",
-    "stomp": "Dẫm đạp",
-    "stomp_multi": "Dẫm đạp (liên tiếp)",
-    "slash_vertical": "Chém (dọc)",
-    "slash_horizontal": "Chém (ngang)",
-    "slash_multi": "Chém (liên tiếp)",
-    "mob_wild_wolf": "Dã Lang · Cắn",
-    "mob_giant_earthworm": "Trùn Đất · Địa Chấn",
-    "mob_flame_fox": "Viêm Hồ · Hỏa Bộc",
-    "mob_ferocious_flood_serpent": "Hung Giao Xà · Thủy Triều",
-    "mob_mortal_wild_boar": "Dã Trư · Húc",
-    "mob_mortal_savage_tiger": "Man Hổ · Trảo",
-    "mob_mortal_water_wolf": "Thủy Lang · Cắn",
-    "mob_mortal_ferocious_giant_crocodile": "Hung Cự Ngạc · Cắn",
-    "mob_mortal_ferocious_wild_boar": "Heo Rừng Vương · Dẫm đạp",
-    "mob_ferocious_bandit": "Sơn Tặc Vương · Chém liên tiếp",
-    "mob_bandit": "Sơn Tặc · Chém",
-    "mob_foundation_spirit_wolf": "Linh Lang · Cắn",
-    "mob_foundation_ferocious_spirit_wolf": "Linh Lang Vương · Cắn liên tiếp",
-    "mob_foundation_lava_hound": "Dực Hỏa Khuyển · Hỏa Bộc",
-    "mob_foundation_sand_scorpion": "Sa Hắc · Trảo",
-    "mob_foundation_mud_golem": "Nê Cự Nhân · Địa Chấn Nộ",
     "hit": "Trúng mục tiêu",
     "miss": "Đòn hụt",
     "intercept": "Bị chặn",
@@ -296,9 +255,7 @@
           "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         },
-        "upgradeGateHeader": "Nâng cấp bị chặn:",
-        "infoOnly": "Kỹ năng tiền thân — chỉ để xem; tự lên cấp theo số lần xuất chiêu, không thể lĩnh ngộ hay nâng cấp bằng Cảm Ngộ.",
-        "grantOnly": "Phần thưởng đột phá cảnh giới — chỉ để xem; tự động lên cấp khi đột phá, không thể lĩnh ngộ hay nâng cấp bằng Cảm Ngộ."
+        "upgradeGateHeader": "Nâng cấp bị chặn:"
       },
       "elementTabs": {
         "aria": "Chọn Hành Pháp Tu"
@@ -395,7 +352,6 @@
         },
         "elementPick": {
           "hint": "Chọn hành của Ngũ Hành Chân Quyết — quyết định vĩnh viễn.",
-          "lockedBeta": "Chưa mở trong beta",
           "back": "Quay lại"
         }
       },
@@ -523,6 +479,8 @@
     },
     "tranPhap": {
       "title": "Trận Pháp",
+      "choose": "Chọn Trận Pháp",
+      "roster": "Đồng Đội Chờ Bố Trận",
       "confirm": "Lưu Trận Pháp"
     },
     "bag": {
@@ -920,8 +878,7 @@
     },
     "hkNav": {
       "aria": "Điều hướng chức năng",
-      "body": "Đạo Thể",
-      "techniqueLocked": "Tâm Pháp mở khi vào Luyện Khí"
+      "body": "Đạo Thể"
     },
     "decompose": {
       "labels": {
@@ -1175,7 +1132,7 @@
     },
     "overlay": {
       "aiPanel": {
-        "title": "AI Chiến Đấu",
+        "title": "AI Mục Tiêu",
         "ariaGroup": "Chiến lược AI chọn mục tiêu",
         "strategies": {
           "nearest": "Gần nhất",
@@ -1190,9 +1147,7 @@
           "elite_first": "Boss → Elite → thường, sau đó xếp theo khoảng cách.",
           "lowest_hp": "Chọn mục tiêu đang còn máu thấp nhất.",
           "highest_hp": "Chọn mục tiêu đang còn máu cao nhất."
-        },
-        "close": "Đóng bảng AI",
-        "target": "Ưu tiên mục tiêu"
+        }
       },
       "countdown": {
         "go": "Xuất Trận!"
@@ -1211,11 +1166,7 @@
         "exit": "Thoát Trận"
       },
       "topBar": {
-        "enemiesSuffix": "quái",
-        "autoMode": "Tự Động",
-        "manualMode": "Thủ Công",
-        "pause": "Tạm dừng",
-        "resume": "Tiếp tục"
+        "enemiesSuffix": "quái"
       },
       "skillBar": {
         "roles": {
@@ -1234,13 +1185,6 @@
         "upcoming": "Lượt tới",
         "round": "Hiệp {current}",
         "roundWithLimit": "Hiệp {current}/{limit}"
-      },
-      "playerCard": {
-        "title": "Thông tin nhân vật",
-        "hp": "HP",
-        "mp": "MP",
-        "ward": "Khiên",
-        "effects": "Hiệu ứng"
       }
     }
   },
@@ -1252,6 +1196,9 @@
       "skip": "Bỏ qua"
     },
     "auth": {
+      "begin": "Bắt Đầu",
+      "createAccount": "Tạo Tài Khoản",
+      "returnOpening": "Quay lại",
       "eyebrow": "NHẤT NIỆM NHẬP ĐẠO",
       "lead": "Một đời phàm tục, một niệm cầu tiên.",
       "wordmark": "Tu Tiên IDLE",
@@ -1276,7 +1223,7 @@
         "register": "Lập đạo danh"
       },
       "guest": {
-        "button": "Chơi khách"
+        "button": "Chơi Thử"
       },
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
@@ -1331,8 +1278,8 @@
       "headerSubtitle": "MỘT BƯỚC TU TIÊN · VẠN DẶM SƠN HÀ",
       "vistaBanner": "ĐẠO TÂM BẤT NHIỄM",
       "starterSlot": {
-        "title": "Kỹ Năng Khởi Đầu",
-        "previewNote": "Bản duyệt UI · Lựa chọn kỹ năng chưa áp dụng vào game",
+        "title": "Chiêu mở đầu",
+        "previewNote": "Linh Bạo là chiêu mở đầu; các chiêu khác đang khóa trong phiên bản hiện tại",
         "pending": "Sẽ hiển thị sau khi chọn Thiên Phú"
       },
       "chooseOne": "Chọn một",
@@ -1678,9 +1625,6 @@
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
     "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
-    "bodyRefinementInvested": "Luyện Thể +{amount} — {tier} {progress}/{cap}",
-    "bodyRefinementTierComplete": "{tier} đã viên mãn!",
-    "bodyRefinementTierLocked": "{tier} cần Phàm Nhân tầng {level} — {stored} tinh hoa đang chờ trong túi",
     "autosaveFailed": "Không lưu được tiến trình — bộ nhớ trình duyệt đầy. Hãy hóa luyện bớt trang bị.",
     "resetDeleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ."
   },
@@ -1863,15 +1807,15 @@
       "export": "Tải Về Save (.json)",
       "import": "Nhập Save Khác",
       "reset": "Xoá & Bắt Đầu Mới",
-      "resetCloud": "Xoá Nhân Vật Server"
+      "resetCloud": "Tải Lại Từ Cloud"
     },
     "confirm": {
       "resetTitle": "Xoá & Bắt Đầu Mới",
       "resetBody": "Xoá save hiện tại và bắt đầu nhân vật mới? Nhớ Tải Về Save trước nếu chưa làm — hành động này không thể hoàn tác.",
       "importFailedTitle": "Nhập Save Thất Bại",
       "importFailedBody": "File save không hợp lệ.",
-      "resetCloudTitle": "Xoá Nhân Vật Trên Máy Chủ",
-      "resetCloudBody": "Xoá VĨNH VIỄN nhân vật và toàn bộ save trên máy chủ — hành động này không thể hoàn tác. Tài khoản sẽ bắt đầu lại từ trang tạo nhân vật."
+      "resetCloudTitle": "Tải Lại Từ Cloud",
+      "resetCloudBody": "Xoá bộ nhớ đệm local và tải lại từ máy chủ? Save trên máy chủ không bị xoá — nếu dữ liệu server vẫn lỗi, màn hình này sẽ hiện lại."
     },
     "notify": {
       "deleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.",
@@ -2003,13 +1947,13 @@
     "navigation": "Chức năng",
     "realm": "Cảnh Giới",
     "character": "Nhân Vật",
-    "inventory": "Kho Vật",
+    "inventory": "Túi",
     "skill": "Kỹ Năng",
-    "technique": "Tâm Pháp",
+    "technique": "Công Pháp",
     "body": "Luyện Thể",
-    "alchemy": "Đan Phòng",
+    "alchemy": "Luyện Đan",
     "equipment": "Trang Bị",
-    "exploration": "Thám Hiểm",
+    "exploration": "Bản Đồ",
     "quest": "Nhiệm Vụ",
     "settings": "Cài Đặt"
   },
@@ -2021,8 +1965,6 @@
     "talent": "Thiên Phú",
     "elements": "Ngũ Hành",
     "path": "Đạo lộ",
-    "lyHoaDao": "Ly Hỏa Chi Đạo",
-    "lyHoaVerse": "離宮真火焚天地 · 三昧神光煉古今",
     "power": "Chiến Lực",
     "details": "Chi Tiết",
     "combat": "Chiến Đấu",
@@ -2057,7 +1999,7 @@
     "viewing": "Đang xem mốc tầng {floor}"
   },
   "technique": {
-    "title": "Tâm Pháp",
+    "title": "Công Pháp",
     "navigation": "Chức năng",
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
     "active": "TÂM PHÁP ĐANG TU LUYỆN",
@@ -2082,7 +2024,6 @@
     "tree": "Linh Mạch Kỹ Năng",
     "levelLabel": "Cấp",
     "grants": "Kỹ năng",
-    "infoCasts": "Số lần xuất chiêu",
     "effects": "Hiệu Ứng",
     "conditions": "Điều Kiện",
     "noConditions": "Không có điều kiện bổ sung.",
@@ -2092,12 +2033,7 @@
       "locked": "Chưa Đủ Điều Kiện"
     },
     "actionDone": "{name} đã cập nhật.",
-    "actionFailed": "Không thể thực hiện — kiểm tra điều kiện và Cảm Ngộ.",
-    "constellation": {
-      "legendGlyph": "Nét chữ",
-      "legendPrereq": "Điều kiện",
-      "canvas": "Chòm sao {glyph}"
-    }
+    "actionFailed": "Không thể thực hiện — kiểm tra điều kiện và Cảm Ngộ."
   },
   "body": {
     "title": "Luyện Thể",
@@ -2120,7 +2056,7 @@
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay"
   },
   "exploration": {
-    "title": "Thám Hiểm",
+    "title": "Bản Đồ",
     "navigation": "Chức năng",
     "zones": "Địa Giới",
     "progress": "Tiến Độ Thám Hiểm",
@@ -2163,7 +2099,8 @@
       "accessories": "Phụ Kiện"
     },
     "workspace": {
-      "equip": "Trang Bị"
+      "equip": "Trang Bị",
+      "bag": "Túi Đồ"
     }
   },
   "inventoryPreview": {
@@ -2211,5 +2148,8 @@
     "feedback": "Gửi Phản Hồi",
     "build": "Phiên Bản",
     "buildValue": "Bản dựng hiện tại"
+  },
+  "pcUi": {
+    "back": "Trở Về"
   }
 }

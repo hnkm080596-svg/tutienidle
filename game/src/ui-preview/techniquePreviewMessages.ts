@@ -1,0 +1,27 @@
+export const techniquePreviewMessages = {
+  vi: {
+    tp: {
+      title: 'Tâm Pháp',
+      subtitle: 'Lấy tâm ngự kiếm, lấy khí dưỡng thần.',
+      name: 'Vạn Kiếm Quyết',
+      quality: 'Huyền Phẩm',
+      progress: 'Tiến Cảnh Tâm Pháp',
+      rank: 'Cảnh 1 · Tầng 7 / 18',
+      mastery: 'Độ thuần thục',
+      stats: 'Thuộc Tính',
+      power: 'Sức Mạnh',
+      defense: 'Phòng Ngự',
+      mana: 'Linh Lực',
+      advance: 'Nâng Cảnh',
+      current: 'Hiện tại:',
+      next: 'Kế tiếp:',
+      grade1: 'Phẩm 1',
+      grade2: 'Phẩm 2',
+      material: 'Linh Thạch',
+      entry: 'Sơ Nhập',
+      minor: 'Tiểu Thành',
+      major: 'Đại Thành',
+      complete: 'Viên Mãn',
+    },
+  },
+}

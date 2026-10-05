@@ -1,9 +1,14 @@
+import { installTienHiepUiAssets } from '@/presentation/assets/TienHiepUiAssets'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
 import './assets/theme.css'
 import './assets/huyen-kim.tokens.css'
 import './assets/system-theme.css'
+import './assets/tien-hiep-ui.css'
+import './assets/tien-hiep-secondary-ui.css'
+import './assets/tien-hiep-auxiliary.css'
+import './assets/pc-paper-production.css'
 import App from './App.vue'
 import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'
@@ -50,6 +55,8 @@ window.addEventListener('unhandledrejection', (ev) => {
     code: 'UNHANDLED_REJECTION',
   })
 })
+
+installTienHiepUiAssets(document.documentElement)
 
 const app = createApp(App)
 const pinia = createPinia()

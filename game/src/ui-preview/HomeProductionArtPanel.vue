@@ -1,0 +1,18 @@
+<script setup lang="ts">
+import {ref} from 'vue'
+import {useI18n} from 'vue-i18n'
+import ProductionSourceArtCard from './ProductionSourceArtCard.vue'
+import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
+import EquipmentEnergyTube from './equipment/EquipmentEnergyTube.vue'
+const {t}=useI18n()
+const levels=ref([1,1,1]),running=ref([true,true,true]),amount=ref(320),notice=ref('')
+const base='/assets/ui/tien-hiep-2026-10/'
+const icons=['/assets/materials/linh_moc.png','/assets/materials/linh_khoang.png','/assets/materials/herbs/tu_linh_thao/decade.png']
+const landscapes=[base+'source/world-vista-warm-v1.png',base+'realm/landscape-3-v1.png',base+'source/opening-vista-warm-v1.png']
+function upgrade(index:number){if((levels.value[index]??9)>=9)return;levels.value[index]=(levels.value[index]??1)+1;notice.value=t('pp.upgradeNotice')}
+function harvest(){amount.value=0;notice.value=t('pp.harvestNotice')}
+</script>
+<template><section class="home-production-art" data-testid="home-production-panel"><header><h1>{{t('pp.title')}}</h1></header><div class="production-heading"><img :src="base+'icons/navigation-production-v2.png'" alt=""><div><h2>{{t('pp.hall')}}</h2><span>{{t('pp.level',{level:1})}}</span></div><p>{{t('pp.intro')}}</p></div><article class="production-vein"><img :src="base+'icons/navigation-exploration-v2.png'" alt=""><div><h3>{{t('pp.vein')}}</h3><EquipmentEnergyTube :fill="amount/1270*100" color="#e1b354"/><strong>{{t('pp.stored',{amount})}}</strong><small>{{t('pp.rate')}}</small></div><EquipmentArtButton gold @click="harvest">{{t('pp.harvest')}}</EquipmentArtButton></article><div class="production-sources"><ProductionSourceArtCard v-for="(icon,index) in icons" :key="icon" :index="index" :icon="icon" :landscape="landscapes[index]??''" :level="levels[index]??1" :running="running[index]??false" @toggle="running[index]=!running[index]" @upgrade="upgrade(index)"/></div><small class="production-notice" role="status">{{notice}}</small></section></template>
+<style scoped>
+.home-production-art{position:absolute;left:24%;top:12.5%;width:74%;height:75%;z-index:20;box-sizing:border-box;padding:12px 24px 20px;background:#f2e4c8 url('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png') center/cover;border:3px double #b28a43;color:#30271b;font-family:var(--pc-font-body);display:flex;flex-direction:column;gap:10px;}header{position:relative;inset:auto;flex:none;height:44px;border-bottom:1px solid #b28a4370;}h1{margin:0;font-size:35px;}.production-heading{display:flex;align-items:center;gap:12px;height:55px;flex:none;}.production-heading img{width:50px;height:50px;object-fit:contain;}.production-heading h2{margin:0;font-size:24px;}.production-heading span{font-size:13px;}.production-heading p{margin:0 0 0 20px;max-width:470px;font-size:14px;font-style:italic;line-height:1.5;}.production-vein{display:flex;align-items:center;gap:14px;flex:none;height:90px;border:3px double #b58a42;background:#f7ecd480;padding:7px 12px;box-sizing:border-box;}.production-vein>img{width:65px;height:65px;object-fit:contain;}.production-vein>div{flex:1;display:grid;gap:5px;}.production-vein h3{margin:0;font-size:18px;}.production-vein strong{font-size:16px;}.production-vein small{font-size:12px;}.production-vein>button{width:150px;height:42px;font-size:17px;}.production-sources{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;min-height:0;flex:1;}.production-notice{height:12px;flex:none;font-size:11px;text-align:center;}.production-sources :deep(.source-landscape){height:85px;}.production-sources :deep(.source-body){gap:5px;padding:8px 10px;}.production-sources :deep(.source-body p){min-height:34px;font-size:12px;}.production-sources :deep(.source-title h2){font-size:17px;}
+</style>
