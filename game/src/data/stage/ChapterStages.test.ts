@@ -122,6 +122,35 @@ describe('defineChapterStages - floor rules (spec v3 D9)', () => {
     ).toThrow(/exactly 10 floors/)
   })
 
+  it('stamps floorStatScales[i] onto stage.statScale (default 1)', () => {
+    const scales = [1.0, 1.0, 1.3, 1.55, 1.85, 2.15, 2.45, 2.8, 3.2, 3.6]
+    const scaled = defineChapterStages({ ...FIXTURE, floorStatScales: scales })
+    for (const stage of scaled) {
+      expect(stage.statScale).toBe(scales[stage.floor! - 1])
+    }
+    for (const stage of built) {
+      expect(stage.statScale).toBe(1)
+    }
+  })
+
+  it('rejects floorStatScales that is not 10 positive finite entries', () => {
+    expect(() =>
+      defineChapterStages({ ...FIXTURE, floorStatScales: [1, 2, 3] }),
+    ).toThrow(/exactly 10 entries/)
+    expect(() =>
+      defineChapterStages({
+        ...FIXTURE,
+        floorStatScales: [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+      }),
+    ).toThrow(/positive finite/)
+    expect(() =>
+      defineChapterStages({
+        ...FIXTURE,
+        floorStatScales: [1, 1, 1, 1, 1, 1, 1, 1, 1, Number.NaN],
+      }),
+    ).toThrow(/positive finite/)
+  })
+
   it('rejects a roster without 3 normals + boss', () => {
     expect(() =>
       defineChapterStages({
