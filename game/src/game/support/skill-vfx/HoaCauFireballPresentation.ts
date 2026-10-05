@@ -154,7 +154,12 @@ export class HoaCauFireballPresentation {
     }
     if (sample.chargeFrame !== null) {
       const frame = this.surface.reducedMotion ? Math.max(27, Math.min(44, sample.chargeFrame)) : sample.chargeFrame
-      this.show(HOA_CAU_VFX_ASSETS.charge, frame, active.origin, 1.75, sourceDepth + 0.03)
+      // Empowered casts gather the azure charge (offline hue-shift, no
+      // runtime tint); normal casts keep the orange ball.
+      const chargeAsset = active.cast.empowered
+        ? HOA_CAU_VFX_ASSETS.chargeEmpowered
+        : HOA_CAU_VFX_ASSETS.charge
+      this.show(chargeAsset, frame, active.origin, 1.75, sourceDepth + 0.03)
     }
     if (sample.projectileProgress !== null && !active.resolved) {
       const p = sample.projectileProgress

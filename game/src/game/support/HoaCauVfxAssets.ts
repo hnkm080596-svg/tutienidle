@@ -9,6 +9,15 @@ export const HOA_CAU_VFX_ASSETS = {
     firstFrame: 0,
     lastFrame: 50,
   },
+  /** Same converging charge hue-shifted to azure offline - the empowered
+      (and ultimate) cast gathers a blue ball to match its azure phoenix. */
+  chargeEmpowered: {
+    key: 'hoa-cau-charge-azure',
+    textureUrl: '/assets/vfx/hoa-cau-thuat/charge-azure/hoa-tu-charge-azure.png',
+    atlasUrl: '/assets/vfx/hoa-cau-thuat/charge-azure/hoa-tu-charge-azure.json',
+    firstFrame: 0,
+    lastFrame: 50,
+  },
   impact: {
     key: 'hoa-cau-fire-20',
     textureUrl: '/assets/vfx/spritesheets/火 (20).png',
