@@ -161,10 +161,17 @@ export function createGamePresentation(deps: GamePresentationDeps): GamePresenta
       reservedSessionId = null
     }
 
-    if (result.status === 'rejected' && accepted) {
+    if (
+      (result.status === 'rejected' || (result.status === 'failed' && result.aborted === true)) &&
+      accepted
+    ) {
       // Unreachable while canEnter and request agree, but an accepted domain
       // command with no transition is the one outcome that must never survive
-      // silently - the session would run held and unrendered forever.
+      // silently - the session would run held and unrendered forever. The
+      // aborted-'failed' case is reachable: an error-route preemption aborts
+      // the transition AFTER behindCurtain delivered, orphaning the admitted
+      // session (W7-COR-3). A GENUINE 'failed' keeps the session: the error
+      // surface's retry() re-mounts it.
       forgetSession(accepted)
       options.compensate?.()
     }

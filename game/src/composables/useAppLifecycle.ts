@@ -535,6 +535,28 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
           if (commit.status !== 'ok') {
             recordSaveOutcome(commit, 'boot-commit')
+            // A permanent data-class refuse on a LIVE, loadable character
+            // wedges identically to the firstSave arm (load 'ok' -> commit
+            // -> REJECTED -> generic fail, forever) but with the opposite
+            // doctrine: the committed remote head just proved healthy, so
+            // remote destruction is the WRONG remedy. Mount the same
+            // save-issue surface at scope 'local' - the destructive gate
+            // stays a local-envelope clear (self-heals to the healthy
+            // remote head) and the export affordance preserves what the
+            // accrual produced, instead of the retry-implying generic
+            // error card. (W7-COR-1)
+            if (
+              commit.status === 'unavailable' &&
+              !commit.retryable &&
+              !(commit.code && NON_DATA_WEDGE_CODES.has(commit.code))
+            ) {
+              if (commit.code !== 'SAVE_INVALID' && commit.code !== 'SAVE_TOO_LARGE') {
+                authority.markFailed('recovery')
+              }
+              saveIssue.report('corrupted', '', undefined, 'local')
+              boot.fail()
+              return { status: 'failed' }
+            }
             onError(
               commit.status === 'conflict'
                 ? i18n.global.t('save.conflict')
@@ -646,7 +668,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
             !firstSave.retryable &&
             !(firstSave.code && NON_DATA_WEDGE_CODES.has(firstSave.code))
           ) {
-            authority.markFailed('recovery')
+            // observeSaveResult already entered 'recovery' for the two
+            // RPC payload-refuse codes - only classes it mapped elsewhere
+            // (e.g. SERVER_ERROR -> 'reconnecting') need the explicit
+            // terminal; re-entering the same terminal would double-fire
+            // the pause callback and bump generation a second time.
+            if (firstSave.code !== 'SAVE_INVALID' && firstSave.code !== 'SAVE_TOO_LARGE') {
+              authority.markFailed('recovery')
+            }
             saveIssue.report('corrupted', '', undefined, 'remote')
             boot.fail()
             return { status: 'failed' }

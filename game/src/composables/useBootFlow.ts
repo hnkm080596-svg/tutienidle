@@ -96,17 +96,18 @@ export function useBootFlow(
     },
     fail: () => {
       // A conflicting in-flight transition rejects and swallows this
-      // request (fire-and-forget callers cannot observe it). Retry once
-      // the transition settles so the terminal error surface always
-      // mounts; the bound covers sustained back-to-back conflicts, and
-      // the breadcrumb keeps a dead-drop observable instead of silent.
+      // request (fire-and-forget callers cannot observe it); a 'failed'
+      // error transition leaves the caller on the generic card, so both
+      // retry. The bound covers sustained conflicts and wedged error
+      // mounts; the breadcrumb keeps a dead-drop observable - its only
+      // reachable producer besides starvation is a disposed coordinator.
       void (async () => {
         for (let attempt = 0; attempt < 10; attempt++) {
           const result = await coordinator.request({ target: 'error' })
-          if (result.status !== 'rejected') return
+          if (result.status !== 'rejected' && result.status !== 'failed') return
           await coordinator.whenIdle()
         }
-        console.error('[boot] error route request starved - coordinator stayed busy through the retry budget')
+        console.error('[boot] error route never mounted - coordinator rejected, failed, or stayed busy through the retry budget')
       })()
     },
   }

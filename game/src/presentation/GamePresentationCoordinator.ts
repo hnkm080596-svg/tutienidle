@@ -215,9 +215,12 @@ export class GamePresentationCoordinator {
       // forever because a competitor chained on the previous settle
       // re-takes the slot inside the one-microtask gap before any retry
       // continuation runs. Abort the in-flight instead of rejecting -
-      // our .then continuation was registered BEFORE the competitor's
-      // settle continuation, so the retried request takes the cleared
-      // slot first; the aborted transition lands 'failed'.
+      // the aborted transition lands 'failed' with aborted:true so its
+      // caller compensates accepted domain work (W7-COR-3). A settle-
+      // chained competitor can still beat the recursion to the next
+      // slot (W7-INT-4) - convergence holds because the recursion then
+      // preempts THAT landing too; preemption wins by aborting whatever
+      // lands, not by landing first.
       if (request.target === 'error') {
         this.currentAbortController?.abort()
         await this.inFlightPromise.then(() => undefined, () => undefined)
@@ -483,6 +486,11 @@ export class GamePresentationCoordinator {
       return { status: 'entered', transitionId }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err)
+      // An externally-aborted signal (error-route preemption, dispose)
+      // distinguishes this failure from a genuine step failure: the
+      // caller's accepted domain work is orphaned with no retry intended
+      // and must be compensated, not kept for the error surface's retry.
+      const aborted = controller.signal.aborted
 
       // A deadline fires without aborting anything by itself. Abort here so
       // every scoped listener/waiter this transition registered (asset waiters,
@@ -523,11 +531,13 @@ export class GamePresentationCoordinator {
         // one. Bounded like every other curtain call - a reopen that never
         // settles would wedge inFlightPromise forever (whenIdle() and any
         // preempting 'error' request would park on it indefinitely).
+        const reopenSignal = new AbortController().signal
         try {
           await this.withTimeout(
-            this.curtain.open(transitionId, new AbortController().signal),
+            this.curtain.open(transitionId, reopenSignal),
             DEADLINES.curtainOpen,
             'Curtain reopen timed out',
+            reopenSignal,
           )
         } catch {
           // Best-effort: the transition already failed for its own reason
@@ -548,7 +558,7 @@ export class GamePresentationCoordinator {
       }
       this.notify()
 
-      return { status: 'failed', transitionId }
+      return { status: 'failed', transitionId, aborted: aborted || undefined }
     }
   }
 

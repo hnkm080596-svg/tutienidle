@@ -50,8 +50,9 @@ function makeHarness(overrides: Partial<ConstructorParameters<typeof OnlineSessi
     scheduleInterval: scheduler.scheduleInterval,
     clearHandle: scheduler.clearHandle,
     onPause: (reason) => pauses.push(reason),
-    onResume: (lineage, save, serverAuthority) =>
-      resumes.push({ lineage, save, serverNowMs: serverAuthority?.serverNowMs }),
+    onResume: (lineage, save, serverAuthority) => {
+      resumes.push({ lineage, save, serverNowMs: serverAuthority?.serverNowMs })
+    },
     onStateChange: (state) => states.push(state),
     ...overrides,
   })

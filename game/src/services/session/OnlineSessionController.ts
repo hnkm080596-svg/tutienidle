@@ -89,7 +89,10 @@ export interface OnlineSessionControllerDeps {
     lineage: 'same' | 'replaced',
     save?: GameSave,
     serverAuthority?: { cutoffMs?: number; serverNowMs: number },
-  ) => void
+  // Awaited: an async implementation's rejection is classified by the
+  // same catch path a synchronous throw takes, and markReady waits for
+  // the restore to actually land (W7-COR-4).
+  ) => void | Promise<void>
   onStateChange?: (state: AuthorityState) => void
   heartbeatIntervalMs?: number
   healthLeaseMs?: number
@@ -468,7 +471,7 @@ export class OnlineSessionController {
       // 'recovery' - gated on the same generation so a deliberate exit
       // parked inside onResume is not dragged back out.
       try {
-        this.deps.onResume?.('same')
+        await this.deps.onResume?.('same')
         this.resumeFailureStreak = 0
         if (generation === this.generation) {
           this.markReady()
@@ -498,7 +501,7 @@ export class OnlineSessionController {
         // applies. A rejecting resume calls markFailed (which bumps
         // generation), so only an untouched controller earns markReady.
         try {
-          this.deps.onResume?.(outcome.lineage, outcome.save, outcome.serverAuthority)
+          await this.deps.onResume?.(outcome.lineage, outcome.save, outcome.serverAuthority)
           this.resumeFailureStreak = 0
           if (generation === this.generation) {
             this.markReady()

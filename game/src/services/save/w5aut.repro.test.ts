@@ -248,11 +248,11 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
         capability: 'remote-authoritative' as const,
       } as unknown as import('../cloudSave/CloudSaveCoordinator').CloudSaveCoordinator,
       player: {
-        save: vi.fn(async () => ({
-          status: 'unavailable' as const,
+        save: vi.fn(async (): Promise<import('../cloudSave/CloudSaveService').CloudSaveWriteResult> => ({
+          status: 'unavailable',
           message: 'Save bị máy chủ từ chối — dữ liệu không hợp lệ.',
           retryable: false,
-          code: 'SAVE_INVALID' as const,
+          code: 'SAVE_INVALID',
         })),
         restoreFromSave: vi.fn(),
         $state: {},
@@ -319,10 +319,12 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
     // wedges the account (every boot re-lands CHARACTER_UNINITIALIZED ->
     // same reject, generic error surface has no reset). The fix arms the
     // recovery surface: remote-scoped report (the authoritative side
-    // refuses the starter snapshot) + markFailed('recovery') + boot.fail
-    // -> SaveIncompatibleScreen's remote reset deletes the wedge.
+    // refuses the starter snapshot) + boot.fail -> SaveIncompatibleScreen's
+    // remote reset deletes the wedge. markFailed('recovery') is skipped
+    // for this code - observeSaveResult already entered that terminal
+    // (W7-INT-8: a second identical entry double-fires onPause).
     expect(outcome.status).toBe('failed')
-    expect(stubs.authority.markFailed).toHaveBeenCalledWith('recovery')
+    expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
     expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', '', undefined, 'remote')
 
@@ -373,21 +375,21 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
   })
 
   it.each([
-    ['NETWORK_UNAVAILABLE', 'a lost-ACK transport'],
-    ['SESSION_REVOKED', 'a revoked session'],
-    ['PROTOCOL_OUTDATED', 'a stale protocol'],
-    ['AUTH_EXPIRED', 'an expired credential'],
-    ['MAINTENANCE', 'a maintenance window'],
-    ['CONFIGURATION_ERROR', 'a client config fault'],
+    'NETWORK_UNAVAILABLE', // a lost-ACK transport
+    'SESSION_REVOKED', // a revoked session
+    'PROTOCOL_OUTDATED', // a stale protocol
+    'AUTH_EXPIRED', // an expired credential
+    'MAINTENANCE', // a maintenance window
+    'CONFIGURATION_ERROR', // a client config fault
   ] as const)(
     'CHARACTER_UNINITIALIZED + permanent %s -> generic fail only, NO remote reset arm (wrong-remedy classes, W6-COR-2 + W7-AUT-1)',
     async (code) => {
       const stubs = makeStubs()
-      stubs.player.save = vi.fn(async () => ({
-        status: 'unavailable' as const,
+      stubs.player.save = vi.fn(async (): Promise<import('../cloudSave/CloudSaveService').CloudSaveWriteResult> => ({
+        status: 'unavailable',
         message: 'fail',
         retryable: false,
-        code: code as import('../session/BackendStatus').BackendErrorCode,
+        code,
       }))
       const lifecycle = useAppLifecycle({
         clock: stubs.clock,
@@ -429,19 +431,19 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
   )
 
   it.each([
-    ['SAVE_INVALID', 'an RPC payload refuse'],
-    ['SAVE_TOO_LARGE', 'an RPC size refuse'],
-    ['SERVER_ERROR', 'an HTTP-layer/authority refuse'],
-    [undefined, 'an uncoded refuse (fail-safe)'],
+    'SAVE_INVALID', // an RPC payload refuse
+    'SAVE_TOO_LARGE', // an RPC size refuse
+    'SERVER_ERROR', // an HTTP-layer/authority refuse
+    undefined, // an uncoded refuse (fail-safe arm)
   ] as const)(
     'CHARACTER_UNINITIALIZED + permanent %s -> recovery + remote arm (data-wedge classes, W7-AUT-1 blacklist)',
     async (code) => {
       const stubs = makeStubs()
-      stubs.player.save = vi.fn(async () => ({
-        status: 'unavailable' as const,
+      stubs.player.save = vi.fn(async (): Promise<import('../cloudSave/CloudSaveService').CloudSaveWriteResult> => ({
+        status: 'unavailable',
         message: 'fail',
         retryable: false,
-        code: code as import('../session/BackendStatus').BackendErrorCode | undefined,
+        code,
       }))
       const lifecycle = useAppLifecycle({
         clock: stubs.clock,
@@ -470,8 +472,16 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
       // Every permanent data-class refuse wedges the account; on a first
       // write the reset is vacuous (no saves exist), so arming is the
       // fail-safe direction for refuse classes a whitelist would miss.
+      // markFailed('recovery') fires only for codes observeSaveResult did
+      // not already land in 'recovery' (SERVER_ERROR -> 'reconnecting',
+      // uncoded -> default) - the RPC payload-refuse pair maps there
+      // itself (W7-INT-8).
       expect(outcome.status).toBe('failed')
-      expect(stubs.authority.markFailed).toHaveBeenCalledWith('recovery')
+      if (code === 'SAVE_INVALID' || code === 'SAVE_TOO_LARGE') {
+        expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
+      } else {
+        expect(stubs.authority.markFailed).toHaveBeenCalledWith('recovery')
+      }
       expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', '', undefined, 'remote')
 
       lifecycle.stopAll()
