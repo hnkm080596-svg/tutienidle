@@ -82,6 +82,58 @@ export const ITEM_QUALITY_AFFIX_SLOTS: Record<ItemQuality, ItemQualityAffixSlots
 // (item-grade-quality-rework Task 22).
 export const ITEM_QUALITY_EXALTED_AFFIX_CHANCE = 0.15
 
+// Gear-pace retune (2026-10-05, balance doc docs/balance/2026-10-05-gear-pace-curve.md):
+// the quality a drop may ROLL is capped by the stage floor it dropped on.
+// Bands mirror chapter pacing (10 floors per chapter): low floors only hand
+// out low qualities so a slot is never finished by one early lucky roll, and
+// each band's gear has to be farmed before the next floor wall. The cap only
+// binds the BASE roll - applyQualityBonusSteps() still nudges the rolled
+// quality upward afterwards (stacked kills keep their upgrade rule), so a
+// boss+elite kill remains the rare venue that can reach one band higher.
+export interface ItemQualityFloorBand {
+  maxFloor: number
+  ceiling: ItemQuality
+}
+
+export const ITEM_QUALITY_FLOOR_CEILING: readonly ItemQualityFloorBand[] = [
+  { maxFloor: 3, ceiling: 'huyen' },
+  { maxFloor: 6, ceiling: 'dia' },
+  { maxFloor: 9, ceiling: 'thien' },
+  { maxFloor: Number.POSITIVE_INFINITY, ceiling: 'tien' },
+]
+
+/**
+ * Max quality a stage-floor drop may roll. `undefined` floor means the drop
+ * carried no stage context (debug/lab grants, auto-farm shims): those keep
+ * the legacy flat ladder and are deliberately not re-gated here.
+ */
+export function itemQualityCeilingForFloor(floor: number | undefined): ItemQuality | undefined {
+  if (floor === undefined) {
+    return undefined
+  }
+
+  for (const band of ITEM_QUALITY_FLOOR_CEILING) {
+    if (floor <= band.maxFloor) {
+      return band.ceiling
+    }
+  }
+
+  return 'tien'
+}
+
+// Weight per affix tier on the initial roll - hunting high-tier affixes is
+// meant to stay a farm loop inside a quality band, so low tiers draw far
+// more often than high ones (was: uniform among eligible tiers). Only the
+// initial roll consumes this table; wash keeps its own per-quality weights
+// (RefinementBalance.ts) and exalted affixes roll at a fixed tier.
+export const AFFIX_TIER_ROLL_WEIGHT: Readonly<Record<number, number>> = {
+  1: 10,
+  2: 6,
+  3: 3,
+  4: 2,
+  5: 1,
+}
+
 /**
  * Applied AFTER rollItemQuality(), never instead of it (spec E5).
  *

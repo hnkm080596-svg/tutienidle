@@ -246,8 +246,9 @@ export class EquipmentSystem {
     zoneId?: string,
     qualityBonusSteps = 0,
     rng?: () => number,
+    maxQuality?: ItemQuality,
   ): EquipmentInstance {
-    return createEquipmentInstance(template, player, affixRegistry, zoneId, qualityBonusSteps, rng)
+    return createEquipmentInstance(template, player, affixRegistry, zoneId, qualityBonusSteps, rng, maxQuality)
   }
 
   /**

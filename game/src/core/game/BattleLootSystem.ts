@@ -29,6 +29,7 @@ import {
 } from '../reward/BattleRewardSummary'
 import { composeItemGradeNameSegments, type ItemGrade } from '../item/ItemGrade'
 import type { ItemQuality } from '../item/ItemQuality'
+import { itemQualityCeilingForFloor } from '../equipment/ItemQualityBalance'
 import { composeEquipmentDisplayName } from '../equipment/EquipmentNaming'
 import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
@@ -363,6 +364,12 @@ export class BattleLootSystem {
             drops.items,
             drops.qualityBonusSteps,
             battleEnemy.entity.id,
+            // Canonical floor read (ChapterStages: requiredRealmLevel is
+            // the normalized floor; GameManagerStageOps reads it the same
+            // way), then stageDropTableFor's own `?? 1` so ceiling and
+            // table always resolve the same floor. A stage-less kill
+            // keeps floor undefined -> uncapped.
+            stage ? (stage.floor ?? stage.requiredRealmLevel ?? 1) : undefined,
           )
 
           this.grantArtifactExperience(enemy)
@@ -502,6 +509,7 @@ export class BattleLootSystem {
     items: ResolvedDropItem[],
     qualityBonusSteps: number,
     sourceId: string,
+    floor?: number,
   ) {
     const overflowParts: string[] = []
 
@@ -511,6 +519,11 @@ export class BattleLootSystem {
     const zoneId = activeStageId
       ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
       : undefined
+
+    // Gear-pace retune (2026-10-05): the floor the drop table already
+    // resolved on also caps the quality any equipment roll may reach
+    // (band table in ItemQualityBalance). No stage context -> no cap.
+    const maxQuality = itemQualityCeilingForFloor(floor)
 
     const grantEquipment = (templateId: string | undefined) => {
       if (!this.player) {
@@ -538,6 +551,7 @@ export class BattleLootSystem {
         zoneId,
         qualityBonusSteps,
         this.lootRng,
+        maxQuality,
       )
 
       this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
