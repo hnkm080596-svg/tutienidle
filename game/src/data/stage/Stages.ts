@@ -50,6 +50,13 @@ const QI_CHAPTER: ChapterConfig = {
     normals: ['bandit', 'bandit', 'bandit'],
     boss: 'ferocious_bandit',
   },
+  // Stat-wall ladder (statScale per floor): floor 1 already beats a
+  // bare mortal-entrant stat line, so the ladder starts at the authored
+  // template strength; each step is a ~15-20% hp/might/defense climb so
+  // every deeper floor asks for another gear/upgrade step, ending at
+  // x2.85 on the bandit king's floor (the act gate, on top of the x7/x2
+  // boss multipliers).
+  floorStatScales: [1.0, 1.2, 1.4, 1.6, 1.85, 2.05, 2.25, 2.45, 2.5, 2.85],
 }
 
 const MORTAL_CHAPTER: ChapterConfig = {
@@ -84,6 +91,11 @@ const MORTAL_CHAPTER: ChapterConfig = {
     normals: ['mortal_wild_boar', 'mortal_wild_boar', 'mortal_wild_boar'],
     boss: 'mortal_ferocious_wild_boar',
   },
+  // Stat-wall ladder: floors 1-2 stay the gentle tutorial handoff
+  // (scale 1.0 - a bare pham nhan may still clear them); from floor 3
+  // every floor is a real stat check demanding more gear/upgrades, up
+  // to x3.6 on the boar king's floor.
+  floorStatScales: [1.0, 1.0, 1.3, 1.55, 1.85, 2.15, 2.45, 2.8, 3.2, 3.6],
 }
 
 const FOUNDATION_CHAPTER: ChapterConfig = {
@@ -118,6 +130,10 @@ const FOUNDATION_CHAPTER: ChapterConfig = {
     normals: ['foundation_spirit_wolf', 'foundation_spirit_wolf', 'foundation_spirit_wolf'],
     boss: 'foundation_ferocious_spirit_wolf',
   },
+  // Stat-wall ladder: entry already walls a fresh truc co, then each
+  // floor demands a deeper that_pham + enhance investment, ending at
+  // x1.95 under the spirit wolf king's x7/x2 boss multipliers.
+  floorStatScales: [1.0, 1.05, 1.05, 1.1, 1.15, 1.25, 1.4, 1.55, 1.7, 1.95],
 }
 
 export const STAGES: Stage[] = [

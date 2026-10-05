@@ -2,6 +2,7 @@ import type { EventBus } from '../events/EventBus'
 import { createBossVariant } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
 import { applyEnemyTags } from '../enemy/EnemyTag'
+import { applyFloorStatScale } from '../enemy/EnemyStatInput'
 import { ENEMY_TAGS } from '../../data/enemy/EnemyTags'
 import { rollChance } from '../reward/DropRoll'
 import type { PlayerData } from '../player/Player'
@@ -246,6 +247,25 @@ export class StageWaveSystem {
     const applyStageRealm = (enemy: Enemy): Enemy =>
       stage.requiredRealmId ? { ...enemy, realmId: stage.requiredRealmId } : enemy
 
+    // Stat-wall ladder (Stage.statScale): one wrapper for every spawn
+    // path - normals, tinh_anh elites, the floor-10 boss and any
+    // substituted identity all spawn as the floor's scaled specimens.
+    // Produces fresh stats/currentHp objects so shared templates in the
+    // registry are never mutated.
+    const applyFloorScale = (enemy: Enemy): Enemy => {
+      const scale = stage.statScale ?? 1
+      if (scale === 1) {
+        return applyStageRealm(enemy)
+      }
+      const stats = applyFloorStatScale(enemy.stats, scale)
+      return applyStageRealm({
+        ...enemy,
+        stats,
+        currentHp: stats.maxHp,
+        maxHp: stats.maxHp,
+      })
+    }
+
     // DESIGN: boss chi xuat hien o tang 10 (tang cuoi chuong). bossEnemyId tren
     // cac stage 1-9 hien la metadata/reserved data, khong phai lenh spawn boss.
     // Khong bo guard nay chi vi stage 1-9 cung khai bossEnemyId.
@@ -262,10 +282,10 @@ export class StageWaveSystem {
         // ~18 spawns, idle never rolls (allowTags: false).
         const bossEntry = stage.enemyPool.find(poolEntry => poolEntry.enemyId === stage.bossEnemyId)
         if (options?.allowTags !== false && bossEntry?.eliteChance && rollChance(FINAL_BOSS_ELITE_STACK_CHANCE, options?.rng)) {
-          return applyStageRealm(applyEnemyTags(boss, ['tinh_anh'], ENEMY_TAGS))
+          return applyFloorScale(applyEnemyTags(boss, ['tinh_anh'], ENEMY_TAGS))
         }
 
-        return applyStageRealm(boss)
+        return applyFloorScale(boss)
       }
     }
 
@@ -279,7 +299,7 @@ export class StageWaveSystem {
     // Tag roll - ACTIVE only (spec v3 D5): eliteChance is the chance to
     // attach the tinh_anh tag; idle passes allowTags: false.
     if (options?.allowTags !== false && entry.eliteChance && rollChance(entry.eliteChance, options?.rng)) {
-      return applyStageRealm(applyEnemyTags(template, ['tinh_anh'], ENEMY_TAGS))
+      return applyFloorScale(applyEnemyTags(template, ['tinh_anh'], ENEMY_TAGS))
     }
 
     // Quai an tra tron (spec dot-pha-loi-kiep sec4.1c) - chi stage Luyen
@@ -297,11 +317,11 @@ export class StageWaveSystem {
         options?.rng ?? this.deps.sessionRng,
       )
       if (hidden && stageSpawnableEnemyIds(stage).has(hidden.id)) {
-        return applyStageRealm(hidden)
+        return applyFloorScale(hidden)
       }
     }
 
-    return applyStageRealm(template)
+    return applyFloorScale(template)
   }
 
   /**

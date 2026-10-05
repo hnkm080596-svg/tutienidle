@@ -337,6 +337,29 @@ export function applyEliteMultiplier(stats: Stats): Stats {
   }
 }
 
+// Floor stat-scale (stat wall ladder): the stage's own difficulty
+// multiplier - same spec-shape as the elite path (hp / might / defense /
+// accuracy). Applied at spawn AFTER tag/boss transforms, so floors
+// 1-9 scale normals and floor 10 scales the boss on top of
+// applyBossMultiplier. Evasion and attackSpeed stay unscaled: evasion
+// already gates hit rate through the accuracy curve, and attack speed
+// changes the engagement's ATB shape (a pacing knob, not a stat knob).
+export function applyFloorStatScale(stats: Stats, scale: number): Stats {
+  if (scale <= 0) {
+    throw new Error(`applyFloorStatScale: scale must be > 0 (got ${scale})`)
+  }
+  if (scale === 1) {
+    return stats
+  }
+  return {
+    ...stats,
+    maxHp: stats.maxHp * scale,
+    might: stats.might * scale,
+    defense: stats.defense * scale,
+    accuracyRating: stats.accuracyRating * scale,
+  }
+}
+
 // Boss spends most of its power budget on engagement time and defense.
 // Attack x2.0 (2026-09-13, up from x1.6): x1.6 was set when legacy speed
 // 3-7 gave the boss ~2 actions/round, so each hit had to stay small. With
