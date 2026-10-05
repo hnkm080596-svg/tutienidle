@@ -23,8 +23,15 @@ const tamMuoiInput = element<HTMLInputElement>('tam-muoi-aura')
 element('tam-muoi-label').textContent = i18n.global.t('skillVfxLab.tamMuoiAura')
 const phapTheInput = element<HTMLSelectElement>('phap-the-stacks')
 element('phap-the-label').textContent = i18n.global.t('skillVfxLab.phapTheStacks')
-const empoweredInput = element<HTMLInputElement>('empowered')
-element('empowered-label').textContent = i18n.global.t('skillVfxLab.empowered')
+const castTierInput = element<HTMLSelectElement>('cast-tier')
+element('empowered-label').textContent = i18n.global.t('skillVfxLab.castTier')
+// Tier -> (empowered, slotRole): 1 ring normal, 2 rings empowered azure,
+// 3 rings ultimate (lab-only preview - no production ult grants it yet).
+const castTierFacts = () => castTierInput.value === '3'
+  ? { empowered: true, slotRole: 'ultimate' as const }
+  : castTierInput.value === '2'
+    ? { empowered: true, slotRole: 'basic' as const }
+    : { empowered: false, slotRole: 'basic' as const }
 // Player-side skills first (ngu_kiem_flight stays the default option: the e2e
 // suite drives the lab's initial play against its flight milestones), then the
 // beta monster attacks keyed by their authored attackPresetId, then the
@@ -85,7 +92,7 @@ function paintSequence() {
 }
 const query = new URLSearchParams(location.search)
 tamMuoiInput.checked = query.get('tam_muoi') === '1'
-empoweredInput.checked = query.get('empowered') === '1'
+castTierInput.value = query.get('tier') ?? (query.get('empowered') === '1' ? '2' : '1')
 phapTheInput.value = String(Math.max(0, Math.min(5, Number(query.get('phap_the')) || 0)))
 if ([...presetInput.options].some(option => option.value === query.get('preset')))
   presetInput.value = query.get('preset')!
@@ -100,7 +107,7 @@ const paintScrub = () => { scrubWrap.hidden = !manual || !fireballMode() }
 // in every mode - not only while the fireball preview runs.
 const paintAuraControl = () => { element('tam-muoi-wrap').hidden = false }
 const paintPhapTheControl = () => { element('phap-the-wrap').hidden = false }
-// The empowered toggle only makes sense while previewing Ly Hoa Thuat.
+// The tier select only makes sense while previewing Ly Hoa Thuat.
 const paintEmpoweredControl = () => { element('empowered-wrap').hidden = !fireballMode() }
 paintScrub()
 paintAuraControl()
@@ -182,7 +189,8 @@ function play(autoplay = false) {
   fireball.cancel()
   if (fireballMode()) {
     scrubInput.value = '0'
-    fireball.play(outcomeInput.value !== 'miss', autoplay, empoweredInput.checked)
+    const tier = castTierFacts()
+    fireball.play(outcomeInput.value !== 'miss', autoplay, tier.empowered, tier.slotRole)
     paintStats()
     return
   }
@@ -293,7 +301,8 @@ class SkillLabScene extends Phaser.Scene {
     scrubInput.oninput = () => {
       if (!manual || !fireballMode()) return
       fireballAutoplay = false
-      fireball.play(outcomeInput.value !== 'miss', false, empoweredInput.checked)
+      const tier = castTierFacts()
+      fireball.play(outcomeInput.value !== 'miss', false, tier.empowered, tier.slotRole)
       fireball.update(Number(scrubInput.value))
       paintStats()
     }
