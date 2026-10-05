@@ -110,7 +110,9 @@ describe('BattleLootSystem — DropResult consumer', () => {
     [8, 'thien'],
     [10, 'tien'],
   ] as const)('floor %i caps equipment roll quality at %s', (floor, expectedCeiling) => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.8)
+    // Guaranteed misses at 0.8; pool draw hits inside the gated mortal
+    // band's 15% hit region at 0.1.
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.8).mockReturnValue(0.1)
     const { killEnemy, createInstance } = createLootTestSetup({
       realmId: 'mortal',
       stage: { stageId: 'mortal_5', requiredRealmId: 'mortal', floor },
@@ -127,7 +129,7 @@ describe('BattleLootSystem — DropResult consumer', () => {
   // chapter builder normalizes requiredRealmLevel = floor). The ceiling
   // must still resolve through the canonical fallback, not fall uncapped.
   it('stage without floor resolves the ceiling via requiredRealmLevel', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.8)
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.8).mockReturnValue(0.1)
     const { killEnemy, createInstance } = createLootTestSetup({
       realmId: 'mortal',
       stage: { stageId: 'mortal_5', requiredRealmId: 'mortal', floor: undefined, requiredRealmLevel: 7 },
@@ -141,7 +143,9 @@ describe('BattleLootSystem — DropResult consumer', () => {
   })
 
   it('no stage context leaves the quality ladder uncapped', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.8)
+    // Signature line (chance 1) lands at 0.8; pool draw hits the gated
+    // band at 0.1.
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.8).mockReturnValue(0.1)
     const { killEnemy, createInstance } = createLootTestSetup({
       realmId: 'mortal',
       signatureDrops: [{ kind: 'equipment', itemId: 'eq_test', chance: 1 }],
