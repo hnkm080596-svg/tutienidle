@@ -50,7 +50,10 @@ export const REALMS: RealmData[] = [
     id: 'qi_refining',
     name: 'Luyện Khí',
     maxLevel: 18,
-    baseCultivationMinutes: 22
+    // Pace floor (2026-10-05): whole-realm gate ~= 1 day at the 10 tv/s base
+    // rate - 70*18 + sum(0..17) = 1431 min ~= 23.9h; stacked speed builds
+    // still land under a day by talent design.
+    baseCultivationMinutes: 70
   },
 
   {
@@ -58,7 +61,9 @@ export const REALMS: RealmData[] = [
     name: 'Trúc Cơ',
     // Moc ket thuc noi dung progression hien tai, khong co dot pha Kim Dan.
     maxLevel: 18,
-    baseCultivationMinutes: 64
+    // Pace floor (2026-10-05): whole-realm gate ~= 1 week at base rate -
+    // 550*18 + sum(0..17) = 10071 min ~= 6.99 days.
+    baseCultivationMinutes: 550
   },
 
   {

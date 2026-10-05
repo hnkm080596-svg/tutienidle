@@ -187,7 +187,10 @@ function gearUp(enhance: number): void {
 function grindToLevel(level: number): void {
   let guard = 0
   while (s.player.realmLevel < level && guard++ < 2000) {
-    s.cultivate(120)
+    // 1-hour chunks - the pace floor retune (2026-10-05) prices Luyen Khi
+    // at ~1 day and Truc Co at ~1 week of base-rate cultivation; 120s
+    // slices no longer reach the target inside the guard.
+    s.cultivate(3600)
     s.breakthroughIfReady()
   }
   expect(
