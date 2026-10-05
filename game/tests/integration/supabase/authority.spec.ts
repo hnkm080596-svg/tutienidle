@@ -529,6 +529,57 @@ test('payload: schema gate, shape checks, identity binding, byte ceiling', async
   })
   expect(wNoMortal.body.status).toBe('COMMITTED')
 
+  // AUT-AUTH-1: breakthrough entitlements legitimately grow
+  // selectedTalentIds past the creation pick - the server mirror binds
+  // identity via containment, not set-equality, so a grown list at
+  // qi_refining (ceiling = 1 + realmIndex 1 = 2) must commit.
+  const grown = {
+    ...payload,
+    player: {
+      ...(payload.player as object),
+      selectedTalentIds: [...character.selectedTalentIds, 'kiem_quang'],
+      realmId: 'qi_refining',
+    },
+  }
+  const wGrown = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 1, payload: grown,
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(wGrown.body.status).toBe('COMMITTED')
+  // past the earnability ceiling still rejects (3 talents > ceiling 2)
+  const overCeiling = {
+    ...grown,
+    player: {
+      ...(grown.player as object),
+      selectedTalentIds: [...character.selectedTalentIds, 'kiem_quang', 'hap_linh'],
+    },
+  }
+  const wCeil = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 2, payload: overCeiling,
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(wCeil.body.code).toBe('SAVE_INVALID')
+  // a grown list that dropped the creation pick still rejects (identity)
+  const droppedPick = {
+    ...grown,
+    player: { ...(grown.player as object), selectedTalentIds: ['kiem_quang', 'hap_linh'] },
+  }
+  const wDropped = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 2, payload: droppedPick,
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(wDropped.body.code).toBe('SAVE_INVALID')
+  // duplicated pool ids still reject (one id per slot)
+  const dupIds = {
+    ...grown,
+    player: { ...(grown.player as object), selectedTalentIds: [...character.selectedTalentIds, 'kiem_quang', 'kiem_quang'] },
+  }
+  const wDup = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 2, payload: dupIds,
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(wDup.body.code).toBe('SAVE_INVALID')
+
   // byte ceiling, enforced without mutation: temporarily lower the configured
   // ceiling so the test is independent of transport body limits.
   await pg.query(
@@ -536,21 +587,21 @@ test('payload: schema gate, shape checks, identity binding, byte ceiling', async
   )
   try {
     const big = await writeSave(env, user.token, {
-      sessionId: sid, expectedRevision: 1,
+      sessionId: sid, expectedRevision: 2,
       payload: { ...payload, notes: 'x'.repeat(4096) },
       mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
     })
     expect(big.body.status).toBe('REJECTED')
     expect(big.body.code).toBe('SAVE_TOO_LARGE')
     const row = await saveRow(pg, character.id)
-    expect(row.save_revision).toBe(1)
+    expect(row.save_revision).toBe(2)
     expect(row.payload.notes).toBeUndefined()
   } finally {
     await pg.query(
       `update public.backend_config set value = jsonb_set(value, '{maxSavePayloadBytes}', '4194304') where key = 'limits'`,
     )
   }
-  expect(await receiptRows(pg, user.userId)).toHaveLength(1)
+  expect(await receiptRows(pg, user.userId)).toHaveLength(2)
 })
 
 // ---------------------------------------------------------------------------

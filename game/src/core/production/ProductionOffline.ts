@@ -42,6 +42,9 @@ export interface ProductionOfflineOptions {
   /** Chi-hien-quan - assignments snapshot (tu states truoc settle) de
    *  offline khop online. */
   workerAssignments?: Map<string, number>
+
+  /** Seeded stream for rollSeed mints on spawned cycles. */
+  rng?: () => number
 }
 
 export function settleProductionOffline(
@@ -65,6 +68,7 @@ export function settleProductionOffline(
     Math.floor(options.workerCapacity ?? 0),
     options.offlineSinceMs,
     options.workerAssignments,
+    options.rng,
   )
 }
 
@@ -93,6 +97,7 @@ function settleWorkersOffline(
   workerCapacity: number,
   offlineSinceMs?: number,
   workerAssignments?: Map<string, number>,
+  rng?: () => number,
 ): number {
   // R7 (AR-07): the SAME pure allocator as tickWorkers - online and
   // offline settlement share one distribution rule (manual first,
@@ -160,6 +165,7 @@ function settleWorkersOffline(
       emptyLaneStartMs: offlineSinceMs,
       advanceMode: 'deadline',
       budgetMs,
+      rng,
     })
 
     state.workerCycles = result.pending

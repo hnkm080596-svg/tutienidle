@@ -429,12 +429,20 @@ export function betaActiveWayAdmitted(player: PlayerData): boolean {
 
 /**
  * One write/effect admission predicate for progression ops and their
- * readers: tree-surface admission (dormant way/hidden branch tags) AND
- * skill-level admission (a core node leveling a dormant way's kit skill
- * stays rejected even though core nodes carry no view tag).
+ * readers: tree-surface admission (dormant way/hidden branch tags),
+ * skill-level admission (a core node leveling a dormant way's kit
+ * skill stays rejected even though core nodes carry no view tag), AND
+ * element admission - a node stamped for an out-of-beta element can
+ * only ever be owned by a pre-lock save, so it takes no insight and
+ * emits no effects (the combat rail already reads that commit as
+ * uncommitted).
  */
 export function betaNodeWriteAdmitted(node: ProgressionNode): boolean {
-  return betaTreeNodeAdmitted(node) && betaNodeSkillLevelAdmitted(node)
+  return (
+    betaTreeNodeAdmitted(node) &&
+    betaNodeSkillLevelAdmitted(node) &&
+    (node.elementTag === undefined || isBetaElement(node.elementTag))
+  )
 }
 
 /**
@@ -678,9 +686,17 @@ export function betaSkillTreeFor(
   // getActiveElement resolves only through the owning way's element axis
   // (spell_pathway); undefined covers pre-commit, off-way, and mortal
   // realm (a mortal+way corrupt save reports no committed element).
-  const committedElement =
+  const resolvedElement =
     player.realmId !== 'mortal' && way !== null && isBetaWay(way)
       ? getActiveElement(player)
+      : undefined
+  // COR-1 - a pre-lock save can carry an out-of-beta committed element
+  // (e.g. water): treat it as uncommitted so the scoped-out branch stops
+  // being purchasable/insight-charged, matching the combat rail's
+  // element-uncommitted verdict.
+  const committedElement =
+    resolvedElement !== undefined && isBetaElement(resolvedElement)
+      ? resolvedElement
       : undefined
 
   return {

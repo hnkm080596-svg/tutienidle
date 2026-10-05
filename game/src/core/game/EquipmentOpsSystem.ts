@@ -37,6 +37,10 @@ export interface EquipmentOpsSystemDeps {
   // cung cap closure vi hook that can questSystem/questRegistry/questManager,
   // nhung state khong thuoc pham vi trang bi.
   notifyMaterialGained: (materialId: string, amount: number) => void
+  // Seeded stream for all paid/random rolls (enhance, wash, refine,
+  // dissolve, createInstance affix draws) - GameManager binds
+  // sessionRng; undefined falls back to each seam's Math.random default.
+  sessionRng?: () => number
   // Talent policy reads the active player per call (same pattern as
   // GameManagerBuildingOps) - enhance guarantee follows the CURRENT
   // selectedTalentIds, not a snapshot.
@@ -93,7 +97,9 @@ export class EquipmentOpsSystem {
     }
 
     const template = this.deps.equipmentRegistry.get(equipmentId)
-    const instance = this.deps.equipmentSystem.createInstance(template, player, this.deps.affixRegistry)
+    const instance = this.deps.equipmentSystem.createInstance(
+      template, player, this.deps.affixRegistry, undefined, 0, this.deps.sessionRng,
+    )
 
     this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
 
@@ -169,6 +175,8 @@ export class EquipmentOpsSystem {
       this.deps.equipmentSlotManager,
 
       this.deps.affixRegistry,
+
+      this.deps.sessionRng,
     )
   }
 
@@ -248,6 +256,7 @@ export class EquipmentOpsSystem {
       this.deps.materialBag,
       this.deps.equipmentSlotManager,
       this.deps.affixRegistry,
+      this.deps.sessionRng,
     )
   }
 
@@ -272,6 +281,7 @@ export class EquipmentOpsSystem {
       this.deps.materialBag,
       this.deps.equipmentSlotManager,
       this.deps.affixRegistry,
+      this.deps.sessionRng,
     )
   }
 
@@ -289,6 +299,7 @@ export class EquipmentOpsSystem {
       this.deps.equipmentRegistry,
       this.deps.materialBag,
       this.deps.affixRegistry,
+      this.deps.sessionRng,
     )
   }
 
@@ -333,6 +344,7 @@ export class EquipmentOpsSystem {
       this.deps.equipmentRegistry,
       this.deps.materialBag,
       this.deps.affixRegistry,
+      this.deps.sessionRng,
     )
   }
 
@@ -379,7 +391,7 @@ export class EquipmentOpsSystem {
     reason?: string
     rewards?: Array<{ materialId: string; amount: number }>
   } {
-    const result = this.deps.equipmentSystem.dissolveInstances(instanceIds, this.deps.equipmentBag)
+    const result = this.deps.equipmentSystem.dissolveInstances(instanceIds, this.deps.equipmentBag, this.deps.sessionRng)
 
     if (result.ok && result.rewards) {
       for (const reward of result.rewards) {

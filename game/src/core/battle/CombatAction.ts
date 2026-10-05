@@ -105,8 +105,8 @@ export type CombatVfxPresetId =
   // melee beasts (wolves, crocodiles) distinct from claw rakes.
   | 'bite'
   // Monster attack VFX batch 2 (2026-10-04) -- authored atlases for
-  // ram/stomp hits plus multi-bite and directional slash variants. No
-  // enemy maps to them yet; the dev lab lists them for art review.
+  // ram/stomp hits plus multi-bite and directional slash variants;
+  // enemies and bosses map to them via attackPresetId/specialAttacks.
   | 'bite_multi' | 'ram' | 'ram_multi' | 'stomp' | 'stomp_multi'
   | 'slash_vertical' | 'slash_horizontal' | 'slash_multi'
   | 'arcane_impact'

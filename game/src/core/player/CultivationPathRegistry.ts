@@ -392,7 +392,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       // Hoa The gate (Minh ruling 2026-10-04) - the +1 The mint and the
       // Phap The empowerment only exist once the player owns the
       // `hoa_the` node; the node's level sets the mint chance
-      // (lv1 = 25%, lv4 = guaranteed). Locked => no stamp, no pool, and
+      // (lv1 = 35%, lv3 = guaranteed). Locked => no stamp, no pool, and
       // resolveMaxThe caps the pool at 0 (see below).
       const hoaTheLevel = deps.getNodeLevel(HOA_THE_NODE_ID, player)
       const stamped: TurnSkillDefinition =

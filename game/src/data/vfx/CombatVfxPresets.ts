@@ -111,9 +111,10 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 340,
     screenShake: { durationMs: 120, intensity: 0.004 },
   },
-  // Monster attack VFX batch 2 (2026-10-04) - authored atlases with no
-  // monster mapping yet; durationMs covers each sheet's full frame
-  // window so the injected cue does not trim the clip.
+  // Monster attack VFX batch 2 (2026-10-04) - authored atlases; enemies
+  // and bosses already reference them via attackPresetId/specialAttacks.
+  // durationMs covers each sheet's full frame window so the injected
+  // cue does not trim the clip.
   bite_multi: { id: 'bite_multi', color: 0xcfe4ff, space: 'upright', areaScale: 1, durationMs: 570, signature: ['crescent', 'scar'] },
   ram: { id: 'ram', color: 0xe8b878, space: 'upright', areaScale: 1, durationMs: 400 },
   ram_multi: { id: 'ram_multi', color: 0xe8b878, space: 'upright', areaScale: 1, durationMs: 570 },

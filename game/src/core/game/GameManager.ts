@@ -753,6 +753,7 @@ export class GameManager {
       notifyMaterialGained: (materialId, amount) =>
         this.questOps.notifyMaterialGained(materialId, amount),
       getActivePlayer: () => this.activePlayer,
+      sessionRng: () => this.sessionRng(),
     })
 
     this.buildingOps = new GameManagerBuildingOps({

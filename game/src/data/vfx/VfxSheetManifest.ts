@@ -79,8 +79,8 @@ export const VFX_SHEET_BINDINGS: Partial<Record<CombatVfxPresetId, VfxSheetBindi
   // (art/vfx/mob-attacks/Boss Ground Slam.json); mud golem slam.
   boss_ground_slam: binding('vfx-sheet-mob-slam', 'boss-ground-slam', 0, 12, 30, 160, true, '/assets/vfx/mob-boss-ground-slam'),
   // Monster attack VFX batch 2 (2026-10-04) - authored atlases wired at
-  // preset level so the dev lab and the e2e sweep can play them; no
-  // enemy attackPresetId references these yet.
+  // preset level so the dev lab and the e2e sweep can play them; enemy
+  // attackPresetId/specialAttacks presets reference them.
   bite_multi: binding('vfx-sheet-mob-bite-multi', 'bite-multi', 0, 16, 30, 140, false, '/assets/vfx/mob-bite-multi'),
   ram: binding('vfx-sheet-mob-ram', 'ram', 0, 11, 30, 150, false, '/assets/vfx/mob-ram'),
   ram_multi: binding('vfx-sheet-mob-ram-multi', 'ram-multi', 0, 16, 30, 150, false, '/assets/vfx/mob-ram-multi'),

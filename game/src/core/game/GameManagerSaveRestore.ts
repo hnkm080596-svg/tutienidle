@@ -397,6 +397,7 @@ export class GameManagerSaveRestore {
             ),
             offlineSinceMs,
             workerAssignments: this.deps.getWorkerAssignments(),
+            rng: this.deps.sessionRng,
           },
         )
 

@@ -27,3 +27,12 @@ designed; revisit only if a second playable way ships.
 
 Độ Kiếp Trúc Cơ needs def ≥ ~130; strength-first builds must respec
 into vitality. Minh: "Khó là tốt, khó mới cần idle" — keep the gate.
+
+## Beta-scope predicate duplication (UI — Codex)
+
+A few `.vue` components carry a locally duplicated beta-scope predicate
+instead of importing the canonical helpers from `src/core/betaScope*`
+(fixpoint AUT-UI-1, Low). Harmless while the scope stays fire-only;
+consolidate into the shared predicates on the next UI pass on those
+files so future scope changes can't drift. `PlayerVisualProfiles.ts`
+has the same duplication in non-UI code — same cleanup, optional.
