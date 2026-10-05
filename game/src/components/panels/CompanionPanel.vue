@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 // Companion roster panel (companion-gacha Task 10, 2026-09-12) - standalone
 // overlay listing owned companions grouped by grade, with a detail pane:
 // realm/tier, EXP bar, resolved stats, 6 Cung Menh pips + perk states,
@@ -329,7 +330,7 @@ function close() {
       </GameButton>
     </template>
 
-    <div class="companion-panel">
+    <div class="companion-panel pc-auxiliary">
       <p v-if="groups.length === 0" class="companion-panel__empty">{{ t('companion.empty') }}</p>
 
       <div v-else class="companion-panel__body">

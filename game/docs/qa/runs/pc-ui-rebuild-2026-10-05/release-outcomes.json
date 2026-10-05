@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "observedStatus": "finished",
+  "evidence": "Native terminal lifecycle observed after final G5, completed/absent from current active roster",
+  "observedRuntimeId": "/root/wire_outcomes",
+  "assignmentId": "WIRE-outcomes-01"
+}

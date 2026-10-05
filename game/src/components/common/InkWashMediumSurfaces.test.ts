@@ -68,7 +68,7 @@ describe('ink-wash medium surfaces', () => {
 
     const tooltip = document.querySelector<HTMLElement>('#global-tooltip')
     expect(tooltip).not.toBeNull()
-    expect(tooltip?.querySelector('[data-hk-slice="frame-xs-tooltip"]')).not.toBeNull()
+    expect(tooltip?.getAttribute('role')).toBe('tooltip')
     expect(tooltip?.textContent).toContain('Linh thạch')
     expect(tooltip?.style.pointerEvents).not.toBe('auto')
   })

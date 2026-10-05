@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import InkNineSlice from './primitives/InkNineSlice.vue'
 import { AudioManager } from '@/core/audio/AudioManager'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
 // Shared chrome primitive (UI/UX rework phase A) - replaces hand-rolled
 // buttons (each panel declaring its own background/color/border) with one
 // component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
@@ -31,6 +30,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{ click: [MouseEvent] }>()
+const controls = pcPaperControlStyles()
 
 // Direct AudioManager singleton (not the Pinia store) so GameButton can
 // mount in unit tests without an active Pinia - documented exception to
@@ -41,6 +41,7 @@ const audio = AudioManager.getInstance()
 // on the first click (autoplay policy requires a user gesture). The real
 // parent click still fires via emit('click').
 function handleClick(event: MouseEvent) {
+  if (props.disabled || props.loading) return
   audio.unlock()
   if (props.sound) {
     audio.playCue('ui.click')
@@ -48,28 +49,6 @@ function handleClick(event: MouseEvent) {
   emit('click', event)
 }
 
-const CHROME_SLOT_BY_SIZE = {
-  sm: 'button-compact',
-  md: 'button-standard',
-  lg: 'button-ceremonial',
-} as const
-
-const chromeSlot = computed(() => {
-  // ghost stays a bare hairline frame on the element itself. Circle maps
-  // to the icon-button-utility seal slot (the pending --hk-* fallback
-  // rounds via border-radius: inherit like every other slice).
-  if (props.variant === 'ghost') return undefined
-  if (props.shape === 'circle') return 'icon-button-utility'
-  return CHROME_SLOT_BY_SIZE[props.size]
-})
-
-const sliceTint = computed(() => {
-  switch (props.variant) {
-    case 'danger': return '--hk-cinnabar'
-    case 'primary': return '--hk-gold'
-    default: return undefined
-  }
-})
 </script>
 
 <template>
@@ -77,12 +56,11 @@ const sliceTint = computed(() => {
     :type="type"
     class="game-button"
     :class="[`game-button--${variant}`, `game-button--${size}`, `game-button--${shape}`, { 'is-loading': loading, 'has-accent': accentVar !== undefined }]"
-    :style="accentVar ? { '--button-accent': accentVar } : undefined"
+    :style="{ ...controls, ...(accentVar ? { '--button-accent': accentVar } : {}) }"
     :disabled="disabled || loading"
     :aria-busy="loading || undefined"
     @click="handleClick"
   >
-    <InkNineSlice v-if="chromeSlot" :chrome-id="chromeSlot" layer="surface" :tint-var="sliceTint" />
     <span v-if="loading" class="game-button__spinner" aria-hidden="true" />
     <span class="game-button__label"><slot /></span>
   </button>

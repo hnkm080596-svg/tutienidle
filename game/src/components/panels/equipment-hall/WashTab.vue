@@ -227,9 +227,8 @@ const washRenAfter = computed(() =>
   <section class="qi-hall__body qi-hall__split">
     <div class="qi-hall__split-left">
       <div class="qi-hall__slot-grid" :aria-label="t('panels.equipmentHall.aria.washSlots')">
+        <div v-for="row in hallSlotRows" :key="row.slot" class="qi-hall__slot-choice">
         <SlotView
-          v-for="row in hallSlotRows"
-          :key="row.slot"
           class="qi-hall__slot"
           :item="row.equippedRow?.instance ?? null"
           :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
@@ -242,6 +241,8 @@ const washRenAfter = computed(() =>
           :state="{ interaction: row.equippedRow?.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: row.equippedRow ? 'equipped' : undefined }"
           @click="selectHallSlotForAction(row)"
         />
+        <span class="qi-hall__slot-name">{{ equipmentSlotLabel(row.slot) }}</span>
+        </div>
       </div>
     </div>
 

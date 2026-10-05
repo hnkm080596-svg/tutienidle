@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import ItemCardBody from '@/components/common/ItemCardBody.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, StatBreakdownTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
@@ -155,7 +154,6 @@ function hideBrokenImage(event: Event) {
         :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor ?? itemAuraColor, '--tooltip-aura': itemAuraColor, zIndex: OVERLAY_LAYERS.tooltip }"
       >
         <img v-if="elementBannerUrl" class="tooltip__banner" :src="elementBannerUrl" alt="" aria-hidden="true" />
-        <InkNineSlice v-else-if="!contained" chrome-id="frame-xs-tooltip" layer="surface" />
         <div class="tooltip__content">
         <!-- Compare pair (spec section 4): equipped card LEFT, hovered card
              RIGHT; each is a role=group with its own aria-label so

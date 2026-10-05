@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
@@ -10,8 +11,9 @@ const fill = computed(() => Number.isFinite(props.model.progress) ? Math.min(100
 const seal = resolveAssetUrl('/assets/ui/huyen-kim/symbols/realm.svg')
 </script>
 <template>
-  <section class="realm-details">
+  <section class="realm-details pc-paper-inspector">
     <header class="realm-identity"><span class="realm-seal"><img :src="seal" alt=""></span><div><h2>{{ model.name }}</h2><p>{{ t('realm.floorCount', { floor: model.currentFloor, total: model.maxFloor }) }}</p></div></header>
+    <div class="realm-details-content">
     <h3>{{ t('panels.realm.sections.progress') }}</h3>
     <div class="realm-progress"><div class="realm-progress-track" role="progressbar" :aria-label="t('panels.realm.sections.progress')" :aria-valuenow="fill" :aria-valuemin="0" :aria-valuemax="100"><span :style="{ width: `${fill}%` }" /></div><strong>{{ model.progressLabel }}</strong></div>
     <dl class="realm-values"><div><dt>{{ t('realm.cultivation') }}</dt><dd>{{ model.cultivation }}</dd></div><div><dt>{{ t('panels.realm.meta.rateLabel') }}</dt><dd>{{ model.rate }}</dd></div></dl>
@@ -20,8 +22,9 @@ const seal = resolveAssetUrl('/assets/ui/huyen-kim/symbols/realm.svg')
       <ul><li v-for="passive in model.passives" :key="passive.id" :title="passive.description"><strong>{{ passive.name }}</strong><small v-for="line in passive.effectLines" :key="line">{{ line }}</small></li></ul>
     </section>
     <div v-if="model.ctaVisible" class="realm-breakthrough"><h3>{{ t('realm.breakthroughTitle', { target: model.nextRealmName || model.name }) }}</h3><dl class="realm-values"><div v-for="row in model.requirements" :key="row.id" :class="{ met: row.met }"><dt>{{ row.label }}</dt><dd>{{ row.met ? t('panels.realm.requirements.met') : t('panels.realm.requirements.unmet') }}</dd></div></dl></div>
+    </div>
     <p class="realm-selection">{{ t('realm.viewing', { floor: selected }) }}</p>
-    <button v-if="model.ctaVisible" class="realm-cta" :disabled="!model.ctaEnabled" @click="emit('breakthrough')">{{ model.ctaLabel }}</button>
+    <PcPaperButton v-if="model.ctaVisible" class="realm-cta" :disabled="!model.ctaEnabled" @click="emit('breakthrough')">{{ model.ctaLabel }}</PcPaperButton>
     <p class="realm-notice" role="status" aria-live="polite">{{ notice }}</p>
   </section>
 </template>

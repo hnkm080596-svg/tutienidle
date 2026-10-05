@@ -7,10 +7,12 @@
 // (its own nav rail + sections) through that slot.
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import PcPaperScene from '@/components/common/PcPaperScene.vue'
+import PcPaperSceneActions from '@/components/common/PcPaperSceneActions.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import type { PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import SettingsFidelitySection, { type SettingsDisplayControl } from './SettingsFidelitySection.vue'
+import '@/assets/tien-hiep-outcomes.css'
 
 withDefaults(defineProps<{
   groups: readonly {id: string; label: string; controls: readonly SettingsDisplayControl[]}[]
@@ -23,7 +25,6 @@ withDefaults(defineProps<{
 const emit = defineEmits<{select: [id: string]; update: [id: string, value: string | number | boolean]; action: [id: string]; navigate: [id: string]; back: []}>()
 const { t } = useI18n()
 
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 
 // Same dialog contract the imperial scroll carried: focus/pointer stay
 // inside the open surface and Escape closes through emit('back').
@@ -32,21 +33,22 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 
 <template>
-  <section ref="rootRef" class="settings-scene" :aria-label="t('layout.functionOverlay.titles.settings')" @click.self="emit('back')">
-    <div class="settings-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="settings" :label="t('paperNav.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
-    <h1 class="settings-title">{{ t('layout.functionOverlay.titles.settings') }}</h1>
+  <section ref="rootRef" role="dialog" aria-modal="true" tabindex="-1" class="pc-settings-root" :aria-label="t('layout.functionOverlay.titles.settings')" @click.self="emit('back')">
+    <PcPaperScene :title="t('layout.functionOverlay.titles.settings')">
+    <template #actions><PcPaperSceneActions :items="navigation" active="settings" @navigate="emit('navigate',$event)" @back="emit('back')" /></template>
 
-    <div class="settings-content">
+    <div class="pc-settings-content">
       <slot name="workspace"><div class="settings-layout"><nav :aria-label="t('settingsPreview.title')"><button v-for="id in ['all','audio','display','storage','support']" :key="id" :class="{active:active===id}" @click="emit('select',id)">{{t(`settingsPreview.group.${id}`)}}</button></nav><div class="settings-workspace"><SettingsFidelitySection v-for="group in groups" :key="group.id" :title="group.label" :controls="group.controls" @update="(id,value)=>emit('update',id,value)"/><section v-if="active==='all'||active==='storage'" class="settings-actions"><h2>{{t('settingsPreview.storage')}}</h2><p>{{t('settingsPreview.storageHint')}}</p><div><button v-for="id in ['save','export','import']" :key="id" @click="emit('action',id)">{{t(`settingsPreview.${id}`)}}</button></div></section><section v-if="active==='support'" class="settings-actions"><h2>{{t('settingsPreview.support')}}</h2><p>{{t('settingsPreview.supportHint')}}</p><button @click="emit('action','feedback')">{{t('settingsPreview.feedback')}}</button><p>{{t('settingsPreview.build')}} · {{t('settingsPreview.buildValue')}}</p></section></div></div></slot>
     </div>
 
-    <p v-if="preview" class="settings-preview">{{ t('preview') }}</p>
-    <p class="settings-notice" role="status">{{ notice }}</p>
+    <template #footer><p v-if="preview">{{ t('preview') }}</p><p class="settings-notice" role="status">{{ notice }}</p></template>
+    </PcPaperScene>
   </section>
 </template>
 
 <style scoped>
+.pc-settings-root { position:absolute;inset:0;pointer-events:auto; }
+.pc-settings-content { height:100%;min-height:0;display:flex;flex-direction:column; }
 .settings-scene{position:absolute;inset:0;pointer-events:auto;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
 .settings-scene :deep(*){box-sizing:border-box}
 .settings-paper{position:absolute;left:94px;top:123px;width:1334px;height:633px;border:0 solid transparent;border-image-slice:300 fill;border-image-width:83px;filter:drop-shadow(0 12px 15px #0009)}

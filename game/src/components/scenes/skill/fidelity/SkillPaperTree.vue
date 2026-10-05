@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SkillUiNode, SkillUiEdge } from './skillUi'
 import SkillPaperNode from './SkillPaperNode.vue'
+import { skillGraphViewport } from './skillGraphViewport'
 const props = withDefaults(defineProps<{
   nodes: readonly SkillUiNode[]
   edges: readonly SkillUiEdge[]
@@ -25,10 +26,11 @@ const connections = computed(() => props.edges.flatMap(edge => {
 // Descending-y order keeps every label above every disc that could occlude it.
 const paintNodes = computed(() => [...props.nodes].sort((a, b) => b.y - a.y))
 const viewBox = computed(() => `0 0 ${props.size} ${props.size}`)
+const viewport = computed(() => skillGraphViewport(props.nodes, props.fit))
 const graphStyle = computed(() => ({
   width: `${props.size}px`,
   height: `${props.size}px`,
-  transform: `translate(-50%, -50%) scale(${props.fit})`,
+  transform: `translate(${viewport.value.x}px, ${viewport.value.y}px) scale(${viewport.value.scale})`,
 }))
 </script>
 <template>
@@ -43,8 +45,8 @@ const graphStyle = computed(() => ({
 </template>
 <style scoped>
 .skill-positioned-node { position:absolute; transform:translate(-50%,-38px); }
-.skill-paper-tree { position:absolute; left:228px; top:259px; width:710px; height:445px; }
-.skill-graph { position:absolute; left:50%; top:50%; transform-origin:center; }
+.skill-paper-tree { position:absolute; left:205px; top:282px; width:740px; height:420px; }
+.skill-graph { position:absolute; left:0; top:0; transform-origin:0 0; }
 .skill-tree-lines { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
 .skill-connection { stroke:#b48732; stroke-width:2; filter:drop-shadow(0 0 3px #edc56a); }
 .skill-connection.muted { stroke:#aa9c78; stroke-dasharray:4 6; filter:none; }

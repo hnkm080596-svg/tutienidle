@@ -61,8 +61,8 @@ export const PANEL_HEIGHT = FORMATION_CANVAS_HEIGHT
 // Re-exported for existing consumers; the value's owner is FormationCanvasSpec.
 export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = FORMATION_MIN_ROAD_HEIGHT
 
-const PANEL_SKY_COLOR = 0x22283a
-const PANEL_GROUND_COLOR = 0x1a1a1a
+const PANEL_SKY_COLOR = 0xe8dbc0
+const PANEL_GROUND_COLOR = 0xd6c6a0
 
 export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGridViewHost {
   // Battlefield Perspective Panel (2026-09-06) - chuyen tu flat sang
@@ -221,10 +221,11 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     // cung hardcode GRID_ROW_COUNT/COLUMN_COUNT). Dat ten ro rang de sau
     // nay thay Rectangle bang Image that chi can doi loai GameObject, giu
     // nguyen vi tri goi.
-    this.skyLayer = this.add.rectangle(0, 0, PANEL_WIDTH, geometry.horizonY, PANEL_SKY_COLOR).setOrigin(0, 0)
+    this.skyLayer = this.add.rectangle(0, 0, PANEL_WIDTH, geometry.horizonY, PANEL_SKY_COLOR).setOrigin(0, 0).setAlpha(0)
     this.groundLayer = this.add
       .rectangle(0, geometry.horizonY, PANEL_WIDTH, geometry.roadHeight, PANEL_GROUND_COLOR)
       .setOrigin(0, 0)
+      .setAlpha(0)
 
     // Same factory the shell calls (FormationCanvasSpec) - the five parameters
     // are declared once and neither layer restates them (sec3.6.2).
@@ -383,10 +384,11 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
         }
       }
 
+      // The DOM slot owns the localized label; avoid a second raw-id label on the canvas.
       const sprite = this.gridView.getOrCreateSprite(
         assignment.combatantId,
         0x4caf50,
-        assignment.combatantId,
+        '',
         assignment.row as LaneIndex,
       )
 

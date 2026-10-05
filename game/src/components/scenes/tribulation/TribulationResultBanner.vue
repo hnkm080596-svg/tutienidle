@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Scene 13 result region (spec: 536/340/600/220 z30, shell-panel,
 // surface-m-panel) - victory/defeat banner while isFinished.
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import PcPaperChrome from '@/components/common/PcPaperChrome.vue'
 
 defineProps<{
   title: string
@@ -11,7 +11,7 @@ defineProps<{
 
 <template>
   <div class="tribulation-ui__result" data-hk-region="result">
-    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+    <PcPaperChrome />
     <div class="tribulation-ui__result-title">{{ title }}</div>
     <div class="tribulation-ui__result-text">{{ text }}</div>
   </div>

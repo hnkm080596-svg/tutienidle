@@ -124,7 +124,10 @@ describe('RealmPanel', () => {
 
     // The requirements block lives INSIDE the detail rail above the CTA.
     const block = mounted.container.querySelector<HTMLElement>('.realm-breakthrough')!
-    expect(block.parentElement?.classList.contains('realm-details')).toBe(true)
+    const details = block.closest('.realm-details')
+    expect(details).not.toBeNull()
+    const action = details!.querySelector('.realm-cta')!
+    expect(block.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     mounted.player.completedStageIds = ['qi_refining_abyssal_pool']
     await nextTick()

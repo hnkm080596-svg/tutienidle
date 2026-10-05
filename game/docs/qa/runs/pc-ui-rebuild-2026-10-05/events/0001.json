@@ -1,0 +1,34 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "pc-ui-rebuild-2026-10-05",
+    "productRoot": ".",
+    "checkout": "E:/tutienidle/.agent-worktrees/hoa-cau-fireball-vfx",
+    "branch": "codex/tien-hiep-ui-redesign",
+    "base": "f8af8007b0b6519e6aa6997fedad2cc77939538a",
+    "head": "f8af8007b0b6519e6aa6997fedad2cc77939538a-dirty",
+    "authorizedRepairs": [
+      "Entire PC UI composition and art integration, preserving domain behavior"
+    ],
+    "nonGoals": [
+      "Phone design",
+      "Gameplay changes",
+      "Commit/push/merge",
+      "Replacement player animation"
+    ],
+    "requiredDomains": [
+      "ui-input-lifecycle",
+      "pinia-phaser-sync"
+    ],
+    "requiredReadiness": true,
+    "briefIds": [
+      "pc-ui-reconstruction-2026-10-05"
+    ],
+    "exclusions": [
+      "node_modules",
+      "dist",
+      "test-results",
+      "docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence"
+    ]
+  }
+}

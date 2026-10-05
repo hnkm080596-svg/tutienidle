@@ -164,6 +164,21 @@ const MOUNT_GATES: MountGate[] = [
 
 const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: string }> = [
   {
+    file: 'ui-preview/CollectionCraftDesignPreview.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason: 'isolated ui-collection-craft-design.html composition gallery; production EquipmentSurface still filters actual tabs through isBetaEquipmentTab',
+  },
+  {
+    file: 'ui-preview/DesignSystemPreview.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason: 'isolated ui-design-system.html static visual examples; not imported by production main.ts or mounted by EquipmentSurface',
+  },
+  {
+    file: 'ui-preview/SecondaryPreview.vue',
+    tokens: ['formation'],
+    reason: 'isolated ui-secondary.html authoring fixture; never imported or mounted by the production application',
+  },
+  {
     file: 'components/scenes/realm/RealmAscentNode.vue',
     tokens: ['coming-soon'],
     reason:

@@ -7,10 +7,10 @@ const { t } = useI18n()
 </script>
 <template>
   <header class="cf-identity">
-    <h1 class="cf-name">{{ model.name }}<span class="cf-seal" aria-hidden="true">◆</span></h1>
+    <h2 class="cf-name">{{ model.name }}<span class="cf-seal" aria-hidden="true">◆</span></h2>
     <p class="cf-realm">{{ model.realm }}</p>
     <p class="cf-path"><img :src="symbolUrl('technique')" alt="">{{ t('character.path') }}: {{ model.path }}</p>
-    <div class="cf-power"><small>{{ t('character.power') }}</small><strong>{{ model.combatPower }}</strong></div>
+    <div class="cf-power"><img class="cf-power__icon" :src="symbolUrl('equipment')" alt=""><small>{{ t('character.power') }}</small><strong>{{ model.combatPower }}</strong></div>
   </header>
 </template>
 <style scoped>

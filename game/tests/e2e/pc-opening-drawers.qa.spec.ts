@@ -1,0 +1,56 @@
+import { test, expect } from './fixtures'
+import { collectBrowserErrors, assertNoBrowserErrors, createCharacterThroughUi, enterHome, openSettingsAndSave } from './helpers'
+
+const evidence = 'docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence'
+
+test('opening actions use right drawers, shared preferences and trial/resume owners', async ({ page }) => {
+  test.setTimeout(120_000)
+  const errors = collectBrowserErrors(page)
+  await page.setViewportSize({ width: 1672, height: 941 })
+  await page.goto('/')
+  const trial = page.getByTestId('auth-guest-button')
+  await expect(trial).toBeEnabled({ timeout: 20_000 })
+  await expect(trial).toHaveText('Chơi Thử')
+  await page.screenshot({ path: `${evidence}/scene-01-four-actions.png` })
+  for (const mode of ['login', 'register'] as const) {
+    const trigger = page.getByTestId(`opening-${mode}-button`)
+    await trigger.click()
+    const drawer = page.getByTestId('entry-drawer')
+    await expect(drawer).toBeVisible()
+    await expect(page.locator(`#auth-tab-${mode}`)).toHaveAttribute('aria-selected', 'true')
+    await page.locator('#auth-input-id').fill('ab')
+    await expect(page.locator('#auth-input-id')).toHaveAttribute('aria-invalid', 'true')
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: `${evidence}/scene-01-${mode}-drawer.png` })
+    await page.keyboard.press('Escape')
+    await expect(drawer).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  }
+  for (const width of [1280, 1672, 1920]) {
+    await page.setViewportSize({ width, height: Math.round(width * 9 / 16) })
+    await page.getByTestId('opening-settings-button').click()
+    await expect(page.getByTestId('settings-audio-volume')).toBeVisible()
+    await page.getByTestId('settings-audio-volume').fill('42')
+    await expect(page.getByTestId('settings-audio-volume')).toHaveValue('42')
+    await page.waitForTimeout(400)
+    const box = await page.getByTestId('entry-drawer').boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.x).toBeGreaterThan(0)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(width)
+    await page.screenshot({ path: `${evidence}/scene-01-settings-${width}.png` })
+    await page.getByTestId('entry-drawer-close').click()
+    await expect(page.getByTestId('entry-drawer')).toHaveCount(0)
+  }
+  await trial.click()
+  await expect(page.getByTestId('character-creation-screen')).toBeVisible({ timeout: 20_000 })
+  await createCharacterThroughUi(page, 'Đạo Hữu')
+  await enterHome(page)
+  await openSettingsAndSave(page)
+  await page.reload()
+  await expect(page.getByTestId('auth-continue-button')).toBeEnabled({ timeout: 20_000 })
+  await expect(page.getByTestId('auth-guest-button')).toHaveCount(0)
+  await page.getByTestId('auth-continue-button').click()
+  await enterHome(page)
+  await expect(page.getByTestId('character-creation-screen')).toHaveCount(0)
+  assertNoBrowserErrors(errors)
+})

@@ -1,0 +1,14 @@
+const vi = {
+  character: 'Nhân Vật', creation: 'Khởi Đạo', technique: 'Công Pháp', body: 'Luyện Thể', meridian: 'Kinh Mạch', zhou: 'Chu Thiên',
+  tabs: 'Các mục tu hành', name: 'Đạo Danh', sampleName: 'Thanh Vân', identity: 'Luyện Khí · Tầng 11', pathway: 'Đạo Lộ', swordPath: 'Kiếm Tu', spellPath: 'Pháp Tu', bodyPath: 'Thể Tu',
+  mainStats: 'Thuộc Tính Chính', points: 'Điểm thuộc tính: 5', vitality: 'Thể Chất', strength: 'Căn Cốt', dexterity: 'Thân Pháp', attunement: 'Linh Căn', intelligence: 'Thần Thức', talent: 'Thiên Phú', elements: 'Ngũ Hành', details: 'Chi Tiết', power: 'Chiến Lực',
+  hp: 'Sinh Lực', attack: 'Tấn Công', defense: 'Phòng Ngự', mana: 'Nội Lực', critical: 'Bạo Kích', speed: 'Tốc Độ', accuracy: 'Chính Xác', dodge: 'Né Tránh', regen: 'Hồi Sinh Lực', reduction: 'Giảm Sát Thương',
+  fire: 'Hỏa', wood: 'Mộc', water: 'Thủy', earth: 'Thổ', metal: 'Kim', basic: 'Cơ Bản', combat: 'Chiến Đấu', other: 'Khác',
+  talentName1: 'Kiên Thể', talentName2: 'Linh Căn', talentName3: 'Thần Thức', talentDescription1: 'Thể chất vững vàng, căn cơ bền bỉ.', talentDescription2: 'Cảm ứng linh khí, thiên tư tu hành.', talentDescription3: 'Tâm trí sáng suốt, thần thức tinh tế.', unopened: 'Chưa mở',
+  creationIntro: 'Một đạo danh, một khởi đầu trên con đường tu hành.', enterName: 'Nhập đạo danh của bạn', choosePath: 'Đạo lộ khởi đầu', pathPreview: 'Minh họa đạo lộ', pathDescription1: 'Kiếm pháp linh hoạt, căn cơ vững vàng.', pathDescription2: 'Điều ngự linh khí, thông hiểu ngũ hành.', pathDescription3: 'Rèn luyện thể phách, vững bền gân cốt.', chooseTalent: 'Chọn một thiên phú', reroll: 'Đổi Thiên Phú', begin: 'Bắt Đầu Tu Hành', back: 'Quay Lại',
+  catalog: 'Danh Mục Công Pháp', manual: 'Thanh Vân Quyết', manual2: 'Thiết Thể Kinh', manual3: 'Ngũ Hành Chân Quyết', grade: 'Sơ Cấp', manualDescription: 'Điều hòa khí tức, vững gốc căn cơ, tăng cường căn bản tu hành.', effects: 'Thuộc Tính Tăng', current: 'Hiện Tại (Lv.1)', next: 'Cấp Kế (Lv.2)', costs: 'Nguyên Liệu Cần', stone: 'Linh Thạch', herb: 'Nhân Sâm', upgrade: 'Tăng Cấp',
+  meridianTitle: 'Kỳ Kinh Bát Mạch', ren: 'Nhâm Mạch', du: 'Đới Mạch', yin: 'Âm Kiều Mạch', meridianDescription: 'Kiều đạo phía âm, dẫn huyết nuôi thân.', opened: 'Đã mở', nextMeridian: 'Kế tiếp', meridianSummary: 'Đã mở: 2/8', conditions: 'Điều Kiện', realmGate: 'Luyện Khí tầng 6', pill: 'Thông Mạch Đan', openMeridian: 'Mở Mạch',
+  zhouDescription: 'Vận hành chu thiên, khai thông pháp thể, tăng cường thuộc tính.', capacity: 'Dung lượng hiện tại: 18', smallCycle: 'Tiểu Chu Thiên · 18', largeCycle: 'Đại Chu Thiên · 36', zhouSummary: 'Chu thiên: 12/36', step: 'Bước Hiện Tại', stepCount: 'Bước 13/18', stepRewards: 'Thưởng Bước Này', essence: 'Tinh Hoa Pháp Thể', circulate: 'Vận Chu Thiên',
+  designOnly: 'Bản duyệt thiết kế · Dữ liệu tĩnh',
+}
+export const messages = { vi }

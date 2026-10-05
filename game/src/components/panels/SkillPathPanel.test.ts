@@ -91,7 +91,7 @@ function mountPanel(
     container,
     scene: () => container.querySelector('.skill-paper-scene'),
     nodes: () => container.querySelectorAll('.skill-node'),
-    heading: () => container.querySelector('.skill-heading p')?.textContent ?? null,
+    heading: () => container.querySelector('.pc-paper-scene__header > p')?.textContent ?? null,
     actionButton: () => container.querySelector<HTMLButtonElement>('.skill-upgrade'),
     respecButton: () => container.querySelector<HTMLButtonElement>('.skill-respec'),
     selectNode: (id: string) =>

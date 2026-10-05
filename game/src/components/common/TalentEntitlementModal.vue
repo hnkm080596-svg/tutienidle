@@ -12,7 +12,7 @@
 // checkTribulationOutcomeAction) waits on the same record.
 import { computed, ref, useId, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import InkNineSlice from './primitives/InkNineSlice.vue'
+import PcPaperChrome from './PcPaperChrome.vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 import {
   getTalentLevel,
@@ -108,8 +108,9 @@ function decide(decision: TalentEntitlementDecision): void {
       aria-modal="true"
       :aria-labelledby="titleId"
     >
-      <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-      <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+
+      <PcPaperChrome />
+
 
       <h3 :id="titleId" class="talent-entitlement__title">{{ t('tribulation.entitlement.title') }}</h3>
       <p class="talent-entitlement__body">{{ t('tribulation.entitlement.body') }}</p>

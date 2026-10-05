@@ -20,11 +20,18 @@ import {
  * switches the output root so the same flows produce the after set.
  */
 
-const OUT_ROOT = process.env.HK_FIDELITY_DIR ?? 'docs/qa/huyen-kim-reference-fidelity/evidence/before'
+const OUT_ROOT = process.env.HK_FIDELITY_DIR ?? 'docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence'
 
 test.use({ viewport: { width: 1280, height: 720 } })
 
 async function shot(page: Page, name: string): Promise<void> {
+  for (const scene of ['alchemy', 'exploration']) {
+    const surface = page.locator(`.${scene}-scene .${scene}-paper`)
+    if (await surface.isVisible()) {
+      expect(await surface.evaluate(element => getComputedStyle(element, '::before').backgroundImage)).not.toBe('none')
+      await expect(surface).toHaveCSS('border-image-slice', '240 320')
+    }
+  }
   await page.screenshot({ path: `${OUT_ROOT}/${name}.png` })
 }
 
@@ -91,7 +98,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     await shot(page, '03-dong-fu-closed')
 
     // Wheel open state - Tab is the shipped shortcut.
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
     const wheel = page.locator('[data-wheel-slot="settings"]')
     await expect(wheel).toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(700)
@@ -113,7 +120,24 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
       await openLeftMode(page, mode)
       await expect(page.locator(root)).toBeVisible({ timeout: 15_000 })
       await settle(page)
+      if (root === '.hk-scroll') {
+        const plaque = await page.locator('.hk-scroll__plaque').boundingBox()
+        const heading = await page.locator('.building-heading').boundingBox()
+        const rail = await page.locator('.hk-scroll__rail').boundingBox()
+        const envelope = await page.locator('.hk-scroll__envelope').boundingBox()
+        expect(heading!.y).toBeGreaterThanOrEqual(plaque!.y + plaque!.height)
+        expect(rail!.y + rail!.height).toBeLessThanOrEqual(envelope!.y + envelope!.height)
+      }
       await shot(page, name)
+      if (root === '.hk-scroll') {
+        const lastAction = page.locator('.production-panel button').last()
+        await lastAction.scrollIntoViewIfNeeded()
+        const action = await lastAction.boundingBox()
+        const content = await page.locator('.hk-scroll__main').boundingBox()
+        expect(action!.y).toBeGreaterThanOrEqual(content!.y)
+        expect(action!.y + action!.height).toBeLessThanOrEqual(content!.y + content!.height + 1)
+        await shot(page, '11c-production-actions')
+      }
       await closeAll(page)
     }
 
@@ -125,6 +149,15 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
       ['quest', '18-quest', '.quest-scene'],
     ]
     for (const [panel, name, root] of standalones) {
+      if (panel === 'technique') {
+        // The current beta gate rejects this route for a fresh mortal.
+        // Capture the real locked affordance instead of bypassing eligibility.
+        await openLeftMode(page, 'character')
+        await expect(page.locator('[data-nav-id="technique"]')).toHaveAttribute('aria-disabled', 'true')
+        await shot(page, '06-technique-locked')
+        await closeAll(page)
+        continue
+      }
       await openStandalone(page, panel)
       await expect(page.locator(root)).toBeVisible({ timeout: 15_000 })
       await settle(page)
@@ -140,7 +173,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     await createBetaCharacter(page, 'Fidelity Battle')
     await enterHome(page)
 
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
@@ -192,7 +225,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     // Continue home, then re-enter the same stage for the defeat frame.
     await victory.getByRole('button', { name: /Tiếp Tục/ }).click()
     await waitForPresentationIdle(page)
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
     await expect(scroll).toBeVisible({ timeout: 15_000 })
@@ -211,7 +244,11 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
             if (!battle) return 'none'
             if (battle.state !== 'fighting') return battle.state as string
             for (const p of battle.players ?? []) {
-              if (p.entity) p.entity.currentHp = 1
+              if (p.entity) {
+                // Capture-only terminal fixture, symmetric with the enemy victory fixture.
+                p.entity.currentHp = 0
+                p.entity.alive = false
+              }
             }
             return battle.state as string
           }),
@@ -249,6 +286,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     }, { ...save, player: { ...save!.player, realmLevel: 12, cultivation: 0 } })
     await page.reload()
     await page.getByTestId('auth-screen').waitFor({ state: 'visible', timeout: 15_000 })
+    await page.getByTestId('opening-login-button').click()
     await page.getByTestId('auth-guest-button').click()
     await enterHome(page)
 

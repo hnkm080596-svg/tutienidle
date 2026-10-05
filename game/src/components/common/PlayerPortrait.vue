@@ -34,12 +34,15 @@ export interface PlayerPortraitProps {
 
   /** Chi variant 'cultivate' honor co nay. */
   animated?: boolean
+  /** UI scenes may select existing idle clips without changing combat art mode. */
+  animationMode?: 'inherit' | 'idle'
 }
 
 const props = withDefaults(defineProps<PlayerPortraitProps>(), {
   height: 239,
 
   animated: false,
+  animationMode: 'inherit',
 })
 
 // Profile-derived art (art-seam wave, user ruling Q4 2026-09-29): the
@@ -64,7 +67,7 @@ const imageUrl = computed(() =>
 // draws the mortal idle loop from the catalogue's dormant animated form;
 // `cultivate` draws the shared 17-frame bridge multiatlas until player
 // atlases carry a cultivate clip (uniformity plan, 2026-09-19).
-const useCanvas = ENTITY_ART_MODE === 'animated'
+const useCanvas = computed(() => props.animationMode === 'idle' || ENTITY_ART_MODE === 'animated')
 
 // The same entity key combat resolves for this profile - reskin-mapped
 // profiles animate their own sheet (armed/unarmed pick included), unmapped
@@ -90,7 +93,7 @@ const CULTIVATE_BRIDGE = {
 } as const
 
 const canvasProps = computed(() => {
-  if (props.variant === 'cultivate') {
+  if (props.variant === 'cultivate' && props.animationMode !== 'idle') {
     return CULTIVATE_BRIDGE
   }
 
@@ -128,7 +131,7 @@ const portraitHeight = computed(() =>
 
     <EntitySpriteCanvas
       v-if="useCanvas && canvasProps"
-      :key="variant"
+      :key="canvasProps.sheetUrl + canvasProps.framePrefix"
       v-bind="canvasProps"
       :height="height"
       class="player-portrait__image"

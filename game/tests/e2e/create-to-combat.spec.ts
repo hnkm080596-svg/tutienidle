@@ -23,7 +23,7 @@ test.describe('Create character to combat', () => {
     // Phaser canvas click risk: AVOID clicking the canvas character trigger; instead
     // use the keyboard shortcut Tab (DongFuStage.vue listens for Tab keydown)
     // to open the command wheel deterministically.
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
 
     const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleportSlot).toBeVisible({ timeout: 10_000 })

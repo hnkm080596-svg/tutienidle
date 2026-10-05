@@ -64,7 +64,8 @@ const chromeArtStyle = computed<Record<string, string> | null>(() => {
   const fill = meta?.center === 'transparent' ? '' : ' fill'
   const repeat = meta?.edgeMode === 'tile' ? 'round' : 'stretch'
   const slice = `${top} ${right} ${bottom} ${left}${fill}`
-  const width = `${top}px ${right}px ${bottom}px ${left}px`
+  const destination = (value: number) => value === 0 ? '0px' : `${Math.min(value, props.thickness ?? 22)}px`
+  const width = `${destination(top)} ${destination(right)} ${destination(bottom)} ${destination(left)}`
   const source = `image-set(url("${c.url1x}") 1x, url("${c.url2x}") 2x)`
   const tint = meta?.tintable === false ? undefined : resolvedTint.value
   const art: Record<string, string> = tint
@@ -77,6 +78,8 @@ const chromeArtStyle = computed<Record<string, string> | null>(() => {
         WebkitMaskBoxImageOutset: '0',
       }
     : {
+        background: 'none',
+        boxShadow: 'none',
         borderStyle: 'solid',
         borderColor: 'transparent',
         borderWidth: width,

@@ -1,7 +1,7 @@
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 const root = '/assets/ui/huyen-kim/scene/character-v2/'
 export const CHARACTER_ART = Object.freeze({
-  figure: resolveAssetUrl(`${root}figure.png`), paper: resolveAssetUrl(`${root}paper-nine-slice.png`),
+  figure: resolveAssetUrl(`${root}figure.png`), paper: resolveAssetUrl("/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png"),
   logo: resolveAssetUrl('/assets/ui/huyen-kim/scene/login-v2/wordmark.png'),
 })
 export const elementArt = (id: string) => resolveAssetUrl(`/assets/ui/elements/el-${id}.png`)

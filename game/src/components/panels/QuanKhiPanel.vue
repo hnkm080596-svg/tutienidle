@@ -29,7 +29,11 @@ import {
 import { BETA_PLAYABLE_ELEMENTS, isBetaWay, isScopeHidden } from '@/core/betaScope'
 import type { ElementType } from '@/core/element/ElementType'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
-import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
+import PcPaperScene from '@/components/common/PcPaperScene.vue'
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
+import { useDialogFocus } from '@/composables/useDialogFocus'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
@@ -43,6 +47,8 @@ import { useAudioStore } from '@/stores/audio'
 const { t, te } = useI18n()
 
 const ui = useUiStore()
+const pageRef = ref<HTMLElement | null>(null)
+useDialogFocus(pageRef, computed(() => ui.standalonePanel === 'quan_khi'), { onEscape: () => close() })
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
@@ -304,7 +310,11 @@ function removeOrbAt(index: number) {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" :title="t('panels.quanKhi.title')" width="min(480px, 90vw)" @close="close">
+  <SceneDesignCanvas v-if="ui.standalonePanel === 'quan_khi'" overlay :style="{ zIndex: OVERLAY_LAYERS.panel }">
+    <section ref="pageRef" class="quan-khi-page" role="dialog" aria-modal="true" :aria-label="t('panels.quanKhi.title')">
+      <PcPaperScene :title="t('panels.quanKhi.title')">
+        <template #actions><PcPaperButton variant="secondary" @click="close">{{ t('pcUi.back') }}</PcPaperButton></template>
+        <div class="quan-khi-workspace">
     <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
       <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 
@@ -446,7 +456,10 @@ function removeOrbAt(index: number) {
       @confirm="confirmChoosePath"
       @cancel="cancelChoosePath"
     />
-  </OverlayPanel>
+        </div>
+      </PcPaperScene>
+    </section>
+  </SceneDesignCanvas>
 </template>
 
 <style scoped>
@@ -661,4 +674,17 @@ function removeOrbAt(index: number) {
   line-height: 1.4;
   color: var(--crimson);
 }
+
+.quan-khi-page{position:absolute;inset:0;pointer-events:auto}
+.quan-khi-workspace{height:100%;min-height:0;overflow:auto;scrollbar-width:thin;color:#302718;font:18px/1.6 var(--pc-font-body)}
+.quan-khi-workspace .quan-khi-panel__card{background:transparent;border:0;border-block:1px solid #b08b4d66;border-radius:0;padding:24px 0}
+.quan-khi-workspace .quan-khi-panel__choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin:25px 0}
+.quan-khi-workspace .quan-khi-panel__choice{min-height:200px;font:700 25px/1.3 var(--pc-font-body);padding:25px;white-space:normal}
+.quan-khi-workspace :is(.quan-khi-panel__choice-desc,.quan-khi-panel__choice-kit){font:17px/1.6 var(--pc-font-body);margin-top:16px}
+.quan-khi-workspace :is(.quan-khi-panel__hint,.quan-khi-panel__route-name){color:#604b29;font-size:20px}
+.quan-khi-workspace :is(.quan-khi-panel__warning,.quan-khi-panel__element-error){color:#a53b2f;font-size:18px}
+.quan-khi-workspace .quan-khi-panel__element-grid{display:flex;gap:25px;flex-wrap:wrap;justify-content:center;margin:40px 0}
+.quan-khi-workspace .quan-khi-panel__element-btn{min-width:160px;min-height:140px;font-size:24px}
+.quan-khi-workspace .quan-khi-panel__preset-strip{padding:20px 0;gap:18px}
+.quan-khi-workspace .quan-khi-panel__preset-slot{width:110px;height:110px;background:var(--pc-slot-art) center/100% 100%;border:0}
 </style>

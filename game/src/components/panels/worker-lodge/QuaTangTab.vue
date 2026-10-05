@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 // Qua Tang tab (M-F-COMPANION-GIFT) - the mail/gift surface inside
 // WorkerLodgePanel: pending companionGifts records claim through the
 // ops transaction; claimed records render as history. Presentation
@@ -104,7 +105,7 @@ function onClaim(giftId: string) {
 </script>
 
 <template>
-  <section class="qua-tang">
+  <section class="qua-tang pc-auxiliary">
     <p class="qua-tang__hint">{{ t('quaTang.hint') }}</p>
 
     <div v-for="gift in pending" :key="gift.id" class="qua-tang__row">

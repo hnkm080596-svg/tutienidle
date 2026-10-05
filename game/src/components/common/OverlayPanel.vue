@@ -3,7 +3,7 @@ import { computed, ref, useId, type ComponentPublicInstance } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { i18n } from '@/i18n'
-import InkNineSlice from './primitives/InkNineSlice.vue'
+import PcPaperChrome from './PcPaperChrome.vue'
 import GameButton from './GameButton.vue'
 import HuyenKimSymbol from './HuyenKimSymbol.vue'
 import SysPanel from './system/SysPanel.vue'
@@ -61,8 +61,8 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
         aria-modal="true"
         :aria-labelledby="headingId"
       >
-        <InkNineSlice v-if="variant === 'ink'" chrome-id="surface-m-panel" layer="surface" />
-        <InkNineSlice v-if="variant === 'ink'" chrome-id="frame-m-modal" layer="frame" />
+        <PcPaperChrome v-if="variant === 'ink'" />
+        
         <header class="overlay-panel__header">
           <div class="overlay-panel__heading">
             <slot name="heading">

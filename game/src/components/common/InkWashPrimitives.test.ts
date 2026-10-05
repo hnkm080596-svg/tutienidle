@@ -25,32 +25,24 @@ afterEach(() => {
 })
 
 describe('ink-wash shared primitives', () => {
-  it('maps each rectangular button variant to the huyen-kim button slot', () => {
-    for (const variant of ['primary', 'secondary', 'danger'] as const) {
+  it('uses one shared authored control family for all button variants', () => {
+    for (const variant of ['primary', 'secondary', 'danger', 'ghost'] as const) {
       const container = mount(GameButton, { variant })
-      expect(container.querySelector('[data-hk-slice="button-standard"]')).not.toBeNull()
+      const button = container.querySelector('button')!
+      expect(button.style.getPropertyValue('--pc-primary-button')).toContain('button-primary-v1.png')
+      expect(button.style.getPropertyValue('--pc-secondary-button')).toContain('button-secondary-v1.png')
+      expect(container.querySelector('[data-hk-slice]')).toBeNull()
+      expect(button.textContent).toBe('Nhãn dài')
     }
-    // ghost stays a bare hairline frame on the element - no slice layer.
-    const ghost = mount(GameButton, { variant: 'ghost' })
-    expect(ghost.querySelector('[data-hk-slice]')).toBeNull()
-    expect(ghost.querySelector('[data-ink-slice]')).toBeNull()
   })
 
-  it('maps circular buttons to the icon-button-utility seal slot', () => {
-    const circle = mount(GameButton, { shape: 'circle' })
-    const button = circle.querySelector('button')
-
-    expect(circle.querySelector('[data-hk-slice="icon-button-utility"]')).not.toBeNull()
-    expect(button?.classList).toContain('game-button--circle')
+  it('preserves the circle shape and accessible button label', () => {
+    const circle = mount(GameButton, { shape: 'circle', 'aria-label': 'Đóng' })
+    const button = circle.querySelector('button')!
+    expect(button.classList).toContain('game-button--circle')
+    expect(button.getAttribute('aria-label')).toBe('Đóng')
+    expect(circle.querySelector('[data-hk-slice]')).toBeNull()
   })
-
-  it('keeps ghost circles a bare hairline - no slice layer', () => {
-    const ghostCircle = mount(GameButton, { shape: 'circle', variant: 'ghost' })
-
-    expect(ghostCircle.querySelector('[data-hk-slice]')).toBeNull()
-    expect(ghostCircle.querySelector('[data-ink-slice]')).toBeNull()
-  })
-
   it('keeps enabled, disabled, and loading click behavior unchanged', () => {
     const enabledClick = vi.fn()
     const disabledClick = vi.fn()

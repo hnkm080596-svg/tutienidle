@@ -121,15 +121,14 @@ describe('BodySurface (scene 08 fidelity)', () => {
     view.unmount()
   })
 
-  it('renders the approved figure art per chapter', async () => {
+  it('renders the approved shared body diagram', async () => {
     const view = mountBodyScene((player) => {
       player.$state.realmId = 'mortal'
     })
     await nextTick()
 
-    const figure = view.container.querySelector<HTMLImageElement>('.body-figure-art')
-    expect(figure?.getAttribute('src')).toContain('body-v2')
-    expect(figure?.getAttribute('src')).toContain('mortal-horse-stance')
+    const figure = view.container.querySelector<HTMLImageElement>('.pc-body-diagram > img')
+    expect(figure?.getAttribute('src')).toContain('controls/body-diagram-v1')
 
     view.unmount()
   })
@@ -163,7 +162,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
         player.$state.realmId = 'mortal'
       })
       await nextTick()
-      expect(fresh.container.querySelector('.body-heading p')?.textContent)
+      expect(fresh.container.querySelector('.pc-paper-scene__header p')?.textContent)
         .toContain('Phàm Thể')
       fresh.unmount()
 
@@ -178,7 +177,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       // Completed refinement makes meridian the default chapter - open
       // the Luyen The seal first.
       await selectChapter(transformed, 'body_refinement')
-      expect(transformed.container.querySelector('.body-heading p')?.textContent)
+      expect(transformed.container.querySelector('.pc-paper-scene__header p')?.textContent)
         .toContain('Bảo Thể')
       transformed.unmount()
     })
@@ -190,13 +189,13 @@ describe('BodySurface (scene 08 fidelity)', () => {
         player.$state.realmId = 'mortal'
       })
       await nextTick()
-      expect(view.container.querySelector('.body-heading p')?.textContent)
+      expect(view.container.querySelector('.pc-paper-scene__header p')?.textContent)
         .toContain('Phàm Thể')
 
       store!.$state.physiqueGrade = 'bao'
       view.bumpState()
       await nextTick()
-      expect(view.container.querySelector('.body-heading p')?.textContent)
+      expect(view.container.querySelector('.pc-paper-scene__header p')?.textContent)
         .toContain('Bảo Thể')
       view.unmount()
     })

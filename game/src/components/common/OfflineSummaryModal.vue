@@ -11,7 +11,7 @@ import { useI18n } from 'vue-i18n'
 import { onMounted, ref, useId } from 'vue'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
-import InkNineSlice from './primitives/InkNineSlice.vue'
+import PcPaperChrome from './PcPaperChrome.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useAudioStore } from '@/stores/audio'
@@ -57,8 +57,9 @@ const titleId = useId()
       aria-modal="true"
       :aria-labelledby="titleId"
     >
-      <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-      <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+
+      <PcPaperChrome />
+
 
       <h3 :id="titleId" class="offline-summary__title">{{ t('combat.offline.title') }}</h3>
 

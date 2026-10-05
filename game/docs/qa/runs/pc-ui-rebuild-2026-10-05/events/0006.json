@@ -1,0 +1,7 @@
+{
+  "observedStatus": "finished",
+  "observedRuntimeId": "/root/wire_entry_home",
+  "evidence": "collaboration.list_agents observed completed; G5 WIRE-entry-home-01-G5.md",
+  "action": "observe",
+  "assignmentId": "WIRE-entry-home-01"
+}

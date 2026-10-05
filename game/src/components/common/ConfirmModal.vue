@@ -2,7 +2,7 @@
 import { computed, ref, useId, watch } from 'vue'
 import { i18n } from '@/i18n'
 import GameButton from './GameButton.vue'
-import InkNineSlice from './primitives/InkNineSlice.vue'
+import PcPaperChrome from './PcPaperChrome.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useAudioStore } from '@/stores/audio'
@@ -87,8 +87,9 @@ useDialogFocus(panelRef, computed(() => props.open), {
           :aria-labelledby="titleId"
           :aria-describedby="messageId"
         >
-          <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
-          <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
+
+      <PcPaperChrome />
+
 
           <h3 :id="titleId" class="confirm-modal__title" :class="{ 'is-danger': danger }">{{ title }}</h3>
           <p :id="messageId" class="confirm-modal__message">{{ message }}</p>

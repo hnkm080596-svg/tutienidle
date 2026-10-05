@@ -8,11 +8,12 @@ import TribulationFidelityChapters from './TribulationFidelityChapters.vue'
 import TribulationFidelityQuestion from './TribulationFidelityQuestion.vue'
 import CombatFidelityMeter from '@/components/scenes/combat/fidelity/CombatFidelityMeter.vue'
 import type { TribulationUiModel } from './tribulationUi'
+import '@/assets/tien-hiep-outcomes.css'
 const props = defineProps<{ model: TribulationUiModel; selected: string | null; notice: string }>()
 const emit = defineEmits<{ answer: [id: string]; back: [] }>()
 const { t } = useI18n()
 const chapter = computed(() => props.model.chapters.find(entry => entry.id === props.model.chapterId))
-const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/combat-v2/ornament-ring-v1.png')
+const ring = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/orb-frame.png')
 const meditator = resolveAssetUrl('/assets/ui/huyen-kim/scene/body-v2/zhou-meditation-v1.png')
 const backIcon = stableSymbolUrl('back')
 </script>

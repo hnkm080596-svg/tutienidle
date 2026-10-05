@@ -1,4 +1,4 @@
-﻿import { expect, test } from './fixtures'
+import { expect, test } from './fixtures'
 
 import {
   bootToGuestHome,
@@ -104,13 +104,13 @@ test.describe('Save and reload persistence', () => {
     await reauthAndEnterHome(page)
 
     // Character identity persisted: mo Nhan Vat panel qua wheel + check ten.
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
     const characterSlot = page.locator('[data-wheel-slot="character"]')
     await expect(characterSlot).toBeVisible({ timeout: 10_000 })
     await characterSlot.click()
 
-    await expect(page.getByTestId('character-name')).toHaveText(characterName, { timeout: 10_000 })
-    await expect(page.getByTestId('character-realm-line')).toContainText('Phàm Nhân')
+    await expect(page.locator('.cf-name')).toHaveText(`${characterName}◆`, { timeout: 10_000 })
+    await expect(page.locator('.cf-realm')).toContainText('Phàm Nhân')
 
     // EXACT persistence: Linh Thach stack phai bang dung amount da seed.
     // Autosave (15s) co the ghi trong luc navigate - autosave persist cung

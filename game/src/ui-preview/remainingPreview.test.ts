@@ -1,3 +1,4 @@
+import { installTienHiepUiAssets } from '@/presentation/assets/TienHiepUiAssets'
 // @vitest-environment jsdom
 import {expect,it} from 'vitest'
 import {createApp,nextTick,type Component} from 'vue'

@@ -63,6 +63,7 @@ import {
   stableSymbolUrl,
 } from '@/presentation/huyenKim/StableSceneArt'
 import { HUYEN_KIM_CHROME } from '@/ui/huyenKimChrome'
+import { PC_PAPER_ICON_PATHS } from './PcPaperIcons'
 import {
   THANH_VAN_SEASONS,
   THANH_VAN_TIMES,
@@ -556,6 +557,38 @@ const UI_SHARED_CHROME_URLS = [
  * guard - a quoted art path with no registry owner.
  */
 const UI_SCENE_SINGLE_URLS = [
+  '/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png',
+  '/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/body-diagram-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/landmark-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/inspector-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/resource-jade-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/resource-coin-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/resource-crystal-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
+  '/assets/ui/tien-hiep-2026-10/source/opening-vista-warm-v1.png',
+  '/assets/ui/tien-hiep-2026-10/source/warm-landscape-header-v1.png',
+  '/assets/ui/tien-hiep-2026-10/source/warm-branch-corner-v1.png',
+  '/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png',
+  '/assets/ui/tien-hiep-2026-10/source/world-vista.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/page-paper.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/ink-panel.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/paper-panel.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/paper-surface.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/orb-frame.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/slot-frame.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/navigation-rail.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/power-ribbon.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/section-header.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/title-plaque.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/button-primary.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/building-plaque.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon.png',
+  '/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon-red.png',
   '/assets/ui/huyen-kim/scene/body-v2/mortal-horse-stance-v1.png',
   '/assets/ui/huyen-kim/scene/body-v2/qi-taichi-v1.png',
   '/assets/ui/huyen-kim/scene/body-v2/zhou-meditation-v1.png',
@@ -666,7 +699,7 @@ export function getUiSceneDescriptors(): readonly AssetResourceDescriptor[] {
   // '@2x'); non-stack layers without consumers stay unwarmed.
   urls.push(stableSceneArtUrl('equipment-paperdoll-base', '@2x'))
 
-  urls.push(...UI_SCENE_SINGLE_URLS)
+  urls.push(...UI_SCENE_SINGLE_URLS, ...PC_PAPER_ICON_PATHS)
 
   // Dong Fu modular backdrop: every season/time file is reachable once
   // the variant rotates (selectNextThanhVanVariant after each battle),

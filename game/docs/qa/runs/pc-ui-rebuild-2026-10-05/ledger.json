@@ -1,0 +1,455 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "pc-ui-rebuild-2026-10-05",
+    "createdAt": "2026-10-05T03:01:19.538Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "Entire PC UI composition and art integration, preserving domain behavior"
+    ],
+    "nonGoals": [
+      "Phone design",
+      "Gameplay changes",
+      "Commit/push/merge",
+      "Replacement player animation"
+    ],
+    "checkout": "E:/tutienidle/.agent-worktrees/hoa-cau-fireball-vfx",
+    "branch": "codex/tien-hiep-ui-redesign",
+    "base": "f8af8007b0b6519e6aa6997fedad2cc77939538a",
+    "head": "f8af8007b0b6519e6aa6997fedad2cc77939538a-dirty",
+    "state": {
+      "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+      "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+      "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+      "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "ui-input-lifecycle",
+      "pinia-phaser-sync"
+    ],
+    "exclusions": [
+      "node_modules",
+      "dist",
+      "test-results",
+      "docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence"
+    ],
+    "briefIds": [
+      "pc-ui-reconstruction-2026-10-05"
+    ],
+    "capacityLimit": 5,
+    "requiredReadiness": true,
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [],
+  "assignments": [
+    {
+      "phase": "IMPLEMENT",
+      "bundleRef": "docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-EXECUTION.md",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "requestId": "WIRE-entry-home-01",
+      "worker": "entry-home",
+      "status": "FINISHED",
+      "readiness": "READY",
+      "id": "WIRE-entry-home-01",
+      "scope": "entry-home",
+      "history": [
+        {
+          "at": "2026-10-05T05:07:04.093Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-10-05T05:07:04.094Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 2/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-10-05T05:24:04.313Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
+        }
+      ],
+      "reservedAt": "2026-10-05T05:07:04.094Z",
+      "releaseEvidence": "collaboration.list_agents observed completed; G5 WIRE-entry-home-01-G5.md",
+      "observedRuntimeId": "/root/wire_entry_home"
+    },
+    {
+      "phase": "IMPLEMENT",
+      "bundleRef": "docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-EXECUTION.md",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "requestId": "WIRE-progression-01",
+      "worker": "progression",
+      "status": "FINISHED",
+      "readiness": "READY",
+      "id": "WIRE-progression-01",
+      "scope": "progression",
+      "history": [
+        {
+          "at": "2026-10-05T05:07:04.241Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-10-05T05:07:04.241Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-10-05T05:30:43.532Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
+        }
+      ],
+      "reservedAt": "2026-10-05T05:07:04.241Z",
+      "releaseEvidence": "Final G5 received; native list_agents after final shows worker no longer active; G5 WIRE-progression-01-G5.md",
+      "observedRuntimeId": "/root/wire_progression"
+    },
+    {
+      "phase": "IMPLEMENT",
+      "bundleRef": "docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-EXECUTION.md",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "requestId": "WIRE-collections-01",
+      "worker": "collections",
+      "status": "FINISHED",
+      "readiness": "READY",
+      "id": "WIRE-collections-01",
+      "scope": "collections",
+      "history": [
+        {
+          "at": "2026-10-05T05:07:04.385Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-10-05T05:07:04.385Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 4/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-10-05T06:00:53.668Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
+        }
+      ],
+      "reservedAt": "2026-10-05T05:07:04.385Z",
+      "releaseEvidence": "Native terminal lifecycle observed after final G5, completed/absent from current active roster",
+      "observedRuntimeId": "/root/wire_collections"
+    },
+    {
+      "readiness": "READY",
+      "phase": "IMPLEMENT",
+      "bundleRef": "docs/design/tien-hiep-ui-redesign-2026-10-05/UI-SHARED-CONSUMER-MAP.md",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "status": "FINISHED",
+      "requestId": "WIRE-outcomes-01",
+      "scope": "combat-tribulation-victory-defeat",
+      "id": "WIRE-outcomes-01",
+      "history": [
+        {
+          "at": "2026-10-05T05:24:04.491Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-10-05T05:24:04.492Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 4/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-10-05T06:00:56.712Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
+        }
+      ],
+      "reservedAt": "2026-10-05T05:24:04.492Z",
+      "releaseEvidence": "Native terminal lifecycle observed after final G5, completed/absent from current active roster",
+      "observedRuntimeId": "/root/wire_outcomes"
+    },
+    {
+      "readiness": "READY",
+      "phase": "IMPLEMENT",
+      "bundleRef": "docs/design/tien-hiep-ui-redesign-2026-10-05/UI-SHARED-CONSUMER-MAP.md",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "status": "FINISHED",
+      "requestId": "WIRE-auxiliary-01",
+      "scope": "production-vendor-companion-formation-worker-reading",
+      "id": "WIRE-auxiliary-01",
+      "history": [
+        {
+          "at": "2026-10-05T05:30:46.690Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-10-05T05:30:46.691Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 4/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-10-05T06:00:59.784Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
+        }
+      ],
+      "reservedAt": "2026-10-05T05:30:46.691Z",
+      "releaseEvidence": "Native terminal lifecycle observed after final G5, completed/absent from current active roster",
+      "observedRuntimeId": "/root/wire_auxiliary"
+    }
+  ],
+  "consumptions": [],
+  "invariants": [],
+  "census": [],
+  "findings": [],
+  "evidence": [],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-10-05T03:01:19.543Z",
+      "kind": "PHASE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "d0b6c4c8982b97de365f19c661946f76ce3eebab8a602c3781a18744a17c0ac5",
+      "eventHash": "9b99b4ed394cb7eda324b91ec513c18982865e2105226159f5982dee8766f45b"
+    },
+    {
+      "seq": 2,
+      "at": "2026-10-05T05:06:11.316Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "9b99b4ed394cb7eda324b91ec513c18982865e2105226159f5982dee8766f45b",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "78d609dca4e69e8269e71f5901253733777ad85c26db286f736628247ffbb108",
+      "eventHash": "d533ac7b174208cf28408427af094fc6a45d03bee36f31cb40c7fe67c7fc3f50"
+    },
+    {
+      "seq": 3,
+      "at": "2026-10-05T05:07:04.095Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "d533ac7b174208cf28408427af094fc6a45d03bee36f31cb40c7fe67c7fc3f50",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "dc67630171b2efd50c350398846b30f838d295eaf9dd3e5a4858858876675b70",
+      "eventHash": "89fa007fcd25126641ce20df28701479fb9d2c7c470ca7e3bc6dc8ff9235a9ce"
+    },
+    {
+      "seq": 4,
+      "at": "2026-10-05T05:07:04.243Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "89fa007fcd25126641ce20df28701479fb9d2c7c470ca7e3bc6dc8ff9235a9ce",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "9477f049bbdad058bbcbdf071fd6a7bc67b8f1c96533356bc2fed17d41c05cf9",
+      "eventHash": "7087170db8b68619fafdc9461120343f9009841eb9b3282c4eb2f12938ef4b3d"
+    },
+    {
+      "seq": 5,
+      "at": "2026-10-05T05:07:04.387Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "7087170db8b68619fafdc9461120343f9009841eb9b3282c4eb2f12938ef4b3d",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "277d36cc38cbc245c249fb6f80430dff4844769100977a16cc30700f6018caec",
+      "eventHash": "c4b81943662ae59ea85c60167c94f3ad24dac5d03fbe26b42626b22d3a10590e"
+    },
+    {
+      "seq": 6,
+      "at": "2026-10-05T05:24:04.316Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "c4b81943662ae59ea85c60167c94f3ad24dac5d03fbe26b42626b22d3a10590e",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "0126e0de91c6ee40e17cc75878b526d491108640516a9ad4d79dc30dffd5ebf4",
+      "eventHash": "2a52b0f053f4df6ef4ed74909a9024efb3b80a47fafe2f4f9dff87d936cf27fb"
+    },
+    {
+      "seq": 7,
+      "at": "2026-10-05T05:24:04.494Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "2a52b0f053f4df6ef4ed74909a9024efb3b80a47fafe2f4f9dff87d936cf27fb",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "2556097981ae26d0de8759c2d89365f70820ec07e79051bfea67752939171be4",
+      "eventHash": "9652b5368e7de8eae51a53015b735bea2ed5ebb68e936ac80b87ad23fa0aa4c5"
+    },
+    {
+      "seq": 8,
+      "at": "2026-10-05T05:30:43.534Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "9652b5368e7de8eae51a53015b735bea2ed5ebb68e936ac80b87ad23fa0aa4c5",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "43dc07980d9648c5addcf9585d353f4aadbac65b0f2446d0d4dee2e91572dbed",
+      "eventHash": "15bba35ff272160e7c99b6335419988def34fa41153415a71270b1f7f0792725"
+    },
+    {
+      "seq": 9,
+      "at": "2026-10-05T05:30:46.692Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "15bba35ff272160e7c99b6335419988def34fa41153415a71270b1f7f0792725",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "29ca9f9690749bf716cca69fe542675ef10fb5ecc9fb7d379e5b5fe9ab97c595",
+      "eventHash": "312453ae48edd3b18903681b3c613aeba8cd8ddad585487f9312701078a25892"
+    },
+    {
+      "seq": 10,
+      "at": "2026-10-05T06:00:53.670Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "312453ae48edd3b18903681b3c613aeba8cd8ddad585487f9312701078a25892",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "0701c7490c617d7698938cefea5583d10c91f9fbc2efc0a44d6a79336faba3e9",
+      "eventHash": "7777dfeba779834f479d662cc0089da3a59eeef8fd0e0ef52f5b45b0bd75a864"
+    },
+    {
+      "seq": 11,
+      "at": "2026-10-05T06:00:56.714Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "7777dfeba779834f479d662cc0089da3a59eeef8fd0e0ef52f5b45b0bd75a864",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "f58f2148eaa1bde5e91c0071de3bc4a69be4decc6032257a3bc854fe0139e667",
+      "eventHash": "7d88825b2346665d0988cf3885f4a10082f6ad9c7cc63d6680947c29aa3cfbb5"
+    },
+    {
+      "seq": 12,
+      "at": "2026-10-05T06:00:59.786Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-48832",
+      "state": {
+        "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+        "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+        "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+        "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+      },
+      "previousEventHash": "7d88825b2346665d0988cf3885f4a10082f6ad9c7cc63d6680947c29aa3cfbb5",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "88174a4afb395b3fd1406dff5b957d5e0b7909615bf54e0bcf16b283798e0718",
+      "eventHash": "bbbc1ae9c29513a95850c040719fc66a9864b67370e31d16c0e8d1122d30248e"
+    }
+  ]
+}

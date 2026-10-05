@@ -73,15 +73,15 @@ describe('InkWashBackdrop', () => {
     // mounts the login scroll card inside it.
     expect(authSource).toContain('LoginScrollCard')
     expect(onboardingStageSource).toContain('LoginSceneVista')
-    expect(loginVistaSource).toContain('HuyenKimParallaxStack')
-    expect(loginVistaSource).toContain('stack="auth-creation"')
+    expect(loginVistaSource).toContain('opening-vista-warm-v1.png')
+    expect(loginVistaSource).toContain('LOGIN_ART.cultivator')
     // Scene 02: CharacterCreationScreen composes region components inside
     // the SAME shared vista - the auth-creation parallax stack serves both
     // screens (the scroll exchanges inside one persistent backdrop).
-    expect(creationSource).toContain('CreationSceneLayout')
+    expect(creationSource).toContain('PcPaperScene')
     expect(onboardingStageSource).not.toContain('CreationVista')
-    expect(victorySource).toContain('<InkWashBackdrop :left-mountain="false" bottom-mist seal="large"')
-    expect(defeatSource).toContain('<InkWashBackdrop left-mountain bottom-mist')
+    expect(victorySource).toContain('<PcPaperChrome />')
+    expect(defeatSource).toContain('<PcPaperChrome />')
   })
 
   it('keeps onboarding controls legible on the ivory scroll', () => {
@@ -91,7 +91,7 @@ describe('InkWashBackdrop', () => {
     // Huyen Kim S01/S02 (2026-10-02): the card is the surface-xl-scroll
     // chrome - paper-text tokens carry the legibility contract now.
     // Scene 02 scaffold: the chrome lives in CreationScrollShell.
-    expect(creationSource).toContain('CreationScrollShell')
+    expect(creationSource).toContain('PcPaperScene')
     expect(creationShellSource).toContain('data-hk-region="creation-card"')
     expect(creationShellSource).toContain('creation-scroll__art')
     // BETA-CREATION - name+talent draft only: the selected talent card

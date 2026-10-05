@@ -9,6 +9,8 @@ import TribulationRealmCard from '@/components/scenes/tribulation/TribulationRea
 import TribulationHpCluster from '@/components/scenes/tribulation/TribulationHpCluster.vue'
 import TribulationMindCard from '@/components/scenes/tribulation/TribulationMindCard.vue'
 import TribulationResultBanner from '@/components/scenes/tribulation/TribulationResultBanner.vue'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
+import '@/assets/tien-hiep-outcomes.css'
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -42,7 +44,7 @@ function answer(index: number) {
 </script>
 
 <template>
-  <div v-if="active" class="tribulation-ui">
+  <div v-if="active" class="tribulation-ui pc-outcome-live" :style="pcPaperControlStyles()">
     <TribulationChapterTracker
       :chapter-names="active.chapterNames"
       :chapter-index="active.chapterIndex"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/tien-hiep-collections.css'
 // Scene 09 (Kho Vat / inventory) paper surface: the approved fidelity
 // composition - toolbar tabs | bag grid | detail rail | count - now
 // owning the shared paper chrome (nine-slice sheet + nav rail + title)
@@ -7,9 +8,10 @@
 // sections + canonical tab state through #toolbar/#grid/#count.
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import type { PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import PcPaperScene from '@/components/common/PcPaperScene.vue'
+import PcPaperSceneActions from '@/components/common/PcPaperSceneActions.vue'
 import type { InventoryDisplay } from './inventoryUi'
 import InventoryFidelityDetail from './InventoryFidelityDetail.vue'
 
@@ -28,7 +30,6 @@ const { t } = useI18n()
 const filters = ['all', 'equipment', 'material', 'pill']
 function search(event: Event) { if (event.target instanceof HTMLInputElement) emit('query', event.target.value) }
 
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 
 // Same dialog contract the imperial scroll carried: focus/pointer stay
 // inside the open surface and Escape closes through emit('back').
@@ -37,10 +38,13 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 
 <template>
-  <section ref="rootRef" class="inventory-scene" :aria-label="t('panels.bag.title')" @click.self="emit('back')">
-    <div class="inventory-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="inventory" :label="t('paperNav.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
-    <h1 class="inventory-title">{{ t('panels.bag.title') }}</h1>
+  <section ref="rootRef" role="dialog" aria-modal="true" tabindex="-1" class="th-collection pc-collection inventory-scene" :aria-label="t('panels.bag.title')" @click.self="emit('back')">
+    <PcPaperScene :title="t('panels.bag.title')" class="pc-collection-page">
+      <template #actions><PcPaperSceneActions :items="navigation" active="inventory" @navigate="emit('navigate', $event)" @back="emit('back')" /></template>
+      <div class="pc-collection-stage">
+    <div class="inventory-landscape" aria-hidden="true" />
+    <div class="inventory-branch" aria-hidden="true" />
+
 
     <div class="inventory-content">
       <slot name="toolbar"><div class="toolbar"><nav><button v-for="id in filters" :key="id" :aria-pressed="filter===id" @click="emit('filter',id)">{{ t(`inventoryPreview.${id}`) }}</button></nav><input type="search" :value="query" :placeholder="t('inventoryPreview.search')" :aria-label="t('inventoryPreview.searchLabel')" @input="search"><button class="sort" @click="emit('sort')">{{ t('inventoryPreview.sort') }}</button></div></slot>
@@ -50,6 +54,8 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
     <p v-if="preview" class="inventory-preview">{{ t('preview') }}</p>
     <p class="inventory-notice" role="status">{{ notice }}</p>
+      </div>
+    </PcPaperScene>
   </section>
 </template>
 

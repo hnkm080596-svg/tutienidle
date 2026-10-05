@@ -1,16 +1,20 @@
+import { pcPaperIconUrl, type PcPaperIcon } from '@/presentation/assets/PcPaperIcons'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import frameMetadata from '../../../../../public/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.json'
+const frameMetadata = { slices: { top: 240, right: 240, bottom: 240, left: 240 } }
 
 const artRoot = '/assets/ui/huyen-kim/scene/dong-fu-v2/'
 export const DONG_FU_ART = Object.freeze({
-  rear: resolveAssetUrl(`${artRoot}rear.png`),
+  rear: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png'),
   foreground: resolveAssetUrl(`${artRoot}foreground.png`),
   cultivator: resolveAssetUrl(`${artRoot}cultivator.png`),
-  frame: resolveAssetUrl(`${artRoot}${frameMetadata.image}`),
+  frame: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png'),
 })
 export { frameMetadata }
 export function symbolUrl(id: string): string {
-  return resolveAssetUrl(`/assets/ui/huyen-kim/symbols/${id}.svg`)
+  const aliases: Record<string, PcPaperIcon> = { pill_room: 'alchemy', equipment_hall: 'forge', gathering_outpost: 'production', teleport_array: 'portal', formation_slot: 'formation', realm_breakthrough: 'realm', cultivation: 'realm', body_training: 'body' }
+  const icon = aliases[id] ?? id
+  const supported: readonly string[] = ['home', 'character', 'skill', 'equipment', 'sect', 'guild', 'inventory', 'alchemy', 'forge', 'body', 'companion', 'exploration', 'portal', 'formation', 'artifact', 'realm', 'technique', 'quest', 'compass', 'settings', 'feedback', 'opportunity', 'production', 'vendor']
+  return supported.includes(icon) ? pcPaperIconUrl(icon as PcPaperIcon) : resolveAssetUrl(`/assets/ui/huyen-kim/symbols/${id}.svg`)
 }
 export interface DongFuUiAction {
   id: string

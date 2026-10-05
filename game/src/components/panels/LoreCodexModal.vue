@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 // Home Hub Phase 2 - ban modal PERSISTENT-CLICK cua Tooltip.vue (von
 // chi hien khi hover, bien mat ngay khi roi chuot) - dung cho Tang
 // Kinh Cac's Lore tab (Phase 7): nguoi choi bam vao 1 lore item, doc
@@ -30,7 +31,7 @@ function onClose() {
   <Teleport to="body">
     <Transition name="lore-modal-fade">
       <div v-if="content" class="lore-modal" :style="{ zIndex: OVERLAY_LAYERS.modal }" @click.self="onClose">
-        <div class="lore-modal__panel scrollfade">
+        <div class="lore-modal__panel scrollfade pc-auxiliary">
           <h3 class="lore-modal__title">{{ content.title }}</h3>
 
           <p class="lore-modal__description">{{ content.description }}</p>

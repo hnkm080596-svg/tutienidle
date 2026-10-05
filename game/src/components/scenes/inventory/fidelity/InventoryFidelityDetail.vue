@@ -5,7 +5,7 @@ import type {InventoryDisplay} from './inventoryUi'
 defineProps<{item:InventoryDisplay}>()
 const emit=defineEmits<{use:[id:string]}>()
 const {t}=useI18n()
-const frame=resolveAssetUrl('/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.png')
+const frame=resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png')
 </script>
 <template><aside class="item-detail" :style="{borderImageSource:`url('${frame}')`}"><h3>{{t('inventoryPreview.details')}}</h3><img class="item-art" :src="item.icon" :alt="item.name"><h2>{{item.name}}</h2><p class="quality">{{t('inventoryPreview.quality')}} · {{t(`inventoryPreview.${item.category}`)}}</p><div class="rule"/><p class="description">{{item.description}}</p><p class="amount">{{t('inventoryPreview.amount')}}<b>{{item.amount}}</b></p><button @click="emit('use',item.id)">{{t('inventoryPreview.use')}}</button></aside></template>
 <style scoped>

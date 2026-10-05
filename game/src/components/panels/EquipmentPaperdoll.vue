@@ -15,12 +15,11 @@ import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge } from '@/components/common/SlotTypes'
 import { useAudioStore } from '@/stores/audio'
-import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
+import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
 
 // equipment-paperdoll-base (stable art): neutral mannequin substrate under
 // the six runtime sockets - no gameplay identity, decorative alignment
 // only. Runtime keeps item/socket/rarity ownership.
-const PAPERDOLL_BASE_SRC = stableSceneArtUrl('equipment-paperdoll-base', '@2x')
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -209,7 +208,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 
 <template>
   <div class="paperdoll">
-    <img class="paperdoll__base" :src="PAPERDOLL_BASE_SRC" alt="" aria-hidden="true" />
+    <PlayerPortrait class="paperdoll__base" variant="portrait" animation-mode="idle" height="100%" />
     <div v-for="(column, i) in SLOT_COLUMNS" :key="i" class="paperdoll__col">
       <div v-for="slot in column" :key="slot" class="paperdoll__cell">
         <div class="paperdoll__slot-wrap">

@@ -40,6 +40,10 @@ const COMMENT_LINE = /^\s*(?:\/\/|\*)/
 /** Deliberate, recorded exemptions: 'file: url' pairs a maintainer opted
     out of enumeration. Entries require a comment explaining why. */
 const ALLOWED_UNCOVERED = new Set([
+  // Static authoring portrait only; production keeps the animated PlayerPortrait.
+  'ui-preview/CharacterProgressionDesignPreview.vue: /assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
+  'ui-preview/CombatOutcomeDesignPreview.vue: /assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
+  'ui-preview/DesignSystemPreview.vue: /assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
   // components/scenes/alchemy/AlchemySurface.vue - dead-path fallback icon:
   // the file itself does not exist (404s when the recipe->pill lookup
   // misses). Pre-existing defect; enumerating a missing file would fail

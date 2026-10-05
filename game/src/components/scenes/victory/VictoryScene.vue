@@ -7,17 +7,17 @@
 // actions stay owned by the wrapper panel.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
+import PcPaperChrome from '@/components/common/PcPaperChrome.vue'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
 import type { BattleRunMode } from '@/stores/ui'
 import type { BattleRewardSummary } from '@/core/reward/BattleRewardSummary'
 import { useVictorySceneModel } from './useVictorySceneModel'
-import VictoryRoller from './VictoryRoller.vue'
 import VictoryTitleBand from './VictoryTitleBand.vue'
 import VictorySectionPlaque from './VictorySectionPlaque.vue'
 import VictoryRewardSlots from './VictoryRewardSlots.vue'
 import VictoryGrowthRow from './VictoryGrowthRow.vue'
 import VictoryActions from './VictoryActions.vue'
+import '@/assets/tien-hiep-outcomes.css'
 
 const props = defineProps<{
   summary: BattleRewardSummary
@@ -32,22 +32,22 @@ const model = useVictorySceneModel(computed(() => props.summary))
 </script>
 
 <template>
-  <div class="victory-scene paper-on-dark">
-    <InkWashBackdrop :left-mountain="false" bottom-mist seal="large" />
-    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-
-    <VictoryRoller side="left" />
-    <VictoryRoller side="right" />
+  <div class="victory-scene paper-on-dark pc-outcome-live" :style="pcPaperControlStyles()">
+    <PcPaperChrome />
 
     <div class="victory-scene__inner">
       <VictoryTitleBand :stage-name="model.stageName.value" />
 
-      <VictorySectionPlaque>{{ t('combat.victory.sections.rewards') }}</VictorySectionPlaque>
-      <VictoryRewardSlots v-if="model.slots.value.length" :slots="model.slots.value" />
-
-      <VictorySectionPlaque>{{ t('combat.victory.sections.growth') }}</VictorySectionPlaque>
-      <VictoryGrowthRow :cards="model.growth.value" />
+      <div class="victory-scene__results">
+        <section class="victory-scene__rewards">
+          <VictorySectionPlaque>{{ t('combat.victory.sections.rewards') }}</VictorySectionPlaque>
+          <VictoryRewardSlots v-if="model.slots.value.length" :slots="model.slots.value" />
+        </section>
+        <section class="victory-scene__growth">
+          <VictorySectionPlaque>{{ t('combat.victory.sections.growth') }}</VictorySectionPlaque>
+          <VictoryGrowthRow :cards="model.growth.value" />
+        </section>
+      </div>
 
       <VictoryActions
         :run-mode="props.runMode"

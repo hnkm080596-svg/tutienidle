@@ -15,8 +15,8 @@ describe('huyen-kim chrome manifest', () => {
     expect(ids.length).toBeGreaterThanOrEqual(20)
     expect(new Set(ids).size).toBe(ids.length)
     for (const a of Object.values(HUYEN_KIM_CHROME)) {
-      expect(a.url1x, a.id).toMatch(/assets\/ui\/huyen-kim\/.+@1x\.png$/)
-      expect(a.url2x, a.id).toMatch(/assets\/ui\/huyen-kim\/.+@2x\.png$/)
+      expect(a.url1x, a.id).toMatch(/assets\/ui\/(?:huyen-kim|tien-hiep-2026-10)\/.+@1x\.png$/)
+      expect(a.url2x, a.id).toMatch(/assets\/ui\/(?:huyen-kim|tien-hiep-2026-10)\/.+@2x\.png$/)
       expect(a.sourceWidth, a.id).toBeGreaterThan(0)
       expect(a.sourceHeight, a.id).toBeGreaterThan(0)
       for (const edge of ['left', 'right', 'top', 'bottom'] as const) {

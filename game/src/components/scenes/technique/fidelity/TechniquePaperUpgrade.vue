@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { TechniqueUiModel } from './techniqueUi'
@@ -8,14 +9,14 @@ const { t } = useI18n()
 const symbol = resolveAssetUrl('/assets/ui/huyen-kim/symbols/technique.svg')
 </script>
 <template>
-  <aside class="technique-upgrade">
+  <aside class="technique-upgrade pc-paper-inspector">
     <h2>{{ t('technique.advance') }}</h2>
     <div class="technique-compare"><div><small>{{ t('technique.current') }}</small><strong>{{ model.currentGrade }}</strong></div><span aria-hidden="true">›</span><div><small>{{ t('technique.target') }}</small><strong>{{ model.nextGrade }}</strong></div></div>
     <p class="technique-upgrade-hint">{{ t('technique.upgradeHint') }}</p>
     <h3>{{ t('technique.materials') }}</h3>
-    <div class="technique-material"><span class="technique-material-icon"><img :src="symbol" alt=""></span><div><p>{{ model.material.name }}</p><strong>{{ model.material.amountLabel }}</strong></div></div>
+    <div class="technique-material"><span class="technique-material-icon pc-paper-slot"><img :src="symbol" alt=""></span><div><p>{{ model.material.name }}</p><strong>{{ model.material.amountLabel }}</strong></div></div>
     <p v-if="model.materialNote" class="technique-material-note">{{ model.materialNote }}</p>
-    <button class="technique-advance" :disabled="model.advanceDisabled" @click="emit('advance')">{{ t('technique.advance') }}</button>
+    <PcPaperButton class="technique-advance" :disabled="model.advanceDisabled" @click="emit('advance')">{{ t('technique.advance') }}</PcPaperButton>
     <p class="technique-notice" role="status" aria-live="polite">{{ notice || model.disabledReason }}</p>
   </aside>
 </template>

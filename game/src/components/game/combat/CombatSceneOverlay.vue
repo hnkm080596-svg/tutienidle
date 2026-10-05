@@ -22,6 +22,8 @@ import CombatLogFeed from '@/components/scenes/combat/CombatLogFeed.vue'
 import CombatModalLayer from '@/components/scenes/combat/CombatModalLayer.vue'
 import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
+import '@/assets/tien-hiep-outcomes.css'
 
 const rootRef = ref<HTMLElement | null>(null)
 
@@ -103,7 +105,7 @@ onUnmounted(() => {
        duy nhat cua app van la PhaserCanvas.vue trong MainScene.vue.
        Overlay chi con TopBar (thong tin zone/stage), AI panel, dock
        ky nang mep phai va cac modal. Bottom = full canvas. -->
-  <div ref="rootRef" class="combat-scene-overlay">
+  <div ref="rootRef" class="combat-scene-overlay pc-outcome-live" :style="pcPaperControlStyles()">
     <CombatTopRail class="combat-scene-overlay__top-bar" />
 
     <CombatActionDock :fighting="isBattleFighting" />

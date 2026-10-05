@@ -12,7 +12,7 @@ import type { DongFuUiModel } from './dongFuUi'
 defineProps<{ model: DongFuUiModel; notice: string; selected: string | null }>()
 const emit = defineEmits<{ action: [id: string] }>()
 const { t } = useI18n()
-const wheelOpen = shallowRef(true)
+const wheelOpen = shallowRef(false)
 const boardOpen = shallowRef(true)
 const pointer = shallowRef({ x: 0, y: 0 })
 function move(event: PointerEvent) {

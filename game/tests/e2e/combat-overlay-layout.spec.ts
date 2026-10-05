@@ -23,13 +23,13 @@ async function enterBattle(page: Page, name: string): Promise<void> {
   await createCharacterThroughUi(page, name)
   await enterHome(page)
 
-  await page.keyboard.press('Tab')
+  await page.locator('.df-cultivator').click()
 
   const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
   await teleportSlot.click()
 
-  const overlay = page.getByTestId('function-overlay-panel')
+  const overlay = page.locator('.exploration-scene')
   await expect(overlay).toBeVisible({ timeout: 10_000 })
 
   const startButton = page.getByTestId('stage-start-button')

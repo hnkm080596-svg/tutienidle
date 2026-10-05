@@ -1,0 +1,11 @@
+{
+  "os": "win32",
+  "tools": {"node": "24.19.0", "vitest": "4.1.11", "ocr": "1.12.11"},
+  "profile": "implementation-worktree-pc",
+  "browser": "Microsoft Edge for independent checks; Playwright configured Chromium for suite",
+  "locale": "vi",
+  "viewports": [[1280,720],[1672,941],[1920,1080]],
+  "serverIdentity": "worktree E:/tutienidle/.agent-worktrees/hoa-cau-fireball-vfx, port5449",
+  "testConcurrency": "Vitest full bounded2; Playwright1",
+  "domainMutationPolicy": "existing production owners; isolated fixtures are never persisted to player sessions"
+}

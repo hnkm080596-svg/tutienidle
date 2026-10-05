@@ -305,32 +305,10 @@ function onSceneClick(event: MouseEvent) {
   ui.closeHomeOverlays()
 }
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  return (
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement ||
-    (target instanceof HTMLElement && target.isContentEditable)
-  )
-}
-
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     ui.closeCommandWheel()
     return
-  }
-  if (
-    event.key === 'Tab' &&
-    !event.repeat &&
-    !event.altKey &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.shiftKey &&
-    !stageActive.value &&
-    !isEditableTarget(event.target)
-  ) {
-    event.preventDefault()
-    ui.toggleCommandWheel()
   }
 }
 

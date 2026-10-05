@@ -1,0 +1,505 @@
+[
+  {
+    "schema_version": "1",
+    "groups": [
+      {
+        "group_id": 1,
+        "source": "system",
+        "pattern": "default",
+        "files": [
+          "game/src/components/common/BetaCompletionModal.vue",
+          "game/src/components/common/ConfirmModal.vue",
+          "game/src/components/common/EntitySpriteCanvas.vue",
+          "game/src/components/common/ErrorScreen.vue",
+          "game/src/components/common/GameButton.vue",
+          "game/src/components/common/LoadingScreen.vue",
+          "game/src/components/common/OfflineSummaryModal.vue",
+          "game/src/components/common/OverlayPanel.vue",
+          "game/src/components/common/PaperPanelNavigation.vue",
+          "game/src/components/common/PlayerPortrait.vue",
+          "game/src/components/common/SaveIncompatibleScreen.vue",
+          "game/src/components/common/TalentEntitlementModal.vue",
+          "game/src/components/common/Tooltip.vue",
+          "game/src/components/common/TutorialOverlay.vue",
+          "game/src/components/common/primitives/InkNineSlice.vue",
+          "game/src/components/game/combat/CombatDefeatPanel.vue",
+          "game/src/components/game/combat/CombatSceneOverlay.vue",
+          "game/src/components/game/tribulation/TribulationSceneOverlay.vue",
+          "game/src/components/layout/FunctionOverlayPanel.vue",
+          "game/src/components/onboarding/AuthEntryScreen.vue",
+          "game/src/components/onboarding/CharacterCreationScreen.vue",
+          "game/src/components/panels/ArtifactPanel.vue",
+          "game/src/components/panels/CompanionPanel.vue",
+          "game/src/components/panels/EquipmentPaperdoll.vue",
+          "game/src/components/panels/GuestAbandonDialog.vue",
+          "game/src/components/panels/LoreCodexModal.vue",
+          "game/src/components/panels/ProductionPanel.vue",
+          "game/src/components/panels/QuanKhiPanel.vue",
+          "game/src/components/panels/ScripturePavilionPanel.vue",
+          "game/src/components/panels/TranPhapPanel.vue",
+          "game/src/components/panels/VendorPanel.vue",
+          "game/src/components/panels/WorkerLodgePanel.vue",
+          "game/src/components/panels/equipment-hall/DecomposeTab.vue",
+          "game/src/components/panels/equipment-hall/DissolveTab.vue",
+          "game/src/components/panels/equipment-hall/EnhanceTab.vue",
+          "game/src/components/panels/equipment-hall/RefineTab.vue",
+          "game/src/components/panels/equipment-hall/WashTab.vue",
+          "game/src/components/panels/equipment-hall/qi-hall.css",
+          "game/src/components/panels/worker-lodge/ChieuMoTab.vue",
+          "game/src/components/panels/worker-lodge/DuyenPhanTab.vue",
+          "game/src/components/panels/worker-lodge/QuaTangTab.vue",
+          "game/src/components/scenes/alchemy/fidelity/AlchemyFidelityScene.vue",
+          "game/src/components/scenes/alchemy/fidelity/AlchemyPaperDetails.vue",
+          "game/src/components/scenes/body/fidelity/BodyFidelityScene.vue",
+          "game/src/components/scenes/body/fidelity/BodyPaperDetails.vue",
+          "game/src/components/scenes/body/fidelity/BodyPaperFigure.vue",
+          "game/src/components/scenes/character/fidelity/CharacterFidelityFigure.vue",
+          "game/src/components/scenes/character/fidelity/CharacterFidelityIdentity.vue",
+          "game/src/components/scenes/character/fidelity/CharacterFidelityScene.vue",
+          "game/src/components/scenes/combat/fidelity/CombatFidelityFrame.vue",
+          "game/src/components/scenes/combat/fidelity/CombatFidelityPortrait.vue",
+          "game/src/components/scenes/combat/fidelity/CombatFidelityScene.vue",
+          "game/src/components/scenes/defeat/DefeatTitleBand.vue",
+          "game/src/components/scenes/defeat/fidelity/DefeatFidelityScene.vue",
+          "game/src/components/scenes/dong-fu/DongFuStage.vue",
+          "game/src/components/scenes/dong-fu/fidelity/DongFuFidelityScene.vue",
+          "game/src/components/scenes/dong-fu/fidelity/DongFuHomeContent.vue",
+          "game/src/components/scenes/dong-fu/fidelity/DongFuHud.vue"
+        ],
+        "rule": "#### Correctness\nIs the logic correct? Are there missing boundary conditions?\nAre exceptions handled properly?\nIs it thread-safe in concurrent scenarios?\n\n#### Security\nAre there security vulnerabilities such as SQL injection or XSS?\nIs sensitive information handled correctly?\nIs permission validation complete?\n\n#### Performance\nAre there obvious performance issues (e.g., N+1 queries, unnecessary loops)?\nAre resources properly released?\n\n#### Maintainability\nIs the code clear and easy to understand?\nDo names accurately express intent?\nDoes it follow the project’s existing code style and architecture patterns?\n\n#### Test Coverage\nDo critical logic paths have corresponding test cases?\nDo test cases cover boundary conditions?"
+      },
+      {
+        "group_id": 2,
+        "source": "project",
+        "pattern": "{**/*.test.ts,**/*.spec.ts,game/tests/**/*.ts}",
+        "files": [
+          "game/src/components/common/InkWashBackdrop.test.ts",
+          "game/src/components/common/InkWashLargeSurfaces.test.ts",
+          "game/src/components/common/InkWashMediumSurfaces.test.ts",
+          "game/src/components/common/InkWashPrimitives.test.ts",
+          "game/src/components/common/PlayerPortrait.test.ts",
+          "game/src/components/panels/RealmPanel.test.ts",
+          "game/src/components/panels/SkillPathPanel.test.ts",
+          "game/src/components/panels/TranPhapPanel.test.ts",
+          "game/src/components/scenes/body/BodySurface.test.ts",
+          "game/src/components/scenes/dong-fu/fidelity/DongFuHomeContent.test.ts"
+        ],
+        "rule": "## System-Specific Rules (Mandatory)\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited\n\n---\n\n## User-Specific Rules (Mandatory)\n\nTest defects only: mocks or stubs that hide integration defects or bypass the real authority path; regression behavior not actually exercised (missing assertions, assertions trivially true); tests coupled to implementation details instead of observable behavior; tests duplicating production logic instead of exercising the real path; guard/wiring tests weakened or removed to make a change pass; e2e specs that cannot detect the failure they claim to cover."
+      },
+      {
+        "group_id": 3,
+        "source": "project",
+        "pattern": "{game/src/components/**/*.{ts,vue},game/src/composables/**/*.ts,game/src/stores/**/*.ts,game/src/presentation/**/*.{ts,vue},game/src/App.vue}",
+        "files": [
+          "game/src/components/scenes/character/fidelity/characterUi.ts",
+          "game/src/components/scenes/dong-fu/fidelity/dongFuUi.ts"
+        ],
+        "rule": "## System-Specific Rules (Mandatory)\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited\n\n---\n\n## User-Specific Rules (Mandatory)\n\nVue/Pinia defects only: UI owning domain logic or computing authoritative gameplay results; direct domain-state mutation from presentation instead of owner APIs; duplicated reactive authority over one piece of state; stale reactive state after reset/restore; incorrect watchers (missing immediate/deep/flush needs, watch loops); missing cleanup in onUnmounted/onScopeDispose; event-listener, timer, or subscription leaks; Vue-Pinia-Phaser synchronization errors; hardcoded UI strings bypassing the i18n gateway; computed/ref misuse causing stale or lost reactivity."
+      }
+    ]
+  },
+  {
+    "schema_version": "1",
+    "groups": [
+      {
+        "group_id": 1,
+        "source": "system",
+        "pattern": "default",
+        "files": [
+          "game/src/components/scenes/equipment/fidelity/EquipmentFidelityScene.vue",
+          "game/src/components/scenes/equipment/fidelity/EquipmentPaperTooltip.vue",
+          "game/src/components/scenes/equipment/fidelity/ForgeBatchBag.vue",
+          "game/src/components/scenes/equipment/fidelity/ForgeFidelityScene.vue",
+          "game/src/components/scenes/exploration/fidelity/ExplorationFidelityScene.vue",
+          "game/src/components/scenes/exploration/fidelity/ExplorationPaperDetails.vue",
+          "game/src/components/scenes/exploration/fidelity/ExplorationPaperMap.vue",
+          "game/src/components/scenes/inventory/fidelity/InventoryFidelityDetail.vue",
+          "game/src/components/scenes/inventory/fidelity/InventoryFidelityScene.vue",
+          "game/src/components/scenes/login/AuthSubmitButton.vue",
+          "game/src/components/scenes/login/LoginLogoBlock.vue",
+          "game/src/components/scenes/login/LoginSceneVista.vue",
+          "game/src/components/scenes/quest/fidelity/QuestFidelityScene.vue",
+          "game/src/components/scenes/realm/fidelity/RealmFidelityScene.vue",
+          "game/src/components/scenes/realm/fidelity/RealmPaperDetails.vue",
+          "game/src/components/scenes/realm/fidelity/RealmPaperMap.vue",
+          "game/src/components/scenes/settings/SettingsNavRail.vue",
+          "game/src/components/scenes/settings/fidelity/SettingsFidelityScene.vue",
+          "game/src/components/scenes/skill/fidelity/SkillFidelityScene.vue",
+          "game/src/components/scenes/skill/fidelity/SkillPaperDetails.vue",
+          "game/src/components/scenes/skill/fidelity/SkillPaperNode.vue",
+          "game/src/components/scenes/skill/fidelity/SkillPaperTree.vue",
+          "game/src/components/scenes/technique/fidelity/TechniqueFidelityScene.vue",
+          "game/src/components/scenes/technique/fidelity/TechniquePaperInfo.vue",
+          "game/src/components/scenes/technique/fidelity/TechniquePaperUpgrade.vue",
+          "game/src/components/scenes/tribulation/TribulationResultBanner.vue",
+          "game/src/components/scenes/tribulation/fidelity/TribulationFidelityChapters.vue",
+          "game/src/components/scenes/tribulation/fidelity/TribulationFidelityFrame.vue",
+          "game/src/components/scenes/tribulation/fidelity/TribulationFidelityScene.vue",
+          "game/src/components/scenes/victory/VictoryScene.vue",
+          "game/src/components/scenes/victory/VictoryTitleBand.vue",
+          "game/src/components/scenes/victory/fidelity/VictoryFidelityScene.vue"
+        ],
+        "rule": "#### Correctness\nIs the logic correct? Are there missing boundary conditions?\nAre exceptions handled properly?\nIs it thread-safe in concurrent scenarios?\n\n#### Security\nAre there security vulnerabilities such as SQL injection or XSS?\nIs sensitive information handled correctly?\nIs permission validation complete?\n\n#### Performance\nAre there obvious performance issues (e.g., N+1 queries, unnecessary loops)?\nAre resources properly released?\n\n#### Maintainability\nIs the code clear and easy to understand?\nDo names accurately express intent?\nDoes it follow the project’s existing code style and architecture patterns?\n\n#### Test Coverage\nDo critical logic paths have corresponding test cases?\nDo test cases cover boundary conditions?"
+      },
+      {
+        "group_id": 2,
+        "source": "project",
+        "pattern": "{game/src/components/**/*.{ts,vue},game/src/composables/**/*.ts,game/src/stores/**/*.ts,game/src/presentation/**/*.{ts,vue},game/src/App.vue}",
+        "files": [
+          "game/src/components/scenes/login/loginArt.ts"
+        ],
+        "rule": "## System-Specific Rules (Mandatory)\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited\n\n---\n\n## User-Specific Rules (Mandatory)\n\nVue/Pinia defects only: UI owning domain logic or computing authoritative gameplay results; direct domain-state mutation from presentation instead of owner APIs; duplicated reactive authority over one piece of state; stale reactive state after reset/restore; incorrect watchers (missing immediate/deep/flush needs, watch loops); missing cleanup in onUnmounted/onScopeDispose; event-listener, timer, or subscription leaks; Vue-Pinia-Phaser synchronization errors; hardcoded UI strings bypassing the i18n gateway; computed/ref misuse causing stale or lost reactivity."
+      },
+      {
+        "group_id": 3,
+        "source": "project",
+        "pattern": "{**/*.test.ts,**/*.spec.ts,game/tests/**/*.ts}",
+        "files": [
+          "game/src/components/scenes/technique/fidelity/TechniqueFidelityScene.test.ts",
+          "game/src/ui-preview/remainingPreview.test.ts",
+          "game/tests/architecture/betaScopeRenderedTokens.test.ts",
+          "game/tests/architecture/domArtLiteralCoverage.test.ts",
+          "game/tests/architecture/huyenKimChromeManifest.test.ts",
+          "game/tests/e2e/beta-journey.spec.ts",
+          "game/tests/e2e/combat-overlay-layout.spec.ts",
+          "game/tests/e2e/combat-vertical-slice.spec.ts",
+          "game/tests/e2e/create-to-combat.spec.ts",
+          "game/tests/e2e/helpers.ts",
+          "game/tests/e2e/huyen-kim-fidelity-capture.qa.spec.ts",
+          "game/tests/e2e/save-reload.spec.ts",
+          "game/tests/e2e/tribulation-flow.spec.ts"
+        ],
+        "rule": "## System-Specific Rules (Mandatory)\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited\n\n---\n\n## User-Specific Rules (Mandatory)\n\nTest defects only: mocks or stubs that hide integration defects or bypass the real authority path; regression behavior not actually exercised (missing assertions, assertions trivially true); tests coupled to implementation details instead of observable behavior; tests duplicating production logic instead of exercising the real path; guard/wiring tests weakened or removed to make a change pass; e2e specs that cannot detect the failure they claim to cover."
+      },
+      {
+        "group_id": 4,
+        "source": "project",
+        "pattern": "game/src/game/**/*.ts",
+        "files": [
+          "game/src/game/scenes/TranPhapCombatPreviewScene.ts"
+        ],
+        "rule": "## System-Specific Rules (Mandatory)\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited\n\n---\n\n## User-Specific Rules (Mandatory)\n\nPhaser/scene defects only: duplicate scene-transition authority; incorrect scene lifecycle use (init/preload/create/update/shutdown); double initialization; event listeners registered more than once or never removed; tweens/timers/textures/objects not released on shutdown or destroy; assets loaded by the wrong owner; one scene directly controlling unrelated scenes; transition race conditions; authoritative gameplay state mutated from render or animation code."
+      },
+      {
+        "group_id": 5,
+        "source": "system",
+        "pattern": "**/*.{json,json5}",
+        "files": [
+          "game/src/locales/en.json",
+          "game/src/locales/vi.json",
+          "game/src/ui/huyen-kim-chrome.json"
+        ],
+        "rule": "Check JSON files for spelling errors in json-keys; ignore the content of json-values."
+      },
+      {
+        "group_id": 6,
+        "source": "system",
+        "pattern": "**/*.{ts,js,tsx,jsx,mjs,cjs}",
+        "files": [
+          "game/src/main.ts",
+          "game/src/presentation/assets/AssetBundleCatalog.ts",
+          "game/src/ui-preview/alchemy.ts",
+          "game/src/ui-preview/body.ts",
+          "game/src/ui-preview/character.ts",
+          "game/src/ui-preview/characterMessages.ts",
+          "game/src/ui-preview/combat.ts",
+          "game/src/ui-preview/defeat.ts",
+          "game/src/ui-preview/dong-fu.ts",
+          "game/src/ui-preview/equipment.ts",
+          "game/src/ui-preview/exploration.ts",
+          "game/src/ui-preview/forge.ts",
+          "game/src/ui-preview/inventory.ts",
+          "game/src/ui-preview/quest.ts",
+          "game/src/ui-preview/realm.ts",
+          "game/src/ui-preview/settings.ts",
+          "game/src/ui-preview/skill.ts",
+          "game/src/ui-preview/technique.ts",
+          "game/src/ui-preview/tribulation.ts",
+          "game/src/ui-preview/victory.ts"
+        ],
+        "rule": "#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited"
+      }
+    ]
+  },
+  {
+    "schema_version": "1",
+    "groups": [
+      {
+        "group_id": 1,
+        "source": "system",
+        "pattern": "**/*.{json,json5}",
+        "files": [
+          "game/art/vfx/pc-paper-meridian/Pc Paper Acupoint Aura.json",
+          "game/art/vfx/pc-paper-meridian/acupoint-aura-sheet.json",
+          "game/art/vfx/pc-paper-meridian/export-proof.json",
+          "game/art/vfx/pc-paper-meridian/provenance.json",
+          "game/art/vfx/pc-paper-meridian/runtime-proof.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/ALPHA-REVIEW.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/DELIVERY.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/GENERATED-PROMPTS.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/MIGRATED-DIRECT-CONSUMERS.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/PACK-VALIDATION.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-BRIEF.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-TASK.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/SHARED-ADDITIONAL-PROMPTS.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/SHARED-CONTROLS-PROMPTS.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/REVIEW-MANIFEST.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/draft-asset-checks.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/panel-frame-v2-alpha.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/polish-ocr-preview.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/rebuild-ocr-preview.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/rebuild-risk-map.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/source-metrics.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/wire-outcomes-runtime-retry/.last-run.json",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/wire-outcomes-runtime/.last-run.json",
+          "game/docs/qa/pc-ui-rebuild-request.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/attack-model.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/environment.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0001.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0002.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0003.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0004.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0005.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0006.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0007.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0008.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0009.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0010.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0011.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0012.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/lease.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/ledger.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/manifest.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/ocr-coverage.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/ocr-preview.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/ocr-rules.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-auxiliary.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-collections.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-entry.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-outcomes.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-progression.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/request.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-auxiliary.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-collections.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-entry-home.json"
+        ],
+        "rule": "Check JSON files for spelling errors in json-keys; ignore the content of json-values."
+      },
+      {
+        "group_id": 2,
+        "source": "system",
+        "pattern": "default",
+        "files": [
+          "game/art/vfx/pc-paper-meridian/acupoint-aura.css",
+          "game/art/vfx/pc-paper-meridian/preview.html",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/review.html",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/preview.html"
+        ],
+        "rule": "#### Correctness\nIs the logic correct? Are there missing boundary conditions?\nAre exceptions handled properly?\nIs it thread-safe in concurrent scenarios?\n\n#### Security\nAre there security vulnerabilities such as SQL injection or XSS?\nIs sensitive information handled correctly?\nIs permission validation complete?\n\n#### Performance\nAre there obvious performance issues (e.g., N+1 queries, unnecessary loops)?\nAre resources properly released?\n\n#### Maintainability\nIs the code clear and easy to understand?\nDo names accurately express intent?\nDoes it follow the project’s existing code style and architecture patterns?\n\n#### Test Coverage\nDo critical logic paths have corresponding test cases?\nDo test cases cover boundary conditions?"
+      },
+      {
+        "group_id": 3,
+        "source": "system",
+        "pattern": "**/*.{ts,js,tsx,jsx,mjs,cjs}",
+        "files": [
+          "game/art/vfx/pc-paper-meridian/capture.mjs",
+          "game/art/vfx/pc-paper-meridian/export.mjs",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/dedupe-preview.mjs",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/finalize-preview.mjs",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/preview-server.mjs",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/refine-preview.mjs",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/validate-pack.mjs",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/wire-outcomes-capture.mjs",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/wire-outcomes-components-capture.mjs"
+        ],
+        "rule": "#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited"
+      },
+      {
+        "group_id": 4,
+        "source": "system",
+        "pattern": "**/*.{py,pyi,ipynb}",
+        "files": [
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/build_manifest.py",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/census_imports.py",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/inspect_sources.py",
+          "game/docs/design/tien-hiep-ui-redesign-2026-10-05/package-delivery.py"
+        ],
+        "rule": "> Favor precision over recall: only raise an issue when you are confident it is a real defect, and stay silent when the surrounding context is unclear — a false alarm costs more reviewer trust than a missed minor issue. Treat security and correctness findings as blocking, and style or idiom suggestions as non-blocking.\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable, function, class, or module names at their declaration sites; do not report spelling errors at reference sites, as these are determined by the declaration\n- Strings in log messages or exception messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that can never be reached (e.g., branches where the condition is always false, code after a `return`, `raise`, `break`, or `continue`)\n- Variables, imports, or function parameters that are declared but never read or referenced\n- Large blocks of commented-out code with no apparent intent to preserve\n- Do not report unused imports, variables, or parameters in `.pyi` stub files; a stub declares an interface it never executes, so re-exported imports, annotation-only declarations, and unreferenced parameter names are expected rather than dead\n\n#### Mutable Default Arguments and Shared State\n- Mutable default arguments such as `def f(x=[])` or `def f(x={})`; the default is created once and shared across every call. Default to `None` and build the value inside the body\n- Class-level mutable attributes shared unintentionally across instances when a per-instance value was intended\n- Module-level mutable globals (lists, dicts, caches) mutated across requests or threads, retaining state in ways that surprise the caller\n- Closures that capture a loop variable by reference and all end up seeing its final value\n- Do not report when the function never mutates the argument, or when the shared default is a deliberate, documented cache or sentinel\n\n#### Boundary and Edge-Case Handling\n- Empty inputs assumed to be non-empty: indexing `xs[0]`, `max()`/`min()`, or slicing without first handling the empty `list`, `str`, `dict`, or iterator\n- Off-by-one and out-of-range access on indices, ranges, or slices, especially at the first/last element\n- `None` reaching code that assumes a value, when an upstream call or default can legitimately return `None` (confirm the data source with `file_read` before flagging)\n- Comparing floats for exact equality with `==`; use `math.isclose` or an explicit tolerance, since floating-point results are not exact\n- Integer/float and division assumptions: unintended truncation with `//`, or `ZeroDivisionError` when a divisor can be zero\n- Heterogeneous or unexpected element types in a collection that the code assumes are uniform (e.g., mixing `None`, numbers, and strings)\n- Dictionary access by key without handling the missing-key case (`d[k]` vs `d.get(k)`), or set/dict operations that assume a key is present\n- Do not report edge cases that a caller or type contract has already ruled out, or inputs that cannot occur given validated boundaries upstream\n\n#### Error Handling and Exceptions\n- Bare `except:` swallows everything, including `KeyboardInterrupt` and `SystemExit`; catch `except Exception` at minimum, and prefer the specific exception types you expect\n- `except Exception` that is still broader than the failure being handled; narrow it to the exceptions actually raised by the guarded call\n- Exceptions caught and silently discarded (`pass`) without logging or re-raising\n- Original traceback lost when re-raising; prefer `raise NewError(...) from err` to preserve the cause\n- Broad `try` blocks that wrap far more than the line that can actually fail, hiding where the error originates\n- `assert` used for runtime validation of external input — assertions are stripped under `python -O`\n\n#### Identity and Equality Comparisons\n- Using `is`/`is not` to compare against literals such as strings, numbers, or tuples; this relies on implementation-specific interning rather than value equality — use `==` (a real correctness risk)\n- Comparing against `True`/`False` with `==`, where a truthy-but-not-`True` value (e.g. `1`, a non-empty container) would compare unequal; prefer a plain truthiness check\n- Reserve `is` for identity checks against singletons and sentinels\n- Comparing against `None` with `==`/`!=` rather than `is`/`is not` is a style preference; report as minor, not blocking\n\n#### Resource Management\n- Files, sockets, locks, or database connections opened without a `with` statement, risking leaks on early return or exception\n- Context managers available but bypassed in favor of manual `open()`/`close()` pairs\n- Resources acquired in a `try` whose `finally` cleanup is missing or incomplete on the error path\n- Iterators or generators holding resources open longer than necessary\n- Do not report short-lived scripts, or handles already managed by an enclosing `with` or framework-managed lifecycle (confirm the surrounding scope with `file_read` before flagging)\n\n#### Performance\nConfirm data scale and that the code is on a hot path before flagging:\n- Building strings with `+=` in a loop instead of accumulating in a list and `\"\".join(...)`, or using an f-string\n- Repeated membership tests against a `list` where a `set` or `dict` would turn O(n) lookups into O(1)\n- Building a full list when a generator would avoid holding everything in memory\n- Recomputing inside a loop a value that is invariant across iterations (e.g., compiling a regex, attribute lookups in hot paths)\n- Passing an eagerly formatted f-string to `logging` (e.g., `logging.info(f\"...\")`) instead of `logging.info(\"%s\", value)`, which defeats lazy formatting when the level is disabled\n\n#### Concurrency and Async\nOnly flag concurrency issues when there is evidence of multi-threaded, multi-process, or async invocation (confirm the call context before reporting):\n- CPU-bound work parallelized with `threading` under the GIL where `multiprocessing` or a process pool is the right tool (traditional CPython; free-threaded builds excepted); I/O-bound work is the case threads actually help\n- Check-then-act races on shared state without a `Lock`, or non-atomic compound updates assumed to be atomic\n- Blocking calls (synchronous I/O, `time.sleep`, `requests`, CPU-heavy work) inside `async def`, stalling the event loop; use the async equivalent or run them in an executor\n- `asyncio` tasks created and never awaited, so exceptions are swallowed and the work may be garbage-collected before it finishes\n- Shared mutable state across threads or tasks without synchronization or a thread-safe structure\n\nDo not report local variables (each thread has its own), read-only access to shared data, or code with no evidence of concurrent use.\n\n#### Security-Sensitive Code\nValidate the data source before flagging; confirm the input is actually attacker-controlled rather than a trusted constant:\n- `eval`, `exec`, or `compile` on untrusted input; this is arbitrary code execution\n- `subprocess` with `shell=True` built from unsanitized input; pass an argument list and avoid the shell\n- `pickle`, `marshal`, or `yaml.load` (without `SafeLoader`) on untrusted data; deserialization can execute arbitrary code\n- SQL built by string concatenation or f-strings instead of parameterized queries\n- Secrets, tokens, passwords, or PII written to logs or committed in source\n- Weak or misused cryptography (`hashlib.md5`/`sha1` for passwords, `random` for security tokens); use `secrets` and vetted libraries\n- Untrusted file paths joined without validation, allowing path traversal"
+      }
+    ]
+  },
+  {
+    "schema_version": "1",
+    "groups": [
+      {
+        "group_id": 1,
+        "source": "system",
+        "pattern": "**/*.{json,json5}",
+        "files": [
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-outcomes.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-progression.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/wiring-brief.json",
+          "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/wiring-task.json",
+          "game/public/assets/ui/tien-hiep-2026-10/controls/body-diagram-manifest.json",
+          "game/public/assets/ui/tien-hiep-2026-10/controls/button-manifest.json",
+          "game/public/assets/ui/tien-hiep-2026-10/controls/inspector-manifest.json",
+          "game/public/assets/ui/tien-hiep-2026-10/controls/landmark-manifest.json",
+          "game/public/assets/ui/tien-hiep-2026-10/controls/resource-manifest.json",
+          "game/public/assets/ui/tien-hiep-2026-10/controls/slot-manifest.json",
+          "game/public/assets/ui/tien-hiep-2026-10/icons/body-manifest.json",
+          "game/public/assets/ui/tien-hiep-2026-10/icons/manifest.json",
+          "game/public/assets/ui/tien-hiep-2026-10/pack.json"
+        ],
+        "rule": "Check JSON files for spelling errors in json-keys; ignore the content of json-values."
+      },
+      {
+        "group_id": 2,
+        "source": "system",
+        "pattern": "**/*.{ts,js,tsx,jsx,mjs,cjs}",
+        "files": [
+          "game/scripts/audit-tien-hiep-alpha.mjs",
+          "game/scripts/build-tien-hiep-ui.mjs",
+          "game/scripts/capture-pc-design-gallery.mjs",
+          "game/scripts/capture-pc-landscape-design.mjs",
+          "game/scripts/export-pc-paper-controls.mjs",
+          "game/scripts/export-pc-paper-icons.mjs",
+          "game/scripts/migrate-tien-hiep-surfaces.mjs",
+          "game/scripts/scope-tien-hiep-skin.mjs",
+          "game/scripts/verify-pc-paper-fonts.mjs",
+          "game/src/presentation/assets/PcPaperControls.ts",
+          "game/src/presentation/assets/PcPaperIcons.ts",
+          "game/src/presentation/assets/TienHiepUiAssets.ts",
+          "game/src/ui-preview/auxiliary-design.ts",
+          "game/src/ui-preview/auxiliarydesignMessages.ts",
+          "game/src/ui-preview/character-progression-design.ts"
+        ],
+        "rule": "#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited"
+      },
+      {
+        "group_id": 3,
+        "source": "system",
+        "pattern": "default",
+        "files": [
+          "game/src/assets/pc-paper-auxiliary-production.css",
+          "game/src/assets/pc-paper-production.css",
+          "game/src/assets/pc-paper-scene.css",
+          "game/src/assets/pc-paper-type.css",
+          "game/src/assets/tien-hiep-auxiliary.css",
+          "game/src/assets/tien-hiep-collections.css",
+          "game/src/assets/tien-hiep-entry.css",
+          "game/src/assets/tien-hiep-forge.css",
+          "game/src/assets/tien-hiep-outcomes.css",
+          "game/src/assets/tien-hiep-progression.css",
+          "game/src/assets/tien-hiep-secondary-ui.css",
+          "game/src/assets/tien-hiep-ui.css",
+          "game/src/components/common/PcBodyDiagram.vue",
+          "game/src/components/common/PcBodyMeridianOverlay.vue",
+          "game/src/components/common/PcPaperButton.vue",
+          "game/src/components/common/PcPaperChrome.vue",
+          "game/src/components/common/PcPaperDialog.vue",
+          "game/src/components/common/PcPaperLandmark.vue",
+          "game/src/components/common/PcPaperLock.vue",
+          "game/src/components/common/PcPaperScene.vue",
+          "game/src/components/common/PcPaperSceneActions.vue",
+          "game/src/components/common/PcPaperTabs.vue",
+          "game/src/components/scenes/login/LoginOpening.vue",
+          "game/src/ui-preview/AuxiliaryDesignPreview.vue",
+          "game/src/ui-preview/CharacterProgressionDesignPreview.vue",
+          "game/src/ui-preview/CollectionCraftDesignPreview.vue",
+          "game/src/ui-preview/CombatOutcomeDesignPreview.vue",
+          "game/src/ui-preview/DesignReviewIndex.vue",
+          "game/src/ui-preview/DesignSystemPreview.vue",
+          "game/src/ui-preview/LandscapeDesignPreview.vue",
+          "game/src/ui-preview/PaperArchetypePreview.vue",
+          "game/src/ui-preview/PaperSceneDesigns.vue",
+          "game/src/ui-preview/SecondaryPreview.vue",
+          "game/src/ui-preview/SystemDesignPreview.vue"
+        ],
+        "rule": "#### Correctness\nIs the logic correct? Are there missing boundary conditions?\nAre exceptions handled properly?\nIs it thread-safe in concurrent scenarios?\n\n#### Security\nAre there security vulnerabilities such as SQL injection or XSS?\nIs sensitive information handled correctly?\nIs permission validation complete?\n\n#### Performance\nAre there obvious performance issues (e.g., N+1 queries, unnecessary loops)?\nAre resources properly released?\n\n#### Maintainability\nIs the code clear and easy to understand?\nDo names accurately express intent?\nDoes it follow the project’s existing code style and architecture patterns?\n\n#### Test Coverage\nDo critical logic paths have corresponding test cases?\nDo test cases cover boundary conditions?"
+      },
+      {
+        "group_id": 4,
+        "source": "project",
+        "pattern": "{**/*.test.ts,**/*.spec.ts,game/tests/**/*.ts}",
+        "files": [
+          "game/src/components/common/EntitySpriteCanvas.test.ts",
+          "game/src/components/common/PaperPanelNavigation.test.ts",
+          "game/src/components/common/PcPaperScene.test.ts",
+          "game/src/components/onboarding/AuthEntryScreen.test.ts",
+          "game/src/components/panels/CollectionPaperPanels.test.ts",
+          "game/src/components/scenes/skill/fidelity/skillGraphViewport.test.ts",
+          "game/src/presentation/assets/TienHiepUiAssets.test.ts"
+        ],
+        "rule": "## System-Specific Rules (Mandatory)\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited\n\n---\n\n## User-Specific Rules (Mandatory)\n\nTest defects only: mocks or stubs that hide integration defects or bypass the real authority path; regression behavior not actually exercised (missing assertions, assertions trivially true); tests coupled to implementation details instead of observable behavior; tests duplicating production logic instead of exercising the real path; guard/wiring tests weakened or removed to make a change pass; e2e specs that cannot detect the failure they claim to cover."
+      },
+      {
+        "group_id": 5,
+        "source": "project",
+        "pattern": "{game/src/components/**/*.{ts,vue},game/src/composables/**/*.ts,game/src/stores/**/*.ts,game/src/presentation/**/*.{ts,vue},game/src/App.vue}",
+        "files": [
+          "game/src/components/scenes/skill/fidelity/skillGraphViewport.ts"
+        ],
+        "rule": "## System-Specific Rules (Mandatory)\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited\n\n---\n\n## User-Specific Rules (Mandatory)\n\nVue/Pinia defects only: UI owning domain logic or computing authoritative gameplay results; direct domain-state mutation from presentation instead of owner APIs; duplicated reactive authority over one piece of state; stale reactive state after reset/restore; incorrect watchers (missing immediate/deep/flush needs, watch loops); missing cleanup in onUnmounted/onScopeDispose; event-listener, timer, or subscription leaks; Vue-Pinia-Phaser synchronization errors; hardcoded UI strings bypassing the i18n gateway; computed/ref misuse causing stale or lost reactivity."
+      }
+    ]
+  },
+  {
+    "schema_version": "1",
+    "groups": [
+      {
+        "group_id": 1,
+        "source": "system",
+        "pattern": "**/*.{ts,js,tsx,jsx,mjs,cjs}",
+        "files": [
+          "game/src/ui-preview/characterprogressiondesignMessages.ts",
+          "game/src/ui-preview/collection-craft-design.ts",
+          "game/src/ui-preview/collectioncraftdesignMessages.ts",
+          "game/src/ui-preview/combat-outcome-design.ts",
+          "game/src/ui-preview/combatoutcomedesignMessages.ts",
+          "game/src/ui-preview/design-review.ts",
+          "game/src/ui-preview/design-system.ts",
+          "game/src/ui-preview/designreviewMessages.ts",
+          "game/src/ui-preview/designsystemMessages.ts",
+          "game/src/ui-preview/landscape-design.ts",
+          "game/src/ui-preview/landscapedesignMessages.ts",
+          "game/src/ui-preview/secondary.ts",
+          "game/src/ui-preview/system-design.ts",
+          "game/src/ui-preview/systemdesignMessages.ts"
+        ],
+        "rule": "#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited"
+      },
+      {
+        "group_id": 2,
+        "source": "project",
+        "pattern": "{**/*.test.ts,**/*.spec.ts,game/tests/**/*.ts}",
+        "files": [
+          "game/tests/architecture/archivedUiProducers.test.ts",
+          "game/tests/e2e/pc-auxiliary-wiring.qa.spec.ts",
+          "game/tests/e2e/pc-collections-wiring.qa.spec.ts",
+          "game/tests/e2e/pc-paper-design.qa.spec.ts",
+          "game/tests/e2e/pc-progression-wiring.qa.spec.ts",
+          "game/tests/e2e/pc-settings-dialogs-wiring.qa.spec.ts",
+          "game/tests/e2e/tien-hiep-pc-ui.spec.ts"
+        ],
+        "rule": "## System-Specific Rules (Mandatory)\n\n#### Obvious Typos or Spelling Errors\n- Spelling errors in variable names, function names, component names, or Props property names\n- Strings in log or error messages containing spelling errors that affect readability\n\n#### Dead Code\n- Code blocks that will never be executed (e.g., branches where the condition is always false, code after a return statement)\n- Variables that are declared but never read or referenced\n- Large blocks of commented-out code (with no apparent intent to retain)\n\n#### Code Quality Checks\n- **Duplicate Code**: Check for common logic that can be extracted\n- **Code Comments**: Complex business logic should have clear explanatory comments (avoid commenting obvious code)\n- **Hardcoding**: Business-related hardcoded strings are prohibited, especially URL paths and business numbers; simple UI text may be relaxed\n- **Variable Declarations**: Using `var` is strictly prohibited; use `let` or `const`\n- **Equality Comparisons**: Using `==` and `!=` is prohibited; use strict equality `===` and `!==`\n- **TypeScript Types**: Avoid using `any` type; if necessary, provide a comment explaining the reason\n- **Null Checks**: Perform null checks when accessing values or destructuring to avoid null pointer exceptions\n- **Ternary Expressions**: Nested ternary expressions are not allowed\n\n#### React Best Practices\n- **Hooks Usage**: Verify compliance with Hooks rules (only call at the top level, only call in React functions)\n- **State Management**: Ensure state is placed at the appropriate level; avoid unnecessary state lifting\n- **Side Effect Handling**: Verify useEffect correctly handles dependencies and cleanup functions\n- **Performance Optimization**: Verify proper use of React.memo, useMemo, useCallback (based on performance analysis; avoid over-optimization)\n- **Render Side Effects**: Side effects in React component render methods are strictly prohibited (e.g., API calls, DOM manipulation)\n- **Inline Styles**: Avoid using inline `style` attributes, except for dynamic styles\n- **Inner Components**: Declaring new components inside a component is prohibited; use render methods instead (e.g., `renderItem`, not `<Item/>`)\n\n#### Async Handling Standards\n- **Error Handling**: Async functions must include proper error handling with user-friendly error messages\n- **Prefer async/await**: Prefer async/await over Promises; callback hell is prohibited\n- **Async in Loops**: Distinguish between independent async operations (use `Promise.all` for parallelism) and dependent async operations (use sequential execution); prefer `Promise.all` for performance\n\n#### Code Security Checks\n- **XSS Protection**: Verify that user input is properly escaped\n- **innerHTML Safety**: Using innerHTML to directly insert user input is prohibited; use textContent or apply XSS protection\n- **Code Injection Protection**: Using eval(), Function() constructor, and string argument forms of setTimeout/setInterval is strictly prohibited\n- **Dangerous Methods**: Using document.write() is prohibited as it causes page reflow and security issues\n- **Sensitive Information**: Check whether API keys or sensitive data are exposed\n- **Prototype Chain Safety**: Modifying native object prototypes (e.g., Array.prototype, Object.prototype) is prohibited\n\n---\n\n## User-Specific Rules (Mandatory)\n\nTest defects only: mocks or stubs that hide integration defects or bypass the real authority path; regression behavior not actually exercised (missing assertions, assertions trivially true); tests coupled to implementation details instead of observable behavior; tests duplicating production logic instead of exercising the real path; guard/wiring tests weakened or removed to make a change pass; e2e specs that cannot detect the failure they claim to cover."
+      },
+      {
+        "group_id": 3,
+        "source": "system",
+        "pattern": "default",
+        "files": [
+          "game/ui-auxiliary-design.html",
+          "game/ui-character-progression-design.html",
+          "game/ui-collection-craft-design.html",
+          "game/ui-combat-outcome-design.html",
+          "game/ui-design-review.html",
+          "game/ui-design-system.html",
+          "game/ui-landscape-design.html",
+          "game/ui-secondary.html",
+          "game/ui-system-design.html"
+        ],
+        "rule": "#### Correctness\nIs the logic correct? Are there missing boundary conditions?\nAre exceptions handled properly?\nIs it thread-safe in concurrent scenarios?\n\n#### Security\nAre there security vulnerabilities such as SQL injection or XSS?\nIs sensitive information handled correctly?\nIs permission validation complete?\n\n#### Performance\nAre there obvious performance issues (e.g., N+1 queries, unnecessary loops)?\nAre resources properly released?\n\n#### Maintainability\nIs the code clear and easy to understand?\nDo names accurately express intent?\nDoes it follow the project’s existing code style and architecture patterns?\n\n#### Test Coverage\nDo critical logic paths have corresponding test cases?\nDo test cases cover boundary conditions?"
+      }
+    ]
+  }
+]

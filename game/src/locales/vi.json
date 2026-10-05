@@ -479,6 +479,8 @@
     },
     "tranPhap": {
       "title": "Trận Pháp",
+      "choose": "Chọn Trận Pháp",
+      "roster": "Đồng Đội Chờ Bố Trận",
       "confirm": "Lưu Trận Pháp"
     },
     "bag": {
@@ -1194,6 +1196,9 @@
       "skip": "Bỏ qua"
     },
     "auth": {
+      "begin": "Bắt Đầu",
+      "createAccount": "Tạo Tài Khoản",
+      "returnOpening": "Quay lại",
       "eyebrow": "NHẤT NIỆM NHẬP ĐẠO",
       "lead": "Một đời phàm tục, một niệm cầu tiên.",
       "wordmark": "Tu Tiên IDLE",
@@ -1218,7 +1223,7 @@
         "register": "Lập đạo danh"
       },
       "guest": {
-        "button": "Chơi khách"
+        "button": "Chơi Thử"
       },
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
@@ -1273,8 +1278,8 @@
       "headerSubtitle": "MỘT BƯỚC TU TIÊN · VẠN DẶM SƠN HÀ",
       "vistaBanner": "ĐẠO TÂM BẤT NHIỄM",
       "starterSlot": {
-        "title": "Kỹ Năng Khởi Đầu",
-        "previewNote": "Bản duyệt UI · Lựa chọn kỹ năng chưa áp dụng vào game",
+        "title": "Chiêu mở đầu",
+        "previewNote": "Linh Bạo là chiêu mở đầu; các chiêu khác đang khóa trong phiên bản hiện tại",
         "pending": "Sẽ hiển thị sau khi chọn Thiên Phú"
       },
       "chooseOne": "Chọn một",
@@ -1942,13 +1947,13 @@
     "navigation": "Chức năng",
     "realm": "Cảnh Giới",
     "character": "Nhân Vật",
-    "inventory": "Kho Vật",
+    "inventory": "Túi",
     "skill": "Kỹ Năng",
-    "technique": "Tâm Pháp",
+    "technique": "Công Pháp",
     "body": "Luyện Thể",
-    "alchemy": "Đan Phòng",
+    "alchemy": "Luyện Đan",
     "equipment": "Trang Bị",
-    "exploration": "Thám Hiểm",
+    "exploration": "Bản Đồ",
     "quest": "Nhiệm Vụ",
     "settings": "Cài Đặt"
   },
@@ -1994,7 +1999,7 @@
     "viewing": "Đang xem mốc tầng {floor}"
   },
   "technique": {
-    "title": "Tâm Pháp",
+    "title": "Công Pháp",
     "navigation": "Chức năng",
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
     "active": "TÂM PHÁP ĐANG TU LUYỆN",
@@ -2051,7 +2056,7 @@
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay"
   },
   "exploration": {
-    "title": "Thám Hiểm",
+    "title": "Bản Đồ",
     "navigation": "Chức năng",
     "zones": "Địa Giới",
     "progress": "Tiến Độ Thám Hiểm",
@@ -2143,5 +2148,8 @@
     "feedback": "Gửi Phản Hồi",
     "build": "Phiên Bản",
     "buildValue": "Bản dựng hiện tại"
+  },
+  "pcUi": {
+    "back": "Trở Về"
   }
 }

@@ -1,0 +1,93 @@
+/* Shared page composition preserves production models and commands. */
+:is(#app,body) .pc-progression.pc-progression { position:absolute; inset:0; pointer-events:auto; }
+:is(#app,body) .pc-progression .progression-workspace { position:relative; inset:auto; width:100%; height:100%; display:grid; grid-template-columns:minmax(0,1fr) 378px; grid-template-rows:minmax(0,1fr); gap:30px; }
+.pc-progression--realm .pc-paper-scene__workspace,.pc-progression--technique .pc-paper-scene__workspace { top:140px; bottom:68px; }
+.pc-progression .pc-paper-scene__footer { top:auto; bottom:18px; height:48px; }
+.pc-progression .progression-preview-label { margin:0; font-size:12px; color:#786443; }
+.pc-progression .body-chapters small { display:block; font-size:12px; margin-top:3px; }
+.pc-progression .is-locked { opacity:.6; }
+:is(#app,body) .pc-progression :is(.body-paper-details,.realm-details,.technique-upgrade,.skill-paper-details,.exploration-details) { position:relative; inset:auto; width:auto; height:100%; min-width:0; min-height:0; padding:23px 27px; border:0; border-image:none; box-shadow:none; background-color:transparent; background-image:var(--pc-inspector-art); background-size:100% 100%; color:#f4e4c0; display:flex; flex-direction:column; overflow:hidden; }
+.pc-progression :is(.body-info-content,.realm-details-content,.skill-detail-body,.details-body) { flex:1; min-height:0; overflow:auto; scrollbar-width:thin; }
+.pc-progression :is(.body-info-frame,.skill-info-frame) { display:none; }
+:is(#app,body) .pc-progression .pc-paper-inspector :is(h2,h3) { color:#ead5a3; }
+:is(#app,body) .pc-progression .pc-paper-inspector :is(p,dt,small) { color:#cfc2a5; }
+:is(#app,body) .pc-progression .pc-paper-inspector :is(dd,strong) { color:#d6e3b1; }
+.pc-progression .pc-paper-inspector h2 { font-size:27px; }
+.pc-progression .pc-paper-inspector h3 { margin:12px 0 8px; padding:8px 0; font-size:18px; }
+.pc-progression .pc-paper-inspector dl > div { font-size:15px; padding:7px 0; }
+.pc-progression .pc-paper-inspector p { font-size:14px; line-height:1.45; }
+:is(#app,body) .pc-progression :is(.body-invest,.realm-cta,.technique-advance,.skill-upgrade,.challenge,.build-link,.exploration-stop) { position:relative; inset:auto; width:100%; height:auto; min-height:46px; margin:12px 0 0; border:0; border-image:none; border-radius:0; background:transparent; box-shadow:none; color:#30271b; font:700 20px/1.2 var(--pc-font-body); }
+.pc-progression .pc-paper-button:disabled { opacity:.55; cursor:default; }
+:is(#app,body) .pc-progression :is(.body-notice,.realm-notice,.technique-notice,.skill-notice,.notice) { position:static; width:auto; height:auto; min-height:28px; margin:5px 0 0; flex:none; }
+:is(#app,body) .pc-progression .body-paper-figure { position:relative; inset:auto; width:100%; height:100%; min-width:0; }
+:is(#app,body) .pc-progression .body-figure-art { position:absolute; top:0; left:22%; width:76%; height:82%; }
+:is(#app,body) .pc-progression .body-unit-rail { left:0; top:3px; bottom:40px; width:24%; display:flex; flex-direction:column; gap:12px; overflow:auto; justify-content:flex-start; }
+:is(#app,body) .pc-progression .body-unit-rail button { position:relative; flex:0 0 auto; width:100%; min-height:65px; padding:9px; border:3px double #b28a43; background:#ead6ad66; font:17px var(--pc-font-body); }
+:is(#app,body) .pc-progression .body-unit-rail .selected { background:#cda86166; outline:1px solid #967030; }
+:is(#app,body) .pc-progression .body-progress { position:absolute; top:auto; left:27%; right:0; bottom:0; }
+:is(#app,body) .pc-progression .body-paper-figure--meridian .body-unit-rail { top:auto; bottom:35px; width:100%; max-height:120px; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; }
+:is(#app,body) .pc-progression .body-paper-figure--meridian .body-unit-rail button { min-height:47px; font-size:12px; padding:5px; }
+:is(#app,body) .pc-progression .body-paper-figure--meridian .body-figure-art { left:12%; width:76%; height:72%; }
+:is(#app,body) .pc-progression .body-orb { width:83px; height:48px; border:3px double #b28a43; background:#ebdab6; border-radius:50%; font-size:12px; z-index:1; }
+.pc-progression .body-orb img { display:none; }
+:is(#app,body) .pc-progression .body-paper-figure--cycle .body-unit-rail { top:auto; bottom:35px; width:100%; max-height:155px; flex-direction:row; flex-wrap:wrap; gap:6px; }
+:is(#app,body) .pc-progression .body-paper-figure--cycle .body-unit-rail button { flex:1 0 85px; min-height:65px; width:auto; font-size:14px; }
+:is(#app,body) .pc-progression .body-paper-figure--cycle .body-figure-art { left:8%; width:84%; height:70%; }
+.pc-progression .body-extra { background:#c7b17412; border-color:#a58b4955; }
+:is(#app,body) .pc-progression .realm-map { position:relative; inset:auto; width:100%; height:100%; display:grid; grid-template-columns:155px minmax(0,1fr); gap:20px; }
+.pc-progression .realm-floor-rail { display:grid; grid-template-columns:repeat(3,1fr); align-content:center; gap:18px 8px; }
+:is(#app,body) .pc-progression .realm-marker { position:relative; inset:auto; transform:none; justify-self:center; width:42px; height:42px; background:#e3c997; border:3px double #a67e36; color:#534124; }
+.pc-progression .realm-marker.reached { background:#a7833b; color:#fff1c9; }
+.pc-progression .realm-marker.current { background:#526342; color:#fff1c9; }
+.pc-progression .realm-map-path { position:relative; height:100%; }
+.pc-progression .realm-map-art { width:100%; height:100%; object-fit:contain; }
+.pc-progression .realm-selection { position:static; margin:8px 0 0; flex:none; }
+.pc-progression .realm-identity { flex:none; }
+:is(#app,body) .pc-progression .technique-workspace { grid-template-columns:270px minmax(0,1fr) 360px; gap:25px; }
+:is(#app,body) .pc-progression .technique-workspace.is-empty { grid-template-columns:1fr; }
+:is(#app,body) .pc-progression :is(.technique-info,.technique-artifact) { position:relative; inset:auto; width:auto; height:100%; }
+.pc-progression .technique-info { overflow:auto; scrollbar-width:thin; }
+:is(#app,body) .pc-progression .technique-book { left:0; top:0; width:100%; height:68%; }
+:is(#app,body) .pc-progression .technique-orbit { left:10%; top:0; width:80%; height:65%; }
+:is(#app,body) .pc-progression .technique-track { left:0; right:0; bottom:0; }
+.pc-progression .technique-stages { overflow-x:auto; padding:5px; gap:6px; }
+.pc-progression .technique-stage { min-width:60px; }
+.pc-progression .technique-material-icon.pc-paper-slot { width:64px; height:64px; }
+:is(#app,body) .pc-progression .skill-elements { position:static; width:auto; height:100%; justify-content:flex-start; gap:15px; }
+.pc-progression .skill-elements button { min-width:115px; display:flex; align-items:center; gap:8px; font-size:20px; }
+.pc-progression .skill-elements img { width:35px; height:35px; object-fit:contain; }
+:is(#app,body) .pc-progression .skill-paper-tree { position:relative; inset:auto; width:100%; height:100%; overflow:auto; }
+.pc-progression .skill-meta { position:static; display:flex; align-items:center; gap:20px; }
+.pc-progression .skill-respec,.pc-progression .skill-insight { font-size:18px; }
+:is(#app,body) .pc-progression .exploration-map-region { min-width:0; height:100%; display:flex; flex-direction:column; }
+.pc-progression .zone-title { font-size:25px; margin:0 0 8px; }
+:is(#app,body) .pc-progression .exploration-map { width:100%; flex:1; min-height:0; height:auto; border:3px double #b28a43; }
+.pc-progression .exploration-map-scroll { overflow:auto; }
+.pc-progression .exploration-map .chapter { min-width:720px; }
+:is(#app,body) .pc-progression .progress { position:static; width:auto; font-size:14px; margin-top:12px; }
+.pc-progression .progress-label { display:flex; justify-content:space-between; margin-bottom:5px; }
+.pc-progression .track { height:10px; background:#373326; border:2px solid #b28a43; }
+.pc-progression .track > span { display:block; height:100%; background:#d1ac60; }
+:is(#app,body) .pc-progression .stage-title { position:static; font-size:26px; color:#ead5a3; }
+:is(#app,body) .pc-progression .chapter-name { position:static; font-size:13px; }
+:is(#app,body) .pc-progression .start-row { position:static; display:flex; gap:8px; width:auto; flex:none; }
+.pc-progression .start-row > .pc-paper-button { font-size:16px; padding:8px 12px; }
+.pc-progression .stage-vista { display:none; }
+.body-page-enter-active,.body-page-leave-active { transition:opacity .16s ease; }
+.body-page-enter-from,.body-page-leave-to { opacity:0; }
+@media(prefers-reduced-motion:reduce) { .body-page-enter-active,.body-page-leave-active { transition:none; } }
+:is(#app,body) .pc-progression .realm-identity { flex:none; display:flex; gap:16px; align-items:center; padding-bottom:12px; }
+:is(#app,body) .pc-progression .realm-identity h2 { font-size:32px; margin:0; }
+:is(#app,body) .pc-progression .realm-identity p { font-size:16px; margin:6px 0 0; }
+:is(#app,body) .pc-progression .realm-selection { position:static; width:auto; margin:8px 0 0; flex:none; }
+:is(#app,body) .pc-progression .realm-details-content { flex:1; min-height:0; overflow:auto; }
+:is(#app,body) .pc-progression .realm-seal { width:54px; height:54px; flex:none; }
+:is(#app,body) .pc-progression .realm-passives { margin-top:8px; }
+:is(#app,body) .pc-progression .realm-progress strong { font-size:22px; }
+:is(#app,body) .pc-progression .realm-map-path { position:relative; height:100%; min-width:0; }
+:is(#app,body) .pc-progression .realm-map-art { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+:is(#app,body) .pc-progression .exploration-details { border-image-source:none; border-image-width:0; border-image-slice:0; }
+:is(#app,body) .pc-progression .start-row > .pc-paper-button { flex:1 1 0; width:auto; min-width:0; padding:8px 10px; font-size:16px; }
+:is(#app,body) .pc-progression .exploration-stop { width:auto; min-height:32px; font-size:13px; padding:5px 10px; margin:0; }
+:is(#app,body) .pc-progression .body-material.unmet :is(strong,span) { color:#efa889; }
+:is(#app,body) .pc-progression .exploration-details::before,:is(#app,body) .pc-progression .exploration-details::after { display:none; content:none; }

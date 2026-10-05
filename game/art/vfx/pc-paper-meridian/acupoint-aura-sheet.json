@@ -1,0 +1,12 @@
+{
+  "name": "PC Paper Acupoint Aura",
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "cols": 8,
+  "rows": 4,
+  "frames": 32,
+  "fps": 16,
+  "duration": 2,
+  "pixelArt": false,
+  "compression": 0
+}

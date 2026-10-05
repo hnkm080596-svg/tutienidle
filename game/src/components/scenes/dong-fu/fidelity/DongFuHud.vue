@@ -1,21 +1,27 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import DongFuArtFrame from './DongFuArtFrame.vue'
-import { DONG_FU_ART, symbolUrl, type DongFuUiModel } from './dongFuUi'
+import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
+import { pcPaperResourceUrl, type PcPaperResource } from '@/presentation/assets/PcPaperControls'
+import { symbolUrl, type DongFuUiModel } from './dongFuUi'
 defineProps<{ model: DongFuUiModel }>()
 const emit = defineEmits<{ action: [id: string] }>()
 const { t } = useI18n()
+function resourceArt(id: string): string | null {
+  const resources: Record<string, PcPaperResource> = { spirit_stone: 'jade', spirit_stone_ha_pham: 'jade', gold: 'coin', spirit_stone_trung_pham: 'coin', crystal: 'crystal', spirit_stone_thuong_pham: 'crystal', essence: 'essence' }
+  return resources[id] ? pcPaperResourceUrl(resources[id]) : null
+}
 </script>
 <template>
   <header class="df-hud">
     <button class="df-identity" @click="emit('action', 'character')">
       <DongFuArtFrame :border-width="34" />
-      <span class="df-portrait"><img :src="DONG_FU_ART.cultivator" alt=""></span>
+      <span class="df-portrait"><PlayerPortrait variant="cultivate" animation-mode="idle" height="100%" /></span>
       <span class="df-identity__body"><strong>{{ model.name }}</strong><span>{{ model.realm }}</span><span class="df-progress"><i :style="{ width: `${Math.min(100, Math.max(0, model.progressPercent))}%` }" /></span><small>{{ model.progressLabel }}</small></span>
     </button>
     <div class="df-resources">
       <div v-for="resource in model.resources" :key="resource.id" class="df-resource" :title="resource.label">
-        <DongFuArtFrame :border-width="19" /><i class="df-gem" :class="`df-gem--${resource.id}`" aria-hidden="true" /><span>{{ resource.value }}</span>
+        <img v-if="resourceArt(resource.id)" class="df-resource-art" :src="resourceArt(resource.id)!" alt=""><i v-else class="df-gem" :class="`df-gem--${resource.id}`" aria-hidden="true" /><span>{{ resource.value }}</span>
       </div>
     </div>
     <div class="df-utilities">

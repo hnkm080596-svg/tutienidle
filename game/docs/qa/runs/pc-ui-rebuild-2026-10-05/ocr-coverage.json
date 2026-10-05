@@ -1,0 +1,1552 @@
+[
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/BetaCompletionModal.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/ConfirmModal.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/EntitySpriteCanvas.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/ErrorScreen.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/GameButton.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/common/InkWashBackdrop.test.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/common/InkWashLargeSurfaces.test.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/common/InkWashMediumSurfaces.test.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/common/InkWashPrimitives.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/LoadingScreen.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/OfflineSummaryModal.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/OverlayPanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PaperPanelNavigation.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PlayerPortrait.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PlayerPortrait.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/SaveIncompatibleScreen.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/TalentEntitlementModal.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/Tooltip.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/TutorialOverlay.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/primitives/InkNineSlice.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/game/combat/CombatDefeatPanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/game/combat/CombatSceneOverlay.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/game/tribulation/TribulationSceneOverlay.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/layout/FunctionOverlayPanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/onboarding/AuthEntryScreen.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/onboarding/CharacterCreationScreen.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/ArtifactPanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/CompanionPanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/EquipmentPaperdoll.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/GuestAbandonDialog.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/LoreCodexModal.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/ProductionPanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/QuanKhiPanel.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/RealmPanel.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/ScripturePavilionPanel.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/SkillPathPanel.test.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/TranPhapPanel.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/TranPhapPanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/VendorPanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/WorkerLodgePanel.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/equipment-hall/DecomposeTab.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/equipment-hall/DissolveTab.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/equipment-hall/EnhanceTab.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/equipment-hall/RefineTab.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/equipment-hall/WashTab.vue"
+  },
+  {
+    "reason": "Complete task diff or new source reviewed against OCR rules and actual production owner/admission/geometry behavior.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/equipment-hall/qi-hall.css"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/worker-lodge/ChieuMoTab.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/worker-lodge/DuyenPhanTab.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/worker-lodge/QuaTangTab.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/alchemy/fidelity/AlchemyFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/alchemy/fidelity/AlchemyPaperDetails.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/body/BodySurface.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/body/fidelity/BodyFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/body/fidelity/BodyPaperDetails.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/body/fidelity/BodyPaperFigure.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/character/fidelity/CharacterFidelityFigure.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/character/fidelity/CharacterFidelityIdentity.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/character/fidelity/CharacterFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/character/fidelity/characterUi.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/combat/fidelity/CombatFidelityFrame.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/combat/fidelity/CombatFidelityPortrait.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/combat/fidelity/CombatFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/defeat/DefeatTitleBand.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/defeat/fidelity/DefeatFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/dong-fu/DongFuStage.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/dong-fu/fidelity/DongFuFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/dong-fu/fidelity/DongFuHomeContent.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/dong-fu/fidelity/DongFuHomeContent.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/dong-fu/fidelity/DongFuHud.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/dong-fu/fidelity/dongFuUi.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/equipment/fidelity/EquipmentFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/equipment/fidelity/EquipmentPaperTooltip.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/equipment/fidelity/ForgeBatchBag.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/equipment/fidelity/ForgeFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/exploration/fidelity/ExplorationFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/exploration/fidelity/ExplorationPaperDetails.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/exploration/fidelity/ExplorationPaperMap.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/inventory/fidelity/InventoryFidelityDetail.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/inventory/fidelity/InventoryFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/login/AuthSubmitButton.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/login/LoginLogoBlock.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/login/LoginSceneVista.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/login/loginArt.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/quest/fidelity/QuestFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/realm/fidelity/RealmFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/realm/fidelity/RealmPaperDetails.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/realm/fidelity/RealmPaperMap.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/settings/SettingsNavRail.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/settings/fidelity/SettingsFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/skill/fidelity/SkillFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/skill/fidelity/SkillPaperDetails.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/skill/fidelity/SkillPaperNode.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/skill/fidelity/SkillPaperTree.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/technique/fidelity/TechniqueFidelityScene.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/technique/fidelity/TechniqueFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/technique/fidelity/TechniquePaperInfo.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/technique/fidelity/TechniquePaperUpgrade.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/tribulation/TribulationResultBanner.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/tribulation/fidelity/TribulationFidelityChapters.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/tribulation/fidelity/TribulationFidelityFrame.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/tribulation/fidelity/TribulationFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/victory/VictoryScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/victory/VictoryTitleBand.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/victory/fidelity/VictoryFidelityScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/game/scenes/TranPhapCombatPreviewScene.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/locales/en.json"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/locales/vi.json"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/main.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/presentation/assets/AssetBundleCatalog.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/alchemy.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/body.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/character.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/characterMessages.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/combat.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/defeat.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/dong-fu.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/equipment.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/exploration.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/forge.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/inventory.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/quest.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/realm.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/remainingPreview.test.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/settings.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/skill.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/technique.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/tribulation.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/victory.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui/huyen-kim-chrome.json"
+  },
+  {
+    "reason": "Complete task diff or new source reviewed against OCR rules and actual production owner/admission/geometry behavior.",
+    "status": "reviewed",
+    "path": "game/tests/architecture/betaScopeRenderedTokens.test.ts"
+  },
+  {
+    "reason": "Complete task diff or new source reviewed against OCR rules and actual production owner/admission/geometry behavior.",
+    "status": "reviewed",
+    "path": "game/tests/architecture/domArtLiteralCoverage.test.ts"
+  },
+  {
+    "reason": "Complete task diff or new source reviewed against OCR rules and actual production owner/admission/geometry behavior.",
+    "status": "reviewed",
+    "path": "game/tests/architecture/huyenKimChromeManifest.test.ts"
+  },
+  {
+    "path": "game/tests/e2e/beta-journey.spec.ts",
+    "status": "reviewed",
+    "reason": "Complete task diff or new source reviewed against OCR rules and actual production owner/admission/geometry behavior."
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/combat-overlay-layout.spec.ts"
+  },
+  {
+    "path": "game/tests/e2e/combat-vertical-slice.spec.ts",
+    "status": "pending",
+    "reason": "Awaiting coordinator complete source/diff review"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/create-to-combat.spec.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/helpers.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/huyen-kim-fidelity-capture.qa.spec.ts"
+  },
+  {
+    "path": "game/tests/e2e/save-reload.spec.ts",
+    "status": "pending",
+    "reason": "Awaiting coordinator complete source/diff review"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/tribulation-flow.spec.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/Pc Paper Acupoint Aura.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/acupoint-aura-sheet.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/acupoint-aura.css"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/capture.mjs"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/export-proof.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/export.mjs"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/preview.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/provenance.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/art/vfx/pc-paper-meridian/runtime-proof.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/ALPHA-REVIEW.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/DELIVERY.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/GENERATED-PROMPTS.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/MIGRATED-DIRECT-CONSUMERS.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/PACK-VALIDATION.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-BRIEF.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-TASK.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/SHARED-ADDITIONAL-PROMPTS.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/SHARED-CONTROLS-PROMPTS.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/build_manifest.py"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/census_imports.py"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/REVIEW-MANIFEST.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/review.html"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/dedupe-preview.mjs"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/draft-asset-checks.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/finalize-preview.mjs"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/inspect_sources.py"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/package-delivery.py"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/panel-frame-v2-alpha.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/polish-ocr-preview.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/preview-server.mjs"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/preview.html"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/rebuild-ocr-preview.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/rebuild-risk-map.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/refine-preview.mjs"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/source-metrics.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/validate-pack.mjs"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/wire-outcomes-capture.mjs"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/wire-outcomes-components-capture.mjs"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/wire-outcomes-runtime-retry/.last-run.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/wire-outcomes-runtime/.last-run.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/pc-ui-rebuild-request.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/attack-model.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/environment.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0001.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0002.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0003.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0004.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0005.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0006.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0007.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0008.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0009.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0010.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0011.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/events/0012.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/lease.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/ledger.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/manifest.json"
+  },
+  {
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/ocr-coverage.json",
+    "status": "skipped",
+    "reason": "Non-executable task documentation or captured evidence; runtime/protocol assertions are assessed separately."
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/ocr-preview.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/ocr-rules.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-auxiliary.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-collections.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-entry.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-outcomes.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/release-progression.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/request.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-auxiliary.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-collections.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-entry-home.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-outcomes.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/schedule-progression.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/wiring-brief.json"
+  },
+  {
+    "reason": "Non-executable task documentation or captured evidence. Source defect review does not infer runtime correctness from this document; protocol and runtime evidence are assessed separately.",
+    "status": "skipped",
+    "path": "game/docs/qa/runs/pc-ui-rebuild-2026-10-05/wiring-task.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/controls/body-diagram-manifest.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/controls/button-manifest.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/controls/inspector-manifest.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/controls/landmark-manifest.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/controls/resource-manifest.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/controls/slot-manifest.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/icons/body-manifest.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/icons/manifest.json"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/public/assets/ui/tien-hiep-2026-10/pack.json"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/audit-tien-hiep-alpha.mjs"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/build-tien-hiep-ui.mjs"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/capture-pc-design-gallery.mjs"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/capture-pc-landscape-design.mjs"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/export-pc-paper-controls.mjs"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/export-pc-paper-icons.mjs"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/migrate-tien-hiep-surfaces.mjs"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/scope-tien-hiep-skin.mjs"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/scripts/verify-pc-paper-fonts.mjs"
+  },
+  {
+    "reason": "Complete shared production stylesheet read; selector scope, pointer ownership, scroll containment and reduced-motion behavior checked with actual browser evidence.",
+    "status": "reviewed",
+    "path": "game/src/assets/pc-paper-auxiliary-production.css"
+  },
+  {
+    "reason": "Complete shared production stylesheet read; selector scope, pointer ownership, scroll containment and reduced-motion behavior checked with actual browser evidence.",
+    "status": "reviewed",
+    "path": "game/src/assets/pc-paper-production.css"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/assets/pc-paper-scene.css"
+  },
+  {
+    "reason": "Complete shared production stylesheet read; selector scope, pointer ownership, scroll containment and reduced-motion behavior checked with actual browser evidence.",
+    "status": "reviewed",
+    "path": "game/src/assets/pc-paper-type.css"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/assets/tien-hiep-auxiliary.css"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/assets/tien-hiep-collections.css"
+  },
+  {
+    "reason": "Complete task diff or new source reviewed against OCR rules and actual production owner/admission/geometry behavior.",
+    "status": "reviewed",
+    "path": "game/src/assets/tien-hiep-entry.css"
+  },
+  {
+    "reason": "Complete task diff or new source reviewed against OCR rules and actual production owner/admission/geometry behavior.",
+    "status": "reviewed",
+    "path": "game/src/assets/tien-hiep-forge.css"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/assets/tien-hiep-outcomes.css"
+  },
+  {
+    "reason": "Complete task diff or new source reviewed against OCR rules and actual production owner/admission/geometry behavior.",
+    "status": "reviewed",
+    "path": "game/src/assets/tien-hiep-progression.css"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/assets/tien-hiep-secondary-ui.css"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/assets/tien-hiep-ui.css"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/common/EntitySpriteCanvas.test.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PaperPanelNavigation.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcBodyDiagram.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcBodyMeridianOverlay.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperButton.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperChrome.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperDialog.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperLandmark.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperLock.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperScene.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperScene.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperSceneActions.vue"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/common/PcPaperTabs.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/onboarding/AuthEntryScreen.test.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/panels/CollectionPaperPanels.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/login/LoginOpening.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/skill/fidelity/skillGraphViewport.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/components/scenes/skill/fidelity/skillGraphViewport.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/presentation/assets/PcPaperControls.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/presentation/assets/PcPaperIcons.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/presentation/assets/TienHiepUiAssets.test.ts"
+  },
+  {
+    "reason": "Coordinator read the full new component or complete task diff and owner/consumer context; rendering, event, admission and lifecycle contracts checked against resolved OCR rules.",
+    "status": "reviewed",
+    "path": "game/src/presentation/assets/TienHiepUiAssets.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/AuxiliaryDesignPreview.vue"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/CharacterProgressionDesignPreview.vue"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/CollectionCraftDesignPreview.vue"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/CombatOutcomeDesignPreview.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/ui-preview/DesignReviewIndex.vue"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/DesignSystemPreview.vue"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/LandscapeDesignPreview.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/ui-preview/PaperArchetypePreview.vue"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/ui-preview/PaperSceneDesigns.vue"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/SecondaryPreview.vue"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/SystemDesignPreview.vue"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/auxiliary-design.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/auxiliarydesignMessages.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/character-progression-design.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/characterprogressiondesignMessages.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/collection-craft-design.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/collectioncraftdesignMessages.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/combat-outcome-design.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/combatoutcomedesignMessages.ts"
+  },
+  {
+    "reason": "Coordinator read complete new source or complete task diff and relevant consumer context; checked selected OCR rules. Test intent, owner outcomes and authoring write boundaries assessed.",
+    "status": "reviewed",
+    "path": "game/src/ui-preview/design-review.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/design-system.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/designreviewMessages.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/designsystemMessages.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/landscape-design.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/landscapedesignMessages.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/secondary.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/system-design.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/src/ui-preview/systemdesignMessages.ts"
+  },
+  {
+    "path": "game/tests/architecture/archivedUiProducers.test.ts",
+    "status": "reviewed",
+    "reason": "Complete regression source read; real child processes operate only in checkout-local canary directories, immutable consumer assertions cover refusal-before-write."
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/pc-auxiliary-wiring.qa.spec.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/pc-collections-wiring.qa.spec.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/pc-paper-design.qa.spec.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/pc-progression-wiring.qa.spec.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/pc-settings-dialogs-wiring.qa.spec.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/tests/e2e/tien-hiep-pc-ui.spec.ts"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-auxiliary-design.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-character-progression-design.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-collection-craft-design.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-combat-outcome-design.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-design-review.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-design-system.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-landscape-design.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-secondary.html"
+  },
+  {
+    "reason": "Awaiting coordinator diff/full-file review",
+    "status": "pending",
+    "path": "game/ui-system-design.html"
+  }
+]

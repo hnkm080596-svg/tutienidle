@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { SkillUiNode } from './skillUi'
 defineProps<{ node: SkillUiNode | null; notice: string }>()
 const emit = defineEmits<{ upgrade: [id: string] }>()
 const { t } = useI18n()
-const paperFrame = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png')
 </script>
 <template>
-  <aside class="skill-paper-details">
+  <aside class="skill-paper-details pc-paper-inspector">
     <div class="skill-info-frame" :style="{ borderImageSource: `url('${paperFrame}')` }" aria-hidden="true" />
     <header v-if="node"><img :src="node.icon" alt=""><div><h2>{{ node.name }}</h2><p>{{ node.level }} · {{ t(`skill.state.${node.state}`) }}</p></div></header>
     <div class="skill-detail-body">
@@ -23,7 +24,7 @@ const paperFrame = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/pape
       </template>
       <p v-else class="skill-description">{{ t('panels.skillPath.nodeInspector.empty') }}</p>
     </div>
-    <button v-if="node?.actionLabel" class="skill-upgrade" :disabled="node.actionDisabled" @click="emit('upgrade', node.id)">{{ node.actionLabel }}</button>
+    <PcPaperButton v-if="node?.actionLabel" class="skill-upgrade" :disabled="node.actionDisabled" @click="emit('upgrade', node.id)">{{ node.actionLabel }}</PcPaperButton>
     <p class="skill-notice" role="status" aria-live="polite">{{ notice }}</p>
   </aside>
 </template>

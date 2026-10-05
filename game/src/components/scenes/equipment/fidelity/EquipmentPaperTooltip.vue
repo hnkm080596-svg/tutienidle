@@ -2,7 +2,7 @@
 import type { EquipmentDisplay } from './equipmentUi'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 defineProps<{ item: EquipmentDisplay }>()
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.png')
+const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png')
 </script>
 <template>
   <aside id="equipment-tooltip" role="tooltip" class="gear-tooltip" :style="{ borderImageSource: `url('${paper}')`, '--gear-tone': item.tone }">

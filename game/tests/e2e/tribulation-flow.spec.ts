@@ -154,7 +154,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     await reauthAndEnterHome(page)
 
     // Command wheel (Tab) -> Canh Gioi slot -> RealmPanel -> "Quan Khi".
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
     const realmSlot = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlot).toBeVisible({ timeout: 10_000 })
     await realmSlot.click()
@@ -217,7 +217,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     // .command-wheel-layer only renders while the committed route is neither
     // 'combat' nor 'tribulation' (GameRoot.vue isFullSceneActive), so its
     // re-attachment IS the route-home witness - under F1 it never reappears.
-    const wheelLayer = page.locator('.command-wheel-layer')
+    const wheelLayer = page.locator('.df-wheel')
     try {
       await expect(wheelLayer).toBeAttached({ timeout: 30_000 })
     } catch (error) {
@@ -266,7 +266,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     // between attempts so a mid-leave element never stalls the click on
     // a detached node.
     for (let i = 0; i < 3; i += 1) {
-      const openPanel = page.locator('.overlay-panel, .hk-scroll').first()
+      const openPanel = page.locator('.overlay-panel, .hk-scroll, .realm-paper-scene, .quan-khi-page').first()
       if (!(await openPanel.isVisible().catch(() => false))) break
       const closeButton = openPanel.locator('.overlay-panel__close, .hk-scroll__close').first()
       if (await closeButton.isVisible().catch(() => false)) {
@@ -278,9 +278,9 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
       }
       await page.waitForTimeout(400)
     }
-    await expect(page.locator('.overlay-panel, .hk-scroll')).toHaveCount(0, { timeout: 10_000 })
+    await expect(page.locator('.overlay-panel, .hk-scroll, .realm-paper-scene, .quan-khi-page')).toHaveCount(0, { timeout: 10_000 })
 
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
     const realmSlotAfter = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlotAfter).toBeVisible({ timeout: 10_000 })
     await realmSlotAfter.click()

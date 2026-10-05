@@ -32,6 +32,14 @@ function mountPortrait(props: Record<string, unknown>) {
 }
 
 describe('PlayerPortrait — ENTITY_ART_MODE branch', () => {
+  it('UI idle animation renders the existing catalogue clip without flipping global art mode', () => {
+    const originalMode = ENTITY_ART_MODE
+    const { container, unmount } = mountPortrait({ variant: 'portrait', animationMode: 'idle' })
+    expect(container.querySelector('canvas.entity-sprite-canvas')).not.toBeNull()
+    expect(container.querySelector('img.player-portrait__image')).toBeNull()
+    expect(ENTITY_ART_MODE).toBe(originalMode)
+    unmount()
+  })
   it('static mode renders the PNG <img>, never the atlas canvas', () => {
     if (ENTITY_ART_MODE !== 'static') return
 

@@ -2,8 +2,7 @@
 // Scene 16/17 settings nav rail (ref left rail: Chung/Am Thanh/Hien Thi/
 // Ngon Ngu/Luu Tru/Tai Khoan/Cap Nhat/Ho Tro seals - CORRECTED to real
 // sections only). Selector/data-section contract pinned by tests + e2e.
-import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
-import type { StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
+import { pcPaperIconUrl, type PcPaperIcon } from '@/presentation/assets/PcPaperIcons'
 
 defineProps<{
   sections: Array<{ id: string; label: string }>
@@ -13,16 +12,16 @@ defineProps<{
 
 // Per-section seal glyph - nearest existing stable symbol per section
 // (art-needed medallion stays only for an unknown id).
-const SECTION_SYMBOL: Record<string, StableSymbolId> = {
+const SECTION_SYMBOL: Record<string, PcPaperIcon> = {
   general: 'settings',
   display: 'realm',
   audio: 'feedback',
   account: 'character',
-  update: 'auto-farm',
-  support: 'confirm',
+  update: 'opportunity',
+  support: 'feedback',
 }
 
-function sectionSymbol(id: string): StableSymbolId | null {
+function sectionSymbol(id: string): PcPaperIcon | null {
   return SECTION_SYMBOL[id] ?? null
 }
 const emit = defineEmits<{ select: [id: string] }>()
@@ -39,9 +38,10 @@ const emit = defineEmits<{ select: [id: string] }>()
       :data-section="section.id"
       @click="emit('select', section.id)"
     >
-      <HuyenKimSymbol
+      <img
         v-if="sectionSymbol(section.id)"
-        :name="sectionSymbol(section.id)!"
+        :src="pcPaperIconUrl(sectionSymbol(section.id)!)"
+        alt=""
         class="settings-panel__nav-glyph"
       />
       <i v-else class="settings-panel__nav-glyph settings-panel__nav-glyph--blank art-needed" :data-art-id="`settings-nav-glyph-${section.id}`" aria-hidden="true" />

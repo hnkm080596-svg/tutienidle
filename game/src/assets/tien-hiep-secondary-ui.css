@@ -1,0 +1,137 @@
+/* Secondary surfaces share the same paper and ink art as the PC scenes.
+   Teleported dialogs and tooltips intentionally use their own root selectors. */
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel) {
+  --hk-text-primary: #30291d; --hk-text-secondary: #675637; --hk-text-muted: #74664e;
+  --text-primary: #30291d; --text-secondary: #675637; --text-muted: #74664e;
+  --paper-text: #30291d; --paper-text-soft: #675637; --paper-line: #b39a68;
+  --surface-text: #30291d; --surface-text-soft: #675637; --surface-line: #b39a68;
+  --surface-900: #e4d6b7; --surface-800: #eee2c9; --surface-700: #f3e9d4;
+  --hk-border-muted: #b39a6880; --hk-jade: #287257; --jade: #287257;
+  --hk-cinnabar-bright: #a63628; --crimson: #a63628;
+  color: #30291d; font-family: var(--font-display);
+  background: #efe4ca var(--th-art-paper-surface) center/cover;
+  border-radius: 0; border: 0 solid transparent;
+  border-image: var(--th-art-panel-frame-v2) 240 320 / 72px / 0 stretch;
+  box-shadow: 0 12px 40px #08131066;
+}
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.error-screen__panel,.save-incompatible__panel) > .ink-nine-slice { visibility: hidden; }
+:is(#app, body) .overlay-panel { background: #07120e85; backdrop-filter: blur(3px); }
+:is(#app, body) .overlay-panel__card .overlay-panel__header { padding: 34px 80px 18px; border-bottom: 1px solid #b39a6860; }
+:is(#app, body) .overlay-panel__card .overlay-panel__heading h3 { color: #352a1b; font: 700 28px/1.3 var(--font-display); }
+:is(#app, body) .overlay-panel__card .overlay-panel__body { padding: 18px 46px 38px; }
+:is(#app, body) .overlay-panel__card .overlay-panel__close { color: #3d301b; background: #e9dab6; border: 1px solid #a18448; border-radius: 50%; }
+:is(#app, body) :is(.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel) { padding: 38px 42px; }
+:is(#app, body) :is(.talent-entitlement__panel,.error-screen__panel,.save-incompatible__panel) { padding: 38px; }
+:is(#app, body) :is(.offline-summary__title,.beta-completion__title,.tutorial-overlay__title,.abandon-modal__title,.lore-modal__title) { color: #352a1b; font-size: 28px; line-height: 1.3; }
+:is(#app, body) :is(.offline-summary__rows,.tutorial-overlay__body,.beta-completion__body,.abandon-modal__message,.lore-modal__description) { color: #675637; font-size: 16px; line-height: 1.65; }
+:is(#app, body) .overlay-panel__card .game-button--primary, :is(#app, body) :is(.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel) .game-button--primary { color: #352713; }
+:is(#app, body) .overlay-panel__card .game-button--secondary, :is(#app, body) :is(.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel) .game-button--secondary { color: #eddeb6; }
+
+:is(#app, body) #global-tooltip:not(.tooltip--element) {
+  --hk-text-primary: #f0dfb7; --hk-text-secondary: #d5c6a6; --hk-text-muted: #ad9d7c;
+  --hk-border-muted: #ad8e4966; --hk-gold-muted: #d1b679;
+  color: #f0dfb7; background: #15221e;
+  padding: 22px 24px; border: 0 solid transparent; border-radius: 0; font: 14px/1.55 var(--font-display);
+  border-image: var(--th-art-panel-frame-v2) 240 320 / 26px / 0 stretch;
+  box-shadow: 0 8px 24px #0006;
+}
+:is(#app, body) #global-tooltip:not(.tooltip--element) > .ink-nine-slice { visibility: hidden; }
+:is(#app, body) #global-tooltip:not(.tooltip--element)::before { inset: 25px auto 25px 15px; }
+:is(#app, body) #global-tooltip .tooltip__title { font-size: 18px; line-height: 1.35; }
+:is(#app, body) #global-tooltip .item-card__name { font-size: 18px; line-height: 1.4; }
+:is(#app, body) #global-tooltip .item-card__header { padding-bottom: 9px; }
+:is(#app, body) #global-tooltip .item-card__section { margin-top: 12px; padding-top: 10px; }
+:is(#app, body) #global-tooltip .item-card__section-label { font-size: 12px; letter-spacing: .04em; }
+:is(#app, body) #global-tooltip .item-card__row { column-gap: 18px; line-height: 1.65; }
+:is(#app, body) #global-tooltip .tooltip__icon-shell, :is(#app, body) #global-tooltip .item-card__icon-shell { background: #0b1512; border-color: #ac8c4f; }
+
+:is(#app, body) .tran-phap-panel { display: grid; grid-template-columns: 120px minmax(240px, 1fr) minmax(260px, 1.2fr); grid-template-rows: minmax(0, 1fr) auto; gap: 20px; overflow: hidden; }
+:is(#app, body) .tran-phap-panel__body { display: contents; }
+:is(#app, body) .tran-phap-panel__grid-stack { grid-column: 2; grid-row: 1; width: 100%; height: auto; align-self: center; border: 1px solid #a3895660; }
+:is(#app, body) .tran-phap-panel__formation-list { grid-column: 3; grid-row: 1; }
+:is(#app, body) .tran-phap-panel__formation-list { gap: 10px; padding: 8px 6px 8px 0; scrollbar-width: thin; scrollbar-color: #a18547 transparent; }
+:is(#app, body) .tran-phap-panel__formation-button {
+  min-height: 60px; padding: 16px 25px; border: 1px solid #b29a69;
+  background: linear-gradient(90deg,#e2d0a4,#f3e8cf); color: #3b2c19;
+  font: 17px/1.4 var(--font-display); box-shadow: inset 0 0 0 3px #f9efda80;
+}
+:is(#app, body) .tran-phap-panel__formation-button.is-selected { background: #15221e; border-color: #b99953; color: #f2dfb1; box-shadow: inset 0 0 0 3px #b9995330,0 0 12px #b9995320; }
+:is(#app, body) .tran-phap-panel__queue { grid-column: 1; grid-row: 1; flex-direction: column; flex-wrap: nowrap; align-items: center; overflow-y: auto; scrollbar-width: thin; padding: 12px 4px; border-right: 1px solid #aa8d5455; background: #dac69b30; }
+:is(#app, body) .tran-phap-panel__card.queue-stand { width: 110px; }
+:is(#app, body) .tran-phap-panel__confirm { grid-column: 3; grid-row: 2; justify-self: end; min-height: 44px; min-width: 180px; padding: 10px 28px; border: 0; background: var(--th-art-button-primary) center/100% 100% no-repeat; color: #352713; font: 700 17px/1.4 var(--font-display); }
+:is(#app, body) .tran-phap-panel__confirm:disabled { filter: grayscale(.8); }
+:is(#app, body) .queue-stand__label { color: #3b2c19; font-size: 13px; }
+
+:is(#app, body) :is(.tab-bar,.equipment-hall__tabs,.worker-lodge__tabs) { gap: 4px; padding-bottom: 10px; border-bottom: 1px solid #ac8f5660; }
+:is(#app, body) .tab-bar .tab-bar__item { padding: 10px 18px; min-height: 40px; font-size: 16px; }
+:is(#app, body) :is(.site-card,.resource-card,.vendor-panel__card,.lin-mach__card,.companion-panel__detail,.artifact-overview,.technique-slot-card) { border: 1px solid #b39a6870; background: #f6edda80; border-radius: 0; padding: 18px; }
+:is(#app, body) .production-panel__grid { gap: 18px; }
+:is(#app, body) .site-card__name { font-size: 21px; color: #352a1b; }
+:is(#app, body) :is(.site-card__description,.production-panel__summary,.resource-card__rate,.vendor-panel__description) { color: #675637; font-size: 15px; line-height: 1.5; }
+:is(#app, body) .site-card__stats { padding: 12px 0; border-block: 1px solid #b39a6840; }
+:is(#app, body) .building-heading { gap: 20px; }
+:is(#app, body) .building-heading__name { color: #352a1b; font-size: 27px; }
+:is(#app, body) .building-heading__level { color: #675637; }
+:is(#app, body) .artifact-panel { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(0, 1.5fr); gap: 18px 24px; overflow-y: auto; }
+:is(#app, body) .artifact-panel > .artifact-path-cards { grid-column: 2; grid-row: 1 / span 3; margin: 0; }
+:is(#app, body) .artifact-path-cards__card { border: 1px solid #b39a68; background: #f4e8ce; border-radius: 0; padding: 15px 18px; }
+:is(#app, body) .artifact-path-cards__card.is-selected { box-shadow: inset 0 0 0 2px #b9995350; background: #e1cfa7; }
+:is(#app, body) .artifact-path-cards__name { font-size: 21px; }
+:is(#app, body) .artifact-path-cards__milestones { line-height: 1.6; }
+:is(#app, body) :is(.worker-lodge-panel,.chieu-mo,.duyen-phan,.qua-tang) { color: #30291d; background: transparent; font-family: var(--font-display); }
+:is(#app, body) :is(.worker-lodge-panel__card,.chieu-mo__card,.duyen-phan__result,.qua-tang__row) { padding: 20px; border: 1px solid #b39a6880; border-radius: 0; background: #f5ead370; }
+:is(#app, body) .qua-tang__row { margin-bottom: 12px; }
+:is(#app, body) .lore-codex__grid { gap: 12px; padding: 12px; }
+:is(#app, body) :is(.feedback-dialog__events,.save-incompatible__import,.artifact-path-cards__milestones li,.dissolve-filters select,.dissolve-filters__bulk,.bag-pagination__pages button,.bag-pagination__sort-btn,.bag-pagination__menu,.lore-codex__pagination button,.quan-khi-panel__choice,.quan-khi-panel__preset-slot,.quan-khi-panel__preset-orb) {
+  --text-primary: #f0dfb7; --text-secondary: #d5c6a6; --text-muted: #ad9d7c;
+  --paper-text: #f0dfb7; --paper-text-soft: #d5c6a6; --paper-text-muted: #ad9d7c;
+  --surface-text: #f0dfb7; --surface-text-soft: #d5c6a6;
+  color: #eddeb6;
+}
+:is(#app, body) .artifact-path-cards__milestone-name { color: #d5c6a6; }
+:is(#app, body) .feedback-dialog :is(textarea,input:not([type=checkbox])) { background: #f8efdd; color: #30291d; border-color: #b39a68; }
+:is(#app, body) .feedback-dialog :is(textarea,input)::placeholder { color: #74664e; opacity: 1; }
+:is(#app, body) .bag-pagination__pages button.is-active { color: #30291d; }
+:is(#app, body) .companion-panel__card { background: #efe3c6; border: 1px solid #b39a6880; border-radius: 0; padding: 14px; }
+:is(#app, body) .companion-panel__card.is-selected { background: #15221e; color: #eddeb6; border-color: #b99953; }
+:is(#app, body) .companion-panel__card.is-selected :is(.companion-panel__card-name,.companion-panel__card-meta) { color: #eddeb6; }
+
+:is(#app, body) :is(.toast-item,.update-banner,.world-announcement__content) { background: #15221ef5; color: #eddeb6; border: 1px solid #b9995370; border-radius: 0; box-shadow: 0 6px 20px #0005; }
+:is(#app, body) .toast-item { font-family: var(--font-display); padding: 14px 20px; }
+:is(#app, body) .toast-item { min-width: 240px; max-width: 320px; padding: 12px 30px 12px 16px; font-size: 14px; border-image: var(--th-art-panel-frame-v2) 240 320 / 20px / 0 stretch; }
+:is(#app, body) .toast-item > .ink-nine-slice { visibility: hidden; }
+:is(#app, body) .toast-item:has(.toast-item__content) { grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; }
+:is(#app, body) .toast-item__icon-shell { width: 30px; height: 30px; }
+:is(#app, body) .toast-item__content { gap: 3px; }
+:is(#app, body) .toast-item__eyebrow { font-size: 10px; line-height: 1.3; color: #c7b996; }
+:is(#app, body) .toast-item__name { font-size: 14px; line-height: 1.4; }
+:is(#app, body) .world-announcement__title { color: #f1d391; }
+:is(#app, body) .world-announcement__body { color: #eddeb6; }
+:is(#app, body) .loading-screen { background: #15221e var(--th-art-world-vista) center/cover; }
+:is(#app, body) .loading-screen__title { padding: 18px 54px; color: #f3e0b5; background: var(--th-art-title-plaque) center/100% 100%; }
+:is(#app, body) .tran-phap-panel__formation-button { display: flex; align-items: center; gap: 16px; padding: 13px 16px; min-height: 88px; }
+:is(#app, body) .tran-phap-panel__formation-pattern { display: grid; grid-template-columns: repeat(3, 10px); gap: 3px; flex: 0 0 36px; }
+:is(#app, body) .tran-phap-panel__formation-pattern i { width: 10px; height: 10px; border: 1px solid #977943; background: #ccb98e55; }
+:is(#app, body) .tran-phap-panel__formation-pattern .is-lit { background: #bd954e; box-shadow: inset 0 0 0 2px #f5e4b8; }
+:is(#app, body) .tran-phap-panel__formation-copy { display: grid; gap: 5px; min-width: 0; }
+:is(#app, body) .tran-phap-panel__formation-copy strong { font-size: 18px; font-weight: 600; }
+:is(#app, body) .tran-phap-panel__formation-copy small { font-size: 13px; line-height: 1.5; color: #675637; }
+:is(#app, body) .tran-phap-panel__formation-button.is-selected small { color: #d5c6a6; }
+:is(#app, body) .artifact-path-cards__milestone-level { color: color-mix(in srgb, var(--path-color) 35%, #fff3d2); }
+:is(#app, body) .artifact-path-cards__milestones li:not(.is-unlocked) { opacity: .7; }
+:is(#app, body) .toast-item { --hk-text-muted: #c5b797; --rank-color-1: #c5c2b8; }
+/* Paper occupies the opening; the ornament's exterior remains a cutout. */
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel) { background: transparent; isolation: isolate; }
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before { content: ''; position: absolute; inset: 18px; border-radius: 26px; background: #efe4ca var(--th-art-paper-surface) center/cover; z-index: -1; pointer-events: none; }
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before { z-index: -2; }
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
+:is(#app, body) #global-tooltip:not(.tooltip--element) { background: transparent; border-image-source: none; box-shadow: none; }
+:is(#app, body) #global-tooltip:not(.tooltip--element)::after { content: ''; position: absolute; inset: 7px; border-radius: 12px; background: #15221e; z-index: -1; pointer-events: none; }
+:is(#app, body) #global-tooltip:not(.tooltip--element) > .ink-nine-slice { visibility: visible; }
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel) { box-shadow: none; }
+:is(#app, body) :is(.toast-item) { background: transparent; border-color: transparent; box-shadow: none; isolation: isolate; }
+:is(#app, body) .toast-item::before { content: ''; position: absolute; inset: 6px; border-radius: 10px; background: #15221ef5; z-index: -2; pointer-events: none; }
+:is(#app, body) .toast-item::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before {
+  inset: 3px; border-radius: 3px;
+}

@@ -148,7 +148,7 @@ async function seedAndReload(
 }
 
 async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): Promise<void> {
-  await page.keyboard.press('Tab')
+  await page.locator('.df-cultivator').click()
   const realmSlot = page.locator('[data-wheel-slot="realm"]')
   await expect(realmSlot).toBeVisible({ timeout: 10_000 })
   await realmSlot.click()
@@ -206,12 +206,12 @@ async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): P
     await expect(entitlementModal).toHaveCount(0)
   }
 
-  const wheelLayer = page.locator('.command-wheel-layer')
+  const wheelLayer = page.locator('.df-wheel')
   await expect(wheelLayer).toBeAttached({ timeout: 30_000 })
   await expect(tribulationUi).toHaveCount(0)
   await waitForPresentationIdle(page)
 
-  const ritualPanel = page.locator('.overlay-panel')
+  const ritualPanel = page.locator('.quan-khi-page')
   await expect(ritualPanel).toBeVisible({ timeout: 15_000 })
   await expect(page.locator('.quan-khi-panel__choices')).toBeVisible()
 }
@@ -225,7 +225,7 @@ async function chooseWay(page: import('@playwright/test').Page, wayNamePattern: 
   await expect(confirm).toBeVisible({ timeout: 10_000 })
   await confirm.click()
 
-  await expect(page.locator('.overlay-panel')).toHaveCount(0, { timeout: 10_000 })
+  await expect(page.locator('.quan-khi-page')).toHaveCount(0, { timeout: 10_000 })
 
   const announcement = page.locator('.world-announcement')
   if (await announcement.isVisible().catch(() => false)) {
@@ -239,12 +239,12 @@ async function chooseWay(page: import('@playwright/test').Page, wayNamePattern: 
 async function startStageOneBattle(page: import('@playwright/test').Page): Promise<void> {
   const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
   if (!(await teleportSlot.isVisible().catch(() => false))) {
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
   }
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
   await teleportSlot.click()
 
-  const overlay = page.getByTestId('function-overlay-panel')
+  const overlay = page.locator('.exploration-scene')
   await expect(overlay).toBeVisible({ timeout: 10_000 })
 
   const startButton = page.getByTestId('stage-start-button')
@@ -478,7 +478,7 @@ test.describe('P3 — production combat vertical slice', () => {
       }
     }
 
-    await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('.df-wheel')).toBeAttached({ timeout: 30_000 })
     await expect
       .poll(async () => isBattleInProgress(page), {
         timeout: 15_000,
@@ -510,7 +510,7 @@ test.describe('P3 — production combat vertical slice', () => {
     // Abandon terminal: engine forced to defeat and the exit routes
     // STRAIGHT HOME under the curtain (exitCombatToHome) - the defeat
     // panel is the natural-defeat surface, not the abandon surface.
-    await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('.df-wheel')).toBeAttached({ timeout: 30_000 })
     // The curtain is still settling when the wheel layer reattaches -
     // Tab would be swallowed mid-transition, so wait for idle before
     // re-entering a stage.
@@ -550,7 +550,7 @@ test.describe('P3 — production combat vertical slice', () => {
     } else {
       await page.locator('.combat-defeat-panel__return').click()
     }
-    await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('.df-wheel')).toBeAttached({ timeout: 30_000 })
     expect(await isBattleInProgress(page)).toBe(false)
 
     assertNoBrowserErrors(collected)

@@ -8,8 +8,10 @@ import { useI18n } from 'vue-i18n'
 import DongFuHud from './DongFuHud.vue'
 import DongFuWheel from './DongFuWheel.vue'
 import DongFuBoard from './DongFuBoard.vue'
-import DongFuArtFrame from './DongFuArtFrame.vue'
-import { DONG_FU_ART, symbolUrl, type DongFuUiModel } from './dongFuUi'
+import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
+import { symbolUrl, type DongFuUiModel } from './dongFuUi'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import '@/assets/tien-hiep-entry.css'
 
 withDefaults(defineProps<{
   model: DongFuUiModel
@@ -41,10 +43,9 @@ const { t } = useI18n()
       :key="building.id"
       class="df-building"
       :data-df-building="building.id"
-      :style="{ left: `${building.x}px`, top: `${building.y}px` }"
+      :style="{ left: `${building.x}px`, top: `${building.y}px`, backgroundImage: `url(${resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/landmark-v1.png')})` }"
       @click="emit('action', building.id)"
     >
-      <DongFuArtFrame :border-width="22" />
       <img :src="symbolUrl(building.symbol)" alt="">
       <span>{{ t(building.labelKey) }}<small>{{ t('dongFu.buildingHint') }}</small></span>
       <span
@@ -67,7 +68,7 @@ const { t } = useI18n()
     :aria-expanded="wheelOpen"
     @click="emit('toggleWheel')"
   >
-    <img :src="DONG_FU_ART.cultivator" alt="" draggable="false">
+    <PlayerPortrait variant="cultivate" animation-mode="idle" height="100%" />
   </button>
   <DongFuWheel
     :actions="model.actions"
@@ -85,7 +86,7 @@ const { t } = useI18n()
     @toggle="emit('toggleBoard')"
     @action="emit('action', $event)"
   />
-  <div class="df-location">
+  <div class="pc-home-location">
     <span>{{ t('dongFu.sceneTitle') }}</span>
     <small>{{ t('dongFu.sceneSubtitle') }}</small>
   </div>
@@ -98,12 +99,26 @@ const { t } = useI18n()
     :aria-label="t('home.questTracker.aria', { name: model.quest.name })"
     @click="emit('action', 'quest')"
   >
-    <DongFuArtFrame :border-width="32" />
     <img :src="symbolUrl('quest')" alt="">
     <span><strong>{{ model.quest.name }}</strong><small>{{ model.quest.detail }}</small></span>
     <b aria-hidden="true">›</b>
   </button>
   <div class="df-notice" role="status" aria-live="polite">{{ notice }}</div>
+  <nav v-show="!occluded" class="df-navigation" :aria-label="t('dongFu.aria')">
+    <button
+      v-for="action in model.actions"
+      :key="action.id"
+      :data-df-navigation="action.id"
+      :class="{ 'is-active': action.active || selected === action.id, 'is-unavailable': action.disabledReason }"
+      :aria-disabled="Boolean(action.disabledReason)"
+      :title="action.disabledReason ?? undefined"
+      @click="emit('action', action.id)"
+    >
+      <img :src="symbolUrl(action.symbol)" alt="">
+      <span>{{ t(action.labelKey) }}</span>
+      <i v-if="action.badge" aria-hidden="true" />
+    </button>
+  </nav>
 </template>
 
 <style scoped>
@@ -123,9 +138,9 @@ const { t } = useI18n()
 .df-building__upgrade:focus-visible { outline: 2px solid #ffe9b0; outline-offset: 1px; }
 .df-cultivator { position: absolute; z-index: 2; left: 550px; top: 366px; width: 300px; height: 300px; padding: 0; background: none; border: 0; cursor: pointer; filter: drop-shadow(0 8px 7px #07101bcc); }
 .df-cultivator img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-.df-location { position: absolute; left: 477px; bottom: 23px; width: 450px; text-align: center; display: grid; gap: 3px; text-shadow: 0 2px 4px #000; }
-.df-location > span { font-size: 15px; letter-spacing: 4px; color: #dcca9e; }
-.df-location > small { font-size: 11px; letter-spacing: 1px; color: #c1c4b7; }
+.pc-home-location { position: absolute; left: 535px; bottom: 105px; width: 370px; text-align: center; display: grid; gap: 3px; text-shadow: 0 1px #fff1d2; }
+.pc-home-location > span { font: 700 22px/28px var(--pc-font-body); color: #4c3821; }
+.pc-home-location > small { font-size: 13px; color: #755f3b; }
 .df-quest { position: absolute; bottom: 16px; right: 13px; width: 305px; height: 71px; border: 0; background: none; color: var(--df-ivory); display: flex; align-items: center; gap: 13px; padding: 14px 22px; cursor: pointer; text-align: left; }
 .df-quest.is-claimable strong { color: #ffd98a; }
 .df-quest > img { position: relative; width: 32px; height: 32px; filter: invert(87%) sepia(41%) saturate(480%) hue-rotate(350deg); }

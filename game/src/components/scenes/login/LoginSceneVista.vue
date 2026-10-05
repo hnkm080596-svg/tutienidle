@@ -1,18 +1,14 @@
 <script setup lang="ts">
 // Scene 01 vista region (spec: vista 0/0/1672/941, z0). The delivered
-// six-layer auth-creation parallax stack is the world backdrop; this
-// component only anchors the region for fidelity gates.
-import HuyenKimParallaxStack from '@/components/common/HuyenKimParallaxStack.vue'
+// authored mountain painting is the backdrop; character art is reused.
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { LOGIN_ART } from './loginArt'
 </script>
 
 <template>
   <div class="login-vista" data-hk-region="vista" aria-hidden="true">
-    <HuyenKimParallaxStack stack="auth-creation">
-      <template #foreground>
-        <img class="login-vista__cultivator" :src="LOGIN_ART.cultivator" alt="" draggable="false" />
-      </template>
-    </HuyenKimParallaxStack>
+    <img class="login-world-vista" :src="resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/opening-vista-warm-v1.png')" alt="">
+    <img class="login-vista__cultivator" :src="LOGIN_ART.cultivator" alt="" draggable="false" />
   </div>
 </template>
 

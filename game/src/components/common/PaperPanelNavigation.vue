@@ -16,7 +16,7 @@ const backIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/back.svg')
   <nav class="paper-navigation" :aria-label="label">
     <button class="paper-back" :aria-label="backLabel" :title="backLabel" @click="emit('back')"><img :src="backIcon" alt=""></button>
     <div class="paper-navigation-items">
-      <button v-for="item in items" :key="item.id" class="paper-navigation-item" :class="{ active: active === item.id, 'is-locked': item.locked }" :aria-current="active === item.id ? 'page' : undefined" :aria-disabled="item.locked || undefined" :data-nav-id="item.id" @click="emit('select', item.id)">
+      <button v-for="item in items" :key="item.id" class="paper-navigation-item" :class="{ active: active === item.id, 'is-locked': item.locked }" :aria-current="active === item.id ? 'page' : undefined" :aria-disabled="item.locked || undefined" :data-nav-id="item.id" @click="!item.locked && emit('select', item.id)">
         <span class="paper-navigation-icon"><img :src="item.icon" alt=""></span><span>{{ item.label }}</span>
       </button>
     </div>

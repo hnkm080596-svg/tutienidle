@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 // Chieu Hien Quan panel (chi-hien-quan spec 2026-09-02, functionType
 // 'worker_lodge'). Building upgrade goes through the shared
 // FunctionOverlayPanel header (useBuildingHeaderState) - this panel is
@@ -94,7 +95,7 @@ const nextCapacity = computed(() => {
 </script>
 
 <template>
-  <section class="worker-lodge-panel">
+  <section class="worker-lodge-panel pc-auxiliary">
     <!-- FINAL POLICY (sec.4C): under beta the scope model offers zero
          tabs, so nothing renders - the lodge is fully hidden. -->
     <template v-if="visibleTabs.length > 0">

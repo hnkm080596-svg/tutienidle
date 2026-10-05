@@ -279,6 +279,7 @@ function doDissolve() {
 
 <template>
   <section class="qi-hall__body qi-hall__dissolve">
+    <div class="dissolve-collection">
     <div class="dissolve-filters">
       <select v-model="dissolveFilterGrade">
         <option value="any">{{ t('panels.equipmentHall.select.anyProfessionGrade') }}</option>
@@ -360,6 +361,9 @@ function doDissolve() {
       <GameButton variant="ghost" size="sm" :disabled="dissolvePage >= dissolveTotalPages - 1" @click="dissolveGoTo(dissolvePage + 1)">›</GameButton>
     </div>
 
+    </div>
+    <aside class="dissolve-inspector">
+    <div v-if="!dissolvePreview.length" class="dissolve-guidance"><h3>{{ t('panels.equipmentHall.labels.dissolveReward') }}</h3><p>{{ t('panels.equipmentHall.empty.selectItem') }}</p></div>
     <div v-if="dissolvePreview.length > 0" class="dissolve-preview">
       <h4>{{ t('panels.equipmentHall.labels.dissolveReward') }} ({{ t('panels.equipmentHall.labels.itemCount', { count: dissolveSelected.size }) }}):</h4>
 
@@ -379,6 +383,7 @@ function doDissolve() {
     >
       {{ dissolveConfirming ? t('panels.equipmentHall.buttons.dissolveConfirm') : `${t('panels.equipmentHall.tabs.dissolve')} (${dissolveSelected.size})` }}
     </GameButton>
+    </aside>
   </section>
 </template>
 
@@ -387,13 +392,14 @@ function doDissolve() {
    sheet header for the specificity-war rationale). Only Dissolve-private
    classes stay scoped here. */
 .dissolve-filters {
-  display: flex;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
 }
 
 .dissolve-filters select {
-  background: var(--ink-800);
-  color: var(--text-primary);
+  background: #f7efdd;
+  color: #564731;
   border: 1px solid var(--ink-line-soft);
   border-radius: var(--radius-sm);
   padding: 4px;
@@ -402,8 +408,8 @@ function doDissolve() {
 }
 
 .dissolve-filters__bulk {
-  background: var(--ink-800);
-  color: var(--text-primary);
+  background: #f7efdd;
+  color: #564731;
   border: 1px solid var(--ink-line-soft);
   border-radius: var(--radius-sm);
   padding: 4px 10px;
@@ -491,4 +497,16 @@ function doDissolve() {
   font-size: var(--text-xs);
   color: var(--jade);
 }
+
+
+.dissolve-collection { display: flex; flex-direction: column; min-width: 0; min-height: 0; gap: 10px; }
+.dissolve-inspector { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 15px; padding: 20px; border: 1px solid #a58a51; background: #252c26; color: #eee0bf; --paper-text: #eee0bf; --jade: #becbac; --crimson: #efb6a1; }
+.dissolve-inspector .dissolve-preview { flex: 1; min-height: 0; overflow: auto; }
+.dissolve-inspector .dissolve-preview h4 { font: 500 18px/1.5 var(--font-display); margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid #a68d514d; }
+.dissolve-inspector .dissolve-preview p { margin: 10px 0; font-size: 14px; line-height: 1.5; }
+.dissolve-guidance { flex: 1; color: #c9ba98; font: 14px/1.7 var(--font-display); }
+.dissolve-guidance h3 { font-size: 20px; color: #dec78d; font-weight: 500; }
+.dissolve-inspector .game-button { width: 100%; margin-top: auto; flex: none; }
+#app .dissolve-filters select { width: 100%; min-width: 0; font-family: var(--font-display); color: #564731; background: #f7efdd; }
+.dissolve-filters__bulk { font-family: var(--font-display); }
 </style>

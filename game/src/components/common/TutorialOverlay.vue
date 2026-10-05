@@ -2,7 +2,7 @@
 import { ref, computed, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import PcPaperChrome from '@/components/common/PcPaperChrome.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { TUTORIAL_STEPS } from '@/data/tutorial/tutorialSteps'
@@ -53,8 +53,7 @@ function next() {
       :aria-labelledby="titleId"
       :aria-describedby="bodyId"
     >
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+      <PcPaperChrome />
 
       <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>
 
@@ -94,7 +93,7 @@ function next() {
   font-family: var(--font-body);
 }
 
-.tutorial-overlay__panel > :not(.ink-nine-slice) {
+.tutorial-overlay__panel > :not(.pc-paper-chrome) {
   position: relative;
   z-index: 3;
 }

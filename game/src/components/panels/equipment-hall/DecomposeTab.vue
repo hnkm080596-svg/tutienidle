@@ -250,4 +250,13 @@ function onWorkersInput(event: Event) {
   color: var(--paper-text);
   font-size: var(--text-xs);
 }
+
+
+.decompose-tab { padding: 20px; min-width: 0; border: 1px solid #a78d51; color: #ede0c3; background: #252c26; }
+.decompose-tab__filter { color: #d7c59a; font: 14px/1.5 var(--font-display); gap: 10px; }
+.decompose-tab__filter select { min-height: 44px; padding: 8px 10px; background: #f6ecda; border: 1px solid #a98b4e; color: #433823; }
+.decompose-tab__filter input { accent-color: #c4a661; }
+.decompose-tab__estimate { padding: 14px 0; color: #dac18a; border-block: 1px solid #a58b514d; }
+.decompose-tab__hint,.decompose-tab__matching-title { color: #cabd9e; line-height: 1.7; }
+.decompose-tab__matching-list li { padding: 7px 12px; border-radius: 0; color: #dacfb4; background: #b4985230; border-color: #a98b4e66; }
 </style>

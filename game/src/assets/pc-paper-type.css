@@ -1,0 +1,18 @@
+@font-face {
+  font-family: 'PC Paper Serif';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/assets/fonts/source-serif-4/regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'PC Paper Serif';
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+  src: url('/assets/fonts/source-serif-4/bold.ttf') format('truetype');
+}
+:root {
+  --pc-font-body: 'PC Paper Serif', 'Times New Roman', Georgia, serif;
+  --pc-font-title: 'PC Paper Serif', 'Times New Roman', Georgia, serif;
+}

@@ -1,0 +1,20 @@
+{
+  "before": {
+    "x": 351,
+    "y": 353.578125,
+    "width": 64,
+    "height": 64
+  },
+  "after": {
+    "x": 351,
+    "y": 353.578125,
+    "width": 64,
+    "height": 64
+  },
+  "anchorStable": true,
+  "reduced": {
+    "animation": "none",
+    "image": "url(\"http://127.0.0.1:5449/art/vfx/pc-paper-meridian/acupoint-aura-poster.png\")"
+  },
+  "pageErrors": []
+}

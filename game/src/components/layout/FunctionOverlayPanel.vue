@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
-import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
 import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
 import ProductionPanel from '@/components/panels/ProductionPanel.vue'
@@ -33,11 +33,8 @@ const TITLE_KEYS: Record<FunctionMode, string> = {
   vendor: 'layout.functionOverlay.titles.vendor',
 }
 
-// Huyen Kim rebuild: these left-panel modes are imperial-scroll scenes
-// (layout spec scenes 10/11/12/17) - except most now own their paper
-// chrome and mount outside the scroll (see PAPER_MODES). Vendor +
-// scripture pavilion stay on the legacy micro-overlay shell until
-// their own redesign lands.
+// Scene-owned pages mount separately. Auxiliary pages retain the shared
+// building header and admission boundary in the canonical paper overlay.
 const IMPERIAL_MODES: ReadonlySet<FunctionMode> = new Set([
   'stage_select',
   'pill_room',
@@ -46,10 +43,7 @@ const IMPERIAL_MODES: ReadonlySet<FunctionMode> = new Set([
   'settings',
 ])
 
-// Modes whose fidelity surface owns the shared paper chrome on its own
-// overlay design canvas - mounted outside the scroll like the other
-// migrated tabs. 'exploration' is the last mode still on the scroll
-// (its production outpost has no approved paper surface yet).
+// These scene-owned pages provide their own paper composition.
 const PAPER_MODES: ReadonlySet<FunctionMode> = new Set([
   'stage_select',
   'pill_room',
@@ -115,19 +109,18 @@ function close() {
   <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
   <SettingsSurface v-else-if="paperMode === 'settings'" />
 
-  <!-- Imperial scroll scenes: San Xuat (production outpost) is the
-       last surface still on the shared scroll shell. -->
-  <ImperialScrollScene
+  <!-- Production retains its building identity and canonical upgrade owner. -->
+  <OverlayPanel
     :open="scrollMode !== null"
     :title="scrollMode ? t(TITLE_KEYS[scrollMode]) : ''"
-    :scene="scrollMode ?? undefined"
+    width="min(1280px, 96vw)"
+    height="min(820px, 92vh)"
     data-testid="function-overlay-panel"
     @close="close"
   >
-    <!-- Building identity + upgrade keep their canonical behavior; the
-         scroll's header band replaces the old modal title row. -->
-    <template v-if="header.template.value" #header>
-      <div class="building-heading building-heading--imperial">
+    <!-- One header owns the building identity and optional upgrade action. -->
+    <template v-if="header.template.value" #heading>
+      <div class="building-heading building-heading--paper">
         <img
           v-if="!artBroken"
           class="building-heading__art"
@@ -147,12 +140,12 @@ function close() {
       </div>
     </template>
 
-    <div v-if="scrollMode" class="function-overlay">
+    <div v-if="scrollMode" class="function-overlay pc-auxiliary-host">
       <ProductionPanel v-if="scrollMode === 'exploration'" />
     </div>
-  </ImperialScrollScene>
+  </OverlayPanel>
 
-  <!-- Legacy micro-overlay surfaces (not part of the scene redesign). -->
+  <!-- Auxiliary collections share the same canonical paper overlay. -->
   <OverlayPanel
     :open="legacyMode !== null"
     :title="legacyMode ? t(TITLE_KEYS[legacyMode]) : ''"
@@ -185,7 +178,7 @@ function close() {
       <BuildingUpgradeButton :building-id="buildingId" class="building-heading__upgrade-area" />
     </template>
 
-    <div v-if="legacyMode" class="function-overlay">
+    <div v-if="legacyMode" class="function-overlay pc-auxiliary-host">
       <WorkerLodgePanel v-if="legacyMode === 'worker_lodge'" />
       <ScripturePavilionPanel v-else-if="legacyMode === 'scripture_pavilion'" />
       <VendorPanel v-else-if="legacyMode === 'vendor'" />
@@ -214,24 +207,24 @@ function close() {
   filter: saturate(.9) contrast(1.08);
 }
 
-.building-heading--imperial {
+.building-heading--paper {
   justify-content: space-between;
   padding: 0 4px;
 }
 /* The imperial scroll interior is PALE paper - the on-dark ramp used by
    OverlayPanel's ink header would render the name as washed-out glyphs
    (audit: "Truyen Tong Tran" read as clipped text). Use the paper ramp. */
-.building-heading--imperial .building-heading__name { color: var(--paper-text); }
-.building-heading--imperial .building-heading__level { color: color-mix(in srgb, var(--hk-gold, var(--jade)) 55%, var(--paper-text)); }
-.building-heading--imperial .building-heading__text { margin-right: auto; }
-.building-heading--imperial .building-heading__upgrade-area { flex-direction: row; align-items: center; gap: 10px; }
+.building-heading--paper .building-heading__name { color: var(--paper-text); }
+.building-heading--paper .building-heading__level { color: color-mix(in srgb, var(--hk-gold, var(--jade)) 55%, var(--paper-text)); }
+.building-heading--paper .building-heading__text { margin-right: auto; }
+.building-heading--paper .building-heading__upgrade-area { flex-direction: row; align-items: center; gap: 10px; }
 
 .building-heading__text { min-width: 0; }
 /* Name/cost sit on the DARK ink header of OverlayPanel -- they must use
    the surface ramp, not the light-paper ramp (audit H4: --paper-text on
    the ink title bar rendered dark-on-dark). */
-.building-heading__name { margin: 0; color: var(--surface-text); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
-.building-heading__level { color: var(--jade); font-size: var(--text-sm); }
+.building-heading__name { margin: 0; color: var(--paper-text); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
+.building-heading__level { color: var(--paper-text-soft); font-size: var(--text-sm); }
 
 /* Unnamed container query: resolves against the imperial-scroll
    envelope in scene mounts and the overlay-panel card in legacy

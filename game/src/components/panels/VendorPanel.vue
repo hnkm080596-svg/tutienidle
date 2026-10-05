@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -171,7 +172,7 @@ function confirmSellAll() {
 </script>
 
 <template>
-  <section class="vendor-panel scrollfade">
+  <section class="vendor-panel scrollfade pc-auxiliary">
     <p class="vendor-panel__description">{{ template?.description }}</p>
 
     <div class="vendor-panel__card">

@@ -1,0 +1,31 @@
+/* Preview workshop chrome; production commands remain in equipment-hall. */
+:is(#app,body) .forge-scene .forge-tabs { gap: 0; margin-bottom: 20px; height: 45px; }
+:is(#app,body) .forge-scene .forge-tabs button,
+:is(#app,body) .forge-scene .forge-tabs a { padding: 10px 18px; font-weight: 500; font-size: 16px; color: #65553a; }
+:is(#app,body) .forge-scene .forge-tabs button[aria-pressed=true] { color: #302a1f; border-color: #ac8740; background: #c1a16525; }
+:is(#app,body) .forge-scene .forge-layout { height: 390px; grid-template-columns: 225px minmax(0,1fr); gap: 24px; }
+:is(#app,body) .forge-scene .selection { min-height: 0; min-width: 0; overflow: auto; scrollbar-width: thin; }
+:is(#app,body) .forge-scene .selection button { height: 78px; border-color: #a78a4f70; }
+:is(#app,body) .forge-scene .selection button[aria-pressed=true] { background: #cab07430; color: #483922; border-color: #a78a4f; box-shadow: inset 3px 0 #a98a43; }
+:is(#app,body) .forge-scene .workspace.workspace { height: 390px; display: flex; gap: 16px; }
+:is(#app,body) .forge-scene .workspace .upper { flex: 1; min-height: 0; display: grid; grid-template-columns: 205px minmax(0,1fr); gap: 20px; }
+:is(#app,body) .forge-scene .workspace .focus-item { position: relative; inset: auto; height: 100%; width: auto; z-index: auto; }
+:is(#app,body) .forge-scene .workspace .focus-item .furnace-art { inset: 0; width: 100%; height: 100%; opacity: .9; filter: drop-shadow(0 8px 10px #63503330); }
+:is(#app,body) .forge-scene .workspace .comparison { margin: 0; min-width: 0; min-height: 0; overflow: auto; padding: 20px; color: #eee0c0; background: #252c26; border: 1px solid #aa8f51; }
+:is(#app,body) .forge-scene .comparison .chosen-item { color: #ead59c; font-size: 21px; font-weight: 500; }
+:is(#app,body) .forge-scene .comparison h3 { color: #d9c18a; font-size: 16px; }
+:is(#app,body) .forge-scene .comparison .explanation { color: #c8ba9a; font-size: 13px; }
+:is(#app,body) .forge-scene .comparison .column-head { color: #c8ba9a; }
+:is(#app,body) .forge-scene .comparison .stat-row b { color: #c8ba9a; }
+:is(#app,body) .forge-scene .comparison .stat-row strong { color: #c0cfb0; }
+:is(#app,body) .forge-scene .comparison .outputs span { color: #c0cfb0; }
+:is(#app,body) .forge-scene .comparison .lock { border-color: #b69a57; color: #e2c684; }
+:is(#app,body) .forge-scene .workspace footer { flex: none; min-height: 80px; padding: 14px 18px; border: 1px solid #ad945757; background: #d2bd8526; }
+:is(#app,body) .forge-scene .actions .submit { background: linear-gradient(100deg,#c1a466,#e6cf95,#c1a466); color: #392e1b; font-weight: 500; border-radius: 0; }
+:is(#app,body) .forge-scene .actions .submit.danger { background: #78503c; color: #f6e3bc; }
+:is(#app,body) .batch-bag.batch-bag { height: 100%; min-height: 0; gap: 16px; }
+:is(#app,body) .batch-bag .batch-grid { grid-template-columns: repeat(auto-fill,minmax(66px,1fr)); grid-auto-rows: 70px; height: auto; flex: 1; min-height: 0; }
+:is(#app,body) .batch-bag .batch-grid button { width: 100%; height: 70px; }
+:is(#app,body) .batch-bag .batch-bottom { flex: none; padding: 18px; border: 1px solid #a88b4d; color: #eee0c0; background: #252c26; }
+:is(#app,body) .batch-bag .warning { color: #e4aa90; font-size: 12px; }
+:is(#app,body) .batch-bag .submit { min-height: 44px; background: #79503d; color: #f1e0bb; }

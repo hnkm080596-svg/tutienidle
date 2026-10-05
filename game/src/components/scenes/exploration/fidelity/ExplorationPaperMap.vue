@@ -6,7 +6,7 @@ import type { ExplorationChapter } from './explorationUi'
 const props = defineProps<{ chapters: readonly ExplorationChapter[]; terrain: string; selected: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
 const { t } = useI18n()
-const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/skill-v2/node-ring-v1.png')
+const ring = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/orb-frame.png')
 const lockIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/lock.svg')
 const bands = computed(() => props.chapters.map(chapter => ({
   ...chapter,

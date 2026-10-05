@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed,shallowRef,watch} from 'vue'
+import '@/assets/tien-hiep-forge.css'
 import {useI18n} from 'vue-i18n'
 import {resolveAssetUrl} from '@/presentation/assets/AssetBaseUrl'
 import type {EquipmentDisplay} from './equipmentUi'

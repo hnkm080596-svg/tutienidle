@@ -1,0 +1,11 @@
+region,x,y,width,height,role
+world,0,0,1672,941,existing-world-background
+shared-hud,0,0,1672,90,identity-resources-utilities
+page-frame,165,145,1470,740,new-frame-over-paper
+navigation-rail,30,150,140,720,dark-ink-navigation-with-scroll
+page-title,205,125,390,72,title-plaque-runtime-text
+identity,220,235,240,450,identity-realm-path-power
+animated-figure,475,200,480,625,existing-animation-contain-foot-anchor
+main-stats-talents-elements,990,230,265,570,dynamic-model-independent-scroll
+details,1280,230,300,570,derived-stat-groups-independent-scroll
+feedback,220,825,1360,36,status-message-not-covering-actions

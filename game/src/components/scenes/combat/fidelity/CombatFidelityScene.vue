@@ -6,6 +6,7 @@ import CombatFidelityTurns from './CombatFidelityTurns.vue'
 import CombatFidelityControls from './CombatFidelityControls.vue'
 import CombatFidelityMeter from './CombatFidelityMeter.vue'
 import type { CombatDisplayModel } from './combatUi'
+import '@/assets/tien-hiep-outcomes.css'
 defineProps<{ model: CombatDisplayModel; selectedStrategy: string; auto: boolean; paused: boolean; notice: string }>()
 const emit = defineEmits<{ strategy: [id: string]; auto: []; pause: []; skill: [id: string]; back: [] }>()
 const { t } = useI18n()

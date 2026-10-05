@@ -1,0 +1,258 @@
+{
+  "source": "component-sheet-v1.png",
+  "components": [
+    {
+      "id": "area-title",
+      "file": "area-title-v1.png",
+      "width": 815,
+      "height": 180,
+      "sourceRect": {
+        "left": 25,
+        "top": 40,
+        "width": 815,
+        "height": 180
+      }
+    },
+    {
+      "id": "player-status",
+      "file": "player-status-v1.png",
+      "width": 695,
+      "height": 228,
+      "sourceRect": {
+        "left": 830,
+        "top": 15,
+        "width": 695,
+        "height": 228
+      }
+    },
+    {
+      "id": "initiative-queue",
+      "file": "initiative-queue-v1.png",
+      "width": 995,
+      "height": 205,
+      "sourceRect": {
+        "left": 20,
+        "top": 240,
+        "width": 995,
+        "height": 205
+      }
+    },
+    {
+      "id": "portrait-normal",
+      "file": "portrait-normal-v1.png",
+      "width": 165,
+      "height": 200,
+      "sourceRect": {
+        "left": 1008,
+        "top": 246,
+        "width": 165,
+        "height": 200
+      }
+    },
+    {
+      "id": "portrait-selected",
+      "file": "portrait-selected-v1.png",
+      "width": 175,
+      "height": 202,
+      "sourceRect": {
+        "left": 1170,
+        "top": 242,
+        "width": 175,
+        "height": 202
+      }
+    },
+    {
+      "id": "portrait-inactive",
+      "file": "portrait-inactive-v1.png",
+      "width": 188,
+      "height": 202,
+      "sourceRect": {
+        "left": 1340,
+        "top": 244,
+        "width": 188,
+        "height": 202
+      }
+    },
+    {
+      "id": "control-normal",
+      "file": "control-normal-v1.png",
+      "width": 236,
+      "height": 108,
+      "sourceRect": {
+        "left": 35,
+        "top": 491,
+        "width": 236,
+        "height": 108
+      }
+    },
+    {
+      "id": "control-hover",
+      "file": "control-hover-v1.png",
+      "width": 239,
+      "height": 108,
+      "sourceRect": {
+        "left": 278,
+        "top": 491,
+        "width": 239,
+        "height": 108
+      }
+    },
+    {
+      "id": "control-selected",
+      "file": "control-selected-v1.png",
+      "width": 240,
+      "height": 110,
+      "sourceRect": {
+        "left": 521,
+        "top": 490,
+        "width": 240,
+        "height": 110
+      }
+    },
+    {
+      "id": "control-pressed",
+      "file": "control-pressed-v1.png",
+      "width": 235,
+      "height": 106,
+      "sourceRect": {
+        "left": 765,
+        "top": 493,
+        "width": 235,
+        "height": 106
+      }
+    },
+    {
+      "id": "skill-tray",
+      "file": "skill-tray-v1.png",
+      "width": 251,
+      "height": 454,
+      "sourceRect": {
+        "left": 1018,
+        "top": 445,
+        "width": 251,
+        "height": 454
+      }
+    },
+    {
+      "id": "skill-active",
+      "file": "skill-active-v1.png",
+      "width": 175,
+      "height": 142,
+      "sourceRect": {
+        "left": 1310,
+        "top": 445,
+        "width": 175,
+        "height": 142
+      }
+    },
+    {
+      "id": "skill-inactive",
+      "file": "skill-inactive-v1.png",
+      "width": 175,
+      "height": 137,
+      "sourceRect": {
+        "left": 1310,
+        "top": 585,
+        "width": 175,
+        "height": 137
+      }
+    },
+    {
+      "id": "skill-label",
+      "file": "skill-label-v1.png",
+      "width": 187,
+      "height": 60,
+      "sourceRect": {
+        "left": 1304,
+        "top": 718,
+        "width": 187,
+        "height": 60
+      }
+    },
+    {
+      "id": "item-slot",
+      "file": "item-slot-v1.png",
+      "width": 140,
+      "height": 147,
+      "sourceRect": {
+        "left": 1267,
+        "top": 776,
+        "width": 140,
+        "height": 147
+      }
+    },
+    {
+      "id": "quantity-badge",
+      "file": "quantity-badge-v1.png",
+      "width": 82,
+      "height": 73,
+      "sourceRect": {
+        "left": 1411,
+        "top": 820,
+        "width": 82,
+        "height": 73
+      }
+    },
+    {
+      "id": "hp-caption",
+      "file": "hp-caption-v1.png",
+      "width": 987,
+      "height": 239,
+      "sourceRect": {
+        "left": 15,
+        "top": 615,
+        "width": 987,
+        "height": 239
+      }
+    },
+    {
+      "id": "health-frame",
+      "file": "health-frame-v1.png",
+      "width": 641,
+      "height": 133,
+      "sourceRect": {
+        "left": 14,
+        "top": 881,
+        "width": 641,
+        "height": 133
+      }
+    },
+    {
+      "id": "health-fill",
+      "file": "health-fill-v1.png",
+      "width": 423,
+      "height": 63,
+      "sourceRect": {
+        "left": 661,
+        "top": 916,
+        "width": 423,
+        "height": 63
+      }
+    },
+    {
+      "id": "enemy-health",
+      "file": "enemy-health-v1.png",
+      "width": 218,
+      "height": 55,
+      "sourceRect": {
+        "left": 1120,
+        "top": 922,
+        "width": 218,
+        "height": 55
+      }
+    },
+    {
+      "id": "expand-button",
+      "file": "expand-button-v1.png",
+      "width": 126,
+      "height": 126,
+      "sourceRect": {
+        "left": 1385,
+        "top": 894,
+        "width": 126,
+        "height": 126
+      }
+    }
+  ],
+  "notes": "Preserve aspect ratio; circles and exterior use alpha. Dynamic text, portrait art and bar fills are separate layers."
+}

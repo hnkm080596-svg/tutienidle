@@ -6,12 +6,13 @@ import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
+import PcPaperChrome from '@/components/common/PcPaperChrome.vue'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
 import DefeatTitleBand from '@/components/scenes/defeat/DefeatTitleBand.vue'
 import DefeatHintBlock from '@/components/scenes/defeat/DefeatHintBlock.vue'
 import DefeatRewardBlock from '@/components/scenes/defeat/DefeatRewardBlock.vue'
 import DefeatActionRow from '@/components/scenes/defeat/DefeatActionRow.vue'
+import '@/assets/tien-hiep-outcomes.css'
 
 // Combat UI Redesign muc 18/23, mo rong 2026-08-22 -- truoc day CHI 1
 // nut "Ve Dong Phu" (khong danh lai). Gio them "Tai Chien" (LUON danh
@@ -130,16 +131,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="combat-defeat-panel paper-on-dark">
-    <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
-    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
+  <div class="combat-defeat-panel paper-on-dark pc-outcome-live" :style="pcPaperControlStyles()">
+    <PcPaperChrome />
 
     <DefeatTitleBand :title="t('combat.defeat.title')" :subtitle="t('combat.defeat.subtitle')" />
 
-    <DefeatHintBlock :hint="t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear')" />
-
-    <DefeatRewardBlock v-if="hasAnyReward" :summary="summary" />
+    <div class="combat-defeat-panel__results" :class="{ 'has-rewards': hasAnyReward }">
+      <DefeatHintBlock :hint="t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear')" />
+      <DefeatRewardBlock v-if="hasAnyReward" :summary="summary" />
+    </div>
 
     <DefeatActionRow
       :is-auto-retrying="isAutoRetrying"

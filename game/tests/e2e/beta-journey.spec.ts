@@ -33,8 +33,8 @@ const SCOPE_HIDDEN_BUILDINGS = ['chi_hien_quan']
 const BETA_EQUIPMENT_TAB_LABELS = ['Cường Hóa', 'Hóa Luyện']
 const SCOPE_HIDDEN_EQUIPMENT_TAB_LABELS = ['Tẩy Luyện', 'Tinh Luyện', 'Phân Giải']
 
-// Realm ladder in beta shows only the in-window rungs (Nhap Dao /
-// Kien Co / Truc Co); Kim Dan+ and any coming-soon chip are forbidden.
+// The current realm's minor floors may render; future major realm labels
+// and any coming-soon chip remain forbidden in beta.
 const SCOPE_HIDDEN_REALM_LABELS = [
   'Kim Đan',
   'Nguyên Anh',
@@ -140,7 +140,7 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
 
   test('command wheel renders no scope-hidden slots', async ({ page }) => {
     await bootFreshMortal(page)
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
     const slots = page.locator('[data-wheel-slot]')
     await expect(slots.first()).toBeVisible({ timeout: 10_000 })
     const rendered = await slots.evaluateAll((els) =>
@@ -153,10 +153,10 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
 
   test('home building icons render no worker lodge', async ({ page }) => {
     await bootFreshMortal(page)
-    const icons = page.locator('[data-building-id]')
+    const icons = page.locator('[data-df-building]')
     await expect(icons.first()).toBeVisible({ timeout: 10_000 })
     const rendered = await icons.evaluateAll((els) =>
-      els.map((el) => el.getAttribute('data-building-id')),
+      els.map((el) => el.getAttribute('data-df-building')),
     )
     for (const id of SCOPE_HIDDEN_BUILDINGS) {
       expect(rendered, `building icon ${id} must be absent`).not.toContain(id)
@@ -166,13 +166,15 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
   test('equipment hall renders only enhance + dissolve tabs', async ({ page }) => {
     await bootFreshMortal(page)
     await openLeftMode(page, 'equipment_hall')
-    const overlay = page.getByTestId('function-overlay-panel')
+    const overlay = page.locator('.equipment-scene')
     await expect(overlay).toBeVisible({ timeout: 10_000 })
-    const tabs = overlay.locator('.qi-hall__tabs [role="tab"]')
+    const tabs = overlay.locator('.equipment-workspace > nav button')
     await expect(tabs.first()).toBeVisible({ timeout: 10_000 })
-    await expect(tabs).toHaveCount(2)
+    // Equipment detail and bag flank the two admitted operation modes.
+    await expect(tabs).toHaveCount(4)
     const labels = (await tabs.allTextContents()).map((label) => label.trim())
-    expect(labels.sort()).toEqual([...BETA_EQUIPMENT_TAB_LABELS].sort())
+    const operationLabels = labels.filter((label) => BETA_EQUIPMENT_TAB_LABELS.includes(label))
+    expect(operationLabels.sort()).toEqual([...BETA_EQUIPMENT_TAB_LABELS].sort())
     for (const label of SCOPE_HIDDEN_EQUIPMENT_TAB_LABELS) {
       expect(labels, `equipment tab "${label}" must be absent`).not.toContain(label)
     }
@@ -187,19 +189,20 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     await expect(panel.getByText(/hàng ngày|hằng ngày/i)).toHaveCount(0)
   })
 
-  test('realm ladder lists only the three beta rungs, no coming-soon chips', async ({
+  test('realm surface lists current mortal floors, no future realm labels or coming-soon chips', async ({
     page,
   }) => {
     await bootFreshMortal(page)
     await openStandalone(page, 'realm')
-    const nodes = page.locator('.realm-node')
+    const scene = page.locator('.realm-paper-scene')
+    const nodes = scene.locator('.realm-marker')
     await expect(nodes.first()).toBeVisible({ timeout: 10_000 })
-    // mortal rung (prepended) + Kien Co + Truc Co.
-    await expect(nodes).toHaveCount(3)
+    // Authored mortal maxLevel is eighteen; these are minor floors, not future realms.
+    await expect(nodes).toHaveCount(18)
     await expect(page.getByText(COMING_SOON_LABEL)).toHaveCount(0)
     for (const label of SCOPE_HIDDEN_REALM_LABELS) {
       await expect(
-        page.locator('.realm-node').getByText(label, { exact: true }),
+        scene.getByText(label, { exact: true }),
         `realm node "${label}" must be absent`,
       ).toHaveCount(0)
     }
@@ -228,11 +231,11 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     await bootFreshMortal(page)
 
     // Stage select via the wheel's teleport array, then start dong_1.
-    await page.keyboard.press('Tab')
+    await page.locator('.df-cultivator').click()
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
-    const overlay = page.getByTestId('function-overlay-panel')
+    const overlay = page.locator('.exploration-scene')
     await expect(overlay).toBeVisible({ timeout: 10_000 })
     const start = page.getByTestId('stage-start-button')
     await expect(start).toBeEnabled({ timeout: 10_000 })

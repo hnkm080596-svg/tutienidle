@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -6,6 +7,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
+import { pcPaperIconUrl } from '@/presentation/assets/PcPaperIcons'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
@@ -323,7 +325,7 @@ function collectLinMach() {
 </script>
 
 <template>
-  <div class="production-panel scrollfade">
+  <div class="production-panel scrollfade pc-auxiliary">
       <p class="production-panel__summary">
         {{ t('panels.production.summary') }}
       </p>
@@ -417,7 +419,7 @@ function collectLinMach() {
       <div class="production-panel__grid">
         <article v-for="row in rows" :key="row.siteId" class="site-card">
           <div class="site-card__art" :data-kind="row.kind" aria-hidden="true">
-            <span>{{ row.sigil }}</span>
+            <img :src="pcPaperIconUrl(row.kind === 'forest' ? 'production' : row.kind === 'mine' ? 'forge' : 'alchemy')" alt="" />
           </div>
 
           <header class="site-card__header">

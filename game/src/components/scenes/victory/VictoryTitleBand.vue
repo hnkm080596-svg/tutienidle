@@ -5,14 +5,14 @@
 // (EXCEPTED-text) - only the brush flourish is art.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { hkChromeUrl } from '@/ui/huyenKimChrome'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 const props = defineProps<{
   stageName: string | null
 }>()
 
 const { t } = useI18n()
-const ribbonUrl = hkChromeUrl('ceremony-ribbon')
+const ribbonUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png')
 
 const subtitle = computed(() => props.stageName ?? t('combat.victory.subtitle'))
 </script>

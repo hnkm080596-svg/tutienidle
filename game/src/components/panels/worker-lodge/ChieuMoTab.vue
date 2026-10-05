@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 // Chieu Mo tab (companion-gacha Task 9, 2026-09-12) - the companion
 // gacha pull surface inside WorkerLodgePanel. Presentation only: calls
 // gameManager.companionOps.pullCompanion() and renders the returned
@@ -96,7 +97,7 @@ function onPull() {
 </script>
 
 <template>
-  <section class="chieu-mo">
+  <section class="chieu-mo pc-auxiliary">
     <!-- ui-audit economy H3: when the pool is closed the token / duyen
          phan / pity chips previously rendered like a LIVE currency
          strip, so the tab read as a dead end hiding real balances. The

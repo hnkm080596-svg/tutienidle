@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/tien-hiep-collections.css'
 // Nhan Vat paper surface (fidelity) - rendered inside the host's design
 // canvas above the Dong Fu vista. Pure surface: model/notice/selection
 // in, intent events out. The Chi Tiet dock is always rendered open.
@@ -10,8 +11,10 @@ import CharacterFidelityIdentity from './CharacterFidelityIdentity.vue'
 import CharacterFidelityFigure from './CharacterFidelityFigure.vue'
 import CharacterFidelityStats from './CharacterFidelityStats.vue'
 import CharacterFidelityDetails from './CharacterFidelityDetails.vue'
-import { CHARACTER_ART, type CharacterUiModel } from './characterUi'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import { type CharacterUiModel } from './characterUi'
+import type { PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import PcPaperScene from '@/components/common/PcPaperScene.vue'
+import PcPaperSceneActions from '@/components/common/PcPaperSceneActions.vue'
 withDefaults(defineProps<{
   model: CharacterUiModel
   notice: string
@@ -31,15 +34,21 @@ const rootRef = ref<HTMLElement | null>(null)
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 <template>
-  <section ref="rootRef" class="cf-scene" :aria-label="t('panels.wheel.slots.character')" @click.self="emit('back')">
-    <div class="cf-paper" :style="{ borderImageSource: `url('${CHARACTER_ART.paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="character" :label="t('panels.wheel.slots.character')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
-    <CharacterFidelityIdentity :model="model" />
-    <CharacterFidelityFigure />
+  <section ref="rootRef" role="dialog" aria-modal="true" tabindex="-1" class="th-collection pc-collection cf-scene" :aria-label="t('panels.wheel.slots.character')" @click.self="emit('back')">
+    <PcPaperScene :title="t('panels.wheel.slots.character')" class="pc-collection-page">
+      <template #actions><PcPaperSceneActions :items="navigation" active="character" @navigate="emit('navigate', $event)" @back="emit('back')" /></template>
+      <div class="pc-collection-stage">
+
+    <div class="character-study">
+      <CharacterFidelityIdentity :model="model" />
+      <CharacterFidelityFigure />
+    </div>
     <CharacterFidelityStats :model="model" @select="emit('select', $event)" @allocate="emit('allocate', $event)" />
     <CharacterFidelityDetails :model="model" />
     <p v-if="preview" class="cf-preview">{{ t('preview') }}</p>
     <div class="cf-notice" role="status" aria-live="polite">{{ notice }}</div>
+      </div>
+    </PcPaperScene>
   </section>
 </template>
 <style scoped>

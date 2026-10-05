@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 // Formation panel (Combat Art Roster spec, 2026-09-05) - drag-and-drop
 // assignment of player/companions into the selected formation's 3x3
 // STANDING-SLOT grid (local slot indices 0-2, fixed regardless of the
@@ -29,6 +30,7 @@ import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import AtlasIdleSprite from '@/components/common/AtlasIdleSprite.vue'
+import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 // Battlefield Perspective Panel (2026-09-06) - the canvas is larger than the
 // pure grid to leave room for perspective depth (spec section 3). The size now
@@ -43,7 +45,6 @@ import { createProjectionBridge } from '@/presentation/geometry/ProjectionBridge
 import { formationSlotStyle } from '@/presentation/geometry/formationSlotBoxes'
 import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
 import { FORMATION_ASSIGNMENTS_EVENT, type FormationAssignmentsPayload } from '@/presentation/contracts/regionEvents'
-import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   PLACEHOLDER_ATLAS_URL,
   PLACEHOLDER_ENTITY_KEY,
@@ -53,6 +54,7 @@ import {
   presentationFor,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import type { SlotState } from '@/presentation/contracts/SlotState'
+import { COMPANIONS } from '@/data/companion/Companions'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -139,21 +141,20 @@ function slotStateAt(row: number, column: number): SlotState {
 // Danh sach quan "chua duoc xep vao o nao" - keo tu day vao luoi.
 // Player luon la 1 la bai co dinh (id 'player'), cong them moi
 // companion da thu phuc (Task 11) chua duoc gan o.
+function combatantLabel(id: string): string {
+  if (id === 'player') return player.name || t('panels.wheel.slots.character')
+  return COMPANIONS.find((definition) => definition.id === id)?.name ?? id
+}
+
 function combatantCards(): { combatantId: string; label: string; artUrl?: string }[] {
   const placed = new Set(currentAssignments.value.map((a) => a.combatantId))
   const cards: { combatantId: string; label: string; artUrl?: string }[] = []
 
   if (!placed.has('player')) {
-    // The queue stand shows the entity's own art - its profile PNG
-    // (visualProfileId -> shared profile catalogue). Note combat surfaces may
-    // now draw a reskin atlas (CHARACTER_RESKIN_MAP) instead, so this card
-    // intentionally keeps the profile art, not the battle sprite. Companions
-    // have no authored art yet: they mirror the battlefield's placeholder idle
-    // loop (AtlasIdleSprite) until companion art exists.
+    // PlayerPortrait resolves the existing profile's idle animation.
     cards.push({
       combatantId: 'player',
-      label: player.name,
-      artUrl: PLAYER_VISUAL_PROFILES[player.visualProfileId]?.combatTextureUrl,
+      label: combatantLabel('player'),
     })
   }
 
@@ -167,7 +168,7 @@ function combatantCards(): { combatantId: string; label: string; artUrl?: string
         presentationFor(instance.definitionId) ?? presentationFor(PLACEHOLDER_ENTITY_KEY)
       cards.push({
         combatantId: instance.definitionId,
-        label: instance.definitionId,
+        label: combatantLabel(instance.definitionId),
         artUrl: form?.kind === 'static' ? form.texture.textureUrl : undefined,
       })
     }
@@ -345,8 +346,8 @@ watch([currentAssignments, () => player.visualProfileId], () => {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1000px, 94vw)" height="min(680px, 88vh)" @close="close">
-    <div class="tran-phap-panel">
+  <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1280px, 94vw)" height="min(820px, 90vh)" @close="close">
+    <div class="tran-phap-panel pc-auxiliary">
       <div class="tran-phap-panel__body">
         <div class="tran-phap-panel__grid-stack" :style="stackStyle">
           <div ref="previewContainerRef" class="tran-phap-panel__preview-canvas"></div>
@@ -367,7 +368,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
                 @drop="(event) => { onDrop(row - 1, column - 1, (event as DragEvent).dataTransfer?.getData('text/plain') ?? ''); hoveredCell = null }"
                 @click="() => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) removeAssignment(occupant.combatantId) }"
               >
-                {{ assignmentAt(row - 1, column - 1)?.combatantId ?? '' }}
+                {{ assignmentAt(row - 1, column - 1) ? combatantLabel(assignmentAt(row - 1, column - 1)!.combatantId) : '' }}
                 <span class="fx-border-beam__fx" aria-hidden="true" />
               </div>
             </template>
@@ -375,15 +376,20 @@ watch([currentAssignments, () => player.visualProfileId], () => {
         </div>
 
         <div class="tran-phap-panel__formation-list">
+          <h4 class="tran-phap-panel__section-title">{{ t('panels.tranPhap.choose') }}</h4>
           <button
             v-for="formation in TRAN_PHAP_FORMATIONS"
             :key="formation.id"
             type="button"
             class="tran-phap-panel__formation-button"
             :class="{ 'is-selected': formation.id === selectedFormationId }"
+            :aria-pressed="formation.id === selectedFormationId"
             @click="onSelectFormation(formation)"
           >
-            {{ formation.name }}
+            <span class="tran-phap-panel__formation-pattern" aria-hidden="true">
+              <i v-for="cell in STANDING_SLOT_COUNT * STANDING_SLOT_COUNT" :key="cell" :class="{ 'is-lit': formation.cellPattern.some(position => position.row === Math.floor((cell - 1) / STANDING_SLOT_COUNT) && position.column === (cell - 1) % STANDING_SLOT_COUNT) }" />
+            </span>
+            <span class="tran-phap-panel__formation-copy"><strong>{{ formation.name }}</strong><small>{{ formation.description }}</small></span>
           </button>
         </div>
       </div>
@@ -393,6 +399,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
         @dragover.prevent
         @drop="(event) => removeAssignment((event as DragEvent).dataTransfer?.getData('text/plain') ?? '')"
       >
+        <h4 class="tran-phap-panel__queue-title">{{ t('panels.tranPhap.roster') }}</h4>
         <div
           v-for="card in combatantCards()"
           :key="card.combatantId"
@@ -408,7 +415,8 @@ watch([currentAssignments, () => player.visualProfileId], () => {
           <span class="queue-stand__base fx-border-beam fx-border-beam--clip" aria-hidden="true">
             <span class="fx-border-beam__fx" aria-hidden="true" />
           </span>
-          <img v-if="card.artUrl" class="queue-stand__art" :src="card.artUrl" :alt="card.label" />
+          <PlayerPortrait v-if="card.combatantId === 'player'" class="queue-stand__art" variant="portrait" animation-mode="idle" :height="68" />
+          <img v-else-if="card.artUrl" class="queue-stand__art" :src="card.artUrl" :alt="card.label" />
           <AtlasIdleSprite
             v-else
             class="queue-stand__art"

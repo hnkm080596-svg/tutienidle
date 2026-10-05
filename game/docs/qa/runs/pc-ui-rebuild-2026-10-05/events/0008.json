@@ -1,0 +1,7 @@
+{
+  "assignmentId": "WIRE-progression-01",
+  "observedStatus": "finished",
+  "observedRuntimeId": "/root/wire_progression",
+  "action": "observe",
+  "evidence": "Final G5 received; native list_agents after final shows worker no longer active; G5 WIRE-progression-01-G5.md"
+}

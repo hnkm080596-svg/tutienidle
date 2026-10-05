@@ -1,0 +1,2034 @@
+{
+  "schema_version": "1",
+  "mode": "workspace",
+  "repository": "E:/tutienidle/.agent-worktrees/hoa-cau-fireball-vfx",
+  "background": "Review and repair entire PC xianxia UI, preserving gameplay",
+  "total_files": 305,
+  "reviewable_count": 116,
+  "excluded_count": 189,
+  "total_insertions": 6105,
+  "total_deletions": 420,
+  "reviewable_files": [
+    {
+      "path": "game/src/components/common/EntitySpriteCanvas.vue",
+      "status": "modified",
+      "insertions": 6,
+      "deletions": 4
+    },
+    {
+      "path": "game/src/components/common/GameButton.vue",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/common/InkWashBackdrop.test.ts",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/common/InkWashPrimitives.test.ts",
+      "status": "modified",
+      "insertions": 10,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/common/PaperPanelNavigation.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/common/PlayerPortrait.test.ts",
+      "status": "modified",
+      "insertions": 8,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/common/PlayerPortrait.vue",
+      "status": "modified",
+      "insertions": 6,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/components/common/primitives/InkNineSlice.vue",
+      "status": "modified",
+      "insertions": 4,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/panels/ArtifactPanel.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/panels/EquipmentPaperdoll.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/components/panels/TranPhapPanel.test.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 9
+    },
+    {
+      "path": "game/src/components/panels/TranPhapPanel.vue",
+      "status": "modified",
+      "insertions": 18,
+      "deletions": 13
+    },
+    {
+      "path": "game/src/components/panels/equipment-hall/qi-hall.css",
+      "status": "modified",
+      "insertions": 10,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/scenes/alchemy/fidelity/AlchemyFidelityScene.vue",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 5
+    },
+    {
+      "path": "game/src/components/scenes/alchemy/fidelity/AlchemyPaperDetails.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/body/fidelity/BodyFidelityScene.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/body/fidelity/BodyPaperDetails.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/body/fidelity/BodyPaperFigure.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/character/fidelity/CharacterFidelityFigure.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 16
+    },
+    {
+      "path": "game/src/components/scenes/character/fidelity/CharacterFidelityIdentity.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/scenes/character/fidelity/CharacterFidelityScene.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/character/fidelity/characterUi.ts",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/combat/fidelity/CombatFidelityFrame.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/combat/fidelity/CombatFidelityPortrait.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/defeat/DefeatTitleBand.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/scenes/defeat/fidelity/DefeatFidelityScene.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/scenes/dong-fu/fidelity/DongFuHomeContent.test.ts",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/scenes/dong-fu/fidelity/DongFuHomeContent.vue",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/scenes/dong-fu/fidelity/dongFuUi.ts",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/components/scenes/equipment/fidelity/EquipmentFidelityScene.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/equipment/fidelity/EquipmentPaperTooltip.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/exploration/fidelity/ExplorationFidelityScene.vue",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/components/scenes/exploration/fidelity/ExplorationPaperDetails.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/exploration/fidelity/ExplorationPaperMap.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/inventory/fidelity/InventoryFidelityDetail.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/inventory/fidelity/InventoryFidelityScene.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/login/AuthSubmitButton.vue",
+      "status": "modified",
+      "insertions": 3,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/components/scenes/login/LoginSceneVista.vue",
+      "status": "modified",
+      "insertions": 4,
+      "deletions": 8
+    },
+    {
+      "path": "game/src/components/scenes/login/loginArt.ts",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/scenes/quest/fidelity/QuestFidelityScene.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/realm/fidelity/RealmFidelityScene.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/scenes/settings/fidelity/SettingsFidelityScene.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/skill/fidelity/SkillFidelityScene.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/skill/fidelity/SkillPaperDetails.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/skill/fidelity/SkillPaperNode.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/skill/fidelity/SkillPaperTree.vue",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/components/scenes/technique/fidelity/TechniqueFidelityScene.test.ts",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/technique/fidelity/TechniqueFidelityScene.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/technique/fidelity/TechniquePaperInfo.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/scenes/tribulation/fidelity/TribulationFidelityChapters.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/tribulation/fidelity/TribulationFidelityFrame.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/tribulation/fidelity/TribulationFidelityScene.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/components/scenes/victory/fidelity/VictoryFidelityScene.vue",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/game/scenes/TranPhapCombatPreviewScene.ts",
+      "status": "modified",
+      "insertions": 4,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/locales/vi.json",
+      "status": "modified",
+      "insertions": 7,
+      "deletions": 7
+    },
+    {
+      "path": "game/src/main.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/presentation/assets/AssetBundleCatalog.ts",
+      "status": "modified",
+      "insertions": 16,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/alchemy.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/body.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/character.ts",
+      "status": "modified",
+      "insertions": 7,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/ui-preview/characterMessages.ts",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/combat.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/defeat.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/dong-fu.ts",
+      "status": "modified",
+      "insertions": 7,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/ui-preview/equipment.ts",
+      "status": "modified",
+      "insertions": 7,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/ui-preview/exploration.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/forge.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/inventory.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/quest.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/realm.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/remainingPreview.test.ts",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/settings.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/skill.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/technique.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/tribulation.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/victory.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui/huyen-kim-chrome.json",
+      "status": "modified",
+      "insertions": 304,
+      "deletions": 284
+    },
+    {
+      "path": "game/tests/architecture/betaScopeRenderedTokens.test.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/tests/architecture/huyenKimChromeManifest.test.ts",
+      "status": "modified",
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "path": "game/tests/e2e/huyen-kim-fidelity-capture.qa.spec.ts",
+      "status": "modified",
+      "insertions": 34,
+      "deletions": 1
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/ALPHA-REVIEW.json",
+      "status": "added",
+      "insertions": 1822,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/DELIVERY.json",
+      "status": "added",
+      "insertions": 9,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/GENERATED-PROMPTS.json",
+      "status": "added",
+      "insertions": 82,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/MIGRATED-DIRECT-CONSUMERS.json",
+      "status": "added",
+      "insertions": 29,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/PACK-VALIDATION.json",
+      "status": "added",
+      "insertions": 171,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/build_manifest.py",
+      "status": "added",
+      "insertions": 64,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/census_imports.py",
+      "status": "added",
+      "insertions": 30,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/dedupe-preview.mjs",
+      "status": "added",
+      "insertions": 11,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/draft-asset-checks.json",
+      "status": "added",
+      "insertions": 35,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/finalize-preview.mjs",
+      "status": "added",
+      "insertions": 9,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/inspect_sources.py",
+      "status": "added",
+      "insertions": 26,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/package-delivery.py",
+      "status": "added",
+      "insertions": 24,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/panel-frame-v2-alpha.json",
+      "status": "added",
+      "insertions": 14,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/polish-ocr-preview.json",
+      "status": "added",
+      "insertions": 0,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/preview-server.mjs",
+      "status": "added",
+      "insertions": 21,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/preview.html",
+      "status": "added",
+      "insertions": 41,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/refine-preview.mjs",
+      "status": "added",
+      "insertions": 9,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/source-metrics.json",
+      "status": "added",
+      "insertions": 439,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/validate-pack.mjs",
+      "status": "added",
+      "insertions": 26,
+      "deletions": 0
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/pack.json",
+      "status": "added",
+      "insertions": 896,
+      "deletions": 0
+    },
+    {
+      "path": "game/scripts/audit-tien-hiep-alpha.mjs",
+      "status": "added",
+      "insertions": 26,
+      "deletions": 0
+    },
+    {
+      "path": "game/scripts/build-tien-hiep-ui.mjs",
+      "status": "added",
+      "insertions": 47,
+      "deletions": 0
+    },
+    {
+      "path": "game/scripts/migrate-tien-hiep-surfaces.mjs",
+      "status": "added",
+      "insertions": 24,
+      "deletions": 0
+    },
+    {
+      "path": "game/scripts/scope-tien-hiep-skin.mjs",
+      "status": "added",
+      "insertions": 9,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/assets/tien-hiep-secondary-ui.css",
+      "status": "added",
+      "insertions": 121,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/assets/tien-hiep-ui.css",
+      "status": "added",
+      "insertions": 236,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/common/EntitySpriteCanvas.test.ts",
+      "status": "added",
+      "insertions": 44,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/common/PaperPanelNavigation.test.ts",
+      "status": "added",
+      "insertions": 22,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/scenes/skill/fidelity/skillGraphViewport.test.ts",
+      "status": "added",
+      "insertions": 19,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/scenes/skill/fidelity/skillGraphViewport.ts",
+      "status": "added",
+      "insertions": 16,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/presentation/assets/TienHiepUiAssets.test.ts",
+      "status": "added",
+      "insertions": 23,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/presentation/assets/TienHiepUiAssets.ts",
+      "status": "added",
+      "insertions": 25,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/SecondaryPreview.vue",
+      "status": "added",
+      "insertions": 72,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/ui-preview/secondary.ts",
+      "status": "added",
+      "insertions": 39,
+      "deletions": 0
+    },
+    {
+      "path": "game/tests/e2e/tien-hiep-pc-ui.spec.ts",
+      "status": "added",
+      "insertions": 122,
+      "deletions": 0
+    },
+    {
+      "path": "game/ui-secondary.html",
+      "status": "added",
+      "insertions": 2,
+      "deletions": 0
+    }
+  ],
+  "excluded_files": [
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/AUDIT-AND-HANDOFF-PLAN.md",
+      "status": "added",
+      "insertions": 118,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/IMAGEGEN-PROMPTS.md",
+      "status": "added",
+      "insertions": 21,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/IMPLEMENTATION-REPORT.md",
+      "status": "added",
+      "insertions": 47,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/README.md",
+      "status": "added",
+      "insertions": 58,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/SCENE-SPECS.md",
+      "status": "added",
+      "insertions": 61,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/WIRING-PLAN.md",
+      "status": "added",
+      "insertions": 90,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/WORLD-VISTA-PROMPT.md",
+      "status": "added",
+      "insertions": 3,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/character-layout-reference.csv",
+      "status": "added",
+      "insertions": 11,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/component-census.csv",
+      "status": "added",
+      "insertions": 287,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/existing-chrome-census.csv",
+      "status": "added",
+      "insertions": 44,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/01-login.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/02-character-creation.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/03-dong-fu-closed.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/03-dong-fu-open.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/04-character.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/05-realm.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/06-technique-locked.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/07-skill.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/08-body.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/09-inventory.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/10-exploration.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/11-alchemy.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/11b-production-outpost.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/11c-production-actions.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/12-equipment.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/13-combat.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/14-tribulation.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/15-victory.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/16-defeat.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/17-settings.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/18-quest.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-character-tooltip-1280.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-character-tooltip-1672.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-character-tooltip-1920.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-dialog-confirm.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-dialog-feedback.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-dialog-lore.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-equipment-1280.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-equipment-1672.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-equipment-1920.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-fixture-body.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-fixture-inventory.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-fixture-skill.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-fixture-technique.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-home-1280.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-home-1672.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-home-1920.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-artifact.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-chieu_mo.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-companion.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-duyen_phan.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-formation.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-qua_tang.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/tien-hiep-ui-art-and-plan.zip",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/docs/design/tien-hiep-ui-redesign-2026-10-05/ui-art-consumer-search.txt",
+      "status": "added",
+      "insertions": 143,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/drafts/button-primary-v1.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/drafts/orb-frame-v1.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/drafts/orb-frame-v2.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/drafts/page-frame-v1.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/avatar-frame@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/avatar-frame@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/boss-seal@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/boss-seal@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/building-plaque.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/building-plaque@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/building-plaque@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-ceremonial@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-ceremonial@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-compact@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-compact@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-danger@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-danger@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-primary.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-secondary.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-standard@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/button-standard@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon-red.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/corner-ornament.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/corner-ornament@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/corner-ornament@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/dao-luan-center@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/dao-luan-center@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/dao-luan-node@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/dao-luan-node@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/divider-ornament@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/divider-ornament@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/entity-bar@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/entity-bar@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/frame-m-modal@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/frame-m-modal@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/frame-s-slot@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/frame-s-slot@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/frame-xl-ceremony@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/frame-xl-ceremony@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/frame-xs-tooltip@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/frame-xs-tooltip@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/icon-button-utility@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/icon-button-utility@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/identity-plate@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/identity-plate@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-body@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-body@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-roller.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-roller@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-roller@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/ink-panel.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/list-row@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/list-row@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/nav-seal-vertical@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/nav-seal-vertical@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/navigation-rail.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/orb-frame.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/page-paper.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/paper-grain-tile@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/paper-grain-tile@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/paper-panel.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/paper-surface.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/power-ribbon.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/resource-pill@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/resource-pill@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/rune-node@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/rune-node@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/scroll-title-plaque@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/scroll-title-plaque@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/scrollbar@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/scrollbar@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/seal-chip@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/seal-chip@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/section-header.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/section-plaque@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/section-plaque@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/skill-orb-frame@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/skill-orb-frame@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/slider-thumb@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/slider-thumb@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/slider-track@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/slider-track@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/slot-frame.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/stage-node@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/stage-node@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/surface-l-drawer@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/surface-l-drawer@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/surface-m-panel@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/surface-m-panel@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/surface-xl-scroll@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/surface-xl-scroll@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/tab-seal@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/tab-seal@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/text-field@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/text-field@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/timer-ring@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/timer-ring@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/title-plaque.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/toggle-track@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/toggle-track@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/turn-token@1x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/runtime/turn-token@2x.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/avatar-ring.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/building-plaque.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/button-primary-v2.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/button-primary.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/button-secondary.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/ceremony-ribbon-red.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/ceremony-ribbon.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/divider.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/identity-plate.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/list-row.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/navigation-rail.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/orb-frame.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/page-frame.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/panel-frame-v2.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/panel-frame.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/paper-surface.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/power-ribbon.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/progress-track.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/resource-pill.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/section-header.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/slot-frame.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/tab-plate.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/text-field.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/title-plaque.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/ui/tien-hiep-2026-10/source/world-vista.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    }
+  ]
+}

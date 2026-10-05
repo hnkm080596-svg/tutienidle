@@ -99,7 +99,7 @@ export async function enterHome(page: Page): Promise<void> {
 export async function reauthAndEnterHome(page: Page): Promise<void> {
   const auth = page.getByTestId('auth-screen')
   await expect(auth).toBeVisible({ timeout: 15_000 })
-  await page.getByTestId('auth-guest-button').click()
+  await page.getByTestId('auth-continue-button').click()
 
   await enterHome(page)
 }
@@ -108,8 +108,8 @@ export async function reauthAndEnterHome(page: Page): Promise<void> {
  * Open the Cai Dat panel and click the manual save button.
  */
 export async function openSettingsAndSave(page: Page): Promise<void> {
-  // Tab to open command wheel, then click Cai Dat slot.
-  await page.keyboard.press('Tab')
+  // The player figure explicitly opens the wheel.
+  await page.locator('.df-cultivator').click()
   const settingsSlot = page.locator('[data-wheel-slot="settings"]')
   await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
   await settingsSlot.click()

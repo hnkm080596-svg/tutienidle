@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PcBodyDiagram from '@/components/common/PcBodyDiagram.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
@@ -6,23 +7,22 @@ import type { BodyPaperModel } from './bodyUi'
 const props = defineProps<{ model: BodyPaperModel; selected: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
 const { t } = useI18n()
-const figure = computed(() => resolveAssetUrl(`/assets/ui/huyen-kim/scene/body-v2/${props.model.chapter === 'refinement' ? 'mortal-horse-stance-v1' : props.model.chapter === 'meridian' ? 'qi-taichi-v1' : 'zhou-meditation-v1'}.png`))
-const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/skill-v2/node-ring-v1.png')
+const ring = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/orb-frame.png')
 const fill = computed(() => Number.isFinite(props.model.progress) ? Math.min(100,Math.max(0,props.model.progress)) : 0)
 // Meridian orbs ring the figure: positions derive from the unit count so
 // every authored meridian owns a distinct anchor (previously 8 fixed
 // anchors collided once the catalog grew past eight).
 const anchors = computed(() => props.model.units.map((_, index) => {
   const angle = -Math.PI / 2 + (index * Math.PI * 2) / props.model.units.length
-  return { x: 50 + Math.cos(angle) * 38, y: 38 + Math.sin(angle) * 33 }
+  return { x: 50 + Math.cos(angle) * 38, y: 33 + Math.sin(angle) * 26 }
 }))
 </script>
 <template>
-  <section class="body-paper-figure" :aria-label="model.chapterLabel">
-    <img class="body-figure-art" :src="figure" alt="">
+  <section class="body-paper-figure" :class="`body-paper-figure--${model.chapter}`" :aria-label="model.chapterLabel">
+    <PcBodyDiagram class="body-figure-art" />
     <template v-if="model.chapter === 'meridian'"><button v-for="(unit,index) in model.units" :key="unit.id" :class="['body-orb',unit.state,{selected:selected === unit.id}]" :style="{left:`${anchors[index]!.x}%`,top:`${anchors[index]!.y}%`}" :aria-pressed="selected === unit.id" @click="emit('select',unit.id)"><img :src="ring" alt=""><span>{{ unit.label }}</span></button></template>
-    <div class="body-progress"><div><span>{{ model.chapterLabel }}</span><span>{{ model.progressLabel }}</span></div><div class="body-progress-track" role="progressbar" :aria-label="t('body.progress')" :aria-valuenow="fill" :aria-valuemin="0" :aria-valuemax="100"><span :style="{width:`${fill}%`}" /></div></div>
-    <div class="body-unit-rail" :aria-label="t('body.units')"><button v-for="unit in model.units" :key="unit.id" :class="[unit.state,{selected:selected === unit.id}]" :aria-pressed="selected === unit.id" @click="emit('select',unit.id)">{{ unit.label }}<small>{{ t(`body.state.${unit.state}`) }}</small></button><span v-for="milestone in model.milestones" :key="milestone.id" :class="['body-milestone',{done:milestone.done}]">{{ milestone.label }}</span></div>
+    <div class="body-progress"><div><span>{{ model.chapterLabel }}</span><span>{{ model.progressLabel }}</span></div><div v-if="model.chapter !== 'cycle'" class="body-progress-track" role="progressbar" :aria-label="t('body.progress')" :aria-valuenow="fill" :aria-valuemin="0" :aria-valuemax="100"><span :style="{width:`${fill}%`}" /></div></div>
+    <div class="body-unit-rail" :aria-label="t('body.units')"><button v-for="(unit, index) in model.units" :key="unit.id" :class="[unit.state,{selected:selected === unit.id}]" :aria-pressed="selected === unit.id" @click="emit('select',unit.id)"><span class="body-unit-number" aria-hidden="true">{{ index + 1 }}</span><span>{{ unit.label }}</span><small>{{ t(`body.state.${unit.state}`) }}</small></button><span v-for="milestone in model.milestones" :key="milestone.id" :class="['body-milestone',{done:milestone.done}]">{{ milestone.label }}</span></div>
   </section>
 </template>
 <style scoped>

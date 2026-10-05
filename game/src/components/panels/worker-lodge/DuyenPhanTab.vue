@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@/assets/pc-paper-auxiliary-production.css'
 // Doi Duyen Phan tab (companion-gacha Task 9, 2026-09-12) - exchange
 // Duyen Phan for a specific companion definition. Row button states
 // mirror GameManagerCompanionOps.exchangeCompanion() gates in the same
@@ -125,7 +126,7 @@ function onExchange(definitionId: string) {
 </script>
 
 <template>
-  <section class="duyen-phan">
+  <section class="duyen-phan pc-auxiliary">
     <p class="duyen-phan__balance">
       {{ t('duyenPhan.balance', { count: formatNumber(duyenPhan) }) }}
     </p>

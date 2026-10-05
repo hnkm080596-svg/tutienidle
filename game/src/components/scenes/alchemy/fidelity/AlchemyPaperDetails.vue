@@ -9,7 +9,7 @@ const emit = defineEmits<{ variant: [id: string]; brew: [] }>()
 
 const { t } = useI18n()
 
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png')
 </script>
 
 <template>

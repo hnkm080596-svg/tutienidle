@@ -2,7 +2,7 @@
 import { computed, ref, useId } from 'vue'
 import { i18n } from '@/i18n'
 import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import PcPaperChrome from '@/components/common/PcPaperChrome.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useAudioStore } from '@/stores/audio'
@@ -43,8 +43,7 @@ useDialogFocus(panelRef, computed(() => props.open), {
           :aria-labelledby="titleId"
           :aria-describedby="messageId"
         >
-          <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-          <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+          <PcPaperChrome />
 
           <h3 :id="titleId" class="abandon-modal__title">{{ i18n.global.t('account.abandon.title') }}</h3>
           <p :id="messageId" class="abandon-modal__message">{{ i18n.global.t('account.abandon.body') }}</p>
@@ -72,7 +71,7 @@ useDialogFocus(panelRef, computed(() => props.open), {
 <style scoped>
 .abandon-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--scrim); }
 .abandon-modal__panel { position: relative; isolation: isolate; width: min(440px, 92vw); padding: 40px 36px; color: var(--paper-text); font-family: var(--font-body); text-align: center; }
-.abandon-modal__panel > :not(.ink-nine-slice) { position: relative; z-index: 3; }
+.abandon-modal__panel > :not(.pc-paper-chrome) { position: relative; z-index: 3; }
 .abandon-modal__title { margin: 0 0 10px; font-family: var(--font-display); font-size: var(--text-title); letter-spacing: .06em; color: var(--cinnabar, #b54432); }
 .abandon-modal__message { margin: 0 0 18px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-sm); line-height: 1.6; }
 .abandon-modal__actions { display: grid; gap: 10px; }

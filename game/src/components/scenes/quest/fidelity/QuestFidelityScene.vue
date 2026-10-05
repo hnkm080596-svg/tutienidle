@@ -7,12 +7,14 @@
 // QuestGroupTabs/QuestList/QuestDetailPanel through #tabs/#list/#detail.
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import type { PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import PcPaperScene from '@/components/common/PcPaperScene.vue'
+import PcPaperSceneActions from '@/components/common/PcPaperSceneActions.vue'
 import type { QuestDisplay } from './questUi'
 import type { VictoryRewardDisplay } from '@/components/scenes/victory/fidelity/victoryUi'
 import QuestFidelityDetail from './QuestFidelityDetail.vue'
+import '@/assets/tien-hiep-outcomes.css'
 
 withDefaults(defineProps<{
   quests: readonly QuestDisplay[]
@@ -28,7 +30,6 @@ const emit = defineEmits<{ select: [id: string]; filter: [id: string]; action: [
 const { t } = useI18n()
 const filters = ['all', 'once', 'active', 'ready', 'claimed']
 
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 
 // Same dialog contract the imperial scroll carried: focus/pointer stay
 // inside the open surface and Escape closes through emit('back').
@@ -37,10 +38,11 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 
 <template>
-  <section ref="rootRef" class="quest-scene" :aria-label="t('panels.quest.title')" @click.self="emit('back')">
-    <div class="quest-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="quest" :label="t('paperNav.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
-    <h1 class="quest-title">{{ t('panels.quest.title') }}</h1>
+  <section ref="rootRef" role="dialog" aria-modal="true" tabindex="-1" class="quest-scene th-outcome-surface th-collection pc-collection" :aria-label="t('panels.quest.title')" @click.self="emit('back')">
+    <PcPaperScene :title="t('panels.quest.title')" class="pc-collection-page">
+      <template #actions><PcPaperSceneActions :items="navigation" active="quest" @navigate="emit('navigate', $event)" @back="emit('back')" /></template>
+      <div class="pc-collection-stage">
+
 
     <div class="quest-content">
       <slot name="tabs"><nav class="tabs"><button v-for="id in filters" :key="id" :aria-pressed="filter===id" @click="emit('filter',id)">{{ t(`questPreview.${id}`) }}</button></nav></slot>
@@ -49,6 +51,8 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
     <p v-if="preview" class="quest-preview">{{ t('preview') }}</p>
     <p class="quest-notice" role="status">{{ notice }}</p>
+      </div>
+    </PcPaperScene>
   </section>
 </template>
 

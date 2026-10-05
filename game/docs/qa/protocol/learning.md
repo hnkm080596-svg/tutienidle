@@ -546,3 +546,60 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Detector escape:** regeneration had only been run in the existing populated pack, not in a clean output root.
   - **Evidence:** EXECUTED_TOOLING failure in the isolated replay, then a successful clean replay producing all nine preview sheets after the generator created each output parent.
   - **Pin/attack proposal:** asset-generator qualification must include a clean-root replay with no output directories, followed by exact output and preservation census. Capture as CANDIDATE; independent qualification is still required before promotion.
+### 2026-10-05 PC watercolor UI reconstruction
+
+- **Incident:** Charcoal companion/artifact inspectors inherited ivory fills or dark grade/path colors; the enabled creation CTA and defeat motto inherited cream labels on light art. Direct independent browser screenshots and computed colors confirmed unreadable text.
+  - **Root class:** L-PRESENTATION-LOCAL-PALETTE-MISMATCH - composed surface changed backdrop without changing dependent text/fill tokens.
+  - **Detector escape:** component tests assert data and intents, not composited contrast; fixture-only scene screenshots did not exercise creation or all auxiliary controls.
+  - **Pin/attack proposal:** enumerate local light/dark regions, measure text against the resolved backing at enabled/disabled/selected states, exercise real creation and inspector controls. Independent repair checks recorded in INDEPENDENT-AUX-REVIEW.md. Candidate detector qualification and automatic promotion remain pending; no promoted prevention claim.
+- **Incident:** Formation backing420x480 displayed at420x350.609 after layout recomposition.
+  - **Root class:** L-PRESENTATION-NONUNIFORM-SCALE - competing width and available-height constraints distorted a shared projection.
+  - **Detector escape:** projection math tests used canonical dimensions; no rendered equal-scale oracle.
+  - **Pin/attack proposal:** compare canvas/overlay bounds and x/y scale, then drop a real DragEvent/DataTransfer into an enabled projected cell at minimum PC viewport. Independent resulting-state scale and drop checks passed; candidate qualification pending.
+- **Incident:** A legacy Tab shortcut opened the command wheel despite the approved click-gated interaction; old authoring scripts could overwrite the updated manifest.
+  - **Root class:** L-STALE-CONSUMER-CONTRACT - unchanged consumers/producers retained earlier assumptions after the presentation migration.
+  - **Detector escape:** new fidelity components were inspected without all production-host keyboard handlers and historical regeneration entrypoints.
+  - **Pin/attack proposal:** census one-hop hosts and all metadata producers; Tab must preserve focus traversal; archived producers refuse execution. Current PC E2E includes Tab/wheel regression. Independent source review found these; qualification remains pending.
+
+### 2026-10-05 shared watercolor design reset
+
+- **Incident:** User rejected production styling as inconsistent and unlike approved whole-scene art despite functional verification. Static map/skill/realm prototypes initially reused one six-square diagram, repeating the same composition error.
+  - **Root class:** L-VISUAL-ORACLE-SUBSTITUTION - passing mechanics and shared chrome substituted for matching scene hierarchy and reference composition.
+  - **Detector escape:** screenshots were exercised for clipping and behavior without a specific approved visual oracle, region geometry or art-family comparison.
+  - **Pin/attack proposal:** reference-specific full-scene comparison before wiring; measure title/tab/grid/hero/inspector regions, compare shared controls and separate genuine scene topology from component exercises. Independent STATIC-DESIGN-BASELINE-REVIEW.md caught the twelve-column and body placement discrepancies. Candidate only; no policy promotion or final visual acceptance claim.
+- **Incident:** Enlarging decorative meditation art to match the reference let it intercept a native click on the Luyen The tab.
+  - **Root class:** L-DECORATIVE-OVERFLOW-HIT-TESTING - painted art escaped its workspace and became an input target.
+  - **Detector escape:** source/style review did not prove click ownership at the rendered scale; the existing native tab-click browser capture detected the defect.
+  - **Pin/attack proposal:** decorative layers use pointer-events:none and bounded workspace clipping; exercise native tab/control clicks after hero-art scaling at both PC sizes. Worker repaired and reran the capture. Candidate qualification remains pending.
+
+### 2026-10-05 shared-paper typography integration
+
+- Incident: Source Serif 4 changed text metrics and exposed technique then meridian inspector CTA overflow in the fixed PC canvas.
+  - Root class: L-FONT-METRICS-FIXED-CANVAS - visual content budget depended on the previous system font.
+  - Detector escape: earlier captures proved the old font only; a font replacement invalidated text-flow and button-containment evidence.
+  - Evidence: inspector containment browser pin caught both previews after the font change; explicit technique grid and reduced meridian section gaps repaired the owned design-only surfaces. Latest 1672/1280 captures and focused browser checks passed.
+  - Pin/attack proposal: load actual bundled fonts before every reference capture; repeat viewport and inspector control containment after typography changes, and inspect the resulting full scene. CANDIDATE only; independent qualification/promotion not claimed.
+
+### 2026-10-05 production paper navigation and settings composition
+
+- Incident: Escape after opening the page navigation menu from its trigger closed the entire page. Menu-item-only key handling did not own Escape while focus remained on the trigger; the ancestor dialog listener received it. Actual production browser test reproduced the loss of the settings surface.
+  - Root class: L-NESTED-DIALOG-KEY-OWNERSHIP. Detector escape: previous menu captures moved focus into a menu item; they omitted the opening trigger state.
+  - Repair/pin: the shared navigation container consumes Escape only while its menu is open and restores trigger focus; otherwise the event reaches the existing page close owner. `pc-settings-dialogs-wiring.qa.spec.ts` exercises both Escape steps. Candidate qualification pending; no promoted policy claim.
+- Incident: live settings screenshot showed legacy rounded navigation and gray section fills despite the new approved paper/inspector declarations. Late-loaded scoped section styles defeated equal-specificity shared recipe selectors.
+  - Root class: L-PRESENTATION-CASCADE-COMPOSITION. Detector escape: type checks and intent tests do not prove composed paint; the full production settings screenshot exposed the mismatch.
+  - Repair/pin: scope the production recipe to the app host and actual settings workspace, inspect all live settings categories at both PC sizes after lazy styles load. Candidate qualification and final resulting-state proof pending.
+
+### 2026-10-05 production paper content containment
+
+- Incident: the actual Character page's default talent and five-element summary exceeded the statistics inspector at 1280x720. Native browser containment assertions failed, and the screenshot showed clipped element labels.
+  - Root class: L-FONT-METRICS-FIXED-CANVAS. Detector escape: populated fixtures and larger viewport captures did not establish the smallest PC window's actual default content budget.
+  - Repair/pin: reduce section and row gaps within the owned inspector, preserve its existing scroll behavior, and keep the real-character element-summary containment assertion. The final three-viewport browser check passed. Candidate only; independent qualification/promotion not claimed.
+- Incident: the feedback form's action footer fell below its bounded paper dialog after typography/layout migration.
+  - Root class: L-NESTED-SCROLL-CTA-CONTAINMENT. Detector escape: component behavior tests did not inspect the actual nested scroll viewport.
+  - Repair/pin: bound the existing form scroll area and retain its action footer in view; actual feedback-submit viewport assertion and screenshot passed. No feedback was submitted. Candidate only; independent qualification/promotion not claimed.
+
+### 2026-10-05 archived UI producer refusal order
+
+- Incident: the two archived UI migration scripts threw their refusal error only after rewriting component/stylesheet files and the migration manifest. Coordinator source review confirmed awaited writes preceded the guard.
+  - Root class: L-STALE-CONSUMER-CONTRACT / L-REFUSAL-AFTER-SIDE-EFFECT. Detector escape: the presence of an archived-producer error was checked without checking execution order or post-execution file identity.
+  - Repair/pin: move refusal before all reads and writes; `tests/architecture/archivedUiProducers.test.ts` runs each real script in an isolated checkout-local canary directory and asserts component, stylesheet and manifest contents remain unchanged. Two regression tests and type check passed; broader verification is running. Candidate only; independent qualification/promotion not claimed.

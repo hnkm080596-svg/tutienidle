@@ -1,0 +1,20 @@
+{
+  "assignment": {
+    "phase": "IMPLEMENT",
+    "bundleRef": "docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-EXECUTION.md",
+    "state": {
+      "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+      "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+      "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+      "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+    },
+    "requestId": "WIRE-entry-home-01",
+    "worker": "entry-home",
+    "status": "READY",
+    "readiness": "READY",
+    "id": "WIRE-entry-home-01",
+    "scope": "entry-home"
+  },
+  "externalOccupied": 1,
+  "action": "admit"
+}

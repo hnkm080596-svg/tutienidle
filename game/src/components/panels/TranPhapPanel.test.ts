@@ -173,7 +173,7 @@ describe('TranPhapPanel', () => {
     mounted.unmount()
   })
 
-  it('queue stand for the player shows the entity-derived profile art standing on a slot base', async () => {
+  it('queue stand for the player keeps the shared animated portrait on a slot base', async () => {
     const mounted = mountPanel()
     await mounted.open()
 
@@ -182,12 +182,8 @@ describe('TranPhapPanel', () => {
     expect(card).not.toBeNull()
     expect(card!.querySelector('.queue-stand__base')).not.toBeNull()
 
-    const img = card!.querySelector<HTMLImageElement>('img.queue-stand__art')
-
-    expect(img).not.toBeNull()
-    expect(img!.getAttribute('src') ?? '').toContain(
-      'player-mortal-pham-nhan-v1',
-    )
+    expect(card!.querySelector('.player-portrait canvas')).not.toBeNull()
+    expect(card!.querySelector('img.queue-stand__art')).toBeNull()
 
     mounted.unmount()
   })
@@ -210,7 +206,7 @@ describe('TranPhapPanel', () => {
 
     expect(img).not.toBeNull()
     expect(img!.getAttribute('src') ?? '').toContain('entity-placeholder')
-    expect(companionCard.textContent ?? '').toContain('ho_ly_tinh')
+    expect(companionCard.textContent ?? '').toContain('Hồ Ly Tinh')
 
     mounted.unmount()
   })
@@ -238,7 +234,7 @@ describe('TranPhapPanel', () => {
     )
 
     // Local cell (0,0) is the first cell in DOM order.
-    expect(cells(mounted.container)[0]!.textContent ?? '').toContain('player')
+    expect(cells(mounted.container)[0]!.textContent ?? '').toContain(mounted.player.name || 'Nhân Vật')
 
     mounted.unmount()
   })

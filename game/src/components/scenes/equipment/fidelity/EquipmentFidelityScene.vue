@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import '@/assets/tien-hiep-collections.css'
 import { computed, ref, shallowRef } from 'vue'
 import ForgeFidelityWorkspace from './ForgeFidelityWorkspace.vue'
 import ForgeBatchBag from './ForgeBatchBag.vue'
 import { useI18n } from 'vue-i18n'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import type { PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
+import PcPaperScene from '@/components/common/PcPaperScene.vue'
+import PcPaperSceneActions from '@/components/common/PcPaperSceneActions.vue'
 import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import EquipmentPaperItem from './EquipmentPaperItem.vue'
 import EquipmentPaperTooltip from './EquipmentPaperTooltip.vue'
@@ -40,14 +42,14 @@ const emptyBagCells = computed(() => {
   const remainder = props.items.length % BAG_COLUMNS
   return remainder === 0 ? 0 : BAG_COLUMNS - remainder
 })
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 </script>
 
 <template>
-  <section ref="rootRef" class="equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')" @keydown.esc="inspecting = null">
-    <div class="equipment-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="equipment" :label="t('equipment.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
-    <h1 class="equipment-title">{{ t('equipment.title') }}</h1><p class="equipment-subtitle">{{ t('equipment.subtitle') }}</p>
+  <section ref="rootRef" role="dialog" aria-modal="true" tabindex="-1" class="th-collection pc-collection equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')" @keydown.esc="inspecting = null">
+    <PcPaperScene :title="t('equipment.title')" class="pc-collection-page">
+      <template #actions><PcPaperSceneActions :items="navigation" active="equipment" @navigate="emit('navigate', $event)" @back="emit('back')" /></template>
+      <div class="pc-collection-stage">
+
     <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -
          neo o khe trong giua subtitle va cot bag/forge (design px). -->
     <BuildingUpgradeButton building-id="equipment_hall" class="equipment-upgrade" />
@@ -60,7 +62,7 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
       <div class="equipment-sockets"><div v-for="socket in sockets" :key="socket.id" class="equipment-socket"><EquipmentPaperItem :item="socket.item" :label="socket.label" @click="selected=socket.item??null" @inspect="inspecting = $event" @leave="inspecting = null" /><span>{{ socket.label }}</span></div></div>
     </slot>
 
-    <div class="equipment-summary"><h2>{{ t('equipment.summary') }}</h2><slot name="summary"><div><span>{{ t('equipment.stats.hp') }}</span><strong>18.200</strong><span>{{ t('equipment.stats.attack') }}</span><strong>1.260</strong><span>{{ t('equipment.stats.defense') }}</span><strong>840</strong></div></slot></div>
+    <div v-if="$slots.summary" class="equipment-summary"><h2>{{ t('equipment.summary') }}</h2><slot name="summary" /></div>
 
     <!-- The unified right region (ref: bag OR forge at the same rect)
          carries the fixture bag/forge toggle; production mounts the real
@@ -73,6 +75,8 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
     <EquipmentPaperTooltip v-if="inspecting" :item="inspecting" />
 
     <p v-if="preview" class="equipment-preview">{{ t('equipment.previewStamp') }}</p><p class="equipment-notice" role="status">{{ notice }}</p>
+      </div>
+    </PcPaperScene>
   </section>
 </template>
 

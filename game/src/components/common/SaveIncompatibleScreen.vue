@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import PcPaperChrome from './PcPaperChrome.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
 import { useNotificationStore } from '@/stores/notification'
@@ -126,8 +126,9 @@ function handleImport(event: Event) {
   <div class="save-incompatible" :style="{ zIndex: OVERLAY_LAYERS.saveGate }">
     <InkWashBackdrop left-mountain right-mountain bottom-mist />
     <div class="save-incompatible__panel paper-on-dark">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+
+      <PcPaperChrome />
+
 
       <h2 class="save-incompatible__title">{{ t('saveIncompatible.title') }}</h2>
 

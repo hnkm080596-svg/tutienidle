@@ -232,9 +232,8 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
   <section class="qi-hall__body qi-hall__split">
     <div class="qi-hall__split-left">
       <div class="qi-hall__slot-grid" :aria-label="t('panels.equipmentHall.aria.enhanceSlots')">
+        <div v-for="row in enhanceRows" :key="row.slot" class="qi-hall__slot-choice">
         <SlotView
-          v-for="row in enhanceRows"
-          :key="row.slot"
           class="qi-hall__slot"
           :item="row.equippedRow?.instance ?? null"
           :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
@@ -248,6 +247,8 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
           :state="{ interaction: row.slot === selectedEnhanceSlot ? 'selected' : 'idle' }"
           @click="selectEnhanceSlot(row.slot)"
         />
+        <span class="qi-hall__slot-name">{{ equipmentSlotLabel(row.slot) }}</span>
+        </div>
       </div>
     </div>
 

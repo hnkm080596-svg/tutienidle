@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 // EntitySpriteCanvas - Vue-side sprite animation over a TexturePacker atlas.
 // Exists because Vue panels can't play Phaser animations: this component
 // fetches the atlas JSON + PNG once and steps frames on a rAF interval. Only
-// rendered when ENTITY_ART_MODE === 'animated' (callers gate on the constant).
+// rendered by animated consumers or UI scenes selecting existing idle clips.
 //
 // Reads both atlas layouts Phaser consumes: a single atlas's JSON-Hash
 // (`frames` keyed by filename) and a multiatlas's array-of-textures
@@ -44,7 +45,7 @@ function frameName(i: number): string {
 // fetch() and img.src resolve against the DOCUMENT URL, so a nested route
 // would mis-resolve them. Root them like the sibling IMAGE_URLS do.
 function rootedUrl(url: string): string {
-  return url.startsWith('/') ? url : `/${url}`
+  return resolveAssetUrl(/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(url) || url.startsWith('/') ? url : `/${url}`)
 }
 
 function frameTable(atlas: Record<string, unknown>): Record<string, PackedFrame> {
@@ -103,8 +104,9 @@ onMounted(async () => {
     // collected list.
     let cursor = 0
 
+    const reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
     const tick = (t: number) => {
-      if (t - lastStep >= stepMs) {
+      if (lastStep === 0 || reducedMotion || t - lastStep >= stepMs) {
         lastStep = t
         const f = frames[cursor]!
         ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -122,7 +124,7 @@ onMounted(async () => {
         )
         cursor = (cursor + 1) % frames.length
       }
-      rafId = requestAnimationFrame(tick)
+      if (!reducedMotion && !disposed) rafId = requestAnimationFrame(tick)
     }
     rafId = requestAnimationFrame(tick)
   } catch {

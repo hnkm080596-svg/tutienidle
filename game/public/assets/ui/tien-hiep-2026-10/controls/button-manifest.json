@@ -1,0 +1,22 @@
+{
+  "source": "shared-buttons-atlas-v1.png",
+  "operation": "split and tight crop only",
+  "buttons": [
+    {
+      "variant": "secondary",
+      "width": 1863,
+      "height": 280,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "variant": "primary",
+      "width": 1863,
+      "height": 281,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    }
+  ]
+}

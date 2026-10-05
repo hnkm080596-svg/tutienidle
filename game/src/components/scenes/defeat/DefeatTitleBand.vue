@@ -2,13 +2,13 @@
 // Scene 15/16 defeat title region (spec: 576/140/520/96, ornament,
 // ceremony-ribbon with cinnabar tint - delivered). Ref adds a subtitle
 // motto under the brush title.
-import { hkChromeUrl } from '@/ui/huyenKimChrome'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 defineProps<{
   title: string
   subtitle: string
 }>()
-const ribbonUrl = hkChromeUrl('ceremony-ribbon')
+const ribbonUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-title-cloud-v1.png')
 </script>
 
 <template>

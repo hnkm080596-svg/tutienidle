@@ -479,6 +479,8 @@
     },
     "tranPhap": {
       "title": "Formation",
+      "choose": "Choose Formation",
+      "roster": "Unassigned Combatants",
       "confirm": "Save Formation"
     },
     "bag": {
@@ -1194,6 +1196,9 @@
       "skip": "Skip"
     },
     "auth": {
+      "begin": "Begin",
+      "createAccount": "Create Account",
+      "returnOpening": "Back",
       "eyebrow": "ONE THOUGHT ENTERS THE DAO",
       "lead": "A lifetime of mortal toil, a single thought seeking immortality.",
       "wordmark": "Tu Tiên IDLE",
@@ -1218,7 +1223,7 @@
         "register": "Create Identity"
       },
       "guest": {
-        "button": "Play Now"
+        "button": "Try Playing"
       },
       "continue": "Continue — {name}",
       "continueNoName": "Continue",
@@ -1274,7 +1279,7 @@
       "vistaBanner": "UNSULLIED HEART",
       "starterSlot": {
         "title": "Starter Skill",
-        "previewNote": "UI preview · Skill selection is not applied in game yet",
+        "previewNote": "Linh Bao is the starting skill; other skills are locked in the current version",
         "pending": "Revealed after you choose a talent"
       },
       "chooseOne": "Choose one",
@@ -2143,5 +2148,8 @@
     "feedback": "Send Feedback",
     "build": "Build",
     "buildValue": "Current build"
+  },
+  "pcUi": {
+    "back": "Return"
   }
 }

@@ -1,16 +1,15 @@
 <script setup lang="ts">
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import { useI18n } from 'vue-i18n'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import SlotView from '@/components/common/SlotView.vue'
 import type { ExplorationPaperModel, ExplorationDetail } from './explorationUi'
 defineProps<{ model: ExplorationPaperModel; stage: ExplorationDetail | null; notice: string }>()
 const emit = defineEmits<{ mode: [id: string]; stopFarm: []; openBuild: []; start: [] }>()
 const { t } = useI18n()
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 </script>
 <template>
-  <aside class="exploration-details" :style="{ borderImageSource: `url('${paper}')` }">
-    <div v-if="model.armedFarm" class="exploration-armed"><span>{{ t('exploration.armedFarm', { stage: model.armedFarm.stageName }) }}</span><button type="button" class="exploration-stop" data-testid="autofarm-stop" @click="emit('stopFarm')">{{ model.stopLabel }}</button></div>
+  <aside class="exploration-details pc-paper-inspector">
+    <div v-if="model.armedFarm" class="exploration-armed"><span>{{ t('exploration.armedFarm', { stage: model.armedFarm.stageName }) }}</span><PcPaperButton type="button" class="exploration-stop" data-testid="autofarm-stop" @click="emit('stopFarm')">{{ model.stopLabel }}</PcPaperButton></div>
     <template v-if="stage">
       <p class="chapter-name">{{ stage.chapter }}</p>
       <h2 class="stage-title">{{ stage.title }}</h2>
@@ -29,7 +28,7 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
            part of the primary start flow and must never clip behind
            the CTA on shorter viewports. -->
       <div class="mode-block"><div class="mode-chips" role="group" :aria-label="t('exploration.modes')"><button v-for="chip in stage.modes" :key="chip.id" type="button" :class="['mode-chip', { active: chip.active }]" :disabled="chip.disabled" :aria-pressed="chip.active" :data-mode="chip.id" @click="emit('mode', chip.id)">{{ chip.label }}</button></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
-      <div class="start-row"><button type="button" class="build-link" @click="emit('openBuild')">{{ stage.buildLabel }}</button><button class="challenge" type="button" :disabled="stage.startDisabled" data-testid="stage-start-button" @click="emit('start')">{{ stage.startLabel }}</button></div>
+      <div class="start-row"><PcPaperButton type="button" class="build-link" @click="emit('openBuild')">{{ stage.buildLabel }}</PcPaperButton><PcPaperButton class="challenge" type="button" :disabled="stage.startDisabled" data-testid="stage-start-button" @click="emit('start')">{{ stage.startLabel }}</PcPaperButton></div>
     </template>
     <template v-else><h2 class="stage-title">{{ model.title }}</h2><p class="empty-line">{{ t('exploration.empty') }}</p></template>
     <p class="notice" role="status">{{ notice }}</p>

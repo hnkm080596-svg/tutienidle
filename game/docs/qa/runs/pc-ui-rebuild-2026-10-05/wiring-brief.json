@@ -1,0 +1,130 @@
+{
+  "taskId": "pc-ui-wiring-2026-10-05",
+  "generatedAt": "2026-10-05T05:06:14.059Z",
+  "policyHash": "aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d",
+  "routing": [
+    {
+      "lessonRef": "L-016@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-017@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-018@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-019@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-020@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-021@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-022@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    }
+  ],
+  "brief": {
+    "id": "BRIEF-pc-ui-wiring-2026-10-05",
+    "taskId": "pc-ui-wiring-2026-10-05",
+    "revision": 1,
+    "planningBaseline": {
+      "productStateId": "628cec604e46805cdebea89f4702d51f3f27aa2024bdf13e6ebcbfd96dd15765",
+      "contractId": "8511d9842c397be3862d3973aa3e87832a34d3cee4204ae7746369b5e2ab6682",
+      "attackModelId": "1fb26e9df53fba4041ee5dd7f16720275963f40cdfdab56c04d5cd5400c992ef",
+      "environmentId": "4ae56d539aacf148604501d42453d7afeb04771578f7c000c191ba7f587a35b8"
+    },
+    "policyHash": "aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d",
+    "requirementRefs": [
+      "docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-EXECUTION.md",
+      "docs/design/tien-hiep-ui-redesign-2026-10-05/SHARED-VISUAL-CONTRACT.md"
+    ],
+    "invariantIds": [
+      "LOGIC-UNCHANGED",
+      "APPROVED-VISUAL",
+      "REAL-CONSUMER",
+      "CONFLICT-ASK"
+    ],
+    "dependencyRefs": [],
+    "sourceDependencyHashes": [],
+    "expectedChangeSet": [
+      "src/components/scenes",
+      "src/components/panels",
+      "src/components/common",
+      "src/components/onboarding",
+      "src/assets",
+      "src/locales"
+    ],
+    "lessonRouting": [
+      {
+        "lessonRef": "L-016@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-017@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-018@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-019@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-020@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-021@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-022@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      }
+    ],
+    "slices": [
+      "entry-home",
+      "progression",
+      "collections",
+      "systems-outcomes"
+    ],
+    "firstProofObligations": [
+      {
+        "oracle": "Actual mounted production screen visual comparison and existing command outcome parity; preserve props/emits focus lifecycle. No static fixture data allowed in production.",
+        "admittedSlice": "all"
+      }
+    ],
+    "unresolvedAssumptions": [],
+    "readiness": "DRAFT",
+    "preflightEvidenceIds": [],
+    "deviations": [],
+    "consumedBy": [],
+    "checkpoints": [],
+    "finalConformanceIds": []
+  }
+}

@@ -1,0 +1,71 @@
+import { expect, test } from './fixtures'
+import { assertNoBrowserErrors, bootToGuestHome, collectBrowserErrors, createCharacterThroughUi, enterHome } from './helpers'
+
+const evidence = 'docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence'
+
+test('production collection pages preserve canonical navigation, bags and admitted workshops', async ({ page }) => {
+  test.setTimeout(120_000)
+  const errors = collectBrowserErrors(page)
+  await page.setViewportSize({ width: 1672, height: 941 })
+  await bootToGuestHome(page)
+  await createCharacterThroughUi(page, 'Thanh Vân Kho')
+  await enterHome(page)
+  await page.locator('.df-identity').click()
+  await expect(page.locator('.cf-scene .pc-paper-scene')).toBeVisible()
+  await expect(page.locator('.cf-name')).toContainText('Thanh Vân Kho')
+  await page.locator('.cf-stat__main').first().click()
+  await expect(page.locator('.cf-details')).toBeVisible()
+  await page.mouse.move(15, 110)
+  for (const [width, height] of [[1280,720], [1672,941], [1920,1080]]) {
+    await page.setViewportSize({ width: width!, height: height! })
+    await page.screenshot({ path: `${evidence}/wired-character-${width}.png` })
+    const panel = await page.locator('.cf-details').boundingBox()
+    expect(panel!.x + panel!.width).toBeLessThanOrEqual(width! + 1)
+    expect(panel!.y + panel!.height).toBeLessThanOrEqual(height! + 1)
+  }
+  await page.setViewportSize({ width: 1672, height: 941 })
+  await page.locator('.pc-paper-scene-actions > button').nth(1).click()
+  await page.locator('[data-nav-id="equipment"]').click()
+  await expect(page.locator('.equipment-scene .pc-paper-scene')).toBeVisible()
+  await page.locator('.equipment-workspace nav button').filter({ hasText: 'Cường Hóa' }).click()
+  await expect(page.locator('.qi-hall__slot-choice')).toHaveCount(6)
+  await page.screenshot({ path: `${evidence}/wired-enhance-1672.png` })
+  await page.locator('.equipment-workspace nav button').filter({ hasText: 'Túi Đồ' }).click()
+  await page.screenshot({ path: `${evidence}/wired-equipment-bag-1672.png` })
+  await page.locator('.pc-paper-scene-actions > button').nth(1).click()
+  await page.locator('[data-nav-id="inventory"]').click()
+  await expect(page.locator('.inventory-scene .bag-anchor')).toBeVisible()
+  for (const name of ['Nguyên Liệu', 'Đan Dược', 'Trang Bị']) {
+    await page.locator('.inventory-content > .toolbar button').filter({ hasText: name }).click()
+    await expect(page.locator('.inventory-content > .toolbar button').filter({ hasText: name })).toHaveAttribute('aria-pressed', 'true')
+  }
+  await expect(page.locator('.inventory-scene .bag-section__grid')).toHaveCSS('--grid-columns', '12')
+  await expect(page.locator('.inventory-scene .bag-section__grid > .bag-section__slot')).toHaveCount(48)
+  await page.screenshot({ path: `${evidence}/wired-inventory-1672.png` })
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.inventory-scene')).toHaveCount(0)
+  await page.locator('[data-df-navigation="quest"]').click()
+  await expect(page.locator('.quest-scene .pc-paper-scene')).toBeVisible()
+  await expect(page.locator('.quest-list-slot')).toBeVisible()
+  await page.screenshot({ path: `${evidence}/wired-quest-1672.png` })
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.quest-scene')).toHaveCount(0)
+  assertNoBrowserErrors(errors)
+})
+
+
+test('release-hidden artifact authoring mount keeps the single artifact and close contract', async ({ page }) => {
+  const errors = collectBrowserErrors(page)
+  await page.setViewportSize({ width: 1672, height: 941 })
+  await page.goto('/ui-secondary.html')
+  await page.locator('[data-preview-tab="artifact"]').click()
+  await expect(page.locator('.artifact-page .pc-paper-scene')).toBeVisible()
+  await expect(page.locator('.artifact-overview__name')).toHaveText('Ngũ Hành Châu')
+  await expect(page.locator('.artifact-path-cards__card')).toHaveCount(3)
+  await expect.poll(() => page.locator('.artifact-panel__focal').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0)
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: `${evidence}/wired-artifact-authoring-1672.png` })
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.artifact-page')).toHaveCount(0)
+  assertNoBrowserErrors(errors)
+})

@@ -1,0 +1,171 @@
+{
+  "baseline": "f8af8007b0b6519e6aa6997fedad2cc77939538a",
+  "assets": 23,
+  "legacyEntries": 43,
+  "structuralResult": "PASS",
+  "problems": [],
+  "checks": [
+    {
+      "id": "avatar-ring",
+      "bytes": 871466,
+      "sha256": "ded1cf52d28194798b37570355688b13ba22eeeacb7c8ebe97f653a566d44d06",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "building-plaque",
+      "bytes": 1511726,
+      "sha256": "c1e07345dc08937e5a41e4d55e5e002e8ee64e95e691ca078727379266edab29",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "button-primary",
+      "bytes": 2129758,
+      "sha256": "bc271e749503bff7b1471cd7ad7f0cd7acfa25273b60929d18cfa83b4b6d425c",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "button-secondary",
+      "bytes": 716242,
+      "sha256": "ce8502a196ce2decef30132a937c826226f139450b0ede19a7ac7f6aed6034da",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "ceremony-ribbon-red",
+      "bytes": 1020031,
+      "sha256": "f7fc38294882c63dbbbaf6fb2721daf3c781b143d393352e079c928be9814468",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "ceremony-ribbon",
+      "bytes": 1206025,
+      "sha256": "606ef905307291ca9c0c8b255f5fafbc053e0160f5da16f3bc7f49d48f30da4f",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "divider",
+      "bytes": 119579,
+      "sha256": "082bc0223095cdeae73fe5de926f169d68d2f02e37c79091b1cb7701da903af8",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "identity-plate",
+      "bytes": 1044518,
+      "sha256": "db7fef67db23f8b60d47d6f18bdb50c22513f5dfdb92590745daf01997c1376f",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "list-row",
+      "bytes": 1071021,
+      "sha256": "0c48cbacfd9cd07f34e4fdb18d214df774789ca9e39c4aeda44b2520d5fdef6c",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "navigation-rail",
+      "bytes": 650001,
+      "sha256": "0249c4267213fb19c775a50372c981ca18e02666e699dec73f819f77284e9d08",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "orb-frame",
+      "bytes": 681615,
+      "sha256": "4f21dacdee3ed558a842ebff04a264a72c9359a91724d40636843c3df2d59419",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "page-frame",
+      "bytes": 1628651,
+      "sha256": "23260b93c4205cbb7e02b62a3dc7aa41920bcb685541e32d20036730384ccbf0",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "panel-frame",
+      "bytes": 519175,
+      "sha256": "986df7003cd67b85dc11f4c32dbc8fc76e13d0a7ddf546c2dcb2f37f8b6d6813",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "paper-surface",
+      "bytes": 2465184,
+      "sha256": "27f9ea4a363032ee08cca480f2af057c152b1c07af52da2998076af9425211d1",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "power-ribbon",
+      "bytes": 1424991,
+      "sha256": "6575f69e6603a06be64b51a010475467753ca9dad00d755c6124b5e08cc26ad5",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "progress-track",
+      "bytes": 358825,
+      "sha256": "de874921406ec8ecf588a11e0544567746352bd8e6429caeca2b37867347f832",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "resource-pill",
+      "bytes": 1149862,
+      "sha256": "286ca2733d8663d65ccb748bd1c47cf3be6d5b362ebd2592b1f98133610f6e09",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "section-header",
+      "bytes": 912737,
+      "sha256": "0c5739e9ebcae4875abd82f62cd89b783335ea45292c59b5fc8cdef8f6e16308",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "slot-frame",
+      "bytes": 615936,
+      "sha256": "641380caf26eae73401ef013af488eb62cbe4466356c7d35bdd53b5c20c604ec",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "tab-plate",
+      "bytes": 1064474,
+      "sha256": "821f6e3151da1aa59e7347321913801fa35ad2b3a2f40037abc8ab4cb3314dc9",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "text-field",
+      "bytes": 1039113,
+      "sha256": "89704260dba66222fe37f369f67132db1ff43667c13a04687abebbc2c859746b",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "title-plaque",
+      "bytes": 869609,
+      "sha256": "9187f46e777cb3dee71d202c6440a895f3609dc96888ffaa543352018c20b841",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    },
+    {
+      "id": "world-vista",
+      "bytes": 3068429,
+      "sha256": "4e4deba5144aebdc6f404937f3b4f75f7794a9f59b8903f9d07d291551209c05",
+      "sourceRect": "PASS",
+      "alpha": "PASS"
+    }
+  ],
+  "productionWiring": "NOT PERFORMED - assigned to next agent"
+}

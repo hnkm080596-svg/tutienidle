@@ -39,8 +39,8 @@ describe('ink-wash large surfaces', () => {
     const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!
 
     expect(dialog.getAttribute('aria-modal')).toBe('true')
-    expect(dialog.querySelector('[data-hk-slice="surface-m-panel"]')).not.toBeNull()
-    expect(dialog.querySelector('[data-hk-slice="frame-m-modal"]')).not.toBeNull()
+    expect(dialog.querySelector('.pc-paper-chrome')).not.toBeNull()
+    expect(dialog.querySelector('.pc-paper-scene__frame')).not.toBeNull()
     overlay.click()
     expect(onClose).toHaveBeenCalledTimes(1)
   })
@@ -52,8 +52,8 @@ describe('ink-wash large surfaces', () => {
     for (const source of [victorySurfaceSource, defeatSource]) {
       // XL scroll surface migrated to the Huyen Kim chrome registry;
       // the ceremony frame stays on the legacy ink-wash asset id.
-      expect(source).toContain('chrome-id="surface-xl-scroll"')
-      expect(source).toContain('asset-id="frame-xl-ceremony"')
+      expect(source).toContain('<PcPaperChrome />')
+      expect(source).not.toContain('asset-id="frame-xl-ceremony"')
     }
     expect(confirmSource).toContain("emit('confirm')")
     expect(victorySource).toContain('startAutoRefightCountdown')

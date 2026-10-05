@@ -1,0 +1,7 @@
+{
+  "revision": "pc-ui-rebuild-1",
+  "invariants": ["UI-OWNER-PRESERVATION", "UI-PC-READABILITY", "UI-ALPHA-EXTERIOR", "UI-CLICK-WHEEL"],
+  "operators": ["repeat open-close", "Tab focus traversal", "Escape dismissal", "formation DragEvent drop", "filtered beta action rejection", "minimum PC viewport", "composited contrast", "PNG alpha", "archived producer refusal"],
+  "sources": ["tests/e2e/tien-hiep-pc-ui.spec.ts", "docs/design/tien-hiep-ui-redesign-2026-10-05/INDEPENDENT-AUX-REVIEW.md"],
+  "missing": ["full paid transaction runtime coverage", "qualified comparative prevention detector pilot"]
+}

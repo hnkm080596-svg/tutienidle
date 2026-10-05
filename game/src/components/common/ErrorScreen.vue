@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import PcPaperChrome from './PcPaperChrome.vue'
 import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
 import { useErrorStore } from '@/stores/error'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
@@ -130,8 +130,9 @@ async function exportDiagnostics() {
 <template>
   <div v-if="errorStore.current" class="error-screen" :style="{ zIndex: OVERLAY_LAYERS.appError }">
     <div class="error-screen__panel paper-on-dark">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+
+      <PcPaperChrome />
+
 
       <div class="error-screen__scroll">
         <h2 class="error-screen__title">{{ t('errors.app.title') }}</h2>

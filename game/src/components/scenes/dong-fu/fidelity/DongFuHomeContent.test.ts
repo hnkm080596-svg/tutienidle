@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest'
 import { createApp, defineComponent, h } from 'vue'
 import { i18n } from '@/i18n'
+import { createPinia } from 'pinia'
 import DongFuHomeContent from './DongFuHomeContent.vue'
 import type { DongFuUiBuilding, DongFuUiModel } from './dongFuUi'
 
@@ -56,11 +57,31 @@ function mountContent(model: DongFuUiModel) {
   })
   const app = createApp({ render: () => h(Root) })
   app.use(i18n)
+  app.use(createPinia())
   app.mount(container)
   return { container, emitted, unmount: () => app.unmount() }
 }
 
 describe('DongFuHomeContent building plaque upgrade affordance', () => {
+  it('keeps every admitted action reachable from the home rail while the wheel is closed', () => {
+    const model = makeModel([])
+    model.actions = [
+      { id: 'character', labelKey: 'panels.wheel.slots.character', symbol: 'character' },
+      { id: 'skill', labelKey: 'panels.wheel.slots.skill', symbol: 'skill' },
+      { id: 'formation_slot', labelKey: 'panels.wheel.slots.formation_slot', symbol: 'realm', disabledReason: 'Locked' },
+    ]
+    const mounted = mountContent(model)
+    const actions = [...mounted.container.querySelectorAll<HTMLButtonElement>('[data-df-navigation]')]
+    expect(actions.map((action) => action.dataset.dfNavigation)).toEqual(['character', 'skill', 'formation_slot'])
+    actions[0]!.click()
+    expect(mounted.emitted.action).toEqual(['character'])
+    // Eligibility stays with the host owner; a locked intent carries its original id.
+    expect(actions[2]!.getAttribute('aria-disabled')).toBe('true')
+    actions[2]!.click()
+    expect(mounted.emitted.action).toEqual(['character', 'formation_slot'])
+    mounted.unmount()
+  })
+
   it("badge 'upgrade' -> gold arrow button; click emits 'upgrade' only", () => {
     const mounted = mountContent(makeModel([makeBuilding('upgrade')]))
     const chip = mounted.container.querySelector<HTMLElement>('.df-building__upgrade')

@@ -13,8 +13,10 @@ const anchors = computed(() => realmMapAnchors.slice(0, Math.max(0, Math.min(pro
 </script>
 <template>
   <div class="realm-map">
-    <img class="realm-map-art" :src="art" alt="">
-    <button v-for="(anchor, index) in anchors" :key="index" class="realm-marker" :class="{ major: (index + 1) % 3 === 0, reached: index + 1 <= current, current: index + 1 === current, selected: index + 1 === selected }" :style="{ left: `${anchor[0]}%`, top: `${anchor[1]}%` }" :aria-label="t('realm.floorLabel', { floor: index + 1 })" :aria-pressed="selected === index + 1" :aria-current="index + 1 === current ? 'step' : undefined" @click="emit('select', index + 1)">{{ index + 1 }}</button>
+    <div class="realm-floor-rail">
+    <button v-for="(_, index) in anchors" :key="index" class="realm-marker" :class="{ major: (index + 1) % 3 === 0, reached: index + 1 <= current, current: index + 1 === current, selected: index + 1 === selected }" :aria-label="t('realm.floorLabel', { floor: index + 1 })" :aria-pressed="selected === index + 1" :aria-current="index + 1 === current ? 'step' : undefined" @click="emit('select', index + 1)">{{ index + 1 }}</button>
+    </div>
+    <div class="realm-map-path"><img class="realm-map-art" :src="art" alt=""></div>
   </div>
 </template>
 <style scoped>

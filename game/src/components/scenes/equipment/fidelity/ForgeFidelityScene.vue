@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {useI18n} from 'vue-i18n'
+import '@/assets/tien-hiep-forge.css'
 import ForgeFidelityWorkspace from './ForgeFidelityWorkspace.vue'
 export interface ForgeItemDisplay{id:string;name:string;icon:string}
 defineProps<{mode:string;items:readonly ForgeItemDisplay[];item:ForgeItemDisplay}>()
