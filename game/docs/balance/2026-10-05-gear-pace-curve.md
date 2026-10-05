@@ -74,16 +74,22 @@ maxQuality)`. `rollItemQuality` bo quality tren tran khoi bang trong
 so va renormalize (khong don xac suat len tran).
 
 ### 2b. Tier affix roll nghieng ve tier thap — `AFFIX_TIER_ROLL_WEIGHT`
-t1..t5 = 10/6/3/2/1 (truoc: deu trong cac tier hop le)
+t1..t5 = 7/5/3/2/1 (truoc: deu trong cac tier hop le; ban dau de
+10/6/3/2/1 nhung khi merge voi stat-wall ladder cua worker quai,
+pinned early-loop seed 11 khong qua duoc mortal_dong_9 — giam xuong
+7/5/3/2/1 giu nguyen huong nghieng-thap nhung du dau ra power cho
+wall; xem them flag 6)
 
 Phan phoi tier do duoc theo quality (roll khong tran, qi L10):
 
 | quality | t1 | t2 | t3 | t4 | t5 |
 |---|---|---|---|---|---|
 | hoang | 100% | - | - | - | - |
-| huyen | 64.3% | 35.7% | - | - | - |
-| dia | 50.9% | 33.5% | 15.7% | - | - |
-| thien | 50.7% | 31.9% | 16.5% | 0.9% | - |
+| huyen | 58.3% | 41.7% | - | - | - |
+| dia | 46.7% | 33.3% | 20.0% | - | - |
+| thien | 46.7% | 33.3% | 20.0%* | 0.9% | - |
+
+*thien dieu kien: t4 chi 4/19 affix co pool; ti le t3 theo trong so.
 
 Y nghia: item "cap tran" cua 1 band (vd dia o floor 4-6) thuong ra
 tier thap — san them drop trong cung band moi day tier len. San affix
@@ -138,6 +144,12 @@ RIENG — chu yeu wall duoc ganh boi truc enhance (x1.3..x1.9 o +5..+15).
    canh tranh duoc truc gear — chi phi cap la surface worker khac;
    neu muon The Tu la truc song song, can tang baseGains (data/realm
    /BodyRefinement.ts dang ghi "P7-M-F PLACEHOLDER"). Flag, khong sua.
+6. **Affix-weight margin rat mong.** Merge voi stat-wall ladder (qua
+   commit 0848268d cua worker quai): pinned early-loop seed 11 qua
+   mortal_dong_9 voi weight 7/5/3/2/1, FAIL voi 8/5/3/2/1 (da do
+   truc tiep). Neu worker quai day statScale cao hon nua, dau ra gear
+   cua toi can noi ve phia deu hon — hoac Minh quyet dinh wall dong_9
+   dung la doi hoi affix tier cao hon nua va chap nhan grind sau hon.
 
 ## 5. Scope
 

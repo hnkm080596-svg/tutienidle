@@ -92,7 +92,11 @@ describe('ItemQuality balance tables', () => {
   // affixes keeps demanding drops inside a band. Strictly decreasing,
   // normalized weights per tier index.
   it('weights affix tier rolls toward low tiers', () => {
-    expect(AFFIX_TIER_ROLL_WEIGHT).toEqual({ 1: 10, 2: 6, 3: 3, 4: 2, 5: 1 })
+    // 7/5/3/2/1 (was 10/6/3/2/1 at first cut): still low-weighted but
+    // merged with the stat-wall ladder the pinned early loop only
+    // clears mortal_dong_9 under the gentler curve - steeper ratios
+    // starve the wall.
+    expect(AFFIX_TIER_ROLL_WEIGHT).toEqual({ 1: 7, 2: 5, 3: 3, 4: 2, 5: 1 })
     const weights = [1, 2, 3, 4, 5].map((tier) => AFFIX_TIER_ROLL_WEIGHT[tier]!)
     for (let index = 1; index < weights.length; index += 1) {
       expect(weights[index]!).toBeLessThan(weights[index - 1]!)

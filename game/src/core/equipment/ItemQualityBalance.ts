@@ -127,8 +127,8 @@ export function itemQualityCeilingForFloor(floor: number | undefined): ItemQuali
 // initial roll consumes this table; wash keeps its own per-quality weights
 // (RefinementBalance.ts) and exalted affixes roll at a fixed tier.
 export const AFFIX_TIER_ROLL_WEIGHT: Readonly<Record<number, number>> = {
-  1: 10,
-  2: 6,
+  1: 7,
+  2: 5,
   3: 3,
   4: 2,
   5: 1,

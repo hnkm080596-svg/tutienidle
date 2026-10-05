@@ -90,7 +90,26 @@ Exclusions: none beyond OCR's own doc exclusion.
 - Note: if a future production path grants drops without stage context it must
   pass floor explicitly — recorded as balance-doc flag #4.
 
-### QA-2026-10-05-003: early-floors dissolve income drops
+### QA-2026-10-05-003: affix weight 10/6/3/2/1 starved the merged stat-wall journey
+- Severity: Medium
+- Status: Confirmed — fixed inside this task (weight softened to 7/5/3/2/1)
+- Invariant: pacing composition — after merging the stage-wall worker's
+  statScale ladder (0848268d), the pinned canonical early loop must
+  still clear mortal_dong_9.
+- Preconditions: merge base 0848268d (per-floor statScale ladder).
+- Reproduction: `npx vitest run src/core/simulation/earlygame/
+  EarlyGameSession.test.ts` on merged HEAD → canonical loop fails at
+  step 12 (mortal_dong_9, 8 attempts).
+- Expected: failedAt null.
+- Actual (pre-fix): failedAt=12. Bisected: ceiling alone + uniform
+  tiers passes; the 10/6/3/2/1 tier reweight is the power loss.
+  8/5/3/2/1 also fails; 7/5/3/2/1 passes (margin thin, flagged).
+- Evidence: deterministic same-seed repros on merged state.
+- Test file: existing pin (journey test is the oracle; no new test).
+- Owner subsystem: equipment roll balance tables.
+- Blast radius: any future statScale raise re-touches this margin.
+
+### QA-2026-10-05-004: early-floors dissolve income drops
 - Severity: Low
 - Status: Suspected (economic side effect, other worker's surface)
 - Invariant: conservation of essence income is intentionally changed by the
