@@ -12,7 +12,7 @@ import {
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow, TU_LINH_TRAN_DURATION_MS } from '../core/economy/TuLinhTranBalance'
-import { buildGameSave, computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
+import { buildGameSave, computeRestoreIdentity, restoreAuthorityNowMs, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
@@ -319,12 +319,7 @@ export const usePlayerStore = defineStore('player', {
       // clamp anchors at is the server-approved window end, not the
       // client clock - a slow local clock would underpay an approved
       // span, a fast one must not pay past approval.
-      const authorityNowMs =
-        timeAuthority?.kind === 'cold-boot'
-          ? timeAuthority.untilMs
-          : timeAuthority?.kind === 'live-replacement'
-            ? timeAuthority.nowMs
-            : Date.now()
+      const authorityNowMs = restoreAuthorityNowMs(timeAuthority)
 
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x

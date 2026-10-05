@@ -144,7 +144,7 @@ export class QuestManager {
    * copy: the payload is a value, so mutating it afterwards must not
    * leak into live state (A3).
    */
-  restore(state: QuestManagerState): void {
+  restore(state: QuestManagerState, nowMs: number = Date.now()): void {
     // Mission A3 defense-in-depth: normalize instead of trusting the
     // declared shape - a payload that bypassed the validator (active as
     // a string, non-finite reset marker) must not crash consumers.
@@ -184,7 +184,10 @@ export class QuestManager {
           // reset forever (dayBucket(now) <= dayBucket(future) always).
           // Clamp to now - the honest direction ("just reset") denies
           // the exploit, unlike 0 which would grant a free reset.
-          ? Math.min(state.lastDailyResetAtMs, Date.now())
+          // r14-INT-6: callers under a remote time authority pass their
+          // approved anchor as nowMs so the clamp measures the same
+          // clock the restore window was authorized on.
+          ? Math.min(state.lastDailyResetAtMs, nowMs)
           : 0,
 
       // Same normalize contract as completedOnceIds - type-filter plus

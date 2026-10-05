@@ -138,7 +138,9 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
 
     expect(result.status).toBe('ok')
     // 200s authorized - NOT the 900s a lastSavedAt read would mint.
-    expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 200)
+    // The settle clock is the approved window end (lastSavedAt+200s),
+    // not the machine now.
+    expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 200, NOW - 700_000)
     // The alchemy settle bound sits inside the payload's own epoch:
     // lastSavedAt + elapsed, identical to legacy positioning.
     expect(alchemySpy).toHaveBeenCalledWith(
@@ -171,8 +173,8 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
 
     expect(result.status).toBe('ok')
     // Queue restored, zero-accrual settle: re-anchor, never catch up the
-    // paused window.
-    expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 0)
+    // paused window. Anchor = the snapshot end (lastSavedAt+0).
+    expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 0, NOW - 900_000)
     expect(decomposeSpy).not.toHaveBeenCalled()
     // settleNowMs = lastSavedAt + 0 => jobs complete only at the snapshot.
     expect(alchemySpy).toHaveBeenCalledWith(

@@ -265,6 +265,19 @@ export type RestoreTimeAuthority =
   | { kind: 'cold-boot'; sinceMs: number; untilMs: number }
   | { kind: 'live-replacement'; nowMs: number }
 
+/**
+ * The "now" every forward clamp during a restore anchors at - the
+ * union's contract (cold-boot => server-approved window end,
+ * live-replacement => snapshot now, undefined => legacy client clock).
+ */
+export function restoreAuthorityNowMs(timeAuthority?: RestoreTimeAuthority): number {
+  return timeAuthority?.kind === 'cold-boot'
+    ? timeAuthority.untilMs
+    : timeAuthority?.kind === 'live-replacement'
+      ? timeAuthority.nowMs
+      : Date.now()
+}
+
 export interface GameSessionPlayerOwner {
   readonly $state: PlayerData
 

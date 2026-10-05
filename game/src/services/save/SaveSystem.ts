@@ -9,6 +9,7 @@ import type {
   RestoreGameSessionResult,
   RestoreTimeAuthority,
 } from './saveTypes'
+import { restoreAuthorityNowMs } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { exportFilename, type ExportProvenance } from './recoveryApi'
 import {
@@ -301,7 +302,10 @@ export function restoreGameSession(
     // session seam (khong phai restoreFromSave) de giu contract
     // "moi slice = replacement thuan" cua M1; moi duong load save thuc
     // deu di qua day. Idempotent - retry cung payload khong them lan 2.
-    gameManager.buildingOps.reconcileBuildings(player.$state, Date.now() / 1000)
+    // r14-INT-6: anchor the building-reconcile clock at the approved
+    // authority, not the machine clock - under cold-boot a slow local
+    // clock would clamp lastCollectedAt short of the granted window.
+    gameManager.buildingOps.reconcileBuildings(player.$state, restoreAuthorityNowMs(timeAuthority) / 1000)
 
     player.setEquipmentModifiers(equipmentModifiers)
 

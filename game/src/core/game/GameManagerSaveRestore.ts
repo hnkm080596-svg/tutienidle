@@ -24,7 +24,7 @@ import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import { applyAllBodyModifiers } from '../realm/body/BodyProgressionSystem'
 import type { StatModifier } from '../stats/StatCalculator'
-import { computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
+import { computeRestoreIdentity, restoreAuthorityNowMs, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
 import { assertSaveAcceptable } from '../../services/save/saveAcceptance'
 import { NotificationQueue } from './NotificationQueue'
 import { calculateOfflineTime } from '../idle/GameClock'
@@ -64,7 +64,7 @@ export interface GameManagerSaveRestoreDeps {
   getWorkerAssignments: () => Map<string, number>
   // Auto-farm Task 5 (2026-09-04) - offline catch-up closure (logic song
   // tren GameManager, SaveRestore chi goi lai - cung pattern tren).
-  settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
+  settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number, settleNowMs: number) => void
   // Mission B audit - the persisted farm lease must also RE-ACQUIRE the
   // StageManager slot at restore; settle alone leaves the slot free while
   // persisted state stays armed.
@@ -343,6 +343,7 @@ export class GameManagerSaveRestore {
 
     this.deps.questManager.restore(
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
+      restoreAuthorityNowMs(timeAuthority),
     )
 
     // Production (plan S4.3) - restore state + offline settle tuan tu
@@ -397,12 +398,7 @@ export class GameManagerSaveRestore {
     // server-approved window end (untilMs), not the client clock - a
     // slow local clock would otherwise underpay the offline span the
     // server already granted (and a fast one must not pay past it).
-    const authorityNowMs =
-      timeAuthority?.kind === 'cold-boot'
-        ? timeAuthority.untilMs
-        : timeAuthority?.kind === 'live-replacement'
-          ? timeAuthority.nowMs
-          : Date.now()
+    const authorityNowMs = restoreAuthorityNowMs(timeAuthority)
     const settleNowMs = Math.min(
       (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
       authorityNowMs,
@@ -443,14 +439,14 @@ export class GameManagerSaveRestore {
         // Auto-farm Task 5 (2026-09-04) - NGOAI LE DUY NHAT combat nhan
         // reward offline: roll cac chu ky auto-farm da troi trong cua so
         // offline (cung gate >60s voi Production catch-up).
-        this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
+        this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds, settleNowMs)
       } else if (offlinePlayer.autoFarmStage) {
         // Re-anchor an armed farm on EVERY restore that skipped the
         // settle (elapsed <= 60s AND live-replacement alike - r12-COR).
         // Without this, a crafted stale lastCheckedMs survives to the
         // next tick and mints the gap at LIVE rate (2x the offline
         // settle) - the anchor bound only guards the settle path.
-        this.deps.settleAutoFarmOffline(offlinePlayer, 0)
+        this.deps.settleAutoFarmOffline(offlinePlayer, 0, settleNowMs)
       }
 
       // Mission B audit - re-acquire the StageManager lease for a persisted

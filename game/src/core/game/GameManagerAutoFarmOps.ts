@@ -211,7 +211,11 @@ export class GameManagerAutoFarmOps {
    * - cycleSeconds <= 0 / non-finite -> safe no-op (blocks Infinity cycles
    *   from malformed saves - evidence: infinite-loop timeout in tests).
    */
-  settleAutoFarmOffline(player: PlayerData, elapsedOfflineSeconds: number): void {
+  settleAutoFarmOffline(
+    player: PlayerData,
+    elapsedOfflineSeconds: number,
+    settleNowMs: number = Date.now(),
+  ): void {
     const autoFarm = player.autoFarmStage
 
     if (!autoFarm) {
@@ -253,7 +257,12 @@ export class GameManagerAutoFarmOps {
     // settle ~0 cycles - the anchor already consumed the window - so a
     // mid-settle failure can only underpay, never double-pay. Honest
     // windows are unaffected: a running farm's anchor tracks now.
-    const now = Date.now()
+    // r14-INT-1: `now` is the caller's authority anchor, not the local
+    // clock - under cold-boot the window is server-approved untilMs, so
+    // a slow local clock measuring Date.now() would shrink the payable
+    // tail the server already granted (other settle channels were
+    // plumbed the same anchor in r13).
+    const now = settleNowMs
     if (
       !Number.isFinite(autoFarm.lastCheckedMs) ||
       autoFarm.lastCheckedMs < 0 ||
