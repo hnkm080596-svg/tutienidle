@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import LoginScrollCard from '@/components/scenes/login/LoginScrollCard.vue'
-import LoginLogoBlock from '@/components/scenes/login/LoginLogoBlock.vue'
 import LoginLocaleChips from '@/components/scenes/login/LoginLocaleChips.vue'
 import AuthModeTabs from '@/components/scenes/login/AuthModeTabs.vue'
 import AuthCredentialForm from '@/components/scenes/login/AuthCredentialForm.vue'
 import LoginUpgradeSection from '@/components/scenes/login/LoginUpgradeSection.vue'
-import AuthSecondaryActions from '@/components/scenes/login/AuthSecondaryActions.vue'
+import LoginOpening from '@/components/scenes/login/LoginOpening.vue'
+import LoginSideDrawer from '@/components/scenes/login/LoginSideDrawer.vue'
+import LoginSettingsContent from '@/components/scenes/login/LoginSettingsContent.vue'
+import '@/assets/tien-hiep-entry.css'
 import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
 import { readResumeCandidate, consumeResetNotice, type ResumeCandidate } from '@/composables/resumeSession'
@@ -23,6 +24,14 @@ const loginId = ref('')
 const password = ref('')
 const submitting = ref(false)
 const error = ref('')
+const drawer = shallowRef<'auth' | 'settings' | null>(null)
+
+function revealAuthentication(nextMode: 'login' | 'register') {
+  if (submitting.value) return
+  mode.value = nextMode
+  error.value = ''
+  drawer.value = 'auth'
+}
 
 const { t } = useI18n()
 
@@ -128,12 +137,20 @@ function submit() {
 function startGuest() {
   requireAccountSwitchAck(() => void authenticate('guest'))
 }
+
+function playOrContinue() {
+  if (!resumeReady.value || submitting.value) return
+  if (resume.value) void continueSaved()
+  else startGuest()
+}
 </script>
 
 <template>
-  <main class="auth-screen" data-testid="auth-screen" data-hk-scene="login">
-    <LoginScrollCard>
-      <LoginLogoBlock />
+  <main class="auth-screen th-entry-scene" data-testid="auth-screen" data-hk-scene="login">
+    <LoginOpening :resume-available="Boolean(resume)" :ready="resumeReady" :busy="submitting" :error="drawer === null ? error : ''"
+      @authenticate="revealAuthentication" @play="playOrContinue" @settings="drawer = 'settings'" />
+    <LoginSideDrawer :open="drawer !== null" :busy="submitting" :title="drawer === 'settings' ? t('paperNav.settings') : t(`onboarding.auth.tabs.${mode}`)" @close="drawer = null">
+      <template v-if="drawer === 'auth'">
       <AuthModeTabs v-model="mode" />
       <AuthCredentialForm
         v-model:login-id="loginId"
@@ -147,15 +164,10 @@ function startGuest() {
         @submit="submit"
       />
       <LoginUpgradeSection :resume-ready="resumeReady" :stored-guest-session="storedGuestSession" />
-      <AuthSecondaryActions
-        :resume="resume"
-        :resume-ready="resumeReady"
-        :submitting="submitting"
-        @continue="continueSaved"
-        @guest="startGuest"
-      />
-      <template #footer><LoginLocaleChips /></template>
-    </LoginScrollCard>
+      <LoginLocaleChips />
+      </template>
+      <LoginSettingsContent v-else-if="drawer === 'settings'" />
+    </LoginSideDrawer>
 
     <!-- B1.8 cross-account acknowledgement: leaving the stored guest
          session is an explicit user choice, never automatic. -->

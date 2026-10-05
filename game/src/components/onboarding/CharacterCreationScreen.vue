@@ -6,18 +6,16 @@ import { isValidCharacterName } from '@/services/character/CharacterCreationServ
 import type { TalentDefinition } from '@/core/talent/Talent'
 import type { RemoteCharacterMetadata } from '@/services/session/BackendStatus'
 import { useAudioStore } from '@/stores/audio'
-import CreationSceneLayout from '@/components/scenes/creation/CreationSceneLayout.vue'
-import CreationBackButton from '@/components/scenes/creation/CreationBackButton.vue'
-import CreationScrollShell from '@/components/scenes/creation/CreationScrollShell.vue'
-import CreationTitleBlock from '@/components/scenes/creation/CreationTitleBlock.vue'
+import PcPaperScene from '@/components/common/PcPaperScene.vue'
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import CreationNameSection from '@/components/scenes/creation/CreationNameSection.vue'
 import CreationTalentSection from '@/components/scenes/creation/CreationTalentSection.vue'
 import CreationStarterSlot from '@/components/scenes/creation/CreationStarterSlot.vue'
-import CreationFooter from '@/components/scenes/creation/CreationFooter.vue'
 import { CREATION_SKILL_PREVIEW } from '@/components/scenes/creation/creationPreview'
+import '@/assets/tien-hiep-entry.css'
 
 // The committed creation contract remains name + talent only.
-// Starter tiles are a read-only visual preview until the gameplay hookup.
+// Beta grants Linh Bao; the other starter tiles remain locked previews.
 // The talent offer list still arrives from the existing service.
 export interface CharacterCreationPayload {
   name: string
@@ -103,30 +101,20 @@ onMounted(() => { void reroll() })
 </script>
 
 <template>
-  <CreationSceneLayout>
-    <template #scroll>
-      <CreationScrollShell>
-        <template #back><CreationBackButton :disabled="creating" @back="emit('back')" /></template>
-        <CreationTitleBlock />
+    <PcPaperScene :title="t('onboarding.creation.headerTitle')" class="pc-creation-screen" data-testid="character-creation-screen" data-hk-scene="creation">
+      <section class="pc-creation-content">
         <CreationNameSection v-model="name" :valid-name="validName" :disabled="creating" />
-        <CreationTalentSection
-          :talents="talents"
-          :selected-ids="selectedTalentIds"
-          :rolling="rolling"
-          :error="error"
-          :creating="creating"
-          @toggle="toggleTalent"
-          @reroll="reroll"
-        />
         <CreationStarterSlot :options="CREATION_SKILL_PREVIEW" />
-        <CreationFooter
-          :ready="ready"
-          :creating="creating"
-          :summary="summary"
-          :error="talents.length > 0 ? error : ''"
-          @finish="finish"
-        />
-      </CreationScrollShell>
-    </template>
-  </CreationSceneLayout>
+        <CreationTalentSection :talents="talents" :selected-ids="selectedTalentIds" :rolling="rolling" :error="error" :creating="creating" @toggle="toggleTalent" @reroll="reroll" />
+        <div class="pc-creation-feedback" aria-live="polite" aria-atomic="true">
+          <p v-if="talents.length > 0 && error" class="creation-footer__error">{{ error }}</p>
+          <p v-else-if="ready" data-testid="creation-summary">{{ summary }}</p>
+        </div>
+        <p class="pc-creation-preview">{{ t('onboarding.creation.starterSlot.previewNote') }}</p>
+        <footer class="pc-creation-actions">
+          <PcPaperButton variant="secondary" :disabled="creating" @click="emit('back')">{{ t('onboarding.creation.back') }}</PcPaperButton>
+          <PcPaperButton :aria-disabled="!ready || creating" data-testid="creation-finish" @click="finish">{{ creating ? t('onboarding.creation.creating') : t('onboarding.creation.finish') }}</PcPaperButton>
+        </footer>
+      </section>
+    </PcPaperScene>
 </template>
