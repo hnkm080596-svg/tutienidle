@@ -247,3 +247,22 @@ All confirmed Medium-or-higher findings fixed and verified: `npm run type-check`
 ## Wave-6 disposition
 
 All confirmed Medium-or-higher findings fixed: type-check clean; scoped vitest green (incl. 3 new resume-budget pins + 4-code parametric arm-gate pin); live spec W6-COR-1 3/3 on staging; migration 202610070002 applied to staging AND beta. Low/Nit excepted per threshold. Wave-7 confirmation trio audits the delta.
+
+---
+
+## Wave 7 adjudication (delta 1bd0763f..cc4a51e7)
+
+### AUT (fixpoint-codex-w7-AUT.md) — FINDINGS 8 (1 Medium / 5 Low / 2 Nit)
+
+| ID | Sev | Disposition |
+|---|---|---|
+| W7-AUT-1 | Medium | FIXED: gate -> blacklist `NON_DATA_WEDGE_CODES` (auth/transport/protocol/config excluded; SERVER_ERROR+HTTP-refuse+uncoded arm; first-write row is vacuous) + parametric pins split @fc4e8b43 |
+| W7-AUT-2 | Low | FIXED: `resumeFailureStreak=0` in `beginChecking` + `acknowledge` + pin @fc4e8b43 |
+| W7-AUT-3 | Low | FIXED: catch-path escalation gated `generation === this.generation` + pin @fc4e8b43 |
+| W7-AUT-4 | Low | FIXED: `markReady` inside resume try (local+remote); dep throws -> 'unavailable' class @fc4e8b43 |
+| W7-AUT-5 | Low | FIXED: error-path `curtain.open` bounded by `DEADLINES.curtainOpen` (closes last wedge path for inFlightPromise) @fc4e8b43 |
+| W7-AUT-6 | Low | FIXED: throwing `deps.reconnect` shares the budget streak @fc4e8b43 |
+| W7-AUT-7 | Nit | VALID-NO-ACTION: `markFailed('recovery')` still needed — under blacklist a non-'recovery' mapping (e.g. SERVER_ERROR->'reconnecting') must be terminated explicitly |
+| W7-AUT-8 | Nit | FIXED: comment corrected |
+
+### COR / INT — pending
