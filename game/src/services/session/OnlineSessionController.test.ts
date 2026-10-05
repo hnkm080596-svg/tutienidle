@@ -511,4 +511,60 @@ describe('OnlineSessionController — local-only mode', () => {
     expect(controller.authorityState).toBe('ready')
     expect(failures).toBe(3) // 2 throws + the successful third call
   })
+
+  it('a fresh admission owns a fresh resume-failure budget (W7-AUT-2)', async () => {
+    // Two throwing resumes in admission 1 -> acknowledge -> new
+    // admission: one throw must NOT escalate - the streak resets at
+    // beginChecking, otherwise the new session inherits the old one's
+    // runway debt.
+    const { controller } = makeHarness({
+      reconnect: async () => ({ status: 'resumed' as const, lineage: 'same' as const }),
+      onResume: () => {
+        throw new Error('broken restore')
+      },
+    })
+    controller.beginChecking()
+    controller.markReady()
+    controller.pause('suspend')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    controller.resumeFromSuspend()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    // streak = 2, one short of the budget
+    expect(controller.authorityState).toBe('reconnecting')
+
+    controller.acknowledge()
+    controller.beginChecking()
+    controller.markReady()
+    controller.suspend()
+    controller.resumeFromSuspend()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(controller.authorityState).toBe('reconnecting') // streak 1, not 3
+  })
+
+  it('an onResume that parks the session then throws is not dragged back to recovery (W7-AUT-3)', async () => {
+    // The escalation shares the success path's generation fence: a
+    // resume that called markFailed (bumping generation) before throwing
+    // keeps its own terminal state - 'revoked' must not be clobbered to
+    // 'recovery' by the catch-path budget.
+    let parked = false
+    const { controller } = makeHarness({
+      reconnect: async () => ({ status: 'resumed' as const, lineage: 'same' as const }),
+      onResume: () => {
+        if (!parked) {
+          parked = true
+          controller.markFailed('SESSION_REVOKED') // generation++
+        }
+        throw new Error('broken restore')
+      },
+    })
+    controller.beginChecking()
+    controller.markReady()
+    controller.pause('suspend')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // The resume parked the session 'revoked' inside its own call and
+    // then threw: the catch-path escalation must NOT un-park it.
+    expect(controller.authorityState).toBe('revoked')
+  })
 })

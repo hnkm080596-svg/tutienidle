@@ -35,6 +35,20 @@ import { recordSaveOutcome } from '../services/diagnostics/recordSaveOutcome'
  *    chay SAU onBeforeUnmount(stopAll) - listener-driven callers thi da bi
  *    go het roi nen khong co stale persist nao toi duoc do.
  */
+/** First-write failure codes whose remedy is NOT remote destruction:
+ *  auth/transport/protocol/config faults have their own terminal
+ *  surfaces (observeSaveResult routes them); arming a reset affordance
+ *  there offers a remedy that cannot help. Every other permanent refuse
+ *  class wedges the account and is armed - see the firstSave gate. */
+const NON_DATA_WEDGE_CODES: ReadonlySet<BackendErrorCode> = new Set([
+  'NETWORK_UNAVAILABLE',
+  'SESSION_REVOKED',
+  'AUTH_EXPIRED',
+  'PROTOCOL_OUTDATED',
+  'MAINTENANCE',
+  'CONFIGURATION_ERROR',
+])
+
 export interface UseAppLifecycleDeps {
   clock: { start: () => void; stop: () => void; nowSeconds: () => number }
   /** Tuong thich window.setInterval - inject de test kiem soat timer. */
@@ -614,20 +628,23 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         if (firstSave.status !== 'ok') {
           authority.observeSaveResult(firstSave)
           recordSaveOutcome(firstSave, 'boot-first-save')
-          // A permanent first-write rejection wedges the account ONLY
-          // when the authoritative side refused the starter snapshot -
-          // every boot re-lands CHARACTER_UNINITIALIZED -> same reject.
-          // Gate on the payload-reject codes: SAVE_INVALID/SAVE_TOO_LARGE
-          // are the server's deterministic "this data can never commit";
-          // other !retryable classes (lost-ACK transport, session
-          // revoked, protocol outdated) never proved the remote row bad,
-          // so arming remote destruction there would offer the wrong
-          // remedy on a healthy account. observeSaveResult above already
-          // classified those into their own terminal states.
+          // A permanent first-write failure wedges the account whenever
+          // the refusal is data-class: every boot re-lands
+          // CHARACTER_UNINITIALIZED -> same refuse, and the generic error
+          // surface has no reset affordance. The arm is a blacklist, not
+          // a payload-code whitelist (W7-AUT-1): on a first write the
+          // character row is FRESH - it holds no saves yet - so a false-
+          // positive reset destroys nothing while a false-negative wedges
+          // permanently. The only exclusions are classes whose remedy is
+          // elsewhere (re-auth, reload, update, maintenance, config) -
+          // observeSaveResult already routed those to their own terminal.
+          // RPC payload refuses (SAVE_INVALID/SAVE_TOO_LARGE), HTTP-layer
+          // refuses (SERVER_ERROR !retryable), missing identity, and any
+          // future/unrecognized refuse code all arm by default.
           if (
             firstSave.status === 'unavailable' &&
             !firstSave.retryable &&
-            (firstSave.code === 'SAVE_INVALID' || firstSave.code === 'SAVE_TOO_LARGE')
+            !(firstSave.code && NON_DATA_WEDGE_CODES.has(firstSave.code))
           ) {
             authority.markFailed('recovery')
             saveIssue.report('corrupted', '', undefined, 'remote')

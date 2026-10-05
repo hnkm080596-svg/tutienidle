@@ -373,12 +373,14 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
   })
 
   it.each([
-    ['SERVER_ERROR', 'unrecognized/authority REJECTED classes'],
     ['NETWORK_UNAVAILABLE', 'a lost-ACK transport'],
     ['SESSION_REVOKED', 'a revoked session'],
     ['PROTOCOL_OUTDATED', 'a stale protocol'],
+    ['AUTH_EXPIRED', 'an expired credential'],
+    ['MAINTENANCE', 'a maintenance window'],
+    ['CONFIGURATION_ERROR', 'a client config fault'],
   ] as const)(
-    'CHARACTER_UNINITIALIZED + permanent %s -> generic fail only, NO remote reset arm (W6-COR-2 fix)',
+    'CHARACTER_UNINITIALIZED + permanent %s -> generic fail only, NO remote reset arm (wrong-remedy classes, W6-COR-2 + W7-AUT-1)',
     async (code) => {
       const stubs = makeStubs()
       stubs.player.save = vi.fn(async () => ({
@@ -411,16 +413,66 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
 
       const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter: vi.fn() })
 
-      // %s never proved the remote row bad - a lost-ACK may even have
-      // COMMITTED on a healthy row. Arming remote destruction there was
-      // W6-COR-2/W6-AUT-1: only payload-reject codes (SAVE_INVALID /
-      // SAVE_TOO_LARGE) may arm the reset surface. Authority classification
-      // stays with observeSaveResult (W6-COR-3: 'revoked'/'update-required'
-      // must NOT be clobbered to 'recovery').
+      // %s never proved the remote row bad - its remedy is elsewhere
+      // (re-auth / reload / update / maintenance). W6-COR-2/W6-AUT-1
+      // narrowed the arm off these classes; W7-AUT-1 re-widened it to a
+      // blacklist because on a first write the character row holds no
+      // saves - a false-positive reset destroys nothing while a false-
+      // negative wedges permanently.
       expect(outcome.status).toBe('failed')
       expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
       expect(stubs.saveIssue.report).not.toHaveBeenCalled()
       expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
+
+      lifecycle.stopAll()
+    },
+  )
+
+  it.each([
+    ['SAVE_INVALID', 'an RPC payload refuse'],
+    ['SAVE_TOO_LARGE', 'an RPC size refuse'],
+    ['SERVER_ERROR', 'an HTTP-layer/authority refuse'],
+    [undefined, 'an uncoded refuse (fail-safe)'],
+  ] as const)(
+    'CHARACTER_UNINITIALIZED + permanent %s -> recovery + remote arm (data-wedge classes, W7-AUT-1 blacklist)',
+    async (code) => {
+      const stubs = makeStubs()
+      stubs.player.save = vi.fn(async () => ({
+        status: 'unavailable' as const,
+        message: 'fail',
+        retryable: false,
+        code: code as import('../session/BackendStatus').BackendErrorCode | undefined,
+      }))
+      const lifecycle = useAppLifecycle({
+        clock: stubs.clock,
+        scheduleInterval: stubs.scheduleInterval,
+        clearHandle: stubs.clearHandle,
+        addEventListener: stubs.addEventListener,
+        removeEventListener: stubs.removeEventListener,
+        boot: stubs.boot,
+        coordinator: stubs.coordinator,
+        authority: stubs.authority,
+        player: stubs.player as never,
+        gameManager: stubs.gameManager,
+        tick: stubs.tick,
+        offlineSummary: stubs.offlineSummary,
+        saveIssue: stubs.saveIssue,
+        entryStage: stubs.entryStage as never,
+        restoreGameSession: stubs.restoreGameSession as never,
+        persistPlayer: stubs.persistPlayer,
+        onError: stubs.onError,
+        unsupportedSaveNotice: stubs.unsupportedSaveNotice,
+        hardReset: stubs.hardReset,
+      })
+
+      const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter: vi.fn() })
+
+      // Every permanent data-class refuse wedges the account; on a first
+      // write the reset is vacuous (no saves exist), so arming is the
+      // fail-safe direction for refuse classes a whitelist would miss.
+      expect(outcome.status).toBe('failed')
+      expect(stubs.authority.markFailed).toHaveBeenCalledWith('recovery')
+      expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', '', undefined, 'remote')
 
       lifecycle.stopAll()
     },

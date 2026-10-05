@@ -198,6 +198,9 @@ export class OnlineSessionController {
       return
     }
     this.generation++
+    // A fresh admission owns a fresh resume-failure budget - a prior
+    // session's throws must not shorten this one's retry runway.
+    this.resumeFailureStreak = 0
     this.transition('checking')
   }
 
@@ -333,6 +336,7 @@ export class OnlineSessionController {
       return
     }
     this.generation++
+    this.resumeFailureStreak = 0
     this.clearHeartbeat()
     this.clearRetry()
     this.transition('signed-out')
@@ -458,21 +462,22 @@ export class OnlineSessionController {
       // must not leave a 'ready' session whose restore never landed.
       // The generation guard also lets a rejecting resume (markFailed
       // inside onResume) win - the failure stays authoritative. A throw
-      // is classified like 'unavailable': stay 'reconnecting' and let the
-      // retry cadence fire again, until the resume-failure budget
-      // escalates a deterministic thrower to 'recovery'.
+      // (from onResume or from markReady's own state-change fan-out) is
+      // classified like 'unavailable': stay 'reconnecting' until the
+      // resume-failure budget escalates a deterministic thrower to
+      // 'recovery' - gated on the same generation so a deliberate exit
+      // parked inside onResume is not dragged back out.
       try {
         this.deps.onResume?.('same')
+        this.resumeFailureStreak = 0
+        if (generation === this.generation) {
+          this.markReady()
+        }
       } catch {
         this.resumeFailureStreak++
-        if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET) {
+        if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET && generation === this.generation) {
           this.markFailed('recovery')
         }
-        return
-      }
-      this.resumeFailureStreak = 0
-      if (generation === this.generation) {
-        this.markReady()
       }
       return
     }
@@ -489,29 +494,36 @@ export class OnlineSessionController {
         // the session stays 'reconnecting' and retries - but a
         // deterministic thrower hits the resume-failure budget and
         // escalates to 'recovery' instead of churning the reconnect
-        // RPC forever. A rejecting resume calls markFailed (which bumps
+        // RPC forever, under the same generation fence the success path
+        // applies. A rejecting resume calls markFailed (which bumps
         // generation), so only an untouched controller earns markReady.
         try {
           this.deps.onResume?.(outcome.lineage, outcome.save, outcome.serverAuthority)
+          this.resumeFailureStreak = 0
+          if (generation === this.generation) {
+            this.markReady()
+          }
         } catch {
           this.resumeFailureStreak++
-          if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET) {
+          if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET && generation === this.generation) {
             this.markFailed('recovery')
           }
-          return
-        }
-        this.resumeFailureStreak = 0
-        if (generation === this.generation) {
-          this.markReady()
         }
         return
       }
+      this.resumeFailureStreak = 0
       if (outcome.status === 'terminal') {
         this.enterTerminal(outcome.state)
       }
       // 'unavailable' stays 'reconnecting' - the retry interval fires again.
     } catch {
-      // A throwing pipeline is still 'unavailable' - keep retrying.
+      // A throwing pipeline is classified 'unavailable' too - but an
+      // always-throwing reconnect dep would churn the RPC cadence
+      // forever, so it shares the resume-failure budget.
+      this.resumeFailureStreak++
+      if (this.resumeFailureStreak >= RESUME_FAILURE_BUDGET && generation === this.generation) {
+        this.markFailed('recovery')
+      }
     } finally {
       this.reconnectInFlight = false
     }

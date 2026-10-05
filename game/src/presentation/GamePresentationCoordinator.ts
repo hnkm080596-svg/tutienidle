@@ -519,9 +519,16 @@ export class GamePresentationCoordinator {
         // curtainState ref with no transition-id/generation guard of its own.
         //
         // Use a fresh signal: the transition's own signal was just aborted
-        // above, and the curtain rejects immediately on an already-aborted one.
+        // above, and the curtain rejects immediately on an already-aborted
+        // one. Bounded like every other curtain call - a reopen that never
+        // settles would wedge inFlightPromise forever (whenIdle() and any
+        // preempting 'error' request would park on it indefinitely).
         try {
-          await this.curtain.open(transitionId, new AbortController().signal)
+          await this.withTimeout(
+            this.curtain.open(transitionId, new AbortController().signal),
+            DEADLINES.curtainOpen,
+            'Curtain reopen timed out',
+          )
         } catch {
           // Best-effort: the transition already failed for its own reason
           // above; a reopen failure must not overwrite that with a different one.
