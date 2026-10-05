@@ -37,6 +37,11 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
     // the boss branch is gone - a boss simply draws more often. The entry
     // itself now resolves through the band authority (pham band, M-QI-10).
     guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.mortal],
+    // Minh ruling 2026-10-05: mortal kills should mint equipment only
+    // ~15% of the time, not on every kill - the miss outcome is reserved
+    // inside the same single-roll draw (see DropTable.poolDrawChance),
+    // so family pool lines are gated at the same rate.
+    poolDrawChance: 0.15,
     pool: [
       // No fixed equipment entry: base_kiem already sits in the registry
       // pool equipment_any draws from, so the mortal band keeps a single

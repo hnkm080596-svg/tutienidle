@@ -45,6 +45,15 @@ describe('drop tables - shape', () => {
     }
   })
 
+  it('poolDrawChance stays inside (0, 1] when a band sets it', () => {
+    for (const table of STAGE_DROP_TABLES) {
+      if (table.poolDrawChance !== undefined) {
+        expect(table.poolDrawChance, `${table.realmId} poolDrawChance`).toBeGreaterThan(0)
+        expect(table.poolDrawChance, `${table.realmId} poolDrawChance`).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
   it('every stage table can pay currency', () => {
     for (const table of STAGE_DROP_TABLES) {
       expect(table.currency.spiritStone.min).toBeGreaterThan(0)

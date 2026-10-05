@@ -71,14 +71,18 @@ function toResolved(entry: DropEntry, rng: () => number): ResolvedDropItem {
   }
 }
 
-function drawFromPool(pool: readonly WeightedDropEntry[], rng: () => number): WeightedDropEntry | undefined {
+function drawFromPool(
+  pool: readonly WeightedDropEntry[],
+  rng: () => number,
+  missWeight = 0,
+): WeightedDropEntry | undefined {
   const total = pool.reduce((sum, entry) => sum + entry.weight, 0)
 
   if (total <= 0) {
     return undefined
   }
 
-  let roll = rng() * total
+  let roll = rng() * (total + missWeight)
 
   for (const entry of pool) {
     roll -= entry.weight
@@ -88,7 +92,38 @@ function drawFromPool(pool: readonly WeightedDropEntry[], rng: () => number): We
     }
   }
 
-  return pool[pool.length - 1]
+  // The roll passed every entry: on a gated table it landed in the
+  // reserved miss band and the draw yields nothing. On an ungated table
+  // (missWeight 0) keep the historical float-error fallback of paying the
+  // last entry so the documented "every draw hits" contract is unchanged.
+  return missWeight > 0 ? undefined : pool[pool.length - 1]
+}
+
+/**
+ * Weight reserved for the "miss" outcome so each draw hits at
+ * `poolDrawChance` of the MERGED bag (stage + family entries together).
+ * Absent/>=1 means ungated; <= 0 reserves an unmissable miss band
+ * (Infinity keeps the arithmetic honest without a special case).
+ */
+function poolMissWeight(
+  pool: readonly WeightedDropEntry[],
+  poolDrawChance: number | undefined,
+): number {
+  if (poolDrawChance === undefined || poolDrawChance >= 1 || Number.isNaN(poolDrawChance)) {
+    return 0
+  }
+
+  const hitWeight = pool.reduce((sum, entry) => sum + entry.weight, 0)
+
+  if (hitWeight <= 0) {
+    return 0
+  }
+
+  if (poolDrawChance <= 0) {
+    return Number.POSITIVE_INFINITY
+  }
+
+  return hitWeight * (1 / poolDrawChance - 1)
 }
 
 export function resolveDrops(input: ResolveDropsInput): DropResult {
@@ -105,7 +140,9 @@ export function resolveDrops(input: ResolveDropsInput): DropResult {
   //   2. One rng() per signature drop line that passes its modifier/channel
   //      gate, for its chance check, in declaration order.
   //   3. One rng() per pool draw (1 + extraRolls total), for which weighted
-  //      entry is selected.
+  //      entry is selected. A gated stage table (poolDrawChance < 1) folds
+  //      its miss outcome into THIS same roll, so the count stays one
+  //      rng() per draw and no downstream call shifts position.
   //   4. One rng() for the spiritStone amount, then one for the
   //      techniqueMastery amount.
   // On top of that base order: ANY entry above that carries an `amount`
@@ -145,12 +182,17 @@ export function resolveDrops(input: ResolveDropsInput): DropResult {
     }
   }
 
-  // 3. One merged weighted bag, drawn 1 + extraRolls times.
+  // 3. One merged weighted bag, drawn 1 + extraRolls times. The stage
+  //    band may gate the draw itself: poolDrawChance < 1 reserves a "miss"
+  //    band inside the same roll, so stage and family lines share the
+  //    gate and the per-draw rng cost stays one call (no extra roll -
+  //    a separate gate roll would shift every downstream draw).
   const pool = [...(input.stageTable?.pool ?? []), ...(input.familyTable?.pool ?? [])]
   const rolls = 1 + totalExtraRolls(modifiers)
+  const missWeight = poolMissWeight(pool, input.stageTable?.poolDrawChance)
 
   for (let index = 0; index < rolls; index++) {
-    const drawn = drawFromPool(pool, rng)
+    const drawn = drawFromPool(pool, rng, missWeight)
 
     if (drawn) {
       items.push(toResolved(drawn, rng))

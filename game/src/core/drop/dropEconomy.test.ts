@@ -62,4 +62,35 @@ describe('drop economy (spec §5.3)', () => {
 
     expect(stacked / plain).toBeLessThanOrEqual(4 * (1 + TOLERANCE))
   })
+
+  // Minh ruling 2026-10-05: mortal equipment lands on ~15% of kills, not
+  // every kill. The stage band gates each pool draw at 0.15 (see
+  // StageDropTables.poolDrawChance), so a plain mortal kill - one draw -
+  // mints no equipment 85% of the time. The pin holds across family
+  // composition because the miss weight is computed on the merged bag.
+  it('mortal kills mint equipment only ~15% of the time', () => {
+    const plain = sampleDropExpectation('mortal', 'boar', [])
+    const familyless = sampleDropExpectation('mortal', undefined, [])
+
+    expect(plain.noEquipmentRate).toBeGreaterThanOrEqual(0.83)
+    expect(plain.noEquipmentRate).toBeLessThanOrEqual(0.87)
+    expect(familyless.noEquipmentRate).toBeGreaterThanOrEqual(0.83)
+    expect(familyless.noEquipmentRate).toBeLessThanOrEqual(0.87)
+  })
+
+  it('higher bands are unaffected by the mortal gate', () => {
+    // Ungated tables keep their pre-change rates: qi_refining bandit
+    // merged bag is ore 30 + equipment_any 20 + base_hai 10 + base_truy
+    // 10 (equipment 40/70 -> noEquipment ~43%); foundation's stage-only
+    // bag is 25+15+20 (equipment 20/60 -> noEquipment ~67%).
+    const qiRefining = sampleDropExpectation('qi_refining', 'bandit', [])
+    const foundation = sampleDropExpectation('foundation_establishment', undefined, [])
+
+    expect(qiRefining.itemsPerKill).toBeGreaterThanOrEqual(1)
+    expect(foundation.itemsPerKill).toBeGreaterThanOrEqual(1)
+    expect(qiRefining.noEquipmentRate).toBeGreaterThanOrEqual(0.40)
+    expect(qiRefining.noEquipmentRate).toBeLessThanOrEqual(0.46)
+    expect(foundation.noEquipmentRate).toBeGreaterThanOrEqual(0.64)
+    expect(foundation.noEquipmentRate).toBeLessThanOrEqual(0.70)
+  })
 })

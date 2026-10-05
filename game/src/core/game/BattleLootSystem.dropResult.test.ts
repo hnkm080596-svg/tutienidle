@@ -50,9 +50,10 @@ describe('BattleLootSystem — DropResult consumer', () => {
   })
 
   it('equipment_any draws a template through the equipment registry', () => {
-    // rng 0.8: mortal guaranteed line (0.7) misses; pool draw roll
-    // 0.8 * 35 = 28 -> past base_kiem (15) -> equipment_any entry.
-    vi.spyOn(Math, 'random').mockReturnValue(0.8)
+    // rng[0] 0.8: mortal guaranteed line (0.7) misses. Pool draw at 0.1:
+    // roll 0.1 * (20 + 113.33) ~= 13 lands inside the 15% hit band of the
+    // gated mortal table (poolDrawChance 0.15) -> equipment_any entry.
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.8).mockReturnValue(0.1)
     const { killEnemy, equipmentBag, createInstance } = createLootTestSetup({
       realmId: 'mortal',
       stage: { stageId: 'mortal_5', requiredRealmId: 'mortal', floor: 5 },
@@ -82,7 +83,9 @@ describe('BattleLootSystem — DropResult consumer', () => {
   })
 
   it('plain kill carries no modifier: 1 pool draw, 0 quality steps', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.8)
+    // Guaranteed misses at 0.8; the lone pool draw hits at 0.1 (mortal
+    // band gate: hit band = first 15% of the weighted roll).
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.8).mockReturnValue(0.1)
     const { killEnemy, createInstance, equipmentBag } = createLootTestSetup({
       realmId: 'mortal',
       stage: { stageId: 'mortal_5', requiredRealmId: 'mortal', floor: 5 },
@@ -156,7 +159,7 @@ describe('BattleLootSystem — DropResult consumer', () => {
   })
 
   it('idle channel strips the elite tag: boss kill draws 4, not 5, and earns no quality steps', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.8)
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.8).mockReturnValue(0.1)
     const { loot, killEnemy, createInstance, equipmentBag } = createLootTestSetup({
       realmId: 'mortal',
       stage: { stageId: 'mortal_5', requiredRealmId: 'mortal', floor: 5 },
@@ -164,7 +167,8 @@ describe('BattleLootSystem — DropResult consumer', () => {
     })
 
     loot.setChannel('idle')
-    // rng 0.8: guaranteed misses, every pool draw lands on equipment_any.
+    // rng 0.8 then 0.1: guaranteed misses, every pool draw lands on
+    // equipment_any inside the gated band's 15% hit region.
     // Boss survives on idle (4 draws); the tinh_anh tag is stripped, so
     // no 5th draw and no quality bonus.
     killEnemy({ isBoss: true, isElite: true })
