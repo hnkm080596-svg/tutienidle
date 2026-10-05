@@ -7,7 +7,7 @@ const authPreview = {
   continued: 'Minh họa tiếp tục nhân vật đã lưu.', created: 'Minh họa chuyển vào Động Phủ.',
   exit: 'Thoát Game', exitQuestion: 'Bạn muốn thoát game?', cancel: 'Ở Lại', exitConfirm: 'Thoát', exited: 'Đã thoát — trạng thái minh họa', returnPreview: 'Trở Lại Preview',
   trial: {
-    chooseTalent: 'Chọn Thiên Phú', features: 'Đặc Điểm', setName: 'Đặt Tên', namePlaceholder: 'Nhập tên nhân vật...', random: 'Tên ngẫu nhiên', randomName: 'Lạc Vân Trần',
+    chooseTalent: 'Chọn Thiên Phú', features: 'Đặc Điểm', setName: 'Đạo Danh', namePlaceholder: 'Nhập tên nhân vật...', random: 'Tên ngẫu nhiên', randomName: 'Lạc Vân Trần',
     choosePath: 'Chọn Đạo Lộ Khởi Đầu', pathDescription: 'Chọn một đạo lộ phù hợp với thiên phú, quyết chí tu hành.',
     talents: { fire: 'Hỏa Linh', water: 'Thủy Mạch', wind: 'Phong Hành', earth: 'Thổ Căn', lightning: 'Lôi Vực', wood: 'Mộc Sinh', metal: 'Kim Thân', void: 'Hư Không', herb: 'Dược Tâm' },
     paths: { sword: 'Kiếm Đạo', manual: 'Công Pháp', talisman: 'Phù Đạo', pill: 'Đan Đạo', forge: 'Khí Đạo' },

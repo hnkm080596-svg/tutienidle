@@ -30,7 +30,7 @@ function randomName() { name.value = t('authPreview.trial.randomName'); notice.v
 <template>
   <section class="trial-creation-art" :style="style" data-testid="trial-creation-art">
     <PcPaperButton class="trial-back" variant="secondary" data-testid="trial-back" @click="emit('back')">‹ {{ t('authPreview.back') }}</PcPaperButton>
-    <header class="trial-heading"><img :src="art.cloud" alt=""><h1>{{ t('authPreview.creation') }}</h1></header>
+    <header class="trial-heading"><img :src="art.cloud" alt=""></header>
     <div class="trial-brush-ring" aria-hidden="true"><svg viewBox="0 0 500 500"><circle cx="250" cy="250" r="222" fill="none" stroke="currentColor" stroke-width="9" stroke-dasharray="340 7 100 12 32 3 190 9"/><circle cx="250" cy="250" r="210" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="160 8 40 12"/><circle cx="250" cy="250" r="234" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 8 100 4"/></svg><img v-for="position in ['top','right','bottom','left']" :key="position" :class="`trial-cloud-${position}`" :src="art.cloud" alt=""></div>
     <section class="trial-creation-board">
       <h2 class="trial-section-title">{{ t('authPreview.trial.chooseTalent') }}</h2>
@@ -40,8 +40,7 @@ function randomName() { name.value = t('authPreview.trial.randomName'); notice.v
         </div>
         <aside class="trial-talent-detail"><span class="trial-talent-seal"><img :src="pcPaperIconUrl(selectedTalent.icon)" alt=""></span><h3>{{ t(`authPreview.trial.talents.${selectedTalent.id}`) }}</h3><p>{{ t('authPreview.trial.description', { talent: t(`authPreview.trial.talents.${selectedTalent.id}`) }) }}</p><h4 class="trial-section-title">{{ t('authPreview.trial.features') }}</h4><ul><li v-for="n in 3" :key="n">{{ t(`authPreview.trial.feature${n}`) }}</li></ul></aside>
       </div>
-      <h2 class="trial-section-title trial-name-title">{{ t('authPreview.trial.setName') }}</h2>
-      <div class="trial-name-row"><input v-model="name" :aria-label="t('authPreview.name')" :placeholder="t('authPreview.trial.namePlaceholder')"><PcPaperButton icon variant="secondary" :aria-label="t('authPreview.trial.random')" @click="randomName">⚄</PcPaperButton></div>
+      <div class="trial-name-row"><span class="trial-name-label">{{ t('authPreview.trial.setName') }}</span><input v-model="name" :aria-label="t('authPreview.name')" :placeholder="t('authPreview.trial.namePlaceholder')"><PcPaperButton icon variant="secondary" :aria-label="t('authPreview.trial.random')" @click="randomName">⚄</PcPaperButton></div>
       <h2 class="trial-section-title trial-path-title">{{ t('authPreview.trial.choosePath') }}</h2>
       <p class="trial-path-description">{{ t('authPreview.trial.pathDescription') }}</p>
       <div class="trial-paths"><PcPaperButton v-for="(path,index) in pathways" :key="path" :variant="pathway === index ? 'primary' : 'secondary'" :aria-pressed="pathway === index" @click="pathway = index">{{ t(`authPreview.trial.paths.${path}`) }}</PcPaperButton></div>
@@ -55,13 +54,12 @@ function randomName() { name.value = t('authPreview.trial.randomName'); notice.v
 .trial-creation-art { position: absolute; inset: 0; }
 .trial-back { position: absolute; top: 20px; left: 22px; min-width: 125px; z-index: 2; font-size: 19px; }
 .trial-heading { position: absolute; left: 175px; right: 40px; top: 20px; height: 82px; border-bottom: 1px solid #b08a47; }
-.trial-heading h1 { margin: 0; font: 700 52px var(--pc-font-body); color: #2d2010; }
 .trial-heading img { position: absolute; right: 20px; top: -7px; width: 280px; height: 95px; object-fit: contain; opacity: .5; }
 .trial-brush-ring { position: absolute; left: 82px; top: 170px; width: 550px; height: 550px; color: #ae813c; opacity: .6; pointer-events: none; }
 .trial-brush-ring svg { width: 100%; height: 100%; }
 .trial-brush-ring img { position: absolute; width: 190px; height: 90px; object-fit: contain; }
 .trial-cloud-top { top: 5px; right: 25px; }.trial-cloud-right { right: -40px; top: 180px; }.trial-cloud-bottom { bottom: 20px; left: 15px; }.trial-cloud-left { left: -45px; top: 140px; }
-.trial-creation-board { position: absolute; top: 132px; right: 40px; width: 700px; height: 650px; padding: 38px 28px 22px; color: #f1e2c0; background: var(--trial-panel) center / contain no-repeat; }
+.trial-creation-board { position: absolute; top: 110px; right: 40px; width: 700px; height: 650px; padding: 38px 28px 22px; color: #f1e2c0; background: var(--trial-panel) center / contain no-repeat; }
 .trial-creation-board::before { display: none; }
 .trial-section-title { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 8px; font: 700 22px var(--pc-font-body); }
 .trial-section-title::before, .trial-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg,transparent,#b6934c); }
@@ -77,11 +75,12 @@ function randomName() { name.value = t('authPreview.trial.randomName'); notice.v
 .trial-talent-detail .trial-talent-seal { margin: 0 auto; }
 .trial-talent-detail h3 { font-size: 24px; margin: 7px 0; }.trial-talent-detail p { font-size: 14px; line-height: 1.35; margin: 7px 0 14px; }
 .trial-talent-detail h4 { font-size: 18px; }.trial-talent-detail ul { text-align: left; padding-left: 16px; font-size: 14px; line-height: 1.35; margin: 0; }.trial-talent-detail li { margin-bottom: 4px; }.trial-talent-detail li::marker { color: #dbb260; }
-.trial-name-title { margin: 18px 0 9px; }.trial-name-row { display: flex; gap: 10px; padding: 0 75px; }
-.trial-name-row input { min-width: 0; flex: 1; height: 42px; padding: 8px 16px; border: 1px solid #b49860; background: #1b211a; color: #f1e2c0; font: 15px var(--pc-font-body); }.trial-name-row input::placeholder { color: #aaa18b; }.trial-name-row button { min-height: 42px; font-size: 28px; }
+.trial-name-row { display: flex; align-items: center; gap: 12px; padding: 0 55px; margin: 46px 0 4px; }
+.trial-name-label { flex: 0 0 auto; color: #e8cf9e; font: 700 22px var(--pc-font-body); white-space: nowrap; }
+.trial-name-row input { min-width: 0; flex: 1; height: 42px; padding: 8px 16px; border: 1px solid #b49860; background: #1b211a; color: #f1e2c0; font: 15px var(--pc-font-body); }.trial-name-row input::placeholder { color: #aaa18b; }.trial-name-row button { min-height: 42px; font-size: 28px; transform: translateY(-4px); }
 .trial-path-title { margin: 12px 0 4px; font-size: 18px; }.trial-path-description { margin: 0 0 8px; font-size: 14px; text-align: center; }
 .trial-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }.trial-paths button { padding: 7px 8px; min-height: 44px; font-size: 15px; }
-.trial-begin { position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }.trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; }
+.trial-begin { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }.trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; }
 </style>
 
 
