@@ -72,20 +72,20 @@ describe('player store — talent v4 M2 (Hau Tich / Ngo Dao offline)', () => {
     expect(store.cultivation).toBe(500)
   })
 
-  it('Hau Tich Bat Phat — tang 11 ramp x1.5, tang 12 ramp x1.6', () => {
+  it('Hau Tich Bat Phat — tang 11 ramp x1.0, tang 12 ramp x1.05', () => {
     const store = usePlayerStore()
     store.realmId = 'qi_refining'
     store.selectedTalentIds = ['ho_tich_bat_phat']
 
     store.realmLevel = 11
     store.cultivation = 0
-    store.cultivate(10) // 100 raw -> x1.5 = 150
-    expect(store.cultivation).toBe(150)
+    store.cultivate(10) // 100 raw -> x1.0 = 100
+    expect(store.cultivation).toBe(100)
 
     store.realmLevel = 12
     store.cultivation = 0
-    store.cultivate(10) // 100 raw -> x1.6 = 160
-    expect(store.cultivation).toBe(160)
+    store.cultivate(10) // 100 raw -> x1.05 = 105
+    expect(store.cultivation).toBe(105)
   })
 
   it('khong co talent — cultivate giu nguyen toc do goc', () => {
