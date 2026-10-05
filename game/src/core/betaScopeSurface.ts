@@ -310,6 +310,13 @@ export interface BetaUnsupportedSaveSlices {
       workers?: unknown
     } | Record<string, unknown>
   } | null
+  /**
+   * The artifact record AS CARRIED in the payload. normalizeArtifactProgress
+   * drops records the current path cannot own before this read-model runs,
+   * so artifact_owned must look at the carried slice, not the restored
+   * field - a carried dormant record is flagged, never silently dropped.
+   */
+  carriedArtifact?: unknown
 }
 
 /**
@@ -341,7 +348,7 @@ export function unsupportedReleaseReason(
     return 'companion_owned'
   }
 
-  if (player.artifact !== undefined) {
+  if (player.artifact !== undefined || saveSlices?.carriedArtifact != null) {
     return 'artifact_owned'
   }
 

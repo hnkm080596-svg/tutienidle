@@ -382,8 +382,8 @@ export function resolveCombatBuild(
     survive: {
       talentIds: source.selectedTalentIds,
       talentLevels: source.talentLevels,
-      extraSources: runtime?.buildSurviveSources
-        ? (participant, hasActiveBuff) => runtime.buildSurviveSources!(source, participant, hasActiveBuff)
+      extraSources: gatedRuntime?.buildSurviveSources
+        ? (participant, hasActiveBuff) => gatedRuntime.buildSurviveSources!(source, participant, hasActiveBuff)
         : undefined,
     },
     liveModifiers,

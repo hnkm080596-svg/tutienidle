@@ -411,6 +411,19 @@ describe('betaScopeSurface - save safety read-model', () => {
     expect(unsupportedReleaseReason(withFormation)).toBe('formation_loadout')
   })
 
+  it('flags a carried artifact even when restore already dropped the record', () => {
+    // normalizeArtifactProgress wipes records the current path cannot own
+    // BEFORE this read-model runs - the notice must inspect the carried
+    // slice so the drop is flagged, never silent.
+    const dropped = player()
+    expect(dropped.artifact).toBeUndefined()
+    expect(
+      unsupportedReleaseReason(dropped, {
+        carriedArtifact: { artifactId: 'ngu_hanh_chau', realmId: 'mortal', realmLevel: 1, experience: 0, grade: 'pham' },
+      }),
+    ).toBe('artifact_owned')
+  })
+
   it('reports the highest-precedence reason only', () => {
     // Order: realm -> way -> hidden -> companion -> artifact -> formation.
     const goldenWithCompanion = player({
