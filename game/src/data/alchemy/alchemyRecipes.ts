@@ -4,6 +4,7 @@ import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
 import { herbBaseId, herbMaterialId } from '@/core/profession/ProfessionMaterial'
 import { isPillFamilyRecipeLiveAtRealm, PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import { stoneCostRealmFactor } from '@/core/economy/EconomyRealmPace'
 
 /** Bien the phu DU truc HerbAge (5 bac - gp123 6E C1, thuong_co craftable). */
 function grottoVariants(baseId: string): AlchemyHerbVariant[] {
@@ -24,7 +25,7 @@ const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierInde
     herbAmount: 2 + Math.floor(tierIndex / 3),
     fuelWoodRealmId: realmId,
     fuelWoodAmount: 2 + Math.floor(tierIndex / 2),
-    spiritStoneCost: Math.round(50 * Math.pow(2, tierIndex)),
+    spiritStoneCost: 50 * stoneCostRealmFactor(realmId),
     baseDurationSeconds: Math.round(600 * Math.pow(1.45, tierIndex)),
     // M10 (ARCH-008) - retired families (Hoi Xuan Dan) keep their recipes
     // resolvable for in-flight settle, but new jobs are rejected.
@@ -48,7 +49,7 @@ export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
     herbAmount: 3,
     fuelWoodRealmId: 'qi_refining',
     fuelWoodAmount: 3,
-    spiritStoneCost: 500,
+    spiritStoneCost: 1500,
     baseDurationSeconds: 900,
     specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }],
   },
@@ -63,7 +64,7 @@ export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
     herbAmount: 4,
     fuelWoodRealmId: 'qi_refining',
     fuelWoodAmount: 4,
-    spiritStoneCost: 1000,
+    spiritStoneCost: 5000,
     baseDurationSeconds: 1200,
     specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }],
   },

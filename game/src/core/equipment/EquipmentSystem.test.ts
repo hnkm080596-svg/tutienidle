@@ -39,7 +39,7 @@ import {
 } from '../material/SpiritStoneMaterial'
 import { isPercentStat } from '../stats/StatMetadata'
 import { isValidEquipmentSubstat } from './EquipmentStatPolicy'
-import { REFINE_SPIRIT_STONE_PER_UNIT } from './RefinementBalance'
+import { REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY } from './RefinementBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
 const TEMPLATE: Equipment = {
@@ -890,7 +890,7 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
       expect(ctx.instance.forgeUsesRemaining).toBe(forgeUsesBefore - 1)
       expect(ctx.materialBag.getAmount(ctx.essenceId)).toBe(essenceBefore - tinhHoaCost)
       expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(
-        genericStonesBefore - 5 * REFINE_SPIRIT_STONE_PER_UNIT,
+        genericStonesBefore - 5 * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[quality],
       )
       expect(ctx.materialBag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)).toBe(
         middleStonesBefore,
@@ -2124,7 +2124,7 @@ describe('EquipmentSystem — chi phí Tinh Luyện theo Chất', () => {
 
     expect(system.getRefineCost(4, 1, quality)).toEqual({
       essenceUnits: tinhHoa,
-      spiritStone: 5 * REFINE_SPIRIT_STONE_PER_UNIT,
+      spiritStone: 5 * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[quality],
       spiritStoneMaterialId: SPIRIT_STONE_MATERIAL_ID,
       refinementPoints: 1,
     })
@@ -2162,7 +2162,7 @@ describe('EquipmentSystem — chi phí Tinh Luyện theo Chất', () => {
     expect(result.ok).toBe(true)
     expect(displayedCost).toEqual({
       essenceUnits: 7,
-      spiritStone: 120,
+      spiritStone: 9600,
       spiritStoneMaterialId: SPIRIT_STONE_MATERIAL_ID,
       refinementPoints: 1,
     })

@@ -20,7 +20,7 @@ import type { StageWaveSystem } from './StageWaveSystem'
  */
 function isValidCycleSeconds(cycleSeconds: number | undefined): cycleSeconds is number {
   // F-TC8-7: >= 1 second authored floor - a sub-second claim mints
-  // thousands of reward cycles per tick (cycleMs halves the value).
+  // thousands of reward cycles per tick.
   return (
     cycleSeconds !== undefined && cycleSeconds >= 1 && Number.isFinite(cycleSeconds)
   )
@@ -200,7 +200,9 @@ export class GameManagerAutoFarmOps {
   /**
    * Auto-farm Task 5 - offline catch-up on save restore: roll rewards for
    * cycles elapsed offline (the ONE exception where combat rewards are
-   * granted offline). Online cycle time (perfectClearSeconds/2); leftover
+   * granted offline). Cycle time = perfectClearSeconds (2026-10-05
+   * retune: was /2, which minted idle income at 2x live clear rate);
+   * leftover
    * time carries via lastCheckedMs advancing by exactly the settled part.
    *
    * Remediation Task 3 (2026-09-05) - BOUNDED settlement:
@@ -237,7 +239,7 @@ export class GameManagerAutoFarmOps {
       DEFAULT_MAX_OFFLINE_SECONDS,
     )
 
-    const cycleMs = (cycleSeconds / 2) * 1000
+    const cycleMs = cycleSeconds * 1000
     const elapsedMs = cappedElapsedSeconds * 1000
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
@@ -304,7 +306,7 @@ export class GameManagerAutoFarmOps {
       autoFarm.lastCheckedMs = now
     }
 
-    const cycleMs = (cycleSeconds / 2) * 1000
+    const cycleMs = cycleSeconds * 1000
     // A corrupt save can persist a small-positive lastCheckedMs - the
     // uncapped remainder (years of "elapsed" time) turned the reward loop
     // below into ~10^8 iterations per tick. Same bound as

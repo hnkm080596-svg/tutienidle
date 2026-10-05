@@ -46,8 +46,20 @@ export const WASH_TIER_WEIGHTS_BY_QUALITY: Record<ItemQuality, readonly number[]
   tien: [10, 35, 55],
 }
 
-/** Linh Thach moi lan Tay Luyen. */
-export const WASH_SPIRIT_STONE_COST = 100
+/**
+ * Linh Thach moi lan Tay Luyen theo Chat.
+ * 2026-10-05 pace retune: was a flat 100 at every quality, which made
+ * rerolling dia/thien gear trivially cheap at Truc Co income. Item
+ * quality tracks the realm whose income pays for it, so the fee climbs
+ * the same ladder as stoneCostRealmFactor (x1/x8/x50).
+ */
+export const WASH_SPIRIT_STONE_COST_BY_QUALITY: Record<ItemQuality, number> = {
+  hoang: 100,
+  huyen: 600,
+  dia: 1500,
+  thien: 4000,
+  tien: 8000,
+}
 
 // =========================
 // Tinh Luyen (sec7.4): giu identity, moi dong eligible chi tang 5-20%
@@ -61,5 +73,14 @@ export const REFINE_INCREASE_MAX = 0.2
 
 export const REFINE_MAX_LOCKS = 3
 
-/** Linh Thach don gia moi don vi (N + L) cua Tinh Luyen. */
-export const REFINE_SPIRIT_STONE_PER_UNIT = 50
+/**
+ * Linh Thach don gia moi don vi (N + L) cua Tinh Luyen theo Chat.
+ * Same 2026-10-05 pace retune as WASH_SPIRIT_STONE_COST_BY_QUALITY.
+ */
+export const REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY: Record<ItemQuality, number> = {
+  hoang: 50,
+  huyen: 300,
+  dia: 800,
+  thien: 2000,
+  tien: 4000,
+}

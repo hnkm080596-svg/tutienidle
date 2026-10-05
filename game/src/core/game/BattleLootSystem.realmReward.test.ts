@@ -7,19 +7,22 @@ import {
   TEST_EQUIPMENT_TEMPLATE,
 } from './battleLootTestSetup'
 
-// Scale thuong theo canh gioi stage (balance playtest 2026-08-28) - Truc Co
-// tai su dung enemyPool Luyen Khi nen nhan thuong x3 de thu nhap khong khung.
+// Scale thuong theo canh gioi stage (balance playtest 2026-08-28).
+// 2026-10-05 pace retune: Truc Co co drop band rieng (25-35 thach /
+// 90-120 cam ngo, da la ~x3 band Luyen Khi) nen chi tra x1 - bo x3
+// double-count khien thu nhap TC ~x9 LK, vuot xa moi bang chi phi.
+// x3 tro len chi con cho tier chua co band (golden_core+).
 // Drop-system (2026-09-12): currency gio den tu STAGE DROP TABLE qua
 // resolveDrops - enemy.rewards khong con la bang thuong. He so realm/talent
 // giu nguyen vi tri: nhan SAU he so modifier cua resolver (spec sec1.6).
 const PILL = { id: 'pill_grade_drop', name: 'Đan Phẩm', grade: 'tien', icon: undefined }
 
 describe('getRealmRewardMultiplier', () => {
-  it('mortal & Luyện Khí ×1; Trúc Cơ ×3; Kim Đan ×9', () => {
+  it('beta realms x1; Kim Đan x3 (tier chua co drop band rieng)', () => {
     expect(getRealmRewardMultiplier('mortal')).toBe(1)
     expect(getRealmRewardMultiplier('qi_refining')).toBe(1)
-    expect(getRealmRewardMultiplier('foundation_establishment')).toBe(3)
-    expect(getRealmRewardMultiplier('golden_core')).toBe(9)
+    expect(getRealmRewardMultiplier('foundation_establishment')).toBe(1)
+    expect(getRealmRewardMultiplier('golden_core')).toBe(3)
   })
 
   it('realm không biết — ×1 (an toàn)', () => {
@@ -50,8 +53,8 @@ describe('BattleLootSystem — realm reward scaling', () => {
     expect(loot.getSummary().spiritStone).toBe(8)
   })
 
-  it('Trúc Cơ ×3 — currency stage-table nhân 3', () => {
-    // rng 0 -> foundation table min: 25 thach / 90 cam ngo, sau x3.
+  it('Trúc Cơ x1 — currency stage-table di nguyen qua (band da ~x3)', () => {
+    // rng 0 -> foundation table min: 25 thach / 90 cam ngo.
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'foundation_establishment',
@@ -60,13 +63,13 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     killEnemy()
 
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75 })
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 25 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(270, 'mortal', 1)
-    expect(loot.getSummary().spiritStone).toBe(75)
+    expect(gainMastery).toHaveBeenCalledWith(90, 'mortal', 1)
+    expect(loot.getSummary().spiritStone).toBe(25)
   })
 
-  it('Trúc Cơ ×3 + talent v3 retired (tu_bao) — không còn bonus ×1.5 (effect rỗng, spec v4 §4.4)', () => {
+  it('Trúc Cơ x1 + talent v3 retired (tu_bao) — không còn bonus ×1.5 (effect rỗng, spec v4 §4.4)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'foundation_establishment',
@@ -76,14 +79,14 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     killEnemy()
 
-    // Tu Bao retired - chi con realm x3, dung hanh vi "save cu an toan".
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75 })
+    // Tu Bao retired - chi con realm x1, dung hanh vi "save cu an toan".
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 25 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(270, 'mortal', 1)
-    expect(loot.getSummary().spiritStone).toBe(75)
+    expect(gainMastery).toHaveBeenCalledWith(90, 'mortal', 1)
+    expect(loot.getSummary().spiritStone).toBe(25)
   })
 
-  it('Trúc Cơ — Cảm Ngộ Kỹ năng suy ra từ techniqueMastery cũng ×3', () => {
+  it('Trúc Cơ — Cảm Ngộ Kỹ năng suy ra từ techniqueMastery (band x1)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, player, loot } = createLootTestSetup({
       realmId: 'foundation_establishment',
@@ -92,14 +95,14 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     killEnemy()
 
-    // techniqueMastery 90 (min) x 3 realm = 270 -> skillInsight suy ra
-    // round(270 x 0.18) = 49 (balance 2026-10-04, SkillInsightBalance.ts).
-    expect(player.skillInsight).toBe(49)
-    expect(loot.getSummary().skillInsight).toBe(49)
+    // techniqueMastery 90 (min) x 1 realm = 90 -> skillInsight suy ra
+    // round(90 x 0.18) = 16 (balance 2026-10-04, SkillInsightBalance.ts).
+    expect(player.skillInsight).toBe(16)
+    expect(loot.getSummary().skillInsight).toBe(16)
   })
 
   it('Trúc Cơ — hệ số áp lên giá trị resolver trả về (mid-range)', () => {
-    // rng 0.5 -> spiritStone floor(0.5*11)+25 = 30, x3 = 90.
+    // rng 0.5 -> spiritStone floor(0.5*11)+25 = 30, x1 = 30.
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
     const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'foundation_establishment',
@@ -108,9 +111,9 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     killEnemy()
 
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 90 })
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 30 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(315, 'mortal', 1)
+    expect(gainMastery).toHaveBeenCalledWith(105, 'mortal', 1)
   })
 
   it('equipment rơi qua pool draw dùng quality cho particle và rank accent', () => {

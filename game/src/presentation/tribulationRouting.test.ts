@@ -719,7 +719,9 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
       checkTribulationOutcomeAction(store, gameManager, presentation)
     }).not.toThrow()
     expect(store.cultivation).toBe(expectedCultivation)
-    expect(gameManager.materialBag.getAmount(stoneId)).toBe(150)
+    // The stone debit clamps at the bag contents (350 < 1000 loss
+    // after the 2026-10-05 retune), so the bag drains to zero.
+    expect(gameManager.materialBag.getAmount(stoneId)).toBe(0)
     expect(debuffSpy).toHaveBeenCalledTimes(1)
 
     await completeHomeExit()

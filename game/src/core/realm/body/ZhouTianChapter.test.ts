@@ -82,15 +82,16 @@ describe('ZhouTianChapter - invest', () => {
     expect(zhouTianChapter.invest(player, 14, 0)).toBe(0)
     expect(player.bodyProgression.zhou_tian.completed).toBe(0)
 
-    expect(zhouTianChapter.invest(player, 15, 0)).toBe(15)
+    expect(zhouTianChapter.invest(player, 100, 0)).toBe(100)
     expect(player.bodyProgression.zhou_tian.completed).toBe(1)
   })
 
   it('consumes consecutive step costs while affordable within capacity', () => {
     const player = tcPlayer(1) // capacity 2
 
-    // Steps 0+1 cost 15+20=35; a surplus beyond that stays unspent.
-    expect(zhouTianChapter.invest(player, 100, 0)).toBe(35)
+    // Steps 0+1 cost 100+125=225 (2026-10-05 curve); a surplus beyond
+    // that stays unspent.
+    expect(zhouTianChapter.invest(player, 225, 0)).toBe(225)
     expect(player.bodyProgression.zhou_tian.completed).toBe(2)
   })
 

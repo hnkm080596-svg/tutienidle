@@ -22,12 +22,12 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
     gameManager.catalogOps.registerEnemyTemplates([DUMMY])
     gameManager.catalogOps.registerStages([STAGE])
     player.perfectClearStageIds.push('adv_stage')
-    player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 100s (2026-10-05 retune)
 
     const lastCheckedMs = Date.now() - 120_000
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs }
 
-    // Settle 120s = 2 cycles (50s moi cycle) + 20s du -> lastCheckedMs tien 100s.
+    // Settle 120s = 1 cycle (100s moi cycle) + 20s du -> lastCheckedMs tien 100s.
     gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)
     const afterFirst = player.autoFarmStage!.lastCheckedMs
 
@@ -186,16 +186,16 @@ describe('Adversarial — corrupt lastCheckedMs bound (C1)', () => {
     const ops = buildAutoFarmOps(processDefeatedEnemies)
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push('adv_stage')
-    player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 100s
     // Corrupt save: epoch timestamp. Elapsed is ~55 years -> completedCycles
     // would be ~10^8 without the clamp (pre-fix: main-thread hang).
     armFarm(ops, player, 1)
 
     ops.tickAutoFarm(player)
 
-    // 24h cap / 50s cycle = 1728 cycles max on the catch-up tick.
+    // 24h cap / 100s cycle = 864 cycles max on the catch-up tick.
     const firstTickRolls = processDefeatedEnemies.mock.calls.length
-    expect(firstTickRolls).toBeLessThanOrEqual(24 * 60 * 60 / 50 + 1)
+    expect(firstTickRolls).toBeLessThanOrEqual(24 * 60 * 60 / 100 + 1)
     expect(firstTickRolls).toBeGreaterThan(0)
     expect(Number.isFinite(player.autoFarmStage!.lastCheckedMs)).toBe(true)
 
@@ -215,8 +215,8 @@ describe('tickAutoFarm — farm_cycle observation emit (Sound System W6)', () =>
     const ops = buildAutoFarmOps(vi.fn(), out)
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push('adv_stage')
-    player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
-    armFarm(ops, player, Date.now() - 150_000) // 3 cycles
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 100s
+    armFarm(ops, player, Date.now() - 350_000) // 3 cycles + 50s du
 
     const seen: { type: string; stageId: string; cycles: number }[] = []
     out.eventBus.on<typeof seen[number]>('farm_cycle', (e) => seen.push(e))

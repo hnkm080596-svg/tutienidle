@@ -545,11 +545,11 @@ describe('BodySurface (scene 08 fidelity)', () => {
       const view = mountBodyScene((player, manager) => {
         state = player.$state
         tcPlayer(player, 18, 0)
-        // Step 0 costs 15 essence - seeding exactly 15 bounds the
-        // chapter's multi-step invest to one advancement.
+        // Step 0 costs 100 essence (2026-10-05 curve) - seeding exactly
+        // 100 bounds the chapter's multi-step invest to one advancement.
         manager.materialBag.add(
           manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
-          15,
+          100,
         )
       })
       await nextTick()

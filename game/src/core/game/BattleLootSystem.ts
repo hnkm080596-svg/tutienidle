@@ -307,9 +307,10 @@ export class BattleLootSystem {
           const talentStoneMultiplier = this.player
             ? getSpiritStoneGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels)
             : 1
-          // Scale thuong theo canh gioi stage (Truc Co x3, xem
-          // RealmRewardScale) - Truc Co tai su dung enemyPool Luyen Khi
-          // nen phai nhan thuong de thu nhap khong bi khung. Nhan ca
+          // Scale thuong theo canh gioi stage (xem RealmRewardScale) -
+          // 2026-10-05 retune: beta realms pay x1, drop bands carry the
+          // era jump themselves; x3+ remains only for band-less tiers.
+          // Nhan ca
           // techniqueMastery (tac dung phu: artifact EXP + skill insight
           // tang theo o Truc Co, da duoc duyet 2026-08-28). Currency now
           // comes from the stage drop table (already multiplied by the

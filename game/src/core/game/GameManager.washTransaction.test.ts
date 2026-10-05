@@ -16,6 +16,7 @@ import { materials } from '../../data/materials/materials'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
+import { WASH_SPIRIT_STONE_COST_BY_QUALITY } from '../equipment/RefinementBalance'
 import { createDefaultPlayer } from '../player/Player'
 import { buildGameSave } from '../../services/save/SaveSystem'
 import { validateGameSaveShape } from '../../services/save/saveShapeValidation'
@@ -60,7 +61,7 @@ describe('GameManager wash transaction', () => {
     const oreId = 'qi_refining_ore_century'
     const ore = manager.materialRegistry.get(oreId)
     manager.materialBag.add(essence, 9)
-    manager.materialBag.add(spiritStone, 100)
+    manager.materialBag.add(spiritStone, WASH_SPIRIT_STONE_COST_BY_QUALITY[instance.quality])
     manager.materialBag.add(ore, 7)
 
     const modifierIdsBefore = manager
@@ -214,7 +215,7 @@ describe('GameManager wash transaction', () => {
       const essence = manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID)
       const spiritStone = manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID)
       manager.materialBag.add(essence, 100)
-      manager.materialBag.add(spiritStone, 1000)
+      manager.materialBag.add(spiritStone, WASH_SPIRIT_STONE_COST_BY_QUALITY[instance.quality])
 
       const preview = manager.equipmentOps.previewWashItem(instance.instanceId)
 

@@ -263,11 +263,11 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     // Phap is the highest rung - nothing sits above it to cover a
     // shortfall, so the seam debits the authored per-step cost and
     // only that.
-    manager.materialBag.add(manager.materialRegistry.get(PHAP), 15)
+    manager.materialBag.add(manager.materialRegistry.get(PHAP), 100)
 
     const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')
 
-    expect(consumed).toBe(15)
+    expect(consumed).toBe(100)
     expect(manager.materialBag.getAmount(PHAP)).toBe(0)
     expect(player.bodyProgression.zhou_tian.completed).toBe(1)
   })
@@ -291,11 +291,11 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     expect(manager.materialBag.getAmount(BAO)).toBe(25)
     expect(player.bodyProgression.zhou_tian.completed).toBe(0)
 
-    // Partial Phap: 20 essence buys exactly the first step (15) and the
-    // lower-band stacks remain byte-for-byte untouched.
-    manager.materialBag.add(manager.materialRegistry.get(PHAP), 20)
-    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(15)
-    expect(manager.materialBag.getAmount(PHAP)).toBe(5)
+    // Partial Phap: 110 essence buys exactly the first step (100) and
+    // the lower-band stacks remain byte-for-byte untouched.
+    manager.materialBag.add(manager.materialRegistry.get(PHAP), 110)
+    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(100)
+    expect(manager.materialBag.getAmount(PHAP)).toBe(10)
     expect(manager.materialBag.getAmount(PHAM)).toBe(10)
     expect(manager.materialBag.getAmount(BAO)).toBe(25)
     expect(player.bodyProgression.zhou_tian.completed).toBe(1)
