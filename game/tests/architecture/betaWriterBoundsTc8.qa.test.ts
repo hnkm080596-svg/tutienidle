@@ -422,15 +422,20 @@ describe('F-SEAM-2: perfectClearSeconds per-stage physical floor', () => {
 })
 
 describe('F-TC8-8: tu_linh_tran duration bound', () => {
-  it('a span wider than the authored 24h writer window is rejected', () => {
+  // r14-AUT-2/3: the r13 span check was retired (rebuy honestly widens
+  // expires - applied); the provable bound is expires <= lastSavedAt +
+  // duration - every honest extension is appTime + duration with
+  // appTime <= lastSavedAt.
+  it('a deadline past lastSavedAt + authored window is rejected', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 10_000
     p.persistentTimedEffects = [
       {
         id: 'fx1',
         sourceItemId: 'tu_linh_tran',
-        appliedAtMs: 1000,
-        expiresAtMs: 1000 + TU_LINH_TRAN_DURATION_MS + 60_000,
+        appliedAtMs: 5_000,
+        expiresAtMs: 10_000 + TU_LINH_TRAN_DURATION_MS + 60_000,
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         cultivationSpeedPercent: 0.2,
         modifiers: [],
@@ -440,15 +445,37 @@ describe('F-TC8-8: tu_linh_tran duration bound', () => {
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 
-  it('an exact 24h writer span still validates', () => {
+  it('a rebuy-extended span inside lastSavedAt + window still validates', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 70_000
     p.persistentTimedEffects = [
       {
         id: 'fx1',
         sourceItemId: 'tu_linh_tran',
-        appliedAtMs: 1000,
-        expiresAtMs: 1000 + TU_LINH_TRAN_DURATION_MS,
+        appliedAtMs: 5_000,
+        // span > 24h is honest over rebuys; expires stays inside
+        // lastSavedAt + duration.
+        expiresAtMs: 5_000 + TU_LINH_TRAN_DURATION_MS + 60_000,
+        effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
+        cultivationSpeedPercent: 0.2,
+        modifiers: [],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('an exact 24h writer span still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 10_000
+    p.persistentTimedEffects = [
+      {
+        id: 'fx1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: 5_000,
+        expiresAtMs: 5_000 + TU_LINH_TRAN_DURATION_MS,
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         cultivationSpeedPercent: 0.2,
         modifiers: [],

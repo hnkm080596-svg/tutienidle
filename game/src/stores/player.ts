@@ -88,13 +88,20 @@ const SIGNATURE_SEPARATOR = '\u0001'
  * forged future application date cannot park a buff ahead of time.
  * `expiresAtMs` forward-bound applies ONLY to non-stackable effects:
  * applyTimedEffect refreshes those via `max(existing, new)` so their
- * honest expiry is always `last-refresh + dur <= now + authored max`
+ * honest expiry is `last-refresh + dur <= lastSavedAt + authored max`
  * (TU_LINH_TRAN_DURATION_MS = longest authored window). A
  * `durationStackable` group instead ADDS its duration onto remaining
  * time per drink - its honest expiresAtMs is unbounded over the save
  * lifetime, so no fixed bound can separate an honest long chain from
  * a forged deadline; the span check is left to the shape validator's
- * stackable exemption and expires passes through here (r13-COR-3).
+ * stackable exemption and expires passes through here (r13-COR-3,
+ * r14-AUT-1 accepted residual).
+ * r14-AUT-2: the non-stackable forward bound anchors at the save's own
+ * provenance (provenanceMs = min(lastSavedAt, now)), NOT at boot-now.
+ * Every honest extension is appTime + duration with appTime <=
+ * lastSavedAt, so expires > lastSavedAt + TU_LINH_TRAN_DURATION_MS is
+ * impossible provenance - a forged far-future deadline on a stale save
+ * must clamp to its dead expiry instead of reviving at boot + 24h.
  * Shared by the offline-payout read and the persistentTimedEffects
  * restore map so crafted spans cannot feed the settlement seam
  * through a raw copy.
@@ -102,13 +109,14 @@ const SIGNATURE_SEPARATOR = '\u0001'
 function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: number; durationStackable?: boolean }>(
   effect: T,
   nowMs: number,
+  provenanceMs: number,
 ): T {
   const appliedAtMs = Number.isFinite(effect.appliedAtMs)
     ? Math.min(effect.appliedAtMs, nowMs)
     : effect.appliedAtMs
   const expiresAtMs =
     Number.isFinite(effect.expiresAtMs) && effect.durationStackable !== true
-      ? Math.min(effect.expiresAtMs, nowMs + TU_LINH_TRAN_DURATION_MS)
+      ? Math.min(effect.expiresAtMs, provenanceMs + TU_LINH_TRAN_DURATION_MS)
       : effect.expiresAtMs
   return { ...effect, appliedAtMs, expiresAtMs }
 }
@@ -320,6 +328,13 @@ export const usePlayerStore = defineStore('player', {
       // client clock - a slow local clock would underpay an approved
       // span, a fast one must not pay past approval.
       const authorityNowMs = restoreAuthorityNowMs(timeAuthority)
+      // r14-AUT-2: timed-effect provenance is the payload's own stamp
+      // bounded by the approved now - a save cannot claim a deadline
+      // past lastSavedAt + duration, and a forged-future lastSavedAt
+      // cannot widen the bound past the approved now.
+      const effectProvenanceMs = Number.isFinite(save.player.lastSavedAt)
+        ? Math.min(save.player.lastSavedAt, authorityNowMs)
+        : authorityNowMs
 
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x
@@ -330,15 +345,24 @@ export const usePlayerStore = defineStore('player', {
       // otherwise pays its boost over window stretches no authored
       // duration could cover (same bound as the restore map below).
       const savedTimedEffects = (save.player.persistentTimedEffects ?? []).map(
-        (effect) => boundTimedEffectClocks(effect, authorityNowMs),
+        (effect) => boundTimedEffectClocks(effect, authorityNowMs, effectProvenanceMs),
       )
       // r12-AUT: bound the cultivation window at now on BOTH ends -
       // under cold-boot a crafted-future lastSavedAt could otherwise
       // position a payable window in the future (same clamp as saveOps
       // settleNowMs). The splitter sorts bounds into positive segments,
       // so a future-positioned start/end pair still mints - the start
-      // must clamp too (crafted future -> degenerate now..now window).
-      const windowStartMs = Math.min(save.player.lastSavedAt, authorityNowMs)
+      // must clamp too. r14-COR-1: the start anchor is
+      // authorityNowMs - elapsed, not authorityNowMs - the window is
+      // the authorized DURATION positioned at the payload marker, so a
+      // client clock honestly ahead of the server (lastSavedAt >
+      // untilMs) must still collect the full span instead of
+      // collapsing to [until, until]; only content past the approved
+      // end is denied (windowEnd stays clamped at authorityNowMs).
+      const windowStartMs = Math.min(
+        save.player.lastSavedAt,
+        authorityNowMs - offlineSeconds * 1000,
+      )
       const windowEndMs = Math.min(windowStartMs + offlineSeconds * 1000, authorityNowMs)
       const percentAtSave = getActiveCultivationSpeedPercent(savedTimedEffects, windowStartMs)
       const unbuffedCultivationPerSecond = save.player.cultivationPerSecond / (1 + percentAtSave)
@@ -505,7 +529,7 @@ export const usePlayerStore = defineStore('player', {
       // honest ceilings; stackable chains keep their forward expiry).
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
-          ...boundTimedEffectClocks(effect, authorityNowMs),
+          ...boundTimedEffectClocks(effect, authorityNowMs, effectProvenanceMs),
           modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
         }),
       )

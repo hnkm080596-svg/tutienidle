@@ -187,6 +187,38 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
     )
   })
 
+  it('cold-boot with an honest fast client clock settles the full window (r14-COR-1 pin)', () => {
+    const player = usePlayerStore()
+    const manager = registeredManager()
+    manager.setActivePlayer(player.$state)
+
+    // Client clock 300s ahead of the server: lastSavedAt lands past
+    // untilMs even though the save is honest. Pre-fix the settle
+    // window collapsed to [until, until] -> production/decompose paid
+    // 0 while auto-farm paid the same elapsed.
+    const save = makeSave({ lastSavedAt: NOW + 300_000 })
+    const productionSpy = vi.spyOn(manager.productionSystem, 'settleOffline')
+    const decomposeSpy = vi.spyOn(manager.decomposeSystem, 'settleOffline')
+
+    const result = restoreGameSession(player, manager, save, {
+      kind: 'cold-boot',
+      sinceMs: NOW - 200_000,
+      untilMs: NOW,
+    })
+
+    expect(result.status).toBe('ok')
+    // offlineSinceMs anchors at untilMs - elapsed = sinceMs; the end
+    // still clamps at the approved untilMs - full authorized width.
+    expect(productionSpy).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      NOW,
+      expect.objectContaining({ offlineSinceMs: NOW - 200_000 }),
+    )
+    expect(decomposeSpy).toHaveBeenCalledWith(NOW, NOW - 200_000)
+  })
+
   it('cold-boot window under the 60s gate runs no production/auto-farm catch-up', () => {
     const player = usePlayerStore()
     const manager = registeredManager()

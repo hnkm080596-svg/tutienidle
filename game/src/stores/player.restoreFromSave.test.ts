@@ -215,7 +215,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(effect.expiresAtMs).toBeLessThanOrEqual(effect.appliedAtMs + 24 * 60 * 60 * 1000)
   })
 
-  it('crafted-future lastSavedAt under cold-boot mints no cultivation (r12-AUT-3 pin)', () => {
+  it('crafted-future lastSavedAt under cold-boot pays ONLY the authorized window (r12-AUT-3, r14-COR-1)', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({
       cultivationPerSecond: 20,
@@ -228,10 +228,82 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
       untilMs: currentMs,
     })
 
-    // offlineSeconds comes from the server window (600s > cap-free
-    // mortal gate), but the payable window clamps [now, now] -> 0.
+    // offlineSeconds comes from the server window (600s). The payable
+    // window anchors at untilMs - elapsed -> [now-600s, now]: the
+    // forged marker cannot position content past the approved end and
+    // gains nothing beyond the authorized span (600s * 20/s = 12000,
+    // post-cap 600).
     expect(result.elapsedSeconds).toBe(600)
-    expect(result.cultivation).toBe(0)
+    expect(result.cultivation).toBe(600)
+  })
+
+  it('honest fast client clock under cold-boot still pays the full authorized window (r14-COR-1 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      cultivationPerSecond: 1,
+      // Client clock 300s ahead of the server: lastSavedAt lands past
+      // untilMs even though the save is honest.
+      lastSavedAt: currentMs + 300_000,
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    // Pre-fix the window collapsed to [until, until] -> 0 while
+    // auto-farm paid the same elapsed (asymmetric underpayment).
+    expect(result.elapsedSeconds).toBe(500)
+    expect(result.cultivation).toBe(500)
+  })
+
+  it('skewed client clock inside the window still pays the full authorized span (r14-COR-1)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      cultivationPerSecond: 1,
+      // Client clock 300s ahead: honest stamp = since + 300s.
+      lastSavedAt: currentMs - 200_000,
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    // Pre-fix the window was [lastSavedAt, until] = 200s -> the client
+    // lost the 300s skew every cold boot.
+    expect(result.elapsedSeconds).toBe(500)
+    expect(result.cultivation).toBe(500)
+  })
+
+  it('forged far-future expires on a stale save clamps to its dead provenance, not boot + 24h (r14-AUT-2 pin)', () => {
+    const player = usePlayerStore()
+    const staleSavedAt = currentMs - 10 * 86_400_000 // save is 10 days old
+    const save = buildMinimalSave({
+      lastSavedAt: staleSavedAt,
+      persistentTimedEffects: [
+        {
+          id: 'fx-forged',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: staleSavedAt - 3_600_000,
+          expiresAtMs: currentMs + 365 * 86_400_000, // forged: +1y
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    // Honest provenance bound: expires <= lastSavedAt + duration -
+    // the forged deadline clamps to ~9 days in the past (dead), not
+    // now + 24h (a free revived buff).
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(staleSavedAt + 24 * 60 * 60 * 1000)
+    expect(effect.expiresAtMs).toBeLessThan(currentMs)
   })
 
   it('buff tu luyện đã hết hạn trước khi save → rate lưu trừ hết phần buff', () => {

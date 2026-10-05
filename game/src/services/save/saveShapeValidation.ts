@@ -1528,7 +1528,18 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
               // expires BEFORE applied. Forward-honesty bounds live at
               // the restore seam (boundTimedEffectClocks), not in the
               // shape gate.
-              (effect.expiresAtMs as number) < (effect.appliedAtMs as number))
+              (effect.expiresAtMs as number) < (effect.appliedAtMs as number)) ||
+            (isFiniteNumber(effect.expiresAtMs) &&
+              isFiniteNumber(player.lastSavedAt) &&
+              // r14-AUT-2/3: expires - appliedAt is honestly unbounded
+              // over rebuys, but expires - lastSavedAt is NOT: every
+              // extension is appTime + TU_LINH_TRAN_DURATION_MS with
+              // appTime <= lastSavedAt, so a deadline past
+              // lastSavedAt + duration is impossible provenance (and a
+              // forged one would also loosen the cps cap via the live-
+              // TLT check above and revive at restore).
+              (effect.expiresAtMs as number) >
+                (player.lastSavedAt as number) + TU_LINH_TRAN_DURATION_MS)
           ) {
             issues.push({
               path: effectPath,

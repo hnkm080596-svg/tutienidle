@@ -630,6 +630,13 @@ export class ProductionSystem {
 
     const tierIndex = rollWeightedIndex(cappedProfile, random)
 
+    // r14-INT-4: the all-zero pool returns the -1 sentinel - guard it
+    // explicitly like the ageIndex sites below instead of relying on
+    // realmIds[-1] -> undefined.
+    if (tierIndex < 0) {
+      return []
+    }
+
     const tierRealmId = this.deps.territory.realmIds[tierIndex]
 
     if (!tierRealmId) {

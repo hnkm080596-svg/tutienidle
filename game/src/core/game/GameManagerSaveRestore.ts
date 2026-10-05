@@ -403,11 +403,22 @@ export class GameManagerSaveRestore {
       (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
       authorityNowMs,
     )
-    // r13-COR-4: clamp the window START at now as well - a
+    // r13-COR-4: clamp the window START as well - a
     // crafted/skewed-future lastSavedAt otherwise positions
     // offlineSinceMs ahead of settleNowMs, confiscating every pending
     // decompose cycle and parking worker lanes in the future.
-    const offlineSinceMs = Math.min(save.player.lastSavedAt ?? settleNowMs, authorityNowMs)
+    // r14-COR-1: the start anchor is authorityNowMs - elapsed, not
+    // authorityNowMs - the window is the authorized DURATION
+    // positioned at the payload marker, so a client clock honestly
+    // ahead of the server (lastSavedAt > untilMs) still settles the
+    // full approved span instead of collapsing to a zero-width
+    // window while auto-farm pays the same elapsed (asymmetry was
+    // the r14 regression); settleNowMs still clamps the end at
+    // authorityNowMs.
+    const offlineSinceMs = Math.min(
+      save.player.lastSavedAt ?? settleNowMs,
+      authorityNowMs - elapsedOfflineSeconds * 1000,
+    )
 
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {
