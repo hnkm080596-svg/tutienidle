@@ -1,0 +1,37 @@
+.pc-acupoint-aura { position:absolute; width:64px; height:64px; margin:-32px; pointer-events:none; background-image:url('./acupoint-aura-sheet.png'); background-size:512px 256px; animation:pc-acupoint-breathe 2s steps(1,end) infinite; }
+@keyframes pc-acupoint-breathe {
+0.00000% { background-position: 0px 0px; }
+3.12500% { background-position: -64px 0px; }
+6.25000% { background-position: -128px 0px; }
+9.37500% { background-position: -192px 0px; }
+12.50000% { background-position: -256px 0px; }
+15.62500% { background-position: -320px 0px; }
+18.75000% { background-position: -384px 0px; }
+21.87500% { background-position: -448px 0px; }
+25.00000% { background-position: 0px -64px; }
+28.12500% { background-position: -64px -64px; }
+31.25000% { background-position: -128px -64px; }
+34.37500% { background-position: -192px -64px; }
+37.50000% { background-position: -256px -64px; }
+40.62500% { background-position: -320px -64px; }
+43.75000% { background-position: -384px -64px; }
+46.87500% { background-position: -448px -64px; }
+50.00000% { background-position: 0px -128px; }
+53.12500% { background-position: -64px -128px; }
+56.25000% { background-position: -128px -128px; }
+59.37500% { background-position: -192px -128px; }
+62.50000% { background-position: -256px -128px; }
+65.62500% { background-position: -320px -128px; }
+68.75000% { background-position: -384px -128px; }
+71.87500% { background-position: -448px -128px; }
+75.00000% { background-position: 0px -192px; }
+78.12500% { background-position: -64px -192px; }
+81.25000% { background-position: -128px -192px; }
+84.37500% { background-position: -192px -192px; }
+87.50000% { background-position: -256px -192px; }
+90.62500% { background-position: -320px -192px; }
+93.75000% { background-position: -384px -192px; }
+96.87500% { background-position: -448px -192px; }
+100% { background-position:0 0; }
+}
+@media (prefers-reduced-motion:reduce) { .pc-acupoint-aura { animation:none; background-image:url('./acupoint-aura-poster.png'); background-size:64px 64px; background-position:0 0; } }

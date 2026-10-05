@@ -1,0 +1,35 @@
+[
+  {
+    "file": "button-primary-v1.png",
+    "width": 2048,
+    "height": 768,
+    "centerAlpha": 253,
+    "outsideAlpha": 0,
+    "format": "Format32bppArgb",
+    "status": "draft-not-wiring-ready",
+    "slices": null,
+    "safeRect": null
+  },
+  {
+    "file": "orb-frame-v1.png",
+    "width": 1254,
+    "height": 1254,
+    "centerAlpha": 0,
+    "outsideAlpha": 0,
+    "format": "Format32bppArgb",
+    "status": "draft-not-wiring-ready",
+    "slices": null,
+    "safeRect": null
+  },
+  {
+    "file": "page-frame-v1.png",
+    "width": 1536,
+    "height": 1024,
+    "centerAlpha": 0,
+    "outsideAlpha": 0,
+    "format": "Format32bppArgb",
+    "status": "draft-not-wiring-ready",
+    "slices": null,
+    "safeRect": null
+  }
+]

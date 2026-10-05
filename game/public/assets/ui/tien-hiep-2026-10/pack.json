@@ -1,0 +1,897 @@
+{
+  "version": 1,
+  "baseline": "f8af8007b0b6519e6aa6997fedad2cc77939538a",
+  "branch": "codex/tien-hiep-ui-redesign",
+  "scope": "PC UI implementation; mobile deferred; gameplay unchanged",
+  "sourceRectThreshold": 8,
+  "assets": [
+    {
+      "id": "avatar-ring",
+      "url": "/assets/ui/tien-hiep-2026-10/source/avatar-ring.png",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sourceRect": {
+        "x": 41,
+        "y": 40,
+        "width": 1172,
+        "height": 1174
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 0
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "replaces": [
+        "avatar-frame"
+      ],
+      "render": "contain-source-rect",
+      "center": "transparent"
+    },
+    {
+      "id": "building-plaque",
+      "url": "/assets/ui/tien-hiep-2026-10/source/building-plaque.png",
+      "sourceSize": {
+        "width": 1024,
+        "height": 1536
+      },
+      "sourceRect": {
+        "x": 296,
+        "y": 0,
+        "width": 433,
+        "height": 1443
+      },
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "center": 254
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "replaces": [
+        "nav-seal-vertical",
+        "boss-seal",
+        "building-plaque"
+      ],
+      "render": "contain-source-rect",
+      "center": "fill"
+    },
+    {
+      "id": "button-primary",
+      "url": "/assets/ui/tien-hiep-2026-10/source/button-primary-v2.png",
+      "sourceSize": {
+        "width": 2048,
+        "height": 768
+      },
+      "sourceRect": {
+        "x": 7,
+        "y": 152,
+        "width": 2034,
+        "height": 448
+      },
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "button-ceremonial"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.12,
+      "center": "fill"
+    },
+    {
+      "id": "button-secondary",
+      "url": "/assets/ui/tien-hiep-2026-10/source/button-secondary.png",
+      "sourceSize": {
+        "width": 1983,
+        "height": 793
+      },
+      "sourceRect": {
+        "x": 90,
+        "y": 249,
+        "width": 1803,
+        "height": 260
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 254
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "button-compact",
+        "button-standard"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "ceremony-ribbon-red",
+      "url": "/assets/ui/tien-hiep-2026-10/source/ceremony-ribbon-red.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 0,
+        "y": 176,
+        "width": 2172,
+        "height": 340
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 254
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "ceremony-ribbon",
+      "url": "/assets/ui/tien-hiep-2026-10/source/ceremony-ribbon.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 8,
+        "y": 149,
+        "width": 2158,
+        "height": 404
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "ceremony-ribbon"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "divider",
+      "url": "/assets/ui/tien-hiep-2026-10/source/divider.png",
+      "sourceSize": {
+        "width": 1774,
+        "height": 887
+      },
+      "sourceRect": {
+        "x": 34,
+        "y": 397,
+        "width": 1706,
+        "height": 90
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "divider-ornament"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "identity-plate",
+      "url": "/assets/ui/tien-hiep-2026-10/source/identity-plate.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 57,
+        "y": 130,
+        "width": 2072,
+        "height": 367
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "identity-plate"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "list-row",
+      "url": "/assets/ui/tien-hiep-2026-10/source/list-row.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 48,
+        "y": 196,
+        "width": 2077,
+        "height": 322
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 254
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "list-row"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "navigation-rail",
+      "url": "/assets/ui/tien-hiep-2026-10/source/navigation-rail.png",
+      "sourceSize": {
+        "width": 971,
+        "height": 1619
+      },
+      "sourceRect": {
+        "x": 341,
+        "y": 44,
+        "width": 289,
+        "height": 1529
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "replaces": [],
+      "render": "nine-slice-source-rect",
+      "center": "fill",
+      "slices": {
+        "left": 58,
+        "right": 58,
+        "top": 275,
+        "bottom": 275
+      },
+      "destinationBorder": 30
+    },
+    {
+      "id": "orb-frame",
+      "url": "/assets/ui/tien-hiep-2026-10/source/orb-frame.png",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sourceRect": {
+        "x": 48,
+        "y": 61,
+        "width": 1157,
+        "height": 1128
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 0
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "replaces": [
+        "icon-button-utility",
+        "dao-luan-center",
+        "dao-luan-node",
+        "rune-node",
+        "slider-thumb",
+        "skill-orb-frame",
+        "turn-token",
+        "stage-node",
+        "timer-ring"
+      ],
+      "render": "contain-source-rect",
+      "center": "transparent"
+    },
+    {
+      "id": "page-frame",
+      "url": "/assets/ui/tien-hiep-2026-10/source/page-frame.png",
+      "sourceSize": {
+        "width": 1536,
+        "height": 1024
+      },
+      "sourceRect": {
+        "x": 12,
+        "y": 4,
+        "width": 1507,
+        "height": 1008
+      },
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "center": 0
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "replaces": [
+        "surface-xl-scroll",
+        "frame-xl-ceremony",
+        "imperial-scroll-body"
+      ],
+      "render": "nine-slice-source-rect",
+      "center": "transparent",
+      "slices": {
+        "left": 422,
+        "right": 422,
+        "top": 292,
+        "bottom": 292
+      },
+      "destinationBorder": 60
+    },
+    {
+      "id": "panel-frame",
+      "url": "/assets/ui/tien-hiep-2026-10/source/panel-frame.png",
+      "sourceSize": {
+        "width": 1448,
+        "height": 1086
+      },
+      "sourceRect": {
+        "x": 10,
+        "y": 57,
+        "width": 1428,
+        "height": 972
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 0
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "replaces": [
+        "frame-xs-tooltip",
+        "surface-m-panel",
+        "frame-m-modal",
+        "surface-l-drawer"
+      ],
+      "render": "nine-slice-source-rect",
+      "center": "transparent",
+      "slices": {
+        "left": 286,
+        "right": 286,
+        "top": 194,
+        "bottom": 194
+      },
+      "destinationBorder": 24
+    },
+    {
+      "id": "paper-surface",
+      "url": "/assets/ui/tien-hiep-2026-10/source/paper-surface.png",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1254,
+        "height": 1254
+      },
+      "alpha": {
+        "min": 255,
+        "max": 255,
+        "center": 255
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "replaces": [
+        "paper-grain-tile"
+      ],
+      "render": "tile",
+      "center": "fill"
+    },
+    {
+      "id": "power-ribbon",
+      "url": "/assets/ui/tien-hiep-2026-10/source/power-ribbon.png",
+      "sourceSize": {
+        "width": 1983,
+        "height": 793
+      },
+      "sourceRect": {
+        "x": 10,
+        "y": 140,
+        "width": 1963,
+        "height": 477
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "progress-track",
+      "url": "/assets/ui/tien-hiep-2026-10/source/progress-track.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 40,
+        "y": 289,
+        "width": 2091,
+        "height": 134
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "entity-bar",
+        "scrollbar",
+        "toggle-track",
+        "slider-track"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "resource-pill",
+      "url": "/assets/ui/tien-hiep-2026-10/source/resource-pill.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 20,
+        "y": 147,
+        "width": 2133,
+        "height": 398
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "resource-pill"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "section-header",
+      "url": "/assets/ui/tien-hiep-2026-10/source/section-header.png",
+      "sourceSize": {
+        "width": 1774,
+        "height": 887
+      },
+      "sourceRect": {
+        "x": 23,
+        "y": 214,
+        "width": 1735,
+        "height": 417
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "section-plaque"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "slot-frame",
+      "url": "/assets/ui/tien-hiep-2026-10/source/slot-frame.png",
+      "sourceSize": {
+        "width": 1254,
+        "height": 1254
+      },
+      "sourceRect": {
+        "x": 102,
+        "y": 129,
+        "width": 1050,
+        "height": 993
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 0
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "replaces": [
+        "frame-s-slot"
+      ],
+      "render": "nine-slice-source-rect",
+      "center": "transparent",
+      "slices": {
+        "left": 273,
+        "right": 273,
+        "top": 258,
+        "bottom": 258
+      },
+      "destinationBorder": 14
+    },
+    {
+      "id": "tab-plate",
+      "url": "/assets/ui/tien-hiep-2026-10/source/tab-plate.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 67,
+        "y": 193,
+        "width": 2039,
+        "height": 337
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "seal-chip",
+        "tab-seal"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "text-field",
+      "url": "/assets/ui/tien-hiep-2026-10/source/text-field.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 29,
+        "y": 177,
+        "width": 2114,
+        "height": 349
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "text-field"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "title-plaque",
+      "url": "/assets/ui/tien-hiep-2026-10/source/title-plaque.png",
+      "sourceSize": {
+        "width": 2172,
+        "height": 724
+      },
+      "sourceRect": {
+        "x": 31,
+        "y": 205,
+        "width": 2110,
+        "height": 302
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 253
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.23,
+        "y": 0.18,
+        "width": 0.54,
+        "height": 0.64
+      },
+      "replaces": [
+        "scroll-title-plaque"
+      ],
+      "render": "three-slice-source-rect",
+      "capFraction": 0.22,
+      "center": "fill"
+    },
+    {
+      "id": "world-vista",
+      "url": "/assets/ui/tien-hiep-2026-10/source/world-vista.png",
+      "sourceSize": {
+        "width": 1672,
+        "height": 941
+      },
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 941
+      },
+      "alpha": {
+        "min": 255,
+        "max": 255,
+        "center": 255
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "replaces": [],
+      "render": "cover",
+      "center": "fill",
+      "role": "decorative UI backdrop; keep live building props/hotspots separate"
+    },
+    {
+      "id": "panel-frame-v2",
+      "url": "/assets/ui/tien-hiep-2026-10/source/panel-frame-thin-v3.png",
+      "sourceSize": {
+        "width": 1448,
+        "height": 1086
+      },
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1448,
+        "height": 1086
+      },
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "center": 0
+      },
+      "tintable": false,
+      "status": "art-delivered",
+      "safeRectNormalized": {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.6,
+        "height": 0.6
+      },
+      "replaces": [],
+      "render": "nine-slice-source-rect",
+      "center": "transparent",
+      "slices": {
+        "left": 320,
+        "right": 320,
+        "top": 240,
+        "bottom": 240
+      },
+      "destinationBorder": 24,
+      "provenance": "ImageGen transparent thin antique-gold border matched to user-selected warm paper concept; replaces heavy curl frame"
+    }
+  ],
+  "legacyMapping": {
+    "frame-xs-tooltip": "panel-frame-v2",
+    "frame-s-slot": "slot-frame",
+    "surface-m-panel": "panel-frame-v2",
+    "frame-m-modal": "panel-frame-v2",
+    "surface-l-drawer": "panel-frame-v2",
+    "surface-xl-scroll": "panel-frame-v2",
+    "frame-xl-ceremony": "panel-frame-v2",
+    "button-compact": "button-secondary",
+    "button-standard": "button-secondary",
+    "button-ceremonial": "button-primary",
+    "icon-button-utility": "orb-frame",
+    "seal-chip": "tab-plate",
+    "resource-pill": "resource-pill",
+    "entity-bar": "progress-track",
+    "divider-ornament": "divider",
+    "scrollbar": "progress-track",
+    "dao-luan-center": "orb-frame",
+    "dao-luan-node": "orb-frame",
+    "rune-node": "orb-frame",
+    "tab-seal": "tab-plate",
+    "imperial-scroll-body": "panel-frame-v2",
+    "imperial-scroll-roller": null,
+    "scroll-title-plaque": "title-plaque",
+    "section-plaque": "section-header",
+    "nav-seal-vertical": "building-plaque",
+    "list-row": "list-row",
+    "avatar-frame": "avatar-ring",
+    "identity-plate": "identity-plate",
+    "text-field": "text-field",
+    "toggle-track": "progress-track",
+    "slider-track": "progress-track",
+    "slider-thumb": "orb-frame",
+    "skill-orb-frame": "orb-frame",
+    "turn-token": "orb-frame",
+    "boss-seal": "building-plaque",
+    "stage-node": "orb-frame",
+    "building-plaque": "building-plaque",
+    "corner-ornament": null,
+    "cloud-ornament": null,
+    "timer-ring": "orb-frame",
+    "ceremony-ribbon": "ceremony-ribbon",
+    "paper-grain-tile": "paper-surface",
+    "alchemy-cauldron-prop": null
+  },
+  "preserved": [
+    "existing logo",
+    "existing animated characters",
+    "existing world/building art",
+    "existing item and skill icons",
+    "SVG functional symbols",
+    "alchemy-cauldron-prop"
+  ],
+  "suppressed": [
+    "imperial-scroll-roller",
+    "corner-ornament",
+    "cloud-ornament"
+  ],
+  "warning": "Do not copy old nine-slice values. All crop/slice units are source pixels. Preview is art evidence, not production-runtime evidence."
+}

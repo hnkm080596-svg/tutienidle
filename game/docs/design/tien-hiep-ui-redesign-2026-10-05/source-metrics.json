@@ -1,0 +1,439 @@
+[
+  {
+    "id": "avatar-ring",
+    "width": 1254,
+    "height": 1254,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 0,
+    "transparentPixels": 1286336,
+    "redVisible": 7475,
+    "redInvisible": 0,
+    "redAlphaMax": 5,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 41,
+      "y": 40,
+      "width": 1172,
+      "height": 1174
+    }
+  },
+  {
+    "id": "building-plaque",
+    "width": 1024,
+    "height": 1536,
+    "alphaMin": 0,
+    "alphaMax": 254,
+    "centerAlpha": 254,
+    "transparentPixels": 1188524,
+    "redVisible": 0,
+    "redInvisible": 0,
+    "redAlphaMax": 0,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 296,
+      "y": 0,
+      "width": 433,
+      "height": 1443
+    }
+  },
+  {
+    "id": "button-primary",
+    "width": 2048,
+    "height": 768,
+    "alphaMin": 0,
+    "alphaMax": 254,
+    "centerAlpha": 253,
+    "transparentPixels": 831230,
+    "redVisible": 0,
+    "redInvisible": 0,
+    "redAlphaMax": 0,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 15,
+      "y": 145,
+      "width": 2018,
+      "height": 459
+    }
+  },
+  {
+    "id": "button-secondary",
+    "width": 1983,
+    "height": 793,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 254,
+    "transparentPixels": 1138599,
+    "redVisible": 337,
+    "redInvisible": 0,
+    "redAlphaMax": 5,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 90,
+      "y": 249,
+      "width": 1803,
+      "height": 260
+    }
+  },
+  {
+    "id": "ceremony-ribbon-red",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 254,
+    "transparentPixels": 1053925,
+    "redVisible": 2589,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 0,
+      "y": 176,
+      "width": 2172,
+      "height": 340
+    }
+  },
+  {
+    "id": "ceremony-ribbon",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 1014589,
+    "redVisible": 4551,
+    "redInvisible": 0,
+    "redAlphaMax": 5,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 8,
+      "y": 149,
+      "width": 2158,
+      "height": 404
+    }
+  },
+  {
+    "id": "divider",
+    "width": 1774,
+    "height": 887,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 1531041,
+    "redVisible": 496,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 34,
+      "y": 397,
+      "width": 1706,
+      "height": 90
+    }
+  },
+  {
+    "id": "identity-plate",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 1020732,
+    "redVisible": 719,
+    "redInvisible": 0,
+    "redAlphaMax": 5,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 57,
+      "y": 130,
+      "width": 2072,
+      "height": 367
+    }
+  },
+  {
+    "id": "list-row",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 254,
+    "transparentPixels": 884245,
+    "redVisible": 4963,
+    "redInvisible": 0,
+    "redAlphaMax": 1,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 48,
+      "y": 196,
+      "width": 2077,
+      "height": 322
+    }
+  },
+  {
+    "id": "navigation-rail",
+    "width": 971,
+    "height": 1619,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 1207602,
+    "redVisible": 170,
+    "redInvisible": 0,
+    "redAlphaMax": 1,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 341,
+      "y": 44,
+      "width": 289,
+      "height": 1529
+    }
+  },
+  {
+    "id": "orb-frame",
+    "width": 1254,
+    "height": 1254,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 0,
+    "transparentPixels": 1348418,
+    "redVisible": 11298,
+    "redInvisible": 0,
+    "redAlphaMax": 5,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 48,
+      "y": 61,
+      "width": 1157,
+      "height": 1128
+    }
+  },
+  {
+    "id": "page-frame",
+    "width": 1536,
+    "height": 1024,
+    "alphaMin": 0,
+    "alphaMax": 254,
+    "centerAlpha": 0,
+    "transparentPixels": 1223677,
+    "redVisible": 0,
+    "redInvisible": 0,
+    "redAlphaMax": 0,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 12,
+      "y": 4,
+      "width": 1507,
+      "height": 1008
+    }
+  },
+  {
+    "id": "panel-frame",
+    "width": 1448,
+    "height": 1086,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 0,
+    "transparentPixels": 1349579,
+    "redVisible": 6371,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 10,
+      "y": 57,
+      "width": 1428,
+      "height": 972
+    }
+  },
+  {
+    "id": "paper-surface",
+    "width": 1254,
+    "height": 1254,
+    "alphaMin": 255,
+    "alphaMax": 255,
+    "centerAlpha": 255,
+    "transparentPixels": 0,
+    "redVisible": 0,
+    "redInvisible": 0,
+    "redAlphaMax": 0,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 0,
+      "y": 0,
+      "width": 1254,
+      "height": 1254
+    }
+  },
+  {
+    "id": "power-ribbon",
+    "width": 1983,
+    "height": 793,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 911689,
+    "redVisible": 2630,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 10,
+      "y": 140,
+      "width": 1963,
+      "height": 477
+    }
+  },
+  {
+    "id": "progress-track",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 1346120,
+    "redVisible": 181,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 40,
+      "y": 289,
+      "width": 2091,
+      "height": 134
+    }
+  },
+  {
+    "id": "resource-pill",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 914587,
+    "redVisible": 4097,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 20,
+      "y": 147,
+      "width": 2133,
+      "height": 398
+    }
+  },
+  {
+    "id": "section-header",
+    "width": 1774,
+    "height": 887,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 1161997,
+    "redVisible": 4835,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 23,
+      "y": 214,
+      "width": 1735,
+      "height": 417
+    }
+  },
+  {
+    "id": "slot-frame",
+    "width": 1254,
+    "height": 1254,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 0,
+    "transparentPixels": 1331489,
+    "redVisible": 6475,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 102,
+      "y": 129,
+      "width": 1050,
+      "height": 993
+    }
+  },
+  {
+    "id": "tab-plate",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 918044,
+    "redVisible": 3208,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 67,
+      "y": 193,
+      "width": 2039,
+      "height": 337
+    }
+  },
+  {
+    "id": "text-field",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 1010001,
+    "redVisible": 446,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 29,
+      "y": 177,
+      "width": 2114,
+      "height": 349
+    }
+  },
+  {
+    "id": "title-plaque",
+    "width": 2172,
+    "height": 724,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "centerAlpha": 253,
+    "transparentPixels": 1053046,
+    "redVisible": 578,
+    "redInvisible": 0,
+    "redAlphaMax": 2,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 31,
+      "y": 205,
+      "width": 2110,
+      "height": 302
+    }
+  },
+  {
+    "id": "world-vista",
+    "width": 1672,
+    "height": 941,
+    "alphaMin": 255,
+    "alphaMax": 255,
+    "centerAlpha": 255,
+    "transparentPixels": 0,
+    "redVisible": 0,
+    "redInvisible": 0,
+    "redAlphaMax": 0,
+    "redAbove32": 0,
+    "bounds": {
+      "x": 0,
+      "y": 0,
+      "width": 1672,
+      "height": 941
+    }
+  }
+]

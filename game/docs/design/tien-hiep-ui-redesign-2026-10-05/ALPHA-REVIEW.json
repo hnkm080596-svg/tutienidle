@@ -1,0 +1,1920 @@
+[
+  {
+    "file": "source/avatar-ring.png",
+    "width": 1254,
+    "height": 1254,
+    "transparentPct": 81.8,
+    "partialPct": 18.14,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "source/building-plaque.png",
+    "width": 1024,
+    "height": 1536,
+    "transparentPct": 75.56,
+    "partialPct": 24.44,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "source/button-primary-v2.png",
+    "width": 2048,
+    "height": 768,
+    "transparentPct": 52.48,
+    "partialPct": 47.52,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/button-primary.png",
+    "width": 2048,
+    "height": 768,
+    "transparentPct": 52.85,
+    "partialPct": 47.15,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/button-secondary.png",
+    "width": 1983,
+    "height": 793,
+    "transparentPct": 72.41,
+    "partialPct": 27.5,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "source/ceremony-ribbon-red.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 67.02,
+    "partialPct": 32.93,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "source/ceremony-ribbon.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 64.52,
+    "partialPct": 35.44,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/divider.png",
+    "width": 1774,
+    "height": 887,
+    "transparentPct": 97.3,
+    "partialPct": 2.69,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/identity-plate.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 64.91,
+    "partialPct": 35.04,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/ink-panel-cutout-v3.png",
+    "width": 1448,
+    "height": 1086,
+    "transparentPct": 14.21,
+    "partialPct": 85.79,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/list-row.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 56.23,
+    "partialPct": 43.77,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "source/navigation-rail.png",
+    "width": 971,
+    "height": 1619,
+    "transparentPct": 76.82,
+    "partialPct": 23.18,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/opening-vista-warm-v1.png",
+    "width": 1672,
+    "height": 941,
+    "transparentPct": 0,
+    "partialPct": 0,
+    "corners": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "center": 255
+  },
+  {
+    "file": "source/orb-frame.png",
+    "width": 1254,
+    "height": 1254,
+    "transparentPct": 85.75,
+    "partialPct": 14.22,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "source/page-frame.png",
+    "width": 1536,
+    "height": 1024,
+    "transparentPct": 77.8,
+    "partialPct": 22.2,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "source/panel-frame-thin-v3.png",
+    "width": 1448,
+    "height": 1086,
+    "transparentPct": 91.32,
+    "partialPct": 8.68,
+    "corners": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "source/panel-frame-v2.png",
+    "width": 1448,
+    "height": 1086,
+    "transparentPct": 82.04,
+    "partialPct": 17.96,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "source/panel-frame.png",
+    "width": 1448,
+    "height": 1086,
+    "transparentPct": 85.82,
+    "partialPct": 14.14,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "source/paper-panel-cutout-v3.png",
+    "width": 1448,
+    "height": 1086,
+    "transparentPct": 12.73,
+    "partialPct": 87.27,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 251
+  },
+  {
+    "file": "source/paper-surface.png",
+    "width": 1254,
+    "height": 1254,
+    "transparentPct": 0,
+    "partialPct": 0,
+    "corners": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "center": 255
+  },
+  {
+    "file": "source/power-ribbon.png",
+    "width": 1983,
+    "height": 793,
+    "transparentPct": 57.98,
+    "partialPct": 42.02,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/progress-track.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 85.6,
+    "partialPct": 14.33,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/resource-pill.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 58.16,
+    "partialPct": 41.83,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/section-header.png",
+    "width": 1774,
+    "height": 887,
+    "transparentPct": 73.85,
+    "partialPct": 26.07,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/slot-frame.png",
+    "width": 1254,
+    "height": 1254,
+    "transparentPct": 84.67,
+    "partialPct": 15.31,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "source/tab-plate.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 58.38,
+    "partialPct": 41.62,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/text-field.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 64.23,
+    "partialPct": 35.68,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/title-plaque.png",
+    "width": 2172,
+    "height": 724,
+    "transparentPct": 66.97,
+    "partialPct": 33.03,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "source/warm-branch-corner-v1.png",
+    "width": 1672,
+    "height": 941,
+    "transparentPct": 73.34,
+    "partialPct": 26.66,
+    "corners": [
+      0,
+      0,
+      135,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "source/warm-landscape-header-v1.png",
+    "width": 2159,
+    "height": 728,
+    "transparentPct": 58.12,
+    "partialPct": 41.88,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 172
+  },
+  {
+    "file": "source/world-vista-warm-v1.png",
+    "width": 1672,
+    "height": 941,
+    "transparentPct": 0,
+    "partialPct": 0,
+    "corners": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "center": 255
+  },
+  {
+    "file": "source/world-vista.png",
+    "width": 1672,
+    "height": 941,
+    "transparentPct": 0,
+    "partialPct": 0,
+    "corners": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "center": 255
+  },
+  {
+    "file": "runtime/avatar-frame@1x.png",
+    "width": 96,
+    "height": 96,
+    "transparentPct": 72.33,
+    "partialPct": 23.86,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/avatar-frame@2x.png",
+    "width": 192,
+    "height": 192,
+    "transparentPct": 77.08,
+    "partialPct": 20.24,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/boss-seal@1x.png",
+    "width": 80,
+    "height": 104,
+    "transparentPct": 33.89,
+    "partialPct": 62.9,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "runtime/boss-seal@2x.png",
+    "width": 160,
+    "height": 208,
+    "transparentPct": 36.98,
+    "partialPct": 61.41,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "runtime/building-plaque.png",
+    "width": 433,
+    "height": 1443,
+    "transparentPct": 38.53,
+    "partialPct": 61.47,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "runtime/building-plaque@1x.png",
+    "width": 96,
+    "height": 160,
+    "transparentPct": 35.29,
+    "partialPct": 62.73,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "runtime/building-plaque@2x.png",
+    "width": 192,
+    "height": 320,
+    "transparentPct": 37.78,
+    "partialPct": 61.04,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "runtime/button-ceremonial@1x.png",
+    "width": 256,
+    "height": 96,
+    "transparentPct": 18.4,
+    "partialPct": 79.25,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-ceremonial@2x.png",
+    "width": 512,
+    "height": 192,
+    "transparentPct": 18.87,
+    "partialPct": 80.3,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-compact@1x.png",
+    "width": 160,
+    "height": 56,
+    "transparentPct": 6.34,
+    "partialPct": 89.67,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-compact@2x.png",
+    "width": 320,
+    "height": 112,
+    "transparentPct": 7.11,
+    "partialPct": 90.84,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-danger@1x.png",
+    "width": 192,
+    "height": 72,
+    "transparentPct": 27.68,
+    "partialPct": 69.34,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-danger@2x.png",
+    "width": 384,
+    "height": 144,
+    "transparentPct": 29.59,
+    "partialPct": 69.01,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-primary.png",
+    "width": 2034,
+    "height": 448,
+    "transparentPct": 18.51,
+    "partialPct": 81.49,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-secondary.png",
+    "width": 1803,
+    "height": 260,
+    "transparentPct": 8.88,
+    "partialPct": 90.82,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-standard@1x.png",
+    "width": 192,
+    "height": 72,
+    "transparentPct": 5.98,
+    "partialPct": 90.78,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/button-standard@2x.png",
+    "width": 384,
+    "height": 144,
+    "transparentPct": 8.23,
+    "partialPct": 90.15,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/ceremony-ribbon-red.png",
+    "width": 2172,
+    "height": 340,
+    "transparentPct": 29.95,
+    "partialPct": 69.94,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/ceremony-ribbon.png",
+    "width": 2158,
+    "height": 404,
+    "transparentPct": 36.07,
+    "partialPct": 63.86,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/ceremony-ribbon@1x.png",
+    "width": 320,
+    "height": 96,
+    "transparentPct": 34.86,
+    "partialPct": 63.23,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/ceremony-ribbon@2x.png",
+    "width": 640,
+    "height": 192,
+    "transparentPct": 36.06,
+    "partialPct": 63.19,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/cloud-ornament.png",
+    "width": 8,
+    "height": 8,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/cloud-ornament@1x.png",
+    "width": 8,
+    "height": 8,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/cloud-ornament@2x.png",
+    "width": 16,
+    "height": 16,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/corner-ornament.png",
+    "width": 8,
+    "height": 8,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/corner-ornament@1x.png",
+    "width": 8,
+    "height": 8,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/corner-ornament@2x.png",
+    "width": 16,
+    "height": 16,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/dao-luan-center@1x.png",
+    "width": 192,
+    "height": 192,
+    "transparentPct": 80.87,
+    "partialPct": 17.18,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/dao-luan-center@2x.png",
+    "width": 384,
+    "height": 384,
+    "transparentPct": 82.74,
+    "partialPct": 16.35,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/dao-luan-node@1x.png",
+    "width": 96,
+    "height": 96,
+    "transparentPct": 76.28,
+    "partialPct": 19.94,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/dao-luan-node@2x.png",
+    "width": 192,
+    "height": 192,
+    "transparentPct": 80.87,
+    "partialPct": 17.18,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/divider-ornament@1x.png",
+    "width": 256,
+    "height": 16,
+    "transparentPct": 61.67,
+    "partialPct": 36.11,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 252
+  },
+  {
+    "file": "runtime/divider-ornament@2x.png",
+    "width": 512,
+    "height": 32,
+    "transparentPct": 72.2,
+    "partialPct": 24.58,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/entity-bar@1x.png",
+    "width": 192,
+    "height": 32,
+    "transparentPct": 12.26,
+    "partialPct": 81.2,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/entity-bar@2x.png",
+    "width": 384,
+    "height": 64,
+    "transparentPct": 18.21,
+    "partialPct": 80.18,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/frame-m-modal@1x.png",
+    "width": 256,
+    "height": 256,
+    "transparentPct": 90.85,
+    "partialPct": 9.15,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/frame-m-modal@2x.png",
+    "width": 512,
+    "height": 512,
+    "transparentPct": 92.18,
+    "partialPct": 7.81,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/frame-s-slot@1x.png",
+    "width": 96,
+    "height": 96,
+    "transparentPct": 70.03,
+    "partialPct": 24.64,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/frame-s-slot@2x.png",
+    "width": 192,
+    "height": 192,
+    "transparentPct": 74.38,
+    "partialPct": 22.41,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/frame-xl-ceremony@1x.png",
+    "width": 512,
+    "height": 512,
+    "transparentPct": 92.18,
+    "partialPct": 7.81,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/frame-xl-ceremony@2x.png",
+    "width": 1024,
+    "height": 1024,
+    "transparentPct": 91.49,
+    "partialPct": 8.51,
+    "corners": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/frame-xs-tooltip@1x.png",
+    "width": 96,
+    "height": 96,
+    "transparentPct": 87.86,
+    "partialPct": 12.14,
+    "corners": [
+      3,
+      3,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/frame-xs-tooltip@2x.png",
+    "width": 192,
+    "height": 192,
+    "transparentPct": 89.8,
+    "partialPct": 10.2,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/icon-button-utility@1x.png",
+    "width": 96,
+    "height": 96,
+    "transparentPct": 76.28,
+    "partialPct": 19.94,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/icon-button-utility@2x.png",
+    "width": 192,
+    "height": 192,
+    "transparentPct": 80.87,
+    "partialPct": 17.18,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/identity-plate@1x.png",
+    "width": 384,
+    "height": 96,
+    "transparentPct": 26.24,
+    "partialPct": 71.78,
+    "corners": [
+      0,
+      0,
+      5,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/identity-plate@2x.png",
+    "width": 768,
+    "height": 192,
+    "transparentPct": 27.98,
+    "partialPct": 70.99,
+    "corners": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/imperial-scroll-body@1x.png",
+    "width": 768,
+    "height": 512,
+    "transparentPct": 91.83,
+    "partialPct": 8.17,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/imperial-scroll-body@2x.png",
+    "width": 1536,
+    "height": 1024,
+    "transparentPct": 91.2,
+    "partialPct": 8.8,
+    "corners": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/imperial-scroll-roller.png",
+    "width": 8,
+    "height": 8,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/imperial-scroll-roller@1x.png",
+    "width": 8,
+    "height": 8,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/imperial-scroll-roller@2x.png",
+    "width": 16,
+    "height": 16,
+    "transparentPct": 100,
+    "partialPct": 0,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/ink-panel.png",
+    "width": 1200,
+    "height": 900,
+    "transparentPct": 14.28,
+    "partialPct": 85.7,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/list-row@1x.png",
+    "width": 384,
+    "height": 64,
+    "transparentPct": 0.07,
+    "partialPct": 98.78,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "runtime/list-row@2x.png",
+    "width": 768,
+    "height": 128,
+    "transparentPct": 0.74,
+    "partialPct": 99.09,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/nav-seal-vertical@1x.png",
+    "width": 96,
+    "height": 128,
+    "transparentPct": 34.76,
+    "partialPct": 63.06,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "runtime/nav-seal-vertical@2x.png",
+    "width": 192,
+    "height": 256,
+    "transparentPct": 37.54,
+    "partialPct": 61.16,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 254
+  },
+  {
+    "file": "runtime/navigation-rail.png",
+    "width": 289,
+    "height": 1529,
+    "transparentPct": 17.58,
+    "partialPct": 82.41,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/orb-frame.png",
+    "width": 1157,
+    "height": 1128,
+    "transparentPct": 82.85,
+    "partialPct": 17.11,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/page-paper.png",
+    "width": 1200,
+    "height": 900,
+    "transparentPct": 12.74,
+    "partialPct": 87.24,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 251
+  },
+  {
+    "file": "runtime/panel-frame-v2.png",
+    "width": 1448,
+    "height": 1086,
+    "transparentPct": 91.32,
+    "partialPct": 8.68,
+    "corners": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/paper-grain-tile@1x.png",
+    "width": 256,
+    "height": 256,
+    "transparentPct": 0,
+    "partialPct": 0,
+    "corners": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "center": 255
+  },
+  {
+    "file": "runtime/paper-grain-tile@2x.png",
+    "width": 512,
+    "height": 512,
+    "transparentPct": 0,
+    "partialPct": 0,
+    "corners": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "center": 255
+  },
+  {
+    "file": "runtime/paper-panel.png",
+    "width": 1200,
+    "height": 900,
+    "transparentPct": 12.74,
+    "partialPct": 87.24,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 251
+  },
+  {
+    "file": "runtime/paper-surface.png",
+    "width": 512,
+    "height": 384,
+    "transparentPct": 0,
+    "partialPct": 0,
+    "corners": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "center": 255
+  },
+  {
+    "file": "runtime/power-ribbon.png",
+    "width": 1963,
+    "height": 477,
+    "transparentPct": 29.99,
+    "partialPct": 70.01,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/resource-pill@1x.png",
+    "width": 160,
+    "height": 48,
+    "transparentPct": 18.55,
+    "partialPct": 77.02,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/resource-pill@2x.png",
+    "width": 320,
+    "height": 96,
+    "transparentPct": 21.47,
+    "partialPct": 76.36,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/rune-node@1x.png",
+    "width": 64,
+    "height": 64,
+    "transparentPct": 72.31,
+    "partialPct": 22.71,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/rune-node@2x.png",
+    "width": 128,
+    "height": 128,
+    "transparentPct": 78.46,
+    "partialPct": 18.57,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/scroll-title-plaque@1x.png",
+    "width": 320,
+    "height": 88,
+    "transparentPct": 17.42,
+    "partialPct": 81.89,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/scroll-title-plaque@2x.png",
+    "width": 640,
+    "height": 176,
+    "transparentPct": 19.41,
+    "partialPct": 80.29,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/scrollbar@1x.png",
+    "width": 32,
+    "height": 128,
+    "transparentPct": 16.53,
+    "partialPct": 78.39,
+    "corners": [
+      4,
+      8,
+      3,
+      4
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/scrollbar@2x.png",
+    "width": 64,
+    "height": 256,
+    "transparentPct": 18.48,
+    "partialPct": 78.8,
+    "corners": [
+      0,
+      3,
+      0,
+      2
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/seal-chip@1x.png",
+    "width": 128,
+    "height": 48,
+    "transparentPct": 4.35,
+    "partialPct": 90.97,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/seal-chip@2x.png",
+    "width": 256,
+    "height": 96,
+    "transparentPct": 5.28,
+    "partialPct": 92.35,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/section-header.png",
+    "width": 1735,
+    "height": 417,
+    "transparentPct": 43.14,
+    "partialPct": 56.68,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/section-plaque@1x.png",
+    "width": 240,
+    "height": 56,
+    "transparentPct": 38.27,
+    "partialPct": 58.12,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/section-plaque@2x.png",
+    "width": 480,
+    "height": 112,
+    "transparentPct": 41.77,
+    "partialPct": 56.88,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/skill-orb-frame@1x.png",
+    "width": 96,
+    "height": 96,
+    "transparentPct": 76.28,
+    "partialPct": 19.94,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/skill-orb-frame@2x.png",
+    "width": 192,
+    "height": 192,
+    "transparentPct": 80.87,
+    "partialPct": 17.18,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/slider-thumb@1x.png",
+    "width": 40,
+    "height": 40,
+    "transparentPct": 64.31,
+    "partialPct": 30.94,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/slider-thumb@2x.png",
+    "width": 80,
+    "height": 80,
+    "transparentPct": 74.8,
+    "partialPct": 20.81,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/slider-track@1x.png",
+    "width": 256,
+    "height": 24,
+    "transparentPct": 8.56,
+    "partialPct": 83.33,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/slider-track@2x.png",
+    "width": 512,
+    "height": 48,
+    "transparentPct": 16.42,
+    "partialPct": 80.25,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/slot-frame.png",
+    "width": 1050,
+    "height": 993,
+    "transparentPct": 77,
+    "partialPct": 22.97,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/stage-node@1x.png",
+    "width": 80,
+    "height": 80,
+    "transparentPct": 74.8,
+    "partialPct": 20.81,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/stage-node@2x.png",
+    "width": 160,
+    "height": 160,
+    "transparentPct": 80.06,
+    "partialPct": 17.61,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/surface-l-drawer@1x.png",
+    "width": 384,
+    "height": 384,
+    "transparentPct": 92.13,
+    "partialPct": 7.87,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/surface-l-drawer@2x.png",
+    "width": 768,
+    "height": 768,
+    "transparentPct": 91.64,
+    "partialPct": 8.36,
+    "corners": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/surface-m-panel@1x.png",
+    "width": 256,
+    "height": 256,
+    "transparentPct": 90.85,
+    "partialPct": 9.15,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/surface-m-panel@2x.png",
+    "width": 512,
+    "height": 512,
+    "transparentPct": 92.18,
+    "partialPct": 7.81,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/surface-xl-scroll@1x.png",
+    "width": 512,
+    "height": 640,
+    "transparentPct": 92.17,
+    "partialPct": 7.82,
+    "corners": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/surface-xl-scroll@2x.png",
+    "width": 1024,
+    "height": 1280,
+    "transparentPct": 91.52,
+    "partialPct": 8.48,
+    "corners": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/tab-seal@1x.png",
+    "width": 96,
+    "height": 64,
+    "transparentPct": 4.07,
+    "partialPct": 91.62,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/tab-seal@2x.png",
+    "width": 192,
+    "height": 128,
+    "transparentPct": 5,
+    "partialPct": 93.47,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/text-field@1x.png",
+    "width": 320,
+    "height": 56,
+    "transparentPct": 20.06,
+    "partialPct": 76.8,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/text-field@2x.png",
+    "width": 640,
+    "height": 112,
+    "transparentPct": 23.33,
+    "partialPct": 75.1,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/timer-ring@1x.png",
+    "width": 128,
+    "height": 128,
+    "transparentPct": 78.46,
+    "partialPct": 18.57,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/timer-ring@2x.png",
+    "width": 256,
+    "height": 256,
+    "transparentPct": 81.51,
+    "partialPct": 17.01,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/title-plaque.png",
+    "width": 2110,
+    "height": 302,
+    "transparentPct": 19.12,
+    "partialPct": 80.86,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/toggle-track@1x.png",
+    "width": 96,
+    "height": 48,
+    "transparentPct": 15.39,
+    "partialPct": 79.99,
+    "corners": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/toggle-track@2x.png",
+    "width": 192,
+    "height": 96,
+    "transparentPct": 19.54,
+    "partialPct": 79.43,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 253
+  },
+  {
+    "file": "runtime/turn-token@1x.png",
+    "width": 64,
+    "height": 64,
+    "transparentPct": 72.31,
+    "partialPct": 22.71,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  },
+  {
+    "file": "runtime/turn-token@2x.png",
+    "width": 128,
+    "height": 128,
+    "transparentPct": 78.46,
+    "partialPct": 18.57,
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "center": 0
+  }
+]

@@ -1,0 +1,150 @@
+{
+  "source": "component-sheet-v1.png",
+  "components": [
+    {
+      "id": "title-plaque",
+      "file": "title-plaque-v1.png",
+      "width": 1570,
+      "height": 290,
+      "sourceRect": {
+        "left": 55,
+        "top": 0,
+        "width": 1570,
+        "height": 290
+      }
+    },
+    {
+      "id": "chapter-plaque",
+      "file": "chapter-plaque-v1.png",
+      "width": 690,
+      "height": 220,
+      "sourceRect": {
+        "left": 125,
+        "top": 290,
+        "width": 690,
+        "height": 220
+      }
+    },
+    {
+      "id": "chapter-tassel",
+      "file": "chapter-tassel-v1.png",
+      "width": 84,
+      "height": 144,
+      "sourceRect": {
+        "left": 125,
+        "top": 496,
+        "width": 84,
+        "height": 144
+      }
+    },
+    {
+      "id": "question-panel",
+      "file": "question-panel-v1.png",
+      "width": 720,
+      "height": 510,
+      "sourceRect": {
+        "left": 940,
+        "top": 277,
+        "width": 720,
+        "height": 510
+      }
+    },
+    {
+      "id": "answer-normal",
+      "file": "answer-normal-v1.png",
+      "width": 610,
+      "height": 72,
+      "sourceRect": {
+        "left": 209,
+        "top": 510,
+        "width": 610,
+        "height": 72
+      }
+    },
+    {
+      "id": "answer-hover",
+      "file": "answer-hover-v1.png",
+      "width": 627,
+      "height": 79,
+      "sourceRect": {
+        "left": 198,
+        "top": 576,
+        "width": 627,
+        "height": 79
+      }
+    },
+    {
+      "id": "answer-selected",
+      "file": "answer-selected-v1.png",
+      "width": 614,
+      "height": 73,
+      "sourceRect": {
+        "left": 205,
+        "top": 645,
+        "width": 614,
+        "height": 73
+      }
+    },
+    {
+      "id": "answer-pressed",
+      "file": "answer-pressed-v1.png",
+      "width": 610,
+      "height": 67,
+      "sourceRect": {
+        "left": 210,
+        "top": 717,
+        "width": 610,
+        "height": 67
+      }
+    },
+    {
+      "id": "countdown",
+      "file": "countdown-v1.png",
+      "width": 234,
+      "height": 206,
+      "sourceRect": {
+        "left": 30,
+        "top": 735,
+        "width": 234,
+        "height": 206
+      }
+    },
+    {
+      "id": "hp-frame",
+      "file": "hp-frame-v1.png",
+      "width": 666,
+      "height": 105,
+      "sourceRect": {
+        "left": 315,
+        "top": 778,
+        "width": 666,
+        "height": 105
+      }
+    },
+    {
+      "id": "time-tube",
+      "file": "time-tube-v1.png",
+      "width": 570,
+      "height": 42,
+      "sourceRect": {
+        "left": 354,
+        "top": 878,
+        "width": 570,
+        "height": 42
+      }
+    },
+    {
+      "id": "caption-plaque",
+      "file": "caption-plaque-v1.png",
+      "width": 645,
+      "height": 146,
+      "sourceRect": {
+        "left": 1004,
+        "top": 778,
+        "width": 645,
+        "height": 146
+      }
+    }
+  ],
+  "notes": "Typography and bar fills are separate runtime layers. Transparent exterior. Do not stretch; preserve native aspect ratio."
+}

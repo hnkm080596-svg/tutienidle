@@ -1,0 +1,20 @@
+{
+  "authoringTool": "Arcadia Effects",
+  "toolCheckout": "E:/tutienidle-tools/arcadia-effects/Arcada Effects",
+  "toolUpstream": "ed2bd1b371ecdaae9274f207c77535c61610f0f8",
+  "exportAPI": "AFX.Model.loadEffectFile + AFX.Atlas.build + AFX.Atlas.metaJSON",
+  "canonicalSource": "Pc Paper Acupoint Aura.json",
+  "externalLibraryWrite": false,
+  "sharedLoopSeconds": 2,
+  "frameCount": 32,
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "atlasColumns": 8,
+  "atlasRows": 4,
+  "displaySize": 64,
+  "hashes": {
+    "Pc Paper Acupoint Aura.json": "7b125a44d062263ed067dcd7da68b34731343ee31f1f01d13d69cd832441284d",
+    "acupoint-aura-sheet.png": "a08a06ac99882a2aec90b7a45611fb489ffaab29c5ac2fd3ccb80a7de11967e7",
+    "acupoint-aura-poster.png": "225902dc99407d4c56b82ce06d3aa1e69f2173bf44f4694e23973f338d8ef224"
+  }
+}

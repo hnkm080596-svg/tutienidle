@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import { chromium } from '@playwright/test';
+const dir='art/vfx/pc-paper-meridian';
+const browser=await chromium.launch({channel:'msedge',headless:true});
+const page=await browser.newPage({viewport:{width:1280,height:720}});let errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://127.0.0.1:5449/art/vfx/pc-paper-meridian/preview.html');
+const before=await page.locator('.pc-acupoint-aura').first().boundingBox();await page.waitForTimeout(550);
+const after=await page.locator('.pc-acupoint-aura').first().boundingBox();
+await page.screenshot({path:dir+'/preview-motion-1280.png'});
+await page.emulateMedia({reducedMotion:'reduce'});await page.screenshot({path:dir+'/preview-reduced-motion-1280.png'});
+const reduced=await page.locator('.pc-acupoint-aura').first().evaluate(el=>({animation:getComputedStyle(el).animationName,image:getComputedStyle(el).backgroundImage}));
+const proof={before,after,anchorStable:JSON.stringify(before)===JSON.stringify(after),reduced,pageErrors:errors};fs.writeFileSync(dir+'/runtime-proof.json',JSON.stringify(proof,null,2));console.log(proof);await browser.close();

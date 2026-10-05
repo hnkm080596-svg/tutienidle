@@ -1,0 +1,37 @@
+{
+  "source": "shared-resources-atlas-v1.png",
+  "resources": [
+    {
+      "name": "jade",
+      "width": 256,
+      "height": 256,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "name": "coin",
+      "width": 256,
+      "height": 256,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "name": "crystal",
+      "width": 256,
+      "height": 256,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    },
+    {
+      "name": "essence",
+      "width": 256,
+      "height": 256,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "opaque": false
+    }
+  ]
+}

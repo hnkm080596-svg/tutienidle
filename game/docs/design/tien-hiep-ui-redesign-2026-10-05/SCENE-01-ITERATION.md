@@ -1,0 +1,11 @@
+# Scene 01 review iteration
+
+Worktree: E:/tutienidle/.agent-worktrees/hoa-cau-fireball-vfx. Branch: codex/tien-hiep-ui-redesign. Local changes, no commit/push/integration.
+
+User ruling: four opening actions matching the approved reference. Login/register and general audio/display preferences slide from the right. Trial starts existing guest authentication then creation. When a resume candidate exists, the third action becomes Continue and invokes the existing resume owner. No new gameplay rule or save replacement.
+
+Bounded design: LoginOpening renders the four commands; AuthEntryScreen owns the existing credential validation, auth request, account-switch acknowledgement, busy/error and resume state. LoginSideDrawer owns only transition/focus/close. LoginSettingsContent composes existing SettingsAudioSection and SettingsUiScaleSection with their existing audio store and preference persistence APIs. No account/save/game manager UI mounted in opening settings. Escape/scrim/close return to the invoking command. Reduced motion disables sliding.
+
+G0/G1 source census: AuthEntryScreen -> authenticate/startGuest/continueSaved -> authService -> existing authenticated event consumer. SettingsAudioSection -> useAudioStore setters. SettingsUiScaleSection -> saveUiScale. Q1-Q12: same domain owners, observational resume probe, no rule formulas/direct domain writes; async busy guard remains; failed auth resumes commands with the error; existing account-switch acknowledgement retained; fresh trial and stored resume tested through production UI. The new presentation state is a nullable drawer kind, reset on close/unmount and never persisted. Dependencies point to existing services/stores/composables. No combat/inventory/quest/save implementation changes. Test helper consumers migrated from removed Begin to the actual trial/resume commands.
+
+Verification: failing-first opening component test observed before production changes. Scoped type-check/unit/i18n and actual Edge flow checks recorded in this iteration. This document is a scene review candidate, not aggregate QA completion. Prior aggregate QA evidence must be refreshed for the changed surfaces; remaining overall protocol obligations are still open.

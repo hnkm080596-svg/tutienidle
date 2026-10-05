@@ -1,0 +1,187 @@
+{
+  "status": "pending-user-review",
+  "aesthetic": "Warm ivory paper / ink wash / restrained antique gold",
+  "scope": "PC concepts only; no unapproved production wiring",
+  "approved": [
+    "opening",
+    "dong-phu",
+    "luyen-the"
+  ],
+  "existingPending": [
+    "kho-vat-v1.png",
+    "kinh-mach-v1.png",
+    "canh-gioi-v1.png"
+  ],
+  "requested": [
+    {
+      "id": "auth-after-start",
+      "title": "Đăng nhập sau Bắt Đầu",
+      "detail": "Warm landscape left, charcoal form right. Tabs Đăng Nhập / Tạo Tài Khoản, fields ID and Mật khẩu, eye toggle, primary Đăng Nhập; secondary Chơi Khách, existing-save Tiếp Tục, back. No social login, email, subscription or servers. ID panel compact; no character art."
+    },
+    {
+      "id": "character-creation",
+      "title": "Tạo Nhân Vật",
+      "detail": "Name field, nine selectable talent cards with small existing-icon placeholders, selected talent details, roll control and confirmation CTA, constrained starter Đạo Lộ selection. Left an airy RESERVED animated-character region, ink scenery only, no new character drawing. No gender/starter weapon mechanic unless provided; focus name/talent."
+    },
+    {
+      "id": "character",
+      "title": "Nhân Vật",
+      "detail": "Identity, realm/tầng, Đạo Lộ, level/cultivation, chiến lực; main stats with point allocation controls; talents and Ngũ Hành overview; detail attributes scroll area. Center-left reserve the existing animated player region using an empty ink halo, NO new full-body character art. Owned values illustrative."
+    },
+    {
+      "id": "equipment",
+      "title": "Trang Bị",
+      "detail": "Left reserved animated player area with six surrounding equipment sockets, power/stat summary; right actual inventory grid and equipment detail comparison. Controls equip/unequip existing items, category filter, no invented enchantment stats. Empty player region shows ink halo, no replacement character art."
+    },
+    {
+      "id": "forge",
+      "title": "Khí Đường",
+      "detail": "Workshop: internal operation tabs Cường Hóa / Tẩy Luyện / Tinh Luyện / Phân Giải; left eligible equipment list, selected item preview center, detail cost/outcome/CTA right, selected item history only if existing. Show costs beside action, insufficient cost state readable. No gacha or new crafting system."
+    },
+    {
+      "id": "skills",
+      "title": "Kỹ Năng",
+      "detail": "Đạo Lộ header and Ngũ Hành selectors; large five-element branching skill tree workspace left, selected fire skill detail panel right with current/next effects, required predecessor/realm, costs and Nâng Cấp. Connected nodes learned/available/locked/max. Do not bake arbitrary topology as production authority; show restrained representative branching. No new game mechanics."
+    },
+    {
+      "id": "technique",
+      "title": "Công Pháp",
+      "detail": "Selected technique identity and grade progression; current benefit vs next benefit, material cost and advancement action; compact existing technique presentation focal. Elegant paper with a single charcoal detail panel. No inventory of five purchasable techniques or random reroll mechanics."
+    },
+    {
+      "id": "zhou-thien",
+      "title": "Chu Thiên",
+      "detail": "Luyện Thể header tabs Luyện Thể / Kinh Mạch / Chu Thiên selected. Left fantasy seated ink schematic (not player art) and elegant circular circulation track of 36 discreet marks, progress 12/36, current capacity 18, milestone18 Tiểu Chu Thiên,36 Đại Chu Thiên. Right Bước13/18, reward sample Sinh Lực+34/Tấn Công+5/Phòng Ngự+3/Hồi Sinh Lực+1, single cost Tinh Hoa Pháp Thể 120/75, action Vận Chu Thiên. Steps discrete, no timer/auto circulation. Pale locked capacity marks."
+    },
+    {
+      "id": "quan-khi",
+      "title": "Quán Khí",
+      "detail": "Ritual selector: compact existing initiation-way choice cards left, selected ritual description/eligibility right, central abstract gold ink altar/halo only. Clear selected state, unmet conditions, Confirm and Cancel. Do not invent new character classes, chance/reroll or payment mechanics. Main title Quán Khí."
+    },
+    {
+      "id": "artifact",
+      "title": "Pháp Bảo",
+      "detail": "Artifact collection left, selected existing sword/jade artwork reserved center, detail grade/path/EXP bar and realm cap right; upgrade costs close to CTA, earned progression distinct from skill level. Tabs for authored paths only as representative labels, no invented random loot/shop. Full design even if beta locked."
+    },
+    {
+      "id": "formation",
+      "title": "Trận Pháp",
+      "detail": "Large three-by-three formation board left, eligible companion/player portrait cards in lower tray, selected formation choices plus brief patterns right, role/placement detail, xác nhận and restore/cancel existing intent. Board shows distinct occupied/empty/invalid cells, gold valid drag target. Characters represented by portrait placeholders only. No combat rules invented."
+    },
+    {
+      "id": "companion",
+      "title": "Đồng Hành",
+      "detail": "Owned companion portrait cards left, selected companion reserve area central, real attributes/skills and assignment management right, costs if existing. One selected, one unowned/locked state, no new species drawing or paid gacha. Existing animated art reserved, coherent list/detail."
+    },
+    {
+      "id": "recruit",
+      "title": "Chi Hiền Quán · Chiêu Mộ",
+      "detail": "Three tabs Chiêu Mộ / Duyên Phận / Quà Tặng. Recruitment active: candidates portrait list, selected candidate information, actual eligibility/cost rows, recruitment CTA. Plain placeholders for existing portraits, no new characters, no invented currency/rate or ten-pull lottery."
+    },
+    {
+      "id": "relationship",
+      "title": "Chi Hiền Quán · Duyên Phận",
+      "detail": "Three tabs Chiêu Mộ / Duyên Phận / Quà Tặng, Duyên Phận selected. Worker portrait list left, selected relationship description and current effects/progress right. Use existing relationship presentation only, no dating choices/daily timers or new mechanics. Portraits reserved."
+    },
+    {
+      "id": "gifts",
+      "title": "Chi Hiền Quán · Quà Tặng",
+      "detail": "Three tabs, Quà Tặng selected. Selected owned worker identity left; available gift inventory grid middle; selected gift detail, count controls and recipient/action right. Empty/selected/insufficient states readable, no new item types or relationship rules."
+    },
+    {
+      "id": "alchemy",
+      "title": "Luyện Đan",
+      "detail": "Recipe list left25%, beautiful small existing-style cauldron focal center30%, selected recipe variant/material costs/outcome and Luyện CTA right40%; horizontal production job queue at bottom with progress, ready result and cancellation control. Existing recipes only representative; no invented chance/auto-brew or new currencies."
+    },
+    {
+      "id": "production",
+      "title": "Sản Xuất",
+      "detail": "Production buildings/resource job rows left, selected building detail right showing current level, existing upgrade eligibility, materials and production job/progress/ready state. Upgrade button and collection action only as actual command affordances, no invented factory economy. Small abstract building ink art; multiple rows scroll."
+    },
+    {
+      "id": "exploration",
+      "title": "Sơn Hà Đồ",
+      "detail": "Large airy ink-wash landscape route map center, chapter/zone list left, current selected stage detail right: enemy portrait placeholders, reward slots, real entry conditions, existing battle mode choice and Khiêu Chiến; overall progress below. Locked/cleared/perfect/boss states. No real-world maps or extra travel currencies. Artwork understated like chosen Sơn Hà Đồ reference."
+    },
+    {
+      "id": "vendor",
+      "title": "Thương Nhân",
+      "detail": "Shop item grid left, selected item description/cost and existing buy/sell mode, quantity stepper and primary transaction action right. Available currency balance small header, insufficient funds message near CTA; no invented sale countdown or rarity system. Item icons reserved."
+    },
+    {
+      "id": "scripture",
+      "title": "Tàng Kinh Các",
+      "detail": "Readable lore codex: contents/owned entries left, large warm parchment reading area right with title, structured article, modest ink illustration, scroll indicator. Selected entry and uncollected empty state only; no active Đạo Lộ choice, upgrades or purchases."
+    },
+    {
+      "id": "quests",
+      "title": "Nhiệm Vụ",
+      "detail": "Current real quest list left, selected quest narrative, aligned objective progress rows and reward slots right; claim button enabled only completed. Ongoing/completed/claimed distinctions. No daily/battlepass tasks invented. Subtle ink scenery behind header."
+    },
+    {
+      "id": "settings",
+      "title": "Cài Đặt",
+      "detail": "Internal section rail and actual controls: language, audio levels, UI scale/accessibility preferences; save/account/update actions separated below with confirm destructive actions. Real select/toggle/slider styling on paper, dark section buttons, sufficient label spacing. No invented graphics-quality/fps/network-server controls."
+    },
+    {
+      "id": "combat",
+      "title": "Chiến Đấu",
+      "detail": "Battlefield remains visible, ink-and-gold compact health/resource HUD, turn order strip, active skill dock with cooldown/blocked costs, AI/auto controls, battle log toggle and exit control. Use pale ink mountains with restrained gold atmosphere but leave player/enemy animated artwork as reserved combat silhouettes/placeholders, no new characters or fireball art. No extra actions or damage mechanics. Paper only for log/details."
+    },
+    {
+      "id": "tribulation",
+      "title": "Độ Kiếp",
+      "detail": "Sky ink battlefield reserved region, compact health/time and chapter progression tracker; paper tâm-ma question card right with readable existing answer choices, current chapter/phase info, no auto/skip. Clear selected/expired state, restrained red-gold danger accent. Character art reserved."
+    },
+    {
+      "id": "victory",
+      "title": "Chiến Thắng",
+      "detail": "Single complete result scene: restrained gold title ribbon, warm parchment results panel, battle statistics and earned reward slot grid, existing next/retry/return actions with auto retry countdown small. No invented extra rewards, ad multipliers or star rating."
+    },
+    {
+      "id": "defeat",
+      "title": "Thất Bại",
+      "detail": "Single complete result scene: subdued cinnabar title ribbon on warm parchment, player-facing reason and cultivation gap hint, partial reward grid if earned, retry/return and existing countdown. Calm readable ink scenery, no extra penalties or pay-to-revive."
+    },
+    {
+      "id": "tooltip",
+      "title": "Tooltip Trang Bị",
+      "detail": "A realistic equipment inventory view background with ONE selected slot hovered and ONE polished floating charcoal tooltip. Tooltip has name/grade, existing attribute rows, compare gains green/losses muted red, use requirement/footer hints. No paper rectangle OUTSIDE decorative contour. Show readable content and correct stacking, not asset sheet."
+    },
+    {
+      "id": "confirm",
+      "title": "Hộp Thoại Xác Nhận",
+      "detail": "A realistic settings scene dimmed behind ONE compact warm paper confirmation modal centered. Title Xác Nhận, concise 'Bạn có muốn tiếp tục thao tác này?', Hủy secondary and Xác Nhận primary. Fine gold outline with shaped corners; absolutely no rectangular backing outside outline, dim world visible around silhouette. No extra popups."
+    },
+    {
+      "id": "offline",
+      "title": "Bế Quan Kết Thúc",
+      "detail": "Dimmed home ink landscape with ONE complete small result modal: Bế Quan Kết Thúc, Thời gian26p33s, +Linh lực6729 and Tiếp Tục. Warm paper fill INSIDE thin gold decorative outline; exterior fully reveals dimmed world, no paper margins beyond outline. Readable aligned rows, no extra rewards or buttons."
+    },
+    {
+      "id": "system-feedback",
+      "title": "Thông Báo Hệ Thống",
+      "detail": "One realistic Động Phủ warm ink landscape screen with small elegant charcoal top-right toast 'Không đủ nguyên liệu' and readable short explanation, one modest announcement ribbon near top. Show feedback placement without covering existing quest/building targets. No extra gameplay feature, no full-body character drawing."
+    },
+    {
+      "id": "talent-entitlement",
+      "title": "Thiên Phú",
+      "detail": "One complete talent entitlement dialog over dimmed character scene. Warm paper, reserved existing talent icon, name and readable description/current entitlement state; existing confirmation/close affordances. Avoid inventing reroll currency or purchasable boosts. No character art replacement."
+    },
+    {
+      "id": "tutorial",
+      "title": "Hướng Dẫn",
+      "detail": "One complete onboarding tutorial overlay over approved-style home. Subtle dimming, one highlighted existing building target, concise readable paper instruction card and existing continue/skip affordances only where actual supported. Thin gold borders, little ornament, no new game mechanics."
+    },
+    {
+      "id": "loading-error",
+      "title": "Lỗi Tải Dữ Liệu",
+      "detail": "One complete recoverable error screen on beautiful pale ink landscape with centered warm paper panel: 'Không thể tải dữ liệu', concise connection explanation, Thử Lại and Quay Lại. Reserved compact loading/emblem icon, no technical stack traces, no new account/reset functionality."
+    },
+    {
+      "id": "save-incompatible",
+      "title": "Dữ Liệu Không Tương Thích",
+      "detail": "One complete save incompatibility dialog on dimmed auth scene: clear heading, readable explanation that save version cannot be opened, existing return/export-support affordance rather than automatic overwrite. Preserve save; no destructive CTA invented. Warm paper inside fine gold contour, dark secondary controls."
+    }
+  ]
+}

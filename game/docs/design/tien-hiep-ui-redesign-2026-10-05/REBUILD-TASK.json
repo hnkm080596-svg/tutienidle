@@ -1,0 +1,49 @@
+{
+  "taskId": "pc-ui-reconstruction-2026-10-05",
+  "tags": [
+    "ui",
+    "vue",
+    "presentation",
+    "pc",
+    "assets"
+  ],
+  "requirementRefs": [
+    "docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-EXECUTION.md"
+  ],
+  "invariantIds": [
+    "UI-OWNER-PRESERVATION",
+    "UI-PC-READABILITY",
+    "UI-ALPHA-EXTERIOR"
+  ],
+  "expectedChangeSet": [
+    "src/components/scenes",
+    "src/components/panels",
+    "src/assets/tien-hiep*.css",
+    "public/assets/ui/tien-hiep-2026-10"
+  ],
+  "planningBaseline": {
+    "productStateId": "f8af8007b0b6519e6aa6997fedad2cc77939538a-with-existing-task-diff",
+    "contractId": "source-models-and-existing-emits",
+    "attackModelId": "pc-visual-interaction-and-consumer-census",
+    "environmentId": "same-worktree-server-5449"
+  },
+  "slices": [
+    {
+      "id": "scene-layouts"
+    },
+    {
+      "id": "auxiliary-layouts"
+    },
+    {
+      "id": "runtime-integration"
+    }
+  ],
+  "firstProofObligations": [
+    {
+      "admittedSlice": "scene-layouts",
+      "stage": "BEFORE_PROPAGATION",
+      "oracle": "Production surface consumer census plus fidelity interaction screenshot: props/emits unchanged; generated concept controls never become authoritative UI."
+    }
+  ],
+  "unresolvedAssumptions": []
+}

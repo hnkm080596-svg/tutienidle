@@ -1,0 +1,82 @@
+[
+  {
+    "id": "orb-frame",
+    "prompt": "ONE isolated text-free production UI component for a premium Vietnamese xianxia fantasy game. Hand-painted antique gold metal, dark charcoal lacquer and ivory parchment, finely crafted ancient cloud motifs, matching the supplied immortal-game visual language. Perfect front-facing orthographic, no perspective. No letters numbers logos characters landscapes or central functional icons. Actual transparent background outside the object. No glow, bloom, glitter, dust or colored fringe. Clean anti-aliased silhouette, generous transparent margin at least 10 percent on ALL sides. Corners carry subtle ornament, long edge middle stays quiet for resizing. Single circular ring, perfectly round. Transparent open aperture occupies 76 percent of outer diameter. Narrow antique gold rim with charcoal inset and tiny cloud accents at 4 cardinal points. Understated, readable at 64px. All center fully transparent. Less ornamental than a page frame. Square canvas."
+  },
+  {
+    "id": "slot-frame",
+    "prompt": "ONE isolated text-free production UI component for a premium Vietnamese xianxia fantasy game. Hand-painted antique gold metal, dark charcoal lacquer and ivory parchment, finely crafted ancient cloud motifs, matching the supplied immortal-game visual language. Perfect front-facing orthographic, no perspective. No letters numbers logos characters landscapes or central functional icons. Actual transparent background outside the object. No glow, bloom, glitter, dust or colored fringe. Clean anti-aliased silhouette, generous transparent margin at least 10 percent on ALL sides. Corners carry subtle ornament, long edge middle stays quiet for resizing. Single SQUARE inventory slot FRAME, open center fully transparent. Thin double gold rim with tiny cloud curls only at corners, dark metal backing restricted to the narrow rim. No inner fill. No jewel gems or icons. Perfect square, suitable for dense 8-column grids at 72px. Simplified crisp 4 matching corners."
+  },
+  {
+    "id": "title-plaque",
+    "prompt": "ONE isolated text-free production UI component for a premium Vietnamese xianxia fantasy game. Hand-painted antique gold metal, dark charcoal lacquer and ivory parchment, finely crafted ancient cloud motifs, matching the supplied immortal-game visual language. Perfect front-facing orthographic, no perspective. No letters numbers logos characters landscapes or central functional icons. Actual transparent background outside the object. No glow, bloom, glitter, dust or colored fringe. Clean anti-aliased silhouette, generous transparent margin at least 10 percent on ALL sides. Corners carry subtle ornament, long edge middle stays quiet for resizing. Single wide horizontal dark ink-black title plaque, aspect ratio 5:1. Empty charcoal center with extremely subtle ink texture for ivory runtime title text. Sculpted antique gold narrow frame and modest curling clouds at clipped tapered ends. Not a button, no decorative icon. Keep middle 70 percent visually quiet. Landscape canvas."
+  },
+  {
+    "id": "button-secondary",
+    "prompt": "ONE isolated text-free production UI component for a premium Vietnamese xianxia fantasy game. Hand-painted antique gold metal, dark charcoal lacquer and ivory parchment, finely crafted ancient cloud motifs, matching the supplied immortal-game visual language. Perfect front-facing orthographic, no perspective. No letters numbers logos characters landscapes or central functional icons. Actual transparent background outside the object. No glow, bloom, glitter, dust or colored fringe. Clean anti-aliased silhouette, generous transparent margin at least 10 percent on ALL sides. Corners carry subtle ornament, long edge middle stays quiet for resizing. Single horizontal SECONDARY button, aspect ratio 4:1. Very thin antique gold rim, dark lacquer face empty for ivory runtime label. Small stepped notches at each end, restrained cloud etching on end caps only. This is less ornate than a ceremonial primary button. Landscape canvas."
+  },
+  {
+    "id": "resource-pill",
+    "prompt": "Generate ONE hand-painted xianxia RPG UI component, not a sheet or full screenshot. Antique sculpted gold with charcoal lacquer and warm ivory parchment. Straight-on orthographic. No text, digits, logos, figures, landscape, icons. NO halo glow particles or colored fringe. Crisp clean alpha transparency outside, 12 percent padding on all sides, nothing clipped. Elegant ancient cloud ornament confined to ends/corners, quiet middle for runtime text. Very wide small HUD capsule 5:1 ratio, charcoal black filled face, thin gold bevelled rim, gently notched ends. Left end broad enough for a runtime resource icon, right end for runtime plus symbol, neither baked in. Middle entirely empty. Less decorative for dense HUD."
+  },
+  {
+    "id": "identity-plate",
+    "prompt": "Generate ONE hand-painted xianxia RPG UI component, not a sheet or full screenshot. Antique sculpted gold with charcoal lacquer and warm ivory parchment. Straight-on orthographic. No text, digits, logos, figures, landscape, icons. NO halo glow particles or colored fringe. Crisp clean alpha transparency outside, 12 percent padding on all sides, nothing clipped. Elegant ancient cloud ornament confined to ends/corners, quiet middle for runtime text. Wide dark ink HUD identity plate 4:1 ratio with thin sculpted gold outline, tapering right end, straight left edge. Open quiet face for runtime name and XP. No portrait circle baked into this piece. Tiny cloud scroll at corners only."
+  },
+  {
+    "id": "section-header",
+    "prompt": "Generate ONE hand-painted xianxia RPG UI component, not a sheet or full screenshot. Antique sculpted gold with charcoal lacquer and warm ivory parchment. Straight-on orthographic. No text, digits, logos, figures, landscape, icons. NO halo glow particles or colored fringe. Crisp clean alpha transparency outside, 12 percent padding on all sides, nothing clipped. Elegant ancient cloud ornament confined to ends/corners, quiet middle for runtime text. Wide horizontal ivory parchment section header 6:1 ratio, thin warm gold line border, a small outlined EMPTY circular socket attached at left for separate icon. Decorative pointed tails right. No lettering or icons. Quiet empty paper center."
+  },
+  {
+    "id": "building-plaque",
+    "prompt": "Generate ONE hand-painted xianxia RPG UI component, not a sheet or full screenshot. Antique sculpted gold with charcoal lacquer and warm ivory parchment. Straight-on orthographic. No text, digits, logos, figures, landscape, icons. NO halo glow particles or colored fringe. Crisp clean alpha transparency outside, 12 percent padding on all sides, nothing clipped. Elegant ancient cloud ornament confined to ends/corners, quiet middle for runtime text. ONE vertical hanging charcoal lacquer plaque 1:2.5 ratio. Gold ornate crown, narrow gold side rims, gently pointed gold bottom tip, a short dark cord attachment at top included. Empty dark center for a runtime icon and vertical or stacked Vietnamese label. No text or icon baked in."
+  },
+  {
+    "id": "paper-surface",
+    "prompt": "ONE seamless ivory parchment texture tile for premium xianxia game UI. Square canvas completely filled edge to edge with warm pale ivory fibrous paper, delicate low-contrast fibers and extremely subtle pale gold cloud-watermark hints. Uniform brightness, no vignette, no border, no fold, no object, no letters, no scenery, no stains or dark spots. Quiet surface suitable behind black Vietnamese text. Truly repeatable texture, edges consistent."
+  },
+  {
+    "id": "panel-frame",
+    "prompt": "ONE isolated premium xianxia fantasy UI asset, painted antique gold, ivory paper and ink-black, exact front-on view. No text numbers logos characters scenes or central icons. No halo bloom or fringe. Transparent outside with generous safety padding. Clean crisp edges. Ornament restrained, quiet content area. Single rectangular 4:3 panel FRAME with transparent center. Very thin sculpted gold and charcoal rim; tiny cloud scrolls at four corners. Simpler than a large page frame. Long straight edges. All center fully transparent, no fill."
+  },
+  {
+    "id": "tab-plate",
+    "prompt": "ONE isolated premium xianxia fantasy UI asset, painted antique gold, ivory paper and ink-black, exact front-on view. No text numbers logos characters scenes or central icons. No halo bloom or fringe. Transparent outside with generous safety padding. Clean crisp edges. Ornament restrained, quiet content area. Single 3:1 horizontal tab plate, ivory parchment face, thin antique gold outline, small clipped corners and straight edges. Absolutely empty face. Restrained symmetrical design for row of category tabs. No glow. No arrow."
+  },
+  {
+    "id": "progress-track",
+    "prompt": "ONE isolated premium xianxia fantasy UI asset, painted antique gold, ivory paper and ink-black, exact front-on view. No text numbers logos characters scenes or central icons. No halo bloom or fringe. Transparent outside with generous safety padding. Clean crisp edges. Ornament restrained, quiet content area. Single very slender horizontal progress bar track ratio 12:1. Thin gold bevelled frame, dark charcoal recessed interior. Small understated gold rounded end caps. No colored fill, no percentage, no jewels or icons. Runtime fill will overlay inside. Clean quiet metal."
+  },
+  {
+    "id": "navigation-rail",
+    "prompt": "ONE production UI component for hand-painted xianxia immortal fantasy RPG. Antique gold metal, dark ink lacquer, ivory. Perfect front-on orthographic, clean alpha outside, at least 12 percent transparent margin. No text numbers glyphs logos or figures. No halo glow particles or colored fringe. Intricate but restrained cloud ornament, quiet middle. Single tall vertical dark ink navigation rail panel, ratio 1:6, gold rim with subtle cloud ornaments at top and bottom. Empty uninterrupted charcoal face for runtime navigation entries. No button divisions or icons baked in. Straight quiet middle edges to extend vertically."
+  },
+  {
+    "id": "list-row",
+    "prompt": "ONE production UI component for hand-painted xianxia immortal fantasy RPG. Antique gold metal, dark ink lacquer, ivory. Perfect front-on orthographic, clean alpha outside, at least 12 percent transparent margin. No text numbers glyphs logos or figures. No halo glow particles or colored fringe. Intricate but restrained cloud ornament, quiet middle. Single long horizontal ivory paper list-row container, ratio 6:1. Subtle antique gold corners and faint thin gold bottom divider, very quiet warm paper center for runtime entry labels and button. Rectangular no arrow ends, no icon sockets. Ornament only tiny corners."
+  },
+  {
+    "id": "ceremony-ribbon",
+    "prompt": "ONE production UI component for hand-painted xianxia immortal fantasy RPG. Antique gold metal, dark ink lacquer, ivory. Perfect front-on orthographic, clean alpha outside, at least 12 percent transparent margin. No text numbers glyphs logos or figures. No halo glow particles or colored fringe. Intricate but restrained cloud ornament, quiet middle. Single wide victory/achievement title ribbon 5:1 ratio, rich warm antique gold parchment face, carved gold-and-charcoal caps at both ends, gently pointed tips. Empty center for runtime dark title. Small symmetric cloud filigree only at ends. No trophy or icon."
+  },
+  {
+    "id": "avatar-ring",
+    "prompt": "ONE production UI component for hand-painted xianxia immortal fantasy RPG. Antique gold metal, dark ink lacquer, ivory. Perfect front-on orthographic, clean alpha outside, at least 12 percent transparent margin. No text numbers glyphs logos or figures. No halo glow particles or colored fringe. Intricate but restrained cloud ornament, quiet middle. Single circular portrait frame, entirely transparent open center 82 percent diameter. Very slender double antique-gold rim with tiny jade-green accents at lower cardinal point and understated cloud curls at top. No portrait. Clean unlit ring readable at 96px. Perfect round square canvas."
+  },
+  {
+    "id": "text-field",
+    "prompt": "ONE isolated front-on hand-painted xianxia premium game UI element. Warm antique gold metal, dark ink-black lacquer, restrained fine cloud ornament. Transparent background with 12 percent padding, no cropping. No words letters digits logos characters or functional icons. NO bloom glow glitter specks or colored fringe. Quiet middle for runtime label. Single long horizontal input field, aspect ratio 6:1. Warm pale ivory paper center and thin inset gold rectangular frame, slightly clipped corners. Very subtle texture, absolutely no placeholder text or cursor or icon. Understated, readable in dense forms."
+  },
+  {
+    "id": "divider",
+    "prompt": "ONE isolated front-on hand-painted xianxia premium game UI element. Warm antique gold metal, dark ink-black lacquer, restrained fine cloud ornament. Transparent background with 12 percent padding, no cropping. No words letters digits logos characters or functional icons. NO bloom glow glitter specks or colored fringe. Quiet middle for runtime label. Single elegant horizontal hairline divider 12:1 overall ratio. Delicate gold line interrupted by a tiny simple symmetric cloud-knot ornament exactly at center, tapered quiet ends. All background transparent. No filled plaque."
+  },
+  {
+    "id": "ceremony-ribbon-red",
+    "prompt": "ONE isolated front-on hand-painted xianxia premium game UI element. Warm antique gold metal, dark ink-black lacquer, restrained fine cloud ornament. Transparent background with 12 percent padding, no cropping. No words letters digits logos characters or functional icons. NO bloom glow glitter specks or colored fringe. Quiet middle for runtime label. Single wide ceremonial defeat/warning title ribbon 5:1 ratio. Deep muted cinnabar red painted silk face, narrow antique gold outline, charcoal-and-gold ornamental end caps with modest cloud curls, pointed tips. Blank center. No torn cloth no giant curls."
+  },
+  {
+    "id": "power-ribbon",
+    "prompt": "ONE isolated front-on hand-painted xianxia premium game UI element. Warm antique gold metal, dark ink-black lacquer, restrained fine cloud ornament. Transparent background with 12 percent padding, no cropping. No words letters digits logos characters or functional icons. NO bloom glow glitter specks or colored fringe. Quiet middle for runtime label. Single horizontal character combat-power plaque 4:1 ratio. Deep wine-red and charcoal lacquer face with antique gold rim, small EMPTY round outlined medallion socket on left, quiet empty right side for runtime title and large numeric value. Slight clipped corners, refined fantasy aesthetic. No swords, no combat icon, no number."
+  }
+]
