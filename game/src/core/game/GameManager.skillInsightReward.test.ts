@@ -13,7 +13,7 @@ function makeEnemy(techniqueMastery: number) {
     id: 'skill_insight_test_enemy',
     name: 'Quái',
     level: 1,
-    realmId: 'mortal',
+    realmId: 'qi_refining', // QI band keeps the mint >=1 at the 0.018 insight re-base
     lane: 'ground',
     statsInput: {
       maxHp: 1, might: 0, attackSpeed: 1,

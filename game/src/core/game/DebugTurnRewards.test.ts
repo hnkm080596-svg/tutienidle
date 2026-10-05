@@ -30,7 +30,7 @@ describe('debug turn battle rewards', () => {
       id: 'dbg_enemy',
       name: 'Dbg Enemy',
       level: 1,
-      realmId: 'mortal',
+      realmId: 'qi_refining', // QI band: the drop-table mastery roll (35-45) still mints >=1 insight at the 0.018 re-base
       lane: 'ground',
       statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { techniqueMastery: 5, spiritStone: 2 },

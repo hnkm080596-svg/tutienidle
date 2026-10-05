@@ -195,7 +195,7 @@ function buildQiPoint(s: EarlyGameSession, element: ElementType): void {
   s.player.realmLevel = 10
   s.player.techniqueProgress = { rank: 2, grade: 1 }
   spendAttributes(s, 12)
-  s.player.skillInsight += 30
+  s.player.skillInsight += 3_000
   expect(maxNode(s, `${element}_ailment_mastery`)).toBe(5)
   expect(gearUp(s, element, 5)).toBeGreaterThan(0)
 }
@@ -213,7 +213,7 @@ function fightAtPoint(s: EarlyGameSession, element: ElementType, boss: BossKey):
     s.player.realmLevel = 10
     s.player.techniqueProgress = { rank: 3, grade: 2 }
     spendAttributes(s, 18)
-    s.player.skillInsight += 40
+    s.player.skillInsight += 150_000
     expect(maxNode(s, `${element}_ailment_mastery`)).toBe(5)
     expect(s.purchaseNode(keystoneNode)).toBe(true)
     expect(gearUp(s, element, 8)).toBeGreaterThan(0)

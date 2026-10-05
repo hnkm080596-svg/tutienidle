@@ -12,7 +12,15 @@ import type { EnemyReward } from '../enemy/Enemy'
 // at 0.6 a Luyen Khi kill mints 21-27 insight while the whole fire tree
 // costs 53 - the tree empties inside one floor and every insight_gain
 // talent reads as a trap. Cut to 0.18 so a full tree is ~8-10 kills.
-export const SKILL_INSIGHT_PER_TECHNIQUE_MASTERY = 0.18
+// pace-floor retune 2026-10-05 (insight-pace worker): realm floors moved
+// to ~1 day (QI) / ~1 week (TC) but the auto-farm loop mints a full
+// stage's kill rewards every half-clear cycle - at 0.18 a QI floor idles
+// ~10-17k insight/h against a ~30-cost tree. Cut to 0.018: insight mints
+// off the realm band's techniqueMastery roll (StageDropTables), so
+// mortal kills mint 0, QI kills ~1, TC kills ~5-6 (band roll x3 realm
+// multiplier), while node prices were re-anchored to each realm window
+// (QI minor 600/level, TC minor 40,000/level - see data/progression/*).
+export const SKILL_INSIGHT_PER_TECHNIQUE_MASTERY = 0.018
 
 export function getSkillInsightReward(reward: Pick<EnemyReward, 'techniqueMastery' | 'skillInsight'>): number {
   if (reward.skillInsight !== undefined) {

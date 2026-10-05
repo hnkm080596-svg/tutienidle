@@ -41,6 +41,15 @@ const CAPSTONE_PAIR: Record<ElementType, [string, string]> = {
 
 const FOUNDATION: NodePrerequisite = { kind: 'realm', realmId: 'foundation_establishment' }
 
+// Insight pace retune 2026-10-05: per-level prices are window-anchored.
+// QI-window minors cost 600/level (one element line ~11-15k - near the
+// end of the ~24h QI window at ~1.4k/h idle insight); Truc Co-gated
+// minors cost 40,000/level (TC idle ~10-13.6k/h across the ~1-week
+// window). Flat base: the base+floor(L/perLevel) step is invisible at
+// this magnitude. See SkillInsightBalance for the income re-base.
+const GROWTH_QI = { base: 600, perLevel: 5 } // perLevel >= maxLevel -> flat 600/level.
+const GROWTH_TC = { base: 40_000, perLevel: 5 } // perLevel >= maxLevel -> flat 40,000/level.
+
 /**
  * Minor-tier level gates (ruling #8: "bac nho hon quy dinh duoc cong den
  * level may"): techniqueRank is the in-realm minor tier, so each cap
@@ -89,9 +98,9 @@ function powerNode(
     description,
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: options.foundation ? GROWTH_TC.base : GROWTH_QI.base,
     maxLevel: options.maxLevel ?? 5,
-    upgradeCost: { base: 1, perLevel: 2 },
+    upgradeCost: options.foundation ? GROWTH_TC : GROWTH_QI,
     levelGates: options.maxLevel === 4 ? MINOR_TIER_GATES_4 : MINOR_TIER_GATES,
     prerequisites,
     elementTag: element,
@@ -115,7 +124,9 @@ function capstone(
     description,
     type: 'minor',
     role: 'keystone',
-    insightCost: 3,
+    // TC-window XOR specialization capstone: 200,000 insight
+    // (~16-18h idle at TC rates).
+    insightCost: 200_000,
     maxLevel: 1,
     prerequisites: [
       { kind: 'node', nodeId: prereqNodeId },
@@ -144,9 +155,9 @@ function buildFire(): ProgressionNode[] {
         'Mở khóa Hỏa Thế — mỗi cấp +35% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng (cấp 3 = chắc chắn). Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
       type: 'minor',
       role: 'growth',
-      insightCost: 1,
+      insightCost: 600,
       maxLevel: 4,
-      upgradeCost: { base: 1, perLevel: 2 },
+      upgradeCost: { base: 600, perLevel: 5 },
       levelGates: MINOR_TIER_GATES_4,
       prerequisites: [{ kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS.fire }],
       elementTag: 'fire',

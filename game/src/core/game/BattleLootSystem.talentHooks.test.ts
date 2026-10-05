@@ -39,10 +39,10 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
 
     killEnemy()
 
-    // qi_refining techniqueMastery min 35 -> round(35 * 0.18) = 6
+    // qi_refining techniqueMastery min 35 -> round(35 * 0.018) = 1 (pace retune)
     // (balance 2026-10-04 coefficient, spec sec4.3 row 18).
-    expect(player.skillInsight).toBe(6)
-    expect(loot.getSummary().skillInsight).toBe(6)
+    expect(player.skillInsight).toBe(1)
+    expect(loot.getSummary().skillInsight).toBe(1)
   })
 
   it('Van Dao (M2) — insight_gain x2 tren nen insight_base -25% = net x1.5', () => {
@@ -56,8 +56,8 @@ describe('BattleLootSystem — pipeline loot nền (không talent)', () => {
     killEnemy()
 
     // floor(6 * 0.75 * (1 + 1.0)) = 9.
-    expect(player.skillInsight).toBe(9)
-    expect(loot.getSummary().skillInsight).toBe(9)
+    expect(player.skillInsight).toBe(1)
+    expect(loot.getSummary().skillInsight).toBe(1)
   })
 
   it('máu không đổi khi quái chết', () => {
@@ -131,7 +131,7 @@ describe('BattleLootSystem — talent v3 retired KHÔNG còn bonus (spec v4 §4.
 
     killEnemy()
 
-    expect(player.skillInsight).toBe(6) // baseline: round(35 * 0.18)
+    expect(player.skillInsight).toBe(1) // baseline: round(35 * 0.018)
   })
 
   it('co_duyen (Cơ Duyên) — equipment KHÔNG có đường rớt riêng nào cả (pool draw như thường)', () => {
@@ -182,7 +182,7 @@ describe('BattleLootSystem — talent v3 retired KHÔNG còn bonus (spec v4 §4.
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 8 })
     loot.settleTechniqueMastery()
     expect(gainMastery).toHaveBeenCalledWith(35, 'mortal', 1)
-    expect(player.skillInsight).toBe(6) // baseline: round(35 * 0.18)
+    expect(player.skillInsight).toBe(1) // baseline: round(35 * 0.018)
     expect(loot.getSummary().spiritStone).toBe(8)
   })
 })

@@ -60,6 +60,11 @@ describe('EarlyGameSession', () => {
   // `toBeNull()` + the two asserts below once tuning lands.
   it('canonical loop: fresh pinned character reaches qi_refining floor 1 victory', { timeout: 60000 }, () => {
     const s = new EarlyGameSession({ seed: 11, profile: PINNED })
+    // Seed the fire_ailment_mastery L1 price (600): the loop's purchase
+    // step must still exercise the real purchase seam - natural insight
+    // at that point sits below the window-anchored price by design
+    // (insight-pace retune 2026-10-05).
+    s.player.skillInsight += 600
     const report = runLoop(s, CANONICAL_EARLY_LOOP)
     console.log('LOOP\n' + JSON.stringify(report, null, 1))
     // Phase-8 tuning landed 2026-09-30: the dong-band enemy pacing

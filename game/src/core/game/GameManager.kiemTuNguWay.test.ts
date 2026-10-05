@@ -40,7 +40,7 @@ function mortalAtRitual(tramLevel: number) {
   const { gameManager, player } = makeManager()
   player.nodeLevels.core_tram = tramLevel
   player.skillCastCounts = { tram: tramLevel >= 3 ? 10_000 : 9_000 }
-  player.skillInsight = 500
+  player.skillInsight = 200_000
 
   gameManager.setActivePlayer(player)
   gameManager.progressionOps.learnSkill('tram', player)
@@ -165,7 +165,7 @@ describe('sword ngu way — subtree isolation', () => {
     ).toBe(true)
     // The ritual lands the player at qi_refining Lv1 -- enough insight
     // for the cheap test nodes below.
-    player.skillInsight = 100
+    player.skillInsight = 150_100
 
     return { gameManager, player }
   }
@@ -242,11 +242,11 @@ describe('sword ngu way — subtree isolation', () => {
     player.realmId = 'foundation_establishment'
     const insightBefore = player.skillInsight
     expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', player)).toBe(true)
-    expect(player.skillInsight).toBe(insightBefore - 3)
+    expect(player.skillInsight).toBe(insightBefore - 150_000)
 
     const refund = gameManager.progressionOps.devResetBranch('ngu_kiem', player)
 
-    expect(refund).toBe(3)
+    expect(refund).toBe(150_000) // the branch's only paid node (Khoi is granted free)
     expect(player.skillInsight).toBe(insightBefore)
     expect(player.nodeLevels['ngu_kiem_lien']).toBeUndefined()
     // Deliberate: the dev tool resets the WHOLE branch -- even the

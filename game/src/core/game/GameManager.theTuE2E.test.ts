@@ -101,7 +101,7 @@ function mortalAtGate(): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = 'mortal'
   player.realmLevel = CORE_REALM_LEVEL
-  player.skillInsight = 99
+  player.skillInsight = 200_000
   return player
 }
 
