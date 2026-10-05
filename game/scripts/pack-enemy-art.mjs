@@ -28,9 +28,11 @@
 import { createCanvas, loadImage } from 'canvas'
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
+import { loadImpactMarkers, assertKnownMarkerVariants, assertKnownMarkerClips, assertMarkerInRange } from './lib/impact-markers.mjs'
 
 const args = process.argv.slice(2)
 const SRC_ARG = args[args.indexOf('--src') + 1] || null
+const ONLY = args[args.indexOf('--only') + 1] || null
 const DRY_RUN = args.includes('--dry-run')
 
 // Impact-sync: authored impact frames live in art/animation-impact-markers.json
@@ -109,6 +111,13 @@ const EMISSIONS = [
     out: 'streamscale-forkman-floodserpent-ferocious',
     src: 'monster-library/25-streamscale-forkman',
     recolor: { hueShift: 150, valueScale: 0.72, satScale: 1.1 },
+  },
+  // --- hand-authored bandit (pixellab idle sheet, 2026-10-05) ---
+  { out: 'redscarf-blade-bandit', src: 'hand-art/redscarf-blade-bandit' },
+  {
+    out: 'redscarf-blade-bandit-ferocious',
+    src: 'hand-art/redscarf-blade-bandit',
+    recolor: FEROCIOUS,
   },
 ]
 
@@ -513,7 +522,14 @@ async function emitVariant(emission) {
 
 async function main() {
   const manifest = { generated: 'pack-enemy-art.mjs', zeroPad: ZERO_PAD, frameSuffix: FRAME_SUFFIX, variants: {} }
-  for (const e of EMISSIONS) {
+  if (ONLY) {
+    const existingPath = path.join(OUT_ROOT, 'manifest.json')
+    if (existsSync(existingPath)) {
+      const existing = JSON.parse(readFileSync(existingPath, 'utf8'))
+      Object.assign(manifest.variants, existing.variants ?? {})
+    }
+  }
+  for (const e of EMISSIONS.filter((e) => !ONLY || e.out === ONLY || e.out === `${ONLY}-ferocious`)) {
     const report = await emitVariant(e)
     manifest.variants[e.out] = report
     console.log(

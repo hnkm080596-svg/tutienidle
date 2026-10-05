@@ -251,6 +251,20 @@ export const MONSTER_ART: Record<string, MonsterArtVariant> = {
     { idle: [1, 25, 1], attack: [1, 2, 1], death: [1, 1, 1] },
     { avatarSize: { w: 81, h: 78 } },
   ),
+  'redscarf-blade-bandit': variant(
+    'redscarf-blade-bandit',
+    { w: 693, h: 597 },
+    { x: 0, y: 0, w: 0.974026, h: 1 },
+    { idle: [1, 17, 1], death: [1, 1, 1] },
+    { avatarSize: { w: 512, h: 512 } },
+  ),
+  'redscarf-blade-bandit-ferocious': variant(
+    'redscarf-blade-bandit-ferocious',
+    { w: 693, h: 597 },
+    { x: 0, y: 0, w: 0.974026, h: 1 },
+    { idle: [1, 17, 1], death: [1, 1, 1] },
+    { avatarSize: { w: 512, h: 512 } },
+  ),
   'streamscale-forkman-floodserpent-ferocious': variant(
     'streamscale-forkman-floodserpent-ferocious',
     { w: 514, h: 463 },
@@ -285,6 +299,10 @@ export const ENEMY_RESKIN_MAP: Record<string, string> = {
   metal_beetle: 'whiteshell-venom-beetle',
   ferocious_metal_beetle: 'whiteshell-venom-beetle-ferocious',
   forest_fiend: 'witherfir-vineman',
+  // qi_refining bandit - Minh hand-authored pixellab idle sheet
+  // (17-frame walk-cycle look); ferocious reuses the FEROCIOUS recipe.
+  bandit: 'redscarf-blade-bandit',
+  ferocious_bandit: 'redscarf-blade-bandit-ferocious',
   // mortal tier
   mortal_feral_dog: 'graymane-wolf',
   mortal_ferocious_feral_dog: 'graymane-wolf-ferocious',
