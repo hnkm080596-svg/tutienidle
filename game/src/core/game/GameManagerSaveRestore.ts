@@ -376,7 +376,11 @@ export class GameManagerSaveRestore {
       timeAuthority?.kind === 'live-replacement'
         ? 0
         : timeAuthority?.kind === 'cold-boot'
-          ? Math.max(0, (timeAuthority.untilMs - timeAuthority.sinceMs) / 1000)
+          ? calculateOfflineTime(
+              { lastOnlineAt: timeAuthority.sinceMs },
+              timeAuthority.untilMs,
+              Number.POSITIVE_INFINITY,
+            ).offlineSeconds
           : calculateOfflineTime(
               { lastOnlineAt: save.player.lastSavedAt ?? Date.now() },
               Date.now(),
@@ -384,8 +388,15 @@ export class GameManagerSaveRestore {
             ).offlineSeconds
 
     // End of the authorized window expressed in the payload's epoch -
-    // identical to Date.now() in the legacy branch.
-    const settleNowMs = (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000
+    // identical to Date.now() for honest saves (lastSavedAt + elapsed).
+    // r11-COR: clamp at Date.now() - a finite FUTURE lastSavedAt passes
+    // shape validation, yields elapsed=0, but would leave settleNowMs
+    // future-dated and feed every unconditional settle below (alchemy
+    // tick(future) minting pending jobs early - save-edit cheat).
+    const settleNowMs = Math.min(
+      (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
+      Date.now(),
+    )
     const offlineSinceMs = save.player.lastSavedAt ?? settleNowMs
 
     if (offlinePlayer) {

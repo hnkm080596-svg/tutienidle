@@ -78,6 +78,13 @@ function drawFromPool(
 ): WeightedDropEntry | undefined {
   const total = pool.reduce((sum, entry) => sum + entry.weight, 0)
 
+  if (!Number.isFinite(total)) {
+    // A NaN/Infinity entry weight is invalid authored data - without
+    // this check the roll math stays NaN and the ungated fall-through
+    // below silently pays the LAST pool entry (r11-AUT fail-open).
+    throw new Error(`drawFromPool: pool weights must be finite (got total ${total})`)
+  }
+
   if (total <= 0) {
     return undefined
   }

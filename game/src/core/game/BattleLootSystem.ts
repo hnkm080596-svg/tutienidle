@@ -381,8 +381,11 @@ export class BattleLootSystem {
             battleEnemy.entity.id,
             // Canonical floor read (ChapterStages: requiredRealmLevel is
             // the normalized floor; GameManagerStageOps reads it the same
-            // way), then stageDropTableFor's own `?? 1` so ceiling and
-            // table always resolve the same floor. A stage-less kill
+            // way). The drop table at line ~294 keys off stage.floor
+            // with its own `?? 1`, so on a stage MISSING `floor` with
+            // requiredRealmLevel > 1 the ceiling resolves a deeper floor
+            // than the table - an authored-data-only edge, dormant today
+            // (every authored Stage carries floor). A stage-less kill
             // keeps floor undefined -> uncapped.
             stage ? (stage.floor ?? stage.requiredRealmLevel ?? 1) : undefined,
           )

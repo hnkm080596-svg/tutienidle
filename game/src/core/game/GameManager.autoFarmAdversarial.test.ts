@@ -214,6 +214,24 @@ describe('Adversarial — corrupt lastCheckedMs bound (C1)', () => {
     ops.tickAutoFarm(player)
     expect(processDefeatedEnemies.mock.calls.length).toBe(firstTickRolls)
   })
+
+  it('future-dated lastCheckedMs re-anchors to now (r11-COR-2 pin)', () => {
+    const processDefeatedEnemies = vi.fn()
+    const ops = buildAutoFarmOps(processDefeatedEnemies)
+    const player = createDefaultPlayer()
+    player.perfectClearStageIds.push('adv_stage')
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 100s
+    // Crafted/corrupt save: lastCheckedMs 1h in the future used to leave
+    // the farm idling silently until real time caught up to the forged
+    // value. Re-anchor arm recovers it to ~= now.
+    armFarm(ops, player, Date.now() + 3_600_000)
+
+    ops.tickAutoFarm(player)
+
+    expect(player.autoFarmStage!.lastCheckedMs).toBeLessThanOrEqual(Date.now() + 1)
+    expect(player.autoFarmStage!.lastCheckedMs).toBeGreaterThan(Date.now() - 60_000)
+    expect(processDefeatedEnemies).not.toHaveBeenCalled()
+  })
 })
 
 describe('tickAutoFarm — farm_cycle observation emit (Sound System W6)', () => {

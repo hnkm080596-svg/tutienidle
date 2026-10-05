@@ -246,6 +246,24 @@ export class GameManagerAutoFarmOps {
       DEFAULT_MAX_OFFLINE_SECONDS,
     )
 
+    // r11-INT: the payable window is also bounded by the farm's OWN
+    // anchor. elapsedOfflineSeconds is the caller's authorized window
+    // (offline time since lastSavedAt); intersecting it with
+    // (now - lastCheckedMs) makes a retry of the SAME settle payload
+    // settle ~0 cycles - the anchor already consumed the window - so a
+    // mid-settle failure can only underpay, never double-pay. Honest
+    // windows are unaffected: a running farm's anchor tracks now.
+    const now = Date.now()
+    if (
+      !Number.isFinite(autoFarm.lastCheckedMs) ||
+      autoFarm.lastCheckedMs < 0 ||
+      autoFarm.lastCheckedMs > now
+    ) {
+      autoFarm.lastCheckedMs = now
+    }
+    const anchorGapSeconds = Math.max(0, (now - autoFarm.lastCheckedMs) / 1000)
+    const effectiveSeconds = Math.min(cappedElapsedSeconds, anchorGapSeconds)
+
     const cycleMs = cycleSeconds * 1000
     // 2026-10-05, Minh ruling ("offline 50%"): the window pays at
     // AUTO_FARM_OFFLINE_EFFICIENCY before flooring into cycles, so cycle rewards
@@ -254,12 +272,8 @@ export class GameManagerAutoFarmOps {
     // the 0-cycle path: skipping it would leave the FULL raw remainder
     // in lastCheckedMs to mint at live rate, silently un-doing the
     // efficiency on every sub-cycle gap.
-    const elapsedMs = cappedElapsedSeconds * AUTO_FARM_OFFLINE_EFFICIENCY * 1000
+    const elapsedMs = effectiveSeconds * AUTO_FARM_OFFLINE_EFFICIENCY * 1000
     const completedCycles = Math.floor(elapsedMs / cycleMs)
-
-    for (let i = 0; i < completedCycles; i++) {
-      this.rollAutoFarmCycleReward(player, stage)
-    }
 
     // T1-12 - anchor to now minus the UNSETTLED remainder, identical to
     // tickAutoFarm. A stale/corrupt persisted lastCheckedMs used to
@@ -269,7 +283,14 @@ export class GameManagerAutoFarmOps {
     // also triggered by any honest session longer than the 24h cap).
     // elapsed 0 (B1-D resume gesture) and sub-cycle gaps land here too:
     // anchor = now - halved remainder == now when nothing accrued.
-    autoFarm.lastCheckedMs = Date.now() - (elapsedMs - completedCycles * cycleMs)
+    // r11-INT: the anchor lands BEFORE the payout loop so a mid-loop
+    // failure loses the remaining cycles instead of replaying the whole
+    // window on next restore (underpay on crash, never double-pay).
+    autoFarm.lastCheckedMs = now - (elapsedMs - completedCycles * cycleMs)
+
+    for (let i = 0; i < completedCycles; i++) {
+      this.rollAutoFarmCycleReward(player, stage)
+    }
   }
 
   /**
