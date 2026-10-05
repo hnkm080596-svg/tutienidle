@@ -21,7 +21,7 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-.login-opening { position: absolute; inset: 0; display: grid; align-content: start; justify-items: start; padding: 92px 130px; }
+.login-opening { position: absolute; inset: 0; display: grid; align-content: start; justify-items: start; padding: 62px 96px; }
 .login-opening :deep(.login-logo) { width: 560px; }
 .login-opening__actions { position: absolute; left: 566px; top: 295px; width: 310px; display: grid; gap: 17px; }
 .login-opening__actions .pc-paper-button { width: 100%; min-height: 68px; color: #f5e6c6; font: 600 27px var(--font-display, Georgia, serif); box-shadow: 0 4px 12px #65522c40; }
