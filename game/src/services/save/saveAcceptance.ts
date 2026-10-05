@@ -313,9 +313,9 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
     !(committedElement !== undefined && isBetaElement(committedElement))
   ) {
     throw new Error(
-      `spell_pathway save carries uncommittable element '${String(
-        committedElement,
-      )}' outside beta scope`,
+      `spell_pathway save carries uncommittable element '${
+        committedElement === undefined ? 'none' : committedElement
+      }' outside beta scope`,
     )
   }
 }

@@ -267,6 +267,12 @@ export function buildSavePayload(
   const player: Record<string, unknown> = {
     name: char.name,
     selectedTalentIds: [...char.selectedTalentIds],
+    // A real writer always carries its realm witness - the boundary
+    // mirror rejects an absent/unknown realmId like the client does.
+    // The payload id is the client realm catalog ('mortal'), not the
+    // informational characters.realm_id column.
+    realmId: 'mortal',
+    realmLevel: 1,
   }
   if (char.mortalBasicSkillId) player.mortalBasicSkillId = char.mortalBasicSkillId
   return {
@@ -283,6 +289,23 @@ export function buildSavePayload(
     equipmentSlots: [],
     ...overrides,
   }
+}
+
+// Realm claims carry their initiation receipts - the boundary mirror
+// rejects a non-mortal realmId missing techniques/breakthroughGrade
+// (and a foundation claim missing its victory record) exactly like the
+// client does, so a probe exercising another rule needs the witnesses.
+export function realmReceipts(realmId: unknown): Record<string, unknown> {
+  const idx = realmId === 'qi_refining' ? 1 : realmId === 'foundation_establishment' ? 2 : 0
+  if (idx === 0) return {}
+  return idx >= 2
+    ? { breakthroughGrade: 1, highestFoundationAchieved: 'human' }
+    : { breakthroughGrade: 1 }
+}
+
+export function realmTechniques(realmId: unknown): Record<string, unknown>[] {
+  const idx = realmId === 'qi_refining' ? 1 : realmId === 'foundation_establishment' ? 2 : 0
+  return idx >= 1 ? [{ id: 'five_elements_art' }] : []
 }
 
 export interface ServerCheckpoint {

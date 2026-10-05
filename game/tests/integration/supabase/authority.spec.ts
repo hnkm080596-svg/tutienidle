@@ -31,6 +31,8 @@ import {
   uniqueName,
   type ContractEnv,
   type ServerCheckpoint,
+  realmReceipts,
+  realmTechniques,
 } from './fixture'
 import { CloudSaveCoordinator } from '../../../src/services/cloudSave/CloudSaveCoordinator'
 import { PendingSaveJournal, buildPendingSaveRecord } from '../../../src/services/cloudSave/PendingSaveJournal'
@@ -523,7 +525,17 @@ test('payload: schema gate, shape checks, identity binding, byte ceiling', async
   expect(wrongSkill.body.code).toBe('SAVE_INVALID')
 
   // post-initiation shape: mortalBasicSkillId absent is legal
-  const noMortal = { ...payload, player: { name: character.name, selectedTalentIds: [...character.selectedTalentIds] } }
+  const noMortal = {
+    ...payload,
+    player: {
+      name: character.name,
+      selectedTalentIds: [...character.selectedTalentIds],
+      // post-initiation claim - realm witness plus its receipts
+      realmId: 'qi_refining',
+      ...realmReceipts('qi_refining'),
+    },
+    techniques: realmTechniques('qi_refining'),
+  }
   const wNoMortal = await writeSave(env, user.token, {
     sessionId: sid, expectedRevision: 0, payload: noMortal,
     mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
@@ -542,7 +554,9 @@ test('payload: schema gate, shape checks, identity binding, byte ceiling', async
       ...(payload.player as object),
       selectedTalentIds: [...character.selectedTalentIds, 'lk_linh_mach'],
       realmId: 'qi_refining',
+      ...realmReceipts('qi_refining'),
     },
+    techniques: realmTechniques('qi_refining'),
   }
   const wGrown = await writeSave(env, user.token, {
     sessionId: sid, expectedRevision: 1, payload: grown,
@@ -621,7 +635,13 @@ test('save authority: locked + witnessed talent rules mirror F-TAL-1', async () 
   const pick = character.selectedTalentIds[0]!
   const withPlayer = (extra: Record<string, unknown>) =>
     buildSavePayload(character, {
-      player: { name: character.name, selectedTalentIds: [pick], ...extra },
+      player: {
+        name: character.name,
+        selectedTalentIds: [pick],
+        ...realmReceipts(extra.realmId),
+        ...extra,
+      },
+      techniques: realmTechniques(extra.realmId),
     })
   const write = (payload: Record<string, unknown>, rev = 0) =>
     writeSave(env, user.token, {
@@ -725,8 +745,11 @@ test('save authority: pham_cot conversion tolerance + roll draw order', async ()
   const converted = await write(buildSavePayload(character, {
     player: {
       name, selectedTalentIds: ['pham_nhan_chi_cot'],
-      realmId: 'foundation_establishment', highestFoundationAchieved: 'great_dao',
+      realmId: 'foundation_establishment',
+      ...realmReceipts('foundation_establishment'),
+      highestFoundationAchieved: 'great_dao',
     },
+    techniques: realmTechniques('foundation_establishment'),
   }))
   expect(converted.body.status).toBe('COMMITTED')
 

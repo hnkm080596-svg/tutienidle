@@ -89,3 +89,41 @@ now hold `element:'fire'`), `treeNodeFor` non-beta-scope verdict,
 `_check_save_payload` full F-TAL-1 mirror + conversion tolerance,
 `create_character` offer-slice binding, roll draw-order contract, the
 enabled-gated pham_cot injection.
+
+---
+
+# Wave 3 adjudication (reports: fixpoint-codex-w3-{INT,COR,AUT}.md)
+
+Audit trio on the wave-2 aggregate; adjudicator = coordinator session.
+
+## INT (0 Critical / 0 High / 0 Medium / 1 Low / 2 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W3-INT-1 `onResume` live-replacement discards `restoreGameSession` verdict - a 'rejected' is swallowed and the sim resumes on a payload it could not consume (contract-asymmetric vs boot's recovery routing) | Low | FIXED — rejected now routes like boot: `markFailed('recovery')` + `saveIssue.report('corrupted', ...)` + skip `resumeSimulation` (App.vue onResume) |
+| W3-INT-2 `betaCombatRolesFor` reports basic 'available' without `deps.hasSkill` | Nit | EXCEPTED — display-only on a boundary-rejected state |
+| W3-INT-3 `isNodeElementActive/Effective` read `spellPath.element` raw | Nit | EXCEPTED — defense-in-depth divergence, unreachable |
+
+## COR (0 Critical / 0 High / 0 Medium / 2 Low / 2 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W3-COR-1 `committedPlayer` fixture still `element: null` - F-TECH-1 pin passed via F-SCOPE-1 emit, not its intended techniques-empty rule | Low | FIXED — fixture now carries the coherent committed-fire bundle (element + fire root + core node + purchased ids + kit basic) |
+| W3-COR-2 `_check_save_payload` coerces non-string talent ids (`jsonb_array_elements_text`) - server accepts ids the client's typeof gate rejects | Low | FIXED — non-string entry rejected in `202610050002` |
+| W3-COR-3 F-SCOPE-1 message prints 'undefined' for the null element | Nit | FIXED — prints 'none' |
+| W3-COR-4 `treeNodeFor` reports fire root 'purchasable' on unproducible element-null state | Nit | EXCEPTED — write seam closed anyway |
+
+## AUT (0 Critical / 0 High / 1 Medium / 1 Low / 3 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W3-AUT-1 server `_check_save_payload` accepts payload classes every client ingress seam rejects: unknown realmId, realm beyond release ceiling, missing initiation receipts (techniques/breakthroughGrade), missing foundation victory record, mortal cultivation pair, F-SCOPE-1 committed element, fire kit coherence, element-root claims, bad pendingTalentEntitlement.realmId - a 'ready' row wedges on next client read | Medium | FIXED — all classes mirrored in `202610050002_beta_save_boundary_mirror.sql`; deeper graph checks (nodeLevels prereqs, axis slices) stay client-owned: a reject lands on SaveIncompatibleScreen with export/delete, recoverable not wedged. Contract fixture also repaired (canonical payload omitted realmId - dishonest vs the client's required field) |
+| W3-AUT-2 `create_character` name check is length-only, no charset | Low | FIXED — client regex mirrored (`^[[:alnum:] _-]+$`) in same migration |
+| W3-AUT-3 `characters.realm_id` default 'pham_nhan' diverges from payload catalog 'mortal' | Nit | FIXED — column defaulted + backfilled to 'mortal' (492 beta / 496 staging rows); column is informational only |
+| W3-AUT-4 mirror hardcodes carry no drift guard | Nit | EXCEPTED — contract suite covers catalog drift end-to-end |
+| W3-AUT-5 no unknown-id check either side for mirror lists | Nit | EXCEPTED — same coverage argument |
+
+## Verification evidence
+
+- `npm run type-check` clean; scoped vitest: save dir + architecture probes 25 files / 683 assertions green; w3int.repro pins 15/15 green.
+- Contract suite vs live staging: migration applied idempotently on both projects; fresh-install scratch applies all 13 with catalog identical to historical-upgrade.

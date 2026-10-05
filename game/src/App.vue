@@ -660,10 +660,19 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
       // the authoritative payload with the reconnect's server clock bound
       // as 'now' - no offline catch-up is owed (the sim stayed admitted
       // or was paused; nothing accrued).
-      restoreGameSession(player, gameManager, save, {
+      const restored = restoreGameSession(player, gameManager, save, {
         kind: 'live-replacement',
         nowMs: serverAuthority?.serverNowMs ?? Date.now(),
       })
+      if (restored.status === 'rejected') {
+        // Boot routes a save the restore seams refuse to the recovery
+        // surface; a live-replacement rejection is the same class - the
+        // resumed sim must not run on a payload it could not consume.
+        onlineAuthority.markFailed('recovery')
+        console.warn('[resume] save rejected by restore preflight:', restored.message)
+        saveIssue.report('corrupted', JSON.stringify(save))
+        return
+      }
     }
     lifecycle.resumeSimulation()
   },
