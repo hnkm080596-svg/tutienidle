@@ -465,6 +465,26 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
     },
   )
 
+  // Gear-pace retune (2026-10-05): a maxQuality ceiling drops the
+  // out-of-band qualities from the weight table entirely - the same rng
+  // that would roll 'thien' uncapped lands inside the cap instead, and
+  // bonus steps may still nudge the rolled quality upward past the cap.
+  it('caps the base quality roll at maxQuality while bonus steps still apply after', () => {
+    const { system, player, affixRegistry } = setup()
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999_999)
+    const capped = system.createInstance(TEMPLATE, player, affixRegistry, undefined, 0, undefined, 'huyen')
+    expect(capped.quality).toBe('huyen')
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999_999)
+    const uncapped = system.createInstance(TEMPLATE, player, affixRegistry, undefined, 0, undefined)
+    expect(uncapped.quality).toBe('tien')
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999_999)
+    const stepped = system.createInstance(TEMPLATE, player, affixRegistry, undefined, 2, undefined, 'huyen')
+    expect(stepped.quality).toBe('thien')
+  })
+
   it.each([
     ['hoang', 0.1, 0.99, 'basic', 1, 'advanced'],
     ['huyen', 0.8, 0.4, 'advanced', 2, 'specialized'],
