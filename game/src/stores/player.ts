@@ -82,6 +82,37 @@ const lastRestoredPayloads = new WeakMap<object, RestoredPayloadSnapshot>()
 // khac noi dung khong the vo tinh trung chu ky vi ghep chuoi.
 const SIGNATURE_SEPARATOR = '\u0001'
 
+/**
+ * r13-INT: bound the wall-clock window a persisted timed effect may
+ * claim. `appliedAtMs > now` is impossible provenance - clamp it so a
+ * forged future application date cannot park a buff ahead of time.
+ * `expiresAtMs` forward-bound applies ONLY to non-stackable effects:
+ * applyTimedEffect refreshes those via `max(existing, new)` so their
+ * honest expiry is always `last-refresh + dur <= now + authored max`
+ * (TU_LINH_TRAN_DURATION_MS = longest authored window). A
+ * `durationStackable` group instead ADDS its duration onto remaining
+ * time per drink - its honest expiresAtMs is unbounded over the save
+ * lifetime, so no fixed bound can separate an honest long chain from
+ * a forged deadline; the span check is left to the shape validator's
+ * stackable exemption and expires passes through here (r13-COR-3).
+ * Shared by the offline-payout read and the persistentTimedEffects
+ * restore map so crafted spans cannot feed the settlement seam
+ * through a raw copy.
+ */
+function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: number; durationStackable?: boolean }>(
+  effect: T,
+  nowMs: number,
+): T {
+  const appliedAtMs = Number.isFinite(effect.appliedAtMs)
+    ? Math.min(effect.appliedAtMs, nowMs)
+    : effect.appliedAtMs
+  const expiresAtMs =
+    Number.isFinite(effect.expiresAtMs) && effect.durationStackable !== true
+      ? Math.min(effect.expiresAtMs, nowMs + TU_LINH_TRAN_DURATION_MS)
+      : effect.expiresAtMs
+  return { ...effect, appliedAtMs, expiresAtMs }
+}
+
 // "Noi dung giong het" = cung so luong, cung THU TU, va tung entry khop
 // TOAN BO field cua StatModifier co anh huong toi calculateStats
 // (id/sourceId/sourceType/stat/tag + 7 field so). Thu tu duoc tinh vao
@@ -289,7 +320,12 @@ export const usePlayerStore = defineStore('player', {
       // whole-window over-grants. Re-derive the un-buffed base rate and
       // pay each expiry-boundary segment its own live percent through
       // the same seconds->cultivation conversion authority.
-      const savedTimedEffects = save.player.persistentTimedEffects ?? []
+      // r13-INT-03: read the BOUNDED copy - a crafted oversized span
+      // otherwise pays its boost over window stretches no authored
+      // duration could cover (same bound as the restore map below).
+      const savedTimedEffects = (save.player.persistentTimedEffects ?? []).map(
+        (effect) => boundTimedEffectClocks(effect, Date.now()),
+      )
       // r12-AUT: bound the cultivation window at now on BOTH ends -
       // under cold-boot a crafted-future lastSavedAt could otherwise
       // position a payable window in the future (same clamp as saveOps
@@ -459,28 +495,13 @@ export const usePlayerStore = defineStore('player', {
       // restored copy clears here and repopulates on the next tick.
       restoredPlayer.externalModifiers = []
       // r12-COR: bound the wall-clock window a persisted timed effect
-      // may claim. appliedAtMs > now is impossible provenance - clamp it
-      // so a forged future application date cannot park a buff ahead of
-      // time; expiresAtMs beyond appliedAtMs + the longest authored
-      // window (TU_LINH_TRAN_DURATION_MS) mints a months-long buff off
-      // a forged stamp - clamp to the authored bound. Honest saves are
-      // untouched (no authored effect exceeds its duration).
+      // may claim - shared helper above (r13-INT-01/02: seconds-domain
+      // honest ceilings; stackable chains keep their forward expiry).
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
-        (effect) => {
-          const appliedAtMs = Number.isFinite(effect.appliedAtMs)
-            ? Math.min(effect.appliedAtMs, Date.now())
-            : effect.appliedAtMs
-          const expiresAtMs =
-            Number.isFinite(effect.expiresAtMs) && Number.isFinite(appliedAtMs)
-              ? Math.min(effect.expiresAtMs, appliedAtMs + TU_LINH_TRAN_DURATION_MS)
-              : effect.expiresAtMs
-          return {
-            ...effect,
-            appliedAtMs,
-            expiresAtMs,
-            modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
-          }
-        },
+        (effect) => ({
+          ...boundTimedEffectClocks(effect, Date.now()),
+          modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
+        }),
       )
 
       // Reject a nonsense realmId BEFORE the assign lands it: a crafted

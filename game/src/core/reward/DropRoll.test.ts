@@ -12,4 +12,17 @@ describe('weightedRandom', () => {
   it('picks the only entry of a single-entry table', () => {
     expect(weightedRandom([{ value: 'a', weight: 5 }])).toBe('a')
   })
+
+  it('throws on a zero/negative-weight pool instead of paying the last entry (r13-COR-6)', () => {
+    expect(() =>
+      weightedRandom([
+        { value: 'a', weight: 0 },
+        { value: 'b', weight: 0 },
+      ]),
+    ).toThrow('weightedRandom: entry weights must be finite and positive')
+
+    expect(() => weightedRandom([{ value: 'a', weight: -1 }])).toThrow(
+      'weightedRandom: entry weights must be finite and positive',
+    )
+  })
 })

@@ -43,8 +43,11 @@ export function weightedRandom<T>(entries: WeightedEntry<T>[], rng: () => number
   // r12-AUT (sibling of drawFromPool): a NaN/Infinity entry weight is
   // invalid authored data - the roll math would stay NaN and the
   // fall-through below silently pays the LAST entry (fail-open).
-  if (!Number.isFinite(totalWeight)) {
-    throw new Error(`weightedRandom: entry weights must be finite (got total ${totalWeight})`)
+  // r13-COR-6: total <= 0 is equally fail-open - every weight is zero
+  // or negative so no entry can win legitimately, yet the fall-through
+  // returns the last entry deterministically. Align on fail-closed.
+  if (!Number.isFinite(totalWeight) || totalWeight <= 0) {
+    throw new Error(`weightedRandom: entry weights must be finite and positive (got total ${totalWeight})`)
   }
 
   let roll = rng() * totalWeight

@@ -397,7 +397,11 @@ export class GameManagerSaveRestore {
       (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
       Date.now(),
     )
-    const offlineSinceMs = save.player.lastSavedAt ?? settleNowMs
+    // r13-COR-4: clamp the window START at now as well - a
+    // crafted/skewed-future lastSavedAt otherwise positions
+    // offlineSinceMs ahead of settleNowMs, confiscating every pending
+    // decompose cycle and parking worker lanes in the future.
+    const offlineSinceMs = Math.min(save.player.lastSavedAt ?? settleNowMs, Date.now())
 
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {

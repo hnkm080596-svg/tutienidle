@@ -1519,11 +1519,16 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
             (effect.cultivationSpeedPercent as number) > TU_LINH_TRAN_BUFF_PERCENT ||
             (isFiniteNumber(effect.appliedAtMs) &&
               isFiniteNumber(effect.expiresAtMs) &&
-              // F-TC8-8: the writer mints expiresAtMs = appliedAtMs +
-              // TU_LINH_TRAN_DURATION_MS exactly - a wider span is
-              // fabricated even when every other field is in shape.
-              (effect.expiresAtMs as number) - (effect.appliedAtMs as number) >
-                TU_LINH_TRAN_DURATION_MS)
+              // r13-COR-1: the span check this replaced was WRONG -
+              // applyTimedEffect keeps appliedAtMs at the FIRST
+              // application and max-extends expiresAtMs on rebuy, so an
+              // honest repeat purchase legitimately produces a span
+              // beyond TU_LINH_TRAN_DURATION_MS (and a forever-chain is
+              // unbounded). The only impossible honest order is
+              // expires BEFORE applied. Forward-honesty bounds live at
+              // the restore seam (boundTimedEffectClocks), not in the
+              // shape gate.
+              (effect.expiresAtMs as number) < (effect.appliedAtMs as number))
           ) {
             issues.push({
               path: effectPath,

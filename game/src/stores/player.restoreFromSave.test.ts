@@ -159,8 +159,36 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     player.restoreFromSave(save)
 
     const effect = player.persistentTimedEffects[0]!
-    // Applied clamp: expiresAtMs <= appliedAtMs + TU_LINH_TRAN_DURATION_MS (24h).
-    expect(effect.expiresAtMs).toBeLessThanOrEqual(effect.appliedAtMs + 24 * 60 * 60 * 1000)
+    // r13-INT-02: bound is now + longest authored duration (24h), not
+    // appliedAtMs + 24h - stackable refresh chains honestly carry
+    // expires far past their appliedAt.
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(Date.now() + 24 * 60 * 60 * 1000)
+    expect(effect.expiresAtMs).toBeGreaterThan(currentMs + 23 * 60 * 60 * 1000)
+  })
+
+  it('honest stacked pill chain past appliedAtMs+24h survives untouched (r13-INT-02 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx-stack',
+          sourceItemId: 'hoi_linh_dan',
+          effectGroup: 'pill_regen',
+          durationStackable: true,
+          // Old application, refreshed forward past the naive 24h bound.
+          appliedAtMs: currentMs - 20 * 3_600_000,
+          expiresAtMs: currentMs + 23 * 3_600_000,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.appliedAtMs).toBe(currentMs - 20 * 3_600_000)
+    expect(effect.expiresAtMs).toBe(currentMs + 23 * 3_600_000)
   })
 
   it('forged future appliedAtMs clamps to now at restore (r12-COR-2 pin)', () => {

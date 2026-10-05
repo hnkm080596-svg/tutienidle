@@ -197,13 +197,13 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     instanceId: 'b-chq',
     buildingId: 'chi_hien_quan',
     level: 1,
-    lastCollectedAt: NOW - 2_000,
+    lastCollectedAt: Math.floor(NOW / 1000) - 2_000, // SECONDS domain (accrual subtracts from Date.now()/1000)
   })
   manager.buildingManager.add({
     instanceId: 'b-pill',
     buildingId: 'pill_room',
     level: 1,
-    lastCollectedAt: NOW - 2_000,
+    lastCollectedAt: Math.floor(NOW / 1000) - 2_000, // SECONDS domain (accrual subtracts from Date.now()/1000)
   })
   manager.buildingOps.refreshAutoWorkerCapacity(
     player,
