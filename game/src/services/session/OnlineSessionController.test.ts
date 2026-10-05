@@ -394,6 +394,20 @@ describe('OnlineSessionController — result-bearing flush (B1.9a)', () => {
       code: 'FLUSH_FAILED',
     })
   })
+
+  it('a throwing onStateChange on ready still leaves the watchdog armed (W9-COR-1)', () => {
+    const probe = vi.fn(async (): Promise<ProbeOutcome> => ({ status: 'ok' }))
+    const { controller, scheduler } = makeHarness({
+      probe,
+      onStateChange: (state) => {
+        if (state === 'ready') throw new Error('dep boom')
+      },
+    })
+
+    controller.beginChecking()
+    expect(() => controller.markReady()).toThrow('dep boom')
+    expect(scheduler.handles.size).toBe(1)
+  })
 })
 
 describe('authorityStateForError — B1.7 taxonomy', () => {

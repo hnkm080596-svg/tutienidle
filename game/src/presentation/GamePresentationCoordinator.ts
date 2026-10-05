@@ -499,10 +499,14 @@ export class GamePresentationCoordinator {
       controller.abort()
 
       // An externally-aborted transition releases its session to headless
-      // so the domain drains it to an outcome - a 'hold'-detached session
+      // so the domain can drain it to an outcome - a 'hold'-detached session
       // blocks forever for callers with no compensate (tribulation
       // soft-locks breakthrough + silently loses the unequipped gear,
       // W8-AUT-2). Genuine failures keep 'hold' for retry()'s surface.
+      // Defense-in-depth: the drain still rides the canMutate-gated tick
+      // engine, so while an error surface is mounted the drain has no
+      // engine - the user-visible heal stays the acknowledge ->
+      // re-admission -> restoreRuntime path (W9-INT-1).
       if (holdToken) {
         this.sessionPort.detach(holdToken, aborted ? 'headless' : 'hold')
       } else if (request.behindCurtain && curtainClosed) {

@@ -204,15 +204,20 @@ export class OnlineSessionController {
     // A fresh admission owns a fresh resume-failure budget - a prior
     // session's throws must not shorten this one's retry runway.
     this.resumeFailureStreak = 0
+    // A retry armed by a paused prior session is inert under the
+    // 'reconnecting' guard but is residue - drop it on entry (W9-INT-3).
+    this.clearRetry()
     this.transition('checking')
   }
 
-  /** Admission checks passed: renew the lease and arm the heartbeat. */
+  /** Admission checks passed: renew the lease and arm the heartbeat. The
+   *  timers arm BEFORE the 'ready' fan-out: a throwing onStateChange must
+   *  not leave 'ready' with the watchdog disarmed and a dead retry armed. */
   markReady(): void {
     this.renewHealthLease()
-    this.transition('ready')
     this.armHeartbeat()
     this.clearRetry()
+    this.transition('ready')
   }
 
   /** A boot admission check failed - record the failure class. The boot

@@ -267,11 +267,20 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
       gameManager: {
         eventBus: { on: vi.fn(), off: vi.fn() },
         materialRegistry: { has: () => false },
-        materialBag: { add: vi.fn() },
-        productionSystem: { getSiteDefinitions: () => [] },
+        materialBag: { add: vi.fn(), getAll: () => [] },
+        techniqueManager: { getAll: () => [] },
+        skillManager: { getAll: () => [] },
+        equipmentBag: { getAll: () => [] },
+        pillBag: { getAll: () => [] },
+        equipmentSlotManager: { getAll: () => [] },
+        alchemySystem: { getJobs: () => [] },
+        questManager: { getState: () => ({}) },
+        decomposeSystem: { getSaveState: () => ({}) },
+        tribulationDirector: { serializeRuntime: () => ({}) },
+        productionSystem: { getSiteDefinitions: () => [], getAllStates: () => [] },
         setProductionAutoRestart: vi.fn(),
         setActivePlayer: vi.fn(),
-        buildingManager: { add: vi.fn() },
+        buildingManager: { add: vi.fn(), getAll: () => [] },
         refreshAutoWorkerCapacity: vi.fn(),
         restoreFromSave: vi.fn(),
         freezeCombat: vi.fn(),
@@ -323,11 +332,14 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
     // remote reset deletes the wedge. markFailed('recovery') is skipped
     // for this code - observeSaveResult already entered that terminal
     // (W7-INT-8: a second identical entry double-fires onPause). The
-    // refused payload rides as `raw` for Export salvage (W8-COR-1).
+    // refused payload rides as `raw` for Export salvage (W8-COR-1);
+    // raw must be non-empty - the '' fallback hides Export (W9-AUT-1).
     expect(outcome.status).toBe('failed')
     expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
     expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', expect.any(String), undefined, 'remote')
+    const singleRaw = (stubs.saveIssue.report.mock.calls[0]?.[1] as string | undefined) ?? ''
+    expect(singleRaw.length).toBeGreaterThan(0)
 
     lifecycle.stopAll()
   })
@@ -479,10 +491,13 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
       // re-rolls the refused content, the only heal. The refused payload
       // rides as `raw` so Export salvages it (W8-COR-1). Both armed codes
       // are already 'recovery' via observeSaveResult - no duplicate
-      // markFailed (W7-INT-8).
+      // markFailed (W7-INT-8). raw must be non-empty - the '' fallback
+      // would hide Export (W9-AUT-1).
       expect(outcome.status).toBe('failed')
       expect(stubs.authority.markFailed).not.toHaveBeenCalledWith('recovery')
       expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', expect.any(String), undefined, 'remote')
+      const armedRaw = (stubs.saveIssue.report.mock.calls[0]?.[1] as string | undefined) ?? ''
+      expect(armedRaw.length).toBeGreaterThan(0)
 
       lifecycle.stopAll()
     },

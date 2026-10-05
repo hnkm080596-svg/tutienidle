@@ -329,3 +329,41 @@ Wave-8 confirmation trio dispatched on d0b778f0.
 
 Wave-8 totals: 5 Medium + 5 Low + 8 Nit. All Medium+ fixed @19e35fe6 + @c47d058a.
 Wave-9 confirmation trio dispatched on c47d058a.
+
+## Wave 9 - adjudication (base 9d65d894, delta 4f456cfd..9d65d894)
+
+### COR report (devin-3705842f, report commit 7474a40d)
+
+Verdict: 0 Critical / 0 High / 0 Medium / 1 Low / 2 Nit.
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| W9-COR-1 | Low | FIXED - markReady arms heartbeat + clears retry BEFORE transition('ready'), so a throwing onStateChange cannot strand the watchdog (the new reconnecting-guard had removed the leaked-retry self-heal); pin added in OnlineSessionController.test.ts |
+| W9-COR-2 | Nit | EXCEPTED - firstSave-arm raw assertion uses expect.any(String) which also passes on the degraded '' fallback path; assertion intent preserved, cosmetic |
+| W9-COR-3 | Nit | EXCEPTED - standing note: whitelist {SAVE_INVALID, SAVE_TOO_LARGE} is now the binding contract for 'data-class'; new refuse codes land on the generic card (under-arm, safe direction). Convention link deferred to docs, no code change |
+
+### INT report (devin-c482543d, report commit 20c1a1a2)
+
+Verdict: PASS WITH EVIDENCE - 0 Medium+. 3 Low + 3 Nit.
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| W9-INT-1 | Low | COMMENT RE-SCOPED - headless drain is real but engineless under a mounted error surface (tick engine is canMutate-gated); user-visible heal stays acknowledge -> re-admission -> restoreRuntime. Coordinator comment now says defense-in-depth, not active heal |
+| W9-INT-2 | Low | EXCEPTED - latent two-sided shape unreachable today (no 'error' producer fires while 'ready'); kept visible so a future producer inherits it knowingly |
+| W9-INT-3 | Nit | FIXED - beginChecking now clearRetry()s the inert-but-resident retry handle on entry |
+| W9-INT-4 | Nit | COVERED - same markReady-throw residue as W9-COR-1; the reorder closes it (recovery now via lease watchdog, deterministic) |
+| W9-INT-5 | Nit | EXCEPTED - retryable data-class refuse lands terminal 'recovery' + generic card: coarse but defensible (byte-identical retry refuses identically); pre-existing mapping |
+| W9-INT-6 | Low | EXCEPTED - accepted SERVER_ERROR wedge restated end-to-end: permanent non-data commit refuse has no self-serve remedy by design; stays visible as the recorded tradeoff |
+
+### AUT report (devin-df530756, report commit pending pull)
+
+Verdict: PASS WITH EVIDENCE - 0 Critical / 0 High / 0 Medium. 1 Low + 3 Nit.
+
+| Finding | Severity | Disposition |
+|---------|----------|-------------|
+| W9-AUT-1 | Low | FIXED - w5aut.repro.test.ts stub gameManager gained the full buildGameSave getter set (12 managers) and both armed pins now assert raw.length > 0, so a regression that degrades raw to '' (hiding Export) is falsifiable again |
+| W9-AUT-2 | Nit | EXCEPTED - dep-fanout throws at boot arm/terminal sites escape bootGame uncaught; pre-existing propagation class, shipped deps non-throwing (unreachable) |
+| W9-AUT-3 | Nit | EXCEPTED - AUTH_EXPIRED/terminal-regression asymmetry is pre-existing and overlay-gated; no user-visible wedge |
+| W9-AUT-4 | Low (hypothesis) | EXCEPTED - persistent-server-refuse tail in the SERVER_ERROR bucket is the consciously-accepted tail risk of the whitelist; no deterministic client-side producer exists |
+
+Wave-9 totals: 0 Critical / 0 High / 0 Medium across COR + AUT + INT (1 Low fixed, 2 Nit fixed, remainder excepted in place).
