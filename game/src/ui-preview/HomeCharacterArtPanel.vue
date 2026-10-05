@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { messages } from './characterprogressiondesignMessages'
 import { pcPaperIconUrl } from '@/presentation/assets/PcPaperIcons'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
-const { t } = useI18n({ useScope: 'local', messages })
+const { t } = useI18n()
 const stats = ['vitality','strength','dexterity','attunement','intelligence']
 const values = [18,30,16,20,14]
 const colors = ['#b98a3f','#b54432','#3f9e6f','#4a8fc4','#7a6fc4']
