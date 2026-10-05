@@ -75,12 +75,12 @@ function randomName() { name.value = t('authPreview.trial.randomName'); notice.v
 .trial-talent-detail .trial-talent-seal { margin: 0 auto; }
 .trial-talent-detail h3 { font-size: 24px; margin: 7px 0; }.trial-talent-detail p { font-size: 14px; line-height: 1.35; margin: 7px 0 14px; }
 .trial-talent-detail h4 { font-size: 18px; }.trial-talent-detail ul { text-align: left; padding-left: 16px; font-size: 14px; line-height: 1.35; margin: 0; }.trial-talent-detail li { margin-bottom: 4px; }.trial-talent-detail li::marker { color: #dbb260; }
-.trial-name-row { display: flex; align-items: center; gap: 12px; padding: 0 55px; margin: 46px 0 4px; }
+.trial-name-row { display: flex; align-items: center; gap: 12px; padding: 0 55px; margin: 58px 0 4px; }
 .trial-name-label { flex: 0 0 auto; color: #e8cf9e; font: 700 22px var(--pc-font-body); white-space: nowrap; }
 .trial-name-row input { min-width: 0; flex: 1; height: 42px; padding: 8px 16px; border: 1px solid #b49860; background: #1b211a; color: #f1e2c0; font: 15px var(--pc-font-body); }.trial-name-row input::placeholder { color: #aaa18b; }.trial-name-row button { min-height: 42px; font-size: 28px; transform: translateY(-4px); }
 .trial-path-title { margin: 12px 0 4px; font-size: 18px; }.trial-path-description { margin: 0 0 8px; font-size: 14px; text-align: center; }
 .trial-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }.trial-paths button { padding: 7px 8px; min-height: 44px; font-size: 15px; }
-.trial-begin { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }.trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; }
+.trial-begin { position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }.trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; }
 </style>
 
 
