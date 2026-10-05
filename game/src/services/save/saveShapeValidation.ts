@@ -82,11 +82,13 @@ import {
 } from '../../core/production/ProductionBalance'
 import { BETA_MORTAL_STARTER_SKILL_ID } from '../../core/betaScope'
 import type { PlayerData } from '../../core/player/Player'
+import type { PersistentTimedEffect } from '../../core/player/PersistentTimedEffect'
 import { pills } from '../../data/pill/pills'
 import {
   TU_LINH_TRAN_BUFF_PERCENT,
   TU_LINH_TRAN_DURATION_MS,
   TU_LINH_TRAN_EFFECT_GROUP,
+  getActiveCultivationSpeedPercent,
 } from '../../core/economy/TuLinhTranBalance'
 import { TRIBULATION_COOLDOWN_SECONDS } from '../../core/tribulation/TribulationDirector'
 import { GLOBAL_MAX_AFFIXES } from '../../core/equipment/EquipmentRollPrimitives'
@@ -800,23 +802,47 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
     // tu_linh_tran timed-effect record is live at save time - an
     // unconditional headroom lets a TLT-less save claim 25% extra
     // offline accrual magnitude.
+    // r15-AUT-1: loosen by the record's OWN live percent, not the
+    // authored max. The binary flag let a forged
+    // expires=lastSavedAt+1ms + percent=1e-9 claim the whole 1.25x
+    // bound - the record is live at windowStart (windowStart <=
+    // lastSavedAt always), so the restore's un-buff division barely
+    // shrinks the claim and the dead tail pays the loosened rate for
+    // the whole window. Sampling the same domain read the restore
+    // uses is honest-tight: an authored 0.25 buff still admits its
+    // 1.25x snapshot, while every forged (percent, expires) pair now
+    // divides back to BASE at payout (claim <= BASE x (1+p) ->
+    // unbuffed = claim/(1+p) <= BASE).
     const persistedTimedEffects = player.persistentTimedEffects
-    const hasLiveTlt =
-      Array.isArray(persistedTimedEffects) &&
-      persistedTimedEffects.some(
-        (effect) =>
-          isObject(effect) &&
-          effect.sourceItemId === 'tu_linh_tran' &&
-          isFiniteNumber(effect.expiresAtMs) &&
-          (!isFiniteNumber(player.lastSavedAt) ||
-            (effect.expiresAtMs as number) > (player.lastSavedAt as number)),
-      )
+    const liveTltPercent =
+      Array.isArray(persistedTimedEffects) && isFiniteNumber(player.lastSavedAt)
+        ? getActiveCultivationSpeedPercent(
+            persistedTimedEffects
+              .filter((effect): effect is Record<string, unknown> => isObject(effect))
+              .map(
+                (effect): PersistentTimedEffect => ({
+                  id: '',
+                  sourceItemId:
+                    typeof effect.sourceItemId === 'string' ? effect.sourceItemId : '',
+                  effectGroup:
+                    typeof effect.effectGroup === 'string' ? effect.effectGroup : undefined,
+                  appliedAtMs: 0,
+                  expiresAtMs: isFiniteNumber(effect.expiresAtMs) ? effect.expiresAtMs : 0,
+                  modifiers: [],
+                  cultivationSpeedPercent: isFiniteNumber(effect.cultivationSpeedPercent)
+                    ? effect.cultivationSpeedPercent
+                    : undefined,
+                }),
+              ),
+            player.lastSavedAt as number,
+          )
+        : 0
 
     const maxPersistedCps =
       BASE_CULTIVATION_PER_SECOND *
       getCultivationSpeedMultiplier(cpsTalentIds, cpsTalentLevels) *
       getCultivationRampMultiplier(cpsTalentIds, player.realmLevel, cpsTalentLevels) *
-      (hasLiveTlt ? 1 + TU_LINH_TRAN_BUFF_PERCENT : 1)
+      (1 + liveTltPercent)
 
     if (player.cultivationPerSecond > maxPersistedCps + 1e-9) {
       normalization.cultivationPerSecond = maxPersistedCps
@@ -1496,6 +1522,16 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
         validateStatModifierEntries(effectModifiers, `${effectPath}.modifiers`, issues)
       }
 
+      // r15-AUT-3: the writers only ever emit a boolean here (or omit
+      // it) - a non-boolean claim is crafted shape even though the
+      // stackable comparisons below already fail it closed.
+      if (effect.durationStackable !== undefined && typeof effect.durationStackable !== 'boolean') {
+        issues.push({
+          path: `${effectPath}.durationStackable`,
+          message: 'phải là boolean khi khai báo',
+        })
+      }
+
       if (typeof effect.effectGroup === 'string' && effect.effectGroup.length > 0) {
         if (seenEffectGroups.has(effect.effectGroup)) {
           // applyTimedEffect merges same-group entries into one record -
@@ -1538,8 +1574,18 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
               // lastSavedAt + duration is impossible provenance (and a
               // forged one would also loosen the cps cap via the live-
               // TLT check above and revive at restore).
+              // r15-COR-D: +7d provenance allowance - that bound only
+              // holds inside ONE clock epoch; a rebuy stamped under a
+              // fast-clock stretch whose skew then rolls back before
+              // the save legitimately exceeds it (appliedAt stays at
+              // the first apply, so F-TC9-1 stays silent). The
+              // allowance rescues that honest shape; anything it
+              // admits is still clamped to <=24h live at the restore
+              // seam, so it buys a forge nothing.
               (effect.expiresAtMs as number) >
-                (player.lastSavedAt as number) + TU_LINH_TRAN_DURATION_MS)
+                (player.lastSavedAt as number) +
+                  TU_LINH_TRAN_DURATION_MS +
+                  7 * 86_400_000)
           ) {
             issues.push({
               path: effectPath,
@@ -1565,6 +1611,26 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
               message: `timed effect claim nguồn thuộc family dormant (${String(effect.sourceItemId)})`,
             })
           } else if (claimedPill !== undefined && regenEffect !== undefined) {
+            // F-A10-r15 (r15-AUT-2): the claimed source pill's realm is
+            // an earnability claim - the consume writer only mints this
+            // effect while the player is IN the pill's exact realm, and
+            // realms are monotonic, so a save below the pill's realm is
+            // impossible provenance (a mortal save was claiming the
+            // tribulation-tier regen flat bound).
+            const pillSourceRealmIndex =
+              claimedPill.realmId !== undefined ? getRealmIndex(claimedPill.realmId) : -1
+            const saveRealmIndex =
+              typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+            if (
+              pillSourceRealmIndex >= 0 &&
+              saveRealmIndex >= 0 &&
+              pillSourceRealmIndex > saveRealmIndex
+            ) {
+              issues.push({
+                path: `${effectPath}.sourceItemId`,
+                message: `pill regen nguồn '${String(effect.sourceItemId)}' thuộc realm '${String(claimedPill.realmId)}' cao hơn realm của save`,
+              })
+            }
             if (effect.cultivationSpeedPercent !== undefined) {
               issues.push({
                 path: `${effectPath}.cultivationSpeedPercent`,

@@ -306,6 +306,108 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(effect.expiresAtMs).toBeLessThan(currentMs)
   })
 
+  it('honest TLT bought inside a fast-clock skew clamps to server-now + 24h, not client-now + 24h (r15-INT-01 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs + 300_000, // honest client clock 300s ahead
+      persistentTimedEffects: [
+        {
+          id: 'fx-tlt',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: currentMs + 250_000, // bought inside the skew gap
+          expiresAtMs: currentMs + 300_000 + 86_400_000, // client-now + 24h
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    // Deny-direction rewrite: provenance is min(lastSavedAt, untilMs) =
+    // untilMs, so the buff shrinks by exactly the clock skew (300s) -
+    // never widens past the authored duration.
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.appliedAtMs).toBe(currentMs)
+    expect(effect.expiresAtMs).toBe(currentMs + 86_400_000)
+    expect(effect.expiresAtMs).toBeGreaterThan(currentMs)
+  })
+
+  it('TLT chết trước lúc save (stamp skew tương lai) → kẹp chết, không revive 24h (r15-COR-A pin)', () => {
+    const player = usePlayerStore()
+    // Client clock +10d: every stamp lives in the payload epoch, so a
+    // deadline 6h before the save marker still reads FUTURE in the
+    // authority epoch. Dead-at-save is payload-truthful: expires can
+    // only grow past the save marker on a real rebuy.
+    const fastSavedAt = currentMs + 10 * 86_400_000
+    const save = buildMinimalSave({
+      lastSavedAt: fastSavedAt,
+      persistentTimedEffects: [
+        {
+          id: 'fx-dead',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: fastSavedAt - 10 * 3_600_000,
+          expiresAtMs: fastSavedAt - 6 * 3_600_000, // died 6h before save
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    // r14 bound would revive it to untilMs + 24h; the dead arm clamps
+    // at authority-now instead - dead stays dead.
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(currentMs)
+  })
+
+  it('buff chết giữa cửa sổ offline (đồng hồ nhanh) → chỉ trả % cho đoạn sống (r15-COR-B pin)', () => {
+    const player = usePlayerStore()
+    // Client clock +10d so the client-stamped expiry falls entirely
+    // OUTSIDE the server-epoch window: pre-fix the splitter never
+    // found the mid-window death and paid the buffed rate for the
+    // whole 500s.
+    const fastSavedAt = currentMs + 10 * 86_400_000
+    const save = buildMinimalSave({
+      cultivationPerSecond: 1, // dead at save -> honest base snapshot
+      lastSavedAt: fastSavedAt,
+      persistentTimedEffects: [
+        {
+          id: 'fx-split',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: fastSavedAt - 3_600_000,
+          expiresAtMs: fastSavedAt - 250_000, // dies halfway into the window
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    expect(result.elapsedSeconds).toBe(500)
+    // Honest: 250s x 1.25 + 250s x 1.0 on the base rate 1 -> 562.5.
+    // Server-epoch window gave 500 x 0.8 x 1.25 = 500 (whole-window
+    // percent + an un-buff divide that never applied).
+    expect(result.cultivation).toBeCloseTo(562.5, 6)
+  })
+
   it('buff tu luyện đã hết hạn trước khi save → rate lưu trừ hết phần buff', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({

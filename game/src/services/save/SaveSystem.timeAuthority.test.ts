@@ -12,6 +12,7 @@ import { createDefaultPlayer } from '../../core/player/Player'
 import { usePlayerStore } from '../../stores/player'
 import { primeMortalCreationPick } from './GameSave.fixture'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
+import type { Stage } from '../../core/stage/Stage'
 import { materials } from '../../data/materials/materials'
 import { equipment } from '../../data/equipment/equipment'
 import { affixes } from '../../data/equipment/affixes'
@@ -138,9 +139,10 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
 
     expect(result.status).toBe('ok')
     // 200s authorized - NOT the 900s a lastSavedAt read would mint.
-    // The settle clock is the approved window end (lastSavedAt+200s),
-    // not the machine now.
-    expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 200, NOW - 700_000)
+    // r15-COR-E: the settle's farm anchor stays in the lastCheckedMs
+    // field's own epoch (Date.now) - the authorized width is carried
+    // by elapsedOfflineSeconds alone.
+    expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 200)
     // The alchemy settle bound sits inside the payload's own epoch:
     // lastSavedAt + elapsed, identical to legacy positioning.
     expect(alchemySpy).toHaveBeenCalledWith(
@@ -151,6 +153,48 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
       expect.any(Number),
       expect.any(Function),
     )
+  })
+
+  it('cold-boot: the farm anchor rewrites in the field epoch, not the settle window end (r15-COR-E pin)', () => {
+    const player = usePlayerStore()
+    const manager = registeredManager()
+    manager.setActivePlayer(player.$state)
+
+    // The farm must survive restore's eligibility re-check: real stage
+    // registration + perfect-clear witness, same contract as runtime.
+    const farmStage: Stage = {
+      id: 'farm_stage',
+      name: 'farm_stage',
+      description: '',
+      floor: 1,
+      enemyPool: [{ enemyId: 'stage_probe', weight: 1 }],
+      totalEnemyCount: 1,
+      waves: [1],
+      spawnIntervalSeconds: 0,
+    }
+    manager.catalogOps.registerStages([farmStage])
+    const save = makeSave({
+      lastSavedAt: NOW - 900_000,
+      autoFarmStage: { stageId: 'farm_stage', lastCheckedMs: NOW - 900_000 },
+    })
+    save.player.perfectClearStageIds = ['farm_stage']
+    save.player.perfectClearSeconds = { farm_stage: 100 }
+
+    const result = restoreGameSession(player, manager, save, {
+      kind: 'cold-boot',
+      sinceMs: NOW - 200_000,
+      untilMs: NOW,
+    })
+
+    expect(result.status).toBe('ok')
+    // 200s authorized -> 100 halved seconds -> one 100s cycle, rem 0.
+    // The anchor must sit at restore-now (the Date.now epoch every
+    // lastCheckedMs writer/reader shares), not at settleNowMs =
+    // lastSavedAt + elapsed = NOW - 700s - the r13 stamp left the
+    // unauthorized tail in the anchor for the next tick to mint.
+    const anchor = player.autoFarmStage!.lastCheckedMs
+    expect(anchor).toBeGreaterThanOrEqual(NOW - 1_000)
+    expect(anchor).toBeLessThanOrEqual(NOW)
   })
 
   it('live-replacement with an armed farm re-anchors (settle(0)) without catch-up; decompose/alchemy stop at the snapshot', () => {
@@ -173,8 +217,8 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
 
     expect(result.status).toBe('ok')
     // Queue restored, zero-accrual settle: re-anchor, never catch up the
-    // paused window. Anchor = the snapshot end (lastSavedAt+0).
-    expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 0, NOW - 900_000)
+    // paused window (r15-COR-E: the anchor is client-epoch now).
+    expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 0)
     expect(decomposeSpy).not.toHaveBeenCalled()
     // settleNowMs = lastSavedAt + 0 => jobs complete only at the snapshot.
     expect(alchemySpy).toHaveBeenCalledWith(

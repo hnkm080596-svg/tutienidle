@@ -110,15 +110,49 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
   effect: T,
   nowMs: number,
   provenanceMs: number,
+  saveLastSavedAtMs: number,
 ): T {
   const appliedAtMs = Number.isFinite(effect.appliedAtMs)
     ? Math.min(effect.appliedAtMs, nowMs)
     : effect.appliedAtMs
+  // r15-COR-A: a record dead at save time (expires <= lastSavedAt in
+  // the payload's own epoch) can never honestly revive - expires only
+  // extends on rebuy, which re-stamps past the save marker. Its skewed
+  // stamp may still read future in the authority epoch, so the dead arm
+  // clamps at nowMs, not provenance+duration - without it a dead buff
+  // on a fast-clock save was resurrected for up to a full duration.
+  // The live arm (expires > lastSavedAt) keeps the provenance bound:
+  // a just-bought buff claim is indistinguishable from a forge there,
+  // so it earns at most the authored duration.
   const expiresAtMs =
     Number.isFinite(effect.expiresAtMs) && effect.durationStackable !== true
-      ? Math.min(effect.expiresAtMs, provenanceMs + TU_LINH_TRAN_DURATION_MS)
+      ? Math.min(
+          effect.expiresAtMs,
+          Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs
+            ? nowMs
+            : provenanceMs + TU_LINH_TRAN_DURATION_MS,
+        )
       : effect.expiresAtMs
   return { ...effect, appliedAtMs, expiresAtMs }
+}
+
+// r15-COR-A/-B: the payout window needs each record's death POSITION
+// in the payload epoch, not the liveness-clamped stamp the restore
+// map stores. A dead-at-save record keeps its own stamp here - a buff
+// that honestly died mid-window must still pay its live rate up to
+// that stamp - while a live claim (expires > lastSavedAt) clamps to
+// the provenance bound exactly like the stored copy.
+function payoutExpiresAtMs(
+  effect: { expiresAtMs: number; durationStackable?: boolean },
+  provenanceMs: number,
+  saveLastSavedAtMs: number,
+): number {
+  if (!Number.isFinite(effect.expiresAtMs) || effect.durationStackable === true) {
+    return effect.expiresAtMs
+  }
+  return Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs
+    ? effect.expiresAtMs
+    : Math.min(effect.expiresAtMs, provenanceMs + TU_LINH_TRAN_DURATION_MS)
 }
 
 // "Noi dung giong het" = cung so luong, cung THU TU, va tung entry khop
@@ -345,12 +379,26 @@ export const usePlayerStore = defineStore('player', {
       // otherwise pays its boost over window stretches no authored
       // duration could cover (same bound as the restore map below).
       const savedTimedEffects = (save.player.persistentTimedEffects ?? []).map(
-        (effect) => boundTimedEffectClocks(effect, authorityNowMs, effectProvenanceMs),
+        (effect) =>
+          boundTimedEffectClocks(
+            effect,
+            authorityNowMs,
+            effectProvenanceMs,
+            save.player.lastSavedAt,
+          ),
       )
+      // The payout copy keeps each record's own death position (a buff
+      // honestly dying mid-window still pays its live part); only live
+      // claims clamp, so sample-and-segments stay consistent.
+      const payoutTimedEffects = (save.player.persistentTimedEffects ?? []).map((effect) => ({
+        ...effect,
+        expiresAtMs: payoutExpiresAtMs(
+          effect,
+          effectProvenanceMs,
+          save.player.lastSavedAt,
+        ),
+      }))
       // r12-AUT: bound the cultivation window at now on BOTH ends -
-      // under cold-boot a crafted-future lastSavedAt could otherwise
-      // position a payable window in the future (same clamp as saveOps
-      // settleNowMs). The splitter sorts bounds into positive segments,
       // so a future-positioned start/end pair still mints - the start
       // must clamp too. r14-COR-1: the start anchor is
       // authorityNowMs - elapsed, not authorityNowMs - the window is
@@ -364,11 +412,37 @@ export const usePlayerStore = defineStore('player', {
         authorityNowMs - offlineSeconds * 1000,
       )
       const windowEndMs = Math.min(windowStartMs + offlineSeconds * 1000, authorityNowMs)
-      const percentAtSave = getActiveCultivationSpeedPercent(savedTimedEffects, windowStartMs)
+      // r15-COR-B/-C: the window anchors are authority-epoch (server
+      // untilMs) but every persisted effect stamp is payload-epoch
+      // (client clock) - comparing across epochs misplaces expiries, so
+      // under a fast clock a mid-window death never lands inside the
+      // window (+25% overpay) and a dead-at-save buff counts live at
+      // the sample (rate divide underpay). Re-express the window in
+      // the payload epoch: skew = lastSavedAt - authorityNowMs when
+      // positive (honest synced stamps sit at skew ~0, so honest saves
+      // read identically to before).
+      const clockSkewMs = Number.isFinite(save.player.lastSavedAt)
+        ? Math.max(0, save.player.lastSavedAt - authorityNowMs)
+        : 0
+      const payloadWindowStartMs = windowStartMs + clockSkewMs
+      const payloadWindowEndMs = windowEndMs + clockSkewMs
+      // The un-buff sample belongs at the SAVE INSTANT in the same
+      // epoch - sampling the window start underpaid whenever a buff
+      // died between the window start and the save marker.
+      const percentAtSave = getActiveCultivationSpeedPercent(
+        payoutTimedEffects,
+        Number.isFinite(save.player.lastSavedAt)
+          ? Math.min(save.player.lastSavedAt, payloadWindowEndMs)
+          : payloadWindowStartMs,
+      )
       const unbuffedCultivationPerSecond = save.player.cultivationPerSecond / (1 + percentAtSave)
       const offline: OfflineResult = {
         elapsedSeconds: offlineSeconds,
-        cultivation: splitCultivationSpeedWindow(savedTimedEffects, windowStartMs, windowEndMs).reduce(
+        cultivation: splitCultivationSpeedWindow(
+          payoutTimedEffects,
+          payloadWindowStartMs,
+          payloadWindowEndMs,
+        ).reduce(
           (sum, segment) =>
             sum +
             calculateOfflineProgress(segment.seconds, unbuffedCultivationPerSecond * (1 + segment.percent))
@@ -529,7 +603,12 @@ export const usePlayerStore = defineStore('player', {
       // honest ceilings; stackable chains keep their forward expiry).
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
-          ...boundTimedEffectClocks(effect, authorityNowMs, effectProvenanceMs),
+          ...boundTimedEffectClocks(
+            effect,
+            authorityNowMs,
+            effectProvenanceMs,
+            save.player.lastSavedAt,
+          ),
           modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
         }),
       )

@@ -214,7 +214,6 @@ export class GameManagerAutoFarmOps {
   settleAutoFarmOffline(
     player: PlayerData,
     elapsedOfflineSeconds: number,
-    settleNowMs: number = Date.now(),
   ): void {
     const autoFarm = player.autoFarmStage
 
@@ -257,12 +256,17 @@ export class GameManagerAutoFarmOps {
     // settle ~0 cycles - the anchor already consumed the window - so a
     // mid-settle failure can only underpay, never double-pay. Honest
     // windows are unaffected: a running farm's anchor tracks now.
-    // r14-INT-1: `now` is the caller's authority anchor, not the local
-    // clock - under cold-boot the window is server-approved untilMs, so
-    // a slow local clock measuring Date.now() would shrink the payable
-    // tail the server already granted (other settle channels were
-    // plumbed the same anchor in r13).
-    const now = settleNowMs
+    // r15-COR-E: the anchor must live in the FIELD's own epoch - every
+    // other lastCheckedMs writer (start/reconcile/tickAutoFarm) stamps
+    // Date.now(), and the live tick reads it back against Date.now().
+    // r13's authority anchor wrote a server-epoch stamp here: on a
+    // fast-clock device the gap went negative (settle paid ~0) and the
+    // written stamp then made the next tick mint the whole skew at
+    // live rate; on any capped save it also left the unauthorized
+    // tail in the anchor for the tick to pay. The authorized bound is
+    // elapsedOfflineSeconds (server-derived) - measuring the anchor gap
+    // against the same clock the field uses keeps the cap binding.
+    const now = Date.now()
     if (
       !Number.isFinite(autoFarm.lastCheckedMs) ||
       autoFarm.lastCheckedMs < 0 ||

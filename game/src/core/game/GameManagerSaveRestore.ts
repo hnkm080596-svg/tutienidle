@@ -64,7 +64,7 @@ export interface GameManagerSaveRestoreDeps {
   getWorkerAssignments: () => Map<string, number>
   // Auto-farm Task 5 (2026-09-04) - offline catch-up closure (logic song
   // tren GameManager, SaveRestore chi goi lai - cung pattern tren).
-  settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number, settleNowMs: number) => void
+  settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
   // Mission B audit - the persisted farm lease must also RE-ACQUIRE the
   // StageManager slot at restore; settle alone leaves the slot free while
   // persisted state stays armed.
@@ -450,14 +450,14 @@ export class GameManagerSaveRestore {
         // Auto-farm Task 5 (2026-09-04) - NGOAI LE DUY NHAT combat nhan
         // reward offline: roll cac chu ky auto-farm da troi trong cua so
         // offline (cung gate >60s voi Production catch-up).
-        this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds, settleNowMs)
+        this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
       } else if (offlinePlayer.autoFarmStage) {
         // Re-anchor an armed farm on EVERY restore that skipped the
         // settle (elapsed <= 60s AND live-replacement alike - r12-COR).
         // Without this, a crafted stale lastCheckedMs survives to the
         // next tick and mints the gap at LIVE rate (2x the offline
         // settle) - the anchor bound only guards the settle path.
-        this.deps.settleAutoFarmOffline(offlinePlayer, 0, settleNowMs)
+        this.deps.settleAutoFarmOffline(offlinePlayer, 0)
       }
 
       // Mission B audit - re-acquire the StageManager lease for a persisted

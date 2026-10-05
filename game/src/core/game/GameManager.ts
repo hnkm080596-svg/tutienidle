@@ -829,8 +829,8 @@ export class GameManager {
       refreshAutoWorkerCapacity: (player, instance) =>
         this.buildingOps.refreshAutoWorkerCapacity(player, instance),
       getWorkerAssignments: () => this.buildingOps.getWorkerAssignments(),
-      settleAutoFarmOffline: (player, elapsedSeconds, settleNowMs) =>
-        this.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, elapsedSeconds, settleNowMs),
+      settleAutoFarmOffline: (player, elapsedSeconds) =>
+        this.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, elapsedSeconds),
       reconcileAutoFarmRuntime: (player) =>
         this.turnBattleOps.autoFarmOps.reconcileAutoFarmRuntime(player),
       decomposeSystem: this.decomposeSystem,
