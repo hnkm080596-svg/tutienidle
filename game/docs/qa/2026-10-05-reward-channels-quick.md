@@ -164,5 +164,15 @@ evidence rows, not reviewed surfaces.
 
 ## Pre-existing Failures
 
-None observed in scoped or full runs (all green; expected-fail/skipped
-counts match suite baselines).
+`BattleLootSystem.dropResult.test.ts` — 6 failures
+(`createInstance` not called: the mortal-pool ~15% `poolDrawChance`
+miss-weight landed by sibling PR #150 suppresses the test's equipment
+draws). Reproduced on a clean checkout of `origin/codex/hoa-cau-fireball-vfx`
+@ 953d31e2 WITHOUT this task's diff — pre-existing sibling breakage,
+not caused by the audited change. Routed to the coordinator for a
+fix-back on the sibling's scope.
+
+Post-rebase verification on the final pushed state (1dbb433d onto
+953d31e2): `npm run type-check` clean; scoped vitest
+(game/reward/quest/idle/save/drop/data) 238 files / 2,307 passed with
+ONLY the 6 pre-existing sibling failures; every task-owned pin green.
