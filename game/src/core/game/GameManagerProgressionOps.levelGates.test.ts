@@ -77,7 +77,7 @@ describe('progressionOps cost reads under levelGates', () => {
 
     player.techniqueProgress = { rank: 3, grade: 1 }
 
-    // Core curve: getSkillCoreUpgradeCost(5) = 5 + 3 * 4 = 17.
-    expect(gameManager.progressionOps.getSkillCoreUpgradeCost('test_ops_skill', player)).toBe(17)
+    // Core curve (pace retune): getSkillCoreUpgradeCost(5) = 200 + 100 * 4 = 600.
+    expect(gameManager.progressionOps.getSkillCoreUpgradeCost('test_ops_skill', player)).toBe(600)
   })
 })

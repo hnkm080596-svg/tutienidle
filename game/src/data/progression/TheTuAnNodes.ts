@@ -23,7 +23,9 @@ import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 // nodePathApplies/nodeWayApplies enforce it at purchase, upgrade, and
 // every aggregator.
 
-const GROWTH_3 = { base: 1, perLevel: 2 } // 1,1,2 -- sibling growth convention.
+// Insight pace retune 2026-10-05: QI-window minors pay 600/level;
+// foundation-gated majors pay 150,000 flat. See SkillInsightBalance.
+const GROWTH_3 = { base: 600, perLevel: 5 } // perLevel > maxLevel -> flat 600/level.
 
 // ---------------- Luyen Khi minors ----------------
 
@@ -34,7 +36,7 @@ const LQ_MINORS: ProgressionNode[] = [
     description: 'Quan sát sâu hơn: hành động của kẻ địch được quan sát thu thêm +2 Thế mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 600,
     maxLevel: 3,
     upgradeCost: GROWTH_3,
     prerequisites: [{ kind: 'realm', realmId: 'qi_refining' }],
@@ -47,7 +49,7 @@ const LQ_MINORS: ProgressionNode[] = [
     description: 'Phản Kích xuyên thêm 15% giáp mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 600,
     maxLevel: 3,
     upgradeCost: GROWTH_3,
     prerequisites: [{ kind: 'realm', realmId: 'qi_refining' }],
@@ -65,7 +67,7 @@ const TC_MAJORS: ProgressionNode[] = [
     description: 'Học Quan Thế: quan sát toàn trận trong vài lượt của bản thân; mở kênh Hộ và Trợ.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 150_000,
     prerequisites: [
       { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'techniqueRank', rank: 5 },
@@ -79,7 +81,7 @@ const TC_MAJORS: ProgressionNode[] = [
     description: 'Hộ cam kết: đồng đội được che chắn nhận lớp giáp ngoài bằng 15% Sinh Mệnh Tối Đa của người hộ.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 150_000,
     prerequisites: [{ kind: 'node', nodeId: 'major_quan_the' }],
     effect: { hiddenBodyMechanicModifiers: { interceptWardRatio: 0.15 } },
     branchTag: 'the_tu_an',
@@ -90,7 +92,7 @@ const TC_MAJORS: ProgressionNode[] = [
     description: 'Phản sau khi né đòn trở thành Trọng Phản Kích: đòn phản nặng hơn (+60% sát thương).',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 150_000,
     prerequisites: [{ kind: 'node', nodeId: 'major_quan_the' }],
     effect: { hiddenBodyMechanicModifiers: { evadeCounterMultiplierBonus: 0.6 } },
     branchTag: 'the_tu_an',
@@ -101,7 +103,7 @@ const TC_MAJORS: ProgressionNode[] = [
     description: 'Trợ Kích trúng đặt Dẫn Thế: nhịp quan sát kế tiếp từ kẻ mang ấn sinh gấp ba Thế.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 150_000,
     prerequisites: [{ kind: 'node', nodeId: 'major_quan_the' }],
     effect: { hiddenBodyMechanicModifiers: { danTheBonus: 1 } },
     branchTag: 'the_tu_an',

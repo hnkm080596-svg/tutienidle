@@ -129,7 +129,7 @@ describe('skill level-up notification (T4-37)', () => {
   it('single-level gain pushes messageKey notifications.skillLevelUp', () => {
     const gm = new GameManager()
     const player = createDefaultPlayer()
-    player.skillInsight = 100
+    player.skillInsight = 1_000
 
     // M-QI-05 - canonical path: template + registered core, learn
     // grants the core, levelUpSkill drives the Insight channel.

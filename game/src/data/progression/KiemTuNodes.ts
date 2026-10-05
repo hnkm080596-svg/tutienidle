@@ -64,9 +64,13 @@ const DAM_BETA_NODES: ProgressionNode[] = [
     description: 'Đâm +8% sát thương mỗi cấp — nền của đường kiếm đâm.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    // Insight pace retune 2026-10-05: QI-window prices are 600/level
+    // (growth), 2,000 (keystone), 4,000 (branch capstone); the TC-gated
+    // chem branch prices at the ~10x TC income window - 40,000/level,
+    // 60,000 (keystone), 150,000 (capstone). See SkillInsightBalance.
+    insightCost: 600,
     maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
+    upgradeCost: { base: 600, perLevel: 5 },
     // Same authored cap gate as the ngu growth nodes (M-QI-06
     // precedent): the last mastery level needs technique rank 4.
     levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
@@ -87,7 +91,7 @@ const DAM_BETA_NODES: ProgressionNode[] = [
       'Đâm xuyên 30% giáp trên đòn đánh của chính nó — xuyên một phần cố định, không roll xác suất.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 2000,
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_dam]!.id },
       { kind: 'node', nodeId: 'thich_can' },
@@ -106,7 +110,7 @@ const DAM_BETA_NODES: ProgressionNode[] = [
       'Combo kết bằng Đâm: +20% sát thương combo.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 2000,
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_dam]!.id },
       { kind: 'node', nodeId: 'thich_can' },
@@ -126,7 +130,7 @@ const DAM_BETA_NODES: ProgressionNode[] = [
       'Combo chứa ít nhất 2 Đâm: +25% sát thương combo.',
     type: 'major',
     role: 'keystone',
-    insightCost: 3,
+    insightCost: 4000,
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_dam]!.id },
       { kind: 'node', nodeId: 'nhat_diem' },
@@ -149,9 +153,9 @@ const CHEM_BETA_NODES: ProgressionNode[] = [
     description: 'Chém +8% sát thương mỗi cấp — nền của đường kiếm chém.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 40000,
     maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
+    upgradeCost: { base: 40_000, perLevel: 5 },
     levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_chem]!.id },
@@ -170,7 +174,7 @@ const CHEM_BETA_NODES: ProgressionNode[] = [
       'Kiếm Thương do Chém gây: +25% sát thương mỗi nhịp — móc khoá trên vết thương của chính đòn đó.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 60000,
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_chem]!.id },
       { kind: 'node', nodeId: 'tram_can' },
@@ -206,7 +210,7 @@ const CHEM_BETA_NODES: ProgressionNode[] = [
       'Combo kết bằng Chém: Kiếm Thương cùng nguồn kéo dài thêm 1 lượt.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 60000,
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_chem]!.id },
       { kind: 'node', nodeId: 'tram_can' },
@@ -228,7 +232,7 @@ const CHEM_BETA_NODES: ProgressionNode[] = [
       'Combo chứa ít nhất 2 Chém: kích hoạt một nhịp Kiếm Thương cùng nguồn ngay lập tức.',
     type: 'major',
     role: 'keystone',
-    insightCost: 3,
+    insightCost: 150000,
     prerequisites: [
       { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_chem]!.id },
       { kind: 'node', nodeId: 'thuong_tham' },
@@ -282,7 +286,7 @@ const NGU_EVOLUTION_NODES: ProgressionNode[] = [
       'Trước: mỗi phi kiếm đánh độc lập, không cộng dồn. Sau: phi kiếm trúng tích Kiếm Thế — kiếm sau trong cùng một lần xuất kiếm mạnh hơn theo số kiếm đã trúng.',
     type: 'major',
     role: 'keystone',
-    insightCost: 3,
+    insightCost: 150000,
     maxLevel: 1,
     prerequisites: [
       { kind: 'node', nodeId: 'ngu_kiem_khoi' },

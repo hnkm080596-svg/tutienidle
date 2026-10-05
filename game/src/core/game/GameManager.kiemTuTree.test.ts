@@ -41,7 +41,7 @@ function setup() {
   player.cultivationWay = 'sword_pathway'
   player.realmId = 'mahayana'
   player.swordPath = freshSwordPathState()
-  player.skillInsight = 100_000
+  player.skillInsight = 200_000
 
   gameManager.setActivePlayer(player)
 

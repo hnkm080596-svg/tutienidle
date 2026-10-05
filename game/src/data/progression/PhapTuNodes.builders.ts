@@ -80,9 +80,14 @@ function growth(
     description,
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    // Insight pace retune 2026-10-05: QI-window growth prices at
+    // 600/level - one element line lands ~11-15k insight, near the end
+    // of the ~24h QI window at idle-farm rates (~1.4k/h after the
+    // SkillInsightBalance 0.018 re-base). Flat per level: the
+    // base+floor(L/perLevel) step is invisible at this magnitude.
+    insightCost: 600,
     maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
+    upgradeCost: { base: 600, perLevel: 5 },
     prerequisites: [
       { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
     ],
@@ -122,7 +127,8 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
       description: `Mở khóa ${label} đặc biệt — Pháp Trạng ${label} và Linh Lực Hộ Thể.`,
       type: 'major',
       role: 'keystone',
-      insightCost: 2,
+      // TC-window keystone: 150,000 insight (~12-15h idle at TC rates).
+      insightCost: 150_000,
       prerequisites: [
         { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
         { kind: 'realm', realmId: 'foundation_establishment' },

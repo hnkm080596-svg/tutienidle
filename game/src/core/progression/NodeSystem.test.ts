@@ -639,12 +639,12 @@ describe('respecNodeTree', () => {
       registry.register(node)
     }
 
-    const player = playerWith({ skillInsight: 100 })
+    const player = playerWith({ skillInsight: 1_000 })
 
     expect(purchaseNode(player, granter)).toBe(true)
     grantSkillCore(player, grantedCore)
 
-    // Core upgrades repaid Insight (curve 5 + 3x(L-1)): L3 = 5 + 8 = 13.
+    // Core upgrades repaid Insight (curve 200 + 100x(L-1)): L3 = 200 + 300 = 500.
     for (let i = 0; i < 2; i++) {
       expect(upgradeNode(player, grantedCore)).toBe(true)
     }
@@ -655,9 +655,9 @@ describe('respecNodeTree', () => {
     const before = player.skillInsight
     const refund = respecNodeTree(player, registry)
 
-    // granter 1 + core spend 13 = 14; the free core stays levelled.
-    expect(refund).toBe(14)
-    expect(player.skillInsight).toBe(before + 14)
+    // granter 1 + core spend 500 = 501; the free core stays levelled.
+    expect(refund).toBe(501)
+    expect(player.skillInsight).toBe(before + 501)
     expect(getNodeLevel(player, 'granter')).toBe(0)
     expect(getNodeLevel(player, grantedCore.id)).toBe(0)
     expect(getNodeLevel(player, ungrantedCore.id)).toBe(3)

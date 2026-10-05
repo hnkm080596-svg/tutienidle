@@ -195,7 +195,7 @@ function buildQiPoint(s: EarlyGameSession, element: ElementType): void {
   s.player.realmLevel = 10
   s.player.techniqueProgress = { rank: 3, grade: 2 }
   spendAttributes(s, 60)
-  s.player.skillInsight += 30
+  s.player.skillInsight += 3_000 // ailment_mastery L5 at the 600/level pace-retune price
   expect(maxNode(s, `${element}_ailment_mastery`)).toBe(5)
   // Stat-wall ladder (2026-10-05): the floor-10 bosses now scale
   // 1.95-3.6x on top of the boss multiplier - dia+20 is the new
@@ -216,7 +216,8 @@ function fightAtPoint(s: EarlyGameSession, element: ElementType, boss: BossKey):
     s.player.realmLevel = 10
     s.player.techniqueProgress = { rank: 3, grade: 2 }
     spendAttributes(s, 30)
-    s.player.skillInsight += 40
+    // ailment L5 (3,000) + linh_ngo keystone (150,000) at retuned prices.
+    s.player.skillInsight += 155_000
     expect(maxNode(s, `${element}_ailment_mastery`)).toBe(5)
     expect(s.purchaseNode(keystoneNode)).toBe(true)
     expect(gearUp(s, element, 20)).toBeGreaterThan(0)

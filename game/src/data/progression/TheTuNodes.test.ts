@@ -20,7 +20,7 @@ import type { StatType } from '../../core/stats/StatTypes'
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
   return {
     ...createDefaultPlayer(),
-    skillInsight: 99,
+    skillInsight: 200_000,
     cultivationPath: 'body' as const,
     cultivationWay: 'body_pathway' as const,
     techniqueProgress: { rank: 5, grade: 1 },

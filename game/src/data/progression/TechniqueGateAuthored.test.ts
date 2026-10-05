@@ -98,7 +98,7 @@ describe('authored technique gate set (M-QI-06)', () => {
     const special = byId('linh_ngo_tam_muoi_chan_hoa')
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
-    player.skillInsight = 500
+    player.skillInsight = 200_000
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.spellPath.element = 'fire'
@@ -134,7 +134,7 @@ describe('authored technique gate set (M-QI-06)', () => {
     const trunk = byId('hoa_diem_chuan')
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
-    player.skillInsight = 500
+    player.skillInsight = 200_000
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.spellPath.element = 'fire'
@@ -174,7 +174,7 @@ describe('authored technique gate set (M-QI-06)', () => {
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.spellPath.element = 'fire'
-    player.skillInsight = 500
+    player.skillInsight = 200_000
     // In-band grade-2 cycle at realm index 2, rank 0: owned L4 stays
     // legal surplus while the rank-3 gate blocks further upgrades.
     player.techniqueProgress = { rank: 0, grade: 2 }
@@ -203,7 +203,7 @@ describe('authored technique gate set (M-QI-06)', () => {
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.spellPath.element = 'fire'
-    player.skillInsight = 500
+    player.skillInsight = 200_000
     player.nodeLevels['hoa_linh_ngo'] = 1
     player.nodeLevels['hoa_diem_chuan'] = 3
     player.purchasedNodeIds.push('hoa_linh_ngo', 'hoa_diem_chuan')

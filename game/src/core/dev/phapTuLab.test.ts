@@ -94,8 +94,8 @@ describe('phapTuLab poke', () => {
 
     // The save gate rejects skillInsight > totalSkillInsightGained as a
     // fabricated currency claim - the lab mint must keep the pair in step
-    // (20 minted, the keystone purchase then spends what it costs).
-    expect(player.totalSkillInsightGained).toBe(20)
+    // (150,000 minted, the keystone purchase then spends what it costs).
+    expect(player.totalSkillInsightGained).toBe(150_000)
     expect(player.totalSkillInsightGained).toBeGreaterThanOrEqual(player.skillInsight)
   })
 
@@ -121,7 +121,7 @@ describe('phapTuLab poke', () => {
     expect(player.baseStats.dexterity).toBe(after.dexterity)
     expect(player.attributePoints).toBe(after.attributePoints)
     // Insight floor restores to the grant ceiling, never accumulates.
-    expect(player.skillInsight).toBe(20)
+    expect(player.skillInsight).toBe(150_000)
   })
 
   it('keepTalent leaves the breakthrough entitlement modal pending', () => {
