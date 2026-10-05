@@ -107,10 +107,21 @@ export interface HeartbeatOutcome {
   detail?: string
 }
 
+/** B1.9a remote reset: the recovery surface's delete path soft-deletes
+ *  the caller's character row via reset_character so a server-rejected
+ *  row cannot wedge the account on its next load. */
+export type CloudSaveResetResult =
+  | { status: 'deleted' }
+  | { status: 'absent' }
+  | { status: 'unavailable'; message: string; retryable: boolean; code?: BackendErrorCode; detail?: string }
+
 export interface CloudSaveService {
   readonly capability: CloudSaveCapability
   load(): Promise<CloudSaveLoadResult>
   save(save: GameSave, expectedRevision: number): Promise<CloudSaveWriteResult>
+  /** remote-authoritative only: soft-delete the caller's character row.
+   *  Absent on local-only adapters - there is no remote row to reset. */
+  resetCharacter?(): Promise<CloudSaveResetResult>
   /** B1-C: the ACKed cache mirror for export/resume seams - null when
    *  absent or corrupt. Never an authority read. */
   readCachedSave?(): Promise<{ raw: string; revision: number } | null>

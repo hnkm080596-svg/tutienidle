@@ -12,7 +12,7 @@ import {
   type BackendErrorCode,
   type RemoteTimeCheckpoint,
 } from '../session/BackendStatus'
-import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
+import type { CloudSaveLoadResult, CloudSaveResetResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
 import {
   buildPendingSaveRecord,
   PendingSaveJournal,
@@ -525,6 +525,23 @@ export class SupabaseCloudSaveService implements CloudSaveService {
         this.storeCheckpoint(response.checkpoint)
       }
       return { status: 'ok' }
+    } catch (error: unknown) {
+      return this.mapError(error)
+    }
+  }
+
+  async resetCharacter(): Promise<CloudSaveResetResult> {
+    const binding = await this.binding()
+    if (!binding) {
+      return { status: 'unavailable', code: 'AUTH_EXPIRED', message: 'Phiên đăng nhập đã hết hạn.', retryable: false }
+    }
+    try {
+      const response = await this.rpc<{ status: string }>(
+        '/rest/v1/rpc/reset_character',
+        { p_session_id: binding.sessionId },
+        binding.accessToken,
+      )
+      return response.status === 'DELETED' ? { status: 'deleted' } : { status: 'absent' }
     } catch (error: unknown) {
       return this.mapError(error)
     }

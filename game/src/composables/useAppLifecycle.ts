@@ -384,13 +384,12 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       }
 
       if (loaded.status === 'deleted') {
-        // Terminal remote state (B1.10) - the character row is
-        // soft-deleted; no in-client recovery path exists, so this
-        // surfaces as a plain boot failure, not the recovery surface.
-        authority.markFailed('recovery')
-        onError(i18n.global.t('save.characterDeleted'))
-        boot.fail()
-        return { status: 'failed' }
+        // The character row is soft-deleted (B1.10). Since reset_character
+        // exists, a tombstone is a restartable state, not a dead end:
+        // route to character creation like an account that never had a
+        // character - create_character ignores deleted rows.
+        boot.requireCharacter()
+        return { status: 'require-character' }
       }
 
       if (loaded.status === 'incompatible' || loaded.status === 'corrupted') {

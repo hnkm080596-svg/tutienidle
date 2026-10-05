@@ -573,7 +573,7 @@ describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
     lifecycle.stopAll()
   })
 
-  it('CHARACTER_DELETED is terminal - fail with onError, never the grant path', async () => {
+  it('CHARACTER_DELETED routes to character creation - reset_character makes tombstones restartable', async () => {
     const stubs = makeStubs()
     stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
     ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ status: 'deleted' })
@@ -583,9 +583,10 @@ describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
 
     const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter })
 
-    expect(outcome.status).toBe('failed')
-    expect(stubs.onError).toHaveBeenCalledTimes(1)
-    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(outcome.status).toBe('require-character')
+    expect(stubs.onError).not.toHaveBeenCalled()
+    expect(stubs.boot.fail).not.toHaveBeenCalled()
+    expect(stubs.boot.requireCharacter).toHaveBeenCalledTimes(1)
     expect(onNewCharacter).not.toHaveBeenCalled()
     expect(stubs.boot.enterGame).not.toHaveBeenCalled()
 

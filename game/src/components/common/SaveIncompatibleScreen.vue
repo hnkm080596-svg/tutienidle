@@ -62,15 +62,25 @@ function handleReset() {
     () => {
       // Mission A review - deleteSave() returns false on storage
       // failure; reloading would boot back into the same corrupt save.
-      // In remote mode this is only a CACHE reset: the authoritative
-      // load re-fetches the cloud row after reload (an unchanged
-      // corrupt row lands back on this surface).
-      if (deleteSave()) {
-        markResetNotice()
-        window.location.reload()
-      } else {
-        notification.push('error', t('saveIncompatible.notify.deleteFailed'))
-      }
+      // In remote mode the authoritative row lives server-side, so
+      // reset_character soft-deletes it first; only then does the local
+      // cache reset make the reload land on character creation instead
+      // of re-loading the corrupt row.
+      void (async () => {
+        if (remoteAuthoritative) {
+          const reset = await cloudSaveCoordinator.resetCharacter()
+          if (reset.status === 'unavailable') {
+            notification.push('error', reset.message || t('saveIncompatible.notify.deleteFailed'))
+            return
+          }
+        }
+        if (deleteSave()) {
+          markResetNotice()
+          window.location.reload()
+        } else {
+          notification.push('error', t('saveIncompatible.notify.deleteFailed'))
+        }
+      })()
     },
     true,
   )

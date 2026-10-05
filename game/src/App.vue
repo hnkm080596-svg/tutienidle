@@ -668,9 +668,13 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
         // Boot routes a save the restore seams refuse to the recovery
         // surface; a live-replacement rejection is the same class - the
         // resumed sim must not run on a payload it could not consume.
+        // fail() transitions entryStage to 'error', which is the only
+        // branch mounting SaveIncompatibleScreen - report() alone is a
+        // dead write and would leak a stale status into later boots.
         onlineAuthority.markFailed('recovery')
         console.warn('[resume] save rejected by restore preflight:', restored.message)
         saveIssue.report('corrupted', JSON.stringify(save))
+        bootFlow.fail()
         return
       }
     }

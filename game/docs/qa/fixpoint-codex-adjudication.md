@@ -135,3 +135,33 @@ Audit trio on the wave-2 aggregate; adjudicator = coordinator session.
 Fix until no confirmed Medium-or-higher remains, then stop: Low/Nit
 findings are adjudicated and excepted in place — no further fix waves
 chase them. Wave-4 onward applies this threshold.
+
+## Wave 4 (aggregate codex @0afd0b2f — COR + AUT + INT)
+
+## COR (0 Critical / 0 High / 3 Medium / Low+Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W4-COR-1 server `_check_save_payload` accepts non-object `player.nodeLevels` (scalar/array) — client rejects; 'ready' row wedges at next read | Medium | FIXED — key-present + type guard added before F-SCOPE-1 block in `202610060001_beta_save_boundary_hardening.sql`; probed live: scalar/array -> SAVE_INVALID, object/absent -> pass |
+| W4-COR-2 name charset mirror rejects client-valid names AND misreports them as taken | Medium | FIXED — split code: format -> `CHARACTER_NAME_INVALID` + honest client message; taken -> `CHARACTER_NAME_UNAVAILABLE`. PG `[[:alnum:]]` vs client `\p{N}` overshoot (No/Nl e.g. '1/2', 'IV') cannot be expressed server-side — residual is Low: exotic-unicode names rejected, recoverable by picking another name |
+| W4-COR-3 resume rejected-verdict dropped to a dead write (saveIssue.report without bootFlow.fail) | Medium | FIXED — App.vue onResume rejected branch now reports + `bootFlow.fail()` |
+| raw-bytes shape guard deeper than mirror (utf8/control chars inside strings) | Low | EXCEPTED — pin kept `it.fails`/`test.fail()`; server byte-scan would mirror a pathological input class with no observed wedge |
+
+## AUT (0 Critical / 0 High / 1 Medium / Low residuals)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W4-AUT-1 corrupt-but-server-accepted row wedges the account permanently: client routes to SaveIncompatibleScreen but `deleteSave()` only clears localStorage — remote row still loads incompatible on every device forever | Medium | FIXED — new `reset_character` RPC (202610060002): hard-deletes the character row (cascades saves/checkpoints/receipts); soft-delete was rejected because every other authority function resolves "the" character by user_id without a deleted_at filter — a tombstone + fresh row would wedge them again. Client wiring: CloudSaveService.resetCharacter?/Supabase impl/Coordinator passthrough, lifecycle 'deleted' -> requireCharacter, SaveIncompatibleScreen calls remote reset then local clear + reload. Live pin `resetCharacter.spec.ts`: create -> save -> DELETED -> NO_CHARACTER -> recreated CREATED (staging) |
+| W4-AUT-2 ~30 residual payload classes the mirror doesn't cover | Low | EXCEPTED — recovery premise now real (reset_character), so a residual-class reject is recoverable not wedged; matches mirror's stated scope |
+| W4-AUT-3 charset check ordering vs name-availability probe | Nit | FIXED with COR-2 (split code) |
+
+## INT (0 Critical / 0 High / 2 Medium / Low+Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W4-INT-1 (= COR-3) resume rejected -> dead write | Medium | FIXED — same App.vue edit |
+| W4-INT-3 (= COR-2) wrong "name taken" for invalid-format names | Medium | FIXED — CHARACTER_NAME_INVALID + invalid_name client message |
+
+## Wave-4 disposition
+
+All confirmed Medium-or-higher findings fixed and verified (type-check clean; scoped vitest 182+1 expected-fail; live playwright boundaryMirrorW4 + resetCharacter specs green on staging; migrations applied to staging AND beta). Remaining Low/Nit excepted in place per the termination threshold — QA fixpoint reached under Minh's ruling.

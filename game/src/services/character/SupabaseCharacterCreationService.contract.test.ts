@@ -133,6 +133,7 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (B1.4
     const cases: Array<[string, string]> = [
       ['CHARACTER_EXISTS', 'character_exists'],
       ['CHARACTER_NAME_UNAVAILABLE', 'name_taken'],
+      ['CHARACTER_NAME_INVALID', 'invalid_name'],
       ['INVALID_TALENT_ROLL', 'invalid_talents'],
       ['INVALID_TALENT_SELECTION', 'invalid_talents'],
       ['INVALID_MORTAL_SKILL', 'invalid_skill'],
