@@ -448,15 +448,19 @@ export class OnlineSessionController {
     if (this.reconnectInFlight) {
       return
     }
-    // Local-only mode has no remote to revalidate: resuming is immediate
-    // once the caller asks (OS resume path); a plain pause() still holds.
+    const generation = this.generation
     if (!this.deps.reconnect) {
-      this.markReady()
+      // markReady runs only after onResume finishes: a throwing resume
+      // must not leave a 'ready' session whose restore never landed.
+      // The generation guard also lets a rejecting resume (markFailed
+      // inside onResume) win - the failure stays authoritative.
       this.deps.onResume?.('same')
+      if (generation === this.generation) {
+        this.markReady()
+      }
       return
     }
 
-    const generation = this.generation
     this.reconnectInFlight = true
     try {
       const outcome = await this.deps.reconnect()
@@ -464,8 +468,15 @@ export class OnlineSessionController {
         return
       }
       if (outcome.status === 'resumed') {
-        this.markReady()
+        // Same ordering: resume restores state first; only then may the
+        // mutation gate open. A throw lands in the catch below and the
+        // session stays 'reconnecting' (retried), never fake-ready. A
+        // rejecting resume calls markFailed (which bumps generation), so
+        // only an untouched controller earns markReady.
         this.deps.onResume?.(outcome.lineage, outcome.save, outcome.serverAuthority)
+        if (generation === this.generation) {
+          this.markReady()
+        }
         return
       }
       if (outcome.status === 'terminal') {

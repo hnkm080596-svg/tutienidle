@@ -20,9 +20,15 @@ const { t } = useI18n()
 // B1.9a - under the remote authority the corrupt/incompatible bytes
 // live server-side. Export still preserves raw data for manual
 // recovery; import is validate+export only (it cannot overwrite the
-// cloud row); reset becomes a cloud recheck that restores whatever
-// the authoritative row holds.
+// cloud row); reset permanently deletes the server character + saves
+// (reset_character) so the next boot restarts at creation.
 const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authoritative'
+
+// The remote reset is only legal when the offending bytes actually live
+// server-side. pending-conflict/pending-quarantined report the same
+// surface but scope 'local' - the remote row is the healthy head there,
+// so the reset must stay a local-envelope clear.
+const remoteResettable = remoteAuthoritative && saveIssue.scope === 'remote'
 
 // Thay window.confirm()/window.alert() native - modal xac nhan dong bo
 // hoa bang pending-action giong SettingsPanel.vue: mo ConfirmModal, hanh
@@ -53,21 +59,21 @@ function handleExport() {
 
 function handleReset() {
   requestConfirm(
-    remoteAuthoritative
+    remoteResettable
       ? t('saveIncompatible.confirm.resetCloudTitle')
       : t('saveIncompatible.confirm.resetTitle'),
-    remoteAuthoritative
+    remoteResettable
       ? t('saveIncompatible.confirm.resetCloudBody')
       : t('saveIncompatible.confirm.resetBody'),
     () => {
       // Mission A review - deleteSave() returns false on storage
       // failure; reloading would boot back into the same corrupt save.
-      // In remote mode the authoritative row lives server-side, so
-      // reset_character soft-deletes it first; only then does the local
-      // cache reset make the reload land on character creation instead
-      // of re-loading the corrupt row.
+      // For a remote-scope issue the authoritative row is the corrupt
+      // one, so reset_character deletes it first; only then does the
+      // local cache reset make the reload land on character creation
+      // instead of re-loading the corrupt row.
       void (async () => {
-        if (remoteAuthoritative) {
+        if (remoteResettable) {
           const reset = await cloudSaveCoordinator.resetCharacter()
           if (reset.status === 'unavailable') {
             notification.push('error', reset.message || t('saveIncompatible.notify.deleteFailed'))
@@ -159,7 +165,7 @@ function handleImport(event: Event) {
         </label>
 
         <GameButton variant="danger" @click="handleReset">
-          {{ remoteAuthoritative ? t('saveIncompatible.actions.resetCloud') : t('saveIncompatible.actions.reset') }}
+          {{ remoteResettable ? t('saveIncompatible.actions.resetCloud') : t('saveIncompatible.actions.reset') }}
         </GameButton>
       </div>
     </div>

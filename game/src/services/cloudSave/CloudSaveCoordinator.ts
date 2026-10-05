@@ -79,9 +79,19 @@ export class CloudSaveCoordinator {
 
   /** B1.9a: remote reset for the recovery surface. Local adapters have
    *  no remote row - they resolve 'absent' so the caller proceeds with
-   *  the local-only reset it already performs. */
+   *  the local-only reset it already performs. A successful remote
+   *  delete also resets this coordinator: the character row is gone, so
+   *  the cached revision/queue/generation no longer describe reality.
+   *  'unavailable' leaves state untouched - the remote row may still
+   *  exist. */
   async resetCharacter(): Promise<CloudSaveResetResult> {
-    return this.service.resetCharacter ? this.service.resetCharacter() : { status: 'absent' }
+    const result = this.service.resetCharacter
+      ? await this.service.resetCharacter()
+      : { status: 'absent' as const }
+    if (result.status !== 'unavailable') {
+      this.reset()
+    }
+    return result
   }
 
   async save(snapshot: GameSave): Promise<CloudSaveWriteResult> {

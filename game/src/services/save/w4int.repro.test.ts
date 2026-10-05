@@ -139,6 +139,11 @@ describe('W4-INT - onResume reject path composition', () => {
     const saveIssue = useSaveIssueStore()
     const pauses: PauseReason[] = []
     let resumeSimulationCalls = 0
+    // Post-wave-5 replica: the App.vue onResume wiring also routes the
+    // terminal surface via bootFlow.fail(); the coordinator-level retry
+    // (useBootFlow fail -> whenIdle -> request) is pinned in
+    // useBootFlow.test.ts and w5int.repro.test.ts.
+    let bootFailCalls = 0
     const scheduler = makeScheduler()
 
     const controller = new OnlineSessionController({
@@ -154,7 +159,8 @@ describe('W4-INT - onResume reject path composition', () => {
       }),
       onPause: (reason) => pauses.push(reason),
       // Replicates the src/App.vue onResume wiring verbatim: diagnostic
-      // first (AUTH_RESUMED), then the live-replacement reject path.
+      // first (AUTH_RESUMED), then the live-replacement reject path -
+      // markFailed + saveIssue.report + bootFlow.fail(), in that order.
       onResume: (lineage, save, serverAuthority) => {
         void serverAuthority
         if (lineage === 'replaced' && save) {
@@ -165,6 +171,7 @@ describe('W4-INT - onResume reject path composition', () => {
           if (restored.status === 'rejected') {
             controller.markFailed('recovery')
             saveIssue.report('corrupted', JSON.stringify(save))
+            bootFailCalls += 1
             return
           }
         }
@@ -184,20 +191,23 @@ describe('W4-INT - onResume reject path composition', () => {
     await Promise.resolve()
     await Promise.resolve()
 
-    // attemptReconnect ran: markReady() then onResume -> reject ->
-    // markFailed('recovery') unwinds the just-armed heartbeat.
+    // attemptReconnect ran: onResume first (W5-INT-3 ordering fix) ->
+    // reject -> markFailed('recovery') inside onResume wins over the
+    // trailing markReady (generation guard) and unwinds the heartbeat.
     expect(controller.authorityState).toBe('recovery')
     expect(controller.canMutate()).toBe(false)
     expect(resumeSimulationCalls).toBe(0)
     expect(pauses).toContain('terminal')
     expect(scheduler.handles.size).toBe(0) // heartbeat + retry both cleared
 
-    // W4-INT-1: the saveIssue write lands in the store but its only
-    // consumer (SaveIncompatibleScreen) mounts only under entryStage
-    // 'error' - unreachable post-boot because App.vue never calls
-    // boot.fail() on this path. The write is dead state.
+    // W4-INT-1 resolution: the reject path now calls bootFlow.fail()
+    // (remote-scoped report -> SaveIncompatibleScreen mounts via the
+    // 'error' route; the wave-5 whenIdle retry makes the call survive
+    // an in-flight transition). Not a dead write.
+    expect(bootFailCalls).toBe(1)
     expect(saveIssue.status).toBe('corrupted')
     expect(saveIssue.raw).toBe(JSON.stringify(badSave))
+    expect(saveIssue.scope).toBe('remote')
   })
 
   it("saveIssue state persists after the rejected resume - nothing clears it", async () => {

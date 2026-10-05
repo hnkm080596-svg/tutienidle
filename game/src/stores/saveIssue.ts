@@ -12,13 +12,24 @@ export const useSaveIssueStore = defineStore('saveIssue', {
     status: null as 'incompatible' | 'corrupted' | null,
     foundVersion: undefined as number | undefined,
     raw: '',
+    // Whether the offending bytes live on the server ('remote') or only
+    // in the local envelope ('local' - pending-conflict/quarantined).
+    // The recovery screen must not run the remote character reset for a
+    // local-scope report: the remote row is healthy in that case.
+    scope: 'remote' as 'remote' | 'local',
   }),
 
   actions: {
-    report(status: 'incompatible' | 'corrupted', raw: string, foundVersion?: number) {
+    report(
+      status: 'incompatible' | 'corrupted',
+      raw: string,
+      foundVersion?: number,
+      scope: 'remote' | 'local' = 'remote',
+    ) {
       this.status = status
       this.raw = raw
       this.foundVersion = foundVersion
+      this.scope = scope
       // BETA-FINAL PR11 - metadata only: `raw` (the unreadable save bytes)
       // must NEVER enter the diagnostic trail.
       recordDiagnostic({
@@ -35,6 +46,7 @@ export const useSaveIssueStore = defineStore('saveIssue', {
       this.status = null
       this.raw = ''
       this.foundVersion = undefined
+      this.scope = 'remote'
     },
   },
 })

@@ -165,3 +165,43 @@ chase them. Wave-4 onward applies this threshold.
 ## Wave-4 disposition
 
 All confirmed Medium-or-higher findings fixed and verified (type-check clean; scoped vitest 182+1 expected-fail; live playwright boundaryMirrorW4 + resetCharacter specs green on staging; migrations applied to staging AND beta). Remaining Low/Nit excepted in place per the termination threshold — QA fixpoint reached under Minh's ruling.
+
+## Wave 5 (aggregate codex @66746ede+delta — COR + AUT + INT)
+
+## COR (0 Critical / 1 High / 2 Medium / 4 Low / 1 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W5-COR-1 remote reset reachable on HEALTHY remote rows: pending-conflict/pending-quarantined (local envelope problems) mounted SaveIncompatibleScreen with the destructive reset gate — a click deletes the good server character | High | FIXED — `saveIssue.scope` ('remote'|'local'): pending-* reports 'local', incompatible/corrupted/rejected report 'remote'; `remoteResettable` in SaveIncompatibleScreen gates the destructive leg to remote-scope reports only |
+| W5-COR-2 (= INT-1) reset confirm dialog asserts the OPPOSITE of behavior ("cloud save is not deleted / screen will return") under a hard-delete RPC | Medium (INT: High) | FIXED — copy rewritten both locales: button "Xoá Nhân Vật Server"/"Delete Server Character", confirm states PERMANENT character+save deletion + restart at creation; stale "cloud recheck/soft-delete" comments corrected (NIT-1) |
+| W5-COR-3 (= INT-4) tombstone+fresh-row wedge: characters lookups by user_id/norm_name never filtered deleted_at — create_character fires CHARACTER_EXISTS while load surfaces CHARACTER_DELETED | Medium | FIXED — migration `202610070001_deleted_character_predicates.sql`: partial unique index (deleted_at is null), exists/name checks filter tombstones, load/write canonical order `(deleted_at is null) desc` so live row wins over coexisting tombstone; applied to staging AND beta |
+| W5-COR-4 (= INT-2) `bootFlow.fail()` resolved 'rejected' during any in-flight transition and the void-swallow dropped it — dead write survives in exactly the race window the wave-4 fix was written for | Medium | FIXED — `coordinator.whenIdle()` + bounded retry (3) in `useBootFlow.fail()`; behavioral pin in useBootFlow.test.ts; w5int repro pins updated |
+| W5-COR-5 reset_character used the weaker `_assert_session_locked` while load/write/create use `_assert_session_protocol` | Low | FIXED — now `_assert_session_protocol` (same gate as every other authority function) in 202610070001 |
+| W5-COR-6 reset_character status mapping collapsed every non-DELETED status to 'absent' — unknown RPC contract = wipe local state | Low | FIXED — strict mapping: DELETED→deleted, NO_CHARACTER→absent, else→unavailable retryable SERVER_ERROR; charset message corrected to list the actual accepted charset |
+| Residual mirror/byte classes | Low | EXCEPTED — recoverable via reset_character; same ruling as W4-AUT-2 |
+| Lexical-witness placement pin only, no effect pin | Nit | FIXED — behavioral pins added (useBootFlow retry test, w5int post-fix assertions) |
+
+## AUT (0 Critical / 0 High / 1 Medium / 3 Low / 1 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W5-AUT-1 CHARACTER_UNINITIALIZED + permanent first-write reject = permanent wedge: generic error surface has no recovery affordance | Medium | FIXED — permanent (`!retryable`) first-write reject now arms the remote-scoped recovery surface (`markFailed('recovery')` + `saveIssue.report('corrupted','',undefined,'remote')` + `boot.fail()`); retryable rejects keep the generic path. w5aut pins flipped to post-fix assertions incl. retryable sibling |
+| W5-AUT-2 reset_character blind to manual tombstones (`and deleted_at is null` filter) | Low | FIXED — canonical order (live-first, tombstone-last) with no filter; reset removes a tombstone-only row too |
+| W5-AUT-3 CloudSaveCoordinator.resetCharacter bare passthrough — stale revision/identity/queue survives; next save CASes expected_revision under the deleted identity | Low | FIXED — `this.reset()` on any non-'unavailable' result: generation++, revision=0, queue drained |
+| W5-AUT-4 recovery/'reconnecting' overlay has no backToAuth escape hatch | Low | EXCEPTED — reload is the documented escape; terminal states already gate mutation |
+| resetNotice stale carry | Nit | EXCEPTED — cosmetic, one-shot flag |
+
+## INT (0 Critical / 1 High / 4 Medium)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W5-INT-1 (= COR-2) lying destructive copy | High | FIXED — see COR-2 |
+| W5-INT-2 (= COR-4) fail() dropped under in-flight transition | Medium | FIXED — see COR-4 |
+| W5-INT-3 attemptReconnect: markReady() BEFORE deps.onResume — an onResume THROW left 'ready' + heartbeat armed + retry dead + sim frozen + autosave gate open on half-restored state | Medium | FIXED — onResume runs first under the generation fence: a throwing resume is classified 'unavailable' (stays 'reconnecting', retry stays armed); a rejecting resume's markFailed (generation bump) beats the trailing markReady. Both local + remote branches |
+| W5-INT-4 (= COR-3) tombstone wedge | Medium | FIXED — see COR-3 |
+| W5-INT-5 w4int.repro.test.ts replica encoded pre-fix wiring as "verbatim" — fix behaviorally unpinned (regression-safe green) | Medium | FIXED — replica updated to post-fix wiring (markFailed + report + bootFlow.fail order), stale "dead write" claim corrected; behavioral pins added |
+| W5-INT-6 resume-reject reports re-serialized bytes (not server-verbatim) | Low | EXCEPTED — forensically usable; ReconnectOutcome would need a raw field; recorded as premise-invalidated re-flag |
+
+## Wave-5 disposition
+
+All confirmed Medium-or-higher findings fixed and verified: `npm run type-check` clean; scoped vitest 8 files / 137 assertions green (incl. flipped repro pins); live `resetCharacter.spec.ts` 2/2 on staging; migration 202610070001 applied to staging AND beta. Low/Nit excepted per the termination threshold. Wave-6 confirmation trio audits the delta; a clean wave = fixed point under Minh's ruling.

@@ -79,7 +79,12 @@ export interface UseAppLifecycleDeps {
   tick: () => void
   offlineSummary: { show: (summary: { elapsedSeconds: number; cultivation: number }) => void }
   saveIssue: {
-    report: (status: 'incompatible' | 'corrupted', raw: string, foundVersion?: number) => void
+    report: (
+      status: 'incompatible' | 'corrupted',
+      raw: string,
+      foundVersion?: number,
+      scope?: 'remote' | 'local',
+    ) => void
   }
   entryStage: Ref<string>
   restoreGameSession: (
@@ -384,10 +389,10 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       }
 
       if (loaded.status === 'deleted') {
-        // The character row is soft-deleted (B1.10). Since reset_character
-        // exists, a tombstone is a restartable state, not a dead end:
-        // route to character creation like an account that never had a
-        // character - create_character ignores deleted rows.
+        // The character row is deleted (B1.10). Creation is legal again:
+        // create_character's exists/name checks and the unique name index
+        // all count live rows only (202610070001), and every authority
+        // lookup prefers the live row over a tombstone.
         boot.requireCharacter()
         return { status: 'require-character' }
       }
@@ -411,7 +416,10 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         // recovery surface as a corrupted save; deleteSave drops the
         // envelope keys so a resolved pending never wedges the next boot.
         authority.markFailed('recovery')
-        saveIssue.report('corrupted', loaded.pendingRaw)
+        // Local-scope: the remote row is the healthy head; the recovery
+        // surface must clear the local envelope only, never reset the
+        // remote character.
+        saveIssue.report('corrupted', loaded.pendingRaw, undefined, 'local')
         boot.fail()
         return { status: 'failed' }
       }
@@ -606,6 +614,19 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         if (firstSave.status !== 'ok') {
           authority.observeSaveResult(firstSave)
           recordSaveOutcome(firstSave, 'boot-first-save')
+          // A permanent first-write rejection wedges the account: every
+          // boot re-lands CHARACTER_UNINITIALIZED -> same reject, and the
+          // generic error surface has no reset affordance. Arm the
+          // recovery surface instead - remote-scope, since the
+          // authoritative side is what refuses the starter snapshot;
+          // the remote reset deletes the character row so the next boot
+          // restarts from creation.
+          if (firstSave.status === 'unavailable' && !firstSave.retryable) {
+            authority.markFailed('recovery')
+            saveIssue.report('corrupted', '', undefined, 'remote')
+            boot.fail()
+            return { status: 'failed' }
+          }
           onError(
             firstSave.status === 'conflict'
               ? i18n.global.t('save.conflict')

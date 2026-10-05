@@ -37,7 +37,7 @@ function creationRejection(code: string | undefined): CharacterCreationResult {
     case 'CHARACTER_NAME_UNAVAILABLE':
       return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
     case 'CHARACTER_NAME_INVALID':
-      return { ok: false, code: 'invalid_name', message: 'Đạo danh phải dài 2–20 ký tự.' }
+      return { ok: false, code: 'invalid_name', message: 'Đạo danh dài 2–20 ký tự, chỉ gồm chữ, số, khoảng trắng, gạch ngang và gạch dưới.' }
     case 'INVALID_TALENT_ROLL':
     case 'INVALID_TALENT_SELECTION':
       return { ok: false, code: 'invalid_talents', message: 'Lượt Thiên Phú đã hết hiệu lực.' }

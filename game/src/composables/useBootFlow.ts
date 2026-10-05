@@ -95,7 +95,17 @@ export function useBootFlow(
       void coordinator.request({ target: 'home' })
     },
     fail: () => {
-      void coordinator.request({ target: 'error' })
+      // A conflicting in-flight transition rejects and swallows this
+      // request (fire-and-forget callers cannot observe it). Retry once
+      // the transition settles so the terminal error surface always
+      // mounts; bounded retries cover back-to-back conflicts.
+      void (async () => {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const result = await coordinator.request({ target: 'error' })
+          if (result.status !== 'rejected') return
+          await coordinator.whenIdle()
+        }
+      })()
     },
   }
 }

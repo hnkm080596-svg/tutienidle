@@ -305,7 +305,7 @@ describe('useAppLifecycle — B1-C pending load surfaces', () => {
     const outcome = await lifecycle.bootGame({ createNewCharacter: false })
 
     expect(outcome.status).toBe('failed')
-    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'pending-payload-bytes')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'pending-payload-bytes', undefined, 'local')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
     expect(stubs.onError).not.toHaveBeenCalled()
 
@@ -324,7 +324,7 @@ describe('useAppLifecycle — B1-C pending load surfaces', () => {
     const outcome = await lifecycle.bootGame({ createNewCharacter: false })
 
     expect(outcome.status).toBe('failed')
-    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'quarantined-bytes')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'quarantined-bytes', undefined, 'local')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
 
     lifecycle.stopAll()
@@ -804,10 +804,13 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
 
   it('new character save non-ok → outcome failed, boot.fail + onError, tick loop and clock NEVER start', async () => {
     const stubs = makeStubs()
+    // Retryable (transient) reject keeps the generic fail path; a
+    // permanent reject would instead arm the remote recovery surface
+    // (W5-AUT-1) - pinned in w5aut.repro.test.ts.
     ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
       status: 'unavailable',
       message: 'storage blocked',
-      retryable: false,
+      retryable: true,
     })
     const lifecycle = makeLifecycle(stubs)
 
@@ -817,6 +820,7 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
     expect(stubs.boot.enterGame).not.toHaveBeenCalled()
     expect(stubs.onError).toHaveBeenCalledWith('storage blocked')
+    expect(stubs.saveIssue.report).not.toHaveBeenCalled()
     expect(lifecycle.getTickHandle()).toBeUndefined()
     expect(stubs.clock.start).not.toHaveBeenCalled()
     expect(stubs.intervals).toHaveLength(0)

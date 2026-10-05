@@ -1863,15 +1863,15 @@
       "export": "Download Save (.json)",
       "import": "Import Another Save",
       "reset": "Delete & Start Over",
-      "resetCloud": "Reload From Cloud"
+      "resetCloud": "Delete Server Character"
     },
     "confirm": {
       "resetTitle": "Delete & Start Over",
       "resetBody": "Delete the current save and start a new character? Download your save first if you have not — this cannot be undone.",
       "importFailedTitle": "Import Failed",
       "importFailedBody": "The save file is not valid.",
-      "resetCloudTitle": "Reload From Cloud",
-      "resetCloudBody": "Clear the local cache and reload from the server? The cloud save is not deleted — if the server data is still corrupt, this screen will return."
+      "resetCloudTitle": "Delete Server Character",
+      "resetCloudBody": "PERMANENTLY delete the character and all save data on the server — this cannot be undone. Your account restarts at character creation."
     },
     "notify": {
       "deleteFailed": "Could not delete the save — the browser is refusing storage access.",

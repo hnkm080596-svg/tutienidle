@@ -246,6 +246,15 @@ export class GamePresentationCoordinator {
     }
   }
 
+  /** Resolves once no transition is in flight. Lets a caller whose
+   *  request was rejected by the in-flight conflict rule retry after
+   *  the current transition settles, instead of dropping a terminal
+   *  route (e.g. bootFlow.fail) into dead state. */
+  whenIdle(): Promise<void> {
+    const inflight = this.inFlightPromise
+    return inflight ? inflight.then(() => undefined, () => undefined) : Promise.resolve()
+  }
+
   dispose(): void {
     if (this.disposed) return
     this.disposed = true

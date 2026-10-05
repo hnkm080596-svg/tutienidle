@@ -541,7 +541,9 @@ export class SupabaseCloudSaveService implements CloudSaveService {
         { p_session_id: binding.sessionId },
         binding.accessToken,
       )
-      return response.status === 'DELETED' ? { status: 'deleted' } : { status: 'absent' }
+      if (response.status === 'DELETED') return { status: 'deleted' }
+      if (response.status === 'NO_CHARACTER') return { status: 'absent' }
+      return { status: 'unavailable', code: 'SERVER_ERROR', message: `reset_character: ${String(response.status)}`, retryable: true }
     } catch (error: unknown) {
       return this.mapError(error)
     }

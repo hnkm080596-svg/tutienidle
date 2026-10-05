@@ -1863,15 +1863,15 @@
       "export": "Tải Về Save (.json)",
       "import": "Nhập Save Khác",
       "reset": "Xoá & Bắt Đầu Mới",
-      "resetCloud": "Tải Lại Từ Cloud"
+      "resetCloud": "Xoá Nhân Vật Server"
     },
     "confirm": {
       "resetTitle": "Xoá & Bắt Đầu Mới",
       "resetBody": "Xoá save hiện tại và bắt đầu nhân vật mới? Nhớ Tải Về Save trước nếu chưa làm — hành động này không thể hoàn tác.",
       "importFailedTitle": "Nhập Save Thất Bại",
       "importFailedBody": "File save không hợp lệ.",
-      "resetCloudTitle": "Tải Lại Từ Cloud",
-      "resetCloudBody": "Xoá bộ nhớ đệm local và tải lại từ máy chủ? Save trên máy chủ không bị xoá — nếu dữ liệu server vẫn lỗi, màn hình này sẽ hiện lại."
+      "resetCloudTitle": "Xoá Nhân Vật Trên Máy Chủ",
+      "resetCloudBody": "Xoá VĨNH VIỄN nhân vật và toàn bộ save trên máy chủ — hành động này không thể hoàn tác. Tài khoản sẽ bắt đầu lại từ trang tạo nhân vật."
     },
     "notify": {
       "deleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.",
