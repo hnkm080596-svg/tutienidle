@@ -210,6 +210,19 @@ export class GamePresentationCoordinator {
       if (this.isSameRequest(request, this.inFlightRequest)) {
         return this.inFlightPromise
       }
+      // The terminal error surface always wins over a competing
+      // transition (W6-INT-1): a caller retrying 'error' can be starved
+      // forever because a competitor chained on the previous settle
+      // re-takes the slot inside the one-microtask gap before any retry
+      // continuation runs. Abort the in-flight instead of rejecting -
+      // our .then continuation was registered BEFORE the competitor's
+      // settle continuation, so the retried request takes the cleared
+      // slot first; the aborted transition lands 'failed'.
+      if (request.target === 'error') {
+        this.currentAbortController?.abort()
+        await this.inFlightPromise.then(() => undefined, () => undefined)
+        return this.request(request)
+      }
       // Conflicting in-flight request is rejected
       return { status: 'rejected', transitionId: this.currentTransitionId }
     }

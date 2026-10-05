@@ -100,23 +100,21 @@ describe('W5-INT repro - wave-4 onResume fix integration seams', () => {
     await flushTicks()
     expect(coordinator.getSnapshot().phase).toBe('closing')
 
-    // The coordinator's conflict contract: the competing request
-    // RESOLVES 'rejected' (no throw, no log). A fire-and-forget caller
-    // cannot observe it - which is why useBootFlow.fail() now retries
-    // after whenIdle() instead of void-ing once. The useBootFlow-level
-    // retry is pinned in useBootFlow.test.ts.
-    const failResult = await coordinator.request({ target: 'error' })
-    expect(failResult.status).toBe('rejected')
+    // W6-INT-1 fix: an 'error'-target request no longer loses the
+    // in-flight race - the coordinator aborts the running transition
+    // instead of rejecting, and the retried request takes the cleared
+    // slot first (its .then continuation was registered before the
+    // competitor's settle continuation could fire).
+    const failPromise = coordinator.request({ target: 'error' })
 
-    // The in-flight transition WINS: the player lands in combat (or
-    // whichever route was in flight) while saveIssue stays latched
-    // 'corrupted' - a dead write that hijacks the NEXT 'error' mount with
-    // the destructive reset gate instead of the boot-error card.
+    // The aborted in-flight transition lands 'failed' (its catch path);
+    // the error request completes its own transition to 'entered'.
     closeGate.resolve()
     const inFlightResult = await inFlight
-    expect(inFlightResult.status).toBe('entered')
-    expect(coordinator.getSnapshot().currentRoute).toBe('combat')
-    expect(coordinator.getSnapshot().phase).toBe('idle')
+    const failResult = await failPromise
+    expect(inFlightResult.status).toBe('failed')
+    expect(failResult.status).toBe('entered')
+    expect(coordinator.getSnapshot().currentRoute).toBe('error')
   })
 
   it('an onResume THROW keeps the session reconnecting: markReady never ran, retry stays armed, sim stays paused', async () => {

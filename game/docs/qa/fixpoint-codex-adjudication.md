@@ -232,9 +232,17 @@ All confirmed Medium-or-higher findings fixed and verified: `npm run type-check`
 | W6-AUT-6 `(deleted_at is null) desc` ordering inert under user_id UNIQUE | Nit | EXCEPTED — defensive ordering stays; after the COR-1 absorb a tombstone cannot coexist with a live row anyway |
 | W6-AUT-7 (= COR-5) fail() bounded-3 dead-drop | Nit | FIXED — see COR-5 |
 
-## INT
+## INT (0 Critical / 0 High / 1 Medium / 2 Low / 4 Nit)
 
-Still in flight (session de0243ebcdea43f1b5196a1b45c859d2); findings fold into this section when the report lands — Medium+ fixes land before the wave-7 dispatch.
+| Finding | Severity | Disposition |
+|---|---|---|
+| W6-INT-1 fail()'s bounded retry can starve forever: a competitor chained on each settle re-takes the in-flight slot in the microtask gap before any retry continuation — terminal error route never mounts | Medium | FIXED — 'error'-target requests now preempt the in-flight transition: the coordinator aborts it (lands 'failed') and the retried request takes the cleared slot first (continuation ordering is deterministic). w6int repro flipped to post-fix; w5int contract pin updated |
+| W6-INT-2 (= COR-3) firstSave markFailed('recovery') overrode 'revoked' | Low | FIXED — subsumed by the arm-gate narrowing (AUTH_EXPIRED never enters the payload-reject arm) |
+| W6-INT-3 (= COR-4/AUT-2) local onResume outside try + no in-flight guard | Low | FIXED — see AUT-2 |
+| W6-INT-4 handleExport provenance keys on remoteAuthoritative, not saveIssue.scope | Nit | EXCEPTED — export meta label only; bytes are identical either way |
+| W6-INT-5 (= AUT-4) first-save raw='' exports an empty file | Nit | FIXED — see AUT-4 |
+| W6-INT-6 sibling fire-and-forget void request() callers still swallow 'rejected' | Nit | EXCEPTED — pre-existing class outside the wave-6 delta; only the terminal-error caller needed closing |
+| W6-INT-7 w5aut stale comment: charset mislabeled as length | Nit | FIXED — comment corrected (the wave-4 message already lists the charset) |
 
 ## Wave-6 disposition
 

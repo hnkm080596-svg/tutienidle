@@ -492,9 +492,10 @@ describe('W5-AUT: name charset boundary', () => {
     // classes (No like superscript-2, full-width letters, diacritics).
     // Server: trim(p_name) ~ '^[[:alnum:] _-]+$' (202610060001:316-319) -
     // POSIX [[:alnum:]] under a C.UTF-8 collation matches ASCII only, so
-    // these client-valid names can land CHARACTER_NAME_INVALID - and the
-    // client message mislabels it as a LENGTH problem
-    // (SupabaseCharacterCreationService.ts:40 "dài 2–20 ký tự").
+    // these client-valid names can land CHARACTER_NAME_INVALID. The
+    // wave-4 fix corrected the client message to state the charset
+    // (SupabaseCharacterCreationService.ts:40), so the residual is only
+    // the collation divergence itself.
     // Collation-dependent -> reported Low/Nit, not asserted against server.
     expect(isValidCharacterName('Đạo Hữu²')).toBe(true) // superscript-2 is \p{No}
     expect(isValidCharacterName('Ｋｉｅｍ')).toBe(true) // full-width letters are \p{L}
