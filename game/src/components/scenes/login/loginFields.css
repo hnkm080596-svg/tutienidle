@@ -6,8 +6,8 @@
 .auth-field { position: relative; display: flex; align-items: center; border-radius: 4px; }
 .auth-field:focus-within { outline: 2px solid #426d4c; outline-offset: 1px; }
 .auth-field__icon { position: absolute; z-index: 2; left: 2.6cqw; width: 3.3cqw; height: 3.3cqw; color: #a5946d; pointer-events: none; }
-.auth-field input { position: relative; z-index: 2; box-sizing: border-box; width: 100%; min-width: 0; height: 8cqw; padding: 1cqw 2.5cqw 1cqw 8cqw; border: 0; border-radius: 4px; outline: none; background: transparent; color: #ede4cd; font: 2.9cqw var(--hk-font-display, Georgia, serif); }
-.auth-field input::placeholder { color: #968e72; opacity: 1; }
+.auth-field input { position: relative; z-index: 2; box-sizing: border-box; width: 100%; min-width: 0; height: 8cqw; padding: 1cqw 2.5cqw 1cqw 8cqw; border: 0; border-radius: 4px; outline: none; background: transparent; color: #1e1912; font: 2.9cqw var(--hk-font-display, Georgia, serif); }
+.auth-field input::placeholder { color: #5f5540; opacity: 1; }
 .auth-field input.auth-field__password { padding-right: 8cqw; }
 .auth-field__reveal { position: absolute; z-index: 2; right: 0; top: 0; bottom: 0; width: 8cqw; padding: 2cqw; border: 0; background: none; color: #a5946d; cursor: pointer; }
 .auth-field__reveal svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.4; }
