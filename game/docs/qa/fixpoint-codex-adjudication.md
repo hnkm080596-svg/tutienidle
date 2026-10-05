@@ -44,7 +44,7 @@ authority migration semantics, description/comment edits.
 
 ---
 
-# Wave 2 adjudication (commit <pending>)
+# Wave 2 adjudication (commit 72f313c2)
 
 Audit trio on 638bfda9; adjudicator = coordinator session.
 
