@@ -47,7 +47,6 @@ function reset() { drawer.value = null; exited.value = false; creation.value = f
       <PcPaperButton v-if="!creation && !exited" class="preview-exit-button" variant="secondary" data-testid="opening-exit-button" @click="drawer = 'exit'">{{ t('authPreview.exit') }}</PcPaperButton>
       <AuthPreviewDrawer :open="drawer !== null" :title="displayedDrawer === 'settings' ? t('paperNav.settings') : displayedDrawer === 'exit' ? t('authPreview.exit') : t(`onboarding.auth.tabs.${mode}`)" @close="drawer = null">
         <template v-if="displayedDrawer === 'auth'">
-          <span :id="`auth-tab-${mode}`" class="sr-only">{{ t(`onboarding.auth.tabs.${mode}`) }}</span>
           <AuthCredentialForm v-model:login-id="loginId" v-model:password="password" :mode="mode" :can-submit="canSubmit" :submitting="false" :error="''" :reset-notice="false" :credential-error="false" @submit="message = t('authPreview.submitted')" />
           <p v-if="message" class="preview-notice" role="status">{{ message }}</p>
         </template>
@@ -78,12 +77,12 @@ function reset() { drawer.value = null; exited.value = false; creation.value = f
 .preview-exited { position: absolute; left: 480px; top: 315px; width: 530px; padding: 35px; text-align: center; background: #f5e6c9eb; border: 3px double #aa8645; }
 .preview-exited h2 { margin: 0 0 25px; font-size: 28px; }
 /* Auth uses the same warm paper and proportion-preserving art as the opening. */
-.auth-interactive-preview :deep(.auth-preview-drawer .auth-form) { gap: 20px; padding-top: 10px; }
+.auth-interactive-preview :deep(.auth-preview-drawer .auth-form) { gap: 14px; padding-top: 4px; }
 .auth-interactive-preview :deep(.auth-preview-drawer .auth-field-row .sr-only) { position: static; width: auto; height: auto; padding: 0; margin: 0 0 6px; overflow: visible; clip: auto; white-space: normal; color: #564023; font-size: 18px; }
 .auth-interactive-preview :deep(.auth-preview-drawer .auth-field) { border: 1px solid #998b6d; background: linear-gradient(110deg,#32322c,#252620); box-shadow: inset 0 1px 3px #00000020; border-radius: 3px; min-height: 50px; }
 .auth-interactive-preview :deep(.auth-preview-drawer .auth-field:focus-within) { border-color: #ba9857; box-shadow: 0 0 0 1px #ba985730; }
-.auth-interactive-preview :deep(.auth-preview-drawer .auth-field input) { height: 50px; padding: 10px 44px; font: 17px var(--pc-font-body); color: #1e1912; }
-.auth-interactive-preview :deep(.auth-preview-drawer .auth-field input::placeholder) { color: #5f5540; }
+.auth-interactive-preview :deep(.auth-preview-drawer .auth-field input) { height: 50px; padding: 10px 44px; font: 17px var(--pc-font-body); color: #f1e5cd; }
+.auth-interactive-preview :deep(.auth-preview-drawer .auth-field input::placeholder) { color: #aba38f; }
 .auth-interactive-preview :deep(.auth-preview-drawer .auth-field__icon), .auth-interactive-preview :deep(.auth-preview-drawer .auth-field__reveal) { color: #c9bda2; }
 .auth-interactive-preview :deep(.auth-preview-drawer .auth-primary-action::before) { border-image-source: var(--pc-secondary-button); }
 .auth-interactive-preview.auth-interactive-preview :deep(.auth-preview-drawer .auth-primary-action) { color: #f4e4c0; min-height: 62px; font-size: 25px; }

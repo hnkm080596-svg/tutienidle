@@ -40,7 +40,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', outside, true)
 .auth-preview-drawer header { position: relative; padding: 12px 0 22px; border-bottom: 1px solid #b18b45; }
 .auth-preview-drawer header img { position: absolute; width: 210px; height: 88px; object-fit: contain; right: -10px; top: -12px; opacity: .25; pointer-events: none; }
 .auth-preview-drawer h2 { position: relative; margin: 0; font: 600 34px var(--pc-font-body); }
-.auth-preview-drawer-content { min-height: 0; flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #b18b4580 transparent; padding: 28px 0 150px; container-type: inline-size; display: flex; flex-direction: column; gap: 24px; }
+.auth-preview-drawer-content { min-height: 0; flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #b18b4580 transparent; padding: 14px 0 150px; container-type: inline-size; display: flex; flex-direction: column; gap: 14px; }
 .auth-preview-slide-enter-active .auth-preview-drawer, .auth-preview-slide-leave-active .auth-preview-drawer { transition: transform 360ms cubic-bezier(.22,.8,.3,1); }
 .auth-preview-slide-enter-from .auth-preview-drawer, .auth-preview-slide-leave-to .auth-preview-drawer { transform: translateX(calc(100% + 20px)); }
 @media (prefers-reduced-motion: reduce) { .auth-preview-slide-enter-active .auth-preview-drawer, .auth-preview-slide-leave-active .auth-preview-drawer { transition: none; } }

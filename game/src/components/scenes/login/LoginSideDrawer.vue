@@ -34,10 +34,10 @@ useDialogFocus(panel, computed(() => props.open), { onEscape: close })
 .login-drawer-layer { position: absolute; inset: 0; z-index: 10; }
 .login-drawer-scrim { position: absolute; inset: 0; background: #30281933; }
 .login-side-drawer { position: absolute; right: 18px; top: 18px; bottom: 18px; width: 490px; display: flex; flex-direction: column; padding: 30px; color: #30271b; background: #f5e9d0 var(--entry-paper) center / 240px; border: 1px solid #b39458; box-shadow: -18px 0 50px #48351b30, inset 0 0 0 5px #f7ecd8, inset 0 0 0 6px #b6986270; }
-.login-side-drawer__header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #b69862; padding-bottom: 18px; }
+.login-side-drawer__header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #b69862; padding-bottom: 12px; }
 .login-side-drawer__header h2 { margin: 0; font: 600 32px var(--font-display, Georgia, serif); }
 .login-side-drawer__header button { min-width: 44px; min-height: 44px; font-size: 28px; }
-.login-side-drawer__content { min-height: 0; overflow-y: auto; flex: 1; padding-top: 24px; scrollbar-width: thin; container-type: inline-size; display: flex; flex-direction: column; gap: 24px; }
+.login-side-drawer__content { min-height: 0; overflow-y: auto; flex: 1; padding-top: 14px; scrollbar-width: thin; container-type: inline-size; display: flex; flex-direction: column; gap: 14px; }
 .login-drawer-enter-active, .login-drawer-leave-active { transition: opacity 320ms ease; }
 .login-drawer-enter-active .login-side-drawer, .login-drawer-leave-active .login-side-drawer { transition: transform 320ms cubic-bezier(.22,.8,.3,1); }
 .login-drawer-enter-from, .login-drawer-leave-to { opacity: 0; }

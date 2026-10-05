@@ -3,7 +3,6 @@ import { computed, onMounted, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import LoginLocaleChips from '@/components/scenes/login/LoginLocaleChips.vue'
-import AuthModeTabs from '@/components/scenes/login/AuthModeTabs.vue'
 import AuthCredentialForm from '@/components/scenes/login/AuthCredentialForm.vue'
 import LoginUpgradeSection from '@/components/scenes/login/LoginUpgradeSection.vue'
 import LoginOpening from '@/components/scenes/login/LoginOpening.vue'
@@ -151,7 +150,6 @@ function playOrContinue() {
       @authenticate="revealAuthentication" @play="playOrContinue" @settings="drawer = 'settings'" />
     <LoginSideDrawer :open="drawer !== null" :busy="submitting" :title="drawer === 'settings' ? t('paperNav.settings') : t(`onboarding.auth.tabs.${mode}`)" @close="drawer = null">
       <template v-if="drawer === 'auth'">
-      <AuthModeTabs v-model="mode" />
       <AuthCredentialForm
         v-model:login-id="loginId"
         v-model:password="password"

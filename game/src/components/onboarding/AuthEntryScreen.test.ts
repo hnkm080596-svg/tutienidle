@@ -31,7 +31,12 @@ describe('AuthEntryScreen opening', () => {
     expect(container.querySelector('[data-testid="login-opening"]')).not.toBeNull()
     expect(container.querySelector('#auth-input-id')).not.toBeNull()
     expect(container.querySelector('[data-testid="auth-guest-button"]')).not.toBeNull()
-    expect(container.querySelector('#auth-tab-register')?.getAttribute('aria-selected')).toBe('true')
+    // Mode is chosen from the opening menu - the drawer title carries
+    // it and there is no second tabs row inside the drawer.
+    expect(container.querySelector('[data-testid="entry-drawer"] h2')?.textContent).toContain(
+      i18n.global.t('onboarding.auth.tabs.register'),
+    )
+    expect(container.querySelector('#auth-input-password')?.getAttribute('autocomplete')).toBe('new-password')
     container.querySelector<HTMLButtonElement>('[data-testid="entry-drawer-close"]')!.click()
     await nextTick()
     await new Promise((resolve) => setTimeout(resolve, 450))
