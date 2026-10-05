@@ -130,7 +130,7 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     // The starter slot renders as a cosmetic preview strip (approved
     // creation design) - it never enters the creation payload, which stays
     // name + talent only (asserted by the unit suite).
-    await expect(creation.locator('[data-hk-region="starter-slot"]')).toBeVisible()
+    await expect(creation.locator('[data-hk-region="dao-lo"]')).toBeVisible()
     // The retired attribute pick must not exist at all.
     await expect(creation.locator('[data-testid^="creation-attribute-"]')).toHaveCount(0)
     // No sword/body/hidden way chooser.

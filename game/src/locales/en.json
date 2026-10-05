@@ -1296,7 +1296,7 @@
       "returnOpening": "Back"
     },
     "creation": {
-      "back": "← Back",
+      "back": "Back",
       "headerKicker": "DESTINY-BINDING",
       "headerTitle": "Create Character",
       "nameStep": {
@@ -1306,11 +1306,12 @@
         "description": "Character names are unique and cannot be changed in the early phase.",
         "label": "Character Name",
         "placeholder": "Enter a dao name…",
-        "minLengthHint": "{length}/20 · Minimum 2 characters"
+        "minLengthHint": "{length}/20 · Minimum 2 characters",
+        "random": "Random name"
       },
       "talentStep": {
         "kicker": "DESTINY",
-        "sectionTitle": "Innate Talent",
+        "sectionTitle": "Choose a Talent",
         "title": "Choose One Innate Talent",
         "selected": "Selected {count} / 1",
         "rolling": "Observing the heavens…",
@@ -1325,9 +1326,10 @@
           "resource": "Resource",
           "risk_reward": "Risk & Reward",
           "skill": "Skill"
-        }
+        },
+        "locked": "Unrevealed"
       },
-      "finish": "Step onto the immortal path",
+      "finish": "Begin Cultivation",
       "creating": "Binding fate…",
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."
@@ -1341,7 +1343,17 @@
         "pending": "Revealed after you choose a talent"
       },
       "chooseOne": "Choose one",
-      "hoverDetail": "Hover for details"
+      "hoverDetail": "Hover for details",
+      "pathStep": {
+        "sectionTitle": "Choose a Starting Path",
+        "description": "Pick the road your gift points to.",
+        "paths": {
+          "tuKiem": "Sword Path",
+          "tuPhap": "Spell Path",
+          "tuThe": "Body Path",
+          "hidden": "?"
+        }
+      }
     }
   },
   "skillResource": {

@@ -1296,7 +1296,7 @@
       "returnOpening": "Quay lại"
     },
     "creation": {
-      "back": "← Trở lại",
+      "back": "Quay Lại",
       "headerKicker": "KHAI MỆNH",
       "headerTitle": "Tạo Nhân Vật",
       "nameStep": {
@@ -1306,11 +1306,12 @@
         "description": "Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.",
         "label": "Tên nhân vật",
         "placeholder": "Nhập đạo danh…",
-        "minLengthHint": "{length}/20 · Tối thiểu 2 ký tự"
+        "minLengthHint": "{length}/20 · Tối thiểu 2 ký tự",
+        "random": "Tên ngẫu nhiên"
       },
       "talentStep": {
         "kicker": "THIÊN MỆNH",
-        "sectionTitle": "Thiên Phú",
+        "sectionTitle": "Chọn Thiên Phú",
         "title": "Chọn một Thiên Phú",
         "selected": "Đã chọn {count} / 1",
         "rolling": "Đang quan sát thiên cơ…",
@@ -1325,9 +1326,10 @@
           "resource": "Tài Nguyên",
           "risk_reward": "Mạo Hiểm",
           "skill": "Kỹ Năng"
-        }
+        },
+        "locked": "Chưa lộ"
       },
-      "finish": "Bước vào tiên đồ",
+      "finish": "Bắt Đầu Tu Hành",
       "creating": "Đang lập mệnh…",
       "errors": {
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
@@ -1341,7 +1343,17 @@
         "pending": "Sẽ hiển thị sau khi chọn Thiên Phú"
       },
       "chooseOne": "Chọn một",
-      "hoverDetail": "Di chuột để xem chi tiết"
+      "hoverDetail": "Di chuột để xem chi tiết",
+      "pathStep": {
+        "sectionTitle": "Chọn Đạo Lộ Khởi Đầu",
+        "description": "Chọn một đạo lộ phù hợp với thiên phú, quyết chí tu hành.",
+        "paths": {
+          "tuKiem": "Tu Kiếm",
+          "tuPhap": "Tu Pháp",
+          "tuThe": "Tu Thể",
+          "hidden": "?"
+        }
+      }
     }
   },
   "skillResource": {

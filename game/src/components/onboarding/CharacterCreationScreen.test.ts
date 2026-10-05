@@ -42,7 +42,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     document.body.innerHTML = ''
   })
 
-  it('renders name + talent on ONE screen; the starter slot previews 3 skills with only linh_bao selectable', async () => {
+  it('renders name + dao-lo + talent on ONE screen; dao-lo previews 5 cells with only linh_bao selectable', async () => {
     const mounted = mountScreen()
     await flushRoll()
 
@@ -50,28 +50,48 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     expect(container.querySelector('[data-testid="creation-name-input"]')).toBeTruthy()
     expect(container.querySelector('[data-testid^="creation-talent-"]')).toBeTruthy()
 
-    // BETA SCOPE LOCK v2 (phase-2): no allocation, no stepper. The starter
-    // slot previews all three mortal precursors (CREATION_SKILL_PREVIEW):
-    // tram + huy_quyen render as locked display cards (dimmed, no control
-    // semantics), and linh_bao - the fixed beta starter - is the single
-    // selectable radio. The pick is local UI state and never enters the
-    // payload (pinned by the emit test below).
-    const starter = container.querySelector('[data-hk-region="starter-slot"]')
-    expect(starter).toBeTruthy()
-    expect(starter!.querySelectorAll('.creation-choice-tile')).toHaveLength(3)
-    const locked = starter!.querySelectorAll('.creation-choice-tile--locked')
-    expect(locked).toHaveLength(2)
-    expect([...locked].map((el) => el.getAttribute('data-testid'))).toEqual([
-      'creation-starter-tram',
-      'creation-starter-huy_quyen',
-    ])
-    const starterPick = starter!.querySelector<HTMLElement>('[data-testid="creation-starter-linh_bao"]')
+    // BETA SCOPE LOCK v2 (phase-2): no allocation, no stepper. The dao-lo
+    // row IS the starter-skill row: tram/huy_quyen render as locked cells,
+    // the two trailing cells are hidden placeholders, and linh_bao - the
+    // fixed beta starter - is the single selectable radio. The pick is
+    // local UI state and never enters the payload (pinned below).
+    const daoLo = container.querySelector('[data-hk-region="dao-lo"]')
+    expect(daoLo).toBeTruthy()
+    expect(daoLo!.querySelectorAll('.trial-path-cell')).toHaveLength(5)
+    const locked = daoLo!.querySelectorAll('.trial-path-cell--locked')
+    expect(locked).toHaveLength(4)
+    const starterPick = daoLo!.querySelector<HTMLElement>('[data-testid="creation-starter-linh_bao"]')
     expect(starterPick!.tagName).toBe('BUTTON')
     expect(starterPick!.getAttribute('role')).toBe('radio')
     expect(starterPick!.getAttribute('aria-checked')).toBe('true')
-    expect(starter!.querySelectorAll('button')).toHaveLength(1)
+    expect(daoLo!.querySelectorAll('button:not([disabled])')).toHaveLength(1)
     expect(container.querySelector('[data-testid^="creation-attribute-"]')).toBeNull()
     expect(container.querySelector('.stepper')).toBeNull()
+
+    mounted.unmount()
+  })
+
+  it('renders the 3-offer talent row inside a 9-tile grid (6 locked slots)', async () => {
+    const mounted = mountScreen()
+    await flushRoll()
+
+    const grid = mounted.container.querySelector('[data-hk-region="talent-grid"]')!
+    expect(grid.querySelectorAll('button[data-testid^="creation-talent-"]')).toHaveLength(3)
+    expect(grid.querySelectorAll('[data-testid^="creation-locked-talent-"]')).toHaveLength(6)
+    expect(mounted.container.querySelector('[data-testid="creation-reroll"]')).toBeTruthy()
+
+    mounted.unmount()
+  })
+
+  it('fills the name from the random-name die', async () => {
+    const mounted = mountScreen()
+    await flushRoll()
+
+    const nameInput = mounted.container.querySelector<HTMLInputElement>('[data-testid="creation-name-input"]')!
+    expect(nameInput.value).toBe('')
+    mounted.container.querySelector<HTMLButtonElement>('[data-testid="creation-random-name"]')!.click()
+    await nextTick()
+    expect(nameInput.value.length).toBeGreaterThanOrEqual(2)
 
     mounted.unmount()
   })
@@ -88,7 +108,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     await nextTick()
     expect(finish().getAttribute('aria-disabled')).toBe('true')
 
-    container.querySelector<HTMLButtonElement>('.talent-card')!.click()
+    container.querySelector<HTMLButtonElement>('[data-testid^="creation-talent-"]')!.click()
     await nextTick()
     expect(finish().getAttribute('aria-disabled')).toBe('false')
 
@@ -103,7 +123,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     fillName(mounted.container)
     await nextTick()
 
-    mounted.container.querySelector<HTMLButtonElement>('.talent-card')!.click()
+    mounted.container.querySelector<HTMLButtonElement>('[data-testid^="creation-talent-"]')!.click()
     await nextTick()
 
     mounted.container.querySelector<HTMLButtonElement>('[data-testid="creation-finish"]')!.click()

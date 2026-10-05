@@ -1,0 +1,23 @@
+// Curated dao-name pool for the creation screen's random-name die.
+export const DAO_NAME_POOL: readonly string[] = [
+  'Lạc Vân Trần',
+  'Mộ Thanh Sương',
+  'Sở Dạ Hành',
+  'Tần Vô Song',
+  'Giang Tử Ngôn',
+  'Thẩm Túc Tinh',
+  'Vân Thượng Thanh',
+  'Lục Cảnh Thâm',
+  'Niếp Vong Ưu',
+  'Phí Tạp Tuyết',
+  'Yến Hồi Nguyệt',
+  'Thẩm Cô Hồng',
+  'Hàn Trạch Vũ',
+  'Cố Trường Phong',
+  'Tô Tranh Dạ',
+  'Tạ Lâm Tú',
+  'Bạch Nhược Thủy',
+  'Diệp Phi Quỳnh',
+  'Phương Độc Hành',
+  'Lam Vân Khâm',
+]

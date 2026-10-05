@@ -7,9 +7,6 @@ import onboardingStageSource from '@/components/onboarding/OnboardingStage.vue?r
 import loginVistaSource from '@/components/scenes/login/LoginSceneVista.vue?raw'
 import modeTabsSource from '@/components/scenes/login/AuthModeTabs.vue?raw'
 import creationSource from '@/components/onboarding/CharacterCreationScreen.vue?raw'
-import creationShellSource from '@/components/scenes/creation/CreationScrollShell.vue?raw'
-import talentCardSource from '@/components/scenes/creation/TalentCard.vue?raw'
-import creationTileSource from '@/components/scenes/creation/CreationChoiceTile.vue?raw'
 // Scene 14: the victory ceremonial surface lives in the scene layer
 // (scenes/victory/VictoryScene); the panel wrapper keeps the behavior.
 import victorySource from '@/components/scenes/victory/VictoryScene.vue?raw'
@@ -70,15 +67,16 @@ describe('InkWashBackdrop', () => {
     // Onboarding (auth/creation) moved to the Huyen Kim parallax vista -
     // the ink-wash backdrop family now owns the combat result surfaces.
     // Scene 01: OnboardingStage owns the shared backdrop; AuthEntryScreen
-    // mounts the login scroll card inside it.
-    expect(authSource).toContain('LoginScrollCard')
+    // mounts the opening menu + side drawer inside it.
+    expect(authSource).toContain('LoginOpening')
+    expect(authSource).toContain('LoginSideDrawer')
     expect(onboardingStageSource).toContain('LoginSceneVista')
-    expect(loginVistaSource).toContain('HuyenKimParallaxStack')
-    expect(loginVistaSource).toContain('stack="auth-creation"')
-    // Scene 02: CharacterCreationScreen composes region components inside
-    // the SAME shared vista - the auth-creation parallax stack serves both
-    // screens (the scroll exchanges inside one persistent backdrop).
-    expect(creationSource).toContain('CreationSceneLayout')
+    expect(loginVistaSource).toContain('login-world-vista')
+    expect(loginVistaSource).toContain('login-vista__cultivator')
+    // Scene 02: CharacterCreationScreen renders the trial-creation board
+    // inside the SAME shared vista - the auth-creation parallax stack serves
+    // both screens (the scroll exchanges inside one persistent backdrop).
+    expect(creationSource).toContain('trial-creation-board')
     expect(onboardingStageSource).not.toContain('CreationVista')
     // Huyen-kim reskin: victory/defeat dropped the ink-wash backdrop
     // entirely - the mock is a flat scrim + floating title art.
@@ -90,18 +88,14 @@ describe('InkWashBackdrop', () => {
     // Scene 01 uses an inline jade banner; keep the ivory-on-jade
     // contrast contract without requiring the superseded chrome asset.
     expect(modeTabsSource).toMatch(/\.auth-tabs__tab\.active \{[^}]*color: var\(--hk-ivory/)
-    // Huyen Kim S01/S02 (2026-10-02): the card is the surface-xl-scroll
-    // chrome - paper-text tokens carry the legibility contract now.
-    // Scene 02 scaffold: the chrome lives in CreationScrollShell.
-    expect(creationSource).toContain('CreationScrollShell')
-    expect(creationShellSource).toContain('data-hk-region="creation-card"')
-    expect(creationShellSource).toContain('creation-scroll__art')
-    // BETA-CREATION - name+talent draft only: the selected talent card
-    // is the legibility affordance now (TalentCard delegates the chrome to
-    // CreationChoiceTile; the selected tile carries the gold ceremony rim).
-    expect(talentCardSource).toContain('CreationChoiceTile')
-    expect(creationTileSource).toMatch(
-      /\.creation-choice-tile\.selected \{[^}]*border: 2px solid #ab7934/,
+    // Huyen Kim S01/S02 (2026-10-02): the card is the trial-creation board
+    // chrome - the card region marker lives on the board itself.
+    expect(creationSource).toContain('data-hk-region="creation-card"')
+    // BETA-CREATION - name+talent draft only: the selected talent tile is
+    // the legibility affordance now (gold ceremony rim on the selected
+    // tile).
+    expect(creationSource).toMatch(
+      /\.trial-talent-tile\.selected \{[^}]*border-color: #e2b257/,
     )
   })
 })
