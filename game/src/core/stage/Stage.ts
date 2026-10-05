@@ -60,6 +60,16 @@ export interface Stage {
   // GameManager.pickEnemyForSpawn().
   bossEnemyId?: string
 
+  // Stat-wall ladder (Minh directive 2026-10-05): per-floor multiplier
+  // applied at spawn to every enemy instance (normal/elite/boss -
+  // applies AFTER the elite/boss multipliers, so a floor-10 king is
+  // bossMult x statScale). Keeps the single-species roster intact:
+  // same species id, deeper floors are the stronger specimens.
+  // undefined / 1 = authored template stats (no scaling). Scaling an
+  // existing stat field is applied in StageWaveSystem.pickEnemyForSpawn
+  // via applyFloorStatScale (core/enemy/EnemyStatInput.ts).
+  statScale?: number
+
   // Auto-farm Hoan My (2026-09-04 spec) - so ROUND toi da de dat dieu
   // kien "Hoan My" (spec v3 D1: every party member alive at victory;
   // the count is battle.roundsElapsed - ATB rounds, NOT actor actions;
