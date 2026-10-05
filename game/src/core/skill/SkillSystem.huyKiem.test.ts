@@ -71,7 +71,9 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
     const effective = system.getEffectiveSkill(skill)
 
     const damage = effective.effects.find((effect) => effect.type === 'damage')
-    expect(damage?.value).toBe(1)
+    // Authored value, unchanged by the huy_kiem flat channel - 1.07 since
+    // the F-SCOPE-1 fire-kit buff (2026-10-05).
+    expect(damage?.value).toBe(1.07)
   })
 })
 
