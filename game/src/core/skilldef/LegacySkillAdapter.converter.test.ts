@@ -27,11 +27,12 @@ describe('toTurnSkillDefinition', () => {
     expect(turnSkill.id).toBe('hoa_cau_thuat')
     // Number-preserved cooldown (skill.cooldown = 4).
     expect(turnSkill.cooldownTurns).toBe(4)
-    // Damage effect: elemental fire, value 1.
+    // Damage effect: elemental fire, value 1.07 (F-SCOPE-1 buff
+    // 2026-10-05: hoa_cau_thuat base hit 1 -> 1.07).
     expect(turnSkill.damage?.kind).toBe('elemental')
     if (turnSkill.damage && turnSkill.damage.kind === 'elemental') {
       expect(turnSkill.damage.components).toEqual([{ kind: 'element', element: 'fire', ratio: 1 }])
-      expect(turnSkill.damage.multiplier).toBeCloseTo(1, 5)
+      expect(turnSkill.damage.multiplier).toBeCloseTo(1.07, 5)
     }
     // R3 re-audit (AR-03 gap) - authored manaScalingRatio/attributeScaling
     // must survive conversion (previously silently dropped).
@@ -76,7 +77,7 @@ describe('toTurnSkillDefinition', () => {
 
     expect(turnSkill.targeting).toEqual({ shape: 'square', laneRadius: 1 })
     if (turnSkill.damage && turnSkill.damage.kind === 'elemental') {
-      expect(turnSkill.damage.multiplier).toBeCloseTo(0.9, 5)
+      expect(turnSkill.damage.multiplier).toBeCloseTo(0.96, 5) // F-SCOPE-1 buff: Tan Diem 0.9 -> 0.96
     }
     expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 0.45 })
   })

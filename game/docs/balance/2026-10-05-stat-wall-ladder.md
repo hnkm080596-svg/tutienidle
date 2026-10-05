@@ -108,15 +108,20 @@ unscaled) + bare-stats walls (naked mortal loses dong_3 3/3; naked qi
 entrant loses qi_refining_forest). BetaJourney stays green - curated
 dia+8 build clears every act end to end.
 
-## FLAGS for Minh (not silently weakened)
+## FLAGS for Minh (resolved / remaining)
 
-1. Element x act-boss parity (ElementBossMatrix, maxed intended-point
-   build, 60s enrage DPS gate): 11/15 cells clear. Still pinned
-   `defeat` pending his pick (buff wood kit / extend enrage / lower
-   the two boss coefficients / keep defeats):
-   - wood x croc, wood x serpent: sustain-profile kit lands ~45-55%
-     short of the boss hp pool inside the enrage window.
-   - fire x serpent (~5%), earth x serpent (~11%): knife-edge.
+1. Element x act-boss parity - RESOLVED by F-SCOPE-1 (fire only):
+   - The serpent soften (2.85 -> 2.0) already flipped fire/wood/earth
+     x serpent to victory; Minh then ruled fire the only in-scope
+     element and ordered a KIT-DAMAGE tune: `hoa_cau_thuat` hit value
+     1 -> 1.07 (+7%), spec overrides Tụ Diễm 1.15 -> 1.23 and Tán Diễm
+     0.9 -> 0.96 (same +7%, authored spec ratios preserved). Enemy
+     stats untouched. Post-buff: fire x serpent victory in 26 turns,
+     fire x croc victory, fire x whelp victory.
+   - Remaining pinned `defeat`: wood x croc only - kept as
+     OUT-OF-SCOPE documentation (beta scope is fire only; the croc
+     floor at 3.6 was not softened; wood kit sustain profile still
+     lands ~45-50% short inside the 60s enrage window).
 2. `statScale` mechanism - APPROVED by Minh, kept.
 3. Residual variance tail: with random drops the worst floor on a bad
    seed costs ~20-30 farm runs (seen: qi stone_range 31 at 1.65). All

@@ -238,15 +238,16 @@ const BOSSES: BossKey[] = ['croc', 'serpent', 'whelp']
 // STAT-WALL FLAG (2026-10-05) - the floor-10 boss scale jump on top of
 // the x7/x2 boss multiplier turned the act bosses into real DPS-gates
 // behind the 60s enrage. Same-day soften (Minh: "rot do ngau nhien
-// cung nen du qua") dropped the serpent floor from 2.85 to 2.0, which
-// flipped the fire/wood/earth x serpent cells to victory - one of the
-// options he was weighing. Remaining pinned defeat:
+// cung nen du qua") dropped the serpent floor from 2.85 to 2.0, and
+// the F-SCOPE-1 ruling made fire the only in-scope element: the fire
+// kit's damage was buffed +7% (hoa_cau_thuat 1->1.07 and both spec
+// overrides) so fire x serpent clears at the max legit build - kit
+// tune, boss stats untouched. Remaining pinned defeat is
+// OUT-OF-SCOPE documentation (beta scope is fire only):
 //   - wood x croc: sustain-profile kit is ~45-50% short of the boss hp
 //     pool inside the enrage window at dia+20 + maxed attributes - an
 //     element-side burst gap, not an investment gap. The croc floor
 //     (mortal_dong_10, scale 3.6) was NOT softened.
-// Pinned as the reported outcome pending Minh's pick (buff wood kit /
-// extend enrage / lower the croc coefficient / keep the defeat).
 // Tracked in docs/balance/2026-10-05-stat-wall-ladder.md.
 const EXPECTED_OUTCOME: Record<string, 'victory' | 'defeat'> = {
   'fire/croc': 'victory',

@@ -114,7 +114,10 @@ export const PHAP_TU_SKILLS: Skill[] = [
         type: 'damage',
 
         // FirePath.md sec.2 - "Damage: 100% Skill Power".
-        value: 1,
+        // F-SCOPE-1 buff (2026-10-05, Minh ruling: fire is the only
+        // in-scope element; tune KIT DAMAGE, not boss stats): +7% so
+        // the fire x serpent act gate clears at the max legit build.
+        value: 1.07,
 
         components: [{ kind: 'element', element: 'fire', ratio: 1 }],
 
@@ -180,7 +183,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
         effectsOverride: [
           {
             type: 'damage',
-            value: 1.15,
+            // F-SCOPE-1 buff (2026-10-05): base x1.07 keeps this spec
+            // at its authored +15% over the base hit.
+            value: 1.23,
             components: [{ kind: 'element', element: 'fire', ratio: 1 }],
             manaScalingRatio: 0.001,
             attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
@@ -214,7 +219,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
         effectsOverride: [
           {
             type: 'damage',
-            value: 0.9,
+            // F-SCOPE-1 buff (2026-10-05): base x1.07 keeps this spec
+            // at its authored -10% under the base hit.
+            value: 0.96,
             components: [{ kind: 'element', element: 'fire', ratio: 1 }],
             manaScalingRatio: 0.001,
             attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
