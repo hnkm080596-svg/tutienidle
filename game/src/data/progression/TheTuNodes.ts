@@ -23,7 +23,12 @@ import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 // authority (M-QI-05). Legacy post-beta nodes (bat_tu/son_nhac/taunt
 // duration) are dropped from the tree with their channels.
 
-const GROWTH_5 = { base: 1, perLevel: 2 } // 1,1,2,2,3 - sibling growth convention.
+// Insight pace retune 2026-10-05: window-anchored prices (see
+// SkillInsightBalance). Root-gated minors (QI window) pay 600/level;
+// minors sitting behind a foundation-gated major (TC window) pay
+// 40,000/level. Flat base - the +1/perLevel step is invisible here.
+const GROWTH_5 = { base: 600, perLevel: 5 } // QI-window minor: flat 600/level (perLevel >= maxLevel kills the step).
+const GROWTH_5_TC = { base: 40_000, perLevel: 5 } // TC-window minor: flat 40,000/level.
 
 // ---------------- Cuong Chien (Might -> single-target) ----------------
 
@@ -54,7 +59,7 @@ const CUONG_BASIC_BRANCH: ProgressionNode[] = [
     description: 'Cuồng Quyền chuyển hóa Căn Cốt sâu hơn: +0.10 hệ số sát thương mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 600,
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'cuong_chien' }],
@@ -67,7 +72,7 @@ const CUONG_BASIC_BRANCH: ProgressionNode[] = [
     description: 'Cuồng Quyền xuyên giáp: đòn đánh bỏ qua thêm +15% tỉ lệ giảm sát thương từ Phòng Ngự mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 600,
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'cuong_chien' }],
@@ -85,7 +90,7 @@ const LOAN_DAU_MAJOR: ProgressionNode = {
     'Trúc Cơ: học Loạn Đấu — hiến sinh một phần Sinh Mệnh Tối Đa để đánh loạn liên hoàn; mở nội tại Huyết Cuồng (máu càng ít, Cuồng Chiến càng mạnh).',
   type: 'major',
   role: 'keystone',
-  insightCost: 2,
+  insightCost: 150_000,
   prerequisites: [
     { kind: 'realm', realmId: 'foundation_establishment' },
     { kind: 'node', nodeId: 'cuong_chien' },
@@ -102,9 +107,9 @@ const CUONG_SPECIAL_BRANCH: ProgressionNode[] = [
     description: 'Loạn Đấu nghiệt hơn: +0.002 hệ số sát thương cho mỗi điểm máu đã hiến trả mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 40_000,
     maxLevel: 5,
-    upgradeCost: GROWTH_5,
+    upgradeCost: GROWTH_5_TC,
     prerequisites: [{ kind: 'node', nodeId: 'major_loan_dau' }],
     effect: { bodyKitModifiers: { loanDauPaidHpBonus: 0.002 } },
     branchTag: 'the_tu',
@@ -115,9 +120,9 @@ const CUONG_SPECIAL_BRANCH: ProgressionNode[] = [
     description: 'Huyết Cuồng bộc phát mạnh hơn: +0.5% sát thương mỗi 1% máu đã mất, mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 40_000,
     maxLevel: 5,
-    upgradeCost: GROWTH_5,
+    upgradeCost: GROWTH_5_TC,
     prerequisites: [{ kind: 'node', nodeId: 'major_loan_dau' }],
     effect: { bodyKitModifiers: { missingHpBonusBonus: 0.005 } },
     branchTag: 'the_tu',
@@ -153,7 +158,7 @@ const TRAN_BASIC_BRANCH: ProgressionNode[] = [
     description: 'Trấn Áp mượn thêm Sinh Mệnh Tối Đa: +6% Max-HP chuyển vào sát thương mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 600,
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'tran_the' }],
@@ -166,7 +171,7 @@ const TRAN_BASIC_BRANCH: ProgressionNode[] = [
     description: 'Kẻ địch trúng Trấn Áp bị đánh yếu: đòn kế tiếp của chúng giảm sát thương (mạnh hơn mỗi cấp).',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 600,
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'tran_the' }],
@@ -182,7 +187,7 @@ const PHAN_CHAN_MAJOR: ProgressionNode = {
     'Trúc Cơ: học Phản Chấn — khiêu khích và đánh ấn mọi kẻ địch; kẻ đánh trúng Trấn Thể bị phản kích theo Sinh Mệnh Tối Đa.',
   type: 'major',
   role: 'keystone',
-  insightCost: 2,
+  insightCost: 150_000,
   prerequisites: [
     { kind: 'realm', realmId: 'foundation_establishment' },
     { kind: 'node', nodeId: 'tran_the' },
@@ -199,9 +204,9 @@ const TRAN_SPECIAL_BRANCH: ProgressionNode[] = [
     description: 'Phản Chấn phản nặng hơn: +1% Sinh Mệnh Tối Đa sát thương phản mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 40_000,
     maxLevel: 5,
-    upgradeCost: GROWTH_5,
+    upgradeCost: GROWTH_5_TC,
     prerequisites: [{ kind: 'node', nodeId: 'major_phan_chan' }],
     effect: { bodyKitModifiers: { reflectMaxHpRatioBonus: 0.01 } },
     branchTag: 'the_tu',
@@ -212,9 +217,9 @@ const TRAN_SPECIAL_BRANCH: ProgressionNode[] = [
     description: 'Chấn Ấn ngấm sâu: kẻ mang ấn chịu phản kích thêm +2% Sinh Mệnh Tối Đa mỗi cấp.',
     type: 'minor',
     role: 'growth',
-    insightCost: 1,
+    insightCost: 40_000,
     maxLevel: 5,
-    upgradeCost: GROWTH_5,
+    upgradeCost: GROWTH_5_TC,
     prerequisites: [{ kind: 'node', nodeId: 'major_phan_chan' }],
     effect: { bodyKitModifiers: { reflectMarkedRatioBonus: 0.02 } },
     branchTag: 'the_tu',

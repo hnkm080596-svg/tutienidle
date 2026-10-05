@@ -96,9 +96,9 @@ describe('BattleLootSystem — realm reward scaling', () => {
     killEnemy()
 
     // techniqueMastery 90 (min) x 1 realm = 90 -> skillInsight suy ra
-    // round(90 x 0.18) = 16 (balance 2026-10-04, SkillInsightBalance.ts).
-    expect(player.skillInsight).toBe(16)
-    expect(loot.getSummary().skillInsight).toBe(16)
+    // round(90 * 0.018) = 2 (economy band x1 + insight rate 0.018, 2026-10-05).
+    expect(player.skillInsight).toBe(2)
+    expect(loot.getSummary().skillInsight).toBe(2)
   })
 
   it('Trúc Cơ — hệ số áp lên giá trị resolver trả về (mid-range)', () => {

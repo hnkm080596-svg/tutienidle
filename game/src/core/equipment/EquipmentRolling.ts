@@ -8,6 +8,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { PlayerData } from '../player/Player'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
 import {
+  AFFIX_TIER_ROLL_WEIGHT,
   ITEM_QUALITY_AFFIX_TIER,
   ITEM_QUALITY_DROP_WEIGHT,
   ITEM_QUALITY_EXALTED_AFFIX_CHANCE,
@@ -51,6 +52,7 @@ export function createEquipmentInstance(
   zoneId?: string,
   qualityBonusSteps = 0,
   rng: () => number = Math.random,
+  maxQuality?: ItemQuality,
 ): EquipmentInstance {
   assertValidEquipmentMainStats(template)
 
@@ -59,7 +61,7 @@ export function createEquipmentInstance(
     throw new Error(`Missing profession grade for equipment realm ${player.realmId}`)
   }
 
-  const quality = applyQualityBonusSteps(rollItemQuality(rng), qualityBonusSteps)
+  const quality = applyQualityBonusSteps(rollItemQuality(rng, maxQuality), qualityBonusSteps)
 
   const mainStat = rollMainStat(template, grade, player, quality, undefined, rng)
 
@@ -100,9 +102,16 @@ function rollIcon(template: Equipment, rng: () => number): string | undefined {
   return pool.length > 0 ? pool[randomInt(0, pool.length - 1, rng)] : template.icon
 }
 
-function rollItemQuality(rng: () => number): ItemQuality {
+// Gear-pace retune (2026-10-05): the caller may pass a roll ceiling
+// (stage-floor band, itemQualityCeilingForFloor in ItemQualityBalance).
+// Qualities above the ceiling are simply dropped from the weight table and
+// the remainder renormalizes - the odds inside the band do not pile onto
+// the ceiling quality. Omitting the ceiling preserves the flat ladder.
+function rollItemQuality(rng: () => number, maxQuality?: ItemQuality): ItemQuality {
+  const maxRank = maxQuality === undefined ? ITEM_QUALITY_ORDER.length - 1 : ITEM_QUALITY_ORDER.indexOf(maxQuality)
+
   return weightedRandom(
-    ITEM_QUALITY_ORDER.map((quality) => ({
+    ITEM_QUALITY_ORDER.filter((_, index) => index <= maxRank).map((quality) => ({
       value: quality,
       weight: ITEM_QUALITY_DROP_WEIGHT[quality],
     })),
@@ -306,7 +315,17 @@ function rollAffixValue(affix: Affix, maxTier: number, rng: () => number): Rolle
     return null
   }
 
-  const tierDef = eligibleTiers[randomInt(0, eligibleTiers.length - 1, rng)]!
+  // Gear-pace retune (2026-10-05): tiers roll weighted toward the LOW end
+  // (AFFIX_TIER_ROLL_WEIGHT) so better-tiered affixes keep demanding more
+  // drops inside the same quality band. weightedRandom still consumes
+  // exactly one rng() call - same draw cadence as the old randomInt pick.
+  const tierDef = weightedRandom(
+    eligibleTiers.map((candidate) => ({
+      value: candidate,
+      weight: AFFIX_TIER_ROLL_WEIGHT[candidate.tier] ?? 0,
+    })),
+    rng,
+  )!
 
   return {
     affixId: affix.id,

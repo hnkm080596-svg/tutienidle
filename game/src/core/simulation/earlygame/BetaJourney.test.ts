@@ -187,7 +187,10 @@ function gearUp(enhance: number): void {
 function grindToLevel(level: number): void {
   let guard = 0
   while (s.player.realmLevel < level && guard++ < 2000) {
-    s.cultivate(120)
+    // 1-hour chunks - the pace floor retune (2026-10-05) prices Luyen Khi
+    // at ~1 day and Truc Co at ~1 week of base-rate cultivation; 120s
+    // slices no longer reach the target inside the guard.
+    s.cultivate(3600)
     s.breakthroughIfReady()
   }
   expect(
@@ -552,7 +555,7 @@ describe('beta canonical journey (spec sec.9) - headless drive of the production
     // Realm-gate lifted at foundation - the keystone node is the authored
     // unlock path for the kit special (betaScopeSkillDomain derives the
     // gate from the node, never a literal).
-    s.player.skillInsight += 40
+    s.player.skillInsight += 150_000
     expect(s.purchaseNode(KEYSTONE)).toBe(true)
     if (!s.gameManager.skillManager.has(KIT[1])) {
       expect(s.gameManager.progressionOps.learnSkill(KIT[1], s.player)).toBe(true)

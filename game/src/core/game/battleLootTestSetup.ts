@@ -39,6 +39,7 @@ export interface LootTestStage {
   stageId: string
   requiredRealmId: string
   floor?: number
+  requiredRealmLevel?: number
 }
 
 export const TEST_EQUIPMENT_TEMPLATE = { id: 'eq_test', name: 'Kiếm Test' }

@@ -84,6 +84,7 @@ import { getRequiredCultivation } from '../../realm/realmSystem'
 import { isCompanionDomainUnlocked } from '../../companion/CompanionAvailability'
 import { isCompanionPullPoolEnabled } from '../../realm/ReleasePolicy'
 import { makeInstance } from '../../equipment/EquipmentInstance.fixture'
+import { EQUIPMENT_SLOTS } from '../../equipment/EquipmentSlotState'
 import { usePlayerStore } from '../../../stores/player'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -834,7 +835,19 @@ describe('TrucCoJourney - ordered journey', () => {
       // other floor enjoys (leg E.2): equip the carried drops and
       // spend the earned attribute pool. floor_10 was the only boss
       // attempted on the pre-growth state, which left the seeded
-      // battle margin RNG-exposed.
+      // battle margin RNG-exposed. Stat-wall ladder (2026-10-05): the
+      // floor-10 king scales 1.95x on top of the x7/x2 boss
+      // multipliers, so the authored rhythm now also re-farms floor_9
+      // for ore and burns it on slot enhance before the attempt.
+      for (let run = 0; run < 8; run++) {
+        if (s.runStage('foundation_floor_9') !== 'victory') break
+      }
+      s.equipAll()
+      for (const slot of EQUIPMENT_SLOTS) {
+        for (let k = 0; k < 20; k++) {
+          s.gameManager.equipmentOps.enhanceSlot(slot, s.player)
+        }
+      }
       s.equipAll()
       while (s.allocateAttribute('strength')) {}
       expect(s.runStage('foundation_floor_10')).toBe('victory')

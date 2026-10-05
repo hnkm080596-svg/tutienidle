@@ -93,7 +93,7 @@ describe('QI-D3 canonical skill level (learn -> core -> levelUpSkill)', () => {
 
   it('levelUpSkill deducts the canonical cost, bumps nodeLevels, notifies once', () => {
     const { gameManager, player } = setup()
-    player.skillInsight = 100
+    player.skillInsight = 250 // >= the 200-cost core upgrade
 
     expect(gameManager.progressionOps.learnSkill('test_skill', player)).toBe(true)
 
@@ -101,7 +101,7 @@ describe('QI-D3 canonical skill level (learn -> core -> levelUpSkill)', () => {
 
     expect(gameManager.progressionOps.levelUpSkill('test_skill', player)).toBe(true)
     expect(player.nodeLevels[skillCoreNodeId('test_skill')]).toBe(2)
-    expect(player.skillInsight).toBe(100 - getSkillCoreUpgradeCost(1))
+    expect(player.skillInsight).toBe(250 - getSkillCoreUpgradeCost(1))
     expect(gameManager.drainNotifications().filter((event) => event.kind === 'upgrade')).toHaveLength(1)
   })
 
@@ -129,7 +129,7 @@ describe('QI-D3 canonical skill level (learn -> core -> levelUpSkill)', () => {
 
     gameManager.progressionOps.learnSkill('test_skill', player)
 
-    expect(gameManager.progressionOps.getSkillCoreUpgradeCost('test_skill', player)).toBe(5)
+    expect(gameManager.progressionOps.getSkillCoreUpgradeCost('test_skill', player)).toBe(200)
 
     player.nodeLevels[skillCoreNodeId('test_skill')] = 10
     expect(gameManager.progressionOps.getSkillCoreUpgradeCost('test_skill', player)).toBeUndefined()

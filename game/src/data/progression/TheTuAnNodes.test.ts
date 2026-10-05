@@ -32,7 +32,7 @@ function economyPayload(def: BuffDefinition): TheEconomyPayload | undefined {
 // reactions.
 
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
-  return { ...createDefaultPlayer(), skillInsight: 99, ...overrides }
+  return { ...createDefaultPlayer(), skillInsight: 200_000, ...overrides }
 }
 
 function registryWithNodes() {

@@ -44,7 +44,8 @@ function swordPathPlayer(way: 'sword_pathway' | 'hidden_sword_pathway'): PlayerD
   player.cultivationPath = 'sword'
   player.cultivationWay = way
   player.realmId = 'qi_refining'
-  player.skillInsight = 99
+  // Covers the retuned prices: ngu_kiem_lien costs 150,000 at foundation.
+  player.skillInsight = 150_000
   player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
   return player
 }

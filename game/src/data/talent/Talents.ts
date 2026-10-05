@@ -147,11 +147,11 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'ho_tich_bat_phat',
     name: 'Hậu Tích Bạt Phát',
-    description: 'Đại khí tự chứa, một khi bộc phát không gì cản nổi. Trong một cảnh giới: tầng một tu chậm hơn một nửa (−50%), mỗi tiểu tầng sau nhanh thêm 10% — càng sâu càng vượt người thường. Ngược lại: tầng đầu của mọi cảnh giới luôn là khoản nợ thời gian.',
+    description: 'Đại khí tự chứa, một khi bộc phát không gì cản nổi. Trong một cảnh giới: tầng một tu chậm hơn một nửa (−50%), mỗi tiểu tầng sau nhanh thêm 5% — càng sâu càng vượt người thường. Ngược lại: tầng đầu của mọi cảnh giới luôn là khoản nợ thời gian.',
     rarity: 'linh',
     weight: 28,
     tags: ['cultivation', 'risk_reward'],
-    effects: [{ kind: 'cultivation_ramp', startOffset: -0.5, perRealmLevel: 0.1 }],
+    effects: [{ kind: 'cultivation_ramp', startOffset: -0.5, perRealmLevel: 0.05 }],
   },
   {
     id: 'loi_kiep',
