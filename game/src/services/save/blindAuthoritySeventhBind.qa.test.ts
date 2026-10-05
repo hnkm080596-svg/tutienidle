@@ -75,6 +75,8 @@ import { EquipmentBag } from '../../core/equipment/EquipmentBag'
 import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 import { commitFormationLoadout } from '../../core/game/FormationPlacement'
 import type { StatModifier } from '../../core/stats/StatCalculator'
+import { PHAP_TU_SKILLS } from '../../data/skill/PhapTuSkills'
+import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 
 function validSave(): Record<string, unknown> {
   return {
@@ -104,14 +106,17 @@ function committedPlayer(realmId: string, realmLevel = 1): PlayerData {
   player.realmLevel = realmLevel
   player.cultivationPath = 'spell'
   player.cultivationWay = 'spell_pathway'
-  player.spellPath = { element: null }
+  // F-SCOPE-1 (fixpoint W2-3): the element-axis commit is atomic - a
+  // committed pair always carries the beta-scope element, its minted
+  // element root, and the learned basic's writer node.
+  player.spellPath = { element: 'fire' }
   player.mortalBasicSkillId = undefined
   player.breakthroughGrade = 1
   if (realmId !== 'qi_refining') {
     player.highestFoundationAchieved = 'human'
   }
-  player.nodeLevels = {}
-  player.purchasedNodeIds = []
+  player.nodeLevels = { hoa_linh_ngo: 1 }
+  player.purchasedNodeIds = ['hoa_linh_ngo']
   return player
 }
 
@@ -510,6 +515,13 @@ describe('R7-ACCEPT-ROOT: the atomic element commit is replayed at acceptance', 
     const save = validSave()
     const player = committedPlayer('qi_refining')
     save.player = player
+    save.skills = [
+      structuredClone(
+        PHAP_TU_SKILLS.find((skill) => skill.id === SPELL_KIT_IDS.fire[0])!,
+      ) as never,
+    ]
+    player.nodeLevels.core_hoa_cau_thuat = 1
+    player.purchasedNodeIds.push('core_hoa_cau_thuat')
     save.techniques = [
       {
         id: 'five_elements_art',
@@ -533,8 +545,9 @@ describe('R7-ACCEPT-ROOT: the atomic element commit is replayed at acceptance', 
   it('an element-root claim without the owning element rejects', () => {
     const save = acceptanceReadySave()
     const player = save.player as PlayerData
-    player.nodeLevels = { hoa_linh_ngo: 1 }
-    player.purchasedNodeIds = ['hoa_linh_ngo']
+    // fire is committed - a water root claim has no owning element.
+    player.nodeLevels = { thuy_linh_ngo: 1 }
+    player.purchasedNodeIds = ['thuy_linh_ngo']
 
     expect(isSaveAcceptable(save as never, staticSaveAcceptanceCatalogs())).toBe(false)
   })

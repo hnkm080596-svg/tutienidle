@@ -11,6 +11,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { TECHNIQUES } from '@/data/technique/Techniques'
+import { PHAP_TU_SKILLS } from '@/data/skill/PhapTuSkills'
+import { SPELL_KIT_IDS } from '@/data/skill/Skills'
 import { MERIDIANS } from '@/data/realm/Meridians'
 import { createDefaultPlayer } from '@/core/player/Player'
 import {
@@ -47,13 +49,14 @@ function qiRefiningSave(): GameSave {
     realmLevel: 1,
     cultivationPath: 'spell',
     cultivationWay: 'spell_pathway',
+    spellPath: { element: 'fire' },
+    nodeLevels: { hoa_linh_ngo: 1, core_hoa_cau_thuat: 1 },
+    purchasedNodeIds: ['hoa_linh_ngo', 'core_hoa_cau_thuat'],
     breakthroughGrade: 1,
     mortalBasicSkillId: undefined,
   }
   save.techniques = [structuredClone(TECHNIQUES.find((t) => t.id === 'five_elements_art')!)]
-  save.skills = []
-  save.player.nodeLevels = {}
-  save.player.purchasedNodeIds = []
+  save.skills = [structuredClone(PHAP_TU_SKILLS.find((s) => s.id === SPELL_KIT_IDS.fire[0])!)]
   return save
 }
 

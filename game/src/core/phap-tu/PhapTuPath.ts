@@ -13,6 +13,7 @@ import { masteryGrantRecord } from '../../data/progression/PhapTuRealmRewardNode
 import { ARTIFACT_UNLOCK_REALM_ID } from '../artifact/ArtifactDomain'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import { MAX_THE } from '../combat/CombatTypes'
+import { isBetaElement } from '../betaScope'
 
 // Cultivation Path Framework (spec 2026-09-16, M4) - the Phap Tu path
 // module: the two way definitions + the path-domain machinery they own.
@@ -220,6 +221,24 @@ export function validateSpellPathPersistedState(
     emit({
       path: 'player.spellPath',
       message: "element chỉ thuộc way 'spell_pathway' của path 'spell'",
+    })
+  }
+
+  // Beta scope (fixpoint W2-3): selectSpellPathElement is mortal-gated,
+  // so a post-initiation spell_pathway save whose element is null or
+  // out-of-beta can NEVER commit - it would fight with the linh_bao
+  // starter forever while every write gate refuses its locked content.
+  // Reject the wedge at the boundary (Minh ruling: crash over silent
+  // degradation for locked-feature saves).
+  if (
+    playerPayload.cultivationPath === 'spell' &&
+    playerPayload.cultivationWay === 'spell_pathway' &&
+    playerPayload.realmId !== 'mortal' &&
+    !(typeof spellPath.element === 'string' && isBetaElement(spellPath.element))
+  ) {
+    emit({
+      path: 'player.spellPath.element',
+      message: `commit '${String(spellPath.element)}' ngoài beta scope - save không còn seam commit nào`,
     })
   }
 }

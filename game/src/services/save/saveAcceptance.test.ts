@@ -82,11 +82,15 @@ describe('spell element <-> kit coherence (saveAcceptance)', () => {
     expect(() => assertSaveAcceptable(save, catalogs)).toThrow('coherence')
   })
 
-  it('no element committed (fresh spell_pathway) -> the class stays inert', () => {
+  // F-SCOPE-1 (fixpoint W2-3): an element-null element-axis commit is
+  // unproducible (selectSpellPathElement is mortal-gated) and rejected at
+  // the load seam rather than left as an inert half-committed class.
+  it('no element committed on a committed spell_pathway pair -> reject', () => {
     const save = spellPathwaySave()
     save.skills = []
 
-    expect(isSaveAcceptable(save, catalogs)).toBe(true)
+    expect(() => assertSaveAcceptable(save, catalogs)).toThrow('uncommittable element')
+    expect(isSaveAcceptable(save, catalogs)).toBe(false)
   })
 
   // A corrupt save may carry a non-ElementType string that slipped past
@@ -174,6 +178,9 @@ describe('gradeHistory completionState whitelist (saveAcceptance)', () => {
   it('canonical completionState on the same record -> accepted', () => {
     const save = spellPathwaySave()
     save.player.realmId = 'foundation_establishment'
+    save.player.spellPath.element = 'fire'
+    const basic = PHAP_TU_SKILLS.find((skill) => skill.id === SPELL_KIT_IDS.fire[0])
+    save.skills = [structuredClone(basic!)]
     save.techniques = [
       {
         ...structuredClone(TECHNIQUES.find((entry) => entry.id === 'five_elements_art')!),

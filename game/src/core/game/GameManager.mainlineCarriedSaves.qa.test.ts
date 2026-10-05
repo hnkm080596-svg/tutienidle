@@ -20,6 +20,8 @@ import { pills } from '../../data/pill/pills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import type { Technique } from '../technique/Technique'
 import { QUESTS } from '../../data/quest/quests'
+import { PHAP_TU_SKILLS } from '../../data/skill/PhapTuSkills'
+import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 
 const HERB_QUEST = 'collect_tu_linh_thao_1'
 const ORE_QUEST = 'collect_qi_refining_ore_decade_1'
@@ -56,7 +58,13 @@ function buildSave(player: PlayerData, quests: GameSave['quests']): GameSave {
     version: CURRENT_SAVE_VERSION,
     player: { ...player, lastSavedAt: Date.now() },
     techniques: mortal ? [] : [wayTechnique(getRealmIndex(player.realmId))],
-    skills: [],
+    skills: mortal
+      ? []
+      : [
+          structuredClone(
+            PHAP_TU_SKILLS.find((skill) => skill.id === SPELL_KIT_IDS.fire[0])!,
+          ),
+        ],
     materials: [],
     equipment: [],
     equipmentSlots: [],
@@ -78,7 +86,11 @@ function qiRefiningPlayer(): PlayerData {
   const player = createDefaultPlayer()
   player.cultivationPath = 'spell'
   player.cultivationWay = 'spell_pathway'
-  player.spellPath = { element: null }
+  // F-SCOPE-1 (fixpoint W2-3): a committed element-axis pair always
+  // carries the beta-scope element and its atomically minted root.
+  player.spellPath = { element: 'fire' }
+  player.nodeLevels = { hoa_linh_ngo: 1, core_hoa_cau_thuat: 1 }
+  player.purchasedNodeIds = ['hoa_linh_ngo', 'core_hoa_cau_thuat']
   player.realmId = 'qi_refining'
   player.breakthroughGrade = 1
   delete player.mortalBasicSkillId

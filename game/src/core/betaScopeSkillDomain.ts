@@ -632,6 +632,17 @@ function treeNodeFor(
     return { ...entry, state: 'scope-hidden', reason: 'other-element-branch' }
   }
 
+  // F-READ-1 (fixpoint W2): the ops layer refuses writes on nodes the
+  // beta admission predicate rejects (catalog/pool/element locks via
+  // betaNodeWriteAdmitted); a read model that still reports such a node
+  // 'purchasable' lies about a write that can never land. Scope-hidden -
+  // dim, never a locked branch (sec.19), so the player sees one class of
+  // unbuyable: out of scope. An owned seat stays 'purchased' below -
+  // ownership is fact; the verdict never promised upgradeability.
+  if (!betaNodeWriteAdmitted(node) && level < 1) {
+    return { ...entry, state: 'scope-hidden', reason: 'non-beta-scope' }
+  }
+
   // Info anchors render for readability only - the mirrored skill's own
   // channel (casts/grants) owns any level, never Insight; the verdict
   // must not read 'available'/'purchasable' or let a dirty level in

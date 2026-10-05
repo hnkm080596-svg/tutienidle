@@ -7,6 +7,8 @@ import { GameManager } from './GameManager'
 import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import type { GameSave } from '../../services/save/SaveSystem'
+import { PHAP_TU_SKILLS } from '../../data/skill/PhapTuSkills'
+import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 
 describe('GameManager — cultivation path realm rewards', () => {
   it('kit Trúc Cơ Pháp Tu từ data: artifact deferred Kim Đan, gọi lại không đụng tiến trình cũ', () => {
@@ -96,6 +98,11 @@ describe('GameManager — cultivation path realm rewards', () => {
 
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
+    // F-SCOPE-1 (fixpoint W2-3): the element-axis commit is atomic -
+    // beta element + minted root + the learned basic's writer node.
+    player.spellPath = { element: 'fire' }
+    player.nodeLevels = { hoa_linh_ngo: 1, core_hoa_cau_thuat: 1 }
+    player.purchasedNodeIds = ['hoa_linh_ngo', 'core_hoa_cau_thuat']
     player.realmId = 'qi_refining'
     gameManager.realmAdvanceOps.grantCanonicalTechnique('five_elements_art', player)
     player.realmId = 'foundation_establishment'
@@ -109,7 +116,11 @@ describe('GameManager — cultivation path realm rewards', () => {
       version: CURRENT_SAVE_VERSION,
       player: { ...player },
       techniques: gameManager.techniqueManager.getAll(),
-      skills: [],
+      skills: [
+        structuredClone(
+          PHAP_TU_SKILLS.find((skill) => skill.id === SPELL_KIT_IDS.fire[0])!,
+        ),
+      ],
       materials: [],
       equipment: [],
       equipmentSlots: [],

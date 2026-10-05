@@ -132,12 +132,14 @@ function alchemySave(): Record<string, unknown> {
   player.realmId = 'foundation_establishment'
   player.cultivationPath = 'spell'
   player.cultivationWay = 'spell_pathway'
-  player.spellPath = { element: null }
+  // F-SCOPE-1 (fixpoint W2-3): a committed element-axis pair always
+  // carries the beta-scope element and its atomically minted root.
+  player.spellPath = { element: 'fire' }
   player.mortalBasicSkillId = undefined
   player.breakthroughGrade = 1
   player.highestFoundationAchieved = 'human'
-  player.nodeLevels = {}
-  player.purchasedNodeIds = []
+  player.nodeLevels = { hoa_linh_ngo: 1 }
+  player.purchasedNodeIds = ['hoa_linh_ngo']
   save.techniques = [
     {
       id: 'five_elements_art',

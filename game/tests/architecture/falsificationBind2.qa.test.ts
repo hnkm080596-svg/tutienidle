@@ -76,7 +76,9 @@ function committedPlayer(realmId: string): PlayerData {
   const player = createDefaultPlayer()
   player.cultivationPath = 'spell'
   player.cultivationWay = 'spell_pathway'
-  player.spellPath = { element: null }
+  // A real spell_pathway save always carries its committed element -
+  // null/out-of-beta commits are rejected at the boundary (F-SCOPE-1).
+  player.spellPath = { element: 'fire' }
   player.realmId = realmId
   player.realmLevel = 1
   delete player.mortalBasicSkillId

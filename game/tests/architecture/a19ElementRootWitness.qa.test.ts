@@ -110,12 +110,10 @@ describe('a19 - forged element-root claims (persisted authority seam)', () => {
     expect(acceptable, 'acceptance admits a forged element-root claim').toBe(false)
   })
 
-  // A19-2 (committed way + element = null) is a confirmed Low deferred
-  // per the Medium+-only attack-surface ruling - it mints no extra
-  // capability (getActiveElement fails closed, the kit check stays
-  // inert). This witness pins the residual as EXPECTED TO FAIL until
-  // the online-authority layer owns the verdict.
-  it.fails('a committed spell_pathway save with element = null is unproducible', () => {
+  // A19-2 closed (fixpoint W2-3): the save boundary now rejects a
+  // committed spell_pathway save whose element is null or out of beta
+  // scope, so this witness is a positive assertion.
+  it('a committed spell_pathway save with element = null is unproducible', () => {
     // The ONLY element commit runs inside commitFiveElementInitiation,
     // the ONLY way onto spell_pathway - so every writer-produced
     // spell_pathway save carries element != null. element = null on a

@@ -41,3 +41,51 @@ New surfaces needing fresh eyes: rng threading (equipment ops,
 production cycles), element gates (betaSkillTreeFor /
 betaNodeWriteAdmitted / selectSpellPathElement / grantSkillCoreBySkillId),
 authority migration semantics, description/comment edits.
+
+---
+
+# Wave 2 adjudication (commit <pending>)
+
+Audit trio on 638bfda9; adjudicator = coordinator session.
+
+## COR (0 Critical / 0 High / 3 Medium / 2 Low / 3 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W2-1 type-check red at HEAD (pin imported nonexistent `core/battle/CombatTypes`; vitest masked it via `import type` erasure) | Medium | FIXED — import now `core/element/ElementType` |
+| W2-2 read-model still split: `betaSkillTreeFor` reports water-tagged nodes 'purchasable' while ops refuses | Medium | FIXED — `treeNodeFor` returns 'scope-hidden'/'non-beta-scope' when `!betaNodeWriteAdmitted(node) && level < 1`; owned seats keep 'purchased' (ownership is fact) |
+| W2-3 coherent water-commit save permanently wedged (can never commit, never buy, linh_bao forever) | Medium | FIXED — `validateSpellPathPersistedState` now rejects spell_pathway + non-mortal + element null-or-out-of-beta at the save boundary (Minh F2 ruling: crash over silent wedge; module-owned hook so the spell path owns its own axis rule) |
+| server ceiling lacks F-TAL-1 creation-catalog ≤1 cap | Low | FIXED — mirrored in `202610050001` (`v_creation_catalog` count > 1 rejects); grown-list fixture switched to real pool ids (lk_*) since a second creation id was never legal growth |
+| pick binds all 9 rolled ids vs UI's offered 3 (auth path leaks injected pham_cot ~15% vs ~5% guest) | Low | FIXED — `create_character` now requires `p_talent_ids <@ talent_ids[1:3]` |
+| pham_cot injection ignores `enabled` flag | Nit | FIXED — injection gated on `exists(talents where id='pham_cot' and enabled)` |
+| unseeded Math.random in hidden-content rolls (AncientBeastTrial, NghichChuTian) | Nit | EXCEPTED — dormant content |
+| `pickNextEnemyEntry` rng optional → unseeded outside turn battle | Nit | EXCEPTED — acceptable seam per audit |
+
+## AUT (1 High / 2 Medium / 2 Low / 2 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| W2-AUT-1 type-check red at HEAD (same import as W2-1) | High | FIXED — same fix |
+| W2-AUT-2 witnessed great-dao saves permanently reject (`pham_cot` conversion drops the recorded pick, containment fails) | Medium | FIXED — containment tolerates the pick's absence iff `highestFoundationAchieved='great_dao'`; contract pin covers reject-without-witness + commit-with-witness |
+| W2-AUT-3 roll `jsonb_agg` unordered → "first 3" was arbitrary table order, pham_cot ~0.13% vs ~5% | Medium | FIXED — `ORDER BY array_position(rolled_ids, t.id)`; contract pin asserts response order ≡ stored talent_ids |
+| W2-AUT-4 SQL mirrors only 4 F-TAL-1 rules (parked/witness/creation-cap/pool-realm unmirrored) | Low | FIXED — all four mirrored in `_check_save_payload`; 5 contract pins cover each rejection + both controls |
+| W2-AUT-5 pham_cot `enabled=false` → server pool 18 vs client 19 | Low | REJECTED WITH EVIDENCE — live staging row shows `enabled=true, weight=1` (later migrations `202610020001`/`202610030001` already enabled it; the audit read the stale seed `202609300005`) |
+| W2-AUT-6 The-bar reads raw element (display-only edge) | Nit | EXCEPTED — display-only on a state the boundary now rejects |
+| W2-AUT-7 companion/pill RNG unseeded | Nit | EXCEPTED — dormant content |
+
+## INT (1 High / 1 Medium / 1 Nit)
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| INT-1 type-check red at HEAD (same import) | High | FIXED — same fix |
+| INT-2 `treeNodeFor` ignores beta admission (same class as W2-2) | Medium | FIXED — same fix |
+| INT-3 shared module-level mulberry32 fallback across rng-less TribulationDirectors | Nit | EXCEPTED — prod binds sessionRng; fallback is deterministic |
+
+## Re-audit scope for wave 3
+
+New surfaces: `validateSpellPathPersistedState` rejection (fixture
+coherence across falsification suites updated - spell_pathway carriers
+now hold `element:'fire'`), `treeNodeFor` non-beta-scope verdict,
+`_check_save_payload` full F-TAL-1 mirror + conversion tolerance,
+`create_character` offer-slice binding, roll draw-order contract, the
+enabled-gated pham_cot injection.

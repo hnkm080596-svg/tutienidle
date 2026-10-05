@@ -26,7 +26,8 @@ import { pills } from '../../src/data/pill/pills'
 import { equipment } from '../../src/data/equipment/equipment'
 import { affixes } from '../../src/data/equipment/affixes'
 import { buildings } from '../../src/data/building/buildings'
-import { SKILLS } from '../../src/data/skill/Skills'
+import { PHAP_TU_SKILLS } from '../../src/data/skill/PhapTuSkills'
+import { SKILLS, SPELL_KIT_IDS } from '../../src/data/skill/Skills'
 import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
 import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
@@ -69,7 +70,11 @@ function committedPlayer(realmId: RealmId): PlayerData {
   const player = createDefaultPlayer()
   player.cultivationPath = 'spell'
   player.cultivationWay = 'spell_pathway'
-  player.spellPath = { element: null }
+  player.spellPath = { element: 'fire' }
+  // committed fire bundle: the initiation-minted root + learned basic,
+  // kept coherent with the element claim (shape + kit coherence).
+  player.nodeLevels = { hoa_linh_ngo: 1, core_hoa_cau_thuat: 1 }
+  player.purchasedNodeIds = ['hoa_linh_ngo', 'core_hoa_cau_thuat']
   player.realmId = realmId
   player.realmLevel = 1
   delete player.mortalBasicSkillId
@@ -111,7 +116,7 @@ function committedSave(
     version: CURRENT_SAVE_VERSION,
     player: { ...player, lastSavedAt: Date.now() },
     techniques: [wayTechnique(getRealmIndex(realmId))],
-    skills: [],
+    skills: [structuredClone(PHAP_TU_SKILLS.find((s) => s.id === SPELL_KIT_IDS.fire[0])!)],
     materials: [],
     equipment: [],
     equipmentSlots: [],
