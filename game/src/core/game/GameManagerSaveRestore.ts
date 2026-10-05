@@ -430,10 +430,12 @@ export class GameManagerSaveRestore {
         // reward offline: roll cac chu ky auto-farm da troi trong cua so
         // offline (cung gate >60s voi Production catch-up).
         this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
-      } else if (timeAuthority?.kind === 'live-replacement' && offlinePlayer.autoFarmStage) {
-        // B1-D zero-accrual live replacement: an armed farm's saved anchor
-        // must not mint the paused gap on the next live tick - re-anchor
-        // at resume time without rolling any cycle.
+      } else if (offlinePlayer.autoFarmStage) {
+        // Re-anchor an armed farm on EVERY restore that skipped the
+        // settle (elapsed <= 60s AND live-replacement alike - r12-COR).
+        // Without this, a crafted stale lastCheckedMs survives to the
+        // next tick and mints the gap at LIVE rate (2x the offline
+        // settle) - the anchor bound only guards the settle path.
         this.deps.settleAutoFarmOffline(offlinePlayer, 0)
       }
 

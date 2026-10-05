@@ -130,6 +130,12 @@ export function drawBreakthroughTalentOffers(
 
   while (offers.length < BREAKTHROUGH_TALENT_OFFER_COUNT && remaining.length > 0) {
     const totalWeight = remaining.reduce((sum, talent) => sum + talent.weight, 0)
+    // r12-AUT (sibling of drawFromPool): NaN/Infinity weight is invalid
+    // authored data - without this the roll stays NaN, index lands on
+    // the last remaining entry, and the draw silently pays it.
+    if (!Number.isFinite(totalWeight)) {
+      throw new Error(`rollBreakthroughTalentOffers: weights must be finite (got total ${totalWeight})`)
+    }
     let roll = rng() * totalWeight
     let index = 0
 

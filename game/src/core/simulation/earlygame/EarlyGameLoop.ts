@@ -67,6 +67,7 @@ export const CANONICAL_EARLY_LOOP: readonly LoopStep[] = [
   { kind: 'stage_until_victory', stageId: 'mortal_dong_7', maxAttempts: 10 },
   { kind: 'growth_cycle', runs: 8 },
   { kind: 'stage_until_victory', stageId: 'mortal_dong_8', maxAttempts: 12 },
+  { kind: 'growth_cycle', runs: 16 },
   { kind: 'stage_until_victory', stageId: 'mortal_dong_9', maxAttempts: 12 },
   { kind: 'growth_cycle', runs: 10 },
   { kind: 'stage_until_victory', stageId: 'mortal_dong_10', maxAttempts: 12 },

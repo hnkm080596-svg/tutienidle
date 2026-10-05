@@ -11,7 +11,7 @@ import {
 
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
-import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow } from '../core/economy/TuLinhTranBalance'
+import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow, TU_LINH_TRAN_DURATION_MS } from '../core/economy/TuLinhTranBalance'
 import { buildGameSave, computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
@@ -290,8 +290,14 @@ export const usePlayerStore = defineStore('player', {
       // pay each expiry-boundary segment its own live percent through
       // the same seconds->cultivation conversion authority.
       const savedTimedEffects = save.player.persistentTimedEffects ?? []
-      const windowStartMs = save.player.lastSavedAt
-      const windowEndMs = windowStartMs + offlineSeconds * 1000
+      // r12-AUT: bound the cultivation window at now on BOTH ends -
+      // under cold-boot a crafted-future lastSavedAt could otherwise
+      // position a payable window in the future (same clamp as saveOps
+      // settleNowMs). The splitter sorts bounds into positive segments,
+      // so a future-positioned start/end pair still mints - the start
+      // must clamp too (crafted future -> degenerate now..now window).
+      const windowStartMs = Math.min(save.player.lastSavedAt, Date.now())
+      const windowEndMs = Math.min(windowStartMs + offlineSeconds * 1000, Date.now())
       const percentAtSave = getActiveCultivationSpeedPercent(savedTimedEffects, windowStartMs)
       const unbuffedCultivationPerSecond = save.player.cultivationPerSecond / (1 + percentAtSave)
       const offline: OfflineResult = {
@@ -452,11 +458,29 @@ export const usePlayerStore = defineStore('player', {
       // sources - it holds no persisted authority of its own, so the
       // restored copy clears here and repopulates on the next tick.
       restoredPlayer.externalModifiers = []
+      // r12-COR: bound the wall-clock window a persisted timed effect
+      // may claim. appliedAtMs > now is impossible provenance - clamp it
+      // so a forged future application date cannot park a buff ahead of
+      // time; expiresAtMs beyond appliedAtMs + the longest authored
+      // window (TU_LINH_TRAN_DURATION_MS) mints a months-long buff off
+      // a forged stamp - clamp to the authored bound. Honest saves are
+      // untouched (no authored effect exceeds its duration).
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
-        (effect) => ({
-          ...effect,
-          modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
-        }),
+        (effect) => {
+          const appliedAtMs = Number.isFinite(effect.appliedAtMs)
+            ? Math.min(effect.appliedAtMs, Date.now())
+            : effect.appliedAtMs
+          const expiresAtMs =
+            Number.isFinite(effect.expiresAtMs) && Number.isFinite(appliedAtMs)
+              ? Math.min(effect.expiresAtMs, appliedAtMs + TU_LINH_TRAN_DURATION_MS)
+              : effect.expiresAtMs
+          return {
+            ...effect,
+            appliedAtMs,
+            expiresAtMs,
+            modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
+          }
+        },
       )
 
       // Reject a nonsense realmId BEFORE the assign lands it: a crafted

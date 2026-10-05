@@ -40,6 +40,13 @@ export function weightedRandom<T>(entries: WeightedEntry<T>[], rng: () => number
 
   const totalWeight = entries.reduce((sum, entry) => sum + entry.weight, 0)
 
+  // r12-AUT (sibling of drawFromPool): a NaN/Infinity entry weight is
+  // invalid authored data - the roll math would stay NaN and the
+  // fall-through below silently pays the LAST entry (fail-open).
+  if (!Number.isFinite(totalWeight)) {
+    throw new Error(`weightedRandom: entry weights must be finite (got total ${totalWeight})`)
+  }
+
   let roll = rng() * totalWeight
 
   for (const entry of entries) {

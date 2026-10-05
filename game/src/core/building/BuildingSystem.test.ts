@@ -359,3 +359,28 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     expect(manager.getAll()).toHaveLength(1)
   })
 })
+
+describe('BuildingManager.restore — crafted lastCollectedAt bound (r12-AUT-1 pin)', () => {
+  it('future lastCollectedAt clamps to now so production does not freeze', () => {
+    const manager = new BuildingManager()
+    const futureStamp = Date.now() + 86_400_000
+
+    manager.restore([{ instanceId: 'i1', buildingId: 'pill_room', level: 3, lastCollectedAt: futureStamp }])
+
+    const restored = manager.get('i1')!
+    expect(restored.lastCollectedAt).toBeLessThanOrEqual(Date.now())
+    expect(restored.lastCollectedAt).toBeGreaterThan(Date.now() - 60_000)
+    // Only the anchor is rewritten - the rest of the entry survives.
+    expect(restored.level).toBe(3)
+    expect(restored.buildingId).toBe('pill_room')
+  })
+
+  it('honest past lastCollectedAt survives untouched', () => {
+    const manager = new BuildingManager()
+    const honestStamp = Date.now() - 3_600_000
+
+    manager.restore([{ instanceId: 'i1', buildingId: 'pill_room', level: 2, lastCollectedAt: honestStamp }])
+
+    expect(manager.get('i1')!.lastCollectedAt).toBe(honestStamp)
+  })
+})
