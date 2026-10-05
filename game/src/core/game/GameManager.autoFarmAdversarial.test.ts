@@ -16,7 +16,7 @@ const STAGE = {
 }
 
 describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
-  it('settle tiến lastCheckedMs ĐÚNG bằng cycles đã roll (2 cycles trên 120s)', () => {
+  it('settle tiến lastCheckedMs đúng phần window hiệu lực (offline x0.5: 120s -> 60s)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     gameManager.catalogOps.registerEnemyTemplates([DUMMY])
@@ -27,12 +27,14 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
     const lastCheckedMs = Date.now() - 120_000
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs }
 
-    // Settle 120s = 1 cycle (100s moi cycle) + 20s du -> lastCheckedMs tien 100s.
+    // 2026-10-05 ruling "offline 50%": 120s x OFFLINE_EFFICIENCY 0.5 =
+    // 60s hieu luc < 100s cycle -> 0 cycles roll, anchor tien dung 60s
+    // (remainder da halve carry sang tick live; truoc ruling tien 100s).
     gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)
     const afterFirst = player.autoFarmStage!.lastCheckedMs
 
-    expect(afterFirst).toBeGreaterThanOrEqual(lastCheckedMs + 100_000 - 1000)
-    expect(afterFirst).toBeLessThanOrEqual(lastCheckedMs + 100_000 + 1000)
+    expect(afterFirst).toBeGreaterThanOrEqual(lastCheckedMs + 60_000 - 1000)
+    expect(afterFirst).toBeLessThanOrEqual(lastCheckedMs + 60_000 + 1000)
   })
 
   it('elapsed ÂM (clock rollback) → no-op, lastCheckedMs KHÔNG lùi', () => {
@@ -48,7 +50,12 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
 
     gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, -5000)
 
-    expect(player.autoFarmStage!.lastCheckedMs).toBe(lastCheckedMs)
+    // 2026-10-05: elapsed am clamp ve 0 -> anchor rebase ve now thay vi
+    // giu moc stale. Moc cu de lai ca 10s gap cho tick live mint tiep
+    // full rate (undo ca OFFLINE_EFFICIENCY lan double-pay risk T1-12).
+    const anchor = player.autoFarmStage!.lastCheckedMs
+    expect(anchor).toBeGreaterThanOrEqual(lastCheckedMs + 9_000)
+    expect(anchor).toBeLessThanOrEqual(Date.now())
   })
 
   it('cycleSeconds NaN → no-op (boundedness)', () => {

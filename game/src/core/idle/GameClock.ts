@@ -43,6 +43,15 @@ export interface OfflineTimeResult {
 
 export const DEFAULT_MAX_OFFLINE_SECONDS = 24 * 60 * 60
 
+// Minh ruling 2026-10-05 (reward-channels worker, "offline 50%"):
+// offline accrual pays HALF the live autofarm rate. The auto-farm
+// offline settle multiplies its eligible window by this factor BEFORE
+// flooring into reward cycles, so every channel the cycle mints
+// (stones/materials/mastery/insight) is halved uniformly and the
+// unsettled remainder also carries at half value into the next live
+// tick. Online tickAutoFarm is unaffected.
+export const OFFLINE_EFFICIENCY = 0.5
+
 /**
  * Tinh thoi gian offline (da clamp theo maxOfflineSeconds).
  *

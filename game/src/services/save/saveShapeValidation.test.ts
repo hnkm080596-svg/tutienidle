@@ -1810,6 +1810,44 @@ describe('validateGameSaveShape — C1 corrupt-save residuals', () => {
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain(expectedPath)
   })
+
+  // 2026-10-05 reward-channels ruling A - the idle-channel daily
+  // insight ledger follows the migration-lite optional-field contract:
+  // absent passes (old save), malformed/non-object rejected.
+  it.each([
+    [7, 'player.idleSkillInsightDaily'],
+    ['x', 'player.idleSkillInsightDaily'],
+    [null, 'player.idleSkillInsightDaily'],
+    [{}, 'player.idleSkillInsightDaily.dayBucket'],
+    [{ dayBucket: 'x' }, 'player.idleSkillInsightDaily.dayBucket'],
+    [{ dayBucket: -1 }, 'player.idleSkillInsightDaily.dayBucket'],
+    [{ dayBucket: 1 }, 'player.idleSkillInsightDaily.minted'],
+    [{ dayBucket: 1, minted: 'x' }, 'player.idleSkillInsightDaily.minted'],
+    [{ dayBucket: 1, minted: -1 }, 'player.idleSkillInsightDaily.minted'],
+    [{ dayBucket: 1, minted: Number.NaN }, 'player.idleSkillInsightDaily.minted'],
+  ])('từ chối idleSkillInsightDaily = %j, path "%s"', (value, expectedPath) => {
+    const save = validSave()
+
+    playerOf(save).idleSkillInsightDaily = value
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(expectedPath)
+  })
+
+  it('chấp nhận idleSkillInsightDaily hợp lệ / vắng mặt', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    player.idleSkillInsightDaily = { dayBucket: 21000, minted: 12345 }
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    player.idleSkillInsightDaily = { dayBucket: 0, minted: 0 }
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
 })
 
 describe('validateGameSaveShape — player record/array deep checks (Mission A review)', () => {

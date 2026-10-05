@@ -2318,6 +2318,32 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
     }
   }
 
+  // idleSkillInsightDaily (2026-10-05 ruling A): optional
+  // { dayBucket, minted } ledger - absent on pre-ruling saves means the
+  // daily window starts at the first idle mint (migration-lite, same
+  // `!== undefined` gate as pendingTalentEntitlement).
+  if (player.idleSkillInsightDaily !== undefined) {
+    if (!isObject(player.idleSkillInsightDaily)) {
+      issues.push({
+        path: 'player.idleSkillInsightDaily',
+        message: 'phải là object',
+      })
+    } else {
+      requireNonNegativeNumber(
+        player.idleSkillInsightDaily,
+        'dayBucket',
+        'player.idleSkillInsightDaily',
+        issues,
+      )
+      requireNonNegativeNumber(
+        player.idleSkillInsightDaily,
+        'minted',
+        'player.idleSkillInsightDaily',
+        issues,
+      )
+    }
+  }
+
   // formationLoadout: null | { formationId, assignments[] }. Mirror the
   // commitFormationLoadout contract (FormationPlacement.ts): a malformed
   // loadout passes shape-check then resolvePartyFormation() silently

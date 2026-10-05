@@ -1,7 +1,7 @@
 import type { EventBus } from '../events/EventBus'
 import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { EnemySystem } from '../enemy/EnemySystem'
-import { DEFAULT_MAX_OFFLINE_SECONDS } from '../idle/GameClock'
+import { DEFAULT_MAX_OFFLINE_SECONDS, OFFLINE_EFFICIENCY } from '../idle/GameClock'
 import type { PlayerData } from '../player/Player'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
@@ -234,24 +234,28 @@ export class GameManagerAutoFarmOps {
       return
     }
 
+    // Non-finite elapsed (corrupt save clock) must bail BEFORE the
+    // unconditional re-anchor below - NaN would poison lastCheckedMs
+    // forever (same malformed-save contract as isValidCycleSeconds).
+    if (!Number.isFinite(elapsedOfflineSeconds)) {
+      return
+    }
+
     const cappedElapsedSeconds = Math.min(
       Math.max(0, elapsedOfflineSeconds),
       DEFAULT_MAX_OFFLINE_SECONDS,
     )
 
     const cycleMs = cycleSeconds * 1000
-    const elapsedMs = cappedElapsedSeconds * 1000
+    // 2026-10-05, Minh ruling ("offline 50%"): the window pays at
+    // OFFLINE_EFFICIENCY before flooring into cycles, so cycle rewards
+    // - and the unsettled remainder carried into the next live tick -
+    // are all halved uniformly. The anchor MUST therefore also run on
+    // the 0-cycle path: skipping it would leave the FULL raw remainder
+    // in lastCheckedMs to mint at live rate, silently un-doing the
+    // efficiency on every sub-cycle gap.
+    const elapsedMs = cappedElapsedSeconds * OFFLINE_EFFICIENCY * 1000
     const completedCycles = Math.floor(elapsedMs / cycleMs)
-
-    if (completedCycles <= 0) {
-      // B1-D live replacement calls this with elapsed 0 to resume an armed
-      // farm WITHOUT catch-up: re-anchor to now so the saved lastCheckedMs
-      // cannot mint the paused gap on the next live tick.
-      if (elapsedOfflineSeconds === 0) {
-        autoFarm.lastCheckedMs = Date.now()
-      }
-      return
-    }
 
     for (let i = 0; i < completedCycles; i++) {
       this.rollAutoFarmCycleReward(player, stage)
@@ -263,6 +267,8 @@ export class GameManagerAutoFarmOps {
     // window, then the next online tickAutoFarm clamped (now - staleTs)
     // to the cap and paid the SAME window a second time (double-pay -
     // also triggered by any honest session longer than the 24h cap).
+    // elapsed 0 (B1-D resume gesture) and sub-cycle gaps land here too:
+    // anchor = now - halved remainder == now when nothing accrued.
     autoFarm.lastCheckedMs = Date.now() - (elapsedMs - completedCycles * cycleMs)
   }
 

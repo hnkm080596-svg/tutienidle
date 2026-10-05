@@ -1,7 +1,7 @@
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EventBus } from '../events/EventBus'
 import { randomInt } from '../reward/DropRoll'
-import { getSkillInsightReward } from '../reward/SkillInsightBalance'
+import { getSkillInsightReward, settleIdleSkillInsightMint } from '../reward/SkillInsightBalance'
 import { getRealmRewardMultiplier } from '../reward/RealmRewardScale'
 import {
   getHealOnKillMaxHpPercent,
@@ -343,10 +343,24 @@ export class BattleLootSystem {
           // skill-insight-and-auto-combat-hud-plan.md muc 3).
           // Thien phu Dai Tri Nhuoc Ngu/Nghich Thien nhan tai day (plan S6).
           const baseSkillInsight = getSkillInsightReward(rewards)
-          const skillInsightGained =
+          let skillInsightGained =
             baseSkillInsight > 0 && this.player
               ? Math.floor(baseSkillInsight * getInsightBaseMultiplier(this.player.selectedTalentIds, this.player.talentLevels) * getInsightGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels))
               : 0
+
+          // Idle channel only (2026-10-05, Minh ruling): auto-farm
+          // insight accrues against a daily realm-band quota on the
+          // player - clamped mints read Date.now() lazily for the
+          // UTC day-bucket. The active channel skips the gate entirely
+          // (manual combat stays unbounded and reads no wall clock).
+          if (skillInsightGained > 0 && this.player && this.channel === 'idle') {
+            skillInsightGained = settleIdleSkillInsightMint(
+              this.player,
+              enemy.realmId,
+              skillInsightGained,
+              Date.now(),
+            )
+          }
 
           if (skillInsightGained > 0 && this.player) {
             this.player.skillInsight += skillInsightGained

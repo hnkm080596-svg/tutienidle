@@ -10,6 +10,8 @@ import {
   isCompanionPullTokenSourceSuppressed,
 } from '../realm/ReleasePolicy'
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
+import type { Reward } from '../reward/Reward'
+import { stoneCostRealmFactor } from '../economy/EconomyRealmPace'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PillRegistry } from '../pill/PillRegistry'
@@ -135,6 +137,67 @@ export function isQuestRewardDropAdmitted(
   }
 
   return false
+}
+
+// Minh ruling 2026-10-05 (reward-channels worker, "thuong quest nang
+// theo canh gioi"): flat quest currency was decorative against era
+// income. spiritStone and cultivation scale by the QUEST's realm band
+// via stoneCostRealmFactor - the single economy authority already
+// used for per-era cost/reward jumps (x1 mortal / x8 Luyen Khi /
+// x50 Truc Co).
+//
+// Band derivation follows the codebase's OWN progression convention:
+// quest.requiredRealmId gates which era a quest belongs to. A quest
+// with no realm gate still belongs to an era through its unlock chain
+// (unlocksAfterQuestId - e.g. main_08 can only unlock after main_07's
+// qi_refining gate, so it IS a qi-era quest): walk the chain to the
+// nearest gated ancestor. An ungated, unchained quest (or an
+// unresolvable chain on a partial registry) is mortal-era.
+// Cycle-safe: chain cycles or registry misses stop the walk.
+export function questRewardBandRealmId(
+  quest: Quest,
+  registry?: Pick<QuestRegistry, 'has' | 'get'>,
+): string {
+  let cursor: Quest | undefined = quest
+  const seen = new Set<string>()
+
+  while (cursor !== undefined && !seen.has(cursor.id)) {
+    if (cursor.requiredRealmId !== undefined) {
+      return cursor.requiredRealmId
+    }
+
+    seen.add(cursor.id)
+    const nextId: string | undefined = cursor.unlocksAfterQuestId
+    cursor =
+      nextId !== undefined && registry !== undefined && registry.has(nextId)
+        ? registry.get(nextId)
+        : undefined
+  }
+
+  return 'mortal'
+}
+
+// skillInsight is NOT scaled here: data/quest/quests.ts already
+// re-anchored those values per era (QI 400-800, TC 6k-40k - the same
+// ~x50 band jump), so multiplying again would double-count.
+// itemDrops (material/pill counts) stay authored counts.
+export function scaleQuestRewardByRealm(
+  reward: Reward,
+  questRealmId: string | undefined,
+): Reward {
+  const factor = stoneCostRealmFactor(questRealmId ?? 'mortal')
+
+  if (factor === 1) {
+    return reward
+  }
+
+  return {
+    spiritStone:
+      reward.spiritStone !== undefined ? Math.floor(reward.spiritStone * factor) : undefined,
+    cultivation:
+      reward.cultivation !== undefined ? Math.floor(reward.cultivation * factor) : undefined,
+    skillInsight: reward.skillInsight,
+  }
 }
 
 // M-F-COMPANION-GIFT - a quest whose ENTIRE reward set is censused
@@ -306,7 +369,12 @@ export class QuestSystem {
     // bag holds the cost). Drops run last so the debit frees bag space
     // before reward items land.
     if (quest.reward.reward) {
-      rewardSystem.give(receiver, quest.reward.reward)
+      // 2026-10-05 realm-band scaling - same helper+resolver the beta
+      // surface read-model previews, so previewed amounts equal paid.
+      rewardSystem.give(
+        receiver,
+        scaleQuestRewardByRealm(quest.reward.reward, questRewardBandRealmId(quest, registry)),
+      )
     }
 
     if (quest.condition.kind === 'collect') {

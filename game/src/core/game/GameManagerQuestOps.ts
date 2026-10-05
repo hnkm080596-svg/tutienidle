@@ -114,6 +114,9 @@ export class GameManagerQuestOps {
       pillRegistry: this.deps.pillRegistry,
       pillBag: this.deps.pillBag,
       enemyName: (enemyId) => this.deps.getEnemyTemplate(enemyId)?.name,
+      // 2026-10-05 reward scaling previews the claim-time band
+      // resolution (unlock-chain walk) - same registry claim() sees.
+      questRegistry: this.deps.questRegistry,
     }
 
     const models = this.getActiveQuests()

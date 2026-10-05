@@ -29,3 +29,61 @@ export function getSkillInsightReward(reward: Pick<EnemyReward, 'techniqueMaster
 
   return Math.round(reward.techniqueMastery * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY)
 }
+
+// Minh ruling 2026-10-05 (reward-channels worker, "cap cam ngo
+// auto-farm 1 ngay"): the idle/auto-farm channel minted insight
+// unbounded - a permanently armed farm out-paced every tree price.
+// Daily quota on the IDLE channel only: each idle-channel mint clamps
+// at the killed enemy's realm-band quota; manual/active battles never
+// touch the ledger. Cap sizes = one max auto-farm day's mint at the
+// 0.018 rate, measured off the pace audit
+// (docs/balance/2026-10-05-economy-pace-retune.md, autofarm stones/h /
+// band stone roll -> kills/h):
+//   qi_refining  ~1 insight/kill x ~1.2k kills/h x 24h ~= 29k -> 30_000
+//   foundation   ~2 insight/kill x ~0.77k kills/h x 24h ~= 37k -> 40_000
+// mortal mints ~0 (5-8 mastery rounds to 0) and post-beta bands have no
+// authored drop table yet - unlisted realms take the top beta quota.
+export const AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_BY_REALM: Record<string, number> = {
+  qi_refining: 30_000,
+  foundation_establishment: 40_000,
+}
+export const AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_DEFAULT = 40_000
+
+const IDLE_INSIGHT_DAY_MS = 24 * 60 * 60 * 1000
+
+export interface IdleSkillInsightDaily {
+  // UTC day-bucket convention - identical to QuestSystem.dayBucket /
+  // lastDailyResetAtMs (floor(ms / 24h)). Lazily rolled at mint time,
+  // no scheduler needed.
+  dayBucket: number
+  minted: number
+}
+
+/**
+ * Idle-channel insight mint gate: rolls the persisted daily ledger at
+ * the UTC boundary, clamps the requested mint to the day's remaining
+ * quota for the enemy's realm band, and returns the amount actually
+ * minted (0 once the quota is spent until the bucket rolls).
+ */
+export function settleIdleSkillInsightMint(
+  player: { idleSkillInsightDaily?: IdleSkillInsightDaily },
+  enemyRealmId: string | undefined,
+  requested: number,
+  nowMs: number,
+): number {
+  const today = Math.floor(nowMs / IDLE_INSIGHT_DAY_MS)
+  const ledger = (player.idleSkillInsightDaily ??= { dayBucket: today, minted: 0 })
+
+  if (ledger.dayBucket !== today) {
+    ledger.dayBucket = today
+    ledger.minted = 0
+  }
+
+  const cap =
+    AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_BY_REALM[enemyRealmId ?? ''] ??
+    AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_DEFAULT
+
+  const granted = Math.min(requested, Math.max(0, cap - ledger.minted))
+  ledger.minted += granted
+  return granted
+}

@@ -10,7 +10,12 @@ vi.mock('../betaScope', async (importOriginal) => ({
   isBetaQuestEnabled: () => true,
 }))
 
-import { QuestSystem } from './QuestSystem'
+import {
+  QuestSystem,
+  questRewardBandRealmId,
+  scaleQuestRewardByRealm,
+} from './QuestSystem'
+import { betaQuestSurfaceFor } from '../betaScopeQuestDomain'
 import { QuestRegistry } from './QuestRegistry'
 import { QuestManager } from './QuestManager'
 import type { Quest } from './Quest'
@@ -271,5 +276,174 @@ describe('QuestSystem - domain-scoped reward material gate (F-W-10)', () => {
 
     expect(system.claim(registry, manager, rewardSystem, createReceiver(), bags, 'domain_reward_test')).toBe(true)
     expect(materialBag.getAmount('domain_scoped_ore')).toBe(2)
+  })
+})
+
+// Minh ruling 2026-10-05 - quest currency rewards scale by the QUEST's
+// realm band via stoneCostRealmFactor (x1 mortal / x8 qi / x50 truc co).
+// skillInsight stays authored (data already era-anchored).
+describe('QuestSystem - quest reward realm-band scaling (2026-10-05)', () => {
+  function scaledSetup(quest: Quest, playerRealmId: string) {
+    const registry = new QuestRegistry()
+    registry.register(quest)
+
+    const manager = new QuestManager()
+    const system = new QuestSystem()
+
+    const materialRegistry = new MaterialRegistry()
+    materialRegistry.register(createMaterial('linh_chi'))
+    const materialBag = new MaterialBag()
+
+    const pillRegistry = new PillRegistry()
+    const pillBag = new PillBag()
+
+    const bags = { materialRegistry, materialBag, pillRegistry, pillBag }
+    const rewardSystem = new RewardSystem()
+
+    const player = createPlayer(playerRealmId)
+    system.reconcileActiveQuests(registry, manager, player)
+    materialBag.add(materialRegistry.get('linh_chi'), 1)
+    manager.incrementProgress(quest.id, 1)
+
+    return { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag, pillRegistry, pillBag, player }
+  }
+
+  const baseQuest: Omit<Quest, 'id' | 'requiredRealmId'> = {
+    name: 'Scaled reward test',
+    description: '',
+    condition: { kind: 'collect', materialId: 'linh_chi', amount: 1 },
+    reward: { reward: { spiritStone: 100, cultivation: 50, skillInsight: 400 } },
+    cadence: 'once',
+  }
+
+  it('ungated (mortal-era) quest pays authored amounts - factor 1', () => {
+    const quest: Quest = { ...baseQuest, id: 'scale_mortal' }
+    const { registry, manager, system, bags, rewardSystem } = scaledSetup(quest, 'mortal')
+
+    const receiver = createReceiver()
+    expect(system.claim(registry, manager, rewardSystem, receiver, bags, quest.id)).toBe(true)
+    expect(receiver.spiritStone).toBe(100)
+    expect(receiver.cultivation).toBe(50)
+    expect(receiver.insight).toBe(400)
+  })
+
+  it('qi_refining-gated quest pays x8 spiritStone/cultivation, skillInsight unchanged', () => {
+    const quest: Quest = { ...baseQuest, id: 'scale_qi', requiredRealmId: 'qi_refining' }
+    const { registry, manager, system, bags, rewardSystem } = scaledSetup(quest, 'qi_refining')
+
+    const receiver = createReceiver()
+    expect(system.claim(registry, manager, rewardSystem, receiver, bags, quest.id)).toBe(true)
+    expect(receiver.spiritStone).toBe(800)
+    expect(receiver.cultivation).toBe(400)
+    expect(receiver.insight).toBe(400)
+  })
+
+  it('foundation_establishment-gated quest pays x50', () => {
+    const quest: Quest = {
+      ...baseQuest,
+      id: 'scale_foundation',
+      requiredRealmId: 'foundation_establishment',
+    }
+    const { registry, manager, system, bags, rewardSystem } = scaledSetup(
+      quest,
+      'foundation_establishment',
+    )
+
+    const receiver = createReceiver()
+    expect(system.claim(registry, manager, rewardSystem, receiver, bags, quest.id)).toBe(true)
+    expect(receiver.spiritStone).toBe(5000)
+    expect(receiver.cultivation).toBe(2500)
+    expect(receiver.insight).toBe(400)
+  })
+
+  it('ungated quest chained after a qi-gated ancestor pays the qi band (main_08 shape)', () => {
+    const gatedAncestor: Quest = {
+      ...baseQuest,
+      id: 'chain_main_07',
+      requiredRealmId: 'qi_refining',
+    }
+    const ungatedChainMember: Quest = {
+      ...baseQuest,
+      id: 'chain_main_08',
+      unlocksAfterQuestId: 'chain_main_07',
+    }
+    const { registry, manager, system, bags, rewardSystem, player } = scaledSetup(
+      ungatedChainMember,
+      'qi_refining',
+    )
+    registry.register(gatedAncestor)
+    // Real unlock flow: the ancestor's completedOnceIds witness is what
+    // admits the member on the next idempotent reconcile pass.
+    manager.markCompletedOnce('chain_main_07')
+    system.reconcileActiveQuests(registry, manager, player)
+    manager.incrementProgress(ungatedChainMember.id, 1)
+
+    const receiver = createReceiver()
+    expect(
+      system.claim(registry, manager, rewardSystem, receiver, bags, ungatedChainMember.id),
+    ).toBe(true)
+    expect(receiver.spiritStone).toBe(800)
+    expect(receiver.cultivation).toBe(400)
+  })
+
+  it('questRewardBandRealmId pins the band-resolution contract', () => {
+    const gated: Quest = { ...baseQuest, id: 'band_gated', requiredRealmId: 'qi_refining' }
+    const member: Quest = { ...baseQuest, id: 'band_member', unlocksAfterQuestId: 'band_gated' }
+    const grandchild: Quest = {
+      ...baseQuest,
+      id: 'band_grandchild',
+      unlocksAfterQuestId: 'band_member',
+    }
+    const orphan: Quest = { ...baseQuest, id: 'band_orphan' }
+
+    const registry = new QuestRegistry()
+    registry.register(gated)
+    registry.register(member)
+
+    expect(questRewardBandRealmId(gated, registry)).toBe('qi_refining')
+    // Transitive walk: grandchild -> member -> gated ancestor.
+    expect(questRewardBandRealmId(grandchild, registry)).toBe('qi_refining')
+    // Ungated + unchained = mortal band.
+    expect(questRewardBandRealmId(orphan, registry)).toBe('mortal')
+    // Chain not resolvable on a partial registry stops at mortal.
+    expect(questRewardBandRealmId(grandchild, undefined)).toBe('mortal')
+  })
+
+  it('questRewardBandRealmId stops on a chain cycle instead of looping', () => {
+    const a: Quest = { ...baseQuest, id: 'band_cycle_a', unlocksAfterQuestId: 'band_cycle_b' }
+    const b: Quest = { ...baseQuest, id: 'band_cycle_b', unlocksAfterQuestId: 'band_cycle_a' }
+    const registry = new QuestRegistry()
+    registry.register(a)
+    registry.register(b)
+
+    expect(questRewardBandRealmId(a, registry)).toBe('mortal')
+  })
+
+  it('beta quest surface preview shows the SAME scaled amounts claim pays', () => {
+    const quest: Quest = { ...baseQuest, id: 'scale_preview', requiredRealmId: 'qi_refining' }
+    const { registry, manager, materialRegistry, materialBag, pillRegistry, pillBag, player } =
+      scaledSetup(quest, 'qi_refining')
+
+    const model = betaQuestSurfaceFor(quest, manager.getProgress(quest.id)!, player, {
+      materialRegistry,
+      materialBag,
+      pillRegistry,
+      pillBag,
+      enemyName: () => undefined,
+      questRegistry: registry,
+    })
+
+    const stoneEntry = model.rewards.find((entry) => entry.kind === 'spiritStone')
+    const insightEntry = model.rewards.find((entry) => entry.kind === 'skillInsight')
+    expect(stoneEntry?.amount).toBe(800)
+    expect(insightEntry?.amount).toBe(400)
+  })
+
+  it('scaleQuestRewardByRealm unit pin: unknown/ungated band = factor 1', () => {
+    const authored = { spiritStone: 100, cultivation: 50, skillInsight: 400 }
+
+    expect(scaleQuestRewardByRealm(authored, undefined)).toEqual(authored)
+    expect(scaleQuestRewardByRealm(authored, 'mortal')).toEqual(authored)
+    expect(scaleQuestRewardByRealm(authored, 'unknown_realm')).toEqual(authored)
   })
 })
