@@ -1,4 +1,5 @@
 import type { EnemyReward } from '../enemy/Enemy'
+import { utcDayBucket } from '../idle/GameClock'
 
 // skill-insight-and-auto-combat-hud-plan.md muc 12 - "Can bang so Cam
 // ngo cuoi cung; phase dau dung config tam de de chinh". Ti le DUY
@@ -22,11 +23,11 @@ import type { EnemyReward } from '../enemy/Enemy'
 // (QI minor 600/level, TC minor 40,000/level - see data/progression/*).
 export const SKILL_INSIGHT_PER_TECHNIQUE_MASTERY = 0.018
 
-export function getSkillInsightReward(reward: Pick<EnemyReward, 'techniqueMastery' | 'skillInsight'>): number {
-  if (reward.skillInsight !== undefined) {
-    return reward.skillInsight
-  }
-
+// EnemyReward.skillInsight override removed 2026-10-05 (r10-COR): the
+// resolved drop table - not enemy.rewards - feeds this function, so the
+// authored per-enemy field was unreachable dead surface (ruling 3:
+// no consumer, drop it). Skill insight is always mastery-derived.
+export function getSkillInsightReward(reward: Pick<EnemyReward, 'techniqueMastery'>): number {
   return Math.round(reward.techniqueMastery * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY)
 }
 
@@ -49,7 +50,8 @@ export const AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_BY_REALM: Record<string, number> 
 }
 export const AUTO_FARM_DAILY_SKILL_INSIGHT_CAP_DEFAULT = 40_000
 
-const IDLE_INSIGHT_DAY_MS = 24 * 60 * 60 * 1000
+// Canonical UTC day-bucket comes from GameClock.utcDayBucket - shared
+// with QuestSystem.dayBucket so daily resets cannot drift apart.
 
 export interface IdleSkillInsightDaily {
   // UTC day-bucket convention - identical to QuestSystem.dayBucket /
@@ -71,7 +73,7 @@ export function settleIdleSkillInsightMint(
   requested: number,
   nowMs: number,
 ): number {
-  const today = Math.floor(nowMs / IDLE_INSIGHT_DAY_MS)
+  const today = utcDayBucket(nowMs)
   const ledger = (player.idleSkillInsightDaily ??= { dayBucket: today, minted: 0 })
 
   if (ledger.dayBucket !== today) {

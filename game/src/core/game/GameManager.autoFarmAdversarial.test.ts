@@ -27,7 +27,7 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
     const lastCheckedMs = Date.now() - 120_000
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs }
 
-    // 2026-10-05 ruling "offline 50%": 120s x OFFLINE_EFFICIENCY 0.5 =
+    // 2026-10-05 ruling "offline 50%": 120s x AUTO_FARM_OFFLINE_EFFICIENCY 0.5 =
     // 60s hieu luc < 100s cycle -> 0 cycles roll, anchor tien dung 60s
     // (remainder da halve carry sang tick live; truoc ruling tien 100s).
     gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)
@@ -52,7 +52,7 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
 
     // 2026-10-05: elapsed am clamp ve 0 -> anchor rebase ve now thay vi
     // giu moc stale. Moc cu de lai ca 10s gap cho tick live mint tiep
-    // full rate (undo ca OFFLINE_EFFICIENCY lan double-pay risk T1-12).
+    // full rate (undo ca AUTO_FARM_OFFLINE_EFFICIENCY lan double-pay risk T1-12).
     const anchor = player.autoFarmStage!.lastCheckedMs
     expect(anchor).toBeGreaterThanOrEqual(lastCheckedMs + 9_000)
     expect(anchor).toBeLessThanOrEqual(Date.now())

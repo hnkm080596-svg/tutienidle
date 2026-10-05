@@ -1,7 +1,7 @@
 import type { EventBus } from '../events/EventBus'
 import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { EnemySystem } from '../enemy/EnemySystem'
-import { DEFAULT_MAX_OFFLINE_SECONDS, OFFLINE_EFFICIENCY } from '../idle/GameClock'
+import { DEFAULT_MAX_OFFLINE_SECONDS, AUTO_FARM_OFFLINE_EFFICIENCY } from '../idle/GameClock'
 import type { PlayerData } from '../player/Player'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
@@ -248,13 +248,13 @@ export class GameManagerAutoFarmOps {
 
     const cycleMs = cycleSeconds * 1000
     // 2026-10-05, Minh ruling ("offline 50%"): the window pays at
-    // OFFLINE_EFFICIENCY before flooring into cycles, so cycle rewards
+    // AUTO_FARM_OFFLINE_EFFICIENCY before flooring into cycles, so cycle rewards
     // - and the unsettled remainder carried into the next live tick -
     // are all halved uniformly. The anchor MUST therefore also run on
     // the 0-cycle path: skipping it would leave the FULL raw remainder
     // in lastCheckedMs to mint at live rate, silently un-doing the
     // efficiency on every sub-cycle gap.
-    const elapsedMs = cappedElapsedSeconds * OFFLINE_EFFICIENCY * 1000
+    const elapsedMs = cappedElapsedSeconds * AUTO_FARM_OFFLINE_EFFICIENCY * 1000
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
     for (let i = 0; i < completedCycles; i++) {
@@ -308,7 +308,10 @@ export class GameManagerAutoFarmOps {
 
     // A non-finite/negative persisted lastCheckedMs must recover, not
     // freeze the feature silently: NaN makes every later elapsedMs NaN.
-    if (!Number.isFinite(autoFarm.lastCheckedMs) || autoFarm.lastCheckedMs < 0) {
+    if (!Number.isFinite(autoFarm.lastCheckedMs) || autoFarm.lastCheckedMs < 0 || autoFarm.lastCheckedMs > now) {
+      // r10-INT: a future-dated persisted/crafted timestamp also
+      // re-anchors - otherwise the farm idles silently until real time
+      // catches up to the forged value.
       autoFarm.lastCheckedMs = now
     }
 

@@ -345,7 +345,9 @@ export function applyEliteMultiplier(stats: Stats): Stats {
 // already gates hit rate through the accuracy curve, and attack speed
 // changes the engagement's ATB shape (a pacing knob, not a stat knob).
 export function applyFloorStatScale(stats: Stats, scale: number): Stats {
-  if (scale <= 0) {
+  if (!(scale > 0)) {
+    // !(scale > 0) also rejects NaN - <= 0 alone lets it slip through
+    // into NaN stats (r10-AUT/INT input-guard gap).
     throw new Error(`applyFloorStatScale: scale must be > 0 (got ${scale})`)
   }
   if (scale === 1) {

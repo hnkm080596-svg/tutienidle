@@ -12,6 +12,7 @@ import {
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
 import type { Reward } from '../reward/Reward'
 import { stoneCostRealmFactor } from '../economy/EconomyRealmPace'
+import { utcDayBucket } from '../idle/GameClock'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PillRegistry } from '../pill/PillRegistry'
@@ -22,7 +23,9 @@ import { isBetaQuestEnabled } from '../betaScope'
 import type { NotificationEvent } from '../notification/NotificationEvent'
 import type { Material } from '../material/Material'
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000
+// r10-AUT: the canonical UTC day-bucket convention lives in
+// GameClock.utcDayBucket - every daily-reset surface (quest daily
+// reset, idle insight ledger) must agree on the same boundary.
 
 export interface QuestBagDeps {
   materialRegistry: MaterialRegistry
@@ -218,7 +221,7 @@ function questIsTokenOnlySource(quest: Quest): boolean {
 }
 
 function dayBucket(ms: number): number {
-  return Math.floor(ms / MS_PER_DAY)
+  return utcDayBucket(ms)
 }
 
 /**

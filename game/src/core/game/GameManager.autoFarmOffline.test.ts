@@ -7,7 +7,7 @@ import { defineEnemy } from '../enemy/Enemy'
 // chay roll reward cho SO CYCLES da troi offline (dung cung chu ky online),
 // lastCheckedMs tien dung phan da settle (leftover giu lai).
 // 2026-10-05, Minh ruling "offline 50%": window offline duoc nhan
-// OFFLINE_EFFICIENCY (0.5) truoc khi floor thanh cycles - moi kenh cycle
+// AUTO_FARM_OFFLINE_EFFICIENCY (0.5) truoc khi floor thanh cycles - moi kenh cycle
 // mint (stones/materials/mastery/insight) deu tra nua live rate, va phan
 // du chua du cycle cung chi mang nua gia tri sang tick live tiep theo.
 
@@ -87,7 +87,7 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
     player.perfectClearStageIds.push('farm_stage')
     player.perfectClearSeconds['farm_stage'] = 100 // cycle = 100s
 
-    // 240s offline x OFFLINE_EFFICIENCY 0.5 = 120s hieu luc =
+    // 240s offline x AUTO_FARM_OFFLINE_EFFICIENCY 0.5 = 120s hieu luc =
     // 1 cycle (100s) + 20s du. Truoc ruling: 1 cycle + 20s du tu 120s.
     player.autoFarmStage = {
       stageId: 'farm_stage',

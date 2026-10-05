@@ -231,7 +231,10 @@ export const QUESTS: Quest[] = [
     id: 'collect_foundation_ore_30',
     name: 'Thu Thập Linh Khoáng Hậu Sơn',
     description: 'Nộp 30 Thập Niên Linh Khoáng thu được từ yêu thú hậu sơn.',
-    condition: { kind: 'collect', materialId: 'qi_refining_ore_decade', amount: 30 },
+    // r10-INT 2026-10-05: chapter bands moved Truc Co floors to
+    // foundation-era ore - keep the collect target on the band the
+    // quest text describes (yeu thu hau son), not the LK floor band.
+    condition: { kind: 'collect', materialId: 'foundation_establishment_ore_decade', amount: 30 },
     reward: { reward: { cultivation: 4000 } },
     cadence: 'once',
     requiredRealmId: 'foundation_establishment',

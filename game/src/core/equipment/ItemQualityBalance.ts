@@ -112,6 +112,12 @@ export function itemQualityCeilingForFloor(floor: number | undefined): ItemQuali
     return undefined
   }
 
+  if (!Number.isFinite(floor)) {
+    // NaN/Infinity floor is invalid authored data - fail closed rather
+    // than silently return the top (tien) cap (r10-COR nit).
+    throw new Error(`itemQualityCeilingForFloor: floor must be finite (got ${floor})`)
+  }
+
   for (const band of ITEM_QUALITY_FLOOR_CEILING) {
     if (floor <= band.maxFloor) {
       return band.ceiling

@@ -50,7 +50,20 @@ export const DEFAULT_MAX_OFFLINE_SECONDS = 24 * 60 * 60
 // (stones/materials/mastery/insight) is halved uniformly and the
 // unsettled remainder also carries at half value into the next live
 // tick. Online tickAutoFarm is unaffected.
-export const OFFLINE_EFFICIENCY = 0.5
+// r10-AUT: scoped name - the ruling covers the AUTO-FARM channel
+// only. Cultivation/production/decompose offline settles do NOT read
+// this; importing it into another channel silently halves a flow Minh
+// did not rate.
+export const AUTO_FARM_OFFLINE_EFFICIENCY = 0.5
+
+const UTC_DAY_MS = 24 * 60 * 60 * 1000
+
+/** Canonical UTC day-bucket for daily-reset surfaces (r10-AUT shared
+ *  convention - quest daily reset and the idle insight ledger must
+ *  agree on the same boundary or their resets drift apart). */
+export function utcDayBucket(ms: number): number {
+  return Math.floor(ms / UTC_DAY_MS)
+}
 
 /**
  * Tinh thoi gian offline (da clamp theo maxOfflineSeconds).

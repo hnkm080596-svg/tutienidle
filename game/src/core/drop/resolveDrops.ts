@@ -102,15 +102,22 @@ function drawFromPool(
 /**
  * Weight reserved for the "miss" outcome so each draw hits at
  * `poolDrawChance` of the MERGED bag (stage + family entries together).
- * Absent/>=1 means ungated; <= 0 reserves an unmissable miss band
- * (Infinity keeps the arithmetic honest without a special case).
+ * Absent means ungated; <= 0 reserves an unmissable miss band
+ * (Infinity keeps the arithmetic honest without a special case); 1
+ * degenerates to hitWeight*0 = ungated. Values outside [0,1] (incl.
+ * NaN) are invalid authored data - fail closed instead of silently
+ * ungating (r10-AUT contract hole).
  */
 function poolMissWeight(
   pool: readonly WeightedDropEntry[],
   poolDrawChance: number | undefined,
 ): number {
-  if (poolDrawChance === undefined || poolDrawChance >= 1 || Number.isNaN(poolDrawChance)) {
+  if (poolDrawChance === undefined) {
     return 0
+  }
+
+  if (!(poolDrawChance >= 0 && poolDrawChance <= 1)) {
+    throw new Error(`poolDrawChance must be in [0, 1] (got ${poolDrawChance})`)
   }
 
   const hitWeight = pool.reduce((sum, entry) => sum + entry.weight, 0)
