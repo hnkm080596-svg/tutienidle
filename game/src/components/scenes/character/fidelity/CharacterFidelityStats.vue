@@ -97,7 +97,7 @@ const talentIconError = (event: Event) => {
 .character-allocate:disabled img { opacity: .45; filter: saturate(.4); }
 /* Maxed stat: the cap label sits in the allocate slot (where + was),
    vertically centred on the tube row, in bright gold (user ruling). */
-.character-stat-max { grid-column: 3; grid-row: 2; align-self: center; justify-self: center; font: 700 20px/20px var(--pc-font-body, serif); letter-spacing: .14em; text-transform: uppercase; color: #ffdf9a; text-shadow: 0 0 6px #b8860b, 0 1px 1px #000; font-style: normal; }
+.character-stat-max { grid-column: 3; grid-row: 2; align-self: center; justify-self: center; transform: translateY(-4px); font: italic 700 20px/20px var(--pc-font-body, serif); letter-spacing: .14em; text-transform: uppercase; color: #ffe9b3; text-shadow: 0 0 4px #ffd76a, 0 0 10px #e8a93c, 0 0 18px #b8860b, 0 1px 1px #000; }
 /* Small cards: icon + name talent rows (hover = description, R10) and
    the five ivory element pucks with share. */
 .character-talent { display: inline-flex; align-items: center; gap: 10px; margin: 0 12px 4px 0; padding: 0; border: 0; background: none; color: inherit; font-size: 13px; cursor: pointer; text-align: left; }

@@ -131,14 +131,24 @@
 :is(#app, body) .tribulation-realm-card__title { color: #ffe3a0; }
 :is(#app, body) .tribulation-ui__chapter { color: #30291d; text-shadow: none; }
 :is(#app, body) .realm-paper-scene .realm-paper, :is(#app, body) .technique-paper-scene .technique-paper, :is(#app, body) .body-paper-scene .body-paper, :is(#app, body) .skill-paper-scene .skill-paper { left: 156px; width: 1272px; border-image-width: 52px; }
-:is(#app, body) .skill-heading, :is(#app, body) .body-heading, :is(#app, body) .technique-heading { left: 192px; top: 97px; width: 370px; max-width: none; }
-:is(#app, body) .skill-heading h1, :is(#app, body) .body-heading h1, :is(#app, body) .technique-heading h1, :is(#app, body) .realm-paper-scene > h1 {
-  width: 370px; height: 58px; margin: 0; padding: 11px 40px;
-  font-size: 30px; font-style: normal; font-weight: 700; line-height: 36px; color: #f3e0b5; text-align: center;
-  background: var(--th-art-title-plaque) center/100% 100% no-repeat;
+:is(#app, body) .skill-heading, :is(#app, body) .body-heading, :is(#app, body) .technique-heading { left: 289px; top: 97px; width: 370px; max-width: none; }
+:is(#app, body) .skill-heading h1, :is(#app, body) .skill-head h1, :is(#app, body) .body-heading h1, :is(#app, body) .technique-heading h1, :is(#app, body) .realm-paper-scene > h1, :is(#app, body) .inventory-title, :is(#app, body) .equipment-title, :is(#app, body) .quest-title, :is(#app, body) .settings-title, :is(#app, body) .alchemy-scene .title, :is(#app, body) .exploration-scene .zone-title, :is(#app, body) .cf-panel__header h1 {
+  width: 370px; height: 58px; margin: 0; padding: 0;
+  font-family: 'UTM OngDoGia', 'Ma Shan Zheng', 'ZCOOL XiaoWei', var(--font-display, Georgia, serif);
+  font-size: 72px; font-style: normal; font-weight: 400; line-height: 58px; text-align: center;
+  color: transparent;
+  background: linear-gradient(100deg, #241a0c 20%, #6b5224 40%, #fff6d8 50%, #6b5224 60%, #241a0c 80%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: th-title-shine 2.8s linear infinite;
+}
+@keyframes th-title-shine { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  :is(#app, body) .skill-heading h1, :is(#app, body) .skill-head h1, :is(#app, body) .body-heading h1, :is(#app, body) .technique-heading h1, :is(#app, body) .realm-paper-scene > h1, :is(#app, body) .inventory-title, :is(#app, body) .equipment-title, :is(#app, body) .quest-title, :is(#app, body) .settings-title, :is(#app, body) .alchemy-scene .title, :is(#app, body) .exploration-scene .zone-title, :is(#app, body) .cf-panel__header h1 { animation: none; color: #8a6420; }
 }
 :is(#app, body) .skill-heading p, :is(#app, body) .body-heading p, :is(#app, body) .technique-heading p { padding: 23px 40px 0; }
-:is(#app, body) .realm-paper-scene > h1 { left: 192px; top: 97px; z-index: 6; }
+:is(#app, body) .realm-paper-scene > h1 { left: 289px; top: 97px; z-index: 6; }
 :is(#app, body) .df-building {
   width: 76px; min-width: 76px; max-width: 76px; height: 184px; padding: 28px 12px;
   flex-direction: column; gap: 10px; align-items: center; text-align: center;
@@ -219,7 +229,7 @@
 :is(#app, body) .df-scene .df-board { background: #f0e4c9; padding: 24px 25px; }
 :is(#app, body) .df-board__heading { font-size: 24px; font-style: normal; }
 :is(#app, body) .victory-scene, :is(#app, body) .combat-defeat-panel { background: #f1e6cf; border: 0 solid transparent; border-image: var(--th-art-panel-frame-v2) 240 320 / 52px / 0 stretch; }
-:is(#app, body) :is(.gear-tooltip,.inventory-scene .item-detail,.combat-frame,.tribulation-frame) { background: #15221ef5; border-image-slice: 240 320; }
+:is(#app, body) :is(.gear-tooltip,.inventory-scene .item-detail,.combat-frame) { background: #15221ef5; border-image-slice: 240 320; }
 :is(#app, body) :is(.alchemy-details,.exploration-details,.body-info-frame) { background: #f2e8d0; border-image-slice: 240 320; border-image-width: 28px; }
 :is(#app, body) :is(.victory-paper,.defeat-scene .result-paper) { background: #f2e8d0; border-image-slice: 240 320; color: #30291d; }
 :is(#app, body) .df-quest { background: #15221ef2; border: 1px solid #b9995360; }
@@ -259,9 +269,9 @@
 :is(#app, body) :is(.gear-tooltip,.inventory-scene .item-detail,.alchemy-details,.exploration-details,.body-info-frame,.alchemy-details-empty,.victory-scene,.combat-defeat-panel,.victory-paper,.defeat-scene .result-paper)::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
 :is(#app, body) .df-quest { background: transparent; border: 0; isolation: isolate; }
 :is(#app, body) .df-quest::before { content: ''; position: absolute; inset: 8px; border-radius: 12px; background: #15221ef2; z-index: -1; pointer-events: none; }
-:is(#app, body) :is(.combat-frame,.tribulation-frame) { background: transparent; isolation: isolate; }
-:is(#app, body) :is(.combat-frame,.tribulation-frame)::before { content: ''; position: absolute; inset: 7px; border-radius: 12px; background: #15221ef5; z-index: -2; pointer-events: none; }
-:is(#app, body) :is(.combat-frame,.tribulation-frame)::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
+:is(#app, body) :is(.combat-frame) { background: transparent; isolation: isolate; }
+:is(#app, body) :is(.combat-frame)::before { content: ''; position: absolute; inset: 7px; border-radius: 12px; background: #15221ef5; z-index: -2; pointer-events: none; }
+:is(#app, body) :is(.combat-frame)::after { content: ''; position: absolute; inset: 0; border: 0 solid transparent; border-image: inherit; z-index: -1; pointer-events: none; }
 
 /* Inventory composition follows the warm paper reference. All controls
    continue to consume the existing bag commands and pagination model. */

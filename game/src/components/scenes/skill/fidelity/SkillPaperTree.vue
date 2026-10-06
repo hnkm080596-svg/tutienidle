@@ -64,7 +64,7 @@ const graphStyle = computed(() => ({
 </template>
 <style scoped>
 .skill-positioned-node { position:absolute; transform:translate(-50%,-38px); }
-.skill-paper-tree { position:absolute; left:228px; top:259px; width:710px; height:445px; }
+.skill-paper-tree { position:absolute; left:365px; top:180px; width:600px; height:440px; }
 .skill-graph { position:absolute; left:50%; top:50%; transform-origin:center; }
 .skill-tree-lines { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
 .connection-flow { stroke:#fff0aa; stroke-width:2; stroke-dasharray:9 91; stroke-linecap:round; animation:skill-line-energy 3s linear infinite; }

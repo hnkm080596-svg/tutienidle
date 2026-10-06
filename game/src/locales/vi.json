@@ -239,7 +239,7 @@
       }
     },
     "skillPath": {
-      "title": "Kỹ Năng",
+      "title": "Công Pháp",
       "mortalName": "Phàm Nhân",
       "technique": {
         "title": "Tâm Pháp",
@@ -248,7 +248,7 @@
         "emptyNoTechnique": "Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận",
         "gradeAction": "Nâng Cảnh",
         "gradeNode": "Phẩm {grade}",
-        "cardTitle": "Công Pháp",
+        "cardTitle": "Tâm Pháp",
         "helpAria": "Trợ giúp công pháp",
         "qualityLine": "Phẩm: {quality}",
         "gradeTrackTitle": "Cảnh Giới Công Pháp",
@@ -506,7 +506,7 @@
       "slots": {
         "character": "Tu Sĩ",
         "realm": "Cảnh Giới",
-        "skill": "Kỹ Năng",
+        "skill": "Công Pháp",
         "quest": "Nhiệm Vụ",
         "phap_bao": "Pháp Bảo",
         "talisman_slot": "Phù",
@@ -1091,7 +1091,7 @@
       "skillOverride": "Cường hóa {slot} ({detail})"
     },
     "skills": {
-      "title": "Kỹ Năng",
+      "title": "Công Pháp",
       "slots": {
         "basic": "Cơ Bản",
         "special": "Đặc Biệt",
@@ -2019,10 +2019,10 @@
     "nav": {
       "home": "Động Phủ",
       "character": "Tu Sĩ",
-      "skill": "Kỹ Năng",
+      "skill": "Công Pháp",
       "equipment": "Trang Bị",
       "body": "Luyện Thể",
-      "technique": "Công Pháp",
+      "technique": "Tâm Pháp",
       "realm": "Cảnh Giới",
       "inventory": "Trữ Vật",
       "alchemy": "Luyện Đan",
@@ -2045,7 +2045,7 @@
     "realm": "Cảnh Giới",
     "character": "Tu Sĩ",
     "inventory": "Kho Vật",
-    "skill": "Kỹ Năng",
+    "skill": "Công Pháp",
     "technique": "Tâm Pháp",
     "body": "Luyện Thể",
     "alchemy": "Đan Phòng",
@@ -2076,7 +2076,7 @@
       "bodyDelta": "Luyện Thể",
       "realm": "Cảnh Giới",
       "technique": "Tâm Pháp",
-      "skill": "Kỹ Năng",
+      "skill": "Công Pháp",
       "buff": "Buff",
       "debuff": "Debuff",
       "equipment": "Trang Bị",
@@ -2119,7 +2119,7 @@
     "advanceNotice": "Tâm pháp đã lên {grade}."
   },
   "skill": {
-    "title": "Kỹ Năng",
+    "title": "Công Pháp",
     "navigation": "Chức năng",
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
     "elements": "Ngũ Hành",
@@ -2270,7 +2270,7 @@
       "mechanic": "Cơ Quan",
       "resource": "Tài Nguyên",
       "risk_reward": "Mạo Hiểm",
-      "skill": "Kỹ Năng",
+      "skill": "Công Pháp",
       "element": "Nguyên Tố"
     }
   }

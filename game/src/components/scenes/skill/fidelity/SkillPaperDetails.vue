@@ -18,17 +18,19 @@ const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/charac
         <h3>{{ t('skill.conditions') }}</h3>
         <p v-for="(line, i) in node.conditions" :key="i" class="skill-condition">{{ line }}</p>
         <p v-if="!node.conditions.length" class="skill-condition">{{ t('skill.noConditions') }}</p>
-        <p v-if="node.costLabel" class="skill-condition skill-cost">{{ node.costLabel }}</p>
-        <p v-if="node.actionHint" class="skill-action-hint">{{ node.actionHint }}</p>
       </template>
       <p v-else class="skill-description">{{ t('panels.skillPath.nodeInspector.empty') }}</p>
     </div>
-    <button v-if="node?.actionLabel" class="skill-upgrade" :disabled="node.actionDisabled" @click="emit('upgrade', node.id)">{{ node.actionLabel }}</button>
+    <div v-if="node" class="skill-actions">
+      <p v-if="node.costLabel" class="skill-cost">{{ node.costLabel }}</p>
+      <p v-if="node.actionHint" class="skill-action-hint">{{ node.actionHint }}</p>
+      <button v-if="node.actionLabel" class="skill-upgrade" :disabled="node.actionDisabled" @click="emit('upgrade', node.id)">{{ node.actionLabel }}</button>
+    </div>
     <p class="skill-notice" role="status" aria-live="polite">{{ notice }}</p>
   </aside>
 </template>
 <style scoped>
-.skill-detail-card { position:absolute; left:967px; top:153px; width:422px; height:578px; padding:25px 26px 13px; isolation:isolate; display:flex; flex-direction:column; color:#f0dfbb; }
+.skill-detail-card { position:absolute; left:985px; top:198px; width:400px; height:487px; padding:25px 26px 13px; isolation:isolate; display:flex; flex-direction:column; color:#f0dfbb; }
 .skill-card-frame { position:absolute; inset:0; z-index:-1; pointer-events:none; border:15px solid transparent; border-image-slice:90 fill; border-image-width:15px; border-image-repeat:stretch; }
 .skill-detail-card header { flex:none; display:flex; align-items:center; gap:14px; min-height:76px; padding-bottom:16px; border-bottom:1px solid #9d8049; }
 header img { width:61px; height:61px; border:3px double #a6813a; border-radius:50%; object-fit:cover; }
@@ -36,8 +38,10 @@ header img { width:61px; height:61px; border:3px double #a6813a; border-radius:5
 .skill-detail-body { min-height:0; flex:1; overflow:auto; scrollbar-width:thin; scrollbar-color:#aa8c48 transparent; padding-right:5px; }
 .skill-description { font-size:16px; line-height:1.7; color:#d8c49a; margin:20px 0; }h3 { margin:22px 0 12px; padding-top:13px; border-top:1px solid #8a713c55; font-size:20px; font-weight:500; color:#f0d9a0; }
 dl { margin:0; font-size:15px; }dl > div { display:flex; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px solid #8a713c33; }dt { color:#cbb585; }dd { margin:0; color:#f0d9a0; text-align:right; }
-.skill-condition { font-size:15px; line-height:1.6; margin:0 0 6px; color:#b3a077; }.skill-cost { color:#e0b665; font-weight:500; }
-.skill-action-hint { color:#8c7956; font-size:11px; line-height:1.5; }
-.skill-upgrade { flex:none; width:100%; height:47px; margin-top:15px; font:23px var(--font-display,Georgia,serif); cursor:pointer; }.skill-upgrade:hover { filter:brightness(1.12); }.skill-upgrade:focus-visible { outline:2px solid #315b43; outline-offset:3px; }.skill-upgrade:disabled { cursor:default; filter:grayscale(.55) opacity(.75); }
+.skill-condition { font-size:15px; line-height:1.6; margin:0 0 6px; color:#b3a077; }
+.skill-actions { flex:none; padding-top:14px; border-top:1px solid #8a713c55; }
+.skill-cost { font-size:15px; margin:0 0 6px; color:#e0b665; font-weight:500; }
+.skill-action-hint { color:#8c7956; font-size:11px; line-height:1.5; margin:0 0 8px; }
+.skill-upgrade { flex:none; width:100%; height:47px; font:23px var(--font-display,Georgia,serif); cursor:pointer; }.skill-upgrade:hover { filter:brightness(1.12); }.skill-upgrade:focus-visible { outline:2px solid #315b43; outline-offset:3px; }.skill-upgrade:disabled { cursor:default; filter:grayscale(.55) opacity(.75); }
 .skill-notice { flex:none; width:100%; height:34px; padding-top:7px; font-size:11px; line-height:14px; color:#b3a077; }
 </style>
