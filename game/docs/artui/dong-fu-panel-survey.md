@@ -407,7 +407,26 @@ Mọi `*Surface.vue` đã build model THẬT qua `gameManager.*Ops` + `usePlayer
 2. **Thương Hội (vendor) icon có trên rail nhưng là dead button** — click không mở gì: mock chưa có panel vendor (xác nhận R33).
 3. **Quest card (góc phải header) chỉ là display** — click không làm gì trong mock. Ruling: card trên production có nên link sang quest panel?
 
-**R37.** Panel Trợ Giúp mới — thêm vào prod (5 topic help/onboarding) hay chỉ giữ FeedbackDialog hiện có? (Gợi ý: thêm — content dạng hướng dẫn, khác mục đích form báo lỗi.)
+**R37.** Panel Trợ Giúp mới — thêm vào prod (5 topic hướng dẫn) hay chỉ giữ FeedbackDialog hiện có? (Gợi ý: thêm — content dạng hướng dẫn, khác mục đích form báo lỗi.)
+
+## 9b. Prod-only features mocks bỏ qua — keep candidates
+
+Fidelity scenes hiện có các feature G2 mock KHÔNG vẽ — cần ruling "giữ" hay "bỏ":
+
+| Panel | Feature prod | Mock | Gợi ý |
+|---|---|---|---|
+| Character | `statSources.ts` + `rowTooltip` — breakdown nguồn stat khi hover từng dòng | detail scroll phẳng, không tooltip | giữ tooltip (hợp đồng G2, data sẵn) |
+| Inventory | `InventoryFidelityDetail` aside: art + desc + số lượng + nút Use | slot click không làm gì | giữ detail panel khi chọn slot |
+| Equipment | `EquipmentPaperTooltip` hover inspect; 2 mode bag↔forge + 5 tab forge (enhance/temper/refine/dissolve/decompose qua ForgeBatchBag/Workspace) | 4 tab đơn giản, không tooltip | giữ tooltip + 5 mode (decompose ở forge vẫn đúng R14) |
+| Alchemy | `AlchemyPaperQueue`: hàng job đang luyện + % + nút hủy × | không queue | giữ queue strip (feature thật) |
+| Quest | detail banner art + ✓/◇ objectives + rewards + claim/follow action | gần giống (có card chi tiết + Nhận) | aligned |
+| Technique | stages + mastery bar + sections rows + artifact book | 4-node + detail card | aligned (4 node = stages) |
+| Settings | ~7 nhóm (account/audio/build/feedback/language/save/uiScale/update) | 3 nhóm | map cả 7 nhóm prod vào rail mock |
+| Realm | passives "Hiệu Quả Đã Nhận" + Giới Thiệu footer | có sẵn trong mock | aligned |
+
+**R38.** Tooltip inspect: character stat-source tooltip + equipment item tooltip — giữ trong G3 skin? (mặc định: giữ, đã là hợp đồng a11y/tooltip hiện có)
+
+**R39.** Alchemy queue strip — mock không vẽ vị trí; giữ strip dưới cauldron (vị trí hiện tại) hay gộp vào card chi tiết? (mặc định: giữ strip)
 
 ## 9. Dormant files (cũ còn, mới chưa dùng / mới có cũ vẫn sống)
 
