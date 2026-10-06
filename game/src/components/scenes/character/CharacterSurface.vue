@@ -98,7 +98,7 @@ const pathName = computed(() => {
   }
 
   const pathId = player.cultivationPath as CultivationPathId | undefined
-  return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('panels.skillPath.mortalName')
+  return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('character.daoUndecided')
 })
 
 const pathVerse = computed(() => (isLyHoa.value ? t('character.lyHoaVerse') : undefined))
@@ -196,11 +196,6 @@ const model = computed<CharacterUiModel>(() => {
 })
 
 function onSelect(id: string) {
-  const stat = model.value.stats.find((entry) => entry.id === id)
-  if (stat) {
-    flashNotice(t('character.statNotice', { name: stat.label, value: stat.value }))
-    return
-  }
   if (id.startsWith('talent.')) {
     const talent = model.value.talents.find((entry) => `talent.${entry.id}` === id)
     if (talent) flashNotice(`${talent.name} — ${talent.description}`)

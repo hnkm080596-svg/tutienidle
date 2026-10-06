@@ -7,15 +7,30 @@
 import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { CHARACTER_ART as COMBAT_ART, resolveCharacterArtSlug } from '@/game/support/CharacterArt'
+import {
+  animatedArtFormFor,
+  resolvePlayerEntityKey,
+} from '@/presentation/art/CombatPresentationCatalogue'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import EntitySpriteCanvas from '@/components/common/EntitySpriteCanvas.vue'
 
 const player = usePlayerStore()
 
-const idle = computed(() => {
-  const slug = resolveCharacterArtSlug(player.visualProfileId, { armed: player.visualArmed })
-  return slug ? COMBAT_ART[slug]?.clips.idle : undefined
-})
+const profile = computed(
+  () => PLAYER_VISUAL_PROFILES[player.visualProfileId] ?? PLAYER_VISUAL_PROFILES.mortal,
+)
+
+// The same entity key combat resolves for this profile (armed pick included)
+// - reskin-mapped profiles animate their own sheet, unmapped profiles fall
+// back to their static key's dormant placeholder clips.
+const idle = computed(
+  () =>
+    animatedArtFormFor(
+      resolvePlayerEntityKey(profile.value.id, profile.value.combatTextureKey, {
+        armed: player.visualArmed,
+      }),
+    )?.idle,
+)
 </script>
 <template>
   <div class="cf-figure">
@@ -25,11 +40,11 @@ const idle = computed(() => {
       :sheet-url="resolveAssetUrl(`/${idle.sheetUrl}`)"
       :atlas-url="resolveAssetUrl(`/${idle.atlasUrl}`)"
       :frame-prefix="idle.framePrefix"
-      frame-suffix=".png"
-      :zero-pad="3"
+      :frame-suffix="idle.frameSuffix"
+      :zero-pad="idle.zeroPad"
       :first-frame="idle.firstFrame"
       :last-frame="idle.lastFrame"
-      :fps="8"
+      :fps="idle.frameRate ?? 8"
       height="100%"
     />
   </div>

@@ -294,12 +294,12 @@ async function startStageOneBattle(page: import('@playwright/test').Page): Promi
     .toBe(true)
 }
 
-/** Reopens the QuanKhiPanel via CharacterPanel's Kiem Tu-only entry. */
+/** Reopens the QuanKhiPanel via the Realm panel's Kiem Tu-only entry (R13). */
 async function reopenQuanKhiViaCharacter(page: import('@playwright/test').Page): Promise<void> {
   await page.keyboard.press('`')
-  const characterSlot = page.locator('[data-wheel-slot="character"]')
-  await expect(characterSlot).toBeVisible({ timeout: 10_000 })
-  await characterSlot.click()
+  const realmSlot = page.locator('[data-wheel-slot="realm"]')
+  await expect(realmSlot).toBeVisible({ timeout: 10_000 })
+  await realmSlot.click()
 
   const quanKhiEntry = page.getByRole('button', { name: 'Quán Khí' })
   await expect(quanKhiEntry).toBeVisible({ timeout: 10_000 })

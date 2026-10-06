@@ -37,7 +37,11 @@ h3 { font-size:23px; font-weight:500; margin:24px 0 15px; }.realm-progress { dis
 .realm-passives ul { margin:0; padding:0; list-style:none; max-height:120px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#7f714c transparent; }
 .realm-passives li { display:flex; align-items:baseline; gap:8px; padding:5px 0; font-size:13px; }.realm-passives li strong { font-weight:500; }.realm-passives li small { color:#6b5f42; }
 .realm-breakthrough { border-top:1px solid #a98a4b; margin-top:16px; }.realm-breakthrough h3 { margin-top:15px; font-size:19px; }
-.realm-quan-khi { margin-top:12px; padding:7px 16px; border:1px solid #a5762e; background:linear-gradient(#ffe9ae,#d3a952); color:#4a2f0c; font-size:14px; cursor:pointer; border-radius:4px; }
+/* Docks with the absolute bottom stack (selection/cta/notice) - an in-flow
+   button lands inside the clipped band whenever passives+requirements are
+   tall, so it takes the free slot above the selection line. */
+.realm-quan-khi { position:absolute; left:29px; bottom:112px; width:calc(100% - 29px); padding:7px 16px; border:1px solid #a5762e; background:linear-gradient(#ffe9ae,#d3a952); color:#4a2f0c; font-size:14px; cursor:pointer; border-radius:4px; }
+.realm-quan-khi:hover { filter:brightness(1.08); }
 .realm-selection { position:absolute; left:29px; bottom:90px; margin:0; font-size:13px; color:#6b654d; }
 .realm-cta { position:absolute; left:29px; bottom:35px; width:calc(100% - 29px); height:48px; background:linear-gradient(100deg,#164f40,#28775d,#164f40); border:3px double #c0a35e; border-radius:6px; color:#fff3cf; font:23px var(--font-display,Georgia,serif); cursor:pointer; box-shadow:inset 0 0 0 2px #2d3c2b,0 3px 8px #74603b33; }.realm-cta:hover:not(:disabled) { filter:brightness(1.12); }.realm-cta:focus-visible { outline:2px solid #23604d; outline-offset:3px; }.realm-cta:disabled { opacity:.45; filter:grayscale(.6); cursor:default; }
 .realm-notice { position:absolute; left:29px; bottom:0; width:calc(100% - 29px); margin:0; height:29px; font-size:12px; line-height:14px; color:#665738; }

@@ -9,8 +9,8 @@ import CharacterDerivedStats from './CharacterDerivedStats.vue'
 // Scene 04 - Nhan Vat (imperial-scroll interior). Region grid follows
 // the canonical scene-layout-spec: identity band + talent seals across
 // the top, figure+wheel left, five main stats center, element summary
-// over derived stats right, action rail in the footer zone. The Chi
-// Tiet drawer overlays the right edge (LeftPanel mounts it).
+// over derived stats right. The Chi Tiet drawer overlays the right
+// edge (LeftPanel mounts it).
 </script>
 
 <template>
@@ -36,12 +36,11 @@ import CharacterDerivedStats from './CharacterDerivedStats.vue'
   /* Spec columns 400 | 560 | 252 on the 1244 band with two 16px gaps:
      fr shares + 1.29% gaps (16/1244) land the total on exactly 100%. */
   grid-template-columns: minmax(0, 400fr) minmax(0, 560fr) minmax(0, 252fr);
-  grid-template-rows: minmax(0, auto) minmax(0, auto) minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, auto) minmax(0, auto) minmax(0, 1fr);
   grid-template-areas:
     'identity identity identity'
     'talents talents talents'
-    'figure stats rightcol'
-    'rail rail rail';
+    'figure stats rightcol';
   column-gap: 1.29%;
   row-gap: var(--hk-space-3, 8px);
   color: var(--paper-text);
@@ -63,14 +62,12 @@ import CharacterDerivedStats from './CharacterDerivedStats.vue'
 .character-scene__elements,
 .character-scene__derived { min-height: 0; }
 
-.character-scene__rail { grid-area: rail; min-height: 0; }
-
 @container (max-width: 900px) {
   .character-scene {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto auto auto auto;
+    grid-template-rows: auto auto auto auto auto;
     grid-template-areas:
-      'identity' 'talents' 'figure' 'stats' 'rightcol' 'rail';
+      'identity' 'talents' 'figure' 'stats' 'rightcol';
     overflow-y: auto;
   }
   .character-scene__right {

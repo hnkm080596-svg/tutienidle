@@ -146,7 +146,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const scene = page.locator('.cf-scene')
     await expect(scene).toBeVisible({ timeout: 15_000 })
     await expect(scene.locator('.cf-figure')).toBeVisible({ timeout: 10_000 })
-    await expect(scene.locator('.cf-details__body')).toBeVisible()
+    await expect(scene.locator('[data-testid="character-detail-scroll"]')).toBeVisible()
     await shot(page, '04-character')
     assertNoBrowserErrors(errors)
   })

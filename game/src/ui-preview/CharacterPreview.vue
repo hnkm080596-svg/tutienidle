@@ -6,20 +6,7 @@ import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
 import CharacterFidelityScene from '@/components/scenes/character/fidelity/CharacterFidelityScene.vue'
 import Tooltip from '@/components/common/Tooltip.vue'
 import type { CharacterUiModel } from '@/components/scenes/character/fidelity/characterUi'
-import { previewPaperNavigation } from './paperNavigation'
 const { t } = useI18n()
-const navigation = computed(() => previewPaperNavigation(t))
-function navigate(id: string) {
-  if (id === 'inventory') { window.location.assign('/ui-inventory.html'); return }
-  if (id === 'realm') window.location.assign('/ui-realm.html')
-  else if (id === 'body') window.location.assign('/ui-body.html')
-  else if (id === 'exploration') window.location.assign('/ui-exploration.html')
-  else if (id === 'alchemy') window.location.assign('/ui-alchemy.html')
-  else if (id === 'equipment') window.location.assign('/ui-equipment.html')
-  else if (id === 'skill') window.location.assign('/ui-skill.html')
-  else if (id === 'technique') window.location.assign('/ui-technique.html')
-  else if (id !== 'character') select(`nav.${id}`)
-}
 function back() { window.location.assign('/ui-dong-fu.html') }
 const notice = shallowRef('')
 const pointer = shallowRef({ x: 0, y: 0 })
@@ -104,7 +91,7 @@ function move(event: PointerEvent) {
 <template>
   <SceneDesignCanvas><div class="character-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }">
     <DongFuVista />
-    <CharacterFidelityScene :model="model" :navigation="navigation" :notice="notice" preview @select="select" @navigate="navigate" @allocate="select" @back="back" />
+    <CharacterFidelityScene :model="model" :notice="notice" preview @select="select" @allocate="select" @back="back" />
     <Tooltip />
   </div></SceneDesignCanvas>
 </template>
