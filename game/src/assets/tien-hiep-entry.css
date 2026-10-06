@@ -115,3 +115,10 @@
 :is(#app, body) .df-scene.df-scene .df-quest::before { display: none; }
 :is(#app, body) .df-scene.df-scene .df-location { text-shadow: 0 1px #fff3d7; font-style: normal; }
 :is(#app, body) .df-scene.df-scene .df-location > span { font: 700 24px/28px var(--pc-font-body); text-transform: none; }
+
+/* Mock hover recipe (AuthInteractivePreview.vue lines 93-96): an enabled
+   secondary paper-button takes the gold primary face + dark ink text on
+   hover/focus - the pack carries no separate hover PNG for main buttons,
+   the gold face IS the drawn hover state. */
+:is(#app, body) .th-entry-scene .pc-paper-button:not(:disabled):is(:hover, :focus-visible) { color: #3c2810; filter: none; text-shadow: 0 1px #fff0c2; }
+:is(#app, body) .th-entry-scene .pc-paper-button:not(:disabled):is(:hover, :focus-visible)::before { border-image-source: var(--pc-primary-button); filter: brightness(.92) saturate(.85) drop-shadow(0 0 2px #d9b56a40); }
