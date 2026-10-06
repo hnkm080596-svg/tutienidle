@@ -31,7 +31,7 @@ const lock = resolveAssetUrl('/assets/ui/huyen-kim/symbols/lock.svg')
 .skill-node:not(.learned) .skill-node-icon { filter:grayscale(1) brightness(.6); opacity:.6; }
 .skill-node:not(.learned) .skill-node-frame { filter:saturate(.35) brightness(.7); }
 .selected .skill-node-frame { filter:brightness(1.2) drop-shadow(0 0 5px #ffd17a) drop-shadow(0 0 8px #d4983d70); }
-.skill-node:not(.locked):hover .skill-node-frame { filter:brightness(1.15) drop-shadow(0 0 3px #d8ab55); transform:scale(1.035); }
+.skill-node:not(.locked):hover .skill-node-frame { filter:brightness(1.25) drop-shadow(0 0 5px #ffd17a) drop-shadow(0 0 8px #d4983d70); transform:scale(1.035); }
 .skill-node:not(.locked):active .skill-node-disc { transform:scale(.96); }
 .skill-node:focus-visible { outline:2px solid #315c47; outline-offset:5px; border-radius:5px; }
 @media (prefers-reduced-motion:reduce) { .skill-node-frame { transition:none; } }
