@@ -107,7 +107,7 @@ const graphStyle = computed(() => ({
 </template>
 <style scoped>
 .skill-positioned-node { position:absolute; transform:translate(-50%,-38px); }
-.skill-paper-tree { position:absolute; left:365px; top:180px; width:600px; height:440px; overflow:hidden; cursor:grab; touch-action:none; user-select:none; }
+.skill-paper-tree { position:absolute; left:365px; top:180px; width:600px; height:440px; overflow:hidden; cursor:grab; touch-action:none; user-select:none; background:#0d0a07; border:1px solid #6d5a33; border-radius:6px; }
 .skill-paper-tree.dragging { cursor:grabbing; }
 .skill-paper-tree :deep(img) { -webkit-user-drag:none; }
 .skill-graph { position:absolute; left:50%; top:50%; transform-origin:center; }
