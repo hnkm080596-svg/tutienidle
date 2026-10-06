@@ -1355,10 +1355,11 @@
       "chooseOne": "Choose one",
       "hoverDetail": "Hover for details",
       "pathStep": {
-        "sectionTitle": "Choose a Starting Path",
-        "description": "Pick the road your gift points to.",
+        "sectionTitle": "Starting Dao Path",
+        "description": "Your dao path is already set — the journey begins on the Spell Path.",
         "paths": {
           "tuKiem": "Sword Path",
+          "lyHoa": "Ly Hoa",
           "tuPhap": "Spell Path",
           "tuThe": "Body Path",
           "hidden": "?"
@@ -2074,7 +2075,7 @@
     "elements": "Five Elements",
     "path": "Path",
     "lyHoaDao": "Ly Hỏa Chi Đạo",
-    "lyHoaVerse": "離宮真火焚天地 · 三昧神光煉古今",
+    "lyHoaVerse": "Ly Palace True Fire Burns Heaven And Earth · Samadhi Light Refines Past And Present",
     "power": "Combat Power",
     "details": "Details",
     "combat": "Combat",

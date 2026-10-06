@@ -32,6 +32,7 @@ import type { Stats } from '@/core/stats/StatBlock'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import CharacterFidelityScene from './fidelity/CharacterFidelityScene.vue'
 import type { CharacterUiModel, CharacterUiStat, CharacterUiStatSources } from './fidelity/characterUi'
+import { daoIdentityFor } from './fidelity/characterUi'
 
 
 const { t } = useI18n()
@@ -90,18 +91,31 @@ const combatPower = computed(() => {
 // replace the generic path label on the identity plate. The committed
 // element comes through the canonical accessor - the shell never
 // reconstructs it from player state.
-const isLyHoa = computed(() => getActiveElement(player.$state) === 'fire')
+// Dao identity is generic over every committed way (Minh ruling) -
+// the plate reads the dao table, not a Ly Hoa special case.
+const daoIdentity = computed(() =>
+  daoIdentityFor(player.cultivationWay, getActiveElement(player.$state)),
+)
 
 const pathName = computed(() => {
-  if (isLyHoa.value) {
-    return t('character.lyHoaDao')
+  if (daoIdentity.value) {
+    return t(daoIdentity.value.nameKey)
   }
 
   const pathId = player.cultivationPath as CultivationPathId | undefined
-  return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('character.daoUndecided')
+  if (pathId === undefined) {
+    // The plate shows CURRENT state only (Minh ruling): a mortal reads
+    // 'Pham Nhan' - the dao name appears only after the way is
+    // committed at the promotion ritual, not as a declared destiny.
+    return undefined
+  }
+
+  return CULTIVATION_PATH_MODULES[pathId]?.name ?? t('character.daoUndecided')
 })
 
-const pathVerse = computed(() => (isLyHoa.value ? t('character.lyHoaVerse') : undefined))
+const pathVerse = computed(() =>
+  daoIdentity.value?.verseKey ? t(daoIdentity.value.verseKey) : undefined,
+)
 
 function detailRows(
   categories: readonly StatCategory[],
@@ -166,7 +180,7 @@ const model = computed<CharacterUiModel>(() => {
 
   return {
     name: player.name,
-    realm: `${realm.name} · ${t('panels.character.labels.realmFloor')} ${player.realmLevel}`,
+    realm: realm.name,
     path: pathName.value,
     pathVerse: pathVerse.value,
     combatPower: formatNumber(combatPower.value),

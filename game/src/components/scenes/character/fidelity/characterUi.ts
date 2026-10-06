@@ -9,6 +9,23 @@ export const CHARACTER_ART = Object.freeze({
 export const elementArt = (id: string) => resolveAssetUrl(`${tienHiep}icons/element-${id}-ivory-v1.png`)
 // Per-talent glyph seals (talent-<id>.svg), 'technique' symbol as fallback.
 export const talentGlyph = (id: string) => resolveAssetUrl(`/assets/ui/huyen-kim/symbols/talent-${id}.svg`)
+
+/** Committed dao identity for the name plate: every dao lo declares
+ *  its display name and (optionally) a couplet verse here, keyed by
+ *  `<wayId>.<element>` first, then bare `<wayId>` for ways that carry
+ *  no element axis. The couplet renders as two vertical columns
+ *  flanking the idle figure - generic mechanism, one entry per dao. */
+export interface DaoIdentity {
+  nameKey: string
+  verseKey?: string
+}
+const DAO_IDENTITIES: Readonly<Record<string, DaoIdentity>> = {
+  'spell_pathway.fire': { nameKey: 'character.lyHoaDao', verseKey: 'character.lyHoaVerse' },
+}
+export function daoIdentityFor(wayId: string | undefined, element: string | undefined) {
+  if (!wayId) return undefined
+  return DAO_IDENTITIES[`${wayId}.${element ?? ''}`] ?? DAO_IDENTITIES[wayId]
+}
 export interface CharacterUiStatSource {
   /** Resolved Vietnamese source name, or the category fallback. */
   label: string
@@ -71,8 +88,9 @@ export interface CharacterUiPowerSource {
 export interface CharacterUiModel {
   name: string
   realm: string
-  /** Resolved cultivation-path display name ('Phap Tu' / 'Kiem Tu' / ...). */
-  path: string
+  /** Committed dao display name ('Ly Hoa Chi Dao' / module name).
+   *  Undefined while uncommitted - a mortal plate shows just 'Pham Nhan'. */
+  path?: string
   /** Dao verse shown under the path name for elemental daos (Ly Hoa). */
   pathVerse?: string
   combatPower: string

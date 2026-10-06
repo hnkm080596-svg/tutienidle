@@ -1355,10 +1355,11 @@
       "chooseOne": "Chọn một",
       "hoverDetail": "Di chuột để xem chi tiết",
       "pathStep": {
-        "sectionTitle": "Chọn Đạo Lộ Khởi Đầu",
-        "description": "Chọn một đạo lộ phù hợp với thiên phú, quyết chí tu hành.",
+        "sectionTitle": "Đạo Lộ Khởi Đầu",
+        "description": "Đạo lộ của đạo hữu đã định — con đường tu hành bắt đầu từ Pháp Tu.",
         "paths": {
           "tuKiem": "Tu Kiếm",
+          "lyHoa": "Lý Hỏa",
           "tuPhap": "Tu Pháp",
           "tuThe": "Tu Thể",
           "hidden": "?"
@@ -2074,7 +2075,7 @@
     "elements": "Ngũ Hành",
     "path": "Đạo lộ",
     "lyHoaDao": "Ly Hỏa Chi Đạo",
-    "lyHoaVerse": "離宮真火焚天地 · 三昧神光煉古今",
+    "lyHoaVerse": "Ly Cung Chân Hỏa Phần Thiên Địa · Tam Muội Thần Quang Luyện Cổ Kim",
     "power": "Chiến Lực",
     "details": "Chi Tiết",
     "combat": "Chiến Đấu",

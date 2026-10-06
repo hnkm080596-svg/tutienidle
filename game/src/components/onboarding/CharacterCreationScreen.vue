@@ -34,18 +34,20 @@ const rolling = ref(false)
 const error = ref('')
 const creating = ref(false)
 
-// Minh ruling: one random button randomizes every section the player has
-// not directly filled/picked; touched sections are never overridden.
+// Minh ruling: one master die covers all three sections - it fills the
+// name only when untouched/empty, always picks the single open dao-lo
+// cell, and rerolls the talent offer before picking one of the new 3.
 const nameTouched = ref(false)
-const pathTouched = ref(false)
-const talentTouched = ref(false)
+
 
 const { t } = useI18n()
 
-// Dao-lo row IS the starter-skill row (Minh ruling): each cell maps to a
-// mortal precursor option; only Tu Phap (linh_bao) is unlocked in beta.
-// The two trailing cells are unrevealed placeholders. The pick stays
-// local UI state and never enters the payload.
+// Dao-lo row (Minh ruling 2026-10-05): dao lo fixes art + starter
+// skill + the breakthrough lane from creation; the player picks the
+// dao lo itself, and beta opens exactly one - Tu Phap (mortal starter
+// linh_bao) - so the master die always lands on it. Every other cell
+// stays locked/hidden. The pick stays local UI state and never enters
+// the payload.
 interface DaoLoCell { skillId: string | null; labelKey: string; locked: boolean }
 const DAO_LO_CELLS: readonly DaoLoCell[] = [
   { skillId: 'tram', labelKey: 'tuKiem', locked: true },
@@ -55,11 +57,10 @@ const DAO_LO_CELLS: readonly DaoLoCell[] = [
   { skillId: null, labelKey: 'hidden', locked: true },
 ]
 const starterBySkillId = new Map(CREATION_SKILL_PREVIEW.map((option) => [option.id, option]))
-const pickedPathId = ref<string | null>('linh_bao')
+const pickedPathId = ref<string | null>(null)
 function pickPath(cell: DaoLoCell) {
   if (cell.locked || creating.value) return
   pickedPathId.value = cell.skillId
-  pathTouched.value = true
 }
 
 const TALENT_GRID_SIZE = 9
@@ -83,8 +84,8 @@ const summary = computed(() =>
   t('onboarding.creation.summary', { name: name.value.trim(), talent: pickedTalentName.value }),
 )
 
-function masterRandom() {
-  if (creating.value) return
+async function masterRandom() {
+  if (creating.value || rolling.value) return
   useAudioStore().cue('progress.reroll')
   if (!nameTouched.value || !name.value.trim()) {
     const roll = () => DAO_NAME_POOL[Math.floor(Math.random() * DAO_NAME_POOL.length)] ?? 'Lạc Vân Trần'
@@ -94,15 +95,13 @@ function masterRandom() {
     }
     name.value = pick
   }
-  if (!pathTouched.value) {
-    const open = DAO_LO_CELLS.filter((cell) => cell.skillId !== null && !cell.locked)
-    const cell = open[Math.floor(Math.random() * open.length)]
-    if (cell) pickedPathId.value = cell.skillId
-  }
-  if ((!talentTouched.value || selectedTalentIds.value.length === 0) && talents.value.length > 0) {
-    const options = talents.value.filter((talent) => talent.id !== selectedTalentIds.value[0])
-    const pool = options.length > 0 ? options : talents.value
-    const pick = pool[Math.floor(Math.random() * pool.length)]
+  const open = DAO_LO_CELLS.filter((cell) => cell.skillId !== null && !cell.locked)
+  const cell = open[Math.floor(Math.random() * open.length)]
+  if (cell) pickedPathId.value = cell.skillId
+  // Talent: reroll the offer FIRST, then randomly pick one of the new 3.
+  await reroll()
+  if (talents.value.length > 0) {
+    const pick = talents.value[Math.floor(Math.random() * talents.value.length)]
     if (pick) selectedTalentIds.value = [pick.id]
   }
 }
@@ -112,7 +111,6 @@ function toggleTalent(talent: TalentDefinition) {
   const index = selectedTalentIds.value.indexOf(talent.id)
   if (index >= 0) selectedTalentIds.value.splice(index, 1)
   else selectedTalentIds.value = [talent.id]
-  talentTouched.value = true
 }
 async function reroll() {
   if (rolling.value || creating.value) return
@@ -180,7 +178,7 @@ const style = { '--trial-panel': `url('${art.panel}')` }
       <div class="trial-paths" data-hk-region="dao-lo" role="radiogroup" :aria-label="t('onboarding.creation.pathStep.sectionTitle')">
         <button v-for="(cell, index) in DAO_LO_CELLS" :key="cell.skillId ?? `hidden-${index}`" type="button" role="radio" :aria-checked="pickedPathId === cell.skillId" class="trial-path-cell" :class="{ selected: pickedPathId === cell.skillId, locked: cell.locked }" :disabled="cell.locked || creating" :title="cell.skillId ? starterBySkillId.get(cell.skillId)?.description : undefined" :data-testid="cell.skillId ? `creation-starter-${cell.skillId}` : `creation-starter-hidden-${index}`" @click="pickPath(cell)"><InkNineSlice :chrome-id="pickedPathId === cell.skillId ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ cell.skillId ? t(`onboarding.creation.pathStep.paths.${cell.labelKey}`) : '?' }}</span></button>
       </div>
-      <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}<PcPaperButton icon variant="secondary" class="trial-talent-reroll" data-testid="creation-reroll" :disabled="rolling || creating" :aria-label="t('onboarding.creation.talentStep.reroll')" @click="reroll">⚄</PcPaperButton></h2>
+      <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}</h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid" data-hk-region="talent-grid" role="radiogroup" :aria-label="t('onboarding.creation.talentStep.sectionTitle')">
           <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIcon(talent)" alt=""></span><b>{{ talent.name }}</b></button>
@@ -248,7 +246,6 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 .trial-path-title { margin: 14px 0 4px; font-size: 18px; }
 .trial-path-description { margin: 0 0 8px; font-size: 14px; text-align: center; }
 .trial-talent-title { margin-top: 20px; display: flex; align-items: center; gap: 12px; }
-.trial-talent-reroll { min-width: 40px; height: 40px; font-size: 18px; }
 .trial-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 11px; }
 .trial-path-cell { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; padding: 7px 8px; min-height: 44px; border: 0; background: transparent; color: #f1e2c0; font: 15px var(--pc-font-body); cursor: pointer; }
 .trial-path-cell > :not(.ink-nine-slice) { position: relative; z-index: 2; }

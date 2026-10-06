@@ -50,20 +50,22 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     expect(container.querySelector('[data-testid="creation-name-input"]')).toBeTruthy()
     expect(container.querySelector('[data-testid^="creation-talent-"]')).toBeTruthy()
 
-    // BETA SCOPE LOCK v2 (phase-2): no allocation, no stepper. The dao-lo
-    // row IS the starter-skill row: tram/huy_quyen render as locked cells,
-    // the two trailing cells are hidden placeholders, and linh_bao - the
-    // fixed beta starter - is the single selectable radio. The pick is
-    // local UI state and never enters the payload (pinned below).
+    // BETA SCOPE LOCK v2 (phase-2): no allocation, no stepper. Dao lo
+    // cells: Tu Phap (linh_bao) is the only OPEN pick in beta - a normal
+    // selectable cell, not pre-selected (Minh ruling 2026-10-06).
+    // tram/huy_quyen render locked, the two trailing cells are hidden
+    // placeholders. The pick stays local UI state and never enters the
+    // payload (pinned below).
     const daoLo = container.querySelector('[data-hk-region="dao-lo"]')
     expect(daoLo).toBeTruthy()
     expect(daoLo!.querySelectorAll('.trial-path-cell')).toHaveLength(5)
     const locked = daoLo!.querySelectorAll('.trial-path-cell.locked')
     expect(locked).toHaveLength(4)
-    const starterPick = daoLo!.querySelector<HTMLElement>('[data-testid="creation-starter-linh_bao"]')
+    const starterPick = daoLo!.querySelector<HTMLButtonElement>('[data-testid="creation-starter-linh_bao"]')
     expect(starterPick!.tagName).toBe('BUTTON')
     expect(starterPick!.getAttribute('role')).toBe('radio')
-    expect(starterPick!.getAttribute('aria-checked')).toBe('true')
+    expect(starterPick!.getAttribute('aria-checked')).toBe('false')
+    expect(starterPick!.disabled).toBe(false)
     expect(daoLo!.querySelectorAll('button:not([disabled])')).toHaveLength(1)
     expect(container.querySelector('[data-testid^="creation-attribute-"]')).toBeNull()
     expect(container.querySelector('.stepper')).toBeNull()
@@ -83,7 +85,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     mounted.unmount()
   })
 
-  it('master die randomizes every untouched section (name + talent)', async () => {
+  it('master die randomizes all three sections - name, dao-lo, talent (reroll first)', async () => {
     const mounted = mountScreen()
     await flushRoll()
 
@@ -91,11 +93,13 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     const nameInput = container.querySelector<HTMLInputElement>('[data-testid="creation-name-input"]')!
     expect(nameInput.value).toBe('')
     expect(container.querySelector('[data-testid^="creation-talent-"][aria-checked="true"]')).toBeNull()
+    expect(container.querySelector('[data-testid="creation-starter-linh_bao"]')!.getAttribute('aria-checked')).toBe('false')
 
     container.querySelector<HTMLButtonElement>('[data-testid="creation-random-all"]')!.click()
-    await nextTick()
+    await flushRoll()
 
     expect(nameInput.value.length).toBeGreaterThanOrEqual(2)
+    expect(container.querySelector('[data-testid="creation-starter-linh_bao"]')!.getAttribute('aria-checked')).toBe('true')
     expect(container.querySelectorAll('[data-testid^="creation-talent-"][aria-checked="true"]')).toHaveLength(1)
 
     mounted.unmount()
@@ -109,7 +113,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     fillName(container)
     await nextTick()
     container.querySelector<HTMLButtonElement>('[data-testid="creation-random-all"]')!.click()
-    await nextTick()
+    await flushRoll()
 
     const nameInput = container.querySelector<HTMLInputElement>('[data-testid="creation-name-input"]')!
     expect(nameInput.value).toBe('Lạc Vân')
@@ -139,7 +143,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     expect(checkedTalent()).toHaveLength(0)
 
     die().click()
-    await nextTick()
+    await flushRoll()
 
     expect(nameInput.value.length).toBeGreaterThanOrEqual(2)
     expect(checkedTalent()).toHaveLength(1)

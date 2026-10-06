@@ -50,9 +50,10 @@ const idle = computed(
   </div>
 </template>
 <style scoped>
-/* Mock proportions: the figure occupies 73% of the portrait column and
-   the sprite scales to fit (object-fit: contain equivalent). The power
-   card docks over the bottom edge. */
-.cf-figure { position: absolute; left: 0; right: 0; top: 15%; height: 73%; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
-.cf-figure__sprite { height: 100%; max-width: 100%; object-fit: contain; filter: drop-shadow(0 8px 9px #4a3c3040); }
+/* Figure zone (Minh ruling): bottom edge rests on the power card's top
+   border (~18% of the column), top starts just below the realm/path
+   line so the head never covers the dao text. Sprite is bottom-aligned
+   and scales to fit. */
+.cf-figure { position: absolute; left: 0; right: 0; top: 14%; bottom: 18%; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
+.cf-figure__sprite { height: 100%; max-width: 100%; object-fit: contain; transform: translateX(-14px); filter: drop-shadow(0 8px 9px #4a3c3040); }
 </style>

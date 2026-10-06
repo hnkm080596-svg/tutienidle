@@ -17,9 +17,9 @@ const talents: { id: string; icon: PcPaperIcon }[] = [
   { id: 'metal', icon: 'artifact' }, { id: 'void', icon: 'portal' }, { id: 'herb', icon: 'alchemy' },
 ]
 const selectedTalent = computed(() => talents[selected.value]!)
-// Minh ruling: dao-lo cells mirror production - Tu Kiem/Tu Phap/Tu The
-// plus two unrevealed '?'; only Tu Phap is selectable. Cells ride the
-// compact drawn button (the 9-slice paper button stripes at this size).
+// Minh ruling 2026-10-06: Tu Phap is the only open dao-lo cell in beta
+// (the rest stay locked); it is a normal pick, not an assignment.
+// Cells ride the compact drawn button (9-slice paper stripes).
 const pathways = [
   { key: 'tuKiem', labelKey: 'onboarding.creation.pathStep.paths.tuKiem', locked: true },
   { key: 'tuPhap', labelKey: 'onboarding.creation.pathStep.paths.tuPhap', locked: false },
@@ -27,27 +27,22 @@ const pathways = [
   { key: 'hidden1', labelKey: 'onboarding.creation.pathStep.paths.hidden', locked: true },
   { key: 'hidden2', labelKey: 'onboarding.creation.pathStep.paths.hidden', locked: true },
 ]
-const pathwayKey = ref('tuPhap')
+const pathwayKey = ref('')
 const nameTouched = ref(false)
-const pathTouched = ref(false)
-const talentTouched = ref(false)
 const art = {
   panel: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png'),
   frame: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png'),
   cloud: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@2x.png'),
 }
 const style = { '--trial-panel': `url('${art.panel}')`, '--trial-frame': `url('${art.frame}')` }
-// Master random: randomizes every section the player has not touched.
+// Master random: fills the name when untouched, always lands on the
+// single open dao-lo cell, and picks a talent tile.
 function randomAll() {
   if (!nameTouched.value) name.value = t('authPreview.trial.randomName')
-  if (!pathTouched.value) {
-    const open = pathways.filter((path) => !path.locked)
-    pathwayKey.value = open[Math.floor(Math.random() * open.length)]?.key ?? pathwayKey.value
-  }
-  if (!talentTouched.value) {
-    const options = talents.map((_, index) => index).filter((index) => index !== selected.value)
-    selected.value = options[Math.floor(Math.random() * options.length)] ?? selected.value
-  }
+  const open = pathways.filter((path) => !path.locked)
+  pathwayKey.value = open[Math.floor(Math.random() * open.length)]?.key ?? pathwayKey.value
+  const options = talents.map((_, index) => index).filter((index) => index !== selected.value)
+  selected.value = options[Math.floor(Math.random() * options.length)] ?? selected.value
   notice.value = ''
 }
 </script>
@@ -61,11 +56,11 @@ function randomAll() {
       <div class="trial-name-row"><span class="trial-name-label">{{ t('authPreview.trial.setName') }}</span><input v-model="name" :aria-label="t('authPreview.name')" :placeholder="t('authPreview.trial.namePlaceholder')" @input="nameTouched = true"><PcPaperButton icon variant="secondary" class="trial-name-random" :aria-label="t('onboarding.creation.talentStep.randomAll')" @click="randomAll">⚄</PcPaperButton></div>
       <h2 class="trial-section-title trial-path-title">{{ t('authPreview.trial.choosePath') }}</h2>
       <p class="trial-path-description">{{ t('authPreview.trial.pathDescription') }}</p>
-      <div class="trial-paths"><button v-for="path in pathways" :key="path.key" type="button" class="trial-path-cell" :class="{ selected: pathwayKey === path.key, locked: path.locked }" :disabled="path.locked" :aria-pressed="pathwayKey === path.key" @click="pathwayKey = path.key; pathTouched = true"><InkNineSlice :chrome-id="pathwayKey === path.key ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ path.locked && path.key.startsWith('hidden') ? '?' : t(path.labelKey) }}</span></button></div>
+      <div class="trial-paths"><button v-for="path in pathways" :key="path.key" type="button" class="trial-path-cell" :class="{ selected: pathwayKey === path.key, locked: path.locked }" :disabled="path.locked" :aria-pressed="pathwayKey === path.key" @click="pathwayKey = path.key"><InkNineSlice :chrome-id="pathwayKey === path.key ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ path.locked && path.key.startsWith('hidden') ? '?' : t(path.labelKey) }}</span></button></div>
       <h2 class="trial-section-title trial-talent-title">{{ t('authPreview.trial.chooseTalent') }}</h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid">
-          <button v-for="(talent,index) in talents" :key="talent.id" type="button" :class="{ selected: selected === index }" :aria-pressed="selected === index" :data-testid="`trial-talent-${talent.id}`" @click="selected = index; talentTouched = true"><span class="trial-talent-seal"><img :src="pcPaperIconUrl(talent.icon)" alt=""></span><b>{{ t(`authPreview.trial.talents.${talent.id}`) }}</b></button>
+          <button v-for="(talent,index) in talents" :key="talent.id" type="button" :class="{ selected: selected === index }" :aria-pressed="selected === index" :data-testid="`trial-talent-${talent.id}`" @click="selected = index"><span class="trial-talent-seal"><img :src="pcPaperIconUrl(talent.icon)" alt=""></span><b>{{ t(`authPreview.trial.talents.${talent.id}`) }}</b></button>
         </div>
         <aside class="trial-talent-detail"><span class="trial-talent-seal"><img :src="pcPaperIconUrl(selectedTalent.icon)" alt=""></span><h3>{{ t(`authPreview.trial.talents.${selectedTalent.id}`) }}</h3><p>{{ t('authPreview.trial.description', { talent: t(`authPreview.trial.talents.${selectedTalent.id}`) }) }}</p><h4 class="trial-section-title">{{ t('authPreview.trial.features') }}</h4><ul><li v-for="n in 3" :key="n">{{ t(`authPreview.trial.feature${n}`) }}</li></ul></aside>
       </div>
