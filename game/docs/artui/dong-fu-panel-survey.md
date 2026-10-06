@@ -372,9 +372,33 @@ Vấn đề: 13 `Home*ArtPanel` + 8 `EquipmentArt*`/`Skill*`/`Quest*`/`Productio
 
 ## 6. Coverage checklist (line-by-line)
 
-Done: home (§1), character, inventory, settings, equipment, skill, body, technique, realm, alchemy, exploration, production, quest, formation, vendor, feedback + non-rail (worker_lodge, scripture, quan_khi, artifact, companion, guild/sect/portal).
+Done: home (§1), character, inventory, settings, equipment, skill, body, technique, realm, alchemy, exploration, production, quest, formation, vendor, feedback + non-rail (worker_lodge, scripture, quan_khi, artifact, companion, guild/sect/portal), combat/tribulation/victory/defeat asset map (§9a), visual pass live trên 13 mock panel (§9a-2), prod-only features (§9b), preview index 25 trang (§9c), system surfaces ngoài canvas (§9d), locale audit (§8b), test-pin radius (§8c), quest taxonomy (R31).
 
-Chưa sâu (cycle sau): subcomponent từng fidelity scene (Chi Tiết drawer, stat source breakdowns, tooltip contracts), combat/tribulation/victory/defeat scenes (không phải panel động phủ nhưng cùng pack), locales key-parity cho các label mới của mock.
+## 10. Suggested slice order (sau khi Minh rule R1–R43)
+
+| Slice | Nội dung | Phụ thuộc | Rulings chặn |
+|---|---|---|---|
+| C0-foundation | Promote primitives→common/art + rail seam đã có (2d1a2238) + inner PaperPanelNavigation gỡ mặc định | — | R9, R38 |
+| C1-character | CharacterFidelity → mock layout + Chi Tiết drawer + tooltips | C0 | R11, R38 |
+| C2-inventory | InventoryFidelity + detail aside + decompose decision | C0 | R14, R15 |
+| C3-skill | SkillFidelity → element chips + cross tree | C0 | — |
+| C4-body | BodyFidelity → silhouette | C0 | R20 |
+| C5-technique | TechniqueFidelity → 4-node row | C0 | R22 |
+| C6-realm | RealmFidelity → timeline + Kim Đan key | C0 | — |
+| C7-quest | QuestFidelity → 5-group rail (1 live + 4 "Chưa lộ") | C0 | R31 |
+| C8-alchemy | AlchemyFidelity → pill rail + cauldron + queue strip | C0 | R39 + lò đan asset |
+| C9-equipment | EquipmentFidelity → 4 tab + paperdoll + tooltip | C0 | R18, R38 |
+| C10-exploration | ExplorationFidelity → vista map | C0 | R28 |
+| C11-production | ProductionPanel promote paper shell | C0 | R29, R30 |
+| C12-settings | SettingsFidelity → 3-group rail (map 7 nhóm) | C0 | — |
+| C13-help | Trợ Giúp panel mới | C0 | R37 |
+| C14-secondary | reskin tran_phap/artifact/companion/worker_lodge/scripture/quan_khi/vendor | C0 | R33, R35, R42 |
+| C15-combat | CombatFidelity → pack mới chrome | §9a | R36 |
+| C16-tribulation | TribulationFidelity → pack mới | §9a | — |
+| C17-victory/defeat | titles + chrome | §9a | R36 |
+| C18-system | loading/entitlement/feedback/confirm + reskin 9 modal | C0 | R40, R43 |
+
+Mỗi slice = 1 PR vào chuỗi sau B; chỉ mở khi rulings tương ứng đã quyết.
 
 ## 7. Asset audit (mọi file mock tham chiếu — đã kiểm tồn tại trong `public/`)
 
