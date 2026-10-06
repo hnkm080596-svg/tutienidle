@@ -3152,6 +3152,28 @@ describe('validateGameSaveShape — v82 seam repair cross-checks', () => {
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
+  it('F-R22-03: từ chối autoWorkerCapacity vượt trần slot cơ chế 65536', () => {
+    const save = validSave()
+
+    playerOf(save).autoWorkerCapacity = 70_000
+    save.buildings = [
+      {
+        instanceId: 'b-chq',
+        buildingId: 'chi_hien_quan',
+        level: 1,
+        lastCollectedAt: 1_725_000_000_000,
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.autoWorkerCapacity')
+
+    playerOf(save).autoWorkerCapacity = 65_536
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
   it('F-W-17: từ chối formationLoadout assignment ô ngoài cellPattern', () => {
     const save = validSave()
 

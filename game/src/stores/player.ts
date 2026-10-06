@@ -86,16 +86,24 @@ const SIGNATURE_SEPARATOR = '\u0001'
  * r13-INT: bound the wall-clock window a persisted timed effect may
  * claim. `appliedAtMs > now` is impossible provenance - clamp it so a
  * forged future application date cannot park a buff ahead of time.
- * `expiresAtMs` forward-bound applies ONLY to non-stackable effects:
- * applyTimedEffect refreshes those via `max(existing, new)` so their
- * honest expiry is `last-refresh + dur <= lastSavedAt + authored max`
- * (TU_LINH_TRAN_DURATION_MS = longest authored window). A
- * `durationStackable` group instead ADDS its duration onto remaining
- * time per drink - its honest expiresAtMs is unbounded over the save
- * lifetime, so no fixed bound can separate an honest long chain from
- * a forged deadline; the span check is left to the shape validator's
- * stackable exemption and expires passes through here (r13-COR-3,
- * r14-AUT-1 accepted residual).
+ * `expiresAtMs` forward-bound now applies to EVERY effect, stackable
+ * included (r22-AUT-1): parking an EXPIRY mints liveness - a crafted
+ * far-future deadline on a stackable regen record granted a live buff
+ * for ~285M years vs the 75s authored (grant direction, not the
+ * deny-direction residual the earlier exemption assumed). Honest
+ * bound math: every extension is `max(drinkTime, oldExpiry) + dur`
+ * with drinkTime <= lastSavedAt, so honest expiry <= lastSavedAt +
+ * sum(durations consumed). The sum is structurally unbounded (no
+ * per-record drink counter persists), so the cap uses the same
+ * class-max window as non-stackable (TU_LINH_TRAN_DURATION_MS =
+ * longest authored window = 24h): every honest single-window chain
+ * shorter than ~360 consecutive drinks passes whole; chains beyond
+ * that lose only their tail past save+24h on load - bounded
+ * deny-direction loss, far cheaper than a permanent mint.
+ * (Supersedes the r13-COR-3 / r14-AUT-1 exemption, which reasoned
+ * the honest span was unbounded and therefore unboundable - true for
+ * an absolute bound, wrong as a reason to pass a forged deadline
+ * verbatim.)
  * The non-stackable forward bound anchors at the save's own
  * provenance (provenanceMs = min(lastSavedAt, authorityNow)), NOT at
  * boot-now. Every honest extension re-stamps lastApply + duration
@@ -133,7 +141,7 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
   // until + dur is still unprovable (indistinguishable from a
   // far-future mint) - irreducible bounded loss.
   const expiresAtMs =
-    Number.isFinite(effect.expiresAtMs) && effect.durationStackable !== true
+    Number.isFinite(effect.expiresAtMs)
       ? Math.min(
           effect.expiresAtMs,
           Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs
@@ -164,7 +172,10 @@ function payoutExpiresAtMs(
   effect: { expiresAtMs: number; durationStackable?: boolean },
   saveLastSavedAtMs: number,
 ): number {
-  if (!Number.isFinite(effect.expiresAtMs) || effect.durationStackable === true) {
+  // r22-AUT-1: stackable records bound the same way - a far-future
+  // parked expiry on the payout read mints buff-coverage width the
+  // same way it mints liveness on the restore map.
+  if (!Number.isFinite(effect.expiresAtMs)) {
     return effect.expiresAtMs
   }
   if (!Number.isFinite(saveLastSavedAtMs) || effect.expiresAtMs <= saveLastSavedAtMs) {
@@ -612,9 +623,10 @@ export const usePlayerStore = defineStore('player', {
       restoredPlayer.externalModifiers = []
       // r12-COR: bound the wall-clock window a persisted timed effect
       // may claim - boundTimedEffectClocks above (r13-INT-01/02:
-      // seconds-domain honest ceilings; stackable chains keep their
-      // forward expiry). The sibling payoutExpiresAtMs runs the
-      // payout-epoch bound in the offline-pay map.
+      // seconds-domain honest ceilings; r22-AUT-1: stackable expiries
+      // bound the same - a parked expiry mints liveness). The sibling
+      // payoutExpiresAtMs runs the payout-epoch bound in the
+      // offline-pay map.
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
           ...boundTimedEffectClocks(

@@ -739,15 +739,16 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
   })
 
   // --------------------------------------------------------------------
-  // D4 (surface 4) - documented accepted residual re-verified: a
-  // stackable pill-regen record's expires is unbounded by design
-  // (refreshes widen it legitimately). Forge ceiling: ONE record per
-  // effectGroup (dedup), one manaRegenPerTurn modifier at <= 1.5x the
-  // authored mpPerSecond, realm-earnability gated, dormant families
-  // rejected. A crafted expires=1e15 is admitted and stored raw - the
-  // whole residual is this pin.
+  // D4 (surface 4) - SUPERSEDED residual pin, now a deny pin (r22-AUT-1):
+  // the "admitted and stored raw" classification was wrong for an
+  // EXPIRY field - parking it minted ~285M years of regen (grant
+  // direction). boundTimedEffectClocks now bounds stackable expiries
+  // like every sibling: a crafted 1e15 restores clamped at
+  // provenance + 24h, the mint dead. Forge ceiling pins unchanged:
+  // ONE record per effectGroup (dedup), one modifier at <= 1.5x
+  // authored rate, realm-earnability gated, dormant families rejected.
   // --------------------------------------------------------------------
-  it('D4 stackable regen residual: forged 1e15 expires admitted and stored raw (accepted)', () => {
+  it('D4 stackable regen forged 1e15 expires: admitted, restore-clamped to provenance+24h (r22 fix)', () => {
     const save = validSave()
     const p = save.player as PlayerData
     p.realmId = 'qi_refining' // mp_regen family dormant at mortal
@@ -784,9 +785,10 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
       (e) => e.effectGroup === 'hoi_linh_dan',
     )
     expect(stored).toBeDefined()
-    // Raw 1e15 stamp survives - the accepted residual. Bounded mint:
-    // single record, single modifier, <= 1.5x authored regen rate.
-    expect(stored!.expiresAtMs).toBe(1e15)
+    // The crafted deadline no longer survives: restore clamps it at
+    // provenance + TU_LINH_TRAN_DURATION_MS (lastSavedAt wins min here),
+    // so the buff dies inside one authored window, not ~285M years.
+    expect(stored!.expiresAtMs).toBe(lastSavedAt + 24 * 3_600_000)
     expect(stored!.durationStackable).toBe(true)
   })
 

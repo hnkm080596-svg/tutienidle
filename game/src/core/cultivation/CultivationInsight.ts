@@ -17,9 +17,20 @@ export function accrueCultivationInsight(player: PlayerData, gained: number): vo
 
   player.cultivationInsightAccumulator += gained
 
-  while (player.cultivationInsightAccumulator >= threshold) {
-    player.cultivationInsightAccumulator -= threshold
-    player.skillInsight += 1
-    player.totalSkillInsightGained += 1
+  if (!Number.isFinite(player.cultivationInsightAccumulator)) {
+    // Mechanism-level guard: a non-finite feed must not mint a
+    // NaN/Infinity insight counter - the accrual just doesn't happen.
+    return
+  }
+
+  // O(1) drain (r22-AUT nit): the loop body is uniform - subtracting
+  // threshold and bumping the same two counters per step - so one
+  // floor-division mints the identical result in bounded work even
+  // when `gained` lands far past the threshold.
+  const steps = Math.floor(player.cultivationInsightAccumulator / threshold)
+  if (steps > 0) {
+    player.cultivationInsightAccumulator -= steps * threshold
+    player.skillInsight += steps
+    player.totalSkillInsightGained += steps
   }
 }

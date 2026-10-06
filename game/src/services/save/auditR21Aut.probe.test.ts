@@ -209,17 +209,20 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
 
   // ------------------------------------------------------------------
   // A3 (surface 1) - player.lastSavedAt magnitude - WAS: finite-only
-  // pin admitted -1e300. r21 fix: |marker| >= 2^53 is rejected at
-  // the gate; sub-pin markers (+-9e15) stay admitted and settle
-  // safely (ms-deltas cannot absorb under ulp/2 at < 2^53).
+  // pin admitted -1e300. r21 fix: |marker| >= 2^53 rejected; r22
+  // (INT-01 derivation sliver + COR-1 stackable-writer escalation)
+  // tightened to |marker| >= 2^52 - the ~4.5e15 headroom keeps every
+  // derived cursor (offlineSinceMs round-trip, stackable re-drink
+  // adds) off the mechanism pin. Sub-bound markers (+-4e15) stay
+  // admitted and settle safely (ulp/2 < every authored cycleMs).
   // ------------------------------------------------------------------
-  it('A3 validator rejects out-of-domain lastSavedAt, admits sub-pin markers (r21 pin)', () => {
-    for (const marker of [-1e300, TWO_POW_53, -TWO_POW_53]) {
+  it('A3 validator rejects out-of-domain lastSavedAt, admits sub-bound markers (r22 pin)', () => {
+    for (const marker of [-1e300, TWO_POW_53, -TWO_POW_53, 9e15, -9e15, 2 ** 52, -(2 ** 52)]) {
       const save = validSave()
       ;(save.player as PlayerData).lastSavedAt = marker
       expect(validateGameSaveShape(save).ok, `rejected marker ${marker}`).toBe(false)
     }
-    for (const marker of [9e15, -9e15]) {
+    for (const marker of [4e15, -4e15, 2 ** 52 - 1, -(2 ** 52 - 1)]) {
       const save = validSave()
       ;(save.player as PlayerData).lastSavedAt = marker
       expect(validateGameSaveShape(save).ok, `admitted marker ${marker}`).toBe(true)
@@ -227,21 +230,21 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
   })
 
   // ------------------------------------------------------------------
-  // A4 (surface 1) - the just-under-pin arm the dispatch asked about:
-  // a pending pair JUST under 2^53 (9e15) keeps the exact span and is
-  // admitted - then never completes (due ~285,000 years out). The
-  // exact-span pin does NOT cap the crafted magnitude lower: the
-  // subtraction is exact at every magnitude where both integers are
-  // representable (Sterbenz), and multiples of 1000 stay representable
-  // far above 2^53 (spacing 2 needs delta multiple of 2 - every
-  // authored span is a multiple of 1000).
+  // A4 (surface 1) - the just-under-pin arm: WAS the 9e15 pair
+  // admitted (exact span, Sterbenz). r22: 9e15 > 2^52 - rejected. The
+  // deepest admitted pair (4e15) keeps the exact span and is admitted
+  // - then never completes (due ~128,000 years out: the sub-bound
+  // parked residual, deny-direction).
   // ------------------------------------------------------------------
-  it('A4 validator ADMITS sub-pin far-future pending pair (9e15, exact span)', () => {
-    const crafted = makeCycle(FOREST, 9e15 - MORTAL_L1_CYCLE_MS, 9e15)
-    const save = saveWithSite(9e15, FOREST, [crafted])
+  it('A4 validator rejects a 9e15 pair; admits the 4e15 pair (residual parks)', () => {
+    const tooBig = makeCycle(FOREST, 9e15 - MORTAL_L1_CYCLE_MS, 9e15)
+    expect(validateGameSaveShape(saveWithSite(9e15, FOREST, [tooBig])).ok).toBe(false)
+
+    const crafted = makeCycle(FOREST, 4e15 - MORTAL_L1_CYCLE_MS, 4e15)
+    const save = saveWithSite(4e15, FOREST, [crafted])
 
     expect(validateGameSaveShape(save).ok).toBe(true)
-    // The exact-span subtraction is still exact just under 2^53.
+    // The exact-span subtraction stays exact at the admitted edge.
     expect(crafted.completesAtMs - crafted.startedAtMs).toBe(MORTAL_L1_CYCLE_MS)
   })
 
@@ -311,11 +314,13 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
   })
 
   // ------------------------------------------------------------------
-  // B2 (surface 2) - FREEZE SCOPE, per-lane: a sub-pin far-future due
-  // (9e15 < 2^53) does NOT trip the guard; it just never comes due.
+  // B2 (surface 2) - FREEZE SCOPE, per-lane - MECHANISM-LEVEL feed:
+  // a far-future due does NOT trip the guard; it just never comes due.
   // Scope is per-LANE: the honest sibling still completes, respawns,
   // and seeds keep working. Fill all 3 lanes (maxLanes) to freeze the
-  // site this way - measured: sibling lane pays normally.
+  // site this way - measured: sibling lane pays normally. (9e15 is
+  // gate-rejected at admission since r22; this pins the mechanism's
+  // sub-2^53 behavior for non-save feeds.)
   // ------------------------------------------------------------------
   it('B2 sub-pin far-future pending freezes only its own lane (sibling pays)', () => {
     const stuck = makeCycle(FOREST, 9e15 - MORTAL_L1_CYCLE_MS, 9e15)
@@ -592,16 +597,17 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
 
   // ------------------------------------------------------------------
   // D2 (surface 3) - dead-arm under a FORGED FUTURE marker: expires ==
-  // lastSavedAt (marker-exact death) with lastSavedAt = 9e15 lands the
-  // dead arm `expires <= saveLastSavedAt` -> clamps at
+  // lastSavedAt (marker-exact death) with lastSavedAt = 4e15 (just
+  // under the r22 2^52 bound) lands the dead arm
+  // `expires <= saveLastSavedAt` -> clamps at
   // min(authorityNow, Date.now()) - the record dies at trusted-now in
   // the field epoch, never the crafted epoch. Deny holds at both
   // marker poles.
   // ------------------------------------------------------------------
-  it('D2 forged future marker (9e15) + marker-exact expires stores dead at field-now', () => {
+  it('D2 forged future marker (4e15) + marker-exact expires stores dead at field-now', () => {
     const save = validSave()
     const p = save.player as PlayerData
-    const forgedMarker = 9e15
+    const forgedMarker = 4e15
     p.lastSavedAt = forgedMarker
     p.cultivationPerSecond = 12.5
     p.persistentTimedEffects = [
@@ -626,7 +632,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     )
     expect(stored).toBeDefined()
     // Dead arm: min(raw, min(authorityNow, Date.now())) = currentMs -
-    // the buff is dead NOW, not live-until-9e15.
+    // the buff is dead NOW, not live-until-4e15.
     expect(stored!.expiresAtMs).toBe(currentMs)
   })
 
@@ -835,18 +841,17 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
 
   // ------------------------------------------------------------------
   // F1 (sibling) - alchemy job stamps carry the SAME magnitude class.
-  // r21 fix: |stamp| >= 2^53 is now rejected at the gate for jobs
-  // too. What stays admitted is the SUB-PIN far-future shape (9e15
-  // < 2^53): a fully self-consistent forged job passes (digest
-  // replays, span exact, ordering holds, started <= marker) and parks
-  // its slot forever. ACCEPTED residual (r21 adjudication): the
-  // park is deny-direction self-harm on the attacker's own save, and
-  // no tighter bound exists - any absolute ceiling on the marker
-  // also rejects honest saves written on broken future clocks (the
-  // r15-COR-D class). >= 2^53 was the dangerous arm (absorb/hang);
-  // below it arithmetic stays exact and only the forged entry dies.
+  // r21 pinned |stamp| >= 2^53; r22 tightened to |stamp| >= 2^52.
+  // What stays admitted is the SUB-BOUND far-future shape (4e15 <
+  // 2^52): a fully self-consistent forged job passes (digest replays,
+  // span exact, ordering holds, started <= marker) and parks its slot
+  // forever. ACCEPTED residual (r21/r22 adjudication): the park is
+  // deny-direction self-harm on the attacker's own save - no honest
+  // clock writes past ~1.8e12 but any bound at 'now' would reject
+  // honest broken-clock saves (the r15-COR-D class), so the residual
+  // band (~now, 4.5e15) can only shrink, not vanish.
   // ------------------------------------------------------------------
-  it('F1 self-consistent crafted alchemy job with completesAtMs 9e15 admitted and parks forever', () => {
+  it('F1 self-consistent crafted alchemy job with completesAtMs 4e15 admitted and parks forever', () => {
     const recipe = alchemyRecipes.find(
       (candidate) => candidate.realmId === 'mortal' && candidate.retired !== true,
     )!
@@ -854,8 +859,8 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
 
     const variant = recipe.herbVariants[0]!
     const spanMs = alchemySecondsFor(recipe, 1) * 1000
-    const startedAtMs = 9e15 - spanMs
-    const completesAtMs = 9e15
+    const startedAtMs = 4e15 - spanMs
+    const completesAtMs = 4e15
 
     const job: Omit<ActiveAlchemyJob, 'reservation'> & { reservation?: Omit<AlchemyJobReservation, 'digest'> & { digest?: number } } = {
       jobId: 'r21_alch_job_1',
@@ -884,7 +889,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
 
     const save = validSave()
     const p = save.player as PlayerData
-    p.lastSavedAt = 9e15
+    p.lastSavedAt = 4e15
     save.buildings = [
       { instanceId: 'r21_b1', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 },
     ]
@@ -901,34 +906,34 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     alchemy.restoreJobs([fullJob])
     alchemy.tick(currentMs, new PillBag(), () => undefined, () => 0.5)
     expect(alchemy.getJobs()).toHaveLength(1)
-    expect(alchemy.getJobs()[0]!.completesAtMs).toBe(9e15)
+    expect(alchemy.getJobs()[0]!.completesAtMs).toBe(4e15)
     expect(alchemy.drainSettlementEvents()).toHaveLength(0)
   })
 
   // ------------------------------------------------------------------
   // F2 (sibling matrix) - the magnitude class repeats on every
-  // persisted deadline/cursor field. r21 fix: all three now reject
-  // |x| >= 2^53 at the gate. What remains admitted is the sub-pin
-  // 9e15 shape - ACCEPTED residual for the same reason as F1 (deny-
-  // direction self-harm, and any tighter absolute ceiling rejects
-  // honest broken-clock saves; the dangerous >= 2^53 arm is closed):
+  // persisted deadline/cursor field. r21 pinned |x| >= 2^53; r22
+  // tightened to |x| >= 2^52. What remains admitted is the sub-bound
+  // far-future shape - ACCEPTED residual for the same reason as F1
+  // (deny-direction self-harm; any bound at 'now' rejects honest
+  // broken-clock saves; the dangerous >= 2^52 arm is closed):
   //   - tribulation.cooldownUntil: admitted at <= lastSavedAt +
-  //     TRIBULATION_COOLDOWN_SECONDS*1000 - a crafted 9e15 marker
-  //     admits ~9e15 cooldown; getCooldownSeconds reads vs Date.now()
-  //     (TribulationDirector.ts:802-855) -> ~285,000 years, parked.
-  //   - decompose.nextCycleAt: bounded timestamp now; a 9e15 value
+  //     TRIBULATION_COOLDOWN_SECONDS*1000 - a crafted 4e15 marker
+  //     admits ~4e15 cooldown; getCooldownSeconds reads vs Date.now()
+  //     (TribulationDirector.ts:802-855) -> ~128,000 years, parked.
+  //   - decompose.nextCycleAt: bounded timestamp now; a 4e15 value
   //     parks the channel (the tick's `nextCycleAt <= nowMs` never
   //     fires) - and the r21 O(1) jump makes even a crafted nextCycleAt
   //     =0 settle instantly instead of ~57M no-op iterations.
   //   - buildings[].lastCollectedAt: seconds-domain cursor, bounded
-  //     timestamp now; a 9e15 value puts elapsedSeconds <= 0 forever,
+  //     timestamp now; a 4e15 value puts elapsedSeconds <= 0 forever,
   //     parked accrual on the building channel.
   // ------------------------------------------------------------------
-  it('F2 sibling deadline fields admit 9e15 - cooldown/decompose/building parks', () => {
+  it('F2 sibling deadline fields admit 4e15 - cooldown/decompose/building parks', () => {
     const withMarker = (mutate: (save: Record<string, unknown>) => void) => {
       const save = validSave()
       const p = save.player as PlayerData
-      p.lastSavedAt = 9e15
+      p.lastSavedAt = 4e15
       mutate(save)
       return validateGameSaveShape(save)
     }
@@ -936,7 +941,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     // Tribulation cooldown admitted just under the crafted ceiling.
     expect(
       withMarker((save) => {
-        save.tribulation = { cooldownUntil: 9e15 + 299_999 }
+        save.tribulation = { cooldownUntil: 4e15 + 299_999 }
       }).ok,
       'tribulation.cooldownUntil',
     ).toBe(true)
@@ -946,7 +951,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       withMarker((save) => {
         save.decompose = {
           settings: { workers: 1, gradeFilter: 'all', ageFilter: 'all' },
-          nextCycleAt: 9e15,
+          nextCycleAt: 4e15,
           started: false,
         }
       }).ok,
@@ -957,7 +962,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     expect(
       withMarker((save) => {
         save.buildings = [
-          { instanceId: 'r21_b2', buildingId: 'pill_room', level: 1, lastCollectedAt: 9e15 },
+          { instanceId: 'r21_b2', buildingId: 'pill_room', level: 1, lastCollectedAt: 4e15 },
         ]
       }).ok,
       'buildings[].lastCollectedAt',

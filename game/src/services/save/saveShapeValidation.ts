@@ -399,9 +399,19 @@ function isNonNegativeFiniteNumber(value: unknown): value is number {
 // through: the mechanism then froze its whole site verbatim on every
 // settle + tickWorkers and re-persisted it - a permanent silent wedge
 // worse than save rejection. Admission owns the same bound for every
-// persisted timestamp cursor; honest stamps are epoch-ms (~1e12).
+// persisted timestamp cursor.
+//
+// The bound is 2^52, not 2^53: the derivations downstream do one
+// honest-epoch add/subtract on the stamp (offlineSinceMs = min(stamp,
+// authorityNow - elapsed*1000) in GameManagerSaveRestore; the /1000
+// float64 round-trip re-lands the outermost admitted value EXACTLY on
+// -2^53 - QA-r22-int-01). 2^52 keeps ~4.5e15 of headroom between the
+// admitted domain and the absorb line, so no derived cursor can drift
+// onto the mechanism pin. Honest stamps are epoch-ms (~1.8e12) or
+// epoch-seconds (~1.8e9, buildings lastCollectedAt) - the bound is
+// still ~2500x beyond anything a real clock writes.
 function isBoundedTimestamp(value: unknown): value is number {
-  return isFiniteNumber(value) && Math.abs(value) < 2 ** 53
+  return isFiniteNumber(value) && Math.abs(value) < 2 ** 52
 }
 
 function isNonNegativeBoundedTimestamp(value: unknown): value is number {
@@ -1021,6 +1031,18 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
 
   requireBoolean(player, 'hasSeenTutorial', 'player', issues)
   requireNonNegativeNumber(player, 'autoWorkerCapacity', 'player', issues)
+  // F-R22-03: capacity feeds WorkerLaneAdvance slots, whose mechanism
+  // guard pins 0..65536 - a larger persisted value re-trips the r21
+  // per-site freeze the moment a scope-hidden feature consumes it.
+  if (
+    isNonNegativeFiniteNumber(player.autoWorkerCapacity) &&
+    (player.autoWorkerCapacity as number) > 65_536
+  ) {
+    issues.push({
+      path: 'player.autoWorkerCapacity',
+      message: 'vượt trần slot cơ chế 65536',
+    })
+  }
   requireNonNegativeNumber(player, 'totalCultivationGained', 'player', issues)
   requireNonNegativeNumber(player, 'bossKillCount', 'player', issues)
   requireNonNegativeNumber(player, 'skillInsight', 'player', issues)
@@ -1510,10 +1532,10 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
       requireNonEmptyString(effect, 'sourceItemId', effectPath, issues)
 
       if (!isBoundedTimestamp(effect.appliedAtMs)) {
-        issues.push({ path: `${effectPath}.appliedAtMs`, message: 'phải là timestamp trong miền |x| < 2^53' })
+        issues.push({ path: `${effectPath}.appliedAtMs`, message: 'phải là timestamp trong miền |x| < 2^52' })
       }
       if (!isBoundedTimestamp(effect.expiresAtMs)) {
-        issues.push({ path: `${effectPath}.expiresAtMs`, message: 'phải là timestamp trong miền |x| < 2^53' })
+        issues.push({ path: `${effectPath}.expiresAtMs`, message: 'phải là timestamp trong miền |x| < 2^52' })
       }
 
       // F-TC9-1: every writer stamps appliedAtMs=now before the save's
@@ -1654,8 +1676,13 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
               })
             }
             // The writer always emits effectGroup and durationStackable;
-            // expiresAtMs-appliedAtMs is NOT bound - the stackable
-            // refresh legitimately widens it (unbounded over drinks).
+            // expiresAtMs-appliedAtMs is NOT bound at admission - the
+            // stackable refresh legitimately widens it (unbounded over
+            // drinks). The forward bound lives at the restore seam
+            // instead (r22-AUT-1: boundTimedEffectClocks clamps stackable
+            // expiry to provenance + 24h like every sibling class - a
+            // far-future parked expiry mints liveness, so admission
+            // can't leave it verbatim).
             const expectedGroup = regenEffect.effectGroup ?? 'pill_regen'
             if (effect.effectGroup !== expectedGroup) {
               issues.push({
@@ -2314,7 +2341,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   // the exact-integer-ms domain (like -1e300) derives deep-past
   // cursors that trip the settle guard and wedge sites verbatim.
   if (!isBoundedTimestamp(player.lastSavedAt)) {
-    issues.push({ path: 'player.lastSavedAt', message: 'phải là timestamp trong miền |x| < 2^53' })
+    issues.push({ path: 'player.lastSavedAt', message: 'phải là timestamp trong miền |x| < 2^52' })
   }
 
   // v60 companion gacha - pity counter and Duyen Phan currency. A NaN
@@ -2404,7 +2431,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
       ) {
         issues.push({
           path: 'player.autoFarmStage.lastCheckedMs',
-          message: 'ngoài miền timestamp |x| < 2^53',
+          message: 'ngoài miền timestamp |x| < 2^52',
         })
       }
 
@@ -3238,7 +3265,7 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
   }
 
   if (!isNonNegativeBoundedTimestamp(value.lastDailyResetAtMs)) {
-    issues.push({ path: `${path}.lastDailyResetAtMs`, message: 'phải là timestamp không âm trong miền |x| < 2^53' })
+    issues.push({ path: `${path}.lastDailyResetAtMs`, message: 'phải là timestamp không âm trong miền |x| < 2^52' })
   }
 }
 
@@ -4453,7 +4480,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       }
 
       if (!isNonNegativeBoundedTimestamp(decompose.nextCycleAt)) {
-        issues.push({ path: '.decompose.nextCycleAt', message: 'phải là timestamp không âm trong miền |x| < 2^53' })
+        issues.push({ path: '.decompose.nextCycleAt', message: 'phải là timestamp không âm trong miền |x| < 2^52' })
       }
 
       if (typeof decompose.started !== 'boolean') {
@@ -4475,7 +4502,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
         tribulation.cooldownUntil !== undefined &&
         !isNonNegativeBoundedTimestamp(tribulation.cooldownUntil)
       ) {
-        issues.push({ path: '.tribulation.cooldownUntil', message: 'phải là timestamp không âm trong miền |x| < 2^53' })
+        issues.push({ path: '.tribulation.cooldownUntil', message: 'phải là timestamp không âm trong miền |x| < 2^52' })
       }
 
       // F-LC-1: the only writer mints cooldownUntil = now +

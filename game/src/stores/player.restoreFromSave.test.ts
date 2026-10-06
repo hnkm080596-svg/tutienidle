@@ -191,6 +191,55 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(effect.expiresAtMs).toBe(currentMs + 23 * 3_600_000)
   })
 
+  it('forged far-future stackable expiry clamps at provenance+24h (r22-AUT-1 pin)', () => {
+    // A crafted stackable record parking a 30-day expiry minted a
+    // permanent regen buff before r22 - the stackable exemption is
+    // gone, the same provenance+24h bound as every sibling applies.
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx-stack-mint',
+          sourceItemId: 'hoi_linh_dan',
+          effectGroup: 'pill_regen',
+          durationStackable: true,
+          appliedAtMs: currentMs - 20 * 3_600_000,
+          expiresAtMs: currentMs + 30 * 86_400_000, // forged: +30d
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.expiresAtMs).toBe(currentMs + 24 * 3_600_000)
+  })
+
+  it('dead-at-save stackable record clamps dead like every sibling (r22-AUT-1 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx-stack-dead',
+          sourceItemId: 'hoi_linh_dan',
+          effectGroup: 'pill_regen',
+          durationStackable: true,
+          appliedAtMs: currentMs - 50 * 3_600_000,
+          expiresAtMs: currentMs - 10 * 3_600_000, // died before the save
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(currentMs)
+  })
+
   it('forged future appliedAtMs clamps to now at restore (r12-COR-2 pin)', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({

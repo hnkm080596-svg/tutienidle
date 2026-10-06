@@ -315,7 +315,19 @@ export class GameManagerPersistentEffectOps {
       if (existing) {
         if (effect.durationStackable) {
           const duration = Math.max(0, effect.expiresAtMs - effect.appliedAtMs)
-          existing.expiresAtMs = Math.max(Date.now(), existing.expiresAtMs) + duration
+          // R22-COR-1: this arm is the only writer that ADDS onto a
+          // persisted stamp - a parked expiry just inside the
+          // validator's timestamp bound plus one honest re-drink used
+          // to push expiresAtMs past it, and buildGameSave then wrote
+          // the out-of-domain value verbatim, bricking the save at the
+          // next load. Clamp inside the admitted domain (|x| < 2^52,
+          // saveShapeValidation.isBoundedTimestamp): the parked buff
+          // stays parked (deny-direction residual) but every written
+          // save always re-validates.
+          existing.expiresAtMs = Math.min(
+            2 ** 52 - 1,
+            Math.max(Date.now(), existing.expiresAtMs) + duration,
+          )
         } else {
           existing.expiresAtMs = Math.max(existing.expiresAtMs, effect.expiresAtMs)
         }

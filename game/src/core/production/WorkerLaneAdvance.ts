@@ -125,7 +125,9 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
   // dueMs > Infinity are both always false. r19-AUT hardening: a
   // non-finite emptyLaneStartMs or pending due hangs the same way
   // (NaN due never breaks the loop, respawns NaN forever) - upstream
-  // pins keep every input finite, this guard is for future callers.
+  // pins bound every persisted timestamp at |x| < 2^52 (admission),
+  // this guard mirrors the mechanism's own 2^53 line for non-save
+  // feeds.
   // r20-AUT: the ordering pin too - a reversed/zero span
   // (completesAtMs <= startedAtMs) computes headCost = 0 and would
   // grant a free completion per entry; the validator rejects the same

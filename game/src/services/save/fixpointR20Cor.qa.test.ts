@@ -148,12 +148,21 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
       validation.issues.some((issue) => issue.path === 'player.lastSavedAt'),
     ).toBe(true)
 
-    // Boundary control: a crafted marker INSIDE the domain is still
-    // admitted and settles safely (sub-pin magnitudes cannot absorb a
-    // ms-delta - ulp/2 < every authored cycleMs at < 2^53).
+    // r22-INT-01 tightened the admitted bound to |x| < 2^52: a
+    // sub-pin marker like -9e15 is now rejected too (still ~2500x
+    // beyond any honest epoch stamp).
+    const outside = validSave()
+    ;(outside.player as PlayerData).lastSavedAt = -9e15
+    expect(validateGameSaveShape(outside).ok).toBe(false)
+
+    // Boundary control: a crafted marker INSIDE the admitted domain
+    // is still admitted and settles safely (sub-bound magnitudes
+    // cannot absorb a ms-delta - ulp/2 < every authored cycleMs at
+    // < 2^52, and derivations get ~4.5e15 of headroom before the
+    // mechanism's own 2^53 pin).
     const admitted = validSave()
     const admittedPlayer = admitted.player as PlayerData
-    admittedPlayer.lastSavedAt = -9e15
+    admittedPlayer.lastSavedAt = -4e15
     admitted.productionSites = [
       {
         siteId: 'thanh_van_lam',
@@ -265,26 +274,26 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
   it('slots = +Infinity returns normally (child-process probe, r20 fix)', { timeout: 45_000 }, () => {
     const spec = fileURLToPath(new URL('./fixpointR20CorSlotsHang.probe.test.ts', import.meta.url))
     const vitestBin = fileURLToPath(new URL('../../../node_modules/.bin/vitest', import.meta.url))
-    try {
-      const result = spawnSync(vitestBin, ['run', spec, '--reporter=dot'], {
-        cwd: fileURLToPath(new URL('../../../', import.meta.url)),
-        env: { ...process.env, R20_SLOTS_HANG_PROBE: '1' },
-        timeout: 20_000,
-      })
+    // --pool=threads: a regressed hang would live in a worker THREAD of
+    // the spawned vitest process, so the timeout kill (SIGTERM to the
+    // process) takes the looping thread down with it - no pkill sweep
+    // needed (R22-COR-2: any spec-name pkill pattern can also match a
+    // parent vitest cmdline when both spec files are listed together).
+    // NODE_OPTIONS caps the child heap so an OOM-class hang dies fast.
+    const result = spawnSync(vitestBin, ['run', spec, '--reporter=dot', '--pool=threads'], {
+      cwd: fileURLToPath(new URL('../../../', import.meta.url)),
+      env: {
+        ...process.env,
+        R20_SLOTS_HANG_PROBE: '1',
+        NODE_OPTIONS: '--max-old-space-size=768',
+      },
+      timeout: 20_000,
+    })
 
-      // PINNED DENY (r20 fix): the fixed guard makes the child exit
-      // fast with status 0; a regression that re-opens the hang is
-      // still caught - the spawn would be killed by timeout instead.
-      expect(result.error).toBeUndefined()
-      expect(result.status).toBe(0)
-    } finally {
-      // Sweep any vitest worker that outlived the timeout kill.
-      // r21-COR-5: match the child invocation only - a bare spec-name
-      // pattern also matches THIS run's cmdline when both spec files
-      // are listed together and pkill kills the parent vitest.
-      spawnSync('pkill', ['-f', 'fixpointR20CorSlotsHang.probe.test.ts --reporter=dot'], {
-        timeout: 5_000,
-      })
-    }
+    // PINNED DENY (r20 fix): the fixed guard makes the child exit
+    // fast with status 0; a regression that re-opens the hang is
+    // still caught - the spawn would be killed by timeout instead.
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
   })
 })
