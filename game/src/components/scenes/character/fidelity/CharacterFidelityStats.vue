@@ -77,13 +77,13 @@ const talentIconError = (event: Event) => {
 /* Gold tubes (user ruling 2026-10-06): one shared metallic gradient for
    every stat - the old per-stat colors went away with the G3 reskin. */
 .character-stat-tube { grid-column: 1/3; height: 9px; border: 1px solid #927747; border-radius: 9px; background: #111912; overflow: hidden; box-shadow: inset 0 2px 3px #0009; }
-.character-stat-tube i { display: block; height: 100%; border-radius: 7px; background: linear-gradient(90deg, #8a6420, #dfbc71); box-shadow: inset 0 2px 2px #fff5; position: relative; overflow: hidden; }
+.character-stat-tube i { display: block; height: 100%; border-radius: 7px; background: linear-gradient(90deg, #8a6420, #dfbc71); box-shadow: inset 0 2px 2px #fff5; position: relative; overflow: hidden; transition: width .45s cubic-bezier(.25,.8,.35,1); }
 .character-stat-tube i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 10%, #ffffff18 30%, #fff8 48%, #ffffff20 60%, transparent 80%); width: 60%; transform: translateX(-160%); animation: stat-energy-flow 2.8s linear infinite; }
 .character-stat-row:nth-of-type(3) .character-stat-tube i::after { animation-delay: -.7s; }
 .character-stat-row:nth-of-type(4) .character-stat-tube i::after { animation-delay: -1.4s; }
 .character-stat-row:nth-of-type(5) .character-stat-tube i::after { animation-delay: -2.1s; }
 @keyframes stat-energy-flow { to { transform: translateX(270%); } }
-@media (prefers-reduced-motion: reduce) { .character-stat-tube i::after { animation: none; transform: translateX(65%); opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .character-stat-tube i { transition: none; } .character-stat-tube i::after { animation: none; transform: translateX(65%); opacity: .3; } }
 .character-allocate { grid-column: 3; grid-row: 1/3; position: relative; z-index: 1; width: 39px; height: 39px; padding: 0; border: 0; background: transparent; align-self: center; cursor: pointer; }
 .character-allocate img { width: 100%; height: 100%; object-fit: contain; }
 .character-allocate:not(:disabled):hover img { filter: brightness(1.18) drop-shadow(0 0 3px #e8b657); }
