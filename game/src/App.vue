@@ -573,12 +573,21 @@ const lifecycle = useAppLifecycle({
     // payload deterministically (post-dated stamps stay future until
     // wall time reaches them), so the generic autosave-fail toast would
     // loop forever while every write keeps refusing. Escalate to the
-    // corrupted-save surface like the boot arm does: under remote
-    // authority observeSaveResult already entered 'recovery' above and
-    // this report adds the remote-reset affordance that unwedges the
-    // row; under local the admission transition never ran at all, so
-    // the card is the only surface (scope 'local' correctly hides the
-    // remote reset - burning a remote row cannot fix a local wedge).
+    // corrupted-save surface like the boot arm does.
+    // r28-INT-1: two corrections to the original arm.
+    //  - Scope is always 'local', even under remote authority: these
+    //    codes only fire when the adapter was never invoked (the
+    //    refused bytes never left the client), so the remote row still
+    //    holds the last-good commit - the "remote row is the healthy
+    //    head" pattern the pending-conflict arm scopes 'local' for. A
+    //    'remote' label would offer resetCharacter() against a healthy
+    //    cloud row.
+    //  - report() must pair with bootFlow.fail(): SaveIncompatibleScreen
+    //    only mounts under entryStage 'error', so a bare report() is a
+    //    dead write that leaks a stale armed card into a later unrelated
+    //    error mount (the onResume arm below documents this rule). A
+    //    deterministic refuse means no write can ever commit, so the
+    //    error mount is the correct terminal surface.
     if (
       result.status === 'unavailable'
       && !result.retryable
@@ -591,7 +600,8 @@ const lifecycle = useAppLifecycle({
       } catch {
         refusedPayload = ''
       }
-      saveIssue.report('corrupted', refusedPayload, undefined, remoteAuthority ? 'remote' : 'local')
+      saveIssue.report('corrupted', refusedPayload, undefined, 'local')
+      bootFlow.fail()
     }
 
     // Canh bao autosave fail chi 1 lan cho moi chuoi fail - reset co khi
@@ -602,6 +612,10 @@ const lifecycle = useAppLifecycle({
       console.warn('[autosave] progress was not saved', result)
     } else if (result.status === 'ok') {
       saveFailureNotified = false
+      // r28-INT-1: an ok write proves the save path healthy - sweep any
+      // armed save-issue status so a stale card can never hijack a
+      // later unrelated error mount inside this page lifetime.
+      saveIssue.clear()
     }
 
     return result

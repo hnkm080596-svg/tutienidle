@@ -2,9 +2,9 @@
 
 - Date: 2026-10-06
 - Audited commit: `1582467f` (r26 + r27 batches)
-- Auditors: COR (`079dffba`, PASS WITH EVIDENCE). AUT (`0d8d6bb0`) / INT (`ba234422`) — running; this document will be amended when they report.
+- Auditors: COR (`079dffba`, PASS WITH EVIDENCE), INT (`ba234422`, PASS WITH EVIDENCE). AUT (`0d8d6bb0`) — running; this document will be amended when it reports.
 
-## Tally (COR so far)
+## Tally (COR)
 
 | Finding | Severity | Verdict | Disposition |
 | --- | --- | --- | --- |
@@ -38,8 +38,41 @@ snapshot, entitlement sanitize) now require
 over-cap record is already refused, so it no longer pays unbounded
 iterations.
 
+## Tally (INT)
+
+| Finding | Severity | Verdict | Disposition |
+| --- | --- | --- | --- |
+| R28-INT-1 persistPlayer's coded-refuse arm calls `saveIssue.report('corrupted', ..., remoteAuthority ? 'remote' : 'local')` without `bootFlow.fail()`: dead write under `entryStage 'game'` (the card mounts only on the error route), and the armed `corrupted` + `remote` state leaks into later unrelated error mounts — remote reset then offered against a row that provably never received the refused bytes (`saveCalls === 0`). Under local mode: no overlay, no card — one deduped toast only | Medium | Confirmed — provenance inversion + mount-contract violation; every sibling report site pairs `report()` with `fail()` | **FIXED** |
+| R28-INT-2 `restoreJobs` shift arm re-derives the digest over the raw reservation before the normalize arm — same input class, opposite verdicts across sibling/intra arms | Low | Same defect class as R28-COR-Low | **Already fixed** by the COR batch (`7601b33f`) |
+
+## R28-INT-1 — refuse escalation now mounts its surface, scoped local (FIXED)
+
+Three-part fix in `App.vue` persistPlayer:
+
+1. **Scope `'local'` always.** These refuse codes (`OUTGOING_ADMISSION_REJECTED` /
+   `OUTGOING_UNSERIALIZABLE` → `SAVE_INVALID`) only fire when the adapter was
+   never invoked — the refused bytes never left the client, so under remote
+   authority the cloud row still holds the last-good commit. Labeling it
+   `'remote'` armed `resetCharacter()` against a healthy row (provenance
+   inversion — the exact fact pattern the pending-conflict arm scopes `'local'`
+   for, useAppLifecycle.ts:426-429).
+2. **Paired `bootFlow.fail()`.** `SaveIncompatibleScreen` mounts only under
+   `entryStage === 'error'`; a bare `report()` was a dead write whose stale
+   armed status could hijack a later non-save `fail()` mount. The refuse is
+   deterministic and terminal for the session — the error mount is the correct
+   escalation the r26 arm intended (onResume arm documents the rule verbatim).
+3. **`saveIssue.clear()` on the ok arm.** An ok write proves the save path
+   healthy; any armed status is stale and is swept instead of leaking for the
+   page lifetime (previously `clear()` had no production caller).
+
+Probe flips: I1/I2 now assert no-throw + normalized `[]` on every malformed
+reservation shape (post-dated or not); I3 now restores `'ok'` through the
+session seam with the stale digest still failing the grant-time verify (deny
+preserved downstream); M1 asserts `remoteResettable === false`; M2 asserts the
+ok arm's clear contract; M3 records all report sites paired.
+
 ## Verification
 
 - `npm run type-check` — clean.
-- `npx vitest run --pool=threads src/services/save src/services/cloudSave src/services/session src/core/production src/core/alchemy src/core/tribulation src/composables` — **1636 pass** (15 r28 COR probes green after flips).
+- `npx vitest run --pool=threads src/services/save src/services/cloudSave src/services/session src/App.routeMountWitness.test.ts src/composables src/stores` — **1512 pass** (15 COR + 10 INT r28 probes green after flips).
 - OCR gate: 100% reviewable-file coverage on the batch diff.
