@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { loadUiScale, saveUiScale } from '@/composables/uiScale'
+import { saveLocale, type AppLocale } from '@/composables/locale'
 import SettingsAudioSection from '@/components/scenes/settings/SettingsAudioSection.vue'
 import SettingsUiScaleSection from '@/components/scenes/settings/SettingsUiScaleSection.vue'
+import SettingsLanguageSection from '@/components/scenes/settings/SettingsLanguageSection.vue'
+const { locale } = useI18n()
 const uiScale = ref(loadUiScale())
 function selectScale(scale: number) { saveUiScale(scale); uiScale.value = scale }
+function selectLanguage(next: AppLocale) { saveLocale(next) }
 </script>
 
 <template>
   <div class="login-settings-content">
     <SettingsAudioSection />
     <SettingsUiScaleSection :ui-scale="uiScale" @select="selectScale" />
+    <SettingsLanguageSection :locale="(locale as AppLocale)" @select="selectLanguage" />
   </div>
 </template>
 
