@@ -2020,11 +2020,36 @@
   "dongFu": {
     "aria": "Grotto-Heaven",
     "toggleWheel": "Show / hide the command wheel",
+    "railOpen": "Open the navigation rail",
+    "railClose": "Close the navigation rail",
     "buildingHint": "Tap to view",
     "sceneTitle": "AZURE CLOUD GROTTO-HEAVEN",
     "sceneSubtitle": "A tranquil mind · All dharmas return to one",
     "view": "View",
-    "unhandled": "This feature is not open yet."
+    "unhandled": "This feature is not open yet.",
+    "nav": {
+      "home": "Grotto",
+      "character": "Character",
+      "skill": "Skills",
+      "equipment": "Equipment",
+      "body": "Body",
+      "technique": "Techniques",
+      "realm": "Realm",
+      "inventory": "Storage",
+      "alchemy": "Alchemy",
+      "formation": "Formation",
+      "exploration": "Map",
+      "quest": "Quests",
+      "production": "Production",
+      "vendor": "Vendor",
+      "settings": "Settings",
+      "feedback": "Help",
+      "artifact": "Artifact",
+      "companion": "Companion",
+      "guild": "Guild",
+      "sect": "Sect",
+      "portal": "Secret Realm"
+    }
   },
   "paperNav": {
     "navigation": "Functions",

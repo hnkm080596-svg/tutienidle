@@ -2020,11 +2020,36 @@
   "dongFu": {
     "aria": "Động Phủ",
     "toggleWheel": "Ẩn / hiện vòng chức năng",
+    "railOpen": "Mở thanh điều hướng",
+    "railClose": "Đóng thanh điều hướng",
     "buildingHint": "Chạm để xem",
     "sceneTitle": "THANH VÂN ĐỘNG THIÊN",
     "sceneSubtitle": "Một niệm thanh tĩnh · Vạn pháp quy nguyên",
     "view": "Xem",
-    "unhandled": "Chức năng này chưa mở."
+    "unhandled": "Chức năng này chưa mở.",
+    "nav": {
+      "home": "Động Phủ",
+      "character": "Nhân Vật",
+      "skill": "Kỹ Năng",
+      "equipment": "Trang Bị",
+      "body": "Luyện Thể",
+      "technique": "Công Pháp",
+      "realm": "Cảnh Giới",
+      "inventory": "Trữ Vật",
+      "alchemy": "Luyện Đan",
+      "formation": "Trận Pháp",
+      "exploration": "Bản Đồ",
+      "quest": "Nhiệm Vụ",
+      "production": "Sản Xuất",
+      "vendor": "Thương Hội",
+      "settings": "Cài Đặt",
+      "feedback": "Trợ Giúp",
+      "artifact": "Pháp Bảo",
+      "companion": "Đồng Hành",
+      "guild": "Bang Hội",
+      "sect": "Tông Môn",
+      "portal": "Bí Cảnh"
+    }
   },
   "paperNav": {
     "navigation": "Chức năng",
