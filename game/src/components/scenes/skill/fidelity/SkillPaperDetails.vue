@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { LOGIN_ART } from '@/components/scenes/login/loginArt'
 import type { SkillUiNode } from './skillUi'
 defineProps<{ node: SkillUiNode | null; notice: string }>()
 const emit = defineEmits<{ upgrade: [id: string] }>()
 const { t } = useI18n()
 const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
+const buttonArt = LOGIN_ART.button
 </script>
 <template>
   <aside class="skill-detail-card">
@@ -28,7 +30,7 @@ const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/charac
     <div v-if="node && (node.costLabel || node.actionHint || node.actionLabel)" class="skill-actions">
       <p v-if="node.costLabel" class="skill-cost">{{ node.costLabel }}</p>
       <p v-if="node.actionHint" class="skill-action-hint">{{ node.actionHint }}</p>
-      <button v-if="node.actionLabel" class="skill-upgrade" :disabled="node.actionDisabled" @click="emit('upgrade', node.id)">{{ node.actionLabel }}</button>
+      <button v-if="node.actionLabel" class="skill-upgrade" :disabled="node.actionDisabled" @click="emit('upgrade', node.id)"><img :src="buttonArt" alt="" aria-hidden="true" draggable="false"><span>{{ node.actionLabel }}</span></button>
     </div>
     <p class="skill-notice" role="status" aria-live="polite">{{ notice }}</p>
   </aside>
@@ -47,6 +49,6 @@ dl { margin:0; font-size:15px; }dl > div { display:flex; justify-content:space-b
 .skill-actions { flex:none; padding-top:14px; border-top:1px solid #8a713c55; }
 .skill-cost { font-size:15px; margin:0 0 6px; color:#e0b665; font-weight:500; }
 .skill-action-hint { color:#8c7956; font-size:11px; line-height:1.5; margin:0 0 8px; }
-.skill-upgrade { flex:none; width:100%; height:47px; font:23px var(--font-display,Georgia,serif); cursor:pointer; }.skill-upgrade:hover { filter:brightness(1.12); }.skill-upgrade:focus-visible { outline:2px solid #315b43; outline-offset:3px; }.skill-upgrade:disabled { cursor:default; filter:grayscale(.55) opacity(.75); }
+.skill-upgrade { position:relative; flex:none; width:104%; height:53px; margin:0 -2%; border:0; background:none; color:#ffecaf; font:500 23px var(--font-display,Georgia,serif); text-shadow:0 1px 3px #071d17; cursor:pointer; }.skill-upgrade img { position:absolute; width:104%; height:auto; left:-2%; top:50%; transform:translateY(-50%); pointer-events:none; }.skill-upgrade span { position:relative; display:block; line-height:1.2; transform:translateY(-4px); }.skill-upgrade:hover { filter:brightness(1.12); }.skill-upgrade:focus-visible { outline:2px solid #557253; outline-offset:1px; }.skill-upgrade:disabled { cursor:default; filter:saturate(.65); }
 .skill-notice { flex:none; width:100%; height:34px; padding-top:7px; font-size:11px; line-height:14px; color:#b3a077; }.skill-notice:empty { display:none; }
 </style>
