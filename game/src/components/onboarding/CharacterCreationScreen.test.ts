@@ -58,7 +58,7 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     const daoLo = container.querySelector('[data-hk-region="dao-lo"]')
     expect(daoLo).toBeTruthy()
     expect(daoLo!.querySelectorAll('.trial-path-cell')).toHaveLength(5)
-    const locked = daoLo!.querySelectorAll('.trial-path-cell--locked')
+    const locked = daoLo!.querySelectorAll('.trial-path-cell.locked')
     expect(locked).toHaveLength(4)
     const starterPick = daoLo!.querySelector<HTMLElement>('[data-testid="creation-starter-linh_bao"]')
     expect(starterPick!.tagName).toBe('BUTTON')
@@ -78,20 +78,42 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     const grid = mounted.container.querySelector('[data-hk-region="talent-grid"]')!
     expect(grid.querySelectorAll('button[data-testid^="creation-talent-"]')).toHaveLength(3)
     expect(grid.querySelectorAll('[data-testid^="creation-locked-talent-"]')).toHaveLength(6)
-    expect(mounted.container.querySelector('[data-testid="creation-reroll"]')).toBeTruthy()
+    expect(mounted.container.querySelector('[data-testid="creation-random-all"]')).toBeTruthy()
 
     mounted.unmount()
   })
 
-  it('fills the name from the random-name die', async () => {
+  it('master die randomizes every untouched section (name + talent)', async () => {
     const mounted = mountScreen()
     await flushRoll()
 
-    const nameInput = mounted.container.querySelector<HTMLInputElement>('[data-testid="creation-name-input"]')!
+    const container = mounted.container
+    const nameInput = container.querySelector<HTMLInputElement>('[data-testid="creation-name-input"]')!
     expect(nameInput.value).toBe('')
-    mounted.container.querySelector<HTMLButtonElement>('[data-testid="creation-random-name"]')!.click()
+    expect(container.querySelector('[data-testid^="creation-talent-"][aria-checked="true"]')).toBeNull()
+
+    container.querySelector<HTMLButtonElement>('[data-testid="creation-random-all"]')!.click()
     await nextTick()
+
     expect(nameInput.value.length).toBeGreaterThanOrEqual(2)
+    expect(container.querySelectorAll('[data-testid^="creation-talent-"][aria-checked="true"]')).toHaveLength(1)
+
+    mounted.unmount()
+  })
+
+  it('master die never overrides a section the player filled', async () => {
+    const mounted = mountScreen()
+    await flushRoll()
+    const container = mounted.container
+
+    fillName(container)
+    await nextTick()
+    container.querySelector<HTMLButtonElement>('[data-testid="creation-random-all"]')!.click()
+    await nextTick()
+
+    const nameInput = container.querySelector<HTMLInputElement>('[data-testid="creation-name-input"]')!
+    expect(nameInput.value).toBe('Lạc Vân')
+    expect(container.querySelectorAll('[data-testid^="creation-talent-"][aria-checked="true"]')).toHaveLength(1)
 
     mounted.unmount()
   })

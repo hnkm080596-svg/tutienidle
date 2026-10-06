@@ -1327,7 +1327,9 @@
           "risk_reward": "Mạo Hiểm",
           "skill": "Kỹ Năng"
         },
-        "locked": "Chưa lộ"
+        "locked": "Chưa lộ",
+        "features": "Đặc Điểm",
+        "randomAll": "Ngẫu nhiên các phần chưa chọn"
       },
       "finish": "Bắt Đầu Tu Hành",
       "creating": "Đang lập mệnh…",

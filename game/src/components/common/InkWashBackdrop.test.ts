@@ -95,7 +95,7 @@ describe('InkWashBackdrop', () => {
     // the legibility affordance now (gold ceremony rim on the selected
     // tile).
     expect(creationSource).toMatch(
-      /\.trial-talent-tile\.selected \{[^}]*border-color: #e2b257/,
+      /\.trial-talent-grid button\.selected \{[^}]*border-color: #e2b257/,
     )
   })
 })

@@ -1327,7 +1327,9 @@
           "risk_reward": "Risk & Reward",
           "skill": "Skill"
         },
-        "locked": "Unrevealed"
+        "locked": "Unrevealed",
+        "features": "Features",
+        "randomAll": "Randomize untouched sections"
       },
       "finish": "Begin Cultivation",
       "creating": "Binding fate…",

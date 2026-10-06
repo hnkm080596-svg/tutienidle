@@ -2,13 +2,13 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { pcPaperIconUrl, type PcPaperIcon } from '@/presentation/assets/PcPaperIcons'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 const emit = defineEmits<{ back: [] }>()
 const { t } = useI18n()
 const selected = ref(0)
-const pathway = ref(0)
 const name = ref('')
 const notice = ref('')
 const talents: { id: string; icon: PcPaperIcon }[] = [
@@ -17,30 +17,55 @@ const talents: { id: string; icon: PcPaperIcon }[] = [
   { id: 'metal', icon: 'artifact' }, { id: 'void', icon: 'portal' }, { id: 'herb', icon: 'alchemy' },
 ]
 const selectedTalent = computed(() => talents[selected.value]!)
-const pathways = ['sword', 'manual', 'talisman', 'pill', 'forge']
+// Minh ruling: dao-lo cells mirror production - Tu Kiem/Tu Phap/Tu The
+// plus two unrevealed '?'; only Tu Phap is selectable. Cells ride the
+// compact drawn button (the 9-slice paper button stripes at this size).
+const pathways = [
+  { key: 'tuKiem', labelKey: 'onboarding.creation.pathStep.paths.tuKiem', locked: true },
+  { key: 'tuPhap', labelKey: 'onboarding.creation.pathStep.paths.tuPhap', locked: false },
+  { key: 'tuThe', labelKey: 'onboarding.creation.pathStep.paths.tuThe', locked: true },
+  { key: 'hidden1', labelKey: 'onboarding.creation.pathStep.paths.hidden', locked: true },
+  { key: 'hidden2', labelKey: 'onboarding.creation.pathStep.paths.hidden', locked: true },
+]
+const pathwayKey = ref('tuPhap')
+const nameTouched = ref(false)
+const pathTouched = ref(false)
+const talentTouched = ref(false)
 const art = {
   panel: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png'),
   frame: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png'),
   cloud: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@2x.png'),
 }
 const style = { '--trial-panel': `url('${art.panel}')`, '--trial-frame': `url('${art.frame}')` }
-function randomName() { name.value = t('authPreview.trial.randomName'); notice.value = '' }
+// Master random: randomizes every section the player has not touched.
+function randomAll() {
+  if (!nameTouched.value) name.value = t('authPreview.trial.randomName')
+  if (!pathTouched.value) {
+    const open = pathways.filter((path) => !path.locked)
+    pathwayKey.value = open[Math.floor(Math.random() * open.length)]?.key ?? pathwayKey.value
+  }
+  if (!talentTouched.value) {
+    const options = talents.map((_, index) => index).filter((index) => index !== selected.value)
+    selected.value = options[Math.floor(Math.random() * options.length)] ?? selected.value
+  }
+  notice.value = ''
+}
 </script>
 
 <template>
   <section class="trial-creation-art" :style="style" data-testid="trial-creation-art">
     <PcPaperButton class="trial-back" variant="secondary" data-testid="trial-back" @click="emit('back')">‹ {{ t('authPreview.back') }}</PcPaperButton>
     <header class="trial-heading"><img :src="art.cloud" alt=""></header>
-    <div class="trial-brush-ring" aria-hidden="true"><svg viewBox="0 0 500 500"><circle cx="250" cy="250" r="222" fill="none" stroke="currentColor" stroke-width="9" stroke-dasharray="340 7 100 12 32 3 190 9"/><circle cx="250" cy="250" r="210" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="160 8 40 12"/><circle cx="250" cy="250" r="234" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 8 100 4"/></svg><img v-for="position in ['top','right','bottom','left']" :key="position" :class="`trial-cloud-${position}`" :src="art.cloud" alt=""></div>
+    <div class="trial-brush-ring" aria-hidden="true"><svg viewBox="0 0 500 500"><circle cx="250" cy="250" r="222" fill="none" stroke="currentColor" stroke-width="9" stroke-dasharray="340 7 100 12 32 3 190 9" /><circle cx="250" cy="250" r="210" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="160 8 40 12" /><circle cx="250" cy="250" r="234" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 8 100 4" /></svg><img v-for="position in ['top','right','bottom','left']" :key="position" :class="`trial-cloud-${position}`" :src="art.cloud" alt=""></div>
     <section class="trial-creation-board">
-      <div class="trial-name-row"><span class="trial-name-label">{{ t('authPreview.trial.setName') }}</span><input v-model="name" :aria-label="t('authPreview.name')" :placeholder="t('authPreview.trial.namePlaceholder')"><PcPaperButton icon variant="secondary" :aria-label="t('authPreview.trial.random')" @click="randomName">⚄</PcPaperButton></div>
+      <div class="trial-name-row"><span class="trial-name-label">{{ t('authPreview.trial.setName') }}</span><input v-model="name" :aria-label="t('authPreview.name')" :placeholder="t('authPreview.trial.namePlaceholder')" @input="nameTouched = true"></div>
       <h2 class="trial-section-title trial-path-title">{{ t('authPreview.trial.choosePath') }}</h2>
       <p class="trial-path-description">{{ t('authPreview.trial.pathDescription') }}</p>
-      <div class="trial-paths"><PcPaperButton v-for="(path,index) in pathways" :key="path" :variant="pathway === index ? 'primary' : 'secondary'" :aria-pressed="pathway === index" @click="pathway = index">{{ t(`authPreview.trial.paths.${path}`) }}</PcPaperButton></div>
-      <h2 class="trial-section-title trial-talent-title">{{ t('authPreview.trial.chooseTalent') }}</h2>
+      <div class="trial-paths"><button v-for="path in pathways" :key="path.key" type="button" class="trial-path-cell" :class="{ selected: pathwayKey === path.key, locked: path.locked }" :disabled="path.locked" :aria-pressed="pathwayKey === path.key" @click="pathwayKey = path.key; pathTouched = true"><InkNineSlice :chrome-id="pathwayKey === path.key ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ path.locked && path.key.startsWith('hidden') ? '?' : t(path.labelKey) }}</span></button></div>
+      <h2 class="trial-section-title trial-talent-title">{{ t('authPreview.trial.chooseTalent') }}<PcPaperButton icon variant="secondary" class="trial-talent-reroll" :aria-label="t('onboarding.creation.talentStep.randomAll')" @click="randomAll">⚄</PcPaperButton></h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid">
-          <button v-for="(talent,index) in talents" :key="talent.id" type="button" :class="{ selected: selected === index }" :aria-pressed="selected === index" :data-testid="`trial-talent-${talent.id}`" @click="selected = index"><span class="trial-talent-seal"><img :src="pcPaperIconUrl(talent.icon)" alt=""></span><b>{{ t(`authPreview.trial.talents.${talent.id}`) }}</b></button>
+          <button v-for="(talent,index) in talents" :key="talent.id" type="button" :class="{ selected: selected === index }" :aria-pressed="selected === index" :data-testid="`trial-talent-${talent.id}`" @click="selected = index; talentTouched = true"><span class="trial-talent-seal"><img :src="pcPaperIconUrl(talent.icon)" alt=""></span><b>{{ t(`authPreview.trial.talents.${talent.id}`) }}</b></button>
         </div>
         <aside class="trial-talent-detail"><span class="trial-talent-seal"><img :src="pcPaperIconUrl(selectedTalent.icon)" alt=""></span><h3>{{ t(`authPreview.trial.talents.${selectedTalent.id}`) }}</h3><p>{{ t('authPreview.trial.description', { talent: t(`authPreview.trial.talents.${selectedTalent.id}`) }) }}</p><h4 class="trial-section-title">{{ t('authPreview.trial.features') }}</h4><ul><li v-for="n in 3" :key="n">{{ t(`authPreview.trial.feature${n}`) }}</li></ul></aside>
       </div>
@@ -77,10 +102,17 @@ function randomName() { name.value = t('authPreview.trial.randomName'); notice.v
 .trial-talent-detail h4 { font-size: 18px; }.trial-talent-detail ul { text-align: left; padding-left: 16px; font-size: 14px; line-height: 1.35; margin: 0; }.trial-talent-detail li { margin-bottom: 4px; }.trial-talent-detail li::marker { color: #dbb260; }
 .trial-name-row { display: flex; align-items: center; gap: 12px; padding: 0 55px; margin: 10px 0 4px; }
 .trial-name-label { flex: 0 0 auto; color: #e8cf9e; font: 700 22px var(--pc-font-body); white-space: nowrap; }
-.trial-name-row input { min-width: 0; flex: 1; height: 42px; padding: 8px 16px; border: 1px solid #b49860; background: #1b211a; color: #f1e2c0; font: 15px var(--pc-font-body); }.trial-name-row input::placeholder { color: #aaa18b; }.trial-name-row button { min-height: 42px; font-size: 28px; transform: translateY(-4px); }
+.trial-name-row input { min-width: 0; flex: 1; height: 42px; padding: 8px 16px; border: 1px solid #b49860; background: #1b211a; color: #f1e2c0; font: 15px var(--pc-font-body); }.trial-name-row input::placeholder { color: #aaa18b; }
 .trial-path-title { margin: 14px 0 4px; font-size: 18px; }.trial-path-description { margin: 0 0 8px; font-size: 14px; text-align: center; }
 .trial-talent-title { margin-top: 20px; }
-.trial-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 11px; }.trial-paths button { padding: 7px 8px; min-height: 44px; font-size: 15px; }
+.trial-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 11px; }
+.trial-path-cell { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; padding: 7px 8px; min-height: 44px; border: 0; background: transparent; color: #f1e2c0; font: 15px var(--pc-font-body); cursor: pointer; }
+.trial-path-cell > :not(.ink-nine-slice) { position: relative; z-index: 2; }
+.trial-path-cell.selected .trial-path-cell__label { color: #2f2415; font-weight: 700; }
+.trial-path-cell.locked { cursor: default; }
+.trial-path-cell.locked .ink-nine-slice { opacity: .4; }
+.trial-path-cell.locked .trial-path-cell__label { color: #8a7c56; }
+.trial-talent-reroll { flex: 0 0 auto; min-height: 40px; font-size: 26px; margin-left: -8px; }
 .trial-begin { position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }.trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; }
 </style>
 
