@@ -321,9 +321,10 @@ export class GameManagerPersistentEffectOps {
           // to push expiresAtMs past it, and buildGameSave then wrote
           // the out-of-domain value verbatim, bricking the save at the
           // next load. Clamp inside the admitted domain (|x| < 2^52,
-          // saveShapeValidation.isBoundedTimestamp): the parked buff
-          // stays parked (deny-direction residual) but every written
-          // save always re-validates.
+          // saveShapeValidation.isBoundedTimestamp): every written save
+          // always re-validates, and a parked stamp the writer cannot
+          // shrink is bounded at the restore seam instead
+          // (boundTimedEffectClocks - r22-AUT-1).
           existing.expiresAtMs = Math.min(
             2 ** 52 - 1,
             Math.max(Date.now(), existing.expiresAtMs) + duration,

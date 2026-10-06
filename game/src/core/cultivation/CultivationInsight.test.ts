@@ -100,4 +100,24 @@ describe('accrueCultivationInsight', () => {
     expect(player.skillInsight).toBe(0)
     expect(player.cultivationInsightAccumulator).toBe(0)
   })
+
+  it('non-finite gained resets the poisoned accumulator instead of bricking later saves (r23-AUT nit)', () => {
+    mocks.insightPerCultivation.mockReturnValue(2000)
+    const player = createDefaultPlayer()
+    player.cultivationInsightAccumulator = 500
+
+    // A non-finite feed mints no insight - and the accumulator drops
+    // back to a writable value instead of staying Infinity, which
+    // would fail save-shape validation on every later save-write.
+    accrueCultivationInsight(player, Number.POSITIVE_INFINITY)
+
+    expect(player.skillInsight).toBe(0)
+    expect(player.totalSkillInsightGained).toBe(0)
+    expect(player.cultivationInsightAccumulator).toBe(0)
+
+    // The next honest accrual works normally from the reset.
+    accrueCultivationInsight(player, 2500)
+    expect(player.skillInsight).toBe(1)
+    expect(player.cultivationInsightAccumulator).toBe(500)
+  })
 })

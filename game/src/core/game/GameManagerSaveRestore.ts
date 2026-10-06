@@ -24,7 +24,7 @@ import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import { applyAllBodyModifiers } from '../realm/body/BodyProgressionSystem'
 import type { StatModifier } from '../stats/StatCalculator'
-import { computeRestoreIdentity, restoreAuthorityNowMs, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
+import { computeRestoreIdentity, restoreAuthorityNowMs, sanitizeRestoreAuthority, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
 import { assertSaveAcceptable } from '../../services/save/saveAcceptance'
 import { NotificationQueue } from './NotificationQueue'
 import { calculateOfflineTime } from '../idle/GameClock'
@@ -151,6 +151,11 @@ export class GameManagerSaveRestore {
     // return the already-current modifiers. A genuinely different payload
     // (even sharing lastSavedAt|cultivation) always runs the full restore.
     const payloadIdentity = computeRestoreIdentity(save)
+
+    // r23-AUT: authority stamps bypass the save gate - an out-of-domain
+    // server stamp falls back to client-clock semantics (bounded deny)
+    // instead of feeding derivations.
+    const authority = sanitizeRestoreAuthority(timeAuthority)
 
     if (payloadIdentity === this.lastAppliedPayloadHash) {
       return this.deps.equipmentSystem.getModifiers()
@@ -382,12 +387,12 @@ export class GameManagerSaveRestore {
     // each settle consumer still applies its own channel cap, so the
     // raw window is resolved uncapped here.
     const elapsedOfflineSeconds =
-      timeAuthority?.kind === 'live-replacement'
+      authority?.kind === 'live-replacement'
         ? 0
-        : timeAuthority?.kind === 'cold-boot'
+        : authority?.kind === 'cold-boot'
           ? calculateOfflineTime(
-              { lastOnlineAt: timeAuthority.sinceMs },
-              timeAuthority.untilMs,
+              { lastOnlineAt: authority.sinceMs },
+              authority.untilMs,
               Number.POSITIVE_INFINITY,
             ).offlineSeconds
           : calculateOfflineTime(
@@ -406,7 +411,7 @@ export class GameManagerSaveRestore {
     // server-approved window end (untilMs), not the client clock - a
     // slow local clock would otherwise underpay the offline span the
     // server already granted (and a fast one must not pay past it).
-    const authorityNowMs = restoreAuthorityNowMs(timeAuthority)
+    const authorityNowMs = restoreAuthorityNowMs(authority)
     const settleNowMs = Math.min(
       (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
       authorityNowMs,

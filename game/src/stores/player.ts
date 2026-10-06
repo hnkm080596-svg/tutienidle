@@ -12,7 +12,7 @@ import {
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow, TU_LINH_TRAN_DURATION_MS } from '../core/economy/TuLinhTranBalance'
-import { buildGameSave, computeRestoreIdentity, restoreAuthorityNowMs, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
+import { buildGameSave, computeRestoreIdentity, restoreAuthorityNowMs, sanitizeRestoreAuthority, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
@@ -122,6 +122,11 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
   provenanceMs: number,
   saveLastSavedAtMs: number,
 ): T {
+  // appliedAtMs is write-only after persistence (refresh merges read
+  // expiresAtMs only), so its clamp epoch is cosmetic - nowMs keeps it
+  // inside the same authority window the sibling arms anchor (r23-int-02:
+  // asymmetric vs the dead arm's field-epoch clamp, but strict-subset -
+  // it never admits what the raw payload couldn't already claim).
   const appliedAtMs = Number.isFinite(effect.appliedAtMs)
     ? Math.min(effect.appliedAtMs, nowMs)
     : effect.appliedAtMs
@@ -361,6 +366,10 @@ export const usePlayerStore = defineStore('player', {
       // fingerprint 2-field. Cung save goi lai = no-op; save KHAC (du
       // cung lastSavedAt|cultivation) ap day du.
       const payloadIdentity = computeRestoreIdentity(save)
+      // r23-AUT: authority stamps bypass the save gate - an
+      // out-of-domain server stamp falls back to client-clock
+      // semantics (bounded deny) instead of feeding derivations.
+      const authority = sanitizeRestoreAuthority(timeAuthority)
       const previousRestore = lastRestoredPayloads.get(this)
 
       if (previousRestore !== undefined && previousRestore.identity === payloadIdentity) {
@@ -375,12 +384,12 @@ export const usePlayerStore = defineStore('player', {
       // zero by definition. The bound still flows through
       // calculateOfflineTime so the max cap applies.
       const offlineSeconds =
-        timeAuthority?.kind === 'cold-boot'
+        authority?.kind === 'cold-boot'
           ? calculateOfflineTime(
-              { lastOnlineAt: timeAuthority.sinceMs },
-              timeAuthority.untilMs,
+              { lastOnlineAt: authority.sinceMs },
+              authority.untilMs,
             ).offlineSeconds
-          : timeAuthority?.kind === 'live-replacement'
+          : authority?.kind === 'live-replacement'
             ? 0
             : calculateOfflineTime({
                 lastOnlineAt: save.player.lastSavedAt,
@@ -390,7 +399,7 @@ export const usePlayerStore = defineStore('player', {
       // clamp anchors at is the server-approved window end, not the
       // client clock - a slow local clock would underpay an approved
       // span, a fast one must not pay past approval.
-      const authorityNowMs = restoreAuthorityNowMs(timeAuthority)
+      const authorityNowMs = restoreAuthorityNowMs(authority)
       // r14-AUT-2: timed-effect provenance is the payload's own stamp
       // bounded by the approved now - a save cannot claim a deadline
       // past lastSavedAt + duration, and a forged-future lastSavedAt
@@ -408,8 +417,11 @@ export const usePlayerStore = defineStore('player', {
       // span otherwise pays its boost over window stretches no
       // authored duration could cover (the payout-epoch sibling of the
       // restore map's bound: lastSavedAt + dur vs provenance + dur -
-      // equal whenever a payout can run, strictly tighter under a fast
-      // clock). The payout copy keeps each record's own death POSITION
+      // provenance = min(lastSavedAt, authorityNow) <= lastSavedAt, so
+      // the map bound is never looser; the two coincide when
+      // lastSavedAt <= authorityNow and diverge under a fast client
+      // clock, where the live map is strictly tighter - deny
+      // direction, r23-int-01). The payout copy keeps each record's own death POSITION
       // for the split (a buff honestly dying mid-window still pays its
       // live part); only live claims clamp, so segments stay
       // consistent with what was actually live.

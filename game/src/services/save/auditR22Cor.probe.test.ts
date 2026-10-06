@@ -75,9 +75,11 @@ describe('auditR22 COR probe - write-side ratchet vs 2^52 admission bound', () =
     const admission = validateGameSaveShape(forgedSave)
     expect(admission.ok, JSON.stringify(admission.issues)).toBe(true)
 
-    // Post-restore state: boundTimedEffectClocks passes a stackable
-    // expiresAtMs through verbatim (stores/player.ts:135-143), so the
-    // live player carries the parked stamp unchanged.
+    // Post-admission state: the parked stamp survives the gate, and
+    // boundTimedEffectClocks (stores/player.ts) bounds it at
+    // provenance + 24h on the next restore - never a verbatim
+    // carry-through, never a mint. This spec drives the live path
+    // directly so the persisted stamp feeds the re-drink unchanged.
     const player = createDefaultPlayer()
     player.persistentTimedEffects = [
       JSON.parse(JSON.stringify(craftedEffect)) as PersistentTimedEffect,
@@ -113,8 +115,9 @@ describe('auditR22 COR probe - write-side ratchet vs 2^52 admission bound', () =
     expect(player.persistentTimedEffects[0]!.expiresAtMs).toBe(BOUND - 1)
 
     // (3) next save+load cycle: the write stayed inside the domain, so
-    // the rebuilt save still validates - the parked buff parks forever
-    // but the save can never brick through normal play.
+    // the rebuilt save still validates - the save can never brick
+    // through normal play, and the parked deadline itself is bounded
+    // by the restore clamp (r22-AUT-1).
     const secondSave = buildGameSave(player, new GameManager())
     const revalidation = validateGameSaveShape(secondSave)
     expect(revalidation.ok, JSON.stringify(revalidation.issues)).toBe(true)

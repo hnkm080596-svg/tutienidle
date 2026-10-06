@@ -278,6 +278,32 @@ export function restoreAuthorityNowMs(timeAuthority?: RestoreTimeAuthority): num
       : Date.now()
 }
 
+/**
+ * r23-AUT: authority stamps are the one timestamp input the save gate
+ * never sees (they arrive out-of-band from the server response, not
+ * through validateGameSaveShape). A stamp outside the admitted
+ * timestamp domain (|x| >= 2^52, or non-finite) drops the whole
+ * authority to undefined - the restore falls back to legacy
+ * client-clock semantics, which pays only what the save's own
+ * marker + the local clock justify. Bounded deny direction: no path
+ * widens past the honest elapsed a same-payload client-window would
+ * pay, and every mechanism guard still applies downstream.
+ */
+export function sanitizeRestoreAuthority(
+  timeAuthority?: RestoreTimeAuthority,
+): RestoreTimeAuthority | undefined {
+  if (timeAuthority === undefined) {
+    return undefined
+  }
+  const stamps =
+    timeAuthority.kind === 'cold-boot'
+      ? [timeAuthority.sinceMs, timeAuthority.untilMs]
+      : [timeAuthority.nowMs]
+  return stamps.every((stamp) => Number.isFinite(stamp) && Math.abs(stamp) < 2 ** 52)
+    ? timeAuthority
+    : undefined
+}
+
 export interface GameSessionPlayerOwner {
   readonly $state: PlayerData
 

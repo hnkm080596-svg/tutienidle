@@ -704,4 +704,66 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(after.retiredFieldV42).toBeUndefined()
     expect(player.name).toBe('purge-target')
   })
+
+  // r23-AUT: authority stamps are the one timestamp input that bypasses
+  // the save gate. An out-of-domain server stamp (|x| >= 2^52, or
+  // non-finite) drops the whole authority to undefined - the restore
+  // pays the client-clock window instead of feeding absurd derivations.
+  describe('sanitizeRestoreAuthority fallback (r23-AUT)', () => {
+    it('out-of-domain cold-boot untilMs pays the client-clock window, not the absurd server span', () => {
+      const player = usePlayerStore()
+      const save = buildMinimalSave({
+        cultivationPerSecond: 1,
+        lastSavedAt: currentMs - 600_000, // honest 10-minute-old save
+      })
+
+      const result = player.restoreFromSave(save, {
+        kind: 'cold-boot',
+        sinceMs: currentMs - 600_000,
+        untilMs: 2 ** 52, // corrupt server stamp outside the save domain
+      })
+
+      // Honored, the authority would claim elapsed = until - since
+      // (~4.5e15s -> 24h cap = 86400). Sanitized, the client window
+      // pays exactly the honest 600s.
+      expect(result.elapsedSeconds).toBe(600)
+      expect(result.cultivation).toBe(600)
+    })
+
+    it('boundary: untilMs just inside the domain is still honored', () => {
+      const player = usePlayerStore()
+      const save = buildMinimalSave({
+        cultivationPerSecond: 1,
+        lastSavedAt: currentMs - 600_000,
+      })
+
+      const result = player.restoreFromSave(save, {
+        kind: 'cold-boot',
+        sinceMs: currentMs - 600_000,
+        untilMs: 2 ** 52 - 1,
+      })
+
+      // In-domain authority wins: elapsed = until - since is far past
+      // the cap, so the window pays the 24h ceiling like the
+      // pre-sanitize code path did.
+      expect(result.elapsedSeconds).toBe(86400)
+    })
+
+    it('non-finite live-replacement nowMs falls back to client-clock semantics', () => {
+      const player = usePlayerStore()
+      const save = buildMinimalSave({
+        cultivationPerSecond: 1,
+        lastSavedAt: currentMs - 600_000,
+      })
+
+      const result = player.restoreFromSave(save, {
+        kind: 'live-replacement',
+        nowMs: Number.NaN,
+      })
+
+      // Honored, live-replacement pays zero accrual. A corrupt stamp
+      // drops the authority: the client window pays the honest span.
+      expect(result.elapsedSeconds).toBe(600)
+    })
+  })
 })
