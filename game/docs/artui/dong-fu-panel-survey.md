@@ -8,7 +8,7 @@ panels, and shared components they all sit on.
 **TL;DR (đọc 60s):** 22 surface đã khảo sát line-by-line + preview live.
 Rail trái trong game ĐÃ khớp mock (20 mục + lock, @2d1a2238). Wire G3 = port
 layout mock vào `*FidelityScene` hiện có — model thật đủ, không cần adapter.
-**44 rulings** kèm default ở §4 — mỗi cái chỉ cần duyệt/sửa. Nổi bật: vendor
+**45 rulings** kèm default ở §4 — mỗi cái chỉ cần duyệt/sửa. Nổi bật: vendor
 không có design nào (R33), Trợ Giúp là panel mới không phải form (R37), 2 bản
 formation xung đột (R41), quest chỉ có mainline vs 5 nhóm mock (R31), title art
 victory/defeat thiếu trong pack (R36). Slice order đề xuất C0→C18 ở §10.
@@ -360,6 +360,7 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R42 | Un-mocked panels reskin Pc* hay cần mock? | reskin theo secondary; vendor cần quyết thêm |
 | R43 | 9 system surfaces chưa có design (toast/announce/tutorial/pause…) | reskin Pc*, giữ z-order |
 | R44 | Lò đan dùng asset pack cũ (huyen-kim) | giữ tạm asset cũ đến khi có art mới |
+| R45 | Rail locked item không hiện lý do khóa (wheel có disabledReason) | thêm hover/tooltip lý do |
 
 ---
 
@@ -531,3 +532,13 @@ Fidelity scenes hiện có các feature G2 mock KHÔNG vẽ — cần ruling "gi
 - `ui-preview/Home*ArtPanel` — mock, không production (giữ làm reference hay move sang scenes khi port xong?).
 
 
+
+## 11. Audio cues (đóng)
+
+`AudioCueManifest` đã đủ generic cues cho G3 (ui.click/tab/modal open-close/panel open-close/toast ×4/wheel ×3/equip/purchase/error/confirm/cancel) — không cần cue mới; rail đã dùng `ui.wheel.select`. Ghi nhận, không ruling.
+
+## 12. Gaps còn lại (cycle sau)
+
+- Pháp Bảo/Đồng Hành/artifact/companion hidden-scope: content reskin-ready (secondary preview), unlock predicates sẵn — đợi R2/R32.
+- `talisman_slot` wheel = future placeholder (NEVER_AVAILABLE) — vắng ở mọi surface, ghi nhận.
+- Electron/desktop: G3 pages là vite-dev only; packaging không đổi.
