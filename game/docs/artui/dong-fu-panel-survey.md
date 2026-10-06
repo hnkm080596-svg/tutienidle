@@ -8,7 +8,7 @@ panels, and shared components they all sit on.
 **TL;DR (đọc 60s):** 22 surface đã khảo sát line-by-line + preview live.
 Rail trái trong game ĐÃ khớp mock (20 mục + lock, @2d1a2238). Wire G3 = port
 layout mock vào `*FidelityScene` hiện có — model thật đủ, không cần adapter.
-**43 rulings** kèm default ở §4 — mỗi cái chỉ cần duyệt/sửa. Nổi bật: vendor
+**44 rulings** kèm default ở §4 — mỗi cái chỉ cần duyệt/sửa. Nổi bật: vendor
 không có design nào (R33), Trợ Giúp là panel mới không phải form (R37), 2 bản
 formation xung đột (R41), quest chỉ có mainline vs 5 nhóm mock (R31), title art
 victory/defeat thiếu trong pack (R36). Slice order đề xuất C0→C18 ở §10.
@@ -359,6 +359,7 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R41 | 2 bản formation design (landscape 9-slot vs auxiliary pentagram) | landscape 9-slot |
 | R42 | Un-mocked panels reskin Pc* hay cần mock? | reskin theo secondary; vendor cần quyết thêm |
 | R43 | 9 system surfaces chưa có design (toast/announce/tutorial/pause…) | reskin Pc*, giữ z-order |
+| R44 | Lò đan dùng asset pack cũ (huyen-kim) | giữ tạm asset cũ đến khi có art mới |
 
 ---
 
@@ -417,7 +418,7 @@ Mỗi slice = 1 PR vào chuỗi sau B; chỉ mở khi rulings tương ứng đã
 **Mock dùng ảnh tái chế** (không phải asset riêng): production source-card landscapes = world-vista-warm + realm/landscape-3 + opening-vista-warm; quest list pictures = vista/landscape/meditation/materials — OK tái dùng, không cần art mới.
 
 **Thiếu/thận trọng:**
-- `huyen-kim/alchemy/alchemy-cauldron-prop@2x.png` — mock dùng asset GÓI CŨ (huyen-kim, không phải tien-hiep-2026-10). Asset tồn tại nhưng làm lộn pack — cần asset lò đan trong pack mới hoặc giữ tạm.
+- `huyen-kim/alchemy/alchemy-cauldron-prop@2x.png` — mock dùng asset GÓI CŨ (huyen-kim, không phải tien-hiep-2026-10). Asset tồn tại nhưng làm lộn pack → **R44:** cần asset lò đan trong pack mới hay giữ asset cũ tạm?
 - Không có rail icon scripture_pavilion (R7) và không có Home*ArtPanel cho vendor (R33), worker_lodge, scripture, artifact, companion, quan_khi.
 - `manual-art-space` (technique) trống — chờ art (R22).
 
