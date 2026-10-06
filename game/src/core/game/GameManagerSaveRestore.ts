@@ -427,14 +427,6 @@ export class GameManagerSaveRestore {
       save.player.lastSavedAt ?? settleNowMs,
       authorityNowMs - elapsedOfflineSeconds * 1000,
     )
-    // r17-INT-01: lanes spawned at offlineSinceMs inherit ITS epoch -
-    // only when the server bound anchored it (strictly below the
-    // payload marker) do spawned deadlines need the field-epoch
-    // re-stamp; equality means both epochs name the same instant.
-    const offlineSinceIsServerEpoch =
-      offlineSinceMs === authorityNowMs - elapsedOfflineSeconds * 1000 &&
-      offlineSinceMs < (save.player.lastSavedAt ?? settleNowMs)
-
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {
         // T3 (economy-ecosystem-plan) - worker chay offline nhu slot tay
@@ -451,7 +443,6 @@ export class GameManagerSaveRestore {
               this.deps.decomposeSystem.getSettings().workers,
             ),
             offlineSinceMs,
-            offlineSinceIsServerEpoch,
             workerAssignments: this.deps.getWorkerAssignments(),
             rng: this.deps.sessionRng,
           },

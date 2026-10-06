@@ -342,14 +342,11 @@ describe('RestoreTimeAuthority — field-epoch stamps (r16)', () => {
       registry,
       'mortal',
       until,
-      // r17-INT-01: the window is server-anchored here by construction
-      // (the harness supplies the authority bound directly), so the
-      // caller declares the seed's epoch explicitly.
-      { workerCapacity: 1, offlineSinceMs: until - 50_000, offlineSinceIsServerEpoch: true },
+      { workerCapacity: 1, offlineSinceMs: until - 50_000 },
     )
 
     // Mortal L1 cycle is ~100s, so the lane seeded at until-50s stays
-    // pending 50s past the window end. A server-epoch stamp already
+    // pending 50s past the window end. Its settle-epoch stamp already
     // reads past-due against Date.now() - the online tick would have
     // paid it ~10d early. The field-epoch re-stamp keeps it ahead.
     const pending = states.get('s1')!.workerCycles!

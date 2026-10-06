@@ -279,13 +279,13 @@ describe('settleProductionOffline — worker settle phase', () => {
   })
 })
 
-describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17-INT-01)', () => {
+describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17-INT-01 / r18-COR-4)', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
   // r17-INT-01(a): the successor of a SAVED lane inherits the saved
-  // lane's client-epoch deadline - it is not a server-epoch seed and
+  // lane's client-epoch deadline - its chain is not seed-rooted and
   // must not be shifted even when the window is server-anchored.
   it('keeps a saved-lane successor deadline unshifted under a server-anchored window', () => {
     // Window [T0+100k, T0+300k] server-anchored; device clock runs
@@ -300,7 +300,6 @@ describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17
     const settled = settle(deps, T0 + 300_000, {
       workerCapacity: 1,
       offlineSinceMs: T0 + 100_000,
-      offlineSinceIsServerEpoch: true,
     })
 
     // saved lane chain completes at T0+100k/200k/300k; the pending
@@ -315,13 +314,13 @@ describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17
     ])
   })
 
-  // r17-INT-01(b): a CLIENT-anchored window seeds lanes in the field
-  // epoch already - a device clock that changed between save and
-  // restore must not shift them (previously froze lanes by the skew
-  // change).
-  it('leaves client-anchored spawned lanes unshifted when the clock moved', () => {
-    // Save was written on a clock 1h behind; restore runs honest ->
-    // Date.now() - settleNowMs = 200k of clock CHANGE, not lane skew.
+  // r18-COR-4: a seed-rooted chain's pending head encodes "remaining
+  // work at settle" relative to nowMs regardless of the seed's anchor
+  // epoch - client-anchored windows re-stamp it the same +200k (a raw
+  // T0+400k stamp would pay ~1 cycle early at the field's T0+500k).
+  it('re-stamps client-anchored seeded lanes the same - the head is settle-relative', () => {
+    // Save was written on a client clock; restore sees field-now
+    // T0+500k while the settle window ended at T0+300k.
     vi.spyOn(Date, 'now').mockReturnValue(T0 + 500_000)
     const states = new Map<string, ProductionSiteState>([
       [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 2, workerCycles: [] })],
@@ -331,15 +330,15 @@ describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17
     const settled = settle(deps, T0 + 300_000, {
       workerCapacity: 2,
       offlineSinceMs: T0,
-      offlineSinceIsServerEpoch: false,
     })
 
     // Two lanes seeded at T0 complete at 100k/200k/300k each; pending
-    // heads keep client-epoch T0+400k (no +200k freeze).
+    // heads owe (T0+400k - T0+300k) = 100k of remaining work at settle
+    // -> field-epoch deadline T0+500k + 100k = T0+600k.
     expect(settled).toBe(6)
     expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
-      T0 + 400_000,
-      T0 + 400_000,
+      T0 + 600_000,
+      T0 + 600_000,
     ])
   })
 
@@ -355,7 +354,6 @@ describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17
     const settled = settle(deps, T0 + 300_000, {
       workerCapacity: 1,
       offlineSinceMs: T0 + 100_000,
-      offlineSinceIsServerEpoch: true,
     })
 
     // Seed at T0+100k (server): dues 200k/300k complete, pending
@@ -377,6 +375,9 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
   // budget spent the chain jumps to its post-window head in O(1) -
   // the settle pays at most CAP/cycleMs completions per lane.
   it('bounds a deep-past seed chain by the offline cap instead of window depth', () => {
+    // r18-COR-4: pin field-now so the seed-rooted head's re-stamp is
+    // deterministic (it owes 1.1M of remaining work past the settle).
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 50_000_000)
     const states = new Map<string, ProductionSiteState>([
       [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [] })],
     ])
@@ -393,13 +394,13 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
 
     expect(settled).toBe(360)
     expect(grants).toHaveLength(360)
-    // The pending head is the first due past nowMs - the lane keeps
-    // in-flight work at its true deadline, not a walked stamp.
+    // The pending head is the first due past nowMs; seed-rooted, so it
+    // re-stamps to the field epoch: Date.now + (41.1M - 40M) = 51.1M.
     expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
-      41_100_000,
+      51_100_000,
     ])
     expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.startedAtMs)).toEqual([
-      41_000_000,
+      51_000_000,
     ])
   })
 
@@ -407,6 +408,7 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
   // first head pays/forfeits by cost, then the successor chain jumps
   // the same way once the budget is spent.
   it('bounds a deep-past saved lane chain the same way', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 50_000_000)
     const saved = makeCycle(LAM, 0, 100_000)
     const states = new Map<string, ProductionSiteState>([
       [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [saved] })],
@@ -422,6 +424,9 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
     // dues 100k..41_000k: 410 in-window dues pay until the 36M budget
     // is gone (360 completions), the 50-due tail jumps to its head.
     expect(settled).toBe(360)
+    // Saved-rooted chain: the head is the lane's own deadline and
+    // keeps its stamp (r18-COR-4 residual - an ancient saved-chain
+    // head pays ~1 cycle early at the next tick, bounded one-time).
     expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
       41_100_000,
     ])

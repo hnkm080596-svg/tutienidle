@@ -219,10 +219,10 @@ describe('fixpoint r16 COR - r15 payload-epoch window repros', () => {
 
     expect(result.elapsedSeconds).toBe(500)
     // FIXED shape: unbuffed = 12.5/1.25 = 10; the live claim's payout
-    // bound is its own duration (min(appliedAt, lastSavedAt)+24h) so
-    // the honest 60s tail pays at the live rate ->
+    // bound is the payload-epoch honest-max (lastSavedAt+24h) so the
+    // honest 60s tail pays at the live rate ->
     // 60s x 12.5 + 440s x 10 = 5150. r17-COR-B1 removed the residual
-    // provenance bound that used to cut the tail under skew.
+    // authority-epoch bound that used to cut the tail under skew.
     expect(result.cultivation).toBe(5150)
   })
 
@@ -275,7 +275,7 @@ describe('fixpoint r16 COR - r15 payload-epoch window repros', () => {
     expect(result.elapsedSeconds).toBe(500)
     // FIXED shape: the sample reads the RAW payload stamps at
     // lastSavedAt (same probe as the validator) -> live -> unbuffed =
-    // 12.5/1.25 = 10; the claim's own duration bound keeps the 60s
+    // 12.5/1.25 = 10; the claim's payload-epoch bound keeps the 60s
     // tail -> 60s x 12.5 + 440s x 10 = 5150. The r15-AUT-1 invariant
     // holds: the admitted boost is paid un-divided nowhere (pre-fix
     // paid 6250 flat).

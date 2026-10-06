@@ -96,12 +96,14 @@ const SIGNATURE_SEPARATOR = '\u0001'
  * a forged deadline; the span check is left to the shape validator's
  * stackable exemption and expires passes through here (r13-COR-3,
  * r14-AUT-1 accepted residual).
- * r14-AUT-2: the non-stackable forward bound anchors at the save's own
- * provenance (provenanceMs = min(lastSavedAt, now)), NOT at boot-now.
- * Every honest extension is appTime + duration with appTime <=
- * lastSavedAt, so expires > lastSavedAt + TU_LINH_TRAN_DURATION_MS is
- * impossible provenance - a forged far-future deadline on a stale save
- * must clamp to its dead expiry instead of reviving at boot + 24h.
+ * The non-stackable forward bound anchors at the save's own
+ * provenance (provenanceMs = min(lastSavedAt, authorityNow)), NOT at
+ * boot-now. Every honest extension re-stamps lastApply + duration
+ * with lastApply <= lastSavedAt (rebuy chains included: appliedAt
+ * stays at first buy while expires max-extends), so expires >
+ * lastSavedAt + TU_LINH_TRAN_DURATION_MS is an impossible claim - a
+ * forged far-future deadline on a stale save clamps to the provenance
+ * bound instead of minting real buff time past trusted-now + dur.
  * Shared by the offline-payout read and the persistentTimedEffects
  * restore map so crafted spans cannot feed the settlement seam
  * through a raw copy.
@@ -122,20 +124,21 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
   // clamps at the FIELD clock, not provenance+duration - authorityNow
   // alone revives a dead record under a SLOW device clock (until >
   // Date.now() reads the stamp as live for up to skew).
-  // r17-COR-B1: the live arm (expires > lastSavedAt) binds by the
-  // claim's own DURATION - min(appliedAt, authorityNow) + duration -
-  // not by the marker's position. An honest claim applied more than
-  // skew before the save keeps its whole tail (the r14 bound cut up
-  // to skew of honest remaining life); a forge still dies within
-  // duration of authorityNow because appliedAt clamps at nowMs.
+  // r18-INT-01/r18-AUT-1: the live arm (expires > lastSavedAt) binds
+  // at provenance + duration, the tightest cap that still admits the
+  // WHOLE honest class - rebuy chains reach expires = lastApply + dur
+  // <= lastSavedAt + dur because appliedAt keeps the FIRST purchase
+  // stamp while expires max-extends (an appliedAt-anchored bound
+  // killed those chains). Under a fast clock the honest tail beyond
+  // until + dur is still unprovable (indistinguishable from a
+  // far-future mint) - irreducible bounded loss.
   const expiresAtMs =
     Number.isFinite(effect.expiresAtMs) && effect.durationStackable !== true
       ? Math.min(
           effect.expiresAtMs,
           Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs
             ? Math.min(nowMs, Date.now())
-            : (Number.isFinite(appliedAtMs) ? appliedAtMs : provenanceMs) +
-                TU_LINH_TRAN_DURATION_MS,
+            : provenanceMs + TU_LINH_TRAN_DURATION_MS,
         )
       : effect.expiresAtMs
   return { ...effect, appliedAtMs, expiresAtMs }
@@ -145,33 +148,29 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
 // in the payload epoch, not the liveness-clamped stamp the restore
 // map stores. A dead-at-save record keeps its own stamp here - a buff
 // that honestly died mid-window must still pay its live rate up to
-// that stamp - while a live claim (expires > lastSavedAt) binds by
-// its own DURATION in the payload epoch: min(appliedAt, lastSavedAt)
-// + duration. r17-COR-B1: anchoring this bound at the server provenance
-// cut up to `skew` of honest tail time from every live claim; the
-// duration bound still caps any claim at the honest maximum shape (a
-// just-applied buff asserting the full duration at the marker), and
-// the paid width stays inside the authorized window. The stored copy
-// additionally clamps at authorityNow - that is the bound that stops
-// a crafted far-future marker from minting real buff time.
+// that stamp - while a live claim (expires > lastSavedAt) binds at
+// lastSavedAt + duration: the payload-epoch honest-max for the class
+// (a claim applied AT the marker asserts the full remaining duration;
+// honest chains and single buys alike stay under it). r18-INT-01:
+// anchoring at appliedAt killed honest rebuy chains (appliedAt keeps
+// the first-buy stamp while expires max-extends); r17-COR-B1: any
+// authority-epoch anchor cuts honest tails by the clock skew. This
+// bound keeps every honest shape whole while capping a forged claim
+// at the same class max - the paid width still sits inside the
+// authorized window. The stored copy additionally clamps at
+// provenance so a crafted far-future marker cannot mint real buff
+// time past trusted-now + duration.
 function payoutExpiresAtMs(
-  effect: { appliedAtMs: number; expiresAtMs: number; durationStackable?: boolean },
+  effect: { expiresAtMs: number; durationStackable?: boolean },
   saveLastSavedAtMs: number,
 ): number {
   if (!Number.isFinite(effect.expiresAtMs) || effect.durationStackable === true) {
     return effect.expiresAtMs
   }
-  if (Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs) {
+  if (!Number.isFinite(saveLastSavedAtMs) || effect.expiresAtMs <= saveLastSavedAtMs) {
     return effect.expiresAtMs
   }
-  const appliedBoundMs = Number.isFinite(effect.appliedAtMs)
-    ? Math.min(effect.appliedAtMs, saveLastSavedAtMs)
-    : saveLastSavedAtMs
-  // A claim with no finite anchor keeps its own stamp - the validator
-  // rejects that shape upstream; a NaN bound would poison the split.
-  return Number.isFinite(appliedBoundMs)
-    ? Math.min(effect.expiresAtMs, appliedBoundMs + TU_LINH_TRAN_DURATION_MS)
-    : effect.expiresAtMs
+  return Math.min(effect.expiresAtMs, saveLastSavedAtMs + TU_LINH_TRAN_DURATION_MS)
 }
 
 // "Noi dung giong het" = cung so luong, cung THU TU, va tung entry khop
