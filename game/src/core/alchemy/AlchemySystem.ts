@@ -386,19 +386,30 @@ export class AlchemySystem {
       if (job.startedAtMs > restoreNowMs) {
         const shiftMs = job.startedAtMs - restoreNowMs
         const shifted = { ...job, startedAtMs: job.startedAtMs - shiftMs, completesAtMs: job.completesAtMs - shiftMs }
-        job = job.reservation === undefined
-          ? shifted
-          : {
+        // The reservation digest folds startedAtMs/completesAtMs into
+        // the witness - re-derive it over the shifted stamps so the
+        // witness still replays. Safe: an attacker could always
+        // self-consistent-digest (documented residual).
+        // r28-COR-Low: the fold reads reservation.specialIngredients.map
+        // - only re-derive when the witness is actually foldable, or a
+        // defined-but-malformed reservation throws before the normalize
+        // arm below can run (shift arm vs verbatim arm divergence).
+        const resSpecials =
+          typeof job.reservation === 'object' && job.reservation !== null
+            ? job.reservation.specialIngredients
+            : undefined
+        const foldable =
+          Array.isArray(resSpecials) &&
+          resSpecials.every((special) => typeof special === 'object' && special !== null)
+        job = foldable
+          ? {
               ...shifted,
-              // The reservation digest folds startedAtMs/completesAtMs
-              // into the witness - re-derive it over the shifted stamps
-              // so the witness still replays. Safe: an attacker could
-              // always self-consistent-digest (documented residual).
               reservation: {
-                ...job.reservation,
-                digest: alchemyJobReservationDigest(shifted, job.reservation),
+                ...(job.reservation as AlchemyJobReservation),
+                digest: alchemyJobReservationDigest(shifted, job.reservation as AlchemyJobReservation),
               },
             }
+          : shifted
       }
       return {
         ...job,

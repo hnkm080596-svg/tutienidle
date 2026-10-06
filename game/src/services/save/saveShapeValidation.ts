@@ -850,7 +850,13 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
     )
     const cpsTalentLevels: Record<string, number> = {}
 
-    if (isObject(player.talentLevels)) {
+    // r28-COR-Nit: the root cap covers this sibling walk too - an
+    // over-cap record is already refused, so do not pay the unbounded
+    // entries iteration here either.
+    if (
+      isObject(player.talentLevels) &&
+      Object.keys(player.talentLevels).length <= ID_COLLECTION_CAP
+    ) {
       for (const [talentId, level] of Object.entries(player.talentLevels)) {
         if (isNonNegativeFiniteNumber(level)) {
           cpsTalentLevels[talentId] = level
@@ -1034,7 +1040,12 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
         )
         const sanitizedLevels: Record<string, number> = {}
 
-        if (isObject(player.talentLevels)) {
+        // r28-COR-Nit: same cap guard as the root walk - refused
+        // over-cap records do not pay sibling entry iterations.
+        if (
+          isObject(player.talentLevels) &&
+          Object.keys(player.talentLevels).length <= ID_COLLECTION_CAP
+        ) {
           for (const [talentId, level] of Object.entries(player.talentLevels)) {
             if (isNonNegativeFiniteNumber(level) && Number.isInteger(level)) {
               sanitizedLevels[talentId] = level
