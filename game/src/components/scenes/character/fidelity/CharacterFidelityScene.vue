@@ -53,11 +53,17 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .cf-scene :deep(button:hover) { filter: brightness(1.12); }
 /* Panel frame + cards: the approved landscape-design skin (paper page
    under a double border; nine-slice card frames via border-image). */
-.cf-panel { position: absolute; left: 94px; top: 123px; width: 1334px; height: 633px; padding: 20px 24px 22px; background: #f2e4c8 var(--character-paper) center/cover; border: 3px double #b28a43; overflow: hidden; }
+/* Geometry: the 1440x810 design space is scaled x1.0889 to the viewport,
+   so values below are mock screen-px / 1.0889 (mock panel: x376 y166
+   w1160 h662, 30px pad). */
+.cf-panel { position: absolute; left: 345px; top: 101px; width: 1065px; height: 608px; padding: 22px 27px 26px; background: #f2e4c8 var(--character-paper) center/cover; border: 3px double #b28a43; overflow: hidden; }
 .cf-panel__header { height: 61px; border-bottom: 1px solid #b28a43; display: flex; align-items: flex-start; justify-content: space-between; color: #302519; }
 .cf-panel__header h1 { font-size: 38px; margin: 0; }
 .cf-panel__content { display: grid; grid-template-columns: 28% 39% 1fr; gap: 14px; height: calc(100% - 72px); margin-top: 11px; min-height: 0; }
 .cf-scene :deep(.character-card) { position: relative; isolation: isolate; background: transparent; border: 0; color: #f0dfbb; padding: 13px 16px; }
+/* The power card opts out of the card relative box: it docks to the
+   portrait column's bottom edge over the figure (mock geometry). */
+.cf-scene :deep(.character-power) { position: absolute; bottom: 0; left: 0; right: 0; }
 .cf-scene :deep(.character-card)::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border: 15px solid transparent; border-image: var(--character-card) 90 fill / 15px stretch; }
 .cf-scene :deep(.character-card h2) { font-size: 19px; margin: 0 0 9px; padding-bottom: 7px; border-bottom: 1px solid #9d8049; font-weight: 500; }
 .cf-preview { position: absolute; left: 121px; top: 582px; width: 210px; font-size: 10px; line-height: 15px; letter-spacing: .4px; color: #675c43; z-index: 4; }

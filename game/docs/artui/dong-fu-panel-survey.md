@@ -324,11 +324,11 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R6 | Teleport array invisible trên rail | chấp nhận (wheel còn) |
 | R7 | Scripture pavilion không có rail icon | wheel-only |
 | R8 | Wheel/board/autofarm giữ chrome cũ tới khi có redesign riêng | giữ |
-| R9 | PaperPanelNavigation top-nav trong mọi panel — giữ hay bỏ (rail đã nav)? | bỏ nav ngang, giữ nút back |
-| R10 | Character talent: 1 card (mock) vs list seal (prod) | list scroll |
-| R11 | Character figure: hero concept v2 vs figure.png huyen-kim | hero concept |
-| R12 | Card Sức Mạnh (combatPower) | wire-now |
-| R13 | Quán Khí mở từ đâu trong G3? (rail không có icon, action rail mất) | thêm nút trong card portrait |
+| R9 | PaperPanelNavigation top-nav trong mọi panel — giữ hay bỏ (rail đã nav)? | APPLIED: bỏ nav ngang VÀ nút back (preview không có gì) |
+| R10 | Character talent: 1 card (mock) vs list seal (prod) | APPLIED: icon + tên, hover hiện info |
+| R11 | Character figure: hero concept v2 vs figure.png huyen-kim | APPLIED: idle animation của đạo lộ hiện tại (EntitySpriteCanvas) |
+| R12 | Card Sức Mạnh (combatPower) | APPLIED: wire + hover breakdown từng term; công thức note vào tab Trợ Giúp |
+| R13 | Quán Khí mở từ đâu trong G3? (rail không có icon, action rail mất) | APPLIED: chuyển sang panel Cảnh Giới, gỡ khỏi Nhân Vật |
 | R14 | Decompose ở inventory (mock) vs forge (prod) | forge |
 | R15 | Inventory pagination ‹1› vs scroll | scroll |
 | R16 | "Trợ Giúp" = panel hướng dẫn 5 topic (KHÔNG phải form báo lỗi) vs prod chỉ có FeedbackDialog | thêm panel help mới, giữ dialog riêng |
@@ -353,7 +353,7 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R35 | Scripture rail icon | wheel-only |
 | R36 | Title art victory/defeat thiếu trong pack | giữ huyen-kim title tạm |
 | R37 | Panel Trợ Giúp mới (5 topic hướng dẫn) | thêm — khác mục đích FeedbackDialog |
-| R38 | Tooltips (stat-source + item inspect) mock không vẽ | giữ — hợp đồng hiện có |
+| R38 | Tooltips (stat-source + item inspect) mock không vẽ | APPLIED: giữ tooltip hover, art mới |
 | R39 | Alchemy queue strip không có trong mock | giữ strip dưới cauldron |
 | R40 | System surfaces (loading/entitlement/feedback/confirm) có design riêng | wire khi tới lượt |
 | R41 | 2 bản formation design (landscape 9-slot vs auxiliary pentagram) | landscape 9-slot |

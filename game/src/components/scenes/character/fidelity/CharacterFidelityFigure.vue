@@ -30,13 +30,14 @@ const idle = computed(() => {
       :first-frame="idle.firstFrame"
       :last-frame="idle.lastFrame"
       :fps="8"
-      :height="430"
+      height="100%"
     />
   </div>
 </template>
 <style scoped>
-/* The idle box is feet-anchored: the canvas bottoms out just above the
-   power card, centered on the portrait column. */
-.cf-figure { position: absolute; left: 0; right: 0; top: 78px; bottom: 64px; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
-.cf-figure__sprite { filter: drop-shadow(0 8px 9px #4a3c3040); }
+/* Mock proportions: the figure occupies 73% of the portrait column and
+   the sprite scales to fit (object-fit: contain equivalent). The power
+   card docks over the bottom edge. */
+.cf-figure { position: absolute; left: 0; right: 0; top: 15%; height: 73%; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
+.cf-figure__sprite { height: 100%; max-width: 100%; object-fit: contain; filter: drop-shadow(0 8px 9px #4a3c3040); }
 </style>
