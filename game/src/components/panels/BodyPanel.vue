@@ -11,5 +11,5 @@ const ui = useUiStore()
 </script>
 
 <template>
-  <BodySurface v-if="ui.standalonePanel === 'body'" />
+  <Transition name="th-panel-swap"><BodySurface v-if="ui.standalonePanel === 'body'" /></Transition>
 </template>

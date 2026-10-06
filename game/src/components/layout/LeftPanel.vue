@@ -13,6 +13,8 @@ const ui = useUiStore()
 </script>
 
 <template>
-  <CharacterSurface v-if="ui.characterOverlayOpen && ui.characterSceneTab === 'character'" />
-  <InventoryPanel v-else-if="ui.characterOverlayOpen" />
+  <Transition name="th-panel-swap">
+    <CharacterSurface v-if="ui.characterOverlayOpen && ui.characterSceneTab === 'character'" />
+    <InventoryPanel v-else-if="ui.characterOverlayOpen" />
+  </Transition>
 </template>

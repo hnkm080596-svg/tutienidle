@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, inject, reactive, watch } from 'vue'
+import { computed, defineAsyncComponent, inject, onMounted, reactive, watch } from 'vue'
 import type { StandalonePanel } from '@/presentation/contracts/panelIds'
 import MainScene from '../game/MainScene.vue'
 import RouteMount from '../game/RouteMount.vue'
@@ -103,6 +103,23 @@ watch(
 const mountedGameRoute = computed<'home' | 'combat' | 'tribulation'>(() => {
   const route = routeAdapter?.activeRoute.value
   return route === 'combat' || route === 'tribulation' ? route : 'home'
+})
+
+// Warm the lazy panel chunks on idle so the FIRST rail switch swaps
+// instantly instead of flashing the home vista during the chunk fetch.
+onMounted(() => {
+  const schedule = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500))
+  schedule(() => {
+    void import('../panels/SkillPathPanel.vue')
+    void import('../panels/RealmPanel.vue')
+    void import('../panels/TechniquePanel.vue')
+    void import('../panels/BodyPanel.vue')
+    void import('../panels/QuestPanel.vue')
+    void import('../panels/QuanKhiPanel.vue')
+    void import('../panels/ArtifactPanel.vue')
+    void import('../panels/TranPhapPanel.vue')
+    void import('../panels/CompanionPanel.vue')
+  })
 })
 
 // Bam khoang trong giua man hinh (MainScene - canh Phaser, khong phai

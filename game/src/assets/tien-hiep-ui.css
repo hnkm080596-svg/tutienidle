@@ -363,3 +363,17 @@
   background-image: var(--th-art-panel-frame-v2),radial-gradient(ellipse at 45% 35%,#333127,#1c211c 85%);
   background-size: 100% 100%; background-repeat: no-repeat;
 }
+
+/* Panel swap (2026-10): switching between overlay panels slides the old
+   panel out to the left while the new one slides in from the right, so
+   the home vista never flashes between two panels. The wrappers live in
+   different parents - each panel component keeps its own <Transition>;
+   both phases run simultaneously (leaving element stays until its
+   transition ends), which IS the swap. */
+.th-panel-swap-enter-active { transition: transform .26s cubic-bezier(.25,.85,.3,1), opacity .26s ease; z-index: 30; }
+.th-panel-swap-leave-active { transition: transform .22s cubic-bezier(.5,.05,.7,.4), opacity .22s ease; z-index: 29; }
+.th-panel-swap-enter-from { transform: translateX(70px); opacity: 0; }
+.th-panel-swap-leave-to { transform: translateX(-70px); opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .th-panel-swap-enter-active, .th-panel-swap-leave-active { transition: none; }
+}

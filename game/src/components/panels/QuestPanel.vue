@@ -27,5 +27,5 @@ const rows = computed(() => {
 </script>
 
 <template>
-  <QuestScene v-if="ui.standalonePanel === 'quest'" :rows="rows" />
+  <Transition name="th-panel-swap"><QuestScene v-if="ui.standalonePanel === 'quest'" :rows="rows" /></Transition>
 </template>
