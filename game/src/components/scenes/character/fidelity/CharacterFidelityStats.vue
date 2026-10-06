@@ -5,8 +5,10 @@
 // per-source hover breakdown (R38).
 import { useI18n } from 'vue-i18n'
 import { symbolUrl } from '../../dong-fu/fidelity/dongFuUi'
-import { CHARACTER_ART, elementArt, talentGlyph, type CharacterUiModel, type CharacterUiStat } from './characterUi'
+import { CHARACTER_ART, elementArt, talentGlyph, type CharacterUiModel, type CharacterUiStat, type CharacterUiTalent } from './characterUi'
 import { buildStatSourceTooltip } from './statSources'
+import { getTalentDefinition } from '@/data/talent/Talents'
+import { buildTalentTooltip } from '@/composables/useTalentTooltip'
 import type { StatType } from '@/core/stats/StatTypes'
 defineProps<{ model: CharacterUiModel }>()
 const emit = defineEmits<{ select: [id: string]; allocate: [id: string] }>()
@@ -15,6 +17,10 @@ const { t } = useI18n()
 // from (base + each contributing source and its amount).
 const statTooltip = (stat: CharacterUiStat) =>
   buildStatSourceTooltip(stat.id as StatType, stat, t)
+const talentTooltip = (talent: CharacterUiTalent) => {
+  const definition = getTalentDefinition(talent.id)
+  return definition ? buildTalentTooltip(definition, t) : { title: talent.name, description: talent.description }
+}
 const talentIconError = (event: Event) => {
   const img = event.target as HTMLImageElement
   if (!img.dataset.fallback) {
@@ -50,7 +56,7 @@ const talentIconError = (event: Event) => {
         v-for="talent in model.talents"
         :key="talent.id"
         class="character-talent"
-        :title="talent.description"
+        v-tooltip="talentTooltip(talent)"
         @click="emit('select', `talent.${talent.id}`)"
       ><img :src="talentGlyph(talent.id)" alt="" @error="talentIconError"><span>{{ talent.name }}</span></button>
     </div>
