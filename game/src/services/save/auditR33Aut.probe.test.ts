@@ -33,12 +33,10 @@ import { EventBus } from '../../core/events/EventBus'
 // QA probe - fixpoint r33 AUT wave. Adversarial audit of the r32 adjudication
 // at a014b7fb:
 //
-//   (A/B) useAppLifecycle.bootGame resumeCombat('authority-pause') at :355 -
-//         the reason is released BEFORE the boot outcome is known. On every
-//         failure branch a battle latched only under 'authority-pause' flips
-//         to 'running' behind the terminal card, and on the success path the
-//         clock steps across the coordinator.load() await on pre-restore
-//         state.
+//   (A/B) useAppLifecycle.bootGame resumeCombat('authority-pause') now sits
+//         in the success tail after markReady; every fail arm keeps the
+//         reason latched, and r34-COR-F1's discard makes the success path
+//         enter battleless (the stale battle stops instead of resuming).
 //   (C)   CombatClock reason hygiene controls: resume deletes only the named
 //         reason; a 'stopped' clock cannot be resumed; user-pause survives.
 //   (D)   ProductionSystem.restoreStates parks invalid pairs verbatim - one
@@ -209,7 +207,7 @@ describe('r33 AUT - A/B: bootGame keeps the combat freeze latched until admissio
     lifecycle.stopAll()
   })
 
-  it('successful boot: the clock stays frozen across the load await, then unlatches post-admission', async () => {
+  it('successful boot: the clock stays frozen across the load await, then the stale battle is discarded at admission', async () => {
     const manager = registeredManager()
     const combatSource = new ManualClockSource()
     manager.setCombatClockSource(combatSource)
@@ -240,11 +238,14 @@ describe('r33 AUT - A/B: bootGame keeps the combat freeze latched until admissio
 
     expect(outcome.status).toBe('entered')
     // The frame inside the load window could not step the battle - the
-    // latch held until markReady - and the successful boot then cleared
-    // the reason (the r32-INT-1 intent still holds).
+    // latch held until markReady - and admission then DISCARDED the
+    // stale battle outright (r34-COR-F1: a boot enters battleless, the
+    // same shape a page reload produces; resumeCombat no-ops on the
+    // stopped clock).
     expect(manager.getElapsedCombatSteps()).toBe(0)
-    expect(manager.getFreezeReasons()).not.toContain('authority-pause')
-    expect(manager.getCombatClockState()).toBe('running')
+    expect(manager.getTurnBattle()).toBeNull()
+    expect(manager.getFreezeReasons()).toEqual([])
+    expect(manager.getCombatClockState()).toBe('stopped')
 
     lifecycle.stopAll()
   })

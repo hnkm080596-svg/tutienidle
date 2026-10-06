@@ -317,9 +317,12 @@ describe('auditR33 INT probe - eager resumeCombat vs unproven boot admission (R)
 
     // While the awaited coordinator.load() was in flight the clock stayed
     // 'frozen' - no source frame can step the battle before admission.
-    // The successful boot then clears the latch (R4 contrast still holds).
+    // r34-COR-F1: the successful boot then DISCARDS the stale battle -
+    // the clock stops outright instead of resuming.
     expect(clockStateDuringLoad[1]).toBe('frozen')
     expect(gameManager.getElapsedCombatSteps()).toBe(stepsBefore)
+    expect(gameManager.getCombatClockState()).toBe('stopped')
+    expect(gameManager.getTurnBattle()).toBeNull()
   })
 
   it('R3 source pin - resumeCombat sits AFTER authority.markReady() (post-admission), before enterGame', () => {
@@ -348,7 +351,7 @@ describe('auditR33 INT probe - eager resumeCombat vs unproven boot admission (R)
     expect(resumeAt).toBeLessThan(enterAt)
   })
 
-  it('R4 contrast pin - a SUCCESSFUL re-boot must clear the latch (the r32-INT-1 intent still holds)', async () => {
+  it('R4 contrast pin - a SUCCESSFUL re-boot discards the stale battle (the r32-INT-1 intent, hardened by r34-COR-F1)', async () => {
     const { lifecycle, gameManager, boot } = lifecycleHarness()
 
     expect((await lifecycle.bootGame({ createNewCharacter: false })).status).toBe('entered')
@@ -359,11 +362,14 @@ describe('auditR33 INT probe - eager resumeCombat vs unproven boot admission (R)
     boot.showAuth()
     expect((await lifecycle.bootGame({ createNewCharacter: false })).status).toBe('entered')
 
-    // Intended behavior: the surviving battle resumes after a successful
-    // re-entry (the reason is cleared, the clock counts again).
-    expect(gameManager.getTurnBattle()).not.toBeNull()
-    expect(gameManager.getFreezeReasons()).not.toContain('authority-pause')
-    expect(gameManager.getCombatClockState()).toBe('running')
+    // r34-COR-F1: the boot discards the stale battle at admission - its
+    // bindings pointed at the player.$state the restore just rebound,
+    // so a resumed ghost would have written into the new session. The
+    // clock stops outright (every reason dies with it); the enter path
+    // lands battleless, the same shape a page reload produces.
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.getFreezeReasons()).toEqual([])
+    expect(gameManager.getCombatClockState()).toBe('stopped')
   })
 })
 

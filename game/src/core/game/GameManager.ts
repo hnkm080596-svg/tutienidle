@@ -1407,6 +1407,16 @@ export class GameManager {
   }
 
   /**
+   * r34-COR-F1 - drop an in-flight battle whose owner is being replaced
+   * (boot restore / character create). Silent: no terminal event, no
+   * banking - the battle's player binding points at the state being
+   * rebound. bootGame calls this at the startInitializing funnel.
+   */
+  discardStaleBattle(): void {
+    this.turnBattleOps.discardStaleBattle()
+  }
+
+  /**
    * The Vue layer (App.vue's tick()) calls this each tick to drain
    * toasts produced inside core since the last call - returns and
    * clears the queue.

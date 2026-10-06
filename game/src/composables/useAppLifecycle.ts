@@ -363,10 +363,13 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
     // B1-D - boot admission opens here: 'ready' is only reached after
     // auth/session/compatibility/load/pending/restore/durability all pass
-    // (the durability leg is the post-accrual commit below).
-    authority.beginChecking()
-
+    // (the durability leg is the post-accrual commit below). Runs INSIDE
+    // the try so an injected throw still lands in the finally below -
+    // a pre-try throw would strand bootInFlight=true and deadlock every
+    // later boot into 'skipped' (r34-COR-F4).
     try {
+      authority.beginChecking()
+
       const { createNewCharacter, onRestoreOk, onNewCharacter } = options
 
       if (createNewCharacter && newCharacterGrantsApplied) {
@@ -724,6 +727,18 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         }
       }
 
+      // r34-COR-F1 - a boot that reaches admission starts battleless.
+      // Both arms above (restoreFromSave on 'ok', initializeCharacter on
+      // the grant path) rebind player.$state wholesale, so a battle still
+      // in flight belongs to a character that no longer exists: its
+      // player/stage bindings point at the very object the new owner now
+      // owns, and the unlatch below would resume it into the new session
+      // - a ghost resolution landing on the new character's state. It
+      // stayed latched through every await above (fail arms keep the
+      // frozen zombie untouched, exactly like pre-r33); only the success
+      // path pays the discard - silent, no terminal, no banking.
+      gameManager.discardStaleBattle()
+
       // B1-D - admission granted only now: heartbeat arms, the health
       // lease starts, and the mutation gate opens for the clock below.
       authority.markReady()
@@ -732,23 +747,32 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       // that admission is proven - paired with the simPaused re-baseline
       // at entry. resume() deletes just that reason and no-ops on a
       // stopped clock or when nothing is latched, so user-pause /
-      // tab-hidden reasons are untouched.
-      gameManager.resumeCombat('authority-pause')
+      // tab-hidden reasons are untouched. The whole tail is wrapped:
+      // an injected throw past this point would otherwise leave combat
+      // unfrozen behind a non-game surface with no re-latch path
+      // (pauseSimulation needs entryStage === 'game'), so the catch
+      // re-latches the same reason before rethrowing (r34-COR-F2).
+      try {
+        gameManager.resumeCombat('authority-pause')
 
-      clock.start()
+        clock.start()
 
-      // Fix (2026-09-06) - bootGame() TU start tick loop thay vi nho
-      // caller nho goi startTickLoop() sau khi boot xong. Day chinh la
-      // loi goi tung bi rot khi Task 5 extract inline boot logic cua
-      // App.vue sang composable nay (commit d6d9a1d) - ket qua:
-      // GameManager.update() khong bao gio chay trong browser that, toan
-      // bo game (combat/tu luyen/san xuat...) dung hinh vo thoi han du
-      // 2651 unit test van xanh (test goi thang gameManager.tickOps.update(), bo
-      // qua dung lop wiring nay). Gop vao bootGame() - noi da so huu
-      // clock.start()/startAutosave() - de "extract composable, quen
-      // rewire" khong con kha nang lap lai duoc nua.
-      startTickLoop(tick)
-      boot.enterGame()
+        // Fix (2026-09-06) - bootGame() TU start tick loop thay vi nho
+        // caller nho goi startTickLoop() sau khi boot xong. Day chinh la
+        // loi goi tung bi rot khi Task 5 extract inline boot logic cua
+        // App.vue sang composable nay (commit d6d9a1d) - ket qua:
+        // GameManager.update() khong bao gio chay trong browser that, toan
+        // bo game (combat/tu luyen/san xuat...) dung hinh vo thoi han du
+        // 2651 unit test van xanh (test goi thang gameManager.tickOps.update(), bo
+        // qua dung lop wiring nay). Gop vao bootGame() - noi da so huu
+        // clock.start()/startAutosave() - de "extract composable, quen
+        // rewire" khong con kha nang lap lai duoc nua.
+        startTickLoop(tick)
+        boot.enterGame()
+      } catch (error: unknown) {
+        gameManager.freezeCombat('authority-pause')
+        throw error
+      }
 
       return { status: 'entered' }
     } finally {

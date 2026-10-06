@@ -1593,6 +1593,32 @@ export class GameManagerTurnBattleOps {
     // by this point (beginBattleCycle terminalizes a non-terminal
     // outgoing battle pre-commit; a repeat's previous was terminal to
     // begin with), so it needs nothing here.
+    this.discardInFlightBattle()
+  }
+
+  /**
+   * r34-COR-F1 - session-boundary teardown. The in-flight battle's owner
+   * is being replaced (a boot that restores a save or creates a new
+   * character rebinds player.$state wholesale), so the stale battle is
+   * dropped WITHOUT a terminal: its bindings point at the very object
+   * the new owner now owns, so a battle_end/banking write would grant
+   * (or debit) the new character. Stopping the clock outright also
+   * clears every latched freeze reason - including an orphaned
+   * 'authority-pause' - so the post-admission unlatch in bootGame can
+   * never resurrect a dead character's battle.
+   */
+  discardStaleBattle(): void {
+    this.discardInFlightBattle()
+  }
+
+  /**
+   * Silent teardown shared by discardFailedCycle and discardStaleBattle:
+   * drops the battle reference, the presentation session, the stage
+   * lease, surviving enemies and every per-battle binding - without a
+   * terminal event and without banking carry. Callers decide whether a
+   * terminal was owed (abandon emits one; these two paths never do).
+   */
+  private discardInFlightBattle(): void {
     this.turnBattle = null
 
     const session = this.presentationOps.session.getCurrentSession()

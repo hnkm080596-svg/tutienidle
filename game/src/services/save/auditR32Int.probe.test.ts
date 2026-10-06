@@ -216,7 +216,7 @@ describe('auditR32 INT probe - orphaned authority-pause freeze across re-entry (
     vi.restoreAllMocks()
   })
 
-  it('R1 re-entry clears BOTH latches - the combat clock resumes with the boot baseline (r32 fix)', async () => {
+  it('R1 re-entry clears BOTH latches - the stale battle is discarded at admission (r32 fix, r34-COR-F1 hardened)', async () => {
     const { lifecycle, gameManager, boot } = lifecycleHarness()
     const resumeSpy = vi.spyOn(gameManager, 'resumeCombat')
 
@@ -236,19 +236,19 @@ describe('auditR32 INT probe - orphaned authority-pause freeze across re-entry (
     expect(gameManager.getFreezeReasons()).toContain('authority-pause')
 
     // acknowledgeAuthority -> bootFlow.showAuth() -> onAuthenticated ->
-    // bootGame(false): the re-baseline now clears BOTH latches - the
-    // flag AND the paired CombatClock reason - so the battle remounts
-    // running instead of frozen-forever behind a dead-ended
-    // resumeSimulation gate.
+    // bootGame(false): the re-baseline clears the flag; at admission
+    // r34-COR-F1's discardStaleBattle drops the stale battle wholesale
+    // (its bindings pointed at the rebound player.$state) - the clock
+    // stops and resumeCombat no-ops on it.
     boot.showAuth()
     expect((await lifecycle.bootGame({ createNewCharacter: false })).status).toBe('entered')
     lifecycle.startAutosave()
     expect(lifecycle.isSimPaused()).toBe(false)
     expect(lifecycle.getTickHandle()).toBeDefined()
 
-    expect(gameManager.getTurnBattle()).not.toBeNull()
-    expect(gameManager.getCombatClockState()).toBe('running')
-    expect(gameManager.getFreezeReasons()).not.toContain('authority-pause')
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.getCombatClockState()).toBe('stopped')
+    expect(gameManager.getFreezeReasons()).toEqual([])
     expect(resumeSpy).toHaveBeenCalledWith('authority-pause')
   })
 
@@ -261,25 +261,31 @@ describe('auditR32 INT probe - orphaned authority-pause freeze across re-entry (
     boot.showAuth()
     expect((await lifecycle.bootGame({ createNewCharacter: false })).status).toBe('entered')
 
-    // r32-INT-1: the boot baseline itself clears the orphaned reason -
-    // the battle the restore left mounted resumes instead of staying
-    // frozen until some unrelated pause+resume pair happens to land.
-    expect(gameManager.getFreezeReasons()).not.toContain('authority-pause')
-    expect(gameManager.getCombatClockState()).toBe('running')
+    // r34-COR-F1: admission discards the stale battle - the clock stops
+    // outright with every reason dead (the battle's bindings pointed at
+    // the rebound player.$state; nothing resumes).
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.getFreezeReasons()).toEqual([])
+    expect(gameManager.getCombatClockState()).toBe('stopped')
 
-    // The pause+resume pair still works normally after re-entry.
+    // The pause+resume pair still works normally on a FRESH battle
+    // started after re-entry.
+    gameManager.startBattle(barePlayer(), dummyEnemy())
+    expect(gameManager.getCombatClockState()).toBe('running')
     lifecycle.pauseSimulation()
     expect(gameManager.getFreezeReasons()).toContain('authority-pause')
     lifecycle.resumeSimulation()
     expect(gameManager.getFreezeReasons()).not.toContain('authority-pause')
     expect(gameManager.getCombatClockState()).toBe('running')
 
-    // And a fresh battle's stop()+start() still clears every reason.
+    // And the next re-boot discards that battle too - same contract.
     lifecycle.pauseSimulation()
     expect(gameManager.getFreezeReasons()).toContain('authority-pause')
     boot.showAuth()
     await lifecycle.bootGame({ createNewCharacter: false })
-    expect(gameManager.getFreezeReasons()).not.toContain('authority-pause')
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.getFreezeReasons()).toEqual([])
+    expect(gameManager.getCombatClockState()).toBe('stopped')
   })
 
   it('R3 ordering pin - bootGame re-baselines simPaused without any resumeCombat pair (source pin)', () => {

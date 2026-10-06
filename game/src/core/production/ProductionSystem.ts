@@ -163,8 +163,11 @@ export class ProductionSystem {
           // (pending.some freezes every healthy sibling lane) AND
           // refused every later save write on the ordering pin - a
           // whole-save wedge for content that can never be authored.
-          // Drop at the boundary, same as the sibling arm. Out-of-domain
-          // stamps still park verbatim below (deny doctrine).
+          // Drop at the boundary, same as the sibling arm. The drop test
+          // runs first, so an inverted pair whose stamps are themselves
+          // out-of-domain ({2^52,2^52}, {-Inf,-Inf}...) also drops -
+          // strictly-safe direction. A NON-inverted out-of-domain pair
+          // still parks verbatim below (deny doctrine) - r34-COR-F3.
           if (cycle.completesAtMs <= cycle.startedAtMs) {
             return []
           }

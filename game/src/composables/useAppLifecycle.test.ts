@@ -102,6 +102,7 @@ function makeStubs() {
       restoreFromSave: vi.fn(),
       freezeCombat: vi.fn(),
       resumeCombat: vi.fn(),
+      discardStaleBattle: vi.fn(),
     } as unknown as GameManager,
     tick: vi.fn(),
     offlineSummary: { show: vi.fn() },
