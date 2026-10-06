@@ -1324,19 +1324,7 @@
         "rolling": "Observing the heavens…",
         "reroll": "↻ Reroll all",
         "hint": "Choose 1 starting talent",
-        "tags": {
-          "combat": "Combat",
-          "crafting": "Crafting",
-          "cultivation": "Cultivation",
-          "defense": "Defense",
-          "mechanic": "Mechanic",
-          "resource": "Resource",
-          "risk_reward": "Risk & Reward",
-          "skill": "Skill",
-          "element": "Element"
-        },
         "locked": "Unrevealed",
-        "features": "Features",
         "randomAll": "Randomize untouched sections"
       },
       "finish": "Begin Cultivation",
@@ -2271,5 +2259,19 @@
   },
   "pcUi": {
     "back": "Return"
+  },
+  "talents": {
+    "features": "Features",
+    "tags": {
+      "combat": "Combat",
+      "crafting": "Crafting",
+      "cultivation": "Cultivation",
+      "defense": "Defense",
+      "mechanic": "Mechanic",
+      "resource": "Resource",
+      "risk_reward": "Risk & Reward",
+      "skill": "Skill",
+      "element": "Element"
+    }
   }
 }

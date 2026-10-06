@@ -1324,19 +1324,7 @@
         "rolling": "Đang quan sát thiên cơ…",
         "reroll": "↻ Đổi thiên phú",
         "hint": "Chọn 1 thiên phú khởi đầu",
-        "tags": {
-          "combat": "Chiến Đấu",
-          "crafting": "Chế Tạo",
-          "cultivation": "Tu Luyện",
-          "defense": "Phòng Thủ",
-          "mechanic": "Cơ Quan",
-          "resource": "Tài Nguyên",
-          "risk_reward": "Mạo Hiểm",
-          "skill": "Kỹ Năng",
-          "element": "Nguyên Tố"
-        },
         "locked": "Chưa lộ",
-        "features": "Đặc Điểm",
         "randomAll": "Ngẫu nhiên các phần chưa chọn"
       },
       "finish": "Bắt Đầu Tu Hành",
@@ -2271,5 +2259,19 @@
   },
   "pcUi": {
     "back": "Trở Về"
+  },
+  "talents": {
+    "features": "Đặc Điểm",
+    "tags": {
+      "combat": "Chiến Đấu",
+      "crafting": "Chế Tạo",
+      "cultivation": "Tu Luyện",
+      "defense": "Phòng Thủ",
+      "mechanic": "Cơ Quan",
+      "resource": "Tài Nguyên",
+      "risk_reward": "Mạo Hiểm",
+      "skill": "Kỹ Năng",
+      "element": "Nguyên Tố"
+    }
   }
 }

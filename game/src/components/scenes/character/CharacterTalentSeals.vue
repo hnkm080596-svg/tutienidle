@@ -8,6 +8,7 @@ import { isBetaTalentId } from '@/core/betaScope'
 import SysTag from '@/components/common/system/SysTag.vue'
 import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import { talentSymbolId } from '@/presentation/huyenKim/StableSceneArt'
+import { buildTalentTooltip } from '@/composables/useTalentTooltip'
 import CharacterSectionPlaque from './CharacterSectionPlaque.vue'
 
 // talent-seals region: the Thien Phu band under the identity header -
@@ -49,7 +50,7 @@ const TALENT_RARITY_TONE: Record<TalentRarity, 'muted' | 'success' | 'cyan' | 'v
         :key="talent.id"
         class="talent-seal"
         :class="`talent-tier-${talent.rarity}`"
-        v-tooltip="talent.description"
+        v-tooltip="buildTalentTooltip(talent, t)"
       >
         <span class="talent-seal__icon" aria-hidden="true">
           <HuyenKimSymbol :name="talentSymbolId(talent.id)" />

@@ -3,14 +3,14 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
 import { isValidCharacterName } from '@/services/character/CharacterCreationService'
-import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentTag } from '@/core/talent/Talent'
+import { type TalentDefinition } from '@/core/talent/Talent'
 import type { RemoteCharacterMetadata } from '@/services/session/BackendStatus'
 import { useAudioStore } from '@/stores/audio'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { CREATION_SKILL_PREVIEW } from '@/components/scenes/creation/creationPreview'
 import { DAO_NAME_POOL } from '@/data/creation/DaoNamePool'
-import { talentSymbolId, stableSymbolUrl, type StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
+import { buildTalentTooltip, talentIconUrl } from '@/composables/useTalentTooltip'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 // The committed creation contract remains name + talent only.
@@ -65,18 +65,13 @@ function pickPath(cell: DaoLoCell) {
 
 const TALENT_GRID_SIZE = 9
 const lockedTalentSlots = computed(() => Math.max(0, TALENT_GRID_SIZE - talents.value.length))
-const tagSymbols: Record<TalentTag, StableSymbolId> = {
-  cultivation: 'realm', combat: 'skill', defense: 'body', resource: 'inventory',
-  crafting: 'alchemy', element: 'technique', skill: 'skill', risk_reward: 'exploration', mechanic: 'settings',
-}
-function talentIcon(talent: TalentDefinition) {
-  return stableSymbolUrl(talentSymbolId(talent.id, tagSymbols[talent.tags[0] ?? 'cultivation']))
-}
-function talentTooltip(talent: TalentDefinition) {
-  return { title: `${talent.name} · ${TALENT_RARITY_LABELS[talent.rarity]}`, description: talent.description }
-}
 const selectedTalent = computed(
   () => talents.value.find((talent) => talent.id === selectedTalentIds.value[0]) ?? null,
+)
+// Detail aside renders the SAME talent model the hover tooltip shows -
+// one builder (useTalentTooltip) owns talent presentation everywhere.
+const selectedTalentCard = computed(() =>
+  selectedTalent.value ? buildTalentTooltip(selectedTalent.value, t) : null,
 )
 
 const validName = computed(() => isValidCharacterName(name.value))
@@ -184,16 +179,16 @@ const style = { '--trial-panel': `url('${art.panel}')` }
       <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}</h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid" data-hk-region="talent-grid" role="radiogroup" :aria-label="t('onboarding.creation.talentStep.sectionTitle')">
-          <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" v-tooltip="talentTooltip(talent)" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIcon(talent)" alt=""></span><b>{{ talent.name }}</b></button>
+          <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" v-tooltip="buildTalentTooltip(talent, t)" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIconUrl(talent)" alt=""></span><b>{{ talent.name }}</b></button>
           <button v-for="slot in lockedTalentSlots" :key="`locked-${slot}`" type="button" disabled class="locked" :data-testid="`creation-locked-talent-${slot}`"><b>?</b><i>{{ t('onboarding.creation.talentStep.locked') }}</i></button>
         </div>
         <aside class="trial-talent-detail" aria-live="polite">
-          <template v-if="selectedTalent">
-            <span class="trial-talent-seal"><img :src="talentIcon(selectedTalent)" alt=""></span>
-            <h3>{{ selectedTalent.name }} · {{ TALENT_RARITY_LABELS[selectedTalent.rarity] }}</h3>
-            <p>{{ selectedTalent.description }}</p>
-            <h4 class="trial-section-title">{{ t('onboarding.creation.talentStep.features') }}</h4>
-            <ul><li v-for="tag in selectedTalent.tags" :key="tag">{{ t(`onboarding.creation.talentStep.tags.${tag}`) }}</li></ul>
+          <template v-if="selectedTalentCard">
+            <span class="trial-talent-seal"><img :src="selectedTalentCard.imagePath" alt=""></span>
+            <h3>{{ selectedTalentCard.name }} · {{ selectedTalentCard.rarityLabel }}</h3>
+            <p>{{ selectedTalentCard.description }}</p>
+            <h4 class="trial-section-title">{{ selectedTalentCard.featuresLabel }}</h4>
+            <ul><li v-for="label in selectedTalentCard.tagLabels" :key="label">{{ label }}</li></ul>
           </template>
           <p v-else class="trial-talent-detail__empty">{{ rolling ? t('onboarding.creation.talentStep.rolling') : t('onboarding.creation.talentStep.hint') }}</p>
         </aside>
