@@ -1,10 +1,14 @@
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-const root = '/assets/ui/huyen-kim/scene/character-v2/'
+const tienHiep = '/assets/ui/tien-hiep-2026-10/'
 export const CHARACTER_ART = Object.freeze({
-  figure: resolveAssetUrl(`${root}figure.png`), paper: resolveAssetUrl(`${root}paper-nine-slice.png`),
-  logo: resolveAssetUrl('/assets/ui/huyen-kim/scene/login-v2/wordmark.png'),
+  paper: resolveAssetUrl(`${tienHiep}source/shared-paper-page-v1.png`),
+  card: resolveAssetUrl(`${tienHiep}controls/character-card-nine-slice-v2.png`),
+  plus: resolveAssetUrl(`${tienHiep}controls/attribute-plus-v2.png`),
 })
-export const elementArt = (id: string) => resolveAssetUrl(`/assets/ui/elements/el-${id}.png`)
+// Element ivory pucks from the landscape-design pack (metal/wood/water/fire/earth).
+export const elementArt = (id: string) => resolveAssetUrl(`${tienHiep}icons/element-${id}-ivory-v1.png`)
+// Per-talent glyph seals (talent-<id>.svg), 'technique' symbol as fallback.
+export const talentGlyph = (id: string) => resolveAssetUrl(`/assets/ui/huyen-kim/symbols/talent-${id}.svg`)
 export interface CharacterUiStatSource {
   /** Resolved Vietnamese source name, or the category fallback. */
   label: string
@@ -58,6 +62,12 @@ export interface CharacterUiDetail {
   sources?: CharacterUiStatSources
 }
 export interface CharacterUiTalent { id: string; name: string; description: string; rarity: string }
+export interface CharacterUiPowerSource {
+  /** Resolved stat label the formula term draws from. */
+  label: string
+  /** Formatted contribution this term adds to combat power. */
+  value: string
+}
 export interface CharacterUiModel {
   name: string
   realm: string
@@ -66,6 +76,8 @@ export interface CharacterUiModel {
   /** Dao verse shown under the path name for elemental daos (Ly Hoa). */
   pathVerse?: string
   combatPower: string
+  /** Per-term contributions behind combatPower (hover breakdown). */
+  powerSources?: readonly CharacterUiPowerSource[]
   stats: readonly CharacterUiStat[]
   elements: readonly CharacterUiElement[]
   talents: readonly CharacterUiTalent[]

@@ -5,7 +5,6 @@ import CharacterFigureWheel from './CharacterFigureWheel.vue'
 import CharacterMainStats from './CharacterMainStats.vue'
 import CharacterElementSummary from './CharacterElementSummary.vue'
 import CharacterDerivedStats from './CharacterDerivedStats.vue'
-import CharacterActionRail from './CharacterActionRail.vue'
 
 // Scene 04 - Nhan Vat (imperial-scroll interior). Region grid follows
 // the canonical scene-layout-spec: identity band + talent seals across
@@ -24,7 +23,6 @@ import CharacterActionRail from './CharacterActionRail.vue'
       <CharacterElementSummary class="character-scene__elements" />
       <CharacterDerivedStats class="character-scene__derived" />
     </div>
-    <CharacterActionRail class="character-scene__rail" />
   </div>
 </template>
 

@@ -1,7 +1,11 @@
 <script setup lang="ts">
+// Central column (G3 mock): main-stats card (gold tubes + energy shimmer),
+// Thien Phu card (icon + name, hover shows the talent description - R10),
+// Ngu Hanh card (ivory element pucks + share). Stat rows keep the
+// per-source hover breakdown (R38).
 import { useI18n } from 'vue-i18n'
 import { symbolUrl } from '../../dong-fu/fidelity/dongFuUi'
-import { elementArt, type CharacterUiModel, type CharacterUiStat } from './characterUi'
+import { CHARACTER_ART, elementArt, talentGlyph, type CharacterUiModel, type CharacterUiStat } from './characterUi'
 import { buildStatSourceTooltip } from './statSources'
 import type { StatType } from '@/core/stats/StatTypes'
 defineProps<{ model: CharacterUiModel }>()
@@ -11,46 +15,85 @@ const { t } = useI18n()
 // from (base + each contributing source and its amount).
 const statTooltip = (stat: CharacterUiStat) =>
   buildStatSourceTooltip(stat.id as StatType, stat, t)
+const talentIconError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  if (!img.dataset.fallback) {
+    img.dataset.fallback = '1'
+    img.src = symbolUrl('technique')
+  }
+}
 </script>
 <template>
-  <section class="cf-stats">
-    <h2 class="cf-section">{{ t('character.mainStats') }}<small v-if="model.attributePoints > 0" class="cf-points">{{ t('character.points', { count: model.attributePoints }) }}</small></h2>
-    <div class="cf-stat-list">
-      <div v-for="stat in model.stats" :key="stat.id" class="cf-stat" :style="{ '--stat-color': stat.color }" v-tooltip="statTooltip(stat)">
-        <button class="cf-stat__main" @click="emit('select', stat.id)">
-          <span class="cf-stat__seal"><img :src="symbolUrl(stat.symbol)" alt=""></span>
-          <span class="cf-stat__content"><span class="cf-stat__label"><span>{{ stat.label }}</span><b>{{ stat.value }}<i v-if="stat.capped" class="cf-stat__max">{{ t('character.max') }}</i></b></span><span class="cf-stat__track"><i :style="{ width: `${Math.min(100, Math.max(0, stat.fill))}%` }" /></span></span>
-        </button>
-        <button v-if="stat.allocatable" class="cf-stat__add" :aria-label="`${t('character.allocate')} ${stat.label}`" @click.stop="emit('allocate', stat.id)">+</button>
+  <section class="character-central">
+    <div class="character-card character-mainstats">
+      <h2>{{ t('character.mainStats') }}</h2>
+      <p v-if="model.attributePoints > 0">{{ t('character.points', { count: model.attributePoints }) }}</p>
+      <div
+        v-for="stat in model.stats"
+        :key="stat.id"
+        class="character-stat-row"
+        v-tooltip="statTooltip(stat)"
+      >
+        <span>{{ stat.label }}</span>
+        <b>{{ stat.value }} <small v-if="stat.capped">{{ t('character.max') }}</small></b>
+        <span class="character-stat-tube"><i :style="{ width: `${Math.min(100, Math.max(0, stat.fill))}%` }" /></span>
+        <button
+          class="character-allocate"
+          :disabled="!stat.allocatable"
+          :aria-label="`${t('character.allocate')} ${stat.label}`"
+          @click.stop="emit('allocate', stat.id)"
+        ><img :src="CHARACTER_ART.plus" alt=""></button>
       </div>
     </div>
-    <h2 class="cf-section cf-section--talent">{{ t('character.talent') }}</h2>
-    <button v-for="talent in model.talents" :key="talent.id" class="cf-talent" :class="`cf-talent--${talent.rarity}`" :title="talent.description" @click="emit('select', `talent.${talent.id}`)"><span class="cf-talent__seal"><img :src="symbolUrl('technique')" alt=""></span><span class="cf-talent__text"><strong>{{ talent.name }}</strong><small>{{ talent.description }}</small></span></button>
-    <h2 class="cf-section cf-section--elements">{{ t('character.elements') }}</h2>
-    <div class="cf-element-summary"><button v-for="element in model.elements" :key="element.id" :title="element.name" @click="emit('select', `element.${element.id}`)"><img :src="elementArt(element.id)" alt=""><span>{{ element.name }}</span><b>{{ element.share }}</b></button></div>
+    <div class="character-card character-small-card">
+      <h2>{{ t('character.talent') }}</h2>
+      <button
+        v-for="talent in model.talents"
+        :key="talent.id"
+        class="character-talent"
+        :title="talent.description"
+        @click="emit('select', `talent.${talent.id}`)"
+      ><img :src="talentGlyph(talent.id)" alt="" @error="talentIconError"><span>{{ talent.name }}</span></button>
+    </div>
+    <div class="character-card character-small-card">
+      <h2>{{ t('character.elements') }}</h2>
+      <button
+        v-for="element in model.elements"
+        :key="element.id"
+        class="character-element"
+        :title="element.name"
+        @click="emit('select', `element.${element.id}`)"
+      ><img :src="elementArt(element.id)" :alt="element.name"><b>{{ element.share }}</b></button>
+    </div>
   </section>
 </template>
 <style scoped>
-/* Extended down to the paper's lower margin and tightened so the Ngu
-   Hanh summary sits inside the visible column (ref shows it inline) -
-   no scrollbar: content fits the region. */
-.cf-stats { position: absolute; left: 891px; top: 180px; width: 248px; max-height: 560px; overflow-y: auto; scrollbar-width: none; z-index: 4; color: #302c20; }
-.cf-section { display: flex; align-items: center; gap: 9px; justify-content: center; font-size: 18px; font-weight: 500; margin: 0 0 7px; white-space: nowrap; }
-.cf-section::before, .cf-section::after { content: ''; flex: 1; height: 1px; background: #a58b50; }
-.cf-points { font-size: 12px; color: #8a5a1f; }
-.cf-stat-list { display: grid; gap: 7px; }
-.cf-stat { display: flex; align-items: center; gap: 6px; }
-.cf-stat__main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; border: 0; background: transparent; padding: 0; color: inherit; cursor: pointer; text-align: left; }
-.cf-stat__seal { width: 36px; height: 36px; flex: 0 0 36px; padding: 7px; border-radius: 50%; background: var(--stat-color); border: 2px solid #f5e5b7; box-shadow: 0 0 0 1px #8e7444; }
-.cf-stat__seal img { width: 100%; filter: invert(91%) sepia(35%) saturate(251%); }
-.cf-stat__content { flex: 1; display: grid; gap: 5px; }.cf-stat__label { display: flex; justify-content: space-between; font-size: 17px; }.cf-stat__label b { font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: .2px; color: #241e10; }
-.cf-stat__max { font-style: normal; font-size: 11px; color: #9a5a1e; margin-left: 4px; }
-.cf-stat__add { flex: 0 0 26px; height: 26px; border-radius: 50%; border: 1.5px solid #a5762e; background: linear-gradient(#ffe9ae,#d3a952); color: #4a2f0c; font-size: 17px; line-height: 1; cursor: pointer; }
-.cf-stat__track { height: 7px; background: #474839; border: 1px solid #c7b984; border-radius: 5px; overflow: hidden; }.cf-stat__track i { display: block; height: 100%; background: linear-gradient(90deg,var(--stat-color),#fff3c9); }
-.cf-section--talent { margin-top: 14px; }
-.cf-talent { display: flex; align-items: center; width: 100%; gap: 11px; border: 0; background: none; padding: 0; color: inherit; text-align: left; cursor: pointer; }
-.cf-talent + .cf-talent { margin-top: 8px; }
-.cf-talent__seal { flex: 0 0 54px; height: 54px; padding: 11px; border: 2px solid #e4c778; border-radius: 50%; background: radial-gradient(circle,#7c5c22,#25261b); box-shadow: 0 0 0 2px #9f7b36, 0 0 12px #dfb95799; }.cf-talent__seal img { width: 100%; filter: invert(90%) sepia(38%) saturate(474%); }
-.cf-talent__text { display: grid; gap: 5px; }.cf-talent__text strong { font-size: 15px; font-weight: 500; }.cf-talent__text small { font-size: 12px; line-height: 1.4; }
-.cf-section--elements { margin-top: 13px; }.cf-element-summary { display: flex; justify-content: space-between; }.cf-element-summary button { width: 42px; border: 0; background: none; color: #302c20; padding: 0; display: grid; justify-items: center; gap: 3px; cursor: pointer; font-size: 12px; }.cf-element-summary img { width: 36px; height: 36px; border-radius: 50%; }.cf-element-summary b { font-size: 13px; font-weight: 500; }
+.character-central { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 9px; min-height: 0; }
+.character-mainstats > p { font-size: 13px; margin: 0 0 9px; }
+/* Rows: label | value | [tube under both] | allocate puck. */
+.character-stat-row { position: relative; display: grid; grid-template-columns: 1fr auto 39px; gap: 3px 8px; padding: 3px 0; font-size: 15px; line-height: 1.2; min-height: 40px; }
+.character-stat-row b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.character-stat-row small { font-size: 9px; color: #edcd7e; }
+/* Gold tubes (user ruling 2026-10-06): one shared metallic gradient for
+   every stat - the old per-stat colors went away with the G3 reskin. */
+.character-stat-tube { grid-column: 1/3; height: 9px; border: 1px solid #927747; border-radius: 9px; background: #111912; overflow: hidden; box-shadow: inset 0 2px 3px #0009; }
+.character-stat-tube i { display: block; height: 100%; border-radius: 7px; background: linear-gradient(90deg, #8a6420, #dfbc71); box-shadow: inset 0 2px 2px #fff5; position: relative; overflow: hidden; }
+.character-stat-tube i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 10%, #ffffff18 30%, #fff8 48%, #ffffff20 60%, transparent 80%); width: 60%; transform: translateX(-160%); animation: stat-energy-flow 2.8s linear infinite; }
+.character-stat-row:nth-of-type(3) .character-stat-tube i::after { animation-delay: -.7s; }
+.character-stat-row:nth-of-type(4) .character-stat-tube i::after { animation-delay: -1.4s; }
+.character-stat-row:nth-of-type(5) .character-stat-tube i::after { animation-delay: -2.1s; }
+@keyframes stat-energy-flow { to { transform: translateX(270%); } }
+@media (prefers-reduced-motion: reduce) { .character-stat-tube i::after { animation: none; transform: translateX(65%); opacity: .3; } }
+.character-allocate { grid-column: 3; grid-row: 1/3; position: relative; z-index: 1; width: 39px; height: 39px; padding: 0; border: 0; background: transparent; align-self: center; cursor: pointer; }
+.character-allocate img { width: 100%; height: 100%; object-fit: contain; }
+.character-allocate:not(:disabled):hover img { filter: brightness(1.18) drop-shadow(0 0 3px #e8b657); }
+.character-allocate:not(:disabled):active img { filter: brightness(.88); transform: translateY(1px); }
+.character-allocate:disabled img { opacity: .45; filter: saturate(.4); }
+/* Small cards: icon + name talent rows (hover = description, R10) and
+   the five ivory element pucks with share. */
+.character-talent { display: inline-flex; align-items: center; gap: 10px; margin: 0 12px 4px 0; padding: 0; border: 0; background: none; color: inherit; font-size: 13px; cursor: pointer; text-align: left; }
+.character-talent img { width: 24px; height: 24px; object-fit: contain; }
+.character-element { display: inline-flex; align-items: center; gap: 4px; margin-right: 9px; padding: 0; border: 0; background: none; color: inherit; font-size: 13px; cursor: pointer; }
+.character-element img { width: 27px; height: 27px; object-fit: contain; }
+.character-element b { font-size: 13px; }
 </style>

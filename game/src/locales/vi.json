@@ -2097,7 +2097,9 @@
       "formation": "Trận Pháp",
       "talisman": "Phù",
       "attribute": "Thuộc Tính"
-    }
+    },
+    "powerSources": "Chiến Lực Đến Từ",
+    "powerFormula": "might×2 + defense×1.5 + maxHp×0.1 + maxMp×0.05 + critRate×500 + critDmg×300 + speed×200"
   },
   "realm": {
     "title": "ĐƯỜNG ĐĂNG TIÊN",

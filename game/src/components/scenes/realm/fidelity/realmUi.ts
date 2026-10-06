@@ -33,6 +33,9 @@ export interface RealmUiModel {
   ctaVisible: boolean
   /** canTriggerBreakthrough - the CTA is lit only when the gate opens. */
   ctaEnabled: boolean
+  /** Quan Khi entry (R13 ruling: moved out of Nhan Vat into Canh Gioi)
+      - sword-path players re-open the Kiem Tu panel from here. */
+  quanKhiEntry: boolean
 }
 
 // Normalized anchors on the complete six-landing artwork, not gameplay data.

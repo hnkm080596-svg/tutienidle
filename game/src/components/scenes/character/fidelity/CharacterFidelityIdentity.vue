@@ -1,28 +1,38 @@
 <script setup lang="ts">
+// Portrait column (G3 mock): name + realm/path line, the dao-path idle
+// figure, and the Suc Manh card docked at the bottom. R12: the card's
+// hover tooltip breaks combat power down per formula term.
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { symbolUrl } from '../../dong-fu/fidelity/dongFuUi'
 import type { CharacterUiModel } from './characterUi'
-defineProps<{ model: CharacterUiModel }>()
+import CharacterFidelityFigure from './CharacterFidelityFigure.vue'
+const props = defineProps<{ model: CharacterUiModel }>()
 const { t } = useI18n()
+const powerTooltip = computed(() => {
+  const sources = props.model.powerSources
+  if (!sources?.length) return undefined
+  const rows = sources.map((row) => `${row.label}: +${row.value}`).join('\n')
+  return `${t('character.powerSources')}\n${rows}\n${t('character.powerFormula')}`
+})
 </script>
 <template>
-  <header class="cf-identity">
-    <h1 class="cf-name">{{ model.name }}<span class="cf-seal" aria-hidden="true">◆</span></h1>
-    <p class="cf-realm">{{ model.realm }}</p>
-    <p class="cf-path"><img :src="symbolUrl('technique')" alt="">{{ t('character.path') }}: {{ model.path }}</p>
-    <p v-if="model.pathVerse" class="cf-path-verse">{{ model.pathVerse }}</p>
-    <div class="cf-power"><small>{{ t('character.power') }}</small><strong>{{ model.combatPower }}</strong></div>
-  </header>
+  <section class="character-portrait">
+    <h2>{{ model.name }}</h2>
+    <p class="character-portrait__line">{{ model.realm }} · {{ model.path }}</p>
+    <p v-if="model.pathVerse" class="character-portrait__verse">{{ model.pathVerse }}</p>
+    <CharacterFidelityFigure />
+    <div class="character-card character-power" v-tooltip="powerTooltip">
+      <h3>{{ t('character.power') }}</h3>
+      <b>{{ model.combatPower }}</b>
+    </div>
+  </section>
 </template>
 <style scoped>
-.cf-identity { position: absolute; left: 215px; top: 178px; width: 225px; z-index: 4; color: #27251b; }
-.cf-name { margin: 0; font-size: 39px; font-style: italic; font-weight: 700; line-height: 1.2; white-space: nowrap; }
-.cf-seal { display: inline-grid; place-items: center; vertical-align: middle; background: #a53b2f; color: #f4dfb9; font-size: 13px; width: 19px; height: 32px; margin-left: 10px; border-radius: 3px; box-shadow: inset 0 0 0 2px #eed7a94d; }
-.cf-realm { font-size: 16px; margin: 10px 0 15px; padding-bottom: 12px; border-bottom: 1px solid #a08a5570; }
-.cf-path { display: flex; gap: 9px; align-items: center; font-size: 14px; margin: 0 0 34px; }
-.cf-path img { width: 21px; height: 21px; }
-.cf-path-verse { margin: -26px 0 30px 30px; font-size: 11px; letter-spacing: 0.5px; color: #8a5a3a; }
-.cf-power { display: grid; gap: 5px; padding: 0; }
-.cf-power small { font-size: 15px; color: #746044; }
-.cf-power strong { font-size: 37px; font-weight: 500; line-height: 44px; color: #4b3420; font-variant-numeric: tabular-nums; }
+.character-portrait { position: relative; text-align: center; min-height: 0; color: #f0dfbb; }
+.character-portrait h2 { font-size: 24px; margin: 0; font-weight: 650; }
+.character-portrait__line { font-size: 15px; margin: 6px; }
+.character-portrait__verse { margin: -4px 0 0; font-size: 11px; letter-spacing: 0.5px; color: #c9a86a; }
+.character-power { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 16px; }
+.character-power h3 { margin: 0; font-size: 16px; font-weight: 500; }
+.character-power b { font-size: 29px; color: #dfbc71; font-variant-numeric: tabular-nums; }
 </style>

@@ -14,7 +14,6 @@ import { usePlayerStore } from '@/stores/player'
 import { useStateVersion, useGameManager } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
 import { getActiveElement } from '@/core/player/CultivationPathSystem'
@@ -42,7 +41,6 @@ const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const { allocateAttributePoint } = useProgressionActions()
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
-const { items: navItems, navigate } = usePaperNavigation()
 
 const notice = ref('')
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
@@ -69,16 +67,21 @@ const DETAIL_CATEGORIES: Record<'combat' | 'other', readonly StatCategory[]> = {
   other: ['special', 'defense_advanced'],
 }
 
+// Suc Manh formula (owner: this adapter) - the same terms feed both the
+// headline number and the R12 hover breakdown rows.
+const POWER_TERMS: readonly { stat: keyof Stats; weight: number }[] = [
+  { stat: 'might', weight: 2 },
+  { stat: 'defense', weight: 1.5 },
+  { stat: 'maxHp', weight: 0.1 },
+  { stat: 'maxMp', weight: 0.05 },
+  { stat: 'criticalRate', weight: 500 },
+  { stat: 'criticalDamage', weight: 300 },
+  { stat: 'speed', weight: 200 },
+]
 const combatPower = computed(() => {
   const stats = player.finalStats
   return Math.round(
-    stats.might * 2 +
-    stats.defense * 1.5 +
-    stats.maxHp * 0.1 +
-    stats.maxMp * 0.05 +
-    stats.criticalRate * 500 +
-    stats.criticalDamage * 300 +
-    stats.speed * 200,
+    POWER_TERMS.reduce((sum, term) => sum + stats[term.stat] * term.weight, 0),
   )
 })
 
@@ -167,6 +170,10 @@ const model = computed<CharacterUiModel>(() => {
     path: pathName.value,
     pathVerse: pathVerse.value,
     combatPower: formatNumber(combatPower.value),
+    powerSources: POWER_TERMS.map((term) => ({
+      label: BASE_STAT_LABELS.find((stat) => stat.key === term.stat)?.label ?? term.stat,
+      value: formatNumber(Math.round(resolved[term.stat] * term.weight)),
+    })),
     stats,
     elements: ELEMENT_ORDER.map((element, index) => ({
       id: element,
@@ -223,9 +230,7 @@ function onAllocate(id: string) {
     <CharacterFidelityScene
       :model="model"
       :notice="notice"
-      :navigation="navItems"
       @select="onSelect"
-      @navigate="navigate"
       @allocate="onAllocate"
       @back="ui.closeHomeOverlays()"
     />

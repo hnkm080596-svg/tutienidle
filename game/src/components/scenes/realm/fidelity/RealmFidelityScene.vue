@@ -8,7 +8,7 @@ import RealmPaperMap from './RealmPaperMap.vue'
 import RealmPaperDetails from './RealmPaperDetails.vue'
 import type { RealmUiModel } from './realmUi'
 withDefaults(defineProps<{ model: RealmUiModel; selected: number; notice: string; navigation: readonly PaperNavigationItem[]; preview?: boolean }>(), { preview: false })
-const emit = defineEmits<{ selectFloor: [floor: number]; navigate: [id: string]; back: []; breakthrough: [] }>()
+const emit = defineEmits<{ selectFloor: [floor: number]; navigate: [id: string]; back: []; breakthrough: []; quanKhi: [] }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 
@@ -23,7 +23,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <PaperPanelNavigation :items="navigation" active="realm" :label="t('panels.wheel.slots.realm')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <h1>{{ t('realm.title') }}</h1><p class="realm-subtitle">{{ t('realm.subtitle') }}</p>
     <RealmPaperMap :current="model.currentFloor" :selected="selected" :max="model.maxFloor" @select="emit('selectFloor', $event)" />
-    <RealmPaperDetails :model="model" :selected="selected" :notice="notice" @breakthrough="emit('breakthrough')" />
+    <RealmPaperDetails :model="model" :selected="selected" :notice="notice" @breakthrough="emit('breakthrough')" @quan-khi="emit('quanKhi')" />
     <p v-if="preview" class="realm-preview-label">{{ t('preview') }}</p>
   </section>
 </template>

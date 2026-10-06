@@ -2097,7 +2097,9 @@
       "formation": "Formation",
       "talisman": "Talisman",
       "attribute": "Attribute"
-    }
+    },
+    "powerSources": "Power From",
+    "powerFormula": "might×2 + defense×1.5 + maxHp×0.1 + maxMp×0.05 + critRate×500 + critDmg×300 + speed×200"
   },
   "realm": {
     "title": "ASCENSION PATH",
