@@ -184,9 +184,10 @@ export class QuestManager {
           // reset forever (dayBucket(now) <= dayBucket(future) always).
           // Clamp to now - the honest direction ("just reset") denies
           // the exploit, unlike 0 which would grant a free reset.
-          // r14-INT-6: callers under a remote time authority pass their
-          // approved anchor as nowMs so the clamp measures the same
-          // clock the restore window was authorized on.
+          // r16-INT-04: the clamp reads the FIELD's own epoch - callers
+          // pass Date.now() (the stamp lives in the payload clock; a
+          // server anchor would drag an honest same-day marker a full
+          // skew back and refire the daily reset).
           ? Math.min(state.lastDailyResetAtMs, nowMs)
           : 0,
 

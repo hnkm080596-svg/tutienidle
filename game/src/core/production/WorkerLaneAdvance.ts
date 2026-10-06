@@ -46,10 +46,21 @@ export interface WorkerLaneAdvanceParams {
 
   /**
    * Start instant for lanes holding no in-flight cycle. Online passes
-   * nowMs (top-up at the tick); offline passes the save timestamp
-   * (offlineSinceMs). Undefined = empty lanes stay empty.
+   * nowMs (top-up at the tick); offline passes the authorized window
+   * start (offlineSinceMs) - whose epoch the caller declares via
+   * spawnedSeedsAreServerEpoch. Undefined = empty lanes stay empty.
    */
   emptyLaneStartMs?: number
+
+  /**
+   * r17-INT-01: true when emptyLaneStartMs was anchored by the server
+   * bound (authority untilMs - elapsed), so lanes seeded from it - and
+   * their whole successor chain - carry server-epoch stamps the
+   * persister must convert back to the field epoch. Successors of
+   * SAVED lanes keep the saved lane's client-epoch deadline and must
+   * never be shifted. Online ticks pass client-epoch nowMs -> false.
+   */
+  spawnedSeedsAreServerEpoch?: boolean
 
   advanceMode: WorkerLaneAdvanceMode
 
@@ -77,6 +88,13 @@ export interface WorkerLaneAdvanceResult {
 
   /** Total rewarded duration consumed from budgetMs (0 when no budget). */
   consumedBudgetMs: number
+
+  /**
+   * Pending lane heads whose deadline chain derives from a server-epoch
+   * seed (spawnedSeedsAreServerEpoch). Same object refs as `pending`;
+   * the persister shifts exactly these into the field epoch.
+   */
+  serverSeededPending: readonly ProductionCycle[]
 }
 
 interface LaneCursor {
@@ -88,6 +106,12 @@ interface LaneCursor {
 
   /** The restored cycle object when the in-flight cycle came from saved state. */
   saved?: ProductionCycle
+
+  /**
+   * True when this lane's deadline chain was seeded at a server-epoch
+   * emptyLaneStartMs (successor chains inherit their root's epoch).
+   */
+  serverSeeded?: boolean
 }
 
 export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneAdvanceResult {
@@ -107,6 +131,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
       pending: [...params.pending],
       forfeited: 0,
       consumedBudgetMs: 0,
+      serverSeededPending: [],
     }
   }
 
@@ -135,6 +160,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
       lanes.push({
         startMs: params.emptyLaneStartMs,
         dueMs: params.emptyLaneStartMs + cycleMs,
+        serverSeeded: params.spawnedSeedsAreServerEpoch === true,
       })
     }
 
@@ -154,6 +180,42 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
     // future, every remaining lane is in-flight work to keep.
     if (lane.dueMs > nowMs) {
       break
+    }
+
+    // r17-AUT-1: with the budget spent, every remaining due on this
+    // chain forfeits anyway - jump it to its post-window head in O(1)
+    // instead of walking one completion per iteration. A crafted
+    // deep-past seed/deadline (e.g. lastSavedAt = 0 or a
+    // completesAtMs far below the window) otherwise spins ~1e10 no-op
+    // forfeits here on every boot - the same class DecomposeSystem
+    // bounds with its settle cap. A positive-cost head at zero budget
+    // forfeits; a zero-cost head (crafted saved cycle where
+    // startedAtMs == completesAtMs) still completes once through the
+    // normal path and its cycleMs-priced successor then jumps.
+    if (hasBudget && budgetLeftMs <= 0 && cycleMs > 0 && lane.dueMs - lane.startMs > 0) {
+      const skippedDues = Math.floor((nowMs - lane.dueMs) / cycleMs) + 1
+      const lastDueMs = lane.dueMs + (skippedDues - 1) * cycleMs
+
+      lanes.shift()
+      inFlight -= 1
+      forfeited += skippedDues
+
+      // Same slot rule as the per-iteration path: the chain continues
+      // only while the lane still holds a slot (inFlight < slots);
+      // oversubscribed lanes die with their forfeited dues.
+      if (params.advanceMode === 'deadline' && canSpawn && inFlight < slots) {
+        inFlight += 1
+        lane.saved = undefined
+        lane.startMs = lastDueMs
+        lane.dueMs = lastDueMs + cycleMs
+
+        let index = 0
+        while (index < lanes.length && lanes[index]!.dueMs <= lane.dueMs) {
+          index += 1
+        }
+        lanes.splice(index, 0, lane)
+      }
+      continue
     }
 
     lanes.shift()
@@ -180,7 +242,11 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
       // completion instant and keeps its slot.
       inFlight += 1
 
-      const next: LaneCursor = { startMs: lane.dueMs, dueMs: lane.dueMs + cycleMs }
+      const next: LaneCursor = {
+        startMs: lane.dueMs,
+        dueMs: lane.dueMs + cycleMs,
+        serverSeeded: lane.serverSeeded,
+      }
 
       let index = 0
 
@@ -199,9 +265,14 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
     buildProductionCycle(siteId, collectionRealmId, siteLevel, baseSeconds, lane.startMs, params.rng),
   )
 
+  const serverSeededPending = pending.filter(
+    (_, index) => lanes[index]!.serverSeeded === true && lanes[index]!.saved === undefined,
+  )
+
   return {
     completed,
     pending,
+    serverSeededPending,
     forfeited,
     consumedBudgetMs: hasBudget ? Math.max(0, params.budgetMs ?? 0) - budgetLeftMs : 0,
   }

@@ -119,18 +119,23 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
   // the payload's own epoch) can never honestly revive - expires only
   // extends on rebuy, which re-stamps past the save marker. Its skewed
   // stamp may still read future in the authority epoch, so the dead arm
-  // clamps at nowMs, not provenance+duration - without it a dead buff
-  // on a fast-clock save was resurrected for up to a full duration.
-  // The live arm (expires > lastSavedAt) keeps the provenance bound:
-  // a just-bought buff claim is indistinguishable from a forge there,
-  // so it earns at most the authored duration.
+  // clamps at the FIELD clock, not provenance+duration - authorityNow
+  // alone revives a dead record under a SLOW device clock (until >
+  // Date.now() reads the stamp as live for up to skew).
+  // r17-COR-B1: the live arm (expires > lastSavedAt) binds by the
+  // claim's own DURATION - min(appliedAt, authorityNow) + duration -
+  // not by the marker's position. An honest claim applied more than
+  // skew before the save keeps its whole tail (the r14 bound cut up
+  // to skew of honest remaining life); a forge still dies within
+  // duration of authorityNow because appliedAt clamps at nowMs.
   const expiresAtMs =
     Number.isFinite(effect.expiresAtMs) && effect.durationStackable !== true
       ? Math.min(
           effect.expiresAtMs,
           Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs
-            ? nowMs
-            : provenanceMs + TU_LINH_TRAN_DURATION_MS,
+            ? Math.min(nowMs, Date.now())
+            : (Number.isFinite(appliedAtMs) ? appliedAtMs : provenanceMs) +
+                TU_LINH_TRAN_DURATION_MS,
         )
       : effect.expiresAtMs
   return { ...effect, appliedAtMs, expiresAtMs }
@@ -140,19 +145,33 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
 // in the payload epoch, not the liveness-clamped stamp the restore
 // map stores. A dead-at-save record keeps its own stamp here - a buff
 // that honestly died mid-window must still pay its live rate up to
-// that stamp - while a live claim (expires > lastSavedAt) clamps to
-// the provenance bound exactly like the stored copy.
+// that stamp - while a live claim (expires > lastSavedAt) binds by
+// its own DURATION in the payload epoch: min(appliedAt, lastSavedAt)
+// + duration. r17-COR-B1: anchoring this bound at the server provenance
+// cut up to `skew` of honest tail time from every live claim; the
+// duration bound still caps any claim at the honest maximum shape (a
+// just-applied buff asserting the full duration at the marker), and
+// the paid width stays inside the authorized window. The stored copy
+// additionally clamps at authorityNow - that is the bound that stops
+// a crafted far-future marker from minting real buff time.
 function payoutExpiresAtMs(
-  effect: { expiresAtMs: number; durationStackable?: boolean },
-  provenanceMs: number,
+  effect: { appliedAtMs: number; expiresAtMs: number; durationStackable?: boolean },
   saveLastSavedAtMs: number,
 ): number {
   if (!Number.isFinite(effect.expiresAtMs) || effect.durationStackable === true) {
     return effect.expiresAtMs
   }
-  return Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs
-    ? effect.expiresAtMs
-    : Math.min(effect.expiresAtMs, provenanceMs + TU_LINH_TRAN_DURATION_MS)
+  if (Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs) {
+    return effect.expiresAtMs
+  }
+  const appliedBoundMs = Number.isFinite(effect.appliedAtMs)
+    ? Math.min(effect.appliedAtMs, saveLastSavedAtMs)
+    : saveLastSavedAtMs
+  // A claim with no finite anchor keeps its own stamp - the validator
+  // rejects that shape upstream; a NaN bound would poison the split.
+  return Number.isFinite(appliedBoundMs)
+    ? Math.min(effect.expiresAtMs, appliedBoundMs + TU_LINH_TRAN_DURATION_MS)
+    : effect.expiresAtMs
 }
 
 // "Noi dung giong het" = cung so luong, cung THU TU, va tung entry khop
@@ -384,11 +403,7 @@ export const usePlayerStore = defineStore('player', {
       // consistent with what was actually live.
       const payoutTimedEffects = (save.player.persistentTimedEffects ?? []).map((effect) => ({
         ...effect,
-        expiresAtMs: payoutExpiresAtMs(
-          effect,
-          effectProvenanceMs,
-          save.player.lastSavedAt,
-        ),
+        expiresAtMs: payoutExpiresAtMs(effect, save.player.lastSavedAt),
       }))
       // r12-AUT: bound the cultivation window at now on BOTH ends -
       // so a future-positioned start/end pair still mints - the start

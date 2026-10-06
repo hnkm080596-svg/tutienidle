@@ -475,8 +475,12 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           id: 'fx1',
           sourceItemId: 'tu_linh_tran',
           effectGroup: 'tu_linh_tran',
-          appliedAtMs: 0,
-          expiresAtMs: currentMs + 999_000_000, // still live past window end
+          // r17-COR-B1: honest shape - expires = appliedAt + authored
+          // duration. The payout bound is the claim's own duration;
+          // an appliedAt=0 + far-future expires record is a >24h
+          // duration forge and now correctly pays flat unbuffed.
+          appliedAtMs: currentMs - 21_000,
+          expiresAtMs: currentMs - 21_000 + 86_400_000, // still live past window end
           cultivationSpeedPercent: 0.25,
           modifiers: [],
         },

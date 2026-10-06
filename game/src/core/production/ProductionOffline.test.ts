@@ -278,3 +278,152 @@ describe('settleProductionOffline — worker settle phase', () => {
     expect(harnessB.grants[0]!.siteId).toBe(QUANG)
   })
 })
+
+describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17-INT-01)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  // r17-INT-01(a): the successor of a SAVED lane inherits the saved
+  // lane's client-epoch deadline - it is not a server-epoch seed and
+  // must not be shifted even when the window is server-anchored.
+  it('keeps a saved-lane successor deadline unshifted under a server-anchored window', () => {
+    // Window [T0+100k, T0+300k] server-anchored; device clock runs
+    // +200k ahead of settleNowMs (the skew that used to shift stamps).
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 500_000)
+    const saved = makeCycle(LAM, T0, T0 + 100_000)
+    const states = new Map<string, ProductionSiteState>([
+      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [saved] })],
+    ])
+    const { deps, grants } = createHarness(states)
+
+    const settled = settle(deps, T0 + 300_000, {
+      workerCapacity: 1,
+      offlineSinceMs: T0 + 100_000,
+      offlineSinceIsServerEpoch: true,
+    })
+
+    // saved lane chain completes at T0+100k/200k/300k; the pending
+    // successor keeps its client-epoch deadline T0+400k.
+    expect(settled).toBe(3)
+    expect(grants).toHaveLength(3)
+    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+      T0 + 400_000,
+    ])
+    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.startedAtMs)).toEqual([
+      T0 + 300_000,
+    ])
+  })
+
+  // r17-INT-01(b): a CLIENT-anchored window seeds lanes in the field
+  // epoch already - a device clock that changed between save and
+  // restore must not shift them (previously froze lanes by the skew
+  // change).
+  it('leaves client-anchored spawned lanes unshifted when the clock moved', () => {
+    // Save was written on a clock 1h behind; restore runs honest ->
+    // Date.now() - settleNowMs = 200k of clock CHANGE, not lane skew.
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 500_000)
+    const states = new Map<string, ProductionSiteState>([
+      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 2, workerCycles: [] })],
+    ])
+    const { deps } = createHarness(states)
+
+    const settled = settle(deps, T0 + 300_000, {
+      workerCapacity: 2,
+      offlineSinceMs: T0,
+      offlineSinceIsServerEpoch: false,
+    })
+
+    // Two lanes seeded at T0 complete at 100k/200k/300k each; pending
+    // heads keep client-epoch T0+400k (no +200k freeze).
+    expect(settled).toBe(6)
+    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+      T0 + 400_000,
+      T0 + 400_000,
+    ])
+  })
+
+  // r16-INT-03 stays pinned: lanes seeded at a SERVER-anchored window
+  // DO carry the settle epoch and still get the one-way shift.
+  it('still re-stamps server-seeded pending lanes into the field epoch', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(T0 + 500_000)
+    const states = new Map<string, ProductionSiteState>([
+      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [] })],
+    ])
+    const { deps } = createHarness(states)
+
+    const settled = settle(deps, T0 + 300_000, {
+      workerCapacity: 1,
+      offlineSinceMs: T0 + 100_000,
+      offlineSinceIsServerEpoch: true,
+    })
+
+    // Seed at T0+100k (server): dues 200k/300k complete, pending
+    // T0+400k shifted +200k -> T0+600k in the field epoch.
+    expect(settled).toBe(2)
+    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+      T0 + 600_000,
+    ])
+  })
+})
+
+describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  // r17-AUT-1: a crafted deep-past seed used to walk the chain one
+  // completion per cycle across the whole window depth. With the
+  // budget spent the chain jumps to its post-window head in O(1) -
+  // the settle pays at most CAP/cycleMs completions per lane.
+  it('bounds a deep-past seed chain by the offline cap instead of window depth', () => {
+    const states = new Map<string, ProductionSiteState>([
+      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [] })],
+    ])
+    const { deps, grants } = createHarness(states)
+
+    // Deep-past seed (crafted lastSavedAt = 0 shape): 411 dues fall
+    // inside [0, nowMs] at 100s cycles, the cap pays only 36_000_000ms
+    // of cycle time -> 360 completions, the rest forfeit in O(1).
+    const now = T0 + 40_000_000
+    const settled = settle(deps, now, {
+      workerCapacity: 1,
+      offlineSinceMs: 0,
+    })
+
+    expect(settled).toBe(360)
+    expect(grants).toHaveLength(360)
+    // The pending head is the first due past nowMs - the lane keeps
+    // in-flight work at its true deadline, not a walked stamp.
+    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+      41_100_000,
+    ])
+    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.startedAtMs)).toEqual([
+      41_000_000,
+    ])
+  })
+
+  // r17-AUT-1 sibling: a saved lane with a deep-past deadline - the
+  // first head pays/forfeits by cost, then the successor chain jumps
+  // the same way once the budget is spent.
+  it('bounds a deep-past saved lane chain the same way', () => {
+    const saved = makeCycle(LAM, 0, 100_000)
+    const states = new Map<string, ProductionSiteState>([
+      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [saved] })],
+    ])
+    const { deps } = createHarness(states)
+
+    const now = T0 + 40_000_000
+    const settled = settle(deps, now, {
+      workerCapacity: 1,
+      offlineSinceMs: 0,
+    })
+
+    // dues 100k..41_000k: 410 in-window dues pay until the 36M budget
+    // is gone (360 completions), the 50-due tail jumps to its head.
+    expect(settled).toBe(360)
+    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+      41_100_000,
+    ])
+  })
+})

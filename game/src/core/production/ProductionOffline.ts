@@ -39,6 +39,16 @@ export interface ProductionOfflineDeps {
 export interface ProductionOfflineOptions {
   workerCapacity?: number
   offlineSinceMs?: number
+
+  /**
+   * r17-INT-01: true when offlineSinceMs was anchored by the server
+   * bound (authority untilMs - elapsed) rather than the payload's own
+   * lastSavedAt - lanes seeded at it carry server-epoch stamps and the
+   * spawned-lane re-stamp below converts exactly those back to the
+   * field epoch. A client-anchored window needs no conversion.
+   */
+  offlineSinceIsServerEpoch?: boolean
+
   /** Chi-hien-quan - assignments snapshot (tu states truoc settle) de
    *  offline khop online. */
   workerAssignments?: Map<string, number>
@@ -69,6 +79,7 @@ export function settleProductionOffline(
     options.offlineSinceMs,
     options.workerAssignments,
     options.rng,
+    options.offlineSinceIsServerEpoch,
   )
 }
 
@@ -98,6 +109,7 @@ function settleWorkersOffline(
   offlineSinceMs?: number,
   workerAssignments?: Map<string, number>,
   rng?: () => number,
+  offlineSinceIsServerEpoch?: boolean,
 ): number {
   // R7 (AR-07): the SAME pure allocator as tickWorkers - online and
   // offline settlement share one distribution rule (manual first,
@@ -146,8 +158,6 @@ function settleWorkersOffline(
 
     state.workerCycles ??= []
 
-    const persistedLanes = new Set(state.workerCycles)
-
     // M11 (ARCH-007) - per-lane advancement via the SAME mechanism as
     // tickWorkers (advanceWorkerLanes): each lane completes on its OWN
     // deadline; pending cycles keep their lane + original deadline;
@@ -165,24 +175,26 @@ function settleWorkersOffline(
       slots,
       nowMs,
       emptyLaneStartMs: offlineSinceMs,
+      spawnedSeedsAreServerEpoch: offlineSinceIsServerEpoch,
       advanceMode: 'deadline',
       budgetMs,
       rng,
     })
 
-    // r16-INT-03: spawned lane deadlines are stamped in the settle
-    // window's epoch (authority untilMs at cold-boot) but persist into
-    // workerCycles, which tickWorkers compares against Date.now() - a
-    // device clock ahead of the server read every leftover spawned
-    // lane as past-due and paid a cycle it had not honestly run (~1
-    // cycle per lane per site, repeatable each boot). Re-stamp spawned
-    // lanes into the field's epoch; restored lanes keep their own
-    // (already client-epoch) stamps. One-way shift only: a slow clock
-    // leaves deadlines ahead of Date.now(), the bounded underpay
-    // direction.
+    // r16-INT-03 + r17-INT-01: only lanes seeded at a SERVER-anchored
+    // offlineSinceMs (and their successor chains) carry the settle
+    // window's epoch; persisting them into workerCycles - which
+    // tickWorkers reads against Date.now() - paid them early under a
+    // fast clock. Shift exactly the lanes advanceWorkerLanes marks
+    // server-seeded into the field epoch: successors of SAVED lanes
+    // keep the saved lane's client-epoch deadline, and lanes seeded at
+    // a client-anchored window are already field-epoch. One-way shift
+    // only: a slow clock leaves deadlines ahead of Date.now(), the
+    // bounded underpay direction.
     const fieldEpochShiftMs = Math.max(0, Date.now() - nowMs)
+    const serverSeeded = new Set(result.serverSeededPending)
     state.workerCycles = result.pending.map((cycle) =>
-      fieldEpochShiftMs > 0 && !persistedLanes.has(cycle)
+      fieldEpochShiftMs > 0 && serverSeeded.has(cycle)
         ? {
             ...cycle,
             startedAtMs: cycle.startedAtMs + fieldEpochShiftMs,

@@ -457,6 +457,10 @@ export class ProductionSystem {
     options: {
       workerCapacity?: number
       offlineSinceMs?: number
+      /** r17-INT-01: true when offlineSinceMs was anchored by the server
+       *  bound - spawned lanes then carry server-epoch stamps the
+       *  settle re-stamps into the field epoch. */
+      offlineSinceIsServerEpoch?: boolean
       /** Chi-hien-quan - assignments snapshot (tu states truoc settle) de
        *  offline khop online. */
       workerAssignments?: Map<string, number>

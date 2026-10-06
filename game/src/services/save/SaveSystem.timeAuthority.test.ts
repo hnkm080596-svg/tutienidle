@@ -342,7 +342,10 @@ describe('RestoreTimeAuthority — field-epoch stamps (r16)', () => {
       registry,
       'mortal',
       until,
-      { workerCapacity: 1, offlineSinceMs: until - 50_000 },
+      // r17-INT-01: the window is server-anchored here by construction
+      // (the harness supplies the authority bound directly), so the
+      // caller declares the seed's epoch explicitly.
+      { workerCapacity: 1, offlineSinceMs: until - 50_000, offlineSinceIsServerEpoch: true },
     )
 
     // Mortal L1 cycle is ~100s, so the lane seeded at until-50s stays

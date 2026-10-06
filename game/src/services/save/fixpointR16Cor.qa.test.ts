@@ -218,12 +218,12 @@ describe('fixpoint r16 COR - r15 payload-epoch window repros', () => {
     })
 
     expect(result.elapsedSeconds).toBe(500)
-    // FIXED shape: unbuffed = 12.5/1.25 = 10, then the live claim's
-    // provenance bound (untilMs + 24h) still dies before the window
-    // start under skew > 24h - the honest 60s tail is unprovable, so
-    // the residual pays flat 500 x 10 = 5000 (bounded underpay, the
-    // accepted direction). The pre-fix defect paid 6250.
-    expect(result.cultivation).toBe(5000)
+    // FIXED shape: unbuffed = 12.5/1.25 = 10; the live claim's payout
+    // bound is its own duration (min(appliedAt, lastSavedAt)+24h) so
+    // the honest 60s tail pays at the live rate ->
+    // 60s x 12.5 + 440s x 10 = 5150. r17-COR-B1 removed the residual
+    // provenance bound that used to cut the tail under skew.
+    expect(result.cultivation).toBe(5150)
   })
 
   // ------------------------------------------------------------------
@@ -273,13 +273,13 @@ describe('fixpoint r16 COR - r15 payload-epoch window repros', () => {
     })
 
     expect(result.elapsedSeconds).toBe(500)
-    // FIXED shape: the sample now reads the RAW payload stamps at
+    // FIXED shape: the sample reads the RAW payload stamps at
     // lastSavedAt (same probe as the validator) -> live -> unbuffed =
-    // 12.5/1.25 = 10. The bound still kills the live claim before the
-    // window start under skew > 24h -> flat 500 x 10 = 5000. The
-    // r15-AUT-1 invariant holds: admitted claim divides back to BASE
-    // and the boost cannot be paid un-divided (pre-fix paid 6250).
-    expect(result.cultivation).toBe(5000)
+    // 12.5/1.25 = 10; the claim's own duration bound keeps the 60s
+    // tail -> 60s x 12.5 + 440s x 10 = 5150. The r15-AUT-1 invariant
+    // holds: the admitted boost is paid un-divided nowhere (pre-fix
+    // paid 6250 flat).
+    expect(result.cultivation).toBe(5150)
   })
 
   // ------------------------------------------------------------------
