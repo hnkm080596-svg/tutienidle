@@ -3,7 +3,7 @@ import {ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
 import EquipmentArtCard from './equipment/EquipmentArtCard.vue'
 import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
-import QuestCategoryArtButton from './QuestCategoryArtButton.vue'
+import QuestCategoryArtButton from '@/components/common/QuestCategoryArtButton.vue'
 const props=defineProps<{kind:'settings'|'feedback'}>()
 const {t}=useI18n()
 const section=ref(0)

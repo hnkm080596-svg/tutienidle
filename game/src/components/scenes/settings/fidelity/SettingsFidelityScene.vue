@@ -9,18 +9,16 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import SettingsFidelitySection, { type SettingsDisplayControl } from './SettingsFidelitySection.vue'
 
 withDefaults(defineProps<{
   groups: readonly {id: string; label: string; controls: readonly SettingsDisplayControl[]}[]
   active: string
-  navigation: readonly PaperNavigationItem[]
   notice: string
   preview?: boolean
 }>(), { preview: false })
 
-const emit = defineEmits<{select: [id: string]; update: [id: string, value: string | number | boolean]; action: [id: string]; navigate: [id: string]; back: []}>()
+const emit = defineEmits<{select: [id: string]; update: [id: string, value: string | number | boolean]; action: [id: string]; back: []}>()
 const { t } = useI18n()
 
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
@@ -34,7 +32,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="settings-scene" :aria-label="t('layout.functionOverlay.titles.settings')" @click.self="emit('back')">
     <div class="settings-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="settings" :label="t('paperNav.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <h1 class="settings-title">{{ t('layout.functionOverlay.titles.settings') }}</h1>
 
     <div class="settings-content">
