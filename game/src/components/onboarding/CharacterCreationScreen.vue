@@ -169,7 +169,7 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 </script>
 
 <template>
-  <section class="trial-creation-art" :style="style" data-testid="character-creation-screen" data-hk-scene="creation">
+  <section class="trial-creation-art hk-art-scene" :style="style" data-testid="character-creation-screen" data-hk-scene="creation">
     <PcPaperButton class="trial-back" variant="secondary" data-testid="creation-back" :disabled="creating" @click="emit('back')">‹ {{ t('onboarding.creation.back') }}</PcPaperButton>
     <header class="trial-heading"><img :src="art.cloud" alt=""></header>
     <div class="trial-brush-ring" aria-hidden="true"><svg viewBox="0 0 500 500"><circle cx="250" cy="250" r="222" fill="none" stroke="currentColor" stroke-width="9" stroke-dasharray="340 7 100 12 32 3 190 9" /><circle cx="250" cy="250" r="210" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="160 8 40 12" /><circle cx="250" cy="250" r="234" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 8 100 4" /></svg><img v-for="position in ['top','right','bottom','left']" :key="position" :class="`trial-cloud-${position}`" :src="art.cloud" alt=""></div>
@@ -205,10 +205,6 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 
 <style scoped>
 .trial-creation-art { position: absolute; inset: 0; }
-/* Mock-verbatim geometry: the preview page inherits a global border-box
-   reset the game shell does not provide - pin it here so every frame's
-   CSS px match the mock exactly. */
-.trial-creation-art, .trial-creation-art * { box-sizing: border-box; }
 .trial-back { position: absolute; top: 20px; left: 22px; min-width: 125px; z-index: 2; font-size: 19px; }
 .trial-heading { position: absolute; left: 175px; right: 40px; top: 20px; height: 82px; border-bottom: 1px solid #b08a47; }
 .trial-heading img { position: absolute; right: 20px; top: -7px; width: 280px; height: 95px; object-fit: contain; opacity: .5; }
