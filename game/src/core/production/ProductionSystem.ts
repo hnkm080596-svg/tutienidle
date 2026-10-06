@@ -164,7 +164,14 @@ export class ProductionSystem {
           // the authored span stays exact: the lane resumes as a live
           // in-flight cycle instead of idling past the next save marker
           // and self-bricking every write. Honest stamps are untouched.
-          if (clockOk && cycle.startedAtMs > restoreNowMs) {
+          // r31-COR-F-HEADROOM (sibling): minted completesAtMs =
+          // restoreNowMs + authored span must fit the persisted domain
+          // - else keep the pair verbatim (parked, deny).
+          if (
+            clockOk &&
+            cycle.startedAtMs > restoreNowMs &&
+            restoreNowMs + (cycle.completesAtMs - cycle.startedAtMs) < 2 ** 52
+          ) {
             const shiftMs = cycle.startedAtMs - restoreNowMs
             return {
               ...cycle,

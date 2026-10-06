@@ -184,9 +184,14 @@ describe('fixpoint r22 INT - timestamp pin integration probes', () => {
       budgetMs: CYCLE_MS * 2,
       rng: () => 0.5,
     })
-    // In-domain feed: the guard does not fire; the lane runs its
-    // deadline walk against the bounded budget.
-    expect(result.pending.length + result.completed.length).toBeGreaterThan(0)
+    // r31-WIN-ASYM: the derived window start is negative (marker
+    // -(2^52-1) < 0) so the feed now denies verbatim - the lane
+    // parks instead of walking. Deny-lean: a forged negative marker
+    // yields zero offline accrual, never a mint.
+    expect(result.completed).toHaveLength(0)
+    expect(result.pending).toHaveLength(0)
+    expect(result.seededPending).toHaveLength(0)
+    expect(result.consumedBudgetMs).toBe(0)
   })
 
   it('mechanism guard: a direct |emptyLaneStartMs| >= 2^53 feed still zero-advances verbatim', () => {

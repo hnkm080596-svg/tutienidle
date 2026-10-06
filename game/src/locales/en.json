@@ -1576,7 +1576,8 @@
       "missing_spirit_stone": "Not enough Spirit Stones",
       "missing_special_ingredient": "Missing the recipe's special ingredient",
       "fallback": "Cannot start brewing",
-      "scope_hidden": "This recipe is outside the beta scope"
+      "scope_hidden": "This recipe is outside the beta scope",
+      "invalid_clock": "The system clock is misbehaving — try again in a moment"
     },
     "outcomeNone": "This run yields no pills.",
     "queueTitle": "Brewing Queue",

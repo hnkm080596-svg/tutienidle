@@ -3489,8 +3489,11 @@ function validateProductionCycleSave(
     !isFiniteNumber(value.siteLevelAtStart) ||
     !isFiniteNumber(value.rewardTableVersion) ||
     !isFiniteNumber(value.rollSeed) ||
-    !isBoundedTimestamp(value.startedAtMs) ||
-    !isBoundedTimestamp(value.completesAtMs)
+    // r31-COR-F-NEG-MINT: non-negative domain - a negative due pair
+    // validated then settled on the next honest tick (mint). Every
+    // honest writer stamps >= 0.
+    !isNonNegativeBoundedTimestamp(value.startedAtMs) ||
+    !isNonNegativeBoundedTimestamp(value.completesAtMs)
   ) {
     issues.push({ path, message: 'production cycle sai shape' })
     return
@@ -3724,8 +3727,10 @@ function validateAlchemyJobsSave(
       typeof entry.recipeId !== 'string' ||
       typeof entry.pillId !== 'string' ||
       typeof entry.herbMaterialId !== 'string' ||
-      !isBoundedTimestamp(entry.startedAtMs) ||
-      !isBoundedTimestamp(entry.completesAtMs) ||
+      // r31-COR-F-NEG-MINT: non-negative domain - a negative due pair
+      // validated then minted a pill on the next honest tick.
+      !isNonNegativeBoundedTimestamp(entry.startedAtMs) ||
+      !isNonNegativeBoundedTimestamp(entry.completesAtMs) ||
       !isFiniteNumber(entry.roomLevelAtStart)
     ) {
       issues.push({ path: entryPath, message: 'alchemy job sai shape' })

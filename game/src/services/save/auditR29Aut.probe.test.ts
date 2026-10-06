@@ -539,7 +539,7 @@ describe('r29-AUT - F3: sibling walks skip cap-refused collections (fixed)', () 
     const save = makeSave()
     // 1 registered core at level 1 with no grant source + filler keys to
     // exceed ID_COLLECTION_CAP (1024). The :3253 walk pushing
-    // 'core không có nguồn grant' proves the refused record was iterated.
+    // The 'no grant source' issue proves the refused record was iterated.
     const nodeLevels: Record<string, number> = {}
     for (let i = 0; i < 1_100; i += 1) {
       nodeLevels[`fake_node_${i}`] = 1

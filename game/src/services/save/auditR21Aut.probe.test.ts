@@ -479,21 +479,15 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       rng: () => 0.5,
     })
 
-    // headCost (100000) > budgetLeft (50000) && cycleMs > budgetLeft:
-    // the whole deep tail is skipped in O(1) - nothing paid.
+    // r31-NEG-MINT: a negative persisted stamp now denies the whole
+    // feed verbatim in O(1) - the deep-past walk/jump class it probed
+    // is closed upstream at the [0, 2^52) domain gate.
     expect(result.completed).toHaveLength(0)
     expect(result.consumedBudgetMs).toBe(0)
-    // Forfeit count = skipped dues ~= (nowMs - deepDue)/cycleMs ~ 4e10
-    // - an inflated counter with no consumer.
-    expect(result.forfeited).toBeGreaterThan(1e10)
-    // Head lands in (nowMs, nowMs + cycleMs] - the post-window
-    // position, on a SPAWNED object (lane.saved was cleared), still
-    // flagged unseeded (saved-chain provenance).
+    expect(result.forfeited).toBe(0)
     expect(result.pending).toHaveLength(1)
-    const head = result.pending[0]!
-    expect(head.cycleId).not.toBe(crafted.cycleId)
-    expect(head.completesAtMs).toBeGreaterThan(1_000_000)
-    expect(head.completesAtMs).toBeLessThanOrEqual(1_000_000 + MORTAL_L1_CYCLE_MS)
+    expect(result.pending[0]).toBe(crafted)
+    expect(result.pending[0]!.cycleId).toBe(crafted.cycleId)
     expect(result.seededPending).toHaveLength(0)
   })
 
@@ -731,17 +725,14 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       { workerCapacity: 1, offlineSinceMs: -1e12, rng: () => 0.5 },
     )
 
-    expect(settled).toBe(Math.floor((PRODUCTION_OFFLINE_CAP_SECONDS * 1000) / MORTAL_L1_CYCLE_MS))
+    // r31-WIN-ASYM/NEG-MINT: both the offlineSinceMs window start and
+    // the saved lane's stamps are negative -> the whole feed denies
+    // verbatim; the lane parks untouched.
+    expect(settled).toBe(0)
     const heads = state.workerCycles ?? []
     expect(heads).toHaveLength(1)
-    const head = heads[0]!
-    // Landed in (settleNow, settleNow + cycleMs] in the SETTLE epoch -
-    // and because the lane was saved-rooted it is NOT in the re-stamp
-    // set: its stamp stays 200s EARLY of field-now.
-    expect(head.completesAtMs).toBeGreaterThan(settleNow)
-    expect(head.completesAtMs).toBeLessThanOrEqual(settleNow + MORTAL_L1_CYCLE_MS)
-    expect(head.completesAtMs).toBeLessThan(fieldNow)
-    expect(head.cycleId).not.toBe(crafted.cycleId)
+    expect(heads[0]).toBe(crafted)
+    expect(heads[0]!.completesAtMs).toBe(-1e12 + MORTAL_L1_CYCLE_MS)
   })
 
   // ------------------------------------------------------------------
@@ -775,8 +766,8 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     // The saved lane's own ref survives as the unflagged pending head.
     expect(result.pending).toContain(saved)
 
-    // Jump path: saved deep-past lane under a budget squeeze - the
-    // rewritten head is a spawned object and still unflagged.
+    // Deny path: a negative-stamped saved lane now zero-advances
+    // verbatim (r31-NEG-MINT) - the very ref comes back, unflagged.
     const jumped = makeCycle(FOREST, -1e12, -1e12 + MORTAL_L1_CYCLE_MS)
     const jumpedResult = advanceWorkerLanes({
       siteId: FOREST,
@@ -794,7 +785,8 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     })
     expect(jumpedResult.seededPending).toHaveLength(0)
     expect(jumpedResult.pending).toHaveLength(1)
-    expect(jumpedResult.pending[0]!.cycleId).not.toBe(jumped.cycleId)
+    expect(jumpedResult.pending[0]).toBe(jumped)
+    expect(jumpedResult.pending[0]!.cycleId).toBe(jumped.cycleId)
   })
 
   // ------------------------------------------------------------------
@@ -955,7 +947,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       withMarker((save) => {
         save.tribulation = { cooldownUntil: 4e15 + 299_999 }
       }).ok,
-      'tribulation.cooldownUntil',
+      'tribulation cooldownUntil marker',
     ).toBe(true)
 
     // Decompose nextCycleAt - no ceiling at all.

@@ -157,16 +157,25 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
     !(nowMs + Math.max(0, cycleMs) < 2 ** 52) ||
     !Number.isInteger(slots) || slots < 0 || slots > 65_536 ||
     (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs)) ||
+    // r31-COR-F-WIN-ASYM/F-HEADROOM: the window start is a persisted
+    // clock AND the seed origin - it needs the same [0, 2^52) domain as
+    // offlineSinceMs plus the +cycleMs headroom so seeded dues
+    // (emptyLaneStartMs + cycleMs) stay inside the persisted bound.
     (params.emptyLaneStartMs !== undefined &&
       (!Number.isFinite(params.emptyLaneStartMs) ||
-        Math.abs(params.emptyLaneStartMs) >= 2 ** 52)) ||
+        params.emptyLaneStartMs < 0 ||
+        !(params.emptyLaneStartMs + Math.max(0, cycleMs) < 2 ** 52))) ||
+    // r31-COR-F-NEG-MINT: pending stamps live in [0, 2^52) - a negative
+    // due is already-past and settles/mints on this call.
     params.pending.some(
       (cycle) =>
         !Number.isFinite(cycle.completesAtMs) ||
         !Number.isFinite(cycle.startedAtMs) ||
         cycle.completesAtMs <= cycle.startedAtMs ||
-        Math.abs(cycle.completesAtMs) >= 2 ** 52 ||
-        Math.abs(cycle.startedAtMs) >= 2 ** 52,
+        cycle.completesAtMs < 0 ||
+        cycle.completesAtMs >= 2 ** 52 ||
+        cycle.startedAtMs < 0 ||
+        cycle.startedAtMs >= 2 ** 52,
     )
   ) {
     return {

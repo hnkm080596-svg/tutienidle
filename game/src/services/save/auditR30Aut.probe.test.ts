@@ -353,9 +353,12 @@ describe('r30-AUT F3 - startJob origination gate boundary sweep', () => {
     })
   }
 
-  it('boundary: [0, 2^52) is admitted - the origination gate does not fire', () => {
+  it('boundary: [0, 2^52 - spanMs) is admitted - the origination gate does not fire', () => {
     const system = new AlchemySystem()
-    for (const clock of [0, -0, 2 ** 52 - 1, currentMs]) {
+    // r31-HEADROOM: the minted completesAtMs must also stay in domain,
+    // so the top admitted clock is 2^52 - span - 1, not 2^52 - 1.
+    const spanMs = alchemySecondsFor(recipe, 1) * 1000
+    for (const clock of [0, -0, 2 ** 52 - 1 - spanMs, currentMs]) {
       const result = system.startJob(
         recipe,
         'unobtainable_herb',
@@ -372,7 +375,7 @@ describe('r30-AUT F3 - startJob origination gate boundary sweep', () => {
 
   it('boundary: negative or >= 2^52 clocks refuse as invalid_clock', () => {
     const system = new AlchemySystem()
-    for (const clock of [-1, -(2 ** 53) + 1, 2 ** 52, 2 ** 53 - 1]) {
+    for (const clock of [-1, -(2 ** 53) + 1, 2 ** 52 - 1, 2 ** 52, 2 ** 53 - 1]) {
       const result = system.startJob(
         recipe,
         'unobtainable_herb',

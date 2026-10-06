@@ -161,7 +161,15 @@ export class DecomposeSystem {
     // AND poisons nextCycleAt into a write-gate wedge. Zero-advance
     // preserves state untouched (deny direction).
     // r30-AUT-3: [0, 2^52) persisted-clock domain.
-    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
+    // r31-COR-F-HEADROOM: every mint below writes nextCycleAt =
+    // nowMs + cycleMs - a clock within cycleMs of the bound stamps a
+    // due the next save write self-refuses (wedge). The !(...) form
+    // denies NaN cycleMs as well.
+    if (
+      !Number.isFinite(nowMs) ||
+      nowMs < 0 ||
+      !(nowMs + Math.max(0, this.cycleMs) < 2 ** 52)
+    ) {
       return
     }
 
@@ -309,7 +317,14 @@ export class DecomposeSystem {
     // r29-COR-F1: nowMs guard parity - nowMs=+Infinity spins the
     // settle loop up to the 5000-cycle bound; zero-settle under a
     // broken clock (deny). r30-AUT-3: [0, 2^52) persisted-clock domain.
-    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
+    // r31-COR-F-HEADROOM: the fast-forward and settle-loop writes
+    // advance nextCycleAt to at most nowMs + cycleMs - the same
+    // headroom keeps the persisted stamp inside the admitted domain.
+    if (
+      !Number.isFinite(nowMs) ||
+      nowMs < 0 ||
+      !(nowMs + Math.max(0, this.cycleMs) < 2 ** 52)
+    ) {
       return 0
     }
 

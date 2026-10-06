@@ -314,7 +314,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
   // budget + jump are. This is the class the magnitude pins only
   // tightened - bounded settle already held below 2^53.
   // --------------------------------------------------------------------
-  it('pending just inside 2^53 settles bounded: 360 grants then O(1) jump', () => {
+  it('negative pending denies verbatim (r31-NEG-MINT): zero-advance O(1)', () => {
     const saved = makeCycle(LAM, -4.5e15, -4.5e15 + 100_000)
 
     const result = advanceWorkerLanes({
@@ -332,9 +332,13 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
       rng: () => 0.5,
     })
 
-    expect(result.completed).toHaveLength(360)
-    expect(result.consumedBudgetMs).toBe(36_000_000)
-    expect(result.forfeited).toBeGreaterThan(0)
+    // r31: persisted lane stamps now live in [0, 2^52) - a negative
+    // pair denies the feed verbatim instead of settling the tail.
+    expect(result.completed).toHaveLength(0)
+    expect(result.consumedBudgetMs).toBe(0)
+    expect(result.forfeited).toBe(0)
+    expect(result.pending).toHaveLength(1)
+    expect(result.pending[0]).toBe(saved)
   })
 
   // --------------------------------------------------------------------

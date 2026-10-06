@@ -232,7 +232,11 @@ describe('settleProductionOffline — worker settle phase', () => {
   })
 
   it('feeds the remaining worker budget to sites in states order — an earlier site can starve later ones', () => {
-    const now = T0 + 140_000
+    // r31-NEG-MINT: persisted stamps live in [0, 2^52) - the CAP_MS
+    // span that starves the later site must sit at the domain edge to
+    // stay admitted (a negative start now denies verbatim).
+    const BOUND = 2 ** 52
+    const now = BOUND - 150_000
     const options: ProductionOfflineOptions = {
       workerCapacity: 2,
       offlineSinceMs: T0,
@@ -243,8 +247,8 @@ describe('settleProductionOffline — worker settle phase', () => {
     }
 
     // LAM first: its saved lane eats the whole cap; QUANG's lane forfeits.
-    const expensive = makeCycle(LAM, T0 + 50_000 - CAP_MS, T0 + 50_000) // duration CAP_MS
-    const cheap = makeCycle(QUANG, T0, T0 + CYCLE_MS)
+    const expensive = makeCycle(LAM, BOUND - 200_000 - CAP_MS, BOUND - 200_000) // duration CAP_MS
+    const cheap = makeCycle(QUANG, BOUND - 250_000, BOUND - 150_000)
     const lamFirst = new Map<string, ProductionSiteState>([
       [LAM, makeState(LAM, { autoRestart: true, workerCycles: [expensive] })],
       [QUANG, makeState(QUANG, { autoRestart: true, workerCycles: [cheap] })],
@@ -255,20 +259,23 @@ describe('settleProductionOffline — worker settle phase', () => {
     expect(harnessA.grants).toEqual([expensive])
     // QUANG's saved lane was dropped unpaid; only a live tail remains.
     expect(lamFirst.get(QUANG)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
-      T0 + 200_000,
+      BOUND - 50_000,
     ])
 
     // QUANG first: the cheap lane fits; the expensive lane no longer does.
     const quangFirst = new Map<string, ProductionSiteState>([
       [
         QUANG,
-        makeState(QUANG, { autoRestart: true, workerCycles: [makeCycle(QUANG, T0, T0 + CYCLE_MS)] }),
+        makeState(QUANG, {
+          autoRestart: true,
+          workerCycles: [makeCycle(QUANG, BOUND - 250_000, BOUND - 150_000)],
+        }),
       ],
       [
         LAM,
         makeState(LAM, {
           autoRestart: true,
-          workerCycles: [makeCycle(LAM, T0 + 50_000 - CAP_MS, T0 + 50_000)],
+          workerCycles: [makeCycle(LAM, BOUND - 200_000 - CAP_MS, BOUND - 200_000)],
         }),
       ],
     ])

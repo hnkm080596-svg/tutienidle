@@ -386,7 +386,22 @@ export class AlchemySystem {
     // at >= 2^52 exceeds the persisted timestamp domain so the next
     // save write self-refuses. Both read as bad clock -> verbatim.
     const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
-    this.jobs = jobs.map((job) => {
+    this.jobs = jobs.flatMap((job) => {
+      // r31-COR-F-NEG-MINT: persisted stamps live in [0, 2^52) - a
+      // crafted negative pair would verbatim-restore as already-due and
+      // settle on the next honest tick (mint); a >= 2^52 stamp wedges
+      // the next write. Drop at the boundary (same rule as unknown
+      // siteIds in restoreStates).
+      if (
+        !Number.isFinite(job.startedAtMs) ||
+        !Number.isFinite(job.completesAtMs) ||
+        job.startedAtMs < 0 ||
+        job.startedAtMs >= 2 ** 52 ||
+        job.completesAtMs < 0 ||
+        job.completesAtMs >= 2 ** 52
+      ) {
+        return []
+      }
       // r26-COR-1/AUT-1: a job post-dating the restore clock is
       // impossible-authored - startedAtMs is a began-time pinned
       // <= playerLastSavedAt at admission, so only a uniformly-shifted
@@ -395,7 +410,16 @@ export class AlchemySystem {
       // authored span stays exact: the job resumes as live in-flight
       // instead of idling past the next save marker and self-bricking
       // every write. Honest stamps are untouched.
-      if (clockOk && job.startedAtMs > restoreNowMs) {
+      // r31-COR-F-HEADROOM (sibling): the minted completesAtMs =
+      // restoreNowMs + authored span must fit the persisted domain too
+      // - a restore clock within span of the bound would re-ground a
+      // stamp the next save write self-refuses. Keep the pair verbatim
+      // (parked) instead.
+      if (
+        clockOk &&
+        job.startedAtMs > restoreNowMs &&
+        restoreNowMs + (job.completesAtMs - job.startedAtMs) < 2 ** 52
+      ) {
         const shiftMs = job.startedAtMs - restoreNowMs
         const shifted = { ...job, startedAtMs: job.startedAtMs - shiftMs, completesAtMs: job.completesAtMs - shiftMs }
         // The reservation digest folds startedAtMs/completesAtMs into
@@ -423,17 +447,19 @@ export class AlchemySystem {
             }
           : shifted
       }
-      return {
-        ...job,
-        reservation: {
-          ...job.reservation,
-          // r27-INT-Low: tolerate a non-array specials field - the
-          // normalize arm must never throw on an ungated payload.
-          specialIngredients: Array.isArray(job.reservation?.specialIngredients)
-            ? job.reservation.specialIngredients.map((special) => ({ ...special }))
-            : [],
+      return [
+        {
+          ...job,
+          reservation: {
+            ...job.reservation,
+            // r27-INT-Low: tolerate a non-array specials field - the
+            // normalize arm must never throw on an ungated payload.
+            specialIngredients: Array.isArray(job.reservation?.specialIngredients)
+              ? job.reservation.specialIngredients.map((special) => ({ ...special }))
+              : [],
+          },
         },
-      }
+      ]
     })
   }
 
@@ -479,7 +505,15 @@ export class AlchemySystem {
     // r30-AUT-3: the domain is [0, 2^52) - the minted stamps must fit
     // the persisted timestamp bound, and a negative clock would mint
     // an already-due job (free instant pill).
-    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
+    // r31-COR-F-HEADROOM: headroom on the minted due too - completesAtMs
+    // = nowMs + authored span, so a clock within span of the bound mints
+    // a stamp the next save write self-refuses (wedge). The !(...) form
+    // denies NaN spans as well.
+    if (
+      !Number.isFinite(nowMs) ||
+      nowMs < 0 ||
+      !(nowMs + Math.max(0, alchemySecondsFor(recipe, roomLevel) * 1000) < 2 ** 52)
+    ) {
       return { ok: false, reason: 'invalid_clock' }
     }
 

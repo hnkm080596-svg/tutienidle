@@ -1576,7 +1576,8 @@
       "missing_spirit_stone": "Không đủ Linh Thạch",
       "missing_special_ingredient": "Thiếu nguyên liệu đặc biệt của đan phương",
       "fallback": "Không thể bắt đầu luyện",
-      "scope_hidden": "Đan phương này nằm ngoài phạm vi beta — chưa mở trong bản này"
+      "scope_hidden": "Đan phương này nằm ngoài phạm vi beta — chưa mở trong bản này",
+      "invalid_clock": "Đồng hồ hệ thống chưa ổn định — thử lại sau một lúc"
     },
     "outcomeNone": "Lần này không nhận được đan nào.",
     "queueTitle": "Hàng Chờ Luyện Đan",

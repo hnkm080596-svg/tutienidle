@@ -386,8 +386,11 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
       cycleMs: CYCLE_MS,
       pending: [] as ProductionCycle[],
       slots: 1,
-      nowMs: T0,
-      emptyLaneStartMs: -4e15, // admitted: 4e15 < 2^52 persisted domain
+      // r31-NEG-MINT/WIN-ASYM: the deep-past window moved to positive
+      // stamps only - start 0 + far-future nowMs is the widest
+      // admitted window under [0, 2^52).
+      nowMs: 1e15,
+      emptyLaneStartMs: 0,
       advanceMode: 'deadline' as const,
     }
 
@@ -414,7 +417,27 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
   //    magnitude domain on every stamp, so the site never self-trips.
   // --------------------------------------------------------------------
   it('emitted pending is always re-admissible: finite, ordered, inside the exact-integer domain', () => {
-    for (const start of [T0, 0, -4e15]) {
+    // r31-WIN-ASYM: -4e15 is out of the [0, 2^52) window domain and
+    // now denies verbatim - the emitted-pending pin covers the
+    // admitted positive window starts only.
+    const denied = advanceWorkerLanes({
+      siteId: 'probe',
+      collectionRealmId: REALM,
+      siteLevel: 1,
+      baseSeconds: CYCLE_BASE_SECONDS_BY_REALM[REALM]!,
+      cycleMs: CYCLE_MS,
+      pending: [] as ProductionCycle[],
+      slots: 2,
+      nowMs: T0 + 400_000,
+      emptyLaneStartMs: -4e15,
+      advanceMode: 'deadline',
+      budgetMs: 36_000_000,
+      rng: () => 0.5,
+    })
+    expect(denied.completed).toHaveLength(0)
+    expect(denied.pending).toHaveLength(0)
+
+    for (const start of [T0, 0]) {
       const first = advanceWorkerLanes({
         siteId: 'probe',
         collectionRealmId: REALM,

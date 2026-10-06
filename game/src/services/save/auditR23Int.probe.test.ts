@@ -321,9 +321,11 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
       rng: () => 0.5,
     })
     expect(result.completed).toHaveLength(0)
-    // A lane IS seeded, at the derived future cursor - still in-domain.
-    expect(result.seededPending).toHaveLength(1)
-    expect(result.seededPending[0]!.completesAtMs).toBe(TWO_POW_52 - 1 + CYCLE_MS)
+    // r31-HEADROOM: minting a lane at 2^52-1 + CYCLE_MS would put the
+    // stamp outside the [0, 2^52) domain -> the seed itself is denied
+    // now. Same deny-lean outcome (no completions), one guard earlier.
+    expect(result.seededPending).toHaveLength(0)
+    expect(result.pending).toHaveLength(0)
   })
 
   it('B3 autoFarm lastCheckedMs: crafted far-future stamp re-anchors on the elapsed<=60 restore branch', () => {

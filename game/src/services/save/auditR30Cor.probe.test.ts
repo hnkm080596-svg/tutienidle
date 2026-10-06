@@ -361,13 +361,15 @@ describe('r30 COR - C: decompose remaining clock edges', () => {
     },
   )
 
-  it('admit edge: tick(2**52 - 1) still advances the due cycle', () => {
+  it('deny edge: tick(2**52 - 1) zero-advances - the minted nextCycleAt would escape [0, 2^52)', () => {
     const { system } = decomposeWithOre()
 
     system.tick(2 ** 52 - 1)
 
-    expect(system.drainOutput().length).toBe(1)
-    expect(Number.isFinite(system.getSaveState().nextCycleAt)).toBe(true)
+    // r31-HEADROOM: nowMs + cycleMs exceeds the persisted domain, so
+    // the tick denies verbatim rather than minting an unwritable stamp.
+    expect(system.drainOutput()).toHaveLength(0)
+    expect(system.getSaveState().nextCycleAt).toBe(currentMs)
   })
 })
 

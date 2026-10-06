@@ -370,8 +370,16 @@ export class GameManagerPersistentEffectOps {
     // r30-COR-Low-3: the verbatim push of a fresh effect clamps
     // expiresAtMs into the admitted domain for the same reason - every
     // written save must re-validate.
+    // r31-COR-F-APPLIEDAT/INT-4: appliedAtMs is a persisted stamp too,
+    // and the validator pins it <= lastSavedAt - the clamp ceiling is
+    // therefore min(2^52-1, now), not the bare bound, or a crafted
+    // value still wedges every later write on that pin.
     player.persistentTimedEffects.push({
       ...effect,
+      appliedAtMs: Math.min(
+        Math.min(2 ** 52 - 1, Date.now()),
+        Math.max(-(2 ** 52 - 1), effect.appliedAtMs),
+      ),
       expiresAtMs: Math.min(2 ** 52 - 1, Math.max(-(2 ** 52 - 1), effect.expiresAtMs)),
     })
   }

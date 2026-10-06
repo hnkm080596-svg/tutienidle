@@ -338,6 +338,12 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     }
 
     bootInFlight = true
+    // r31-INT-1: re-baseline the pause latch on every (re-)entry. The
+    // flag is only meaningful while a LIVE sim is paused - a latch
+    // surviving the terminal -> acknowledge -> re-auth -> re-enter chain
+    // would make every later pauseSimulation() a silent no-op (combat
+    // freeze never fires behind the next error surface).
+    simPaused = false
     // Captured BEFORE the first await. Everything past the await below
     // compares against this: a stopAll() that landed while the load was in
     // flight makes every later side effect (restore, clock, intervals,

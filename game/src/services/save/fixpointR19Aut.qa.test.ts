@@ -401,16 +401,16 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
     })
     const wallMs = performance.now() - t0
 
-    // The head's cost exceeds the budget -> forfeits (no grant); the
-    // chain jumps in O(1) and re-inserts its pending head past nowMs.
+    // r31-NEG-MINT: persisted lane stamps now live in [0, 2^52) - a
+    // negative stamp zero-advances O(1) and the lane parks verbatim
+    // instead of jumping the deep-past tail.
     expect(result.completed).toHaveLength(0)
     expect(result.pending).toHaveLength(1)
-    const due = result.pending[0]!.completesAtMs
-    expect(due).toBeGreaterThan(currentMs)
-    expect(due).toBeLessThanOrEqual(currentMs + cycleMs)
+    expect(result.pending[0]).toBe(head)
+    expect(result.pending[0]!.completesAtMs).toBe(startMs + cycleMs)
     expect(wallMs).toBeLessThan(500)
     expect(Number.isFinite(result.forfeited)).toBe(true)
-    expect(result.forfeited).toBeGreaterThanOrEqual(1)
+    expect(result.forfeited).toBe(0)
   })
 
   it('W2: crafted deep-past saved head with affordable span completes once inside the cap - no extra forfeit skip', () => {
@@ -436,13 +436,12 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
       rng: () => 0.5,
     })
 
-    // The saved head completes once (cost 100s <= budget); its chain
-    // then settles under the same budget and the pending head lands in
-    // (now, now+cycle].
-    expect(result.completed).toHaveLength(360)
+    // r31-NEG-MINT: negative persisted stamps now zero-advance O(1) -
+    // the lane parks verbatim (deny-lean), no grant, no re-stamp.
+    expect(result.completed).toHaveLength(0)
     expect(result.pending).toHaveLength(1)
-    expect(result.pending[0]!.completesAtMs).toBeGreaterThan(currentMs)
-    expect(result.pending[0]!.completesAtMs).toBeLessThanOrEqual(currentMs + 100_000)
+    expect(result.pending[0]).toBe(head)
+    expect(result.pending[0]!.completesAtMs).toBe(-1_000_000_000_000_000 + 100_000)
   })
 
   it('W3: zero-cycle site (cycleMs = 0) drains without unbounded iteration', () => {
@@ -502,11 +501,12 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
     })
     const wallMs = performance.now() - t0
 
+    // r31-NEG-MINT/WIN-ASYM: both the pending pair and the window
+    // start are negative -> the whole feed denies verbatim in O(1).
+    expect(result.completed).toHaveLength(0)
     expect(result.pending).toHaveLength(1)
-    const due = result.pending[0]!.completesAtMs
-    expect(due).toBeGreaterThan(currentMs)
-    expect(due).toBeLessThanOrEqual(currentMs + cycleMs)
-    expect(Number.isFinite(due)).toBe(true)
+    expect(result.pending[0]).toBe(head)
+    expect(result.pending[0]!.completesAtMs).toBe(dueMs)
     expect(wallMs).toBeLessThan(500)
   })
 
