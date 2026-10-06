@@ -29,6 +29,7 @@ import {
   AlchemySystem,
   alchemyJobReservationDigest,
   alchemySecondsFor,
+  verifyAlchemyJobReservation,
 } from '../../core/alchemy/AlchemySystem'
 import type { ActiveAlchemyJob, AlchemyJobReservation } from '../../core/alchemy/AlchemySystem'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
@@ -841,17 +842,17 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
 
   // ------------------------------------------------------------------
   // F1 (sibling) - alchemy job stamps carry the SAME magnitude class.
-  // r21 pinned |stamp| >= 2^53; r22 tightened to |stamp| >= 2^52.
-  // What stays admitted is the SUB-BOUND far-future shape (4e15 <
-  // 2^52): a fully self-consistent forged job passes (digest replays,
-  // span exact, ordering holds, started <= marker) and parks its slot
-  // forever. ACCEPTED residual (r21/r22 adjudication): the park is
-  // deny-direction self-harm on the attacker's own save - no honest
-  // clock writes past ~1.8e12 but any bound at 'now' would reject
-  // honest broken-clock saves (the r15-COR-D class), so the residual
-  // band (~now, 4.5e15) can only shrink, not vanish.
+  // r21 pinned |stamp| >= 2^53; r22 tightened to |stamp| >= 2^52;
+  // r26 closed the sub-bound park arm at RESTORE: a job post-dating
+  // the restore clock is impossible-authored (admission pins
+  // startedAtMs <= lastSavedAt, so only a uniformly-shifted/crafted
+  // pair reaches here), so restoreJobs re-grounds the pair at the
+  // restore clock, preserving the exact authored span and re-deriving
+  // the reservation digest over the shifted stamps. The job resumes
+  // live in-flight instead of parking forever; the residual band
+  // (~now, 4.5e15) shrank to 'parked until the shifted span elapses'.
   // ------------------------------------------------------------------
-  it('F1 self-consistent crafted alchemy job with completesAtMs 4e15 admitted and parks forever', () => {
+  it('F1 crafted alchemy job at completesAtMs 4e15 is admitted, then re-anchored at restore', () => {
     const recipe = alchemyRecipes.find(
       (candidate) => candidate.realmId === 'mortal' && candidate.retired !== true,
     )!
@@ -901,12 +902,19 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     expect(validation.ok).toBe(true)
     if (!validation.ok) return
 
-    // Mechanism outcome: the job parks forever - every tick skips it.
+    // Mechanism outcome (r26): restore re-grounds the post-dated pair
+    // at the restore clock - the job resumes live in-flight with the
+    // authored span intact and a re-derived witness digest, instead of
+    // parking its slot forever.
     const alchemy = new AlchemySystem()
     alchemy.restoreJobs([fullJob])
     alchemy.tick(currentMs, new PillBag(), () => undefined, () => 0.5)
     expect(alchemy.getJobs()).toHaveLength(1)
-    expect(alchemy.getJobs()[0]!.completesAtMs).toBe(4e15)
+    expect(alchemy.getJobs()[0]!.startedAtMs).toBe(currentMs)
+    expect(alchemy.getJobs()[0]!.completesAtMs).toBe(currentMs + spanMs)
+    expect(
+      verifyAlchemyJobReservation(alchemy.getJobs()[0]!, recipe),
+    ).toBeNull()
     expect(alchemy.drainSettlementEvents()).toHaveLength(0)
   })
 
@@ -919,15 +927,16 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
   // broken-clock saves; the dangerous >= 2^52 arm is closed):
   //   - tribulation.cooldownUntil: admitted at <= lastSavedAt +
   //     TRIBULATION_COOLDOWN_SECONDS*1000 - a crafted 4e15 marker
-  //     admits ~4e15 cooldown; getCooldownSeconds reads vs Date.now()
-  //     (TribulationDirector.ts:802-855) -> ~128,000 years, parked.
-  //   - decompose.nextCycleAt: bounded timestamp now; a 4e15 value
-  //     parks the channel (the tick's `nextCycleAt <= nowMs` never
-  //     fires) - and the r21 O(1) jump makes even a crafted nextCycleAt
-  //     =0 settle instantly instead of ~57M no-op iterations.
+  //     admits ~4e15 cooldown; r26 clamps it at restore-now + authored
+  //     max-remaining (restoreRuntime), so the park arm is closed.
+  //   - decompose.nextCycleAt: bounded timestamp now; r26 clamps it at
+  //     restore-now + cycleMs, so the park arm is closed (and the r21
+  //     O(1) jump makes even a crafted nextCycleAt=0 settle instantly
+  //     instead of ~57M no-op iterations).
   //   - buildings[].lastCollectedAt: seconds-domain cursor, bounded
   //     timestamp now; a 4e15 value puts elapsedSeconds <= 0 forever,
-  //     parked accrual on the building channel.
+  //     parked accrual on the building channel - the cursor channels
+  //     keep the residual (no restore re-anchor exists for cursors).
   // ------------------------------------------------------------------
   it('F2 sibling deadline fields admit 4e15 - cooldown/decompose/building parks', () => {
     const withMarker = (mutate: (save: Record<string, unknown>) => void) => {

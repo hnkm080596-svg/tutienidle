@@ -96,10 +96,12 @@ import { useBootFlow } from './composables/useBootFlow'
 import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
 import { backendBundle, backendComposition, backendFatal } from './services/backend/backendBundle'
 import {
+  buildGameSave,
   deleteSave,
   restoreGameSession,
   SAVE_RESET_REQUEST_EVENT,
 } from './services/save/SaveSystem'
+import { DATA_REFUSE_CODES } from './services/session/BackendStatus'
 import {
   OnlineSessionController,
   type AuthorityState,
@@ -565,6 +567,32 @@ const lifecycle = useAppLifecycle({
 
     // B8 - non-ok save outcomes are diagnostic events (never save bytes).
     recordSaveOutcome(result, 'autosave')
+
+    // r26-INT-02/COR-3: a coded non-retryable data refuse can never
+    // commit - the same in-memory state rebuilds the same failing
+    // payload deterministically (post-dated stamps stay future until
+    // wall time reaches them), so the generic autosave-fail toast would
+    // loop forever while every write keeps refusing. Escalate to the
+    // corrupted-save surface like the boot arm does: under remote
+    // authority observeSaveResult already entered 'recovery' above and
+    // this report adds the remote-reset affordance that unwedges the
+    // row; under local the admission transition never ran at all, so
+    // the card is the only surface (scope 'local' correctly hides the
+    // remote reset - burning a remote row cannot fix a local wedge).
+    if (
+      result.status === 'unavailable'
+      && !result.retryable
+      && result.code !== undefined
+      && DATA_REFUSE_CODES.has(result.code)
+    ) {
+      let refusedPayload = ''
+      try {
+        refusedPayload = JSON.stringify(buildGameSave(player.$state, gameManager))
+      } catch {
+        refusedPayload = ''
+      }
+      saveIssue.report('corrupted', refusedPayload, undefined, remoteAuthority ? 'remote' : 'local')
+    }
 
     // Canh bao autosave fail chi 1 lan cho moi chuoi fail - reset co khi
     // ghi thanh cong lai de chuoi fail ke tiep van duoc bao.

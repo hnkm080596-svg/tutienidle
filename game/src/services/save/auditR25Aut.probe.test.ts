@@ -262,7 +262,7 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
     expect(shape.ok).toBe(true)
   })
 
-  it("R25-AUT-2 CLOSED BY GATE: the admission pin still compares to the payload's own marker, but the write-side gate refuses the self-failing write", async () => {
+  it("R25-AUT-2 CLOSED AT SOURCE: the payload still admits on its own marker, but the restore re-anchor makes the next write valid", async () => {
     const FUTURE = NOW + DAY_MS
     const save = makeSave({
       lastSavedAt: FUTURE,
@@ -277,14 +277,16 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
       ],
     })
     // Admission passes: startedAtMs (NOW+60s) <= lastSavedAt (NOW+24h).
-    // Deadline channels restore verbatim - real deadlines are preserved.
+    // r26: deadline channels re-anchor at the restore clock instead of
+    // restoring verbatim.
     expect(validateGameSaveShape(save).ok).toBe(true)
 
     const player = usePlayerStore()
     const manager = registeredManager()
     manager.setActivePlayer(player.$state)
     // ABSENT authority: elapsed = max(0, now - future) = 0 -> no settle,
-    // lanes persist verbatim.
+    // and the post-dated cycle head is re-grounded at restore-now (span
+    // preserved) instead of persisting verbatim.
     const result = restoreGameSession(player, manager, save, undefined)
     expect(result.status).toBe('ok')
     if (result.status !== 'ok') throw new Error(result.message)
@@ -293,14 +295,13 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
     const heads = (repackaged.productionSites ?? []).flatMap(
       (site) => site.workerCycles ?? [],
     )
-    expect(heads.some((cycle) => cycle.startedAtMs > NOW)).toBe(true)
+    // Re-anchored: the began-time lands at restore-now, inside the pin.
+    expect(heads.every((cycle) => cycle.startedAtMs <= NOW)).toBe(true)
     const shape = validateGameSaveShape(repackaged)
-    expect(shape.ok).toBe(false)
+    expect(shape.ok).toBe(true)
 
-    // R25-AUT-2 fixed by the write-side gate: the self-failing payload
-    // is refused inside driveSave before the service ever sees it - the
-    // healthy slot survives on both tiers (the INT probe pins the same
-    // gate on the coordinator seam).
+    // The repackaged write no longer self-fails - the gate passes it
+    // and the service sees the commit.
     let serviceSawSave = false
     const service: CloudSaveService = {
       capability: 'local-only',
@@ -315,11 +316,8 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
     const coordinator = new CloudSaveCoordinator(service)
     await coordinator.load()
     const writeResult = await coordinator.save(repackaged)
-    expect(writeResult.status).toBe('unavailable')
-    if (writeResult.status === 'unavailable') {
-      expect(writeResult.detail).toBe('OUTGOING_ADMISSION_REJECTED')
-    }
-    expect(serviceSawSave).toBe(false)
+    expect(writeResult.status).toBe('ok')
+    expect(serviceSawSave).toBe(true)
   }) 
 
   it('deny-side complement: a fully-past approved window keeps settleNowMs <= now and the round-trip re-validates', () => {

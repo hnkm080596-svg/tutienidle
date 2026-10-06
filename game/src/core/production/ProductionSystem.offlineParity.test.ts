@@ -127,11 +127,16 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     const now = start + 160_000
 
     const system = createSystem()
+    // Restore in this fixture's frame: the seeded lanes' began-times sit
+    // at/before the restore instant (a real save admits only
+    // startedAtMs <= lastSavedAt), so the r26 re-anchor leaves them
+    // untouched and the per-lane deadline assertions still hold.
     system.restoreStates(
       siteState([
         makeWorkerCycle(SITE, start, start + 100_000, 'lane_a'),
         makeWorkerCycle(SITE, start + 50_000, start + 150_000, 'lane_b'),
       ]),
+      now,
     )
 
     const settled = system.settleOffline(bag, registry, REALM, now, {
@@ -166,6 +171,7 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
         makeWorkerCycle(SITE, start + 10_000, start + 110_000, 'lane_b'),
         makeWorkerCycle(SITE, start + 20_000, start + 120_000, 'lane_c'),
       ]),
+      now,
     )
 
     const settled = system.settleOffline(bag, registry, REALM, now, {
@@ -246,7 +252,11 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     // Third absence settles the chains once more - total granted equals
     // 2 lanes x 2 completions (at +100s and +200s), no pooling residue.
     const third = createSystem()
-    third.restoreStates(structuredClone(second.getAllStates()))
+    // Restore inside the third window's frame: the chained lanes the
+    // second settle left began at T+100s/T+165s - post-dating the
+    // mocked device clock (pinned at T) but legal under a real marker -
+    // so the frame's restore instant keeps them un-anchored.
+    third.restoreStates(structuredClone(second.getAllStates()), start + 265_000)
     const settledThird = third.settleOffline(bag, registry, REALM, start + 265_000, {
       workerCapacity: 2,
       offlineSinceMs: start + 165_000,

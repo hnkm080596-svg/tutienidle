@@ -3,6 +3,7 @@ import type { GameManager } from '../core/game/GameManager'
 import type { CloudSaveCoordinator } from '../services/cloudSave/CloudSaveCoordinator'
 import type { CloudSaveWriteResult } from '../services/cloudSave/CloudSaveService'
 import type { BackendErrorCode, RemoteCharacterMetadata } from '../services/session/BackendStatus'
+import { DATA_REFUSE_CODES } from '../services/session/BackendStatus'
 import type { RestoreTimeAuthority } from '../services/save/saveTypes'
 import type { PlayerData } from '../core/player/Player'
 import { unsupportedReleaseReason } from '../core/betaScopeSurface'
@@ -36,22 +37,10 @@ import { buildGameSave } from '../services/save/SaveSystem'
  *    chay SAU onBeforeUnmount(stopAll) - listener-driven callers thi da bi
  *    go het roi nen khong co stale persist nao toi duoc do.
  */
-/** Refuse codes that arm the remote-scope save-issue surface on the boot
- *  write paths. A remote-destruction remedy is only honest for genuine
- *  DATA-CLASS refuses - the server saying "this save's content is
- *  unacceptable" (W8-AUT-1): rerolling/deleting the character is the one
- *  heal left, and the exported payload preserves the refused state. The
- *  whole SERVER_ERROR bucket (COMMITTED_MALFORMED - the save already
- *  landed; PENDING_JOURNAL codes - local faults; CHECKPOINT codes,
- *  CUTOFF_REGRESSION, MUTATION_ID_REUSED - transient authority rejections)
- *  must NOT arm: remote reset there burns a healthy row or loops the
- *  wedge. Auth/transport/protocol/config codes likewise keep their own
- *  terminal surfaces via observeSaveResult - the generic card is honest
- *  where remote reset could not help anyway. */
-const DATA_REFUSE_CODES: ReadonlySet<BackendErrorCode> = new Set([
-  'SAVE_INVALID',
-  'SAVE_TOO_LARGE',
-])
+// DATA_REFUSE_CODES moved next to the BackendErrorCode union
+// (BackendStatus.ts) - App.vue's persistPlayer escalation needs the
+// same positive-set classification, so the set lives with the type it
+// classifies instead of duplicating it here.
 
 export interface UseAppLifecycleDeps {
   clock: { start: () => void; stop: () => void; nowSeconds: () => number }

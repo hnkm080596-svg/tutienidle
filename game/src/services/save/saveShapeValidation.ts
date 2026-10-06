@@ -532,6 +532,14 @@ function validateNonNegativeIntMap(
     return
   }
 
+  // r26-AUT-2/INT-04: the map shape itself needs the same count bound
+  // every other id collection got - the entries loop alone lets a
+  // crafted map inflate the payload and re-tax every validation walk.
+  if (Object.keys(value).length > ID_COLLECTION_CAP) {
+    issues.push({ path, message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
+    return
+  }
+
   for (const [key, entry] of Object.entries(value)) {
     if (!Number.isInteger(entry) || (entry as number) < 0) {
       issues.push({ path: `${path}.${key}`, message: 'phải là int không âm' })
@@ -648,6 +656,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   // values), and spread NaN through every stat computation.
   if (!isObject(player.baseStats)) {
     issues.push({ path: 'player.baseStats', message: 'phải là object' })
+  } else if (Object.keys(player.baseStats).length > ID_COLLECTION_CAP) {
+    issues.push({ path: 'player.baseStats', message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
   } else {
     for (const [statKey, statValue] of Object.entries(player.baseStats)) {
       if (!isFiniteNumber(statValue)) {
@@ -1839,6 +1849,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
     }
   }
 
+  // r26-COR-2: the witness array itself had no count bound - cap it
+  // like every other id collection (id validity stays restore-side).
+  if (
+    isObject(player.hiddenPerfection)
+    && Array.isArray(player.hiddenPerfection.hiddenBreakthroughRealmIds)
+    && player.hiddenPerfection.hiddenBreakthroughRealmIds.length > ID_COLLECTION_CAP
+  ) {
+    issues.push({
+      path: 'player.hiddenPerfection.hiddenBreakthroughRealmIds',
+      message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})`,
+    })
+  }
+
   if (!COMBAT_AI_STRATEGIES.some((strategy) => strategy === player.combatAiStrategy)) {
     issues.push({ path: 'player.combatAiStrategy', message: 'phải thuộc COMBAT_AI_STRATEGIES' })
   }
@@ -1864,6 +1887,11 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
 
     if (!isObject(record)) {
       issues.push({ path: `player.${recordKey}`, message: 'phải là object hoặc vắng mặt' })
+      continue
+    }
+
+    if (Object.keys(record).length > ID_COLLECTION_CAP) {
+      issues.push({ path: `player.${recordKey}`, message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
       continue
     }
 
@@ -2265,6 +2293,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
 
   if (!isObject(player.nodeFreePurchaseRecord)) {
     issues.push({ path: 'player.nodeFreePurchaseRecord', message: 'phải là object' })
+  } else if (Object.keys(player.nodeFreePurchaseRecord).length > ID_COLLECTION_CAP) {
+    issues.push({ path: 'player.nodeFreePurchaseRecord', message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
   } else {
     for (const [nodeId, count] of Object.entries(player.nodeFreePurchaseRecord)) {
       if (!isNonNegativeFiniteNumber(count)) {
@@ -2293,6 +2323,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
       if (grant.learnedSkillIds !== undefined) {
         if (
           !Array.isArray(grant.learnedSkillIds) ||
+          grant.learnedSkillIds.length > ID_COLLECTION_CAP ||
           !grant.learnedSkillIds.every((id) => typeof id === 'string')
         ) {
           issues.push({

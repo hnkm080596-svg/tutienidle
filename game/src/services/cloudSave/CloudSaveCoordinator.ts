@@ -149,9 +149,15 @@ export class CloudSaveCoordinator {
     // restores its deadline channels verbatim, so the next write would
     // stamp a fresh now-lastSavedAt beneath them and brick its own
     // slot on the following boot. Fail the write instead: the healthy
-    // slot survives on both local and remote tiers; progress defers
-    // until the stamps are in-domain again (bounded deny, never a
-    // grant).
+    // slot survives on both local and remote tiers (bounded deny, never
+    // a grant). The refuse is code SAVE_INVALID + non-retryable on
+    // purpose (r26-INT-01): the same in-memory state rebuilds the same
+    // failing payload deterministically - post-dated entries do not
+    // leave the state until wall time reaches them - so 'retryable'
+    // would only mean 'try again with bytes that refuse identically'.
+    // The data-class code arms the DATA_REFUSE recovery surface
+    // (export the refused snapshot, remote reset) instead of looping
+    // generic failures forever.
     // NOTE: the gate is validateGameSaveShape only - NOT the stricter
     // isSaveAcceptable foreign-payload surface. A pre-creation-pick
     // autosave is shape-valid and loadGame-legal; requiring acceptance
@@ -169,6 +175,7 @@ export class CloudSaveCoordinator {
         status: 'unavailable',
         message: 'save không serialize được - giữ nguyên slot hiện tại',
         retryable: false,
+        code: 'SAVE_INVALID',
         detail: 'OUTGOING_UNSERIALIZABLE',
       }
     }
@@ -181,7 +188,8 @@ export class CloudSaveCoordinator {
       return {
         status: 'unavailable',
         message: 'save tự vi phạm cổng nhận - giữ nguyên slot hiện tại',
-        retryable: true,
+        retryable: false,
+        code: 'SAVE_INVALID',
         detail: 'OUTGOING_ADMISSION_REJECTED',
       }
     }

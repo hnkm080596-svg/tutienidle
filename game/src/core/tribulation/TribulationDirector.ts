@@ -840,7 +840,7 @@ export class TribulationDirector {
    * entitlement resolve nhu run moi. settlementError=true dung lai
    * marker Error de terminal-after-first-attempt semantics giu nguyen.
    */
-  restoreRuntime(slice: TribulationRuntimeSave | undefined): void {
+  restoreRuntime(slice: TribulationRuntimeSave | undefined, restoreNowMs: number = Date.now()): void {
     // Save la authoritative - restore phai replacement-complete: xoa toan
     // bo run-state khong persist (run dang chay + outcome cu cua timeline
     // truoc) truoc khi nap slice, khong de gi sot lai tu timeline cu.
@@ -852,7 +852,17 @@ export class TribulationDirector {
     this.mindFailStacks = 0
     this.mindCorrectLightningReduction = 0
     this.lightningTalentMultiplier = 1
-    this.cooldownUntil = slice?.cooldownUntil ?? 0
+    // r26-AUT-1: authored cooldown remaining never exceeds
+    // TRIBULATION_COOLDOWN_SECONDS past the restore clock (admission
+    // pins until <= lastSavedAt + authored span), so a stamp beyond
+    // that bound is uniformly-shifted crafted/skewed content - clamp
+    // it at the authored max instead of parking the channel and
+    // bricking the next save write (until > next lastSavedAt + span
+    // fails admission). Honest stamps sit below the bound untouched.
+    this.cooldownUntil = Math.min(
+      slice?.cooldownUntil ?? 0,
+      restoreNowMs + TRIBULATION_COOLDOWN_SECONDS * 1000,
+    )
     this.attemptRealmId = ''
     this.attemptSeed = 0
 

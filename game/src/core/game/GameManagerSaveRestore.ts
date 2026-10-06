@@ -346,6 +346,16 @@ export class GameManagerSaveRestore {
       }
     }
 
+    const authorityNowMs = restoreAuthorityNowMs(authority)
+
+    // r26 (COR-1/AUT-1) - persisted deadline stamps live in the CLIENT
+    // epoch, so the restore-side re-domain bound for began-time and
+    // deadline fields is min(authority window end, client now): an
+    // honest stamp can never sit past it, while a uniformly-shifted
+    // crafted/skewed payload always does. Feeds the deadline-channel
+    // clamps below (workerCycles, decompose, alchemyJobs, tribulation).
+    const restoreClockMs = Math.min(authorityNowMs, Date.now())
+
     // r16-INT-04: the reset marker lives in the FIELD's epoch -
     // checkAndResetDaily/resetDaily read and write it against
     // Date.now(). A server-epoch clamp stamp on a fast clock lands a
@@ -361,7 +371,10 @@ export class GameManagerSaveRestore {
 
     // Production (plan S4.3) - restore state + offline settle tuan tu
     // trong cap; MOI auto-cycle mot seed/roll rieng.
-    this.deps.productionSystem.restoreStates((save.productionSites ?? []) as ProductionSiteState[])
+    this.deps.productionSystem.restoreStates(
+      (save.productionSites ?? []) as ProductionSiteState[],
+      restoreClockMs,
+    )
 
     for (const definition of this.deps.productionSystem.getSiteDefinitions()) {
       this.deps.productionSystem.ensureSiteState(definition.siteId)
@@ -375,7 +388,7 @@ export class GameManagerSaveRestore {
     // the offline window under the shared cap concept, and deliver
     // output through the SAME delivery/overflow path as the tick.
     this.deps.decomposeSystem.updateCapacity(betaEffectiveWorkerCapacity(offlinePlayer?.autoWorkerCapacity ?? 0))
-    this.deps.decomposeSystem.restore(save.decompose)
+    this.deps.decomposeSystem.restore(save.decompose, restoreClockMs)
 
     // B1-D - the settle window is the authorized context, never a
     // Date.now()/lastSavedAt read of our own: 'cold-boot' accrues the
@@ -420,7 +433,6 @@ export class GameManagerSaveRestore {
     // the settle cursor at Date.now() too: dues in the skew window
     // defer to the next live tick at their real times (no loss), while
     // elapsed-driven channels still pay the full approved span.
-    const authorityNowMs = restoreAuthorityNowMs(authority)
     const settleNowMs = Math.min(
       (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
       authorityNowMs,
@@ -504,7 +516,10 @@ export class GameManagerSaveRestore {
     // Dan Phong offline settle (S8.2). B1-D: the same authorized window
     // end - a live replacement delivers only jobs already complete at the
     // snapshot, and a cold-boot window stops at the server-stamped bound.
-    this.deps.alchemySystem.restoreJobs((save.alchemyJobs ?? []) as ActiveAlchemyJob[])
+    this.deps.alchemySystem.restoreJobs(
+      (save.alchemyJobs ?? []) as ActiveAlchemyJob[],
+      restoreClockMs,
+    )
 
     this.deps.alchemySystem.settleOffline(
       this.deps.pillBag,
@@ -533,7 +548,7 @@ export class GameManagerSaveRestore {
     // F-W-5 (v82) - tribulation runtime: khoi phuc committed outcome +
     // cooldown sau khi moi slice domain da nap (director khong phu
     // thuoc thu tu domain khac nhung dat cuoi cho dung boundary).
-    this.deps.tribulationDirector.restoreRuntime(save.tribulation)
+    this.deps.tribulationDirector.restoreRuntime(save.tribulation, restoreClockMs)
 
     // F-PT-A9-1 - realm-entry rewards replay BEFORE quest lifecycle so
     // rewardOnly nodeLevels exist when eligibility is evaluated; runs on

@@ -39,3 +39,35 @@ pin the stackable span at admission (`expires - appliedAt <= K` — note
 the admission gate cannot do this one honestly: `appliedAt` keeps the
 FIRST-drink stamp while `expires` extends, so any span pin breaks honest
 chains; the restore seam is the only place the bound can live).
+
+## D-2026-10-05-02 — Honest equipment hoard can exceed ID_COLLECTION_CAP (from r26 COR-4)
+
+`player.equipment` now shares the uniform `ID_COLLECTION_CAP = 1024` admission
+bound, but an honest player can reach it: `EQUIPMENT_BAG_SOFT_CAP = 500`
+(`EquipmentBag.ts:14`) is enforced by `autoDissolveOverflow`, which only
+dissolves non-equipped/non-locked/non-favorite items. A player who locks or
+favorites >1024 accumulated items produces an honest `player.equipment` array
+the write gate refuses - every subsequent save write fails until the hoard
+dips below 1024 (self-healing but total while it holds).
+
+Reachability is edge-honest (deliberate mass locking over long play); no
+crafted path is needed - the lock/favorite flags are legitimate authored
+features. `alchemyJobs` cannot honestly overrun (`maxJobs <= 4` is itself
+validated), so equipment is the only honest-reachable capped channel found.
+
+Ruling needed (pick one):
+
+- **Hard bag cap counting locked/favorite** (e.g. equipment array hard-bounded
+  below 1024 by the bag itself): closes the wedge mechanically but changes
+  gameplay semantics - hoarding collectors lose items or cannot lock new ones.
+- **Admission carve-out for `player.equipment`** (exempt it from the count
+  cap, keep per-entry shape checks): preserves gameplay but leaves the one
+  unbounded walk the cap exists to bound (crafted self-DoS per write - the
+  same class the uniform cap closed).
+- **Accept as residual** (edge-honest, self-healing, deny-direction): no code
+  change; the wedge teaches the player to unlock items to save again - awkward
+  UX, no data loss.
+
+Coordinator note: this is the only channel where an *honest* save can
+manufacture a capped-collection refusal; every other capped channel's honest
+bound lives far below 1024.

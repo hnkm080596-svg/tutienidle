@@ -24,6 +24,23 @@ export type BackendErrorCode =
  *  get_backend_status().supportedProtocolVersions for admission. */
 export const CLIENT_PROTOCOL_VERSION = 1
 
+/** Refuse codes that arm the remote-scope save-issue surface on the
+ *  write paths. A remote-destruction remedy is only honest for genuine
+ *  DATA-CLASS refuses - the server saying "this save's content is
+ *  unacceptable" (W8-AUT-1): rerolling/deleting the character is the one
+ *  heal left, and the exported payload preserves the refused state. The
+ *  whole SERVER_ERROR bucket (COMMITTED_MALFORMED - the save already
+ *  landed; PENDING_JOURNAL codes - local faults; CHECKPOINT codes,
+ *  CUTOFF_REGRESSION, MUTATION_ID_REUSED - transient authority rejections)
+ *  must NOT arm: remote reset there burns a healthy row or loops the
+ *  wedge. Auth/transport/protocol/config codes likewise keep their own
+ *  terminal surfaces via observeSaveResult - the generic card is honest
+ *  where remote reset could not help anyway. */
+export const DATA_REFUSE_CODES: ReadonlySet<BackendErrorCode> = new Set([
+  'SAVE_INVALID',
+  'SAVE_TOO_LARGE',
+])
+
 export interface BackendStatus {
   contractPhase: string
   protocolVersion: number

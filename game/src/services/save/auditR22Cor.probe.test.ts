@@ -242,7 +242,6 @@ describe('auditR22 COR probe - decompose O(1) jump vs r20 stepping loop', () => 
     ['crafted-future offlineSince forces end > n0', 1_000_000_000_000, 1_000_000_100_000, 1_000_000_000_005],
     ['cap window pin (10h) dominates deep-past n0', 0, NOW, 0],
     ['n0 inside settle window: all dues complete', NOW - 150_000, NOW, NOW - 600_000],
-    ['sub-pin admitted huge n0 stays parked', 9e15, NOW, 0],
     ['fractional remainder c-1 below boundary', 1, NOW, 0],
     ['n0 one ms after cap edge', NOW - 36_000_001, NOW, NOW - 36_000_001],
     ['n0 exactly at cap edge', NOW - 36_000_000, NOW, NOW - 36_000_000],
@@ -255,6 +254,27 @@ describe('auditR22 COR probe - decompose O(1) jump vs r20 stepping loop', () => 
     const old = simulateOldStepping(n0Clamped, DECOMPOSE_CYCLE_MS, nowMs, offlineSince)
     expect(real.landed).toBe(old.landed)
     expect(real.settled).toBe(old.settled)
+  })
+
+  it('r26: a sub-pin huge n0 re-anchors at restore-now + cycleMs instead of parking', () => {
+    // The 'stays parked' arm is closed: restore clamps a post-dated
+    // nextCycleAt at restore-now + cycleMs (authored max-remaining -
+    // a fire can never owe more than one cycle), so a 9e15 stamp
+    // resumes the channel at the authored deadline instead of idling
+    // it until Delta and self-bricking every write past it.
+    const system = new DecomposeSystem(new MaterialBag(), {
+      cycleSeconds: DECOMPOSE_CYCLE_MS / 1000,
+    })
+    system.updateCapacity(4)
+    system.restore(
+      {
+        started: true,
+        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+        nextCycleAt: 9e15,
+      },
+      NOW,
+    )
+    expect(system.getSaveState().nextCycleAt).toBe(NOW + DECOMPOSE_CYCLE_MS)
   })
 
   it('cycleMs = 0: new arm exits bounded (old stepping hung forever)', () => {

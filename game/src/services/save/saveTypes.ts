@@ -298,8 +298,16 @@ export function restoreAuthorityNowMs(timeAuthority?: RestoreTimeAuthority): num
 export function sanitizeRestoreAuthority(
   timeAuthority?: RestoreTimeAuthority,
 ): RestoreTimeAuthority | undefined {
+  // r26-COR-N1: null is not in the declared type but a JS caller can
+  // still hand it in - `null.kind` throws, so guard before the kind
+  // read. A nullish non-undefined value degrades to the deny primitive
+  // like every other corrupt authority, not to `undefined` (the absent
+  // case above stays strictly undefined-only).
   if (timeAuthority === undefined) {
     return undefined
+  }
+  if (timeAuthority === null) {
+    return { kind: 'live-replacement', nowMs: Date.now() }
   }
   // r25-AUT-4: whitelist the kind explicitly - an unrecognized kind
   // (runtime-crafted authority, future kind added without updating

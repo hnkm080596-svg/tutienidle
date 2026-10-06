@@ -126,7 +126,7 @@ export class ProductionSystem {
    * live state (A3). Whitelisted fields only - legacy keys (e.g. the
    * removed `activeCycle`) are dropped here, not migrated.
    */
-  restoreStates(states: ProductionSiteState[]): void {
+  restoreStates(states: ProductionSiteState[], restoreNowMs: number = Date.now()): void {
     this.states.clear()
 
     for (const state of states) {
@@ -144,7 +144,25 @@ export class ProductionSystem {
         autoRestart: state.autoRestart,
         activeWorkerSlots: state.activeWorkerSlots ?? 0,
         assignedWorkers: state.assignedWorkers,
-        workerCycles: (state.workerCycles ?? []).map((cycle) => ({ ...cycle })),
+        workerCycles: (state.workerCycles ?? []).map((cycle) => {
+          // r26-COR-1/AUT-1: a cycle head post-dating the restore clock
+          // is impossible-authored - startedAtMs is a began-time pinned
+          // <= lastSavedAt at admission, so only a uniformly-shifted
+          // (skewed-clock/crafted) pair reaches here. Re-ground it at the
+          // restore clock, shifting completesAtMs by the same delta so
+          // the authored span stays exact: the lane resumes as a live
+          // in-flight cycle instead of idling past the next save marker
+          // and self-bricking every write. Honest stamps are untouched.
+          if (cycle.startedAtMs > restoreNowMs) {
+            const shiftMs = cycle.startedAtMs - restoreNowMs
+            return {
+              ...cycle,
+              startedAtMs: cycle.startedAtMs - shiftMs,
+              completesAtMs: cycle.completesAtMs - shiftMs,
+            }
+          }
+          return { ...cycle }
+        }),
         hiddenChannelCycles: state.hiddenChannelCycles
           ? { ...state.hiddenChannelCycles }
           : undefined,

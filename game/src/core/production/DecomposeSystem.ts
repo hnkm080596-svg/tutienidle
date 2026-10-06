@@ -229,7 +229,7 @@ export class DecomposeSystem {
    * window keeps the advanced timer, so the offline settle cannot
    * award twice.
    */
-  restore(state: DecomposeSaveState | undefined): void {
+  restore(state: DecomposeSaveState | undefined, restoreNowMs: number = Date.now()): void {
     const source: DecomposeSaveState = state ?? {
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
       nextCycleAt: 0,
@@ -255,8 +255,18 @@ export class DecomposeSystem {
         ? Math.min(Math.max(0, Math.floor(restoredWorkers)), this.capacity)
         : 0,
     }
+    // r26-AUT-3: re-anchor like autofarm.lastCheckedMs - an authored
+    // next-cycle can sit at most one cycleMs past the restore clock
+    // (it was stamped at last fire + cycleMs, fire <= marker <= now),
+    // so anything beyond restore-now + cycleMs is impossible content,
+    // not a deadline. Without the cap a crafted future stamp idles the
+    // channel until Delta and self-bricks every save write past it;
+    // the tick already rebases the same way (:177-178).
     this.nextCycleAt = Number.isFinite(restoredDeadline)
-      ? Math.max(this.nextCycleAt, Math.max(0, restoredDeadline))
+      ? Math.max(
+          this.nextCycleAt,
+          Math.min(Math.max(0, restoredDeadline), restoreNowMs + this.cycleMs),
+        )
       : this.nextCycleAt
     this.started = this.started || Boolean(source.started)
   }

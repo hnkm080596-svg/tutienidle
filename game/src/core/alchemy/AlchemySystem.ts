@@ -355,14 +355,41 @@ export class AlchemySystem {
    * the payload is a value, so mutating it afterwards must not leak into
    * live state (A3).
    */
-  restoreJobs(jobs: ActiveAlchemyJob[]): void {
-    this.jobs = jobs.map((job) => ({
-      ...job,
-      reservation: {
-        ...job.reservation,
-        specialIngredients: (job.reservation?.specialIngredients ?? []).map((special) => ({ ...special })),
-      },
-    }))
+  restoreJobs(jobs: ActiveAlchemyJob[], restoreNowMs: number = Date.now()): void {
+    this.jobs = jobs.map((job) => {
+      // r26-COR-1/AUT-1: a job post-dating the restore clock is
+      // impossible-authored - startedAtMs is a began-time pinned
+      // <= playerLastSavedAt at admission, so only a uniformly-shifted
+      // (skewed-clock/crafted) pair reaches here. Re-ground it at the
+      // restore clock, shifting completesAtMs by the same delta so the
+      // authored span stays exact: the job resumes as live in-flight
+      // instead of idling past the next save marker and self-bricking
+      // every write. Honest stamps are untouched.
+      if (job.startedAtMs > restoreNowMs) {
+        const shiftMs = job.startedAtMs - restoreNowMs
+        const shifted = { ...job, startedAtMs: job.startedAtMs - shiftMs, completesAtMs: job.completesAtMs - shiftMs }
+        job = job.reservation === undefined
+          ? shifted
+          : {
+              ...shifted,
+              // The reservation digest folds startedAtMs/completesAtMs
+              // into the witness - re-derive it over the shifted stamps
+              // so the witness still replays. Safe: an attacker could
+              // always self-consistent-digest (documented residual).
+              reservation: {
+                ...job.reservation,
+                digest: alchemyJobReservationDigest(shifted, job.reservation),
+              },
+            }
+      }
+      return {
+        ...job,
+        reservation: {
+          ...job.reservation,
+          specialIngredients: (job.reservation?.specialIngredients ?? []).map((special) => ({ ...special })),
+        },
+      }
+    })
   }
 
   getJobs(): ActiveAlchemyJob[] {

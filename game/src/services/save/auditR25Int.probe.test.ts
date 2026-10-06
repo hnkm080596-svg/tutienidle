@@ -234,7 +234,7 @@ describe('seam (c) - payload-seeded future stamps self-brick the next write', ()
     vi.restoreAllMocks()
   })
 
-  it('consistent +Δ stamps pass admission, restore verbatim, and the next buildGameSave fails validation', () => {
+  it('consistent +Δ stamps pass admission, re-anchor at restore, and the next buildGameSave stays valid', () => {
     const DELTA = HOUR_MS
     const player = usePlayerStore()
     const manager = registeredManager()
@@ -279,33 +279,33 @@ describe('seam (c) - payload-seeded future stamps self-brick the next write', ()
     const result = restoreGameSession(player, manager, save)
     expect(result.status).toBe('ok')
 
-    // Deadline channels restore VERBATIM at +Δ - no reader-side clamp.
+    // r26: deadline channels RE-ANCHOR at the restore clock - the
+    // coverage gap is closed. The post-dated cycle head shifts its
+    // pair to startedAt=now (span preserved); the post-dated cooldown
+    // clamps at the authored max-remaining (now + 300s).
     const site = manager.productionSystem
       .getAllStates()
       .find((state) => state.siteId === 'thanh_van_lam')
-    expect(site?.workerCycles?.[0]?.startedAtMs).toBe(NOW + DELTA - MORTAL_CYCLE_MS)
-    expect(site?.workerCycles?.[0]?.completesAtMs).toBe(NOW + DELTA)
+    expect(site?.workerCycles?.[0]?.startedAtMs).toBe(NOW)
+    expect(site?.workerCycles?.[0]?.completesAtMs).toBe(NOW + MORTAL_CYCLE_MS)
     expect(manager.tribulationDirector.serializeRuntime()?.cooldownUntil).toBe(
-      NOW + DELTA + 120_000,
+      NOW + 300_000,
     )
 
-    // Healed sibling: the same +Δ shift on lastDailyResetAtMs clamps to
-    // now at restore - this stamp would NOT brick the next write. The
-    // asymmetry (healed vs verbatim) is the coverage gap.
+    // The healed sibling and the re-anchored deadlines now behave the
+    // same way - every restored stamp sits at/below its authored
+    // bound, so no asymmetry remains.
     expect(manager.questManager.getState().lastDailyResetAtMs).toBeLessThanOrEqual(NOW)
 
-    // Next honest write: lastSavedAt = Date.now() = NOW < the
-    // verbatim-restored head stamps -> the reader pins reject the
-    // app-written payload.
+    // Next honest write: lastSavedAt = Date.now() = NOW - every
+    // re-anchored stamp sits inside its pin, so the app-written
+    // payload validates (the self-brick class is gone at the source).
     const repacked = buildGameSave(player.$state, manager)
     const verdict = validateGameSaveShape(repacked)
-    expect(verdict.ok).toBe(false)
-    const paths = verdict.ok ? [] : verdict.issues.map((issue) => issue.path)
-    expect(paths.some((path) => path.includes('startedAtMs'))).toBe(true)
-    expect(paths.some((path) => path.includes('tribulation'))).toBe(true)
+    expect(verdict.ok).toBe(true)
   })
 
-  it('the write-side gate refuses that self-failing payload before it reaches the service (R25-INT-01 fixed)', async () => {
+  it('the write-side gate commits the re-anchored payload - self-failure is gone at the source', async () => {
     const DELTA = HOUR_MS
     const player = usePlayerStore()
     const manager = registeredManager()
@@ -336,9 +336,10 @@ describe('seam (c) - payload-seeded future stamps self-brick the next write', ()
     restoreGameSession(player, manager, save)
     const repacked = buildGameSave(player.$state, manager)
 
-    // The coordinator's write-side admission gate: a payload the boot
-    // gate would reject is refused BEFORE service.save runs - the
-    // healthy slot (local or remote) is never overwritten.
+    // r26: the restored deadline stamps re-anchored at the restore
+    // clock, so the repackaged payload no longer self-fails - the
+    // coordinator's write-side admission gate passes it and the write
+    // reaches the service.
     let serviceSawSave = false
     const service: CloudSaveService = {
       capability: 'local-only',
@@ -354,11 +355,8 @@ describe('seam (c) - payload-seeded future stamps self-brick the next write', ()
     await coordinator.load()
     const result = await coordinator.save(repacked)
 
-    expect(result.status).toBe('unavailable')
-    if (result.status === 'unavailable') {
-      expect(result.detail).toBe('OUTGOING_ADMISSION_REJECTED')
-    }
-    expect(serviceSawSave).toBe(false)
+    expect(result.status).toBe('ok')
+    expect(serviceSawSave).toBe(true)
 
     // A clean payload passes the same gate untouched.
     const clean = makeSave({ lastSavedAt: NOW })
