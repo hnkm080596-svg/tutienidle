@@ -118,14 +118,33 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
   // non-finite emptyLaneStartMs or pending due hangs the same way
   // (NaN due never breaks the loop, respawns NaN forever) - upstream
   // pins keep every input finite, this guard is for future callers.
-  // Zero-advance result: the in-flight lanes are preserved untouched
-  // (no completions, no respawns, no empty-lane seeding).
+  // r20-AUT: the ordering pin too - a reversed/zero span
+  // (completesAtMs <= startedAtMs) computes headCost = 0 and would
+  // grant a free completion per entry; the validator rejects the same
+  // shape upstream (F-A11-4). r20-COR-1/2: magnitude + slots pins -
+  // |stamp| >= 2^53 makes stamp + cycleMs absorb back into stamp in
+  // float64 (headCost = 0 forever, dues never reach nowMs: an
+  // unbounded settle loop a crafted deep-past lastSavedAt could reach
+  // through the window start, and the same absorb can sit inside a
+  // crafted pending pair at mechanism level), and non-finite slots
+  // makes the seed loop push lanes forever. Honest stamps stay under
+  // ~1.8e12 ms, far inside the exact-integer domain. Zero-advance
+  // result: the in-flight lanes are preserved untouched (no
+  // completions, no respawns, no empty-lane seeding).
   if (
     !Number.isFinite(nowMs) ||
+    !Number.isFinite(slots) ||
     (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs)) ||
-    (params.emptyLaneStartMs !== undefined && !Number.isFinite(params.emptyLaneStartMs)) ||
+    (params.emptyLaneStartMs !== undefined &&
+      (!Number.isFinite(params.emptyLaneStartMs) ||
+        Math.abs(params.emptyLaneStartMs) >= 2 ** 53)) ||
     params.pending.some(
-      (cycle) => !Number.isFinite(cycle.completesAtMs) || !Number.isFinite(cycle.startedAtMs),
+      (cycle) =>
+        !Number.isFinite(cycle.completesAtMs) ||
+        !Number.isFinite(cycle.startedAtMs) ||
+        cycle.completesAtMs <= cycle.startedAtMs ||
+        Math.abs(cycle.completesAtMs) >= 2 ** 53 ||
+        Math.abs(cycle.startedAtMs) >= 2 ** 53,
     )
   ) {
     return {

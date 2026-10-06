@@ -611,8 +611,10 @@ export const usePlayerStore = defineStore('player', {
       // restored copy clears here and repopulates on the next tick.
       restoredPlayer.externalModifiers = []
       // r12-COR: bound the wall-clock window a persisted timed effect
-      // may claim - shared helper above (r13-INT-01/02: seconds-domain
-      // honest ceilings; stackable chains keep their forward expiry).
+      // may claim - boundTimedEffectClocks above (r13-INT-01/02:
+      // seconds-domain honest ceilings; stackable chains keep their
+      // forward expiry). The sibling payoutExpiresAtMs runs the
+      // payout-epoch bound in the offline-pay map.
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
           ...boundTimedEffectClocks(

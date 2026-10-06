@@ -434,7 +434,7 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
   })
 })
 
-describe('advanceWorkerLanes — non-finite input guard (r19-AUT hardening)', () => {
+describe('advanceWorkerLanes — defensive input guard (r19/r20-AUT/COR hardening)', () => {
   const baseParams = {
     siteId: LAM,
     collectionRealmId: REALM,
@@ -474,5 +474,80 @@ describe('advanceWorkerLanes — non-finite input guard (r19-AUT hardening)', ()
     expect(result.completed).toHaveLength(0)
     expect(result.pending).toEqual([saved])
     expect(result.forfeited).toBe(0)
+  })
+
+  // r20-AUT: a reversed/zero span computes headCost = 0 and would grant
+  // a free completion per entry - the validator's F-A11-4 ordering pin
+  // rejects the shape upstream; the mechanism guard mirrors it.
+  it('returns zero-advance when a pending span is reversed or zero', () => {
+    const reversed = { ...makeCycle(LAM, T0 + 100_000, T0) }
+    const zeroSpan = { ...makeCycle(LAM, T0, T0) }
+
+    for (const saved of [reversed, zeroSpan]) {
+      const result = advanceWorkerLanes({
+        ...baseParams,
+        pending: [saved],
+        emptyLaneStartMs: T0,
+      })
+
+      expect(result.completed).toHaveLength(0)
+      expect(result.pending).toEqual([saved])
+      expect(result.forfeited).toBe(0)
+    }
+  })
+
+  // r20-COR-1: at |stamp| >= 2^53 float64 absorbs stamp + cycleMs back
+  // into stamp - headCost = 0 forever, dues never reach nowMs, an
+  // unbounded settle loop. A crafted deep-past lastSavedAt reaches
+  // this through the window start; the validator only pins isFinite.
+  it('returns zero-advance when emptyLaneStartMs exceeds the exact-integer domain', () => {
+    const saved = { ...makeCycle(LAM, T0, T0 + 100_000) }
+
+    for (const start of [-1e308, -(2 ** 53), 2 ** 53, 1e308]) {
+      const result = advanceWorkerLanes({
+        ...baseParams,
+        pending: [saved],
+        emptyLaneStartMs: start,
+      })
+
+      expect(result.completed).toHaveLength(0)
+      expect(result.pending).toEqual([saved])
+      expect(result.seededPending).toHaveLength(0)
+    }
+  })
+
+  it('returns zero-advance when a pending stamp exceeds the exact-integer domain', () => {
+    const deepDue = { ...makeCycle(LAM, -(2 ** 53) - 200_000, -(2 ** 53) - 100_000) }
+    const deepStart = { ...makeCycle(LAM, 1e21, 1e21 + 100_000) }
+
+    for (const saved of [deepDue, deepStart]) {
+      const result = advanceWorkerLanes({
+        ...baseParams,
+        pending: [saved],
+        emptyLaneStartMs: T0,
+      })
+
+      expect(result.completed).toHaveLength(0)
+      expect(result.pending).toEqual([saved])
+    }
+  })
+
+  // r20-COR-2: non-finite slots makes the seed loop push lanes
+  // forever; only non-finite is rejected (0 or negative stays legal -
+  // lanes still settle their dues, they just never respawn).
+  it('returns zero-advance when slots is non-finite', () => {
+    const saved = { ...makeCycle(LAM, T0, T0 + 100_000) }
+
+    for (const slots of [Number.POSITIVE_INFINITY, Number.NaN]) {
+      const result = advanceWorkerLanes({
+        ...baseParams,
+        slots,
+        pending: [saved],
+        emptyLaneStartMs: T0,
+      })
+
+      expect(result.completed).toHaveLength(0)
+      expect(result.pending).toEqual([saved])
+    }
   })
 })
