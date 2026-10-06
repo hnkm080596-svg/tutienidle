@@ -33,6 +33,7 @@ import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { layoutRadialGraph } from '@/components/panels/skill-path/skillGraphLayout'
+import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import {
   constellationPointsById,
   skillConstellationLayoutFor,
@@ -42,6 +43,7 @@ import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import type { ElementType } from '@/core/element/ElementType'
 import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
+import type { Skill } from '@/core/skill/Skill'
 import SkillFidelityScene from './fidelity/SkillFidelityScene.vue'
 import type { SkillUiEdge, SkillUiElement, SkillUiNode } from './fidelity/skillUi'
 
@@ -267,6 +269,56 @@ function nodeIcon(node: ProgressionNode): string {
     : FALLBACK_ICON
 }
 
+// Detail-card stat rows (Minh's block order: level -> xp -> stats ->
+// conditions -> description). Reads the live Skill template's trigger
+// actions + legacy effects so the card reports real combat numbers.
+function skillStatRows(skill: Skill | undefined): { id: string; label: string; value: string }[] {
+  if (skill === undefined) return []
+  const rows: { id: string; label: string; value: string }[] = []
+  const push = (label: string, value: string) => rows.push({ id: `stat-${rows.length}`, label, value })
+  const damageSuffix = (damageType: 'physical' | 'primordial' | undefined) =>
+    damageType === 'physical'
+      ? ` ${t('skill.damageTypePhysical')}`
+      : damageType === 'primordial'
+        ? ` ${t('skill.damageTypePrimordial')}`
+        : ''
+  const ailmentLine = (buffId: string, chance: number | undefined) => {
+    const name = BUFF_REGISTRY.tryGet(buffId)?.name ?? buffId
+    const pct = chance === undefined ? '100%' : `${Math.round(chance * 100)}%`
+    push(t('skill.statAilmentChance'), `${pct} ${name}`)
+  }
+  for (const binding of skill.triggers ?? []) {
+    for (const action of binding.actions) {
+      if (action.type === 'dealDamage') {
+        push(t('skill.statDamage'), `x${formatNumber(action.value ?? 0)}${damageSuffix(action.damageType)}`)
+      } else if (action.type === 'applyBuff' || action.type === 'applyDebuff') {
+        ailmentLine(action.buffId, action.chance)
+      } else if (action.type === 'heal') {
+        push(t('skill.statHeal'), `x${formatNumber(action.value ?? 0)}`)
+      }
+    }
+  }
+  for (const effect of skill.effects) {
+    if (effect.type === 'damage') {
+      push(t('skill.statDamage'), `x${formatNumber(effect.value ?? 0)}${damageSuffix(effect.damageType)}`)
+      if (effect.ailmentChance !== undefined && effect.buffId !== undefined) {
+        ailmentLine(effect.buffId, effect.ailmentChance)
+      }
+    } else if (effect.type === 'debuff' && effect.buffId !== undefined) {
+      ailmentLine(effect.buffId, effect.ailmentChance)
+    } else if (effect.type === 'heal') {
+      push(t('skill.statHeal'), `x${formatNumber(effect.value ?? 0)}`)
+    }
+  }
+  if (skill.execution?.kind === 'cooldown') {
+    push(t('skill.statCooldown'), `${formatNumber(skill.cooldown)}s`)
+  }
+  if (skill.cost !== undefined && skill.resourceType !== undefined && skill.resourceType !== 'none') {
+    push(t('skill.statCost'), `${formatNumber(skill.cost)} ${skill.resourceType}`)
+  }
+  return rows
+}
+
 // Info-anchor presentation: the node's seat renders the LIVE skill
 // state (template + core level + cast progress) and never an action -
 // the skill's own channel owns leveling, Insight is not an input.
@@ -304,17 +356,11 @@ function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphE
     level: `${coreLevel} / ${maxLevel}`,
     state: isActiveBasic ? 'learned' : 'locked',
     description: skill?.description ?? row.description ?? '',
-    rows: [
-      { id: 'level', label: t('skill.levelLabel'), value: `${coreLevel} / ${maxLevel}` },
-      {
-        id: 'casts',
-        label: t('skill.infoCasts'),
-        value:
-          nextThreshold !== undefined
-            ? `${formatNumber(casts)} / ${formatNumber(nextThreshold)}`
-            : formatNumber(casts),
-      },
-    ],
+    experience:
+      nextThreshold !== undefined
+        ? `${formatNumber(casts)} / ${formatNumber(nextThreshold)}`
+        : formatNumber(casts),
+    stats: skillStatRows(skill),
     conditions: [t('panels.skillPath.nodeInspector.infoOnly')],
     costLabel: '',
     actionLabel: '',
@@ -344,9 +390,8 @@ function grantUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: Graph
     level: `${row.level} / ${row.maxLevel}`,
     state: owned ? 'learned' : 'locked',
     description: row.description ?? '',
-    rows: [
-      { id: 'level', label: t('skill.levelLabel'), value: `${row.level} / ${row.maxLevel}` },
-    ],
+    experience: '',
+    stats: row.grantsSkillIds.map((skillId, i) => ({ id: `grant-${i}`, label: t('skill.grants'), value: skillName(skillId) })),
     conditions: [t('panels.skillPath.nodeInspector.grantOnly')],
     costLabel: '',
     actionLabel: '',
@@ -406,10 +451,8 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     level: `${row.level} / ${row.maxLevel}`,
     state,
     description: row.description ?? '',
-    rows: [
-      { id: 'level', label: t('skill.levelLabel'), value: `${row.level} / ${row.maxLevel}` },
-      ...row.grantsSkillIds.map((skillId, i) => ({ id: `grant-${i}`, label: t('skill.grants'), value: skillName(skillId) })),
-    ],
+    experience: '',
+    stats: row.grantsSkillIds.map((skillId, i) => ({ id: `grant-${i}`, label: t('skill.grants'), value: skillName(skillId) })),
     conditions,
     costLabel,
     actionLabel,

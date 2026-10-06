@@ -36,7 +36,8 @@ const nodes = computed<SkillUiNode[]>(() => {
   const make = (id: string, name: string, x: number, y: number, state: SkillUiNode['state'], level: string): SkillUiNode => ({
     id, name, icon, x, y, state, level,
     description: id === 'root' && element.value === 'fire' ? t('fireDescription') : t('description'),
-    rows: [{ id: 'level', label: t('level'), value: level }, { id: 'effect', label: t('effect'), value: t('effectValue') }],
+    experience: '1.240 / 2.500',
+    stats: [{ id: 'effect', label: t('effect'), value: t('effectValue') }],
     conditions: state === 'locked' ? [t('lockedHint')] : [],
     costLabel: state === 'learned' ? '' : t('costSample'),
     actionLabel: state === 'learned' ? '' : state === 'available' ? t('upgrade') : t('upgrade'),

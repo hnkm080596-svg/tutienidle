@@ -11,7 +11,12 @@ export interface SkillUiNode {
   level: string
   state: 'learned' | 'available' | 'locked'
   description: string
-  rows: readonly { id: string; label: string; value: string }[]
+  /** XP line under level in the detail card ('' = row hidden). Cast-leveled
+   *  skills report "casts / next threshold"; insight-priced nodes have no
+   *  per-node XP channel so they stay ''. */
+  experience: string
+  /** Combat/effect stat rows - damage, ailment chance, granted skills. */
+  stats: readonly { id: string; label: string; value: string }[]
   /** Unmet purchase/level gate lines for the conditions block. */
   conditions: readonly string[]
   /** Cost line under the action button ('' = hidden). */

@@ -13,11 +13,15 @@ const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/charac
     <header v-if="node"><img :src="node.icon" alt=""><div><h2>{{ node.name }}</h2><p>{{ node.level }} · {{ t(`skill.state.${node.state}`) }}</p></div></header>
     <div class="skill-detail-body">
       <template v-if="node">
-        <p class="skill-description">{{ node.description }}</p>
-        <template v-if="node.rows.length"><h3>{{ t('skill.effects') }}</h3><dl><div v-for="row in node.rows" :key="row.id"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div></dl></template>
+        <dl class="skill-primary">
+          <div><dt>{{ t('skill.level') }}</dt><dd>{{ node.level }}</dd></div>
+          <div v-if="node.experience !== ''"><dt>{{ t('skill.experience') }}</dt><dd>{{ node.experience }}</dd></div>
+        </dl>
+        <template v-if="node.stats.length"><h3>{{ t('skill.stats') }}</h3><dl><div v-for="row in node.stats" :key="row.id"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div></dl></template>
         <h3>{{ t('skill.conditions') }}</h3>
         <p v-for="(line, i) in node.conditions" :key="i" class="skill-condition">{{ line }}</p>
         <p v-if="!node.conditions.length" class="skill-condition">{{ t('skill.noConditions') }}</p>
+        <p class="skill-description skill-description--footer">{{ node.description }}</p>
       </template>
       <p v-else class="skill-description">{{ t('panels.skillPath.nodeInspector.empty') }}</p>
     </div>
@@ -37,7 +41,7 @@ header img { width:61px; height:61px; border:3px double #a6813a; border-radius:5
 .skill-detail-card h2 { margin:0 0 9px; font-size:25px; line-height:1.2; font-weight:500; color:#f3e0b5; }header p { margin:0; color:#b3a077; font-size:14px; }
 .skill-detail-body { min-height:0; flex:1; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; padding-right:5px; }
 .skill-detail-body::-webkit-scrollbar { display:none; }
-.skill-description { font-size:16px; line-height:1.7; color:#d8c49a; margin:20px 0; }h3 { margin:22px 0 12px; padding-top:13px; border-top:1px solid #8a713c55; font-size:20px; font-weight:500; color:#f0d9a0; }
+.skill-description { font-size:16px; line-height:1.7; color:#d8c49a; margin:20px 0; }.skill-description--footer { margin:22px 0 0; padding-top:13px; border-top:1px solid #8a713c55; }.skill-primary { margin-top:14px; }h3 { margin:22px 0 12px; padding-top:13px; border-top:1px solid #8a713c55; font-size:20px; font-weight:500; color:#f0d9a0; }
 dl { margin:0; font-size:15px; }dl > div { display:flex; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px solid #8a713c33; }dt { color:#cbb585; }dd { margin:0; color:#f0d9a0; text-align:right; }
 .skill-condition { font-size:15px; line-height:1.6; margin:0 0 6px; color:#b3a077; }
 .skill-actions { flex:none; padding-top:14px; border-top:1px solid #8a713c55; }
