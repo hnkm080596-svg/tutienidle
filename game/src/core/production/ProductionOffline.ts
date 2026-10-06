@@ -149,7 +149,8 @@ function settleWorkersOffline(
     // M11 (ARCH-007) - per-lane advancement via the SAME mechanism as
     // tickWorkers (advanceWorkerLanes): each lane completes on its OWN
     // deadline; pending cycles keep their lane + original deadline;
-    // empty lanes produce only from the save instant (offlineSinceMs).
+    // empty lanes produce only from the authorized window start
+    // (offlineSinceMs).
     // No floor(windowMs * slots / cycleMs) pooling across lanes.
     // Completions over the budget are forfeited - past-due backlog is
     // never left behind for a free online grant outside the cap.

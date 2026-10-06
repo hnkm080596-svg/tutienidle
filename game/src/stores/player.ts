@@ -104,9 +104,9 @@ const SIGNATURE_SEPARATOR = '\u0001'
  * lastSavedAt + TU_LINH_TRAN_DURATION_MS is an impossible claim - a
  * forged far-future deadline on a stale save clamps to the provenance
  * bound instead of minting real buff time past trusted-now + dur.
- * Shared by the offline-payout read and the persistentTimedEffects
- * restore map so crafted spans cannot feed the settlement seam
- * through a raw copy.
+ * Used by the persistentTimedEffects restore map (the offline-payout
+ * read runs the sibling payoutExpiresAtMs bound, payload epoch) so
+ * crafted spans cannot feed the settlement seam through a raw copy.
  */
 function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: number; durationStackable?: boolean }>(
   effect: T,
@@ -395,8 +395,10 @@ export const usePlayerStore = defineStore('player', {
       // the same seconds->cultivation conversion authority.
       // r13-INT-03: read the BOUNDED payout copy - a crafted oversized
       // span otherwise pays its boost over window stretches no
-      // authored duration could cover (same bound as the restore map
-      // below). The payout copy keeps each record's own death POSITION
+      // authored duration could cover (the payout-epoch sibling of the
+      // restore map's bound: lastSavedAt + dur vs provenance + dur -
+      // equal whenever a payout can run, strictly tighter under a fast
+      // clock). The payout copy keeps each record's own death POSITION
       // for the split (a buff honestly dying mid-window still pays its
       // live part); only live claims clamp, so segments stay
       // consistent with what was actually live.

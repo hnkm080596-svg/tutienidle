@@ -21,6 +21,7 @@ import {
   type ProductionOfflineDeps,
   type ProductionOfflineOptions,
 } from './ProductionOffline'
+import { advanceWorkerLanes } from './WorkerLaneAdvance'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
   PRODUCTION_OFFLINE_CAP_SECONDS,
@@ -430,5 +431,48 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
     expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
       41_100_000,
     ])
+  })
+})
+
+describe('advanceWorkerLanes — non-finite input guard (r19-AUT hardening)', () => {
+  const baseParams = {
+    siteId: LAM,
+    collectionRealmId: REALM,
+    siteLevel: 1,
+    baseSeconds: 100,
+    cycleMs: 100_000,
+    slots: 1,
+    nowMs: T0 + 300_000,
+    advanceMode: 'deadline' as const,
+    budgetMs: 36_000_000,
+  }
+
+  // A NaN due never breaks the settle loop (NaN > nowMs is always
+  // false) and respawns NaN forever - the guard returns the in-flight
+  // lanes untouched instead of hanging deadline mode.
+  it('returns zero-advance when emptyLaneStartMs is NaN', () => {
+    const result = advanceWorkerLanes({
+      ...baseParams,
+      pending: [],
+      emptyLaneStartMs: Number.NaN,
+    })
+
+    expect(result.completed).toHaveLength(0)
+    expect(result.pending).toHaveLength(0)
+    expect(result.seededPending).toHaveLength(0)
+    expect(result.forfeited).toBe(0)
+  })
+
+  it('returns zero-advance when a pending due is non-finite', () => {
+    const saved = { ...makeCycle(LAM, Number.NaN, Number.NaN) }
+    const result = advanceWorkerLanes({
+      ...baseParams,
+      pending: [saved],
+      emptyLaneStartMs: T0,
+    })
+
+    expect(result.completed).toHaveLength(0)
+    expect(result.pending).toEqual([saved])
+    expect(result.forfeited).toBe(0)
   })
 })

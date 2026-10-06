@@ -114,12 +114,19 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
 
   // Defensive guard: a non-finite clock or budget can never advance a
   // lane - 'deadline' mode would loop forever because dueMs > NaN and
-  // dueMs > Infinity are both always false. Zero-advance result: the
-  // in-flight lanes are preserved untouched (no completions, no
-  // respawns, no empty-lane seeding).
+  // dueMs > Infinity are both always false. r19-AUT hardening: a
+  // non-finite emptyLaneStartMs or pending due hangs the same way
+  // (NaN due never breaks the loop, respawns NaN forever) - upstream
+  // pins keep every input finite, this guard is for future callers.
+  // Zero-advance result: the in-flight lanes are preserved untouched
+  // (no completions, no respawns, no empty-lane seeding).
   if (
     !Number.isFinite(nowMs) ||
-    (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs))
+    (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs)) ||
+    (params.emptyLaneStartMs !== undefined && !Number.isFinite(params.emptyLaneStartMs)) ||
+    params.pending.some(
+      (cycle) => !Number.isFinite(cycle.completesAtMs) || !Number.isFinite(cycle.startedAtMs),
+    )
   ) {
     return {
       completed: [],
