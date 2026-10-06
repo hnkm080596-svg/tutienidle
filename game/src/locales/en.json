@@ -2078,8 +2078,8 @@
     "lyHoaVerse": "Ly Palace True Fire Burns Heaven And Earth · Samadhi Light Refines Past And Present",
     "power": "Combat Power",
     "details": "Details",
-    "combat": "Combat",
-    "other": "Other",
+    "offense": "Offense",
+    "defense": "Defense",
     "statNotice": "{name}: {value}",
     "elementNotice": "{name} · Power {power} · Resist {resistance} · Pierce {penetration}",
     "sources": {

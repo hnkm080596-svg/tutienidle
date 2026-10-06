@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Detail column (G3 mock): one scroll of stacked cards, each a stat
-// group (combat, other). Rows keep the per-source hover breakdown.
+// group (offense/defense split - user ruling). Rows keep the per-source
+// hover breakdown.
 import { useI18n } from 'vue-i18n'
 import type { CharacterUiDetail, CharacterUiModel } from './characterUi'
 import { buildStatSourceTooltip } from './statSources'
@@ -12,7 +13,7 @@ const rowTooltip = (row: CharacterUiDetail) =>
 </script>
 <template>
   <aside class="character-detail-scroll" data-testid="character-detail-scroll">
-    <section v-for="group in (['combat', 'other'] as const)" :key="group" class="character-card character-detail-card">
+    <section v-for="group in (['offense', 'defense'] as const)" :key="group" class="character-card character-detail-card">
       <h2>{{ t(`character.${group}`) }}</h2>
       <dl class="character-card-scroll">
         <div v-for="row in model[group]" :key="row.id" v-tooltip="rowTooltip(row)">

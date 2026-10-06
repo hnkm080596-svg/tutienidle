@@ -99,8 +99,8 @@ export interface CharacterUiModel {
   stats: readonly CharacterUiStat[]
   elements: readonly CharacterUiElement[]
   talents: readonly CharacterUiTalent[]
-  combat: readonly CharacterUiDetail[]
-  other: readonly CharacterUiDetail[]
+  offense: readonly CharacterUiDetail[]
+  defense: readonly CharacterUiDetail[]
   /** Unspent attribute points - drives the (+) affordance + points badge. */
   attributePoints: number
 }

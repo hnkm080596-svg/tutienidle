@@ -18,7 +18,7 @@ import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
 import { getActiveElement } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
-import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
+import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { MAIN_STAT_KEYS, type MainStatKey, type StatType } from '@/core/stats/StatTypes'
 import type { ModifierSourceType } from '@/core/stats/StatCalculator'
 import { resolvePlayerStatAssembly } from '@/core/player/Player'
@@ -63,10 +63,48 @@ const STAT_LAYOUT: Record<StatId, { color: string; symbol: string }> = {
   intelligence: { color: '#77419b', symbol: 'skill' },
 }
 
-const DETAIL_CATEGORIES: Record<'combat' | 'other', readonly StatCategory[]> = {
-  combat: ['combat', 'survival'],
-  other: ['special', 'defense_advanced'],
-}
+// Detail cards re-split by combat role (user ruling): Cong holds every
+// outgoing-damage stat, Thu every incoming-damage/sustain stat.
+const DETAIL_OFFENSE: readonly (keyof Stats)[] = [
+  'might',
+  'speed',
+  'accuracyRating',
+  'criticalRate',
+  'criticalDamage',
+  'finalDamagePercent',
+  'skillDamagePercent',
+  'chanceToIgnoreResistance',
+  'elementApplicationPercent',
+  'reactionEffectPercent',
+  'ailmentDurationPercent',
+  'ailmentPotencyPercent',
+  'followUpChance',
+]
+const DETAIL_DEFENSE: readonly (keyof Stats)[] = [
+  'defense',
+  'maxHp',
+  'hpRegenPerTurn',
+  'maxMp',
+  'manaRegenPerTurn',
+  'evasionRate',
+  'criticalAvoidance',
+  'finalDamageReductionPercent',
+  'dotResistancePercent',
+  'blockChance',
+  'blockEffectiveness',
+  'enduranceThreshold',
+  'endurancePercent',
+  'wardMax',
+  'wardRegenPerTurn',
+  'manaShieldPercent',
+  'linhLucHoTheCap',
+  'wardBreakDamagePercent',
+  'leechPercent',
+  'healingEffectivenessPercent',
+  'ailmentResistPercent',
+  'counterChance',
+  'protectChance',
+]
 
 // Suc Manh formula (owner: this adapter) - the same terms feed both the
 // headline number and the R12 hover breakdown rows.
@@ -118,12 +156,12 @@ const pathVerse = computed(() =>
 )
 
 function detailRows(
-  categories: readonly StatCategory[],
+  keys: readonly (keyof Stats)[],
   stats: Stats,
   sourcesFor: (stat: StatType) => CharacterUiStatSources,
 ) {
   return BASE_STAT_LABELS
-    .filter((stat) => categories.includes(stat.category) && isBetaStatLabelVisible(stat.key))
+    .filter((stat) => keys.includes(stat.key) && isBetaStatLabelVisible(stat.key))
     .map((stat) => ({
       id: stat.key,
       label: stat.label,
@@ -203,8 +241,8 @@ const model = computed<CharacterUiModel>(() => {
         ? [{ id: talent.id, name: talent.name, description: talent.description, rarity: talent.rarity }]
         : []
     }),
-    combat: detailRows(DETAIL_CATEGORIES.combat, resolved, sourcesFor),
-    other: detailRows(DETAIL_CATEGORIES.other, resolved, sourcesFor),
+    offense: detailRows(DETAIL_OFFENSE, resolved, sourcesFor),
+    defense: detailRows(DETAIL_DEFENSE, resolved, sourcesFor),
     attributePoints: player.attributePoints,
   }
 })

@@ -8,7 +8,7 @@ export const characterMessages = { vi: {
   character: {
     mainStats: 'Thuộc Tính Chính', points: '({count} điểm)', max: 'MAX', allocate: 'Cộng điểm',
     talent: 'Thiên Phú', elements: 'Ngũ Hành', path: 'Đạo lộ', power: 'Chiến Lực',
-    details: 'Chi Tiết', combat: 'Chiến Đấu', other: 'Khác',
+    details: 'Chi Tiết', offense: 'Công', defense: 'Thủ',
     statNotice: '{name}: {value}',
     elementNotice: '{name} · Lực {power} · Kháng {resistance} · Xuyên {penetration}',
     sources: {

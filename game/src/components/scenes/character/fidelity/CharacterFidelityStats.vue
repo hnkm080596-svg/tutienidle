@@ -56,13 +56,15 @@ const talentIconError = (event: Event) => {
     </div>
     <div class="character-card character-small-card">
       <h2>{{ t('character.elements') }}</h2>
-      <button
-        v-for="element in model.elements"
-        :key="element.id"
-        class="character-element"
-        :title="element.name"
-        @click="emit('select', `element.${element.id}`)"
-      ><img :src="elementArt(element.id)" :alt="element.name"><b>{{ element.share }}</b></button>
+      <div class="character-element-row">
+        <button
+          v-for="element in model.elements"
+          :key="element.id"
+          class="character-element"
+          :title="element.name"
+          @click="emit('select', `element.${element.id}`)"
+        ><img :src="elementArt(element.id)" :alt="element.name"><b>{{ element.share }}</b></button>
+      </div>
     </div>
   </section>
 </template>
@@ -89,12 +91,13 @@ const talentIconError = (event: Event) => {
 .character-allocate:disabled img { opacity: .45; filter: saturate(.4); }
 /* Maxed stat: the cap label sits in the allocate slot (where + was),
    vertically centred on the tube row, in bright gold (user ruling). */
-.character-stat-max { grid-column: 3; grid-row: 2; align-self: center; justify-self: center; font: 700 10px/10px var(--pc-font-body, serif); letter-spacing: .14em; text-transform: uppercase; color: #ffdf9a; text-shadow: 0 0 4px #8a5f10, 0 1px 1px #000; font-style: normal; }
+.character-stat-max { grid-column: 3; grid-row: 2; align-self: center; justify-self: center; font: 700 20px/20px var(--pc-font-body, serif); letter-spacing: .14em; text-transform: uppercase; color: #ffdf9a; text-shadow: 0 0 6px #b8860b, 0 1px 1px #000; font-style: normal; }
 /* Small cards: icon + name talent rows (hover = description, R10) and
    the five ivory element pucks with share. */
 .character-talent { display: inline-flex; align-items: center; gap: 10px; margin: 0 12px 4px 0; padding: 0; border: 0; background: none; color: inherit; font-size: 13px; cursor: pointer; text-align: left; }
 .character-talent img { width: 24px; height: 24px; object-fit: contain; }
-.character-element { display: inline-flex; align-items: center; gap: 4px; margin-right: 9px; padding: 0; border: 0; background: none; color: inherit; font-size: 13px; cursor: pointer; }
+.character-element-row { display: flex; justify-content: space-between; align-items: center; }
+.character-element { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: inherit; font-size: 13px; cursor: pointer; }
 .character-element img { width: 27px; height: 27px; object-fit: contain; }
 .character-element b { font-size: 13px; }
 </style>

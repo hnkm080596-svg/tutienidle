@@ -2078,8 +2078,8 @@
     "lyHoaVerse": "Ly Cung Chân Hỏa Phần Thiên Địa · Tam Muội Thần Quang Luyện Cổ Kim",
     "power": "Chiến Lực",
     "details": "Chi Tiết",
-    "combat": "Chiến Đấu",
-    "other": "Khác",
+    "offense": "Công",
+    "defense": "Thủ",
     "statNotice": "{name}: {value}",
     "elementNotice": "{name} · Lực {power} · Kháng {resistance} · Xuyên {penetration}",
     "sources": {

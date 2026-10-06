@@ -46,39 +46,41 @@ const model = computed<CharacterUiModel>(() => ({
     { id: 't1', name: 'Kiếm Tâm Thông Minh', description: 'Kỹ năng kiếm tăng sát thương.', rarity: 'epic' },
     { id: 't2', name: 'Linh Căn Thanh Tú', description: 'Tốc độ tu luyện tăng nhẹ.', rarity: 'rare' },
   ],
-  combat: [
-    { id: 'maxHp', label: t('detail.maxHp'), value: '12.640',
-      sources: { base: 12000, contributions: [
-        { label: 'Thể Chất', flat: 640 },
-      ] } },
-    { id: 'maxMp', label: t('detail.maxMp'), value: '4.320' },
+  offense: [
     { id: 'might', label: t('detail.might'), value: '1.280',
       sources: { base: 1000, contributions: [
         { label: 'Căn Cốt', flat: 210 },
         { label: 'Trang Bị · Kiếm Tre', flat: 70 },
       ] } },
-    { id: 'defense', label: t('detail.defense'), value: '860',
-      sources: { base: 800, contributions: [
-        { label: 'Căn Cốt', flat: 20 },
-        { label: 'Trang Bị · Giáp Vảy Rồng', flat: 40 },
-      ] } },
+    { id: 'speed', label: t('detail.speed'), value: '132' },
+    { id: 'accuracyRating', label: t('detail.accuracyRating'), value: '960' },
     { id: 'criticalRate', label: t('detail.criticalRate'), value: '18,5%',
       sources: { base: 0.05, contributions: [
         { label: 'Thân Pháp', flat: 0.085 },
         { label: 'Trang Bị · Kiếm Tre', flat: 0.05 },
       ] } },
     { id: 'criticalDamage', label: t('detail.criticalDamage'), value: '168%' },
-    { id: 'accuracyRating', label: t('detail.accuracyRating'), value: '960' },
-    { id: 'evasionRate', label: t('detail.evasionRate'), value: '14%' }, { id: 'speed', label: t('detail.speed'), value: '132' },
-  ],
-  other: [
-    { id: 'leechPercent', label: t('detail.leechPercent'), value: '6%' }, { id: 'criticalAvoidance', label: t('detail.criticalAvoidance'), value: '12%' },
     { id: 'skillDamagePercent', label: t('detail.skillDamagePercent'), value: '8%',
       sources: { base: 0, contributions: [
         { label: 'Buff · Tụ Thần Hương', flat: 0.08 },
       ] } },
-    { id: 'finalDamageReductionPercent', label: t('detail.finalDamageReductionPercent'), value: '5%' },
     { id: 'primordialPower', label: t('detail.primordialPower'), value: '120' },
+  ],
+  defense: [
+    { id: 'defense', label: t('detail.defense'), value: '860',
+      sources: { base: 800, contributions: [
+        { label: 'Căn Cốt', flat: 20 },
+        { label: 'Trang Bị · Giáp Vảy Rồng', flat: 40 },
+      ] } },
+    { id: 'maxHp', label: t('detail.maxHp'), value: '12.640',
+      sources: { base: 12000, contributions: [
+        { label: 'Thể Chất', flat: 640 },
+      ] } },
+    { id: 'maxMp', label: t('detail.maxMp'), value: '4.320' },
+    { id: 'evasionRate', label: t('detail.evasionRate'), value: '14%' },
+    { id: 'criticalAvoidance', label: t('detail.criticalAvoidance'), value: '12%' },
+    { id: 'leechPercent', label: t('detail.leechPercent'), value: '6%' },
+    { id: 'finalDamageReductionPercent', label: t('detail.finalDamageReductionPercent'), value: '5%' },
   ],
   attributePoints: 3,
 }))
