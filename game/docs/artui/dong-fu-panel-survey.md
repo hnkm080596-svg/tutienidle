@@ -177,7 +177,7 @@ rail icon (DongFuStage.navAction)
 
 **Wire-now:** swap pipe asset `skill-connection-pipe-v1.png` vào SkillPaperTree edges; SkillNodeArtButton → SkillPaperNode skin.
 
-**DONE @9ac4dd15 (không cần ruling — wire theo đúng spec):** pipe image span mọi edge, learned→learned chạy connection-flow, edge vào node locked giữ muted grayscale; node skin = frame `skill-node-{parent|sub}-v1.png` (hub depth-0 → parent 78px, còn lại → sub 60px), giữ overlay lock/✓/level; SkillNodeArtButton promote → `components/common`; PaperPanelNavigation gỡ khỏi scene (R9 convention). Lưu ý: Ly Hỏa (beta) render qua `SkillConstellationPanel` — design riêng, wire trên chỉ phủ radial tree của các đạo khác.
+**DONE @85c2d72d (series 9ac4dd15+85c2d72d) (không cần ruling — wire theo đúng spec):** pipe image span mọi edge, learned→learned chạy connection-flow, edge vào node locked giữ muted grayscale; node skin = frame `skill-node-{parent|sub}-v1.png` (hub depth-0 → parent 78px, còn lại → sub 60px), giữ overlay lock/✓/level; SkillNodeArtButton promote → `components/common`; PaperPanelNavigation gỡ khỏi scene (R9 convention). Lưu ý: Ly Hỏa (beta) render qua `SkillConstellationPanel` — design riêng, wire trên chỉ phủ radial tree của các đạo khác.
 
 **RULING:**
 - **R19.** Prod có respec button (footer) — mock không vẽ; giữ respec ở đâu?
