@@ -40,6 +40,9 @@ the admission gate cannot do this one honestly: `appliedAt` keeps the
 FIRST-drink stamp while `expires` extends, so any span pin breaks honest
 chains; the restore seam is the only place the bound can live).
 
+**CLOSED by owner ruling (2026-10-05):** keep K = 24h as implemented —
+no further tightening.
+
 ## D-2026-10-05-02 — Honest equipment hoard can exceed ID_COLLECTION_CAP (from r26 COR-4)
 
 `player.equipment` now shares the uniform `ID_COLLECTION_CAP = 1024` admission
@@ -71,3 +74,13 @@ Ruling needed (pick one):
 Coordinator note: this is the only channel where an *honest* save can
 manufacture a capped-collection refusal; every other capped channel's honest
 bound lives far below 1024.
+
+**RESOLVED by owner ruling (2026-10-05):** neither a hard bag cap nor an
+admission carve-out — the ruling is **LOCK/FAVORITE AT MOST 10 equipment
+items**. Implemented: `EQUIPMENT_PROTECTION_CAP = 10` on `EquipmentBag`;
+`setProtected()` is the sole writer and refuses the 11th protected item
+with `'protection_cap'` (UI surfaces that reason); the save gate counts
+locked-or-favorite entries and refuses payloads beyond 10 as
+unproducible. A produced bag now bounds at ~500 trash + ~10 equipped +
+10 protected, permanently below `ID_COLLECTION_CAP` — no honest save can
+reach the wedge.

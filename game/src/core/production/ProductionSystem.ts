@@ -127,6 +127,14 @@ export class ProductionSystem {
    * removed `activeCycle`) are dropped here, not migrated.
    */
   restoreStates(states: ProductionSiteState[], restoreNowMs: number = Date.now()): void {
+    // r29-COR-F1: the shift only fires under a sane restore clock -
+    // a non-finite or exact-integer-domain-overflow restoreNowMs from
+    // an ungated caller must not re-anchor every began-pair
+    // (restoreNowMs = -Infinity turns shiftMs into +Infinity and
+    // mints every lane head on the next honest tick). Bad clock ->
+    // verbatim restore: post-dated cycles stay parked (deny), honest
+    // pairs were never shifted anyway.
+    const clockOk = Number.isFinite(restoreNowMs) && Math.abs(restoreNowMs) < 2 ** 53
     this.states.clear()
 
     for (const state of states) {
@@ -153,7 +161,7 @@ export class ProductionSystem {
           // the authored span stays exact: the lane resumes as a live
           // in-flight cycle instead of idling past the next save marker
           // and self-bricking every write. Honest stamps are untouched.
-          if (cycle.startedAtMs > restoreNowMs) {
+          if (clockOk && cycle.startedAtMs > restoreNowMs) {
             const shiftMs = cycle.startedAtMs - restoreNowMs
             return {
               ...cycle,

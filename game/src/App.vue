@@ -575,13 +575,14 @@ const lifecycle = useAppLifecycle({
     // loop forever while every write keeps refusing. Escalate to the
     // corrupted-save surface like the boot arm does.
     // r28-INT-1: two corrections to the original arm.
-    //  - Scope is always 'local', even under remote authority: these
-    //    codes only fire when the adapter was never invoked (the
-    //    refused bytes never left the client), so the remote row still
-    //    holds the last-good commit - the "remote row is the healthy
-    //    head" pattern the pending-conflict arm scopes 'local' for. A
-    //    'remote' label would offer resetCharacter() against a healthy
-    //    cloud row.
+    //  - Scope is always 'local': a refused write never commits, so
+    //    the remote row holds the last-good save whether the refuse
+    //    came from the local write gate (bytes never left the client)
+    //    or from the remote adapter's server-side coded refuse
+    //    (SupabaseCloudSaveService refuse envelope). The 'local' label
+    //    follows the "remote row is the healthy head" pattern the
+    //    pending-conflict arm uses. A 'remote' label would offer
+    //    resetCharacter() against a healthy cloud row.
     //  - report() must pair with bootFlow.fail(): SaveIncompatibleScreen
     //    only mounts under entryStage 'error', so a bare report() is a
     //    dead write that leaks a stale armed card into a later unrelated
@@ -602,6 +603,9 @@ const lifecycle = useAppLifecycle({
       }
       saveIssue.report('corrupted', refusedPayload, undefined, 'local')
       bootFlow.fail()
+      // r29-AUT-4: the terminal card IS the signal - skip the transient
+      // autosaveFailed toast/latch below (double-signal noise).
+      return result
     }
 
     // Canh bao autosave fail chi 1 lan cho moi chuoi fail - reset co khi

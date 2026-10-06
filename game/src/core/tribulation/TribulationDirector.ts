@@ -859,10 +859,18 @@ export class TribulationDirector {
     // it at the authored max instead of parking the channel and
     // bricking the next save write (until > next lastSavedAt + span
     // fails admission). Honest stamps sit below the bound untouched.
-    this.cooldownUntil = Math.min(
-      slice?.cooldownUntil ?? 0,
-      restoreNowMs + TRIBULATION_COOLDOWN_SECONDS * 1000,
-    )
+    // r29-COR-F1: the clamp only runs under a sane restore clock -
+    // a non-finite restoreNowMs collapses min() to NaN (cooldown gate
+    // reads NaN > 0 = false -> free retry) and -Infinity clears it
+    // the same way. Bad clock -> verbatim restored stamp: a
+    // far-future until stays parked (deny).
+    const clockOk = Number.isFinite(restoreNowMs) && Math.abs(restoreNowMs) < 2 ** 53
+    this.cooldownUntil = clockOk
+      ? Math.min(
+          slice?.cooldownUntil ?? 0,
+          restoreNowMs + TRIBULATION_COOLDOWN_SECONDS * 1000,
+        )
+      : (slice?.cooldownUntil ?? 0)
     this.attemptRealmId = ''
     this.attemptSeed = 0
 

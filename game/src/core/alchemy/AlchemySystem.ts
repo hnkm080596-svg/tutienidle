@@ -374,6 +374,14 @@ export class AlchemySystem {
    * live state (A3).
    */
   restoreJobs(jobs: ActiveAlchemyJob[], restoreNowMs: number = Date.now()): void {
+    // r29-COR-F1: the shift only fires under a sane restore clock -
+    // a non-finite or exact-integer-domain-overflow restoreNowMs from
+    // an ungated caller must not re-anchor every began-pair
+    // (restoreNowMs = -Infinity turns shiftMs into +Infinity and
+    // mints the whole queue on the next honest tick). Bad clock ->
+    // verbatim restore: post-dated jobs stay parked (deny), honest
+    // pairs were never shifted anyway.
+    const clockOk = Number.isFinite(restoreNowMs) && Math.abs(restoreNowMs) < 2 ** 53
     this.jobs = jobs.map((job) => {
       // r26-COR-1/AUT-1: a job post-dating the restore clock is
       // impossible-authored - startedAtMs is a began-time pinned
@@ -383,7 +391,7 @@ export class AlchemySystem {
       // authored span stays exact: the job resumes as live in-flight
       // instead of idling past the next save marker and self-bricking
       // every write. Honest stamps are untouched.
-      if (job.startedAtMs > restoreNowMs) {
+      if (clockOk && job.startedAtMs > restoreNowMs) {
         const shiftMs = job.startedAtMs - restoreNowMs
         const shifted = { ...job, startedAtMs: job.startedAtMs - shiftMs, completesAtMs: job.completesAtMs - shiftMs }
         // The reservation digest folds startedAtMs/completesAtMs into
@@ -458,6 +466,16 @@ export class AlchemySystem {
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
+    // r29-INT-2: nowMs guard parity with tick - a non-finite or
+    // exact-integer-domain-overflow clock bakes a NaN/huge deadline
+    // the tick guard never inspects (it guards the clock ARGUMENT,
+    // not stored stamps): NaN settles for free on the next finite
+    // tick (mint), +Infinity parks a live slot forever. Deny at
+    // origination - before any cost/burn arithmetic below.
+    if (!Number.isFinite(nowMs) || Math.abs(nowMs) >= 2 ** 53) {
+      return { ok: false, reason: 'invalid_clock' }
+    }
+
     // BETA SCOPE LOCK v2 sec.12 - recipe families outside
     // BETA_ENABLED_RECIPE_FAMILIES are dormant: their definitions stay in
     // the registry but jobs cannot start via ANY entry path (the domain

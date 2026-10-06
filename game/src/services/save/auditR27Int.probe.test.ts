@@ -771,9 +771,10 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
     vi.restoreAllMocks()
   })
 
-  it('E1 cap-order asymmetry: over-cap ARRAY still walks entries (cap issue + per-entry issues); over-cap MAP stops at the cap issue', () => {
-    // productionSites is an optionalArray: >1024 pushes the cap issue AND
-    // still walks every malformed entry.
+  it('E1 cap-order parity (r29): over-cap ARRAY stops at the cap issue, same as over-cap MAP', () => {
+    // productionSites is an optionalArray: >1024 pushes the cap issue
+    // and - since r29 INT-4/AUT-3 - the helper returns [] so the entry
+    // walk iterates nothing on the refused collection.
     const wireArray = validWireSave()
     wireArray.productionSites = Array.from({ length: 1025 }, (_v, i) => ({
       siteId: i === 0 ? FOREST_SITE_ID : `bogus_site_${i}`,
@@ -789,7 +790,7 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
     ).toBe(true)
     expect(
       shapeArray.issues.some((issue) => issue.path.startsWith('productionSites[')),
-    ).toBe(true)
+    ).toBe(false)
 
     // hiddenBeastKills is a nonNegativeIntMap: >1024 pushes the cap issue
     // and returns before the entry walk - no per-entry issues even though

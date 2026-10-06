@@ -155,6 +155,15 @@ export class DecomposeSystem {
       return
     }
 
+    // r29-COR-F1: nowMs guard parity with advanceWorkerLanes /
+    // AlchemySystem.tick - a non-finite or exact-integer-domain-overflow
+    // clock mints a cycle (NaN < nextCycleAt is false -> catch-up arm)
+    // AND poisons nextCycleAt into a NaN write-gate wedge. Zero-advance
+    // preserves state untouched (deny direction).
+    if (!Number.isFinite(nowMs) || Math.abs(nowMs) >= 2 ** 53) {
+      return
+    }
+
     if (this.settings.workers <= 0) {
       this.started = false
 
@@ -262,12 +271,18 @@ export class DecomposeSystem {
     // not a deadline. Without the cap a crafted future stamp idles the
     // channel until Delta and self-bricks every save write past it;
     // the tick already rebases the same way (:177-178).
-    this.nextCycleAt = Number.isFinite(restoredDeadline)
-      ? Math.max(
-          this.nextCycleAt,
-          Math.min(Math.max(0, restoredDeadline), restoreNowMs + this.cycleMs),
-        )
-      : this.nextCycleAt
+    // r29-COR-F1: the re-anchor only runs under a sane restore clock -
+    // a non-finite or huge restoreNowMs collapses the min() bound to
+    // NaN/garbage and poisons nextCycleAt into a write-gate wedge. Bad
+    // clock -> merge the restored deadline verbatim: a crafted-future
+    // stamp stays parked (deny), honest stamps merge the same way.
+    const clockOk = Number.isFinite(restoreNowMs) && Math.abs(restoreNowMs) < 2 ** 53
+    if (Number.isFinite(restoredDeadline)) {
+      const mergedDeadline = clockOk
+        ? Math.min(Math.max(0, restoredDeadline), restoreNowMs + this.cycleMs)
+        : Math.max(0, restoredDeadline)
+      this.nextCycleAt = Math.max(this.nextCycleAt, mergedDeadline)
+    }
     this.started = this.started || Boolean(source.started)
   }
 
@@ -284,6 +299,13 @@ export class DecomposeSystem {
   settleOffline(nowMs: number, offlineSinceMs: number): number {
     // BETA SCOPE LOCK v2 - offline cycles cannot accrue while hidden.
     if (isScopeHidden('equipmentOreDecompose')) {
+      return 0
+    }
+
+    // r29-COR-F1: nowMs guard parity - nowMs=+Infinity spins the
+    // settle loop up to the 5000-cycle bound; zero-settle under a
+    // broken clock (deny).
+    if (!Number.isFinite(nowMs) || Math.abs(nowMs) >= 2 ** 53) {
       return 0
     }
 

@@ -235,7 +235,12 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     // interval callback that outlives pause() must not tick (the paused
     // delta is discarded by the clock re-anchor on resume, not paid).
     tickHandle = scheduleInterval(() => {
-      if (authority.canMutate()) {
+      // r29-INT-3: entryStage gate parity with persistProgress (:313) -
+      // the autosave refuse arm mounts entryStage 'error' under LOCAL
+      // authority too (observeSaveResult early-returns without a
+      // reconnect dep, so canMutate stays true there). Without this
+      // gate the sim keeps advancing behind the terminal surface.
+      if (entryStage.value === 'game' && authority.canMutate()) {
         onTick?.()
       }
     }, TICK_INTERVAL_MS)

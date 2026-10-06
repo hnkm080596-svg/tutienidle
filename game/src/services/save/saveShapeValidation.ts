@@ -26,7 +26,7 @@ import type { EquipmentSlot } from '../../core/equipment/EquipmentTypes'
 import { ENHANCE_PITY_THRESHOLD, MAX_SLOT_ENHANCE_LEVEL } from '../../core/equipment/EnhanceCurve'
 import { MAIN_STAT_REALM_SCALE } from '../../core/equipment/EquipmentRolling'
 import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '../../core/equipment/ItemQualityBalance'
-import { EQUIPMENT_BAG_SOFT_CAP } from '../../core/equipment/EquipmentBag'
+import { EQUIPMENT_BAG_SOFT_CAP, EQUIPMENT_PROTECTION_CAP } from '../../core/equipment/EquipmentBag'
 import { equipment } from '../../data/equipment/equipment'
 import {
   CULTIVATION_PATH_MODULES,
@@ -454,6 +454,10 @@ function requireArray(
   // workerCycles lanes carry their own maxLanes bound instead.
   if (value.length > ID_COLLECTION_CAP) {
     issues.push({ path: `${path}.${key}`, message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
+    // r29-INT-4/AUT-3: a refused collection pays no element walk -
+    // return it empty so per-entry validators (incl. per-job digest
+    // folds) skip it like the capped record maps.
+    return []
   }
 
   return value
@@ -480,6 +484,7 @@ function optionalArray(
 
   if (value.length > ID_COLLECTION_CAP) {
     issues.push({ path: `${path}.${key}`, message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
+    return []
   }
 
   return value
@@ -3038,7 +3043,13 @@ function validateSkillCoreCoverage(
   skills: unknown[],
   issues: ShapeIssue[],
 ) {
-  const nodeLevels = isObject(player.nodeLevels) ? player.nodeLevels : undefined
+  // r29-COR-F2: cap-gate like talentLevels - an over-cap record already
+  // fails the root check (:2026); skipping its walks here is cost-only
+  // (the verdict still refuses).
+  const nodeLevels =
+    isObject(player.nodeLevels) && Object.keys(player.nodeLevels).length <= ID_COLLECTION_CAP
+      ? player.nodeLevels
+      : undefined
 
   const coreGranted = (skillId: string): boolean =>
     nodeLevels !== undefined &&
@@ -3890,6 +3901,7 @@ function validateEquipmentEntries(
   const normalizedEntries: unknown[] = []
   let discardedCount = 0
   let unprotectedCount = 0
+  let protectedCount = 0
 
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -3907,6 +3919,13 @@ function validateEquipmentEntries(
     // minting essence per dissolved forged item.
     if (entry.equipped !== true && entry.locked !== true && entry.favorite !== true) {
       unprotectedCount += 1
+    }
+
+    // Ruling D-02: setProtected() refuses the 11th protected item, so a
+    // produced bag holds at most EQUIPMENT_PROTECTION_CAP locked-or-
+    // favorite entries. Beyond that the payload is unproducible.
+    if (entry.locked === true || entry.favorite === true) {
+      protectedCount += 1
     }
 
     // Development build khong migrate item schema cu. Chi rieng entry
@@ -4267,6 +4286,13 @@ function validateEquipmentEntries(
     issues.push({
       path,
       message: `unprotected equipment vượt EQUIPMENT_BAG_SOFT_CAP (${EQUIPMENT_BAG_SOFT_CAP})`,
+    })
+  }
+
+  if (protectedCount > EQUIPMENT_PROTECTION_CAP) {
+    issues.push({
+      path,
+      message: `protected equipment (locked/favorite) vượt EQUIPMENT_PROTECTION_CAP (${EQUIPMENT_PROTECTION_CAP})`,
     })
   }
 
