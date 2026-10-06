@@ -58,11 +58,11 @@ function randomAll() {
     <header class="trial-heading"><img :src="art.cloud" alt=""></header>
     <div class="trial-brush-ring" aria-hidden="true"><svg viewBox="0 0 500 500"><circle cx="250" cy="250" r="222" fill="none" stroke="currentColor" stroke-width="9" stroke-dasharray="340 7 100 12 32 3 190 9" /><circle cx="250" cy="250" r="210" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="160 8 40 12" /><circle cx="250" cy="250" r="234" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 8 100 4" /></svg><img v-for="position in ['top','right','bottom','left']" :key="position" :class="`trial-cloud-${position}`" :src="art.cloud" alt=""></div>
     <section class="trial-creation-board">
-      <div class="trial-name-row"><span class="trial-name-label">{{ t('authPreview.trial.setName') }}</span><input v-model="name" :aria-label="t('authPreview.name')" :placeholder="t('authPreview.trial.namePlaceholder')" @input="nameTouched = true"></div>
+      <div class="trial-name-row"><span class="trial-name-label">{{ t('authPreview.trial.setName') }}</span><input v-model="name" :aria-label="t('authPreview.name')" :placeholder="t('authPreview.trial.namePlaceholder')" @input="nameTouched = true"><PcPaperButton icon variant="secondary" class="trial-name-random" :aria-label="t('onboarding.creation.talentStep.randomAll')" @click="randomAll">⚄</PcPaperButton></div>
       <h2 class="trial-section-title trial-path-title">{{ t('authPreview.trial.choosePath') }}</h2>
       <p class="trial-path-description">{{ t('authPreview.trial.pathDescription') }}</p>
       <div class="trial-paths"><button v-for="path in pathways" :key="path.key" type="button" class="trial-path-cell" :class="{ selected: pathwayKey === path.key, locked: path.locked }" :disabled="path.locked" :aria-pressed="pathwayKey === path.key" @click="pathwayKey = path.key; pathTouched = true"><InkNineSlice :chrome-id="pathwayKey === path.key ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ path.locked && path.key.startsWith('hidden') ? '?' : t(path.labelKey) }}</span></button></div>
-      <h2 class="trial-section-title trial-talent-title">{{ t('authPreview.trial.chooseTalent') }}<PcPaperButton icon variant="secondary" class="trial-talent-reroll" :aria-label="t('onboarding.creation.talentStep.randomAll')" @click="randomAll">⚄</PcPaperButton></h2>
+      <h2 class="trial-section-title trial-talent-title">{{ t('authPreview.trial.chooseTalent') }}</h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid">
           <button v-for="(talent,index) in talents" :key="talent.id" type="button" :class="{ selected: selected === index }" :aria-pressed="selected === index" :data-testid="`trial-talent-${talent.id}`" @click="selected = index; talentTouched = true"><span class="trial-talent-seal"><img :src="pcPaperIconUrl(talent.icon)" alt=""></span><b>{{ t(`authPreview.trial.talents.${talent.id}`) }}</b></button>
@@ -112,7 +112,7 @@ function randomAll() {
 .trial-path-cell.locked { cursor: default; }
 .trial-path-cell.locked .ink-nine-slice { opacity: .4; }
 .trial-path-cell.locked .trial-path-cell__label { color: #8a7c56; }
-.trial-talent-reroll { flex: 0 0 auto; min-height: 40px; font-size: 26px; margin-left: -8px; }
+.trial-name-random { flex: 0 0 auto; min-height: 42px; font-size: 26px; }
 .trial-begin { position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }.trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; }
 </style>
 

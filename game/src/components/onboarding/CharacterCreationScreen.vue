@@ -174,13 +174,13 @@ const style = { '--trial-panel': `url('${art.panel}')` }
     <header class="trial-heading"><img :src="art.cloud" alt=""></header>
     <div class="trial-brush-ring" aria-hidden="true"><svg viewBox="0 0 500 500"><circle cx="250" cy="250" r="222" fill="none" stroke="currentColor" stroke-width="9" stroke-dasharray="340 7 100 12 32 3 190 9" /><circle cx="250" cy="250" r="210" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="160 8 40 12" /><circle cx="250" cy="250" r="234" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 8 100 4" /></svg><img v-for="position in ['top','right','bottom','left']" :key="position" :class="`trial-cloud-${position}`" :src="art.cloud" alt=""></div>
     <section class="trial-creation-board" data-hk-region="creation-card">
-      <div class="trial-name-row" data-hk-region="name-section"><span class="trial-name-label">{{ t('onboarding.creation.nameStep.sectionTitle') }}</span><input v-model="name" data-testid="creation-name-input" maxlength="20" :disabled="creating" :aria-invalid="name.length > 0 && !validName" :aria-label="t('onboarding.creation.nameStep.label')" :placeholder="t('onboarding.creation.nameStep.placeholder')" aria-describedby="creation-name-desc" @input="nameTouched = true"><span id="creation-name-desc" class="creation-visually-hidden">{{ t('onboarding.creation.nameStep.minLengthHint', { length: name.length }) }}</span></div>
+      <div class="trial-name-row" data-hk-region="name-section"><span class="trial-name-label">{{ t('onboarding.creation.nameStep.sectionTitle') }}</span><input v-model="name" data-testid="creation-name-input" maxlength="20" :disabled="creating" :aria-invalid="name.length > 0 && !validName" :aria-label="t('onboarding.creation.nameStep.label')" :placeholder="t('onboarding.creation.nameStep.placeholder')" aria-describedby="creation-name-desc" @input="nameTouched = true"><span id="creation-name-desc" class="creation-visually-hidden">{{ t('onboarding.creation.nameStep.minLengthHint', { length: name.length }) }}</span><PcPaperButton icon variant="secondary" class="trial-name-random" data-testid="creation-random-all" :disabled="creating" :aria-label="t('onboarding.creation.talentStep.randomAll')" @click="masterRandom">⚄</PcPaperButton></div>
       <h2 class="trial-section-title trial-path-title">{{ t('onboarding.creation.pathStep.sectionTitle') }}</h2>
       <p class="trial-path-description">{{ t('onboarding.creation.pathStep.description') }}</p>
       <div class="trial-paths" data-hk-region="dao-lo" role="radiogroup" :aria-label="t('onboarding.creation.pathStep.sectionTitle')">
         <button v-for="(cell, index) in DAO_LO_CELLS" :key="cell.skillId ?? `hidden-${index}`" type="button" role="radio" :aria-checked="pickedPathId === cell.skillId" class="trial-path-cell" :class="{ selected: pickedPathId === cell.skillId, locked: cell.locked }" :disabled="cell.locked || creating" :title="cell.skillId ? starterBySkillId.get(cell.skillId)?.description : undefined" :data-testid="cell.skillId ? `creation-starter-${cell.skillId}` : `creation-starter-hidden-${index}`" @click="pickPath(cell)"><InkNineSlice :chrome-id="pickedPathId === cell.skillId ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ cell.skillId ? t(`onboarding.creation.pathStep.paths.${cell.labelKey}`) : '?' }}</span></button>
       </div>
-      <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}<PcPaperButton icon variant="secondary" class="trial-talent-reroll" data-testid="creation-random-all" :disabled="creating" :aria-label="t('onboarding.creation.talentStep.randomAll')" @click="masterRandom">⚄</PcPaperButton></h2>
+      <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}</h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid" data-hk-region="talent-grid" role="radiogroup" :aria-label="t('onboarding.creation.talentStep.sectionTitle')">
           <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIcon(talent)" alt=""></span><b>{{ talent.name }}</b></button>
@@ -246,12 +246,12 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 .trial-talent-detail__empty { text-align: center; color: #b9a77f; }
 .trial-name-row { display: flex; align-items: center; gap: 12px; padding: 0 55px; margin: 10px 0 4px; }
 .trial-name-label { flex: 0 0 auto; color: #e8cf9e; font: 700 22px var(--pc-font-body); white-space: nowrap; }
+.trial-name-random { flex: 0 0 auto; min-height: 42px; font-size: 26px; }
 .trial-name-row input { min-width: 0; flex: 1; height: 42px; padding: 8px 16px; border: 1px solid #b49860; background: #1b211a; color: #f1e2c0; font: 15px var(--pc-font-body); }
 .trial-name-row input::placeholder { color: #aaa18b; }
 .trial-path-title { margin: 14px 0 4px; font-size: 18px; }
 .trial-path-description { margin: 0 0 8px; font-size: 14px; text-align: center; }
 .trial-talent-title { margin-top: 20px; }
-.trial-talent-reroll { flex: 0 0 auto; min-height: 40px; font-size: 26px; margin-left: -8px; }
 .trial-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 11px; }
 .trial-path-cell { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; padding: 7px 8px; min-height: 44px; border: 0; background: transparent; color: #f1e2c0; font: 15px var(--pc-font-body); cursor: pointer; }
 .trial-path-cell > :not(.ink-nine-slice) { position: relative; z-index: 2; }
