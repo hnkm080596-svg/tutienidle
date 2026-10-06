@@ -86,7 +86,7 @@ const summary = computed(() =>
 function masterRandom() {
   if (creating.value) return
   useAudioStore().cue('progress.reroll')
-  if (!nameTouched.value) {
+  if (!nameTouched.value || !name.value.trim()) {
     const roll = () => DAO_NAME_POOL[Math.floor(Math.random() * DAO_NAME_POOL.length)] ?? 'Lạc Vân Trần'
     let pick = roll()
     if (DAO_NAME_POOL.length > 1) {
@@ -99,7 +99,7 @@ function masterRandom() {
     const cell = open[Math.floor(Math.random() * open.length)]
     if (cell) pickedPathId.value = cell.skillId
   }
-  if (!talentTouched.value && talents.value.length > 0) {
+  if ((!talentTouched.value || selectedTalentIds.value.length === 0) && talents.value.length > 0) {
     const options = talents.value.filter((talent) => talent.id !== selectedTalentIds.value[0])
     const pool = options.length > 0 ? options : talents.value
     const pick = pool[Math.floor(Math.random() * pool.length)]

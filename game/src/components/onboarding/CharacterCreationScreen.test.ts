@@ -118,6 +118,35 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     mounted.unmount()
   })
 
+  it('master die re-randomizes sections the player cleared', async () => {
+    const mounted = mountScreen()
+    await flushRoll()
+    const container = mounted.container
+    const nameInput = container.querySelector<HTMLInputElement>('[data-testid="creation-name-input"]')!
+    const die = () => container.querySelector<HTMLButtonElement>('[data-testid="creation-random-all"]')!
+    const checkedTalent = () => container.querySelectorAll('[data-testid^="creation-talent-"][aria-checked="true"]')
+
+    fillName(container)
+    await nextTick()
+    container.querySelector<HTMLButtonElement>('[data-testid^="creation-talent-"]')!.click()
+    await nextTick()
+    expect(checkedTalent()).toHaveLength(1)
+
+    nameInput.value = ''
+    nameInput.dispatchEvent(new Event('input'))
+    container.querySelector<HTMLButtonElement>('[data-testid^="creation-talent-"][aria-checked="true"]')!.click()
+    await nextTick()
+    expect(checkedTalent()).toHaveLength(0)
+
+    die().click()
+    await nextTick()
+
+    expect(nameInput.value.length).toBeGreaterThanOrEqual(2)
+    expect(checkedTalent()).toHaveLength(1)
+
+    mounted.unmount()
+  })
+
   it('keeps finish disabled until name + talent are both chosen', async () => {
     const mounted = mountScreen()
     await flushRoll()
