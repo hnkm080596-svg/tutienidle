@@ -365,15 +365,47 @@
 }
 
 /* Panel swap (2026-10): switching between overlay panels slides the old
-   panel out to the left while the new one slides in from the right, so
-   the home vista never flashes between two panels. The wrappers live in
-   different parents - each panel component keeps its own <Transition>;
-   both phases run simultaneously (leaving element stays until its
-   transition ends), which IS the swap. */
+   panel down-left while the new one slides in from up-right, so the
+   two panels trade places diagonally and the home vista never flashes
+   between them. The wrappers live in different parents - each panel
+   component keeps its own <Transition>; both phases run simultaneously
+   (leaving element stays until its transition ends), which IS the swap. */
 .th-panel-swap-enter-active { transition: transform .26s cubic-bezier(.25,.85,.3,1), opacity .26s ease; z-index: 30; }
-.th-panel-swap-leave-active { transition: transform .22s cubic-bezier(.5,.05,.7,.4), opacity .22s ease; z-index: 29; }
-.th-panel-swap-enter-from { transform: translateX(70px); opacity: 0; }
-.th-panel-swap-leave-to { transform: translateX(-70px); opacity: 0; }
+.th-panel-swap-leave-active { transition: transform .26s cubic-bezier(.25,.85,.3,1), opacity .24s ease; z-index: 29; }
+.th-panel-swap-enter-from { transform: translate(56px, -30px); opacity: 0; }
+.th-panel-swap-leave-to { transform: translate(-56px, 30px); opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
   .th-panel-swap-enter-active, .th-panel-swap-leave-active { transition: none; }
 }
+
+/* Rail over panels (2026-10): every fidelity scene root spans inset:0
+   with pointer-events:auto and swallows rail clicks - the click lands
+   on the scene root (its @click.self backdrop-dismiss) instead of the
+   real nav button, so rail-switching panels read as "closed to home".
+   The rail cannot out-z the overlay canvas (it lives inside the scaled
+   home canvas), so the fix is hit-testing: scene roots go transparent
+   to clicks and each bounded region child keeps capturing its own box.
+   Backdrop clicks now fall through to DongFuStage's own empty-space
+   handler, which also closes overlays - same dismiss, working rail. */
+:is(#app, body) .cf-scene,
+:is(#app, body) .skill-paper-scene,
+:is(#app, body) .realm-paper-scene,
+:is(#app, body) .technique-paper-scene,
+:is(#app, body) .body-paper-scene,
+:is(#app, body) .alchemy-scene,
+:is(#app, body) .inventory-scene,
+:is(#app, body) .equipment-scene,
+:is(#app, body) .quest-scene,
+:is(#app, body) .settings-scene,
+:is(#app, body) .exploration-scene { pointer-events: none; }
+:is(#app, body) .cf-scene > *,
+:is(#app, body) .skill-paper-scene > *,
+:is(#app, body) .realm-paper-scene > *,
+:is(#app, body) .technique-paper-scene > *,
+:is(#app, body) .body-paper-scene > *,
+:is(#app, body) .alchemy-scene > *,
+:is(#app, body) .inventory-scene > *,
+:is(#app, body) .equipment-scene > *,
+:is(#app, body) .quest-scene > *,
+:is(#app, body) .settings-scene > *,
+:is(#app, body) .exploration-scene > * { pointer-events: auto; }

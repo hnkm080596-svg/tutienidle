@@ -17,5 +17,8 @@ import InventorySurface from '@/components/scenes/inventory/InventorySurface.vue
 .inventory-panel {
   position: fixed;
   inset: 0;
+  /* transparent wrapper - the scene's own regions opt back in, and rail
+     clicks in the left column fall through to the real rail. */
+  pointer-events: none;
 }
 </style>

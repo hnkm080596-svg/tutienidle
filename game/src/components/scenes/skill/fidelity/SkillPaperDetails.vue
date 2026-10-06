@@ -30,7 +30,7 @@ const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/charac
   </aside>
 </template>
 <style scoped>
-.skill-detail-card { position:absolute; left:985px; top:198px; width:400px; height:auto; max-height:487px; padding:25px 26px 13px; isolation:isolate; display:flex; flex-direction:column; color:#f0dfbb; }
+.skill-detail-card { position:absolute; left:985px; top:198px; width:400px; height:487px; padding:25px 26px 13px; isolation:isolate; display:flex; flex-direction:column; color:#f0dfbb; }
 .skill-card-frame { position:absolute; inset:0; z-index:-1; pointer-events:none; border:15px solid transparent; border-image-slice:90 fill; border-image-width:15px; border-image-repeat:stretch; }
 .skill-detail-card header { flex:none; display:flex; align-items:center; gap:14px; min-height:76px; padding-bottom:16px; border-bottom:1px solid #9d8049; }
 header img { width:61px; height:61px; border:3px double #a6813a; border-radius:50%; object-fit:cover; }
