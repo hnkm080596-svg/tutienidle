@@ -155,7 +155,19 @@ export class ProductionSystem {
         autoRestart: state.autoRestart,
         activeWorkerSlots: state.activeWorkerSlots ?? 0,
         assignedWorkers: state.assignedWorkers,
-        workerCycles: (state.workerCycles ?? []).map((cycle) => {
+        workerCycles: (state.workerCycles ?? []).flatMap((cycle) => {
+          // r33-COR-F1/AUT-2: ordering parity with restoreJobs and the
+          // validator's ordering pin - an INVERTED pair
+          // (completesAtMs <= startedAtMs) is impossible-authored.
+          // Parking it verbatim denied the whole site's advance
+          // (pending.some freezes every healthy sibling lane) AND
+          // refused every later save write on the ordering pin - a
+          // whole-save wedge for content that can never be authored.
+          // Drop at the boundary, same as the sibling arm. Out-of-domain
+          // stamps still park verbatim below (deny doctrine).
+          if (cycle.completesAtMs <= cycle.startedAtMs) {
+            return []
+          }
           // r26-COR-1/AUT-1: a cycle head post-dating the restore clock
           // is impossible-authored - startedAtMs is a began-time pinned
           // <= lastSavedAt at admission, so only a uniformly-shifted
@@ -171,21 +183,20 @@ export class ProductionSystem {
           // negative span, so the headroom holds trivially and the shift
           // mints a FRESH inverted pair - ordering-denied by
           // advanceWorkerLanes yet refusing the persisted ordering pin
-          // on every later write. Park inverted pairs verbatim instead.
+          // on every later write. (Handled above: inverted pairs drop.)
           if (
             clockOk &&
             cycle.startedAtMs > restoreNowMs &&
-            cycle.completesAtMs > cycle.startedAtMs &&
             restoreNowMs + (cycle.completesAtMs - cycle.startedAtMs) < 2 ** 52
           ) {
             const shiftMs = cycle.startedAtMs - restoreNowMs
-            return {
+            return [{
               ...cycle,
               startedAtMs: cycle.startedAtMs - shiftMs,
               completesAtMs: cycle.completesAtMs - shiftMs,
-            }
+            }]
           }
-          return { ...cycle }
+          return [{ ...cycle }]
         }),
         hiddenChannelCycles: state.hiddenChannelCycles
           ? { ...state.hiddenChannelCycles }

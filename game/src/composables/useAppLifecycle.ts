@@ -344,15 +344,17 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     // would make every later pauseSimulation() a silent no-op (combat
     // freeze never fires behind the next error surface).
     simPaused = false
-    // r32-INT-1: the flag is only HALF the pause latch - pauseSimulation
-    // also freezes CombatClock under reason 'authority-pause', and that
-    // reason is cleared ONLY inside resumeSimulation, which early-returns
-    // once the flag is already false. A terminal pause -> acknowledge ->
-    // re-enter would leave a live battle frozen forever (resumeCombat
-    // never called, no other path clears the reason). Clear the reason
-    // alongside the flag: a no-op when nothing is latched, and other
-    // freeze reasons (tab-hidden, etc.) are untouched.
-    gameManager.resumeCombat('authority-pause')
+    // r32-INT-1/r33-INT-1: the flag is only HALF the pause latch -
+    // pauseSimulation also freezes CombatClock under reason
+    // 'authority-pause', and that reason is cleared ONLY inside
+    // resumeSimulation, which early-returns once the flag is already
+    // false. A terminal pause -> acknowledge -> re-enter would leave a
+    // live battle frozen forever. The reason is cleared below, AFTER
+    // authority.markReady() - clearing here would unfreeze the clock
+    // before admission is proven: the awaits in boot let RAF step turns
+    // behind the load/error surfaces, and a failed boot leaves the
+    // battle running with no way to re-latch (pauseSimulation needs
+    // entryStage === 'game').
     // Captured BEFORE the first await. Everything past the await below
     // compares against this: a stopAll() that landed while the load was in
     // flight makes every later side effect (restore, clock, intervals,
@@ -725,6 +727,13 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       // B1-D - admission granted only now: heartbeat arms, the health
       // lease starts, and the mutation gate opens for the clock below.
       authority.markReady()
+
+      // r33-INT-1: clear the orphaned 'authority-pause' freeze only now
+      // that admission is proven - paired with the simPaused re-baseline
+      // at entry. resume() deletes just that reason and no-ops on a
+      // stopped clock or when nothing is latched, so user-pause /
+      // tab-hidden reasons are untouched.
+      gameManager.resumeCombat('authority-pause')
 
       clock.start()
 

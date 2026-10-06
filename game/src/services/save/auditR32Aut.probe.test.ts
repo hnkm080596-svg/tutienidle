@@ -249,7 +249,7 @@ describe('r32-AUT F2 - restore shift arms mint inverted pairs', () => {
     expect(system.drainSettlementEvents()).toHaveLength(0)
   })
 
-  it('restoreStates shift arm PARKS an inverted pair verbatim - no shift mints (r32 fix)', () => {
+  it('restoreStates drops an inverted pair at the boundary; the mechanism still ordering-denies a direct feed (r33 parity)', () => {
     const system = productionSystem()
     const inverted = cycleAt(currentMs + 2000, currentMs + 1000)
     system.restoreStates(
@@ -265,15 +265,11 @@ describe('r32-AUT F2 - restore shift arms mint inverted pairs', () => {
       currentMs,
     )
 
-    // The shift arm now refuses inverted input (ordering deny) - the
-    // pair keeps its crafted stamps verbatim, parked; downstream
-    // advanceWorkerLanes ordering-denies it (zero advance), matching
-    // the documented drop-vs-park asymmetry (alchemy drops, production
-    // parks so the persisted ordering pin self-harms the write).
-    const restored = system.getState(FOREST_SITE_ID)!.workerCycles![0]!
-    expect(restored.startedAtMs).toBe(currentMs + 2000)
-    expect(restored.completesAtMs).toBe(currentMs + 1000)
-    expect(restored.completesAtMs).toBeLessThan(restored.startedAtMs)
+    // r33-COR-F1/AUT-2: the impossible-authored pair now drops at the
+    // restore boundary - parity with restoreJobs - instead of parking
+    // verbatim and wedging every later write. The pure mechanism keeps
+    // its ordering deny for any feed that bypasses restore.
+    expect(system.getState(FOREST_SITE_ID)!.workerCycles!).toHaveLength(0)
 
     const result = advanceWorkerLanes({
       siteId: FOREST_SITE_ID,
@@ -281,7 +277,7 @@ describe('r32-AUT F2 - restore shift arms mint inverted pairs', () => {
       siteLevel: 1,
       baseSeconds: 30,
       cycleMs: 30_000,
-      pending: [restored],
+      pending: [inverted],
       slots: 1,
       nowMs: currentMs,
       advanceMode: 'deadline',
