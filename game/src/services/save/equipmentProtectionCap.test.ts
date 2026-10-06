@@ -54,6 +54,24 @@ describe('save gate — protected equipment cap pin (ruling D-02)', () => {
     ).toBe(true)
   })
 
+  it('entry legacy (realmId/rarity marker) khong tinh vao protected pool - discard chay truoc counter', () => {
+    const save = validWireSave()
+    save.equipment = Array.from({ length: EQUIPMENT_PROTECTION_CAP + 1 }, (_v, i) => ({
+      instanceId: `legacy_${i}`,
+      itemId: 'test_item',
+      realmId: 'legacy_schema',
+      locked: true,
+    })) as never
+
+    const result = validateGameSaveShape(save)
+    // restore discards these entries outright, so they cannot push the
+    // produced bag past the protection cap - the payload stays admissible
+    // on that check (deny-direction: over-cap REAL protected still refuses).
+    expect(
+      result.issues.some((issue) => issue.message.includes('EQUIPMENT_PROTECTION_CAP')),
+    ).toBe(false)
+  })
+
   it(`${EQUIPMENT_PROTECTION_CAP} protected entries khong bi keo theo cap (khong giet save honest)`, () => {
     const save = validWireSave()
     save.equipment = Array.from({ length: EQUIPMENT_PROTECTION_CAP }, (_v, i) => ({

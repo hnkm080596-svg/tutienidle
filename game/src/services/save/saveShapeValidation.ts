@@ -885,8 +885,12 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
     // divides back to BASE at payout (claim <= BASE x (1+p) ->
     // unbuffed = claim/(1+p) <= BASE).
     const persistedTimedEffects = player.persistentTimedEffects
+    // r30-COR-Low-2: same cap gate - a refused over-cap array pays no
+    // element walk in this sibling read either.
     const liveTltPercent =
-      Array.isArray(persistedTimedEffects) && isFiniteNumber(player.lastSavedAt)
+      Array.isArray(persistedTimedEffects) &&
+      persistedTimedEffects.length <= ID_COLLECTION_CAP &&
+      isFiniteNumber(player.lastSavedAt)
         ? getActiveCultivationSpeedPercent(
             persistedTimedEffects
               .filter((effect): effect is Record<string, unknown> => isObject(effect))
@@ -3148,9 +3152,14 @@ function validateSkillCoreCoverage(
   // templates reach this check; an id with no producing writer is a
   // fabricated claim that restore would mint anyway.
   const ownedTalentPassiveSkillIds = new Set<string>()
-  const persistedOwnedTalentIds = Array.isArray(player.selectedTalentIds)
-    ? player.selectedTalentIds
-    : []
+  // r30-COR-Low-1: bind through the cap gate - a refused over-cap array
+  // pays no element walk (requireArray already bound [] upstream and
+  // pushed the cap issue).
+  const persistedOwnedTalentIds =
+    Array.isArray(player.selectedTalentIds) &&
+    player.selectedTalentIds.length <= ID_COLLECTION_CAP
+      ? player.selectedTalentIds
+      : []
 
   for (const talentId of persistedOwnedTalentIds) {
     if (typeof talentId !== 'string') {
@@ -3912,6 +3921,17 @@ function validateEquipmentEntries(
       continue
     }
 
+    // Development build khong migrate item schema cu. Chi rieng entry
+    // legacy co realmId/rarity duoc bo co chu dich; phan save
+    // con lai van nap duoc. Kiem tra marker TRUOC cac field
+    // schema moi de entry cu khong bi bien thanh loi toan save.
+    // r30-COR-Nit-1: the discard runs BEFORE the cap counters - a legacy
+    // entry is dropped at restore and must not count toward either cap.
+    if ('realmId' in entry || 'rarity' in entry) {
+      discardedCount += 1
+      continue
+    }
+
     // F-EQ-COUNT-1: add() auto-dissolves overflow above the soft cap, so
     // a produced bag holds at most EQUIPMENT_BAG_SOFT_CAP entries that
     // are not equipped/locked/favorite. Beyond that the payload is
@@ -3926,15 +3946,6 @@ function validateEquipmentEntries(
     // favorite entries. Beyond that the payload is unproducible.
     if (entry.locked === true || entry.favorite === true) {
       protectedCount += 1
-    }
-
-    // Development build khong migrate item schema cu. Chi rieng entry
-    // legacy co realmId/rarity duoc bo co chu dich; phan save
-    // con lai van nap duoc. Kiem tra marker TRUOC cac field
-    // schema moi de entry cu khong bi bien thanh loi toan save.
-    if ('realmId' in entry || 'rarity' in entry) {
-      discardedCount += 1
-      continue
     }
 
     normalizedEntries.push(entry)

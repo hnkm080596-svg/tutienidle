@@ -330,7 +330,13 @@ export class GameManagerPersistentEffectOps {
             Math.max(Date.now(), existing.expiresAtMs) + duration,
           )
         } else {
-          existing.expiresAtMs = Math.max(existing.expiresAtMs, effect.expiresAtMs)
+          // r30-COR-Low-3: same |x| < 2^52 clamp as the stackable arm -
+          // a caller-crafted stamp outside the admitted domain must not
+          // persist and self-brick the next buildGameSave write.
+          existing.expiresAtMs = Math.min(
+            2 ** 52 - 1,
+            Math.max(-(2 ** 52 - 1), Math.max(existing.expiresAtMs, effect.expiresAtMs)),
+          )
         }
 
         for (const modifier of effect.modifiers) {
@@ -361,7 +367,13 @@ export class GameManagerPersistentEffectOps {
       }
     }
 
-    player.persistentTimedEffects.push(effect)
+    // r30-COR-Low-3: the verbatim push of a fresh effect clamps
+    // expiresAtMs into the admitted domain for the same reason - every
+    // written save must re-validate.
+    player.persistentTimedEffects.push({
+      ...effect,
+      expiresAtMs: Math.min(2 ** 52 - 1, Math.max(-(2 ** 52 - 1), effect.expiresAtMs)),
+    })
   }
 
   /** Drops expired effects - returns the count dropped (debug/test). */
