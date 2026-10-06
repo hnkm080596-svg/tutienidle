@@ -397,17 +397,17 @@ test.describe('Huyen Kim stable scene art', () => {
     assertNoBrowserErrors(errors)
   })
 
-  test('svg symbols render in chrome (top bar, overlay close, wheel lock)', async ({ page }) => {
+  test('chrome icons render (nav rail, overlay close, wheel locks)', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    // Top-bar utility glyphs carry mask-image pointing at stable symbols.
-    const topbar = page.locator('.global-top-bar .hk-symbol')
-    await expect(topbar.first()).toBeVisible({ timeout: 10_000 })
-    for (const mask of await topbar.evaluateAll((els) =>
-      els.map((el) => getComputedStyle(el).maskImage),
-    )) {
-      expect(mask).toContain('huyen-kim/symbols/')
+    // Landscape rail icons are <img> pointing at the tien-hiep icon pack.
+    const railIcons = page.locator('.home-navigation-surface nav button img')
+    await expect(railIcons.first()).toBeVisible({ timeout: 10_000 })
+    for (const img of await railIcons.all()) {
+      expect(await img.getAttribute('src')).toContain('tien-hiep-2026-10/icons/navigation-')
+      const naturalWidth = await img.evaluate((el) => (el as HTMLImageElement).naturalWidth)
+      expect(naturalWidth).toBeGreaterThan(0)
     }
 
     // Imperial-scroll close glyph (San Xuat is the last scroll shell).
@@ -418,14 +418,14 @@ test.describe('Huyen Kim stable scene art', () => {
       'symbols/close.svg',
     )
 
-    // Wheel lock badge on a locked/ungated building slot.
+    // Wheel nodes render; any realm-gated slot shows the disabled state.
     await page.keyboard.press('Escape')
     await page.keyboard.press('`')
-    const wheelLock = page.locator('.command-wheel .command-wheel__lock-badge .hk-symbol').first()
-    if (await wheelLock.count()) {
-      expect(await wheelLock.evaluate((el) => getComputedStyle(el).maskImage)).toContain(
-        'symbols/lock.svg',
-      )
+    await expect(page.locator('.df-wheel')).toBeVisible({ timeout: 10_000 })
+    expect(await page.locator('.df-node').count()).toBeGreaterThanOrEqual(8)
+    const locked = page.locator('.df-node.is-disabled')
+    if (await locked.count()) {
+      await expect(locked.first()).toHaveAttribute('aria-disabled', 'true')
     }
     assertNoBrowserErrors(errors)
   })

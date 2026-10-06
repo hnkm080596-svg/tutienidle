@@ -412,6 +412,7 @@ onBeforeUnmount(() => {
   <SceneDesignCanvas v-if="!stageActive">
     <main
       class="df-scene hk-art-scene landscape-design"
+      data-hk-scene="dong-fu"
       :class="{ 'df-scene--covered': surfaceOpen, 'df-scene--rail-collapsed': railCollapsed }"
       :aria-label="t('dongFu.aria')"
       :style="sceneStyle"

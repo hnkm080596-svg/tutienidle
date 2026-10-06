@@ -130,8 +130,11 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await waitForPresentationIdle(page)
-    // World chrome: top bar + building hotspots + command wheel toggle.
-    await expect(page.locator('.global-top-bar')).toBeVisible({ timeout: 10_000 })
+    // World chrome: landscape header (profile + currencies) + nav rail +
+    // the Backquote command wheel.
+    await expect(page.locator('.home-design-profile')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('.home-design-currencies')).toBeVisible()
+    await expect(page.locator('.home-navigation-surface')).toBeVisible()
     await shot(page, '03-dong-phu')
     assertNoBrowserErrors(errors)
   })
