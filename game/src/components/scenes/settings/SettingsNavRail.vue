@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Settings nav rail — tien-hiep medallion buttons (QuestCategoryArtButton
+// Settings nav rail: tien-hiep medallion buttons (QuestCategoryArtButton
 // skin) in place of the old seal rows. The .settings-panel__nav +
 // [data-section] + .is-active contract stays pinned for tests/e2e.
 import QuestCategoryArtButton from '@/components/common/QuestCategoryArtButton.vue'
