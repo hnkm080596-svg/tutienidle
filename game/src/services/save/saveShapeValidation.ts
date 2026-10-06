@@ -787,6 +787,11 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   // loud like nodeLevels.
   if (!isObject(player.talentLevels)) {
     issues.push({ path: 'player.talentLevels', message: 'phải là object' })
+  } else if (Object.keys(player.talentLevels).length > ID_COLLECTION_CAP) {
+    // r27-COR-3: the ownership pin rejects each unowned entry but the
+    // walk itself was the one uncapped collection left - refuse on
+    // count like every sibling map before iterating.
+    issues.push({ path: 'player.talentLevels', message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
   } else {
     for (const [talentId, level] of Object.entries(player.talentLevels)) {
       if (!isNonNegativeFiniteNumber(level) || !Number.isInteger(level) || level < 1) {
@@ -2321,11 +2326,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
       }
 
       if (grant.learnedSkillIds !== undefined) {
-        if (
-          !Array.isArray(grant.learnedSkillIds) ||
-          grant.learnedSkillIds.length > ID_COLLECTION_CAP ||
-          !grant.learnedSkillIds.every((id) => typeof id === 'string')
-        ) {
+        // r27-COR-6: distinct messages for the cap arm vs the shape arm
+        // so a refused payload names the actual bound it hit.
+        if (!Array.isArray(grant.learnedSkillIds)) {
+          issues.push({
+            path: `player.nodeOneShotGrants.${nodeId}.learnedSkillIds`,
+            message: 'phải là mảng string',
+          })
+        } else if (grant.learnedSkillIds.length > ID_COLLECTION_CAP) {
+          issues.push({
+            path: `player.nodeOneShotGrants.${nodeId}.learnedSkillIds`,
+            message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})`,
+          })
+        } else if (!grant.learnedSkillIds.every((id) => typeof id === 'string')) {
           issues.push({
             path: `player.nodeOneShotGrants.${nodeId}.learnedSkillIds`,
             message: 'phải là mảng string',

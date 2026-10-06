@@ -579,18 +579,35 @@ describe('seam (e) - uncapped record walks remain after the ID_COLLECTION_CAP ba
     }
   })
 
-  it('talentLevels stays bounded indirectly: entries for unowned ids fail the ownership pin', () => {
+  it('talentLevels: r27 root cap fires on >1024 keys; unowned entries still fail the ownership pin below it', () => {
     const record = Object.fromEntries(Array.from({ length: 2_000 }, (_, i) => [`crafted_${i}`, 1]))
     const save = makeSave({ lastSavedAt: NOW })
     save.player.talentLevels = record
-    // Not an uncapped channel: the validator cross-checks every level
-    // entry against the capped selectedTalentIds ownership list, so a
-    // crafted record fails on the unowned-talent pin instead of
-    // inflating the walk.
+    // r27-COR-3: the record now shares the ID_COLLECTION_CAP root bound
+    // - a 2000-entry crafted map refuses on count before any entry walk.
     const verdict = validateGameSaveShape(save)
     expect(verdict.ok).toBe(false)
     if (!verdict.ok) {
-      expect(verdict.issues.some((issue) => issue.path.startsWith('player.talentLevels.'))).toBe(true)
+      expect(
+        verdict.issues.some(
+          (issue) =>
+            issue.path === 'player.talentLevels' && issue.message.includes('ID_COLLECTION_CAP'),
+        ),
+      ).toBe(true)
+    }
+
+    // Below the cap the ownership pin still guards: every level entry
+    // must belong to a selected talent.
+    const small = makeSave({ lastSavedAt: NOW })
+    small.player.talentLevels = { crafted_unowned: 1 }
+    const smallVerdict = validateGameSaveShape(small)
+    expect(smallVerdict.ok).toBe(false)
+    if (!smallVerdict.ok) {
+      expect(
+        smallVerdict.issues.some((issue) =>
+          issue.path.startsWith('player.talentLevels.'),
+        ),
+      ).toBe(true)
     }
   })
 

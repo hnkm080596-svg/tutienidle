@@ -348,13 +348,22 @@ export class GameManagerSaveRestore {
 
     const authorityNowMs = restoreAuthorityNowMs(authority)
 
-    // r26 (COR-1/AUT-1) - persisted deadline stamps live in the CLIENT
-    // epoch, so the restore-side re-domain bound for began-time and
-    // deadline fields is min(authority window end, client now): an
-    // honest stamp can never sit past it, while a uniformly-shifted
-    // crafted/skewed payload always does. Feeds the deadline-channel
-    // clamps below (workerCycles, decompose, alchemyJobs, tribulation).
-    const restoreClockMs = Math.min(authorityNowMs, Date.now())
+    // r26 (COR-1/AUT-1) + r27-COR-1 - persisted deadline stamps live in
+    // the SAVE's own epoch (every began-time is pinned <= lastSavedAt at
+    // admission, every deadline <= marker + authored span), so the
+    // re-domain bound is min(the payload's marker, device now) - an
+    // honest stamp can never exceed it, while a uniformly +Delta
+    // shifted payload always carries stamps past device-now. The
+    // authority stamp deliberately does NOT participate: a formally
+    // valid but corrupt-LOW authority (e.g. seconds-for-millis
+    // serverTimeUtc) must only deny accrual, never re-anchor honest
+    // stamps downward into instant-completion grants. Feeds the
+    // deadline-channel clamps below (workerCycles, decompose,
+    // alchemyJobs, tribulation).
+    const restoreClockMs = Math.min(
+      Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : Date.now(),
+      Date.now(),
+    )
 
     // r16-INT-04: the reset marker lives in the FIELD's epoch -
     // checkAndResetDaily/resetDaily read and write it against

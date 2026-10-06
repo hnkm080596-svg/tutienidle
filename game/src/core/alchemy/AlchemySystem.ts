@@ -205,6 +205,14 @@ export function verifyAlchemyJobReservation(
     return 'costScale'
   }
 
+  // r27-COR-2: the digest fold reads specialIngredients.map - shape it
+  // BEFORE folding so a malformed reservation reports its field instead
+  // of throwing through the save validator (which would surface as an
+  // uncoded adapter throw and escape the data-refuse classification).
+  if (!Array.isArray(witness.specialIngredients)) {
+    return 'specialIngredients'
+  }
+
   // The digest is recipe-independent - it binds the job identity and
   // every reserved input atomically, so it replays even when the
   // recipe no longer resolves (data changed between save and load).
