@@ -385,6 +385,18 @@ Chưa sâu (cycle sau): subcomponent từng fidelity scene (Chi Tiết drawer, s
 
 Mọi `*Surface.vue` đã build model THẬT qua `gameManager.*Ops` + `usePlayerStore` (skill: `betaSkillTreeFor` + nodeRegistry; realm: `betaNextRealmSurfaceFor` + `getBreakthroughRequirements` + ETA; technique: `getBetaTechniqueSurfaceModel` + `tryAdvanceTechniqueGrade`; body: `useBodySceneModel`; quest: `getBetaQuestSurfaceModels`). → wire G3 = đổi template/style của `*FidelityScene`, model giữ nguyên. Không cần adapter mới.
 
+## 8b. Locale audit (2026-10-06)
+
+`vi.json` = `en.json` = 1557 keys, parity sạch. Mock labels phần lớn đã có key thật: 'Chưa lộ' (`locked`), 'Auto lặp lại', 'Thu hoạch' (`collect`), realm names (`*.realms.{goldenCore→Kim Đan, nascentSoul→Nguyên Anh, soulTransformation→Hóa Thần, voidRefinement→Luyện Hư, tribulation→Độ Kiếp}`), 5 tab equipment (`panels.equipmentHall.tabs.{enhance,wash,refine,dissolve,decompose}`), dao-lu ('Chọn Đạo Lộ Khởi Đầu', tuKiem/tuPhap/tuThe).
+
+**Copy mismatch:** mock ghi "**Kết Đan**" nhưng key thật = "**Kim Đan**" — cùng realm, khác tên. Ruling nhỏ: dùng key prod (Kim Đan).
+
+**Labels mock chưa có key** (cần thêm khi wire): 'Hoạt Động' (help topic), 'Lên Cấp' (prod dùng 'Nâng Cấp'), 'Hạ Giới' (quest difficulty chip), 'Tạm khóa' (locked badge text). 36 file `src/ui-preview/*Messages.ts` (hardcoded preview-only) được thay bằng key thật khi wire — không port nguyên.
+
+## 8c. Test-pin blast radius
+
+~35 spec e2e, **~8 pin trực tiếp vào class/structure fidelity** (`cf-*`, `equipment-socket`, `technique-stage`, `alchemy-paper`, `quest-detail`, `paper-nav`, `item-detail` …) + 4 architecture tests (`i18nKeyParity`, `betaScopeRenderedTokens`, `betaConsumerSeamMounts`, `huyenKimChromeManifest`) + nhóm `huyen-kim-*` spec (imperial-shell/reference-fidelity/stable-art/scroll-lifecycle/fidelity-capture). Mỗi G3 slice phải kèm pin-update trong cùng PR; spec `huyen-kim-*` sẽ dần lỗi thời khi chrome chuyển pack — xếp lịch retire/repoint theo slice.
+
 ## 9a. Combat / Tribulation / Victory / Defeat (scenes, không phải panel nhưng cùng pack)
 
 **Combat** (`CombatFidelityScene` + 6 sub): hiện toàn bộ chrome trỏ `huyen-kim` pack cũ (`panel-nine-slice`, `ornament-ring-v1`, meters). Pack mới `combat/` có manifest với semantic id → map wire-now:
