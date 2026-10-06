@@ -258,6 +258,8 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 .trial-begin { position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }
 .trial-begin[aria-disabled="true"] { cursor: not-allowed; filter: grayscale(.8); }
 .trial-begin[aria-disabled="true"]:hover { filter: grayscale(.8); }
+.trial-begin:not([aria-disabled="true"]):hover { color: #2f2415; filter: none; }
+.trial-begin:not([aria-disabled="true"]):hover::before { border-image-source: var(--pc-primary-button); }
 .trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; margin: 0; min-height: 1.2em; }
 .creation-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>

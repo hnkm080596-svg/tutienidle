@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import LoginLogoBlock from './LoginLogoBlock.vue'
 defineProps<{ resumeAvailable: boolean; ready: boolean; busy: boolean; error: string }>()
-const emit = defineEmits<{ authenticate: [mode: 'login' | 'register']; play: []; settings: [] }>()
+const emit = defineEmits<{ authenticate: [mode: 'login' | 'register']; play: []; settings: []; exit: [] }>()
 const { t } = useI18n()
 </script>
 
@@ -15,6 +15,7 @@ const { t } = useI18n()
       <PcPaperButton variant="secondary" data-testid="opening-register-button" :disabled="busy" @click="emit('authenticate', 'register')">{{ t('onboarding.auth.createAccount') }}</PcPaperButton>
       <PcPaperButton variant="secondary" :data-testid="resumeAvailable ? 'auth-continue-button' : 'auth-guest-button'" :disabled="busy || !ready" :aria-busy="busy" @click="emit('play')">{{ resumeAvailable ? t('onboarding.auth.continueNoName') : t('onboarding.auth.guest.button') }}</PcPaperButton>
       <PcPaperButton variant="secondary" data-testid="opening-settings-button" :disabled="busy" @click="emit('settings')">{{ t('paperNav.settings') }}</PcPaperButton>
+      <PcPaperButton variant="secondary" data-testid="opening-exit-button" :disabled="busy" @click="emit('exit')">{{ t('onboarding.auth.exit.title') }}</PcPaperButton>
       <p v-if="error" class="login-opening__error" role="alert">{{ error }}</p>
     </nav>
   </section>

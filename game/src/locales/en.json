@@ -1293,7 +1293,15 @@
       },
       "begin": "Begin",
       "createAccount": "Register",
-      "returnOpening": "Back"
+      "returnOpening": "Back",
+      "exit": {
+        "title": "Exit Game",
+        "question": "Do you want to exit the game?",
+        "cancel": "Stay",
+        "confirm": "Exit",
+        "exited": "Exited",
+        "return": "Back"
+      }
     },
     "creation": {
       "back": "Back",

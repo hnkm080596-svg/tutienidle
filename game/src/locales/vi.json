@@ -1293,7 +1293,15 @@
       },
       "begin": "Bắt Đầu",
       "createAccount": "Đăng Ký",
-      "returnOpening": "Quay lại"
+      "returnOpening": "Quay lại",
+      "exit": {
+        "title": "Thoát Game",
+        "question": "Bạn muốn thoát game?",
+        "cancel": "Ở Lại",
+        "confirm": "Thoát",
+        "exited": "Đã thoát",
+        "return": "Quay Lại"
+      }
     },
     "creation": {
       "back": "Quay Lại",
