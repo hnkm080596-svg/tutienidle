@@ -26,8 +26,6 @@ const talentIconError = (event: Event) => {
 <template>
   <section class="character-central">
     <div class="character-card character-mainstats">
-      <h2>{{ t('character.mainStats') }}</h2>
-      <p v-if="model.attributePoints > 0">{{ t('character.points', { count: model.attributePoints }) }}</p>
       <div
         v-for="stat in model.stats"
         :key="stat.id"
@@ -35,11 +33,12 @@ const talentIconError = (event: Event) => {
         v-tooltip="statTooltip(stat)"
       >
         <span>{{ stat.label }}</span>
-        <b>{{ stat.value }} <small v-if="stat.capped">{{ t('character.max') }}</small></b>
+        <b>{{ stat.value }}</b>
         <span class="character-stat-tube"><i :style="{ width: `${Math.min(100, Math.max(0, stat.fill))}%` }" /></span>
+        <span v-if="stat.capped" class="character-allocate character-allocate--max">{{ t('character.max') }}</span>
         <button
+          v-else-if="stat.allocatable"
           class="character-allocate"
-          :disabled="!stat.allocatable"
           :aria-label="`${t('character.allocate')} ${stat.label}`"
           @click.stop="emit('allocate', stat.id)"
         ><img :src="CHARACTER_ART.plus" alt=""></button>
@@ -69,11 +68,10 @@ const talentIconError = (event: Event) => {
 </template>
 <style scoped>
 .character-central { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 9px; min-height: 0; }
-.character-mainstats > p { font-size: 13px; margin: 0 0 9px; }
+.character-mainstats { display: flex; flex-direction: column; justify-content: space-evenly; }
 /* Rows: label | value | [tube under both] | allocate puck. */
 .character-stat-row { position: relative; display: grid; grid-template-columns: 1fr auto 39px; gap: 3px 8px; padding: 3px 0; font-size: 15px; line-height: 1.2; min-height: 40px; }
 .character-stat-row b { font-size: 15px; font-variant-numeric: tabular-nums; }
-.character-stat-row small { font-size: 9px; color: #edcd7e; }
 /* Gold tubes (user ruling 2026-10-06): one shared metallic gradient for
    every stat - the old per-stat colors went away with the G3 reskin. */
 .character-stat-tube { grid-column: 1/3; height: 9px; border: 1px solid #927747; border-radius: 9px; background: #111912; overflow: hidden; box-shadow: inset 0 2px 3px #0009; }
@@ -89,6 +87,7 @@ const talentIconError = (event: Event) => {
 .character-allocate:not(:disabled):hover img { filter: brightness(1.18) drop-shadow(0 0 3px #e8b657); }
 .character-allocate:not(:disabled):active img { filter: brightness(.88); transform: translateY(1px); }
 .character-allocate:disabled img { opacity: .45; filter: saturate(.4); }
+.character-allocate--max { display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: .08em; color: #caa24e; text-transform: uppercase; cursor: default; }
 /* Small cards: icon + name talent rows (hover = description, R10) and
    the five ivory element pucks with share. */
 .character-talent { display: inline-flex; align-items: center; gap: 10px; margin: 0 12px 4px 0; padding: 0; border: 0; background: none; color: inherit; font-size: 13px; cursor: pointer; text-align: left; }
