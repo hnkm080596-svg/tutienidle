@@ -392,6 +392,22 @@ function isNonNegativeFiniteNumber(value: unknown): value is number {
   return isFiniteNumber(value) && value >= 0
 }
 
+// F-R21-01/02/03 (COR-1/2/3 same class): persisted timestamp cursors
+// feed settle/tick machinery whose mechanism guard rejects
+// |stamp| >= 2^53 (outside the exact-integer-ms domain any ms-delta
+// absorbs). Finite-only admission let a crafted magnitude record
+// through: the mechanism then froze its whole site verbatim on every
+// settle + tickWorkers and re-persisted it - a permanent silent wedge
+// worse than save rejection. Admission owns the same bound for every
+// persisted timestamp cursor; honest stamps are epoch-ms (~1e12).
+function isBoundedTimestamp(value: unknown): value is number {
+  return isFiniteNumber(value) && Math.abs(value) < 2 ** 53
+}
+
+function isNonNegativeBoundedTimestamp(value: unknown): value is number {
+  return isBoundedTimestamp(value) && value >= 0
+}
+
 function isItemQuality(value: unknown): value is ItemQuality {
   return typeof value === 'string' && ITEM_QUALITY_ORDER.some((quality) => quality === value)
 }
@@ -1493,11 +1509,11 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
       requireNonEmptyString(effect, 'id', effectPath, issues)
       requireNonEmptyString(effect, 'sourceItemId', effectPath, issues)
 
-      if (!isFiniteNumber(effect.appliedAtMs)) {
-        issues.push({ path: `${effectPath}.appliedAtMs`, message: 'phải là số hữu hạn' })
+      if (!isBoundedTimestamp(effect.appliedAtMs)) {
+        issues.push({ path: `${effectPath}.appliedAtMs`, message: 'phải là timestamp trong miền |x| < 2^53' })
       }
-      if (!isFiniteNumber(effect.expiresAtMs)) {
-        issues.push({ path: `${effectPath}.expiresAtMs`, message: 'phải là số hữu hạn' })
+      if (!isBoundedTimestamp(effect.expiresAtMs)) {
+        issues.push({ path: `${effectPath}.expiresAtMs`, message: 'phải là timestamp trong miền |x| < 2^53' })
       }
 
       // F-TC9-1: every writer stamps appliedAtMs=now before the save's
@@ -2294,8 +2310,11 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
 
   // lastSavedAt - buildGameSave() LUON ghi; thieu no khien offline time
   // tinh ra NaN (review 2026-08-28 bug #2). Save hien hanh bat buoc co.
-  if (!isFiniteNumber(player.lastSavedAt)) {
-    issues.push({ path: 'player.lastSavedAt', message: 'phải là number hữu hạn' })
+  // r21-AUT-02/COR-3: magnitude bound too - a crafted marker outside
+  // the exact-integer-ms domain (like -1e300) derives deep-past
+  // cursors that trip the settle guard and wedge sites verbatim.
+  if (!isBoundedTimestamp(player.lastSavedAt)) {
+    issues.push({ path: 'player.lastSavedAt', message: 'phải là timestamp trong miền |x| < 2^53' })
   }
 
   // v60 companion gacha - pity counter and Duyen Phan currency. A NaN
@@ -2379,6 +2398,15 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
     } else {
       requireNonEmptyString(player.autoFarmStage, 'stageId', 'player.autoFarmStage', issues)
       requireNonNegativeNumber(player.autoFarmStage, 'lastCheckedMs', 'player.autoFarmStage', issues)
+      if (
+        isNonNegativeFiniteNumber(player.autoFarmStage.lastCheckedMs) &&
+        !isBoundedTimestamp(player.autoFarmStage.lastCheckedMs)
+      ) {
+        issues.push({
+          path: 'player.autoFarmStage.lastCheckedMs',
+          message: 'ngoài miền timestamp |x| < 2^53',
+        })
+      }
 
       // F-A10-6: autofarm mints rewards on the claimed stage - the same
       // realm-earnability bound as the clear claims applies.
@@ -3209,8 +3237,8 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
     }
   }
 
-  if (!isNonNegativeFiniteNumber(value.lastDailyResetAtMs)) {
-    issues.push({ path: `${path}.lastDailyResetAtMs`, message: 'phải là số hữu hạn không âm' })
+  if (!isNonNegativeBoundedTimestamp(value.lastDailyResetAtMs)) {
+    issues.push({ path: `${path}.lastDailyResetAtMs`, message: 'phải là timestamp không âm trong miền |x| < 2^53' })
   }
 }
 
@@ -3244,7 +3272,7 @@ function validateBuildingsSave(
       typeof entry.buildingId !== 'string' ||
       !Number.isInteger(entry.level) ||
       (entry.level as number) < 1 ||
-      !isNonNegativeFiniteNumber(entry.lastCollectedAt)
+      !isNonNegativeBoundedTimestamp(entry.lastCollectedAt)
     ) {
       issues.push({ path: entryPath, message: 'building sai shape' })
       continue
@@ -3327,8 +3355,8 @@ function validateProductionCycleSave(
     !isFiniteNumber(value.siteLevelAtStart) ||
     !isFiniteNumber(value.rewardTableVersion) ||
     !isFiniteNumber(value.rollSeed) ||
-    !isFiniteNumber(value.startedAtMs) ||
-    !isFiniteNumber(value.completesAtMs)
+    !isBoundedTimestamp(value.startedAtMs) ||
+    !isBoundedTimestamp(value.completesAtMs)
   ) {
     issues.push({ path, message: 'production cycle sai shape' })
     return
@@ -3562,8 +3590,8 @@ function validateAlchemyJobsSave(
       typeof entry.recipeId !== 'string' ||
       typeof entry.pillId !== 'string' ||
       typeof entry.herbMaterialId !== 'string' ||
-      !isFiniteNumber(entry.startedAtMs) ||
-      !isFiniteNumber(entry.completesAtMs) ||
+      !isBoundedTimestamp(entry.startedAtMs) ||
+      !isBoundedTimestamp(entry.completesAtMs) ||
       !isFiniteNumber(entry.roomLevelAtStart)
     ) {
       issues.push({ path: entryPath, message: 'alchemy job sai shape' })
@@ -4424,8 +4452,8 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
         }
       }
 
-      if (!isNonNegativeFiniteNumber(decompose.nextCycleAt)) {
-        issues.push({ path: '.decompose.nextCycleAt', message: 'phải là số hữu hạn không âm' })
+      if (!isNonNegativeBoundedTimestamp(decompose.nextCycleAt)) {
+        issues.push({ path: '.decompose.nextCycleAt', message: 'phải là timestamp không âm trong miền |x| < 2^53' })
       }
 
       if (typeof decompose.started !== 'boolean') {
@@ -4445,9 +4473,9 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
       if (
         tribulation.cooldownUntil !== undefined &&
-        !isNonNegativeFiniteNumber(tribulation.cooldownUntil)
+        !isNonNegativeBoundedTimestamp(tribulation.cooldownUntil)
       ) {
-        issues.push({ path: '.tribulation.cooldownUntil', message: 'phải là số hữu hạn không âm' })
+        issues.push({ path: '.tribulation.cooldownUntil', message: 'phải là timestamp không âm trong miền |x| < 2^53' })
       }
 
       // F-LC-1: the only writer mints cooldownUntil = now +

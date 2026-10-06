@@ -32,22 +32,24 @@ import { MaterialRegistry } from '../../core/material/MaterialRegistry'
 //
 // R20-COR-1 - WAS: the r19 non-finite guard checked FINITENESS only,
 // not MAGNITUDE. The seed arm computes dueMs = emptyLaneStartMs +
-// cycleMs; for |emptyLaneStartMs| >= ~1e21 the addition FP-absorbs
-// (ulp at 1e21 is 131072 > every authored cycleMs), so dueMs ===
-// startMs and the head cost is 0. A zero-cost completion never drains
-// budgetMs and respawns the identical cursor - an infinite loop
-// minting free completions in deadline mode (the function never
-// returns; the completed array grows to OOM). A crafted save carries
-// lastSavedAt = -1e308 (validator pins it finite only -
-// saveShapeValidation.ts:2297) -> local restore computes elapsed
-// ~1e305s -> offlineSinceMs ~ -1e308 (finite, guard-admitted) -> the
-// seed loop hangs every boot.
+// cycleMs; once |stamp| is large enough that ulp/2 exceeds the delta
+// (~1.2e21 for the probed 100s cycle), the addition FP-absorbs -
+// dueMs === startMs and the head cost is 0. A zero-cost completion
+// never drains budgetMs and respawns the identical cursor - an
+// infinite loop minting free completions in deadline mode (the
+// function never returns; the completed array grows to OOM). A
+// crafted save carries lastSavedAt = -1e308 (validator pins it finite
+// only - saveShapeValidation.ts:2297) -> local restore computes
+// elapsed ~1e305s -> offlineSinceMs ~ -1e308 (finite, guard-admitted)
+// -> the seed loop hangs every boot.
 // r20 adjudication FIXED: the guard now rejects |stamp| >= 2^53 (the
 // exact-integer-ms domain edge where any ms-delta can absorb) for
 // emptyLaneStartMs AND pending dues, and non-finite slots - repros
-// (b)/(c)/(COR-2) are flipped to pin the DENY semantics; (a) still
-// documents the validator's admitted shape (the mechanism, not the
-// marker, now owns the bound).
+// (b)/(c)/(COR-2) are flipped to pin the DENY semantics.
+// r21 adjudication (R21-AUT-01/02 + R21-COR-1/2/3, same class):
+// admission co-owns the bound - the validator now rejects |stamp| >=
+// 2^53 on every persisted timestamp cursor, so repro (a) flips to a
+// REJECTION pin (a crafted magnitude marker never reaches restore).
 //
 // R20-COR-2 - WAS: slots = +Infinity makes `count < slots` in the
 // seed loop always true -> infinite push loop (OOM). FIXED in the
@@ -118,11 +120,13 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
   })
 
   // --------------------------------------------------------------------
-  // R20-COR-1(a): the reader gate admits lastSavedAt = -1e308. The only
-  // pin on the field is isFiniteNumber (saveShapeValidation.ts:2297) -
-  // no epoch sanity floor exists anywhere in the pipeline.
+  // R20-COR-1(a) - WAS: the reader gate admitted lastSavedAt = -1e308
+  // (finite-pinned only, no floor). r21 fix: admission rejects
+  // |stamp| >= 2^53 on every persisted timestamp cursor - the crafted
+  // marker fails at the gate and never reaches restore (louder deny
+  // than the silent per-site freeze it used to cause downstream).
   // --------------------------------------------------------------------
-  it('validator admits lastSavedAt = -1e308 (finite-pinned only, no floor)', () => {
+  it('validator rejects lastSavedAt = -1e308 (r21 magnitude pin)', () => {
     const save = validSave()
     const p = save.player as PlayerData
     p.lastSavedAt = -1e308
@@ -137,12 +141,29 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
     ]
 
     const validation = validateGameSaveShape(save)
-    // ADMITTED: every lastSavedAt-relative pin bounds OTHER fields
-    // against the marker; nothing bounds the marker's own magnitude.
-    expect(validation.ok).toBe(true)
-    if (validation.ok) {
-      expect((validation.normalizedSave as { player: PlayerData }).player.lastSavedAt).toBe(-1e308)
-    }
+    // REJECTED: |stamp| >= 2^53 is outside the exact-integer-ms domain
+    // - no legal writer can produce it (epoch-ms is ~1e12).
+    expect(validation.ok).toBe(false)
+    expect(
+      validation.issues.some((issue) => issue.path === 'player.lastSavedAt'),
+    ).toBe(true)
+
+    // Boundary control: a crafted marker INSIDE the domain is still
+    // admitted and settles safely (sub-pin magnitudes cannot absorb a
+    // ms-delta - ulp/2 < every authored cycleMs at < 2^53).
+    const admitted = validSave()
+    const admittedPlayer = admitted.player as PlayerData
+    admittedPlayer.lastSavedAt = -9e15
+    admitted.productionSites = [
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        activeWorkerSlots: 0,
+        workerCycles: [],
+      },
+    ]
+    expect(validateGameSaveShape(admitted).ok).toBe(true)
   })
 
   // --------------------------------------------------------------------
@@ -258,7 +279,12 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
       expect(result.status).toBe(0)
     } finally {
       // Sweep any vitest worker that outlived the timeout kill.
-      spawnSync('pkill', ['-f', 'fixpointR20CorSlotsHang'], { timeout: 5_000 })
+      // r21-COR-5: match the child invocation only - a bare spec-name
+      // pattern also matches THIS run's cmdline when both spec files
+      // are listed together and pkill kills the parent vitest.
+      spawnSync('pkill', ['-f', 'fixpointR20CorSlotsHang.probe.test.ts --reporter=dot'], {
+        timeout: 5_000,
+      })
     }
   })
 })

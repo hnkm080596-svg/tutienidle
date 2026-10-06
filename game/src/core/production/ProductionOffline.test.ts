@@ -461,6 +461,7 @@ describe('advanceWorkerLanes — defensive input guard (r19/r20-AUT/COR hardenin
     expect(result.pending).toHaveLength(0)
     expect(result.seededPending).toHaveLength(0)
     expect(result.forfeited).toBe(0)
+    expect(result.consumedBudgetMs).toBe(0)
   })
 
   it('returns zero-advance when a pending due is non-finite', () => {
@@ -474,6 +475,7 @@ describe('advanceWorkerLanes — defensive input guard (r19/r20-AUT/COR hardenin
     expect(result.completed).toHaveLength(0)
     expect(result.pending).toEqual([saved])
     expect(result.forfeited).toBe(0)
+    expect(result.consumedBudgetMs).toBe(0)
   })
 
   // r20-AUT: a reversed/zero span computes headCost = 0 and would grant
@@ -493,13 +495,35 @@ describe('advanceWorkerLanes — defensive input guard (r19/r20-AUT/COR hardenin
       expect(result.completed).toHaveLength(0)
       expect(result.pending).toEqual([saved])
       expect(result.forfeited).toBe(0)
+      expect(result.consumedBudgetMs).toBe(0)
+    }
+  })
+
+  // r21-COR-2: nowMs is a timestamp too - a finite but huge clock
+  // puts every due in the past and runs the same unbounded settle
+  // loop the stamp pins close.
+  it('returns zero-advance when nowMs exceeds the exact-integer domain', () => {
+    const saved = { ...makeCycle(LAM, T0, T0 + 100_000) }
+
+    for (const nowMs of [2 ** 53, 1e300]) {
+      const result = advanceWorkerLanes({
+        ...baseParams,
+        nowMs,
+        pending: [saved],
+        emptyLaneStartMs: T0,
+      })
+
+      expect(result.completed).toHaveLength(0)
+      expect(result.pending).toEqual([saved])
+      expect(result.consumedBudgetMs).toBe(0)
     }
   })
 
   // r20-COR-1: at |stamp| >= 2^53 float64 absorbs stamp + cycleMs back
   // into stamp - headCost = 0 forever, dues never reach nowMs, an
-  // unbounded settle loop. A crafted deep-past lastSavedAt reaches
-  // this through the window start; the validator only pins isFinite.
+  // unbounded settle loop. A crafted deep-past lastSavedAt used to
+  // reach this through the window start; the r21 validator magnitude
+  // pin rejects it at admission, this arm keeps mechanism-level cover.
   it('returns zero-advance when emptyLaneStartMs exceeds the exact-integer domain', () => {
     const saved = { ...makeCycle(LAM, T0, T0 + 100_000) }
 
@@ -513,6 +537,7 @@ describe('advanceWorkerLanes — defensive input guard (r19/r20-AUT/COR hardenin
       expect(result.completed).toHaveLength(0)
       expect(result.pending).toEqual([saved])
       expect(result.seededPending).toHaveLength(0)
+      expect(result.consumedBudgetMs).toBe(0)
     }
   })
 
@@ -529,16 +554,18 @@ describe('advanceWorkerLanes — defensive input guard (r19/r20-AUT/COR hardenin
 
       expect(result.completed).toHaveLength(0)
       expect(result.pending).toEqual([saved])
+      expect(result.consumedBudgetMs).toBe(0)
     }
   })
 
-  // r20-COR-2: non-finite slots makes the seed loop push lanes
-  // forever; only non-finite is rejected (0 or negative stays legal -
-  // lanes still settle their dues, they just never respawn).
-  it('returns zero-advance when slots is non-finite', () => {
+  // r20-COR-2 + r21-INT-01: non-finite or out-of-contract slots makes
+  // the seed loop push lanes without bound (1e9 finite still OOMs; a
+  // fractional count over-seeds a lane). 0 stays legal - lanes settle
+  // their dues and just never respawn.
+  it('returns zero-advance when slots is outside the bounded-integer contract', () => {
     const saved = { ...makeCycle(LAM, T0, T0 + 100_000) }
 
-    for (const slots of [Number.POSITIVE_INFINITY, Number.NaN]) {
+    for (const slots of [Number.POSITIVE_INFINITY, Number.NaN, 1e9, 1.5, -1, 65_537]) {
       const result = advanceWorkerLanes({
         ...baseParams,
         slots,
@@ -548,6 +575,29 @@ describe('advanceWorkerLanes — defensive input guard (r19/r20-AUT/COR hardenin
 
       expect(result.completed).toHaveLength(0)
       expect(result.pending).toEqual([saved])
+      expect(result.consumedBudgetMs).toBe(0)
     }
+  })
+
+  it('settles normally at the slots boundary (0 and 65536 legal)', () => {
+    const saved = { ...makeCycle(LAM, T0, T0 + 100_000) }
+
+    const zeroSlots = advanceWorkerLanes({
+      ...baseParams,
+      slots: 0,
+      pending: [saved],
+      emptyLaneStartMs: T0,
+    })
+    expect(zeroSlots.completed).toHaveLength(1)
+    expect(zeroSlots.pending).toHaveLength(0)
+
+    // 65536 must stay legal: with no emptyLaneStartMs the seed loop is
+    // skipped, so the boundary contract check runs without the push.
+    const maxSlots = advanceWorkerLanes({
+      ...baseParams,
+      slots: 65_536,
+      pending: [saved],
+    })
+    expect(maxSlots.completed.length).toBeGreaterThan(0)
   })
 })

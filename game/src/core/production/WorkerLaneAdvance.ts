@@ -39,7 +39,12 @@ export interface WorkerLaneAdvanceParams {
   /** In-flight lane heads from state (saved or tick-carried). */
   pending: readonly ProductionCycle[]
 
-  /** Lanes allocated to this site by allocateWorkerSlots. */
+  /**
+   * Lanes allocated to this site by allocateWorkerSlots. Contract: a
+   * non-negative integer, bounded - the defensive guard rejects
+   * non-integer/negative/>65536 values (a fractional count over-seeds
+   * a lane; a huge count makes the seed loop push lanes to OOM).
+   */
   slots: number
 
   nowMs: number
@@ -57,7 +62,10 @@ export interface WorkerLaneAdvanceParams {
    * Offline work budget (cap accounting): a completion whose own
    * duration exceeds the remaining budget is FORFEITED (dropped without
    * reward), same rule as the manual backlog forfeit. Undefined = no
-   * budget (online path never forfeits).
+   * budget (online path never forfeits). Caller-owned ceiling: the
+   * authorized cap lives upstream (PRODUCTION_OFFLINE_CAP_SECONDS
+   * bounds the production settle); a huge finite value is honored by
+   * design, the guard only rejects non-finite.
    */
   budgetMs?: number
 
@@ -123,17 +131,23 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
   // grant a free completion per entry; the validator rejects the same
   // shape upstream (F-A11-4). r20-COR-1/2: magnitude + slots pins -
   // |stamp| >= 2^53 makes stamp + cycleMs absorb back into stamp in
-  // float64 (headCost = 0 forever, dues never reach nowMs: an
-  // unbounded settle loop a crafted deep-past lastSavedAt could reach
-  // through the window start, and the same absorb can sit inside a
-  // crafted pending pair at mechanism level), and non-finite slots
-  // makes the seed loop push lanes forever. Honest stamps stay under
-  // ~1.8e12 ms, far inside the exact-integer domain. Zero-advance
-  // result: the in-flight lanes are preserved untouched (no
-  // completions, no respawns, no empty-lane seeding).
+  // float64 (ulp/2 > the delta: headCost = 0 forever, dues never reach
+  // nowMs - an unbounded settle loop a crafted deep-past lastSavedAt
+  // could reach through the window start, and the same absorb can sit
+  // inside a crafted pending pair at mechanism level), and a bad
+  // slots makes the seed loop push lanes without bound. r21-INT-01:
+  // slots must be a bounded non-negative integer - 1e9 finite still
+  // pushes to OOM, and a fractional count over-seeds a lane. Honest
+  // stamps are epoch-ms, orders of magnitude inside the exact-integer
+  // domain. Zero-advance result: the in-flight lanes are preserved
+  // untouched (no completions, no respawns, no empty-lane seeding).
   if (
+    // r21-COR-2: nowMs is a timestamp too - a finite but huge clock
+    // (1e300) puts every due in the past and runs the same unbounded
+    // settle loop the stamp pin closes.
     !Number.isFinite(nowMs) ||
-    !Number.isFinite(slots) ||
+    Math.abs(nowMs) >= 2 ** 53 ||
+    !Number.isInteger(slots) || slots < 0 || slots > 65_536 ||
     (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs)) ||
     (params.emptyLaneStartMs !== undefined &&
       (!Number.isFinite(params.emptyLaneStartMs) ||

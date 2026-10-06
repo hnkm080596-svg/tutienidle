@@ -296,9 +296,14 @@ export class DecomposeSystem {
     // still pending, and a crafted-future offlineSinceMs paired with a
     // crafted-old nextCycleAt would otherwise spin billions of no-op
     // iterations at boot.
+    // r21-COR-4: O(1) jump arithmetic instead of per-cycle stepping -
+    // a crafted nextCycleAt=0 still admitted by the non-negative pin
+    // used to spin ~57M no-op iterations (~156ms) every boot.
     const fastForwardEndMs = Math.min(windowStartMs, nowMs)
-    while (this.nextCycleAt <= fastForwardEndMs) {
-      this.nextCycleAt += this.cycleMs
+    if (this.cycleMs > 0 && this.nextCycleAt <= fastForwardEndMs) {
+      const skippedCycles =
+        Math.floor((fastForwardEndMs - this.nextCycleAt) / this.cycleMs) + 1
+      this.nextCycleAt += skippedCycles * this.cycleMs
     }
 
     let settled = 0
