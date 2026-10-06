@@ -59,7 +59,7 @@ const edges = computed<SkillUiEdge[]>(() =>
 )
 const selected = computed(() => nodes.value.find(node => node.id === selectedId.value) ?? nodes.value[0] ?? null)
 function chooseElement(id: string) { if (elementIds.includes(id as ElementId)) { element.value = id as ElementId; selectedId.value = element.value === 'fire' ? 'hoa_linh_ngo' : 'root'; notice.value = '' } }
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function move(event: PointerEvent) { const rect = (event.currentTarget as HTMLElement).getBoundingClientRect(); pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) } }
 </script>
 <template>

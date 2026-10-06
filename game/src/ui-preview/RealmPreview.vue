@@ -10,7 +10,7 @@ const selected = shallowRef(11)
 const notice = shallowRef('')
 const pointer = shallowRef({ x: 0, y: 0 })
 const model = computed<RealmUiModel>(() => ({ name: t('name'), currentFloor: 11, maxFloor: 18, progress: 70, progressLabel: '70%', cultivation: '7.000 / 10.000', rate: t('rateValue'), requirements: [{ id: 'level', label: t('level'), met: false }, { id: 'chapter', label: t('chapter'), met: true }], passives: [{ id: 'p1', name: 'Linh Khí Hộ Thể', description: 'Nhập đạo ban phúc.', effectLines: ['Sức mạnh +5%'] }], nextRealmName: 'Trúc Cơ', ctaLabel: t('breakthrough'), ctaVisible: true, ctaEnabled: false, quanKhiEntry: true }))
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function move(event: PointerEvent) {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) }

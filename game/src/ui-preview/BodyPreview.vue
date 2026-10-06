@@ -59,7 +59,7 @@ const model = computed<BodyPaperModel>(() => {
 })
 const unit = computed(() => model.value.units.find(entry => entry.id === selection.value) ?? model.value.units[0] ?? null)
 function chooseChapter(id:string) { if((id === 'refinement' || id === 'meridian' || id === 'cycle') && !LOCKED_CHAPTERS.has(id)) {chapter.value=id;selection.value='1';notice.value=''} }
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function move(event:PointerEvent) { const rect=(event.currentTarget as HTMLElement).getBoundingClientRect(); pointer.value={x:Math.max(-1,Math.min(1,(event.clientX-rect.left)/rect.width*2-1)),y:Math.max(-1,Math.min(1,(event.clientY-rect.top)/rect.height*2-1))} }
 </script>
 <template><SceneDesignCanvas><div class="body-preview" :style="{'--df-x':pointer.x,'--df-y':pointer.y}" @pointermove="move" @pointerleave="pointer={x:0,y:0}"><DongFuVista /><BodyFidelityScene :model="model" :unit="unit" :notice="notice" preview @chapter="chooseChapter" @select="selection=$event" @back="back" @invest="notice=t('notice')" /></div></SceneDesignCanvas></template>

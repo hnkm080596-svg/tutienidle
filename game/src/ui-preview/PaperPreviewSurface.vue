@@ -13,7 +13,7 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
 const pointer = shallowRef({x:0,y:0})
 const navigation = computed(()=>previewPaperNavigation(t))
 function navigate(id:string) { const route=previewRoutes[id]; if(route)window.location.assign(route) }
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function move(event:PointerEvent) { const r=(event.currentTarget as HTMLElement).getBoundingClientRect(); pointer.value={x:Math.max(-1,Math.min(1,(event.clientX-r.left)/r.width*2-1)),y:Math.max(-1,Math.min(1,(event.clientY-r.top)/r.height*2-1))} }
 </script>
 <template><SceneDesignCanvas><div class="paper-preview-host" :style="{'--df-x':pointer.x,'--df-y':pointer.y}" @pointermove="move" @pointerleave="pointer={x:0,y:0}"><DongFuVista/><section class="paper-preview-panel" :aria-label="title"><div class="paper-surface" :style="{borderImageSource:`url('${paper}')`}" aria-hidden="true"/><PaperPanelNavigation :items="navigation" :active="active" :label="t('navigation')" :back-label="t('home')" @select="navigate" @back="back"/><h1>{{ title }}</h1><button class="paper-close" :aria-label="t('close')" @click="back">×</button><div class="paper-content"><slot/></div><p class="paper-preview-note">{{ t('preview') }}</p><p class="paper-notice" role="status">{{ notice }}</p></section></div></SceneDesignCanvas></template>

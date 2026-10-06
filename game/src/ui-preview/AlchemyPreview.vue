@@ -29,7 +29,7 @@ const jobs = computed<AlchemyJobDisplay[]>(() => [
 ])
 function choose(id: string) { if (recipes.value.some(entry => entry.id === id)) { selected.value = id; variant.value = 'decade'; notice.value = '' } }
 function chooseVariant(id: string) { if (recipe.value?.variants.some(entry => entry.id === id)) { variant.value = id; notice.value = '' } }
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function move(event: PointerEvent) {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) }

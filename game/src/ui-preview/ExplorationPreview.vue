@@ -69,7 +69,7 @@ const stage = computed<ExplorationDetail>(() => {
 function choose(id: string) { selected.value = id; notice.value = '' }
 function chooseZone(id: string) { if (id === zoneId.value) return; notice.value = t('navNotice', { name: 'Huyền Phong' }) }
 function pickMode(id: string) { if (id === 'perfect_farm') { notice.value = t('disabled'); return } mode.value = id }
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function move(event: PointerEvent) {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) }

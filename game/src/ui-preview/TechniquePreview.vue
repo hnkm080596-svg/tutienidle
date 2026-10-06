@@ -34,7 +34,7 @@ const model = computed<TechniqueUiModel>(() => emptyState
   rankLabel: t('rank'), masteryLabel: '210 / 300', masteryPercent: 70, currentGrade: t('currentGrade'), nextGrade: t('nextGrade'), material: { name: t('material'), amountLabel: '1.280 / 800' }, materialNote: t('materialNote'),
   advanceDisabled: false, disabledReason: '', artTemporary: true,
 }))
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function select(id: string) {
   const stage = model.value.stages.find(entry => entry.id === id)
   if (!stage) return

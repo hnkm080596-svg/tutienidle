@@ -7,7 +7,7 @@ import CharacterFidelityScene from '@/components/scenes/character/fidelity/Chara
 import Tooltip from '@/components/common/Tooltip.vue'
 import type { CharacterUiModel } from '@/components/scenes/character/fidelity/characterUi'
 const { t } = useI18n()
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 const notice = shallowRef('')
 const pointer = shallowRef({ x: 0, y: 0 })
 const model = computed<CharacterUiModel>(() => ({

@@ -23,9 +23,9 @@ function move(event: PointerEvent) {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) }
 }
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function action(id:string) {
-  if(id==='enhance'||id==='dissolve')window.location.assign(`/ui-forge.html#${id}`)
+  if(id==='enhance'||id==='dissolve')window.location.assign(`/legacy/ui-forge.html#${id}`)
   else notice.value=t('notice')
 }
 </script>
