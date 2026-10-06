@@ -205,11 +205,22 @@ export function verifyAlchemyJobReservation(
     return 'costScale'
   }
 
-  // r27-COR-2: the digest fold reads specialIngredients.map - shape it
-  // BEFORE folding so a malformed reservation reports its field instead
-  // of throwing through the save validator (which would surface as an
-  // uncoded adapter throw and escape the data-refuse classification).
-  if (!Array.isArray(witness.specialIngredients)) {
+  // r27-COR-2 + r27-AUT-1: the digest fold reads
+  // specialIngredients.map(special => special.materialId) - shape the
+  // collection AND each element BEFORE folding so a malformed
+  // reservation reports its field instead of throwing through the save
+  // validator (which would surface as an uncoded adapter throw and
+  // escape the data-refuse classification).
+  if (
+    !Array.isArray(witness.specialIngredients) ||
+    !witness.specialIngredients.every(
+      (special) =>
+        typeof special === 'object' &&
+        special !== null &&
+        typeof special.materialId === 'string' &&
+        Number.isFinite(special.amount),
+    )
+  ) {
     return 'specialIngredients'
   }
 
@@ -240,7 +251,6 @@ export function verifyAlchemyJobReservation(
   const witnessSpecials = witness.specialIngredients
 
   if (
-    !Array.isArray(witnessSpecials) ||
     witnessSpecials.length !== expectedSpecials.length ||
     expectedSpecials.some(
       (expected, index) =>
@@ -394,7 +404,11 @@ export class AlchemySystem {
         ...job,
         reservation: {
           ...job.reservation,
-          specialIngredients: (job.reservation?.specialIngredients ?? []).map((special) => ({ ...special })),
+          // r27-INT-Low: tolerate a non-array specials field - the
+          // normalize arm must never throw on an ungated payload.
+          specialIngredients: Array.isArray(job.reservation?.specialIngredients)
+            ? job.reservation.specialIngredients.map((special) => ({ ...special }))
+            : [],
         },
       }
     })

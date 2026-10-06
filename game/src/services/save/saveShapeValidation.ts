@@ -4356,7 +4356,7 @@ function validateEquipmentSlotEntries(
   return normalizedEntries
 }
 
-export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
+function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
   const issues: ShapeIssue[] = []
 
   if (!isObject(parsed)) {
@@ -5044,5 +5044,26 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       equipmentSlots: normalizedEquipmentSlots ?? [],
     },
     discardedEquipmentCount,
+  }
+}
+
+/**
+ * The shape gate must never throw. Any internal defect (a field check
+ * that itself assumes shape - e.g. a digest fold over an unverified
+ * collection) converts to a refused verdict so every caller - remote
+ * load, pending-journal replay, local slot read, the driveSave write
+ * gate, import/recovery - classifies the payload as corrupted data
+ * instead of propagating an unhandled rejection that wedges the boot
+ * pipeline or escapes the classified-refuse envelope. (r27-AUT-1)
+ */
+export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
+  try {
+    return validateGameSaveShapeChecked(parsed)
+  } catch {
+    return {
+      ok: false,
+      issues: [{ path: '', message: 'validator gặp lỗi nội bộ' }],
+      discardedEquipmentCount: 0,
+    }
   }
 }

@@ -1,8 +1,8 @@
 # Fixpoint adjudication — wave r27
 
-- Date: 2026-10-05
-- Audited commit: `a9a9c37c` (wave r27 attacks the r26 batch)
-- Auditors: COR (`dc7333fe`, report `2026-10-05-fixpoint-r27-COR.md`, verdict FAIL). AUT/INT pending dispatch (SWE-2 slot starvation) — this document will be amended when they report.
+- Date: 2026-10-05/06
+- Audited commits: `a9a9c37c` (COR, wave start), `7bea330a` (AUT/INT, tip after the r27-COR batch)
+- Auditors: COR (`dc7333fe`, FAIL) / AUT (`c39228ee`, FAIL) / INT (`92ca3e5b`, PASS WITH EVIDENCE)
 
 ## Tally
 
@@ -14,6 +14,14 @@
 | R27-COR-4 skewed-honest began-pairs under server `until` pay up to skew early | Low | Confirmed, inherent bound of the re-anchor | **Accepted residual** |
 | R27-005 `restoreJobs` fabricates `{specialIngredients: []}` on witnessless jobs | Nit | Confirmed, pre-existing (present at 3588ebf9) | Accepted residual (deny-equivalent) |
 | R27-006 `learnedSkillIds` cap shares generic issue text | Nit | Confirmed | **FIXED** |
+| R27-AUT-1 `specialIngredients` array containing null/undefined ELEMENTS still throws TypeError through the gate → remote-load unhandled rejection wedges boot loading permanently; local slot misclassifies 'unavailable'; driveSave escapes DATA_REFUSE; import/recovery throw silently | High | Confirmed (element-class bypass of the COR-2 gate) | **FIXED** |
+| R27-AUT-2 `.map` over unvalidated collections inside restore seams throws on ungated callers (contained by upstream 'rejected') | Nit | Confirmed, defense-in-depth | **FIXED** (same clone-arm repair as INT-Low) |
+| R27-INT-Low `restoreJobs` clone arm throws on `specialIngredients:{}` for ungated callers (gate names the shape cleanly — ungated path diverged) | Low | Confirmed | **FIXED** |
+| INT-Nit cap-reporting asymmetry: over-cap arrays walk entries AND emit the cap issue; over-cap maps emit cap only | Nit | Confirmed, message-layer only | Accepted (no behavioral difference — refuse either way) |
+| INT-Nit `decompose.nextCycleAt` has no vs-marker admission pin (tribulation.cooldownUntil does) | Nit | Confirmed, sibling asymmetry | Accepted residual — same class as cursor-channel far-future stamps: parks own channel, deny-direction |
+| INT-Nit dead `!Array.isArray` arm in the post-digest specials compare | Nit | Confirmed | **FIXED** (removed) |
+| INT-Nit decompose restore merges (max(live, restored)) while siblings replace | Nit | Confirmed, bounded ≤30s deny-direction | Accepted |
+| INT-Nit `saveIssue.report` re-overwrites the store per wedged autosave | Nit | Confirmed, idempotent | Accepted |
 
 ## R27-COR-1 — restoreClock no longer takes authority input (High → FIXED)
 
@@ -87,8 +95,49 @@ pin still fires).
   pre-existing at 3588ebf9; deny-equivalent (settle fails on `costScale`);
   not a finding against this batch — recorded so the diff isn't blamed.
 
+## R27-AUT-1 — element-class bypass + validator now fail-closed (High → FIXED)
+
+**Claim verified.** The COR-2 gate checked `Array.isArray` only; a crafted
+`specialIngredients: [null]` (or `[undefined]` — which survives the wire as
+`[null]`) reached `alchemyJobReservationDigest`'s
+`.map(s => s.materialId)` and threw TypeError through
+`validateGameSaveShape`. All six call sites were unguarded, so the throw
+propagated: remote load + pending-journal → unhandled rejection wedging
+boot loading (`coordinator.load()` was the one arm the batch's own
+comment warned about but never wrapped); local slot → blanket-catch
+'unavailable' with no recovery surface, re-wedging every boot; driveSave
+→ codeless `SAVE_ADAPTER_THROW` escaping `DATA_REFUSE_CODES`;
+`importSaveRaw`/`validateRecoveryData` → silent throw inside the
+FileReader onload.
+
+**Fix — three layers:**
+1. `verifyAlchemyJobReservation`: every element must be a
+   `{materialId:string, amount:finite}` object BEFORE the digest fold —
+   a malformed element reports 'specialIngredients' like every other
+   malformed field.
+2. `validateGameSaveShape` is now **fail-closed at the boundary**: the
+   checked body moved to `validateGameSaveShapeChecked` and the exported
+   function catches any internal throw into a refused verdict
+   (`issues:[internal]`). The whole class — any field check that throws
+   on an unverified shape, now or in future — lands on 'corrupted' /
+   coded-refuse at every one of the six call sites instead of an
+   unhandled rejection. (The validator has no deliberate throws; no test
+   asserts one.)
+3. `restoreJobs` clone arm: `Array.isArray(job.reservation?.specialIngredients)
+   ? map : []` — the restore seam tolerates a non-array specials field on
+   ungated callers (INT-Low / AUT-2, same repair). The dead `!Array.isArray`
+   arm in the post-digest compare removed (INT nit).
+
+**Probe flips** (`auditR27Aut.probe.test.ts`): A2–A4 now assert the
+refused verdict + specials issue; B1 asserts the coded
+`OUTGOING_ADMISSION_REJECTED`/`SAVE_INVALID` envelope through
+`coordinator.save`; B2 asserts `loaded.status === 'corrupted'`
+(recovery surface armed); B3/B4 assert `false`/`invalid` without a
+throw. `auditR27Int.probe.test.ts` E3 asserts restoreJobs no longer
+throws on `{}` specials and normalizes to `[]`.
+
 ## Verification
 
 - `npm run type-check` — clean.
-- `npx vitest run --pool=threads src/services/save src/services/cloudSave src/services/session src/core/production src/core/alchemy src/core/tribulation src/composables` — **1585 pass** (18 r27 probes green after flips; r26 suite green incl. updated talentLevels pin).
+- `npx vitest run --pool=threads src/services/save src/services/cloudSave src/services/session src/core/production src/core/alchemy src/core/tribulation src/composables` — **1621 pass** (18 COR + 20 AUT + 16 INT r27 probes green after flips; r26 suite green).
 - OCR gate: 100% reviewable-file coverage on the batch diff (see run output below).
