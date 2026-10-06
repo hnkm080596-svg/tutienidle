@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
-import SkillNodeArtButton from './SkillNodeArtButton.vue'
+import SkillNodeArtButton from '@/components/common/SkillNodeArtButton.vue'
 import { useI18n } from 'vue-i18n'
 import type { SkillUiNode, SkillUiEdge } from '@/components/scenes/skill/fidelity/skillUi'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'

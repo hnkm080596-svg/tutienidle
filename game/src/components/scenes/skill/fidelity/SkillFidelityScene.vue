@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import SkillConstellationPanel from '@/components/panels/skill-constellation/SkillConstellationPanel.vue'
 import SkillPaperTree from './SkillPaperTree.vue'
 import SkillPaperDetails from './SkillPaperDetails.vue'
@@ -17,7 +16,6 @@ const props = withDefaults(
     elements: readonly SkillUiElement[]
     element: string
     selected: SkillUiNode | null
-    navigation: readonly PaperNavigationItem[]
     notice: string
     /** Way/pathway identity line under the title. */
     identity: string
@@ -42,7 +40,7 @@ const props = withDefaults(
 const constellationAccent = computed(
   () => (ELEMENT_COLOR_VARS as Record<string, string>)[props.element] ?? '',
 )
-const emit = defineEmits<{ navigate: [id: string]; back: []; select: [id: string]; element: [id: string]; upgrade: [id: string]; respec: [] }>()
+const emit = defineEmits<{ back: []; select: [id: string]; element: [id: string]; upgrade: [id: string]; respec: [] }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 
@@ -54,7 +52,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="skill-paper-scene" :aria-label="t('skill.title')" @click.self="emit('back')">
     <div class="skill-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="skill" :label="t('skill.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <header class="skill-heading"><h1>{{ t('skill.title') }}</h1><p>{{ identity }}</p></header>
     <div v-if="elements.length" class="skill-elements" role="group" :aria-label="t('skill.elements')"><button v-for="entry in elements" :key="entry.id" :class="{ active: entry.id === element }" :aria-pressed="entry.id === element" @click="emit('element', entry.id)"><img :src="entry.icon" alt=""><span>{{ entry.label }}</span></button></div>
     <SkillConstellationPanel

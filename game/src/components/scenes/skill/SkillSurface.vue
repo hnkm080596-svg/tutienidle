@@ -22,7 +22,6 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { ELEMENT_ORDER, ELEMENT_LABELS } from '@/core/element/ElementLabels'
@@ -55,7 +54,6 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { items: navItems, navigate } = usePaperNavigation()
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 const { purchaseNode, upgradeNode, respecNodeTree } = useProgressionActions()
 
@@ -487,7 +485,6 @@ function confirmRespec() {
       :elements="elements"
       :element="selectedElement ?? ''"
       :selected="selected"
-      :navigation="navItems"
       :notice="notice"
       :identity="wayIdentity"
       :insight-label="insightLabel"
@@ -498,7 +495,6 @@ function confirmRespec() {
       :unlocking="unlockingId"
       @select="onSelect"
       @element="onSelectElement"
-      @navigate="navigate"
       @upgrade="onUpgrade"
       @respec="onRespec"
       @back="ui.closeHomeOverlays()"
