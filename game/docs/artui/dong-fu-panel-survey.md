@@ -343,6 +343,11 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R35 | Scripture rail icon | wheel-only |
 | R36 | Title art victory/defeat thiếu trong pack | giữ huyen-kim title tạm |
 | R37 | Panel Trợ Giúp mới (5 topic hướng dẫn) | thêm — khác mục đích FeedbackDialog |
+| R38 | Tooltips (stat-source + item inspect) mock không vẽ | giữ — hợp đồng hiện có |
+| R39 | Alchemy queue strip không có trong mock | giữ strip dưới cauldron |
+| R40 | System surfaces (loading/entitlement/feedback/confirm) có design riêng | wire khi tới lượt |
+| R41 | 2 bản formation design (landscape 9-slot vs auxiliary pentagram) | landscape 9-slot |
+| R42 | Un-mocked panels reskin Pc* hay cần mock? | reskin theo secondary; vendor cần quyết thêm |
 
 ---
 
@@ -439,6 +444,26 @@ Fidelity scenes hiện có các feature G2 mock KHÔNG vẽ — cần ruling "gi
 **R38.** Tooltip inspect: character stat-source tooltip + equipment item tooltip — giữ trong G3 skin? (mặc định: giữ, đã là hợp đồng a11y/tooltip hiện có)
 
 **R39.** Alchemy queue strip — mock không vẽ vị trí; giữ strip dưới cauldron (vị trí hiện tại) hay gộp vào card chi tiết? (mặc định: giữ strip)
+
+## 9c. Preview page index + design ngoài landscape mock
+
+25 trang `ui-*.html`. `ui-landscape-design.html` = mock G3 đã duyệt (13 panel, surveyed §3). Các trang còn lại:
+
+**Design cho surface KHÔNG có trong landscape mock:**
+- `ui-system-design.html` — 5 ví dụ: **màn loading** (title + progress bar), **FeedbackDialog G3** (category chips + fields + report inspector), **TalentEntitlementModal** (newTalent + upgrade row + mandatory note — prod có `TalentEntitlementModal.vue`), ConfirmModal, incompatible dialog.
+- `ui-auxiliary-design.html` — 4 ví dụ: **formation pentagram** (ngũ hành 5 điểm + inspector effects/costs + apply — KHÁC hẳn formation ở landscape mock!), tooltip, dialog, settings 5-category rail.
+- `ui-secondary.html` — reskin REAL prod components: TranPhapPanel, ArtifactPanel, CompanionPanel, worker-lodge tabs (ChieuMo/DuyenPhan/QuaTang), Tooltip, OverlayPanel, ConfirmModal, OfflineSummaryModal, LoreCodexModal (gồm cả surface release-hidden). → design target cho các panel KHÔNG có Home*ArtPanel = reskin Pc* trên component hiện có, không layout mới.
+- `ui-design-review.html` — index/liệt kê.
+
+**Design exploration cũ (trước landscape mock):** combat-outcome-design (combat + turn log + victory/defeat + breakthrough variants), collection-craft-design (alchemy/forge), character-progression-design (character + path choice), dong-fu/secondary-standalone.
+
+**Per-panel preview pages** (đối chiếu từng surface): ui-{character,skill,equipment,forge,body,technique,realm,inventory,alchemy,exploration,quest,settings,combat,tribulation,victory,defeat}.html — cùng nguồn gốc G2-solo, tham khảo khi wire từng slice.
+
+**Vendor:** vắng mặt ở CẢ secondary preview — không có design nào cả (R33 tăng mức).
+
+**R40.** System surfaces có design riêng: loading screen + TalentEntitlementModal + FeedbackDialog + ConfirmModal — wire theo style system-design khi tới lượt (không cần ruling mới, chỉ xếp slice).
+**R41.** HAI bản formation design xung đột: landscape = lưới 9 ô + roster tabs vs auxiliary = pentagram 5 điểm + apply. Minh chọn một — gợi ý: landscape 9-slot (khớp model tran_phap hiện tại hơn?).
+**R42.** Un-mocked panels (tran_phap/artifact/companion/worker_lodge/quan_khi/scripture/artifact) wire theo kiểu secondary: reskin Pc* lên component hiện có, giữ layout. Vendor không có ở đâu cả → cần mock mới hoặc reskin mù.
 
 ## 9. Dormant files (cũ còn, mới chưa dùng / mới có cũ vẫn sống)
 
