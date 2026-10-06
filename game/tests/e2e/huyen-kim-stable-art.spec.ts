@@ -280,7 +280,7 @@ test.describe('Huyen Kim stable scene art', () => {
   }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
@@ -357,7 +357,7 @@ test.describe('Huyen Kim stable scene art', () => {
       player: { ...save.player, realmLevel: 12, cultivation: 0 },
     }))
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const realmSlot = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlot).toBeVisible({ timeout: 10_000 })
     await realmSlot.click()
@@ -420,7 +420,7 @@ test.describe('Huyen Kim stable scene art', () => {
 
     // Wheel lock badge on a locked/ungated building slot.
     await page.keyboard.press('Escape')
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const wheelLock = page.locator('.command-wheel .command-wheel__lock-badge .hk-symbol').first()
     if (await wheelLock.count()) {
       expect(await wheelLock.evaluate((el) => getComputedStyle(el).maskImage)).toContain(

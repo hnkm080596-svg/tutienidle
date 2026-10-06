@@ -146,7 +146,7 @@ test.describe('huyen-kim reference fidelity', () => {
     // Wheel open: hub at ~(640, 475); inner orbit r ~=142px, outer
     // ~=202px at the 1280x720 runtime scale (design 185/264 x 0.7655).
     await page.locator('.home-player').click()
-    const wheel = page.locator('.command-wheel-layer.is-ready')
+    const wheel = page.locator('.df-wheel.is-ready')
     await expect(wheel).toBeVisible({ timeout: 10_000 })
 
     const inner = wheel.locator('[data-hk-region="wheel-inner-orbit"]')
@@ -161,7 +161,7 @@ test.describe('huyen-kim reference fidelity', () => {
     expect(Math.abs(innerBox.y + innerBox.height / 2 - 475)).toBeLessThanOrEqual(12)
 
     // Slot labels hang below the node discs (never wrap inside).
-    const labels = wheel.locator('.command-wheel__label')
+    const labels = wheel.locator('.df-node__label')
     expect(await labels.count()).toBeGreaterThanOrEqual(8)
     for (const label of await labels.all()) {
       const box = (await label.boundingBox())!

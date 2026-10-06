@@ -140,7 +140,7 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
 
   test('command wheel renders no scope-hidden slots', async ({ page }) => {
     await bootFreshMortal(page)
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const slots = page.locator('[data-wheel-slot]')
     await expect(slots.first()).toBeVisible({ timeout: 10_000 })
     const rendered = await slots.evaluateAll((els) =>
@@ -228,7 +228,7 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     await bootFreshMortal(page)
 
     // Stage select via the wheel's teleport array, then start dong_1.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()

@@ -265,7 +265,7 @@ const NAV_ACTIVE_STANDALONE: Partial<Record<PcPaperIcon, 'skill' | 'realm' | 'qu
 }
 
 function navActive(id: PcPaperIcon): boolean {
-  if (id === 'home') return !surfaceOpen.value
+  if (id === 'home') return !surfaceOpen.value && !feedbackOpen.value
   // 'character'/'inventory' live behind the shared overlay boolean +
   // characterSceneTab, not leftPanelMode (ui store lines ~206).
   if ((id === 'character' || id === 'inventory') && ui.characterOverlayOpen && ui.characterSceneTab === id) return true
@@ -394,7 +394,7 @@ function onKeydown(event: KeyboardEvent) {
   // The wheel must not open while a surface is up: it mounts inside the
   // canvas, so it would stay invisible under the panel and pop up open
   // when the panel closes.
-  if (event.key === '`' && !stageActive.value && !surfaceOpen.value) {
+  if (event.key === '`' && !stageActive.value && !surfaceOpen.value && !feedbackOpen.value) {
     event.preventDefault()
     ui.toggleCommandWheel()
   }
@@ -417,14 +417,14 @@ onBeforeUnmount(() => {
       :style="sceneStyle"
       @click.stop="onSceneClick"
     >
-      <header class="home-design-profile">
+      <header class="home-design-profile" data-df-ui>
         <div class="home-design-avatar"><img :src="pcPaperIconUrl('character')" alt=""></div>
         <div>
           <h2>{{ player.name }}</h2>
           <p>{{ realmName }} {{ player.realmLevel }} <span class="home-design-progress"><i :style="{ width: `${profileProgress}%` }" /></span></p>
         </div>
       </header>
-      <div class="home-design-currencies">
+      <div class="home-design-currencies" data-df-ui>
         <PcPaperButton v-for="chip in currencyChips" :key="chip.id" variant="secondary" :aria-label="chip.label">
           <img :src="pcPaperResourceUrl(chip.icon)" alt=""><b>{{ chip.value }}</b><span>＋</span>
         </PcPaperButton>
@@ -442,7 +442,7 @@ onBeforeUnmount(() => {
         <span>{{ questCard.detail }}</span>
         <div class="home-design-progress"><i :style="{ width: `${questCard.percent}%` }" /></div>
       </button>
-      <aside class="home-navigation-surface" @transitionend="onRailTransitionEnd">
+      <aside class="home-navigation-surface" data-df-ui @transitionend="onRailTransitionEnd">
         <img class="home-navigation-backing" :src="navBackingUrl" alt="">
         <nav class="home-independent-navigation">
           <button
@@ -489,7 +489,7 @@ onBeforeUnmount(() => {
         @action="onWheelAction"
       />
       <AutoFarmIndicator />
-      <div class="df-notice" role="status" aria-live="polite">{{ notice }}</div>
+      <div class="df-notice" role="status" aria-live="polite" data-df-ui>{{ notice }}</div>
       <div class="pc-paper-scene__frame" aria-hidden="true" />
     </main>
   </SceneDesignCanvas>

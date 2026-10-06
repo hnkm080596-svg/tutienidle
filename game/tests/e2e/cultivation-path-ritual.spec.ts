@@ -146,7 +146,7 @@ async function seedAndReload(
  * 'quan_khi' on the mortal -> qi_refining kiep).
  */
 async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): Promise<void> {
-  await page.keyboard.press('Tab')
+  await page.keyboard.press('`')
   const realmSlot = page.locator('[data-wheel-slot="realm"]')
   await expect(realmSlot).toBeVisible({ timeout: 10_000 })
   await realmSlot.click()
@@ -186,7 +186,7 @@ async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): P
   }
 
   // Route home + the outcome's standalonePanel commit.
-  const wheelLayer = page.locator('.command-wheel-layer')
+  const wheelLayer = page.locator('.df-wheel')
   await expect(wheelLayer).toBeAttached({ timeout: 30_000 })
   await expect(tribulationUi).toHaveCount(0)
   await waitForPresentationIdle(page)
@@ -264,7 +264,7 @@ async function startStageOneBattle(page: import('@playwright/test').Page): Promi
   // have left the wheel open from a prior wheel-slot assertion).
   const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
   if (!(await teleportSlot.isVisible().catch(() => false))) {
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
   }
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
   await teleportSlot.click()
@@ -296,7 +296,7 @@ async function startStageOneBattle(page: import('@playwright/test').Page): Promi
 
 /** Reopens the QuanKhiPanel via CharacterPanel's Kiem Tu-only entry. */
 async function reopenQuanKhiViaCharacter(page: import('@playwright/test').Page): Promise<void> {
-  await page.keyboard.press('Tab')
+  await page.keyboard.press('`')
   const characterSlot = page.locator('[data-wheel-slot="character"]')
   await expect(characterSlot).toBeVisible({ timeout: 10_000 })
   await characterSlot.click()
@@ -483,7 +483,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     // Element tree surface - under the beta lock only the committed
     // element tab renders (beta-journey pins the same 1-tab contract);
     // the 5-tab matrix returns when the other elements re-open.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const skillSlot = page.locator('[data-wheel-slot="skill"]')
     await expect(skillSlot).toBeVisible({ timeout: 10_000 })
     await skillSlot.click()
@@ -520,7 +520,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     const restored = await saveAndRead(page)
     expect(restored.player.artifact).toBeUndefined()
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const artifactSlot = page.locator('[data-wheel-slot="phap_bao"]')
     if (BETA_FEATURES.artifact) {
       // Post-beta: the slot renders but stays progression-locked to Kim Dan.
@@ -572,7 +572,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     expect(learnedIds).toContain('ngo_dao_hon_don')
 
     // ngo_dao owns no element tree.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const skillSlot = page.locator('[data-wheel-slot="skill"]')
     await expect(skillSlot).toBeVisible({ timeout: 10_000 })
     await skillSlot.click()
@@ -607,7 +607,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     const restored = await saveAndRead(page)
     expect(restored.player.artifact).toBeUndefined()
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const artifactSlot = page.locator('[data-wheel-slot="phap_bao"]')
     await expect(artifactSlot).toBeVisible({ timeout: 10_000 })
     await expect(artifactSlot).toHaveAttribute('aria-disabled', 'true')

@@ -1314,8 +1314,7 @@
         "description": "Character names are unique and cannot be changed in the early phase.",
         "label": "Character Name",
         "placeholder": "Enter a dao name…",
-        "minLengthHint": "{length}/20 · Minimum 2 characters",
-        "random": "Random name"
+        "minLengthHint": "{length}/20 · Minimum 2 characters"
       },
       "talentStep": {
         "kicker": "DESTINY",
@@ -1333,7 +1332,8 @@
           "mechanic": "Mechanic",
           "resource": "Resource",
           "risk_reward": "Risk & Reward",
-          "skill": "Skill"
+          "skill": "Skill",
+          "element": "Element"
         },
         "locked": "Unrevealed",
         "features": "Features",

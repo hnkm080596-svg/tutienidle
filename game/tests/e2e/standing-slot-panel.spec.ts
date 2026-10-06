@@ -192,7 +192,7 @@ test.describe('Standing slot panel (P14)', () => {
     await seedAndReload(page, 'mortal', { realmLevel: BREAKTHROUGH_GATE_LEVEL })
 
     // RealmPanel -> Quan Khi (same drive as technique-frozen-warning).
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const realmSlot = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlot).toBeVisible({ timeout: 10_000 })
     await realmSlot.click()
@@ -228,7 +228,7 @@ test.describe('Standing slot panel (P14)', () => {
       .click()
     await expect(entitlementModal).toHaveCount(0, { timeout: 10_000 })
 
-    await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('.df-wheel')).toBeAttached({ timeout: 30_000 })
     await expect(tribulationUi).toHaveCount(0)
     await waitForPresentationIdle(page)
 
@@ -309,7 +309,7 @@ test.describe('Standing slot panel (P14)', () => {
     })
 
     // Open the command wheel and the formation panel.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const formationSlot = page.locator('[data-wheel-slot="formation_slot"]')
     await expect(formationSlot).toBeVisible({ timeout: 10_000 })
     await formationSlot.click()

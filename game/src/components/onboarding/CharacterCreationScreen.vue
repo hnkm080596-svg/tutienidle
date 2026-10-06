@@ -180,7 +180,7 @@ const style = { '--trial-panel': `url('${art.panel}')` }
       <div class="trial-paths" data-hk-region="dao-lo" role="radiogroup" :aria-label="t('onboarding.creation.pathStep.sectionTitle')">
         <button v-for="(cell, index) in DAO_LO_CELLS" :key="cell.skillId ?? `hidden-${index}`" type="button" role="radio" :aria-checked="pickedPathId === cell.skillId" class="trial-path-cell" :class="{ selected: pickedPathId === cell.skillId, locked: cell.locked }" :disabled="cell.locked || creating" :title="cell.skillId ? starterBySkillId.get(cell.skillId)?.description : undefined" :data-testid="cell.skillId ? `creation-starter-${cell.skillId}` : `creation-starter-hidden-${index}`" @click="pickPath(cell)"><InkNineSlice :chrome-id="pickedPathId === cell.skillId ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ cell.skillId ? t(`onboarding.creation.pathStep.paths.${cell.labelKey}`) : '?' }}</span></button>
       </div>
-      <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}</h2>
+      <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}<PcPaperButton icon variant="secondary" class="trial-talent-reroll" data-testid="creation-reroll" :disabled="rolling || creating" :aria-label="t('onboarding.creation.talentStep.reroll')" @click="reroll">⚄</PcPaperButton></h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid" data-hk-region="talent-grid" role="radiogroup" :aria-label="t('onboarding.creation.talentStep.sectionTitle')">
           <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIcon(talent)" alt=""></span><b>{{ talent.name }}</b></button>
@@ -198,7 +198,7 @@ const style = { '--trial-panel': `url('${art.panel}')` }
         </aside>
       </div>
       <PcPaperButton variant="secondary" class="trial-begin" data-testid="creation-finish" data-hk-region="primary-action" :aria-disabled="!ready || creating" @click="finish">{{ creating ? t('onboarding.creation.creating') : t('onboarding.creation.finish') }}</PcPaperButton>
-      <p class="trial-notice" role="status" aria-live="polite" aria-atomic="true"><template v-if="talents.length > 0 && error">{{ error }}</template><template v-else-if="ready">{{ summary }}</template></p>
+      <p class="trial-notice" role="status" aria-live="polite" aria-atomic="true"><template v-if="error">{{ error }}</template><template v-else-if="ready">{{ summary }}</template></p>
     </section>
   </section>
 </template>
@@ -247,7 +247,8 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 .trial-name-row input::placeholder { color: #aaa18b; }
 .trial-path-title { margin: 14px 0 4px; font-size: 18px; }
 .trial-path-description { margin: 0 0 8px; font-size: 14px; text-align: center; }
-.trial-talent-title { margin-top: 20px; }
+.trial-talent-title { margin-top: 20px; display: flex; align-items: center; gap: 12px; }
+.trial-talent-reroll { min-width: 40px; height: 40px; font-size: 18px; }
 .trial-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 11px; }
 .trial-path-cell { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; padding: 7px 8px; min-height: 44px; border: 0; background: transparent; color: #f1e2c0; font: 15px var(--pc-font-body); cursor: pointer; }
 .trial-path-cell > :not(.ink-nine-slice) { position: relative; z-index: 2; }

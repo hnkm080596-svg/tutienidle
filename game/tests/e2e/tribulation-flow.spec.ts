@@ -154,7 +154,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     await reauthAndEnterHome(page)
 
     // Command wheel (Tab) -> Canh Gioi slot -> RealmPanel -> "Quan Khi".
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const realmSlot = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlot).toBeVisible({ timeout: 10_000 })
     await realmSlot.click()
@@ -214,10 +214,10 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     }
 
     // F1 oracle: the outcome tick must issue request({ target: 'home' }).
-    // .command-wheel-layer only renders while the committed route is neither
+    // .df-wheel only renders while the committed route is neither
     // 'combat' nor 'tribulation' (GameRoot.vue isFullSceneActive), so its
     // re-attachment IS the route-home witness - under F1 it never reappears.
-    const wheelLayer = page.locator('.command-wheel-layer')
+    const wheelLayer = page.locator('.df-wheel')
     try {
       await expect(wheelLayer).toBeAttached({ timeout: 30_000 })
     } catch (error) {
@@ -280,7 +280,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     }
     await expect(page.locator('.overlay-panel, .hk-scroll')).toHaveCount(0, { timeout: 10_000 })
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const realmSlotAfter = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlotAfter).toBeVisible({ timeout: 10_000 })
     await realmSlotAfter.click()

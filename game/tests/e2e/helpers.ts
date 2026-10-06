@@ -99,7 +99,7 @@ export async function enterHome(page: Page): Promise<void> {
 export async function reauthAndEnterHome(page: Page): Promise<void> {
   const auth = page.getByTestId('auth-screen')
   await expect(auth).toBeVisible({ timeout: 15_000 })
-  await page.getByTestId('auth-guest-button').click()
+  await page.getByTestId('auth-continue-button').click()
 
   await enterHome(page)
 }
@@ -109,7 +109,7 @@ export async function reauthAndEnterHome(page: Page): Promise<void> {
  */
 export async function openSettingsAndSave(page: Page): Promise<void> {
   // Tab to open command wheel, then click Cai Dat slot.
-  await page.keyboard.press('Tab')
+  await page.keyboard.press('`')
   const settingsSlot = page.locator('[data-wheel-slot="settings"]')
   await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
   await settingsSlot.click()

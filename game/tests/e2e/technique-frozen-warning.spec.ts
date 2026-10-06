@@ -116,7 +116,7 @@ async function seedAndReload(
 }
 
 async function openRealmDialog(page: import('@playwright/test').Page) {
-  await page.keyboard.press('Tab')
+  await page.keyboard.press('`')
   const realmSlot = page.locator('[data-wheel-slot="realm"]')
   await expect(realmSlot).toBeVisible({ timeout: 10_000 })
   await realmSlot.click()
@@ -167,7 +167,7 @@ test.describe('BreakthroughRequirementPanel unperfected-technique warning (M-F-T
 
     // M-F-TALENT (S15-18): a settled breakthrough opens the blocking talent
     // entitlement dialog - no dismiss path by design, the pick resolves it
-    // and home chrome (.command-wheel-layer) can only return afterwards.
+    // and home chrome (.df-wheel) can only return afterwards.
     const entitlementModal = page.getByTestId('talent-entitlement-modal')
     await expect(entitlementModal).toBeVisible({ timeout: 30_000 })
     await entitlementModal
@@ -176,7 +176,7 @@ test.describe('BreakthroughRequirementPanel unperfected-technique warning (M-F-T
       .click()
     await expect(entitlementModal).toHaveCount(0, { timeout: 10_000 })
 
-    await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('.df-wheel')).toBeAttached({ timeout: 30_000 })
     await expect(tribulationUi).toHaveCount(0)
     await waitForPresentationIdle(page)
 

@@ -1314,8 +1314,7 @@
         "description": "Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.",
         "label": "Tên nhân vật",
         "placeholder": "Nhập đạo danh…",
-        "minLengthHint": "{length}/20 · Tối thiểu 2 ký tự",
-        "random": "Tên ngẫu nhiên"
+        "minLengthHint": "{length}/20 · Tối thiểu 2 ký tự"
       },
       "talentStep": {
         "kicker": "THIÊN MỆNH",
@@ -1333,7 +1332,8 @@
           "mechanic": "Cơ Quan",
           "resource": "Tài Nguyên",
           "risk_reward": "Mạo Hiểm",
-          "skill": "Kỹ Năng"
+          "skill": "Kỹ Năng",
+          "element": "Nguyên Tố"
         },
         "locked": "Chưa lộ",
         "features": "Đặc Điểm",

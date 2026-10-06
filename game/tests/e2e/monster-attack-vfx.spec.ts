@@ -19,7 +19,7 @@ test.describe('Monster attack VFX sweep', () => {
     await createCharacterThroughUi(page, 'VFX Quái Vật')
     await enterHome(page)
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
     await teleportSlot.click()

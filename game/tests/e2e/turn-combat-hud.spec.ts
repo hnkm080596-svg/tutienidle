@@ -46,7 +46,7 @@ test.describe('Slice 7 — turn combat HUD', () => {
     await enterHome(page)
 
     // Open stage select via keyboard Tab (deterministic) and start battle 1.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
 
     const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleportSlot).toBeVisible({ timeout: 10_000 })

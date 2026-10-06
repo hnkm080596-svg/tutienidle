@@ -233,7 +233,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     await bootFreshMortal(page)
 
     // Enter a stage-1 battle through the real flow.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
@@ -288,7 +288,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
