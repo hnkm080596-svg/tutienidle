@@ -363,6 +363,7 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R42 | Un-mocked panels reskin Pc* hay cần mock? | reskin theo secondary; vendor cần quyết thêm |
 | R43 | 9 system surfaces chưa có design (toast/announce/tutorial/pause…) | reskin Pc*, giữ z-order |
 | R44 | Lò đan dùng asset pack cũ (huyen-kim) | giữ tạm asset cũ đến khi có art mới |
+| R46 | Settings nav icon map: display→realm, audio→feedback, update→production, support→guild (không có glyph riêng) | chọn icon khác hoặc đặt art mới |
 | R45 | Rail locked item không hiện lý do khóa (wheel có disabledReason) | thêm hover/tooltip lý do |
 
 ---
@@ -406,6 +407,8 @@ Done: home (§1), character, inventory, settings, equipment, skill, body, techni
 | C10-exploration | ExplorationFidelity → vista map | C0 | R28 |
 | C11-production | ProductionPanel promote paper shell | C0 | R29, R30 |
 | C12-settings | SettingsFidelity → 3-group rail (map 7 nhóm) | C0 | — |
+
+DONE @3433448f: nav rail đổi sang medallion QuestCategoryArtButton + navigation-*-v2 icon theo section; PaperPanelNavigation gỡ (R9). Icon map display/audio/update/support là tạm (không có glyph riêng) — xem R46 nếu muốn đổi.
 | C13-help | Trợ Giúp panel mới | C0 | R37 |
 | C14-secondary | reskin tran_phap/artifact/companion/worker_lodge/scripture/quan_khi/vendor | C0 | R33, R35, R42 |
 | C15-combat | CombatFidelity → pack mới chrome | §9a | R36 |
