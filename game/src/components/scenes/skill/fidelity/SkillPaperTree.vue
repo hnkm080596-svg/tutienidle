@@ -45,6 +45,7 @@ const viewBox = computed(() => `0 0 ${props.size} ${props.size}`)
 // the whole graph (nodes + edges together). A sub-threshold press stays a
 // click so node select keeps working; double-click re-centers.
 const pan = ref({ x: 0, y: 0 })
+const zoom = ref(1)
 const dragging = ref(false)
 let dragMoved = false
 let dragStart: { px: number; py: number; x: number; y: number } | null = null
@@ -67,17 +68,30 @@ function onPointerUp(event: PointerEvent) {
   dragStart = null
   ;(event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId)
 }
+// Wheel zoom, anchored on the cursor: the graph point under the pointer
+// stays fixed while scale multiplies the authored fit.
+function onWheel(event: WheelEvent) {
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const cx = event.clientX - (rect.left + rect.width / 2)
+  const cy = event.clientY - (rect.top + rect.height / 2)
+  const next = Math.min(4, Math.max(0.3, zoom.value * Math.exp(-event.deltaY * 0.0012)))
+  if (next === zoom.value) return
+  const ratio = (props.fit * next) / (props.fit * zoom.value)
+  pan.value = { x: cx - (cx - pan.value.x) * ratio, y: cy - (cy - pan.value.y) * ratio }
+  zoom.value = next
+}
 function onSelect(id: string) {
   if (!dragMoved) emit('select', id)
 }
 function onResetView() {
   pan.value = { x: 0, y: 0 }
+  zoom.value = 1
 }
 
 const graphStyle = computed(() => ({
   width: `${props.size}px`,
   height: `${props.size}px`,
-  transform: `translate(-50%, -50%) translate(${pan.value.x}px, ${pan.value.y}px) scale(${props.fit})`,
+  transform: `translate(-50%, -50%) translate(${pan.value.x}px, ${pan.value.y}px) scale(${props.fit * zoom.value})`,
 }))
 </script>
 <template>
@@ -89,6 +103,7 @@ const graphStyle = computed(() => ({
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
     @pointercancel="onPointerUp"
+    @wheel.prevent="onWheel"
     @dblclick="onResetView"
   >
     <div class="skill-paper-backdrop" :style="{ borderImageSource: `url('${backdrop}')` }" aria-hidden="true" />
