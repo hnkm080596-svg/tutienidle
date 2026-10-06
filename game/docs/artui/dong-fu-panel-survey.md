@@ -348,6 +348,7 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R40 | System surfaces (loading/entitlement/feedback/confirm) có design riêng | wire khi tới lượt |
 | R41 | 2 bản formation design (landscape 9-slot vs auxiliary pentagram) | landscape 9-slot |
 | R42 | Un-mocked panels reskin Pc* hay cần mock? | reskin theo secondary; vendor cần quyết thêm |
+| R43 | 9 system surfaces chưa có design (toast/announce/tutorial/pause…) | reskin Pc*, giữ z-order |
 
 ---
 
