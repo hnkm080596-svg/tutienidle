@@ -117,6 +117,13 @@ const pathwayRows = computed(() => {
   const nodes = allNodes.value.filter((node) => {
     const tag = nodeViewTag(node)
     const row = rowsById.value.get(node.id)
+    // Minh ruling: a mortal sees only the precursor seat of the dao lo
+    // picked at creation (mortalBasicSkillId) - sibling precursors stay
+    // hidden entirely, not just locked. A missing pick (corrupt/dev
+    // save) falls back to showing every seat rather than none.
+    if (mortalView && node.infoSkillId !== undefined && player.$state.mortalBasicSkillId !== undefined) {
+      if (node.infoSkillId !== player.$state.mortalBasicSkillId) return false
+    }
     return tag !== undefined && tags.has(tag as ElementType & string) && row !== undefined && row.state !== 'scope-hidden' && !revealHidden(row)
   })
   return { spell, rows: rowsById.value, nodes }
@@ -208,8 +215,14 @@ const layout = computed(() =>
 
 // Zoom-to-fit: coordinates stay in the layout's natural square space;
 // the tree scales the whole graph (cards included) into the viewport.
+// Minh ruling: a mortal owns exactly one precursor seat, so it renders
+// centered (the radial layout already anchors a lone root at the core)
+// and 3x rather than fit-shrunk.
+const mortalSolo = computed(() => skillTree.value.mortal && graph.value.entries.length === 1)
 const graphSize = computed(() => (layout.value.size > 0 ? layout.value.size : CANVAS_W))
-const graphFit = computed(() => (layout.value.size > 0 ? Math.min(1, CANVAS_H / layout.value.size) : 1))
+const graphFit = computed(() =>
+  mortalSolo.value ? 3 : layout.value.size > 0 ? Math.min(1, CANVAS_H / layout.value.size) : 1,
+)
 
 function nodeName(id: string): string {
   return allNodes.value.find((node) => node.id === id)?.name ?? id
