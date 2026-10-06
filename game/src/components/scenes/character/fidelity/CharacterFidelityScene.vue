@@ -31,6 +31,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="cf-scene" :aria-label="t('panels.wheel.slots.character')" @click.self="emit('back')">
     <div class="cf-panel" :style="{ '--character-paper': `url('${CHARACTER_ART.paper}')`, '--character-card': `url('${CHARACTER_ART.card}')` }">
+      <header class="cf-panel__header"><h1>{{ t('panels.wheel.slots.character') }}</h1></header>
       <div class="cf-panel__content">
         <CharacterFidelityIdentity :model="model" />
         <CharacterFidelityStats :model="model" @select="emit('select', $event)" @allocate="emit('allocate', $event)" />
@@ -39,7 +40,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
       <p v-if="preview" class="cf-preview">{{ t('preview') }}</p>
       <div class="cf-notice" role="status" aria-live="polite">{{ notice }}</div>
     </div>
-    <header class="cf-title"><h1>{{ t('panels.wheel.slots.character') }}</h1></header>
   </section>
 </template>
 <style scoped>
@@ -57,11 +57,9 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
    so values below are mock screen-px / 1.0889 (mock panel: x376 y166
    w1160 h662, 30px pad). */
 .cf-panel { position: absolute; left: 345px; top: 101px; width: 1065px; height: 608px; padding: 22px 27px 26px; background: #f2e4c8 var(--character-paper) center/cover; border: 3px double #b28a43; overflow: hidden; }
-/* Title plaque rides the panel's top edge: its vertical center sits on the
-   border, half over the paper and half over the scene behind. */
-.cf-title { position: absolute; left: 345px; top: 72px; width: 1065px; display: flex; justify-content: center; z-index: 5; pointer-events: none; }
-.cf-title h1 { margin: 0; width: 370px; height: 58px; padding: 11px 40px; font-size: 30px; line-height: 36px; font-weight: 700; color: #f3e0b5; text-align: center; text-shadow: 0 1px 3px #000; background: var(--th-art-title-plaque) center/100% 100% no-repeat; }
-.cf-panel__content { display: grid; grid-template-columns: 28% 39% 1fr; gap: 14px; height: calc(100% - 8px); margin-top: 8px; min-height: 0; }
+.cf-panel__header { height: 61px; border-bottom: 1px solid #b28a43; display: flex; align-items: flex-start; justify-content: center; color: #302519; }
+.cf-panel__header h1 { font-size: 38px; margin: 0; }
+.cf-panel__content { display: grid; grid-template-columns: 28% 39% 1fr; gap: 14px; height: calc(100% - 72px); margin-top: 11px; min-height: 0; }
 .cf-scene :deep(.character-card) { position: relative; isolation: isolate; background: transparent; border: 0; color: #f0dfbb; padding: 13px 16px; }
 /* The power card opts out of the card relative box: it docks to the
    portrait column's bottom edge over the figure (mock geometry). */
