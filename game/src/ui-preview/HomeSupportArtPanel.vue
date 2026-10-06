@@ -7,7 +7,7 @@ import QuestCategoryArtButton from './QuestCategoryArtButton.vue'
 const props=defineProps<{kind:'settings'|'feedback'}>()
 const {t}=useI18n()
 const section=ref(0)
-const defaults=()=>({master:80,music:60,sfx:70,ui:70,sound:true,shake:false,motion:false,scale:100,quality:'high',language:'vi'})
+const defaults=()=>({master:80,music:60,sfx:70,ui:70,sound:true,shakeFx:false,motion:false,scale:100,quality:'high',language:'vi'})
 const values=ref(defaults())
 const channels=['master','music','sfx','ui'] as const
 const categories=['audio','display','language']
@@ -20,7 +20,7 @@ watch(()=>props.kind,()=>{section.value=0})
 <EquipmentArtCard class="support-main">
 <template v-if="kind==='settings'">
  <template v-if="section===0"><h2>{{t('sp.audio')}}</h2><label class="toggle"><input v-model="values.sound" type="checkbox">{{t('sp.sound')}}</label><label v-for="channel in channels" :key="channel" class="range-row"><span>{{t(`sp.${channel}`)}}</span><input v-model.number="values[channel]" type="range" min="0" max="100" :disabled="!values.sound" :aria-label="t(`sp.${channel}`)"><output>{{values[channel]}}%</output></label></template>
- <template v-else-if="section===1"><h2>{{t('sp.display')}}</h2><label class="toggle"><input v-model="values.shake" type="checkbox">{{t('sp.shake')}}</label><label class="toggle"><input v-model="values.motion" type="checkbox">{{t('sp.motion')}}</label><h3>{{t('sp.scale')}}</h3><div class="support-options"><EquipmentArtButton v-for="scale in [80,100,120]" :key="scale" :gold="values.scale===scale" :aria-pressed="values.scale===scale" @click="values.scale=scale">{{scale}}%</EquipmentArtButton></div><h3>{{t('sp.quality')}}</h3><div class="support-options"><EquipmentArtButton v-for="quality in ['low','medium','high']" :key="quality" :gold="values.quality===quality" :aria-pressed="values.quality===quality" @click="values.quality=quality">{{t(`sp.${quality}`)}}</EquipmentArtButton></div></template>
+ <template v-else-if="section===1"><h2>{{t('sp.display')}}</h2><label class="toggle"><input v-model="values.shakeFx" type="checkbox">{{t('sp.shake')}}</label><label class="toggle"><input v-model="values.motion" type="checkbox">{{t('sp.motion')}}</label><h3>{{t('sp.scale')}}</h3><div class="support-options"><EquipmentArtButton v-for="scale in [80,100,120]" :key="scale" :gold="values.scale===scale" :aria-pressed="values.scale===scale" @click="values.scale=scale">{{scale}}%</EquipmentArtButton></div><h3>{{t('sp.quality')}}</h3><div class="support-options"><EquipmentArtButton v-for="quality in ['low','medium','high']" :key="quality" :gold="values.quality===quality" :aria-pressed="values.quality===quality" @click="values.quality=quality">{{t(`sp.${quality}`)}}</EquipmentArtButton></div></template>
  <template v-else><h2>{{t('sp.language')}}</h2><div class="support-options"><EquipmentArtButton v-for="language in ['vi','en']" :key="language" :gold="values.language===language" :aria-pressed="values.language===language" @click="values.language=language">{{t(`sp.${language}`)}}</EquipmentArtButton></div></template>
  <footer><small>{{t('sp.preview')}}</small><EquipmentArtButton @click="values=defaults()">{{t('sp.reset')}}</EquipmentArtButton></footer>
 </template>

@@ -199,6 +199,42 @@ const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: s
     reason:
       'ui-preview dev surface validating the approved 5-tab design; not mounted in production',
   },
+  // Tien-hiep artUI mocks (slice A preview harness) - dev-only surfaces
+  // reproducing the approved mock layouts; never mounted in production.
+  // The equipment-forbidden-tab token reproduces the mock's full tab row;
+  // the formation token in SecondaryPreview reproduces the aux pentagram
+  // design. Production admission stays gated at S12 integration via
+  // isBetaEquipmentTab / BETA_STANDALONE_PANEL_FEATURES.
+  {
+    file: 'ui-preview/CollectionCraftDesignPreview.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason:
+      'ui-preview dev surface validating the approved mock tab row; not mounted in production',
+  },
+  {
+    file: 'ui-preview/DesignSystemPreview.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason:
+      'ui-preview dev surface validating the approved mock tab row; not mounted in production',
+  },
+  {
+    file: 'ui-preview/HomeInventoryArtPanel.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason:
+      'ui-preview dev surface validating the approved mock tab row; not mounted in production',
+  },
+  {
+    file: 'ui-preview/equipment/EquipmentForgePreview.vue',
+    tokens: ['equipment-forbidden-tab'],
+    reason:
+      'ui-preview dev surface validating the approved mock tab row; not mounted in production',
+  },
+  {
+    file: 'ui-preview/SecondaryPreview.vue',
+    tokens: ['formation'],
+    reason:
+      'ui-preview dev surface previewing release-hidden surfaces on purpose; not mounted in production',
+  },
 ]
 
 // ---------------------------------------------------------------------------

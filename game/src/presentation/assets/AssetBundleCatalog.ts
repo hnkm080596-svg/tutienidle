@@ -641,6 +641,31 @@ const UI_SCENE_SINGLE_URLS = [
   // literal by the Nhan Vat tab figure (component art path, no registry
   // owner) - pinned by the domArtLiteralCoverage guard.
   '/assets/vfx/spritesheets/火 (9).png',
+  // Tien Hiep 2026-10 chrome + controls quoted as literals by the
+  // landscape rewire (DongFuStage nav chrome, trial-creation board) and
+  // by ui-preview dev surfaces - pinned by the domArtLiteralCoverage
+  // guard.
+  '/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/navigation-medallion-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/navigation-backing-dark-v3.png',
+  '/assets/ui/tien-hiep-2026-10/controls/navigation-landscape-seam-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-hover-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-level-seal-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/skill-connection-pipe-v1.png',
+  '/assets/ui/tien-hiep-2026-10/realm/active-card-frame-v1.svg',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-technique-v2.png',
+  // ConstellationNode dao-luan/rune node chrome (component literals, no
+  // registry owner) and the approved mortal hero concept used across
+  // G3 mocks + previews.
+  '/assets/ui/huyen-kim/nodes/rune-node@2x.png',
+  '/assets/ui/huyen-kim/nodes/dao-luan-node@2x.png',
+  '/assets/ui/huyen-kim/nodes/dao-luan-center@2x.png',
+  '/assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
 ] as const
 
 /**
