@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ select: [id: string] }>()
 const { t } = useI18n()
 const pipe = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/skill-connection-pipe-v1.png')
+const backdrop = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 // G3 edge skin (HomeSkillArtPanel): the pipe image spans each link; when
 // both ends are learned a light flow runs along it. Links into a locked
 // node keep the muted look so gating still reads at a glance.
@@ -90,6 +91,7 @@ const graphStyle = computed(() => ({
     @pointercancel="onPointerUp"
     @dblclick="onResetView"
   >
+    <div class="skill-paper-backdrop" :style="{ borderImageSource: `url('${backdrop}')` }" aria-hidden="true" />
     <div class="skill-graph" :style="graphStyle">
       <svg class="skill-tree-lines" :viewBox="viewBox" aria-hidden="true">
         <defs><filter id="skill-flow-glow"><feGaussianBlur stdDeviation="1.8" /></filter></defs>
@@ -107,7 +109,8 @@ const graphStyle = computed(() => ({
 </template>
 <style scoped>
 .skill-positioned-node { position:absolute; transform:translate(-50%,-38px); }
-.skill-paper-tree { position:absolute; left:365px; top:180px; width:600px; height:440px; overflow:hidden; cursor:grab; touch-action:none; user-select:none; background:#0d0a07; border:1px solid #6d5a33; border-radius:6px; }
+.skill-paper-tree { position:absolute; left:365px; top:198px; width:600px; height:487px; overflow:hidden; cursor:grab; touch-action:none; user-select:none; }
+.skill-paper-backdrop { position:absolute; inset:0; pointer-events:none; border:15px solid transparent; border-image-slice:90 fill; border-image-width:15px; border-image-repeat:stretch; }
 .skill-paper-tree.dragging { cursor:grabbing; }
 .skill-paper-tree :deep(img) { -webkit-user-drag:none; }
 .skill-graph { position:absolute; left:50%; top:50%; transform-origin:center; }
