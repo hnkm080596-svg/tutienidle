@@ -465,6 +465,28 @@ Fidelity scenes hiện có các feature G2 mock KHÔNG vẽ — cần ruling "gi
 **R41.** HAI bản formation design xung đột: landscape = lưới 9 ô + roster tabs vs auxiliary = pentagram 5 điểm + apply. Minh chọn một — gợi ý: landscape 9-slot (khớp model tran_phap hiện tại hơn?).
 **R42.** Un-mocked panels (tran_phap/artifact/companion/worker_lodge/quan_khi/scripture/artifact) wire theo kiểu secondary: reskin Pc* lên component hiện có, giữ layout. Vendor không có ở đâu cả → cần mock mới hoặc reskin mù.
 
+## 9d. System surfaces (mount ngoài canvas — Teleport/App overlays)
+
+| Surface | Mount | Design có? |
+|---|---|---|
+| Loading/boot | App | ✓ system-design (title+progress) |
+| FeedbackDialog | DongFuStage→body | ✓ system-design (5 fields + report) |
+| TalentEntitlementModal | GameRoot | ✓ system-design |
+| ConfirmModal | body Teleport | ✓ system-design (+ secondary) |
+| Save-incompatible dialog | body | ~ system-design 'incompatible' |
+| Tooltip | body Teleport (contained opt) | ~ auxiliary tooltip example |
+| OfflineSummaryModal | GameRoot | ✗ |
+| ToastContainer | body | ✗ |
+| ActionFeedbackLog | body | ✗ |
+| WorldAnnouncementOverlay | in-flow | ✗ |
+| TutorialOverlay | GameRoot | ✗ |
+| CombatPauseOverlay | App | ✗ |
+| PresentationTransitionOverlay | App | ✗ |
+| BetaCompletionModal | App | ✗ |
+| GuestAbandonDialog | panel | ✗ |
+
+**R43.** 9 surface ✗ (offline summary, toast, action log, announcement, tutorial, pause, transition, beta-completion, guest-abandon) không có design — reskin Pc* mặc định hay cần mock? (Gợi ý: reskin — đều là modal/overlay đơn giản; overlay z-order/OVERLAY_LAYERS giữ nguyên.)
+
 ## 9. Dormant files (cũ còn, mới chưa dùng / mới có cũ vẫn sống)
 
 - `scenes/character/Character*.vue` (7 file vùng cũ: IdentityHeader/FigureWheel/MainStats/…) — dormant, CharacterPanel→CharacterSurface→fidelity. Giữ hay xóa?
