@@ -306,6 +306,16 @@ export class GameManagerPersistentEffectOps {
    */
   applyTimedEffect(player: PlayerData, effect: PersistentTimedEffect) {
     const group = effect.effectGroup
+    // r32-INT-2: the TLT write pin (expires <= lastSavedAt +
+    // TU_LINH_TRAN_DURATION_MS + 7d, saveShapeValidation.ts) is TIGHTER
+    // than the bare persisted-domain bound - a crafted expiresAtMs that
+    // passes the 2^52 clamp still self-refuses the next write. Ceiling
+    // every emitted expiry at the pin bound; the honest TLT writer
+    // stamps now + 24h, far below it.
+    const expiresCeiling =
+      group === TU_LINH_TRAN_EFFECT_GROUP
+        ? Math.min(2 ** 52 - 1, Date.now() + TU_LINH_TRAN_DURATION_MS + 7 * 86_400_000)
+        : 2 ** 52 - 1
 
     if (group) {
       const existing = player.persistentTimedEffects.find(
@@ -314,7 +324,11 @@ export class GameManagerPersistentEffectOps {
 
       if (existing) {
         if (effect.durationStackable) {
-          const duration = Math.max(0, effect.expiresAtMs - effect.appliedAtMs)
+          // r32-AUT-6: coerce a non-finite caller span to no-extension
+          // - a NaN duration would propagate through Math.min into
+          // existing.expiresAtMs and wedge every later save write.
+          const rawSpan = effect.expiresAtMs - effect.appliedAtMs
+          const duration = Number.isFinite(rawSpan) ? Math.max(0, rawSpan) : 0
           // R22-COR-1: this arm is the only writer that ADDS onto a
           // persisted stamp - a parked expiry just inside the
           // validator's timestamp bound plus one honest re-drink used
@@ -326,16 +340,22 @@ export class GameManagerPersistentEffectOps {
           // shrink is bounded at the restore seam instead
           // (boundTimedEffectClocks - r22-AUT-1).
           existing.expiresAtMs = Math.min(
-            2 ** 52 - 1,
+            expiresCeiling,
             Math.max(Date.now(), existing.expiresAtMs) + duration,
           )
         } else {
           // r30-COR-Low-3: same |x| < 2^52 clamp as the stackable arm -
           // a caller-crafted stamp outside the admitted domain must not
           // persist and self-brick the next buildGameSave write.
+          // r32-AUT-5: coerce a non-finite claimed expiry to 'no
+          // extension' (below the parked stamp) - Math.max propagates
+          // NaN, and a NaN persisted stamp wedges every later write.
+          const claimedExpires = Number.isFinite(effect.expiresAtMs)
+            ? (effect.expiresAtMs as number)
+            : 0
           existing.expiresAtMs = Math.min(
-            2 ** 52 - 1,
-            Math.max(-(2 ** 52 - 1), Math.max(existing.expiresAtMs, effect.expiresAtMs)),
+            expiresCeiling,
+            Math.max(-(2 ** 52 - 1), Math.max(existing.expiresAtMs, claimedExpires)),
           )
         }
 
@@ -374,13 +394,21 @@ export class GameManagerPersistentEffectOps {
     // and the validator pins it <= lastSavedAt - the clamp ceiling is
     // therefore min(2^52-1, now), not the bare bound, or a crafted
     // value still wedges every later write on that pin.
+    // r32-AUT-5: Math.min/max PROPAGATE NaN - a caller-crafted
+    // non-finite stamp would persist verbatim as NaN and self-refuse
+    // every later write. Coerce before clamping: applied falls back to
+    // now (just applied), expires falls back to the applied stamp
+    // (dead on arrival - deny). Every real writer stamps Date.now().
+    const appliedCeiling = Math.min(2 ** 52 - 1, Date.now())
+    const appliedAtMs = Number.isFinite(effect.appliedAtMs)
+      ? Math.min(appliedCeiling, Math.max(-(2 ** 52 - 1), effect.appliedAtMs as number))
+      : appliedCeiling
     player.persistentTimedEffects.push({
       ...effect,
-      appliedAtMs: Math.min(
-        Math.min(2 ** 52 - 1, Date.now()),
-        Math.max(-(2 ** 52 - 1), effect.appliedAtMs),
-      ),
-      expiresAtMs: Math.min(2 ** 52 - 1, Math.max(-(2 ** 52 - 1), effect.expiresAtMs)),
+      appliedAtMs,
+      expiresAtMs: Number.isFinite(effect.expiresAtMs)
+        ? Math.min(expiresCeiling, Math.max(-(2 ** 52 - 1), effect.expiresAtMs as number))
+        : appliedAtMs,
     })
   }
 

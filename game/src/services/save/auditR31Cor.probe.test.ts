@@ -15,10 +15,7 @@ import { buildings } from '../../data/building/buildings'
 import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
-import {
-  alchemySecondsFor,
-  verifyAlchemyJobReservation,
-} from '../../core/alchemy/AlchemySystem'
+import { alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
 import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { MaterialBag } from '../../core/material/MaterialBag'
 import { PillBag } from '../../core/pill/PillBag'
@@ -145,7 +142,11 @@ function laneParams(overrides: Partial<Parameters<typeof advanceWorkerLanes>[0]>
     siteId: SITE_ID,
     collectionRealmId: 'mortal',
     siteLevel: 1,
-    baseSeconds: CYCLE_BASE_SECONDS_BY_REALM.mortal!,
+    // r32-COR-F2: the headroom denominates max(cycleMs, authored span
+    // via computeCycleSeconds) - this pair must be coherent for the
+    // boundary rows below to exercise the intended edge. baseSeconds
+    // 30 -> authored span 30_000ms = cycleMs.
+    baseSeconds: 30,
     cycleMs: 30_000,
     pending: [] as ProductionCycle[],
     slots: 1,

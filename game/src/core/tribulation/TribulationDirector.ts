@@ -868,10 +868,15 @@ export class TribulationDirector {
     // deep-pasts the cooldown (instant retry), and >= 2^52
     // self-refuses the next save write.
     const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
+    // r32-AUT-3 (sibling): the authored-max cap is a minted stamp too -
+    // a restore clock within cooldown-span of the domain bound pushes
+    // it past 2^52 and the persisted cooldownUntil self-refuses the
+    // next save write. Clamp the cap into the domain (deny-lean: the
+    // remaining cooldown only shrinks).
     this.cooldownUntil = clockOk
       ? Math.min(
           slice?.cooldownUntil ?? 0,
-          restoreNowMs + TRIBULATION_COOLDOWN_SECONDS * 1000,
+          Math.min(restoreNowMs + TRIBULATION_COOLDOWN_SECONDS * 1000, 2 ** 52 - 1),
         )
       : (slice?.cooldownUntil ?? 0)
     this.attemptRealmId = ''

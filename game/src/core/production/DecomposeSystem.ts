@@ -290,8 +290,12 @@ export class DecomposeSystem {
     // self-refuses the next save write.
     const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
     if (Number.isFinite(restoredDeadline)) {
+      // r32-AUT-3: the re-anchor CAP is itself a minted stamp - a
+      // restore clock within cycleMs of the domain bound makes
+      // restoreNowMs + cycleMs exceed it, and the merged nextCycleAt
+      // self-refuses the next save write. Clamp the cap into the domain.
       const mergedDeadline = clockOk
-        ? Math.min(Math.max(0, restoredDeadline), restoreNowMs + this.cycleMs)
+        ? Math.min(Math.max(0, restoredDeadline), Math.min(restoreNowMs + this.cycleMs, 2 ** 52 - 1))
         : Math.max(0, restoredDeadline)
       this.nextCycleAt = Math.max(this.nextCycleAt, mergedDeadline)
     }

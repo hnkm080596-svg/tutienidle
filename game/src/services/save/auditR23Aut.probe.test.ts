@@ -49,8 +49,6 @@ import { pills } from '../../data/pill/pills'
 //      or runtime feed (gained is always a real cultivation delta).
 // ============================================================================
 
-declare const process: { env: Record<string, string | undefined> }
-
 const PILL_ID = 'hoi_linh_dan_qi_refining'
 const authored = pills.find((pill) => pill.id === PILL_ID)
 const authoredRegen = authored?.effects.find((effect) => effect.type === 'regen')
@@ -192,9 +190,11 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     vi.spyOn(Date, 'now').mockReturnValue(now)
     // A NaN incoming stamp is unproducible by every caller (PillSystem
     // stamps Date.now() + authored durationSeconds, TLT/Kiep Thuong the
-    // same) - this documents what the writer WOULD emit if one existed:
-    // Math.min(2**52-1, NaN) = NaN, which then wedges the next
-    // write-time validation. Same latent-hardening class r22 recorded.
+    // same). r32-AUT-6: the stackable arm now coerces a non-finite
+    // caller span to 0 (no extension) BEFORE the add - the parked
+    // expiry survives untouched at its current value instead of NaN
+    // propagating into it and wedging every later write. Deny-lean:
+    // the crafted input buys nothing.
     gameManager.effectOps.applyTimedEffect(player, {
       id: `pill-regen:${PILL_ID}:${now}`,
       sourceItemId: PILL_ID,
@@ -205,7 +205,7 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
       modifiers: [],
     })
 
-    expect(Number.isNaN(player.persistentTimedEffects[0]!.expiresAtMs)).toBe(true)
+    expect(player.persistentTimedEffects[0]!.expiresAtMs).toBe(now + 5_000)
   })
 
   it('A4 non-stackable arm cannot push a sub-pin stamp out of domain (max, not add)', () => {
@@ -236,9 +236,11 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     })
 
     const rewritten = player.persistentTimedEffects[0]!
-    // max() only - the parked stamp survives in-domain and the save
-    // still validates (deny-direction park, accepted residual).
-    expect(rewritten.expiresAtMs).toBe(TWO_POW_52 - 1)
+    // r32-INT-2: the over-ceiling parked stamp collapses to the TLT
+    // maxMerge ceiling (lastSavedAt + 24h + 7d) instead of surviving at
+    // 2^52-1 - same deny-direction park, now at the validator's own
+    // writer bound.
+    expect(rewritten.expiresAtMs).toBe(now + TU_LINH_TRAN_DURATION_MS + 7 * 86_400_000)
   })
 
   // ------------------------------------------------------------------

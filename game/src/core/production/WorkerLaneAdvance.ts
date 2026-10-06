@@ -1,5 +1,6 @@
 import type { ProductionCycle } from './ProductionTypes'
 import { buildProductionCycle } from './ProductionCycles'
+import { computeCycleSeconds } from './ProductionBalance'
 
 // M11 (ARCH-007) - per-lane worker-cycle advancement, ONE mechanism with
 // two drivers (A9):
@@ -120,6 +121,20 @@ interface LaneCursor {
 export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneAdvanceResult {
   const { siteId, collectionRealmId, siteLevel, baseSeconds, cycleMs, slots, nowMs } = params
 
+  // r32-COR-F2: the headroom must denominate the stamp the mint
+  // ACTUALLY writes, not the caller's cycleMs param - spawned cycles
+  // are persisted via buildProductionCycle which stamps
+  // completesAtMs = startMs + computeCycleSeconds(baseSeconds,
+  // siteLevel) * 1000, so an incoherent cycleMs < authored span would
+  // pass the guard while the minted pending lands >= 2^52. Denominate
+  // the larger of the two; a NaN authored span (malformed site def)
+  // denies like every other bad mint input. Both real callers pass the
+  // coherent pair, so nothing honest tightens.
+  const mintedSpanMs = Math.max(
+    Math.max(0, cycleMs),
+    computeCycleSeconds(baseSeconds, siteLevel) * 1000,
+  )
+
   // Defensive guard: a non-finite clock or budget can never advance a
   // lane - 'deadline' mode would loop forever because dueMs > NaN and
   // dueMs > Infinity are both always false. r19-AUT hardening: a
@@ -154,7 +169,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
     // save write self-refuses (wedge). A negative clock parks every
     // due anyway, so deny here for uniform seams.
     nowMs < 0 ||
-    !(nowMs + Math.max(0, cycleMs) < 2 ** 52) ||
+    !(nowMs + mintedSpanMs < 2 ** 52) ||
     !Number.isInteger(slots) || slots < 0 || slots > 65_536 ||
     (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs)) ||
     // r31-COR-F-WIN-ASYM/F-HEADROOM: the window start is a persisted
@@ -164,7 +179,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
     (params.emptyLaneStartMs !== undefined &&
       (!Number.isFinite(params.emptyLaneStartMs) ||
         params.emptyLaneStartMs < 0 ||
-        !(params.emptyLaneStartMs + Math.max(0, cycleMs) < 2 ** 52))) ||
+        !(params.emptyLaneStartMs + mintedSpanMs < 2 ** 52))) ||
     // r31-COR-F-NEG-MINT: pending stamps live in [0, 2^52) - a negative
     // due is already-past and settles/mints on this call.
     params.pending.some(

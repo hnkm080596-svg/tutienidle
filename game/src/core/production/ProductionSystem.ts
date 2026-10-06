@@ -167,9 +167,15 @@ export class ProductionSystem {
           // r31-COR-F-HEADROOM (sibling): minted completesAtMs =
           // restoreNowMs + authored span must fit the persisted domain
           // - else keep the pair verbatim (parked, deny).
+          // r32-AUT-2: an inverted pair (completes <= started) has a
+          // negative span, so the headroom holds trivially and the shift
+          // mints a FRESH inverted pair - ordering-denied by
+          // advanceWorkerLanes yet refusing the persisted ordering pin
+          // on every later write. Park inverted pairs verbatim instead.
           if (
             clockOk &&
             cycle.startedAtMs > restoreNowMs &&
+            cycle.completesAtMs > cycle.startedAtMs &&
             restoreNowMs + (cycle.completesAtMs - cycle.startedAtMs) < 2 ** 52
           ) {
             const shiftMs = cycle.startedAtMs - restoreNowMs

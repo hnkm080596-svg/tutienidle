@@ -392,13 +392,20 @@ export class AlchemySystem {
       // settle on the next honest tick (mint); a >= 2^52 stamp wedges
       // the next write. Drop at the boundary (same rule as unknown
       // siteIds in restoreStates).
+      // r32-AUT-1/2: ordering parity with the validator pin and the
+      // sibling lane advance - an INVERTED pair (completes <= started)
+      // is already-due the moment it lands (next tick mints), and the
+      // shift arm mints a fresh inverted pair because a negative span
+      // passes the headroom trivially. Drop inverted pairs outright:
+      // impossible-authored content, never shift them.
       if (
         !Number.isFinite(job.startedAtMs) ||
         !Number.isFinite(job.completesAtMs) ||
         job.startedAtMs < 0 ||
         job.startedAtMs >= 2 ** 52 ||
         job.completesAtMs < 0 ||
-        job.completesAtMs >= 2 ** 52
+        job.completesAtMs >= 2 ** 52 ||
+        job.completesAtMs <= job.startedAtMs
       ) {
         return []
       }

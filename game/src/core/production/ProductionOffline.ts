@@ -184,7 +184,13 @@ function settleWorkersOffline(
     const fieldEpochShiftMs = Math.max(0, Date.now() - nowMs)
     const seededHeads = new Set(result.seededPending)
     state.workerCycles = result.pending.map((cycle) =>
-      fieldEpochShiftMs > 0 && seededHeads.has(cycle)
+      // r32-AUT-4: the re-stamp must not mint out-of-domain either - a
+      // crafted wall clock far ahead of the settle epoch would push the
+      // shifted stamps >= 2^52 and self-refuse the next save write.
+      // completesAtMs is the pair's largest stamp (ordering pin), so it
+      // alone decides headroom; a head that cannot shift cleanly keeps
+      // the settle-epoch stamps verbatim (parked, deny).
+      fieldEpochShiftMs > 0 && seededHeads.has(cycle) && cycle.completesAtMs + fieldEpochShiftMs < 2 ** 52
         ? {
             ...cycle,
             startedAtMs: cycle.startedAtMs + fieldEpochShiftMs,

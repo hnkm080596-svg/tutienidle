@@ -344,6 +344,15 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     // would make every later pauseSimulation() a silent no-op (combat
     // freeze never fires behind the next error surface).
     simPaused = false
+    // r32-INT-1: the flag is only HALF the pause latch - pauseSimulation
+    // also freezes CombatClock under reason 'authority-pause', and that
+    // reason is cleared ONLY inside resumeSimulation, which early-returns
+    // once the flag is already false. A terminal pause -> acknowledge ->
+    // re-enter would leave a live battle frozen forever (resumeCombat
+    // never called, no other path clears the reason). Clear the reason
+    // alongside the flag: a no-op when nothing is latched, and other
+    // freeze reasons (tab-hidden, etc.) are untouched.
+    gameManager.resumeCombat('authority-pause')
     // Captured BEFORE the first await. Everything past the await below
     // compares against this: a stopAll() that landed while the load was in
     // flight makes every later side effect (restore, clock, intervals,
