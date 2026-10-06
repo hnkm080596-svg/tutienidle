@@ -707,10 +707,10 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
   // r23-AUT: authority stamps are the one timestamp input that bypasses
   // the save gate. An out-of-domain server stamp (|x| >= 2^52, or
-  // non-finite) drops the whole authority to undefined - the restore
-  // pays the client-clock window instead of feeding absurd derivations.
-  describe('sanitizeRestoreAuthority fallback (r23-AUT)', () => {
-    it('out-of-domain cold-boot untilMs pays the client-clock window, not the absurd server span', () => {
+  // non-finite) degrades the authority to zero-accrual live-replacement
+  // (r24-AUT) - never to the payload-editable client-clock window.
+  describe('sanitizeRestoreAuthority deny (r23-AUT, corrected r24-AUT)', () => {
+    it('out-of-domain cold-boot untilMs degrades to zero-accrual, never to the client window', () => {
       const player = usePlayerStore()
       const save = buildMinimalSave({
         cultivationPerSecond: 1,
@@ -723,11 +723,13 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
         untilMs: 2 ** 52, // corrupt server stamp outside the save domain
       })
 
-      // Honored, the authority would claim elapsed = until - since
-      // (~4.5e15s -> 24h cap = 86400). Sanitized, the client window
-      // pays exactly the honest 600s.
-      expect(result.elapsedSeconds).toBe(600)
-      expect(result.cultivation).toBe(600)
+      // r24-AUT-1: the client window is attacker-editable and can
+      // exceed the approved span - degrading to it turns a corrupt
+      // stamp into a mint. A present-but-corrupt authority degrades
+      // to zero-accrual live-replacement: queues restore, nothing
+      // accrues.
+      expect(result.elapsedSeconds).toBe(0)
+      expect(result.cultivation).toBe(0)
     })
 
     it('boundary: untilMs just inside the domain is still honored', () => {
@@ -749,7 +751,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
       expect(result.elapsedSeconds).toBe(86400)
     })
 
-    it('non-finite live-replacement nowMs falls back to client-clock semantics', () => {
+    it('non-finite live-replacement nowMs keeps the zero-accrual contract', () => {
       const player = usePlayerStore()
       const save = buildMinimalSave({
         cultivationPerSecond: 1,
@@ -761,9 +763,11 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
         nowMs: Number.NaN,
       })
 
-      // Honored, live-replacement pays zero accrual. A corrupt stamp
-      // drops the authority: the client window pays the honest span.
-      expect(result.elapsedSeconds).toBe(600)
+      // r24-AUT-2: live-replacement exists to accrue ZERO (the server
+      // replaced the head); a corrupt stamp is the only mint path on
+      // the channel - degrading to the client window would pay up to
+      // 24h. Zero accrual must survive the corrupt stamp.
+      expect(result.elapsedSeconds).toBe(0)
     })
   })
 })

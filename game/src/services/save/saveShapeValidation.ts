@@ -3196,6 +3196,12 @@ function validateSkillCoreCoverage(
 // Mission A1 - deep per-slice validation. QuestManager.restore spreads
 // state.active blindly, so a malformed element must fail the boundary
 // instead of crashing restore (quest `active:"x"` -> TypeError).
+// r24-AUT (d): every quest list is dedup-only - a crafted payload with
+// thousands of unique entries validated, inflating every write and
+// restore walk. Honest counts are bounded by the authored quest roster
+// (~two dozen); 1024 leaves generous headroom for future content.
+const QUEST_LIST_CAP = 1024
+
 function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): void {
   if (!isObject(value)) {
     issues.push({ path, message: 'phải là object hoặc vắng mặt' })
@@ -3207,6 +3213,8 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
 
   if (!Array.isArray(active)) {
     issues.push({ path: `${path}.active`, message: 'phải là array' })
+  } else if (active.length > QUEST_LIST_CAP) {
+    issues.push({ path: `${path}.active`, message: `vượt QUEST_LIST_CAP (${QUEST_LIST_CAP})` })
   } else {
     // F-QUEST-DUP: ensureActive dedupes via getProgress (first-match),
     // so a duplicated active questId is unproducible - the dup would
@@ -3245,9 +3253,10 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
   if (
     !Array.isArray(value.completedOnceIds) ||
     !value.completedOnceIds.every((id) => typeof id === 'string') ||
-    new Set(value.completedOnceIds).size !== value.completedOnceIds.length
+    new Set(value.completedOnceIds).size !== value.completedOnceIds.length ||
+    value.completedOnceIds.length > QUEST_LIST_CAP
   ) {
-    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[] không trùng lặp' })
+    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[] không trùng lặp trong QUEST_LIST_CAP' })
   }
 
   // Mainline flag witness (kind:'flag' quests): optional slice - saves
@@ -3258,9 +3267,10 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
     if (
       !Array.isArray(value.questFlags) ||
       !value.questFlags.every((id) => typeof id === 'string') ||
-      new Set(value.questFlags).size !== value.questFlags.length
+      new Set(value.questFlags).size !== value.questFlags.length ||
+      value.questFlags.length > QUEST_LIST_CAP
     ) {
-      issues.push({ path: `${path}.questFlags`, message: 'phải là string[] không trùng lặp' })
+      issues.push({ path: `${path}.questFlags`, message: 'phải là string[] không trùng lặp trong QUEST_LIST_CAP' })
     }
   }
 

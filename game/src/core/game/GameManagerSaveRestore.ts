@@ -411,10 +411,20 @@ export class GameManagerSaveRestore {
     // server-approved window end (untilMs), not the client clock - a
     // slow local clock would otherwise underpay the offline span the
     // server already granted (and a fast one must not pay past it).
+    // r24-INT-01: ...but persisted stamps live in the CLIENT epoch
+    // (next write stamps lastSavedAt = Date.now()). A forward-skewed
+    // authority (untilMs > now, honest server-clock skew) would settle
+    // dues inside (now, untilMs] and seed lane heads/payouts stamped
+    // past the next save's own marker -> the admission pin
+    // (startedAtMs <= lastSavedAt) rejects the game's own save. Clamp
+    // the settle cursor at Date.now() too: dues in the skew window
+    // defer to the next live tick at their real times (no loss), while
+    // elapsed-driven channels still pay the full approved span.
     const authorityNowMs = restoreAuthorityNowMs(authority)
     const settleNowMs = Math.min(
       (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
       authorityNowMs,
+      Date.now(),
     )
     // r13-COR-4: clamp the window START as well - a
     // crafted/skewed-future lastSavedAt otherwise positions

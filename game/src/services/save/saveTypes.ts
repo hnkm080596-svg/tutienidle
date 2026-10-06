@@ -282,12 +282,18 @@ export function restoreAuthorityNowMs(timeAuthority?: RestoreTimeAuthority): num
  * r23-AUT: authority stamps are the one timestamp input the save gate
  * never sees (they arrive out-of-band from the server response, not
  * through validateGameSaveShape). A stamp outside the admitted
- * timestamp domain (|x| >= 2^52, or non-finite) drops the whole
- * authority to undefined - the restore falls back to legacy
- * client-clock semantics, which pays only what the save's own
- * marker + the local clock justify. Bounded deny direction: no path
- * widens past the honest elapsed a same-payload client-window would
- * pay, and every mechanism guard still applies downstream.
+ * timestamp domain (|x| >= 2^52, or non-finite) makes the approval
+ * unusable.
+ *
+ * r24-AUT-1/2: a PRESENT-but-corrupt authority must never degrade to
+ * `undefined` - that is the legacy client-clock path, which pays
+ * `Date.now() - lastSavedAt` over a payload-editable marker and can
+ * exceed the approved window (a zero-width approval becomes a 24h
+ * payout; a corrupt live-replacement `nowMs` kills the zero-accrual
+ * contract outright). Deny instead: degrade to zero-accrual
+ * live-replacement anchored at the local clock - the restore still
+ * loads queues/jobs but accrues nothing, whatever the payload claims.
+ * `undefined` stays reserved for an ABSENT authority only.
  */
 export function sanitizeRestoreAuthority(
   timeAuthority?: RestoreTimeAuthority,
@@ -301,7 +307,7 @@ export function sanitizeRestoreAuthority(
       : [timeAuthority.nowMs]
   return stamps.every((stamp) => Number.isFinite(stamp) && Math.abs(stamp) < 2 ** 52)
     ? timeAuthority
-    : undefined
+    : { kind: 'live-replacement', nowMs: Date.now() }
 }
 
 export interface GameSessionPlayerOwner {
