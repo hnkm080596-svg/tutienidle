@@ -649,6 +649,7 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/tien-hiep-2026-10/controls/navigation-medallion-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/navigation-backing-dark-v3.png',
   '/assets/ui/tien-hiep-2026-10/controls/navigation-landscape-seam-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/navigation-connector-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png',
   '/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png',
