@@ -5,6 +5,16 @@ Scope: every surface reachable from the home scene — the stage chrome itself,
 the 21-icon nav rail, building function panels, standalone overlays, hidden-scope
 panels, and shared components they all sit on.
 
+**TL;DR (đọc 60s):** 22 surface đã khảo sát line-by-line + preview live.
+Rail trái trong game ĐÃ khớp mock (20 mục + lock, @2d1a2238). Wire G3 = port
+layout mock vào `*FidelityScene` hiện có — model thật đủ, không cần adapter.
+**43 rulings** kèm default ở §4 — mỗi cái chỉ cần duyệt/sửa. Nổi bật: vendor
+không có design nào (R33), Trợ Giúp là panel mới không phải form (R37), 2 bản
+formation xung đột (R41), quest chỉ có mainline vs 5 nhóm mock (R31), title art
+victory/defeat thiếu trong pack (R36). Slice order đề xuất C0→C18 ở §10.
+Mọi mock label đã có key thật trừ ~4 cái (§8b); ~8 e2e spec pin layout cũ
+cần repin theo slice (§8c).
+
 Legend:
 - **Wire-now** = element maps 1:1 onto an existing Pc* component or tien-hiep-2026-10 asset; no design decision needed.
 - **RULING** = needs Minh's call before implementation.
