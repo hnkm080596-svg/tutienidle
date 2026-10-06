@@ -16,11 +16,14 @@ import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge } from '@/components/common/SlotTypes'
 import { useAudioStore } from '@/stores/audio'
 import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 // equipment-paperdoll-base (stable art): neutral mannequin substrate under
 // the six runtime sockets - no gameplay identity, decorative alignment
 // only. Runtime keeps item/socket/rarity ownership.
 const PAPERDOLL_BASE_SRC = stableSceneArtUrl('equipment-paperdoll-base', '@2x')
+const CIRCLE_FRAME_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png')
+const BRUSH_CIRCLE_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-brush-circle-v1.png')
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -209,10 +212,11 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 
 <template>
   <div class="paperdoll">
+    <img class="paperdoll__ring" :src="BRUSH_CIRCLE_SRC" alt="" aria-hidden="true" />
     <img class="paperdoll__base" :src="PAPERDOLL_BASE_SRC" alt="" aria-hidden="true" />
     <div v-for="(column, i) in SLOT_COLUMNS" :key="i" class="paperdoll__col">
       <div v-for="slot in column" :key="slot" class="paperdoll__cell">
-        <div class="paperdoll__slot-wrap">
+        <div class="paperdoll__slot-wrap" :style="{ '--socket-circle-frame': `url('${CIRCLE_FRAME_SRC}')` }">
           <SlotView
             class="paperdoll__slot"
             variant="bag"
@@ -260,6 +264,22 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   width: 74px;
 }
 
+/* Gold brush ring behind the mannequin (tien-hiep pack ornament from the
+   Trang Bi preview); sockets still own all interaction above it. */
+.paperdoll__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  width: 78%;
+  aspect-ratio: 1;
+  max-height: 84%;
+  object-fit: contain;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 /* Neutral mannequin substrate (stable art): centered behind the socket
    grid; sockets keep full interaction above it. */
 .paperdoll__base {
@@ -296,6 +316,17 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   aspect-ratio: 1;
 }
 
+/* Circle-frame art rides above the square slot tile; the tile shrinks
+   into the ring interior so the painted border reads as the socket. */
+.paperdoll__slot-wrap::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  background: var(--socket-circle-frame) center / contain no-repeat;
+  pointer-events: none;
+  z-index: 3;
+}
+
 .paperdoll__label {
   font-size: 12px;
   font-weight: 600;
@@ -306,8 +337,11 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 /* Paperdoll slots use variant="bag" (owner ruling 2026-10-04): the 6
    worn slots join the dense Trang Bi cells - drawn frame-s-slot chrome
    over the dark tile + the shared pale-gold hover frame. Quality aura
-   (rarityRank >= 3) still rides on top. */
+   (rarityRank >= 3) still rides on top. The tile is inset into the
+   circle-frame ring drawn by slot-wrap::after. */
 .paperdoll__slot {
-  width: 100%;
+  width: 66%;
+  border-radius: 50%;
+  overflow: hidden;
 }
 </style>

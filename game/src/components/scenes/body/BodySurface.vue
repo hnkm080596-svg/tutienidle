@@ -118,6 +118,9 @@ function toUiUnit(unit: BodyUnitView): BodyPaperUnit {
     progressLabel: unit.progress !== undefined
       ? `${formatNumber(unit.progress.value)} / ${formatNumber(unit.progress.max)}`
       : undefined,
+    progressPct: unit.progress !== undefined && unit.progress.max > 0
+      ? (unit.progress.value / unit.progress.max) * 100
+      : undefined,
     actionLabel: t(bodyChapterCtaKey(activeDomainChapter.value)),
     actionDisabled: !unit.canInvest,
   }

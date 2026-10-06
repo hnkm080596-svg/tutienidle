@@ -3,9 +3,11 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import EquipmentArtButton from '@/ui-preview/equipment/EquipmentArtButton.vue'
 import BodyPaperFigure from './BodyPaperFigure.vue'
 import BodyPaperDetails from './BodyPaperDetails.vue'
 import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
+
 withDefaults(defineProps<{
   model: BodyPaperModel
   unit: BodyPaperUnit | null
@@ -14,32 +16,71 @@ withDefaults(defineProps<{
 }>(), { preview: false })
 const emit = defineEmits<{ back:[]; chapter:[id:string]; select:[id:string]; invest:[] }>()
 const { t } = useI18n()
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
-const bodyIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/body.svg')
 
-// Same dialog contract ImperialScrollScene carried: Escape closes, focus
-// and pointer interaction stay inside the open surface.
+const paper = {
+  backgroundImage: `url('${resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')}')`,
+}
+const divider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png')
+const bodyArt = (name: string) =>
+  resolveAssetUrl(`/assets/ui/tien-hiep-2026-10/body/${name}-v1.png`)
+
+// Preview nav art ids (ren/khai/dan) keyed by the ui chapter id.
+const NAV_ART: Record<string, string> = { refinement: 'ren', meridian: 'khai', cycle: 'dan' }
+const navArt = (id: string, lit: boolean) =>
+  bodyArt(`navigation-${NAV_ART[id] ?? 'ren'}-${lit ? 'lit' : 'unlit'}`)
+
 const rootRef = ref<HTMLElement | null>(null)
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 </script>
 <template>
-  <section ref="rootRef" class="body-paper-scene" :aria-label="t('body.title')" @click.self="emit('back')">
-    <div class="body-paper" :style="{borderImageSource:`url('${paper}')`}" aria-hidden="true" />
-    <header class="body-heading"><h1>{{ t('body.title') }}</h1><p>{{ model.identity }}</p></header>
-    <div class="body-chapters" role="group" :aria-label="t('body.chapters')">
-      <button v-for="chapter in model.chapters" :key="chapter.id" :class="{active:model.chapter === chapter.id, 'is-locked':!chapter.unlocked}" :aria-pressed="model.chapter === chapter.id" @click="emit('chapter',chapter.id)"><img :src="bodyIcon" alt=""><span>{{ chapter.label }}<small>{{ chapter.hint }}</small></span></button>
+  <section ref="rootRef" class="body-scene body-paper-scene" :aria-label="t('body.title')" @click.self="emit('back')">
+    <div class="body-panel" :style="paper">
+      <!-- The global pack still sizes .body-heading/h1 to the old 370px
+           title box (absolute-era design); this layout wants a full-width
+           in-flow heading, so the two width overrides stay inline. -->
+      <header class="body-heading" style="width:auto"><div class="body-heading__top"><h1 style="width:auto;text-align:left">{{ t('body.title') }}</h1><img :src="divider" alt=""></div><p class="body-subtitle">{{ model.identity }}</p></header>
+      <div class="body-layout">
+        <nav class="body-family body-chapters" :aria-label="t('body.chapters')">
+          <img class="family-spine" :src="bodyArt('meridian-tube-lit')" alt="">
+          <EquipmentArtButton
+            v-for="chapter in model.chapters"
+            :key="chapter.id"
+            class="family-pill"
+            :class="{ 'is-locked': !chapter.unlocked }"
+            :gold="model.chapter === chapter.id"
+            :aria-pressed="model.chapter === chapter.id"
+            @click="emit('chapter', chapter.id)"
+          >
+            <img class="family-icon" :src="navArt(chapter.id, model.chapter === chapter.id)" alt="">
+            <span class="family-text">{{ chapter.label }}<small>{{ chapter.hint }}</small></span>
+          </EquipmentArtButton>
+        </nav>
+        <BodyPaperFigure :model="model" :selected="unit?.id ?? ''" @select="emit('select', $event)" />
+        <BodyPaperDetails :model="model" :unit="unit" :notice="notice" @invest="emit('invest')" />
+      </div>
     </div>
-    <Transition name="body-page" mode="out-in">
-      <BodyPaperFigure :key="model.chapter" :model="model" :selected="unit?.id ?? ''" @select="emit('select',$event)" />
-    </Transition>
-    <BodyPaperDetails :model="model" :unit="unit" :notice="notice" @invest="emit('invest')" />
     <p v-if="preview" class="body-preview-label">{{ t('body.preview') }}</p>
   </section>
 </template>
 <style scoped>
-.body-paper-scene { position:absolute; inset:0; pointer-events:auto; font-family:var(--font-display,Georgia,serif); color:#3b2f1d; line-height:1.3; }.body-paper-scene :deep(*) { box-sizing:border-box; }.body-paper { position:absolute; left:94px; top:123px; width:1334px; height:633px; border:0 solid transparent; border-image-slice:300 fill; border-image-width:83px; border-image-repeat:stretch; filter:drop-shadow(0 12px 15px #0009); }.body-heading { position:absolute; left:231px; top:177px; max-width:250px; }.body-heading h1 { margin:0 0 9px; font-size:34px; font-weight:500; font-style:italic; }.body-heading p { margin:0; font-size:15px; color:#8a713c; }.body-chapters { position:absolute; left:229px; top:270px; width:168px; display:grid; gap:24px; }.body-chapters button { display:flex; align-items:center; gap:11px; padding:14px 8px; border:1px solid #ac8e4866; border-radius:6px; background:#e6d6ab44; color:#775d32; text-align:left; font:18px var(--font-display,Georgia,serif); cursor:pointer; }.body-chapters img { width:32px; height:32px; }.body-chapters small { display:block; margin-top:7px; font-size:11px; }.body-chapters .active { background:#d2d7b588; border-color:#447b5c; color:#305a43; }.body-chapters .is-locked { opacity:.55; }.body-chapters button:focus-visible { outline:2px solid #315d48; outline-offset:3px; }.body-preview-label { position:absolute; left:231px; top:718px; margin:0; color:#806b43; font-size:10px; }
-.body-page-enter-active,.body-page-leave-active { transition:transform .24s ease,opacity .24s ease; transform-origin:left center; backface-visibility:hidden; pointer-events:none; }
-.body-page-enter-from { transform:perspective(1400px) rotateY(35deg); opacity:0; }
-.body-page-leave-to { transform:perspective(1400px) rotateY(-45deg); opacity:0; }
-@media (prefers-reduced-motion:reduce) { .body-page-enter-active,.body-page-leave-active { transition:none; }.body-page-enter-from,.body-page-leave-to { transform:none; } }
+.body-scene { position:absolute; inset:0; pointer-events:auto; font-family:var(--font-display,Georgia,serif); color:#3b2f1d; line-height:1.3; }
+.body-scene :deep(*) { box-sizing:border-box; }
+.body-panel { position:absolute; left:94px; top:123px; width:1334px; height:633px; padding:14px 26px 12px; border:3px double #b28a43; background-color:#f2e4c8; background-position:center; background-size:cover; background-repeat:no-repeat; box-shadow:0 12px 15px #0009; overflow:hidden; }
+.body-heading { border-bottom:1px solid #b28a43; }
+/* h1 inherits the global 72px calligraphy treatment (58px box) - give
+   the row its real height so the glyphs sit inside the baked plaque
+   instead of straddling the panel edge. */
+.body-heading__top { height:58px; display:flex; align-items:center; gap:24px; }
+.body-heading h1 { margin:0; font-size:30px; font-weight:700; color:#35250f; text-shadow:0 1px #fff7; }
+.body-heading img { width:170px; height:21px; object-fit:contain; opacity:.65; }
+.body-subtitle { margin:2px 0 4px; font-size:13px; color:#715627; }
+.body-layout { height:calc(100% - 106px); display:grid; grid-template-columns:17% 52% 31%; gap:8px; min-height:0; }
+.body-family { position:relative; display:flex; flex-direction:column; justify-content:space-evenly; padding:4px 4px 4px 20px; isolation:isolate; }
+.family-spine { position:absolute; left:6px; top:50%; width:280px; height:13px; object-fit:fill; transform:translate(-50%,-50%) rotate(90deg); z-index:-1; }
+.family-pill { height:60px; padding-left:42px; font-size:15px; white-space:nowrap; text-align:left; }
+.family-icon { position:absolute; left:2px; top:50%; transform:translateY(-50%); width:46px; height:46px; object-fit:contain; }
+.family-text small { display:block; margin-top:4px; font-size:10px; font-weight:400; }
+.family-pill.is-locked { opacity:.55; }
+.family-pill:focus-visible { outline:2px solid #315d48; outline-offset:3px; }
+.body-preview-label { position:absolute; left:231px; top:718px; margin:0; color:#806b43; font-size:10px; }
 </style>

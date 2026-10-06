@@ -1,15 +1,96 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import EquipmentArtCard from '@/ui-preview/equipment/EquipmentArtCard.vue'
+import EquipmentArtButton from '@/ui-preview/equipment/EquipmentArtButton.vue'
+import EquipmentEnergyTube from '@/ui-preview/equipment/EquipmentEnergyTube.vue'
 import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
-defineProps<{ model: BodyPaperModel; unit: BodyPaperUnit | null; notice: string }>()
+
+const props = defineProps<{ model: BodyPaperModel; unit: BodyPaperUnit | null; notice: string }>()
 const emit = defineEmits<{ invest: [] }>()
 const { t } = useI18n()
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+
+// Same ren/khai/dan art mapping the scene nav uses.
+const NAV_ART: Record<string, string> = { refinement: 'ren', meridian: 'khai', cycle: 'dan' }
+const navIcon = resolveAssetUrl(
+  `/assets/ui/tien-hiep-2026-10/body/navigation-${NAV_ART[props.model.chapter] ?? 'ren'}-lit-v1.png`,
+)
 </script>
 <template>
-  <aside class="body-paper-details"><div class="body-info-frame" :style="{borderImageSource:`url('${paper}')`}" aria-hidden="true" /><template v-if="unit"><h2>{{ unit.title }}</h2><div class="body-info-content"><p>{{ unit.description }}</p><h3>{{ t('body.gains') }}</h3><dl><div v-for="row in unit.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div><p v-if="!unit.rows.length" class="body-empty-row">{{ t('body.noGains') }}</p></dl><h3>{{ t('body.material') }}</h3><div v-for="cost in unit.costs" :key="cost.id" class="body-material" :class="{ unmet: !cost.met }"><span><img v-if="cost.icon" :src="cost.icon" alt="" class="body-cost-icon">{{ cost.name }}</span><strong>{{ cost.amountLabel }}</strong></div><p v-if="!unit.costs.length" class="body-empty-row">{{ t('body.noCost') }}</p><p v-if="unit.progressLabel" class="body-material body-progress-line"><span>{{ t('body.progress') }}</span><strong>{{ unit.progressLabel }}</strong></p><p v-for="(gate, i) in unit.gates" :key="i" class="body-gate">{{ gate }}</p><p class="body-state">{{ t(`body.state.${unit.state}`) }}</p><div v-if="model.extra" class="body-extra" :class="{ done: model.extra.done }"><div class="body-extra__head"><span>{{ model.extra.title }}</span><em>{{ model.extra.stateLabel }}</em></div><p>{{ model.extra.description }}</p><div v-if="model.extra.progressMax" class="body-extra__bar"><span :style="{ width: `${Math.min(100, (model.extra.progress ?? 0) / model.extra.progressMax * 100)}%` }" /></div><p v-if="model.extra.progressLabel" class="body-extra__count">{{ model.extra.progressLabel }}</p></div></div><button v-if="unit.actionLabel" class="body-invest" :disabled="unit.actionDisabled" @click="emit('invest')">{{ unit.actionLabel }}</button></template><template v-else><h2>{{ model.chapterLabel }}</h2><p class="body-empty-row">{{ model.lockHint ?? t('body.empty') }}</p></template><p class="body-notice" role="status" aria-live="polite">{{ notice }}</p></aside>
+  <EquipmentArtCard class="body-card body-paper-details">
+    <div class="body-card-title">
+      <img :src="navIcon" alt="">
+      <h2>{{ unit?.title ?? model.chapterLabel }}</h2>
+    </div>
+    <template v-if="unit">
+      <p class="body-description">{{ unit.description }}</p>
+      <h3>{{ t('body.progress') }}</h3>
+      <div class="body-progress-value">
+        <span>{{ unit.progressLabel ?? model.progressLabel }}</span>
+        <span>{{ t(`body.state.${unit.state}`) }}</span>
+      </div>
+      <EquipmentEnergyTube :fill="unit.progressPct ?? model.progress" color="#eec76c" />
+      <div class="body-scroll">
+        <h3>{{ t('body.gains') }}</h3>
+        <dl class="body-stat-list">
+          <div v-for="row in unit.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+          <p v-if="!unit.rows.length" class="body-empty-row">{{ t('body.noGains') }}</p>
+        </dl>
+        <h3>{{ t('body.material') }}</h3>
+        <div class="body-materials">
+          <div v-for="cost in unit.costs" :key="cost.id" :class="{ unmet: !cost.met }">
+            <img v-if="cost.icon" :src="cost.icon" alt="">
+            <span>{{ cost.name }}</span>
+            <strong>{{ cost.amountLabel }}</strong>
+          </div>
+          <p v-if="!unit.costs.length" class="body-empty-row">{{ t('body.noCost') }}</p>
+        </div>
+        <p v-for="(gate, i) in unit.gates" :key="i" class="body-gate">{{ gate }}</p>
+        <div v-if="model.extra" class="body-extra" :class="{ done: model.extra.done }">
+          <div class="body-extra__head"><span>{{ model.extra.title }}</span><em>{{ model.extra.stateLabel }}</em></div>
+          <p>{{ model.extra.description }}</p>
+          <div v-if="model.extra.progressMax" class="body-extra__bar">
+            <span :style="{ width: `${Math.min(100, (model.extra.progress ?? 0) / model.extra.progressMax * 100)}%` }" />
+          </div>
+          <p v-if="model.extra.progressLabel" class="body-extra__count">{{ model.extra.progressLabel }}</p>
+        </div>
+      </div>
+      <EquipmentArtButton v-if="unit.actionLabel" gold class="body-invest" :disabled="unit.actionDisabled" @click="emit('invest')">{{ unit.actionLabel }}</EquipmentArtButton>
+    </template>
+    <template v-else>
+      <p class="body-empty-row">{{ model.lockHint ?? t('body.empty') }}</p>
+    </template>
+    <p class="body-notice" role="status" aria-live="polite">{{ notice }}</p>
+  </EquipmentArtCard>
 </template>
 <style scoped>
-.body-paper-details { position:absolute; left:970px; top:154px; width:419px; height:575px; padding:26px 27px 12px; isolation:isolate; display:flex; flex-direction:column; }.body-info-frame { position:absolute; inset:0; z-index:-1; border:0 solid transparent; border-image-slice:300 fill; border-image-width:35px; border-image-repeat:stretch; filter:drop-shadow(0 3px 4px #79613a30); pointer-events:none; }h2 { margin:0; padding-bottom:13px; border-bottom:1px solid #ac8a46; font-size:22px; line-height:1.3; font-weight:500; }.body-info-content { flex:1; min-height:0; overflow:auto; scrollbar-width:thin; }.body-info-content > p { margin:13px 0; font-size:14px; line-height:1.55; color:#746144; }h3 { margin:15px 0 10px; padding-top:11px; border-top:1px solid #ae94554d; font-size:16px; font-weight:500; }dl { margin:0; font-size:14px; }dl > div { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #ab914e22; }dd { margin:0; color:#326349; }.body-material { display:flex; justify-content:space-between; gap:12px; font-size:14px; margin:7px 0; }.body-material strong { color:#326349; font-weight:500; }.body-material.unmet strong, .body-material.unmet span { color:#8a3f2d; }.body-cost-icon { width:18px; height:18px; vertical-align:-4px; margin-right:6px; }.body-progress-line { border-top:1px dashed #ab914e55; padding-top:7px; }.body-info-content .body-state { font-size:11px; color:#927c53; }.body-gate { margin:5px 0; font-size:12px; color:#9c4f2e; }.body-empty-row { font-size:13px; color:#9a8562; font-style:italic; }.body-extra { margin-top:14px; padding:8px 10px; border:1px solid #3f7a5c88; border-radius:6px; background:#d5dec355; }.body-extra__head { display:flex; justify-content:space-between; align-items:baseline; font-size:14px; color:#2c543f; }.body-extra__head em { font-style:normal; font-size:10px; text-transform:uppercase; letter-spacing:.4px; }.body-extra p { margin:5px 0 0; font-size:12px; color:#66583d; }.body-extra__bar { margin-top:7px; height:5px; border-radius:3px; background:#c9b98b88; overflow:hidden; }.body-extra__bar span { display:block; height:100%; background:linear-gradient(90deg,#466c4b,#c6a047); }.body-extra__count { font-size:10px; }.body-invest { flex:none; height:44px; margin-top:10px; border:3px double #b4984b; border-radius:6px; background:linear-gradient(100deg,#1b513f,#35755b,#1b513f); color:#fff0c9; font:20px var(--font-display,Georgia,serif); cursor:pointer; }.body-invest:disabled { filter:grayscale(.6); opacity:.55; cursor:default; }.body-invest:focus-visible { outline:2px solid #315d48; outline-offset:3px; }.body-notice { flex:none; height:30px; padding-top:6px; margin:0; font-size:11px; line-height:13px; color:#725c38; }
+.body-card { height:100%; min-height:0; display:flex; flex-direction:column; padding:14px; }
+.body-card-title { display:flex; align-items:center; gap:8px; flex:none; }
+.body-card-title img { width:48px; height:48px; object-fit:contain; }
+.body-card-title h2 { margin:0; font-size:23px; color:#f3e4c4; }
+.body-description { font-size:12px; line-height:1.4; min-height:32px; margin:3px 0 4px; padding-bottom:5px; border-bottom:1px solid #b28a4377; color:#d8c49a; flex:none; }
+.body-card h3 { font-size:14px; margin:6px 0 4px; color:#ebd49e; flex:none; }
+.body-progress-value { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; color:#e8d8b8; flex:none; }
+.body-card :deep(.equipment-energy-tube) { flex:none; }
+.body-scroll { flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#8a7444 transparent; }
+.body-stat-list { margin:0; }
+.body-stat-list > div { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #b28a4333; font-size:13px; align-items:center; }
+.body-stat-list dd { margin:0; color:#a3d793; }
+.body-materials { display:flex; flex-wrap:wrap; gap:6px; }
+.body-materials > div { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; color:#a3d793; flex:1; min-width:0; }
+.body-materials img { width:32px; height:32px; object-fit:contain; }
+.body-materials strong { font-weight:400; }
+.body-materials .unmet, .body-materials .unmet strong { color:#d98a6f; }
+.body-gate { margin:5px 0; font-size:12px; color:#d98a6f; }
+.body-empty-row { font-size:13px; color:#9a8562; font-style:italic; }
+.body-extra { margin-top:10px; padding:8px 10px; border:1px solid #3f7a5c88; border-radius:6px; background:#0f201855; }
+.body-extra__head { display:flex; justify-content:space-between; align-items:baseline; font-size:14px; color:#9fd4a8; }
+.body-extra__head em { font-style:normal; font-size:10px; text-transform:uppercase; letter-spacing:.4px; }
+.body-extra p { margin:5px 0 0; font-size:12px; color:#b6a87e; }
+.body-extra__bar { margin-top:7px; height:8px; border:1px solid #8a7444; border-radius:5px; background:#151715; overflow:hidden; }
+.body-extra__bar span { display:block; height:100%; background:linear-gradient(90deg,#466c4b,#c6a047); }
+.body-extra__count { font-size:11px; color:#b6a87e; }
+.body-extra.done { border-color:#7fae62; }
+.body-invest { width:100%; height:44px; flex:none; font-size:20px; padding:0; margin-top:8px; }
+.body-notice { position:absolute; left:14px; right:14px; bottom:6px; margin:0; font-size:11px; color:#c9a95f; min-height:14px; text-align:center; }
 </style>
