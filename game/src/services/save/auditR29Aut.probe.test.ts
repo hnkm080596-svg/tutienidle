@@ -216,17 +216,31 @@ describe('r29-AUT - tick/settleOffline finite-clock guard boundary sweep', () =>
     })
   }
 
-  it('boundary: 2^53 - 1 is admitted and settles a due job (guard is >= 2^53)', () => {
+  it('boundary: 2^52 - 1 is admitted and settles a due job (guard is >= 2^52)', () => {
     const reader = registeredManager()
-    const inside = 2 ** 53 - 1
-    // due well before the admitted boundary clock.
-    reader.alchemySystem.restoreJobs([jobAt(inside - 3_600_000, 'r29_boundary_in')], inside - 3_000_000)
+    const inside = 2 ** 52 - 1
+    // due well before the admitted boundary clock; the job's stamps sit
+    // inside [0, 2^52) so the shift arm re-grounds them (verbatim span).
+    const jobStart = inside - 3_600_000
+    const job = jobAt(jobStart, 'r29_boundary_in')
+    reader.alchemySystem.restoreJobs([job], inside - 3_000_000)
 
     const bag = new PillBag()
     reader.alchemySystem.tick(inside, bag, (id) => ({ id }), () => 0)
 
     expect(reader.alchemySystem.getJobs()).toHaveLength(0)
     expect(bag.getAmount(JOB_RECIPE.pillId)).toBeGreaterThan(0)
+  })
+
+  it('boundary: 2^52 is refused - a due job is preserved, no pill mints', () => {
+    const reader = registeredManager()
+    reader.alchemySystem.restoreJobs([jobAt(currentMs - 60_000, 'r29_boundary_out')], currentMs)
+
+    const bag = new PillBag()
+    reader.alchemySystem.tick(2 ** 52, bag, (id) => ({ id }), () => 0)
+
+    expect(reader.alchemySystem.getJobs()).toHaveLength(1)
+    expect(bag.getAmount(JOB_RECIPE.pillId)).toBe(0)
   })
 
   it('settleOffline(NaN) returns 0 and preserves the queue', () => {

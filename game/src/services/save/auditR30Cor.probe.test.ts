@@ -40,7 +40,7 @@ import type { GameManager as GameManagerType } from '../../core/game/GameManager
 //
 //   (A) AlchemySystem.restoreJobs clockOk truth table: verbatim restore under
 //       every deny clock (NaN / +-Infinity / +-2^53 / 1e300); shift arm under
-//       admitted boundary clocks (+- (2^53 - 1)) with exact span preservation
+//       admitted boundary clocks ([0, 2^52) domain) with exact span preservation
 //       and re-derived reservation digest.
 //   (B) ProductionSystem.restoreStates same truth table on workerCycle pairs.
 //   (C) DecomposeSystem tick/restore/settleOffline at the remaining edges
@@ -50,7 +50,7 @@ import type { GameManager as GameManagerType } from '../../core/game/GameManager
 //   (E) TribulationDirector.restoreRuntime: verbatim under deny clocks,
 //       min(slice, now + 300s) under a sane clock.
 //   (F) AlchemySystem.startJob invalid_clock origination gate: exact reason,
-//       zero burn, precedence over scope_hidden, admitted boundary still runs.
+//       zero burn, precedence over scope_hidden, in-domain boundary still runs.
 //   (G) useAppLifecycle tick callback: entryStage x canMutate truth table
 //       (only 'game' + mutable ticks) plus the autosave persistProgress gate.
 //   (H) OnlineSessionController substrate for the lifecycle claim: under
@@ -76,6 +76,9 @@ const DENY_CLOCKS = [
   Number.NaN,
   Number.POSITIVE_INFINITY,
   Number.NEGATIVE_INFINITY,
+  -1,
+  -(2 ** 52),
+  2 ** 52,
   2 ** 53,
   -(2 ** 53),
   1e300,
@@ -164,7 +167,7 @@ describe('r30 COR - A: restoreJobs clockOk truth table', () => {
     },
   )
 
-  it.each([-(2 ** 53 - 1), currentMs])(
+  it.each([0, currentMs])(
     'restoreNowMs=%j admitted: post-dated job SHIFTS - re-grounds at restoreNowMs, span preserved, digest re-derived consistent',
     (edge) => {
       const { job, span } = mortalJob(currentMs + 60_000, `r30a_admit_${String(edge)}`)
@@ -174,10 +177,8 @@ describe('r30 COR - A: restoreJobs clockOk truth table', () => {
       reader.alchemySystem.restoreJobs([job], edge)
       const restored = reader.alchemySystem.getJobs()[0]!
 
-      // At extreme admit clocks the shift delta overflows 2^53 and
-      // doubles round to even - the grounded stamp may land 1-2ms off
-      // restoreNowMs. Span and digest consistency are what the
-      // invariant pins; grounding is pinned to double precision.
+      // Grounding is exact at these admit edges (0 and an epoch-ms
+      // clock); span and digest consistency are the pinned invariant.
       expect(Math.abs(restored.startedAtMs - edge)).toBeLessThanOrEqual(4)
       expect(restored.completesAtMs - restored.startedAtMs).toBe(span)
       expect(restored.reservation!.digest).not.toBe(writerDigest)
@@ -188,17 +189,20 @@ describe('r30 COR - A: restoreJobs clockOk truth table', () => {
     },
   )
 
-  it('admit boundary 2^53-1: a normal post-dated pair cannot exceed the clock - verbatim arm', () => {
-    const { job, span } = mortalJob(currentMs + 60_000, 'r30a_top')
-    const reader = registeredManager()
+  it.each([2 ** 52, 2 ** 53 - 1])(
+    'deny boundary %j: out-of-domain clock leaves the pair verbatim',
+    (edge) => {
+      const { job, span } = mortalJob(currentMs + 60_000, `r30a_top_${edge}`)
+      const reader = registeredManager()
 
-    reader.alchemySystem.restoreJobs([job], 2 ** 53 - 1)
-    const restored = reader.alchemySystem.getJobs()[0]!
+      reader.alchemySystem.restoreJobs([job], edge)
+      const restored = reader.alchemySystem.getJobs()[0]!
 
-    // startedAtMs < restoreNowMs -> no shift; verbatim stamps
-    expect(restored.startedAtMs).toBe(currentMs + 60_000)
-    expect(restored.completesAtMs).toBe(currentMs + 60_000 + span)
-  })
+      // Out-of-domain clock -> verbatim stamps (deny, never re-anchor).
+      expect(restored.startedAtMs).toBe(currentMs + 60_000)
+      expect(restored.completesAtMs).toBe(currentMs + 60_000 + span)
+    },
+  )
 })
 
 // ----------------------------------------------------------------------------
@@ -244,7 +248,7 @@ describe('r30 COR - B: restoreStates workerCycle clockOk truth table', () => {
     },
   )
 
-  it.each([-(2 ** 53 - 1), currentMs])(
+  it.each([0, currentMs])(
     'restoreNowMs=%j admitted: post-dated workerCycle SHIFTS - grounds at restoreNowMs within double precision, span preserved',
     (edge) => {
       const manager = registeredManager()
@@ -259,19 +263,22 @@ describe('r30 COR - B: restoreStates workerCycle clockOk truth table', () => {
     },
   )
 
-  it('admit boundary 2^53-1: a normal workerCycle cannot post-date it - verbatim', () => {
-    const manager = registeredManager()
-    const started = currentMs + 60_000
+  it.each([2 ** 52, 2 ** 53 - 1])(
+    'deny boundary %j: out-of-domain clock leaves the workerCycle verbatim',
+    (edge) => {
+      const manager = registeredManager()
+      const started = currentMs + 60_000
 
-    manager.productionSystem.restoreStates(
-      [siteState(started, started + 30_000)],
-      2 ** 53 - 1,
-    )
+      manager.productionSystem.restoreStates(
+        [siteState(started, started + 30_000)],
+        edge,
+      )
 
-    const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
-    expect(restored.startedAtMs).toBe(started)
-    expect(restored.completesAtMs).toBe(started + 30_000)
-  })
+      const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+      expect(restored.startedAtMs).toBe(started)
+      expect(restored.completesAtMs).toBe(started + 30_000)
+    },
+  )
 
   it('verbatim arm: past-due pair under a sane clock is NOT shifted (honest shape)', () => {
     const manager = registeredManager()
@@ -310,7 +317,7 @@ describe('r30 COR - C: decompose remaining clock edges', () => {
     return { system, bag, oreId: ore.id }
   }
 
-  it.each([2 ** 53, -(2 ** 53), Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+  it.each([2 ** 52, 2 ** 53, -(2 ** 53), -1, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
     'tick(%j) zero-advances and preserves nextCycleAt',
     (edge) => {
       const { system, bag, oreId } = decomposeWithOre()
@@ -324,7 +331,7 @@ describe('r30 COR - C: decompose remaining clock edges', () => {
     },
   )
 
-  it.each([Number.NEGATIVE_INFINITY, 2 ** 53, -(2 ** 53)])(
+  it.each([Number.NEGATIVE_INFINITY, -1, 2 ** 52, 2 ** 53, -(2 ** 53)])(
     'restore(state, %j) merges nextCycleAt verbatim - max(live, restored), no poison',
     (edge) => {
       const { system } = decomposeWithOre()
@@ -343,7 +350,7 @@ describe('r30 COR - C: decompose remaining clock edges', () => {
     },
   )
 
-  it.each([Number.NaN, Number.NEGATIVE_INFINITY, 2 ** 53])(
+  it.each([Number.NaN, Number.NEGATIVE_INFINITY, -1, 2 ** 52, 2 ** 53])(
     'settleOffline(%j, since) returns 0 and preserves state',
     (edge) => {
       const { system } = decomposeWithOre()
@@ -354,10 +361,10 @@ describe('r30 COR - C: decompose remaining clock edges', () => {
     },
   )
 
-  it('admit edge: tick(2**53 - 1) still advances the due cycle', () => {
+  it('admit edge: tick(2**52 - 1) still advances the due cycle', () => {
     const { system } = decomposeWithOre()
 
-    system.tick(2 ** 53 - 1)
+    system.tick(2 ** 52 - 1)
 
     expect(system.drainOutput().length).toBe(1)
     expect(Number.isFinite(system.getSaveState().nextCycleAt)).toBe(true)
@@ -536,28 +543,26 @@ describe('r30 COR - F: startJob invalid_clock origination gate', () => {
     expect(control.reason).not.toBe('invalid_clock')
   })
 
-  it('admit edge: startJob(..., -(2**53 - 1), ...) passes the clock gate and mints a job stamped at the admit boundary', () => {
+  it('deny edge: startJob(..., negative/out-of-domain, ...) refuses invalid_clock before any burn', () => {
     const { manager, recipe, variant, bag } = alchemyContext()
-    const edge = -(2 ** 53 - 1)
 
-    const result = manager.alchemySystem.startJob(
-      recipe,
-      variant.materialId,
-      bag,
-      manager.materialRegistry,
-      1_000_000,
-      1,
-      edge,
-      4,
-    )
+    for (const edge of [-1, -(2 ** 53 - 1), 2 ** 52]) {
+      const result = manager.alchemySystem.startJob(
+        recipe,
+        variant.materialId,
+        bag,
+        manager.materialRegistry,
+        1_000_000,
+        1,
+        edge,
+        4,
+      )
 
-    expect(result.ok).toBe(true)
-    const job = manager.alchemySystem.getJobs()[0]!
-    expect(job.startedAtMs).toBe(edge)
-    expect(job.completesAtMs).toBe(edge + alchemySecondsFor(recipe, 1) * 1000)
-    // Ungated-caller note: this pair is deeply due - the next honest tick
-    // settles it. Reachability is caller-side only (production feeds
-    // Date.now()); recorded in the report.
+      // r30-AUT-3: a clock outside [0, 2^52) can no longer mint a job
+      // stamped outside the persisted domain (or an already-due one).
+      expect(result).toEqual({ ok: false, reason: 'invalid_clock' })
+    }
+    expect(manager.alchemySystem.getJobs()).toHaveLength(0)
   })
 
   it('honest clock regression: startJob burns exactly once and mints the job', () => {

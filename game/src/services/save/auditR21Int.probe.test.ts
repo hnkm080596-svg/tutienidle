@@ -11,7 +11,6 @@ import { createDefaultPlayer } from '../../core/player/Player'
 import type { PlayerData } from '../../core/player/Player'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
-import type { GameSave } from './SaveSystem'
 import { lockBetaFeaturesForTests } from '../../core/game/__fixtures__/betaFeaturesUnlock'
 import { lockBetaWaysForTests } from '../../core/game/__fixtures__/betaWaysUnlock'
 import { lockBetaTalentsForTests } from '../../core/game/__fixtures__/betaTalentsUnlock'
@@ -388,7 +387,7 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
       pending: [] as ProductionCycle[],
       slots: 1,
       nowMs: T0,
-      emptyLaneStartMs: -8e15, // admitted: 8e15 < 2^53
+      emptyLaneStartMs: -4e15, // admitted: 4e15 < 2^52 persisted domain
       advanceMode: 'deadline' as const,
     }
 
@@ -415,7 +414,7 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
   //    magnitude domain on every stamp, so the site never self-trips.
   // --------------------------------------------------------------------
   it('emitted pending is always re-admissible: finite, ordered, inside the exact-integer domain', () => {
-    for (const start of [T0, 0, -8e15]) {
+    for (const start of [T0, 0, -4e15]) {
       const first = advanceWorkerLanes({
         siteId: 'probe',
         collectionRealmId: REALM,
@@ -435,8 +434,8 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
         expect(Number.isFinite(cycle.startedAtMs)).toBe(true)
         expect(Number.isFinite(cycle.completesAtMs)).toBe(true)
         expect(cycle.completesAtMs).toBeGreaterThan(cycle.startedAtMs)
-        expect(Math.abs(cycle.startedAtMs)).toBeLessThan(2 ** 53)
-        expect(Math.abs(cycle.completesAtMs)).toBeLessThan(2 ** 53)
+        expect(Math.abs(cycle.startedAtMs)).toBeLessThan(2 ** 52)
+        expect(Math.abs(cycle.completesAtMs)).toBeLessThan(2 ** 52)
       }
 
       // The mechanism's own output can never wedge the next call -

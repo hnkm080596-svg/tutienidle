@@ -4002,6 +4002,18 @@ function validateEquipmentEntries(
 
     requireBoolean(entry, 'equipped', `${path}[${i}]`, issues)
 
+    // r30-AUT-2: locked/favorite are optional but must be boolean when
+    // present - a truthy non-boolean ('yes') validates clean, restores
+    // verbatim into EquipmentBag, and reads protected to every consumer
+    // (dissolve/wash/refine guards, auto-dissolve exclusion), wedging
+    // the equipment channel behind crafted flags.
+    if (entry.locked !== undefined && typeof entry.locked !== 'boolean') {
+      issues.push({ path: `${path}[${i}].locked`, message: 'phải là boolean khi khai báo' })
+    }
+    if (entry.favorite !== undefined && typeof entry.favorite !== 'boolean') {
+      issues.push({ path: `${path}[${i}].favorite`, message: 'phải là boolean khi khai báo' })
+    }
+
     // F-SCOPE-EQ-1: equipped:true is a writer-gated claim - equip()
     // enforces canUseItemGrade and every tribulation transition
     // unequips all gear, so an equipped item whose grade cannot be

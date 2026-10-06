@@ -601,6 +601,15 @@ const lifecycle = useAppLifecycle({
       } catch {
         refusedPayload = ''
       }
+      // r30-INT-1: freeze the sim BEFORE the error mount - mirrors the
+      // remote-tier cascade (observeSaveResult -> onPause('terminal')
+      // -> pauseSimulation while entryStage is still 'game'). Under
+      // local authority no observer fires, so without this call the
+      // combat channel (CombatClock, outside the tick gate) keeps
+      // resolving turns behind the terminal card. pauseSimulation's
+      // own entryStage==='game' guard makes the ordering load-bearing:
+      // it must run while the stage is still 'game', before fail().
+      lifecycle.pauseSimulation()
       saveIssue.report('corrupted', refusedPayload, undefined, 'local')
       bootFlow.fail()
       // r29-AUT-4: the terminal card IS the signal - skip the transient

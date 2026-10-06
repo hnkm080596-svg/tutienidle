@@ -134,7 +134,10 @@ export class ProductionSystem {
     // mints every lane head on the next honest tick). Bad clock ->
     // verbatim restore: post-dated cycles stay parked (deny), honest
     // pairs were never shifted anyway.
-    const clockOk = Number.isFinite(restoreNowMs) && Math.abs(restoreNowMs) < 2 ** 53
+    // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
+    // deep-pasts the lane (next tick mints), and a stamp re-grounded
+    // at >= 2^52 self-refuses the next save write.
+    const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
     this.states.clear()
 
     for (const state of states) {

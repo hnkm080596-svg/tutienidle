@@ -148,19 +148,25 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
     // (1e300) puts every due in the past and runs the same unbounded
     // settle loop the stamp pin closes.
     !Number.isFinite(nowMs) ||
-    Math.abs(nowMs) >= 2 ** 53 ||
+    // r30-AUT-3: clocks live in [0, 2^52) - the persisted timestamp
+    // domain. The +cycleMs headroom keeps every minted due inside it:
+    // a clock within cycleMs of the bound would seed a due the next
+    // save write self-refuses (wedge). A negative clock parks every
+    // due anyway, so deny here for uniform seams.
+    nowMs < 0 ||
+    !(nowMs + Math.max(0, cycleMs) < 2 ** 52) ||
     !Number.isInteger(slots) || slots < 0 || slots > 65_536 ||
     (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs)) ||
     (params.emptyLaneStartMs !== undefined &&
       (!Number.isFinite(params.emptyLaneStartMs) ||
-        Math.abs(params.emptyLaneStartMs) >= 2 ** 53)) ||
+        Math.abs(params.emptyLaneStartMs) >= 2 ** 52)) ||
     params.pending.some(
       (cycle) =>
         !Number.isFinite(cycle.completesAtMs) ||
         !Number.isFinite(cycle.startedAtMs) ||
         cycle.completesAtMs <= cycle.startedAtMs ||
-        Math.abs(cycle.completesAtMs) >= 2 ** 53 ||
-        Math.abs(cycle.startedAtMs) >= 2 ** 53,
+        Math.abs(cycle.completesAtMs) >= 2 ** 52 ||
+        Math.abs(cycle.startedAtMs) >= 2 ** 52,
     )
   ) {
     return {

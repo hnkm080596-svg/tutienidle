@@ -864,7 +864,10 @@ export class TribulationDirector {
     // reads NaN > 0 = false -> free retry) and -Infinity clears it
     // the same way. Bad clock -> verbatim restored stamp: a
     // far-future until stays parked (deny).
-    const clockOk = Number.isFinite(restoreNowMs) && Math.abs(restoreNowMs) < 2 ** 53
+    // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
+    // deep-pasts the cooldown (instant retry), and >= 2^52
+    // self-refuses the next save write.
+    const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
     this.cooldownUntil = clockOk
       ? Math.min(
           slice?.cooldownUntil ?? 0,

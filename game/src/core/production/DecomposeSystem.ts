@@ -156,11 +156,12 @@ export class DecomposeSystem {
     }
 
     // r29-COR-F1: nowMs guard parity with advanceWorkerLanes /
-    // AlchemySystem.tick - a non-finite or exact-integer-domain-overflow
+    // AlchemySystem.tick - a non-finite or out-of-domain
     // clock mints a cycle (NaN < nextCycleAt is false -> catch-up arm)
-    // AND poisons nextCycleAt into a NaN write-gate wedge. Zero-advance
+    // AND poisons nextCycleAt into a write-gate wedge. Zero-advance
     // preserves state untouched (deny direction).
-    if (!Number.isFinite(nowMs) || Math.abs(nowMs) >= 2 ** 53) {
+    // r30-AUT-3: [0, 2^52) persisted-clock domain.
+    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
       return
     }
 
@@ -276,7 +277,10 @@ export class DecomposeSystem {
     // NaN/garbage and poisons nextCycleAt into a write-gate wedge. Bad
     // clock -> merge the restored deadline verbatim: a crafted-future
     // stamp stays parked (deny), honest stamps merge the same way.
-    const clockOk = Number.isFinite(restoreNowMs) && Math.abs(restoreNowMs) < 2 ** 53
+    // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
+    // deep-pasts the deadline (next settle mints), and >= 2^52
+    // self-refuses the next save write.
+    const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
     if (Number.isFinite(restoredDeadline)) {
       const mergedDeadline = clockOk
         ? Math.min(Math.max(0, restoredDeadline), restoreNowMs + this.cycleMs)
@@ -304,8 +308,18 @@ export class DecomposeSystem {
 
     // r29-COR-F1: nowMs guard parity - nowMs=+Infinity spins the
     // settle loop up to the 5000-cycle bound; zero-settle under a
-    // broken clock (deny).
-    if (!Number.isFinite(nowMs) || Math.abs(nowMs) >= 2 ** 53) {
+    // broken clock (deny). r30-AUT-3: [0, 2^52) persisted-clock domain.
+    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
+      return 0
+    }
+
+    // r30-AUT-1: the sibling window input needs the same guard - a NaN
+    // offlineSinceMs collapses windowStartMs to NaN, which SKIPS the
+    // confiscation fast-forward (nextCycleAt <= NaN is false) and pays
+    // the whole deep-past backlog up to the 5000-cycle bound. Parity
+    // with the workerLane/auto-farm window guards: zero-settle.
+    // r30-AUT-3: same [0, 2^52) domain as the clock seams.
+    if (!Number.isFinite(offlineSinceMs) || offlineSinceMs < 0 || offlineSinceMs >= 2 ** 52) {
       return 0
     }
 

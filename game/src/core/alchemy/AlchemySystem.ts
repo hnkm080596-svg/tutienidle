@@ -381,7 +381,11 @@ export class AlchemySystem {
     // mints the whole queue on the next honest tick). Bad clock ->
     // verbatim restore: post-dated jobs stay parked (deny), honest
     // pairs were never shifted anyway.
-    const clockOk = Number.isFinite(restoreNowMs) && Math.abs(restoreNowMs) < 2 ** 53
+    // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
+    // deep-pasts the queue (next tick mints), and a stamp re-grounded
+    // at >= 2^52 exceeds the persisted timestamp domain so the next
+    // save write self-refuses. Both read as bad clock -> verbatim.
+    const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
     this.jobs = jobs.map((job) => {
       // r26-COR-1/AUT-1: a job post-dating the restore clock is
       // impossible-authored - startedAtMs is a began-time pinned
@@ -467,12 +471,15 @@ export class AlchemySystem {
     costMultiplier = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
     // r29-INT-2: nowMs guard parity with tick - a non-finite or
-    // exact-integer-domain-overflow clock bakes a NaN/huge deadline
+    // out-of-domain clock bakes a NaN/huge deadline
     // the tick guard never inspects (it guards the clock ARGUMENT,
     // not stored stamps): NaN settles for free on the next finite
     // tick (mint), +Infinity parks a live slot forever. Deny at
     // origination - before any cost/burn arithmetic below.
-    if (!Number.isFinite(nowMs) || Math.abs(nowMs) >= 2 ** 53) {
+    // r30-AUT-3: the domain is [0, 2^52) - the minted stamps must fit
+    // the persisted timestamp bound, and a negative clock would mint
+    // an already-due job (free instant pill).
+    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
       return { ok: false, reason: 'invalid_clock' }
     }
 
@@ -627,11 +634,13 @@ export class AlchemySystem {
   ): void {
     // r28-AUT-2: nowMs guard parity with advanceWorkerLanes
     // (WorkerLaneAdvance.ts:150-151) - a non-finite or
-    // exact-integer-domain-overflow clock would treat every in-flight
+    // out-of-domain clock would treat every in-flight
     // job as due (NaN < completesAtMs is false -> settle arm) and mint
     // the whole queue, or park all jobs forever. Zero-advance result:
     // jobs preserved untouched (deny direction).
-    if (!Number.isFinite(nowMs) || Math.abs(nowMs) >= 2 ** 53) {
+    // r30-AUT-3: [0, 2^52) - a clock outside the persisted domain
+    // would bake stamps the next save write self-refuses.
+    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
       return
     }
 

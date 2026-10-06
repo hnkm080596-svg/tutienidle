@@ -241,7 +241,7 @@ describe('auditR28 COR probe - restoreJobs shifted-arm throw asymmetry (A)', () 
 })
 
 describe('auditR28 COR probe - restore-clock boundaries (B)', () => {
-  it('B1 negative restore clock: pairs <= clock stay deep-past, > clock re-ground at the marker', () => {
+  it('B1 negative restore clock: out of [0, 2^52) - every pair restores VERBATIM (deny, never re-anchors)', () => {
     const marker = -1_000_000_000_000
     const system = createProductionSystem()
 
@@ -265,12 +265,14 @@ describe('auditR28 COR probe - restore-clock boundaries (B)', () => {
     const byId = new Map(
       system.getState(FOREST_SITE_ID)!.workerCycles!.map((c) => [c.cycleId, c]),
     )
-    // The shift arm is pure arithmetic - no 0-floor, no non-negative pin.
+    // r30-AUT-3: a negative restore clock is outside the persisted
+    // domain - the shift arm no longer fires; every pair keeps its own
+    // stamps verbatim (all deep-past = deny direction either way).
     expect(byId.get('deep')!.startedAtMs).toBe(marker - 5_000)
     expect(byId.get('deep')!.completesAtMs).toBe(marker - 5_000 + MORTAL_CYCLE_MS)
     expect(byId.get('edge')!.startedAtMs).toBe(marker)
-    expect(byId.get('post')!.startedAtMs).toBe(marker)
-    expect(byId.get('post')!.completesAtMs).toBe(marker + MORTAL_CYCLE_MS)
+    expect(byId.get('post')!.startedAtMs).toBe(marker + 60_000)
+    expect(byId.get('post')!.completesAtMs).toBe(marker + 60_000 + MORTAL_CYCLE_MS)
   })
 
   it('B2 tribulation: cooldownUntil == restoreNow + authored span kept; +1ms clamps to the bound', () => {
@@ -482,7 +484,7 @@ describe('auditR28 COR probe - negative marker end-to-end (D)', () => {
     ).toBe(false)
   })
 
-  it('D2 restoreFromSave under a negative marker: restoreClock = marker, began-pair shift is deterministic', () => {
+  it('D2 restoreFromSave under a negative marker: out-of-domain clock, began pairs restore verbatim', () => {
     const marker = -1_000_000_000_000
     const writer = registeredManager()
     const writerPlayer = createDefaultPlayer()
@@ -521,8 +523,11 @@ describe('auditR28 COR probe - negative marker end-to-end (D)', () => {
         .getState(FOREST_SITE_ID)!
         .workerCycles!.map((c) => [c.cycleId, c]),
     )
+    // r30-AUT-3: restoreClock = min(marker, Date.now()) is negative ->
+    // outside [0, 2^52), so every began pair restores VERBATIM - no
+    // re-anchor; the deep-past stamps are deny-direction regardless.
     expect(byId.get('pre')!.startedAtMs).toBe(marker - 5_000)
-    expect(byId.get('post')!.startedAtMs).toBe(marker)
-    expect(byId.get('post')!.completesAtMs).toBe(marker + MORTAL_CYCLE_MS)
+    expect(byId.get('post')!.startedAtMs).toBe(marker + 60_000)
+    expect(byId.get('post')!.completesAtMs).toBe(marker + 60_000 + MORTAL_CYCLE_MS)
   })
 })

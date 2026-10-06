@@ -159,11 +159,12 @@ export class QuestManager {
     // collapses min() to NaN and poisons the marker into a write-gate
     // wedge (-Infinity would drag it deep-past and refire the reset).
     // Bad clock -> verbatim stamp: a crafted-future marker stays frozen
-    // (deny).
+    // (deny). r30-AUT-3: same [0, 2^52) domain as the sibling restore
+    // clocks - a negative or out-of-domain restoreNowMs keeps verbatim.
     let lastDailyResetAtMs = 0
     if (Number.isFinite(state.lastDailyResetAtMs) && state.lastDailyResetAtMs >= 0) {
       lastDailyResetAtMs =
-        Number.isFinite(nowMs) && Math.abs(nowMs) < 2 ** 53
+        Number.isFinite(nowMs) && nowMs >= 0 && nowMs < 2 ** 52
           ? Math.min(state.lastDailyResetAtMs, nowMs)
           : state.lastDailyResetAtMs
     }

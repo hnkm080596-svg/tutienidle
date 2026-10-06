@@ -64,6 +64,7 @@ import type { GameSave } from './SaveSystem'
 let currentMs = 1_725_160_000_000
 
 const TWO_POW_53 = 2 ** 53 // 9007199254740992
+const TWO_POW_52 = 2 ** 52 // 4503599627370496 - persisted timestamp domain bound
 
 // Mortal L1 authored span: ceil(100/1.0)*1000.
 const MORTAL_L1_CYCLE_MS = computeCycleSeconds(100, 1) * 1000 // 100000
@@ -324,7 +325,9 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
   // sub-2^53 behavior for non-save feeds.)
   // ------------------------------------------------------------------
   it('B2 sub-pin far-future pending freezes only its own lane (sibling pays)', () => {
-    const stuck = makeCycle(FOREST, 9e15 - MORTAL_L1_CYCLE_MS, 9e15)
+    // 4e15 < 2^52: inside the persisted domain - a stamp this far out
+    // still parks its own lane forever without tripping the guard.
+    const stuck = makeCycle(FOREST, 4e15 - MORTAL_L1_CYCLE_MS, 4e15)
     const honest = makeCycle(FOREST, 100_000, 200_000)
     const state = makeState(FOREST, {
       autoRestart: true,
@@ -346,7 +349,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     // The crafted lane re-persists untouched - forever parked.
     const parked = state.workerCycles!.find((c) => c.cycleId === stuck.cycleId)
     expect(parked).toBeDefined()
-    expect(parked!.completesAtMs).toBe(9e15)
+    expect(parked!.completesAtMs).toBe(4e15)
     // It never advances: observe tick at any honest nowMs keeps it.
     const observe = advanceWorkerLanes({
       siteId: FOREST,
@@ -362,7 +365,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       rng: () => 0.5,
     })
     expect(observe.completed).toHaveLength(0)
-    expect(observe.pending[0]!.completesAtMs).toBe(9e15)
+    expect(observe.pending[0]!.completesAtMs).toBe(4e15)
   })
 
   // ------------------------------------------------------------------
@@ -457,7 +460,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
   // reads only result.completed/.pending/.consumedBudgetMs).
   // ------------------------------------------------------------------
   it('B5 deep-past sub-pin due: bounded pay + O(1) forfeit jump; inflated counter is dead-ended', () => {
-    const deepDue = -8.9e15
+    const deepDue = -4e15 // admitted: |x| < 2^52 persisted domain
     const crafted = makeCycle(FOREST, deepDue, deepDue + MORTAL_L1_CYCLE_MS)
     const budgetMs = 50_000 // smaller than one span: the jump arms immediately
 
@@ -480,9 +483,9 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     // the whole deep tail is skipped in O(1) - nothing paid.
     expect(result.completed).toHaveLength(0)
     expect(result.consumedBudgetMs).toBe(0)
-    // Forfeit count = skipped dues ~= (nowMs - deepDue)/cycleMs ~ 8.9e10
+    // Forfeit count = skipped dues ~= (nowMs - deepDue)/cycleMs ~ 4e10
     // - an inflated counter with no consumer.
-    expect(result.forfeited).toBeGreaterThan(8e10)
+    expect(result.forfeited).toBeGreaterThan(1e10)
     // Head lands in (nowMs, nowMs + cycleMs] - the post-window
     // position, on a SPAWNED object (lane.saved was cleared), still
     // flagged unseeded (saved-chain provenance).
@@ -530,7 +533,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
   // +2^53 and -(2^53) trip the guard on either stamp position;
   // emptyLaneStartMs at +-2^53 trips the same way.
   // ------------------------------------------------------------------
-  it('C2 magnitude pin boundary: 2^53-1 advances, +-2^53 trip on pending and seed arms', () => {
+  it('C2 magnitude pin boundary: 2^52-1 advances, +-2^52/2^53 trip on pending and seed arms', () => {
     const run = (overrides: Partial<Parameters<typeof advanceWorkerLanes>[0]>) =>
       advanceWorkerLanes({
         siteId: FOREST,
@@ -548,16 +551,16 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
         ...overrides,
       })
 
-    // Just under the pin: lane seeded at 2^53-1-MORTAL_L1_CYCLE_MS is
-    // not due (due 2^53-1 > nowMs) - pending keeps the seed head.
+    // Just under the pin: lane seeded at 2^52-1-MORTAL_L1_CYCLE_MS is
+    // not due (due 2^52-1 > nowMs) - pending keeps the seed head.
     const under = run({
-      emptyLaneStartMs: TWO_POW_53 - 1 - MORTAL_L1_CYCLE_MS,
+      emptyLaneStartMs: TWO_POW_52 - 1 - MORTAL_L1_CYCLE_MS,
     })
     expect(under.pending).toHaveLength(1)
-    expect(under.pending[0]!.completesAtMs).toBe(TWO_POW_53 - 1)
+    expect(under.pending[0]!.completesAtMs).toBe(TWO_POW_52 - 1)
 
-    // Boundary values trip on every arm.
-    for (const stamp of [TWO_POW_53, -TWO_POW_53]) {
+    // Boundary values trip on every arm (r30-AUT-3: persisted domain).
+    for (const stamp of [TWO_POW_52, -TWO_POW_52, TWO_POW_53, -TWO_POW_53]) {
       const seededArm = run({ emptyLaneStartMs: stamp })
       expect(seededArm.pending, `emptyLaneStartMs ${stamp}`).toHaveLength(0)
       expect(seededArm.completed, `emptyLaneStartMs ${stamp}`).toHaveLength(0)

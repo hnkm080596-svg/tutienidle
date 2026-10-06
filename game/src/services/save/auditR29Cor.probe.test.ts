@@ -425,29 +425,31 @@ describe('r29 COR - claim 4: finite-clock guard edges on alchemy tick/settleOffl
     expect(reader.alchemySystem.getJobs()).toHaveLength(1)
   })
 
-  it('boundary: tick(2**53 - 1) still advances - the due job settles', () => {
+  it('boundary: tick(2**52 - 1) still advances - the due job settles inside the persisted domain', () => {
     const reader = registeredManager()
     const { job } = mortalJob(currentMs - 60_000, 'edge_hi_ok')
 
     reader.alchemySystem.restoreJobs([job], currentMs)
-    reader.alchemySystem.tick(2 ** 53 - 1, ANY_PILL(), RESOLVE_ANY)
+    reader.alchemySystem.tick(2 ** 52 - 1, ANY_PILL(), RESOLVE_ANY)
 
     expect(reader.alchemySystem.getJobs()).toHaveLength(0)
   })
 
-  it('boundary: tick(-(2**53 - 1)) is admitted by the |x| bound - a past clock parks (deny), never settles', () => {
-    const reader = registeredManager()
-    const { job } = mortalJob(currentMs - 60_000, 'edge_lo_ok')
+  it.each([-(2 ** 53 - 1), -1, 2 ** 52, 2 ** 53 - 1])(
+    'boundary: tick(%j) is outside [0, 2^52) - zero-advance deny, job preserved',
+    (edge) => {
+      const reader = registeredManager()
+      const { job } = mortalJob(currentMs - 60_000, `edge_lo_ok_${edge}`)
 
-    reader.alchemySystem.restoreJobs([job], currentMs)
-    reader.alchemySystem.tick(-(2 ** 53 - 1), ANY_PILL(), RESOLVE_ANY)
+      reader.alchemySystem.restoreJobs([job], currentMs)
+      reader.alchemySystem.tick(edge, ANY_PILL(), RESOLVE_ANY)
 
-    // admitted, and a negative clock is strictly < completesAtMs -> the
-    // job is parked, not minted
-    const jobs = reader.alchemySystem.getJobs()
-    expect(jobs).toHaveLength(1)
-    expect(jobs[0]!.completesAtMs).toBe(job.completesAtMs)
-  })
+      // r30-AUT-3: out-of-domain clocks deny instead of settling.
+      const jobs = reader.alchemySystem.getJobs()
+      expect(jobs).toHaveLength(1)
+      expect(jobs[0]!.completesAtMs).toBe(job.completesAtMs)
+    },
+  )
 
   it('honest feed regression: tick(Date.now()) settles the due job', () => {
     const reader = registeredManager()
