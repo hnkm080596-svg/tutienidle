@@ -205,6 +205,10 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 
 <style scoped>
 .trial-creation-art { position: absolute; inset: 0; }
+/* Mock-verbatim geometry: the preview page inherits a global border-box
+   reset the game shell does not provide - pin it here so every frame's
+   CSS px match the mock exactly. */
+.trial-creation-art, .trial-creation-art * { box-sizing: border-box; }
 .trial-back { position: absolute; top: 20px; left: 22px; min-width: 125px; z-index: 2; font-size: 19px; }
 .trial-heading { position: absolute; left: 175px; right: 40px; top: 20px; height: 82px; border-bottom: 1px solid #b08a47; }
 .trial-heading img { position: absolute; right: 20px; top: -7px; width: 280px; height: 95px; object-fit: contain; opacity: .5; }
@@ -219,12 +223,16 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 .trial-section-title::after { transform: rotate(180deg); }
 .trial-talent-workspace { display: grid; grid-template-columns: 350px 1fr; gap: 18px; height: 260px; }
 .trial-talent-grid { display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,minmax(0,1fr)); gap: 9px; }
-.trial-talent-grid button { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 3px double #8c794f; background: linear-gradient(145deg,#323025,#181e19); color: #f1e2c0; cursor: pointer; font: 15px var(--pc-font-body); }
+.trial-talent-grid button { min-width: 0; min-height: 93px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 3px double #8c794f; background: linear-gradient(145deg,#323025,#181e19); color: #f1e2c0; cursor: pointer; font: 15px var(--pc-font-body); }
 .trial-talent-grid button.selected { border-color: #e2b257; background: radial-gradient(#b48b3d,#382b17); box-shadow: inset 0 0 12px #deb35b70,0 0 7px #cf9e4a60; }
 .trial-talent-grid button:hover:not(.selected):not(:disabled) { border-color: #c3a464; background: #403b2b; }
 .trial-talent-grid button.locked { cursor: default; color: #8a7c56; background: linear-gradient(145deg,#26241d,#131713); }
 .trial-talent-grid button.locked b { font-size: 26px; line-height: 1; color: #6f633f; }
 .trial-talent-grid button.locked i { font-style: normal; font-size: 12px; color: #6f633f; }
+/* Real talent names can be longer than the mock's sample names - keep
+   them on one line so a 2-line name cannot stretch the tile past the
+   mock's 93px row height (the full name shows in the detail aside). */
+.trial-talent-grid button b { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: inherit; }
 .trial-talent-seal { display: grid; place-items: center; width: 49px; height: 49px; border-radius: 50%; border: 3px double #c7ad78; background: radial-gradient(#463d28,#1b211a); }
 .trial-talent-seal img { width: 35px; height: 35px; object-fit: contain; }
 .trial-talent-detail { padding: 12px 16px; border: 3px double #9c844f; background: #161b17b0; text-align: center; overflow: auto; }
