@@ -301,10 +301,16 @@ export function sanitizeRestoreAuthority(
   if (timeAuthority === undefined) {
     return undefined
   }
+  // r25-AUT-4: whitelist the kind explicitly - an unrecognized kind
+  // (runtime-crafted authority, future kind added without updating
+  // this seam) must degrade to the deny primitive rather than fall
+  // through to a default branch that reads it as a client window.
   const stamps =
     timeAuthority.kind === 'cold-boot'
       ? [timeAuthority.sinceMs, timeAuthority.untilMs]
-      : [timeAuthority.nowMs]
+      : timeAuthority.kind === 'live-replacement'
+        ? [timeAuthority.nowMs]
+        : [Number.NaN]
   return stamps.every((stamp) => Number.isFinite(stamp) && Math.abs(stamp) < 2 ** 52)
     ? timeAuthority
     : { kind: 'live-replacement', nowMs: Date.now() }

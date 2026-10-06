@@ -455,8 +455,9 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         // from the load row; a missing cutoff (pre-checkpoint saves)
         // degrades to the payload's own lastSavedAt marker under the
         // same server 'until' bound. Never the editable client clock.
-        const timeAuthority: RestoreTimeAuthority | undefined =
-          remoteAuthoritative && loaded.serverAuthority
+        const timeAuthority: RestoreTimeAuthority | undefined = !remoteAuthoritative
+          ? undefined
+          : loaded.serverAuthority
             ? {
                 kind: 'cold-boot',
                 sinceMs:
@@ -465,7 +466,15 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
                   ?? loaded.serverAuthority.serverNowMs,
                 untilMs: loaded.serverAuthority.serverNowMs,
               }
-            : undefined
+            : // r25-COR-1: under remote-authoritative a response with no
+              // usable server clock must FAIL CLOSED - undefined selects
+              // the legacy client-clock window, which pays
+              // Date.now()-lastSavedAt over the payload's editable
+              // marker (the class r24 denied for corrupt authorities;
+              // the resume seam at App.vue already fails closed the
+              // same way). Degrade to zero-accrual live-replacement:
+              // queues/jobs still load, nothing accrues, this boot.
+              { kind: 'live-replacement', nowMs: Date.now() }
 
         const restored = restoreGameSession(player, gameManager, loaded.save, timeAuthority)
 

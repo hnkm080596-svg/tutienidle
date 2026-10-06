@@ -210,6 +210,14 @@ const PHA_GIAP_CARRY_BANK_MAX: number = (() => {
   return bound
 })()
 
+// r24-AUT (d) + r25-COR: every player-owned id collection is
+// dedup/element-type only - a crafted payload with thousands of unique
+// entries validates and inflates every write and restore walk. Honest
+// counts are bounded by the authored rosters (quests ~two dozen,
+// stages, nodes, talents - all small catalogs); 1024 leaves generous
+// headroom for future content while closing the wedge uniformly.
+const ID_COLLECTION_CAP = 1024
+
 const SKILL_TEMPLATE_BY_ID = new Map(SKILLS.map((skill) => [skill.id, skill]))
 
 const STAGE_BY_ID = new Map(STAGES.map((stage) => [stage.id, stage]))
@@ -441,6 +449,13 @@ function requireArray(
     return undefined
   }
 
+  // Every array that reaches this helper is honestly bounded by an
+  // authored roster (catalogs, buildings, slots) - the nested
+  // workerCycles lanes carry their own maxLanes bound instead.
+  if (value.length > ID_COLLECTION_CAP) {
+    issues.push({ path: `${path}.${key}`, message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
+  }
+
   return value
 }
 
@@ -461,6 +476,10 @@ function optionalArray(
     issues.push({ path: `${path}.${key}`, message: 'phải là array hoặc vắng mặt' })
 
     return undefined
+  }
+
+  if (value.length > ID_COLLECTION_CAP) {
+    issues.push({ path: `${path}.${key}`, message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
   }
 
   return value
@@ -1960,6 +1979,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   // nodeLevels - field tung gay crash boot v47 (SaveSystem.ts comment v47).
   if (!isObject(player.nodeLevels)) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
+  } else if (Object.keys(player.nodeLevels).length > ID_COLLECTION_CAP) {
+    issues.push({ path: 'player.nodeLevels', message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
   } else {
     for (const [nodeId, level] of Object.entries(player.nodeLevels)) {
       if (!isNonNegativeFiniteNumber(level)) {
@@ -2260,6 +2281,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   // Optional per-field nhung khi co phai dung kieu.
   if (!isObject(player.nodeOneShotGrants)) {
     issues.push({ path: 'player.nodeOneShotGrants', message: 'phải là object' })
+  } else if (Object.keys(player.nodeOneShotGrants).length > ID_COLLECTION_CAP) {
+    issues.push({ path: 'player.nodeOneShotGrants', message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
   } else {
     for (const [nodeId, grant] of Object.entries(player.nodeOneShotGrants)) {
       if (!isObject(grant)) {
@@ -2392,6 +2415,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   // guarded at consumption by isValidCycleSeconds).
   if (!isObject(player.perfectClearSeconds)) {
     issues.push({ path: 'player.perfectClearSeconds', message: 'phải là object' })
+  } else if (Object.keys(player.perfectClearSeconds).length > ID_COLLECTION_CAP) {
+    issues.push({ path: 'player.perfectClearSeconds', message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
   } else {
     for (const [stageId, seconds] of Object.entries(player.perfectClearSeconds)) {
       // F-TC8-7: a sub-second clear is below every authored stage
@@ -3196,12 +3221,6 @@ function validateSkillCoreCoverage(
 // Mission A1 - deep per-slice validation. QuestManager.restore spreads
 // state.active blindly, so a malformed element must fail the boundary
 // instead of crashing restore (quest `active:"x"` -> TypeError).
-// r24-AUT (d): every quest list is dedup-only - a crafted payload with
-// thousands of unique entries validated, inflating every write and
-// restore walk. Honest counts are bounded by the authored quest roster
-// (~two dozen); 1024 leaves generous headroom for future content.
-const QUEST_LIST_CAP = 1024
-
 function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): void {
   if (!isObject(value)) {
     issues.push({ path, message: 'phải là object hoặc vắng mặt' })
@@ -3213,8 +3232,8 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
 
   if (!Array.isArray(active)) {
     issues.push({ path: `${path}.active`, message: 'phải là array' })
-  } else if (active.length > QUEST_LIST_CAP) {
-    issues.push({ path: `${path}.active`, message: `vượt QUEST_LIST_CAP (${QUEST_LIST_CAP})` })
+  } else if (active.length > ID_COLLECTION_CAP) {
+    issues.push({ path: `${path}.active`, message: `vượt ID_COLLECTION_CAP (${ID_COLLECTION_CAP})` })
   } else {
     // F-QUEST-DUP: ensureActive dedupes via getProgress (first-match),
     // so a duplicated active questId is unproducible - the dup would
@@ -3252,11 +3271,14 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
   // id is unproducible.
   if (
     !Array.isArray(value.completedOnceIds) ||
+    // r25-AUT-3: the count bound must precede the per-element walks -
+    // .every/new Set on an unbounded crafted array is the wedge the
+    // cap exists to close.
+    value.completedOnceIds.length > ID_COLLECTION_CAP ||
     !value.completedOnceIds.every((id) => typeof id === 'string') ||
-    new Set(value.completedOnceIds).size !== value.completedOnceIds.length ||
-    value.completedOnceIds.length > QUEST_LIST_CAP
+    new Set(value.completedOnceIds).size !== value.completedOnceIds.length
   ) {
-    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[] không trùng lặp trong QUEST_LIST_CAP' })
+    issues.push({ path: `${path}.completedOnceIds`, message: 'phải là string[] không trùng lặp trong ID_COLLECTION_CAP' })
   }
 
   // Mainline flag witness (kind:'flag' quests): optional slice - saves
@@ -3266,11 +3288,11 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
   if (value.questFlags !== undefined) {
     if (
       !Array.isArray(value.questFlags) ||
+      value.questFlags.length > ID_COLLECTION_CAP ||
       !value.questFlags.every((id) => typeof id === 'string') ||
-      new Set(value.questFlags).size !== value.questFlags.length ||
-      value.questFlags.length > QUEST_LIST_CAP
+      new Set(value.questFlags).size !== value.questFlags.length
     ) {
-      issues.push({ path: `${path}.questFlags`, message: 'phải là string[] không trùng lặp trong QUEST_LIST_CAP' })
+      issues.push({ path: `${path}.questFlags`, message: 'phải là string[] không trùng lặp trong ID_COLLECTION_CAP' })
     }
   }
 

@@ -191,7 +191,7 @@ describe('W5-AUT: CloudSaveCoordinator.resetCharacter containment', () => {
     const coordinator = new CloudSaveCoordinator(service)
 
     // Seed a live session's revision via a committed save.
-    await coordinator.save({} as GameSave)
+    await coordinator.save(committedSave())
     expect(coordinator.getRevision()).toBe(5)
 
     const reset = await coordinator.resetCharacter()
@@ -203,7 +203,7 @@ describe('W5-AUT: CloudSaveCoordinator.resetCharacter containment', () => {
     expect(coordinator.getRevision()).toBe(0)
     expect(advanceGeneration).toHaveBeenCalledTimes(1)
     ;(service.save as ReturnType<typeof vi.fn>).mockClear()
-    await coordinator.save({} as GameSave)
+    await coordinator.save(committedSave())
     // The post-reset write carries the fresh expected revision.
     expect((service.save as ReturnType<typeof vi.fn>).mock.calls[0]?.[1]).toBe(0)
   })

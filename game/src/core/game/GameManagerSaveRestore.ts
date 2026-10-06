@@ -438,9 +438,19 @@ export class GameManagerSaveRestore {
     // window while auto-farm pays the same elapsed (asymmetry was
     // the r14 regression); settleNowMs still clamps the end at
     // authorityNowMs.
+    // r25-AUT-1: the start must clamp at Date.now() too - persisted
+    // lane heads are stamped FROM this cursor, so a future-positioned
+    // pair (crafted-future lastSavedAt + a sinceMs still ahead of the
+    // client clock) seeds workerCycles[].startedAtMs past the next
+    // save's own lastSavedAt and the admission pin then rejects the
+    // game's own write (same self-brick class as r24-INT-01). Dues in
+    // the future window defer to live ticks at their real times; an
+    // honest start is never past now, so the clamp only fires on the
+    // crafted arm.
     const offlineSinceMs = Math.min(
       save.player.lastSavedAt ?? settleNowMs,
       authorityNowMs - elapsedOfflineSeconds * 1000,
+      Date.now(),
     )
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {

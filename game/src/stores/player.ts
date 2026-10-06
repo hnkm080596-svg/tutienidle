@@ -127,8 +127,14 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
   // inside the same authority window the sibling arms anchor (r23-int-02:
   // asymmetric vs the dead arm's field-epoch clamp, but strict-subset -
   // it never admits what the raw payload couldn't already claim).
+  // r25-AUT: persisted stamps must also sit inside the CLIENT epoch -
+  // nowMs is the authority clock, which may sit ahead of Date.now()
+  // (skewed server response or crafted pair); a persisted stamp past
+  // the next save's lastSavedAt is rejected at the next write's
+  // admission (self-brick class). The extra clamp only fires when both
+  // inputs are already future-dated.
   const appliedAtMs = Number.isFinite(effect.appliedAtMs)
-    ? Math.min(effect.appliedAtMs, nowMs)
+    ? Math.min(effect.appliedAtMs, nowMs, Date.now())
     : effect.appliedAtMs
   // r15-COR-A: a record dead at save time (expires <= lastSavedAt in
   // the payload's own epoch) can never honestly revive - expires only
@@ -404,9 +410,15 @@ export const usePlayerStore = defineStore('player', {
       // bounded by the approved now - a save cannot claim a deadline
       // past lastSavedAt + duration, and a forged-future lastSavedAt
       // cannot widen the bound past the approved now.
+      // r25-AUT: the provenance also bounds the PERSISTED expires clamp
+      // (provenance + TU_LINH_TRAN_DURATION_MS is written back into the
+      // save), so it must clamp at the client clock too - a
+      // double-future pair (marker + authority both ahead of now) would
+      // otherwise persist expires > next-lastSavedAt + duration and the
+      // admission pin rejects the game's own write (self-brick class).
       const effectProvenanceMs = Number.isFinite(save.player.lastSavedAt)
-        ? Math.min(save.player.lastSavedAt, authorityNowMs)
-        : authorityNowMs
+        ? Math.min(save.player.lastSavedAt, authorityNowMs, Date.now())
+        : Math.min(authorityNowMs, Date.now())
 
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x

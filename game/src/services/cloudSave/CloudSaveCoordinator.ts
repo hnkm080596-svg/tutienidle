@@ -1,5 +1,6 @@
 import type { GameSave } from '../save/SaveSystem'
 import type { CloudSaveCapability, CloudSaveLoadResult, CloudSaveResetResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
+import { validateGameSaveShape } from '../save/saveShapeValidation'
 
 interface QueuedSave {
   /** Callers that arrived while a write was in flight all resolve with
@@ -138,6 +139,37 @@ export class CloudSaveCoordinator {
   }
 
   private async driveSave(snapshot: GameSave, generation: number): Promise<CloudSaveWriteResult> {
+    // r25-INT-01 / r25-AUT-2: the outgoing payload must pass the SAME
+    // shape admission the local boot gate (loadGame) applies before it
+    // may overwrite a healthy slot - the import gate already enforces
+    // this law for foreign payloads ("a file the boot restore would
+    // reject must not overwrite a healthy save slot"), and the game's
+    // own writer is bound by it too. A save carrying post-dated stamps
+    // (written under a skewed clock or synced from another machine)
+    // restores its deadline channels verbatim, so the next write would
+    // stamp a fresh now-lastSavedAt beneath them and brick its own
+    // slot on the following boot. Fail the write instead: the healthy
+    // slot survives on both local and remote tiers; progress defers
+    // until the stamps are in-domain again (bounded deny, never a
+    // grant).
+    // NOTE: the gate is validateGameSaveShape only - NOT the stricter
+    // isSaveAcceptable foreign-payload surface. A pre-creation-pick
+    // autosave is shape-valid and loadGame-legal; requiring acceptance
+    // here would block legitimate early writes.
+    const outgoing = validateGameSaveShape(snapshot)
+    if (!outgoing.ok) {
+      console.warn(
+        '[cloudSave] refusing to commit a payload that fails admission:',
+        outgoing.issues,
+      )
+      return {
+        status: 'unavailable',
+        message: 'save tự vi phạm cổng nhận - giữ nguyên slot hiện tại',
+        retryable: true,
+        detail: 'OUTGOING_ADMISSION_REJECTED',
+      }
+    }
+
     const result = await this.service.save(snapshot, this.revision)
 
     if (result.status === 'ok') {
