@@ -72,6 +72,9 @@ const tagSymbols: Record<TalentTag, StableSymbolId> = {
 function talentIcon(talent: TalentDefinition) {
   return stableSymbolUrl(talentSymbolId(talent.id, tagSymbols[talent.tags[0] ?? 'cultivation']))
 }
+function talentTooltip(talent: TalentDefinition) {
+  return { title: `${talent.name} · ${TALENT_RARITY_LABELS[talent.rarity]}`, description: talent.description }
+}
 const selectedTalent = computed(
   () => talents.value.find((talent) => talent.id === selectedTalentIds.value[0]) ?? null,
 )
@@ -181,7 +184,7 @@ const style = { '--trial-panel': `url('${art.panel}')` }
       <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}</h2>
       <div class="trial-talent-workspace">
         <div class="trial-talent-grid" data-hk-region="talent-grid" role="radiogroup" :aria-label="t('onboarding.creation.talentStep.sectionTitle')">
-          <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIcon(talent)" alt=""></span><b>{{ talent.name }}</b></button>
+          <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" v-tooltip="talentTooltip(talent)" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIcon(talent)" alt=""></span><b>{{ talent.name }}</b></button>
           <button v-for="slot in lockedTalentSlots" :key="`locked-${slot}`" type="button" disabled class="locked" :data-testid="`creation-locked-talent-${slot}`"><b>?</b><i>{{ t('onboarding.creation.talentStep.locked') }}</i></button>
         </div>
         <aside class="trial-talent-detail" aria-live="polite">
