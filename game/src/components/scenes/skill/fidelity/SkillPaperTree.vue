@@ -67,7 +67,6 @@ const graphStyle = computed(() => ({
 .skill-paper-tree { position:absolute; left:228px; top:259px; width:710px; height:445px; }
 .skill-graph { position:absolute; left:50%; top:50%; transform-origin:center; }
 .skill-tree-lines { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
-.skill-edge.muted { opacity:.5; filter:grayscale(.85); }
 .connection-flow { stroke:#fff0aa; stroke-width:2; stroke-dasharray:9 91; stroke-linecap:round; animation:skill-line-energy 3s linear infinite; }
 .connection-flow-glow { stroke:#ffd36c; stroke-width:6; filter:url(#skill-flow-glow); opacity:.7; }
 @keyframes skill-line-energy { from { stroke-dashoffset:100; } to { stroke-dashoffset:0; } }
