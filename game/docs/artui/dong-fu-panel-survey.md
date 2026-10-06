@@ -336,7 +336,7 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R28 | Exploration mock chỉ map — details+start vẫn cần | giữ details |
 | R29 | ProductionPanel promote lên paper shell | promote |
 | R30 | worker-allocation block dưới scope | giữ, scope-gated |
-| R31 | Quest category nav ↔ filter taxonomy | map filters→categories |
+| R31 | Quest 5 nhóm mock (Chính Tuyến/Ngày/Tuần/Thành Tựu/Thám Hiểm) vs prod chỉ chain 'mainline' + status filters (daily đã scope-lock beta) | rail giữ 5 nhóm: Chính Tuyến live, 4 nhóm còn lại "Chưa lộ" |
 | R32 | Formation design sẵn sàng khi scope mở | ghi nhận |
 | R33 | Vendor không có mock | paper shell tạm, chờ design |
 | R34 | (xem R16) | |
