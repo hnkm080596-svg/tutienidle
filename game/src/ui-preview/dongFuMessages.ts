@@ -4,7 +4,7 @@ export const messages = {
     notice: '{name} — đã chọn trong bản UI',
     identity: 'Thanh Vân', realmName: 'Luyện Khí · Tầng 11', progress: '125.600 / 130.000',
     currency: { stone: 'Linh thạch', gold: 'Vàng', crystal: 'Tinh thạch' },
-    action: { realm: 'Cảnh Giới', skill: 'Kỹ Năng', body: 'Luyện Thể', alchemy: 'Luyện Đan', exploration: 'Thám Hiểm', equipment: 'Trang Bị', inventory: 'Túi Đồ', character: 'Nhân Vật', technique: 'Tâm Pháp', feedback: 'Góp Ý', settings: 'Cài Đặt' },
+    action: { realm: 'Cảnh Giới', skill: 'Kỹ Năng', body: 'Luyện Thể', alchemy: 'Luyện Đan', exploration: 'Thám Hiểm', equipment: 'Trang Bị', inventory: 'Túi Đồ', character: 'Tu Sĩ', technique: 'Tâm Pháp', feedback: 'Góp Ý', settings: 'Cài Đặt' },
     building: { chi_hien_quan: 'Chiêu Hiền Quán', equipment_hall: 'Khí Đường', pill_room: 'Đan Phòng', teleport_array: 'Truyền Tống Trận', gathering_outpost: 'Khai Vật Đường', vendor: 'Ký Bảo Các' },
     cultivating: 'Tĩnh tâm tu luyện',
     opportunity: { realm: 'Cảnh giới', alchemy: 'Luyện đan', technique: 'Tâm pháp', production: 'Khai thác', quest: 'Nhiệm vụ' },

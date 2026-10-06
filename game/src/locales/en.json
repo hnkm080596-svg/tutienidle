@@ -504,7 +504,7 @@
         "group": "Cave Dwelling Command Wheel"
       },
       "slots": {
-        "character": "Character",
+        "character": "Cultivator",
         "realm": "Realm",
         "skill": "Skills",
         "quest": "Quests",
@@ -1782,7 +1782,7 @@
     },
     "topBar": {
       "aria": "Cave Dwelling status bar",
-      "identityAria": "Open the Character panel",
+      "identityAria": "Open the Cultivator panel",
       "cultivation": "Cultivation progress",
       "realmLine": "{realm} · Stage {level}",
       "feedback": "Mail",
@@ -2018,7 +2018,7 @@
     "unhandled": "This feature is not open yet.",
     "nav": {
       "home": "Grotto",
-      "character": "Character",
+      "character": "Cultivator",
       "skill": "Skills",
       "equipment": "Equipment",
       "body": "Body",
@@ -2043,7 +2043,7 @@
   "paperNav": {
     "navigation": "Functions",
     "realm": "Realm",
-    "character": "Character",
+    "character": "Cultivator",
     "inventory": "Bag",
     "skill": "Skills",
     "technique": "Techniques",

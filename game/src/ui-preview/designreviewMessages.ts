@@ -4,7 +4,7 @@ const vi = {
   inventory: 'Kho Vật', body: 'Luyện Thể', equipment: 'Trang Bị', graph: 'Kỹ Năng', map: 'Sơn Hà Đồ',
   progression: 'Cảnh Giới', home: 'Động Phủ', opening: 'Mở Đầu', formation: 'Trận Pháp',
   tooltip: 'Chi Tiết Vật Phẩm', dialog: 'Bế Quan Kết Thúc', settings: 'Cài Đặt',
-  character: 'Nhân Vật', creation: 'Tạo Nhân Vật', technique: 'Công Pháp', meridian: 'Kinh Mạch', zhou: 'Chu Thiên',
+  character: 'Tu Sĩ', creation: 'Tạo Nhân Vật', technique: 'Công Pháp', meridian: 'Kinh Mạch', zhou: 'Chu Thiên',
   battle: 'Chiến Đấu', victory: 'Chiến Thắng', defeat: 'Thất Bại', tribulation: 'Độ Kiếp',
   alchemy: 'Luyện Đan', forge: 'Xưởng Trang Bị', companion: 'Đồng Hành', artifact: 'Pháp Bảo', vendor: 'Ký Bảo Các', quest: 'Nhiệm Vụ',
   feedback: 'Góp Ý', confirm: 'Xác Nhận', entitlement: 'Chọn Thiên Phú', incompatible: 'Dữ Liệu Không Tương Thích', loading: 'Đang Tải',

@@ -36,5 +36,5 @@ export const explorationMessages = { vi: {
     modeHints: { manual: 'Chiến thủ công từng đợt, thưởng đầy đủ.', repeat: 'Tự động đánh lại ải này.', progress: 'Tự động tiến đến ải xa nhất có thể.', perfectFarm: 'Tự động thu thưởng hoàn mỹ (cần hoàn mỹ ải).' },
     actions: { editBuild: 'Chỉnh Build', start: 'Bắt Đầu' },
   } },
-  nav: { realm: 'Cảnh Giới', character: 'Nhân Vật', inventory: 'Túi Đồ', skill: 'Kỹ Năng', technique: 'Tâm Pháp', body: 'Luyện Thể', alchemy: 'Luyện Đan', equipment: 'Trang Bị', exploration: 'Thám Hiểm', quest: 'Nhiệm Vụ', settings: 'Cài Đặt' },
+  nav: { realm: 'Cảnh Giới', character: 'Tu Sĩ', inventory: 'Túi Đồ', skill: 'Kỹ Năng', technique: 'Tâm Pháp', body: 'Luyện Thể', alchemy: 'Luyện Đan', equipment: 'Trang Bị', exploration: 'Thám Hiểm', quest: 'Nhiệm Vụ', settings: 'Cài Đặt' },
 } } as const

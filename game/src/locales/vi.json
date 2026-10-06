@@ -504,7 +504,7 @@
         "group": "Bảng lệnh Động Phủ"
       },
       "slots": {
-        "character": "Nhân Vật",
+        "character": "Tu Sĩ",
         "realm": "Cảnh Giới",
         "skill": "Kỹ Năng",
         "quest": "Nhiệm Vụ",
@@ -1782,7 +1782,7 @@
     },
     "topBar": {
       "aria": "Thanh trạng thái Động Phủ",
-      "identityAria": "Mở bảng Nhân Vật",
+      "identityAria": "Mở bảng Tu Sĩ",
       "cultivation": "Tiến độ tu vi",
       "realmLine": "{realm} · Tầng {level}",
       "feedback": "Thư",
@@ -2018,7 +2018,7 @@
     "unhandled": "Chức năng này chưa mở.",
     "nav": {
       "home": "Động Phủ",
-      "character": "Nhân Vật",
+      "character": "Tu Sĩ",
       "skill": "Kỹ Năng",
       "equipment": "Trang Bị",
       "body": "Luyện Thể",
@@ -2043,7 +2043,7 @@
   "paperNav": {
     "navigation": "Chức năng",
     "realm": "Cảnh Giới",
-    "character": "Nhân Vật",
+    "character": "Tu Sĩ",
     "inventory": "Kho Vật",
     "skill": "Kỹ Năng",
     "technique": "Tâm Pháp",

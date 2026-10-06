@@ -523,7 +523,7 @@ onBeforeUnmount(() => {
 .home-independent-navigation button { transition:transform 180ms ease,filter 180ms ease;transform-origin:left center; }
 .home-independent-navigation button.active { transform:scale(1.1);filter:none;color:#efdcb6; }
 .home-independent-navigation button.active::before { filter:brightness(1.22) drop-shadow(0 0 4px #ffd279) drop-shadow(0 0 9px #df9b3f90); }
-.home-independent-navigation img { position:absolute;left:43px;width:35px;height:35px;object-fit:contain; }
+.home-independent-navigation img { position:absolute;left:39px;top:48%;transform:translateY(-50%);width:35px;height:35px;object-fit:contain; }
 .home-independent-navigation button>span { margin-left:84px; }
 .home-independent-navigation button::before { content:"";position:absolute;inset:0;z-index:-1;background:var(--home-nav-art) center/contain no-repeat; }
 .home-independent-navigation button.locked { filter:grayscale(1);opacity:.48;cursor:default; }
