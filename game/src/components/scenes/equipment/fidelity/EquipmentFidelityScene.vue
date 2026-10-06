@@ -5,7 +5,6 @@ import ForgeBatchBag from './ForgeBatchBag.vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import EquipmentPaperItem from './EquipmentPaperItem.vue'
 import EquipmentPaperTooltip from './EquipmentPaperTooltip.vue'
@@ -14,13 +13,12 @@ import type { EquipmentDisplay, EquipmentSocket } from './equipmentUi'
 const props = withDefaults(defineProps<{
   sockets?: readonly EquipmentSocket[]
   items?: readonly EquipmentDisplay[]
-  navigation: readonly PaperNavigationItem[]
   notice: string
   characterImage?: string
   preview?: boolean
 }>(), { sockets: () => [], items: () => [], preview: false })
 
-const emit = defineEmits<{ navigate: [id: string]; back: []; action: [id: string] }>()
+const emit = defineEmits<{ back: []; action: [id: string] }>()
 
 const { t } = useI18n()
 
@@ -46,7 +44,6 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
 <template>
   <section ref="rootRef" class="equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')" @keydown.esc="inspecting = null">
     <div class="equipment-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="equipment" :label="t('equipment.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <h1 class="equipment-title">{{ t('equipment.title') }}</h1><p class="equipment-subtitle">{{ t('equipment.subtitle') }}</p>
     <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -
          neo o khe trong giua subtitle va cot bag/forge (design px). -->

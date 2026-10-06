@@ -9,7 +9,6 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import type { QuestDisplay } from './questUi'
 import type { VictoryRewardDisplay } from '@/components/scenes/victory/fidelity/victoryUi'
 import QuestFidelityDetail from './QuestFidelityDetail.vue'
@@ -19,12 +18,11 @@ withDefaults(defineProps<{
   selected?: QuestDisplay
   filter: string
   rewards: readonly VictoryRewardDisplay[]
-  navigation: readonly PaperNavigationItem[]
   notice: string
   preview?: boolean
 }>(), { preview: false })
 
-const emit = defineEmits<{ select: [id: string]; filter: [id: string]; action: [id: string]; navigate: [id: string]; back: [] }>()
+const emit = defineEmits<{ select: [id: string]; filter: [id: string]; action: [id: string]; back: [] }>()
 const { t } = useI18n()
 const filters = ['all', 'once', 'active', 'ready', 'claimed']
 
@@ -39,7 +37,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="quest-scene" :aria-label="t('panels.quest.title')" @click.self="emit('back')">
     <div class="quest-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="quest" :label="t('paperNav.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <h1 class="quest-title">{{ t('panels.quest.title') }}</h1>
 
     <div class="quest-content">

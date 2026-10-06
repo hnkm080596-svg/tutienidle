@@ -3,18 +3,16 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import BodyPaperFigure from './BodyPaperFigure.vue'
 import BodyPaperDetails from './BodyPaperDetails.vue'
 import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
 withDefaults(defineProps<{
   model: BodyPaperModel
   unit: BodyPaperUnit | null
-  navigation: readonly PaperNavigationItem[]
   notice: string
   preview?: boolean
 }>(), { preview: false })
-const emit = defineEmits<{ navigate:[id:string]; back:[]; chapter:[id:string]; select:[id:string]; invest:[] }>()
+const emit = defineEmits<{ back:[]; chapter:[id:string]; select:[id:string]; invest:[] }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 const bodyIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/body.svg')
@@ -27,7 +25,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="body-paper-scene" :aria-label="t('body.title')" @click.self="emit('back')">
     <div class="body-paper" :style="{borderImageSource:`url('${paper}')`}" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="body" :label="t('body.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate',$event)" @back="emit('back')" />
     <header class="body-heading"><h1>{{ t('body.title') }}</h1><p>{{ model.identity }}</p></header>
     <div class="body-chapters" role="group" :aria-label="t('body.chapters')">
       <button v-for="chapter in model.chapters" :key="chapter.id" :class="{active:model.chapter === chapter.id, 'is-locked':!chapter.unlocked}" :aria-pressed="model.chapter === chapter.id" @click="emit('chapter',chapter.id)"><img :src="bodyIcon" alt=""><span>{{ chapter.label }}<small>{{ chapter.hint }}</small></span></button>

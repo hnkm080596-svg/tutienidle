@@ -9,7 +9,6 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import type { InventoryDisplay } from './inventoryUi'
 import InventoryFidelityDetail from './InventoryFidelityDetail.vue'
@@ -19,12 +18,11 @@ withDefaults(defineProps<{
   selected?: InventoryDisplay
   filter: string
   query: string
-  navigation: readonly PaperNavigationItem[]
   notice: string
   preview?: boolean
 }>(), { preview: false })
 
-const emit = defineEmits<{ select: [id: string]; filter: [id: string]; query: [value: string]; sort: []; use: [id: string]; navigate: [id: string]; back: [] }>()
+const emit = defineEmits<{ select: [id: string]; filter: [id: string]; query: [value: string]; sort: []; use: [id: string]; back: [] }>()
 const { t } = useI18n()
 const filters = ['all', 'equipment', 'material', 'pill']
 function search(event: Event) { if (event.target instanceof HTMLInputElement) emit('query', event.target.value) }
@@ -40,7 +38,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="inventory-scene" :aria-label="t('panels.bag.title')" @click.self="emit('back')">
     <div class="inventory-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="inventory" :label="t('paperNav.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <h1 class="inventory-title">{{ t('panels.bag.title') }}</h1>
 
     <div class="inventory-content">

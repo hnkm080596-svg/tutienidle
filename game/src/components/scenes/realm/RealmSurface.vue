@@ -13,7 +13,6 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm, CORE_REALM_LEVEL } from '@/core/realm/realmSystem'
 import { betaNextRealmSurfaceFor } from '@/core/betaScopeSurface'
 import { isActivePath } from '@/core/player/CultivationPathSystem'
@@ -32,7 +31,6 @@ const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
-const { items: navItems, navigate } = usePaperNavigation()
 
 const selected = ref(0)
 const notice = ref('')
@@ -118,9 +116,8 @@ function onQuanKhi() {
       :model="model"
       :selected="selected || model.currentFloor"
       :notice="notice"
-      :navigation="navItems"
+     
       @select-floor="onSelectFloor"
-      @navigate="navigate"
       @breakthrough="onBreakthrough"
       @quan-khi="onQuanKhi"
       @back="ui.closeHomeOverlays()"

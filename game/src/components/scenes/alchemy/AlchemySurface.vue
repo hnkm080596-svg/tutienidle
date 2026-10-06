@@ -19,7 +19,6 @@ import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profe
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { useAudioStore } from '@/stores/audio'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import AlchemyFidelityScene from './fidelity/AlchemyFidelityScene.vue'
 import type {
   AlchemyCostRow,
@@ -35,7 +34,6 @@ const { t, te } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
 const gameManager = useGameManager()
-const { items: navItems, navigate } = usePaperNavigation()
 
 const { stateVersion, bumpState } = useStateVersion()
 
@@ -483,13 +481,12 @@ function selectRecipeById(id: string) {
       :variant="selectedHerbId"
       :jobs="jobs"
       :capacity="maxJobSlots"
-      :navigation="navItems"
+     
       notice=""
       @select="selectRecipeById"
       @variant="selectedHerbId = $event"
       @brew="startJob"
       @cancel="cancelJob"
-      @navigate="navigate"
       @back="ui.closeHomeOverlays()"
     />
   </SceneDesignCanvas>

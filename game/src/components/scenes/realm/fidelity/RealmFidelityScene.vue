@@ -3,12 +3,11 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import RealmPaperMap from './RealmPaperMap.vue'
 import RealmPaperDetails from './RealmPaperDetails.vue'
 import type { RealmUiModel } from './realmUi'
-withDefaults(defineProps<{ model: RealmUiModel; selected: number; notice: string; navigation: readonly PaperNavigationItem[]; preview?: boolean }>(), { preview: false })
-const emit = defineEmits<{ selectFloor: [floor: number]; navigate: [id: string]; back: []; breakthrough: []; quanKhi: [] }>()
+withDefaults(defineProps<{ model: RealmUiModel; selected: number; notice: string; preview?: boolean }>(), { preview: false })
+const emit = defineEmits<{ selectFloor: [floor: number]; back: []; breakthrough: []; quanKhi: [] }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 
@@ -20,7 +19,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="realm-paper-scene" :aria-label="t('panels.wheel.slots.realm')" @click.self="emit('back')">
     <div class="realm-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="realm" :label="t('panels.wheel.slots.realm')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <h1>{{ t('realm.title') }}</h1><p class="realm-subtitle">{{ t('realm.subtitle') }}</p>
     <RealmPaperMap :current="model.currentFloor" :selected="selected" :max="model.maxFloor" @select="emit('selectFloor', $event)" />
     <RealmPaperDetails :model="model" :selected="selected" :notice="notice" @breakthrough="emit('breakthrough')" @quan-khi="emit('quanKhi')" />

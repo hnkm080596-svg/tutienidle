@@ -18,7 +18,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -30,7 +29,6 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 
 const { t } = useI18n()
 const ui = useUiStore()
-const { items: navItems, navigate } = usePaperNavigation()
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
@@ -70,7 +68,7 @@ function selectTab(id: InventoryTab) {
 
 <template>
   <SceneDesignCanvas overlay>
-  <InventoryFidelityScene :items="[]" :selected="undefined" filter="material" query="" :navigation="navItems" notice="" @navigate="navigate" @back="ui.closeHomeOverlays()">
+  <InventoryFidelityScene :items="[]" :selected="undefined" filter="material" query="" notice="" @back="ui.closeHomeOverlays()">
     <template #toolbar>
       <div class="toolbar">
         <nav>

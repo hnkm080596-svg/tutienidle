@@ -3,16 +3,15 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import TechniquePaperInfo from './TechniquePaperInfo.vue'
 import TechniquePaperArtifact from './TechniquePaperArtifact.vue'
 import TechniquePaperUpgrade from './TechniquePaperUpgrade.vue'
 import type { TechniqueUiModel } from './techniqueUi'
 withDefaults(
-  defineProps<{ model: TechniqueUiModel; navigation: readonly PaperNavigationItem[]; selected: string; notice: string; preview?: boolean }>(),
+  defineProps<{ model: TechniqueUiModel; selected: string; notice: string; preview?: boolean }>(),
   { preview: false },
 )
-const emit = defineEmits<{ navigate: [id: string]; back: []; select: [id: string]; advance: [] }>()
+const emit = defineEmits<{ back: []; select: [id: string]; advance: [] }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 
@@ -24,7 +23,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="technique-paper-scene" :aria-label="t('technique.title')" @click.self="emit('back')">
     <div class="technique-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="technique" :label="t('technique.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <TechniquePaperInfo :model="model" />
     <template v-if="model.hasTechnique">
       <TechniquePaperArtifact :model="model" :selected="selected" @select="emit('select', $event)" />

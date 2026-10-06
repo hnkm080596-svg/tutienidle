@@ -12,7 +12,6 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { TECHNIQUE_TIER_LABELS } from '@/core/technique/TechniqueProgression'
@@ -31,7 +30,6 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
-const { items: navItems, navigate } = usePaperNavigation()
 
 const selected = ref('')
 const notice = ref('')
@@ -134,9 +132,8 @@ function onAdvance() {
       :model="model"
       :selected="selected"
       :notice="notice"
-      :navigation="navItems"
+     
       @select="onSelect"
-      @navigate="navigate"
       @advance="onAdvance"
       @back="ui.closeHomeOverlays()"
     />

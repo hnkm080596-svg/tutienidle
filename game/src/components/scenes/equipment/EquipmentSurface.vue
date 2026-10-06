@@ -27,7 +27,6 @@ import { isBetaEquipmentTab } from '@/core/betaScope'
 import { HALL_SELECTION_KEY } from '@/components/panels/equipment-hall/hallSelection'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import EquipmentFidelityScene from './fidelity/EquipmentFidelityScene.vue'
 import EquipmentPaperdollStage from './paperdoll/EquipmentPaperdollStage.vue'
 import EquipmentBagSection from '@/components/panels/bag-sections/EquipmentBagSection.vue'
@@ -45,7 +44,6 @@ const furnaceArtUrl = resolveAssetUrl('/assets/ui/huyen-kim/scene/forge-v2/furna
 const { t } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
-const { items: navItems, navigate } = usePaperNavigation()
 const { stateVersion } = useStateVersion()
 
 // Canonical authored op table (same ids the old shell declared): all 5
@@ -128,9 +126,8 @@ const summaryRows = computed(() => {
        behind the paper instead of the home vista). -->
   <SceneDesignCanvas overlay>
     <EquipmentFidelityScene
-      :navigation="navItems"
+     
       notice=""
-      @navigate="navigate"
       @back="ui.closeHomeOverlays()"
     >
       <template #doll>
