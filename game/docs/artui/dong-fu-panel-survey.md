@@ -1,0 +1,393 @@
+# Động Phủ panel survey — artUI C-series (line-by-line)
+
+Survey date: 2026-10-06. Branch: `devin/artui-c-login` (off `devin/artui-b-design-system`).
+Scope: every surface reachable from the home scene — the stage chrome itself,
+the 21-icon nav rail, building function panels, standalone overlays, hidden-scope
+panels, and shared components they all sit on.
+
+Legend:
+- **Wire-now** = element maps 1:1 onto an existing Pc* component or tien-hiep-2026-10 asset; no design decision needed.
+- **RULING** = needs Minh's call before implementation.
+- **Risk** = hidden dep, scope leak, or "old has / new doesn't" gap.
+
+---
+
+## 0. Taxonomy — what "động phủ panels" means in code
+
+Two parallel panel systems (presentation/contracts/panelIds.ts):
+- `LeftPanelMode`: character, inventory, exploration (Sản Xuất / auto-farm), settings, equipment_hall, pill_room, worker_lodge (scope-hidden), scripture_pavilion, stage_select (Bản Đồ), vendor.
+- `StandalonePanel`: skill, realm, quan_khi, quest, artifact, tran_phap, companion, technique, body.
+
+Building → panel routing (data/building/buildings.ts, single funnel `openBuilding`):
+gathering_outpost→exploration, equipment_hall→equipment_hall, pill_room→pill_room,
+teleport_array→stage_select, vendor→vendor, chi_hien_quan→worker_lodge (scope-hidden).
+
+Nav rail (21 icons): home, character, skill, equipment, body, technique, realm,
+inventory, alchemy, formation, exploration, quest, production, vendor, settings,
+feedback + locked: artifact, companion, guild, sect, portal.
+
+---
+
+## 1. Home stage (DongFuStage) — in-flight rewire @2d1a2238
+
+**Wired already (real read-models):** profile card (avatar + name + realm + progress),
+currency chips, quest tracker card (opens quest panel), 21-icon rail (locked/active
+states, collapse + indicator, transition seam), command wheel coexists (Backquote),
+Thiên Cơ Bảng parked below quest card, AutoFarmIndicator, notice line.
+
+### Wire-now
+- Rail icons: `icons/navigation-{id}-v2.png` all present in pack — done.
+- Rail chrome: `navigation-backing-dark-v3.png`, `navigation-medallion-v1.png`, `navigation-landscape-seam-v1.png` — done.
+- Currencies: `resource-{coin,crystal,essence,jade}-v1.png` + PcPaperButton secondary — done.
+
+### RULING — home scene
+- **R1. Building hotspots removed.** The old vista had 5 clickable building markers (pill_room 386,120; equipment_hall 868,133; gathering_outpost 126,410; teleport_array 1250,449; vendor 980,470) with ready/upgradeable dots. The approved mock paints none — buildings are rail-only now. Keep rail-only, or restore markers (pack has `landmark-v1.png` + `PcPaperLandmark.vue` unused)?
+- **R2. artifact/companion are realm-gated unlockables**, not permanently locked. The wheel computes `disabledContext` (isArtifactDomainUnlocked etc.) — the rail hard-locks them forever. Wire the same realm predicates into `navLocked()` so they unlock on the rail too?
+- **R3. Building status badges lost on the rail.** Wheel slots + old hotspots showed ready (kho đầy)/upgradeable dots; rail shows none. Add a dot to equipment/alchemy/production/vendor rail buttons (reuses `navigation.getBuildingStatus`)?
+- **R4. Thiên Cơ Bảng** still the old dark drawer parked under the quest card (top:290 right:30). Restyle to paper chrome, fold into quest card, or leave until its own redesign pass?
+- **R5. Currency icon mapping is positional** (`CHIP_ICON[index]`), and real chips are the 3 linh-thạch tiers — not the mock's 4 currencies. Icon per tier vs one stone icon? (Index mapping breaks if a 4th chip appears when companion unlocks.)
+- **R6. Teleport array building has no rail entry** — 'exploration' nav opens stage_select (the same surface the array opens), but the array's own level/upgrade/status is invisible from the rail. Acceptable (wheel still shows it) or needs a plaque?
+- **R7. scripture_pavilion (Tàng Kinh Các) has no rail icon** — wheel-only today. The pack has no scripture icon; keep wheel-only or add to rail?
+- **R8. Command wheel + board + AutoFarmIndicator** keep old chrome until their redesign passes — confirm "park old chrome" per-surface is the plan.
+
+### Risk
+- `df-notice` at left:420/top:110 can collide with the currencies row (starts left:682) on long strings.
+- Old `DongFuHomeContent`/`DongFuVista`/`DongFuHud` now dormant — kept for raw-source test pins or slated for removal? (same question as dormant creation shell files).
+- `player portrait` real art was in old HUD; avatar slot now uses the generic 'character' nav icon — placeholder or final?
+
+---
+
+## 2. Kiến trúc mount — 3 đường vào panel
+
+```
+rail icon (DongFuStage.navAction)
+  ├─ 'character'/'inventory' → ui.characterOverlayOpen + characterSceneTab
+  │     → LeftPanel.vue → CharacterSurface→CharacterFidelityScene / InventoryPanel→InventorySurface→InventoryFidelityScene
+  ├─ openLeftPanel(mode) → FunctionOverlayPanel.vue
+  │     ├─ PAPER_MODES (chrome riêng, đã fidelity): stage_select→ExplorationSurface, pill_room→AlchemySurface, equipment_hall→EquipmentSurface, settings→SettingsSurface
+  │     ├─ scrollMode: exploration→ProductionPanel (trong ImperialScrollScene — panel cuối cùng còn vỏ scroll cũ)
+  │     └─ legacyMode (OverlayPanel cũ): worker_lodge, scripture_pavilion, vendor
+  └─ openStandalonePanel(panel) → GameRoot (lazy-mount, mountedStandalone Set)
+        → SkillPathPanel→SkillSurface, RealmPanel→RealmSurface, QuanKhiPanel (OverlayPanel CŨ),
+          QuestPanel→QuestScene, ArtifactPanel (OverlayPanel CŨ), TranPhapPanel (OverlayPanel CŨ),
+          CompanionPanel (OverlayPanel CŨ), TechniquePanel→TechniqueSurface, BodyPanel→BodySurface
+```
+
+**3 thế hệ design đang tồn tại trong repo:**
+- G1 cũ: OverlayPanel/ImperialScrollScene + ink chrome (worker_lodge, vendor, scripture, quan_khi, artifact, tran_phap, companion)
+- G2 fidelity: `*FidelityScene` + `PaperPanelNavigation` + huyen-kim paper (character, skill, body, technique, realm, inventory, alchemy, exploration, quest, equipment, settings) — PRODUCTION hiện tại
+- G3 approved: `Home*ArtPanel` mock trong `ui-landscape-design.html` — panel mở TRÊN canvas home (left:24%, top:12.5%, 74%×75%, nền `shared-paper-page-v1.png`, card `character-card-nine-slice-v2.png`, control family `EquipmentArt*`)
+
+**G3 = target đã duyệt.** Wire = port layout Home*ArtPanel vào fidelity scene tương ứng, feed data thật.
+
+**Primitives G3 cần promote** (hiện chỉ ở `ui-preview/equipment/` — preview-only, không được production dùng): `EquipmentArtButton`, `EquipmentArtCard`, `EquipmentArtSlot`, `EquipmentEnergyTube`, `EquipmentPaperdollPreview`, `ProductionSourceArtCard`, `QuestCategoryArtButton`, `QuestObjectiveArt`, `SkillNodeArtButton`. → RULING ownership bên dưới.
+
+---
+
+## 3. Per-panel survey (G3 mock vs production fidelity)
+
+### 3.1 CHARACTER (rail → characterOverlayOpen → CharacterSurface→CharacterFidelityScene)
+
+| | G3 mock (`HomeCharacterArtPanel`) | Production (`CharacterFidelityScene`) |
+|---|---|---|
+| Shell | panel trong home canvas 74%×75%, nền paper-page, KHÔNG có top nav | full-canvas overlay + `PaperPanelNavigation` (nav ngang trên cùng) |
+| Cột trái | portrait: tên, "identity" dòng, hero art `player-mortal-ink-sword-concept-v2.png`, card Sức Mạnh (combat power) | `CharacterFidelityIdentity` (tên+seal ◆), `CharacterFidelityFigure` (figure.png) |
+| Cột giữa | card main-stats: 5 stats + tube fill + nút `+` (`attribute-plus-v2.png`), MAX state; card talent 1 dòng (icon+name); card elements 5 icon ivory+value | `CharacterFidelityStats`: 5 stat rows (label+value+fill tube+`+` allocatable) + talents seal-list (tất cả talents, rarity class) + element summary (icon+share) |
+| Cột phải | detail scroll: 3 card nhóm (basic/combat/other rows dt/dd) | `CharacterFidelityDetails` aside: combat + other groups |
+| Events | select stat/talent/element, allocate | select, allocate, navigate, back — đủ |
+| Sự cố | preview render BẢN DUYỆT stamp | |
+
+**Wire-now:** thay chrome cf-* → `character-card-nine-slice-v2` cho 3 cột card; hero art `player-mortal-ink-sword-concept-v2.png` (có sẵn, mock dùng ảnh thật!); `attribute-plus-v2.png` cho nút +; element ivory icons `element-*-ivory-v1.png`; tube có energy-flow animation sẵn trong mock CSS.
+
+**DELTA/ruling:**
+- **R9.** Mock không có `PaperPanelNavigation` — câu hỏi chung cho mọi panel G3: giữ nav ngang trên cùng (G2) hay rail trái đã đủ điều hướng? (Mock mount panel TRONG home canvas → rail vẫn thấy bên trái panel.)
+- **R10.** Prod talents = danh sách seal đầy đủ; mock chỉ 1 card talent. Giữ list talent (thành card scroll) thay vì 1 dòng?
+- **R11.** Prod figure = `figure.png` huyen-kim; mock = hero concept v2 art — chọn hero concept làm figure chính?
+- **R12.** Mock có card "Sức Mạnh" (combat power số lớn) — prod `CharacterUiModel.combatPower` đã có sẵn. Wire-now, chỉ cần vị trí card.
+- Mock "identity" dòng mơ hồ — prod có realm+path+pathVerse. Mock bỏ sót path → cần hiện trong card portrait?
+- Stat MAX state: mock `MAX` khi capped — prod đã có `capped` flag. Wire-now.
+- Action rail (Quán Khí entry, respec?) — prod `CharacterActionRail` render khi `showQuanKhiEntry`; mock không có → **R13: Quán Khí mở từ đâu?** (hiện chỉ mở từ nút trong action rail của character panel; rail 21-icon KHÔNG có quan_khi)
+
+### 3.2 INVENTORY (rail → characterOverlayOpen+tab='inventory' → InventoryPanel→InventoryFidelityScene)
+
+| | G3 mock | Production |
+|---|---|---|
+| Tabs | tabs ngang: bag/decompose (+tab đổi filter nav) | `activeBagTab` model: material/equipment/consumable? (BagTab) |
+| Toolbar | search ô + filter buttons (decompose mode) + count | toolbar: filter nav + search input + sort button |
+| Grid | `EquipmentArtSlot` grid + empty cells "Trống" | item-grid button (icon+amount) |
+| Decompose | card phải: target slot + result material + nút | **prod không có decompose trong inventory** (decompose sống ở equipment forge) |
+| Chi tiết | (không — mock chỉ slot select) | `InventoryFidelityDetail` aside: art+name+quality+desc+amount+nút dùng |
+| Footer | pagination ‹1› + sort ↕ | không có pagination |
+
+**Wire-now:** slot grid → `EquipmentArtSlot` (item-slot-v1.png asset); search row; tab style.
+
+**RULING:**
+- **R14.** Decompose ở inventory (mock) vs ở forge (prod) — đưa thẻ decompose vào inventory theo mock, hay giữ ở Khi Đường?
+- **R15.** Pagination ‹1› trong mock — prod không phân trang (scroll). Cần pagination thật hay bỏ?
+- Mock thiếu detail panel (prod có) → giữ chi tiết item.
+
+### 3.3 SETTINGS (rail → leftPanelMode=settings → SettingsSurface→SettingsFidelityScene)
+
+| | G3 (`HomeSupportArtPanel` kind=settings) | Production |
+|---|---|---|
+| Nav | cột trái `QuestCategoryArtButton` 3 section (audio/video?/…) | `settings-layout` nav trái + section |
+| Controls | toggle checkbox + range + % output | `SettingsFidelitySection`: range/toggle/select theo control model |
+| Actions | (mock không có) | actions row |
+
+**Wire-now:** nav cột trái bằng QuestCategoryArtButton + navigation-settings icon; giữ control model prod.
+
+**RULING:** mock có **kind='feedback'** dùng cùng panel với 5 nhóm help — feedback hiện là dialog cục bộ trong DongFuStage (R16: feedback = full panel hay dialog?).
+
+### 3.4 EQUIPMENT HALL / KHÍ ĐƯỜNG (rail equipment → equipment_hall → EquipmentSurface→EquipmentFidelityScene)
+
+| | G3 (`HomeEquipmentArtPanel`) | Production |
+|---|---|---|
+| Header | title + divider img | title + subtitle |
+| Tabs | nav tabs (equipment/forge modes → `eq.tabs.*`) | sockets + bag/forge mode nav (enhance/dissolve/decompose) |
+| Trái | `EquipmentPaperdollPreview` — paperdoll slots | `equipment-sockets` hàng socket item |
+| Phải | `EquipmentArtCard` chứa `EquipmentBagPreview` hoặc `EquipmentForgePreview` theo tab | bag grid + `ForgeFidelityWorkspace` (compact) / `ForgeBatchBag` |
+| Tooltip | — | `EquipmentPaperTooltip` |
+| Summary | — | `equipment-summary` (HP/ATK/DEF tổng) |
+
+**Wire-now:** tab nav style mock; paperdoll preview component layout; card shell `EquipmentArtCard`.
+
+**RULING:**
+- **R17.** Prod summary card (HP/ATK/DEF) — mock không hiển thị; giữ?
+- **R18.** Prod sockets là hàng ngang trên; mock paperdoll dọc trái — đổi sang paperdoll layout luôn?
+- Forge tabs trong prod = enhance/dissolve/decompose/…(5 tabs `panels.equipmentHall.tabs.*`); mock chỉ 2 tab (equipment + forge). Tab map chính xác?
+
+### 3.5 SKILL (rail → standalone=skill → SkillPathPanel→SkillSurface→SkillFidelityScene)
+
+| | G3 (`HomeSkillArtPanel`) | Production |
+|---|---|---|
+| Header | title + element chips nav (icon+label) | title + identity + element chips — đã trùng khớp |
+| Tree | SVG pipe `skill-connection-pipe-v1.png` + glow lines active; node `SkillNodeArtButton` (kind active/passive/locked, icon, level, selected) | `SkillPaperTree`: nodes+edges SVG, `SkillPaperNode` — trùng ý tưởng |
+| Phải | card chi tiết node: name, level·state, description, effects dl, conditions, costLabel, nút upgrade | `SkillPaperDetails`: header icon+name+level·state, effect rows, conditions, upgrade btn |
+| Footer | — | `skill-meta` + respec button |
+
+**Wire-now:** swap pipe asset `skill-connection-pipe-v1.png` vào SkillPaperTree edges; SkillNodeArtButton → SkillPaperNode skin.
+
+**RULING:**
+- **R19.** Prod có respec button (footer) — mock không vẽ; giữ respec ở đâu?
+- Mock active connection = glow flow animation — prod edge style phẳng; dùng luôn asset pipe+flow?
+
+### 3.6 BODY / LUYỆN THỂ (rail → standalone=body → BodyPanel→BodySurface→BodyFidelityScene)
+
+| | G3 (`HomeBodyArtPanel`) | Production |
+|---|---|---|
+| Nav trái | 3 family tabs ren/khai/dan (icon lit/unlit + spine line) | chapter buttons (`model.chapters`) icon+label+hint, is-locked |
+| Giữa | `body-stage`: silhouette ngồi + lớp anatomy (skin/muscle/blood/spine 10 đốt/heart/forehead 3 nodes) lit theo tier | `BodyPaperFigure`: meridian = orbs anchor positions; khác = unit-rail buttons + milestones |
+| Phải | (trong mock phần sau — details card) | `BodyPaperDetails`: title+desc+gains dl+costs+progress+extra+invest btn |
+
+**Wire-now:** nav trái lit/unlit icon assets (`navigation-{ren,khai,dan}-{lit,unlit}` trong pack body/), spine tube `meridian-tube-lit.png`.
+
+**RULING:**
+- **R20.** Anatomy silhouette G3 (10 vertebra, heart, forehead nodes, blood lit) = concept khác hẳn prod orbs/rail. Đây là redesign lớn nhất — dùng anatomy cho chương nào? (Mock hardcode tab 'ren'.) Prod chapters thực tế là gì — cần map ren/khai/dan ↔ chapters.
+- **R21.** Body prod có `model.extra` block + gates + material costs — mock không hiển thị; giữ chi tiết phải.
+
+### 3.7 TECHNIQUE / TÂM PHÁP (standalone=technique, gated LK+pathway → TechniqueSurface→TechniqueFidelityScene)
+
+| | G3 | Production |
+|---|---|---|
+| Trái | manual heading (icon+name+quality) + `manual-art-space` + milestone nodes (SkillNodeArtButton passive, 4 stage lit/unlit) | `TechniquePaperArtifact`: name + stages row (seal ◇ buttons) + sections |
+| Phải | stat card: progress tube 70%, rank, stats dl (power/defense/mana), grade-comparison current→next, material cost (crystal), nút advance | `TechniquePaperInfo` sections + `TechniquePaperUpgrade`: advance btn |
+
+**Wire-now:** milestone node row (SkillNodeArtButton) thay technique-stage seals; stat card layout; grade-comparison current→next.
+
+**RULING:**
+- **R22.** `manual-art-space` trong mock = vùng trống chờ art sách — Minh cung cấp art manual?
+- Prod `model.sections` (mô tả nhiều section) vs mock chỉ 1 name/quality — giữ sections.
+
+### 3.8 REALM / CẢNH GIỚI (standalone=realm → RealmSurface→RealmFidelityScene)
+
+| | G3 | Production |
+|---|---|---|
+| Track | timeline ngang: milestones landscape ảnh (`realm/landscape-1..3`), current/locked, translateX theo index | `RealmPaperMap`: anchors trên map (marker buttons major/reached/current/selected) |
+| Card | active-card: name, level, meditation img, cultivation tube 650/1000, speed +2/s, estimate, conditions ✓, 2 nút (advance + tribulation locked<12) | `RealmPaperDetails`: identity (seal+name+floor), passives list, cta btn |
+| Footer | effects + introduction 2 card | — |
+
+**Wire-now:** meditation img `realm/meditation`, landscape milestone imgs, condition ✓ list, 2 nút action (advance/tribulation) — tribulation gating đã có trong prod (breakthrough emit).
+
+**RULING:**
+- **R23.** Track mock = timeline ngang landscape cards vs prod = map anchor path. Hai concept khác — chọn timeline?
+- **R24.** Nút "Độ Kiếp" riêng trong realm card (locked dưới floor 12) — prod route tribulation qua breakthrough cta. Giữ 2 nút?
+- **R25.** Realm footer effects/introduction — prod `model.passives` + section khác đã cover?
+
+### 3.9 ALCHEMY / LUYỆN ĐAN (rail alchemy → pill_room → AlchemySurface→AlchemyFidelityScene)
+
+| | G3 | Production |
+|---|---|---|
+| Nav | recipe list `EquipmentArtButton` (icon+name) | `AlchemyPaperRecipes` recipe-row list |
+| Stage | `alchemy-stage`: connectors meridian-tube + ingredient slots + cauldron art + pill center frame | `AlchemyPaperCauldron`: cauldron art + selected-herb chip |
+| Phải | progress card: 4 tube (mastery/fire/purity/stability) + nút start | `AlchemyPaperDetails`: header, herb variants radio, outcome, brew btn |
+| Queue | — | `AlchemyPaperQueue`: jobs progress + cancel |
+
+**Wire-now:** cauldron stage mới (connectors + ingredient slots x/y%); cauldron art đã có `alchemy-cauldron-prop@2x.png`.
+
+**RULING:**
+- **R26.** 4 progress tube (mastery/fire/purity/stability) — prod không có metric này. Có wire số thật (tỉ lệ thành/level mastery trong data?) hay bỏ?
+- **R27.** Herb variants radio (prod, 5 tuổi khoáng) vs mock ingredient slots cố định — giữ radio variants trong card phải.
+- Queue — giữ `AlchemyPaperQueue` (mock bỏ sót).
+
+### 3.10 EXPLORATION / SƠN HÀ ĐỒ + BẢN ĐỒ (rail exploration → stage_select → StageSelectPanel→ExplorationSurface→ExplorationFidelityScene)
+
+| | G3 (`HomeExplorationArtPanel` = map chỉ) | Production |
+|---|---|---|
+| Map | `PaperSceneDesigns kind='map'` — vùng map thiết kế | `ExplorationPaperMap`: chapter bands + stage-node buttons (state/boss/perfect/selected) |
+| Header | title | zone chips + title/subtitle |
+| Phải | — | `ExplorationPaperDetails`: armed-farm bar, stage title, mode chips (auto/manual?), build link, start btn |
+
+**Wire-now:** map gọn (mock chỉ title+map).
+
+**RULING:**
+- **R28.** Mock exploration = chỉ map, không có panel chi tiết/nút start — prod có details đầy đủ. Đây có phải chủ ý "Bản Đồ chỉ để nhìn" hay mock chưa vẽ phần phải? (stage_select là cửa vào combat — nút start là core!) → giữ details.
+- Zone chips (prod) vs mock không — giữ.
+
+### 3.11 PRODUCTION / KHAI VẬT (rail production → exploration mode → ProductionPanel trong ImperialScrollScene — G1!)
+
+| | G3 (`HomeProductionArtPanel`) | Production (scroll cũ) |
+|---|---|---|
+| Header | hall name+level+intro + vein card (Linh Mạch: tube+stored+rate+Thu hoạch) | summary p + Linh Mạch card (progress+rate+collect) |
+| Sources | 3 `ProductionSourceArtCard` (icon+landscape img+level+running toggle+upgrade) | site-card grid: art+name+kind+desc+stats+reward+Bar progress+auto toggle |
+| Worker | — | `worker-allocation` block (manual sliders / auto hint + reserved) — scope feature manualWorkforce |
+
+**Wire-now:** vein card → Linh Mạch (tube + Thu hoạch); 3 source art card layout (landscape img — asset nào? cần check `landscapes[]` mock source).
+
+**RULING:**
+- **R29.** Panel cuối cùng còn vỏ `ImperialScrollScene` — promote ProductionPanel lên paper chrome như 4 anh em đã migrate?
+- **R30.** `worker-allocation` (manual workforce) — scope-hidden feature, mock không có. Giữ trong panel hay bỏ theo scope?
+
+### 3.12 QUEST / NHIỆM VỤ (standalone=quest → QuestPanel→QuestScene→QuestFidelityScene)
+
+| | G3 | Production |
+|---|---|---|
+| Nav | `QuestCategoryArtButton` cột trái (icon nav-*-v2 + label+hint) | tabs ngang filters |
+| List | card list: img+name+progress tube+status small | quest-list button: img+name+status+› |
+| Chi tiết | banner img + name + group; description; objectives ✓/◇ +amount; progress tube; rewards slots ×N; nút claim | `QuestFidelityDetail`: banner+desc+objectives+`VictoryFidelityRewards`+action (claim/follow/claimed) |
+
+**Wire-now:** category nav trái; list tube; detail banner style; reward slots.
+
+**RULING:**
+- **R31.** Quest groups trong mock = 4-5 category icon buttons; prod filters là text tabs (daily/main/…). Map category ↔ filter như nào? Mock group names lấy từ nav icons → cần taxonomy quest thật.
+
+### 3.13 FORMATION / TRẬN PHÁP (rail formation → NAV_FEATURE_LOCKED → scope-hidden; prod TranPhapPanel = OverlayPanel cũ)
+
+G3 (`HomeFormationArtPanel`): tabs deploy/formations/rank; board 3×3 cells (item-slot-v1 + portrait + ＋/×) + current formation mini-grid + brush circle; details card (choices 9-grid list, info, position, rank progress tube); roster row slots + reset/confirm.
+
+**RULING:**
+- **R32.** Formation có mock ĐẦY ĐỦ mặc dù scope-hidden — khi mở scope, design đã có sẵn. Hiện tại rail icon = forever-locked; wheel slot formation_slot → realm (?). Confirm giữ lock, design sẵn sàng khi mở.
+- TranPhapPanel prod = overlay cũ với formation slots assignment + AtlasIdleSprite — wire khi scope mở.
+
+### 3.14 VENDOR (rail vendor → leftPanelMode=vendor → VendorPanel OverlayPanel cũ)
+
+**G3 mock KHÔNG TỒN TẠI** — rail icon `navigation-vendor-v2.png` có, nhưng `activePanel` union của LandscapeDesignPreview không gồm 'vendor'.
+
+Prod VendorPanel: description + sell-card (resource rows bán lấy linh thạch, qty input, total, nút bán) + ConfirmModal. Sell-only, không có buy list.
+
+**RULING:**
+- **R33.** Vendor chưa có design duyệt — cần mock mới hay port tạm style paper? (wire-now: mount VendorPanel vào paper shell như siblings, giữ sell-card.)
+
+### 3.15 FEEDBACK (rail feedback → local dialog)
+
+G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cục bộ trong DongFuStage.
+**R34.** Feedback = full support panel (mock) hay giữ dialog nhỏ?
+
+### 3.16 Non-rail surfaces
+
+- **worker_lodge** (Chi Hiên Quán → worker_lodge, scope-hidden manualWorkforce): 3 tab QuaTang/ChieuMo/DuyenPhan + capacity card — under beta renders nothing. No mock. → giữ ẩn.
+- **scripture_pavilion** (Tàng Kinh Các): wheel-catalog entry duy nhất (không building, không rail icon) → LoreCodex overlay. No mock. **R35:** thêm rail icon? (pack thiếu icon scripture)
+- **quan_khi**: chỉ mở từ CharacterActionRail. No mock. **R13** cover.
+- **artifact / companion**: scope-hidden + realm-gated; no mock. **R2** cover (rail hard-lock vs unlock predicate).
+- **guild/sect/portal**: rail locked decorative, không có panel production nào → future.
+
+---
+
+## 4. Rulings tổng hợp (để Minh quyết khi quay lại)
+
+| ID | Câu hỏi | Gợi ý mặc định |
+|---|---|---|
+| R1 | Rail-only vs khôi phục building hotspots (landmark-v1 + PcPaperLandmark có sẵn chưa dùng) | rail-only (mock đã duyệt) |
+| R2 | artifact/companion trên rail: hard-lock hay realm-gated như wheel | realm-gated |
+| R3 | Badge trạng thái công trình (sẵn thu/nâng cấp) lên icon rail | thêm dot |
+| R4 | Thiên Cơ Bảng: restyle paper hay fold vào quest card | giữ parked, redesign riêng |
+| R5 | Currency chips: icon theo tier linh thạch vs 4 loại mock | icon per tier (3) |
+| R6 | Teleport array invisible trên rail | chấp nhận (wheel còn) |
+| R7 | Scripture pavilion không có rail icon | wheel-only |
+| R8 | Wheel/board/autofarm giữ chrome cũ tới khi có redesign riêng | giữ |
+| R9 | PaperPanelNavigation top-nav trong mọi panel — giữ hay bỏ (rail đã nav)? | bỏ nav ngang, giữ nút back |
+| R10 | Character talent: 1 card (mock) vs list seal (prod) | list scroll |
+| R11 | Character figure: hero concept v2 vs figure.png huyen-kim | hero concept |
+| R12 | Card Sức Mạnh (combatPower) | wire-now |
+| R13 | Quán Khí mở từ đâu trong G3? (rail không có icon, action rail mất) | thêm nút trong card portrait |
+| R14 | Decompose ở inventory (mock) vs forge (prod) | forge |
+| R15 | Inventory pagination ‹1› vs scroll | scroll |
+| R16 | Feedback = panel help 5 nhóm vs dialog nhỏ | panel (mock đã có) |
+| R17 | Equipment summary HP/ATK/DEF | giữ |
+| R18 | Paperdoll dọc trái vs sockets ngang | paperdoll (mock) |
+| R19 | Respec button vị trí | giữ footer meta |
+| R20 | Body anatomy silhouette vs orbs/rail | cần Minh xem mock trực tiếp |
+| R21 | Body details (costs/gates/extra) | giữ card phải |
+| R22 | Technique manual art space | chờ art |
+| R23 | Realm: timeline ngang vs map anchors | timeline (mock) |
+| R24 | Nút Độ Kiếp riêng trong realm card | giữ 2 nút |
+| R25 | Realm footer effects/intro | fold vào details |
+| R26 | Alchemy 4 tube mastery/fire/purity/stability — có số thật không | bỏ nếu không có data |
+| R27 | Herb variants radio giữ | giữ |
+| R28 | Exploration mock chỉ map — details+start vẫn cần | giữ details |
+| R29 | ProductionPanel promote lên paper shell | promote |
+| R30 | worker-allocation block dưới scope | giữ, scope-gated |
+| R31 | Quest category nav ↔ filter taxonomy | map filters→categories |
+| R32 | Formation design sẵn sàng khi scope mở | ghi nhận |
+| R33 | Vendor không có mock | paper shell tạm, chờ design |
+| R34 | (xem R16) | |
+| R35 | Scripture rail icon | wheel-only |
+
+---
+
+## 5. Ownership / chia nhỏ component — proposal
+
+Vấn đề: 13 `Home*ArtPanel` + 8 `EquipmentArt*`/`Skill*`/`Quest*`/`ProductionSource*` primitives đang sống trong `src/ui-preview/` (preview-only, không được production import). Fidelity scenes production dùng `Pc*` + `InkNineSlice` + `PaperPanelNavigation` (common). Để wire G3 vào production theo đúng ownership:
+
+**Bước 1 — promote primitives lên common:**
+`ui-preview/equipment/{EquipmentArtButton,EquipmentArtCard,EquipmentArtSlot,EquipmentEnergyTube,EquipmentPaperdollPreview,EquipmentBagPreview,EquipmentForgePreview}.vue` + `ProductionSourceArtCard.vue` + `QuestCategoryArtButton.vue` + `QuestObjectiveArt.vue` + `SkillNodeArtButton.vue` → `components/common/art/` (hoặc `components/common/pc/`). Import nội bộ sửa từ `ui-preview/` → alias `@/components/common/art`.
+
+**Bước 2 — mỗi surface tự sở hữu layout G3:** không mount `Home*ArtPanel` vào production (chúng là mock, hardcode data). Thay vào đó port template+CSS vào `scenes/{surface}/fidelity/` như một "G3 skin" trên cùng `*UiModel` — vd `CharacterFidelityScene` đổi shell sang panel-card layout mock nhưng vẫn nhận `model: CharacterUiModel` + emit intents. Mock files giữ nguyên trong ui-preview làm tham chiếu visual.
+
+**Bước 3 — assets theo pack, không theo component:** mọi asset G3 đã ở `public/assets/ui/tien-hiep-2026-10/` (icons/, controls/, body/, realm/, source/, combat/, tribulation/). Component common chỉ tham chiếu `resolveAssetUrl` — không copy asset vào component dir.
+
+**Bước 4 — mount contract giữ nguyên:** không đổi 3 seam (characterOverlayOpen / leftPanelMode / standalonePanel) và không đổi beta-scope gates ở mount — G3 skin nằm dưới fidelity layer, không chạm routing.
+
+**Rủi ro mở ra:**
+- `Home*ArtPanel` CSS dùng absolute `position:absolute;left:24%;top:12.5%` (canvas-relative) — port sang fidelity scene phải đổi thành layout trong canvas có sẵn (fidelity scene đã là absolute-inset:0 trong design canvas).
+- Mock panels KHÔNG render `PaperPanelNavigation` — nếu R9 quyết bỏ nav ngang thì fidelity mất cơ chế navigate giữa các surface (rail làm việc này); nhưng prod standalone có thể mở khi không ở home? (standalone mở cả từ wheel + rail — rail luôn sẵn tại home; wheel cũng vậy) → nav ngang dư thừa, back vẫn cần.
+- EquipmentPaperdollPreview/EquipmentBagPreview/EquipmentForgePreview mock chứa fake data — port = chỉ lấy shell/style, data vẫn từ equipmentUi model.
+
+## 6. Coverage checklist (line-by-line)
+
+Done: home (§1), character, inventory, settings, equipment, skill, body, technique, realm, alchemy, exploration, production, quest, formation, vendor, feedback + non-rail (worker_lodge, scripture, quan_khi, artifact, companion, guild/sect/portal).
+
+Chưa sâu (cycle sau): subcomponent từng fidelity scene (Chi Tiết drawer, stat source breakdowns, tooltip contracts), combat/tribulation/victory/defeat scenes (không phải panel động phủ nhưng cùng pack), locales key-parity cho các label mới của mock.
+
+## 7. Asset audit (mọi file mock tham chiếu — đã kiểm tồn tại trong `public/`)
+
+**Có đủ:** `controls/` (attribute-plus-v2, character-card-nine-slice-v1+v2, equipment-{brush-circle,circle-frame,divider,filter-{normal,hover,pressed,selected}-v2,level-seal,tab-brush}, inspector-v1, item-slot-v1, landmark-v1, navigation-{backing-dark-v3,connector,landscape-seam,medallion}, resource-{coin,crystal,essence,jade}, skill-connection-pipe-v1, skill-node-{main,parent,passive,sub}-v1); `icons/` (navigation-{21 ids}-v2 + element-{metal,wood,water,fire,earth}-ivory-v1); `body/` (silhouette-{seated,upper}, anatomy-{blood,heart,vertebra}-{lit,unlit}, biceps-{l,r}-{lit,unlit}, forehead-{node,ring}-{lit,unlit}, process-{bi,cot,huyet,mach,nhuc,tang}-{lit,unlit}, meridian-{junction,node,ring,tube}-{lit,unlit}, galaxy-*-{lit,unlit}, navigation-{ren,khai,dan}-{lit,unlit}); `realm/` (landscape-1..3-v1, meditation-v1, active-card-frame-v1.svg); `source/` (shared-paper-page-v1, panel-frame-v2, ink-panel-cutout-v3, opening/world-vista-warm, …); `combat/` (21 file incl. portrait-3-state, health-*, skill-*, initiative-queue); `tribulation/` (12 file); characters/player/mortal/player-mortal-ink-sword-concept-v2.png; materials/linh_khoang.png + linh_moc.png + herbs.
+
+**Mock dùng ảnh tái chế** (không phải asset riêng): production source-card landscapes = world-vista-warm + realm/landscape-3 + opening-vista-warm; quest list pictures = vista/landscape/meditation/materials — OK tái dùng, không cần art mới.
+
+**Thiếu/thận trọng:**
+- `huyen-kim/alchemy/alchemy-cauldron-prop@2x.png` — mock dùng asset GÓI CŨ (huyen-kim, không phải tien-hiep-2026-10). Asset tồn tại nhưng làm lộn pack — cần asset lò đan trong pack mới hoặc giữ tạm.
+- Không có rail icon scripture_pavilion (R7) và không có Home*ArtPanel cho vendor (R33), worker_lodge, scripture, artifact, companion, quan_khi.
+- `manual-art-space` (technique) trống — chờ art (R22).
+
+## 8. Dữ liệu thật → mock (adapter check)
+
+Mọi `*Surface.vue` đã build model THẬT qua `gameManager.*Ops` + `usePlayerStore` (skill: `betaSkillTreeFor` + nodeRegistry; realm: `betaNextRealmSurfaceFor` + `getBreakthroughRequirements` + ETA; technique: `getBetaTechniqueSurfaceModel` + `tryAdvanceTechniqueGrade`; body: `useBodySceneModel`; quest: `getBetaQuestSurfaceModels`). → wire G3 = đổi template/style của `*FidelityScene`, model giữ nguyên. Không cần adapter mới.
+
+## 9. Dormant files (cũ còn, mới chưa dùng / mới có cũ vẫn sống)
+
+- `scenes/character/Character*.vue` (7 file vùng cũ: IdentityHeader/FigureWheel/MainStats/…) — dormant, CharacterPanel→CharacterSurface→fidelity. Giữ hay xóa?
+- Tương tự `scenes/realm/Realm*.vue` (9 file), `scenes/quest/{list,tabs,detail}/`, `scenes/settings/Settings*Section.vue` (8 file), `scenes/creation/Creation*.vue` + `TalentCard.vue` — dormant sau fidelity.
+- `scenes/dong-fu/fidelity/{DongFuHomeContent,DongFuVista,DongFuHud,DongFuWheel}` — vista/hud dormant; wheel ĐANG DÙNG (Backquote).
+- `ui-preview/Home*ArtPanel` — mock, không production (giữ làm reference hay move sang scenes khi port xong?).
+
+
