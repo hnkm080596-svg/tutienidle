@@ -156,7 +156,23 @@ export class CloudSaveCoordinator {
     // isSaveAcceptable foreign-payload surface. A pre-creation-pick
     // autosave is shape-valid and loadGame-legal; requiring acceptance
     // here would block legitimate early writes.
-    const outgoing = validateGameSaveShape(snapshot)
+    // The gate runs on the WIRE form (JSON round-trip): the boot path
+    // admits the parsed payload, not the in-memory object, and values
+    // that serialize differently (NaN -> null, dropped undefined) must
+    // be judged on what actually lands in storage.
+    let wire: unknown
+    try {
+      wire = JSON.parse(JSON.stringify(snapshot))
+    } catch {
+      console.warn('[cloudSave] refusing to commit an unserializable payload')
+      return {
+        status: 'unavailable',
+        message: 'save không serialize được - giữ nguyên slot hiện tại',
+        retryable: false,
+        detail: 'OUTGOING_UNSERIALIZABLE',
+      }
+    }
+    const outgoing = validateGameSaveShape(wire)
     if (!outgoing.ok) {
       console.warn(
         '[cloudSave] refusing to commit a payload that fails admission:',
