@@ -9,7 +9,6 @@ import type {
   RestoreGameSessionResult,
   RestoreTimeAuthority,
 } from './saveTypes'
-import { restoreAuthorityNowMs } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { exportFilename, type ExportProvenance } from './recoveryApi'
 import {
@@ -302,10 +301,15 @@ export function restoreGameSession(
     // session seam (khong phai restoreFromSave) de giu contract
     // "moi slice = replacement thuan" cua M1; moi duong load save thuc
     // deu di qua day. Idempotent - retry cung payload khong them lan 2.
-    // r14-INT-6: anchor the building-reconcile clock at the approved
-    // authority, not the machine clock - under cold-boot a slow local
-    // clock would clamp lastCollectedAt short of the granted window.
-    gameManager.buildingOps.reconcileBuildings(player.$state, restoreAuthorityNowMs(timeAuthority) / 1000)
+    // r16-INT-02: the grant stamp belongs to the FIELD's epoch -
+    // getStoredAmount/claim subtract it from Date.now()/1000. The
+    // reconcile only stamps NEWLY granted instances (existing ones keep
+    // the persisted marker), and a new building has no granted window
+    // to backpay - a server-epoch stamp on a fast clock minted
+    // min(skew, 10h) of accrual it never produced. Same class as
+    // r15-COR-E: authority bounds the offline window, field stamps
+    // stay on the clock their readers use.
+    gameManager.buildingOps.reconcileBuildings(player.$state, Date.now() / 1000)
 
     player.setEquipmentModifiers(equipmentModifiers)
 

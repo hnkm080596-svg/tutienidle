@@ -372,15 +372,17 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(effect.expiresAtMs).toBeLessThanOrEqual(currentMs)
   })
 
-  it('buff chết giữa cửa sổ offline (đồng hồ nhanh) → chỉ trả % cho đoạn sống (r15-COR-B pin)', () => {
+  it('buff chết giữa cửa sổ offline (đồng hồ nhanh) → chỉ trả % cho đoạn sống (r16-COR-1 pin)', () => {
     const player = usePlayerStore()
-    // Client clock +10d so the client-stamped expiry falls entirely
-    // OUTSIDE the server-epoch window: pre-fix the splitter never
-    // found the mid-window death and paid the buffed rate for the
-    // whole 500s.
-    const fastSavedAt = currentMs + 10 * 86_400_000
+    // Client clock +1h. The honest payout window runs FORWARD from
+    // the save marker, so a death 250s after it must split the pay:
+    // 250s buffed + 250s flat. A pre-save-positioned window either
+    // misses the death entirely (pays 625) or pays the pre-save
+    // stretch the buff never earned. Skew stays under the 24h claim
+    // bound so the honest death position is still provable.
+    const fastSavedAt = currentMs + 3_600_000
     const save = buildMinimalSave({
-      cultivationPerSecond: 1, // dead at save -> honest base snapshot
+      cultivationPerSecond: 1.25, // live at save -> honest buffed snapshot
       lastSavedAt: fastSavedAt,
       persistentTimedEffects: [
         {
@@ -388,7 +390,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           sourceItemId: 'tu_linh_tran',
           effectGroup: 'tu_linh_tran',
           appliedAtMs: fastSavedAt - 3_600_000,
-          expiresAtMs: fastSavedAt - 250_000, // dies halfway into the window
+          expiresAtMs: fastSavedAt + 250_000, // dies 250s into the honest window
           cultivationSpeedPercent: 0.25,
           modifiers: [],
         },
@@ -402,10 +404,41 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     })
 
     expect(result.elapsedSeconds).toBe(500)
-    // Honest: 250s x 1.25 + 250s x 1.0 on the base rate 1 -> 562.5.
-    // Server-epoch window gave 500 x 0.8 x 1.25 = 500 (whole-window
-    // percent + an un-buff divide that never applied).
+    // Honest: unbuffed 1.25/1.25 = 1; 250s x 1.25 + 250s x 1.0 = 562.5.
     expect(result.cultivation).toBeCloseTo(562.5, 6)
+  })
+
+  it('buff TLT chết TRƯỚC lúc save (đồng hồ nhanh) → trả phẳng cả cửa sổ (r16-COR-1 pin)', () => {
+    const player = usePlayerStore()
+    // A death before the save marker earned nothing in the offline
+    // span - the r15 skew-positioned window paid its pre-save tail
+    // anyway (562.5 vs 500 honest).
+    const fastSavedAt = currentMs + 10 * 86_400_000
+    const save = buildMinimalSave({
+      cultivationPerSecond: 1, // dead at save -> honest base snapshot
+      lastSavedAt: fastSavedAt,
+      persistentTimedEffects: [
+        {
+          id: 'fx-dead-split',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: fastSavedAt - 3_600_000,
+          expiresAtMs: fastSavedAt - 250_000, // died 250s BEFORE the save
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    expect(result.elapsedSeconds).toBe(500)
+    // Honest: 500s flat at the unbuffed base rate -> 500.
+    expect(result.cultivation).toBeCloseTo(500, 6)
   })
 
   it('buff tu luyện đã hết hạn trước khi save → rate lưu trừ hết phần buff', () => {

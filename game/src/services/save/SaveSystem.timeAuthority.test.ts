@@ -13,6 +13,11 @@ import { usePlayerStore } from '../../stores/player'
 import { primeMortalCreationPick } from './GameSave.fixture'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
 import type { Stage } from '../../core/stage/Stage'
+import { buildings } from '../../data/building/buildings'
+import { settleProductionOffline } from '../../core/production/ProductionOffline'
+import { MaterialBag } from '../../core/material/MaterialBag'
+import { MaterialRegistry } from '../../core/material/MaterialRegistry'
+import type { ProductionSiteState } from '../../core/production/ProductionTypes'
 import { materials } from '../../data/materials/materials'
 import { equipment } from '../../data/equipment/equipment'
 import { affixes } from '../../data/equipment/affixes'
@@ -283,5 +288,93 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
     expect(settleSpy).not.toHaveBeenCalled()
     expect(decomposeSpy).not.toHaveBeenCalled()
     expect(productionSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('RestoreTimeAuthority — field-epoch stamps (r16)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.spyOn(Date, 'now').mockReturnValue(NOW)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('cold-boot: newly granted buildings stamp lastCollectedAt in the field epoch (r16-INT-02 pin)', () => {
+    const player = usePlayerStore()
+    const manager = registeredManager()
+    manager.catalogOps.registerBuildings(buildings)
+    manager.setActivePlayer(player.$state)
+    const save = makeSave({ lastSavedAt: NOW - 100_000 })
+    save.buildings = []
+
+    // Server clock 10d BEHIND the device clock: a server-epoch grant
+    // stamp accrues min(skew, 10h) the building never produced (~3300
+    // spirit stones in the auditor repro).
+    const result = restoreGameSession(player, manager, save, {
+      kind: 'cold-boot',
+      sinceMs: NOW - 100_000,
+      untilMs: NOW - 10 * 86_400_000,
+    })
+
+    expect(result.status).toBe('ok')
+    const instance = manager.buildingManager.getAll()[0]!
+    expect(manager.buildingOps.getBuildingStoredAmount(instance.instanceId)).toBe(0)
+  })
+
+  it('offline production settle writes spawned lane deadlines in the field epoch (r16-INT-03 pin)', () => {
+    const states = new Map<string, ProductionSiteState>([
+      ['s1', { siteId: 's1', level: 1, autoRestart: true, activeWorkerSlots: 0, workerCycles: [] }],
+    ])
+    const bag = new MaterialBag()
+    const registry = new MaterialRegistry()
+    // Server authority end sits 10d behind the device clock.
+    const until = NOW - 10 * 86_400_000
+
+    settleProductionOffline(
+      {
+        states,
+        getSiteDefinition: () => ({ siteId: 's1' }) as never,
+        grantCycleRewards: () => undefined,
+      },
+      bag,
+      registry,
+      'mortal',
+      until,
+      { workerCapacity: 1, offlineSinceMs: until - 50_000 },
+    )
+
+    // Mortal L1 cycle is ~100s, so the lane seeded at until-50s stays
+    // pending 50s past the window end. A server-epoch stamp already
+    // reads past-due against Date.now() - the online tick would have
+    // paid it ~10d early. The field-epoch re-stamp keeps it ahead.
+    const pending = states.get('s1')!.workerCycles!
+    expect(pending.length).toBe(1)
+    expect(pending[0]!.completesAtMs).toBeGreaterThan(NOW)
+  })
+
+  it('cold-boot: quest daily-reset marker clamps against the field clock (r16-INT-04 pin)', () => {
+    const player = usePlayerStore()
+    const manager = registeredManager()
+    manager.setActivePlayer(player.$state)
+    const save = makeSave({ lastSavedAt: NOW - 3_600_000 })
+    save.quests = {
+      active: [],
+      completedOnceIds: [],
+      lastDailyResetAtMs: NOW - 3_600_000,
+    }
+
+    const result = restoreGameSession(player, manager, save, {
+      kind: 'cold-boot',
+      sinceMs: NOW - 3_600_000,
+      untilMs: NOW - 10 * 86_400_000,
+    })
+
+    expect(result.status).toBe('ok')
+    // The honest same-day marker survives: a server-epoch clamp would
+    // have dragged it 10d back, refiring today's daily reset (wiping
+    // unclaimed progress and re-arming claimed dailies).
+    expect(manager.questManager.getLastDailyResetAtMs()).toBe(NOW - 3_600_000)
   })
 })

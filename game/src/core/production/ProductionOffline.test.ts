@@ -12,7 +12,7 @@
 //     budget ordering across sites in states-map order.
 //   - Mission D (spec D3): the manual activeCycle phase is deleted;
 //     this file drives the worker phase only.
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MaterialBag } from '../material/MaterialBag'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { THANH_VAN_PRODUCTION_SITES } from './ProductionCatalog'
@@ -106,6 +106,18 @@ function settle(
 }
 
 describe('settleProductionOffline — worker settle phase', () => {
+  beforeEach(() => {
+    // r16-INT-03: spawned lanes re-stamp into the field epoch
+    // (+max(0, Date.now()-settleNowMs)). Pin the device clock at the
+    // synthetic timeline origin so settled deadlines stay in the
+    // frame these cases assert.
+    vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   // D1 (INV-D-03): a saved in-flight lane is retained work - it keeps
   // its own deadline and settles once under the cap budget even when
   // the pool is zero. Slots still zero out; no successor spawns.

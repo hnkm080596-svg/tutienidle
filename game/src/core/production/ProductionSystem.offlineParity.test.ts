@@ -5,7 +5,7 @@
 // saved state + elapsed yields identical completed-cycle counts online
 // vs offline within PRODUCTION_OFFLINE_CAP; retained future cycles keep
 // their reserved lane capacity and original deadlines.
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MaterialBag } from '../material/MaterialBag'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { materials } from '../../data/materials/materials'
@@ -79,6 +79,18 @@ function pendingDues(system: ProductionSystem, siteId = SITE): number[] {
 }
 
 describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
+  beforeEach(() => {
+    // r16-INT-03: spawned lanes re-stamp into the field epoch
+    // (+max(0, Date.now()-settleNowMs)). Pin the device clock at the
+    // synthetic timeline origin so settled deadlines stay in the
+    // frame these cases assert.
+    vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('AUD-E01 oracle: 2 workers due T+100s, settle at T+65s -> 0 granted, both pending kept', () => {
     const { bag, registry } = createBag()
     const start = 1_000_000

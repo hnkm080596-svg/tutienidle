@@ -341,9 +341,17 @@ export class GameManagerSaveRestore {
       }
     }
 
+    // r16-INT-04: the reset marker lives in the FIELD's epoch -
+    // checkAndResetDaily/resetDaily read and write it against
+    // Date.now(). A server-epoch clamp stamp on a fast clock lands a
+    // day behind the client's bucket, so the daily reset refires right
+    // after restore: unclaimed progress is wiped and claimed dailies
+    // re-arm (one replay per boot). Clamping against Date.now() keeps
+    // the r11-AUT freeze guard (future stamps still die) in the epoch
+    // the field's readers use.
     this.deps.questManager.restore(
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
-      restoreAuthorityNowMs(timeAuthority),
+      Date.now(),
     )
 
     // Production (plan S4.3) - restore state + offline settle tuan tu

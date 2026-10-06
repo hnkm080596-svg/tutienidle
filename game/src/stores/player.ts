@@ -375,21 +375,13 @@ export const usePlayerStore = defineStore('player', {
       // whole-window over-grants. Re-derive the un-buffed base rate and
       // pay each expiry-boundary segment its own live percent through
       // the same seconds->cultivation conversion authority.
-      // r13-INT-03: read the BOUNDED copy - a crafted oversized span
-      // otherwise pays its boost over window stretches no authored
-      // duration could cover (same bound as the restore map below).
-      const savedTimedEffects = (save.player.persistentTimedEffects ?? []).map(
-        (effect) =>
-          boundTimedEffectClocks(
-            effect,
-            authorityNowMs,
-            effectProvenanceMs,
-            save.player.lastSavedAt,
-          ),
-      )
-      // The payout copy keeps each record's own death position (a buff
-      // honestly dying mid-window still pays its live part); only live
-      // claims clamp, so sample-and-segments stay consistent.
+      // r13-INT-03: read the BOUNDED payout copy - a crafted oversized
+      // span otherwise pays its boost over window stretches no
+      // authored duration could cover (same bound as the restore map
+      // below). The payout copy keeps each record's own death POSITION
+      // for the split (a buff honestly dying mid-window still pays its
+      // live part); only live claims clamp, so segments stay
+      // consistent with what was actually live.
       const payoutTimedEffects = (save.player.persistentTimedEffects ?? []).map((effect) => ({
         ...effect,
         expiresAtMs: payoutExpiresAtMs(
@@ -412,28 +404,32 @@ export const usePlayerStore = defineStore('player', {
         authorityNowMs - offlineSeconds * 1000,
       )
       const windowEndMs = Math.min(windowStartMs + offlineSeconds * 1000, authorityNowMs)
-      // r15-COR-B/-C: the window anchors are authority-epoch (server
-      // untilMs) but every persisted effect stamp is payload-epoch
-      // (client clock) - comparing across epochs misplaces expiries, so
-      // under a fast clock a mid-window death never lands inside the
-      // window (+25% overpay) and a dead-at-save buff counts live at
-      // the sample (rate divide underpay). Re-express the window in
-      // the payload epoch: skew = lastSavedAt - authorityNowMs when
-      // positive (honest synced stamps sit at skew ~0, so honest saves
-      // read identically to before).
-      const clockSkewMs = Number.isFinite(save.player.lastSavedAt)
-        ? Math.max(0, save.player.lastSavedAt - authorityNowMs)
-        : 0
-      const payloadWindowStartMs = windowStartMs + clockSkewMs
-      const payloadWindowEndMs = windowEndMs + clockSkewMs
-      // The un-buff sample belongs at the SAVE INSTANT in the same
-      // epoch - sampling the window start underpaid whenever a buff
-      // died between the window start and the save marker.
+      // r16-COR-1: the payout window must START at the save marker -
+      // the offline span runs AFTER the save, so the authorized width
+      // re-anchors at lastSavedAt in the payload epoch. r15 shifted
+      // the authority window by an end-anchored skew, which paid the
+      // PRE-save interval instead: a buff dying just before the save
+      // still paid its boost, and a live-at-save buff paid the whole
+      // window regardless of when it really died. Stamps are
+      // payload-epoch, so [lastSavedAt, lastSavedAt + width] is the
+      // window the payload's own clock measured.
+      const payloadWindowStartMs = Number.isFinite(save.player.lastSavedAt)
+        ? save.player.lastSavedAt
+        : windowStartMs
+      const payloadWindowEndMs =
+        payloadWindowStartMs + Math.max(0, windowEndMs - windowStartMs)
+      // The un-buff divide must match the validator's own probe: the
+      // RAW payload stamps at the SAVE INSTANT (payload epoch). A
+      // claim folded a buffed snapshot passes the gate as
+      // claim <= BASE*(1+p) with p = raw-live percent at lastSavedAt;
+      // sampling the bound copy instead read a live claim as dead
+      // whenever skew > duration, the missing divide then minted the
+      // buff twice (r16-INT-01). Segments still use payout positions -
+      // they only move a live record's death EARLIER (deny-bounded),
+      // never extend what the claim can mint.
       const percentAtSave = getActiveCultivationSpeedPercent(
-        payoutTimedEffects,
-        Number.isFinite(save.player.lastSavedAt)
-          ? Math.min(save.player.lastSavedAt, payloadWindowEndMs)
-          : payloadWindowStartMs,
+        save.player.persistentTimedEffects ?? [],
+        Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : Number.NEGATIVE_INFINITY,
       )
       const unbuffedCultivationPerSecond = save.player.cultivationPerSecond / (1 + percentAtSave)
       const offline: OfflineResult = {
