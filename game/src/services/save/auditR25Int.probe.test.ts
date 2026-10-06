@@ -34,7 +34,7 @@ import { CYCLE_BASE_SECONDS_BY_REALM } from '../../core/production/ProductionBal
 //      bodies - same input, same sanitize outcome class.
 //  (b) the degrade stamps each body's own Date.now() - distinct nowMs,
 //      same zero-accrual semantics end-to-end.
-//  (c) a consistent +Δ-epoch payload (all stamps shifted together)
+//  (c) a consistent +Delta-epoch payload (all stamps shifted together)
 //      passes every admission pin, restores deadline channels verbatim,
 //      and the NEXT honest write self-rejects: the reader-side
 //      `startedAtMs > lastSavedAt` pin fires on the re-persisted head.
@@ -221,7 +221,7 @@ describe('seam (b) - degrade evaluates each body\'s own Date.now()', () => {
 })
 
 // ----------------------------------------------------------------------------
-// (c) R25-INT-01: consistent +Δ-epoch payload -> verbatim restore -> the
+// (c) R25-INT-01: consistent +Delta-epoch payload -> verbatim restore -> the
 //     next honest write self-rejects
 // ----------------------------------------------------------------------------
 describe('seam (c) - payload-seeded future stamps self-brick the next write', () => {
@@ -234,13 +234,13 @@ describe('seam (c) - payload-seeded future stamps self-brick the next write', ()
     vi.restoreAllMocks()
   })
 
-  it('consistent +Δ stamps pass admission, re-anchor at restore, and the next buildGameSave stays valid', () => {
+  it('consistent +Delta stamps pass admission, re-anchor at restore, and the next buildGameSave stays valid', () => {
     const DELTA = HOUR_MS
     const player = usePlayerStore()
     const manager = registeredManager()
     manager.setActivePlayer(player.$state)
 
-    // Every persisted stamp shifted +Δ TOGETHER: internally consistent
+    // Every persisted stamp shifted +Delta TOGETHER: internally consistent
     // epoch, every admission pin satisfied (startedAtMs <= lastSavedAt,
     // cooldownUntil <= lastSavedAt + 300s, all bounded).
     const save = makeSave({

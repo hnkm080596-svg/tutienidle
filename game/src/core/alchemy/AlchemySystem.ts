@@ -607,6 +607,16 @@ export class AlchemySystem {
     // M3 - Hoa Hau Thong Than: successful jobs yield pills x multiplier.
     pillYieldMultiplier = 1,
   ): void {
+    // r28-AUT-2: nowMs guard parity with advanceWorkerLanes
+    // (WorkerLaneAdvance.ts:150-151) - a non-finite or
+    // exact-integer-domain-overflow clock would treat every in-flight
+    // job as due (NaN < completesAtMs is false -> settle arm) and mint
+    // the whole queue, or park all jobs forever. Zero-advance result:
+    // jobs preserved untouched (deny direction).
+    if (!Number.isFinite(nowMs) || Math.abs(nowMs) >= 2 ** 53) {
+      return
+    }
+
     const remaining: ActiveAlchemyJob[] = []
 
     for (const job of this.jobs) {

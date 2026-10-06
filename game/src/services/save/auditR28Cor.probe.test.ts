@@ -54,7 +54,7 @@ import type { ProductionCycle } from '../../core/production/ProductionTypes'
 //       /decompose clamps and the negative-marker arm of min(lastSavedAt,
 //       Date.now()) - the began-pair shift is pure arithmetic, no floor.
 //   (V) fail-closed validator: an internal defect converts to a refused
-//       verdict ({ok:false, path:'', 'validator gặp lỗi nội bộ'}), and a
+//       verdict ({ok:false, path:'', 'validator gap loi noi bo'}), and a
 //       legit wire payload still validates (regression).
 //   (C) collection-cap order: exactly-1024 carries no cap issue (boundary),
 //       learnedSkillIds distinct messages (shape arm vs cap arm), and the
