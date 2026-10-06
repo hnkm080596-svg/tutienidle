@@ -30,7 +30,7 @@ const powerTooltip = computed(() => {
 <style scoped>
 .character-portrait { position: relative; text-align: center; min-height: 0; color: #302519; }
 .character-portrait h2 { font-size: 24px; margin: 0; font-weight: 650; }
-.character-portrait__line { font-size: 15px; margin: 6px; }
+.character-portrait__line { font-size: 14px; margin: 6px; white-space: nowrap; }
 .character-portrait__verse { margin: -4px 0 0; font-size: 11px; letter-spacing: 0.5px; color: #8a6420; }
 .character-portrait .character-power { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 16px; }
 .character-power h3 { margin: 0; font-size: 16px; font-weight: 500; }

@@ -27,7 +27,7 @@ const rowTooltip = (row: CharacterUiDetail) =>
 .character-detail-scroll { min-height: 0; overflow: hidden; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .character-detail-scroll::-webkit-scrollbar { display: none; }
 .character-detail-card { margin: 0; min-height: 0; display: flex; flex-direction: column; }
-.character-card-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.character-card-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: 10px; mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent); -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent); }
 .character-card-scroll::-webkit-scrollbar { display: none; }
 .character-card-scroll > div { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #a98b4230; font-size: 14px; }
 .character-card-scroll dd { margin: 0; font-variant-numeric: tabular-nums; }
