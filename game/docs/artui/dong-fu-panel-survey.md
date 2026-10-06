@@ -321,7 +321,7 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R13 | Quán Khí mở từ đâu trong G3? (rail không có icon, action rail mất) | thêm nút trong card portrait |
 | R14 | Decompose ở inventory (mock) vs forge (prod) | forge |
 | R15 | Inventory pagination ‹1› vs scroll | scroll |
-| R16 | Feedback = panel help 5 nhóm vs dialog nhỏ | panel (mock đã có) |
+| R16 | "Trợ Giúp" = panel hướng dẫn 5 topic (KHÔNG phải form báo lỗi) vs prod chỉ có FeedbackDialog | thêm panel help mới, giữ dialog riêng |
 | R17 | Equipment summary HP/ATK/DEF | giữ |
 | R18 | Paperdoll dọc trái vs sockets ngang | paperdoll (mock) |
 | R19 | Respec button vị trí | giữ footer meta |
@@ -341,6 +341,8 @@ G3 `HomeSupportArtPanel kind='feedback'` = help panel 5 nhóm. Prod: dialog cụ
 | R33 | Vendor không có mock | paper shell tạm, chờ design |
 | R34 | (xem R16) | |
 | R35 | Scripture rail icon | wheel-only |
+| R36 | Title art victory/defeat thiếu trong pack | giữ huyen-kim title tạm |
+| R37 | Panel Trợ Giúp mới (5 topic hướng dẫn) | thêm — khác mục đích FeedbackDialog |
 
 ---
 
@@ -382,6 +384,30 @@ Chưa sâu (cycle sau): subcomponent từng fidelity scene (Chi Tiết drawer, s
 ## 8. Dữ liệu thật → mock (adapter check)
 
 Mọi `*Surface.vue` đã build model THẬT qua `gameManager.*Ops` + `usePlayerStore` (skill: `betaSkillTreeFor` + nodeRegistry; realm: `betaNextRealmSurfaceFor` + `getBreakthroughRequirements` + ETA; technique: `getBetaTechniqueSurfaceModel` + `tryAdvanceTechniqueGrade`; body: `useBodySceneModel`; quest: `getBetaQuestSurfaceModels`). → wire G3 = đổi template/style của `*FidelityScene`, model giữ nguyên. Không cần adapter mới.
+
+## 9a. Combat / Tribulation / Victory / Defeat (scenes, không phải panel nhưng cùng pack)
+
+**Combat** (`CombatFidelityScene` + 6 sub): hiện toàn bộ chrome trỏ `huyen-kim` pack cũ (`panel-nine-slice`, `ornament-ring-v1`, meters). Pack mới `combat/` có manifest với semantic id → map wire-now:
+- player-status-v1 (khung avatar+bars), portrait-{normal,selected,inactive}-v1 (thay ornament-ring)
+- health-frame/fill + hp-caption + enemy-health (meters), initiative-queue (thanh lượt)
+- skill-{tray,active,inactive,label}, item-slot, quantity-badge (skill/slot UI)
+- control-{normal,hover,selected,pressed}-v1 (nút Tự Động/Thoát/strategy), expand-button, area-title
+
+**Tribulation** (`TribulationFidelityScene` + chapters/frame/question): cũng trỏ huyen-kim. Pack `tribulation/` đủ bộ: title-plaque, chapter-plaque+tassel, question-panel, answer-{normal,hover,selected,pressed}, countdown, hp-frame, time-tube, caption-plaque. `zhou-meditation-v1.png` (huyen-kim) → `realm/meditation-v1.png` pack mới.
+
+**Victory/Defeat**: dùng `victory-title-v1`/`defeat-title-v1` + `divider-ornament` huyen-kim — **pack mới KHÔNG có title art victory/defeat** → ruling R36 (giữ title cũ / cần art mới / dùng chung title-plaque style tribulation).
+
+**R36.** Title art victory/defeat thiếu trong pack — giữ huyen-kim title hay cần Minh art?
+
+## 9a-2. Visual pass (xác nhận trên preview live 2026-10-06)
+
+Đã click kiểm từng panel trên `ui-landscape-design.html` — tất cả render đúng như code mô tả. **3 correction so với đọc code:**
+
+1. **"Trợ Giúp" (feedback icon) KHÔNG phải form feedback** — đó là panel hướng dẫn onboarding: 5 topic rail (Bắt Đầu/Nhân Vật/Tu Luyện/Trang Bị/Hoạt Động) + card nội dung hướng dẫn ("Hành trình tu tiên", "Thao Tác Giao Diện"). Prod hiện có `FeedbackDialog` = form báo lỗi — hai thứ khác nhau. → R16 đổi: mock thêm panel HELP mới, không thay thế FeedbackDialog.
+2. **Thương Hội (vendor) icon có trên rail nhưng là dead button** — click không mở gì: mock chưa có panel vendor (xác nhận R33).
+3. **Quest card (góc phải header) chỉ là display** — click không làm gì trong mock. Ruling: card trên production có nên link sang quest panel?
+
+**R37.** Panel Trợ Giúp mới — thêm vào prod (5 topic help/onboarding) hay chỉ giữ FeedbackDialog hiện có? (Gợi ý: thêm — content dạng hướng dẫn, khác mục đích form báo lỗi.)
 
 ## 9. Dormant files (cũ còn, mới chưa dùng / mới có cũ vẫn sống)
 
