@@ -142,6 +142,14 @@ export class GameManagerBattleRewardOps {
         this.deps.stageWaves.stopRepeat()
       }
 
+      // r38-AUT-3 - snapshot the stage binding BEFORE the emit: a
+      // battle_end listener that synchronously mints a new battle
+      // rebinds getActiveStage() mid-function, so post-emit reads must
+      // credit the stage THIS battle finished (a fresh mint would drop
+      // the writes entirely; a stage mint would attribute them to the
+      // new stage).
+      const stageSnapshot = this.deps.getActiveStage()
+
       // ARCH-014 (M12) - publish the terminal fact for EVERY outcome,
       // not just victory: natural defeat used to set the once-flag
       // without emitting, so audio/scene/cache consumers never ran on a
@@ -155,11 +163,11 @@ export class GameManagerBattleRewardOps {
         // cycle from re-paying the same buffer next victory.
         this.deps.battleLoot.settleTechniqueMastery(turnBattle.players[0]?.entity.id)
 
-        this.recordPerfectClearIfEligible(turnBattle)
+        this.recordPerfectClearIfEligible(turnBattle, stageSnapshot)
 
         // Stage completion: push completedStageIds exactly once per stage
         // (auto-repeat still pushes - the player did complete the stage).
-        const stage = this.deps.getActiveStage()
+        const stage = stageSnapshot
 
         if (
           playerData &&
@@ -189,8 +197,12 @@ export class GameManagerBattleRewardOps {
    * battle). Records perfectClearStageIds + perfectClearSeconds ONCE -
    * the first achievement is never overwritten (B4).
    */
-  private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
-    const stage = this.deps.getActiveStage()
+  private recordPerfectClearIfEligible(
+    turnBattle: TurnBattle,
+    // r38-AUT-3 - the caller snapshots the stage binding before the
+    // battle_end emit so a mid-emit re-mint cannot rebind the credit.
+    stage = this.deps.getActiveStage(),
+  ) {
     const player = this.deps.getPlayerData()
 
     if (!stage || !player || stage.perfectClearTurnLimit === undefined) {

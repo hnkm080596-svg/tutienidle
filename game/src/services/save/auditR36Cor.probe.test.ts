@@ -536,8 +536,9 @@ describe('r36 COR - C: awaitStep fallback gate', () => {
     for (const key of armedKeys) {
       expect(ops.pendingStepDone[key]).toBeUndefined()
     }
-    // No re-arm: the timer array did not grow from the drop.
-    expect(ops.pendingStepTimers.length).toBe(timersAtArm)
+    // No re-arm: the array did not grow from the drop, and r38's hoisted
+    // splice retired the just-fired handle - strictly smaller.
+    expect(ops.pendingStepTimers.length).toBeLessThan(timersAtArm)
   })
 
   it("C3 dead-battle drop also fires on a 'stopped' clock with a live battle reference", () => {

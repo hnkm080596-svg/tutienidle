@@ -670,7 +670,13 @@ export class GameManagerTurnBattleOps {
       return
     }
 
-    if (this.turnToken.getState() === 'IDLE') {
+    // r38-COR-2 - the IDLE-window inline run must yield to a pending
+    // queue: a command arriving while earlier ones still wait for the
+    // fighting-branch drain would otherwise overtake them (later-inline
+    // runs first, then the drained older one lands LAST - a rapid
+    // double-toggle ends with the first intent on the flag, not the
+    // last). Only an empty queue is truly "at a boundary".
+    if (this.turnToken.getState() === 'IDLE' && this.boundaryQueue.length === 0) {
       command()
       return
     }
@@ -700,7 +706,15 @@ export class GameManagerTurnBattleOps {
     this.boundaryQueue = []
 
     for (const command of queued) {
-      command()
+      // r38-COR-6 - the queue is already emptied above, so a throwing
+      // command would silently drop every trailing entry. Land each
+      // command independently; a pendingManualMode slot dropped with the
+      // batch still re-lands at the next dropBoundaryQueue.
+      try {
+        command()
+      } catch (error) {
+        console.warn('[TurnBattle] boundary command threw - continuing drain', error)
+      }
     }
   }
 
@@ -871,11 +885,20 @@ export class GameManagerTurnBattleOps {
       // r37-COR-2 - same-epoch but already settled: the ACK channel (or
       // an earlier same-generation fire) consumed this step's parked
       // settle while this callback sat in the task queue. Bail before the
-      // admin-latch arm splices its dead handle and re-arms a live timer
-      // for a step that no longer exists - an orphan chain re-firing
-      // every fallback interval until the next clearPendingSteps.
+      // retired-handle splice below re-arms a live timer for a step that
+      // no longer exists - an orphan chain re-firing every fallback
+      // interval until the next clearPendingSteps.
       if (this.pendingStepDone[signal] === undefined) {
         return
+      }
+      // r38-COR-3/AUT-4 - the fallback fired, so this timer handle is
+      // dead on EVERY arm below (dead-battle drop, admin-latch re-arm,
+      // isBlocking deferral, cap-drain, drive). Retire it once here so
+      // pendingStepTimers holds live handles only no matter which arm
+      // runs; the re-arm paths push their replacement handle below.
+      const firedIdx = this.pendingStepTimers.indexOf(timer)
+      if (firedIdx !== -1) {
+        this.pendingStepTimers.splice(firedIdx, 1)
       }
       // r35-AUT-1 - the fallback is a wall-clock channel that would
       // otherwise bypass the CombatClock latch entirely: a ghost parked
@@ -911,12 +934,7 @@ export class GameManagerTurnBattleOps {
       ) {
         // r36-COR-1/INT-3 - a parked-forever latch would otherwise append
         // one dead handle per fire (~21k entries/day on a wedged zombie):
-        // swap the handle that just fired for the re-arm so the array
-        // holds live timers only.
-        const deadIdx = this.pendingStepTimers.indexOf(timer)
-        if (deadIdx !== -1) {
-          this.pendingStepTimers.splice(deadIdx, 1)
-        }
+        // the fired handle was retired above; push only the re-arm.
         timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
         this.pendingStepTimers.push(timer)
         return
@@ -924,13 +942,9 @@ export class GameManagerTurnBattleOps {
       if (this.presentationOps.session.isBlocking()) {
         deferredMs += ANIMATION_FALLBACK_MS
         // r37-COR-1 - same live-handles-only invariant as the
-        // admin-latch arm above: retire the just-fired handle on EVERY
-        // deferral path (re-arm below and the cap-drain alike) so a held
-        // session cannot accumulate dead handles.
-        const deadIdx = this.pendingStepTimers.indexOf(timer)
-        if (deadIdx !== -1) {
-          this.pendingStepTimers.splice(deadIdx, 1)
-        }
+        // admin-latch arm above: the fired handle was retired at the top
+        // of the fallback, so re-arm and cap-drain both leave the array
+        // holding live handles only.
         if (deferredMs < AWAIT_STEP_DEFERRAL_CAP_MS) {
           timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
           this.pendingStepTimers.push(timer)
@@ -1889,6 +1903,16 @@ export class GameManagerTurnBattleOps {
     this.clearCycleEntryState()
     this.battleGeneration += 1
 
+    // r38-COR-4/INT-L1 - the enemy registry is battle-scoped too: a
+    // committed mint must start with an empty field. The pre-commit
+    // emitAbandonEnd above publishes 'battle_end' while a listener may
+    // synchronously mint a nested cycle - that mint's spawn registrations
+    // are overwritten by this mint and were permanent orphans; the
+    // outgoing battle's own leftover enemies are swept by the same clear.
+    // clear() is idempotent under the discard/abandon paths that already
+    // ran it.
+    this.deps.enemyManager.clear()
+
     // Commit the cycle's session RNG here so EVERY roll below - spawn
     // placement, enemy-pool picks, engine rolls, combat formulas - reads
     // one source. Scope guard (spec C3): loot/alchemy/pill economy
@@ -2166,7 +2190,19 @@ export class GameManagerTurnBattleOps {
     // which is exactly the pre-carry semantics the UI already assumes.
     const latchedReasons = this.combatClock
       .getFreezeReasons()
-      .filter((reason) => reason !== 'user-pause')
+      .filter(
+        (reason) =>
+          // 'turn-in-flight' gets the same IDLE-token strip as the
+          // source-swap arm (r38-COR-5/AUT-1): the token was reset to
+          // IDLE inside clearCycleEntryState earlier in this block, so a
+          // 'turn-in-flight' in this snapshot is foreign by definition -
+          // a plant through the synchronous presentation_session_started
+          // emit window would re-freeze verbatim and wedge the fresh
+          // clock permanently (only the token listener clears that
+          // reason, and a frozen token never transitions).
+          reason !== 'user-pause' &&
+          !(reason === 'turn-in-flight' && this.turnToken.getState() === 'IDLE'),
+      )
     this.combatClock.stop()
     this.combatClock.start()
     for (const reason of latchedReasons) {
@@ -2678,6 +2714,13 @@ export class GameManagerTurnBattleOps {
   setBattleManualMode(enabled: boolean): void {
     const stranded = enabled ? null : this.presentationOps.runtime.getAwaitedManualActor()
 
+    // The session-scoped pending intent is recorded BEFORE the rescue runs:
+    // beginTurnPipeline below can settle a whole turn inline and reach
+    // COMBAT_OVER synchronously, and dropBoundaryQueue inside that path must
+    // re-land THIS call's intent - not the previous toggle's stale value
+    // (r38-AUT-2).
+    this.pendingManualMode = enabled
+
     // Turning manual off mid-wait must not strand the token in AWAITING_INPUT
     // - that would freeze the clock for the rest of the battle waiting for a
     // choice the UI no longer offers. The claimed turn becomes an auto turn.
@@ -2707,11 +2750,11 @@ export class GameManagerTurnBattleOps {
     // acknowledgeTurnReady reads the LIVE flag when routing a claimed
     // actor into the manual pause, so an immediate flip could hijack an
     // in-flight auto turn into AWAITING_INPUT. The battle-scoped queue
-    // is still cleared undrained at combat-over/teardown though, so a
-    // session-scoped pending intent mirrors the toggle: dropBoundaryQueue
-    // re-lands the latest requested value before discarding (r37-AUT-1 -
-    // a terminal-turn toggle no longer dies silently with the queue).
-    this.pendingManualMode = enabled
+    // is still cleared undrained at combat-over/teardown though, so the
+    // session-scoped pending intent (recorded at the top of this method)
+    // mirrors the toggle: dropBoundaryQueue re-lands the latest requested
+    // value before discarding (r37-AUT-1 - a terminal-turn toggle no
+    // longer dies silently with the queue).
     this.enqueueAtTurnBoundary(() => {
       this.presentationOps.runtime.setBattleManualMode(enabled)
       this.pendingManualMode = null // landed through the normal boundary path

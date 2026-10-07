@@ -484,18 +484,20 @@ const { breakthrough } = useBreakthrough(gameManager)
 
 // Task 8 (A11, spec sec.6.1) - an unwatched battle pauses visibly and resumes
 // only on Continue; returning to the tab is not consent to resume. Gated on
-// getCombatClockState() !== 'stopped' so the overlay never appears outside
-// combat (no battle mounted == nothing to pause).
+// the 'game' entry stage plus a non-stopped combat clock so the overlay never
+// arms over an error/entry surface (no admitted battle == nothing to pause).
 const { isPaused: isCombatPaused, continueBattle, dispose: disposeCombatPause } = useCombatPause(
   gameManager,
-  // r37-AUT-2 - gate on a live battle, not just a non-stopped clock: the
-  // accepted battle-less 'frozen' zombie residual (boot-fail /
-  // rejected-restore keeps a latched clock) would otherwise let a hidden
-  // tab arm the "combat paused - continue" curtain over an error/entry
-  // screen with nothing to continue into.
+  // r37-AUT-2 / r38-COR-1 - gate on the admitted route, not battle
+  // presence: the boot-fail / rejected-restore zombie KEEPS its battle
+  // object (the fail arm returns before discardStaleBattle), so a battle
+  // check passes exactly the shape it was meant to exclude. The one thing
+  // the zombie lacks is the 'game' entry stage - the fail arm lands on
+  // 'error', where a hidden tab must not arm the "combat paused -
+  // continue" curtain over the error surface with nothing behind it.
   {
     isCombatActive: () =>
-      gameManager.getCombatClockState() !== 'stopped' && gameManager.getTurnBattle() !== null,
+      entryStage.value === 'game' && gameManager.getCombatClockState() !== 'stopped',
   },
 )
 
