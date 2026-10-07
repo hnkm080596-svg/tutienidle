@@ -122,42 +122,40 @@ afterEach(() => {
 //     'turn-in-flight'. It wedges verbatim.
 // ----------------------------------------------------------------------------
 
-describe("r39 AUT - A: 'turn-in-flight' plant inside the post-cycle launch emit (stage path) wedges verbatim", () => {
-  it("the planted reason survives reveal and parks the fresh battle permanently", () => {
+describe("r39 AUT - A: 'turn-in-flight' plant inside the post-cycle launch emit is refused at the latch (post-adjudication pin)", () => {
+  it("the planted reason dies at freezeCombat and the fresh battle runs", () => {
     const manager = registeredManager()
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
     manager.setPresentationActive(true)
     manager.setPresentationMode('interactive')
 
-    // 'stage' mints skip the :2174 emit; their session emit is :2487,
-    // emitted after step-7 already stopped/started the clock.
+    // 'stage' mints emit presentation_session_started past step-7's strip -
+    // the latch's intrinsic token owner now refuses the plant while IDLE.
     const plant = () => manager.freezeCombat('turn-in-flight')
     manager.eventBus.on('presentation_session_started', plant)
     startAStage(manager)
     manager.eventBus.off('presentation_session_started', plant)
 
-    // The held interactive session also arms 'not-revealed'.
-    expect(manager.getFreezeReasons()).toEqual(
-      expect.arrayContaining(['turn-in-flight', 'not-revealed']),
-    )
+    // Only the mint's own 'not-revealed' is armed - the plant never landed.
+    expect(manager.getFreezeReasons()).toEqual(['not-revealed'])
 
-    // Reveal clears the owned 'not-revealed' - the plant stays.
     const port = manager.getPresentationPort()
     const hold = port.hold(port.getCurrentSession()!)!
     port.attach(hold)
     port.release(hold)
-    expect(manager.getFreezeReasons()).toEqual(['turn-in-flight'])
+    expect(manager.getFreezeReasons()).toEqual([])
 
-    // Wedge: frozen clock -> no step -> token never leaves IDLE -> the only
-    // writer of 'turn-in-flight' (the token transition listener) never
-    // fires. The fresh battle cannot progress and nothing resumes it.
+    // The battle ticks: no wedge - the intro countdown advances. Mid-turn
+    // the clock may legitimately hold 'turn-in-flight', so progress is the
+    // pin, not the instantaneous state; no admin reason may be latched.
     const minted = manager.getTurnBattle()!
-    const introAtPark = minted.introTurnsRemaining as number
+    const introAtStart = minted.introTurnsRemaining as number
     clock.advance(COMBAT_STEP_SECONDS * 600)
-    expect(manager.getTurnBattle()!.introTurnsRemaining).toBe(introAtPark)
-    expect(manager.getTurnTokenState()).toBe('IDLE')
-    expect(manager.getCombatClockState()).toBe('frozen')
+    expect(manager.getTurnBattle()!.introTurnsRemaining).toBeLessThan(introAtStart)
+    expect(manager.getFreezeReasons()).toEqual(
+      expect.not.arrayContaining(['authority-pause', 'tab-hidden', 'user-pause', 'not-revealed']),
+    )
 
     manager.abandonBattle()
   })
@@ -193,8 +191,8 @@ describe("r39 AUT - A: 'turn-in-flight' plant inside the post-cycle launch emit 
 //     silently drops 'authority-pause' - the next mint restarts unlatched.
 // ----------------------------------------------------------------------------
 
-describe("r39 AUT - B: a terminal combat-over while 'authority-pause' is armed drops the owned latch silently", () => {
-  it('parked manual turn + authority latch + submitted choice -> victory wipes the latch, next mint runs free', () => {
+describe("r39 AUT - B: a terminal combat-over parks the armed 'authority-pause' and the next mint carries it (post-adjudication pin)", () => {
+  it('parked manual turn + authority latch + submitted choice -> victory parks the latch, the next mint stays held until the owner releases', () => {
     const manager = registeredManager()
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
@@ -206,37 +204,37 @@ describe("r39 AUT - B: a terminal combat-over while 'authority-pause' is armed d
     expect(manager.getTurnTokenState()).toBe('AWAITING_INPUT')
     expect(manager.getCombatClockState()).toBe('frozen') // 'turn-in-flight'
 
-    // The authority latch arms mid-wait (lifecycle-owned reason; the owner
-    // will not re-assert it - freeze/resume are edge-triggered).
+    // The authority latch arms mid-wait (owner edge-triggered; the probe
+    // acts as the owner - no truth registered, so the latch fails open).
     manager.freezeCombat('authority-pause')
     expect(manager.getFreezeReasons()).toEqual(
       expect.arrayContaining(['authority-pause', 'turn-in-flight']),
     )
 
-    // The user answers the parked choice anyway: submitTurnChoice drives
-    // beginTurnPipeline directly and never consults the clock state. The
-    // resolved hit kills the 1hp enemy -> victory -> settleCombatOutcome ->
-    // combatClock.stop() at :1132 -> reasons.clear() erases the owned
-    // 'authority-pause' alongside the dead turn's latch.
+    // The user answers the parked choice anyway: victory -> settle parks
+    // both live reasons before combatClock.stop() clears the live set.
     manager.getTurnBattle()!.enemies[0]!.entity.currentHp = 1
     expect(manager.submitTurnChoice('basic')).toBe(true)
 
     expect(manager.getTurnBattle()!.state).toBe('victory')
     expect(manager.getCombatClockState()).toBe('stopped')
-    // The owner never resumed it; nothing replants it.
     expect(manager.getFreezeReasons()).toEqual([])
 
-    // The next mint restarts on an empty snapshot: combat ticks while the
-    // authority pause is still logically held. The r35-AUT-2 carry cannot
-    // restore a reason the terminal stop erased before the snapshot.
+    // The next mint carries the parked latch: 'authority-pause' re-lands
+    // while 'turn-in-flight' dies on the IDLE-token strip - the battle
+    // stays frozen until the owner releases it.
     manager.turnBattleOps.startBattleWithPlayer(player, enemyWith('post_wipe'))
+    expect(manager.getFreezeReasons()).toEqual(['authority-pause'])
+    expect(manager.getCombatClockState()).toBe('frozen')
+
+    manager.resumeCombat('authority-pause')
     expect(manager.getFreezeReasons()).toEqual([])
     expect(manager.getCombatClockState()).toBe('running')
 
     manager.abandonBattle()
   })
 
-  it('sibling form: abandonBattle under an armed authority latch wipes it the same way', () => {
+  it('sibling form: abandonBattle under an armed authority latch parks + carries it the same way', () => {
     const manager = registeredManager()
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
@@ -247,14 +245,16 @@ describe("r39 AUT - B: a terminal combat-over while 'authority-pause' is armed d
     manager.freezeCombat('authority-pause')
     expect(manager.getCombatClockState()).toBe('frozen')
 
-    // Retreat while authority-latched: the teardown stop() at :2662 clears
-    // the latch with no resume.
     expect(manager.abandonBattle()).toBe(true)
     expect(manager.getFreezeReasons()).toEqual([])
     expect(manager.getCombatClockState()).toBe('stopped')
 
+    // The parked latch carries into the next mint.
     manager.turnBattleOps.startBattleWithPlayer(player, enemyWith('post_abandon'))
-    expect(manager.getFreezeReasons()).toEqual([])
+    expect(manager.getFreezeReasons()).toEqual(['authority-pause'])
+    expect(manager.getCombatClockState()).toBe('frozen')
+
+    manager.resumeCombat('authority-pause')
     expect(manager.getCombatClockState()).toBe('running')
 
     manager.abandonBattle()
@@ -266,8 +266,8 @@ describe("r39 AUT - B: a terminal combat-over while 'authority-pause' is armed d
 //     made inside the 'fresh' mint's own :2174 emit window.
 // ----------------------------------------------------------------------------
 
-describe("r39 AUT - C: the in-mint emit plant still dies at the step-7 strip (r38 regression pin)", () => {
-  it("a 'turn-in-flight' planted inside a 'fresh' mint's emit is stripped by the IDLE-token filter", () => {
+describe("r39 AUT - C: the in-mint emit plant still dies (r38 strip + r39 latch refusal)", () => {
+  it("a 'turn-in-flight' planted inside a 'fresh' mint's emit is refused - token IDLE means nothing arms it", () => {
     const manager = registeredManager()
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)

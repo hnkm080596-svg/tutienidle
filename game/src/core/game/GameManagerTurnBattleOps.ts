@@ -235,6 +235,33 @@ export class GameManagerTurnBattleOps {
   private detachTokenListener: (() => void) | null = null
 
   /**
+   * r39 adjudication - reasons parked between a battle-boundary stop()
+   * and the next mint's step-7 carry. stop() atomically erases the
+   * clock's reason set (spec sec.8), but the latch's OWNER still
+   * believes it is armed: its resumer can never fire for a latch that
+   * no longer exists (r39-AUT-2/INT-3). Terminal paths park the armed
+   * set first; the next mint adjudicates it through the same filter a
+   * live latch sees. resumeCombat deletes parked entries, and
+   * discardStaleBattle clears the whole park - the dead character's
+   * latch dies with its bindings (r34-COR-F1).
+   */
+  private readonly parkedFreezeReasons = new Set<FreezeReason>()
+
+  /**
+   * r39 adjudication - per-reason owner truth. An owned reason may be
+   * armed only while its registered owner says it holds the state, and
+   * released only while it does not: a foreign plant through a
+   * synchronous emit listener dies at the latch instead of wedging the
+   * clock behind a reason with no resumer (r39-COR-1/AUT-1). Owners:
+   * useAppLifecycle (authority-pause), useCombatPause (tab-hidden),
+   * CombatTopBar (user-pause). 'turn-in-flight' is intrinsically owned
+   * by the turn token; 'not-revealed' is re-derived by
+   * syncOffScreenFreeze. An unregistered owned reason stays open -
+   * headless/test callers act as the owner themselves.
+   */
+  private readonly freezeLatchTruth = new Map<FreezeReason, () => boolean>()
+
+  /**
    * 9.5 #9 -- engine-side cast notification, filtered to the primary
    * player. The engine reports every committed cast (enemy, companion,
    * player); only players[0] writes into the skillCastCounts mirror
@@ -454,11 +481,86 @@ export class GameManagerTurnBattleOps {
     }
   }
 
+  /**
+   * A reason's owner registers its own truth: the latch then accepts an
+   * arm only while the owner says it holds the state, and a release
+   * only while it does not. Registration is by reference - the returned
+   * unregister removes only that exact registration.
+   */
+  registerFreezeLatchTruth(reason: FreezeReason, isHeld: () => boolean): () => void {
+    this.freezeLatchTruth.set(reason, isHeld)
+
+    return () => {
+      if (this.freezeLatchTruth.get(reason) === isHeld) {
+        this.freezeLatchTruth.delete(reason)
+      }
+    }
+  }
+
+  /**
+   * 'turn-in-flight' is only coherent while the token is claimed - a
+   * plant on an IDLE token can never be resumed, so it is refused at
+   * the latch wherever it is attempted (the step-7 carry strip heals
+   * carries; this closes the live-clock sibling at both emit sites).
+   */
+  private isFreezeArmable(reason: FreezeReason): boolean {
+    if (reason === 'turn-in-flight') {
+      return this.turnToken.getState() !== 'IDLE'
+    }
+
+    const isHeld = this.freezeLatchTruth.get(reason)
+    return isHeld === undefined || isHeld()
+  }
+
+  private isFreezeReleasable(reason: FreezeReason): boolean {
+    if (reason === 'turn-in-flight') {
+      return this.turnToken.getState() === 'IDLE'
+    }
+
+    const isHeld = this.freezeLatchTruth.get(reason)
+    return isHeld === undefined || !isHeld()
+  }
+
+  /**
+   * Terminal teardown must not erase the owner's latch silently: park
+   * the armed set so the next mint's step-7 carry adjudicates each
+   * reason by the same rules as a live latch (r39-AUT-2 - settle,
+   * abandon and discard used to stop() first and leave the owner
+   * believing it still held the latch).
+   */
+  private parkFreezeReasonsBeforeStop(): void {
+    for (const reason of this.combatClock.getFreezeReasons()) {
+      this.parkedFreezeReasons.add(reason)
+    }
+  }
+
   freezeCombat(reason: FreezeReason): void {
+    if (!this.isFreezeArmable(reason)) {
+      return
+    }
+
+    // A stopped clock cannot hold a latch - but the owner's claim still
+    // exists (its resumer will fire later, never for a silently dropped
+    // latch). Park it so the next mint's step-7 carry adjudicates it
+    // like any boundary survivor.
+    if (this.combatClock.getState() === 'stopped') {
+      this.parkedFreezeReasons.add(reason)
+      return
+    }
+
     this.combatClock.freeze(reason)
   }
 
   resumeCombat(reason: FreezeReason): void {
+    // The owner released the reason wherever it currently lives - an
+    // entry awaiting carry dies too (the boot post-admission unlatch
+    // relies on this: discardStaleBattle may have parked it).
+    this.parkedFreezeReasons.delete(reason)
+
+    if (!this.isFreezeReleasable(reason)) {
+      return
+    }
+
     this.combatClock.resume(reason)
   }
 
@@ -1128,7 +1230,10 @@ export class GameManagerTurnBattleOps {
     }
 
     // Spec section 8: combat-over STOPS the clock. It does not freeze it - the
-    // battle is over and nothing more will advance.
+    // battle is over and nothing more will advance. The armed latch set is
+    // parked first: an owner's resumer still exists and must find the latch
+    // again at the next mint's carry (r39-AUT-2).
+    this.parkFreezeReasonsBeforeStop()
     this.combatClock.stop()
   }
 
@@ -1752,6 +1857,12 @@ export class GameManagerTurnBattleOps {
    */
   discardStaleBattle(): void {
     this.discardInFlightBattle()
+    // The dead battle's parked latch dies with its bindings: the
+    // post-admission unlatch in bootGame targets the live clock and can
+    // never reach a parked entry left over from the old owner
+    // (r34-COR-F1). Same-session teardowns keep their park - their
+    // owners' resumers still exist.
+    this.parkedFreezeReasons.clear()
   }
 
   /**
@@ -1782,6 +1893,7 @@ export class GameManagerTurnBattleOps {
     this.deps.combatSystem.setSurviveLethalSession(null)
 
     this.clearCycleEntryState()
+    this.parkFreezeReasonsBeforeStop()
     this.combatClock.stop()
 
     this.activeStageForTurnBattle = null
@@ -2188,21 +2300,28 @@ export class GameManagerTurnBattleOps {
     // carrying it would strand the new battle frozen behind a button
     // that claims unpaused (r36-INT-1). It dies with the old battle,
     // which is exactly the pre-carry semantics the UI already assumes.
-    const latchedReasons = this.combatClock
-      .getFreezeReasons()
-      .filter(
-        (reason) =>
-          // 'turn-in-flight' gets the same IDLE-token strip as the
-          // source-swap arm (r38-COR-5/AUT-1): the token was reset to
-          // IDLE inside clearCycleEntryState earlier in this block, so a
-          // 'turn-in-flight' in this snapshot is foreign by definition -
-          // a plant through the synchronous presentation_session_started
-          // emit window would re-freeze verbatim and wedge the fresh
-          // clock permanently (only the token listener clears that
-          // reason, and a frozen token never transitions).
-          reason !== 'user-pause' &&
-          !(reason === 'turn-in-flight' && this.turnToken.getState() === 'IDLE'),
-      )
+    // The carry sees every latch still standing - the live set plus any
+    // reasons a terminal stop() parked (settle/abandon/discard before
+    // this mint). Each is adjudicated by the same filter below.
+    const latchedReasons = [
+      ...new Set([
+        ...this.combatClock.getFreezeReasons(),
+        ...this.parkedFreezeReasons,
+      ]),
+    ].filter(
+      (reason) =>
+        // 'turn-in-flight' gets the same IDLE-token strip as the
+        // source-swap arm (r38-COR-5/AUT-1): the token was reset to
+        // IDLE inside clearCycleEntryState earlier in this block, so a
+        // 'turn-in-flight' in this snapshot is foreign by definition -
+        // a plant through the synchronous presentation_session_started
+        // emit window would re-freeze verbatim and wedge the fresh
+        // clock permanently (only the token listener clears that
+        // reason, and a frozen token never transitions).
+        reason !== 'user-pause' &&
+        !(reason === 'turn-in-flight' && this.turnToken.getState() === 'IDLE'),
+    )
+    this.parkedFreezeReasons.clear()
     this.combatClock.stop()
     this.combatClock.start()
     for (const reason of latchedReasons) {
@@ -2659,6 +2778,7 @@ export class GameManagerTurnBattleOps {
     // this battle (spec section 9.2). Same teardown block beginBattleCycle
     // runs on entry - the pending-clear cannot drift.
     this.clearCycleEntryState()
+    this.parkFreezeReasonsBeforeStop()
     this.combatClock.stop()
 
     // ARCH-014 (M12) -- ONE terminal publisher: rewardOps owns every

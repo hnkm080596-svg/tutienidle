@@ -161,12 +161,20 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   let saveInFlight = false
   let persistenceSuppressed = false
   let stopped = false
+
   // B1-D - reversible authority pause: the OnlineSessionController calls
   // pauseSimulation() on OBSERVED authority loss and resumeSimulation()
   // once the reconnect pipeline lands. Distinct from `stopped` (terminal
   // teardown): intervals come back and the clock re-anchors so the
   // paused delta is discarded rather than paid as catch-up.
   let simPaused = false
+
+  // r39 adjudication - this lifecycle owns the 'authority-pause' latch:
+  // the combat clock accepts an arm only while simPaused holds, so a
+  // foreign freezeCombat plant cannot wedge combat behind an authority
+  // pause nobody set. Optional-chained: partial test stubs may not
+  // expose the registration API.
+  gameManager.registerFreezeLatchTruth?.('authority-pause', () => simPaused)
   // B2 (audit T1-8 follow-up) - starter grants commit to runtime state
   // BEFORE the first save; if that save fails, the buildings/materials/
   // activePlayer already applied cannot be rolled back in memory. A

@@ -3,6 +3,13 @@ import { ref, type Ref } from 'vue'
 interface CombatClockOwner {
   freezeCombat(reason: 'tab-hidden'): void
   resumeCombat(reason: 'tab-hidden'): void
+  /**
+   * r39 adjudication - latch ownership: this composable owns
+   * 'tab-hidden', so it registers isPaused as the arm truth at setup.
+   * Optional on the narrow owner interface - full GameManager provides
+   * it, partial test stubs may not.
+   */
+  registerFreezeLatchTruth?(reason: 'tab-hidden', isHeld: () => boolean): () => void
 }
 
 interface Options {
@@ -30,6 +37,12 @@ export function useCombatPause(
   dispose: () => void
 } {
   const isPaused = ref(false)
+
+  // This composable is the only legitimate 'tab-hidden' armer: register
+  // isPaused as the latch's truth so a foreign freezeCombat plant
+  // (synchronous emit listener) is refused at the latch instead of
+  // wedging combat behind an overlay nobody armed (r39-COR-1).
+  gameManager.registerFreezeLatchTruth?.('tab-hidden', () => isPaused.value)
 
   const onVisibilityChange = () => {
     if (document.visibilityState !== 'hidden' || isPaused.value) {

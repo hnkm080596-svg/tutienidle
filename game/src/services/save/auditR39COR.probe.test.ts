@@ -176,8 +176,11 @@ afterEach(() => {
 // ----------------------------------------------------------------------------
 
 describe('r39 COR - A: foreign reason carry through the step-7 replay', () => {
+  // Post-adjudication pin (r39 Mediums): latch ownership is registered -
+  // a reason the owner is not holding is refused at freezeCombat instead
+  // of riding the carry.
   it.each(['authority-pause', 'tab-hidden'] as const)(
-    "a foreign '%s' planted inside presentation_session_started carries verbatim and wedges the fresh battle",
+    "a foreign '%s' planted inside presentation_session_started is refused at the latch and the battle runs",
     (reason) => {
       vi.useFakeTimers()
       const manager = registeredManager()
@@ -185,39 +188,36 @@ describe('r39 COR - A: foreign reason carry through the step-7 replay', () => {
       manager.setCombatClockSource(clock)
       manager.setPresentationActive(true)
       manager.setPresentationMode('interactive')
+      // The owner registers its truth - not holding.
+      manager.registerFreezeLatchTruth(reason, () => false)
       const player = startAStage(manager)
       releaseCurrentSessionHold(manager)
       clock.advance(COMBAT_STEP_SECONDS * 260)
       expect(manager.getTurnTokenState()).toBe('RESOLVING')
 
-      // Same listener seam the fixed 'turn-in-flight' probe used: the emit
-      // sits between token.reset() and the step-7 latch snapshot.
       manager.eventBus.on('presentation_session_started', () => {
         manager.freezeCombat(reason)
       })
 
       manager.turnBattleOps.startBattleWithPlayer(player, secondEnemy())
 
-      // The replay's filter only strips 'user-pause' and the IDLE-token
-      // 'turn-in-flight' - this reason rides through verbatim.
-      const carried = manager.getFreezeReasons()
-      expect(carried).toContain(reason)
+      // Refused at the latch: nothing foreign rides the carry.
+      expect(manager.getFreezeReasons()).not.toContain(reason)
 
-      // Release the mint's own 'not-revealed' latch: the wedge is the
-      // foreign reason, not the presentation hold.
       releaseCurrentSessionHold(manager)
-      expect(manager.getCombatClockState()).toBe('frozen')
-      expect(manager.getFreezeReasons()).toEqual([reason])
+      expect(manager.getCombatClockState()).toBe('running')
+      expect(manager.getFreezeReasons()).toEqual([])
 
-      // Wedge evidence: a full claim window produces no pipeline advance.
+      // Progress evidence: intro countdown advances (mid-turn the clock may
+      // legitimately hold 'turn-in-flight' - sample the countdown, not the
+      // instantaneous clock state).
+      const introAtMint = manager.getTurnBattle()!.introTurnsRemaining as number
       clock.advance(COMBAT_STEP_SECONDS * 260)
-      expect(manager.getTurnTokenState()).toBe('IDLE')
-      expect(manager.getTurnBattle()!.totalTurnsElapsed).toBe(0)
-      expect(manager.getFreezeReasons()).toEqual([reason])
+      expect(manager.getTurnBattle()!.introTurnsRemaining).toBeLessThan(introAtMint)
     },
   )
 
-  it("a 'turn-in-flight' planted in a stage mint's post-step-7 emit lands on the running clock - the strip never sees it", () => {
+  it("a 'turn-in-flight' planted in a stage mint's post-step-7 emit is refused at the latch - the battle runs", () => {
     vi.useFakeTimers()
     const manager = registeredManager()
     const clock = new ManualClockSource()
@@ -225,11 +225,9 @@ describe('r39 COR - A: foreign reason carry through the step-7 replay', () => {
     manager.setPresentationActive(true)
     manager.setPresentationMode('interactive')
 
-    // The stage-mint emit lives in mintCombatSessionForLaunch (:2487), which
-    // runs AFTER the committed block's step-7 snapshot - a plant here lands
-    // directly on the new running clock and never passes the strip. Arming
-    // the listener before the stage's own launch exercises exactly that
-    // seam.
+    // The stage-mint emit lives in mintCombatSessionForLaunch (:2487), past
+    // the step-7 strip. The latch's intrinsic 'turn-in-flight' owner (the
+    // token itself) now refuses it while the token is IDLE.
     manager.eventBus.on('presentation_session_started', () => {
       manager.freezeCombat('turn-in-flight')
     })
@@ -237,13 +235,12 @@ describe('r39 COR - A: foreign reason carry through the step-7 replay', () => {
     startAStage(manager)
 
     releaseCurrentSessionHold(manager)
-    expect(manager.getFreezeReasons()).toEqual(['turn-in-flight'])
-    expect(manager.getCombatClockState()).toBe('frozen')
+    expect(manager.getFreezeReasons()).toEqual([])
+    expect(manager.getCombatClockState()).toBe('running')
 
-    // The token is IDLE, so no token transition will ever clear the latch.
+    const introAtMint = manager.getTurnBattle()!.introTurnsRemaining as number
     clock.advance(COMBAT_STEP_SECONDS * 260)
-    expect(manager.getTurnTokenState()).toBe('IDLE')
-    expect(manager.getTurnBattle()!.totalTurnsElapsed).toBe(0)
+    expect(manager.getTurnBattle()!.introTurnsRemaining).toBeLessThan(introAtMint)
   })
 })
 
@@ -257,7 +254,7 @@ describe('r39 COR - A: foreign reason carry through the step-7 replay', () => {
 //     autofarm-ineligible forever.
 // ----------------------------------------------------------------------------
 
-describe('r39 COR - B: recordPerfectClearIfEligible reads the timer binding post-emit', () => {
+describe('r39 COR - B: recordPerfectClearIfEligible keeps the pre-emit startedAtMs snapshot (post-adjudication pin)', () => {
   const PC_STAGE: Stage = {
     id: 'pc_stage',
     name: 'PC Stage',
@@ -308,7 +305,7 @@ describe('r39 COR - B: recordPerfectClearIfEligible reads the timer binding post
     expect(battle.state).toBe('victory')
   }
 
-  it('a fresh mint inside battle_end records a 0-second perfect clear on the ended stage', () => {
+  it('a fresh mint inside battle_end cannot poison the ended stage clear - the pre-emit snapshot lands', () => {
     let now = 1_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => now)
     const { manager, player, clock } = pcHarness()
@@ -322,19 +319,16 @@ describe('r39 COR - B: recordPerfectClearIfEligible reads the timer binding post
       if (minted) return
       minted = true
       // Foreign re-mint inside the emit: the fresh policy nulls
-      // turnBattleStartedAtMs at :1949, so the post-emit read falls to
-      // ?? Date.now() and clearSeconds lands 0.
+      // turnBattleStartedAtMs, but the ended battle's startedAtMs was
+      // snapshotted pre-emit (r39 adjudication) - the record lands honest.
       manager.turnBattleOps.startBattleWithPlayer(player, secondEnemy())
     })
 
     driveToVictory(manager, clock)
     expect(minted).toBe(true)
 
-    // The stage binding itself is correctly snapshotted (r38-AUT-3): the
-    // record lands on the ENDED battle's stage. What lands wrong is the
-    // seconds value - and first-record semantics make it permanent.
     expect(player.perfectClearStageIds).toContain('pc_stage')
-    expect(player.perfectClearSeconds['pc_stage']).toBe(0)
+    expect(player.perfectClearSeconds['pc_stage']).toBe(5)
 
     manager.abandonBattle()
   })
@@ -355,7 +349,7 @@ describe('r39 COR - B: recordPerfectClearIfEligible reads the timer binding post
     manager.abandonBattle()
   })
 
-  it('a stage mint inside battle_end restamps the timer - the ended battle records ~0', () => {
+  it('a stage mint inside battle_end cannot poison the ended stage clear either', () => {
     let now = 1_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => now)
     const { manager, player, clock } = pcHarness()
@@ -380,8 +374,8 @@ describe('r39 COR - B: recordPerfectClearIfEligible reads the timer binding post
       if (minted) return
       minted = true
       // Stage mint: mintCombatSessionForLaunch restamps
-      // turnBattleStartedAtMs = Date.now() at :2477, so the ended battle's
-      // post-emit read sees the NESTED launch's timestamp.
+      // turnBattleStartedAtMs = Date.now(), but the ended battle keeps its
+      // own pre-emit snapshot - the nested launch cannot poison it.
       manager.turnBattleOps.startStage(player, stage2, false)
     })
 
@@ -389,7 +383,7 @@ describe('r39 COR - B: recordPerfectClearIfEligible reads the timer binding post
     expect(minted).toBe(true)
 
     expect(player.perfectClearStageIds).toContain('pc_stage')
-    expect(player.perfectClearSeconds['pc_stage']).toBe(0)
+    expect(player.perfectClearSeconds['pc_stage']).toBe(5)
 
     manager.abandonBattle()
   })

@@ -238,19 +238,17 @@ describe('r39 INT - A: latch-carry arms agree (step-7 vs source swap)', () => {
     manager.discardStaleBattle()
   })
 
-  it('a plant on the OLD clock set before the mint is equally stripped (IDLE at read)', async () => {
+  // Post-adjudication pin (r39 Mediums): with the token at IDLE the latch
+  // refuses the plant outright - there is no reason left for the mint to
+  // strip.
+  it('a plant on the OLD clock set before the mint is refused outright (IDLE token)', async () => {
     const manager = registeredManager()
     parkGhost(manager)
 
-    // Resolving the parked turn brings the token to IDLE; a plant now
-    // wedges the current clock until something resumes it.
     await driveAcks(manager, () => manager.getTurnTokenState() === 'IDLE')
     manager.freezeCombat('turn-in-flight')
-    expect(manager.getFreezeReasons()).toContain('turn-in-flight')
-    expect(manager.getCombatClockState()).toBe('frozen')
+    expect(manager.getFreezeReasons()).not.toContain('turn-in-flight')
 
-    // A fresh mint with the plant still latched: the step-7 snapshot sees
-    // IDLE + foreign reason and strips it.
     manager.turnBattleOps.startBattleWithPlayer(makePlayer(), makeDummyEnemy('after_plant'))
     expect(manager.getFreezeReasons()).not.toContain('turn-in-flight')
 
@@ -533,7 +531,9 @@ describe('r39 INT - F: unclosed siblings of the fixed classes', () => {
   // pauses, but the update-install flush pause (useUpdates pauseAdmission)
   // shows no overlay, and the seam is also live for any programmatic
   // abandon under an owned freeze.
-  it.fails('an owned authority-pause latch carries through abandon -> restart', () => {
+  // Post-adjudication pin (r39 Mediums): park-before-stop + parked carry -
+  // the latch survives the boundary and lands on the next mint.
+  it('an owned authority-pause latch carries through abandon -> restart', () => {
     vi.useFakeTimers()
     const manager = registeredManager()
     parkGhost(manager)

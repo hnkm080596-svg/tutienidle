@@ -86,6 +86,14 @@ onMounted(() => {
 // tab-hidden via useCombatPause.
 const userPaused = ref(false)
 
+// r39 adjudication - this button owns the 'user-pause' latch: the clock
+// accepts an arm only while userPaused holds, so a foreign emit-listener
+// plant cannot wedge the battle behind a button showing unpaused.
+const unregisterUserPauseTruth = gameManager.registerFreezeLatchTruth(
+  'user-pause',
+  () => userPaused.value,
+)
+
 function togglePause(): void {
   // Pausing only means something while the clock can run - a click on
   // the result screen would just latch the seal look without freezing
@@ -115,6 +123,7 @@ watch(battle, () => {
 // the ops-level clock would keep 'user-pause' with no UI left to clear
 // it - release the reason with the button that owns it.
 onUnmounted(() => {
+  unregisterUserPauseTruth()
   if (userPaused.value) {
     gameManager.resumeCombat('user-pause')
   }
