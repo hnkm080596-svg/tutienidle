@@ -5,7 +5,7 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import EquipmentArtCard from './equipment/EquipmentArtCard.vue'
 import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
 import EquipmentEnergyTube from './equipment/EquipmentEnergyTube.vue'
-import SkillNodeArtButton from './SkillNodeArtButton.vue'
+import SkillNodeArtButton from '@/components/common/SkillNodeArtButton.vue'
 const { t } = useI18n()
 const selected = shallowRef(2)
 const gold = shallowRef(false)

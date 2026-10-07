@@ -130,7 +130,7 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     // The starter slot renders as a cosmetic preview strip (approved
     // creation design) - it never enters the creation payload, which stays
     // name + talent only (asserted by the unit suite).
-    await expect(creation.locator('[data-hk-region="starter-slot"]')).toBeVisible()
+    await expect(creation.locator('[data-hk-region="dao-lo"]')).toBeVisible()
     // The retired attribute pick must not exist at all.
     await expect(creation.locator('[data-testid^="creation-attribute-"]')).toHaveCount(0)
     // No sword/body/hidden way chooser.
@@ -140,7 +140,7 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
 
   test('command wheel renders no scope-hidden slots', async ({ page }) => {
     await bootFreshMortal(page)
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const slots = page.locator('[data-wheel-slot]')
     await expect(slots.first()).toBeVisible({ timeout: 10_000 })
     const rendered = await slots.evaluateAll((els) =>
@@ -151,30 +151,45 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     }
   })
 
-  test('home building icons render no worker lodge', async ({ page }) => {
+  test('home building affordances render no worker lodge', async ({ page }) => {
     await bootFreshMortal(page)
-    const icons = page.locator('[data-building-id]')
-    await expect(icons.first()).toBeVisible({ timeout: 10_000 })
-    const rendered = await icons.evaluateAll((els) =>
-      els.map((el) => el.getAttribute('data-building-id')),
+    // Buildings no longer mount vista hotspots - they live only as wheel
+    // slots, so the absence check reads the rendered slot ids.
+    await page.keyboard.press('`')
+    const slots = page.locator('[data-wheel-slot]')
+    await expect(slots.first()).toBeVisible({ timeout: 10_000 })
+    const rendered = await slots.evaluateAll((els) =>
+      els.map((el) => el.getAttribute('data-wheel-slot')),
     )
     for (const id of SCOPE_HIDDEN_BUILDINGS) {
-      expect(rendered, `building icon ${id} must be absent`).not.toContain(id)
+      expect(rendered, `building slot ${id} must be absent`).not.toContain(id)
     }
   })
 
   test('equipment hall renders only enhance + dissolve tabs', async ({ page }) => {
     await bootFreshMortal(page)
     await openLeftMode(page, 'equipment_hall')
-    const overlay = page.getByTestId('function-overlay-panel')
-    await expect(overlay).toBeVisible({ timeout: 10_000 })
-    const tabs = overlay.locator('.qi-hall__tabs [role="tab"]')
-    await expect(tabs.first()).toBeVisible({ timeout: 10_000 })
-    await expect(tabs).toHaveCount(2)
-    const labels = (await tabs.allTextContents()).map((label) => label.trim())
-    expect(labels.sort()).toEqual([...BETA_EQUIPMENT_TAB_LABELS].sort())
+    const scene = page.locator('.equipment-scene')
+    await expect(scene).toBeVisible({ timeout: 10_000 })
+    // Fidelity workspace rail: Trang Bi + 5 op seals. Beta admits only
+    // enhance + dissolve - wash/refine/decompose render as disabled
+    // shells (never mount their component).
+    const tabs = scene.locator('.equipment-workspace nav button')
+    await expect(tabs).toHaveCount(6, { timeout: 10_000 })
+    const tabIds = ['equip', 'enhance', 'wash', 'refine', 'dissolve', 'decompose']
+    for (const [index, id] of tabIds.entries()) {
+      const betaAdmits = ['equip', 'enhance', 'dissolve'].includes(id)
+      if (betaAdmits) {
+        await expect(tabs.nth(index), `workspace tab "${id}"`).toBeEnabled()
+      } else {
+        await expect(tabs.nth(index), `workspace tab "${id}"`).toBeDisabled()
+      }
+    }
     for (const label of SCOPE_HIDDEN_EQUIPMENT_TAB_LABELS) {
-      expect(labels, `equipment tab "${label}" must be absent`).not.toContain(label)
+      expect(
+        await scene.locator('.equipment-workspace__body').getByText(label, { exact: true }).count(),
+        `equipment tab "${label}" must not mount`,
+      ).toBe(0)
     }
   })
 
@@ -192,15 +207,17 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
   }) => {
     await bootFreshMortal(page)
     await openStandalone(page, 'realm')
-    const nodes = page.locator('.realm-node')
-    await expect(nodes.first()).toBeVisible({ timeout: 10_000 })
-    // mortal rung (prepended) + Kien Co + Truc Co.
-    await expect(nodes).toHaveCount(3)
+    // Realm v2 surface: the ascension map paints only the current
+    // realm's floors (mortal = 18 markers) - no realm ladder, so
+    // scope-hidden realm names and coming-soon chips never render.
+    const scene = page.locator('.realm-paper-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    await expect(scene.locator('.realm-marker')).toHaveCount(18)
     await expect(page.getByText(COMING_SOON_LABEL)).toHaveCount(0)
     for (const label of SCOPE_HIDDEN_REALM_LABELS) {
       await expect(
-        page.locator('.realm-node').getByText(label, { exact: true }),
-        `realm node "${label}" must be absent`,
+        scene.getByText(label, { exact: true }),
+        `realm label "${label}" must be absent`,
       ).toHaveCount(0)
     }
   })
@@ -228,13 +245,13 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     await bootFreshMortal(page)
 
     // Stage select via the wheel's teleport array, then start dong_1.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
-    const overlay = page.getByTestId('function-overlay-panel')
-    await expect(overlay).toBeVisible({ timeout: 10_000 })
-    const start = page.getByTestId('stage-start-button')
+    const scene = page.locator('.exploration-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    const start = scene.getByTestId('stage-start-button')
     await expect(start).toBeEnabled({ timeout: 10_000 })
     await start.click()
 

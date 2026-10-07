@@ -91,7 +91,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     await shot(page, '03-dong-fu-closed')
 
     // Wheel open state - Tab is the shipped shortcut.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const wheel = page.locator('[data-wheel-slot="settings"]')
     await expect(wheel).toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(700)
@@ -140,7 +140,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     await createBetaCharacter(page, 'Fidelity Battle')
     await enterHome(page)
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
@@ -192,7 +192,7 @@ test.describe('huyen-kim reference fidelity - scene capture', () => {
     // Continue home, then re-enter the same stage for the defeat frame.
     await victory.getByRole('button', { name: /Tiếp Tục/ }).click()
     await waitForPresentationIdle(page)
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
     await expect(scroll).toBeVisible({ timeout: 15_000 })

@@ -239,7 +239,7 @@
       }
     },
     "skillPath": {
-      "title": "Kỹ Năng",
+      "title": "Công Pháp",
       "mortalName": "Phàm Nhân",
       "technique": {
         "title": "Tâm Pháp",
@@ -248,7 +248,7 @@
         "emptyNoTechnique": "Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận",
         "gradeAction": "Nâng Cảnh",
         "gradeNode": "Phẩm {grade}",
-        "cardTitle": "Công Pháp",
+        "cardTitle": "Tâm Pháp",
         "helpAria": "Trợ giúp công pháp",
         "qualityLine": "Phẩm: {quality}",
         "gradeTrackTitle": "Cảnh Giới Công Pháp",
@@ -504,9 +504,9 @@
         "group": "Bảng lệnh Động Phủ"
       },
       "slots": {
-        "character": "Nhân Vật",
+        "character": "Tu Sĩ",
         "realm": "Cảnh Giới",
-        "skill": "Kỹ Năng",
+        "skill": "Công Pháp",
         "quest": "Nhiệm Vụ",
         "phap_bao": "Pháp Bảo",
         "talisman_slot": "Phù",
@@ -1091,7 +1091,7 @@
       "skillOverride": "Cường hóa {slot} ({detail})"
     },
     "skills": {
-      "title": "Kỹ Năng",
+      "title": "Công Pháp",
       "slots": {
         "basic": "Cơ Bản",
         "special": "Đặc Biệt",
@@ -1278,7 +1278,7 @@
         "register": "Lập đạo danh"
       },
       "guest": {
-        "button": "Chơi khách"
+        "button": "Chơi Ngay"
       },
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
@@ -1292,11 +1292,19 @@
         "confirm": "Rời phiên khách"
       },
       "begin": "Bắt Đầu",
-      "createAccount": "Tạo Tài Khoản",
-      "returnOpening": "Quay lại"
+      "createAccount": "Đăng Ký",
+      "returnOpening": "Quay lại",
+      "exit": {
+        "title": "Thoát Game",
+        "question": "Bạn muốn thoát game?",
+        "cancel": "Ở Lại",
+        "confirm": "Thoát",
+        "exited": "Đã thoát",
+        "return": "Quay Lại"
+      }
     },
     "creation": {
-      "back": "← Trở lại",
+      "back": "Quay Lại",
       "headerKicker": "KHAI MỆNH",
       "headerTitle": "Tạo Nhân Vật",
       "nameStep": {
@@ -1310,24 +1318,16 @@
       },
       "talentStep": {
         "kicker": "THIÊN MỆNH",
-        "sectionTitle": "Thiên Phú",
+        "sectionTitle": "Chọn Thiên Phú",
         "title": "Chọn một Thiên Phú",
         "selected": "Đã chọn {count} / 1",
         "rolling": "Đang quan sát thiên cơ…",
         "reroll": "↻ Đổi thiên phú",
         "hint": "Chọn 1 thiên phú khởi đầu",
-        "tags": {
-          "combat": "Chiến Đấu",
-          "crafting": "Chế Tạo",
-          "cultivation": "Tu Luyện",
-          "defense": "Phòng Thủ",
-          "mechanic": "Cơ Quan",
-          "resource": "Tài Nguyên",
-          "risk_reward": "Mạo Hiểm",
-          "skill": "Kỹ Năng"
-        }
+        "locked": "Chưa lộ",
+        "randomAll": "Ngẫu nhiên các phần chưa chọn"
       },
-      "finish": "Bước vào tiên đồ",
+      "finish": "Bắt Đầu Tu Hành",
       "creating": "Đang lập mệnh…",
       "errors": {
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
@@ -1341,7 +1341,18 @@
         "pending": "Sẽ hiển thị sau khi chọn Thiên Phú"
       },
       "chooseOne": "Chọn một",
-      "hoverDetail": "Di chuột để xem chi tiết"
+      "hoverDetail": "Di chuột để xem chi tiết",
+      "pathStep": {
+        "sectionTitle": "Đạo Lộ Khởi Đầu",
+        "description": "Đạo lộ của đạo hữu đã định — con đường tu hành bắt đầu từ Pháp Tu.",
+        "paths": {
+          "tuKiem": "Tu Kiếm",
+          "lyHoa": "Lý Hỏa",
+          "tuPhap": "Tu Pháp",
+          "tuThe": "Tu Thể",
+          "hidden": "?"
+        }
+      }
     }
   },
   "skillResource": {
@@ -1772,7 +1783,7 @@
     },
     "topBar": {
       "aria": "Thanh trạng thái Động Phủ",
-      "identityAria": "Mở bảng Nhân Vật",
+      "identityAria": "Mở bảng Tu Sĩ",
       "cultivation": "Tiến độ tu vi",
       "realmLine": "{realm} · Tầng {level}",
       "feedback": "Thư",
@@ -1999,18 +2010,43 @@
   "dongFu": {
     "aria": "Động Phủ",
     "toggleWheel": "Ẩn / hiện vòng chức năng",
+    "railOpen": "Mở thanh điều hướng",
+    "railClose": "Đóng thanh điều hướng",
     "buildingHint": "Chạm để xem",
     "sceneTitle": "THANH VÂN ĐỘNG THIÊN",
     "sceneSubtitle": "Một niệm thanh tĩnh · Vạn pháp quy nguyên",
     "view": "Xem",
-    "unhandled": "Chức năng này chưa mở."
+    "unhandled": "Chức năng này chưa mở.",
+    "nav": {
+      "home": "Động Phủ",
+      "character": "Tu Sĩ",
+      "skill": "Công Pháp",
+      "equipment": "Trang Bị",
+      "body": "Luyện Thể",
+      "technique": "Tâm Pháp",
+      "realm": "Cảnh Giới",
+      "inventory": "Trữ Vật",
+      "alchemy": "Luyện Đan",
+      "formation": "Trận Pháp",
+      "exploration": "Bản Đồ",
+      "quest": "Nhiệm Vụ",
+      "production": "Sản Xuất",
+      "vendor": "Thương Hội",
+      "settings": "Cài Đặt",
+      "feedback": "Trợ Giúp",
+      "artifact": "Pháp Bảo",
+      "companion": "Đồng Hành",
+      "guild": "Bang Hội",
+      "sect": "Tông Môn",
+      "portal": "Bí Cảnh"
+    }
   },
   "paperNav": {
     "navigation": "Chức năng",
     "realm": "Cảnh Giới",
-    "character": "Nhân Vật",
+    "character": "Tu Sĩ",
     "inventory": "Kho Vật",
-    "skill": "Kỹ Năng",
+    "skill": "Công Pháp",
     "technique": "Tâm Pháp",
     "body": "Luyện Thể",
     "alchemy": "Đan Phòng",
@@ -2028,11 +2064,11 @@
     "elements": "Ngũ Hành",
     "path": "Đạo lộ",
     "lyHoaDao": "Ly Hỏa Chi Đạo",
-    "lyHoaVerse": "離宮真火焚天地 · 三昧神光煉古今",
+    "lyHoaVerse": "Ly Cung Chân Hỏa Phần Thiên Địa · Tam Muội Thần Quang Luyện Cổ Kim",
     "power": "Chiến Lực",
     "details": "Chi Tiết",
-    "combat": "Chiến Đấu",
-    "other": "Khác",
+    "offense": "Công",
+    "defense": "Thủ",
     "statNotice": "{name}: {value}",
     "elementNotice": "{name} · Lực {power} · Kháng {resistance} · Xuyên {penetration}",
     "sources": {
@@ -2041,7 +2077,7 @@
       "bodyDelta": "Luyện Thể",
       "realm": "Cảnh Giới",
       "technique": "Tâm Pháp",
-      "skill": "Kỹ Năng",
+      "skill": "Công Pháp",
       "buff": "Buff",
       "debuff": "Debuff",
       "equipment": "Trang Bị",
@@ -2051,7 +2087,10 @@
       "formation": "Trận Pháp",
       "talisman": "Phù",
       "attribute": "Thuộc Tính"
-    }
+    },
+    "powerSources": "Chiến Lực Đến Từ",
+    "powerFormula": "might×2 + defense×1.5 + maxHp×0.1 + maxMp×0.05 + critRate×500 + critDmg×300 + speed×200",
+    "daoUndecided": "Chưa Chọn Đạo"
   },
   "realm": {
     "title": "ĐƯỜNG ĐĂNG TIÊN",
@@ -2081,7 +2120,7 @@
     "advanceNotice": "Tâm pháp đã lên {grade}."
   },
   "skill": {
-    "title": "Kỹ Năng",
+    "title": "Công Pháp",
     "navigation": "Chức năng",
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
     "elements": "Ngũ Hành",
@@ -2089,6 +2128,16 @@
     "levelLabel": "Cấp",
     "grants": "Kỹ năng",
     "infoCasts": "Số lần xuất chiêu",
+    "level": "Cấp Độ",
+    "experience": "Kinh Nghiệm",
+    "stats": "Chỉ Số",
+    "statDamage": "Sát Thương",
+    "statHeal": "Hồi Phục",
+    "statAilmentChance": "Tỉ lệ áp hiệu ứng",
+    "statCooldown": "Hồi Chiêu",
+    "statCost": "Tiêu Hao",
+    "damageTypePhysical": "Vật Lý",
+    "damageTypePrimordial": "Nguyên Tổ",
     "effects": "Hiệu Ứng",
     "conditions": "Điều Kiện",
     "noConditions": "Không có điều kiện bổ sung.",
@@ -2098,11 +2147,16 @@
       "locked": "Chưa Đủ Điều Kiện"
     },
     "actionDone": "{name} đã cập nhật.",
+    "holdToAct": "Giữ node để {action}.",
     "actionFailed": "Không thể thực hiện — kiểm tra điều kiện và Cảm Ngộ.",
     "constellation": {
       "legendGlyph": "Nét chữ",
       "legendPrereq": "Điều kiện",
       "canvas": "Chòm sao {glyph}"
+    },
+    "designMode": {
+      "ultimatePlaceholder": "Chưa Lộ",
+      "ultimateLocked": "Chưa lộ — tuyệt kỹ chưa được tạo."
     }
   },
   "body": {
@@ -2221,5 +2275,19 @@
   },
   "pcUi": {
     "back": "Trở Về"
+  },
+  "talents": {
+    "features": "Đặc Điểm",
+    "tags": {
+      "combat": "Chiến Đấu",
+      "crafting": "Chế Tạo",
+      "cultivation": "Tu Luyện",
+      "defense": "Phòng Thủ",
+      "mechanic": "Cơ Quan",
+      "resource": "Tài Nguyên",
+      "risk_reward": "Mạo Hiểm",
+      "skill": "Công Pháp",
+      "element": "Nguyên Tố"
+    }
   }
 }

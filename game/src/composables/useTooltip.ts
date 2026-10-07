@@ -215,6 +215,28 @@ export interface StatBreakdownTooltipContent {
   sections: TooltipSection[]
 }
 
+// Talent tooltip (creation offer + character seals + entitlement) - the
+// compact identity card: icon + name + rarity meta + description + the
+// tag feature list. Single builder at useTalentTooltip.ts - every
+// talent surface reads it, none formats its own.
+export interface TalentTooltipContent {
+  kind: 'talent'
+
+  name: string
+
+  rarityLabel: string
+
+  rarity: string
+
+  imagePath?: string
+
+  description?: string
+
+  featuresLabel: string
+
+  tagLabels: string[]
+}
+
 export type TooltipContent =
   | PlainTooltipContent
   | TechniqueTooltipContent
@@ -223,6 +245,7 @@ export type TooltipContent =
   | BuildingTooltipContent
   | ElementTooltipContent
   | StatBreakdownTooltipContent
+  | TalentTooltipContent
 
 // State module-level (khong phai Pinia) - chi 1 tooltip hien thi
 // tai 1 thoi diem trong toan game, khong can theo doi lich su/persist.

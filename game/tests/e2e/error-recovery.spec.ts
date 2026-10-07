@@ -66,7 +66,7 @@ test.describe('Reload recovery', () => {
     await reauthAndEnterHome(page)
 
     // Home hoat dong lai - command wheel mo duoc bang Tab.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     await expect(page.locator('[data-wheel-slot="teleport_array"]')).toBeVisible({ timeout: 10_000 })
   })
 })

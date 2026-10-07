@@ -13,9 +13,10 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm, CORE_REALM_LEVEL } from '@/core/realm/realmSystem'
 import { betaNextRealmSurfaceFor } from '@/core/betaScopeSurface'
+import { isActivePath } from '@/core/player/CultivationPathSystem'
+import { isScopeHidden } from '@/core/betaScope'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
@@ -30,7 +31,6 @@ const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
-const { items: navItems, navigate } = usePaperNavigation()
 
 const selected = ref(0)
 const notice = ref('')
@@ -89,6 +89,9 @@ const model = computed<RealmUiModel>(() => {
     ctaLabel: majorLabel,
     ctaVisible: Boolean(nextRealmSurface.value),
     ctaEnabled: canBreakthrough.value,
+    // R13 ruling (2026-10-06): the sword-path Quan Khi re-entry moved
+    // out of Nhan Vat into Canh Gioi - same gate it carried there.
+    quanKhiEntry: isActivePath(player, 'sword') && !isScopeHidden('swordPath'),
   }
 })
 
@@ -101,6 +104,10 @@ function onBreakthrough() {
   if (!canBreakthrough.value) return
   requirement.open()
 }
+
+function onQuanKhi() {
+  ui.openStandalonePanel('quan_khi')
+}
 </script>
 
 <template>
@@ -109,10 +116,10 @@ function onBreakthrough() {
       :model="model"
       :selected="selected || model.currentFloor"
       :notice="notice"
-      :navigation="navItems"
+     
       @select-floor="onSelectFloor"
-      @navigate="navigate"
       @breakthrough="onBreakthrough"
+      @quan-khi="onQuanKhi"
       @back="ui.closeHomeOverlays()"
     />
   </SceneDesignCanvas>

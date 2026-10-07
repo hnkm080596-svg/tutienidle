@@ -110,10 +110,12 @@ function close() {
        Luyen Dan / Khi Duong / Cai Dat scene) - they mount outside the
        imperial scroll while keeping the same mode/beta-gate/close
        contract. -->
-  <StageSelectPanel v-if="paperMode === 'stage_select'" />
-  <PillRoomPanel v-else-if="paperMode === 'pill_room'" />
-  <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
-  <SettingsSurface v-else-if="paperMode === 'settings'" />
+  <Transition name="th-panel-swap">
+    <StageSelectPanel v-if="paperMode === 'stage_select'" />
+    <PillRoomPanel v-else-if="paperMode === 'pill_room'" />
+    <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
+    <SettingsSurface v-else-if="paperMode === 'settings'" />
+  </Transition>
 
   <!-- Imperial scroll scenes: San Xuat (production outpost) is the
        last surface still on the shared scroll shell. -->

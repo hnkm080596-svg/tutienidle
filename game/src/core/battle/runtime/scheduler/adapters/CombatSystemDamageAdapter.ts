@@ -77,6 +77,7 @@ import { getResistanceMitigationPercent } from '../../../../combat/Resistance'
 import type { CombatAuthorityExecutionContext } from '../../../contracts/context'
 import type { CombatEntityId } from '../../../contracts/ids'
 import type { DealDamageOperation } from '../../../contracts/operations'
+import type { StatType } from '../../../../stats/StatTypes'
 
 import type { DamageAuthority } from '../CombatAuthorityPorts'
 import { CombatOperationSkip } from '../CombatOperationExecutor'
@@ -344,6 +345,18 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     // Stacks late bindings resolve into this field pre-resolve).
     if (op.elementalPenetrationBonus !== undefined) {
       options.elementalPenetrationBonus = op.elementalPenetrationBonus
+    }
+
+    // Hoa lane / Tam Muoi trades (Minh rulings 2026-10-06) -- cast-
+    // scoped stat deltas fold into scopedStats (sum per stat); the
+    // hit line reads a cloned stat view, vitals/triggers stay on the
+    // real entity. Same merge semantics as TBS.withCastModifiers.
+    if (op.castModifiers !== undefined && op.castModifiers.length > 0) {
+      const scoped: Partial<Record<StatType, number>> = { ...(options.scopedStats ?? {}) }
+      for (const entry of op.castModifiers) {
+        scoped[entry.stat] = (scoped[entry.stat] ?? 0) + entry.value
+      }
+      options.scopedStats = scoped
     }
 
     return options

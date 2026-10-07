@@ -623,3 +623,87 @@ describe('CombatSystemDamageAdapter -- CombatRng contract', () => {
     expect(streams.size).toBeGreaterThan(1)
   })
 })
+
+describe('CombatSystemDamageAdapter -- castModifiers (Hoa lane / Tam Muoi trades)', () => {
+  // Element-tagged hit on a zero-resistance target: power = might +
+  // elementPower lands unmitigated, so scoped deltas move the result
+  // by exactly their declared amount.
+  const fireHit = (
+    h: Harness,
+    targetId: string,
+    mods?: DealDamageOperation['payload']['castModifiers'],
+  ) =>
+    h.adapter.dealDamage(
+      payload({
+        targetId,
+        damageProfile: 'skill_hit',
+        coefficient: 1,
+        canCrit: false,
+        canMiss: false,
+        element: 'fire',
+        ...(mods !== undefined ? { castModifiers: mods } : {}),
+      }),
+      h.ctx(),
+    )
+
+  it('folds payload castModifiers into scopedStats: scoped skillDamagePercent doubles the hit, source stats untouched', () => {
+    const attacker = makeEntity('source', { might: 10, firePower: 90, skillDamagePercent: 0 })
+    const tBare = makeEntity('target', { maxHp: 10_000, fireResistance: 0, defense: 0, enduranceThreshold: 0, blockChance: 0, evasionRate: 0 }, { currentHp: 10_000 })
+    const tScoped = makeEntity('scoped', { maxHp: 10_000, fireResistance: 0, defense: 0, enduranceThreshold: 0, blockChance: 0, evasionRate: 0 }, { currentHp: 10_000 })
+    const h = makeHarness([attacker, tBare, tScoped], { engineSource: () => 0.999999 })
+
+    const bare = fireHit(h, 'target')
+    const scoped = fireHit(h, 'scoped', [{ stat: 'skillDamagePercent', value: 1 }])
+
+    // might 10 + firePower 90 = 100 power x coeff 1; scoped +100%
+    // skillDamagePercent doubles the multiplier line -> 200.
+    expect(bare.hpDamage).toBe(100)
+    expect(scoped.hpDamage).toBe(200)
+    // Scope is a per-hit clone -- the entity's real stat never moved.
+    expect(attacker.stats.skillDamagePercent).toBe(0)
+  })
+
+  it('scopes finalDamagePercent AND leechPercent through resolveAttack (statSource view reaches the absorb layer)', () => {
+    // A scoped finalDamagePercent is the REV-B boundary case: it lives
+    // behind resolveAttack's post-absorb multiplier, not the pre-absorb
+    // hit line. The scoped clone must ride into resolveAttack's stat
+    // reads while leech keeps healing the REAL entity.
+    const attacker = makeEntity('source', {
+      maxHp: 10_000,
+      might: 10,
+      firePower: 90,
+      finalDamagePercent: 0,
+      leechPercent: 0,
+    })
+    const tBare = makeEntity('target', { maxHp: 10_000, fireResistance: 0, defense: 0, enduranceThreshold: 0, blockChance: 0, evasionRate: 0 }, { currentHp: 10_000 })
+    const tScoped = makeEntity('scoped', { maxHp: 10_000, fireResistance: 0, defense: 0, enduranceThreshold: 0, blockChance: 0, evasionRate: 0 }, { currentHp: 10_000 })
+    const h = makeHarness([attacker, tBare, tScoped], { engineSource: () => 0.999999 })
+    attacker.currentHp = 50
+
+    const bare = fireHit(h, 'target')
+    const scoped = fireHit(h, 'scoped', [
+      { stat: 'finalDamagePercent', value: 1 },
+      { stat: 'leechPercent', value: 0.25 },
+    ])
+
+    // Scoped finalDamagePercent x2 applies AFTER the hit line through
+    // resolveAttack's statSource view; scoped leechPercent 0.25 (the
+    // StatMetadata cap) heals the real source for a quarter of the
+    // landed hpDamage.
+    expect(bare.hpDamage).toBe(100)
+    expect(scoped.hpDamage).toBe(200)
+    expect(attacker.currentHp).toBe(100)
+    expect(attacker.stats.finalDamagePercent).toBe(0)
+    expect(attacker.stats.leechPercent).toBe(0)
+  })
+
+  it('leaves options.scopedStats absent when the payload carries no castModifiers (identity passthrough)', () => {
+    const attacker = makeEntity('source', { might: 10, firePower: 90 })
+    const target = makeEntity('target', { maxHp: 10_000, fireResistance: 0, defense: 0, enduranceThreshold: 0, blockChance: 0, evasionRate: 0 }, { currentHp: 10_000 })
+    const h = makeHarness([attacker, target], { engineSource: () => 0.999999 })
+
+    const result = fireHit(h, 'target')
+    expect(result.hpDamage).toBe(100)
+    expect(target.currentHp).toBe(10_000 - result.hpDamage)
+  })
+})

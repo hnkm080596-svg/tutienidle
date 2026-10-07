@@ -27,11 +27,9 @@ import { isBetaEquipmentTab } from '@/core/betaScope'
 import { HALL_SELECTION_KEY } from '@/components/panels/equipment-hall/hallSelection'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import EquipmentFidelityScene from './fidelity/EquipmentFidelityScene.vue'
 import EquipmentPaperdollStage from './paperdoll/EquipmentPaperdollStage.vue'
 import EquipmentBagSection from '@/components/panels/bag-sections/EquipmentBagSection.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import EnhanceTab from '@/components/panels/equipment-hall/EnhanceTab.vue'
 import WashTab from '@/components/panels/equipment-hall/WashTab.vue'
 import RefineTab from '@/components/panels/equipment-hall/RefineTab.vue'
@@ -41,11 +39,13 @@ import type { Stats } from '@/core/stats/StatBlock'
 
 
 const furnaceArtUrl = resolveAssetUrl('/assets/ui/huyen-kim/scene/forge-v2/furnace-v1.png')
+const cardArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
+const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-tab-brush-v1.png')
+const dividerBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png')
 
 const { t } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
-const { items: navItems, navigate } = usePaperNavigation()
 const { stateVersion } = useStateVersion()
 
 // Canonical authored op table (same ids the old shell declared): all 5
@@ -128,9 +128,8 @@ const summaryRows = computed(() => {
        behind the paper instead of the home vista). -->
   <SceneDesignCanvas overlay>
     <EquipmentFidelityScene
-      :navigation="navItems"
+     
       notice=""
-      @navigate="navigate"
       @back="ui.closeHomeOverlays()"
     >
       <template #doll>
@@ -144,7 +143,11 @@ const summaryRows = computed(() => {
       </template>
 
       <template #workspace>
-        <section class="equipment-workspace" :aria-label="t('equipment.title')">
+        <section
+          class="equipment-workspace"
+          :style="{ '--equipment-card-art': `url('${cardArt}')`, '--equipment-tab-brush': `url('${tabBrush}')`, '--equipment-divider': `url('${dividerBrush}')` }"
+          :aria-label="t('equipment.title')"
+        >
           <!-- LO REN hearth backdrop (ref forge workspace): decorative
                furnace art behind the op views only. -->
           <img
@@ -162,22 +165,11 @@ const summaryRows = computed(() => {
               :disabled="mode.locked"
               @click="selectWorkspace(mode.id)"
             >
-              <!-- Active seal: tab-seal chrome art (huyen-kim manifest) -
-                   drawn, not a CSS frame. -->
-              <InkNineSlice
-                v-if="activeWorkspace === mode.id"
-                class="nav-seal"
-                chrome-id="tab-seal"
-                layer="surface"
-              />
               <span class="nav-label">{{ mode.label }}</span>
             </button>
           </nav>
-          <!-- Under-tab divider: drawn divider-ornament line + endcap
-               diamonds (ref image 2 chrome), replaces the plain rule. -->
-          <div class="equipment-workspace__divider" aria-hidden="true">
-            <InkNineSlice chrome-id="divider-ornament" layer="surface" />
-          </div>
+          <!-- Under-tab divider: tien-hiep divider art line. -->
+          <div class="equipment-workspace__divider" aria-hidden="true" />
           <div class="equipment-workspace__body">
             <!-- Trang Bi tab: the unequipped gear grid (equip-on-click).
                  The bag-panel container anchor gives the section's
@@ -212,19 +204,22 @@ const summaryRows = computed(() => {
 }
 
 /* Production workspace: same rect as the ref's bag/forge region; the tab
-   bar mirrors the forge nav, the body mounts the real tabs verbatim. */
+   bar mirrors the preview's brush rail, and the body mounts the real
+   tabs verbatim inside the dark card frame. */
 .equipment-workspace {
   position: absolute;
   left: 700px;
   top: 178px;
   width: 678px;
   height: 507px;
-  padding-left: 20px;
+  padding: 10px 18px 14px;
   /* The workspace's right edge (x1378) sits ~33px onto the paper's 83px
      border frame - without matching padding right-side content (bag
      counts) renders under the torn rim. */
   padding-right: 40px;
-  border-left: 1px solid #a0875166;
+  border: 15px solid transparent;
+  border-image: var(--equipment-card-art) 90 fill / 15px stretch;
+  color: #f3e4c4;
   display: flex;
   flex-direction: column;
 }
@@ -253,22 +248,22 @@ const summaryRows = computed(() => {
   flex: 1;
   padding: 0 5px;
   border: 0;
-  color: #71532f;
+  color: #c9b184;
   background: transparent;
   font: 700 14px var(--font-display, Georgia, serif);
   cursor: pointer;
 }
-.equipment-workspace nav button .nav-seal {
-  /* tab-seal art is a dark seal tile - it needs a few px breathing room
-     so the curved strokes stay inside the button. */
-  inset: 2px 0;
-}
 .equipment-workspace nav .nav-label {
   position: relative;
   z-index: 2;
+  text-shadow: 0 1px 3px #2c1e08;
 }
+/* Brush streak reads as an underline accent below the label (preview
+   treatment), not a fill behind the text - keeps the label legible on
+   the dark card. */
 .equipment-workspace nav button[aria-pressed='true'] {
-  color: #f0e3c0;
+  color: #f7e4b5;
+  background: var(--equipment-tab-brush) center bottom / 88% auto no-repeat;
 }
 .equipment-workspace nav button:disabled {
   cursor: default;
@@ -276,12 +271,14 @@ const summaryRows = computed(() => {
 }
 .equipment-workspace__divider {
   position: relative;
-  height: 8px;
+  height: 21px;
   margin-bottom: 4px;
   flex: 0 0 auto;
+  background: var(--equipment-divider) center / contain no-repeat;
+  opacity: 0.8;
 }
 .equipment-workspace nav button:focus-visible {
-  outline: 2px solid #47765f;
+  outline: 2px solid #d6ad5d;
   outline-offset: 3px;
 }
 .equipment-workspace__body {

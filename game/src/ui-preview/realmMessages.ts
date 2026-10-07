@@ -20,5 +20,5 @@ export const realmMessages = { vi: {
   name: 'Kiến Cơ', progress: 'Tiến Độ Tu Luyện', cultivation: 'Tu vi', rate: 'Tốc độ', rateValue: '+120 / phút',
   breakthrough: 'Đột Phá', level: 'Cấp độ yêu cầu', chapter: 'Tiến độ chương', levelValue: 'Cấp 30', chapterValue: '8 / 10',
   preview: 'BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay', notice: 'Chỉ xem trước UI — chưa thực hiện đột phá.', navNotice: '{name} — chưa có bản duyệt trong màn này.',
-  nav: { realm: 'Cảnh Giới', character: 'Nhân Vật', inventory: 'Túi Đồ', skill: 'Kỹ Năng', technique: 'Tâm Pháp', body: 'Luyện Thể', alchemy: 'Luyện Đan', equipment: 'Trang Bị', exploration: 'Thám Hiểm', quest: 'Nhiệm Vụ', settings: 'Cài Đặt' },
+  nav: { realm: 'Cảnh Giới', character: 'Tu Sĩ', inventory: 'Túi Đồ', skill: 'Kỹ Năng', technique: 'Tâm Pháp', body: 'Luyện Thể', alchemy: 'Luyện Đan', equipment: 'Trang Bị', exploration: 'Thám Hiểm', quest: 'Nhiệm Vụ', settings: 'Cài Đặt' },
 } } as const

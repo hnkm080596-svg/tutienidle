@@ -76,7 +76,7 @@ import {
 import { equipment } from '@/data/equipment/equipment'
 import { materials } from '@/data/materials/materials'
 import { pills } from '@/data/pill/pills'
-import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
+import { NODE_ICON_MANIFEST, SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
 import { TECHNIQUES } from '@/data/technique/Techniques'
 import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 import { hoaCauCombatDescriptors, phapTheCombatDescriptors } from '@/game/support/HoaCauVfxAssets'
@@ -651,15 +651,43 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/tien-hiep-2026-10/controls/navigation-landscape-seam-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/navigation-connector-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-brush-circle-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png',
   '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png',
   '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-hover-v2.png',
   '/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png',
   '/assets/ui/tien-hiep-2026-10/controls/equipment-level-seal-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-tab-brush-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/skill-connection-pipe-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/skill-connection-pipe-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/skill-node-passive-v1.png',
+  // Minh's hand-drawn fire node set (SkillIconManifest NODE_ICON_MANIFEST)
+  '/assets/skills/nodes/ngo-hoa-v1.png',
+  '/assets/skills/nodes/tich-diem-v1.png',
+  '/assets/skills/nodes/dan-hoa-v1.png',
+  '/assets/skills/nodes/khac-an-v1.png',
+  '/assets/skills/nodes/liet-hoa-v1.png',
+  '/assets/skills/nodes/du-tan-v1.png',
+  '/assets/skills/nodes/thau-hoa-v1.png',
+  '/assets/skills/nodes/tu-diem-v1.png',
+  '/assets/skills/nodes/tan-diem-v1.png',
+  '/assets/skills/nodes/hoa-dao-tinh-thong-v1.png',
   '/assets/ui/tien-hiep-2026-10/realm/active-card-frame-v1.svg',
   '/assets/ui/tien-hiep-2026-10/icons/navigation-technique-v2.png',
+  '/assets/ui/tien-hiep-2026-10/realm/meditation-v1.png',
+  '/assets/ui/tien-hiep-2026-10/source/ink-panel-cutout-v3.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/answer-hover-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/answer-normal-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/answer-pressed-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/answer-selected-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/caption-plaque-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/countdown-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/hp-frame-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/question-panel-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/time-tube-v1.png',
+  '/assets/ui/tien-hiep-2026-10/tribulation/title-plaque-v1.png',
   // ConstellationNode dao-luan/rune node chrome (component literals, no
   // registry owner) and the approved mortal hero concept used across
   // G3 mocks + previews.
@@ -687,6 +715,7 @@ function collectItemIconUrls(): string[] {
   }
   for (const technique of TECHNIQUES) add(technique.icon)
   for (const url of Object.values(SKILL_ICON_MANIFEST)) add(url)
+  for (const url of Object.values(NODE_ICON_MANIFEST)) add(url)
   return [...urls]
 }
 

@@ -63,6 +63,23 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     // Realm-reward mastery seat - a spark nested inside the glyph's leg
     // junction (no prereq edge, so it carries no stroke).
     { nodeId: 'tinh_thong_hoa', x: 218, y: 195, labelPlacement: 'top' },
+    // ------------------------------------------------------------------
+    // Fire rulings 2026-10-06 - first-pass placement (design-mode will
+    // reseat): Ly Hoa hit chain ascends the inner-left arc; the Tam
+    // Muoi lane fans right of the Trang mark; the solo mana branch
+    // hangs off the left leg below Tich Diem.
+    { nodeId: 'hoa_diem_uy', x: 170, y: 122 },
+    { nodeId: 'hoa_hoa_nhan', x: 188, y: 92 },
+    { nodeId: 'hoa_pha_giap_diem', x: 202, y: 60 },
+    { nodeId: 'hoa_bao_diem', x: 188, y: 30 },
+    { nodeId: 'hoa_phe_diem', x: 162, y: 14 },
+    { nodeId: 'ngu_hoa', x: 372, y: 72 },
+    { nodeId: 'ngu_viem_tam', x: 362, y: 38 },
+    { nodeId: 'ngu_viem_y', x: 412, y: 52 },
+    { nodeId: 'ho_the_mon', x: 70, y: 148 },
+    { nodeId: 'nguyen_kinh', x: 48, y: 186 },
+    { nodeId: 'linh_chuong', x: 96, y: 194 },
+    { nodeId: 'the_diem_kinh', x: 34, y: 224 },
   ],
   strokes: [
     // Left-falling sweep (pie): top extension through the junction down
@@ -78,6 +95,21 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     { fromNodeId: 'hoa_linh_ngo', toNodeId: 'fire_ailment_mastery' },
     { fromNodeId: 'hoa_linh_ngo', toNodeId: 'linh_ngo_tam_muoi_chan_hoa' },
     { fromNodeId: 'hoa_linh_ngo', toNodeId: 'hoa_the' },
+    // Ly Hoa hit chain (root -> Uy -> Nhan -> Pha Giap -> Bao -> Phe).
+    { fromNodeId: 'hoa_linh_ngo', toNodeId: 'hoa_diem_uy' },
+    { fromNodeId: 'hoa_diem_uy', toNodeId: 'hoa_hoa_nhan' },
+    { fromNodeId: 'hoa_hoa_nhan', toNodeId: 'hoa_pha_giap_diem' },
+    { fromNodeId: 'hoa_pha_giap_diem', toNodeId: 'hoa_bao_diem' },
+    { fromNodeId: 'hoa_bao_diem', toNodeId: 'hoa_phe_diem' },
+    // Tam Muoi lane - three parallel children of the Trang mark.
+    { fromNodeId: 'linh_ngo_tam_muoi_chan_hoa', toNodeId: 'ngu_hoa' },
+    { fromNodeId: 'linh_ngo_tam_muoi_chan_hoa', toNodeId: 'ngu_viem_tam' },
+    { fromNodeId: 'linh_ngo_tam_muoi_chan_hoa', toNodeId: 'ngu_viem_y' },
+    // Solo mana branch off the root (Minh ruling).
+    { fromNodeId: 'hoa_linh_ngo', toNodeId: 'ho_the_mon' },
+    { fromNodeId: 'ho_the_mon', toNodeId: 'nguyen_kinh' },
+    { fromNodeId: 'ho_the_mon', toNodeId: 'linh_chuong' },
+    { fromNodeId: 'nguyen_kinh', toNodeId: 'the_diem_kinh' },
   ],
 }
 

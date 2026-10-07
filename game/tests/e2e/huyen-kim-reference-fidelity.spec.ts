@@ -8,52 +8,62 @@ import {
 } from './helpers'
 
 // huyen-kim reference fidelity - structural geometry assertions at the
-// canonical 1280x720 runtime space (design space 1672x941 x 0.7655).
-// Composition claims live in data-hk-scene / data-hk-region anchors so
-// selectors assert regions, not pixel snapshots of AI references.
+// canonical 1280x720 runtime space (design space 1440x810 scaled).
+// Composition claims live in data-hk-scene / data-hk-region anchors and the
+// G3 landscape chrome classes so selectors assert regions, not pixels.
 test.describe('huyen-kim reference fidelity', () => {
   test.use({ viewport: { width: 1280, height: 720 } })
 
-  test('S01 login: auth scroll is right-anchored, vista holds the left', async ({ page }) => {
+  test('S01 login: vista + logo opening, right-anchored credential drawer', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await page.goto('/')
     await page.waitForLoadState('domcontentloaded')
 
     const scene = page.locator('[data-hk-scene="login"]')
     await expect(scene).toBeVisible({ timeout: 15_000 })
-    const card = scene.locator('[data-hk-region="auth-card"]')
-    await expect(card).toBeVisible()
+    await waitForPresentationIdle(page)
 
     const rootBox = (await scene.boundingBox())!
-    const cardBox = (await card.boundingBox())!
-    // Plan example: card starts at least 56% across the root and stays
-    // fully inside it (design x=1016/1672 = 60.8%; 56% leaves slack for
-    // the 1280 runtime's tighter margin).
-    expect(cardBox.x).toBeGreaterThanOrEqual(rootBox.x + rootBox.width * 0.56)
-    expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(rootBox.x + rootBox.width + 1)
+    const logo = scene.locator('[data-hk-region="logo-block"]')
+    await expect(logo).toBeVisible()
+    const logoBox = (await logo.boundingBox())!
+    expect(logoBox.x).toBeGreaterThanOrEqual(rootBox.x)
+    expect(logoBox.x + logoBox.width).toBeLessThanOrEqual(rootBox.x + rootBox.width + 1)
 
-    const guest = card.locator('[data-hk-region="guest-action"]')
-    const primary = card.locator('[data-hk-region="primary-action"]')
-    await expect(guest).toBeVisible()
-    await expect(primary).toBeVisible()
-    const guestBox = (await guest.boundingBox())!
-    const primaryBox = (await primary.boundingBox())!
-    for (const box of [guestBox, primaryBox]) {
-      expect(box.x).toBeGreaterThanOrEqual(cardBox.x)
-      expect(box.x + box.width).toBeLessThanOrEqual(cardBox.x + cardBox.width + 1)
+    // Opening menu buttons all live inside the root.
+    for (const testid of [
+      'opening-login-button',
+      'opening-register-button',
+      'auth-guest-button',
+      'opening-settings-button',
+      'opening-exit-button',
+    ]) {
+      const button = scene.getByTestId(testid)
+      await expect(button).toBeVisible()
+      const box = (await button.boundingBox())!
+      expect(box.x + box.width).toBeLessThanOrEqual(rootBox.x + rootBox.width + 1)
       expect(box.y + box.height).toBeLessThanOrEqual(rootBox.y + rootBox.height + 1)
     }
 
-    // Real chrome path: the card must paint the delivered scroll art
-    // (border-image on the InkNineSlice), not the retired CSS chrome.
-    const slice = card.locator('.ink-nine-slice').first()
-    const painted = await slice.evaluate((el) => {
-      const s = getComputedStyle(el)
-      return { border: s.borderImageSource, mask: s.webkitMaskBoxImageSource }
-    })
-    expect(`${painted.border}${painted.mask}`).toContain('surface-xl-scroll')
+    // Login drawer slides in right-anchored and holds the credential form.
+    await scene.getByTestId('opening-login-button').click()
+    const drawer = page.getByTestId('entry-drawer')
+    await expect(drawer).toBeVisible()
+    const drawerBox = (await drawer.boundingBox())!
+    // Right-anchored panel: starts right of ~45% of the root, right edge
+    // kisses the viewport edge (design right:18px x scale).
+    expect(drawerBox.x).toBeGreaterThanOrEqual(rootBox.x + rootBox.width * 0.4)
+    expect(drawerBox.x + drawerBox.width).toBeLessThanOrEqual(rootBox.x + rootBox.width + 1)
 
-    await waitForPresentationIdle(page)
+    const form = drawer.locator('[data-hk-region="form"]')
+    await expect(form).toBeVisible()
+    await expect(drawer.locator('#auth-input-id')).toBeVisible()
+    await expect(drawer.locator('#auth-input-password')).toBeVisible()
+    await expect(drawer.locator('[data-hk-region="primary-action"]')).toBeVisible()
+
+    await page.getByTestId('entry-drawer-close').click()
+    await expect(drawer).toHaveCount(0)
+
     assertNoBrowserErrors(errors)
   })
 
@@ -74,8 +84,9 @@ test.describe('huyen-kim reference fidelity', () => {
 
     const rootBox = (await creation.boundingBox())!
     const cardBox = (await card.boundingBox())!
-    // Right-anchored panel: starts right of the midpoint, stays in root.
-    expect(cardBox.x).toBeGreaterThanOrEqual(rootBox.x + rootBox.width * 0.52)
+    // Right-anchored panel: starts right of ~40% (measured 48.6% at the
+    // 1280 runtime for the approved trial board), stays in root.
+    expect(cardBox.x).toBeGreaterThanOrEqual(rootBox.x + rootBox.width * 0.4)
     expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(rootBox.x + rootBox.width + 1)
 
     // 3x3 grid: nine cards on exactly three columns, two rows of three
@@ -110,10 +121,10 @@ test.describe('huyen-kim reference fidelity', () => {
     await page.locator('[data-hk-region="talent-grid"] button').first().click()
     await page.getByTestId('creation-finish').click()
     await enterHome(page)
-    await expect(page.locator('.home-scene')).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('[data-hk-scene="dong-fu"]')).toBeVisible({ timeout: 15_000 })
   })
 
-  test('S03 dong-fu: hud regions, vertical plaques, two-orbit wheel', async ({ page }) => {
+  test('S03 dong-fu: landscape chrome - profile, rail, wheel, board', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootToGuestHome(page)
     await page.getByTestId('creation-name-input').fill('Fidelity Dong Fu')
@@ -125,59 +136,49 @@ test.describe('huyen-kim reference fidelity', () => {
     const scene = page.locator('[data-hk-scene="dong-fu"]')
     await expect(scene).toBeVisible({ timeout: 15_000 })
 
-    // Top bar: inside the viewport, icon-only utility seals (no text
-    // overflow past the right edge), exactly three spirit-stone pills.
-    const topBar = page.locator('[data-hk-region="top-bar"]')
-    await expect(topBar).toBeVisible()
-    const topBox = (await topBar.boundingBox())!
-    expect(topBox.x + topBox.width).toBeLessThanOrEqual(1280 + 1)
-    await expect(topBar.locator('.currency-hud__chip')).toHaveCount(3)
-    const seals = topBar.locator('.global-top-bar__seal')
-    expect(await seals.count()).toBeGreaterThanOrEqual(3)
+    // Landscape chrome: profile block top-left, currency chips, left rail.
+    const profile = scene.locator('.home-design-profile')
+    await expect(profile).toBeVisible()
+    const profileBox = (await profile.boundingBox())!
+    expect(profileBox.x).toBeGreaterThanOrEqual(0)
+    expect(profileBox.y).toBeLessThanOrEqual(120)
 
-    // Building nameplates are vertical hanging tags (taller than wide).
-    const nameplates = page.locator('.building-nameplate__tag')
-    expect(await nameplates.count()).toBeGreaterThanOrEqual(2)
-    for (const tag of await nameplates.all()) {
-      const box = (await tag.boundingBox())!
-      expect(box.height).toBeGreaterThan(box.width)
-    }
+    const chips = scene.locator('.home-design-currencies > *')
+    expect(await chips.count()).toBeGreaterThanOrEqual(1)
+    const chipBox = (await chips.last().boundingBox())!
+    expect(chipBox.x + chipBox.width).toBeLessThanOrEqual(1280 + 1)
 
-    // Wheel open: hub at ~(640, 475); inner orbit r ~=142px, outer
-    // ~=202px at the 1280x720 runtime scale (design 185/264 x 0.7655).
-    await page.locator('.home-player').click()
-    const wheel = page.locator('.command-wheel-layer.is-ready')
+    const railButtons = scene.locator('.home-navigation-surface nav button')
+    expect(await railButtons.count()).toBeGreaterThanOrEqual(15)
+
+    // Wheel opens on Backquote: orbit nodes with hanging labels inside
+    // the viewport.
+    await page.keyboard.press('`')
+    const wheel = scene.locator('.df-wheel')
     await expect(wheel).toBeVisible({ timeout: 10_000 })
 
-    const inner = wheel.locator('[data-hk-region="wheel-inner-orbit"]')
-    const outer = wheel.locator('[data-hk-region="wheel-outer-orbit"]')
-    const innerBox = (await inner.boundingBox())!
-    const outerBox = (await outer.boundingBox())!
-    expect(innerBox.width / 2).toBeGreaterThanOrEqual(120)
-    expect(innerBox.width / 2).toBeLessThanOrEqual(160)
-    expect(outerBox.width / 2).toBeGreaterThanOrEqual(175)
-    expect(outerBox.width / 2).toBeLessThanOrEqual(215)
-    expect(Math.abs(innerBox.x + innerBox.width / 2 - 640)).toBeLessThanOrEqual(12)
-    expect(Math.abs(innerBox.y + innerBox.height / 2 - 475)).toBeLessThanOrEqual(12)
-
-    // Slot labels hang below the node discs (never wrap inside).
-    const labels = wheel.locator('.command-wheel__label')
+    const nodes = wheel.locator('.df-node')
+    expect(await nodes.count()).toBeGreaterThanOrEqual(8)
+    const labels = wheel.locator('.df-node__label')
     expect(await labels.count()).toBeGreaterThanOrEqual(8)
     for (const label of await labels.all()) {
       const box = (await label.boundingBox())!
       expect(box.y + box.height).toBeLessThanOrEqual(720 + 1)
     }
 
-    // Thien Co collapsed chip + expandable drawer.
-    const chip = page.locator('.thien-co-rail__chip')
-    await expect(chip).toBeVisible()
-    await chip.click()
-    const drawer = page.locator('[data-hk-region="thien-co-open"]')
-    await expect(drawer).toBeVisible()
-    const drawerBox = (await drawer.boundingBox())!
-    expect(drawerBox.x + drawerBox.width).toBeLessThanOrEqual(1280 + 1)
-    await chip.click()
-    await expect(drawer).toBeHidden()
+    // Close the wheel before touching the board.
+    await page.keyboard.press('Escape')
+    await expect(wheel).toBeHidden({ timeout: 10_000 })
+
+    // Thien Co board chip collapses + expands (mounts open by default).
+    const board = scene.locator('.df-board')
+    await expect(board).toBeAttached()
+    const heading = board.locator('.df-board__heading')
+    await expect(board.locator('.df-board__entries')).toBeVisible()
+    await heading.click()
+    await expect(board.locator('.df-board__entries')).toBeHidden()
+    await heading.click()
+    await expect(board.locator('.df-board__entries')).toBeVisible()
 
     assertNoBrowserErrors(errors)
   })

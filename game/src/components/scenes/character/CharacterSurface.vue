@@ -14,12 +14,11 @@ import { usePlayerStore } from '@/stores/player'
 import { useStateVersion, useGameManager } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
 import { getActiveElement } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
-import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
+import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { MAIN_STAT_KEYS, type MainStatKey, type StatType } from '@/core/stats/StatTypes'
 import type { ModifierSourceType } from '@/core/stats/StatCalculator'
 import { resolvePlayerStatAssembly } from '@/core/player/Player'
@@ -33,6 +32,7 @@ import type { Stats } from '@/core/stats/StatBlock'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import CharacterFidelityScene from './fidelity/CharacterFidelityScene.vue'
 import type { CharacterUiModel, CharacterUiStat, CharacterUiStatSources } from './fidelity/characterUi'
+import { daoIdentityFor } from './fidelity/characterUi'
 
 
 const { t } = useI18n()
@@ -42,7 +42,6 @@ const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const { allocateAttributePoint } = useProgressionActions()
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
-const { items: navItems, navigate } = usePaperNavigation()
 
 const notice = ref('')
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
@@ -64,21 +63,64 @@ const STAT_LAYOUT: Record<StatId, { color: string; symbol: string }> = {
   intelligence: { color: '#77419b', symbol: 'skill' },
 }
 
-const DETAIL_CATEGORIES: Record<'combat' | 'other', readonly StatCategory[]> = {
-  combat: ['combat', 'survival'],
-  other: ['special', 'defense_advanced'],
-}
+// Detail cards re-split by combat role (user ruling): Cong holds every
+// outgoing-damage stat, Thu every incoming-damage/sustain stat.
+const DETAIL_OFFENSE: readonly (keyof Stats)[] = [
+  'might',
+  'speed',
+  'accuracyRating',
+  'criticalRate',
+  'criticalDamage',
+  'finalDamagePercent',
+  'skillDamagePercent',
+  'chanceToIgnoreResistance',
+  'elementApplicationPercent',
+  'reactionEffectPercent',
+  'ailmentDurationPercent',
+  'ailmentPotencyPercent',
+  'followUpChance',
+]
+const DETAIL_DEFENSE: readonly (keyof Stats)[] = [
+  'defense',
+  'maxHp',
+  'hpRegenPerTurn',
+  'maxMp',
+  'manaRegenPerTurn',
+  'evasionRate',
+  'criticalAvoidance',
+  'finalDamageReductionPercent',
+  'dotResistancePercent',
+  'blockChance',
+  'blockEffectiveness',
+  'enduranceThreshold',
+  'endurancePercent',
+  'wardMax',
+  'wardRegenPerTurn',
+  'manaShieldPercent',
+  'linhLucHoTheCap',
+  'wardBreakDamagePercent',
+  'leechPercent',
+  'healingEffectivenessPercent',
+  'ailmentResistPercent',
+  'counterChance',
+  'protectChance',
+]
 
+// Suc Manh formula (owner: this adapter) - the same terms feed both the
+// headline number and the R12 hover breakdown rows.
+const POWER_TERMS: readonly { stat: keyof Stats; weight: number }[] = [
+  { stat: 'might', weight: 2 },
+  { stat: 'defense', weight: 1.5 },
+  { stat: 'maxHp', weight: 0.1 },
+  { stat: 'maxMp', weight: 0.05 },
+  { stat: 'criticalRate', weight: 500 },
+  { stat: 'criticalDamage', weight: 300 },
+  { stat: 'speed', weight: 200 },
+]
 const combatPower = computed(() => {
   const stats = player.finalStats
   return Math.round(
-    stats.might * 2 +
-    stats.defense * 1.5 +
-    stats.maxHp * 0.1 +
-    stats.maxMp * 0.05 +
-    stats.criticalRate * 500 +
-    stats.criticalDamage * 300 +
-    stats.speed * 200,
+    POWER_TERMS.reduce((sum, term) => sum + stats[term.stat] * term.weight, 0),
   )
 })
 
@@ -87,26 +129,39 @@ const combatPower = computed(() => {
 // replace the generic path label on the identity plate. The committed
 // element comes through the canonical accessor - the shell never
 // reconstructs it from player state.
-const isLyHoa = computed(() => getActiveElement(player.$state) === 'fire')
+// Dao identity is generic over every committed way (Minh ruling) -
+// the plate reads the dao table, not a Ly Hoa special case.
+const daoIdentity = computed(() =>
+  daoIdentityFor(player.cultivationWay, getActiveElement(player.$state)),
+)
 
 const pathName = computed(() => {
-  if (isLyHoa.value) {
-    return t('character.lyHoaDao')
+  if (daoIdentity.value) {
+    return t(daoIdentity.value.nameKey)
   }
 
   const pathId = player.cultivationPath as CultivationPathId | undefined
-  return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('panels.skillPath.mortalName')
+  if (pathId === undefined) {
+    // The plate shows CURRENT state only (Minh ruling): a mortal reads
+    // 'Pham Nhan' - the dao name appears only after the way is
+    // committed at the promotion ritual, not as a declared destiny.
+    return undefined
+  }
+
+  return CULTIVATION_PATH_MODULES[pathId]?.name ?? t('character.daoUndecided')
 })
 
-const pathVerse = computed(() => (isLyHoa.value ? t('character.lyHoaVerse') : undefined))
+const pathVerse = computed(() =>
+  daoIdentity.value?.verseKey ? t(daoIdentity.value.verseKey) : undefined,
+)
 
 function detailRows(
-  categories: readonly StatCategory[],
+  keys: readonly (keyof Stats)[],
   stats: Stats,
   sourcesFor: (stat: StatType) => CharacterUiStatSources,
 ) {
   return BASE_STAT_LABELS
-    .filter((stat) => categories.includes(stat.category) && isBetaStatLabelVisible(stat.key))
+    .filter((stat) => keys.includes(stat.key) && isBetaStatLabelVisible(stat.key))
     .map((stat) => ({
       id: stat.key,
       label: stat.label,
@@ -163,10 +218,14 @@ const model = computed<CharacterUiModel>(() => {
 
   return {
     name: player.name,
-    realm: `${realm.name} · ${t('panels.character.labels.realmFloor')} ${player.realmLevel}`,
+    realm: realm.name,
     path: pathName.value,
     pathVerse: pathVerse.value,
     combatPower: formatNumber(combatPower.value),
+    powerSources: POWER_TERMS.map((term) => ({
+      label: BASE_STAT_LABELS.find((stat) => stat.key === term.stat)?.label ?? term.stat,
+      value: formatNumber(Math.round(resolved[term.stat] * term.weight)),
+    })),
     stats,
     elements: ELEMENT_ORDER.map((element, index) => ({
       id: element,
@@ -182,18 +241,13 @@ const model = computed<CharacterUiModel>(() => {
         ? [{ id: talent.id, name: talent.name, description: talent.description, rarity: talent.rarity }]
         : []
     }),
-    combat: detailRows(DETAIL_CATEGORIES.combat, resolved, sourcesFor),
-    other: detailRows(DETAIL_CATEGORIES.other, resolved, sourcesFor),
+    offense: detailRows(DETAIL_OFFENSE, resolved, sourcesFor),
+    defense: detailRows(DETAIL_DEFENSE, resolved, sourcesFor),
     attributePoints: player.attributePoints,
   }
 })
 
 function onSelect(id: string) {
-  const stat = model.value.stats.find((entry) => entry.id === id)
-  if (stat) {
-    flashNotice(t('character.statNotice', { name: stat.label, value: stat.value }))
-    return
-  }
   if (id.startsWith('talent.')) {
     const talent = model.value.talents.find((entry) => `talent.${entry.id}` === id)
     if (talent) flashNotice(`${talent.name} — ${talent.description}`)
@@ -223,9 +277,7 @@ function onAllocate(id: string) {
     <CharacterFidelityScene
       :model="model"
       :notice="notice"
-      :navigation="navItems"
       @select="onSelect"
-      @navigate="navigate"
       @allocate="onAllocate"
       @back="ui.closeHomeOverlays()"
     />

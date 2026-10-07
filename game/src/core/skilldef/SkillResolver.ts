@@ -1639,6 +1639,12 @@ export class SkillResolver {
         ...(op.missingHpBonusCap !== undefined
           ? { missingHpBonusCap: op.missingHpBonusCap }
           : {}),
+        // Hoa lane / Tam Muoi trades -- already-folded cast-scoped
+        // deltas; stamped verbatim, the DamageAuthority folds them
+        // into HitResolveOptions.scopedStats at hit resolution.
+        ...(op.castModifiers !== undefined && op.castModifiers.length > 0
+          ? { castModifiers: op.castModifiers }
+          : {}),
         ...(op.sourceMaxHpRatio !== undefined
           ? {
               sourceMaxHpRatio: this.bindScalar(

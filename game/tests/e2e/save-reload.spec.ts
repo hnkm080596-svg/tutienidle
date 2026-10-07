@@ -104,7 +104,7 @@ test.describe('Save and reload persistence', () => {
     await reauthAndEnterHome(page)
 
     // Character identity persisted: mo Nhan Vat panel qua wheel + check ten.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const characterSlot = page.locator('[data-wheel-slot="character"]')
     await expect(characterSlot).toBeVisible({ timeout: 10_000 })
     await characterSlot.click()

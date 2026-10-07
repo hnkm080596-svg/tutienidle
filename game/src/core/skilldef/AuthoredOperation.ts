@@ -20,6 +20,7 @@ import type { ElementType } from '../element/ElementType'
 import type { SkillDamageComponent } from '../skill/SkillDamageComponent'
 
 import type { ScalarExpression } from './ScalarExpression'
+import type { StatType } from '../stats/StatTypes'
 
 // ---------------------------------------------------------------------------
 // Target intents -- authored selectors, NEVER runtime entity ids.
@@ -231,6 +232,12 @@ export type AuthoredSkillOperation =
           branch gated on `ops_landed_any` over every earlier primary
           hit's operation ids. */
       oncePerCast?: boolean
+      /** Hoa lane / Tam Muoi trades (Minh rulings 2026-10-06) -- cast-scoped
+          additive stat deltas stamped off TurnSkillDefinition.castModifiers
+          (already-folded numbers; the adapter copies them verbatim onto
+          the DealDamageOperation payload). The damage authority folds
+          them into HitResolveOptions.scopedStats at hit resolution. */
+      castModifiers?: readonly { stat: StatType; value: number }[]
     }
   | {
       type: 'heal'

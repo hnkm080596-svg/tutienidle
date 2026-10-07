@@ -10,15 +10,17 @@ import { SPELL_KIT_IDS } from '../skill/Skills'
 
 // Phap Tu Reimagine (2026-09-26 spec sec.1.4 + openQuestion 5) -- the
 // basic lane keeps ONLY skill-owned channels: the ailment family
-// (elementApplicationPercent / ailmentPotencyPercent /
-// ailmentDurationPercent -- the element basic is the path's only
-// own-source ailment producer, so the global channel IS the skill
-// channel, ruling F14) plus the two-way capstone specializations
-// (they modify the basic itself). The generic-stat nodes
-// (skillDamagePercent / criticalRate / criticalDamage /
-// finalDamagePercent) are cut outright; a per-skillId coefficient/
-// conversion channel was considered and deferred -- no kept mechanic
-// needs it.
+// (elementApplicationPercent / ailmentPotencyPercent -- the element
+// basic is the path's only own-source ailment producer, so the global
+// channel IS the skill channel, ruling F14; ailmentDurationPercent is
+// dead on 2-4 turn lifetimes, Minh filter 2026-10-07) plus the two-way
+// capstone specializations
+// (they modify the basic itself). Generic GLOBAL-stat nodes stay cut;
+// the per-skillId channel landed 2026-10-06 as cast-scoped
+// `castStatModifiers` on `skillDefinitionModifiers` (fold in
+// PhapTuNodeModifiers) - the five-node Ly Hoa chain + Tam Muoi trades
+// use it for hit-layer stats (skill damage / accuracy / resist-ignore /
+// crit) that must NOT leak into character stats or ailment reads.
 //
 // Gating contract is unchanged: trunk nodes require only the element
 // root (open at Luyen Khi); the outer ring + capstones also require
@@ -76,6 +78,47 @@ function stat(nodeId: string, statKey: StatType, perLevelFlat: number): StatModi
     flat: perLevelFlat,
     perLevelFlat,
     domain: 'spell',
+  }
+}
+
+/**
+ * Hoa lane cast-scope (Minh rulings 2026-10-06): a powerNode sibling
+ * whose bonus lives on the kit def's `castModifiers` - it moves the
+ * CASTER's stat view only while a Ly Hoa hit resolves (fold in
+ * PhapTuNodeModifiers); nothing lands in aggregated character stats.
+ * Gating mirrors powerNode: element root by default, FOUNDATION realm
+ * gate for the TC ring.
+ */
+function castScopedNode(
+  id: string,
+  name: string,
+  description: string,
+  element: ElementType,
+  entries: readonly { stat: StatType; perLevel: number }[],
+  options: { foundation?: boolean; maxLevel?: number; prereqNodeId?: string } = {},
+): ProgressionNode {
+  const prerequisites: NodePrerequisite[] = [
+    { kind: 'node', nodeId: options.prereqNodeId ?? PHAP_TU_ELEMENT_ROOT_IDS[element] },
+    ...(options.foundation ? [FOUNDATION] : []),
+  ]
+
+  return {
+    id,
+    name,
+    description,
+    type: 'minor',
+    role: 'growth',
+    insightCost: options.foundation ? GROWTH_TC.base : GROWTH_QI.base,
+    maxLevel: options.maxLevel ?? 5,
+    upgradeCost: options.foundation ? GROWTH_TC : GROWTH_QI,
+    levelGates: options.maxLevel === 4 ? MINOR_TIER_GATES_4 : MINOR_TIER_GATES,
+    prerequisites,
+    elementTag: element,
+    effect: {
+      skillDefinitionModifiers: [
+        { skillId: SPELL_KIT_IDS[element][0], castStatModifiers: entries },
+      ],
+    },
   }
 }
 
@@ -144,15 +187,15 @@ function buildFire(): ProgressionNode[] {
   return [
     // Hoa The gate (Minh ruling 2026-10-04): the The loop does NOT come
     // with the element - this node unlocks it. Level = the chance a
-    // landed Ly Hoa cast mints +1 The (lv1 = 35%, lv3 = 100% certain).
+    // landed Ly Hoa cast mints +1 The (10%/level, lv4 = 40%).
     // The mechanic is read straight off player.nodeLevels at kit build
     // (CultivationPathRegistry), like the evolution/cascade markers --
     // statModifiers stay empty so nothing double-counts the chance.
     {
       id: 'hoa_the',
-      name: 'Hỏa Thế',
+      name: 'Tích Diễm',
       description:
-        'Mở khóa Hỏa Thế — mỗi cấp +35% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng (cấp 3 = chắc chắn). Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
+        'Mở khóa Hỏa Thế — mỗi cấp +10% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng. Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
       type: 'minor',
       role: 'growth',
       insightCost: 600,
@@ -165,30 +208,30 @@ function buildFire(): ProgressionNode[] {
     },
     powerNode(
       'hoa_diem_chuan',
-      'Diễm Chuẩn',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      'Dẫn Hỏa',
+      '+2.5% tỉ lệ áp dụng Hỏa Ấn mỗi cấp (tối đa +10% so với gốc).',
       'fire',
       [stat('hoa_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'hoa_an_sau',
-      'Hỏa Ấn Sâu',
-      '+2.5% uy lực tật trạng mỗi cấp.',
+      'Khắc Ấn',
+      '+2.5% uy lực Hỏa Ấn mỗi cấp.',
       'fire',
       [stat('hoa_an_sau', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'hoa_nhiet_keo',
-      'Nhiệt Kéo',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
+      'Dư Tẫn',
+      '+2.5% uy lực Hỏa Ấn mỗi cấp (tầng Trúc Cơ).',
       'fire',
-      [stat('hoa_nhiet_keo', 'ailmentDurationPercent', 0.025)],
+      [stat('hoa_nhiet_keo', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_an_sau' },
     ),
     powerNode(
       'hoa_diem_tham',
-      'Diễm Thấm',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tầng Trúc Cơ).',
+      'Thấu Hỏa',
+      '+2.5% tỉ lệ áp dụng Hỏa Ấn mỗi cấp (tầng Trúc Cơ).',
       'fire',
       [stat('hoa_diem_tham', 'elementApplicationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_diem_chuan' },
@@ -207,6 +250,203 @@ function buildFire(): ProgressionNode[] {
       'Ly Hỏa tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
       'hoa_diem_tham',
     ),
+
+    // ------------------------------------------------------------------
+    // Fire tree rulings (Minh, 2026-10-06 spec v4).
+    //
+    // (a) Ly Hoa hit chain - five cast-scoped growth nodes: their stats
+    //     fold into the kit def's castModifiers and apply ONLY while a
+    //     Ly Hoa hit resolves (they never touch aggregated stats, so the
+    //     Hoa An ailment read stays clean).
+    // (b) Tam Muoi lane - three parallel children of
+    //     linh_ngo_tam_muoi_chan_hoa: Ngu Hoa trims the Phap Trang
+    //     cooldown; each Ngu Viem trade pays +1 CD (once, when learned)
+    //     for per-level cast-scoped damage on Ly Hoa. Ngu Viem Than is
+    //     intentionally left unauthored (locked seat).
+    // (c) Mana branch - SOLO off the element root (Minh ruling):
+    //     ho_the_mon is a purchased gate seat; Nguyen Kinh thickens the
+    //     Linh Luc Ho The shield, Linh Chuong hardens the barrier as
+    //     always-on DR (spec's "while the window holds" has no channel -
+    //     flagged), The Diem Kinh raises the Ho The cap ceiling.
+    // ------------------------------------------------------------------
+
+    castScopedNode(
+      'hoa_diem_uy',
+      'Diễm Uy',
+      'Đòn Ly Hỏa +6% sát thương kỹ năng mỗi cấp.',
+      'fire',
+      [{ stat: 'skillDamagePercent', perLevel: 0.06 }],
+    ),
+    castScopedNode(
+      'hoa_hoa_nhan',
+      'Hỏa Nhãn',
+      'Đòn Ly Hỏa +50 chính xác mỗi cấp.',
+      'fire',
+      [{ stat: 'accuracyRating', perLevel: 50 }],
+      { prereqNodeId: 'hoa_diem_uy' },
+    ),
+    castScopedNode(
+      'hoa_pha_giap_diem',
+      'Phá Giáp Diễm',
+      'Đòn Ly Hỏa +4% tỉ lệ bỏ qua hoàn toàn kháng phép mỗi cấp.',
+      'fire',
+      [{ stat: 'chanceToIgnoreResistance', perLevel: 0.04 }],
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_hoa_nhan' },
+    ),
+    castScopedNode(
+      'hoa_bao_diem',
+      'Bạo Diễm',
+      'Đòn Ly Hỏa +4% tỉ lệ chí mạng mỗi cấp.',
+      'fire',
+      [{ stat: 'criticalRate', perLevel: 0.04 }],
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_pha_giap_diem' },
+    ),
+    castScopedNode(
+      'hoa_phe_diem',
+      'Phệ Diễm',
+      'Đòn Ly Hỏa +25% sát thương chí mạng mỗi cấp.',
+      'fire',
+      [{ stat: 'criticalDamage', perLevel: 0.25 }],
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_bao_diem' },
+    ),
+
+    // Ngu Hoa - tempering the Trang cast: each level shaves half a turn
+    // off the special's cooldown (folded and floored at 2 turns by
+    // PhapTuNodeModifiers).
+    {
+      id: 'ngu_hoa',
+      name: 'Ngự Hỏa',
+      description: 'Thuần hóa chân hỏa quanh thân — Ngự Diễm sớm hồi thêm nửa hiệp mỗi cấp (tối đa xuống 2 hiệp).',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 5,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES,
+      prerequisites: [
+        { kind: 'node', nodeId: 'linh_ngo_tam_muoi_chan_hoa' },
+        FOUNDATION,
+      ],
+      elementTag: 'fire',
+      effect: {
+        skillDefinitionModifiers: [
+          { skillId: SPELL_KIT_IDS.fire[1], cooldownTurnsDelta: { perLevel: -0.5 } },
+        ],
+      },
+    },
+
+    // Tam Muoi trade nodes (song song - parallel children of the
+    // special unlock): each pays +1 CD on Ngu Diem ONCE when learned
+    // (flat, not per level) for per-level cast-scoped Ly Hoa damage.
+    {
+      id: 'ngu_viem_tam',
+      name: 'Ngự Viêm Tâm',
+      description: 'Đổi nhịp Ngự Diễm (+1 hiệp hồi) lấy quyền năng: đòn Ly Hỏa +6% sát thương kỹ năng mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 5,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES,
+      prerequisites: [
+        { kind: 'node', nodeId: 'linh_ngo_tam_muoi_chan_hoa' },
+        FOUNDATION,
+      ],
+      elementTag: 'fire',
+      effect: {
+        skillDefinitionModifiers: [
+          { skillId: SPELL_KIT_IDS.fire[0], castStatModifiers: [{ stat: 'skillDamagePercent', perLevel: 0.06 }] },
+          { skillId: SPELL_KIT_IDS.fire[1], cooldownTurnsDelta: { flat: 1 } },
+        ],
+      },
+    },
+    {
+      id: 'ngu_viem_y',
+      name: 'Ngự Viêm Ý',
+      description: 'Đổi nhịp Ngự Diễm (+1 hiệp hồi) lấy ý chí thiêu đốt: đòn Ly Hỏa +9% sát thương kỹ năng mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 5,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES,
+      prerequisites: [
+        { kind: 'node', nodeId: 'linh_ngo_tam_muoi_chan_hoa' },
+        FOUNDATION,
+      ],
+      elementTag: 'fire',
+      effect: {
+        skillDefinitionModifiers: [
+          { skillId: SPELL_KIT_IDS.fire[0], castStatModifiers: [{ stat: 'skillDamagePercent', perLevel: 0.09 }] },
+          { skillId: SPELL_KIT_IDS.fire[1], cooldownTurnsDelta: { flat: 1 } },
+        ],
+      },
+    },
+
+    // Mana branch (Minh ruling: "nhanh mana solo") - hangs off the
+    // element root, NOT the Tam Muoi unlock. Ho The is the purchased
+    // gate seat (a thin keystone - it owns no effect itself).
+    {
+      id: 'ho_the_mon',
+      name: 'Hộ Thể',
+      description: 'Ngưng Linh Lực thành tầng hộ mệnh — mở nhánh Linh Lực Hộ Thể.',
+      type: 'minor',
+      role: 'keystone',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 1,
+      prerequisites: [
+        { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS.fire },
+        FOUNDATION,
+      ],
+      elementTag: 'fire',
+      effect: {},
+    },
+    {
+      id: 'nguyen_kinh',
+      name: 'Nguyên Kính',
+      description: 'Dày hóa tấm kính nguyên lực — Linh Lực Hộ Thể gánh thêm +5% sát thương nhận vào mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 5,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES,
+      prerequisites: [{ kind: 'node', nodeId: 'ho_the_mon' }],
+      elementTag: 'fire',
+      effect: { statModifiers: [stat('nguyen_kinh', 'manaShieldPercent', 0.05)] },
+    },
+    // Linh Chuong (renamed "Ngu Ho" seat, Minh ruling): parallel with
+    // Nguyen Kinh off the same seat. Final-DR is always-on here - the
+    // spec's "only while Ngu Diem holds" has no stat channel; flagged
+    // on the task report for a conditional gate if wanted.
+    {
+      id: 'linh_chuong',
+      name: 'Linh Chướng',
+      description: 'Chướng khí rào quanh thân — +1.5% giảm sát thương cuối mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 3,
+      upgradeCost: GROWTH_TC,
+      levelGates: [{ atLevel: 3, prerequisite: { kind: 'techniqueRank', rank: 2 } }],
+      prerequisites: [{ kind: 'node', nodeId: 'ho_the_mon' }],
+      elementTag: 'fire',
+      effect: { statModifiers: [stat('linh_chuong', 'finalDamageReductionPercent', 0.015)] },
+    },
+    {
+      id: 'the_diem_kinh',
+      name: 'Thể Diễm Kính',
+      description: 'Kính diễm dung nạp thêm — nóc Linh Lực Hộ Thể +2% Linh Lực tối đa mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 4,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES_4,
+      prerequisites: [{ kind: 'node', nodeId: 'nguyen_kinh' }],
+      elementTag: 'fire',
+      effect: { statModifiers: [stat('the_diem_kinh', 'linhLucHoTheCap', 0.02)] },
+    },
   ]
 }
 
@@ -215,28 +455,28 @@ function buildWater(): ProgressionNode[] {
     powerNode(
       'thuy_diem_chuan',
       'Lưu Chuẩn',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2.5% tỉ lệ áp dụng Tê Cóng mỗi cấp (tối đa +10% so với gốc).',
       'water',
       [stat('thuy_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'thuy_te_dam',
       'Tê Đẫm',
-      '+2.5% uy lực tật trạng mỗi cấp.',
+      '+2.5% uy lực Tê Cóng mỗi cấp.',
       'water',
       [stat('thuy_te_dam', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'thuy_luu_tich',
       'Lưu Tích',
-      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian Tê Cóng mỗi cấp (tối đa +10%).',
       'water',
       [stat('thuy_luu_tich', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'thuy_nhiet_tri',
       'Nhiễm Trì',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% thời gian Tê Cóng mỗi cấp (tầng Trúc Cơ).',
       'water',
       [stat('thuy_nhiet_tri', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_luu_tich' },
@@ -244,7 +484,7 @@ function buildWater(): ProgressionNode[] {
     powerNode(
       'thuy_te_tham',
       'Tê Thấm',
-      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực Tê Cóng mỗi cấp (tầng Trúc Cơ).',
       'water',
       [stat('thuy_te_tham', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_te_dam' },
@@ -273,21 +513,21 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_sau',
       'Độc Sâu',
-      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tối đa +10%).',
       'wood',
       [stat('moc_doc_sau', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_dien',
       'Độc Diễn',
-      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian Trúng Độc mỗi cấp (tối đa +10%).',
       'wood',
       [stat('moc_doc_dien', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_tham',
       'Độc Thấm',
-      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_tham', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_sau' },
@@ -295,7 +535,7 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_man',
       'Độc Mạn',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% thời gian Trúng Độc mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_man', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_dien' },
@@ -303,21 +543,21 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_nhuan',
       'Độc Nhuần',
-      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian Trúng Độc mỗi cấp (tối đa +10%).',
       'wood',
       [stat('moc_doc_nhuan', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_tu',
       'Độc Tú',
-      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tối đa +10%).',
       'wood',
       [stat('moc_doc_tu', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_am',
       'Độc Ám',
-      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_am', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_tu' },
@@ -325,7 +565,7 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_nhiem',
       'Độc Nhiễm',
-      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_nhiem', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_tu' },
@@ -352,21 +592,21 @@ function buildMetal(): ProgressionNode[] {
     powerNode(
       'kim_diem_chuan',
       'Điểm Chuẩn',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2.5% tỉ lệ áp dụng Xuất Huyết mỗi cấp (tối đa +10% so với gốc).',
       'metal',
       [stat('kim_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'kim_liet_huyet',
       'Liệt Huyết',
-      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực Xuất Huyết mỗi cấp (tối đa +10%).',
       'metal',
       [stat('kim_liet_huyet', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'kim_diem_tham',
       'Điểm Thấm',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% tỉ lệ áp dụng Xuất Huyết mỗi cấp (tầng Trúc Cơ).',
       'metal',
       [stat('kim_diem_tham', 'elementApplicationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'kim_diem_chuan' },
@@ -393,14 +633,14 @@ function buildEarth(): ProgressionNode[] {
     powerNode(
       'tho_tran_sau',
       'Trần Sâu',
-      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian Thạch Hóa mỗi cấp (tối đa +10%).',
       'earth',
       [stat('tho_tran_sau', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'tho_tran_cung',
       'Trần Củng',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% thời gian Thạch Hóa mỗi cấp (tầng Trúc Cơ).',
       'earth',
       [stat('tho_tran_cung', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tran_sau' },

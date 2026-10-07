@@ -1,5 +1,5 @@
 const vi = {
-  character: 'Nhân Vật', creation: 'Khởi Đạo', technique: 'Công Pháp', body: 'Luyện Thể', meridian: 'Kinh Mạch', zhou: 'Chu Thiên',
+  character: 'Tu Sĩ', creation: 'Khởi Đạo', technique: 'Công Pháp', body: 'Luyện Thể', meridian: 'Kinh Mạch', zhou: 'Chu Thiên',
   tabs: 'Các mục tu hành', name: 'Đạo Danh', sampleName: 'Thanh Vân', identity: 'Luyện Khí · Tầng 11', pathway: 'Đạo Lộ', swordPath: 'Kiếm Tu', spellPath: 'Pháp Tu', bodyPath: 'Thể Tu',
   mainStats: 'Thuộc Tính Chính', points: 'Điểm thuộc tính: 5', vitality: 'Thể Chất', strength: 'Căn Cốt', dexterity: 'Thân Pháp', attunement: 'Linh Căn', intelligence: 'Thần Thức', talent: 'Thiên Phú', elements: 'Ngũ Hành', details: 'Chi Tiết', power: 'Chiến Lực',
   hp: 'Sinh Lực', attack: 'Tấn Công', defense: 'Phòng Ngự', mana: 'Nội Lực', critical: 'Bạo Kích', speed: 'Tốc Độ', accuracy: 'Chính Xác', dodge: 'Né Tránh', regen: 'Hồi Sinh Lực', reduction: 'Giảm Sát Thương',

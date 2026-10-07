@@ -12,7 +12,6 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { useBodySceneModel, bodyChapterCtaKey, bodyChapterSubtitleKey } from './useBodySceneModel'
 import { BODY_CHAPTER_LABEL_KEYS } from './useBodySceneModel'
 import type { BodyChapterId } from '@/core/realm/body/BodyChapter'
@@ -36,7 +35,6 @@ const { t } = useI18n()
 const ui = useUiStore()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
-const { items: navItems, navigate } = usePaperNavigation()
 const model = useBodySceneModel()
 
 const notice = ref('')
@@ -119,6 +117,9 @@ function toUiUnit(unit: BodyUnitView): BodyPaperUnit {
     gates: unit.gates,
     progressLabel: unit.progress !== undefined
       ? `${formatNumber(unit.progress.value)} / ${formatNumber(unit.progress.max)}`
+      : undefined,
+    progressPct: unit.progress !== undefined && unit.progress.max > 0
+      ? (unit.progress.value / unit.progress.max) * 100
       : undefined,
     actionLabel: t(bodyChapterCtaKey(activeDomainChapter.value)),
     actionDisabled: !unit.canInvest,
@@ -221,11 +222,10 @@ function invest() {
     <BodyFidelityScene
       :model="paperModel"
       :unit="paperUnit"
-      :navigation="navItems"
+     
       :notice="notice"
       @chapter="selectChapter"
       @select="selectUnit"
-      @navigate="navigate"
       @invest="invest"
       @back="ui.closeHomeOverlays()"
     />

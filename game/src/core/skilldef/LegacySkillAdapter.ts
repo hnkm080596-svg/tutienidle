@@ -464,6 +464,13 @@ function adaptDamageOp(
     // primary hit op; instances.each.armorPierce overrides it per
     // instance (SkillResolver.armorPolicyFor).
     ...(def.armorPolicy !== undefined ? { armorPolicy: def.armorPolicy } : {}),
+    // Hoa lane / Tam Muoi trades (Minh rulings 2026-10-06) -- cast-scoped
+    // stat deltas ride the deal_damage op verbatim (already folded);
+    // CombatSystemDamageAdapter.resolveHitOptions maps them into
+    // HitResolveOptions.scopedStats for the hit line only.
+    ...(def.castModifiers !== undefined && def.castModifiers.length > 0
+      ? { castModifiers: def.castModifiers }
+      : {}),
     ...(info.sourceMaxHpRatio !== undefined
       ? { sourceMaxHpRatio: info.sourceMaxHpRatio as ScalarExpression }
       : {}),

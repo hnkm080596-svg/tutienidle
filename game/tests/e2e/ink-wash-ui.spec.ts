@@ -63,7 +63,7 @@ test.describe('ink-wash UI visual smoke', () => {
       await enterHome(page)
       await expectNoHorizontalOverflow(page)
 
-      await page.keyboard.press('Tab')
+      await page.keyboard.press('`')
       const settingsSlot = page.locator('[data-wheel-slot="settings"]')
       await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
       await settingsSlot.click()

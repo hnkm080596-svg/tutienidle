@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import QuestObjectiveArt from './QuestObjectiveArt.vue'
-import QuestCategoryArtButton from './QuestCategoryArtButton.vue'
+import QuestCategoryArtButton from '@/components/common/QuestCategoryArtButton.vue'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import EquipmentArtCard from './equipment/EquipmentArtCard.vue'

@@ -504,7 +504,7 @@
         "group": "Cave Dwelling Command Wheel"
       },
       "slots": {
-        "character": "Character",
+        "character": "Cultivator",
         "realm": "Realm",
         "skill": "Skills",
         "quest": "Quests",
@@ -1292,11 +1292,19 @@
         "confirm": "Leave guest session"
       },
       "begin": "Begin",
-      "createAccount": "Create Account",
-      "returnOpening": "Back"
+      "createAccount": "Register",
+      "returnOpening": "Back",
+      "exit": {
+        "title": "Exit Game",
+        "question": "Do you want to exit the game?",
+        "cancel": "Stay",
+        "confirm": "Exit",
+        "exited": "Exited",
+        "return": "Back"
+      }
     },
     "creation": {
-      "back": "← Back",
+      "back": "Back",
       "headerKicker": "DESTINY-BINDING",
       "headerTitle": "Create Character",
       "nameStep": {
@@ -1310,24 +1318,16 @@
       },
       "talentStep": {
         "kicker": "DESTINY",
-        "sectionTitle": "Innate Talent",
+        "sectionTitle": "Choose a Talent",
         "title": "Choose One Innate Talent",
         "selected": "Selected {count} / 1",
         "rolling": "Observing the heavens…",
         "reroll": "↻ Reroll all",
         "hint": "Choose 1 starting talent",
-        "tags": {
-          "combat": "Combat",
-          "crafting": "Crafting",
-          "cultivation": "Cultivation",
-          "defense": "Defense",
-          "mechanic": "Mechanic",
-          "resource": "Resource",
-          "risk_reward": "Risk & Reward",
-          "skill": "Skill"
-        }
+        "locked": "Unrevealed",
+        "randomAll": "Randomize untouched sections"
       },
-      "finish": "Step onto the immortal path",
+      "finish": "Begin Cultivation",
       "creating": "Binding fate…",
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."
@@ -1341,7 +1341,18 @@
         "pending": "Revealed after you choose a talent"
       },
       "chooseOne": "Choose one",
-      "hoverDetail": "Hover for details"
+      "hoverDetail": "Hover for details",
+      "pathStep": {
+        "sectionTitle": "Starting Dao Path",
+        "description": "Your dao path is already set — the journey begins on the Spell Path.",
+        "paths": {
+          "tuKiem": "Sword Path",
+          "lyHoa": "Ly Hoa",
+          "tuPhap": "Spell Path",
+          "tuThe": "Body Path",
+          "hidden": "?"
+        }
+      }
     }
   },
   "skillResource": {
@@ -1772,7 +1783,7 @@
     },
     "topBar": {
       "aria": "Cave Dwelling status bar",
-      "identityAria": "Open the Character panel",
+      "identityAria": "Open the Cultivator panel",
       "cultivation": "Cultivation progress",
       "realmLine": "{realm} · Stage {level}",
       "feedback": "Mail",
@@ -1999,16 +2010,41 @@
   "dongFu": {
     "aria": "Grotto-Heaven",
     "toggleWheel": "Show / hide the command wheel",
+    "railOpen": "Open the navigation rail",
+    "railClose": "Close the navigation rail",
     "buildingHint": "Tap to view",
     "sceneTitle": "AZURE CLOUD GROTTO-HEAVEN",
     "sceneSubtitle": "A tranquil mind · All dharmas return to one",
     "view": "View",
-    "unhandled": "This feature is not open yet."
+    "unhandled": "This feature is not open yet.",
+    "nav": {
+      "home": "Grotto",
+      "character": "Cultivator",
+      "skill": "Skills",
+      "equipment": "Equipment",
+      "body": "Body",
+      "technique": "Techniques",
+      "realm": "Realm",
+      "inventory": "Storage",
+      "alchemy": "Alchemy",
+      "formation": "Formation",
+      "exploration": "Map",
+      "quest": "Quests",
+      "production": "Production",
+      "vendor": "Vendor",
+      "settings": "Settings",
+      "feedback": "Help",
+      "artifact": "Artifact",
+      "companion": "Companion",
+      "guild": "Guild",
+      "sect": "Sect",
+      "portal": "Secret Realm"
+    }
   },
   "paperNav": {
     "navigation": "Functions",
     "realm": "Realm",
-    "character": "Character",
+    "character": "Cultivator",
     "inventory": "Bag",
     "skill": "Skills",
     "technique": "Techniques",
@@ -2028,11 +2064,11 @@
     "elements": "Five Elements",
     "path": "Path",
     "lyHoaDao": "Ly Hỏa Chi Đạo",
-    "lyHoaVerse": "離宮真火焚天地 · 三昧神光煉古今",
+    "lyHoaVerse": "Ly Palace True Fire Burns Heaven And Earth · Samadhi Light Refines Past And Present",
     "power": "Combat Power",
     "details": "Details",
-    "combat": "Combat",
-    "other": "Other",
+    "offense": "Offense",
+    "defense": "Defense",
     "statNotice": "{name}: {value}",
     "elementNotice": "{name} · Power {power} · Resist {resistance} · Pierce {penetration}",
     "sources": {
@@ -2051,7 +2087,10 @@
       "formation": "Formation",
       "talisman": "Talisman",
       "attribute": "Attribute"
-    }
+    },
+    "powerSources": "Power From",
+    "powerFormula": "might×2 + defense×1.5 + maxHp×0.1 + maxMp×0.05 + critRate×500 + critDmg×300 + speed×200",
+    "daoUndecided": "Undecided Dao"
   },
   "realm": {
     "title": "ASCENSION PATH",
@@ -2089,6 +2128,16 @@
     "levelLabel": "Level",
     "grants": "Skill",
     "infoCasts": "Casts",
+    "level": "Level",
+    "experience": "Experience",
+    "stats": "Stats",
+    "statDamage": "Damage",
+    "statHeal": "Healing",
+    "statAilmentChance": "Ailment chance",
+    "statCooldown": "Cooldown",
+    "statCost": "Cost",
+    "damageTypePhysical": "Physical",
+    "damageTypePrimordial": "Primordial",
     "effects": "Effects",
     "conditions": "Requirements",
     "noConditions": "No further requirements.",
@@ -2098,11 +2147,16 @@
       "locked": "Locked"
     },
     "actionDone": "{name} updated.",
+    "holdToAct": "Hold the node to {action}.",
     "actionFailed": "Action unavailable — check requirements and Insight.",
     "constellation": {
       "legendGlyph": "Glyph stroke",
       "legendPrereq": "Prerequisite",
       "canvas": "{glyph} constellation"
+    },
+    "designMode": {
+      "ultimatePlaceholder": "Unrevealed",
+      "ultimateLocked": "Unrevealed — the ultimate art is not authored yet."
     }
   },
   "body": {
@@ -2221,5 +2275,19 @@
   },
   "pcUi": {
     "back": "Return"
+  },
+  "talents": {
+    "features": "Features",
+    "tags": {
+      "combat": "Combat",
+      "crafting": "Crafting",
+      "cultivation": "Cultivation",
+      "defense": "Defense",
+      "mechanic": "Mechanic",
+      "resource": "Resource",
+      "risk_reward": "Risk & Reward",
+      "skill": "Skill",
+      "element": "Element"
+    }
   }
 }

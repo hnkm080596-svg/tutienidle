@@ -29,7 +29,7 @@ test.describe('system UI skin - dialog containment', () => {
     // must not move focus to the background scene: Escape then closes only
     // the confirm, and the settings scene stays open (QA regression -
     // useDialogFocus pointer containment).
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     await page.locator('[data-wheel-slot="settings"]').click()
     const settingsScene = page.locator('.settings-scene').first()
     await expect(settingsScene).toBeVisible({ timeout: 10_000 })

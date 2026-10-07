@@ -11,5 +11,5 @@ const ui = useUiStore()
 </script>
 
 <template>
-  <RealmSurface v-if="ui.standalonePanel === 'realm'" />
+  <Transition name="th-panel-swap"><RealmSurface v-if="ui.standalonePanel === 'realm'" /></Transition>
 </template>

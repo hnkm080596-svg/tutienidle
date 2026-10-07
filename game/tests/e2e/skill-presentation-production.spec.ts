@@ -313,7 +313,7 @@ async function seedAndReload(page: Page, playerPatch: Record<string, unknown>): 
 
 /** Quan Khi tribulation -> victory, leaving the offer list on screen. */
 async function winQuanKhiAndOpenRitual(page: Page): Promise<void> {
-  await page.keyboard.press('Tab')
+  await page.keyboard.press('`')
   const realmSlot = page.locator('[data-wheel-slot="realm"]')
   await expect(realmSlot).toBeVisible({ timeout: 10_000 })
   await realmSlot.click()
@@ -359,7 +359,7 @@ async function winQuanKhiAndOpenRitual(page: Page): Promise<void> {
     await expect(entitlementModal).toHaveCount(0)
   }
 
-  await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+  await expect(page.locator('.df-wheel')).toBeAttached({ timeout: 30_000 })
   await expect(tribulationUi).toHaveCount(0)
   await waitForPresentationIdle(page)
 
@@ -390,7 +390,7 @@ async function chooseWay(page: Page, wayNamePattern: RegExp): Promise<void> {
 async function startStageOneBattle(page: Page): Promise<void> {
   const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
   if (!(await teleportSlot.isVisible().catch(() => false))) {
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
   }
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
   await teleportSlot.click()
@@ -474,7 +474,7 @@ test.describe('skill presentation runtime - production path (design section 11)'
 
     // Cancel/exit path clean: exit-confirm -> abandon -> no battle.
     await abandonViaExitConfirm(page)
-    await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('.df-wheel')).toBeAttached({ timeout: 30_000 })
     await expect.poll(async () => isBattleInProgress(page), { timeout: 15_000 }).toBe(false)
 
     // ---- Leg 2: ngu_kiem_thuat on hidden_sword_pathway ----

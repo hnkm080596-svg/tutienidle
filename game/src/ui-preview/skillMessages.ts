@@ -10,15 +10,29 @@ export const skillMessages = { vi: {
   // (SkillConstellationLayouts fire glyph) - mirror the registry names
   // so the preview reads like the real branch.
   fireConst: {
-    hoa_linh_ngo: 'Hỏa Linh Ngộ',
-    hoa_an_sau: 'Hỏa Ấn Sâu',
-    hoa_nhiet_keo: 'Nhiệt Kéo',
+    hoa_linh_ngo: 'Hỏa Chủng',
+    hoa_an_sau: 'Khắc Ấn',
+    hoa_nhiet_keo: 'Dư Tẫn',
     fire_basic_hoa_tu_diem: 'Tụ Diễm',
-    hoa_diem_chuan: 'Diễm Chuẩn',
-    hoa_diem_tham: 'Diễm Thấm',
+    hoa_diem_chuan: 'Dẫn Hỏa',
+    hoa_diem_tham: 'Thấu Hỏa',
     fire_basic_hoa_tan_diem: 'Tán Diễm',
-    fire_ailment_mastery: 'Hỏa Chưởng',
-    linh_ngo_tam_muoi_chan_hoa: 'Linh Ngộ Hỏa Đặc Biệt',
+    fire_ailment_mastery: 'Liệt Hỏa',
+    linh_ngo_tam_muoi_chan_hoa: 'Tam Muội Chân Ý',
+    // Fire rulings 2026-10-06 - Ly Hoa hit chain + Tam Muoi trades +
+    // solo mana branch (mirror PhapTuBasicNodes.buildFire).
+    hoa_diem_uy: 'Diễm Uy',
+    hoa_hoa_nhan: 'Hỏa Nhãn',
+    hoa_pha_giap_diem: 'Phá Giáp Diễm',
+    hoa_bao_diem: 'Bạo Diễm',
+    hoa_phe_diem: 'Phệ Diễm',
+    ngu_hoa: 'Ngự Hỏa',
+    ngu_viem_tam: 'Ngự Viêm Tâm',
+    ngu_viem_y: 'Ngự Viêm Ý',
+    ho_the: 'Hộ Thể',
+    nguyen_kinh: 'Nguyên Kính',
+    linh_chuong: 'Linh Chướng',
+    the_diem_kinh: 'Thể Diễm Kính',
   },
   // Mirrors the production `skill.*` + `dongFu.aria` +
   // `panels.nodeTree.respec.*` keys the fidelity surface resolves.
@@ -32,5 +46,5 @@ export const skillMessages = { vi: {
   },
   dongFu: { aria: 'Về Động Phủ' },
   panels: { nodeTree: { respec: { button: 'Đặt Lại' } } },
-  nav: { realm: 'Cảnh Giới', character: 'Nhân Vật', inventory: 'Túi Đồ', skill: 'Kỹ Năng', technique: 'Tâm Pháp', body: 'Luyện Thể', alchemy: 'Luyện Đan', equipment: 'Trang Bị', exploration: 'Thám Hiểm', quest: 'Nhiệm Vụ', settings: 'Cài Đặt' },
+  nav: { realm: 'Cảnh Giới', character: 'Tu Sĩ', inventory: 'Túi Đồ', skill: 'Kỹ Năng', technique: 'Tâm Pháp', body: 'Luyện Thể', alchemy: 'Luyện Đan', equipment: 'Trang Bị', exploration: 'Thám Hiểm', quest: 'Nhiệm Vụ', settings: 'Cài Đặt' },
 } } as const

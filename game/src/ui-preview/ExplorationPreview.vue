@@ -7,14 +7,12 @@ import Tooltip from '@/components/common/Tooltip.vue'
 import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
 import ExplorationFidelityScene from '@/components/scenes/exploration/fidelity/ExplorationFidelityScene.vue'
 import type { ExplorationPaperModel, ExplorationDetail, ExplorationChapter } from '@/components/scenes/exploration/fidelity/explorationUi'
-import { previewPaperNavigation } from './paperNavigation'
 const { t } = useI18n()
 const selected = shallowRef('1-4')
 const zoneId = shallowRef('zone-thanh-van')
 const mode = shallowRef('manual')
 const notice = shallowRef('')
 const pointer = shallowRef({ x: 0, y: 0 })
-const navigation = computed(() => previewPaperNavigation(t))
 const chapters = computed<ExplorationChapter[]>(() => ['mortal', 'qi', 'foundation'].map((realm, index) => {
   const nodes = Array.from({ length: 10 }, (_, i) => ({
     id: `${index + 1}-${i + 1}`, label: String(i + 1), x: 58 + i * 66, y: 60 + (i % 2 === 0 ? 0 : 17),
@@ -71,18 +69,11 @@ const stage = computed<ExplorationDetail>(() => {
 function choose(id: string) { selected.value = id; notice.value = '' }
 function chooseZone(id: string) { if (id === zoneId.value) return; notice.value = t('navNotice', { name: 'Huyền Phong' }) }
 function pickMode(id: string) { if (id === 'perfect_farm') { notice.value = t('disabled'); return } mode.value = id }
-function navigate(id: string) {
-  if (id === 'inventory') { window.location.assign('/ui-inventory.html'); return }
-  if (id === 'equipment') { window.location.assign('/ui-equipment.html'); return }
-  const routes: Record<string, string> = { character: '/ui-character.html', realm: '/ui-realm.html', body: '/ui-body.html', skill: '/ui-skill.html', technique: '/ui-technique.html', alchemy: '/ui-alchemy.html' }
-  if (routes[id]) window.location.assign(routes[id])
-  else if (id !== 'exploration') notice.value = t('navNotice', { name: t(`nav.${id}`) })
-}
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function move(event: PointerEvent) {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) }
 }
 </script>
-<template><SceneDesignCanvas><div class="exploration-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><ExplorationFidelityScene :model="model" :stage="stage" :navigation="navigation" :notice="notice" preview @select="choose" @zone="chooseZone" @navigate="navigate" @mode="pickMode" @stop-farm="notice = t('notice')" @open-build="notice = t('navNotice', { name: t('nav.skill') })" @start="notice = t('notice')" @back="back" /></div></SceneDesignCanvas><Tooltip /></template>
+<template><SceneDesignCanvas><div class="exploration-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><ExplorationFidelityScene :model="model" :stage="stage" :notice="notice" preview @select="choose" @zone="chooseZone" @mode="pickMode" @stop-farm="notice = t('notice')" @open-build="notice = t('navNotice', { name: t('nav.skill') })" @start="notice = t('notice')" @back="back" /></div></SceneDesignCanvas><Tooltip /></template>
 <style scoped>.exploration-preview { position:relative; width:100%; height:100%; }</style>

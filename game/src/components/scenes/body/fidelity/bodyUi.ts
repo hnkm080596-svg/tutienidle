@@ -24,6 +24,8 @@ export interface BodyPaperUnit {
   gates: readonly string[]
   /** Unit-level progress line (e.g. refinement tier essence fill). */
   progressLabel?: string
+  /** Unit progress percent (0-100) for the tube fill - undefined hides. */
+  progressPct?: number
   /** Resolved CTA text - empty hides the invest button. */
   actionLabel: string
   actionDisabled: boolean

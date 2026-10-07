@@ -10,7 +10,6 @@
 import { computed, ref, watch } from 'vue'
 import { useStateVersion, useGameManager } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import QuestFidelityScene from './fidelity/QuestFidelityScene.vue'
 import QuestGroupTabs from './tabs/QuestGroupTabs.vue'
@@ -25,7 +24,6 @@ const props = defineProps<{
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { bumpState } = useStateVersion()
-const { items: navItems, navigate } = usePaperNavigation()
 
 // Cadence filter is model-driven: beta admits 'once' only, so the tab
 // strip renders Tat Ca + one tab per cadence actually present (other
@@ -80,7 +78,7 @@ function onClaim(questId: string) {
 
 <template>
   <SceneDesignCanvas overlay>
-  <QuestFidelityScene :quests="[]" :selected="undefined" filter="all" :rewards="[]" :navigation="navItems" notice="" @navigate="navigate" @back="ui.closeHomeOverlays()">
+  <QuestFidelityScene :quests="[]" :selected="undefined" filter="all" :rewards="[]" notice="" @back="ui.closeHomeOverlays()">
     <template #tabs>
       <QuestGroupTabs
         class="quest-tabs-slot"

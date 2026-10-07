@@ -6,7 +6,7 @@ import type { TribulationChapterDisplay } from './tribulationUi'
 const props = defineProps<{ chapters: readonly TribulationChapterDisplay[]; current: string }>()
 const { t } = useI18n()
 const index = computed(() => props.chapters.findIndex(chapter => chapter.id === props.current))
-const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/combat-v2/ornament-ring-v1.png')
+const ring = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/tribulation/countdown-v1.png')
 </script>
 <template><ol class="chapter-tracker" :aria-label="t('chapters')"><li v-for="(chapter, i) in chapters" :key="chapter.id" :class="{ current: chapter.id === current, complete: i < index }" :aria-current="chapter.id === current ? 'step' : undefined"><span class="chapter-medallion"><img class="chapter-ring" :src="ring" alt=""><img class="chapter-symbol" :src="chapter.icon" alt=""></span><strong>{{ i + 1 }}. {{ chapter.name }}</strong><span class="chapter-hint">{{ chapter.hint }}</span></li></ol></template>
 <style scoped>

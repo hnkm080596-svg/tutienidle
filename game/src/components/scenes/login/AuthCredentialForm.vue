@@ -24,7 +24,7 @@ const emit = defineEmits<{ submit: [] }>()
 </script>
 
 <template>
-  <form id="auth-credential-panel" class="auth-form" role="tabpanel" :aria-labelledby="`auth-tab-${mode}`" data-hk-region="form" @submit.prevent="emit('submit')">
+  <form id="auth-credential-panel" class="auth-form" data-hk-region="form" @submit.prevent="emit('submit')">
     <LoginIdField v-model="loginId" />
     <LoginPasswordField v-model="password" :mode="mode" />
     <LoginNoticeLines :invalid-id="Boolean(loginId && !isValidLoginId(loginId))" :error="error"
@@ -36,7 +36,7 @@ const emit = defineEmits<{ submit: [] }>()
 <style scoped>
 .auth-form {
   display: grid;
-  gap: 1.5cqw;
+  gap: 1cqw;
   text-align: left;
 }
 </style>

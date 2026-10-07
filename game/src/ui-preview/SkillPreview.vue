@@ -7,7 +7,6 @@ import SkillFidelityScene from '@/components/scenes/skill/fidelity/SkillFidelity
 import type { SkillUiNode, SkillUiEdge } from '@/components/scenes/skill/fidelity/skillUi'
 import { SKILL_CONSTELLATION_LAYOUTS } from '@/data/progression/SkillConstellationLayouts'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { previewPaperNavigation } from './paperNavigation'
 const { t } = useI18n()
 const elementIds = ['fire', 'wood', 'water', 'metal', 'earth'] as const
 type ElementId = typeof elementIds[number]
@@ -15,7 +14,6 @@ const element = shallowRef<ElementId>('fire')
 const selectedId = shallowRef('hoa_linh_ngo')
 const notice = shallowRef('')
 const pointer = shallowRef({ x: 0, y: 0 })
-const navigation = computed(() => previewPaperNavigation(t))
 const elements = computed(() => elementIds.map(id => ({ id, label: t(`element.${id}`), icon: resolveAssetUrl(`/assets/ui/elements/el-${id}.png`) })))
 // Authored fire glyph from SkillConstellationLayouts renders the real
 // constellation in preview; the other elements keep the generic
@@ -38,7 +36,8 @@ const nodes = computed<SkillUiNode[]>(() => {
   const make = (id: string, name: string, x: number, y: number, state: SkillUiNode['state'], level: string): SkillUiNode => ({
     id, name, icon, x, y, state, level,
     description: id === 'root' && element.value === 'fire' ? t('fireDescription') : t('description'),
-    rows: [{ id: 'level', label: t('level'), value: level }, { id: 'effect', label: t('effect'), value: t('effectValue') }],
+    experience: '1.240 / 2.500',
+    stats: [{ id: 'effect', label: t('effect'), value: t('effectValue') }],
     conditions: state === 'locked' ? [t('lockedHint')] : [],
     costLabel: state === 'learned' ? '' : t('costSample'),
     actionLabel: state === 'learned' ? '' : state === 'available' ? t('upgrade') : t('upgrade'),
@@ -61,18 +60,10 @@ const edges = computed<SkillUiEdge[]>(() =>
 )
 const selected = computed(() => nodes.value.find(node => node.id === selectedId.value) ?? nodes.value[0] ?? null)
 function chooseElement(id: string) { if (elementIds.includes(id as ElementId)) { element.value = id as ElementId; selectedId.value = element.value === 'fire' ? 'hoa_linh_ngo' : 'root'; notice.value = '' } }
-function navigate(id: string) {
-  if (id === 'inventory') { window.location.assign('/ui-inventory.html'); return }
-  if (id === 'equipment') { window.location.assign('/ui-equipment.html'); return }
-  const routes: Record<string, string> = { character: '/ui-character.html', realm: '/ui-realm.html', technique: '/ui-technique.html', body: '/ui-body.html', exploration: '/ui-exploration.html', alchemy: '/ui-alchemy.html' }
-  const route = routes[id]
-  if (route) window.location.assign(route)
-  else if (id !== 'skill') notice.value = t('navNotice', { name: t(`nav.${id}`) })
-}
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function move(event: PointerEvent) { const rect = (event.currentTarget as HTMLElement).getBoundingClientRect(); pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) } }
 </script>
 <template>
-  <SceneDesignCanvas><div class="skill-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><SkillFidelityScene :nodes="nodes" :edges="edges" :elements="elements" :element="element" :selected="selected" :navigation="navigation" :notice="notice" :identity="`Pháp Tu · ${t(`element.${element}`)}`" insight-label="Cảm Ngộ: 42" :respec-disabled="false" :constellation="constellation" preview @select="selectedId = $event" @element="chooseElement" @navigate="navigate" @back="back" @upgrade="notice = t('notice')" @respec="notice = t('notice')" /></div></SceneDesignCanvas>
+  <SceneDesignCanvas><div class="skill-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><SkillFidelityScene :nodes="nodes" :edges="edges" :elements="elements" :element="element" :selected="selected" :notice="notice" :identity="`Pháp Tu · ${t(`element.${element}`)}`" insight-label="Cảm Ngộ: 42" :respec-disabled="false" :constellation="constellation" preview @select="selectedId = $event" @element="chooseElement" @back="back" @upgrade="notice = t('notice')" @respec="notice = t('notice')" /></div></SceneDesignCanvas>
 </template>
 <style scoped>.skill-preview { position:relative; width:100%; height:100%; }</style>

@@ -3,21 +3,18 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
 import { isValidCharacterName } from '@/services/character/CharacterCreationService'
-import type { TalentDefinition } from '@/core/talent/Talent'
+import { type TalentDefinition } from '@/core/talent/Talent'
 import type { RemoteCharacterMetadata } from '@/services/session/BackendStatus'
 import { useAudioStore } from '@/stores/audio'
-import CreationSceneLayout from '@/components/scenes/creation/CreationSceneLayout.vue'
-import CreationBackButton from '@/components/scenes/creation/CreationBackButton.vue'
-import CreationScrollShell from '@/components/scenes/creation/CreationScrollShell.vue'
-import CreationTitleBlock from '@/components/scenes/creation/CreationTitleBlock.vue'
-import CreationNameSection from '@/components/scenes/creation/CreationNameSection.vue'
-import CreationTalentSection from '@/components/scenes/creation/CreationTalentSection.vue'
-import CreationStarterSlot from '@/components/scenes/creation/CreationStarterSlot.vue'
-import CreationFooter from '@/components/scenes/creation/CreationFooter.vue'
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { CREATION_SKILL_PREVIEW } from '@/components/scenes/creation/creationPreview'
+import { DAO_NAME_POOL } from '@/data/creation/DaoNamePool'
+import { buildTalentTooltip, talentIconUrl } from '@/composables/useTalentTooltip'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 // The committed creation contract remains name + talent only.
-// Starter tiles are a read-only visual preview until the gameplay hookup.
+// Beta grants Linh Bao; the other dao-lo cells are locked previews.
 // The talent offer list still arrives from the existing service.
 export interface CharacterCreationPayload {
   name: string
@@ -37,17 +34,76 @@ const rolling = ref(false)
 const error = ref('')
 const creating = ref(false)
 
+// Minh ruling: one master die covers all three sections - it fills the
+// name only when untouched/empty, always picks the single open dao-lo
+// cell, and rerolls the talent offer before picking one of the new 3.
+const nameTouched = ref(false)
+
+
 const { t } = useI18n()
+
+// Dao-lo row (Minh ruling 2026-10-05): dao lo fixes art + starter
+// skill + the breakthrough lane from creation; the player picks the
+// dao lo itself, and beta opens exactly one - Tu Phap (mortal starter
+// linh_bao) - so the master die always lands on it. Every other cell
+// stays locked/hidden. The pick stays local UI state and never enters
+// the payload.
+interface DaoLoCell { skillId: string | null; labelKey: string; locked: boolean }
+const DAO_LO_CELLS: readonly DaoLoCell[] = [
+  { skillId: 'tram', labelKey: 'tuKiem', locked: true },
+  { skillId: 'linh_bao', labelKey: 'tuPhap', locked: false },
+  { skillId: 'huy_quyen', labelKey: 'tuThe', locked: true },
+  { skillId: null, labelKey: 'hidden', locked: true },
+  { skillId: null, labelKey: 'hidden', locked: true },
+]
+const starterBySkillId = new Map(CREATION_SKILL_PREVIEW.map((option) => [option.id, option]))
+const pickedPathId = ref<string | null>(null)
+function pickPath(cell: DaoLoCell) {
+  if (cell.locked || creating.value) return
+  pickedPathId.value = cell.skillId
+}
+
+const TALENT_GRID_SIZE = 9
+const lockedTalentSlots = computed(() => Math.max(0, TALENT_GRID_SIZE - talents.value.length))
+const selectedTalent = computed(
+  () => talents.value.find((talent) => talent.id === selectedTalentIds.value[0]) ?? null,
+)
+// Detail aside renders the SAME talent model the hover tooltip shows -
+// one builder (useTalentTooltip) owns talent presentation everywhere.
+const selectedTalentCard = computed(() =>
+  selectedTalent.value ? buildTalentTooltip(selectedTalent.value, t) : null,
+)
 
 const validName = computed(() => isValidCharacterName(name.value))
 const ready = computed(() => validName.value && selectedTalentIds.value.length === 1)
 
-const pickedTalentName = computed(
-  () => talents.value.find((talent) => talent.id === selectedTalentIds.value[0])?.name ?? '',
-)
+const pickedTalentName = computed(() => selectedTalent.value?.name ?? '')
 const summary = computed(() =>
   t('onboarding.creation.summary', { name: name.value.trim(), talent: pickedTalentName.value }),
 )
+
+async function masterRandom() {
+  if (creating.value || rolling.value) return
+  useAudioStore().cue('progress.reroll')
+  if (!nameTouched.value || !name.value.trim()) {
+    const roll = () => DAO_NAME_POOL[Math.floor(Math.random() * DAO_NAME_POOL.length)] ?? 'Lạc Vân Trần'
+    let pick = roll()
+    if (DAO_NAME_POOL.length > 1) {
+      while (pick === name.value) pick = roll()
+    }
+    name.value = pick
+  }
+  const open = DAO_LO_CELLS.filter((cell) => cell.skillId !== null && !cell.locked)
+  const cell = open[Math.floor(Math.random() * open.length)]
+  if (cell) pickedPathId.value = cell.skillId
+  // Talent: reroll the offer FIRST, then randomly pick one of the new 3.
+  await reroll()
+  if (talents.value.length > 0) {
+    const pick = talents.value[Math.floor(Math.random() * talents.value.length)]
+    if (pick) selectedTalentIds.value = [pick.id]
+  }
+}
+
 function toggleTalent(talent: TalentDefinition) {
   if (rolling.value || creating.value) return
   const index = selectedTalentIds.value.indexOf(talent.id)
@@ -100,33 +156,109 @@ async function finish() {
 }
 
 onMounted(() => { void reroll() })
+
+const art = {
+  panel: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png'),
+  cloud: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@2x.png'),
+}
+const style = { '--trial-panel': `url('${art.panel}')` }
 </script>
 
 <template>
-  <CreationSceneLayout>
-    <template #scroll>
-      <CreationScrollShell>
-        <template #back><CreationBackButton :disabled="creating" @back="emit('back')" /></template>
-        <CreationTitleBlock />
-        <CreationNameSection v-model="name" :valid-name="validName" :disabled="creating" />
-        <CreationTalentSection
-          :talents="talents"
-          :selected-ids="selectedTalentIds"
-          :rolling="rolling"
-          :error="error"
-          :creating="creating"
-          @toggle="toggleTalent"
-          @reroll="reroll"
-        />
-        <CreationStarterSlot :options="CREATION_SKILL_PREVIEW" />
-        <CreationFooter
-          :ready="ready"
-          :creating="creating"
-          :summary="summary"
-          :error="talents.length > 0 ? error : ''"
-          @finish="finish"
-        />
-      </CreationScrollShell>
-    </template>
-  </CreationSceneLayout>
+  <section class="trial-creation-art hk-art-scene" :style="style" data-testid="character-creation-screen" data-hk-scene="creation">
+    <PcPaperButton class="trial-back" variant="secondary" data-testid="creation-back" :disabled="creating" @click="emit('back')">‹ {{ t('onboarding.creation.back') }}</PcPaperButton>
+    <header class="trial-heading"><img :src="art.cloud" alt=""></header>
+    <div class="trial-brush-ring" aria-hidden="true"><svg viewBox="0 0 500 500"><circle cx="250" cy="250" r="222" fill="none" stroke="currentColor" stroke-width="9" stroke-dasharray="340 7 100 12 32 3 190 9" /><circle cx="250" cy="250" r="210" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="160 8 40 12" /><circle cx="250" cy="250" r="234" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 8 100 4" /></svg><img v-for="position in ['top','right','bottom','left']" :key="position" :class="`trial-cloud-${position}`" :src="art.cloud" alt=""></div>
+    <section class="trial-creation-board" data-hk-region="creation-card">
+      <div class="trial-name-row" data-hk-region="name-section"><span class="trial-name-label">{{ t('onboarding.creation.nameStep.sectionTitle') }}</span><input v-model="name" data-testid="creation-name-input" maxlength="20" :disabled="creating" :aria-invalid="name.length > 0 && !validName" :aria-label="t('onboarding.creation.nameStep.label')" :placeholder="t('onboarding.creation.nameStep.placeholder')" aria-describedby="creation-name-desc" @input="nameTouched = true"><span id="creation-name-desc" class="creation-visually-hidden">{{ t('onboarding.creation.nameStep.minLengthHint', { length: name.length }) }}</span><PcPaperButton icon variant="secondary" class="trial-name-random" data-testid="creation-random-all" :disabled="creating" :aria-label="t('onboarding.creation.talentStep.randomAll')" @click="masterRandom">⚄</PcPaperButton></div>
+      <h2 class="trial-section-title trial-path-title">{{ t('onboarding.creation.pathStep.sectionTitle') }}</h2>
+      <p class="trial-path-description">{{ t('onboarding.creation.pathStep.description') }}</p>
+      <div class="trial-paths" data-hk-region="dao-lo" role="radiogroup" :aria-label="t('onboarding.creation.pathStep.sectionTitle')">
+        <button v-for="(cell, index) in DAO_LO_CELLS" :key="cell.skillId ?? `hidden-${index}`" type="button" role="radio" :aria-checked="pickedPathId === cell.skillId" class="trial-path-cell" :class="{ selected: pickedPathId === cell.skillId, locked: cell.locked }" :disabled="cell.locked || creating" :title="cell.skillId ? starterBySkillId.get(cell.skillId)?.description : undefined" :data-testid="cell.skillId ? `creation-starter-${cell.skillId}` : `creation-starter-hidden-${index}`" @click="pickPath(cell)"><InkNineSlice :chrome-id="pickedPathId === cell.skillId ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ cell.skillId ? t(`onboarding.creation.pathStep.paths.${cell.labelKey}`) : '?' }}</span></button>
+      </div>
+      <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}</h2>
+      <div class="trial-talent-workspace">
+        <div class="trial-talent-grid" data-hk-region="talent-grid" role="radiogroup" :aria-label="t('onboarding.creation.talentStep.sectionTitle')">
+          <button v-for="talent in talents" :key="talent.id" type="button" role="radio" :aria-checked="selectedTalentIds.includes(talent.id)" :data-testid="`creation-talent-${talent.id}`" :class="{ selected: selectedTalentIds.includes(talent.id) }" :disabled="rolling || creating" v-tooltip="buildTalentTooltip(talent, t)" @click="toggleTalent(talent)"><span class="trial-talent-seal"><img :src="talentIconUrl(talent)" alt=""></span><b>{{ talent.name }}</b></button>
+          <button v-for="slot in lockedTalentSlots" :key="`locked-${slot}`" type="button" disabled class="locked" :data-testid="`creation-locked-talent-${slot}`"><b>?</b><i>{{ t('onboarding.creation.talentStep.locked') }}</i></button>
+        </div>
+        <aside class="trial-talent-detail" aria-live="polite">
+          <template v-if="selectedTalentCard">
+            <span class="trial-talent-seal"><img :src="selectedTalentCard.imagePath" alt=""></span>
+            <h3>{{ selectedTalentCard.name }} · {{ selectedTalentCard.rarityLabel }}</h3>
+            <p>{{ selectedTalentCard.description }}</p>
+            <h4 class="trial-section-title">{{ selectedTalentCard.featuresLabel }}</h4>
+            <ul><li v-for="label in selectedTalentCard.tagLabels" :key="label">{{ label }}</li></ul>
+          </template>
+          <p v-else class="trial-talent-detail__empty">{{ rolling ? t('onboarding.creation.talentStep.rolling') : t('onboarding.creation.talentStep.hint') }}</p>
+        </aside>
+      </div>
+      <PcPaperButton variant="secondary" class="trial-begin" data-testid="creation-finish" data-hk-region="primary-action" :aria-disabled="!ready || creating" @click="finish">{{ creating ? t('onboarding.creation.creating') : t('onboarding.creation.finish') }}</PcPaperButton>
+      <p class="trial-notice" role="status" aria-live="polite" aria-atomic="true"><template v-if="error">{{ error }}</template><template v-else-if="ready">{{ summary }}</template></p>
+    </section>
+  </section>
 </template>
+
+<style scoped>
+.trial-creation-art { position: absolute; inset: 0; }
+.trial-back { position: absolute; top: 20px; left: 22px; min-width: 125px; z-index: 2; font-size: 19px; }
+.trial-heading { position: absolute; left: 175px; right: 40px; top: 20px; height: 82px; border-bottom: 1px solid #b08a47; }
+.trial-heading img { position: absolute; right: 20px; top: -7px; width: 280px; height: 95px; object-fit: contain; opacity: .5; }
+.trial-brush-ring { position: absolute; left: 82px; top: 170px; width: 550px; height: 550px; color: #ae813c; opacity: .6; pointer-events: none; }
+.trial-brush-ring svg { width: 100%; height: 100%; }
+.trial-brush-ring img { position: absolute; width: 190px; height: 90px; object-fit: contain; }
+.trial-cloud-top { top: 5px; right: 25px; }.trial-cloud-right { right: -40px; top: 180px; }.trial-cloud-bottom { bottom: 20px; left: 15px; }.trial-cloud-left { left: -45px; top: 140px; }
+.trial-creation-board { position: absolute; top: 110px; right: 40px; width: 700px; height: 650px; padding: 38px 28px 22px; color: #f1e2c0; background: var(--trial-panel) center / contain no-repeat; }
+.trial-creation-board::before { display: none; }
+.trial-section-title { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 8px; font: 700 22px var(--pc-font-body); }
+.trial-section-title::before, .trial-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg,transparent,#b6934c); }
+.trial-section-title::after { transform: rotate(180deg); }
+.trial-talent-workspace { display: grid; grid-template-columns: 350px 1fr; gap: 18px; height: 260px; }
+.trial-talent-grid { display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,minmax(0,1fr)); gap: 9px; }
+.trial-talent-grid button { min-width: 0; min-height: 93px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 3px double #8c794f; background: linear-gradient(145deg,#323025,#181e19); color: #f1e2c0; cursor: pointer; font: 15px var(--pc-font-body); }
+.trial-talent-grid button.selected { border-color: #e2b257; background: radial-gradient(#b48b3d,#382b17); box-shadow: inset 0 0 12px #deb35b70,0 0 7px #cf9e4a60; }
+.trial-talent-grid button:hover:not(.selected):not(:disabled) { border-color: #c3a464; background: #403b2b; }
+.trial-talent-grid button.locked { cursor: default; color: #8a7c56; background: linear-gradient(145deg,#26241d,#131713); }
+.trial-talent-grid button.locked b { font-size: 26px; line-height: 1; color: #6f633f; }
+.trial-talent-grid button.locked i { font-style: normal; font-size: 12px; color: #6f633f; }
+/* Real talent names can be longer than the mock's sample names - keep
+   them on one line so a 2-line name cannot stretch the tile past the
+   mock's 93px row height (the full name shows in the detail aside). */
+.trial-talent-grid button b { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: inherit; }
+.trial-talent-seal { display: grid; place-items: center; width: 49px; height: 49px; border-radius: 50%; border: 3px double #c7ad78; background: radial-gradient(#463d28,#1b211a); }
+.trial-talent-seal img { width: 35px; height: 35px; object-fit: contain; }
+.trial-talent-detail { padding: 12px 16px; border: 3px double #9c844f; background: #161b17b0; text-align: center; overflow: auto; }
+.trial-talent-detail .trial-talent-seal { margin: 0 auto; }
+.trial-talent-detail h3 { font-size: 24px; margin: 7px 0; }
+.trial-talent-detail p { font-size: 14px; line-height: 1.35; margin: 7px 0 14px; text-align: left; }
+.trial-talent-detail h4 { font-size: 18px; }
+.trial-talent-detail ul { text-align: left; padding-left: 16px; font-size: 14px; line-height: 1.35; margin: 0; }
+.trial-talent-detail li { margin-bottom: 4px; }
+.trial-talent-detail li::marker { color: #dbb260; }
+.trial-talent-detail__empty { text-align: center; color: #b9a77f; }
+.trial-name-row { display: flex; align-items: center; gap: 12px; padding: 0 55px; margin: 10px 0 4px; }
+.trial-name-label { flex: 0 0 auto; color: #e8cf9e; font: 700 22px var(--pc-font-body); white-space: nowrap; }
+.trial-name-random { flex: 0 0 auto; min-height: 42px; font-size: 26px; }
+.trial-name-row input { min-width: 0; flex: 1; height: 42px; padding: 8px 16px; border: 1px solid #b49860; background: #1b211a; color: #f1e2c0; font: 15px var(--pc-font-body); }
+.trial-name-row input::placeholder { color: #aaa18b; }
+.trial-path-title { margin: 14px 0 4px; font-size: 18px; }
+.trial-path-description { margin: 0 0 8px; font-size: 14px; text-align: center; }
+.trial-talent-title { margin-top: 20px; display: flex; align-items: center; gap: 12px; }
+.trial-paths { display: grid; grid-template-columns: repeat(5,1fr); gap: 11px; }
+.trial-path-cell { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; padding: 7px 8px; min-height: 44px; border: 0; background: transparent; color: #f1e2c0; font: 15px var(--pc-font-body); cursor: pointer; }
+.trial-path-cell > :not(.ink-nine-slice) { position: relative; z-index: 2; }
+.trial-path-cell:not(.locked) .trial-path-cell__label { color: #f8ecc8; font-weight: 700; text-shadow: 0 1px 2px #1c1508; }
+.trial-path-cell.selected .trial-path-cell__label { color: #2f2415; text-shadow: none; }
+.trial-path-cell.locked { cursor: default; }
+.trial-path-cell.locked :deep(.ink-nine-slice) { opacity: .45; }
+.trial-path-cell.locked .trial-path-cell__label { color: #8a7c56; }
+.trial-begin { position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }
+.trial-begin[aria-disabled="true"] { cursor: not-allowed; filter: grayscale(.8); }
+.trial-begin[aria-disabled="true"]:hover { filter: grayscale(.8); }
+/* Mock hover recipe for every paper-button in this scene (same as the
+   auth preview): enabled buttons take the gold face + dark ink text. */
+.trial-creation-art .pc-paper-button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible) { color: #3c2810; filter: none; text-shadow: 0 1px #fff0c2; }
+.trial-creation-art .pc-paper-button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible)::before { border-image-source: var(--pc-primary-button); filter: brightness(.92) saturate(.85) drop-shadow(0 0 2px #d9b56a40); }
+.trial-notice { position: absolute; bottom: -35px; left: 0; right: 0; text-align: center; color: #543d21; font-size: 16px; margin: 0; min-height: 1.2em; }
+.creation-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+</style>

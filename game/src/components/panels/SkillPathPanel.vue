@@ -13,5 +13,5 @@ const ui = useUiStore()
 </script>
 
 <template>
-  <SkillSurface v-if="ui.standalonePanel === 'skill'" />
+  <Transition name="th-panel-swap"><SkillSurface v-if="ui.standalonePanel === 'skill'" /></Transition>
 </template>

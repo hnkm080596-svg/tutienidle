@@ -83,7 +83,7 @@ async function openWheelSlot(page: import('@playwright/test').Page, slotId: stri
   const slot = page.locator(`[data-wheel-slot="${slotId}"]`)
   for (let attempt = 0; attempt < 4; attempt += 1) {
     if (!(await slot.isVisible().catch(() => false))) {
-      await page.keyboard.press('Tab')
+      await page.keyboard.press('`')
     }
     // Orbit animation needs a beat before the slot is click-stable.
     await page.waitForTimeout(700)
@@ -181,7 +181,7 @@ test('progression slice fixed screens', async ({ page }) => {
     await expect(entitlementModal).toHaveCount(0)
   }
 
-  await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+  await expect(page.locator('.df-wheel')).toBeAttached({ timeout: 30_000 })
   await waitForPresentationIdle(page)
 
   // ---- QuanKhiPanel - the three path choices now carry descriptions + kit

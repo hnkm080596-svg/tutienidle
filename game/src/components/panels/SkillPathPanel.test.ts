@@ -91,8 +91,10 @@ function mountPanel(
     container,
     scene: () => container.querySelector('.skill-paper-scene'),
     nodes: () => container.querySelectorAll('.skill-node'),
-    heading: () => container.querySelector('.skill-heading p')?.textContent ?? null,
-    actionButton: () => container.querySelector<HTMLButtonElement>('.skill-upgrade'),
+    heading: () => container.querySelector('.skill-head p')?.textContent ?? null,
+    holdHint: () => container.querySelector<HTMLElement>('.skill-hold-hint'),
+    holdCircle: (id: string) =>
+      container.querySelector<SVGCircleElement>(`.skill-node[data-node-id="${id}"] .skill-node-hold circle`),
     respecButton: () => container.querySelector<HTMLButtonElement>('.skill-respec'),
     selectNode: (id: string) =>
       container.querySelector<HTMLButtonElement>(`.skill-node[data-node-id="${id}"]`),
@@ -152,23 +154,24 @@ describe('SkillPathPanel (scene 07 fidelity)', () => {
 
     await nextTick()
 
-    // Root (unpurchased, prereq-free, affordable) -> unlock CTA.
+    // Root (unpurchased, prereq-free, affordable) -> unlock hold hint;
+    // activation is press-and-hold on the node (no button in the card).
     view.selectNode('kiem_root')!.click()
     await nextTick()
-    const unlock = view.actionButton()!
-    expect(unlock.textContent).toContain(i18n.global.t('panels.skillPath.nodeInspector.actions.unlock'))
-    expect(unlock.disabled).toBe(false)
-    unlock.click()
+    expect(view.holdHint()!.textContent).toContain(i18n.global.t('panels.skillPath.nodeInspector.actions.unlock'))
+    view.selectNode('kiem_root')!.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0 }))
+    await nextTick()
+    view.holdCircle('kiem_root')!.dispatchEvent(new Event('animationend'))
     await nextTick()
     expect(purchaseNode).toHaveBeenCalledWith('kiem_root')
 
-    // Owned node -> upgrade CTA.
+    // Owned node -> upgrade hold hint.
     view.selectNode('kiem_owned')!.click()
     await nextTick()
-    const upgrade = view.actionButton()!
-    expect(upgrade.textContent).toContain(i18n.global.t('panels.skillPath.nodeInspector.actions.upgrade'))
-    expect(upgrade.disabled).toBe(false)
-    upgrade.click()
+    expect(view.holdHint()!.textContent).toContain(i18n.global.t('panels.skillPath.nodeInspector.actions.upgrade'))
+    view.selectNode('kiem_owned')!.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0 }))
+    await nextTick()
+    view.holdCircle('kiem_owned')!.dispatchEvent(new Event('animationend'))
     await nextTick()
     expect(upgradeNode).toHaveBeenCalledWith('kiem_owned')
 

@@ -14,7 +14,7 @@ import {
  */
 
 async function openSettings(page: import('./fixtures').Page) {
-  await page.keyboard.press('Tab')
+  await page.keyboard.press('`')
   const settingsSlot = page.locator('[data-wheel-slot="settings"]')
   await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
   await settingsSlot.click()

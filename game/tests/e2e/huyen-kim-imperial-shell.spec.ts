@@ -130,8 +130,11 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await waitForPresentationIdle(page)
-    // World chrome: top bar + building hotspots + command wheel toggle.
-    await expect(page.locator('.global-top-bar')).toBeVisible({ timeout: 10_000 })
+    // World chrome: landscape header (profile + currencies) + nav rail +
+    // the Backquote command wheel.
+    await expect(page.locator('.home-design-profile')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('.home-design-currencies')).toBeVisible()
+    await expect(page.locator('.home-navigation-surface')).toBeVisible()
     await shot(page, '03-dong-phu')
     assertNoBrowserErrors(errors)
   })
@@ -143,7 +146,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const scene = page.locator('.cf-scene')
     await expect(scene).toBeVisible({ timeout: 15_000 })
     await expect(scene.locator('.cf-figure')).toBeVisible({ timeout: 10_000 })
-    await expect(scene.locator('.cf-details__body')).toBeVisible()
+    await expect(scene.locator('[data-testid="character-detail-scroll"]')).toBeVisible()
     await shot(page, '04-character')
     assertNoBrowserErrors(errors)
   })
@@ -233,7 +236,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     await bootFreshMortal(page)
 
     // Enter a stage-1 battle through the real flow.
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
@@ -288,7 +291,7 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()

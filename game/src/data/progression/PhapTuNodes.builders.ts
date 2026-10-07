@@ -26,6 +26,23 @@ export const PHAP_TU_ELEMENT_ROOT_IDS: Record<ElementType, string> = {
   earth: 'tho_linh_ngo',
 }
 
+// Ailment display name per element, for node copy that names the
+// element's affliction instead of the generic 'tat trang' wording.
+const AILMENT_NAME: Record<ElementType, string> = {
+  wood: 'Trúng Độc',
+  fire: 'Hỏa Ấn',
+  earth: 'Thạch Hóa',
+  metal: 'Xuất Huyết',
+  water: 'Tê Cóng',
+}
+
+// Authored node names per element (Minh's rename table). Only fire has a
+// name set so far - other elements keep the generic patterns until their
+// own tables land.
+const ELEMENT_NODE_NAMES: Partial<Record<ElementType, { root: string; mastery: string; special: string }>> = {
+  fire: { root: 'Hỏa Chủng', mastery: 'Liệt Hỏa', special: 'Tam Muội Chân Ý' },
+}
+
 /** Linh Luc Ho The cap granted by linh_ngo_<special> (spec D9; TBD). */
 export const LINH_NGO_HO_THE_CAP = 0.25
 
@@ -56,7 +73,7 @@ function elementRoot(element: ElementType): ProgressionNode {
 
   return {
     id: rootId,
-    name: `${ELEMENT_LABELS[element]} Linh Ngộ`,
+    name: ELEMENT_NODE_NAMES[element]?.root ?? `${ELEMENT_LABELS[element]} Linh Ngộ`,
     description: `Mở hành ${ELEMENT_LABELS[element]} — chọn nguyên tố Pháp Tu (nguyên tử, qua nghi lễ nhập môn Ngũ Hành).`,
     type: 'major',
     role: 'root',
@@ -108,12 +125,12 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // ruling F14).
     growth(
       `${element}_ailment_mastery`,
-      `${label} Chưởng`,
-      `+4% uy lực tật trạng, +3% thời gian tật trạng ${label}/cấp.`,
+      ELEMENT_NODE_NAMES[element]?.mastery ?? `${label} Chưởng`,
+      `+4% uy lực ${AILMENT_NAME[element]}, +3% tỉ lệ áp dụng ${AILMENT_NAME[element]}/cấp.`,
       element,
       [
         stat(`${element}_ailment_mastery_pot`, 'ailmentPotencyPercent', 0.04, 0.04),
-        stat(`${element}_ailment_mastery_dur`, 'ailmentDurationPercent', 0.03, 0.03),
+        stat(`${element}_ailment_mastery_app`, 'elementApplicationPercent', 0.03, 0.03),
       ],
     ),
 
@@ -123,7 +140,7 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // node follows it; the kit ends at the special.
     {
       id: `linh_ngo_${specialId}`,
-      name: `Linh Ngộ ${label} Đặc Biệt`,
+      name: ELEMENT_NODE_NAMES[element]?.special ?? `Linh Ngộ ${label} Đặc Biệt`,
       description: `Mở khóa ${label} đặc biệt — Pháp Trạng ${label} và Linh Lực Hộ Thể.`,
       type: 'major',
       role: 'keystone',

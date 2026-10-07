@@ -123,22 +123,25 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     await bootFreshMortal(page)
 
     await openLeftMode(page, 'character')
-    const heading = page.locator('.cf-details__heading')
-    await expect(heading).toBeVisible({ timeout: 10_000 })
+    const dock = page.locator('[data-testid="character-detail-scroll"]')
+    await expect(dock).toBeVisible({ timeout: 10_000 })
     // The Chi Tiet dock is always rendered open - no toggle, so the
-    // body is visible immediately without a click.
-    await expect(page.locator('.cf-details__body')).toBeVisible()
+    // stat cards are visible immediately without a click.
+    await expect(dock.locator('.character-card-scroll').first()).toBeVisible()
 
-    // Swap to inventory via the shared rail - the dock is a
-    // character-surface overlay and must not render over the bag.
-    await page.locator('.paper-navigation-item[data-nav-id="inventory"]').click()
+    // Swap to inventory - the dock is a character-surface overlay and
+    // must not render over the bag. The in-panel nav rail was removed
+    // with the G3 skin (R9), so the swap goes through the same store
+    // action the rail used to call.
+    await openLeftMode(page, 'inventory')
     await expect(page.locator('.inventory-scene')).toBeVisible({ timeout: 10_000 })
+    await expect(dock).toHaveCount(0)
 
     // Back to character: the dock is still open - there is no dock
     // state to reset or resurrect.
-    await page.locator('.paper-navigation-item[data-nav-id="character"]').click()
+    await openLeftMode(page, 'character')
     await expect(page.locator('.cf-scene')).toBeVisible({ timeout: 10_000 })
-    await expect(page.locator('.cf-details__body')).toBeVisible()
+    await expect(dock).toBeVisible()
 
     assertNoBrowserErrors(collected)
   })

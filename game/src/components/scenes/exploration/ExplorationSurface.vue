@@ -35,7 +35,6 @@ import type {
   ExplorationPaperModel,
   ExplorationReward,
 } from './fidelity/explorationUi'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { disabledReasonLabel } from './disabledReasonLabel'
 
 const TERRAIN_SRC = resolveAssetUrl('/assets/ui/huyen-kim/scene/exploration-v2/terrain-three-realms-v1.png')
@@ -64,7 +63,6 @@ const ui = useUiStore()
 const gameManager = useGameManager()
 const { startSelectedStage } = useBattleActions()
 const assetManager = inject(ASSET_BUNDLE_MANAGER_KEY, null)
-const { items: navItems, navigate } = usePaperNavigation()
 
 const notice = ref('')
 let noticeTimer: number | undefined
@@ -459,11 +457,10 @@ const paperModel = computed<ExplorationPaperModel>(() => ({
     <ExplorationFidelityScene
       :model="paperModel"
       :stage="paperStage"
-      :navigation="navItems"
+     
       :notice="notice"
       @select="selectStage"
       @zone="selectZone"
-      @navigate="navigate"
       @mode="pickMode"
       @stop-farm="stopAutoFarm"
       @open-build="openBuild"

@@ -15,7 +15,6 @@
  */
 import type { PlayerData } from './Player'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
-import type { ElementType } from '../element/ElementType'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from './CultivationPathRuntime'
 import { hasPathCapability, resolveActiveWayStatDomains } from './CultivationPathSystem'
 import { getActiveWayDefinition } from './CultivationPathKit'
@@ -48,6 +47,11 @@ import {
   isHiddenSpellPathway,
 } from '../phap-tu/PhapTuPath'
 import { buildPhapTheVariant } from '../phap-tu/PhapTheVariants'
+import {
+  applyPhapTuSkillDefinitionModifiers,
+  collectPhapTuSkillDefinitionModifiers,
+  SPECIAL_CD_FLOOR_TURNS,
+} from '../phap-tu/PhapTuNodeModifiers'
 import {
   KIM_LIET_PENETRATION_PER_STACK,
   PHAP_TU_TRANG_COST_PERCENT_OF_MAX,
@@ -389,20 +393,35 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       // corrupt-state GENERIC_PHYSICAL_BASIC fallback never does. Stamped on
       // `stamped` (not the return wrapper) so the empowered variant inherits
       // it through {...base}.
+      // Hoa lane + Tam Muoi trades (Minh rulings 2026-10-06) - the
+      // shared node -> authored-def channel folds purchased
+      // `skillDefinitionModifiers` aimed at this skill id into a DERIVED
+      // copy (cast-scoped stat deltas, damage multiplier, armor pierce,
+      // ailment interactions; the derived copy carries `castModifiers`
+      // through `stamped` into the empowered variant below).
+      const nodeFolded = applyPhapTuSkillDefinitionModifiers(
+        kitResolved,
+        collectPhapTuSkillDefinitionModifiers(player, deps.nodeRegistry.getAll()),
+        // Basic lane floor is 0: a CD delta may never invent a
+        // cooldown on a 0-CD basic nor clamp one upward (the 2-turn
+        // floor is the special-ult contract only).
+        0,
+      )
+
       // Hoa The gate (Minh ruling 2026-10-04) - the +1 The mint and the
       // Phap The empowerment only exist once the player owns the
       // `hoa_the` node; the node's level sets the mint chance
-      // (lv1 = 35%, lv3 = guaranteed). Locked => no stamp, no pool, and
+      // (10%/level). Locked => no stamp, no pool, and
       // resolveMaxThe caps the pool at 0 (see below).
       const hoaTheLevel = deps.getNodeLevel(HOA_THE_NODE_ID, player)
       const stamped: TurnSkillDefinition =
         resolved !== GENERIC_PHYSICAL_BASIC && hoaTheLevel > 0
           ? {
-              ...kitResolved,
+              ...nodeFolded,
               theGainOnLandedCast: 1,
               theGainChance: Math.min(1, hoaTheLevel * THE_GAIN_CHANCE_PER_LEVEL),
             }
-          : kitResolved
+          : nodeFolded
 
       return {
         ...stamped,
@@ -416,7 +435,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
           : {}),
       }
     },
-    resolveSpecialUltimate() {
+    resolveSpecialUltimate(player) {
       const committedElement = deps.getSpellPathElement()
       const element = committedElement !== undefined && isBetaElement(committedElement) ? committedElement : undefined
 
@@ -435,9 +454,16 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
               // Spec D8/F10 - the five Trang casts pay 30% of LIVE max
               // Linh Luc (evaluated at gate/consume time, never frozen);
               // the authored records carry no flat cost.
-              ...toTurnSkillDefinition(
-                specialSkill,
-                deps.skillSystem.getEffectiveSkill(specialSkill),
+              ...applyPhapTuSkillDefinitionModifiers(
+                toTurnSkillDefinition(
+                  specialSkill,
+                  deps.skillSystem.getEffectiveSkill(specialSkill),
+                ),
+                // Tam Muoi trades + Ngu Hoa (Minh rulings 2026-10-06):
+                // node-owned cooldown deltas land on this def, floored
+                // at the special-ult "minimum 2 turn CD" contract.
+                collectPhapTuSkillDefinitionModifiers(player, deps.nodeRegistry.getAll()),
+                SPECIAL_CD_FLOOR_TURNS,
               ),
               resourceCostPercentOfMax: PHAP_TU_TRANG_COST_PERCENT_OF_MAX,
             }

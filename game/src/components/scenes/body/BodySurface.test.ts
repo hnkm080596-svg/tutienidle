@@ -128,8 +128,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
     await nextTick()
 
     const figure = view.container.querySelector<HTMLImageElement>('.body-figure-art')
-    expect(figure?.getAttribute('src')).toContain('body-v2')
-    expect(figure?.getAttribute('src')).toContain('mortal-horse-stance')
+    expect(figure?.getAttribute('src')).toContain('silhouette-seated')
 
     view.unmount()
   })

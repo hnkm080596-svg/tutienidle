@@ -6,7 +6,7 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import ItemCardBody from '@/components/common/ItemCardBody.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import type { EquipmentTooltipContent, GradedItemTooltipContent, StatBreakdownTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
+import type { EquipmentTooltipContent, GradedItemTooltipContent, StatBreakdownTooltipContent, TalentTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
 import { i18n } from '@/i18n'
 
 const { content, reference } = useTooltip()
@@ -51,6 +51,9 @@ const techniqueContent = computed<TechniqueTooltipContent | null>(() =>
 // Stat-breakdown kind (character board) shares the flat section loop.
 const statContent = computed<StatBreakdownTooltipContent | null>(() =>
   content.value?.kind === 'stat' ? content.value : null,
+)
+const talentContent = computed<TalentTooltipContent | null>(() =>
+  content.value?.kind === 'talent' ? content.value : null,
 )
 const visibleSections = computed(
   () => techniqueContent.value?.sections ?? statContent.value?.sections ?? [],
@@ -196,6 +199,26 @@ function hideBrokenImage(event: Event) {
 
         <template v-else-if="content.kind === 'element'">
           <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
+        </template>
+
+        <template v-else-if="talentContent">
+          <header class="tooltip__header">
+            <div class="tooltip__icon-shell">
+              <span class="tooltip__icon-fallback">{{ talentContent.name.charAt(0) }}</span>
+              <img v-if="talentContent.imagePath" class="tooltip__icon" :src="talentContent.imagePath" :alt="talentContent.name" @error="hideBrokenImage" />
+            </div>
+            <div class="tooltip__heading">
+              <p class="tooltip__title">{{ talentContent.name }}</p>
+              <p class="tooltip__meta">{{ talentContent.rarityLabel }}</p>
+            </div>
+          </header>
+          <p v-if="talentContent.description" class="tooltip__description tooltip__description--rich">{{ talentContent.description }}</p>
+          <section v-if="talentContent.tagLabels.length" class="tooltip__section">
+            <p class="tooltip__section-label">{{ talentContent.featuresLabel }}</p>
+            <div v-for="label in talentContent.tagLabels" :key="label" class="tooltip__section-row">
+              <span class="tooltip__row-label">{{ label }}</span>
+            </div>
+          </section>
         </template>
 
         <template v-else-if="statContent">

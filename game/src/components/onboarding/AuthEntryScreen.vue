@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import LoginScrollCard from '@/components/scenes/login/LoginScrollCard.vue'
-import LoginLogoBlock from '@/components/scenes/login/LoginLogoBlock.vue'
 import LoginLocaleChips from '@/components/scenes/login/LoginLocaleChips.vue'
-import AuthModeTabs from '@/components/scenes/login/AuthModeTabs.vue'
 import AuthCredentialForm from '@/components/scenes/login/AuthCredentialForm.vue'
 import LoginUpgradeSection from '@/components/scenes/login/LoginUpgradeSection.vue'
-import AuthSecondaryActions from '@/components/scenes/login/AuthSecondaryActions.vue'
+import LoginOpening from '@/components/scenes/login/LoginOpening.vue'
+import LoginSideDrawer from '@/components/scenes/login/LoginSideDrawer.vue'
+import LoginSettingsContent from '@/components/scenes/login/LoginSettingsContent.vue'
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
+import '@/assets/tien-hiep-entry.css'
 import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
 import { readResumeCandidate, consumeResetNotice, type ResumeCandidate } from '@/composables/resumeSession'
@@ -23,6 +24,26 @@ const loginId = ref('')
 const password = ref('')
 const submitting = ref(false)
 const error = ref('')
+const drawer = shallowRef<'auth' | 'settings' | 'exit' | null>(null)
+const exited = ref(false)
+
+function confirmExit() {
+  drawer.value = null
+  if (typeof window !== 'undefined' && window.electronAPI?.isElectron) {
+    // Electron: window close runs through the quit-flush interceptor, so
+    // pending saves flush before the app actually exits.
+    window.close()
+    return
+  }
+  exited.value = true
+}
+
+function revealAuthentication(nextMode: 'login' | 'register') {
+  if (submitting.value) return
+  mode.value = nextMode
+  error.value = ''
+  drawer.value = 'auth'
+}
 
 const { t } = useI18n()
 
@@ -128,13 +149,24 @@ function submit() {
 function startGuest() {
   requireAccountSwitchAck(() => void authenticate('guest'))
 }
+
+function playOrContinue() {
+  if (!resumeReady.value || submitting.value) return
+  if (resume.value) void continueSaved()
+  else startGuest()
+}
 </script>
 
 <template>
-  <main class="auth-screen" data-testid="auth-screen" data-hk-scene="login">
-    <LoginScrollCard>
-      <LoginLogoBlock />
-      <AuthModeTabs v-model="mode" />
+  <main class="auth-screen th-entry-scene" data-testid="auth-screen" data-hk-scene="login">
+    <section v-if="exited" class="auth-exited" data-testid="auth-exited">
+      <h2>{{ t('onboarding.auth.exit.exited') }}</h2>
+      <PcPaperButton data-testid="auth-exit-return" @click="exited = false">{{ t('onboarding.auth.exit.return') }}</PcPaperButton>
+    </section>
+    <LoginOpening v-else :resume-available="Boolean(resume)" :ready="resumeReady" :busy="submitting" :error="drawer === null ? error : ''"
+      @authenticate="revealAuthentication" @play="playOrContinue" @settings="drawer = 'settings'" @exit="drawer = 'exit'" />
+    <LoginSideDrawer :open="drawer !== null" :busy="submitting" :title="drawer === 'settings' ? t('paperNav.settings') : drawer === 'exit' ? t('onboarding.auth.exit.title') : t(`onboarding.auth.tabs.${mode}`)" @close="drawer = null">
+      <template v-if="drawer === 'auth'">
       <AuthCredentialForm
         v-model:login-id="loginId"
         v-model:password="password"
@@ -147,15 +179,17 @@ function startGuest() {
         @submit="submit"
       />
       <LoginUpgradeSection :resume-ready="resumeReady" :stored-guest-session="storedGuestSession" />
-      <AuthSecondaryActions
-        :resume="resume"
-        :resume-ready="resumeReady"
-        :submitting="submitting"
-        @continue="continueSaved"
-        @guest="startGuest"
-      />
-      <template #footer><LoginLocaleChips /></template>
-    </LoginScrollCard>
+      <LoginLocaleChips />
+      </template>
+      <LoginSettingsContent v-else-if="drawer === 'settings'" />
+      <section v-else-if="drawer === 'exit'" class="auth-exit-confirm">
+        <p>{{ t('onboarding.auth.exit.question') }}</p>
+        <div class="auth-exit-confirm__actions">
+          <PcPaperButton variant="secondary" data-testid="auth-exit-cancel" @click="drawer = null">{{ t('onboarding.auth.exit.cancel') }}</PcPaperButton>
+          <PcPaperButton data-testid="auth-exit-confirm" @click="confirmExit">{{ t('onboarding.auth.exit.confirm') }}</PcPaperButton>
+        </div>
+      </section>
+    </LoginSideDrawer>
 
     <!-- B1.8 cross-account acknowledgement: leaving the stored guest
          session is an explicit user choice, never automatic. -->
@@ -182,4 +216,9 @@ function startGuest() {
   overflow: hidden auto;
   color: var(--paper-text, #211f1a);
 }
+.auth-exited { position: absolute; left: 480px; top: 315px; width: 530px; padding: 35px; text-align: center; background: #f5e6c9eb; border: 3px double #aa8645; }
+.auth-exited h2 { margin: 0 0 25px; font-size: 28px; }
+.auth-exit-confirm p { font-size: 23px; margin: 0 0 18px; }
+.auth-exit-confirm__actions { display: flex; gap: 14px; }
+.auth-exit-confirm__actions .pc-paper-button { flex: 1; }
 </style>

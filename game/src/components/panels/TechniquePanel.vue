@@ -11,5 +11,5 @@ const ui = useUiStore()
 </script>
 
 <template>
-  <TechniqueSurface v-if="ui.standalonePanel === 'technique'" />
+  <Transition name="th-panel-swap"><TechniqueSurface v-if="ui.standalonePanel === 'technique'" /></Transition>
 </template>

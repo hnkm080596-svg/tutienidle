@@ -1,14 +1,13 @@
 .auth-field-row { display: grid; gap: 1cqw; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-/* wave B chrome: the drawn text-field slice owns the field shell; the
-   wrap is only a positioning context and the input is transparent. Dark
-   field art -> light text/icon tones. */
-.auth-field { position: relative; display: flex; align-items: center; border-radius: 4px; }
-.auth-field:focus-within { outline: 2px solid #426d4c; outline-offset: 1px; }
-.auth-field__icon { position: absolute; z-index: 2; left: 2.6cqw; width: 3.3cqw; height: 3.3cqw; color: #a5946d; pointer-events: none; }
-.auth-field input { position: relative; z-index: 2; box-sizing: border-box; width: 100%; min-width: 0; height: 8cqw; padding: 1cqw 2.5cqw 1cqw 8cqw; border: 0; border-radius: 4px; outline: none; background: transparent; color: #ede4cd; font: 2.9cqw var(--hk-font-display, Georgia, serif); }
-.auth-field input::placeholder { color: #968e72; opacity: 1; }
+/* Codex evidence field: thin border over a dark gradient well - no
+   drawn slice. Dark shell -> light text/icon tones. */
+.auth-field { position: relative; display: flex; align-items: center; border: 1px solid #998b6d; border-radius: 3px; background: linear-gradient(110deg, #32322c, #252620); box-shadow: inset 0 1px 3px #00000020; }
+.auth-field:focus-within { outline: 2px solid #ba9857; outline-offset: 1px; }
+.auth-field__icon { position: absolute; z-index: 2; left: 2.6cqw; width: 3.3cqw; height: 3.3cqw; color: #c9bda2; pointer-events: none; }
+.auth-field input { position: relative; z-index: 2; box-sizing: border-box; width: 100%; min-width: 0; height: 8cqw; padding: 1cqw 2.5cqw 1cqw 8cqw; border: 0; border-radius: 4px; outline: none; background: transparent; color: #f1e5cd; font: 2.9cqw var(--hk-font-display, Georgia, serif); }
+.auth-field input::placeholder { color: #aba38f; opacity: 1; }
 .auth-field input.auth-field__password { padding-right: 8cqw; }
-.auth-field__reveal { position: absolute; z-index: 2; right: 0; top: 0; bottom: 0; width: 8cqw; padding: 2cqw; border: 0; background: none; color: #a5946d; cursor: pointer; }
+.auth-field__reveal { position: absolute; z-index: 2; right: 0; top: 0; bottom: 0; width: 8cqw; padding: 2cqw; border: 0; background: none; color: #c9bda2; cursor: pointer; }
 .auth-field__reveal svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.4; }
 .auth-field__reveal:focus-visible { outline: 2px solid #426d4c; outline-offset: -2px; }

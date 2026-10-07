@@ -15,9 +15,9 @@ import {
  * P13/P14 runtime gate for the Huyen Kim stable scene-art integration.
  *
  * Proves, in a real browser, that:
- * - the auth/creation parallax vista mounts its six ordered layers and
- *   drifts within the extension contract bounds (far < near, clamped);
- * - reduced motion pins every offset to exactly zero;
+ * - the auth/creation vista mounts the flat warm painting + cultivator
+ *   and never covers the opening card;
+ * - reduced motion leaves the static vista fully rendered;
  * - realm/body/skill/technique/exploration/equipment stable art mounts in
  *   its host surfaces behind runtime-owned content;
  * - the tribulation scene loads its four environment textures;
@@ -130,29 +130,9 @@ async function waitForScrollSettled(page: Page): Promise<void> {
     .toBe('1')
 }
 
-function stackDepths(page: Page, stackSelector: string) {
-  return page.locator(`${stackSelector} .hk-parallax-stack__layer`).evaluateAll((els) =>
-    els.map((el) => el.getAttribute('data-depth')),
-  )
-}
-
-/**
- * Raw computed translations. The transform is
- * `translate(-50%,-50%) translate3d(x,y,0)`, so the matrix includes the
- * centering offset - always diff two states to isolate the drift delta.
- */
-function layerTranslations(page: Page, stackSelector: string) {
-  return page.locator(`${stackSelector} .hk-parallax-stack__layer`).evaluateAll((els) =>
-    els.map((el) => {
-      const m = getComputedStyle(el).transform
-      const parts = m.replace('matrix(', '').replace(')', '').split(',').map(Number)
-      return { x: parts[4] ?? 0, y: parts[5] ?? 0 }
-    }),
-  )
-}
 
 test.describe('Huyen Kim stable scene art', () => {
-  test('scene 01 auth vista: six ordered layers, bounded drift', async ({ page }) => {
+  test('scene 01 auth vista: flat painting under the opening card', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await page.goto('/')
     await expect(page.getByTestId('auth-screen')).toBeVisible({ timeout: 15_000 })
@@ -161,87 +141,38 @@ test.describe('Huyen Kim stable scene art', () => {
     // appears; wait it out before asserting paint order.
     await waitForPresentationIdle(page)
 
-    const stack = '[data-testid="auth-screen"] .hk-parallax-stack[data-stack="auth-creation"]'
-    await expect(page.locator(stack)).toBeVisible()
-    await expect(page.locator(`${stack} .hk-parallax-stack__layer`)).toHaveCount(6)
-    expect(await stackDepths(page, stack)).toEqual(['L0', 'L1', 'L2', 'L3', 'L4', 'L5'])
+    const vista = page.locator('.login-vista')
+    await expect(vista).toBeVisible()
+    await expect(vista.locator('.login-world-vista')).toBeVisible()
+    await expect(vista.locator('.login-vista__cultivator')).toBeVisible()
 
-    // Paint order contract: the login card must sit above the vista -
-    // elementFromPoint at the card's center must hit card content, never
-    // a parallax layer (regression pin for the stacking-context fix).
+    // Paint order contract: the opening menu must sit above the vista -
+    // elementFromPoint at the actions block must hit menu content, never
+    // the vista painting.
     const hitHost = await page.evaluate(() => {
-      const card = document.querySelector('.auth-card')
-      if (!card) return 'no-card'
-      const rect = card.getBoundingClientRect()
+      const actions = document.querySelector('.login-opening__actions')
+      if (!actions) return 'no-actions'
+      const rect = actions.getBoundingClientRect()
       const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
-      return hit?.closest('.auth-card') ? 'card' : (hit?.className ?? 'none')
+      return hit?.closest('.login-opening') ? 'actions' : (hit?.className ?? 'none')
     })
-    expect(hitHost, 'parallax layers must not cover the auth card').toBe('card')
+    expect(hitHost, 'vista must not cover the opening actions').toBe('actions')
 
-    // Contract max_drift_px are DESIGN-space px (1672x941); rendered drift
-    // scales with the cover-fit factor, so assert against contract*s where
-    // s is read back from the rendered layer width.
-    const renderedScale = await page
-      .locator(`${stack} .hk-parallax-stack__layer`)
-      .first()
-      .evaluate((el) => (el as HTMLElement).offsetWidth / 1672)
-
-    // Warm-up move, then neutral (center) baseline.
-    await page.mouse.move(800, 450)
-    await page.waitForTimeout(250)
-    const neutral = await layerTranslations(page, stack)
-
-    // Max drift at corners.
-    await page.mouse.move(0, 0)
-    await page.waitForTimeout(250)
-    const neg = await layerTranslations(page, stack)
-    await page.mouse.move(1600, 900)
-    await page.waitForTimeout(250)
-    const pos = await layerTranslations(page, stack)
-
-    // Contract maxima per extension (design px): x 0/4/8/10/12/18.
-    const maxX = [0, 4, 8, 10, 12, 18]
-    const maxY = [0, 2, 4, 5, 6, 9]
-    for (let i = 0; i < 6; i++) {
-      const negDx = Math.abs(neg[i]!.x - neutral[i]!.x)
-      const posDx = Math.abs(pos[i]!.x - neutral[i]!.x)
-      const bound = maxX[i]! * renderedScale
-      expect(negDx, `layer L${i} -x drift`).toBeLessThanOrEqual(bound + 0.5)
-      expect(posDx, `layer L${i} +x drift`).toBeLessThanOrEqual(bound + 0.5)
-      expect(Math.abs(neg[i]!.y - neutral[i]!.y)).toBeLessThanOrEqual(
-        maxY[i]! * renderedScale + 0.5,
-      )
-      if (maxX[i] === 0) {
-        expect(posDx, `layer L${i} static`).toBeLessThan(0.5)
-      } else {
-        // Extreme pointers saturate at (close to) the rendered max.
-        expect(posDx, `layer L${i} +x saturation`).toBeGreaterThan(bound * 0.8)
-      }
-    }
-    // Foreground drifts more than far mountains.
-    const fgDx = Math.abs(pos[5]!.x - neutral[5]!.x)
-    const farDx = Math.abs(pos[1]!.x - neutral[1]!.x)
-    expect(fgDx).toBeGreaterThan(farDx)
     await shot(page, '01-login')
     assertNoBrowserErrors(errors)
   })
 
-  test('reduced motion pins all auth layers to zero drift', async ({ page }) => {
+  test('reduced motion leaves the flat auth vista fully rendered', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/')
     await expect(page.getByTestId('auth-screen')).toBeVisible({ timeout: 15_000 })
-    const stack = '[data-testid="auth-screen"] .hk-parallax-stack'
-    await page.mouse.move(800, 450)
-    await page.waitForTimeout(150)
-    const neutral = await layerTranslations(page, stack)
-    await page.mouse.move(0, 0)
-    await page.waitForTimeout(150)
-    const neg = await layerTranslations(page, stack)
-    for (let i = 0; i < neg.length; i++) {
-      expect(Math.abs(neg[i]!.x - neutral[i]!.x)).toBeLessThan(0.5)
-      expect(Math.abs(neg[i]!.y - neutral[i]!.y)).toBeLessThan(0.5)
-    }
+    const vista = page.locator('.login-vista')
+    await expect(vista).toBeVisible()
+    await expect(vista.locator('.login-world-vista')).toBeVisible()
+    // No animated parallax stack exists in the flat vista - the reduced
+    // motion contract collapses to the static painting staying put.
+    await expect(page.locator('.hk-parallax-stack')).toHaveCount(0)
     assertNoBrowserErrors(errors)
   })
 
@@ -250,9 +181,12 @@ test.describe('Huyen Kim stable scene art', () => {
     await bootToGuestHome(page)
     const creation = page.getByTestId('character-creation-screen')
     await expect(creation).toBeVisible({ timeout: 15_000 })
-    const stack = creation.locator('.hk-parallax-stack[data-stack="auth-creation"]')
-    await expect(stack).toBeVisible()
-    expect(await stack.locator('.hk-parallax-stack__layer').count()).toBe(6)
+    // The vista lives in the shared OnboardingStage - a sibling of the
+    // creation screen, not a descendant of it.
+    const vista = page.locator('.login-vista')
+    await expect(vista).toBeVisible()
+    await expect(vista.locator('.login-world-vista')).toBeVisible()
+    await expect(vista.locator('.login-vista__cultivator')).toBeVisible()
     // Route curtain must finish revealing before the capture.
     await waitForPresentationIdle(page)
     await shot(page, '02-character-creation')
@@ -346,7 +280,7 @@ test.describe('Huyen Kim stable scene art', () => {
   }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const teleport = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleport).toBeVisible({ timeout: 10_000 })
     await teleport.click()
@@ -423,7 +357,7 @@ test.describe('Huyen Kim stable scene art', () => {
       player: { ...save.player, realmLevel: 12, cultivation: 0 },
     }))
 
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('`')
     const realmSlot = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlot).toBeVisible({ timeout: 10_000 })
     await realmSlot.click()
@@ -463,17 +397,17 @@ test.describe('Huyen Kim stable scene art', () => {
     assertNoBrowserErrors(errors)
   })
 
-  test('svg symbols render in chrome (top bar, overlay close, wheel lock)', async ({ page }) => {
+  test('chrome icons render (nav rail, overlay close, wheel locks)', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    // Top-bar utility glyphs carry mask-image pointing at stable symbols.
-    const topbar = page.locator('.global-top-bar .hk-symbol')
-    await expect(topbar.first()).toBeVisible({ timeout: 10_000 })
-    for (const mask of await topbar.evaluateAll((els) =>
-      els.map((el) => getComputedStyle(el).maskImage),
-    )) {
-      expect(mask).toContain('huyen-kim/symbols/')
+    // Landscape rail icons are <img> pointing at the tien-hiep icon pack.
+    const railIcons = page.locator('.home-navigation-surface nav button img')
+    await expect(railIcons.first()).toBeVisible({ timeout: 10_000 })
+    for (const img of await railIcons.all()) {
+      expect(await img.getAttribute('src')).toContain('tien-hiep-2026-10/icons/navigation-')
+      const naturalWidth = await img.evaluate((el) => (el as HTMLImageElement).naturalWidth)
+      expect(naturalWidth).toBeGreaterThan(0)
     }
 
     // Imperial-scroll close glyph (San Xuat is the last scroll shell).
@@ -484,14 +418,14 @@ test.describe('Huyen Kim stable scene art', () => {
       'symbols/close.svg',
     )
 
-    // Wheel lock badge on a locked/ungated building slot.
+    // Wheel nodes render; any realm-gated slot shows the disabled state.
     await page.keyboard.press('Escape')
-    await page.keyboard.press('Tab')
-    const wheelLock = page.locator('.command-wheel .command-wheel__lock-badge .hk-symbol').first()
-    if (await wheelLock.count()) {
-      expect(await wheelLock.evaluate((el) => getComputedStyle(el).maskImage)).toContain(
-        'symbols/lock.svg',
-      )
+    await page.keyboard.press('`')
+    await expect(page.locator('.df-wheel')).toBeVisible({ timeout: 10_000 })
+    expect(await page.locator('.df-node').count()).toBeGreaterThanOrEqual(8)
+    const locked = page.locator('.df-node.is-disabled')
+    if (await locked.count()) {
+      await expect(locked.first()).toHaveAttribute('aria-disabled', 'true')
     }
     assertNoBrowserErrors(errors)
   })

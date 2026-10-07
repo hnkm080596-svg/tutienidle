@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import AlchemyPaperRecipes from './AlchemyPaperRecipes.vue'
 import AlchemyPaperCauldron from './AlchemyPaperCauldron.vue'
@@ -17,7 +16,6 @@ const props = withDefaults(defineProps<{
   variant: string | null
   jobs: readonly AlchemyJobDisplay[]
   capacity: number
-  navigation: readonly PaperNavigationItem[]
   notice: string
   preview?: boolean
 }>(), { preview: false })
@@ -27,7 +25,6 @@ const emit = defineEmits<{
   variant: [id: string]
   brew: []
   cancel: [id: string]
-  navigate: [id: string]
   back: []
 }>()
 
@@ -45,7 +42,6 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
 <template>
   <section ref="rootRef" class="alchemy-scene" :aria-label="t('alchemy.title')" @click.self="emit('back')">
     <div class="paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="alchemy" :label="t('alchemy.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <h1 class="title">{{ t('alchemy.title') }}</h1>
     <span class="subtitle">{{ t('alchemy.subtitle') }}</span>
     <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -

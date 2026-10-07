@@ -59,3 +59,11 @@
 :is(#app,body) .feedback-dialog .chip { border:10px solid transparent;border-image:var(--pc-secondary-button) 60 fill / 10px stretch;border-radius:0;background:none;color:#f2e1ba;box-shadow:none; }
 :is(#app,body) .feedback-dialog .chip.is-active { border-image-source:var(--pc-primary-button);color:#302718; }
 :is(#app,body) .feedback-dialog .chip>.ink-nine-slice { display:none; }
+
+/* Art-scene ports carry mock-verbatim geometry: the preview pages get a
+   border-box reset from .pc-paper-scene that production lacks. Any ported
+   scene root takes .hk-art-scene and inherits the same box model, so mock
+   CSS ports keep pixel parity without per-scene fixes. */
+:is(#app,body) :is(.hk-art-scene,.hk-art-scene *),
+:is(#app,body) :is(.hk-art-scene::before,.hk-art-scene::after),
+:is(#app,body) :is(.hk-art-scene *::before,.hk-art-scene *::after) { box-sizing: border-box; }

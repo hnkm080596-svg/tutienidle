@@ -6,7 +6,6 @@ import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
 import TechniqueFidelityScene from '@/components/scenes/technique/fidelity/TechniqueFidelityScene.vue'
 import type { TechniqueUiModel } from '@/components/scenes/technique/fidelity/techniqueUi'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { previewPaperNavigation } from './paperNavigation'
 const { t } = useI18n()
 const selected = shallowRef('major')
 const notice = shallowRef('')
@@ -17,7 +16,6 @@ const pointer = shallowRef({ x: 0, y: 0 })
 const flags = new URLSearchParams(window.location.search)
 const emptyState = flags.has('empty')
 const navLocked = flags.has('locked')
-const navigation = computed(() => previewPaperNavigation(t, navLocked ? ['technique'] : []))
 const model = computed<TechniqueUiModel>(() => emptyState
   ? {
       hasTechnique: false,
@@ -36,18 +34,7 @@ const model = computed<TechniqueUiModel>(() => emptyState
   rankLabel: t('rank'), masteryLabel: '210 / 300', masteryPercent: 70, currentGrade: t('currentGrade'), nextGrade: t('nextGrade'), material: { name: t('material'), amountLabel: '1.280 / 800' }, materialNote: t('materialNote'),
   advanceDisabled: false, disabledReason: '', artTemporary: true,
 }))
-function navigate(id: string) {
-  if (id === 'inventory') { window.location.assign('/ui-inventory.html'); return }
-  if (id === 'character') window.location.assign('/ui-character.html')
-  else if (id === 'body') window.location.assign('/ui-body.html')
-  else if (id === 'exploration') window.location.assign('/ui-exploration.html')
-  else if (id === 'alchemy') window.location.assign('/ui-alchemy.html')
-  else if (id === 'equipment') window.location.assign('/ui-equipment.html')
-  else if (id === 'skill') window.location.assign('/ui-skill.html')
-  else if (id === 'realm') window.location.assign('/ui-realm.html')
-  else if (id !== 'technique') notice.value = t('navNotice', { name: t(`nav.${id}`) })
-}
-function back() { window.location.assign('/ui-dong-fu.html') }
+function back() { window.location.assign('/legacy/ui-dong-fu.html') }
 function select(id: string) {
   const stage = model.value.stages.find(entry => entry.id === id)
   if (!stage) return
@@ -60,6 +47,6 @@ function move(event: PointerEvent) {
 }
 </script>
 <template>
-  <SceneDesignCanvas><div class="technique-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><TechniqueFidelityScene :model="model" :navigation="navigation" :selected="selected" :notice="notice" preview @navigate="navigate" @back="back" @select="select" @advance="notice = t('notice')" /></div></SceneDesignCanvas>
+  <SceneDesignCanvas><div class="technique-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><TechniqueFidelityScene :model="model" :selected="selected" :notice="notice" preview @back="back" @select="select" @advance="notice = t('notice')" /></div></SceneDesignCanvas>
 </template>
 <style scoped>.technique-preview { position:relative; width:100%; height:100%; }</style>

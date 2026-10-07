@@ -22,40 +22,60 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { ELEMENT_ORDER, ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/CastLeveling'
-import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
+import { NODE_ICON_MANIFEST, SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
+import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
+import { SPELL_KIT_IDS } from '@/data/skill/Skills'
 import { betaMortalTreeViewTags } from '@/core/betaScopeSkillDomain'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { layoutRadialGraph } from '@/components/panels/skill-path/skillGraphLayout'
-import {
-  constellationPointsById,
-  skillConstellationLayoutFor,
-} from '@/data/progression/SkillConstellationLayouts'
+import type { RadialGraphPosition } from '@/components/panels/skill-path/skillGraphLayout'
+import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import type { ElementType } from '@/core/element/ElementType'
 import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
+import type { Skill } from '@/core/skill/Skill'
 import SkillFidelityScene from './fidelity/SkillFidelityScene.vue'
+import { edgeLinkLength } from './fidelity/skillUi'
 import type { SkillUiEdge, SkillUiElement, SkillUiNode } from './fidelity/skillUi'
 
 const CANVAS_W = 710
 const CANVAS_H = 445
 const FALLBACK_ICON = resolveAssetUrl('/assets/ui/huyen-kim/symbols/skill.svg')
+// Design-mode anchor geometry (element trees): parked authored nodes
+// form a left column; the root sits center-top with the 3 skill
+// children one pipe-link below it (basic bottom-left, the sealed
+// top seat bottom-center, special bottom-right).
+const PARKED_X = 90
+const PARKED_TOP = 90
+const PARKED_STEP = 74
+const MAIN_CX = 420
+const MAIN_ROOT_Y = 150
+// Children sit exactly one pipe-link from the root: side children fan
+// out at ~35 degrees from vertical, the middle child drops straight
+// down (edgeLinkLength(1) ~= 321 for the uniform-scaled pipe art).
+const CHILD_D = edgeLinkLength(1)
+const CHILD_DX = Math.sin(Math.PI * 35 / 180) * CHILD_D
+const CHILD_DY = Math.cos(Math.PI * 35 / 180) * CHILD_D
+
+// Element kit specials (kit[1] - Ngu Diem / Van Moc Sinh Co / ...) are the
+// branch's passive leaf: their node seats get the passive frame.
+const ELEMENT_SPECIAL_SKILL_IDS = new Set(Object.values(SPELL_KIT_IDS).map((pair) => pair[1]))
 
 const { t } = useI18n()
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { items: navItems, navigate } = usePaperNavigation()
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 const { purchaseNode, upgradeNode, respecNodeTree } = useProgressionActions()
 
@@ -117,6 +137,13 @@ const pathwayRows = computed(() => {
   const nodes = allNodes.value.filter((node) => {
     const tag = nodeViewTag(node)
     const row = rowsById.value.get(node.id)
+    // Minh ruling: a mortal sees only the precursor seat of the dao lo
+    // picked at creation (mortalBasicSkillId) - sibling precursors stay
+    // hidden entirely, not just locked. A missing pick (corrupt/dev
+    // save) falls back to showing every seat rather than none.
+    if (mortalView && node.infoSkillId !== undefined && player.$state.mortalBasicSkillId !== undefined) {
+      if (node.infoSkillId !== player.$state.mortalBasicSkillId) return false
+    }
     return tag !== undefined && tags.has(tag as ElementType & string) && row !== undefined && row.state !== 'scope-hidden' && !revealHidden(row)
   })
   return { spell, rows: rowsById.value, nodes }
@@ -149,15 +176,8 @@ const elements = computed<SkillUiElement[]>(() =>
   })),
 )
 
-// The glyph the selected element branch has authored, if any.
-const constellation = computed(() =>
-  pathwayRows.value.spell && selectedElement.value !== null
-    ? (skillConstellationLayoutFor(selectedElement.value) ?? null)
-    : null,
-)
-const constellationPoints = computed(() =>
-  constellation.value !== null ? constellationPointsById(constellation.value) : null,
-)
+// Minh ruling: the Cong Phap panel owns one tree design - every dao
+// lo branch renders the same paper tree, only the node set swaps.
 
 // Brief "node id mid-unlock" flag - lets the constellation run the
 // parent->child energy travel + arrival pulse once per purchase.
@@ -202,14 +222,54 @@ const graph = computed<{ entries: GraphEntry[] }>(() => {
   return { entries }
 })
 
-const layout = computed(() =>
-  layoutRadialGraph(graph.value.entries.map((entry) => ({ id: entry.node.id, parentId: entry.parentId, depth: entry.depth }))),
-)
+const layout = computed(() => {
+  const base = layoutRadialGraph(graph.value.entries.map((entry) => ({ id: entry.node.id, parentId: entry.parentId, depth: entry.depth })))
+  if (skillTree.value.mortal || graph.value.entries.length <= 1) return base
+
+  // Minh's design-mode ruling (2026-10): the element tree parks every
+  // authored node in a side column awaiting re-attachment, and anchors
+  // the design on 3 hero skill nodes (basic / special / sealed) in
+  // the center. No edges render in this mode.
+  const positions = new Map<string, RadialGraphPosition>()
+  const specialId = graph.value.entries.find((entry) =>
+    entry.row.grantsSkillIds.some((id) => ELEMENT_SPECIAL_SKILL_IDS.has(id)),
+  )?.node.id
+  const parked = graph.value.entries.filter((entry) => entry.depth !== 0 && entry.node.id !== specialId)
+  parked.forEach((entry, i) => positions.set(entry.node.id, { x: PARKED_X, y: PARKED_TOP + i * PARKED_STEP }))
+
+  const rootId = graph.value.entries.find((entry) => entry.depth === 0)?.node.id
+  if (rootId !== undefined) positions.set(rootId, { x: MAIN_CX, y: MAIN_ROOT_Y })
+  positions.set(DESIGN_BASIC_ID, { x: MAIN_CX - CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
+  positions.set(ULTIMATE_NODE_ID, { x: MAIN_CX, y: MAIN_ROOT_Y - CHILD_D })
+  if (specialId !== undefined) positions.set(specialId, { x: MAIN_CX + CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  for (const pos of positions.values()) {
+    minX = Math.min(minX, pos.x); maxX = Math.max(maxX, pos.x)
+    minY = Math.min(minY, pos.y); maxY = Math.max(maxY, pos.y)
+  }
+  const MARGIN = 80
+  const size = Math.max(maxX - minX, maxY - minY) + 2 * MARGIN
+  const shiftX = size / 2 - (minX + maxX) / 2
+  const shiftY = size / 2 - (minY + maxY) / 2
+  for (const pos of positions.values()) { pos.x += shiftX; pos.y += shiftY }
+  return { positions, size }
+})
 
 // Zoom-to-fit: coordinates stay in the layout's natural square space;
 // the tree scales the whole graph (cards included) into the viewport.
-const graphSize = computed(() => (layout.value.size > 0 ? layout.value.size : CANVAS_W))
-const graphFit = computed(() => (layout.value.size > 0 ? Math.min(1, CANVAS_H / layout.value.size) : 1))
+// Minh ruling: a mortal owns exactly one precursor seat, so it renders
+// centered (the radial layout already anchors a lone root at the core)
+// and 3x rather than fit-shrunk.
+const mortalSolo = computed(() => skillTree.value.mortal && graph.value.entries.length === 1)
+// Design-mode positions can place nodes beyond the authored layout
+// square - the tree reports its true rendered extent so the fit still
+// keeps every node inside the paper backdrop.
+const renderExtent = ref(0)
+const graphSize = computed(() => Math.max(layout.value.size > 0 ? layout.value.size : CANVAS_W, renderExtent.value))
+const graphFit = computed(() =>
+  mortalSolo.value ? 3 : graphSize.value > 0 ? Math.min(1, CANVAS_H / graphSize.value) : 1,
+)
 
 function nodeName(id: string): string {
   return allNodes.value.find((node) => node.id === id)?.name ?? id
@@ -269,6 +329,75 @@ function nodeIcon(node: ProgressionNode): string {
     : FALLBACK_ICON
 }
 
+// Node art (NODE_ICON_MANIFEST) outranks the granted-skill icon and
+// the element orb - drawn seats carry their own identity.
+function nodeArtIcon(nodeId: string): string | undefined {
+  const path = NODE_ICON_MANIFEST[nodeId]
+  return path !== undefined ? resolveAssetUrl(path) : undefined
+}
+
+// Skill-granting seats render the hand-drawn skill icon
+// (grantsSkillIds -> display meta iconKey -> SKILL_ICON_MANIFEST ->
+// /assets/skills/<key>.png); stat-only nodes keep the element orb.
+function grantIcon(row: BetaSkillTreeNode): string | undefined {
+  for (const skillId of row.grantsSkillIds) {
+    const key = turnSkillDisplayMetaOf(skillId)?.iconKey
+    const path = key !== undefined ? SKILL_ICON_MANIFEST[key] : undefined
+    if (path !== undefined) return resolveAssetUrl(path)
+  }
+  return undefined
+}
+
+// Detail-card stat rows (Minh's block order: level -> xp -> stats ->
+// conditions -> description). Reads the live Skill template's trigger
+// actions + legacy effects so the card reports real combat numbers.
+function skillStatRows(skill: Skill | undefined): { id: string; label: string; value: string }[] {
+  if (skill === undefined) return []
+  const rows: { id: string; label: string; value: string }[] = []
+  const push = (label: string, value: string) => rows.push({ id: `stat-${rows.length}`, label, value })
+  const damageSuffix = (damageType: 'physical' | 'primordial' | undefined) =>
+    damageType === 'physical'
+      ? ` ${t('skill.damageTypePhysical')}`
+      : damageType === 'primordial'
+        ? ` ${t('skill.damageTypePrimordial')}`
+        : ''
+  const ailmentLine = (buffId: string, chance: number | undefined) => {
+    const name = BUFF_REGISTRY.tryGet(buffId)?.name ?? buffId
+    const pct = chance === undefined ? '100%' : `${Math.round(chance * 100)}%`
+    push(t('skill.statAilmentChance'), `${pct} ${name}`)
+  }
+  for (const binding of skill.triggers ?? []) {
+    for (const action of binding.actions) {
+      if (action.type === 'dealDamage') {
+        push(t('skill.statDamage'), `x${formatNumber(action.value ?? 0)}${damageSuffix(action.damageType)}`)
+      } else if (action.type === 'applyBuff' || action.type === 'applyDebuff') {
+        ailmentLine(action.buffId, action.chance)
+      } else if (action.type === 'heal') {
+        push(t('skill.statHeal'), `x${formatNumber(action.value ?? 0)}`)
+      }
+    }
+  }
+  for (const effect of skill.effects) {
+    if (effect.type === 'damage') {
+      push(t('skill.statDamage'), `x${formatNumber(effect.value ?? 0)}${damageSuffix(effect.damageType)}`)
+      if (effect.ailmentChance !== undefined && effect.buffId !== undefined) {
+        ailmentLine(effect.buffId, effect.ailmentChance)
+      }
+    } else if (effect.type === 'debuff' && effect.buffId !== undefined) {
+      ailmentLine(effect.buffId, effect.ailmentChance)
+    } else if (effect.type === 'heal') {
+      push(t('skill.statHeal'), `x${formatNumber(effect.value ?? 0)}`)
+    }
+  }
+  if (skill.execution?.kind === 'cooldown') {
+    push(t('skill.statCooldown'), `${formatNumber(skill.cooldown)}s`)
+  }
+  if (skill.cost !== undefined && skill.resourceType !== undefined && skill.resourceType !== 'none') {
+    push(t('skill.statCost'), `${formatNumber(skill.cost)} ${skill.resourceType}`)
+  }
+  return rows
+}
+
 // Info-anchor presentation: the node's seat renders the LIVE skill
 // state (template + core level + cast progress) and never an action -
 // the skill's own channel owns leveling, Insight is not an input.
@@ -287,10 +416,7 @@ function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphE
   if (thresholds !== undefined && coreLevel < maxLevel) {
     nextThreshold = coreLevel >= 2 ? thresholds.lv3 : thresholds.lv2
   }
-  const position =
-    constellationPoints.value?.get(node.id) ??
-    layout.value.positions.get(node.id) ??
-    { x: 0, y: 0 }
+  const position = layout.value.positions.get(node.id) ?? { x: 0, y: 0 }
 
   return {
     id: node.id,
@@ -302,26 +428,25 @@ function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphE
     x: position.x,
     y: position.y,
     prominent: entry.depth === 0,
-    emphasis: constellationPoints.value?.get(node.id)?.emphasis ?? 'normal',
+    emphasis: 'normal',
     level: `${coreLevel} / ${maxLevel}`,
+    levelCurrent: coreLevel,
+    levelMax: maxLevel,
     state: isActiveBasic ? 'learned' : 'locked',
     description: skill?.description ?? row.description ?? '',
-    rows: [
-      { id: 'level', label: t('skill.levelLabel'), value: `${coreLevel} / ${maxLevel}` },
-      {
-        id: 'casts',
-        label: t('skill.infoCasts'),
-        value:
-          nextThreshold !== undefined
-            ? `${formatNumber(casts)} / ${formatNumber(nextThreshold)}`
-            : formatNumber(casts),
-      },
-    ],
+    experience:
+      nextThreshold !== undefined
+        ? `${formatNumber(casts)} / ${formatNumber(nextThreshold)}`
+        : formatNumber(casts),
+    stats: skillStatRows(skill),
     conditions: [t('panels.skillPath.nodeInspector.infoOnly')],
     costLabel: '',
     actionLabel: '',
     actionDisabled: true,
     actionHint: '',
+    frameKind: (MORTAL_PRECURSOR_SKILL_IDS as readonly string[]).includes(skillId)
+      ? (coreLevel >= 3 ? 'parent' : coreLevel >= 2 ? 'main' : 'sub')
+      : undefined,
   }
 }
 
@@ -330,25 +455,23 @@ function infoUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphE
 // shows the seat + level and never an Insight action.
 function grantUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: GraphEntry): SkillUiNode {
   const owned = row.level >= 1
-  const position =
-    constellationPoints.value?.get(node.id) ??
-    layout.value.positions.get(node.id) ??
-    { x: 0, y: 0 }
+  const position = layout.value.positions.get(node.id) ?? { x: 0, y: 0 }
 
   return {
     id: node.id,
     name: row.name,
-    icon: nodeIcon(node),
+    icon: nodeArtIcon(node.id) ?? grantIcon(row) ?? nodeIcon(node),
     x: position.x,
     y: position.y,
     prominent: entry.depth === 0,
-    emphasis: constellationPoints.value?.get(node.id)?.emphasis ?? 'normal',
+    emphasis: 'normal',
     level: `${row.level} / ${row.maxLevel}`,
+    levelCurrent: row.level,
+    levelMax: row.maxLevel,
     state: owned ? 'learned' : 'locked',
     description: row.description ?? '',
-    rows: [
-      { id: 'level', label: t('skill.levelLabel'), value: `${row.level} / ${row.maxLevel}` },
-    ],
+    experience: '',
+    stats: row.grantsSkillIds.map((skillId, i) => ({ id: `grant-${i}`, label: t('skill.grants'), value: skillName(skillId) })),
     conditions: [t('panels.skillPath.nodeInspector.grantOnly')],
     costLabel: '',
     actionLabel: '',
@@ -394,36 +517,117 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     }
   }
 
-  const glyphPoint = constellationPoints.value?.get(node.id)
-  const position = glyphPoint ?? layout.value.positions.get(node.id) ?? { x: 0, y: 0 }
+  const position = layout.value.positions.get(node.id) ?? { x: 0, y: 0 }
 
   return {
     id: node.id,
     name: row.name,
-    icon: nodeIcon(node),
+    icon: nodeArtIcon(node.id) ?? grantIcon(row) ?? nodeIcon(node),
     x: position.x,
     y: position.y,
     prominent: entry.depth === 0,
-    emphasis: glyphPoint?.emphasis ?? 'normal',
+    emphasis: 'normal',
     level: `${row.level} / ${row.maxLevel}`,
+    levelCurrent: row.level,
+    levelMax: row.maxLevel,
     state,
     description: row.description ?? '',
-    rows: [
-      { id: 'level', label: t('skill.levelLabel'), value: `${row.level} / ${row.maxLevel}` },
-      ...row.grantsSkillIds.map((skillId, i) => ({ id: `grant-${i}`, label: t('skill.grants'), value: skillName(skillId) })),
-    ],
+    experience: '',
+    stats: row.grantsSkillIds.map((skillId, i) => ({ id: `grant-${i}`, label: t('skill.grants'), value: skillName(skillId) })),
     conditions,
     costLabel,
     actionLabel,
     actionDisabled,
     actionHint,
+    frameKind: row.grantsSkillIds.some((id) => ELEMENT_SPECIAL_SKILL_IDS.has(id))
+      ? 'parent'
+      : row.role === 'keystone'
+        ? 'keystone'
+        : undefined,
   }
 }
 
-const nodes = computed<SkillUiNode[]>(() => graph.value.entries.map(toUiNode))
-const edges = computed<SkillUiEdge[]>(() =>
-  graph.value.entries.filter((entry) => entry.parentId !== null).map((entry) => ({ from: entry.parentId!, to: entry.node.id })),
-)
+// Skill-seat placeholders for Minh's design tree: the element basic
+// (Ly Hoa Thuat) sits as a learned child of the root, and the sealed
+// top seat stays locked until its skill is authored. Element
+// trees only - the mortal tree keeps the radial layout.
+const DESIGN_BASIC_ID = 'design_basic_skill'
+const ULTIMATE_NODE_ID = 'design_ultimate_placeholder'
+function basicUiNode(): SkillUiNode {
+  const position = layout.value.positions.get(DESIGN_BASIC_ID) ?? { x: 0, y: 0 }
+  const skillId = committedElement.value !== undefined ? SPELL_KIT_IDS[committedElement.value][0] : ''
+  const skill = skillId !== '' ? gameManager.catalogOps.getSkillTemplate(skillId) : undefined
+  return {
+    id: DESIGN_BASIC_ID,
+    name: skill?.name ?? DESIGN_BASIC_ID,
+    icon: skillId !== '' ? (resolveAssetUrl(SKILL_ICON_MANIFEST[skillId] ?? '') || FALLBACK_ICON) : FALLBACK_ICON,
+    x: position.x,
+    y: position.y,
+    prominent: false,
+    emphasis: 'normal',
+    level: '1 / 1',
+    levelCurrent: 1,
+    levelMax: 1,
+    state: 'learned',
+    description: skill?.description ?? '',
+    experience: '',
+    stats: [],
+    conditions: [],
+    costLabel: '',
+    actionLabel: '',
+    actionDisabled: true,
+    actionHint: '',
+    frameKind: 'main',
+  }
+}
+function ultimateUiNode(): SkillUiNode {
+  const position = layout.value.positions.get(ULTIMATE_NODE_ID) ?? { x: 0, y: 0 }
+  return {
+    id: ULTIMATE_NODE_ID,
+    name: t('skill.designMode.ultimatePlaceholder'),
+    icon: FALLBACK_ICON,
+    x: position.x,
+    y: position.y,
+    prominent: false,
+    emphasis: 'normal',
+    level: '0 / 1',
+    levelCurrent: 0,
+    levelMax: 1,
+    state: 'locked',
+    description: '',
+    experience: '',
+    stats: [],
+    conditions: [t('skill.designMode.ultimateLocked')],
+    costLabel: '',
+    actionLabel: '',
+    actionDisabled: true,
+    actionHint: '',
+    frameKind: 'main',
+  }
+}
+const nodes = computed<SkillUiNode[]>(() => {
+  const list = graph.value.entries.map(toUiNode)
+  if (!skillTree.value.mortal && committedElement.value !== undefined && graph.value.entries.length > 1) {
+    list.push(basicUiNode(), ultimateUiNode())
+  }
+  return list
+})
+const edges = computed<SkillUiEdge[]>(() => {
+  if (skillTree.value.mortal) {
+    return graph.value.entries.filter((entry) => entry.parentId !== null).map((entry) => ({ from: entry.parentId!, to: entry.node.id }))
+  }
+  // Design mode: exactly 3 pipelines, root -> each skill child.
+  const rootId = graph.value.entries.find((entry) => entry.depth === 0)?.node.id
+  const specialId = graph.value.entries.find((entry) =>
+    entry.row.grantsSkillIds.some((id) => ELEMENT_SPECIAL_SKILL_IDS.has(id)),
+  )?.node.id
+  if (rootId === undefined) return []
+  return [
+    { from: rootId, to: DESIGN_BASIC_ID },
+    { from: rootId, to: ULTIMATE_NODE_ID },
+    ...(specialId !== undefined ? [{ from: rootId, to: specialId }] : []),
+  ]
+})
 
 const selectedId = ref<string | null>(null)
 watch(nodes, (list) => {
@@ -487,19 +691,17 @@ function confirmRespec() {
       :elements="elements"
       :element="selectedElement ?? ''"
       :selected="selected"
-      :navigation="navItems"
       :notice="notice"
       :identity="wayIdentity"
       :insight-label="insightLabel"
       :respec-disabled="respecDisabled"
       :graph-size="graphSize"
       :graph-fit="graphFit"
-      :constellation="constellation"
       :unlocking="unlockingId"
       @select="onSelect"
       @element="onSelectElement"
-      @navigate="navigate"
       @upgrade="onUpgrade"
+      @extent="renderExtent = $event"
       @respec="onRespec"
       @back="ui.closeHomeOverlays()"
     />

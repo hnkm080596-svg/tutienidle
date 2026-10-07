@@ -3,12 +3,11 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import PaperPanelNavigation, { type PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import ExplorationPaperMap from './ExplorationPaperMap.vue'
 import ExplorationPaperDetails from './ExplorationPaperDetails.vue'
 import type { ExplorationPaperModel, ExplorationDetail } from './explorationUi'
-const props = withDefaults(defineProps<{ model: ExplorationPaperModel; stage: ExplorationDetail | null; navigation: readonly PaperNavigationItem[]; notice: string; preview?: boolean }>(), { preview: false })
-const emit = defineEmits<{ select: [id: string]; zone: [id: string]; navigate: [id: string]; back: []; mode: [id: string]; stopFarm: []; openBuild: []; start: [] }>()
+const props = withDefaults(defineProps<{ model: ExplorationPaperModel; stage: ExplorationDetail | null; notice: string; preview?: boolean }>(), { preview: false })
+const emit = defineEmits<{ select: [id: string]; zone: [id: string]; back: []; mode: [id: string]; stopFarm: []; openBuild: []; start: [] }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
 const progress = computed(() => Number.isFinite(props.model.progress) ? Math.max(0, Math.min(100, props.model.progress)) : 0)
@@ -21,7 +20,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <template>
   <section ref="rootRef" class="exploration-scene" :aria-label="t('exploration.title')" @click.self="emit('back')">
     <div class="paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <PaperPanelNavigation :items="navigation" active="exploration" :label="t('exploration.navigation')" :back-label="t('dongFu.aria')" @select="emit('navigate', $event)" @back="emit('back')" />
     <header class="heading"><p class="eyebrow">{{ t('exploration.title') }}</p><h1 class="zone-title">{{ model.title }}</h1><p class="subtitle">{{ model.subtitle }}</p>
       <div v-if="model.zones.length > 1" class="exploration-zones" role="group" :aria-label="t('exploration.zones')">
         <button v-for="zone in model.zones" :key="zone.id" :class="{ active: model.zone === zone.id, 'is-locked': !zone.unlocked }" :aria-pressed="model.zone === zone.id" :disabled="!zone.unlocked" @click="emit('zone', zone.id)">{{ zone.label }}</button>

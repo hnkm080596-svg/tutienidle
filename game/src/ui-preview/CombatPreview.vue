@@ -34,7 +34,7 @@ const model = computed<CombatDisplayModel>(() => ({
 function chooseStrategy(id: string) { selectedStrategy.value = id; notice.value = t('selectedStrategy', { name: t(`strategy.${id}`) }) }
 function toggleAuto() { auto.value = !auto.value; notice.value = t('notice') }
 function togglePause() { paused.value = !paused.value; notice.value = t('notice') }
-function back() { window.location.assign('/ui-exploration.html') }
+function back() { window.location.assign('/legacy/ui-exploration.html') }
 </script>
 <template><SceneDesignCanvas><div class="combat-preview"><div class="existing-art-context" aria-hidden="true"><img v-for="layer in previewLayers" :key="layer.key" :src="layer.src" alt="" draggable="false"></div><CombatFidelityScene :model="model" :selected-strategy="selectedStrategy" :auto="auto" :paused="paused" :notice="notice" @strategy="chooseStrategy" @auto="toggleAuto" @pause="togglePause" @skill="notice = t('notice')" @back="back" /></div></SceneDesignCanvas></template>
 <style scoped>.combat-preview { position:relative; width:100%; height:100%; background:#172526; }.existing-art-context { position:absolute; inset:0; pointer-events:none; }.existing-art-context img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; }</style>
