@@ -33,18 +33,24 @@ const EDGE_FLOW_W = 34
 // positions; the Export button dumps them as JSON for baking.
 const DESIGN_KEY = 'skill-tree-design-pos-v1'
 const DESIGN_MODE_KEY = 'skill-tree-design-mode-v1'
-const designMode = ref(localStorage.getItem(DESIGN_MODE_KEY) === '1')
+// SSR/test mounts have no window.localStorage - fall back to a no-op
+// store so setup never crashes outside the browser.
+const ls: Pick<Storage, 'getItem' | 'setItem'> =
+  typeof localStorage === 'undefined'
+    ? { getItem: () => null, setItem: () => {} }
+    : localStorage
+const designMode = ref(ls.getItem(DESIGN_MODE_KEY) === '1')
 function toggleDesign() {
   designMode.value = !designMode.value
-  localStorage.setItem(DESIGN_MODE_KEY, designMode.value ? '1' : '0')
+  ls.setItem(DESIGN_MODE_KEY, designMode.value ? '1' : '0')
 }
 const designOffsets = ref<Record<string, { x: number; y: number }>>(
-  JSON.parse(localStorage.getItem(DESIGN_KEY) ?? '{}'),
+  JSON.parse(ls.getItem(DESIGN_KEY) ?? '{}'),
 )
 const exported = ref(false)
 const posOf = (node: SkillUiNode) => designOffsets.value[node.id] ?? { x: node.x, y: node.y }
 function saveDesign() {
-  localStorage.setItem(DESIGN_KEY, JSON.stringify(designOffsets.value))
+  ls.setItem(DESIGN_KEY, JSON.stringify(designOffsets.value))
 }
 function exportDesign() {
   const round = Object.fromEntries(
@@ -85,10 +91,10 @@ const DESIGN_NODE_TYPES = [
   { type: 'gate', label: 'Cổng CG', frame: 'parent' },
 ] as const
 interface DesignSpawn { id: string; type: string }
-const designSpawns = ref<DesignSpawn[]>(JSON.parse(localStorage.getItem(DESIGN_SPAWNS_KEY) ?? '[]'))
+const designSpawns = ref<DesignSpawn[]>(JSON.parse(ls.getItem(DESIGN_SPAWNS_KEY) ?? '[]'))
 const spawnIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/skill.svg')
 function saveSpawns() {
-  localStorage.setItem(DESIGN_SPAWNS_KEY, JSON.stringify(designSpawns.value))
+  ls.setItem(DESIGN_SPAWNS_KEY, JSON.stringify(designSpawns.value))
 }
 function spawnNode(type: string) {
   if (!DESIGN_NODE_TYPES.some(d => d.type === type)) return

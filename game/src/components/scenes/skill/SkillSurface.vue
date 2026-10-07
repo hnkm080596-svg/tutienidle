@@ -53,8 +53,8 @@ const CANVAS_H = 445
 const FALLBACK_ICON = resolveAssetUrl('/assets/ui/huyen-kim/symbols/skill.svg')
 // Design-mode anchor geometry (element trees): parked authored nodes
 // form a left column; the root sits center-top with the 3 skill
-// children one pipe-link below it (basic bottom-left, ultimate
-// bottom-center, special bottom-right).
+// children one pipe-link below it (basic bottom-left, the sealed
+// top seat bottom-center, special bottom-right).
 const PARKED_X = 90
 const PARKED_TOP = 90
 const PARKED_STEP = 74
@@ -176,7 +176,7 @@ const elements = computed<SkillUiElement[]>(() =>
   })),
 )
 
-// Minh ruling: the Công Pháp panel owns one tree design - every dao
+// Minh ruling: the Cong Phap panel owns one tree design - every dao
 // lo branch renders the same paper tree, only the node set swaps.
 
 // Brief "node id mid-unlock" flag - lets the constellation run the
@@ -228,7 +228,7 @@ const layout = computed(() => {
 
   // Minh's design-mode ruling (2026-10): the element tree parks every
   // authored node in a side column awaiting re-attachment, and anchors
-  // the design on 3 hero skill nodes (basic / special / ultimate) in
+  // the design on 3 hero skill nodes (basic / special / sealed) in
   // the center. No edges render in this mode.
   const positions = new Map<string, RadialGraphPosition>()
   const specialId = graph.value.entries.find((entry) =>
@@ -548,8 +548,8 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
 }
 
 // Skill-seat placeholders for Minh's design tree: the element basic
-// (Ly Hoa Thuat) sits as a learned child of the root, and the ultimate
-// seat stays locked until the ultimate skill is authored. Element
+// (Ly Hoa Thuat) sits as a learned child of the root, and the sealed
+// top seat stays locked until its skill is authored. Element
 // trees only - the mortal tree keeps the radial layout.
 const DESIGN_BASIC_ID = 'design_basic_skill'
 const ULTIMATE_NODE_ID = 'design_ultimate_placeholder'
@@ -607,7 +607,7 @@ function ultimateUiNode(): SkillUiNode {
 }
 const nodes = computed<SkillUiNode[]>(() => {
   const list = graph.value.entries.map(toUiNode)
-  if (!skillTree.value.mortal && graph.value.entries.length > 1) {
+  if (!skillTree.value.mortal && committedElement.value !== undefined && graph.value.entries.length > 1) {
     list.push(basicUiNode(), ultimateUiNode())
   }
   return list
