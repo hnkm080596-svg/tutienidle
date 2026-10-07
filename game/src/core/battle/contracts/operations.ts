@@ -15,6 +15,7 @@ import type { SkillDamageComponent } from '../../skill/SkillDamageComponent'
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from './ids'
 import type { CombatOperationOrigin } from './origin'
 import type { BuffInstanceSelector } from './selectors'
+import type { StatType } from '../../stats/StatTypes'
 
 // ---------------------------------------------------------------------------
 // Reaction eligibility (contract sec.14) -- runtime metadata on an application,
@@ -190,6 +191,15 @@ export interface DealDamageOperation {
         raw base BEFORE mitigation. Primary scaling for Tran The kit
         hits; absent = might-only base (legacy parity). */
     sourceMaxHpRatio?: number
+    /** Hoa lane / Tam Muoi trades (Minh rulings 2026-10-06) -- cast-scoped
+        additive stat deltas stamped off TurnSkillDefinition.castModifiers
+        by the skill adapter. DamageAuthority folds them into
+        HitResolveOptions.scopedStats: the hit line reads a cloned stat
+        view (accuracy, crit, resist-ignore, scaling, penetration,
+        finalDamage/leech) while post-hit vitals and triggers keep the
+        real entity. Legal iff damageProfile === 'skill_hit' AND
+        origin.kind === 'skill' (flat profiles have no stat view). */
+    castModifiers?: readonly { stat: StatType; value: number }[]
   }
 }
 

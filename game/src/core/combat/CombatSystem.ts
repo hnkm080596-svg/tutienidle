@@ -38,7 +38,7 @@ const DOT_RESISTANCE_FLOOR = -1
 function addScopedDeltas(base: Stats, deltas: Partial<Record<StatType, number>>): Partial<Record<StatType, number>> {
   const added: Partial<Record<StatType, number>> = {}
   for (const [stat, delta] of Object.entries(deltas) as [StatType, number][]) {
-    added[stat] = base[stat] + delta
+    added[stat] = (base[stat] ?? 0) + delta
   }
   return added
 }
@@ -332,7 +332,7 @@ export class CombatSystem {
       targetKilled: false,
     }
 
-    return this.resolveAttack(source, target, result, isCritical, blocked)
+    return this.resolveAttack(source, target, result, isCritical, blocked, src)
   }
 
   private rollHit(source: CombatEntity, target: CombatEntity): boolean {
@@ -419,11 +419,14 @@ export class CombatSystem {
     result: DamageResult,
     critical: boolean,
     blocked: boolean,
+    statSource: CombatEntity = source,
   ) {
     const targetBefore = { hp: target.currentHp, ward: target.currentWard, mp: target.currentMp }
     // Floor "toi thieu 1" ap SAU finalDamageMultiplier (xem resolveActionHit)
     // - moi don trung dich luon gay it nhat 1 sat thuong.
-    result.finalDamage = Math.max(1, result.finalDamage * this.finalDamageMultiplier(source, target))
+    // statSource carries the cast-scoped view (castModifiers) for stat
+    // reads; mutations/attribution stay on the real `source` entity.
+    result.finalDamage = Math.max(1, result.finalDamage * this.finalDamageMultiplier(statSource, target))
 
     // Phap Tu Reimagined (spec D9, F11) - Linh Luc Ho The: DR on the
     // resolved hit scaled by the LIVE LL ratio, applied AFTER the
@@ -574,8 +577,8 @@ export class CombatSystem {
     // (hpDamage > 0), scaled on the HP THAT SU lost post-absorb (D11 -
     // a fully-warded hit feeds no leech, an overkill feeds only the HP
     // the target actually had).
-    if (actualHpDamage > 0 && source.stats.leechPercent > 0 && source.alive) {
-      this.applyHealing(source, actualHpDamage * clampStatValue('leechPercent', source.stats.leechPercent), source.id, 'leech')
+    if (actualHpDamage > 0 && statSource.stats.leechPercent > 0 && source.alive) {
+      this.applyHealing(source, actualHpDamage * clampStatValue('leechPercent', statSource.stats.leechPercent), source.id, 'leech')
     }
 
     // Phap Tu (Tho Tu) - "Khien No": Ward VUA hap thu xong VA vua vo

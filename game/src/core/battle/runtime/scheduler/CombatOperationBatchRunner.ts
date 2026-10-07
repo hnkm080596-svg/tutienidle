@@ -471,6 +471,23 @@ export class CombatOperationBatchRunner {
             bad('elementalPenetrationBonus')
           }
         }
+        // Cast-scoped stat deltas (Hoa lane / Tam Muoi trades) -- only
+        // the skill_hit profile resolves a stat view; any other carrier
+        // would silently drop them, so it faults instead.
+        if (p.castModifiers !== undefined) {
+          const legal =
+            entry.origin.kind === 'skill' &&
+            p.damageProfile === 'skill_hit' &&
+            p.castModifiers.length > 0 &&
+            p.castModifiers.every(
+              (m) =>
+                typeof m === 'object' &&
+                m !== null &&
+                isNonEmptyString(m.stat) &&
+                isFiniteNumber(m.value),
+            )
+          if (!legal) bad('castModifiers')
+        }
         return
       }
       case 'heal': {

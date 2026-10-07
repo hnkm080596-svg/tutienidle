@@ -101,6 +101,11 @@ export function applyPhapTuSkillDefinitionModifiers(
     return derived
   }
 
+  // cooldownTurnsDelta folds sum-first then floors once ("minimum 2
+  // turn CD" reads aggregate) - per-modifier flooring would make the
+  // result order-sensitive when an intermediate dip crosses the floor.
+  let cooldownDeltaSum = 0
+
   for (const modifier of matching) {
     if (modifier.damageMultiplierPerLevel !== undefined && derived.damage !== undefined) {
       const next = ensureDerived()
@@ -128,16 +133,9 @@ export function applyPhapTuSkillDefinitionModifiers(
     }
 
     if (modifier.cooldownTurnsDelta !== undefined) {
-      const delta =
+      cooldownDeltaSum +=
         (modifier.cooldownTurnsDelta.flat ?? 0) +
         (modifier.cooldownTurnsDelta.perLevel ?? 0) * modifier.level
-      if (delta !== 0) {
-        const next = ensureDerived()
-        next.cooldownTurns = Math.max(
-          SPECIAL_CD_FLOOR_TURNS,
-          Math.floor(next.cooldownTurns + delta),
-        )
-      }
     }
 
     if (modifier.castStatModifiers !== undefined && modifier.castStatModifiers.length > 0) {
@@ -148,6 +146,14 @@ export function applyPhapTuSkillDefinitionModifiers(
       }
       next.castModifiers = [...merged.entries()].map(([stat, value]) => ({ stat, value }))
     }
+  }
+
+  if (cooldownDeltaSum !== 0) {
+    const next = ensureDerived()
+    next.cooldownTurns = Math.max(
+      SPECIAL_CD_FLOOR_TURNS,
+      Math.floor(next.cooldownTurns + cooldownDeltaSum),
+    )
   }
 
   return derived
