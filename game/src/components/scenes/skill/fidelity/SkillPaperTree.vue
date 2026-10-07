@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SkillUiNode, SkillUiEdge } from './skillUi'
 import { EDGE_PIPE_CELL, EDGE_PIPE_GAP, EDGE_PIPE_H, EDGE_PIPE_INSET_TO } from './skillUi'
@@ -217,6 +217,7 @@ const viewBox = computed(() => `0 0 ${props.size} ${props.size}`)
 const pan = ref({ x: 0, y: 0 })
 const zoom = ref(1)
 const dragging = ref(false)
+const rootEl = useTemplateRef<HTMLElement>('rootEl')
 let dragMoved = false
 let dragStart: { px: number; py: number; x: number; y: number } | null = null
 let nodeDrag: { id: string; px: number; py: number; x: number; y: number; scale: number } | null = null
@@ -231,12 +232,22 @@ function clampPan(p: { x: number; y: number }, vw: number, vh: number) {
   const by = Math.max(0, vh / 2 + half - PAN_MARGIN)
   return { x: Math.min(bx, Math.max(-bx, p.x)), y: Math.min(by, Math.max(-by, p.y)) }
 }
+// A scale change outside a gesture (extent refit, element switch onto a
+// smaller tree) can shrink the bound under a stored pan - re-clamp it.
+watch([() => props.size, () => props.fit], () => {
+  if (rootEl.value === null) return
+  pan.value = clampPan(pan.value, rootEl.value.offsetWidth, rootEl.value.offsetHeight)
+})
 
 function onPointerDown(event: PointerEvent) {
   dragging.value = true
   dragMoved = false
   dragStart = { px: event.clientX, py: event.clientY, x: pan.value.x, y: pan.value.y }
   nodeDrag = null
+  // Clear any leaked freeze first: a press whose release never reaches
+  // this root (e.g. over the .stop'd design-tools) leaves one behind,
+  // and a stale freeze silences every later extent emit.
+  extentFreeze.value = null
   if (designMode.value) {
     const host = (event.target as HTMLElement).closest('.skill-positioned-node') as HTMLElement | null
     const node = host && paintNodes.value.find(n => host.dataset.nodeId === n.id)
@@ -264,12 +275,18 @@ function onPointerMove(event: PointerEvent) {
   if (!dragMoved) return
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
   if (nodeDrag) {
-    // Screen px -> graph px, at the drag-start scale.
+    // Screen px -> graph px, at the drag-start scale. Drops are clamped
+    // to the envelope the extent formula can actually cover: a negative
+    // coordinate escapes the size square entirely (invisible, ungrabbable),
+    // a runaway coordinate shrinks the fit to unreadable.
+    const nx = (event.clientX - nodeDrag.px) / nodeDrag.scale
+    const ny = (event.clientY - nodeDrag.py) / nodeDrag.scale
+    const bound = props.size + 300
     designOffsets.value = {
       ...designOffsets.value,
       [nodeDrag.id]: {
-        x: nodeDrag.x + (event.clientX - nodeDrag.px) / nodeDrag.scale,
-        y: nodeDrag.y + (event.clientY - nodeDrag.py) / nodeDrag.scale,
+        x: Math.min(bound, Math.max(0, nodeDrag.x + nx)),
+        y: Math.min(bound, Math.max(0, nodeDrag.y + ny)),
       },
     }
     saveDesign()
@@ -338,6 +355,7 @@ const rootStyle = computed(() =>
 </script>
 <template>
   <div
+    ref="rootEl"
     class="skill-paper-tree"
     :class="{ dragging, design: designMode }"
     :style="rootStyle"
