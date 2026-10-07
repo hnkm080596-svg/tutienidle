@@ -220,8 +220,8 @@ export interface TurnSkillDefinition {
    * Hoa The gate (Minh ruling 2026-10-04) - success probability of the
    * landed-cast The mint, rolled once via CombatRng at grant time.
    * Omitted = certain (legacy callers never roll). The spell kit stamps
-   * nodeLevel * 0.35 so a fresh Hoa The node starts unreliable (35%)
-   * and level 3 restores the guaranteed income.
+   * nodeLevel * 0.10 so the Hoa The node mints probabilistically
+   * (lv4 = 40%).
    */
   theGainChance?: number
   /**

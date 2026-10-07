@@ -9,6 +9,12 @@ export interface SkillUiNode {
    *  the minor/major/root sizing inside SkillConstellationPanel. */
   emphasis?: 'normal' | 'major' | 'root'
   level: string
+  /** Numeric level/maxLevel driving the segmented pipe fill on edges
+   *  entering this node (one slot per level, filled per current level).
+   *  Optional - preview/fixture nodes leave them unset and draw a plain
+   *  pipe. */
+  levelCurrent?: number
+  levelMax?: number
   state: 'learned' | 'available' | 'locked'
   description: string
   /** XP line under level in the detail card ('' = row hidden). Cast-leveled
@@ -27,6 +33,32 @@ export interface SkillUiNode {
   actionDisabled: boolean
   /** Why the CTA is gated - sits in the reserved notice area. */
   actionHint: string
+  /** Frame tier override (tien-hiep skill-node-{tier}-v1.png). Set only for
+   *  the three mortal precursor seats - their frame upgrades with the
+   *  skill's core level; every other node keeps the prominent/sub frames. */
+  frameKind?: 'main' | 'parent' | 'sub' | 'passive' | 'keystone'
 }
 export interface SkillUiEdge { from: string; to: string }
+
+// Minh's pipe-segment ruling (2026-10): an edge renders one pipe per
+// level of the TARGET node; the NODE's distance from its parent is what
+// grows with level count. Each pipe is the full pipe art scaled
+// UNIFORMLY to EDGE_PIPE_H (never stretched to fit): the v2 source art
+// is 1088x183 (~5.9:1) so one scaled pipe is ~131px wide. The level
+// fill lives INSIDE the pipe's dark channel (rows ~27-84% of art
+// height) - never a bar over the art. Both the layout
+// post-pass (SkillSurface) and the edge renderer (SkillPaperTree) share
+// these metrics so the pipe chain exactly tiles the link.
+export const EDGE_PIPE_ART_W = 1088
+export const EDGE_PIPE_ART_H = 183
+export const EDGE_PIPE_H = 22
+export const EDGE_PIPE_CELL = EDGE_PIPE_H * (EDGE_PIPE_ART_W / EDGE_PIPE_ART_H)
+export const EDGE_PIPE_GAP = 6
+// Pipe-to-disc gaps are asymmetric (Minh ruling): the PARENT side keeps
+// an 8px breathing gap past the disc rim while the TARGET node sits
+// 8px closer, right at its rim (node disc radius 30px).
+export const EDGE_PIPE_INSET = 38
+export const EDGE_PIPE_INSET_TO = 30
+export const edgeLinkLength = (max: number): number =>
+  EDGE_PIPE_INSET + EDGE_PIPE_INSET_TO + max * EDGE_PIPE_CELL + Math.max(0, max - 1) * EDGE_PIPE_GAP
 export interface SkillUiElement { id: string; label: string; icon: string }

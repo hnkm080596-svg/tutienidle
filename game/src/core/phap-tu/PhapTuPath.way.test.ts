@@ -336,10 +336,10 @@ describe('battle build — the way drives the kit branch', () => {
     const participant = gameManager.getTurnBattle()!.players[0]!
     expect(participant.basic?.id).toBe('hoa_cau_thuat')
     // Phap Tu Reimagined + Hoa The gate: +1 The on landed cast at the
-    // node's mint chance (lv4 = guaranteed); the Phap The element
+    // node's mint chance (lv4 = 40%); the Phap The element
     // rider rides the empowerment channel at the flat cap of 5.
     expect(participant.basic?.theGainOnLandedCast).toBe(1)
-    expect(participant.basic?.theGainChance).toBe(1)
+    expect(participant.basic?.theGainChance).toBe(0.4)
     expect(participant.basic?.empowerment?.theThreshold).toBe(SPELL_PATH_MAX_THE)
     expect(participant.entity.maxThe).toBe(SPELL_PATH_MAX_THE)
   })
@@ -370,6 +370,6 @@ describe('battle build — the way drives the kit branch', () => {
 
     const participant = gameManager.getTurnBattle()!.players[0]!
     expect(participant.basic?.theGainOnLandedCast).toBe(1)
-    expect(participant.basic?.theGainChance).toBe(0.35)
+    expect(participant.basic?.theGainChance).toBe(0.1)
   })
 })

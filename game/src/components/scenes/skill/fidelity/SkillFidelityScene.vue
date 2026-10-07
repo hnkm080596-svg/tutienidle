@@ -40,7 +40,7 @@ const props = withDefaults(
 const constellationAccent = computed(
   () => (ELEMENT_COLOR_VARS as Record<string, string>)[props.element] ?? '',
 )
-const emit = defineEmits<{ back: []; select: [id: string]; element: [id: string]; upgrade: [id: string]; respec: [] }>()
+const emit = defineEmits<{ back: []; select: [id: string]; element: [id: string]; upgrade: [id: string]; respec: []; extent: [size: number] }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
 
@@ -63,7 +63,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
       :accent="constellationAccent"
       @select="emit('select', $event)"
     />
-    <SkillPaperTree v-else :nodes="nodes" :edges="edges" :selected="selected?.id ?? ''" :size="graphSize" :fit="graphFit" @select="emit('select', $event)" />
+    <SkillPaperTree v-else :nodes="nodes" :edges="edges" :selected="selected?.id ?? ''" :size="graphSize" :fit="graphFit" :accent="constellationAccent" @select="emit('select', $event)" @activate="emit('upgrade', $event)" @extent="emit('extent', $event)" />
     <SkillPaperDetails :node="selected" :notice="notice" @upgrade="emit('upgrade', $event)" />
     <footer class="skill-foot">
       <span class="skill-insight">{{ insightLabel }}</span>

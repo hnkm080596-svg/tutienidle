@@ -10,10 +10,11 @@ import { SPELL_KIT_IDS } from '../skill/Skills'
 
 // Phap Tu Reimagine (2026-09-26 spec sec.1.4 + openQuestion 5) -- the
 // basic lane keeps ONLY skill-owned channels: the ailment family
-// (elementApplicationPercent / ailmentPotencyPercent /
-// ailmentDurationPercent -- the element basic is the path's only
-// own-source ailment producer, so the global channel IS the skill
-// channel, ruling F14) plus the two-way capstone specializations
+// (elementApplicationPercent / ailmentPotencyPercent -- the element
+// basic is the path's only own-source ailment producer, so the global
+// channel IS the skill channel, ruling F14; ailmentDurationPercent is
+// dead on 2-4 turn lifetimes, Minh filter 2026-10-07) plus the two-way
+// capstone specializations
 // (they modify the basic itself). The generic-stat nodes
 // (skillDamagePercent / criticalRate / criticalDamage /
 // finalDamagePercent) are cut outright; a per-skillId coefficient/
@@ -144,15 +145,15 @@ function buildFire(): ProgressionNode[] {
   return [
     // Hoa The gate (Minh ruling 2026-10-04): the The loop does NOT come
     // with the element - this node unlocks it. Level = the chance a
-    // landed Ly Hoa cast mints +1 The (lv1 = 35%, lv3 = 100% certain).
+    // landed Ly Hoa cast mints +1 The (10%/level, lv4 = 40%).
     // The mechanic is read straight off player.nodeLevels at kit build
     // (CultivationPathRegistry), like the evolution/cascade markers --
     // statModifiers stay empty so nothing double-counts the chance.
     {
       id: 'hoa_the',
-      name: 'Hỏa Thế',
+      name: 'Tích Diễm',
       description:
-        'Mở khóa Hỏa Thế — mỗi cấp +35% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng (cấp 3 = chắc chắn). Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
+        'Mở khóa Hỏa Thế — mỗi cấp +10% tỉ lệ tích 1 tầng Hỏa Thế khi đòn Ly Hỏa trúng. Đủ 5 tầng Hỏa Thế, đòn kế mang Pháp Thế.',
       type: 'minor',
       role: 'growth',
       insightCost: 600,
@@ -165,30 +166,30 @@ function buildFire(): ProgressionNode[] {
     },
     powerNode(
       'hoa_diem_chuan',
-      'Diễm Chuẩn',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      'Dẫn Hỏa',
+      '+2.5% tỉ lệ áp dụng Hỏa Ấn mỗi cấp (tối đa +10% so với gốc).',
       'fire',
       [stat('hoa_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'hoa_an_sau',
-      'Hỏa Ấn Sâu',
-      '+2.5% uy lực tật trạng mỗi cấp.',
+      'Khắc Ấn',
+      '+2.5% uy lực Hỏa Ấn mỗi cấp.',
       'fire',
       [stat('hoa_an_sau', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'hoa_nhiet_keo',
-      'Nhiệt Kéo',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
+      'Dư Tẫn',
+      '+2.5% uy lực Hỏa Ấn mỗi cấp (tầng Trúc Cơ).',
       'fire',
-      [stat('hoa_nhiet_keo', 'ailmentDurationPercent', 0.025)],
+      [stat('hoa_nhiet_keo', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_an_sau' },
     ),
     powerNode(
       'hoa_diem_tham',
-      'Diễm Thấm',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tầng Trúc Cơ).',
+      'Thấu Hỏa',
+      '+2.5% tỉ lệ áp dụng Hỏa Ấn mỗi cấp (tầng Trúc Cơ).',
       'fire',
       [stat('hoa_diem_tham', 'elementApplicationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_diem_chuan' },
@@ -215,28 +216,28 @@ function buildWater(): ProgressionNode[] {
     powerNode(
       'thuy_diem_chuan',
       'Lưu Chuẩn',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2.5% tỉ lệ áp dụng Tê Cóng mỗi cấp (tối đa +10% so với gốc).',
       'water',
       [stat('thuy_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'thuy_te_dam',
       'Tê Đẫm',
-      '+2.5% uy lực tật trạng mỗi cấp.',
+      '+2.5% uy lực Tê Cóng mỗi cấp.',
       'water',
       [stat('thuy_te_dam', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'thuy_luu_tich',
       'Lưu Tích',
-      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian Tê Cóng mỗi cấp (tối đa +10%).',
       'water',
       [stat('thuy_luu_tich', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'thuy_nhiet_tri',
       'Nhiễm Trì',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% thời gian Tê Cóng mỗi cấp (tầng Trúc Cơ).',
       'water',
       [stat('thuy_nhiet_tri', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_luu_tich' },
@@ -244,7 +245,7 @@ function buildWater(): ProgressionNode[] {
     powerNode(
       'thuy_te_tham',
       'Tê Thấm',
-      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực Tê Cóng mỗi cấp (tầng Trúc Cơ).',
       'water',
       [stat('thuy_te_tham', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_te_dam' },
@@ -273,21 +274,21 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_sau',
       'Độc Sâu',
-      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tối đa +10%).',
       'wood',
       [stat('moc_doc_sau', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_dien',
       'Độc Diễn',
-      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian Trúng Độc mỗi cấp (tối đa +10%).',
       'wood',
       [stat('moc_doc_dien', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_tham',
       'Độc Thấm',
-      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_tham', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_sau' },
@@ -295,7 +296,7 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_man',
       'Độc Mạn',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% thời gian Trúng Độc mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_man', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_dien' },
@@ -303,21 +304,21 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_nhuan',
       'Độc Nhuần',
-      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian Trúng Độc mỗi cấp (tối đa +10%).',
       'wood',
       [stat('moc_doc_nhuan', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_tu',
       'Độc Tú',
-      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tối đa +10%).',
       'wood',
       [stat('moc_doc_tu', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'moc_doc_am',
       'Độc Ám',
-      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_am', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_tu' },
@@ -325,7 +326,7 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_nhiem',
       'Độc Nhiễm',
-      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_nhiem', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_tu' },
@@ -352,21 +353,21 @@ function buildMetal(): ProgressionNode[] {
     powerNode(
       'kim_diem_chuan',
       'Điểm Chuẩn',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2.5% tỉ lệ áp dụng Xuất Huyết mỗi cấp (tối đa +10% so với gốc).',
       'metal',
       [stat('kim_diem_chuan', 'elementApplicationPercent', 0.025)],
     ),
     powerNode(
       'kim_liet_huyet',
       'Liệt Huyết',
-      '+2.5% uy lực tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% uy lực Xuất Huyết mỗi cấp (tối đa +10%).',
       'metal',
       [stat('kim_liet_huyet', 'ailmentPotencyPercent', 0.025)],
     ),
     powerNode(
       'kim_diem_tham',
       'Điểm Thấm',
-      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% tỉ lệ áp dụng Xuất Huyết mỗi cấp (tầng Trúc Cơ).',
       'metal',
       [stat('kim_diem_tham', 'elementApplicationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'kim_diem_chuan' },
@@ -393,14 +394,14 @@ function buildEarth(): ProgressionNode[] {
     powerNode(
       'tho_tran_sau',
       'Trần Sâu',
-      '+2.5% thời gian tật trạng mỗi cấp (tối đa +10%).',
+      '+2.5% thời gian Thạch Hóa mỗi cấp (tối đa +10%).',
       'earth',
       [stat('tho_tran_sau', 'ailmentDurationPercent', 0.025)],
     ),
     powerNode(
       'tho_tran_cung',
       'Trần Củng',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% thời gian Thạch Hóa mỗi cấp (tầng Trúc Cơ).',
       'earth',
       [stat('tho_tran_cung', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tran_sau' },

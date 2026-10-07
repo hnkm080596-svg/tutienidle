@@ -2146,11 +2146,16 @@
       "locked": "Chưa Đủ Điều Kiện"
     },
     "actionDone": "{name} đã cập nhật.",
+    "holdToAct": "Giữ node để {action}.",
     "actionFailed": "Không thể thực hiện — kiểm tra điều kiện và Cảm Ngộ.",
     "constellation": {
       "legendGlyph": "Nét chữ",
       "legendPrereq": "Điều kiện",
       "canvas": "Chòm sao {glyph}"
+    },
+    "designMode": {
+      "ultimatePlaceholder": "Chưa Lộ",
+      "ultimateLocked": "Chưa lộ — tuyệt kỹ chưa được tạo."
     }
   },
   "body": {

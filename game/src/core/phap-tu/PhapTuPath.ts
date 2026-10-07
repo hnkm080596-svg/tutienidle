@@ -135,11 +135,10 @@ export const SPELL_PATH_MAX_THE = 5
  * empowerment and the The cap come online with the same purchase.
  */
 export const HOA_THE_NODE_ID = 'hoa_the'
-// balance-review 2026-10-04 (docs/balance/skills-review.md ngoai pham
-// vi #2): at 0.25 the lv1-3 payoff shot almost never lands inside a
-// decisive fight; 0.35 makes hoa_the lv3 a reliable empowered engine
-// while lv1-2 stay probabilistic.
-export const THE_GAIN_CHANCE_PER_LEVEL = 0.35
+// Minh tune 2026-10-07: 0.35 -> 0.10 per level (max lv4 = 40% per
+// landed cast) - the The loop stays a slow-burn engine, not a
+// reliable per-fight trigger.
+export const THE_GAIN_CHANCE_PER_LEVEL = 0.10
 
 /** Battle-scoped The-cap authority (reads onto entity.maxThe at
     participant build via CombatBuild -> runtime.resolveMaxThe).
