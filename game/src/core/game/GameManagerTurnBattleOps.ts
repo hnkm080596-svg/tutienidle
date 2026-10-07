@@ -288,6 +288,28 @@ export class GameManagerTurnBattleOps {
    */
   private boundaryQueue: Array<() => void> = []
 
+  /**
+   * Latest manual-mode toggle the USER requested (session-scoped intent).
+   * The boundary queue is battle-scoped and dropped undrained at
+   * combat-over/teardown; this slot survives the drop so the toggle still
+   * lands - see dropBoundaryQueue (r37-AUT-1).
+   */
+  private pendingManualMode: boolean | null = null
+
+  /**
+   * Discard every queued boundary command (combat-over, cycle teardown).
+   * Battle-scoped commands die with their battle - but a session-scoped
+   * intent (the manual-mode toggle) must not die with them: re-land the
+   * latest requested value on the runtime flag before dropping.
+   */
+  private dropBoundaryQueue(): void {
+    if (this.pendingManualMode !== null) {
+      this.presentationOps.runtime.setBattleManualMode(this.pendingManualMode)
+      this.pendingManualMode = null
+    }
+    this.boundaryQueue = []
+  }
+
   constructor(private readonly deps: {
     eventBus: EventBus
     combatSystem: CombatSystem
@@ -419,6 +441,13 @@ export class GameManagerTurnBattleOps {
     if (wasRunning) {
       this.combatClock.start()
       for (const reason of latchedReasons) {
+        // r37-COR-4 - 'turn-in-flight' is only coherent while the token
+        // is claimed: a foreign latch on an IDLE token can never be
+        // resumed (no transition fires the rebound listener, no claim
+        // ever runs) and would freeze the new instance permanently.
+        if (reason === 'turn-in-flight' && this.turnToken.getState() === 'IDLE') {
+          continue
+        }
         this.combatClock.freeze(reason)
       }
       this.syncOffScreenFreeze()
@@ -839,6 +868,15 @@ export class GameManagerTurnBattleOps {
       if (generationAtArm !== this.pendingStepGeneration) {
         return
       }
+      // r37-COR-2 - same-epoch but already settled: the ACK channel (or
+      // an earlier same-generation fire) consumed this step's parked
+      // settle while this callback sat in the task queue. Bail before the
+      // admin-latch arm splices its dead handle and re-arms a live timer
+      // for a step that no longer exists - an orphan chain re-firing
+      // every fallback interval until the next clearPendingSteps.
+      if (this.pendingStepDone[signal] === undefined) {
+        return
+      }
       // r35-AUT-1 - the fallback is a wall-clock channel that would
       // otherwise bypass the CombatClock latch entirely: a ghost parked
       // mid-turn kept draining on setTimeout while the boot awaited, and
@@ -885,6 +923,14 @@ export class GameManagerTurnBattleOps {
       }
       if (this.presentationOps.session.isBlocking()) {
         deferredMs += ANIMATION_FALLBACK_MS
+        // r37-COR-1 - same live-handles-only invariant as the
+        // admin-latch arm above: retire the just-fired handle on EVERY
+        // deferral path (re-arm below and the cap-drain alike) so a held
+        // session cannot accumulate dead handles.
+        const deadIdx = this.pendingStepTimers.indexOf(timer)
+        if (deadIdx !== -1) {
+          this.pendingStepTimers.splice(deadIdx, 1)
+        }
         if (deferredMs < AWAIT_STEP_DEFERRAL_CAP_MS) {
           timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
           this.pendingStepTimers.push(timer)
@@ -897,7 +943,9 @@ export class GameManagerTurnBattleOps {
         // never completes (the turn token would wedge in RESOLVING).
         // Drain the pending playback mechanically instead - the same
         // inline settle the deactivation path performs - so this turn
-        // still runs its work and resolves.
+        // still runs its work and resolves. The parked settle entry stays
+        // armed for the drain's own settle chain to consume (the
+        // completion sink routes through settleStep).
         console.warn(
           `[TurnBattle] step '${signal}' blocked for ${deferredMs}ms - draining pending playback mechanically`,
         )
@@ -925,6 +973,13 @@ export class GameManagerTurnBattleOps {
 
     this.pendingStepDone[signal] = () => {
       clearTimeout(timer)
+      // r37-COR-1 - an ACK-settled step retires its fallback from the
+      // live-timer array as well, otherwise every settled step leaves
+      // one dead handle behind until the next clearPendingSteps.
+      const deadIdx = this.pendingStepTimers.indexOf(timer)
+      if (deadIdx !== -1) {
+        this.pendingStepTimers.splice(deadIdx, 1)
+      }
       done()
     }
   }
@@ -1008,8 +1063,9 @@ export class GameManagerTurnBattleOps {
       // Spec section 9.2: a victory or defeat never passes through
       // abandonBattle, so a command queued in the last turn of THIS battle
       // must be dropped here - draining it at the next boundary would apply
-      // it to whatever battle starts next, not the one it was queued against.
-      this.boundaryQueue = []
+      // it to whatever battle starts next, not the one it was queued
+      // against. Session-scoped intents still re-land via dropBoundaryQueue.
+      this.dropBoundaryQueue()
       this.settleCombatOutcome()
     }
   }
@@ -1630,7 +1686,7 @@ export class GameManagerTurnBattleOps {
     this.pipeline.reset()
     this.turnToken.reset()
     this.presentationOps.runtime.resetPendingState()
-    this.boundaryQueue = []
+    this.dropBoundaryQueue()
     this.activeBuild = undefined
     // A live trial torn down by cycle replacement must release its
     // enemies here - the undefeatable beast has no other despawn path,
@@ -2556,12 +2612,6 @@ export class GameManagerTurnBattleOps {
       this.deps.bankPassiveCarry(this.playerDataForTurnBattle)
     }
 
-    // ARCH-014 (M12) -- ONE terminal publisher: rewardOps owns every
-    // 'battle_end' emission (victory, natural defeat, abandon). The shared
-    // once-guard both publishes and stamps the flag, so a duplicate
-    // terminal can never slip through if the clock were ever restarted.
-    this.rewardOps.emitAbandonEnd()
-
     // Audit fix 2026-08-31 - surviving enemies + pending spawns are dropped
     // without a victory flow; clear here exactly where the battle is
     // destroyed (StageWave auto-repeat spawns the next battle right after
@@ -2574,6 +2624,17 @@ export class GameManagerTurnBattleOps {
     // runs on entry - the pending-clear cannot drift.
     this.clearCycleEntryState()
     this.combatClock.stop()
+
+    // ARCH-014 (M12) -- ONE terminal publisher: rewardOps owns every
+    // 'battle_end' emission (victory, natural defeat, abandon). The shared
+    // once-guard both publishes and stamps the flag, so a duplicate
+    // terminal can never slip through if the clock were ever restarted.
+    // Emit AFTER the teardown tail (r37-COR-3): a synchronous
+    // battle-start inside a subscriber mid-emit would otherwise mint a
+    // cycle this tail then tears down - a stopped-clock zombie nobody
+    // owns. Subscribers consume the event payload, not the live battle
+    // reference, so no live turnBattle is required at emit time.
+    this.rewardOps.emitAbandonEnd()
 
     return true
   }
@@ -2641,8 +2702,19 @@ export class GameManagerTurnBattleOps {
       this.beginTurnPipeline(stranded, 'ready')
     }
 
+    // The flag flip is boundary-queued like every external command: it
+    // must not affect the turn already resolving (spec section 9.1) -
+    // acknowledgeTurnReady reads the LIVE flag when routing a claimed
+    // actor into the manual pause, so an immediate flip could hijack an
+    // in-flight auto turn into AWAITING_INPUT. The battle-scoped queue
+    // is still cleared undrained at combat-over/teardown though, so a
+    // session-scoped pending intent mirrors the toggle: dropBoundaryQueue
+    // re-lands the latest requested value before discarding (r37-AUT-1 -
+    // a terminal-turn toggle no longer dies silently with the queue).
+    this.pendingManualMode = enabled
     this.enqueueAtTurnBoundary(() => {
       this.presentationOps.runtime.setBattleManualMode(enabled)
+      this.pendingManualMode = null // landed through the normal boundary path
     })
   }
 

@@ -488,7 +488,15 @@ const { breakthrough } = useBreakthrough(gameManager)
 // combat (no battle mounted == nothing to pause).
 const { isPaused: isCombatPaused, continueBattle, dispose: disposeCombatPause } = useCombatPause(
   gameManager,
-  { isCombatActive: () => gameManager.getCombatClockState() !== 'stopped' },
+  // r37-AUT-2 - gate on a live battle, not just a non-stopped clock: the
+  // accepted battle-less 'frozen' zombie residual (boot-fail /
+  // rejected-restore keeps a latched clock) would otherwise let a hidden
+  // tab arm the "combat paused - continue" curtain over an error/entry
+  // screen with nothing to continue into.
+  {
+    isCombatActive: () =>
+      gameManager.getCombatClockState() !== 'stopped' && gameManager.getTurnBattle() !== null,
+  },
 )
 
 // Cau noi reactivity chung cho cac panel doc bag/equipment - xem
