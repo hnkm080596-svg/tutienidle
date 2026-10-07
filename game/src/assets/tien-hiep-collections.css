@@ -1,0 +1,281 @@
+/* Collection composition is owned by its scene roots. All dimensions use
+   the shared 1440 x 810 design projection, including production slots. */
+:is(#app, body) .th-collection.th-collection.th-collection {
+  --collection-paper: #f3ead8;
+  --collection-ink: #252722;
+  --collection-muted: #766a53;
+  --collection-gold: #aa8c55;
+  --collection-dark: #252923;
+  color: var(--collection-ink);
+}
+:is(#app, body) .th-collection.th-collection.th-collection :is(.cf-paper,.inventory-paper,.equipment-paper,.skill-paper,.alchemy-paper,.exploration-paper) {
+  left: 156px; top: 123px; width: 1272px; height: 633px;
+  border-image: none; border: 1px solid #aa8c5570;
+  background: linear-gradient(100deg,#f6efdfef,#efe4cfee), var(--th-art-paper-surface) center/cover;
+  box-shadow: inset 0 0 0 7px #f8efdc, inset 0 0 0 8px #aa8c5538, 0 14px 38px #10180e66;
+  filter: none;
+}
+:is(#app, body) .th-collection.th-collection.th-collection :is(.cf-title,.inventory-title,.equipment-title,.alchemy-title) {
+  left: 204px; top: 151px; width: auto; height: auto; margin: 0; padding: 0;
+  background: none; color: var(--collection-ink); text-align: left;
+  font-size: 34px; line-height: 42px; font-style: normal; font-weight: 600;
+  letter-spacing: .025em; text-shadow: none;
+}
+:is(#app, body) .th-collection.th-collection.th-collection :is(.cf-notice,.inventory-notice,.equipment-notice) {
+  left: 204px; top: 718px; width: 1170px; height: 24px;
+  color: var(--collection-muted); text-align: right; font-size: 13px;
+}
+:is(#app, body) .th-collection.th-collection :is(button,input,select):focus-visible {
+  outline: 2px solid #ad8439; outline-offset: 3px;
+}
+:is(#app, body) .th-collection.th-collection.th-collection :is(.cf-preview,.inventory-preview,.equipment-preview,.preview-label,.skill-preview-label) {
+  left: 204px; top: 736px; font-size: 10px;
+}
+
+/* Character: a personal study, aggregate attributes, then source detail. */
+:is(#app, body) .th-collection.th-collection.th-collection .character-study {
+  position: absolute; left: 204px; top: 211px; width: 559px; height: 488px;
+  border-right: 1px solid #aa8c5540;
+  background: radial-gradient(ellipse at 65% 57%,#baa57224,transparent 64%);
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-identity {
+  left: 0; top: 0; width: 210px;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-name {
+  font-size: 29px; line-height: 1.35; font-style: normal;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-realm { color: #6b604d; font-size: 17px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-path { line-height: 1.6; align-items: flex-start; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-power {
+  margin-top: 28px; padding: 16px 12px 16px 47px; min-height: 86px;
+  border-block: 1px solid #aa8c5570; background: #262a24;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-power__icon { left: 10px; top: 29px; width: 26px; height: 26px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-person { left: 187px; top: 15px; width: 370px; height: 472px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-aura {
+  left: 235px; top: 71px; width: 270px; height: 300px;
+  border-color: #aa8c5540; background: radial-gradient(ellipse,#bba56620,transparent 70%); box-shadow: none;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-aura i { border-color: #aa8c5535; box-shadow: none; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-stats { left: 786px; top: 211px; width: 278px; max-height: 517px; padding-right: 12px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-section {
+  justify-content: flex-start; padding: 7px 0; min-height: 36px;
+  background: none; border-bottom: 1px solid #aa8c5560; color: var(--collection-ink); font-size: 18px;
+  white-space: normal; flex-wrap: wrap;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-details {
+  left: 1091px; top: 207px; width: 299px; height: 496px; padding: 18px 20px;
+  background: var(--collection-dark); color: #efe2c5; border: 1px solid #aa8c5570;
+  box-shadow: inset 0 0 0 5px #ffffff04;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-details__heading {
+  padding: 0 0 14px; background: none; color: #ead8ad; font-size: 21px;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-details__body { height: 411px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-details__section h3 { color: #c7ad77; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-detail-row { font-size: 14px; line-height: 20px; border-color: #c4a66524; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-detail-row dt { color: #d8ceb6; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-detail-row dd { color: #f4e8ce; }
+
+/* Inventory: the toolbar spans the bag; item identity is a fixed inspector. */
+:is(#app, body) .th-collection.th-collection.th-collection .inventory-content {
+  left: 204px; top: 207px; width: 1186px; height: 494px;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .inventory-content .toolbar { height: 46px; margin-bottom: 16px; }
+:is(#app, body) .th-collection.th-collection.th-collection .inventory-content .toolbar button[aria-pressed=true] {
+  background: #292d25; color: #ead8ad; border-color: #aa8c55;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .cf-stat-list { gap: 5px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-stat__seal { width: 30px; height: 30px; flex-basis: 30px; padding: 5px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-stat__label { font-size: 16px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-stat__content { gap: 3px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-talent__seal { flex-basis: 42px; height: 42px; padding: 8px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-section--talent { margin-top: 10px; }
+:is(#app, body) .th-collection.th-collection.th-collection .cf-section--elements { margin-top: 9px; }
+:is(#app, body) .th-collection.th-collection.th-collection .inventory-content .workspace { gap: 28px; }
+:is(#app, body) .th-collection.th-collection.th-collection .inventory-content .bag { padding: 8px 18px 8px 0; overflow: auto; border-right: 1px solid #aa8c553b; }
+:is(#app, body) .th-collection.th-collection.th-collection .inventory-content .item-grid { grid-template-columns: repeat(8,76px); gap: 17px; }
+:is(#app, body) .th-collection.th-collection.th-collection .inventory-content .item-grid button {
+  background: radial-gradient(ellipse at center,#5b604a,#292c24); border-color: #a58b54;
+  box-shadow: inset 0 0 0 4px #ffffff05,0 3px 7px #4a392720;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .item-detail {
+  width: 336px; border-image: none; border: 1px solid #aa8c5570;
+  padding: 22px 26px; color: #eadcc0; background: var(--collection-dark); filter: none;
+  overflow-y: auto; scrollbar-width: thin;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .item-detail h3 { color: #cdb681; font-size: 15px; }
+:is(#app, body) .th-collection.th-collection.th-collection .item-detail .description { color: #dbd0b8; }
+:is(#app, body) .th-collection.th-collection.th-collection .item-detail .quality { color: #b9c2a2; }
+:is(#app, body) .th-collection.th-collection.th-collection :is(.item-detail,.alchemy-details,.alchemy-details-empty,.exploration-details)::before,
+:is(#app, body) .th-collection.th-collection.th-collection :is(.item-detail,.alchemy-details,.alchemy-details-empty,.exploration-details)::after { display: none; }
+:is(#app, body) .th-collection.th-collection.th-collection .inventory-content .count { margin-top: 12px; color: var(--collection-muted); font-size: 13px; }
+
+/* Equipment: preserve the actual paperdoll slots and production operation tabs. */
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-subtitle { left: 408px; top: 170px; font-size: 14px; color: var(--collection-muted); }
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-upgrade { left: 571px; top: 162px; }
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-doll { left: 200px; top: 229px; width: 465px; height: 355px; }
+:is(#app, body) .th-collection.th-collection.th-collection .character-stage { left: 304px; top: 224px; width: 264px; height: 355px; }
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-sockets { left: 208px; top: 239px; width: 449px; height: 328px; }
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-summary {
+  left: 208px; top: 594px; width: 457px; height: 102px; padding: 14px 18px;
+  border: 1px solid #aa8c5540; background: #f9f2e070;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-summary h2 { margin-bottom: 14px; font-size: 18px; }
+:is(#app, body) .th-collection.th-collection.th-collection :is(.equipment-workspace,.equipment-bag,.equipment-forge) {
+  left: 699px; top: 213px; width: 691px; height: 487px; padding: 16px 19px;
+  border: 1px solid #aa8c5555; background: #f8f0df99;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-workspace nav {
+  gap: 4px; min-height: 42px; margin-bottom: 14px; flex-wrap: wrap;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-workspace nav button { min-height: 40px; padding: 4px 8px; font-size: 14px; }
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-workspace nav button[aria-pressed=true] {
+  background: var(--collection-dark); color: #e8d3a5; border-color: #aa8c55;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .equipment-bag .bag-grid { gap: 8px; max-height: 319px; }
+
+/* Skills: topology remains authored by the runtime; selection opens the dock. */
+:is(#app, body) .th-collection.th-collection.th-collection .skill-heading { left: 204px; top: 151px; width: 725px; max-width: none; }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-heading h1 {
+  width: auto; height: auto; padding: 0; margin: 0; background: none; color: var(--collection-ink);
+  font-size: 34px; line-height: 42px; font-style: normal; font-weight: 600; text-align: left;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .skill-heading p { padding: 0; margin: 5px 0; font-size: 15px; color: var(--collection-muted); }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-elements { left: 480px; top: 210px; width: 447px; padding-bottom: 11px; border-bottom: 1px solid #aa8c5540; }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-paper-tree { left: 205px; top: 282px; }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-meta { left: 204px; top: 706px; }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-paper-details {
+  left: 972px; top: 164px; width: 418px; height: 543px;
+  background: var(--collection-dark); border: 1px solid #aa8c5570; padding: 24px 26px 14px; color: #ede0c5;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .skill-info-frame { display: none; }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-paper-details :is(h2,h3) { color: #e5cf9e; }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-paper-details :is(header p,.skill-description,.skill-condition,.skill-action-hint,.skill-notice) { color: #d1c6ad; }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-paper-details dd { color: #b8caaa; }
+:is(#app, body) .th-collection.th-collection.th-collection .skill-paper-details .skill-upgrade { color: #ead8ad; background: #3c4435; font-size: 19px; }
+
+/* Alchemy: recipe archive, workbench and real queue, then a dark recipe folio. */
+:is(#app, body) .th-collection.th-collection.th-collection.alchemy-scene > .subtitle { left: 449px; top: 172px; color: var(--collection-muted); letter-spacing: 1px; }
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-upgrade { left: 785px; top: 163px; }
+:is(#app, body) .th-collection.th-collection.th-collection .recipe-list {
+  left: 204px; top: 216px; width: 273px; height: 367px; padding-right: 19px; border-right: 1px solid #aa8c5540;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .recipe-row { min-height: 65px; background: #fbf5e950; border-color: #aa8c5530; }
+:is(#app, body) .th-collection.th-collection.th-collection .recipe-row.selected { background: #ded1ae; border-color: #aa8c55; }
+:is(#app, body) .th-collection.th-collection.th-collection .cauldron-region { left: 505px; top: 218px; width: 425px; height: 367px; }
+:is(#app, body) .th-collection.th-collection.th-collection .queue {
+  left: 204px; top: 602px; width: 743px; height: 111px; padding: 9px 12px;
+  border-top: 1px solid #aa8c5550; background: #e9ddc460;
+}
+:is(#app, body) .th-collection.th-collection.th-collection :is(.alchemy-details,.alchemy-details-empty) {
+  left: 973px; top: 164px; width: 417px; height: 547px; padding: 24px 26px 18px;
+  border-image: none; border: 1px solid #aa8c5570; background: var(--collection-dark); color: #ede0c5;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details :is(.description,.notice,.empty-copy) { color: #d1c6ad; }
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details :is(.recipe-name,legend,.outcome h3) { color: #e5cf9e; }
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details .recipe-grade { background: #efe3c7; }
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details .herb-option { background: #ffffff05; border-color: #aa8c5545; }
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details .herb-option.selected { background: #8f9a6540; border-color: #c1af7b; }
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details :is(.herb-option strong,.costs dd,.outcome p) { color: #bccaa9; }
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details :is(.costs dd.insufficient,.herb-option.insufficient strong,.block-reason) { color: #ef9d84; }
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details .brew-button {
+  background: #3c4435; color: #eedbb0; border: 3px double #aa8c55; font-size: 19px;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .alchemy-details-empty .empty-copy { color: #d1c6ad; }
+
+/* Exploration: ink atlas and chapter routes stay intact beside expedition detail. */
+:is(#app, body) .th-collection.th-collection.th-collection.exploration-scene > .heading { left: 204px; top: 153px; right: 575px; }
+:is(#app, body) .th-collection.th-collection.th-collection.exploration-scene .zone-title { font-style: normal; font-weight: 600; font-size: 31px; }
+:is(#app, body) .th-collection.th-collection.th-collection .map-position { left: 211px; top: 273px; }
+:is(#app, body) .th-collection.th-collection.th-collection .exploration-map { height: 402px; border: 1px solid #aa8c5538; }
+:is(#app, body) .th-collection.th-collection.th-collection.exploration-scene .progress { left: 211px; top: 696px; width: 720px; }
+:is(#app, body) .th-collection.th-collection.th-collection .exploration-details {
+  left: 973px; top: 164px; width: 417px; height: 549px; padding: 22px 25px 14px;
+  border-image: none; border: 1px solid #aa8c5570; background: var(--collection-dark); color: #ede0c5;
+}
+:is(#app, body) .th-collection.th-collection.th-collection .exploration-details :is(.chapter-name,.section-heading,.stage-title) { color: #e5cf9e; }
+:is(#app, body) .th-collection.th-collection.th-collection .exploration-details :is(.description,.state-line,.enemy-summary,.enemy-name,.mode-hint,.notice,.empty-line) { color: #d1c6ad; }
+:is(#app, body) .th-collection.th-collection.th-collection .exploration-details .disabled-line { color: #efad92; }
+:is(#app, body) .th-collection.th-collection.th-collection .exploration-details .build-link { color: #dbc89f; background: #33382e; }
+:is(#app, body) .th-collection.th-collection.th-collection .exploration-details :is(.reward strong,.exploration-armed) { color: #c4d1af; }
+:is(#app, body) .th-collection.th-collection.th-collection .exploration-details .challenge {
+  background: #3c4435; color: #eedbb0; border: 3px double #aa8c55; font-size: 19px;
+}
+/* Continuous production collection shell; original slots keep their coordinate contract. */
+.pc-collection-page .pc-collection-stage{position:absolute;left:-96px;top:-174px;right:-48px;bottom:-91px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection{font-family:var(--pc-font-body)}
+:is(#app,body) .pc-collection.pc-collection.pc-collection :is(.inventory-landscape,.inventory-branch){display:none}
+:is(#app,body) .pc-collection.pc-collection.pc-collection :is(.cf-preview,.inventory-preview,.equipment-preview,.preview-label,.quest-preview){left:96px;top:756px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection :is(.cf-notice,.inventory-notice,.equipment-notice,.quest-notice){left:96px;top:745px;width:1296px;height:auto;color:#705734}
+:is(#app,body) .pc-collection.pc-collection.pc-collection :is(.equipment-upgrade,.alchemy-upgrade){left:1120px;top:115px;width:260px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .character-study{left:96px;top:174px;width:360px;height:545px;border:0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-identity{inset:0;width:100%;text-align:center}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-name{font:700 31px/1.3 var(--pc-font-body);white-space:normal}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-realm{border:0;margin:7px 0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-path{position:absolute;left:0;right:0;bottom:89px;justify-content:center;margin:0;font-size:17px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-power{position:absolute;bottom:0;left:22px;right:22px;min-height:80px;margin:0;padding:12px;background:var(--pc-inspector-art) center/100% 100%;border:0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-power__icon{display:none}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-power small{color:#ead8ad;font-size:17px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-power strong{color:#edce82;font-size:35px;line-height:40px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-person{left:0;top:70px;width:360px;height:375px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-aura{left:15px;top:70px;width:330px;height:330px;border:6px double #b68e4899;box-shadow:0 0 0 7px #c9a45e2c}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-stats{left:479px;top:174px;width:505px;height:545px;max-height:545px;padding:20px 25px;background:var(--pc-inspector-art) center/100% 100%;color:#f4e4c0;scrollbar-width:thin}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-section{color:#f0ddb4;justify-content:center;font-size:22px;padding:0 0 4px;margin-bottom:4px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-points{color:#d9c89f}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-stat-list{gap:6px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-stat__seal{width:28px;height:28px;flex-basis:28px;padding:5px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-stat__label{font-size:20px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-stat__content{gap:3px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-stat__label b{color:#d6e3b1}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-talent{color:#f4e4c0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-talent__text strong{font-size:18px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-talent__text small{font-size:14px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-element-summary button{width:65px;color:#f4e4c0;font-size:14px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-details{left:1007px;top:174px;width:385px;height:545px;padding:20px 24px;background:var(--pc-inspector-art) center/100% 100%;border:0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-details__heading{font-size:24px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-details__body{height:461px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-detail-row{font-size:17px;line-height:25px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .inventory-content{left:96px;top:112px;width:1296px;height:607px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .inventory-content .toolbar{height:46px;margin-bottom:16px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection :is(.inventory-content .toolbar,.equipment-workspace nav) button{font:700 22px/1.2 var(--pc-font-body);min-height:44px;padding:4px 20px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection :is(.inventory-content .toolbar,.equipment-workspace nav) button[aria-pressed=true]{color:#302519;background:radial-gradient(ellipse,#deb665aa,transparent 75%);border-bottom:2px solid #a8803c}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .inventory-content .bag{border:0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .inventory-content .count{font-size:16px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .item-detail{background:var(--pc-inspector-art) center/100% 100%;border:0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .equipment-doll{left:96px;top:174px;width:490px;height:410px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .equipment-summary{left:96px;top:602px;width:490px;height:117px;background:var(--pc-inspector-art) center/100% 100%;color:#f4e4c0;border:0;padding:17px 22px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .equipment-summary h2{color:#e8d2a6;font-size:22px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .equipment-summary :is(div,strong){color:#d6e3b1;font-size:18px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection :is(.equipment-workspace,.equipment-bag,.equipment-forge){left:620px;top:174px;width:772px;height:545px;padding:0 0 0 20px;border:0;border-left:1px solid #b18a4360;background:transparent}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .equipment-workspace nav{flex-wrap:nowrap;gap:2px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .equipment-workspace nav button{font-size:20px;padding:6px 10px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .recipe-list{left:96px;top:174px;width:300px;height:391px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .recipe-row{min-height:75px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cauldron-region{left:425px;top:174px;width:510px;height:391px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .queue{left:96px;top:580px;width:850px;height:139px;overflow:auto}
+:is(#app,body) .pc-collection.pc-collection.pc-collection :is(.alchemy-details,.alchemy-details-empty){left:973px;top:174px;width:419px;height:545px;background:var(--pc-inspector-art) center/100% 100%;border:0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-content{left:96px;top:112px;width:1296px;height:607px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-content .workspace{grid-template-columns:430px minmax(0,1fr);gap:28px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-content :is(.quest-detail-panel,.quest-detail){background:var(--pc-inspector-art) center/100% 100%;color:#f4e4c0;border:0;padding:23px 27px;overflow:auto}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-details .cf-detail-row dt{color:#d8ceb6}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-details .cf-detail-row dd{color:#f4e8ce}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-details .cf-details__section h3{color:#c7ad77}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .cf-details .cf-details__heading{color:#ead8ad}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail__name{color:#e8d4a8;font:700 26px/1.3 var(--pc-font-body)}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail__desc{color:#ded1b4;font-size:18px;line-height:1.6}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-group-tabs__pill{font:700 22px/1.2 var(--pc-font-body);color:#392b18;padding:8px 24px;border-radius:0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-group-tabs__pill.is-active{background:radial-gradient(ellipse,#deb665aa,transparent 75%);border-bottom:2px solid #a8803c;color:#392b18}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail{--hk-text-primary:#f2e3c4;--hk-text-secondary:#ded1b4;--hk-text-muted:#c5b58f;--hk-gold:#e3bd67;--paper-text:#f2e3c4;--paper-text-soft:#ded1b4;--paper-eyebrow:#d8bb7a}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail :is(h3,.quest-objectives__label,.quest-rewards__token){color:#eedbb4;font-size:19px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail :is(.quest-objectives__count,.quest-claim__note){color:#d8c49a;font-size:16px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-objectives__row{background:#d7b56810;border-color:#b58f454d;padding:9px 12px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-rewards__cell{width:70px;height:70px;background:var(--pc-slot-art) center/100% 100%;border:0}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-rewards__token{font-size:13px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-rewards__amount{font-size:14px}
+/* A measured logical grid maps to the approved twelve-column PC artwork
+   without replacing the canonical ResizeObserver/pagination algorithm. */
+:is(#app,body) .pc-collection.pc-collection.pc-collection.inventory-scene .bag-section__grid{width:832px;height:272px;flex:0 0 272px;transform:scale(1.45);transform-origin:top left;margin-bottom:122px}
+
+:is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-section-plaque__text{color:#eedbb4;font-size:21px}
+:is(#app,body) .pc-collection.pc-collection.pc-collection.inventory-scene .inventory-content{height:620px}

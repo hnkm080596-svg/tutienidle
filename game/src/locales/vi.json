@@ -523,7 +523,9 @@
     },
     "tranPhap": {
       "title": "Trận Pháp",
-      "confirm": "Lưu Trận Pháp"
+      "confirm": "Lưu Trận Pháp",
+      "choose": "Chọn Trận Pháp",
+      "roster": "Đồng Đội Chờ Bố Trận"
     },
     "bag": {
       "title": "Kho Vật",
@@ -1288,7 +1290,10 @@
         "title": "Rời phiên khách hiện tại",
         "body": "Máy này đang giữ một tài khoản khách. Tiếp tục sẽ rời phiên khách đó — tiến trình khách vẫn giữ nguyên, nhưng để quay lại bạn cần phiên khách còn hiệu lực trên máy chủ.",
         "confirm": "Rời phiên khách"
-      }
+      },
+      "begin": "Bắt Đầu",
+      "createAccount": "Tạo Tài Khoản",
+      "returnOpening": "Quay lại"
     },
     "creation": {
       "back": "← Trở lại",
@@ -2163,7 +2168,8 @@
       "accessories": "Phụ Kiện"
     },
     "workspace": {
-      "equip": "Trang Bị"
+      "equip": "Trang Bị",
+      "bag": "Túi Đồ"
     }
   },
   "inventoryPreview": {
@@ -2211,5 +2217,8 @@
     "feedback": "Gửi Phản Hồi",
     "build": "Phiên Bản",
     "buildValue": "Bản dựng hiện tại"
+  },
+  "pcUi": {
+    "back": "Trở Về"
   }
 }

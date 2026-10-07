@@ -1,4 +1,5 @@
 export const characterMessages = { vi: {
+  paperNav: { navigation: 'Chức năng' },
   title: 'Nhân Vật', brand: 'Tu Tiên Idle', preview: 'BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay',
   notice: '{name} — đã chọn trong bản UI', home: 'Về Động Phủ',
   name: 'Thanh Vân', realm: 'Luyện Khí · Tầng 11', pathValue: 'Pháp Tu',

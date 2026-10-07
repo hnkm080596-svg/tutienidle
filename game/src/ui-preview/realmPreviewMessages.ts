@@ -1,0 +1,27 @@
+export const realmPreviewMessages = {
+  vi: {
+    rp: {
+      title: 'Cảnh Giới',
+      subtitle: 'Tu hành cảnh giới, khai mở tiềm năng vô tận.',
+      floor: 'Tầng {n}',
+      level: '{name} · Tầng {n} / 18',
+      mortal: 'Phàm Nhân',
+      qi: 'Luyện Khí',
+      tribulation: 'Độ Kiếp',
+      reached: 'Đã đạt',
+      current: 'Hiện tại',
+      locked: 'Chưa đạt',
+      cultivation: 'Tu Vi',
+      second: 'giây',
+      estimate: 'Dự kiến:',
+      conditions: 'Điều Kiện Đột Phá',
+      chapter: 'Hoàn thành chương yêu cầu',
+      advance: 'Đột Phá',
+      effects: 'Hiệu Quả Đã Nhận',
+      noEffects: 'Chưa nhận hiệu quả cảnh giới.',
+      effectHint: 'Hiệu quả được ghi nhận khi bước vào cảnh giới mới.',
+      introduction: 'Giới Thiệu',
+      description: 'Rèn luyện thân thể, tích lũy tu vi, chuẩn bị nhập đạo.',
+    },
+  },
+}

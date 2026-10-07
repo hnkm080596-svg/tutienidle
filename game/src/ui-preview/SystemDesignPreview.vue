@@ -1,0 +1,52 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
+import PcPaperDialog from '@/components/common/PcPaperDialog.vue'
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
+import { pcPaperIconUrl } from '@/presentation/assets/PcPaperIcons'
+import { pcPaperControlStyles } from '@/presentation/assets/PcPaperControls'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+
+const { t } = useI18n()
+const requested = new URLSearchParams(window.location.search).get('example')
+const example = ['feedback','confirm','entitlement','incompatible','loading'].includes(requested ?? '') ? requested! : 'feedback'
+const world = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png')
+const opening = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/opening-vista-warm-v1.png')
+const category = ref('bug')
+const description = ref('')
+const steps = ref('')
+const contact = ref('')
+const diagnostics = ref(false)
+const selectedTalent = ref('kiemQuang')
+const controls = pcPaperControlStyles()
+const talents = [{ id: 'kiemQuang', rarity: 'thien', description: 'kiemDescription', icon: 'equipment' }, { id: 'phaGiap', rarity: 'dia', description: 'phaDescription', icon: 'forge' }, { id: 'tatPhong', rarity: 'linh', description: 'tatDescription', icon: 'compass' }] as const
+const reportLines = computed(() => [{ label: 'category', value: t(category.value) }, { label: 'description', value: description.value || t('descriptionPlaceholder') }, { label: 'steps', value: steps.value || t('stepsPlaceholder') }, { label: 'contact', value: contact.value || '—' }])
+</script>
+
+<template>
+  <SceneDesignCanvas><div class="system-design" :class="{ 'system-design--loading': example === 'loading' }" :style="{ ...controls, backgroundImage: `url('${example === 'loading' ? opening : world}')` }">
+    <template v-if="example === 'loading'"><section class="system-loading"><img :src="pcPaperIconUrl('technique')" alt=""><h1>{{ t('loading') }}</h1><p>{{ t('loadingHint') }}</p><progress value="65" max="100" :aria-label="t('progress')" /><small>{{ t('loadingNote') }}</small></section></template>
+    <template v-else><div class="system-scrim" />
+      <PcPaperDialog :title="t(example)" :width="example === 'feedback' ? 1000 : example === 'entitlement' ? 1050 : 700">
+        <template v-if="example === 'feedback'" #body><div class="system-feedback"><section class="system-feedback-fields"><p>{{ t('feedbackIntro') }}</p><fieldset><legend>{{ t('category') }}</legend><div class="system-categories"><PcPaperButton v-for="id in ['bug','suggestion','balance','other']" :key="id" :variant="category === id ? 'primary' : 'secondary'" :aria-pressed="category === id" @click="category = id">{{ t(id) }}</PcPaperButton></div></fieldset><label>{{ t('description') }}<textarea v-model="description" :placeholder="t('descriptionPlaceholder')" rows="3" /></label><label>{{ t('steps') }}<textarea v-model="steps" :placeholder="t('stepsPlaceholder')" rows="2" /></label><label>{{ t('contact') }}<input v-model="contact" :placeholder="t('contactPlaceholder')"></label><label class="system-checkbox"><input v-model="diagnostics" type="checkbox"><span>{{ t('diagnostics') }}</span></label></section><aside class="pc-paper-inspector system-report"><h2>{{ t('review') }}</h2><p>{{ t('reviewHint') }}</p><dl><div v-for="line in reportLines" :key="line.label"><dt>{{ t(line.label) }}</dt><dd>{{ line.value }}</dd></div></dl><p class="system-draft">{{ t('draft') }}</p></aside></div></template>
+        <template v-else-if="example === 'confirm'" #body><div class="system-confirm"><img :src="pcPaperIconUrl('portal')" alt=""><p>{{ t('confirmMessage') }}</p><small>{{ t('confirmDetail') }}</small></div></template>
+        <template v-else-if="example === 'entitlement'" #body><div class="system-entitlement"><p>{{ t('entitlementHint') }}</p><h2>{{ t('newTalent') }}</h2><div class="system-talents"><button v-for="talent in talents" :key="talent.id" :class="{ selected: selectedTalent === talent.id }" :aria-pressed="selectedTalent === talent.id" @click="selectedTalent = talent.id"><small>{{ t(talent.rarity) }}</small><img :src="pcPaperIconUrl(talent.icon)" alt=""><h3>{{ t(talent.id) }}</h3><p>{{ t(talent.description) }}</p></button></div><div class="system-upgrade"><span>{{ t('upgradeTalent') }}</span><b>{{ t('thachGiap') }}</b><span>{{ t('levelUpgrade') }}</span></div><small class="system-mandatory">{{ t('mandatory') }}</small></div></template>
+        <template v-else #body><div class="system-incompatible"><img :src="pcPaperIconUrl('inventory')" alt=""><p>{{ t('incompatibleHint') }}</p><p>{{ t('preserve') }}</p><dl><div><dt>{{ t('saveStatus') }}</dt><dd>{{ t('detected') }}</dd></div></dl><small>{{ t('recoveryNote') }}</small></div></template>
+        <template #footer><template v-if="example === 'feedback'"><PcPaperButton variant="secondary">{{ t('close') }}</PcPaperButton><PcPaperButton variant="secondary">{{ t('export') }}</PcPaperButton><PcPaperButton>{{ t('submit') }}</PcPaperButton></template><template v-else-if="example === 'confirm'"><PcPaperButton variant="secondary">{{ t('cancel') }}</PcPaperButton><PcPaperButton>{{ t('accept') }}</PcPaperButton></template><PcPaperButton v-else-if="example === 'entitlement'">{{ t('choose') }}</PcPaperButton><template v-else><PcPaperButton variant="secondary">{{ t('exportSave') }}</PcPaperButton><PcPaperButton variant="secondary">{{ t('import') }}</PcPaperButton><PcPaperButton>{{ t('retry') }}</PcPaperButton></template></template>
+      </PcPaperDialog>
+    </template>
+    <p class="system-static">{{ t('static') }}</p>
+  </div></SceneDesignCanvas>
+</template>
+
+<style scoped>
+:global(html), :global(body), :global(#app) { margin: 0; width: 100%; height: 100%; background: #ead9b9; }
+.system-design { position: absolute; inset: 0; background-size: cover; background-position: center; font-family: var(--pc-font-body); color: #302718; }.system-scrim { position: absolute; inset: 0; background: #241d16a6; }.system-static { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #f5e3be; font-size: 13px; text-shadow: 0 1px 3px #231a10; }
+.system-feedback { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(0,1fr); gap: 28px; }.system-feedback-fields > p { margin: 0 0 17px; font-size: 17px; line-height: 1.5; }.system-feedback-fields fieldset { border: 0; padding: 0; margin: 0 0 15px; }.system-feedback-fields legend { font-size: 17px; font-weight: bold; margin-bottom: 8px; }.system-categories { display: flex; gap: 9px; }.system-categories button { font-size: 15px; padding: 8px 15px; min-height: 39px; }.system-feedback-fields > label { display: grid; gap: 7px; margin-top: 12px; font-size: 17px; font-weight: bold; }.system-feedback-fields input:not([type=checkbox]), .system-feedback-fields textarea { width: 100%; box-sizing: border-box; padding: 9px 11px; background: #fff4ddaa; border: 1px solid #ad8b4e; color: #302718; font: 16px/1.4 var(--pc-font-body); resize: none; }.system-feedback-fields .system-checkbox { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: normal; line-height: 1.5; }.system-checkbox input { accent-color: #8b6d35; margin: 4px 0 0; }.system-report h2 { font-size: 24px; }.system-report p { font-size: 14px; }.system-report dl > div { display: block; padding: 12px 0; font-size: 15px; }.system-report dt { color: #d4b876; margin-bottom: 7px; }.system-report dd { color: #f1e1bc; overflow-wrap: anywhere; line-height: 1.5; }.system-report .system-draft { margin-top: 20px; color: #b7cf8b; }
+.system-confirm { text-align: center; padding: 12px 0 22px; }.system-confirm img { width: 82px; height: 82px; object-fit: contain; }.system-confirm p { font-size: 24px; margin: 22px 0 15px; }.system-confirm small { font-size: 16px; color: #795e33; }
+.system-entitlement > p { font-size: 18px; line-height: 1.6; margin: 0 0 15px; }.system-entitlement h2 { font-size: 23px; margin: 0 0 16px; }.system-talents { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }.system-talents button { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border: 0; border-top: 1px solid #b08b4d99; border-bottom: 1px solid #b08b4d99; background: #d8be8620; color: #302718; padding: 16px; font-family: var(--pc-font-body); text-align: center; }.system-talents button.selected { background: #d8b56966; box-shadow: inset 0 2px #b08b4d; }.system-talents small { display: block; color: #856a36; font-size: 15px; }.system-talents img { display: block; width: 58px; height: 58px; object-fit: contain; margin: 16px auto; }.system-talents h3 { font-size: 25px; margin: 0 0 15px; }.system-talents p { font-size: 16px; line-height: 1.5; margin: 0; }.system-upgrade { display: flex; gap: 24px; align-items: center; border-block: 1px solid #b08b4d66; padding: 16px 0; margin-top: 23px; font-size: 19px; }.system-upgrade > span:last-child { margin-left: auto; color: #526938; }.system-mandatory { display: block; margin-top: 16px; font-size: 14px; color: #795e33; }
+.system-incompatible { position: relative; padding-left: 105px; }.system-incompatible > img { position: absolute; left: 0; top: 25px; width: 78px; height: 78px; object-fit: contain; }.system-incompatible p { margin: 0 0 17px; font-size: 18px; line-height: 1.6; }.system-incompatible dl { margin: 20px 0; }.system-incompatible dl > div { display: flex; justify-content: space-between; gap: 15px; border-block: 1px solid #b08b4d66; padding: 15px 0; font-size: 16px; }.system-incompatible dd { margin: 0; color: #8a5839; }.system-incompatible small { font-size: 13px; color: #795e33; }
+.system-loading { position: absolute; left: 40%; top: 43%; transform: translate(-50%,-50%); width: 520px; text-align: center; color: #302718; }.system-loading::before { content: ''; position: absolute; z-index: -1; inset: -50px -90px; background: radial-gradient(ellipse,#f2e1be55,transparent 72%); }.system-loading > img { width: 74px; height: 74px; object-fit: contain; }.system-loading h1 { margin: 20px 0 10px; font-size: 62px; letter-spacing: .08em; }.system-loading p { font-size: 21px; }.system-loading progress { width: 300px; height: 9px; accent-color: #d0af65; }.system-loading small { display: block; margin-top: 18px; font-size: 13px; }
+.system-design--loading .system-static { color: #735a32; text-shadow: none; }
+</style>

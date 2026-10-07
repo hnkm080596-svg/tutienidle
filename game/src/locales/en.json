@@ -523,7 +523,9 @@
     },
     "tranPhap": {
       "title": "Formation",
-      "confirm": "Save Formation"
+      "confirm": "Save Formation",
+      "choose": "Choose Formation",
+      "roster": "Unassigned Combatants"
     },
     "bag": {
       "title": "Inventory",
@@ -1288,7 +1290,10 @@
         "title": "Leave the current guest session",
         "body": "This device holds a guest account. Continuing will leave that guest session — its progress is kept, but returning requires the guest session to still be valid on the server.",
         "confirm": "Leave guest session"
-      }
+      },
+      "begin": "Begin",
+      "createAccount": "Create Account",
+      "returnOpening": "Back"
     },
     "creation": {
       "back": "← Back",
@@ -2163,7 +2168,8 @@
       "accessories": "Accessories"
     },
     "workspace": {
-      "equip": "Gear"
+      "equip": "Gear",
+      "bag": "Stash"
     }
   },
   "inventoryPreview": {
@@ -2211,5 +2217,8 @@
     "feedback": "Send Feedback",
     "build": "Build",
     "buildValue": "Current build"
+  },
+  "pcUi": {
+    "back": "Return"
   }
 }

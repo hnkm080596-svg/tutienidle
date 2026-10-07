@@ -1,0 +1,116 @@
+/* PC workspaces use their actual read models and existing command controls. */
+:is(#app, body) .tran-phap-panel {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .85fr);
+  grid-template-rows: minmax(0, 1fr) 138px;
+  gap: 18px 28px;
+}
+:is(#app, body) .tran-phap-panel__grid-stack {
+  grid-column: 1; grid-row: 1; justify-self: center;
+  width: auto; height: 100%; max-height: 480px; max-width: 100%;
+  background: radial-gradient(ellipse, #d9b56a30, transparent 70%);
+  border: 0;
+}
+:is(#app, body) .tran-phap-panel__formation-list {
+  grid-column: 2; grid-row: 1; min-height: 0; overflow: auto;
+  padding: 20px; background: #27251ff2; border: 1px solid #b89455;
+  color: #f4e4c1;
+}
+:is(#app, body) .tran-phap-panel__section-title {
+  margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid #b8945560;
+  font: 700 24px/1.3 var(--font-display);
+}
+:is(#app, body) .tran-phap-panel__formation-button {
+  flex: none; background: #ffffff08; color: #f1e2c2; border-color: #b8945545;
+  padding: 16px; min-height: 92px;
+}
+:is(#app, body) .tran-phap-panel__formation-copy small { color: #cebf9f; }
+:is(#app, body) .tran-phap-panel__formation-button.is-selected {
+  background: #a777292e; border-color: #e0b868; box-shadow: inset 3px 0 #e0b868;
+}
+:is(#app, body) .tran-phap-panel__queue {
+  grid-column: 1; grid-row: 2; position: relative; flex-direction: row;
+  justify-content: flex-start; gap: 12px; padding: 25px 12px 2px;
+  border: 1px solid #ae8a5045; overflow-x: auto; overflow-y: hidden;
+  background: #40382c0c;
+}
+:is(#app, body) .tran-phap-panel__queue-title {
+  position: absolute; top: 5px; left: 14px; margin: 0;
+  font: 600 13px/1.4 var(--font-display); color: #71522c;
+}
+:is(#app, body) .tran-phap-panel__card.queue-stand { flex: 0 0 98px; width: 98px; }
+:is(#app, body) .tran-phap-panel__card.queue-stand { height: 104px; }
+:is(#app, body) .tran-phap-panel__confirm {
+  grid-column: 2; grid-row: 2; align-self: center; justify-self: stretch; margin: 0;
+}
+:is(#app, body) .companion-panel__body {
+  display: grid; grid-template-columns: minmax(220px, .75fr) minmax(0, 1.7fr);
+  gap: 24px; height: 100%; min-height: 0;
+}
+:is(#app, body) .companion-panel__roster { min-height: 0; overflow: auto; padding-right: 8px; }
+:is(#app, body) .companion-panel__detail {
+  min-width: 0; overflow: auto; background: #27251ff2; border-color: #b89455;
+  padding: 24px; color: #f4e4c1;
+  --paper-text: #f4e4c1; --paper-text-soft: #d5c6a6; --paper-text-muted: #bcad8e;
+}
+:is(#app, body) .companion-panel__detail :is(.companion-panel__realm,.companion-panel__exp-text,.companion-panel__formation-hint,.companion-panel__feed-note) { color: #d5c6a6; }
+:is(#app, body) .companion-panel__stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; }
+:is(#app, body) .companion-panel__stats > span { background: #ffffff08; border: 1px solid #b8945540; padding: 10px 12px; color: #f4e4c1; }
+:is(#app, body) :is(.companion-panel__detail,.companion-panel__card.is-selected) {
+  --grade-hoang: #e0d5bc; --grade-huyen: #acd9be;
+  --grade-dia: #a4c9f0; --grade-thien: #e7b4df; --grade-tien: #f3d68e;
+  --rank-color-1: #e0d5bc; --rank-color-2: #c5d9bf; --rank-color-3: #acd9be;
+  --rank-color-4: #a4d6de; --rank-color-5: #a4c9f0; --rank-color-6: #ceb4ec;
+  --rank-color-7: #e7b4df; --rank-color-8: #f0c078; --rank-color-9: #f3b5a1;
+}
+:is(#app, body) .artifact-path-cards__name { color: #f4dfb6; }
+:is(#app, body) .companion-panel__detail :is(.companion-panel__constellation,.companion-panel__skills,.companion-panel__feed) h4 { color: #dfbd77; }
+:is(#app, body) .companion-panel__detail { --jade: #92c9a4; --hk-jade: #92c9a4; }
+:is(#app, body) .companion-panel__detail :is(select,input) {
+  background: #f3e5c8; color: #30291d; border-color: #ae8a50;
+}
+:is(#app, body) .companion-panel__detail :is(select,input):disabled { opacity: .65; }
+:is(#app, body) .companion-panel__card:not(.is-selected) { --grade-hoang: #5f584b; }
+:is(#app, body) .tran-phap-panel__cell--enabled { background: #bb8c3930; }
+:is(#app, body) .tran-phap-panel__cell--occupied { background: #bb8c3955; }
+:is(#app, body) .tran-phap-panel__cell--hover { background: #e7b95980; }
+:is(#app, body) .queue-stand__base { background: #b68a3b28; }
+:is(#app, body) :is(.overlay-panel__card,.confirm-modal__panel,.offline-summary__panel,.beta-completion__panel,.talent-entitlement__panel,.tutorial-overlay__panel,.abandon-modal__panel,.lore-modal__panel,.error-screen__panel,.save-incompatible__panel)::before {
+  background-image: var(--th-art-warm-landscape-header), var(--th-art-paper-surface);
+  background-position: right top, center; background-size: 55% auto, cover; background-repeat: no-repeat;
+}
+:is(#app, body) .companion-panel__detail :is(h4,.companion-panel__detail-header) { border-color: #b8945550; }
+:is(#app, body) .artifact-panel { grid-template-columns: minmax(240px, .9fr) minmax(0, 1.6fr); grid-template-rows: auto auto minmax(0, 1fr); gap: 18px 28px; }
+:is(#app, body) .artifact-panel > .artifact-path-cards { grid-column: 2; grid-row: 1 / 4; padding: 20px; overflow: auto; background: #27251ff2; border: 1px solid #b89455; }
+:is(#app, body) .artifact-path-cards__card { background: #ffffff08; color: #f4e4c1; border-color: #b8945550; }
+:is(#app, body) .artifact-path-cards__card.is-selected { background: #a777292e; box-shadow: inset 3px 0 #e0b868; }
+:is(#app, body) .artifact-path-cards__card :is(p,small,.artifact-path-cards__milestone-name) { color: #d5c6a6; }
+:is(#app, body) .production-panel__grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: 24px; }
+:is(#app, body) .site-card { display: flex; flex-direction: column; gap: 10px; padding: 22px; background: #faf0dcb3; border-color: #ac854a70; }
+:is(#app, body) .site-card__stats { margin-top: auto; }
+:is(#app, body) .vendor-panel { display: grid; grid-template-columns: minmax(0,1fr); gap: 20px; overflow: auto; }
+:is(#app, body) .vendor-panel__card { padding: 24px; }
+:is(#app, body) .resource-card__row { display: grid; grid-template-columns: minmax(150px,1fr) auto; gap: 22px; align-items: center; padding-block: 12px; border-bottom: 1px solid #ac854a30; }
+:is(#app, body) .resource-card__sale { display: flex; align-items: center; gap: 12px; }
+:is(#app, body) .chieu-mo { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; padding: 16px 0; }
+:is(#app, body) .chieu-mo__status { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+:is(#app, body) .chieu-mo__status-item { padding: 18px; background: #27251f; color: #f4e4c1; border: 1px solid #b89455; font: 17px/1.4 var(--font-display); }
+:is(#app, body) .chieu-mo__unavailable { grid-column: 1 / -1; padding: 22px; line-height: 1.6; }
+:is(#app, body) .chieu-mo__pull { align-self: center; justify-self: center; min-width: 260px; min-height: 52px; }
+:is(#app, body) .chieu-mo__result { padding: 28px; background: #27251f; border: 1px solid #b89455; color: #f4e4c1; }
+:is(#app, body) .duyen-phan__group { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 14px; }
+:is(#app, body) .duyen-phan__grade { grid-column: 1 / -1; margin: 8px 0; }
+:is(#app, body) .duyen-phan__row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 20px; border: 1px solid #ac854a60; background: #faf0dc90; }
+:is(#app, body) .duyen-phan__reason { grid-column: 1 / -1; line-height: 1.5; }
+:is(#app, body) .qua-tang__row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 24px; padding: 20px 24px; }
+:is(#app, body) .quan-khi-panel__choices { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 20px; }
+:is(#app, body) .quan-khi-panel__choice { padding: 22px; min-height: 140px; background: #27251f; border-color: #b89455; }
+:is(#app, body) .quan-khi-panel__choice-name { font: 700 23px/1.35 var(--font-display); }
+:is(#app, body) .quan-khi-panel__choice-desc { font-size: 15px; line-height: 1.7; color: #d5c6a6; }
+:is(#app, body) #global-tooltip:not(.tooltip--element) { max-width: min(410px,calc(100vw - 24px)); padding: 24px 28px; }
+:is(#app, body) .offline-summary__rows { display: grid; gap: 12px; margin: 24px 0; }
+:is(#app, body) :is(.confirm-modal__actions,.offline-summary__actions,.abandon-modal__actions) { display: flex; justify-content: flex-end; gap: 16px; margin-top: 24px; }
+@media (max-width: 1300px) {
+  :is(#app, body) .tran-phap-panel { grid-template-columns: minmax(0,1fr) minmax(240px,.85fr); gap: 14px; }
+  :is(#app, body) .tran-phap-panel__formation-list { padding: 14px; }
+  :is(#app, body) .tran-phap-panel__formation-button { min-height: 74px; padding: 12px; }
+}
