@@ -569,10 +569,10 @@ describe('r38 COR - G: verified-correct pins', () => {
     expect(manager.getTurnTokenState()).toBe('IDLE')
     expect(manager.getFreezeReasons()).toEqual([])
 
-    // Foreign plant on the IDLE token, then swap: the strip must drop it -
-    // the new clock runs clean instead of inheriting a permanent wedge.
+    // Foreign plant on the IDLE token: r39 adjudication - refused at the
+    // latch (token not holding), so the swap strip is backstop.
     manager.freezeCombat('turn-in-flight')
-    expect(manager.getFreezeReasons()).toEqual(['turn-in-flight'])
+    expect(manager.getFreezeReasons()).toEqual([])
     const next = new ManualClockSource()
     manager.setCombatClockSource(next)
     expect(manager.getFreezeReasons()).toEqual([])

@@ -235,13 +235,12 @@ describe('r37 COR - A: freeze-reason census vs the step-7 carry', () => {
     manager.setPresentationMode('interactive')
     const player = startAStage(manager)
 
-    // Foreign latch: the token is IDLE and nothing claims it. The carry
-    // still cannot receive it - turnToken.reset() -> setState('IDLE') ->
-    // listener fires resume('turn-in-flight') on EVERY reset (TurnToken
-    // emits unconditionally, no change check), deleting the reason by name
-    // on the old clock before step 7 reads the set.
+    // Foreign latch: the token is IDLE and nothing claims it. r39
+    // adjudication - the intrinsic token owner now refuses the arm
+    // outright (refusal at the latch is the front gate; the reset scrub
+    // stays as backstop).
     manager.freezeCombat('turn-in-flight')
-    expect(manager.getFreezeReasons()).toContain('turn-in-flight')
+    expect(manager.getFreezeReasons()).not.toContain('turn-in-flight')
 
     manager.turnBattleOps.startBattleWithPlayer(player, secondEnemy())
 
@@ -260,12 +259,11 @@ describe('r37 COR - A: freeze-reason census vs the step-7 carry', () => {
     startAStage(manager)
     manager.resumeCombat('not-revealed')
 
-    // Foreign latch: freezeCombat is public and does not distinguish owner
-    // latches from foreign ones, but the swap's re-freeze now skips
-    // 'turn-in-flight' when the token is IDLE (no transition could ever
-    // resume it).
+    // Foreign latch: r39 adjudication - freezeCombat refuses an IDLE-token
+    // 'turn-in-flight' at the latch, so the swap's re-freeze strip is
+    // backstop for a reason that can no longer land.
     manager.freezeCombat('turn-in-flight')
-    expect(manager.getFreezeReasons()).toEqual(['turn-in-flight'])
+    expect(manager.getFreezeReasons()).toEqual([])
 
     const newSource = new ManualClockSource()
     manager.setCombatClockSource(newSource)

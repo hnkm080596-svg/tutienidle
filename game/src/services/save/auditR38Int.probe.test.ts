@@ -383,10 +383,11 @@ describe('r38 INT - C: the IDLE-token strip vs the rebound listener', () => {
     expect(manager.getTurnTokenState()).toBe('IDLE')
     expect(manager.getFreezeReasons()).toEqual([])
 
-    // Foreign plant: freezeCombat can write the reason while the token
-    // is IDLE - no token transition owns this latch on the old clock.
+    // Foreign plant: r39 adjudication - the latch refuses a
+    // 'turn-in-flight' arm while the token is IDLE (its intrinsic owner
+    // is not holding), so the swap strip is backstop.
     manager.freezeCombat('turn-in-flight')
-    expect(manager.getFreezeReasons()).toEqual(['turn-in-flight'])
+    expect(manager.getFreezeReasons()).toEqual([])
 
     manager.setCombatClockSource(new ManualClockSource())
 
