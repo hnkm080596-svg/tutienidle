@@ -76,7 +76,7 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     { nodeId: 'ngu_hoa', x: 372, y: 72 },
     { nodeId: 'ngu_viem_tam', x: 362, y: 38 },
     { nodeId: 'ngu_viem_y', x: 412, y: 52 },
-    { nodeId: 'ho_the', x: 70, y: 148 },
+    { nodeId: 'ho_the_mon', x: 70, y: 148 },
     { nodeId: 'nguyen_kinh', x: 48, y: 186 },
     { nodeId: 'linh_chuong', x: 96, y: 194 },
     { nodeId: 'the_diem_kinh', x: 34, y: 224 },
@@ -106,9 +106,9 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     { fromNodeId: 'linh_ngo_tam_muoi_chan_hoa', toNodeId: 'ngu_viem_tam' },
     { fromNodeId: 'linh_ngo_tam_muoi_chan_hoa', toNodeId: 'ngu_viem_y' },
     // Solo mana branch off the root (Minh ruling).
-    { fromNodeId: 'hoa_linh_ngo', toNodeId: 'ho_the' },
-    { fromNodeId: 'ho_the', toNodeId: 'nguyen_kinh' },
-    { fromNodeId: 'ho_the', toNodeId: 'linh_chuong' },
+    { fromNodeId: 'hoa_linh_ngo', toNodeId: 'ho_the_mon' },
+    { fromNodeId: 'ho_the_mon', toNodeId: 'nguyen_kinh' },
+    { fromNodeId: 'ho_the_mon', toNodeId: 'linh_chuong' },
     { fromNodeId: 'nguyen_kinh', toNodeId: 'the_diem_kinh' },
   ],
 }

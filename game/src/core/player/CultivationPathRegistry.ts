@@ -50,6 +50,7 @@ import { buildPhapTheVariant } from '../phap-tu/PhapTheVariants'
 import {
   applyPhapTuSkillDefinitionModifiers,
   collectPhapTuSkillDefinitionModifiers,
+  SPECIAL_CD_FLOOR_TURNS,
 } from '../phap-tu/PhapTuNodeModifiers'
 import {
   KIM_LIET_PENETRATION_PER_STACK,
@@ -401,6 +402,10 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       const nodeFolded = applyPhapTuSkillDefinitionModifiers(
         kitResolved,
         collectPhapTuSkillDefinitionModifiers(player, deps.nodeRegistry.getAll()),
+        // Basic lane floor is 0: a CD delta may never invent a
+        // cooldown on a 0-CD basic nor clamp one upward (the 2-turn
+        // floor is the special-ult contract only).
+        0,
       )
 
       // Hoa The gate (Minh ruling 2026-10-04) - the +1 The mint and the
@@ -455,9 +460,10 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
                   deps.skillSystem.getEffectiveSkill(specialSkill),
                 ),
                 // Tam Muoi trades + Ngu Hoa (Minh rulings 2026-10-06):
-                // node-owned cooldown deltas land on this def (floored
-                // at 2 turns inside the fold).
+                // node-owned cooldown deltas land on this def, floored
+                // at the special-ult "minimum 2 turn CD" contract.
                 collectPhapTuSkillDefinitionModifiers(player, deps.nodeRegistry.getAll()),
+                SPECIAL_CD_FLOOR_TURNS,
               ),
               resourceCostPercentOfMax: PHAP_TU_TRANG_COST_PERCENT_OF_MAX,
             }

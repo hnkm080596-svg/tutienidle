@@ -19,8 +19,10 @@ import { isNodeElementEffective, nodePathApplies, nodeWayApplies } from '../prog
 //                             (clamped [0,1]); no-op on damage-less defs
 //   addAilmentInteractions    appends, phase-sorted
 //   cooldownTurnsDelta        flat once while owned + perLevel x level,
-//                             floored at SPECIAL_CD_FLOOR_TURNS and
-//                             rounded to whole turns
+//                             floored at the caller's lane floor
+//                             (SPECIAL_CD_FLOOR_TURNS on the special
+//                             lane, 0 on the basic lane) and rounded
+//                             to whole turns
 //   castStatModifiers         summed per stat into def.castModifiers -
 //                             additive deltas the engine folds into the
 //                             caster's stat view for THIS skill's hits
@@ -89,6 +91,11 @@ export function collectPhapTuSkillDefinitionModifiers(
 export function applyPhapTuSkillDefinitionModifiers(
   def: TurnSkillDefinition,
   modifiers: readonly PhapTuSkillDefinitionModifier[],
+  // The CD floor is the SPECIAL-ult contract ("minimum 2 turn CD") - a
+  // caller folds with its own lane's floor: specials pass
+  // SPECIAL_CD_FLOOR_TURNS, basics pass 0 so a positive/negative delta
+  // can neither invent a cooldown on a 0-CD def nor clamp one upward.
+  cooldownFloorTurns: number,
 ): TurnSkillDefinition {
   const matching = modifiers
     .filter((m) => m.skillId === def.id)
@@ -101,8 +108,8 @@ export function applyPhapTuSkillDefinitionModifiers(
     return derived
   }
 
-  // cooldownTurnsDelta folds sum-first then floors once ("minimum 2
-  // turn CD" reads aggregate) - per-modifier flooring would make the
+  // cooldownTurnsDelta folds sum-first then floors once (the caller's
+  // lane floor reads aggregate) - per-modifier flooring would make the
   // result order-sensitive when an intermediate dip crosses the floor.
   let cooldownDeltaSum = 0
 
@@ -151,7 +158,7 @@ export function applyPhapTuSkillDefinitionModifiers(
   if (cooldownDeltaSum !== 0) {
     const next = ensureDerived()
     next.cooldownTurns = Math.max(
-      SPECIAL_CD_FLOOR_TURNS,
+      cooldownFloorTurns,
       Math.floor(next.cooldownTurns + cooldownDeltaSum),
     )
   }

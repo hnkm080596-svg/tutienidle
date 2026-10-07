@@ -164,7 +164,7 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'ngu_hoa',
     'ngu_viem_tam',
     'ngu_viem_y',
-    'ho_the',
+    'ho_the_mon',
     'nguyen_kinh',
     'linh_chuong',
     'the_diem_kinh',

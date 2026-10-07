@@ -264,7 +264,7 @@ function buildFire(): ProgressionNode[] {
     //     for per-level cast-scoped damage on Ly Hoa. Ngu Viem Than is
     //     intentionally left unauthored (locked seat).
     // (c) Mana branch - SOLO off the element root (Minh ruling):
-    //     ho_the is a purchased gate seat; Nguyen Kinh thickens the
+    //     ho_the_mon is a purchased gate seat; Nguyen Kinh thickens the
     //     Linh Luc Ho The shield, Linh Chuong hardens the barrier as
     //     always-on DR (spec's "while the window holds" has no channel -
     //     flagged), The Diem Kinh raises the Ho The cap ceiling.
@@ -387,7 +387,7 @@ function buildFire(): ProgressionNode[] {
     // element root, NOT the Tam Muoi unlock. Ho The is the purchased
     // gate seat (a thin keystone - it owns no effect itself).
     {
-      id: 'ho_the',
+      id: 'ho_the_mon',
       name: 'Hộ Thể',
       description: 'Ngưng Linh Lực thành tầng hộ mệnh — mở nhánh Linh Lực Hộ Thể.',
       type: 'minor',
@@ -411,7 +411,7 @@ function buildFire(): ProgressionNode[] {
       maxLevel: 5,
       upgradeCost: GROWTH_TC,
       levelGates: MINOR_TIER_GATES,
-      prerequisites: [{ kind: 'node', nodeId: 'ho_the' }],
+      prerequisites: [{ kind: 'node', nodeId: 'ho_the_mon' }],
       elementTag: 'fire',
       effect: { statModifiers: [stat('nguyen_kinh', 'manaShieldPercent', 0.05)] },
     },
@@ -429,7 +429,7 @@ function buildFire(): ProgressionNode[] {
       maxLevel: 3,
       upgradeCost: GROWTH_TC,
       levelGates: [{ atLevel: 3, prerequisite: { kind: 'techniqueRank', rank: 2 } }],
-      prerequisites: [{ kind: 'node', nodeId: 'ho_the' }],
+      prerequisites: [{ kind: 'node', nodeId: 'ho_the_mon' }],
       elementTag: 'fire',
       effect: { statModifiers: [stat('linh_chuong', 'finalDamageReductionPercent', 0.015)] },
     },
