@@ -221,6 +221,18 @@ const rootEl = useTemplateRef<HTMLElement>('rootEl')
 let dragMoved = false
 let dragStart: { px: number; py: number; x: number; y: number } | null = null
 let nodeDrag: { id: string; px: number; py: number; x: number; y: number; scale: number } | null = null
+// One gesture at a time: a second pointer (multi-touch) is ignored while
+// the primary is tracked, so it cannot clear the drag/freeze mid-gesture.
+let activePointer: number | null = null
+
+// Screen px -> local px: the tree renders inside SceneDesignCanvas
+// (scale = min(vw/1440, vh/810)) plus any document zoom, so clientX/Y
+// deltas are visual px, bigger than layout px by this factor.
+function viewScale(): number {
+  const el = rootEl.value
+  if (el === null || el.offsetWidth === 0) return 1
+  return el.getBoundingClientRect().width / el.offsetWidth
+}
 
 // Pan clamp: keep at least PAN_MARGIN px of the scaled graph inside the
 // viewport on each axis - a background drag can never push the tree fully
@@ -240,6 +252,8 @@ watch([() => props.size, () => props.fit], () => {
 })
 
 function onPointerDown(event: PointerEvent) {
+  if (activePointer !== null) return
+  activePointer = event.pointerId
   dragging.value = true
   dragMoved = false
   dragStart = { px: event.clientX, py: event.clientY, x: pan.value.x, y: pan.value.y }
@@ -248,6 +262,11 @@ function onPointerDown(event: PointerEvent) {
   // this root (e.g. over the .stop'd design-tools) leaves one behind,
   // and a stale freeze silences every later extent emit.
   extentFreeze.value = null
+  // Capture at press, not at the 4px move threshold: while captured the
+  // pointerup is always delivered here, so a short press released over
+  // the .stop'd tools row (or off the element) cannot leak drag state.
+  // jsdom/test mounts lack the pointer-capture API - skip silently there.
+  ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
   if (designMode.value) {
     const host = (event.target as HTMLElement).closest('.skill-positioned-node') as HTMLElement | null
     const node = host && paintNodes.value.find(n => host.dataset.nodeId === n.id)
@@ -259,21 +278,21 @@ function onPointerDown(event: PointerEvent) {
         py: event.clientY,
         x: p.x,
         y: p.y,
-        // Drag-start scale: the cursor->graph mapping stays fixed even
-        // if a wheel zoom lands mid-gesture.
-        scale: props.fit * zoom.value,
+        // Drag-start scale (fit x zoom x ancestor scale): the
+        // cursor->graph mapping stays fixed even if a wheel zoom
+        // lands mid-gesture.
+        scale: props.fit * zoom.value * viewScale(),
       }
       extentFreeze.value = renderExtent.value
     }
   }
 }
 function onPointerMove(event: PointerEvent) {
-  if (!dragging.value || dragStart === null) return
+  if (event.pointerId !== activePointer || !dragging.value || dragStart === null) return
   const dx = event.clientX - dragStart.px
   const dy = event.clientY - dragStart.py
   if (!dragMoved && Math.abs(dx) + Math.abs(dy) > 4) dragMoved = true
   if (!dragMoved) return
-  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
   if (nodeDrag) {
     // Screen px -> graph px, at the drag-start scale. Drops are clamped
     // to the envelope the extent formula can actually cover: a negative
@@ -293,26 +312,33 @@ function onPointerMove(event: PointerEvent) {
     return
   }
   const host = event.currentTarget as HTMLElement
+  const vs = viewScale()
   pan.value = clampPan(
-    { x: dragStart.x + dx, y: dragStart.y + dy },
+    { x: dragStart.x + dx / vs, y: dragStart.y + dy / vs },
     host.offsetWidth,
     host.offsetHeight,
   )
 }
 function onPointerUp(event: PointerEvent) {
+  if (event.pointerId !== activePointer) return
+  activePointer = null
   dragging.value = false
   dragStart = null
   nodeDrag = null
   extentFreeze.value = null
   const host = event.currentTarget as HTMLElement
-  if (host.hasPointerCapture(event.pointerId)) host.releasePointerCapture(event.pointerId)
+  if (host.hasPointerCapture?.(event.pointerId)) host.releasePointerCapture?.(event.pointerId)
 }
 // Wheel zoom, anchored on the cursor: the graph point under the pointer
 // stays fixed while scale multiplies the authored fit.
 function onWheel(event: WheelEvent) {
+  // Wheel mid-gesture would rescale the graph under the tracked
+  // pointer - ignore it until the gesture ends.
+  if (dragging.value) return
+  const vs = viewScale()
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-  const cx = event.clientX - (rect.left + rect.width / 2)
-  const cy = event.clientY - (rect.top + rect.height / 2)
+  const cx = (event.clientX - (rect.left + rect.width / 2)) / vs
+  const cy = (event.clientY - (rect.top + rect.height / 2)) / vs
   const next = Math.min(4, Math.max(0.3, zoom.value * Math.exp(-event.deltaY * 0.0012)))
   if (next === zoom.value) return
   const ratio = (props.fit * next) / (props.fit * zoom.value)
