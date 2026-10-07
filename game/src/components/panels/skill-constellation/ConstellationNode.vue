@@ -19,6 +19,7 @@ const emit = defineEmits<{ select: [id: string] }>()
 const { t } = useI18n()
 
 const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/skill-v2/node-ring-v1.png')
+const passiveRing = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/skill-node-passive-v1.png')
 const rune = resolveAssetUrl('/assets/ui/huyen-kim/nodes/rune-node@2x.png')
 const daoLuanNode = resolveAssetUrl('/assets/ui/huyen-kim/nodes/dao-luan-node@2x.png')
 const daoLuanCenter = resolveAssetUrl('/assets/ui/huyen-kim/nodes/dao-luan-center@2x.png')
@@ -29,6 +30,9 @@ const disc = computed(() =>
   emphasis.value === 'root' ? daoLuanCenter : emphasis.value === 'major' ? daoLuanNode : rune,
 )
 const placement = computed(() => props.labelPlacement ?? 'bottom')
+// Passive branch leaves swap the generic drawn ring for the ornate
+// tien-hiep passive frame (same overlay role, distinct silhouette).
+const ringArt = computed(() => (props.node.frameKind === 'passive' ? passiveRing : ring))
 </script>
 
 <template>
@@ -48,7 +52,7 @@ const placement = computed(() => props.labelPlacement ?? 'bottom')
     <span class="constellation-disc">
       <img class="disc-art" :src="disc" alt="">
       <img class="icon" :src="node.icon" alt="">
-      <img class="ring" :src="ring" alt="">
+      <img class="ring" :src="ringArt" alt="">
       <span v-if="node.state === 'locked'" class="lock"><img :src="lock" alt=""></span>
       <span v-else-if="node.state === 'learned'" class="learned-badge" aria-hidden="true">✓</span>
     </span>

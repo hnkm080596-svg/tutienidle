@@ -119,12 +119,14 @@ const unlockingEdges = computed(() => prereqEdges.value.filter((edge) => edge.un
   stroke-dasharray: none;
   opacity: 0.9;
 }
+/* Learned channels always read as lit gold (vang kim) - element accent
+ * stays on the node discs, never on the beams. */
 .connection.learned {
-  stroke: var(--constellation-accent, #d8b45f);
+  stroke: #f0cf81;
   stroke-width: 1.8;
   stroke-dasharray: none;
   opacity: 1;
-  filter: drop-shadow(0 0 3.5px var(--constellation-accent, #edc56a));
+  filter: drop-shadow(0 0 3.5px #ffd36c);
 }
 .connection.related {
   opacity: 1;

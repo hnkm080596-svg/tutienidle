@@ -145,7 +145,7 @@ const panelStyle = computed(() =>
   border-color: rgba(216, 192, 128, 0.5);
 }
 .legend-prereq {
-  border-color: var(--constellation-accent, #d8b45f);
+  border-color: #f0cf81;
   margin-left: 10px;
 }
 </style>
