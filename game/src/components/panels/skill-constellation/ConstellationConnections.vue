@@ -68,6 +68,7 @@ const prereqEdges = computed<RenderedEdge[]>(() =>
 )
 
 const unlockingEdges = computed(() => prereqEdges.value.filter((edge) => edge.unlocking))
+const learnedEdges = computed(() => prereqEdges.value.filter((edge) => edge.state === 'learned'))
 </script>
 
 <template>
@@ -83,6 +84,20 @@ const unlockingEdges = computed(() => prereqEdges.value.filter((edge) => edge.un
       :key="`prereq-${edge.key}`"
       :class="['connection', edge.state, { free: edge.free, related: edge.related }]"
       :d="edge.d"
+    />
+    <path
+      v-for="edge in learnedEdges"
+      :key="`tail-${edge.key}`"
+      class="connection-comet-tail"
+      :d="edge.d"
+      pathLength="1"
+    />
+    <path
+      v-for="edge in learnedEdges"
+      :key="`head-${edge.key}`"
+      class="connection-comet-head"
+      :d="edge.d"
+      pathLength="1"
     />
     <path
       v-for="edge in unlockingEdges"
@@ -120,13 +135,50 @@ const unlockingEdges = computed(() => prereqEdges.value.filter((edge) => edge.un
   opacity: 0.9;
 }
 /* Learned channels always read as lit gold (vang kim) - element accent
- * stays on the node discs, never on the beams. */
+ * stays on the node discs, never on the beams. The line itself stays
+ * thin; the energy travels as a comet (sao bang): a bright rounded head
+ * dragging a slim tail along the channel. */
 .connection.learned {
   stroke: #f0cf81;
-  stroke-width: 1.8;
+  stroke-width: 1.1;
   stroke-dasharray: none;
-  opacity: 1;
-  filter: drop-shadow(0 0 3.5px #ffd36c);
+  opacity: 0.95;
+  filter: drop-shadow(0 0 2.5px #ffd36c);
+}
+.connection-comet-tail,
+.connection-comet-head {
+  fill: none;
+  stroke-linecap: round;
+  animation: constellationComet 2.4s linear infinite;
+}
+.connection-comet-tail {
+  stroke: #f0cf81;
+  stroke-width: 0.9;
+  stroke-dasharray: 0.3 0.7;
+  stroke-dashoffset: 1;
+  opacity: 0.75;
+}
+.connection-comet-head {
+  stroke: #fff6cc;
+  stroke-width: 2.6;
+  stroke-dasharray: 0.035 0.965;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 3px #ffd36c) drop-shadow(0 0 6px #ffb84d);
+}
+@keyframes constellationComet {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .connection-comet-tail,
+  .connection-comet-head {
+    animation: none;
+    opacity: 0;
+  }
 }
 .connection.related {
   opacity: 1;
