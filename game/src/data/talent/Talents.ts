@@ -295,6 +295,12 @@ export function rollCharacterCreationTalents(count = 9): TalentDefinition[] {
 
   while (result.length < count && pool.length > 0) {
     const totalWeight = pool.reduce((sum, talent) => sum + talent.weight, 0)
+    // r13-AUT-low: a non-finite or non-positive total silently picks
+    // the LAST pool entry every draw (NaN roll never subtracts below
+    // 0) - fail closed like the sibling weighted draws.
+    if (!Number.isFinite(totalWeight) || totalWeight <= 0) {
+      throw new Error(`rollCharacterCreationTalents: talent weights must be finite and positive (got total ${totalWeight})`)
+    }
     let roll = Math.random() * totalWeight
     let index = 0
 

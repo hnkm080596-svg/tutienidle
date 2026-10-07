@@ -133,8 +133,13 @@ export function drawBreakthroughTalentOffers(
     // r12-AUT (sibling of drawFromPool): NaN/Infinity weight is invalid
     // authored data - without this the roll stays NaN, index lands on
     // the last remaining entry, and the draw silently pays it.
-    if (!Number.isFinite(totalWeight)) {
-      throw new Error(`rollBreakthroughTalentOffers: weights must be finite (got total ${totalWeight})`)
+    // r14-INT-5: total <= 0 is equally impossible - every entry in
+    // `remaining` passed isLegalBreakthroughOffer (weight > 0), so a
+    // non-positive sum means corrupted data; fail closed like the
+    // weighted-draw siblings instead of deterministically paying
+    // index 0.
+    if (!Number.isFinite(totalWeight) || totalWeight <= 0) {
+      throw new Error(`rollBreakthroughTalentOffers: weights must be finite and positive (got total ${totalWeight})`)
     }
     let roll = rng() * totalWeight
     let index = 0

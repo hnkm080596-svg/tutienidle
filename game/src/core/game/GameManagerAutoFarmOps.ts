@@ -211,7 +211,10 @@ export class GameManagerAutoFarmOps {
    * - cycleSeconds <= 0 / non-finite -> safe no-op (blocks Infinity cycles
    *   from malformed saves - evidence: infinite-loop timeout in tests).
    */
-  settleAutoFarmOffline(player: PlayerData, elapsedOfflineSeconds: number): void {
+  settleAutoFarmOffline(
+    player: PlayerData,
+    elapsedOfflineSeconds: number,
+  ): void {
     const autoFarm = player.autoFarmStage
 
     if (!autoFarm) {
@@ -253,6 +256,16 @@ export class GameManagerAutoFarmOps {
     // settle ~0 cycles - the anchor already consumed the window - so a
     // mid-settle failure can only underpay, never double-pay. Honest
     // windows are unaffected: a running farm's anchor tracks now.
+    // r15-COR-E: the anchor must live in the FIELD's own epoch - every
+    // other lastCheckedMs writer (start/reconcile/tickAutoFarm) stamps
+    // Date.now(), and the live tick reads it back against Date.now().
+    // r13's authority anchor wrote a server-epoch stamp here: on a
+    // fast-clock device the gap went negative (settle paid ~0) and the
+    // written stamp then made the next tick mint the whole skew at
+    // live rate; on any capped save it also left the unauthorized
+    // tail in the anchor for the tick to pay. The authorized bound is
+    // elapsedOfflineSeconds (server-derived) - measuring the anchor gap
+    // against the same clock the field uses keeps the cap binding.
     const now = Date.now()
     if (
       !Number.isFinite(autoFarm.lastCheckedMs) ||

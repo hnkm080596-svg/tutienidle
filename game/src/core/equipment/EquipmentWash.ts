@@ -183,7 +183,14 @@ function rollWashAffixes(
       (tierDef) => WASH_TIER_WEIGHTS_BY_QUALITY[instance.quality][tierDef.tier - 1] ?? 0,
     )
 
-    const chosenTier = eligibleTiers[rollWeightedIndex(tierWeights, random)]!
+    // r13-AUT-3: an all-zero weight profile returns -1 - no eligible
+    // tier, so this affix cannot roll (the count check below fails the
+    // wash closed instead of paying a deterministic tier).
+    const tierIndex = rollWeightedIndex(tierWeights, random)
+    if (tierIndex < 0) {
+      break
+    }
+    const chosenTier = eligibleTiers[tierIndex]!
 
     rolled.push({
       affixId: affix.id,

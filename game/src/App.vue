@@ -96,10 +96,12 @@ import { useBootFlow } from './composables/useBootFlow'
 import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
 import { backendBundle, backendComposition, backendFatal } from './services/backend/backendBundle'
 import {
+  buildGameSave,
   deleteSave,
   restoreGameSession,
   SAVE_RESET_REQUEST_EVENT,
 } from './services/save/SaveSystem'
+import { DATA_REFUSE_CODES } from './services/session/BackendStatus'
 import {
   OnlineSessionController,
   type AuthorityState,
@@ -482,11 +484,21 @@ const { breakthrough } = useBreakthrough(gameManager)
 
 // Task 8 (A11, spec sec.6.1) - an unwatched battle pauses visibly and resumes
 // only on Continue; returning to the tab is not consent to resume. Gated on
-// getCombatClockState() !== 'stopped' so the overlay never appears outside
-// combat (no battle mounted == nothing to pause).
+// the 'game' entry stage plus a non-stopped combat clock so the overlay never
+// arms over an error/entry surface (no admitted battle == nothing to pause).
 const { isPaused: isCombatPaused, continueBattle, dispose: disposeCombatPause } = useCombatPause(
   gameManager,
-  { isCombatActive: () => gameManager.getCombatClockState() !== 'stopped' },
+  // r37-AUT-2 / r38-COR-1 - gate on the admitted route, not battle
+  // presence: the boot-fail / rejected-restore zombie KEEPS its battle
+  // object (the fail arm returns before discardStaleBattle), so a battle
+  // check passes exactly the shape it was meant to exclude. The one thing
+  // the zombie lacks is the 'game' entry stage - the fail arm lands on
+  // 'error', where a hidden tab must not arm the "combat paused -
+  // continue" curtain over the error surface with nothing behind it.
+  {
+    isCombatActive: () =>
+      entryStage.value === 'game' && gameManager.getCombatClockState() !== 'stopped',
+  },
 )
 
 // Cau noi reactivity chung cho cac panel doc bag/equipment - xem
@@ -502,6 +514,18 @@ function bumpState() {
 provide(GAME_MANAGER_KEY, gameManager)
 provide(STATE_VERSION_KEY, stateVersion)
 provide(BUMP_STATE_KEY, bumpState)
+
+// The curtain's lifetime is its latch's: a battle discard clears
+// 'tab-hidden' through combatClock.stop() but cannot reach this flag,
+// leaving a stale Continue screen over the post-discard session (or the
+// next battle minted under it). A legitimate carry across an auto-repeat
+// restart re-freezes 'tab-hidden', so the curtain stays while its latch
+// lives. stateVersion bumps cover every teardown path (r36-INT-2).
+watch(stateVersion, () => {
+  if (isCombatPaused.value && !gameManager.getFreezeReasons().includes('tab-hidden')) {
+    isCombatPaused.value = false
+  }
+})
 
 // Remediation Task 5 (2026-09-05) - lifecycle idempotence extract sang
 // useAppLifecycle.ts (tick/autosave interval guard, bootInFlight guard,
@@ -566,6 +590,55 @@ const lifecycle = useAppLifecycle({
     // B8 - non-ok save outcomes are diagnostic events (never save bytes).
     recordSaveOutcome(result, 'autosave')
 
+    // r26-INT-02/COR-3: a coded non-retryable data refuse can never
+    // commit - the same in-memory state rebuilds the same failing
+    // payload deterministically (post-dated stamps stay future until
+    // wall time reaches them), so the generic autosave-fail toast would
+    // loop forever while every write keeps refusing. Escalate to the
+    // corrupted-save surface like the boot arm does.
+    // r28-INT-1: two corrections to the original arm.
+    //  - Scope is always 'local': a refused write never commits, so
+    //    the remote row holds the last-good save whether the refuse
+    //    came from the local write gate (bytes never left the client)
+    //    or from the remote adapter's server-side coded refuse
+    //    (SupabaseCloudSaveService refuse envelope). The 'local' label
+    //    follows the "remote row is the healthy head" pattern the
+    //    pending-conflict arm uses. A 'remote' label would offer
+    //    resetCharacter() against a healthy cloud row.
+    //  - report() must pair with bootFlow.fail(): SaveIncompatibleScreen
+    //    only mounts under entryStage 'error', so a bare report() is a
+    //    dead write that leaks a stale armed card into a later unrelated
+    //    error mount (the onResume arm below documents this rule). A
+    //    deterministic refuse means no write can ever commit, so the
+    //    error mount is the correct terminal surface.
+    if (
+      result.status === 'unavailable'
+      && !result.retryable
+      && result.code !== undefined
+      && DATA_REFUSE_CODES.has(result.code)
+    ) {
+      let refusedPayload = ''
+      try {
+        refusedPayload = JSON.stringify(buildGameSave(player.$state, gameManager))
+      } catch {
+        refusedPayload = ''
+      }
+      // r30-INT-1: freeze the sim BEFORE the error mount - mirrors the
+      // remote-tier cascade (observeSaveResult -> onPause('terminal')
+      // -> pauseSimulation while entryStage is still 'game'). Under
+      // local authority no observer fires, so without this call the
+      // combat channel (CombatClock, outside the tick gate) keeps
+      // resolving turns behind the terminal card. pauseSimulation's
+      // own entryStage==='game' guard makes the ordering load-bearing:
+      // it must run while the stage is still 'game', before fail().
+      lifecycle.pauseSimulation()
+      saveIssue.report('corrupted', refusedPayload, undefined, 'local')
+      bootFlow.fail()
+      // r29-AUT-4: the terminal card IS the signal - skip the transient
+      // autosaveFailed toast/latch below (double-signal noise).
+      return result
+    }
+
     // Canh bao autosave fail chi 1 lan cho moi chuoi fail - reset co khi
     // ghi thanh cong lai de chuoi fail ke tiep van duoc bao.
     if (result.status !== 'ok' && !saveFailureNotified) {
@@ -574,6 +647,10 @@ const lifecycle = useAppLifecycle({
       console.warn('[autosave] progress was not saved', result)
     } else if (result.status === 'ok') {
       saveFailureNotified = false
+      // r28-INT-1: an ok write proves the save path healthy - sweep any
+      // armed save-issue status so a stale card can never hijack a
+      // later unrelated error mount inside this page lifetime.
+      saveIssue.clear()
     }
 
     return result
@@ -677,6 +754,17 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
         bootFlow.fail()
         return
       }
+      // r35-INT-1 - the restore just rewrote player.$state's contents in
+      // place, so a battle still in flight belongs to the previous
+      // character state: its player/stage bindings point at the very
+      // object whose contents the replacement now owns, and the
+      // resumeSimulation unlatch below would resume the ghost into the
+      // new character (same mechanism r34-COR-F1 closed on bootGame -
+      // this seam is the sibling arm). Silent teardown, no terminal, no
+      // banking - identical to the boot-path discard. Only the
+      // 'replaced' arm pays it: a 'same' lineage rebinds nothing, so the
+      // battle stays legitimately owned.
+      gameManager.discardStaleBattle()
     }
     lifecycle.resumeSimulation()
   },

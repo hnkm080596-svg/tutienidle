@@ -840,7 +840,7 @@ export class TribulationDirector {
    * entitlement resolve nhu run moi. settlementError=true dung lai
    * marker Error de terminal-after-first-attempt semantics giu nguyen.
    */
-  restoreRuntime(slice: TribulationRuntimeSave | undefined): void {
+  restoreRuntime(slice: TribulationRuntimeSave | undefined, restoreNowMs: number = Date.now()): void {
     // Save la authoritative - restore phai replacement-complete: xoa toan
     // bo run-state khong persist (run dang chay + outcome cu cua timeline
     // truoc) truoc khi nap slice, khong de gi sot lai tu timeline cu.
@@ -852,7 +852,33 @@ export class TribulationDirector {
     this.mindFailStacks = 0
     this.mindCorrectLightningReduction = 0
     this.lightningTalentMultiplier = 1
-    this.cooldownUntil = slice?.cooldownUntil ?? 0
+    // r26-AUT-1: authored cooldown remaining never exceeds
+    // TRIBULATION_COOLDOWN_SECONDS past the restore clock (admission
+    // pins until <= lastSavedAt + authored span), so a stamp beyond
+    // that bound is uniformly-shifted crafted/skewed content - clamp
+    // it at the authored max instead of parking the channel and
+    // bricking the next save write (until > next lastSavedAt + span
+    // fails admission). Honest stamps sit below the bound untouched.
+    // r29-COR-F1: the clamp only runs under a sane restore clock -
+    // a non-finite restoreNowMs collapses min() to NaN (cooldown gate
+    // reads NaN > 0 = false -> free retry) and -Infinity clears it
+    // the same way. Bad clock -> verbatim restored stamp: a
+    // far-future until stays parked (deny).
+    // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
+    // deep-pasts the cooldown (instant retry), and >= 2^52
+    // self-refuses the next save write.
+    const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
+    // r32-AUT-3 (sibling): the authored-max cap is a minted stamp too -
+    // a restore clock within cooldown-span of the domain bound pushes
+    // it past 2^52 and the persisted cooldownUntil self-refuses the
+    // next save write. Clamp the cap into the domain (deny-lean: the
+    // remaining cooldown only shrinks).
+    this.cooldownUntil = clockOk
+      ? Math.min(
+          slice?.cooldownUntil ?? 0,
+          Math.min(restoreNowMs + TRIBULATION_COOLDOWN_SECONDS * 1000, 2 ** 52 - 1),
+        )
+      : (slice?.cooldownUntil ?? 0)
     this.attemptRealmId = ''
     this.attemptSeed = 0
 

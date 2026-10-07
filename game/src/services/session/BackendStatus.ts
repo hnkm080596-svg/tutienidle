@@ -24,6 +24,25 @@ export type BackendErrorCode =
  *  get_backend_status().supportedProtocolVersions for admission. */
 export const CLIENT_PROTOCOL_VERSION = 1
 
+/** Refuse codes that arm the save-issue surface on the write paths.
+ *  A refused write never commits, so the remote row holds the
+ *  last-good save on EVERY refuse path - the local write gate (bytes
+ *  never left the client) AND the server's own REJECTED answer
+ *  (SupabaseCloudSaveService refuse envelope). The armed card
+ *  therefore scopes 'local' (r28-INT-1): a 'remote' label would
+ *  offer resetCharacter() against a healthy cloud row. The whole
+ *  SERVER_ERROR bucket (COMMITTED_MALFORMED - the save already
+ *  landed; PENDING_JOURNAL codes - local faults; CHECKPOINT codes,
+ *  CUTOFF_REGRESSION, MUTATION_ID_REUSED - transient authority
+ *  rejections) must NOT arm: they keep their own terminal surfaces
+ *  via observeSaveResult. Auth/transport/protocol/config codes
+ *  likewise keep their own surfaces - the generic card is honest
+ *  where remote reset could not help anyway. */
+export const DATA_REFUSE_CODES: ReadonlySet<BackendErrorCode> = new Set([
+  'SAVE_INVALID',
+  'SAVE_TOO_LARGE',
+])
+
 export interface BackendStatus {
   contractPhase: string
   protocolVersion: number

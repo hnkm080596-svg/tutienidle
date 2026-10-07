@@ -37,14 +37,17 @@ export class BuildingManager {
    * a value, so mutating it afterwards must not leak into live state.
    */
   restore(entries: BuildingInstance[]) {
-    const now = Date.now()
+    // lastCollectedAt is a SECONDS-domain stamp - BuildingSystem accrual
+    // math subtracts it from `Date.now() / 1000` callers - so the bound
+    // compares seconds to seconds (r13-INT-01).
+    const nowSeconds = Date.now() / 1000
     this.instances = entries.map((entry) => {
       const instance = structuredClone(entry)
       // r12-AUT: a crafted FUTURE lastCollectedAt freezes production
       // accrual (elapsed <= 0 forever) - clamp to now, same class as
       // the lastCheckedMs/lastDailyResetAtMs anchors.
-      if (Number.isFinite(instance.lastCollectedAt) && instance.lastCollectedAt > now) {
-        instance.lastCollectedAt = now
+      if (Number.isFinite(instance.lastCollectedAt) && instance.lastCollectedAt > nowSeconds) {
+        instance.lastCollectedAt = nowSeconds
       }
       return instance
     })

@@ -126,7 +126,18 @@ export class ProductionSystem {
    * live state (A3). Whitelisted fields only - legacy keys (e.g. the
    * removed `activeCycle`) are dropped here, not migrated.
    */
-  restoreStates(states: ProductionSiteState[]): void {
+  restoreStates(states: ProductionSiteState[], restoreNowMs: number = Date.now()): void {
+    // r29-COR-F1: the shift only fires under a sane restore clock -
+    // a non-finite or exact-integer-domain-overflow restoreNowMs from
+    // an ungated caller must not re-anchor every began-pair
+    // (restoreNowMs = -Infinity turns shiftMs into +Infinity and
+    // mints every lane head on the next honest tick). Bad clock ->
+    // verbatim restore: post-dated cycles stay parked (deny), honest
+    // pairs were never shifted anyway.
+    // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
+    // deep-pasts the lane (next tick mints), and a stamp re-grounded
+    // at >= 2^52 self-refuses the next save write.
+    const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
     this.states.clear()
 
     for (const state of states) {
@@ -144,7 +155,52 @@ export class ProductionSystem {
         autoRestart: state.autoRestart,
         activeWorkerSlots: state.activeWorkerSlots ?? 0,
         assignedWorkers: state.assignedWorkers,
-        workerCycles: (state.workerCycles ?? []).map((cycle) => ({ ...cycle })),
+        workerCycles: (state.workerCycles ?? []).flatMap((cycle) => {
+          // r33-COR-F1/AUT-2: ordering parity with restoreJobs and the
+          // validator's ordering pin - an INVERTED pair
+          // (completesAtMs <= startedAtMs) is impossible-authored.
+          // Parking it verbatim denied the whole site's advance
+          // (pending.some freezes every healthy sibling lane) AND
+          // refused every later save write on the ordering pin - a
+          // whole-save wedge for content that can never be authored.
+          // Drop at the boundary, same as the sibling arm. The drop test
+          // runs first, so an inverted pair whose stamps are themselves
+          // out-of-domain ({2^52,2^52}, {-Inf,-Inf}...) also drops -
+          // strictly-safe direction. A NON-inverted out-of-domain pair
+          // still parks verbatim below (deny doctrine) - r34-COR-F3.
+          if (cycle.completesAtMs <= cycle.startedAtMs) {
+            return []
+          }
+          // r26-COR-1/AUT-1: a cycle head post-dating the restore clock
+          // is impossible-authored - startedAtMs is a began-time pinned
+          // <= lastSavedAt at admission, so only a uniformly-shifted
+          // (skewed-clock/crafted) pair reaches here. Re-ground it at the
+          // restore clock, shifting completesAtMs by the same delta so
+          // the authored span stays exact: the lane resumes as a live
+          // in-flight cycle instead of idling past the next save marker
+          // and self-bricking every write. Honest stamps are untouched.
+          // r31-COR-F-HEADROOM (sibling): minted completesAtMs =
+          // restoreNowMs + authored span must fit the persisted domain
+          // - else keep the pair verbatim (parked, deny).
+          // r32-AUT-2: an inverted pair (completes <= started) has a
+          // negative span, so the headroom holds trivially and the shift
+          // mints a FRESH inverted pair - ordering-denied by
+          // advanceWorkerLanes yet refusing the persisted ordering pin
+          // on every later write. (Handled above: inverted pairs drop.)
+          if (
+            clockOk &&
+            cycle.startedAtMs > restoreNowMs &&
+            restoreNowMs + (cycle.completesAtMs - cycle.startedAtMs) < 2 ** 52
+          ) {
+            const shiftMs = cycle.startedAtMs - restoreNowMs
+            return [{
+              ...cycle,
+              startedAtMs: cycle.startedAtMs - shiftMs,
+              completesAtMs: cycle.completesAtMs - shiftMs,
+            }]
+          }
+          return [{ ...cycle }]
+        }),
         hiddenChannelCycles: state.hiddenChannelCycles
           ? { ...state.hiddenChannelCycles }
           : undefined,
@@ -630,6 +686,13 @@ export class ProductionSystem {
 
     const tierIndex = rollWeightedIndex(cappedProfile, random)
 
+    // r14-INT-4: the all-zero pool returns the -1 sentinel - guard it
+    // explicitly like the ageIndex sites below instead of relying on
+    // realmIds[-1] -> undefined.
+    if (tierIndex < 0) {
+      return []
+    }
+
     const tierRealmId = this.deps.territory.realmIds[tierIndex]
 
     if (!tierRealmId) {
@@ -648,7 +711,11 @@ export class ProductionSystem {
         random,
       )
 
-      const age = HERB_AGES[ageIndex] ?? 'decade'
+      // r13-AUT-3: all-zero pool returns -1 - no eligible entry pays.
+      const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
+      if (age === undefined) {
+        return []
+      }
 
       const entry = pool.find((reward) => reward.age === age)
 
@@ -677,7 +744,11 @@ export class ProductionSystem {
         random,
       )
 
-      const age = HERB_AGES[ageIndex] ?? 'decade'
+      // r13-AUT-3: all-zero pool returns -1 - no eligible entry pays.
+      const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
+      if (age === undefined) {
+        return []
+      }
 
       const entry = pool.find((reward) => reward.age === age)
 
@@ -722,7 +793,11 @@ export class ProductionSystem {
       random,
     )
 
-    const age = HERB_AGES[ageIndex] ?? 'decade'
+    // r13-AUT-3: all-zero pool returns -1 - no eligible entry pays.
+    const age = ageIndex >= 0 ? HERB_AGES[ageIndex] : undefined
+    if (age === undefined) {
+      return []
+    }
 
     const chosen = ageVariants.find((herb) => herb.age === age) ?? ageVariants[0]
 

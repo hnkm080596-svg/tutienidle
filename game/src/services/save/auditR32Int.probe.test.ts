@@ -1,0 +1,504 @@
+// @vitest-environment node
+// @ts-expect-error project omits Node ambient types by design (pattern: deadReferences.test.ts)
+import { readFileSync } from 'node:fs'
+// @ts-expect-error see above
+import { fileURLToPath } from 'node:url'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
+
+// BETA SCOPE LOCK v2 - same seam as the r20-r31 probes: exercise the
+// enabled implementation paths, not the dormant scope-hidden shells.
+vi.mock('../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
+import { createPinia, setActivePinia } from 'pinia'
+import { createDefaultPlayer } from '../../core/player/Player'
+import type { PlayerData } from '../../core/player/Player'
+import { GameManager } from '../../core/game/GameManager'
+import { primeMortalCreationPick } from './GameSave.fixture'
+import { buildGameSave } from './SaveSystem'
+import { validateGameSaveShape } from './saveShapeValidation'
+import type { GameSave } from './saveTypes'
+import { useAppLifecycle } from '../../composables/useAppLifecycle'
+import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
+import type { ProductionCycle } from '../../core/production/ProductionTypes'
+import { ManualClockSource } from '../../core/battle/turn/CombatClock'
+import { defineEnemy } from '../../core/enemy/Enemy'
+import { createBaseStats } from '../../core/stats/StatBlock'
+import { CENTER_LANE_INDEX } from '../../core/battle/BattleLane'
+import type { CombatEntity } from '../../core/combat/CombatEntity'
+import { equipment } from '../../data/equipment/equipment'
+import { affixes } from '../../data/equipment/affixes'
+import { buildings } from '../../data/building/buildings'
+import { pills } from '../../data/pill/pills'
+import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import type { PersistentTimedEffect } from '../../core/player/PersistentTimedEffect'
+import { scopeHiddenPillFamilyOfId } from '../../core/betaScope'
+import { TU_LINH_TRAN_DURATION_MS } from '../../core/economy/TuLinhTranBalance'
+
+// ============================================================================
+// QA probe - fixpoint r32 INT wave. Audits the r31 adjudication batch at
+// 1d27aee4 for INTEGRATION COHERENCE - whether the r31-corrected layers still
+// agree with every real consumer and seam:
+//
+//   (R) simPaused re-baseline vs the PAIRED combat-side latch: r31-INT-1
+//       added `simPaused = false` at bootGame's head so a latch surviving
+//       the terminal -> acknowledge -> re-auth -> re-enter chain cannot
+//       disarm later pauses. But the pause contract is TWO latches - the
+//       composable flag AND the CombatClock reasons set ('authority-pause').
+//       bootGame re-baselines the flag only; resumeCombat('authority-pause')
+//       fires exclusively inside resumeSimulation(), which the cleared flag
+//       now dead-ends. A battle frozen at terminal-pause time re-mounts
+//       frozen forever - invisible wedge, no 'authority-pause' UI.
+//   (E) escape pins: the two ways the orphaned reason still clears
+//       (beginBattleCycle's stop()+start(); a later pause+resume pair).
+//   (C) coherence pins on the r31 fixes themselves: deny-return shape
+//       preserves pending verbatim at every arm (not just the empty case
+//       r31 probed); applyTimedEffect's min(2^52-1, now) clamp vs the
+//       validator's appliedAtMs <= lastSavedAt pin - a pushed record must
+//       re-validate (the pre-clamp future stamp would wedge every write).
+// ============================================================================
+
+let currentMs = 1_725_160_000_000
+const REALM = 'mortal'
+
+function registeredManager(): GameManager {
+  const manager = new GameManager()
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
+  manager.catalogOps.registerBuildings(buildings)
+  manager.catalogOps.registerPills(pills)
+  manager.catalogOps.registerAlchemyRecipes(alchemyRecipes)
+  return manager
+}
+
+function validWireSave(): GameSave {
+  const writer = registeredManager()
+  const player = createDefaultPlayer()
+  writer.setActivePlayer(player)
+  primeMortalCreationPick(player, writer.skillManager)
+  return JSON.parse(JSON.stringify(buildGameSave(player, writer))) as GameSave
+}
+
+// Minimal live battle - raw-entity test policy, same shape as
+// GameManager.laneAssignment.test.ts (no catalogs needed).
+function barePlayer(): CombatEntity {
+  const stats = createBaseStats({ might: 0 })
+
+  return {
+    id: 'player',
+    name: 'Player',
+    type: 'player',
+    baseStats: stats,
+    stats,
+    currentHp: stats.maxHp,
+    maxHp: stats.maxHp,
+    currentMp: stats.maxMp,
+    currentWard: 0,
+    turnsSinceLastHitLanded: Infinity,
+    realmIndex: 0,
+    x: 0,
+    row: CENTER_LANE_INDEX,
+    alive: true,
+  }
+}
+
+function dummyEnemy() {
+  return defineEnemy({
+    id: 'r32_dummy',
+    name: 'Dummy',
+    level: 1,
+    realmId: 'mortal',
+    lane: 'ground',
+    statsInput: {
+      maxHp: 100_000,
+      might: 0,
+      attackSpeed: 1,
+      criticalRate: 0,
+      criticalDamage: 1.5,
+      armor: 0,
+    },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
+  })
+}
+
+// ----------------------------------------------------------------------------
+// (R) The lifecycle harness mirrors App.vue wiring: bootGame -> entered,
+// pauseSimulation latches simPaused + freezes CombatClock under
+// 'authority-pause', acknowledgeAuthority -> showAuth -> re-auth -> bootGame.
+// ManualClockSource keeps the clock deterministic - state transitions are
+// what matter, not elapsed time.
+// ----------------------------------------------------------------------------
+
+function lifecycleHarness() {
+  const entryStage = ref('auth')
+  let nextHandle = 1
+  const liveIntervals = new Set<number>()
+  const wire = validWireSave()
+  const gameManager = registeredManager()
+  gameManager.setCombatClockSource(new ManualClockSource())
+  const playerState = createDefaultPlayer()
+  const boot = {
+    startInitializing: vi.fn(),
+    startSaveLoad: vi.fn(),
+    requireCharacter: vi.fn(() => {
+      entryStage.value = 'character'
+    }),
+    enterGame: vi.fn(() => {
+      entryStage.value = 'game'
+    }),
+    showAuth: vi.fn(() => {
+      entryStage.value = 'auth'
+    }),
+    fail: vi.fn(() => {
+      entryStage.value = 'error'
+    }),
+  }
+  const deps = {
+    clock: { start: vi.fn(), stop: vi.fn(), update: vi.fn() },
+    scheduleInterval: (_fn: () => void, _ms: number) => {
+      const handle = nextHandle
+      nextHandle += 1
+      liveIntervals.add(handle)
+      return handle
+    },
+    clearHandle: (handle: number) => {
+      liveIntervals.delete(handle)
+    },
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    boot,
+    coordinator: {
+      capability: 'local',
+      load: vi.fn(async () => ({ status: 'ok' as const, save: wire, raw: '{}', revision: 1 })),
+      save: vi.fn(),
+      reset: vi.fn(async () => undefined),
+    },
+    authority: {
+      canMutate: () => true,
+      beginChecking: vi.fn(),
+      markReady: vi.fn(),
+      markFailed: vi.fn(),
+      observeSaveResult: vi.fn(),
+    },
+    player: {
+      save: vi.fn(async () => ({ status: 'ok' as const, revision: 1 })),
+      $state: playerState,
+    },
+    gameManager,
+    tick: vi.fn(),
+    offlineSummary: { show: vi.fn() },
+    saveIssue: { report: vi.fn(), clear: vi.fn() },
+    entryStage,
+    // Mocked seam - production restoreGameSession never touches the
+    // battle/combatClock either, so the live battle below survives a
+    // re-boot exactly as it would in the app.
+    restoreGameSession: vi.fn(() => ({ status: 'ok' })),
+    persistPlayer: vi.fn(async () => ({ status: 'ok' })),
+    onError: vi.fn(),
+    hardReset: vi.fn(),
+  }
+  const lifecycle = useAppLifecycle(deps as never)
+  return { lifecycle, entryStage, liveIntervals, gameManager, deps, boot, playerState }
+}
+
+describe('auditR32 INT probe - orphaned authority-pause freeze across re-entry (R)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    currentMs = 1_725_160_000_000
+    vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('R1 re-entry clears BOTH latches - the stale battle is discarded at admission (r32 fix, r34-COR-F1 hardened)', async () => {
+    const { lifecycle, gameManager, boot } = lifecycleHarness()
+    const resumeSpy = vi.spyOn(gameManager, 'resumeCombat')
+
+    // Boot 1 -> entered; a live battle owns a running CombatClock.
+    expect((await lifecycle.bootGame({ createNewCharacter: false })).status).toBe('entered')
+    lifecycle.startAutosave()
+    gameManager.startBattle(barePlayer(), dummyEnemy())
+    expect(gameManager.getTurnBattle()).not.toBeNull()
+    expect(gameManager.getCombatClockState()).toBe('running')
+
+    // Terminal authority pause (the remote cascade's onPause('terminal')
+    // and the local coded-refuse arm share this exact call): latches the
+    // flag and freezes the combat channel under 'authority-pause'.
+    lifecycle.pauseSimulation()
+    expect(lifecycle.isSimPaused()).toBe(true)
+    expect(gameManager.getCombatClockState()).toBe('frozen')
+    expect(gameManager.getFreezeReasons()).toContain('authority-pause')
+
+    // acknowledgeAuthority -> bootFlow.showAuth() -> onAuthenticated ->
+    // bootGame(false): the re-baseline clears the flag; at admission
+    // r34-COR-F1's discardStaleBattle drops the stale battle wholesale
+    // (its bindings pointed at the rebound player.$state) - the clock
+    // stops and resumeCombat no-ops on it.
+    boot.showAuth()
+    expect((await lifecycle.bootGame({ createNewCharacter: false })).status).toBe('entered')
+    lifecycle.startAutosave()
+    expect(lifecycle.isSimPaused()).toBe(false)
+    expect(lifecycle.getTickHandle()).toBeDefined()
+
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.getCombatClockState()).toBe('stopped')
+    expect(gameManager.getFreezeReasons()).toEqual([])
+    expect(resumeSpy).toHaveBeenCalledWith('authority-pause')
+  })
+
+  it('R2 unlatch paths: re-entry itself clears the reason; later pause+resume and fresh battle still work', async () => {
+    const { lifecycle, gameManager, boot } = lifecycleHarness()
+
+    expect((await lifecycle.bootGame({ createNewCharacter: false })).status).toBe('entered')
+    gameManager.startBattle(barePlayer(), dummyEnemy())
+    lifecycle.pauseSimulation()
+    boot.showAuth()
+    expect((await lifecycle.bootGame({ createNewCharacter: false })).status).toBe('entered')
+
+    // r34-COR-F1: admission discards the stale battle - the clock stops
+    // outright with every reason dead (the battle's bindings pointed at
+    // the rebound player.$state; nothing resumes).
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.getFreezeReasons()).toEqual([])
+    expect(gameManager.getCombatClockState()).toBe('stopped')
+
+    // The pause+resume pair still works normally on a FRESH battle
+    // started after re-entry.
+    gameManager.startBattle(barePlayer(), dummyEnemy())
+    expect(gameManager.getCombatClockState()).toBe('running')
+    lifecycle.pauseSimulation()
+    expect(gameManager.getFreezeReasons()).toContain('authority-pause')
+    lifecycle.resumeSimulation()
+    expect(gameManager.getFreezeReasons()).not.toContain('authority-pause')
+    expect(gameManager.getCombatClockState()).toBe('running')
+
+    // And the next re-boot discards that battle too - same contract.
+    lifecycle.pauseSimulation()
+    expect(gameManager.getFreezeReasons()).toContain('authority-pause')
+    boot.showAuth()
+    await lifecycle.bootGame({ createNewCharacter: false })
+    expect(gameManager.getTurnBattle()).toBeNull()
+    expect(gameManager.getFreezeReasons()).toEqual([])
+    expect(gameManager.getCombatClockState()).toBe('stopped')
+  })
+
+  it('R3 ordering pin - bootGame re-baselines simPaused without any resumeCombat pair (source pin)', () => {
+    const source = readFileSync(
+      fileURLToPath(new URL('../../composables/useAppLifecycle.ts', import.meta.url)),
+      'utf-8',
+    )
+    const bootStart = source.indexOf('async function bootGame')
+    const bootEnd = source.indexOf('// --- Essence stream state', bootStart)
+    const bootBody = source.slice(bootStart, bootEnd)
+    expect(bootBody).toContain('simPaused = false')
+    // r32-INT-1: the flag clear must be PAIRED with the combat-side
+    // latch - bootGame calls resumeCombat('authority-pause') so a frozen
+    // battle remounts running after re-entry (no-op when unlatched).
+    expect(bootBody).toContain("resumeCombat('authority-pause')")
+    // stopAll() never clears the combat latch either.
+    const stopStart = source.indexOf('function stopAll')
+    const stopBody = source.slice(stopStart, stopStart + 1200)
+    expect(stopBody).not.toContain('resumeCombat')
+    expect(stopBody).not.toContain('freezeCombat')
+  })
+})
+
+// ----------------------------------------------------------------------------
+// (C1) Deny-return shape: the r31 negative-window deny must preserve pending
+// verbatim - callers assign result.pending back to state.workerCycles, so a
+// deny that truncated the array would delete honest in-flight lanes.
+// ----------------------------------------------------------------------------
+
+describe('auditR32 INT probe - deny-return shape vs caller write-back (C1)', () => {
+  const CYCLE_MS = 3_600_000
+
+  const parkedCycle: ProductionCycle = {
+    cycleId: 'cyc_parked',
+    siteId: 'thanh_van_lam',
+    collectionRealmId: REALM,
+    siteLevelAtStart: 1,
+    rewardTableVersion: 1,
+    rollSeed: 7,
+    startedAtMs: currentMs,
+    completesAtMs: currentMs + CYCLE_MS,
+  }
+
+  it('negative emptyLaneStartMs denies with pending verbatim - no data loss, no truncation', () => {
+    const result = advanceWorkerLanes({
+      siteId: 'thanh_van_lam',
+      collectionRealmId: REALM,
+      siteLevel: 1,
+      baseSeconds: 3600,
+      cycleMs: CYCLE_MS,
+      pending: [parkedCycle],
+      slots: 1,
+      nowMs: currentMs,
+      emptyLaneStartMs: -1,
+      advanceMode: 'deadline',
+      budgetMs: CYCLE_MS * 10,
+    })
+
+    // Zero-advance shape: callers write result.pending back verbatim, so
+    // the deny must hand back the input untouched - the parked in-domain
+    // cycle survives for the next honest tick.
+    expect(result.pending).toEqual([parkedCycle])
+    expect(result.completed).toHaveLength(0)
+    expect(result.seededPending).toHaveLength(0)
+    expect(result.forfeited).toBe(0)
+    expect(result.consumedBudgetMs).toBe(0)
+  })
+
+  it('same verbatim preservation when nowMs itself is out of domain', () => {
+    const result = advanceWorkerLanes({
+      siteId: 'thanh_van_lam',
+      collectionRealmId: REALM,
+      siteLevel: 1,
+      baseSeconds: 3600,
+      cycleMs: CYCLE_MS,
+      pending: [parkedCycle],
+      slots: 1,
+      nowMs: 2 ** 52, // out-of-domain clock
+      emptyLaneStartMs: currentMs,
+      advanceMode: 'deadline',
+      budgetMs: CYCLE_MS * 10,
+    })
+
+    expect(result.pending).toEqual([parkedCycle])
+    expect(result.completed).toHaveLength(0)
+  })
+})
+
+// ----------------------------------------------------------------------------
+// (C2) applyTimedEffect push-arm clamp vs the validator's two pins:
+// appliedAtMs must sit in |x| < 2^52 AND <= lastSavedAt (write marker is
+// Date.now()). The r31 clamp min(2^52-1, now) guarantees both; expiresAtMs
+// keeps the bare magnitude clamp - the persisted domain it actually has.
+// ----------------------------------------------------------------------------
+
+describe('auditR32 INT probe - applyTimedEffect clamp vs write-gate pins (C2)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    currentMs = 1_725_160_000_000
+    vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function regenSource(): { pillId: string; realmId: string; effect: Partial<PersistentTimedEffect> } {
+    // Live regen family only: hoi_xuan_dan is retired/scope-hidden, and a
+    // dormant-family claim is rejected at the gate outright (F-TC6-8).
+    const pill = pills.find(
+      (entry) =>
+        entry.realmId !== undefined &&
+        entry.effects.some((e) => e.type === 'regen') &&
+        scopeHiddenPillFamilyOfId(entry.id) === null,
+    )!
+    const regen = pill.effects.find((e) => e.type === 'regen')!
+
+    return {
+      pillId: pill.id,
+      realmId: pill.realmId!,
+      effect: {
+        sourceItemId: pill.id,
+        effectGroup: regen.effectGroup ?? 'pill_regen',
+        durationStackable: regen.stackable ?? false,
+        modifiers: [],
+      },
+    }
+  }
+
+  it('crafted future appliedAtMs clamps to Date.now() - the pushed record passes its own write gate', () => {
+    const gameManager = registeredManager()
+    const player = createDefaultPlayer()
+    const source = regenSource()
+    player.realmId = source.realmId as PlayerData['realmId']
+
+    gameManager.effectOps.applyTimedEffect(player, {
+      id: 'r32_crafted',
+      ...source.effect,
+      appliedAtMs: 9_000_000_000_000_000, // ~284e3 years future - crafted
+      expiresAtMs: 9_000_000_000_000_000, // above the 2^52 bound
+    } as PersistentTimedEffect)
+
+    const pushed = player.persistentTimedEffects.find((effect) => effect.id === 'r32_crafted')!
+
+    // appliedAtMs clamped to min(2^52-1, now) = now; expiresAtMs clamped
+    // to the bare magnitude bound 2^52-1.
+    expect(pushed.appliedAtMs).toBe(currentMs)
+    expect(pushed.expiresAtMs).toBe(2 ** 52 - 1)
+
+    // The point of the clamp: a save written right after the push must
+    // re-validate - the raw 9e15 stamp would have wedged on BOTH
+    // |x| < 2^52 and appliedAtMs <= lastSavedAt. (The pill-regen branch
+    // binds no expires window at admission - the far-future expiry is
+    // bounded at the restore seam by boundTimedEffectClocks instead.)
+    const save = buildGameSave(player as PlayerData, gameManager)
+    const shape = validateGameSaveShape(save)
+    expect(shape.ok).toBe(true)
+    expect(
+      shape.issues.every((issue) => !issue.path.includes('persistentTimedEffects')),
+    ).toBe(true)
+  })
+
+  it('crafted negative appliedAtMs clamps only at the magnitude floor - the field domain is signed', () => {
+    const gameManager = registeredManager()
+    const player = createDefaultPlayer()
+    const source = regenSource()
+    player.realmId = source.realmId as PlayerData['realmId']
+
+    gameManager.effectOps.applyTimedEffect(player, {
+      id: 'r32_neg',
+      ...source.effect,
+      appliedAtMs: -9_000_000_000_000_000,
+      expiresAtMs: currentMs + 60_000,
+      modifiers: [],
+    } as PersistentTimedEffect)
+
+    const pushed = player.persistentTimedEffects.find((effect) => effect.id === 'r32_neg')!
+    // Sign kept, magnitude clamped: -(2^52-1). appliedAtMs is provenance
+    // (write-only after persistence; the merge arms read expiresAtMs
+    // only) - the validator's magnitude + <= lastSavedAt pins both pass.
+    expect(pushed.appliedAtMs).toBe(-(2 ** 52 - 1))
+    const save = buildGameSave(player as PlayerData, gameManager)
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('tu_linh_tran push clamp now reaches the tighter writer bound (r32 fix) - emitted expiry validates', () => {
+    const gameManager = registeredManager()
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining' as PlayerData['realmId']
+
+    gameManager.effectOps.applyTimedEffect(player, {
+      id: 'r32_tlt',
+      sourceItemId: 'tu_linh_tran',
+      effectGroup: 'tu_linh_tran',
+      cultivationSpeedPercent: 0.25, // authored TU_LINH_TRAN_BUFF_PERCENT ceiling
+      appliedAtMs: currentMs,
+      expiresAtMs: 9_000_000_000_000_000, // crafted far-future
+      modifiers: [],
+    })
+
+    const pushed = player.persistentTimedEffects.find((effect) => effect.id === 'r32_tlt')!
+    // r32-INT-2: the emitted expiry is ceiled at the TLT write pin
+    // (lastSavedAt + 24h + 7d) instead of the bare 2^52-1 - the pushed
+    // record re-validates on the very next write.
+    expect(pushed.expiresAtMs).toBe(currentMs + TU_LINH_TRAN_DURATION_MS + 7 * 86_400_000)
+
+    // The pushed TLT record no longer wedges the next write - the only
+    // remaining issues in this save are the unprimed-player pins
+    // (breakthroughGrade/techniques), unrelated to the emitted stamp.
+    const save = buildGameSave(player as PlayerData, gameManager)
+    const shape = validateGameSaveShape(save)
+    expect(
+      shape.issues.every((issue) => !issue.path.includes('persistentTimedEffects')),
+    ).toBe(true)
+  })
+})

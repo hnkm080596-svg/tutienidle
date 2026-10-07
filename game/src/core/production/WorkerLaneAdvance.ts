@@ -1,5 +1,6 @@
 import type { ProductionCycle } from './ProductionTypes'
 import { buildProductionCycle } from './ProductionCycles'
+import { computeCycleSeconds } from './ProductionBalance'
 
 // M11 (ARCH-007) - per-lane worker-cycle advancement, ONE mechanism with
 // two drivers (A9):
@@ -39,15 +40,20 @@ export interface WorkerLaneAdvanceParams {
   /** In-flight lane heads from state (saved or tick-carried). */
   pending: readonly ProductionCycle[]
 
-  /** Lanes allocated to this site by allocateWorkerSlots. */
+  /**
+   * Lanes allocated to this site by allocateWorkerSlots. Contract: a
+   * non-negative integer, bounded - the defensive guard rejects
+   * non-integer/negative/>65536 values (a fractional count over-seeds
+   * a lane; a huge count makes the seed loop push lanes to OOM).
+   */
   slots: number
 
   nowMs: number
 
   /**
    * Start instant for lanes holding no in-flight cycle. Online passes
-   * nowMs (top-up at the tick); offline passes the save timestamp
-   * (offlineSinceMs). Undefined = empty lanes stay empty.
+   * nowMs (top-up at the tick); offline passes the authorized window
+   * start (offlineSinceMs). Undefined = empty lanes stay empty.
    */
   emptyLaneStartMs?: number
 
@@ -57,7 +63,10 @@ export interface WorkerLaneAdvanceParams {
    * Offline work budget (cap accounting): a completion whose own
    * duration exceeds the remaining budget is FORFEITED (dropped without
    * reward), same rule as the manual backlog forfeit. Undefined = no
-   * budget (online path never forfeits).
+   * budget (online path never forfeits). Caller-owned ceiling: the
+   * authorized cap lives upstream (PRODUCTION_OFFLINE_CAP_SECONDS
+   * bounds the production settle); a huge finite value is honored by
+   * design, the guard only rejects non-finite.
    */
   budgetMs?: number
 
@@ -77,6 +86,17 @@ export interface WorkerLaneAdvanceResult {
 
   /** Total rewarded duration consumed from budgetMs (0 when no budget). */
   consumedBudgetMs: number
+
+  /**
+   * Pending lane heads whose deadline chain is ROOTED at a settle-time
+   * seed (spawned from emptyLaneStartMs - offline only), not at a
+   * persisted lane deadline. Their stamps encode "remaining work at
+   * settle" relative to the settle's nowMs, so the persister re-stamps
+   * exactly these into the field epoch; successors of SAVED lanes keep
+   * the saved lane's own client-epoch deadline. Same object refs as
+   * `pending`.
+   */
+  seededPending: readonly ProductionCycle[]
 }
 
 interface LaneCursor {
@@ -88,25 +108,97 @@ interface LaneCursor {
 
   /** The restored cycle object when the in-flight cycle came from saved state. */
   saved?: ProductionCycle
+
+  /**
+   * True when this lane's deadline chain is rooted at a settle-time
+   * seed spawned from emptyLaneStartMs (successor chains inherit their
+   * root). Saved-lane chains never carry it - their deadlines are the
+   * lane's own persisted client stamps, not settle constructs.
+   */
+  seeded?: boolean
 }
 
 export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneAdvanceResult {
   const { siteId, collectionRealmId, siteLevel, baseSeconds, cycleMs, slots, nowMs } = params
 
+  // r32-COR-F2: the headroom must denominate the stamp the mint
+  // ACTUALLY writes, not the caller's cycleMs param - spawned cycles
+  // are persisted via buildProductionCycle which stamps
+  // completesAtMs = startMs + computeCycleSeconds(baseSeconds,
+  // siteLevel) * 1000, so an incoherent cycleMs < authored span would
+  // pass the guard while the minted pending lands >= 2^52. Denominate
+  // the larger of the two; a NaN authored span (malformed site def)
+  // denies like every other bad mint input. Both real callers pass the
+  // coherent pair, so nothing honest tightens.
+  const mintedSpanMs = Math.max(
+    Math.max(0, cycleMs),
+    computeCycleSeconds(baseSeconds, siteLevel) * 1000,
+  )
+
   // Defensive guard: a non-finite clock or budget can never advance a
   // lane - 'deadline' mode would loop forever because dueMs > NaN and
-  // dueMs > Infinity are both always false. Zero-advance result: the
-  // in-flight lanes are preserved untouched (no completions, no
-  // respawns, no empty-lane seeding).
+  // dueMs > Infinity are both always false. r19-AUT hardening: a
+  // non-finite emptyLaneStartMs or pending due hangs the same way
+  // (NaN due never breaks the loop, respawns NaN forever) - upstream
+  // pins bound every persisted timestamp at |x| < 2^52 (admission),
+  // this guard mirrors the mechanism's own 2^53 line for non-save
+  // feeds.
+  // r20-AUT: the ordering pin too - a reversed/zero span
+  // (completesAtMs <= startedAtMs) computes headCost = 0 and would
+  // grant a free completion per entry; the validator rejects the same
+  // shape upstream (F-A11-4). r20-COR-1/2: magnitude + slots pins -
+  // |stamp| >= 2^53 makes stamp + cycleMs absorb back into stamp in
+  // float64 (ulp/2 > the delta: headCost = 0 forever, dues never reach
+  // nowMs - an unbounded settle loop a crafted deep-past lastSavedAt
+  // could reach through the window start, and the same absorb can sit
+  // inside a crafted pending pair at mechanism level), and a bad
+  // slots makes the seed loop push lanes without bound. r21-INT-01:
+  // slots must be a bounded non-negative integer - 1e9 finite still
+  // pushes to OOM, and a fractional count over-seeds a lane. Honest
+  // stamps are epoch-ms, orders of magnitude inside the exact-integer
+  // domain. Zero-advance result: the in-flight lanes are preserved
+  // untouched (no completions, no respawns, no empty-lane seeding).
   if (
+    // r21-COR-2: nowMs is a timestamp too - a finite but huge clock
+    // (1e300) puts every due in the past and runs the same unbounded
+    // settle loop the stamp pin closes.
     !Number.isFinite(nowMs) ||
-    (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs))
+    // r30-AUT-3: clocks live in [0, 2^52) - the persisted timestamp
+    // domain. The +cycleMs headroom keeps every minted due inside it:
+    // a clock within cycleMs of the bound would seed a due the next
+    // save write self-refuses (wedge). A negative clock parks every
+    // due anyway, so deny here for uniform seams.
+    nowMs < 0 ||
+    !(nowMs + mintedSpanMs < 2 ** 52) ||
+    !Number.isInteger(slots) || slots < 0 || slots > 65_536 ||
+    (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs)) ||
+    // r31-COR-F-WIN-ASYM/F-HEADROOM: the window start is a persisted
+    // clock AND the seed origin - it needs the same [0, 2^52) domain as
+    // offlineSinceMs plus the +cycleMs headroom so seeded dues
+    // (emptyLaneStartMs + cycleMs) stay inside the persisted bound.
+    (params.emptyLaneStartMs !== undefined &&
+      (!Number.isFinite(params.emptyLaneStartMs) ||
+        params.emptyLaneStartMs < 0 ||
+        !(params.emptyLaneStartMs + mintedSpanMs < 2 ** 52))) ||
+    // r31-COR-F-NEG-MINT: pending stamps live in [0, 2^52) - a negative
+    // due is already-past and settles/mints on this call.
+    params.pending.some(
+      (cycle) =>
+        !Number.isFinite(cycle.completesAtMs) ||
+        !Number.isFinite(cycle.startedAtMs) ||
+        cycle.completesAtMs <= cycle.startedAtMs ||
+        cycle.completesAtMs < 0 ||
+        cycle.completesAtMs >= 2 ** 52 ||
+        cycle.startedAtMs < 0 ||
+        cycle.startedAtMs >= 2 ** 52,
+    )
   ) {
     return {
       completed: [],
       pending: [...params.pending],
       forfeited: 0,
       consumedBudgetMs: 0,
+      seededPending: [],
     }
   }
 
@@ -135,6 +227,7 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
       lanes.push({
         startMs: params.emptyLaneStartMs,
         dueMs: params.emptyLaneStartMs + cycleMs,
+        seeded: true,
       })
     }
 
@@ -156,13 +249,57 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
       break
     }
 
+    // r17-AUT-1 + r18-COR-2: once this due AND every successor can't be
+    // paid, the rest of the chain forfeits anyway - jump it to its
+    // post-window head in O(1) instead of walking one completion per
+    // iteration. Successors always cost cycleMs, so the jump arms when
+    // the head's cost exceeds the budget leftover AND cycleMs does too
+    // (a leftover in (0, cycleMs) walks the same unbounded forfeits as
+    // an exhausted one - the r17 guard's <= 0 missed that arm). A
+    // crafted deep-past seed/deadline (e.g. lastSavedAt = 0 or a
+    // completesAtMs far below the window) otherwise spins ~1e10 no-op
+    // forfeits here on every boot - the same class DecomposeSystem
+    // bounds with its settle cap. An affordable saved head (cost <=
+    // budgetLeft) still completes first through the normal path; its
+    // cycleMs-priced successor then jumps.
+    const headCostMs = Math.max(0, lane.dueMs - lane.startMs)
+    if (hasBudget && cycleMs > 0 && headCostMs > budgetLeftMs && cycleMs > budgetLeftMs) {
+      const skippedDues = Math.floor((nowMs - lane.dueMs) / cycleMs) + 1
+      const lastDueMs = lane.dueMs + (skippedDues - 1) * cycleMs
+
+      lanes.shift()
+      inFlight -= 1
+
+      // Same slot rule as the per-iteration path: the chain continues
+      // only while the lane still holds a slot (inFlight < slots);
+      // oversubscribed lanes die with their forfeited dues. Forfeit
+      // parity: the walk counts every due while the chain survives,
+      // but only the head's forfeit before a dead lane ends.
+      if (params.advanceMode === 'deadline' && canSpawn && inFlight < slots) {
+        forfeited += skippedDues
+        inFlight += 1
+        lane.saved = undefined
+        lane.startMs = lastDueMs
+        lane.dueMs = lastDueMs + cycleMs
+
+        let index = 0
+        while (index < lanes.length && lanes[index]!.dueMs <= lane.dueMs) {
+          index += 1
+        }
+        lanes.splice(index, 0, lane)
+      } else {
+        forfeited += 1
+      }
+      continue
+    }
+
     lanes.shift()
 
     inFlight -= 1
 
     // A completion costs its own full duration (saved cycles use their
     // snapshot duration; spawned cycles always span exactly cycleMs).
-    const costMs = Math.max(0, lane.dueMs - lane.startMs)
+    const costMs = headCostMs
 
     if (!hasBudget || costMs <= budgetLeftMs) {
       budgetLeftMs -= costMs
@@ -180,7 +317,11 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
       // completion instant and keeps its slot.
       inFlight += 1
 
-      const next: LaneCursor = { startMs: lane.dueMs, dueMs: lane.dueMs + cycleMs }
+      const next: LaneCursor = {
+        startMs: lane.dueMs,
+        dueMs: lane.dueMs + cycleMs,
+        seeded: lane.seeded,
+      }
 
       let index = 0
 
@@ -199,9 +340,14 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
     buildProductionCycle(siteId, collectionRealmId, siteLevel, baseSeconds, lane.startMs, params.rng),
   )
 
+  const seededPending = pending.filter(
+    (_, index) => lanes[index]!.seeded === true,
+  )
+
   return {
     completed,
     pending,
+    seededPending,
     forfeited,
     consumedBudgetMs: hasBudget ? Math.max(0, params.budgetMs ?? 0) - budgetLeftMs : 0,
   }

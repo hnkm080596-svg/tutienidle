@@ -144,10 +144,30 @@ export class QuestManager {
    * copy: the payload is a value, so mutating it afterwards must not
    * leak into live state (A3).
    */
-  restore(state: QuestManagerState): void {
+  restore(state: QuestManagerState, nowMs: number = Date.now()): void {
     // Mission A3 defense-in-depth: normalize instead of trusting the
     // declared shape - a payload that bypassed the validator (active as
     // a string, non-finite reset marker) must not crash consumers.
+    // r11-AUT: a crafted FUTURE reset stamp freezes the daily reset
+    // forever (dayBucket(now) <= dayBucket(future) always). Clamp to
+    // now - the honest direction ("just reset") denies the exploit,
+    // unlike 0 which would grant a free reset. r16-INT-04: the clamp
+    // reads the FIELD's own epoch - callers pass Date.now() (the stamp
+    // lives in the payload clock; a server anchor would drag an honest
+    // same-day marker a full skew back and refire the daily reset).
+    // r29-COR-F1: only clamp under a sane clock - a non-finite nowMs
+    // collapses min() to NaN and poisons the marker into a write-gate
+    // wedge (-Infinity would drag it deep-past and refire the reset).
+    // Bad clock -> verbatim stamp: a crafted-future marker stays frozen
+    // (deny). r30-AUT-3: same [0, 2^52) domain as the sibling restore
+    // clocks - a negative or out-of-domain restoreNowMs keeps verbatim.
+    let lastDailyResetAtMs = 0
+    if (Number.isFinite(state.lastDailyResetAtMs) && state.lastDailyResetAtMs >= 0) {
+      lastDailyResetAtMs =
+        Number.isFinite(nowMs) && nowMs >= 0 && nowMs < 2 ** 52
+          ? Math.min(state.lastDailyResetAtMs, nowMs)
+          : state.lastDailyResetAtMs
+    }
     this.state = {
       // Canonicalize to the declared element shape - a bypassed payload
       // carrying extra keys must not self-replicate into future saves
@@ -178,14 +198,7 @@ export class QuestManager {
         ? [...new Set(state.completedOnceIds.filter((id) => typeof id === 'string'))]
         : [],
 
-      lastDailyResetAtMs:
-        Number.isFinite(state.lastDailyResetAtMs) && state.lastDailyResetAtMs >= 0
-          // r11-AUT: a crafted FUTURE reset stamp freezes the daily
-          // reset forever (dayBucket(now) <= dayBucket(future) always).
-          // Clamp to now - the honest direction ("just reset") denies
-          // the exploit, unlike 0 which would grant a free reset.
-          ? Math.min(state.lastDailyResetAtMs, Date.now())
-          : 0,
+      lastDailyResetAtMs,
 
       // Same normalize contract as completedOnceIds - type-filter plus
       // dedup so a bypassed payload cannot self-replicate flag rows.

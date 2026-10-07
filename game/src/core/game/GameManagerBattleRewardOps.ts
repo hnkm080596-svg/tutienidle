@@ -142,6 +142,22 @@ export class GameManagerBattleRewardOps {
         this.deps.stageWaves.stopRepeat()
       }
 
+      // r38-AUT-3 - snapshot the stage binding BEFORE the emit: a
+      // battle_end listener that synchronously mints a new battle
+      // rebinds getActiveStage() mid-function, so post-emit reads must
+      // credit the stage THIS battle finished (a fresh mint would drop
+      // the writes entirely; a stage mint would attribute them to the
+      // new stage).
+      const stageSnapshot = this.deps.getActiveStage()
+
+      // r39-COR-2 - the same rebind hits the TIMER binding: a fresh mint
+      // nulls turnBattleStartedAtMs and a stage mint restamps it, so a
+      // post-emit getStartedAtMs() read wrote clearSeconds=0 - a
+      // permanent first-record that also locks the stage out of
+      // autofarm forever (isValidCycleSeconds rejects 0). Snapshot the
+      // start stamp alongside the stage so the record stays honest.
+      const startedAtMsSnapshot = this.deps.getStartedAtMs()
+
       // ARCH-014 (M12) - publish the terminal fact for EVERY outcome,
       // not just victory: natural defeat used to set the once-flag
       // without emitting, so audio/scene/cache consumers never ran on a
@@ -155,11 +171,11 @@ export class GameManagerBattleRewardOps {
         // cycle from re-paying the same buffer next victory.
         this.deps.battleLoot.settleTechniqueMastery(turnBattle.players[0]?.entity.id)
 
-        this.recordPerfectClearIfEligible(turnBattle)
+        this.recordPerfectClearIfEligible(turnBattle, stageSnapshot, startedAtMsSnapshot)
 
         // Stage completion: push completedStageIds exactly once per stage
         // (auto-repeat still pushes - the player did complete the stage).
-        const stage = this.deps.getActiveStage()
+        const stage = stageSnapshot
 
         if (
           playerData &&
@@ -189,8 +205,15 @@ export class GameManagerBattleRewardOps {
    * battle). Records perfectClearStageIds + perfectClearSeconds ONCE -
    * the first achievement is never overwritten (B4).
    */
-  private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
-    const stage = this.deps.getActiveStage()
+  private recordPerfectClearIfEligible(
+    turnBattle: TurnBattle,
+    // r38-AUT-3 - the caller snapshots the stage binding before the
+    // battle_end emit so a mid-emit re-mint cannot rebind the credit.
+    stage = this.deps.getActiveStage(),
+    // r39-COR-2 - same snapshot for the timer binding (a mid-emit mint
+    // would otherwise turn this into a permanent 0-second record).
+    startedAtMs = this.deps.getStartedAtMs(),
+  ) {
     const player = this.deps.getPlayerData()
 
     if (!stage || !player || stage.perfectClearTurnLimit === undefined) {
@@ -211,8 +234,7 @@ export class GameManagerBattleRewardOps {
       return
     }
 
-    const startedAtMs = this.deps.getStartedAtMs() ?? Date.now()
-    const clearSeconds = Math.max(0, (Date.now() - startedAtMs) / 1000)
+    const clearSeconds = Math.max(0, (Date.now() - (startedAtMs ?? Date.now())) / 1000)
 
     player.perfectClearStageIds.push(stage.id)
     player.perfectClearSeconds[stage.id] = clearSeconds

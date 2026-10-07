@@ -622,15 +622,17 @@ describe('tribulation lifecycle + restore', () => {
     expect(result.ok).toBe(false)
   })
 
-  it('F-LC-1b (restore mint demo): the forged cooldown WOULD wedge start() forever', () => {
+  it('F-LC-1b (restore mint closed): the forged cooldown clamps at the authored bound', () => {
     const director = new TribulationDirector({ eventBus: new EventBus() })
     director.restoreRuntime({ cooldownUntil: 9e15 })
 
-    // Mint demo: the envelope bound in F-LC-1a is load-bearing - the
-    // same payload restored verbatim would wedge the cooldown at
-    // ~9e12s, far past the authored 300s.
+    // r-fixed: restoreRuntime now clamps the stamped marker at the
+    // authored bound - the wedge class F-LC-1 demoed no longer exists.
+    // The cooldown is still active (deny-lean) but bounded to authored
+    // seconds, so it expires instead of blocking start() forever.
     const seconds = director.getCooldownSeconds()
-    expect(seconds).toBeGreaterThan(TRIBULATION_COOLDOWN_SECONDS)
+    expect(seconds).toBeLessThanOrEqual(TRIBULATION_COOLDOWN_SECONDS)
+    expect(seconds).toBeGreaterThan(0)
   })
 
   it('F-LC-1c (DEFECT consequence): the wedged director blocks an eligible start', () => {

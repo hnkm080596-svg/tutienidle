@@ -1,5 +1,6 @@
 import type { GameSave } from '../save/SaveSystem'
 import type { CloudSaveCapability, CloudSaveLoadResult, CloudSaveResetResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
+import { validateGameSaveShape } from '../save/saveShapeValidation'
 
 interface QueuedSave {
   /** Callers that arrived while a write was in flight all resolve with
@@ -138,6 +139,61 @@ export class CloudSaveCoordinator {
   }
 
   private async driveSave(snapshot: GameSave, generation: number): Promise<CloudSaveWriteResult> {
+    // r25-INT-01 / r25-AUT-2: the outgoing payload must pass the SAME
+    // shape admission the local boot gate (loadGame) applies before it
+    // may overwrite a healthy slot - the import gate already enforces
+    // this law for foreign payloads ("a file the boot restore would
+    // reject must not overwrite a healthy save slot"), and the game's
+    // own writer is bound by it too. A save carrying post-dated stamps
+    // (written under a skewed clock or synced from another machine)
+    // restores its deadline channels verbatim, so the next write would
+    // stamp a fresh now-lastSavedAt beneath them and brick its own
+    // slot on the following boot. Fail the write instead: the healthy
+    // slot survives on both local and remote tiers (bounded deny, never
+    // a grant). The refuse is code SAVE_INVALID + non-retryable on
+    // purpose (r26-INT-01): the same in-memory state rebuilds the same
+    // failing payload deterministically - post-dated entries do not
+    // leave the state until wall time reaches them - so 'retryable'
+    // would only mean 'try again with bytes that refuse identically'.
+    // The data-class code arms the DATA_REFUSE recovery surface
+    // (export the refused snapshot, remote reset) instead of looping
+    // generic failures forever.
+    // NOTE: the gate is validateGameSaveShape only - NOT the stricter
+    // isSaveAcceptable foreign-payload surface. A pre-creation-pick
+    // autosave is shape-valid and loadGame-legal; requiring acceptance
+    // here would block legitimate early writes.
+    // The gate runs on the WIRE form (JSON round-trip): the boot path
+    // admits the parsed payload, not the in-memory object, and values
+    // that serialize differently (NaN -> null, dropped undefined) must
+    // be judged on what actually lands in storage.
+    let wire: unknown
+    try {
+      wire = JSON.parse(JSON.stringify(snapshot))
+    } catch {
+      console.warn('[cloudSave] refusing to commit an unserializable payload')
+      return {
+        status: 'unavailable',
+        message: 'save không serialize được - giữ nguyên slot hiện tại',
+        retryable: false,
+        code: 'SAVE_INVALID',
+        detail: 'OUTGOING_UNSERIALIZABLE',
+      }
+    }
+    const outgoing = validateGameSaveShape(wire)
+    if (!outgoing.ok) {
+      console.warn(
+        '[cloudSave] refusing to commit a payload that fails admission:',
+        outgoing.issues,
+      )
+      return {
+        status: 'unavailable',
+        message: 'save tự vi phạm cổng nhận - giữ nguyên slot hiện tại',
+        retryable: false,
+        code: 'SAVE_INVALID',
+        detail: 'OUTGOING_ADMISSION_REJECTED',
+      }
+    }
+
     const result = await this.service.save(snapshot, this.revision)
 
     if (result.status === 'ok') {

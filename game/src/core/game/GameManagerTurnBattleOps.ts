@@ -235,6 +235,33 @@ export class GameManagerTurnBattleOps {
   private detachTokenListener: (() => void) | null = null
 
   /**
+   * r39 adjudication - reasons parked between a battle-boundary stop()
+   * and the next mint's step-7 carry. stop() atomically erases the
+   * clock's reason set (spec sec.8), but the latch's OWNER still
+   * believes it is armed: its resumer can never fire for a latch that
+   * no longer exists (r39-AUT-2/INT-3). Terminal paths park the armed
+   * set first; the next mint adjudicates it through the same filter a
+   * live latch sees. resumeCombat deletes parked entries, and
+   * discardStaleBattle clears the whole park - the dead character's
+   * latch dies with its bindings (r34-COR-F1).
+   */
+  private readonly parkedFreezeReasons = new Set<FreezeReason>()
+
+  /**
+   * r39 adjudication - per-reason owner truth. An owned reason may be
+   * armed only while its registered owner says it holds the state, and
+   * released only while it does not: a foreign plant through a
+   * synchronous emit listener dies at the latch instead of wedging the
+   * clock behind a reason with no resumer (r39-COR-1/AUT-1). Owners:
+   * useAppLifecycle (authority-pause), useCombatPause (tab-hidden),
+   * CombatTopBar (user-pause). 'turn-in-flight' is intrinsically owned
+   * by the turn token; 'not-revealed' is re-derived by
+   * syncOffScreenFreeze. An unregistered owned reason stays open -
+   * headless/test callers act as the owner themselves.
+   */
+  private readonly freezeLatchTruth = new Map<FreezeReason, () => boolean>()
+
+  /**
    * 9.5 #9 -- engine-side cast notification, filtered to the primary
    * player. The engine reports every committed cast (enemy, companion,
    * player); only players[0] writes into the skillCastCounts mirror
@@ -273,12 +300,42 @@ export class GameManagerTurnBattleOps {
   private pendingStepTimers: Array<ReturnType<typeof setTimeout>> = []
 
   /**
+   * Epoch of the parked-step bookkeeping. Bumped by clearPendingSteps:
+   * clearTimeout cannot recall a timer callback already dequeued into the
+   * task queue, so a fallback armed in an older epoch must no-op before
+   * touching the new cycle's map (r36-AUT-2).
+   */
+  private pendingStepGeneration = 0
+
+  /**
    * Commands arrive on wall-clock time; battle state changes on turn
    * boundaries. Queueing them gives exactly one instant at which combat state
    * may change from outside, and at that instant no action is in flight
    * (spec section 9).
    */
   private boundaryQueue: Array<() => void> = []
+
+  /**
+   * Latest manual-mode toggle the USER requested (session-scoped intent).
+   * The boundary queue is battle-scoped and dropped undrained at
+   * combat-over/teardown; this slot survives the drop so the toggle still
+   * lands - see dropBoundaryQueue (r37-AUT-1).
+   */
+  private pendingManualMode: boolean | null = null
+
+  /**
+   * Discard every queued boundary command (combat-over, cycle teardown).
+   * Battle-scoped commands die with their battle - but a session-scoped
+   * intent (the manual-mode toggle) must not die with them: re-land the
+   * latest requested value on the runtime flag before dropping.
+   */
+  private dropBoundaryQueue(): void {
+    if (this.pendingManualMode !== null) {
+      this.presentationOps.runtime.setBattleManualMode(this.pendingManualMode)
+      this.pendingManualMode = null
+    }
+    this.boundaryQueue = []
+  }
 
   constructor(private readonly deps: {
     eventBus: EventBus
@@ -394,6 +451,13 @@ export class GameManagerTurnBattleOps {
    */
   setCombatClockSource(source: ClockSource): void {
     const wasRunning = this.combatClock.getState() !== 'stopped'
+    // Same stop()+start() class as beginBattleCycle step 7: the new
+    // CombatClock instance starts with an empty reason set, so every
+    // latch the SAME battle lives under must be carried verbatim -
+    // including 'turn-in-flight' (the token listener only re-binds; it
+    // does not re-claim) - or a mid-turn source swap would unlatch the
+    // clock and ungate the wall-clock fallback (r36-COR-2/INT-4).
+    const latchedReasons = this.combatClock.getFreezeReasons()
 
     this.combatClock.stop()
     this.detachClockStep?.()
@@ -403,15 +467,100 @@ export class GameManagerTurnBattleOps {
 
     if (wasRunning) {
       this.combatClock.start()
+      for (const reason of latchedReasons) {
+        // r37-COR-4 - 'turn-in-flight' is only coherent while the token
+        // is claimed: a foreign latch on an IDLE token can never be
+        // resumed (no transition fires the rebound listener, no claim
+        // ever runs) and would freeze the new instance permanently.
+        if (reason === 'turn-in-flight' && this.turnToken.getState() === 'IDLE') {
+          continue
+        }
+        this.combatClock.freeze(reason)
+      }
       this.syncOffScreenFreeze()
     }
   }
 
+  /**
+   * A reason's owner registers its own truth: the latch then accepts an
+   * arm only while the owner says it holds the state, and a release
+   * only while it does not. Registration is by reference - the returned
+   * unregister removes only that exact registration.
+   */
+  registerFreezeLatchTruth(reason: FreezeReason, isHeld: () => boolean): () => void {
+    this.freezeLatchTruth.set(reason, isHeld)
+
+    return () => {
+      if (this.freezeLatchTruth.get(reason) === isHeld) {
+        this.freezeLatchTruth.delete(reason)
+      }
+    }
+  }
+
+  /**
+   * 'turn-in-flight' is only coherent while the token is claimed - a
+   * plant on an IDLE token can never be resumed, so it is refused at
+   * the latch wherever it is attempted (the step-7 carry strip heals
+   * carries; this closes the live-clock sibling at both emit sites).
+   */
+  private isFreezeArmable(reason: FreezeReason): boolean {
+    if (reason === 'turn-in-flight') {
+      return this.turnToken.getState() !== 'IDLE'
+    }
+
+    const isHeld = this.freezeLatchTruth.get(reason)
+    return isHeld === undefined || isHeld()
+  }
+
+  private isFreezeReleasable(reason: FreezeReason): boolean {
+    if (reason === 'turn-in-flight') {
+      return this.turnToken.getState() === 'IDLE'
+    }
+
+    const isHeld = this.freezeLatchTruth.get(reason)
+    return isHeld === undefined || !isHeld()
+  }
+
+  /**
+   * Terminal teardown must not erase the owner's latch silently: park
+   * the armed set so the next mint's step-7 carry adjudicates each
+   * reason by the same rules as a live latch (r39-AUT-2 - settle,
+   * abandon and discard used to stop() first and leave the owner
+   * believing it still held the latch).
+   */
+  private parkFreezeReasonsBeforeStop(): void {
+    for (const reason of this.combatClock.getFreezeReasons()) {
+      this.parkedFreezeReasons.add(reason)
+    }
+  }
+
   freezeCombat(reason: FreezeReason): void {
+    if (!this.isFreezeArmable(reason)) {
+      return
+    }
+
+    // A stopped clock cannot hold a latch - but the owner's claim still
+    // exists (its resumer will fire later, never for a silently dropped
+    // latch). Park it so the next mint's step-7 carry adjudicates it
+    // like any boundary survivor.
+    if (this.combatClock.getState() === 'stopped') {
+      this.parkedFreezeReasons.add(reason)
+      return
+    }
+
     this.combatClock.freeze(reason)
   }
 
   resumeCombat(reason: FreezeReason): void {
+    // The owner released the reason wherever it currently lives - an
+    // entry awaiting carry dies too (the boot post-admission unlatch
+    // relies on this: discardStaleBattle may have parked it).
+    this.parkedFreezeReasons.delete(reason)
+
+    if (!this.isFreezeReleasable(reason)) {
+      return
+    }
+
     this.combatClock.resume(reason)
   }
 
@@ -623,7 +772,13 @@ export class GameManagerTurnBattleOps {
       return
     }
 
-    if (this.turnToken.getState() === 'IDLE') {
+    // r38-COR-2 - the IDLE-window inline run must yield to a pending
+    // queue: a command arriving while earlier ones still wait for the
+    // fighting-branch drain would otherwise overtake them (later-inline
+    // runs first, then the drained older one lands LAST - a rapid
+    // double-toggle ends with the first intent on the flag, not the
+    // last). Only an empty queue is truly "at a boundary".
+    if (this.turnToken.getState() === 'IDLE' && this.boundaryQueue.length === 0) {
       command()
       return
     }
@@ -653,7 +808,15 @@ export class GameManagerTurnBattleOps {
     this.boundaryQueue = []
 
     for (const command of queued) {
-      command()
+      // r38-COR-6 - the queue is already emptied above, so a throwing
+      // command would silently drop every trailing entry. Land each
+      // command independently; a pendingManualMode slot dropped with the
+      // batch still re-lands at the next dropBoundaryQueue.
+      try {
+        command()
+      } catch (error) {
+        console.warn('[TurnBattle] boundary command threw - continuing drain', error)
+      }
     }
   }
 
@@ -812,9 +975,78 @@ export class GameManagerTurnBattleOps {
    */
   private awaitStep(signal: TurnStepSignal, done: () => void): void {
     let deferredMs = 0
+    const generationAtArm = this.pendingStepGeneration
     const fallback = () => {
+      // r36-AUT-2 - clearTimeout cannot recall a callback already
+      // dequeued into the task queue: an old-cycle fallback firing now
+      // would wipe the NEW cycle's parked settle and drive its declare
+      // early via the live token. Bail before touching the new map.
+      if (generationAtArm !== this.pendingStepGeneration) {
+        return
+      }
+      // r37-COR-2 - same-epoch but already settled: the ACK channel (or
+      // an earlier same-generation fire) consumed this step's parked
+      // settle while this callback sat in the task queue. Bail before the
+      // retired-handle splice below re-arms a live timer for a step that
+      // no longer exists - an orphan chain re-firing every fallback
+      // interval until the next clearPendingSteps.
+      if (this.pendingStepDone[signal] === undefined) {
+        return
+      }
+      // r38-COR-3/AUT-4 - the fallback fired, so this timer handle is
+      // dead on EVERY arm below (dead-battle drop, admin-latch re-arm,
+      // isBlocking deferral, cap-drain, drive). Retire it once here so
+      // pendingStepTimers holds live handles only no matter which arm
+      // runs; the re-arm paths push their replacement handle below.
+      const firedIdx = this.pendingStepTimers.indexOf(timer)
+      if (firedIdx !== -1) {
+        this.pendingStepTimers.splice(firedIdx, 1)
+      }
+      // r35-AUT-1 - the fallback is a wall-clock channel that would
+      // otherwise bypass the CombatClock latch entirely: a ghost parked
+      // mid-turn kept draining on setTimeout while the boot awaited, and
+      // its mints landed on whichever character the rebound $state now
+      // owns. A dead/terminal battle drops its parked work; an
+      // ADMINISTRATIVELY latched clock (authority-pause, user-pause,
+      // tab-hidden) parks this channel until released. Scope honesty
+      // (r36-AUT-1): the gate covers THIS wall-clock channel only - the
+      // renderer-ACK channel (acknowledge*) still drains the CLAIMED
+      // turn under a latch by design (finish-the-swing semantics: it
+      // gates on isSessionBlocking + token, bounded to the in-flight
+      // turn's residual work, and ghosts die via the drop above or the
+      // admission discard). 'turn-in-flight' and 'not-revealed' are
+      // exempt - the battle pipeline's own latches: the fallback exists
+      // to unblock the first, and the deferral arm below owns the second
+      // (its cap-drain exists precisely to complete turns whose held
+      // session never releases).
+      const liveBattle = this.turnBattle
+      if (
+        liveBattle === null ||
+        liveBattle.state === 'victory' ||
+        liveBattle.state === 'defeat' ||
+        this.combatClock.getState() === 'stopped'
+      ) {
+        this.pendingStepDone[signal] = undefined
+        return
+      }
+      if (
+        this.combatClock
+          .getFreezeReasons()
+          .some((reason) => reason !== 'turn-in-flight' && reason !== 'not-revealed')
+      ) {
+        // r36-COR-1/INT-3 - a parked-forever latch would otherwise append
+        // one dead handle per fire (~21k entries/day on a wedged zombie):
+        // the fired handle was retired above; push only the re-arm.
+        timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
+        this.pendingStepTimers.push(timer)
+        return
+      }
       if (this.presentationOps.session.isBlocking()) {
         deferredMs += ANIMATION_FALLBACK_MS
+        // r37-COR-1 - same live-handles-only invariant as the
+        // admin-latch arm above: the fired handle was retired at the top
+        // of the fallback, so re-arm and cap-drain both leave the array
+        // holding live handles only.
         if (deferredMs < AWAIT_STEP_DEFERRAL_CAP_MS) {
           timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
           this.pendingStepTimers.push(timer)
@@ -827,7 +1059,9 @@ export class GameManagerTurnBattleOps {
         // never completes (the turn token would wedge in RESOLVING).
         // Drain the pending playback mechanically instead - the same
         // inline settle the deactivation path performs - so this turn
-        // still runs its work and resolves.
+        // still runs its work and resolves. The parked settle entry stays
+        // armed for the drain's own settle chain to consume (the
+        // completion sink routes through settleStep).
         console.warn(
           `[TurnBattle] step '${signal}' blocked for ${deferredMs}ms - draining pending playback mechanically`,
         )
@@ -855,6 +1089,13 @@ export class GameManagerTurnBattleOps {
 
     this.pendingStepDone[signal] = () => {
       clearTimeout(timer)
+      // r37-COR-1 - an ACK-settled step retires its fallback from the
+      // live-timer array as well, otherwise every settled step leaves
+      // one dead handle behind until the next clearPendingSteps.
+      const deadIdx = this.pendingStepTimers.indexOf(timer)
+      if (deadIdx !== -1) {
+        this.pendingStepTimers.splice(deadIdx, 1)
+      }
       done()
     }
   }
@@ -866,6 +1107,9 @@ export class GameManagerTurnBattleOps {
   }
 
   private clearPendingSteps(): void {
+    // Invalidate fallback closures already queued in the task queue -
+    // clearTimeout below only stops not-yet-fired handles (r36-AUT-2).
+    this.pendingStepGeneration += 1
     for (const timer of this.pendingStepTimers) {
       clearTimeout(timer)
     }
@@ -935,8 +1179,9 @@ export class GameManagerTurnBattleOps {
       // Spec section 9.2: a victory or defeat never passes through
       // abandonBattle, so a command queued in the last turn of THIS battle
       // must be dropped here - draining it at the next boundary would apply
-      // it to whatever battle starts next, not the one it was queued against.
-      this.boundaryQueue = []
+      // it to whatever battle starts next, not the one it was queued
+      // against. Session-scoped intents still re-land via dropBoundaryQueue.
+      this.dropBoundaryQueue()
       this.settleCombatOutcome()
     }
   }
@@ -985,7 +1230,10 @@ export class GameManagerTurnBattleOps {
     }
 
     // Spec section 8: combat-over STOPS the clock. It does not freeze it - the
-    // battle is over and nothing more will advance.
+    // battle is over and nothing more will advance. The armed latch set is
+    // parked first: an owner's resumer still exists and must find the latch
+    // again at the next mint's carry (r39-AUT-2).
+    this.parkFreezeReasonsBeforeStop()
     this.combatClock.stop()
   }
 
@@ -1557,7 +1805,7 @@ export class GameManagerTurnBattleOps {
     this.pipeline.reset()
     this.turnToken.reset()
     this.presentationOps.runtime.resetPendingState()
-    this.boundaryQueue = []
+    this.dropBoundaryQueue()
     this.activeBuild = undefined
     // A live trial torn down by cycle replacement must release its
     // enemies here - the undefeatable beast has no other despawn path,
@@ -1593,6 +1841,38 @@ export class GameManagerTurnBattleOps {
     // by this point (beginBattleCycle terminalizes a non-terminal
     // outgoing battle pre-commit; a repeat's previous was terminal to
     // begin with), so it needs nothing here.
+    this.discardInFlightBattle()
+  }
+
+  /**
+   * r34-COR-F1 - session-boundary teardown. The in-flight battle's owner
+   * is being replaced (a boot that restores a save or creates a new
+   * character rebinds player.$state wholesale), so the stale battle is
+   * dropped WITHOUT a terminal: its bindings point at the very object
+   * the new owner now owns, so a battle_end/banking write would grant
+   * (or debit) the new character. Stopping the clock outright also
+   * clears every latched freeze reason - including an orphaned
+   * 'authority-pause' - so the post-admission unlatch in bootGame can
+   * never resurrect a dead character's battle.
+   */
+  discardStaleBattle(): void {
+    this.discardInFlightBattle()
+    // The dead battle's parked latch dies with its bindings: the
+    // post-admission unlatch in bootGame targets the live clock and can
+    // never reach a parked entry left over from the old owner
+    // (r34-COR-F1). Same-session teardowns keep their park - their
+    // owners' resumers still exist.
+    this.parkedFreezeReasons.clear()
+  }
+
+  /**
+   * Silent teardown shared by discardFailedCycle and discardStaleBattle:
+   * drops the battle reference, the presentation session, the stage
+   * lease, surviving enemies and every per-battle binding - without a
+   * terminal event and without banking carry. Callers decide whether a
+   * terminal was owed (abandon emits one; these two paths never do).
+   */
+  private discardInFlightBattle(): void {
     this.turnBattle = null
 
     const session = this.presentationOps.session.getCurrentSession()
@@ -1613,6 +1893,7 @@ export class GameManagerTurnBattleOps {
     this.deps.combatSystem.setSurviveLethalSession(null)
 
     this.clearCycleEntryState()
+    this.parkFreezeReasonsBeforeStop()
     this.combatClock.stop()
 
     this.activeStageForTurnBattle = null
@@ -1625,6 +1906,13 @@ export class GameManagerTurnBattleOps {
     this.reactionVfxBattle = null
     this.procExecutionCursor = 0
     this.procPresentationBattle = null
+
+    // r35-INT-2 - the battle-local runtime, scheduler and buff registry
+    // are the dead battle's too: leave them mounted and getBattleBuffs
+    // (or any future unguarded reader) would answer dead-entity data.
+    this.turnRuntime = undefined
+    this.battleBuffRegistry = undefined
+    this.combatScheduler = undefined
   }
 
   /**
@@ -1726,6 +2014,16 @@ export class GameManagerTurnBattleOps {
     // 1. Session/pending teardown - BEFORE any new state is built.
     this.clearCycleEntryState()
     this.battleGeneration += 1
+
+    // r38-COR-4/INT-L1 - the enemy registry is battle-scoped too: a
+    // committed mint must start with an empty field. The pre-commit
+    // emitAbandonEnd above publishes 'battle_end' while a listener may
+    // synchronously mint a nested cycle - that mint's spawn registrations
+    // are overwritten by this mint and were permanent orphans; the
+    // outgoing battle's own leftover enemies are swept by the same clear.
+    // clear() is idempotent under the discard/abandon paths that already
+    // ran it.
+    this.deps.enemyManager.clear()
 
     // Commit the cycle's session RNG here so EVERY roll below - spawn
     // placement, enemy-pool picks, engine rolls, combat formulas - reads
@@ -1991,8 +2289,44 @@ export class GameManagerTurnBattleOps {
     // 7. A fresh battle owns a fresh clock run. stop() before start()
     // matters - the previous battle may have stopped the clock at
     // combat-over, and stop() is what clears the stale freeze reasons.
+    // The LATCHED reasons come back though: every freeze reason is owned
+    // by whoever set it (authority, user, visibility), and a per-battle
+    // restart has no authority to unlatch it - r35-AUT-2 had a ghost
+    // victory erase 'authority-pause' here and re-run the clock behind
+    // the failed-boot error surface forever. An unlatched restart is
+    // behavior-identical to before (empty set -> running). 'user-pause'
+    // is the exception: its owner is battle-scoped - CombatTopBar resets
+    // userPaused on the battle-identity change WITHOUT resuming - so
+    // carrying it would strand the new battle frozen behind a button
+    // that claims unpaused (r36-INT-1). It dies with the old battle,
+    // which is exactly the pre-carry semantics the UI already assumes.
+    // The carry sees every latch still standing - the live set plus any
+    // reasons a terminal stop() parked (settle/abandon/discard before
+    // this mint). Each is adjudicated by the same filter below.
+    const latchedReasons = [
+      ...new Set([
+        ...this.combatClock.getFreezeReasons(),
+        ...this.parkedFreezeReasons,
+      ]),
+    ].filter(
+      (reason) =>
+        // 'turn-in-flight' gets the same IDLE-token strip as the
+        // source-swap arm (r38-COR-5/AUT-1): the token was reset to
+        // IDLE inside clearCycleEntryState earlier in this block, so a
+        // 'turn-in-flight' in this snapshot is foreign by definition -
+        // a plant through the synchronous presentation_session_started
+        // emit window would re-freeze verbatim and wedge the fresh
+        // clock permanently (only the token listener clears that
+        // reason, and a frozen token never transitions).
+        reason !== 'user-pause' &&
+        !(reason === 'turn-in-flight' && this.turnToken.getState() === 'IDLE'),
+    )
+    this.parkedFreezeReasons.clear()
     this.combatClock.stop()
     this.combatClock.start()
+    for (const reason of latchedReasons) {
+      this.combatClock.freeze(reason)
+    }
     this.syncOffScreenFreeze()
   }
 
@@ -2433,12 +2767,6 @@ export class GameManagerTurnBattleOps {
       this.deps.bankPassiveCarry(this.playerDataForTurnBattle)
     }
 
-    // ARCH-014 (M12) -- ONE terminal publisher: rewardOps owns every
-    // 'battle_end' emission (victory, natural defeat, abandon). The shared
-    // once-guard both publishes and stamps the flag, so a duplicate
-    // terminal can never slip through if the clock were ever restarted.
-    this.rewardOps.emitAbandonEnd()
-
     // Audit fix 2026-08-31 - surviving enemies + pending spawns are dropped
     // without a victory flow; clear here exactly where the battle is
     // destroyed (StageWave auto-repeat spawns the next battle right after
@@ -2450,7 +2778,19 @@ export class GameManagerTurnBattleOps {
     // this battle (spec section 9.2). Same teardown block beginBattleCycle
     // runs on entry - the pending-clear cannot drift.
     this.clearCycleEntryState()
+    this.parkFreezeReasonsBeforeStop()
     this.combatClock.stop()
+
+    // ARCH-014 (M12) -- ONE terminal publisher: rewardOps owns every
+    // 'battle_end' emission (victory, natural defeat, abandon). The shared
+    // once-guard both publishes and stamps the flag, so a duplicate
+    // terminal can never slip through if the clock were ever restarted.
+    // Emit AFTER the teardown tail (r37-COR-3): a synchronous
+    // battle-start inside a subscriber mid-emit would otherwise mint a
+    // cycle this tail then tears down - a stopped-clock zombie nobody
+    // owns. Subscribers consume the event payload, not the live battle
+    // reference, so no live turnBattle is required at emit time.
+    this.rewardOps.emitAbandonEnd()
 
     return true
   }
@@ -2494,6 +2834,13 @@ export class GameManagerTurnBattleOps {
   setBattleManualMode(enabled: boolean): void {
     const stranded = enabled ? null : this.presentationOps.runtime.getAwaitedManualActor()
 
+    // The session-scoped pending intent is recorded BEFORE the rescue runs:
+    // beginTurnPipeline below can settle a whole turn inline and reach
+    // COMBAT_OVER synchronously, and dropBoundaryQueue inside that path must
+    // re-land THIS call's intent - not the previous toggle's stale value
+    // (r38-AUT-2).
+    this.pendingManualMode = enabled
+
     // Turning manual off mid-wait must not strand the token in AWAITING_INPUT
     // - that would freeze the clock for the rest of the battle waiting for a
     // choice the UI no longer offers. The claimed turn becomes an auto turn.
@@ -2518,8 +2865,19 @@ export class GameManagerTurnBattleOps {
       this.beginTurnPipeline(stranded, 'ready')
     }
 
+    // The flag flip is boundary-queued like every external command: it
+    // must not affect the turn already resolving (spec section 9.1) -
+    // acknowledgeTurnReady reads the LIVE flag when routing a claimed
+    // actor into the manual pause, so an immediate flip could hijack an
+    // in-flight auto turn into AWAITING_INPUT. The battle-scoped queue
+    // is still cleared undrained at combat-over/teardown though, so the
+    // session-scoped pending intent (recorded at the top of this method)
+    // mirrors the toggle: dropBoundaryQueue re-lands the latest requested
+    // value before discarding (r37-AUT-1 - a terminal-turn toggle no
+    // longer dies silently with the queue).
     this.enqueueAtTurnBoundary(() => {
       this.presentationOps.runtime.setBattleManualMode(enabled)
+      this.pendingManualMode = null // landed through the normal boundary path
     })
   }
 

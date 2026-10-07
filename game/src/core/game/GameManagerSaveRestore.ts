@@ -24,7 +24,7 @@ import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import { applyAllBodyModifiers } from '../realm/body/BodyProgressionSystem'
 import type { StatModifier } from '../stats/StatCalculator'
-import { computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
+import { computeRestoreIdentity, restoreAuthorityNowMs, sanitizeRestoreAuthority, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
 import { assertSaveAcceptable } from '../../services/save/saveAcceptance'
 import { NotificationQueue } from './NotificationQueue'
 import { calculateOfflineTime } from '../idle/GameClock'
@@ -151,6 +151,11 @@ export class GameManagerSaveRestore {
     // return the already-current modifiers. A genuinely different payload
     // (even sharing lastSavedAt|cultivation) always runs the full restore.
     const payloadIdentity = computeRestoreIdentity(save)
+
+    // r23-AUT: authority stamps bypass the save gate - an out-of-domain
+    // server stamp falls back to client-clock semantics (bounded deny)
+    // instead of feeding derivations.
+    const authority = sanitizeRestoreAuthority(timeAuthority)
 
     if (payloadIdentity === this.lastAppliedPayloadHash) {
       return this.deps.equipmentSystem.getModifiers()
@@ -341,13 +346,44 @@ export class GameManagerSaveRestore {
       }
     }
 
+    const authorityNowMs = restoreAuthorityNowMs(authority)
+
+    // r26 (COR-1/AUT-1) + r27-COR-1 - persisted deadline stamps live in
+    // the SAVE's own epoch (every began-time is pinned <= lastSavedAt at
+    // admission, every deadline <= marker + authored span), so the
+    // re-domain bound is min(the payload's marker, device now) - an
+    // honest stamp can never exceed it, while a uniformly +Delta
+    // shifted payload always carries stamps past device-now. The
+    // authority stamp deliberately does NOT participate: a formally
+    // valid but corrupt-LOW authority (e.g. seconds-for-millis
+    // serverTimeUtc) must only deny accrual, never re-anchor honest
+    // stamps downward into instant-completion grants. Feeds the
+    // deadline-channel clamps below (workerCycles, decompose,
+    // alchemyJobs, tribulation).
+    const restoreClockMs = Math.min(
+      Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : Date.now(),
+      Date.now(),
+    )
+
+    // r16-INT-04: the reset marker lives in the FIELD's epoch -
+    // checkAndResetDaily/resetDaily read and write it against
+    // Date.now(). A server-epoch clamp stamp on a fast clock lands a
+    // day behind the client's bucket, so the daily reset refires right
+    // after restore: unclaimed progress is wiped and claimed dailies
+    // re-arm (one replay per boot). Clamping against Date.now() keeps
+    // the r11-AUT freeze guard (future stamps still die) in the epoch
+    // the field's readers use.
     this.deps.questManager.restore(
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
+      Date.now(),
     )
 
     // Production (plan S4.3) - restore state + offline settle tuan tu
     // trong cap; MOI auto-cycle mot seed/roll rieng.
-    this.deps.productionSystem.restoreStates((save.productionSites ?? []) as ProductionSiteState[])
+    this.deps.productionSystem.restoreStates(
+      (save.productionSites ?? []) as ProductionSiteState[],
+      restoreClockMs,
+    )
 
     for (const definition of this.deps.productionSystem.getSiteDefinitions()) {
       this.deps.productionSystem.ensureSiteState(definition.siteId)
@@ -361,7 +397,7 @@ export class GameManagerSaveRestore {
     // the offline window under the shared cap concept, and deliver
     // output through the SAME delivery/overflow path as the tick.
     this.deps.decomposeSystem.updateCapacity(betaEffectiveWorkerCapacity(offlinePlayer?.autoWorkerCapacity ?? 0))
-    this.deps.decomposeSystem.restore(save.decompose)
+    this.deps.decomposeSystem.restore(save.decompose, restoreClockMs)
 
     // B1-D - the settle window is the authorized context, never a
     // Date.now()/lastSavedAt read of our own: 'cold-boot' accrues the
@@ -373,12 +409,12 @@ export class GameManagerSaveRestore {
     // each settle consumer still applies its own channel cap, so the
     // raw window is resolved uncapped here.
     const elapsedOfflineSeconds =
-      timeAuthority?.kind === 'live-replacement'
+      authority?.kind === 'live-replacement'
         ? 0
-        : timeAuthority?.kind === 'cold-boot'
+        : authority?.kind === 'cold-boot'
           ? calculateOfflineTime(
-              { lastOnlineAt: timeAuthority.sinceMs },
-              timeAuthority.untilMs,
+              { lastOnlineAt: authority.sinceMs },
+              authority.untilMs,
               Number.POSITIVE_INFINITY,
             ).offlineSeconds
           : calculateOfflineTime(
@@ -393,12 +429,50 @@ export class GameManagerSaveRestore {
     // shape validation, yields elapsed=0, but would leave settleNowMs
     // future-dated and feed every unconditional settle below (alchemy
     // tick(future) minting pending jobs early - save-edit cheat).
+    // r13-AUT-5: under cold-boot the clamp must anchor at the
+    // server-approved window end (untilMs), not the client clock - a
+    // slow local clock would otherwise underpay the offline span the
+    // server already granted (and a fast one must not pay past it).
+    // r24-INT-01: ...but persisted stamps live in the CLIENT epoch
+    // (next write stamps lastSavedAt = Date.now()). A forward-skewed
+    // authority (untilMs > now, honest server-clock skew) would settle
+    // dues inside (now, untilMs] and seed lane heads/payouts stamped
+    // past the next save's own marker -> the admission pin
+    // (startedAtMs <= lastSavedAt) rejects the game's own save. Clamp
+    // the settle cursor at Date.now() too: dues in the skew window
+    // defer to the next live tick at their real times (no loss), while
+    // elapsed-driven channels still pay the full approved span.
     const settleNowMs = Math.min(
       (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
+      authorityNowMs,
       Date.now(),
     )
-    const offlineSinceMs = save.player.lastSavedAt ?? settleNowMs
-
+    // r13-COR-4: clamp the window START as well - a
+    // crafted/skewed-future lastSavedAt otherwise positions
+    // offlineSinceMs ahead of settleNowMs, confiscating every pending
+    // decompose cycle and parking worker lanes in the future.
+    // r14-COR-1: the start anchor is authorityNowMs - elapsed, not
+    // authorityNowMs - the window is the authorized DURATION
+    // positioned at the payload marker, so a client clock honestly
+    // ahead of the server (lastSavedAt > untilMs) still settles the
+    // full approved span instead of collapsing to a zero-width
+    // window while auto-farm pays the same elapsed (asymmetry was
+    // the r14 regression); settleNowMs still clamps the end at
+    // authorityNowMs.
+    // r25-AUT-1: the start must clamp at Date.now() too - persisted
+    // lane heads are stamped FROM this cursor, so a future-positioned
+    // pair (crafted-future lastSavedAt + a sinceMs still ahead of the
+    // client clock) seeds workerCycles[].startedAtMs past the next
+    // save's own lastSavedAt and the admission pin then rejects the
+    // game's own write (same self-brick class as r24-INT-01). Dues in
+    // the future window defer to live ticks at their real times; an
+    // honest start is never past now, so the clamp only fires on the
+    // crafted arm.
+    const offlineSinceMs = Math.min(
+      save.player.lastSavedAt ?? settleNowMs,
+      authorityNowMs - elapsedOfflineSeconds * 1000,
+      Date.now(),
+    )
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {
         // T3 (economy-ecosystem-plan) - worker chay offline nhu slot tay
@@ -451,7 +525,10 @@ export class GameManagerSaveRestore {
     // Dan Phong offline settle (S8.2). B1-D: the same authorized window
     // end - a live replacement delivers only jobs already complete at the
     // snapshot, and a cold-boot window stops at the server-stamped bound.
-    this.deps.alchemySystem.restoreJobs((save.alchemyJobs ?? []) as ActiveAlchemyJob[])
+    this.deps.alchemySystem.restoreJobs(
+      (save.alchemyJobs ?? []) as ActiveAlchemyJob[],
+      restoreClockMs,
+    )
 
     this.deps.alchemySystem.settleOffline(
       this.deps.pillBag,
@@ -480,7 +557,7 @@ export class GameManagerSaveRestore {
     // F-W-5 (v82) - tribulation runtime: khoi phuc committed outcome +
     // cooldown sau khi moi slice domain da nap (director khong phu
     // thuoc thu tu domain khac nhung dat cuoi cho dung boundary).
-    this.deps.tribulationDirector.restoreRuntime(save.tribulation)
+    this.deps.tribulationDirector.restoreRuntime(save.tribulation, restoreClockMs)
 
     // F-PT-A9-1 - realm-entry rewards replay BEFORE quest lifecycle so
     // rewardOnly nodeLevels exist when eligibility is evaluated; runs on

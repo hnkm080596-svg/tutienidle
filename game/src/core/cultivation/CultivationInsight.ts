@@ -17,9 +17,31 @@ export function accrueCultivationInsight(player: PlayerData, gained: number): vo
 
   player.cultivationInsightAccumulator += gained
 
-  while (player.cultivationInsightAccumulator >= threshold) {
-    player.cultivationInsightAccumulator -= threshold
-    player.skillInsight += 1
-    player.totalSkillInsightGained += 1
+  if (!Number.isFinite(player.cultivationInsightAccumulator)) {
+    // Mechanism-level guard: a non-finite feed must not mint a
+    // NaN/Infinity insight counter - the accrual doesn't happen and
+    // the poisoned accumulator resets to a writable value instead of
+    // bricking every later save-write (r23-AUT nit - bounded deny).
+    player.cultivationInsightAccumulator = 0
+    return
+  }
+
+  // O(1) drain (r22-AUT nit): the loop body is uniform - subtracting
+  // threshold and bumping the same two counters per step - so one
+  // floor-division yields the same result in bounded work even when
+  // `gained` lands far past the threshold. r23-COR-1: at mechanism-only
+  // acc magnitudes (~2.8e17+ - r24-COR-4 measured the onset; admission
+  // pins acc < threshold so no reachable feed gets near it) product
+  // rounding can leave a small negative remainder - clamp at 0 so the
+  // field always re-validates. Every reachable feed stays inside the
+  // domain where the jump is bit-identical to the loop.
+  const steps = Math.floor(player.cultivationInsightAccumulator / threshold)
+  if (steps > 0) {
+    player.cultivationInsightAccumulator = Math.max(
+      0,
+      player.cultivationInsightAccumulator - steps * threshold,
+    )
+    player.skillInsight += steps
+    player.totalSkillInsightGained += steps
   }
 }

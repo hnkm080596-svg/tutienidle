@@ -102,6 +102,7 @@ function makeStubs() {
       restoreFromSave: vi.fn(),
       freezeCombat: vi.fn(),
       resumeCombat: vi.fn(),
+      discardStaleBattle: vi.fn(),
     } as unknown as GameManager,
     tick: vi.fn(),
     offlineSummary: { show: vi.fn() },
@@ -187,6 +188,32 @@ describe('useAppLifecycle — idempotent tick loop (Remediation Task 5)', () => 
 
     expect(stubs.clearHandle).toHaveBeenCalled()
     expect(stubs.removeEventListener).toHaveBeenCalledTimes(2)
+  })
+
+  it('r29-INT-3: tick callback gates on entryStage - sim freezes behind the error surface under local authority too', () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+    const tick = vi.fn()
+
+    lifecycle.startTickLoop(tick)
+
+    stubs.intervals[0]!()
+    expect(tick).toHaveBeenCalledTimes(1)
+
+    // The refuse arm mounts entryStage 'error' (boot.fail) - the tick
+    // loop must idle behind the terminal card even while
+    // authority.canMutate() stays true (local tier has no admission
+    // dep, so observeSaveResult early-returns there).
+    stubs.entryStage.value = 'error'
+    stubs.intervals[0]!()
+    stubs.intervals[0]!()
+    expect(tick).toHaveBeenCalledTimes(1)
+
+    stubs.entryStage.value = 'game'
+    stubs.intervals[0]!()
+    expect(tick).toHaveBeenCalledTimes(2)
+
+    lifecycle.stopAll()
   })
 })
 

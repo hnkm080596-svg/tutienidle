@@ -265,6 +265,65 @@ export type RestoreTimeAuthority =
   | { kind: 'cold-boot'; sinceMs: number; untilMs: number }
   | { kind: 'live-replacement'; nowMs: number }
 
+/**
+ * The "now" every forward clamp during a restore anchors at - the
+ * union's contract (cold-boot => server-approved window end,
+ * live-replacement => snapshot now, undefined => legacy client clock).
+ */
+export function restoreAuthorityNowMs(timeAuthority?: RestoreTimeAuthority): number {
+  return timeAuthority?.kind === 'cold-boot'
+    ? timeAuthority.untilMs
+    : timeAuthority?.kind === 'live-replacement'
+      ? timeAuthority.nowMs
+      : Date.now()
+}
+
+/**
+ * r23-AUT: authority stamps are the one timestamp input the save gate
+ * never sees (they arrive out-of-band from the server response, not
+ * through validateGameSaveShape). A stamp outside the admitted
+ * timestamp domain (|x| >= 2^52, or non-finite) makes the approval
+ * unusable.
+ *
+ * r24-AUT-1/2: a PRESENT-but-corrupt authority must never degrade to
+ * `undefined` - that is the legacy client-clock path, which pays
+ * `Date.now() - lastSavedAt` over a payload-editable marker and can
+ * exceed the approved window (a zero-width approval becomes a 24h
+ * payout; a corrupt live-replacement `nowMs` kills the zero-accrual
+ * contract outright). Deny instead: degrade to zero-accrual
+ * live-replacement anchored at the local clock - the restore still
+ * loads queues/jobs but accrues nothing, whatever the payload claims.
+ * `undefined` stays reserved for an ABSENT authority only.
+ */
+export function sanitizeRestoreAuthority(
+  timeAuthority?: RestoreTimeAuthority,
+): RestoreTimeAuthority | undefined {
+  // r26-COR-N1: null is not in the declared type but a JS caller can
+  // still hand it in - `null.kind` throws, so guard before the kind
+  // read. A nullish non-undefined value degrades to the deny primitive
+  // like every other corrupt authority, not to `undefined` (the absent
+  // case above stays strictly undefined-only).
+  if (timeAuthority === undefined) {
+    return undefined
+  }
+  if (timeAuthority === null) {
+    return { kind: 'live-replacement', nowMs: Date.now() }
+  }
+  // r25-AUT-4: whitelist the kind explicitly - an unrecognized kind
+  // (runtime-crafted authority, future kind added without updating
+  // this seam) must degrade to the deny primitive rather than fall
+  // through to a default branch that reads it as a client window.
+  const stamps =
+    timeAuthority.kind === 'cold-boot'
+      ? [timeAuthority.sinceMs, timeAuthority.untilMs]
+      : timeAuthority.kind === 'live-replacement'
+        ? [timeAuthority.nowMs]
+        : [Number.NaN]
+  return stamps.every((stamp) => Number.isFinite(stamp) && Math.abs(stamp) < 2 ** 52)
+    ? timeAuthority
+    : { kind: 'live-replacement', nowMs: Date.now() }
+}
+
 export interface GameSessionPlayerOwner {
   readonly $state: PlayerData
 

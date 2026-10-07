@@ -149,7 +149,8 @@ function settleWorkersOffline(
     // M11 (ARCH-007) - per-lane advancement via the SAME mechanism as
     // tickWorkers (advanceWorkerLanes): each lane completes on its OWN
     // deadline; pending cycles keep their lane + original deadline;
-    // empty lanes produce only from the save instant (offlineSinceMs).
+    // empty lanes produce only from the authorized window start
+    // (offlineSinceMs).
     // No floor(windowMs * slots / cycleMs) pooling across lanes.
     // Completions over the budget are forfeited - past-due backlog is
     // never left behind for a free online grant outside the cap.
@@ -168,7 +169,35 @@ function settleWorkersOffline(
       rng,
     })
 
-    state.workerCycles = result.pending
+    // r16-INT-03 + r17-INT-01 + r18-COR-4: chains ROOTED at a
+    // settle-time seed (emptyLaneStartMs) encode "remaining work at
+    // settle" - their pending head owes its next completion relative
+    // to the settle's nowMs, whatever epoch anchored the seed (server
+    // bound, recent marker, or crafted deep-past). Persisting those
+    // stamps raw into workerCycles - which tickWorkers reads against
+    // Date.now() - paid them early under any positive skew (and paid
+    // ~1 cycle instantly for deep-past windows). Re-stamp exactly the
+    // seed-rooted heads into the field epoch; successors of SAVED
+    // lanes keep the lane's own client-epoch deadline. One-way shift
+    // only: a slow clock leaves deadlines ahead of Date.now(), the
+    // bounded underpay direction.
+    const fieldEpochShiftMs = Math.max(0, Date.now() - nowMs)
+    const seededHeads = new Set(result.seededPending)
+    state.workerCycles = result.pending.map((cycle) =>
+      // r32-AUT-4: the re-stamp must not mint out-of-domain either - a
+      // crafted wall clock far ahead of the settle epoch would push the
+      // shifted stamps >= 2^52 and self-refuse the next save write.
+      // completesAtMs is the pair's largest stamp (ordering pin), so it
+      // alone decides headroom; a head that cannot shift cleanly keeps
+      // the settle-epoch stamps verbatim (parked, deny).
+      fieldEpochShiftMs > 0 && seededHeads.has(cycle) && cycle.completesAtMs + fieldEpochShiftMs < 2 ** 52
+        ? {
+            ...cycle,
+            startedAtMs: cycle.startedAtMs + fieldEpochShiftMs,
+            completesAtMs: cycle.completesAtMs + fieldEpochShiftMs,
+          }
+        : cycle,
+    )
 
     budgetMs -= result.consumedBudgetMs
 

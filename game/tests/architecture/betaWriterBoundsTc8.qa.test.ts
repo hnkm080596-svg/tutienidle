@@ -422,15 +422,23 @@ describe('F-SEAM-2: perfectClearSeconds per-stage physical floor', () => {
 })
 
 describe('F-TC8-8: tu_linh_tran duration bound', () => {
-  it('a span wider than the authored 24h writer window is rejected', () => {
+  // r14-AUT-2/3: the r13 span check was retired (rebuy honestly widens
+  // expires - applied); the provable bound is expires <= lastSavedAt +
+  // duration - every honest extension is appTime + duration with
+  // appTime <= lastSavedAt.
+  // r15-COR-D: the gate additionally tolerates a 7d provenance
+  // allowance for honest clock-epoch migration (a rebuy stamped while
+  // the device clock ran fast, rolled back before the save).
+  it('a deadline past lastSavedAt + authored window + 7d allowance is rejected', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 10_000
     p.persistentTimedEffects = [
       {
         id: 'fx1',
         sourceItemId: 'tu_linh_tran',
-        appliedAtMs: 1000,
-        expiresAtMs: 1000 + TU_LINH_TRAN_DURATION_MS + 60_000,
+        appliedAtMs: 5_000,
+        expiresAtMs: 10_000 + TU_LINH_TRAN_DURATION_MS + 8 * 86_400_000,
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         cultivationSpeedPercent: 0.2,
         modifiers: [],
@@ -440,15 +448,61 @@ describe('F-TC8-8: tu_linh_tran duration bound', () => {
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 
-  it('an exact 24h writer span still validates', () => {
+  it('a clock-rollback deadline inside the 7d provenance allowance still validates', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 70_000
     p.persistentTimedEffects = [
       {
         id: 'fx1',
         sourceItemId: 'tu_linh_tran',
-        appliedAtMs: 1000,
-        expiresAtMs: 1000 + TU_LINH_TRAN_DURATION_MS,
+        appliedAtMs: 5_000,
+        // honest shape under a clock rollback: the rebuy stamped
+        // expires = rebuyTime + duration while the device clock ran
+        // ~3d fast; the save's own marker is the rolled-back clock, so
+        // expires lands past lastSavedAt + duration but inside the
+        // allowance.
+        expiresAtMs: 5_000 + TU_LINH_TRAN_DURATION_MS + 3 * 86_400_000,
+        effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
+        cultivationSpeedPercent: 0.2,
+        modifiers: [],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('a rebuy-extended span inside lastSavedAt + window still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 70_000
+    p.persistentTimedEffects = [
+      {
+        id: 'fx1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: 5_000,
+        // span > 24h is honest over rebuys; expires stays inside
+        // lastSavedAt + duration.
+        expiresAtMs: 5_000 + TU_LINH_TRAN_DURATION_MS + 60_000,
+        effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
+        cultivationSpeedPercent: 0.2,
+        modifiers: [],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('an exact 24h writer span still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 10_000
+    p.persistentTimedEffects = [
+      {
+        id: 'fx1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: 5_000,
+        expiresAtMs: 5_000 + TU_LINH_TRAN_DURATION_MS,
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         cultivationSpeedPercent: 0.2,
         modifiers: [],
@@ -1122,6 +1176,112 @@ describe('F-A11-6: purchasedNodeIds must mirror nodeLevels', () => {
     const p = save.player as Record<string, unknown>
     p.purchasedNodeIds = ['core_linh_bao']
     p.nodeLevels = { core_linh_bao: 1 }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('r15-AUT-1: live percent loosens the cps bound, not the authored max', () => {
+  // The r14 binary flag let a forged expires=lastSavedAt+1ms +
+  // percent=1e-9 claim the whole 1.25x cps bound; the bound now scales
+  // by the record's own live percent at save time.
+  it('an epsilon-percent live TLT no longer admits a 1.25x rate claim', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 1_000_000
+    p.cultivationPerSecond = BASE_CULTIVATION_PER_SECOND * 1.25
+    p.persistentTimedEffects = [
+      {
+        id: 'fx1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: p.lastSavedAt - 60_000,
+        expiresAtMs: p.lastSavedAt + 1,
+        effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
+        cultivationSpeedPercent: 1e-9,
+        modifiers: [],
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(
+        (result.normalizedSave as GameSave).player.cultivationPerSecond,
+      ).toBeCloseTo(BASE_CULTIVATION_PER_SECOND * (1 + 1e-9), 10)
+    }
+  })
+
+  it('a real 0.25 live TLT still admits its authored 1.25x snapshot', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 1_000_000
+    p.cultivationPerSecond = BASE_CULTIVATION_PER_SECOND * 1.25
+    p.persistentTimedEffects = [
+      {
+        id: 'fx1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: p.lastSavedAt - 60_000,
+        expiresAtMs: p.lastSavedAt + 60_000,
+        effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
+        cultivationSpeedPercent: 0.25,
+        modifiers: [],
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(
+        (result.normalizedSave as GameSave).player.cultivationPerSecond,
+      ).toBe(BASE_CULTIVATION_PER_SECOND * 1.25)
+    }
+  })
+})
+
+describe('r15-AUT-2: pill regen effect honors the pill realm gate', () => {
+  // The consume writer mints this effect only while the player is IN
+  // the pill's exact realm and realms are monotonic - a save below the
+  // pill's realm is impossible provenance.
+  it('a regen effect from a pill above the save realm is rejected', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.persistentTimedEffects = [
+      {
+        id: 'r1',
+        sourceItemId: 'hoi_linh_dan_tribulation',
+        appliedAtMs: 1_000,
+        expiresAtMs: 1_000_000,
+        effectGroup: 'hoi_linh_dan',
+        durationStackable: true,
+        modifiers: [],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a regen effect matching the save realm still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'qi_refining'
+    p.realmLevel = 1
+    // Coherent qi_refining shape: initiation technique receipt +
+    // derivable breakthrough grade.
+    save.techniques = [fiveElementsTechnique()]
+    p.breakthroughGrade = 1
+    p.persistentTimedEffects = [
+      {
+        id: 'r1',
+        sourceItemId: 'hoi_linh_dan_qi_refining',
+        appliedAtMs: 1_000,
+        expiresAtMs: 1_000_000,
+        effectGroup: 'hoi_linh_dan',
+        durationStackable: true,
+        modifiers: [],
+      },
+    ]
 
     expect(validateGameSaveShape(save).ok).toBe(true)
   })

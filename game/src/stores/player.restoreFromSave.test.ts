@@ -159,8 +159,85 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     player.restoreFromSave(save)
 
     const effect = player.persistentTimedEffects[0]!
-    // Applied clamp: expiresAtMs <= appliedAtMs + TU_LINH_TRAN_DURATION_MS (24h).
-    expect(effect.expiresAtMs).toBeLessThanOrEqual(effect.appliedAtMs + 24 * 60 * 60 * 1000)
+    // r13-INT-02: bound is now + longest authored duration (24h), not
+    // appliedAtMs + 24h - stackable refresh chains honestly carry
+    // expires far past their appliedAt.
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(Date.now() + 24 * 60 * 60 * 1000)
+    expect(effect.expiresAtMs).toBeGreaterThan(currentMs + 23 * 60 * 60 * 1000)
+  })
+
+  it('honest stacked pill chain past appliedAtMs+24h survives untouched (r13-INT-02 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx-stack',
+          sourceItemId: 'hoi_linh_dan',
+          effectGroup: 'pill_regen',
+          durationStackable: true,
+          // Old application, refreshed forward past the naive 24h bound.
+          appliedAtMs: currentMs - 20 * 3_600_000,
+          expiresAtMs: currentMs + 23 * 3_600_000,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.appliedAtMs).toBe(currentMs - 20 * 3_600_000)
+    expect(effect.expiresAtMs).toBe(currentMs + 23 * 3_600_000)
+  })
+
+  it('forged far-future stackable expiry clamps at provenance+24h (r22-AUT-1 pin)', () => {
+    // A crafted stackable record parking a 30-day expiry minted a
+    // permanent regen buff before r22 - the stackable exemption is
+    // gone, the same provenance+24h bound as every sibling applies.
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx-stack-mint',
+          sourceItemId: 'hoi_linh_dan',
+          effectGroup: 'pill_regen',
+          durationStackable: true,
+          appliedAtMs: currentMs - 20 * 3_600_000,
+          expiresAtMs: currentMs + 30 * 86_400_000, // forged: +30d
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.expiresAtMs).toBe(currentMs + 24 * 3_600_000)
+  })
+
+  it('dead-at-save stackable record clamps dead like every sibling (r22-AUT-1 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx-stack-dead',
+          sourceItemId: 'hoi_linh_dan',
+          effectGroup: 'pill_regen',
+          durationStackable: true,
+          appliedAtMs: currentMs - 50 * 3_600_000,
+          expiresAtMs: currentMs - 10 * 3_600_000, // died before the save
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(currentMs)
   })
 
   it('forged future appliedAtMs clamps to now at restore (r12-COR-2 pin)', () => {
@@ -187,7 +264,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(effect.expiresAtMs).toBeLessThanOrEqual(effect.appliedAtMs + 24 * 60 * 60 * 1000)
   })
 
-  it('crafted-future lastSavedAt under cold-boot mints no cultivation (r12-AUT-3 pin)', () => {
+  it('crafted-future lastSavedAt under cold-boot pays ONLY the authorized window (r12-AUT-3, r14-COR-1)', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({
       cultivationPerSecond: 20,
@@ -200,10 +277,217 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
       untilMs: currentMs,
     })
 
-    // offlineSeconds comes from the server window (600s > cap-free
-    // mortal gate), but the payable window clamps [now, now] -> 0.
+    // offlineSeconds comes from the server window (600s). The payable
+    // window anchors at untilMs - elapsed -> [now-600s, now]: the
+    // forged marker cannot position content past the approved end and
+    // gains nothing beyond the authorized span (600s * 20/s = 12000,
+    // post-cap 600).
     expect(result.elapsedSeconds).toBe(600)
-    expect(result.cultivation).toBe(0)
+    expect(result.cultivation).toBe(600)
+  })
+
+  it('honest fast client clock under cold-boot still pays the full authorized window (r14-COR-1 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      cultivationPerSecond: 1,
+      // Client clock 300s ahead of the server: lastSavedAt lands past
+      // untilMs even though the save is honest.
+      lastSavedAt: currentMs + 300_000,
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    // Pre-fix the window collapsed to [until, until] -> 0 while
+    // auto-farm paid the same elapsed (asymmetric underpayment).
+    expect(result.elapsedSeconds).toBe(500)
+    expect(result.cultivation).toBe(500)
+  })
+
+  it('skewed client clock inside the window still pays the full authorized span (r14-COR-1)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      cultivationPerSecond: 1,
+      // Client clock 300s ahead: honest stamp = since + 300s.
+      lastSavedAt: currentMs - 200_000,
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    // Pre-fix the window was [lastSavedAt, until] = 200s -> the client
+    // lost the 300s skew every cold boot.
+    expect(result.elapsedSeconds).toBe(500)
+    expect(result.cultivation).toBe(500)
+  })
+
+  it('forged far-future expires on a stale save clamps to its dead provenance, not boot + 24h (r14-AUT-2 pin)', () => {
+    const player = usePlayerStore()
+    const staleSavedAt = currentMs - 10 * 86_400_000 // save is 10 days old
+    const save = buildMinimalSave({
+      lastSavedAt: staleSavedAt,
+      persistentTimedEffects: [
+        {
+          id: 'fx-forged',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: staleSavedAt - 3_600_000,
+          expiresAtMs: currentMs + 365 * 86_400_000, // forged: +1y
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    // Honest provenance bound: expires <= lastSavedAt + duration -
+    // the forged deadline clamps to ~9 days in the past (dead), not
+    // now + 24h (a free revived buff).
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(staleSavedAt + 24 * 60 * 60 * 1000)
+    expect(effect.expiresAtMs).toBeLessThan(currentMs)
+  })
+
+  it('honest TLT bought inside a fast-clock skew clamps to server-now + 24h, not client-now + 24h (r15-INT-01 pin)', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      lastSavedAt: currentMs + 300_000, // honest client clock 300s ahead
+      persistentTimedEffects: [
+        {
+          id: 'fx-tlt',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: currentMs + 250_000, // bought inside the skew gap
+          expiresAtMs: currentMs + 300_000 + 86_400_000, // client-now + 24h
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    // Deny-direction rewrite: provenance is min(lastSavedAt, untilMs) =
+    // untilMs, so the buff shrinks by exactly the clock skew (300s) -
+    // never widens past the authored duration.
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.appliedAtMs).toBe(currentMs)
+    expect(effect.expiresAtMs).toBe(currentMs + 86_400_000)
+    expect(effect.expiresAtMs).toBeGreaterThan(currentMs)
+  })
+
+  it('TLT chết trước lúc save (stamp skew tương lai) → kẹp chết, không revive 24h (r15-COR-A pin)', () => {
+    const player = usePlayerStore()
+    // Client clock +10d: every stamp lives in the payload epoch, so a
+    // deadline 6h before the save marker still reads FUTURE in the
+    // authority epoch. Dead-at-save is payload-truthful: expires can
+    // only grow past the save marker on a real rebuy.
+    const fastSavedAt = currentMs + 10 * 86_400_000
+    const save = buildMinimalSave({
+      lastSavedAt: fastSavedAt,
+      persistentTimedEffects: [
+        {
+          id: 'fx-dead',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: fastSavedAt - 10 * 3_600_000,
+          expiresAtMs: fastSavedAt - 6 * 3_600_000, // died 6h before save
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    // r14 bound would revive it to untilMs + 24h; the dead arm clamps
+    // at authority-now instead - dead stays dead.
+    const effect = player.persistentTimedEffects[0]!
+    expect(effect.expiresAtMs).toBeLessThanOrEqual(currentMs)
+  })
+
+  it('buff chết giữa cửa sổ offline (đồng hồ nhanh) → chỉ trả % cho đoạn sống (r16-COR-1 pin)', () => {
+    const player = usePlayerStore()
+    // Client clock +1h. The honest payout window runs FORWARD from
+    // the save marker, so a death 250s after it must split the pay:
+    // 250s buffed + 250s flat. A pre-save-positioned window either
+    // misses the death entirely (pays 625) or pays the pre-save
+    // stretch the buff never earned. Skew stays under the 24h claim
+    // bound so the honest death position is still provable.
+    const fastSavedAt = currentMs + 3_600_000
+    const save = buildMinimalSave({
+      cultivationPerSecond: 1.25, // live at save -> honest buffed snapshot
+      lastSavedAt: fastSavedAt,
+      persistentTimedEffects: [
+        {
+          id: 'fx-split',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: fastSavedAt - 3_600_000,
+          expiresAtMs: fastSavedAt + 250_000, // dies 250s into the honest window
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    expect(result.elapsedSeconds).toBe(500)
+    // Honest: unbuffed 1.25/1.25 = 1; 250s x 1.25 + 250s x 1.0 = 562.5.
+    expect(result.cultivation).toBeCloseTo(562.5, 6)
+  })
+
+  it('buff TLT chết TRƯỚC lúc save (đồng hồ nhanh) → trả phẳng cả cửa sổ (r16-COR-1 pin)', () => {
+    const player = usePlayerStore()
+    // A death before the save marker earned nothing in the offline
+    // span - the r15 skew-positioned window paid its pre-save tail
+    // anyway (562.5 vs 500 honest).
+    const fastSavedAt = currentMs + 10 * 86_400_000
+    const save = buildMinimalSave({
+      cultivationPerSecond: 1, // dead at save -> honest base snapshot
+      lastSavedAt: fastSavedAt,
+      persistentTimedEffects: [
+        {
+          id: 'fx-dead-split',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: fastSavedAt - 3_600_000,
+          expiresAtMs: fastSavedAt - 250_000, // died 250s BEFORE the save
+          cultivationSpeedPercent: 0.25,
+          modifiers: [],
+        },
+      ],
+    })
+
+    const result = player.restoreFromSave(save, {
+      kind: 'cold-boot',
+      sinceMs: currentMs - 500_000,
+      untilMs: currentMs,
+    })
+
+    expect(result.elapsedSeconds).toBe(500)
+    // Honest: 500s flat at the unbuffed base rate -> 500.
+    expect(result.cultivation).toBeCloseTo(500, 6)
   })
 
   it('buff tu luyện đã hết hạn trước khi save → rate lưu trừ hết phần buff', () => {
@@ -240,8 +524,12 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           id: 'fx1',
           sourceItemId: 'tu_linh_tran',
           effectGroup: 'tu_linh_tran',
-          appliedAtMs: 0,
-          expiresAtMs: currentMs + 999_000_000, // still live past window end
+          // r17-COR-B1: honest shape - expires = appliedAt + authored
+          // duration. The payout bound is the claim's own duration;
+          // an appliedAt=0 + far-future expires record is a >24h
+          // duration forge and now correctly pays flat unbuffed.
+          appliedAtMs: currentMs - 21_000,
+          expiresAtMs: currentMs - 21_000 + 86_400_000, // still live past window end
           cultivationSpeedPercent: 0.25,
           modifiers: [],
         },
@@ -415,5 +703,71 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(after.__sessionLeftover).toBeUndefined()
     expect(after.retiredFieldV42).toBeUndefined()
     expect(player.name).toBe('purge-target')
+  })
+
+  // r23-AUT: authority stamps are the one timestamp input that bypasses
+  // the save gate. An out-of-domain server stamp (|x| >= 2^52, or
+  // non-finite) degrades the authority to zero-accrual live-replacement
+  // (r24-AUT) - never to the payload-editable client-clock window.
+  describe('sanitizeRestoreAuthority deny (r23-AUT, corrected r24-AUT)', () => {
+    it('out-of-domain cold-boot untilMs degrades to zero-accrual, never to the client window', () => {
+      const player = usePlayerStore()
+      const save = buildMinimalSave({
+        cultivationPerSecond: 1,
+        lastSavedAt: currentMs - 600_000, // honest 10-minute-old save
+      })
+
+      const result = player.restoreFromSave(save, {
+        kind: 'cold-boot',
+        sinceMs: currentMs - 600_000,
+        untilMs: 2 ** 52, // corrupt server stamp outside the save domain
+      })
+
+      // r24-AUT-1: the client window is attacker-editable and can
+      // exceed the approved span - degrading to it turns a corrupt
+      // stamp into a mint. A present-but-corrupt authority degrades
+      // to zero-accrual live-replacement: queues restore, nothing
+      // accrues.
+      expect(result.elapsedSeconds).toBe(0)
+      expect(result.cultivation).toBe(0)
+    })
+
+    it('boundary: untilMs just inside the domain is still honored', () => {
+      const player = usePlayerStore()
+      const save = buildMinimalSave({
+        cultivationPerSecond: 1,
+        lastSavedAt: currentMs - 600_000,
+      })
+
+      const result = player.restoreFromSave(save, {
+        kind: 'cold-boot',
+        sinceMs: currentMs - 600_000,
+        untilMs: 2 ** 52 - 1,
+      })
+
+      // In-domain authority wins: elapsed = until - since is far past
+      // the cap, so the window pays the 24h ceiling like the
+      // pre-sanitize code path did.
+      expect(result.elapsedSeconds).toBe(86400)
+    })
+
+    it('non-finite live-replacement nowMs keeps the zero-accrual contract', () => {
+      const player = usePlayerStore()
+      const save = buildMinimalSave({
+        cultivationPerSecond: 1,
+        lastSavedAt: currentMs - 600_000,
+      })
+
+      const result = player.restoreFromSave(save, {
+        kind: 'live-replacement',
+        nowMs: Number.NaN,
+      })
+
+      // r24-AUT-2: live-replacement exists to accrue ZERO (the server
+      // replaced the head); a corrupt stamp is the only mint path on
+      // the channel - degrading to the client window would pay up to
+      // 24h. Zero accrual must survive the corrupt stamp.
+      expect(result.elapsedSeconds).toBe(0)
+    })
   })
 })

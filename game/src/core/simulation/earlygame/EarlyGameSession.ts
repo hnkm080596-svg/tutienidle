@@ -647,6 +647,11 @@ export class EarlyGameSession {
   ): RestoreGameSessionResult {
     const result = restoreGameSession(playerOwner, this.gameManager, save)
     if (result.status === 'ok') {
+      // The restore rewrote $state in place - a live battle still binds
+      // the pre-restore contents, so it dies here exactly like the boot
+      // and reconnect admissions do (r36-AUT-3: same in-place-rewrite
+      // class; sim harness, but the ghost contract is identical).
+      this.gameManager.discardStaleBattle()
       this.player = playerOwner.$state
       // A restored owner that is a full store also satisfies the writer
       // contract - keep writer seams (settle/drain/entitlement) usable

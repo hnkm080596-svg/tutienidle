@@ -306,6 +306,16 @@ export class GameManagerPersistentEffectOps {
    */
   applyTimedEffect(player: PlayerData, effect: PersistentTimedEffect) {
     const group = effect.effectGroup
+    // r32-INT-2: the TLT write pin (expires <= lastSavedAt +
+    // TU_LINH_TRAN_DURATION_MS + 7d, saveShapeValidation.ts) is TIGHTER
+    // than the bare persisted-domain bound - a crafted expiresAtMs that
+    // passes the 2^52 clamp still self-refuses the next write. Ceiling
+    // every emitted expiry at the pin bound; the honest TLT writer
+    // stamps now + 24h, far below it.
+    const expiresCeiling =
+      group === TU_LINH_TRAN_EFFECT_GROUP
+        ? Math.min(2 ** 52 - 1, Date.now() + TU_LINH_TRAN_DURATION_MS + 7 * 86_400_000)
+        : 2 ** 52 - 1
 
     if (group) {
       const existing = player.persistentTimedEffects.find(
@@ -314,10 +324,39 @@ export class GameManagerPersistentEffectOps {
 
       if (existing) {
         if (effect.durationStackable) {
-          const duration = Math.max(0, effect.expiresAtMs - effect.appliedAtMs)
-          existing.expiresAtMs = Math.max(Date.now(), existing.expiresAtMs) + duration
+          // r32-AUT-6: coerce a non-finite caller span to no-extension
+          // - a NaN duration would propagate through Math.min into
+          // existing.expiresAtMs and wedge every later save write.
+          const rawSpan = effect.expiresAtMs - effect.appliedAtMs
+          const duration = Number.isFinite(rawSpan) ? Math.max(0, rawSpan) : 0
+          // R22-COR-1: this arm is the only writer that ADDS onto a
+          // persisted stamp - a parked expiry just inside the
+          // validator's timestamp bound plus one honest re-drink used
+          // to push expiresAtMs past it, and buildGameSave then wrote
+          // the out-of-domain value verbatim, bricking the save at the
+          // next load. Clamp inside the admitted domain (|x| < 2^52,
+          // saveShapeValidation.isBoundedTimestamp): every written save
+          // always re-validates, and a parked stamp the writer cannot
+          // shrink is bounded at the restore seam instead
+          // (boundTimedEffectClocks - r22-AUT-1).
+          existing.expiresAtMs = Math.min(
+            expiresCeiling,
+            Math.max(Date.now(), existing.expiresAtMs) + duration,
+          )
         } else {
-          existing.expiresAtMs = Math.max(existing.expiresAtMs, effect.expiresAtMs)
+          // r30-COR-Low-3: same |x| < 2^52 clamp as the stackable arm -
+          // a caller-crafted stamp outside the admitted domain must not
+          // persist and self-brick the next buildGameSave write.
+          // r32-AUT-5: coerce a non-finite claimed expiry to 'no
+          // extension' (below the parked stamp) - Math.max propagates
+          // NaN, and a NaN persisted stamp wedges every later write.
+          const claimedExpires = Number.isFinite(effect.expiresAtMs)
+            ? (effect.expiresAtMs as number)
+            : 0
+          existing.expiresAtMs = Math.min(
+            expiresCeiling,
+            Math.max(-(2 ** 52 - 1), Math.max(existing.expiresAtMs, claimedExpires)),
+          )
         }
 
         for (const modifier of effect.modifiers) {
@@ -348,7 +387,29 @@ export class GameManagerPersistentEffectOps {
       }
     }
 
-    player.persistentTimedEffects.push(effect)
+    // r30-COR-Low-3: the verbatim push of a fresh effect clamps
+    // expiresAtMs into the admitted domain for the same reason - every
+    // written save must re-validate.
+    // r31-COR-F-APPLIEDAT/INT-4: appliedAtMs is a persisted stamp too,
+    // and the validator pins it <= lastSavedAt - the clamp ceiling is
+    // therefore min(2^52-1, now), not the bare bound, or a crafted
+    // value still wedges every later write on that pin.
+    // r32-AUT-5: Math.min/max PROPAGATE NaN - a caller-crafted
+    // non-finite stamp would persist verbatim as NaN and self-refuse
+    // every later write. Coerce before clamping: applied falls back to
+    // now (just applied), expires falls back to the applied stamp
+    // (dead on arrival - deny). Every real writer stamps Date.now().
+    const appliedCeiling = Math.min(2 ** 52 - 1, Date.now())
+    const appliedAtMs = Number.isFinite(effect.appliedAtMs)
+      ? Math.min(appliedCeiling, Math.max(-(2 ** 52 - 1), effect.appliedAtMs as number))
+      : appliedCeiling
+    player.persistentTimedEffects.push({
+      ...effect,
+      appliedAtMs,
+      expiresAtMs: Number.isFinite(effect.expiresAtMs)
+        ? Math.min(expiresCeiling, Math.max(-(2 ** 52 - 1), effect.expiresAtMs as number))
+        : appliedAtMs,
+    })
   }
 
   /** Drops expired effects - returns the count dropped (debug/test). */

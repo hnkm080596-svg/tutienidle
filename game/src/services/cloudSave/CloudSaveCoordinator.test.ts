@@ -2,8 +2,18 @@ import { describe, expect, it } from 'vitest'
 import type { GameSave } from '../save/SaveSystem'
 import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
 import { CloudSaveCoordinator } from './CloudSaveCoordinator'
+import { buildGameSave } from '../save/SaveSystem'
+import { createDefaultPlayer } from '../../core/player/Player'
+import { GameManager } from '../../core/game/GameManager'
 
-const snapshot = {} as GameSave
+// r25-INT-01: driveSave now admits only shape-valid payloads - the
+// fixture must be a real GameSave, not a stub cast.
+const snapshot: GameSave = (() => {
+  const player = createDefaultPlayer()
+  const manager = new GameManager()
+  manager.setActivePlayer(player)
+  return buildGameSave(player, manager)
+})()
 
 function mockService(
   loadResults: Array<() => CloudSaveLoadResult>,

@@ -14,6 +14,15 @@ import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 export const EQUIPMENT_BAG_SOFT_CAP = 500
 
 /**
+ * Tran cung so item duoc bao ve (locked/favorite) - ruling D-02 (owner):
+ * toi da 10 mon. Khong co tran nay thi nguoi choi that lock >1024 mon
+ * se tu day mang equipment trong save qua ID_COLLECTION_CAP -> bi tu
+ * choi o cong ghi. Cap nay giu bag toi da ~500 rac + ~10 equipped +
+ * 10 protected, luon nam duoi trang save.
+ */
+export const EQUIPMENT_PROTECTION_CAP = 10
+
+/**
  * Reward Tinh Hoa khi auto-dissolve vuot cap - bag KHONG tu cong vao
  * material system (tranh circular dependency voi GameManager): add()
  * tra rewards, CALLER cong bag + toast.
@@ -147,6 +156,52 @@ export class EquipmentBag {
 
   getEquippedInSlot(slot: EquipmentSlot) {
     return this.slotIndex.get(slot)
+  }
+
+  /**
+   * Writer DUY NHAT cua `instance.locked`/`instance.favorite` cho
+   * instance dang trong bag (ruling D-02): tong item duoc bao ve (lock
+   * HOAC favorite) khong vuot EQUIPMENT_PROTECTION_CAP - yeu cau bao
+   * ve mon thu 11 bi tu choi 'protection_cap'. Go bo bao ve luon
+   * duoc phep. Idempotent theo tung flag (lock roi van favorite them
+   * duoc, union khong tang).
+   */
+  setProtected(
+    instanceId: string,
+    flag: 'locked' | 'favorite',
+    value: boolean,
+  ): { ok: boolean; reason?: 'not_found' | 'protection_cap' } {
+    const instance = this.get(instanceId)
+
+    if (!instance) {
+      return { ok: false, reason: 'not_found' }
+    }
+
+    if (instance[flag] === value) {
+      return { ok: true }
+    }
+
+    if (
+      value &&
+      !instance.locked &&
+      !instance.favorite &&
+      this.protectedCount() >= EQUIPMENT_PROTECTION_CAP
+    ) {
+      return { ok: false, reason: 'protection_cap' }
+    }
+
+    instance[flag] = value
+    return { ok: true }
+  }
+
+  private protectedCount(): number {
+    let count = 0
+    for (const instance of this.instances) {
+      if (instance.locked || instance.favorite) {
+        count += 1
+      }
+    }
+    return count
   }
 
   /**

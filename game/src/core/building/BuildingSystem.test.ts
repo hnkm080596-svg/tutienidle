@@ -361,23 +361,28 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
 })
 
 describe('BuildingManager.restore — crafted lastCollectedAt bound (r12-AUT-1 pin)', () => {
-  it('future lastCollectedAt clamps to now so production does not freeze', () => {
+  // lastCollectedAt is SECONDS-domain (accrual subtracts it from
+  // Date.now()/1000) - the crafted-future case must prove the bound
+  // fires on a REALISTIC seconds stamp, not a millisecond stamp that
+  // any compare would trivially catch (r13-INT-01).
+  it('future seconds-domain lastCollectedAt clamps to now so production does not freeze', () => {
     const manager = new BuildingManager()
-    const futureStamp = Date.now() + 86_400_000
+    const nowSeconds = Date.now() / 1000
+    const craftedFuture = nowSeconds + 7_200
 
-    manager.restore([{ instanceId: 'i1', buildingId: 'pill_room', level: 3, lastCollectedAt: futureStamp }])
+    manager.restore([{ instanceId: 'i1', buildingId: 'pill_room', level: 3, lastCollectedAt: craftedFuture }])
 
     const restored = manager.get('i1')!
-    expect(restored.lastCollectedAt).toBeLessThanOrEqual(Date.now())
-    expect(restored.lastCollectedAt).toBeGreaterThan(Date.now() - 60_000)
+    expect(restored.lastCollectedAt).toBeLessThanOrEqual(Date.now() / 1000)
+    expect(restored.lastCollectedAt).toBeGreaterThan(nowSeconds - 60)
     // Only the anchor is rewritten - the rest of the entry survives.
     expect(restored.level).toBe(3)
     expect(restored.buildingId).toBe('pill_room')
   })
 
-  it('honest past lastCollectedAt survives untouched', () => {
+  it('honest past seconds-domain lastCollectedAt survives untouched', () => {
     const manager = new BuildingManager()
-    const honestStamp = Date.now() - 3_600_000
+    const honestStamp = Date.now() / 1000 - 3_600
 
     manager.restore([{ instanceId: 'i1', buildingId: 'pill_room', level: 2, lastCollectedAt: honestStamp }])
 

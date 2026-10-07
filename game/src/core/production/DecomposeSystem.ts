@@ -155,6 +155,24 @@ export class DecomposeSystem {
       return
     }
 
+    // r29-COR-F1: nowMs guard parity with advanceWorkerLanes /
+    // AlchemySystem.tick - a non-finite or out-of-domain
+    // clock mints a cycle (NaN < nextCycleAt is false -> catch-up arm)
+    // AND poisons nextCycleAt into a write-gate wedge. Zero-advance
+    // preserves state untouched (deny direction).
+    // r30-AUT-3: [0, 2^52) persisted-clock domain.
+    // r31-COR-F-HEADROOM: every mint below writes nextCycleAt =
+    // nowMs + cycleMs - a clock within cycleMs of the bound stamps a
+    // due the next save write self-refuses (wedge). The !(...) form
+    // denies NaN cycleMs as well.
+    if (
+      !Number.isFinite(nowMs) ||
+      nowMs < 0 ||
+      !(nowMs + Math.max(0, this.cycleMs) < 2 ** 52)
+    ) {
+      return
+    }
+
     if (this.settings.workers <= 0) {
       this.started = false
 
@@ -229,7 +247,7 @@ export class DecomposeSystem {
    * window keeps the advanced timer, so the offline settle cannot
    * award twice.
    */
-  restore(state: DecomposeSaveState | undefined): void {
+  restore(state: DecomposeSaveState | undefined, restoreNowMs: number = Date.now()): void {
     const source: DecomposeSaveState = state ?? {
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
       nextCycleAt: 0,
@@ -255,9 +273,32 @@ export class DecomposeSystem {
         ? Math.min(Math.max(0, Math.floor(restoredWorkers)), this.capacity)
         : 0,
     }
-    this.nextCycleAt = Number.isFinite(restoredDeadline)
-      ? Math.max(this.nextCycleAt, Math.max(0, restoredDeadline))
-      : this.nextCycleAt
+    // r26-AUT-3: re-anchor like autofarm.lastCheckedMs - an authored
+    // next-cycle can sit at most one cycleMs past the restore clock
+    // (it was stamped at last fire + cycleMs, fire <= marker <= now),
+    // so anything beyond restore-now + cycleMs is impossible content,
+    // not a deadline. Without the cap a crafted future stamp idles the
+    // channel until Delta and self-bricks every save write past it;
+    // the tick already rebases the same way (:177-178).
+    // r29-COR-F1: the re-anchor only runs under a sane restore clock -
+    // a non-finite or huge restoreNowMs collapses the min() bound to
+    // NaN/garbage and poisons nextCycleAt into a write-gate wedge. Bad
+    // clock -> merge the restored deadline verbatim: a crafted-future
+    // stamp stays parked (deny), honest stamps merge the same way.
+    // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
+    // deep-pasts the deadline (next settle mints), and >= 2^52
+    // self-refuses the next save write.
+    const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
+    if (Number.isFinite(restoredDeadline)) {
+      // r32-AUT-3: the re-anchor CAP is itself a minted stamp - a
+      // restore clock within cycleMs of the domain bound makes
+      // restoreNowMs + cycleMs exceed it, and the merged nextCycleAt
+      // self-refuses the next save write. Clamp the cap into the domain.
+      const mergedDeadline = clockOk
+        ? Math.min(Math.max(0, restoredDeadline), Math.min(restoreNowMs + this.cycleMs, 2 ** 52 - 1))
+        : Math.max(0, restoredDeadline)
+      this.nextCycleAt = Math.max(this.nextCycleAt, mergedDeadline)
+    }
     this.started = this.started || Boolean(source.started)
   }
 
@@ -274,6 +315,30 @@ export class DecomposeSystem {
   settleOffline(nowMs: number, offlineSinceMs: number): number {
     // BETA SCOPE LOCK v2 - offline cycles cannot accrue while hidden.
     if (isScopeHidden('equipmentOreDecompose')) {
+      return 0
+    }
+
+    // r29-COR-F1: nowMs guard parity - nowMs=+Infinity spins the
+    // settle loop up to the 5000-cycle bound; zero-settle under a
+    // broken clock (deny). r30-AUT-3: [0, 2^52) persisted-clock domain.
+    // r31-COR-F-HEADROOM: the fast-forward and settle-loop writes
+    // advance nextCycleAt to at most nowMs + cycleMs - the same
+    // headroom keeps the persisted stamp inside the admitted domain.
+    if (
+      !Number.isFinite(nowMs) ||
+      nowMs < 0 ||
+      !(nowMs + Math.max(0, this.cycleMs) < 2 ** 52)
+    ) {
+      return 0
+    }
+
+    // r30-AUT-1: the sibling window input needs the same guard - a NaN
+    // offlineSinceMs collapses windowStartMs to NaN, which SKIPS the
+    // confiscation fast-forward (nextCycleAt <= NaN is false) and pays
+    // the whole deep-past backlog up to the 5000-cycle bound. Parity
+    // with the workerLane/auto-farm window guards: zero-settle.
+    // r30-AUT-3: same [0, 2^52) domain as the clock seams.
+    if (!Number.isFinite(offlineSinceMs) || offlineSinceMs < 0 || offlineSinceMs >= 2 ** 52) {
       return 0
     }
 
@@ -296,9 +361,14 @@ export class DecomposeSystem {
     // still pending, and a crafted-future offlineSinceMs paired with a
     // crafted-old nextCycleAt would otherwise spin billions of no-op
     // iterations at boot.
+    // r21-COR-4: O(1) jump arithmetic instead of per-cycle stepping -
+    // a crafted nextCycleAt=0 still admitted by the non-negative pin
+    // used to spin ~57M no-op iterations (~156ms) every boot.
     const fastForwardEndMs = Math.min(windowStartMs, nowMs)
-    while (this.nextCycleAt <= fastForwardEndMs) {
-      this.nextCycleAt += this.cycleMs
+    if (this.cycleMs > 0 && this.nextCycleAt <= fastForwardEndMs) {
+      const skippedCycles =
+        Math.floor((fastForwardEndMs - this.nextCycleAt) / this.cycleMs) + 1
+      this.nextCycleAt += skippedCycles * this.cycleMs
     }
 
     let settled = 0

@@ -12,7 +12,7 @@ import {
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow, TU_LINH_TRAN_DURATION_MS } from '../core/economy/TuLinhTranBalance'
-import { buildGameSave, computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
+import { buildGameSave, computeRestoreIdentity, restoreAuthorityNowMs, sanitizeRestoreAuthority, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
@@ -81,6 +81,119 @@ const lastRestoredPayloads = new WeakMap<object, RestoredPayloadSnapshot>()
 // id/sourceId/stat/tag (toan chuoi dinh danh do code sinh), nen hai mang
 // khac noi dung khong the vo tinh trung chu ky vi ghep chuoi.
 const SIGNATURE_SEPARATOR = '\u0001'
+
+/**
+ * r13-INT: bound the wall-clock window a persisted timed effect may
+ * claim. `appliedAtMs > now` is impossible provenance - clamp it so a
+ * forged future application date cannot park a buff ahead of time.
+ * `expiresAtMs` forward-bound now applies to EVERY effect, stackable
+ * included (r22-AUT-1): parking an EXPIRY mints liveness - a crafted
+ * far-future deadline on a stackable regen record granted a live buff
+ * for ~285M years vs the 75s authored (grant direction, not the
+ * deny-direction residual the earlier exemption assumed). Honest
+ * bound math: every extension is `max(drinkTime, oldExpiry) + dur`
+ * with drinkTime <= lastSavedAt, so honest expiry <= lastSavedAt +
+ * sum(durations consumed). The sum is structurally unbounded (no
+ * per-record drink counter persists), so the cap uses the same
+ * class-max window as non-stackable (TU_LINH_TRAN_DURATION_MS =
+ * longest authored window = 24h): every honest single-window chain
+ * shorter than ~360 consecutive drinks passes whole; chains beyond
+ * that lose only their tail past save+24h on load - bounded
+ * deny-direction loss, far cheaper than a permanent mint.
+ * (Supersedes the r13-COR-3 / r14-AUT-1 exemption, which reasoned
+ * the honest span was unbounded and therefore unboundable - true for
+ * an absolute bound, wrong as a reason to pass a forged deadline
+ * verbatim.)
+ * The non-stackable forward bound anchors at the save's own
+ * provenance (provenanceMs = min(lastSavedAt, authorityNow)), NOT at
+ * boot-now. Every honest extension re-stamps lastApply + duration
+ * with lastApply <= lastSavedAt (rebuy chains included: appliedAt
+ * stays at first buy while expires max-extends), so expires >
+ * lastSavedAt + TU_LINH_TRAN_DURATION_MS is an impossible claim - a
+ * forged far-future deadline on a stale save clamps to the provenance
+ * bound instead of minting real buff time past trusted-now + dur.
+ * Used by the persistentTimedEffects restore map (the offline-payout
+ * read runs the sibling payoutExpiresAtMs bound, payload epoch) so
+ * crafted spans cannot feed the settlement seam through a raw copy.
+ */
+function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: number; durationStackable?: boolean }>(
+  effect: T,
+  nowMs: number,
+  provenanceMs: number,
+  saveLastSavedAtMs: number,
+): T {
+  // appliedAtMs is write-only after persistence (refresh merges read
+  // expiresAtMs only), so its clamp epoch is cosmetic - nowMs keeps it
+  // inside the same authority window the sibling arms anchor (r23-int-02:
+  // asymmetric vs the dead arm's field-epoch clamp, but strict-subset -
+  // it never admits what the raw payload couldn't already claim).
+  // r25-AUT: persisted stamps must also sit inside the CLIENT epoch -
+  // nowMs is the authority clock, which may sit ahead of Date.now()
+  // (skewed server response or crafted pair); a persisted stamp past
+  // the next save's lastSavedAt is rejected at the next write's
+  // admission (self-brick class). The extra clamp only fires when both
+  // inputs are already future-dated.
+  const appliedAtMs = Number.isFinite(effect.appliedAtMs)
+    ? Math.min(effect.appliedAtMs, nowMs, Date.now())
+    : effect.appliedAtMs
+  // r15-COR-A: a record dead at save time (expires <= lastSavedAt in
+  // the payload's own epoch) can never honestly revive - expires only
+  // extends on rebuy, which re-stamps past the save marker. Its skewed
+  // stamp may still read future in the authority epoch, so the dead arm
+  // clamps at the FIELD clock, not provenance+duration - authorityNow
+  // alone revives a dead record under a SLOW device clock (until >
+  // Date.now() reads the stamp as live for up to skew).
+  // r18-INT-01/r18-AUT-1: the live arm (expires > lastSavedAt) binds
+  // at provenance + duration, the tightest cap that still admits the
+  // WHOLE honest class - rebuy chains reach expires = lastApply + dur
+  // <= lastSavedAt + dur because appliedAt keeps the FIRST purchase
+  // stamp while expires max-extends (an appliedAt-anchored bound
+  // killed those chains). Under a fast clock the honest tail beyond
+  // until + dur is still unprovable (indistinguishable from a
+  // far-future mint) - irreducible bounded loss.
+  const expiresAtMs =
+    Number.isFinite(effect.expiresAtMs)
+      ? Math.min(
+          effect.expiresAtMs,
+          Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs
+            ? Math.min(nowMs, Date.now())
+            : provenanceMs + TU_LINH_TRAN_DURATION_MS,
+        )
+      : effect.expiresAtMs
+  return { ...effect, appliedAtMs, expiresAtMs }
+}
+
+// r15-COR-A/-B: the payout window needs each record's death POSITION
+// in the payload epoch, not the liveness-clamped stamp the restore
+// map stores. A dead-at-save record keeps its own stamp here - a buff
+// that honestly died mid-window must still pay its live rate up to
+// that stamp - while a live claim (expires > lastSavedAt) binds at
+// lastSavedAt + duration: the payload-epoch honest-max for the class
+// (a claim applied AT the marker asserts the full remaining duration;
+// honest chains and single buys alike stay under it). r18-INT-01:
+// anchoring at appliedAt killed honest rebuy chains (appliedAt keeps
+// the first-buy stamp while expires max-extends); r17-COR-B1: any
+// authority-epoch anchor cuts honest tails by the clock skew. This
+// bound keeps every honest shape whole while capping a forged claim
+// at the same class max - the paid width still sits inside the
+// authorized window. The stored copy additionally clamps at
+// provenance so a crafted far-future marker cannot mint real buff
+// time past trusted-now + duration.
+function payoutExpiresAtMs(
+  effect: { expiresAtMs: number; durationStackable?: boolean },
+  saveLastSavedAtMs: number,
+): number {
+  // r22-AUT-1: stackable records bound the same way - a far-future
+  // parked expiry on the payout read mints buff-coverage width the
+  // same way it mints liveness on the restore map.
+  if (!Number.isFinite(effect.expiresAtMs)) {
+    return effect.expiresAtMs
+  }
+  if (!Number.isFinite(saveLastSavedAtMs) || effect.expiresAtMs <= saveLastSavedAtMs) {
+    return effect.expiresAtMs
+  }
+  return Math.min(effect.expiresAtMs, saveLastSavedAtMs + TU_LINH_TRAN_DURATION_MS)
+}
 
 // "Noi dung giong het" = cung so luong, cung THU TU, va tung entry khop
 // TOAN BO field cua StatModifier co anh huong toi calculateStats
@@ -259,6 +372,10 @@ export const usePlayerStore = defineStore('player', {
       // fingerprint 2-field. Cung save goi lai = no-op; save KHAC (du
       // cung lastSavedAt|cultivation) ap day du.
       const payloadIdentity = computeRestoreIdentity(save)
+      // r23-AUT: authority stamps bypass the save gate - an
+      // out-of-domain server stamp falls back to client-clock
+      // semantics (bounded deny) instead of feeding derivations.
+      const authority = sanitizeRestoreAuthority(timeAuthority)
       const previousRestore = lastRestoredPayloads.get(this)
 
       if (previousRestore !== undefined && previousRestore.identity === payloadIdentity) {
@@ -273,36 +390,106 @@ export const usePlayerStore = defineStore('player', {
       // zero by definition. The bound still flows through
       // calculateOfflineTime so the max cap applies.
       const offlineSeconds =
-        timeAuthority?.kind === 'cold-boot'
+        authority?.kind === 'cold-boot'
           ? calculateOfflineTime(
-              { lastOnlineAt: timeAuthority.sinceMs },
-              timeAuthority.untilMs,
+              { lastOnlineAt: authority.sinceMs },
+              authority.untilMs,
             ).offlineSeconds
-          : timeAuthority?.kind === 'live-replacement'
+          : authority?.kind === 'live-replacement'
             ? 0
             : calculateOfflineTime({
                 lastOnlineAt: save.player.lastSavedAt,
               }).offlineSeconds
+
+      // r13-AUT-5: under remote authority the "now" every forward
+      // clamp anchors at is the server-approved window end, not the
+      // client clock - a slow local clock would underpay an approved
+      // span, a fast one must not pay past approval.
+      const authorityNowMs = restoreAuthorityNowMs(authority)
+      // r14-AUT-2: timed-effect provenance is the payload's own stamp
+      // bounded by the approved now - a save cannot claim a deadline
+      // past lastSavedAt + duration, and a forged-future lastSavedAt
+      // cannot widen the bound past the approved now.
+      // r25-AUT: the provenance also bounds the PERSISTED expires clamp
+      // (provenance + TU_LINH_TRAN_DURATION_MS is written back into the
+      // save), so it must clamp at the client clock too - a
+      // double-future pair (marker + authority both ahead of now) would
+      // otherwise persist expires > next-lastSavedAt + duration and the
+      // admission pin rejects the game's own write (self-brick class).
+      const effectProvenanceMs = Number.isFinite(save.player.lastSavedAt)
+        ? Math.min(save.player.lastSavedAt, authorityNowMs, Date.now())
+        : Math.min(authorityNowMs, Date.now())
 
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x
       // whole-window over-grants. Re-derive the un-buffed base rate and
       // pay each expiry-boundary segment its own live percent through
       // the same seconds->cultivation conversion authority.
-      const savedTimedEffects = save.player.persistentTimedEffects ?? []
+      // r13-INT-03: read the BOUNDED payout copy - a crafted oversized
+      // span otherwise pays its boost over window stretches no
+      // authored duration could cover (the payout-epoch sibling of the
+      // restore map's bound: lastSavedAt + dur vs provenance + dur -
+      // provenance = min(lastSavedAt, authorityNow) <= lastSavedAt, so
+      // the map bound is never looser; the two coincide when
+      // lastSavedAt <= authorityNow and diverge under a fast client
+      // clock, where the live map is strictly tighter - deny
+      // direction, r23-int-01). The payout copy keeps each record's own death POSITION
+      // for the split (a buff honestly dying mid-window still pays its
+      // live part); only live claims clamp, so segments stay
+      // consistent with what was actually live.
+      const payoutTimedEffects = (save.player.persistentTimedEffects ?? []).map((effect) => ({
+        ...effect,
+        expiresAtMs: payoutExpiresAtMs(effect, save.player.lastSavedAt),
+      }))
       // r12-AUT: bound the cultivation window at now on BOTH ends -
-      // under cold-boot a crafted-future lastSavedAt could otherwise
-      // position a payable window in the future (same clamp as saveOps
-      // settleNowMs). The splitter sorts bounds into positive segments,
       // so a future-positioned start/end pair still mints - the start
-      // must clamp too (crafted future -> degenerate now..now window).
-      const windowStartMs = Math.min(save.player.lastSavedAt, Date.now())
-      const windowEndMs = Math.min(windowStartMs + offlineSeconds * 1000, Date.now())
-      const percentAtSave = getActiveCultivationSpeedPercent(savedTimedEffects, windowStartMs)
+      // must clamp too. r14-COR-1: the start anchor is
+      // authorityNowMs - elapsed, not authorityNowMs - the window is
+      // the authorized DURATION positioned at the payload marker, so a
+      // client clock honestly ahead of the server (lastSavedAt >
+      // untilMs) must still collect the full span instead of
+      // collapsing to [until, until]; only content past the approved
+      // end is denied (windowEnd stays clamped at authorityNowMs).
+      const windowStartMs = Math.min(
+        save.player.lastSavedAt,
+        authorityNowMs - offlineSeconds * 1000,
+      )
+      const windowEndMs = Math.min(windowStartMs + offlineSeconds * 1000, authorityNowMs)
+      // r16-COR-1: the payout window must START at the save marker -
+      // the offline span runs AFTER the save, so the authorized width
+      // re-anchors at lastSavedAt in the payload epoch. r15 shifted
+      // the authority window by an end-anchored skew, which paid the
+      // PRE-save interval instead: a buff dying just before the save
+      // still paid its boost, and a live-at-save buff paid the whole
+      // window regardless of when it really died. Stamps are
+      // payload-epoch, so [lastSavedAt, lastSavedAt + width] is the
+      // window the payload's own clock measured.
+      const payloadWindowStartMs = Number.isFinite(save.player.lastSavedAt)
+        ? save.player.lastSavedAt
+        : windowStartMs
+      const payloadWindowEndMs =
+        payloadWindowStartMs + Math.max(0, windowEndMs - windowStartMs)
+      // The un-buff divide must match the validator's own probe: the
+      // RAW payload stamps at the SAVE INSTANT (payload epoch). A
+      // claim folded a buffed snapshot passes the gate as
+      // claim <= BASE*(1+p) with p = raw-live percent at lastSavedAt;
+      // sampling the bound copy instead read a live claim as dead
+      // whenever skew > duration, the missing divide then minted the
+      // buff twice (r16-INT-01). Segments still use payout positions -
+      // they only move a live record's death EARLIER (deny-bounded),
+      // never extend what the claim can mint.
+      const percentAtSave = getActiveCultivationSpeedPercent(
+        save.player.persistentTimedEffects ?? [],
+        Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : Number.NEGATIVE_INFINITY,
+      )
       const unbuffedCultivationPerSecond = save.player.cultivationPerSecond / (1 + percentAtSave)
       const offline: OfflineResult = {
         elapsedSeconds: offlineSeconds,
-        cultivation: splitCultivationSpeedWindow(savedTimedEffects, windowStartMs, windowEndMs).reduce(
+        cultivation: splitCultivationSpeedWindow(
+          payoutTimedEffects,
+          payloadWindowStartMs,
+          payloadWindowEndMs,
+        ).reduce(
           (sum, segment) =>
             sum +
             calculateOfflineProgress(segment.seconds, unbuffedCultivationPerSecond * (1 + segment.percent))
@@ -459,28 +646,21 @@ export const usePlayerStore = defineStore('player', {
       // restored copy clears here and repopulates on the next tick.
       restoredPlayer.externalModifiers = []
       // r12-COR: bound the wall-clock window a persisted timed effect
-      // may claim. appliedAtMs > now is impossible provenance - clamp it
-      // so a forged future application date cannot park a buff ahead of
-      // time; expiresAtMs beyond appliedAtMs + the longest authored
-      // window (TU_LINH_TRAN_DURATION_MS) mints a months-long buff off
-      // a forged stamp - clamp to the authored bound. Honest saves are
-      // untouched (no authored effect exceeds its duration).
+      // may claim - boundTimedEffectClocks above (r13-INT-01/02:
+      // seconds-domain honest ceilings; r22-AUT-1: stackable expiries
+      // bound the same - a parked expiry mints liveness). The sibling
+      // payoutExpiresAtMs runs the payout-epoch bound in the
+      // offline-pay map.
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
-        (effect) => {
-          const appliedAtMs = Number.isFinite(effect.appliedAtMs)
-            ? Math.min(effect.appliedAtMs, Date.now())
-            : effect.appliedAtMs
-          const expiresAtMs =
-            Number.isFinite(effect.expiresAtMs) && Number.isFinite(appliedAtMs)
-              ? Math.min(effect.expiresAtMs, appliedAtMs + TU_LINH_TRAN_DURATION_MS)
-              : effect.expiresAtMs
-          return {
-            ...effect,
-            appliedAtMs,
-            expiresAtMs,
-            modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
-          }
-        },
+        (effect) => ({
+          ...boundTimedEffectClocks(
+            effect,
+            authorityNowMs,
+            effectProvenanceMs,
+            save.player.lastSavedAt,
+          ),
+          modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
+        }),
       )
 
       // Reject a nonsense realmId BEFORE the assign lands it: a crafted

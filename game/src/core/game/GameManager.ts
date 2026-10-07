@@ -1138,6 +1138,16 @@ export class GameManager {
   }
 
   /**
+   * r39 adjudication - a freeze reason's owner registers its own truth:
+   * the latch then refuses arms the owner is not holding and releases
+   * the owner still holds (foreign emit-listener plants die at the
+   * latch). Returns an unregister function.
+   */
+  registerFreezeLatchTruth(reason: FreezeReason, isHeld: () => boolean): () => void {
+    return this.turnBattleOps.registerFreezeLatchTruth(reason, isHeld)
+  }
+
+  /**
    * External command boundary (spec section 9). A command never mutates
    * battle state at the moment it arrives: it runs immediately when there is
    * no boundary to wait for (no battle, or the token is already idle), and
@@ -1404,6 +1414,16 @@ export class GameManager {
    */
   abandonBattle(): boolean {
     return this.turnBattleOps.abandonBattle()
+  }
+
+  /**
+   * r34-COR-F1 - drop an in-flight battle whose owner is being replaced
+   * (boot restore / character create). Silent: no terminal event, no
+   * banking - the battle's player binding points at the state being
+   * rebound. bootGame calls this at the startInitializing funnel.
+   */
+  discardStaleBattle(): void {
+    this.turnBattleOps.discardStaleBattle()
   }
 
   /**

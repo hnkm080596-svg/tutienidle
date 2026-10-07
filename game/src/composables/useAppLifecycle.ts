@@ -3,6 +3,7 @@ import type { GameManager } from '../core/game/GameManager'
 import type { CloudSaveCoordinator } from '../services/cloudSave/CloudSaveCoordinator'
 import type { CloudSaveWriteResult } from '../services/cloudSave/CloudSaveService'
 import type { BackendErrorCode, RemoteCharacterMetadata } from '../services/session/BackendStatus'
+import { DATA_REFUSE_CODES } from '../services/session/BackendStatus'
 import type { RestoreTimeAuthority } from '../services/save/saveTypes'
 import type { PlayerData } from '../core/player/Player'
 import { unsupportedReleaseReason } from '../core/betaScopeSurface'
@@ -36,22 +37,10 @@ import { buildGameSave } from '../services/save/SaveSystem'
  *    chay SAU onBeforeUnmount(stopAll) - listener-driven callers thi da bi
  *    go het roi nen khong co stale persist nao toi duoc do.
  */
-/** Refuse codes that arm the remote-scope save-issue surface on the boot
- *  write paths. A remote-destruction remedy is only honest for genuine
- *  DATA-CLASS refuses - the server saying "this save's content is
- *  unacceptable" (W8-AUT-1): rerolling/deleting the character is the one
- *  heal left, and the exported payload preserves the refused state. The
- *  whole SERVER_ERROR bucket (COMMITTED_MALFORMED - the save already
- *  landed; PENDING_JOURNAL codes - local faults; CHECKPOINT codes,
- *  CUTOFF_REGRESSION, MUTATION_ID_REUSED - transient authority rejections)
- *  must NOT arm: remote reset there burns a healthy row or loops the
- *  wedge. Auth/transport/protocol/config codes likewise keep their own
- *  terminal surfaces via observeSaveResult - the generic card is honest
- *  where remote reset could not help anyway. */
-const DATA_REFUSE_CODES: ReadonlySet<BackendErrorCode> = new Set([
-  'SAVE_INVALID',
-  'SAVE_TOO_LARGE',
-])
+// DATA_REFUSE_CODES moved next to the BackendErrorCode union
+// (BackendStatus.ts) - App.vue's persistPlayer escalation needs the
+// same positive-set classification, so the set lives with the type it
+// classifies instead of duplicating it here.
 
 export interface UseAppLifecycleDeps {
   clock: { start: () => void; stop: () => void; nowSeconds: () => number }
@@ -172,12 +161,20 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   let saveInFlight = false
   let persistenceSuppressed = false
   let stopped = false
+
   // B1-D - reversible authority pause: the OnlineSessionController calls
   // pauseSimulation() on OBSERVED authority loss and resumeSimulation()
   // once the reconnect pipeline lands. Distinct from `stopped` (terminal
   // teardown): intervals come back and the clock re-anchors so the
   // paused delta is discarded rather than paid as catch-up.
   let simPaused = false
+
+  // r39 adjudication - this lifecycle owns the 'authority-pause' latch:
+  // the combat clock accepts an arm only while simPaused holds, so a
+  // foreign freezeCombat plant cannot wedge combat behind an authority
+  // pause nobody set. Optional-chained: partial test stubs may not
+  // expose the registration API.
+  gameManager.registerFreezeLatchTruth?.('authority-pause', () => simPaused)
   // B2 (audit T1-8 follow-up) - starter grants commit to runtime state
   // BEFORE the first save; if that save fails, the buildings/materials/
   // activePlayer already applied cannot be rolled back in memory. A
@@ -246,7 +243,12 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     // interval callback that outlives pause() must not tick (the paused
     // delta is discarded by the clock re-anchor on resume, not paid).
     tickHandle = scheduleInterval(() => {
-      if (authority.canMutate()) {
+      // r29-INT-3: entryStage gate parity with persistProgress (:313) -
+      // the autosave refuse arm mounts entryStage 'error' under LOCAL
+      // authority too (observeSaveResult early-returns without a
+      // reconnect dep, so canMutate stays true there). Without this
+      // gate the sim keeps advancing behind the terminal surface.
+      if (entryStage.value === 'game' && authority.canMutate()) {
         onTick?.()
       }
     }, TICK_INTERVAL_MS)
@@ -344,6 +346,23 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     }
 
     bootInFlight = true
+    // r31-INT-1: re-baseline the pause latch on every (re-)entry. The
+    // flag is only meaningful while a LIVE sim is paused - a latch
+    // surviving the terminal -> acknowledge -> re-auth -> re-enter chain
+    // would make every later pauseSimulation() a silent no-op (combat
+    // freeze never fires behind the next error surface).
+    simPaused = false
+    // r32-INT-1/r33-INT-1: the flag is only HALF the pause latch -
+    // pauseSimulation also freezes CombatClock under reason
+    // 'authority-pause', and that reason is cleared ONLY inside
+    // resumeSimulation, which early-returns once the flag is already
+    // false. A terminal pause -> acknowledge -> re-enter would leave a
+    // live battle frozen forever. The reason is cleared below, AFTER
+    // authority.markReady() - clearing here would unfreeze the clock
+    // before admission is proven: the awaits in boot let RAF step turns
+    // behind the load/error surfaces, and a failed boot leaves the
+    // battle running with no way to re-latch (pauseSimulation needs
+    // entryStage === 'game').
     // Captured BEFORE the first await. Everything past the await below
     // compares against this: a stopAll() that landed while the load was in
     // flight makes every later side effect (restore, clock, intervals,
@@ -352,10 +371,13 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
     // B1-D - boot admission opens here: 'ready' is only reached after
     // auth/session/compatibility/load/pending/restore/durability all pass
-    // (the durability leg is the post-accrual commit below).
-    authority.beginChecking()
-
+    // (the durability leg is the post-accrual commit below). Runs INSIDE
+    // the try so an injected throw still lands in the finally below -
+    // a pre-try throw would strand bootInFlight=true and deadlock every
+    // later boot into 'skipped' (r34-COR-F4).
     try {
+      authority.beginChecking()
+
       const { createNewCharacter, onRestoreOk, onNewCharacter } = options
 
       if (createNewCharacter && newCharacterGrantsApplied) {
@@ -455,8 +477,9 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         // from the load row; a missing cutoff (pre-checkpoint saves)
         // degrades to the payload's own lastSavedAt marker under the
         // same server 'until' bound. Never the editable client clock.
-        const timeAuthority: RestoreTimeAuthority | undefined =
-          remoteAuthoritative && loaded.serverAuthority
+        const timeAuthority: RestoreTimeAuthority | undefined = !remoteAuthoritative
+          ? undefined
+          : loaded.serverAuthority
             ? {
                 kind: 'cold-boot',
                 sinceMs:
@@ -465,7 +488,15 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
                   ?? loaded.serverAuthority.serverNowMs,
                 untilMs: loaded.serverAuthority.serverNowMs,
               }
-            : undefined
+            : // r25-COR-1: under remote-authoritative a response with no
+              // usable server clock must FAIL CLOSED - undefined selects
+              // the legacy client-clock window, which pays
+              // Date.now()-lastSavedAt over the payload's editable
+              // marker (the class r24 denied for corrupt authorities;
+              // the resume seam at App.vue already fails closed the
+              // same way). Degrade to zero-accrual live-replacement:
+              // queues/jobs still load, nothing accrues, this boot.
+              { kind: 'live-replacement', nowMs: Date.now() }
 
         const restored = restoreGameSession(player, gameManager, loaded.save, timeAuthority)
 
@@ -704,24 +735,53 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         }
       }
 
+      // r34-COR-F1 - a boot that reaches admission starts battleless.
+      // Both arms above (restoreFromSave on 'ok', initializeCharacter on
+      // the grant path) rewrite player.$state's contents in place, so a
+      // battle still in flight belongs to a character that no longer
+      // exists: its player/stage bindings point at the very object whose
+      // contents the new owner now owns, and the unlatch below would
+      // resume it into the new session - a ghost resolution landing on
+      // the new character's state. It stayed latched through every await
+      // above (fail arms keep the frozen zombie untouched, exactly like
+      // pre-r33); only the success path pays the discard - silent, no
+      // terminal, no banking.
+      gameManager.discardStaleBattle()
+
       // B1-D - admission granted only now: heartbeat arms, the health
       // lease starts, and the mutation gate opens for the clock below.
       authority.markReady()
 
-      clock.start()
+      // r33-INT-1: clear the orphaned 'authority-pause' freeze only now
+      // that admission is proven - paired with the simPaused re-baseline
+      // at entry. resume() deletes just that reason and no-ops on a
+      // stopped clock or when nothing is latched, so user-pause /
+      // tab-hidden reasons are untouched. The whole tail is wrapped:
+      // an injected throw past this point would otherwise leave combat
+      // unfrozen behind a non-game surface with no re-latch path
+      // (pauseSimulation needs entryStage === 'game'), so the catch
+      // re-latches the same reason before rethrowing (r34-COR-F2).
+      try {
+        gameManager.resumeCombat('authority-pause')
 
-      // Fix (2026-09-06) - bootGame() TU start tick loop thay vi nho
-      // caller nho goi startTickLoop() sau khi boot xong. Day chinh la
-      // loi goi tung bi rot khi Task 5 extract inline boot logic cua
-      // App.vue sang composable nay (commit d6d9a1d) - ket qua:
-      // GameManager.update() khong bao gio chay trong browser that, toan
-      // bo game (combat/tu luyen/san xuat...) dung hinh vo thoi han du
-      // 2651 unit test van xanh (test goi thang gameManager.tickOps.update(), bo
-      // qua dung lop wiring nay). Gop vao bootGame() - noi da so huu
-      // clock.start()/startAutosave() - de "extract composable, quen
-      // rewire" khong con kha nang lap lai duoc nua.
-      startTickLoop(tick)
-      boot.enterGame()
+        clock.start()
+
+        // Fix (2026-09-06) - bootGame() TU start tick loop thay vi nho
+        // caller nho goi startTickLoop() sau khi boot xong. Day chinh la
+        // loi goi tung bi rot khi Task 5 extract inline boot logic cua
+        // App.vue sang composable nay (commit d6d9a1d) - ket qua:
+        // GameManager.update() khong bao gio chay trong browser that, toan
+        // bo game (combat/tu luyen/san xuat...) dung hinh vo thoi han du
+        // 2651 unit test van xanh (test goi thang gameManager.tickOps.update(), bo
+        // qua dung lop wiring nay). Gop vao bootGame() - noi da so huu
+        // clock.start()/startAutosave() - de "extract composable, quen
+        // rewire" khong con kha nang lap lai duoc nua.
+        startTickLoop(tick)
+        boot.enterGame()
+      } catch (error: unknown) {
+        gameManager.freezeCombat('authority-pause')
+        throw error
+      }
 
       return { status: 'entered' }
     } finally {

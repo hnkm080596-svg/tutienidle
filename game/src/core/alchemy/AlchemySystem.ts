@@ -205,6 +205,25 @@ export function verifyAlchemyJobReservation(
     return 'costScale'
   }
 
+  // r27-COR-2 + r27-AUT-1: the digest fold reads
+  // specialIngredients.map(special => special.materialId) - shape the
+  // collection AND each element BEFORE folding so a malformed
+  // reservation reports its field instead of throwing through the save
+  // validator (which would surface as an uncoded adapter throw and
+  // escape the data-refuse classification).
+  if (
+    !Array.isArray(witness.specialIngredients) ||
+    !witness.specialIngredients.every(
+      (special) =>
+        typeof special === 'object' &&
+        special !== null &&
+        typeof special.materialId === 'string' &&
+        Number.isFinite(special.amount),
+    )
+  ) {
+    return 'specialIngredients'
+  }
+
   // The digest is recipe-independent - it binds the job identity and
   // every reserved input atomically, so it replays even when the
   // recipe no longer resolves (data changed between save and load).
@@ -232,7 +251,6 @@ export function verifyAlchemyJobReservation(
   const witnessSpecials = witness.specialIngredients
 
   if (
-    !Array.isArray(witnessSpecials) ||
     witnessSpecials.length !== expectedSpecials.length ||
     expectedSpecials.some(
       (expected, index) =>
@@ -355,14 +373,101 @@ export class AlchemySystem {
    * the payload is a value, so mutating it afterwards must not leak into
    * live state (A3).
    */
-  restoreJobs(jobs: ActiveAlchemyJob[]): void {
-    this.jobs = jobs.map((job) => ({
-      ...job,
-      reservation: {
-        ...job.reservation,
-        specialIngredients: (job.reservation?.specialIngredients ?? []).map((special) => ({ ...special })),
-      },
-    }))
+  restoreJobs(jobs: ActiveAlchemyJob[], restoreNowMs: number = Date.now()): void {
+    // r29-COR-F1: the shift only fires under a sane restore clock -
+    // a non-finite or exact-integer-domain-overflow restoreNowMs from
+    // an ungated caller must not re-anchor every began-pair
+    // (restoreNowMs = -Infinity turns shiftMs into +Infinity and
+    // mints the whole queue on the next honest tick). Bad clock ->
+    // verbatim restore: post-dated jobs stay parked (deny), honest
+    // pairs were never shifted anyway.
+    // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
+    // deep-pasts the queue (next tick mints), and a stamp re-grounded
+    // at >= 2^52 exceeds the persisted timestamp domain so the next
+    // save write self-refuses. Both read as bad clock -> verbatim.
+    const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
+    this.jobs = jobs.flatMap((job) => {
+      // r31-COR-F-NEG-MINT: persisted stamps live in [0, 2^52) - a
+      // crafted negative pair would verbatim-restore as already-due and
+      // settle on the next honest tick (mint); a >= 2^52 stamp wedges
+      // the next write. Drop at the boundary (same rule as unknown
+      // siteIds in restoreStates).
+      // r32-AUT-1/2: ordering parity with the validator pin and the
+      // sibling lane advance - an INVERTED pair (completes <= started)
+      // is already-due the moment it lands (next tick mints), and the
+      // shift arm mints a fresh inverted pair because a negative span
+      // passes the headroom trivially. Drop inverted pairs outright:
+      // impossible-authored content, never shift them.
+      if (
+        !Number.isFinite(job.startedAtMs) ||
+        !Number.isFinite(job.completesAtMs) ||
+        job.startedAtMs < 0 ||
+        job.startedAtMs >= 2 ** 52 ||
+        job.completesAtMs < 0 ||
+        job.completesAtMs >= 2 ** 52 ||
+        job.completesAtMs <= job.startedAtMs
+      ) {
+        return []
+      }
+      // r26-COR-1/AUT-1: a job post-dating the restore clock is
+      // impossible-authored - startedAtMs is a began-time pinned
+      // <= playerLastSavedAt at admission, so only a uniformly-shifted
+      // (skewed-clock/crafted) pair reaches here. Re-ground it at the
+      // restore clock, shifting completesAtMs by the same delta so the
+      // authored span stays exact: the job resumes as live in-flight
+      // instead of idling past the next save marker and self-bricking
+      // every write. Honest stamps are untouched.
+      // r31-COR-F-HEADROOM (sibling): the minted completesAtMs =
+      // restoreNowMs + authored span must fit the persisted domain too
+      // - a restore clock within span of the bound would re-ground a
+      // stamp the next save write self-refuses. Keep the pair verbatim
+      // (parked) instead.
+      if (
+        clockOk &&
+        job.startedAtMs > restoreNowMs &&
+        restoreNowMs + (job.completesAtMs - job.startedAtMs) < 2 ** 52
+      ) {
+        const shiftMs = job.startedAtMs - restoreNowMs
+        const shifted = { ...job, startedAtMs: job.startedAtMs - shiftMs, completesAtMs: job.completesAtMs - shiftMs }
+        // The reservation digest folds startedAtMs/completesAtMs into
+        // the witness - re-derive it over the shifted stamps so the
+        // witness still replays. Safe: an attacker could always
+        // self-consistent-digest (documented residual).
+        // r28-COR-Low: the fold reads reservation.specialIngredients.map
+        // - only re-derive when the witness is actually foldable, or a
+        // defined-but-malformed reservation throws before the normalize
+        // arm below can run (shift arm vs verbatim arm divergence).
+        const resSpecials =
+          typeof job.reservation === 'object' && job.reservation !== null
+            ? job.reservation.specialIngredients
+            : undefined
+        const foldable =
+          Array.isArray(resSpecials) &&
+          resSpecials.every((special) => typeof special === 'object' && special !== null)
+        job = foldable
+          ? {
+              ...shifted,
+              reservation: {
+                ...(job.reservation as AlchemyJobReservation),
+                digest: alchemyJobReservationDigest(shifted, job.reservation as AlchemyJobReservation),
+              },
+            }
+          : shifted
+      }
+      return [
+        {
+          ...job,
+          reservation: {
+            ...job.reservation,
+            // r27-INT-Low: tolerate a non-array specials field - the
+            // normalize arm must never throw on an ungated payload.
+            specialIngredients: Array.isArray(job.reservation?.specialIngredients)
+              ? job.reservation.specialIngredients.map((special) => ({ ...special }))
+              : [],
+          },
+        },
+      ]
+    })
   }
 
   getJobs(): ActiveAlchemyJob[] {
@@ -398,6 +503,27 @@ export class AlchemySystem {
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
+    // r29-INT-2: nowMs guard parity with tick - a non-finite or
+    // out-of-domain clock bakes a NaN/huge deadline
+    // the tick guard never inspects (it guards the clock ARGUMENT,
+    // not stored stamps): NaN settles for free on the next finite
+    // tick (mint), +Infinity parks a live slot forever. Deny at
+    // origination - before any cost/burn arithmetic below.
+    // r30-AUT-3: the domain is [0, 2^52) - the minted stamps must fit
+    // the persisted timestamp bound, and a negative clock would mint
+    // an already-due job (free instant pill).
+    // r31-COR-F-HEADROOM: headroom on the minted due too - completesAtMs
+    // = nowMs + authored span, so a clock within span of the bound mints
+    // a stamp the next save write self-refuses (wedge). The !(...) form
+    // denies NaN spans as well.
+    if (
+      !Number.isFinite(nowMs) ||
+      nowMs < 0 ||
+      !(nowMs + Math.max(0, alchemySecondsFor(recipe, roomLevel) * 1000) < 2 ** 52)
+    ) {
+      return { ok: false, reason: 'invalid_clock' }
+    }
+
     // BETA SCOPE LOCK v2 sec.12 - recipe families outside
     // BETA_ENABLED_RECIPE_FAMILIES are dormant: their definitions stay in
     // the registry but jobs cannot start via ANY entry path (the domain
@@ -547,6 +673,18 @@ export class AlchemySystem {
     // M3 - Hoa Hau Thong Than: successful jobs yield pills x multiplier.
     pillYieldMultiplier = 1,
   ): void {
+    // r28-AUT-2: nowMs guard parity with advanceWorkerLanes
+    // (WorkerLaneAdvance.ts:150-151) - a non-finite or
+    // out-of-domain clock would treat every in-flight
+    // job as due (NaN < completesAtMs is false -> settle arm) and mint
+    // the whole queue, or park all jobs forever. Zero-advance result:
+    // jobs preserved untouched (deny direction).
+    // r30-AUT-3: [0, 2^52) - a clock outside the persisted domain
+    // would bake stamps the next save write self-refuses.
+    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
+      return
+    }
+
     const remaining: ActiveAlchemyJob[] = []
 
     for (const job of this.jobs) {
