@@ -219,7 +219,7 @@ const zoom = ref(1)
 const dragging = ref(false)
 let dragMoved = false
 let dragStart: { px: number; py: number; x: number; y: number } | null = null
-let nodeDrag: { id: string; px: number; py: number; x: number; y: number } | null = null
+let nodeDrag: { id: string; px: number; py: number; x: number; y: number; scale: number } | null = null
 
 // Pan clamp: keep at least PAN_MARGIN px of the scaled graph inside the
 // viewport on each axis - a background drag can never push the tree fully
@@ -242,7 +242,16 @@ function onPointerDown(event: PointerEvent) {
     const node = host && paintNodes.value.find(n => host.dataset.nodeId === n.id)
     if (node) {
       const p = posOf(node)
-      nodeDrag = { id: node.id, px: event.clientX, py: event.clientY, x: p.x, y: p.y }
+      nodeDrag = {
+        id: node.id,
+        px: event.clientX,
+        py: event.clientY,
+        x: p.x,
+        y: p.y,
+        // Drag-start scale: the cursor->graph mapping stays fixed even
+        // if a wheel zoom lands mid-gesture.
+        scale: props.fit * zoom.value,
+      }
       extentFreeze.value = renderExtent.value
     }
   }
@@ -255,13 +264,12 @@ function onPointerMove(event: PointerEvent) {
   if (!dragMoved) return
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
   if (nodeDrag) {
-    // Screen px -> graph px: the graph scales by fit*zoom.
-    const scale = props.fit * zoom.value
+    // Screen px -> graph px, at the drag-start scale.
     designOffsets.value = {
       ...designOffsets.value,
       [nodeDrag.id]: {
-        x: nodeDrag.x + (event.clientX - nodeDrag.px) / scale,
-        y: nodeDrag.y + (event.clientY - nodeDrag.py) / scale,
+        x: nodeDrag.x + (event.clientX - nodeDrag.px) / nodeDrag.scale,
+        y: nodeDrag.y + (event.clientY - nodeDrag.py) / nodeDrag.scale,
       },
     }
     saveDesign()
@@ -291,13 +299,14 @@ function onWheel(event: WheelEvent) {
   const next = Math.min(4, Math.max(0.3, zoom.value * Math.exp(-event.deltaY * 0.0012)))
   if (next === zoom.value) return
   const ratio = (props.fit * next) / (props.fit * zoom.value)
+  // Commit the zoom before clamping: the bound reads the NEW scale.
+  zoom.value = next
   const host = event.currentTarget as HTMLElement
   pan.value = clampPan(
     { x: cx - (cx - pan.value.x) * ratio, y: cy - (cy - pan.value.y) * ratio },
     host.offsetWidth,
     host.offsetHeight,
   )
-  zoom.value = next
 }
 function onSelect(id: string) {
   if (!dragMoved) emit('select', id)
