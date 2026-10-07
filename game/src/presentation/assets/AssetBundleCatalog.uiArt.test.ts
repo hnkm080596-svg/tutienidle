@@ -10,7 +10,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { Route } from '../PresentationContracts'
-import { SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
+import { NODE_ICON_MANIFEST, SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconManifest'
 import {
   getBundlesForRoute,
   getUiChromeDescriptors,
@@ -34,7 +34,7 @@ describe('ui art bundles', () => {
     // SkillIconManifest deliberately declares icons whose placeholder PNGs
     // may not be dropped yet (they render as the slot monogram). The
     // manifest stays the warm authority; its URLs are presence-exempt.
-    const manifestDeclared = new Set(Object.values(SKILL_ICON_MANIFEST))
+    const manifestDeclared = new Set([...Object.values(SKILL_ICON_MANIFEST), ...Object.values(NODE_ICON_MANIFEST)])
     const missing: string[] = []
     for (const d of [...getUiChromeDescriptors(), ...getUiSceneDescriptors()]) {
       if (d.kind !== 'dom-image') continue
