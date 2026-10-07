@@ -167,7 +167,7 @@ afterEach(() => {
 // ----------------------------------------------------------------------------
 
 describe('r34 AUT - A: bootGame reports entered even when the home request never lands', () => {
-  it("boot.enterGame that does not reach 'game' (rejected request): outcome 'entered', sim admitted, combat unlatched - but tick/save stay stage-gated", async () => {
+  it("boot.enterGame that does not reach 'game' (rejected request): outcome 'entered', sim admitted, battleless boot - but tick/save stay stage-gated", async () => {
     const manager = registeredManager()
     const combatSource = new ManualClockSource()
     manager.setCombatClockSource(combatSource)
@@ -192,11 +192,14 @@ describe('r34 AUT - A: bootGame reports entered even when the home request never
     const outcome = await lifecycle.bootGame({ createNewCharacter: false })
 
     // bootGame claims success although no game surface will ever mount on
-    // its own. Admission + unlatch already ran.
+    // its own. Admission + the pre-markReady discard already ran: the
+    // entered boot is battleless (r34-COR-F1/r35-INT-1 contract - every
+    // freeze reason died with the battle, clock stopped).
     expect(outcome.status).toBe('entered')
     expect(stubs.authority.markReady).toHaveBeenCalledTimes(1)
-    expect(manager.getFreezeReasons()).not.toContain('authority-pause')
-    expect(manager.getCombatClockState()).toBe('running')
+    expect(manager.getFreezeReasons()).toEqual([])
+    expect(manager.getTurnBattle()).toBeNull()
+    expect(manager.getCombatClockState()).toBe('stopped')
     expect(stubs.boot.fail).not.toHaveBeenCalled()
     expect(stubs.entryStage.value).toBe('auth')
 
@@ -222,11 +225,13 @@ describe('r34 AUT - A: bootGame reports entered even when the home request never
 })
 
 // ----------------------------------------------------------------------------
-// (B) Tail throw propagation: no catch around markReady..enterGame.
+// (B) Tail throw propagation: markReady sits outside the inner tail
+//     try/catch; its throw propagates. Post-discard the boot is already
+//     battleless, so the safe direction is 'stopped', not 'frozen'.
 // ----------------------------------------------------------------------------
 
 describe('r34 AUT - B: a throw inside the success tail propagates uncaught (no fail arm)', () => {
-  it('markReady throwing rejects bootGame: boot.fail never runs, the combat latch holds (safe direction)', async () => {
+  it("markReady throwing rejects bootGame: boot.fail never runs, the discard already dropped the battle (safe direction)", async () => {
     const manager = registeredManager()
     manager.setCombatClockSource(new ManualClockSource())
     startAStage(manager)
@@ -248,11 +253,12 @@ describe('r34 AUT - B: a throw inside the success tail propagates uncaught (no f
     await expect(lifecycle.bootGame({ createNewCharacter: false })).rejects.toThrow('listener boom')
 
     // No fail surface mounted - the caller sees a rejection it does not
-    // handle (void bootGame / event handler). The combat latch survived:
-    // moving resumeCombat post-markReady makes this arm fail-safe.
+    // handle (void bootGame / event handler). The discard ran before
+    // markReady, so the battleless state survived the throw: clock
+    // 'stopped', every freeze reason gone - fail-safe either way.
     expect(stubs.boot.fail).not.toHaveBeenCalled()
-    expect(manager.getFreezeReasons()).toContain('authority-pause')
-    expect(manager.getCombatClockState()).toBe('frozen')
+    expect(manager.getFreezeReasons()).toEqual([])
+    expect(manager.getCombatClockState()).toBe('stopped')
     expect(stubs.clock.start).not.toHaveBeenCalled()
     expect(stubs.intervals).toHaveLength(0)
 

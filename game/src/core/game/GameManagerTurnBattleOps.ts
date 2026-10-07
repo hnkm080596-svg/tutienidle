@@ -813,6 +813,36 @@ export class GameManagerTurnBattleOps {
   private awaitStep(signal: TurnStepSignal, done: () => void): void {
     let deferredMs = 0
     const fallback = () => {
+      // r35-AUT-1 - the fallback is a wall-clock channel that would
+      // otherwise bypass the CombatClock latch entirely: a ghost parked
+      // mid-turn kept draining on setTimeout while the boot awaited, and
+      // its mints landed on whichever character the rebound $state now
+      // owns. A dead/terminal battle drops its parked work; an
+      // ADMINISTRATIVELY latched clock (authority-pause, user-pause,
+      // tab-hidden) parks the step until released. 'turn-in-flight' and
+      // 'not-revealed' are exempt - the battle pipeline's own latches:
+      // the fallback exists to unblock the first, and the deferral arm
+      // below owns the second (its cap-drain exists precisely to
+      // complete turns whose held session never releases).
+      const liveBattle = this.turnBattle
+      if (
+        liveBattle === null ||
+        liveBattle.state === 'victory' ||
+        liveBattle.state === 'defeat' ||
+        this.combatClock.getState() === 'stopped'
+      ) {
+        this.pendingStepDone[signal] = undefined
+        return
+      }
+      if (
+        this.combatClock
+          .getFreezeReasons()
+          .some((reason) => reason !== 'turn-in-flight' && reason !== 'not-revealed')
+      ) {
+        timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
+        this.pendingStepTimers.push(timer)
+        return
+      }
       if (this.presentationOps.session.isBlocking()) {
         deferredMs += ANIMATION_FALLBACK_MS
         if (deferredMs < AWAIT_STEP_DEFERRAL_CAP_MS) {
@@ -1651,6 +1681,13 @@ export class GameManagerTurnBattleOps {
     this.reactionVfxBattle = null
     this.procExecutionCursor = 0
     this.procPresentationBattle = null
+
+    // r35-INT-2 - the battle-local runtime, scheduler and buff registry
+    // are the dead battle's too: leave them mounted and getBattleBuffs
+    // (or any future unguarded reader) would answer dead-entity data.
+    this.turnRuntime = undefined
+    this.battleBuffRegistry = undefined
+    this.combatScheduler = undefined
   }
 
   /**
@@ -2017,8 +2054,18 @@ export class GameManagerTurnBattleOps {
     // 7. A fresh battle owns a fresh clock run. stop() before start()
     // matters - the previous battle may have stopped the clock at
     // combat-over, and stop() is what clears the stale freeze reasons.
+    // The LATCHED reasons come back though: every freeze reason is owned
+    // by whoever set it (authority, user, visibility), and a per-battle
+    // restart has no authority to unlatch it - r35-AUT-2 had a ghost
+    // victory erase 'authority-pause' here and re-run the clock behind
+    // the failed-boot error surface forever. An unlatched restart is
+    // behavior-identical to before (empty set -> running).
+    const latchedReasons = this.combatClock.getFreezeReasons()
     this.combatClock.stop()
     this.combatClock.start()
+    for (const reason of latchedReasons) {
+      this.combatClock.freeze(reason)
+    }
     this.syncOffScreenFreeze()
   }
 

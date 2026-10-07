@@ -732,6 +732,17 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
         bootFlow.fail()
         return
       }
+      // r35-INT-1 - the restore just rewrote player.$state's contents in
+      // place, so a battle still in flight belongs to the previous
+      // character state: its player/stage bindings point at the very
+      // object whose contents the replacement now owns, and the
+      // resumeSimulation unlatch below would resume the ghost into the
+      // new character (same mechanism r34-COR-F1 closed on bootGame -
+      // this seam is the sibling arm). Silent teardown, no terminal, no
+      // banking - identical to the boot-path discard. Only the
+      // 'replaced' arm pays it: a 'same' lineage rebinds nothing, so the
+      // battle stays legitimately owned.
+      gameManager.discardStaleBattle()
     }
     lifecycle.resumeSimulation()
   },

@@ -729,14 +729,15 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
       // r34-COR-F1 - a boot that reaches admission starts battleless.
       // Both arms above (restoreFromSave on 'ok', initializeCharacter on
-      // the grant path) rebind player.$state wholesale, so a battle still
-      // in flight belongs to a character that no longer exists: its
-      // player/stage bindings point at the very object the new owner now
-      // owns, and the unlatch below would resume it into the new session
-      // - a ghost resolution landing on the new character's state. It
-      // stayed latched through every await above (fail arms keep the
-      // frozen zombie untouched, exactly like pre-r33); only the success
-      // path pays the discard - silent, no terminal, no banking.
+      // the grant path) rewrite player.$state's contents in place, so a
+      // battle still in flight belongs to a character that no longer
+      // exists: its player/stage bindings point at the very object whose
+      // contents the new owner now owns, and the unlatch below would
+      // resume it into the new session - a ghost resolution landing on
+      // the new character's state. It stayed latched through every await
+      // above (fail arms keep the frozen zombie untouched, exactly like
+      // pre-r33); only the success path pays the discard - silent, no
+      // terminal, no banking.
       gameManager.discardStaleBattle()
 
       // B1-D - admission granted only now: heartbeat arms, the health
