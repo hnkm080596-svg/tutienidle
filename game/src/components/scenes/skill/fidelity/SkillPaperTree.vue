@@ -71,6 +71,11 @@ function resetDesign() {
 const DESIGN_SPAWNS_KEY = 'skill-tree-design-spawns-v1'
 const DESIGN_NODE_TYPES = [
   { type: 'dmg', label: 'ST Kỹ Năng', frame: 'sub' },
+  { type: 'acc', label: 'Chính Xác', frame: 'sub' },
+  { type: 'pen', label: 'Xuyên Kháng', frame: 'sub' },
+  { type: 'crit', label: 'Chí Mạng', frame: 'sub' },
+  { type: 'critdmg', label: 'ST Chí Mạng', frame: 'sub' },
+  { type: 'cd', label: 'Hồi Chiêu', frame: 'sub' },
   { type: 'ail_rate', label: 'Tỉ Lệ Tật', frame: 'sub' },
   { type: 'ail_power', label: 'Uy Lực Tật', frame: 'sub' },
   { type: 'ail_dur', label: 'TG Tật', frame: 'sub' },
