@@ -336,7 +336,7 @@ function buildFire(): ProgressionNode[] {
     },
 
     // Tam Muoi trade nodes (song song - parallel children of the
-    // special unlock): each pays +1 CD on Ngự Diễm ONCE when learned
+    // special unlock): each pays +1 CD on Ngu Diem ONCE when learned
     // (flat, not per level) for per-level cast-scoped Ly Hoa damage.
     {
       id: 'ngu_viem_tam',
@@ -417,7 +417,7 @@ function buildFire(): ProgressionNode[] {
     },
     // Linh Chuong (renamed "Ngu Ho" seat, Minh ruling): parallel with
     // Nguyen Kinh off the same seat. Final-DR is always-on here - the
-    // spec's "only while Ngự Diễm holds" has no stat channel; flagged
+    // spec's "only while Ngu Diem holds" has no stat channel; flagged
     // on the task report for a conditional gate if wanted.
     {
       id: 'linh_chuong',

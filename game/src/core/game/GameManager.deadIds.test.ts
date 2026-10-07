@@ -154,6 +154,20 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     // Hoa The gate node (Minh ruling 2026-10-04): same minor-tier
     // level caps as the rest of the basic lane.
     'hoa_the',
+    // Fire rulings 2026-10-06: Ly Hoa hit chain + Tam Muoi lane + solo
+    // mana branch, all minor-tier capped like the rest of the lane.
+    'hoa_diem_uy',
+    'hoa_hoa_nhan',
+    'hoa_pha_giap_diem',
+    'hoa_bao_diem',
+    'hoa_phe_diem',
+    'ngu_hoa',
+    'ngu_viem_tam',
+    'ngu_viem_y',
+    'ho_the',
+    'nguyen_kinh',
+    'linh_chuong',
+    'the_diem_kinh',
     'thuy_xuyen_lan',
     'thuy_diem_chuan',
     'thuy_te_dam',
