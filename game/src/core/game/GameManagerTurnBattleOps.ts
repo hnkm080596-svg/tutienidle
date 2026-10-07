@@ -273,6 +273,14 @@ export class GameManagerTurnBattleOps {
   private pendingStepTimers: Array<ReturnType<typeof setTimeout>> = []
 
   /**
+   * Epoch of the parked-step bookkeeping. Bumped by clearPendingSteps:
+   * clearTimeout cannot recall a timer callback already dequeued into the
+   * task queue, so a fallback armed in an older epoch must no-op before
+   * touching the new cycle's map (r36-AUT-2).
+   */
+  private pendingStepGeneration = 0
+
+  /**
    * Commands arrive on wall-clock time; battle state changes on turn
    * boundaries. Queueing them gives exactly one instant at which combat state
    * may change from outside, and at that instant no action is in flight
@@ -394,6 +402,13 @@ export class GameManagerTurnBattleOps {
    */
   setCombatClockSource(source: ClockSource): void {
     const wasRunning = this.combatClock.getState() !== 'stopped'
+    // Same stop()+start() class as beginBattleCycle step 7: the new
+    // CombatClock instance starts with an empty reason set, so every
+    // latch the SAME battle lives under must be carried verbatim -
+    // including 'turn-in-flight' (the token listener only re-binds; it
+    // does not re-claim) - or a mid-turn source swap would unlatch the
+    // clock and ungate the wall-clock fallback (r36-COR-2/INT-4).
+    const latchedReasons = this.combatClock.getFreezeReasons()
 
     this.combatClock.stop()
     this.detachClockStep?.()
@@ -403,6 +418,9 @@ export class GameManagerTurnBattleOps {
 
     if (wasRunning) {
       this.combatClock.start()
+      for (const reason of latchedReasons) {
+        this.combatClock.freeze(reason)
+      }
       this.syncOffScreenFreeze()
     }
   }
@@ -812,18 +830,32 @@ export class GameManagerTurnBattleOps {
    */
   private awaitStep(signal: TurnStepSignal, done: () => void): void {
     let deferredMs = 0
+    const generationAtArm = this.pendingStepGeneration
     const fallback = () => {
+      // r36-AUT-2 - clearTimeout cannot recall a callback already
+      // dequeued into the task queue: an old-cycle fallback firing now
+      // would wipe the NEW cycle's parked settle and drive its declare
+      // early via the live token. Bail before touching the new map.
+      if (generationAtArm !== this.pendingStepGeneration) {
+        return
+      }
       // r35-AUT-1 - the fallback is a wall-clock channel that would
       // otherwise bypass the CombatClock latch entirely: a ghost parked
       // mid-turn kept draining on setTimeout while the boot awaited, and
       // its mints landed on whichever character the rebound $state now
       // owns. A dead/terminal battle drops its parked work; an
       // ADMINISTRATIVELY latched clock (authority-pause, user-pause,
-      // tab-hidden) parks the step until released. 'turn-in-flight' and
-      // 'not-revealed' are exempt - the battle pipeline's own latches:
-      // the fallback exists to unblock the first, and the deferral arm
-      // below owns the second (its cap-drain exists precisely to
-      // complete turns whose held session never releases).
+      // tab-hidden) parks this channel until released. Scope honesty
+      // (r36-AUT-1): the gate covers THIS wall-clock channel only - the
+      // renderer-ACK channel (acknowledge*) still drains the CLAIMED
+      // turn under a latch by design (finish-the-swing semantics: it
+      // gates on isSessionBlocking + token, bounded to the in-flight
+      // turn's residual work, and ghosts die via the drop above or the
+      // admission discard). 'turn-in-flight' and 'not-revealed' are
+      // exempt - the battle pipeline's own latches: the fallback exists
+      // to unblock the first, and the deferral arm below owns the second
+      // (its cap-drain exists precisely to complete turns whose held
+      // session never releases).
       const liveBattle = this.turnBattle
       if (
         liveBattle === null ||
@@ -839,6 +871,14 @@ export class GameManagerTurnBattleOps {
           .getFreezeReasons()
           .some((reason) => reason !== 'turn-in-flight' && reason !== 'not-revealed')
       ) {
+        // r36-COR-1/INT-3 - a parked-forever latch would otherwise append
+        // one dead handle per fire (~21k entries/day on a wedged zombie):
+        // swap the handle that just fired for the re-arm so the array
+        // holds live timers only.
+        const deadIdx = this.pendingStepTimers.indexOf(timer)
+        if (deadIdx !== -1) {
+          this.pendingStepTimers.splice(deadIdx, 1)
+        }
         timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
         this.pendingStepTimers.push(timer)
         return
@@ -896,6 +936,9 @@ export class GameManagerTurnBattleOps {
   }
 
   private clearPendingSteps(): void {
+    // Invalidate fallback closures already queued in the task queue -
+    // clearTimeout below only stops not-yet-fired handles (r36-AUT-2).
+    this.pendingStepGeneration += 1
     for (const timer of this.pendingStepTimers) {
       clearTimeout(timer)
     }
@@ -2059,8 +2102,15 @@ export class GameManagerTurnBattleOps {
     // restart has no authority to unlatch it - r35-AUT-2 had a ghost
     // victory erase 'authority-pause' here and re-run the clock behind
     // the failed-boot error surface forever. An unlatched restart is
-    // behavior-identical to before (empty set -> running).
-    const latchedReasons = this.combatClock.getFreezeReasons()
+    // behavior-identical to before (empty set -> running). 'user-pause'
+    // is the exception: its owner is battle-scoped - CombatTopBar resets
+    // userPaused on the battle-identity change WITHOUT resuming - so
+    // carrying it would strand the new battle frozen behind a button
+    // that claims unpaused (r36-INT-1). It dies with the old battle,
+    // which is exactly the pre-carry semantics the UI already assumes.
+    const latchedReasons = this.combatClock
+      .getFreezeReasons()
+      .filter((reason) => reason !== 'user-pause')
     this.combatClock.stop()
     this.combatClock.start()
     for (const reason of latchedReasons) {

@@ -505,6 +505,18 @@ provide(GAME_MANAGER_KEY, gameManager)
 provide(STATE_VERSION_KEY, stateVersion)
 provide(BUMP_STATE_KEY, bumpState)
 
+// The curtain's lifetime is its latch's: a battle discard clears
+// 'tab-hidden' through combatClock.stop() but cannot reach this flag,
+// leaving a stale Continue screen over the post-discard session (or the
+// next battle minted under it). A legitimate carry across an auto-repeat
+// restart re-freezes 'tab-hidden', so the curtain stays while its latch
+// lives. stateVersion bumps cover every teardown path (r36-INT-2).
+watch(stateVersion, () => {
+  if (isCombatPaused.value && !gameManager.getFreezeReasons().includes('tab-hidden')) {
+    isCombatPaused.value = false
+  }
+})
+
 // Remediation Task 5 (2026-09-05) - lifecycle idempotence extract sang
 // useAppLifecycle.ts (tick/autosave interval guard, bootInFlight guard,
 // symmetric event-bus/DOM listener cleanup). App.vue giu phan tick co

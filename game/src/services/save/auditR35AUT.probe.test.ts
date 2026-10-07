@@ -272,7 +272,7 @@ describe('r35 AUT - B: parked pipeline stays parked while an external latch hold
     expect(battle.totalTurnsElapsed).toBe(turnsBefore + 1)
   })
 
-  it('an authority-paused ghost keeps its parked turn parked - frozen means frozen on every channel', () => {
+  it('an authority-paused ghost keeps its parked turn parked - frozen on the wall-clock channel (ACK drains by design, r36-AUT-1)', () => {
     vi.useFakeTimers()
     const manager = registeredManager()
     const { battle } = parkInteractiveGhost(manager)
