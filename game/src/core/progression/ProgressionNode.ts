@@ -1,5 +1,6 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
+import type { StatType } from '../stats/StatTypes'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import type { SkillAilmentInteraction } from '../skill/SkillEffect'
 import type { BodyKitModifierValues } from '../the-tu/TheTuKitModifiers'
@@ -176,6 +177,19 @@ export interface SkillDefinitionModifierSpec {
   /** Appends same-source seal interactions to the def's
       ailmentInteractions (phase-sorted at fold). */
   addAilmentInteractions?: readonly SkillAilmentInteraction[]
+
+  /** Hoa lane / Tam Muoi trades (Minh rulings 2026-10-06) - deltas on
+      the def's cooldownTurns. `flat` applies once while the node is
+      owned (level >= 1); `perLevel` scales with node level. The fold
+      floors to the owning path's minimum and rounds to whole turns. */
+  cooldownTurnsDelta?: { flat?: number; perLevel?: number }
+
+  /** Hoa lane (Minh rulings 2026-10-06) - cast-scoped stat deltas
+      stamped onto the def as `castModifiers`: the sum folds into the
+      CASTER's stat view only while this skill's hit resolves - never
+      aggregated into character stats, never seen by ailment reads.
+      Each entry contributes `perLevel x nodeLevel` to `stat`. */
+  castStatModifiers?: readonly { stat: StatType; perLevel: number }[]
 
   /** Deterministic fold order - ascending, nodeId tiebreak. Default 0. */
   priority?: number

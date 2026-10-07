@@ -3,6 +3,7 @@
 // Kept in its own file (separate from TurnBattleSystem.ts) matching the
 // existing ActionGauge.ts/TurnQueue.ts one-concern-per-file pattern.
 import type { CombatEntity } from '../../combat/CombatEntity'
+import type { StatType } from '../../stats/StatTypes'
 import type { SkillResourceType } from '../../skill/SkillTypes'
 import type { SkillAilmentInteraction } from '../../skill/SkillEffect'
 import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
@@ -58,6 +59,17 @@ export interface TurnSkillBuffApplication {
 export interface TurnSkillDefinition {
   id: string
   cooldownTurns: number
+  /**
+   * Hoa lane / Tam Muoi trades (Minh rulings 2026-10-06) - cast-scoped
+   * stat deltas stamped by the kit provider (phap-tu def fold of
+   * `effect.skillDefinitionModifiers[].castStatModifiers`). At hit
+   * resolution each entry adds `value` to the CASTER's read of `stat`
+   * for this skill's hit only: character stats never change and
+   * downstream reads that bypass the hit view (ailment potency, DoT
+   * ticks) see the unscoped value. Values are additive deltas already
+   * folded per level at stamp time.
+   */
+  castModifiers?: readonly { stat: StatType; value: number }[]
   /**
    * R3 (AR-03) - Explicit target scope. Defaults to 'enemy'.
    * 'self' targets the caster without dealing damage.

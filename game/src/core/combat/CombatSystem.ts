@@ -13,6 +13,8 @@ import type { ActionDamageInfo, HitResolveOptions } from '../battle/ActionImpact
 import type { ElementType } from '../element/ElementType'
 import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSystem'
 import { clampStatValue } from '../stats/StatMetadata'
+import type { StatType } from '../stats/StatTypes'
+import type { Stats } from '../stats/StatBlock'
 import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { dotRecoveryTriggers } from './DotRecovery'
 import { resolveHoTheDamageReduction } from './hoTheDamageReduction'
@@ -28,6 +30,18 @@ import type { CombatAuthorityExecutionContext } from '../battle/contracts/contex
 // helper here or the scale drifts.
 const DOT_RESISTANCE_CAP = 0.75
 const DOT_RESISTANCE_FLOOR = -1
+
+/** Cast-scoped deltas (Hoa lane rulings 2026-10-06): returns the
+    ADDED stat entries (base + delta per key) for spreading over a
+    cloned stat view - a missing delta key contributes `delta` onto
+    the base, never replaces unrelated entries. */
+function addScopedDeltas(base: Stats, deltas: Partial<Record<StatType, number>>): Partial<Record<StatType, number>> {
+  const added: Partial<Record<StatType, number>> = {}
+  for (const [stat, delta] of Object.entries(deltas) as [StatType, number][]) {
+    added[stat] = base[stat] + delta
+  }
+  return added
+}
 
 /**
  * Toan bo combat gio di qua action impact (xem ActionImpactSystem/
@@ -208,11 +222,22 @@ export class CombatSystem {
     damage: ActionDamageInfo,
     options: Partial<HitResolveOptions> = {},
   ): DamageResult {
-    if (!options.guaranteedHit && !this.rollHit(source, target)) {
+    // Cast-scoped stat view (Hoa lane / Tam Muoi trades, Minh rulings
+    // 2026-10-06): `options.scopedStats` carries the cast's additive
+    // deltas cloned onto a per-hit source view - the hit line below
+    // reads `src` (accuracy, crit, resist-ignore, scaling, penetration)
+    // while post-hit vitals, ailment application and reactive triggers
+    // keep reading the real `source` entity.
+    const src =
+      options.scopedStats !== undefined
+        ? { ...source, stats: { ...source.stats, ...addScopedDeltas(source.stats, options.scopedStats) } }
+        : source
+
+    if (!options.guaranteedHit && !this.rollHit(src, target)) {
       return this.resolveDodge(source, target, damage.kind)
     }
 
-    const isCritical = options.critical !== undefined ? options.critical : this.rollCritical(source, target)
+    const isCritical = options.critical !== undefined ? options.critical : this.rollCritical(src, target)
 
     // R3 re-audit (AR-03 gap) - authored per-skill scaling (attributeScaling/
     // manaScalingRatio, carried on ActionDamageInfo.
@@ -220,14 +245,14 @@ export class CombatSystem {
     // skillDamagePercent stat (equipment/node), which previously
     // had no live consumer in the turn engine at all - same formula
     // the deleted legacy executor used for the non-turn execution path.
-    const scalingBonus = calculateScalingBonus(source, damage.scaling)
+    const scalingBonus = calculateScalingBonus(src, damage.scaling)
 
     const effectiveMultiplier =
       damage.multiplier *
       (options.damageMultiplier ?? 1) *
       (1 + scalingBonus) *
-      (1 + clampStatValue('skillDamagePercent', source.stats.skillDamagePercent)) *
-      getRealmPressureMultiplier(source, target)
+      (1 + clampStatValue('skillDamagePercent', src.stats.skillDamagePercent)) *
+      getRealmPressureMultiplier(src, target)
 
     // Chance to Ignore Resistance - roll 1 LAN/don (khac Penetration phang,
     // day la "bo qua hoan toan" mitigation cua don do neu trung).
@@ -235,11 +260,11 @@ export class CombatSystem {
     // caller - the calculator executes the already-rolled outcome.
     const ignoreResistance =
       options.armorBypass === true ||
-      this.randomSource() < clampStatValue('chanceToIgnoreResistance', source.stats.chanceToIgnoreResistance)
+      this.randomSource() < clampStatValue('chanceToIgnoreResistance', src.stats.chanceToIgnoreResistance)
 
     const baseDamage = damage.kind === 'elemental'
       ? calculateSkillBaseDamage(
-          source,
+          src,
           target,
           damage.components,
           ignoreResistance,
@@ -248,7 +273,7 @@ export class CombatSystem {
           options.elementalPenetrationBonus ?? 0,
         )
       : calculateBaseDamage(
-          source,
+          src,
           target,
           damage.kind,
           ignoreResistance,
@@ -258,7 +283,7 @@ export class CombatSystem {
           damage.kind === 'physical' ? (damage.sourceMaxHpRatio ?? 0) : 0,
         )
 
-    const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, isCritical, source.stats.criticalDamage)
+    const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, isCritical, src.stats.criticalDamage)
 
     const blocked = this.rollBlock(target)
 

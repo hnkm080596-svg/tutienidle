@@ -15,11 +15,12 @@ import { SPELL_KIT_IDS } from '../skill/Skills'
 // channel IS the skill channel, ruling F14; ailmentDurationPercent is
 // dead on 2-4 turn lifetimes, Minh filter 2026-10-07) plus the two-way
 // capstone specializations
-// (they modify the basic itself). The generic-stat nodes
-// (skillDamagePercent / criticalRate / criticalDamage /
-// finalDamagePercent) are cut outright; a per-skillId coefficient/
-// conversion channel was considered and deferred -- no kept mechanic
-// needs it.
+// (they modify the basic itself). Generic GLOBAL-stat nodes stay cut;
+// the per-skillId channel landed 2026-10-06 as cast-scoped
+// `castStatModifiers` on `skillDefinitionModifiers` (fold in
+// PhapTuNodeModifiers) - the five-node Ly Hoa chain + Tam Muoi trades
+// use it for hit-layer stats (skill damage / accuracy / resist-ignore /
+// crit) that must NOT leak into character stats or ailment reads.
 //
 // Gating contract is unchanged: trunk nodes require only the element
 // root (open at Luyen Khi); the outer ring + capstones also require
@@ -77,6 +78,47 @@ function stat(nodeId: string, statKey: StatType, perLevelFlat: number): StatModi
     flat: perLevelFlat,
     perLevelFlat,
     domain: 'spell',
+  }
+}
+
+/**
+ * Hoa lane cast-scope (Minh rulings 2026-10-06): a powerNode sibling
+ * whose bonus lives on the kit def's `castModifiers` - it moves the
+ * CASTER's stat view only while a Ly Hoa hit resolves (fold in
+ * PhapTuNodeModifiers); nothing lands in aggregated character stats.
+ * Gating mirrors powerNode: element root by default, FOUNDATION realm
+ * gate for the TC ring.
+ */
+function castScopedNode(
+  id: string,
+  name: string,
+  description: string,
+  element: ElementType,
+  entries: readonly { stat: StatType; perLevel: number }[],
+  options: { foundation?: boolean; maxLevel?: number; prereqNodeId?: string } = {},
+): ProgressionNode {
+  const prerequisites: NodePrerequisite[] = [
+    { kind: 'node', nodeId: options.prereqNodeId ?? PHAP_TU_ELEMENT_ROOT_IDS[element] },
+    ...(options.foundation ? [FOUNDATION] : []),
+  ]
+
+  return {
+    id,
+    name,
+    description,
+    type: 'minor',
+    role: 'growth',
+    insightCost: options.foundation ? GROWTH_TC.base : GROWTH_QI.base,
+    maxLevel: options.maxLevel ?? 5,
+    upgradeCost: options.foundation ? GROWTH_TC : GROWTH_QI,
+    levelGates: options.maxLevel === 4 ? MINOR_TIER_GATES_4 : MINOR_TIER_GATES,
+    prerequisites,
+    elementTag: element,
+    effect: {
+      skillDefinitionModifiers: [
+        { skillId: SPELL_KIT_IDS[element][0], castStatModifiers: entries },
+      ],
+    },
   }
 }
 
@@ -208,6 +250,203 @@ function buildFire(): ProgressionNode[] {
       'Ly Hỏa tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Hỏa Ấn khó trúng hơn.',
       'hoa_diem_tham',
     ),
+
+    // ------------------------------------------------------------------
+    // Fire tree rulings (Minh, 2026-10-06 spec v4).
+    //
+    // (a) Ly Hoa hit chain - five cast-scoped growth nodes: their stats
+    //     fold into the kit def's castModifiers and apply ONLY while a
+    //     Ly Hoa hit resolves (they never touch aggregated stats, so the
+    //     Hoa An ailment read stays clean).
+    // (b) Tam Muoi lane - three parallel children of
+    //     linh_ngo_tam_muoi_chan_hoa: Ngu Hoa trims the Phap Trang
+    //     cooldown; each Ngu Viem trade pays +1 CD (once, when learned)
+    //     for per-level cast-scoped damage on Ly Hoa. Ngu Viem Than is
+    //     intentionally left unauthored (locked seat).
+    // (c) Mana branch - SOLO off the element root (Minh ruling):
+    //     ho_the is a purchased gate seat; Nguyen Kinh thickens the
+    //     Linh Luc Ho The shield, Linh Chuong hardens the barrier as
+    //     always-on DR (spec's "while the window holds" has no channel -
+    //     flagged), The Diem Kinh raises the Ho The cap ceiling.
+    // ------------------------------------------------------------------
+
+    castScopedNode(
+      'hoa_diem_uy',
+      'Diễm Uy',
+      'Đòn Ly Hỏa +6% sát thương kỹ năng mỗi cấp.',
+      'fire',
+      [{ stat: 'skillDamagePercent', perLevel: 0.06 }],
+    ),
+    castScopedNode(
+      'hoa_hoa_nhan',
+      'Hỏa Nhãn',
+      'Đòn Ly Hỏa +50 chính xác mỗi cấp.',
+      'fire',
+      [{ stat: 'accuracyRating', perLevel: 50 }],
+      { prereqNodeId: 'hoa_diem_uy' },
+    ),
+    castScopedNode(
+      'hoa_pha_giap_diem',
+      'Phá Giáp Diễm',
+      'Đòn Ly Hỏa +4% tỉ lệ bỏ qua hoàn toàn kháng phép mỗi cấp.',
+      'fire',
+      [{ stat: 'chanceToIgnoreResistance', perLevel: 0.04 }],
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_hoa_nhan' },
+    ),
+    castScopedNode(
+      'hoa_bao_diem',
+      'Bạo Diễm',
+      'Đòn Ly Hỏa +4% tỉ lệ chí mạng mỗi cấp.',
+      'fire',
+      [{ stat: 'criticalRate', perLevel: 0.04 }],
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_pha_giap_diem' },
+    ),
+    castScopedNode(
+      'hoa_phe_diem',
+      'Phệ Diễm',
+      'Đòn Ly Hỏa +25% sát thương chí mạng mỗi cấp.',
+      'fire',
+      [{ stat: 'criticalDamage', perLevel: 0.25 }],
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_bao_diem' },
+    ),
+
+    // Ngu Hoa - tempering the Trang cast: each level shaves half a turn
+    // off the special's cooldown (folded and floored at 2 turns by
+    // PhapTuNodeModifiers).
+    {
+      id: 'ngu_hoa',
+      name: 'Ngự Hỏa',
+      description: 'Thuần hóa chân hỏa quanh thân — Ngự Diễm sớm hồi thêm nửa hiệp mỗi cấp (tối đa xuống 2 hiệp).',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 5,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES,
+      prerequisites: [
+        { kind: 'node', nodeId: 'linh_ngo_tam_muoi_chan_hoa' },
+        FOUNDATION,
+      ],
+      elementTag: 'fire',
+      effect: {
+        skillDefinitionModifiers: [
+          { skillId: SPELL_KIT_IDS.fire[1], cooldownTurnsDelta: { perLevel: -0.5 } },
+        ],
+      },
+    },
+
+    // Tam Muoi trade nodes (song song - parallel children of the
+    // special unlock): each pays +1 CD on Ngự Diễm ONCE when learned
+    // (flat, not per level) for per-level cast-scoped Ly Hoa damage.
+    {
+      id: 'ngu_viem_tam',
+      name: 'Ngự Viêm Tâm',
+      description: 'Đổi nhịp Ngự Diễm (+1 hiệp hồi) lấy quyền năng: đòn Ly Hỏa +6% sát thương kỹ năng mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 5,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES,
+      prerequisites: [
+        { kind: 'node', nodeId: 'linh_ngo_tam_muoi_chan_hoa' },
+        FOUNDATION,
+      ],
+      elementTag: 'fire',
+      effect: {
+        skillDefinitionModifiers: [
+          { skillId: SPELL_KIT_IDS.fire[0], castStatModifiers: [{ stat: 'skillDamagePercent', perLevel: 0.06 }] },
+          { skillId: SPELL_KIT_IDS.fire[1], cooldownTurnsDelta: { flat: 1 } },
+        ],
+      },
+    },
+    {
+      id: 'ngu_viem_y',
+      name: 'Ngự Viêm Ý',
+      description: 'Đổi nhịp Ngự Diễm (+1 hiệp hồi) lấy ý chí thiêu đốt: đòn Ly Hỏa +9% sát thương kỹ năng mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 5,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES,
+      prerequisites: [
+        { kind: 'node', nodeId: 'linh_ngo_tam_muoi_chan_hoa' },
+        FOUNDATION,
+      ],
+      elementTag: 'fire',
+      effect: {
+        skillDefinitionModifiers: [
+          { skillId: SPELL_KIT_IDS.fire[0], castStatModifiers: [{ stat: 'skillDamagePercent', perLevel: 0.09 }] },
+          { skillId: SPELL_KIT_IDS.fire[1], cooldownTurnsDelta: { flat: 1 } },
+        ],
+      },
+    },
+
+    // Mana branch (Minh ruling: "nhanh mana solo") - hangs off the
+    // element root, NOT the Tam Muoi unlock. Ho The is the purchased
+    // gate seat (a thin keystone - it owns no effect itself).
+    {
+      id: 'ho_the',
+      name: 'Hộ Thể',
+      description: 'Ngưng Linh Lực thành tầng hộ mệnh — mở nhánh Linh Lực Hộ Thể.',
+      type: 'minor',
+      role: 'keystone',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 1,
+      prerequisites: [
+        { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS.fire },
+        FOUNDATION,
+      ],
+      elementTag: 'fire',
+      effect: {},
+    },
+    {
+      id: 'nguyen_kinh',
+      name: 'Nguyên Kính',
+      description: 'Dày hóa tấm kính nguyên lực — Linh Lực Hộ Thể gánh thêm +5% sát thương nhận vào mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 5,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES,
+      prerequisites: [{ kind: 'node', nodeId: 'ho_the' }],
+      elementTag: 'fire',
+      effect: { statModifiers: [stat('nguyen_kinh', 'manaShieldPercent', 0.05)] },
+    },
+    // Linh Chuong (renamed "Ngu Ho" seat, Minh ruling): parallel with
+    // Nguyen Kinh off the same seat. Final-DR is always-on here - the
+    // spec's "only while Ngự Diễm holds" has no stat channel; flagged
+    // on the task report for a conditional gate if wanted.
+    {
+      id: 'linh_chuong',
+      name: 'Linh Chướng',
+      description: 'Chướng khí rào quanh thân — +1.5% giảm sát thương cuối mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 3,
+      upgradeCost: GROWTH_TC,
+      levelGates: [{ atLevel: 3, prerequisite: { kind: 'techniqueRank', rank: 2 } }],
+      prerequisites: [{ kind: 'node', nodeId: 'ho_the' }],
+      elementTag: 'fire',
+      effect: { statModifiers: [stat('linh_chuong', 'finalDamageReductionPercent', 0.015)] },
+    },
+    {
+      id: 'the_diem_kinh',
+      name: 'Thể Diễm Kính',
+      description: 'Kính diễm dung nạp thêm — nóc Linh Lực Hộ Thể +2% Linh Lực tối đa mỗi cấp.',
+      type: 'minor',
+      role: 'growth',
+      insightCost: GROWTH_TC.base,
+      maxLevel: 4,
+      upgradeCost: GROWTH_TC,
+      levelGates: MINOR_TIER_GATES_4,
+      prerequisites: [{ kind: 'node', nodeId: 'nguyen_kinh' }],
+      elementTag: 'fire',
+      effect: { statModifiers: [stat('the_diem_kinh', 'linhLucHoTheCap', 0.02)] },
+    },
   ]
 }
 

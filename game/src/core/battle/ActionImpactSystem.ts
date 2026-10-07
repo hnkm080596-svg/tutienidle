@@ -5,6 +5,7 @@
 // artifact port's param type (ArtifactSystem calls scheduleBasic on it).
 // Gameplay does not depend on VFX/Phaser - the event carries only grid data.
 import type { SkillDamageComponent } from '../skill/SkillDamageComponent'
+import type { StatType } from '../stats/StatTypes'
 import type { CombatVfxPresetId } from './CombatAction'
 import type { CombatActionOrigin } from './BattleEvents'
 import type { DamageScalingConfig } from '../combat/DamageCalculator'
@@ -116,6 +117,16 @@ export interface HitResolveOptions {
    * element-kind damage components consume it.
    */
   elementalPenetrationBonus?: number
+
+  /**
+   * Hoa lane + Tam Muoi trades (Minh rulings 2026-10-06) -- cast-scoped
+   * additive stat deltas on the SOURCE's stat view for this hit only
+   * (stamped off `TurnSkillDefinition.castModifiers`). The engine folds
+   * them into a cloned stat view used by the hit line (accuracy, crit,
+   * resist-ignore, scaling, penetration); post-hit vitals, ailment
+   * application and reactive triggers keep reading the real entity.
+   */
+  scopedStats?: Partial<Record<StatType, number>>
 }
 
 export interface ScheduledBasicImpact {

@@ -35,6 +35,7 @@ import type { CombatTrace } from '../runtime/scheduler/CombatTrace'
 import type { CombatOperationOrigin } from '../contracts/origin'
 import type { StatModifier } from '../../stats/StatCalculator'
 import type { StatDomain } from '../../stats/StatDomain'
+import type { StatType } from '../../stats/StatTypes'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
@@ -2666,6 +2667,25 @@ export class TurnBattleSystem {
    * kiem) and provider-returned combo impacts loop THIS helper -- never
    * bare CombatSystem.resolveActionHit, which lacks the consequences.
    */
+  /** Hoa lane / Tam Muoi trades (Minh rulings 2026-10-06) -- folds
+      `skill.castModifiers` into the hit options' scopedStats (sum per
+      stat over any caller-supplied entries). No modifiers => the
+      original options object passes through untouched. */
+  private withCastModifiers(
+    skill: TurnSkillDefinition | null,
+    hitOptions?: Partial<HitResolveOptions>,
+  ): Partial<HitResolveOptions> | undefined {
+    const mods = skill?.castModifiers
+    if (!mods || mods.length === 0) {
+      return hitOptions
+    }
+    const scopedStats: Partial<Record<StatType, number>> = { ...(hitOptions?.scopedStats ?? {}) }
+    for (const { stat, value } of mods) {
+      scopedStats[stat] = (scopedStats[stat] ?? 0) + value
+    }
+    return { ...hitOptions, scopedStats }
+  }
+
   private resolveDeclaredHit(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
@@ -2684,7 +2704,10 @@ export class TurnBattleSystem {
       actor.entity,
       target.entity,
       this.applyMissingHpScalar(damage, actor.entity),
-      hitOptions,
+      // Hoa lane / Tam Muoi trades (Minh rulings 2026-10-06) -- the
+      // def's castModifiers ride this hit only, folded into the options
+      // so per-instance callers keep their own overrides.
+      this.withCastModifiers(skill, hitOptions),
     )
     presentationOutcomes?.push({ outcomeId: '', kind: 'hit', target: actorAnchor(target), hitOrdinal: presentationOutcomes.filter(o => o.kind === 'hit').length, landed: !hitResult.dodged, crit: hitResult.critical, hpDamage: hitResult.hpDamage, killed: !target.entity.alive })
 
