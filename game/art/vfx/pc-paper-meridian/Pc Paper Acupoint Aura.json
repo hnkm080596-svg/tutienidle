@@ -1,0 +1,541 @@
+{
+  "app": "arcadia-effects",
+  "v": 1,
+  "doc": {
+    "v": 1,
+    "id": "fx_pc_paper_acupoint_aura",
+    "name": "PC Paper Acupoint Aura",
+    "comp": {
+      "w": 128,
+      "h": 128,
+      "dur": 4,
+      "fps": 60
+    },
+    "cam": {
+      "comp": 0
+    },
+    "exp": {
+      "cols": 8,
+      "rows": 4,
+      "frames": 32,
+      "cellW": 128,
+      "cellH": 128,
+      "t0": 0,
+      "t1": 2,
+      "mode": "rgba",
+      "ss": 2,
+      "pixelArt": false
+    },
+    "textures": [],
+    "layers": [
+      {
+        "id": "lr_pc_aura_core",
+        "name": "Amber Core",
+        "type": "sprite",
+        "on": true,
+        "start": 0,
+        "end": 4,
+        "blend": "normal",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.8,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 1,
+              "v": 1,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 2,
+              "v": 0.8,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 3,
+              "v": 1,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 4,
+              "v": 0.8,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 14,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            173,
+            116,
+            24
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15
+        },
+        "glowL": 0
+      },
+      {
+        "id": "lr_pc_aura_inner",
+        "name": "Inner Gold Ring",
+        "type": "sprite",
+        "on": true,
+        "start": 0,
+        "end": 4,
+        "blend": "normal",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.46,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 1,
+              "v": 0.72,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 2,
+              "v": 0.46,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 3,
+              "v": 0.72,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 4,
+              "v": 0.46,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "ring",
+            "p": {
+              "th": 0.045
+            }
+          },
+          "size": 30,
+          "x": 0,
+          "y": 0,
+          "scale": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.94,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 1,
+                "v": 1.08,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 2,
+                "v": 0.94,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 3,
+                "v": 1.08,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 4,
+                "v": 0.94,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            191,
+            143,
+            48
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15
+        },
+        "glowL": 0
+      },
+      {
+        "id": "lr_pc_aura_outer",
+        "name": "Breathing Outer Ring",
+        "type": "sprite",
+        "on": true,
+        "start": 0,
+        "end": 4,
+        "blend": "normal",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.18,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 1,
+              "v": 0.3,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 2,
+              "v": 0.18,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 3,
+              "v": 0.3,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 4,
+              "v": 0.18,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "ring",
+            "p": {
+              "th": 0.045
+            }
+          },
+          "size": 54,
+          "x": 0,
+          "y": 0,
+          "scale": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.96,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 1,
+                "v": 1.12,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 2,
+                "v": 0.96,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 3,
+                "v": 1.12,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 4,
+                "v": 0.96,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            199,
+            155,
+            67
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15
+        },
+        "glowL": 0
+      },
+      {
+        "id": "lr_pc_aura_glow",
+        "name": "Soft Paper Halo",
+        "type": "sprite",
+        "on": true,
+        "start": 0,
+        "end": 4,
+        "blend": "normal",
+        "opacity": {
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.22,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 1,
+              "v": 0.37,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 2,
+              "v": 0.22,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 3,
+              "v": 0.37,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            },
+            {
+              "t": 4,
+              "v": 0.22,
+              "i": {
+                "m": "ease"
+              },
+              "o": {
+                "m": "ease"
+              }
+            }
+          ]
+        },
+        "sp": {
+          "sprite": {
+            "kind": "shape",
+            "id": "soft",
+            "p": {}
+          },
+          "size": 78,
+          "x": 0,
+          "y": 0,
+          "scale": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.94,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 1,
+                "v": 1.06,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 2,
+                "v": 0.94,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 3,
+                "v": 1.06,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              },
+              {
+                "t": 4,
+                "v": 0.94,
+                "i": {
+                  "m": "ease"
+                },
+                "o": {
+                  "m": "ease"
+                }
+              }
+            ]
+          },
+          "aspect": 1,
+          "rot": 0,
+          "color": [
+            211,
+            172,
+            76
+          ],
+          "squash": 0,
+          "glow": 0,
+          "glowSize": 1.6,
+          "glowBlur": 0.15
+        },
+        "glowL": 0
+      }
+    ]
+  },
+  "tex": {}
+}

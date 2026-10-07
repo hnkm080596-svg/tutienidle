@@ -1,0 +1,143 @@
+game/src/ui\huyenKimChrome.ts:74:export function hkChromeUrl(id: string, density: '1x' | '2x' = '2x'): string | null {
+game/src/presentation/huyenKim\StableSceneArt.ts:4: * public/assets/ui/huyen-kim/_source/stable-scene-extension.json).
+game/src/presentation/huyenKim\StableSceneArt.ts:8: * hand-write an `/assets/ui/huyen-kim/...` string.
+game/src/presentation/huyenKim\StableSceneArt.ts:24:const STABLE_ART_BASE = '/assets/ui/huyen-kim/'
+game/src/presentation/huyenKim\StableSceneArt.test.ts:80:      expect(stableSymbolUrl(id)).toBe(`/assets/ui/huyen-kim/symbols/${id}.svg`)
+game/src/components\scenes\combat\CombatAiRail.vue:11:    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+game/src/components\scenes\combat\fidelity\CombatFidelityFrame.vue:4:const source = resolveAssetUrl('/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.png')
+game/src/components\game\combat\CombatDefeatPanel.vue:135:    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+game/src/components\scenes\victory\VictoryTitleBand.vue:15:const ribbonUrl = hkChromeUrl('ceremony-ribbon')
+game/src/components\scenes\victory\VictorySectionPlaque.vue:7:const plaqueUrl = hkChromeUrl('section-plaque')
+game/src/components\scenes\victory\VictorySectionPlaque.vue:8:const dividerUrl = hkChromeUrl('divider-ornament')
+game/src/components\scenes\character\fidelity\characterUi.ts:2:const root = '/assets/ui/huyen-kim/scene/character-v2/'
+game/src/components\scenes\character\fidelity\characterUi.ts:5:  logo: resolveAssetUrl('/assets/ui/huyen-kim/scene/login-v2/wordmark.png'),
+game/src/components\scenes\character\fidelity\characterUi.ts:7:export const elementArt = (id: string) => resolveAssetUrl(`/assets/ui/elements/el-${id}.png`)
+game/src/components\scenes\victory\fidelity\VictoryFidelityScene.vue:10:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\victory\fidelity\VictoryFidelityScene.vue:11:const title = resolveAssetUrl('/assets/ui/huyen-kim/scene/victory-v2/victory-title-v1.png')
+game/src/components\scenes\victory\fidelity\VictoryFidelityScene.vue:12:const divider = resolveAssetUrl('/assets/ui/huyen-kim/ornaments/divider-ornament@2x.png')
+game/src/components\scenes\exploration\fidelity\explorationRewards.ts:13:export const EQUIPMENT_ANY_ICON = resolveAssetUrl('/assets/ui/huyen-kim/symbols/equipment.svg')
+game/src/components\scenes\victory\VictoryScene.vue:37:    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+game/src/components\scenes\victory\VictoryGrowthCard.vue:26:    <InkNineSlice chrome-id="list-row" layer="surface" />
+game/src/components\scenes\combat\fidelity\CombatFidelityPortrait.vue:4:const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/combat-v2/ornament-ring-v1.png')
+game/src/components\scenes\victory\VictoryRoller.vue:10:const rollerUrl = hkChromeUrl('imperial-scroll-roller')
+game/src/components\scenes\skill\SkillSurface.vue:40:const FALLBACK_ICON = resolveAssetUrl('/assets/ui/huyen-kim/symbols/skill.svg')
+game/src/components\scenes\skill\SkillSurface.vue:127:    icon: resolveAssetUrl(`/assets/ui/elements/el-${id}.png`),
+game/src/components\scenes\skill\SkillSurface.vue:223:    ? resolveAssetUrl(`/assets/ui/elements/el-${node.elementTag}.png`)
+game/src/components\game\combat\TurnOrderStrip.vue:17:const turnTokenUrl = hkChromeUrl('turn-token')
+game/src/components\scenes\exploration\fidelity\ExplorationPaperMap.vue:9:const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/skill-v2/node-ring-v1.png')
+game/src/components\scenes\exploration\fidelity\ExplorationPaperMap.vue:10:const lockIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/lock.svg')
+game/src/components\scenes\character\CharacterSectionPlaque.vue:12:    <InkNineSlice chrome-id="section-plaque" layer="surface" class="section-plaque__bg" />
+game/src/components\scenes\realm\RealmRequirementChips.vue:23:        chrome-id="seal-chip"
+game/src/components\scenes\victory\VictoryRewardSlot.vue:27:      <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+game/src/components\common\ConfirmModal.vue:90:          <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+game/src/components\common\ConfirmModal.vue:91:          <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
+game/src/components\scenes\realm\RealmPassiveList.vue:25:        <InkNineSlice chrome-id="list-row" layer="surface" />
+game/src/components\game\combat\RewardList.vue:19:      <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+game/src/components\game\combat\RewardList.vue:23:      <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+game/src/components\game\combat\RewardList.vue:27:      <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+game/src/components\game\combat\RewardList.vue:31:      <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+game/src/components\game\combat\RewardList.vue:35:      <InkNineSlice chrome-id="frame-s-slot" layer="surface" />
+game/src/components\scenes\realm\RealmDetailRail.vue:10:    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+game/src/components\scenes\character\CharacterIdentityHeader.vue:17:const avatarFrameUrl = hkChromeUrl('avatar-frame')
+game/src/components\scenes\skill\fidelity\SkillPaperNode.vue:8:const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/skill-v2/node-ring-v1.png')
+game/src/components\scenes\skill\fidelity\SkillPaperNode.vue:9:const lock = resolveAssetUrl('/assets/ui/huyen-kim/symbols/lock.svg')
+game/src/components\scenes\character\CharacterFigureWheel.vue:43:      ? `/assets/ui/elements/el-${heroElement.value}.png`
+game/src/components\scenes\character\CharacterFigureWheel.vue:44:      : '/assets/ui/elements/el-formation-ring.png',
+game/src/components\scenes\character\CharacterFigureWheel.vue:62:const primordialDiscUrl = resolveAssetUrl('/assets/ui/elements/el-primordial.png')
+game/src/components\scenes\character\CharacterFigureWheel.vue:65:const formationRingUrl = resolveAssetUrl('/assets/ui/elements/el-formation-ring.png')
+game/src/components\scenes\character\CharacterFigureWheel.vue:66:const formationOrbsUrl = resolveAssetUrl('/assets/ui/elements/el-formation-orbs.png')
+game/src/components\scenes\character\CharacterFigureWheel.vue:67:const formationStarUrl = resolveAssetUrl('/assets/ui/elements/el-formation-star.png')
+game/src/components\scenes\character\CharacterFigureWheel.vue:99:        <img class="element-node__disc" :src="resolveAssetUrl(`/assets/ui/elements/el-${row.element}.png`)" :alt="row.label" />
+game/src/components\scenes\tribulation\TribulationStatusCard.vue:19:const plaqueUrl = hkChromeUrl('scroll-title-plaque')
+game/src/components\scenes\tribulation\TribulationStatusCard.vue:31:    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+game/src/components\game\combat\hud\TurnCombatSkillBar.vue:34:const skillOrbFrameUrl = hkChromeUrl('skill-orb-frame')
+game/src/components\game\combat\hud\TurnCombatSkillBar.vue:35:const toggleTrackUrl = hkChromeUrl('toggle-track')
+game/src/components\game\combat\hud\TurnCombatSkillBar.vue:36:const sliderThumbUrl = hkChromeUrl('slider-thumb')
+game/src/components\scenes\skill\fidelity\SkillPaperDetails.vue:8:const paperFrame = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\tribulation\TribulationResultBanner.vue:14:    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+game/src/components\scenes\character\CharacterElementSummary.vue:42:          :src="resolveAssetUrl(`/assets/ui/elements/el-${row.element}.png`)"
+game/src/components\scenes\realm\RealmAscentNode.vue:23:const runeUrl = hkChromeUrl('rune-node', '1x')
+game/src/components\scenes\skill\fidelity\SkillFidelityScene.vue:33:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\common\GameButton.vue:85:    <InkNineSlice v-if="chromeSlot" :chrome-id="chromeSlot" layer="surface" :tint-var="sliceTint" />
+game/src/components\scenes\tribulation\TribulationMindCard.vue:20:const timerRingUrl = hkChromeUrl('timer-ring')
+game/src/components\scenes\tribulation\TribulationMindCard.vue:26:    <InkNineSlice chrome-id="surface-m-panel" layer="surface" />
+game/src/components\scenes\tribulation\TribulationHpCluster.vue:21:      <InkNineSlice chrome-id="entity-bar" layer="frame" />
+game/src/components\common\InkWashBackdrop.test.ts:43:      '/assets/ui/ink-wash/overlays/wash-corner-mountain-left.png',
+game/src/components\common\InkWashBackdrop.test.ts:44:      '/assets/ui/ink-wash/overlays/wash-bottom-mist.png',
+game/src/components\common\InkWashBackdrop.test.ts:63:      '/assets/ui/ink-wash/overlays/wash-corner-mountain-right.png',
+game/src/components\common\InkWashBackdrop.test.ts:64:      '/assets/ui/ink-wash/overlays/wash-bamboo-right.png',
+game/src/components\common\InkWashBackdrop.test.ts:65:      '/assets/ui/ink-wash/overlays/seal-cinnabar-large.png',
+game/src/components\common\InkWashLargeSurfaces.test.ts:55:      expect(source).toContain('chrome-id="surface-xl-scroll"')
+game/src/components\common\ImperialScrollScene.vue:47:const rollerUrl = hkChromeUrl('imperial-scroll-roller')
+game/src/components\common\ImperialScrollScene.vue:48:const plaqueUrl = hkChromeUrl('scroll-title-plaque')
+game/src/components\common\ImperialScrollScene.vue:49:const grainUrl = hkChromeUrl('paper-grain-tile')
+game/src/components\common\ImperialScrollScene.vue:50:const cornerUrl = hkChromeUrl('corner-ornament')
+game/src/components\common\ImperialScrollScene.vue:51:const cloudUrl = hkChromeUrl('cloud-ornament')
+game/src/components\common\ImperialScrollScene.vue:83:          <InkNineSlice chrome-id="imperial-scroll-body" layer="surface" />
+game/src/components\common\ImperialScrollScene.vue:89:          <InkNineSlice chrome-id="frame-xl-ceremony" layer="frame" />
+game/src/components\common\ImperialScrollScene.vue:113:            <InkNineSlice chrome-id="icon-button-utility" layer="surface" />
+game/src/components\scenes\tribulation\TribulationChapterTracker.vue:13:const nodeUrl = hkChromeUrl('dao-luan-node')
+game/src/components\common\InkWashBackdrop.vue:17:const overlayRoot = resolveAssetUrl('/assets/ui/ink-wash/overlays')
+game/src/components\scenes\exploration\fidelity\ExplorationPaperDetails.vue:9:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\exploration\fidelity\ExplorationFidelityScene.vue:13:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\tribulation\fidelity\TribulationFidelityScene.vue:15:const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/combat-v2/ornament-ring-v1.png')
+game/src/components\scenes\tribulation\fidelity\TribulationFidelityScene.vue:16:const meditator = resolveAssetUrl('/assets/ui/huyen-kim/scene/body-v2/zhou-meditation-v1.png')
+game/src/components\common\OverlayPanel.vue:64:        <InkNineSlice v-if="variant === 'ink'" chrome-id="surface-m-panel" layer="surface" />
+game/src/components\common\OverlayPanel.vue:65:        <InkNineSlice v-if="variant === 'ink'" chrome-id="frame-m-modal" layer="frame" />
+game/src/components\common\PaperPanelNavigation.vue:13:const backIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/back.svg')
+game/src/components\scenes\realm\fidelity\RealmPaperMap.vue:9:const art = resolveAssetUrl('/assets/ui/huyen-kim/scene/realm-v2/ascension-path-six-landings-v2.png')
+game/src/components\scenes\exploration\ExplorationSurface.vue:41:const TERRAIN_SRC = resolveAssetUrl('/assets/ui/huyen-kim/scene/exploration-v2/terrain-three-realms-v1.png')
+game/src/components\scenes\realm\fidelity\RealmPaperDetails.vue:10:const seal = resolveAssetUrl('/assets/ui/huyen-kim/symbols/realm.svg')
+game/src/components\scenes\tribulation\fidelity\TribulationFidelityFrame.vue:3:const frame = resolveAssetUrl('/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.png')
+game/src/components\scenes\realm\fidelity\RealmFidelityScene.vue:13:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\body\fidelity\BodyPaperFigure.vue:9:const figure = computed(() => resolveAssetUrl(`/assets/ui/huyen-kim/scene/body-v2/${props.model.chapter === 'refinement' ? 'mortal-horse-stance-v1' : props.model.chapter === 'meridian' ? 'qi-taichi-v1' : 'zhou-meditation-v1'}.png`))
+game/src/components\scenes\body\fidelity\BodyPaperFigure.vue:10:const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/skill-v2/node-ring-v1.png')
+game/src/components\scenes\body\fidelity\BodyPaperDetails.vue:8:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\body\fidelity\BodyFidelityScene.vue:19:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\body\fidelity\BodyFidelityScene.vue:20:const bodyIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/body.svg')
+game/src/components\scenes\quest\tabs\QuestGroupTabs.vue:36:        chrome-id="seal-chip"
+game/src/components\scenes\quest\tabs\QuestGroupTabs.vue:55:        chrome-id="seal-chip"
+game/src/components\common\SlotView.vue:349:    var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
+game/src/components\common\SlotView.vue:366:    var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
+game/src/components\common\SlotView.vue:520:  background: var(--slot-hover-image, url('/assets/ui/Slot/bag-slot-hover.png')) center / var(--slot-hover-fit, 100% 100%) no-repeat;
+game/src/components\common\SlotView.vue:543:  --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
+game/src/components\common\SlotView.vue:548:  --slot-bg-image: url('/assets/ui/Slot/slot-backdrop.png');
+game/src/components\common\SlotView.vue:549:  --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
+game/src/components\common\SlotView.vue:580:  background: url('/assets/ui/Slot/seal-frame.png') center / contain no-repeat;
+game/src/components\scenes\quest\list\QuestRow.vue:61:      chrome-id="list-row"
+game/src/components\scenes\quest\list\QuestRow.vue:83:            chrome-id="seal-chip"
+game/src/components\common\ToastContainer.vue:100:          <InkNineSlice chrome-id="frame-xs-tooltip" layer="surface" tint-var="var(--toast-color)" />
+game/src/components\common\Tooltip.vue:75:    ? resolveAssetUrl(`/assets/ui/elements/banner-${content.value.element}.png`)
+game/src/components\common\Tooltip.vue:158:        <InkNineSlice v-else-if="!contained" chrome-id="frame-xs-tooltip" layer="surface" />
+game/src/components\scenes\quest\fidelity\QuestFidelityScene.vue:31:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\tribulation\fidelity\TribulationFidelityChapters.vue:9:const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/combat-v2/ornament-ring-v1.png')
+game/src/components\scenes\equipment\fidelity\ForgeFidelityWorkspace.vue:15:<template><section class="workspace" :class="{compact}"><div class="upper"><div class="focus-item" aria-hidden="true"><img class="furnace-art" :src="resolveAssetUrl('/assets/ui/huyen-kim/scene/forge-v2/furnace-v1.png')" alt=""></div><div class="comparison"><p class="chosen-item">{{item.name}}</p><h3>{{t(destructive?'forge.output':'forge.comparison')}}</h3><p class="explanation">{{t(`forge.hint.${mode}`)}}</p><template v-if="!destructive"><div class="column-head"><span>{{t('forge.stat')}}</span><span>{{t('forge.before')}}</span><span>{{t('forge.after')}}</span></div><div v-for="row in rows" :key="row.id" class="stat-row"><span>{{t(`forge.${row.id}`)}}</span><b>{{row.before}}</b><strong>{{locked.includes(row.id)?row.before:row.after}}</strong><button v-if="mode==='wash'||mode==='refine'" class="lock" :aria-label="t('forge.lock',{name:t(`forge.${row.id}`)})" :aria-pressed="locked.includes(row.id)" @click="toggle(row.id)">{{locked.includes(row.id)?'◆':'◇'}}</button></div></template><div v-else class="outputs"><div v-for="(asset,i) in ['/assets/materials/linh_khoang.png','/assets/materials/linh_moc.png']" :key="asset"><img :src="resolveAssetUrl(asset)" alt=""><b>{{t(i===0?'items.ore':'items.wood')}}</b><span>× {{i===0?'8':'12'}}</span></div></div></div></div><footer><div class="cost"><h3>{{t(destructive?'forge.warning':'forge.cost')}}</h3><p v-if="destructive">{{t('forge.destructiveHint')}}</p><div v-else><img :src="resolveAssetUrl('/assets/materials/linh_khoang.png')" alt=""><span>{{t('items.ore')}} <b>8 / 12</b></span><span class="stone">{{t('items.stone')}} <b>1.280 / 8.640</b></span></div></div><div class="actions"><button v-if="mode==='wash'||mode==='refine'" class="preview" @click="emit('action','preview')">{{t('forge.preview')}}</button><button class="submit" :class="{danger:destructive}" @click="emit('action','submit')">{{t(`forge.${mode}`)}}</button></div></footer></section></template>
+game/src/components\common\primitives\Chip.vue:51:      :chrome-id="isTab ? 'tab-seal' : 'seal-chip'"
+game/src/components\panels\SettingsPanel.vue:312:const sliderTrackUrl = hkChromeUrl('slider-track')
+game/src/components\panels\SettingsPanel.vue:313:const sliderThumbUrl = hkChromeUrl('slider-thumb')
+game/src/components\scenes\alchemy\fidelity\AlchemyPaperCauldron.vue:7:const cauldron = resolveAssetUrl('/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png')
+game/src/components\scenes\technique\TechniqueSurface.vue:27:const FALLBACK_ART = '/assets/ui/huyen-kim/scene/technique-v2/temporary-manual-v1.png'
+game/src/components\scenes\equipment\EquipmentSurface.vue:39:const furnaceArtUrl = resolveAssetUrl('/assets/ui/huyen-kim/scene/forge-v2/furnace-v1.png')
+game/src/components\scenes\alchemy\fidelity\AlchemyFidelityScene.vue:42:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\equipment\fidelity\EquipmentPaperTooltip.vue:5:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.png')
+game/src/components\scenes\equipment\fidelity\EquipmentFidelityScene.vue:43:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\quest\detail\QuestSectionPlaque.vue:18:      chrome-id="section-plaque"
+game/src/components\scenes\quest\detail\QuestDetailPanel.vue:32:      chrome-id="surface-m-panel"
+game/src/components\scenes\quest\detail\QuestDetailPanel.vue:45:            chrome-id="entity-bar"
+game/src/components\scenes\settings\fidelity\SettingsFidelityScene.vue:26:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\defeat\fidelity\DefeatFidelityScene.vue:9:const paper=resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\defeat\fidelity\DefeatFidelityScene.vue:10:const title=resolveAssetUrl('/assets/ui/huyen-kim/scene/defeat-v2/defeat-title-v1.png')
+game/src/components\scenes\technique\fidelity\TechniqueFidelityScene.vue:17:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\alchemy\fidelity\AlchemyPaperDetails.vue:12:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\login\loginArt.ts:3:const art = (name: string) => resolveAssetUrl(`/assets/ui/huyen-kim/scene/login-v2/${name}.png`)
+game/src/components\scenes\technique\fidelity\TechniquePaperUpgrade.vue:8:const symbol = resolveAssetUrl('/assets/ui/huyen-kim/symbols/technique.svg')
+game/src/components\scenes\defeat\DefeatTitleBand.vue:11:const ribbonUrl = hkChromeUrl('ceremony-ribbon')
+game/src/components\scenes\equipment\bag\EquipmentBagPanel.vue:21:      chrome-id="surface-m-panel"
+game/src/components\scenes\settings\SettingsAudioSection.vue:28:const sliderTrackUrl = hkChromeUrl('slider-track')
+game/src/components\scenes\settings\SettingsAudioSection.vue:29:const sliderThumbUrl = hkChromeUrl('slider-thumb')
+game/src/components\scenes\inventory\fidelity\InventoryFidelityDetail.vue:8:const frame=resolveAssetUrl('/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.png')
+game/src/components\scenes\inventory\fidelity\InventoryFidelityScene.vue:31:const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+game/src/components\scenes\dong-fu\fidelity\dongFuUi.ts:2:import frameMetadata from '../../../../../public/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.json'
+game/src/components\scenes\dong-fu\fidelity\dongFuUi.ts:4:const artRoot = '/assets/ui/huyen-kim/scene/dong-fu-v2/'
+game/src/components\scenes\dong-fu\fidelity\dongFuUi.ts:13:  return resolveAssetUrl(`/assets/ui/huyen-kim/symbols/${id}.svg`)
+game/src/components\scenes\dong-fu\hud\DongFuResourcePill.vue:24:    <InkNineSlice v-if="sliced" chrome-id="resource-pill" layer="surface" />

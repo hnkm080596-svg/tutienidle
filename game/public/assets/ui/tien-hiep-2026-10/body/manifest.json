@@ -1,0 +1,372 @@
+{
+  "version": 1,
+  "scope": "Reusable presentation assets only; no gameplay wiring",
+  "silhouette": "Cross-legged seated, plain dark upper torso, faceless",
+  "render": "contain; preserve alpha; do not stretch",
+  "states": [
+    "unlit",
+    "lit"
+  ],
+  "tierColors": [
+    "gray",
+    "jade",
+    "violet",
+    "gold"
+  ],
+  "tierNote": "Jade/violet are presentation tint stages to be evaluated in preview; separate raster variants are not exported.",
+  "assets": [
+    {
+      "file": "galaxy-core-lit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "galaxy-core-unlit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "galaxy-dust-lit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "galaxy-dust-unlit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 250
+    },
+    {
+      "file": "galaxy-orbit-arc-lit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "galaxy-orbit-arc-unlit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 252
+    },
+    {
+      "file": "galaxy-orbit-circle-lit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 248
+    },
+    {
+      "file": "galaxy-orbit-circle-unlit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 250
+    },
+    {
+      "file": "galaxy-orbit-ellipse-lit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 252
+    },
+    {
+      "file": "galaxy-orbit-ellipse-unlit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 247
+    },
+    {
+      "file": "galaxy-ribbon-lit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "galaxy-ribbon-unlit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 249
+    },
+    {
+      "file": "galaxy-spiral-lit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "galaxy-spiral-unlit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "galaxy-stars-lit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 252
+    },
+    {
+      "file": "galaxy-stars-unlit-v1.png",
+      "width": 384,
+      "height": 256,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 249
+    },
+    {
+      "file": "meridian-junction-lit-v1.png",
+      "width": 768,
+      "height": 269,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "meridian-junction-unlit-v1.png",
+      "width": 768,
+      "height": 269,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "meridian-node-lit-v1.png",
+      "width": 768,
+      "height": 300,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "meridian-node-unlit-v1.png",
+      "width": 768,
+      "height": 300,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "meridian-ring-lit-v1.png",
+      "width": 768,
+      "height": 290,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "meridian-ring-unlit-v1.png",
+      "width": 768,
+      "height": 290,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "meridian-tube-lit-v1.png",
+      "width": 768,
+      "height": 165,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "meridian-tube-unlit-v1.png",
+      "width": 768,
+      "height": 165,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "navigation-dan-lit-v1.png",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "navigation-dan-unlit-v1.png",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "navigation-khai-lit-v1.png",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 253
+    },
+    {
+      "file": "navigation-khai-unlit-v1.png",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "navigation-ren-lit-v1.png",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "navigation-ren-unlit-v1.png",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 254
+    },
+    {
+      "file": "process-bi-lit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 249
+    },
+    {
+      "file": "process-bi-unlit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 236
+    },
+    {
+      "file": "process-cot-lit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 251
+    },
+    {
+      "file": "process-cot-unlit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 241
+    },
+    {
+      "file": "process-huyet-lit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 252
+    },
+    {
+      "file": "process-huyet-unlit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 244
+    },
+    {
+      "file": "process-mach-lit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 247
+    },
+    {
+      "file": "process-mach-unlit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 236
+    },
+    {
+      "file": "process-nhuc-lit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 250
+    },
+    {
+      "file": "process-nhuc-unlit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 244
+    },
+    {
+      "file": "process-tang-lit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 252
+    },
+    {
+      "file": "process-tang-unlit-v1.png",
+      "width": 362,
+      "height": 362,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 241
+    },
+    {
+      "file": "silhouette-seated-v1.png",
+      "width": 1312,
+      "height": 1199,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 255
+    },
+    {
+      "file": "silhouette-upper-v1.png",
+      "width": 1215,
+      "height": 1295,
+      "hasAlpha": true,
+      "alphaMin": 0,
+      "alphaMax": 255
+    }
+  ],
+  "activeSilhouette": "silhouette-seated-v1.png"
+}

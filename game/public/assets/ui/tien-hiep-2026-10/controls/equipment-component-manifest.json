@@ -1,0 +1,56 @@
+{
+  "generator": "built-in ImageGen",
+  "scope": "UI components only; original game item art reused",
+  "artifacts": [
+    {
+      "name": "equipment-circle-frame-v1",
+      "width": 443,
+      "height": 405,
+      "hasAlpha": true,
+      "cornerAlpha": 0,
+      "centerAlpha": 253,
+      "usage": "circular equipped slot",
+      "export": "trim alpha silhouette; render contain; never stretch"
+    },
+    {
+      "name": "equipment-brush-circle-v1",
+      "width": 706,
+      "height": 576,
+      "hasAlpha": true,
+      "cornerAlpha": 0,
+      "centerAlpha": 0,
+      "usage": "blank idle-art backdrop",
+      "export": "trim alpha silhouette; render contain; never stretch"
+    },
+    {
+      "name": "equipment-level-seal-v1",
+      "width": 361,
+      "height": 339,
+      "hasAlpha": true,
+      "cornerAlpha": 0,
+      "centerAlpha": 253,
+      "usage": "level seal",
+      "export": "trim alpha silhouette; render contain; never stretch"
+    },
+    {
+      "name": "equipment-divider-v1",
+      "width": 767,
+      "height": 65,
+      "hasAlpha": true,
+      "cornerAlpha": 0,
+      "centerAlpha": 248,
+      "usage": "section ornament",
+      "export": "trim alpha silhouette; render contain; never stretch"
+    },
+    {
+      "name": "equipment-tab-brush-v1",
+      "width": 2086,
+      "height": 307,
+      "hasAlpha": true,
+      "cornerAlpha": 0,
+      "centerAlpha": 252,
+      "usage": "selected tab",
+      "export": "trim alpha silhouette; render contain; never stretch"
+    }
+  ]
+}

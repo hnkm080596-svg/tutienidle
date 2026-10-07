@@ -1,0 +1,132 @@
+{
+  "taskId": "pc-ui-reconstruction-2026-10-05",
+  "generatedAt": "2026-10-05T02:17:45.898Z",
+  "policyHash": "aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d",
+  "routing": [
+    {
+      "lessonRef": "L-016@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-017@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-018@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-019@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-020@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-021@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    },
+    {
+      "lessonRef": "L-022@1",
+      "decision": "NOT_APPLICABLE",
+      "reason": "no semantic trigger matched"
+    }
+  ],
+  "brief": {
+    "id": "BRIEF-pc-ui-reconstruction-2026-10-05",
+    "taskId": "pc-ui-reconstruction-2026-10-05",
+    "revision": 1,
+    "planningBaseline": {
+      "productStateId": "f8af8007b0b6519e6aa6997fedad2cc77939538a-with-existing-task-diff",
+      "contractId": "source-models-and-existing-emits",
+      "attackModelId": "pc-visual-interaction-and-consumer-census",
+      "environmentId": "same-worktree-server-5449"
+    },
+    "policyHash": "aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d",
+    "requirementRefs": [
+      "docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-EXECUTION.md"
+    ],
+    "invariantIds": [
+      "UI-OWNER-PRESERVATION",
+      "UI-PC-READABILITY",
+      "UI-ALPHA-EXTERIOR"
+    ],
+    "dependencyRefs": [],
+    "sourceDependencyHashes": [],
+    "expectedChangeSet": [
+      "src/components/scenes",
+      "src/components/panels",
+      "src/assets/tien-hiep*.css",
+      "public/assets/ui/tien-hiep-2026-10"
+    ],
+    "lessonRouting": [
+      {
+        "lessonRef": "L-016@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-017@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-018@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-019@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-020@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-021@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      },
+      {
+        "lessonRef": "L-022@1",
+        "decision": "NOT_APPLICABLE",
+        "reason": "no semantic trigger matched"
+      }
+    ],
+    "slices": [
+      {
+        "id": "scene-layouts"
+      },
+      {
+        "id": "auxiliary-layouts"
+      },
+      {
+        "id": "runtime-integration"
+      }
+    ],
+    "firstProofObligations": [
+      {
+        "admittedSlice": "scene-layouts",
+        "stage": "BEFORE_PROPAGATION",
+        "oracle": "Production surface consumer census plus fidelity interaction screenshot: props/emits unchanged; generated concept controls never become authoritative UI."
+      }
+    ],
+    "unresolvedAssumptions": [],
+    "readiness": "DRAFT",
+    "preflightEvidenceIds": [],
+    "deviations": [],
+    "consumedBy": [],
+    "checkpoints": [],
+    "finalConformanceIds": []
+  }
+}

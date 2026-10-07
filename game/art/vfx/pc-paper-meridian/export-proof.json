@@ -1,0 +1,11 @@
+{
+  "alphaMin": 0,
+  "alphaMax": 248,
+  "nonzeroPixels": 141984,
+  "edgePixels": 0,
+  "width": 1024,
+  "height": 512,
+  "frames": 32,
+  "fps": 16,
+  "pageErrors": []
+}

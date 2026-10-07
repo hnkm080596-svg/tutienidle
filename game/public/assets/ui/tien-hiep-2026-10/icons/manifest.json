@@ -1,0 +1,293 @@
+{
+  "source": "brush-icons-atlas-v1.png",
+  "entries": [
+    {
+      "name": "home",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "character",
+      "sourceRect": {
+        "left": 256,
+        "top": 0,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "skill",
+      "sourceRect": {
+        "left": 512,
+        "top": 0,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "equipment",
+      "sourceRect": {
+        "left": 768,
+        "top": 0,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "sect",
+      "sourceRect": {
+        "left": 1024,
+        "top": 0,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "guild",
+      "sourceRect": {
+        "left": 1280,
+        "top": 0,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "inventory",
+      "sourceRect": {
+        "left": 0,
+        "top": 256,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "alchemy",
+      "sourceRect": {
+        "left": 256,
+        "top": 256,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "forge",
+      "sourceRect": {
+        "left": 512,
+        "top": 256,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "body",
+      "sourceRect": {
+        "left": 768,
+        "top": 256,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "companion",
+      "sourceRect": {
+        "left": 1024,
+        "top": 256,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "exploration",
+      "sourceRect": {
+        "left": 1280,
+        "top": 256,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "portal",
+      "sourceRect": {
+        "left": 0,
+        "top": 512,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "formation",
+      "sourceRect": {
+        "left": 256,
+        "top": 512,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "artifact",
+      "sourceRect": {
+        "left": 512,
+        "top": 512,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "realm",
+      "sourceRect": {
+        "left": 768,
+        "top": 512,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "technique",
+      "sourceRect": {
+        "left": 1024,
+        "top": 512,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "quest",
+      "sourceRect": {
+        "left": 1280,
+        "top": 512,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "compass",
+      "sourceRect": {
+        "left": 0,
+        "top": 768,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "settings",
+      "sourceRect": {
+        "left": 256,
+        "top": 768,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "feedback",
+      "sourceRect": {
+        "left": 512,
+        "top": 768,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "opportunity",
+      "sourceRect": {
+        "left": 768,
+        "top": 768,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "production",
+      "sourceRect": {
+        "left": 1024,
+        "top": 768,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    },
+    {
+      "name": "vendor",
+      "sourceRect": {
+        "left": 1280,
+        "top": 768,
+        "width": 256,
+        "height": 256
+      },
+      "alphaMin": 0,
+      "alphaMax": 254,
+      "opaque": false
+    }
+  ]
+}

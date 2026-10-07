@@ -1,0 +1,440 @@
+# Files (150 reviewable / 434 total)
+
+- mode: workspace
+- total_insertions: 10161
+- total_deletions: 505
+
+  - `game/src/components/common/EntitySpriteCanvas.vue` [modified] +6/-4
+  - `game/src/components/common/GameButton.vue` [modified] +3/-0
+  - `game/src/components/common/InkWashBackdrop.test.ts` [modified] +2/-2
+  - `game/src/components/common/InkWashPrimitives.test.ts` [modified] +10/-2
+  - `game/src/components/common/PaperPanelNavigation.vue` [modified] +1/-1
+  - `game/src/components/common/PlayerPortrait.test.ts` [modified] +8/-0
+  - `game/src/components/common/PlayerPortrait.vue` [modified] +6/-3
+  - `game/src/components/common/primitives/InkNineSlice.vue` [modified] +4/-1
+  - `game/src/components/game/combat/CombatDefeatPanel.vue` [modified] +5/-3
+  - `game/src/components/game/combat/CombatSceneOverlay.vue` [modified] +1/-0
+  - `game/src/components/game/tribulation/TribulationSceneOverlay.vue` [modified] +1/-0
+  - `game/src/components/onboarding/AuthEntryScreen.vue` [modified] +13/-3
+  - `game/src/components/onboarding/CharacterCreationScreen.vue` [modified] +1/-0
+  - `game/src/components/panels/ArtifactPanel.vue` [modified] +1/-1
+  - `game/src/components/panels/EquipmentPaperdoll.vue` [modified] +2/-3
+  - `game/src/components/panels/QuanKhiPanel.vue` [modified] +1/-1
+  - `game/src/components/panels/TranPhapPanel.test.ts` [modified] +5/-9
+  - `game/src/components/panels/TranPhapPanel.vue` [modified] +21/-14
+  - `game/src/components/panels/equipment-hall/DecomposeTab.vue` [modified] +9/-0
+  - `game/src/components/panels/equipment-hall/DissolveTab.vue` [modified] +24/-6
+  - `game/src/components/panels/equipment-hall/EnhanceTab.vue` [modified] +3/-2
+  - `game/src/components/panels/equipment-hall/RefineTab.vue` [modified] +3/-2
+  - `game/src/components/panels/equipment-hall/WashTab.vue` [modified] +3/-2
+  - `game/src/components/panels/equipment-hall/qi-hall.css` [modified] +52/-0
+  - `game/src/components/scenes/alchemy/fidelity/AlchemyFidelityScene.vue` [modified] +7/-6
+  - `game/src/components/scenes/alchemy/fidelity/AlchemyPaperDetails.vue` [modified] +1/-1
+  - `game/src/components/scenes/body/fidelity/BodyFidelityScene.vue` [modified] +6/-13
+  - `game/src/components/scenes/body/fidelity/BodyPaperDetails.vue` [modified] +1/-3
+  - `game/src/components/scenes/body/fidelity/BodyPaperFigure.vue` [modified] +5/-5
+  - `game/src/components/scenes/character/fidelity/CharacterFidelityFigure.vue` [modified] +2/-16
+  - `game/src/components/scenes/character/fidelity/CharacterFidelityIdentity.vue` [modified] +2/-2
+  - `game/src/components/scenes/character/fidelity/CharacterFidelityScene.vue` [modified] +8/-4
+  - `game/src/components/scenes/character/fidelity/characterUi.ts` [modified] +1/-1
+  - `game/src/components/scenes/combat/fidelity/CombatFidelityFrame.vue` [modified] +1/-1
+  - `game/src/components/scenes/combat/fidelity/CombatFidelityPortrait.vue` [modified] +1/-1
+  - `game/src/components/scenes/combat/fidelity/CombatFidelityScene.vue` [modified] +1/-0
+  - `game/src/components/scenes/defeat/DefeatTitleBand.vue` [modified] +2/-2
+  - `game/src/components/scenes/defeat/fidelity/DefeatFidelityScene.vue` [modified] +4/-3
+  - `game/src/components/scenes/dong-fu/fidelity/DongFuFidelityScene.vue` [modified] +1/-1
+  - `game/src/components/scenes/dong-fu/fidelity/DongFuHomeContent.test.ts` [modified] +21/-0
+  - `game/src/components/scenes/dong-fu/fidelity/DongFuHomeContent.vue` [modified] +19/-2
+  - `game/src/components/scenes/dong-fu/fidelity/dongFuUi.ts` [modified] +3/-3
+  - `game/src/components/scenes/equipment/fidelity/EquipmentFidelityScene.vue` [modified] +4/-3
+  - `game/src/components/scenes/equipment/fidelity/EquipmentPaperTooltip.vue` [modified] +1/-1
+  - `game/src/components/scenes/equipment/fidelity/ForgeBatchBag.vue` [modified] +1/-0
+  - `game/src/components/scenes/equipment/fidelity/ForgeFidelityScene.vue` [modified] +1/-0
+  - `game/src/components/scenes/exploration/fidelity/ExplorationFidelityScene.vue` [modified] +5/-4
+  - `game/src/components/scenes/exploration/fidelity/ExplorationPaperDetails.vue` [modified] +1/-1
+  - `game/src/components/scenes/exploration/fidelity/ExplorationPaperMap.vue` [modified] +1/-1
+  - `game/src/components/scenes/inventory/fidelity/InventoryFidelityDetail.vue` [modified] +1/-1
+  - `game/src/components/scenes/inventory/fidelity/InventoryFidelityScene.vue` [modified] +5/-2
+  - `game/src/components/scenes/login/AuthSubmitButton.vue` [modified] +3/-3
+  - `game/src/components/scenes/login/LoginLogoBlock.vue` [modified] +2/-4
+  - `game/src/components/scenes/login/LoginSceneVista.vue` [modified] +4/-8
+  - `game/src/components/scenes/login/loginArt.ts` [modified] +2/-2
+  - `game/src/components/scenes/quest/fidelity/QuestFidelityScene.vue` [modified] +3/-2
+  - `game/src/components/scenes/realm/fidelity/RealmFidelityScene.vue` [modified] +6/-10
+  - `game/src/components/scenes/realm/fidelity/RealmPaperDetails.vue` [modified] +2/-0
+  - `game/src/components/scenes/realm/fidelity/RealmPaperMap.vue` [modified] +4/-2
+  - `game/src/components/scenes/settings/fidelity/SettingsFidelityScene.vue` [modified] +3/-2
+  - `game/src/components/scenes/skill/fidelity/SkillFidelityScene.vue` [modified] +3/-2
+  - `game/src/components/scenes/skill/fidelity/SkillPaperDetails.vue` [modified] +1/-1
+  - `game/src/components/scenes/skill/fidelity/SkillPaperNode.vue` [modified] +1/-1
+  - `game/src/components/scenes/skill/fidelity/SkillPaperTree.vue` [modified] +5/-3
+  - `game/src/components/scenes/technique/fidelity/TechniqueFidelityScene.test.ts` [modified] +2/-1
+  - `game/src/components/scenes/technique/fidelity/TechniqueFidelityScene.vue` [modified] +6/-9
+  - `game/src/components/scenes/technique/fidelity/TechniquePaperInfo.vue` [modified] +2/-2
+  - `game/src/components/scenes/tribulation/fidelity/TribulationFidelityChapters.vue` [modified] +1/-1
+  - `game/src/components/scenes/tribulation/fidelity/TribulationFidelityFrame.vue` [modified] +1/-1
+  - `game/src/components/scenes/tribulation/fidelity/TribulationFidelityScene.vue` [modified] +2/-1
+  - `game/src/components/scenes/victory/VictoryScene.vue` [modified] +11/-5
+  - `game/src/components/scenes/victory/fidelity/VictoryFidelityScene.vue` [modified] +4/-3
+  - `game/src/game/scenes/TranPhapCombatPreviewScene.ts` [modified] +6/-4
+  - `game/src/locales/en.json` [modified] +4/-0
+  - `game/src/locales/vi.json` [modified] +10/-6
+  - `game/src/main.ts` [modified] +6/-0
+  - `game/src/presentation/assets/AssetBundleCatalog.ts` [modified] +20/-0
+  - `game/src/ui-preview/alchemy.ts` [modified] +5/-0
+  - `game/src/ui-preview/body.ts` [modified] +5/-0
+  - `game/src/ui-preview/character.ts` [modified] +7/-1
+  - `game/src/ui-preview/characterMessages.ts` [modified] +1/-0
+  - `game/src/ui-preview/combat.ts` [modified] +5/-0
+  - `game/src/ui-preview/defeat.ts` [modified] +5/-0
+  - `game/src/ui-preview/dong-fu.ts` [modified] +7/-1
+  - `game/src/ui-preview/equipment.ts` [modified] +7/-1
+  - `game/src/ui-preview/exploration.ts` [modified] +5/-0
+  - `game/src/ui-preview/forge.ts` [modified] +5/-0
+  - `game/src/ui-preview/inventory.ts` [modified] +5/-0
+  - `game/src/ui-preview/quest.ts` [modified] +5/-0
+  - `game/src/ui-preview/realm.ts` [modified] +5/-0
+  - `game/src/ui-preview/remainingPreview.test.ts` [modified] +1/-0
+  - `game/src/ui-preview/settings.ts` [modified] +5/-0
+  - `game/src/ui-preview/skill.ts` [modified] +5/-0
+  - `game/src/ui-preview/technique.ts` [modified] +5/-0
+  - `game/src/ui-preview/tribulation.ts` [modified] +5/-0
+  - `game/src/ui-preview/victory.ts` [modified] +5/-0
+  - `game/src/ui/huyen-kim-chrome.json` [modified] +304/-284
+  - `game/tests/architecture/betaScopeRenderedTokens.test.ts` [modified] +5/-0
+  - `game/tests/architecture/huyenKimChromeManifest.test.ts` [modified] +2/-2
+  - `game/tests/e2e/helpers.ts` [modified] +4/-2
+  - `game/tests/e2e/huyen-kim-fidelity-capture.qa.spec.ts` [modified] +43/-5
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/ALPHA-REVIEW.json` [added] +1878/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/AUDIT-AND-HANDOFF-PLAN.md` [added] +118/-0 (excluded: unsupported_ext)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/COLLECTIONS-G5.md` [added] +41/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/DELIVERY.json` [added] +9/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/ENTRY-HOME-WORKER-EVIDENCE.md` [added] +36/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/GENERATED-PROMPTS.json` [added] +82/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/IMAGEGEN-PROMPTS.md` [added] +21/-0 (excluded: unsupported_ext)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/IMPLEMENTATION-REPORT.md` [added] +75/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/MIGRATED-DIRECT-CONSUMERS.json` [added] +29/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/OUTCOME-WORKER-EVIDENCE.md` [added] +42/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/PACK-VALIDATION.json` [added] +171/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/README.md` [added] +58/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-BRIEF.json` [added] +132/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-EXECUTION.md` [added] +23/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/REBUILD-TASK.json` [added] +49/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/SCENE-APPROVAL-WORKFLOW.md` [added] +22/-0 (excluded: unsupported_ext)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/SCENE-SPECS.md` [added] +61/-0 (excluded: unsupported_ext)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/WIRING-PLAN.md` [added] +90/-0 (excluded: unsupported_ext)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/WORLD-VISTA-PROMPT.md` [added] +3/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/build_manifest.py` [added] +64/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/census_imports.py` [added] +30/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/character-layout-reference.csv` [added] +11/-0 (excluded: unsupported_ext)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/component-census.csv` [added] +287/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/REVIEW-MANIFEST.json` [added] +187/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/artifact-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/auth-after-start-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/canh-gioi-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/character-creation-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/character-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/dong-phu-user-approved.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/equipment-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/forge-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/formation-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/kho-vat-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/kinh-mach-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/luyen-the-user-approved.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/opening-user-approved.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/quan-khi-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/realm-user-reference.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/recruit-v1.png` [binary] +0/-0 (excluded: binary)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/review.html` [added] +37/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/skills-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/technique-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/concepts/zhou-thien-v1.png` [binary] +0/-0 (excluded: binary)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/dedupe-preview.mjs` [added] +11/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/draft-asset-checks.json` [added] +35/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/existing-chrome-census.csv` [added] +44/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/finalize-preview.mjs` [added] +9/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/inspect_sources.py` [added] +26/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/package-delivery.py` [added] +24/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/panel-frame-v2-alpha.json` [added] +14/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/polish-ocr-preview.json` [added] +2034/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/polish-ocr-rules.txt` [added] +139/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/preview-server.mjs` [added] +21/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/preview.html` [added] +41/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/rebuild-ocr-preview.json` [added] +0/-0
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/refine-preview.mjs` [added] +9/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/01-login.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/02-character-creation.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/03-dong-fu-closed.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/03-dong-fu-open.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/04-character.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/05-realm.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/06-technique-locked.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/07-skill.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/08-body.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/09-inventory.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/10-exploration.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/11-alchemy.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/11b-production-outpost.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/11c-production-actions.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/12-equipment.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/13-combat.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/14-tribulation.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/15-victory.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/16-defeat.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/17-settings.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/18-quest.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-aux-artifact-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-aux-chieu_mo-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-aux-companion-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-aux-duyen_phan-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-aux-qua_tang-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-aux-system-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-aux-tran_phap-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-dialog-confirm-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-dialog-feedback-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-dialog-lore-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-dialog-offline-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-entry-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-fixed-artifact-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-fixed-companion-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-fixed-tran_phap-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/independent-formation-drag-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-character-tooltip-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-character-tooltip-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-character-tooltip-1920.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-dialog-confirm.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-dialog-feedback.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-dialog-lore.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-dialog-offline.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-equipment-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-equipment-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-equipment-1920.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-fixture-body.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-fixture-inventory.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-fixture-skill.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-fixture-technique.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-home-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-home-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-home-1920.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-production-quest.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-production-settings.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-rebuilt-combat.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-rebuilt-defeat.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-rebuilt-quest.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-rebuilt-settings.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-rebuilt-tribulation.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-rebuilt-victory.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-artifact.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-chieu_mo.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-companion.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-duyen_phan.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-formation.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/pc-secondary-qua_tang.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-alchemy-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-alchemy-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-body-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-body-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-body-Chu-Thiên-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-body-Chu-Thiên-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-body-Kinh-Mạch-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-body-Kinh-Mạch-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-body-meridian-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-body-meridian-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-character-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-character-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-equipment-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-equipment-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-equipment-hall-dissolve-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-equipment-hall-dissolve-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-equipment-hall-enhance-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-equipment-hall-enhance-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-exploration-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-exploration-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-decompose-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-decompose-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-dissolve-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-dissolve-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-enhance-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-enhance-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-refine-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-refine-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-wash-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-forge-wash-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-inventory-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-inventory-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-realm-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-realm-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-skill-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-skill-1672.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-technique-1280.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/runtime-evidence/rebuild-technique-1672.png` [binary] +0/-0 (excluded: binary)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/source-metrics.json` [added] +439/-0
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/tien-hiep-ui-art-and-plan.zip` [binary] +0/-0 (excluded: binary)~~
+~~- `game/docs/design/tien-hiep-ui-redesign-2026-10-05/ui-art-consumer-search.txt` [added] +143/-0 (excluded: unsupported_ext)~~
+  - `game/docs/design/tien-hiep-ui-redesign-2026-10-05/validate-pack.mjs` [added] +26/-0
+~~- `game/public/assets/ui/tien-hiep-2026-10/drafts/button-primary-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/drafts/orb-frame-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/drafts/orb-frame-v2.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/drafts/page-frame-v1.png` [binary] +0/-0 (excluded: binary)~~
+  - `game/public/assets/ui/tien-hiep-2026-10/pack.json` [added] +897/-0
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/avatar-frame@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/avatar-frame@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/boss-seal@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/boss-seal@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/building-plaque.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/building-plaque@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/building-plaque@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-ceremonial@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-ceremonial@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-compact@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-compact@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-danger@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-danger@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-primary.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-secondary.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-standard@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/button-standard@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon-red.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/ceremony-ribbon@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/corner-ornament.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/corner-ornament@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/corner-ornament@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/dao-luan-center@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/dao-luan-center@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/dao-luan-node@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/dao-luan-node@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/divider-ornament@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/divider-ornament@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/entity-bar@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/entity-bar@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/frame-m-modal@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/frame-m-modal@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/frame-s-slot@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/frame-s-slot@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/frame-xl-ceremony@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/frame-xl-ceremony@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/frame-xs-tooltip@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/frame-xs-tooltip@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/icon-button-utility@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/icon-button-utility@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/identity-plate@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/identity-plate@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-body@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-body@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-roller.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-roller@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/imperial-scroll-roller@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/ink-panel.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/list-row@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/list-row@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/nav-seal-vertical@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/nav-seal-vertical@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/navigation-rail.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/orb-frame.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/page-paper.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/panel-frame-v2.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/paper-grain-tile@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/paper-grain-tile@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/paper-panel.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/paper-surface.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/power-ribbon.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/resource-pill@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/resource-pill@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/rune-node@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/rune-node@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/scroll-title-plaque@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/scroll-title-plaque@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/scrollbar@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/scrollbar@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/seal-chip@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/seal-chip@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/section-header.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/section-plaque@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/section-plaque@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/skill-orb-frame@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/skill-orb-frame@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/slider-thumb@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/slider-thumb@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/slider-track@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/slider-track@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/slot-frame.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/stage-node@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/stage-node@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/surface-l-drawer@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/surface-l-drawer@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/surface-m-panel@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/surface-m-panel@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/surface-xl-scroll@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/surface-xl-scroll@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/tab-seal@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/tab-seal@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/text-field@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/text-field@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/timer-ring@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/timer-ring@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/title-plaque.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/toggle-track@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/toggle-track@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/turn-token@1x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/runtime/turn-token@2x.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/avatar-ring.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/building-plaque.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/button-primary-v2.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/button-primary.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/button-secondary.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/ceremony-ribbon-red.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/ceremony-ribbon.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/divider.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/identity-plate.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/ink-panel-cutout-v3.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/list-row.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/navigation-rail.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/opening-vista-warm-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/orb-frame.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/page-frame.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/panel-frame-thin-v3.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/panel-frame-v2.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/panel-frame.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/paper-panel-cutout-v3.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/paper-surface.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/power-ribbon.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/progress-track.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/resource-pill.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/section-header.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/slot-frame.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/tab-plate.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/text-field.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/title-plaque.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/warm-branch-corner-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/warm-landscape-header-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png` [binary] +0/-0 (excluded: binary)~~
+~~- `game/public/assets/ui/tien-hiep-2026-10/source/world-vista.png` [binary] +0/-0 (excluded: binary)~~
+  - `game/scripts/audit-tien-hiep-alpha.mjs` [added] +26/-0
+  - `game/scripts/build-tien-hiep-ui.mjs` [added] +46/-0
+  - `game/scripts/migrate-tien-hiep-surfaces.mjs` [added] +24/-0
+  - `game/scripts/scope-tien-hiep-skin.mjs` [added] +9/-0
+  - `game/src/assets/tien-hiep-auxiliary.css` [added] +111/-0
+  - `game/src/assets/tien-hiep-collections.css` [added] +204/-0
+  - `game/src/assets/tien-hiep-entry.css` [added] +81/-0
+  - `game/src/assets/tien-hiep-forge.css` [added] +31/-0
+  - `game/src/assets/tien-hiep-outcomes.css` [added] +119/-0
+  - `game/src/assets/tien-hiep-progression.css` [added] +171/-0
+  - `game/src/assets/tien-hiep-secondary-ui.css` [added] +137/-0
+  - `game/src/assets/tien-hiep-ui.css` [added] +355/-0
+  - `game/src/components/common/EntitySpriteCanvas.test.ts` [added] +44/-0
+  - `game/src/components/common/PaperPanelNavigation.test.ts` [added] +22/-0
+  - `game/src/components/onboarding/AuthEntryScreen.test.ts` [added] +36/-0
+  - `game/src/components/scenes/login/LoginOpening.vue` [added] +24/-0
+  - `game/src/components/scenes/skill/fidelity/skillGraphViewport.test.ts` [added] +19/-0
+  - `game/src/components/scenes/skill/fidelity/skillGraphViewport.ts` [added] +16/-0
+  - `game/src/presentation/assets/TienHiepUiAssets.test.ts` [added] +23/-0
+  - `game/src/presentation/assets/TienHiepUiAssets.ts` [added] +28/-0
+  - `game/src/ui-preview/SecondaryPreview.vue` [added] +75/-0
+  - `game/src/ui-preview/secondary.ts` [added] +42/-0
+  - `game/tests/e2e/tien-hiep-pc-ui.spec.ts` [added] +192/-0
+  - `game/ui-secondary.html` [added] +2/-0

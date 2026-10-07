@@ -1,0 +1,19 @@
+{
+  "domains": [
+    "pinia-phaser-sync",
+    "ui-input-lifecycle"
+  ],
+  "oneHopConsumers": [
+    "Phaser scenes and event lifecycle",
+    "Vue panels and overlays",
+    "keyboard, pointer, focus, and overlay behavior",
+    "observable domain-state feedback"
+  ],
+  "deepAuditCandidate": true,
+  "reasons": [
+    "cross-system change: 2 domains"
+  ],
+  "unmappedPaths": [
+    "game/src/assets/tien-hiep-auxiliary.css"
+  ]
+}

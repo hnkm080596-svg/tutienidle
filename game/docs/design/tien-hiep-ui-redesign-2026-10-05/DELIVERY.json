@@ -1,0 +1,9 @@
+{
+  "archive": "tien-hiep-ui-art-and-plan.zip",
+  "entries": 42,
+  "pngSources": 23,
+  "bytes": 25798661,
+  "sha256": "032535b2fe7d3d0a82cfc6ffe93574065b2e929c7e4f265ef2b980a410a1aed7",
+  "crc": "PASS",
+  "usage": "Overlay in matching repo/worktree. Preview reuses existing character and SVG assets from the repo."
+}
