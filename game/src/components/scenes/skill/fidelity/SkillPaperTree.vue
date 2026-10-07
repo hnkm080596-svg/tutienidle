@@ -201,7 +201,13 @@ const renderExtent = computed(() => {
   for (const n of paintNodes.value) max = Math.max(max, n.x, n.y)
   return max + 90
 })
-watch(renderExtent, (v) => emit('extent', v), { immediate: true })
+// Minh ruling (drag area A): while a node drag is in flight the reported
+// extent freezes at its pre-drag value, so the surface fit stays constant
+// and the dragged node tracks the cursor instead of sliding away as the
+// extent re-emits. The live extent re-reports on release (one refit).
+const extentFreeze = ref<number | null>(null)
+const reportedExtent = computed(() => extentFreeze.value ?? renderExtent.value)
+watch(reportedExtent, (v) => emit('extent', v), { immediate: true })
 
 const viewBox = computed(() => `0 0 ${props.size} ${props.size}`)
 
@@ -215,6 +221,17 @@ let dragMoved = false
 let dragStart: { px: number; py: number; x: number; y: number } | null = null
 let nodeDrag: { id: string; px: number; py: number; x: number; y: number } | null = null
 
+// Pan clamp: keep at least PAN_MARGIN px of the scaled graph inside the
+// viewport on each axis - a background drag can never push the tree fully
+// off-screen.
+const PAN_MARGIN = 48
+function clampPan(p: { x: number; y: number }, vw: number, vh: number) {
+  const half = (props.size * props.fit * zoom.value) / 2
+  const bx = Math.max(0, vw / 2 + half - PAN_MARGIN)
+  const by = Math.max(0, vh / 2 + half - PAN_MARGIN)
+  return { x: Math.min(bx, Math.max(-bx, p.x)), y: Math.min(by, Math.max(-by, p.y)) }
+}
+
 function onPointerDown(event: PointerEvent) {
   dragging.value = true
   dragMoved = false
@@ -226,6 +243,7 @@ function onPointerDown(event: PointerEvent) {
     if (node) {
       const p = posOf(node)
       nodeDrag = { id: node.id, px: event.clientX, py: event.clientY, x: p.x, y: p.y }
+      extentFreeze.value = renderExtent.value
     }
   }
 }
@@ -249,11 +267,18 @@ function onPointerMove(event: PointerEvent) {
     saveDesign()
     return
   }
-  pan.value = { x: dragStart.x + dx, y: dragStart.y + dy }
+  const host = event.currentTarget as HTMLElement
+  pan.value = clampPan(
+    { x: dragStart.x + dx, y: dragStart.y + dy },
+    host.offsetWidth,
+    host.offsetHeight,
+  )
 }
 function onPointerUp(event: PointerEvent) {
   dragging.value = false
   dragStart = null
+  nodeDrag = null
+  extentFreeze.value = null
   const host = event.currentTarget as HTMLElement
   if (host.hasPointerCapture(event.pointerId)) host.releasePointerCapture(event.pointerId)
 }
@@ -266,7 +291,12 @@ function onWheel(event: WheelEvent) {
   const next = Math.min(4, Math.max(0.3, zoom.value * Math.exp(-event.deltaY * 0.0012)))
   if (next === zoom.value) return
   const ratio = (props.fit * next) / (props.fit * zoom.value)
-  pan.value = { x: cx - (cx - pan.value.x) * ratio, y: cy - (cy - pan.value.y) * ratio }
+  const host = event.currentTarget as HTMLElement
+  pan.value = clampPan(
+    { x: cx - (cx - pan.value.x) * ratio, y: cy - (cy - pan.value.y) * ratio },
+    host.offsetWidth,
+    host.offsetHeight,
+  )
   zoom.value = next
 }
 function onSelect(id: string) {
