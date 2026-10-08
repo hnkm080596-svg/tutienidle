@@ -8,6 +8,7 @@ import { EquipmentRegistry } from './EquipmentRegistry'
 import { EquipmentSlotManager } from './EquipmentSlotManager'
 import { createDefaultSlotState, type EquipmentSlotState } from './EquipmentSlotState'
 import { AffixRegistry } from './AffixRegistry'
+import type { Affix } from './Affix'
 import { MaterialBag } from '../material/MaterialBag'
 import { materials } from '../../data/materials/materials'
 import type { Equipment } from './Equipment'
@@ -344,5 +345,46 @@ describe('Bách Luyện balance guardrail (spec §8)', () => {
         expect(baselineAttempts).toBeLessThan(talentCostRatio)
       }
     }
+  })
+})
+
+// Owner ruling - Cuong Hoa chi scale mainStat; stat phu la truc cua
+// Tinh Luyen (rolled value da gom tang truong refine). Pin: equip
+// item o slot enhanceLevel>0 -> mainStat nhan scale, affix modifier
+// dung nguyen gia tri roll, khong nhan enhance scale.
+describe('EquipmentSystem — Cuong Hoa chỉ scale mainStat', () => {
+  it('enhanceLevel > 0: mainStat nhân hệ số enhance, affix giữ nguyên giá trị roll', () => {
+    const { system, bag, registry, slotManager, affixRegistry, player } = setup()
+
+    const affix: Affix = {
+      id: 'test_affix_hp',
+      name: 'Test Affix HP',
+      stat: 'maxHp',
+      kind: 'prefix',
+      tiers: [{ tier: 1, min: 4, max: 8 }],
+      pool: 'basic',
+    }
+
+    affixRegistry.register(affix)
+
+    const instance: EquipmentInstance = {
+      ...makeInstance('inst-affix'),
+      affixes: [{ affixId: affix.id, tier: 1, value: 6 }],
+    }
+
+    bag.add(instance)
+
+    // +5 -> scale = 1 + 5 * 0.06 = 1.3 (calculateEquipmentScale).
+    slotManager.get('weapon').enhanceLevel = 5
+
+    const result = system.equip(instance.instanceId, bag, registry, slotManager, player, affixRegistry)
+
+    expect(result).toEqual({ ok: true })
+
+    const modifiers = system.getModifiers().filter((m) => m.sourceId === instance.instanceId)
+
+    // mainStat 12 * 1.3 = 15.6; affix giu nguyen 6 (truoc fix se la 7.8).
+    expect(modifiers.find((m) => m.stat === 'might')?.flat).toBeCloseTo(15.6, 8)
+    expect(modifiers.find((m) => m.stat === 'maxHp')?.flat).toBe(6)
   })
 })
