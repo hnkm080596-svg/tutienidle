@@ -53,11 +53,11 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 <template>
   <section ref="rootRef" class="equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')" @keydown.esc="inspecting = null">
     <div class="equipment-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="equipment-heading"><h1>{{ t('equipment.title') }}</h1><img class="equipment-divider" :src="divider" alt=""></header>
+    <header class="equipment-heading"><h1 class="equipment-title">{{ t('equipment.title') }}</h1><img class="equipment-divider" :src="divider" alt=""></header>
     <!-- Scene-level tab strip per the Codex preview: under the heading,
-         above the doll column (the h1 carries no `equipment-title`
-         class on purpose - the tien-hiep-ui global rule would paint the
-         legacy title plaque over it). -->
+         above the doll column. The h1 carries `equipment-title` so the
+         shared plaque + OngDoGia shine rule hits it like every sibling
+         scene (owner ruling 2026-10-08). -->
     <slot name="tabs" />
     <p class="equipment-subtitle">{{ t('equipment.subtitle') }}</p>
     <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -
@@ -72,7 +72,10 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
       <div class="equipment-sockets" :style="{ '--equipment-circle-frame': `url('${circleFrame}')` }"><div v-for="socket in sockets" :key="socket.id" class="equipment-socket"><EquipmentPaperItem :item="socket.item" :label="socket.label" @click="selected=socket.item??null" @inspect="inspecting = $event" @leave="inspecting = null" /><span>{{ socket.label }}</span></div></div>
     </slot>
 
-    <div class="equipment-summary" :style="{ '--equipment-card-art': `url('${darkCard}')` }"><h2>{{ t('equipment.summary') }}</h2><slot name="summary"><div><span>{{ t('equipment.stats.hp') }}</span><strong>18.200</strong><span>{{ t('equipment.stats.attack') }}</span><strong>1.260</strong><span>{{ t('equipment.stats.defense') }}</span><strong>840</strong></div></slot></div>
+    <!-- Stats card (owner ruling 2026-10-08): no title - the card only
+         lists the stats contributed by equipped gear, and the list
+         scrolls without ever showing a scrollbar. -->
+    <div class="equipment-summary" :style="{ '--equipment-card-art': `url('${darkCard}')` }"><slot name="summary"><div><span>{{ t('equipment.stats.hp') }}</span><strong>18.200</strong><span>{{ t('equipment.stats.attack') }}</span><strong>1.260</strong><span>{{ t('equipment.stats.defense') }}</span><strong>840</strong></div></slot></div>
 
     <!-- The unified right region (ref: bag OR forge at the same rect)
          carries the fixture bag/forge toggle; production mounts the real
@@ -116,18 +119,17 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 .equipment-socket::before { content:''; position:absolute; top:-6px; left:50%; width:88px; height:88px; transform:translateX(-50%); background:var(--equipment-circle-frame) center/contain no-repeat; pointer-events:none; z-index:1; }
 .equipment-socket :deep(.gear-item) { width:64px; height:64px; border-radius:50%; }
 .equipment-socket > span { font-size:14px; font-weight:600; color:#473315; }
-/* Design-paper summary: plain ink text on the paper with a hairline
-   rule - the dark card went away with the Codex preview restyle. */
 /* Codex home-equipment stats card: dark nine-slice card under the doll
-   (same character-card art the preview's EquipmentArtCard mounts) with
-   a centered title and a 2-col dl grid - gold values on dark. */
+   (same character-card art the preview's EquipmentArtCard mounts) -
+   title removed per owner ruling; a single-column name/value list in
+   the Tu Si derived-stats pattern, gold values on dark. */
 .equipment-summary { position:absolute; left:365px; top:572px; width:369px; height:119px; padding:11px 14px 12px; border:15px solid transparent; border-image:var(--equipment-card-art) 90 fill / 15px stretch; color:#f3e4c4; }
-.equipment-summary h2 { font-size:18px; font-weight:700; margin:0 0 9px; color:#f3e4c4; text-align:center; line-height:1.2; }
-.equipment-summary :deep(dl) { margin:0; display:grid; grid-template-columns:1fr 1fr; gap:6px 15px; font-size:12px; }
-.equipment-summary :deep(dl > div) { display:flex; justify-content:space-between; align-items:center; gap:5px; }
-.equipment-summary :deep(dt) { white-space:nowrap; display:flex; align-items:center; gap:6px; }
-.equipment-summary :deep(dt span) { font:17px/1 serif; }
-.equipment-summary :deep(dd) { margin:0; color:#ebce84; white-space:nowrap; }
+/* The list fills the card and scrolls invisibly (owner rule: roll nhung
+   khong the hien scroller) - scrollbar-width:none + webkit display:none. */
+.equipment-summary :deep(ul),
+.equipment-summary :deep(dl) { margin:0; height:100%; align-content:start; overflow:auto; scrollbar-width:none; }
+.equipment-summary :deep(ul::-webkit-scrollbar),
+.equipment-summary :deep(dl::-webkit-scrollbar) { display:none; }
 .equipment-bag { position:absolute; left:748px; top:215px; width:642px; height:476px; padding:14px 18px; border:15px solid transparent; border-image:var(--equipment-card-art) 90 fill / 15px stretch; color:#f3e4c4; }
 .equipment-bag header { display:flex; align-items:baseline; justify-content:space-between; }
 .equipment-bag h2 { margin:0; font-size:24px; font-weight:700; color:#f3e4c4; }

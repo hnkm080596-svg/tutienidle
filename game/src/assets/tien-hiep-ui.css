@@ -47,7 +47,7 @@
 :is(#app, body) .cf-scene .cf-power strong { font-size: 28px; line-height: 32px; }
 :is(#app, body) .cf-scene .cf-power { position: relative; }
 :is(#app, body) .cf-power__icon { position: absolute; left: 15px; top: 27px; width: 29px; height: 29px; filter: invert(90%) sepia(40%) saturate(400%); }
-:is(#app, body) .paperdoll .paperdoll__base { width: 85%; height: 92%; opacity: 1; display: flex; align-items: center; justify-content: center; }
+:is(#app, body) .paperdoll .paperdoll__base { display: block; width: auto; max-width: 88%; height: 92%; object-fit: contain; opacity: 1; }
 :is(#app, body) .paperdoll__base .player-portrait__image { max-width: 100%; max-height: 100%; width: auto; height: 100%; margin: 0; object-fit: contain; }
 :is(#app, body) .chip.chip, :is(#app, body) .chip.chip.is-active { color: #30291d; }
 :is(#app, body) .chip.is-active { outline: 1px solid #9f7838; outline-offset: 1px; }

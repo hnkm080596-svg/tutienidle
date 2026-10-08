@@ -345,6 +345,7 @@ function doDissolve() {
       >
         <SlotView
           class="dissolve-slot"
+          variant="equipment"
           :item="{ id: candidate.instanceId }"
           :label="candidate.name"
           :accessible-label="candidate.accessibleLabel"

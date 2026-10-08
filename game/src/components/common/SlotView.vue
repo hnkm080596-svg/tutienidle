@@ -2,10 +2,10 @@
 import { computed, ref, watch } from 'vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { PROFESSION_GRADE_SEAL_ORDINALS } from '@/core/profession/ProfessionGrade'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge, SlotPresentationState, SlotVariant } from './SlotTypes'
-import InkNineSlice from './primitives/InkNineSlice.vue'
 
 // Slot presentation (tooltip-revamp-plan.md section 17 + user art pass
 // 2026-09). Art layers: backdrop per variant (SlotTypes.ts SlotVariant
@@ -17,12 +17,12 @@ import InkNineSlice from './primitives/InkNineSlice.vue'
 // (availability/interaction/validation/marker/comparison) - NOT a list
 // of loose booleans.
 //
-// InkNineSlice frame-s-slot was REMOVED 2026-08-30 as a universal slot
-// frame (noisy when repeated), then RE-ADMITTED 2026-10-04 by owner
-// ruling as the 'bag' variant: the dense Kho Vat / Trang Bi inventory
-// cells must use the drawn frame-s-slot chrome instead of flat CSS
-// frames. It stays confined to that variant - 'item'/'equipment'
-// everywhere else keep the flat-tile look.
+// Equipment-cell art history: flat tile -> frame-s-slot chrome (2026-10-04)
+// -> item-slot-v1.png per the Codex preview (owner ruling 2026-10-08,
+// variant ownership moved bag -> equipment 2026-10-08: the Trang Bi
+// scope IS 'equipment'; 'bag' is reserved for Tru Vat grids).
+// The art is painted via --slot-bg-image under :is(#app) so it wins the
+// global slot-frame.png rule.
 const props = defineProps<{
   /** Item ma Slot dang chua. null = slot trong - filled/empty suy truc
    * tiep tu day, KHONG co prop `hasItem` rieng. */
@@ -88,11 +88,30 @@ const props = defineProps<{
   /** Presentation-only render (tooltip card header): root becomes a
    * span role=img, tooltip/click/hover suppressed. */
   static?: boolean
+
+  /** Cuong hoa aura (owner ruling 2026-10-08): slot-level enhance 0-100,
+   * 10 cap moi canh gioi. Mau = --rank-color-{canh} (ceil(level/10));
+   * x1 = vien tinh (khong pulse); x2-4 band 1 mong, x5-7 band 2 dam,
+   * x8-10 band 3 ruc. Drop-shadow filter bam theo hinh PNG icon (khong
+   * sang ca o). Chi truyen khi o nay dang chua do MAC (socket doll);
+   * o tui khong truyen -> khong aura. 0/undefined = khong aura. */
+  enhanceLevel?: number
 }>()
 
 const emit = defineEmits<{
   click: []
 }>()
+
+// 'circle' variant (owner ruling 2026-10-08 - merge-instead-of-swap):
+// the reskinned paperdoll sockets per the Codex home-equipment
+// preview. The ring art below IS the socket chrome; the preview shows
+// no seal/badge/hover-frame/square chrome on it, so `isCircle` turns
+// those render layers off. Data props (nameSegments, ranks, badges,
+// tooltip, aria) stay fully wired - only the painting is suppressed.
+const isCircle = computed(() => props.variant === 'circle')
+const CIRCLE_FRAME_SRC = resolveAssetUrl(
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png',
+)
 
 const filled = computed(() => props.item !== null)
 
@@ -156,21 +175,67 @@ const sealOrdinal = computed(() => (sealRank.value ? PROFESSION_GRADE_SEAL_ORDIN
 // giu nguyen hanh vi moi caller equipment hien co (Fix 1, final review).
 const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === (props.rarityRankScale ?? 5))
 
-// Quality aura (user art pass 2026-09): the repurposed border-beam is no
-// longer a hover effect - it is the persistent Chat indicator for
-// equipment (itemQualityRank, 5-step scale). Only Dia (rank 3) and above
-// show it, each tier tinted by its rank color. Materials feeding
-// professionRankOf (rarityRankScale = 10) are NOT equipment Chat - no
-// aura. Empty slots never show it either.
-const qualityAuraTier = computed(() => {
+// Enhance aura (owner ruling 2026-10-08): equipped-slot only. Color =
+// the realm's --rank-color-{ceil(level/10)}; the step inside the realm
+// picks the treatment - x1 = static colored rim (no pulse, the realm's
+// own 'khong glow' level that still announces the new color), x2-4
+// band 1 thin, x5-7 band 2 dense, x8-10 band 3 bright.
+const enhanceAura = computed(() => {
+  const level = props.enhanceLevel ?? 0
+  if (level <= 0) return undefined
+  const realm = Math.min(10, Math.ceil(level / 10))
+  const step = ((level - 1) % 10) + 1 // 1..10 within the realm
+  const band = step === 1 ? 0 : step <= 4 ? 1 : step <= 7 ? 2 : 3
+  return { realm, band }
+})
+const enhanceAuraClass = computed(() => (enhanceAura.value ? `slot-view--enhance-${enhanceAura.value.band}` : ''))
+const enhanceAuraColor = computed(() => (enhanceAura.value ? `var(--rank-color-${enhanceAura.value.realm})` : undefined))
+
+// Pham cell recolor (owner ruling 2026-10-08): the art-frame cells
+// (equipment/bag/socket variants) recolor to the item's Pham rank on
+// the shared --rank-color-{1..10} ramp. Empty cells take rank 1 - the
+// basic gray ("mau thap nhat neu khong co do"). Rendered by the
+// .slot-view__quality-tint layer masked to the art itself.
+const ART_FRAME_VARIANTS = new Set(['equipment', 'bag', 'socket'])
+// 'gương' = the 6 worn equipment sockets only (owner ruling
+// 2026-10-08): the ~100 bag cells render variant='equipment' (bag
+// grid shares the art) but get NO sheen - the rule is the WORN slot,
+// not the art.
+const MIRROR_GLINT_VARIANTS = new Set(['socket'])
+const qualityTintColor = computed(() => {
+  if (!ART_FRAME_VARIANTS.has(props.variant ?? 'item')) return undefined
+  const rank = sealRank.value ?? 1
+  // Rank 10 (Tien Pham) paints the seven-colour gradient per theme.css
+  // spec; --rank-color-10 is only the flat fallback for non-gradient
+  // consumers.
+  if (rank >= 10) return 'var(--rank-gradient-10)'
+  // Rank 1 (Cuu Pham, basic): steel gray, scoped to this tint only -
+  // --rank-color-1 is shared by --grade-hoang / --affix-tier-1 /
+  // talent-tier-pham so the token itself must not change (owner ruling
+  // 2026-10-08: 'đổi đi cho rõ màu').
+  if (rank <= 1) return '#7f8792'
+  return `var(--rank-color-${rank})`
+})
+
+// Chat meteors (owner ruling 2026-10-08): the approved demo cell is
+// the groove 'sao băng' - twin bright streaks running the art's inner
+// groove. Chat 1 (Hoang, lowest) gets NO streak at all - the effect
+// starts at Huyen (rank 2); tiers differ by COLOR only
+// (--slot-rarity-color already maps rank -> --grade-* ramp positions).
+// rarityRankScale=10 callers (materials) are not equipment Chat - off.
+const chatMeteorTier = computed(() => {
+  if (!ART_FRAME_VARIANTS.has(props.variant ?? 'item')) return 0
   const rank = clampRank(props.rarityRank)
-  if (!filled.value || (props.rarityRankScale ?? 5) !== 5 || rank === undefined || rank < 3) {
-    return 0
-  }
-  // Clamp to the declared 5-step scale - a caller feeding an out-of-
-  // contract rank must not fabricate unstyled fx-6..10 tiers.
+  if (!filled.value || (props.rarityRankScale ?? 5) !== 5 || !rank || rank < 2) return 0
   return Math.min(rank, 5)
 })
+
+// Mirror glint (owner ruling 2026-10-08): 'gương' = the white sheen
+// pass - the occupied marker on the worn sockets only; bag cells share
+// the art but skip it. Empty cells get no sheen either way.
+const showMirrorGlint = computed(
+  () => filled.value && MIRROR_GLINT_VARIANTS.has(props.variant ?? 'item'),
+)
 
 // ============================================================
 // PRECEDENCE (muc 17.2) - locked chan interaction+validation; disabled
@@ -233,13 +298,15 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       veil !== 'none' ? `slot-view--veil-${veil}` : '',
       validation !== 'neutral' ? `slot-view--validation-${validation}` : '',
       isMaxRarityRank ? 'slot-view--max-rank' : '',
-      qualityAuraTier > 0 ? `slot-view--quality-fx-${qualityAuraTier}` : '',
-      qualityAuraTier >= 4 ? 'fx-border-beam fx-border-beam--active' : '',
+      (qualityTintColor && (sealRank ?? 1) >= 10) ? 'slot-view--quality-max' : '',
+      (qualityTintColor && (sealRank ?? 1) <= 1) ? 'slot-view--quality-low' : '',
+      enhanceAuraClass,
       props.static ? 'slot-view--static' : '',
     ]"
     :style="{
       '--slot-rarity-color': rarityColor,
-      '--fx-beam-color': qualityAuraTier > 0 ? rarityColor : undefined,
+      '--enhance-aura-color': enhanceAuraColor,
+      '--slot-quality-color': qualityTintColor,
     }"
     :role="props.static ? 'img' : undefined"
     :aria-disabled="props.static ? undefined : isBlocked ? 'true' : undefined"
@@ -248,19 +315,33 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     v-tooltip="props.static ? undefined : tooltipContent"
     @click="handleClick"
   >
-    <!-- layer 0.9 (variant 'bag' only): drawn ornate cell frame -
-         huyen-kim chrome frame-s-slot, per the 2026-10-04 owner
-         ruling. Sits over the dark tile, under the content. -->
-    <InkNineSlice
-      v-if="props.variant === 'bag'"
-      class="slot-view__frame-art"
-      chrome-id="frame-s-slot"
-      layer="frame"
-    />
+    <!-- layer 1.4 (art-frame variants only): Pham recolor - masked to
+         the cell art, blend 'color' keeps the texture and rehues the
+         frame to the item's rank color. -->
+    <span v-if="qualityTintColor" class="slot-view__quality-tint" aria-hidden="true"></span>
+
+    <!-- layer 1.45: Chat meteors - twin streaks in the art's inner
+         groove, colored by the Chat tier (--slot-rarity-color). -->
+    <span v-if="chatMeteorTier > 0" class="slot-view__chat" aria-hidden="true"></span>
+
+    <!-- layer 1.46: 'gương' white sheen pass - the occupied marker for
+         the art-frame cells. -->
+    <span v-if="showMirrorGlint" class="slot-view__glint" aria-hidden="true"></span>
 
     <!-- layer 1.5: Pham seal - carved seal-frame art + Han grade
          glyph (replaces the underlay wash). -->
-    <span v-if="filled && sealOrdinal" class="slot-view__seal" aria-hidden="true">{{ sealOrdinal }}</span>
+    <span v-if="filled && sealOrdinal && !isCircle" class="slot-view__seal" aria-hidden="true">{{ sealOrdinal }}</span>
+
+    <!-- layer 1.8 (variant 'circle' only): the ring art IS the socket
+         chrome - one <img> like the preview's EquipmentArtSlot, hover
+         brightens it via the filter rule below. -->
+    <img
+      v-if="isCircle"
+      class="slot-view__ring-art"
+      :src="CIRCLE_FRAME_SRC"
+      alt=""
+      aria-hidden="true"
+    />
 
     <!-- layer 2: icon / monogram fallback -->
     <span class="slot-view__icon-wrap">
@@ -269,24 +350,27 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     </span>
 
     <!-- layer 4: validation glyph (mau KHONG phai tin hieu duy nhat) -->
-    <span v-if="validation !== 'neutral'" class="slot-view__validation-glyph" aria-hidden="true">{{ validationGlyph }}</span>
+    <span v-if="validation !== 'neutral' && !isCircle" class="slot-view__validation-glyph" aria-hidden="true">{{ validationGlyph }}</span>
 
-    <!-- layer 6: marker + comparison + custom badges -->
-    <span v-if="marker === 'equipped'" class="slot-view__marker slot-view__marker--equipped" aria-hidden="true">●</span>
-    <span v-else-if="marker === 'new'" class="slot-view__marker slot-view__marker--new" aria-hidden="true">NEW</span>
+    <!-- layer 6: marker + comparison + custom badges (off for
+         'circle' - preview paints none; data still feeds tooltip/aria) -->
+    <template v-if="!isCircle">
+      <span v-if="marker === 'equipped'" class="slot-view__marker slot-view__marker--equipped" aria-hidden="true">●</span>
+      <span v-else-if="marker === 'new'" class="slot-view__marker slot-view__marker--new" aria-hidden="true">NEW</span>
 
-    <span v-if="comparison !== 'neutral'" class="slot-view__comparison" :class="`slot-view__comparison--${comparison}`" aria-hidden="true">
-      {{ comparison === 'upgrade' ? '▲' : '▼' }}
-    </span>
+      <span v-if="comparison !== 'neutral'" class="slot-view__comparison" :class="`slot-view__comparison--${comparison}`" aria-hidden="true">
+        {{ comparison === 'upgrade' ? '▲' : '▼' }}
+      </span>
 
-    <span v-for="(badge, index) in badges" :key="index" class="slot-view__badge" :class="[`slot-view__badge--${badge.kind}`, badge.tone ? `slot-view__badge--${badge.tone}` : '']">
-      {{ badge.text }}
-    </span>
+      <span v-for="(badge, index) in badges" :key="index" class="slot-view__badge" :class="[`slot-view__badge--${badge.kind}`, badge.tone ? `slot-view__badge--${badge.tone}` : '']">
+        {{ badge.text }}
+      </span>
 
-    <!-- layer 7: amount + opt-in caption (nametag off by default -
-         user ruling: names live in the tooltip; combat skill slots
-         opt back in via showLabel since the skill name is content) -->
-    <span v-if="amount !== undefined" class="slot-view__amount">x{{ formatNumber(amount) }}</span>
+      <!-- layer 7: amount + opt-in caption (nametag off by default -
+           user ruling: names live in the tooltip; combat skill slots
+           opt back in via showLabel since the skill name is content) -->
+      <span v-if="amount !== undefined" class="slot-view__amount">x{{ formatNumber(amount) }}</span>
+    </template>
 
     <template v-if="showLabel">
       <span v-if="nameSegments && nameSegments.length > 0" class="slot-view__caption">
@@ -303,14 +387,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
          equipment (6 worn slots) = pale-gold select frame). Replaces the
          old border-color hover affordance. Always in the DOM; CSS
          drives visibility. -->
-    <span class="slot-view__hover-frame" aria-hidden="true" />
-
-    <!-- layer 7.5: border-beam fx - the slot-view ::before/::after are
-         busy (max-rank bar + rarity tint) so the beam paints via its own
-         layer; shared class in theme.css. No longer a hover effect -
-         only lights up with fx-border-beam(--active) when
-         qualityAuraTier >= 4. -->
-    <span class="fx-border-beam__fx" aria-hidden="true" />
+    <span v-if="!isCircle" class="slot-view__hover-frame" aria-hidden="true" />
 
     <!-- layer 8: locked/disabled/processing veil -->
     <span v-if="veil !== 'none'" class="slot-view__veil" aria-hidden="true">
@@ -358,7 +435,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      a square slot -> cover never distorts. Per-place art lives behind
      the `variant` prop (SlotTypes.ts), not consumer CSS overrides. */
   background:
-    var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
+    var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / var(--slot-bg-fit, cover) no-repeat,
     var(--hk-surface-base);
   color: var(--hk-text-primary);
   font-family: var(--hk-font-ui);
@@ -375,7 +452,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 
 .slot-view--filled {
   background:
-    var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
+    var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / var(--slot-bg-fit, cover) no-repeat,
     var(--hk-surface-raised);
   border-color: var(--slot-rarity-color, var(--hk-border-muted));
   box-shadow: var(--slot-shadow), 0 0 8px var(--slot-rarity-color, transparent);
@@ -486,32 +563,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 /* ============================================================
-   4.5 QUALITY AURA - itemQualityRank >= 3 (Dia+) carries a persistent
-   edge signal; per user art direction each tier differs: Dia = static
-   ring (cheapest - no per-frame repaint on the common tier), Thien =
-   slow beam, Tien = fast bright beam. Color always --fx-beam-color
-   (rank token). Materials (rarityRankScale=10) never reach this.
-   ============================================================ */
-
-.slot-view--quality-fx-3 {
-  box-shadow:
-    var(--slot-shadow),
-    inset 0 0 0 1.5px var(--fx-beam-color),
-    0 0 6px color-mix(in srgb, var(--fx-beam-color) 45%, transparent);
-}
-
-.slot-view--quality-fx-4 {
-  --fx-beam-duration: 3.6s;
-  --fx-beam-width: 2px;
-}
-
-.slot-view--quality-fx-5 {
-  --fx-beam-duration: 1.5s;
-  --fx-beam-width: 3px;
-  filter: drop-shadow(0 0 4px var(--fx-beam-color));
-}
-
-/* ============================================================
    5. HOVER / FOCUS / SELECTED - selected thang hover nhung khong
    che validation (ring validation o tren la box-shadow rieng, ring
    selected ben duoi la outline rieng - 2 kenh khac nhau, khong de).
@@ -555,27 +606,243 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 .slot-view--item,
 .slot-view--equipment,
 .slot-view--bag,
-.slot-view--bag.slot-view--filled {
+.slot-view--bag.slot-view--filled,
+.slot-view--socket,
+.slot-view--socket.slot-view--filled {
   --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
   --slot-hover-inset: -4%;
 }
 
-.slot-view--equipment {
-  --slot-bg-image: url('/assets/ui/Slot/slot-backdrop.png');
-}
-
-/* 'bag' variant: the ornate frame is DRAWN art (frame-s-slot chrome),
-   so the flat CSS border steps aside (the art owns the cell edge);
-   rarity still reads through the ::after glow, the box-shadow aura,
-   the max-rank bar, and the shared pale-gold hover frame. */
+/* 'equipment' variant (owner ruling 2026-10-08): the Trang Bi scope's
+   cell art is the preview's item-slot-v1.png - one image owns backdrop
+   + frame edge, painted via --slot-bg-image under :is(#app) to beat the
+   global slot-frame.png rule (tien-hiep-ui.css:56-58). The flat CSS
+   border steps aside; rarity still reads through the ::after glow, the
+   box-shadow aura, the max-rank bar, and the shared pale-gold hover
+   frame. ('bag' keeps the same art for the future Tru Vat grids.) */
+:is(#app) .slot-view--equipment,
+.slot-view--equipment,
+.slot-view--equipment.slot-view--filled,
+:is(#app) .slot-view--bag,
 .slot-view--bag,
 .slot-view--bag.slot-view--filled {
+  --slot-bg-image: url('/assets/ui/tien-hiep-2026-10/controls/item-slot-v2.png');
+  --slot-ornament-mask: url('/assets/ui/tien-hiep-2026-10/controls/item-slot-v2-ornament-mask.png');
   border-color: transparent;
+  /* The v2 art bakes transparent chamfer corners - a solid fill under it
+     shows as a dark rim. The art carries its own dark centre. */
+  background-color: transparent;
 }
-.slot-view--bag .slot-view__frame-art {
-  /* frame-s-slot min size is 32px - bag cells are ~55-96px, always
-     inside the art's range. */
-  border-radius: 0;
+:is(#app) .slot-view--equipment,
+.slot-view--equipment,
+.slot-view--equipment.slot-view--filled,
+:is(#app) .slot-view--bag,
+.slot-view--bag,
+.slot-view--bag.slot-view--filled {
+  /* Owner ruling 2026-10-08: only the art renders around the cell - the
+     filled-state shadow and the square rarity tint both draw outside the
+     chamfered edge, so they are suppressed. Chat still reads via the
+     seal, the max-rank bar and the tooltip. */
+  box-shadow: none;
+}
+:is(#app) .slot-view--equipment::after,
+.slot-view--equipment::after,
+:is(#app) .slot-view--bag::after,
+.slot-view--bag::after,
+:is(#app) .slot-view--socket::after,
+.slot-view--socket::after {
+  display: none;
+}
+
+/* 'socket' variant (owner ruling 2026-10-08): the 6 worn sockets on the
+   paperdoll use equipment-socket-v2.png - chamfered square with ornate
+   cloud corners. Seal stamp is suppressed: it would sit on the art's
+   top-left cloud flourish. Hover-frame + enhance badge still render. */
+:is(#app) .slot-view--socket,
+.slot-view--socket,
+.slot-view--socket.slot-view--filled {
+  --slot-bg-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2.png');
+  --slot-ornament-mask: url('/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2-ornament-mask.png');
+  border-color: transparent;
+  background-color: transparent;
+}
+.slot-view--socket,
+.slot-view--socket.slot-view--filled {
+  /* The filled-state shadow is a square spread - it draws a light square
+     rim outside the chamfered art. */
+  box-shadow: none;
+}
+.slot-view--socket .slot-view__seal {
+  display: none;
+}
+/* The art's cloud flourishes reach ~30% inward at both ornate corners;
+   keep the icon inside the plain dark centre. */
+.slot-view--socket .slot-view__item-icon {
+  width: 72%;
+  height: 72%;
+}
+
+/* Pham recolor (owner ruling 2026-10-08, "Phuong an D"): mask PNG
+   extracted from the art's ornament pixels by scripts/gen_ornament_mask.py
+   keeps only the golden filigree, so the tint lands on exactly those
+   pixels - dark centre, icon, transparent rim untouched. Three layers:
+   color blend (true hue) + overlay blend with drop-shadow (brightness)
+   + animated white sweep. Rank 10 additionally hue-rotates its gradient
+   ("cau vong dong"). Empty cells run at rank 1 (basic gray). Sits under
+   the icon/seal. */
+.slot-view__quality-tint,
+.slot-view__quality-tint::before,
+.slot-view__quality-tint::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: var(--slot-ornament-mask, none);
+  mask-image: var(--slot-ornament-mask, none);
+  -webkit-mask-size: var(--slot-bg-fit, cover);
+  mask-size: var(--slot-bg-fit, cover);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.slot-view__quality-tint {
+  background: var(--slot-quality-color, transparent);
+  mix-blend-mode: color;
+  opacity: 0.9;
+}
+.slot-view__quality-tint::before {
+  content: '';
+  background: var(--slot-quality-color, transparent);
+  mix-blend-mode: overlay;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 1.5px var(--slot-quality-color)) saturate(1.35) brightness(1.25);
+}
+/* Rank 1 (Cuu Pham): the base 'color' blend keeps the gold art's
+   luminance, so a plain gray still reads as faded gold. Swap the
+   overlay layer to multiply - it pulls the ornament's brightness down
+   toward the steel tone so basic cells read clearly gray. */
+.slot-view--quality-low .slot-view__quality-tint::before {
+  mix-blend-mode: multiply;
+  filter: saturate(0.6);
+}
+.slot-view__quality-tint::after {
+  content: '';
+  background: linear-gradient(105deg,
+    transparent 38%, rgba(255, 255, 255, 0.05) 44%,
+    rgba(255, 255, 255, 0.95) 50%, rgba(255, 255, 255, 0.05) 56%, transparent 62%) no-repeat;
+  background-size: 300% 100%;
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  animation: slot-ornament-sweep 5s ease-in-out infinite;
+}
+@keyframes slot-ornament-sweep {
+  0% { background-position: 130% 0; }
+  100% { background-position: -130% 0; }
+}
+/* Rank 10 (Tien Pham): the seven-colour gradient itself flows - hue-rotate
+   cycles it continuously ("cau vong dong"), plus a rainbow sweep streak. */
+.slot-view--quality-max .slot-view__quality-tint {
+  animation: slot-quality-hue-flow-flat 3s linear infinite;
+}
+.slot-view--quality-max .slot-view__quality-tint::before {
+  animation: slot-quality-hue-flow 3s linear infinite;
+}
+.slot-view--quality-max .slot-view__quality-tint::after {
+  background-image: linear-gradient(105deg,
+    transparent 40%, rgba(255, 107, 107, 0.85) 46%, rgba(255, 214, 107, 0.9) 49%,
+    rgba(103, 216, 255, 0.9) 52%, rgba(158, 140, 255, 0.85) 55%, transparent 61%);
+  animation: slot-ornament-sweep 3s ease-in-out infinite, slot-quality-hue-flow 3s linear infinite;
+}
+@keyframes slot-quality-hue-flow {
+  to { filter: hue-rotate(360deg) drop-shadow(0 0 2px #ffd66b) saturate(1.3) brightness(1.3); }
+}
+@keyframes slot-quality-hue-flow-flat {
+  to { filter: hue-rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot-view__quality-tint::after,
+  .slot-view--quality-max .slot-view__quality-tint,
+  .slot-view--quality-max .slot-view__quality-tint::before,
+  .slot-view--quality-max .slot-view__quality-tint::after {
+    animation: none;
+  }
+}
+
+/* Chat meteors (owner ruling 2026-10-08): twin 'sao băng' streaks
+   chasing each other through the art's inner groove - the groove band
+   was pixel-measured on item-slot-v2.png (dark channel ~3.4%-5% of the
+   cell, between the bright outer frame and the inner filigree), so the
+   evenodd octagon below clips to exactly that ring. All 5 Chat tiers
+   render it; tiers differ by COLOR only (--slot-rarity-color). */
+@property --slot-meteor {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.slot-view__chat {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: conic-gradient(from var(--slot-meteor),
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 0deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 30deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 40%, transparent) 80deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 70%, transparent) 120deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 90%, transparent) 160deg,
+    #fff8dc 172deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 185deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 210deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 40%, transparent) 260deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 70%, transparent) 300deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 90%, transparent) 340deg,
+    #fff8dc 352deg,
+    color-mix(in srgb, var(--slot-rarity-color, transparent) 0%, transparent) 360deg);
+  clip-path: polygon(evenodd,
+    10.4% 3.4%, 89.6% 3.4%, 96.6% 10.4%, 96.6% 89.6%, 89.6% 96.6%, 10.4% 96.6%, 3.4% 89.6%, 3.4% 10.4%,
+    11.1% 5%, 88.9% 5%, 95% 11.1%, 95% 88.9%, 88.9% 95%, 11.1% 95%, 5% 88.9%, 5% 11.1%);
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--slot-rarity-color, transparent) 85%, transparent));
+  animation: slot-meteor-run 1.8s linear infinite;
+}
+@keyframes slot-meteor-run {
+  to { --slot-meteor: 360deg; }
+}
+/* equipment-socket-v2.png has a WIDER groove than item-slot-v2
+   (~4.2%-7.8% measured the same way) - its own ring so the meteors
+   run in the groove instead of overlapping the bright frame. */
+.slot-view--socket .slot-view__chat {
+  clip-path: polygon(evenodd,
+    10.8% 4.3%, 89.2% 4.3%, 95.7% 10.8%, 95.7% 89.2%, 89.2% 95.7%, 10.8% 95.7%, 4.3% 89.2%, 4.3% 10.8%,
+    12.2% 7.7%, 87.8% 7.7%, 92.3% 12.2%, 92.3% 87.8%, 87.8% 92.3%, 12.2% 92.3%, 7.7% 87.8%, 7.7% 12.2%);
+}
+
+/* 'gương' (owner ruling 2026-10-08): one soft white sheen pass - the
+   occupied-state channel for the art-frame cells. Pure white, no tint;
+   clip follows the octagon silhouette. */
+.slot-view__glint {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.6;
+  clip-path: polygon(9% 0, 91% 0, 100% 9%, 100% 91%, 91% 100%, 9% 100%, 0 91%, 0 9%);
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.55) 50%, transparent 58%);
+  background-size: 300% 300%;
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+  animation: slot-glint-pass 5s ease-in-out infinite;
+}
+/* One flash per 5s cycle (owner ruling): the band crosses in the first
+   ~25% then parks off-cell for the rest. */
+@keyframes slot-glint-pass {
+  0% { background-position: 130% 130%; }
+  25%, 100% { background-position: -30% -30%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot-view__chat,
+  .slot-view__glint {
+    animation: none;
+  }
 }
 
 .slot-view:focus-visible {
@@ -805,10 +1072,109 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   animation: slot-spin 0.8s linear infinite;
 }
 
+/* ============================================================
+   9. VARIANT 'circle' - reskinned paperdoll socket (owner ruling
+   2026-10-08: merge the preview art INTO SlotView instead of
+   swapping the component out). The ring <img> is the chrome; every
+   square-slot ornament is unmounted (template) or unpainted here.
+   ============================================================ */
+
+/* Chrome reset. tien-hiep-ui.css paints slot-frame.png on every
+   .slot-view via `:is(#app, body)` - ID specificity (1,0,1). The
+   :is(#app) selector beats it (1,2,0); the plain selectors keep the
+   reset working outside #app (tests, detached mounts), and the
+   2-class ones win the filled/max-rank box-shadows. */
+:is(#app) .slot-view--circle,
+.slot-view--circle,
+.slot-view--circle.slot-view--filled,
+.slot-view--circle.slot-view--filled.slot-view--max-rank {
+  --slot-bg-image: none;
+  background: none;
+  border: 0;
+  /* Round hit area: the ring art is a circle, so the click region
+     follows the ellipse instead of the full cell rect (owner ruling
+     2026-10-08). */
+  border-radius: 50%;
+  box-shadow: none;
+  /* Circle units are not square (paperdoll cell 88x80) - the base
+     aspect-ratio:1 must not squeeze the element. */
+  aspect-ratio: auto;
+}
+
+/* Rank tint + max-rank bar paint via pseudos - preview shows none. */
+.slot-view--circle::before,
+.slot-view--circle::after,
+.slot-view--circle.slot-view--filled::before,
+.slot-view--circle.slot-view--filled::after {
+  content: none;
+}
+
+/* The ring art - object-fit contain inside whatever rect the parent
+   gives the slot (paperdoll unit 88x80). */
+.slot-view__ring-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hover = brighten the ring itself (preview spec), not a square
+   hover-frame layer. */
+.slot-view--circle:hover:not([aria-disabled='true']) .slot-view__ring-art {
+  filter: brightness(1.65) drop-shadow(0 0 3px #ffd785) drop-shadow(0 0 7px #e9a935aa);
+}
+
+/* Icon sits in the ring's inset zone (preview: inset 20% -> the icon
+   covers 60%x60% of the unit). */
+.slot-view--circle .slot-view__icon-wrap {
+  inset: 20%;
+}
+.slot-view--circle .slot-view__item-icon {
+  width: 100%;
+  height: 100%;
+}
+
+/* Enhance aura (owner ruling 2026-10-08) - drop-shadow bam theo hinh
+   PNG icon (khong sang ca o). Mau = --enhance-aura-color (realm var
+   --rank-color-N inject tu script). x1 = vien tinh khong pulse; x2+
+   = 3 band pulse tang dan. Chi hien khi caller truyen enhanceLevel
+   (socket doll do dang mac) - o tui khong co. */
+.slot-view--enhance-0 .slot-view__item-icon {
+  filter: drop-shadow(0 0 3px var(--enhance-aura-color));
+}
+.slot-view--enhance-1 .slot-view__item-icon {
+  animation: slot-enhance-glow-1 3s ease-in-out infinite;
+}
+.slot-view--enhance-2 .slot-view__item-icon {
+  animation: slot-enhance-glow-2 2s ease-in-out infinite;
+}
+.slot-view--enhance-3 .slot-view__item-icon {
+  animation: slot-enhance-glow-3 1.2s ease-in-out infinite;
+}
+@keyframes slot-enhance-glow-1 {
+  0%, 100% { filter: drop-shadow(0 0 2.5px var(--enhance-aura-color)) drop-shadow(0 0 5px color-mix(in srgb, var(--enhance-aura-color) 60%, transparent)); }
+  50% { filter: drop-shadow(0 0 4px var(--enhance-aura-color)) drop-shadow(0 0 8px color-mix(in srgb, var(--enhance-aura-color) 70%, transparent)); }
+}
+@keyframes slot-enhance-glow-2 {
+  0%, 100% { filter: drop-shadow(0 0 3px var(--enhance-aura-color)) drop-shadow(0 0 8px color-mix(in srgb, var(--enhance-aura-color) 75%, transparent)) drop-shadow(0 0 14px color-mix(in srgb, var(--enhance-aura-color) 40%, transparent)); }
+  50% { filter: drop-shadow(0 0 5px var(--enhance-aura-color)) drop-shadow(0 0 12px color-mix(in srgb, var(--enhance-aura-color) 85%, transparent)) drop-shadow(0 0 20px color-mix(in srgb, var(--enhance-aura-color) 55%, transparent)); }
+}
+@keyframes slot-enhance-glow-3 {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--enhance-aura-color)) drop-shadow(0 0 10px var(--enhance-aura-color)) drop-shadow(0 0 18px color-mix(in srgb, var(--enhance-aura-color) 70%, transparent)); }
+  50% { filter: drop-shadow(0 0 7px var(--enhance-aura-color)) drop-shadow(0 0 16px var(--enhance-aura-color)) drop-shadow(0 0 28px color-mix(in srgb, var(--enhance-aura-color) 85%, transparent)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .slot-view,
   .slot-view__hover-frame {
     transition: none;
+  }
+
+  .slot-view__item-icon {
+    animation: none;
   }
 
   .slot-view__spinner {

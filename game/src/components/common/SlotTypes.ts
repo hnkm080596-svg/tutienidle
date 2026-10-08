@@ -22,23 +22,29 @@ export interface SlotPresentationState {
 // SlotView).
 //   item      = default, EVERY item-holding cell (bag tabs, Qi hall
 //               pickers, codex, combat...): flat dark tile backdrop
-//               inv-slot-backdrop.png + bright sheen hover
-//               bag-slot-hover.png ("cell select").
-//   equipment = ONLY the 6 worn equipment slots (paperdoll): frosted
-//               glass slot-backdrop.png ("empty" - reads faintly on
-//               the dark backdrop) + pale gold frame hover
+//               inv-slot-backdrop.png + pale gold frame hover
 //               slot-frame-hover.png ("click").
-//   bag       = the dense Kho Vat / Trang Bi inventory grids (owner
-//               ruling 2026-10-04): drawn ornate cell frame
-//               frame-s-slot (huyen-kim chrome manifest) layered over
-//               the same dark tile + pale gold frame hover.
+//   equipment = the Trang Bi scope's cells (owner ruling 2026-10-08):
+//               the Codex preview's item-slot-v1.png cell art
+//               (backdrop + thin frame in one image) painted via
+//               --slot-bg-image + pale gold frame hover.
+//   bag       = reserved for the dense Kho Vat / Tru Vat grids; for now
+//               shares the same item-slot-v1.png cell art.
 // Item hover fits the cell edge exactly (inset 0, 100% 100%); the
 // equipment gold frame bakes ~2-3% transparent padding into its PNG
 // edges, so it overshoots via --slot-hover-inset: -4% to land the
 // bright stroke on the slot border. equip-slot-backdrop.png (stray
 // metal rim) + equip-slot-hover.png (black 293x134 banner cut from
 // the wrong region) were removed.
-export type SlotVariant = 'item' | 'equipment' | 'bag'
+//   circle    = ring art (equipment-circle-frame-v1.png); dormant -
+//               the doll sockets moved to `socket` on 2026-10-08.
+//   socket    = the 6 worn sockets on the reskinned paperdoll (owner
+//               ruling 2026-10-08): equipment-socket-v2.png chamfered
+//               square art with ornate cloud corners. The seal stamp
+//               would sit on the art's top-left cloud, so the variant
+//               suppresses it; hover-frame + badges still render.
+//               Rank/badge data still flows to tooltip + aria-label.
+export type SlotVariant = 'item' | 'equipment' | 'bag' | 'circle' | 'socket'
 
 // Badge nho o layer 6 (muc 17.3) - thay cho cac span tu absolute-
 // position ben ngoai Slot (vd .paperdoll__enhance-badge cu).

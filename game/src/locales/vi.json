@@ -557,8 +557,6 @@
       "search": {
         "materialPlaceholder": "Tìm nguyên liệu...",
         "materialAria": "Tìm nguyên liệu theo tên",
-        "equipmentPlaceholder": "Tìm trang bị...",
-        "equipmentAria": "Tìm trang bị theo tên",
         "pillPlaceholder": "Tìm đan dược...",
         "pillAria": "Tìm đan dược theo tên"
       },
@@ -629,7 +627,9 @@
           "mahayana": "Đại Thừa",
           "tribulation": "Độ Kiếp"
         }
-      }
+      },
+      "pagePrev": "Trang trước",
+      "pageNext": "Trang sau"
     },
     "vendor": {
       "gateNotBelow": "Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại",
@@ -2251,6 +2251,15 @@
     "workspace": {
       "equip": "Trang Bị",
       "bag": "Túi Đồ"
+    },
+    "sortModes": {
+      "default": "Mặc Định",
+      "quality": "Phẩm",
+      "rarity": "Chất",
+      "realm": "Cảnh Giới",
+      "slot": "Vị Trí",
+      "name": "Tên",
+      "forge": "Lần Rèn"
     }
   },
   "inventoryPreview": {

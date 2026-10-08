@@ -557,8 +557,6 @@
       "search": {
         "materialPlaceholder": "Search materials...",
         "materialAria": "Search materials by name",
-        "equipmentPlaceholder": "Search equipment...",
-        "equipmentAria": "Search equipment by name",
         "pillPlaceholder": "Search pills...",
         "pillAria": "Search pills by name"
       },
@@ -629,7 +627,9 @@
           "mahayana": "Mahayana",
           "tribulation": "Tribulation"
         }
-      }
+      },
+      "pagePrev": "Previous page",
+      "pageNext": "Next page"
     },
     "vendor": {
       "gateNotBelow": "Only items of a grade below your current realm can be sold",
@@ -2251,6 +2251,15 @@
     "workspace": {
       "equip": "Gear",
       "bag": "Stash"
+    },
+    "sortModes": {
+      "default": "Default",
+      "quality": "Grade",
+      "rarity": "Quality",
+      "realm": "Realm",
+      "slot": "Slot",
+      "name": "Name",
+      "forge": "Forge Uses"
     }
   },
   "inventoryPreview": {

@@ -105,13 +105,14 @@ export function useEquipmentActions() {
     enhance: (slot: EquipmentSlot) =>
       withSyncAndResult(gameManager.equipmentOps.enhanceSlot(slot, player.$state), 'enhance'),
 
-    /** Tay Luyen - tieu Tinh Hoa, Linh Thach va mot luot Ren. */
-    wash: (instanceId: string) =>
-      withSyncAndResult(gameManager.equipmentOps.washItem(instanceId, player.$state), 'wash'),
+    // wash() one-shot removed (owner ruling 2026-10-08): it bypassed the
+    // preview-then-commit ticket flow and had zero callers. The domain
+    // method equipmentSystem.washAffixes stays - it is the scope-hidden
+    // dormant implementation covered by EquipmentSystem.wash.test.ts.
 
-    /** Tinh Luyen - lockedIndices la cac dong giu nguyen (sec7.4). */
-    refine: (instanceId: string, lockedIndices: readonly number[]) =>
-      withSyncAndResult(gameManager.equipmentOps.refineItem(instanceId, lockedIndices, player.$state), 'refine'),
+    // refine() one-shot removed (owner ruling 2026-10-08): same bypass
+    // pattern as the deleted wash() - zero callers, the live path goes
+    // through refinePreview -> refineCommit tickets.
 
     /**
      * Xem truoc Tay Luyen (2026-08-30, UI "giu/bo") - roll + TRU COST NGAY

@@ -19,7 +19,6 @@ import EntitySpriteCanvas from '../common/EntitySpriteCanvas.vue'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
-import type { SlotBadge } from '@/components/common/SlotTypes'
 import { useAudioStore } from '@/stores/audio'
 import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
@@ -29,9 +28,8 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 // only. Runtime keeps item/socket/rarity ownership.
 const PAPERDOLL_BASE_SRC = stableSceneArtUrl('equipment-paperdoll-base', '@2x')
 // Codex home-equipment preview spec (ui-landscape-design Trang Bi):
-// circular sockets ringed by equipment-circle-frame-v1 flanking the big
-// brush circle the idle figure stands inside.
-const CIRCLE_FRAME_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png')
+// the big brush circle the idle figure stands inside. The socket ring
+// (equipment-circle-frame-v1) is painted by SlotView variant 'circle'.
 const BRUSH_CIRCLE_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-brush-circle-v1.png')
 
 
@@ -42,8 +40,19 @@ const { stateVersion, bumpState } = useStateVersion()
 const { unequip } = useEquipmentActions()
 
 // Scene 12 scaffold: the item-card detail view wants the clicked
-// instance; the unequip mutation below stays the slot's behavior.
+// instance; the unequip mutation below stays the slot's behavior on the
+// Trang Bi tab only (owner ruling 2026-10-08): on the forge op tabs a
+// socket click selects the item for the operation, it must not strip it.
 const emit = defineEmits<{ select: [instanceId: string] }>()
+
+const props = withDefaults(
+  defineProps<{
+    /** true = click socket thao trang bi (tab Trang Bi). false = chi
+     * emit select (tab op chon item de nang cap). */
+    unequipOnSelect?: boolean
+  }>(),
+  { unequipOnSelect: true },
+)
 
 // Two socket columns x three rows around the brush-ring figure (Codex
 // home-equipment preview layout): left Vu Khi / Ao Giap / Giay, right
@@ -214,23 +223,16 @@ const rarityRankBySlot = computed<Record<EquipmentSlot, number | undefined>>(() 
   return result
 })
 
-const badgesBySlot = computed<Record<EquipmentSlot, SlotBadge[]>>(() => {
-  const result = {} as Record<EquipmentSlot, SlotBadge[]>
-
-  for (const slot of SLOT_SLOTS) {
-    const level = enhanceLevelBySlot.value[slot]
-
-    result[slot] = level > 0 ? [{ kind: 'enhance', text: `+${level}` }] : []
-  }
-
-  return result
-})
-
+// Owner ruling 2026-10-08: doll cells no longer print the enhance
+// level - it lives in the slot tooltip instead (useEquipmentTooltip
+// already renders "Cuong Hoa +N/max" for equipped items).
 function onSlotClick(instance: EquipmentInstance | undefined) {
   if (instance) {
     emit('select', instance.instanceId)
-    useAudioStore().cue('ui.equip')
-    unequip(instance.instanceId)
+    if (props.unequipOnSelect) {
+      useAudioStore().cue('ui.equip')
+      unequip(instance.instanceId)
+    }
   }
 }
 </script>
@@ -260,10 +262,9 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
       :style="{ top: `${(index % 3) * 33.33}%` }"
     >
       <div class="paperdoll__slot-wrap">
-        <img class="paperdoll__frame" :src="CIRCLE_FRAME_SRC" alt="" aria-hidden="true" />
         <SlotView
           class="paperdoll__slot"
-          variant="bag"
+          variant="socket"
           :item="equippedBySlot[slot] ?? null"
           :label="equippedBySlot[slot] ? itemName(equippedBySlot[slot]!) : t(`panels.bag.paperdoll.slots.${slot}`)"
           :accessible-label="equippedBySlot[slot] ? itemAccessibleLabel(equippedBySlot[slot]!) : undefined"
@@ -273,7 +274,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
           "
           :equipment-quality-rank="qualityRankBySlot[slot]"
           :rarity-rank="rarityRankBySlot[slot]"
-          :badges="badgesBySlot[slot]"
+          :enhance-level="equippedBySlot[slot] ? enhanceLevelBySlot[slot] : 0"
           :tooltip="tooltipBySlot[slot]"
           :icon="equippedBySlot[slot] ? itemIcon(equippedBySlot[slot]!) : undefined"
           @click="onSlotClick(equippedBySlot[slot])"
@@ -314,7 +315,10 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 
 
 /* Neutral mannequin substrate (stable art): centered behind the socket
-   grid; sockets keep full interaction above it. */
+   grid; sockets keep full interaction above it. Appearance (size,
+   opacity) is owned by the global rule tien-hiep-ui.css:50 - the
+   mannequin is the designed fallback FIGURE (opaque, per owner ruling
+   2026-10-08), not a dim backdrop; this scoped block only positions it. */
 .paperdoll__base {
   position: absolute;
   left: 50%;
@@ -323,11 +327,6 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   /* Substrate must paint under the static grid cells - positioned
      elements at z:auto would otherwise cover the runtime sockets. */
   z-index: -1;
-  height: 92%;
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-  opacity: 0.55;
   pointer-events: none;
 }
 
@@ -352,71 +351,18 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   object-fit: contain;
 }
 
-/* Codex preview socket (EquipmentPaperdollPreview + EquipmentArtSlot
-   circular): the circle-frame PNG is an <img> at inset:0 object-fit
-   contain - a true circle centered in the 88x80 unit, NOT a stretched
-   background. The item icon occupies the ring's inset:20% / 60%x60%
-   zone with no extra backdrop disc behind it. */
+/* Socket squares (owner ruling 2026-10-08): equipment-socket-v2.png is
+   square art, so the wrap is a square; SlotView variant 'socket' owns
+   the cell art, icon inset and hover - this file only places it. */
 .paperdoll__slot-wrap {
   position: relative;
   flex: none;
   width: 88px;
-  height: 80px;
+  height: 88px;
 }
-.paperdoll__frame {
+.paperdoll__slot {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-}
-.paperdoll__slot-wrap:hover .paperdoll__frame {
-  filter: brightness(1.65) drop-shadow(0 0 3px #ffd785) drop-shadow(0 0 7px #e9a935aa);
-}
-/* SlotView covers the whole 88x80 unit so its seal/badges anchor at
-   the ring's corners like before; only its own chrome (border, dark
-   backdrop disc, drawn frame) is suppressed - the preview has none. */
-:is(#app) .paperdoll__slot-wrap .paperdoll__slot {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  /* tien-hiep-ui.css paints the square runtime slot-frame on .slot-view via
-     :is(#app, body) - ID-level specificity (1,0,1) beats every scoped rule,
-     including assignments to --slot-bg-image on the same element. Beat the
-     ID with the same :is(#app) trick: (1,2,0) > (1,0,1). */
-  --slot-bg-image: none;
-  background-image: none;
-  /* The bag variant's rarity/quality aura is a box-shadow painted around
-     the square button bounds - reads as a square frame around the ring. */
-  box-shadow: none;
-}
-.paperdoll__slot-wrap :deep(.slot-view__frame-art) {
-  display: none;
-}
-/* Preview shows no square hover chrome around the ring - suppress the
-   bag variant's hover-frame layer outright (it also overflows the wrap). */
-.paperdoll__slot-wrap :deep(.slot-view__hover-frame) {
-  display: none;
-}
-/* Preview sockets show no grade seal or enhance badge - pure ring+icon.
-   (aria-label still carries the grade for screen readers.) */
-.paperdoll__slot-wrap :deep(.slot-view__seal),
-.paperdoll__slot-wrap :deep(.slot-view__badge) {
-  display: none;
-}
-/* Icon zone = preview's EquipmentArtSlot circular spec (inset 20%,
-   60%x60% of the unit). */
-.paperdoll__slot-wrap :deep(.slot-view__icon-wrap) {
-  inset: 20%;
-}
-.paperdoll__slot-wrap :deep(.slot-view__item-icon) {
   width: 100%;
   height: 100%;
 }
@@ -427,14 +373,6 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   font-weight: 700;
   color: #3a2a14;
   text-align: center;
-}
-
-/* Paperdoll slots use variant="bag" (owner ruling 2026-10-04): the 6
-   worn slots join the dense Trang Bi cells - quality aura (rarityRank
-   >= 3), the max-rank bar and the shared pale-gold hover frame still
-   ride on top of the circle-frame art. */
-.paperdoll__slot {
-  border-radius: 50%;
 }
 
 /* Big gold brush circle the figure stands inside (preview ornament). */

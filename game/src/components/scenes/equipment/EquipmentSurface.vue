@@ -2,7 +2,7 @@
 // Scene 12 (Trang Bi / Khi Duong) production adapter -- mounts the real
 // equipment surfaces inside the approved fidelity composition:
 //   doll slot      -> EquipmentPaperdollStage (canonical socket select)
-//   summary slot   -> real HP / attack / defense from player.finalStats
+//   summary slot   -> stats contributed by equipped gear (equipmentOps)
 //   workspace slot -> Trang Bi gear grid (unequipped bag items) + the 5
 //                     authored Khi Duong op tabs (owner ruling 2026-10-04:
 //                     rail = Trang Bi + Cuong Hoa/Tay Luyen/Tinh Luyen/
@@ -19,11 +19,11 @@
 // are ported verbatim from the old EquipmentScene.
 import { computed, provide, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { formatStat } from '@/core/stats/StatLabels'
+import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { isBetaEquipmentTab } from '@/core/betaScope'
+import { useMasterAccess } from '@/services/master/masterAccess'
 import { HALL_SELECTION_KEY } from '@/components/panels/equipment-hall/hallSelection'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
@@ -35,10 +35,9 @@ import WashTab from '@/components/panels/equipment-hall/WashTab.vue'
 import RefineTab from '@/components/panels/equipment-hall/RefineTab.vue'
 import DissolveTab from '@/components/panels/equipment-hall/DissolveTab.vue'
 import DecomposeTab from '@/components/panels/equipment-hall/DecomposeTab.vue'
-import type { Stats } from '@/core/stats/StatBlock'
 
 
-const furnaceArtUrl = resolveAssetUrl('/assets/ui/huyen-kim/scene/forge-v2/furnace-v1.png')
+
 // Dark nine-slice card the Codex home-equipment preview mounts for the
 // workspace (EquipmentArtCard -> character-card-nine-slice-v2).
 const cardArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
@@ -46,7 +45,6 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 const dividerBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png')
 
 const { t } = useI18n()
-const player = usePlayerStore()
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
@@ -67,14 +65,22 @@ type OpTabId = (typeof TABS)[number]['id']
 /** 'equip' = Trang Bi gear grid (unequipped items); the ops follow. */
 type EquipmentWorkspaceId = 'equip' | OpTabId
 
-const visibleTabs = TABS.filter((tab) => isBetaEquipmentTab(tab.id))
+const { isMaster } = useMasterAccess()
+
+// Owner ruling 2026-10-08: wash/refine stay scope-hidden for beta
+// players but open for the master account so their UIs can be
+// reskinned live.
+const MASTER_OP_TABS = new Set(['wash', 'refine'])
+const visibleTabs = computed(() =>
+  TABS.filter((tab) => isBetaEquipmentTab(tab.id) || (MASTER_OP_TABS.has(tab.id) && isMaster.value)),
+)
 
 const workspaceModes = computed<readonly { id: EquipmentWorkspaceId; label: string; locked: boolean }[]>(() => [
   { id: 'equip', label: t('equipment.workspace.equip'), locked: false },
   ...TABS.map((tab) => ({
     id: tab.id as EquipmentWorkspaceId,
     label: t(`panels.equipmentHall.tabs.${tab.id}`),
-    locked: !visibleTabs.some((admitted) => admitted.id === tab.id),
+    locked: !visibleTabs.value.some((admitted) => admitted.id === tab.id),
   })),
 ])
 
@@ -84,21 +90,18 @@ function selectWorkspace(id: EquipmentWorkspaceId) {
   // Defense in depth: a locked op tab is disabled in the nav, and the
   // surface itself also refuses to activate it - activeWorkspace can
   // only ever hold 'equip' or an admitted op id.
-  if (id !== 'equip' && !visibleTabs.some((tab) => tab.id === id)) return
+  if (id !== 'equip' && !visibleTabs.value.some((tab) => tab.id === id)) return
   activeWorkspace.value = id
 }
-
-// The lo ren hearth belongs to the forge op surfaces (enhance/wash/
-// refine/dissolve/decompose); the Trang Bi grid keeps the plain slab.
-const showFurnaceArt = computed(() => activeWorkspace.value !== 'equip')
 
 // Shared selection -- only Wash/Refine inject it (old shell note kept):
 // Enhance selects by SLOT; Dissolve/Decompose keep their own multi-select.
 const selectedInstanceId = ref<string | null>(null)
 
 function selectEquipped(instanceId: string) {
-  // Socket click = unequip lives in EquipmentPaperdoll.onSlotClick
-  // (emits select AND unequips on every workspace - pre-existing).
+  // Socket click semantics per workspace (owner ruling 2026-10-08):
+  // Trang Bi tab = unequip; op tabs = pick the item for the operation
+  // (unequipOnSelect prop on the paperdoll).
   selectedInstanceId.value = instanceId
 }
 
@@ -108,38 +111,33 @@ function clearSelection() {
 
 provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection })
 
-const SUMMARY_STATS: readonly { key: keyof Stats; labelKey: string; glyph: string }[] = [
-  { key: 'maxHp', labelKey: 'equipment.stats.hp', glyph: '\u2665' },
-  { key: 'might', labelKey: 'equipment.stats.attack', glyph: '\u2694' },
-  { key: 'defense', labelKey: 'equipment.stats.defense', glyph: '\u25C8' },
-  { key: 'maxMp', labelKey: 'equipment.stats.mana', glyph: '\u262F' },
-  { key: 'criticalRate', labelKey: 'equipment.stats.critical', glyph: '\u2727' },
-  { key: 'speed', labelKey: 'equipment.stats.speed', glyph: '\u27B6' },
-]
-
-// "Thuec Tinh Trang Bi" = stats CONTRIBUTED by equipped gear (the
-// preview's +1.800 / +5% rows), not the character's totals: sum the
-// equipment-sourced modifiers per stat - flat for flat stats, % for
-// percent stats. The authoritative list lives on equipmentOps - the
-// pinia player.modifiers array does not carry equipment entries.
+// "Thuec Tinh Trang Bi" = stats CONTRIBUTED by equipped gear (owner
+// ruling 2026-10-08: the card lists the stats equipment adds, shown in
+// the same name/value pattern as the Tu Si derived-stats board - no
+// icons). Sums the equipment-sourced modifiers per stat via
+// equipmentOps.getEquipmentModifiers() (the authoritative list - the
+// pinia player.modifiers array is only refreshed on equip actions).
+// Only stats with a nonzero contribution render; rows follow
+// BASE_STAT_LABELS order so the card matches Tu Si naming + tooltips.
 const summaryRows = computed(() => {
   stateVersion.value
   const equipmentModifiers = gameManager.equipmentOps.getEquipmentModifiers()
-  return SUMMARY_STATS.map((row) => {
+  const rows = []
+  for (const stat of BASE_STAT_LABELS) {
     let flat = 0
     let percent = 0
     for (const modifier of equipmentModifiers) {
-      if (modifier.stat !== row.key) continue
+      if (modifier.stat !== stat.key) continue
       flat += modifier.flat ?? 0
       percent += modifier.percent ?? 0
     }
-    const value = flat !== 0
-      ? `+${formatStat(row.key, flat)}`
-      : percent !== 0
-        ? `+${percent}%`
-        : '0'
-    return { key: row.key, label: t(row.labelKey), glyph: row.glyph, value }
-  })
+    if (flat === 0 && percent === 0) continue
+    const flatText = flat !== 0 ? `+${formatStat(stat.key, flat)}` : ''
+    const percentText = percent !== 0 ? `+${percent}%` : ''
+    const value = flatText && percentText ? `${flatText} (${percentText})` : flatText || percentText
+    rows.push({ key: stat.key, label: stat.label, description: stat.description, value })
+  }
+  return rows
 })
 
 </script>
@@ -156,17 +154,29 @@ const summaryRows = computed(() => {
     >
       <template #doll>
         <div class="equipment-doll">
-          <EquipmentPaperdollStage @select="selectEquipped" />
+          <EquipmentPaperdollStage
+            :unequip-on-select="activeWorkspace === 'equip'"
+            @select="selectEquipped"
+          />
         </div>
       </template>
 
       <template #summary>
-        <dl>
-          <div v-for="row in summaryRows" :key="row.key">
-            <dt><span>{{ row.glyph }}</span>{{ row.label }}</dt>
-            <dd>{{ row.value }}</dd>
-          </div>
-        </dl>
+        <!-- Same row pattern as the Tu Si derived-stats board
+             (name + value, hairline separators, tooltip description) -
+             minus icons, per owner ruling. -->
+        <ul class="equipment-summary__list">
+          <li
+            v-for="row in summaryRows"
+            :key="row.key"
+            class="equipment-summary__row"
+            :data-stat="row.key"
+            v-tooltip="row.description"
+          >
+            <span class="equipment-summary__name">{{ row.label }}</span>
+            <span class="equipment-summary__value">{{ row.value }}</span>
+          </li>
+        </ul>
       </template>
 
       <!-- Scene-level tab strip per the Codex preview: under the
@@ -192,15 +202,6 @@ const summaryRows = computed(() => {
           :style="{ '--equipment-card-art': `url('${cardArt}')`, '--equipment-tab-brush': `url('${tabBrush}')`, '--equipment-divider': `url('${dividerBrush}')` }"
           :aria-label="t('equipment.title')"
         >
-          <!-- LO REN hearth backdrop (ref forge workspace): decorative
-               furnace art behind the op views only. -->
-          <img
-            v-if="showFurnaceArt"
-            class="furnace-art"
-            :src="furnaceArtUrl"
-            alt=""
-            aria-hidden="true"
-          />
           <div class="equipment-workspace__body">
             <!-- Trang Bi tab: the unequipped gear grid (equip-on-click).
                  The bag-panel container anchor gives the section's
@@ -246,28 +247,16 @@ const summaryRows = computed(() => {
   width: 642px;
   height: 476px;
   padding: 14px 16px;
-  /* The inspector art stretches full-size like the design preview (its
-     painted gold border + mountain corners stay sharp at any size). */
-  border: 0;
-  background: var(--equipment-card-art) center / 100% 100% no-repeat;
+  /* Nine-slice like the preview's EquipmentArtCard: corners preserved,
+     edges stretch, center fills - replaces the background stretch that
+     distorted the card corners (owner ruling: backdrop giong preview). */
+  border: 15px solid transparent;
+  border-image: var(--equipment-card-art) 90 fill / 15px stretch;
   color: #f3e4c4;
   display: flex;
   flex-direction: column;
 }
 
-/* Decorative forge hearth behind the forge op views - same asset +
-   treatment the fidelity fixture uses (left, contained, dimmed). */
-.furnace-art {
-  position: absolute;
-  left: -6px;
-  bottom: 0;
-  width: 200px;
-  height: auto;
-  object-fit: contain;
-  opacity: 0.45;
-  filter: drop-shadow(0 4px 7px #61451d33);
-  pointer-events: none;
-}
 /* Scene-level tab strip (Codex preview treatment): ink labels on the
    paper; the active tab gets the brush streak behind the label and
    darkens to near-black. */
@@ -344,6 +333,47 @@ const summaryRows = computed(() => {
 .equipment-workspace__body > * {
   flex: 1;
   min-height: 0;
+}
+
+/* Stats card rows - same pattern as the Tu Si derived-stats board
+   (name left / value right, hairline separators, tooltip per row),
+   recolored for the dark card. The list scrolls invisibly: the scene
+   gives it height:100% + overflow:auto, scrollbar stays hidden. */
+/* Two-column grid (owner ruling 2026-10-08) - the scroll rules live on
+   the scene's :deep(ul); this only shapes the columns. */
+.equipment-summary__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 14px;
+  align-content: start;
+}
+.equipment-summary__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid color-mix(in srgb, #d8b56a 22%, transparent);
+  cursor: default;
+}
+.equipment-summary__row:last-child { border-bottom: 0; }
+.equipment-summary__name {
+  font-size: 12px;
+  color: #c9b184;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.equipment-summary__value {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 12px;
+  color: #ebce84;
+  white-space: nowrap;
 }
 /* Trang Bi gear grid host: same bag-panel container contract the Kho
    Vat surface's .bag-anchor declares (container queries on the

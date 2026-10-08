@@ -13,9 +13,8 @@ import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import { equipmentSlotLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
-import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
-import { equipmentArt } from '@/components/common/art/equipmentArt'
+import SlotView from '@/components/common/SlotView.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { RefineValueEntry } from '@/core/equipment/EquipmentSystem'
 import { getEffectiveAffixValue } from '@/core/equipment/EquipmentSystem'
@@ -223,7 +222,7 @@ const refineRenAfter = computed(() =>
   itemRenState.value ? Math.max(0, itemRenState.value.points - refineCost.value.refinementPoints) : 0,
 )
 
-const circleFrameSrc = equipmentArt('equipment-circle-frame-v1')
+
 
 const MATERIAL_CATEGORY_ART: Record<string, string> = {
   essence: '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
@@ -231,7 +230,12 @@ const MATERIAL_CATEGORY_ART: Record<string, string> = {
 }
 
 function materialIcon(materialId: string): string | undefined {
-  const material = gameManager.materialRegistry.get(materialId)
+  // Guard the registry: .get() throws on unknown ids - a missing
+  // material must degrade to no icon, not crash the tab (same .has()
+  // pattern as the cost-name computeds).
+  const material = gameManager.materialRegistry.has(materialId)
+    ? gameManager.materialRegistry.get(materialId)
+    : undefined
   const art = material?.icon ?? (material?.category ? MATERIAL_CATEGORY_ART[material.category] : undefined)
   return art ? resolveAssetUrl(art) : undefined
 }
@@ -314,8 +318,17 @@ const refineMaterials = computed(() => [
         :title="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
         @click="selectHallSlotForAction(row)"
       >
-        <img class="refine-slot__frame" :src="circleFrameSrc" alt="" aria-hidden="true" />
-        <img v-if="row.equippedRow?.icon" class="refine-slot__icon" :src="row.equippedRow.icon" alt="" aria-hidden="true" />
+        <SlotView
+          class="refine-slot__view"
+          variant="circle"
+          static
+          :item="row.equippedRow?.instance ?? null"
+          :icon="row.equippedRow?.icon"
+          :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
+          :accessible-label="row.equippedRow?.accessibleLabel"
+          :equipment-quality-rank="row.equippedRow?.gradeRank"
+          :rarity-rank="row.equippedRow?.qualityRank"
+        />
       </button>
     </div>
 
@@ -372,7 +385,7 @@ const refineMaterials = computed(() => [
           :class="{ 'is-missing': material.owned < material.amount }"
         >
           <div class="equipment-material-icon">
-            <EquipmentArtSlot :icon="material.icon" :label="material.label" empty />
+            <SlotView variant="equipment" static :item="null" :icon="material.icon" :label="material.label" />
           </div>
           <b>{{ material.owned }}/{{ material.amount }}</b>
         </div>
@@ -446,13 +459,6 @@ const refineMaterials = computed(() => [
   padding: 4px 8px;
   font-size: 14px;
 }
-/* tierClass() emits qi-hall__tier-N (equipmentHallDisplay.ts) - defined
-   locally so the scene does not depend on the legacy qi-hall.css bundle. */
-.qi-hall__tier-1 { color: var(--affix-tier-1); }
-.qi-hall__tier-2 { color: var(--affix-tier-2); }
-.qi-hall__tier-3 { color: var(--affix-tier-3); }
-.qi-hall__tier-4 { color: var(--affix-tier-4); }
-.qi-hall__tier-5 { color: var(--affix-tier-5); }
 .equipment-stat-name {
   display: flex;
   align-items: center;
@@ -530,6 +536,10 @@ const refineMaterials = computed(() => [
   height: 48px;
   flex: none;
 }
+.equipment-material-icon :deep(.slot-view) {
+  width: 100%;
+  height: 100%;
+}
 .equipment-material b {
   font-weight: 400;
   color: #8bca8d;
@@ -587,25 +597,20 @@ const refineMaterials = computed(() => [
   background: transparent;
   cursor: pointer;
 }
-.refine-slot__frame {
+.refine-slot__view {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
   pointer-events: none;
 }
-.refine-slot__icon {
-  position: absolute;
+.refine-slot :deep(.slot-view__icon-wrap) {
   inset: 14%;
-  width: 72%;
-  height: 72%;
-  object-fit: contain;
 }
-.refine-slot.selected .refine-slot__frame {
+.refine-slot.selected :deep(.slot-view__ring-art) {
   filter: brightness(1.35) drop-shadow(0 0 5px #d9a94f88);
 }
-.refine-slot:not(.selected):hover .refine-slot__frame {
+.refine-slot:not(.selected):hover :deep(.slot-view__ring-art) {
   filter: brightness(1.18);
 }
 </style>

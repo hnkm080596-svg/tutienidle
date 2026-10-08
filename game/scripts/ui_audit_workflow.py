@@ -1,209 +1,231 @@
 import asyncio
 import json
+import os
 
-# UI audit fan-out for tutienidle's artui-c0-foundation worktree.
-# Agents MUST be vm_mode="shared": they audit the worktree's UNCOMMITTED
-# reskin state, which cannot be pushed (it mixes the owner's in-flight
-# edits) and therefore is invisible to separate-VM clones. Each agent
-# owns exactly one report file under docs/ui-audit/ so parallel writes
-# never collide. Max 4 agents run at once (owner rule) — enforced by
-# chunked barriers below.
+# UI audit fan-out for tutienidle — artui-c0-foundation worktree.
+# Agents are separate-VM (shared-VM is unavailable in this session) cloning
+# origin branch devin/artui-c0-foundation, a snapshot pushed for this audit.
+# Rolling window: a semaphore admits max 4 agents at once — when one scope
+# finishes, the next agent starts immediately (owner rule). Agents cannot
+# write to this machine, so they return report markdown in structured
+# output and THIS SCRIPT writes docs/ui-audit/*.md locally.
+# Waves (each rolls over ALL scopes before the next starts):
+#   search -> review -> research (verify+fix report) -> final review.
 
+REPO = "hnkm080596-svg/tutienidle"
+BRANCH = "devin/artui-c0-foundation"
 GAME = r"C:\Users\Administrator\repos\tutienidle\.agent-worktrees\artui-c0-foundation\game"
+AUDIT_DIR = os.path.join(GAME, "docs", "ui-audit")
+MAX_CONCURRENT = 4
 
-REPORT_FORMAT = """Report file format (write in Vietnamese, Markdown):
+REPORT_FORMAT = """Report format (Vietnamese, Markdown):
 # Panel: <name>
 ## 1. Mount chain — từ nav/route đến component gốc, file nào chứa gì
-## 2. UI logic inventory — mọi computed/store-read/emit/directive đang feed DOM (mới lẫn cũ)
-## 3. Art map — mỗi file art (đường dẫn assets/) + element vị trí dùng nó; kể cả art set qua CSS global
-## 4. Conflicts / layers — nơi 2 phiên bản UI cùng tồn tại (dead DOM ẩn, suppression CSS, component trùng vai trò, global rule đè scoped)
-## 5. Logic không có hình ảnh — logic tính toán/state mà không render gì ra màn hình
-## 6. Hình ảnh không có logic — art/DOM trưng bày không gắn dữ liệu thật, unwired UI
-## 7. Open questions — điểm mâu thuẫn cần chủ dự án quyết
-Every claim must cite file:line. Verify by reading code, never from memory."""
+## 2. UI logic inventory — mọi computed/store-read/emit/directive/props đang feed DOM (mới lẫn cũ)
+## 3. Art map — mỗi file art (đường dẫn assets/) + element dùng nó; kể cả art qua CSS global
+## 4. Conflicts / layers — nơi 2 phiên bản UI cùng tồn tại (dead DOM, suppression CSS, component trùng vai trò, global rule đè scoped)
+## 5. Logic không có hình ảnh — logic/state không render ra gì
+## 6. Hình ảnh không có logic — art/DOM trưng bày, unwired
+## 7. Open questions — mâu thuẫn cần chủ dự án quyết
+Every claim cites file:line. Read code, never guess. Cap ~500 lines."""
 
-RULES = """Hard rules:
-- Audit ONLY; never edit code, never run git mutating commands, never touch the dev server, never write outside your assigned file.
-- Scope covers BOTH the live/production path and any dormant/fallback/legacy UI paths reachable from this panel (dead components still mounted or imported count).
-- Include global chrome that visibly affects this panel (e.g. src/assets/tien-hiep-ui.css rules matching this panel's classes).
-- The repo root for this task is """ + GAME + """ — work strictly inside it.
-- Write the report file FIRST, then return the structured summary."""
+RULES = f"""Hard rules:
+- READ-ONLY audit. Never edit code, never run mutating git commands, never start servers.
+- The UI is mid-reskin: audit BOTH the live path and dormant/fallback/legacy paths still imported or reachable — dead code counts.
+- Include global chrome affecting your scope (src/assets/tien-hiep-ui.css rules matching your classes).
+- Checkout the audit snapshot first: `git checkout {BRANCH}` in the clone, then work inside `game/`.
+- Do NOT write the report file — return it in `report_md`. Keep it under ~500 lines."""
 
-# (scope_id, display name, where to start looking)
-SCOPES_WAVE1 = [
-    ("dong-fu", "Động Phủ (home scene)", "src/components/scenes/dong-fu/ (DongFuStage.vue, fidelity/*), src/components/game/MainScene.vue + src/game/scenes/MainScene.ts, src/components/layout/GameRoot.vue"),
-    ("wheel-cu", "Wheel cũ (command wheel)", "src/components/scenes/dong-fu/fidelity/DongFuWheel.vue, DongFuHomeContent.vue, dongFuUi.ts, CharacterFigureWheel.vue — trace whether still mounted anywhere"),
-    ("trail-hien-tai", "Trail/navigation hiện tại", "nav rail + landscape seam inside DongFuStage.vue, FunctionOverlayPanel/overlay routing that opens panels, src/core/presentation/OverlayLayers.ts"),
-    ("tu-si", "Tu Sĩ", "nav id → panel: src/components/panels/CharacterPanel.vue + src/components/scenes/character/* + pc-paper chrome"),
-    ("cong-phap", "Công Pháp", "src/components/panels/SkillPathPanel.vue + skill-constellation/* + scenes/skill* (skill-sheet chrome)"),
-    ("trang-bi", "Trang Bị", "src/components/panels/EquipmentHallPanel.vue + EquipmentPaperdoll.vue + panels/equipment-hall/* + scenes/equipment/*"),
-    ("luyen-the", "Luyện Thể", "src/components/panels/BodyPanel.vue + scenes/body* "),
-    ("tam-phap", "Tâm Pháp", "src/components/panels/TechniquePanel.vue + ScripturePavilionPanel.vue + scenes/technique* — resolve which the nav opens"),
+# (scope_id, display name, hints)
+SCOPES = [
+    ("dong-fu-vista", "Động Phủ — vista/stage", "scenes/dong-fu/DongFuStage.vue (vista bg, header, resource chips, quest card) + game/MainScene.vue + game/scenes/MainScene.ts (Phaser canvas under it)"),
+    ("dong-fu-nav", "Động Phủ — nav rail + overlay flow", "DongFuStage nav rail/icons/seam/collapse + FunctionOverlayPanel + core/presentation/OverlayLayers.ts + ui store open/close"),
+    ("wheel-cu", "Wheel cũ", "scenes/dong-fu/fidelity/DongFuWheel.vue + DongFuHomeContent.vue + dongFuUi.ts + scenes/character/CharacterFigureWheel.vue — mounted anywhere or dead?"),
+    ("trail-hien-tai", "Trail/điều hướng hiện tại", "the CURRENT navigation/trail mechanism on home (nav rail, seams, quest tracker 'Nhiệm Vụ ›', panel open flow) — enumerate whatever trail-like UI is live"),
+    ("tu-si", "Tu Sĩ", "panels/CharacterPanel.vue + scenes/character/* + pc-paper chrome"),
+    ("cong-phap", "Công Pháp", "panels/SkillPathPanel.vue + panels/skill-constellation/* + skill-sheet chrome"),
+    ("trang-bi-doll", "Trang Bị — doll/sockets", "panels/EquipmentPaperdoll.vue + scenes/equipment/paperdoll/EquipmentPaperdollStage.vue + SlotView props used"),
+    ("trang-bi-bag", "Trang Bị — túi", "panels/bag-sections/EquipmentBagSection.vue + filters/footer/grid + shared BagGrid.vue if used"),
+    ("trang-bi-forge", "Trang Bị — 5 tab op", "panels/equipment-hall/* (Enhance/Wash/Refine/Dissolve/Decompose + qi-hall.css + equipmentHallDisplay.ts)"),
+    ("trang-bi-shell", "Trang Bị — shell/sheet/tabs", "panels/EquipmentHallPanel.vue + scenes/equipment/EquipmentSurface.vue + scenes/equipment/fidelity/* (incl. dormant fallback)"),
+    ("luyen-the", "Luyện Thể", "panels/BodyPanel.vue + scenes/body*"),
+    ("tam-phap", "Tâm Pháp", "panels/TechniquePanel.vue + ScripturePavilionPanel.vue + scenes/technique*"),
+    ("canh-gioi", "Cảnh Giới", "panels/RealmPanel.vue + scenes/realm/* (RealmAscentTrack, RealmAscentNode)"),
+    ("tru-vat", "Trữ Vật", "panels/InventoryPanel.vue + panels/bag-sections/* (MaterialBagSection etc.) + inventory chrome"),
+    ("luyen-dan", "Luyện Đan", "panels/PillRoomPanel.vue + alchemy scenes"),
+    ("ban-do", "Bản Đồ", "panels/StageSelectPanel.vue + scenes/exploration/*"),
+    ("nhiem-vu", "Nhiệm Vụ", "panels/QuestPanel.vue + quest tracker on home"),
+    ("san-xuat", "Sản Xuất", "panels/ProductionPanel.vue + WorkerLodgePanel.vue + production scenes"),
+    ("cai-dat", "Cài Đặt", "panels/SettingsPanel.vue + settings sections"),
+    ("tro-giup-locked", "Trợ Giúp + panels khóa", "panels/LoreCodexModal.vue/Trợ Giúp + locked/stub nav items (Trận Pháp=TranPhapPanel?, Thương Hội=VendorPanel, Pháp Bảo=ArtifactPanel?, Đồng Hành=CompanionPanel, Bang Hội, Tông Môn, Bí Cảnh): what UI exists vs gated"),
+    ("shared-chrome", "Component dùng chung", "components/common/SlotView.vue + SlotTypes.ts + common/art/* + GameButton + InkNineSlice + SceneDesignCanvas — who uses what, variant matrix"),
+    ("global-css", "Global CSS/traps", "assets/tien-hiep-ui.css + tien-hiep-secondary-ui.css + huyen-kim.tokens.css + theme.css — every global rule hitting panels, --th-art-* var map"),
+    ("tooltips", "Tooltip hệ thống", "composables/useTooltip.ts + useEquipmentTooltip.ts + gear-tooltip styling + all tooltip consumers in panels"),
+    ("overlay-host", "Overlay/scene host", "FunctionOverlayPanel.vue + paperMode registry + scrim/transition layers + how panels get mounted/hidden"),
 ]
 
-SCOPES_WAVE2 = [
-    ("canh-gioi", "Cảnh Giới", "src/components/panels/RealmPanel.vue + scenes/realm/* (RealmAscentTrack/Node)"),
-    ("tru-vat", "Trữ Vật", "src/components/panels/InventoryPanel.vue + panels/bag-sections/* + scenes/inventory*"),
-    ("luyen-dan", "Luyện Đan", "src/components/panels/PillRoomPanel.vue + scenes/alchemy* "),
-    ("ban-do", "Bản Đồ", "src/components/panels/StageSelectPanel.vue + scenes/exploration/*"),
-    ("nhiem-vu", "Nhiệm Vụ", "src/components/panels/QuestPanel.vue + scenes/quest*"),
-    ("san-xuat", "Sản Xuất", "src/components/panels/ProductionPanel.vue + WorkerLodgePanel.vue + scenes/production*"),
-    ("cai-dat", "Cài Đặt", "src/components/panels/SettingsPanel.vue + settings sections"),
-    ("tro-giup-lore", "Trợ Giúp + panels khóa", "src/components/panels/LoreCodexModal.vue/Trợ Giúp + stub/locked panels (Trận Pháp, Thương Hội, Pháp Bảo, Đồng Hành, Bang Hội, Tông Môn, Bí Cảnh): enumerate what UI exists vs is gated"),
-]
-
-REPORT_SCHEMA = {
+SEARCH_SCHEMA = {
     "type": "object",
     "properties": {
-        "file": {"type": "string"},
-        "logic_items": {"type": "number"},
-        "art_items": {"type": "number"},
-        "conflicts": {"type": "number"},
-        "logic_without_visual": {"type": "number"},
-        "visual_without_logic": {"type": "number"},
+        "scope": {"type": "string"},
+        "report_md": {"type": "string"},
         "summary": {"type": "string"},
     },
-    "required": ["file", "summary"],
+    "required": ["scope", "report_md", "summary"],
 }
-
 REVIEW_SCHEMA = {
     "type": "object",
     "properties": {
-        "file": {"type": "string"},
+        "scope": {"type": "string"},
         "verdict": {"type": "string"},
-        "missing": {"type": "array", "items": {"type": "string"}},
-        "wrong": {"type": "array", "items": {"type": "string"}},
+        "findings_md": {"type": "string"},
         "summary": {"type": "string"},
     },
-    "required": ["file", "verdict", "summary"],
+    "required": ["scope", "verdict", "findings_md", "summary"],
 }
 
-async def in_fours(items, fn):
-    """Run fn over items with at most 4 in flight; barrier per chunk."""
-    results = []
-    for i in range(0, len(items), 4):
-        chunk = items[i:i + 4]
-        results.extend(await parallel([lambda it=it: fn(it) for it in chunk]))
-        log(f"chunk done ({i + len(chunk)}/{len(items)})")
-    return results
+def write_doc(name, text):
+    os.makedirs(AUDIT_DIR, exist_ok=True)
+    path = os.path.join(AUDIT_DIR, name)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    return path
 
-def report_prompt(scope_id, name, hints):
-    return f"""You are auditing the UI of the '{name}' scope in a Vue 3 idle game
-whose UI is mid-reskin (old legacy vocabulary vs new tien-hiep art, so layers
-overlap). Repo root: {GAME}
+def base_ctx(item):
+    scope_id, name, hints = item
+    return (f"Repo {REPO}, branch {BRANCH} (run `git checkout {BRANCH}` first), "
+            f"work inside `game/`. Scope: {name}. Start: {hints}\n\n{RULES}\n")
 
-Your scope: {name}. Start from: {hints}
-Find the real entry: locate the nav button label in locale files / FunctionOverlayPanel
-mapping, then follow the mount chain to the actual components rendered on screen.
-Audit every file in scope, including dormant/fallback code paths still imported.
-
-{RULES}
+def search_prompt(item):
+    scope_id, name, hints = item
+    return base_ctx(item) + f"""Audit ALL UI-related logic for '{name}' — old AND new — then write the report.
 
 {REPORT_FORMAT}
 
-Write the report to: {GAME}\\docs\\ui-audit\\{scope_id}.md (create the dir if needed).
+Return structured output: scope='{scope_id}', report_md=<full report>, summary=3-line Vietnamese summary of ugliest findings."""
 
-Then return structured output: file=<absolute path you wrote>, counts of logic items,
-art files, conflicts, logic-without-visual items, visual-without-logic items, and a
-3-line Vietnamese summary of the ugliest findings."""
-
-def review_prompt(scope_id, name, hints):
-    return f"""You are a skeptical reviewer. A report was just written auditing the UI
-of '{name}' in repo {GAME} — file: docs/ui-audit/{scope_id}.md
-
-Scope hints: {hints}
-
-Your job: verify the report against the actual code. For each claim citing file:line,
-spot-check it is real. Then hunt for what the report MISSED: unlisted files in scope,
-art referenced that isn't mapped, global CSS rules affecting this panel, components
-imported but never rendered, listeners/intervals still active. Classify each problem
-as 'missing' (absent from report) or 'wrong' (reported incorrectly).
-
-{RULES}
-
-Write your findings to: {GAME}\\docs\\ui-audit\\review-{scope_id}.md — sections:
-'## Missed', '## Wrong', '## Verified-ok'. Each finding cites file:line.
-
-Return structured output: file, verdict ('thorough'|'has-gaps'|'unreliable'),
-missing[] + wrong[] as one-line strings, summary (3 lines Vietnamese)."""
-
-def adjudicate_prompt(scope_id, name, hints):
-    return f"""You are the adjudicator for the UI audit of '{name}' in repo {GAME}.
-
-Inputs:
-- Draft report: docs/ui-audit/{scope_id}.md
-- Review findings: docs/ui-audit/review-{scope_id}.md
-
-Scope hints: {hints}
-
-Verify every 'missing'/'wrong' finding against the code yourself (reviewers also
-hallucinate). Then produce the FINAL corrected report at the same path
-docs/ui-audit/{scope_id}.md (overwrite), keeping the original section format and
-marking corrected lines where the review was right; reject review findings that are
-wrong and say why in an '## Adjudication' appendix section.
-
-{RULES}
-
-Return structured output: file, counts as in the report schema, summary (3 lines
-Vietnamese: what the review caught, what it got wrong)."""
-
-async def search_agent(item):
+def review_prompt(item, report_md):
     scope_id, name, hints = item
-    try:
-        return await agent(report_prompt(scope_id, name, hints), phase="wave1+2-search",
-                           schema=REPORT_SCHEMA, label=f"audit-{scope_id}", vm_mode="shared")
-    except Exception as e:
-        log(f"audit-{scope_id} FAILED: {e}")
-        return {"file": f"docs/ui-audit/{scope_id}.md", "summary": f"FAILED: {e}"}
+    return base_ctx(item) + f"""You are a skeptical reviewer of this UI audit report for '{name}':
 
-async def review_agent(item):
-    scope_id, name, hints = item
-    try:
-        return await agent(review_prompt(scope_id, name, hints), phase="wave3-review",
-                           schema=REVIEW_SCHEMA, label=f"review-{scope_id}", vm_mode="shared")
-    except Exception as e:
-        log(f"review-{scope_id} FAILED: {e}")
-        return {"file": f"docs/ui-audit/review-{scope_id}.md", "verdict": "unreliable",
-                "summary": f"FAILED: {e}"}
+<report>
+{report_md}
+</report>
 
-async def adjudicate_agent(item):
+Verify file:line claims against code. Then hunt what it MISSED: files in scope,
+art not mapped, global CSS rules hitting the panel, imported-but-unrendered
+components, live listeners/intervals. Output findings Markdown with sections
+'## Missed' / '## Wrong' / '## Verified-ok', each finding cites file:line.
+
+Return: scope='{scope_id}', verdict ('thorough'|'has-gaps'|'unreliable'),
+findings_md=<full findings doc>, summary=3 lines Vietnamese."""
+
+def research_prompt(item, report_md, findings_md):
     scope_id, name, hints = item
-    try:
-        return await agent(adjudicate_prompt(scope_id, name, hints), phase="wave4-adjudicate",
-                           schema=REPORT_SCHEMA, label=f"fix-{scope_id}", vm_mode="shared")
-    except Exception as e:
-        log(f"fix-{scope_id} FAILED: {e}")
-        return {"file": f"docs/ui-audit/{scope_id}.md", "summary": f"FAILED: {e}"}
+    return base_ctx(item) + f"""You are the research/adjudication pass for the '{name}' UI audit.
+
+<report>
+{report_md}
+</report>
+
+<findings>
+{findings_md}
+</findings>
+
+Verify every Missed/Wrong finding against code yourself (reviewers hallucinate too),
+then produce the FINAL corrected report in the ORIGINAL section format, plus an
+'## Adjudication' appendix listing which findings you accepted/rejected and why.
+
+Return: scope='{scope_id}', report_md=<full corrected report>, summary=3 lines Vietnamese."""
+
+def final_review_prompt(item, report_md):
+    scope_id, name, hints = item
+    return base_ctx(item) + f"""Final review of the corrected UI audit for '{name}'. The report below went through
+one review + adjudication round already:
+
+<report>
+{report_md}
+</report>
+
+Check only for material errors that remain: false file:line claims, big scope files
+still missing, conflicts/logic-vs-visual items the earlier rounds did not catch.
+Do NOT re-litigate adjudicated items. Output findings Markdown ('## Missed' /
+'## Wrong' / '## Verified-ok'), cite file:line.
+
+Return: scope='{scope_id}', verdict ('clean'|'minor-residual'|'still-broken'),
+findings_md=<full doc>, summary=3 lines Vietnamese."""
+
+SEM = asyncio.Semaphore(MAX_CONCURRENT)
+
+async def wave(items, fn, phase, label_prefix, schema):
+    async def one(item):
+        scope_id = item[0]
+        last = None
+        # Org caps at ~5 concurrent sessions; a 429 means 'retry when a
+        # sibling finishes'. Back off OUTSIDE the semaphore so other
+        # scopes can use the freed slot while this one waits.
+        for attempt in range(8):
+            async with SEM:
+                try:
+                    return await agent(fn(item), phase=phase, label=f"{label_prefix}-{scope_id}",
+                                       schema=schema, repos=[REPO], soft_time_limit_minutes=25)
+                except Exception as e:
+                    last = e
+            await asyncio.sleep(60)
+        log(f"{label_prefix}-{scope_id} FAILED after retries: {last}")
+        return None
+    return await parallel([lambda i=i: one(i) for i in items])
 
 async def main():
     await register_workflow({
-        "name": "ui-audit-trang-bi-all-panels",
-        "description": "4-wave UI audit: search reports per scope, then review, then adjudicate — max 4 agents at once, all on the shared worktree.",
+        "name": "ui-audit-all-panels-v2",
+        "description": "Rolling-4 UI audit per scope: search -> review -> research -> final review; reports land in docs/ui-audit/.",
         "subscribe": "refresh",
-        "soft_time_limit_minutes": 25,
         "phases": [
-            {"title": "wave1+2-search", "detail": "one audit report per scope -> docs/ui-audit/<scope>.md", "count": len(SCOPES_WAVE1) + len(SCOPES_WAVE2)},
-            {"title": "wave3-review", "detail": "skeptical review of each report -> review-<scope>.md", "count": len(SCOPES_WAVE1) + len(SCOPES_WAVE2)},
-            {"title": "wave4-adjudicate", "detail": "verify findings vs code, rewrite final report", "count": len(SCOPES_WAVE1) + len(SCOPES_WAVE2)},
+            {"title": "w1-search", "detail": "audit report per scope", "count": len(SCOPES)},
+            {"title": "w2-review", "detail": "skeptical review of each report", "count": len(SCOPES)},
+            {"title": "w3-research", "detail": "verify findings vs code, rewrite final report", "count": len(SCOPES)},
+            {"title": "w4-final-review", "detail": "last pass over corrected reports", "count": len(SCOPES)},
         ],
     })
 
-    log("wave1 search: dong-fu -> panels batch 1")
-    r1 = await in_fours(SCOPES_WAVE1, search_agent)
-    log("wave1 done: " + json.dumps([r.get("summary", "?") for r in r1]))
+    log("W1 search: rolling 4 over %d scopes" % len(SCOPES))
+    reports = {}
+    for item, res in zip(SCOPES, await wave(SCOPES, search_prompt, "w1-search", "audit", SEARCH_SCHEMA)):
+        if res and res.get("report_md"):
+            write_doc(f"{item[0]}.md", res["report_md"])
+            reports[item[0]] = res["report_md"]
+        log(f"search {item[0]}: {'ok' if item[0] in reports else 'FAILED'}")
 
-    log("wave2 search: remaining panels")
-    r2 = await in_fours(SCOPES_WAVE2, search_agent)
-    log("wave2 done: " + json.dumps([r.get("summary", "?") for r in r2]))
+    todo = [i for i in SCOPES if i[0] in reports]
+    log(f"W2 review over {len(todo)} reports")
+    findings = {}
+    def rv(item):
+        return review_prompt(item, reports[item[0]])
+    for item, res in zip(todo, await wave(todo, rv, "w2-review", "review", REVIEW_SCHEMA)):
+        if res and res.get("findings_md"):
+            write_doc(f"review-{item[0]}.md", res["findings_md"])
+            findings[item[0]] = res["findings_md"]
+        log(f"review {item[0]}: verdict={res.get('verdict','?') if res else 'FAILED'}")
 
-    all_scopes = SCOPES_WAVE1 + SCOPES_WAVE2
-    log("wave3 review: skeptical pass over every report")
-    rv = await in_fours(all_scopes, review_agent)
-    log("wave3 verdicts: " + json.dumps([r.get("verdict", "?") for r in rv]))
+    todo3 = [i for i in SCOPES if i[0] in findings]
+    log(f"W3 research over {len(todo3)} scopes")
+    def rs(item):
+        return research_prompt(item, reports[item[0]], findings[item[0]])
+    finals = {}
+    for item, res in zip(todo3, await wave(todo3, rs, "w3-research", "research", SEARCH_SCHEMA)):
+        if res and res.get("report_md"):
+            write_doc(f"{item[0]}.md", res["report_md"])
+            finals[item[0]] = res["report_md"]
+        log(f"research {item[0]}: {'ok' if item[0] in finals else 'FAILED'}")
 
-    log("wave4 adjudicate: verify findings, finalize reports")
-    ad = await in_fours(all_scopes, adjudicate_agent)
-    for item, a in zip(all_scopes, ad):
-        log(f"final {item[0]}: {a.get('summary', '?')}")
+    todo4 = [i for i in SCOPES if i[0] in finals]
+    log(f"W4 final review over {len(todo4)} scopes")
+    def fr(item):
+        return final_review_prompt(item, finals[item[0]])
+    for item, res in zip(todo4, await wave(todo4, fr, "w4-final-review", "final", REVIEW_SCHEMA)):
+        if res and res.get("findings_md"):
+            write_doc(f"final-review-{item[0]}.md", res["findings_md"])
+        log(f"final {item[0]}: verdict={res.get('verdict','?') if res else 'FAILED'}")
 
 asyncio.run(main())

@@ -14,8 +14,7 @@ import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
-import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
-import { equipmentArt } from '@/components/common/art/equipmentArt'
+import SlotView from '@/components/common/SlotView.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useEquippedRows, useHallSlotRows, useItemRenState, type HallSlotRow } from './useEquippedRows'
 import { affixDisplayLabel, tierClass } from './equipmentHallDisplay'
@@ -224,7 +223,7 @@ const washRenAfter = computed(() =>
   itemRenState.value ? Math.max(0, itemRenState.value.points - 1) : 0,
 )
 
-const circleFrameSrc = equipmentArt('equipment-circle-frame-v1')
+
 
 const MATERIAL_CATEGORY_ART: Record<string, string> = {
   essence: '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
@@ -232,7 +231,12 @@ const MATERIAL_CATEGORY_ART: Record<string, string> = {
 }
 
 function materialIcon(materialId: string): string | undefined {
-  const material = gameManager.materialRegistry.get(materialId)
+  // Guard the registry: .get() throws on unknown ids - a missing
+  // material must degrade to no icon, not crash the tab (same .has()
+  // pattern as the cost-name computeds).
+  const material = gameManager.materialRegistry.has(materialId)
+    ? gameManager.materialRegistry.get(materialId)
+    : undefined
   const art = material?.icon ?? (material?.category ? MATERIAL_CATEGORY_ART[material.category] : undefined)
   return art ? resolveAssetUrl(art) : undefined
 }
@@ -275,8 +279,17 @@ const washMaterials = computed(() => [
         :title="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
         @click="selectHallSlotForAction(row)"
       >
-        <img class="wash-slot__frame" :src="circleFrameSrc" alt="" aria-hidden="true" />
-        <img v-if="row.equippedRow?.icon" class="wash-slot__icon" :src="row.equippedRow.icon" alt="" aria-hidden="true" />
+        <SlotView
+          class="wash-slot__view"
+          variant="circle"
+          static
+          :item="row.equippedRow?.instance ?? null"
+          :icon="row.equippedRow?.icon"
+          :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
+          :accessible-label="row.equippedRow?.accessibleLabel"
+          :equipment-quality-rank="row.equippedRow?.gradeRank"
+          :rarity-rank="row.equippedRow?.qualityRank"
+        />
       </button>
     </div>
 
@@ -317,7 +330,7 @@ const washMaterials = computed(() => [
           :class="{ 'is-missing': material.owned < material.amount }"
         >
           <div class="equipment-material-icon">
-            <EquipmentArtSlot :icon="material.icon" :label="material.label" empty />
+            <SlotView variant="equipment" static :item="null" :icon="material.icon" :label="material.label" />
           </div>
           <span>{{ material.label }}</span>
           <b>{{ material.owned }}/{{ material.amount }}</b>
@@ -405,13 +418,10 @@ const washMaterials = computed(() => [
   min-height: 0;
   font-size: 14px;
 }
-/* tierClass() emits qi-hall__tier-N (equipmentHallDisplay.ts) - defined
-   locally so the scene does not depend on the legacy qi-hall.css bundle. */
-.qi-hall__tier-1 { color: var(--affix-tier-1); }
-.qi-hall__tier-2 { color: var(--affix-tier-2); }
-.qi-hall__tier-3 { color: var(--affix-tier-3); }
-.qi-hall__tier-4 { color: var(--affix-tier-4); }
-.qi-hall__tier-5 { color: var(--affix-tier-5); }
+/* tierClass() emits qi-hall__tier-N - owned solely by qi-hall.css
+   (owner ruling 2026-10-08: keep the sheet's designed tier colors,
+   tier-5 gradient included; the local flat redefinitions were removed
+   so one owner remains and the ownership guard stays green). */
 .equipment-stat-name {
   display: flex;
   align-items: center;
@@ -448,6 +458,10 @@ const washMaterials = computed(() => [
   width: 48px;
   height: 48px;
   flex: none;
+}
+.equipment-material-icon :deep(.slot-view) {
+  width: 100%;
+  height: 100%;
 }
 .equipment-material span {
   font-size: 13px;
@@ -504,25 +518,20 @@ const washMaterials = computed(() => [
   background: transparent;
   cursor: pointer;
 }
-.wash-slot__frame {
+.wash-slot__view {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
   pointer-events: none;
 }
-.wash-slot__icon {
-  position: absolute;
+.wash-slot :deep(.slot-view__icon-wrap) {
   inset: 14%;
-  width: 72%;
-  height: 72%;
-  object-fit: contain;
 }
-.wash-slot.selected .wash-slot__frame {
+.wash-slot.selected :deep(.slot-view__ring-art) {
   filter: brightness(1.35) drop-shadow(0 0 5px #d9a94f88);
 }
-.wash-slot:not(.selected):hover .wash-slot__frame {
+.wash-slot:not(.selected):hover :deep(.slot-view__ring-art) {
   filter: brightness(1.18);
 }
 </style>

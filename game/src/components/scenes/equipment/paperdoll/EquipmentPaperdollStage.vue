@@ -12,6 +12,15 @@ import EquipmentPaperdoll from '@/components/panels/EquipmentPaperdoll.vue'
 
 const emit = defineEmits<{ select: [instanceId: string] }>()
 
+withDefaults(
+  defineProps<{
+    /** Forwarded to EquipmentPaperdoll - true on the Trang Bi tab only;
+     * op tabs select the item for their operation instead of stripping. */
+    unequipOnSelect?: boolean
+  }>(),
+  { unequipOnSelect: true },
+)
+
 function forward(instanceId: string) {
   emit('select', instanceId)
 }
@@ -25,7 +34,11 @@ function forward(instanceId: string) {
       data-art-id="equipment-stage-plinth"
       aria-hidden="true"
     />
-    <EquipmentPaperdoll class="equipment-paperdoll-stage__doll" @select="forward" />
+    <EquipmentPaperdoll
+      class="equipment-paperdoll-stage__doll"
+      :unequip-on-select="unequipOnSelect"
+      @select="forward"
+    />
   </section>
 </template>
 
