@@ -94,7 +94,7 @@ describe('EnhanceTab — Cường Hóa', () => {
   it('hiện đủ 6 slot (2026-08-30: ô luôn tồn tại, tham chiếu equip trực tiếp)', () => {
     const mounted = mountTab()
 
-    expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')).toHaveLength(6)
+    expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .enhance-slot')).toHaveLength(6)
 
     mounted.unmount()
   })
@@ -111,7 +111,7 @@ describe('EnhanceTab — Cường Hóa', () => {
 
     // Tab Cuong Hoa mac dinh - slot weapon dang mac 'fast-weapon'.
     const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn slot cường hóa"] .slot-view',
+      '[aria-label="Chọn slot cường hóa"] .enhance-slot',
     )
     ;(slots[0] as HTMLElement).click()
     await nextTick()
@@ -120,7 +120,7 @@ describe('EnhanceTab — Cường Hóa', () => {
 
     expect(table).not.toBeNull()
 
-    const cells = Array.from(table!.querySelectorAll('td')).map((cell) => cell.textContent ?? '')
+    const cells = Array.from(table!.querySelectorAll('.equipment-enhance-stat b, .equipment-enhance-stat strong')).map((cell) => cell.textContent ?? '')
 
     expect(cells.some((cell) => cell.includes('105'))).toBe(true)
     expect(cells.some((cell) => cell.trim() === '0.0')).toBe(false)
@@ -141,7 +141,7 @@ describe('EnhanceTab — Cường Hóa', () => {
     // Khong throw khi render - slot weapon van hien (caption = itemId tho
     // vi template khong tra duoc).
     const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn slot cường hóa"] .slot-view',
+      '[aria-label="Chọn slot cường hóa"] .enhance-slot',
     )
 
     expect(slots).toHaveLength(6)
@@ -156,11 +156,11 @@ describe('EnhanceTab — Cường Hóa', () => {
     const mounted = mountTab()
 
     const slots = () =>
-      mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')
+      mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .enhance-slot')
 
     // Slot helmet (index 1 trong EQUIPMENT_SLOTS) ban dau trong - chua co
     // equipment nao trong bag mang slot 'helmet'.
-    expect(slots()[1]!.classList.contains('slot-view--empty')).toBe(true)
+    expect(slots()[1]!.classList.contains('enhance-slot--empty')).toBe(true)
 
     // Equip trang bi moi vao slot helmet, roi bump stateVersion - dung
     // pattern app that (useEquipmentActions goi bumpState sau khi mutate
@@ -173,7 +173,7 @@ describe('EnhanceTab — Cường Hóa', () => {
     mounted.version.value += 1
     await nextTick()
 
-    expect(slots()[1]!.classList.contains('slot-view--filled')).toBe(true)
+    expect(slots()[1]!.classList.contains('enhance-slot--filled')).toBe(true)
 
     mounted.unmount()
   })

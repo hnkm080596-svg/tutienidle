@@ -33,6 +33,13 @@ export interface SkillUiNode {
   actionDisabled: boolean
   /** Why the CTA is gated - sits in the reserved notice area. */
   actionHint: string
+  /** Next-level Insight cost shown in the detail card's unlocked body
+   *  ('Cam Ngo can thiet'). null at the level cap. */
+  nextCost?: number | null
+  /** 'Hieu Qua' ladder (Minh 2026-10-07): one line per level with the
+   *  cumulative contribution the level buys - real numbers derived
+   *  from node.effect, not prose. met = level already owned (gold). */
+  levelEffects?: readonly { lv: number; text: string; met: boolean }[]
   /** Frame tier override (tien-hiep skill-node-{tier}-v1.png). Set only for
    *  the three mortal precursor seats - their frame upgrades with the
    *  skill's core level; every other node keeps the prominent/sub frames. */

@@ -160,6 +160,7 @@ onMounted(() => { void reroll() })
 const art = {
   panel: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png'),
   cloud: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/runtime/cloud-ornament@2x.png'),
+  lock: resolveAssetUrl('/assets/ui/huyen-kim/symbols/lock.svg'),
 }
 const style = { '--trial-panel': `url('${art.panel}')` }
 </script>
@@ -174,7 +175,7 @@ const style = { '--trial-panel': `url('${art.panel}')` }
       <h2 class="trial-section-title trial-path-title">{{ t('onboarding.creation.pathStep.sectionTitle') }}</h2>
       <p class="trial-path-description">{{ t('onboarding.creation.pathStep.description') }}</p>
       <div class="trial-paths" data-hk-region="dao-lo" role="radiogroup" :aria-label="t('onboarding.creation.pathStep.sectionTitle')">
-        <button v-for="(cell, index) in DAO_LO_CELLS" :key="cell.skillId ?? `hidden-${index}`" type="button" role="radio" :aria-checked="pickedPathId === cell.skillId" class="trial-path-cell" :class="{ selected: pickedPathId === cell.skillId, locked: cell.locked }" :disabled="cell.locked || creating" :title="cell.skillId ? starterBySkillId.get(cell.skillId)?.description : undefined" :data-testid="cell.skillId ? `creation-starter-${cell.skillId}` : `creation-starter-hidden-${index}`" @click="pickPath(cell)"><InkNineSlice :chrome-id="pickedPathId === cell.skillId ? 'seal-chip' : 'button-compact'" layer="surface" /><span class="trial-path-cell__label">{{ cell.skillId ? t(`onboarding.creation.pathStep.paths.${cell.labelKey}`) : '?' }}</span></button>
+        <button v-for="(cell, index) in DAO_LO_CELLS" :key="cell.skillId ?? `hidden-${index}`" type="button" role="radio" :aria-checked="pickedPathId === cell.skillId" class="trial-path-cell" :class="{ selected: cell.skillId !== null && pickedPathId === cell.skillId, locked: cell.locked }" :disabled="cell.locked || creating" :title="cell.skillId ? starterBySkillId.get(cell.skillId)?.description : undefined" :data-testid="cell.skillId ? `creation-starter-${cell.skillId}` : `creation-starter-hidden-${index}`" @click="pickPath(cell)"><InkNineSlice :chrome-id="'button-compact'" layer="surface" /><span class="trial-path-cell__label"><img v-if="!cell.skillId" class="trial-path-cell__lock" :src="art.lock" alt=""><template v-else>{{ t(`onboarding.creation.pathStep.paths.${cell.labelKey}`) }}</template></span></button>
       </div>
       <h2 class="trial-section-title trial-talent-title">{{ t('onboarding.creation.talentStep.sectionTitle') }}</h2>
       <div class="trial-talent-workspace">
@@ -248,10 +249,29 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 .trial-path-cell { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; padding: 7px 8px; min-height: 44px; border: 0; background: transparent; color: #f1e2c0; font: 15px var(--pc-font-body); cursor: pointer; }
 .trial-path-cell > :not(.ink-nine-slice) { position: relative; z-index: 2; }
 .trial-path-cell:not(.locked) .trial-path-cell__label { color: #f8ecc8; font-weight: 700; text-shadow: 0 1px 2px #1c1508; }
-.trial-path-cell.selected .trial-path-cell__label { color: #2f2415; text-shadow: none; }
+.trial-path-cell.selected :deep(.ink-nine-slice) { filter: brightness(1.45); }
+.trial-path-cell.selected::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  box-shadow: inset 0 0 16px rgba(255, 223, 138, .9), inset 0 0 5px rgba(255, 236, 190, .7);
+}
+.trial-path-cell.selected .trial-path-cell__label { color: #2f2415; text-shadow: none; font-size: 17px; }
+@media (prefers-reduced-motion: no-preference) {
+  .trial-path-cell.selected .trial-path-cell__label {
+    background: linear-gradient(100deg, #e8cf9e 36%, #ffffff 50%, #e8cf9e 64%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    -webkit-text-stroke: .7px #e8cf9e;
+    animation: trial-path-glow-sweep 3.2s linear infinite;
+  }
+}
+@keyframes trial-path-glow-sweep { 0% { background-position: 130% 0 } 100% { background-position: -30% 0 } }
+.trial-path-cell:not(.locked) :deep(.ink-nine-slice) { transition: filter .15s ease; }
+.trial-path-cell:not(.locked):not(.selected):hover :deep(.ink-nine-slice) { filter: brightness(1.18); }
 .trial-path-cell.locked { cursor: default; }
 .trial-path-cell.locked :deep(.ink-nine-slice) { opacity: .45; }
 .trial-path-cell.locked .trial-path-cell__label { color: #8a7c56; }
+.trial-path-cell__lock { width: 18px; height: 18px; opacity: .8; }
 .trial-begin { position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }
 .trial-begin[aria-disabled="true"] { cursor: not-allowed; filter: grayscale(.8); }
 .trial-begin[aria-disabled="true"]:hover { filter: grayscale(.8); }

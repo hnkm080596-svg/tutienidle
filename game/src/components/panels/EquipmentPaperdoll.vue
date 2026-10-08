@@ -10,6 +10,12 @@ import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { gradeLabel } from '@/core/presentation/labels'
+import {
+  animatedArtFormFor,
+  resolvePlayerEntityKey,
+} from '@/presentation/art/CombatPresentationCatalogue'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import EntitySpriteCanvas from '../common/EntitySpriteCanvas.vue'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
@@ -22,8 +28,12 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 // the six runtime sockets - no gameplay identity, decorative alignment
 // only. Runtime keeps item/socket/rarity ownership.
 const PAPERDOLL_BASE_SRC = stableSceneArtUrl('equipment-paperdoll-base', '@2x')
+// Codex home-equipment preview spec (ui-landscape-design Trang Bi):
+// circular sockets ringed by equipment-circle-frame-v1 flanking the big
+// brush circle the idle figure stands inside.
 const CIRCLE_FRAME_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png')
 const BRUSH_CIRCLE_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-brush-circle-v1.png')
+
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -35,13 +45,13 @@ const { unequip } = useEquipmentActions()
 // instance; the unequip mutation below stays the slot's behavior.
 const emit = defineEmits<{ select: [instanceId: string] }>()
 
-// Two socket columns x three rows with the character art kept in the
-// middle gap (v3 Trang Bi layout): left column Vu Khi / Dao Quan /
-// Linh Gioi, right column Dao Bao / Dao Hai / Linh Chau.
+// Two socket columns x three rows around the brush-ring figure (Codex
+// home-equipment preview layout): left Vu Khi / Ao Giap / Giay, right
+// Dau / Trang Suc / Nhan.
 // Slot labels go through i18n (panels.bag.paperdoll.slots.*) - P16.
 const SLOT_COLUMNS: readonly (readonly EquipmentSlot[])[] = [
-  ['weapon', 'helmet', 'ring'],
-  ['armor', 'boots', 'necklace'],
+  ['weapon', 'armor', 'boots'],
+  ['helmet', 'necklace', 'ring'],
 ]
 const SLOT_SLOTS = SLOT_COLUMNS.flat()
 
@@ -71,6 +81,21 @@ const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
 
   return result
 })
+
+// Minh ruling: the doll center plays the player's dao-path idle clip
+// (same animated set combat resolves) instead of the static mannequin -
+// the mannequin stays only as the no-art fallback.
+const idleProfile = computed(
+  () => PLAYER_VISUAL_PROFILES[player.visualProfileId] ?? PLAYER_VISUAL_PROFILES.mortal,
+)
+const idleClip = computed(
+  () =>
+    animatedArtFormFor(
+      resolvePlayerEntityKey(idleProfile.value.id, idleProfile.value.combatTextureKey, {
+        armed: player.visualArmed,
+      }),
+    )?.idle,
+)
 
 // Audit fix 2026-08-31 - equipmentRegistry.get() THROW voi itemId la
 // (data edit/save lech) tung chet ca khoi trang bi qua ErrorBoundary;
@@ -213,30 +238,48 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 <template>
   <div class="paperdoll">
     <img class="paperdoll__ring" :src="BRUSH_CIRCLE_SRC" alt="" aria-hidden="true" />
-    <img class="paperdoll__base" :src="PAPERDOLL_BASE_SRC" alt="" aria-hidden="true" />
-    <div v-for="(column, i) in SLOT_COLUMNS" :key="i" class="paperdoll__col">
-      <div v-for="slot in column" :key="slot" class="paperdoll__cell">
-        <div class="paperdoll__slot-wrap" :style="{ '--socket-circle-frame': `url('${CIRCLE_FRAME_SRC}')` }">
-          <SlotView
-            class="paperdoll__slot"
-            variant="bag"
-            :item="equippedBySlot[slot] ?? null"
-            :label="equippedBySlot[slot] ? itemName(equippedBySlot[slot]!) : t(`panels.bag.paperdoll.slots.${slot}`)"
-            :accessible-label="equippedBySlot[slot] ? itemAccessibleLabel(equippedBySlot[slot]!) : undefined"
-            :name-segments="nameSegmentsBySlot[slot]"
-            :description="
-              equippedBySlot[slot] ? itemDescription(equippedBySlot[slot]!) : undefined
-            "
-            :equipment-quality-rank="qualityRankBySlot[slot]"
-            :rarity-rank="rarityRankBySlot[slot]"
-            :badges="badgesBySlot[slot]"
-            :tooltip="tooltipBySlot[slot]"
-            :icon="equippedBySlot[slot] ? itemIcon(equippedBySlot[slot]!) : undefined"
-            @click="onSlotClick(equippedBySlot[slot])"
-          />
-        </div>
-        <span class="paperdoll__label">{{ t(`panels.bag.paperdoll.slots.${slot}`) }}</span>
+    <div v-if="idleClip" class="paperdoll__figure" aria-hidden="true">
+      <EntitySpriteCanvas
+        :sheet-url="resolveAssetUrl(`/${idleClip.sheetUrl}`)"
+        :atlas-url="resolveAssetUrl(`/${idleClip.atlasUrl}`)"
+        :frame-prefix="idleClip.framePrefix"
+        :frame-suffix="idleClip.frameSuffix"
+        :zero-pad="idleClip.zeroPad"
+        :first-frame="idleClip.firstFrame"
+        :last-frame="idleClip.lastFrame"
+        :fps="idleClip.frameRate ?? 8"
+        height="100%"
+      />
+    </div>
+    <img v-else class="paperdoll__base" :src="PAPERDOLL_BASE_SRC" alt="" aria-hidden="true" />
+    <div
+      v-for="(slot, index) in SLOT_SLOTS"
+      :key="slot"
+      class="paperdoll__cell"
+      :class="{ 'paperdoll__cell--right': index > 2 }"
+      :style="{ top: `${(index % 3) * 33.33}%` }"
+    >
+      <div class="paperdoll__slot-wrap">
+        <img class="paperdoll__frame" :src="CIRCLE_FRAME_SRC" alt="" aria-hidden="true" />
+        <SlotView
+          class="paperdoll__slot"
+          variant="bag"
+          :item="equippedBySlot[slot] ?? null"
+          :label="equippedBySlot[slot] ? itemName(equippedBySlot[slot]!) : t(`panels.bag.paperdoll.slots.${slot}`)"
+          :accessible-label="equippedBySlot[slot] ? itemAccessibleLabel(equippedBySlot[slot]!) : undefined"
+          :name-segments="nameSegmentsBySlot[slot]"
+          :description="
+            equippedBySlot[slot] ? itemDescription(equippedBySlot[slot]!) : undefined
+          "
+          :equipment-quality-rank="qualityRankBySlot[slot]"
+          :rarity-rank="rarityRankBySlot[slot]"
+          :badges="badgesBySlot[slot]"
+          :tooltip="tooltipBySlot[slot]"
+          :icon="equippedBySlot[slot] ? itemIcon(equippedBySlot[slot]!) : undefined"
+          @click="onSlotClick(equippedBySlot[slot])"
+        />
       </div>
+      <span class="paperdoll__label">{{ t(`panels.bag.paperdoll.slots.${slot}`) }}</span>
     </div>
   </div>
 </template>
@@ -247,38 +290,28 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   /* Own stacking context so the negative-z base stays between the
      paperdoll background and the runtime socket cells. */
   isolation: isolate;
-  /* Two socket columns flanking the centered mannequin art. */
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
   height: 100%;
-  padding: 6px 14px;
-  box-sizing: border-box;
   font-family: var(--font-body);
 }
 
-.paperdoll__col {
+/* Codex spec (EquipmentPaperdollPreview): sockets are absolute 91x33%
+   units pinned to the stage edges, tops at 0/33.33/66.66%. */
+.paperdoll__cell {
+  position: absolute;
+  left: 0;
+  width: 91px;
+  height: 33%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  width: 74px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1px;
+}
+.paperdoll__cell--right {
+  left: auto;
+  right: 0;
 }
 
-/* Gold brush ring behind the mannequin (tien-hiep pack ornament from the
-   Trang Bi preview); sockets still own all interaction above it. */
-.paperdoll__ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: -1;
-  width: 78%;
-  aspect-ratio: 1;
-  max-height: 84%;
-  object-fit: contain;
-  opacity: 0.85;
-  pointer-events: none;
-}
 
 /* Neutral mannequin substrate (stable art): centered behind the socket
    grid; sockets keep full interaction above it. */
@@ -298,50 +331,122 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   pointer-events: none;
 }
 
-.paperdoll__cell {
+/* Player idle figure: the dao-path animated character stands in the same
+   centered zone the mannequin occupied, feet resting near the column
+   bottom. Paints under the socket cells like the substrate did. */
+.paperdoll__figure {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(calc(-50% - 30px), -50%);
+  z-index: -1;
+  height: 96%;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  min-height: 0;
-  min-width: 0;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
 }
 
+.paperdoll__figure canvas {
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* Codex preview socket (EquipmentPaperdollPreview + EquipmentArtSlot
+   circular): the circle-frame PNG is an <img> at inset:0 object-fit
+   contain - a true circle centered in the 88x80 unit, NOT a stretched
+   background. The item icon occupies the ring's inset:20% / 60%x60%
+   zone with no extra backdrop disc behind it. */
 .paperdoll__slot-wrap {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 74px;
-  aspect-ratio: 1;
+  flex: none;
+  width: 88px;
+  height: 80px;
 }
-
-/* Circle-frame art rides above the square slot tile; the tile shrinks
-   into the ring interior so the painted border reads as the socket. */
-.paperdoll__slot-wrap::after {
-  content: '';
+.paperdoll__frame {
   position: absolute;
-  inset: -9px;
-  background: var(--socket-circle-frame) center / contain no-repeat;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   pointer-events: none;
-  z-index: 3;
+}
+.paperdoll__slot-wrap:hover .paperdoll__frame {
+  filter: brightness(1.65) drop-shadow(0 0 3px #ffd785) drop-shadow(0 0 7px #e9a935aa);
+}
+/* SlotView covers the whole 88x80 unit so its seal/badges anchor at
+   the ring's corners like before; only its own chrome (border, dark
+   backdrop disc, drawn frame) is suppressed - the preview has none. */
+:is(#app) .paperdoll__slot-wrap .paperdoll__slot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  /* tien-hiep-ui.css paints the square runtime slot-frame on .slot-view via
+     :is(#app, body) - ID-level specificity (1,0,1) beats every scoped rule,
+     including assignments to --slot-bg-image on the same element. Beat the
+     ID with the same :is(#app) trick: (1,2,0) > (1,0,1). */
+  --slot-bg-image: none;
+  background-image: none;
+  /* The bag variant's rarity/quality aura is a box-shadow painted around
+     the square button bounds - reads as a square frame around the ring. */
+  box-shadow: none;
+}
+.paperdoll__slot-wrap :deep(.slot-view__frame-art) {
+  display: none;
+}
+/* Preview shows no square hover chrome around the ring - suppress the
+   bag variant's hover-frame layer outright (it also overflows the wrap). */
+.paperdoll__slot-wrap :deep(.slot-view__hover-frame) {
+  display: none;
+}
+/* Preview sockets show no grade seal or enhance badge - pure ring+icon.
+   (aria-label still carries the grade for screen readers.) */
+.paperdoll__slot-wrap :deep(.slot-view__seal),
+.paperdoll__slot-wrap :deep(.slot-view__badge) {
+  display: none;
+}
+/* Icon zone = preview's EquipmentArtSlot circular spec (inset 20%,
+   60%x60% of the unit). */
+.paperdoll__slot-wrap :deep(.slot-view__icon-wrap) {
+  inset: 20%;
+}
+.paperdoll__slot-wrap :deep(.slot-view__item-icon) {
+  width: 100%;
+  height: 100%;
 }
 
 .paperdoll__label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #473315;
+  font-size: 13px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: #3a2a14;
   text-align: center;
 }
 
 /* Paperdoll slots use variant="bag" (owner ruling 2026-10-04): the 6
-   worn slots join the dense Trang Bi cells - drawn frame-s-slot chrome
-   over the dark tile + the shared pale-gold hover frame. Quality aura
-   (rarityRank >= 3) still rides on top. The tile is inset into the
-   circle-frame ring drawn by slot-wrap::after. */
+   worn slots join the dense Trang Bi cells - quality aura (rarityRank
+   >= 3), the max-rank bar and the shared pale-gold hover frame still
+   ride on top of the circle-frame art. */
 .paperdoll__slot {
-  width: 66%;
   border-radius: 50%;
-  overflow: hidden;
+}
+
+/* Big gold brush circle the figure stands inside (preview ornament). */
+.paperdoll__ring {
+  position: absolute;
+  left: 14%;
+  top: 4%;
+  width: 72%;
+  height: 91%;
+  object-fit: contain;
+  opacity: 0.64;
+  pointer-events: none;
+  z-index: -2;
 }
 </style>

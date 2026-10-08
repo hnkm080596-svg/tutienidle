@@ -79,7 +79,4 @@ export const washStats = [
   equipmentStats[0]!,
   equipmentStats[5]!,
 ]
-export const equipmentArtRoot = '/assets/ui/tien-hiep-2026-10/controls/'
-export function equipmentArt(name: string): string {
-  return resolveAssetUrl(`${equipmentArtRoot}${name}.png`)
-}
+export { equipmentArt, equipmentArtRoot } from '@/components/common/art/equipmentArt'

@@ -239,7 +239,7 @@ describe('DissolveTab — Hóa Luyện', () => {
     })
 
     const primary = () =>
-      mounted.container.querySelector<HTMLButtonElement>('.qi-hall__primary-action')!
+      mounted.container.querySelector<HTMLButtonElement>('.equipment-forge-actions button')!
     const bulk = () =>
       Array.from(mounted.container.querySelectorAll<HTMLButtonElement>('.dissolve-filters__bulk'))
     const selectAll = () => bulk().find((b) => b.textContent?.includes('Chọn tất cả'))!
@@ -283,7 +283,7 @@ describe('DissolveTab — Hóa Luyện', () => {
     })
 
     const primary = () =>
-      mounted.container.querySelector<HTMLButtonElement>('.qi-hall__primary-action')!
+      mounted.container.querySelector<HTMLButtonElement>('.equipment-forge-actions button')!
     const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
       '.dissolve-filters .dissolve-filters__field:nth-of-type(1) select',
     )!

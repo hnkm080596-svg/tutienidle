@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { equipmentArt } from './equipmentPreviewData'
+import { equipmentArt } from './equipmentArt'
 const style = { '--equipment-card-art': `url('${equipmentArt('character-card-nine-slice-v2')}')` }
 </script>
 <template>

@@ -13,8 +13,10 @@ import { equipmentSlotLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labe
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
-import SlotView from '@/components/common/SlotView.vue'
-import GameButton from '@/components/common/GameButton.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
+import { equipmentArt } from '@/components/common/art/equipmentArt'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useEquippedRows, useHallSlotRows, useItemRenState, type HallSlotRow } from './useEquippedRows'
 import { affixDisplayLabel, tierClass } from './equipmentHallDisplay'
 import { HALL_SELECTION_KEY } from './hallSelection'
@@ -221,90 +223,307 @@ const washAffixCompareRows = computed<AffixCompareRow[]>(() => {
 const washRenAfter = computed(() =>
   itemRenState.value ? Math.max(0, itemRenState.value.points - 1) : 0,
 )
+
+const circleFrameSrc = equipmentArt('equipment-circle-frame-v1')
+
+const MATERIAL_CATEGORY_ART: Record<string, string> = {
+  essence: '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
+  spirit_stone: '/assets/ui/tien-hiep-2026-10/controls/resource-crystal-v1.png',
+}
+
+function materialIcon(materialId: string): string | undefined {
+  const material = gameManager.materialRegistry.get(materialId)
+  const art = material?.icon ?? (material?.category ? MATERIAL_CATEGORY_ART[material.category] : undefined)
+  return art ? resolveAssetUrl(art) : undefined
+}
+
+const washMaterials = computed(() => [
+  {
+    id: LUYEN_KHI_TINH_HOA_ID,
+    label: t('panels.equipmentHall.labels.essenceName'),
+    icon: materialIcon(LUYEN_KHI_TINH_HOA_ID),
+    owned: washEssenceOwned.value,
+    amount: washCost.value.tinhHoa,
+  },
+  {
+    id: SPIRIT_STONE_MATERIAL_ID,
+    label: washSpiritStoneCostName.value,
+    icon: materialIcon(SPIRIT_STONE_MATERIAL_ID),
+    owned: washSpiritStoneOwned.value,
+    amount: washCost.value.spiritStone,
+  },
+])
 </script>
 
 <template>
-  <section class="qi-hall__body qi-hall__split">
-    <div class="qi-hall__split-left">
-      <div class="qi-hall__slot-grid" :aria-label="t('panels.equipmentHall.aria.washSlots')">
-        <SlotView
-          v-for="row in hallSlotRows"
-          :key="row.slot"
-          class="qi-hall__slot"
-          :item="row.equippedRow?.instance ?? null"
-          :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
-          :accessible-label="row.equippedRow?.accessibleLabel"
-          :name-segments="row.equippedRow?.nameSegments"
-          :icon="row.equippedRow?.icon"
-          :equipment-quality-rank="row.equippedRow?.gradeRank"
-          :rarity-rank="row.equippedRow?.qualityRank"
-          :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: t('panels.equipmentHall.tooltips.emptySlotNoWash') }"
-          :state="{ interaction: row.equippedRow?.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: row.equippedRow ? 'equipped' : undefined }"
-          @click="selectHallSlotForAction(row)"
-        />
-      </div>
+  <!-- Reskin theo Codex EquipmentForgePreview ('wash'): 2 cot
+       Hien tai / Ket qua. Lech ghi nhan: khong nut khoa tung dong
+       (domain chi ho tro khoa cho Tinh Luyen, khong cho Tay Luyen);
+       hang chon slot o dau card (preview chon qua socket doll). -->
+  <div class="equipment-forge-workspace forge-wash">
+    <h2>{{ t('panels.equipmentHall.tabs.wash') }}</h2>
+
+    <div class="wash-slot-strip" :aria-label="t('panels.equipmentHall.aria.washSlots')">
+      <button
+        v-for="row in hallSlotRows"
+        :key="row.slot"
+        type="button"
+        class="wash-slot"
+        :class="{ selected: row.equippedRow?.instanceId === selectedInstanceId }"
+        :aria-pressed="row.equippedRow?.instanceId === selectedInstanceId"
+        :aria-label="row.equippedRow?.accessibleLabel ?? equipmentSlotLabel(row.slot)"
+        :title="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
+        @click="selectHallSlotForAction(row)"
+      >
+        <img class="wash-slot__frame" :src="circleFrameSrc" alt="" aria-hidden="true" />
+        <img v-if="row.equippedRow?.icon" class="wash-slot__icon" :src="row.equippedRow.icon" alt="" aria-hidden="true" />
+      </button>
     </div>
 
-    <div v-if="selectedRow" class="qi-hall__split-right">
-      <!-- Card duy nhat (2026-08-30 spec, khop dung Cuong Hoa da duyet)
-           - Diem Ren lam dong chu thich, moi dong phu 1 hang that
-           trong bang, khong con 2 cot flex + bang meta tach roi. -->
-      <div class="qi-hall__preview-card">
-        <p v-if="itemRenState" class="qi-hall__col-title">
-          {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }} {{ t('panels.equipmentHall.labels.levelArrow') }} {{ washRenAfter }}/{{ itemRenState.max }}
-        </p>
+    <template v-if="selectedRow">
+      <p v-if="itemRenState" class="wash-ren">
+        {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }}
+        {{ t('panels.equipmentHall.labels.levelArrow') }} {{ washRenAfter }}/{{ itemRenState.max }}
+      </p>
 
-        <table v-if="washAffixCompareRows.length" class="qi-hall__compare-table" :aria-label="t('panels.equipmentHall.aria.washComparison')">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('panels.equipmentHall.table.header.stat') }}</th>
-              <th scope="col">{{ t('panels.equipmentHall.table.header.before') }}</th>
-              <th scope="col" aria-hidden="true"></th>
-              <th scope="col">{{ t('panels.equipmentHall.table.header.after') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, position) in washAffixCompareRows" :key="row.index">
-              <th scope="row">{{ t('panels.equipmentHall.labels.rowLine') }} {{ position + 1 }}</th>
-              <td>
-                <span v-if="row.beforeLabel" :class="tierClass(row.beforeTier!)">{{ row.beforeLabel }}</span>
-                <span v-else class="qi-hall__owned">{{ t('panels.equipmentHall.status.added') }}</span>
-              </td>
-              <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
-              <td>
-                <span v-if="row.afterLabel" :class="tierClass(row.afterTier!)">{{ row.afterLabel }}</span>
-                <span v-else-if="row.hasTicket" class="qi-hall__owned">{{ t('panels.equipmentHall.status.removed') }}</span>
-                <span v-else class="qi-hall__owned">{{ t('panels.equipmentHall.status.notRolled') }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="washAffixCompareRows.length" class="equipment-wash-columns">
+        <section>
+          <h3>{{ t('panels.equipmentHall.forge.current') }}</h3>
+          <div v-for="row in washAffixCompareRows" :key="`before-${row.index}`" class="equipment-affix-row">
+            <span v-if="row.beforeLabel" class="equipment-stat-name" :class="tierClass(row.beforeTier!)">{{ row.beforeLabel }}</span>
+            <span v-else class="equipment-stat-name wash-status">{{ t('panels.equipmentHall.status.added') }}</span>
+          </div>
+        </section>
+        <section>
+          <h3>{{ t('panels.equipmentHall.forge.result') }}</h3>
+          <div v-for="row in washAffixCompareRows" :key="`after-${row.index}`" class="equipment-affix-row">
+            <span v-if="row.afterLabel" class="equipment-stat-name" :class="tierClass(row.afterTier!)">{{ row.afterLabel }}</span>
+            <span v-else class="equipment-stat-name wash-status">{{
+              row.hasTicket
+                ? t('panels.equipmentHall.status.removed')
+                : t('panels.equipmentHall.status.notRolled')
+            }}</span>
+          </div>
+        </section>
+      </div>
+      <p v-else class="wash-empty">{{ t('panels.equipmentHall.empty.noAffixes') }}</p>
 
-        <p v-else class="qi-hall__empty">{{ t('panels.equipmentHall.empty.noAffixes') }}</p>
+      <h3 class="equipment-forge-divider material-divider">{{ t('panels.equipmentHall.forge.washMaterials') }}</h3>
+      <div class="equipment-forge-materials">
+        <div
+          v-for="material in washMaterials"
+          :key="material.id"
+          class="equipment-material"
+          :class="{ 'is-missing': material.owned < material.amount }"
+        >
+          <div class="equipment-material-icon">
+            <EquipmentArtSlot :icon="material.icon" :label="material.label" empty />
+          </div>
+          <span>{{ material.label }}</span>
+          <b>{{ material.owned }}/{{ material.amount }}</b>
+        </div>
       </div>
 
-      <div class="qi-hall__info-row">
-        <!-- Diem Ren ton moi luot da hien o dong chu thich dau card
-             (2026-08-30, bug report: trung lap) - costline chi con chi
-             phi KHAC (Linh Thach) chua hien o dau. -->
-        <p class="qi-hall__costline">
-          {{ t('panels.equipmentHall.labels.costPerUse') }} {{ washCost.tinhHoa }} {{ t('panels.equipmentHall.labels.essenceName') }}
-          ({{ t('panels.equipmentHall.labels.ownedPrefix') }} {{ washEssenceOwned }}) · {{ washCost.spiritStone }} {{ washSpiritStoneCostName }}
-        </p>
-      </div>
-
-      <div class="qi-hall__button-row">
-        <GameButton size="lg" :disabled="!canWash()" @click="doWashPreview">
+      <div class="equipment-forge-actions">
+        <EquipmentArtButton gold :disabled="!canWash()" @click="doWashPreview">
           {{ t('panels.equipmentHall.buttons.washPreview') }}
-        </GameButton>
-
-        <GameButton v-if="pendingWashTicket" size="lg" variant="secondary" @click="doWashKeep">
+        </EquipmentArtButton>
+        <EquipmentArtButton
+          v-if="pendingWashTicket"
+          :disabled="!pendingWashTicket"
+          @click="doWashKeep"
+        >
           {{ t('panels.equipmentHall.buttons.keep') }}
-        </GameButton>
+        </EquipmentArtButton>
       </div>
-    </div>
-
-    <p v-else class="qi-hall__split-right qi-hall__empty qi-hall__empty--centered">{{ t('panels.equipmentHall.empty.selectItem') }}</p>
-  </section>
+    </template>
+    <p v-else class="wash-empty">{{ t('panels.equipmentHall.empty.selectItem') }}</p>
+  </div>
 </template>
+
+<style scoped>
+/* Forge layout copied from the approved preview
+   (ui-preview/equipment/EquipmentForgePreview.vue, 'wash' branch). */
+.equipment-forge-workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.equipment-forge-workspace h2 {
+  font-size: 26px;
+  margin: 0;
+  border-bottom: 1px solid #9b7d4066;
+  padding-bottom: 7px;
+  line-height: 1.15;
+}
+.equipment-forge-divider {
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.equipment-forge-divider::before,
+.equipment-forge-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #a4894e;
+  opacity: 0.6;
+}
+.equipment-wash-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  flex: 1;
+  min-height: 0;
+}
+.equipment-wash-columns > section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 8px;
+}
+.equipment-wash-columns h3 {
+  text-align: center;
+  font-size: 19px;
+  margin: 0;
+  padding: 3px 0 6px;
+  border-bottom: 1px solid #9d804a;
+}
+.equipment-affix-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 11px;
+  border: 1px solid #987b4855;
+  flex: 1;
+  min-height: 0;
+  font-size: 14px;
+}
+/* tierClass() emits qi-hall__tier-N (equipmentHallDisplay.ts) - defined
+   locally so the scene does not depend on the legacy qi-hall.css bundle. */
+.qi-hall__tier-1 { color: var(--affix-tier-1); }
+.qi-hall__tier-2 { color: var(--affix-tier-2); }
+.qi-hall__tier-3 { color: var(--affix-tier-3); }
+.qi-hall__tier-4 { color: var(--affix-tier-4); }
+.qi-hall__tier-5 { color: var(--affix-tier-5); }
+.equipment-stat-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.wash-status {
+  color: #8f7f5f;
+  font-size: 12px;
+}
+.equipment-forge-materials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 43px;
+  flex: none;
+  min-height: 53px;
+}
+.forge-wash .equipment-material {
+  flex-direction: column;
+  gap: 4px;
+}
+.forge-wash .equipment-material-icon {
+  height: 44px;
+  width: 44px;
+}
+.equipment-material {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.equipment-material-icon {
+  width: 48px;
+  height: 48px;
+  flex: none;
+}
+.equipment-material span {
+  font-size: 13px;
+}
+.equipment-material b {
+  font-weight: 400;
+  color: #8bca8d;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.equipment-material.is-missing b {
+  color: var(--crimson, #c05a4e);
+}
+.equipment-forge-actions {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex: none;
+}
+.forge-wash .equipment-forge-actions > button {
+  min-width: 0;
+  flex: 1;
+  font-size: 21px;
+}
+.wash-ren {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: #c1b18d;
+}
+.wash-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: 14px;
+  color: #c1b18d;
+}
+
+/* Hang chon slot - live-only (preview chon qua socket doll). */
+.wash-slot-strip {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex: none;
+  height: 52px;
+}
+.wash-slot {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.wash-slot__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.wash-slot__icon {
+  position: absolute;
+  inset: 14%;
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+}
+.wash-slot.selected .wash-slot__frame {
+  filter: brightness(1.35) drop-shadow(0 0 5px #d9a94f88);
+}
+.wash-slot:not(.selected):hover .wash-slot__frame {
+  filter: brightness(1.18);
+}
+</style>
 

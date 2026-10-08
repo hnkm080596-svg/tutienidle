@@ -2,10 +2,10 @@
 import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from './equipment/EquipmentArtCard.vue'
-import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
-import EquipmentEnergyTube from './equipment/EquipmentEnergyTube.vue'
-import SkillNodeArtButton from '@/components/common/SkillNodeArtButton.vue'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
+import SkillNodeArtButton from '@/components/common/art/SkillNodeArtButton.vue'
 const { t } = useI18n()
 const selected = shallowRef(2)
 const gold = shallowRef(false)

@@ -104,12 +104,12 @@ describe('RefineTab — Tinh Luyện', () => {
     const mounted = mountTab()
 
     const slots = mounted.container.querySelectorAll(
-      `[aria-label="${locale === 'vi' ? 'Chọn trang bị để tinh luyện' : 'Select equipment to refine'}"] .slot-view`,
+      `[aria-label="${locale === 'vi' ? 'Chọn trang bị để tinh luyện' : 'Select equipment to refine'}"] .refine-slot`,
     )
     ;(slots[0] as HTMLElement).click()
     await nextTick()
 
-    const rule = mounted.container.querySelector('.qi-hall__info-row.qi-hall__costline')
+    const rule = mounted.container.querySelector('.refine-rule')
     expect(rule?.textContent).toContain(expectedRule)
 
     mounted.unmount()
@@ -129,19 +129,19 @@ describe('RefineTab — Tinh Luyện', () => {
     })
 
     const slots = mounted.container.querySelectorAll(
-      `[aria-label="${locale === 'vi' ? 'Chọn trang bị để tinh luyện' : 'Select equipment to refine'}"] .slot-view`,
+      `[aria-label="${locale === 'vi' ? 'Chọn trang bị để tinh luyện' : 'Select equipment to refine'}"] .refine-slot`,
     )
     ;(slots[0] as HTMLElement).click()
     await nextTick()
 
     const actionButtons = mounted.container.querySelectorAll<HTMLButtonElement>(
-      '.qi-hall__button-row button',
+      '.equipment-forge-actions button',
     )
     actionButtons[0]!.click()
     await nextTick()
 
     const discardButton = Array.from(
-      mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__button-row button'),
+      mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-forge-actions button'),
     ).find((button) => button.textContent?.trim() === discardLabel)
     expect(discardButton).toBeDefined()
 
@@ -166,11 +166,11 @@ describe('RefineTab — Tinh Luyện', () => {
       manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL.id), 1_000)
     })
     const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tinh luyện"] .slot-view',
+      '[aria-label="Chọn trang bị để tinh luyện"] .refine-slot',
     )
     ;(slots[0] as HTMLElement).click()
     await nextTick()
-    mounted.container.querySelector<HTMLButtonElement>('.qi-hall__button-row button')!.click()
+    mounted.container.querySelector<HTMLButtonElement>('.equipment-forge-actions button')!.click()
     await nextTick()
 
     mounted.unmount()
@@ -195,12 +195,12 @@ describe('RefineTab — Tinh Luyện', () => {
     })
 
     const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tinh luyện"] .slot-view',
+      '[aria-label="Chọn trang bị để tinh luyện"] .refine-slot',
     )
     ;(slots[0] as HTMLElement).click()
     await nextTick()
 
-    expect(mounted.container.querySelector('.qi-hall__costline')?.textContent).toContain('37')
+    expect(mounted.container.querySelector('.refine-rule')?.textContent).toContain('37')
 
     mounted.unmount()
   })

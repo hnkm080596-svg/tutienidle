@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import EquipmentArtCard from './equipment/EquipmentArtCard.vue'
-import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
-import QuestCategoryArtButton from '@/components/common/QuestCategoryArtButton.vue'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import QuestCategoryArtButton from '@/components/common/art/QuestCategoryArtButton.vue'
 const props=defineProps<{kind:'settings'|'feedback'}>()
 const {t}=useI18n()
 const section=ref(0)

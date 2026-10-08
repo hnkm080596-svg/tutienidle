@@ -2,9 +2,9 @@
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from './equipment/EquipmentArtCard.vue'
-import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
-import EquipmentArtSlot from './equipment/EquipmentArtSlot.vue'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
 import { equipmentArt, equipmentItems } from './equipment/equipmentPreviewData'
 const { t } = useI18n()
 const tab = shallowRef('materials')

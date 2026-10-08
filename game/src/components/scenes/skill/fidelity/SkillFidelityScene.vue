@@ -7,6 +7,7 @@ import SkillConstellationPanel from '@/components/panels/skill-constellation/Ski
 import SkillPaperTree from './SkillPaperTree.vue'
 import SkillPaperDetails from './SkillPaperDetails.vue'
 import { ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
+import { useMasterAccess } from '@/services/master/masterAccess'
 import type { SkillConstellationLayout } from '@/data/progression/SkillConstellationLayouts'
 import type { SkillUiNode, SkillUiEdge, SkillUiElement } from './skillUi'
 const props = withDefaults(
@@ -42,6 +43,9 @@ const constellationAccent = computed(
 )
 const emit = defineEmits<{ back: []; select: [id: string]; element: [id: string]; upgrade: [id: string]; respec: []; extent: [size: number] }>()
 const { t } = useI18n()
+// Minh ruling (2026-10-07): respec is a dev tool, not a shipped
+// feature - the button only exists for master accounts.
+const { isMaster } = useMasterAccess()
 const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
 
 // Same dialog contract ImperialScrollScene carried: Escape closes, focus
@@ -67,7 +71,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
     <SkillPaperDetails :node="selected" :notice="notice" @upgrade="emit('upgrade', $event)" />
     <footer class="skill-foot">
       <span class="skill-insight">{{ insightLabel }}</span>
-      <button type="button" class="skill-respec" :disabled="respecDisabled" @click="emit('respec')">{{ t('panels.nodeTree.respec.button') }}</button>
+      <button v-if="isMaster" type="button" class="skill-respec" :disabled="respecDisabled" @click="emit('respec')">{{ t('panels.nodeTree.respec.button') }}</button>
     </footer>
     <p v-if="preview" class="skill-preview-label">{{ t('skill.preview') }}</p>
   </section>

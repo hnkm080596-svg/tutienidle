@@ -206,12 +206,17 @@ function buildFire(): ProgressionNode[] {
       elementTag: 'fire',
       effect: {},
     },
+    // An-leg roots hang off the END of the Ly Hoa cast chain (Phe Diem),
+    // not the element root - Minh ruling 2026-10-07: the capstone legs
+    // continue the main branch, so the drawn edges can never claim a
+    // node before its displayed parent is learned.
     powerNode(
       'hoa_diem_chuan',
       'Dẫn Hỏa',
       '+2.5% tỉ lệ áp dụng Hỏa Ấn mỗi cấp (tối đa +10% so với gốc).',
       'fire',
       [stat('hoa_diem_chuan', 'elementApplicationPercent', 0.025)],
+      { prereqNodeId: 'hoa_phe_diem' },
     ),
     powerNode(
       'hoa_an_sau',
@@ -219,6 +224,7 @@ function buildFire(): ProgressionNode[] {
       '+2.5% uy lực Hỏa Ấn mỗi cấp.',
       'fire',
       [stat('hoa_an_sau', 'ailmentPotencyPercent', 0.025)],
+      { prereqNodeId: 'hoa_phe_diem' },
     ),
     powerNode(
       'hoa_nhiet_keo',

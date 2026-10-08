@@ -116,7 +116,9 @@ function onWorkersInput(event: Event) {
 </script>
 
 <template>
-  <div class="decompose-tab">
+  <div class="decompose-tab equipment-forge-workspace">
+    <h2>{{ t('panels.equipmentHall.tabs.decompose') }}</h2>
+
     <section class="decompose-tab__filters">
       <label class="decompose-tab__filter">
         <span>{{ t('panels.decompose.labels.gradeFilter') }}</span>
@@ -186,10 +188,19 @@ function onWorkersInput(event: Event) {
 </template>
 
 <style scoped>
+/* Chrome khop card toi trong sheet moi (decompose khong co design
+   rieng trong preview - dung kieu select/footer tui). */
 .decompose-tab {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+.equipment-forge-workspace h2 {
+  font-size: 26px;
+  margin: 0;
+  border-bottom: 1px solid #9b7d4066;
+  padding-bottom: 7px;
+  line-height: 1.15;
 }
 
 .decompose-tab__filters {
@@ -202,23 +213,36 @@ function onWorkersInput(event: Event) {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: var(--text-body);
-  color: var(--text-primary);
+  font-size: 13px;
+  color: #c1b18d;
+}
+
+.decompose-tab__filter select {
+  height: 29px;
+  border: 1px solid #8e7440;
+  background: #23251e;
+  color: #eedfbf;
+  font: 13px var(--font-body, Georgia, serif);
+  padding: 0 8px;
+}
+
+.decompose-tab__filter input[type='range'] {
+  accent-color: #d6ad5d;
 }
 
 .decompose-tab__estimate {
   margin: 0;
-  color: var(--text-muted);
-  font-size: var(--text-body);
+  color: #f3e4c4;
+  font-size: 14px;
 }
 
 .decompose-tab__hint {
   margin: 0;
   padding: 10px 12px;
-  border: 1px dashed color-mix(in srgb, var(--jade) 40%, var(--paper-line));
-  border-radius: var(--radius-md);
-  color: var(--paper-text-soft);
-  font-size: var(--text-sm);
+  border: 1px dashed #8e744066;
+  border-radius: var(--radius-md, 6px);
+  color: #c1b18d;
+  font-size: 13px;
 }
 
 .decompose-tab__matching {
@@ -229,8 +253,8 @@ function onWorkersInput(event: Event) {
 
 .decompose-tab__matching-title {
   margin: 0;
-  color: var(--text-muted);
-  font-size: var(--text-xs);
+  color: #c1b18d;
+  font-size: 12px;
 }
 
 .decompose-tab__matching-list {
@@ -244,10 +268,10 @@ function onWorkersInput(event: Event) {
 
 .decompose-tab__matching-list li {
   padding: 3px 10px;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--mineral-gold) 8%, var(--paper-50));
-  color: var(--paper-text);
-  font-size: var(--text-xs);
+  border: 1px solid #8e7440;
+  border-radius: var(--radius-sm, 4px);
+  background: #23251e;
+  color: #eedfbf;
+  font-size: 12px;
 }
 </style>

@@ -32,8 +32,11 @@ import { NODE_ICON_MANIFEST, SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconM
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { SPELL_KIT_IDS } from '@/data/skill/Skills'
 import { betaMortalTreeViewTags } from '@/core/betaScopeSkillDomain'
+import { getNextLevelCost } from '@/core/progression/NodeSystem'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { formatStat, statLabel } from '@/core/stats/StatLabels'
+import type { StatType } from '@/core/stats/StatTypes'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { layoutRadialGraph } from '@/components/panels/skill-path/skillGraphLayout'
 import type { RadialGraphPosition } from '@/components/panels/skill-path/skillGraphLayout'
@@ -66,6 +69,79 @@ const MAIN_ROOT_Y = 150
 const CHILD_D = edgeLinkLength(1)
 const CHILD_DX = Math.sin(Math.PI * 35 / 180) * CHILD_D
 const CHILD_DY = Math.cos(Math.PI * 35 / 180) * CHILD_D
+
+// Skill-seat ids for Minh's design tree (declared up top - the fire
+// design tables below reference them).
+const DESIGN_BASIC_ID = 'design_basic_skill'
+const ULTIMATE_NODE_ID = 'design_ultimate_placeholder'
+
+// Fire branch wiring (Minh ruling 2026-10-07): the 3 skill seats are
+// the main-branch anchors. The basic seat grows the Ly Hoa hit chain
+// that ends in the two mutex capstones; the Tam Muoi special seat
+// (a real node) fans its three trade children; the sealed ultimate
+// stays a stub. The two unattached side branches sit off the root:
+// mana (Ho The) left, Hoa The + mastery leaves right. tinh_thong_hoa
+// is a realm grant and carries no edge.
+const FIRE_DESIGN_POS: Readonly<Record<string, RadialGraphPosition>> = {
+  hoa_linh_ngo: { x: 360, y: 270 },
+  // Mana branch - left of the root.
+  ho_the_mon: { x: 235, y: 270 },
+  nguyen_kinh: { x: 150, y: 235 },
+  linh_chuong: { x: 150, y: 310 },
+  the_diem_kinh: { x: 75, y: 235 },
+  // Standalone leaves - right of the root; tinh_thong sits apart (no edge).
+  hoa_the: { x: 485, y: 255 },
+  fire_ailment_mastery: { x: 515, y: 320 },
+  tinh_thong_hoa: { x: 555, y: 170 },
+  // Ly Hoa main chain - domain-gated off the element root (Diem Uy's
+  // prereq is hoa_linh_ngo, not the basic seat), so the chain drops
+  // straight under the root and curves left to the capstone legs.
+  hoa_diem_uy: { x: 365, y: 372 },
+  hoa_hoa_nhan: { x: 340, y: 445 },
+  hoa_pha_giap_diem: { x: 300, y: 510 },
+  hoa_bao_diem: { x: 255, y: 565 },
+  hoa_phe_diem: { x: 215, y: 620 },
+  // Tu Diem leg (left) and Tan Diem leg (right) off the chain end.
+  hoa_an_sau: { x: 160, y: 665 },
+  hoa_nhiet_keo: { x: 110, y: 705 },
+  fire_basic_hoa_tu_diem: { x: 60, y: 745 },
+  hoa_diem_chuan: { x: 270, y: 665 },
+  hoa_diem_tham: { x: 320, y: 705 },
+  fire_basic_hoa_tan_diem: { x: 375, y: 745 },
+  // Tam Muoi lane - fan below the special seat (445, 370).
+  linh_ngo_tam_muoi_chan_hoa: { x: 445, y: 370 },
+  ngu_hoa: { x: 413, y: 445 },
+  ngu_viem_tam: { x: 465, y: 458 },
+  ngu_viem_y: { x: 515, y: 445 },
+}
+const FIRE_DESIGN_EDGES: ReadonlyArray<readonly [string, string]> = [
+  ['hoa_linh_ngo', DESIGN_BASIC_ID],
+  ['hoa_linh_ngo', ULTIMATE_NODE_ID],
+  ['hoa_linh_ngo', 'linh_ngo_tam_muoi_chan_hoa'],
+  ['hoa_linh_ngo', 'ho_the_mon'],
+  ['hoa_linh_ngo', 'hoa_the'],
+  ['hoa_linh_ngo', 'fire_ailment_mastery'],
+  // The Ly Hoa chain is domain-gated off the root, not the seat (seats
+  // are skill grants, not progression nodes) - drawing seat->Diem Uy
+  // would claim a dependency the game never enforces.
+  ['hoa_linh_ngo', 'hoa_diem_uy'],
+  ['hoa_diem_uy', 'hoa_hoa_nhan'],
+  ['hoa_hoa_nhan', 'hoa_pha_giap_diem'],
+  ['hoa_pha_giap_diem', 'hoa_bao_diem'],
+  ['hoa_bao_diem', 'hoa_phe_diem'],
+  ['hoa_phe_diem', 'hoa_an_sau'],
+  ['hoa_an_sau', 'hoa_nhiet_keo'],
+  ['hoa_nhiet_keo', 'fire_basic_hoa_tu_diem'],
+  ['hoa_phe_diem', 'hoa_diem_chuan'],
+  ['hoa_diem_chuan', 'hoa_diem_tham'],
+  ['hoa_diem_tham', 'fire_basic_hoa_tan_diem'],
+  ['linh_ngo_tam_muoi_chan_hoa', 'ngu_hoa'],
+  ['linh_ngo_tam_muoi_chan_hoa', 'ngu_viem_tam'],
+  ['linh_ngo_tam_muoi_chan_hoa', 'ngu_viem_y'],
+  ['ho_the_mon', 'nguyen_kinh'],
+  ['ho_the_mon', 'linh_chuong'],
+  ['nguyen_kinh', 'the_diem_kinh'],
+]
 
 // Element kit specials (kit[1] - Ngu Diem / Van Moc Sinh Co / ...) are the
 // branch's passive leaf: their node seats get the passive frame.
@@ -229,19 +305,33 @@ const layout = computed(() => {
   // Minh's design-mode ruling (2026-10): the element tree parks every
   // authored node in a side column awaiting re-attachment, and anchors
   // the design on 3 hero skill nodes (basic / special / sealed) in
-  // the center. No edges render in this mode.
+  // the center. Fire is further wired (FIRE_DESIGN_POS/EDGES): the 3
+  // skill seats are the main-branch anchors - the Ly Hoa hit chain
+  // grows off the basic seat and ends in the two mutex capstones,
+  // the special carries its three Tam Muoi children, and the two
+  // unattached side branches sit left/right of the root.
   const positions = new Map<string, RadialGraphPosition>()
   const specialId = graph.value.entries.find((entry) =>
     entry.row.grantsSkillIds.some((id) => ELEMENT_SPECIAL_SKILL_IDS.has(id)),
   )?.node.id
-  const parked = graph.value.entries.filter((entry) => entry.depth !== 0 && entry.node.id !== specialId)
-  parked.forEach((entry, i) => positions.set(entry.node.id, { x: PARKED_X, y: PARKED_TOP + i * PARKED_STEP }))
 
   const rootId = graph.value.entries.find((entry) => entry.depth === 0)?.node.id
-  if (rootId !== undefined) positions.set(rootId, { x: MAIN_CX, y: MAIN_ROOT_Y })
-  positions.set(DESIGN_BASIC_ID, { x: MAIN_CX - CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
-  positions.set(ULTIMATE_NODE_ID, { x: MAIN_CX, y: MAIN_ROOT_Y - CHILD_D })
-  if (specialId !== undefined) positions.set(specialId, { x: MAIN_CX + CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
+  if (committedElement.value === 'fire') {
+    let parkIndex = 0
+    for (const entry of graph.value.entries) {
+      const authored = FIRE_DESIGN_POS[entry.node.id]
+      positions.set(entry.node.id, authored ?? { x: PARKED_X, y: PARKED_TOP + parkIndex++ * PARKED_STEP })
+    }
+    positions.set(DESIGN_BASIC_ID, { x: 290, y: 370 })
+    positions.set(ULTIMATE_NODE_ID, { x: 360, y: 175 })
+  } else {
+    const parked = graph.value.entries.filter((entry) => entry.depth !== 0 && entry.node.id !== specialId)
+    parked.forEach((entry, i) => positions.set(entry.node.id, { x: PARKED_X, y: PARKED_TOP + i * PARKED_STEP }))
+    if (rootId !== undefined) positions.set(rootId, { x: MAIN_CX, y: MAIN_ROOT_Y })
+    if (specialId !== undefined) positions.set(specialId, { x: MAIN_CX + CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
+    positions.set(DESIGN_BASIC_ID, { x: MAIN_CX - CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
+    positions.set(ULTIMATE_NODE_ID, { x: MAIN_CX, y: MAIN_ROOT_Y - CHILD_D })
+  }
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
   for (const pos of positions.values()) {
@@ -477,7 +567,60 @@ function grantUiNode(node: ProgressionNode, row: BetaSkillTreeNode, entry: Graph
     actionLabel: '',
     actionDisabled: true,
     actionHint: '',
+    nextCost: null,
+    levelEffects: buildLevelEffects(node, row),
   }
+}
+
+// 'Hieu Qua' ladder (Minh 2026-10-07): each level line carries the real
+// cumulative contribution that level buys - numbers folded from
+// node.effect (statModifiers + cast-scoped/cooldown deltas), not prose.
+// A 'once' contrib (e.g. the Ngu Viem +1-CD trade) lands only on the
+// level-1 line since ownership applies it once.
+interface LevelContrib {
+  label: string
+  value: number
+  stat?: StatType
+  turns?: boolean
+  once?: boolean
+}
+function levelContribs(node: ProgressionNode): LevelContrib[] {
+  const out: LevelContrib[] = []
+  for (const mod of node.effect?.statModifiers ?? []) {
+    out.push({ label: statLabel(mod.stat), value: mod.perLevelFlat ?? mod.flat ?? 0, stat: mod.stat })
+  }
+  for (const spec of node.effect?.skillDefinitionModifiers ?? []) {
+    const sName = skillName(spec.skillId)
+    for (const cm of spec.castStatModifiers ?? []) {
+      out.push({ label: `${sName} · ${statLabel(cm.stat)}`, value: cm.perLevel, stat: cm.stat })
+    }
+    if (spec.cooldownTurnsDelta?.perLevel !== undefined) {
+      out.push({ label: `${sName} · ${t('skill.statCooldown')}`, value: spec.cooldownTurnsDelta.perLevel, turns: true })
+    }
+    if (spec.cooldownTurnsDelta?.flat !== undefined) {
+      out.push({ label: `${sName} · ${t('skill.statCooldown')}`, value: spec.cooldownTurnsDelta.flat, turns: true, once: true })
+    }
+  }
+  return out
+}
+function buildLevelEffects(
+  node: ProgressionNode,
+  row: BetaSkillTreeNode,
+): SkillUiNode['levelEffects'] {
+  const contribs = levelContribs(node)
+  if (!contribs.length) return undefined
+  return Array.from({ length: row.maxLevel }, (_, i) => {
+    const lv = i + 1
+    const parts = contribs
+      .filter((c) => !c.once || lv === 1)
+      .map((c) => {
+        const v = c.value * (c.once === true ? 1 : lv)
+        if (c.turns === true) return `${c.label} ${v > 0 ? '+' : ''}${v} hiệp`
+        const fmt = c.stat !== undefined ? formatStat(c.stat, v) : `${v}`
+        return `${c.label} ${v >= 0 ? '+' : ''}${fmt}`
+      })
+    return { lv, text: parts.join(' · '), met: lv <= row.level }
+  })
 }
 
 function toUiNode(entry: GraphEntry): SkillUiNode {
@@ -485,7 +628,14 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
   if (row.infoSkillId !== undefined) return infoUiNode(node, row, entry)
   if (row.rewardOnly === true) return grantUiNode(node, row, entry)
   const owned = row.level >= 1
-  const state: SkillUiNode['state'] = owned ? 'learned' : row.state === 'purchasable' ? 'available' : 'locked'
+  // Minh ruling (2026-10-07): only unmet conditions read as locked.
+  // 'available' (gates met, insight short) is merely not-yet-activated -
+  // dimmed, no lock icon.
+  const state: SkillUiNode['state'] = owned
+    ? 'learned'
+    : row.state === 'purchasable' || row.state === 'available'
+      ? 'available'
+      : 'locked'
   const purchaseCost = row.nextLevelCost ?? node.insightCost ?? 0
 
   const conditions = unmetReasons(entry, owned)
@@ -539,6 +689,11 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     actionLabel,
     actionDisabled,
     actionHint,
+    // Cam Ngo for the NEXT authored level - row.nextLevelCost is null
+    // whenever a level gate shrinks effectiveMaxLevel, but the Insight
+    // price still exists, so read the authored curve directly.
+    nextCost: row.level < row.maxLevel ? getNextLevelCost(node, row.level) : null,
+    levelEffects: buildLevelEffects(node, row),
     frameKind: row.grantsSkillIds.some((id) => ELEMENT_SPECIAL_SKILL_IDS.has(id))
       ? 'parent'
       : row.role === 'keystone'
@@ -551,8 +706,6 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
 // (Ly Hoa Thuat) sits as a learned child of the root, and the sealed
 // top seat stays locked until its skill is authored. Element
 // trees only - the mortal tree keeps the radial layout.
-const DESIGN_BASIC_ID = 'design_basic_skill'
-const ULTIMATE_NODE_ID = 'design_ultimate_placeholder'
 function basicUiNode(): SkillUiNode {
   const position = layout.value.positions.get(DESIGN_BASIC_ID) ?? { x: 0, y: 0 }
   const skillId = committedElement.value !== undefined ? SPELL_KIT_IDS[committedElement.value][0] : ''
@@ -616,8 +769,14 @@ const edges = computed<SkillUiEdge[]>(() => {
   if (skillTree.value.mortal) {
     return graph.value.entries.filter((entry) => entry.parentId !== null).map((entry) => ({ from: entry.parentId!, to: entry.node.id }))
   }
-  // Design mode: exactly 3 pipelines, root -> each skill child.
   const rootId = graph.value.entries.find((entry) => entry.depth === 0)?.node.id
+  if (committedElement.value === 'fire' && rootId !== undefined) {
+    // Fire design wiring - see FIRE_DESIGN_EDGES. Only emit edges whose
+    // both ends are actually rendered (node rows or the 2 skill seats).
+    const ids = new Set<string>([DESIGN_BASIC_ID, ULTIMATE_NODE_ID, ...graph.value.entries.map((entry) => entry.node.id)])
+    return FIRE_DESIGN_EDGES.filter(([from, to]) => ids.has(from) && ids.has(to)).map(([from, to]) => ({ from, to }))
+  }
+  // Design mode: exactly 3 pipelines, root -> each skill child.
   const specialId = graph.value.entries.find((entry) =>
     entry.row.grantsSkillIds.some((id) => ELEMENT_SPECIAL_SKILL_IDS.has(id)),
   )?.node.id

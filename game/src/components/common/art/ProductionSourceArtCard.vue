@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useI18n} from 'vue-i18n'
-import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
-import EquipmentEnergyTube from './equipment/EquipmentEnergyTube.vue'
+import EquipmentArtButton from './EquipmentArtButton.vue'
+import EquipmentEnergyTube from './EquipmentEnergyTube.vue'
 defineProps<{index:number;icon:string;landscape:string;level:number;running:boolean}>()
 defineEmits<{toggle:[];upgrade:[]}>()
 const {t}=useI18n()

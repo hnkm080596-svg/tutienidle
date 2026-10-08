@@ -119,13 +119,21 @@
           "lock": "Khóa"
         }
       },
+      "forge": {
+        "afterEnhance": "Thuộc Tính Sau Cường Hóa",
+        "materials": "Nguyên Liệu Cường Hóa",
+        "washMaterials": "Tiêu Hao Tẩy Luyện",
+        "refinementMaterials": "Nguyên Liệu Tinh Luyện",
+        "current": "Hiện Tại",
+        "result": "Kết Quả"
+      },
       "empty": {
         "maxLevel": "Đã đạt cấp tối đa.",
         "noStats": "Slot trống — không có chỉ số chính để xem trước.",
         "noAffixes": "Chưa có dòng phụ.",
         "noAffixesToRefine": "Không có dòng phụ để Tinh Luyện.",
         "noDissolveCandidates": "Không có món nào đủ điều kiện Hóa Luyện qua filter hiện tại.",
-        "selectItem": "Chọn một trang bị bên trái để xem chi tiết."
+        "selectItem": "Chọn một trang bị để xem chi tiết."
       },
       "tooltips": {
         "emptySlotCanEnhance": "Slot trống vẫn có thể Cường Hóa.",
@@ -541,7 +549,7 @@
           "helmet": "Đạo Quan",
           "necklace": "Linh Châu",
           "ring": "Linh Giới",
-          "weapon": "Vũ Khí",
+          "weapon": "Đạo Khí",
           "armor": "Đạo Bào",
           "boots": "Đạo Hài"
         }
@@ -2157,7 +2165,8 @@
     "designMode": {
       "ultimatePlaceholder": "Chưa Lộ",
       "ultimateLocked": "Chưa lộ — tuyệt kỹ chưa được tạo."
-    }
+    },
+    "insightNeeded": "Cảm Ngộ cần thiết"
   },
   "body": {
     "title": "Luyện Thể",
@@ -2212,13 +2221,30 @@
     "filter": "Lọc",
     "forgeTitle": "Khí Đường · Rèn Trang Bị",
     "stats": {
-      "hp": "Khí Huyết",
-      "attack": "Công Kích",
-      "defense": "Phòng Ngự"
+      "hp": "Sinh Lực",
+      "attack": "Tấn Công",
+      "defense": "Phòng Ngự",
+      "mana": "Nội Lực",
+      "critical": "Bạo Kích",
+      "speed": "Tốc Độ"
     },
+    "capacity": "Mở rộng túi",
+    "bagFilters": {
+      "jewelry": "Trang Sức"
+    },
+    "quality": "Phẩm Chất",
+    "qualities": {
+      "all": "Tất Cả",
+      "gold": "Kim",
+      "purple": "Tử",
+      "blue": "Lam"
+    },
+    "order": "Sắp Xếp",
+    "defaultOrder": "Mặc Định",
+    "qualityOrder": "Theo Phẩm Chất",
     "bagTabs": {
       "all": "Tất Cả",
-      "weapons": "Vũ Khí",
+      "weapons": "Đạo Khí",
       "armor": "Phòng Cụ",
       "accessories": "Phụ Kiện"
     },
@@ -2289,5 +2315,28 @@
       "skill": "Công Pháp",
       "element": "Nguyên Tố"
     }
+  },
+  "devPanel": {
+    "open": "DEV",
+    "title": "Công Cụ Dev",
+    "resources": "Tài Nguyên",
+    "amount": "Số lượng",
+    "add": "+ Thêm",
+    "cultivation": "Tu Vi",
+    "duyenPhan": "Duyên Phân",
+    "skillInsight": "Cảm Ngộ",
+    "path": "Đạo Lộ",
+    "way": "Way",
+    "pathCurrent": "Hiện tại",
+    "pathUnset": "chưa chọn",
+    "apply": "Đổi",
+    "reset": "Reset đạo lộ",
+    "skill": "Kỹ Năng",
+    "skillDesign": "Chế độ thiết kế constellation",
+    "skillDesignHint": "Bật rồi kéo node trong màn Kỹ Năng; nút Xuất nằm trên canvas.",
+    "exportLayout": "Xuất layout",
+    "realm": "Cảnh Giới",
+    "applyRealm": "Đổi cảnh giới",
+    "respecTree": "Đặt lại cây"
   }
 }

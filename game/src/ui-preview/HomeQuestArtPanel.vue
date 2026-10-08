@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import QuestObjectiveArt from './QuestObjectiveArt.vue'
-import QuestCategoryArtButton from '@/components/common/QuestCategoryArtButton.vue'
+import QuestObjectiveArt from '@/components/common/art/QuestObjectiveArt.vue'
+import QuestCategoryArtButton from '@/components/common/art/QuestCategoryArtButton.vue'
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import EquipmentArtCard from './equipment/EquipmentArtCard.vue'
-import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
-import EquipmentArtSlot from './equipment/EquipmentArtSlot.vue'
-import EquipmentEnergyTube from './equipment/EquipmentEnergyTube.vue'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 const { t } = useI18n()
 const group = shallowRef(0), selected = shallowRef(0), notice = shallowRef('')
 const amounts = ['9 / 10','1 / 1','3 / 5','12 / 20','0 / 1','0 / 1']

@@ -78,7 +78,7 @@ describe('useTooltip owner lifecycle', () => {
       kind: 'equipment' as const,
       name: 'Địa - Hắc Thiết Kiếm',
       nameColorVar: '--rank-color-5',
-      slotLabel: 'Vũ Khí',
+      slotLabel: 'Đạo Khí',
       qualityKey: 'dia',
       sections: [],
     }

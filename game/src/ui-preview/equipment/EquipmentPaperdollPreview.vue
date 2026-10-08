@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import EquipmentArtCard from './EquipmentArtCard.vue'
-import EquipmentArtSlot from './EquipmentArtSlot.vue'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
 import {
   equipmentArt,
   equipmentSlots,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { equipmentArt } from './equipmentPreviewData'
+import { equipmentArt } from './equipmentArt'
 withDefaults(
   defineProps<{
     icon?: string

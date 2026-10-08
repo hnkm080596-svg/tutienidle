@@ -119,13 +119,21 @@
           "lock": "Lock"
         }
       },
+      "forge": {
+        "afterEnhance": "Stats After Enhancement",
+        "materials": "Enhancement Materials",
+        "washMaterials": "Wash Consumables",
+        "refinementMaterials": "Refinement Materials",
+        "current": "Current",
+        "result": "Result"
+      },
       "empty": {
         "maxLevel": "Maximum level reached.",
         "noStats": "Empty slot — no main stat to preview.",
         "noAffixes": "No affix lines yet.",
         "noAffixesToRefine": "No affix lines to Refine.",
         "noDissolveCandidates": "No items match the current filter for Dissolution.",
-        "selectItem": "Select an equipment on the left to view details."
+        "selectItem": "Select an equipment to view details."
       },
       "tooltips": {
         "emptySlotCanEnhance": "Empty slots can still be Enhanced.",
@@ -2157,7 +2165,8 @@
     "designMode": {
       "ultimatePlaceholder": "Unrevealed",
       "ultimateLocked": "Unrevealed — the ultimate art is not authored yet."
-    }
+    },
+    "insightNeeded": "Insight needed"
   },
   "body": {
     "title": "Body Tempering",
@@ -2212,10 +2221,27 @@
     "filter": "Filter",
     "forgeTitle": "Qi Forge · Gear Refining",
     "stats": {
-      "hp": "Health",
+      "hp": "Vitality",
       "attack": "Attack",
-      "defense": "Defense"
+      "defense": "Defense",
+      "mana": "Inner Force",
+      "critical": "Critical",
+      "speed": "Speed"
     },
+    "capacity": "Expand bag",
+    "bagFilters": {
+      "jewelry": "Jewelry"
+    },
+    "quality": "Quality",
+    "qualities": {
+      "all": "All",
+      "gold": "Gold",
+      "purple": "Purple",
+      "blue": "Blue"
+    },
+    "order": "Sort",
+    "defaultOrder": "Default",
+    "qualityOrder": "By Quality",
     "bagTabs": {
       "all": "All",
       "weapons": "Weapons",
@@ -2289,5 +2315,28 @@
       "skill": "Skill",
       "element": "Element"
     }
+  },
+  "devPanel": {
+    "open": "DEV",
+    "title": "Dev Tools",
+    "resources": "Resources",
+    "amount": "Amount",
+    "add": "+ Add",
+    "cultivation": "Cultivation",
+    "duyenPhan": "Duyen Phan",
+    "skillInsight": "Skill Insight",
+    "path": "Cultivation Path",
+    "way": "Way",
+    "pathCurrent": "Current",
+    "pathUnset": "unchosen",
+    "apply": "Apply",
+    "reset": "Reset path",
+    "skill": "Skills",
+    "skillDesign": "Constellation design mode",
+    "skillDesignHint": "Enable, then drag nodes in the Skills scene; the Export chip sits on the canvas.",
+    "exportLayout": "Export layout",
+    "realm": "Realm",
+    "applyRealm": "Apply realm",
+    "respecTree": "Reset tree"
   }
 }

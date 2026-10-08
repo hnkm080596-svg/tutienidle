@@ -47,16 +47,6 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
     data-hk-region="audio"
   >
     <div class="settings-panel__audio-row">
-      <Chip
-        class="settings-panel__audio-toggle"
-        :active="audio.enabled"
-        :aria-pressed="audio.enabled"
-        data-testid="settings-audio-toggle"
-        @click="audio.setEnabled(!audio.enabled)"
-      >
-        {{ audio.enabled ? t('panels.settings.audio.on') : t('panels.settings.audio.off') }}
-      </Chip>
-
       <label class="settings-panel__audio-volume">
         {{ t('panels.settings.audio.volume') }}
         <input

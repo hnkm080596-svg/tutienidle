@@ -56,6 +56,11 @@ const upgrading = ref(false)
 // the user just completed IS the confirmation; replaying it reads as two
 // loops for one action.
 let suppressNextFill = false
+// Completion payoff (Minh 2026-10-07): the moment the groove finishes
+// (or the hold resolves) the node flashes white-hot and pops - the
+// learned halo below then stays on. Driven off the LEVEL CHANGE so both
+// the hold path and the fill path land on it.
+const bursting = ref(false)
 watch(
   () => props.node.level,
   (next, prev) => {
@@ -63,6 +68,7 @@ watch(
       if (suppressNextFill) {
         suppressNextFill = false
         shownKind.value = props.node.frameKind ?? (props.node.prominent ? 'parent' : 'sub')
+        bursting.value = true
         return
       }
       upgrading.value = true
@@ -72,6 +78,10 @@ watch(
 function onFillEnd() {
   upgrading.value = false
   shownKind.value = props.node.frameKind ?? (props.node.prominent ? 'parent' : 'sub')
+  bursting.value = true
+}
+function onBurstEnd() {
+  bursting.value = false
 }
 
 // Hold-to-activate (Minh ruling: no upgrade button - press and hold the
@@ -110,8 +120,8 @@ function onHoldComplete() {
 }
 </script>
 <template>
-  <button :class="['skill-node', `skill-node--${kind}`, node.state, { selected, holding }]" :data-node-id="node.id" :aria-pressed="selected" :aria-label="`${node.name} · ${node.level} · ${t(`skill.state.${node.state}`)}`" @click="emit('select', node.id)" @pointerdown="onNodePointerDown">
-    <span class="skill-node-disc" :style="iconFit"><img class="skill-node-icon" :src="node.icon" alt=""><img class="skill-node-frame" :src="frame" alt=""><svg v-if="selected" class="skill-node-streak" viewBox="0 0 100 100" aria-hidden="true"><circle class="tail-far" cx="50" cy="50" :r="grooveR" pathLength="100" /><circle class="tail-near" cx="50" cy="50" :r="grooveR" pathLength="100" /><circle class="head" cx="50" cy="50" :r="grooveR" pathLength="100" /></svg><svg v-if="upgrading" class="skill-node-fill" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" :r="grooveR" pathLength="100" @animationend="onFillEnd" /></svg><svg v-if="holding" class="skill-node-hold" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" :r="grooveR" pathLength="100" @animationend="onHoldComplete" /></svg><svg v-if="!node.actionDisabled" class="skill-node-can" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1 L15 13 L8 10 L1 13 Z"/></svg><span v-if="node.state === 'locked'" class="skill-node-lock"><img :src="lock" alt=""></span></span>
+  <button :class="['skill-node', `skill-node--${kind}`, node.state, { selected, holding, bursting }]" :data-node-id="node.id" :aria-pressed="selected" :aria-label="`${node.name} · ${node.level} · ${t(`skill.state.${node.state}`)}`" @click="emit('select', node.id)" @pointerdown="onNodePointerDown">
+    <span class="skill-node-disc" :style="iconFit"><img class="skill-node-icon" :src="node.icon" alt=""><img class="skill-node-frame" :src="frame" alt=""><svg v-if="selected" class="skill-node-streak" viewBox="0 0 100 100" aria-hidden="true"><circle class="tail-far" cx="50" cy="50" :r="grooveR" pathLength="100" /><circle class="tail-near" cx="50" cy="50" :r="grooveR" pathLength="100" /><circle class="head" cx="50" cy="50" :r="grooveR" pathLength="100" /></svg><svg v-if="upgrading" class="skill-node-fill" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" :r="grooveR" pathLength="100" @animationend="onFillEnd" /></svg><svg v-if="holding" class="skill-node-hold" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" :r="grooveR" pathLength="100" @animationend="onHoldComplete" /></svg><svg v-if="!node.actionDisabled" class="skill-node-can" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1 L15 13 L8 10 L1 13 Z"/></svg><span v-if="bursting" class="skill-node-burst" aria-hidden="true" @animationend="onBurstEnd"></span><span v-if="node.state === 'locked'" class="skill-node-lock"><img :src="lock" alt=""></span></span>
   </button>
 </template>
 <style scoped>
@@ -146,6 +156,15 @@ function onHoldComplete() {
 @keyframes node-can-bounce { 0%,100% { transform:translate(-50%,0); opacity:.8; } 50% { transform:translate(-50%,-4px); opacity:1; } }
 .skill-node-lock { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; }
 .skill-node-lock img { width:42%; height:42%; filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); }
+/* Completion payoff: a white-hot core flashes from the icon center and
+   blooms past the rim once (0.55s), while the disc pops 1->1.13->1. */
+.skill-node-burst { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:var(--i-size,68%); height:var(--i-size,68%); border-radius:50%; pointer-events:none; background:radial-gradient(circle, #fff9e6 0%, #ffd97a 45%, rgba(255,217,122,0) 72%); animation:node-burst-flash .55s ease-out forwards; }
+@keyframes node-burst-flash { 0% { transform:translate(-50%,-50%) scale(.55); opacity:0 } 22% { opacity:.95 } 100% { transform:translate(-50%,-50%) scale(1.7); opacity:0 } }
+.bursting .skill-node-disc { animation:node-pop .45s ease-out; }
+@keyframes node-pop { 0% { transform:scale(1) } 35% { transform:scale(1.13) } 100% { transform:scale(1) } }
+/* Learned halo: a faint gold ring stays on learned nodes so 'learned'
+   reads as more than just a brighter icon. */
+.skill-node.learned .skill-node-disc::after { content:''; position:absolute; inset:1%; border-radius:50%; pointer-events:none; box-shadow:0 0 7px 1px rgba(233,190,105,.35), inset 0 0 9px rgba(233,190,105,.22); }
 .selected .skill-node-frame { filter:brightness(1.15) drop-shadow(0 0 4px #d8ab5588); }
 .skill-node:not(.learned) .skill-node-icon { filter:grayscale(1) brightness(.6); opacity:.6; }
 .skill-node:not(.learned) .skill-node-frame { filter:saturate(.35) brightness(.7); }

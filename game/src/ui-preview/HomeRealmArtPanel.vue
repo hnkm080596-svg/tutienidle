@@ -2,8 +2,8 @@
 import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
-import EquipmentEnergyTube from './equipment/EquipmentEnergyTube.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 const { t } = useI18n()
 const index = shallowRef(3)
 const realm = shallowRef(0)

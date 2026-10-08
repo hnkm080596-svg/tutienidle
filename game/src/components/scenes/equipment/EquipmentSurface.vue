@@ -21,7 +21,7 @@ import { computed, provide, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
-import { useStateVersion } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatStat } from '@/core/stats/StatLabels'
 import { isBetaEquipmentTab } from '@/core/betaScope'
 import { HALL_SELECTION_KEY } from '@/components/panels/equipment-hall/hallSelection'
@@ -39,6 +39,8 @@ import type { Stats } from '@/core/stats/StatBlock'
 
 
 const furnaceArtUrl = resolveAssetUrl('/assets/ui/huyen-kim/scene/forge-v2/furnace-v1.png')
+// Dark nine-slice card the Codex home-equipment preview mounts for the
+// workspace (EquipmentArtCard -> character-card-nine-slice-v2).
 const cardArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-tab-brush-v1.png')
 const dividerBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png')
@@ -46,6 +48,7 @@ const dividerBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equi
 const { t } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
+const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
 // Canonical authored op table (same ids the old shell declared): all 5
@@ -105,19 +108,38 @@ function clearSelection() {
 
 provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection })
 
-const SUMMARY_STATS: readonly { key: keyof Stats; labelKey: string }[] = [
-  { key: 'maxHp', labelKey: 'equipment.stats.hp' },
-  { key: 'might', labelKey: 'equipment.stats.attack' },
-  { key: 'defense', labelKey: 'equipment.stats.defense' },
+const SUMMARY_STATS: readonly { key: keyof Stats; labelKey: string; glyph: string }[] = [
+  { key: 'maxHp', labelKey: 'equipment.stats.hp', glyph: '\u2665' },
+  { key: 'might', labelKey: 'equipment.stats.attack', glyph: '\u2694' },
+  { key: 'defense', labelKey: 'equipment.stats.defense', glyph: '\u25C8' },
+  { key: 'maxMp', labelKey: 'equipment.stats.mana', glyph: '\u262F' },
+  { key: 'criticalRate', labelKey: 'equipment.stats.critical', glyph: '\u2727' },
+  { key: 'speed', labelKey: 'equipment.stats.speed', glyph: '\u27B6' },
 ]
 
+// "Thuec Tinh Trang Bi" = stats CONTRIBUTED by equipped gear (the
+// preview's +1.800 / +5% rows), not the character's totals: sum the
+// equipment-sourced modifiers per stat - flat for flat stats, % for
+// percent stats. The authoritative list lives on equipmentOps - the
+// pinia player.modifiers array does not carry equipment entries.
 const summaryRows = computed(() => {
   stateVersion.value
-  return SUMMARY_STATS.map((row) => ({
-    key: row.key,
-    label: t(row.labelKey),
-    value: formatStat(row.key, player.finalStats[row.key]),
-  }))
+  const equipmentModifiers = gameManager.equipmentOps.getEquipmentModifiers()
+  return SUMMARY_STATS.map((row) => {
+    let flat = 0
+    let percent = 0
+    for (const modifier of equipmentModifiers) {
+      if (modifier.stat !== row.key) continue
+      flat += modifier.flat ?? 0
+      percent += modifier.percent ?? 0
+    }
+    const value = flat !== 0
+      ? `+${formatStat(row.key, flat)}`
+      : percent !== 0
+        ? `+${percent}%`
+        : '0'
+    return { key: row.key, label: t(row.labelKey), glyph: row.glyph, value }
+  })
 })
 
 </script>
@@ -139,7 +161,29 @@ const summaryRows = computed(() => {
       </template>
 
       <template #summary>
-        <div><template v-for="row in summaryRows" :key="row.key"><span>{{ row.label }}</span><strong>{{ row.value }}</strong></template></div>
+        <dl>
+          <div v-for="row in summaryRows" :key="row.key">
+            <dt><span>{{ row.glyph }}</span>{{ row.label }}</dt>
+            <dd>{{ row.value }}</dd>
+          </div>
+        </dl>
+      </template>
+
+      <!-- Scene-level tab strip per the Codex preview: under the
+           heading, above the doll column (left region). -->
+      <template #tabs>
+        <nav class="equipment-tabs" :aria-label="t('equipment.title')" :style="{ '--equipment-tab-brush': `url('${tabBrush}')` }">
+          <button
+            v-for="mode in workspaceModes"
+            :key="mode.id"
+            :aria-pressed="activeWorkspace === mode.id"
+            :disabled="mode.locked"
+            @click="selectWorkspace(mode.id)"
+          >
+            <span class="nav-label">{{ mode.label }}</span>
+            <img v-if="activeWorkspace === mode.id" :src="dividerBrush" alt="" />
+          </button>
+        </nav>
       </template>
 
       <template #workspace>
@@ -157,26 +201,13 @@ const summaryRows = computed(() => {
             alt=""
             aria-hidden="true"
           />
-          <nav>
-            <button
-              v-for="mode in workspaceModes"
-              :key="mode.id"
-              :aria-pressed="activeWorkspace === mode.id"
-              :disabled="mode.locked"
-              @click="selectWorkspace(mode.id)"
-            >
-              <span class="nav-label">{{ mode.label }}</span>
-            </button>
-          </nav>
-          <!-- Under-tab divider: tien-hiep divider art line. -->
-          <div class="equipment-workspace__divider" aria-hidden="true" />
           <div class="equipment-workspace__body">
             <!-- Trang Bi tab: the unequipped gear grid (equip-on-click).
                  The bag-panel container anchor gives the section's
                  @container bag-panel rules a real ancestor - same host
                  contract the Kho Vat surface uses. -->
             <div v-if="activeWorkspace === 'equip'" class="bag-anchor">
-              <EquipmentBagSection />
+              <EquipmentBagSection @open-dissolve="selectWorkspace('dissolve')" />
             </div>
             <EnhanceTab v-else-if="activeWorkspace === 'enhance'" />
             <WashTab v-else-if="activeWorkspace === 'wash'" />
@@ -192,12 +223,14 @@ const summaryRows = computed(() => {
 </template>
 
 <style scoped>
+/* Left 36% column inside the shared sheet (content x372-1390):
+   doll stage above the contributed-stats card. */
 .equipment-doll {
   position: absolute;
-  left: 244px;
-  top: 222px;
-  width: 449px;
-  height: 376px;
+  left: 365px;
+  top: 215px;
+  width: 369px;
+  height: 348px;
 }
 .equipment-doll :deep(.equipment-paperdoll-stage) {
   height: 100%;
@@ -208,17 +241,15 @@ const summaryRows = computed(() => {
    tabs verbatim inside the dark card frame. */
 .equipment-workspace {
   position: absolute;
-  left: 700px;
-  top: 178px;
-  width: 678px;
-  height: 507px;
-  padding: 10px 18px 14px;
-  /* The workspace's right edge (x1378) sits ~33px onto the paper's 83px
-     border frame - without matching padding right-side content (bag
-     counts) renders under the torn rim. */
-  padding-right: 40px;
-  border: 15px solid transparent;
-  border-image: var(--equipment-card-art) 90 fill / 15px stretch;
+  left: 748px;
+  top: 215px;
+  width: 642px;
+  height: 476px;
+  padding: 14px 16px;
+  /* The inspector art stretches full-size like the design preview (its
+     painted gold border + mountain corners stay sharp at any size). */
+  border: 0;
+  background: var(--equipment-card-art) center / 100% 100% no-repeat;
   color: #f3e4c4;
   display: flex;
   flex-direction: column;
@@ -237,37 +268,58 @@ const summaryRows = computed(() => {
   filter: drop-shadow(0 4px 7px #61451d33);
   pointer-events: none;
 }
-.equipment-workspace nav {
+/* Scene-level tab strip (Codex preview treatment): ink labels on the
+   paper; the active tab gets the brush streak behind the label and
+   darkens to near-black. */
+.equipment-tabs {
+  position: absolute;
+  left: 365px;
+  top: 165px;
+  width: 620px;
+  height: 42px;
   display: flex;
-  gap: 5px;
-  min-height: 34px;
-  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
 }
-.equipment-workspace nav button {
+.equipment-tabs button {
   position: relative;
+  isolation: isolate;
   flex: 1;
-  padding: 0 5px;
+  min-height: 33px;
+  padding: 3px 12px 5px;
   border: 0;
-  color: #c9b184;
+  color: #423019;
   background: transparent;
-  font: 700 14px var(--font-display, Georgia, serif);
+  font: 700 19px var(--pc-font-body, var(--font-display, Georgia, serif));
   cursor: pointer;
+  white-space: nowrap;
 }
-.equipment-workspace nav .nav-label {
-  position: relative;
-  z-index: 2;
-  text-shadow: 0 1px 3px #2c1e08;
+.equipment-tabs button > img {
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 12px;
+  object-fit: contain;
+  pointer-events: none;
 }
-/* Brush streak reads as an underline accent below the label (preview
-   treatment), not a fill behind the text - keeps the label legible on
-   the dark card. */
-.equipment-workspace nav button[aria-pressed='true'] {
-  color: #f7e4b5;
-  background: var(--equipment-tab-brush) center bottom / 88% auto no-repeat;
+.equipment-tabs button[aria-pressed='true'] {
+  color: #231b0c;
 }
-.equipment-workspace nav button:disabled {
+.equipment-tabs button[aria-pressed='true']::before {
+  content: '';
+  position: absolute;
+  inset: 0 -4px;
+  z-index: -1;
+  background: var(--equipment-tab-brush) center / contain no-repeat;
+  pointer-events: none;
+}
+.equipment-tabs button:disabled {
   cursor: default;
   opacity: 0.42;
+}
+.equipment-tabs button:not(:disabled):hover {
+  color: #9a6527;
 }
 .equipment-workspace__divider {
   position: relative;

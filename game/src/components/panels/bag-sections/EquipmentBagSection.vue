@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
-import InkNineSlice from '../../common/primitives/InkNineSlice.vue'
 import Chip from '../../common/primitives/Chip.vue'
-import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore, type EquipmentSortMode } from '@/stores/ui'
-import { useBagPagination } from '@/composables/useBagPagination'
-import { useBagGridLayout } from '@/composables/useBagGridLayout'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { compareNumber, compareText, stableSort, withDirection } from '@/composables/useBagSort'
-import { useEntryFilter } from '@/composables/useBagFilter'
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
@@ -19,22 +14,27 @@ import { gradeLabel } from '@/core/presentation/labels'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
-import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
 
 const { t } = useI18n()
 
-// Grid responsive theo chieu rong that - xem ghi chu day du o
-// useBagGridLayout.ts/MaterialBagSection.vue (cung pattern ap cho ca
-// bag-sections).
-const { gridRef, pageSize, gridStyle } = useBagGridLayout()
+// Codex home-equipment preview layout (ui-landscape-design Trang Bi):
+// fixed 8-col x 5-row grid, no search box or pagination.
+const EQUIPMENT_BAG_COLUMNS = 8
+const EQUIPMENT_BAG_MIN_CELLS = EQUIPMENT_BAG_COLUMNS * 5
+const gridStyle = {
+  '--grid-columns': String(EQUIPMENT_BAG_COLUMNS),
+}
+
+const emit = defineEmits<{ 'open-dissolve': [] }>()
 
 const ui = useUiStore()
 
 const gameManager = useGameManager()
 
-const { stateVersion, bumpState } = useStateVersion()
+const { stateVersion } = useStateVersion()
 
 const { equip } = useEquipmentActions()
 
@@ -49,17 +49,6 @@ interface EquipmentEntry {
 
   name: string
 }
-
-// Task 4 schema bridge keeps the two existing sort controls wired to the
-// closest new fields. Task 19 owns their final unified UI contract.
-const SORT_OPTIONS: Array<BagSortOption & { value: EquipmentSortMode }> = [
-  { value: 'quality', label: 'Phẩm' },
-  { value: 'rarity', label: 'Chất' },
-  { value: 'realm', label: 'Cảnh giới' },
-  { value: 'slot', label: 'Vị trí' },
-  { value: 'name', label: 'Tên', ascLabel: 'Tên A–Z', descLabel: 'Tên Z–A' },
-  { value: 'forge', label: 'Điểm Rèn' },
-]
 
 const entries = computed<EquipmentEntry[]>(() => {
   stateVersion.value
@@ -180,31 +169,55 @@ const entries = computed<EquipmentEntry[]>(() => {
   })
 })
 
-// ================= Filter/search + slot chips =================
-// Mirrors the MaterialBagSection filter bar; filter runs BEFORE sort +
-// pagination. Group axis = equipment slot (single dimension).
-const searchQuery = ref('')
+// ================= Filter chips + quality/order selects =============
+// Codex preview contract: 4 group chips (Tat Ca / Dao Khi / Dao Bao /
+// Trang Suc) and two selects - Pham Chat tone + Sap Xep.
+type BagGroup = 'all' | 'weapon' | 'armor' | 'jewelry'
+const activeGroup = ref<BagGroup>('all')
 
-const activeGroup = ref<EquipmentSlot | 'all'>('all')
-
-const { filtered, visibleCount } = useEntryFilter(
-  entries,
-  { searchQuery, activeGroup },
-  { name: (entry) => entry.name, group: (entry) => entry.instance.slot },
-)
-
-const GROUP_CHIPS = computed<Array<{ value: EquipmentSlot | 'all'; label: string }>>(() => [
+const GROUP_CHIPS = computed<Array<{ value: BagGroup; label: string }>>(() => [
   { value: 'all', label: t('panels.bag.groups.all') },
-  ...EQUIPMENT_SLOTS.map((slot) => ({
-    value: slot,
-    label: t(`panels.bag.paperdoll.slots.${slot}`),
-  })),
+  { value: 'weapon', label: t('panels.bag.paperdoll.slots.weapon') },
+  { value: 'armor', label: t('panels.bag.paperdoll.slots.armor') },
+  { value: 'jewelry', label: t('equipment.bagFilters.jewelry') },
 ])
 
 // Clicking the already-active chip clears the group filter.
-function toggleGroup(value: EquipmentSlot | 'all') {
+function toggleGroup(value: BagGroup) {
   activeGroup.value = activeGroup.value === value ? 'all' : value
 }
+
+// Pham Chat tone select: the preview groups the five ItemQuality tiers
+// into three display tones - Lam (Hoang+Huyen), Tu (Dia+Thien), Kim
+// (Tien).
+type QualityTone = 'all' | 'blue' | 'purple' | 'gold'
+const qualityTone = ref<QualityTone>('all')
+const QUALITY_TONES: readonly QualityTone[] = ['all', 'gold', 'purple', 'blue']
+
+function toneMatches(entry: EquipmentEntry): boolean {
+  if (qualityTone.value === 'all') return true
+  const rank = itemQualityRank(entry.instance.quality)
+  if (qualityTone.value === 'gold') return rank >= 5
+  if (qualityTone.value === 'purple') return rank >= 3
+  return rank <= 2
+}
+
+const filtered = computed(() =>
+  entries.value.filter((entry) => {
+    const slot = entry.instance.slot
+    const groupOk =
+      activeGroup.value === 'all' ||
+      (activeGroup.value === 'jewelry'
+        ? slot === 'necklace' || slot === 'ring'
+        : slot === activeGroup.value)
+    return groupOk && toneMatches(entry)
+  }),
+)
+const visibleCount = computed(() => filtered.value.length)
+
+// Design capacity label (preview "18/100") - the domain has no real bag
+// cap; 100 is the designed display cap.
+const BAG_DISPLAY_CAPACITY = 100
 
 // Tieu chi Trang Bi (plan Workstream E) - mac dinh/quality/rarity/
 // realm/slot/name/forge.
@@ -230,7 +243,9 @@ const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: E
   forge: (a, b) => compareNumber(a.instance.forgeUsesRemaining, b.instance.forgeUsesRemaining),
 }
 
-// Sort chay tren ban copy cua list DA LOC TRUOC pagination.
+// Sort chay tren ban copy cua list DA LOC - the preview's Sap Xep
+// select maps onto the existing equipment sort store ('default' vs
+// 'quality'); direction stays whatever the store holds.
 const cells = computed<BagCell[]>(() => {
   const sortState = ui.bagSorts.equipment
 
@@ -246,46 +261,63 @@ const cells = computed<BagCell[]>(() => {
   return sorted.map((entry) => entry.cell)
 })
 
-const { currentPage, totalPages, goToPage, resetPage, gridCells } = useBagPagination(cells, pageSize)
+// Sap Xep select: Mac Dinh / Theo Pham Chat -> 'default' / 'quality'.
+const sortMode = computed<EquipmentSortMode>({
+  get: () => ui.bagSorts.equipment.mode,
+  set: (mode) => ui.setBagSortMode('equipment', mode),
+})
 
-watch(
-  () => ({ ...ui.bagSorts.equipment }),
-  () => resetPage(),
-)
+// No pagination in the design: the grid always paints full columns and
+// pads to at least 40 cells; overflow scrolls.
+const gridCells = computed<Array<BagCell | undefined>>(() => {
+  const list = cells.value
+  const target = Math.max(
+    EQUIPMENT_BAG_MIN_CELLS,
+    list.length + ((EQUIPMENT_BAG_COLUMNS - (list.length % EQUIPMENT_BAG_COLUMNS)) % EQUIPMENT_BAG_COLUMNS),
+  )
+  const padded = list.slice()
+  while (padded.length < target) padded.push(undefined as unknown as BagCell)
+  return padded
+})
 
-// Filter changes reset to the first page (same contract as sort).
-watch([searchQuery, activeGroup], () => resetPage())
+// Codex design-paper cells: square item-slot art owns the bag cell edge
+// (the drawn tien-hiep slot frame) - applied here only, material/pill
+// bags keep their own chrome.
+const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png')
 </script>
 
 <template>
-  <div class="bag-section">
-    <div class="bag-section__filters">
-      <span class="bag-section__search-wrap">
-        <InkNineSlice chrome-id="text-field" layer="surface" />
-        <input
-          v-model="searchQuery"
-          type="search"
-            class="bag-section__search"
-            :placeholder="t('panels.bag.search.equipmentPlaceholder')"
-            :aria-label="t('panels.bag.search.equipmentAria')"
-          >
-      </span>
+  <div class="bag-section" :style="{ '--equipment-item-slot': `url('${ITEM_SLOT_SRC}')` }">
+    <!-- Header (Codex preview): title + count/capacity + expand +
+         "Hoa Luyen" dissolve shortcut. -->
+    <header class="bag-section__header">
+      <h2 class="bag-section__title">{{ t('equipment.bag') }}</h2>
+      <span class="bag-section__count-label">{{ visibleCount }}/{{ BAG_DISPLAY_CAPACITY }}</span>
+      <button
+        type="button"
+        class="bag-section__icon-btn"
+        :aria-label="t('equipment.capacity')"
+        :title="t('equipment.capacity')"
+      >＋</button>
+      <button
+        type="button"
+        class="bag-section__op-btn"
+        @click="emit('open-dissolve')"
+      >{{ t('panels.equipmentHall.tabs.dissolve') }}</button>
+    </header>
 
-      <div class="bag-section__chips" role="group" :aria-label="t('panels.bag.filterAriaEquipment')">
-        <Chip
-          v-for="chip in GROUP_CHIPS"
-          :key="chip.value"
-          :active="activeGroup === chip.value"
-          @click="toggleGroup(chip.value)"
-        >
-          {{ chip.label }}
-        </Chip>
-      </div>
+    <nav class="bag-section__chips" :aria-label="t('panels.bag.filterAriaEquipment')">
+      <Chip
+        v-for="chip in GROUP_CHIPS"
+        :key="chip.value"
+        :active="activeGroup === chip.value"
+        @click="toggleGroup(chip.value)"
+      >
+        {{ chip.label }}
+      </Chip>
+    </nav>
 
-      <span class="bag-section__count"><InkNineSlice chrome-id="resource-pill" layer="surface" /><span class="bag-section__count-label">{{ visibleCount }} {{ t('panels.bag.countSuffix') }}</span></span>
-    </div>
-
-    <div ref="gridRef" class="bag-section__grid" :style="gridStyle">
+    <div class="bag-section__grid" :style="gridStyle">
       <SlotView
         v-for="(cell, index) in gridCells"
         :key="cell?.key ?? index"
@@ -306,17 +338,23 @@ watch([searchQuery, activeGroup], () => resetPage())
       />
     </div>
 
-    <BagPaginationControls
-      :current-page="currentPage"
-      :total-pages="totalPages"
-      :sort-options="SORT_OPTIONS"
-      :active-mode="ui.bagSorts.equipment.mode"
-      :active-direction="ui.bagSorts.equipment.direction"
-      @go-to-page="goToPage"
-      @select-mode="(mode) => ui.setBagSortMode('equipment', mode as EquipmentSortMode)"
-      @toggle-direction="ui.toggleBagSortDirection('equipment')"
-      @reset-sort="ui.resetBagSort('equipment')"
-    />
+    <footer class="bag-section__footer">
+      <label class="bag-section__select-wrap">
+        {{ t('equipment.quality') }}
+        <select v-model="qualityTone" class="bag-section__select" :aria-label="t('equipment.quality')">
+          <option v-for="tone in QUALITY_TONES" :key="tone" :value="tone">
+            {{ t(`equipment.qualities.${tone}`) }}
+          </option>
+        </select>
+      </label>
+      <label class="bag-section__select-wrap">
+        {{ t('equipment.order') }}
+        <select v-model="sortMode" class="bag-section__select" :aria-label="t('equipment.order')">
+          <option value="default">{{ t('equipment.defaultOrder') }}</option>
+          <option value="quality">{{ t('equipment.qualityOrder') }}</option>
+        </select>
+      </label>
+    </footer>
   </div>
 </template>
 
@@ -326,85 +364,71 @@ watch([searchQuery, activeGroup], () => resetPage())
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  gap: 2px;
+  gap: 8px;
 }
 
-.bag-section__filters {
+/* Preview header: title owns the row start, count/capacity + the two
+   action buttons pin to the right above a hairline rule. */
+.bag-section__header {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+  gap: 8px;
+  height: 33px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #92783e66;
 }
 
-/* Drawn field chrome (owner ruling: search uses the text-field art,
-   not a CSS frame) - wrap carries the slice, input paints on top. */
-.bag-section__search-wrap {
-  position: relative;
-  flex: 1 1 120px;
-  min-width: 0;
-  height: 32px;
-}
-
-.bag-section__search-wrap .ink-nine-slice {
-  inset: 0;
-}
-
-.bag-section__search-wrap:focus-within {
-  outline: 2px solid var(--chrome-300);
-  outline-offset: 1px;
-}
-
-.bag-section__search {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  padding: 0 var(--space-2);
-  background: transparent;
-  color: var(--text-primary);
-  border: 0;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-}
-
-.bag-section__search::placeholder {
-  color: var(--text-secondary);
-}
-
-.bag-section__search:focus-visible {
-  outline: none;
-}
-
-.bag-section__chips {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-wrap: wrap;
-}
-
-/* "N mon" counter: resource-pill chrome capsule (owner ruling) - the
-   drawn capsule carries the count, text sits on the light pill face. */
-.bag-section__count {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 64px;
-  height: 28px;
-  padding: 0 10px;
-  color: #e8d9ae;
-  font-size: var(--text-xs);
-  white-space: nowrap;
-}
-
-.bag-section__count .ink-nine-slice {
-  inset: 0;
+.bag-section__title {
+  flex: 1;
+  margin: 0;
+  font: 700 24px/1.2 var(--font-display, Georgia, serif);
+  color: #f3e4c4;
 }
 
 .bag-section__count-label {
-  position: relative;
-  z-index: 2;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e8d9ae;
+  white-space: nowrap;
+}
+
+.bag-section__icon-btn,
+.bag-section__op-btn {
+  border: 1px solid #8e7440;
+  background: #23251e;
+  color: #eedfbf;
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bag-section__icon-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.bag-section__op-btn {
+  height: 30px;
+  min-width: 118px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.bag-section__icon-btn:hover,
+.bag-section__op-btn:hover {
+  color: #ffe9ae;
+  border-color: #c9a95f;
+}
+
+.bag-section__chips {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
 }
 
 .bag-section__grid {
@@ -412,16 +436,61 @@ watch([searchQuery, activeGroup], () => resetPage())
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   align-content: start;
-  gap: var(--grid-gap);
-  overflow: hidden;
+  gap: 5px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #8a7444 transparent;
+}
+
+/* item-slot-v1 IS the cell (design-paper Trang Bi): hides the
+   frame-s-slot chrome + the flat backdrop; badges/quality/hover layers
+   ride on top untouched. */
+.bag-section__grid :deep(.slot-view--bag),
+.bag-section__grid :deep(.slot-view--bag.slot-view--filled) {
+  background:
+    var(--equipment-item-slot) center / 100% 100% no-repeat,
+    var(--hk-surface-base);
+  border-radius: 0;
+}
+.bag-section__grid :deep(.slot-view--bag .slot-view__frame-art) {
+  display: none;
 }
 
 .bag-section__slot {
   width: 100%;
   aspect-ratio: 1 / 1;
-  /* Art lives on the SlotView `variant` prop (default `item` -
-     inventory art - here); consumers no longer override --slot-*
-     art vars directly. */
+}
+
+/* Preview footer: two labeled selects on the card's bottom edge. */
+.bag-section__footer {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 2px;
+  color: #c9b184;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bag-section__select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.bag-section__select {
+  flex: 1;
+  min-width: 0;
+  height: 29px;
+  border: 1px solid #8e7440;
+  background: #23251e;
+  color: #eedfbf;
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 0 6px;
 }
 </style>

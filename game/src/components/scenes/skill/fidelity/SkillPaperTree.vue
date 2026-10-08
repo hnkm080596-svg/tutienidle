@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SkillUiNode, SkillUiEdge } from './skillUi'
-import { EDGE_PIPE_CELL, EDGE_PIPE_GAP, EDGE_PIPE_H, EDGE_PIPE_INSET_TO } from './skillUi'
 import SkillPaperNode from './SkillPaperNode.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import {
+  setSkillDesignMode,
+  skillDesignMode,
+  useMasterAccess,
+} from '@/services/master/masterAccess'
 const props = withDefaults(defineProps<{
   nodes: readonly SkillUiNode[]
   edges: readonly SkillUiEdge[]
@@ -19,30 +23,26 @@ const props = withDefaults(defineProps<{
 }>(), { size: 710, fit: 1, accent: '' })
 const emit = defineEmits<{ select: [id: string]; activate: [id: string]; extent: [size: number] }>()
 const { t } = useI18n()
-const pipe = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/skill-connection-pipe-v2.png')
 const backdrop = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
-// G3 edge skin (HomeSkillArtPanel): no running light on links.
-// A link tiles whole pipe arts - one per level of the TARGET node,
-// each rendered at the art's own aspect (EDGE_PIPE_CELL is derived from
-// it, never stretched), fixed gap between pipes, the chain centered on
-// the link (SkillSurface spaces nodes to fit exactly this chain). A
-// gained level fills its pipe red; all link art stays under the discs.
-const EDGE_FLOW_W = 34
+// Minh ruling (2026-10-07): no pipe art on links - a plain line joins
+// each pair of nodes; all link art stays under the discs.
 // Design mode (Minh 2026-10): toggleable node-drag arrangement.
 // Overrides live in localStorage, applied over the authored layout
 // positions; the Export button dumps them as JSON for baking.
 const DESIGN_KEY = 'skill-tree-design-pos-v1'
-const DESIGN_MODE_KEY = 'skill-tree-design-mode-v1'
 // SSR/test mounts have no window.localStorage - fall back to a no-op
 // store so setup never crashes outside the browser.
 const ls: Pick<Storage, 'getItem' | 'setItem'> =
   typeof localStorage === 'undefined'
     ? { getItem: () => null, setItem: () => {} }
     : localStorage
-const designMode = ref(ls.getItem(DESIGN_MODE_KEY) === '1')
+// 2026-10-07: the mode flag moved into masterAccess (shared with the dev
+// panel toggle and the constellation panel); the whole design surface is
+// master-account only now.
+const { isMaster } = useMasterAccess()
+const designMode = computed(() => isMaster.value && skillDesignMode.value)
 function toggleDesign() {
-  designMode.value = !designMode.value
-  ls.setItem(DESIGN_MODE_KEY, designMode.value ? '1' : '0')
+  setSkillDesignMode(!skillDesignMode.value)
 }
 const designOffsets = ref<Record<string, { x: number; y: number }>>(
   JSON.parse(ls.getItem(DESIGN_KEY) ?? '{}'),
@@ -152,36 +152,14 @@ const connections = computed(() => props.edges.flatMap(edge => {
   if (!from || !to) return []
   const fromPos = posOf(from)
   const toPos = posOf(to)
-  const length = Math.hypot(toPos.x - fromPos.x, toPos.y - fromPos.y)
-  const max = to.levelMax ?? 0
-  const level = Math.min(to.levelCurrent ?? 0, max)
-  const count = Math.max(1, max)
-  const span = count * EDGE_PIPE_CELL + (count - 1) * EDGE_PIPE_GAP
-  // Chain anchors to the TARGET side: last pipe head stops INSET_TO
-  // from the target center; the parent side takes the leftover room.
-  const start = length - EDGE_PIPE_INSET_TO - span
-  const segments = Array.from({ length: count }, (_, i) => ({
-    filled: i < level,
-    x: start + i * (EDGE_PIPE_CELL + EDGE_PIPE_GAP),
-    w: EDGE_PIPE_CELL,
-  }))
-  // Light flow: a bright blob runs along the filled pipes then back,
-  // looping (Minh ruling; span = every filled pipe end to end).
-  const filledSpan = level * EDGE_PIPE_CELL + Math.max(0, level - 1) * EDGE_PIPE_GAP
-  const flow = level > 0 ? {
-    x0: start,
-    x1: start + filledSpan - EDGE_FLOW_W,
-    dur: `${(1.1 + filledSpan / 160).toFixed(2)}s`,
-  } : null
   return [{
     ...edge,
     fromNode: { ...from, x: fromPos.x, y: fromPos.y },
     toNode: { ...to, x: toPos.x, y: toPos.y },
-    length,
-    angle: Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x) * 180 / Math.PI,
-    segments,
-    flow,
     muted: to.state === 'locked',
+    // A learned child lets the light run the wire: the comet rides the
+    // link from parent to child (Minh 2026-10-07).
+    lit: to.state === 'learned',
   }]
 }))
 
@@ -217,6 +195,21 @@ const viewBox = computed(() => `0 0 ${props.size} ${props.size}`)
 const pan = ref({ x: 0, y: 0 })
 const zoom = ref(1)
 const dragging = ref(false)
+// Opening view (Minh 2026-10-07): a fixed vantage with the main node at
+// the paper's center - the tree always opens the same way, and the root
+// comes pre-selected so the detail panel reads it. Once the user pans or
+// zooms, the view is theirs (viewTouched stops any auto recentering).
+const mainNode = computed(() => {
+  const targets = new Set(props.edges.map(e => e.to))
+  return props.nodes.find(n => !targets.has(n.id)) ?? props.nodes[0] ?? null
+})
+const viewTouched = ref(false)
+// The opening vantage also pins its scale: the surface's extent-driven
+// fit may keep shrinking after mount, which would slide the tree even
+// while the root stays centered. zoom = frozenScale/fit cancels refits.
+// Default ratio picked by Minh on screen (2026-10-07): 0.91 effective.
+const OPEN_VIEW_SCALE = 0.91
+const frozenScale = ref<number | null>(null)
 const rootEl = useTemplateRef<HTMLElement>('rootEl')
 let dragMoved = false
 let dragStart: { px: number; py: number; x: number; y: number } | null = null
@@ -246,11 +239,59 @@ function clampPan(p: { x: number; y: number }, vw: number, vh: number) {
 }
 // A scale change outside a gesture (extent refit, element switch onto a
 // smaller tree) can shrink the bound under a stored pan - re-clamp it.
+// While the user has not taken the view yet, a refit re-centers the root
+// instead so the fixed opening vantage survives an extent re-report.
 watch([() => props.size, () => props.fit], () => {
   if (rootEl.value === null) return
+  if (!viewTouched.value) {
+    resetViewToRoot()
+    return
+  }
   pan.value = clampPan(pan.value, rootEl.value.offsetWidth, rootEl.value.offsetHeight)
 })
 
+// Fixed opening vantage: zoom 1 and the main node centered. With
+// transform-origin:center a graph point p lands at scale * (p - size/2)
+// + pan under translate(-50%,-50%) translate(pan) scale(s) - so pan must
+// equal scale * (size/2 - node), not size/2 - scale * node.
+function resetViewToRoot() {
+  const s = frozenScale.value ?? props.fit
+  // Counteract later extent refits: effective scale stays the frozen one.
+  zoom.value = props.fit === 0 ? 1 : s / props.fit
+  const m = mainNode.value
+  if (m === null) {
+    pan.value = { x: 0, y: 0 }
+    return
+  }
+  const p = posOf(m)
+  pan.value = {
+    x: s * (props.size / 2 - p.x),
+    y: s * (props.size / 2 - p.y),
+  }
+}
+// Focus-induced scroll: browsers scroll an overflow:hidden box to reveal
+// a focused node (the mount select does this), quietly shifting the whole
+// tree ~scrollTop px off the computed vantage. The paper never scrolls by
+// design - pan is the only offset - so any scroll snaps back to 0.
+function onScrollReset(event: Event) {
+  const el = event.currentTarget as HTMLElement
+  el.scrollTop = 0
+  el.scrollLeft = 0
+}
+// Mount opens the panel: fixed view + the main node pre-selected so the
+// detail panel reads it before the user touches anything.
+onMounted(() => {
+  frozenScale.value = OPEN_VIEW_SCALE
+  resetViewToRoot()
+  const m = mainNode.value
+  if (m !== null) emit('select', m.id)
+})
+
+// Press target node: pointer capture retargets the click to the root,
+// so the node button's own click never fires. Minh ruling (2026-10-07):
+// select fires on PRESS, not release - the detail panel must show the
+// node the moment the pointer lands, while the hold-to-learn gesture
+// still resolves on its own timer.
 function onPointerDown(event: PointerEvent) {
   if (activePointer !== null) return
   activePointer = event.pointerId
@@ -258,6 +299,9 @@ function onPointerDown(event: PointerEvent) {
   dragMoved = false
   dragStart = { px: event.clientX, py: event.clientY, x: pan.value.x, y: pan.value.y }
   nodeDrag = null
+  const pressHost = (event.target as HTMLElement).closest('.skill-positioned-node') as HTMLElement | null
+  const pressNodeId = pressHost?.dataset.nodeId ?? null
+  if (pressNodeId !== null) emit('select', pressNodeId)
   // Clear any leaked freeze first: a press whose release never reaches
   // this root (e.g. over the .stop'd design-tools) leaves one behind,
   // and a stale freeze silences every later extent emit.
@@ -313,6 +357,7 @@ function onPointerMove(event: PointerEvent) {
   }
   const host = event.currentTarget as HTMLElement
   const vs = viewScale()
+  viewTouched.value = true
   pan.value = clampPan(
     { x: dragStart.x + dx / vs, y: dragStart.y + dy / vs },
     host.offsetWidth,
@@ -326,6 +371,7 @@ function onPointerUp(event: PointerEvent) {
   dragStart = null
   nodeDrag = null
   extentFreeze.value = null
+
   const host = event.currentTarget as HTMLElement
   if (host.hasPointerCapture?.(event.pointerId)) host.releasePointerCapture?.(event.pointerId)
 }
@@ -343,6 +389,7 @@ function onWheel(event: WheelEvent) {
   if (next === zoom.value) return
   const ratio = (props.fit * next) / (props.fit * zoom.value)
   // Commit the zoom before clamping: the bound reads the NEW scale.
+  viewTouched.value = true
   zoom.value = next
   const host = event.currentTarget as HTMLElement
   pan.value = clampPan(
@@ -358,8 +405,9 @@ function onActivate(id: string) {
   emit('activate', id)
 }
 function onResetView() {
-  pan.value = { x: 0, y: 0 }
-  zoom.value = 1
+  // Double-click returns to the same fixed vantage the panel opens on.
+  viewTouched.value = false
+  resetViewToRoot()
 }
 
 const graphStyle = computed(() => ({
@@ -393,42 +441,32 @@ const rootStyle = computed(() =>
     @wheel.prevent="onWheel"
     @dblclick="onResetView"
     @contextmenu="onContextMenu"
+    @scroll="onScrollReset"
   >
     <div class="skill-paper-backdrop" :style="{ borderImageSource: `url('${backdrop}')` }" aria-hidden="true" />
     <div class="skill-graph" :style="graphStyle">
       <svg class="skill-tree-lines" :viewBox="viewBox" aria-hidden="true">
-        <g v-for="edge in connections" :key="`${edge.from}-${edge.to}`" :class="['skill-edge', { muted: edge.muted }]">
-          <g :transform="`rotate(${edge.angle} ${edge.fromNode.x} ${edge.fromNode.y})`">
-            <image
-              v-for="(seg, i) in edge.segments" :key="i"
-              :href="pipe" :x="edge.fromNode.x + seg.x" :y="edge.fromNode.y - EDGE_PIPE_H / 2"
-              :width="seg.w" :height="EDGE_PIPE_H" preserveAspectRatio="none"
-            />
-            <line
-              v-for="(seg, i) in edge.segments" :key="`fill-${i}`"
-              v-show="seg.filled"
-              class="edge-segment-filled"
-              :x1="edge.fromNode.x + seg.x + seg.w * 0.06" :x2="edge.fromNode.x + seg.x + seg.w * 0.94"
-              :y1="edge.fromNode.y + EDGE_PIPE_H * 0.068" :y2="edge.fromNode.y + EDGE_PIPE_H * 0.068"
-              vector-effect="non-scaling-stroke"
-            />
-            <line
-              v-if="edge.flow"
-              class="edge-flow"
-              :y1="edge.fromNode.y + EDGE_PIPE_H * 0.068" :y2="edge.fromNode.y + EDGE_PIPE_H * 0.068"
-              :x1="edge.fromNode.x + edge.flow.x0" :x2="edge.fromNode.x + edge.flow.x0 + EDGE_FLOW_W"
-              vector-effect="non-scaling-stroke"
-            >
-              <animate attributeName="x1" :values="`${edge.fromNode.x + edge.flow.x0};${edge.fromNode.x + edge.flow.x1};${edge.fromNode.x + edge.flow.x0}`" :dur="edge.flow.dur" repeatCount="indefinite" />
-              <animate attributeName="x2" :values="`${edge.fromNode.x + edge.flow.x0 + EDGE_FLOW_W};${edge.fromNode.x + edge.flow.x1 + EDGE_FLOW_W};${edge.fromNode.x + edge.flow.x0 + EDGE_FLOW_W}`" :dur="edge.flow.dur" repeatCount="indefinite" />
-            </line>
-          </g>
+        <g v-for="edge in connections" :key="`${edge.from}-${edge.to}`" :class="['skill-edge', { muted: edge.muted, lit: edge.lit }]">
+          <line
+            class="edge-line"
+            :x1="edge.fromNode.x" :y1="edge.fromNode.y"
+            :x2="edge.toNode.x" :y2="edge.toNode.y"
+            vector-effect="non-scaling-stroke"
+          />
+          <line
+            v-if="edge.lit"
+            class="edge-flow"
+            :x1="edge.fromNode.x" :y1="edge.fromNode.y"
+            :x2="edge.toNode.x" :y2="edge.toNode.y"
+            pathLength="100"
+            vector-effect="non-scaling-stroke"
+          />
         </g>
       </svg>
       <SkillPaperNode v-for="node in paintNodes" :key="node.id" class="skill-positioned-node" :data-node-id="node.id" :node="node" :selected="selected === node.id" :style="{ left: `${node.x}px`, top: `${node.y}px` }" @select="onSelect" @activate="onActivate" />
     </div>
     <div class="design-tools" aria-hidden="false" @pointerdown.stop @pointermove.stop @pointerup.stop @wheel.stop @click.stop>
-      <button type="button" class="design-toggle" :class="{ active: designMode }" @click="toggleDesign">Thiết Kế</button>
+      <button v-if="isMaster" type="button" class="design-toggle" :class="{ active: designMode }" @click="toggleDesign">Thiết Kế</button>
       <template v-if="designMode">
         <select class="design-spawn" @change="spawnNode(($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value = ''">
           <option value="">+ Node…</option>
@@ -450,10 +488,19 @@ const rootStyle = computed(() =>
 .skill-paper-tree :deep(img) { -webkit-user-drag:none; }
 .skill-graph { position:absolute; left:50%; top:50%; transform-origin:center; }
 .skill-tree-lines { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; z-index:1; }
-/* Level streaks keep a constant on-screen thickness regardless of
-   graph scale (non-scaling-stroke) so the light line stays visible. */
-.edge-segment-filled { stroke:var(--streak,#e53935); stroke-width:3.4px; stroke-linecap:round; opacity:.85; filter:drop-shadow(0 0 2px var(--streak,#e53935)) drop-shadow(0 0 5px var(--streak,#e53935)); }
-.edge-flow { stroke:var(--streak-head,#ff8a5c); stroke-width:4.2px; stroke-linecap:round; opacity:.95; filter:drop-shadow(0 0 3px var(--streak-head,#ff8a5c)) drop-shadow(0 0 8px var(--streak,#e53935)); }
+/* Plain link lines keep a constant on-screen thickness regardless of
+   graph scale (non-scaling-stroke). */
+.skill-edge .edge-line { stroke:#c9a640; stroke-width:1.8px; opacity:.85; }
+.skill-edge.muted .edge-line { stroke:#7a6844; opacity:.5; }
+/* Activation flow: once a node is learned a warm light pulses along its
+   link from the parent - a short bright dash riding the normalized
+   pathLength, tapering via linecap so the pulse reads as a streak. */
+/* A lit link glows end to end (Minh: the wire must light up, not just
+   carry the pulse) - brighter gold stroke plus a warm drop-shadow,
+   the traveling comet rides on top. */
+.skill-edge.lit .edge-line { stroke:#ffd88a; stroke-width:2.6px; opacity:1; filter:drop-shadow(0 0 4px #ffbf5e) drop-shadow(0 0 8px #d4983d90); }
+.skill-edge .edge-flow { stroke:#fff3cf; stroke-width:3.4px; stroke-linecap:round; stroke-dasharray:10 100; animation:edge-flow-run 2.2s linear infinite; filter:drop-shadow(0 0 4px #ffbf5e) drop-shadow(0 0 8px #d4983d); }
+@keyframes edge-flow-run { from { stroke-dashoffset:0 } to { stroke-dashoffset:-110 } }
 .design-tools { position:absolute; left:14px; bottom:12px; display:flex; gap:6px; z-index:3; }
 .design-tools button { padding:4px 10px; border:1px solid #6b5a38; border-radius:4px; background:#1c1a14e0; color:#d9c9a0; font:12px var(--font-display,Georgia,serif); cursor:pointer; }
 .design-tools button:hover { border-color:#d4983d; color:#ffd17a; }

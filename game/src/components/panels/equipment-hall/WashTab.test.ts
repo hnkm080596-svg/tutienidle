@@ -87,7 +87,7 @@ describe('WashTab — Tẩy Luyện', () => {
   it('hiện đủ 6 slot (2026-08-30: ô luôn tồn tại, tham chiếu equip trực tiếp)', () => {
     const mounted = mountTab()
 
-    const washSlots = mounted.container.querySelectorAll('[aria-label="Chọn trang bị để tẩy luyện"] .slot-view')
+    const washSlots = mounted.container.querySelectorAll('[aria-label="Chọn trang bị để tẩy luyện"] .wash-slot')
 
     expect(washSlots).toHaveLength(6)
 
@@ -111,7 +111,7 @@ describe('WashTab — Tẩy Luyện', () => {
 
     // Chon slot dang mac.
     const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tẩy luyện"] .slot-view',
+      '[aria-label="Chọn trang bị để tẩy luyện"] .wash-slot',
     )
     ;(slots[0] as HTMLElement).click()
     await nextTick()
@@ -132,24 +132,24 @@ describe('WashTab — Tẩy Luyện', () => {
     })
 
     const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tẩy luyện"] .slot-view',
+      '[aria-label="Chọn trang bị để tẩy luyện"] .wash-slot',
     )
     ;(slots[0] as HTMLElement).click()
     await nextTick()
 
-    const card = mounted.container.querySelector('.qi-hall__preview-card')
+    const card = mounted.container.querySelector('.equipment-forge-workspace')
     expect(card).not.toBeNull()
 
     // Ngan sach ren: Hoang Chat co 5 luot, moi wash tru 1 luot.
     // gio la dong chu thich tren dau card, khong con la 1 hang trong bang.
-    const caption = card!.querySelector('.qi-hall__col-title')
+    const caption = card!.querySelector('.wash-ren')
     expect(caption?.textContent).toContain('Điểm Rèn')
     expect(caption?.textContent).toContain('5/5')
     expect(caption?.textContent).toContain('4/5')
 
     // Fixture item khong co affix nao (affixes: []) - khong co gi de so
-    // sanh theo dong nen KHONG hien bang, chi hien thong bao trong.
-    expect(card!.querySelector('[aria-label="So sánh trước và sau Tẩy Luyện"]')).toBeNull()
+    // sanh theo dong nen KHONG hien 2 cot so sanh, chi hien thong bao trong.
+    expect(card!.querySelector('.equipment-wash-columns')).toBeNull()
     expect(card!.textContent).toContain('Chưa có dòng phụ')
 
     mounted.unmount()
@@ -175,7 +175,7 @@ describe('WashTab - preview honesty (T4-33)', () => {
 
   async function selectAndPreview(mounted: ReturnType<typeof mountTab>) {
     const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tẩy luyện"] .slot-view',
+      '[aria-label="Chọn trang bị để tẩy luyện"] .wash-slot',
     )
     ;(slots[0] as HTMLElement).click()
     await nextTick()
@@ -191,14 +191,13 @@ describe('WashTab - preview honesty (T4-33)', () => {
     const mounted = mountTab((manager) => prepareWashable(manager, 'huyen'))
     await selectAndPreview(mounted)
 
-    const rows = mounted.container.querySelectorAll(
-      '[aria-label="So sánh trước và sau Tẩy Luyện"] tbody tr',
-    )
-    expect(rows).toHaveLength(2)
+    const columns = mounted.container.querySelectorAll('.equipment-wash-columns section')
+    const beforeRows = columns[0]!.querySelectorAll('.equipment-affix-row')
+    expect(beforeRows).toHaveLength(2)
 
     // Row 2 has no current line - its "before" cell marks the line as new,
     // not blank.
-    expect(rows[1]!.textContent).toContain('dòng mới')
+    expect(beforeRows[1]!.textContent).toContain('dòng mới')
 
     mounted.unmount()
   })
@@ -208,12 +207,11 @@ describe('WashTab - preview honesty (T4-33)', () => {
     const mounted = mountTab((manager) => prepareWashable(manager, 'huyen'))
     await selectAndPreview(mounted)
 
-    const rows = mounted.container.querySelectorAll(
-      '[aria-label="So sánh trước và sau Tẩy Luyện"] tbody tr',
-    )
-    expect(rows).toHaveLength(1)
-    expect(rows[0]!.textContent).toContain('đã mất')
-    expect(rows[0]!.textContent).not.toContain('chưa roll')
+    const columns = mounted.container.querySelectorAll('.equipment-wash-columns section')
+    const afterRows = columns[1]!.querySelectorAll('.equipment-affix-row')
+    expect(afterRows).toHaveLength(1)
+    expect(afterRows[0]!.textContent).toContain('đã mất')
+    expect(afterRows[0]!.textContent).not.toContain('chưa roll')
 
     mounted.unmount()
   })
