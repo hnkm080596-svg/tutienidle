@@ -30,6 +30,16 @@ const REFINEMENT_LAYER: Record<string, 'skin' | 'muscle' | 'vertebra' | 'blood' 
 const litLayer = (layer: string) =>
   Object.entries(REFINEMENT_LAYER).some(([id, own]) => own === layer && unitLit(id))
 
+// Luyen Cot (owner ruling 2026-10-09): the spine fills progressively -
+// every 10% of the current tier lights one vertebra, bottom to top.
+const vertebraUnit = computed(() => props.model.units.find((u) => u.id === 'luyen_cot'))
+const vertebraLitCount = computed(() => {
+  const unit = vertebraUnit.value
+  if (!unit) return 0
+  return unit.state === 'done' ? 10 : Math.floor((unit.progressPct ?? 0) / 10)
+})
+const vertebraVisible = computed(() => (vertebraUnit.value?.state ?? 'locked') !== 'locked')
+
 
 // Khai Mach: fixed 8-point meridian graph (subset of the preview's 10-point
 // anatomy map) - production owns exactly 8 authored meridians.
@@ -110,9 +120,9 @@ const galaxyPieces = computed(() =>
             :src="bodyArt(`biceps-${side}-lit`)" alt="">
         </div>
         <img v-if="litLayer('blood')" class="body-blood" :src="bodyArt('anatomy-blood-lit')" alt="">
-        <div v-if="litLayer('vertebra')" class="body-spine">
-          <span class="spine-core lit"></span>
-          <img v-for="n in 10" :key="n" :src="bodyArt('anatomy-vertebra-lit')" alt="">
+        <div v-if="vertebraVisible" class="body-spine">
+          <span class="spine-core" :class="{ lit: vertebraLitCount > 0 }"></span>
+          <img v-for="n in 10" :key="n" :class="{ lit: n > 10 - vertebraLitCount }" :src="bodyArt('anatomy-vertebra-lit')" alt="">
         </div>
         <img v-if="litLayer('heart')" class="body-heart" :src="bodyArt('anatomy-heart-lit')" alt="">
         <div v-if="litLayer('forehead')" class="body-forehead">
@@ -169,9 +179,9 @@ const galaxyPieces = computed(() =>
 @media (prefers-reduced-motion: reduce) { .body-glow { animation:none; opacity:.4; } }
 /* Lit anatomy arts share the soft pulsing glow with the Luyen Bi aura
    (owner ruling 2026-10-09): a gentle golden halo that breathes on/off. */
-.body-muscle-layer img, .body-blood, .body-spine img, .body-heart, .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; }
+.body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; }
 @keyframes body-art-glow { 0%,100% { filter:drop-shadow(0 0 2px rgba(238,196,108,.35)); } 50% { filter:drop-shadow(0 0 6px rgba(238,196,108,.8)) drop-shadow(0 0 10px rgba(238,196,108,.45)); } }
-@media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img, .body-heart, .forehead-ring { animation:none; } }
+@media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-ring { animation:none; } }
 .body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none;
   animation:body-art-glow 4.6s ease-in-out infinite, body-muscle-pump 4.6s ease-in-out infinite; }
 /* Luyen Nhuc (owner ruling 2026-10-09): the biceps swell +10% at the glow
@@ -181,7 +191,8 @@ const galaxyPieces = computed(() =>
 .body-muscle-layer .right { right:27%; transform:rotate(-26deg); }
 .body-blood { position:absolute; left:18%; top:33%; width:64%; height:35%; object-fit:contain; pointer-events:none; opacity:.7; }
 .body-spine { position:absolute; left:48.5%; top:31%; width:3%; height:34%; display:flex; flex-direction:column; align-items:center; justify-content:space-between; pointer-events:none; }
-.body-spine img { width:100%; height:8%; object-fit:contain; z-index:1; }
+.body-spine img { width:100%; height:8%; object-fit:contain; z-index:1; filter:grayscale(1) brightness(.7); opacity:.35; }
+.body-spine img.lit { filter:none; opacity:1; }
 .spine-core { position:absolute; top:3%; bottom:3%; width:1px; background:#8f9397; }
 .spine-core.lit { background:#efca6b; box-shadow:0 0 3px #eec46c; }
 .body-heart { position:absolute; left:54%; top:38%; width:8%; height:12%; object-fit:contain; pointer-events:none; }
