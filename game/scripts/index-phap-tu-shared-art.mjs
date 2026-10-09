@@ -25,7 +25,10 @@ const IMPACT_MARKERS = JSON.parse(
 function emitJson(file, data) {
   const desired = `${JSON.stringify(data, null, 2)}\n`
   if (CHECK) {
-    if (readFileSync(file, 'utf8') !== desired) throw new Error(`Stale art index: ${file}`)
+    // EOL-insensitive: Windows checkouts land CRLF in the worktree while the
+    // emitted JSON is LF - compare normalized bytes or --check always cries
+    // stale on a clean checkout.
+    if (readFileSync(file, 'utf8').replace(/\r\n/g, '\n') !== desired) throw new Error(`Stale art index: ${file}`)
   } else {
     writeFileSync(file, desired)
   }
