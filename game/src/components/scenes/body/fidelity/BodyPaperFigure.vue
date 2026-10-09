@@ -112,7 +112,7 @@ const galaxyPieces = computed(() =>
       <img class="body-silhouette body-figure-art" :src="bodyArt('silhouette-seated')" alt="">
       <template v-if="model.chapter === 'refinement'">
         <div v-if="litLayer('skin')" class="body-waves" aria-hidden="true">
-          <i v-for="n in 3" :key="n" :style="{ '--i': n - 1 }"></i>
+          <img v-for="n in 3" :key="n" :style="{ '--i': n - 1 }" :src="bodyArt('silhouette-seated')" alt="">
         </div>
         <div v-if="litLayer('skin')" class="body-layer body-skin-layer lit">
           <img :src="bodyArt('silhouette-seated')" alt="">
@@ -176,13 +176,13 @@ const galaxyPieces = computed(() =>
    outward from the figure and fading - staggered so waves emit
    continuously. Elliptical to follow the seated silhouette's proportions. */
 .body-waves { position:absolute; inset:0; pointer-events:none; z-index:-1; }
-.body-waves i { position:absolute; left:50%; top:50%; width:72%; aspect-ratio:1; border-radius:50%;
-  border:3px solid rgba(15,10,5,.5); filter:blur(2px); transform:translate(-50%,-50%) scale(.55);
+.body-waves img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+  filter:brightness(0) blur(3px); transform:scale(1); opacity:0;
   animation:body-wave 4.8s ease-out calc(var(--i) * 1.6s) infinite; }
 @keyframes body-wave {
-  0% { transform:translate(-50%,-50%) scale(.55); opacity:0; }
-  18% { opacity:.55; }
-  100% { transform:translate(-50%,-50%) scaleX(1.45) scaleY(1.3); opacity:0; }
+  0% { transform:scale(1); opacity:0; }
+  15% { opacity:.4; }
+  100% { transform:scale(1.28); opacity:0; }
 }
 @media (prefers-reduced-motion: reduce) { .body-waves { display:none; } }
 /* Lit anatomy arts share the soft pulsing glow with the Luyen Bi aura
