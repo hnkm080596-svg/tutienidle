@@ -231,7 +231,9 @@ function buildMeridianUnits(
       canInvest: pageUnlocked && seqUnlocked && status === 'next'
         && ownedPills >= meridian.thongMachDanCost && paced,
     }
-  }).filter((unit) => unit.status !== 'locked')
+  })
+  // Locked meridians still flow through so the figure column renders all
+  // eight dots dimmed (owner ruling 2026-10-09).
 }
 
 function buildZhouTianUnits(

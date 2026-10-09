@@ -103,19 +103,17 @@ const foreheadLitCount = computed(() => {
 
 // Khai Mach: fixed 8-point meridian graph (subset of the preview's 10-point
 // anatomy map) - production owns exactly 8 authored meridians.
-// Meridians anchored by real anatomy on the stance figure (owner ruling
-// 2026-10-09), in MERIDIANS order: Nhâm = dantian (front midline), Đới =
-// belt line on the flank, Âm Kiều = inner eye, Âm Duy = throat, Dương Duy =
-// temple, Dương Kiều = side of head, Xung = chest centre, Đốc = crown.
+// Meridian dots as a vertical column on the left of the figure, top to
+// bottom in MERIDIANS order (owner ruling 2026-10-09).
 const MERIDIAN_POINTS = [
-  [48.8, 52.2],
-  [38.1, 52.2],
-  [50.8, 20.9],
-  [49.9, 29.6],
-  [48.0, 17.1],
-  [43.1, 17.9],
-  [49.5, 40.7],
-  [46.9, 11.0],
+  [13, 14],
+  [13, 24],
+  [13, 34],
+  [13, 44],
+  [13, 54],
+  [13, 64],
+  [13, 74],
+  [13, 84],
 ] as const
 // Node drag design mode (owner request 2026-10-09): each meridian dot is
 // draggable; on drop the coordinates persist to localStorage and log to the
@@ -157,11 +155,9 @@ const meridianNodes = computed(() =>
     return { unit, index, x: point[0], y: point[1], lit: unitLit(unit.id) || unit.state === 'current' }
   }),
 )
-// Out-of-reach meridians are hidden, not drawn as locked orbs - only the
-// opened and the next sequential node render (pinned behaviour).
-const visibleMeridianNodes = computed(() =>
-  meridianNodes.value.filter((node) => node.unit.state !== 'locked'),
-)
+// All eight meridian dots render as a column (owner ruling 2026-10-09) -
+// locked ones show dimmed.
+const visibleMeridianNodes = computed(() => meridianNodes.value)
 
 
 // Chu Thien: galaxy pieces lit by the chapter progress fraction; lit pieces
