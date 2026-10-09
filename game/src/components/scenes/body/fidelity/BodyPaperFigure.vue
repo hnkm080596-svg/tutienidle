@@ -164,7 +164,9 @@ const visibleMeridianNodes = computed(() => meridianNodes.value)
 // between node centers, with small dots every 10% joined by straight
 // segments. Small-dot lit count follows the destination unit's progress.
 const MERIDIAN_LINKS = [
-  { from: 0, to: 1, seed: 88 },
+  // ctrl bends the default path through the body (owner: dots must start
+  // inside the silhouette) - node1 forehead -> shoulder -> node2 hand.
+  { from: 0, to: 1, seed: 88, ctrl: [33, 31] as [number, number] },
 ] as const
 // Deterministic pseudo-random so the zigzag is stable across renders.
 const seededJitter = (seed: number, i: number) => {
@@ -202,21 +204,25 @@ function onBendPointerUp() {
 // Dot drag mode (owner request 2026-10-09): every 10% dot on the channel
 // is itself a draggable handle; the path is straight segments dot-to-dot.
 // Interior dot i sits at t = i/10 with a jittered offset; stored drags win.
-const channelDot = (link: { from: number; to: number; seed: number }, i: number, a: readonly number[], b: readonly number[]): [number, number] => {
+const channelDot = (link: { from: number; to: number; seed: number; ctrl?: readonly [number, number] }, i: number, a: readonly number[], b: readonly number[]): [number, number] => {
   const key = `${link.from}-${link.to}:d${i}`
   const stored = bendPositions.value[key]
   if (stored) return stored
   const t = i / 10
-  // Offset perpendicular to the a->b axis, alternating side, so the
-  // default path already reads irregular (owner rulings 2026-10-09).
+  // Quadratic bezier through ctrl keeps the default path inside the body;
+  // jitter on top keeps it irregular (owner rulings 2026-10-09).
+  const c: readonly number[] = link.ctrl ?? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
+  const u = 1 - t
+  const px = u * u * a[0] + 2 * u * t * c[0] + t * t * b[0]
+  const py = u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]
   const dx = b[0] - a[0]
   const dy = b[1] - a[1]
   const len = Math.hypot(dx, dy) || 1
   const side = i % 2 === 0 ? 1 : -1
-  const amp = 1.5 + Math.abs(seededJitter(link.seed, i)) * 3
+  const amp = 1 + Math.abs(seededJitter(link.seed, i)) * 2.5
   return [
-    a[0] + dx * t + (-dy / len) * side * amp + seededJitter(link.seed + 5, i) * 1.5,
-    a[1] + dy * t + (dx / len) * side * amp + seededJitter(link.seed + 7, i) * 1.5,
+    px + (-dy / len) * side * amp + seededJitter(link.seed + 5, i) * 1.5,
+    py + (dx / len) * side * amp + seededJitter(link.seed + 7, i) * 1.5,
   ]
 }
 const meridianPaths = computed(() =>
