@@ -233,8 +233,8 @@ const galaxyPieces = computed(() =>
 /* Light pulse only travels on each heartbeat (owner ruling 2026-10-09):
    one bright dash segment is pushed along the vessels per beat, dark in
    between. Period matches the 1.1s heartbeat. */
-.bv-flow { fill:none; stroke:#ffe9b0; stroke-linecap:round; stroke-dasharray:30 400; opacity:.9; animation:blood-flow 1.1s linear infinite; }
-@keyframes blood-flow { from { stroke-dashoffset:0; } to { stroke-dashoffset:-430; } }
+.bv-flow { fill:none; stroke:#ffe9b0; stroke-linecap:round; stroke-dasharray:26 124; opacity:.9; animation:blood-flow 1.1s linear infinite; }
+@keyframes blood-flow { from { stroke-dashoffset:0; } to { stroke-dashoffset:-150; } }
 @media (prefers-reduced-motion: reduce) { .bv-flow { animation:none; opacity:0; } }
 .body-spine { position:absolute; left:48.5%; top:31%; width:3%; height:34%; display:flex; flex-direction:column; align-items:center; justify-content:space-between; pointer-events:none; }
 .body-spine img { width:100%; height:8%; object-fit:contain; z-index:1; filter:grayscale(1) brightness(.7); opacity:.35; }
