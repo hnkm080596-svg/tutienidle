@@ -199,56 +199,37 @@ function onBendPointerUp() {
   }
   bendKey = null
 }
-const bendPoint = (link: { from: number; to: number; bend: number; seed: number }, i: number, a: readonly number[], b: readonly number[]): [number, number] => {
-  const key = `${link.from}-${link.to}:${i}`
+// Dot drag mode (owner request 2026-10-09): every 10% dot on the channel
+// is itself a draggable handle; the path is straight segments dot-to-dot.
+// Interior dot i sits at t = i/10 with a jittered offset; stored drags win.
+const channelDot = (link: { from: number; to: number; seed: number }, i: number, a: readonly number[], b: readonly number[]): [number, number] => {
+  const key = `${link.from}-${link.to}:d${i}`
   const stored = bendPositions.value[key]
   if (stored) return stored
-  // Even t spacing keeps bends apart (owner: "điểm không quá gần nhau");
-  // jitter offsets them off the straight line, alternating side sign.
-  const t = i / (link.bend + 1)
+  const t = i / 10
+  // Offset perpendicular to the a->b axis, alternating side, so the
+  // default path already reads irregular (owner rulings 2026-10-09).
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const len = Math.hypot(dx, dy) || 1
   const side = i % 2 === 0 ? 1 : -1
+  const amp = 3 + Math.abs(seededJitter(link.seed, i)) * 6
   return [
-    a[0] + (b[0] - a[0]) * t + side * (6 + Math.abs(seededJitter(link.seed, i)) * 9),
-    a[1] + (b[1] - a[1]) * t + seededJitter(link.seed + 3, i) * 4,
+    a[0] + dx * t + (-dy / len) * side * amp + seededJitter(link.seed + 5, i) * 2,
+    a[1] + dy * t + (dx / len) * side * amp + seededJitter(link.seed + 7, i) * 2,
   ]
 }
 const meridianPaths = computed(() =>
   MERIDIAN_LINKS.map((link) => {
     const a = nodePosition(link.from)
     const b = nodePosition(link.to)
-    // Irregular waypoints between the two centers (not collinear).
-    const zig: [number, number][] = [a]
-    for (let i = 1; i <= link.bend; i++) zig.push(bendPoint(link, i, a, b))
-    zig.push(b)
-    // Resample the zigzag into points spaced evenly by arc length -
-    // one small dot every 10%, straight segment between dots.
-    const segLen: number[] = []
-    let total = 0
-    for (let i = 1; i < zig.length; i++) {
-      const d = Math.hypot(zig[i][0] - zig[i - 1][0], zig[i][1] - zig[i - 1][1])
-      segLen.push(d)
-      total += d
-    }
-    const dots: [number, number][] = [zig[0]]
-    const step = total / 10
-    let acc = 0 // distance travelled since the last placed dot
-    for (let i = 1; i < zig.length; i++) {
-      let l = segLen[i - 1]
-      while (l > 0 && acc + l >= step && dots.length < 10) {
-        const need = step - acc
-        const f = need / l
-        dots.push([zig[i - 1][0] + (zig[i][0] - zig[i - 1][0]) * f, zig[i - 1][1] + (zig[i][1] - zig[i - 1][1]) * f])
-        zig[i - 1] = dots[dots.length - 1]
-        l -= need
-        acc = 0
-      }
-      acc += l
-    }
+    const dots: [number, number][] = [a]
+    for (let i = 1; i <= 9; i++) dots.push(channelDot(link, i, a, b))
     dots.push(b)
     // All dots lit while meridian nodes are forced lit for layout review
     // (owner request 2026-10-09, temporary) - real wiring: done = 9,
     // else floor(progressPct / 10) on the destination unit.
-    return { key: `${link.from}-${link.to}`, dots, lit: 9, bends: zig.slice(1, -1), link }
+    return { key: `${link.from}-${link.to}`, dots, lit: 9, link }
   }),
 )
 const dotsAttr = (dots: readonly (readonly number[])[]) => dots.map((d) => `${d[0]},${d[1]}`).join(' ')
@@ -324,13 +305,13 @@ const galaxyPieces = computed(() =>
             :cx="dot[0]" :cy="dot[1]" r="0.9"
             :class="di < path.lit ? 'dot-lit' : 'dot-dim'" />
         </svg>
-        <!-- Draggable bend handles shape each channel's irregularity
-             (owner request 2026-10-09). -->
-        <template v-for="path in meridianPaths" :key="`${path.key}-bends`">
-          <button v-for="(bend, bi) in path.bends" :key="`${path.key}-${bi}`"
-            class="body-meridian-bend" :style="{ left: `${bend[0]}%`, top: `${bend[1]}%` }"
-            :aria-label="`Điểm gấp ${bi + 1}`"
-            @pointerdown="onBendPointerDown($event, `${path.key}:${bi + 1}`)"
+        <!-- Every channel dot is draggable - sculpt the irregularity
+             directly (owner request 2026-10-09). -->
+        <template v-for="path in meridianPaths" :key="`${path.key}-dots`">
+          <button v-for="(dot, di) in path.dots.slice(1, -1)" :key="`${path.key}-d${di + 1}`"
+            class="body-meridian-bend" :style="{ left: `${dot[0]}%`, top: `${dot[1]}%` }"
+            :aria-label="`Điểm mạch ${di + 1}`"
+            @pointerdown="onBendPointerDown($event, `${path.key}:d${di + 1}`)"
             @pointermove="onBendPointerMove"
             @pointerup="onBendPointerUp" />
         </template>
