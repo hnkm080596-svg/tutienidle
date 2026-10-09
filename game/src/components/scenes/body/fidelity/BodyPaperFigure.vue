@@ -342,7 +342,7 @@ const galaxyPieces = computed(() =>
 .body-meridian-node:active { cursor:grabbing; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
 /* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
-.body-meridian-num { position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(14px,2.4vmin,20px); font-weight:700; color:#fff8e0; text-shadow:0 0 4px #000,0 0 8px #000; }
+.body-meridian-num { position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
 .body-meridian-line { position:absolute; height:12px; transform-origin:left center; z-index:2; pointer-events:none; }
