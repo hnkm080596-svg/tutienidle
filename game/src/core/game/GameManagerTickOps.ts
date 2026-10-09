@@ -27,7 +27,7 @@ import type { GameManagerTurnBattleOps } from './GameManagerTurnBattleOps'
  *
  * Owns:
  * - the settle block driven each tick for the active player (timed
- *   effects, body refinement, quest reconciliation/daily reset,
+ *   effects, quest reconciliation/daily reset,
  *   production/alchemy/decompose settle + notifications);
  * - the shared decompose delivery path (online tick + offline restore
  *   both call deliverDecomposeOutput);
@@ -41,9 +41,6 @@ export class GameManagerTickOps {
     private readonly deps: {
       getActivePlayer: () => PlayerData | undefined
       tickTimedEffects: (player: PlayerData) => void
-      // P7-M5 - the tick auto-invests the body_refinement chapter through
-      // the unified BodyProgression op (Tinh Hoa Pham The -> Luyen The).
-      investBodyChapter: (player: PlayerData) => void
       questSystem: QuestSystem
       questRegistry: QuestRegistry
       questManager: QuestManager
@@ -120,7 +117,6 @@ export class GameManagerTickOps {
     // dang ky qua setActivePlayer() sau boot/load.
     if (activePlayer) {
       this.deps.tickTimedEffects(activePlayer)
-      this.deps.investBodyChapter(activePlayer)
 
       // R8.1 (AR-09) - realm-transition reconciliation: the writer set
       // the flag; activate newly eligible quests on the first tick

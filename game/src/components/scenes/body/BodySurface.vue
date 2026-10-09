@@ -27,6 +27,7 @@ import type {
   BodyPaperExtra,
   BodyPaperMilestone,
   BodyPaperModel,
+  BodyPaperPour,
   BodyPaperUnit,
 } from './fidelity/bodyUi'
 
@@ -45,6 +46,10 @@ function flashNotice(text: string) {
   noticeTimer = window.setTimeout(() => { noticeTimer = undefined; notice.value = '' }, 3200)
 }
 onBeforeUnmount(() => { if (noticeTimer !== undefined) clearTimeout(noticeTimer) })
+
+// Pour replay spec for the details card's particle stream (Rèn Thể
+// manual pour, owner ruling 2026-10-09) - a fresh object per invest.
+const pour = ref<BodyPaperPour | null>(null)
 
 const UI_TO_DOMAIN: Record<string, BodyChapterId> = {
   refinement: 'body_refinement',
@@ -237,8 +242,9 @@ function selectChapter(id: string) {
 }
 function selectUnit(id: string) { model.selectUnit(activeDomainChapter.value, id) }
 function invest() {
-  const consumed = model.investActive(activeDomainChapter.value)
-  flashNotice(consumed > 0 ? t('body.investDone') : t('body.investUnavailable'))
+  const result = model.pourActive(activeDomainChapter.value)
+  if (result.pour !== null) pour.value = result.pour
+  flashNotice(result.consumed > 0 ? t('body.investDone') : t('body.investUnavailable'))
 }
 </script>
 
@@ -247,7 +253,7 @@ function invest() {
     <BodyFidelityScene
       :model="paperModel"
       :unit="paperUnit"
-     
+      :pour="pour"
       :notice="notice"
       @chapter="selectChapter"
       @select="selectUnit"

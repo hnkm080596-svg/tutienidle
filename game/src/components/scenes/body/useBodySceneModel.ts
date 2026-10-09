@@ -47,8 +47,10 @@ import {
 import { statLabel } from '@/core/stats/StatLabels'
 import type {
   BodyChipView,
+  BodyPourSpec,
   BodyUnitView,
 } from './bodySceneModel'
+import { getBodyRefinementProgressMultiplier } from '@/core/talent/TalentEffects'
 
 export interface BodyChapterModel {
   id: BodyChapterId
@@ -135,7 +137,8 @@ function buildRefinementUnits(
       }],
       gates,
       actionable: status === 'active',
-      // Refinement invests through the tick; the button consumes now.
+      // Manual pour (owner ruling 2026-10-09): any held essence is
+      // clickable - the invest consumes only what the tier still needs.
       canInvest: status === 'active' && have > 0,
       progress: { value: unitProgress, max: cap },
     }
@@ -461,5 +464,38 @@ export function useBodySceneModel() {
     return consumed
   }
 
-  return { chapters, chapter, viewedUnit, selectUnit, investActive }
+  /**
+   * investActive + the pour replay spec (Rèn Thể only): captures the
+   * displayed material count and tier-fill around the real debit so
+   * the details card can animate slot->bar. Other chapters invest
+   * instantly (no pour spec).
+   */
+  function pourActive(chapterId: BodyChapterId): { consumed: number; pour: BodyPourSpec | null } {
+    if (chapterId !== 'body_refinement') {
+      return { consumed: investActive(chapterId), pour: null }
+    }
+    const before = player.$state.bodyProgression.body_refinement
+    const haveBefore = gameManager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
+    const tierBefore = { completed: before.completedTiers, progress: before.currentTierProgress }
+    const consumed = investActive(chapterId)
+    if (consumed <= 0) {
+      return { consumed, pour: null }
+    }
+    return {
+      consumed,
+      pour: {
+        consumed,
+        haveFrom: haveBefore,
+        haveTo: gameManager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID),
+        progressPerMaterial: getBodyRefinementProgressMultiplier(
+          player.$state.selectedTalentIds,
+          player.$state.talentLevels,
+        ),
+        tierProgress: tierBefore.progress,
+        caps: BODY_REFINEMENT_TIERS.slice(tierBefore.completed).map(tier => tier.cap),
+      },
+    }
+  }
+
+  return { chapters, chapter, viewedUnit, selectUnit, investActive, pourActive }
 }

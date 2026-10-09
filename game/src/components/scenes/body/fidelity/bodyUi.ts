@@ -1,6 +1,8 @@
 // Scene 08 (Luyen The) fidelity contract. The adapter maps the canonical
 // useBodySceneModel() chapter units into this shape - nothing here owns
 // progression predicates, costs, or invest semantics.
+export type { BodyPourSpec as BodyPaperPour } from '../bodySceneModel'
+
 export interface BodyPaperCost {
   id: string
   name: string

@@ -6,14 +6,15 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import BodyPaperFigure from './BodyPaperFigure.vue'
 import BodyPaperDetails from './BodyPaperDetails.vue'
-import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
+import type { BodyPaperModel, BodyPaperPour, BodyPaperUnit } from './bodyUi'
 
 withDefaults(defineProps<{
   model: BodyPaperModel
   unit: BodyPaperUnit | null
   notice: string
+  pour?: BodyPaperPour | null
   preview?: boolean
-}>(), { preview: false })
+}>(), { preview: false, pour: null })
 const emit = defineEmits<{ back:[]; chapter:[id:string]; select:[id:string]; invest:[] }>()
 const { t } = useI18n()
 
@@ -55,7 +56,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
           </EquipmentArtButton>
         </nav>
         <BodyPaperFigure :model="model" :selected="unit?.id ?? ''" @select="emit('select', $event)" />
-        <BodyPaperDetails :model="model" :unit="unit" :notice="notice" @invest="emit('invest')" />
+        <BodyPaperDetails :model="model" :unit="unit" :notice="notice" :pour="pour" @invest="emit('invest')" />
       </div>
     </div>
     <p v-if="preview" class="body-preview-label">{{ t('body.preview') }}</p>

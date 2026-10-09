@@ -211,22 +211,25 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     expect(playerStore.bodyProgression.body_refinement.completedTiers).toBe(1)
   })
 
-  it('the update() auto-invest tick resolves substitution through the same seam', () => {
+  it('the update() tick no longer auto-invests - essence sits in the bag until a manual pour', () => {
     const manager = managerWithCatalogs()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     manager.setActivePlayer(player)
     manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
 
-    // Per-tick auto-invest is the production invest path - a headless
-    // update must consume the substitute exactly like the direct seam.
-    manager.tickOps.update(0.1)
-
-    expect(manager.materialBag.getAmount(BAO)).toBeLessThan(25)
+    // Manual pour (owner ruling 2026-10-09): the tick leaves every
+    // essence stack untouched; only the panel's invest consumes.
+    for (let i = 0; i < 20; i++) manager.tickOps.update(0.1)
+    expect(manager.materialBag.getAmount(BAO)).toBe(25)
     expect(
       player.bodyProgression.body_refinement.currentTierProgress +
-        player.bodyProgression.body_refinement.completedTiers * 50,
-    ).toBeGreaterThan(0)
+        player.bodyProgression.body_refinement.completedTiers,
+    ).toBe(0)
+
+    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+    expect(consumed).toBe(50)
+    expect(manager.materialBag.getAmount(BAO)).toBe(0)
   })
 
   it('namespace gate (C2C 6): the meridian pill currency never substitutes physique essence', () => {

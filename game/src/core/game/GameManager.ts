@@ -909,7 +909,6 @@ export class GameManager {
     this.tickOps = new GameManagerTickOps({
       getActivePlayer: () => this.activePlayer,
       tickTimedEffects: (player) => this.effectOps.tickTimedEffects(player),
-      investBodyChapter: (player) => this.realmAdvanceOps.investBodyChapter(player, 'body_refinement'),
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,

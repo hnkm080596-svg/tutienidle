@@ -13,10 +13,12 @@ import type { Stage } from '../stage/Stage'
 import type { CombatEntity } from '../combat/CombatEntity'
 
 // Luyen The growth chain regression (luyen-the-growth fix): replays the
-// live kill -> bag -> tick invest seam on a real GameManager. Pins the
+// live kill -> bag -> manual pour seam on a real GameManager. Pins the
 // verified mechanics (essence lands, realmLevel gate, conversion) plus
 // the growth feedback the fix adds - the invest toast is the only
 // surface that ever reports Tinh Hoa becoming Luyen The progress.
+// Owner ruling 2026-10-09: the tick no longer auto-invests; drops pool
+// in the bag until the player pours from the Luyen The panel.
 
 const BOAR = ENEMIES.find((enemy) => enemy.id === 'mortal_wild_boar')!
 const MORTAL_STAGE = STAGES.find((stage) => stage.id === 'mortal_dong_1')!
@@ -85,15 +87,16 @@ describe('Luyen The growth chain', () => {
     expect(player.realmLevel).toBe(1)
   })
 
-  it('tick invest at realmLevel 1: gated - essence stays, nothing converts, lock hint fires once', () => {
+  it('manual pour at realmLevel 1: gated - essence stays, nothing converts, lock hint fires once', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { gameManager, player, killBoar } = harness()
 
     killBoar(MORTAL_STAGE)
     const before = bagAmount(gameManager)
 
-    gameManager.tickOps.update(0.1)
+    const consumed = gameManager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
 
+    expect(consumed).toBe(0)
     expect(bagAmount(gameManager)).toBe(before)
     expect(tierProgress(player)).toBe(0)
 
@@ -113,8 +116,8 @@ describe('Luyen The growth chain', () => {
       stored: String(before),
     })
 
-    // Once per tier per session - the hint must not re-fire every tick.
-    gameManager.tickOps.update(0.1)
+    // Once per tier per session - the hint must not re-fire every pour.
+    gameManager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
     expect(
       gameManager
         .drainNotifications()
@@ -122,7 +125,7 @@ describe('Luyen The growth chain', () => {
     ).toBe(false)
   })
 
-  it('tick invest at realmLevel 2: essence converts into tier progress and toasts the growth', () => {
+  it('manual pour at realmLevel 2: essence converts into tier progress and toasts the growth', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { gameManager, player, killBoar } = harness()
 
@@ -130,7 +133,9 @@ describe('Luyen The growth chain', () => {
     killBoar(MORTAL_STAGE)
     const landed = bagAmount(gameManager)
 
-    gameManager.tickOps.update(0.1)
+    const consumed = gameManager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+
+    expect(consumed).toBe(landed)
 
     expect(bagAmount(gameManager)).toBe(0)
     expect(tierProgress(player)).toBe(landed)
@@ -155,7 +160,7 @@ describe('Luyen The growth chain', () => {
     player.realmLevel = 2
     gameManager.materialBag.add(ESSENCE, 50)
 
-    gameManager.tickOps.update(0.1)
+    gameManager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
 
     const events = gameManager.drainNotifications()
     expect(player.bodyProgression.body_refinement.completedTiers).toBe(1)
@@ -171,7 +176,7 @@ describe('Luyen The growth chain', () => {
     ).toBe(false)
   })
 
-  it('auto-farm pace: every drained drop reports exactly one growth toast', () => {
+  it('auto-farm pace: drops pool in the bag across ticks - the tick never auto-invests', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { gameManager, player, killBoar } = harness()
 
@@ -181,12 +186,34 @@ describe('Luyen The growth chain', () => {
       gameManager.tickOps.update(0.1)
     }
 
-    const growth = gameManager
-      .drainNotifications()
-      .filter((event) => event.messageKey === 'notifications.bodyRefinementInvested')
-    expect(growth).toHaveLength(20)
-    expect(growth.every((event) => event.kind === 'upgrade')).toBe(true)
+    // No auto-nuốt: 20 kills landed one essence each and every tick
+    // left the bag untouched - zero growth toasts, zero progress.
+    expect(bagAmount(gameManager)).toBe(20)
+    expect(tierProgress(player)).toBe(0)
+    expect(
+      gameManager
+        .drainNotifications()
+        .some((event) => event.messageKey === 'notifications.bodyRefinementInvested'),
+    ).toBe(false)
+
+    // One manual pour drains the pool into the tier.
+    const consumed = gameManager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+    expect(consumed).toBe(20)
     expect(tierProgress(player)).toBe(20)
     expect(bagAmount(gameManager)).toBe(0)
+  })
+
+  it('partial pour: an overfull bag spends only what the tier still needs', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const { gameManager, player } = harness()
+
+    player.realmLevel = 2
+    gameManager.materialBag.add(ESSENCE, 62) // tier 1 cap is 50
+
+    const consumed = gameManager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+
+    expect(consumed).toBe(50)
+    expect(bagAmount(gameManager)).toBe(12)
+    expect(player.bodyProgression.body_refinement.completedTiers).toBe(1)
   })
 })

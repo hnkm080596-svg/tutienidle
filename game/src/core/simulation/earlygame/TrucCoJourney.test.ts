@@ -557,11 +557,17 @@ describe('TrucCoJourney - ordered journey', () => {
         s.player.companions.some((c) => c.definitionId === 'than_nong'),
       ).toBe(true)
 
-      // Leg boundary pin (coupling made explicit): tribulation's tick
-      // loop ran production auto-invest (tickOps.update ->
-      // investBodyChapter per tick) - the leg-A essence residue is
-      // drained to 0 while refinement stands at exactly tier 3. Leg D's
-      // exact-tier asserts start from THIS observed precondition.
+      // Leg boundary pin (coupling made explicit): post-2026-10-09 the
+      // tick no longer auto-invests - the player pours manually, so the
+      // fixture drains the leg-A essence residue through the production
+      // invest seam until the bag empties. The same observed
+      // precondition holds: refinement stands at exactly tier 3 and the
+      // bag is dry. Leg D's exact-tier asserts start from THIS state.
+      while (
+        s.gameManager.realmAdvanceOps.investBodyChapter(s.player, 'body_refinement') > 0
+      ) {
+        /* pour until dry */
+      }
       expect(getBodyRefinementCompletedTiers(s.player)).toBe(3)
       expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(0)
 
