@@ -9,9 +9,15 @@ const emit = defineEmits<{ select: [id: string] }>()
 const bodyArt = (name: string) =>
   resolveAssetUrl(`/assets/ui/tien-hiep-2026-10/body/${name}-v1.png`)
 
-// Every chapter renders the same silhouette art as its own instance (owner
-// ruling 2026-10-09): one file, three separately-styled copies that carry
-// per-chapter treatment and swap inside the chapter transition.
+// Per-chapter silhouette instances (owner rulings 2026-10-09): Khai Mạch
+// shows the martial-stance figure for the eight extraordinary meridians;
+// Rèn Thể and Dẫn Linh keep the seated figure with their own treatments.
+const SILHOUETTE_ART: Record<string, string> = {
+  refinement: 'silhouette-seated',
+  meridian: 'silhouette-stance',
+  zhou_tian: 'silhouette-seated',
+}
+const silhouetteArt = computed(() => SILHOUETTE_ART[props.model.chapter] ?? 'silhouette-seated')
 
 const unitState = computed<Record<string, BodyPaperUnit['state']>>(() => {
   const map: Record<string, BodyPaperUnit['state']> = {}
@@ -97,24 +103,28 @@ const foreheadLitCount = computed(() => {
 
 // Khai Mach: fixed 8-point meridian graph (subset of the preview's 10-point
 // anatomy map) - production owns exactly 8 authored meridians.
+// Meridians anchored by real anatomy on the stance figure (owner ruling
+// 2026-10-09), in MERIDIANS order: Nhâm = dantian (front midline), Đới =
+// belt line on the flank, Âm Kiều = inner eye, Âm Duy = throat, Dương Duy =
+// temple, Dương Kiều = side of head, Xung = chest centre, Đốc = crown.
 const MERIDIAN_POINTS = [
-  [50, 19],
-  [50, 32],
-  [35, 38],
-  [65, 38],
-  [50, 45],
-  [15, 73],
-  [85, 73],
-  [50, 60],
+  [50, 56],
+  [38, 62],
+  [47, 14],
+  [50, 22],
+  [56, 13],
+  [43, 12],
+  [50, 40],
+  [50, 7],
 ] as const
 const MERIDIAN_EDGES: readonly (readonly [number, number])[] = [
-  [0, 1],
-  [1, 2],
-  [1, 3],
-  [1, 4],
-  [2, 5],
-  [3, 6],
-  [4, 7],
+  [0, 6], // dantian -> chest
+  [0, 1], // dantian -> belt
+  [6, 3], // chest -> throat
+  [3, 2], // throat -> inner eye
+  [2, 5], // inner eye -> side of head
+  [3, 4], // throat -> temple
+  [4, 7], // temple -> crown
 ]
 const meridianNodes = computed(() =>
   props.model.units.map((unit, index) => {
@@ -165,7 +175,7 @@ const galaxyPieces = computed(() =>
     <div class="body-stage" :aria-label="model.chapterLabel">
       <Transition name="chapter-swap">
       <div :key="model.chapter" class="chapter-layer">
-      <img class="body-silhouette body-figure-art" :class="`silhouette-${model.chapter}`" :src="bodyArt('silhouette-seated')" alt="">
+      <img class="body-silhouette body-figure-art" :class="`silhouette-${model.chapter}`" :src="bodyArt(silhouetteArt)" alt="">
       <template v-if="model.chapter === 'refinement'">
         <img v-if="litLayer('skin')" class="body-glow" :src="bodyArt('silhouette-seated')" alt="" aria-hidden="true">
         <div v-if="litLayer('skin')" class="body-layer body-skin-layer lit">
@@ -251,10 +261,9 @@ const galaxyPieces = computed(() =>
 .chapter-swap-enter-from { opacity:0; filter:blur(9px); transform:scale(1.06); }
 .chapter-swap-leave-to { opacity:0; filter:blur(9px); transform:scale(.94); }
 @media (prefers-reduced-motion: reduce) { .chapter-swap-enter-active, .chapter-swap-leave-active { transition:none; } }
-/* Per-chapter treatments of the same art (owner ruling 2026-10-09): Khai
-   Mạch tightens the figure slightly under a jade edge, Dẫn Linh floats it
-   under a violet spirit aura. */
-.silhouette-meridian { filter:drop-shadow(0 0 14px rgba(120,190,150,.35)); transform:scale(1.04); transform-origin:50% 20%; }
+/* Per-chapter treatments (owner ruling 2026-10-09): Khai Mạch sits under a
+   jade edge, Dẫn Linh floats under a violet spirit aura. */
+.silhouette-meridian { filter:drop-shadow(0 0 14px rgba(120,190,150,.35)); }
 .silhouette-zhou_tian { filter:drop-shadow(0 0 18px rgba(150,120,255,.4)) drop-shadow(0 0 42px rgba(120,90,220,.22)); }
 .body-layer { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
