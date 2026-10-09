@@ -251,6 +251,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
     <img class="paperdoll__ring" :src="BRUSH_CIRCLE_SRC" alt="" aria-hidden="true" />
     <div v-if="idleClip" class="paperdoll__figure" aria-hidden="true">
       <EntitySpriteCanvas
+        :key="idleClip.atlasUrl"
         :sheet-url="resolveAssetUrl(`/${idleClip.sheetUrl}`)"
         :atlas-url="resolveAssetUrl(`/${idleClip.atlasUrl}`)"
         :frame-prefix="idleClip.framePrefix"

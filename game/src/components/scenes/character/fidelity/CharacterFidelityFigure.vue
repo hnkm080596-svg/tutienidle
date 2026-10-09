@@ -45,6 +45,7 @@ const figureScale = computed(() => {
   <div class="cf-figure">
     <EntitySpriteCanvas
       v-if="idle"
+      :key="idle.atlasUrl"
       class="cf-figure__sprite"
       :sheet-url="resolveAssetUrl(`/${idle.sheetUrl}`)"
       :atlas-url="resolveAssetUrl(`/${idle.atlasUrl}`)"
