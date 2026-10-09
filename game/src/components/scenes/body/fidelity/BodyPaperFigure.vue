@@ -164,7 +164,7 @@ const visibleMeridianNodes = computed(() => meridianNodes.value)
 // between node centers, with small dots every 10% joined by straight
 // segments. Small-dot lit count follows the destination unit's progress.
 const MERIDIAN_LINKS = [
-  { from: 0, to: 2, bend: 5, seed: 88 },
+  { from: 0, to: 1, seed: 88 },
 ] as const
 // Deterministic pseudo-random so the zigzag is stable across renders.
 const seededJitter = (seed: number, i: number) => {
@@ -213,10 +213,10 @@ const channelDot = (link: { from: number; to: number; seed: number }, i: number,
   const dy = b[1] - a[1]
   const len = Math.hypot(dx, dy) || 1
   const side = i % 2 === 0 ? 1 : -1
-  const amp = 3 + Math.abs(seededJitter(link.seed, i)) * 6
+  const amp = 1.5 + Math.abs(seededJitter(link.seed, i)) * 3
   return [
-    a[0] + dx * t + (-dy / len) * side * amp + seededJitter(link.seed + 5, i) * 2,
-    a[1] + dy * t + (dx / len) * side * amp + seededJitter(link.seed + 7, i) * 2,
+    a[0] + dx * t + (-dy / len) * side * amp + seededJitter(link.seed + 5, i) * 1.5,
+    a[1] + dy * t + (dx / len) * side * amp + seededJitter(link.seed + 7, i) * 1.5,
   ]
 }
 const meridianPaths = computed(() =>
@@ -306,15 +306,21 @@ const galaxyPieces = computed(() =>
             :class="di < path.lit ? 'dot-lit' : 'dot-dim'" />
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
-             directly (owner request 2026-10-09). -->
-        <template v-for="path in meridianPaths" :key="`${path.key}-dots`">
-          <button v-for="(dot, di) in path.dots.slice(1, -1)" :key="`${path.key}-d${di + 1}`"
-            class="body-meridian-bend" :style="{ left: `${dot[0]}%`, top: `${dot[1]}%` }"
-            :aria-label="`Điểm mạch ${di + 1}`"
-            @pointerdown="onBendPointerDown($event, `${path.key}:d${di + 1}`)"
-            @pointermove="onBendPointerMove"
-            @pointerup="onBendPointerUp" />
-        </template>
+             directly (owner request 2026-10-09). Handles are clipped by
+             the same silhouette mask so nothing floats outside. -->
+        <div class="body-meridian-handles"
+          :style="{ maskImage: `url(${bodyArt('silhouette-stance')})`, WebkitMaskImage: `url(${bodyArt('silhouette-stance')})`,
+            maskSize: '90% 90%', WebkitMaskSize: '90% 90%', maskPosition: 'center', WebkitMaskPosition: 'center',
+            maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }">
+          <template v-for="path in meridianPaths" :key="`${path.key}-dots`">
+            <button v-for="(dot, di) in path.dots.slice(1, -1)" :key="`${path.key}-d${di + 1}`"
+              class="body-meridian-bend" :style="{ left: `${dot[0]}%`, top: `${dot[1]}%` }"
+              :aria-label="`Điểm mạch ${di + 1}`"
+              @pointerdown="onBendPointerDown($event, `${path.key}:d${di + 1}`)"
+              @pointermove="onBendPointerMove"
+              @pointerup="onBendPointerUp" />
+          </template>
+        </div>
         <button v-for="node in visibleMeridianNodes" :key="node.unit.id"
           class="body-meridian-node body-orb" :class="[node.unit.state, { selected: selected === node.unit.id }]"
           :style="{ left: `${node.x}%`, top: `${node.y}%` }"
@@ -443,7 +449,8 @@ const galaxyPieces = computed(() =>
 .body-meridian-path { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 .body-meridian-path .dot-lit { fill:#ffd76a; }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
-.body-meridian-bend { position:absolute; width:22px; height:22px; transform:translate(-50%,-50%); z-index:4; padding:0; border:0; border-radius:50%; background:radial-gradient(circle,#7fffd4 0 28%,transparent 32%); cursor:grab; touch-action:none; }
+.body-meridian-handles { position:absolute; inset:0; z-index:4; pointer-events:none; }
+.body-meridian-bend { position:absolute; width:22px; height:22px; transform:translate(-50%,-50%); z-index:4; padding:0; border:0; border-radius:50%; background:radial-gradient(circle,#7fffd4 0 28%,transparent 32%); cursor:grab; touch-action:none; pointer-events:auto; }
 .body-meridian-bend:active { cursor:grabbing; }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
