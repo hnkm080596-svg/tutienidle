@@ -159,7 +159,7 @@ const caption = computed(() => props.model.units.map((unit) => unit.label).join(
         class="body-unit-chip" :class="[unit.state, { selected: selected === unit.id }]"
         :aria-pressed="selected === unit.id" @click="emit('select', unit.id)">
         <img v-if="processArt(unit)" class="body-chip-art" :src="processArt(unit) ?? ''" alt="">
-        <span>{{ unit.label }}</span><small>{{ t(`body.state.${unit.state}`) }}</small>
+        <span class="body-chip-text"><span>{{ unit.label }}</span><small>{{ t(`body.state.${unit.state}`) }}</small></span>
       </button>
       <span v-for="milestone in model.milestones" :key="milestone.id"
         :class="['body-milestone', { done: milestone.done }]">{{ milestone.label }}</span>
@@ -199,8 +199,9 @@ const caption = computed(() => props.model.units.map((unit) => unit.label).join(
 .body-galaxy-piece.orbiting { animation:orbit-drift 28s linear infinite; }
 .body-galaxy-stars { position:absolute; left:40%; top:42%; width:20%; height:14%; object-fit:contain; pointer-events:none; }
 .body-unit-rail { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:4px 2px; width:100%; }
-.body-unit-chip { display:inline-flex; flex-direction:column; align-items:center; gap:2px; padding:4px 8px; border:1px solid #a88a4f88; border-radius:5px; background:#e7d8b16b; color:#74603c; font:11px/1.25 var(--font-display,Georgia,serif); cursor:pointer; }
-.body-unit-chip .body-chip-art { width:30px; height:30px; object-fit:contain; }
+.body-unit-chip { display:inline-flex; flex-direction:row; align-items:center; gap:6px; padding:4px 8px; border:1px solid #a88a4f88; border-radius:5px; background:#e7d8b16b; color:#74603c; font:11px/1.25 var(--font-display,Georgia,serif); cursor:pointer; }
+.body-unit-chip .body-chip-art { width:30px; height:30px; object-fit:contain; flex:none; align-self:center; }
+.body-chip-text { display:flex; flex-direction:column; align-items:flex-start; text-align:left; }
 .body-unit-chip small { font-size:9px; }
 .body-unit-chip.selected { border-color:#357455; background:#cbd3ae88; color:#2d563f; }
 .body-unit-chip.locked { color:#998a6a; }
