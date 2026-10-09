@@ -153,7 +153,7 @@ const galaxyPieces = computed(() =>
 </template>
 <style scoped>
 .body-center { display:flex; flex-direction:column; align-items:center; min-height:0; padding:0 4px; }
-.body-stage { position:relative; aspect-ratio:1215/1295; height:calc(100% - 8px); max-width:100%; flex:none; isolation:isolate; transform:scale(1.12); }
+.body-stage { position:relative; aspect-ratio:1215/1295; height:calc(100% - 8px); max-width:100%; flex:none; isolation:isolate; transform:scale(1.12); overflow:hidden; }
 .body-silhouette { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .body-layer { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
