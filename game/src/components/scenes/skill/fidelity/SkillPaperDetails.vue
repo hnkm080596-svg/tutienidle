@@ -48,8 +48,8 @@ const paperFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/charac
   </aside>
 </template>
 <style scoped>
-.skill-detail-card { position:absolute; left:985px; top:198px; width:400px; height:487px; padding:25px 26px 13px; isolation:isolate; display:flex; flex-direction:column; color:#f0dfbb; }
-.skill-card-frame { position:absolute; inset:0; z-index:-1; pointer-events:none; border:15px solid transparent; border-image-slice:90 fill; border-image-width:15px; border-image-repeat:stretch; }
+.skill-detail-card { position:absolute; left:985px; top:198px; width:400px; height:487px; padding:25px 26px 13px; isolation:isolate; display:flex; flex-direction:column; color:#f0dfbb; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); }
+.skill-card-frame { position:absolute; inset:0; z-index:-1; pointer-events:none; border:15px solid transparent; border-image-slice:160; border-image-width:15px; border-image-repeat:stretch; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
 .skill-detail-card header { flex:none; display:flex; align-items:center; gap:14px; min-height:76px; padding-bottom:16px; border-bottom:1px solid #9d8049; }
 header img { width:61px; height:61px; border:3px double #a6813a; border-radius:50%; object-fit:cover; }
 .skill-detail-card h2 { margin:0 0 9px; font-size:25px; line-height:1.2; font-weight:500; color:#f3e0b5; }header p { margin:0; color:#b3a077; font-size:14px; }

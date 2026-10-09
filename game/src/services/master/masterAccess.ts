@@ -3,8 +3,19 @@
 // is a client-side test convenience - NOT a security boundary; the
 // panel's mutations are test cheats applied to local save state only.
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
+import { BETA_MASTER_UNLOCKS } from '@/core/betaScope'
+import type { BetaFeatureName } from '@/core/betaFeatureFlags'
 
 const MASTER_LOGIN_IDS = new Set(['admin'])
+
+// Scope-hidden features a master session opens for TESTING (Minh
+// 2026-10-08): tab gate + domain ops share the isBetaFeature channel -
+// wash/refine tabs render AND their EquipmentSystem guards pass for
+// admin while every other player still fails closed.
+const MASTER_BETA_UNLOCKS: readonly BetaFeatureName[] = [
+  'equipmentWash',
+  'equipmentRefine',
+]
 
 const sessionLoginId = ref<string | undefined>()
 
@@ -46,6 +57,11 @@ export function recordSessionLoginId(loginId: string | undefined) {
   if (!isMasterLoginId(sessionLoginId.value)) {
     setSkillDesignMode(false)
     skillDesignOverrides.value = {}
+    BETA_MASTER_UNLOCKS.clear()
+  } else {
+    for (const feature of MASTER_BETA_UNLOCKS) {
+      BETA_MASTER_UNLOCKS.add(feature)
+    }
   }
 }
 

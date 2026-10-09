@@ -3,21 +3,22 @@
 // extracted from EquipmentHallPanel.vue shell. Preview state
 // (pendingWashAffixes) is now LOCAL - v-if unmount on tab switch resets
 // it automatically, matching the manual reset the old switchTab() did.
-import { computed, inject, onBeforeUnmount, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import type { RolledAffix } from '@/core/equipment/RolledAffix'
-import { equipmentSlotLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
+import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import SlotView from '@/components/common/SlotView.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { useEquippedRows, useHallSlotRows, useItemRenState, type HallSlotRow } from './useEquippedRows'
-import { affixDisplayLabel, tierClass } from './equipmentHallDisplay'
+import { getEffectiveAffixValue } from '@/core/equipment/EquipmentSystem'
+import { useEquippedRows, useItemRenState } from './useEquippedRows'
+import { affixDisplayLabel, formatAffixValue, tierClass } from './equipmentHallDisplay'
 import { HALL_SELECTION_KEY } from './hallSelection'
 
 const { t } = useI18n()
@@ -36,11 +37,9 @@ if (!hallSelection) {
   throw new Error('WashTab phải được render trong cây con đã provide HALL_SELECTION_KEY')
 }
 
-const { selectedInstanceId, selectEquipped, clearSelection } = hallSelection
+const { selectedInstanceId } = hallSelection
 
 const { equippedRows } = useEquippedRows()
-
-const hallSlotRows = useHallSlotRows(equippedRows)
 
 const itemRenState = useItemRenState(selectedInstanceId)
 
@@ -58,16 +57,6 @@ const pendingWashAffixes = computed<RolledAffix[]>(() =>
   pendingWashTicket.value ? washPreviewAffixes(pendingWashTicket.value) ?? [] : [],
 )
 
-function selectHallSlotForAction(row: HallSlotRow) {
-  if (row.equippedRow) {
-    selectEquipped(row.equippedRow.instanceId)
-  } else {
-    clearSelection()
-  }
-
-  discardPendingTicket()
-}
-
 function discardPendingTicket() {
   if (pendingWashTicket.value) {
     washDiscard(pendingWashTicket.value)
@@ -75,6 +64,12 @@ function discardPendingTicket() {
 
   pendingWashTicket.value = null
 }
+
+// Item pick happens on the paperdoll (owner ruling 2026-10-08: same as
+// Enhance). A paid preview ticket is bound to the item it rolled for -
+// switching selection must discard it so Keep can never commit a stale
+// roll onto a different item (the old slot strip did this on click).
+watch(selectedInstanceId, discardPendingTicket)
 
 // T4-33 - the ticket was PAID at preview time; an unmount that keeps it
 // armed lets a remounted tab reuse a stale paid roll.
@@ -146,17 +141,33 @@ function doWashKeep() {
   pendingWashTicket.value = null
 }
 
-const pendingWashAffixDisplay = computed(() =>
-  pendingWashAffixes.value.map((rolled, index) => ({
+interface AffixView {
+  index: number
+  label: string
+  tier: number
+  /** Formatted combat-truth value (rolled value; affixes no longer take
+   *  the enhance scale - owner ruling 2026-10-08). */
+  valueText: string
+}
+
+function toAffixView(rolled: RolledAffix, index: number): AffixView {
+  const affix = gameManager.affixRegistry.has(rolled.affixId)
+    ? gameManager.affixRegistry.get(rolled.affixId)
+    : undefined
+  const value = affix ? getEffectiveAffixValue(rolled, affix) : rolled.value
+  return {
     index,
-
     label: affixDisplayLabel(rolled, gameManager.affixRegistry),
-
     tier: rolled.tier,
-  })),
+    valueText: formatAffixValue(affix?.stat, value),
+  }
+}
+
+const pendingWashAffixDisplay = computed<AffixView[]>(() =>
+  pendingWashAffixes.value.map((rolled, index) => toAffixView(rolled, index)),
 )
 
-const selectedAffixes = computed(() => {
+const selectedAffixes = computed<AffixView[]>(() => {
   stateVersion.value
 
   if (!selectedInstanceId.value) {
@@ -169,25 +180,15 @@ const selectedAffixes = computed(() => {
     return []
   }
 
-  return instance.affixes.map((rolled, index) => ({
-    index,
-
-    label: affixDisplayLabel(rolled, gameManager.affixRegistry),
-
-    tier: rolled.tier,
-  }))
+  return instance.affixes.map((rolled, index) => toAffixView(rolled, index))
 })
 
 interface AffixCompareRow {
   index: number
 
-  beforeLabel?: string
+  before?: AffixView
 
-  beforeTier?: number
-
-  afterLabel?: string
-
-  afterTier?: number
+  after?: AffixView
 
   /** True while a paid ticket is pending - distinguishes "rolled zero
    * lines" (removed) from "no roll pending" (notRolled). */
@@ -207,23 +208,22 @@ const washAffixCompareRows = computed<AffixCompareRow[]>(() => {
   return Array.from({ length: rowCount }, (_, position) => ({
     index: position,
 
-    beforeLabel: current[position]?.label,
+    before: current[position],
 
-    beforeTier: current[position]?.tier,
-
-    afterLabel: pending[position]?.label,
-
-    afterTier: pending[position]?.tier,
+    after: pending[position],
 
     hasTicket: pendingWashTicket.value !== null,
   }))
 })
 
-const washRenAfter = computed(() =>
-  itemRenState.value ? Math.max(0, itemRenState.value.points - 1) : 0,
-)
-
-
+/** Fixed 5-slot card (owner ruling 2026-10-08): an item can roll at
+ *  most 5 affix lines (Tiên). The card always renders all 5 slots,
+ *  empty slots keep their hairline so the rows stay evenly spaced
+ *  no matter how many lines the item actually has. */
+const washCompareSlots = computed<(AffixCompareRow | null)[]>(() => {
+  const rows = washAffixCompareRows.value
+  return [0, 1, 2, 3, 4].map((index) => rows[index] ?? null)
+})
 
 const MATERIAL_CATEGORY_ART: Record<string, string> = {
   essence: '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
@@ -260,68 +260,51 @@ const washMaterials = computed(() => [
 </script>
 
 <template>
-  <!-- Reskin theo Codex EquipmentForgePreview ('wash'): 2 cot
-       Hien tai / Ket qua. Lech ghi nhan: khong nut khoa tung dong
-       (domain chi ho tro khoa cho Tinh Luyen, khong cho Tay Luyen);
-       hang chon slot o dau card (preview chon qua socket doll). -->
+  <!-- Bố cục chung với Cường Hóa (owner ruling 2026-10-08): Tẩy Luyện
+       cần area cho tối đa 5 dòng affix nên BỎ ô chiếu + 2 vòng tròn -
+       chỉ còn danh sách affix trước -> sau (mỗi dòng tên trái, giá trị
+       phải, hairline), hàng nguyên liệu riêng của Tẩy Luyện và nút hành
+       động ghim đáy card. Chọn đồ trực tiếp trên doll. -->
   <div class="equipment-forge-workspace forge-wash">
     <h2>{{ t('panels.equipmentHall.tabs.wash') }}</h2>
 
-    <div class="wash-slot-strip" :aria-label="t('panels.equipmentHall.aria.washSlots')">
-      <button
-        v-for="row in hallSlotRows"
-        :key="row.slot"
-        type="button"
-        class="wash-slot"
-        :class="{ selected: row.equippedRow?.instanceId === selectedInstanceId }"
-        :aria-pressed="row.equippedRow?.instanceId === selectedInstanceId"
-        :aria-label="row.equippedRow?.accessibleLabel ?? equipmentSlotLabel(row.slot)"
-        :title="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
-        @click="selectHallSlotForAction(row)"
-      >
-        <SlotView
-          class="wash-slot__view"
-          variant="circle"
-          static
-          :item="row.equippedRow?.instance ?? null"
-          :icon="row.equippedRow?.icon"
-          :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
-          :accessible-label="row.equippedRow?.accessibleLabel"
-          :equipment-quality-rank="row.equippedRow?.gradeRank"
-          :rarity-rank="row.equippedRow?.qualityRank"
-        />
-      </button>
-    </div>
-
     <template v-if="selectedRow">
-      <p v-if="itemRenState" class="wash-ren">
-        {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }}
-        {{ t('panels.equipmentHall.labels.levelArrow') }} {{ washRenAfter }}/{{ itemRenState.max }}
-      </p>
-
-      <div v-if="washAffixCompareRows.length" class="equipment-wash-columns">
-        <section>
-          <h3>{{ t('panels.equipmentHall.forge.current') }}</h3>
-          <div v-for="row in washAffixCompareRows" :key="`before-${row.index}`" class="equipment-affix-row">
-            <span v-if="row.beforeLabel" class="equipment-stat-name" :class="tierClass(row.beforeTier!)">{{ row.beforeLabel }}</span>
-            <span v-else class="equipment-stat-name wash-status">{{ t('panels.equipmentHall.status.added') }}</span>
-          </div>
-        </section>
-        <section>
-          <h3>{{ t('panels.equipmentHall.forge.result') }}</h3>
-          <div v-for="row in washAffixCompareRows" :key="`after-${row.index}`" class="equipment-affix-row">
-            <span v-if="row.afterLabel" class="equipment-stat-name" :class="tierClass(row.afterTier!)">{{ row.afterLabel }}</span>
-            <span v-else class="equipment-stat-name wash-status">{{
-              row.hasTicket
-                ? t('panels.equipmentHall.status.removed')
-                : t('panels.equipmentHall.status.notRolled')
-            }}</span>
-          </div>
-        </section>
+      <div v-if="washAffixCompareRows.length" class="forge-compare">
+        <template v-for="(row, slot) in washCompareSlots" :key="slot">
+          <template v-if="row">
+            <div class="forge-compare__cell">
+              <template v-if="row.before">
+                <span class="equipment-stat-name" :class="tierClass(row.before.tier)">{{ row.before.label }}</span>
+                <b class="forge-compare__value">{{ row.before.valueText }}</b>
+              </template>
+              <span v-else class="wash-status">{{ t('panels.equipmentHall.status.added') }}</span>
+            </div>
+            <span class="forge-compare__row-arrow" aria-hidden="true">»</span>
+            <div class="forge-compare__cell forge-compare__cell--next">
+              <template v-if="row.after">
+                <span class="equipment-stat-name" :class="tierClass(row.after.tier)">{{ row.after.label }}</span>
+                <b class="forge-compare__value">{{ row.after.valueText }}</b>
+              </template>
+              <span v-else class="wash-status">{{
+                row.hasTicket
+                  ? t('panels.equipmentHall.status.removed')
+                  : t('panels.equipmentHall.status.notRolled')
+              }}</span>
+            </div>
+          </template>
+          <template v-else>
+            <div class="forge-compare__cell forge-compare__cell--empty"></div>
+            <span class="forge-compare__row-arrow"></span>
+            <div class="forge-compare__cell forge-compare__cell--empty"></div>
+          </template>
+        </template>
       </div>
-      <p v-else class="wash-empty">{{ t('panels.equipmentHall.empty.noAffixes') }}</p>
+      <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.noAffixes') }}</p>
 
-      <h3 class="equipment-forge-divider material-divider">{{ t('panels.equipmentHall.forge.washMaterials') }}</h3>
+      <!-- Pinned bottom block (same as Cường Hóa): materials ride above
+           the actions band, both anchored to the card's bottom edge via
+           .equipment-workspace (positioned ancestor outside this flex
+           column) - no scrollbar ever appears. -->
       <div class="equipment-forge-materials">
         <div
           v-for="material in washMaterials"
@@ -332,37 +315,54 @@ const washMaterials = computed(() => [
           <div class="equipment-material-icon">
             <SlotView variant="equipment" static :item="null" :icon="material.icon" :label="material.label" />
           </div>
-          <span>{{ material.label }}</span>
-          <b>{{ material.owned }}/{{ material.amount }}</b>
+          <div>
+            <span>{{ material.label }}</span
+            ><b>{{ material.owned }}/{{ material.amount }}</b>
+          </div>
         </div>
       </div>
-
       <div class="equipment-forge-actions">
-        <EquipmentArtButton gold :disabled="!canWash()" @click="doWashPreview">
+        <EquipmentArtButton filter-art :gold="canWash()" :disabled="!canWash()" @click="doWashPreview">
           {{ t('panels.equipmentHall.buttons.washPreview') }}
         </EquipmentArtButton>
-        <EquipmentArtButton
-          v-if="pendingWashTicket"
-          :disabled="!pendingWashTicket"
-          @click="doWashKeep"
-        >
+        <EquipmentArtButton v-if="pendingWashTicket" filter-art gold @click="doWashKeep">
           {{ t('panels.equipmentHall.buttons.keep') }}
+        </EquipmentArtButton>
+        <EquipmentArtButton v-if="pendingWashTicket" filter-art @click="discardPendingTicket">
+          {{ t('panels.equipmentHall.buttons.discard') }}
         </EquipmentArtButton>
       </div>
     </template>
-    <p v-else class="wash-empty">{{ t('panels.equipmentHall.empty.selectItem') }}</p>
+    <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.selectItem') }}</p>
   </div>
 </template>
 
 <style scoped>
-/* Forge layout copied from the approved preview
-   (ui-preview/equipment/EquipmentForgePreview.vue, 'wash' branch). */
+/* Same forge chrome as EnhanceTab (owner ruling 2026-10-08): title at
+   top, before/after compare fills the middle, materials + actions are
+   absolutely pinned to the card's bottom edge so they never collide
+   and never produce a scrollbar. */
 .equipment-forge-workspace {
   height: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-height: 0;
+}
+.forge-wash {
+  padding-bottom: 185px;
+}
+.forge-wash .equipment-forge-materials {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 85px;
+}
+.forge-wash .equipment-forge-actions {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: -2px;
 }
 .equipment-forge-workspace h2 {
   font-size: 26px;
@@ -371,105 +371,145 @@ const washMaterials = computed(() => [
   padding-bottom: 7px;
   line-height: 1.15;
 }
-.equipment-forge-divider {
-  margin: 0;
-  text-align: center;
-  font-size: 16px;
-  line-height: 1.2;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.equipment-forge-divider::before,
-.equipment-forge-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #a4894e;
-  opacity: 0.6;
-}
-.equipment-wash-columns {
+/* Before/after compare: ONE 2-column grid so each affix row shares its
+   height across both sides (labels can wrap without desyncing rows).
+   Rolls are scrollable inside the area but the scrollbar stays hidden
+   (app-wide rule). The arrow sits dead-center as an overlay. */
+.forge-compare {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  column-gap: 14px;
   flex: 1;
-  min-height: 0;
+  min-height: 120px;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border: 1px solid #9b7d4055;
+  border-radius: 4px;
+  background: #f4e9cf0d;
+  overflow-y: auto;
+  scrollbar-width: none;
+  /* Owner request 2026-10-08: the card is resizable by drag
+     (native bottom-right grip) so row spacing can be tuned live. */
+  resize: both;
+  /* DEBUG outlines while aligning (remove when layout is settled). */
+  outline: 2px dashed #37e6f0cc;
+  outline-offset: 1px;
 }
-.equipment-wash-columns > section {
+.forge-compare::-webkit-scrollbar {
+  display: none;
+}
+/* Per-row arrow: sits on the same baseline as the two stat cells so
+   the number pair and the arrow can never drift apart (replaces the
+   one dead-center overlay that misaligned with the rows). */
+.forge-compare__row-arrow {
+  align-self: center;
+  justify-self: center;
+  color: #dfb365;
+  font-size: 22px;
+  line-height: 1;
+  pointer-events: none;
+}
+.forge-compare__cell {
   display: flex;
-  flex-direction: column;
-  min-height: 0;
-  gap: 8px;
-}
-.equipment-wash-columns h3 {
-  text-align: center;
-  font-size: 19px;
-  margin: 0;
-  padding: 3px 0 6px;
-  border-bottom: 1px solid #9d804a;
-}
-.equipment-affix-row {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 8px;
-  padding: 10px 11px;
-  border: 1px solid #987b4855;
-  flex: 1;
+  padding: 9px 2px;
+  border-bottom: 1px solid #96764440;
+  font-size: 17px;
   min-height: 0;
-  font-size: 14px;
+  /* DEBUG (owner asked for outlines while aligning the 5-row card). */
+  outline: 1px solid #ff6fb366;
+}
+.forge-compare__cell--empty {
+  visibility: hidden;
+  /* DEBUG: keep the empty slot's outline visible while aligning. */
+  visibility: visible;
 }
 /* tierClass() emits qi-hall__tier-N - owned solely by qi-hall.css
-   (owner ruling 2026-10-08: keep the sheet's designed tier colors,
-   tier-5 gradient included; the local flat redefinitions were removed
-   so one owner remains and the ownership guard stays green). */
+   (owner ruling 2026-10-08: keep the sheet's designed tier colors). */
 .equipment-stat-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  min-width: 0;
+}
+.forge-compare__value {
+  font-weight: 600;
+  color: #ebce84;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .wash-status {
   color: #8f7f5f;
-  font-size: 12px;
+  font-size: 13px;
+  margin: auto;
 }
+/* Materials row: identical metrics to Cường Hóa (icon 65px, label
+   column ~150px, owned/amount on one baseline). */
 .equipment-forge-materials {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  gap: 43px;
+  gap: 28px;
   flex: none;
-  min-height: 53px;
-}
-.forge-wash .equipment-material {
-  flex-direction: column;
-  gap: 4px;
-}
-.forge-wash .equipment-material-icon {
-  height: 44px;
-  width: 44px;
+  min-height: 80px;
+  /* DEBUG */
+  outline: 2px dashed #8effa0aa;
 }
 .equipment-material {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
+  /* DEBUG */
+  outline: 1px solid #ffbf47aa;
+}
+.equipment-material > div:last-child {
+  /* DEBUG */
+  outline: 1px solid #37e6f0aa;
+}
+/* Material name stays on ONE line in both columns - a wrapped name
+   pushed the count into the middle and looked asymmetric (owner
+   callout 2026-10-08). */
+.equipment-material > div:last-child > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+}
+.equipment-forge-actions {
+  /* DEBUG */
+  outline: 2px dashed #37e6f0aa;
+}
+.equipment-forge-actions :deep(button) {
+  /* DEBUG */
+  outline: 1px solid #ffbf47aa;
 }
 .equipment-material-icon {
-  width: 48px;
-  height: 48px;
+  width: 65px;
+  height: 65px;
   flex: none;
+  align-self: center;
 }
 .equipment-material-icon :deep(.slot-view) {
   width: 100%;
   height: 100%;
 }
-.equipment-material span {
-  font-size: 13px;
+.equipment-material > div:last-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  align-self: stretch;
+  font-size: 18px;
+  line-height: 1.15;
+  max-width: 175px;
+  min-width: 0;
 }
 .equipment-material b {
   font-weight: 400;
   color: #8bca8d;
-  font-size: 13px;
+  font-size: 18px;
   white-space: nowrap;
 }
 .equipment-material.is-missing b {
@@ -481,58 +521,20 @@ const washMaterials = computed(() => [
   gap: 18px;
   flex: none;
 }
-.forge-wash .equipment-forge-actions > button {
+/* Same filter-art pill as Cường Hóa's submit (owner ruling 2026-10-08). */
+/* Three short-label pills share the row when a roll is pending
+   (Tẩy Luyện / Giữ / Bỏ) - same shrink-to-fit as RefineTab. */
+.equipment-forge-actions > button {
+  width: 220px;
   min-width: 0;
-  flex: 1;
-  font-size: 21px;
+  font-size: 24px;
 }
-.wash-ren {
-  margin: 0;
-  text-align: center;
-  font-size: 13px;
-  color: #c1b18d;
-}
-.wash-empty {
+.forge-empty {
   flex: 1;
   display: grid;
   place-items: center;
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   color: #c1b18d;
 }
-
-/* Hang chon slot - live-only (preview chon qua socket doll). */
-.wash-slot-strip {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-  flex: none;
-  height: 52px;
-}
-.wash-slot {
-  position: relative;
-  width: 52px;
-  height: 52px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-.wash-slot__view {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-.wash-slot :deep(.slot-view__icon-wrap) {
-  inset: 14%;
-}
-.wash-slot.selected :deep(.slot-view__ring-art) {
-  filter: brightness(1.35) drop-shadow(0 0 5px #d9a94f88);
-}
-.wash-slot:not(.selected):hover :deep(.slot-view__ring-art) {
-  filter: brightness(1.18);
-}
 </style>
-

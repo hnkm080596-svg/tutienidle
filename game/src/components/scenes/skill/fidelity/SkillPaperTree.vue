@@ -444,6 +444,7 @@ const rootStyle = computed(() =>
     @scroll="onScrollReset"
   >
     <div class="skill-paper-backdrop" :style="{ borderImageSource: `url('${backdrop}')` }" aria-hidden="true" />
+    <div class="skill-graph-window" @scroll="onScrollReset">
     <div class="skill-graph" :style="graphStyle">
       <svg class="skill-tree-lines" :viewBox="viewBox" aria-hidden="true">
         <g v-for="edge in connections" :key="`${edge.from}-${edge.to}`" :class="['skill-edge', { muted: edge.muted, lit: edge.lit }]">
@@ -465,6 +466,7 @@ const rootStyle = computed(() =>
       </svg>
       <SkillPaperNode v-for="node in paintNodes" :key="node.id" class="skill-positioned-node" :data-node-id="node.id" :node="node" :selected="selected === node.id" :style="{ left: `${node.x}px`, top: `${node.y}px` }" @select="onSelect" @activate="onActivate" />
     </div>
+    </div>
     <div class="design-tools" aria-hidden="false" @pointerdown.stop @pointermove.stop @pointerup.stop @wheel.stop @click.stop>
       <button v-if="isMaster" type="button" class="design-toggle" :class="{ active: designMode }" @click="toggleDesign">Thiết Kế</button>
       <template v-if="designMode">
@@ -482,8 +484,9 @@ const rootStyle = computed(() =>
 /* Node discs always paint above every link/light line (edge svg is
    z-index 1; positioned nodes z-index 2) so art never sits under light. */
 .skill-positioned-node { position:absolute; transform:translate(-50%,-50%); z-index:2; }
-.skill-paper-tree { position:absolute; left:365px; top:198px; width:600px; height:487px; overflow:hidden; cursor:grab; touch-action:none; user-select:none; }
-.skill-paper-backdrop { position:absolute; inset:0; pointer-events:none; border:15px solid transparent; border-image-slice:90 fill; border-image-width:15px; border-image-repeat:stretch; }
+.skill-paper-tree { position:absolute; left:365px; top:198px; width:600px; height:487px; overflow:hidden; cursor:grab; touch-action:none; user-select:none; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); }
+.skill-paper-backdrop { position:absolute; inset:0; pointer-events:none; border:15px solid transparent; border-image-slice:160; border-image-width:15px; border-image-repeat:stretch; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
+.skill-graph-window { position:absolute; inset:9.4px 6.5px 10.1px 6.5px; overflow:hidden; touch-action:none; user-select:none; cursor:grab; }
 .skill-paper-tree.dragging { cursor:grabbing; }
 .skill-paper-tree :deep(img) { -webkit-user-drag:none; }
 .skill-graph { position:absolute; left:50%; top:50%; transform-origin:center; }

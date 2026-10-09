@@ -20,7 +20,7 @@ const { t } = useI18n()
 const paper = {
   backgroundImage: `url('${resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')}')`,
 }
-const divider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png')
+const divider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 const bodyArt = (name: string) =>
   resolveAssetUrl(`/assets/ui/tien-hiep-2026-10/body/${name}-v1.png`)
 
@@ -38,7 +38,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
       <!-- The global pack still sizes .body-heading/h1 to the old 370px
            title box (absolute-era design); this layout wants a full-width
            in-flow heading, so the two width overrides stay inline. -->
-      <header class="body-heading" style="width:auto"><div class="body-heading__top"><h1 style="width:auto;text-align:left">{{ t('body.title') }}</h1><img :src="divider" alt=""></div><p class="body-subtitle">{{ model.identity }}</p></header>
+      <header class="body-heading" style="width:auto"><div class="body-heading__top"><div class="body-heading__col"><h1 style="width:auto;text-align:left">{{ t('body.title') }}</h1><img :src="divider" alt=""></div></div><p class="body-subtitle">{{ model.identity }}</p></header>
       <div class="body-layout">
         <nav class="body-family body-chapters" :aria-label="t('body.chapters')">
           <img class="family-spine" :src="bodyArt('meridian-tube-lit')" alt="">
@@ -70,7 +70,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 /* h1 inherits the global 72px calligraphy treatment (58px box) - give
    the row its real height so the glyphs sit inside the baked plaque
    instead of straddling the panel edge. */
-.body-heading__top { height:58px; display:flex; align-items:center; gap:24px; }
+.body-heading__top { height:58px; display:flex; align-items:center; gap:24px; } .body-heading__col{display:flex;flex-direction:column}.body-heading__top .body-heading__col img{width:200px;margin-top:0;height:auto;object-fit:contain;opacity:.75}
 .body-heading h1 { margin:0; font-size:30px; font-weight:700; color:#35250f; text-shadow:0 1px #fff7; }
 .body-heading img { width:170px; height:21px; object-fit:contain; opacity:.65; }
 .body-subtitle { margin:2px 0 4px; font-size:13px; color:#715627; }

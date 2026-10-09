@@ -118,7 +118,7 @@ const portraitHeight = computed(() =>
 // proportions (mortal extent.h = 1 -> no change).
 const figureScale = computed(() => {
   const extent = props.variant === 'portrait' ? idleClip.value?.extent : undefined
-  return extent && extent.h > 0 ? 1 / extent.h : 1
+  return extent && extent.h > 0 ? 0.9 / extent.h : 1
 })
 </script>
 

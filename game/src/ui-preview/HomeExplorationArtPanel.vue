@@ -27,7 +27,7 @@ h1 { margin:0;font:700 38px/1.2 var(--pc-font-body); }
 .home-map-content :deep(.paper-map-scene__rewards .pc-paper-slot) { width:56px;height:56px; }
 .home-map-content :deep(.paper-map-scene__landscape > h2) { left:8px;padding:5px;font-size:20px; }
 .home-map-content :deep(.paper-map-scene__landscape > p) { font-size:13px;padding:8px; }
-.home-map-content :deep(.paper-scene-inspector) { background:#24231f;border:14px solid transparent;border-image:url('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png') 90 fill stretch;box-sizing:border-box;color:#efdfb9;overflow:hidden;display:flex;flex-direction:column;gap:8px; }
+.home-map-content :deep(.paper-scene-inspector) { border:14px solid transparent;border-image:url('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png') 160 stretch;clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px);box-sizing:border-box;color:#efdfb9;overflow:hidden;display:flex;flex-direction:column;gap:8px;background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 10px) no-repeat;}
 .home-map-content :deep(.paper-scene-inspector h2),.home-map-content :deep(.paper-scene-inspector h3) { margin:0;padding:4px 0; }
 .home-map-content :deep(.paper-scene-inspector p) { margin:0;font-size:14px;line-height:1.35; }
 .home-map-content :deep(.paper-scene-inspector dl) { margin:0;font-size:13px; }

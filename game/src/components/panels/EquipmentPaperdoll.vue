@@ -112,7 +112,7 @@ const idleClip = computed(
 // (mortal extent.h = 1, no change) to match the combat proportion.
 const figureScale = computed(() => {
   const extent = idleClip.value?.extent
-  return extent && extent.h > 0 ? 1 / extent.h : 1
+  return extent && extent.h > 0 ? 0.9 / extent.h : 1
 })
 
 // Audit fix 2026-08-31 - equipmentRegistry.get() THROW voi itemId la
@@ -358,11 +358,13 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 }
 
 .paperdoll__figure canvas {
-  max-width: 100%;
-  object-fit: contain;
-  /* Grow the fixed-height cell box so the opaque figure (extent.h of it)
-     fills the zone like mortal's full-height art; bottom origin keeps the
-     feet planted. */
+  /* No max-width clamp: height-driven sizing keeps the canvas's own aspect,
+     and scale(1/extent.h) makes every profile's figure fill the zone height
+     like mortal's full-height art; bottom origin keeps the feet planted.
+     A width clamp would letterbox wide canvases (phap_tu's square cells)
+     and shrink the figure below the zone. */
+  height: 100%;
+  width: auto;
   transform: scale(var(--pd-figure-scale, 1));
   transform-origin: 50% 100%;
 }

@@ -196,7 +196,10 @@ function onListKeydown(e: KeyboardEvent) {
   /* Owner ruling: option list wears the same nine-slice card backdrop as
      the bag workspace, not the native popup frame. */
   border: 12px solid transparent;
-  border-image: url('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png') 90 fill / 12px stretch;
+  border-image: url('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png') 160 / 12px stretch;
+  clip-path: inset(4.1px 1.7px 4.6px 1.7px round 5px);
+  background:linear-gradient(#000000d9,#000000d9) border-box 2px 4px/calc(100% - 4px) calc(100% - 8px) no-repeat;
+  
   color: #f2e3c2;
 }
 

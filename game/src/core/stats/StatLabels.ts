@@ -85,7 +85,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
 //      sung.
 const FORMAT_ADOPTED_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
   realmPassivePercent: 'Cộng % Cảnh Giới',
-  affixDeltaPercent: 'Tăng Trưởng Affix',
+  affixDeltaPercent: 'Tăng Trưởng Cường Hóa',
   productionSpeedMultiplier: 'Hệ số tốc độ',
   artifactGradeMultiplier: 'Hệ số Pháp Bảo',
   cultivationPercent: 'Tu Vi (Đan Dược)',

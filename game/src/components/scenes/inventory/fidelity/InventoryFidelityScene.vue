@@ -28,6 +28,7 @@ const filters = ['all', 'equipment', 'material', 'pill']
 function search(event: Event) { if (event.target instanceof HTMLInputElement) emit('query', event.target.value) }
 
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 
 // Same dialog contract the imperial scroll carried: focus/pointer stay
 // inside the open surface and Escape closes through emit('back').
@@ -39,6 +40,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
   <section ref="rootRef" class="inventory-scene" :aria-label="t('panels.bag.title')" @click.self="emit('back')">
     <div class="inventory-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
     <h1 class="inventory-title">{{ t('panels.bag.title') }}</h1>
+    <img class="inventory-divider" :src="titleDivider" alt="">
 
     <div class="inventory-content">
       <slot name="toolbar"><div class="toolbar"><nav><button v-for="id in filters" :key="id" :aria-pressed="filter===id" @click="emit('filter',id)">{{ t(`inventoryPreview.${id}`) }}</button></nav><input type="search" :value="query" :placeholder="t('inventoryPreview.search')" :aria-label="t('inventoryPreview.searchLabel')" @input="search"><button class="sort" @click="emit('sort')">{{ t('inventoryPreview.sort') }}</button></div></slot>
@@ -59,7 +61,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .inventory-scene{position:absolute;inset:0;pointer-events:auto;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
 .inventory-scene :deep(*){box-sizing:border-box}
 .inventory-paper{position:absolute;left:94px;top:123px;width:1334px;height:633px;border:0 solid transparent;border-image-slice:300 fill;border-image-width:83px;filter:drop-shadow(0 12px 15px #0009)}
-.inventory-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7}
+.inventory-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7} .inventory-divider{position:absolute;left:237px;top:179px;width:230px;object-fit:contain;opacity:.9}
 /* Interior region: clears the nav-rail column on the left and the
    paper's decorative frame all around (same rect the preview surface
    exposes). */

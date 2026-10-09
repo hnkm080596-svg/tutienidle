@@ -142,7 +142,7 @@
       },
       "buttons": {
         "enhance": "Enhance",
-        "washPreview": "Wash — reroll all affix lines",
+        "washPreview": "Wash",
         "keep": "Keep",
         "discard": "Discard",
         "refinePreview": "Refine",
@@ -542,7 +542,8 @@
       "tabs": {
         "equipment": "Equipment",
         "material": "Materials",
-        "pill": "Pills"
+        "pill": "Pills",
+        "decompose": "Decompose"
       },
       "paperdoll": {
         "slots": {

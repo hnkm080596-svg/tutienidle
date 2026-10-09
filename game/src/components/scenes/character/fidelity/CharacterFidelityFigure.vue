@@ -38,7 +38,7 @@ const idle = computed(
 // extent.h = 1, no change) to match the combat proportion.
 const figureScale = computed(() => {
   const extent = idle.value?.extent
-  return extent && extent.h > 0 ? 1 / extent.h : 1
+  return extent && extent.h > 0 ? 0.9 / extent.h : 1
 })
 </script>
 <template>
@@ -66,5 +66,9 @@ const figureScale = computed(() => {
    line so the head never covers the dao text. Sprite is bottom-aligned
    and scales to fit. */
 .cf-figure { position: absolute; left: 0; right: 0; top: 14%; bottom: 18%; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
-.cf-figure__sprite { height: 100%; max-width: 100%; object-fit: contain; transform: translateX(-14px) scale(var(--cf-figure-scale, 1)); transform-origin: 50% 100%; filter: drop-shadow(0 8px 9px #4a3c3040); }
+/* No max-width clamp: height-driven sizing keeps the canvas aspect, and
+   scale(1/extent.h) makes every profile's figure fill the zone height like
+   mortal's full-height art. A width clamp would letterbox wide canvases
+   (phap_tu's square cells) and shrink the figure below the zone. */
+.cf-figure__sprite { height: 100%; width: auto; transform: translateX(-14px) scale(var(--cf-figure-scale, 1)); transform-origin: 50% 100%; filter: drop-shadow(0 8px 9px #4a3c3040); }
 </style>

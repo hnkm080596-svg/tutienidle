@@ -536,6 +536,20 @@
   display: none;
 }
 
+/* ROW-SNAP SCROLL (owner ruling 2026-10-09) — cuộn bắt mép từng hàng:
+   vùng cuộn dọc nào cũng "hít" về đầu phần tử con gần nhất thay vì dừng
+   giữa chừng. proximity (không mandatory) nên panel nội dung lẫn lộn
+   không bao giờ bị kẹt; scroll-snap-stop: always bắt buộc dừng ở mỗi
+   hàng => cuộn chắc theo hàng thay vì trượt hên xui. */
+* {
+  scroll-snap-type: y proximity;
+}
+
+* > * {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
 /* FIT-REFRACTOR — chỉ báo còn nội dung tràn ở các vùng wheel-scroll ẩn
    thanh (fade vào mực). Áp class .scrollfade ở container có
    overflow-y: auto; mask tự ẩn khi cuộn tới đáy. */

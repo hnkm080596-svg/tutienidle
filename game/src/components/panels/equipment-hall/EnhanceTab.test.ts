@@ -18,6 +18,7 @@ import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
+import { equipmentSlotLabel } from '@/core/presentation/labels'
 
 function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInstance {
   return makeInstance({
@@ -179,10 +180,12 @@ describe('EnhanceTab — Cường Hóa', () => {
     mounted.version.value += 1
     await nextTick()
 
-    const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"] .slot-view')
+    // Owner ruling 2026-10-08: ô chiếu hiện TÊN slot (không phải ảnh
+    // item) - slot phải resolve sang 'helmet' vừa chọn qua doll.
+    const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"]')
 
     expect(single).not.toBeNull()
-    expect(single!.classList.contains('slot-view--filled')).toBe(true)
+    expect(single!.querySelector('.enhance-slot__name')?.textContent).toBe(equipmentSlotLabel('helmet'))
 
     mounted.unmount()
   })

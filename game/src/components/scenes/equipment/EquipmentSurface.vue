@@ -3,11 +3,13 @@
 // equipment surfaces inside the approved fidelity composition:
 //   doll slot      -> EquipmentPaperdollStage (canonical socket select)
 //   summary slot   -> stats contributed by equipped gear (equipmentOps)
-//   workspace slot -> Trang Bi gear grid (unequipped bag items) + the 5
+//   workspace slot -> Trang Bi gear grid (unequipped bag items) + the
 //                     authored Khi Duong op tabs (owner ruling 2026-10-04:
 //                     rail = Trang Bi + Cuong Hoa/Tay Luyen/Tinh Luyen/
-//                     Hoa Luyen/Phan Giai; bag items that are NOT
-//                     equipment live in Kho Vat, not here)
+//                     Hoa Luyen; bag items that are NOT equipment live in
+//                     Kho Vat, not here). Owner ruling 2026-10-08: Phan
+//                     Giai (ore decompose) left the rail and lives on the
+//                     Kho Vat surface instead - it is a materials op.
 //
 // Scope-hidden ops keep their tab SHELL in the rail (disabled seal -
 // owner ruling: tab shown but the op stays locked); the op component
@@ -15,15 +17,14 @@
 // the shell up with no extra wiring.
 //
 // HALL_SELECTION_KEY provide + tab ownership (Enhance slot-based,
-// Wash/Refine shared selection, Dissolve/Decompose own multi-select)
-// are ported verbatim from the old EquipmentScene.
+// Wash/Refine shared selection, Dissolve's own multi-select) are
+// ported verbatim from the old EquipmentScene.
 import { computed, provide, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { isBetaEquipmentTab } from '@/core/betaScope'
-import { useMasterAccess } from '@/services/master/masterAccess'
 import { HALL_SELECTION_KEY } from '@/components/panels/equipment-hall/hallSelection'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
@@ -34,7 +35,6 @@ import EnhanceTab from '@/components/panels/equipment-hall/EnhanceTab.vue'
 import WashTab from '@/components/panels/equipment-hall/WashTab.vue'
 import RefineTab from '@/components/panels/equipment-hall/RefineTab.vue'
 import DissolveTab from '@/components/panels/equipment-hall/DissolveTab.vue'
-import DecomposeTab from '@/components/panels/equipment-hall/DecomposeTab.vue'
 
 
 
@@ -43,21 +43,24 @@ import DecomposeTab from '@/components/panels/equipment-hall/DecomposeTab.vue'
 const cardArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-tab-brush-v1.png')
 const dividerBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png')
+const secondaryButtonArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png')
+const primaryButtonArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png')
 
 const { t } = useI18n()
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
-// Canonical authored op table (same ids the old shell declared): all 5
-// seals render in the rail; scope-hidden ops show a disabled shell and
-// never mount their component (isBetaEquipmentTab still owns admission).
+// Canonical authored op table: scope-hidden ops show a disabled shell
+// and never mount their component (isBetaEquipmentTab still owns
+// admission). Owner ruling 2026-10-08: 'decompose' left the rail for
+// the Kho Vat surface - keep its id in BETA_EQUIPMENT_TAB_FEATURES so
+// a feature flip re-admits it there.
 const TABS = [
   { id: 'enhance' },
   { id: 'wash' },
   { id: 'refine' },
   { id: 'dissolve' },
-  { id: 'decompose' },
 ] as const
 
 type OpTabId = (typeof TABS)[number]['id']
@@ -65,14 +68,8 @@ type OpTabId = (typeof TABS)[number]['id']
 /** 'equip' = Trang Bi gear grid (unequipped items); the ops follow. */
 type EquipmentWorkspaceId = 'equip' | OpTabId
 
-const { isMaster } = useMasterAccess()
-
-// Owner ruling 2026-10-08: wash/refine stay scope-hidden for beta
-// players but open for the master account so their UIs can be
-// reskinned live.
-const MASTER_OP_TABS = new Set(['wash', 'refine'])
 const visibleTabs = computed(() =>
-  TABS.filter((tab) => isBetaEquipmentTab(tab.id) || (MASTER_OP_TABS.has(tab.id) && isMaster.value)),
+  TABS.filter((tab) => isBetaEquipmentTab(tab.id)),
 )
 
 const workspaceModes = computed<readonly { id: EquipmentWorkspaceId; label: string; locked: boolean }[]>(() => [
@@ -95,7 +92,7 @@ function selectWorkspace(id: EquipmentWorkspaceId) {
 }
 
 // Shared selection -- only Wash/Refine inject it (old shell note kept):
-// Enhance selects by SLOT; Dissolve/Decompose keep their own multi-select.
+// Enhance selects by SLOT; Dissolve keeps its own multi-select.
 const selectedInstanceId = ref<string | null>(null)
 
 function selectEquipped(instanceId: string) {
@@ -182,7 +179,7 @@ const summaryRows = computed(() => {
       <!-- Scene-level tab strip per the Codex preview: under the
            heading, above the doll column (left region). -->
       <template #tabs>
-        <nav class="equipment-tabs" :aria-label="t('equipment.title')" :style="{ '--equipment-tab-brush': `url('${tabBrush}')` }">
+        <nav class="equipment-tabs" :aria-label="t('equipment.title')" :style="{ '--equipment-tab-brush': `url('${tabBrush}')`, '--equipment-btn-secondary': `url('${secondaryButtonArt}')`, '--equipment-btn-primary': `url('${primaryButtonArt}')` }">
           <button
             v-for="mode in workspaceModes"
             :key="mode.id"
@@ -214,7 +211,6 @@ const summaryRows = computed(() => {
             <WashTab v-else-if="activeWorkspace === 'wash'" />
             <RefineTab v-else-if="activeWorkspace === 'refine'" />
             <DissolveTab v-else-if="activeWorkspace === 'dissolve'" />
-            <DecomposeTab v-else-if="activeWorkspace === 'decompose'" />
           </div>
         </section>
       </template>
@@ -251,7 +247,10 @@ const summaryRows = computed(() => {
      edges stretch, center fills - replaces the background stretch that
      distorted the card corners (owner ruling: backdrop giong preview). */
   border: 15px solid transparent;
-  border-image: var(--equipment-card-art) 90 fill / 15px stretch;
+  border-image: var(--equipment-card-art) 160 / 15px stretch;
+  clip-path: inset(5.1px 2.1px 5.7px 2.2px round 6px);
+  background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;
+  
   color: #f3e4c4;
   display: flex;
   flex-direction: column;
@@ -262,8 +261,8 @@ const summaryRows = computed(() => {
    darkens to near-black. */
 .equipment-tabs {
   position: absolute;
-  left: 365px;
-  top: 165px;
+  right: 75px;
+  top: 178px;
   width: 620px;
   height: 42px;
   display: flex;
@@ -277,11 +276,24 @@ const summaryRows = computed(() => {
   min-height: 33px;
   padding: 3px 12px 5px;
   border: 0;
-  color: #423019;
+  color: #f4e4c0;
   background: transparent;
   font: 700 19px var(--pc-font-body, var(--font-display, Georgia, serif));
   cursor: pointer;
   white-space: nowrap;
+}
+
+/* Auth "Bat Dau Hanh Trinh" secondary-button art on every tab: the dark
+   parchment pill mounts as a nine-slice ::before so the label sits on
+   it; the active tab keeps the divider brush under it. */
+.equipment-tabs button::before {
+  content: '';
+  position: absolute;
+  inset: 0 -2px;
+  z-index: -1;
+  border: 9px solid transparent;
+  border-image: var(--equipment-btn-secondary) 60 fill stretch;
+  pointer-events: none;
 }
 .equipment-tabs button > img {
   position: absolute;
@@ -293,22 +305,27 @@ const summaryRows = computed(() => {
   pointer-events: none;
 }
 .equipment-tabs button[aria-pressed='true'] {
-  color: #231b0c;
+  color: #2f2415;
+  text-shadow: 0 1px #fff7;
 }
 .equipment-tabs button[aria-pressed='true']::before {
-  content: '';
-  position: absolute;
-  inset: 0 -4px;
-  z-index: -1;
-  background: var(--equipment-tab-brush) center / contain no-repeat;
-  pointer-events: none;
+  border-image-source: var(--equipment-btn-primary);
 }
 .equipment-tabs button:disabled {
   cursor: default;
   opacity: 0.42;
 }
 .equipment-tabs button:not(:disabled):hover {
-  color: #9a6527;
+  color: #fff3d6;
+}
+.equipment-tabs button:not(:disabled):hover::before {
+  filter: brightness(1.1);
+}
+.equipment-tabs button[aria-pressed='true']:not(:disabled):hover {
+  color: #1d1408;
+}
+.equipment-tabs button[aria-pressed='true']:not(:disabled):hover::before {
+  filter: brightness(1.06);
 }
 .equipment-workspace__divider {
   position: relative;

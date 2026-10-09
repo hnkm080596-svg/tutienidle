@@ -47,7 +47,7 @@ None Confirmed against the task scope.
 - Invariant: Determinism — matrix sims at fixed seed
 - Reproduction: `vitest run src/core/simulation/earlygame/ElementBossMatrix.test.ts`
 - Expected (pinned): victory in 7 cells — `fire/croc`, `water/croc`, `wood/serpent`, `wood/whelp`, `metal/croc`, `earth/croc`, `earth/whelp`
-- Actual: defeat — affixes no longer take enhance scale (+5 → each affix ~23% weaker contribution; +8 → ~32%)
+- Actual: defeat — affixes no longer take enhance scale (matrix fixture is `gearUp(20)` → scale 2.2 → affix contribution drops ~55%: −72 element power, −198 maxHp, −38 attack)
 - Evidence: failure output `expected 'defeat' to be 'victory'`; base branch same seed passes 15/15
 - Test file: existing `ElementBossMatrix.test.ts` — left untouched per owner instruction (report, do not weaken)
 - Owner subsystem: simulation pins / equipment balance

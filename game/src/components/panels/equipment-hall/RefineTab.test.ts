@@ -90,27 +90,39 @@ afterEach(() => {
 })
 
 describe('RefineTab — Tinh Luyện', () => {
-  it.each([
-    [
-      'vi',
-      'Mỗi dòng đủ điều kiện và không khóa tăng 5–20%, tối đa đến trần bậc. Chi phí:',
-    ],
-    [
-      'en',
-      'Each eligible unlocked line increases by 5–20%, capped at its tier maximum. Cost:',
-    ],
-  ] as const)('hiển thị đầy đủ quy tắc Tinh Luyện đã trả phí bằng locale %s', async (locale, expectedRule) => {
-    setLocale(locale)
+  it('chưa chọn đồ thì chỉ hiện hướng dẫn, không hiện nguyên liệu/nút (2026-10-08: chọn qua doll, strip cũ bỏ)', async () => {
     const mounted = mountTab()
-
-    const slots = mounted.container.querySelectorAll(
-      `[aria-label="${locale === 'vi' ? 'Chọn trang bị để tinh luyện' : 'Select equipment to refine'}"] .refine-slot`,
-    )
-    ;(slots[0] as HTMLElement).click()
     await nextTick()
 
-    const rule = mounted.container.querySelector('.refine-rule')
-    expect(rule?.textContent).toContain(expectedRule)
+    const card = mounted.container.querySelector('.equipment-forge-workspace')
+    expect(card).not.toBeNull()
+    expect(card!.textContent).toContain('Chọn một trang bị')
+    expect(card!.querySelector('.equipment-forge-materials')).toBeNull()
+    expect(card!.querySelector('.forge-compare')).toBeNull()
+
+    mounted.unmount()
+  })
+
+  it('sau khi chọn đồ: lưới affix hiện tại -> kết quả render theo layout forge chung', async () => {
+    const mounted = mountTab((manager) => {
+      const instance = manager.equipmentBag.get('equipped')!
+      instance.affixes = [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }]
+    })
+
+    mounted.selectedInstanceId.value = 'equipped'
+    await nextTick()
+
+    const compare = mounted.container.querySelector('.forge-compare')
+    expect(compare).not.toBeNull()
+    const beforeCells = compare!.querySelectorAll('.forge-compare__cell--lockable')
+    const rangeBars = compare!.querySelectorAll('.refine-range')
+    expect(beforeCells).toHaveLength(1)
+    // Right cell IS the tier-range statbar (name + bar, no after
+    // column): a fill for the current value and no delta segment while
+    // nothing has been rolled yet.
+    expect(rangeBars).toHaveLength(1)
+    expect(rangeBars[0]!.querySelectorAll('.refine-range__fill')).toHaveLength(1)
+    expect(rangeBars[0]!.querySelectorAll('.refine-range__delta')).toHaveLength(0)
 
     mounted.unmount()
   })
@@ -128,10 +140,7 @@ describe('RefineTab — Tinh Luyện', () => {
       manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL.id), 1_000)
     })
 
-    const slots = mounted.container.querySelectorAll(
-      `[aria-label="${locale === 'vi' ? 'Chọn trang bị để tinh luyện' : 'Select equipment to refine'}"] .refine-slot`,
-    )
-    ;(slots[0] as HTMLElement).click()
+    mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
     const actionButtons = mounted.container.querySelectorAll<HTMLButtonElement>(
@@ -165,10 +174,7 @@ describe('RefineTab — Tinh Luyện', () => {
       manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 100)
       manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL.id), 1_000)
     })
-    const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tinh luyện"] .refine-slot',
-    )
-    ;(slots[0] as HTMLElement).click()
+    mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
     mounted.container.querySelector<HTMLButtonElement>('.equipment-forge-actions button')!.click()
     await nextTick()
@@ -194,13 +200,11 @@ describe('RefineTab — Tinh Luyện', () => {
       )
     })
 
-    const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tinh luyện"] .refine-slot',
-    )
-    ;(slots[0] as HTMLElement).click()
+    mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
-    expect(mounted.container.querySelector('.refine-rule')?.textContent).toContain('37')
+    // Số dư Tinh Hoa in trong hàng nguyên liệu (owned/amount).
+    expect(mounted.container.querySelector('.equipment-forge-materials')?.textContent).toContain('37')
 
     mounted.unmount()
   })

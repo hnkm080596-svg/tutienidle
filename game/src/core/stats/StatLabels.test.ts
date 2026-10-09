@@ -52,7 +52,7 @@ describe('statLabel', () => {
     expect(statLabel('skillDamagePercent')).toBe('Sát thương kỹ năng')
     expect(statLabel('ailmentPotencyPercent')).toBe('Uy lực dị thường')
     expect(statLabel('realmPassivePercent')).toBe('Cộng % Cảnh Giới')
-    expect(statLabel('affixDeltaPercent')).toBe('Tăng Trưởng Affix')
+    expect(statLabel('affixDeltaPercent')).toBe('Tăng Trưởng Cường Hóa')
     expect(statLabel('productionSpeedMultiplier')).toBe('Hệ số tốc độ')
     expect(statLabel('artifactGradeMultiplier')).toBe('Hệ số Pháp Bảo')
     expect(statLabel('cultivationPercent')).toBe('Tu Vi (Đan Dược)')

@@ -142,7 +142,7 @@
       },
       "buttons": {
         "enhance": "Cường Hóa",
-        "washPreview": "Tẩy Luyện — roll lại toàn bộ dòng phụ",
+        "washPreview": "Tẩy Luyện",
         "keep": "Giữ",
         "discard": "Bỏ",
         "refinePreview": "Tinh Luyện",
@@ -542,7 +542,8 @@
       "tabs": {
         "equipment": "Trang Bị",
         "material": "Nguyên Liệu",
-        "pill": "Đan Dược"
+        "pill": "Đan Dược",
+        "decompose": "Phân Giải"
       },
       "paperdoll": {
         "slots": {

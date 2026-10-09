@@ -43,8 +43,10 @@ import {
 export type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
 import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
 
-// Phu/Tran legacy khai tu - bag chi con 3 tab.
-export type BagTab = 'equipment' | 'material' | 'pill'
+// Phu/Tran legacy khai tu - bag chi con 3 tab. Owner ruling 2026-10-08:
+// 'decompose' joins Kho Vat (Phan Giai ore-decompose moved out of the
+// Khi Duong rail).
+export type BagTab = 'equipment' | 'material' | 'pill' | 'decompose'
 // 'passive' da go (2026-08-20) - 9 o Passive Canh Gioi doi sang
 // RealmPanel.vue (useRealmStatPassives.ts).
 

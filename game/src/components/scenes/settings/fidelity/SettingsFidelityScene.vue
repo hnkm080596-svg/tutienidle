@@ -22,6 +22,7 @@ const emit = defineEmits<{select: [id: string]; update: [id: string, value: stri
 const { t } = useI18n()
 
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 
 // Same dialog contract the imperial scroll carried: focus/pointer stay
 // inside the open surface and Escape closes through emit('back').
@@ -33,6 +34,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
   <section ref="rootRef" class="settings-scene" :aria-label="t('layout.functionOverlay.titles.settings')" @click.self="emit('back')">
     <div class="settings-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
     <h1 class="settings-title">{{ t('layout.functionOverlay.titles.settings') }}</h1>
+    <img class="settings-divider" :src="titleDivider" alt="">
 
     <div class="settings-content">
       <slot name="workspace"><div class="settings-layout"><nav :aria-label="t('settingsPreview.title')"><button v-for="id in ['all','audio','display','storage','support']" :key="id" :class="{active:active===id}" @click="emit('select',id)">{{t(`settingsPreview.group.${id}`)}}</button></nav><div class="settings-workspace"><SettingsFidelitySection v-for="group in groups" :key="group.id" :title="group.label" :controls="group.controls" @update="(id,value)=>emit('update',id,value)"/><section v-if="active==='all'||active==='storage'" class="settings-actions"><h2>{{t('settingsPreview.storage')}}</h2><p>{{t('settingsPreview.storageHint')}}</p><div><button v-for="id in ['save','export','import']" :key="id" @click="emit('action',id)">{{t(`settingsPreview.${id}`)}}</button></div></section><section v-if="active==='support'" class="settings-actions"><h2>{{t('settingsPreview.support')}}</h2><p>{{t('settingsPreview.supportHint')}}</p><button @click="emit('action','feedback')">{{t('settingsPreview.feedback')}}</button><p>{{t('settingsPreview.build')}} · {{t('settingsPreview.buildValue')}}</p></section></div></div></slot>
@@ -47,7 +49,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .settings-scene{position:absolute;inset:0;pointer-events:auto;color:#4b3924;font-family:var(--font-display,Georgia,serif)}
 .settings-scene :deep(*){box-sizing:border-box}
 .settings-paper{position:absolute;left:94px;top:123px;width:1334px;height:633px;border:0 solid transparent;border-image-slice:300 fill;border-image-width:83px;filter:drop-shadow(0 12px 15px #0009)}
-.settings-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7}
+.settings-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7} .settings-divider{position:absolute;left:237px;top:179px;width:230px;object-fit:contain;opacity:.9}
 /* Interior region: clears the nav-rail column on the left and the
    paper's decorative frame all around (same rect the preview surface
    exposes). */

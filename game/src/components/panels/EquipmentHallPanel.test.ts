@@ -87,31 +87,30 @@ afterEach(() => {
   unlockAllFeaturesForTests()
 })
 
-// Rail order (2026-10-04): Trang Bi gear grid first, then the 5 op
-// seals in contract order. No bag tab.
+// Rail order (2026-10-04): Trang Bi gear grid first, then the op
+// seals in contract order. No bag tab. Owner ruling 2026-10-08:
+// Phan Giai (decompose) left the rail for the Kho Vat surface.
 const TAB = {
   equip: 0,
   enhance: 1,
   wash: 2,
   refine: 3,
   dissolve: 4,
-  decompose: 5,
 } as const
 
 describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
-  it('render Trang Bi tab + du 5 op tab (khong con Tui Do)', () => {
+  it('render Trang Bi tab + du 4 op tab (khong con Tui Do, Phan Giai da chuyen sang Kho Vat)', () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-tabs button')
 
-    expect(tabs).toHaveLength(6)
+    expect(tabs).toHaveLength(5)
     expect(Array.from(tabs).map((t) => t.textContent?.trim())).toEqual([
       'Trang Bị',
       'Cường Hóa',
       'Tẩy Luyện',
       'Tinh Luyện',
       'Hóa Luyện',
-      'Phân Giải',
     ])
 
     mounted.unmount()
@@ -139,7 +138,9 @@ describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
     await nextTick()
 
     expect(mounted.container.querySelector('.bag-section')).toBeNull()
-    expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .enhance-slot')).toHaveLength(6)
+    // Chrome mới (owner ruling): một ô chiếu duy nhất hiện TÊN slot,
+    // chọn đồ trực tiếp trên doll - không còn picker 6 ô.
+    expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"].enhance-slot-single')).toHaveLength(1)
 
     mounted.unmount()
   })
@@ -152,7 +153,8 @@ describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
     await nextTick()
 
     expect(mounted.container.querySelector('[aria-label="Chọn slot cường hóa"]')).toBeNull()
-    expect(mounted.container.querySelectorAll('[aria-label="Chọn trang bị để tẩy luyện"] .wash-slot')).toHaveLength(6)
+    // Chrome mới: grid affix trước->sau, không slot strip - mount bằng root.
+    expect(mounted.container.querySelector('.forge-wash')).not.toBeNull()
 
     mounted.unmount()
   })
@@ -164,7 +166,7 @@ describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
     tabs[TAB.refine]!.click()
     await nextTick()
 
-    expect(mounted.container.querySelectorAll('[aria-label="Chọn trang bị để tinh luyện"] .refine-slot')).toHaveLength(6)
+    expect(mounted.container.querySelector('.forge-refine')).not.toBeNull()
 
     mounted.unmount()
   })
@@ -181,14 +183,15 @@ describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
     mounted.unmount()
   })
 
-  it('tab Phan Giai -> mount DecomposeTab', async () => {
+  it('Phan Giai khong con trong rail (da chuyen sang Kho Vat)', () => {
     const mounted = mountHall()
 
-    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-tabs button')
-    tabs[TAB.decompose]!.click()
-    await nextTick()
+    const labels = Array.from(
+      mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-tabs button'),
+    ).map((t) => t.textContent?.trim())
 
-    expect(mounted.container.querySelector('.decompose-tab')).not.toBeNull()
+    expect(labels).not.toContain('Phân Giải')
+    expect(mounted.container.querySelector('.decompose-tab')).toBeNull()
 
     mounted.unmount()
   })
@@ -214,14 +217,13 @@ describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.equipment-tabs button')
 
-    // All 6 seals still render; enhance/dissolve stay admitted (beta-
-    // shipped), wash/refine/decompose disable.
-    expect(tabs).toHaveLength(6)
+    // All 5 seals still render; enhance/dissolve stay admitted (beta-
+    // shipped), wash/refine disable.
+    expect(tabs).toHaveLength(5)
     expect(tabs[TAB.enhance]!.disabled).toBe(false)
     expect(tabs[TAB.dissolve]!.disabled).toBe(false)
     expect(tabs[TAB.wash]!.disabled).toBe(true)
     expect(tabs[TAB.refine]!.disabled).toBe(true)
-    expect(tabs[TAB.decompose]!.disabled).toBe(true)
 
     // A disabled seal cannot activate its workspace even if clicked.
     tabs[TAB.wash]!.click()
