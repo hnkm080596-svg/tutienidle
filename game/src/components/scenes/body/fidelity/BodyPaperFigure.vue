@@ -77,6 +77,18 @@ const vesselLitCount = computed(() => {
     : Math.floor(((unit.progressPct ?? 0) / 100) * VESSEL_PATHS.length)
 })
 
+// Luyen Mach (owner ruling 2026-10-09): every 30% of the tier lights one
+// glowing node; at 100% the big forehead ring appears and rotates.
+const foreheadUnit = computed(() => props.model.units.find((u) => u.id === 'luyen_mach'))
+const foreheadVisible = computed(() => (foreheadUnit.value?.state ?? 'locked') !== 'locked')
+const foreheadDone = computed(() => foreheadUnit.value?.state === 'done')
+const foreheadLitCount = computed(() => {
+  const unit = foreheadUnit.value
+  if (!unit) return 0
+  if (unit.state === 'done') return 3
+  return Math.min(3, Math.floor((unit.progressPct ?? 0) / 30))
+})
+
 
 // Khai Mach: fixed 8-point meridian graph (subset of the preview's 10-point
 // anatomy map) - production owns exactly 8 authored meridians.
@@ -172,9 +184,10 @@ const galaxyPieces = computed(() =>
           <img v-for="n in 10" :key="n" :class="{ lit: n > 10 - vertebraLitCount }" :src="bodyArt('anatomy-vertebra-lit')" alt="">
         </div>
         <img v-if="litLayer('heart')" class="body-heart" :src="bodyArt('anatomy-heart-lit')" alt="">
-        <div v-if="litLayer('forehead')" class="body-forehead">
-          <img class="forehead-ring" :src="bodyArt('forehead-ring-lit')" alt="">
+        <div v-if="foreheadVisible" class="body-forehead">
+          <img v-if="foreheadDone" class="forehead-ring" :src="bodyArt('forehead-ring-lit')" alt="">
           <img v-for="(point, i) in [{ x: 50, y: 4 }, { x: 10, y: 73 }, { x: 90, y: 73 }]" :key="i"
+            v-show="i < foreheadLitCount"
             class="forehead-node" :style="{ left: point.x + '%', top: point.y + '%' }"
             :src="bodyArt('forehead-node-lit')" alt="">
         </div>
@@ -232,9 +245,9 @@ const galaxyPieces = computed(() =>
 @media (prefers-reduced-motion: reduce) { .body-glow { animation:none; opacity:.4; } }
 /* Lit anatomy arts share the soft pulsing glow with the Luyen Bi aura
    (owner ruling 2026-10-09): a gentle golden halo that breathes on/off. */
-.body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; }
+.body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-node { animation:body-art-glow 4.6s ease-in-out infinite; }
 @keyframes body-art-glow { 0%,100% { filter:drop-shadow(0 0 2px rgba(238,196,108,.35)); } 50% { filter:drop-shadow(0 0 6px rgba(238,196,108,.8)) drop-shadow(0 0 10px rgba(238,196,108,.45)); } }
-@media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-ring { animation:none; } }
+@media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-node { animation:none; } }
 .body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none;
   animation:body-art-glow 4.6s ease-in-out infinite, body-muscle-pump 4.6s ease-in-out infinite; }
 /* Luyen Nhuc (owner ruling 2026-10-09): the biceps swell +10% at the glow
@@ -265,8 +278,16 @@ const galaxyPieces = computed(() =>
   animation:body-art-glow 4.6s ease-in-out infinite, heartbeat 1.1s ease-in-out infinite; transform-origin:center; }
 @keyframes heartbeat { 0%,100% { scale:1; } 12% { scale:1.14; } 22% { scale:1.02; } 34% { scale:1.08; } 50% { scale:1; } }
 @media (prefers-reduced-motion: reduce) { .body-heart { animation:body-art-glow 4.6s ease-in-out infinite; } }
-.body-forehead { position:absolute; left:47.7%; top:19%; width:4.6%; aspect-ratio:1; pointer-events:none; }
-.forehead-ring { width:100%; height:100%; object-fit:contain; }
+/* Forehead ring doubled per owner ruling 2026-10-09 (left/top recomputed
+   to keep the ring centered on the same forehead point). */
+.body-forehead { position:absolute; left:45.4%; top:16.8%; width:9.2%; aspect-ratio:1; pointer-events:none; }
+/* Luyen Mach complete (owner ruling 2026-10-09): at 100% the big ring
+   appears and rotates slowly - the `rotate` property composes with the
+   shared glow filter animation. */
+.forehead-ring { width:100%; height:100%; object-fit:contain;
+  animation:body-art-glow 4.6s ease-in-out infinite, forehead-spin 14s linear infinite; }
+@keyframes forehead-spin { to { rotate:360deg; } }
+@media (prefers-reduced-motion: reduce) { .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
 .forehead-node { position:absolute; width:17%; height:17%; object-fit:contain; transform:translate(-50%,-50%); }
 .body-meridian-node { position:absolute; width:12%; height:10%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:pointer; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
