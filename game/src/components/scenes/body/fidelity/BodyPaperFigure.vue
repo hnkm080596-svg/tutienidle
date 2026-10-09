@@ -40,6 +40,43 @@ const vertebraLitCount = computed(() => {
 })
 const vertebraVisible = computed(() => (vertebraUnit.value?.state ?? 'locked') !== 'locked')
 
+// Luyen Huyet (owner ruling 2026-10-09): blood vessels grow progressively -
+// every 10% of the current tier reveals ~10% of the strands, main trunks
+// from the heart first and fingertip ends last.
+const VESSEL_PATHS: readonly { w: number; d: string }[] = [
+  { w: 4.5, d: 'M712,568 C690,605 640,650 620,690 C600,728 610,770 600,815 C596,838 602,858 598,872' },
+  { w: 4, d: 'M712,568 C645,555 575,530 500,505 C445,487 385,465 340,487 C305,505 285,545 275,590 C262,645 235,695 205,735 C185,762 168,795 160,822' },
+  { w: 4, d: 'M712,568 C745,552 790,520 830,490 C865,465 895,485 905,530 C918,585 940,645 955,690 C972,735 1005,765 1022,790 C1038,812 1050,828 1058,845' },
+  { w: 3, d: 'M712,568 C670,590 610,610 570,635 C540,655 535,690 545,720 C552,745 540,768 545,790' },
+  { w: 3, d: 'M712,568 C745,595 780,620 800,650 C818,678 812,710 822,735 C830,758 825,782 832,800' },
+  { w: 3, d: 'M712,575 C690,640 650,690 660,735 C668,775 640,800 648,830' },
+  { w: 2.5, d: 'M712,565 C655,555 585,545 530,540 C490,536 450,548 430,575 C410,602 405,640 415,672' },
+  { w: 2.5, d: 'M712,565 C760,552 820,540 860,550 C895,560 915,590 910,625 C905,655 915,685 908,715' },
+  { w: 3, d: 'M712,570 C655,585 585,615 540,645 C505,670 495,705 505,738 C513,765 500,790 508,815' },
+  { w: 3, d: 'M712,570 C760,590 815,620 845,655 C872,685 868,720 878,750 C886,775 880,800 888,822' },
+  { w: 2.5, d: 'M712,568 C660,560 590,548 535,552 C490,556 455,575 440,605 C425,635 430,668 445,695' },
+  { w: 2.5, d: 'M712,568 C768,558 835,552 875,565 C910,577 928,608 922,645 C917,678 925,708 918,738' },
+  { w: 3, d: 'M712,565 C640,540 540,512 465,495 C405,480 350,485 320,515 C295,540 282,578 278,618' },
+  { w: 3, d: 'M712,565 C780,542 855,515 900,500 C940,487 968,505 978,545 C988,585 990,630 985,672' },
+  { w: 2.5, d: 'M712,575 C685,630 640,675 615,720 C595,755 600,795 592,828' },
+  { w: 2.5, d: 'M712,575 C738,632 782,678 805,722 C825,758 818,798 828,832' },
+  { w: 2, d: 'M340,487 C325,512 310,542 300,572' },
+  { w: 2, d: 'M905,530 C918,555 925,575 930,600' },
+  { w: 2, d: 'M275,590 C255,628 232,668 215,700' },
+  { w: 2, d: 'M955,690 C972,722 995,752 1012,772' },
+  { w: 2, d: 'M160,822 C152,842 146,860 142,876' },
+  { w: 2, d: 'M1058,845 C1066,862 1072,876 1075,890' },
+]
+const bloodUnit = computed(() => props.model.units.find((u) => u.id === 'luyen_huyet'))
+const vesselVisible = computed(() => (bloodUnit.value?.state ?? 'locked') !== 'locked')
+const vesselLitCount = computed(() => {
+  const unit = bloodUnit.value
+  if (!unit) return 0
+  return unit.state === 'done'
+    ? VESSEL_PATHS.length
+    : Math.floor(((unit.progressPct ?? 0) / 100) * VESSEL_PATHS.length)
+})
+
 
 // Khai Mach: fixed 8-point meridian graph (subset of the preview's 10-point
 // anatomy map) - production owns exactly 8 authored meridians.
@@ -119,32 +156,12 @@ const galaxyPieces = computed(() =>
           <img v-for="side in ['left', 'right']" :key="side" :class="side"
             :src="bodyArt(`biceps-${side}-lit`)" alt="">
         </div>
-        <svg v-if="litLayer('blood')" class="body-blood" viewBox="0 0 1215 1295" aria-hidden="true"
+        <svg v-if="vesselVisible" class="body-blood" viewBox="0 0 1215 1295" aria-hidden="true"
           :style="{ maskImage: `url(${bodyArt('silhouette-seated')})`, WebkitMaskImage: `url(${bodyArt('silhouette-seated')})`, maskSize: '94% 94%', WebkitMaskSize: '94% 94%', maskPosition: 'center', WebkitMaskPosition: 'center', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }">
           <defs>
             <g id="bvessels">
-              <path stroke-width="4.5" d="M712,568 C690,605 640,650 620,690 C600,728 610,770 600,815 C596,838 602,858 598,872"/>
-              <path stroke-width="4" d="M712,568 C645,555 575,530 500,505 C445,487 385,465 340,487 C305,505 285,545 275,590 C262,645 235,695 205,735 C185,762 168,795 160,822"/>
-              <path stroke-width="4" d="M712,568 C745,552 790,520 830,490 C865,465 895,485 905,530 C918,585 940,645 955,690 C972,735 1005,765 1022,790 C1038,812 1050,828 1058,845"/>
-              <path stroke-width="3" d="M712,568 C670,590 610,610 570,635 C540,655 535,690 545,720 C552,745 540,768 545,790"/>
-              <path stroke-width="3" d="M712,568 C745,595 780,620 800,650 C818,678 812,710 822,735 C830,758 825,782 832,800"/>
-              <path stroke-width="3" d="M712,575 C690,640 650,690 660,735 C668,775 640,800 648,830"/>
-              <path stroke-width="2.5" d="M712,565 C655,555 585,545 530,540 C490,536 450,548 430,575 C410,602 405,640 415,672"/>
-              <path stroke-width="2.5" d="M712,565 C760,552 820,540 860,550 C895,560 915,590 910,625 C905,655 915,685 908,715"/>
-              <path stroke-width="3" d="M712,570 C655,585 585,615 540,645 C505,670 495,705 505,738 C513,765 500,790 508,815"/>
-              <path stroke-width="3" d="M712,570 C760,590 815,620 845,655 C872,685 868,720 878,750 C886,775 880,800 888,822"/>
-              <path stroke-width="2.5" d="M712,568 C660,560 590,548 535,552 C490,556 455,575 440,605 C425,635 430,668 445,695"/>
-              <path stroke-width="2.5" d="M712,568 C768,558 835,552 875,565 C910,577 928,608 922,645 C917,678 925,708 918,738"/>
-              <path stroke-width="3" d="M712,565 C640,540 540,512 465,495 C405,480 350,485 320,515 C295,540 282,578 278,618"/>
-              <path stroke-width="3" d="M712,565 C780,542 855,515 900,500 C940,487 968,505 978,545 C988,585 990,630 985,672"/>
-              <path stroke-width="2.5" d="M712,575 C685,630 640,675 615,720 C595,755 600,795 592,828"/>
-              <path stroke-width="2.5" d="M712,575 C738,632 782,678 805,722 C825,758 818,798 828,832"/>
-              <path stroke-width="2" d="M340,487 C325,512 310,542 300,572"/>
-              <path stroke-width="2" d="M905,530 C918,555 925,575 930,600"/>
-              <path stroke-width="2" d="M275,590 C255,628 232,668 215,700"/>
-              <path stroke-width="2" d="M955,690 C972,722 995,752 1012,772"/>
-              <path stroke-width="2" d="M160,822 C152,842 146,860 142,876"/>
-              <path stroke-width="2" d="M1058,845 C1066,862 1072,876 1075,890"/>
+              <path v-for="(vessel, i) in VESSEL_PATHS" v-show="i < vesselLitCount" :key="i"
+                :stroke-width="vessel.w" :d="vessel.d"/>
             </g>
           </defs>
           <use href="#bvessels" class="bv-base"/>
