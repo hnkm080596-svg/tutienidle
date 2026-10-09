@@ -79,8 +79,7 @@ const vesselLitCount = computed(() => {
 
 // Luyen Mach (owner ruling 2026-10-09): the ring shows as soon as the tier
 // unlocks; the lit nodes orbit it and each 30% of tier progress lights one
-// more node (0/1/2/3). At 100% the ring grows into a halo behind the head
-// and the nodes orbit faster.
+// more node (0/1/2/3). At 100% the ring itself spins (owner ruling).
 const foreheadUnit = computed(() => props.model.units.find((u) => u.id === 'luyen_mach'))
 const foreheadVisible = computed(() => (foreheadUnit.value?.state ?? 'locked') !== 'locked')
 const foreheadDone = computed(() => foreheadUnit.value?.state === 'done')
@@ -186,7 +185,7 @@ const galaxyPieces = computed(() =>
           <img v-for="n in 10" :key="n" :class="{ lit: n > 10 - vertebraLitCount }" :src="bodyArt('anatomy-vertebra-lit')" alt="">
         </div>
         <img v-if="litLayer('heart')" class="body-heart" :src="bodyArt('anatomy-heart-lit')" alt="">
-        <div v-if="foreheadVisible" class="body-forehead" :class="{ halo: foreheadDone }">
+        <div v-if="foreheadVisible" class="body-forehead" :class="{ done: foreheadDone }">
           <img class="forehead-ring" :src="bodyArt('forehead-ring-lit')" alt="">
           <div class="forehead-orbit">
             <img v-for="(point, i) in [{ x: 50, y: 4 }, { x: 10, y: 73 }, { x: 90, y: 73 }]" :key="i"
@@ -295,11 +294,12 @@ const galaxyPieces = computed(() =>
 .forehead-node { position:absolute; width:17%; height:17%; object-fit:contain; transform:translate(-50%,-50%);
   animation:body-art-glow 4.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .forehead-node { animation:none; } }
-/* Luyen Mach complete (owner ruling 2026-10-09): the ring enlarges into a
-   halo around the head (a negative z sinks it behind the stage paper, so it
-   stays in front and circles the head outline) and the nodes orbit faster. */
-.body-forehead.halo { left:42%; top:12.5%; width:16%; }
-.halo .forehead-orbit { animation-duration:7s; }
+/* Luyen Mach complete (owner ruling 2026-10-09): at 100% the main ring
+   itself rotates slowly - the `rotate` property composes with the shared
+   glow filter animation. */
+.done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite, forehead-spin 14s linear infinite; }
+@keyframes forehead-spin { to { rotate:360deg; } }
+@media (prefers-reduced-motion: reduce) { .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
 .body-meridian-node { position:absolute; width:12%; height:10%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:pointer; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .body-meridian-node.locked { opacity:.55; }
