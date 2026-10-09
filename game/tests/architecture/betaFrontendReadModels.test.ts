@@ -165,9 +165,22 @@ describe('beta FE-contract read-models - import guards', () => {
         'ownedNodeIds',
       ])
 
+      // Per-name exceptions (file -> names still legal there):
+      // SkillSurface reads getNextLevelCost purely to display the
+      // authored price curve for the NEXT level in the node inspector
+      // (row.nextLevelCost is gate-aware and nulls early) - a pure
+      // data read over authored upgradeCost fields, not a player-state
+      // admission decision; every real predicate stays banned.
+      const EXCEPTIONS: Record<string, ReadonlySet<string>> = {
+        'components/scenes/skill/SkillSurface.vue': new Set([
+          'getNextLevelCost',
+        ]),
+      }
+
       const offenders = SHELL_FILES.filter((file) =>
-        namedImports(file.text, '@/core/progression/NodeSystem').some((name) =>
-          BANNED.has(name),
+        namedImports(file.text, '@/core/progression/NodeSystem').some(
+          (name) =>
+            BANNED.has(name) && !EXCEPTIONS[file.fromSrc]?.has(name),
         ),
       ).map((file) => file.fromSrc)
 
@@ -198,8 +211,13 @@ describe('beta FE-contract read-models - import guards', () => {
       // (hotspot wheel): its isRealmAvailable deep-link check is not
       // reward admission, so it is a recorded exception - every other
       // file under components/ is not.
+      // DevToolsPanel is a recorded master-only channel (owner ruling
+      // 2026-10-09): it mounts only behind isMaster and reads
+      // isBeyondReleaseCeiling purely as a dev cheat guard, never to
+      // rebuild player-facing reward admission.
       const EXCEPTIONS = new Set([
         'components/scenes/dong-fu/DongFuStage.vue',
+        'components/dev/DevToolsPanel.vue',
       ])
       const offenders = srcCorpus(SRC_DIR)
         .filter(

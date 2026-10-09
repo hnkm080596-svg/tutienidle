@@ -163,7 +163,8 @@
         "essenceName": "Essence",
         "ownedPrefix": "owned",
         "emptySlotPlaceholder": "— empty (can still be enhanced) —",
-        "itemCount": "{count} item(s)"
+        "itemCount": "{count} item(s)",
+        "renSharedHint": "Forge uses are shared between Wash and Refine — once spent, this item's sub-lines are frozen permanently."
       },
       "status": {
         "notRolled": "not rolled",
@@ -2345,8 +2346,43 @@
     "skillDesign": "Constellation design mode",
     "skillDesignHint": "Enable, then drag nodes in the Skills scene; the Export chip sits on the canvas.",
     "exportLayout": "Export layout",
+    "exported": "Exported",
     "realm": "Realm",
     "applyRealm": "Apply realm",
     "respecTree": "Reset tree"
+  },
+  "pp": {
+    "title": "Production",
+    "hall": "Prospecting Hall",
+    "level": "Level {level} / 9",
+    "intro": "Extract raw materials, assign workers to sources, accumulate yield.",
+    "vein": "Spirit Vein",
+    "stored": "{amount} / 1270 Low-grade Spirit Stones",
+    "rate": "+2.1 / min",
+    "harvest": "Harvest",
+    "names": [
+      "Azure Cloud Forest",
+      "Black Iron Quarry",
+      "Azure Cloud Grotto"
+    ],
+    "types": [
+      "Forest",
+      "Quarry",
+      "Grotto"
+    ],
+    "descriptions": [
+      "An azure spiritwood forest - supplies timber for construction and fuel for the alchemy furnace.",
+      "A deep ore vein in the mountains - yields spirit ore and artifact-crafting materials.",
+      "A grotto of rare wonders - where spirit herbs and medicinal ingredients are raised."
+    ],
+    "next": "Next speed x1.15",
+    "working": "Producing - 1m 37s left",
+    "paused": "Paused",
+    "auto": "Auto-repeat",
+    "costWood": "Ten-Year Spiritwood: 0 / 5",
+    "costStone": "Low-grade Spirit Stone: 0 / 800",
+    "upgrade": "Upgrade Source",
+    "upgradeNotice": "Preview source upgrade - no resources spent.",
+    "harvestNotice": "Preview harvest - no resources granted."
   }
 }

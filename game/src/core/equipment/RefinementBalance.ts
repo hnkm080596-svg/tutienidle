@@ -37,7 +37,10 @@ export const REFINE_TINH_HOA_COST_BY_QUALITY: Record<ItemQuality, number> = {
 // Tay Luyen: Chat cua item quyet dinh tran dong va trong so tier.
 // =========================
 
-/** Trong weight roll TIER BAN DAU cua tung dong (index 0 -> tier 1 ...). */
+/** Trong weight roll TIER BAN DAU cua tung dong (index 0 -> tier 1 ...).
+ *  Owner ruling 2026-10-09: wash intentionally caps at tier 3 - tiers
+ *  4-5 only come from random drops, so each quality row stops at 3
+ *  weights by design (not a truncation bug). */
 export const WASH_TIER_WEIGHTS_BY_QUALITY: Record<ItemQuality, readonly number[]> = {
   hoang: [70, 25, 5],
   huyen: [50, 35, 15],
