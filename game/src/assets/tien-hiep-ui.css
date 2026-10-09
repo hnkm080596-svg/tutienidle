@@ -235,8 +235,12 @@
 :is(#app, body) :is(.victory-paper,.defeat-scene .result-paper) { background: #f2e8d0; border-image-slice: 240 320; color: #30291d; }
 :is(#app, body) .df-quest { background: #15221ef2; border: 1px solid #b9995360; }
 :is(#app, body) .technique-title { position: absolute; left: 192px; top: 97px; z-index: 6; width: 370px; height: 58px; margin: 0; padding: 11px 40px; font: 700 30px/36px var(--font-display); color: #f3e0b5; text-align: center; background: var(--th-art-title-plaque) center/100% 100% no-repeat; }
-:is(#app, body) :is(.skill-upgrade,.technique-advance,.body-invest,.brew-button,.realm-cta,.inventory-scene .item-detail button) { border: 0; border-radius: 0; color: #352713; background: var(--th-art-button-primary) center/100% 100% no-repeat; padding: 10px 22px; font-size: 20px; }
-:is(#app, body) :is(.skill-upgrade,.technique-advance,.body-invest,.brew-button,.realm-cta,.inventory-scene .item-detail button):disabled { filter: grayscale(.8); opacity: .65; }
+/* .body-invest removed 2026-10-09: it is now an EquipmentArtButton (own
+   ::before art + state colors); this legacy rule painted the OLD banner
+   art under the capsule and dark text on the dark art (owner flagged
+   unreadable stacked buttons). */
+:is(#app, body) :is(.skill-upgrade,.technique-advance,.brew-button,.realm-cta,.inventory-scene .item-detail button) { border: 0; border-radius: 0; color: #352713; background: var(--th-art-button-primary) center/100% 100% no-repeat; padding: 10px 22px; font-size: 20px; }
+:is(#app, body) :is(.skill-upgrade,.technique-advance,.brew-button,.realm-cta,.inventory-scene .item-detail button):disabled { filter: grayscale(.8); opacity: .65; }
 :is(#app, body) :is(.alchemy-paper,.exploration-paper) { left: 156px; width: 1272px; }
 :is(#app, body) .exploration-scene > .heading { left: 237px; top: 174px; }
 :is(#app, body) .exploration-scene .eyebrow { display: none; }
