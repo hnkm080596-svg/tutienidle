@@ -100,6 +100,7 @@ const galaxyPieces = computed(() =>
     <div class="body-stage" :aria-label="model.chapterLabel">
       <img class="body-silhouette body-figure-art" :src="bodyArt('silhouette-seated')" alt="">
       <template v-if="model.chapter === 'refinement'">
+        <div v-if="litLayer('skin')" class="body-rays" aria-hidden="true"></div>
         <div v-if="litLayer('skin')" class="body-layer body-skin-layer lit">
           <img :src="bodyArt('silhouette-seated')" alt="">
         </div>
@@ -158,6 +159,17 @@ const galaxyPieces = computed(() =>
 .body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
 .body-skin-layer img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 1px #aaaaaa); }
 .body-skin-layer.lit img { filter:drop-shadow(0 0 2px #ffe5a0) drop-shadow(0 0 5px #eaba4d); }
+/* Luyen Bi glow upgraded to soft emitted rays (owner ruling
+   2026-10-09): a slowly rotating conic fan masked to a fading ring
+   around the figure - the band starts outside the body so the rays
+   read as light emitted outward, not a rim. */
+.body-rays { position:absolute; left:50%; top:52%; width:118%; aspect-ratio:1; transform:translate(-50%,-50%); pointer-events:none; z-index:-1;
+  background:repeating-conic-gradient(from 0deg, rgba(255,214,110,.5) 0deg 3.5deg, rgba(255,214,110,0) 3.5deg 16deg);
+  -webkit-mask-image:radial-gradient(closest-side, transparent 34%, #000 48%, transparent 78%);
+  mask-image:radial-gradient(closest-side, transparent 34%, #000 48%, transparent 78%);
+  animation:body-rays-spin 46s linear infinite, body-rays-breathe 5.2s ease-in-out infinite; }
+@keyframes body-rays-spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
+@keyframes body-rays-breathe { 0%,100% { opacity:.55; } 50% { opacity:.95; } }
 .body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none; }
 .body-muscle-layer .left { left:27%; transform:rotate(26deg); }
 .body-muscle-layer .right { right:27%; transform:rotate(-26deg); }
@@ -184,6 +196,6 @@ const galaxyPieces = computed(() =>
 @keyframes meridian-flow { to { background-position:-200% 0; } }
 @keyframes orbit-drift { to { transform:translate(-50%,-50%) rotate(calc(var(--orbit-angle) + 360deg)); } }
 @media (prefers-reduced-motion: reduce) {
-  .meridian-flow, .body-galaxy-piece.orbiting { animation:none; }
+  .meridian-flow, .body-galaxy-piece.orbiting, .body-rays { animation:none; }
 }
 </style>
