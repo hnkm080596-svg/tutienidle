@@ -725,7 +725,7 @@
       },
       "ceilingNote": "{realm} is not available in this build — {ceiling} is the highest realm of this version.",
       "bodyRefinement": {
-        "title": "Body Refinement",
+        "title": "Body Refining",
         "summary": "Tiers completed: {completed}/6",
         "note": "Mortal Body Essence from defeated enemies flows back and feeds progress automatically — no action needed.",
         "tierLock": "Locked — requires Mortal floor {level}",
@@ -747,7 +747,7 @@
         }
       },
       "meridian": {
-        "title": "Eight Extraordinary Meridians",
+        "title": "Meridian Opening",
         "summary": "Opened: {completed}/{total}",
         "stateOpened": "Opened",
         "stateNext": "Next",
@@ -757,16 +757,16 @@
         "pageLocked": "Unlocks at {realm}",
         "invest": "Open Meridian",
         "owned": "owned {count}",
-        "seqGate": "requires Body Refinement complete"
+        "seqGate": "requires Body Refining complete"
       },
       "zhouTian": {
-        "title": "Chu Thien Circulation",
+        "title": "Spirit Channeling",
         "summary": "Circulation: {completed}/{total}",
         "stateLocked": "Sealed",
         "stateRealmLocked": "Realm locked",
         "stateActive": "Circulating",
         "stateComplete": "Great Circuit",
-        "locked": "Complete the Eight Extraordinary Meridians chapter first",
+        "locked": "Complete Meridian Opening first",
         "realmLocked": "Unlocks at {realm}",
         "capacity": "Current capacity: {capacity}",
         "tieuLabel": "Tieu Chu Thien · 18",
@@ -987,7 +987,7 @@
         "requirements": "Requirements"
       },
       "actions": {
-        "investRefinement": "Refine"
+        "investRefinement": "Upgrade"
       },
       "unit": {
         "tierTitle": "Tier {tier} · {name}",
@@ -1704,7 +1704,7 @@
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",
     "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
-    "bodyRefinementInvested": "Body Refinement +{amount} — {tier} {progress}/{cap}",
+    "bodyRefinementInvested": "Body Refining +{amount} — {tier} {progress}/{cap}",
     "bodyRefinementTierComplete": "{tier} complete!",
     "bodyRefinementTierLocked": "{tier} needs Mortal tier {level} — {stored} essence stored",
     "autosaveFailed": "Progress could not be saved — browser storage is full. Smelt some equipment to free space.",

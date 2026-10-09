@@ -725,7 +725,7 @@
       },
       "ceilingNote": "{realm} chưa mở trong bản hiện tại — {ceiling} là cảnh giới cao nhất của phiên bản này.",
       "bodyRefinement": {
-        "title": "Luyện Thể",
+        "title": "Rèn Thể",
         "summary": "Bậc đã hoàn thành: {completed}/6",
         "note": "Tinh Hoa Phàm Thể từ quái tự bay về và nạp tiến độ — không cần thao tác.",
         "tierLock": "Khóa — cần Phàm Nhân tầng {level}",
@@ -747,7 +747,7 @@
         }
       },
       "meridian": {
-        "title": "Kỳ Kinh Bát Mạch",
+        "title": "Khai Mạch",
         "summary": "Đã mở: {completed}/{total}",
         "stateOpened": "Đã mở",
         "stateNext": "Kế tiếp",
@@ -757,16 +757,16 @@
         "pageLocked": "Mở khóa ở {realm}",
         "invest": "Mở Mạch",
         "owned": "sở hữu {count}",
-        "seqGate": "cần hoàn thành Luyện Thể"
+        "seqGate": "cần hoàn thành Rèn Thể"
       },
       "zhouTian": {
-        "title": "Chu Thiên",
+        "title": "Dẫn Linh",
         "summary": "Chu thiên: {completed}/{total}",
         "stateLocked": "Phong ấn",
         "stateRealmLocked": "Chưa tới cảnh giới",
         "stateActive": "Đang vận chuyển",
         "stateComplete": "Đại Chu Thiên",
-        "locked": "Hoàn thành Kỳ Kinh Bát Mạch trước",
+        "locked": "Hoàn thành Khai Mạch trước",
         "realmLocked": "Mở khóa ở {realm}",
         "capacity": "Dung lượng hiện tại: {capacity}",
         "tieuLabel": "Tiểu Chu Thiên · 18",
@@ -987,7 +987,7 @@
         "requirements": "Điều Kiện Luyện Thể"
       },
       "actions": {
-        "investRefinement": "Luyện Thể"
+        "investRefinement": "Nâng Cấp"
       },
       "unit": {
         "tierTitle": "Tầng {tier} · {name}",
@@ -1704,7 +1704,7 @@
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
     "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
-    "bodyRefinementInvested": "Luyện Thể +{amount} — {tier} {progress}/{cap}",
+    "bodyRefinementInvested": "Rèn Thể +{amount} — {tier} {progress}/{cap}",
     "bodyRefinementTierComplete": "{tier} đã viên mãn!",
     "bodyRefinementTierLocked": "{tier} cần Phàm Nhân tầng {level} — {stored} tinh hoa đang chờ trong túi",
     "autosaveFailed": "Không lưu được tiến trình — bộ nhớ trình duyệt đầy. Hãy hóa luyện bớt trang bị.",
