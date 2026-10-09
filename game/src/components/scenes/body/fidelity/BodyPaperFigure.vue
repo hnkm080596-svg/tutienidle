@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
 
@@ -117,9 +117,43 @@ const MERIDIAN_POINTS = [
   [49.5, 40.7],
   [46.9, 11.0],
 ] as const
+// Node drag design mode (owner request 2026-10-09): each meridian dot is
+// draggable; on drop the coordinates persist to localStorage and log to the
+// console so they can be baked into MERIDIAN_POINTS.
+const dragPositions = ref<Record<number, [number, number]>>(
+  JSON.parse(localStorage.getItem('meridian-drag-points') ?? '{}'),
+)
+let dragIndex = -1
+let dragMoved = false
+function nodePosition(index: number): readonly [number, number] {
+  return dragPositions.value[index] ?? MERIDIAN_POINTS[index] ?? [50, 50]
+}
+function onNodePointerDown(e: PointerEvent, index: number) {
+  dragIndex = index
+  dragMoved = false
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+}
+function onNodePointerMove(e: PointerEvent) {
+  if (dragIndex < 0) return
+  const stage = (e.currentTarget as HTMLElement).closest('.body-stage')
+  if (!stage) return
+  const r = stage.getBoundingClientRect()
+  const x = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100))
+  const y = Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100))
+  dragMoved = true
+  dragPositions.value = { ...dragPositions.value, [dragIndex]: [x, y] }
+}
+function onNodePointerUp() {
+  if (dragIndex >= 0 && dragMoved) {
+    localStorage.setItem('meridian-drag-points', JSON.stringify(dragPositions.value))
+    const arr = props.model.units.map((_, i) => nodePosition(i))
+    console.log('MERIDIAN_POINTS =', JSON.stringify(arr))
+  }
+  dragIndex = -1
+}
 const meridianNodes = computed(() =>
   props.model.units.map((unit, index) => {
-    const point = MERIDIAN_POINTS[index] ?? [50, 50]
+    const point = nodePosition(index)
     return { unit, index, x: point[0], y: point[1], lit: unitLit(unit.id) || unit.state === 'current' }
   }),
 )
@@ -192,7 +226,10 @@ const galaxyPieces = computed(() =>
           class="body-meridian-node body-orb" :class="[node.unit.state, { selected: selected === node.unit.id }]"
           :style="{ left: `${node.x}%`, top: `${node.y}%` }"
           :aria-pressed="selected === node.unit.id" :aria-label="node.unit.title"
-          @click="emit('select', node.unit.id)">
+          @pointerdown="onNodePointerDown($event, node.index)"
+          @pointermove="onNodePointerMove"
+          @pointerup="onNodePointerUp"
+          @click="dragMoved ? (dragMoved = false) : emit('select', node.unit.id)">
           <img :src="bodyArt(`meridian-node-${node.lit ? 'lit' : 'unlit'}`)" alt="">
         </button>
       </template>
@@ -302,7 +339,8 @@ const galaxyPieces = computed(() =>
 .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite, forehead-spin 14s linear infinite; }
 @keyframes forehead-spin { to { rotate:360deg; } }
 @media (prefers-reduced-motion: reduce) { .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
-.body-meridian-node { position:absolute; width:12%; height:10%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:pointer; }
+.body-meridian-node { position:absolute; width:12%; height:10%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
+.body-meridian-node:active { cursor:grabbing; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .body-meridian-node.locked { opacity:.55; }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
