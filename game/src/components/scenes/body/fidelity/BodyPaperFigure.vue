@@ -171,19 +171,51 @@ const seededJitter = (seed: number, i: number) => {
   const v = Math.sin(seed * 97.31 + i * 53.77) * 43758.5453
   return (v - Math.floor(v)) * 2 - 1
 }
+// Bend-point drag mode (owner request 2026-10-09): each zigzag waypoint is
+// a draggable handle; positions persist to localStorage for baking.
+const bendPositions = ref<Record<string, [number, number]>>(
+  JSON.parse(localStorage.getItem('meridian-bend-points') ?? '{}'),
+)
+let bendKey: string | null = null
+function onBendPointerDown(e: PointerEvent, key: string) {
+  bendKey = key
+  dragMoved = false
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+}
+function onBendPointerMove(e: PointerEvent) {
+  if (!bendKey) return
+  const stage = (e.currentTarget as HTMLElement).closest('.body-stage')
+  if (!stage) return
+  const r = stage.getBoundingClientRect()
+  const x = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100))
+  const y = Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100))
+  dragMoved = true
+  bendPositions.value = { ...bendPositions.value, [bendKey]: [x, y] }
+}
+function onBendPointerUp() {
+  if (bendKey && dragMoved) {
+    localStorage.setItem('meridian-bend-points', JSON.stringify(bendPositions.value))
+    console.log('MERIDIAN_BENDS =', JSON.stringify(bendPositions.value))
+  }
+  bendKey = null
+}
+const bendPoint = (link: { from: number; to: number; bend: number; seed: number }, i: number, a: readonly number[], b: readonly number[]): [number, number] => {
+  const key = `${link.from}-${link.to}:${i}`
+  const stored = bendPositions.value[key]
+  if (stored) return stored
+  const t = i / (link.bend + 1)
+  return [
+    a[0] + (b[0] - a[0]) * t + seededJitter(link.seed, i) * 10,
+    a[1] + (b[1] - a[1]) * t + seededJitter(link.seed + 3, i) * 7,
+  ]
+}
 const meridianPaths = computed(() =>
   MERIDIAN_LINKS.map((link) => {
     const a = nodePosition(link.from)
     const b = nodePosition(link.to)
     // Irregular waypoints between the two centers (not collinear).
     const zig: [number, number][] = [a]
-    for (let i = 1; i <= link.bend; i++) {
-      const t = i / (link.bend + 1)
-      zig.push([
-        a[0] + (b[0] - a[0]) * t + seededJitter(link.seed, i) * 7,
-        a[1] + (b[1] - a[1]) * t + seededJitter(link.seed + 3, i) * 5,
-      ])
-    }
+    for (let i = 1; i <= link.bend; i++) zig.push(bendPoint(link, i, a, b))
     zig.push(b)
     // Resample the zigzag into points spaced evenly by arc length -
     // one small dot every 10%, straight segment between dots.
@@ -213,7 +245,7 @@ const meridianPaths = computed(() =>
     // All dots lit while meridian nodes are forced lit for layout review
     // (owner request 2026-10-09, temporary) - real wiring: done = 9,
     // else floor(progressPct / 10) on the destination unit.
-    return { key: `${link.from}-${link.to}`, dots, lit: 9 }
+    return { key: `${link.from}-${link.to}`, dots, lit: 9, bends: zig.slice(1, -1), link }
   }),
 )
 const dotsAttr = (dots: readonly (readonly number[])[]) => dots.map((d) => `${d[0]},${d[1]}`).join(' ')
@@ -287,6 +319,16 @@ const galaxyPieces = computed(() =>
             :cx="dot[0]" :cy="dot[1]" r="0.9"
             :class="di < path.lit ? 'dot-lit' : 'dot-dim'" />
         </svg>
+        <!-- Draggable bend handles shape each channel's irregularity
+             (owner request 2026-10-09). -->
+        <template v-for="path in meridianPaths" :key="`${path.key}-bends`">
+          <button v-for="(bend, bi) in path.bends" :key="`${path.key}-${bi}`"
+            class="body-meridian-bend" :style="{ left: `${bend[0]}%`, top: `${bend[1]}%` }"
+            :aria-label="`Điểm gấp ${bi + 1}`"
+            @pointerdown="onBendPointerDown($event, `${path.key}:${bi + 1}`)"
+            @pointermove="onBendPointerMove"
+            @pointerup="onBendPointerUp" />
+        </template>
         <button v-for="node in visibleMeridianNodes" :key="node.unit.id"
           class="body-meridian-node body-orb" :class="[node.unit.state, { selected: selected === node.unit.id }]"
           :style="{ left: `${node.x}%`, top: `${node.y}%` }"
@@ -415,6 +457,8 @@ const galaxyPieces = computed(() =>
 .body-meridian-path { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 .body-meridian-path .dot-lit { fill:#ffd76a; }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
+.body-meridian-bend { position:absolute; width:22px; height:22px; transform:translate(-50%,-50%); z-index:4; padding:0; border:0; border-radius:50%; background:radial-gradient(circle,#7fffd4 0 28%,transparent 32%); cursor:grab; touch-action:none; }
+.body-meridian-bend:active { cursor:grabbing; }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
 .body-meridian-line { position:absolute; height:12px; transform-origin:left center; z-index:2; pointer-events:none; }
