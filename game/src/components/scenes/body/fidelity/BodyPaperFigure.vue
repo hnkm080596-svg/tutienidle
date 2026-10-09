@@ -203,10 +203,13 @@ const bendPoint = (link: { from: number; to: number; bend: number; seed: number 
   const key = `${link.from}-${link.to}:${i}`
   const stored = bendPositions.value[key]
   if (stored) return stored
+  // Even t spacing keeps bends apart (owner: "điểm không quá gần nhau");
+  // jitter offsets them off the straight line, alternating side sign.
   const t = i / (link.bend + 1)
+  const side = i % 2 === 0 ? 1 : -1
   return [
-    a[0] + (b[0] - a[0]) * t + seededJitter(link.seed, i) * 10,
-    a[1] + (b[1] - a[1]) * t + seededJitter(link.seed + 3, i) * 7,
+    a[0] + (b[0] - a[0]) * t + side * (6 + Math.abs(seededJitter(link.seed, i)) * 9),
+    a[1] + (b[1] - a[1]) * t + seededJitter(link.seed + 3, i) * 4,
   ]
 }
 const meridianPaths = computed(() =>
