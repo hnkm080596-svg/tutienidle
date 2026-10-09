@@ -277,8 +277,8 @@ function rangePct(value: number, range: { min: number; max: number }): number {
   return Math.min(100, Math.max(0, pct))
 }
 
-/** Fixed 5-slot card (owner ruling 2026-10-08, same as Tẩy Luyện):
- *  an item can roll at most 5 affix lines (Tiên). The card always
+/** Fixed 5-slot card (owner ruling 2026-10-08, same as Tay Luyen):
+ *  an item can roll at most 5 affix lines (Tien). The card always
  *  renders all 5 slots so rows stay evenly spaced. */
 const refineSlots = computed(() => {
   const rows = refineRows.value
@@ -304,11 +304,12 @@ const refineMaterials = computed(() => [
 </script>
 
 <template>
-  <!-- Bố cục chung với Cường Hóa (owner ruling 2026-10-08): Tinh Luyện
-       cần area cho tối đa 5 dòng affix nên BỎ ô chiếu + 2 vòng tròn -
-       chỉ còn affix hiện tại -> kết quả tinh luyện (khóa từng dòng ở
-       mép trái), hàng nguyên liệu của Tinh Luyện và nút hành động ghim
-       đáy card. Chọn đồ trực tiếp trên doll. -->
+  <!-- Shared layout with Enhance (owner ruling 2026-10-08): Tinh Luyen
+       needs room for up to 5 affix lines so the preview cell + the 2
+       circles are dropped - only the current affix -> refine result
+       rows (per-line lock at the left edge), the refine materials row,
+       and the action buttons pinned to the card bottom. Pick gear off
+       the doll. -->
   <div class="equipment-forge-workspace forge-refine">
     <h2>{{ t('panels.equipmentHall.tabs.refine') }}</h2>
 
@@ -362,7 +363,7 @@ const refineMaterials = computed(() => [
       </div>
       <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.noAffixesToRefine') }}</p>
 
-      <!-- Pinned bottom block (same as Cường Hóa). -->
+      <!-- Pinned bottom block (same as Enhance). -->
       <div class="equipment-forge-materials">
         <div
           v-for="material in refineMaterials"
@@ -379,6 +380,10 @@ const refineMaterials = computed(() => [
           </div>
         </div>
       </div>
+      <!-- Owner ruling 2026-10-09: forge uses are a shared wallet between
+           Wash and Refine; a spent wallet freezes the item's sub-lines
+           forever. One small hint line, no layout change. -->
+      <p class="forge-ren-hint">{{ t('panels.equipmentHall.labels.renSharedHint') }}</p>
       <div class="equipment-forge-actions">
         <EquipmentArtButton filter-art :gold="canRefine()" :disabled="!canRefine()" @click="doRefinePreview">
           {{ t('panels.equipmentHall.buttons.refinePreview') }}
@@ -421,6 +426,20 @@ const refineMaterials = computed(() => [
   left: 16px;
   right: 16px;
   bottom: -2px;
+}
+/* Shared-wallet hint sits in the strip between the pinned materials
+   row and the actions band - text only, no layout change. */
+.forge-ren-hint {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 62px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  color: #cbb27a;
+  opacity: 0.9;
 }
 .equipment-forge-workspace h2 {
   font-size: 26px;
@@ -549,7 +568,7 @@ const refineMaterials = computed(() => [
   border-color: #d9a94f88;
   background: #d9a94f1a;
 }
-/* Materials row: identical metrics to Cường Hóa. */
+/* Materials row: identical metrics to Enhance. */
 .equipment-forge-materials {
   display: flex;
   align-items: stretch;

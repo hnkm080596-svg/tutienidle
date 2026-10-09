@@ -140,7 +140,11 @@ describe('authored technique gate set (M-QI-06)', () => {
     player.spellPath.element = 'fire'
     player.techniqueProgress = { rank: 0, grade: 1 }
     player.nodeLevels['hoa_linh_ngo'] = 1
-    player.purchasedNodeIds.push('hoa_linh_ngo')
+    // Minh ruling 2026-10-07: the trunk's parent is the cast-chain head
+    // (hoa_phe_diem), not the element root - seed it the same way
+    // (this test pins the rank gates, not the prereq leg).
+    player.nodeLevels['hoa_phe_diem'] = 1
+    player.purchasedNodeIds.push('hoa_linh_ngo', 'hoa_phe_diem')
 
     expect(purchaseNode(player, trunk)).toBe(true)
 

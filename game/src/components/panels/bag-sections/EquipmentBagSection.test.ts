@@ -236,7 +236,7 @@ describe('EquipmentBagSection - toolbar (type select + sort)', () => {
   it('re-picking the same sort mode flips direction (owner ruling: no +/- button)', async () => {
     const mounted = mountTwoItems()
 
-    // name sort asc: 'Bào' (armor) before 'Kiếm' (sword).
+    // name sort asc: 'Bao' (armor) before 'Kiem' (sword).
     // SORT_MODES order: default quality rarity realm slot name(5) forge
     await pickOption(mounted.container, 1, 5)
     let filled = filledSlots(mounted.container)

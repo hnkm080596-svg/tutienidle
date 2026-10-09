@@ -46,7 +46,7 @@ const couplet = computed(() => {
 .character-portrait__line { font-size: 14px; margin: 6px; white-space: nowrap; }
 /* Couplet columns (Minh ruling): Vietnamese words stacked one per line
    flanking the figure like a verse couplet. Columns start right under
-   the realm/path line (h2 24px + line ~26px ≈ 56px) so the verse reads
+   the realm/path line (h2 24px + line ~26px = ~56px) so the verse reads
    top-down from the header - owner ruling 2026-10-09. */
 .character-couplet { position: absolute; top: 56px; bottom: 19%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1px; pointer-events: none; }
 .character-couplet em { font-style: normal; font: 700 13px/1.3 var(--pc-font-title, serif); letter-spacing: .12em; color: #8a6420; text-shadow: 0 0 3px rgba(240,214,150,.45), 0 1px 1px #000; white-space: nowrap; }

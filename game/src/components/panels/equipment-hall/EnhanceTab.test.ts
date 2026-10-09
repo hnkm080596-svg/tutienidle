@@ -107,7 +107,7 @@ describe('EnhanceTab — Cường Hóa', () => {
     const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"] .slot-view')
 
     expect(single).not.toBeNull()
-    // Ô chiếu dùng cùng frame 'socket' với doll.
+    // The preview cell shares the 'socket' frame with the doll.
     expect(single!.classList.contains('slot-view--socket')).toBe(true)
 
     mounted.unmount()
@@ -148,7 +148,7 @@ describe('EnhanceTab — Cường Hóa', () => {
       manager.equipmentBag.add(equipmentInstanceWithItemId('ghost-item', 'nonexistent_item', true))
     })
 
-    // Khong throw khi render - ô chiếu weapon van hien.
+    // No throw on render - the weapon preview cell still renders.
     const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"] .slot-view')
 
     expect(single).not.toBeNull()
@@ -162,8 +162,8 @@ describe('EnhanceTab — Cường Hóa', () => {
     // neu Task 4/5 pha reactivity, test nay do ngay.
     const mounted = mountTab()
 
-    // Chọn mũ qua hall selection (doll click) truoc khi co do - ô
-    // chiếu resolve SANG slot helmet trong.
+    // Pick the helmet via hall selection (doll click) before the item
+    // exists - the preview cell resolves to the EMPTY helmet slot.
     mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
@@ -175,13 +175,15 @@ describe('EnhanceTab — Cường Hóa', () => {
     mounted.manager.equipmentBag.get('new-helmet')!.slot = 'helmet'
     mounted.manager.equipmentBag.get('new-helmet')!.itemId = 'base_quan'
 
-    // Doll click vao mu moi -> ô chiếu doi sang slot helmet co do.
+    // Doll click the new helmet -> the preview cell moves to the
+    // equipped helmet slot.
     mounted.selectedInstanceId.value = 'new-helmet'
     mounted.version.value += 1
     await nextTick()
 
-    // Owner ruling 2026-10-08: ô chiếu hiện TÊN slot (không phải ảnh
-    // item) - slot phải resolve sang 'helmet' vừa chọn qua doll.
+    // Owner ruling 2026-10-08: the preview cell shows the slot NAME
+    // (not the item art) - the slot must resolve to the 'helmet' just
+    // picked via the doll.
     const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"]')
 
     expect(single).not.toBeNull()

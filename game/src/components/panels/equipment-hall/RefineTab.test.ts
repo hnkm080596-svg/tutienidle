@@ -203,7 +203,7 @@ describe('RefineTab — Tinh Luyện', () => {
     mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
-    // Số dư Tinh Hoa in trong hàng nguyên liệu (owned/amount).
+    // The Tinh Hoa balance prints in the materials row (owned/amount).
     expect(mounted.container.querySelector('.equipment-forge-materials')?.textContent).toContain('37')
 
     mounted.unmount()
