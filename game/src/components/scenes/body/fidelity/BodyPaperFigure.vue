@@ -30,6 +30,32 @@ const REFINEMENT_LAYER: Record<string, 'skin' | 'muscle' | 'vertebra' | 'blood' 
 const litLayer = (layer: string) =>
   Object.entries(REFINEMENT_LAYER).some(([id, own]) => own === layer && unitLit(id))
 
+// Luyen Bi emit effect (owner ruling 2026-10-09): small rays emitted
+// perpendicular to the skin at random spots - the pool was extracted from
+// silhouette-seated-v1's alpha edge (x%, y%, outward-normal angle).
+const SKIN_RAY_POOL: readonly (readonly [number, number, number])[] = [
+  [49.1,1.0,-27],[53.4,5.0,90],[44.8,5.7,-90],[56.4,10.3,72],[42.4,11.3,-72],[57.6,16.3,117],[39.6,16.7,-45],[43.3,21.3,-90],
+  [56.4,22.3,63],[40.5,26.7,-45],[60.4,26.7,180],[38.1,32.3,-27],[61.6,32.7,18],[32.6,34.3,-27],[67.1,34.7,45],[29.3,39.3,-90],
+  [70.1,40.0,90],[29.3,45.7,-90],[69.8,46.3,72],[36.0,49.3,180],[63.1,49.3,180],[27.7,51.7,-90],[71.6,52.3,90],[33.8,55.0,117],
+  [60.7,55.0,90],[66.2,56.0,-108],[39.3,57.3,-108],[25.6,57.7,-45],[74.1,58.0,45],[31.4,60.7,90],[60.1,61.0,72],[68.3,61.7,-117],
+  [22.0,62.3,-72],[77.7,63.0,63],[38.4,63.3,-45],[63.7,65.7,108],[28.7,66.0,135],[71.6,67.0,-135],[13.1,68.0,0],[19.2,68.0,-45],
+  [86.3,68.0,-27],[34.8,68.3,-63],[80.5,68.3,45],[67.1,70.7,18],[8.8,72.0,-63],[26.5,72.0,-27],[90.5,72.0,90],[72.0,73.7,45],
+  [19.8,74.0,135],[79.9,74.3,-135],[12.2,77.3,-153],[86.6,77.3,162],[89.0,83.0,90],[10.7,83.3,-90],[86.6,88.7,135],[13.1,89.0,-135],
+  [81.4,91.3,162],[18.3,91.7,-162],[23.8,92.3,180],[51.2,92.7,162],[73.8,93.7,162],[41.8,94.0,162],[59.1,94.0,180],[29.0,94.7,-153],
+  [36.3,95.0,162],[68.3,95.0,162],
+]
+const skinRays = SKIN_RAY_POOL.map((p, i) => ({ p, i, key: Math.random() }))
+  .sort((a, b) => a.key - b.key)
+  .slice(0, 18)
+  .map((o) => ({
+    i: o.i,
+    x: o.p[0],
+    y: o.p[1],
+    a: o.p[2],
+    d: (3 + Math.random() * 2.5).toFixed(2),
+    dl: (-Math.random() * 5).toFixed(2),
+  }))
+
 // Khai Mach: fixed 8-point meridian graph (subset of the preview's 10-point
 // anatomy map) - production owns exactly 8 authored meridians.
 const MERIDIAN_POINTS = [
@@ -100,7 +126,14 @@ const galaxyPieces = computed(() =>
     <div class="body-stage" :aria-label="model.chapterLabel">
       <img class="body-silhouette body-figure-art" :src="bodyArt('silhouette-seated')" alt="">
       <template v-if="model.chapter === 'refinement'">
-        <div v-if="litLayer('skin')" class="body-rays" aria-hidden="true"></div>
+        <div v-if="litLayer('skin')" class="body-rays" aria-hidden="true">
+          <i
+            v-for="r in skinRays"
+            :key="r.i"
+            class="body-ray"
+            :style="{ left: `${r.x}%`, top: `${r.y}%`, '--a': `${r.a}deg`, '--d': `${r.d}s`, '--dl': `${r.dl}s` }"
+          ></i>
+        </div>
         <div v-if="litLayer('skin')" class="body-layer body-skin-layer lit">
           <img :src="bodyArt('silhouette-seated')" alt="">
         </div>
@@ -159,17 +192,16 @@ const galaxyPieces = computed(() =>
 .body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
 .body-skin-layer img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 1px #aaaaaa); }
 .body-skin-layer.lit img { filter:drop-shadow(0 0 2px #ffe5a0) drop-shadow(0 0 5px #eaba4d); }
-/* Luyen Bi glow upgraded to soft emitted rays (owner ruling
-   2026-10-09): a slowly rotating conic fan masked to a fading ring
-   around the figure - the band starts outside the body so the rays
-   read as light emitted outward, not a rim. */
-.body-rays { position:absolute; left:50%; top:52%; width:118%; aspect-ratio:1; transform:translate(-50%,-50%); pointer-events:none; z-index:-1;
-  background:repeating-conic-gradient(from 0deg, rgba(30,22,10,.55) 0deg 3.5deg, rgba(30,22,10,0) 3.5deg 16deg);
-  -webkit-mask-image:radial-gradient(closest-side, transparent 34%, #000 48%, transparent 78%);
-  mask-image:radial-gradient(closest-side, transparent 34%, #000 48%, transparent 78%);
-  animation:body-rays-spin 46s linear infinite, body-rays-breathe 5.2s ease-in-out infinite; }
-@keyframes body-rays-spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
-@keyframes body-rays-breathe { 0%,100% { opacity:.55; } 50% { opacity:.95; } }
+/* Luyen Bi emit effect (owner ruling 2026-10-09): short rays emitted
+   perpendicular to the skin at random contour points - each ray is a
+   small tapered beam anchored at the skin edge, twinkling on its own
+   phase. Layered behind the silhouette so rays emerge from under it. */
+.body-rays { position:absolute; inset:0; pointer-events:none; z-index:-1; }
+.body-ray { position:absolute; width:3px; height:30px; transform:translateY(-100%) rotate(var(--a)); transform-origin:50% 100%;
+  background:linear-gradient(to top, rgba(30,22,10,0) 0%, rgba(30,22,10,.75) 100%);
+  clip-path:polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+  animation:body-ray-fade var(--d) ease-in-out var(--dl) infinite; }
+@keyframes body-ray-fade { 0%,100% { opacity:.25; } 50% { opacity:.85; } }
 .body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none; }
 .body-muscle-layer .left { left:27%; transform:rotate(26deg); }
 .body-muscle-layer .right { right:27%; transform:rotate(-26deg); }
