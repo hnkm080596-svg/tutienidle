@@ -164,7 +164,12 @@ const galaxyPieces = computed(() =>
 </template>
 <style scoped>
 .body-center { display:flex; flex-direction:column; align-items:center; min-height:0; padding:0 4px; }
-.body-stage { position:relative; aspect-ratio:1215/1295; height:calc(100% - 8px); max-width:100%; flex:none; isolation:isolate; transform:scale(1.12); overflow:hidden; }
+.body-stage { position:relative; aspect-ratio:1215/1295; height:calc(100% - 8px); max-width:100%; flex:none; isolation:isolate; transform:scale(1.12); overflow:hidden; translate:0 0; animation:body-float 8s ease-in-out infinite; }
+/* Whole-figure gentle drift (owner ruling 2026-10-09): the silhouette and
+   all its layers float together like drifting in air. Uses the `translate`
+   property so it composes with the scale(1.12) zoom. */
+@keyframes body-float { 0%,100% { translate:0 0; } 50% { translate:0 -6px; } }
+@media (prefers-reduced-motion: reduce) { .body-stage { animation:none; } }
 .body-silhouette { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .body-layer { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
