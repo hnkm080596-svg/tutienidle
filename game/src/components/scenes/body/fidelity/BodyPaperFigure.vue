@@ -335,9 +335,9 @@ const galaxyPieces = computed(() =>
 .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite, forehead-spin 14s linear infinite; }
 @keyframes forehead-spin { to { rotate:360deg; } }
 @media (prefers-reduced-motion: reduce) { .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
-.body-meridian-node { position:absolute; width:12%; height:10%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
+.body-meridian-node { position:absolute; width:18%; height:14%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
 .body-meridian-node:active { cursor:grabbing; }
-.body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
+.body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.8); }
 .body-meridian-node.locked { opacity:.55; }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
