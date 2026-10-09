@@ -37,12 +37,14 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 const herb = computed(() => props.recipe?.variants.find(item => item.id === props.variant) ?? null)
 
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 </script>
 
 <template>
   <section ref="rootRef" class="alchemy-scene" :aria-label="t('alchemy.title')" @click.self="emit('back')">
     <div class="paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
     <h1 class="title">{{ t('alchemy.title') }}</h1>
+    <img class="alchemy-divider" :src="titleDivider" alt="">
     <span class="subtitle">{{ t('alchemy.subtitle') }}</span>
     <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -
          neo o khe trong giua subtitle va details card (design px). -->
@@ -63,7 +65,7 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
 .alchemy-scene { position:absolute; inset:0; pointer-events:auto; font-family:var(--font-display,Georgia,serif); color:#46351f; line-height:1.3; }
 .alchemy-scene :deep(*) { box-sizing:border-box; }
 .paper { position:absolute; left:94px; top:123px; width:1334px; height:633px; border:0 solid transparent; border-image-slice:300 fill; border-image-width:83px; filter:drop-shadow(0 12px 15px #0009); }
-.title { position:absolute; left:231px; top:174px; margin:0; font-size:34px; font-weight:500; font-style:italic; }
+.title { position:absolute; left:231px; top:174px; margin:0; font-size:34px; font-weight:500; font-style:italic; } .alchemy-divider{position:absolute;left:233px;top:191px;width:230px;object-fit:contain;opacity:.9}
 .subtitle { position:absolute; left:519px; top:192px; color:#8b7042; font-size:13px; letter-spacing:2px; }
 .alchemy-upgrade { position:absolute; left:792px; top:184px; width:170px; }
 .alchemy-upgrade :deep(.building-heading__cost) { color:#8b7042; font-size:11px; }

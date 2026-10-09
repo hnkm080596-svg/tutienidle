@@ -60,7 +60,7 @@ const equipmentContent: EquipmentTooltipContent = {
     equipmentQualityRank: 5,
     rarityRank: 3,
   },
-  slotLabel: 'Vũ Khí',
+  slotLabel: 'Đạo Khí',
   qualityKey: 'dia',
   gradeLine: 'Cảnh giới: Ngũ Phẩm (Nguyên Anh)',
   sections: [

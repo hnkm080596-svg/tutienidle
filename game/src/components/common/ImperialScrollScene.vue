@@ -5,8 +5,6 @@ import { useDialogFocus } from '@/composables/useDialogFocus'
 import { i18n } from '@/i18n'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import HuyenKimSymbol from './HuyenKimSymbol.vue'
-import PaperPanelNavigation from './PaperPanelNavigation.vue'
-import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 // ImperialScrollScene - the canonical large functional shell of the
@@ -20,23 +18,16 @@ const props = withDefaults(defineProps<{
   open: boolean
   title: string
   layer?: number
-  /** Imperial nav rail (cross-scene seals); scene-local nav uses slots. */
-  nav?: boolean
   /** Fidelity contract: scene id lands as data-hk-scene on the host root. */
   scene?: string
 }>(), {
   layer: OVERLAY_LAYERS.panel,
-  nav: true,
 })
 
 const emit = defineEmits<{ close: [] }>()
 
-// The scroll's rail is the same shared paper nav the fidelity surfaces
-// render - one canonical id list, one selection target authority, and
-// the active item follows whatever surface is currently open (plaque
-// opens on a building land on that building's nav tab).
-const { items: navItems, navigate: navigateRail, activeId: navActiveId } = usePaperNavigation()
-const navLabel = computed(() => i18n.global.t('paperNav.navigation'))
+// R9 (applied): no horizontal PaperPanelNavigation inside the shell - the
+// home rail owns cross-scene navigation; close stays on the corner X.
 
 const envelopeRef = ref<HTMLElement | null>(null)
 useDialogFocus(envelopeRef, computed(() => props.open), { onEscape: () => emit('close') })
@@ -113,17 +104,6 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
             <InkNineSlice chrome-id="icon-button-utility" layer="surface" />
             <HuyenKimSymbol name="close" />
           </button>
-
-          <PaperPanelNavigation
-            v-if="nav"
-            class="hk-scroll__rail"
-            :items="navItems"
-            :active="navActiveId"
-            :label="navLabel"
-            :back-label="closeLabel"
-            @select="navigateRail"
-            @back="emit('close')"
-          />
 
           <div class="hk-scroll__inner">
             <header v-if="$slots.header" class="hk-scroll__header">
@@ -287,31 +267,9 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
 .hk-scroll__close:hover { filter: brightness(1.18); }
 .hk-scroll__close:focus-visible { outline: 2px solid var(--hk-gold, #d8b45a); outline-offset: 2px; }
 
-/* Compound selector wins over .paper-navigation's own design-px box:
-   inside the scroll the rail fills this cqw/cqh slot instead. */
-.hk-scroll__chrome > .hk-scroll__rail {
-  position: absolute;
-  left: 4.8cqw;
-  /* Extended to the frame's usable band so the full canonical set fits
-     at design height (11 items ~608px) with no scroll; shorter surfaces
-     keep the spec scrollfade below. */
-  top: 7cqh;
-  bottom: 7cqh;
-  height: auto;
-  width: max(8.6cqw, 92px);
-  z-index: 4;
-  border-right: 0;
-}
-.hk-scroll__rail :deep(.paper-navigation-items) {
-  align-items: center;
-  /* Tall viewports fit the whole canonical set; shorter ones keep the
-     spec scrollfade at the lower edge instead of a visible scrollbar. */
-  mask-image: linear-gradient(to bottom, #000 0, #000 90%, transparent 100%);
-}
-
 .hk-scroll__inner {
   position: absolute;
-  left: 14.4cqw;
+  left: 4.8cqw;
   right: 4.8cqw;
   top: 6.5cqh;
   /* Keep content inside the pale paper - the ceremony frame's dark
@@ -410,9 +368,7 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
 
 @media (max-width: 900px) {
   .hk-scroll__envelope { width: 96vw; height: 92vh; }
-  /* Icon-only rail at narrow widths (spec: icon-only 96w at 1366). */
-  .hk-scroll__rail { width: max(7cqw, 76px); }
-  .hk-scroll__inner { left: 13cqw; }
+  .hk-scroll__inner { left: 4.8cqw; }
 }
 
 @media (prefers-reduced-motion: reduce) {

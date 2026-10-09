@@ -2,7 +2,7 @@
 import { shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from './equipment/EquipmentArtCard.vue'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
 import EquipmentPaperdollPreview from './equipment/EquipmentPaperdollPreview.vue'
 import EquipmentBagPreview from './equipment/EquipmentBagPreview.vue'
 import EquipmentForgePreview from './equipment/EquipmentForgePreview.vue'

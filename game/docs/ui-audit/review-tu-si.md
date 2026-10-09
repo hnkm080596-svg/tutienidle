@@ -1,0 +1,44 @@
+# Review audit Tu Sĩ — skeptical pass
+
+Snapshot verified: `devin/artui-c0-foundation` @ 8ffc8e64, work inside `game/`.
+
+## Missed
+
+1. **Rail giấy chết hoàn toàn nhưng report xếp vào "cổng mở live"** — `usePaperNavigation()` không có caller production nào (grep toàn src/tests = 0): `NAV_TARGETS.character → left_panel/character` (`usePaperNavigation.ts:45`) và `navigate()` L128-140 không bao giờ chạy. `PaperPanelNavigation.vue` chỉ được mount bởi `ui-preview/PaperPreviewSurface.vue:19`; `ImperialScrollScene.vue:29` + `CharacterFidelityScene.vue:5` chỉ là comment nói "no PaperPanelNavigation". Bản thân rail wrapper `PcPaperSceneActions.vue` có **0 importer** (kể cả preview — nó chỉ import type `PaperNavigationItem` L5). `ui-preview/paperNavigation.ts:1` chỉ re-export `PAPER_NAV_IDS`. → "Cổng mở" thật chỉ còn 2 đường: nav Động Phủ + command wheel.
+2. **3 architecture test khác cũng pin tree chết** — report nói "chỉ 2 test": thiếu `tests/architecture/b18ConsumerHonesty.qa.test.ts:20` (import + mount CharacterPanel), `tests/architecture/betaConsumerSeamsB8.qa.test.ts:39` (import + mount), `tests/architecture/b19ConsumerScopeLeak.qa.test.ts:12` (mount CharacterDetailCard — bác claim "không ai import"), `tests/architecture/betaFrontendScopeExposure.test.ts:204,209` (string-ref `CharacterFigureWheel.vue` + `CharacterSurface.vue`).
+3. **Rule global còn nạp cho thẻ chết** — `system-theme.css:319` `aside.character-detail.sys-surface` (file được main.ts:7 import) style thẳng card `sys-surface` của CharacterDetailCard chết (`CharacterDetailCard.vue:41`). Report chỉ rà `tien-hiep-ui.css`.
+4. **Listener/timer live trong scope** — `EntitySpriteCanvas.vue:125-127` chạy `requestAnimationFrame` loop suốt lúc panel mở (idle figure); `SceneDesignCanvas.vue:7,20-21` gắn `ResizeObserver` trên overlay canvas; `useDialogFocus.ts:79` add `document.mousedown` preventDefault + keydown L65 khi panel mở. Cộng thêm `SceneDesignCanvas.vue:41-42` `.scene-viewport--overlay{pointer-events:none}` — tổ tiên thật sự khiến click rơi xuống DongFuStage (report chỉ kể global rule + scoped).
+5. **avatar-frame không phải art dormant-only** — `hkChromeUrl('avatar-frame')` (manifest `src/ui/huyen-kim-chrome.json:526-530`) còn được live `CombatPlayerCard.vue:44` + `DongFuHud.vue:7` dùng; chỉ consumer Tu Sĩ (IdentityHeader L17) là chết.
+6. **PcPaperButton có consumer production ngoài DongFuStage** — `onboarding/AuthEntryScreen.vue`, `onboarding/CharacterCreationScreen.vue`, `scenes/login/LoginOpening.vue` đều mount nó (bác blanket-claim §3 "TẤT CẢ chỉ có consumer ở ui-preview/").
+7. **PcBodyDiagram thuộc pc-chrome nhưng vắng khỏi inventory** — `CharacterProgressionDesignPreview.vue:8` import nó cho example meridian/zhou (cùng file preview trong scope).
+8. **Art chết trong pack** — `controls/attribute-plus-v1.png`, `controls/character-card-nine-slice-v1.png`: 0 reference (v2 thay thế — v2 card còn share với `EquipmentArtCard.vue:3`). `icons/character.png` → `pcPaperIconUrl('character')` → `DongFuStage.vue:422` (avatar chip header) — art trong scope chưa map.
+9. **`resolveStatSourceName` xử lý cả 'debuff'** (`statSources.ts:118-132`, case `buff|debuff`) — report chỉ liệt kê "buff".
+10. **Cross-scene import chưa ghi** — `CharacterFidelityStats.vue:7` import `symbolUrl` từ `../../dong-fu/fidelity/dongFuUi` (fidelity Tu Sĩ phụ thuộc module UI Động Phủ cho glyph fallback).
+11. **`tien-hiep-collections.css` mang thêm vocab `.cf-*`** — L24/31/209-210 có selector `.cf-notice`/`.cf-preview`, L36/118/212 `.character-study`/`.character-stage`. File KHÔNG được main.ts import + ancestor `.th-collection`/`.pc-collection` không ai emit → double-dead, nhưng đây là file global thứ 2 mang bẫy đặt tên cf-* mà inventory "global chrome" của report bỏ qua.
+12. **không có test nào cho live fidelity** — đúng như report nói, xác nhận thêm: 0 `.test.ts` reference `CharacterFidelity|statSources|characterUi` (grep) — làm nổi bật hơn nghịch lý 5 file test pin tree ngủ.
+
+## Wrong
+
+1. "Cổng mở (3 đường)" — đường rail giấy là code chết (xem Missed #1): không có production scene nào render PaperPanelNavigation hay gọi usePaperNavigation.
+2. "PcPaperSceneActions ... chỉ ui-preview" — sai: **0 importer ở mọi nơi** (component chết hoàn toàn, không cả preview).
+3. "EquipmentPaperdollScene.vue L44" — file không tồn tại; comment cảnh báo bẫy `*-paper` nằm ở `fidelity/EquipmentFidelityScene.vue:43-46`.
+4. "chỉ 2 test" pin tree chết — đúng ra 5 file test động vào scope (2 unit + 3 architecture + 1 string-ref), xem Missed #2.
+5. Trôi line nhỏ: khối pointer-events global là `tien-hiep-ui.css:390-411` (report "~395-411"); `th-panel-swap` L373-379 (report "~383-389"); pin `.cf-paper` background/isolation nằm L253-256 + L278-280 + L344-346 (report "~258-262" — L258-259 thực ra là login-scroll); `toggleLeft` nhánh character L206-216 trong hàm L199-224 (report "L206-215"); `openLeftPanel` nhánh character L232-238 trong hàm L226-242 (report "L232-237").
+6. `pc-paper-scene.css` "chỉ vào app qua DongFuStage L33" — đúng về hiệu quả runtime nhưng file còn được import tĩnh bởi `PcPaperScene.vue:2`, `PcPaperDialog.vue:3`, `PcPaperChrome.vue:2` (đều chết nên không lên bundle production).
+
+## Verified-ok
+
+- Mount chain: `App.vue:1293` GameRoot v-if=isBooted → `GameRoot.vue:140` guard `!isFullSceneActive`, L149 `<LeftPanel/>` → `LeftPanel.vue:16-19` Transition + `CharacterSurface` v-if kép + `InventoryPanel` v-else-if → `CharacterSurface.vue:276-284` `SceneDesignCanvas overlay` → `CharacterFidelityScene` → 3 con L36-38.
+- Open paths thật: `DongFuStage.vue:227` NAV_TARGET.character→openLeftPanel; `commandWheelCatalog.ts:~89-95` slot character ring1 `left_panel/character`; `activateSlot` L330-345; `navActive` L271 đọc đúng cặp flag.
+- Store: `ui.ts:125` characterOverlayOpen, L130 characterSceneTab, L258-263 closeHomeOverlays; `'character'` trong union `panelIds.ts:20` nhưng `leftPanelMode='character'` không tồn tại ở đâu (grep=0); `FunctionOverlayPanel.vue:23` union lọc + L74 filter thủ công; ImperialScrollScene chỉ còn exploration L122-155.
+- CharacterSurface: POWER_TERMS L111-119 (7 hệ số khớp), combatPower L120-125, daoIdentity L134-136, pathName L138-152 (mortal→undefined L148 mâu thuẫn comment L145-147 — đúng như report), detailRows L158-172, model L174-248, attributePoints L246 chỉ gate `allocatable` L212 (characterUi.ts:104-105 comment hứa "points badge" không tồn tại), handlers L250-272, timer 3.2s L51.
+- Dead `.cf-*`: grep 19 class (cf-paper…cf-stat) → 0 emitter; `.cf-panel__header h1` L135/148 là rule live duy nhất trong nhóm; global `:is(#app,body) .cf-scene{pointer-events:none}` L390 + `> *{auto}` L401 thắng scoped L49 → `@click.self` L32 chết, click rơi qua canvas-overlay-none xuống `DongFuStage.onSceneClick` L366-369 → closeHomeOverlays (khớp phân tích của report).
+- Dormant tree: CharacterPanel L4-6 comment "mount point"; CharacterScene grid L17-26 + 6 vùng; combatPower duplicate `IdentityHeader.vue:20-31` cùng hệ số; STAT_GLYPH rỗng L41-47 → '·' L65; art-needed/data-art-id L55,65-67,75,L60-61; data-hk-region ×7 đúng các line report nêu; `CharacterScene.vue` chỉ được import bởi CharacterPanel (chết theo); `CharacterDetailCard` 4-category statGroups L29-37.
+- Art live: shared-paper-page-v1.png, character-card-nine-slice-v2.png, attribute-plus-v2.png, element-*-ivory-v1.png, talent-*.svg, navigation-character-v2.png đều tồn tại trên disk; `banner-*.png` qua `Tooltip.vue:78` chỉ render khi tooltip kind:'element' — Tu Sĩ live dùng `:title` native (Stats L70) nên không render (đúng report); `el-formation-*`/`el-primordial` chỉ còn FigureWheel dormant + AssetBundleCatalog.
+- Stats.vue: statTooltip L18-19, talentTooltip L20-23, talentIconError L24-30 fallback technique.svg, rows L36-51, allocate L44-49, `<em>MAX` L50, gold-tube ruling comment L83-85 — `color`/`symbol` trong `CharacterUiStat` (characterUi.ts:53-54) đúng là field chết.
+- Identity/Figure/Details: powerTooltip L11-16, couplet L20-26 theo '·', `v-if=idle` Figure L38 không fallback, data-testid detail-scroll L15, 2 card offense/defense L16.
+- Tests unit: `CharacterPanel.stats.test.ts:10` import + mount assert; `betaScope.test.ts:15` import + mount `--aura`.
+- Lịch sử commit: `3bfa682a` (2026-10-02, decompose) + `83f84eb5` (2026-10-03, production integration) khớp mô tả.
+- Preview: `CharacterPreview.vue:6` import + ~L96 mount với mock model + `preview`; `CharacterProgressionDesignPreview.vue` PcPaperScene/Tabs/Lock mock; `HomeCharacterArtPanel.vue` copy tay class `character-*` hardcode 3 nhóm detail vs live 2 Công/Thủ + CSS `.character-icon-tree` L33-34 không DOM; `LandscapeDesignPreview.vue` mount nó `v-if="activePanel === 'character'"`.
+- `th-panel-swap` (LeftPanel L16): Tu Sĩ đi Transition này — nhưng không riêng: `FunctionOverlayPanel.vue:113` dùng chung cho 4 paper modes (report nói "Transition riêng" hơi quá tay).
+- `PcPaperScene.test.ts` tồn tại cho component preview-only — đúng report.

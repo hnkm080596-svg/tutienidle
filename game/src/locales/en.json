@@ -119,13 +119,21 @@
           "lock": "Lock"
         }
       },
+      "forge": {
+        "afterEnhance": "Stats After Enhancement",
+        "materials": "Enhancement Materials",
+        "washMaterials": "Wash Consumables",
+        "refinementMaterials": "Refinement Materials",
+        "current": "Current",
+        "result": "Result"
+      },
       "empty": {
         "maxLevel": "Maximum level reached.",
         "noStats": "Empty slot — no main stat to preview.",
         "noAffixes": "No affix lines yet.",
         "noAffixesToRefine": "No affix lines to Refine.",
         "noDissolveCandidates": "No items match the current filter for Dissolution.",
-        "selectItem": "Select an equipment on the left to view details."
+        "selectItem": "Select an equipment to view details."
       },
       "tooltips": {
         "emptySlotCanEnhance": "Empty slots can still be Enhanced.",
@@ -134,7 +142,7 @@
       },
       "buttons": {
         "enhance": "Enhance",
-        "washPreview": "Wash — reroll all affix lines",
+        "washPreview": "Wash",
         "keep": "Keep",
         "discard": "Discard",
         "refinePreview": "Refine",
@@ -534,7 +542,8 @@
       "tabs": {
         "equipment": "Equipment",
         "material": "Materials",
-        "pill": "Pills"
+        "pill": "Pills",
+        "decompose": "Decompose"
       },
       "paperdoll": {
         "slots": {
@@ -549,8 +558,6 @@
       "search": {
         "materialPlaceholder": "Search materials...",
         "materialAria": "Search materials by name",
-        "equipmentPlaceholder": "Search equipment...",
-        "equipmentAria": "Search equipment by name",
         "pillPlaceholder": "Search pills...",
         "pillAria": "Search pills by name"
       },
@@ -621,7 +628,9 @@
           "mahayana": "Mahayana",
           "tribulation": "Tribulation"
         }
-      }
+      },
+      "pagePrev": "Previous page",
+      "pageNext": "Next page"
     },
     "vendor": {
       "gateNotBelow": "Only items of a grade below your current realm can be sold",
@@ -2157,7 +2166,8 @@
     "designMode": {
       "ultimatePlaceholder": "Unrevealed",
       "ultimateLocked": "Unrevealed — the ultimate art is not authored yet."
-    }
+    },
+    "insightNeeded": "Insight needed"
   },
   "body": {
     "title": "Body Tempering",
@@ -2212,10 +2222,27 @@
     "filter": "Filter",
     "forgeTitle": "Qi Forge · Gear Refining",
     "stats": {
-      "hp": "Health",
+      "hp": "Vitality",
       "attack": "Attack",
-      "defense": "Defense"
+      "defense": "Defense",
+      "mana": "Inner Force",
+      "critical": "Critical",
+      "speed": "Speed"
     },
+    "capacity": "Expand bag",
+    "bagFilters": {
+      "jewelry": "Jewelry"
+    },
+    "quality": "Quality",
+    "qualities": {
+      "all": "All",
+      "gold": "Gold",
+      "purple": "Purple",
+      "blue": "Blue"
+    },
+    "order": "Sort",
+    "defaultOrder": "Default",
+    "qualityOrder": "By Quality",
     "bagTabs": {
       "all": "All",
       "weapons": "Weapons",
@@ -2225,6 +2252,15 @@
     "workspace": {
       "equip": "Gear",
       "bag": "Stash"
+    },
+    "sortModes": {
+      "default": "Default",
+      "quality": "Grade",
+      "rarity": "Quality",
+      "realm": "Realm",
+      "slot": "Slot",
+      "name": "Name",
+      "forge": "Forge Uses"
     }
   },
   "inventoryPreview": {
@@ -2289,5 +2325,28 @@
       "skill": "Skill",
       "element": "Element"
     }
+  },
+  "devPanel": {
+    "open": "DEV",
+    "title": "Dev Tools",
+    "resources": "Resources",
+    "amount": "Amount",
+    "add": "+ Add",
+    "cultivation": "Cultivation",
+    "duyenPhan": "Duyen Phan",
+    "skillInsight": "Skill Insight",
+    "path": "Cultivation Path",
+    "way": "Way",
+    "pathCurrent": "Current",
+    "pathUnset": "unchosen",
+    "apply": "Apply",
+    "reset": "Reset path",
+    "skill": "Skills",
+    "skillDesign": "Constellation design mode",
+    "skillDesignHint": "Enable, then drag nodes in the Skills scene; the Export chip sits on the canvas.",
+    "exportLayout": "Export layout",
+    "realm": "Realm",
+    "applyRealm": "Apply realm",
+    "respecTree": "Reset tree"
   }
 }

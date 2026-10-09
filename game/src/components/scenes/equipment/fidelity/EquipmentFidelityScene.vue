@@ -38,8 +38,13 @@ const emptyBagCells = computed(() => {
   const remainder = props.items.length % BAG_COLUMNS
   return remainder === 0 ? 0 : BAG_COLUMNS - remainder
 })
+// Shared redesigned panel sheet: verbatim skill-sheet (Cong Phap) rect
+// + art - flat shared paper page on the common panel band right of the
+// nav rail. Class renamed off `equipment-paper` on purpose: the
+// tien-hiep-ui.css global rules pin *-paper elements to the legacy
+// 156/1272 nine-slice band.
 const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
-const divider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-divider-v1.png')
+const divider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 const darkCard = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 const circleFrame = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png')
 const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-tab-brush-v1.png')
@@ -47,8 +52,13 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 
 <template>
   <section ref="rootRef" class="equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')" @keydown.esc="inspecting = null">
-    <div class="equipment-paper" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
-    <header class="equipment-heading"><h1 class="equipment-title">{{ t('equipment.title') }}</h1><img class="equipment-divider" :src="divider" alt=""></header>
+    <div class="equipment-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
+    <header class="equipment-heading"><div class="equipment-heading__title"><h1 class="equipment-title">{{ t('equipment.title') }}</h1><img class="equipment-divider" :src="divider" alt=""></div></header>
+    <!-- Scene-level tab strip per the Codex preview: under the heading,
+         above the doll column. The h1 carries `equipment-title` so the
+         shared plaque + OngDoGia shine rule hits it like every sibling
+         scene (owner ruling 2026-10-08). -->
+    <slot name="tabs" />
     <p class="equipment-subtitle">{{ t('equipment.subtitle') }}</p>
     <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -
          neo o khe trong giua subtitle va cot bag/forge (design px). -->
@@ -62,7 +72,10 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
       <div class="equipment-sockets" :style="{ '--equipment-circle-frame': `url('${circleFrame}')` }"><div v-for="socket in sockets" :key="socket.id" class="equipment-socket"><EquipmentPaperItem :item="socket.item" :label="socket.label" @click="selected=socket.item??null" @inspect="inspecting = $event" @leave="inspecting = null" /><span>{{ socket.label }}</span></div></div>
     </slot>
 
-    <div class="equipment-summary" :style="{ '--equipment-card-art': `url('${darkCard}')` }"><h2>{{ t('equipment.summary') }}</h2><slot name="summary"><div><span>{{ t('equipment.stats.hp') }}</span><strong>18.200</strong><span>{{ t('equipment.stats.attack') }}</span><strong>1.260</strong><span>{{ t('equipment.stats.defense') }}</span><strong>840</strong></div></slot></div>
+    <!-- Stats card (owner ruling 2026-10-08): no title - the card only
+         lists the stats contributed by equipped gear, and the list
+         scrolls without ever showing a scrollbar. -->
+    <div class="equipment-summary" :style="{ '--equipment-card-art': `url('${darkCard}')` }"><slot name="summary"><div><span>{{ t('equipment.stats.hp') }}</span><strong>18.200</strong><span>{{ t('equipment.stats.attack') }}</span><strong>1.260</strong><span>{{ t('equipment.stats.defense') }}</span><strong>840</strong></div></slot></div>
 
     <!-- The unified right region (ref: bag OR forge at the same rect)
          carries the fixture bag/forge toggle; production mounts the real
@@ -81,27 +94,42 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 <style scoped>
 .equipment-scene { position:absolute; inset:0; pointer-events:auto; color:#30291d; font-family:var(--font-display,Georgia,serif); }
 .equipment-scene :deep(*) { box-sizing:border-box; }
-.equipment-paper { position:absolute; left:94px; top:123px; width:1334px; height:633px; border:3px double #b28a43; background-color:#f2e4c8; background-position:center; background-size:cover; background-repeat:no-repeat; box-shadow:0 12px 15px #0009; }
-.equipment-heading { position:absolute; left:120px; top:137px; height:44px; display:flex; align-items:center; gap:24px; border-bottom:1px solid #b28a43; width:1286px; }
-.equipment-title { margin:0; font-size:30px; font-weight:700; color:#35250f; text-shadow:0 1px #fff7; }
-.equipment-divider { width:170px; height:21px; object-fit:contain; opacity:.65; }
-.equipment-subtitle { position:absolute; left:120px; top:184px; margin:0; font-size:13px; color:#715627; }
-.equipment-upgrade { position:absolute; left:572px; top:150px; width:120px; }
+/* Sheet = .skill-sheet verbatim: the redesigned panels' shared band
+   (24% / 12.5% / 74% / 75% of the 1440x810 design canvas). */
+.equipment-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; background-repeat:no-repeat; border:3px double #b28a43; }
+/* Content inside the sheet keeps the same insets Cong Phap uses
+   (~27px sides): heading row per the Codex preview's 48px line. */
+/* Inner insets mirror HomeEquipmentArtPanel verbatim: sheet padding
+   16px 20px 18px -> content x365-1390, heading top 117, tabs 165,
+   content grid 215. */
+.equipment-heading { position:absolute; left:365px; top:117px; height:48px; display:flex; align-items:center; gap:30px; border-bottom:1px solid #b28a43; width:1025px; } .equipment-heading{height:auto;min-height:48px}.equipment-heading__title{display:flex;flex-direction:column;position:relative}.equipment-divider{position:absolute;left:5px;top:25px;width:200px;height:auto;object-fit:contain;opacity:.75;pointer-events:none}
+.equipment-heading h1 { margin:0; font-size:38px; line-height:1.15; font-weight:700; color:#35250f; text-shadow:0 1px #fff7; }
+.equipment-subtitle { position:absolute; left:365px; top:117px; width:860px; height:48px; margin:0; display:flex; align-items:center; justify-content:flex-end; font-size:13px; color:#715627; }
+.equipment-upgrade { position:absolute; left:1260px; top:110px; width:110px; }
 /* Single-line cost: the row is bounded so it keeps its own lane and
    never spills onto the socket grid below (y=240). */
 .equipment-upgrade :deep(.building-heading__cost) { color:#8b7246; font-size:10px; line-height:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.character-stage { position:absolute; left:338px; top:229px; width:264px; height:374px; pointer-events:none; }
+/* Columns start below the scene-level tab strip (heading 120-168,
+   tabs ~178-220) - same stacking as the Codex preview. */
+.character-stage { position:absolute; left:424px; top:215px; width:264px; height:340px; pointer-events:none; }
 .character-image { width:100%; height:100%; object-fit:contain; }
-.equipment-sockets { position:absolute; left:244px; top:240px; width:449px; height:350px; display:grid; grid-template-columns:74px 74px; grid-template-rows:repeat(3,1fr); justify-content:center; column-gap:264px; }
+.equipment-sockets { position:absolute; left:365px; top:215px; width:369px; height:348px; display:grid; grid-template-columns:74px 74px; grid-template-rows:repeat(3,1fr); justify-content:space-between; }
 .equipment-socket { position:relative; display:flex; flex-direction:column; align-items:center; gap:7px; font-size:12px; color:#78623d; }
 .equipment-socket::before { content:''; position:absolute; top:-6px; left:50%; width:88px; height:88px; transform:translateX(-50%); background:var(--equipment-circle-frame) center/contain no-repeat; pointer-events:none; z-index:1; }
 .equipment-socket :deep(.gear-item) { width:64px; height:64px; border-radius:50%; }
 .equipment-socket > span { font-size:14px; font-weight:600; color:#473315; }
-.equipment-summary { position:absolute; left:244px; top:605px; width:449px; padding:10px 14px; border:15px solid transparent; border-image:var(--equipment-card-art) 90 fill / 15px stretch; color:#f3e4c4; }
-.equipment-summary h2 { font-size:16px; font-weight:700; margin:0 0 8px; color:#f3e4c4; }
-.equipment-summary :deep(div) { display:grid; grid-template-columns:repeat(3,auto auto); gap:6px 12px; font-size:13px; }
-.equipment-summary :deep(strong) { font-weight:700; color:#a3d793; }
-.equipment-bag { position:absolute; left:700px; top:178px; width:678px; height:507px; padding:14px 18px; border:15px solid transparent; border-image:var(--equipment-card-art) 90 fill / 15px stretch; color:#f3e4c4; }
+/* Codex home-equipment stats card: dark nine-slice card under the doll
+   (same character-card art the preview's EquipmentArtCard mounts) -
+   title removed per owner ruling; a single-column name/value list in
+   the Tu Si derived-stats pattern, gold values on dark. */
+.equipment-summary { position:absolute; left:365px; top:572px; width:369px; height:119px; padding:11px 14px 12px; border:15px solid transparent; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); border-image:var(--equipment-card-art) 160 / 15px stretch;  color:#f3e4c4; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
+/* The list fills the card and scrolls invisibly (owner rule: roll nhung
+   khong the hien scroller) - scrollbar-width:none + webkit display:none. */
+.equipment-summary :deep(ul),
+.equipment-summary :deep(dl) { margin:0; height:100%; align-content:start; overflow:auto; scrollbar-width:none; }
+.equipment-summary :deep(ul::-webkit-scrollbar),
+.equipment-summary :deep(dl::-webkit-scrollbar) { display:none; }
+.equipment-bag { position:absolute; left:748px; top:215px; width:642px; height:476px; padding:14px 18px; border:15px solid transparent; clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px); border-image:var(--equipment-card-art) 160 / 15px stretch;  color:#f3e4c4; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
 .equipment-bag header { display:flex; align-items:baseline; justify-content:space-between; }
 .equipment-bag h2 { margin:0; font-size:24px; font-weight:700; color:#f3e4c4; }
 .equipment-bag header span { font-size:12px; color:#c9a95f; }
@@ -115,9 +143,9 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 .equipment-bag footer button { padding:7px 25px; border:1px solid #9f8248; color:#f6dfa6; font-weight:700; background:linear-gradient(#3c5946,#173024); border-radius:3px; cursor:pointer; box-shadow:inset 0 0 0 2px #d3b57633,0 2px 4px #3f2d1455; }
 .equipment-bag footer button:hover { filter:brightness(1.15); }
 .equipment-scene button:focus-visible { outline:2px solid #d6ad5d; outline-offset:3px; }
-.equipment-preview { position:absolute; left:244px; top:690px; width:140px; margin:0; font-size:10px; line-height:15px; color:#7c6a48; }
-.equipment-notice { position:absolute; left:700px; top:710px; width:675px; height:28px; margin:0; text-align:right; font-size:12px; color:#62512d; }
-.equipment-forge { position:absolute;left:700px;top:178px;width:678px;height:507px;padding:14px 18px;border:15px solid transparent;border-image:var(--equipment-card-art) 90 fill / 15px stretch;color:#f3e4c4 }
+.equipment-preview { position:absolute; left:372px; top:692px; width:140px; margin:0; font-size:10px; line-height:15px; color:#7c6a48; }
+.equipment-notice { position:absolute; left:750px; top:692px; width:640px; height:13px; margin:0; text-align:right; font-size:12px; color:#62512d; }
+.equipment-forge { position:absolute;left:748px;top:215px;width:642px;height:476px;padding:14px 18px;border:15px solid transparent;clip-path:inset(5.1px 2.1px 5.7px 2.2px round 6px);border-image:var(--equipment-card-art) 160 / 15px stretch;color:#f3e4c4;background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 11px) no-repeat;}
 .equipment-forge header { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px }
 .equipment-forge h2 { font-size:24px;color:#f3e4c4;margin:0;font-weight:700 }
 .equipment-forge header button,.equipment-bag header button { background:transparent;border:1px solid #a1844a;color:#c9b184;padding:5px 10px;font-size:12px;cursor:pointer }

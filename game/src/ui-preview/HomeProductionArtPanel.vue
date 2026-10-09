@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {ref} from 'vue'
 import {useI18n} from 'vue-i18n'
-import ProductionSourceArtCard from './ProductionSourceArtCard.vue'
-import EquipmentArtButton from './equipment/EquipmentArtButton.vue'
-import EquipmentEnergyTube from './equipment/EquipmentEnergyTube.vue'
+import ProductionSourceArtCard from '@/components/common/art/ProductionSourceArtCard.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 const {t}=useI18n()
 const levels=ref([1,1,1]),running=ref([true,true,true]),amount=ref(320),notice=ref('')
 const base='/assets/ui/tien-hiep-2026-10/'

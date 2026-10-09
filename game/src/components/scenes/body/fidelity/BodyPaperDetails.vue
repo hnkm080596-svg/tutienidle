@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import EquipmentArtCard from '@/ui-preview/equipment/EquipmentArtCard.vue'
-import EquipmentArtButton from '@/ui-preview/equipment/EquipmentArtButton.vue'
-import EquipmentEnergyTube from '@/ui-preview/equipment/EquipmentEnergyTube.vue'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
 
 const props = defineProps<{ model: BodyPaperModel; unit: BodyPaperUnit | null; notice: string }>()

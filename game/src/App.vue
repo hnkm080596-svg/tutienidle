@@ -58,6 +58,8 @@ import {
 } from './services/diagnostics/DiagnosticRecorder'
 import { recordSaveOutcome } from './services/diagnostics/recordSaveOutcome'
 import type { AuthSession } from './services/auth/AuthService'
+import { recordSessionLoginId } from './services/master/masterAccess'
+import DevToolsPanel from './components/dev/DevToolsPanel.vue'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
 import PhapTuLabBridge from './dev/PhapTuLabBridge.vue'
@@ -1132,6 +1134,8 @@ function onAuthenticated(session: AuthSession) {
   // previous session/account cannot touch the journal or cache once it
   // resolves (reset/logout/user-switch fence), and queued writers drain
   // instead of committing under the new account.
+  // Master gate: the dev panel + design mode key off the session loginId.
+  recordSessionLoginId(session.loginId)
   cloudSaveCoordinator.reset()
   setSaveAccountId(accountIdForSession(session))
   void bootGame(false)
@@ -1287,6 +1291,10 @@ onUnmounted(() => {
     <!-- GameRoot chi hien khi boot xong; inert while an authority
          overlay owns the surface (B1-D). -->
     <GameRoot v-if="isBooted" :inert="authorityOverlayActive" />
+
+    <!-- Master-account dev surface - self-gates on the allowlisted
+         loginId, inert for everyone else. -->
+    <DevToolsPanel v-if="isBooted" />
 
     <!-- Beta scope v2 sec.H - the deliberate ending beat: rendered once
          the completion read-model resolves, acknowledged per device via

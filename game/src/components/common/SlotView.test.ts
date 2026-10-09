@@ -324,60 +324,53 @@ describe('SlotView — badge/marker/comparison/amount/caption', () => {
   })
 })
 
-describe('SlotView - Chat aura (equipment quality indicator, user art pass)', () => {
-  // User ruling: the old hover-only blue beam becomes a persistent
-  // quality indicator - only equipment with ItemQuality Dia (rank 3 on
-  // the 5-step scale) and above shows it; each tier gets the rank color.
-  // Materials on the 10-step scale are NOT equipment Chat - no aura.
-  it('equipment Chat Dia (rarityRank = 3) - STATIC glow ring tinted by the grade ramp, no rotating beam', () => {
-    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: 3 })
+describe('SlotView - Chat meteors (equipment quality indicator, owner ruling 2026-10-08)', () => {
+  // Owner ruling: the Chat channel is the groove 'sao băng' meteor
+  // layer (slot-view__chat), twin streaks in the art groove tinted by
+  // --slot-rarity-color. Chat 1 (Hoang, lowest) gets NO streak; the
+  // effect starts at Huyen (rank 2). Materials on the 10-step scale
+  // are NOT equipment Chat. The old border-beam channel was removed.
+  it('Chat >= 2 on art-frame variants renders the meteor layer tinted by the grade ramp', () => {
+    for (const [rank, ramp] of [[2, 3], [3, 5], [4, 7], [5, 9]] as const) {
+      const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', variant: 'equipment', rarityRank: rank })
 
-    expect(button.classList.contains('slot-view--quality-fx-3')).toBe(true)
-    // Chat axis maps onto the shared ramp at the --grade-* positions
-    // (rank r -> --rank-color-(2r-1)) so slot aura matches the name tint.
-    expect(button.style.getPropertyValue('--fx-beam-color')).toBe('var(--rank-color-5)')
-    // Dia = static ring, no spinning beam (zero repaint cost on the tier
-    // that stays common mid-game).
-    expect(button.classList.contains('fx-border-beam--active')).toBe(false)
+      expect(button.querySelector('.slot-view__chat')).not.toBeNull()
+      expect(button.style.getPropertyValue('--slot-rarity-color')).toBe(`var(--rank-color-${ramp})`)
+      unmount()
+    }
+  })
+
+  it('Chat 1 (rarityRank = 1) - NO meteor', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', variant: 'equipment', rarityRank: 1 })
+
+    expect(button.querySelector('.slot-view__chat')).toBeNull()
     unmount()
   })
 
-  it('equipment Chat Thien/Tien (rarityRank 4-5) - persistent beam tinted by the grade ramp', () => {
-    for (const [rank, ramp] of [[4, 7], [5, 9]] as const) {
-      const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: rank })
+  it('socket variant renders the meteor too (same channel)', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', variant: 'socket', rarityRank: 2 })
 
-      expect(button.classList.contains('fx-border-beam--active')).toBe(true)
-      expect(button.style.getPropertyValue('--fx-beam-color')).toBe(`var(--rank-color-${ramp})`)
-      expect(button.classList.contains(`slot-view--quality-fx-${rank}`)).toBe(true)
-      unmount()
-    }
+    expect(button.querySelector('.slot-view__chat')).not.toBeNull()
+    unmount()
   })
 
-  it('equipment below Dia (rarityRank 1-2) - NO indicator', () => {
-    for (const rank of [1, 2]) {
-      const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: rank })
-
-      expect(button.classList.contains('fx-border-beam--active')).toBe(false)
-      unmount()
-    }
-  })
-
-  it('material on the 10-step scale (rarityRankScale=10) rank >= 3 still has NO aura - not equipment Chat', () => {
+  it('material on the 10-step scale (rarityRankScale=10) has NO meteor - not equipment Chat', () => {
     const { button, unmount } = mountSlot({
       item: { id: 1 },
       label: 'X',
+      variant: 'equipment',
       rarityRank: 5,
       rarityRankScale: 10,
     })
 
-    expect(button.classList.contains('fx-border-beam--active')).toBe(false)
+    expect(button.querySelector('.slot-view__chat')).toBeNull()
     unmount()
   })
 
-  it('empty slot shows no aura even when rarityRank is passed', () => {
-    const { button, unmount } = mountSlot({ item: null, label: 'X', rarityRank: 5 })
+  it('empty slot shows no meteor even when rarityRank is passed', () => {
+    const { button, unmount } = mountSlot({ item: null, label: 'X', variant: 'equipment', rarityRank: 5 })
 
-    expect(button.classList.contains('fx-border-beam--active')).toBe(false)
+    expect(button.querySelector('.slot-view__chat')).toBeNull()
     unmount()
   })
 

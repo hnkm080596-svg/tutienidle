@@ -237,28 +237,10 @@ export class EquipmentOpsSystem {
     return this.deps.equipmentSystem.itemRefinementPoints(instance)
   }
 
-  /**
-   * Wash all affixes using one forge use, quality-scaled equipment essence,
-   * and generic spirit stones. Returns a domain reason for presentation.
-   */
-  washItem(
-    instanceId: string,
-    player: PlayerData,
-  ): { ok: boolean; reason?: string } {
-    void player
-
-    this.syncEquipmentCostDiscount()
-
-    return this.deps.equipmentSystem.washAffixes(
-      instanceId,
-      this.deps.equipmentBag,
-      this.deps.equipmentRegistry,
-      this.deps.materialBag,
-      this.deps.equipmentSlotManager,
-      this.deps.affixRegistry,
-      this.deps.sessionRng,
-    )
-  }
+  // washItem() one-shot removed (owner ruling 2026-10-08): the UI path
+  // always goes through previewWashItem -> commitWashItem tickets; the
+  // direct write existed only for the deleted useEquipmentActions.wash
+  // shortcut. equipmentSystem.washAffixes itself stays (dormant, tested).
 
   /**
    * TINH LUYEN (plan S7.4) - moi dong eligible khong khoa tang 5-20%

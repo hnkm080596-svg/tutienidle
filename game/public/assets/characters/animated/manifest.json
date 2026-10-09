@@ -1373,12 +1373,12 @@
         "h": 0.9126984126984127
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "canvasSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sheets": 4,
       "clips": {
@@ -1419,10 +1419,10 @@
           "impactFrameIndex": 12
         }
       },
-      "avatar": "idle-first-frame (supplied standing reference has opaque black background)",
+      "avatar": "idle-first-frame (transparent crop of idle cell 001)",
       "avatarSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "avatars": {},
       "portraits": {},

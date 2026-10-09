@@ -525,6 +525,16 @@ onBeforeUnmount(() => {
 .home-independent-navigation button.active::before { filter:brightness(1.22) drop-shadow(0 0 4px #ffd279) drop-shadow(0 0 9px #df9b3f90); }
 .home-independent-navigation img { position:absolute;left:39px;top:48%;transform:translateY(-50%);width:35px;height:35px;object-fit:contain; }
 .home-independent-navigation button>span { margin-left:84px; }
+@media (prefers-reduced-motion: no-preference) {
+  .home-independent-navigation button.active>span {
+    background: linear-gradient(100deg, #efdcb6 36%, #ffffff 50%, #efdcb6 64%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: home-nav-glow-sweep 3.2s linear infinite;
+  }
+}
+@keyframes home-nav-glow-sweep { 0% { background-position: 130% 0 } 100% { background-position: -30% 0 } }
 .home-independent-navigation button::before { content:"";position:absolute;inset:0;z-index:-1;background:var(--home-nav-art) center/contain no-repeat; }
 .home-independent-navigation button.locked { filter:grayscale(1);opacity:.48;cursor:default; }
 

@@ -80,3 +80,7 @@ app.config.errorHandler = err => {
 }
 
 app.mount('#app')
+
+if (import.meta.env.DEV) {
+  import('./dev/layoutTuner').then((m) => m.installLayoutTuner())
+}

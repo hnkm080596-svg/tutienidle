@@ -204,11 +204,26 @@ export interface BetaScopeQuery {
 
 export type BetaSurfaceContext = Pick<BetaScopeQuery, 'progressionMet'>
 
+/**
+ * Runtime unlocks for allowlisted master sessions (Minh 2026-10-08):
+ * 'admin' opens scope-hidden surfaces FOR TESTING without flipping
+ * BETA_FEATURES for every player - the tab gate (isBetaEquipmentTab)
+ * and the domain fail-closed (isScopeHidden in EquipmentSystem) share
+ * this one admission channel. Populated by recordSessionLoginId
+ * (services/master/masterAccess); empty in normal sessions and cleared
+ * whenever a non-master login is recorded. Module state like
+ * BETA_TALENT_ROSTER above - NOT a security boundary.
+ */
+export const BETA_MASTER_UNLOCKS = new Set<string>()
+
 /** true only when the named feature is enabled in beta scope. */
 export function isBetaFeature(name: string): boolean {
   // The `as const` table types every value `false`, so read through a
   // widened record: unknown names resolve to undefined and fail closed.
-  return (BETA_FEATURES as Readonly<Record<string, boolean>>)[name] === true
+  return (
+    (BETA_FEATURES as Readonly<Record<string, boolean>>)[name] === true ||
+    BETA_MASTER_UNLOCKS.has(name)
+  )
 }
 
 /**

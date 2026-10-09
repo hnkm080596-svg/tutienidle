@@ -5,18 +5,19 @@
 // tab switch resets it automatically (matching old switchTab()'s manual
 // clearPendingRefinePreview() call); onBeforeUnmount still discards the
 // paid-for core preview so an overlay remount can't reuse a stale payload.
-import { computed, inject, onBeforeUnmount, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
-import { equipmentSlotLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
+import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import SlotView from '@/components/common/SlotView.vue'
-import GameButton from '@/components/common/GameButton.vue'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { RefineValueEntry } from '@/core/equipment/EquipmentSystem'
 import { getEffectiveAffixValue } from '@/core/equipment/EquipmentSystem'
-import { useEquippedRows, useHallSlotRows, useItemRenState, type HallSlotRow } from './useEquippedRows'
+import { useEquippedRows, useItemRenState } from './useEquippedRows'
 import { affixDisplayLabel, formatAffixValue, tierClass } from './equipmentHallDisplay'
 import { HALL_SELECTION_KEY } from './hallSelection'
 
@@ -36,11 +37,9 @@ if (!hallSelection) {
   throw new Error('RefineTab phải được render trong cây con đã provide HALL_SELECTION_KEY')
 }
 
-const { selectedInstanceId, selectEquipped, clearSelection } = hallSelection
+const { selectedInstanceId } = hallSelection
 
 const { equippedRows } = useEquippedRows()
-
-const hallSlotRows = useHallSlotRows(equippedRows)
 
 const itemRenState = useItemRenState(selectedInstanceId)
 
@@ -58,17 +57,13 @@ function clearPendingRefinePreview() {
   pendingRefineValues.value = null
 }
 
-function selectHallSlotForAction(row: HallSlotRow) {
+// Item pick happens on the paperdoll (owner ruling 2026-10-08: same as
+// Enhance). Switching selection discards the armed preview + resets
+// locks - the old slot strip did both on click; keep that semantics.
+watch(selectedInstanceId, () => {
   clearPendingRefinePreview()
-
-  if (row.equippedRow) {
-    selectEquipped(row.equippedRow.instanceId)
-  } else {
-    clearSelection()
-  }
-
   lockedIndices.value = []
-}
+})
 
 onBeforeUnmount(clearPendingRefinePreview)
 
@@ -103,27 +98,6 @@ const selectedAffixes = computed(() => {
     }
   })
 })
-
-/** Gia tri hieu luc hien tai cua 1 dong affix (cot "Hien tai" Tinh Luyen). */
-function currentAffixValue(index: number): number | null {
-  if (!selectedInstanceId.value) {
-    return null
-  }
-
-  const instance = gameManager.equipmentBag.get(selectedInstanceId.value)
-
-  const rolled = instance?.affixes[index]
-
-  if (!instance || !rolled) {
-    return null
-  }
-
-  const affix = gameManager.affixRegistry.has(rolled.affixId)
-    ? gameManager.affixRegistry.get(rolled.affixId)
-    : undefined
-
-  return affix ? getEffectiveAffixValue(rolled, affix) : rolled.value
-}
 
 function toggleLock(index: number) {
   const position = lockedIndices.value.indexOf(index)
@@ -237,103 +211,430 @@ const pendingRefineByIndex = computed(() => {
   return map
 })
 
-const refineRenAfter = computed(() =>
-  itemRenState.value ? Math.max(0, itemRenState.value.points - refineCost.value.refinementPoints) : 0,
-)
+const MATERIAL_CATEGORY_ART: Record<string, string> = {
+  essence: '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
+  spirit_stone: '/assets/ui/tien-hiep-2026-10/controls/resource-crystal-v1.png',
+}
+
+function materialIcon(materialId: string): string | undefined {
+  // Guard the registry: .get() throws on unknown ids - a missing
+  // material must degrade to no icon, not crash the tab (same .has()
+  // pattern as the cost-name computeds).
+  const material = gameManager.materialRegistry.has(materialId)
+    ? gameManager.materialRegistry.get(materialId)
+    : undefined
+  const art = material?.icon ?? (material?.category ? MATERIAL_CATEGORY_ART[material.category] : undefined)
+  return art ? resolveAssetUrl(art) : undefined
+}
+
+/** Each affix row: label + current value on the left, refine result on
+ *  the right (kept / pending value / not-rolled-yet), lock toggle on
+ *  the row's left edge. */
+const refineRows = computed(() => {
+  if (!selectedInstanceId.value) {
+    return [] as const
+  }
+
+  const instance = gameManager.equipmentBag.get(selectedInstanceId.value)
+
+  if (!instance) {
+    return [] as const
+  }
+
+  return instance.affixes.map((rolled, index) => {
+    const affix = gameManager.affixRegistry.has(rolled.affixId)
+      ? gameManager.affixRegistry.get(rolled.affixId)
+      : undefined
+
+    const current = affix ? getEffectiveAffixValue(rolled, affix) : rolled.value
+    const locked = lockedIndices.value.includes(index)
+    const pending = pendingRefineByIndex.value.get(index)
+
+    // Tier min/max band (owner ruling 2026-10-08: the bar under each
+    // row shows where the value sits inside its tier range). Registry
+    // miss or a tier the affix no longer lists -> no bar, row still
+    // renders (same degrade rule as tooltips).
+    const tierDef = affix?.tiers.find((def) => def.tier === rolled.tier)
+    const range = tierDef && tierDef.max > tierDef.min
+      ? { min: tierDef.min, max: tierDef.max }
+      : null
+
+    return {
+      index,
+      label: affixDisplayLabel(rolled, gameManager.affixRegistry),
+      tier: rolled.tier,
+      stat: affix?.stat,
+      current,
+      locked,
+      pending,
+      range,
+    }
+  })
+})
+
+function rangePct(value: number, range: { min: number; max: number }): number {
+  const pct = ((value - range.min) / (range.max - range.min)) * 100
+  return Math.min(100, Math.max(0, pct))
+}
+
+/** Fixed 5-slot card (owner ruling 2026-10-08, same as Tẩy Luyện):
+ *  an item can roll at most 5 affix lines (Tiên). The card always
+ *  renders all 5 slots so rows stay evenly spaced. */
+const refineSlots = computed(() => {
+  const rows = refineRows.value
+  return [0, 1, 2, 3, 4].map((index) => rows[index] ?? null)
+})
+
+const refineMaterials = computed(() => [
+  {
+    id: LUYEN_KHI_TINH_HOA_ID,
+    label: t('panels.equipmentHall.labels.essenceName'),
+    icon: materialIcon(LUYEN_KHI_TINH_HOA_ID),
+    owned: refineEssenceOwned.value,
+    amount: refineCost.value.essenceUnits,
+  },
+  {
+    id: refineSpiritStoneCostMaterialId.value,
+    label: refineSpiritStoneCostName.value,
+    icon: materialIcon(refineSpiritStoneCostMaterialId.value),
+    owned: refineSpiritStoneOwned.value,
+    amount: refineCost.value.spiritStone,
+  },
+])
 </script>
 
 <template>
-  <section class="qi-hall__body qi-hall__split">
-    <div class="qi-hall__split-left">
-      <div class="qi-hall__slot-grid" :aria-label="t('panels.equipmentHall.aria.refineSlots')">
-        <SlotView
-          v-for="row in hallSlotRows"
-          :key="row.slot"
-          class="qi-hall__slot"
-          :item="row.equippedRow?.instance ?? null"
-          :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
-          :accessible-label="row.equippedRow?.accessibleLabel"
-          :name-segments="row.equippedRow?.nameSegments"
-          :icon="row.equippedRow?.icon"
-          :equipment-quality-rank="row.equippedRow?.gradeRank"
-          :rarity-rank="row.equippedRow?.qualityRank"
-          :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: t('panels.equipmentHall.tooltips.emptySlotNoRefine') }"
-          :state="{ interaction: row.equippedRow?.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: row.equippedRow ? 'equipped' : undefined }"
-          @click="selectHallSlotForAction(row)"
-        />
+  <!-- Bố cục chung với Cường Hóa (owner ruling 2026-10-08): Tinh Luyện
+       cần area cho tối đa 5 dòng affix nên BỎ ô chiếu + 2 vòng tròn -
+       chỉ còn affix hiện tại -> kết quả tinh luyện (khóa từng dòng ở
+       mép trái), hàng nguyên liệu của Tinh Luyện và nút hành động ghim
+       đáy card. Chọn đồ trực tiếp trên doll. -->
+  <div class="equipment-forge-workspace forge-refine">
+    <h2>{{ t('panels.equipmentHall.tabs.refine') }}</h2>
+
+    <template v-if="selectedRow">
+      <div v-if="refineRows.length" class="forge-compare">
+        <template v-for="(row, slot) in refineSlots" :key="slot">
+          <div v-if="row" class="forge-compare__cell forge-compare__cell--lockable">
+            <button
+              type="button"
+              class="refine-lock"
+              :class="{ 'is-locked': row.locked }"
+              :aria-pressed="row.locked"
+              :aria-label="t('panels.equipmentHall.table.header.lock')"
+              :title="t('panels.equipmentHall.table.header.lock')"
+              @click="toggleLock(row.index)"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v11H6z" />
+                <path d="M12 14v3" />
+              </svg>
+            </button>
+            <span class="equipment-stat-name" :class="tierClass(row.tier)">{{ row.label }}</span>
+            <b class="forge-compare__value">{{ formatAffixValue(row.stat, row.current) }}</b>
+          </div>
+          <div v-else class="forge-compare__cell forge-compare__cell--empty"></div>
+          <!-- Right side IS the tier-range statbar (owner ruling
+               2026-10-08: name + bar only, no after-column): gold fill
+               = value now inside [min,max]; an armed roll renders the
+               delta segment - green when it grows, red when it drops. -->
+          <div v-if="row && row.range" class="forge-compare__cell refine-range">
+            <div class="refine-range__track">
+              <i
+                class="refine-range__fill"
+                :style="{ width: `${rangePct(row.current, row.range)}%` }"
+              ></i>
+              <i
+                v-if="row.pending !== undefined && rangePct(row.pending, row.range) !== rangePct(row.current, row.range)"
+                class="refine-range__delta"
+                :class="rangePct(row.pending, row.range) > rangePct(row.current, row.range)
+                  ? 'refine-range__delta--up'
+                  : 'refine-range__delta--down'"
+                :style="{
+                  left: `${Math.min(rangePct(row.current, row.range), rangePct(row.pending, row.range))}%`,
+                  width: `${Math.abs(rangePct(row.pending, row.range) - rangePct(row.current, row.range))}%`,
+                }"
+              ></i>
+            </div>
+          </div>
+          <div v-else class="forge-compare__cell forge-compare__cell--empty"></div>
+        </template>
       </div>
-    </div>
+      <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.noAffixesToRefine') }}</p>
 
-    <div v-if="selectedRow" class="qi-hall__split-right">
-      <!-- Card duy nhat (2026-08-30 spec, khop dung Cuong Hoa da duyet)
-           - cot "Khoa" gop thang vao bang thay vi tach 2 cot flex
-           rieng, Diem Ren lam dong chu thich. -->
-      <div class="qi-hall__preview-card">
-        <p v-if="itemRenState" class="qi-hall__col-title">
-          {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }} {{ t('panels.equipmentHall.labels.levelArrow') }} {{ refineRenAfter }}/{{ itemRenState.max }}
-          · {{ t('panels.equipmentHall.labels.maxLockPrefix') }} {{ Math.min(3, Math.max(0, selectedAffixes.length - 1)) }} {{ t('panels.equipmentHall.labels.maxLockSuffix') }}
-        </p>
-
-        <table v-if="selectedAffixes.length" class="qi-hall__compare-table" :aria-label="t('panels.equipmentHall.aria.refineComparison')">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('panels.equipmentHall.table.header.stat') }}</th>
-              <th scope="col">{{ t('panels.equipmentHall.table.header.before') }}</th>
-              <th scope="col" aria-hidden="true"></th>
-              <th scope="col">{{ t('panels.equipmentHall.table.header.after') }}</th>
-              <th scope="col">{{ t('panels.equipmentHall.table.header.lock') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="affix in selectedAffixes" :key="affix.index">
-              <th scope="row"><span :class="tierClass(affix.tier)">{{ affix.label }}</span></th>
-              <td>{{ currentAffixValue(affix.index) !== null ? formatAffixValue(affix.stat, currentAffixValue(affix.index)!) : '—' }}</td>
-              <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
-              <td>
-                <span v-if="lockedIndices.includes(affix.index)" class="qi-hall__owned">{{ t('panels.equipmentHall.status.kept') }}</span>
-                <strong v-else-if="pendingRefineByIndex.has(affix.index)">{{ formatAffixValue(affix.stat, pendingRefineByIndex.get(affix.index)!) }}</strong>
-                <span v-else class="qi-hall__owned">{{ t('panels.equipmentHall.status.notRolled') }}</span>
-              </td>
-              <td>
-                <input
-                  type="checkbox"
-                  :checked="lockedIndices.includes(affix.index)"
-                  @change="toggleLock(affix.index)"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p v-else class="qi-hall__empty">{{ t('panels.equipmentHall.empty.noAffixesToRefine') }}</p>
+      <!-- Pinned bottom block (same as Cường Hóa). -->
+      <div class="equipment-forge-materials">
+        <div
+          v-for="material in refineMaterials"
+          :key="material.id"
+          class="equipment-material"
+          :class="{ 'is-missing': material.owned < material.amount }"
+        >
+          <div class="equipment-material-icon">
+            <SlotView variant="equipment" static :item="null" :icon="material.icon" :label="material.label" />
+          </div>
+          <div>
+            <span>{{ material.label }}</span
+            ><b>{{ material.owned }}/{{ material.amount }}</b>
+          </div>
+        </div>
       </div>
-
-      <!-- Bo jargon noi bo "Cost he so N+L" + Diem Ren trung dong chu
-           thich dau card (2026-08-30, bug report) - chi con quy tac
-           tang 5-20% cho dong du dieu kien, khong khoa, clamp tran tier
-           (khong hien thi o dau khac) va chi phi Tinh Hoa/Linh
-           Thach that su chua co cho nao hien. -->
-      <p class="qi-hall__info-row qi-hall__costline">
-        {{ t('panels.equipmentHall.labels.refineRule') }} {{ refineCost.essenceUnits }} {{ t('panels.equipmentHall.labels.essenceName') }}
-        ({{ t('panels.equipmentHall.labels.ownedPrefix') }} {{ refineEssenceOwned }}) · {{ refineCost.spiritStone }} {{ refineSpiritStoneCostName }}
-      </p>
-
-      <div class="qi-hall__button-row">
-        <GameButton size="lg" :disabled="!canRefine()" @click="doRefinePreview">
+      <div class="equipment-forge-actions">
+        <EquipmentArtButton filter-art :gold="canRefine()" :disabled="!canRefine()" @click="doRefinePreview">
           {{ t('panels.equipmentHall.buttons.refinePreview') }}
-        </GameButton>
-
-        <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineKeep">
+        </EquipmentArtButton>
+        <EquipmentArtButton v-if="pendingRefineValues" filter-art gold @click="doRefineKeep">
           {{ t('panels.equipmentHall.buttons.keep') }}
-        </GameButton>
-
-        <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineDiscard">
+        </EquipmentArtButton>
+        <EquipmentArtButton v-if="pendingRefineValues" filter-art @click="doRefineDiscard">
           {{ t('panels.equipmentHall.buttons.discard') }}
-        </GameButton>
+        </EquipmentArtButton>
       </div>
-    </div>
-
-    <p v-else class="qi-hall__split-right qi-hall__empty qi-hall__empty--centered">{{ t('panels.equipmentHall.empty.selectItem') }}</p>
-  </section>
+    </template>
+    <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.selectItem') }}</p>
+  </div>
 </template>
 
+<style scoped>
+/* Same forge chrome as EnhanceTab (owner ruling 2026-10-08): title at
+   top, before/after compare fills the middle, materials + actions are
+   absolutely pinned to the card's bottom edge so they never collide
+   and never produce a scrollbar. */
+.equipment-forge-workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.forge-refine {
+  padding-bottom: 185px;
+}
+.forge-refine .equipment-forge-materials {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 85px;
+}
+.forge-refine .equipment-forge-actions {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: -2px;
+}
+.equipment-forge-workspace h2 {
+  font-size: 26px;
+  margin: 0;
+  border-bottom: 1px solid #9b7d4066;
+  padding-bottom: 7px;
+  line-height: 1.15;
+}
+/* Name | tier-statbar compare: 2 columns, the right cell IS the bar
+   (owner ruling 2026-10-08 - no after column, no arrow). The card
+   always holds exactly 5 evenly-spaced rows; it is resizable by drag
+   (native grip) while the owner tunes spacing. Scrollbar hidden. */
+.forge-compare {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  column-gap: 20px;
+  flex: 1;
+  min-height: 120px;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border: 1px solid #9b7d4055;
+  border-radius: 4px;
+  background: #f4e9cf0d;
+  overflow-y: auto;
+  scrollbar-width: none;
+  resize: both;
+  /* DEBUG outlines while aligning (remove when layout is settled). */
+  outline: 2px dashed #37e6f0cc;
+  outline-offset: 1px;
+}
+.forge-compare::-webkit-scrollbar {
+  display: none;
+}
+/* Tier-range statbar inside the right cell: fill = value's position
+   inside [min,max]; an armed roll paints the gained/lost segment. */
+.refine-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.refine-range__track {
+  position: relative;
+  flex: 1;
+  height: 9px;
+  border-radius: 5px;
+  background: #96764433;
+  box-shadow: inset 0 1px 2px #00000040;
+  overflow: hidden;
+}
+.refine-range__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #f0d48a, #c9a24e);
+  box-shadow: inset 0 1px 0 #fff5d655;
+  transition: width 0.25s ease;
+}
+.refine-range__delta {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.refine-range__delta--up {
+  background: #93cfa0cc;
+  box-shadow: 0 0 6px #93cfa080;
+}
+.refine-range__delta--down {
+  background: #d97b6ccc;
+  box-shadow: 0 0 6px #d97b6c80;
+}
+.forge-compare__cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 2px;
+  border-bottom: 1px solid #96764440;
+  font-size: 17px;
+  min-height: 0;
+  /* DEBUG (owner asked for outlines while aligning the 5-row card). */
+  outline: 1px solid #ff6fb366;
+}
+.forge-compare__cell--empty {
+  visibility: hidden;
+  /* DEBUG: keep the empty slot's outline visible while aligning. */
+  visibility: visible;
+}
+.forge-compare__cell--next {
+  justify-content: center;
+}
+/* tierClass() emits qi-hall__tier-N - owned solely by qi-hall.css. */
+.equipment-stat-name {
+  min-width: 0;
+  flex: 1;
+}
+.forge-compare__value {
+  font-weight: 600;
+  color: #ebce84;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* Per-row lock toggle on the left edge of the "before" cell. */
+.refine-lock {
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  flex: none;
+  align-self: center;
+  border: 1px solid #96764440;
+  border-radius: 4px;
+  background: transparent;
+  color: #a08b62;
+  cursor: pointer;
+}
+.refine-lock svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+.refine-lock.is-locked {
+  color: #e8c98a;
+  border-color: #d9a94f88;
+  background: #d9a94f1a;
+}
+/* Materials row: identical metrics to Cường Hóa. */
+.equipment-forge-materials {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 28px;
+  flex: none;
+  min-height: 80px;
+  /* DEBUG */
+  outline: 2px dashed #8effa0aa;
+}
+.equipment-material {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  /* DEBUG */
+  outline: 1px solid #ffbf47aa;
+}
+.equipment-material > div:last-child {
+  /* DEBUG */
+  outline: 1px solid #37e6f0aa;
+}
+/* Material name stays on ONE line in both columns - a wrapped name
+   pushed the count into the middle and looked asymmetric (owner
+   callout 2026-10-08). */
+.equipment-material > div:last-child > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+}
+.equipment-forge-actions {
+  /* DEBUG */
+  outline: 2px dashed #37e6f0aa;
+}
+.equipment-forge-actions :deep(button) {
+  /* DEBUG */
+  outline: 1px solid #ffbf47aa;
+}
+.equipment-material-icon {
+  width: 65px;
+  height: 65px;
+  flex: none;
+  align-self: center;
+}
+.equipment-material-icon :deep(.slot-view) {
+  width: 100%;
+  height: 100%;
+}
+.equipment-material > div:last-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  align-self: stretch;
+  font-size: 18px;
+  line-height: 1.15;
+  max-width: 175px;
+  min-width: 0;
+}
+.equipment-material b {
+  font-weight: 400;
+  color: #8bca8d;
+  font-size: 18px;
+  white-space: nowrap;
+}
+.equipment-material.is-missing b {
+  color: var(--crimson, #c05a4e);
+}
+.equipment-forge-actions {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex: none;
+}
+.equipment-forge-actions > button {
+  width: 220px;
+  font-size: 24px;
+}
+.forge-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: 15px;
+  color: #c1b18d;
+}
+</style>

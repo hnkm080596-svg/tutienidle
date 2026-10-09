@@ -36,8 +36,8 @@ export const BETA_FEATURES = {
   formation: false,
   artifact: false,
   manualWorkforce: false,
-  equipmentWash: false,
-  equipmentRefine: false,
+  equipmentWash: true,
+  equipmentRefine: true,
   equipmentOreDecompose: false,
   dailyQuest: false,
 } as const

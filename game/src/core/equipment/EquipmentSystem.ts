@@ -920,10 +920,12 @@ export class EquipmentSystem {
 
   /**
    * Build modifier tu chi so DA ROLL cua instance (Implicit/mainStat +
-   * affixes), nhan he so theo enhanceLevel (doc tu SLOT, Phase 9) +
-   * forgePoints (item-level, Equipment Rework) - 2 truc cong don cung
-   * luc. Formation (Khac Tran) duoc ap rieng qua GameManager.
-   * getAggregatedModifiers(), khong nam trong ham nay.
+   * affixes). Cuong Hoa (enhanceLevel doc tu SLOT, Phase 9) chi nhan
+   * he so len mainStat - stat phu thuoc Tinh Luyen: value da roll
+   * trong affixes[] da gom tang truong refine (EquipmentRefine ghi
+   * thang vao instance.affixes[i].value), ap nguyen gia tri do,
+   * khong nhan lai enhance scale. Formation (Khac Tran) duoc ap rieng
+   * qua GameManager. getAggregatedModifiers(), khong nam trong ham nay.
    */
   private applyModifiers(
     instance: EquipmentInstance,
@@ -945,7 +947,9 @@ export class EquipmentSystem {
       const affix = affixRegistry.get(rolled.affixId)
       const value = getEffectiveAffixValue(rolled, affix)
 
-      this.applyScaledModifier(instance.instanceId, affix.stat, value, scale)
+      // Affix khong scale theo Cuong Hoa (scale = 1) - tang truong stat
+      // phu la trach nhiem cua Tinh Luyen, da nam trong rolled value.
+      this.applyScaledModifier(instance.instanceId, affix.stat, value, 1)
     }
   }
 

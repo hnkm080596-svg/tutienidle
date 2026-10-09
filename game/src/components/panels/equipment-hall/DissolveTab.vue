@@ -26,8 +26,7 @@ import SlotView from '@/components/common/SlotView.vue'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
-import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import BagPaginationControls from '@/components/panels/bag-sections/BagPaginationControls.vue'
 
 const { t } = useI18n()
@@ -280,11 +279,14 @@ function doDissolve() {
 </script>
 
 <template>
-  <section class="qi-hall__body qi-hall__dissolve">
+  <!-- Reskin vao card toi cua sheet moi (preview khong co design Hoa
+       Luyen -> dung chrome cua chinh card: select kieu footer tui,
+       slot grid, nut vang). Giu nguyen chuc nang thuc. -->
+  <div class="equipment-forge-workspace dissolve-workspace">
+    <h2>{{ t('panels.equipmentHall.tabs.dissolve') }}</h2>
+
     <div class="dissolve-filters">
-      <!-- wave B chrome: drawn text-field slice behind each select. -->
-      <div class="dissolve-filters__field">
-        <InkNineSlice chrome-id="text-field" layer="surface" />
+      <label class="dissolve-filters__field">
         <select v-model="dissolveFilterGrade">
           <option value="any">{{ t('panels.equipmentHall.select.anyProfessionGrade') }}</option>
 
@@ -297,12 +299,9 @@ function doDissolve() {
             {{ PROFESSION_GRADE_NAMES[grade] }}
           </option>
         </select>
-      </div>
+      </label>
 
-      <!-- Chat - dropdown Chat duy nhat (Task 19: gop rarity+quality cu,
-           2 dropdown do von da doc CHUNG 1 truc ITEM_QUALITY/ITEM_GRADE). -->
-      <div class="dissolve-filters__field">
-        <InkNineSlice chrome-id="text-field" layer="surface" />
+      <label class="dissolve-filters__field">
         <select v-model="dissolveFilterQuality">
           <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
@@ -315,7 +314,7 @@ function doDissolve() {
             {{ equipmentQualityLabel(quality) }}
           </option>
         </select>
-      </div>
+      </label>
 
       <button
         type="button"
@@ -323,8 +322,7 @@ function doDissolve() {
         :disabled="dissolveCandidates.length === 0"
         @click="selectAllDissolveByFilter"
       >
-        <InkNineSlice chrome-id="seal-chip" layer="surface" />
-        <span class="dissolve-filters__bulk-label">{{ t('panels.equipmentHall.buttons.selectAll') }} ({{ dissolveCandidates.length }})</span>
+        {{ t('panels.equipmentHall.buttons.selectAll') }} ({{ dissolveCandidates.length }})
       </button>
 
       <button
@@ -333,8 +331,7 @@ function doDissolve() {
         :disabled="dissolveSelected.size === 0"
         @click="clearDissolveSelection"
       >
-        <InkNineSlice chrome-id="seal-chip" layer="surface" />
-        <span class="dissolve-filters__bulk-label">{{ t('panels.equipmentHall.buttons.clearAll') }}</span>
+        {{ t('panels.equipmentHall.buttons.clearAll') }}
       </button>
     </div>
 
@@ -347,7 +344,8 @@ function doDissolve() {
         @click="toggleDissolve(candidate.instanceId)"
       >
         <SlotView
-          class="qi-hall__slot"
+          class="dissolve-slot"
+          variant="equipment"
           :item="{ id: candidate.instanceId }"
           :label="candidate.name"
           :accessible-label="candidate.accessibleLabel"
@@ -362,11 +360,9 @@ function doDissolve() {
         <span v-if="dissolveSelected.has(candidate.instanceId)" class="dissolve-slot-tick" aria-hidden="true">✓</span>
       </div>
 
-      <p v-if="dissolveCandidates.length === 0" class="qi-hall__empty">{{ t('panels.equipmentHall.empty.noDissolveCandidates') }}</p>
+      <p v-if="dissolveCandidates.length === 0" class="dissolve-empty">{{ t('panels.equipmentHall.empty.noDissolveCandidates') }}</p>
     </div>
 
-    <!-- wave B: same drawn pagination footer as the bag sections; no
-         sort axis here, so the sort cluster stays hidden. -->
     <BagPaginationControls
       v-if="dissolveTotalPages > 1"
       :current-page="dissolvePage"
@@ -384,80 +380,77 @@ function doDissolve() {
         {{ materialLabel(entry.materialId, gameManager.materialRegistry) }}: {{ entry.minAmount }}–{{ entry.maxAmount }}
       </p>
 
-      <p class="qi-hall__warning">{{ t('panels.equipmentHall.warnings.irreversible') }}</p>
+      <p class="dissolve-warning">{{ t('panels.equipmentHall.warnings.irreversible') }}</p>
     </div>
 
-    <GameButton
-      size="lg"
-      variant="danger"
-      class="qi-hall__primary-action"
-      :disabled="dissolveSelected.size === 0"
-      @click="doDissolve"
-    >
-      {{ dissolveConfirming ? t('panels.equipmentHall.buttons.dissolveConfirm') : `${t('panels.equipmentHall.tabs.dissolve')} (${dissolveSelected.size})` }}
-    </GameButton>
-  </section>
+    <div class="equipment-forge-actions">
+      <EquipmentArtButton
+        gold
+        :disabled="dissolveSelected.size === 0"
+        @click="doDissolve"
+      >
+        {{ dissolveConfirming ? t('panels.equipmentHall.buttons.dissolveConfirm') : `${t('panels.equipmentHall.tabs.dissolve')} (${dissolveSelected.size})` }}
+      </EquipmentArtButton>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-/* Shared .qi-hall__* layout lives in ./qi-hall.css (one owner - see the
-   sheet header for the specificity-war rationale). Only Dissolve-private
-   classes stay scoped here. */
+.equipment-forge-workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.equipment-forge-workspace h2 {
+  font-size: 26px;
+  margin: 0;
+  border-bottom: 1px solid #9b7d4066;
+  padding-bottom: 7px;
+  line-height: 1.15;
+}
 .dissolve-filters {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  flex: none;
 }
-
-/* wave B chrome: text-field slice wraps each select (transparent
-   control on top); bulk actions ride the seal-chip pill. */
 .dissolve-filters__field {
-  position: relative;
-  min-height: var(--tap-min);
+  flex: 1;
+  min-width: 0;
 }
-
 .dissolve-filters__field select {
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  background: transparent;
-  color: var(--text-primary);
-  border: 0;
-  border-radius: var(--radius-sm);
-  padding: 4px 8px;
-  min-height: var(--tap-min);
-  font-family: var(--font-body);
+  width: 100%;
+  height: 29px;
+  border: 1px solid #8e7440;
+  background: #23251e;
+  color: #eedfbf;
+  font: 13px var(--font-body, Georgia, serif);
+  padding: 0 8px;
 }
-
 .dissolve-filters__field select:focus-visible {
-  outline: 2px solid var(--chrome-300);
+  outline: 2px solid #d6ad5d;
   outline-offset: 1px;
 }
-
 .dissolve-filters__bulk {
-  position: relative;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  padding: 4px 14px;
-  min-height: var(--tap-min);
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--text-primary);
+  flex: none;
+  min-height: 29px;
+  border: 1px solid #8e7440;
+  background: #23251e;
+  color: #eedfbf;
+  font: 12px var(--font-body, Georgia, serif);
+  padding: 0 10px;
   cursor: pointer;
+  white-space: nowrap;
 }
-
-.dissolve-filters__bulk-label {
-  position: relative;
-  z-index: 2;
-}
-
 .dissolve-filters__bulk:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
-/* Luoi slot Hoa Luyen - tham chieu dung kieu o inventory (2026-08-30
-   spec), thay danh sach <li> text cu. */
+.dissolve-filters__bulk:not(:disabled):hover {
+  color: #f5d78e;
+  border-color: #b28a43;
+}
 .dissolve-grid {
   flex: 1 1 auto;
   min-height: 0;
@@ -467,22 +460,13 @@ function doDissolve() {
   align-content: flex-start;
   overflow: hidden;
 }
-
 .dissolve-slot-wrap {
   position: relative;
   cursor: pointer;
 }
-
-/* Task 19 - hint truc quan mon KHONG khop canh gioi hien tai (mo di,
-   khong chan chon - canUseItemGrade chi la goi y, Hoa Luyen khong can
-   dung duoc mon moi thao tac). */
 .dissolve-slot-wrap--grade-mismatch {
   opacity: 0.55;
 }
-
-/* Dau tick mon da chon (2026-08-30 spec: "hieu ung gi do, vi du dau
-   tick") - SlotView tu vien sang qua state.interaction='selected',
-   badge tick nay la tin hieu PHU ro rang hon o goc. */
 .dissolve-slot-tick {
   position: absolute;
   top: -4px;
@@ -493,26 +477,48 @@ function doDissolve() {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--jade);
-  color: var(--paper-50);
+  background: var(--jade, #5b8a6a);
+  color: #f3e4c4;
   font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 0 0 2px var(--paper-50), var(--surface-shadow-soft);
+  box-shadow: 0 0 0 2px #151713;
 }
-
+.dissolve-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  align-self: center;
+  text-align: center;
+  font-size: 14px;
+  color: #c1b18d;
+}
 .dissolve-preview {
   flex: 0 0 auto;
+  border-top: 1px solid #9b7d4066;
+  padding-top: 6px;
 }
-
 .dissolve-preview h4 {
   margin: 0 0 4px;
-  font-size: var(--text-sm);
-  color: var(--paper-text);
+  font-size: 13px;
+  color: #f3e4c4;
 }
-
 .dissolve-preview p {
   margin: 0 0 3px;
-  font-size: var(--text-xs);
-  color: var(--jade);
+  font-size: 12px;
+  color: #8bca8d;
+}
+.dissolve-warning {
+  color: var(--crimson, #c05a4e) !important;
+}
+.equipment-forge-actions {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex: none;
+}
+.equipment-forge-actions > button {
+  min-width: 220px;
+  min-height: 42px;
+  font-size: 21px;
+  padding: 7px 25px;
 }
 </style>

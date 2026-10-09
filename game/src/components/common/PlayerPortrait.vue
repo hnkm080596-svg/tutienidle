@@ -111,6 +111,15 @@ const canvasProps = computed(() => {
 const portraitHeight = computed(() =>
   typeof props.height === 'number' ? `${props.height}px` : props.height,
 )
+
+// Same normalization the doll/fidelity figure surfaces apply: the canvas box
+// is fixed to the zone height, so art whose opaque figure fills only
+// extent.h of the cell must scale up by 1/extent.h to match combat
+// proportions (mortal extent.h = 1 -> no change).
+const figureScale = computed(() => {
+  const extent = props.variant === 'portrait' ? idleClip.value?.extent : undefined
+  return extent && extent.h > 0 ? 0.9 / extent.h : 1
+})
 </script>
 
 <template>
@@ -128,10 +137,11 @@ const portraitHeight = computed(() =>
 
     <EntitySpriteCanvas
       v-if="useCanvas && canvasProps"
-      :key="variant"
+      :key="`${variant}:${canvasProps.atlasUrl}`"
       v-bind="canvasProps"
       :height="height"
       class="player-portrait__image"
+      :style="{ '--portrait-figure-scale': figureScale }"
     />
     <img
       v-else
@@ -186,6 +196,14 @@ const portraitHeight = computed(() =>
 .player-portrait--portrait .player-portrait__image {
   height: 92%;
   margin: 4% auto 0;
+}
+
+/* Canvas path only (animated mode): grow the fixed-height box so the
+   opaque figure fills the disc like mortal's art; the overhang is the
+   cell's transparent margin, so nothing visible leaves the disc. */
+canvas.player-portrait__image {
+  transform: scale(var(--portrait-figure-scale, 1));
+  transform-origin: 50% 100%;
 }
 
 .player-portrait__taiji {

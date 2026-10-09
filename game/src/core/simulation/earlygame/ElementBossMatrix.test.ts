@@ -30,8 +30,10 @@
 // - A 6-slot dia-quality gear set carrying the affixes a grinder keeps:
 //   3x prefix_<element>_power t3 (the specialized pool only unlocks at
 //   dia+), prefix_max_hp / prefix_attack filler on the rest.
-// - +5 slot enhance at qi, +8 at foundation (equipmentSlotManager
-//   fixture write - same seam as GameManager.talentM3.test.ts).
+// - +20 slot enhance at both points via gearUp(s, element, 20)
+//   (equipmentSlotManager fixture write - same seam as
+//   GameManager.talentM3.test.ts; raised when the stat-wall ladder
+//   retuned the floor-10 bosses).
 // - Foundation cell adds the linh_ngo_<special> keystone purchase
 //   (insight 2, realm-gated at foundation_establishment).
 //

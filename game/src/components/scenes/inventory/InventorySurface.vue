@@ -21,10 +21,12 @@ import { useUiStore } from '@/stores/ui'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { betaMaterialStackVisible, scopeHiddenPillFamilyOfId } from '@/core/betaScope'
+import { betaMaterialStackVisible, isBetaEquipmentTab, scopeHiddenPillFamilyOfId } from '@/core/betaScope'
+import { useMasterAccess } from '@/services/master/masterAccess'
 import InventoryFidelityScene from './fidelity/InventoryFidelityScene.vue'
 import MaterialBagSection from '@/components/panels/bag-sections/MaterialBagSection.vue'
 import PillBagSection from '@/components/panels/bag-sections/PillBagSection.vue'
+import DecomposeTab from '@/components/panels/equipment-hall/DecomposeTab.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 
 const { t } = useI18n()
@@ -33,14 +35,27 @@ const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 
-/** Kho Vat's own tab set: goods only, no equipment (moved to Trang Bi). */
-type InventoryTab = 'material' | 'pill'
+/** Kho Vat's own tab set: goods only, no equipment (moved to Trang Bi).
+ *  Owner ruling 2026-10-08: 'decompose' (Phan Giai, ore -> Luyen Khi
+ *  Tinh Hoa) joins as a third tab - it is a materials op, so it belongs
+ *  here and not on the equipment rail. It stays scope-hidden for beta
+ *  (equipmentOreDecompose) but opens for the master account, same
+ *  channel as wash/refine in Khi Duong. */
+type InventoryTab = 'material' | 'pill' | 'decompose'
 
-const activeTab = computed<InventoryTab>(() => (ui.activeBagTab === 'pill' ? 'pill' : 'material'))
+const { isMaster } = useMasterAccess()
+
+const decomposeAdmitted = computed(() => isBetaEquipmentTab('decompose') || isMaster.value)
+
+const activeTab = computed<InventoryTab>(() => {
+  if (ui.activeBagTab === 'pill') return 'pill'
+  if (ui.activeBagTab === 'decompose' && decomposeAdmitted.value) return 'decompose'
+  return 'material'
+})
 
 // Canonical counting, verbatim from BagGrid (the tab count must agree
 // with what the section's filtered entries can render).
-const BAG_COUNTS: Record<InventoryTab, () => number> = {
+const BAG_COUNTS: Record<'material' | 'pill', () => number> = {
   material: () =>
     gameManager.materialBag
       .getAll()
@@ -53,13 +68,21 @@ const BAG_COUNTS: Record<InventoryTab, () => number> = {
 
 const activeTabCount = computed(() => {
   stateVersion.value
-  return BAG_COUNTS[activeTab.value]()
+  // Phan Giai operates on the live DecomposeSystem, not a bag list -
+  // no item count to prefix its tab with.
+  if (activeTab.value === 'decompose') return ''
+  return `${BAG_COUNTS[activeTab.value]()} ${t('panels.bag.countSuffix')}`
 })
 
-const bagTabs: readonly { id: InventoryTab; labelKey: string }[] = [
+const bagTabs = computed<readonly { id: InventoryTab; labelKey: string }[]>(() => [
   { id: 'material', labelKey: 'panels.bag.tabs.material' },
   { id: 'pill', labelKey: 'panels.bag.tabs.pill' },
-]
+  // The scope-hidden tab renders no shell at all here (unlike the
+  // Khi Duong rail's disabled seals) - Kho Vat simply omits it.
+  ...(decomposeAdmitted.value
+    ? [{ id: 'decompose' as const, labelKey: 'panels.bag.tabs.decompose' }]
+    : []),
+])
 
 function selectTab(id: InventoryTab) {
   ui.setActiveBagTab(id)
@@ -92,10 +115,11 @@ function selectTab(id: InventoryTab) {
            canvas resolve against it instead of the viewport. -->
       <div class="bag-anchor">
         <MaterialBagSection v-if="activeTab === 'material'" />
-        <PillBagSection v-else />
+        <PillBagSection v-else-if="activeTab === 'pill'" />
+        <DecomposeTab v-else />
       </div>
     </template>
-    <template #count>{{ activeTabCount }} {{ t('panels.bag.countSuffix') }}</template>
+    <template #count>{{ activeTabCount }}</template>
   </InventoryFidelityScene>
   </SceneDesignCanvas>
 </template>

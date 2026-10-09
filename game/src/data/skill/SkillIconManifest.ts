@@ -46,6 +46,22 @@ export const NODE_ICON_MANIFEST: Record<string, string> = {
   fire_basic_hoa_tu_diem: '/assets/skills/nodes/tu-diem-v1.png',
   fire_basic_hoa_tan_diem: '/assets/skills/nodes/tan-diem-v1.png',
   tinh_thong_hoa: '/assets/skills/nodes/hoa-dao-tinh-thong-v1.png',
+  // Minor nodes reuse the closest-themed drawn art (Minh 2026-10-07:
+  // repeats allowed, never the root/skill-seat arts). Ly Hoa chain rides
+  // the flame set; the Ho The branch shares the ward-seal art; Ngu *
+  // children ride the spare Tam Muoi glyph.
+  hoa_diem_uy: '/assets/skills/nodes/dan-hoa-v1.png',
+  hoa_hoa_nhan: '/assets/skills/nodes/thau-hoa-v1.png',
+  hoa_pha_giap_diem: '/assets/skills/nodes/thau-hoa-v1.png',
+  hoa_bao_diem: '/assets/skills/nodes/liet-hoa-v1.png',
+  hoa_phe_diem: '/assets/skills/nodes/du-tan-v1.png',
+  ho_the_mon: '/assets/skills/nodes/khac-an-v1.png',
+  nguyen_kinh: '/assets/skills/nodes/khac-an-v1.png',
+  linh_chuong: '/assets/skills/nodes/khac-an-v1.png',
+  the_diem_kinh: '/assets/skills/nodes/khac-an-v1.png',
+  ngu_hoa: '/assets/skills/nodes/tam-muoi-chan-y-v1.png',
+  ngu_viem_tam: '/assets/skills/nodes/tam-muoi-chan-y-v1.png',
+  ngu_viem_y: '/assets/skills/nodes/tam-muoi-chan-y-v1.png',
 }
 
 export function skillIconPath(iconKey: string | undefined): string | undefined {

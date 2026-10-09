@@ -27,6 +27,7 @@ const { t } = useI18n()
 const filters = ['all', 'once', 'active', 'ready', 'claimed']
 
 const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 
 // Same dialog contract the imperial scroll carried: focus/pointer stay
 // inside the open surface and Escape closes through emit('back').
@@ -38,6 +39,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
   <section ref="rootRef" class="quest-scene" :aria-label="t('panels.quest.title')" @click.self="emit('back')">
     <div class="quest-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
     <h1 class="quest-title">{{ t('panels.quest.title') }}</h1>
+    <img class="quest-divider" :src="titleDivider" alt="">
 
     <div class="quest-content">
       <slot name="tabs"><nav class="tabs"><button v-for="id in filters" :key="id" :aria-pressed="filter===id" @click="emit('filter',id)">{{ t(`questPreview.${id}`) }}</button></nav></slot>
@@ -53,7 +55,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .quest-scene{position:absolute;inset:0;pointer-events:auto;font-family:var(--font-display,Georgia,serif)}
 .quest-scene :deep(*){box-sizing:border-box}
 .quest-paper{position:absolute;left:94px;top:123px;width:1334px;height:633px;border:0 solid transparent;border-image-slice:300 fill;border-image-width:83px;filter:drop-shadow(0 12px 15px #0009)}
-.quest-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7}
+.quest-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7} .quest-divider{position:absolute;left:237px;top:179px;width:230px;object-fit:contain;opacity:.9}
 /* Interior region: clears the nav-rail column on the left and the
    paper's decorative frame all around (same rect the preview surface
    exposes). */

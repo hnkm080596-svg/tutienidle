@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 // Task 19 (item-grade-quality-rework, rework P6) - EnhanceTab extracted
-// from EquipmentHallPanel.test.ts. Enhance is fully self-contained (slot
-// selection, no shared HALL_SELECTION_KEY needed).
+// from EquipmentHallPanel.test.ts. Owner ruling 2026-10-08: the item
+// pick happens on the paperdoll - Enhance renders ONE projection slot
+// (socket frame) and resolves the doll's clicked instance to a slot via
+// the shared HALL_SELECTION_KEY.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
+import { HALL_SELECTION_KEY } from './hallSelection'
 import { createPinia } from 'pinia'
 import EnhanceTab from './EnhanceTab.vue'
 import { GameManager } from '@/core/game/GameManager'
@@ -15,6 +18,7 @@ import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
+import { equipmentSlotLabel } from '@/core/presentation/labels'
 
 function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInstance {
   return makeInstance({
@@ -66,6 +70,7 @@ function mountTab(prepare?: (manager: GameManager) => void) {
   const pinia = createPinia()
   const manager = new GameManager()
   const version = ref(0)
+  const selectedInstanceId = ref<string | null>(null)
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
@@ -80,9 +85,14 @@ function mountTab(prepare?: (manager: GameManager) => void) {
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, version)
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
+  app.provide(HALL_SELECTION_KEY, {
+    selectedInstanceId,
+    selectEquipped: (id: string) => { selectedInstanceId.value = id },
+    clearSelection: () => { selectedInstanceId.value = null },
+  })
   app.mount(container)
 
-  return { container, manager, version, unmount: () => app.unmount() }
+  return { container, manager, version, selectedInstanceId, unmount: () => app.unmount() }
 }
 
 afterEach(() => {
@@ -91,10 +101,14 @@ afterEach(() => {
 })
 
 describe('EnhanceTab — Cường Hóa', () => {
-  it('hiện đủ 6 slot (2026-08-30: ô luôn tồn tại, tham chiếu equip trực tiếp)', () => {
+  it('hiện 1 ô chiếu duy nhất (owner ruling 2026-10-08) - mặc định slot đầu (weapon)', () => {
     const mounted = mountTab()
 
-    expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')).toHaveLength(6)
+    const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"] .slot-view')
+
+    expect(single).not.toBeNull()
+    // Ô chiếu dùng cùng frame 'socket' với doll.
+    expect(single!.classList.contains('slot-view--socket')).toBe(true)
 
     mounted.unmount()
   })
@@ -110,17 +124,13 @@ describe('EnhanceTab — Cường Hóa', () => {
     })
 
     // Tab Cuong Hoa mac dinh - slot weapon dang mac 'fast-weapon'.
-    const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn slot cường hóa"] .slot-view',
-    )
-    ;(slots[0] as HTMLElement).click()
     await nextTick()
 
     const table = mounted.container.querySelector('[aria-label="So sánh trước và sau Cường Hóa"]')
 
     expect(table).not.toBeNull()
 
-    const cells = Array.from(table!.querySelectorAll('td')).map((cell) => cell.textContent ?? '')
+    const cells = Array.from(table!.querySelectorAll('.enhance-compare__value')).map((cell) => cell.textContent ?? '')
 
     expect(cells.some((cell) => cell.includes('105'))).toBe(true)
     expect(cells.some((cell) => cell.trim() === '0.0')).toBe(false)
@@ -138,13 +148,10 @@ describe('EnhanceTab — Cường Hóa', () => {
       manager.equipmentBag.add(equipmentInstanceWithItemId('ghost-item', 'nonexistent_item', true))
     })
 
-    // Khong throw khi render - slot weapon van hien (caption = itemId tho
-    // vi template khong tra duoc).
-    const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn slot cường hóa"] .slot-view',
-    )
+    // Khong throw khi render - ô chiếu weapon van hien.
+    const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"] .slot-view')
 
-    expect(slots).toHaveLength(6)
+    expect(single).not.toBeNull()
 
     mounted.unmount()
   })
@@ -155,12 +162,10 @@ describe('EnhanceTab — Cường Hóa', () => {
     // neu Task 4/5 pha reactivity, test nay do ngay.
     const mounted = mountTab()
 
-    const slots = () =>
-      mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')
-
-    // Slot helmet (index 1 trong EQUIPMENT_SLOTS) ban dau trong - chua co
-    // equipment nao trong bag mang slot 'helmet'.
-    expect(slots()[1]!.classList.contains('slot-view--empty')).toBe(true)
+    // Chọn mũ qua hall selection (doll click) truoc khi co do - ô
+    // chiếu resolve SANG slot helmet trong.
+    mounted.selectedInstanceId.value = 'equipped'
+    await nextTick()
 
     // Equip trang bi moi vao slot helmet, roi bump stateVersion - dung
     // pattern app that (useEquipmentActions goi bumpState sau khi mutate
@@ -170,10 +175,17 @@ describe('EnhanceTab — Cường Hóa', () => {
     mounted.manager.equipmentBag.get('new-helmet')!.slot = 'helmet'
     mounted.manager.equipmentBag.get('new-helmet')!.itemId = 'base_quan'
 
+    // Doll click vao mu moi -> ô chiếu doi sang slot helmet co do.
+    mounted.selectedInstanceId.value = 'new-helmet'
     mounted.version.value += 1
     await nextTick()
 
-    expect(slots()[1]!.classList.contains('slot-view--filled')).toBe(true)
+    // Owner ruling 2026-10-08: ô chiếu hiện TÊN slot (không phải ảnh
+    // item) - slot phải resolve sang 'helmet' vừa chọn qua doll.
+    const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"]')
+
+    expect(single).not.toBeNull()
+    expect(single!.querySelector('.enhance-slot__name')?.textContent).toBe(equipmentSlotLabel('helmet'))
 
     mounted.unmount()
   })

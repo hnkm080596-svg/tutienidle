@@ -130,7 +130,7 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
 
     combatTextureKey: PHAP_TU_COMBAT_KEY,
     combatTextureUrl: '/assets/characters/animated/phap_tu_shared/avatar-transparent.png',
-    combatSourceSize: { w: 244, h: 252 },
+    combatSourceSize: { w: 732, h: 756 },
 
     // Minh hand-drawn Ngu Hanh cultivate (2026-09-27). Phap Tu An
     // (Van Dao) has a dedicated PNG on disk but no profile id - the
@@ -139,7 +139,7 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
     cultivateTextureUrl: `/assets/characters/player/phap-tu/${PHAP_TU_CULTIVATE_KEY}.png`,
     cultivateSourceSize: { w: 1254, h: 1254 },
 
-    // Shared spell-cultivator avatar: hand extends to the right of the 244px cell.
+    // Shared spell-cultivator avatar: hand extends to the right of the 732px cell.
     bodyAnchors: standingAnchors({
       head: { x: 0.59, y: 0.13 },
       chest: { x: 0.59, y: 0.36 },

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { background: #1a1710; color: #e8d9ae; font-family: Georgia, serif; margin: 24px; }
+  h2 { font-size: 20px; color: #f3e4c4; margin: 18px 0 10px; }
+  .row { display: flex; gap: 28px; align-items: flex-end; margin-bottom: 8px; }
+  .cell { text-align: center; font-size: 13px; color: #b7a377; }
+  .slot { position: relative; width: 88px; height: 88px; margin: 0 auto 6px; }
+  .slot img.frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .slot img.item { position: absolute; inset: 12%; width: 76%; height: 76%; object-fit: contain; }
+  .slot img.ovl { position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: contain; opacity: 0; }
+
+  /* Cach Codex: cung 1 art, trang thai = CSS filter */
+  .codex.hover .frame  { filter: brightness(1.65) drop-shadow(0 0 3px #ffd785) drop-shadow(0 0 7px #e9a935aa); }
+  .codex.selected .frame { filter: brightness(1.8) drop-shadow(0 0 3px #ffe6a4) drop-shadow(0 0 8px #edb747bb); }
+  .codex.active .frame { filter: brightness(0.88); }
+  .codex.qpurple .frame { filter: hue-rotate(225deg) saturate(0.55); }
+  .codex.qblue .frame { filter: hue-rotate(160deg) saturate(0.65); }
+
+  /* Cach SlotView hien tai: overlay art slot-frame-hover + outline selected */
+  .mine.hover .ovl { opacity: 1; }
+  .mine.hover .item { transform: translateY(-1px); }
+  .mine.selected { outline: 2px solid #ffd977; outline-offset: -2px; }
+  .mine .item { transition: transform .12s ease; }
+</style>
+</head>
+<body>
+<h2>1. Cách preview Codex — 1 art + CSS filter (không art trạng thái riêng)</h2>
+<div class="row">
+  <div class="cell"><div class="slot codex"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"></div>thường</div>
+  <div class="cell"><div class="slot codex hover"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"></div>hover</div>
+  <div class="cell"><div class="slot codex selected"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"></div>selected</div>
+  <div class="cell"><div class="slot codex active"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"></div>pressed</div>
+  <div class="cell"><div class="slot codex qpurple"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"></div>quality tử (hue-rotate)</div>
+  <div class="cell"><div class="slot codex qblue"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"></div>quality lam</div>
+</div>
+
+<h2>2. Cách SlotView hiện tại — art nền Codex + overlay art bộ cũ + outline CSS</h2>
+<div class="row">
+  <div class="cell"><div class="slot mine"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"><img class="ovl" src="/assets/ui/Slot/slot-frame-hover.png"></div>thường</div>
+  <div class="cell"><div class="slot mine hover"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"><img class="ovl" src="/assets/ui/Slot/slot-frame-hover.png"></div>hover (overlay art cũ)</div>
+  <div class="cell"><div class="slot mine selected"><img class="frame" src="/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png"><img class="item" src="/assets/equipment/items/base-kiem/kiem-03.png"><img class="ovl" src="/assets/ui/Slot/slot-frame-hover.png"></div>selected (outline)</div>
+</div>
+</body>
+</html>

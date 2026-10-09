@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
-import InkNineSlice from '../../common/primitives/InkNineSlice.vue'
-import Chip from '../../common/primitives/Chip.vue'
-import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
+import BagChipSelect from './BagChipSelect.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore, type EquipmentSortMode } from '@/stores/ui'
-import { useBagPagination } from '@/composables/useBagPagination'
-import { useBagGridLayout } from '@/composables/useBagGridLayout'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { compareNumber, compareText, stableSort, withDirection } from '@/composables/useBagSort'
-import { useEntryFilter } from '@/composables/useBagFilter'
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
@@ -20,21 +15,26 @@ import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank
 import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
 
 const { t } = useI18n()
 
-// Grid responsive theo chieu rong that - xem ghi chu day du o
-// useBagGridLayout.ts/MaterialBagSection.vue (cung pattern ap cho ca
-// bag-sections).
-const { gridRef, pageSize, gridStyle } = useBagGridLayout()
+// Bag grid: 8 cols x 5 rows (owner ruling 2026-10-08 - cells must be
+// SQUARE and fit the card height; 8 cols is the widest grid whose
+// square cells fit 5 rows in the bag card).
+const EQUIPMENT_BAG_COLUMNS = 8
+const EQUIPMENT_BAG_MIN_CELLS = EQUIPMENT_BAG_COLUMNS * 5
+const gridStyle = {
+  '--grid-columns': String(EQUIPMENT_BAG_COLUMNS),
+}
 
 const ui = useUiStore()
 
 const gameManager = useGameManager()
 
-const { stateVersion, bumpState } = useStateVersion()
+const { stateVersion } = useStateVersion()
 
 const { equip } = useEquipmentActions()
 
@@ -49,17 +49,6 @@ interface EquipmentEntry {
 
   name: string
 }
-
-// Task 4 schema bridge keeps the two existing sort controls wired to the
-// closest new fields. Task 19 owns their final unified UI contract.
-const SORT_OPTIONS: Array<BagSortOption & { value: EquipmentSortMode }> = [
-  { value: 'quality', label: 'Phẩm' },
-  { value: 'rarity', label: 'Chất' },
-  { value: 'realm', label: 'Cảnh giới' },
-  { value: 'slot', label: 'Vị trí' },
-  { value: 'name', label: 'Tên', ascLabel: 'Tên A–Z', descLabel: 'Tên Z–A' },
-  { value: 'forge', label: 'Điểm Rèn' },
-]
 
 const entries = computed<EquipmentEntry[]>(() => {
   stateVersion.value
@@ -109,9 +98,9 @@ const entries = computed<EquipmentEntry[]>(() => {
       ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
       : [{ text: instance.itemId }]
 
-    if (instance.equipped) {
-      nameSegments.push({ text: '(đang mặc)' })
-    }
+    // equipped marker removed (owner ruling 2026-10-08): the canonical
+    // list above only renders unequipped items, so instance.equipped can
+    // never be true here - the branch was dead code.
 
     // Slot Revamp (muc 17.7 "Equipment bag: Quality, Rarity, equipped,
     // comparison") - equipped chi la marker nho (khong doi nen). So sanh
@@ -120,9 +109,9 @@ const entries = computed<EquipmentEntry[]>(() => {
     // state.comparison cho toi khi UX toggle do duoc thiet ke va trien khai.
     const state: SlotPresentationState = {}
 
-    if (instance.equipped) {
-      state.marker = 'equipped'
-    }
+    // equipped marker removed (owner ruling 2026-10-08): the canonical
+    // list above only renders unequipped items, so instance.equipped can
+    // never be true here - the branch was dead code.
 
     return {
       instance,
@@ -180,20 +169,15 @@ const entries = computed<EquipmentEntry[]>(() => {
   })
 })
 
-// ================= Filter/search + slot chips =================
-// Mirrors the MaterialBagSection filter bar; filter runs BEFORE sort +
-// pagination. Group axis = equipment slot (single dimension).
-const searchQuery = ref('')
+// ================= Loai-item filter + sort selects ==================
+// Owner ruling 2026-10-08: chips + footer selects removed. Two dropdowns
+// - Loai item (7 options: Tat Ca + 6 socket types) filters first, then
+// Sap Xep sorts inside the filtered result. The quality-tone (Kim/Tu/
+// Lam) filter UI is dropped; sorting by chất lives in the sort select.
+type TypeFilter = 'all' | EquipmentSlot
+const typeFilter = ref<TypeFilter>('all')
 
-const activeGroup = ref<EquipmentSlot | 'all'>('all')
-
-const { filtered, visibleCount } = useEntryFilter(
-  entries,
-  { searchQuery, activeGroup },
-  { name: (entry) => entry.name, group: (entry) => entry.instance.slot },
-)
-
-const GROUP_CHIPS = computed<Array<{ value: EquipmentSlot | 'all'; label: string }>>(() => [
+const TYPE_OPTIONS = computed<Array<{ value: TypeFilter; label: string }>>(() => [
   { value: 'all', label: t('panels.bag.groups.all') },
   ...EQUIPMENT_SLOTS.map((slot) => ({
     value: slot,
@@ -201,10 +185,16 @@ const GROUP_CHIPS = computed<Array<{ value: EquipmentSlot | 'all'; label: string
   })),
 ])
 
-// Clicking the already-active chip clears the group filter.
-function toggleGroup(value: EquipmentSlot | 'all') {
-  activeGroup.value = activeGroup.value === value ? 'all' : value
-}
+const filtered = computed(() =>
+  entries.value.filter(
+    (entry) => typeFilter.value === 'all' || entry.instance.slot === typeFilter.value,
+  ),
+)
+const visibleCount = computed(() => filtered.value.length)
+
+// Design capacity label (preview "18/100") - the domain has no real bag
+// cap; 100 is the designed display cap.
+const BAG_DISPLAY_CAPACITY = 100
 
 // Tieu chi Trang Bi (plan Workstream E) - mac dinh/quality/rarity/
 // realm/slot/name/forge.
@@ -230,7 +220,9 @@ const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: E
   forge: (a, b) => compareNumber(a.instance.forgeUsesRemaining, b.instance.forgeUsesRemaining),
 }
 
-// Sort chay tren ban copy cua list DA LOC TRUOC pagination.
+// Sort chay tren ban copy cua list DA LOC - the preview's Sap Xep
+// select maps onto the existing equipment sort store ('default' vs
+// 'quality'); direction stays whatever the store holds.
 const cells = computed<BagCell[]>(() => {
   const sortState = ui.bagSorts.equipment
 
@@ -246,52 +238,126 @@ const cells = computed<BagCell[]>(() => {
   return sorted.map((entry) => entry.cell)
 })
 
-const { currentPage, totalPages, goToPage, resetPage, gridCells } = useBagPagination(cells, pageSize)
+// Sap Xep select: every comparator in EQUIPMENT_COMPARATORS is wired -
+// default/quality(pham nghe)/rarity(chat)/realm/slot/name/forge - plus
+// the direction toggle via ui.toggleBagSortDirection.
+const SORT_MODES: readonly EquipmentSortMode[] = [
+  'default',
+  'quality',
+  'rarity',
+  'realm',
+  'slot',
+  'name',
+  'forge',
+]
+const sortMode = computed<EquipmentSortMode>(() => ui.bagSorts.equipment.mode)
 
-watch(
-  () => ({ ...ui.bagSorts.equipment }),
-  () => resetPage(),
+// Owner ruling: direction lives inside the sort dropdown - first pick
+// of a mode is asc, re-picking the same mode flips it (no +/- button).
+function onSortPick(mode: string) {
+  if (mode === ui.bagSorts.equipment.mode) {
+    ui.toggleBagSortDirection('equipment')
+  } else {
+    ui.setBagSortMode('equipment', mode as EquipmentSortMode)
+  }
+}
+
+const SORT_OPTIONS = computed<Array<{ value: EquipmentSortMode; label: string }>>(() =>
+  SORT_MODES.map((m) => ({
+    value: m,
+    label:
+      t(`equipment.sortModes.${m}`) +
+      (m === ui.bagSorts.equipment.mode && m !== 'default'
+        ? ui.bagSorts.equipment.direction === 'asc'
+          ? ' ↑'
+          : ' ↓'
+        : ''),
+  })),
 )
 
-// Filter changes reset to the first page (same contract as sort).
-watch([searchQuery, activeGroup], () => resetPage())
+// Owner ruling: the bag paginates at one full grid (7 cols x 5 rows = 35
+// cells) instead of scrolling; the pager sits mid-toolbar between the
+// dropdowns and the capacity count. Each page still pads to 35 cells.
+const EQUIPMENT_BAG_PAGE_SIZE = EQUIPMENT_BAG_MIN_CELLS
+const page = ref(0)
+const pageCount = computed(() => Math.max(1, Math.ceil(cells.value.length / EQUIPMENT_BAG_PAGE_SIZE)))
+const pageIndex = computed(() => Math.min(page.value, pageCount.value - 1))
+
+const gridCells = computed<Array<BagCell | undefined>>(() => {
+  const start = pageIndex.value * EQUIPMENT_BAG_PAGE_SIZE
+  const padded = cells.value.slice(start, start + EQUIPMENT_BAG_PAGE_SIZE)
+  while (padded.length < EQUIPMENT_BAG_PAGE_SIZE) padded.push(undefined as unknown as BagCell)
+  return padded
+})
+
+function prevPage() {
+  page.value = Math.max(0, pageIndex.value - 1)
+}
+function nextPage() {
+  page.value = Math.min(pageCount.value - 1, pageIndex.value + 1)
+}
+
+// Codex design-paper cells: square item-slot art owns the bag cell edge
+// (the drawn tien-hiep slot frame) - applied here only, material/pill
+// bags keep their own chrome.
+const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png')
 </script>
 
 <template>
-  <div class="bag-section">
-    <div class="bag-section__filters">
-      <span class="bag-section__search-wrap">
-        <InkNineSlice chrome-id="text-field" layer="surface" />
-        <input
-          v-model="searchQuery"
-          type="search"
-            class="bag-section__search"
-            :placeholder="t('panels.bag.search.equipmentPlaceholder')"
-            :aria-label="t('panels.bag.search.equipmentAria')"
-          >
-      </span>
-
-      <div class="bag-section__chips" role="group" :aria-label="t('panels.bag.filterAriaEquipment')">
-        <Chip
-          v-for="chip in GROUP_CHIPS"
-          :key="chip.value"
-          :active="activeGroup === chip.value"
-          @click="toggleGroup(chip.value)"
-        >
-          {{ chip.label }}
-        </Chip>
+  <div class="bag-section" :style="{ '--equipment-item-slot': `url('${ITEM_SLOT_SRC}')` }">
+    <!-- Toolbar (owner ruling 2026-10-08): two dropdowns replace the
+         title/Hoa-Luyen header and the chips row - Loai item filters,
+         Sap Xep sorts inside the filtered set, +/- toggles direction.
+         The footer Pham-Chat/Sap-Xep selects are gone (their logic
+         moved here); capacity text hidden pending a real bag cap. -->
+    <div class="bag-section__toolbar">
+      <!-- Owner ruling: custom chip-art dropdowns (BagChipSelect) - the
+           equipment filter chip art + bag card nine-slice list backdrop;
+           native <select> could not wear either. -->
+      <BagChipSelect
+        v-model="typeFilter"
+        :options="TYPE_OPTIONS"
+        :label="t('panels.bag.filterAriaEquipment')"
+      />
+      <BagChipSelect
+        :model-value="sortMode"
+        :options="SORT_OPTIONS"
+        :label="t('equipment.order')"
+        @update:model-value="onSortPick"
+      />
+      <!-- Owner ruling: pager sits between the dropdowns and the capacity
+           count; hidden until the bag overflows one page. -->
+      <div v-if="pageCount > 1" class="bag-section__pager">
+        <button
+          type="button"
+          class="bag-section__page-btn"
+          :disabled="pageIndex === 0"
+          :aria-label="t('panels.bag.pagePrev')"
+          @click="prevPage"
+        >‹</button>
+        <span class="bag-section__page-label">{{ pageIndex + 1 }}/{{ pageCount }}</span>
+        <button
+          type="button"
+          class="bag-section__page-btn"
+          :disabled="pageIndex >= pageCount - 1"
+          :aria-label="t('panels.bag.pageNext')"
+          @click="nextPage"
+        >›</button>
       </div>
-
-      <span class="bag-section__count"><InkNineSlice chrome-id="resource-pill" layer="surface" /><span class="bag-section__count-label">{{ visibleCount }} {{ t('panels.bag.countSuffix') }}</span></span>
+      <!-- Owner ruling: capacity count returns beside the dropdowns,
+           pinned to the bag's right edge (no real cap yet - display only). -->
+      <span class="bag-section__count-label">
+        {{ visibleCount }}/{{ BAG_DISPLAY_CAPACITY }}
+      </span>
     </div>
 
-    <div ref="gridRef" class="bag-section__grid" :style="gridStyle">
+    <div class="bag-section__grid" :style="gridStyle">
       <SlotView
         v-for="(cell, index) in gridCells"
         :key="cell?.key ?? index"
         class="bag-section__slot"
-        variant="bag"
-        :item="cell"
+        variant="equipment"
+        :item="cell ?? null"
         :label="cell?.label"
         :accessible-label="cell?.accessibleLabel"
         :name-segments="cell?.nameSegments"
@@ -305,18 +371,6 @@ watch([searchQuery, activeGroup], () => resetPage())
         @click="cell?.onClick?.()"
       />
     </div>
-
-    <BagPaginationControls
-      :current-page="currentPage"
-      :total-pages="totalPages"
-      :sort-options="SORT_OPTIONS"
-      :active-mode="ui.bagSorts.equipment.mode"
-      :active-direction="ui.bagSorts.equipment.direction"
-      @go-to-page="goToPage"
-      @select-mode="(mode) => ui.setBagSortMode('equipment', mode as EquipmentSortMode)"
-      @toggle-direction="ui.toggleBagSortDirection('equipment')"
-      @reset-sort="ui.resetBagSort('equipment')"
-    />
   </div>
 </template>
 
@@ -326,102 +380,210 @@ watch([searchQuery, activeGroup], () => resetPage())
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  gap: 2px;
+  gap: 8px;
 }
 
-.bag-section__filters {
+/* Preview header: title owns the row start, count/capacity + the two
+   action buttons pin to the right above a hairline rule. */
+.bag-section__header {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+  gap: 8px;
+  height: 33px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #92783e66;
 }
 
-/* Drawn field chrome (owner ruling: search uses the text-field art,
-   not a CSS frame) - wrap carries the slice, input paints on top. */
-.bag-section__search-wrap {
-  position: relative;
-  flex: 1 1 120px;
-  min-width: 0;
-  height: 32px;
+.bag-section__title {
+  flex: 1;
+  margin: 0;
+  font: 700 24px/1.2 var(--font-display, Georgia, serif);
+  color: #f3e4c4;
 }
 
-.bag-section__search-wrap .ink-nine-slice {
-  inset: 0;
-}
-
-.bag-section__search-wrap:focus-within {
-  outline: 2px solid var(--chrome-300);
-  outline-offset: 1px;
-}
-
-.bag-section__search {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  padding: 0 var(--space-2);
-  background: transparent;
-  color: var(--text-primary);
-  border: 0;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-}
-
-.bag-section__search::placeholder {
-  color: var(--text-secondary);
-}
-
-.bag-section__search:focus-visible {
-  outline: none;
-}
-
-.bag-section__chips {
+.bag-section__pager {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  flex-wrap: wrap;
+  gap: 8px;
 }
-
-/* "N mon" counter: resource-pill chrome capsule (owner ruling) - the
-   drawn capsule carries the count, text sits on the light pill face. */
-.bag-section__count {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 64px;
-  height: 28px;
-  padding: 0 10px;
+.bag-section__page-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #8e7440;
+  border-radius: 50%;
+  background: rgba(232, 217, 174, 0.18);
+  color: #ffe9ae;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.bag-section__page-btn:hover:not(:disabled) {
+  background: rgba(232, 217, 174, 0.24);
+  color: #ffe9ae;
+}
+.bag-section__page-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.bag-section__page-label {
+  min-width: 44px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
   color: #e8d9ae;
-  font-size: var(--text-xs);
-  white-space: nowrap;
-}
-
-.bag-section__count .ink-nine-slice {
-  inset: 0;
 }
 
 .bag-section__count-label {
-  position: relative;
-  z-index: 2;
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e8d9ae;
+  white-space: nowrap;
 }
 
+.bag-section__icon-btn,
+.bag-section__op-btn {
+  border: 1px solid #8e7440;
+  background: #23251e;
+  color: #eedfbf;
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bag-section__icon-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.bag-section__op-btn {
+  height: 30px;
+  min-width: 118px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.bag-section__icon-btn:hover,
+.bag-section__op-btn:hover {
+  color: #ffe9ae;
+  border-color: #c9a95f;
+}
+
+.bag-section__chips {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+/* Toolbar (owner ruling 2026-10-08): Loai-item select + sort select +
+   direction toggle on one row. */
+.bag-section__toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bag-section__chip-select {
+  position: relative;
+  isolation: isolate;
+  /* Art kept at native 1225x324 proportions (owner ruling: no stretch) -
+     the element is sized to the art, not the other way around. */
+  flex: 0 0 auto;
+  height: 36px;
+  aspect-ratio: 1225 / 324;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.bag-section__chip-select::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / contain no-repeat;
+  pointer-events: none;
+}
+.bag-section__chip-select:hover::before {
+  background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-hover-v2.png');
+}
 .bag-section__grid {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
-  align-content: start;
-  gap: var(--grid-gap);
-  overflow: hidden;
+  /* Rows size to the square cells (owner ruling: gap ngang == gap doc),
+     packed to the BOTTOM edge so extra card height lands above row 1
+     instead of inflating the inter-row gap. */
+  /* Owner ruling 2026-10-08: gaps must read EQUAL on both axes. Rows
+     split the card height evenly (minmax 0 so they may shrink below
+     the cell's aspect-ratio) - cells end up ~1% squat, pitch is
+     identical horizontally and vertically. */
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: end;
+  gap: 4px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #8a7444 transparent;
 }
+
+/* item-slot-v2 IS the cell (design-paper Trang Bi); the PNG itself was
+   recentered (2026-10-08) so its transparent margins are symmetric -
+   owner ruling: art paints at natural size (the zoom experiment was
+   rejected for cropping the cloud corners). */
 
 .bag-section__slot {
   width: 100%;
   aspect-ratio: 1 / 1;
-  /* Art lives on the SlotView `variant` prop (default `item` -
-     inventory art - here); consumers no longer override --slot-*
-     art vars directly. */
+}
+
+/* Preview footer: two labeled selects on the card's bottom edge. */
+.bag-section__footer {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 2px;
+  color: #c9b184;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bag-section__select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.bag-section__select {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #f2e3c2;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 26px 0 14px;
+}
+.bag-section__select option {
+  color: #eedfbf;
+  background: #23251e;
+}
+.bag-section__select:focus-visible {
+  outline: none;
+}
+.bag-section__chip-select:focus-within {
+  box-shadow: 0 0 0 2px var(--hk-gold-muted), 0 0 10px var(--hk-glow-gold);
 }
 </style>

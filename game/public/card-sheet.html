@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Card assets</title>
+<style>
+  body { background: #14100c; color: #e8d9b0; font: 14px/1.4 system-ui; padding: 16px; }
+  h1 { font-size: 18px; margin: 0 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .item { border: 1px solid #3a2f1a; padding: 10px; }
+  .item img { display: block; max-width: 100%; max-height: 260px; margin: 0 auto; image-rendering: auto; }
+  .name { margin-top: 8px; font-weight: 700; color: #ffd977; }
+  .meta { color: #8a7c56; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>Card / panel assets — tien-hiep-2026-10/runtime</h1>
+<div class="grid" id="g"></div>
+<script>
+const files = [
+  'ink-panel.png',
+  'panel-frame-v2.png',
+  'paper-panel.png',
+  'paper-surface.png',
+  'surface-l-drawer@2x.png',
+  'surface-m-panel@2x.png',
+  'surface-xl-scroll@2x.png',
+  'frame-m-modal@2x.png',
+  'frame-s-slot@2x.png',
+  'frame-xl-ceremony@2x.png',
+  'frame-xs-tooltip@2x.png',
+  'orb-frame.png',
+  'slot-frame.png',
+  'avatar-frame@2x.png',
+  'skill-orb-frame@2x.png',
+];
+const g = document.getElementById('g');
+for (const f of files) {
+  const d = document.createElement('div');
+  d.className = 'item';
+  const img = document.createElement('img');
+  img.src = '/assets/ui/tien-hiep-2026-10/runtime/' + f;
+  img.onload = () => { d.querySelector('.meta').textContent = img.naturalWidth + 'x' + img.naturalHeight; };
+  d.appendChild(img);
+  const n = document.createElement('div'); n.className = 'name'; n.textContent = f;
+  const m = document.createElement('div'); m.className = 'meta';
+  d.appendChild(n); d.appendChild(m);
+  g.appendChild(d);
+}
+</script>
+</body>
+</html>

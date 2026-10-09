@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import EquipmentArtButton from './EquipmentArtButton.vue'
-import EquipmentArtSlot from './EquipmentArtSlot.vue'
-import EquipmentEnergyTube from './EquipmentEnergyTube.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import {
   equipmentArt,
   equipmentStats,

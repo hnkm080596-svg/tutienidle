@@ -4,340 +4,340 @@
       "frame": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-002.png": {
       "frame": {
-        "x": 244,
+        "x": 732,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-003.png": {
       "frame": {
-        "x": 488,
+        "x": 1464,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-004.png": {
       "frame": {
-        "x": 732,
+        "x": 2196,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-005.png": {
       "frame": {
-        "x": 976,
+        "x": 2928,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-006.png": {
       "frame": {
         "x": 0,
-        "y": 252,
-        "w": 244,
-        "h": 252
+        "y": 756,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-007.png": {
       "frame": {
-        "x": 244,
-        "y": 252,
-        "w": 244,
-        "h": 252
+        "x": 732,
+        "y": 756,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-008.png": {
       "frame": {
-        "x": 488,
-        "y": 252,
-        "w": 244,
-        "h": 252
+        "x": 1464,
+        "y": 756,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-009.png": {
       "frame": {
-        "x": 732,
-        "y": 252,
-        "w": 244,
-        "h": 252
+        "x": 2196,
+        "y": 756,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-010.png": {
       "frame": {
-        "x": 976,
-        "y": 252,
-        "w": 244,
-        "h": 252
+        "x": 2928,
+        "y": 756,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-011.png": {
       "frame": {
         "x": 0,
-        "y": 504,
-        "w": 244,
-        "h": 252
+        "y": 1512,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-012.png": {
       "frame": {
-        "x": 244,
-        "y": 504,
-        "w": 244,
-        "h": 252
+        "x": 732,
+        "y": 1512,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-013.png": {
       "frame": {
-        "x": 488,
-        "y": 504,
-        "w": 244,
-        "h": 252
+        "x": 1464,
+        "y": 1512,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-014.png": {
       "frame": {
-        "x": 732,
-        "y": 504,
-        "w": 244,
-        "h": 252
+        "x": 2196,
+        "y": 1512,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-015.png": {
       "frame": {
-        "x": 976,
-        "y": 504,
-        "w": 244,
-        "h": 252
+        "x": 2928,
+        "y": 1512,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-016.png": {
       "frame": {
         "x": 0,
-        "y": 756,
-        "w": 244,
-        "h": 252
+        "y": 2268,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     },
     "phap_tu_shared-attack-017.png": {
       "frame": {
-        "x": 244,
-        "y": 756,
-        "w": 244,
-        "h": 252
+        "x": 732,
+        "y": 2268,
+        "w": 732,
+        "h": 756
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       },
       "sourceSize": {
-        "w": 244,
-        "h": 252
+        "w": 732,
+        "h": 756
       }
     }
   },
@@ -347,8 +347,8 @@
     "image": "phap_tu_shared-sheet-2.png",
     "format": "RGBA8888",
     "size": {
-      "w": 1220,
-      "h": 1008
+      "w": 3660,
+      "h": 3024
     },
     "scale": "1"
   }

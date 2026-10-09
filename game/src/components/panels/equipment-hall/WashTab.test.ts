@@ -84,20 +84,15 @@ afterEach(() => {
 })
 
 describe('WashTab — Tẩy Luyện', () => {
-  it('hiện đủ 6 slot (2026-08-30: ô luôn tồn tại, tham chiếu equip trực tiếp)', () => {
+  it('chưa chọn đồ thì chỉ hiện hướng dẫn, không hiện nguyên liệu/nút (2026-10-08: chọn qua doll, strip cũ bỏ)', async () => {
     const mounted = mountTab()
+    await nextTick()
 
-    const washSlots = mounted.container.querySelectorAll('[aria-label="Chọn trang bị để tẩy luyện"] .slot-view')
-
-    expect(washSlots).toHaveLength(6)
-
-    // The weapon slot (worn 'equipped') shows the item name + Pham
-    // suffix (accessibleLabel spec section 5b: "{name}, {grade}") - the
-    // other 5 slots are empty and use their default slot-name labels.
-    const labels = Array.from(washSlots).map((el) => el.getAttribute('aria-label'))
-
-    expect(labels).toContain('Kiếm, Cửu Phẩm')
-    expect(labels.filter((label) => label === 'Kiếm, Cửu Phẩm')).toHaveLength(1)
+    const card = mounted.container.querySelector('.equipment-forge-workspace')
+    expect(card).not.toBeNull()
+    expect(card!.textContent).toContain('Chọn một trang bị')
+    expect(card!.querySelector('.equipment-forge-materials')).toBeNull()
+    expect(card!.querySelector('.forge-compare')).toBeNull()
 
     mounted.unmount()
   })
@@ -109,47 +104,34 @@ describe('WashTab — Tẩy Luyện', () => {
       manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
     })
 
-    // Chon slot dang mac.
-    const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tẩy luyện"] .slot-view',
-    )
-    ;(slots[0] as HTMLElement).click()
+    // Chon mon dang mac qua shared hall selection (doll).
+    mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
     const buttons = Array.from(mounted.container.querySelectorAll<HTMLButtonElement>('button'))
-    const washBtn = buttons.find((b) => b.textContent?.includes('roll lại toàn bộ dòng phụ'))
+    const washBtn = buttons.find((b) => b.textContent?.trim() === 'Tẩy Luyện')
     expect(washBtn).toBeDefined()
     expect(washBtn!.disabled).toBe(false)
 
     mounted.unmount()
   })
 
-  it('card so sánh Trước ⇒ Sau hiện khi chọn item ở Tẩy Luyện — Điểm Rèn ở dòng chú thích, bảng theo từng dòng phụ (2026-08-30: bọc gọn 1 card, Điểm Rèn không còn là 1 hàng bảng)', async () => {
+  it('card so sánh Trước ⇒ Sau hiện khi chọn item ở Tẩy Luyện — bảng theo từng dòng phụ (2026-10-08: layout chung forge, strip + Điểm Rèn caption bỏ)', async () => {
     const mounted = mountTab((manager) => {
       const ore = materials.find((m) => m.id === 'qi_refining_ore_century')!
       manager.materialBag.add(ore, 100)
       manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
     })
 
-    const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tẩy luyện"] .slot-view',
-    )
-    ;(slots[0] as HTMLElement).click()
+    mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
-    const card = mounted.container.querySelector('.qi-hall__preview-card')
+    const card = mounted.container.querySelector('.equipment-forge-workspace')
     expect(card).not.toBeNull()
 
-    // Ngan sach ren: Hoang Chat co 5 luot, moi wash tru 1 luot.
-    // gio la dong chu thich tren dau card, khong con la 1 hang trong bang.
-    const caption = card!.querySelector('.qi-hall__col-title')
-    expect(caption?.textContent).toContain('Điểm Rèn')
-    expect(caption?.textContent).toContain('5/5')
-    expect(caption?.textContent).toContain('4/5')
-
     // Fixture item khong co affix nao (affixes: []) - khong co gi de so
-    // sanh theo dong nen KHONG hien bang, chi hien thong bao trong.
-    expect(card!.querySelector('[aria-label="So sánh trước và sau Tẩy Luyện"]')).toBeNull()
+    // sanh theo dong nen KHONG hien bang so sanh, chi hien thong bao trong.
+    expect(card!.querySelector('.forge-compare')).toBeNull()
     expect(card!.textContent).toContain('Chưa có dòng phụ')
 
     mounted.unmount()
@@ -174,14 +156,11 @@ describe('WashTab - preview honesty (T4-33)', () => {
   }
 
   async function selectAndPreview(mounted: ReturnType<typeof mountTab>) {
-    const slots = mounted.container.querySelectorAll(
-      '[aria-label="Chọn trang bị để tẩy luyện"] .slot-view',
-    )
-    ;(slots[0] as HTMLElement).click()
+    mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
     const washBtn = Array.from(mounted.container.querySelectorAll<HTMLButtonElement>('button'))
-      .find((b) => b.textContent?.includes('roll lại toàn bộ dòng phụ'))!
+      .find((b) => b.textContent?.trim() === 'Tẩy Luyện')!
     washBtn.click()
     await nextTick()
   }
@@ -191,14 +170,16 @@ describe('WashTab - preview honesty (T4-33)', () => {
     const mounted = mountTab((manager) => prepareWashable(manager, 'huyen'))
     await selectAndPreview(mounted)
 
-    const rows = mounted.container.querySelectorAll(
-      '[aria-label="So sánh trước và sau Tẩy Luyện"] tbody tr',
+    // The card always renders 5 slots - count only DATA cells (the
+    // empty filler slots keep their slot but carry --empty).
+    const beforeRows = mounted.container.querySelectorAll(
+      '.forge-compare > .forge-compare__cell:not(.forge-compare__cell--next):not(.forge-compare__cell--empty)',
     )
-    expect(rows).toHaveLength(2)
+    expect(beforeRows).toHaveLength(2)
 
     // Row 2 has no current line - its "before" cell marks the line as new,
     // not blank.
-    expect(rows[1]!.textContent).toContain('dòng mới')
+    expect(beforeRows[1]!.textContent).toContain('dòng mới')
 
     mounted.unmount()
   })
@@ -208,12 +189,10 @@ describe('WashTab - preview honesty (T4-33)', () => {
     const mounted = mountTab((manager) => prepareWashable(manager, 'huyen'))
     await selectAndPreview(mounted)
 
-    const rows = mounted.container.querySelectorAll(
-      '[aria-label="So sánh trước và sau Tẩy Luyện"] tbody tr',
-    )
-    expect(rows).toHaveLength(1)
-    expect(rows[0]!.textContent).toContain('đã mất')
-    expect(rows[0]!.textContent).not.toContain('chưa roll')
+    const afterRows = mounted.container.querySelectorAll('.forge-compare__cell--next')
+    expect(afterRows).toHaveLength(1)
+    expect(afterRows[0]!.textContent).toContain('đã mất')
+    expect(afterRows[0]!.textContent).not.toContain('chưa roll')
 
     mounted.unmount()
   })
