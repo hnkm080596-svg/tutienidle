@@ -36,6 +36,9 @@ const BAG_COUNTS: Record<BagTab, () => number> = {
     gameManager.pillBag
       .getAll()
       .filter((stack) => scopeHiddenPillFamilyOfId(stack.pill.id) === null).length,
+  // Phan Giai operates on the live DecomposeSystem, not a bag list -
+  // no item count (same treatment as InventorySurface's '').
+  decompose: () => 0,
 }
 
 const activeTabCount = computed(() => {
