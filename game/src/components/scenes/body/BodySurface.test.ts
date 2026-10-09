@@ -92,10 +92,6 @@ function chapterButtons(view: { container: HTMLElement }) {
   return view.container.querySelectorAll<HTMLButtonElement>('.body-chapters button')
 }
 
-function unitChips(view: { container: HTMLElement }) {
-  return view.container.querySelectorAll<HTMLButtonElement>('.body-unit-rail button')
-}
-
 function investButton(view: { container: HTMLElement }) {
   return view.container.querySelector<HTMLButtonElement>('.body-invest')
 }
@@ -109,7 +105,6 @@ describe('BodySurface (scene 08 fidelity)', () => {
 
     expect(view.container.querySelector('.body-paper-scene')).not.toBeNull()
     expect(view.container.querySelector('.body-paper-figure')).not.toBeNull()
-    expect(view.container.querySelector('.body-unit-rail')).not.toBeNull()
     expect(view.container.querySelector('.body-paper-details')).not.toBeNull()
 
     const seals = chapterButtons(view)
@@ -200,51 +195,21 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('renders tier chips with done/current/locked states from chapter state', async () => {
-      const view = mountBodyScene((player) => {
-        // Mortal floor 3 - tier 0 done, tier 1 (requiredRealmLevel 4)
-        // realm-gated.
-        player.$state.realmId = 'mortal'
-        player.$state.realmLevel = 3
-        setBodyProgression(player, {
-          body_refinement: { completedTiers: 1, currentTierProgress: 10 },
-        })
-      })
-      await nextTick()
-
-      // Unreached tiers hide entirely: only the done tier and the
-      // realm-gated next tier (which keeps its honest gate line) stay.
-      const chips = unitChips(view)
-      expect(chips.length).toBe(2)
-      expect(chips[0]!.classList.contains('done')).toBe(true)
-      expect(chips[1]!.classList.contains('locked')).toBe(true)
-
-      view.unmount()
-    })
-
-    it('shows the viewed tier card gains from its baseGains keys', async () => {
+    it('shows the next actionable tier card gains from its baseGains keys', async () => {
       const view = mountBodyScene((player) => {
         player.$state.realmId = 'qi_refining'
         setBodyProgression(player, {
-          // Four tiers done: all five cards within reach stay viewable.
+          // Four tiers done: the card defaults to the next actionable tier.
           body_refinement: { completedTiers: 4, currentTierProgress: 0 },
         })
       })
       await nextTick()
 
-      // Default view = first actionable tier (index 4).
       const gainLabels = [...view.container.querySelectorAll('.body-paper-details dl div dt')]
         .map(row => row.textContent ?? '')
       const expected = baseGainKeys(BODY_REFINEMENT_TIERS[4]!.baseGains)
         .map(stat => statLabel(stat))
       expect(gainLabels).toEqual(expected)
-
-      // Selecting another tier chip swaps the card.
-      const chips = unitChips(view)
-      chips[3]!.click()
-      await nextTick()
-      const detailTitle = view.container.querySelector('.body-paper-details h2')
-      expect(detailTitle?.textContent).toContain(BODY_REFINEMENT_TIERS[3]!.name)
 
       view.unmount()
     })
@@ -261,10 +226,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       // Completed refinement hands the default chapter to meridian -
       // view the Luyen The card explicitly.
       await selectChapter(view, 'body_refinement')
-      // Done units carry no invest affordance.
-      const buttons = unitChips(view)
-      buttons[0]!.click()
-      await nextTick()
+      // Every tier done: no invest affordance.
       expect(investButton(view)?.disabled ?? true).toBe(true)
 
       view.unmount()
@@ -324,10 +286,10 @@ describe('BodySurface (scene 08 fidelity)', () => {
       expect(title?.textContent).toContain('Âm Kiều Mạch')
 
       // Out-of-reach meridians hide: opened two + the next node only.
-      const chips = unitChips(view)
-      expect(chips.length).toBe(3)
-      expect(chips[0]!.classList.contains('done')).toBe(true)
-      expect(chips[2]!.classList.contains('current')).toBe(true)
+      const orbs = view.container.querySelectorAll('.body-orb')
+      expect(orbs.length).toBe(3)
+      expect(orbs[0]!.classList.contains('done')).toBe(true)
+      expect(orbs[2]!.classList.contains('current')).toBe(true)
 
       view.unmount()
     })
@@ -350,8 +312,8 @@ describe('BodySurface (scene 08 fidelity)', () => {
       expect(view.container.textContent).toContain(
         i18n.global.t('panels.realm.meridian.pageLocked', { realm: 'Luyện Khí' }),
       )
-      const chips = unitChips(view)
-      expect(chips.length).toBe(0)
+      const orbs = view.container.querySelectorAll('.body-orb')
+      expect(orbs.length).toBe(0)
       expect(investButton(view)).toBeNull()
 
       view.unmount()
@@ -567,17 +529,16 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('renders the lore milestone chips (Tieu 18 / Dai 36)', async () => {
+    it('renders no unit rail or milestones under the figure (preview parity)', async () => {
       const view = mountBodyScene((player) => {
         tcPlayer(player, 18, 20)
       })
       await nextTick()
       await selectChapter(view, 'zhou_tian')
 
-      const milestones = view.container.querySelectorAll('.body-milestone')
-      expect(milestones.length).toBe(2)
-      expect(milestones[0]!.classList.contains('done')).toBe(true)
-      expect(milestones[1]!.classList.contains('done')).toBe(false)
+      expect(view.container.querySelectorAll('.body-unit-rail').length).toBe(0)
+      expect(view.container.querySelectorAll('.body-milestone').length).toBe(0)
+      expect(view.container.querySelectorAll('.body-caption').length).toBe(0)
 
       view.unmount()
     })

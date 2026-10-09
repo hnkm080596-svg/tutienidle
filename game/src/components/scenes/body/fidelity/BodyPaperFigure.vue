@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
 
 const props = defineProps<{ model: BodyPaperModel; selected: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
-const { t } = useI18n()
 
 const bodyArt = (name: string) =>
   resolveAssetUrl(`/assets/ui/tien-hiep-2026-10/body/${name}-v1.png`)
@@ -30,9 +28,6 @@ const REFINEMENT_LAYER: Record<string, 'skin' | 'muscle' | 'vertebra' | 'blood' 
 }
 const litLayer = (layer: string) =>
   Object.entries(REFINEMENT_LAYER).some(([id, own]) => own === layer && unitLit(id))
-
-const processArt = (unit: BodyPaperUnit) =>
-  unit.id.startsWith('luyen_') ? bodyArt(`process-${unit.id.slice(6)}-${unitLit(unit.id) ? 'lit' : 'unlit'}`) : null
 
 // Khai Mach: fixed 8-point meridian graph (subset of the preview's 10-point
 // anatomy map) - production owns exactly 8 authored meridians.
@@ -98,8 +93,6 @@ const starsLit = computed(() => props.model.progress > 70)
 const galaxyPieces = computed(() =>
   GALAXY.map((piece, index) => ({ ...piece, lit: index < galaxyLit.value })),
 )
-
-const caption = computed(() => props.model.units.map((unit) => unit.label).join(' · '))
 </script>
 <template>
   <div class="body-center body-paper-figure">
@@ -154,22 +147,11 @@ const caption = computed(() => props.model.units.map((unit) => unit.label).join(
         <img class="body-galaxy-stars" :src="bodyArt(`galaxy-stars-${starsLit ? 'lit' : 'unlit'}`)" alt="">
       </template>
     </div>
-    <div class="body-unit-rail" :aria-label="t('body.units')">
-      <button v-for="unit in model.units" :key="unit.id"
-        class="body-unit-chip" :class="[unit.state, { selected: selected === unit.id }]"
-        :aria-pressed="selected === unit.id" @click="emit('select', unit.id)">
-        <img v-if="processArt(unit)" class="body-chip-art" :src="processArt(unit) ?? ''" alt="">
-        <span class="body-chip-text"><span>{{ unit.label }}</span><small>{{ t(`body.state.${unit.state}`) }}</small></span>
-      </button>
-      <span v-for="milestone in model.milestones" :key="milestone.id"
-        :class="['body-milestone', { done: milestone.done }]">{{ milestone.label }}</span>
-    </div>
-    <p class="body-caption">{{ caption }}<template v-if="model.progressLabel"> — {{ model.progressLabel }}</template></p>
   </div>
 </template>
 <style scoped>
 .body-center { display:flex; flex-direction:column; align-items:center; min-height:0; padding:0 4px; }
-.body-stage { position:relative; aspect-ratio:1215/1295; height:calc(100% - 96px); max-width:100%; flex:none; isolation:isolate; }
+.body-stage { position:relative; aspect-ratio:1215/1295; height:calc(100% - 8px); max-width:100%; flex:none; isolation:isolate; }
 .body-silhouette { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .body-layer { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
@@ -198,17 +180,6 @@ const caption = computed(() => props.model.units.map((unit) => unit.label).join(
 .body-galaxy-piece { position:absolute; height:auto; transform:translate(-50%,-50%) rotate(var(--orbit-angle)); pointer-events:none; }
 .body-galaxy-piece.orbiting { animation:orbit-drift 28s linear infinite; }
 .body-galaxy-stars { position:absolute; left:40%; top:42%; width:20%; height:14%; object-fit:contain; pointer-events:none; }
-.body-unit-rail { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:4px 2px; width:100%; }
-.body-unit-chip { display:inline-flex; flex-direction:row; align-items:center; gap:6px; padding:4px 8px; border:1px solid #a88a4f88; border-radius:5px; background:#e7d8b16b; color:#74603c; font:11px/1.25 var(--font-display,Georgia,serif); cursor:pointer; }
-.body-unit-chip .body-chip-art { width:30px; height:30px; object-fit:contain; flex:none; align-self:center; }
-.body-chip-text { display:flex; flex-direction:column; align-items:flex-start; text-align:left; }
-.body-unit-chip small { font-size:9px; }
-.body-unit-chip.selected { border-color:#357455; background:#cbd3ae88; color:#2d563f; }
-.body-unit-chip.locked { color:#998a6a; }
-.body-unit-chip:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
-.body-milestone { align-self:center; padding:5px 10px; border:1px solid #a88a4f66; border-radius:14px; background:#e7d8b155; color:#998a6a; font:11px var(--font-display,Georgia,serif); }
-.body-milestone.done { border-color:#3d7a56; background:#cbd3ae77; color:#2d563f; }
-.body-caption { margin:2px 0 0; width:100%; text-align:center; font-size:12px; font-weight:700; color:#5d4a2c; }
 @keyframes meridian-flow { to { background-position:-200% 0; } }
 @keyframes orbit-drift { to { transform:translate(-50%,-50%) rotate(calc(var(--orbit-angle) + 360deg)); } }
 @media (prefers-reduced-motion: reduce) {
