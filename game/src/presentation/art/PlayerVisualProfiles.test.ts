@@ -83,7 +83,7 @@ describe('PlayerVisualProfiles — art binding policy', () => {
     expect(phapTu.combatTextureUrl).toBe(
       '/assets/characters/animated/phap_tu_shared/avatar-transparent.png',
     )
-    expect(phapTu.combatSourceSize).toEqual({ w: 244, h: 252 })
+    expect(phapTu.combatSourceSize).toEqual({ w: 732, h: 756 })
     expect(phapTu.combatTextureKey).not.toBe(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey)
     expect(getCultivateTexture(phapTu).key).toBe('player-phap-tu-cultivate-ngu-hanh-v1')
     expect(getCultivateTexture(phapTu).key).not.toBe(

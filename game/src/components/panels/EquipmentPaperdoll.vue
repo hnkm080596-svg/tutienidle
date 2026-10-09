@@ -106,6 +106,15 @@ const idleClip = computed(
     )?.idle,
 )
 
+// Combat sizes every art so its opaque figure lands on personHeight (box =
+// personHeight/extent.h); here the canvas box is fixed to the zone height so
+// the figure would only fill extent.h of it. Scale the sprite by 1/extent.h
+// (mortal extent.h = 1, no change) to match the combat proportion.
+const figureScale = computed(() => {
+  const extent = idleClip.value?.extent
+  return extent && extent.h > 0 ? 1 / extent.h : 1
+})
+
 // Audit fix 2026-08-31 - equipmentRegistry.get() THROW voi itemId la
 // (data edit/save lech) tung chet ca khoi trang bi qua ErrorBoundary;
 // getEquipmentTemplate() tra an toan tra undefined (GameManager.ts) +
@@ -251,6 +260,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
         :last-frame="idleClip.lastFrame"
         :fps="idleClip.frameRate ?? 8"
         height="100%"
+        :style="{ '--pd-figure-scale': figureScale }"
       />
     </div>
     <img v-else class="paperdoll__base" :src="PAPERDOLL_BASE_SRC" alt="" aria-hidden="true" />
@@ -349,6 +359,11 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 .paperdoll__figure canvas {
   max-width: 100%;
   object-fit: contain;
+  /* Grow the fixed-height cell box so the opaque figure (extent.h of it)
+     fills the zone like mortal's full-height art; bottom origin keeps the
+     feet planted. */
+  transform: scale(var(--pd-figure-scale, 1));
+  transform-origin: 50% 100%;
 }
 
 /* Socket squares (owner ruling 2026-10-08): equipment-socket-v2.png is

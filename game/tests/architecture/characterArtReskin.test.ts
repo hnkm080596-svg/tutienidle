@@ -287,7 +287,7 @@ describe('character art reskin registry (infra)', () => {
     const art = CHARACTER_ART.phap_tu_shared
     expect(art).toBeDefined()
     if (!art) throw new Error('phap_tu_shared art is missing')
-    expect(art.sourceSize).toEqual({ w: 244, h: 252 })
+    expect(art.sourceSize).toEqual({ w: 732, h: 756 })
     expect(art.clips.idle.lastFrame).toBe(33)
     expect(art.clips.attack?.lastFrame).toBe(17)
     expect(art.castClips?.['role:special']?.lastFrame).toBe(17)

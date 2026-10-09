@@ -1,4 +1,4 @@
-// Index the user-supplied 244x252 transparent cell sheets as Phaser atlases.
+// Index the user-supplied 732x756 transparent cell sheets as Phaser atlases.
 // The PNGs remain untouched; rerun this after pack-character-art.mjs, whose
 // full rebuild regenerates manifest.json from its own NEWSPRITE sources.
 import { createCanvas, loadImage } from 'canvas'
@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
 const SLUG = 'phap_tu_shared'
-const CELL = { w: 244, h: 252 }
+const CELL = { w: 732, h: 756 }
 const ROOT = path.resolve('public/assets/characters/animated')
 const DIR = path.join(ROOT, SLUG)
 const CHECK = process.argv.includes('--check')
@@ -16,6 +16,11 @@ const SHEETS = [
   { name: 'cast-special', count: 17, columns: 5, index: 3 },
   { name: 'death', count: 17, columns: 5, index: 4 },
 ]
+// Authored impact frames (clip-local) - same lookup CharacterArt.impactMarker
+// performs at runtime, so the manifest stays in parity with the JSON.
+const IMPACT_MARKERS = JSON.parse(
+  readFileSync(path.resolve('art/animation-impact-markers.json'), 'utf8'),
+).characters?.[SLUG] ?? {}
 
 function emitJson(file, data) {
   const desired = `${JSON.stringify(data, null, 2)}\n`
@@ -27,7 +32,7 @@ function emitJson(file, data) {
 }
 
 function clipEntry(sheet) {
-  return {
+  const entry = {
     framePrefix: `${SLUG}-${sheet.name}-`,
     firstFrame: 1,
     lastFrame: sheet.count,
@@ -35,11 +40,17 @@ function clipEntry(sheet) {
     sheet: `${SLUG}-sheet-${sheet.index}.png`,
     atlas: `${SLUG}-sheet-${sheet.index}.atlas.json`,
   }
+  if (IMPACT_MARKERS[sheet.name] !== undefined) {
+    entry.impactFrameIndex = IMPACT_MARKERS[sheet.name]
+  }
+  return entry
 }
 
 async function main() {
   const avatar = await loadImage(path.join(DIR, 'avatar.png'))
-  if (avatar.width !== CELL.w || avatar.height !== CELL.h) throw new Error('Avatar must be 244x252')
+  if (avatar.width !== CELL.w || avatar.height !== CELL.h) {
+    throw new Error(`Avatar must be ${CELL.w}x${CELL.h}`)
+  }
 
   for (const sheet of SHEETS) {
     const imageName = `${SLUG}-sheet-${sheet.index}.png`
@@ -53,8 +64,8 @@ async function main() {
     const ctx = canvas.getContext('2d')
     ctx.drawImage(image, 0, 0)
     if (sheet.name === 'idle') {
-      // The standalone supplied still has an opaque black background. Keep it
-      // as reference and derive the displayed still from transparent idle #1.
+      // The displayed still is the transparent idle frame 001 - same crop as
+      // avatar.png (both derived from the first idle cell).
       const avatarCanvas = createCanvas(CELL.w, CELL.h)
       avatarCanvas.getContext('2d').drawImage(image, 0, 0, CELL.w, CELL.h, 0, 0, CELL.w, CELL.h)
       const avatarPath = path.join(DIR, 'avatar-transparent.png')
@@ -67,20 +78,33 @@ async function main() {
     }
     const pixels = ctx.getImageData(0, 0, image.width, image.height).data
     const frames = {}
+    // Union alpha bbox over the occupied cells (cell-local coords) - the
+    // manifest extent, measured here so --check cannot drift from the art.
+    let union = null
     for (let slot = 0; slot < expectedRows * sheet.columns; slot++) {
       const x = (slot % sheet.columns) * CELL.w
       const y = Math.floor(slot / sheet.columns) * CELL.h
-      let occupied = false
-      for (let cy = 0; cy < CELL.h && !occupied; cy++) {
+      let minX = CELL.w, minY = CELL.h, maxX = -1, maxY = -1
+      for (let cy = 0; cy < CELL.h; cy++) {
         for (let cx = 0; cx < CELL.w; cx++) {
-          if (pixels[((y + cy) * image.width + x + cx) * 4 + 3] > 0) {
-            occupied = true
-            break
-          }
+          if (pixels[((y + cy) * image.width + x + cx) * 4 + 3] === 0) continue
+          if (cx < minX) minX = cx
+          if (cy < minY) minY = cy
+          if (cx > maxX) maxX = cx
+          if (cy > maxY) maxY = cy
         }
       }
+      const occupied = maxX >= 0
       if (occupied !== (slot < sheet.count)) throw new Error(`${imageName}: unexpected filled cell ${slot + 1}`)
       if (!occupied) continue
+      union = union === null
+        ? { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 }
+        : {
+            x: Math.min(union.x, minX),
+            y: Math.min(union.y, minY),
+            w: Math.max(union.x + union.w, maxX + 1) - Math.min(union.x, minX),
+            h: Math.max(union.y + union.h, maxY + 1) - Math.min(union.y, minY),
+          }
 
       const frameName = `${SLUG}-${sheet.name}-${String(slot + 1).padStart(3, '0')}.png`
       frames[frameName] = {
@@ -90,6 +114,16 @@ async function main() {
         spriteSourceSize: { x: 0, y: 0, w: CELL.w, h: CELL.h },
         sourceSize: { ...CELL },
       }
+    }
+    if (sheet.name === 'idle') {
+      sheet.extent = {
+        x: union.x / CELL.w, y: union.y / CELL.h, w: union.w / CELL.w, h: union.h / CELL.h,
+      }
+      process.stdout.write(
+        `idle extent { x: ${sheet.extent.x.toFixed(6)}, y: ${sheet.extent.y.toFixed(6)}, ` +
+          `w: ${sheet.extent.w.toFixed(6)}, h: ${sheet.extent.h.toFixed(6)} } ` +
+          `(px ${union.x},${union.y} ${union.w}x${union.h} of ${CELL.w}x${CELL.h})\n`,
+      )
     }
     emitJson(path.join(DIR, `${SLUG}-sheet-${sheet.index}.atlas.json`), {
       frames,
@@ -106,7 +140,7 @@ async function main() {
     out: SLUG,
     src: 'user-supplied-cell-sheets',
     pivot: { x: 0.5, y: 1 },
-    extent: { x: 1 / 244, y: 16 / 252, w: 197 / 244, h: 230 / 252 },
+    extent: SHEETS[0].extent,
     sourceSize: { ...CELL },
     canvasSize: { ...CELL },
     sheets: 4,
@@ -116,7 +150,7 @@ async function main() {
       death: clipEntry(SHEETS[3]),
     },
     cast: { special: clipEntry(SHEETS[2]) },
-    avatar: 'idle-first-frame (supplied standing reference has opaque black background)',
+    avatar: 'idle-first-frame (transparent crop of idle cell 001)',
     avatarSize: { ...CELL },
     avatars: {}, portraits: {}, closeups: {}, radars: {},
   }
