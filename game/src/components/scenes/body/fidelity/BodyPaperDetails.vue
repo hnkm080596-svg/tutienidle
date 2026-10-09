@@ -52,7 +52,6 @@ const navIcon = resolveAssetUrl(
       <h2>{{ unit?.title ?? model.chapterLabel }}</h2>
     </div>
     <template v-if="unit">
-      <p class="body-description">{{ unit.description }}</p>
       <h3>{{ t('body.progress') }}</h3>
       <div class="body-progress-value">
         <span>{{ unit.progressLabel ?? model.progressLabel }}</span>
@@ -111,7 +110,6 @@ const navIcon = resolveAssetUrl(
 .body-card-title { display:flex; align-items:center; gap:8px; flex:none; }
 .body-card-title img { width:48px; height:48px; object-fit:contain; }
 .body-card-title h2 { margin:0; font-size:23px; color:#f3e4c4; }
-.body-description { font-size:12px; line-height:1.4; min-height:32px; margin:3px 0 4px; padding-bottom:5px; border-bottom:1px solid #b28a4377; color:#d8c49a; flex:none; }
 .body-card h3 { font-size:14px; margin:6px 0 4px; color:#ebd49e; flex:none; }
 .body-progress-value { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; color:#e8d8b8; flex:none; }
 .body-card :deep(.equipment-energy-tube) { flex:none; }
