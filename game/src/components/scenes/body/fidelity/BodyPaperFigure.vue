@@ -164,7 +164,7 @@ const galaxyPieces = computed(() =>
    around the figure - the band starts outside the body so the rays
    read as light emitted outward, not a rim. */
 .body-rays { position:absolute; left:50%; top:52%; width:118%; aspect-ratio:1; transform:translate(-50%,-50%); pointer-events:none; z-index:-1;
-  background:repeating-conic-gradient(from 0deg, rgba(255,214,110,.5) 0deg 3.5deg, rgba(255,214,110,0) 3.5deg 16deg);
+  background:repeating-conic-gradient(from 0deg, rgba(30,22,10,.55) 0deg 3.5deg, rgba(30,22,10,0) 3.5deg 16deg);
   -webkit-mask-image:radial-gradient(closest-side, transparent 34%, #000 48%, transparent 78%);
   mask-image:radial-gradient(closest-side, transparent 34%, #000 48%, transparent 78%);
   animation:body-rays-spin 46s linear infinite, body-rays-breathe 5.2s ease-in-out infinite; }
