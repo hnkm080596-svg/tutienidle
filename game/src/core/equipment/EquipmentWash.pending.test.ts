@@ -343,7 +343,10 @@ describe('M2 (ARCH-011 / AUD-E02) - ticket binds the exact item lifetime', () =>
     const originalAffixes = structuredClone(instance.affixes)
 
     const first = previewOn(ctx, instance)
-    instance.affixes.push({ affixId: affixes[3]!.id, tier: 1, value: 1 })
+    // Mutate a line's value - the issued-at snapshot no longer matches
+    // (cannot push a 4th line: count-preserving reroll would then need
+    // 4 rerollable lines, more than the hoang pool can supply).
+    instance.affixes[0]!.value = 999
     const affixCommit = commitOn(ctx, instance.instanceId, first.ticketId)
     expect(affixCommit.ok).toBe(false)
     expect(affixCommit.reason).toBe('no_pending_wash')
@@ -353,7 +356,10 @@ describe('M2 (ARCH-011 / AUD-E02) - ticket binds the exact item lifetime', () =>
     const gradeCommit = commitOn(ctx, instance.instanceId, second.ticketId)
     expect(gradeCommit.ok).toBe(false)
     expect(gradeCommit.reason).toBe('no_pending_wash')
-    expect(instance.affixes).toEqual([...originalAffixes, { affixId: affixes[3]!.id, tier: 1, value: 1 }])
+    expect(instance.affixes).toEqual([
+      { ...originalAffixes[0]!, value: 999 },
+      ...originalAffixes.slice(1),
+    ])
   })
 
   it.each(['locked', 'favorite'] as const)(

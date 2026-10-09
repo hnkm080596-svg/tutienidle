@@ -80,7 +80,8 @@ describe('GameManager wash transaction', () => {
     expect(preview.ok).toBe(true)
     // R9 (AR-21): display copy read through the ticket read model.
     const previewAffixes = manager.equipmentOps.getWashPreviewAffixes(preview.ticketId!)!.affixes
-    expect(previewAffixes).toHaveLength(3)
+    // Owner ruling 2026-10-09: count bao toan - item 1 dong -> 1 dong.
+    expect(previewAffixes).toHaveLength(1)
     expect(instance.affixes).toEqual([{ affixId: 'suffix_accuracy', tier: 1, value: 3 }])
     expect(instance.forgeUsesRemaining).toBe(19)
     expect(manager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
@@ -179,16 +180,16 @@ describe('GameManager wash transaction', () => {
     expect(instance.forgeUsesRemaining).toBe(forgeBefore)
   })
 
-  // T4-33 - the roll must honor BOTH ends of ITEM_QUALITY_SUBSTATS_RANGE:
-  // lineCount = min + floor(random * (max - min + 1)). Every quality has
-  // min 0 today, so pin the contract by mutating the range for this test -
-  // random -> 0 must yield min lines, not 0.
-  it('wash line count honors the range minimum (contract pin)', () => {
+  // Owner ruling 2026-10-09 - the washed line count comes from the
+  // ITEM's own affixes, never from ITEM_QUALITY_SUBSTATS_RANGE (the
+  // old roll could yield 0 lines -> trang do). Pin by mutating the
+  // range to zero: the item's own count still survives.
+  it('wash preserves the item line count, ignoring the quality range (contract pin)', () => {
     const original = ITEM_QUALITY_SUBSTATS_RANGE.dia
-    ITEM_QUALITY_SUBSTATS_RANGE.dia = { min: 2, max: 3 }
+    ITEM_QUALITY_SUBSTATS_RANGE.dia = { min: 0, max: 0 }
 
     try {
-      vi.spyOn(Math, 'random').mockReturnValue(0) // floor of the range
+      vi.spyOn(Math, 'random').mockReturnValue(0) // floor - old code rolled 0 lines here
 
       const manager = new GameManager()
       manager.catalogOps.registerMaterials(materials)
@@ -209,6 +210,10 @@ describe('GameManager wash transaction', () => {
           stat: 'might',
           flat: 12,
         },
+        affixes: [
+          { affixId: 'suffix_accuracy', tier: 1, value: 3 },
+          { affixId: 'prefix_critical_rate', tier: 1, value: 3 },
+        ],
       })
       manager.equipmentBag.add(instance)
 

@@ -113,7 +113,7 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
 
     instance.equipped = true
 
-    instance.affixes = [
+    instance.affixes = overrides.affixes ?? [
       { affixId: affixes[0]!.id, tier: 1, value: 5 },
       { affixId: affixes[1]!.id, tier: 1, value: 5 },
       { affixId: affixes[2]!.id, tier: 1, value: 5 },
@@ -213,14 +213,14 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
   })
 
   it.each([
-    ['hoang', 1, 2],
-    ['huyen', 2, 5],
-    ['dia', 3, 9],
-    ['thien', 4, 13],
-    ['tien', 5, 18],
+    ['hoang', 2],
+    ['huyen', 5],
+    ['dia', 9],
+    ['thien', 13],
+    ['tien', 18],
   ] as const)(
-    '%s: reroll đúng trần %i, stat/tier/value hợp lệ, giữ mainStat và trừ đúng chi phí',
-    (quality, expectedMax, tinhHoaCost) => {
+    '%s: giữ nguyên số dòng hiện có (3), stat/tier/value hợp lệ, giữ mainStat và trừ đúng chi phí',
+    (quality, tinhHoaCost) => {
       const ctx = washSetup()
       const instance = equippedWithAffixes(ctx, {
         instanceId: `wash-quality-${quality}`,
@@ -232,8 +232,9 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
       const stonesBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
 
       expect(wash(ctx, instance.instanceId).ok).toBe(true)
-      expect(instance.affixes).toHaveLength(expectedMax)
-      expect(instance.affixes.length).toBeLessThanOrEqual(ITEM_QUALITY_SUBSTATS_RANGE[quality].max)
+      // Owner ruling 2026-10-09: so dong BAO TOAN - item 3 dong van 3
+      // dong bat ke range max cua quality.
+      expect(instance.affixes).toHaveLength(3)
       expect(instance.mainStat).toEqual(mainBefore)
       expect(instance.grade).toBe('bat_pham')
       expect(instance.quality).toBe(quality)
@@ -260,81 +261,65 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     },
   )
 
+  // Owner ruling 2026-10-09 - so dong la cua ITEM, khong con roll theo
+  // ITEM_QUALITY_SUBSTATS_RANGE: moi gia tri rng deu giu nguyen count,
+  // ke ca roll 0 (truoc day ra 0 dong, trang do).
   it.each([
-    ['hoang', 1],
-    ['huyen', 2],
-    ['dia', 3],
-    ['thien', 4],
-    ['tien', 5],
-  ] as const)('%s: every line-count bin from 0 through %i is reachable', (quality, maxLines) => {
-    for (let expectedCount = 0; expectedCount <= maxLines; expectedCount += 1) {
+    ['hoang'],
+    ['huyen'],
+    ['dia'],
+    ['thien'],
+    ['tien'],
+  ] as const)('%s: line count is preserved at every roll value, never 0', (quality) => {
+    for (const rollSeed of [0, 0.25, 0.5, 0.75, 0.999_999]) {
       const ctx = washSetup()
       const instance = equippedWithAffixes(ctx, {
-        instanceId: `wash-count-${quality}-${expectedCount}`,
+        instanceId: `wash-count-${quality}-${rollSeed}`,
         quality,
       })
-      const rolls = [(expectedCount + 0.25) / (maxLines + 1)]
 
-      if (quality === 'tien') {
-        rolls.push(0.15)
-      }
+      const result = wash(ctx, instance.instanceId, () => rollSeed)
 
-      const result = wash(ctx, instance.instanceId, () => rolls.shift() ?? 0)
-
-      expect(result.ok, `${quality}:${expectedCount}`).toBe(true)
-      expect(instance.affixes, `${quality}:${expectedCount}`).toHaveLength(expectedCount)
+      expect(result.ok, `${quality}:${rollSeed}`).toBe(true)
+      expect(instance.affixes, `${quality}:${rollSeed}`).toHaveLength(3)
     }
-
-    const boundaryCtx = washSetup()
-    const boundaryInstance = equippedWithAffixes(boundaryCtx, {
-      instanceId: `wash-count-${quality}-max-boundary`,
-      quality,
-    })
-    const boundaryRolls = [0.999_999]
-
-    if (quality === 'tien') {
-      boundaryRolls.push(0.15)
-    }
-
-    expect(
-      wash(boundaryCtx, boundaryInstance.instanceId, () => boundaryRolls.shift() ?? 0).ok,
-    ).toBe(true)
-    expect(boundaryInstance.affixes).toHaveLength(maxLines)
   })
 
   it.each([
-    ['hoang', 0.75, 0, 1],
-    ['hoang', 0.75, 0.999_999, 1],
-    ['huyen', 0.5, 50 / 85 - 0.000_001, 1],
-    ['huyen', 0.5, 50 / 85, 2],
-    ['huyen', 0.5, 0.999_999, 2],
-    ['dia', 0.375, 0.35 - 0.000_001, 1],
-    ['dia', 0.375, 0.35, 2],
-    ['dia', 0.375, 0.7 - 0.000_001, 2],
-    ['dia', 0.375, 0.7, 3],
-    ['dia', 0.375, 0.999_999, 3],
-    ['thien', 0.3, 0.2 - 0.000_001, 1],
-    ['thien', 0.3, 0.2, 2],
-    ['thien', 0.3, 0.6 - 0.000_001, 2],
-    ['thien', 0.3, 0.6, 3],
-    ['thien', 0.3, 0.999_999, 3],
-    ['tien', 0.25, 0.1 - 0.000_001, 1],
-    ['tien', 0.25, 0.1, 2],
-    ['tien', 0.25, 0.45 - 0.000_001, 2],
-    ['tien', 0.25, 0.45, 3],
-    ['tien', 0.25, 0.999_999, 3],
+    ['hoang', 0, 1],
+    ['hoang', 0.999_999, 1],
+    ['huyen', 50 / 85 - 0.000_001, 1],
+    ['huyen', 50 / 85, 2],
+    ['huyen', 0.999_999, 2],
+    ['dia', 0.35 - 0.000_001, 1],
+    ['dia', 0.35, 2],
+    ['dia', 0.7 - 0.000_001, 2],
+    ['dia', 0.7, 3],
+    ['dia', 0.999_999, 3],
+    ['thien', 0.2 - 0.000_001, 1],
+    ['thien', 0.2, 2],
+    ['thien', 0.6 - 0.000_001, 2],
+    ['thien', 0.6, 3],
+    ['thien', 0.999_999, 3],
+    ['tien', 0.1 - 0.000_001, 1],
+    ['tien', 0.1, 2],
+    ['tien', 0.45 - 0.000_001, 2],
+    ['tien', 0.45, 3],
+    ['tien', 0.999_999, 3],
   ] as const)(
-    '%s: line-count roll %s and tier roll %s selects tier %s at cumulative boundaries',
-    (quality, lineCountRoll, tierRoll, expectedTier) => {
+    '%s: tier roll %s selects tier %s at cumulative boundaries',
+    (quality, tierRoll, expectedTier) => {
       const ctx = washSetup()
+      // 1-line item -> exactly 1 rerolled line (count preserved).
       const instance = equippedWithAffixes(ctx, {
         instanceId: `wash-tier-${quality}-${tierRoll}`,
         quality,
+        affixes: [{ affixId: affixes[0]!.id, tier: 1, value: 5 }],
       })
-      const rolls: number[] = [lineCountRoll]
+      const rolls: number[] = []
 
       if (quality === 'tien') {
-        rolls.push(0.15)
+        rolls.push(0.15) // exalted chance: 0.15 is NOT < 0.15 -> miss
       }
 
       rolls.push(0, tierRoll, 0)
@@ -382,9 +367,9 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
       const instance = equippedWithAffixes(ctx, {
         instanceId: `wash-pool-slot-${quality}`,
         quality,
+        affixes: [{ affixId: affixes[0]!.id, tier: 1, value: 5 }],
       })
-      const maxLines = quality === 'hoang' ? 1 : quality === 'huyen' ? 2 : quality === 'dia' ? 3 : quality === 'thien' ? 4 : 5
-      const rolls = [1.25 / (maxLines + 1)]
+      const rolls: number[] = []
 
       if (quality === 'tien') {
         rolls.push(0.15)
@@ -401,13 +386,21 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     },
   )
 
-  it('count 0 là kết quả Tẩy Luyện hợp lệ', () => {
+  // Owner ruling 2026-10-09: item 0 dong khong co gi de reroll - bi
+  // chan o validation (reason no_affixes, khop Tinh Luyen), khong tru
+  // luot Ren lan nguyen lieu.
+  it('item 0 dòng phụ → no_affixes, không trừ gì', () => {
     const ctx = washSetup()
-    const instance = equippedWithAffixes(ctx, { quality: 'huyen' })
+    const instance = equippedWithAffixes(ctx, { quality: 'huyen', affixes: [] })
+    const usesBefore = instance.forgeUsesRemaining
+    const essenceBefore = ctx.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)
+    const stonesBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
 
-    expect(wash(ctx, instance.instanceId, () => 0).ok).toBe(true)
+    expect(wash(ctx, instance.instanceId, () => 0)).toEqual({ ok: false, reason: 'no_affixes' })
     expect(instance.affixes).toEqual([])
-    expect(instance.forgeUsesRemaining).toBe(instance.forgeUsesTotal - 1)
+    expect(instance.forgeUsesRemaining).toBe(usesBefore)
+    expect(ctx.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(essenceBefore)
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stonesBefore)
   })
 
   it('preview trừ đúng một lượt Rèn; commit không trừ lần hai', () => {
@@ -442,32 +435,36 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     [0.149_999, true],
     [0.15, false],
   ] as const)(
-    'Tiên Chất Exalted boundary %s produces bonus=%s',
+    'Tiên Chất Exalted boundary %s: bonus chiếm slot dòng cuối, count bảo toàn =%s',
     (exaltedRoll, expectedBonus) => {
       const ctx = washSetup()
       const instance = equippedWithAffixes(ctx, {
         instanceId: `wash-exalted-boundary-${exaltedRoll}`,
         quality: 'tien',
       })
-      const rolls = [0.99, exaltedRoll]
+      const rolls = [exaltedRoll]
 
       expect(wash(ctx, instance.instanceId, () => rolls.shift() ?? 0).ok).toBe(true)
-      expect(instance.affixes).toHaveLength(ITEM_QUALITY_SUBSTATS_RANGE.tien.max + Number(expectedBonus))
+      // Count bao toan: exalted khong cong them dong ma chiem slot cuoi.
+      expect(instance.affixes).toHaveLength(3)
 
       const exalted = instance.affixes.filter((rolled) => {
         const definition = ctx.affixRegistry.get(rolled.affixId)
         return definition.pool === 'supreme' && rolled.tier === 5
       })
       expect(exalted).toHaveLength(Number(expectedBonus))
+      if (expectedBonus) {
+        expect(instance.affixes[2]!.tier).toBe(5)
+      }
     },
   )
 
   it.each([
-    ['hoang', 1],
-    ['huyen', 2],
-    ['dia', 3],
-    ['thien', 4],
-  ] as const)('%s never receives an Exalted bonus', (quality, maxLines) => {
+    ['hoang'],
+    ['huyen'],
+    ['dia'],
+    ['thien'],
+  ] as const)('%s never receives an Exalted bonus', (quality) => {
     const ctx = washSetup()
     const instance = equippedWithAffixes(ctx, {
       instanceId: `wash-no-exalted-${quality}`,
@@ -476,7 +473,7 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     const rolls = [0.99, 0]
 
     expect(wash(ctx, instance.instanceId, () => rolls.shift() ?? 0).ok).toBe(true)
-    expect(instance.affixes).toHaveLength(maxLines)
+    expect(instance.affixes).toHaveLength(3)
     expect(instance.affixes.some((rolled) => rolled.tier === 5)).toBe(false)
   })
 

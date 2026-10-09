@@ -105,7 +105,10 @@ function canWash(): boolean {
   if (!row) {
     return false
   }
+  // Owner ruling 2026-10-09 - wash reroll tung dong hien co, item khong
+  // co dong phu nao thi khong co gi de roll (domain tra no_affixes).
   return (
+    row.affixCount > 0 &&
     ren !== null &&
     ren.points > 0 &&
     washEssenceOwned.value >= washCost.value.tinhHoa &&
