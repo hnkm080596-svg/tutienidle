@@ -41,7 +41,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
       <header class="body-heading" style="width:auto"><div class="body-heading__top"><div class="body-heading__col"><h1 style="width:auto;text-align:left">{{ t('body.title') }}</h1><img :src="divider" alt=""></div></div><p class="body-subtitle">{{ model.identity }}</p></header>
       <div class="body-layout">
         <nav class="body-family body-chapters" :aria-label="t('body.chapters')">
-          <img class="family-spine" :src="bodyArt('meridian-tube-lit')" alt="">
           <EquipmentArtButton
             v-for="chapter in model.chapters"
             :key="chapter.id"
@@ -80,7 +79,6 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .body-subtitle { margin:2px 0 4px; font-size:13px; color:#715627; }
 .body-layout { height:calc(100% - 106px); display:grid; grid-template-columns:20% 50% 30%; gap:8px; min-height:0; }
 .body-family { position:relative; display:flex; flex-direction:column; justify-content:space-evenly; padding:4px 4px 4px 20px; isolation:isolate; }
-.family-spine { position:absolute; left:6px; top:50%; width:280px; height:13px; object-fit:fill; transform:translate(-50%,-50%) rotate(90deg); z-index:-1; }
 .family-pill { height:60px; padding-left:54px; font-size:13px; white-space:nowrap; text-align:left; }
 /* Medallion hangs off the capsule's left tip like the Codex preview
    (owner 2026-10-09: icon inside the pill + text starting inside its
