@@ -163,7 +163,10 @@ const galaxyPieces = computed(() =>
 /* Luyen Bi glow (owner ruling 2026-10-09): a soft black aura hugging the
    figure - a blurred black copy of the silhouette behind it. */
 .body-glow { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; z-index:-1;
-  filter:brightness(0) blur(7px); opacity:.55; transform:scale(1.015); }
+  filter:brightness(0) blur(7px); opacity:.18; transform:scale(1.015);
+  animation:body-glow-pulse 4.6s ease-in-out infinite; }
+@keyframes body-glow-pulse { 0%,100% { opacity:.18; } 50% { opacity:.6; } }
+@media (prefers-reduced-motion: reduce) { .body-glow { animation:none; opacity:.4; } }
 .body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none; }
 .body-muscle-layer .left { left:27%; transform:rotate(26deg); }
 .body-muscle-layer .right { right:27%; transform:rotate(-26deg); }
