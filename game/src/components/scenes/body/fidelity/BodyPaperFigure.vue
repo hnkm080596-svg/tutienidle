@@ -152,7 +152,8 @@ function onNodePointerUp() {
 const meridianNodes = computed(() =>
   props.model.units.map((unit, index) => {
     const point = nodePosition(index)
-    return { unit, index, x: point[0], y: point[1], lit: unitLit(unit.id) || unit.state === 'current' }
+    // All dots lit for layout review (owner request 2026-10-09, temporary).
+    return { unit, index, x: point[0], y: point[1], lit: true }
   }),
 )
 // All eight meridian dots render as a column (owner ruling 2026-10-09) -
@@ -338,7 +339,7 @@ const galaxyPieces = computed(() =>
 .body-meridian-node { position:absolute; width:18%; height:14%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
 .body-meridian-node:active { cursor:grabbing; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.8); }
-.body-meridian-node.locked { opacity:.55; }
+/* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
 .body-meridian-line { position:absolute; height:12px; transform-origin:left center; z-index:2; pointer-events:none; }
