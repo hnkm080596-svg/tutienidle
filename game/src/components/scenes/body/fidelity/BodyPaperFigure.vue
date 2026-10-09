@@ -117,15 +117,6 @@ const MERIDIAN_POINTS = [
   [50, 40],
   [50, 7],
 ] as const
-const MERIDIAN_EDGES: readonly (readonly [number, number])[] = [
-  [0, 6], // dantian -> chest
-  [0, 1], // dantian -> belt
-  [6, 3], // chest -> throat
-  [3, 2], // throat -> inner eye
-  [2, 5], // inner eye -> side of head
-  [3, 4], // throat -> temple
-  [4, 7], // temple -> crown
-]
 const meridianNodes = computed(() =>
   props.model.units.map((unit, index) => {
     const point = MERIDIAN_POINTS[index] ?? [50, 50]
@@ -137,22 +128,7 @@ const meridianNodes = computed(() =>
 const visibleMeridianNodes = computed(() =>
   meridianNodes.value.filter((node) => node.unit.state !== 'locked'),
 )
-const visibleMeridianEdges = computed(() => {
-  const visible = new Set(visibleMeridianNodes.value.map((node) => node.index))
-  return MERIDIAN_EDGES.filter(([a, b]) => visible.has(a) && visible.has(b))
-})
-function meridianLineStyle(a: number, b: number) {
-  const p = MERIDIAN_POINTS[a]!
-  const q = MERIDIAN_POINTS[b]!
-  const dx = (q[0] - p[0]) * 5
-  const dy = (q[1] - p[1]) * 5.329
-  return {
-    left: `${p[0]}%`,
-    top: `${p[1]}%`,
-    width: `${Math.hypot(dx, dy) / 5}%`,
-    transform: `translateY(-50%) rotate(${Math.atan2(dy, dx)}rad)`,
-  }
-}
+
 
 // Chu Thien: galaxy pieces lit by the chapter progress fraction; lit pieces
 // orbit. Progress arrives as the completed/total percentage on the model.
@@ -212,11 +188,6 @@ const galaxyPieces = computed(() =>
         </div>
       </template>
       <template v-else-if="model.chapter === 'meridian'">
-        <div v-for="([a, b], i) in visibleMeridianEdges" :key="`line-${i}`"
-          class="body-meridian-line" :class="{ energized: meridianNodes[b]?.lit }" :style="meridianLineStyle(a, b)">
-          <img :src="bodyArt(`meridian-tube-${meridianNodes[b]?.lit ? 'lit' : 'unlit'}`)" alt="">
-          <span v-if="meridianNodes[b]?.lit" class="meridian-flow"></span>
-        </div>
         <button v-for="node in visibleMeridianNodes" :key="node.unit.id"
           class="body-meridian-node body-orb" :class="[node.unit.state, { selected: selected === node.unit.id }]"
           :style="{ left: `${node.x}%`, top: `${node.y}%` }"
