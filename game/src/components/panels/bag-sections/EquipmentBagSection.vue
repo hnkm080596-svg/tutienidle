@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
 import BagChipSelect from './BagChipSelect.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { useUiStore, type EquipmentSortMode } from '@/stores/ui'
+import { useUiStore, type BagSortStateMap, type EquipmentSortMode } from '@/stores/ui'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { compareNumber, compareText, stableSort, withDirection } from '@/composables/useBagSort'
 import type { BagCell } from './BagCell'
@@ -38,7 +38,43 @@ const { stateVersion } = useStateVersion()
 
 const { equip } = useEquipmentActions()
 
+// 'pick' mode (Minh ruling 2026-10-09): the Hoa Luyen card embeds the
+// whole bag - cell clicks emit 'pick' instead of equipping, pickedIds
+// mark selected cells, inertIds dim cells that cannot be picked. The
+// 'filtered' emit reports the visible id set (after the Loai-item
+// dropdown) so the host scopes bulk actions to what is on screen.
+const props = withDefaults(
+  defineProps<{
+    mode?: 'bag' | 'pick'
+    pickedIds?: string[]
+    inertIds?: string[]
+    // Sort bucket the grid reads/writes - 'dissolve' keeps the embedded
+    // pick grid's sort independent of the real equipment tab's. Typed to
+    // the equipment-family buckets only: this grid sorts equipment, and
+    // a material/pill key would break the comparator index below.
+    sortKey?: 'equipment' | 'dissolve'
+    // Owner ruling 2026-10-09: the n/100 capacity label is a bag-view
+    // concern - pick-mode hosts (Hoa Luyen) hide it.
+    showCount?: boolean
+  }>(),
+  { mode: 'bag', pickedIds: () => [], inertIds: () => [], sortKey: 'equipment', showCount: true },
+)
+
+const emit = defineEmits<{
+  pick: [instanceId: string]
+  filtered: [instanceIds: string[]]
+}>()
+
+const pickedSet = computed(() => new Set(props.pickedIds))
+
+const inertSet = computed(() => new Set(props.inertIds))
+
 function handleClick(instanceId: string) {
+  if (props.mode === 'pick') {
+    if (!inertSet.value.has(instanceId)) emit('pick', instanceId)
+    return
+  }
+
   equip(instanceId)
 }
 
@@ -190,6 +226,14 @@ const filtered = computed(() =>
     (entry) => typeFilter.value === 'all' || entry.instance.slot === typeFilter.value,
   ),
 )
+
+// Report the visible id set whenever the Loai-item filter or the bag
+// contents change - the pick host scopes select-all to this view.
+watch(
+  filtered,
+  (list) => emit('filtered', list.map((entry) => entry.instance.instanceId)),
+  { immediate: true },
+)
 const visibleCount = computed(() => filtered.value.length)
 
 // Design capacity label (preview "18/100") - the domain has no real bag
@@ -224,18 +268,27 @@ const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: E
 // select maps onto the existing equipment sort store ('default' vs
 // 'quality'); direction stays whatever the store holds.
 const cells = computed<BagCell[]>(() => {
-  const sortState = ui.bagSorts.equipment
+  const sortState = ui.bagSorts[props.sortKey]
 
-  if (sortState.mode === 'default') {
-    return filtered.value.map((entry) => entry.cell)
-  }
+  const base =
+    sortState.mode === 'default'
+      ? filtered.value
+      : stableSort(
+          filtered.value,
+          withDirection(EQUIPMENT_COMPARATORS[sortState.mode], sortState.direction),
+        )
 
-  const sorted = stableSort(
-    filtered.value,
-    withDirection(EQUIPMENT_COMPARATORS[sortState.mode], sortState.direction),
-  )
+  const mapped = base.map((entry) => entry.cell)
 
-  return sorted.map((entry) => entry.cell)
+  if (props.mode !== 'pick') return mapped
+
+  return mapped.map((cell) => ({
+    ...cell,
+    state: {
+      ...(cell.state ?? {}),
+      interaction: pickedSet.value.has(cell.key) ? ('selected' as const) : ('idle' as const),
+    },
+  }))
 })
 
 // Sap Xep select: every comparator in EQUIPMENT_COMPARATORS is wired -
@@ -250,15 +303,15 @@ const SORT_MODES: readonly EquipmentSortMode[] = [
   'name',
   'forge',
 ]
-const sortMode = computed<EquipmentSortMode>(() => ui.bagSorts.equipment.mode)
+const sortMode = computed<EquipmentSortMode>(() => ui.bagSorts[props.sortKey].mode as EquipmentSortMode)
 
 // Owner ruling: direction lives inside the sort dropdown - first pick
 // of a mode is asc, re-picking the same mode flips it (no +/- button).
 function onSortPick(mode: string) {
-  if (mode === ui.bagSorts.equipment.mode) {
-    ui.toggleBagSortDirection('equipment')
+  if (mode === ui.bagSorts[props.sortKey].mode) {
+    ui.toggleBagSortDirection(props.sortKey)
   } else {
-    ui.setBagSortMode('equipment', mode as EquipmentSortMode)
+    ui.setBagSortMode(props.sortKey, mode as EquipmentSortMode)
   }
 }
 
@@ -267,8 +320,8 @@ const SORT_OPTIONS = computed<Array<{ value: EquipmentSortMode; label: string }>
     value: m,
     label:
       t(`equipment.sortModes.${m}`) +
-      (m === ui.bagSorts.equipment.mode && m !== 'default'
-        ? ui.bagSorts.equipment.direction === 'asc'
+      (m === ui.bagSorts[props.sortKey].mode && m !== 'default'
+        ? ui.bagSorts[props.sortKey].direction === 'asc'
           ? ' ↑'
           : ' ↓'
         : ''),
@@ -278,15 +331,19 @@ const SORT_OPTIONS = computed<Array<{ value: EquipmentSortMode; label: string }>
 // Owner ruling: the bag paginates at one full grid (7 cols x 5 rows = 35
 // cells) instead of scrolling; the pager sits mid-toolbar between the
 // dropdowns and the capacity count. Each page still pads to 35 cells.
-const EQUIPMENT_BAG_PAGE_SIZE = EQUIPMENT_BAG_MIN_CELLS
+// Pick mode (owner ruling 2026-10-09): the Hoa Luyen grid drops one
+// row - 8x4=32 cells per page.
 const page = ref(0)
-const pageCount = computed(() => Math.max(1, Math.ceil(cells.value.length / EQUIPMENT_BAG_PAGE_SIZE)))
+const pageSize = computed(() =>
+  props.mode === 'pick' ? EQUIPMENT_BAG_COLUMNS * 4 : EQUIPMENT_BAG_MIN_CELLS,
+)
+const pageCount = computed(() => Math.max(1, Math.ceil(cells.value.length / pageSize.value)))
 const pageIndex = computed(() => Math.min(page.value, pageCount.value - 1))
 
 const gridCells = computed<Array<BagCell | undefined>>(() => {
-  const start = pageIndex.value * EQUIPMENT_BAG_PAGE_SIZE
-  const padded = cells.value.slice(start, start + EQUIPMENT_BAG_PAGE_SIZE)
-  while (padded.length < EQUIPMENT_BAG_PAGE_SIZE) padded.push(undefined as unknown as BagCell)
+  const start = pageIndex.value * pageSize.value
+  const padded = cells.value.slice(start, start + pageSize.value)
+  while (padded.length < pageSize.value) padded.push(undefined as unknown as BagCell)
   return padded
 })
 
@@ -311,6 +368,8 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
          The footer Pham-Chat/Sap-Xep selects are gone (their logic
          moved here); capacity text hidden pending a real bag cap. -->
     <div class="bag-section__toolbar">
+      <!-- Pick-mode hosts may inject extra controls at the row head. -->
+      <slot name="toolbar-start" />
       <!-- Owner ruling: custom chip-art dropdowns (BagChipSelect) - the
            equipment filter chip art + bag card nine-slice list backdrop;
            native <select> could not wear either. -->
@@ -326,7 +385,8 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
         @update:model-value="onSortPick"
       />
       <!-- Owner ruling: pager sits between the dropdowns and the capacity
-           count; hidden until the bag overflows one page. -->
+           count; it hides until the bag overflows one page (same in pick
+           mode - owner ruling 2026-10-09). -->
       <div v-if="pageCount > 1" class="bag-section__pager">
         <button
           type="button"
@@ -346,7 +406,7 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
       </div>
       <!-- Owner ruling: capacity count returns beside the dropdowns,
            pinned to the bag's right edge (no real cap yet - display only). -->
-      <span class="bag-section__count-label">
+      <span v-if="showCount" class="bag-section__count-label">
         {{ visibleCount }}/{{ BAG_DISPLAY_CAPACITY }}
       </span>
     </div>
@@ -355,7 +415,13 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
       <SlotView
         v-for="(cell, index) in gridCells"
         :key="cell?.key ?? index"
-        class="bag-section__slot"
+        :class="[
+          'bag-section__slot',
+          {
+            'bag-section__slot--picked': cell && pickedSet.has(cell.key),
+            'bag-section__slot--inert': cell && inertSet.has(cell.key),
+          },
+        ]"
         variant="equipment"
         :item="cell ?? null"
         :label="cell?.label"
@@ -415,6 +481,9 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
   border-radius: 50%;
   background: rgba(232, 217, 174, 0.18);
   color: #ffe9ae;
+  /* Owner ruling 2026-10-09: same face as the scene op-tab buttons so
+     every function control in Trang Bi reads alike. */
+  font-family: var(--pc-font-body, var(--font-display, Georgia, serif));
   font-size: 18px;
   font-weight: 700;
   line-height: 1;
@@ -431,6 +500,7 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
 .bag-section__page-label {
   min-width: 44px;
   text-align: center;
+  font-family: var(--pc-font-body, var(--font-display, Georgia, serif));
   font-size: 15px;
   font-weight: 600;
   color: #e8d9ae;
@@ -438,6 +508,7 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
 
 .bag-section__count-label {
   margin-left: auto;
+  font-family: var(--pc-font-body, var(--font-display, Georgia, serif));
   font-size: 15px;
   font-weight: 600;
   color: #e8d9ae;
@@ -449,7 +520,7 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
   border: 1px solid #8e7440;
   background: #23251e;
   color: #eedfbf;
-  font-family: var(--font-body);
+  font-family: var(--pc-font-body, var(--font-display, Georgia, serif));
   font-weight: 600;
   cursor: pointer;
 }
@@ -490,6 +561,7 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
   align-items: center;
   gap: 6px;
 }
+
 .bag-section__chip-select {
   position: relative;
   isolation: isolate;
@@ -541,6 +613,32 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
 .bag-section__slot {
   width: 100%;
   aspect-ratio: 1 / 1;
+}
+
+/* pick mode (Hóa Luyện): picked cells carry the same ✓ badge the old
+   dissolve grid drew; inert cells dim and keep the pointer quiet. */
+.bag-section__slot--picked {
+  position: relative;
+}
+.bag-section__slot--picked::after {
+  content: '✓';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--jade, #5b8a6a);
+  color: #f3e4c4;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px #151713;
+}
+.bag-section__slot--inert {
+  opacity: 0.45;
 }
 
 /* Preview footer: two labeled selects on the card's bottom edge. */

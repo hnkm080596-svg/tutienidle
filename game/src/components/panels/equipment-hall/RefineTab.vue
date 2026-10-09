@@ -12,6 +12,7 @@ import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
+import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import SlotView from '@/components/common/SlotView.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
@@ -227,6 +228,16 @@ function materialIcon(materialId: string): string | undefined {
   return art ? resolveAssetUrl(art) : undefined
 }
 
+const buildMaterialTooltip = createMaterialTooltipBuilder(t)
+
+// Owner ruling 2026-10-09: names leave the row and move into the hover
+// tooltip - the row shows icon + count only.
+function materialTooltip(materialId: string, owned: number) {
+  return gameManager.materialRegistry.has(materialId)
+    ? buildMaterialTooltip(gameManager.materialRegistry.get(materialId), { owned })
+    : undefined
+}
+
 /** Each affix row: label + current value on the left, refine result on
  *  the right (kept / pending value / not-rolled-yet), lock toggle on
  *  the row's left edge. */
@@ -367,6 +378,7 @@ const refineMaterials = computed(() => [
         <div
           v-for="material in refineMaterials"
           :key="material.id"
+          v-tooltip="materialTooltip(material.id, material.owned)"
           class="equipment-material"
           :class="{ 'is-missing': material.owned < material.amount }"
         >
@@ -374,12 +386,11 @@ const refineMaterials = computed(() => [
             <SlotView variant="equipment" static :item="null" :icon="material.icon" :label="material.label" />
           </div>
           <div>
-            <span>{{ material.label }}</span
-            ><b>{{ material.owned }}/{{ material.amount }}</b>
+            <b>{{ material.owned }}/{{ material.amount }}</b>
           </div>
         </div>
       </div>
-      <div class="equipment-forge-actions">
+      <div class="equipment-forge-actions" :class="{ 'is-pending': pendingRefineValues }">
         <EquipmentArtButton filter-art :gold="canRefine()" :disabled="!canRefine()" @click="doRefinePreview">
           {{ t('panels.equipmentHall.buttons.refinePreview') }}
         </EquipmentArtButton>
@@ -443,15 +454,8 @@ const refineMaterials = computed(() => [
   min-height: 120px;
   margin-top: 6px;
   padding: 4px 10px;
-  border: 1px solid #9b7d4055;
-  border-radius: 4px;
-  background: #f4e9cf0d;
   overflow-y: auto;
   scrollbar-width: none;
-  resize: both;
-  /* DEBUG outlines while aligning (remove when layout is settled). */
-  outline: 2px dashed #37e6f0cc;
-  outline-offset: 1px;
 }
 .forge-compare::-webkit-scrollbar {
   display: none;
@@ -493,6 +497,9 @@ const refineMaterials = computed(() => [
   background: #d97b6ccc;
   box-shadow: 0 0 6px #d97b6c80;
 }
+/* Stat text unified with the rest of the panel (owner ruling
+   2026-10-09): PC Paper Serif at weight 700 like every other control
+   and label - weight 400 read as a different typeface. */
 .forge-compare__cell {
   display: flex;
   justify-content: space-between;
@@ -501,14 +508,11 @@ const refineMaterials = computed(() => [
   padding: 9px 2px;
   border-bottom: 1px solid #96764440;
   font-size: 17px;
+  font-weight: 700;
   min-height: 0;
-  /* DEBUG (owner asked for outlines while aligning the 5-row card). */
-  outline: 1px solid #ff6fb366;
 }
 .forge-compare__cell--empty {
   visibility: hidden;
-  /* DEBUG: keep the empty slot's outline visible while aligning. */
-  visibility: visible;
 }
 .forge-compare__cell--next {
   justify-content: center;
@@ -519,7 +523,7 @@ const refineMaterials = computed(() => [
   flex: 1;
 }
 .forge-compare__value {
-  font-weight: 600;
+  font-weight: 700;
   color: #ebce84;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -557,37 +561,12 @@ const refineMaterials = computed(() => [
   gap: 28px;
   flex: none;
   min-height: 80px;
-  /* DEBUG */
-  outline: 2px dashed #8effa0aa;
 }
 .equipment-material {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
-  /* DEBUG */
-  outline: 1px solid #ffbf47aa;
-}
-.equipment-material > div:last-child {
-  /* DEBUG */
-  outline: 1px solid #37e6f0aa;
-}
-/* Material name stays on ONE line in both columns - a wrapped name
-   pushed the count into the middle and looked asymmetric (owner
-   callout 2026-10-08). */
-.equipment-material > div:last-child > span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 16px;
-}
-.equipment-forge-actions {
-  /* DEBUG */
-  outline: 2px dashed #37e6f0aa;
-}
-.equipment-forge-actions :deep(button) {
-  /* DEBUG */
-  outline: 1px solid #ffbf47aa;
 }
 .equipment-material-icon {
   width: 65px;
@@ -602,7 +581,7 @@ const refineMaterials = computed(() => [
 .equipment-material > div:last-child {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   gap: 4px;
   align-self: stretch;
   font-size: 18px;
@@ -625,9 +604,16 @@ const refineMaterials = computed(() => [
   gap: 18px;
   flex: none;
 }
+/* Submit pill = Cường Hóa size (owner ruling 2026-10-09: 300px).
+   While a roll is pending the row carries 3 pills (Tinh Luyện / Giữ
+   / Bỏ) - they shrink to fit the ~580px card. */
 .equipment-forge-actions > button {
-  width: 220px;
+  width: 300px;
   font-size: 24px;
+}
+.equipment-forge-actions.is-pending > button {
+  width: 170px;
+  font-size: 18px;
 }
 .forge-empty {
   flex: 1;

@@ -92,6 +92,10 @@ useDialogFocus(panelRef, computed(() => props.open), {
 
           <h3 :id="titleId" class="confirm-modal__title" :class="{ 'is-danger': danger }">{{ title }}</h3>
           <p :id="messageId" class="confirm-modal__message">{{ message }}</p>
+          <!-- Optional rich detail block (item/material lists, warnings)
+               rendered between the message and the actions; consumers
+               without slot content render exactly as before. -->
+          <div v-if="$slots.default" class="confirm-modal__detail"><slot /></div>
 
           <div class="confirm-modal__actions">
             <GameButton class="ghost-on-paper" variant="ghost" :sound="false" @click="onCancel">{{ cancelLabel }}</GameButton>

@@ -111,6 +111,10 @@ export interface BagSortStateMap {
   material: BagSortState<MaterialSortMode>
 
   pill: BagSortState<PillSortMode>
+
+  // Minh ruling 2026-10-09: the Hoa Luyen card embeds the equipment bag
+  // but sorts independently - the two surfaces must not share state.
+  dissolve: BagSortState<EquipmentSortMode>
 }
 
 export const useUiStore = defineStore('ui', {
@@ -144,6 +148,7 @@ export const useUiStore = defineStore('ui', {
       equipment: { mode: 'default', direction: 'asc' },
       material: { mode: 'default', direction: 'asc' },
       pill: { mode: 'default', direction: 'asc' },
+      dissolve: { mode: 'default', direction: 'asc' },
     } as BagSortStateMap,
 
     // Dong Phu quick nav - command wheel entries mo cac overlay DOC
@@ -301,14 +306,14 @@ export const useUiStore = defineStore('ui', {
       sort.direction = 'asc'
     },
 
-    toggleBagSortDirection(tab: BagTab) {
+    toggleBagSortDirection(tab: keyof BagSortStateMap) {
       const sort = this.bagSorts[tab] as BagSortState
 
       sort.direction = sort.direction === 'asc' ? 'desc' : 'asc'
     },
 
     // Action "Mac dinh" - tra lai original order.
-    resetBagSort(tab: BagTab) {
+    resetBagSort(tab: keyof BagSortStateMap) {
       const sort = this.bagSorts[tab] as BagSortState
 
       sort.mode = 'default'

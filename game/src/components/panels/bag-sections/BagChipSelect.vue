@@ -154,9 +154,11 @@ function onListKeydown(e: KeyboardEvent) {
   border: 0;
   background: transparent;
   color: #f2e3c2;
-  font-family: var(--font-body);
+  /* Owner ruling 2026-10-09: same face/weight as the scene op-tab
+     buttons so every function control in Trang Bi reads alike. */
+  font-family: var(--pc-font-body, var(--font-display, Georgia, serif));
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
   cursor: pointer;
   padding: 0 16px;
@@ -205,9 +207,9 @@ function onListKeydown(e: KeyboardEvent) {
 
 .chip-select__option {
   padding: 7px 12px;
-  font-family: var(--font-body);
+  font-family: var(--pc-font-body, var(--font-display, Georgia, serif));
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: #d8c49a;
   cursor: pointer;
   white-space: nowrap;

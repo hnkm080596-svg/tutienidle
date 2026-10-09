@@ -3,13 +3,12 @@
 // from EquipmentHallPanel.test.ts. Fully self-contained (own multi-select,
 // no HALL_SELECTION_KEY needed).
 //
-// The old "ca hai filter bridge doc truc quality da hop nhat" test
-// documented a KNOWN TEMPORARY bridge (its own comment: "Task 19 se hop
-// nhat UI/filter contract") - 3 dropdowns where 2 secretly read the same
-// ITEM_QUALITY-aliased axis. Task 19 replaces it with the real 2-dropdown
-// contract (grade = ProfessionGrade axis, Chat = merged ITEM_QUALITY
-// dropdown), so this file replaces that test with coverage of the new
-// contract rather than moving it verbatim.
+// Filter contract v2 (owner ruling 2026-10-09): the card's own
+// grade/quality selects are gone - the embedded bag's Loai-item
+// dropdown is the only filter, reported back via the 'filtered' emit
+// so Chon Tat Ca scopes to the visible set. The old
+// grade/quality-select tests are replaced by coverage of that
+// visible-set contract.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -24,7 +23,6 @@ import { i18n } from '@/i18n'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
 import { ITEM_QUALITY_FORGE_USES } from '@/core/equipment/ItemQualityBalance'
-import type { ProfessionGrade } from '@/core/profession/ProfessionGrade'
 
 function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInstance {
   return makeInstance({
@@ -72,18 +70,6 @@ function equipmentInstanceWithQuality(
   return instance
 }
 
-/** Instance voi grade (ProfessionGrade) tuy y - dung test dropdown Pham. */
-function equipmentInstanceWithProfessionGrade(
-  instanceId: string,
-  grade: ProfessionGrade,
-): EquipmentInstance {
-  const instance = equipmentInstance(instanceId, false)
-
-  instance.grade = grade
-
-  return instance
-}
-
 function mountTab(prepare?: (manager: GameManager) => void) {
   const container = document.createElement('div')
   const pinia = createPinia()
@@ -105,7 +91,16 @@ function mountTab(prepare?: (manager: GameManager) => void) {
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
 
-  return { container, manager, unmount: () => app.unmount() }
+  return { container, manager, version, unmount: () => app.unmount() }
+}
+
+// Teleported modals leave through a CSS transition - the DOM removal
+// lands whenever the transition resolves, so assert it is GONE with a
+// retry window instead of guessing a wait time.
+function expectModalGone(modal: () => Element | null) {
+  return vi.waitFor(() => {
+    expect(modal()).toBeNull()
+  })
 }
 
 // jsdom khong co ResizeObserver - usePanelPagination tao observer khi
@@ -140,8 +135,9 @@ describe('DissolveTab — Hóa Luyện', () => {
 
     // Dissolve candidates render without throw - a foreign item shows
     // its raw itemId + Pham suffix (accessibleLabel spec section 5b:
-    // "{name}, {grade}").
-    const dissolveSlots = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
+    // "{name}, {grade}"). The card embeds the whole equipment bag, so
+    // count FILLED cells only (the rest are padded empties).
+    const dissolveSlots = mounted.container.querySelectorAll('.bag-section__slot.slot-view--filled')
 
     expect(dissolveSlots.length).toBeGreaterThan(0)
 
@@ -154,84 +150,84 @@ describe('DissolveTab — Hóa Luyện', () => {
     mounted.unmount()
   })
 
-  it('dropdown Phẩm liệt kê đủ 10 Cửu Phẩm (Task 19: đổi trục realm → ProfessionGrade)', () => {
-    const mounted = mountTab()
-
-    const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
-      '.dissolve-filters .dissolve-filters__field:nth-of-type(1) select',
-    )!
-
-    expect(gradeSelect.options.length).toBe(11) // 10 pham + "Moi pham"
-
-    mounted.unmount()
-  })
-
-  it('lọc theo Phẩm (grade) và Chất (quality) độc lập, kết hợp thu hẹp đúng giao', async () => {
+  it('lọc Loại item của túi thu hẹp lưới + Chọn tất cả chỉ chọn tập đang hiển thị', async () => {
     const mounted = mountTab((manager) => {
       manager.equipmentBag.remove('in-bag')
-      manager.equipmentBag.add(equipmentInstanceWithProfessionGrade('d1', 'cuu_pham'))
-      manager.equipmentBag.add(equipmentInstanceWithProfessionGrade('d2', 'luc_pham'))
-    })
-
-    const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
-      '.dissolve-filters .dissolve-filters__field:nth-of-type(1) select',
-    )!
-
-    gradeSelect.value = 'luc_pham'
-    gradeSelect.dispatchEvent(new Event('change'))
-    await nextTick()
-
-    let visible = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
-    expect(visible).toHaveLength(1)
-
-    // Reset pham, loc theo Chat thay vao do - 2 fixture deu 'hoang' nen
-    // van khop ca 2; doi 1 fixture sang 'dia' de kiem tra thu hep.
-    gradeSelect.value = 'any'
-    gradeSelect.dispatchEvent(new Event('change'))
-
-    const qualitySelect = mounted.container.querySelector<HTMLSelectElement>(
-      '.dissolve-filters .dissolve-filters__field:nth-of-type(2) select',
-    )!
-
-    mounted.manager.equipmentBag.get('d2')!.quality = 'dia'
-
-    qualitySelect.value = 'dia'
-    qualitySelect.dispatchEvent(new Event('change'))
-    await nextTick()
-
-    visible = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
-    expect(visible).toHaveLength(1)
-
-    // Pham + Chat mau thuan thi khong con ung vien (giao rong).
-    gradeSelect.value = 'cuu_pham'
-    gradeSelect.dispatchEvent(new Event('change'))
-    await nextTick()
-
-    expect(mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')).toHaveLength(0)
-
-    mounted.unmount()
-  })
-
-  it('món KHÔNG khớp phẩm cảnh giới hiện tại (canUseItemGrade) được đánh dấu mờ (hint, KHÔNG bị ẩn)', async () => {
-    // Player mac dinh realmId 'mortal' -> pham nghe 'cuu_pham'. Mon
-    // 'luc_pham' khong khop nhung van phai liet ke (Hoa Luyen khong can
-    // dung duoc mon moi thao tac duoc) - chi la hint truc quan.
-    const mounted = mountTab((manager) => {
-      manager.equipmentBag.remove('in-bag')
-      manager.equipmentBag.add(equipmentInstanceWithProfessionGrade('mismatch', 'luc_pham'))
+      manager.equipmentBag.add(equipmentInstanceWithItemId('d1-kiem', 'base_kiem', false))
+      const bao = equipmentInstanceWithItemId('d2-bao', 'base_bao', false)
+      bao.slot = 'armor'
+      manager.equipmentBag.add(bao)
     })
 
     await nextTick()
 
-    const wrap = mounted.container.querySelector('.dissolve-slot-wrap')
+    // Open the bag's own Loai-item dropdown (first chip select) and
+    // pick the Bao socket filter.
+    const typeChip = mounted.container.querySelector<HTMLElement>('.chip-select__button')!
 
-    expect(wrap).not.toBeNull()
-    expect(wrap!.classList.contains('dissolve-slot-wrap--grade-mismatch')).toBe(true)
+    typeChip.click()
+    await nextTick()
+
+    const baoOption = Array.from(
+      mounted.container.querySelectorAll<HTMLElement>('.chip-select__option'),
+    ).find((el) => el.textContent?.includes('Bào'))!
+
+    expect(baoOption).toBeDefined()
+
+    baoOption.click()
+    await nextTick()
+
+    expect(mounted.container.querySelectorAll('.bag-section__slot.slot-view--filled')).toHaveLength(1)
+
+    // Select-all scopes to the visible set: only the Bao item is picked.
+    const selectAll = Array.from(
+      mounted.container.querySelectorAll<HTMLButtonElement>('.dissolve-filters__bulk'),
+    ).find((b) => b.textContent?.includes('Chọn tất cả'))!
+
+    selectAll.click()
+    await nextTick()
+
+    expect(mounted.container.querySelectorAll('.bag-section__slot--picked')).toHaveLength(1)
 
     mounted.unmount()
   })
 
-  it('confirm đã gài bị hủy khi selection bị clear - chọn lại phải xác nhận 2 bước mới', async () => {
+  it('món KHÓA / GHIM YÊU THÍCH vẫn hiện trong lưới nhưng mờ và không chọn được (Minh ruling: bưng nguyên túi hành trang)', async () => {
+    const mounted = mountTab((manager) => {
+      manager.equipmentBag.remove('in-bag')
+      manager.equipmentBag.add(equipmentInstance('locked-item', false))
+      manager.equipmentBag.add(equipmentInstance('pickable-item', false))
+      manager.equipmentBag.get('locked-item')!.locked = true
+    })
+
+    await nextTick()
+
+    const inert = mounted.container.querySelector('.bag-section__slot--inert')
+
+    expect(inert).not.toBeNull()
+
+    // Clicking the inert cell must not add it to the selection.
+    ;(inert as HTMLElement).click()
+    await nextTick()
+
+    expect(mounted.container.querySelectorAll('.bag-section__slot--picked')).toHaveLength(0)
+
+    // The pickable sibling still toggles normally (filled AND not inert).
+    const target = Array.from(
+      mounted.container.querySelectorAll<HTMLElement>('.bag-section__slot.slot-view--filled'),
+    ).find((el) => !el.classList.contains('bag-section__slot--inert'))
+
+    expect(target).toBeDefined()
+
+    target!.click()
+    await nextTick()
+
+    expect(mounted.container.querySelectorAll('.bag-section__slot--picked')).toHaveLength(1)
+
+    mounted.unmount()
+  })
+
+  it('dialog xác nhận đóng khi selection bị clear - chọn lại phải mở popup mới', async () => {
     const mounted = mountTab((manager) => {
       manager.equipmentBag.remove('in-bag')
       manager.equipmentBag.add(equipmentInstanceWithQuality('q1', 'hoang'))
@@ -239,35 +235,43 @@ describe('DissolveTab — Hóa Luyện', () => {
     })
 
     const primary = () =>
-      mounted.container.querySelector<HTMLButtonElement>('.equipment-forge-actions button')!
+      mounted.container.querySelector<HTMLButtonElement>('.equipment-forge-actions__submit')!
     const bulk = () =>
       Array.from(mounted.container.querySelectorAll<HTMLButtonElement>('.dissolve-filters__bulk'))
     const selectAll = () => bulk().find((b) => b.textContent?.includes('Chọn tất cả'))!
     const clearAll = () => bulk().find((b) => b.textContent?.includes('Bỏ chọn hết'))!
+    const modal = () => document.body.querySelector('.confirm-modal')
+    const modalConfirm = () =>
+      document.body.querySelector<HTMLButtonElement>('.confirm-modal__confirm')!
 
-    // Arm the 2-step confirm on the full selection.
+    // The submit opens the confirm popup (owner ruling 2026-10-09).
     selectAll().click()
     await nextTick()
     primary().click()
     await nextTick()
 
-    expect(primary().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
+    expect(modal()).toBeTruthy()
+    expect(modalConfirm().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
 
-    // Clearing the selection disarms the pending confirm.
+    // Clearing the selection closes the pending dialog.
     clearAll().click()
     await nextTick()
+    await expectModalGone(modal)
+
     selectAll().click()
     await nextTick()
 
-    // The first click on the re-selected set must arm again, not execute.
+    // The first click on the re-selected set opens the dialog again,
+    // it does not execute.
     primary().click()
     await nextTick()
 
     expect(mounted.manager.equipmentBag.get('q1')).toBeDefined()
-    expect(primary().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
+    expect(modal()).toBeTruthy()
 
-    primary().click()
+    modalConfirm().click()
     await nextTick()
+    await expectModalGone(modal)
 
     expect(mounted.manager.equipmentBag.get('q1')).toBeUndefined()
     expect(mounted.manager.equipmentBag.get('q2')).toBeUndefined()
@@ -275,41 +279,44 @@ describe('DissolveTab — Hóa Luyện', () => {
     mounted.unmount()
   })
 
-  it('confirm đã gài bị hủy khi filter prune khỏi selection', async () => {
+  it('dialog xác nhận đóng khi selection bị prune (món rời túi)', async () => {
     const mounted = mountTab((manager) => {
       manager.equipmentBag.remove('in-bag')
-      manager.equipmentBag.add(equipmentInstanceWithProfessionGrade('d1', 'cuu_pham'))
-      manager.equipmentBag.add(equipmentInstanceWithProfessionGrade('d2', 'luc_pham'))
+      manager.equipmentBag.add(equipmentInstance('d1', false))
+      manager.equipmentBag.add(equipmentInstance('d2', false))
     })
 
+    await nextTick()
+
     const primary = () =>
-      mounted.container.querySelector<HTMLButtonElement>('.equipment-forge-actions button')!
-    const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
-      '.dissolve-filters .dissolve-filters__field:nth-of-type(1) select',
-    )!
+      mounted.container.querySelector<HTMLButtonElement>('.equipment-forge-actions__submit')!
     const selectAll = Array.from(
       mounted.container.querySelectorAll<HTMLButtonElement>('.dissolve-filters__bulk'),
     ).find((b) => b.textContent?.includes('Chọn tất cả'))!
+    const modal = () => document.body.querySelector('.confirm-modal')
 
-    // Select both candidates and arm the confirm.
+    // Select both candidates and open the confirm popup.
     selectAll.click()
     await nextTick()
     primary().click()
     await nextTick()
 
-    expect(primary().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
+    expect(modal()).toBeTruthy()
 
-    // Filtering d1 out prunes it from the selection - the armed confirm
-    // must disarm, so the next click arms again instead of executing.
-    gradeSelect.value = 'luc_pham'
-    gradeSelect.dispatchEvent(new Event('change'))
+    // A selection member leaving the bag prunes it - the pending
+    // dialog must close, so the next click re-opens a fresh review
+    // instead of executing.
+    // (bag mutations only surface to computeds through a version bump)
+    mounted.manager.equipmentBag.remove('d1')
+    mounted.version.value += 1
     await nextTick()
+    await expectModalGone(modal)
 
     primary().click()
     await nextTick()
 
     expect(mounted.manager.equipmentBag.get('d2')).toBeDefined()
-    expect(primary().textContent).toContain('XÁC NHẬN HÓA LUYỆN')
+    expect(modal()).toBeTruthy()
 
     mounted.unmount()
   })
@@ -327,14 +334,14 @@ describe('DissolveTab — Hóa Luyện', () => {
     selectAllBtn.click()
     await nextTick()
 
-    expect(mounted.container.querySelectorAll('.dissolve-slot-tick')).toHaveLength(2)
+    expect(mounted.container.querySelectorAll('.bag-section__slot--picked')).toHaveLength(2)
 
     const clearBtn = buttons.find((b) => b.textContent?.includes('Bỏ chọn hết'))!
 
     clearBtn.click()
     await nextTick()
 
-    expect(mounted.container.querySelectorAll('.dissolve-slot-tick')).toHaveLength(0)
+    expect(mounted.container.querySelectorAll('.bag-section__slot--picked')).toHaveLength(0)
 
     mounted.unmount()
   })

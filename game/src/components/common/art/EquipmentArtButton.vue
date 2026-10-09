@@ -22,7 +22,9 @@ const emit = defineEmits<{ click: [event: MouseEvent] }>()
   border: 0;
   background: transparent;
   color: #f2e3c2;
-  font: 600 14px/1.2 var(--pc-font-body);
+  /* Owner ruling 2026-10-09: same face + weight as the scene op-tab
+     buttons (700) so every function button in Trang Bi reads alike. */
+  font: 700 14px/1.2 var(--pc-font-body);
   cursor: pointer;
 }
 .equipment-art-button::before {

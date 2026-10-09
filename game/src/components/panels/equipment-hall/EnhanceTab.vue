@@ -25,6 +25,7 @@ import {
   calculateEquipmentScale,
 } from '@/core/equipment/EquipmentSystem'
 import { MAX_SLOT_ENHANCE_LEVEL } from '@/core/equipment/EnhanceCurve'
+import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
 import { useEquippedRows } from './useEquippedRows'
 import { formatAffixValue } from './equipmentHallDisplay'
 import { HALL_SELECTION_KEY } from './hallSelection'
@@ -210,6 +211,16 @@ function materialIcon(materialId: string): string | undefined {
   return art ? resolveAssetUrl(art) : undefined
 }
 
+const buildMaterialTooltip = createMaterialTooltipBuilder(t)
+
+// Owner ruling 2026-10-09: names leave the row and move into the hover
+// tooltip - the row shows icon + count only.
+function materialTooltip(materialId: string, owned: number) {
+  return gameManager.materialRegistry.has(materialId)
+    ? buildMaterialTooltip(gameManager.materialRegistry.get(materialId), { owned })
+    : undefined
+}
+
 const levelSealSrc = equipmentArt('equipment-level-seal-v1')
 
 interface EnhancePreviewRow {
@@ -361,6 +372,7 @@ const mainStatLabel = computed(() => enhancePreviewRows.value?.[0]?.label ?? '')
           <div
             v-for="cost in selectedEnhanceRow.costs"
             :key="cost.materialId"
+            v-tooltip="materialTooltip(cost.materialId, cost.owned)"
             class="equipment-material"
             :class="{ 'is-missing': cost.owned < cost.amount }"
           >
@@ -368,11 +380,11 @@ const mainStatLabel = computed(() => enhancePreviewRows.value?.[0]?.label ?? '')
               <SlotView variant="equipment" static :item="null" :icon="materialIcon(cost.materialId)" :label="cost.label" />
             </div>
             <div>
-              <span>{{ cost.label }}</span
-              ><b>{{ cost.owned }}/{{ cost.amount }}</b>
+              <b>{{ cost.owned }}/{{ cost.amount }}</b>
             </div>
           </div>
           <div
+            v-tooltip="materialTooltip(selectedEnhanceRow.spiritStoneMaterialId, selectedEnhanceRow.spiritStoneOwned)"
             class="equipment-material"
             :class="{ 'is-missing': selectedEnhanceRow.spiritStoneOwned < selectedEnhanceRow.spiritStone }"
           >
@@ -386,8 +398,7 @@ const mainStatLabel = computed(() => enhancePreviewRows.value?.[0]?.label ?? '')
               />
             </div>
             <div>
-              <span>{{ materialLabel(selectedEnhanceRow.spiritStoneMaterialId, gameManager.materialRegistry) }}</span
-              ><b>{{ selectedEnhanceRow.spiritStoneOwned }}/{{ selectedEnhanceRow.spiritStone }}</b>
+              <b>{{ selectedEnhanceRow.spiritStoneOwned }}/{{ selectedEnhanceRow.spiritStone }}</b>
             </div>
           </div>
         </div>
@@ -606,14 +617,12 @@ const mainStatLabel = computed(() => enhancePreviewRows.value?.[0]?.label ?? '')
   width: 100%;
   height: 100%;
 }
-/* Material label column bounded (~150px) and stretched to the row's
-   height with space-between so the owned/amount counts sit on the same
-   baseline across materials regardless of name length (owner ruling
-   2026-10-08). */
+/* Material count column (names moved to the hover tooltip, owner
+   ruling 2026-10-09): bounded and centered against the 65px icon. */
 .equipment-material > div:last-child {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   gap: 4px;
   align-self: stretch;
   font-size: 18px;
