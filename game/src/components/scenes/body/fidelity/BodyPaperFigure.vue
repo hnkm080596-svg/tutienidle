@@ -195,18 +195,17 @@ const meridianPaths = computed(() =>
       total += d
     }
     const dots: [number, number][] = [zig[0]]
-    let target = total / 10
-    let acc = 0
+    const step = total / 10
+    let acc = 0 // distance travelled since the last placed dot
     for (let i = 1; i < zig.length; i++) {
       let l = segLen[i - 1]
-      while (l > 0 && acc + l >= target && dots.length < 10) {
-        const need = target - acc
+      while (l > 0 && acc + l >= step && dots.length < 10) {
+        const need = step - acc
         const f = need / l
         dots.push([zig[i - 1][0] + (zig[i][0] - zig[i - 1][0]) * f, zig[i - 1][1] + (zig[i][1] - zig[i - 1][1]) * f])
         zig[i - 1] = dots[dots.length - 1]
         l -= need
         acc = 0
-        target += total / 10
       }
       acc += l
     }
