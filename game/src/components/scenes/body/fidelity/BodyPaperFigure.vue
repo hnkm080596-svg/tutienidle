@@ -111,7 +111,9 @@ const galaxyPieces = computed(() =>
     <div class="body-stage" :aria-label="model.chapterLabel">
       <img class="body-silhouette body-figure-art" :src="bodyArt('silhouette-seated')" alt="">
       <template v-if="model.chapter === 'refinement'">
-        <img v-if="litLayer('skin')" class="body-glow" :src="bodyArt('silhouette-seated')" alt="" aria-hidden="true">
+        <div v-if="litLayer('skin')" class="body-waves" aria-hidden="true">
+          <i v-for="n in 3" :key="n" :style="{ '--i': n - 1 }"></i>
+        </div>
         <div v-if="litLayer('skin')" class="body-layer body-skin-layer lit">
           <img :src="bodyArt('silhouette-seated')" alt="">
         </div>
@@ -170,13 +172,19 @@ const galaxyPieces = computed(() =>
 .body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
 .body-skin-layer img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 1px #aaaaaa); }
 .body-skin-layer.lit img { filter:drop-shadow(0 0 2px #ffe5a0) drop-shadow(0 0 5px #eaba4d); }
-/* Luyen Bi glow (owner ruling 2026-10-09): a soft black aura hugging the
-   figure - a blurred black copy of the silhouette behind it. */
-.body-glow { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; z-index:-1;
-  filter:brightness(0) blur(14px); opacity:.14; transform:scale(1.03);
-  animation:body-glow-pulse 4.6s ease-in-out infinite; }
-@keyframes body-glow-pulse { 0%,100% { opacity:.14; } 50% { opacity:.5; } }
-@media (prefers-reduced-motion: reduce) { .body-glow { animation:none; opacity:.4; } }
+/* Luyen Bi yin-wave (owner ruling 2026-10-09): dark ink ripples expanding
+   outward from the figure and fading - staggered so waves emit
+   continuously. Elliptical to follow the seated silhouette's proportions. */
+.body-waves { position:absolute; inset:0; pointer-events:none; z-index:-1; }
+.body-waves i { position:absolute; left:50%; top:50%; width:72%; aspect-ratio:1; border-radius:50%;
+  border:3px solid rgba(15,10,5,.5); filter:blur(2px); transform:translate(-50%,-50%) scale(.55);
+  animation:body-wave 4.8s ease-out calc(var(--i) * 1.6s) infinite; }
+@keyframes body-wave {
+  0% { transform:translate(-50%,-50%) scale(.55); opacity:0; }
+  18% { opacity:.55; }
+  100% { transform:translate(-50%,-50%) scaleX(1.45) scaleY(1.3); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce) { .body-waves { display:none; } }
 /* Lit anatomy arts share the soft pulsing glow with the Luyen Bi aura
    (owner ruling 2026-10-09): a gentle golden halo that breathes on/off. */
 .body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; }
