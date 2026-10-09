@@ -81,8 +81,11 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .body-layout { height:calc(100% - 106px); display:grid; grid-template-columns:20% 50% 30%; gap:8px; min-height:0; }
 .body-family { position:relative; display:flex; flex-direction:column; justify-content:space-evenly; padding:4px 4px 4px 20px; isolation:isolate; }
 .family-spine { position:absolute; left:6px; top:50%; width:280px; height:13px; object-fit:fill; transform:translate(-50%,-50%) rotate(90deg); z-index:-1; }
-.family-pill { height:60px; padding-left:42px; font-size:15px; white-space:nowrap; text-align:left; }
-.family-icon { position:absolute; left:2px; top:50%; transform:translateY(-50%); width:46px; height:46px; object-fit:contain; }
+.family-pill { height:60px; padding-left:54px; font-size:13px; white-space:nowrap; text-align:left; }
+/* Medallion hangs off the capsule's left tip like the Codex preview
+   (owner 2026-10-09: icon inside the pill + text starting inside its
+   ring read as "two buttons stacked"). Negative left = protrude. */
+.family-icon { position:absolute; left:-14px; top:50%; transform:translateY(-50%); width:50px; height:50px; object-fit:contain; }
 .family-text small { display:block; margin-top:4px; font-size:10px; font-weight:400; }
 .family-pill.is-locked { opacity:.55; }
 .family-pill:focus-visible { outline:2px solid #315d48; outline-offset:3px; }
