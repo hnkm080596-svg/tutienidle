@@ -16,6 +16,20 @@ const unitState = computed<Record<string, BodyPaperUnit['state']>>(() => {
 })
 const unitLit = (id: string) => unitState.value[id] === 'done'
 
+// Rèn Thể: each completed step reveals its anatomy art on the
+// silhouette (owner ruling 2026-10-09) - done units only, nothing is
+// drawn for steps not yet reached.
+const REFINEMENT_LAYER: Record<string, 'skin' | 'muscle' | 'vertebra' | 'blood' | 'heart' | 'forehead'> = {
+  luyen_bi: 'skin',
+  luyen_nhuc: 'muscle',
+  luyen_cot: 'vertebra',
+  luyen_huyet: 'blood',
+  luyen_tang: 'heart',
+  luyen_mach: 'forehead',
+}
+const litLayer = (layer: string) =>
+  Object.entries(REFINEMENT_LAYER).some(([id, own]) => own === layer && unitLit(id))
+
 // Khai Mach: fixed 8-point meridian graph (subset of the preview's 10-point
 // anatomy map) - production owns exactly 8 authored meridians.
 const MERIDIAN_POINTS = [
@@ -85,7 +99,28 @@ const galaxyPieces = computed(() =>
   <div class="body-center body-paper-figure">
     <div class="body-stage" :aria-label="model.chapterLabel">
       <img class="body-silhouette body-figure-art" :src="bodyArt('silhouette-seated')" alt="">
-      <template v-if="model.chapter === 'meridian'">
+      <template v-if="model.chapter === 'refinement'">
+        <div v-if="litLayer('skin')" class="body-layer body-skin-layer lit">
+          <img :src="bodyArt('silhouette-seated')" alt="">
+        </div>
+        <div v-if="litLayer('muscle')" class="body-layer body-muscle-layer">
+          <img v-for="side in ['left', 'right']" :key="side" :class="side"
+            :src="bodyArt(`biceps-${side}-lit`)" alt="">
+        </div>
+        <img v-if="litLayer('blood')" class="body-blood" :src="bodyArt('anatomy-blood-lit')" alt="">
+        <div v-if="litLayer('vertebra')" class="body-spine">
+          <span class="spine-core lit"></span>
+          <img v-for="n in 10" :key="n" :src="bodyArt('anatomy-vertebra-lit')" alt="">
+        </div>
+        <img v-if="litLayer('heart')" class="body-heart" :src="bodyArt('anatomy-heart-lit')" alt="">
+        <div v-if="litLayer('forehead')" class="body-forehead">
+          <img class="forehead-ring" :src="bodyArt('forehead-ring-lit')" alt="">
+          <img v-for="(point, i) in [{ x: 50, y: 4 }, { x: 10, y: 73 }, { x: 90, y: 73 }]" :key="i"
+            class="forehead-node" :style="{ left: point.x + '%', top: point.y + '%' }"
+            :src="bodyArt('forehead-node-lit')" alt="">
+        </div>
+      </template>
+      <template v-else-if="model.chapter === 'meridian'">
         <div v-for="([a, b], i) in visibleMeridianEdges" :key="`line-${i}`"
           class="body-meridian-line" :class="{ energized: meridianNodes[b]?.lit }" :style="meridianLineStyle(a, b)">
           <img :src="bodyArt(`meridian-tube-${meridianNodes[b]?.lit ? 'lit' : 'unlit'}`)" alt="">
@@ -119,6 +154,22 @@ const galaxyPieces = computed(() =>
 .body-center { display:flex; flex-direction:column; align-items:center; min-height:0; padding:0 4px; }
 .body-stage { position:relative; aspect-ratio:1215/1295; height:calc(100% - 8px); max-width:100%; flex:none; isolation:isolate; transform:scale(1.12); }
 .body-silhouette { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
+.body-layer { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
+.body-skin-layer img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 1px #aaaaaa); }
+.body-skin-layer.lit img { filter:drop-shadow(0 0 2px #ffe5a0) drop-shadow(0 0 5px #eaba4d); }
+.body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none; }
+.body-muscle-layer .left { left:27%; transform:rotate(26deg); }
+.body-muscle-layer .right { right:27%; transform:rotate(-26deg); }
+.body-blood { position:absolute; left:18%; top:33%; width:64%; height:35%; object-fit:contain; pointer-events:none; opacity:.7; }
+.body-spine { position:absolute; left:48.5%; top:31%; width:3%; height:34%; display:flex; flex-direction:column; align-items:center; justify-content:space-between; pointer-events:none; }
+.body-spine img { width:100%; height:8%; object-fit:contain; z-index:1; }
+.spine-core { position:absolute; top:3%; bottom:3%; width:1px; background:#8f9397; }
+.spine-core.lit { background:#efca6b; box-shadow:0 0 3px #eec46c; }
+.body-heart { position:absolute; left:54%; top:38%; width:8%; height:12%; object-fit:contain; pointer-events:none; }
+.body-forehead { position:absolute; left:47.7%; top:19%; width:4.6%; aspect-ratio:1; pointer-events:none; }
+.forehead-ring { width:100%; height:100%; object-fit:contain; }
+.forehead-node { position:absolute; width:17%; height:17%; object-fit:contain; transform:translate(-50%,-50%); }
 .body-meridian-node { position:absolute; width:12%; height:10%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:pointer; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .body-meridian-node.locked { opacity:.55; }

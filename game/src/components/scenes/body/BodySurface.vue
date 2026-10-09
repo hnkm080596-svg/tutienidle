@@ -130,6 +130,28 @@ function toUiUnit(unit: BodyUnitView): BodyPaperUnit {
 
 const units = computed(() => activeModel.value.units.map(toUiUnit))
 
+// Total chapter stats: sum the gains of every completed unit (owner
+// ruling 2026-10-09 - the details card shows aggregate stats, not the
+// viewed unit's rows alone). Values like '+1.5' / '+20%' sum by label.
+const totalRows = computed(() => {
+  const sums = new Map<string, { value: number; percent: boolean }>()
+  for (const unit of units.value) {
+    if (unit.state !== 'done') continue
+    for (const row of unit.rows) {
+      const match = /^\s*([+-]?\d+(?:\.\d+)?)\s*(%?)\s*$/.exec(row.value)
+      if (!match) continue
+      const entry = sums.get(row.label) ?? { value: 0, percent: false }
+      entry.value += Number.parseFloat(match[1]!)
+      if (match[2]) entry.percent = true
+      sums.set(row.label, entry)
+    }
+  }
+  return [...sums.entries()].map(([label, entry]) => ({
+    label,
+    value: `+${Number.parseFloat(entry.value.toFixed(2))}${entry.percent ? '%' : ''}`,
+  }))
+})
+
 // Chu Thien lore milestones (Tieu 18 / Dai 36) ride the same rail as
 // chips but own no detail card.
 const milestones = computed<BodyPaperMilestone[]>(() =>
@@ -195,6 +217,7 @@ const paperModel = computed<BodyPaperModel>(() => ({
   progress: activeModel.value.total > 0
     ? (activeModel.value.completed / activeModel.value.total) * 100
     : 0,
+  totalRows: totalRows.value,
 }))
 
 const paperUnit = computed(() => {

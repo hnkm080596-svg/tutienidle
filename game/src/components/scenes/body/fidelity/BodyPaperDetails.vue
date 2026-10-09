@@ -60,29 +60,11 @@ const navIcon = resolveAssetUrl(
       </div>
       <EquipmentEnergyTube :fill="unit.progressPct ?? model.progress" color="#eec76c" />
       <div class="body-scroll">
-        <h3>{{ t('body.gains') }}</h3>
+        <h3>{{ t('body.totalGains') }}</h3>
         <dl class="body-stat-list">
-          <div v-for="row in unit.rows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
-          <p v-if="!unit.rows.length" class="body-empty-row">{{ t('body.noGains') }}</p>
+          <div v-for="row in model.totalRows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+          <p v-if="!model.totalRows.length" class="body-empty-row">{{ t('body.noGains') }}</p>
         </dl>
-        <h3>{{ t('body.material') }}</h3>
-        <div class="body-materials">
-          <div
-            v-for="cost in unit.costs"
-            :key="cost.id"
-            v-tooltip="materialTooltip(cost.id, cost.have)"
-            class="equipment-material"
-            :class="{ 'is-missing': !cost.met }"
-          >
-            <div class="equipment-material-icon">
-              <SlotView variant="equipment" static :item="null" :icon="cost.icon ?? materialIcon(cost.id)" :label="cost.name" />
-            </div>
-            <div>
-              <b>{{ cost.amountLabel }}</b>
-            </div>
-          </div>
-          <p v-if="!unit.costs.length" class="body-empty-row">{{ t('body.noCost') }}</p>
-        </div>
         <p v-for="(gate, i) in unit.gates" :key="i" class="body-gate">{{ gate }}</p>
         <div v-if="model.extra" class="body-extra" :class="{ done: model.extra.done }">
           <div class="body-extra__head"><span>{{ model.extra.title }}</span><em>{{ model.extra.stateLabel }}</em></div>
@@ -92,6 +74,26 @@ const navIcon = resolveAssetUrl(
           </div>
           <p v-if="model.extra.progressLabel" class="body-extra__count">{{ model.extra.progressLabel }}</p>
         </div>
+      </div>
+      <!-- Materials sit pinned right above the CTA (owner ruling
+           2026-10-09). -->
+      <h3 class="body-material-title">{{ t('body.material') }}</h3>
+      <div class="body-materials">
+        <div
+          v-for="cost in unit.costs"
+          :key="cost.id"
+          v-tooltip="materialTooltip(cost.id, cost.have)"
+          class="equipment-material"
+          :class="{ 'is-missing': !cost.met }"
+        >
+          <div class="equipment-material-icon">
+            <SlotView variant="equipment" static :item="null" :icon="cost.icon ?? materialIcon(cost.id)" :label="cost.name" />
+          </div>
+          <div>
+            <b>{{ cost.amountLabel }}</b>
+          </div>
+        </div>
+        <p v-if="!unit.costs.length" class="body-empty-row">{{ t('body.noCost') }}</p>
       </div>
       <!-- Submit states = the Trang Bi machine (owner ruling 2026-10-09):
            dark filter-art pill while locked, gold selected art once the
@@ -115,9 +117,10 @@ const navIcon = resolveAssetUrl(
 .body-card :deep(.equipment-energy-tube) { flex:none; }
 .body-scroll { flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#8a7444 transparent; }
 .body-stat-list { margin:0; }
-.body-stat-list > div { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #b28a4333; font-size:13px; align-items:center; }
+.body-stat-list > div { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #b28a4333; font:700 13px/1.3 var(--pc-font-body, Georgia, serif); align-items:center; }
 .body-stat-list dd { margin:0; color:#a3d793; }
-.body-materials { display:flex; flex-wrap:wrap; gap:10px; }
+.body-material-title { margin-top:4px; }
+.body-materials { display:flex; flex-wrap:wrap; gap:10px; flex:none; }
 .body-materials .equipment-material { display:flex; align-items:center; gap:6px; font-size:12px; color:#a3d793; }
 .body-materials .equipment-material-icon { width:40px; height:40px; flex:none; align-self:center; }
 .body-materials .equipment-material-icon :deep(.slot-view) { width:100%; height:100%; }

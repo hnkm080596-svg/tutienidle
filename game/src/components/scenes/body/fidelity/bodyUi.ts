@@ -72,4 +72,7 @@ export interface BodyPaperModel {
   lockHint?: string
   progressLabel: string
   progress: number
+  /** Aggregated gains of every completed unit (Rèn Thể totals - owner
+   *  ruling: the card shows total stats, not the viewed tier's alone). */
+  totalRows: readonly { label: string; value: string }[]
 }

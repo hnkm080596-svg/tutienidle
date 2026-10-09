@@ -195,21 +195,29 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('shows the next actionable tier card gains from its baseGains keys', async () => {
+    it('shows the aggregated stat total of every completed tier', async () => {
       const view = mountBodyScene((player) => {
         player.$state.realmId = 'qi_refining'
         setBodyProgression(player, {
-          // Four tiers done: the card defaults to the next actionable tier.
+          // Four tiers done: the card totals their combined gains.
           body_refinement: { completedTiers: 4, currentTierProgress: 0 },
         })
       })
       await nextTick()
 
-      const gainLabels = [...view.container.querySelectorAll('.body-paper-details dl div dt')]
-        .map(row => row.textContent ?? '')
-      const expected = baseGainKeys(BODY_REFINEMENT_TIERS[4]!.baseGains)
-        .map(stat => statLabel(stat))
-      expect(gainLabels).toEqual(expected)
+      const expectedTotals = new Map<string, number>()
+      for (const tier of BODY_REFINEMENT_TIERS.slice(0, 4)) {
+        for (const stat of baseGainKeys(tier.baseGains)) {
+          expectedTotals.set(statLabel(stat), (expectedTotals.get(statLabel(stat)) ?? 0) + (tier.baseGains[stat] ?? 0))
+        }
+      }
+      const rows = [...view.container.querySelectorAll('.body-paper-details dl div')]
+        .map(div => [div.querySelector('dt')?.textContent ?? '', div.querySelector('dd')?.textContent ?? ''])
+      const got = new Map(rows.map(([label, value]) => [label, Number.parseFloat(value)]))
+      expect(got.size).toBe(expectedTotals.size)
+      for (const [label, total] of expectedTotals) {
+        expect(got.get(label)).toBeCloseTo(total)
+      }
 
       view.unmount()
     })
