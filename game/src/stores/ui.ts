@@ -111,6 +111,10 @@ export interface BagSortStateMap {
   material: BagSortState<MaterialSortMode>
 
   pill: BagSortState<PillSortMode>
+
+  // Phan Giai lists ore/material stacks - material modes apply (no
+  // sort UI calls this today; the key exists because BagTab includes it).
+  decompose: BagSortState<MaterialSortMode>
 }
 
 export const useUiStore = defineStore('ui', {
@@ -144,6 +148,7 @@ export const useUiStore = defineStore('ui', {
       equipment: { mode: 'default', direction: 'asc' },
       material: { mode: 'default', direction: 'asc' },
       pill: { mode: 'default', direction: 'asc' },
+      decompose: { mode: 'default', direction: 'asc' },
     } as BagSortStateMap,
 
     // Dong Phu quick nav - command wheel entries mo cac overlay DOC
