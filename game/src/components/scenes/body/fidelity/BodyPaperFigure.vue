@@ -79,9 +79,10 @@ const vesselLitCount = computed(() => {
 
 // Luyen Mach (owner ruling 2026-10-09): the ring shows as soon as the tier
 // unlocks; the lit nodes orbit it and each 30% of tier progress lights one
-// more node (0/1/2/3). The 100% effect is still open - awaiting ruling.
+// more node (0/1/2/3). At 100% a vertical third eye opens at its center.
 const foreheadUnit = computed(() => props.model.units.find((u) => u.id === 'luyen_mach'))
 const foreheadVisible = computed(() => (foreheadUnit.value?.state ?? 'locked') !== 'locked')
+const foreheadDone = computed(() => foreheadUnit.value?.state === 'done')
 const foreheadLitCount = computed(() => {
   const unit = foreheadUnit.value
   if (!unit) return 0
@@ -186,6 +187,11 @@ const galaxyPieces = computed(() =>
         <img v-if="litLayer('heart')" class="body-heart" :src="bodyArt('anatomy-heart-lit')" alt="">
         <div v-if="foreheadVisible" class="body-forehead">
           <img class="forehead-ring" :src="bodyArt('forehead-ring-lit')" alt="">
+          <svg v-if="foreheadDone" class="forehead-eye" viewBox="0 0 30 30" aria-hidden="true">
+            <path class="fe-lid" d="M15,4 C10,10 10,20 15,26 C20,20 20,10 15,4 Z" />
+            <circle class="fe-iris" cx="15" cy="15" r="3.4" />
+            <ellipse class="fe-pupil" cx="15" cy="15" rx="1" ry="2.6" />
+          </svg>
           <div class="forehead-orbit">
             <img v-for="(point, i) in [{ x: 50, y: 4 }, { x: 10, y: 73 }, { x: 90, y: 73 }]" :key="i"
               v-show="i < foreheadLitCount"
@@ -293,6 +299,16 @@ const galaxyPieces = computed(() =>
 .forehead-node { position:absolute; width:17%; height:17%; object-fit:contain; transform:translate(-50%,-50%);
   animation:body-art-glow 4.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .forehead-node { animation:none; } }
+/* Luyen Mach complete (owner ruling 2026-10-09): the third eye opens once
+   at the ring center, then holds a soft glow. `scale` composes with the
+   translate used for centering. */
+.forehead-eye { position:absolute; left:50%; top:50%; width:42%; aspect-ratio:1; transform:translate(-50%,-50%);
+  animation:eye-open .9s ease-out both, body-art-glow 4.6s ease-in-out .9s infinite; }
+@keyframes eye-open { from { scale:1 0; } to { scale:1 1; } }
+.fe-lid { fill:rgba(255,233,176,.22); stroke:#ffe9b0; stroke-width:2; }
+.fe-iris { fill:#eec46c; }
+.fe-pupil { fill:#2a2016; }
+@media (prefers-reduced-motion: reduce) { .forehead-eye { animation:body-art-glow 4.6s ease-in-out infinite; } }
 .body-meridian-node { position:absolute; width:12%; height:10%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:pointer; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .body-meridian-node.locked { opacity:.55; }
