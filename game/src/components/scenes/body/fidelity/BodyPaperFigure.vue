@@ -197,11 +197,11 @@ const galaxyPieces = computed(() =>
    small tapered beam anchored at the skin edge, twinkling on its own
    phase. Layered behind the silhouette so rays emerge from under it. */
 .body-rays { position:absolute; inset:0; pointer-events:none; z-index:-1; }
-.body-ray { position:absolute; width:3px; height:30px; transform:translateY(-100%) rotate(var(--a)); transform-origin:50% 100%;
-  background:linear-gradient(to top, rgba(30,22,10,0) 0%, rgba(30,22,10,.75) 100%);
+.body-ray { position:absolute; width:4px; height:34px; transform:translateY(-100%) rotate(var(--a)); transform-origin:50% 100%;
+  background:linear-gradient(to top, rgba(15,10,5,0) 0%, rgba(15,10,5,.95) 100%);
   clip-path:polygon(42% 0, 58% 0, 100% 100%, 0 100%);
   animation:body-ray-fade var(--d) ease-in-out var(--dl) infinite; }
-@keyframes body-ray-fade { 0%,100% { opacity:.25; } 50% { opacity:.85; } }
+@keyframes body-ray-fade { 0%,100% { opacity:.45; } 50% { opacity:1; } }
 .body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none; }
 .body-muscle-layer .left { left:27%; transform:rotate(26deg); }
 .body-muscle-layer .right { right:27%; transform:rotate(-26deg); }
