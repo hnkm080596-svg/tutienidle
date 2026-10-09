@@ -172,7 +172,11 @@ const galaxyPieces = computed(() =>
 .body-muscle-layer img, .body-blood, .body-spine img, .body-heart, .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; }
 @keyframes body-art-glow { 0%,100% { filter:drop-shadow(0 0 2px rgba(238,196,108,.35)); } 50% { filter:drop-shadow(0 0 6px rgba(238,196,108,.8)) drop-shadow(0 0 10px rgba(238,196,108,.45)); } }
 @media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img, .body-heart, .forehead-ring { animation:none; } }
-.body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none; }
+.body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none;
+  animation:body-art-glow 4.6s ease-in-out infinite, body-muscle-pump 4.6s ease-in-out infinite; }
+/* Luyen Nhuc (owner ruling 2026-10-09): the biceps swell +10% at the glow
+   peak and deflate back as the glow fades. */
+@keyframes body-muscle-pump { 0%,100% { scale:1; } 50% { scale:1.1; } }
 .body-muscle-layer .left { left:27%; transform:rotate(26deg); }
 .body-muscle-layer .right { right:27%; transform:rotate(-26deg); }
 .body-blood { position:absolute; left:18%; top:33%; width:64%; height:35%; object-fit:contain; pointer-events:none; opacity:.7; }
