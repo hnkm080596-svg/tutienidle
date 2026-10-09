@@ -164,7 +164,7 @@ const visibleMeridianNodes = computed(() => meridianNodes.value)
 // between node centers, with small dots every 10% joined by straight
 // segments. Small-dot lit count follows the destination unit's progress.
 const MERIDIAN_LINKS = [
-  { from: 0, to: 2, bend: 3, seed: 7 },
+  { from: 0, to: 2, bend: 4, seed: 23 },
 ] as const
 // Deterministic pseudo-random so the zigzag is stable across renders.
 const seededJitter = (seed: number, i: number) => {
