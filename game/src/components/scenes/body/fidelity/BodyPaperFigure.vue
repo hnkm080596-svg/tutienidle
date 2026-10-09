@@ -186,10 +186,13 @@ const galaxyPieces = computed(() =>
         <img v-if="litLayer('heart')" class="body-heart" :src="bodyArt('anatomy-heart-lit')" alt="">
         <div v-if="foreheadVisible" class="body-forehead">
           <img v-if="foreheadDone" class="forehead-ring" :src="bodyArt('forehead-ring-lit')" alt="">
-          <img v-for="(point, i) in [{ x: 50, y: 4 }, { x: 10, y: 73 }, { x: 90, y: 73 }]" :key="i"
+          <svg v-for="(point, i) in [{ x: 50, y: 4 }, { x: 10, y: 73 }, { x: 90, y: 73 }]" :key="i"
             v-show="i < foreheadLitCount"
-            class="forehead-node" :style="{ left: point.x + '%', top: point.y + '%' }"
-            :src="bodyArt('forehead-node-lit')" alt="">
+            class="forehead-node" viewBox="0 0 40 40" aria-hidden="true"
+            :style="{ left: point.x + '%', top: point.y + '%', animationDelay: (i * -2.3) + 's' }">
+            <circle class="fn-ring" cx="20" cy="20" r="13" />
+            <circle class="fn-core" cx="20" cy="20" r="4.5" />
+          </svg>
         </div>
       </template>
       <template v-else-if="model.chapter === 'meridian'">
@@ -245,9 +248,9 @@ const galaxyPieces = computed(() =>
 @media (prefers-reduced-motion: reduce) { .body-glow { animation:none; opacity:.4; } }
 /* Lit anatomy arts share the soft pulsing glow with the Luyen Bi aura
    (owner ruling 2026-10-09): a gentle golden halo that breathes on/off. */
-.body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-node { animation:body-art-glow 4.6s ease-in-out infinite; }
+.body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart { animation:body-art-glow 4.6s ease-in-out infinite; }
 @keyframes body-art-glow { 0%,100% { filter:drop-shadow(0 0 2px rgba(238,196,108,.35)); } 50% { filter:drop-shadow(0 0 6px rgba(238,196,108,.8)) drop-shadow(0 0 10px rgba(238,196,108,.45)); } }
-@media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart, .forehead-node { animation:none; } }
+@media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart { animation:none; } }
 .body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none;
   animation:body-art-glow 4.6s ease-in-out infinite, body-muscle-pump 4.6s ease-in-out infinite; }
 /* Luyen Nhuc (owner ruling 2026-10-09): the biceps swell +10% at the glow
@@ -288,7 +291,14 @@ const galaxyPieces = computed(() =>
   animation:body-art-glow 4.6s ease-in-out infinite, forehead-spin 14s linear infinite; }
 @keyframes forehead-spin { to { rotate:360deg; } }
 @media (prefers-reduced-motion: reduce) { .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
-.forehead-node { position:absolute; width:17%; height:17%; object-fit:contain; transform:translate(-50%,-50%); }
+/* Luyen Mach nodes (owner ruling 2026-10-09): drawn as SVG - a bright core
+   orbited by a dashed ring that visibly rotates, staggered per node. */
+.forehead-node { position:absolute; width:30%; height:30%; transform:translate(-50%,-50%); overflow:visible;
+  animation:body-art-glow 4.6s ease-in-out infinite, forehead-node-spin 7s linear infinite; }
+.forehead-node .fn-ring { fill:none; stroke:#eec46c; stroke-width:1.6; stroke-dasharray:4 5; }
+.forehead-node .fn-core { fill:#ffe9b0; }
+@keyframes forehead-node-spin { to { rotate:360deg; } }
+@media (prefers-reduced-motion: reduce) { .forehead-node { animation:body-art-glow 4.6s ease-in-out infinite; } }
 .body-meridian-node { position:absolute; width:12%; height:10%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:pointer; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .body-meridian-node.locked { opacity:.55; }
