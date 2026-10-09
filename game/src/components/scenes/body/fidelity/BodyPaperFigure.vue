@@ -165,7 +165,7 @@ const galaxyPieces = computed(() =>
             </g>
           </defs>
           <use href="#bvessels" class="bv-base"/>
-          <use href="#bvessels" class="bv-flow"/>
+          <use v-if="litLayer('heart')" href="#bvessels" class="bv-flow"/>
         </svg>
         <div v-if="vertebraVisible" class="body-spine">
           <span class="spine-core" :class="{ lit: vertebraLitCount > 0 }"></span>
