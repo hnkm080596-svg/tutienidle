@@ -52,14 +52,11 @@ const navIcon = resolveAssetUrl(
       <h2>{{ unit?.title ?? model.chapterLabel }}</h2>
     </div>
     <template v-if="unit">
-      <h3>{{ t('body.progress') }}</h3>
       <div class="body-progress-value">
         <span>{{ unit.progressLabel ?? model.progressLabel }}</span>
-        <span>{{ t(`body.state.${unit.state}`) }}</span>
       </div>
       <EquipmentEnergyTube :fill="unit.progressPct ?? model.progress" color="#eec76c" />
       <div class="body-scroll">
-        <h3>{{ t('body.totalGains') }}</h3>
         <dl class="body-stat-list">
           <div v-for="row in model.totalRows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
           <p v-if="!model.totalRows.length" class="body-empty-row">{{ t('body.noGains') }}</p>
@@ -111,7 +108,7 @@ const navIcon = resolveAssetUrl(
 .body-card-title img { width:48px; height:48px; object-fit:contain; }
 .body-card-title h2 { margin:0; font-size:23px; color:#f3e4c4; }
 .body-card h3 { font-size:14px; margin:6px 0 4px; color:#ebd49e; flex:none; }
-.body-progress-value { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; color:#e8d8b8; flex:none; }
+.body-progress-value { display:flex; justify-content:flex-end; font-size:13px; margin-bottom:6px; color:#e8d8b8; flex:none; }
 .body-card :deep(.equipment-energy-tube) { flex:none; }
 .body-scroll { flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#8a7444 transparent; }
 .body-stat-list { margin:0; }

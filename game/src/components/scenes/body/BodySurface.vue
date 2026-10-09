@@ -131,7 +131,7 @@ function toUiUnit(unit: BodyUnitView): BodyPaperUnit {
 const units = computed(() => activeModel.value.units.map(toUiUnit))
 
 // Total chapter stats: sum the gains of every completed unit (owner
-// ruling 2026-10-09 - the details card shows aggregate stats, not the
+// ruling 2026-10-09 - the details card lists aggregate stats, not the
 // viewed unit's rows alone). Values like '+1.5' / '+20%' sum by label.
 const totalRows = computed(() => {
   const sums = new Map<string, { value: number; percent: boolean }>()
