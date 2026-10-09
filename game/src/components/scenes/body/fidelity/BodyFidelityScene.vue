@@ -78,7 +78,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .body-heading img { width:170px; height:21px; object-fit:contain; opacity:.65; }
 .body-subtitle { margin:2px 0 4px; font-size:13px; color:#715627; }
 .body-layout { height:calc(100% - 106px); display:grid; grid-template-columns:20% 50% 30%; gap:8px; min-height:0; }
-.body-family { position:relative; display:flex; flex-direction:column; justify-content:space-evenly; padding:4px 4px 4px 20px; isolation:isolate; }
+.body-family { position:relative; display:flex; flex-direction:column; justify-content:flex-start; gap:6px; padding:6px 4px 4px 20px; isolation:isolate; }
 .family-pill { height:60px; padding-left:54px; font-size:13px; white-space:nowrap; text-align:left; }
 /* Medallion hangs off the capsule's left tip like the Codex preview
    (owner 2026-10-09: icon inside the pill + text starting inside its
