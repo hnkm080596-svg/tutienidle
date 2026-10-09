@@ -165,8 +165,8 @@ const visibleMeridianNodes = computed(() => meridianNodes.value)
 // segments. Small-dot lit count follows the destination unit's progress.
 const MERIDIAN_LINKS = [
   // ctrl bends the default path through the body (owner: dots must start
-  // inside the silhouette) - node1 forehead -> shoulder -> node2 hand.
-  { from: 0, to: 1, seed: 88, ctrl: [33, 31] as [number, number] },
+  // inside the silhouette) - node3 chest -> shoulder -> node2 hand.
+  { from: 2, to: 1, seed: 88, ctrl: [33, 36] as [number, number] },
 ] as const
 // Deterministic pseudo-random so the zigzag is stable across renders.
 const seededJitter = (seed: number, i: number) => {
