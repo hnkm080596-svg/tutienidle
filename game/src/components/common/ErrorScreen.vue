@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
-import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import OrnateDialog from '@/components/common/art/OrnateDialog.vue'
+import OrnateButton from '@/components/common/art/OrnateButton.vue'
 import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
 import { useErrorStore } from '@/stores/error'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
@@ -15,6 +15,7 @@ import { useActiveUpdates } from '@/composables/useUpdates'
 
 const errorStore = useErrorStore()
 const { t } = useI18n()
+const titleId = useId()
 
 // UI-014 (Task 9, 2026-09-07) - nut truoc day nhan "Thu Lai" nhung thuc
 // chat CHI clear error store (khong retry/re-mount operation nao). Doi
@@ -129,62 +130,63 @@ async function exportDiagnostics() {
 
 <template>
   <div v-if="errorStore.current" class="error-screen" :style="{ zIndex: OVERLAY_LAYERS.appError }">
-    <div class="error-screen__panel">
-      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
+    <OrnateDialog
+      class="error-screen__panel"
+      role="alertdialog"
+      aria-modal="true"
+      :aria-labelledby="titleId"
+      :title="t('errors.app.title')"
+      :title-id="titleId"
+      badge="alert"
+      width="min(620px, 94vw)"
+    >
+      <p class="error-screen__message">{{ errorStore.current }}</p>
 
-      <div class="error-screen__scroll">
-        <h2 class="error-screen__title">{{ t('errors.app.title') }}</h2>
-
-        <p class="error-screen__message">{{ errorStore.current }}</p>
-
-        <div class="error-screen__actions">
-          <GameButton variant="primary" @click="dismiss">{{ t('errors.app.close') }}</GameButton>
-
-          <GameButton variant="secondary" @click="reloadPage">{{ t('errors.app.reload') }}</GameButton>
-        </div>
-
-        <div class="error-screen__report">
-          <p v-if="reportId !== ''" class="error-screen__report-id" data-testid="error-report-id">
-            {{ t('errors.app.reportId', { id: reportId }) }}
-          </p>
-          <div class="error-screen__report-actions">
-            <GameButton variant="secondary" @click="copyReportInfo">
-              {{ reportCopied ? t('errors.app.copied') : t('errors.app.copyReport') }}
-            </GameButton>
-            <GameButton v-if="canExport" variant="secondary" @click="exportDiagnostics">
-              {{ t('errors.app.exportDiagnostics') }}
-            </GameButton>
-            <!-- Feedback is always offered: the intake degrades to
-                 export-only when the session is dead (BETA-FINAL PR13). -->
-            <GameButton variant="secondary" data-testid="error-feedback" @click="feedbackOpen = true">
-              {{ t('errors.app.feedback') }}
-            </GameButton>
-          </div>
-          <p v-if="exportState !== 'idle'" class="error-screen__export-state" data-testid="error-export-state">
-            {{ exportState === 'exported' ? t('errors.app.exportDone') : t('errors.app.exportFailed') }}
-          </p>
-        </div>
-
-        <p v-if="updateLabel !== null" class="error-screen__build" data-testid="error-update-status">
-          {{ t('errors.app.updateStatus', { status: updateLabel }) }}
+      <div class="error-screen__report">
+        <p v-if="reportId !== ''" class="error-screen__report-id" data-testid="error-report-id">
+          {{ t('errors.app.reportId', { id: reportId }) }}
         </p>
-
-        <!-- BETA-FINAL PR1 / spec B2 - build identity on the error surface
-             so a screenshot of a crash carries the release manifest values. -->
-        <p class="error-screen__build" data-testid="error-build">
-          {{
-            t('errors.app.build', {
-              product: BUILD_IDENTITY.productName,
-              version: BUILD_IDENTITY.appVersion,
-              build: BUILD_IDENTITY.buildId,
-              sha: shortGitSha(),
-              env: BUILD_IDENTITY.backendEnvironment,
-            })
-          }}
+        <div class="error-screen__report-actions">
+          <OrnateButton class="error-screen__report-btn" variant="dark" @click="copyReportInfo">
+            {{ reportCopied ? t('errors.app.copied') : t('errors.app.copyReport') }}
+          </OrnateButton>
+          <OrnateButton v-if="canExport" class="error-screen__report-btn" variant="dark" @click="exportDiagnostics">
+            {{ t('errors.app.exportDiagnostics') }}
+          </OrnateButton>
+          <!-- Feedback is always offered: the intake degrades to
+               export-only when the session is dead (BETA-FINAL PR13). -->
+          <OrnateButton class="error-screen__report-btn" variant="dark" data-testid="error-feedback" @click="feedbackOpen = true">
+            {{ t('errors.app.feedback') }}
+          </OrnateButton>
+        </div>
+        <p v-if="exportState !== 'idle'" class="error-screen__export-state" data-testid="error-export-state">
+          {{ exportState === 'exported' ? t('errors.app.exportDone') : t('errors.app.exportFailed') }}
         </p>
       </div>
-    </div>
+
+      <p v-if="updateLabel !== null" class="error-screen__build" data-testid="error-update-status">
+        {{ t('errors.app.updateStatus', { status: updateLabel }) }}
+      </p>
+
+      <!-- BETA-FINAL PR1 / spec B2 - build identity on the error surface
+           so a screenshot of a crash carries the release manifest values. -->
+      <p class="error-screen__build" data-testid="error-build">
+        {{
+          t('errors.app.build', {
+            product: BUILD_IDENTITY.productName,
+            version: BUILD_IDENTITY.appVersion,
+            build: BUILD_IDENTITY.buildId,
+            sha: shortGitSha(),
+            env: BUILD_IDENTITY.backendEnvironment,
+          })
+        }}
+      </p>
+
+      <template #actions>
+        <OrnateButton variant="gold" @click="dismiss">{{ t('errors.app.close') }}</OrnateButton>
+        <OrnateButton variant="dark" @click="reloadPage">{{ t('errors.app.reload') }}</OrnateButton>
+      </template>
+    </OrnateDialog>
   </div>
 
   <!-- BETA-FINAL PR13 / spec B7 - opens ABOVE this surface so the error
@@ -209,84 +211,62 @@ async function exportDiagnostics() {
   background: var(--scrim-heavy);
 }
 
-/* Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll +
-   frame-m-modal band; padding clears the band and overflow:hidden +
-   border-radius clip the scroll's square corners. */
+/* Ornate dialog chrome (see ConfirmModal): whole-component frame/band/
+   badge art at a fixed aspect; the body region scrolls inside. */
 .error-screen__panel {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  max-width: 420px;
-  max-height: 90vh;
-  padding: 46px 40px;
-  overflow: hidden;
-  border-radius: 16px;
-  box-shadow: var(--shadow-panel);
-  text-align: center;
-  font-family: var(--font-body);
-}
-
-.error-screen__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
-}
-
-.error-screen__scroll {
-  min-height: 0;
-  overflow: auto;
-}
-
-.error-screen__title {
-  margin: 0 0 12px;
-  font-family: var(--font-display);
-  color: var(--crimson);
-  font-size: var(--text-title);
-  font-weight: 700;
+  flex: none;
 }
 
 .error-screen__message {
-  margin: 0 0 20px;
-  color: var(--paper-text-soft);
-  font-size: var(--text-sm);
+  flex: none;
+  margin: 0;
+  max-width: 100%;
+  color: var(--paper-text-soft, #5e5a50);
+  font-size: min(2.8cqh, var(--text-sm));
+  line-height: 1.5;
+  text-align: center;
   word-break: break-word;
 }
 
-.error-screen__actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
 .error-screen__report {
-  margin: 16px 0 0;
+  flex: none;
+  margin: 1.6cqh 0 0;
+  width: 100%;
 }
 
 .error-screen__report-id {
-  margin: 0 0 8px;
-  color: var(--paper-text-soft);
+  margin: 0 0 0.8cqh;
+  color: var(--paper-text-soft, #5e5a50);
   font-family: var(--font-mono, monospace);
-  font-size: var(--text-xs);
+  font-size: min(2.2cqh, var(--text-xs));
+  text-align: center;
   word-break: break-all;
 }
 
 .error-screen__report-actions {
   display: flex;
-  gap: 10px;
+  gap: 2cqw;
   justify-content: center;
+  height: 11cqh;
+  --ornate-button-label-size: min(2.6cqh, 1.7cqw);
+  --ornate-button-wrap: normal;
 }
 
 .error-screen__export-state {
-  margin: 8px 0 0;
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
+  margin: 0.8cqh 0 0;
+  color: var(--paper-text-soft, #5e5a50);
+  font-size: min(2.2cqh, var(--text-xs));
+  text-align: center;
 }
 
 .error-screen__build {
-  margin: 16px 0 0;
-  color: var(--paper-text-soft);
+  flex: none;
+  margin: 1.4cqh 0 0;
+  max-width: 100%;
+  color: var(--paper-text-soft, #5e5a50);
   font-family: var(--font-mono, monospace);
-  font-size: var(--text-xs);
+  font-size: min(2.2cqh, var(--text-xs));
+  text-align: center;
   word-break: break-all;
 }
 </style>

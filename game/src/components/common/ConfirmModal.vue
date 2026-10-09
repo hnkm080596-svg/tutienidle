@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { computed, ref, useId, watch } from 'vue'
+import { computed, ref, useId, watch, type ComponentPublicInstance } from 'vue'
 import { i18n } from '@/i18n'
-import GameButton from './GameButton.vue'
-import InkNineSlice from './primitives/InkNineSlice.vue'
+import OrnateDialog from './art/OrnateDialog.vue'
+import OrnateDivider from './art/OrnateDivider.vue'
+import OrnateInfoCard from './art/OrnateInfoCard.vue'
+import OrnateButton from './art/OrnateButton.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useAudioStore } from '@/stores/audio'
 
-// Restyle (2026-09-28, ui-audit creation-meta) - was SysModalBase system
-// chrome (sci-fi chrome chrome + translucent panel) clashing with the
-// game's ink/paper art. Now the huyen-kim paper recipe: surface-xl-scroll
-// cream surface + frame-m-modal gold band (same as OfflineSummaryModal).
-// Panel renders opaque (the PNG art has no translucency knob).
+// Restyle (2026-10-09, ornate dialog art) - the parchment recipe
+// (surface-xl-scroll + frame-m-modal) is replaced by whole-component
+// slices from the owner's ornate-ui-sheet: ornate frame + crest title
+// band + flame badge + ornament divider + gold/dark buttons + diamond X.
+// Per owner ruling the art renders intact at native aspect - content
+// scrolls inside the frame instead of resizing it. Public API, a11y
+// wiring and confirm/cancel semantics are unchanged.
 //
 // i18n.global.t (not useI18n): dialogFocus/dialogLabeling tests mount
 // this component through a bare createApp without installing i18n - the
@@ -65,11 +69,12 @@ const cancelLabel = computed(() => props.cancelLabel ?? i18n.global.t('panels.co
 const titleId = useId()
 const messageId = useId()
 
-const panelRef = ref<HTMLElement | null>(null)
+const dialogRef = ref<ComponentPublicInstance | null>(null)
+const panelEl = () => (dialogRef.value?.$el as HTMLElement | undefined) ?? null
 // onEscape maps to cancel (an explicit choice), never confirm; scrim has
 // no click handler on purpose - a destructive confirm must not dismiss
-// from an accidental outside tap.
-useDialogFocus(panelRef, computed(() => props.open), {
+// from an accidental outside tap. The diamond X close is another cancel.
+useDialogFocus(panelEl, computed(() => props.open), {
   onEscape: onCancel,
 })
 </script>
@@ -78,30 +83,35 @@ useDialogFocus(panelRef, computed(() => props.open), {
   <Teleport to="body">
     <Transition name="confirm-modal">
       <div v-if="open" class="confirm-modal" :style="{ zIndex: layer }">
-        <section
-          ref="panelRef"
+        <OrnateDialog
+          ref="dialogRef"
           class="confirm-modal__panel"
-          tabindex="-1"
           role="alertdialog"
           aria-modal="true"
           :aria-labelledby="titleId"
           :aria-describedby="messageId"
+          :title="title"
+          :title-id="titleId"
+          :badge="danger ? 'alert' : 'info'"
+          show-close
+          :close-label="cancelLabel"
+          @close="onCancel"
         >
-          <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-          <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
-
-          <h3 :id="titleId" class="confirm-modal__title" :class="{ 'is-danger': danger }">{{ title }}</h3>
           <p :id="messageId" class="confirm-modal__message">{{ message }}</p>
+          <OrnateDivider />
           <!-- Optional rich detail block (item/material lists, warnings)
-               rendered between the message and the actions; consumers
-               without slot content render exactly as before. -->
-          <div v-if="$slots.default" class="confirm-modal__detail"><slot /></div>
+               rendered inside the info-card art between divider and
+               actions; consumers without slot content get the plain
+               message + divider composition. -->
+          <OrnateInfoCard v-if="$slots.default" class="confirm-modal__detail">
+            <slot />
+          </OrnateInfoCard>
 
-          <div class="confirm-modal__actions">
-            <GameButton class="ghost-on-paper" variant="ghost" :sound="false" @click="onCancel">{{ cancelLabel }}</GameButton>
-            <GameButton class="confirm-modal__confirm" :variant="danger ? 'danger' : 'primary'" :sound="false" @click="onConfirm">{{ confirmLabel }}</GameButton>
-          </div>
-        </section>
+          <template #actions>
+            <OrnateButton class="confirm-modal__confirm" variant="gold" :sound="false" @click="onConfirm">{{ confirmLabel }}</OrnateButton>
+            <OrnateButton variant="dark" :sound="false" @click="onCancel">{{ cancelLabel }}</OrnateButton>
+          </template>
+        </OrnateDialog>
       </div>
     </Transition>
   </Teleport>
@@ -117,53 +127,27 @@ useDialogFocus(panelRef, computed(() => props.open), {
   background: color-mix(in srgb, var(--hk-surface-base) 70%, transparent);
 }
 
-/* Same recipe as OfflineSummaryModal - cream scroll surface + the 40px
-   frame-m-modal band fit a small dialog (frame-xl-ceremony's 72px band
-   would eat the card). overflow:hidden + border-radius clip the scroll's
-   square corners under the frame's rounded silhouette. */
+/* The ornate frame art carries its own silhouette - no radius/overflow
+   clipping here; the panel class only marks the dialog for tests/e2e. */
 .confirm-modal__panel {
-  position: relative;
-  isolation: isolate;
-  width: min(420px, 92vw);
-  padding: 48px var(--hk-space-8);
-  overflow: hidden;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px var(--hk-shadow-high);
-  color: var(--paper-text, #211f1a);
-  font-family: var(--hk-font-ui);
-  text-align: center;
-}
-
-.confirm-modal__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
-}
-
-.confirm-modal__title {
-  margin: 0 0 var(--hk-space-3);
-  font-family: var(--hk-font-display);
-  font-size: var(--text-title);
-  letter-spacing: 0.06em;
-  color: var(--paper-text, #211f1a);
-}
-
-.confirm-modal__title.is-danger {
-  color: var(--cinnabar, #b54432);
+  flex: none;
 }
 
 .confirm-modal__message {
-  margin: 0 0 var(--hk-space-5);
-  color: var(--paper-text-soft, #5e5a50);
-  font-size: var(--text-sm);
-  line-height: 1.55;
+  flex: none;
+  margin: 0;
+  max-width: 100%;
+  color: var(--paper-text, #302719);
+  font-size: min(3cqh, var(--text-sm));
+  line-height: 1.5;
+  text-align: center;
   word-break: break-word;
   white-space: pre-line;
 }
 
-.confirm-modal__actions {
-  display: flex;
-  gap: var(--hk-space-3);
-  justify-content: center;
+.confirm-modal__detail {
+  --ornate-info-card-width: 92%;
+  margin-top: 0.8cqh;
 }
 
 .confirm-modal-enter-active,

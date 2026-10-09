@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
-import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import OrnateDialog from '@/components/common/art/OrnateDialog.vue'
+import OrnateButton from '@/components/common/art/OrnateButton.vue'
+import { dialogArt } from '@/components/common/art/dialogArt'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
 import { useNotificationStore } from '@/stores/notification'
@@ -16,6 +17,8 @@ import { markResetNotice } from '@/composables/resumeSession'
 const saveIssue = useSaveIssueStore()
 const notification = useNotificationStore()
 const { t } = useI18n()
+const titleId = useId()
+const importButtonUrl = dialogArt('button-dark-v1')
 
 // B1.9a - under the remote authority the corrupt/incompatible bytes
 // live server-side. Export still preserves raw data for manual
@@ -142,12 +145,16 @@ function handleImport(event: Event) {
 <template>
   <div class="save-incompatible" :style="{ zIndex: OVERLAY_LAYERS.saveGate }">
     <InkWashBackdrop left-mountain right-mountain bottom-mist />
-    <div class="save-incompatible__panel">
-      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
-
-      <h2 class="save-incompatible__title">{{ t('saveIncompatible.title') }}</h2>
-
+    <OrnateDialog
+      class="save-incompatible__panel"
+      role="alertdialog"
+      aria-modal="true"
+      :aria-labelledby="titleId"
+      :title="t('saveIncompatible.title')"
+      :title-id="titleId"
+      badge="alert"
+      width="min(600px, 94vw)"
+    >
       <p v-if="saveIssue.status === 'incompatible'" class="save-incompatible__message">
         {{ t('saveIncompatible.bodyIncompatible', { version: saveIssue.foundVersion ?? '?' }) }}
       </p>
@@ -160,19 +167,19 @@ function handleImport(event: Event) {
         <!-- No raw bytes means nothing to export (e.g. a rejected first
              write where no save ever persisted) - hide rather than
              download a 0-byte file labelled as the save. -->
-        <GameButton v-if="saveIssue.raw" variant="secondary" @click="handleExport">{{ t('saveIncompatible.actions.export') }}</GameButton>
+        <OrnateButton v-if="saveIssue.raw" variant="dark" @click="handleExport">{{ t('saveIncompatible.actions.export') }}</OrnateButton>
 
         <label class="save-incompatible__import">
-          <InkNineSlice chrome-id="button-standard" layer="surface" />
+          <img class="save-incompatible__import-art" :src="importButtonUrl" alt="" aria-hidden="true" draggable="false" />
           <span class="save-incompatible__import-label">{{ t('saveIncompatible.actions.import') }}</span>
           <input type="file" accept="application/json" @change="handleImport" />
         </label>
 
-        <GameButton variant="danger" @click="handleReset">
+        <OrnateButton variant="gold" @click="handleReset">
           {{ remoteResettable ? t('saveIncompatible.actions.resetCloud') : t('saveIncompatible.actions.reset') }}
-        </GameButton>
+        </OrnateButton>
       </div>
-    </div>
+    </OrnateDialog>
 
     <ConfirmModal
       :open="pendingConfirm !== null"
@@ -201,70 +208,66 @@ function handleImport(event: Event) {
 
 .save-incompatible__panel {
   /* margin:auto - van can giua khi vua man hinh, nhung khi overflow
-     thi panel dat len tren de cuon toi duoc toan bo noi dung.
-   Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll +
-   frame-m-modal band; padding clears the band and overflow:hidden +
-   border-radius clip the scroll's square corners. */
-  position: relative;
-  isolation: isolate;
+     thi panel dat len tren de cuon toi duoc toan bo noi dung. */
+  flex: none;
   margin: auto;
-  max-width: 460px;
-  padding: 46px 40px;
-  overflow: hidden;
-  border-radius: 16px;
-  box-shadow: var(--shadow-panel);
-  text-align: center;
-  font-family: var(--font-body);
-}
-
-.save-incompatible__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
-}
-
-.save-incompatible__title {
-  margin: 0 0 12px;
-  font-family: var(--font-display);
-  color: var(--paper-text);
-  font-size: var(--text-title);
-  font-weight: 700;
 }
 
 .save-incompatible__message {
-  margin: 0 0 20px;
-  color: var(--paper-text-soft);
-  font-size: var(--text-sm);
+  flex: none;
+  margin: 0;
+  max-width: 100%;
+  color: var(--paper-text-soft, #5e5a50);
+  font-size: min(2.9cqh, var(--text-sm));
   line-height: 1.5;
+  text-align: center;
 }
 
 .save-incompatible__actions {
+  --ornate-button-h: 9.5cqh;
+  flex: none;
+  margin-top: 2cqh;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 1.6cqh;
 }
 
-/* The import affordance paints no button of its own - the drawn
-   button-standard chrome supplies the metal shell and the hidden file
-   input still owns the click target. */
+/* The import affordance paints no button of its own - the dark ornate
+   button art supplies the shell and the hidden file input still owns
+   the click target. */
 .save-incompatible__import {
   position: relative;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap-comfortable);
-  padding: var(--space-2) var(--space-4);
-  color: var(--hk-text-primary, #ede6d6);
-  border-radius: var(--radius-sm);
+  display: inline-grid;
+  place-items: center;
+  height: var(--ornate-button-h);
+  aspect-ratio: 219 / 120;
   cursor: pointer;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
+  color: #f3e7c8;
+  font-family: var(--font-display);
+  font-size: min(4.6cqh, 3cqw, 32px);
   font-weight: 700;
+  letter-spacing: 0.05em;
+  transition: transform var(--hk-motion-micro) var(--hk-ease-standard);
+}
+
+.save-incompatible__import-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .save-incompatible__import-label {
   position: relative;
-  z-index: 3;
+  max-width: 78%;
+  transform: translateY(-12%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .save-incompatible__import input {
@@ -275,7 +278,7 @@ function handleImport(event: Event) {
   cursor: pointer;
 }
 
-.save-incompatible__import:hover .save-incompatible__import-label {
-  color: var(--hk-gold-bright, #e8c35a);
+.save-incompatible__import:hover {
+  transform: scale(1.045);
 }
 </style>

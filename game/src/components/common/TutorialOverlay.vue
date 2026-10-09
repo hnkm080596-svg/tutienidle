@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, useId } from 'vue'
+import { ref, computed, useId, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
-import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import OrnateDialog from '@/components/common/art/OrnateDialog.vue'
+import OrnateButton from '@/components/common/art/OrnateButton.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { TUTORIAL_STEPS } from '@/data/tutorial/tutorialSteps'
@@ -14,11 +14,12 @@ import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 const player = usePlayerStore()
 const { t } = useI18n()
 
-const panelRef = ref<HTMLElement | null>(null)
+const dialogRef = ref<ComponentPublicInstance | null>(null)
+const panelEl = () => (dialogRef.value?.$el as HTMLElement | undefined) ?? null
 const isOpen = computed(() => !player.hasSeenTutorial)
 // Escape = bo qua tutorial (cung action voi nut "Bo Qua" - behavior hop ly
 // cho dialog huong dan, khong mat du lieu gi).
-useDialogFocus(panelRef, isOpen, { onEscape: finish })
+useDialogFocus(panelEl, isOpen, { onEscape: finish })
 
 const titleId = useId()
 const bodyId = useId()
@@ -45,31 +46,30 @@ function next() {
 
 <template>
   <div v-if="!player.hasSeenTutorial" class="tutorial-overlay" :style="{ zIndex: OVERLAY_LAYERS.modal }">
-    <div
-      ref="panelRef"
+    <OrnateDialog
+      ref="dialogRef"
       class="tutorial-overlay__panel"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
       :aria-describedby="bodyId"
+      :title="t(currentStep.titleKey)"
+      :title-id="titleId"
+      badge="info"
+      show-close
+      :close-label="t('tutorial.skip')"
+      @close="finish"
     >
-      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
-
       <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>
-
-      <h3 :id="titleId" class="tutorial-overlay__title">{{ t(currentStep.titleKey) }}</h3>
-
       <p :id="bodyId" class="tutorial-overlay__body">{{ t(currentStep.bodyKey) }}</p>
 
-      <div class="tutorial-overlay__actions">
-        <GameButton class="ghost-on-paper" variant="ghost" @click="finish">{{ t('tutorial.skip') }}</GameButton>
-
-        <GameButton variant="primary" @click="next">
+      <template #actions>
+        <OrnateButton variant="dark" @click="finish">{{ t('tutorial.skip') }}</OrnateButton>
+        <OrnateButton variant="gold" @click="next">
           {{ isLastStep ? t('tutorial.start') : t('tutorial.next') }}
-        </GameButton>
-      </div>
-    </div>
+        </OrnateButton>
+      </template>
+    </OrnateDialog>
   </div>
 </template>
 
@@ -84,53 +84,25 @@ function next() {
   background: var(--scrim);
 }
 
-/* Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll
-   surface + frame-m-modal's 40px band; padding clears the band and
-   overflow:hidden + border-radius clip the scroll's square corners. */
 .tutorial-overlay__panel {
-  position: relative;
-  isolation: isolate;
-  width: min(420px, 92vw);
-  padding: 46px 40px;
-  overflow: hidden;
-  border-radius: 16px;
-  color: var(--paper-text);
-  box-shadow: var(--shadow-panel);
-  font-family: var(--font-body);
-}
-
-.tutorial-overlay__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
+  flex: none;
 }
 
 .tutorial-overlay__progress {
-  margin: 0 0 8px;
-  font-size: var(--text-xs);
-  letter-spacing: 0.05em;
-  color: var(--paper-eyebrow);
-  text-align: right;
-}
-
-.tutorial-overlay__title {
-  margin: 0 0 10px;
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 700;
-  color: var(--paper-text);
+  flex: none;
+  margin: 0.6cqh 0 0;
+  font-size: min(2.4cqh, var(--text-xs));
+  letter-spacing: 0.08em;
+  color: var(--paper-eyebrow, #8f897c);
 }
 
 .tutorial-overlay__body {
-  margin: 0 0 20px;
-  font-size: var(--text-body);
+  flex: none;
+  margin: 1.6cqh 0 0;
+  max-width: 100%;
+  font-size: min(3.1cqh, var(--text-body));
   line-height: 1.55;
-  color: var(--paper-text-soft);
+  color: var(--paper-text-soft, #5e5a50);
+  text-align: center;
 }
-
-.tutorial-overlay__actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
 </style>

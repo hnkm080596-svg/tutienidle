@@ -4,10 +4,10 @@
 // resolves true. There is no Kim Dan CTA - the modal only acknowledges
 // the completed slice; dismiss writes a device-local ack flag in
 // App.vue (no save-schema impact).
-import { onMounted, ref, useId } from 'vue'
+import { onMounted, ref, useId, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
-import GameButton from './GameButton.vue'
-import InkNineSlice from './primitives/InkNineSlice.vue'
+import OrnateDialog from './art/OrnateDialog.vue'
+import OrnateButton from './art/OrnateButton.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useAudioStore } from '@/stores/audio'
@@ -16,7 +16,8 @@ const emit = defineEmits<{ dismiss: [] }>()
 
 const { t } = useI18n()
 
-const panelRef = ref<HTMLElement | null>(null)
+const dialogRef = ref<ComponentPublicInstance | null>(null)
+const panelEl = () => (dialogRef.value?.$el as HTMLElement | undefined) ?? null
 
 // The ending beat IS the reward moment (same convention as the
 // offline summary stinger).
@@ -30,29 +31,33 @@ function onContinue() {
   emit('dismiss')
 }
 
-useDialogFocus(panelRef, ref(true), { onEscape: onContinue })
+useDialogFocus(panelEl, ref(true), { onEscape: onContinue })
 
 const titleId = useId()
 </script>
 
 <template>
   <div class="beta-completion" :style="{ zIndex: OVERLAY_LAYERS.modal }">
-    <section
-      ref="panelRef"
+    <OrnateDialog
+      ref="dialogRef"
       class="beta-completion__panel"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
+      :title="t('betaComplete.title')"
+      :title-id="titleId"
+      badge="info"
+      show-close
+      :close-label="t('betaComplete.continue')"
+      width="min(500px, 94vw)"
+      @close="onContinue"
     >
-      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-      <InkNineSlice chrome-id="frame-m-modal" layer="frame" />
-
-      <h3 :id="titleId" class="beta-completion__title">{{ t('betaComplete.title') }}</h3>
-
       <p class="beta-completion__body">{{ t('betaComplete.body') }}</p>
 
-      <GameButton class="beta-completion__continue" :sound="false" @click="onContinue">{{ t('betaComplete.continue') }}</GameButton>
-    </section>
+      <template #actions>
+        <OrnateButton class="beta-completion__continue" variant="gold" :sound="false" @click="onContinue">{{ t('betaComplete.continue') }}</OrnateButton>
+      </template>
+    </OrnateDialog>
   </div>
 </template>
 
@@ -67,46 +72,13 @@ const titleId = useId()
 }
 
 .beta-completion__panel {
-  /* Huyen Kim paper chrome (see OfflineSummaryModal): cream scroll +
-     frame-m-modal band; overflow+border-radius clip the scroll's
-     square corners under the frame's rounded silhouette. */
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: min(340px, 92vw);
-  max-width: min(460px, 92vw);
-  padding: 44px 40px;
-  overflow: hidden;
-  border-radius: 16px;
-  color: var(--paper-text, #211f1a);
-  font-family: var(--font-body);
-}
-
-.beta-completion__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
-}
-
-.beta-completion__title {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  letter-spacing: 0.06em;
-  color: var(--paper-text, #211f1a);
-  text-align: center;
+  flex: none;
 }
 
 .beta-completion__body {
-  margin: 0;
-  font-size: var(--text-body);
+  margin: 3cqh 0 0;
+  font-size: min(3.2cqh, var(--text-body));
   line-height: 1.55;
   text-align: center;
-}
-
-.beta-completion__continue {
-  margin-top: 8px;
-  align-self: center;
 }
 </style>
