@@ -28,11 +28,11 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
 import { BETA_FEATURES, type BetaFeatureName } from '@/core/betaScope'
-import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { restoreAuthoredFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 // The global test setup unlocks every feature for pre-lock suites; the
-// corpus must see the real flags (all scope-hidden).
-lockBetaFeaturesForTests()
+// corpus must see the shipped flags (wash/refine live, rest hidden).
+restoreAuthoredFeaturesForTests()
 
 const SRC_ROOT = fileURLToPath(new URL('../../src', import.meta.url))
 
@@ -62,8 +62,8 @@ function stripComments(text: string): string {
 // ---------------------------------------------------------------------------
 // Tokens that only exist to surface a scope-hidden system (spec sec.9 list:
 // Sword, Body profession, Hidden paths, Ultimate, Companion, Formation,
-// Artifact, Kim Dan, Daily quests, Manual workforce, Wash/Refine/Ore
-// Decompose, coming-soon placeholders).
+// Artifact, Kim Dan, Daily quests, Manual workforce, Ore Decompose,
+// coming-soon placeholders).
 //
 // Tokens are surface-ids or rendered labels, chosen so a bare word in an
 // unrelated feature cannot collide ('refinement' is realm-body UI, not the
@@ -84,8 +84,10 @@ const FORBIDDEN_TOKENS = [
   { id: 'companion', pattern: /companion_roster|Đồng Hành|Companion\b/ },
   { id: 'worker-lodge', pattern: /worker_lodge|chi_hien_quan|Nhân Công/ },
   {
+    // wash/refine ship in beta (2026-10-09) - only the ore decompose
+    // tab is still a forbidden equipment surface.
     id: 'equipment-forbidden-tab',
-    pattern: /['"](wash|refine|decompose)['"]|ore_decompose/,
+    pattern: /['"]decompose['"]|ore_decompose/,
   },
   { id: 'daily-quest', pattern: /daily_quest|Nhiệm Vụ Ngày/ },
   { id: 'coming-soon', pattern: /coming_soon|comingSoon|Sắp Ra Mắt|isComingSoon/ },
@@ -148,12 +150,10 @@ const MOUNT_GATES: MountGate[] = [
     gateFile: 'src/components/scenes/equipment/EquipmentSurface.vue',
     signatures: ['isBetaEquipmentTab(', 'visibleTabs'],
     protected: [
-      'components/panels/equipment-hall/WashTab.vue',
-      'components/panels/equipment-hall/RefineTab.vue',
       'components/panels/equipment-hall/DecomposeTab.vue',
     ],
     reason:
-      'activeWorkspace can only become a tab listed in visibleTabs, which is TABS filtered by isBetaEquipmentTab - wash/refine/decompose tabs are unreachable',
+      'activeWorkspace can only become a tab listed in visibleTabs, which is TABS filtered by isBetaEquipmentTab - decompose stays unreachable; wash/refine are live surfaces',
   },
 ]
 
@@ -205,26 +205,12 @@ const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: s
   // the formation token in SecondaryPreview reproduces the aux pentagram
   // design. Production admission stays gated at S12 integration via
   // isBetaEquipmentTab / BETA_STANDALONE_PANEL_FEATURES.
-  {
-    file: 'ui-preview/CollectionCraftDesignPreview.vue',
-    tokens: ['equipment-forbidden-tab'],
-    reason:
-      'ui-preview dev surface validating the approved mock tab row; not mounted in production',
-  },
-  {
-    file: 'ui-preview/DesignSystemPreview.vue',
-    tokens: ['equipment-forbidden-tab'],
-    reason:
-      'ui-preview dev surface validating the approved mock tab row; not mounted in production',
-  },
+  // (CollectionCraftDesignPreview / DesignSystemPreview /
+  // EquipmentForgePreview lost their only forbidden hits when wash/refine
+  // shipped - their mock tab rows now name live surfaces, so no benign
+  // registration is needed.)
   {
     file: 'ui-preview/HomeInventoryArtPanel.vue',
-    tokens: ['equipment-forbidden-tab'],
-    reason:
-      'ui-preview dev surface validating the approved mock tab row; not mounted in production',
-  },
-  {
-    file: 'ui-preview/equipment/EquipmentForgePreview.vue',
     tokens: ['equipment-forbidden-tab'],
     reason:
       'ui-preview dev surface validating the approved mock tab row; not mounted in production',
@@ -252,7 +238,7 @@ const KNOWN_LEAKS: ReadonlyArray<{ file: string; tokens: readonly string[]; evid
 // instead of drifting.
 type TokenId = (typeof FORBIDDEN_TOKENS)[number]['id']
 
-const FEATURE_TOKEN_MAP: Record<BetaFeatureName, TokenId> = {
+const FEATURE_TOKEN_MAP: Record<BetaFeatureName, TokenId | null> = {
   hiddenContent: 'hidden-path',
   swordPath: 'sword-way',
   bodyPath: 'body-way',
@@ -260,8 +246,10 @@ const FEATURE_TOKEN_MAP: Record<BetaFeatureName, TokenId> = {
   formation: 'formation',
   artifact: 'phap-bao',
   manualWorkforce: 'worker-lodge',
-  equipmentWash: 'equipment-forbidden-tab',
-  equipmentRefine: 'equipment-forbidden-tab',
+  // equipmentWash/equipmentRefine ship in beta - their surfaces are
+  // legal, so no corpus token may watch them (null = none expected).
+  equipmentWash: null,
+  equipmentRefine: null,
   equipmentOreDecompose: 'equipment-forbidden-tab',
   dailyQuest: 'daily-quest',
 }
@@ -396,7 +384,13 @@ describe('beta scope rendered-token corpus guard', () => {
     const tokenIds = new Set(FORBIDDEN_TOKENS.map((tok) => tok.id))
     for (const [feature, enabled] of Object.entries(BETA_FEATURES)) {
       const tokenId = FEATURE_TOKEN_MAP[feature as BetaFeatureName]
-      expect(tokenId, `feature ${feature} has no mapped token`).toBeDefined()
+      if (tokenId === null) {
+        expect(
+          enabled,
+          `feature ${feature} maps to no token - it must be enabled`,
+        ).toBe(true)
+        continue
+      }
       expect(
         tokenIds.has(tokenId),
         `feature ${feature} is ${enabled ? 'enabled - its surfaces are legal, remove token' : 'scope-hidden - add token'} "${tokenId}"`,

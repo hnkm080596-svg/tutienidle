@@ -9,10 +9,11 @@
 // that project and fails to resolve. The table alone is import-safe.
 
 /**
- * Beta feature admission table. Every listed feature is OUT of beta
- * scope; the table exists so each removal is a deliberate named flag
- * and re-enable is a single flip. Features not listed here are still
- * not offered - the fail-closed rule covers anything unnamed.
+ * Beta feature admission table. A listed feature ships in beta only
+ * while its flag is true; the table exists so each removal is a
+ * deliberate named flag and re-enable is a single flip. Features not
+ * listed here are still not offered - the fail-closed rule covers
+ * anything unnamed.
  *
  *   hiddenContent          - hidden ways' content: hidden lineage
  *                            (discovery / Co Thu trial / Quan The

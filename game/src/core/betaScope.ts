@@ -421,8 +421,12 @@ export function scopeHiddenPillFamilyOfId(id: string): string | null {
 // Equipment hall tabs
 // ---------------------------------------------------------------------------
 
-/** Equipment Hall tabs offered in beta; wash/refine/decompose hidden. */
-export const BETA_EQUIPMENT_TABS = ['enhance', 'dissolve'] as const
+/**
+ * Equipment Hall tabs offered in beta. wash/refine admitted
+ * 2026-10-09 (equipmentWash + equipmentRefine flags on); decompose
+ * stays scope-hidden behind equipmentOreDecompose.
+ */
+export const BETA_EQUIPMENT_TABS = ['enhance', 'wash', 'refine', 'dissolve'] as const
 
 export type BetaEquipmentTab = (typeof BETA_EQUIPMENT_TABS)[number]
 
@@ -505,8 +509,9 @@ export const BETA_ECONOMY_EXEMPTIONS: ReadonlyMap<string, BetaEconomyClass> =
     ['cultivator_diary', 'lore'],
     ['stele_fragment', 'lore'],
     // Luyen Khi Tinh Hoa is paid by the beta-visible Dissolve action; its
-    // only consumers (wash/refine) are scope-hidden this phase, so it is
-    // held as banked equipment value rather than suppressed outright.
+    // op-cost sinks (wash/refine, live since 2026-10-09) are not
+    // enumerated by the census, so it stays classified as banked
+    // equipment value rather than suppressed outright.
     [LUYEN_KHI_TINH_HOA_ID, 'store_of_value'],
     [SPIRIT_STONE_MATERIAL_ID, 'base_currency'],
     [SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID, 'base_currency'],

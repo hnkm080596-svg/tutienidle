@@ -1,12 +1,14 @@
 /**
  * BETA SCOPE LOCK v2 Phase-5 - pins the sec.11-sec.15 domain-level gates
- * and the new read-models against the REAL flag table (BETA_FEATURES all
- * false in beta). Every gate fails closed on a DIRECT domain call, so a
- * caller bypassing the frontend never reaches dormant behavior:
+ * and the new read-models against the REAL flag table (authored
+ * BETA_FEATURES). Every dormant gate fails closed on a DIRECT domain
+ * call, so a caller bypassing the frontend never reaches dormant
+ * behavior:
  *
- *   sec.11 equipment - wash/refine mutating + preview entry points all
- *                      reject 'scope_hidden'; decompose freezes at every
- *                      public seam while persisted settings round-trip;
+ *   sec.11 equipment - wash/refine (live since 2026-10-09) reach real
+ *                      validation instead of the scope gate; decompose
+ *                      freezes at every public seam while persisted
+ *                      settings round-trip;
  *   sec.12 alchemy   - dormant families cannot startJob or preview; the
  *                      canonical read-model only carries beta families;
  *   sec.13 workforce - manual assignment is off; the Worker Lodge
@@ -53,12 +55,12 @@ import {
   isBetaQuestEnabled,
 } from '@/core/betaScope'
 import type { Quest } from '@/core/quest/Quest'
-import { lockBetaFeaturesForTests, unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { restoreAuthoredFeaturesForTests, unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 // The global setup admits every feature for legacy suites; this suite
-// asserts the canonical beta lock itself, so re-pin the all-false
+// asserts the shipped beta lock itself, so re-pin the authored
 // feature table before any expectation runs.
-lockBetaFeaturesForTests()
+restoreAuthoredFeaturesForTests()
 
 function foundationPlayer(): PlayerData {
   const player = createDefaultPlayer()
@@ -74,10 +76,12 @@ const DORMANT_RECIPE: AlchemyRecipe = alchemyRecipes.find(
   (recipe) => recipe.id === 'alchemy_phi_van_dan_qi_refining',
 )!
 
-describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domain level', () => {
-  it('wash entry points all reject scope_hidden on a direct call', () => {
+describe('sec.11 equipment hall - wash/refine live, ore-decompose fails closed at domain level', () => {
+  it('wash entry points reach real validation (gate open)', () => {
     const gm = new GameManager()
 
+    // equipmentWash ships in beta: a direct call passes the scope gate
+    // and hits the impl's own validation (unknown instance).
     expect(
       gm.equipmentSystem.washAffixes(
         'instance-1',
@@ -87,7 +91,7 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.equipmentSlotManager,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
     expect(
       gm.equipmentSystem.previewWashAffixes(
@@ -97,7 +101,7 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.materialBag,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
     expect(
       gm.equipmentSystem.commitWashAffixes(
@@ -107,14 +111,13 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.equipmentSlotManager,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
-    // Query side fails closed too - a lingering pre-flag ticket never
-    // renders through the domain API.
+    // Query side stays empty - no ticket was ever minted.
     expect(gm.equipmentSystem.getWashPreviewAffixes('ticket-1')).toBeUndefined()
   })
 
-  it('refine entry points all reject scope_hidden on a direct call', () => {
+  it('refine entry points reach real validation (gate open)', () => {
     const gm = new GameManager()
 
     expect(
@@ -127,7 +130,7 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.equipmentSlotManager,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
     expect(
       gm.equipmentSystem.previewRefineValues(
@@ -138,7 +141,7 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.materialBag,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
     expect(
       gm.equipmentSystem.commitRefineValues(
@@ -148,11 +151,11 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.equipmentSlotManager,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
   })
 
-  it('the beta equipment surface stays exactly Enhance + Dissolve', () => {
-    expect(BETA_EQUIPMENT_TABS).toEqual(['enhance', 'dissolve'])
+  it('the beta equipment surface admits Enhance + Wash + Refine + Dissolve', () => {
+    expect(BETA_EQUIPMENT_TABS).toEqual(['enhance', 'wash', 'refine', 'dissolve'])
 
     // Positive control: enhance reaches its normal validation (missing
     // instance), never the scope gate.
@@ -424,7 +427,7 @@ describe('sec.14 companion/formation/artifact - all faucets shut', () => {
     try {
       expect(system.maybeReplaceSpawn(player, 'qi_refining', () => 0)?.id).toBe('huyet_mong')
     } finally {
-      lockBetaFeaturesForTests()
+      restoreAuthoredFeaturesForTests()
     }
   })
 })

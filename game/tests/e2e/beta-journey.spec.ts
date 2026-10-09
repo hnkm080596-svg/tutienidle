@@ -29,9 +29,11 @@ const SCOPE_HIDDEN_WHEEL_SLOTS = [
 ]
 const SCOPE_HIDDEN_BUILDINGS = ['chi_hien_quan']
 
-// Equipment hall admits exactly enhance + dissolve in beta.
-const BETA_EQUIPMENT_TAB_LABELS = ['Cường Hóa', 'Hóa Luyện']
-const SCOPE_HIDDEN_EQUIPMENT_TAB_LABELS = ['Tẩy Luyện', 'Tinh Luyện', 'Phân Giải']
+// Equipment hall admits Trang Bi + all four live op tabs in beta
+// (wash/refine shipped 2026-10-09). The decompose op left the rail for
+// the Kho Vat surface - its label must never render in the hall.
+const BETA_EQUIPMENT_TABS = ['equip', 'enhance', 'wash', 'refine', 'dissolve']
+const SCOPE_HIDDEN_EQUIPMENT_TAB_LABELS = ['Phân Giải']
 
 // Realm ladder in beta shows only the in-window rungs (Nhap Dao /
 // Kien Co / Truc Co); Kim Dan+ and any coming-soon chip are forbidden.
@@ -166,25 +168,29 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     }
   })
 
-  test('equipment hall renders only enhance + dissolve tabs', async ({ page }) => {
+  test('equipment hall renders every beta-admitted op tab live', async ({ page }) => {
     await bootFreshMortal(page)
     await openLeftMode(page, 'equipment_hall')
     const scene = page.locator('.equipment-scene')
     await expect(scene).toBeVisible({ timeout: 10_000 })
-    // Fidelity workspace rail: Trang Bi + 5 op seals. Beta admits only
-    // enhance + dissolve - wash/refine/decompose render as disabled
-    // shells (never mount their component).
-    const tabs = scene.locator('.equipment-workspace nav button')
-    await expect(tabs).toHaveCount(6, { timeout: 10_000 })
-    const tabIds = ['equip', 'enhance', 'wash', 'refine', 'dissolve', 'decompose']
-    for (const [index, id] of tabIds.entries()) {
-      const betaAdmits = ['equip', 'enhance', 'dissolve'].includes(id)
-      if (betaAdmits) {
-        await expect(tabs.nth(index), `workspace tab "${id}"`).toBeEnabled()
-      } else {
-        await expect(tabs.nth(index), `workspace tab "${id}"`).toBeDisabled()
-      }
+    // Fidelity rail: Trang Bi + 4 op seals. Beta admits enhance + wash +
+    // refine + dissolve (wash/refine shipped 2026-10-09) - every seal is
+    // enabled; decompose left the rail for the Kho Vat surface entirely.
+    const tabs = scene.locator('.equipment-tabs button')
+    await expect(tabs).toHaveCount(5, { timeout: 10_000 })
+    for (const [index, id] of BETA_EQUIPMENT_TABS.entries()) {
+      await expect(tabs.nth(index), `workspace tab "${id}"`).toBeEnabled()
     }
+    // Wash/refine are live: clicking the seal activates it and mounts
+    // the real op component (a locked shell would leave Trang Bi active).
+    const navLabel = (text: string) =>
+      scene.locator('.equipment-tabs button', { hasText: text })
+    await navLabel('Tẩy Luyện').click()
+    await expect(navLabel('Tẩy Luyện')).toHaveAttribute('aria-pressed', 'true')
+    await expect(scene.locator('.forge-wash')).toBeVisible()
+    await navLabel('Tinh Luyện').click()
+    await expect(navLabel('Tinh Luyện')).toHaveAttribute('aria-pressed', 'true')
+    await expect(scene.locator('.forge-refine')).toBeVisible()
     for (const label of SCOPE_HIDDEN_EQUIPMENT_TAB_LABELS) {
       expect(
         await scene.locator('.equipment-workspace__body').getByText(label, { exact: true }).count(),

@@ -48,13 +48,13 @@ import type { ArtifactProgress } from '@/core/artifact/Artifact'
 import type { RealmHiddenState } from '@/core/realm/hidden/HiddenPerfection'
 import { createBaseStats } from '@/core/stats/StatBlock'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
-import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { restoreAuthoredFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 // The global test setup unlocks every catalog way + feature for
-// suites written pre-lock; this suite asserts the canonical beta
+// suites written pre-lock; this suite asserts the shipped beta
 // allow-lists and the fail-closed domain gates, so re-pin them.
 lockBetaWaysForTests()
-lockBetaFeaturesForTests()
+restoreAuthoredFeaturesForTests()
 
 const discoveredRecord: RealmHiddenState = {
   discovered: true,
@@ -135,10 +135,11 @@ describe('betaScopeSurface - navigation allow-lists', () => {
     }
   })
 
-  it('isBetaEquipmentTab admits only enhance + dissolve under the lock', () => {
-    expect(isBetaEquipmentTab('enhance')).toBe(true)
-    expect(isBetaEquipmentTab('dissolve')).toBe(true)
-    for (const tab of ['wash', 'refine', 'decompose', 'made_up_tab']) {
+  it('isBetaEquipmentTab admits the four live tabs, still fails closed', () => {
+    for (const tab of ['enhance', 'wash', 'refine', 'dissolve']) {
+      expect(isBetaEquipmentTab(tab), `expected ${tab} admitted`).toBe(true)
+    }
+    for (const tab of ['decompose', 'made_up_tab']) {
       expect(isBetaEquipmentTab(tab), `expected ${tab} hidden`).toBe(false)
     }
   })
