@@ -83,7 +83,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 /* Medallion hangs off the capsule's left tip like the Codex preview
    (owner 2026-10-09: icon inside the pill + text starting inside its
    ring read as "two buttons stacked"). Negative left = protrude. */
-.family-icon { position:absolute; left:-14px; top:50%; transform:translateY(-50%); width:50px; height:50px; object-fit:contain; }
+.family-icon { position:absolute; left:-14px; top:50%; transform:translateY(-50%); width:43px; height:43px; object-fit:contain; }
 .family-text small { display:block; margin-top:4px; font-size:10px; font-weight:400; }
 .family-pill.is-locked { opacity:.55; }
 .family-pill:focus-visible { outline:2px solid #315d48; outline-offset:3px; }
