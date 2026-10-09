@@ -160,6 +160,8 @@ const galaxyPieces = computed(() =>
   <div class="body-center body-paper-figure">
     <div class="body-stage" :aria-label="model.chapterLabel">
       <img class="body-silhouette body-figure-art" :src="bodyArt('silhouette-seated')" alt="">
+      <Transition name="chapter-swap">
+      <div :key="model.chapter" class="chapter-layer">
       <template v-if="model.chapter === 'refinement'">
         <img v-if="litLayer('skin')" class="body-glow" :src="bodyArt('silhouette-seated')" alt="" aria-hidden="true">
         <div v-if="litLayer('skin')" class="body-layer body-skin-layer lit">
@@ -222,6 +224,8 @@ const galaxyPieces = computed(() =>
           :src="bodyArt(`galaxy-${piece.id}-${piece.lit ? 'lit' : 'unlit'}`)" alt="">
         <img class="body-galaxy-stars" :src="bodyArt(`galaxy-stars-${starsLit ? 'lit' : 'unlit'}`)" alt="">
       </template>
+      </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -234,6 +238,15 @@ const galaxyPieces = computed(() =>
 @keyframes body-float { 0%,100% { translate:0 0; } 50% { translate:0 -6px; } }
 @media (prefers-reduced-motion: reduce) { .body-stage { animation:none; } }
 .body-silhouette { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
+/* Chapter transition (owner ruling 2026-10-09): swapping Rèn Thể / Khai
+   Mạch / Dẫn Linh dissolves the chapter layer - the outgoing content blurs
+   and sinks while the incoming fades up, the silhouette itself stays. */
+.chapter-layer { position:absolute; inset:0; }
+.chapter-swap-enter-active { transition:opacity .5s ease-out .08s, filter .5s ease-out .08s, transform .5s ease-out .08s; }
+.chapter-swap-leave-active { transition:opacity .3s ease-in, filter .3s ease-in, transform .3s ease-in; }
+.chapter-swap-enter-from { opacity:0; filter:blur(9px); transform:scale(1.05); }
+.chapter-swap-leave-to { opacity:0; filter:blur(9px); transform:scale(.97); }
+@media (prefers-reduced-motion: reduce) { .chapter-swap-enter-active, .chapter-swap-leave-active { transition:none; } }
 .body-layer { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .body-skin-layer { mask-image:linear-gradient(transparent 29%, #000 34%, #000 67%, transparent 74%); }
 .body-skin-layer img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 1px #aaaaaa); }
