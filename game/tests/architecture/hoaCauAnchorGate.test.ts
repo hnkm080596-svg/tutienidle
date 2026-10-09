@@ -21,7 +21,9 @@ const sceneSource = readFileSync(
 
 describe('CombatScene hoaCau hand-anchor gate', () => {
   it('gates the palm anchor on the declared phap_tu_shared cell width', () => {
-    const { w, h } = CHARACTER_ART.phap_tu_shared.sourceSize
+    const art = CHARACTER_ART.phap_tu_shared
+    if (!art) throw new Error('phap_tu_shared art is missing')
+    const { w, h } = art.sourceSize
     expect(sceneSource).toContain(`sourceSize?.w === ${w}`)
     // The anchor fractions are authored against the same cell - keep the
     // two literals consistent so a resize is impossible to do halfway.
