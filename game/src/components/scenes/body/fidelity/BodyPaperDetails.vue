@@ -105,7 +105,7 @@ const navIcon = resolveAssetUrl(
   </EquipmentArtCard>
 </template>
 <style scoped>
-.body-card { height:100%; min-height:0; display:flex; flex-direction:column; padding:14px; }
+.body-card { height:100%; min-height:0; display:flex; flex-direction:column; padding:14px 14px 28px; }
 .body-card-title { display:flex; align-items:center; gap:8px; flex:none; }
 .body-card-title img { width:48px; height:48px; object-fit:contain; }
 .body-card-title h2 { margin:0; font-size:23px; color:#f3e4c4; }
