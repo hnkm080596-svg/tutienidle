@@ -987,7 +987,7 @@
         "requirements": "Requirements"
       },
       "actions": {
-        "investRefinement": "Upgrade"
+        "investRefinement": "Temper"
       },
       "unit": {
         "tierTitle": "Tier {tier} · {name}",

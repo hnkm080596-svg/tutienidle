@@ -103,7 +103,10 @@ const navIcon = resolveAssetUrl(
   </EquipmentArtCard>
 </template>
 <style scoped>
-.body-card { height:100%; min-height:0; display:flex; flex-direction:column; padding:14px 14px 28px; }
+/* Grow the card into the free space around it (owner ruling
+   2026-10-09): negative margins let it reach ~10px off the
+   silhouette and the panel edge. */
+.body-card { height:100%; min-height:0; display:flex; flex-direction:column; padding:14px 14px 28px; margin-left:-10px; margin-right:-8px; }
 .body-card-title { display:flex; align-items:center; gap:8px; flex:none; }
 .body-card-title img { width:48px; height:48px; object-fit:contain; }
 .body-card-title h2 { margin:0; font-size:23px; color:#f3e4c4; }
@@ -131,6 +134,9 @@ const navIcon = resolveAssetUrl(
 .body-extra__bar span { display:block; height:100%; background:linear-gradient(90deg,#466c4b,#c6a047); }
 .body-extra__count { font-size:11px; color:#b6a87e; }
 .body-extra.done { border-color:#7fae62; }
-.body-invest { width:100%; height:44px; flex:none; font-size:20px; padding:0; margin-top:8px; }
+/* Same Cường Hóa submit (owner ruling 2026-10-09): fixed-width
+   filter-art pill, the 1225/324 ratio grows the frame with the
+   text - smaller size + centered per his live review. */
+.body-invest { width:220px; flex:none; font-size:18px; padding:0; margin:8px auto 0; }
 .body-notice { position:absolute; left:14px; right:14px; bottom:6px; margin:0; font-size:11px; color:#c9a95f; min-height:14px; text-align:center; }
 </style>
