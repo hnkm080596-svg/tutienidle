@@ -108,14 +108,14 @@ const foreheadLitCount = computed(() => {
 // belt line on the flank, Âm Kiều = inner eye, Âm Duy = throat, Dương Duy =
 // temple, Dương Kiều = side of head, Xung = chest centre, Đốc = crown.
 const MERIDIAN_POINTS = [
-  [50, 55],
-  [36, 57],
-  [47.5, 13.5],
-  [50, 21],
-  [52, 10],
-  [42, 11],
-  [50, 40],
-  [50, 5],
+  [48.8, 52.2],
+  [38.1, 52.2],
+  [50.8, 20.9],
+  [49.9, 29.6],
+  [48.0, 17.1],
+  [43.1, 17.9],
+  [49.5, 40.7],
+  [46.9, 11.0],
 ] as const
 const meridianNodes = computed(() =>
   props.model.units.map((unit, index) => {
