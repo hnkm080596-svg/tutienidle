@@ -629,7 +629,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     if (!this._hoaCauPresentation) {
       this._hoaCauPresentation = new HoaCauFireballPresentation({
         anchor: fact => (fact.entityId === PLAYER_ID && this.sprites.get(fact.entityId)?.kind === 'sprite'
-          && this.sprites.get(fact.entityId)?.sourceSize?.w === 244
+          // phap_tu_shared cell is 732x756 - the hand anchor is authored for
+          // that cast pose only, so other art falls through to the body anchor.
+          && this.sprites.get(fact.entityId)?.sourceSize?.w === 732
           ? hoaCauHandAnchor(this.sprites.get(fact.entityId)!.rect as Phaser.GameObjects.Sprite)
           : this.bodyAnchorScreen(fact.entityId, fact.entityId === PLAYER_ID ? 'front' : 'centre'))
           ?? this.lastKnownScreenPositions?.get(fact.entityId)

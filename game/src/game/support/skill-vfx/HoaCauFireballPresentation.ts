@@ -4,13 +4,14 @@ import { hoaCauTiming, landedHoaCauTargets, sampleHoaCauTimeline } from './HoaCa
 
 type Point = Readonly<{ x: number; y: number }>
 const PORTAL_BLEND_MS = 180
-/** Raised right palm in the shared Phap Tu 244x252 cast frame (frames 6-12). */
+/** Raised right palm in the shared Phap Tu 732x756 cast frame (frames 6-12).
+    Fractions unchanged from the 244x252 pack - same composition at 3x. */
 export function hoaCauHandAnchor(sprite: Readonly<{
   x: number; y: number; displayWidth: number; displayHeight: number; originX: number; originY: number
 }>): Point {
   return {
-    x: sprite.x + (235 / 244 - sprite.originX) * sprite.displayWidth,
-    y: sprite.y + (46 / 252 - sprite.originY) * sprite.displayHeight,
+    x: sprite.x + (705 / 732 - sprite.originX) * sprite.displayWidth,
+    y: sprite.y + (138 / 756 - sprite.originY) * sprite.displayHeight,
   }
 }
 export interface HoaCauSprite {
