@@ -167,6 +167,11 @@ const galaxyPieces = computed(() =>
   animation:body-glow-pulse 4.6s ease-in-out infinite; }
 @keyframes body-glow-pulse { 0%,100% { opacity:.14; } 50% { opacity:.5; } }
 @media (prefers-reduced-motion: reduce) { .body-glow { animation:none; opacity:.4; } }
+/* Lit anatomy arts share the soft pulsing glow with the Luyen Bi aura
+   (owner ruling 2026-10-09): a gentle golden halo that breathes on/off. */
+.body-muscle-layer img, .body-blood, .body-spine img, .body-heart, .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; }
+@keyframes body-art-glow { 0%,100% { filter:drop-shadow(0 0 2px rgba(238,196,108,.35)); } 50% { filter:drop-shadow(0 0 6px rgba(238,196,108,.8)) drop-shadow(0 0 10px rgba(238,196,108,.45)); } }
+@media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img, .body-heart, .forehead-ring { animation:none; } }
 .body-muscle-layer img { position:absolute; top:39%; width:11%; height:22%; object-fit:contain; pointer-events:none; }
 .body-muscle-layer .left { left:27%; transform:rotate(26deg); }
 .body-muscle-layer .right { right:27%; transform:rotate(-26deg); }
