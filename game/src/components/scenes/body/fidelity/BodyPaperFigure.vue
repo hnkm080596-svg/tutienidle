@@ -318,7 +318,8 @@ const galaxyPieces = computed(() =>
           class="body-meridian-path" viewBox="0 0 100 100" preserveAspectRatio="none"
           :style="{ maskImage: `url(${bodyArt('silhouette-stance')})`, WebkitMaskImage: `url(${bodyArt('silhouette-stance')})`, maskSize: '90% 90%', WebkitMaskSize: '90% 90%', maskPosition: 'center', WebkitMaskPosition: 'center', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }">
           <polyline :points="dotsAttr(path.dots)" fill="none"
-            stroke="#8a6f3f" stroke-width="0.7" vector-effect="non-scaling-stroke" opacity="0.8" />
+            stroke="#ffce6b" stroke-width="0.7" vector-effect="non-scaling-stroke" opacity="0.95"
+            style="filter:drop-shadow(0 0 1.5px rgba(255,190,80,.9))" />
           <circle v-for="(dot, di) in path.dots.slice(1, -1)" :key="di"
             :cx="dot[0]" :cy="dot[1]" r="0.9"
             :class="di < path.lit ? 'dot-lit' : 'dot-dim'" />
