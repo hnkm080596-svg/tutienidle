@@ -315,7 +315,8 @@ const galaxyPieces = computed(() =>
         <!-- Channel paths: irregular zigzag between node centers, small
              dot every 10%, straight segment dot-to-dot. -->
         <svg v-for="path in meridianPaths" :key="path.key"
-          class="body-meridian-path" viewBox="0 0 100 100" preserveAspectRatio="none">
+          class="body-meridian-path" viewBox="0 0 100 100" preserveAspectRatio="none"
+          :style="{ maskImage: `url(${bodyArt('silhouette-stance')})`, WebkitMaskImage: `url(${bodyArt('silhouette-stance')})`, maskSize: '90% 90%', WebkitMaskSize: '90% 90%', maskPosition: 'center', WebkitMaskPosition: 'center', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }">
           <polyline :points="dotsAttr(path.dots)" fill="none"
             stroke="#8a6f3f" stroke-width="0.7" vector-effect="non-scaling-stroke" opacity="0.8" />
           <circle v-for="(dot, di) in path.dots.slice(1, -1)" :key="di"
