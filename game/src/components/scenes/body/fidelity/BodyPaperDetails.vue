@@ -4,11 +4,40 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
+import SlotView from '@/components/common/SlotView.vue'
+import { useGameManager } from '@/composables/useGameState'
+import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
 import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
 
 const props = defineProps<{ model: BodyPaperModel; unit: BodyPaperUnit | null; notice: string }>()
 const emit = defineEmits<{ invest: [] }>()
 const { t } = useI18n()
+const gameManager = useGameManager()
+
+// Material rows follow the Trang Bi standard (owner ruling 2026-10-09):
+// icon + owned/need only, the name/info lives in the hover tooltip.
+// Same .has() guard as the hall tabs - a missing material must degrade
+// to no tooltip, not crash the card.
+const MATERIAL_CATEGORY_ART: Record<string, string> = {
+  essence: '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
+  spirit_stone: '/assets/ui/tien-hiep-2026-10/controls/resource-crystal-v1.png',
+}
+
+function materialIcon(materialId: string): string | undefined {
+  const material = gameManager.materialRegistry.has(materialId)
+    ? gameManager.materialRegistry.get(materialId)
+    : undefined
+  const art = material?.icon ?? (material?.category ? MATERIAL_CATEGORY_ART[material.category] : undefined)
+  return art ? resolveAssetUrl(art) : undefined
+}
+
+const buildMaterialTooltip = createMaterialTooltipBuilder(t)
+
+function materialTooltip(materialId: string, owned: number) {
+  return gameManager.materialRegistry.has(materialId)
+    ? buildMaterialTooltip(gameManager.materialRegistry.get(materialId), { owned })
+    : undefined
+}
 
 // Same ren/khai/dan art mapping the scene nav uses.
 const NAV_ART: Record<string, string> = { refinement: 'ren', meridian: 'khai', cycle: 'dan' }
@@ -38,10 +67,19 @@ const navIcon = resolveAssetUrl(
         </dl>
         <h3>{{ t('body.material') }}</h3>
         <div class="body-materials">
-          <div v-for="cost in unit.costs" :key="cost.id" :class="{ unmet: !cost.met }">
-            <img v-if="cost.icon" :src="cost.icon" alt="">
-            <span>{{ cost.name }}</span>
-            <strong>{{ cost.amountLabel }}</strong>
+          <div
+            v-for="cost in unit.costs"
+            :key="cost.id"
+            v-tooltip="materialTooltip(cost.id, cost.have)"
+            class="equipment-material"
+            :class="{ 'is-missing': !cost.met }"
+          >
+            <div class="equipment-material-icon">
+              <SlotView variant="equipment" static :item="null" :icon="cost.icon ?? materialIcon(cost.id)" :label="cost.name" />
+            </div>
+            <div>
+              <b>{{ cost.amountLabel }}</b>
+            </div>
           </div>
           <p v-if="!unit.costs.length" class="body-empty-row">{{ t('body.noCost') }}</p>
         </div>
@@ -55,7 +93,10 @@ const navIcon = resolveAssetUrl(
           <p v-if="model.extra.progressLabel" class="body-extra__count">{{ model.extra.progressLabel }}</p>
         </div>
       </div>
-      <EquipmentArtButton v-if="unit.actionLabel" gold class="body-invest" :disabled="unit.actionDisabled" @click="emit('invest')">{{ unit.actionLabel }}</EquipmentArtButton>
+      <!-- Submit states = the Trang Bi machine (owner ruling 2026-10-09):
+           dark filter-art pill while locked, gold selected art once the
+           unit is investable. -->
+      <EquipmentArtButton v-if="unit.actionLabel" filter-art class="body-invest" :gold="!unit.actionDisabled" :disabled="unit.actionDisabled" @click="emit('invest')">{{ unit.actionLabel }}</EquipmentArtButton>
     </template>
     <template v-else>
       <p class="body-empty-row">{{ model.lockHint ?? t('body.empty') }}</p>
@@ -76,11 +117,12 @@ const navIcon = resolveAssetUrl(
 .body-stat-list { margin:0; }
 .body-stat-list > div { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #b28a4333; font-size:13px; align-items:center; }
 .body-stat-list dd { margin:0; color:#a3d793; }
-.body-materials { display:flex; flex-wrap:wrap; gap:6px; }
-.body-materials > div { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; color:#a3d793; flex:1; min-width:0; }
-.body-materials img { width:32px; height:32px; object-fit:contain; }
-.body-materials strong { font-weight:400; }
-.body-materials .unmet, .body-materials .unmet strong { color:#d98a6f; }
+.body-materials { display:flex; flex-wrap:wrap; gap:10px; }
+.body-materials .equipment-material { display:flex; align-items:center; gap:6px; font-size:12px; color:#a3d793; }
+.body-materials .equipment-material-icon { width:40px; height:40px; flex:none; align-self:center; }
+.body-materials .equipment-material-icon :deep(.slot-view) { width:100%; height:100%; }
+.body-materials .equipment-material b { font-weight:700; }
+.body-materials .equipment-material.is-missing b { color:#d98a6f; }
 .body-gate { margin:5px 0; font-size:12px; color:#d98a6f; }
 .body-empty-row { font-size:13px; color:#9a8562; font-style:italic; }
 .body-extra { margin-top:10px; padding:8px 10px; border:1px solid #3f7a5c88; border-radius:6px; background:#0f201855; }

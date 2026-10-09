@@ -49,7 +49,7 @@ const model = computed<BodyPaperModel>(() => {
       description:t('description'),
       state:i === 0 ? 'done' as const : i === 1 ? 'current' as const : 'locked' as const,
       rows:[{label:t('hp'),value:'+320'},{label:t('might'),value:'+24'},{label:t('defense'),value:'+16'}],
-      costs:[{id:'c1',name:t(`resource.${chapter.value}`),amountLabel:'12 / 20',met:i <= 1}],
+      costs:[{id:'c1',name:t(`resource.${chapter.value}`),have:12,need:20,amountLabel:'12 / 20',met:i <= 1}],
       gates:i > 1 ? [t('lockedHint')] : [],
       progressLabel:i === 1 ? '320 / 1.000' : undefined,
       actionLabel:t('invest'),

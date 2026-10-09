@@ -52,7 +52,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
             @click="emit('chapter', chapter.id)"
           >
             <img class="family-icon" :src="navArt(chapter.id, model.chapter === chapter.id)" alt="">
-            <span class="family-text">{{ chapter.label }}<small>{{ chapter.hint }}</small></span>
+            <span class="family-text">{{ chapter.label }}</span>
           </EquipmentArtButton>
         </nav>
         <BodyPaperFigure :model="model" :selected="unit?.id ?? ''" @select="emit('select', $event)" />
@@ -65,16 +65,20 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <style scoped>
 .body-scene { position:absolute; inset:0; pointer-events:auto; font-family:var(--font-display,Georgia,serif); color:#3b2f1d; line-height:1.3; }
 .body-scene :deep(*) { box-sizing:border-box; }
-.body-panel { position:absolute; left:94px; top:123px; width:1334px; height:633px; padding:14px 26px 12px; border:3px double #b28a43; background-color:#f2e4c8; background-position:center; background-size:cover; background-repeat:no-repeat; box-shadow:0 12px 15px #0009; overflow:hidden; }
+/* Paper page geometry = HomeBodyArtPanel preview source verbatim
+   (left:24% top:12.5% w74% h75% = 345,101,1065x608 at 1440x810 - same
+   sheet rect as skill/equipment scenes; owner ruling 2026-10-09:
+   backdrop was oversized/off-center). */
+.body-panel { position:absolute; left:24%; top:12.5%; width:74%; height:75%; padding:14px 26px 12px; border:3px double #b28a43; background-color:#f2e4c8; background-position:center; background-size:cover; background-repeat:no-repeat; box-shadow:0 12px 15px #0009; overflow:hidden; }
 .body-heading { border-bottom:1px solid #b28a43; }
-/* h1 inherits the global 72px calligraphy treatment (58px box) - give
-   the row its real height so the glyphs sit inside the baked plaque
-   instead of straddling the panel edge. */
+/* h1 = same treatment as equipment/skill titles (owner ruling 2026-10-09:
+   "giống các panel trên") — 56px UTM OngDoGia dark-gold gradient inside
+   the 58px box; overrides the shared tien-hiep-ui 72px rule. */
 .body-heading__top { height:58px; display:flex; align-items:center; gap:24px; } .body-heading__col{display:flex;flex-direction:column}.body-heading__top .body-heading__col img{width:200px;margin-top:0;height:auto;object-fit:contain;opacity:.75}
-.body-heading h1 { margin:0; font-size:30px; font-weight:700; color:#35250f; text-shadow:0 1px #fff7; }
+:is(#app,body) .body-scene .body-heading h1 { margin:0; padding:0; width:370px; height:58px; font-family:'UTM OngDoGia','Ma Shan Zheng','ZCOOL XiaoWei',var(--font-display,Georgia,serif); font-size:56px; font-style:normal; font-weight:400; line-height:58px; text-align:center; color:transparent; background:linear-gradient(100deg,#241a0c 20%,#6b5224 40%,#fff6d8 50%,#6b5224 60%,#241a0c 80%); background-size:220% 100%; background-position:0% 0; -webkit-background-clip:text; background-clip:text; animation:none; }
 .body-heading img { width:170px; height:21px; object-fit:contain; opacity:.65; }
 .body-subtitle { margin:2px 0 4px; font-size:13px; color:#715627; }
-.body-layout { height:calc(100% - 106px); display:grid; grid-template-columns:17% 52% 31%; gap:8px; min-height:0; }
+.body-layout { height:calc(100% - 106px); display:grid; grid-template-columns:20% 50% 30%; gap:8px; min-height:0; }
 .body-family { position:relative; display:flex; flex-direction:column; justify-content:space-evenly; padding:4px 4px 4px 20px; isolation:isolate; }
 .family-spine { position:absolute; left:6px; top:50%; width:280px; height:13px; object-fit:fill; transform:translate(-50%,-50%) rotate(90deg); z-index:-1; }
 .family-pill { height:60px; padding-left:42px; font-size:15px; white-space:nowrap; text-align:left; }

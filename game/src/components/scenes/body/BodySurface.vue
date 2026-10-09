@@ -107,6 +107,8 @@ function toUiUnit(unit: BodyUnitView): BodyPaperUnit {
       id: cost.id,
       name: cost.name,
       icon: cost.icon,
+      have: cost.have,
+      need: cost.need,
       // A completed tier has need=0 - printing 'have / 0' reads as a
       // broken cost, so the row shows the done label instead.
       amountLabel: cost.need === 0

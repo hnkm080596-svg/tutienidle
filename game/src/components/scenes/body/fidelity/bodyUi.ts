@@ -5,6 +5,8 @@ export interface BodyPaperCost {
   id: string
   name: string
   icon?: string
+  have: number
+  need: number
   /** Resolved "have / need" line (domain-formatted). */
   amountLabel: string
   met: boolean
