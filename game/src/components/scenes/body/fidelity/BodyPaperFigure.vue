@@ -229,7 +229,7 @@ const galaxyPieces = computed(() =>
           @click="dragMoved ? (dragMoved = false) : emit('select', node.unit.id)">
           <img :src="bodyArt(`meridian-node-${node.lit ? 'lit' : 'unlit'}`)" alt="">
           <!-- Layout-review index badge (owner request 2026-10-09): 1-8 in data order. -->
-          <span class="body-meridian-num">{{ node.index + 1 }}</span>
+          <span class="body-meridian-num" :class="{ 'num-left': node.index === 5 || node.index === 7 }">{{ node.index + 1 }}</span>
         </button>
       </template>
       <template v-else-if="model.chapter === 'zhou_tian'">
@@ -343,6 +343,7 @@ const galaxyPieces = computed(() =>
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
 /* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
 .body-meridian-num { position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
+.body-meridian-num.num-left { left:auto; right:100%; transform:translate(15%,-50%); }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
 .body-meridian-line { position:absolute; height:12px; transform-origin:left center; z-index:2; pointer-events:none; }
