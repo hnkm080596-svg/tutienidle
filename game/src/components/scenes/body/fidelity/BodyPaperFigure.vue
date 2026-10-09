@@ -160,6 +160,65 @@ const meridianNodes = computed(() =>
 // locked ones show dimmed.
 const visibleMeridianNodes = computed(() => meridianNodes.value)
 
+// Meridian channels (owner request 2026-10-09): irregular zigzag paths
+// between node centers, with small dots every 10% joined by straight
+// segments. Small-dot lit count follows the destination unit's progress.
+const MERIDIAN_LINKS = [
+  { from: 0, to: 2, bend: 3, seed: 7 },
+] as const
+// Deterministic pseudo-random so the zigzag is stable across renders.
+const seededJitter = (seed: number, i: number) => {
+  const v = Math.sin(seed * 97.31 + i * 53.77) * 43758.5453
+  return (v - Math.floor(v)) * 2 - 1
+}
+const meridianPaths = computed(() =>
+  MERIDIAN_LINKS.map((link) => {
+    const a = nodePosition(link.from)
+    const b = nodePosition(link.to)
+    // Irregular waypoints between the two centers (not collinear).
+    const zig: [number, number][] = [a]
+    for (let i = 1; i <= link.bend; i++) {
+      const t = i / (link.bend + 1)
+      zig.push([
+        a[0] + (b[0] - a[0]) * t + seededJitter(link.seed, i) * 7,
+        a[1] + (b[1] - a[1]) * t + seededJitter(link.seed + 3, i) * 5,
+      ])
+    }
+    zig.push(b)
+    // Resample the zigzag into points spaced evenly by arc length -
+    // one small dot every 10%, straight segment between dots.
+    const segLen: number[] = []
+    let total = 0
+    for (let i = 1; i < zig.length; i++) {
+      const d = Math.hypot(zig[i][0] - zig[i - 1][0], zig[i][1] - zig[i - 1][1])
+      segLen.push(d)
+      total += d
+    }
+    const dots: [number, number][] = [zig[0]]
+    let target = total / 10
+    let acc = 0
+    for (let i = 1; i < zig.length; i++) {
+      let l = segLen[i - 1]
+      while (l > 0 && acc + l >= target && dots.length < 10) {
+        const need = target - acc
+        const f = need / l
+        dots.push([zig[i - 1][0] + (zig[i][0] - zig[i - 1][0]) * f, zig[i - 1][1] + (zig[i][1] - zig[i - 1][1]) * f])
+        zig[i - 1] = dots[dots.length - 1]
+        l -= need
+        acc = 0
+        target += total / 10
+      }
+      acc += l
+    }
+    dots.push(b)
+    // All dots lit while meridian nodes are forced lit for layout review
+    // (owner request 2026-10-09, temporary) - real wiring: done = 9,
+    // else floor(progressPct / 10) on the destination unit.
+    return { key: `${link.from}-${link.to}`, dots, lit: 9 }
+  }),
+)
+const dotsAttr = (dots: readonly (readonly number[])[]) => dots.map((d) => `${d[0]},${d[1]}`).join(' ')
+
 
 // Chu Thien: galaxy pieces lit by the chapter progress fraction; lit pieces
 // orbit. Progress arrives as the completed/total percentage on the model.
@@ -219,6 +278,16 @@ const galaxyPieces = computed(() =>
         </div>
       </template>
       <template v-else-if="model.chapter === 'meridian'">
+        <!-- Channel paths: irregular zigzag between node centers, small
+             dot every 10%, straight segment dot-to-dot. -->
+        <svg v-for="path in meridianPaths" :key="path.key"
+          class="body-meridian-path" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <polyline :points="dotsAttr(path.dots)" fill="none"
+            stroke="#8a6f3f" stroke-width="0.7" vector-effect="non-scaling-stroke" opacity="0.8" />
+          <circle v-for="(dot, di) in path.dots.slice(1, -1)" :key="di"
+            :cx="dot[0]" :cy="dot[1]" r="0.9"
+            :class="di < path.lit ? 'dot-lit' : 'dot-dim'" />
+        </svg>
         <button v-for="node in visibleMeridianNodes" :key="node.unit.id"
           class="body-meridian-node body-orb" :class="[node.unit.state, { selected: selected === node.unit.id }]"
           :style="{ left: `${node.x}%`, top: `${node.y}%` }"
@@ -344,6 +413,9 @@ const galaxyPieces = computed(() =>
 /* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
 .body-meridian-num { position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
 .body-meridian-num.num-left { left:auto; right:100%; transform:translate(15%,-50%); }
+.body-meridian-path { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+.body-meridian-path .dot-lit { fill:#ffd76a; }
+.body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
 .body-meridian-line { position:absolute; height:12px; transform-origin:left center; z-index:2; pointer-events:none; }
