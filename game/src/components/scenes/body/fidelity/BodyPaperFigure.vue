@@ -217,7 +217,7 @@ const channelDot = (link: { from: number; to: number; seed: number; ctrl?: reado
   const key = `${link.from}-${link.to}:d${i}`
   const stored = bendPositions.value[key]
   if (stored) return stored
-  const t = i / 6 // 5 interior dots (owner: "giảm còn 5 node con")
+  const t = i / 5 // 4 interior dots (owner ruling 2026-10-10)
   // Quadratic bezier through ctrl keeps the default path inside the body;
   // jitter on top keeps it irregular (owner rulings 2026-10-09).
   const c: readonly number[] = link.ctrl ?? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
@@ -239,7 +239,7 @@ const meridianPaths = computed(() =>
     const a = nodePosition(link.from)
     const b = nodePosition(link.to)
     const dots: [number, number][] = [a]
-    for (let i = 1; i <= 5; i++) dots.push(channelDot(link, i, a, b))
+    for (let i = 1; i <= 4; i++) dots.push(channelDot(link, i, a, b))
     dots.push(b)
     // All dots lit while meridian nodes are forced lit for layout review
     // (owner request 2026-10-09, temporary) - real wiring: done = 9,
@@ -545,7 +545,7 @@ const galaxyPieces = computed(() =>
 .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite, forehead-spin 14s linear infinite; }
 @keyframes forehead-spin { to { rotate:360deg; } }
 @media (prefers-reduced-motion: reduce) { .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
-.body-meridian-node { position:absolute; width:18%; height:14%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
+.body-meridian-node { position:absolute; width:18%; height:14%; transform:translate(-50%,-50%); z-index:5; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
 .body-meridian-node:active { cursor:grabbing; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
 /* Sonar-style ring ping as the spark passes each node (owner ruling
