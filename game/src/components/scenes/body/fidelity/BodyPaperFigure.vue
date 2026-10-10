@@ -364,6 +364,10 @@ const galaxyPieces = computed(() =>
           <!-- Layout-review index badge (owner request 2026-10-09): 1-8 in data order. -->
           <span class="body-meridian-num" :class="{ 'num-left': node.index === 5 || node.index === 7 }">{{ node.index + 1 }}</span>
         </button>
+        <!-- Loop-complete ripple: a thin ring pings out of each node once
+             the circuit is fully lit (owner ruling 2026-10-10). -->
+        <span v-for="node in visibleMeridianNodes" :key="`ring-${node.unit.id}`"
+          class="body-meridian-ring" :style="{ left: `${node.x}%`, top: `${node.y}%` }"/>
       </template>
       <template v-else-if="model.chapter === 'zhou_tian'">
         <img v-for="(piece, i) in galaxyPieces" :key="i"
@@ -473,12 +477,13 @@ const galaxyPieces = computed(() =>
 @media (prefers-reduced-motion: reduce) { .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
 .body-meridian-node { position:absolute; width:18%; height:14%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
 .body-meridian-node:active { cursor:grabbing; }
-.body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); animation:node-burst 10s linear infinite; }
-@keyframes node-burst {
-  0%,84% { transform:scale(1.25); filter:none }
-  88% { transform:scale(1.7); filter:drop-shadow(0 0 6px #ffe9a0) drop-shadow(0 0 12px rgba(255,190,80,.95)); }
-  93% { transform:scale(1.25); filter:drop-shadow(0 0 3px rgba(255,215,120,.5)); }
-  100% { transform:scale(1.25); filter:none }
+.body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
+/* Sonar-style ring ping on loop complete (owner ruling 2026-10-10). */
+.body-meridian-ring { position:absolute; width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,235,170,.95); box-shadow:0 0 8px rgba(255,205,95,.8), inset 0 0 6px rgba(255,205,95,.5); transform:translate(-50%,-50%) scale(.3); opacity:0; pointer-events:none; z-index:3; animation:ring-ping 10s linear infinite; }
+@keyframes ring-ping {
+  0%,84% { transform:translate(-50%,-50%) scale(.3); opacity:0 }
+  86% { opacity:.95 }
+  97%,100% { transform:translate(-50%,-50%) scale(2.6); opacity:0 }
 }
 /* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
 .body-meridian-num { display:none; position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
