@@ -163,7 +163,7 @@ const visibleMeridianNodes = computed(() => meridianNodes.value)
 // Node glyphs (owner ruling 2026-10-10): each main node shows the Han
 // character of its meridian instead of the orb art; the four paired
 // yin/yang meridians stack two chars so  and  stay distinct.
-const NODE_GLYPH = ['任', '带', '阴跷', '阴维', '阳维', '阳跷', '冲', '督'] as const
+const NODE_GLYPH = ['任', '带', '阴跷', '冲', '阳维', '督', '阴维', '阳跷'] as const
 const nodeGlyph = (index: number) => NODE_GLYPH[index] ?? ''
 
 // Meridian channels (owner request 2026-10-09): irregular zigzag paths
@@ -403,7 +403,7 @@ const galaxyPieces = computed(() =>
         <svg v-for="path in meridianPaths" :key="path.key"
           class="body-meridian-path" viewBox="0 0 100 100" preserveAspectRatio="none">
           <polyline :points="dotsAttr(path.dots)" fill="none"
-            stroke="#ffce6b" stroke-width="0.7" vector-effect="non-scaling-stroke" opacity="0.95"
+            stroke="#ffce6b" stroke-width="0.45" vector-effect="non-scaling-stroke" opacity="0.95"
             style="filter:drop-shadow(0 0 1.5px rgba(255,190,80,.9))" />
           <circle v-for="(dot, di) in path.dots.slice(1, -1)" :key="di"
             :cx="dot[0]" :cy="dot[1]" r="0.35"
@@ -568,8 +568,8 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Light-fill cycle (owner 2026-10-10): the spark fills the loop behind it;
    on a full loop all 8 nodes flash, then the cycle restarts. */
-.circuit-fill { stroke:#ffd76a; stroke-width:1.1; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
-.sweep-core { stroke:#fff6d8; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
+.circuit-fill { stroke:#ffd76a; stroke-width:0.65; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
+.sweep-core { stroke:#fff6d8; stroke-width:0.55; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
 .body-meridian-path .dot-lit { fill:#ffd76a; }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
