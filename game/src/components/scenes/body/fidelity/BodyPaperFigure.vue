@@ -333,41 +333,35 @@ function syncMeridianAnims() {
   const root = stageEl.value
   if (!root || props.model.chapter !== 'meridian') return
   const spark = root.querySelector('.sweep-core')
-  const fill = root.querySelector('.circuit-fill')
+  const tail = root.querySelector('.sweep-tail')
+  const mid = root.querySelector('.sweep-mid')
   const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
-  if (!spark || !fill || !rings.length) return
+  if (!spark || !tail || !mid || !rings.length) return
   const t = document.timeline.currentTime ?? 0
+  // Owner rulings 2026-10-10: no persistence fill - just a bright point
+  // with a soft fading tail; sweep runs 25% slower and restarts every 5s+.
+  const SPEED = 0.75
   const travelF = Math.max(litFrac.value, 0.001)
   const litLen = travelF * 100
-  const travelEnd = Math.min(travelF * 0.85, 0.999)
-  const holdEnd = Math.min(travelEnd + 0.05, 1)
-  const fadeEnd = Math.min(travelEnd + 0.12, 1)
-  fill.style.strokeDasharray = `${litLen} 100`
-  meridianAnims.push(fill.animate(
-    [
-      { strokeDashoffset: `${litLen}`, opacity: 1, offset: 0 },
-      { strokeDashoffset: '0', opacity: 1, offset: travelEnd },
-      { strokeDashoffset: '0', opacity: 1, offset: holdEnd },
-      { strokeDashoffset: '0', opacity: 0, offset: fadeEnd },
-      { strokeDashoffset: '0', opacity: 0, offset: 1 },
-    ],
-    { duration: 10000, iterations: Infinity, startTime: t },
-  ))
-  meridianAnims.push(spark.animate(
-    [
-      { strokeDashoffset: '0', opacity: 1, offset: 0 },
-      { strokeDashoffset: `${-litLen}`, opacity: 1, offset: travelEnd },
-      { strokeDashoffset: `${-litLen}`, opacity: 0, offset: Math.min(travelEnd + 0.01, 1) },
-      { strokeDashoffset: '0', opacity: 0, offset: 1 },
-    ],
-    { duration: 10000, iterations: Infinity, startTime: t },
-  ))
+  const travelS = (travelF * 8.5) / SPEED
+  const periodMs = Math.max(5000, travelS * 1000)
+  const travelEnd = Math.min((travelS * 1000) / periodMs, 0.999)
+  const fadeEnd = Math.min(travelEnd + 0.02, 1)
+  const sweep = (from: number, to: number) => [
+    { strokeDashoffset: `${from}`, opacity: 1, offset: 0 },
+    { strokeDashoffset: `${to}`, opacity: 1, offset: travelEnd },
+    { strokeDashoffset: `${to}`, opacity: 0, offset: fadeEnd },
+    { strokeDashoffset: `${from}`, opacity: 0, offset: 1 },
+  ]
+  meridianAnims.push(tail.animate(sweep(0, -litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(mid.animate(sweep(-3.5, -3.5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(spark.animate(sweep(-6.5, -6.5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
     if ((circuit.value.ringDelay[node.index] ?? 99) > litS) return
-    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 1000
+    const delay = ((circuit.value.ringDelay[node.index] ?? 0) * 1000) / SPEED
     meridianAnims.push(ring.animate(
       [
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 0 },
@@ -375,14 +369,20 @@ function syncMeridianAnims() {
         { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.14 },
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 1 },
       ],
-      { duration: 10000, iterations: Infinity, delay, startTime: t },
+      { duration: periodMs, iterations: Infinity, delay, startTime: t },
     ))
   })
+  // Owner ruling 2026-10-10: when every meridian is open, the sweep
+  // finishing its run pings ALL glyphs at once instead of the last one.
+  const allDone = visibleMeridianNodes.value.every((n) => (n.progress ?? 0) >= 100)
+  const finalDelay = litSeconds.value > 0 ? (litSeconds.value * 1000) / SPEED : 0
   root.querySelectorAll<HTMLElement>('.glyph-lit').forEach((lit, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
-    if ((circuit.value.ringDelay[node.index] ?? 99) > litS && litS > 0.2) return
-    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 1000
+    if ((circuit.value.ringDelay[node.index] ?? 99) > litS) return
+    const delay = allDone
+      ? finalDelay
+      : ((circuit.value.ringDelay[node.index] ?? 0) * 1000) / SPEED
     meridianAnims.push(lit.animate(
       [
         { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
@@ -391,7 +391,7 @@ function syncMeridianAnims() {
         { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.44 },
         { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
       ],
-      { duration: 10000, iterations: Infinity, delay, startTime: t },
+      { duration: periodMs, iterations: Infinity, delay, startTime: t },
     ))
   })
 }
@@ -473,7 +473,8 @@ const galaxyPieces = computed(() =>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
              (owner ruling 2026-10-10). -->
         <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path :d="circuitD" class="circuit-fill" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="sweep-tail" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="sweep-mid" pathLength="100" fill="none"/>
           <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
@@ -643,11 +644,11 @@ const galaxyPieces = computed(() =>
 .body-meridian-num.num-left { left:auto; right:100%; transform:translate(15%,-50%); }
 .body-meridian-path { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
-/* Light-fill cycle (owner 2026-10-10): the spark fills the loop behind it;
-   on a full loop all 8 nodes flash, then the cycle restarts. */
-.circuit-fill { stroke:#ffd76a; stroke-width:0.4; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
-.sweep-core { stroke:#fff6d8; stroke-width:0.35; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
-@keyframes circuit-run { to { stroke-dashoffset:-100; } }
+/* Sweep (owner 2026-10-10): a bright point with a soft fading tail runs
+   the opened stretch every 5s+ - nothing persists once it passes. */
+.sweep-tail { stroke:#ffd76a; stroke-width:0.7; stroke-linecap:round; stroke-dasharray:8 92; opacity:.28; filter:drop-shadow(0 0 1.6px rgba(255,205,95,.7)); }
+.sweep-mid { stroke:#ffe9a0; stroke-width:0.5; stroke-linecap:round; stroke-dasharray:4.5 95.5; opacity:.55; }
+.sweep-core { stroke:#fff6d8; stroke-width:0.35; stroke-linecap:round; stroke-dasharray:1.5 98.5; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
 @keyframes meridianTwinkle {
