@@ -337,8 +337,8 @@ const galaxyPieces = computed(() =>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
              (owner ruling 2026-10-10). -->
         <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path v-for="n in 5" :key="n" :d="circuitD" class="comet-tail" :class="`tail-${n}`" pathLength="100" fill="none"/>
-          <path :d="circuitD" class="comet-head" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="sweep-glow" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
              directly (owner request 2026-10-09). -->
@@ -479,16 +479,10 @@ const galaxyPieces = computed(() =>
 .body-meridian-num.num-left { left:auto; right:100%; transform:translate(15%,-50%); }
 .body-meridian-path { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
-/* Shooting-star pulse (owner 2026-10-10): bright head + fading gold tail.
-   All layers share one dashoffset animation; per-layer delays stagger the
-   lit segment into a comet trail. */
-.comet-tail { stroke:#ffd977; stroke-linecap:round; stroke-dasharray:1.0 99.0; animation:circuit-run 10s linear infinite; }
-.comet-head { stroke:#fff8dc; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:1.3 98.7; animation:circuit-run 10s linear infinite; filter:drop-shadow(0 0 1.2px #fff2b8) drop-shadow(0 0 3px rgba(255,205,95,.95)) drop-shadow(0 0 6px rgba(255,180,60,.55)); }
-.tail-1 { stroke-width:.85; opacity:.8; animation-delay:.13s; }
-.tail-2 { stroke-width:.7; opacity:.55; animation-delay:.28s; }
-.tail-3 { stroke-width:.55; opacity:.34; animation-delay:.46s; }
-.tail-4 { stroke-width:.45; opacity:.18; animation-delay:.66s; }
-.tail-5 { stroke-width:.35; opacity:.08; animation-delay:.9s; }
+/* Glint sweep (owner 2026-10-10): one soft light band glides along the
+   meridian loop - wide faint halo under a slim bright core. */
+.sweep-glow { stroke:#ffdf8e; stroke-width:2.4; stroke-linecap:round; stroke-dasharray:7 93; opacity:.35; animation:circuit-run 10s linear infinite; filter:blur(.5px); }
+.sweep-core { stroke:#fff3c8; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:5 95; animation:circuit-run 10s linear infinite; filter:drop-shadow(0 0 1.2px rgba(255,225,150,.9)); }
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
 .body-meridian-path .dot-lit { fill:#ffd76a; }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
