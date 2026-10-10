@@ -229,7 +229,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       }
       const rows = [...view.container.querySelectorAll('.body-paper-details dl div')]
         .map(div => [div.querySelector('dt')?.textContent ?? '', div.querySelector('dd')?.textContent ?? ''])
-      const got = new Map(rows.map(([label, value]) => [label, Number.parseFloat(value)]))
+      const got = new Map(rows.map(([label, value]) => [label, Number.parseFloat(value ?? '')]))
       expect(got.size).toBe(expectedTotals.size)
       for (const [label, total] of expectedTotals) {
         expect(got.get(label)).toBeCloseTo(total)

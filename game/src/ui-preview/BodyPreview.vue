@@ -42,6 +42,7 @@ const model = computed<BodyPaperModel>(() => {
     lockHint,
     progress: 32,
     progressLabel: '320 / 1.000',
+    totalRows: [{label:t('hp'),value:'+320'},{label:t('might'),value:'+24'},{label:t('defense'),value:'+16'}],
     units: names.map((name, i) => ({
       id:String(i+1),
       label:name,

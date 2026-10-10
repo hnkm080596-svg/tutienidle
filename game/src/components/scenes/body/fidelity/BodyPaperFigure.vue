@@ -228,14 +228,14 @@ function onBendPointerUp() {
 // Dot drag mode (owner request 2026-10-09): every 10% dot on the channel
 // is itself a draggable handle; the path is straight segments dot-to-dot.
 // Interior dot i sits at t = i/10 with a jittered offset; stored drags win.
-const channelDot = (link: { from: number; to: number; seed: number; ctrl?: readonly [number, number] }, i: number, a: readonly number[], b: readonly number[]): [number, number] => {
+const channelDot = (link: { from: number; to: number; seed: number; ctrl?: readonly [number, number] }, i: number, a: readonly [number, number], b: readonly [number, number]): [number, number] => {
   const key = `${link.from}-${link.to}:d${i}`
   const stored = bendPositions.value[key] ?? BEND_DEFAULTS[key]
-  if (stored) return stored
+  if (stored) return [stored[0], stored[1]]
   const t = i / 5 // 4 interior dots (owner ruling 2026-10-10)
   // Quadratic bezier through ctrl keeps the default path inside the body;
   // jitter on top keeps it irregular (owner rulings 2026-10-09).
-  const c: readonly number[] = link.ctrl ?? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
+  const c: readonly [number, number] = link.ctrl ?? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
   const u = 1 - t
   const px = u * u * a[0] + 2 * u * t * c[0] + t * t * b[0]
   const py = u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]
@@ -253,9 +253,9 @@ const meridianPaths = computed(() =>
   MERIDIAN_LINKS.map((link) => {
     const a = nodePosition(link.from)
     const b = nodePosition(link.to)
-    const dots: [number, number][] = [a]
+    const dots: [number, number][] = [[a[0], a[1]]]
     for (let i = 1; i <= 4; i++) dots.push(channelDot(link, i, a, b))
-    dots.push(b)
+    dots.push([b[0], b[1]])
     // Owner ruling 2026-10-10: each 20% of the destination meridian's
     // progress lights one interior dot (4 dots = 20/40/60/80; 100% = node).
     const dest = props.model.units[link.to]
@@ -281,19 +281,19 @@ const circuit = computed(() => {
   const dists: number[] = [0]
   const arrival: Record<number, number> = {}
   for (let i = 0; i < MERIDIAN_ORDER.length; i++) {
-    const a = MERIDIAN_ORDER[i]
-    const b = MERIDIAN_ORDER[(i + 1) % MERIDIAN_ORDER.length]
+    const a = MERIDIAN_ORDER[i]!
+    const b = MERIDIAN_ORDER[(i + 1) % MERIDIAN_ORDER.length]!
     const path = meridianPaths.value.find((p) =>
       (p.link.from === a && p.link.to === b) || (p.link.from === b && p.link.to === a))
     if (!path) continue
     const seg = path.link.from === a ? path.dots : [...path.dots].reverse()
     for (const d of seg) {
       const prev = pts[pts.length - 1]
-      if (prev) dists.push(dists[dists.length - 1] + Math.hypot(d[0] - prev[0], d[1] - prev[1]))
+      if (prev) dists.push(dists[dists.length - 1]! + Math.hypot(d[0] - prev[0], d[1] - prev[1]))
       pts.push(d)
     }
     // The spark reaches node b at this cumulative distance.
-    arrival[b] = dists[dists.length - 1]
+    arrival[b] = dists[dists.length - 1]!
   }
   const total = dists[dists.length - 1] || 1
   // Spark covers the loop in 8.5s (85% of the 10s cycle).
@@ -328,7 +328,7 @@ function syncMeridianAnims() {
   const root = stageEl.value
   if (!root || props.model.chapter !== 'meridian') return
   const spark = root.querySelector('.sweep-core')
-  const fill = root.querySelector('.circuit-fill')
+  const fill = root.querySelector<HTMLElement>('.circuit-fill')
   const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
   if (!spark || !fill || !rings.length) return
   // No opened node yet -> the light has nowhere to run (owner ruling:
@@ -341,7 +341,14 @@ function syncMeridianAnims() {
   const holdEnd = Math.min(travelEnd + 0.05, 1)
   const fadeEnd = Math.min(travelEnd + 0.12, 1)
   fill.style.strokeDasharray = `${litLen} 100`
-  meridianAnims.push(fill.animate(
+  // The DOM lib on this toolchain omits KeyframeAnimationOptions.startTime;
+  // assigning it on the returned Animation keeps the shared-clock semantics.
+  const timedAnimate = (el: Element, frames: Keyframe[], options: KeyframeAnimationOptions) => {
+    const anim = el.animate(frames, options)
+    anim.startTime = t
+    return anim
+  }
+  meridianAnims.push(timedAnimate(fill,
     [
       { strokeDashoffset: `${litLen}`, opacity: 1, offset: 0 },
       { strokeDashoffset: '0', opacity: 1, offset: travelEnd },
@@ -349,16 +356,16 @@ function syncMeridianAnims() {
       { strokeDashoffset: '0', opacity: 0, offset: fadeEnd },
       { strokeDashoffset: '0', opacity: 0, offset: 1 },
     ],
-    { duration: 20000, iterations: Infinity, startTime: t },
+    { duration: 20000, iterations: Infinity },
   ))
-  meridianAnims.push(spark.animate(
+  meridianAnims.push(timedAnimate(spark,
     [
       { strokeDashoffset: '0', opacity: 1, offset: 0 },
       { strokeDashoffset: `${-litLen}`, opacity: 1, offset: travelEnd },
       { strokeDashoffset: `${-litLen}`, opacity: 0, offset: Math.min(travelEnd + 0.01, 1) },
       { strokeDashoffset: '0', opacity: 0, offset: 1 },
     ],
-    { duration: 20000, iterations: Infinity, startTime: t },
+    { duration: 20000, iterations: Infinity },
   ))
   const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
@@ -366,14 +373,14 @@ function syncMeridianAnims() {
     if (!node) return
     if ((circuit.value.ringDelay[node.index] ?? 99) > litS) return
     const delay = (circuit.value.ringDelay[node.index] ?? 0) * 2000
-    meridianAnims.push(ring.animate(
+    meridianAnims.push(timedAnimate(ring,
       [
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 0 },
         { opacity: 0.95, offset: 0.005 },
         { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.035 },
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 1 },
       ],
-      { duration: 20000, iterations: Infinity, delay, startTime: t },
+      { duration: 20000, iterations: Infinity, delay },
     ))
   })
   root.querySelectorAll<HTMLElement>('.glyph-lit').forEach((lit, i) => {
@@ -382,7 +389,7 @@ function syncMeridianAnims() {
     if (node.unit.state !== 'done') return
     if ((circuit.value.ringDelay[node.index] ?? 99) > litS && litS > 0.2) return
     const delay = (circuit.value.ringDelay[node.index] ?? 0) * 2000
-    meridianAnims.push(lit.animate(
+    meridianAnims.push(timedAnimate(lit,
       [
         { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
         { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.033 },
@@ -390,7 +397,7 @@ function syncMeridianAnims() {
         { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.11 },
         { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
       ],
-      { duration: 20000, iterations: Infinity, delay, startTime: t },
+      { duration: 20000, iterations: Infinity, delay },
     ))
   })
 }

@@ -36,6 +36,9 @@ const BAG_COUNTS: Record<BagTab, () => number> = {
     gameManager.pillBag
       .getAll()
       .filter((stack) => scopeHiddenPillFamilyOfId(stack.pill.id) === null).length,
+  // The decompose tab renders no grid entries here - it routes to the
+  // equipment hall surface, so its count is always 0.
+  decompose: () => 0,
 }
 
 const activeTabCount = computed(() => {
