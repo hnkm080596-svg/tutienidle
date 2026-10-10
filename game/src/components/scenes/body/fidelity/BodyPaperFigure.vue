@@ -108,7 +108,7 @@ const foreheadLitCount = computed(() => {
 const MERIDIAN_POINTS = [
   [51.76, 17.28],
   [17.64, 28.25],
-  [47.64, 46.67],
+  [44.07, 46.42],
   [59.26, 59.51],
   [14.46, 83.33],
   [93.0, 27.72],
@@ -153,8 +153,8 @@ function onNodePointerUp() {
 const meridianNodes = computed(() =>
   props.model.units.map((unit, index) => {
     const point = nodePosition(index)
-    // All dots lit for layout review (owner request 2026-10-09, temporary).
-    return { unit, index, x: point[0], y: point[1], lit: true }
+    const progress = unit.progressPct ?? (unit.state === 'done' ? 100 : 0)
+    return { unit, index, x: point[0], y: point[1], lit: progress >= 100, progress }
   }),
 )
 // All eight meridian dots render as a column (owner ruling 2026-10-09) -
@@ -189,14 +189,14 @@ const seededJitter = (seed: number, i: number) => {
 // Bend-point drag mode (owner request 2026-10-09): each zigzag waypoint is
 // a draggable handle; positions persist to localStorage for baking.
 const BEND_DEFAULTS: Record<string, readonly [number, number]> = {
-  '2-1:d1': [44.64, 39.12], '2-1:d2': [39.2, 37.95], '2-1:d3': [36.76, 32.65], '2-1:d4': [29.64, 31.77],
-  '0-1:d1': [47.26, 29.74], '0-1:d2': [44.64, 30.56], '0-1:d3': [43.14, 34.2], '0-1:d4': [34.51, 28.49],
+  '2-1:d1': [46.14, 36.51], '2-1:d2': [39.2, 37.95], '2-1:d3': [36.76, 32.65], '2-1:d4': [29.64, 31.77],
+  '0-1:d1': [49.32, 24.51], '0-1:d2': [45.39, 29.93], '0-1:d3': [45.95, 33.55], '0-1:d4': [34.51, 28.49],
   '2-6:d1': [47.26, 54.99], '2-6:d2': [38.45, 53.63], '2-6:d3': [41.08, 59.07],
   '4-6:d2': [14.64, 70.25], '4-6:d3': [20.08, 68.89], '4-6:d4': [20.83, 61.49],
   '4-7:d1': [23.45, 69.78], '4-7:d2': [39.76, 65.35], '4-7:d3': [53.82, 63.23], '4-7:d4': [78.76, 73.5],
   '7-3:d1': [86.44, 75.45], '7-3:d2': [82.13, 68.74], '7-3:d3': [72.76, 65.84], '7-3:d4': [73.13, 60.86],
-  '3-5:d1': [54.2, 51.81], '3-5:d2': [52.32, 39.35], '3-5:d3': [80.82, 38.95], '3-5:d4': [92.25, 33.78],
-  '0-5:d1': [51.95, 30.6], '0-5:d2': [60.2, 35.44], '0-5:d3': [79.88, 35.99], '0-5:d4': [90.0, 33.46],
+  '3-5:d1': [50.45, 45.3], '3-5:d2': [57.38, 37.64], '3-5:d3': [78.19, 38.89], '3-5:d4': [92.25, 33.78],
+  '0-5:d1': [49.89, 32.06], '0-5:d2': [60.2, 35.44], '0-5:d3': [79.88, 35.99], '0-5:d4': [90.0, 33.46],
 }
 const bendPositions = ref<Record<string, [number, number]>>(
   JSON.parse(localStorage.getItem('meridian-bend-points') ?? '{}'),
@@ -256,10 +256,12 @@ const meridianPaths = computed(() =>
     const dots: [number, number][] = [a]
     for (let i = 1; i <= 4; i++) dots.push(channelDot(link, i, a, b))
     dots.push(b)
-    // All dots lit while meridian nodes are forced lit for layout review
-    // (owner request 2026-10-09, temporary) - real wiring: done = 9,
-    // else floor(progressPct / 10) on the destination unit.
-    return { key: `${link.from}-${link.to}`, dots, lit: 9, link }
+    // Owner ruling 2026-10-10: each 20% of the destination meridian's
+    // progress lights one interior dot (4 dots = 20/40/60/80; 100% = node).
+    const dest = props.model.units[link.to]
+    const destPct = dest?.progressPct ?? (dest?.state === 'done' ? 100 : 0)
+    const lit = Math.min(4, Math.floor(destPct / 20))
+    return { key: `${link.from}-${link.to}`, dots, lit, link }
   }),
 )
 const dotTwinkle = (link: { from: number; to: number; seed: number }, di: number) => {
@@ -303,6 +305,23 @@ const circuit = computed(() => {
 })
 const circuitD = computed(() => circuit.value.d)
 
+// Owner ruling 2026-10-10: the traveling light runs only from the circuit
+// start to the deepest opened node along the loop - covered nodes keep the
+// same arrival delays, uncovered nodes get no ping/glyph flash.
+const litSeconds = computed(() => {
+  let best = 0
+  for (const n of visibleMeridianNodes.value) {
+    if ((n.progress ?? 0) > 0) best = Math.max(best, circuit.value.ringDelay[n.index] ?? 0)
+  }
+  return best
+})
+// Idle coverage when nothing is opened: breathe along the first channel so
+// the panel still feels alive (owner review pending).
+const litFrac = computed(() => {
+  const idle = (circuit.value.ringDelay[MERIDIAN_ORDER[1]] ?? 0) / 8.5
+  return Math.max(litSeconds.value / 8.5, idle)
+})
+
 // One shared clock (owner ruling 2026-10-10): spark/fill/rings are driven
 // by Web Animations on the same startTime, so a ring can never ping before
 // the light actually reaches its node.
@@ -318,12 +337,18 @@ function syncMeridianAnims() {
   const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
   if (!spark || !fill || !rings.length) return
   const t = document.timeline.currentTime ?? 0
+  const travelF = Math.max(litFrac.value, 0.001)
+  const litLen = travelF * 100
+  const travelEnd = Math.min(travelF * 0.85, 0.999)
+  const holdEnd = Math.min(travelEnd + 0.05, 1)
+  const fadeEnd = Math.min(travelEnd + 0.12, 1)
+  fill.style.strokeDasharray = `${litLen} 100`
   meridianAnims.push(fill.animate(
     [
-      { strokeDashoffset: '100', opacity: 1, offset: 0 },
-      { strokeDashoffset: '0', opacity: 1, offset: 0.85 },
-      { strokeDashoffset: '0', opacity: 1, offset: 0.9 },
-      { strokeDashoffset: '0', opacity: 0, offset: 0.97 },
+      { strokeDashoffset: `${litLen}`, opacity: 1, offset: 0 },
+      { strokeDashoffset: '0', opacity: 1, offset: travelEnd },
+      { strokeDashoffset: '0', opacity: 1, offset: holdEnd },
+      { strokeDashoffset: '0', opacity: 0, offset: fadeEnd },
       { strokeDashoffset: '0', opacity: 0, offset: 1 },
     ],
     { duration: 10000, iterations: Infinity, startTime: t },
@@ -331,15 +356,17 @@ function syncMeridianAnims() {
   meridianAnims.push(spark.animate(
     [
       { strokeDashoffset: '0', opacity: 1, offset: 0 },
-      { strokeDashoffset: '-100', opacity: 1, offset: 0.85 },
-      { strokeDashoffset: '-100', opacity: 0, offset: 0.86 },
+      { strokeDashoffset: `${-litLen}`, opacity: 1, offset: travelEnd },
+      { strokeDashoffset: `${-litLen}`, opacity: 0, offset: Math.min(travelEnd + 0.01, 1) },
       { strokeDashoffset: '0', opacity: 0, offset: 1 },
     ],
     { duration: 10000, iterations: Infinity, startTime: t },
   ))
+  const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
+    if ((circuit.value.ringDelay[node.index] ?? 99) > litS) return
     const delay = (circuit.value.ringDelay[node.index] ?? 0) * 1000
     meridianAnims.push(ring.animate(
       [
@@ -354,6 +381,7 @@ function syncMeridianAnims() {
   root.querySelectorAll<HTMLElement>('.glyph-lit').forEach((lit, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
+    if ((circuit.value.ringDelay[node.index] ?? 99) > litS && litS > 0.2) return
     const delay = (circuit.value.ringDelay[node.index] ?? 0) * 1000
     meridianAnims.push(lit.animate(
       [
@@ -468,6 +496,8 @@ const galaxyPieces = computed(() =>
           @pointermove="onNodePointerMove"
           @pointerup="onNodePointerUp"
           @click="dragMoved ? (dragMoved = false) : emit('select', node.unit.id)">
+          <span class="node-core" aria-hidden="true"></span>
+          <span v-if="node.unit.state === 'done'" class="comet-orbit" aria-hidden="true"><i></i><i></i></span>
           <span class="meridian-glyph" :class="{ two: nodeGlyph(node.index).length > 1 }">{{ nodeGlyph(node.index) }}</span>
           <span class="meridian-glyph glyph-lit" :class="{ two: nodeGlyph(node.index).length > 1 }" aria-hidden="true">{{ nodeGlyph(node.index) }}</span>
           <!-- Layout-review index badge (owner request 2026-10-09): 1-8 in data order. -->
@@ -584,15 +614,27 @@ const galaxyPieces = computed(() =>
 .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite, forehead-spin 14s linear infinite; }
 @keyframes forehead-spin { to { rotate:360deg; } }
 @media (prefers-reduced-motion: reduce) { .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
-.body-meridian-node { position:absolute; width:18%; height:14%; transform:translate(-50%,-50%); z-index:5; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
+.body-meridian-node { position:absolute; width:9%; height:9%; transform:translate(-50%,-50%); z-index:5; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
 .body-meridian-node:active { cursor:grabbing; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
+/* Owner ruling 2026-10-10: main node = same small dot as the channel dots.
+   Unopened shows the bare dim dot only; opened lights the dot, orbits twin
+   comets and keeps its Han glyph lit. The glyph only flashes into view as
+   the light ping passes an unopened node. */
+.node-core { position:absolute; left:50%; top:50%; width:5px; height:5px; transform:translate(-50%,-50%); border-radius:50%; background:#6b5a38; opacity:.75; pointer-events:none; }
+.body-meridian-node.done .node-core { background:#ffd76a; opacity:1; box-shadow:0 0 4px rgba(255,205,95,.9); }
+.comet-orbit { position:absolute; left:50%; top:50%; width:0; height:0; pointer-events:none; animation:comet-spin 3.8s linear infinite; }
+.comet-orbit i { position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%; background:#fff3c0; box-shadow:0 0 5px rgba(255,205,95,.95), 0 0 9px rgba(255,205,95,.55); }
+.comet-orbit i:first-child { transform:translateY(-13px); }
+.comet-orbit i:last-child { transform:translateY(13px); }
+@keyframes comet-spin { to { rotate:360deg; } }
+@media (prefers-reduced-motion: reduce) { .comet-orbit { animation:none; } }
 /* Han glyph nodes (owner ruling 2026-10-10): one character per meridian,
    gold-glowing; paired yin/yang meridians stack two chars vertically. */
-.meridian-glyph { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; pointer-events:none; font-family:'Ma Shan Zheng','ZCOOL XiaoWei','Noto Serif SC',serif; font-size:clamp(22px,5.5vmin,38px); line-height:1; color:#9a9082; text-shadow:0 0 3px rgba(0,0,0,.55), 0 1px 2px #000; }
+.meridian-glyph { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; pointer-events:none; font-family:'Ma Shan Zheng','ZCOOL XiaoWei','Noto Serif SC',serif; font-size:clamp(22px,5.5vmin,38px); line-height:1; color:#9a9082; text-shadow:0 0 3px rgba(0,0,0,.55), 0 1px 2px #000; opacity:0; }
+.body-meridian-node.done .meridian-glyph { opacity:1; color:#ffe9a0; text-shadow:0 0 6px rgba(255,205,95,.95), 0 0 2px rgba(120,70,0,.9), 0 1px 2px #000; }
 .glyph-lit { position:absolute; inset:0; color:#ffe9a0; text-shadow:0 0 6px rgba(255,205,95,.95), 0 0 2px rgba(120,70,0,.9), 0 1px 2px #000; clip-path:circle(0% at 50% 50%); opacity:0; }
 .meridian-glyph.two { writing-mode:vertical-rl; font-size:clamp(13px,3.2vmin,22px); letter-spacing:2px; }
-.body-meridian-node.locked .meridian-glyph, .body-meridian-node.dim .meridian-glyph { opacity:.35; filter:grayscale(.6); }
 /* Sonar-style ring ping as the spark passes each node (owner ruling
    2026-10-10) - WAAPI on the shared meridian clock lands it at arrival. */
 .body-meridian-ring { position:absolute; width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,235,170,.95); box-shadow:0 0 8px rgba(255,205,95,.8), inset 0 0 6px rgba(255,205,95,.5); transform:translate(-50%,-50%) scale(.3); opacity:0; pointer-events:none; z-index:3; }
