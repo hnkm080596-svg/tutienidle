@@ -371,8 +371,8 @@ function syncMeridianAnims() {
     meridianAnims.push(ring.animate(
       [
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 0 },
-        { opacity: 0.95, offset: 0.01 },
-        { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.07 },
+        { opacity: 0.95, offset: 0.005 },
+        { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.035 },
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 1 },
       ],
       { duration: 20000, iterations: Infinity, delay, startTime: t },
@@ -386,9 +386,9 @@ function syncMeridianAnims() {
     meridianAnims.push(lit.animate(
       [
         { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.065 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.16 },
-        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.22 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.033 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.08 },
+        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.11 },
         { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
       ],
       { duration: 20000, iterations: Infinity, delay, startTime: t },
