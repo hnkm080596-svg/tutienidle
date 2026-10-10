@@ -327,30 +327,19 @@ const litFrac = computed(() => {
 // the light actually reaches its node.
 const stageEl = ref<HTMLElement>()
 let meridianAnims: Animation[] = []
-// Smooth comet (owner ruling: continuous fade, no stepped segments) - a
-// canvas overlay samples points along the circuit polyline and paints a
-// head dot plus a per-pixel fading trail. Shares the WAAPI clock so
-// ring/glyph pings land at head contact.
-const cometCanvas = ref<HTMLCanvasElement>()
-let meridianRaf = 0
-const pointAtDist = (dist: number): [number, number] => {
-  const { pts, dists } = circuit.value
-  for (let i = 1; i < dists.length; i++) {
-    if (dists[i] >= dist) {
-      const f = (dist - dists[i - 1]) / Math.max(dists[i] - dists[i - 1], 1e-6)
-      return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f]
-    }
-  }
-  return pts[pts.length - 1] ?? [0, 0]
-}
+// Comet via SVG dasharray (owner ruling: lighter than canvas) - a bright
+// head, short fading tail, and a persistent fill that stays lit behind.
 function syncMeridianAnims() {
   meridianAnims.forEach((a) => a.cancel())
   meridianAnims = []
   const root = stageEl.value
   if (!root || props.model.chapter !== 'meridian') return
+  const fill = root.querySelector('.circuit-fill')
+  const tail = root.querySelector('.sweep-tail')
+  const mid = root.querySelector('.sweep-mid')
+  const spark = root.querySelector('.sweep-core')
   const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
-  const cv = cometCanvas.value
-  if (!cv || !rings.length) return
+  if (!fill || !tail || !mid || !spark || !rings.length) return
   const t = document.timeline.currentTime ?? 0
   // Owner rulings 2026-10-10: no persistence fill - just a bright point
   // with a soft fading tail; sweep runs 25% slower and restarts every 5s+.
@@ -367,72 +356,10 @@ function syncMeridianAnims() {
     { strokeDashoffset: `${to}`, opacity: 0, offset: fadeEnd },
     { strokeDashoffset: `${from}`, opacity: 0, offset: 1 },
   ]
-  // Canvas comet: head dot + continuous fading trail along the polyline.
-  const cvRaf = () => {
-    const stage = stageEl.value
-    const ctx = cv.getContext('2d')
-    if (!ctx || !stage) return
-    const r = stage.getBoundingClientRect()
-    if (cv.width !== Math.round(r.width) || cv.height !== Math.round(r.height)) {
-      cv.width = Math.round(r.width); cv.height = Math.round(r.height)
-    }
-    ctx.clearRect(0, 0, cv.width, cv.height)
-    const elapsed = ((document.timeline.currentTime ?? 0) - t) % periodMs
-    const travelMs = Math.min(travelEnd * periodMs, periodMs)
-    const head = Math.min(elapsed / travelMs, 1) * circuit.value.total * travelF
-    // Persistence fill (owner ruling): the lit path behind the head stays on
-    // until the cycle ends, then fades out over ~1.5s.
-    const fillFade = elapsed < travelMs ? 1 : Math.max(0, 1 - (elapsed - travelMs) / 1500)
-    if (fillFade > 0 && head > 0) {
-      const { pts, dists } = circuit.value
-      const trace = (width: number, alpha: number) => {
-        ctx.strokeStyle = `rgba(255,214,110,${alpha * fillFade})`
-        ctx.lineWidth = width
-        ctx.lineJoin = 'round'
-        ctx.lineCap = 'round'
-        ctx.beginPath()
-        ctx.moveTo((pts[0][0] / 100) * cv.width, (pts[0][1] / 100) * cv.height)
-        for (let i = 1; i < pts.length; i++) {
-          if (dists[i] > head) {
-            const [hx, hy] = pointAtDist(head)
-            ctx.lineTo((hx / 100) * cv.width, (hy / 100) * cv.height)
-            break
-          }
-          ctx.lineTo((pts[i][0] / 100) * cv.width, (pts[i][1] / 100) * cv.height)
-        }
-        ctx.stroke()
-      }
-      trace(2.4, 0.16)
-      trace(1.1, 0.8)
-    }
-    if (elapsed < travelMs) {
-      const trailLen = 10 * (circuit.value.total / 100)
-      ctx.lineCap = 'round'
-      // Trail: ~30 samples behind the head, alpha ramps smoothly to 0.
-      for (let k = 30; k >= 0; k--) {
-        const d2 = head - (k / 30) * trailLen
-        if (d2 < 0) break
-        const [px, py] = pointAtDist(d2)
-        const f = 1 - k / 30
-        ctx.fillStyle = k < 4
-          ? `rgba(255,246,216,${0.35 + 0.65 * f})`
-          : `rgba(255,215,106,${0.02 + 0.6 * Math.pow(f, 1.8)})`
-        const rad = k < 4 ? 1.6 : 1.1
-        ctx.beginPath()
-        ctx.arc((px / 100) * cv.width, (py / 100) * cv.height, rad, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      // Head core + glow.
-      const [hx, hy] = pointAtDist(head)
-      ctx.fillStyle = 'rgba(255,220,120,0.28)'
-      ctx.beginPath(); ctx.arc((hx / 100) * cv.width, (hy / 100) * cv.height, 3.4, 0, Math.PI * 2); ctx.fill()
-      ctx.fillStyle = '#fff6d8'
-      ctx.beginPath(); ctx.arc((hx / 100) * cv.width, (hy / 100) * cv.height, 1.5, 0, Math.PI * 2); ctx.fill()
-    }
-    meridianRaf = requestAnimationFrame(cvRaf)
-  }
-  cancelAnimationFrame(meridianRaf)
-  meridianRaf = requestAnimationFrame(cvRaf)
+  meridianAnims.push(fill.animate(sweep(100, 100 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(tail.animate(sweep(4, 4 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(mid.animate(sweep(2, 2 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(spark.animate(sweep(1.2, 1.2 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
     const node = visibleMeridianNodes.value[i]
@@ -478,7 +405,7 @@ function syncMeridianAnims() {
 }
 watch(() => props.model.chapter, () => nextTick(syncMeridianAnims), { flush: 'post' })
 onMounted(syncMeridianAnims)
-onBeforeUnmount(() => { meridianAnims.forEach((a) => a.cancel()); cancelAnimationFrame(meridianRaf) })
+onBeforeUnmount(() => meridianAnims.forEach((a) => a.cancel()))
 
 
 // Chu Thien: galaxy pieces lit by the chapter progress fraction; lit pieces
@@ -552,9 +479,14 @@ const galaxyPieces = computed(() =>
             :style="dotTwinkle(path.link, di)" />
         </svg>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
-             (owner ruling 2026-10-10): a canvas comet samples the circuit
-             polyline so the tail fades continuously. -->
-        <canvas ref="cometCanvas" class="meridian-comet"/>
+             (owner ruling 2026-10-10): persistence fill stays lit behind
+             the head, short fading tail. -->
+        <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path :d="circuitD" class="circuit-fill" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="sweep-tail" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="sweep-mid" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
+        </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
              directly (owner request 2026-10-09). -->
         <div class="body-meridian-handles">
@@ -724,7 +656,10 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Sweep (owner 2026-10-10): a bright point with a soft fading tail runs
    the opened stretch every 5s+ - nothing persists once it passes. */
-.meridian-comet { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.circuit-fill { stroke:#ffd66e; stroke-width:0.9; stroke-linecap:round; stroke-dasharray:100 0; opacity:.8; filter:drop-shadow(0 0 1.6px rgba(255,205,95,.7)); }
+.sweep-tail { stroke:#ffd76a; stroke-width:0.85; stroke-linecap:round; stroke-dasharray:4 96; opacity:.35; filter:blur(.5px); }
+.sweep-mid { stroke:#ffe9a0; stroke-width:0.6; stroke-linecap:round; stroke-dasharray:2 98; opacity:.6; }
+.sweep-core { stroke:#fff6d8; stroke-width:0.32; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
 @keyframes meridianTwinkle {
