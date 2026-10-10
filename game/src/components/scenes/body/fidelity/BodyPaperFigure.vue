@@ -381,6 +381,7 @@ function syncMeridianAnims() {
   root.querySelectorAll<HTMLElement>('.glyph-lit').forEach((lit, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
+    if (node.unit.state !== 'done') return
     if ((circuit.value.ringDelay[node.index] ?? 99) > litS && litS > 0.2) return
     const delay = (circuit.value.ringDelay[node.index] ?? 0) * 2000
     meridianAnims.push(lit.animate(
@@ -497,7 +498,7 @@ const galaxyPieces = computed(() =>
           @pointerup="onNodePointerUp"
           @click="dragMoved ? (dragMoved = false) : emit('select', node.unit.id)">
           <span class="node-core" aria-hidden="true"></span>
-          <span v-if="node.unit.state === 'done'" class="comet-orbit" aria-hidden="true"><i></i><i></i></span>
+          <span v-if="node.unit.state !== 'done'" class="comet-orbit" aria-hidden="true"><i></i><i></i></span>
           <span class="meridian-glyph" :class="{ two: nodeGlyph(node.index).length > 1 }">{{ nodeGlyph(node.index) }}</span>
           <span class="meridian-glyph glyph-lit" :class="{ two: nodeGlyph(node.index).length > 1 }" aria-hidden="true">{{ nodeGlyph(node.index) }}</span>
           <!-- Layout-review index badge (owner request 2026-10-09): 1-8 in data order. -->
@@ -632,7 +633,8 @@ const galaxyPieces = computed(() =>
 /* Han glyph nodes (owner ruling 2026-10-10): one character per meridian,
    gold-glowing; paired yin/yang meridians stack two chars vertically. */
 .meridian-glyph { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; pointer-events:none; font-family:'Ma Shan Zheng','ZCOOL XiaoWei','Noto Serif SC',serif; font-size:clamp(22px,5.5vmin,38px); line-height:1; color:#9a9082; text-shadow:0 0 3px rgba(0,0,0,.55), 0 1px 2px #000; opacity:0; }
-.body-meridian-node.done .meridian-glyph { opacity:1; color:#ffe9a0; text-shadow:0 0 6px rgba(255,205,95,.95), 0 0 2px rgba(120,70,0,.9), 0 1px 2px #000; }
+/* Glyph ping requires the node opened AND the light passing (owner ruling)
+   - nothing stays lit. */
 .glyph-lit { position:absolute; inset:0; color:#ffe9a0; text-shadow:0 0 6px rgba(255,205,95,.95), 0 0 2px rgba(120,70,0,.9), 0 1px 2px #000; clip-path:circle(0% at 50% 50%); opacity:0; }
 .meridian-glyph.two { writing-mode:vertical-rl; font-size:clamp(13px,3.2vmin,22px); letter-spacing:2px; }
 /* Sonar-style ring ping as the spark passes each node (owner ruling
