@@ -379,8 +379,33 @@ function syncMeridianAnims() {
     ctx.clearRect(0, 0, cv.width, cv.height)
     const elapsed = ((document.timeline.currentTime ?? 0) - t) % periodMs
     const travelMs = Math.min(travelEnd * periodMs, periodMs)
+    const head = Math.min(elapsed / travelMs, 1) * circuit.value.total * travelF
+    // Persistence fill (owner ruling): the lit path behind the head stays on
+    // until the cycle ends, then fades out over ~1.5s.
+    const fillFade = elapsed < travelMs ? 1 : Math.max(0, 1 - (elapsed - travelMs) / 1500)
+    if (fillFade > 0 && head > 0) {
+      const { pts, dists } = circuit.value
+      const trace = (width: number, alpha: number) => {
+        ctx.strokeStyle = `rgba(255,214,110,${alpha * fillFade})`
+        ctx.lineWidth = width
+        ctx.lineJoin = 'round'
+        ctx.lineCap = 'round'
+        ctx.beginPath()
+        ctx.moveTo((pts[0][0] / 100) * cv.width, (pts[0][1] / 100) * cv.height)
+        for (let i = 1; i < pts.length; i++) {
+          if (dists[i] > head) {
+            const [hx, hy] = pointAtDist(head)
+            ctx.lineTo((hx / 100) * cv.width, (hy / 100) * cv.height)
+            break
+          }
+          ctx.lineTo((pts[i][0] / 100) * cv.width, (pts[i][1] / 100) * cv.height)
+        }
+        ctx.stroke()
+      }
+      trace(2.4, 0.16)
+      trace(1.1, 0.8)
+    }
     if (elapsed < travelMs) {
-      const head = (elapsed / travelMs) * (circuit.value.total) * travelF
       const trailLen = 10 * (circuit.value.total / 100)
       ctx.lineCap = 'round'
       // Trail: ~30 samples behind the head, alpha ramps smoothly to 0.
