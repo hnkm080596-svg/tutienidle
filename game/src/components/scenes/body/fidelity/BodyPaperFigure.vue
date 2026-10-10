@@ -327,17 +327,17 @@ const litFrac = computed(() => {
 // the light actually reaches its node.
 const stageEl = ref<HTMLElement>()
 let meridianAnims: Animation[] = []
-// Moving lit band (owner ruling): a ~7-unit streak travels with the head -
-// spots light only where it passes, never the whole loop lit at once.
+// Fill-on-pass (owner ruling): every spot the light touches stays lit until
+// the head reaches the final node, then the whole lit path fades out.
 function syncMeridianAnims() {
   meridianAnims.forEach((a) => a.cancel())
   meridianAnims = []
   const root = stageEl.value
   if (!root || props.model.chapter !== 'meridian') return
-  const tail = root.querySelector('.sweep-tail')
+  const fill = root.querySelector('.circuit-fill')
   const spark = root.querySelector('.sweep-core')
   const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
-  if (!tail || !spark || !rings.length) return
+  if (!fill || !spark || !rings.length) return
   const t = document.timeline.currentTime ?? 0
   // Owner rulings 2026-10-10: no persistence fill - just a bright point
   // with a soft fading tail; sweep runs 25% slower and restarts every 5s+.
@@ -354,7 +354,7 @@ function syncMeridianAnims() {
     { strokeDashoffset: `${to}`, opacity: 0, offset: fadeEnd },
     { strokeDashoffset: `${from}`, opacity: 0, offset: 1 },
   ]
-  meridianAnims.push(tail.animate(sweep(7, 7 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(fill.animate(sweep(100, 100 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   meridianAnims.push(spark.animate(sweep(1.2, 1.2 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
@@ -467,8 +467,8 @@ const galaxyPieces = computed(() =>
         <svg v-for="path in meridianPaths" :key="path.key"
           class="body-meridian-path" viewBox="0 0 100 100" preserveAspectRatio="none">
           <polyline :points="dotsAttr(path.dots)" fill="none"
-            stroke="#ffce6b" stroke-width="0.3" vector-effect="non-scaling-stroke" opacity="0.95"
-            style="filter:drop-shadow(0 0 1.5px rgba(255,190,80,.9))" />
+            stroke="#ffce6b" stroke-width="0.3" vector-effect="non-scaling-stroke" opacity="0.22"
+            style="filter:drop-shadow(0 0 1px rgba(255,190,80,.5))" />
           <circle v-for="(dot, di) in path.dots.slice(1, -1)" :key="di"
             :cx="dot[0]" :cy="dot[1]" r="0.35"
             :class="di < path.lit ? 'dot-lit' : 'dot-dim'"
@@ -477,7 +477,7 @@ const galaxyPieces = computed(() =>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
              (owner ruling 2026-10-10). -->
         <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path :d="circuitD" class="sweep-tail" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="circuit-fill" pathLength="100" fill="none"/>
           <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
@@ -649,7 +649,7 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Sweep (owner 2026-10-10): a bright point with a soft fading tail runs
    the opened stretch every 5s+ - nothing persists once it passes. */
-.sweep-tail { stroke:#ffce6b; stroke-width:0.4; stroke-linecap:round; stroke-dasharray:7 93; opacity:.85; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.75)); }
+.circuit-fill { stroke:#ffce6b; stroke-width:0.35; stroke-linecap:round; stroke-dasharray:100 0; opacity:.9; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.8)); }
 .sweep-core { stroke:#fff6d8; stroke-width:0.32; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
