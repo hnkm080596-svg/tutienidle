@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
 
@@ -146,6 +146,7 @@ function onNodePointerUp() {
     localStorage.setItem('meridian-drag-points', JSON.stringify(dragPositions.value))
     const arr = props.model.units.map((_, i) => nodePosition(i))
     console.log('MERIDIAN_POINTS =', JSON.stringify(arr))
+    syncMeridianAnims()
   }
   dragIndex = -1
 }
@@ -205,6 +206,7 @@ function onBendPointerUp() {
   if (bendKey && dragMoved) {
     localStorage.setItem('meridian-bend-points', JSON.stringify(bendPositions.value))
     console.log('MERIDIAN_BENDS =', JSON.stringify(bendPositions.value))
+    syncMeridianAnims()
   }
   bendKey = null
 }
@@ -278,7 +280,59 @@ const circuit = computed(() => {
   return { d, ringDelay }
 })
 const circuitD = computed(() => circuit.value.d)
-const ringDelay = (index: number) => `${(circuit.value.ringDelay[index] ?? 0).toFixed(2)}s`
+
+// One shared clock (owner ruling 2026-10-10): spark/fill/rings are driven
+// by Web Animations on the same startTime, so a ring can never ping before
+// the light actually reaches its node.
+const stageEl = ref<HTMLElement>()
+let meridianAnims: Animation[] = []
+function syncMeridianAnims() {
+  meridianAnims.forEach((a) => a.cancel())
+  meridianAnims = []
+  const root = stageEl.value
+  if (!root || props.model.chapter !== 'meridian') return
+  const spark = root.querySelector('.sweep-core')
+  const fill = root.querySelector('.circuit-fill')
+  const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
+  if (!spark || !fill || !rings.length) return
+  const t = document.timeline.currentTime ?? 0
+  meridianAnims.push(fill.animate(
+    [
+      { strokeDashoffset: '100', opacity: 1, offset: 0 },
+      { strokeDashoffset: '0', opacity: 1, offset: 0.85 },
+      { strokeDashoffset: '0', opacity: 1, offset: 0.92 },
+      { strokeDashoffset: '100', opacity: 0, offset: 0.99 },
+      { strokeDashoffset: '100', opacity: 0, offset: 1 },
+    ],
+    { duration: 10000, iterations: Infinity, startTime: t },
+  ))
+  meridianAnims.push(spark.animate(
+    [
+      { strokeDashoffset: '0', opacity: 1, offset: 0 },
+      { strokeDashoffset: '-100', opacity: 1, offset: 0.85 },
+      { strokeDashoffset: '-100', opacity: 0, offset: 0.86 },
+      { strokeDashoffset: '0', opacity: 0, offset: 1 },
+    ],
+    { duration: 10000, iterations: Infinity, startTime: t },
+  ))
+  rings.forEach((ring, i) => {
+    const node = visibleMeridianNodes.value[i]
+    if (!node) return
+    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 1000
+    meridianAnims.push(ring.animate(
+      [
+        { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 0 },
+        { opacity: 0.95, offset: 0.02 },
+        { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.14 },
+        { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 1 },
+      ],
+      { duration: 10000, iterations: Infinity, delay, startTime: t },
+    ))
+  })
+}
+watch(() => props.model.chapter, () => nextTick(syncMeridianAnims), { flush: 'post' })
+onMounted(syncMeridianAnims)
+onBeforeUnmount(() => meridianAnims.forEach((a) => a.cancel()))
 
 
 // Chu Thien: galaxy pieces lit by the chapter progress fraction; lit pieces
@@ -299,7 +353,7 @@ const galaxyPieces = computed(() =>
 </script>
 <template>
   <div class="body-center body-paper-figure">
-    <div class="body-stage" :aria-label="model.chapterLabel">
+    <div class="body-stage" :aria-label="model.chapterLabel" ref="stageEl">
       <Transition name="chapter-swap">
       <div :key="model.chapter" class="chapter-layer">
       <img class="body-silhouette body-figure-art" :class="`silhouette-${model.chapter}`" :src="bodyArt(silhouetteArt)" alt="">
@@ -383,7 +437,7 @@ const galaxyPieces = computed(() =>
         <!-- Loop-complete ripple: a thin ring pings out of each node once
              the circuit is fully lit (owner ruling 2026-10-10). -->
         <span v-for="node in visibleMeridianNodes" :key="`ring-${node.unit.id}`"
-          class="body-meridian-ring" :style="{ left: `${node.x}%`, top: `${node.y}%`, animationDelay: ringDelay(node.index) }"/>
+          class="body-meridian-ring" :style="{ left: `${node.x}%`, top: `${node.y}%` }"/>
       </template>
       <template v-else-if="model.chapter === 'zhou_tian'">
         <img v-for="(piece, i) in galaxyPieces" :key="i"
@@ -495,13 +549,8 @@ const galaxyPieces = computed(() =>
 .body-meridian-node:active { cursor:grabbing; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
 /* Sonar-style ring ping as the spark passes each node (owner ruling
-   2026-10-10) - per-node animation-delay lands it at spark arrival. */
-.body-meridian-ring { position:absolute; width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,235,170,.95); box-shadow:0 0 8px rgba(255,205,95,.8), inset 0 0 6px rgba(255,205,95,.5); transform:translate(-50%,-50%) scale(.3); opacity:0; pointer-events:none; z-index:3; animation:ring-ping 10s linear infinite; }
-@keyframes ring-ping {
-  0% { transform:translate(-50%,-50%) scale(.3); opacity:0 }
-  2% { opacity:.95 }
-  14%,100% { transform:translate(-50%,-50%) scale(2.6); opacity:0 }
-}
+   2026-10-10) - WAAPI on the shared meridian clock lands it at arrival. */
+.body-meridian-ring { position:absolute; width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,235,170,.95); box-shadow:0 0 8px rgba(255,205,95,.8), inset 0 0 6px rgba(255,205,95,.5); transform:translate(-50%,-50%) scale(.3); opacity:0; pointer-events:none; z-index:3; }
 /* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
 .body-meridian-num { display:none; position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
 .body-meridian-num.num-left { left:auto; right:100%; transform:translate(15%,-50%); }
@@ -509,20 +558,8 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Light-fill cycle (owner 2026-10-10): the spark fills the loop behind it;
    on a full loop all 8 nodes flash, then the cycle restarts. */
-.circuit-fill { stroke:#ffd76a; stroke-width:1.1; stroke-linecap:round; stroke-dasharray:100 100; animation:fill-run 10s linear infinite; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
-.sweep-core { stroke:#fff6d8; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:1.2 98.8; animation:spark-run 10s linear infinite; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
-@keyframes fill-run {
-  0% { stroke-dashoffset:100; opacity:1 }
-  85% { stroke-dashoffset:0; opacity:1 }
-  92% { stroke-dashoffset:0; opacity:1 }
-  99%,100% { stroke-dashoffset:100; opacity:0 }
-}
-@keyframes spark-run {
-  0% { stroke-dashoffset:0; opacity:1 }
-  85% { stroke-dashoffset:-100; opacity:1 }
-  86% { opacity:0 }
-  100% { stroke-dashoffset:0; opacity:0 }
-}
+.circuit-fill { stroke:#ffd76a; stroke-width:1.1; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
+.sweep-core { stroke:#fff6d8; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
 .body-meridian-path .dot-lit { fill:#ffd76a; }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
