@@ -341,6 +341,21 @@ function syncMeridianAnims() {
       { duration: 10000, iterations: Infinity, delay, startTime: t },
     ))
   })
+  root.querySelectorAll<HTMLElement>('.glyph-lit').forEach((lit, i) => {
+    const node = visibleMeridianNodes.value[i]
+    if (!node) return
+    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 1000
+    meridianAnims.push(lit.animate(
+      [
+        { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.05 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.2 },
+        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.32 },
+        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
+      ],
+      { duration: 10000, iterations: Infinity, delay, startTime: t },
+    ))
+  })
 }
 watch(() => props.model.chapter, () => nextTick(syncMeridianAnims), { flush: 'post' })
 onMounted(syncMeridianAnims)
@@ -444,6 +459,7 @@ const galaxyPieces = computed(() =>
           @pointerup="onNodePointerUp"
           @click="dragMoved ? (dragMoved = false) : emit('select', node.unit.id)">
           <span class="meridian-glyph" :class="{ two: nodeGlyph(node.index).length > 1 }">{{ nodeGlyph(node.index) }}</span>
+          <span class="meridian-glyph glyph-lit" :class="{ two: nodeGlyph(node.index).length > 1 }" aria-hidden="true">{{ nodeGlyph(node.index) }}</span>
           <!-- Layout-review index badge (owner request 2026-10-09): 1-8 in data order. -->
           <span class="body-meridian-num" :class="{ 'num-left': node.index === 5 || node.index === 7 }">{{ node.index + 1 }}</span>
         </button>
@@ -563,7 +579,8 @@ const galaxyPieces = computed(() =>
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
 /* Han glyph nodes (owner ruling 2026-10-10): one character per meridian,
    gold-glowing; paired yin/yang meridians stack two chars vertically. */
-.meridian-glyph { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; pointer-events:none; font-family:'Ma Shan Zheng','ZCOOL XiaoWei','Noto Serif SC',serif; font-size:clamp(22px,5.5vmin,38px); line-height:1; color:#ffe9a0; text-shadow:0 0 6px rgba(255,205,95,.95), 0 0 2px rgba(120,70,0,.9), 0 1px 2px #000; }
+.meridian-glyph { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; pointer-events:none; font-family:'Ma Shan Zheng','ZCOOL XiaoWei','Noto Serif SC',serif; font-size:clamp(22px,5.5vmin,38px); line-height:1; color:#9a9082; text-shadow:0 0 3px rgba(0,0,0,.55), 0 1px 2px #000; }
+.glyph-lit { position:absolute; inset:0; color:#ffe9a0; text-shadow:0 0 6px rgba(255,205,95,.95), 0 0 2px rgba(120,70,0,.9), 0 1px 2px #000; clip-path:circle(0% at 50% 50%); opacity:0; }
 .meridian-glyph.two { writing-mode:vertical-rl; font-size:clamp(13px,3.2vmin,22px); letter-spacing:2px; }
 .body-meridian-node.locked .meridian-glyph, .body-meridian-node.dim .meridian-glyph { opacity:.35; filter:grayscale(.6); }
 /* Sonar-style ring ping as the spark passes each node (owner ruling
