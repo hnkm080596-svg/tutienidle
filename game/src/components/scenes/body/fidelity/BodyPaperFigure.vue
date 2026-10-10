@@ -252,6 +252,13 @@ const meridianPaths = computed(() =>
     return { key: `${link.from}-${link.to}`, dots, lit: 9, link }
   }),
 )
+const dotTwinkle = (link: { from: number; to: number; seed: number }, di: number) => {
+  let h = (link.from * 31 + link.to * 17 + di * 13 + link.seed) >>> 0
+  h = ((h * 2654435761) >>> 0) ^ (h >>> 13)
+  const dur = 1.1 + (h % 260) / 100 // 1.1s - 3.7s per dot
+  const delay = -((h >>> 8) % 370) / 100 // negative = mid-cycle start
+  return { animationDuration: dur + 's', animationDelay: delay + 's' }
+}
 const dotsAttr = (dots: readonly (readonly number[])[]) => dots.map((d) => `${d[0]},${d[1]}`).join(' ')
 
 // Light circuit (owner 2026-10-10): one bright streak runs the whole meridian
@@ -407,7 +414,8 @@ const galaxyPieces = computed(() =>
             style="filter:drop-shadow(0 0 1.5px rgba(255,190,80,.9))" />
           <circle v-for="(dot, di) in path.dots.slice(1, -1)" :key="di"
             :cx="dot[0]" :cy="dot[1]" r="0.35"
-            :class="di < path.lit ? 'dot-lit' : 'dot-dim'" />
+            :class="di < path.lit ? 'dot-lit' : 'dot-dim'"
+            :style="dotTwinkle(path.link, di)" />
         </svg>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
              (owner ruling 2026-10-10). -->
@@ -571,7 +579,16 @@ const galaxyPieces = computed(() =>
 .circuit-fill { stroke:#ffd76a; stroke-width:0.4; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
 .sweep-core { stroke:#fff6d8; stroke-width:0.35; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
-.body-meridian-path .dot-lit { fill:#ffd76a; }
+.body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 2.6s linear infinite; }
+.body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
+@keyframes meridianTwinkle {
+  0%, 100% { opacity:.3; filter:none; }
+  7% { opacity:1; filter:drop-shadow(0 0 1px rgba(255,240,190,1)) drop-shadow(0 0 2px rgba(255,205,95,.9)); }
+  13% { opacity:.35; filter:none; }
+  47% { opacity:.4; filter:none; }
+  55% { opacity:.95; filter:drop-shadow(0 0 1.2px rgba(255,235,170,1)); }
+  63% { opacity:.3; filter:none; }
+}
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
 .body-meridian-handles { position:absolute; inset:0; z-index:4; pointer-events:none; }
 .body-meridian-bend { position:absolute; width:22px; height:22px; transform:translate(-50%,-50%); z-index:4; padding:0; border:0; border-radius:50%; background:transparent; cursor:grab; touch-action:none; pointer-events:auto; }
