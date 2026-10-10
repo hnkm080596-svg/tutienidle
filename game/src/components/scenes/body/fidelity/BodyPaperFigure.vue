@@ -306,7 +306,7 @@ const galaxyPieces = computed(() =>
              dot every 10%, straight segment dot-to-dot. -->
         <svg v-for="path in meridianPaths" :key="path.key"
           class="body-meridian-path" viewBox="0 0 100 100" preserveAspectRatio="none"
-          :style="{ maskImage: `url(${bodyArt('silhouette-stance')})`, WebkitMaskImage: `url(${bodyArt('silhouette-stance')})`, maskSize: '90% 90%', WebkitMaskSize: '90% 90%', maskPosition: 'center', WebkitMaskPosition: 'center', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }">
+          :style="{ maskImage: `url(${bodyArt('silhouette-stance')})`, WebkitMaskImage: `url(${bodyArt('silhouette-stance')})`, maskSize: '100% 100%', WebkitMaskSize: '100% 100%', maskPosition: 'center', WebkitMaskPosition: 'center', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }">
           <polyline :points="dotsAttr(path.dots)" fill="none"
             stroke="#ffce6b" stroke-width="0.7" vector-effect="non-scaling-stroke" opacity="0.95"
             style="filter:drop-shadow(0 0 1.5px rgba(255,190,80,.9))" />
@@ -319,7 +319,7 @@ const galaxyPieces = computed(() =>
              the same silhouette mask so nothing floats outside. -->
         <div class="body-meridian-handles"
           :style="{ maskImage: `url(${bodyArt('silhouette-stance')})`, WebkitMaskImage: `url(${bodyArt('silhouette-stance')})`,
-            maskSize: '90% 90%', WebkitMaskSize: '90% 90%', maskPosition: 'center', WebkitMaskPosition: 'center',
+            maskSize: '100% 100%', WebkitMaskSize: '100% 100%', maskPosition: 'center', WebkitMaskPosition: 'center',
             maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }">
           <template v-for="path in meridianPaths" :key="`${path.key}-dots`">
             <button v-for="(dot, di) in path.dots.slice(1, -1)" :key="`${path.key}-d${di + 1}`"
