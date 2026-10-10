@@ -353,9 +353,9 @@ function syncMeridianAnims() {
     { strokeDashoffset: `${to}`, opacity: 0, offset: fadeEnd },
     { strokeDashoffset: `${from}`, opacity: 0, offset: 1 },
   ]
-  meridianAnims.push(tail.animate(sweep(0, -litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
-  meridianAnims.push(mid.animate(sweep(-3.5, -3.5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
-  meridianAnims.push(spark.animate(sweep(-6.5, -6.5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(tail.animate(sweep(8, 8 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(mid.animate(sweep(4.5, 4.5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(spark.animate(sweep(1.5, 1.5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
     const node = visibleMeridianNodes.value[i]
