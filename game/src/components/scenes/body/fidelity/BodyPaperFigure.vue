@@ -351,7 +351,7 @@ function syncMeridianAnims() {
       { strokeDashoffset: '0', opacity: 0, offset: fadeEnd },
       { strokeDashoffset: '0', opacity: 0, offset: 1 },
     ],
-    { duration: 10000, iterations: Infinity, startTime: t },
+    { duration: 20000, iterations: Infinity, startTime: t },
   ))
   meridianAnims.push(spark.animate(
     [
@@ -360,38 +360,38 @@ function syncMeridianAnims() {
       { strokeDashoffset: `${-litLen}`, opacity: 0, offset: Math.min(travelEnd + 0.01, 1) },
       { strokeDashoffset: '0', opacity: 0, offset: 1 },
     ],
-    { duration: 10000, iterations: Infinity, startTime: t },
+    { duration: 20000, iterations: Infinity, startTime: t },
   ))
   const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
     if ((circuit.value.ringDelay[node.index] ?? 99) > litS) return
-    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 1000
+    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 2000
     meridianAnims.push(ring.animate(
       [
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 0 },
-        { opacity: 0.95, offset: 0.02 },
-        { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.14 },
+        { opacity: 0.95, offset: 0.01 },
+        { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.07 },
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 1 },
       ],
-      { duration: 10000, iterations: Infinity, delay, startTime: t },
+      { duration: 20000, iterations: Infinity, delay, startTime: t },
     ))
   })
   root.querySelectorAll<HTMLElement>('.glyph-lit').forEach((lit, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
     if ((circuit.value.ringDelay[node.index] ?? 99) > litS && litS > 0.2) return
-    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 1000
+    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 2000
     meridianAnims.push(lit.animate(
       [
         { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.13 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.32 },
-        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.44 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.065 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.16 },
+        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.22 },
         { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
       ],
-      { duration: 10000, iterations: Infinity, delay, startTime: t },
+      { duration: 20000, iterations: Infinity, delay, startTime: t },
     ))
   })
 }
@@ -645,8 +645,8 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Light-fill cycle (owner 2026-10-10): the spark fills the loop behind it;
    on a full loop all 8 nodes flash, then the cycle restarts. */
-.circuit-fill { stroke:#ffd76a; stroke-width:0.4; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
-.sweep-core { stroke:#fff6d8; stroke-width:0.35; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
+.circuit-fill { stroke:#ffd76a; stroke-width:0.2; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
+.sweep-core { stroke:#fff6d8; stroke-width:0.175; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
