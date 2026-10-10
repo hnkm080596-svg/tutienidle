@@ -340,7 +340,7 @@ function syncMeridianAnims() {
   const t = document.timeline.currentTime ?? 0
   // Owner rulings 2026-10-10: no persistence fill - just a bright point
   // with a soft fading tail; sweep runs 25% slower and restarts every 5s+.
-  const SPEED = 0.75
+  const SPEED = 0.5625
   const travelF = Math.max(litFrac.value, 0.001)
   const litLen = travelF * 100
   const travelS = (travelF * 8.5) / SPEED
@@ -353,8 +353,8 @@ function syncMeridianAnims() {
     { strokeDashoffset: `${to}`, opacity: 0, offset: fadeEnd },
     { strokeDashoffset: `${from}`, opacity: 0, offset: 1 },
   ]
-  meridianAnims.push(tail.animate(sweep(8, 8 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
-  meridianAnims.push(mid.animate(sweep(4.5, 4.5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(tail.animate(sweep(10, 10 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  meridianAnims.push(mid.animate(sweep(5, 5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   meridianAnims.push(spark.animate(sweep(1.5, 1.5 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
@@ -646,8 +646,8 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Sweep (owner 2026-10-10): a bright point with a soft fading tail runs
    the opened stretch every 5s+ - nothing persists once it passes. */
-.sweep-tail { stroke:#ffd76a; stroke-width:0.7; stroke-linecap:round; stroke-dasharray:8 92; opacity:.28; filter:drop-shadow(0 0 1.6px rgba(255,205,95,.7)); }
-.sweep-mid { stroke:#ffe9a0; stroke-width:0.5; stroke-linecap:round; stroke-dasharray:4.5 95.5; opacity:.55; }
+.sweep-tail { stroke:#ffd76a; stroke-width:1.4; stroke-linecap:round; stroke-dasharray:10 90; opacity:.16; filter:blur(1.4px) drop-shadow(0 0 2px rgba(255,205,95,.5)); }
+.sweep-mid { stroke:#ffe9a0; stroke-width:0.65; stroke-linecap:round; stroke-dasharray:5 95; opacity:.4; filter:blur(.5px); }
 .sweep-core { stroke:#fff6d8; stroke-width:0.35; stroke-linecap:round; stroke-dasharray:1.5 98.5; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
