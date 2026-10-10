@@ -315,12 +315,7 @@ const litSeconds = computed(() => {
   }
   return best
 })
-// Idle coverage when nothing is opened: breathe along the first channel so
-// the panel still feels alive (owner review pending).
-const litFrac = computed(() => {
-  const idle = (circuit.value.ringDelay[MERIDIAN_ORDER[1]] ?? 0) / 8.5
-  return Math.max(litSeconds.value / 8.5, idle)
-})
+const litFrac = computed(() => litSeconds.value / 8.5)
 
 // One shared clock (owner ruling 2026-10-10): spark/fill/rings are driven
 // by Web Animations on the same startTime, so a ring can never ping before
@@ -336,6 +331,9 @@ function syncMeridianAnims() {
   const fill = root.querySelector('.circuit-fill')
   const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
   if (!spark || !fill || !rings.length) return
+  // No opened node yet -> the light has nowhere to run (owner ruling:
+  // it must never touch an unopened node).
+  if (litSeconds.value <= 0) return
   const t = document.timeline.currentTime ?? 0
   const travelF = Math.max(litFrac.value, 0.001)
   const litLen = travelF * 100
@@ -498,7 +496,7 @@ const galaxyPieces = computed(() =>
           @pointerup="onNodePointerUp"
           @click="dragMoved ? (dragMoved = false) : emit('select', node.unit.id)">
           <span class="node-core" aria-hidden="true"></span>
-          <span v-if="node.unit.state !== 'done'" class="comet-orbit" aria-hidden="true"><i></i><i></i></span>
+          <span v-if="node.unit.state === 'done'" class="comet-orbit" aria-hidden="true"><i></i><i></i></span>
           <span class="meridian-glyph" :class="{ two: nodeGlyph(node.index).length > 1 }">{{ nodeGlyph(node.index) }}</span>
           <span class="meridian-glyph glyph-lit" :class="{ two: nodeGlyph(node.index).length > 1 }" aria-hidden="true">{{ nodeGlyph(node.index) }}</span>
           <!-- Layout-review index badge (owner request 2026-10-09): 1-8 in data order. -->
