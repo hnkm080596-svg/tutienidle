@@ -656,7 +656,7 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Sweep (owner 2026-10-10): a bright point with a soft fading tail runs
    the opened stretch every 5s+ - nothing persists once it passes. */
-.circuit-fill { stroke:#fff0b0; stroke-width:0.3; stroke-linecap:round; stroke-dasharray:100 0; opacity:.9; filter:drop-shadow(0 0 1.2px rgba(255,215,110,.8)); }
+.circuit-fill { stroke:#ffce6b; stroke-width:0.3; stroke-linecap:round; stroke-dasharray:100 0; opacity:.85; filter:drop-shadow(0 0 1.2px rgba(255,205,95,.75)); }
 .sweep-tail { stroke:#ffd76a; stroke-width:0.85; stroke-linecap:round; stroke-dasharray:1.08 98.92; filter:blur(.55px) drop-shadow(0 0 1.4px rgba(255,205,95,.55)); }
 .sweep-core { stroke:#fff6d8; stroke-width:0.32; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
