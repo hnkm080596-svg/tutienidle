@@ -337,6 +337,7 @@ const galaxyPieces = computed(() =>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
              (owner ruling 2026-10-10). -->
         <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path :d="circuitD" class="circuit-fill" pathLength="100" fill="none"/>
           <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
@@ -472,15 +473,34 @@ const galaxyPieces = computed(() =>
 @media (prefers-reduced-motion: reduce) { .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
 .body-meridian-node { position:absolute; width:18%; height:14%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
 .body-meridian-node:active { cursor:grabbing; }
-.body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
+.body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); animation:node-burst 10s linear infinite; }
+@keyframes node-burst {
+  0%,84% { transform:scale(1.25); filter:none }
+  88% { transform:scale(1.7); filter:drop-shadow(0 0 6px #ffe9a0) drop-shadow(0 0 12px rgba(255,190,80,.95)); }
+  93% { transform:scale(1.25); filter:drop-shadow(0 0 3px rgba(255,215,120,.5)); }
+  100% { transform:scale(1.25); filter:none }
+}
 /* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
 .body-meridian-num { display:none; position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
 .body-meridian-num.num-left { left:auto; right:100%; transform:translate(15%,-50%); }
 .body-meridian-path { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
-/* Single light point (owner 2026-10-10): one bright dot glides the
-   meridian loop - no halo, no tail. */
-.sweep-core { stroke:#fff6d8; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:1.2 98.8; animation:circuit-run 10s linear infinite; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
+/* Light-fill cycle (owner 2026-10-10): the spark fills the loop behind it;
+   on a full loop all 8 nodes flash, then the cycle restarts. */
+.circuit-fill { stroke:#ffd76a; stroke-width:1.1; stroke-linecap:round; stroke-dasharray:100 100; animation:fill-run 10s linear infinite; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
+.sweep-core { stroke:#fff6d8; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:1.2 98.8; animation:spark-run 10s linear infinite; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
+@keyframes fill-run {
+  0% { stroke-dashoffset:100; opacity:1 }
+  85% { stroke-dashoffset:0; opacity:1 }
+  92% { stroke-dashoffset:0; opacity:1 }
+  99%,100% { stroke-dashoffset:100; opacity:0 }
+}
+@keyframes spark-run {
+  0% { stroke-dashoffset:0; opacity:1 }
+  85% { stroke-dashoffset:-100; opacity:1 }
+  86% { opacity:0 }
+  100% { stroke-dashoffset:0; opacity:0 }
+}
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
 .body-meridian-path .dot-lit { fill:#ffd76a; }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
