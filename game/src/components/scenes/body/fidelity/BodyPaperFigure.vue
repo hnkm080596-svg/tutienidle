@@ -327,10 +327,9 @@ const litFrac = computed(() => {
 // the light actually reaches its node.
 const stageEl = ref<HTMLElement>()
 let meridianAnims: Animation[] = []
-const TAIL_SEGMENTS = 10
-// Smooth comet tail: 10 contiguous 1-unit segments whose opacity ramps
-// head -> tail (owner ruling: fade must be continuous, not 3 chunks).
-const tailSegmentOpacity = (i: number) => 0.7 * (1 - i / (TAIL_SEGMENTS + 1))
+const TAIL_SEGMENTS = 1
+// Comet tail: a single 4-unit streak behind the bright point.
+const tailSegmentOffset = () => 4
 function syncMeridianAnims() {
   meridianAnims.forEach((a) => a.cancel())
   meridianAnims = []
@@ -356,8 +355,9 @@ function syncMeridianAnims() {
     { strokeDashoffset: `${to}`, opacity: 0, offset: fadeEnd },
     { strokeDashoffset: `${from}`, opacity: 0, offset: 1 },
   ]
-  tails.forEach((seg, i) => {
-    meridianAnims.push(seg.animate(sweep(i + 1, i + 1 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
+  tails.forEach((seg) => {
+    const off = tailSegmentOffset()
+    meridianAnims.push(seg.animate(sweep(off, off - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   })
   meridianAnims.push(spark.animate(sweep(1.2, 1.2 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   const litS = litFrac.value * 8.5 + 0.05
@@ -481,7 +481,7 @@ const galaxyPieces = computed(() =>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
              (owner ruling 2026-10-10). -->
         <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path v-for="i in TAIL_SEGMENTS" :key="'st' + i" :d="circuitD" class="sweep-tail" :style="{ opacity: tailSegmentOpacity(i) }" pathLength="100" fill="none"/>
+          <path v-for="i in TAIL_SEGMENTS" :key="'st' + i" :d="circuitD" class="sweep-tail" pathLength="100" fill="none"/>
           <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
@@ -653,7 +653,7 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Sweep (owner 2026-10-10): a bright point with a soft fading tail runs
    the opened stretch every 5s+ - nothing persists once it passes. */
-.sweep-tail { stroke:#ffd76a; stroke-width:0.85; stroke-linecap:round; stroke-dasharray:1.08 98.92; filter:blur(.55px) drop-shadow(0 0 1.4px rgba(255,205,95,.55)); }
+.sweep-tail { stroke:#ffd76a; stroke-width:0.8; stroke-linecap:round; stroke-dasharray:3.5 96.5; opacity:.45; filter:blur(.5px) drop-shadow(0 0 1.4px rgba(255,205,95,.55)); }
 .sweep-core { stroke:#fff6d8; stroke-width:0.32; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
