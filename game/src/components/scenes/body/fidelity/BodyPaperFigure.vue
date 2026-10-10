@@ -247,6 +247,23 @@ const meridianPaths = computed(() =>
 )
 const dotsAttr = (dots: readonly (readonly number[])[]) => dots.map((d) => `${d[0]},${d[1]}`).join(' ')
 
+// Light circuit (owner 2026-10-10): one bright streak runs the whole meridian
+// loop 1->2->3->7->5->8->4->6->1, reusing each channel's current dots.
+const MERIDIAN_ORDER = [0, 1, 2, 6, 4, 7, 3, 5] as const
+const circuitD = computed(() => {
+  const pts: [number, number][] = []
+  for (let i = 0; i < MERIDIAN_ORDER.length; i++) {
+    const a = MERIDIAN_ORDER[i]
+    const b = MERIDIAN_ORDER[(i + 1) % MERIDIAN_ORDER.length]
+    const path = meridianPaths.value.find((p) =>
+      (p.link.from === a && p.link.to === b) || (p.link.from === b && p.link.to === a))
+    if (!path) continue
+    const seg = path.link.from === a ? path.dots : [...path.dots].reverse()
+    for (const d of seg) pts.push(d)
+  }
+  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ')
+})
+
 
 // Chu Thien: galaxy pieces lit by the chapter progress fraction; lit pieces
 // orbit. Progress arrives as the completed/total percentage on the model.
@@ -316,6 +333,12 @@ const galaxyPieces = computed(() =>
           <circle v-for="(dot, di) in path.dots.slice(1, -1)" :key="di"
             :cx="dot[0]" :cy="dot[1]" r="0.9"
             :class="di < path.lit ? 'dot-lit' : 'dot-dim'" />
+        </svg>
+        <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
+             (owner ruling 2026-10-10). -->
+        <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path v-for="n in 5" :key="n" :d="circuitD" class="comet-tail" :class="`tail-${n}`" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="comet-head" pathLength="100" fill="none"/>
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
              directly (owner request 2026-10-09). -->
@@ -452,13 +475,25 @@ const galaxyPieces = computed(() =>
 .body-meridian-node:active { cursor:grabbing; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
 /* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
-.body-meridian-num { position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
+.body-meridian-num { display:none; position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
 .body-meridian-num.num-left { left:auto; right:100%; transform:translate(15%,-50%); }
 .body-meridian-path { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+.body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+/* Shooting-star pulse (owner 2026-10-10): bright head + fading gold tail.
+   All layers share one dashoffset animation; per-layer delays stagger the
+   lit segment into a comet trail. */
+.comet-tail { stroke:#ffd977; stroke-linecap:round; stroke-dasharray:1.8 98.2; animation:circuit-run 10s linear infinite; }
+.comet-head { stroke:#fff7d0; stroke-width:1.9; stroke-linecap:round; stroke-dasharray:2.6 97.4; animation:circuit-run 10s linear infinite; filter:drop-shadow(0 0 1.5px #fff0b0) drop-shadow(0 0 4px rgba(255,200,90,.9)); }
+.tail-1 { stroke-width:1.5; opacity:.95; animation-delay:-0.10s; }
+.tail-2 { stroke-width:1.3; opacity:.7; animation-delay:-0.24s; }
+.tail-3 { stroke-width:1.1; opacity:.48; animation-delay:-0.40s; }
+.tail-4 { stroke-width:0.9; opacity:.28; animation-delay:-0.58s; }
+.tail-5 { stroke-width:0.8; opacity:.14; animation-delay:-0.78s; }
+@keyframes circuit-run { to { stroke-dashoffset:-100; } }
 .body-meridian-path .dot-lit { fill:#ffd76a; }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
 .body-meridian-handles { position:absolute; inset:0; z-index:4; pointer-events:none; }
-.body-meridian-bend { position:absolute; width:22px; height:22px; transform:translate(-50%,-50%); z-index:4; padding:0; border:0; border-radius:50%; background:radial-gradient(circle,#7fffd4 0 28%,transparent 32%); cursor:grab; touch-action:none; pointer-events:auto; }
+.body-meridian-bend { position:absolute; width:22px; height:22px; transform:translate(-50%,-50%); z-index:4; padding:0; border:0; border-radius:50%; background:transparent; cursor:grab; touch-action:none; pointer-events:auto; }
 .body-meridian-bend:active { cursor:grabbing; }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
