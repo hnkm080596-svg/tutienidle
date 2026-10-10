@@ -35,7 +35,7 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(10)
   })
 
-  it('pill channel: opens the next meridian and debits thong_mach_dan from pillBag', () => {
+  it('pill channel: adds progress to the next meridian and debits 1 thong_mach_dan from pillBag', () => {
     const manager = managerWithCatalogs()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
@@ -51,7 +51,15 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
 
     expect(consumed).toBe(1)
     expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(4)
-    expect(player.bodyProgression.meridian.openedIds).toEqual(['nham_mach'])
+    // Progressive rule: one pill rolls a 5~10 gain on nham_mach.
+    const progress = player.bodyProgression.meridian.progress.nham_mach
+    expect(progress).toBeGreaterThanOrEqual(5)
+    expect(progress).toBeLessThanOrEqual(10)
+
+    // At 100 the dispatch rebuild emits the full bat-mach modifier.
+    player.bodyProgression.meridian.progress.nham_mach = 100
+    manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
+    expect(manager.realmAdvanceOps.investBodyChapter(player, 'meridian')).toBe(1)
     expect(player.modifiers.some(m => m.id.startsWith('bat-mach:'))).toBe(true)
   })
 
@@ -65,14 +73,16 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     manager.setActivePlayer(player)
-    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 7).map(m => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, 7).map((m) => [m.id, 100]))
     manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
 
-    // doc_mach costs 30 thong_mach_dan and no longer asks for any
-    // material aux - the invest goes through on pills alone.
-    expect(manager.realmAdvanceOps.investBodyChapter(player, 'meridian')).toBe(30)
-    expect(player.bodyProgression.meridian.openedIds).toHaveLength(8)
-    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(10)
+    // doc_mach rolls 0.1~1 per invest and asks for no material aux -
+    // the invest goes through on a single pill.
+    expect(manager.realmAdvanceOps.investBodyChapter(player, 'meridian')).toBe(1)
+    const docProgress = player.bodyProgression.meridian.progress.doc_mach
+    expect(docProgress).toBeGreaterThanOrEqual(0.1)
+    expect(docProgress).toBeLessThanOrEqual(1)
+    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(39)
   })
 
   it('gated invest returns 0 without touching either bag', () => {
@@ -135,7 +145,7 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     locked.realmLevel = 1
     locked.physiqueGrade = 'bao'
     locked.bodyProgression.body_refinement.completedTiers = 6
-    locked.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 7).map(m => m.id)
+    locked.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, 7).map((m) => [m.id, 100]))
     manager.setActivePlayer(locked)
     expect(manager.realmAdvanceOps.investBodyChapter(locked, 'zhou_tian')).toBe(0)
     expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(75)
@@ -148,5 +158,5 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
 function completeBodyPrerequisites(player: ReturnType<typeof createDefaultPlayer>): void {
   player.physiqueGrade = 'bao'
   player.bodyProgression.body_refinement.completedTiers = 6
-  player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+  player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
 }

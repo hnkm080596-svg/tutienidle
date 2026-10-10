@@ -36,7 +36,7 @@ function qiPlayerWithMortalBody(): PlayerData {
 }
 
 function openAllMeridians(player: PlayerData): void {
-  player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+  player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
 }
 
 describe('quan the - actionable gate (sec.10.2)', () => {
@@ -48,7 +48,7 @@ describe('quan the - actionable gate (sec.10.2)', () => {
 
   it('rejects when the meridian chapter is short of 8/8', () => {
     const player = qiPlayerWithMortalBody()
-    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, MERIDIANS.length - 1).map((m) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, MERIDIANS.length - 1).map((m) => [m.id, 100]))
     expect(isQuanTheActionable(player)).toBe(false)
   })
 
@@ -56,10 +56,10 @@ describe('quan the - actionable gate (sec.10.2)', () => {
     const player = qiPlayerWithMortalBody()
     // 7 canonical + the retired Thien Dia Chi Kieu: the count matches
     // MERIDIANS.length but the authored set is not fully opened.
-    player.bodyProgression.meridian.openedIds = [
-      ...MERIDIANS.slice(0, MERIDIANS.length - 1).map((m) => m.id),
-      'ky_kinh_thien_dia_chi_kieu',
-    ]
+    player.bodyProgression.meridian.progress = Object.fromEntries([
+      ...MERIDIANS.slice(0, MERIDIANS.length - 1).map((m) => [m.id, 100] as const),
+      ['ky_kinh_thien_dia_chi_kieu', 100] as const,
+    ])
     expect(isQuanTheActionable(player)).toBe(false)
   })
 

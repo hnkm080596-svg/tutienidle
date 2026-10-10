@@ -37,7 +37,7 @@ function readyPlayer(): PlayerData {
   player.realmLevel = 18
   player.physiqueGrade = 'bao'
   player.bodyProgression.body_refinement.completedTiers = 6
-  player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+  player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
   player.hiddenPerfection.lineageActive = true
   player.hiddenPerfection.completedHiddenBodyRealmIds = ['mortal', 'qi_refining']
   return player

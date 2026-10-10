@@ -251,7 +251,7 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
 
     expect(consumed).toBe(0)
     expect(manager.materialBag.getAmount(BAO)).toBe(25)
-    expect(player.bodyProgression.meridian.openedIds).toHaveLength(0)
+    expect(player.bodyProgression.meridian.progress).toEqual({})
   })
 
   it('zhou_tian spends its authored Phap essence exactly - the top rung substitutes nothing (M-F-CHU-THIEN)', () => {
@@ -261,7 +261,7 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     player.realmLevel = 1 // capacity 2
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     manager.setActivePlayer(player)
     // Phap is the highest rung - nothing sits above it to cover a
     // shortfall, so the seam debits the authored per-step cost and
@@ -282,7 +282,7 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     player.realmLevel = 1
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     manager.setActivePlayer(player)
     manager.materialBag.add(manager.materialRegistry.get(PHAM), 10)
     manager.materialBag.add(manager.materialRegistry.get(BAO), 25)

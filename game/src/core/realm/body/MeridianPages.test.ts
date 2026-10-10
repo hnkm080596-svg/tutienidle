@@ -68,7 +68,7 @@ describe('MeridianPages (P7 M-E, D2)', () => {
     }
   })
 
-  // Spec sec.3.6 authoring invariant: flat openedIds + derived page
+  // Spec sec.3.6 authoring invariant: flat meridian progress + derived page
   // grouping is only sound if page realm indices are non-decreasing in
   // canonical order - each page a contiguous block, a closed page
   // never reappearing.

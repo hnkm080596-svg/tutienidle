@@ -43,7 +43,7 @@ function setupManager() {
   player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
   gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
   player.realmLevel = 18
-  player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+  player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
   gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
   return { gameManager, player }
 }

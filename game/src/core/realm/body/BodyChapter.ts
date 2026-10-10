@@ -80,7 +80,14 @@ export interface BodyRefinementChapterState {
 }
 
 export interface MeridianChapterState {
-  openedIds: string[]
+  /**
+   * Per-meridian progress map: meridian id -> percent progress (float,
+   * 0..100, decimals kept). Sequential rule: a meridian may hold
+   * progress only when every earlier meridian in MERIDIANS order is at
+   * 100 (integrityIssues flags a non-prefix progress). "Opened"
+   * meridians are the ids whose progress reached 100.
+   */
+  progress: Record<string, number>
 }
 
 // HIDDEN-C - persisted slice is the DISCRETE step counter (0..36; design
@@ -201,7 +208,7 @@ export function createDefaultBodyProgression(): BodyProgressionState {
   // with non-trivial defaults may declare its own factory.
   return {
     body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-    meridian: { openedIds: [] },
+    meridian: { progress: {} },
     zhou_tian: { completed: 0 },
   }
 }

@@ -461,7 +461,7 @@ describe('live body chain (scope ruling): body-progression records emit and grad
       realmLevel: 6,
       bodyProgression: {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
-        meridian: { openedIds: ['nham_mach', 'doi_mach', 'am_kieu_mach'] },
+        meridian: { progress: { nham_mach: 100, doi_mach: 100, am_kieu_mach: 100 } },
         zhou_tian: { completed: 0 },
       },
       physiqueGrade: 'bao',
@@ -481,7 +481,7 @@ describe('live body chain (scope ruling): body-progression records emit and grad
       realmLevel: 6,
       bodyProgression: {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
-        meridian: { openedIds: ['nham_mach', 'doi_mach', 'am_kieu_mach'] },
+        meridian: { progress: { nham_mach: 100, doi_mach: 100, am_kieu_mach: 100 } },
         zhou_tian: { completed: 0 },
       },
       physiqueGrade: 'bao',
@@ -495,7 +495,7 @@ describe('live body chain (scope ruling): body-progression records emit and grad
     const p = committedPlayer({
       bodyProgression: {
         body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-        meridian: { openedIds: ['nham_mach'] },
+        meridian: { progress: { nham_mach: 100 } },
         zhou_tian: { completed: 0 },
       },
     })

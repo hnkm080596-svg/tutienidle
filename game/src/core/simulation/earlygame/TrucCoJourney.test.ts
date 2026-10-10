@@ -598,7 +598,7 @@ describe('TrucCoJourney - ordered journey', () => {
       const pillsAtReject = s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)
       expect(s.investChapter('meridian')).toBe(0)
       expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(pillsAtReject)
-      expect(s.player.bodyProgression.meridian.openedIds).toEqual([])
+      expect(s.player.bodyProgression.meridian.progress).toEqual({})
 
       // Substitution probe inside D.1: drain the pham stack, hold ONLY
       // phap, and let the real phap->bao->pham plan carry the chapter.
@@ -647,19 +647,30 @@ describe('TrucCoJourney - ordered journey', () => {
       // (d) Meridian strict-prefix 8/8 - pace gates lifted at TC;
       // the sequential constraint remains (the 9th meridian retired
       // with Thien Dia Chi Kieu, 2026-09-23 hidden-perfection-lineage).
-      const expectedOpened: string[] = []
+      // Progressive rule: each invest consumes exactly 1 pill and rolls
+      // the meridian's range gain - drive invests until each hits 100.
+      let pillsSpent = 0
       for (const meridian of MERIDIANS) {
-        expect(s.investChapter('meridian')).toBe(meridian.thongMachDanCost)
-        expectedOpened.push(meridian.id)
-        expect([...s.player.bodyProgression.meridian.openedIds]).toEqual(
-          expectedOpened,
-        )
+        let guard = 0
+        while ((s.player.bodyProgression.meridian.progress[meridian.id] ?? 0) < 100) {
+          s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 1)
+          expect(s.investChapter('meridian')).toBe(1)
+          pillsSpent += 1
+          guard += 1
+          expect(guard).toBeLessThan(2000)
+        }
+        // Strict prefix: no later meridian holds progress yet.
+        const later = MERIDIANS.slice(MERIDIANS.indexOf(meridian) + 1)
+        for (const rest of later) {
+          expect(s.player.bodyProgression.meridian.progress[rest.id]).toBeUndefined()
+        }
       }
       expect(getOpenedMeridianCount(s.player)).toBe(8)
-      // Only the authored pill total debited.
-      expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(
-        133 - MERIDIANS.reduce((sum, m) => sum + m.thongMachDanCost, 0),
-      )
+      // Exactly one pill debited per invest.
+      expect(pillsSpent).toBeGreaterThan(0)
+      // Each invest debited exactly the 1 pill topped up - the bag nets
+      // back to the seeded 133.
+      expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(133)
 
       // bat-mach:* emissions live on the meridian modifier channel
       // ONLY; intrinsic baseStats remain untouched.
@@ -1107,8 +1118,16 @@ describe('TrucCoJourney - determinism', () => {
       expect(s.drainTribulationOutcome()).toBe(true)
       expect(s.runStage('foundation_floor_1')).toBe('victory')
       feedRefinementTo(s, 6)
+      // Progressive rule: open the first 3 meridians fully - the drive
+      // is under a pinned Math.random sequence so gains stay seeded.
       for (const meridian of MERIDIANS.slice(0, 3)) {
-        expect(s.investChapter('meridian')).toBe(meridian.thongMachDanCost)
+        let guard = 0
+        while ((s.player.bodyProgression.meridian.progress[meridian.id] ?? 0) < 100) {
+          s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 1)
+          expect(s.investChapter('meridian')).toBe(1)
+          guard += 1
+          expect(guard).toBeLessThan(2000)
+        }
       }
     } finally {
       randomSpy.mockRestore()
@@ -1156,8 +1175,15 @@ describe('TrucCoJourney - grade ladder', () => {
   const openMeridians = (s: EarlyGameSession, count: number): void => {
     s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 133)
     feedRefinementTo(s, 6)
+    // Progressive rule: drive 1-pill invests until each meridian is 100.
     for (const meridian of MERIDIANS.slice(0, count)) {
-      expect(s.investChapter('meridian')).toBe(meridian.thongMachDanCost)
+      let guard = 0
+      while ((s.player.bodyProgression.meridian.progress[meridian.id] ?? 0) < 100) {
+        s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 1)
+        expect(s.investChapter('meridian')).toBe(1)
+        guard += 1
+        expect(guard).toBeLessThan(2000)
+      }
     }
     expect(getOpenedMeridianCount(s.player)).toBe(count)
   }

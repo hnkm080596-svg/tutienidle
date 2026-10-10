@@ -164,7 +164,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     completeHiddenBody(player.$state, 'qi_refining')
     player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m: { id: string }) => [m.id, 100]))
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
     // ARCH-002 (M7): startTribulation resolves stats internally - patch
@@ -246,7 +246,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     player.realmId = 'qi_refining'
     player.realmLevel = 12
     player.completedStageIds = ['qi_refining_abyssal_pool']
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m: { id: string }) => [m.id, 100]))
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
@@ -269,7 +269,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     player.realmId = 'qi_refining'
     player.realmLevel = 12
     player.completedStageIds = ['qi_refining_abyssal_pool']
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m: { id: string }) => [m.id, 100]))
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
 
@@ -301,7 +301,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     player.realmId = 'qi_refining'
     player.realmLevel = 12
     player.completedStageIds = ['qi_refining_abyssal_pool']
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m: { id: string }) => [m.id, 100]))
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
 

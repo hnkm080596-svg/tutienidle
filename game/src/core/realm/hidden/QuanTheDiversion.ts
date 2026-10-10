@@ -26,6 +26,11 @@
 
 import { HIDDEN_MECHANIC_QUAN_THE } from '../../../data/realm/HiddenBodyRealms'
 import { MERIDIANS } from '../../../data/realm/Meridians'
+import {
+  MERIDIAN_FULL_PROGRESS,
+  readMeridianProgress,
+} from '../body/MeridianChapter'
+import type { PlayerData } from '../../player/Player'
 import { registerFinalCultivationDiversion } from '../../cultivation/CultivationDiversion'
 import type { FinalCultivationGainPlayer } from '../../cultivation/CultivationDiversion'
 import { HIDDEN_MECHANIC_STATE_VALIDATORS } from './HiddenPerfection'
@@ -60,7 +65,7 @@ export interface QuanTheMechanic {
  * shape - the mechanism knows callers pass real PlayerData. */
 type QuanThePlayer = FinalCultivationGainPlayer & {
   hiddenPerfection?: HiddenPerfectionState
-  bodyProgression: { meridian: { openedIds: string[] } }
+  bodyProgression: { meridian: { progress: Record<string, number> } }
 }
 
 export function getQuanTheMechanic(
@@ -84,8 +89,10 @@ export function isQuanTheActionable(player: QuanThePlayer): boolean {
   }
   // Canonical-set membership, not a count: a legacy save can carry a
   // retired ninth id, and the authored gate is the current 8/8 set.
-  return MERIDIANS.every((meridian) =>
-    player.bodyProgression.meridian.openedIds.includes(meridian.id),
+  // Progressive Khai Mach: membership = progress at 100.
+  const progress = readMeridianProgress(player as PlayerData)
+  return MERIDIANS.every(
+    (meridian) => (progress[meridian.id] ?? 0) >= MERIDIAN_FULL_PROGRESS,
   )
 }
 

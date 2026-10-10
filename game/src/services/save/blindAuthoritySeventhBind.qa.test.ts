@@ -215,7 +215,7 @@ describe('R7-AUTH-REBUILD: forged extra StatModifier fields on realm-sourced cha
     const meridian = MERIDIANS[0]!
     const stat = meridian.stats[0]!
     const forged = committedPlayer('qi_refining', meridian.requiredRealmLevel)
-    forged.bodyProgression.meridian.openedIds = [meridian.id]
+    forged.bodyProgression.meridian.progress = Object.fromEntries([meridian.id].map((id) => [id, 100]))
     forged.modifiers = [
       {
         id: `bat-mach:${meridian.id}:${stat}`,
@@ -230,7 +230,7 @@ describe('R7-AUTH-REBUILD: forged extra StatModifier fields on realm-sourced cha
     ]
 
     const clean = committedPlayer('qi_refining', meridian.requiredRealmLevel)
-    clean.bodyProgression.meridian.openedIds = [meridian.id]
+    clean.bodyProgression.meridian.progress = Object.fromEntries([meridian.id].map((id) => [id, 100]))
     clean.modifiers = [
       {
         id: `bat-mach:${meridian.id}:${stat}`,
@@ -250,7 +250,7 @@ describe('R7-AUTH-REBUILD: forged extra StatModifier fields on realm-sourced cha
     const meridian = MERIDIANS[0]!
     const stat = meridian.stats[0]!
     const forged = committedPlayer('qi_refining', meridian.requiredRealmLevel)
-    forged.bodyProgression.meridian.openedIds = []
+    forged.bodyProgression.meridian.progress = {}
     forged.modifiers = [
       {
         id: `bat-mach:${meridian.id}:${stat}`,

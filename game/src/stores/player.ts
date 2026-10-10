@@ -25,6 +25,7 @@ import { cultivateTick } from '@/core/cultivation/CultivationTick'
 import { accrueCultivationInsight } from '@/core/cultivation/CultivationInsight'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
+import { normalizeMeridianChapterState } from '@/core/realm/body/MeridianChapter'
 import {
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
@@ -562,6 +563,13 @@ export const usePlayerStore = defineStore('player', {
           ...filteredBaseStats,
         }),
       }
+
+      // Meridian progressive rework (migration without reset, same v87):
+      // a legacy slice { openedIds: string[] } translates to the
+      // progress map in place (opened id -> 100); canonical saves are a
+      // no-op. Runs before modifier reconciliation so live readers only
+      // ever see the progress shape.
+      normalizeMeridianChapterState(restoredPlayer.bodyProgression.meridian)
 
       // Retired pill-permanent:<stat> flat modifiers (pre-rework saves)
       // are folded into baseStats once, then dropped below: the bucket

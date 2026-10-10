@@ -1,7 +1,7 @@
 // M-E (decision D2) - the meridian PAGE model. One page per realm;
 // page identity IS the realm id (no separate page table - grouping is
 // derived from MeridianDefinition.pageRealmId, array order preserved
-// so the strict-prefix openedIds contract stays flat).
+// so the strict-prefix meridian progress contract stays flat).
 //
 // Unlock contract: unlockedPageRealmIndex <= currentRealmIndex.
 // Monotonic by construction (realm index never decreases) - a page
@@ -43,8 +43,8 @@ export function isMeridianPageUnlocked(
 }
 
 /** Pages derived from the meridian list grouped by pageRealmId,
- * preserving first-appearance order. openedIds stays a flat
- * strict-prefix list across pages - page membership is derived,
+ * preserving first-appearance order. Progress stays a flat
+ * strict-prefix map across pages - page membership is derived,
  * never persisted. The definitions param exists so tests can
  * characterize grouping on fabricated multi-page data without
  * adding fake content to the canonical catalog.

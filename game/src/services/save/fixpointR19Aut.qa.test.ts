@@ -62,7 +62,7 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
     completedStageIds: [],
     bodyProgression: {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-      meridian: { openedIds: [] },
+      meridian: { progress: {} },
     },
     physiqueGrade: 'pham',
     breakthroughGrade: 6,

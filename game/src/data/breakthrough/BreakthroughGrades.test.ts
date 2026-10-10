@@ -42,13 +42,13 @@ describe('resolveKienCoGrade — 3 bậc đột phá thường (spec §4.2)', ()
     const player = createReadyPlayer()
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
-    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 6).map((m) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, 6).map((m) => [m.id, 100]))
     expect(resolveKienCoGrade(player, true)).toBe('heaven')
     // chi 5 duong -> Dia
     const thin = createReadyPlayer()
     thin.bodyProgression.body_refinement.completedTiers = 6
     thin.physiqueGrade = 'bao'
-    thin.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 5).map((m) => m.id)
+    thin.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, 5).map((m) => [m.id, 100]))
     expect(resolveKienCoGrade(thin, true)).toBe('earth')
   })
 
@@ -57,7 +57,7 @@ describe('resolveKienCoGrade — 3 bậc đột phá thường (spec §4.2)', ()
     player.realmLevel = 18
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     expect(resolveKienCoGrade(player, true)).toBe('heaven')
   })

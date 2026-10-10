@@ -105,7 +105,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
 
-    player.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
+    player.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach', 'doi_mach'].map((id) => [id, 100]))
     player.hiddenBeastKills = { huyet_mong: 500 }
     player.hiddenPerfection.realms.mortal = {
       discovered: true,
@@ -124,7 +124,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     const playerData = (roundTripped as { player: typeof player }).player
 
-    expect(playerData.bodyProgression.meridian.openedIds).toEqual(['nham_mach', 'doi_mach'])
+    expect(playerData.bodyProgression.meridian.progress).toEqual({ nham_mach: 100, doi_mach: 100 })
     expect(playerData.hiddenBeastKills).toEqual({ huyet_mong: 500 })
     expect(playerData.hiddenPerfection.lineageActive).toBe(true)
     expect(playerData.hiddenPerfection.realms.mortal?.discovered).toBe(true)
@@ -278,7 +278,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       label: 'default',
       state: {
         body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-        meridian: { openedIds: [] as string[] },
+        meridian: { progress: {} },
         zhou_tian: { completed: 0 },
       },
     },
@@ -286,7 +286,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       label: 'mid-progress',
       state: {
         body_refinement: { completedTiers: 3, currentTierProgress: 120 },
-        meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+        meridian: { progress: { nham_mach: 100, doi_mach: 100 } },
         zhou_tian: { completed: 0 },
       },
     },
@@ -295,10 +295,12 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       state: {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
         meridian: {
-          openedIds: [
-            'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
-            'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
-          ],
+          progress: Object.fromEntries(
+            [
+              'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
+              'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
+            ].map((id) => [id, 100]),
+          ),
         },
         zhou_tian: { completed: 36 },
       },

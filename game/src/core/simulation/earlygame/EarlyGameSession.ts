@@ -136,7 +136,7 @@ export interface EarlyGameSnapshot {
   // same-seed replay.
   bodyProgression: {
     body_refinement: { completedTiers: number; currentTierProgress: number }
-    meridian: { openedIds: string[] }
+    meridian: { progress: Record<string, number> }
     zhou_tian: { completed: number }
   }
   physiqueGrade: string
@@ -700,7 +700,7 @@ export class EarlyGameSession {
           completedTiers: p.bodyProgression.body_refinement.completedTiers,
           currentTierProgress: p.bodyProgression.body_refinement.currentTierProgress,
         },
-        meridian: { openedIds: [...p.bodyProgression.meridian.openedIds] },
+        meridian: { progress: { ...p.bodyProgression.meridian.progress } },
         zhou_tian: { completed: p.bodyProgression.zhou_tian.completed },
       },
       physiqueGrade: p.physiqueGrade,

@@ -275,7 +275,7 @@ describe('carried hidden mechanics mint nothing downstream', () => {
     const p = player({
       realmId: 'qi_refining',
       cultivation: 0,
-      bodyProgression: { meridian: { openedIds: ['nham_mach', 'doc_mach'] } } as never,
+      bodyProgression: { meridian: { progress: { nham_mach: 100, doc_mach: 100 } } } as never,
       hiddenPerfection: {
         lineageActive: true,
         lineageClosedByRealmId: {},

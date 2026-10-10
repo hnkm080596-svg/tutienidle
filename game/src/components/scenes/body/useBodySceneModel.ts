@@ -30,6 +30,7 @@ import {
   listMeridianPages,
 } from '@/core/realm/body/MeridianPages'
 import { MERIDIANS, THONG_MACH_DAN_MATERIAL_ID } from '@/data/realm/Meridians'
+import { readMeridianProgress } from '@/core/realm/body/MeridianChapter'
 import { REALMS } from '@/data/realms/realm'
 import {
   getZhouTianCapacity,
@@ -150,8 +151,13 @@ function buildMeridianUnits(
   manager: GameManager,
   t: (key: string, params?: Record<string, unknown>) => string,
 ): BodyUnitView[] {
-  const progress = getBodyChapterProgress(player, 'meridian')
-  const completed = progress.completed
+  // Progressive-percent model: the investable unit is the first
+  // meridian below 100% in canonical order; done = 100, everything
+  // past the next stays locked.
+  const meridianProgress = readMeridianProgress(player)
+  const nextIndex = MERIDIANS.findIndex(
+    (meridian) => (meridianProgress[meridian.id] ?? 0) < 100,
+  )
   const seqUnlocked = isBodyChapterUnlocked(player, 'meridian')
   const ownedPills = manager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID)
   const pill = pillName(manager, THONG_MACH_DAN_MATERIAL_ID)
@@ -174,11 +180,12 @@ function buildMeridianUnits(
     const realmName =
       REALMS.find(realm => realm.id === meridian.pageRealmId)?.name ?? meridian.pageRealmId
 
+    const progressPercent = meridianProgress[meridian.id] ?? 0
     const status: BodyUnitView['status'] = !pageUnlocked
       ? 'locked'
-      : flatIndex < completed
+      : progressPercent >= 100
         ? 'done'
-        : flatIndex === completed
+        : flatIndex === nextIndex
           ? 'next'
           : 'locked'
 
@@ -230,6 +237,8 @@ function buildMeridianUnits(
       actionable: status === 'next',
       canInvest: pageUnlocked && seqUnlocked && status === 'next'
         && ownedPills >= meridian.thongMachDanCost && paced,
+      progress: { value: progressPercent, max: 100 },
+      progressPercent,
     }
   })
   // Locked meridians still flow through so the figure column renders all

@@ -63,7 +63,14 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     const consumed = investBodyChapterState(player, 'meridian', 10, 0)
 
     expect(consumed).toBe(1)
-    expect(player.bodyProgression.meridian.openedIds).toEqual(['nham_mach'])
+    // Progressive rule: one pill rolls a 5~10 gain on nham_mach.
+    const progress = player.bodyProgression.meridian.progress.nham_mach
+    expect(progress).toBeGreaterThanOrEqual(5)
+    expect(progress).toBeLessThanOrEqual(10)
+
+    // Drive to 100 -> the dispatch rebuild emits the bat-mach modifier.
+    player.bodyProgression.meridian.progress.nham_mach = 100
+    expect(investBodyChapterState(player, 'meridian', 10, 0)).toBe(1)
     expect(player.modifiers.filter(m => m.id.startsWith('bat-mach:')).length).toBeGreaterThan(0)
   })
 
@@ -74,7 +81,7 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     player.bodyProgression.body_refinement.completedTiers = 5 // one tier short
 
     expect(investBodyChapterState(player, 'meridian', 10, 0)).toBe(0)
-    expect(player.bodyProgression.meridian.openedIds).toEqual([])
+    expect(player.bodyProgression.meridian.progress).toEqual({})
 
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
@@ -87,12 +94,12 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     player.realmLevel = 18
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
-    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 7).map(m => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, 7).map((m) => [m.id, 100]))
 
     expect(investBodyChapterState(player, 'zhou_tian', 50, 0)).toBe(0)
     expect(player.bodyProgression.zhou_tian.completed).toBe(0)
 
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     // 225 essence buys steps 0+1 (100+125=225); the next step is 150.
     expect(investBodyChapterState(player, 'zhou_tian', 225, 0)).toBe(225)
     expect(player.bodyProgression.zhou_tian.completed).toBe(2)
@@ -110,7 +117,7 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     expect(isBodyChapterUnlocked(player, 'meridian')).toBe(true)
     expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(false)
 
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(true)
   })
 })
@@ -120,7 +127,7 @@ describe('BodyProgressionSystem - modifier rehydration + reads', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.bodyProgression.body_refinement.completedTiers = 1
-    player.bodyProgression.meridian.openedIds = ['nham_mach']
+    player.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach'].map((id) => [id, 100]))
     player.modifiers = [
       {
         id: 'luyen-the:luyen_mach:maxHp',
@@ -169,7 +176,7 @@ describe('BodyProgressionSystem - modifier rehydration + reads', () => {
     const player = createDefaultPlayer()
 
     player.bodyProgression.body_refinement.completedTiers = 3
-    player.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
+    player.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach', 'doi_mach'].map((id) => [id, 100]))
 
     expect(getBodyChapterProgress(player, 'body_refinement')).toEqual({ completed: 3, total: 6 })
     expect(getBodyChapterProgress(player, 'meridian')).toEqual({ completed: 2, total: 8 })
@@ -202,7 +209,7 @@ describe('BodyProgressionSystem - integrity gate', () => {
     player.realmLevel = 2
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
-    player.bodyProgression.meridian.openedIds = ['nham_mach']
+    player.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach'].map((id) => [id, 100]))
     expect(() => assertBodyProgressionIntegrity(player)).not.toThrow()
   })
 
@@ -221,8 +228,8 @@ describe('BodyProgressionSystem - integrity gate', () => {
         p.bodyProgression.body_refinement.completedTiers = 6
         p.bodyProgression.body_refinement.currentTierProgress = 1
       },
-      p => { p.bodyProgression.meridian.openedIds = ['huyen_mach'] },
-      p => { p.bodyProgression.meridian.openedIds = ['doi_mach'] },
+      p => { p.bodyProgression.meridian.progress = Object.fromEntries(['huyen_mach'].map((id) => [id, 100])) },
+      p => { p.bodyProgression.meridian.progress = Object.fromEntries(['doi_mach'].map((id) => [id, 100])) },
     ]
 
     for (const mutate of cases) {
@@ -242,7 +249,7 @@ describe('BodyProgressionSystem - integrity gate', () => {
     // fired; the persisted grade mirrors it (INV-8).
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     expect(() => assertBodyProgressionIntegrity(player)).not.toThrow()
   })
 
@@ -250,7 +257,7 @@ describe('BodyProgressionSystem - integrity gate', () => {
     // Crafted shape 1: meridian progressed while refinement incomplete.
     const meridianAhead = createDefaultPlayer()
     meridianAhead.realmId = 'qi_refining'
-    meridianAhead.bodyProgression.meridian.openedIds = ['nham_mach']
+    meridianAhead.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach'].map((id) => [id, 100]))
     expect(() => assertBodyProgressionIntegrity(meridianAhead)).toThrow(/body_refinement/)
 
     // Crafted shape 2: zhou_tian progressed while meridian incomplete
@@ -271,7 +278,7 @@ describe('BodyProgressionSystem - integrity gate', () => {
     // coherence check never TypeErrors on it (derivationBlocked-style).
     const missingRefinement = createDefaultPlayer()
     missingRefinement.bodyProgression = {
-      meridian: { openedIds: ['nham_mach'] },
+      meridian: { progress: { nham_mach: 100 } },
       zhou_tian: { completed: 0 },
     } as never
     expect(() => assertBodyProgressionIntegrity(missingRefinement)).toThrow(/body_refinement missing/)

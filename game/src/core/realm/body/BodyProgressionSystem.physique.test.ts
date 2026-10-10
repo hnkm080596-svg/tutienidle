@@ -88,11 +88,16 @@ describe('physique transformation (QI-D4)', () => {
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
 
-    for (let i = 0; i < MERIDIANS.length; i++) {
+    // Progressive Khai Mach: each invest rolls a partial gain, so drive
+    // invests until every meridian reaches 100 (bounded worst case:
+    // doc_mach at min 0.1/invest needs <=1000 invests).
+    for (let i = 0; i < 2000; i++) {
       investBodyChapterState(player, 'meridian', 999, 999)
     }
 
-    expect(player.bodyProgression.meridian.openedIds).toHaveLength(MERIDIANS.length)
+    expect(player.bodyProgression.meridian.progress).toEqual(
+      Object.fromEntries(MERIDIANS.map((m) => [m.id, 100])),
+    )
     expect(getPhysiqueGrade(player)).toBe('bao') // meridian advances nothing
   })
 })
@@ -174,7 +179,7 @@ describe('applyPhysiqueAdvancement (M-F-BODY-CORE completion seam)', () => {
 
   it('is a no-op for a chapter that declares no advancement', () => {
     const player = createDefaultPlayer()
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
 
     applyPhysiqueAdvancement(player, meridian)
 

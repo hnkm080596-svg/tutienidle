@@ -342,9 +342,17 @@ function realmCostBasket(realmId: string): CostBasket[] {
   }
   basket.push({ label: 'alchemy-x1-each', spiritStones: alchStones, essenceTinhHoa: 0, materials: alchMats, herbUnits })
 
-  // Meridian pills (qi page only - realm LK+)
+  // Meridian pills (qi page only - realm LK+). Progressive Khai Mach:
+  // each invest consumes exactly 1 pill and rolls a uniform gain in
+  // investGainRange, so the expected pill total to complete a meridian
+  // is 100 / mean-gain invests.
   if (realmIndex >= 1) {
-    const pills = MERIDIANS.reduce((s, m) => s + m.thongMachDanCost, 0)
+    const pills = Math.ceil(
+      MERIDIANS.reduce(
+        (s, m) => s + 100 / ((m.investGainRange.min + m.investGainRange.max) / 2),
+        0,
+      ),
+    )
     const recipe = alchemyRecipes.find((r) => r.pillId === 'thong_mach_dan')
     basket.push({
       label: `bat-mach pills x${pills}`,

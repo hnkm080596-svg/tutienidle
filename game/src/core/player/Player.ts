@@ -3,6 +3,10 @@ import { collectActiveWayStatModifiers } from './CultivationPathSystem'
 import { collectBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
 import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
 import { MERIDIANS } from '../../data/realm/Meridians'
+import {
+  meridianMilestonePercent,
+  readMeridianProgress,
+} from '../realm/body/MeridianChapter'
 import { isBetaFeature } from '../betaScope'
 import { getHiddenBreakthroughRealmIds } from '../realm/hidden/HiddenLineage'
 import { asBaseStats, createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
@@ -259,7 +263,7 @@ export interface PlayerData {
   idleSkillInsightDaily?: IdleSkillInsightDaily
 
   // P7-M5 - the ONE canonical body progression record (chapter-keyed:
-  // body_refinement tiers + meridian openedIds today). Owned by
+  // body_refinement tiers + meridian progress map today). Owned by
   // core/realm/body/BodyProgressionSystem; consumers read derived facts
   // through it, never the slices directly.
   bodyProgression: BodyProgressionState
@@ -621,19 +625,28 @@ export function resolvePlayerStatAssembly(
     }
     const meridian = MERIDIANS.find((entry) => entry.id === modifier.sourceId)
     if (meridian !== undefined) {
-      if (!player.bodyProgression.meridian.openedIds.includes(meridian.id)) {
+      // Progressive Khai Mach: the authored emission is milestone-
+      // scaled off the canonical progress map, so the reconcile keeps
+      // only entries matching the CURRENT percent for the persisted
+      // progress (a stale claim at another magnitude is dropped).
+      const progress = readMeridianProgress(player)
+      if ((progress[meridian.id] ?? 0) <= 0) {
         continue
       }
+      const percent = meridianMilestonePercent(
+        meridian,
+        progress[meridian.id] ?? 0,
+      )
       const authored = meridian.stats
         .map((stat) => ({
           id: `bat-mach:${meridian.id}:${stat}`,
           sourceId: meridian.id,
           sourceType: 'realm' as const,
           stat,
-          percent: meridian.percentAtFullTier,
+          percent,
         }))
         .find((candidate) => candidate.id === modifier.id)
-      if (authored !== undefined) {
+      if (authored !== undefined && authored.percent > 0) {
         allModifiers.push(authored)
       }
       continue

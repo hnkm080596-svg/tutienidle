@@ -2535,7 +2535,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
 
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 'x', currentTierProgress: -1 },
-      meridian: { openedIds: [] },
+      meridian: { progress: {} },
       zhou_tian: { completed: 0 },
     }
 
@@ -2546,12 +2546,12 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     expect(pathsOf(result)).toContain('player.bodyProgression.body_refinement.currentTierProgress')
   })
 
-  it('từ chối meridian.openedIds không phải array / chứa non-string với indexed path', () => {
+  it('từ chối meridian.progress không phải record / chứa non-number với indexed path', () => {
     const save = validSave()
 
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-      meridian: { openedIds: 'nope' },
+      meridian: { progress: 'nope' },
       zhou_tian: { completed: 0 },
     }
     expect(validateGameSaveShape(save).ok).toBe(false)
@@ -2559,7 +2559,30 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     const save2 = validSave()
     playerOf(save2).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-      meridian: { openedIds: ['nham_mach', 7] },
+      meridian: { progress: { nham_mach: 'x' } },
+      zhou_tian: { completed: 0 },
+    }
+
+    const result = validateGameSaveShape(save2)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression.meridian.progress.nham_mach')
+  })
+
+  it('vẫn chấp nhận legacy openedIds (migration) nhưng từ chối entry non-string', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+      zhou_tian: { completed: 0 },
+    }
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    const save2 = validSave()
+    playerOf(save2).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: ['nham_mach', 5] },
       zhou_tian: { completed: 0 },
     }
 
@@ -2574,7 +2597,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
 
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 3, currentTierProgress: 100 },
-      meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+      meridian: { progress: { nham_mach: 100, doi_mach: 100 } },
       zhou_tian: { completed: 0 },
     }
     expect(validateGameSaveShape(save).ok).toBe(true)
@@ -2600,7 +2623,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
 
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-      meridian: { openedIds: [] },
+      meridian: { progress: {} },
     }
 
     const result = validateGameSaveShape(save)
@@ -2616,7 +2639,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
 
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-      meridian: { openedIds: [] },
+      meridian: { progress: {} },
       zhou_tian: { completed: 1.5 },
     }
 

@@ -1307,15 +1307,15 @@ describe('v72 bodyProgression preflight + rehydration', () => {
       p.bodyProgression.body_refinement.completedTiers = 6
       p.bodyProgression.body_refinement.currentTierProgress = 1
     }],
-    ['unknown meridian id', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = ['huyen_mach'] }],
-    ['non-prefix meridian order', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = ['doi_mach'] }],
-    ['non-array meridian openedIds', (p: PlayerData) => { p.bodyProgression.meridian.openedIds = 42 as never }],
+    ['unknown meridian id', (p: PlayerData) => { p.bodyProgression.meridian.progress = Object.fromEntries(['huyen_mach'].map((id) => [id, 100])) }],
+    ['non-prefix meridian order', (p: PlayerData) => { p.bodyProgression.meridian.progress = Object.fromEntries(['doi_mach'].map((id) => [id, 100])) }],
+    ['non-record meridian progress', (p: PlayerData) => { p.bodyProgression.meridian.progress = 42 as never }],
     ['missing bodyProgression record', (p: PlayerData) => { p.bodyProgression = undefined as never }],
     ['missing meridian slice', (p: PlayerData) => { p.bodyProgression = { body_refinement: { completedTiers: 0, currentTierProgress: 0 } } as never }],
     // M-QI-07: a missing advancement-owning slice must still fail through
     // the aggregated integrity error - not a raw TypeError from the
     // physique derivation walking the absent slice.
-    ['missing body_refinement slice', (p: PlayerData) => { p.bodyProgression = { meridian: { openedIds: [] } } as never }],
+    ['missing body_refinement slice', (p: PlayerData) => { p.bodyProgression = { meridian: { progress: {} } } as never }],
   ])('rejects %s before any owner mutation', (_label, corrupt) => {
     const manager = makeManager()
     const player = createDefaultPlayer()
@@ -1344,7 +1344,7 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     mid.realmLevel = 4
     mid.physiqueGrade = 'bao'
     mid.bodyProgression.body_refinement.completedTiers = 6
-    mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
+    mid.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach', 'doi_mach'].map((id) => [id, 100]))
     expect(() =>
       manager.saveOps.restoreFromSave(
         baseSave(mid, { techniques: [committedTechniqueSlice(mid)] }),
@@ -1364,7 +1364,7 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     player.realmLevel = 2
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
-    player.bodyProgression.meridian.openedIds = ['nham_mach']
+    player.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach'].map((id) => [id, 100]))
     // Stale persisted slices: a completed-tier id the state no longer
     // backs + a fabricated meridian entry. Chapter state wins.
     player.modifiers = [
@@ -1412,7 +1412,7 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
     const player = createDefaultPlayer()
     player.bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-      meridian: { openedIds: [] },
+      meridian: { progress: {} },
     } as never
 
     let thrown: unknown
@@ -1432,7 +1432,7 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
   it.each([
     ['meridian progressed while body_refinement incomplete', (p: PlayerData) => {
       p.realmId = 'qi_refining'
-      p.bodyProgression.meridian.openedIds = ['nham_mach']
+      p.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach'].map((id) => [id, 100]))
     }],
     ['zhou_tian progressed while meridian incomplete', (p: PlayerData) => {
       p.realmId = 'foundation_establishment'
@@ -1449,7 +1449,7 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
     }],
     ['meridian complete while body_refinement incomplete', (p: PlayerData) => {
       p.realmId = 'qi_refining'
-      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+      p.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     }],
     // C2C-75 - realm-capacity invariant at the boundary: coherent
     // predecessors (refinement + full meridian) but completed beyond
@@ -1459,7 +1459,7 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
       p.realmLevel = 1
       p.physiqueGrade = 'bao'
       p.bodyProgression.body_refinement.completedTiers = 6
-      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+      p.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
       p.bodyProgression.zhou_tian.completed = 3
     }],
     ['zhou_tian complete at pre-completion realm level', (p: PlayerData) => {
@@ -1467,7 +1467,7 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
       p.realmLevel = 9
       p.physiqueGrade = 'bao'
       p.bodyProgression.body_refinement.completedTiers = 6
-      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+      p.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
       p.bodyProgression.zhou_tian.completed = 36
     }],
   ])('rejects %s and leaves live state byte-equivalent unchanged', (_label, corrupt) => {

@@ -50,6 +50,10 @@ export interface BodyUnitView {
   actionable: boolean
   canInvest: boolean
   progress?: { value: number; max: number }
+  // Meridian units only: the meridian's float completion percent
+  // (0-100, decimals kept) - the fidelity figure reads this contract
+  // for its dot fill, the detail card prints it verbatim.
+  progressPercent?: number
 }
 
 /**

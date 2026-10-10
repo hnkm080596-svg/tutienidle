@@ -64,6 +64,10 @@ import {
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { authoredRealmPassiveEntries, REALM_PASSIVES } from '../../data/realm/RealmPassives'
 import { MERIDIANS } from '../../data/realm/Meridians'
+import {
+  meridianMilestonePercent,
+  readMeridianProgressSlice,
+} from '../../core/realm/body/MeridianChapter'
 import { resolveKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
 import { CHARACTER_CREATION_TALENT_COUNT } from '../character/CharacterCreationService'
 import {
@@ -1484,15 +1488,30 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
         }
 
         // F-TC6-9: the meridian writer emits exactly
-        // 'bat-mach:<meridian>:<stat>' entries at the authored
-        // percentAtFullTier - a claim in another id shape, another
-        // stat, or another magnitude is forged and would emit live
-        // once bodyPath unlocks (the bat-mach: strip never sees it).
+        // 'bat-mach:<meridian>:<stat>' entries at the milestone-scaled
+        // percent (progressive Khai Mach: percentAtFullTier *
+        // floor(progress/20)/5 recomputed from the persisted slice) - a
+        // claim in another id shape, another stat, or another magnitude
+        // is forged and would emit live once bodyPath unlocks (the
+        // bat-mach: strip never sees it).
         if (meridianSource !== undefined) {
+          const progress = readMeridianProgressSlice(
+            isObject(player.bodyProgression)
+              ? player.bodyProgression.meridian
+              : undefined,
+          )[meridianSource.id] ?? 0
+          // progress>0 pins the live milestone-scaled magnitude; an
+          // unopened meridian carries no legit percent, so the pin
+          // falls back to percentAtFullTier - a canonical-magnitude
+          // claim passes shape and applyAllBodyModifiers strips it at
+          // restore, while a non-authored magnitude is forged.
+          const expectedPercent = progress > 0
+            ? meridianMilestonePercent(meridianSource, progress)
+            : meridianSource.percentAtFullTier
           if (
             modifier.id !== `bat-mach:${meridianSource.id}:${String(modifier.stat)}` ||
             !meridianSource.stats.some((stat) => stat === modifier.stat) ||
-            modifier.percent !== meridianSource.percentAtFullTier
+            modifier.percent !== expectedPercent
           ) {
             issues.push({
               path: `player.modifiers[${i}]`,

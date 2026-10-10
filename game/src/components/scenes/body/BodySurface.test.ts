@@ -47,6 +47,21 @@ function mountScene(
   manager.catalogOps.registerPills(pills)
   app.provide(GAME_MANAGER_KEY, manager)
 
+  // jsdom lacks the Web Animations API the paper figure's meridian
+  // sweep reads - stub the pieces it touches.
+  if (document.timeline === undefined) {
+    Object.defineProperty(document, 'timeline', {
+      value: { currentTime: 0 },
+      configurable: true,
+    })
+  }
+  if (!Element.prototype.animate) {
+    Element.prototype.animate = (() => ({
+      cancel() {},
+      finished: Promise.resolve(),
+    })) as unknown as typeof Element.prototype.animate
+  }
+
   const player = usePlayerStore(pinia)
   setup(player, manager)
   useUiStore(pinia).standalonePanel = 'body'
@@ -134,19 +149,20 @@ describe('BodySurface (scene 08 fidelity)', () => {
       player.$state.physiqueGrade = 'bao'
       setBodyProgression(player, {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
-        meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+        meridian: { progress: { nham_mach: 100, doi_mach: 100 } },
       })
     })
     await nextTick()
     await selectChapter(view, 'meridian')
 
-    // Out-of-reach meridians are hidden, not drawn as locked orbs -
-    // only the opened two and the next sequential node render.
+    // All 8 nodes render (locked dimmed): the opened two 'done', the
+    // next sequential 'current', the tail 'locked'.
     const orbs = view.container.querySelectorAll('.body-orb')
-    expect(orbs.length).toBe(3)
+    expect(orbs.length).toBe(8)
     expect(orbs[0]!.classList.contains('done')).toBe(true)
     expect(orbs[1]!.classList.contains('done')).toBe(true)
     expect(orbs[2]!.classList.contains('current')).toBe(true)
+    expect(orbs[7]!.classList.contains('locked')).toBe(true)
 
     view.unmount()
   })
@@ -269,7 +285,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
     function qiPlayer(
       player: ReturnType<typeof usePlayerStore>,
       realmLevel = 18,
-      openedIds: string[] = [],
+      opened: string[] = [],
     ) {
       player.$state.realmId = 'qi_refining'
       player.$state.realmLevel = realmLevel
@@ -277,7 +293,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       player.$state.physiqueGrade = 'bao'
       setBodyProgression(player, {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
-        meridian: { openedIds },
+        meridian: { progress: Object.fromEntries(opened.map((id) => [id, 100])) },
       })
     }
 
@@ -293,11 +309,14 @@ describe('BodySurface (scene 08 fidelity)', () => {
       // The next sequential node (am_kieu_mach) is the default card.
       expect(title?.textContent).toContain('Âm Kiều Mạch')
 
-      // Out-of-reach meridians hide: opened two + the next node only.
+      // All 8 nodes render (locked dimmed): opened two 'done', the
+      // next 'current', the rest 'locked'.
       const orbs = view.container.querySelectorAll('.body-orb')
-      expect(orbs.length).toBe(3)
+      expect(orbs.length).toBe(8)
       expect(orbs[0]!.classList.contains('done')).toBe(true)
+      expect(orbs[1]!.classList.contains('done')).toBe(true)
       expect(orbs[2]!.classList.contains('current')).toBe(true)
+      expect(orbs[7]!.classList.contains('locked')).toBe(true)
 
       view.unmount()
     })
@@ -308,7 +327,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
         player.$state.realmLevel = 10
         setBodyProgression(player, {
           body_refinement: { completedTiers: 6, currentTierProgress: 0 },
-          meridian: { openedIds: [] },
+          meridian: { progress: {} },
         })
       })
       await nextTick()
@@ -321,13 +340,16 @@ describe('BodySurface (scene 08 fidelity)', () => {
         i18n.global.t('panels.realm.meridian.pageLocked', { realm: 'Luyện Khí' }),
       )
       const orbs = view.container.querySelectorAll('.body-orb')
-      expect(orbs.length).toBe(0)
-      expect(investButton(view)).toBeNull()
+      expect(orbs.length).toBe(8)
+      expect(orbs[0]!.classList.contains('locked')).toBe(true)
+      expect(orbs[7]!.classList.contains('locked')).toBe(true)
+      // The CTA renders but stays disabled behind the page gate.
+      expect(investButton(view)?.disabled ?? false).toBe(true)
 
       view.unmount()
     })
 
-    it('invests the next meridian on click: openedIds grows, pill debited, bumpState fired', async () => {
+    it('invests the next meridian on click: progress grows, 1 pill debited, bumpState fired', async () => {
       let state!: ReturnType<typeof usePlayerStore>['$state']
       const view = mountBodyScene((player, manager) => {
         state = player.$state
@@ -345,13 +367,19 @@ describe('BodySurface (scene 08 fidelity)', () => {
       button!.click()
       await nextTick()
 
-      expect(state.bodyProgression.meridian.openedIds).toEqual(['nham_mach'])
+      // Progressive invest: one pill adds a partial gain (nham 5~10),
+      // the meridian stays 'next' until it reaches 100.
+      const progress = state.bodyProgression.meridian.progress.nham_mach
+      expect(progress).toBeGreaterThanOrEqual(5)
+      expect(progress).toBeLessThanOrEqual(10)
       expect(view.bumpState).toHaveBeenCalledTimes(1)
       expect(view.manager.pillBag.getAmount('thong_mach_dan')).toBe(4)
 
       const orbs = view.container.querySelectorAll('.body-orb')
-      expect(orbs[0]!.classList.contains('done')).toBe(true)
-      expect(orbs[1]!.classList.contains('current')).toBe(true)
+      // The still-investable nham stays 'current'; locked nodes dim.
+      expect(orbs.length).toBe(8)
+      expect(orbs[0]!.classList.contains('current')).toBe(true)
+      expect(orbs[1]!.classList.contains('locked')).toBe(true)
 
       view.unmount()
     })
@@ -398,7 +426,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
         player.$state.physiqueGrade = 'bao'
         setBodyProgression(player, {
           body_refinement: { completedTiers: 6, currentTierProgress: 0 },
-          meridian: { openedIds: [] },
+          meridian: { progress: {} },
         })
         manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
       })
@@ -412,12 +440,14 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('the final meridian needs no material aux - pills alone open it', async () => {
+    it('the final meridian needs no material aux - pills alone progress it', async () => {
       const opened7 = MERIDIANS.slice(0, 7).map(m => m.id)
 
       const view = mountBodyScene((player, manager) => {
         qiPlayer(player)
-        setBodyProgression(player, { meridian: { openedIds: opened7 } })
+        setBodyProgression(player, {
+          meridian: { progress: Object.fromEntries(opened7.map((id) => [id, 100])) },
+        })
         manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
       })
       await nextTick()
@@ -431,8 +461,8 @@ describe('BodySurface (scene 08 fidelity)', () => {
       await nextTick()
 
       expect(view.bumpState).toHaveBeenCalledTimes(1)
-      // doc_mach costs 30 thong_mach_dan - nothing else is checked.
-      expect(view.manager.pillBag.getAmount('thong_mach_dan')).toBe(10)
+      // Exactly 1 pill per invest - doc_mach rolls 0.1~1 per invest.
+      expect(view.manager.pillBag.getAmount('thong_mach_dan')).toBe(39)
 
       view.unmount()
     })
@@ -465,7 +495,11 @@ describe('BodySurface (scene 08 fidelity)', () => {
       player.$state.physiqueGrade = 'bao'
       setBodyProgression(player, {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
-        meridian: { openedIds: meridianComplete ? MERIDIANS.map(m => m.id) : [] },
+        meridian: {
+          progress: Object.fromEntries(
+            (meridianComplete ? MERIDIANS : []).map((m) => [m.id, 100]),
+          ),
+        },
         zhou_tian: { completed },
       })
     }
@@ -494,7 +528,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
         player.$state.physiqueGrade = 'bao'
         setBodyProgression(player, {
           body_refinement: { completedTiers: 6, currentTierProgress: 0 },
-          meridian: { openedIds: MERIDIANS.map(m => m.id) },
+          meridian: { progress: Object.fromEntries(MERIDIANS.map((m) => [m.id, 100])) },
           zhou_tian: { completed: 0 },
         })
       })

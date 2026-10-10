@@ -95,7 +95,8 @@
 // fields (bodyRefinementCompletedTiers /
 // bodyRefinementCurrentTierProgress / openedMeridianIds) fold into ONE
 // chapter-keyed record, player.bodyProgression = { body_refinement:
-// {completedTiers, currentTierProgress}, meridian: {openedIds} } -
+// {completedTiers, currentTierProgress}, meridian: {progress} (legacy
+// {openedIds} still loads - normalized in place at restore) -
 // shape validation delegates to the BodyProgression authority and the
 // restore preflight asserts chapter integrity before any owner mutation.
 // Save v71 is rejected (dev phase, no migration, no compat translator).

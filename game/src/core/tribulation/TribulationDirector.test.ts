@@ -37,7 +37,7 @@ function createHeavenInvestedPlayer(): PlayerData {
   // hidden body progress is realm-resident: mortal's body can only be
   // completed while in mortal; qi_refining work happens after entry.
   player.realmId = 'qi_refining'
-  player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+  player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
   player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
   return player
 }

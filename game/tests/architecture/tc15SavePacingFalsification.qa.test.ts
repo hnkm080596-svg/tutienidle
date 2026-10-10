@@ -84,7 +84,7 @@ describe('F-TC15-MERIDIAN-PACING', () => {
   it('rejects all-8 opened meridians at qi_refining realmLevel 1', () => {
     const save = qiRefiningSave()
     withCompletedRefinement(save.player)
-    save.player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    save.player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
 
     const shape = validateGameSaveShape(save)
     expect(shape.ok).toBe(true)
@@ -97,14 +97,14 @@ describe('F-TC15-MERIDIAN-PACING', () => {
     save.player.realmLevel = 8
     withCompletedRefinement(save.player)
     // 5th meridian requires realmLevel 10 - unproducible at level 8
-    save.player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 5).map((m) => m.id)
+    save.player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.slice(0, 5).map((m) => [m.id, 100]))
     expect(() => assertBodyProgressionIntegrity(save.player as never)).toThrow()
   })
 
-  it('control: page-locked openedIds at mortal are rejected today', () => {
+  it('control: page-locked meridian progress at mortal is rejected today', () => {
     const save = mortalSave()
     withCompletedRefinement(save.player)
-    save.player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    save.player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     expect(() => assertBodyProgressionIntegrity(save.player as never)).toThrow()
   })
 
@@ -113,7 +113,7 @@ describe('F-TC15-MERIDIAN-PACING', () => {
     save.player.realmLevel = 4
     withCompletedRefinement(save.player)
     // nham=2, doi=4 both <= 4 - producible, must NOT throw
-    save.player.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
+    save.player.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach', 'doi_mach'].map((id) => [id, 100]))
     expect(() => assertBodyProgressionIntegrity(save.player as never)).not.toThrow()
   })
 })

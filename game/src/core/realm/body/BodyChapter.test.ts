@@ -18,7 +18,7 @@ describe('BodyChapter - canonical zero state', () => {
   it('createDefaultBodyProgression returns the canonical zero-state record', () => {
     expect(createDefaultBodyProgression()).toEqual({
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-      meridian: { openedIds: [] },
+      meridian: { progress: {} },
       zhou_tian: { completed: 0 },
     })
   })
@@ -27,7 +27,7 @@ describe('BodyChapter - canonical zero state', () => {
     const a = createDefaultBodyProgression()
     const b = createDefaultBodyProgression()
     expect(a.body_refinement).not.toBe(b.body_refinement)
-    expect(a.meridian.openedIds).not.toBe(b.meridian.openedIds)
+    expect(a.meridian.progress).not.toBe(b.meridian.progress)
     expect(a.zhou_tian).not.toBe(b.zhou_tian)
   })
 
@@ -35,7 +35,7 @@ describe('BodyChapter - canonical zero state', () => {
     const player = createDefaultPlayer()
     expect(player.bodyProgression).toEqual({
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
-      meridian: { openedIds: [] },
+      meridian: { progress: {} },
       zhou_tian: { completed: 0 },
     })
   })
@@ -300,10 +300,10 @@ describe('BodyChapter - validateBodyProgressionPersistedState', () => {
     const payload = JSON.parse(JSON.stringify(player)) as Record<string, unknown>
     const record = payload.bodyProgression as Record<string, unknown>
     record.body_refinement = { completedTiers: 'x', currentTierProgress: 0 }
-    record.meridian = { openedIds: [1] }
+    record.meridian = { progress: { nham_mach: 'x' } }
 
     const paths = collectIssues(payload).map(i => i.path)
     expect(paths).toContain('player.bodyProgression.body_refinement.completedTiers')
-    expect(paths).toContain('player.bodyProgression.meridian.openedIds[0]')
+    expect(paths).toContain('player.bodyProgression.meridian.progress.nham_mach')
   })
 })

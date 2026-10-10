@@ -146,7 +146,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.completedStageIds = ['qi_refining_abyssal_pool']
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')!
     gameManager.pillBag.add(trucCoDan, 1)
@@ -207,7 +207,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.completedStageIds = ['qi_refining_abyssal_pool']
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
     player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
@@ -293,7 +293,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.realmLevel = 18
     player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
-    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
 
     // ARCH-002 (M7): startTribulation resolves internally - patch the
     // RAW base so the tribulation ghost survives the strikes.

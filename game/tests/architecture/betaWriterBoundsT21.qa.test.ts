@@ -3,7 +3,7 @@
 // The deterministic triage replayed every still-live claim class from the
 // TC10/A12/B12 harvest against the validator. Each bound is an
 // earnability-coherence check on monotonic inputs (realm markers,
-// completedTiers, openedIds, authored durations) - never a writability
+// completedTiers, meridian progress, authored durations) - never a writability
 // gate. A forged claim that no writer on the save could produce is
 // rejected at the boundary; an authored-shape control stays accepted.
 //

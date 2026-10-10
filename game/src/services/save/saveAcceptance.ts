@@ -224,8 +224,8 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
   // P7-M5 (v72) - body progression integrity is the LAST preflight
   // check, delegated to the BodyProgression authority in one call
   // (shape already passed): completedTiers integral + 0..6, progress
-  // under the active-tier cap / zero at 6, openedIds a strict prefix
-  // of canonical MERIDIANS order. A corrupt slice is corrupt
+  // under the active-tier cap / zero at 6, meridian progress bounded
+  // to a strict prefix of canonical MERIDIANS order. A corrupt slice is corrupt
   // progression state - reject before any owner mutation, same
   // hard-fail seam as the technique-holder contract above.
   assertBodyProgressionIntegrity(save.player)

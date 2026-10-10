@@ -172,7 +172,7 @@ describe('persisted realm modifiers under the beta lock', () => {
     // LIVE in beta - an opened meridian's canonical payload emits its
     // authored modifier.
     const carried = player()
-    carried.bodyProgression.meridian.openedIds = ['nham_mach']
+    carried.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach'].map((id) => [id, 100]))
     const meridian = MERIDIANS.find((m) => m.id === 'nham_mach')
     expect(meridian).toBeDefined()
     for (const stat of meridian!.stats) {

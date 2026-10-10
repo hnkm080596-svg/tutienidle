@@ -1,6 +1,6 @@
 /**
  * QA FIXPOINT probe (run qa-fixpoint-master) - isolates the meridian
- * openedIds arm of the persisted-modifier reconcile. Under the beta
+ * progress arm of the persisted-modifier reconcile. Under the beta
  * lock the upstream bodyPath verdict already drops every meridian
  * claim, so this gate is only observable while bodyPath is live:
  * an 'bat-mach:*' payload on an UNOPENED meridian is a forged claim
@@ -37,7 +37,7 @@ function meridianPayloads(p: PlayerData): void {
   }
 }
 
-describe('meridian openedIds gate while bodyPath is live', () => {
+describe('meridian progress gate while bodyPath is live', () => {
   it('a payload on an unopened meridian emits nothing', () => {
     const p = player()
     meridianPayloads(p)
@@ -51,7 +51,7 @@ describe('meridian openedIds gate while bodyPath is live', () => {
 
   it('control: a canonical payload on an opened meridian emits the authored modifier', () => {
     const p = player()
-    p.bodyProgression.meridian.openedIds = [MERIDIAN.id]
+    p.bodyProgression.meridian.progress = Object.fromEntries([MERIDIAN.id].map((id) => [id, 100]))
     meridianPayloads(p)
 
     const stats = resolvePlayerStatAssembly(p, []).stats

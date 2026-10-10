@@ -128,7 +128,7 @@ describe('Body base-stat assembly (D1)', () => {
 
     player.realmId = 'qi_refining'
     player.realmLevel = 18
-    player.bodyProgression.meridian.openedIds = ['nham_mach', 'doc_mach']
+    player.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach', 'doc_mach'].map((id) => [id, 100]))
 
     expect(collectBodyBaseStatDeltas(player)).toEqual({})
   })
@@ -139,7 +139,7 @@ describe('Body base-stat assembly (D1)', () => {
 
     withMeridian.realmId = 'qi_refining'
     withMeridian.realmLevel = 18
-    withMeridian.bodyProgression.meridian.openedIds = ['nham_mach']
+    withMeridian.bodyProgression.meridian.progress = Object.fromEntries(['nham_mach'].map((id) => [id, 100]))
     withMeridian.modifiers = [
       {
         id: 'bat-mach:nham_mach:maxHp',
