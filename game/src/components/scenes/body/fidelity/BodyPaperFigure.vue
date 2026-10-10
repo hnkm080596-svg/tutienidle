@@ -106,14 +106,14 @@ const foreheadLitCount = computed(() => {
 // Meridian dots as a vertical column on the left of the figure, top to
 // bottom in MERIDIANS order (owner ruling 2026-10-09).
 const MERIDIAN_POINTS = [
-  [13, 14],
-  [13, 24],
-  [13, 34],
-  [13, 44],
-  [13, 54],
-  [13, 64],
-  [13, 74],
-  [13, 84],
+  [51.76, 17.28],
+  [17.64, 28.25],
+  [47.64, 46.67],
+  [59.26, 59.51],
+  [14.46, 83.33],
+  [93.0, 27.72],
+  [29.83, 61.97],
+  [90.57, 85.31],
 ] as const
 // Node drag design mode (owner request 2026-10-09): each meridian dot is
 // draggable; on drop the coordinates persist to localStorage and log to the
@@ -188,6 +188,16 @@ const seededJitter = (seed: number, i: number) => {
 }
 // Bend-point drag mode (owner request 2026-10-09): each zigzag waypoint is
 // a draggable handle; positions persist to localStorage for baking.
+const BEND_DEFAULTS: Record<string, readonly [number, number]> = {
+  '2-1:d1': [44.64, 39.12], '2-1:d2': [39.2, 37.95], '2-1:d3': [36.76, 32.65], '2-1:d4': [29.64, 31.77],
+  '0-1:d1': [47.26, 29.74], '0-1:d2': [44.64, 30.56], '0-1:d3': [43.14, 34.2], '0-1:d4': [34.51, 28.49],
+  '2-6:d1': [47.26, 54.99], '2-6:d2': [38.45, 53.63], '2-6:d3': [41.08, 59.07],
+  '4-6:d2': [14.64, 70.25], '4-6:d3': [20.08, 68.89], '4-6:d4': [20.83, 61.49],
+  '4-7:d1': [23.45, 69.78], '4-7:d2': [39.76, 65.35], '4-7:d3': [53.82, 63.23], '4-7:d4': [78.76, 73.5],
+  '7-3:d1': [86.44, 75.45], '7-3:d2': [82.13, 68.74], '7-3:d3': [72.76, 65.84], '7-3:d4': [73.13, 60.86],
+  '3-5:d1': [54.2, 51.81], '3-5:d2': [52.32, 39.35], '3-5:d3': [80.82, 38.95], '3-5:d4': [92.25, 33.78],
+  '0-5:d1': [51.95, 30.6], '0-5:d2': [60.2, 35.44], '0-5:d3': [79.88, 35.99], '0-5:d4': [90.0, 33.46],
+}
 const bendPositions = ref<Record<string, [number, number]>>(
   JSON.parse(localStorage.getItem('meridian-bend-points') ?? '{}'),
 )
@@ -220,7 +230,7 @@ function onBendPointerUp() {
 // Interior dot i sits at t = i/10 with a jittered offset; stored drags win.
 const channelDot = (link: { from: number; to: number; seed: number; ctrl?: readonly [number, number] }, i: number, a: readonly number[], b: readonly number[]): [number, number] => {
   const key = `${link.from}-${link.to}:d${i}`
-  const stored = bendPositions.value[key]
+  const stored = bendPositions.value[key] ?? BEND_DEFAULTS[key]
   if (stored) return stored
   const t = i / 5 // 4 interior dots (owner ruling 2026-10-10)
   // Quadratic bezier through ctrl keeps the default path inside the body;
