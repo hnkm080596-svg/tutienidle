@@ -169,6 +169,7 @@ const MERIDIAN_LINKS = [
   { from: 2, to: 1, seed: 88, ctrl: [33, 36] as [number, number] },
   { from: 0, to: 1, seed: 88, ctrl: [33, 28] as [number, number] },
   { from: 2, to: 6, seed: 88, ctrl: [38, 55] as [number, number] },
+  { from: 4, to: 6, seed: 88, ctrl: [20, 74] as [number, number] },
 ] as const
 // Deterministic pseudo-random so the zigzag is stable across renders.
 const seededJitter = (seed: number, i: number) => {
