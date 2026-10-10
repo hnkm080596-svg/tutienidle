@@ -347,9 +347,11 @@ function syncMeridianAnims() {
   const travelF = Math.max(litFrac.value, 0.001)
   const litLen = travelF * 100
   const travelS = (travelF * 8.5) / SPEED
-  const periodMs = Math.max(5000, travelS * 1000)
+  // Period = travel + 2.5s rest: the lit fill fades out over 1.5s then a
+  // 1s dark beat before the sweep restarts (owner ruling 2026-10-10).
+  const periodMs = Math.max(5000, travelS * 1000 + 2500)
   const travelEnd = Math.min((travelS * 1000) / periodMs, 0.999)
-  const fadeEnd = Math.min(travelEnd + 0.02, 1)
+  const fadeEnd = Math.min(travelEnd + 1500 / periodMs, 1)
   const sweep = (from: number, to: number) => [
     { strokeDashoffset: `${from}`, opacity: 1, offset: 0 },
     { strokeDashoffset: `${to}`, opacity: 1, offset: travelEnd },
