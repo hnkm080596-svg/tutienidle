@@ -337,7 +337,6 @@ const galaxyPieces = computed(() =>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
              (owner ruling 2026-10-10). -->
         <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path :d="circuitD" class="sweep-glow" pathLength="100" fill="none"/>
           <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
@@ -479,10 +478,9 @@ const galaxyPieces = computed(() =>
 .body-meridian-num.num-left { left:auto; right:100%; transform:translate(15%,-50%); }
 .body-meridian-path { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
-/* Glint sweep (owner 2026-10-10): one soft light band glides along the
-   meridian loop - wide faint halo under a slim bright core. */
-.sweep-glow { stroke:#ffdf8e; stroke-width:2.4; stroke-linecap:round; stroke-dasharray:7 93; opacity:.35; animation:circuit-run 10s linear infinite; filter:blur(.5px); }
-.sweep-core { stroke:#fff3c8; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:5 95; animation:circuit-run 10s linear infinite; animation-delay:-.2s; filter:drop-shadow(0 0 1.2px rgba(255,225,150,.9)); }
+/* Single light point (owner 2026-10-10): one bright dot glides the
+   meridian loop - no halo, no tail. */
+.sweep-core { stroke:#fff6d8; stroke-width:1.0; stroke-linecap:round; stroke-dasharray:1.2 98.8; animation:circuit-run 10s linear infinite; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
 .body-meridian-path .dot-lit { fill:#ffd76a; }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
