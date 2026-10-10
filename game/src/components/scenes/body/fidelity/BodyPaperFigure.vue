@@ -312,9 +312,9 @@ function syncMeridianAnims() {
     [
       { strokeDashoffset: '100', opacity: 1, offset: 0 },
       { strokeDashoffset: '0', opacity: 1, offset: 0.85 },
-      { strokeDashoffset: '0', opacity: 1, offset: 0.92 },
-      { strokeDashoffset: '100', opacity: 0, offset: 0.99 },
-      { strokeDashoffset: '100', opacity: 0, offset: 1 },
+      { strokeDashoffset: '0', opacity: 1, offset: 0.9 },
+      { strokeDashoffset: '0', opacity: 0, offset: 0.97 },
+      { strokeDashoffset: '0', opacity: 0, offset: 1 },
     ],
     { duration: 10000, iterations: Infinity, startTime: t },
   ))
@@ -348,9 +348,9 @@ function syncMeridianAnims() {
     meridianAnims.push(lit.animate(
       [
         { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.05 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.2 },
-        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.32 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.13 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.32 },
+        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.44 },
         { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
       ],
       { duration: 10000, iterations: Infinity, delay, startTime: t },
