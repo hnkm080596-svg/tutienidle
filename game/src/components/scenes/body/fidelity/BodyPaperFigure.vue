@@ -255,8 +255,8 @@ const meridianPaths = computed(() =>
 const dotTwinkle = (link: { from: number; to: number; seed: number }, di: number) => {
   let h = (link.from * 31 + link.to * 17 + di * 13 + link.seed) >>> 0
   h = ((h * 2654435761) >>> 0) ^ (h >>> 13)
-  const dur = 1.1 + (h % 260) / 100 // 1.1s - 3.7s per dot
-  const delay = -((h >>> 8) % 370) / 100 // negative = mid-cycle start
+  const dur = 3.4 + (h % 340) / 100 // 3.4s - 6.8s slow drift per dot
+  const delay = -((h >>> 8) % 680) / 100 // negative = mid-cycle start
   return { animationDuration: dur + 's', animationDelay: delay + 's' }
 }
 const dotsAttr = (dots: readonly (readonly number[])[]) => dots.map((d) => `${d[0]},${d[1]}`).join(' ')
@@ -579,15 +579,11 @@ const galaxyPieces = computed(() =>
 .circuit-fill { stroke:#ffd76a; stroke-width:0.4; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
 .sweep-core { stroke:#fff6d8; stroke-width:0.35; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
-.body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 2.6s linear infinite; }
+.body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
 @keyframes meridianTwinkle {
-  0%, 100% { opacity:.3; filter:none; }
-  7% { opacity:1; filter:drop-shadow(0 0 1px rgba(255,240,190,1)) drop-shadow(0 0 2px rgba(255,205,95,.9)); }
-  13% { opacity:.35; filter:none; }
-  47% { opacity:.4; filter:none; }
-  55% { opacity:.95; filter:drop-shadow(0 0 1.2px rgba(255,235,170,1)); }
-  63% { opacity:.3; filter:none; }
+  0%, 100% { opacity:.5; filter:drop-shadow(0 0 .3px rgba(255,215,120,.4)); }
+  50% { opacity:.95; filter:drop-shadow(0 0 .8px rgba(255,235,170,.9)) drop-shadow(0 0 1.6px rgba(255,205,95,.6)); }
 }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
 .body-meridian-handles { position:absolute; inset:0; z-index:4; pointer-events:none; }
