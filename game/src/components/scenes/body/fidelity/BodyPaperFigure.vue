@@ -167,6 +167,7 @@ const MERIDIAN_LINKS = [
   // ctrl bends the default path through the body (owner: dots must start
   // inside the silhouette) - node3 chest -> shoulder -> node2 hand.
   { from: 2, to: 1, seed: 88, ctrl: [33, 36] as [number, number] },
+  { from: 0, to: 1, seed: 88, ctrl: [33, 28] as [number, number] },
 ] as const
 // Deterministic pseudo-random so the zigzag is stable across renders.
 const seededJitter = (seed: number, i: number) => {
