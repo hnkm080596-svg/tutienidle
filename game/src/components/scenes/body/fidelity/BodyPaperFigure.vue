@@ -208,7 +208,7 @@ const channelDot = (link: { from: number; to: number; seed: number; ctrl?: reado
   const key = `${link.from}-${link.to}:d${i}`
   const stored = bendPositions.value[key]
   if (stored) return stored
-  const t = i / 10
+  const t = i / 6 // 5 interior dots (owner: "giảm còn 5 node con")
   // Quadratic bezier through ctrl keeps the default path inside the body;
   // jitter on top keeps it irregular (owner rulings 2026-10-09).
   const c: readonly number[] = link.ctrl ?? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
@@ -230,7 +230,7 @@ const meridianPaths = computed(() =>
     const a = nodePosition(link.from)
     const b = nodePosition(link.to)
     const dots: [number, number][] = [a]
-    for (let i = 1; i <= 9; i++) dots.push(channelDot(link, i, a, b))
+    for (let i = 1; i <= 5; i++) dots.push(channelDot(link, i, a, b))
     dots.push(b)
     // All dots lit while meridian nodes are forced lit for layout review
     // (owner request 2026-10-09, temporary) - real wiring: done = 9,
