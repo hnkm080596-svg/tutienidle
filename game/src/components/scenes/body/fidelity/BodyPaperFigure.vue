@@ -327,18 +327,17 @@ const litFrac = computed(() => {
 // the light actually reaches its node.
 const stageEl = ref<HTMLElement>()
 let meridianAnims: Animation[] = []
-const TAIL_SEGMENTS = 1
-// Comet tail: a single 4-unit streak behind the bright point.
-const tailSegmentOffset = () => 4
+// Persistence sweep (owner ruling): the bright point fills the path as it
+// goes - no fading tail.
 function syncMeridianAnims() {
   meridianAnims.forEach((a) => a.cancel())
   meridianAnims = []
   const root = stageEl.value
   if (!root || props.model.chapter !== 'meridian') return
+  const fill = root.querySelector('.circuit-fill')
   const spark = root.querySelector('.sweep-core')
-  const tails = root.querySelectorAll<HTMLElement>('.sweep-tail')
   const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
-  if (!spark || !tails.length || !rings.length) return
+  if (!fill || !spark || !rings.length) return
   const t = document.timeline.currentTime ?? 0
   // Owner rulings 2026-10-10: no persistence fill - just a bright point
   // with a soft fading tail; sweep runs 25% slower and restarts every 5s+.
@@ -346,19 +345,16 @@ function syncMeridianAnims() {
   const travelF = Math.max(litFrac.value, 0.001)
   const litLen = travelF * 100
   const travelS = (travelF * 8.5) / SPEED
-  const periodMs = Math.max(5000, travelS * 1000)
+  const periodMs = Math.max(5000, travelS * 1000 + 2500)
   const travelEnd = Math.min((travelS * 1000) / periodMs, 0.999)
-  const fadeEnd = Math.min(travelEnd + 0.02, 1)
+  const fadeEnd = Math.min(travelEnd + 1500 / periodMs, 1)
   const sweep = (from: number, to: number) => [
     { strokeDashoffset: `${from}`, opacity: 1, offset: 0 },
     { strokeDashoffset: `${to}`, opacity: 1, offset: travelEnd },
     { strokeDashoffset: `${to}`, opacity: 0, offset: fadeEnd },
     { strokeDashoffset: `${from}`, opacity: 0, offset: 1 },
   ]
-  tails.forEach((seg) => {
-    const off = tailSegmentOffset()
-    meridianAnims.push(seg.animate(sweep(off, off - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
-  })
+  meridianAnims.push(fill.animate(sweep(100, 100 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   meridianAnims.push(spark.animate(sweep(1.2, 1.2 - litLen), { duration: periodMs, iterations: Infinity, startTime: t }))
   const litS = litFrac.value * 8.5 + 0.05
   rings.forEach((ring, i) => {
@@ -481,7 +477,7 @@ const galaxyPieces = computed(() =>
         <!-- One light streak runs the meridian loop 1-2-3-7-5-8-4-6-1
              (owner ruling 2026-10-10). -->
         <svg class="body-meridian-flow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path v-for="i in TAIL_SEGMENTS" :key="'st' + i" :d="circuitD" class="sweep-tail" pathLength="100" fill="none"/>
+          <path :d="circuitD" class="circuit-fill" pathLength="100" fill="none"/>
           <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
         </svg>
         <!-- Every channel dot is draggable - sculpt the irregularity
@@ -653,7 +649,7 @@ const galaxyPieces = computed(() =>
 .body-meridian-flow { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 /* Sweep (owner 2026-10-10): a bright point with a soft fading tail runs
    the opened stretch every 5s+ - nothing persists once it passes. */
-.sweep-tail { stroke:#ffd76a; stroke-width:0.8; stroke-linecap:round; stroke-dasharray:3.5 96.5; opacity:.45; filter:blur(.5px) drop-shadow(0 0 1.4px rgba(255,205,95,.55)); }
+.circuit-fill { stroke:#ffce6b; stroke-width:0.35; stroke-linecap:round; stroke-dasharray:100 0; opacity:.9; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.8)); }
 .sweep-core { stroke:#fff6d8; stroke-width:0.32; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
