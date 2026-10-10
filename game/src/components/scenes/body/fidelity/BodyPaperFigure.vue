@@ -414,11 +414,12 @@ function syncMeridianAnims() {
     if (!node) return
     if ((circuit.value.ringDelay[node.index] ?? 99) > litS) return
     const delay = ((circuit.value.ringDelay[node.index] ?? 0) * 1000) / SPEED
+    const ringF = 850 / periodMs
     meridianAnims.push(ring.animate(
       [
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 0 },
-        { opacity: 0.95, offset: 0.02 },
-        { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.14 },
+        { opacity: 0.95, offset: ringF * 0.15 },
+        { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: ringF },
         { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 1 },
       ],
       { duration: periodMs, iterations: Infinity, delay, startTime: t },
@@ -435,12 +436,15 @@ function syncMeridianAnims() {
     const delay = allDone
       ? finalDelay
       : ((circuit.value.ringDelay[node.index] ?? 0) * 1000) / SPEED
+    const gA = 400 / periodMs
+    const gB = 1200 / periodMs
+    const gC = 1700 / periodMs
     meridianAnims.push(lit.animate(
       [
         { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.13 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.32 },
-        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.44 },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: gA },
+        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: gB },
+        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: gC },
         { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
       ],
       { duration: periodMs, iterations: Infinity, delay, startTime: t },
