@@ -250,8 +250,10 @@ const dotsAttr = (dots: readonly (readonly number[])[]) => dots.map((d) => `${d[
 // Light circuit (owner 2026-10-10): one bright streak runs the whole meridian
 // loop 1->2->3->7->5->8->4->6->1, reusing each channel's current dots.
 const MERIDIAN_ORDER = [0, 1, 2, 6, 4, 7, 3, 5] as const
-const circuitD = computed(() => {
+const circuit = computed(() => {
   const pts: [number, number][] = []
+  const dists: number[] = [0]
+  const arrival: Record<number, number> = {}
   for (let i = 0; i < MERIDIAN_ORDER.length; i++) {
     const a = MERIDIAN_ORDER[i]
     const b = MERIDIAN_ORDER[(i + 1) % MERIDIAN_ORDER.length]
@@ -259,10 +261,24 @@ const circuitD = computed(() => {
       (p.link.from === a && p.link.to === b) || (p.link.from === b && p.link.to === a))
     if (!path) continue
     const seg = path.link.from === a ? path.dots : [...path.dots].reverse()
-    for (const d of seg) pts.push(d)
+    for (const d of seg) {
+      const prev = pts[pts.length - 1]
+      if (prev) dists.push(dists[dists.length - 1] + Math.hypot(d[0] - prev[0], d[1] - prev[1]))
+      pts.push(d)
+    }
+    // The spark reaches node b at this cumulative distance.
+    arrival[b] = dists[dists.length - 1]
   }
-  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ')
+  const total = dists[dists.length - 1] || 1
+  // Spark covers the loop in 8.5s (85% of the 10s cycle).
+  const ringDelay = Object.fromEntries(
+    Object.entries(arrival).map(([k, v]) => [k, (v / total) * 8.5]),
+  ) as Record<number, number>
+  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ')
+  return { d, ringDelay }
 })
+const circuitD = computed(() => circuit.value.d)
+const ringDelay = (index: number) => `${(circuit.value.ringDelay[index] ?? 0).toFixed(2)}s`
 
 
 // Chu Thien: galaxy pieces lit by the chapter progress fraction; lit pieces
@@ -367,7 +383,7 @@ const galaxyPieces = computed(() =>
         <!-- Loop-complete ripple: a thin ring pings out of each node once
              the circuit is fully lit (owner ruling 2026-10-10). -->
         <span v-for="node in visibleMeridianNodes" :key="`ring-${node.unit.id}`"
-          class="body-meridian-ring" :style="{ left: `${node.x}%`, top: `${node.y}%` }"/>
+          class="body-meridian-ring" :style="{ left: `${node.x}%`, top: `${node.y}%`, animationDelay: ringDelay(node.index) }"/>
       </template>
       <template v-else-if="model.chapter === 'zhou_tian'">
         <img v-for="(piece, i) in galaxyPieces" :key="i"
@@ -478,12 +494,13 @@ const galaxyPieces = computed(() =>
 .body-meridian-node { position:absolute; width:18%; height:14%; transform:translate(-50%,-50%); z-index:3; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
 .body-meridian-node:active { cursor:grabbing; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
-/* Sonar-style ring ping on loop complete (owner ruling 2026-10-10). */
+/* Sonar-style ring ping as the spark passes each node (owner ruling
+   2026-10-10) - per-node animation-delay lands it at spark arrival. */
 .body-meridian-ring { position:absolute; width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,235,170,.95); box-shadow:0 0 8px rgba(255,205,95,.8), inset 0 0 6px rgba(255,205,95,.5); transform:translate(-50%,-50%) scale(.3); opacity:0; pointer-events:none; z-index:3; animation:ring-ping 10s linear infinite; }
 @keyframes ring-ping {
-  0%,84% { transform:translate(-50%,-50%) scale(.3); opacity:0 }
-  86% { opacity:.95 }
-  97%,100% { transform:translate(-50%,-50%) scale(2.6); opacity:0 }
+  0% { transform:translate(-50%,-50%) scale(.3); opacity:0 }
+  2% { opacity:.95 }
+  14%,100% { transform:translate(-50%,-50%) scale(2.6); opacity:0 }
 }
 /* .locked dimming off while nodes are forced lit for layout review (owner request, temporary). */
 .body-meridian-num { display:none; position:absolute; left:100%; top:50%; transform:translate(-15%,-50%); pointer-events:none; font-family:'Times New Roman',serif; font-size:clamp(15px,2.6vmin,22px); font-weight:700; color:#7fffd4; text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px rgba(0,200,160,.8); }
