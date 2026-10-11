@@ -85,12 +85,12 @@ function makeSystemWithJob(job: ActiveAlchemyJob = makeJob()): {
 }
 
 describe('AlchemySystem — jobSuccessPercent', () => {
-  it('không bonus — base decade 30 + room 1 bonus 0', () => {
-    expect(jobSuccessPercent(makeJob(), RECIPE)).toBe(30)
+  it('không bonus — base decade 50 + room 1 bonus 0 (split moi)', () => {
+    expect(jobSuccessPercent(makeJob(), RECIPE)).toBe(50)
   })
 
   it('bonus điểm % (Đan Duyên +15) cộng thẳng vào tổng', () => {
-    expect(jobSuccessPercent(makeJob(), RECIPE, 15)).toBe(45)
+    expect(jobSuccessPercent(makeJob(), RECIPE, 15)).toBe(65)
   })
 
   it('cap 300 giữ nguyên kể cả khi bonus đẩy tổng vượt trần', () => {
@@ -106,16 +106,16 @@ describe('AlchemySystem — jobSuccessPercent', () => {
 })
 
 describe('AlchemySystem — tick với bonus thiên phú', () => {
-  it('không bonus — roll 40% thất bại với total 30%', () => {
+  it('không bonus — roll 60% thất bại với total 50% (split moi)', () => {
     const { system, bag } = makeSystemWithJob()
 
-    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.4)
+    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.6)
 
     expect(bag.getAmount(RECIPE.pillId)).toBe(0)
     expect(system.drainSettlementEvents()[0]?.success).toBe(false)
   })
 
-  it('bonus 15 điểm — cùng roll 40% thành công (total 45%)', () => {
+  it('bonus 15 điểm — cùng roll 40% thành công (total 65%)', () => {
     const { system, bag } = makeSystemWithJob()
 
     system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.4, 15)
@@ -127,7 +127,7 @@ describe('AlchemySystem — tick với bonus thiên phú', () => {
   it('bonus đẩy total qua 100 — guaranteed pill tăng tương ứng', () => {
     const { system, bag } = makeSystemWithJob()
 
-    // 30 + 75 = 105 -> guaranteed 1, extra chance 5% (roll 0.5 truot extra)
+    // 50 + 75 = 125 -> guaranteed 1, extra chance 25% (roll 0.5 truot extra)
     system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.5, 75)
 
     expect(bag.getAmount(RECIPE.pillId)).toBe(1)
@@ -595,20 +595,20 @@ describe('AlchemySystem — success rate với bonus Đan Phòng (pure math, kh�
     )
   })
 
-  it('guaranteed/extra tách từ total — 45% → 0 guaranteed + extra 45%', () => {
+  it('guaranteed/extra tách từ total — 65% → 0 guaranteed + extra 65%', () => {
     const total = jobSuccessPercent(makeJob(), RECIPE, 15)
 
-    expect(total).toBe(45)
+    expect(total).toBe(65)
     expect(Math.floor(total / 100)).toBe(0)
-    expect(total % 100).toBe(45)
+    expect(total % 100).toBe(65)
   })
 
   it('total > 100 → guaranteed tăng, phần thừa thành extra chance', () => {
     const total = jobSuccessPercent(makeJob(), RECIPE, 75)
 
-    expect(total).toBe(105)
+    expect(total).toBe(125)
     expect(Math.floor(total / 100)).toBe(1)
-    expect(total % 100).toBe(5)
+    expect(total % 100).toBe(25)
   })
 })
 
@@ -729,7 +729,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
   it('pillYieldMultiplier 2 — mẻ thất bại vẫn 0 viên (không sinh đan)', () => {
     const { system, bag } = makeSystemWithJob()
 
-    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.4, 0, 2)
+    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.6, 0, 2)
 
     expect(bag.getAmount(RECIPE.pillId)).toBe(0)
     expect(system.drainSettlementEvents()[0]?.success).toBe(false)
@@ -738,7 +738,16 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
   it('settleOffline forward yieldMultiplier — job quá hạn settle x2', () => {
     const { system, bag } = makeSystemWithJob()
 
-    const settled = system.settleOffline(bag, () => ({ id: RECIPE.pillId }), 2_000, 70, 2)
+    // total 120% (50 + 70) -> guaranteed 1 + extra 20%; rng 0.9 tranh
+    // phu thuoc Math.random (extra 20% khien test flaky theo thiet ke).
+    const settled = system.settleOffline(
+      bag,
+      () => ({ id: RECIPE.pillId }),
+      2_000,
+      70,
+      2,
+      () => 0.9,
+    )
 
     expect(settled).toBe(1)
     expect(bag.getAmount(RECIPE.pillId)).toBe(2)
@@ -861,7 +870,7 @@ describe('AlchemySystem — preview với Hoa Hau Thong Than (M3)', () => {
     expect(preview!.fuelWoodAmount).toBe(RECIPE.fuelWoodAmount * 2)
     expect(preview!.spiritStoneCost).toBe(20)
     expect(preview!.yieldMultiplier).toBe(2)
-    // total 50% (decade 30 + room5 20) -> guaranteed 0, extra 50% cho 2 vien.
+    // total 70% (decade 50 + room5 20) -> guaranteed 0, extra 70% cho 2 vien.
     expect(preview!.guaranteedPills).toBe(0)
     expect(preview!.extraPillYield).toBe(2)
   })
@@ -948,8 +957,8 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
 
     system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 1, 1, 3)
 
-    // total 30% (decade) - rng 0 = luon trung extra? extraPillChance = 30%
-    // rng() * 100 < 30 -> 0 trung. Moi vien +1 pill.
+    // total 50% (decade, split moi) - rng 0 = luon trung extra (0 < 50).
+    // Moi vien mint +1 pill, kem 1 roll chat (rng 0 -> hoang).
     const rng = () => 0
 
     system.tick(61_000, pillBag, () => ({ id: recipe.pillId }), rng)
@@ -976,8 +985,8 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
 
     system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 1, 1, 3)
 
-    // 30% extra chance; moi vien roll rieng: vien 1 truot (0.5*100=50>=30),
-    // vien 2 trung (0.1*100=10<30), vien 3 truot -> tong 1 pill.
+    // 50% extra chance; moi vien roll rieng: vien 1 truot (0.5*100=50>=50),
+    // vien 2 trung (0.1*100=10<50, kem roll chat 0.5), vien 3 truot -> tong 1 pill.
     const rolls = [0.5, 0.1, 0.5]
     let index = 0
 
@@ -991,11 +1000,11 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
     expect(event.success).toBe(true)
   })
 
-  it('extraPillChance tren tung vien — total 105%: moi vien guaranteed 1 + roll 5% rieng', () => {
+  it('extraPillChance tren tung vien — total 125%: moi vien guaranteed 1 + roll 25% rieng', () => {
     const { recipe, bag, registry, system } = batchContext()
     const pillBag = new PillBag()
 
-    // room 1 + bonus 75 -> 105%: guaranteed 1 + extra 5%.
+    // room 1 + bonus 75 -> 125%: guaranteed 1 + extra 25%.
     system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 1, 1, 3)
 
     const rolls = [0.01, 0.5, 0.99]
@@ -1003,7 +1012,8 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
 
     system.tick(999_000, pillBag, () => ({ id: recipe.pillId }), () => rolls[index++] ?? 0.9, 75)
 
-    // vien1: 1 + trung (0.01*100<5) = 2; vien2: 1 + 0.5*100=50>5 = 1; vien3: 1.
+    // vien1: 1 + trung (0.01*100<25) = 2, roll chat 0.5; vien2: 1 +
+    // 0.99*100>25 = 1; vien3: 1 (?? 0.9 truot).
     expect(pillBag.getAmount(recipe.pillId)).toBe(4)
   })
 

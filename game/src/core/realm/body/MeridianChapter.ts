@@ -13,8 +13,10 @@ import {
 } from '../../../data/realm/Meridians'
 import type { PlayerData } from '../../player/Player'
 import type { StatModifier } from '../../stats/StatCalculator'
+import type { ItemQuality } from '../../item/ItemQuality'
 import type { BodyProgressionIssue, ModifierBodyChapter } from './BodyChapter'
 import { isMeridianPageUnlocked } from './MeridianPages'
+import { PILL_QUALITY_EFFECT_UPLIFT } from '../../pill/PillQuality'
 
 const MODIFIER_PREFIX = 'bat-mach:'
 
@@ -32,6 +34,30 @@ function modifierId(meridianId: string, stat: string): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+// M-PILL-GRADE (ruling 4): % bat mach nhan theo chat Thong Mach Dan da
+// tieu - TRUNG BINH uplift cua sach vien (mixed-grade stack co the
+// tron). Ghi sparse theo meridian id (additive field, save cu giu
+// nguyen lo danh = he so 1). Goi SAU khi invest da push openedIds va
+// debit da rut sach vien.
+export function recordMeridianOpenQuality(
+  player: PlayerData,
+  spentQualities: readonly ItemQuality[],
+): void {
+  const openedIds = player.bodyProgression.meridian.openedIds
+  const meridianId = openedIds[openedIds.length - 1]
+
+  if (meridianId === undefined || spentQualities.length === 0) {
+    return
+  }
+
+  const mean =
+    spentQualities.reduce((sum, quality) => sum + PILL_QUALITY_EFFECT_UPLIFT[quality], 0) /
+    spentQualities.length
+
+  const state = player.bodyProgression.meridian
+  state.openedQualityMultipliers = { ...state.openedQualityMultipliers, [meridianId]: mean }
 }
 
 export const meridianChapter: ModifierBodyChapter = {
@@ -94,7 +120,11 @@ export const meridianChapter: ModifierBodyChapter = {
           sourceId: meridian.id,
           sourceType: 'realm',
           stat,
-          percent: meridian.percentAtFullTier,
+          // M-PILL-GRADE: % authored nhan he so chat da ghi luc mo
+          // (sach cu khong co field = 1, lo danh giu nguyen).
+          percent:
+            meridian.percentAtFullTier *
+            (player.bodyProgression.meridian.openedQualityMultipliers?.[meridian.id] ?? 1),
         })
       }
     }
@@ -137,6 +167,31 @@ export const meridianChapter: ModifierBodyChapter = {
         })
       }
     })
+
+    // M-PILL-GRADE: additive optional field - absent = legacy save
+    // (he so 1), dien thi phai la record so huu han trong bien uplift.
+    if (slice.openedQualityMultipliers !== undefined) {
+      if (!isRecord(slice.openedQualityMultipliers)) {
+        emit({
+          path: `${basePath}.openedQualityMultipliers`,
+          message: 'openedQualityMultipliers phai la object',
+        })
+      } else {
+        for (const [meridianId, multiplier] of Object.entries(slice.openedQualityMultipliers)) {
+          if (
+            typeof multiplier !== 'number' ||
+            !Number.isFinite(multiplier) ||
+            multiplier < 1 ||
+            multiplier > 2
+          ) {
+            emit({
+              path: `${basePath}.openedQualityMultipliers.${meridianId}`,
+              message: 'he so chat phai la so huu han trong [1,2]',
+            })
+          }
+        }
+      }
+    }
   },
 
   // Strict-prefix rule: openedIds must be a prefix of canonical
@@ -168,6 +223,19 @@ export const meridianChapter: ModifierBodyChapter = {
             ? `meridian.openedIds[${index}] = '${actual}' vi pham thu tu tuan tu (ky vong '${expected}')`
             : `meridian.openedIds[${index}] = '${actual}' khong thuoc MERIDIANS`,
         )
+      }
+    }
+
+    // M-PILL-GRADE: he so chat chi ton tai tren duong DA MO - mot
+    // multiplicand tren duong chua mo la ghi chep khong the phat sinh.
+    const multipliers = player.bodyProgression.meridian.openedQualityMultipliers
+    if (multipliers !== undefined) {
+      for (const meridianId of Object.keys(multipliers)) {
+        if (!openedIds.includes(meridianId)) {
+          issues.push(
+            `meridian.openedQualityMultipliers['${meridianId}'] ghi tren duong chua mo`,
+          )
+        }
       }
     }
 

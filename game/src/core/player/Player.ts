@@ -630,7 +630,11 @@ export function resolvePlayerStatAssembly(
           sourceId: meridian.id,
           sourceType: 'realm' as const,
           stat,
-          percent: meridian.percentAtFullTier,
+          // M-PILL-GRADE: phai khop voi emission o MeridianChapter -
+          // % authored nhan he so chat da ghi, khong la claim forged.
+          percent:
+            meridian.percentAtFullTier *
+            (player.bodyProgression.meridian.openedQualityMultipliers?.[meridian.id] ?? 1),
         }))
         .find((candidate) => candidate.id === modifier.id)
       if (authored !== undefined) {

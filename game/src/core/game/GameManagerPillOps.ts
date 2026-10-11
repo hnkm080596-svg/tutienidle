@@ -1,6 +1,8 @@
 import type { PillBag } from '../pill/PillBag'
 import type { PillRegistry } from '../pill/PillRegistry'
 import type { PillSystem, PillTarget } from '../pill/PillSystem'
+import type { ItemQuality } from '../item/ItemQuality'
+import { BASE_PILL_QUALITY, pillQualityUplift } from '../pill/PillQuality'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import type { PlayerData } from '../player/Player'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
@@ -40,14 +42,31 @@ export class GameManagerPillOps {
     target: PillTarget,
     player: PlayerData,
     random: () => number = Math.random,
+    // M-PILL-GRADE: chat cua stack muon uong. Khong truyen = stack chat
+    // thap nhat (tieu xau truoc, giu vien manh lai). Stack khong tim
+    // thay -> 'not_found' (khong roi vao stack chat khac).
+    quality?: ItemQuality,
   ): {
     ok: boolean
     reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired' | 'material_pill' | 'in_battle' | 'scope_hidden'
     mainStat?: MainStatKey
   } {
-    if (!this.deps.pillBag.has(pillId, 1)) {
+    const stack = quality === undefined
+      ? this.deps.pillBag.getStacks(pillId)[0]
+      : this.deps.pillBag
+          .getStacks(pillId)
+          .find(
+            (candidate) =>
+              (candidate.quality ?? BASE_PILL_QUALITY) === quality,
+          )
+
+    if (stack === undefined || stack.amount <= 0) {
       return { ok: false, reason: 'not_found' }
     }
+
+    // Uplift hieu luc theo chat stack nay (hoang 1 .. tien 2) - ap
+    // dung len moi do lon hieu ung kem ca diem stat.
+    const qualityUplift = pillQualityUplift(stack.quality)
 
     const pill = this.deps.pillRegistry.get(pillId)
 
@@ -106,7 +125,7 @@ export class GameManagerPillOps {
     }
 
     if (isProfessionPill) {
-      const reason = this.deps.pillSystem.canUseProfessionPill(pill, player)
+      const reason = this.deps.pillSystem.canUseProfessionPill(pill, player, qualityUplift)
 
       if (reason !== 'ok') {
         return { ok: false, reason }
@@ -125,9 +144,10 @@ export class GameManagerPillOps {
           // M3 - Hoa Hau Thong Than: +50% effectiveness on crafted pills.
           getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.potencyMultiplier ?? 1,
           target,
+          qualityUplift,
         )
       } catch (error) {
-        this.deps.pillBag.remove(pillId, 1)
+        this.deps.pillBag.remove(pillId, 1, stack.quality)
         throw error
       }
 
@@ -135,7 +155,7 @@ export class GameManagerPillOps {
       // applyTimedEffect throws, the stat grant is already applied -
       // a retained pill would double-grant on retry. Losing one timed
       // effect is strictly less harmful than a free extra grant.
-      this.deps.pillBag.remove(pillId, 1)
+      this.deps.pillBag.remove(pillId, 1, stack.quality)
 
       if (result.timedEffect) {
         this.deps.applyTimedEffect(player, result.timedEffect)
@@ -147,9 +167,9 @@ export class GameManagerPillOps {
     // Legacy path - heal/buff/flat-cultivation pills with no realmId.
     // Side effects run through the target adapter; nothing produces
     // StatModifier anymore (the pill-permanent bucket is retired).
-    this.deps.pillSystem.use(pill, target)
+    this.deps.pillSystem.use(pill, target, qualityUplift)
 
-    this.deps.pillBag.remove(pillId, 1)
+    this.deps.pillBag.remove(pillId, 1, stack.quality)
 
     return { ok: true }
   }

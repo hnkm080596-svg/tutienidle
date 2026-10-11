@@ -8,6 +8,7 @@ import type { QuestManagerState } from '../../core/quest/QuestManager'
 import type { DecomposeSaveState } from '../../core/production/DecomposeSystem'
 import type { OfflineResult } from '../../core/idle/OfflineProgressSystem'
 import type { StatModifier } from '../../core/stats/StatCalculator'
+import type { ItemQuality } from '../../core/item/ItemQuality'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import type { ResolvableKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
 import type { BreakthroughType } from '../../core/realm/hidden/HiddenLineage'
@@ -23,6 +24,10 @@ export interface PillStackSave {
   pillId: string
 
   amount: number
+
+  // M-PILL-GRADE: chat da roll cua stack - additive optional, stack cu
+  // khong co field = hoang (khong migration, restore verbatim).
+  quality?: ItemQuality
 }
 
 export interface TalismanStackSave {

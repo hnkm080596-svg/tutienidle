@@ -269,7 +269,9 @@ export class GameManagerSaveRestore {
 
     for (const entry of save.pills) {
       if (this.deps.pillRegistry.has(entry.pillId)) {
-        this.deps.pillBag.add(this.deps.pillRegistry.get(entry.pillId), entry.amount)
+        // M-PILL-GRADE: chat da roll restore verbatim tu record (field
+        // optional - stack cu khong co = hoang, khong migration).
+        this.deps.pillBag.add(this.deps.pillRegistry.get(entry.pillId), entry.amount, entry.quality)
       }
     }
 

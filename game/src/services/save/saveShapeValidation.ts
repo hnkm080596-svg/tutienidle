@@ -5076,6 +5076,15 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
       const entry = pills[i]
       if (!isObject(entry) || typeof entry.pillId !== 'string') continue
 
+      // M-PILL-GRADE: additive optional quality - absent = hoang (save
+      // cu giu nguyen lo danh); dien thi phai thuoc 5 bac ItemQuality.
+      if (entry.quality !== undefined && !isItemQuality(entry.quality)) {
+        issues.push({
+          path: `pills[${i}].quality`,
+          message: `chat dan '${String(entry.quality)}' khong thuoc ITEM_QUALITY_ORDER`,
+        })
+      }
+
       const pill = CATALOG_PILL_BY_ID.get(entry.pillId)
       if (pill === undefined) continue
 

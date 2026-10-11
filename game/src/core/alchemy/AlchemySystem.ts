@@ -12,7 +12,9 @@ import type { PillBag } from '../pill/PillBag'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { HerbAge } from '../production/ProductionTypes'
+import type { ItemQuality } from '../item/ItemQuality'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
+import { rollPillQualityWithHerb } from '../pill/PillQuality'
 import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { mulberry32 } from '../production/ProductionBalance'
 import { betaRecipeFamilyOfId, scopeHiddenPillFamilyOfId } from '../betaScope'
@@ -326,6 +328,13 @@ export interface AlchemySettlementEvent {
 
   /** QUEUE REWORK - true when this pass finished the whole batch. */
   jobDone?: boolean
+
+  // M-PILL-GRADE: chat da roll cua tung don vi mint thanh cong trong
+  // pass nay (1 muc moi don vi - don vi mint nhieu vien ghi 1 chat).
+  // Receipt-only: pill bag moi la chung cu can the, event chi de UI
+  // hien ket qua. Don vi khong mint duoc (extraPillChance truot xuong
+  // 0) khong co muc.
+  mintedGrades?: ItemQuality[]
 }
 
 export function jobSuccessPercent(
@@ -1140,6 +1149,15 @@ export class AlchemySystem {
 
       let overflow = 0
 
+      // M-PILL-GRADE: dot thao duoc da reserve quyet dinh so bac chat
+      // day them (van_nien +1, thuong_co +2) - doc lap voi truc ty le
+      // thanh o tren, realm khong lien quan.
+      const herbAge =
+        recipe.herbVariants.find((candidate) => candidate.materialId === job.herbMaterialId)?.age ??
+        'decade'
+
+      const mintedGrades: ItemQuality[] = []
+
       for (let unit = 0; unit < unitsToRoll; unit += 1) {
         let unitPills = guaranteedPills
 
@@ -1150,8 +1168,18 @@ export class AlchemySystem {
         unitPills = Math.floor(unitPills * Math.max(0, pillYieldMultiplier))
 
         if (unitPills > 0) {
+          // Chat roll doc lap tung don vi (ruling 1) - chi tieu rng khi
+          // don vi nay that su mint de giu thu tu tieu rng on dinh.
+          const quality = rollPillQualityWithHerb(random, herbAge)
+
+          mintedGrades.push(quality)
+
           // R9 (AR-34): surface the delivery receipt instead of ignoring it.
-          const unitOverflow = pillBag.add(pill as Parameters<typeof pillBag.add>[0], unitPills)
+          const unitOverflow = pillBag.add(
+            pill as Parameters<typeof pillBag.add>[0],
+            unitPills,
+            quality,
+          )
 
           delivered += unitPills - unitOverflow
 
@@ -1191,6 +1219,7 @@ export class AlchemySystem {
         overflow,
         unitsProcessed: unitsToRoll,
         jobDone,
+        ...(mintedGrades.length > 0 ? { mintedGrades } : {}),
       })
     }
 

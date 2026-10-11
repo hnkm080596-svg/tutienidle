@@ -38,6 +38,7 @@ import {
   essenceSubstitutionCoverage,
   planEssenceSubstitution,
 } from '../realm/body/BodyChapterEssenceSubstitution'
+import { recordMeridianOpenQuality } from '../realm/body/MeridianChapter'
 import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
 import {
   physiqueEssenceMaterialId,
@@ -1004,7 +1005,16 @@ export class GameManagerRealmAdvanceOps {
     if (bodyChapterEssenceGrade(chapter.currency) === undefined) {
       const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
       if (consumed > 0) {
-        bag.remove(chapter.currency.id, consumed)
+        if (chapter.currency.bag === 'pill') {
+          // M-PILL-GRADE: debit co sach chat - tui dan tra ve tung vien
+          // da tieu de ghi he so chat vao moc bat mach (Thong Mach Dan).
+          const spent = this.deps.pillBag.removeDetailed(chapter.currency.id, consumed)
+          if (chapterId === 'meridian') {
+            recordMeridianOpenQuality(player, spent)
+          }
+        } else {
+          bag.remove(chapter.currency.id, consumed)
+        }
         if (chapterId === 'zhou_tian') {
           // HIDDEN-C - a completed 36/36 normal track is the discovery
           // event for the Nghich continuation (sec.12.1); the check is

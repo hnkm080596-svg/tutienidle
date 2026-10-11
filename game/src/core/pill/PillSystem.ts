@@ -41,7 +41,7 @@ export class PillSystem {
    * retired; cap enforcement moved into canUseProfessionPill so both
    * pill stat channels share one bound (getEffectiveMainStatCap).
    */
-  use(pill: Pill, target: PillTarget): void {
+  use(pill: Pill, target: PillTarget, potencyMultiplier = 1): void {
     // Gate lanes owned by usePillDetailed: a retired, material
     // (non-consumable) or realm-gated pill must never reach raw apply.
     // This method accepts only ungated legacy pills - every gated
@@ -51,7 +51,9 @@ export class PillSystem {
       return
     }
     for (const effect of pill.effects) {
-      this.applyEffect(effect, target)
+      // M-PILL-GRADE: potencyMultiplier mang uplift chat khi stack
+      // legacy co gan chat (crafted save) - dan thuong giu 1.
+      this.applyEffect(effect, target, potencyMultiplier)
     }
   }
 
@@ -85,7 +87,9 @@ export class PillSystem {
   // EXACT realm.
   // =========================
 
-  canUseProfessionPill(pill: Pill, player: PlayerData): PillUseReason {
+  // M-PILL-GRADE: qualityUplift = PILL_QUALITY_EFFECT_UPLIFT[chat] - cap
+  // gate dem theo grant DA uplift (round) cho khop voi apply.
+  canUseProfessionPill(pill: Pill, player: PlayerData, qualityUplift = 1): PillUseReason {
     // Exact-realm gate (plan sec.5.2) - only NEW pills carry realmId.
     // A defined-but-empty tag is authored-data drift, not an untagged
     // legacy pill - it must fail closed at every realm.
@@ -154,7 +158,7 @@ export class PillSystem {
         continue
       }
 
-      const next = (pendingByStat.get(effect.stat) ?? 0) + (effect.value ?? 0)
+      const next = (pendingByStat.get(effect.stat) ?? 0) + Math.round((effect.value ?? 0) * qualityUplift)
       if ((player.baseStats[effect.stat] ?? 0) + next > mainCap) {
         return 'cap'
       }
@@ -193,6 +197,10 @@ export class PillSystem {
     // through the same channel `use()` would use instead of silently
     // dropping it.
     target?: PillTarget,
+    // M-PILL-GRADE (ruling 4): he so hieu luc theo chat da roll
+    // (hoang 1 .. tien 2) - nhan vao MOI do lon hieu ung, ke ca
+    // permanent_stat/random_main_stat (lam tron diem nguyen).
+    qualityUplift = 1,
   ): { mainStat?: MainStatKey; timedEffect?: PersistentTimedEffect } {
     let mainStat: MainStatKey | undefined
     let timedEffect: PersistentTimedEffect | undefined
@@ -220,6 +228,9 @@ export class PillSystem {
           }
           const cap = getEffectiveMainStatCap(player)
           const base = player.baseStats[effect.stat] ?? 0
+          // Grant DA uplift: chat cao tang so diem cong (round), cap
+          // van rang nhu cu. canUseProfessionPill dem cung cong thuc.
+          const grant = Math.round((effect.value ?? 0) * qualityUplift)
           // A base that is already non-finite or over-cap is not a
           // writable slot: `NaN ?? 0` is NaN, and clamping down would
           // silently DESTROY stat points the cap gate would have
@@ -230,7 +241,7 @@ export class PillSystem {
           if (!Number.isFinite(base) || base >= cap) {
             continue
           }
-          player.baseStats[effect.stat] = Math.min(cap, base + (effect.value ?? 0))
+          player.baseStats[effect.stat] = Math.min(cap, base + grant)
         }
 
         continue
@@ -243,8 +254,12 @@ export class PillSystem {
         const stat = candidates[Math.floor(random() * candidates.length)] ?? candidates[0]
 
         if (stat) {
-          // +1 REAL stat point into baseStats (plan sec.5.3).
-          player.baseStats[stat] += 1
+          // +1 REAL stat point into baseStats (plan sec.5.3) - chat
+          // dan nhan them (>=1 diem ke ca chat thap).
+          player.baseStats[stat] = Math.min(
+            cap,
+            player.baseStats[stat] + Math.max(1, Math.round(qualityUplift)),
+          )
           mainStat = stat
         }
 
@@ -280,7 +295,7 @@ export class PillSystem {
 
               stat: 'manaRegenPerTurn',
 
-              flat: (effect.mpPerSecond ?? 0) * potencyMultiplier,
+              flat: (effect.mpPerSecond ?? 0) * potencyMultiplier * qualityUplift,
 
               // Task 3 (D17): MP pool stat - spell credential so the
               // Task-7 domain gate keeps accepting this grant.
@@ -300,15 +315,18 @@ export class PillSystem {
         // addCultivation de giu cap tang.
         const required = getRequiredCultivation(player.realmId, player.realmLevel)
 
-        addCultivation(player, Math.floor(required * effect.cultivationPercent * potencyMultiplier))
+        addCultivation(
+          player,
+          Math.floor(required * effect.cultivationPercent * potencyMultiplier * qualityUplift),
+        )
 
         continue
       }
 
       if (effect.type === 'skill_insight') {
         // Cam Ngo = skillInsight + lifetime counter, cung transaction.
-        // potency rounds to the nearest whole insight point.
-        const amount = Math.round((effect.value ?? 0) * potencyMultiplier)
+        // potency+chat rounds to the nearest whole insight point.
+        const amount = Math.round((effect.value ?? 0) * potencyMultiplier * qualityUplift)
 
         player.skillInsight += amount
         player.totalSkillInsightGained += amount
@@ -321,7 +339,7 @@ export class PillSystem {
       // profession effect with a legacy effect must pay both. Numeric
       // residuals scale with potency like every profession magnitude.
       if (target) {
-        this.applyEffect(effect, target, potencyMultiplier)
+        this.applyEffect(effect, target, potencyMultiplier * qualityUplift)
       }
     }
 
