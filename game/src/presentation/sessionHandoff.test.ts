@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '@/core/battle/turn/CombatClock'
 import { GameManager } from '../core/game/GameManager'
+import { SeededCombatRng } from '../core/battle/runtime/rng/SeededCombatRng'
 import { createDefaultPlayer } from '../core/player/Player'
 import { calculateStats } from '../core/stats/StatCalculator'
 import { asBaseStats } from '../core/stats/StatBlock'
@@ -146,6 +147,11 @@ describe('Admitted session handoff (ARCH-004 / L03)', () => {
     gameManager = new GameManager()
     combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
+    // Pin the battle RNG: the retained-victory fixtures assert a WIN
+    // on mortal_dong_1, and the default Math.random stream makes the
+    // outcome genuinely nondeterministic (seen failing 'defeat' on CI
+    // while passing locally).
+    gameManager.setBattleRngFactory(() => new SeededCombatRng(42))
     gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
     gameManager.catalogOps.registerStages(STAGES)
     gameManager.catalogOps.registerMaterials(materials)
