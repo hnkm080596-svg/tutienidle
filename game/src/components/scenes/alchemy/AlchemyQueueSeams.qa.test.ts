@@ -169,9 +169,9 @@ describe('QA-B seam — job subline duplicates the order counter', () => {
               name: 'Đan Test',
               icon: '',
               progress: 10,
-              // Adapter already embeds "unitsDone/quantity" into
-              // remaining for multi-unit orders (AlchemySurface.vue).
-              remaining: '1/3 · 5p',
+              // Adapter emits ETA-only remaining for multi-unit orders
+              // (the unitsDone/quantity counter lives in unitsProgress).
+              remaining: '5p',
               unitsDone: 1,
               quantity: 3,
             },
@@ -188,9 +188,8 @@ describe('QA-B seam — job subline duplicates the order counter', () => {
     const subline = container.querySelector<HTMLElement>('.job-card__info small')
     const text = subline?.textContent ?? ''
 
-    // Actual render: "1/3 viên · 1/3 · 5p" - the unitsProgress prefix in
-    // jobSubline() duplicates the counter the adapter already baked
-    // into job.remaining.
+    // Subline must show the units counter exactly once (unitsProgress
+    // prefix only) - adapter remaining is ETA-only.
     expect((text.match(/1\/3/g) ?? []).length).toBe(1)
 
     app.unmount()
