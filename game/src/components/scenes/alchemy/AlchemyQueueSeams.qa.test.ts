@@ -35,8 +35,9 @@ window.ResizeObserver =
     unobserve() {}
     disconnect() {}
   } as unknown as typeof ResizeObserver)
-if (typeof SVGElement !== 'undefined' && !SVGElement.prototype.getScreenCTM) {
-  SVGElement.prototype.getScreenCTM = () => null
+const svgProto = SVGElement.prototype as { getScreenCTM?: () => DOMMatrix | null }
+if (typeof SVGElement !== 'undefined' && !svgProto.getScreenCTM) {
+  Object.assign(SVGElement.prototype, { getScreenCTM: () => null })
 }
 
 const TEST_RECIPE: AlchemyRecipe = {
@@ -61,16 +62,17 @@ const TEST_PILL: Pill = {
   effects: [],
 }
 
-const HERB: Material = { id: 'test_herb', name: 'Thảo Test', category: 'herb', sourceType: 'gathering' }
-const WOOD: Material = { id: 'test_wood', name: 'Gỗ Test', category: 'wood', sourceType: 'gathering' }
-const BUI_GO: Material = { id: BUI_GO_ID, name: 'Bùi Gỗ', category: 'fuel', sourceType: 'gathering' }
-const TINH_HOA: Material = { id: LUYEN_DAN_TINH_HOA_ID, name: 'Tinh Hoa', category: 'essence', sourceType: 'decompose' }
+const HERB: Material = { id: 'test_herb', name: 'Thảo Test', category: 'herb', sourceType: 'exploration' }
+const WOOD: Material = { id: 'test_wood', name: 'Gỗ Test', category: 'wood', sourceType: 'exploration' }
+const BUI_GO: Material = { id: BUI_GO_ID, name: 'Bùi Gỗ', category: 'essence', sourceType: 'building' }
+const TINH_HOA: Material = { id: LUYEN_DAN_TINH_HOA_ID, name: 'Tinh Hoa', category: 'essence', sourceType: 'building' }
 
 const PILL_ROOM: Building = {
   id: 'pill_room',
   name: 'Đan Phòng',
   description: '',
-  function: 'crafting',
+  category: 'crafting_station',
+  tier: 1,
   maxLevel: 3,
   baseStorageCapacity: 0,
   upgradeCost: [[], [], []],
