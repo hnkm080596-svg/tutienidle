@@ -26,6 +26,7 @@ import type { Pill } from './Pill'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
 import {
   AlchemySystem,
+  ALCHEMY_MAX_BATCH_QUANTITY,
   alchemyJobReservationDigest,
   alchemyMulberry32,
   jobSuccessPercent,
@@ -293,7 +294,10 @@ describe('AlchemySystem — truc chat dan tren mint path', () => {
     want: (sim: ReturnType<typeof simUnits>) => boolean,
     recipe: AlchemyRecipe = RECIPE,
   ): number {
-    for (let base = 0; base < 4_000; base += 1) {
+    // Scan stride-aligned bases only: restoreJobs drops any record
+    // whose base is not a multiple of MAX in [0, 2^32 - MAX] (writer
+    // contract), so a free-form base never reaches the tick.
+    for (let base = 0; base + ALCHEMY_MAX_BATCH_QUANTITY <= 2 ** 32; base += ALCHEMY_MAX_BATCH_QUANTITY) {
       const job = makeJob({ quantity, rollSeedBase: base })
       const sim = simUnits(job, recipe)
       if (want(sim)) return base
