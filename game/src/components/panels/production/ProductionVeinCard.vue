@@ -6,6 +6,7 @@
 // harvest button).
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
@@ -18,6 +19,8 @@ import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 const props = defineProps<{ nowMs: number }>()
 
 const { t } = useI18n()
+
+const player = usePlayerStore()
 
 const gameManager = useGameManager()
 

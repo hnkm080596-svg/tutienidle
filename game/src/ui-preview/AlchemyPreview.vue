@@ -24,8 +24,8 @@ const recipes = computed<AlchemyRecipeDisplay[]>(() => content.map((entry, index
 })))
 const recipe = computed(() => recipes.value.find(entry => entry.id === selected.value) ?? null)
 const jobs = computed<AlchemyJobDisplay[]>(() => [
-  { id: 'sample-job-1', name: t('pills.tu_linh_dan'), icon: resolveAssetUrl('/assets/pills/tu_linh_dan.png'), progress: 58, remaining: '00:12:36' },
-  { id: 'sample-job-2', name: t('pills.hoi_xuan_dan'), icon: resolveAssetUrl('/assets/pills/hoi_xuan_dan.png'), progress: 23, remaining: '00:23:06' },
+  { id: 'sample-job-1', recipeId: 'tu_linh_dan', name: t('pills.tu_linh_dan'), icon: resolveAssetUrl('/assets/pills/tu_linh_dan.png'), progress: 58, remaining: '00:12:36' },
+  { id: 'sample-job-2', recipeId: 'hoi_xuan_dan', name: t('pills.hoi_xuan_dan'), icon: resolveAssetUrl('/assets/pills/hoi_xuan_dan.png'), progress: 23, remaining: '00:23:06' },
 ])
 function choose(id: string) { if (recipes.value.some(entry => entry.id === id)) { selected.value = id; variant.value = 'decade'; notice.value = '' } }
 function chooseVariant(id: string) { if (recipe.value?.variants.some(entry => entry.id === id)) { variant.value = id; notice.value = '' } }

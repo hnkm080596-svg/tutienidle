@@ -1,0 +1,308 @@
+diff --git a/game/src/core/game/BattleLootSystem.dropResult.test.ts b/game/src/core/game/BattleLootSystem.dropResult.test.ts
+index 42afaa6d..abb6aa79 100644
+--- a/game/src/core/game/BattleLootSystem.dropResult.test.ts
++++ b/game/src/core/game/BattleLootSystem.dropResult.test.ts
+@@ -216,14 +216,17 @@ describe('BattleLootSystem — DropResult consumer', () => {
+ 
+   // M-QI-08 - the essence particle stream is family-wide: any authored
+   // Tinh Hoa <Grade> material routes to 'essence', not by literal id.
++  // Owner ruling 2026-10-10: the fixture must use an essence with a
++  // live remaining chapter need (pham funds body_refinement) - bao has
++  // no consuming chapter today and the intake cap yields it nothing.
+   it('routes every physique-essence family member to the essence particle stream', () => {
+     vi.spyOn(Math, 'random').mockReturnValue(0)
+     const { killEnemy, eventBus } = createLootTestSetup({
+-      realmId: 'qi_refining',
++      realmId: 'mortal',
+       signatureDrops: [
+-        { kind: 'material', itemId: 'tinh_hoa_bao_the', chance: 1, amount: { min: 1, max: 1 } },
++        { kind: 'material', itemId: 'tinh_hoa_pham_the', chance: 1, amount: { min: 1, max: 1 } },
+       ],
+-      materialIds: ['tinh_hoa_bao_the'],
++      materialIds: ['tinh_hoa_pham_the'],
+     })
+ 
+     killEnemy()
+@@ -233,8 +236,8 @@ describe('BattleLootSystem — DropResult consumer', () => {
+         call[0] === 'reward_particle' &&
+         (call[1].kind === 'essence' || call[1].kind === 'item'),
+     )
+-    // M-QI-10: the qi_refining band guaranteed line is live - rng 0
+-    // passes its 0.7 chance, so the kill emits the band's bao essence
++    // M-QI-10: the mortal band guaranteed line is live - rng 0
++    // passes its 0.7 chance, so the kill emits the band's pham essence
+     // AND the synthetic signature drop. Both route to 'essence'.
+     expect(materialParticles).toEqual([
+       ['reward_particle', expect.objectContaining({ kind: 'essence' })],
+diff --git a/game/src/core/game/GameManager.bodyChapter.test.ts b/game/src/core/game/GameManager.bodyChapter.test.ts
+index 5786c5af..a61b2db3 100644
+--- a/game/src/core/game/GameManager.bodyChapter.test.ts
++++ b/game/src/core/game/GameManager.bodyChapter.test.ts
+@@ -97,7 +97,7 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
+     expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(10)
+   })
+ 
+-  it('material channel: zhou_tian consumes tinh_hoa_phap_the exactly (no substitution)', () => {
++  it('material channel: zhou_tian consumes tinh_hoa_phap_the exactly', () => {
+     // M-F-CHU-THIEN (C2C-64) - the authored currency contract:
+     // ZHOU_TIAN_CURRENCY_MATERIAL_ID is the single source and IS the
+     // Phap essence; the ops seam debits it 1:1 against capacity.
+diff --git a/game/src/core/simulation/earlygame/TrucCoJourney.test.ts b/game/src/core/simulation/earlygame/TrucCoJourney.test.ts
+index d342811b..6da6994f 100644
+--- a/game/src/core/simulation/earlygame/TrucCoJourney.test.ts
++++ b/game/src/core/simulation/earlygame/TrucCoJourney.test.ts
+@@ -355,8 +355,7 @@ describe('TrucCoJourney - ordered journey', () => {
+       // leaves this pinned order nondeterministic whenever a marginal
+       // fight meets gear variance (floor_10 intermittently observed
+       // defeat). Pin the unseeded surface to its own stream for the
+-      // run - the same substitution the benchmark drive uses
+-      // (EssenceSubstitutionEconomy) via the sanctioned vi.spyOn seam.
++      // run via the sanctioned vi.spyOn seam.
+       const unseededStream = new SeededCombatRng(0x5d1ce7)
+       const randomSpy = vi
+         .spyOn(Math, 'random')
+@@ -600,8 +599,9 @@ describe('TrucCoJourney - ordered journey', () => {
+       expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(pillsAtReject)
+       expect(s.player.bodyProgression.meridian.progress).toEqual({})
+ 
+-      // Substitution probe inside D.1: drain the pham stack, hold ONLY
+-      // phap, and let the real phap->bao->pham plan carry the chapter.
++      // Drain the pham stack into the open tier before the pham top-up
++      // arm below. Owner ruling 2026-10-10: the former phap->pham fill
++      // probe was removed with the mechanic.
+       let drainGuard = 0
+       while (
+         s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID) > 0 &&
+@@ -609,14 +609,6 @@ describe('TrucCoJourney - ordered journey', () => {
+       ) {
+         expect(s.investChapter('body_refinement')).toBeGreaterThan(0)
+       }
+-      s.holdMaterial(ZHOU_TIAN_CURRENCY_MATERIAL_ID, 200)
+-      const phapBeforeProbe = s.materialAmount(
+-        ZHOU_TIAN_CURRENCY_MATERIAL_ID,
+-      )
+-      expect(s.investChapter('body_refinement')).toBeGreaterThan(0)
+-      expect(s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBeLessThan(
+-        phapBeforeProbe,
+-      )
+       expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(0)
+ 
+       // Tier 6 commits via pham top-up -> physique flips pham -> bao.
+@@ -891,9 +883,8 @@ describe('TrucCoJourney - ordered journey', () => {
+ 
+       // Exact-Phap debit (spec leg C pin), run BELOW capacity so the
+       // arm is live: holding ONLY the lower-band essence commits
+-      // nothing - substitution is downward only, pham cannot stand in
+-      // for phap. Then supplying phap commits the remaining rungs with
+-      // an exact debit (0-substitution, no surplus).
++      // nothing - pham cannot stand in for phap. Then supplying phap
++      // commits the remaining rungs with an exact debit (no surplus).
+       {
+         // Isolate the arm: drain the phap stack, hold ONLY pham.
+         const heldPhap = s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
+@@ -912,7 +903,7 @@ describe('TrucCoJourney - ordered journey', () => {
+ 
+         // Supplying phap commits the remaining rungs with an exact
+         // debit: debited == the op's reported consumed total (no
+-        // surplus drawn, no substitution fill). Steps 34->36 cost
++        // surplus drawn). Steps 34->36 cost
+         // zhouTianStepCost(34)+zhouTianStepCost(35) = 950+975 = 1925
+         // (2026-10-05 curve). The essence stack caps at 1000, so each
+         // step is supplied from its own full stack - like real play.
+@@ -939,7 +930,7 @@ describe('TrucCoJourney - ordered journey', () => {
+         expect(s.player.bodyProgression.zhou_tian.completed).toBe(36)
+         expect(totalInvested).toBeGreaterThan(0)
+         // Exact debit: everything supplied was invested, nothing drawn
+-        // beyond it (no surplus drawn, no substitution fill).
++        // beyond it (no surplus drawn).
+         expect(totalInvested).toBe(supplied)
+         expect(s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBe(0)
+         expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(
+diff --git a/game/src/data/drop/StageDropTables.ts b/game/src/data/drop/StageDropTables.ts
+index 99df0af2..29d56f8c 100644
+--- a/game/src/data/drop/StageDropTables.ts
++++ b/game/src/data/drop/StageDropTables.ts
+@@ -54,8 +54,7 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
+     realmId: 'qi_refining',
+     floors: { min: 1, max: 10 },
+     currency: { spiritStone: { min: 8, max: 12 }, techniqueMastery: { min: 35, max: 45 } },
+-    // Bao-grade essence per the QI-D4b band map (M-QI-10): a stranded
+-    // pham-chapter player completes through the M-QI-09 substitution seam.
++    // Bao-grade essence per the QI-D4b band map (M-QI-10).
+     guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.qi_refining],
+     pool: [
+       // Ore is the qi_refining realm's general-purpose crafting material,
+diff --git a/game/src/data/enemy/EnemyDropSinkInvariant.test.ts b/game/src/data/enemy/EnemyDropSinkInvariant.test.ts
+index da9c2b64..9bcc6cc1 100644
+--- a/game/src/data/enemy/EnemyDropSinkInvariant.test.ts
++++ b/game/src/data/enemy/EnemyDropSinkInvariant.test.ts
+@@ -4,8 +4,8 @@ import { STAGE_DROP_TABLES } from '../drop/StageDropTables'
+ import { FAMILY_DROP_TABLES } from '../drop/FamilyDropTables'
+ import { QUESTS } from '../quest/quests'
+ import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../realm/BodyRefinement'
+-import { PHYSIQUE_ESSENCES } from '../realm/PhysiqueEssence'
+-import { essenceSubstitutionYield } from '../../core/realm/body/BodyChapterEssenceSubstitution'
++import { PHYSIQUE_ESSENCES, physiqueEssenceGradeOf } from '../realm/PhysiqueEssence'
++import { BODY_CHAPTERS } from '../../core/realm/body/BodyChapter'
+ import { DOAN_BAO_THACH_MATERIAL_ID } from '../../core/artifact/ArtifactProgression'
+ import { createDefaultEquipmentOperationCostCatalog } from '../../core/equipment/EquipmentOperationCostCatalog'
+ import { SUPPORTED_PROFESSION_REALMS } from '../../core/profession/ProfessionMaterial'
+@@ -65,14 +65,18 @@ function collectSinkMaterialIds(): Set<string> {
+     }
+   }
+ 
+-  // Luyen The - pham essence is invested directly, and every higher
+-  // essence drains through the M-QI-09 substitution seam
+-  // (planEssenceSubstitution debits the bag at investBodyChapter). A
+-  // grade only counts as a sink when its chain down to pham is
+-  // unbroken (yield > 0).
+-  for (const def of PHYSIQUE_ESSENCES) {
+-    if (essenceSubstitutionYield('pham', def.grade) > 0) {
+-      sinks.add(def.materialId)
++  // Luyen The - an essence drains at investBodyChapter through the
++  // chapter that declares it as material currency (body_refinement ->
++  // pham, zhou_tian -> phap). Owner ruling 2026-10-10: an essence no
++  // chapter consumes (tinh_hoa_bao_the today) has no sink, and the
++  // intake cap yields its drops nothing at the award seam, so it can
++  // never accumulate in the bag (exempted from the dead-drop rule
++  // below).
++  for (const chapter of BODY_CHAPTERS) {
++    for (const currency of [chapter.currency, chapter.auxCurrency]) {
++      if (currency?.bag === 'material' && physiqueEssenceGradeOf(currency.id) !== undefined) {
++        sinks.add(currency.id)
++      }
+     }
+   }
+ 
+@@ -107,8 +111,15 @@ describe('Enemy drops — mọi material rơi đều có sink (economy T6)', ()
+     const dropped = collectDroppedMaterialIds()
+     const sinks = collectSinkMaterialIds()
+ 
++    // Owner ruling 2026-10-10 - intake-cap exemption: a physique
++    // essence with no consuming chapter can never reach the bag (the
++    // award seam skips its credit), so it is not a dead drop.
++    const capGatedEssence = new Set<string>(
++      PHYSIQUE_ESSENCES.map((def) => def.materialId).filter((id) => !sinks.has(id)),
++    )
++
+     const deadDrops = [...dropped].filter(
+-      (id) => !sinks.has(id) && !LORE_ALLOWLIST.has(id),
++      (id) => !sinks.has(id) && !LORE_ALLOWLIST.has(id) && !capGatedEssence.has(id),
+     )
+ 
+     expect(
+diff --git a/game/src/data/realm/PhysiqueEssence.test.ts b/game/src/data/realm/PhysiqueEssence.test.ts
+index 38cc7299..d0681571 100644
+--- a/game/src/data/realm/PhysiqueEssence.test.ts
++++ b/game/src/data/realm/PhysiqueEssence.test.ts
+@@ -4,14 +4,11 @@ import {
+   PHYSIQUE_ESSENCE_BAND_DROPS,
+   PHYSIQUE_ESSENCES,
+   physiqueEssenceBand,
+-  PHYSIQUE_ESSENCE_CONVERSION_RATIO,
+   physiqueEssenceBandDrop,
+   physiqueEssenceGradeOf,
+   physiqueEssenceMaterialId,
+   type PhysiqueEssenceBandRealm,
+ } from './PhysiqueEssence'
+-import { PHYSIQUE_GRADES, type PhysiqueGradeId } from './PhysiqueLadder'
+-import { essenceSubstitutionYield } from '../../core/realm/body/BodyChapterEssenceSubstitution'
+ import {
+   BODY_CHAPTERS,
+   bodyChapterEssenceGrade,
+@@ -95,8 +92,8 @@ describe('PhysiqueEssence registry (M-QI-08)', () => {
+       // undefined and still satisfy a bare toBe(undefined).
+       expect(drop.itemId).toBeDefined()
+       expect(drop.itemId).toBe(physiqueEssenceMaterialId(PHYSIQUE_ESSENCE_BAND[realm]))
+-      // Exact pin: chance 0.7 / amount 1-3 are the FIXED M-QI-09
+-      // simulation inputs (spec sec.3.5) - drift must fail loudly.
++      // Exact pin: chance 0.7 / amount 1-3 are the authored band
++      // values - drift must fail loudly.
+       expect(drop.chance).toBe(0.7)
+       expect(drop.amount).toEqual({ min: 1, max: 3 })
+     }
+@@ -194,40 +191,3 @@ describe('bodyChapterEssenceGrade (M-QI-08 namespace rule)', () => {
+   })
+ })
+ 
+-// M-QI-09 (QI-D4c + C2C ruling 5) - the sim-locked adjacent ratio
+-// data contract: every ratio is an integer >= 2 (monotonic - a higher
+-// grade is strictly more valuable), only adjacent hops are authored,
+-// and a multi-hop conversion equals the product of its hops so no
+-// path can beat the chain (no-arbitrage by construction; a future
+-// direct-skip edge must not beat the compound it replaces).
+-describe('PHYSIQUE_ESSENCE_CONVERSION_RATIO (M-QI-09)', () => {
+-  it('authors only grades that have an essence material AND an adjacent lower grade', () => {
+-    for (const grade of Object.keys(PHYSIQUE_ESSENCE_CONVERSION_RATIO) as PhysiqueGradeId[]) {
+-      // A ratio on a grade with no essence material is dead data.
+-      expect(physiqueEssenceMaterialId(grade), `ratio authored for ${grade} with no essence material`).toBeDefined()
+-      // The hop must be adjacent: the immediately lower rung exists.
+-      const index = PHYSIQUE_GRADES.findIndex(def => def.id === grade)
+-      expect(index, `${grade} must have a lower adjacent rung`).toBeGreaterThan(0)
+-    }
+-  })
+-
+-  it('every ratio is an integer >= 2 - strictly more valuable per unit (monotonic)', () => {
+-    for (const [grade, ratio] of Object.entries(PHYSIQUE_ESSENCE_CONVERSION_RATIO)) {
+-      expect(Number.isInteger(ratio), `ratio[${grade}] must be an integer`).toBe(true)
+-      expect(ratio, `ratio[${grade}] must be >= 2`).toBeGreaterThanOrEqual(2)
+-    }
+-  })
+-
+-  it('multi-hop yield equals the product of adjacent hops - no-arbitrage chain', () => {
+-    // phap -> pham through the bao hop must equal ratio[phap] *
+-    // ratio[bao]: any authored "skip" that beat the compound would be
+-    // an arbitrage path (C2C 5).
+-    const bao = PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao
+-    const phap = PHYSIQUE_ESSENCE_CONVERSION_RATIO.phap
+-    expect(bao).toBeDefined()
+-    expect(phap).toBeDefined()
+-    expect(essenceSubstitutionYield('pham', 'phap')).toBe(bao! * phap!)
+-    expect(essenceSubstitutionYield('pham', 'bao')).toBe(bao)
+-    expect(essenceSubstitutionYield('bao', 'phap')).toBe(phap)
+-  })
+-})
+diff --git a/game/src/data/realm/PhysiqueEssence.ts b/game/src/data/realm/PhysiqueEssence.ts
+index c05bff0a..ed07144f 100644
+--- a/game/src/data/realm/PhysiqueEssence.ts
++++ b/game/src/data/realm/PhysiqueEssence.ts
+@@ -68,37 +68,10 @@ export function physiqueEssenceBand(realmId: string): PhysiqueGradeId | undefine
+   return REALM_TO_GRADE.get(realmId)
+ }
+ 
+-// QI-D4c adjacent conversion ratios - sim-locked by M-QI-09 (spec
+-// docs/p7/missions/mqi-09-essence-substitution.spec.md sec.3.4):
+-// `ratio[g]` is the number of grade-(g-1) units one unit of grade g
+-// substitutes for at a Body chapter cost check. Integer >= 2 (each
+-// higher unit strictly more valuable, monotonic). Only adjacent hops
+-// are authored; multi-hop yield is their product, so no conversion
+-// path can beat the chain (no-arbitrage by construction - a future
+-// skip edge would have to exceed the compound it replaces). Rungs
+-// without an authored essence material are absent - absence is the
+-// contract, not an error. The values are the sim lock, NOT a balance
+-// guess: any retune of drops, tier caps, or arc length re-runs the sim
+-// and re-locks them in the same change (spec sec.3.5).
+-export const PHYSIQUE_ESSENCE_CONVERSION_RATIO: Readonly<
+-  Partial<Record<PhysiqueGradeId, number>>
+-> = {
+-  bao: 2,
+-  phap: 2,
+-}
+-
+-export function physiqueEssenceConversionRatio(
+-  grade: PhysiqueGradeId,
+-): number | undefined {
+-  return PHYSIQUE_ESSENCE_CONVERSION_RATIO[grade]
+-}
+-
+ // Authored per-band guaranteed-drop entries, DERIVED band -> grade ->
+ // materialId so an entry can never name a material of the wrong grade.
+-// Numbers mirror the live mortal line (chance 0.7, amount 1-3) and are
+-// the FIXED simulation inputs for M-QI-09's ratio lock - any later
+-// retune must re-run the sim and re-lock ratios in the same change
+-// (spec sec.3.5). M-QI-10 wires these into STAGE_DROP_TABLES live.
++// Numbers mirror the live mortal line (chance 0.7, amount 1-3).
++// M-QI-10 wires these into STAGE_DROP_TABLES live.
+ export const PHYSIQUE_ESSENCE_BAND_DROPS: Readonly<
+   Record<PhysiqueEssenceBandRealm, GuaranteedDropEntry>
+ > = Object.fromEntries(

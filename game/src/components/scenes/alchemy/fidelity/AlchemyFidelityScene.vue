@@ -180,7 +180,7 @@ function jobSubline(job: AlchemyJobDisplay) {
               <span class="alchemy-slot__count">{{ herbCell.amount }}</span>
             </div>
             <div v-for="cost in costCells" :key="cost.id" class="alchemy-slot">
-              <SlotView :item="cost" :icon="cost.icon" :label="cost.label" :description="cost.description" :tooltip="cost.tooltip ?? { title: cost.label, description: `${cost.owned} / ${cost.amount}` }" :equipment-quality-rank="cost.equipmentQualityRank" :rarity-rank="cost.rarityRank" :rarity-rank-scale="cost.rarityRankScale" :name-segments="cost.nameSegments" variant="bag" />
+              <SlotView :item="cost" :icon="cost.icon" :label="cost.label" :description="cost.description" :tooltip="cost.tooltip ?? { title: cost.label, description: cost.value }" :equipment-quality-rank="cost.equipmentQualityRank" :rarity-rank="cost.rarityRank" :rarity-rank-scale="cost.rarityRankScale" :name-segments="cost.nameSegments" variant="bag" />
               <span class="alchemy-slot__count">{{ cost.value }}</span>
             </div>
           </div>

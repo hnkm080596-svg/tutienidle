@@ -32,6 +32,20 @@ export interface AlchemyHerbChoice {
 
   /** Owned >= needed for this variant (drives the shortage tone). */
   readonly enough: boolean
+
+  /** Bag prop-set (owner ruling): optional SlotView fields the adapter
+   * fills when the material carries them. */
+  readonly description?: string
+
+  readonly tooltip?: { title: string; description: string }
+
+  readonly equipmentQualityRank?: number
+
+  readonly rarityRank?: number
+
+  readonly rarityRankScale?: 5 | 10
+
+  readonly nameSegments?: import('@/core/item/NameSegment').NameSegment[]
 }
 
 export interface AlchemyCostRow {
@@ -50,6 +64,19 @@ export interface AlchemyCostRow {
 
   /** false renders the shortage tone; undefined hides the flag. */
   readonly enough?: boolean
+
+  /** Bag prop-set (owner ruling): optional SlotView fields. */
+  readonly description?: string
+
+  readonly tooltip?: { title: string; description: string }
+
+  readonly equipmentQualityRank?: number
+
+  readonly rarityRank?: number
+
+  readonly rarityRankScale?: 5 | 10
+
+  readonly nameSegments?: import('@/core/item/NameSegment').NameSegment[]
 }
 
 export interface AlchemyRecipeDisplay {
@@ -100,10 +127,4 @@ export interface AlchemyJobDisplay {
   readonly progress: number
 
   readonly remaining: string
-
-  /** QUEUE REWORK - units already rolled/delivered in this batch. */
-  readonly unitsDone?: number
-
-  /** QUEUE REWORK - total units in this batch (order size). */
-  readonly quantity?: number
 }

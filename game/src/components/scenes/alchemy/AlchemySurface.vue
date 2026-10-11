@@ -507,14 +507,21 @@ const recipeDisplay = computed<AlchemyRecipeDisplay | null>(() => {
     return null
   }
 
-  const variants: AlchemyHerbChoice[] = variantRows.value.map((row) => ({
-    id: row.materialId,
-    name: row.label,
-    icon: row.icon,
-    amount: `${row.owned} / ${recipe.herbAmount}`,
-    owned: row.owned,
-    enough: row.enough,
-  }))
+  const variants: AlchemyHerbChoice[] = variantRows.value.map((row) => {
+    const material = gameManager.materialRegistry.has(row.materialId)
+      ? gameManager.materialRegistry.get(row.materialId)
+      : null
+
+    return {
+      id: row.materialId,
+      name: row.label,
+      icon: row.icon,
+      amount: `${row.owned} / ${recipe.herbAmount}`,
+      owned: row.owned,
+      enough: row.enough,
+      description: material?.description,
+    }
+  })
 
   return {
     id: recipe.id,

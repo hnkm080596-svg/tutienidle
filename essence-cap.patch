@@ -1,0 +1,1883 @@
+diff --git a/game/src/core/game/BattleLootSystem.dropResult.test.ts b/game/src/core/game/BattleLootSystem.dropResult.test.ts
+index 42afaa6d..abb6aa79 100644
+--- a/game/src/core/game/BattleLootSystem.dropResult.test.ts
++++ b/game/src/core/game/BattleLootSystem.dropResult.test.ts
+@@ -216,14 +216,17 @@ describe('BattleLootSystem — DropResult consumer', () => {
+ 
+   // M-QI-08 - the essence particle stream is family-wide: any authored
+   // Tinh Hoa <Grade> material routes to 'essence', not by literal id.
++  // Owner ruling 2026-10-10: the fixture must use an essence with a
++  // live remaining chapter need (pham funds body_refinement) - bao has
++  // no consuming chapter today and the intake cap yields it nothing.
+   it('routes every physique-essence family member to the essence particle stream', () => {
+     vi.spyOn(Math, 'random').mockReturnValue(0)
+     const { killEnemy, eventBus } = createLootTestSetup({
+-      realmId: 'qi_refining',
++      realmId: 'mortal',
+       signatureDrops: [
+-        { kind: 'material', itemId: 'tinh_hoa_bao_the', chance: 1, amount: { min: 1, max: 1 } },
++        { kind: 'material', itemId: 'tinh_hoa_pham_the', chance: 1, amount: { min: 1, max: 1 } },
+       ],
+-      materialIds: ['tinh_hoa_bao_the'],
++      materialIds: ['tinh_hoa_pham_the'],
+     })
+ 
+     killEnemy()
+@@ -233,8 +236,8 @@ describe('BattleLootSystem — DropResult consumer', () => {
+         call[0] === 'reward_particle' &&
+         (call[1].kind === 'essence' || call[1].kind === 'item'),
+     )
+-    // M-QI-10: the qi_refining band guaranteed line is live - rng 0
+-    // passes its 0.7 chance, so the kill emits the band's bao essence
++    // M-QI-10: the mortal band guaranteed line is live - rng 0
++    // passes its 0.7 chance, so the kill emits the band's pham essence
+     // AND the synthetic signature drop. Both route to 'essence'.
+     expect(materialParticles).toEqual([
+       ['reward_particle', expect.objectContaining({ kind: 'essence' })],
+diff --git a/game/src/core/game/BattleLootSystem.essenceCap.test.ts b/game/src/core/game/BattleLootSystem.essenceCap.test.ts
+new file mode 100644
+index 00000000..e6de1220
+--- /dev/null
++++ b/game/src/core/game/BattleLootSystem.essenceCap.test.ts
+@@ -0,0 +1,101 @@
++import { describe, expect, it } from 'vitest'
++
++import { createLootTestSetup } from './battleLootTestSetup'
++import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
++import { remainingEssenceNeed } from '../realm/body/BodyProgressionSystem'
++
++// Owner ruling 2026-10-10 - essence intake cap: a physique-essence drop
++// credits the material bag only while the bag holds less than the
++// essence's remaining chapter-chain requirement; at/above the cap the
++// drop yields nothing (skipped entirely - no conversion, no landing).
++describe('BattleLootSystem - physique essence intake cap', () => {
++  const phamSig = {
++    kind: 'material' as const,
++    itemId: TINH_HOA_PHAM_THE_MATERIAL_ID,
++    chance: 1,
++    amount: { min: 5, max: 5 },
++  }
++
++  it('credits the drop while owned stays below the remaining chapter need', () => {
++    const { killEnemy, materialBag, player } = createLootTestSetup({
++      signatureDrops: [phamSig],
++      materialIds: [TINH_HOA_PHAM_THE_MATERIAL_ID],
++    })
++
++    // Fresh player: the full body_refinement track is still open.
++    expect(remainingEssenceNeed(player, TINH_HOA_PHAM_THE_MATERIAL_ID)).toBeGreaterThan(0)
++
++    killEnemy()
++
++    expect(materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(5)
++  })
++
++  it('skips credit once owned covers the whole remaining need', () => {
++    const { killEnemy, materialBag, materialRegistry, player, deps } = createLootTestSetup({
++      signatureDrops: [phamSig],
++      materialIds: [TINH_HOA_PHAM_THE_MATERIAL_ID],
++    })
++
++    // 5/6 tiers done, 7960/8000 in the last -> exactly 40 left to spend.
++    player.bodyProgression.body_refinement.completedTiers = 5
++    player.bodyProgression.body_refinement.currentTierProgress = 7960
++    materialBag.add(materialRegistry.get(TINH_HOA_PHAM_THE_MATERIAL_ID), 40)
++
++    killEnemy()
++
++    expect(materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(40)
++    expect(deps.notifyMaterialGained).not.toHaveBeenCalled()
++  })
++
++  it('lands a partial fill - owned below need credits normally', () => {
++    const { killEnemy, materialBag, materialRegistry, player } = createLootTestSetup({
++      signatureDrops: [phamSig],
++      materialIds: [TINH_HOA_PHAM_THE_MATERIAL_ID],
++    })
++
++    player.bodyProgression.body_refinement.completedTiers = 5
++    player.bodyProgression.body_refinement.currentTierProgress = 7960
++    materialBag.add(materialRegistry.get(TINH_HOA_PHAM_THE_MATERIAL_ID), 30)
++
++    killEnemy()
++
++    expect(materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(35)
++  })
++
++  it('skips credit when owned already exceeds the need', () => {
++    const { killEnemy, materialBag, materialRegistry, player, deps } = createLootTestSetup({
++      signatureDrops: [phamSig],
++      materialIds: [TINH_HOA_PHAM_THE_MATERIAL_ID],
++    })
++
++    player.bodyProgression.body_refinement.completedTiers = 5
++    player.bodyProgression.body_refinement.currentTierProgress = 7960
++    materialBag.add(materialRegistry.get(TINH_HOA_PHAM_THE_MATERIAL_ID), 45)
++
++    killEnemy()
++
++    expect(materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(45)
++    expect(deps.notifyMaterialGained).not.toHaveBeenCalled()
++  })
++
++  it('an essence with no consuming chapter yields nothing', () => {
++    // tinh_hoa_bao_the is authored but no body chapter spends it today:
++    // remainingEssenceNeed is 0, so even an empty bag is at the cap.
++    const { killEnemy, materialBag, deps } = createLootTestSetup({
++      signatureDrops: [
++        {
++          kind: 'material',
++          itemId: 'tinh_hoa_bao_the',
++          chance: 1,
++          amount: { min: 5, max: 5 },
++        },
++      ],
++      materialIds: ['tinh_hoa_bao_the'],
++    })
++
++    killEnemy()
++
++    expect(materialBag.getAmount('tinh_hoa_bao_the')).toBe(0)
++    expect(deps.notifyMaterialGained).not.toHaveBeenCalled()
++  })
++})
+diff --git a/game/src/core/game/BattleLootSystem.ts b/game/src/core/game/BattleLootSystem.ts
+index b31d16b2..f8b99cad 100644
+--- a/game/src/core/game/BattleLootSystem.ts
++++ b/game/src/core/game/BattleLootSystem.ts
+@@ -35,6 +35,7 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
+ import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
+ import { gradeLabel } from '../presentation/labels'
+ import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
++import { remainingEssenceNeed } from '../realm/body/BodyProgressionSystem'
+ import { isScopeHidden } from '../betaScope'
+ import {
+   isBreakthroughAcquisitionEnabled,
+@@ -628,6 +629,19 @@ export class BattleLootSystem {
+             // thong_mach_dan spend): beta-live progression, not the
+             // scope-hidden The Tu way - the faucet stays open.
+ 
++            // Owner ruling 2026-10-10 - essence intake cap: once the bag
++            // holds enough of an essence to retire the whole remaining
++            // chapter requirement, the drop yields nothing (post-resolve
++            // filter, no conversion, rng order untouched).
++            if (
++              this.player !== null &&
++              physiqueEssenceGradeOf(drop.itemId) !== undefined &&
++              this.deps.materialBag.getAmount(drop.itemId) >=
++                remainingEssenceNeed(this.player, drop.itemId)
++            ) {
++              break
++            }
++
+             const amount = drop.amount
+ 
+             const materialOverflow = this.deps.materialBag.add(material, amount)
+diff --git a/game/src/core/game/GameManager.bodyChapter.test.ts b/game/src/core/game/GameManager.bodyChapter.test.ts
+index 5786c5af..a61b2db3 100644
+--- a/game/src/core/game/GameManager.bodyChapter.test.ts
++++ b/game/src/core/game/GameManager.bodyChapter.test.ts
+@@ -97,7 +97,7 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
+     expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(10)
+   })
+ 
+-  it('material channel: zhou_tian consumes tinh_hoa_phap_the exactly (no substitution)', () => {
++  it('material channel: zhou_tian consumes tinh_hoa_phap_the exactly', () => {
+     // M-F-CHU-THIEN (C2C-64) - the authored currency contract:
+     // ZHOU_TIAN_CURRENCY_MATERIAL_ID is the single source and IS the
+     // Phap essence; the ops seam debits it 1:1 against capacity.
+diff --git a/game/src/core/game/GameManager.essenceSubstitution.test.ts b/game/src/core/game/GameManager.essenceSubstitution.test.ts
+deleted file mode 100644
+index 7067aec3..00000000
+--- a/game/src/core/game/GameManager.essenceSubstitution.test.ts
++++ /dev/null
+@@ -1,306 +0,0 @@
+-import { describe, expect, it, vi } from 'vitest'
+-import { createPinia, setActivePinia } from 'pinia'
+-
+-import { materials } from '../../data/materials/materials'
+-import { pills } from '../../data/pill/pills'
+-import { MERIDIANS } from '../../data/realm/Meridians'
+-import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
+-import { createDefaultPlayer } from '../player/Player'
+-import { usePlayerStore } from '../../stores/player'
+-import { GameManager } from './GameManager'
+-
+-const PHAM = TINH_HOA_PHAM_THE_MATERIAL_ID
+-const BAO = 'tinh_hoa_bao_the'
+-const PHAP = 'tinh_hoa_phap_the'
+-
+-// M-QI-09 (QI-D4c) - the substitution contract end-to-end on the real
+-// invest seam: downward-only spend at the locked adjacent ratio,
+-// exact-value change-back, all-or-nothing debit, and the namespace
+-// gate refusing pill currencies (C2C rulings round 10).
+-describe('investBodyChapter essence substitution (M-QI-09)', () => {
+-  function managerWithCatalogs(): GameManager {
+-    const manager = new GameManager()
+-    manager.catalogOps.registerMaterials(materials)
+-    manager.catalogOps.registerPills(pills)
+-    return manager
+-  }
+-
+-  it('substitutes bao essence for a pham shortfall at the locked ratio', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining' // unlocks every mortal-pace tier gate
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    // Tier 1 cap is 50 pham-equivalent; 25 bao at ratio 2 covers it.
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    expect(consumed).toBe(50)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(0)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(0)
+-    expect(player.bodyProgression.body_refinement.completedTiers).toBe(1)
+-  })
+-
+-  it('spends the required currency first, then substitutes only the shortfall', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAM), 30)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 10)
+-
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    // 30 pham + 10 bao (20 covered) = 50 exactly - no change-back.
+-    expect(consumed).toBe(50)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(0)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(0)
+-    expect(player.bodyProgression.body_refinement.completedTiers).toBe(1)
+-  })
+-
+-  it('credits the whole-unit overpay back in the required material (exact change)', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAM), 1)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    // Shortfall 49 -> ceil(49/2) = 25 bao covering 50: the 1-unit
+-    // overpay returns as pham inside the same transaction.
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    expect(consumed).toBe(50)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(0)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(1)
+-    expect(player.bodyProgression.body_refinement.completedTiers).toBe(1)
+-  })
+-
+-  it('compounds phap across two hops at the product rate', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAP), 13)
+-
+-    // Phap yield is 2x2 = 4; 13 phap covers 52, spent ceil(50/4) = 13
+-    // for tier 1 (cap 50) -> 2 pham change.
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    expect(consumed).toBe(50)
+-    expect(manager.materialBag.getAmount(PHAP)).toBe(0)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(2)
+-    expect(player.bodyProgression.body_refinement.completedTiers).toBe(1)
+-  })
+-
+-  it('insufficient-even-with-substitution consumes only what exists, debiting it all', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAM), 5)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 3)
+-
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    // 5 + 3*2 = 11 coverable - the chapter takes what is offered.
+-    expect(consumed).toBe(11)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(0)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(0)
+-    expect(player.bodyProgression.body_refinement.completedTiers).toBe(0)
+-    expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(11)
+-  })
+-
+-  it('apply-side rejection (C2C 3): a gated invest debits nothing even with substitutes owned', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'mortal'
+-    player.realmLevel = 1 // Luyen Bi tier still locked at mortal pace
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAM), 5)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    expect(consumed).toBe(0)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(5)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(25)
+-    expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(0)
+-  })
+-
+-  it('a completed chapter rejects the invest outright - bags and state unchanged', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    manager.setActivePlayer(player)
+-    player.bodyProgression.body_refinement.completedTiers = 6
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    expect(consumed).toBe(0)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(25)
+-  })
+-
+-  it('an unsatisfiable debit aborts the whole invest - zero state change (C2C r17#1)', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAM), 10)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    // Sabotage the preflight oracle: the plan is built from truth
+-    // (getAmount) but every satisfiability check fails.
+-    vi.spyOn(manager.materialBag, 'has').mockReturnValue(false)
+-
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    expect(consumed).toBe(0)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(10)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(25)
+-    expect(player.bodyProgression.body_refinement.completedTiers).toBe(0)
+-    expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(0)
+-  })
+-
+-  it('a change credit that cannot land aborts the invest atomically (C2C r17#2)', () => {
+-    // Fixture: the required material can hold at most 1 unit - a
+-    // multi-hop overpay of 2 pham can never be credited.
+-    const capped = materials.map((material) =>
+-      material.id === PHAM ? { ...material, stackLimit: 1 } : material,
+-    )
+-    // registerMaterials skips already-registered ids - the capped
+-    // catalog must be the first registration on a fresh manager.
+-    const manager = new GameManager()
+-    manager.catalogOps.registerMaterials(capped)
+-    manager.catalogOps.registerPills(pills)
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAP), 13)
+-
+-    // 13 phap covers 52; consumed would be 50 -> change 2 > headroom 1.
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-
+-    expect(consumed).toBe(0)
+-    expect(manager.materialBag.getAmount(PHAP)).toBe(13)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(0)
+-    expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(0)
+-  })
+-
+-  it('runs the probe against a reactive Pinia $state without DataCloneError (C2C r24#1)', () => {
+-    // The live seam (MeridianSection, store callers) hands in a
+-    // reactive $state proxy - structuredClone would throw on the
+-    // first nested Proxy; the JSON probe must read through it.
+-    setActivePinia(createPinia())
+-    const playerStore = usePlayerStore()
+-    playerStore.realmId = 'qi_refining'
+-    const manager = managerWithCatalogs()
+-    manager.setActivePlayer(playerStore.$state)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAM), 10)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(
+-      playerStore.$state,
+-      'body_refinement',
+-    )
+-
+-    expect(consumed).toBe(50)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(0)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(5)
+-    expect(playerStore.bodyProgression.body_refinement.completedTiers).toBe(1)
+-  })
+-
+-  it('the update() tick no longer auto-invests - essence sits in the bag until a manual pour', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    // Manual pour (owner ruling 2026-10-09): the tick leaves every
+-    // essence stack untouched; only the panel's invest consumes.
+-    for (let i = 0; i < 20; i++) manager.tickOps.update(0.1)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(25)
+-    expect(
+-      player.bodyProgression.body_refinement.currentTierProgress +
+-        player.bodyProgression.body_refinement.completedTiers,
+-    ).toBe(0)
+-
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+-    expect(consumed).toBe(50)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(0)
+-  })
+-
+-  it('namespace gate (C2C 6): the meridian pill currency never substitutes physique essence', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'qi_refining'
+-    player.realmLevel = 18
+-    // M-F-CHU-THIEN (C2C-59): the fixture completes the authored
+-    // prereq so only the namespace gate, not the sequential gate,
+-    // is what this test pins.
+-    player.physiqueGrade = 'bao'
+-    player.bodyProgression.body_refinement.completedTiers = 6
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    // Meridian costs thong_mach_dan PILLS - no substitution even
+-    // though essence material stacks sit in the bag.
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'meridian')
+-
+-    expect(consumed).toBe(0)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(25)
+-    expect(player.bodyProgression.meridian.progress).toEqual({})
+-  })
+-
+-  it('zhou_tian spends its authored Phap essence exactly - the top rung substitutes nothing (M-F-CHU-THIEN)', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'foundation_establishment'
+-    player.realmLevel = 1 // capacity 2
+-    player.physiqueGrade = 'bao'
+-    player.bodyProgression.body_refinement.completedTiers = 6
+-    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
+-    manager.setActivePlayer(player)
+-    // Phap is the highest rung - nothing sits above it to cover a
+-    // shortfall, so the seam debits the authored per-step cost and
+-    // only that.
+-    manager.materialBag.add(manager.materialRegistry.get(PHAP), 100)
+-
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')
+-
+-    expect(consumed).toBe(100)
+-    expect(manager.materialBag.getAmount(PHAP)).toBe(0)
+-    expect(player.bodyProgression.zhou_tian.completed).toBe(1)
+-  })
+-
+-  it('never substitutes lower-band essence for a Phap shortfall - lower stacks stay untouched (C2C-75)', () => {
+-    const manager = managerWithCatalogs()
+-    const player = createDefaultPlayer()
+-    player.realmId = 'foundation_establishment'
+-    player.realmLevel = 1
+-    player.physiqueGrade = 'bao'
+-    player.bodyProgression.body_refinement.completedTiers = 6
+-    player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
+-    manager.setActivePlayer(player)
+-    manager.materialBag.add(manager.materialRegistry.get(PHAM), 10)
+-    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+-
+-    // Zero Phap: substitution is downward-only - rungs below the
+-    // required Phap band carry zero yield, so nothing debits at all.
+-    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(0)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(10)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(25)
+-    expect(player.bodyProgression.zhou_tian.completed).toBe(0)
+-
+-    // Partial Phap: 110 essence buys exactly the first step (100) and
+-    // the lower-band stacks remain byte-for-byte untouched.
+-    manager.materialBag.add(manager.materialRegistry.get(PHAP), 110)
+-    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(100)
+-    expect(manager.materialBag.getAmount(PHAP)).toBe(10)
+-    expect(manager.materialBag.getAmount(PHAM)).toBe(10)
+-    expect(manager.materialBag.getAmount(BAO)).toBe(25)
+-    expect(player.bodyProgression.zhou_tian.completed).toBe(1)
+-  })
+-})
+diff --git a/game/src/core/game/GameManagerRealmAdvanceOps.ts b/game/src/core/game/GameManagerRealmAdvanceOps.ts
+index 4f8c4417..858d422c 100644
+--- a/game/src/core/game/GameManagerRealmAdvanceOps.ts
++++ b/game/src/core/game/GameManagerRealmAdvanceOps.ts
+@@ -7,7 +7,7 @@ import type { PillBag } from '../pill/PillBag'
+ import type { PlayerData } from '../player/Player'
+ import { capturePlayerSnapshot, restorePlayerSnapshotInPlace } from '../player/PlayerSnapshot'
+ import type { ElementType } from '../element/ElementType'
+-import { isBetaElement, isBetaFeature, isBetaWay, isScopeHidden } from '../betaScope'
++import { isBetaElement, isBetaWay, isScopeHidden } from '../betaScope'
+ import { betaTechniqueAdmitted } from '../betaScopeSkillDomain'
+ import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
+ import { canPurchaseNode as canPurchaseNodeSystem } from '../progression/NodeSystem'
+@@ -29,21 +29,11 @@ import {
+ import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
+ import type { NotificationQueue } from './NotificationQueue'
+ import {
+-  bodyChapterEssenceGrade,
+   getBodyChapterDefinition,
+   type BodyChapterCurrency,
+   type BodyChapterId,
+ } from '../realm/body/BodyChapter'
+-import {
+-  essenceSubstitutionCoverage,
+-  planEssenceSubstitution,
+-} from '../realm/body/BodyChapterEssenceSubstitution'
+ import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
+-import {
+-  physiqueEssenceMaterialId,
+-} from '../../data/realm/PhysiqueEssence'
+-import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
+-import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
+ import { grantRealmPassive } from '../realm/RealmPassiveSystem'
+ import { CORE_REALM_LEVEL, getCurrentRealm } from '../realm/realmSystem'
+ import {
+@@ -990,98 +980,23 @@ export class GameManagerRealmAdvanceOps {
+         ? player.bodyProgression.body_refinement.completedTiers
+         : 0
+ 
+-    // M-QI-09 (QI-D4c) - downward-only essence substitution resolved at
+-    // this cost check, no exchange UI: a material-bag physique-essence
+-    // requirement counts higher-grade stacks at the locked adjacent
+-    // ratio. C2C r10#3 + r17#1 - validate -> consume -> apply: the
+-    // progression mutation is computed on a cloned probe FIRST, the
+-    // debit plan is validated (every debit satisfiable AND the change
+-    // credit committable) while the real player is untouched, bags
+-    // commit, and only then does the real state apply. Any failure
+-    // returns 0 with zero state change. The resolver owns the
+-    // namespace gate (C2C 6) - a non-essence currency takes the
+-    // legacy path where the single-currency debit cannot fail.
+-    if (bodyChapterEssenceGrade(chapter.currency) === undefined) {
+-      const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
+-      if (consumed > 0) {
+-        bag.remove(chapter.currency.id, consumed)
+-        if (chapterId === 'zhou_tian') {
+-          // HIDDEN-C - a completed 36/36 normal track is the discovery
+-          // event for the Nghich continuation (sec.12.1); the check is
+-          // itself gated on realm + lineage and stays a no-op otherwise.
+-          maybeDiscoverNghichChuTian(player)
+-        }
+-        this.emitBodyChapterInvested(player, chapterId, consumed, tiersBefore)
++    // Owner ruling 2026-10-10: the cross-grade essence fill is
++    // retired - every currency takes the same direct path (exact
++    // debit of the chapter's own currency).
++    const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
++    if (consumed > 0) {
++      bag.remove(chapter.currency.id, consumed)
++      if (chapterId === 'zhou_tian') {
++        // HIDDEN-C - a completed 36/36 normal track is the discovery
++        // event for the Nghich continuation (sec.12.1); the check is
++        // itself gated on realm + lineage and stays a no-op otherwise.
++        maybeDiscoverNghichChuTian(player)
+       }
+-      return consumed
+-    }
+-
+-    const ownedOf = (grade: PhysiqueGradeId): number => {
+-      const materialId = physiqueEssenceMaterialId(grade)
+-      return materialId === undefined
+-        ? 0
+-        : this.deps.materialBag.getAmount(materialId)
+-    }
+-    const coverage = essenceSubstitutionCoverage(chapter.currency, ownedOf)
+-    const effectiveAvailable = available + coverage
+-
+-    // JSON round-trip, NOT structuredClone: the live callers hand in a
+-    // Pinia store's reactive $state, and structuredClone throws
+-    // DataCloneError on any nested Proxy (SaveSystem's detachSaveValue
+-    // ruling). JSON stringify/parse reads through proxies at any depth.
+-    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
+-    const consumed = investBodyChapterState(probe, chapterId, effectiveAvailable, auxOwned)
+-    if (consumed <= 0) {
++      this.emitBodyChapterInvested(player, chapterId, consumed, tiersBefore)
++    } else {
+       this.maybeEmitBodyChapterLockHint(player, chapterId, available)
+-      return 0
+     }
+-
+-    const plan = planEssenceSubstitution(consumed, chapter.currency, ownedOf)
+-    if (plan === undefined) {
+-      return 0 // fail-closed: unreachable for an essence currency
+-    }
+-    const allSatisfiable = plan.debits.every((debit) =>
+-      bag.has(debit.materialId, debit.amount),
+-    )
+-    // C2C r17#2 - the whole change credit must land or the invest
+-    // fails closed: capacity is checked against the post-debit
+-    // required balance before anything commits.
+-    let changeCommittable = true
+-    if (plan.change !== undefined) {
+-      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+-      const requiredDebit = plan.debits.find(
+-        (debit) => debit.materialId === plan.change?.materialId,
+-      )
+-      const postDebitBalance =
+-        bag.getAmount(plan.change.materialId) - (requiredDebit?.amount ?? 0)
+-      changeCommittable =
+-        postDebitBalance + plan.change.amount <=
+-        (changeMaterial.stackLimit ?? MAX_STACK_AMOUNT)
+-    }
+-    if (!allSatisfiable || !changeCommittable) {
+-      return 0
+-    }
+-
+-    for (const debit of plan.debits) {
+-      bag.remove(debit.materialId, debit.amount)
+-    }
+-    if (plan.change !== undefined) {
+-      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+-      this.deps.materialBag.add(changeMaterial, plan.change.amount)
+-      // M-F-BODY-PERFECTION - the essence change credit is a live
+-      // material landing; capacity was preflighted so delivered is
+-      // the full amount.
+-      this.deps.notifyMaterialGained(plan.change.materialId, plan.change.amount)
+-    }
+-    const applied = investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
+-    if (applied > 0 && chapterId === 'zhou_tian') {
+-      // HIDDEN-C - same post-invest discovery check as the legacy path.
+-      maybeDiscoverNghichChuTian(player)
+-    }
+-    if (applied > 0) {
+-      this.emitBodyChapterInvested(player, chapterId, applied, tiersBefore)
+-    }
+-    return applied
++    return consumed
+   }
+ 
+   // One-shot per tier per session - the invest seam runs every tick,
+diff --git a/game/src/core/realm/body/BodyChapter.ts b/game/src/core/realm/body/BodyChapter.ts
+index 307cf3af..ddccd3b3 100644
+--- a/game/src/core/realm/body/BodyChapter.ts
++++ b/game/src/core/realm/body/BodyChapter.ts
+@@ -163,6 +163,12 @@ interface BodyChapterShared {
+   // amount actually consumed. Does NOT rebuild stat effects - the system
+   // dispatch owns the exactly-once rebuild after a successful mutation.
+   invest(player: PlayerData, available: number, auxOwned: number): number
++  // Owner ruling 2026-10-10 - essence intake cap: the total remaining
++  // requirement of `currency` left in this track (authored requirement
++  // minus invested progress, unclamped by unlock/capacity gates - the
++  // need is what the track can still consume). Required on chapters
++  // spending a physique-essence currency; read at the award seam.
++  remainingCurrencyNeed?: (player: PlayerData) => number
+   progress(player: PlayerData): { completed: number; total: number }
+   isComplete(player: PlayerData): boolean
+   // Chapter-owned persisted-shape validation for its own slice; emits
+@@ -288,6 +294,19 @@ export function validateBodyChapterRegistry(
+       })
+     }
+ 
++    // Owner ruling 2026-10-10 - a chapter spending a physique-essence
++    // currency must expose its remaining requirement so the intake cap
++    // at the award seam can stop credit at full need.
++    const spendsEssence = [chapter.currency, chapter.auxCurrency].some(
++      (currency) => currency !== undefined && bodyChapterEssenceGrade(currency) !== undefined,
++    )
++    if (spendsEssence && typeof chapter.remainingCurrencyNeed !== 'function') {
++      issues.push({
++        path: `${path}.remainingCurrencyNeed`,
++        message: 'essence-currency chapter must implement remainingCurrencyNeed',
++      })
++    }
++
+     const advancement = chapter.physiqueAdvancement
+ 
+     if (advancement !== undefined) {
+diff --git a/game/src/core/realm/body/BodyChapterEssenceSubstitution.test.ts b/game/src/core/realm/body/BodyChapterEssenceSubstitution.test.ts
+deleted file mode 100644
+index 0f4c2974..00000000
+--- a/game/src/core/realm/body/BodyChapterEssenceSubstitution.test.ts
++++ /dev/null
+@@ -1,206 +0,0 @@
+-import { describe, expect, it } from 'vitest'
+-
+-import {
+-  essenceSubstitutionCoverage,
+-  essenceSubstitutionYield,
+-  planEssenceSubstitution,
+-} from './BodyChapterEssenceSubstitution'
+-import type { BodyChapterCurrency } from './BodyChapter'
+-import type { PhysiqueGradeId } from '../../../data/realm/PhysiqueLadder'
+-import { PHYSIQUE_ESSENCE_CONVERSION_RATIO } from '../../../data/realm/PhysiqueEssence'
+-
+-const R_BAO = PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao ?? 0
+-const R_PHAP = PHYSIQUE_ESSENCE_CONVERSION_RATIO.phap ?? 0
+-
+-const PHAM_COST: BodyChapterCurrency = { bag: 'material', id: 'tinh_hoa_pham_the' }
+-const BAO_COST: BodyChapterCurrency = { bag: 'material', id: 'tinh_hoa_bao_the' }
+-const PHAP_COST: BodyChapterCurrency = { bag: 'material', id: 'tinh_hoa_phap_the' }
+-
+-function ownedOf(owned: Partial<Record<PhysiqueGradeId, number>>) {
+-  return (grade: PhysiqueGradeId): number => owned[grade] ?? 0
+-}
+-
+-// M-QI-09 (QI-D4c) - pure substitution plan math: per-hop integer
+-// yield, lowest-grade-first spend, minimum whole units per hop, and
+-// exact-value change-back (C2C rulings round 10 items 1-2 + 6).
+-describe('essenceSubstitutionYield', () => {
+-  it('returns 1 for the same grade and 0 for a downward source', () => {
+-    expect(essenceSubstitutionYield('pham', 'pham')).toBe(1)
+-    expect(essenceSubstitutionYield('bao', 'pham')).toBe(0)
+-  })
+-
+-  it('returns the authored adjacent ratio for one hop', () => {
+-    expect(essenceSubstitutionYield('pham', 'bao')).toBe(R_BAO)
+-    expect(essenceSubstitutionYield('bao', 'phap')).toBe(R_PHAP)
+-  })
+-
+-  it('compounds multi-hop coverage as the per-hop product (floor-at-each-hop result)', () => {
+-    expect(essenceSubstitutionYield('pham', 'phap')).toBe(R_BAO * R_PHAP)
+-  })
+-
+-  it('returns 0 across rungs with no authored essence or ratio', () => {
+-    // linh and every rung above phap have no authored material/ratio -
+-    // a broken chain can never carry value.
+-    expect(essenceSubstitutionYield('pham', 'linh')).toBe(0)
+-    expect(essenceSubstitutionYield('bao', 'linh')).toBe(0)
+-  })
+-})
+-
+-describe('essenceSubstitutionCoverage', () => {
+-  it('sums higher-rung yields against owned stacks', () => {
+-    expect(
+-      essenceSubstitutionCoverage(PHAM_COST, ownedOf({ bao: 4, phap: 1 })),
+-    ).toBe(4 * R_BAO + 1 * R_BAO * R_PHAP)
+-  })
+-
+-  it('refuses non-material bags and non-family ids at the resolver boundary (C2C 6)', () => {
+-    const pill: BodyChapterCurrency = { bag: 'pill', id: 'tinh_hoa_bao_the' }
+-    const foreign: BodyChapterCurrency = { bag: 'material', id: 'qi_refining_ore_decade' }
+-    expect(essenceSubstitutionCoverage(pill, ownedOf({ bao: 9 }))).toBe(0)
+-    expect(essenceSubstitutionCoverage(foreign, ownedOf({ bao: 9 }))).toBe(0)
+-  })
+-})
+-
+-describe('planEssenceSubstitution', () => {
+-  it('spends the required currency first and never touches higher grades when it covers', () => {
+-    const plan = planEssenceSubstitution(30, PHAM_COST, ownedOf({ pham: 40, bao: 5 }))
+-    expect(plan).toBeDefined()
+-    expect(plan!.debits).toEqual([{ materialId: 'tinh_hoa_pham_the', amount: 30 }])
+-    expect(plan!.covered).toBe(30)
+-    expect(plan!.change).toBeUndefined()
+-  })
+-
+-  it('substitutes the minimum whole higher units for the shortfall with exact change-back', () => {
+-    // 30 required, 10 pham owned -> 20 shortfall; bao yield is 2:
+-    // ceil(20/2) = 10 units, exact (no change).
+-    const exact = planEssenceSubstitution(30, PHAM_COST, ownedOf({ pham: 10, bao: 10 }))
+-    expect(exact!.debits).toEqual([
+-      { materialId: 'tinh_hoa_pham_the', amount: 10 },
+-      { materialId: 'tinh_hoa_bao_the', amount: 10 },
+-    ])
+-    expect(exact!.covered).toBe(30)
+-    expect(exact!.change).toBeUndefined()
+-
+-    // 19 shortfall -> ceil(19/2) = 10 bao covering 20: the 1-unit
+-    // overpay is credited back as pham inside the same transaction.
+-    const odd = planEssenceSubstitution(29, PHAM_COST, ownedOf({ pham: 10, bao: 10 }))
+-    expect(odd!.debits).toEqual([
+-      { materialId: 'tinh_hoa_pham_the', amount: 10 },
+-      { materialId: 'tinh_hoa_bao_the', amount: 10 },
+-    ])
+-    expect(odd!.covered).toBe(30)
+-    expect(odd!.change).toEqual({ materialId: 'tinh_hoa_pham_the', amount: 1 })
+-  })
+-
+-  it('cascades upward grade-by-grade and compounds across multiple hops', () => {
+-    // 30 required: 4 pham + 5 bao (10 covered) leaves 16; phap yield is
+-    // 4 -> ceil(16/4) = 4 phap exactly.
+-    const plan = planEssenceSubstitution(
+-      30,
+-      PHAM_COST,
+-      ownedOf({ pham: 4, bao: 5, phap: 4 }),
+-    )
+-    expect(plan!.debits).toEqual([
+-      { materialId: 'tinh_hoa_pham_the', amount: 4 },
+-      { materialId: 'tinh_hoa_bao_the', amount: 5 },
+-      { materialId: 'tinh_hoa_phap_the', amount: 4 },
+-    ])
+-    expect(plan!.covered).toBe(30)
+-  })
+-
+-  it('credits multi-hop change in the required material', () => {
+-    // 30 required, pham 0: bao 7 covers 14 -> shortfall 16, phap
+-    // ceil(16/4) = 4 exact? No - take 31: bao 7 covers 14, shortfall
+-    // 17 -> phap ceil(17/4) = 5 covering 20, overpay 3 back as pham.
+-    const plan = planEssenceSubstitution(
+-      31,
+-      PHAM_COST,
+-      ownedOf({ pham: 0, bao: 7, phap: 5 }),
+-    )
+-    expect(plan!.debits).toEqual([
+-      { materialId: 'tinh_hoa_bao_the', amount: 7 },
+-      { materialId: 'tinh_hoa_phap_the', amount: 5 },
+-    ])
+-    expect(plan!.covered).toBe(34)
+-    expect(plan!.change).toEqual({ materialId: 'tinh_hoa_pham_the', amount: 3 })
+-  })
+-
+-  it('covers only what exists when even full substitution is insufficient', () => {
+-    // 100 required, pham 10 + bao 4 (8) + phap 1 (4) = 22 coverable -
+-    // the plan reports partial coverage rather than refusing.
+-    const plan = planEssenceSubstitution(
+-      100,
+-      PHAM_COST,
+-      ownedOf({ pham: 10, bao: 4, phap: 1 }),
+-    )
+-    expect(plan!.debits).toEqual([
+-      { materialId: 'tinh_hoa_pham_the', amount: 10 },
+-      { materialId: 'tinh_hoa_bao_the', amount: 4 },
+-      { materialId: 'tinh_hoa_phap_the', amount: 1 },
+-    ])
+-    expect(plan!.covered).toBe(22)
+-    expect(plan!.covered).toBeLessThan(100)
+-  })
+-
+-  it('refuses non-material bags and non-family material ids at the resolver boundary (C2C 6)', () => {
+-    const pill: BodyChapterCurrency = { bag: 'pill', id: 'thong_mach_dan' }
+-    const collidingPill: BodyChapterCurrency = { bag: 'pill', id: 'tinh_hoa_bao_the' }
+-    const foreign: BodyChapterCurrency = { bag: 'material', id: 'qi_refining_ore_decade' }
+-    expect(planEssenceSubstitution(10, pill, ownedOf({ bao: 5 }))).toBeUndefined()
+-    expect(planEssenceSubstitution(10, collidingPill, ownedOf({ bao: 5 }))).toBeUndefined()
+-    expect(planEssenceSubstitution(10, foreign, ownedOf({ bao: 5 }))).toBeUndefined()
+-  })
+-})
+-
+-// M-F-ESSENCE (F9 residual) - the typed descriptor boundary exercised
+-// at bao/phap required grades. Phap is the top authored rung: coverage
+-// is always 0, so under the caller's all-or-nothing precondition
+-// (consumed <= owned + coverage) every phap-required plan is a
+-// required-only exact debit. A bao-required cost exercises the
+-// phap -> bao hop with exact change-back.
+-describe('M-F-ESSENCE - bao/phap required costs', () => {
+-  it('reports zero coverage for a phap-required cost - top authored rung', () => {
+-    expect(essenceSubstitutionCoverage(PHAP_COST, ownedOf({}))).toBe(0)
+-    expect(essenceSubstitutionCoverage(PHAP_COST, ownedOf({ phap: 9 }))).toBe(0)
+-    expect(essenceSubstitutionCoverage(PHAP_COST, ownedOf({ bao: 9, phap: 9 }))).toBe(0)
+-  })
+-
+-  it('debits a phap-required cost exactly - required-only, never change', () => {
+-    const plan = planEssenceSubstitution(12, PHAP_COST, ownedOf({ phap: 12, bao: 9 }))
+-    expect(plan).toBeDefined()
+-    expect(plan!.debits).toEqual([{ materialId: 'tinh_hoa_phap_the', amount: 12 }])
+-    expect(plan!.covered).toBe(12)
+-    expect(plan!.change).toBeUndefined()
+-
+-    const smaller = planEssenceSubstitution(7, PHAP_COST, ownedOf({ phap: 9 }))
+-    expect(smaller!.debits).toEqual([{ materialId: 'tinh_hoa_phap_the', amount: 7 }])
+-    expect(smaller!.covered).toBe(7)
+-    expect(smaller!.change).toBeUndefined()
+-  })
+-
+-  it('substitutes phap for a bao-required cost at the locked ratio with change-back', () => {
+-    // consumed 11, bao 0: phap yield is 2 -> ceil(11/2) = 6 phap
+-    // covering 12, the 1-unit overpay credited back as bao.
+-    const plan = planEssenceSubstitution(11, BAO_COST, ownedOf({ phap: 6 }))
+-    expect(plan!.debits).toEqual([{ materialId: 'tinh_hoa_phap_the', amount: 6 }])
+-    expect(plan!.covered).toBe(12)
+-    expect(plan!.change).toEqual({ materialId: 'tinh_hoa_bao_the', amount: 1 })
+-  })
+-
+-  it('spends owned bao first, then the phap hop only for the shortfall', () => {
+-    // consumed 11, bao 5: shortfall 6 -> ceil(6/2) = 3 phap exact.
+-    const plan = planEssenceSubstitution(11, BAO_COST, ownedOf({ bao: 5, phap: 3 }))
+-    expect(plan!.debits).toEqual([
+-      { materialId: 'tinh_hoa_bao_the', amount: 5 },
+-      { materialId: 'tinh_hoa_phap_the', amount: 3 },
+-    ])
+-    expect(plan!.covered).toBe(11)
+-    expect(plan!.change).toBeUndefined()
+-  })
+-
+-  it('sums phap coverage for a bao-required cost at the single-hop yield', () => {
+-    expect(essenceSubstitutionCoverage(BAO_COST, ownedOf({}))).toBe(0)
+-    expect(essenceSubstitutionCoverage(BAO_COST, ownedOf({ phap: 3 }))).toBe(3 * R_PHAP)
+-    expect(essenceSubstitutionCoverage(BAO_COST, ownedOf({ phap: 3, bao: 7 }))).toBe(3 * R_PHAP)
+-  })
+-})
+diff --git a/game/src/core/realm/body/BodyChapterEssenceSubstitution.ts b/game/src/core/realm/body/BodyChapterEssenceSubstitution.ts
+deleted file mode 100644
+index c7150e36..00000000
+--- a/game/src/core/realm/body/BodyChapterEssenceSubstitution.ts
++++ /dev/null
+@@ -1,156 +0,0 @@
+-// M-QI-09 (QI-D4c) - downward-only essence substitution at the Body
+-// chapter invest seam: pure plan math over grade counts - no bags, no
+-// PlayerData, no mutation. GameManagerRealmAdvanceOps owns the bags and
+-// applies the plan.
+-//
+-// Contract (spec docs/p7/missions/mqi-09-essence-substitution.spec.md,
+-// C2C rulings round 10):
+-// - one unit of grade g substitutes for ratio[g] (PHYSIQUE_ESSENCE_
+-//   CONVERSION_RATIO) integer units of grade g-1 (adjacent hops
+-//   only); a multi-hop yield is
+-//   the per-hop integer product down the chain (ratios are authored
+-//   integers, so the product IS the floor-at-each-hop result), so no
+-//   conversion path can beat the chain (no-arbitrage by construction);
+-// - the namespace gate lives HERE at the resolver boundary (C2C 6): the
+-//   plan takes the full typed currency descriptor and refuses every
+-//   non-material bag and every id outside the physique-essence family -
+-//   callers must not pre-qualify;
+-// - lowest-grade spend first, then resolve the shortfall grade-by-grade
+-//   upward (required -> required+1 -> ...) consuming the MINIMUM whole
+-//   units per hop - ceil(shortfall / yield);
+-// - the last hop's whole-unit overpay is credited back in required-grade
+-//   units inside the same transaction (C2C 2): exact-value substitution
+-//   - change is always < the last hop's yield, so it can never create
+-//   value or act as a free exchange;
+-// - callers scope `consumed` inside `owned + coverage`, so a plan
+-//   always covers its `consumed` in full (all-or-nothing).
+-import {
+-  physiqueEssenceConversionRatio,
+-  physiqueEssenceMaterialId,
+-} from '../../../data/realm/PhysiqueEssence'
+-import {
+-  PHYSIQUE_GRADES,
+-  getPhysiqueGradeIndex,
+-  type PhysiqueGradeId,
+-} from '../../../data/realm/PhysiqueLadder'
+-import { bodyChapterEssenceGrade, type BodyChapterCurrency } from './BodyChapter'
+-
+-export interface EssenceSubstitutionDebit {
+-  readonly materialId: string
+-  readonly amount: number
+-}
+-
+-export interface EssenceSubstitutionPlan {
+-  readonly debits: readonly EssenceSubstitutionDebit[]
+-  /** Required-units the debit list covers - >= consumed when the
+-   * caller honoured the coverage bound. */
+-  readonly covered: number
+-  /** Required-grade change credited back when the last debit's hop
+-   * overpaid (covered - consumed > 0); absent when the spend was
+-   * exact. Overflow beyond the bag's stackLimit is lost - bounded
+-   * by the deepest hop's yield. */
+-  readonly change?: EssenceSubstitutionDebit
+-}
+-
+-/** Required-units covered per source unit: the per-hop integer product
+- * of the adjacent ratios from `source` down to `required`. Returns 1
+- * when the grades match, 0 when the source is lower or the chain is
+- * broken (a rung with no authored material or no ratio can never carry
+- * value). */
+-export function essenceSubstitutionYield(
+-  required: PhysiqueGradeId,
+-  source: PhysiqueGradeId,
+-): number {
+-  const requiredIndex = getPhysiqueGradeIndex(required)
+-  const sourceIndex = getPhysiqueGradeIndex(source)
+-  if (sourceIndex <= requiredIndex) return sourceIndex === requiredIndex ? 1 : 0
+-
+-  let yieldPerUnit = 1
+-  for (let g = sourceIndex; g > requiredIndex; g--) {
+-    const grade = PHYSIQUE_GRADES[g]?.id
+-    if (grade === undefined) return 0
+-    const ratio = physiqueEssenceConversionRatio(grade)
+-    if (ratio === undefined || physiqueEssenceMaterialId(grade) === undefined) {
+-      return 0
+-    }
+-    yieldPerUnit *= ratio
+-  }
+-  return yieldPerUnit
+-}
+-
+-/** Total required-units coverable from higher grades -
+- * `sum(ownedOf(g) * yield(g))` over every rung above the cost's grade.
+- * Returns 0 when the cost is not a material-bag physique essence (the
+- * resolver-side namespace gate). */
+-export function essenceSubstitutionCoverage(
+-  cost: BodyChapterCurrency,
+-  ownedOf: (grade: PhysiqueGradeId) => number,
+-): number {
+-  const required = bodyChapterEssenceGrade(cost)
+-  if (required === undefined) return 0
+-
+-  let coverage = 0
+-  const requiredIndex = getPhysiqueGradeIndex(required)
+-  for (let g = requiredIndex + 1; g < PHYSIQUE_GRADES.length; g++) {
+-    const source = PHYSIQUE_GRADES[g]?.id
+-    if (source === undefined || physiqueEssenceMaterialId(source) === undefined) continue
+-    coverage += ownedOf(source) * essenceSubstitutionYield(required, source)
+-  }
+-  return coverage
+-}
+-
+-/** Deterministic debit plan for `consumed` required-units of `cost`:
+- * spend the required currency first, then ascending grades
+- * nearest-higher-first. Returns undefined when `cost` is not a
+- * material-bag physique essence - the resolver refuses substitution
+- * outright rather than planning against a foreign currency.
+- * Precondition: `consumed <= ownedOf(required) + coverage` - honoured
+- * whenever the caller passed `owned + coverage` as availability. */
+-export function planEssenceSubstitution(
+-  consumed: number,
+-  cost: BodyChapterCurrency,
+-  ownedOf: (grade: PhysiqueGradeId) => number,
+-): EssenceSubstitutionPlan | undefined {
+-  const required = bodyChapterEssenceGrade(cost)
+-  const requiredMaterialId =
+-    required === undefined ? undefined : physiqueEssenceMaterialId(required)
+-  if (required === undefined || requiredMaterialId === undefined) {
+-    return undefined
+-  }
+-
+-  const debits: EssenceSubstitutionDebit[] = []
+-  let shortfall = consumed
+-  let covered = 0
+-
+-  const requiredSpend = Math.min(
+-    consumed,
+-    Math.max(0, ownedOf(required)),
+-  )
+-  if (requiredSpend > 0) {
+-    debits.push({ materialId: requiredMaterialId, amount: requiredSpend })
+-    covered += requiredSpend
+-    shortfall -= requiredSpend
+-  }
+-
+-  const requiredIndex = getPhysiqueGradeIndex(required)
+-  for (let g = requiredIndex + 1; shortfall > 0 && g < PHYSIQUE_GRADES.length; g++) {
+-    const source = PHYSIQUE_GRADES[g]?.id
+-    if (source === undefined) continue
+-    const materialId = physiqueEssenceMaterialId(source)
+-    if (materialId === undefined) continue
+-    const yieldPerUnit = essenceSubstitutionYield(required, source)
+-    if (yieldPerUnit <= 0) continue // broken chain: carries no value
+-    const units = Math.min(ownedOf(source), Math.ceil(shortfall / yieldPerUnit))
+-    if (units <= 0) continue
+-    debits.push({ materialId, amount: units })
+-    covered += units * yieldPerUnit
+-    shortfall -= units * yieldPerUnit
+-  }
+-
+-  const change =
+-    covered > consumed
+-      ? { materialId: requiredMaterialId, amount: covered - consumed }
+-      : undefined
+-
+-  return { debits, covered, change }
+-}
+diff --git a/game/src/core/realm/body/BodyProgressionSystem.ts b/game/src/core/realm/body/BodyProgressionSystem.ts
+index 4b576eb2..8bab8aca 100644
+--- a/game/src/core/realm/body/BodyProgressionSystem.ts
++++ b/game/src/core/realm/body/BodyProgressionSystem.ts
+@@ -224,6 +224,27 @@ export function getBodyChapterProgress(
+   return getBodyChapterDefinition(chapterId).progress(player)
+ }
+ 
++// Owner ruling 2026-10-10 - essence intake cap: the total remaining
++// requirement of `materialId` across the chapter chain. Each consuming
++// chapter reports its own unclamped remainder (authored requirement
++// minus invested progress, not gated on current unlock/realm); the
++// award seam sums it. A material no chapter consumes needs 0 - its
++// drops cap out immediately and yield nothing.
++export function remainingEssenceNeed(player: PlayerData, materialId: string): number {
++  let need = 0
++
++  for (const chapter of BODY_CHAPTERS) {
++    const consumes = [chapter.currency, chapter.auxCurrency].some(
++      currency => currency?.bag === 'material' && currency.id === materialId,
++    )
++    if (consumes) {
++      need += chapter.remainingCurrencyNeed?.(player) ?? 0
++    }
++  }
++
++  return need
++}
++
+ // Derived body facts - the canonical reads consumers (ritual snapshot,
+ // breakthrough resolver) use instead of touching chapter state.
+ export function getBodyRefinementCompletedTiers(player: PlayerData): number {
+diff --git a/game/src/core/realm/body/BodyRefinementChapter.ts b/game/src/core/realm/body/BodyRefinementChapter.ts
+index 0195e0ee..8d35ea86 100644
+--- a/game/src/core/realm/body/BodyRefinementChapter.ts
++++ b/game/src/core/realm/body/BodyRefinementChapter.ts
+@@ -171,6 +171,25 @@ export const bodyRefinementChapter: BaseStatBodyChapter = {
+     return consumed
+   },
+ 
++  // Owner ruling 2026-10-10 - essence intake cap: remaining essence the
++  // track can still consume = sum over the open tiers of each tier's
++  // own ceil(remaining/multiplier) (same per-invest math invest()
++  // charges; talent multiplier snapshot, no realm/unlock clamp).
++  remainingCurrencyNeed(player: PlayerData): number {
++    const state = player.bodyProgression.body_refinement
++    const multiplier = getBodyRefinementProgressMultiplier(
++      player.selectedTalentIds,
++      player.talentLevels,
++    )
++    let need = 0
++    for (let i = state.completedTiers; i < TOTAL_TIERS; i++) {
++      const remaining =
++        getTierCap(i) - (i === state.completedTiers ? state.currentTierProgress : 0)
++      need += Math.ceil(remaining / multiplier)
++    }
++    return need
++  },
++
+   collectBaseStatDeltas(player: PlayerData): Partial<Record<StatType, number>> {
+     return collectTierBaseStatDeltas(player)
+   },
+diff --git a/game/src/core/realm/body/ZhouTianChapter.ts b/game/src/core/realm/body/ZhouTianChapter.ts
+index 77072fa9..2176b718 100644
+--- a/game/src/core/realm/body/ZhouTianChapter.ts
++++ b/game/src/core/realm/body/ZhouTianChapter.ts
+@@ -98,6 +98,19 @@ export const zhouTianChapter: BaseStatBodyChapter = {
+     return consumed
+   },
+ 
++  // Owner ruling 2026-10-10 - essence intake cap: remaining essence the
++  // track can still consume = sum of step costs from the current step
++  // to the last, unclamped by realm capacity (capacity gates timing,
++  // not what the track will consume).
++  remainingCurrencyNeed(player: PlayerData): number {
++    const state = player.bodyProgression.zhou_tian
++    let need = 0
++    for (let step = state.completed; step < ZHOU_TIAN_TOTAL_STEPS; step++) {
++      need += zhouTianStepCost(step)
++    }
++    return need
++  },
++
+   // Sec.11.3 - each completed step contributes its authored raw/base
+   // combat-stat reward through the chapter's baseStat channel. The map
+   // is derived on the fly from canonical state (never persisted).
+diff --git a/game/src/core/simulation/earlygame/EssenceSubstitutionEconomy.test.ts b/game/src/core/simulation/earlygame/EssenceSubstitutionEconomy.test.ts
+deleted file mode 100644
+index 4281240a..00000000
+--- a/game/src/core/simulation/earlygame/EssenceSubstitutionEconomy.test.ts
++++ /dev/null
+@@ -1,123 +0,0 @@
+-import { describe, expect, it } from 'vitest'
+-
+-import {
+-  ESSENCE_LOCK_SEEDS,
+-  ESSENCE_RATIO_CANDIDATES,
+-  bodyChapterRequirement,
+-  expectedBandEssence,
+-  expectedBandEssencePerKill,
+-  lockConversionRatio,
+-  measureBandResidency,
+-  measureEssenceRatioLock,
+-  measureStrandedCompletion,
+-} from './EssenceSubstitutionEconomy'
+-import { PHYSIQUE_ESSENCE_CONVERSION_RATIO } from '../../../data/realm/PhysiqueEssence'
+-
+-// M-QI-09 (QI-D4c + C2C ruling 4) - the deterministic economy sim:
+-// the mortal band residency stands in for the stranded band's own
+-// arc (structurally identical: 10-floor chain, level-12 gate, the
+-// same pinned 0.7 / 1-3 essence rate), candidate ratios are evaluated
+-// against the authored parity income, the smallest passing candidate
+-// is written into production data, and THIS test re-derives the lock
+-// from production values so a drifted ratio fails loudly.
+-describe('essence substitution economy sim (M-QI-09)', () => {
+-  it('measures a deterministic band residency per seed', { timeout: 900_000 }, () => {
+-    const first = measureBandResidency(11)
+-    const second = measureBandResidency(11)
+-    expect(second).toEqual(first)
+-    expect(first.realmId).toBe('qi_refining')
+-    expect(first.boundaryReached).toBe(true)
+-    expect(first.kills).toBeGreaterThan(0)
+-  })
+-
+-  it('reaches the band boundary on every lock seed', { timeout: 900_000 }, () => {
+-    for (const seed of ESSENCE_LOCK_SEEDS) {
+-      expect(measureBandResidency(seed).boundaryReached).toBe(true)
+-    }
+-  })
+-
+-  it('derives per-band income from the pinned authored drop entries', () => {
+-    // Every pinned band drops essence at 0.7 chance of 1-3 units ->
+-    // 1.4 expected essence per kill, symmetric across the bands.
+-    for (const realm of ['mortal', 'qi_refining', 'foundation_establishment'] as const) {
+-      expect(expectedBandEssencePerKill(realm)).toBeCloseTo(1.4, 10)
+-    }
+-    expect(expectedBandEssence('mortal', 0)).toBe(0)
+-    expect(expectedBandEssencePerKill('golden_core')).toBe(0)
+-  })
+-
+-  it('evaluates candidates and locks the smallest passing ratio from production data', { timeout: 900_000 }, () => {
+-    const measurement = measureEssenceRatioLock('qi_refining')
+-    const residual = bodyChapterRequirement()
+-
+-    // The lock rule, recomputed from the pinned inputs: the authored
+-    // residency income is parity (residual at 1:1), so candidate 2 is
+-    // the smallest satisfying candidate - and production MUST carry
+-    // the sim-locked value (C2C 4: no placeholders in shipped data).
+-    expect(measurement.residual).toBe(residual)
+-    // Parity within a single per-kill unit: the authored residency
+-    // kill budget is ceil(residual / 1.4), so the expected income
+-    // overshoots the residual by less than one kill's essence.
+-    expect(measurement.surplus).toBeGreaterThanOrEqual(residual)
+-    expect(measurement.surplus).toBeLessThan(residual + expectedBandEssencePerKill('mortal'))
+-    expect(measurement.lockedRatio).toBe(ESSENCE_RATIO_CANDIDATES[0])
+-    expect(measurement.authoredRatio).toBe(PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao)
+-    expect(measurement.authoredRatio).toBe(measurement.lockedRatio)
+-    expect(PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao).toBe(measurement.lockedRatio)
+-    // C2C r17#3 - downstream hops are NOT independent measurements:
+-    // by explicit rule every authored adjacent hop carries the
+-    // first-hop lock until a band-specific arc becomes driveable.
+-    // The production value is pinned to that rule, not copied blind.
+-    expect(PHYSIQUE_ESSENCE_CONVERSION_RATIO.phap).toBe(measurement.lockedRatio)
+-  })
+-
+-  it('lockConversionRatio is the spec rule in pure form', () => {
+-    expect(lockConversionRatio(10, 10)).toBe(2) // parity -> floor 2
+-    // Smallest candidate covering residual: 20 * 5 = 100 >= 100.
+-    expect(lockConversionRatio(100, 20)).toBe(5)
+-    expect(lockConversionRatio(81, 20)).toBe(5)
+-    // No candidate covers a surplus this thin, and a dead surplus
+-    // can never cover.
+-    expect(lockConversionRatio(100, 10)).toBe(Number.MAX_SAFE_INTEGER)
+-    expect(lockConversionRatio(1, 0)).toBe(Number.MAX_SAFE_INTEGER)
+-  })
+-
+-  it('retires the full lower chapter inside one authored-residency budget at the locked ratio', { timeout: 900_000 }, () => {
+-    const residual = bodyChapterRequirement()
+-    const locked = PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao ?? 0
+-    const budget = Math.ceil(residual / locked)
+-    for (const seed of ESSENCE_LOCK_SEEDS) {
+-      const result = measureStrandedCompletion(seed, 'qi_refining', budget)
+-      expect(
+-        result.completed,
+-        `seed ${seed} must retire the chapter at the locked budget`,
+-      ).toBe(true)
+-      expect(result.tiersCompleted).toBe(6)
+-      expect(result.requiredLeft).toBe(0)
+-    }
+-  })
+-
+-  it('exercises the downstream hop end-to-end: a phap budget at the compound rate retires the chapter', { timeout: 900_000 }, () => {
+-    // Phap -> Pham traverses BOTH authored hops at the product rate
+-    // lockedRatio^2 - the downstream hop is exercised through the
+-    // real seams even though no Bao-demanding chapter exists yet.
+-    const residual = bodyChapterRequirement()
+-    const locked = PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao ?? 0
+-    const compound = locked * (PHYSIQUE_ESSENCE_CONVERSION_RATIO.phap ?? 0)
+-    const budget = Math.ceil(residual / compound)
+-    const result = measureStrandedCompletion(11, 'foundation_establishment', budget)
+-    expect(result.completed).toBe(true)
+-    expect(result.tiersCompleted).toBe(6)
+-    // The unit-rounded surplus returns as required-material change
+-    // inside the transaction and is the only residue.
+-    expect(result.requiredLeft).toBe(compound * budget - residual)
+-  })
+-
+-  it('fails the full retirement one unit below the locked budget - the lock is tight', { timeout: 900_000 }, () => {
+-    const residual = bodyChapterRequirement()
+-    const locked = PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao ?? 0
+-    const under = measureStrandedCompletion(11, 'qi_refining', Math.ceil(residual / locked) - 1)
+-    expect(under.completed).toBe(false)
+-    expect(under.tiersCompleted).toBeLessThan(6)
+-  })
+-})
+diff --git a/game/src/core/simulation/earlygame/EssenceSubstitutionEconomy.ts b/game/src/core/simulation/earlygame/EssenceSubstitutionEconomy.ts
+deleted file mode 100644
+index ac915724..00000000
+--- a/game/src/core/simulation/earlygame/EssenceSubstitutionEconomy.ts
++++ /dev/null
+@@ -1,344 +0,0 @@
+-// M-QI-09 (QI-D4c) - deterministic measurement for the essence
+-// substitution ratio lock: drives the canonical progression through
+-// production seams (combatCultivationParity on, like M-D), measures a
+-// band residency's kill budget, and derives the locked adjacent
+-// conversionRatio from the pinned authored band drops.
+-//
+-// Lock rule (spec docs/p7/missions/mqi-09-essence-substitution.spec.md
+-// sec.3.4 - band-redemption invariant via authored parity): the
+-// smallest integer >= 2 such that the stranded band's expected
+-// essence income over one gate arc covers the full authored
+-// lower-chapter requirement. The chapter caps were tuned so that the
+-// required band's own essence income over its residency covers them
+-// (BodyRefinement.ts: "doi chieu tong nguon Tinh Hoa farm duoc trong
+-// 18 tang Pham Nhan"), so one authored residency == the residual at
+-// 1:1. Every band drops essence at the same pinned rate
+-// (0.7 chance, 1-3 amount -> 1.4 per kill), so the stranded band's
+-// authored residency income is identical - substitution at parity
+-// needs ratio 1, and the spec's >=2 premium floor for a strictly
+-// more valuable grade locks ratio 2.
+-//
+-// The scripted residency measurement below is deterministic evidence
+-// for the drive (boundary reached across the seed set) - it is NOT
+-// the income proxy: a scripted journey performs far fewer refarm
+-// kills than a real residency (hundreds vs thousands), which would
+-// inflate the lock by an order of magnitude. Income parity is the
+-// authored anchor, not scripted kill counts.
+-//
+-// This module is simulation infrastructure - nothing on the gameplay
+-// path may import it (same rule as PerfectionEconomy).
+-import { EarlyGameSession } from './EarlyGameSession'
+-import { CANONICAL_EARLY_LOOP, runLoop } from './EarlyGameLoop'
+-import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
+-import type { EarlyGameCreationProfile } from '../../game/EarlyGameBootstrap'
+-import { BODY_REFINEMENT_TIERS } from '../../../data/realm/BodyRefinement'
+-import {
+-  PHYSIQUE_ESSENCE_BAND_DROPS,
+-  physiqueEssenceBand,
+-  physiqueEssenceConversionRatio,
+-  physiqueEssenceMaterialId,
+-  type PhysiqueEssenceBandRealm,
+-} from '../../../data/realm/PhysiqueEssence'
+-import { getBodyRefinementCompletedTiers } from '../../realm/body/BodyProgressionSystem'
+-import { MAX_STACK_AMOUNT } from '../../inventory/StackLimits'
+-import { getRequiredCultivation } from '../../realm/realmSystem'
+-import { REALMS } from '../../../data/realms/realm'
+-
+-/** Same canonical measurement profile as M-D - one fixed creation
+- * identity so runs differ only by seed. */
+-const MEASUREMENT_PROFILE: EarlyGameCreationProfile = {
+-  name: 'substitution-economy-measure',
+-  talentIds: ['hap_linh'],
+-}
+-
+-function makeSession(seed: number): EarlyGameSession {
+-  const session = new EarlyGameSession({ seed, profile: MEASUREMENT_PROFILE })
+-  session.combatCultivationParity = true
+-  return session
+-}
+-
+-/** Fixed seed set for the lock measurement - min arc kills across it
+- * is the worst-case surplus the lock must cover. */
+-export const ESSENCE_LOCK_SEEDS = [11, 22, 33, 44] as const
+-
+-export interface BandResidencyMeasurement {
+-  seed: number
+-  realmId: string
+-  /** Enemies defeated from session start to the band boundary - the
+-   * scripted residency kill budget. */
+-  kills: number
+-  /** True when the drive reached the next realm's boundary. */
+-  boundaryReached: boolean
+-}
+-
+-/** Drive the scripted mortal prefix tolerating scripted-floor failures
+- * (floors are a side path - the transition gates on realmLevel only),
+- * then force the real transition exactly like measureNormalRun: grind
+- * to level 12, win the tribulation, perform the ritual. Returns the
+- * session post-attempt in every case - callers check
+- * `player.realmId === targetRealmId` for the boundary. */
+-function driveToBandBoundary(
+-  seed: number,
+-  targetRealmId: 'qi_refining',
+-): EarlyGameSession {
+-  // Same-seed replay contract: production loot/equipment rolls draw on
+-  // Math.random by design (a seeded battle must not pin drops), which
+-  // leaves the drive non-deterministic once battles are close enough
+-  // for gear variance to tip outcomes. The measurement pins the
+-  // unseeded surface to its own seeded stream for the drive's
+-  // duration - a separate salt keeps drops independent of the battle
+-  // and loot streams, and the global is restored afterwards.
+-  const unseededStream = new SeededCombatRng(seed ^ 0xec0c4e0)
+-  const originalRandom = Math.random
+-  Math.random = () => unseededStream.roll()
+-  try {
+-    return driveToBandBoundaryInner(seed, targetRealmId)
+-  } finally {
+-    Math.random = originalRandom
+-  }
+-}
+-
+-function driveToBandBoundaryInner(
+-  seed: number,
+-  targetRealmId: 'qi_refining',
+-): EarlyGameSession {
+-  const session = makeSession(seed)
+-  const ritualIndex = CANONICAL_EARLY_LOOP.findIndex(
+-    (step) => step.kind === 'ritual',
+-  )
+-  if (ritualIndex < 0) throw new Error('canonical loop has no ritual step')
+-
+-  runLoop(session, CANONICAL_EARLY_LOOP.slice(0, ritualIndex - 1))
+-
+-  const player = session.player
+-  const mortal = REALMS.find((realm) => realm.id === 'mortal')
+-  if (mortal === undefined) throw new Error('mortal realm definition missing')
+-  while (player.realmLevel < 12 && player.realmLevel < mortal.maxLevel) {
+-    const required = getRequiredCultivation(player.realmId, player.realmLevel)
+-    const deficit = required - player.cultivation
+-    if (deficit > 0 && player.cultivationPerSecond > 0) {
+-      session.cultivate(deficit / player.cultivationPerSecond + 1)
+-    }
+-    if (!session.breakthroughIfReady()) break
+-  }
+-  if (session.runTribulation(targetRealmId) === 'victory') {
+-    session.performRitual('sword', 'sword_pathway')
+-  }
+-  return session
+-}
+-
+-/** Measure one band residency: session start through the real
+- * transition to the next realm. `kills` is the scripted residency
+- * budget - progression floor pushes plus refarm kills inside the
+- * scripted growth recipe. */
+-export function measureBandResidency(
+-  seed: number,
+-  nextRealmId: 'qi_refining' = 'qi_refining',
+-): BandResidencyMeasurement {
+-  const session = driveToBandBoundary(seed, nextRealmId)
+-  return {
+-    seed,
+-    realmId: nextRealmId,
+-    kills: session.simRunTotals.enemiesDefeated,
+-    boundaryReached: session.player.realmId === nextRealmId,
+-  }
+-}
+-
+-/** Expected essence per kill for a band, derived from the pinned
+- * authored drop entry: `chance * mean(amount)` (0.7 * 2 = 1.4 for
+- * every pinned band). */
+-export function expectedBandEssencePerKill(realmId: string): number {
+-  const entry = PHYSIQUE_ESSENCE_BAND_DROPS[realmId as PhysiqueEssenceBandRealm]
+-  if (entry === undefined || entry.kind !== 'material' || entry.amount === undefined) return 0
+-  return entry.chance * ((entry.amount.min + entry.amount.max) / 2)
+-}
+-
+-/** Expected essence income over a kill budget for the band. */
+-export function expectedBandEssence(realmId: string, kills: number): number {
+-  return kills * expectedBandEssencePerKill(realmId)
+-}
+-
+-/** Full authored requirement of the mortal Body chapter - the sum of
+- * its tier caps; the worst-case stranded residual. */
+-export function bodyChapterRequirement(): number {
+-  return BODY_REFINEMENT_TIERS.reduce((sum, tier) => sum + tier.cap, 0)
+-}
+-
+-/** Candidate adjacent ratios the sim evaluates (C2C 4): the spec's
+- * premium floor is 2 (a higher grade strictly more valuable), so
+- * candidates run upward from there. The deterministic selection is
+- * the smallest candidate whose authored-residency coverage retires
+- * the full residual. */
+-export const ESSENCE_RATIO_CANDIDATES = [2, 3, 4, 5, 6] as const
+-
+-/** The lock derivation: smallest candidate >= 2 covering `residual`
+- * with `surplus` units of the substituting essence. */
+-export function lockConversionRatio(residual: number, surplus: number): number {
+-  if (surplus <= 0) return Number.MAX_SAFE_INTEGER
+-  return (
+-    ESSENCE_RATIO_CANDIDATES.find(
+-      (candidate) => surplus * candidate >= residual,
+-    ) ?? Number.MAX_SAFE_INTEGER
+-  )
+-}
+-
+-export interface EssenceRatioLockMeasurement {
+-  seeds: readonly number[]
+-  arcs: readonly BandResidencyMeasurement[]
+-  /** Residency kill budget the authored requirement implies at the
+-   * required band's own drop rate (residual / per-kill income). */
+-  authoredResidencyKills: number
+-  /** Min scripted residency kills across completed arcs - reported
+-   * as drive evidence, never used as the income proxy. */
+-  minArcKills: number
+-  residual: number
+-  surplus: number
+-  lockedRatio: number
+-  /** Authored production value the lock is compared against. */
+-  authoredRatio: number
+-}
+-
+-/** Measure band residencies over the seed set (drive evidence) and
+- * compute the lock for that band's grade ratio from authored
+- * parity: `residual` is the full authored requirement of the
+- * chapter the grade substitutes into; `surplus` is the stranded
+- * band's expected income over the authored residency (the kill
+- * budget the required band's caps imply at their own rate). */
+-export function measureEssenceRatioLock(
+-  substituteRealm: PhysiqueEssenceBandRealm,
+-  seeds: readonly number[] = ESSENCE_LOCK_SEEDS,
+-): EssenceRatioLockMeasurement {
+-  // Only the qi_refining substitution hop is measurable today: the
+-  // mortal -> qi_refining arc is the only driveable residency, and
+-  // body_refinement (Pham) is the only authored essence chapter -
+-  // the same lock is authored for every adjacent hop downstream.
+-  if (substituteRealm !== 'qi_refining') {
+-    throw new Error(`residency measurement is not driveable for ${substituteRealm}`)
+-  }
+-  const arcs = seeds.map((seed) => measureBandResidency(seed))
+-  const completed = arcs.filter((arc) => arc.boundaryReached)
+-  const minArcKills =
+-    completed.length === 0
+-      ? 0
+-      : Math.min(...completed.map((arc) => arc.kills))
+-  const residual = bodyChapterRequirement()
+-  const requiredRealm = 'mortal'
+-  const authoredResidencyKills = Math.ceil(
+-    residual / expectedBandEssencePerKill(requiredRealm),
+-  )
+-  const surplus = expectedBandEssence(
+-    substituteRealm,
+-    authoredResidencyKills,
+-  )
+-  const substituteGrade = physiqueEssenceBand(substituteRealm)
+-  const authoredRatio =
+-    substituteGrade === undefined
+-      ? 0
+-      : (physiqueEssenceConversionRatio(substituteGrade) ?? 0)
+-  return {
+-    seeds,
+-    arcs,
+-    authoredResidencyKills,
+-    minArcKills,
+-    residual,
+-    surplus,
+-    lockedRatio: lockConversionRatio(residual, surplus),
+-    authoredRatio,
+-  }
+-}
+-
+-export interface StrandedCompletionMeasurement {
+-  seed: number
+-  substituteGranted: number
+-  substituteSpent: number
+-  /** Required-grade units left in the bag after the drain - the seam
+-   * spends required first, so this isolates the substitution share. */
+-  requiredLeft: number
+-  tiersCompleted: number
+-  completed: boolean
+-}
+-
+-/** End-to-end contract exercise on production seams: drive to the
+- * band boundary, grant `substituteAmount` units of the band's
+- * essence, then drain the real invest seam until the lower chapter
+- * completes. The lock's guarantee says one arc's surplus at the
+- * locked ratio retires the whole lower requirement - this measures
+- * whether the real seam honours it, including per-hop rounding
+- * loss. */
+-export function measureStrandedCompletion(
+-  seed: number,
+-  substituteRealm: PhysiqueEssenceBandRealm,
+-  substituteAmount: number,
+-): StrandedCompletionMeasurement {
+-  const session = driveToBandBoundary(seed, 'qi_refining')
+-  if (session.player.realmId !== 'qi_refining') {
+-    throw new Error('band boundary unreachable - transition failed')
+-  }
+-
+-  const manager = session.gameManager
+-  const player = session.player
+-  const substituteGrade = physiqueEssenceBand(substituteRealm)
+-  const substituteMaterialId =
+-    substituteGrade === undefined
+-      ? undefined
+-      : physiqueEssenceMaterialId(substituteGrade)
+-  if (substituteMaterialId === undefined) {
+-    throw new Error('substitute essence material not authored')
+-  }
+-  const substituteMaterial = manager.materialRegistry.get(substituteMaterialId)
+-
+-  // Isolate the substitution contract on the FULL residual: drain any
+-  // pre-existing required essence and zero the chapter progress the
+-  // scripted mortal arc already bought (a real stranded player may
+-  // arrive with any partial progress - the lock must cover the worst
+-  // case of none).
+-  const requiredMaterialId = physiqueEssenceMaterialId('pham')
+-  if (requiredMaterialId === undefined) {
+-    throw new Error('required essence material not authored')
+-  }
+-  manager.materialBag.remove(
+-    requiredMaterialId,
+-    manager.materialBag.getAmount(requiredMaterialId),
+-  )
+-  const refinement = player.bodyProgression.body_refinement
+-  refinement.completedTiers = 0
+-  refinement.currentTierProgress = 0
+-
+-  // Feed-drain: the substitute essence arrives in bounded stacks
+-  // (MaterialBag.add clamps at the material's stackLimit), exactly as
+-  // it would from real drop income - grant up to headroom, run the
+-  // invest seam until it stops consuming, repeat until the grant
+-  // budget is exhausted or the chapter completes.
+-  const stackLimit = substituteMaterial.stackLimit ?? MAX_STACK_AMOUNT
+-  let granted = 0
+-  let guard = 0
+-  while (
+-    getBodyRefinementCompletedTiers(player) < BODY_REFINEMENT_TIERS.length &&
+-    guard++ < 100_000
+-  ) {
+-    const headroom =
+-      stackLimit - manager.materialBag.getAmount(substituteMaterialId)
+-    const topUp = Math.min(substituteAmount - granted, headroom)
+-    if (topUp > 0) {
+-      manager.materialBag.add(substituteMaterial, topUp)
+-      granted += topUp
+-      continue
+-    }
+-    const consumed = manager.realmAdvanceOps.investBodyChapter(
+-      player,
+-      'body_refinement',
+-    )
+-    if (consumed === 0) break
+-  }
+-
+-  return {
+-    seed,
+-    substituteGranted: granted,
+-    substituteSpent:
+-      granted - manager.materialBag.getAmount(substituteMaterialId),
+-    requiredLeft: manager.materialBag.getAmount(requiredMaterialId),
+-    tiersCompleted: getBodyRefinementCompletedTiers(player),
+-    completed:
+-      getBodyRefinementCompletedTiers(player) >= BODY_REFINEMENT_TIERS.length,
+-  }
+-}
+diff --git a/game/src/core/simulation/earlygame/TrucCoJourney.test.ts b/game/src/core/simulation/earlygame/TrucCoJourney.test.ts
+index d342811b..6da6994f 100644
+--- a/game/src/core/simulation/earlygame/TrucCoJourney.test.ts
++++ b/game/src/core/simulation/earlygame/TrucCoJourney.test.ts
+@@ -355,8 +355,7 @@ describe('TrucCoJourney - ordered journey', () => {
+       // leaves this pinned order nondeterministic whenever a marginal
+       // fight meets gear variance (floor_10 intermittently observed
+       // defeat). Pin the unseeded surface to its own stream for the
+-      // run - the same substitution the benchmark drive uses
+-      // (EssenceSubstitutionEconomy) via the sanctioned vi.spyOn seam.
++      // run via the sanctioned vi.spyOn seam.
+       const unseededStream = new SeededCombatRng(0x5d1ce7)
+       const randomSpy = vi
+         .spyOn(Math, 'random')
+@@ -600,8 +599,9 @@ describe('TrucCoJourney - ordered journey', () => {
+       expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(pillsAtReject)
+       expect(s.player.bodyProgression.meridian.progress).toEqual({})
+ 
+-      // Substitution probe inside D.1: drain the pham stack, hold ONLY
+-      // phap, and let the real phap->bao->pham plan carry the chapter.
++      // Drain the pham stack into the open tier before the pham top-up
++      // arm below. Owner ruling 2026-10-10: the former phap->pham fill
++      // probe was removed with the mechanic.
+       let drainGuard = 0
+       while (
+         s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID) > 0 &&
+@@ -609,14 +609,6 @@ describe('TrucCoJourney - ordered journey', () => {
+       ) {
+         expect(s.investChapter('body_refinement')).toBeGreaterThan(0)
+       }
+-      s.holdMaterial(ZHOU_TIAN_CURRENCY_MATERIAL_ID, 200)
+-      const phapBeforeProbe = s.materialAmount(
+-        ZHOU_TIAN_CURRENCY_MATERIAL_ID,
+-      )
+-      expect(s.investChapter('body_refinement')).toBeGreaterThan(0)
+-      expect(s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBeLessThan(
+-        phapBeforeProbe,
+-      )
+       expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(0)
+ 
+       // Tier 6 commits via pham top-up -> physique flips pham -> bao.
+@@ -891,9 +883,8 @@ describe('TrucCoJourney - ordered journey', () => {
+ 
+       // Exact-Phap debit (spec leg C pin), run BELOW capacity so the
+       // arm is live: holding ONLY the lower-band essence commits
+-      // nothing - substitution is downward only, pham cannot stand in
+-      // for phap. Then supplying phap commits the remaining rungs with
+-      // an exact debit (0-substitution, no surplus).
++      // nothing - pham cannot stand in for phap. Then supplying phap
++      // commits the remaining rungs with an exact debit (no surplus).
+       {
+         // Isolate the arm: drain the phap stack, hold ONLY pham.
+         const heldPhap = s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
+@@ -912,7 +903,7 @@ describe('TrucCoJourney - ordered journey', () => {
+ 
+         // Supplying phap commits the remaining rungs with an exact
+         // debit: debited == the op's reported consumed total (no
+-        // surplus drawn, no substitution fill). Steps 34->36 cost
++        // surplus drawn). Steps 34->36 cost
+         // zhouTianStepCost(34)+zhouTianStepCost(35) = 950+975 = 1925
+         // (2026-10-05 curve). The essence stack caps at 1000, so each
+         // step is supplied from its own full stack - like real play.
+@@ -939,7 +930,7 @@ describe('TrucCoJourney - ordered journey', () => {
+         expect(s.player.bodyProgression.zhou_tian.completed).toBe(36)
+         expect(totalInvested).toBeGreaterThan(0)
+         // Exact debit: everything supplied was invested, nothing drawn
+-        // beyond it (no surplus drawn, no substitution fill).
++        // beyond it (no surplus drawn).
+         expect(totalInvested).toBe(supplied)
+         expect(s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBe(0)
+         expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(
+diff --git a/game/src/data/drop/StageDropTables.ts b/game/src/data/drop/StageDropTables.ts
+index 99df0af2..29d56f8c 100644
+--- a/game/src/data/drop/StageDropTables.ts
++++ b/game/src/data/drop/StageDropTables.ts
+@@ -54,8 +54,7 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
+     realmId: 'qi_refining',
+     floors: { min: 1, max: 10 },
+     currency: { spiritStone: { min: 8, max: 12 }, techniqueMastery: { min: 35, max: 45 } },
+-    // Bao-grade essence per the QI-D4b band map (M-QI-10): a stranded
+-    // pham-chapter player completes through the M-QI-09 substitution seam.
++    // Bao-grade essence per the QI-D4b band map (M-QI-10).
+     guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.qi_refining],
+     pool: [
+       // Ore is the qi_refining realm's general-purpose crafting material,
+diff --git a/game/src/data/enemy/EnemyDropSinkInvariant.test.ts b/game/src/data/enemy/EnemyDropSinkInvariant.test.ts
+index da9c2b64..9bcc6cc1 100644
+--- a/game/src/data/enemy/EnemyDropSinkInvariant.test.ts
++++ b/game/src/data/enemy/EnemyDropSinkInvariant.test.ts
+@@ -4,8 +4,8 @@ import { STAGE_DROP_TABLES } from '../drop/StageDropTables'
+ import { FAMILY_DROP_TABLES } from '../drop/FamilyDropTables'
+ import { QUESTS } from '../quest/quests'
+ import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../realm/BodyRefinement'
+-import { PHYSIQUE_ESSENCES } from '../realm/PhysiqueEssence'
+-import { essenceSubstitutionYield } from '../../core/realm/body/BodyChapterEssenceSubstitution'
++import { PHYSIQUE_ESSENCES, physiqueEssenceGradeOf } from '../realm/PhysiqueEssence'
++import { BODY_CHAPTERS } from '../../core/realm/body/BodyChapter'
+ import { DOAN_BAO_THACH_MATERIAL_ID } from '../../core/artifact/ArtifactProgression'
+ import { createDefaultEquipmentOperationCostCatalog } from '../../core/equipment/EquipmentOperationCostCatalog'
+ import { SUPPORTED_PROFESSION_REALMS } from '../../core/profession/ProfessionMaterial'
+@@ -65,14 +65,18 @@ function collectSinkMaterialIds(): Set<string> {
+     }
+   }
+ 
+-  // Luyen The - pham essence is invested directly, and every higher
+-  // essence drains through the M-QI-09 substitution seam
+-  // (planEssenceSubstitution debits the bag at investBodyChapter). A
+-  // grade only counts as a sink when its chain down to pham is
+-  // unbroken (yield > 0).
+-  for (const def of PHYSIQUE_ESSENCES) {
+-    if (essenceSubstitutionYield('pham', def.grade) > 0) {
+-      sinks.add(def.materialId)
++  // Luyen The - an essence drains at investBodyChapter through the
++  // chapter that declares it as material currency (body_refinement ->
++  // pham, zhou_tian -> phap). Owner ruling 2026-10-10: an essence no
++  // chapter consumes (tinh_hoa_bao_the today) has no sink, and the
++  // intake cap yields its drops nothing at the award seam, so it can
++  // never accumulate in the bag (exempted from the dead-drop rule
++  // below).
++  for (const chapter of BODY_CHAPTERS) {
++    for (const currency of [chapter.currency, chapter.auxCurrency]) {
++      if (currency?.bag === 'material' && physiqueEssenceGradeOf(currency.id) !== undefined) {
++        sinks.add(currency.id)
++      }
+     }
+   }
+ 
+@@ -107,8 +111,15 @@ describe('Enemy drops — mọi material rơi đều có sink (economy T6)', ()
+     const dropped = collectDroppedMaterialIds()
+     const sinks = collectSinkMaterialIds()
+ 
++    // Owner ruling 2026-10-10 - intake-cap exemption: a physique
++    // essence with no consuming chapter can never reach the bag (the
++    // award seam skips its credit), so it is not a dead drop.
++    const capGatedEssence = new Set<string>(
++      PHYSIQUE_ESSENCES.map((def) => def.materialId).filter((id) => !sinks.has(id)),
++    )
++
+     const deadDrops = [...dropped].filter(
+-      (id) => !sinks.has(id) && !LORE_ALLOWLIST.has(id),
++      (id) => !sinks.has(id) && !LORE_ALLOWLIST.has(id) && !capGatedEssence.has(id),
+     )
+ 
+     expect(
+diff --git a/game/src/data/realm/PhysiqueEssence.test.ts b/game/src/data/realm/PhysiqueEssence.test.ts
+index 38cc7299..d0681571 100644
+--- a/game/src/data/realm/PhysiqueEssence.test.ts
++++ b/game/src/data/realm/PhysiqueEssence.test.ts
+@@ -4,14 +4,11 @@ import {
+   PHYSIQUE_ESSENCE_BAND_DROPS,
+   PHYSIQUE_ESSENCES,
+   physiqueEssenceBand,
+-  PHYSIQUE_ESSENCE_CONVERSION_RATIO,
+   physiqueEssenceBandDrop,
+   physiqueEssenceGradeOf,
+   physiqueEssenceMaterialId,
+   type PhysiqueEssenceBandRealm,
+ } from './PhysiqueEssence'
+-import { PHYSIQUE_GRADES, type PhysiqueGradeId } from './PhysiqueLadder'
+-import { essenceSubstitutionYield } from '../../core/realm/body/BodyChapterEssenceSubstitution'
+ import {
+   BODY_CHAPTERS,
+   bodyChapterEssenceGrade,
+@@ -95,8 +92,8 @@ describe('PhysiqueEssence registry (M-QI-08)', () => {
+       // undefined and still satisfy a bare toBe(undefined).
+       expect(drop.itemId).toBeDefined()
+       expect(drop.itemId).toBe(physiqueEssenceMaterialId(PHYSIQUE_ESSENCE_BAND[realm]))
+-      // Exact pin: chance 0.7 / amount 1-3 are the FIXED M-QI-09
+-      // simulation inputs (spec sec.3.5) - drift must fail loudly.
++      // Exact pin: chance 0.7 / amount 1-3 are the authored band
++      // values - drift must fail loudly.
+       expect(drop.chance).toBe(0.7)
+       expect(drop.amount).toEqual({ min: 1, max: 3 })
+     }
+@@ -194,40 +191,3 @@ describe('bodyChapterEssenceGrade (M-QI-08 namespace rule)', () => {
+   })
+ })
+ 
+-// M-QI-09 (QI-D4c + C2C ruling 5) - the sim-locked adjacent ratio
+-// data contract: every ratio is an integer >= 2 (monotonic - a higher
+-// grade is strictly more valuable), only adjacent hops are authored,
+-// and a multi-hop conversion equals the product of its hops so no
+-// path can beat the chain (no-arbitrage by construction; a future
+-// direct-skip edge must not beat the compound it replaces).
+-describe('PHYSIQUE_ESSENCE_CONVERSION_RATIO (M-QI-09)', () => {
+-  it('authors only grades that have an essence material AND an adjacent lower grade', () => {
+-    for (const grade of Object.keys(PHYSIQUE_ESSENCE_CONVERSION_RATIO) as PhysiqueGradeId[]) {
+-      // A ratio on a grade with no essence material is dead data.
+-      expect(physiqueEssenceMaterialId(grade), `ratio authored for ${grade} with no essence material`).toBeDefined()
+-      // The hop must be adjacent: the immediately lower rung exists.
+-      const index = PHYSIQUE_GRADES.findIndex(def => def.id === grade)
+-      expect(index, `${grade} must have a lower adjacent rung`).toBeGreaterThan(0)
+-    }
+-  })
+-
+-  it('every ratio is an integer >= 2 - strictly more valuable per unit (monotonic)', () => {
+-    for (const [grade, ratio] of Object.entries(PHYSIQUE_ESSENCE_CONVERSION_RATIO)) {
+-      expect(Number.isInteger(ratio), `ratio[${grade}] must be an integer`).toBe(true)
+-      expect(ratio, `ratio[${grade}] must be >= 2`).toBeGreaterThanOrEqual(2)
+-    }
+-  })
+-
+-  it('multi-hop yield equals the product of adjacent hops - no-arbitrage chain', () => {
+-    // phap -> pham through the bao hop must equal ratio[phap] *
+-    // ratio[bao]: any authored "skip" that beat the compound would be
+-    // an arbitrage path (C2C 5).
+-    const bao = PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao
+-    const phap = PHYSIQUE_ESSENCE_CONVERSION_RATIO.phap
+-    expect(bao).toBeDefined()
+-    expect(phap).toBeDefined()
+-    expect(essenceSubstitutionYield('pham', 'phap')).toBe(bao! * phap!)
+-    expect(essenceSubstitutionYield('pham', 'bao')).toBe(bao)
+-    expect(essenceSubstitutionYield('bao', 'phap')).toBe(phap)
+-  })
+-})
+diff --git a/game/src/data/realm/PhysiqueEssence.ts b/game/src/data/realm/PhysiqueEssence.ts
+index c05bff0a..ed07144f 100644
+--- a/game/src/data/realm/PhysiqueEssence.ts
++++ b/game/src/data/realm/PhysiqueEssence.ts
+@@ -68,37 +68,10 @@ export function physiqueEssenceBand(realmId: string): PhysiqueGradeId | undefine
+   return REALM_TO_GRADE.get(realmId)
+ }
+ 
+-// QI-D4c adjacent conversion ratios - sim-locked by M-QI-09 (spec
+-// docs/p7/missions/mqi-09-essence-substitution.spec.md sec.3.4):
+-// `ratio[g]` is the number of grade-(g-1) units one unit of grade g
+-// substitutes for at a Body chapter cost check. Integer >= 2 (each
+-// higher unit strictly more valuable, monotonic). Only adjacent hops
+-// are authored; multi-hop yield is their product, so no conversion
+-// path can beat the chain (no-arbitrage by construction - a future
+-// skip edge would have to exceed the compound it replaces). Rungs
+-// without an authored essence material are absent - absence is the
+-// contract, not an error. The values are the sim lock, NOT a balance
+-// guess: any retune of drops, tier caps, or arc length re-runs the sim
+-// and re-locks them in the same change (spec sec.3.5).
+-export const PHYSIQUE_ESSENCE_CONVERSION_RATIO: Readonly<
+-  Partial<Record<PhysiqueGradeId, number>>
+-> = {
+-  bao: 2,
+-  phap: 2,
+-}
+-
+-export function physiqueEssenceConversionRatio(
+-  grade: PhysiqueGradeId,
+-): number | undefined {
+-  return PHYSIQUE_ESSENCE_CONVERSION_RATIO[grade]
+-}
+-
+ // Authored per-band guaranteed-drop entries, DERIVED band -> grade ->
+ // materialId so an entry can never name a material of the wrong grade.
+-// Numbers mirror the live mortal line (chance 0.7, amount 1-3) and are
+-// the FIXED simulation inputs for M-QI-09's ratio lock - any later
+-// retune must re-run the sim and re-lock ratios in the same change
+-// (spec sec.3.5). M-QI-10 wires these into STAGE_DROP_TABLES live.
++// Numbers mirror the live mortal line (chance 0.7, amount 1-3).
++// M-QI-10 wires these into STAGE_DROP_TABLES live.
+ export const PHYSIQUE_ESSENCE_BAND_DROPS: Readonly<
+   Record<PhysiqueEssenceBandRealm, GuaranteedDropEntry>
+ > = Object.fromEntries(

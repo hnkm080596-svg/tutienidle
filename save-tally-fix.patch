@@ -1,0 +1,56 @@
+diff --git a/game/src/core/cultivation/CultivationSystem.ts b/game/src/core/cultivation/CultivationSystem.ts
+index 8e692802..f5b326fb 100644
+--- a/game/src/core/cultivation/CultivationSystem.ts
++++ b/game/src/core/cultivation/CultivationSystem.ts
+@@ -37,6 +37,11 @@ export function addCultivation(
+ 
+   if (total > required && hasCultivationOverflowBank(player.selectedTalentIds, player.talentLevels)) {
+     player.cultivationOvercharge += total - required
++    // Owner ruling 2026-10-10: the banked share is real gained
++    // cultivation - count it in the lifetime tally at the single write
++    // point so the save-integrity invariant (bank <= tally) holds for
++    // legitimate saves on every gain path (tick, offline, pill, reward).
++    player.totalCultivationGained += total - required
+     player.cultivation = required
+     return
+   }
+diff --git a/game/src/core/cultivation/CultivationTick.ts b/game/src/core/cultivation/CultivationTick.ts
+index 6c2d9167..75ab7f09 100644
+--- a/game/src/core/cultivation/CultivationTick.ts
++++ b/game/src/core/cultivation/CultivationTick.ts
+@@ -53,7 +53,8 @@ export function cultivateTick(
+   const gained = player.cultivation - before
+ 
+   // Lifetime cultivation tally (not consumed by breakthroughs) - feeds
+-  // technique tier.
++  // technique tier. The banked share is counted inside addCultivation
++  // itself (owner ruling 2026-10-10) so only the landed delta adds here.
+   player.totalCultivationGained += gained
+ 
+   // Ngo Dao talent (talent-direction-choice-plan sec.6) - converts
+diff --git a/game/src/stores/player.ts b/game/src/stores/player.ts
+index c9a69408..54e2583c 100644
+--- a/game/src/stores/player.ts
++++ b/game/src/stores/player.ts
+@@ -705,6 +705,7 @@ export const usePlayerStore = defineStore('player', {
+       // Math.min was a copy of that rule), plus the M2 Hai Nap
+       // overflow bank.
+       const cultivationBefore = this.cultivation + this.cultivationOvercharge
++      const landedBefore = this.cultivation
+ 
+       addCultivation(this, offline.cultivation)
+ 
+@@ -717,6 +718,13 @@ export const usePlayerStore = defineStore('player', {
+       // wrong whenever the cap binds. Store and return the real delta.
+       const offlineResult = { ...offline, cultivation: offlineGained }
+ 
++      // Owner ruling 2026-10-10: the lifetime tally must count every
++      // real gain so the save-integrity invariant bank <= tally holds
++      // for legitimate saves - offline grants previously skipped the
++      // tally entirely. Banked share is counted inside addCultivation,
++      // so only the landed delta adds here.
++      this.totalCultivationGained += this.cultivation - landedBefore
++
+       // M2 - Ngo Dao (spec sec4.3 row 20): the insight_per_cultivation
+       // accumulator settles the offline grant too, through the SAME
+       // threshold/counters as the online cultivate() path.

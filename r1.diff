@@ -1,0 +1,303 @@
+diff --git a/game/src/core/game/BattleLootSystem.ts b/game/src/core/game/BattleLootSystem.ts
+index b31d16b2..f8b99cad 100644
+--- a/game/src/core/game/BattleLootSystem.ts
++++ b/game/src/core/game/BattleLootSystem.ts
+@@ -35,6 +35,7 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
+ import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
+ import { gradeLabel } from '../presentation/labels'
+ import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
++import { remainingEssenceNeed } from '../realm/body/BodyProgressionSystem'
+ import { isScopeHidden } from '../betaScope'
+ import {
+   isBreakthroughAcquisitionEnabled,
+@@ -628,6 +629,19 @@ export class BattleLootSystem {
+             // thong_mach_dan spend): beta-live progression, not the
+             // scope-hidden The Tu way - the faucet stays open.
+ 
++            // Owner ruling 2026-10-10 - essence intake cap: once the bag
++            // holds enough of an essence to retire the whole remaining
++            // chapter requirement, the drop yields nothing (post-resolve
++            // filter, no conversion, rng order untouched).
++            if (
++              this.player !== null &&
++              physiqueEssenceGradeOf(drop.itemId) !== undefined &&
++              this.deps.materialBag.getAmount(drop.itemId) >=
++                remainingEssenceNeed(this.player, drop.itemId)
++            ) {
++              break
++            }
++
+             const amount = drop.amount
+ 
+             const materialOverflow = this.deps.materialBag.add(material, amount)
+diff --git a/game/src/core/game/GameManagerRealmAdvanceOps.ts b/game/src/core/game/GameManagerRealmAdvanceOps.ts
+index 4f8c4417..858d422c 100644
+--- a/game/src/core/game/GameManagerRealmAdvanceOps.ts
++++ b/game/src/core/game/GameManagerRealmAdvanceOps.ts
+@@ -7,7 +7,7 @@ import type { PillBag } from '../pill/PillBag'
+ import type { PlayerData } from '../player/Player'
+ import { capturePlayerSnapshot, restorePlayerSnapshotInPlace } from '../player/PlayerSnapshot'
+ import type { ElementType } from '../element/ElementType'
+-import { isBetaElement, isBetaFeature, isBetaWay, isScopeHidden } from '../betaScope'
++import { isBetaElement, isBetaWay, isScopeHidden } from '../betaScope'
+ import { betaTechniqueAdmitted } from '../betaScopeSkillDomain'
+ import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
+ import { canPurchaseNode as canPurchaseNodeSystem } from '../progression/NodeSystem'
+@@ -29,21 +29,11 @@ import {
+ import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
+ import type { NotificationQueue } from './NotificationQueue'
+ import {
+-  bodyChapterEssenceGrade,
+   getBodyChapterDefinition,
+   type BodyChapterCurrency,
+   type BodyChapterId,
+ } from '../realm/body/BodyChapter'
+-import {
+-  essenceSubstitutionCoverage,
+-  planEssenceSubstitution,
+-} from '../realm/body/BodyChapterEssenceSubstitution'
+ import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
+-import {
+-  physiqueEssenceMaterialId,
+-} from '../../data/realm/PhysiqueEssence'
+-import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
+-import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
+ import { grantRealmPassive } from '../realm/RealmPassiveSystem'
+ import { CORE_REALM_LEVEL, getCurrentRealm } from '../realm/realmSystem'
+ import {
+@@ -990,98 +980,23 @@ export class GameManagerRealmAdvanceOps {
+         ? player.bodyProgression.body_refinement.completedTiers
+         : 0
+ 
+-    // M-QI-09 (QI-D4c) - downward-only essence substitution resolved at
+-    // this cost check, no exchange UI: a material-bag physique-essence
+-    // requirement counts higher-grade stacks at the locked adjacent
+-    // ratio. C2C r10#3 + r17#1 - validate -> consume -> apply: the
+-    // progression mutation is computed on a cloned probe FIRST, the
+-    // debit plan is validated (every debit satisfiable AND the change
+-    // credit committable) while the real player is untouched, bags
+-    // commit, and only then does the real state apply. Any failure
+-    // returns 0 with zero state change. The resolver owns the
+-    // namespace gate (C2C 6) - a non-essence currency takes the
+-    // legacy path where the single-currency debit cannot fail.
+-    if (bodyChapterEssenceGrade(chapter.currency) === undefined) {
+-      const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
+-      if (consumed > 0) {
+-        bag.remove(chapter.currency.id, consumed)
+-        if (chapterId === 'zhou_tian') {
+-          // HIDDEN-C - a completed 36/36 normal track is the discovery
+-          // event for the Nghich continuation (sec.12.1); the check is
+-          // itself gated on realm + lineage and stays a no-op otherwise.
+-          maybeDiscoverNghichChuTian(player)
+-        }
+-        this.emitBodyChapterInvested(player, chapterId, consumed, tiersBefore)
++    // Owner ruling 2026-10-10: the cross-grade essence fill is
++    // retired - every currency takes the same direct path (exact
++    // debit of the chapter's own currency).
++    const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
++    if (consumed > 0) {
++      bag.remove(chapter.currency.id, consumed)
++      if (chapterId === 'zhou_tian') {
++        // HIDDEN-C - a completed 36/36 normal track is the discovery
++        // event for the Nghich continuation (sec.12.1); the check is
++        // itself gated on realm + lineage and stays a no-op otherwise.
++        maybeDiscoverNghichChuTian(player)
+       }
+-      return consumed
+-    }
+-
+-    const ownedOf = (grade: PhysiqueGradeId): number => {
+-      const materialId = physiqueEssenceMaterialId(grade)
+-      return materialId === undefined
+-        ? 0
+-        : this.deps.materialBag.getAmount(materialId)
+-    }
+-    const coverage = essenceSubstitutionCoverage(chapter.currency, ownedOf)
+-    const effectiveAvailable = available + coverage
+-
+-    // JSON round-trip, NOT structuredClone: the live callers hand in a
+-    // Pinia store's reactive $state, and structuredClone throws
+-    // DataCloneError on any nested Proxy (SaveSystem's detachSaveValue
+-    // ruling). JSON stringify/parse reads through proxies at any depth.
+-    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
+-    const consumed = investBodyChapterState(probe, chapterId, effectiveAvailable, auxOwned)
+-    if (consumed <= 0) {
++      this.emitBodyChapterInvested(player, chapterId, consumed, tiersBefore)
++    } else {
+       this.maybeEmitBodyChapterLockHint(player, chapterId, available)
+-      return 0
+     }
+-
+-    const plan = planEssenceSubstitution(consumed, chapter.currency, ownedOf)
+-    if (plan === undefined) {
+-      return 0 // fail-closed: unreachable for an essence currency
+-    }
+-    const allSatisfiable = plan.debits.every((debit) =>
+-      bag.has(debit.materialId, debit.amount),
+-    )
+-    // C2C r17#2 - the whole change credit must land or the invest
+-    // fails closed: capacity is checked against the post-debit
+-    // required balance before anything commits.
+-    let changeCommittable = true
+-    if (plan.change !== undefined) {
+-      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+-      const requiredDebit = plan.debits.find(
+-        (debit) => debit.materialId === plan.change?.materialId,
+-      )
+-      const postDebitBalance =
+-        bag.getAmount(plan.change.materialId) - (requiredDebit?.amount ?? 0)
+-      changeCommittable =
+-        postDebitBalance + plan.change.amount <=
+-        (changeMaterial.stackLimit ?? MAX_STACK_AMOUNT)
+-    }
+-    if (!allSatisfiable || !changeCommittable) {
+-      return 0
+-    }
+-
+-    for (const debit of plan.debits) {
+-      bag.remove(debit.materialId, debit.amount)
+-    }
+-    if (plan.change !== undefined) {
+-      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+-      this.deps.materialBag.add(changeMaterial, plan.change.amount)
+-      // M-F-BODY-PERFECTION - the essence change credit is a live
+-      // material landing; capacity was preflighted so delivered is
+-      // the full amount.
+-      this.deps.notifyMaterialGained(plan.change.materialId, plan.change.amount)
+-    }
+-    const applied = investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
+-    if (applied > 0 && chapterId === 'zhou_tian') {
+-      // HIDDEN-C - same post-invest discovery check as the legacy path.
+-      maybeDiscoverNghichChuTian(player)
+-    }
+-    if (applied > 0) {
+-      this.emitBodyChapterInvested(player, chapterId, applied, tiersBefore)
+-    }
+-    return applied
++    return consumed
+   }
+ 
+   // One-shot per tier per session - the invest seam runs every tick,
+diff --git a/game/src/core/realm/body/BodyProgressionSystem.ts b/game/src/core/realm/body/BodyProgressionSystem.ts
+index 4b576eb2..8bab8aca 100644
+--- a/game/src/core/realm/body/BodyProgressionSystem.ts
++++ b/game/src/core/realm/body/BodyProgressionSystem.ts
+@@ -224,6 +224,27 @@ export function getBodyChapterProgress(
+   return getBodyChapterDefinition(chapterId).progress(player)
+ }
+ 
++// Owner ruling 2026-10-10 - essence intake cap: the total remaining
++// requirement of `materialId` across the chapter chain. Each consuming
++// chapter reports its own unclamped remainder (authored requirement
++// minus invested progress, not gated on current unlock/realm); the
++// award seam sums it. A material no chapter consumes needs 0 - its
++// drops cap out immediately and yield nothing.
++export function remainingEssenceNeed(player: PlayerData, materialId: string): number {
++  let need = 0
++
++  for (const chapter of BODY_CHAPTERS) {
++    const consumes = [chapter.currency, chapter.auxCurrency].some(
++      currency => currency?.bag === 'material' && currency.id === materialId,
++    )
++    if (consumes) {
++      need += chapter.remainingCurrencyNeed?.(player) ?? 0
++    }
++  }
++
++  return need
++}
++
+ // Derived body facts - the canonical reads consumers (ritual snapshot,
+ // breakthrough resolver) use instead of touching chapter state.
+ export function getBodyRefinementCompletedTiers(player: PlayerData): number {
+diff --git a/game/src/core/realm/body/BodyChapter.ts b/game/src/core/realm/body/BodyChapter.ts
+index 307cf3af..ddccd3b3 100644
+--- a/game/src/core/realm/body/BodyChapter.ts
++++ b/game/src/core/realm/body/BodyChapter.ts
+@@ -163,6 +163,12 @@ interface BodyChapterShared {
+   // amount actually consumed. Does NOT rebuild stat effects - the system
+   // dispatch owns the exactly-once rebuild after a successful mutation.
+   invest(player: PlayerData, available: number, auxOwned: number): number
++  // Owner ruling 2026-10-10 - essence intake cap: the total remaining
++  // requirement of `currency` left in this track (authored requirement
++  // minus invested progress, unclamped by unlock/capacity gates - the
++  // need is what the track can still consume). Required on chapters
++  // spending a physique-essence currency; read at the award seam.
++  remainingCurrencyNeed?: (player: PlayerData) => number
+   progress(player: PlayerData): { completed: number; total: number }
+   isComplete(player: PlayerData): boolean
+   // Chapter-owned persisted-shape validation for its own slice; emits
+@@ -288,6 +294,19 @@ export function validateBodyChapterRegistry(
+       })
+     }
+ 
++    // Owner ruling 2026-10-10 - a chapter spending a physique-essence
++    // currency must expose its remaining requirement so the intake cap
++    // at the award seam can stop credit at full need.
++    const spendsEssence = [chapter.currency, chapter.auxCurrency].some(
++      (currency) => currency !== undefined && bodyChapterEssenceGrade(currency) !== undefined,
++    )
++    if (spendsEssence && typeof chapter.remainingCurrencyNeed !== 'function') {
++      issues.push({
++        path: `${path}.remainingCurrencyNeed`,
++        message: 'essence-currency chapter must implement remainingCurrencyNeed',
++      })
++    }
++
+     const advancement = chapter.physiqueAdvancement
+ 
+     if (advancement !== undefined) {
+diff --git a/game/src/core/realm/body/BodyRefinementChapter.ts b/game/src/core/realm/body/BodyRefinementChapter.ts
+index 0195e0ee..8d35ea86 100644
+--- a/game/src/core/realm/body/BodyRefinementChapter.ts
++++ b/game/src/core/realm/body/BodyRefinementChapter.ts
+@@ -171,6 +171,25 @@ export const bodyRefinementChapter: BaseStatBodyChapter = {
+     return consumed
+   },
+ 
++  // Owner ruling 2026-10-10 - essence intake cap: remaining essence the
++  // track can still consume = sum over the open tiers of each tier's
++  // own ceil(remaining/multiplier) (same per-invest math invest()
++  // charges; talent multiplier snapshot, no realm/unlock clamp).
++  remainingCurrencyNeed(player: PlayerData): number {
++    const state = player.bodyProgression.body_refinement
++    const multiplier = getBodyRefinementProgressMultiplier(
++      player.selectedTalentIds,
++      player.talentLevels,
++    )
++    let need = 0
++    for (let i = state.completedTiers; i < TOTAL_TIERS; i++) {
++      const remaining =
++        getTierCap(i) - (i === state.completedTiers ? state.currentTierProgress : 0)
++      need += Math.ceil(remaining / multiplier)
++    }
++    return need
++  },
++
+   collectBaseStatDeltas(player: PlayerData): Partial<Record<StatType, number>> {
+     return collectTierBaseStatDeltas(player)
+   },
+diff --git a/game/src/core/realm/body/ZhouTianChapter.ts b/game/src/core/realm/body/ZhouTianChapter.ts
+index 77072fa9..2176b718 100644
+--- a/game/src/core/realm/body/ZhouTianChapter.ts
++++ b/game/src/core/realm/body/ZhouTianChapter.ts
+@@ -98,6 +98,19 @@ export const zhouTianChapter: BaseStatBodyChapter = {
+     return consumed
+   },
+ 
++  // Owner ruling 2026-10-10 - essence intake cap: remaining essence the
++  // track can still consume = sum of step costs from the current step
++  // to the last, unclamped by realm capacity (capacity gates timing,
++  // not what the track will consume).
++  remainingCurrencyNeed(player: PlayerData): number {
++    const state = player.bodyProgression.zhou_tian
++    let need = 0
++    for (let step = state.completed; step < ZHOU_TIAN_TOTAL_STEPS; step++) {
++      need += zhouTianStepCost(step)
++    }
++    return need
++  },
++
+   // Sec.11.3 - each completed step contributes its authored raw/base
+   // combat-stat reward through the chapter's baseStat channel. The map
+   // is derived on the fly from canonical state (never persisted).
