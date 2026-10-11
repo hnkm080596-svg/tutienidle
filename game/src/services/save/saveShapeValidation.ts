@@ -69,6 +69,7 @@ import { CHARACTER_CREATION_TALENT_COUNT } from '../character/CharacterCreationS
 import {
   alchemySecondsFor,
   verifyAlchemyJobReservation,
+  ALCHEMY_MAX_BATCH_QUANTITY,
   type ActiveAlchemyJob,
 } from '../../core/alchemy/AlchemySystem'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
@@ -3746,6 +3747,41 @@ function validateAlchemyJobsSave(
       seenJobIds.add(entry.jobId as string)
     }
 
+    // QUEUE REWORK - batch fields: an honest writer always persists
+    // BOTH (a pre-rework save has neither and reads as a one-unit
+    // batch). quantity must be an integer in [1,
+    // ALCHEMY_MAX_BATCH_QUANTITY], unitsDone an integer in
+    // [0, quantity) - a finished batch is never persisted, and a
+    // one-field-only record is malformed.
+    const entryQuantity = entry.quantity
+
+    const entryUnitsDone = entry.unitsDone
+
+    const batchFieldsAbsent = entryQuantity === undefined && entryUnitsDone === undefined
+
+    const effectiveQuantity = batchFieldsAbsent ? 1 : entryQuantity
+
+    let batchShapeOk = batchFieldsAbsent
+
+    if (!batchFieldsAbsent) {
+      batchShapeOk =
+        entryQuantity !== undefined &&
+        entryUnitsDone !== undefined &&
+        Number.isInteger(entryQuantity) &&
+        (entryQuantity as number) >= 1 &&
+        (entryQuantity as number) <= ALCHEMY_MAX_BATCH_QUANTITY &&
+        Number.isInteger(entryUnitsDone) &&
+        (entryUnitsDone as number) >= 0 &&
+        (entryUnitsDone as number) < (entryQuantity as number)
+
+      if (!batchShapeOk) {
+        issues.push({
+          path: `${entryPath}.quantity`,
+          message: 'quantity/unitsDone sai shape (writer luôn ghi cả cặp: 1 <= quantity <= max, 0 <= unitsDone < quantity)',
+        })
+      }
+    }
+
     // F-TC9-3: jobSuccessPercent reads roomLevelAtStart verbatim into
     // the authored success table, and building level never decreases -
     // a claim above the persisted pill_room level is a forged success
@@ -3794,16 +3830,21 @@ function validateAlchemyJobsSave(
 
     // F-A12-4: the span is the authored recipe - startJob stamps
     // completesAtMs = startedAtMs + alchemySecondsFor(recipe,
-    // roomLevelAtStart)*1000, so a mismatched span is a fabricated
-    // delivery window (shorter mints pills faster than authored).
+    // roomLevelAtStart)*1000 x quantity (QUEUE REWORK: sequential
+    // units each spend one authored duration), so a mismatched span is
+    // a fabricated delivery window (shorter mints pills faster than
+    // authored). A malformed batch shape falls back to quantity 1 -
+    // its own issue already flags it.
     if (recipe !== undefined) {
       const expectedSpanMs =
-        alchemySecondsFor(recipe, entry.roomLevelAtStart as number) * 1000
+        alchemySecondsFor(recipe, entry.roomLevelAtStart as number) *
+        1000 *
+        (batchShapeOk ? (effectiveQuantity as number) : 1)
 
       if ((entry.completesAtMs as number) - (entry.startedAtMs as number) !== expectedSpanMs) {
         issues.push({
           path: `${entryPath}.completesAtMs`,
-          message: `span không khớp authored duration (${expectedSpanMs}ms)`,
+          message: `span không khớp authored duration x batch (${expectedSpanMs}ms)`,
         })
       }
     }

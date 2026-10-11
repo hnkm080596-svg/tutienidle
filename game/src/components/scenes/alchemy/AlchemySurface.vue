@@ -227,6 +227,23 @@ const jobs = computed(() => {
 
       const totalSeconds = Math.max(1, Math.ceil((job.completesAtMs - job.startedAtMs) / 1000))
 
+      // QUEUE REWORK - order progress: rolled units + the fraction of
+      // the unit currently in the cauldron, over the whole order.
+      const quantity = Math.max(1, job.quantity ?? 1)
+
+      const unitsDone = Math.min(quantity, Math.max(0, job.unitsDone ?? 0))
+
+      const perUnitMs = Math.max(1, totalSeconds * 1000) / quantity
+
+      const currentUnitStart = job.startedAtMs + unitsDone * perUnitMs
+
+      const currentUnitFraction =
+        unitsDone >= quantity
+          ? 1
+          : Math.min(1, Math.max(0, (nowMs.value - currentUnitStart) / perUnitMs))
+
+      const remainingMinutes = Math.ceil(remainingMs / 60000)
+
       return {
         id: job.jobId,
 
@@ -236,9 +253,13 @@ const jobs = computed(() => {
 
         icon: pillIconFor(job),
 
-        progress: Math.min(100, (1 - remainingMs / (totalSeconds * 1000)) * 100),
+        progress: Math.min(100, ((unitsDone + currentUnitFraction) / quantity) * 100),
 
-        remaining: `${Math.ceil(remainingMs / 60000)}p`,
+        remaining: quantity > 1 ? `${unitsDone}/${quantity} · ${remainingMinutes}p` : `${remainingMinutes}p`,
+
+        unitsDone,
+
+        quantity,
       }
     })
 })

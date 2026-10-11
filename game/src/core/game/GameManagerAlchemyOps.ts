@@ -118,6 +118,10 @@ export class GameManagerAlchemyOps {
   /**
    * Bat dau luyen dan - reserve nguyen lieu ATOMIC (S8.2); slot job theo
    * concurrent_job_slots effect cua pill_room (mac dinh 1).
+   * QUEUE REWORK (ruling 2, 2026-10-11) - KHONG co quantity selector:
+   * moi lan goi = +1 vien. Cung loai voi order cuoi hang cho thi merge
+   * vao order do (quantity + 1, khong ton slot moi); khac loai thi tao
+   * order o slot tiep theo. Domain enqueueJob lo phan merge.
    */
   startAlchemyJob(
     recipeId: string,
@@ -166,7 +170,7 @@ export class GameManagerAlchemyOps {
     // check inside startJob validates the scaled price.
     const costMultiplier = getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.costMultiplier ?? 1
 
-    const started = this.deps.alchemySystem.startJob(
+    const started = this.deps.alchemySystem.enqueueJob(
       recipe,
 
       herbMaterialId,
@@ -198,8 +202,43 @@ export class GameManagerAlchemyOps {
     return started
   }
 
+  /**
+   * QUEUE REWORK - huy order: domain refund herb/go/specials cua cac vien
+   * CHUA BAT DAU; ops mirror phan spirit stone (stone id khong nam trong
+   * reservation - cung split voi duong charge: domain dot lieu, ops tru
+   * stone). Recipe khong resolve duoc (data churn) thi khong suy ra
+   * stone id -> bo qua refund stone, lieu trong lo van hoan binh thuong.
+   */
   cancelAlchemyJob(jobId: string): boolean {
-    return this.deps.alchemySystem.cancelJob(jobId)
+    const job = this.deps.alchemySystem.getJobs().find((candidate) => candidate.jobId === jobId)
+
+    const cancelled = this.deps.alchemySystem.cancelJob(
+      jobId,
+      this.deps.materialBag,
+      this.deps.materialRegistry,
+      Date.now(),
+    )
+
+    if (!cancelled.ok || cancelled.unprocessedUnits <= 0 || !job) {
+      return cancelled.ok
+    }
+
+    const recipe = this.deps.alchemyRecipesById.get(job.recipeId)
+
+    if (!recipe) {
+      return true
+    }
+
+    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(recipe.realmId))
+
+    if (this.deps.materialRegistry.has(spiritStoneId)) {
+      this.deps.materialBag.add(
+        this.deps.materialRegistry.get(spiritStoneId),
+        job.reservation.spiritStoneCost * cancelled.unprocessedUnits,
+      )
+    }
+
+    return true
   }
 
   /**

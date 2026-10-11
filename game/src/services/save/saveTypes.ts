@@ -451,6 +451,15 @@ export interface AlchemyJobSave {
 
   roomLevelAtStart: number
 
+  /**
+   * QUEUE REWORK - one queue entry = a batch of `quantity` pills brewed
+   * sequentially; `unitsDone` = units already rolled/delivered. Absent
+   * on pre-rework saves = a one-unit batch (legacy record, still valid).
+   */
+  quantity?: number
+
+  unitsDone?: number
+
   reservation: AlchemyJobReservationSave
 }
 

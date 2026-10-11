@@ -83,4 +83,10 @@ export interface AlchemyJobDisplay {
   readonly progress: number
 
   readonly remaining: string
+
+  /** QUEUE REWORK - units already rolled/delivered in this batch. */
+  readonly unitsDone?: number
+
+  /** QUEUE REWORK - total units in this batch (order size). */
+  readonly quantity?: number
 }

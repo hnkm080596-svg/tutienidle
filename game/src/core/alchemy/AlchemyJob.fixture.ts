@@ -32,6 +32,10 @@ export function alchemyJobFixture(
     startedAtMs: number
     completesAtMs: number
     roomLevelAtStart: number
+    // QUEUE REWORK - batch fields; omit both for a pre-rework
+    // (one-unit) record, the digest folds whichever shape is given.
+    quantity?: number
+    unitsDone?: number
   },
   reservation?: Partial<Omit<AlchemyJobReservation, 'digest'>>,
   recipe?: AlchemyRecipe,

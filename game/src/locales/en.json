@@ -1587,7 +1587,7 @@
     "outcomeChanceOnly": "{chance}% chance of {extra}",
     "duration": "Duration: ~{minutes} min",
     "jobs": "Brewing",
-    "cancelJob": "Cancel (materials lost)",
+    "cancelJob": "Cancel (refund unbrewed materials)",
     "gradeUnknown": "Unknown",
     "reason": {
       "not_found": "Recipe not found",
@@ -1600,6 +1600,7 @@
       "missing_fuel_wood": "Not enough fuel wood matching the herb's realm and age",
       "missing_spirit_stone": "Not enough Spirit Stones",
       "missing_special_ingredient": "Missing the recipe's special ingredient",
+      "invalid_quantity": "Invalid pill order quantity",
       "fallback": "Cannot start brewing",
       "scope_hidden": "This recipe is outside the beta scope",
       "invalid_clock": "The system clock is misbehaving — try again in a moment"

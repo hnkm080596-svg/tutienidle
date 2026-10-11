@@ -17,6 +17,7 @@ import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { mulberry32 } from '../production/ProductionBalance'
 import { betaRecipeFamilyOfId, scopeHiddenPillFamilyOfId } from '../betaScope'
 import { witnessDigest } from '../math/witnessDigest'
+import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 
 /** Bien the nguyen lieu cua thao - stack cu the trong Bag. */
 export interface AlchemyHerbVariant {
@@ -103,6 +104,27 @@ export interface ActiveAlchemyJob {
   roomLevelAtStart: number
 
   /**
+   * QUEUE REWORK (2026-10-11) - a queue entry is one ORDER of
+   * `quantity` pills brewed sequentially, per-unit deadline
+   * `startedAtMs + (index+1) * perUnitMs` where
+   * `perUnitMs = (completesAtMs - startedAtMs) / quantity`. Every unit
+   * rolls the authored success split independently at its own deadline.
+   * OPTIONAL: records persisted before the rework carry neither field
+   * and mean exactly {quantity: 1, unitsDone: 0} - the deadline math
+   * defaults them rather than mutating the record, so a legacy job
+   * restores verbatim (stamps + legacy digest untouched).
+   */
+  quantity?: number
+
+  /**
+   * Units whose roll already ran and whose pills already delivered
+   * (progress = unitsDone/quantity). Persisted because delivery is
+   * bookkeeping - a missing counter would re-deliver rolled units.
+   * Absent = 0 (see quantity).
+   */
+  unitsDone?: number
+
+  /**
    * F-ALCH-JOB-FORGE - the reservation witness startJob stamps the
    * same moment it burns the inputs. Settle and save validation replay
    * it: a job that never ran the atomic reserve cannot mint the pill.
@@ -147,14 +169,21 @@ export interface AlchemyJobReservation {
 }
 
 /** Everything the reservation digest binds - job identity plus the
- * reserved inputs, in one fixed order shared by writer and verifier. */
+ * reserved inputs, in one fixed order shared by writer and verifier.
+ * QUEUE REWORK: batch fields fold in too - `quantity` decides how much
+ * the batch reserved and `unitsDone` how much already delivered, so
+ * both are mint/refund-relevant. Jobs persisted before the rework
+ * (fields absent on the raw save entry) replay under the legacy fold
+ * exactly as before - a legacy record IS a one-unit batch. */
 export function alchemyJobReservationDigest(
   job: Pick<
     ActiveAlchemyJob,
     'jobId' | 'recipeId' | 'pillId' | 'herbMaterialId' | 'startedAtMs' | 'completesAtMs' | 'roomLevelAtStart'
-  >,
+  > & { quantity?: number; unitsDone?: number },
   reservation: Omit<AlchemyJobReservation, 'digest'>,
 ): number {
+  const batchFields = job.quantity === undefined ? [] : [job.quantity, job.unitsDone ?? 0]
+
   return witnessDigest([
     job.jobId,
     job.recipeId,
@@ -163,6 +192,7 @@ export function alchemyJobReservationDigest(
     job.startedAtMs,
     job.completesAtMs,
     job.roomLevelAtStart,
+    ...batchFields,
     reservation.woodId,
     reservation.fuelWoodAmount,
     reservation.spiritStoneCost,
@@ -290,6 +320,12 @@ export interface AlchemySettlementEvent {
 
   /** R9 (AR-34) receipt - amount lost to a full pill bag (0 = fit). */
   overflow: number
+
+  /** QUEUE REWORK - units rolled in this settle pass (batch aggregate). */
+  unitsProcessed?: number
+
+  /** QUEUE REWORK - true when this pass finished the whole batch. */
+  jobDone?: boolean
 }
 
 export function jobSuccessPercent(
@@ -337,6 +373,59 @@ export function alchemySecondsFor(recipe: AlchemyRecipe, roomLevel: number): num
   return Math.ceil(recipe.baseDurationSeconds / multiplier)
 }
 
+/**
+ * QUEUE REWORK - a queue entry is one batch of up to this many pills.
+ * Bound matches one material stack (StackLimits): a bigger batch could
+ * never be funded by the bag anyway, so it can only come from a crafted
+ * save or a bad caller - deny it.
+ */
+export const ALCHEMY_MAX_BATCH_QUANTITY = MAX_STACK_AMOUNT
+
+/**
+ * Units whose per-unit deadline has passed at `nowMs` - the sequential
+ * model: unit k (0-based) is due at startedAtMs + (k+1) * perUnitMs with
+ * perUnitMs = span/quantity. Deadline-counted, not tick-bookkeeping:
+ * cancel treats deadline-passed units as already burned even when no
+ * tick has run their roll yet (anti-exploit - no roll dodging by
+ * cancelling inside the window).
+ */
+export function unitsProcessedAt(
+  job: Pick<ActiveAlchemyJob, 'startedAtMs' | 'completesAtMs' | 'quantity'>,
+  nowMs: number,
+): number {
+  const quantity = job.quantity ?? 1
+  const perUnitMs = (job.completesAtMs - job.startedAtMs) / quantity
+
+  let due = 0
+
+  while (due < quantity && job.startedAtMs + (due + 1) * perUnitMs <= nowMs) {
+    due += 1
+  }
+
+  return due
+}
+
+/**
+ * Units that already STARTED brewing at `nowMs` - sequential furnace:
+ * unit k (0-based) enters the cauldron at startedAtMs + k * perUnitMs.
+ * Cancel refunds only units NOT yet started (owner ruling 2026-10-11):
+ * a unit sitting in the cauldron mid-brew is already burned, same as a
+ * deadline-passed one.
+ */
+export function unitsStartedAt(
+  job: Pick<ActiveAlchemyJob, 'startedAtMs' | 'completesAtMs' | 'quantity'>,
+  nowMs: number,
+): number {
+  if (nowMs < job.startedAtMs) {
+    return 0
+  }
+
+  const quantity = job.quantity ?? 1
+  const perUnitMs = (job.completesAtMs - job.startedAtMs) / quantity
+
+  return Math.min(quantity, Math.floor((nowMs - job.startedAtMs) / perUnitMs) + 1)
+}
+
 let jobCounter = 0
 
 function nextJobId(): string {
@@ -361,6 +450,19 @@ export function resolveFuelWood(
   const candidate = buildProfessionMaterialId('wood', realmId, requiredAge)
 
   return bag.has(candidate, amount) ? candidate : null
+}
+
+/**
+ * QUEUE REWORK - per-unit special-ingredient profile equality for the
+ * enqueue merge check: same recipe means same specials in practice,
+ * but the comparison is structural so a recipe edit mid-queue can
+ * never fold mismatched inputs into an existing order.
+ */
+function sameSpecialIngredients(
+  a: readonly { materialId: string; amount: number }[],
+  b: readonly { materialId: string; amount: number }[],
+): boolean {
+  return a.length === b.length && a.every((entry, index) => entry.materialId === b[index]?.materialId && entry.amount === b[index]?.amount)
 }
 
 export class AlchemySystem {
@@ -409,6 +511,40 @@ export class AlchemySystem {
       ) {
         return []
       }
+      // QUEUE REWORK - batch fields: a record WITHOUT them is a
+      // pre-rework save (a one-unit order) and restores VERBATIM -
+      // stamps and legacy digest untouched; the deadline math defaults
+      // quantity/unitsDone to 1/0 instead of rewriting the record.
+      // Exactly-one-absent or impossible values are crafted (an honest
+      // writer emits both fields or neither): drop like any malformed
+      // record.
+      const batchFieldsAbsent = job.quantity === undefined && job.unitsDone === undefined
+
+      if (
+        !batchFieldsAbsent &&
+        (!Number.isInteger(job.quantity) ||
+          (job.quantity ?? 0) < 1 ||
+          (job.quantity ?? 0) > ALCHEMY_MAX_BATCH_QUANTITY ||
+          !Number.isInteger(job.unitsDone) ||
+          (job.unitsDone ?? -1) < 0 ||
+          (job.unitsDone ?? 0) >= (job.quantity ?? 0))
+      ) {
+        return []
+      }
+
+      // r28-COR-Low: the fold reads reservation.specialIngredients.map
+      // - only re-derive when the witness is actually foldable, or a
+      // defined-but-malformed reservation throws before the normalize
+      // arm below can run.
+      const resSpecials =
+        typeof job.reservation === 'object' && job.reservation !== null
+          ? job.reservation.specialIngredients
+          : undefined
+
+      const foldable =
+        Array.isArray(resSpecials) &&
+        resSpecials.every((special) => typeof special === 'object' && special !== null)
+
       // r26-COR-1/AUT-1: a job post-dating the restore clock is
       // impossible-authored - startedAtMs is a began-time pinned
       // <= playerLastSavedAt at admission, so only a uniformly-shifted
@@ -433,17 +569,7 @@ export class AlchemySystem {
         // the witness - re-derive it over the shifted stamps so the
         // witness still replays. Safe: an attacker could always
         // self-consistent-digest (documented residual).
-        // r28-COR-Low: the fold reads reservation.specialIngredients.map
-        // - only re-derive when the witness is actually foldable, or a
-        // defined-but-malformed reservation throws before the normalize
-        // arm below can run (shift arm vs verbatim arm divergence).
-        const resSpecials =
-          typeof job.reservation === 'object' && job.reservation !== null
-            ? job.reservation.specialIngredients
-            : undefined
-        const foldable =
-          Array.isArray(resSpecials) &&
-          resSpecials.every((special) => typeof special === 'object' && special !== null)
+        // (foldable hoisted - the batch-field normalize below shares it)
         job = foldable
           ? {
               ...shifted,
@@ -453,7 +579,9 @@ export class AlchemySystem {
               },
             }
           : shifted
+
       }
+
       return [
         {
           ...job,
@@ -502,6 +630,10 @@ export class AlchemySystem {
     // M3 (talent v4 sec4.2) - Hoa Hau Thong Than counter-cost: multiplies
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
+    // QUEUE REWORK - batch size: one queue entry brews `quantity` units
+    // sequentially, each rolling its own deadline. Defaults to 1 so
+    // legacy call sites mint the same one-unit job as before.
+    quantity = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
     // r29-INT-2: nowMs guard parity with tick - a non-finite or
     // out-of-domain clock bakes a NaN/huge deadline
@@ -512,15 +644,28 @@ export class AlchemySystem {
     // r30-AUT-3: the domain is [0, 2^52) - the minted stamps must fit
     // the persisted timestamp bound, and a negative clock would mint
     // an already-due job (free instant pill).
+    if (!Number.isFinite(nowMs) || nowMs < 0) {
+      return { ok: false, reason: 'invalid_clock' }
+    }
+
+    // QUEUE REWORK - batch size is persisted and folds into the
+    // reservation digest, so validate it at origination: a non-integer,
+    // non-positive or over-cap quantity could never come from an honest
+    // caller (UI clamps to affordable materials, capped by the stack
+    // bound the reservation itself obeys).
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > ALCHEMY_MAX_BATCH_QUANTITY) {
+      return { ok: false, reason: 'invalid_quantity' }
+    }
+
+    const perUnitSeconds = alchemySecondsFor(recipe, roomLevel)
+
+    const batchSeconds = perUnitSeconds * quantity
+
     // r31-COR-F-HEADROOM: headroom on the minted due too - completesAtMs
     // = nowMs + authored span, so a clock within span of the bound mints
     // a stamp the next save write self-refuses (wedge). The !(...) form
-    // denies NaN spans as well.
-    if (
-      !Number.isFinite(nowMs) ||
-      nowMs < 0 ||
-      !(nowMs + Math.max(0, alchemySecondsFor(recipe, roomLevel) * 1000) < 2 ** 52)
-    ) {
+    // denies NaN spans as well. QUEUE REWORK: span scales by quantity.
+    if (!(nowMs + Math.max(0, batchSeconds * 1000) < 2 ** 52)) {
       return { ok: false, reason: 'invalid_clock' }
     }
 
@@ -564,8 +709,15 @@ export class AlchemySystem {
     // Counter-cost is a surcharge - clamp >= 1 so bad data can't make jobs free.
     const costScale = Math.max(1, costMultiplier)
 
-    const fuelWoodAmount = Math.ceil(recipe.fuelWoodAmount * costScale)
-    const spiritStoneCost = Math.ceil(recipe.spiritStoneCost * costScale)
+    // QUEUE REWORK - reservation stays PER-UNIT (digest-bound amounts
+    // cancel/tick refund or burn one unit at a time); the batch checks
+    // and burns the per-unit amounts x quantity up front.
+    const perUnitFuelWoodAmount = Math.ceil(recipe.fuelWoodAmount * costScale)
+    const perUnitSpiritStoneCost = Math.ceil(recipe.spiritStoneCost * costScale)
+
+    const fuelWoodAmount = perUnitFuelWoodAmount * quantity
+    const spiritStoneCost = perUnitSpiritStoneCost * quantity
+    const herbAmount = recipe.herbAmount * quantity
 
     // 6E - nhien lieu CUNG age voi thao da chon (variant luon co age
     // theo type - post-C2 moi thao deu `profession.age`).
@@ -575,7 +727,7 @@ export class AlchemySystem {
       return { ok: false, reason: 'missing_fuel_wood' }
     }
 
-    if (!bag.has(herbMaterialId, recipe.herbAmount)) {
+    if (!bag.has(herbMaterialId, herbAmount)) {
       return { ok: false, reason: 'missing_herb' }
     }
 
@@ -586,22 +738,25 @@ export class AlchemySystem {
     // Nguyen lieu dac biet (spec dot-pha-loi-kiep sec4.1b) - check du
     // TAT CA truoc khi reserve bat cu thu gi (giu atomic sec7.2).
     for (const special of recipe.specialIngredients ?? []) {
-      if (!bag.has(special.materialId, special.amount)) {
+      if (!bag.has(special.materialId, special.amount * quantity)) {
         return { ok: false, reason: 'missing_special_ingredient' }
       }
     }
 
     // Reserve atomic - tru toan bo sau khi moi check pass.
-    bag.remove(herbMaterialId, recipe.herbAmount)
+    bag.remove(herbMaterialId, herbAmount)
 
     bag.remove(woodId, fuelWoodAmount)
 
     for (const special of recipe.specialIngredients ?? []) {
-      bag.remove(special.materialId, special.amount)
+      bag.remove(special.materialId, special.amount * quantity)
     }
 
     const jobId = nextJobId()
-    const completesAtMs = nowMs + alchemySecondsFor(recipe, roomLevel) * 1000
+    const completesAtMs = nowMs + batchSeconds * 1000
+    // Reservation keeps PER-UNIT amounts (single source the per-unit
+    // settle and the partial-cancel refund both replay); quantity binds
+    // the batch through the digest fold on the job side.
     const specialIngredients = (recipe.specialIngredients ?? []).map((special) => ({ ...special }))
 
     // F-ALCH-JOB-FORGE - stamp the reservation witness at the same
@@ -609,8 +764,8 @@ export class AlchemySystem {
     // produce this record.
     const reservation: AlchemyJobReservation = {
       woodId,
-      fuelWoodAmount,
-      spiritStoneCost,
+      fuelWoodAmount: perUnitFuelWoodAmount,
+      spiritStoneCost: perUnitSpiritStoneCost,
       herbAmount: recipe.herbAmount,
       specialIngredients,
       costScale,
@@ -623,11 +778,13 @@ export class AlchemySystem {
           startedAtMs: nowMs,
           completesAtMs,
           roomLevelAtStart: roomLevel,
+          quantity,
+          unitsDone: 0,
         },
         {
           woodId,
-          fuelWoodAmount,
-          spiritStoneCost,
+          fuelWoodAmount: perUnitFuelWoodAmount,
+          spiritStoneCost: perUnitSpiritStoneCost,
           herbAmount: recipe.herbAmount,
           specialIngredients,
           costScale,
@@ -643,26 +800,227 @@ export class AlchemySystem {
       startedAtMs: nowMs,
       completesAtMs,
       roomLevelAtStart: roomLevel,
+      quantity,
+      unitsDone: 0,
       reservation,
     })
 
-    // Caller deducts exactly the cost validated here - single formula.
+    // Caller deducts exactly the cost validated here - the batch total
+    // (per-unit cost x quantity), single formula.
     return { ok: true, spiritStoneCost }
   }
 
-  /** Huy job - nguyen lieu da dot khong hoan tra (lo da khoi dong). */
-  cancelJob(jobId: string): boolean {
-    const before = this.jobs.length
+  /**
+   * QUEUE REWORK (owner ruling 2026-10-11) - the player-facing enqueue
+   * path: every "Luyen Dan" click reserves ONE unit immediately. If the
+   * LAST queue entry is the same order (same recipe + herb variant +
+   * room level + identical per-unit cost profile) the click merges into
+   * it (+1 quantity, deadline span extends by one per-unit) instead of
+   * occupying a new slot - A B A queues three entries because the last
+   * entry before the third click is B. A merge is denied only by an
+   * exhausted batch cap or timestamp headroom, in which case the click
+   * falls through to a fresh order.
+   *
+   * Merge safety: the order's reservation stores PER-UNIT amounts, so
+   * refund/settle replay is unchanged by quantity growth; the digest
+   * is re-folded over the extended record. Merge requires the same
+   * resolved inputs - a room upgrade or talent change between clicks
+   * produces a different cost profile and lands as a NEW order (the
+   * new unit can never inherit stale pricing/timing).
+   *
+   * Returns the same contract as startJob plus `merged` so callers can
+   * distinguish extend-from-create if they ever need to.
+   */
+  enqueueJob(
+    recipe: AlchemyRecipe,
+    herbMaterialId: string,
+    bag: MaterialBag,
+    registry: MaterialRegistry,
+    spiritStone: number,
+    roomLevel: number,
+    nowMs: number,
+    maxConcurrentJobs: number,
+    costMultiplier = 1,
+  ): { ok: boolean; reason?: string; spiritStoneCost?: number; merged?: boolean } {
+    // Same origination denials as startJob BEFORE any merge - a parked
+    // dormant-family order at the tail must not absorb clicks (the
+    // domain fails closed at every origination path), and a bad clock
+    // never reaches the amount arithmetic below.
+    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
+      return { ok: false, reason: 'invalid_clock' }
+    }
 
-    this.jobs = this.jobs.filter((job) => job.jobId !== jobId)
+    if (betaRecipeFamilyOfId(recipe.id) === null) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
 
-    return this.jobs.length < before
+    if (recipe.retired === true) {
+      return { ok: false, reason: 'retired' }
+    }
+
+    const variant = recipe.herbVariants.find((candidate) => candidate.materialId === herbMaterialId)
+
+    if (!variant || !registry.has(herbMaterialId)) {
+      return { ok: false, reason: 'wrong_herb' }
+    }
+
+    const last = this.jobs[this.jobs.length - 1]
+
+    const mergeCandidate =
+      last !== undefined &&
+      last.recipeId === recipe.id &&
+      last.herbMaterialId === herbMaterialId &&
+      last.roomLevelAtStart === roomLevel &&
+      (last.quantity ?? 1) < ALCHEMY_MAX_BATCH_QUANTITY
+
+    if (mergeCandidate) {
+      // Compute this click's per-unit cost profile the same way
+      // startJob derives it - merge only when the order's reservation
+      // already describes exactly these inputs.
+      const perUnitSeconds = alchemySecondsFor(recipe, roomLevel)
+      const costScale = Math.max(1, costMultiplier)
+      const perUnitFuelWoodAmount = Math.ceil(recipe.fuelWoodAmount * costScale)
+      const perUnitSpiritStoneCost = Math.ceil(recipe.spiritStoneCost * costScale)
+      const perUnitMs = perUnitSeconds * 1000
+
+      const mergeable =
+        perUnitFuelWoodAmount === last.reservation.fuelWoodAmount &&
+        perUnitSpiritStoneCost === last.reservation.spiritStoneCost &&
+        recipe.herbAmount === last.reservation.herbAmount &&
+        costScale === last.reservation.costScale &&
+        sameSpecialIngredients(recipe.specialIngredients ?? [], last.reservation.specialIngredients) &&
+        last.completesAtMs + perUnitMs < 2 ** 52
+
+      if (mergeable) {
+        const woodId = resolveFuelWood(bag, recipe.fuelWoodRealmId, perUnitFuelWoodAmount, variant.age)
+
+        // Burn this click's single-unit inputs atomically before the
+        // record grows - same all-checks-then-remove order as startJob.
+        if (!woodId) {
+          return { ok: false, reason: 'missing_fuel_wood' }
+        }
+
+        if (!bag.has(herbMaterialId, recipe.herbAmount)) {
+          return { ok: false, reason: 'missing_herb' }
+        }
+
+        if (spiritStone < perUnitSpiritStoneCost) {
+          return { ok: false, reason: 'missing_spirit_stone' }
+        }
+
+        for (const special of recipe.specialIngredients ?? []) {
+          if (!bag.has(special.materialId, special.amount)) {
+            return { ok: false, reason: 'missing_special_ingredient' }
+          }
+        }
+
+        bag.remove(herbMaterialId, recipe.herbAmount)
+        bag.remove(woodId, perUnitFuelWoodAmount)
+
+        for (const special of recipe.specialIngredients ?? []) {
+          bag.remove(special.materialId, special.amount)
+        }
+
+        const quantity = (last.quantity ?? 1) + 1
+        const extended: ActiveAlchemyJob = {
+          ...last,
+          quantity,
+          unitsDone: last.unitsDone ?? 0,
+          completesAtMs: last.completesAtMs + perUnitMs,
+        }
+
+        extended.reservation = {
+          ...last.reservation,
+          digest: alchemyJobReservationDigest(extended, last.reservation),
+        }
+
+        this.jobs[this.jobs.length - 1] = extended
+
+        return { ok: true, spiritStoneCost: perUnitSpiritStoneCost, merged: true }
+      }
+    }
+
+    const created = this.startJob(
+      recipe,
+      herbMaterialId,
+      bag,
+      registry,
+      spiritStone,
+      roomLevel,
+      nowMs,
+      maxConcurrentJobs,
+      costMultiplier,
+      1,
+    )
+
+    return { ...created, merged: false }
   }
 
   /**
-   * Settle job hoan thanh theo cong thuc sec8.3: luon nhan guaranteedPills,
-   * roll mot lan theo extraPillChance de nhan them mot vien. Idempotent -
-   * settle xoa job truoc khi cong Bag.
+   * QUEUE REWORK - huy mot batch: refund chi cac vien CHUA DOT
+   * (deadline chua den luc huy); vien da qua deadline coi nhu lo da
+   * dot - ke ca chua toi tick roll - nen khong hoan (chong exploit ne
+   * roll). Spirit stone khong nam trong reservation ids -> caller
+   * (ops layer) tu refund phan stone cua so unprocessed.
+   * Returns unprocessedUnits so the caller mirrors the stone refund.
+   */
+  cancelJob(
+    jobId: string,
+    bag: MaterialBag,
+    registry: MaterialRegistry,
+    nowMs: number = Date.now(),
+  ): { ok: true; unprocessedUnits: number } | { ok: false } {
+    const job = this.jobs.find((candidate) => candidate.jobId === jobId)
+
+    if (!job) {
+      return { ok: false }
+    }
+
+    // Clock out of the persisted domain cannot count deadlines - deny
+    // the whole cancel rather than refund under a bogus timestamp
+    // (refund is mint-adjacent: bad clock = deny direction).
+    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
+      return { ok: false }
+    }
+
+    const unprocessedUnits = (job.quantity ?? 1) - unitsStartedAt(job, nowMs)
+
+    if (unprocessedUnits > 0) {
+      const refund = (materialId: string, amount: number) => {
+        if (amount <= 0) {
+          return
+        }
+
+        // The reservation already proved these ids were reservable at
+        // start; a registry miss mid-session can only come from data
+        // churn - skip that line (same deny direction as settle).
+        if (!registry.has(materialId)) {
+          return
+        }
+
+        bag.add(registry.get(materialId), amount * unprocessedUnits)
+      }
+
+      refund(job.herbMaterialId, job.reservation.herbAmount)
+
+      refund(job.reservation.woodId, job.reservation.fuelWoodAmount)
+
+      for (const special of job.reservation.specialIngredients) {
+        refund(special.materialId, special.amount)
+      }
+    }
+
+    this.jobs = this.jobs.filter((candidate) => candidate.jobId !== jobId)
+
+    return { ok: true, unprocessedUnits }
+  }
+
+  /**
+   * Settle theo cong thuc sec8.3 TUNG VIEN: moi unit qua deadline roll
+   * rieng (guaranteedPills + mot roll extraPillChance), mint tung vien -
+   * khong con job mint ca batch mot lan (QUEUE REWORK). unitsDone la
+   * bookkeeping da giao; event gap gop ket qua cac unit roll trong mot
+   * pass de khong spam toast. Idempotent - unit da unitsDone khong roll lai.
    */
   tick(
     nowMs: number,
@@ -688,14 +1046,6 @@ export class AlchemySystem {
     const remaining: ActiveAlchemyJob[] = []
 
     for (const job of this.jobs) {
-      if (nowMs < job.completesAtMs) {
-        remaining.push(job)
-
-        continue
-      }
-
-      const recipe = this.recipeLookup?.(job.recipeId)
-
       // BETA SCOPE LOCK - a carried dormant-family job stays inert at
       // the delivery seam: startJob gates origination but restore and
       // settle used to trust persisted intent. The record parks (data
@@ -711,6 +1061,21 @@ export class AlchemySystem {
         continue
       }
 
+      // QUEUE REWORK - sequential units: roll only the units whose
+      // per-unit deadline already passed (deadline math, not
+      // bookkeeping), minus the units already delivered.
+      const unitsDue = unitsProcessedAt(job, nowMs)
+
+      const unitsToRoll = unitsDue - (job.unitsDone ?? 0)
+
+      if (unitsToRoll <= 0) {
+        remaining.push(job)
+
+        continue
+      }
+
+      const recipe = this.recipeLookup?.(job.recipeId)
+
       // F-A7-3: settle re-derives the deliverable from the authored
       // recipe - job.pillId is only a denormalized snapshot, so a forged
       // job claiming a different pill can never mint it.
@@ -722,6 +1087,8 @@ export class AlchemySystem {
         // khong co event nao (review 2026-08-28). Gio phat event that bai de
         // UI thong bao; nguyen lieu da dot KHONG hoan tra (job coi nhu luyen
         // that bai - dung semantic sec8.3, khong tao refund exploit).
+        // Batch: the order cannot continue without its recipe - drop the
+        // whole entry (remaining units' inputs stay burned, deny).
         this.pendingEvents.push({
           jobId: job.jobId,
           pillId: job.pillId,
@@ -729,6 +1096,8 @@ export class AlchemySystem {
           success: false,
           delivered: 0,
           overflow: 0,
+          unitsProcessed: 0,
+          jobDone: true,
         })
 
         continue
@@ -748,6 +1117,8 @@ export class AlchemySystem {
           success: false,
           delivered: 0,
           overflow: 0,
+          unitsProcessed: 0,
+          jobDone: true,
         })
 
         continue
@@ -759,37 +1130,67 @@ export class AlchemySystem {
 
       const extraPillChance = totalPercent % 100
 
-      let pills = guaranteedPills
+      // QUEUE REWORK - each due unit rolls independently (owner ruling:
+      // mint per unit, never the whole batch at once). The settle pass
+      // aggregates the results into one event so a long-offline batch
+      // does not spam one toast per pill.
+      let pills = 0
 
-      if (random() * 100 < extraPillChance) {
-        pills += 1
+      let delivered = 0
+
+      let overflow = 0
+
+      for (let unit = 0; unit < unitsToRoll; unit += 1) {
+        let unitPills = guaranteedPills
+
+        if (random() * 100 < extraPillChance) {
+          unitPills += 1
+        }
+
+        unitPills = Math.floor(unitPills * Math.max(0, pillYieldMultiplier))
+
+        if (unitPills > 0) {
+          // R9 (AR-34): surface the delivery receipt instead of ignoring it.
+          const unitOverflow = pillBag.add(pill as Parameters<typeof pillBag.add>[0], unitPills)
+
+          delivered += unitPills - unitOverflow
+
+          overflow += unitOverflow
+        }
+
+        pills += unitPills
       }
 
-      pills = Math.floor(pills * Math.max(0, pillYieldMultiplier))
+      const unitsDone = unitsDue
 
-      if (pills > 0) {
-        const overflow = pillBag.add(pill as Parameters<typeof pillBag.add>[0], pills)
+      const jobDone = unitsDone >= (job.quantity ?? 1)
 
-        // R9 (AR-34): surface the delivery receipt instead of ignoring it.
-        this.pendingEvents.push({
-          jobId: job.jobId,
-          pillId: recipe.pillId,
-          pills,
-          success: pills > 0,
-          delivered: pills - overflow,
-          overflow,
+      // The digest folds unitsDone - re-derive it over the advanced
+      // record so the witness still replays next settle (same rule as
+      // the restore shift arm). quantity is stamped too: a settled
+      // legacy record becomes fully batch-shaped (the save validator
+      // requires both-or-neither).
+      if (!jobDone) {
+        const advanced = { ...job, quantity: job.quantity ?? 1, unitsDone }
+
+        remaining.push({
+          ...advanced,
+          reservation: {
+            ...job.reservation,
+            digest: alchemyJobReservationDigest(advanced, job.reservation),
+          },
         })
-
-        continue
       }
 
       this.pendingEvents.push({
         jobId: job.jobId,
-        pillId: job.pillId,
+        pillId: recipe.pillId,
         pills,
         success: pills > 0,
-        delivered: 0,
-        overflow: 0,
+        delivered,
+        overflow,
+        unitsProcessed: unitsToRoll,
+        jobDone,
       })
     }
 
