@@ -8,6 +8,14 @@ import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
+import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
+import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
+import { useDialogFocus } from '@/composables/useDialogFocus'
+import { useUiStore } from '@/stores/ui'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import { formatStat } from '@/core/stats/StatLabels'
 import { formatDuration } from '@/core/format/formatDuration'
@@ -278,6 +286,31 @@ function assign(row: SiteRow, count: number) {
 
 const OUTPOST_ID = 'gathering_outpost'
 
+// Landscape art port (2026-10-11): panel gio tu chu chrome giay tren
+// SceneDesignCanvas overlay nhu cac paper surface anh em - khong con
+// nam trong imperial scroll. Close contract giong scene khac: click
+// ngoai sheet hoac Escape -> closeHomeOverlays.
+const ui = useUiStore()
+
+const sceneRef = ref<HTMLElement | null>(null)
+
+useDialogFocus(sceneRef, () => true, { onEscape: () => ui.closeHomeOverlays() })
+
+function closeScene() {
+  ui.closeHomeOverlays()
+}
+
+// Building identity bom thang vao heading trong sheet (preview: icon +
+// ten 'Khai Vat Duong' + 'Cap x/9' + intro) thay dai #header cu cua
+// scroll - cung read-model useBuildingHeaderState.
+const outpostHeader = useBuildingHeaderState(ref(OUTPOST_ID))
+
+const paperSheet = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
+
+const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navigation-production-v2.png')
+
+const veinIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navigation-exploration-v2.png')
+
 const outpostInstance = computed(() => {
   stateVersion.value
 
@@ -302,6 +335,12 @@ const linMachRatePerMinute = computed(() =>
   outpostInstance.value ? gameManager.buildingOps.getBuildingRatePerMinute(outpostInstance.value.instanceId) : 0,
 )
 
+// Fill % cho ong nang luong preview (EquipmentEnergyTube an 0-100 thay
+// Bar an value/max).
+const linMachFill = computed(() =>
+  linMachCapacity.value > 0 ? (linMachStored.value / linMachCapacity.value) * 100 : 0,
+)
+
 const linMachOutputName = computed(() => {
   const id = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
 
@@ -323,10 +362,45 @@ function collectLinMach() {
 </script>
 
 <template>
-  <div class="production-panel scrollfade">
-      <p class="production-panel__summary">
-        {{ t('panels.production.summary') }}
-      </p>
+  <!-- Landscape art port: panel tu chu chrome giay tren overlay canvas
+       (cung rect sheet 345/101/1065/608 voi cac paper surface anh em) -
+       FunctionOverlayPanel mount thang mode 'exploration' nhu paperMode. -->
+  <SceneDesignCanvas overlay>
+    <section
+      ref="sceneRef"
+      class="production-panel"
+      :aria-label="t('layout.functionOverlay.titles.exploration')"
+      tabindex="-1"
+      @click.self="closeScene"
+    >
+      <div
+        class="production-panel__sheet"
+        :style="{ backgroundImage: `url('${paperSheet}')` }"
+        aria-hidden="true"
+      />
+
+      <div class="production-panel__frame">
+        <header class="production-panel__title">
+          <h1>{{ t('layout.functionOverlay.titles.exploration') }}</h1>
+        </header>
+
+        <div class="production-heading">
+          <img class="production-heading__icon" :src="productionIcon" alt="" />
+
+          <div class="production-heading__text">
+            <h2>{{ outpostHeader.template.value?.name }}</h2>
+
+            <span>{{ t('layout.functionOverlay.levelRange', { level: outpostHeader.instance.value?.level ?? 0, max: outpostHeader.template.value?.maxLevel ?? 0 }) }}</span>
+          </div>
+
+          <p class="production-panel__summary">
+            {{ t('panels.production.summary') }}
+          </p>
+
+          <!-- Preview khong ve nut nang cap cong trinh - giu affordance
+               canonical neo cuoi hang heading, cho owner ruling. -->
+          <BuildingUpgradeButton :building-id="OUTPOST_ID" class="production-heading__upgrade" />
+        </div>
 
       <!-- Chieu Hien Quan - phan bo nhan cong (2026-09-02) -->
       <!-- FINAL POLICY (sec.4C): the whole block is scope-hidden under
@@ -386,35 +460,33 @@ function collectLinMach() {
         </p>
       </div>
 
-      <!-- Linh mach Khai Vat Duong - claim Linh Thach (the Linh Tuyen) -->
-      <div v-if="outpostInstance" class="lin-mach">
-        <h3 class="lin-mach__title">{{ t('panels.production.linMach.title') }}</h3>
+      <!-- Linh mach Khai Vat Duong - claim Linh Thach (the Linh Tuyen).
+           Art preview: dai ngang icon + ong nang luong + nut vang; cung
+           bindings stored/capacity/rate/collect nhu the cu. -->
+      <div v-if="outpostInstance" class="production-vein">
+        <img class="production-vein__icon" :src="veinIcon" alt="" />
 
-        <div class="lin-mach__card">
-          <Bar
-            class="lin-mach__progress"
-            :value="linMachStored"
-            :max="linMachCapacity"
-            :height="8"
-            pill
-          />
+        <div class="production-vein__body">
+          <h3>{{ t('panels.production.linMach.title') }}</h3>
+
+          <EquipmentEnergyTube :fill="linMachFill" color="#e1b354" />
 
           <strong>{{ linMachStored }} / {{ linMachCapacity }} {{ linMachOutputName }}</strong>
 
-          <small class="lin-mach__rate">+{{ linMachRatePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} {{ t('panels.production.linMach.rateSuffix') }}</small>
-
-          <GameButton
-            class="lin-mach__collect"
-            size="sm"
-            :disabled="linMachStored <= 0"
-            @click="collectLinMach"
-          >
-            {{ t('panels.production.linMach.collect') }}
-          </GameButton>
+          <small>+{{ linMachRatePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} {{ t('panels.production.linMach.rateSuffix') }}</small>
         </div>
+
+        <EquipmentArtButton
+          class="production-vein__collect"
+          gold
+          :disabled="linMachStored <= 0"
+          @click="collectLinMach"
+        >
+          {{ t('panels.production.linMach.collect') }}
+        </EquipmentArtButton>
       </div>
 
-      <div class="production-panel__grid">
+      <div class="production-panel__grid production-sources">
         <article v-for="row in rows" :key="row.siteId" class="site-card">
           <div class="site-card__art" :data-kind="row.kind" aria-hidden="true">
             <span>{{ row.sigil }}</span>
@@ -483,31 +555,106 @@ function collectLinMach() {
             </GameButton>
           </div>
         </article>
+        </div>
+
+        <!-- Preview khai bao dai status line; canonical chua co nguon
+             notice - element trong, owner wire feed sau. -->
+        <p class="production-notice" role="status"></p>
       </div>
-    </div>
+    </section>
+  </SceneDesignCanvas>
 </template>
 
 <style scoped>
+/* Landscape art port: scene root phu full overlay canvas (close bang
+   click-outside + Escape) - noi dung nam trong sheet + frame. */
 .production-panel {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  color: #30271b;
+  font-family: var(--font-display);
+}
+
+.production-panel :deep(*) {
+  box-sizing: border-box;
+}
+
+/* SHARED-PANEL-01: cung rect + nen giay voi cac fidelity scene anh em
+   (.equipment-sheet) - 24%/12.5%/74%/75% tren canvas 1440x810. */
+.production-panel__sheet {
+  position: absolute;
+  left: 345px;
+  top: 101px;
+  width: 1065px;
+  height: 608px;
+  background-color: #f2e4c8;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 3px double #b28a43;
+}
+
+.production-panel__frame {
+  position: absolute;
+  left: 345px;
+  top: 101px;
+  width: 1065px;
+  height: 608px;
+  box-sizing: border-box;
+  padding: 12px 24px 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  height: 100%;
-  min-height: 0;
-  padding: 12px;
-  overflow-y: auto;
-  color: var(--paper-text);
-  font-family: var(--font-body);
-  background:
-    var(--paper-grain) 0 0 / 160px 160px repeat,
-    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--jade) 8%, transparent), transparent 40%),
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
+}
+
+.production-panel__title {
+  flex: none;
+  height: 44px;
+  border-bottom: 1px solid #b28a4370;
+}
+
+.production-panel__title h1 {
+  margin: 0;
+  font-size: 35px;
+  line-height: 1.15;
+}
+
+.production-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  height: 55px;
+}
+
+.production-heading__icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.production-heading__text h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.production-heading__text span {
+  font-size: 13px;
 }
 
 .production-panel__summary {
-  margin: 0;
-  color: var(--paper-eyebrow);
-  font-size: var(--text-sm);
+  margin: 0 0 0 20px;
+  max-width: 470px;
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.5;
+  color: #5a4526;
+}
+
+.production-heading__upgrade {
+  flex: none;
+  margin-left: auto;
 }
 
 /* Chieu Hien Quan - phan bo nhan cong */
@@ -571,49 +718,67 @@ function collectLinMach() {
   font-size: var(--text-xs);
 }
 
-/* Linh mach Khai Vat Duong */
-.lin-mach__title {
+/* Linh mach Khai Vat Duong - preview dai ngang icon + tube + nut vang */
+.production-vein {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: none;
+  height: 90px;
+  padding: 7px 12px;
+  border: 3px double #b58a42;
+  background: #f7ecd480;
+}
+
+.production-vein__icon {
+  width: 65px;
+  height: 65px;
+  object-fit: contain;
+}
+
+.production-vein__body {
+  flex: 1;
+  display: grid;
+  gap: 5px;
+}
+
+.production-vein__body h3 {
   margin: 0;
-  color: var(--paper-text-soft);
-  font: 700 var(--text-sm) var(--font-display);
+  font-size: 18px;
 }
 
-.lin-mach__card {
+.production-vein__body strong {
+  font-size: 16px;
+}
+
+.production-vein__body small {
+  font-size: 12px;
+  color: #5f4c2c;
+}
+
+.production-vein__collect {
+  flex: none;
+  width: 150px;
+  height: 42px;
+  font-size: 17px;
+}
+
+.production-sources {
   display: grid;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 40%, var(--paper-line));
-  border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-water-accent) 12%, var(--paper-50)), color-mix(in srgb, var(--scene-water-accent) 5%, var(--paper-100)));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
 }
 
-.lin-mach__rate {
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-.lin-mach__collect {
-  justify-self: start;
-  padding: 6px 12px;
-  background: var(--scene-water-accent);
-  border: 0;
-  color: var(--ink-950);
-}
-
-.lin-mach__collect:disabled {
-  background: var(--paper-200);
-  color: var(--paper-text-muted);
-}
-
-.lin-mach__progress {
-  --bar-from: var(--scene-water-accent);
-  --bar-to: var(--jade);
-}
-
-.production-panel__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-  gap: 10px;
+.production-notice {
+  flex: none;
+  height: 12px;
+  margin: 0;
+  font-size: 11px;
+  text-align: center;
+  color: #62512d;
 }
 
 .site-card {

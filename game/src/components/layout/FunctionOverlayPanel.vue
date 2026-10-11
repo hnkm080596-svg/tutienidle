@@ -48,13 +48,15 @@ const IMPERIAL_MODES: ReadonlySet<FunctionMode> = new Set([
 
 // Modes whose fidelity surface owns the shared paper chrome on its own
 // overlay design canvas - mounted outside the scroll like the other
-// migrated tabs. 'exploration' is the last mode still on the scroll
-// (its production outpost has no approved paper surface yet).
+// migrated tabs. 'exploration' joined them 2026-10-11: the landscape
+// production preview gave the outpost an approved paper sheet
+// (ProductionPanel renders its own chrome now).
 const PAPER_MODES: ReadonlySet<FunctionMode> = new Set([
   'stage_select',
   'pill_room',
   'equipment_hall',
   'settings',
+  'exploration',
 ])
 
 const BUILDINGS: Partial<Record<FunctionMode, string>> = {
@@ -115,10 +117,12 @@ function close() {
     <PillRoomPanel v-else-if="paperMode === 'pill_room'" />
     <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
     <SettingsSurface v-else-if="paperMode === 'settings'" />
+    <ProductionPanel v-else-if="paperMode === 'exploration'" />
   </Transition>
 
-  <!-- Imperial scroll scenes: San Xuat (production outpost) is the
-       last surface still on the shared scroll shell. -->
+  <!-- Imperial scroll scenes: no current mode mounts here - the shell
+       stays for future scroll surfaces (San Xuat moved to paper chrome
+       2026-10-11). -->
   <ImperialScrollScene
     :open="scrollMode !== null"
     :title="scrollMode ? t(TITLE_KEYS[scrollMode]) : ''"
@@ -149,9 +153,7 @@ function close() {
       </div>
     </template>
 
-    <div v-if="scrollMode" class="function-overlay">
-      <ProductionPanel v-if="scrollMode === 'exploration'" />
-    </div>
+    <div v-if="scrollMode" class="function-overlay" />
   </ImperialScrollScene>
 
   <!-- Legacy micro-overlay surfaces (not part of the scene redesign). -->
