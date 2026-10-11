@@ -2,7 +2,8 @@ import { SupabaseHttpError, requestSupabase } from '../supabase/SupabaseHttp'
 import type { SupabaseConfig } from '../supabase/SupabaseConfig'
 import { resolveSupabaseSession } from '../supabase/SupabaseSession'
 import { resolveSaveAccountId } from '../save/saveKeys'
-import { CURRENT_SAVE_VERSION, type GameSave } from '../save/SaveSystem'
+import { type GameSave } from '../save/SaveSystem'
+import { migrateSaveToCurrentVersion } from '../save/saveVersion'
 import { validateGameSaveShape } from '../save/saveShapeValidation'
 import { isSaveAcceptable, staticSaveAcceptanceCatalogs } from '../save/saveAcceptance'
 import type { ClientBuildInfo } from '../backend/ClientBuildInfo'
@@ -434,9 +435,14 @@ export class SupabaseCloudSaveService implements CloudSaveService {
       ? (parsed as { version: number }).version
       : undefined
 
-    if (foundVersion !== CURRENT_SAVE_VERSION || record.schemaVersion !== CURRENT_SAVE_VERSION) {
+    // Same version-acceptance as the other save gates: migratable
+    // payloads are upgraded rather than refused; record.schemaVersion
+    // must match the payload's own stamped version.
+    const migrated = migrateSaveToCurrentVersion(parsed as Record<string, unknown>)
+    if (migrated === null || record.schemaVersion !== foundVersion) {
       return { status: 'incompatible', foundVersion, raw: record.rawPayload }
     }
+    parsed = migrated
 
     const shape = validateGameSaveShape(parsed)
     if (!shape.ok) {
@@ -741,9 +747,18 @@ export class SupabaseCloudSaveService implements CloudSaveService {
             ? (save.payload as { version: number }).version
             : undefined
 
-          if (foundVersion !== CURRENT_SAVE_VERSION || save.schemaVersion !== CURRENT_SAVE_VERSION) {
+          // Same version-acceptance the local boot runs: migratable
+          // rows (v88 flatten chain, v89 re-stamp) are upgraded before
+          // shape validation instead of refused outright. The row's
+          // schemaVersion must equal the payload's own stamped
+          // version - a mismatch is contract drift.
+          const migrated = migrateSaveToCurrentVersion(
+            save.payload as Record<string, unknown>,
+          )
+          if (migrated === null || save.schemaVersion !== foundVersion) {
             return { status: 'incompatible', foundVersion, raw }
           }
+          save.payload = migrated as typeof save.payload
 
           const shape = validateGameSaveShape(save.payload)
 

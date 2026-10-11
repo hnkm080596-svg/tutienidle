@@ -15,7 +15,7 @@ import {
   isSaveAcceptable,
   staticSaveAcceptanceCatalogs,
 } from './saveAcceptance'
-import { CURRENT_SAVE_VERSION } from './saveVersion'
+import { CURRENT_SAVE_VERSION, migrateSaveToCurrentVersion } from './saveVersion'
 import {
   listSaveEnvelopeKeys,
   resolveBackupKey,
@@ -475,58 +475,6 @@ export type InspectedSave =
   | { status: 'corrupted'; raw: string }
   | { status: 'storage_unavailable' }
 
-/**
- * v88 -> v89 migration (spirit-stone flatten, owner ruling 2026-10-11:
- * no pham tiers). Folds every legacy trung/thuong stack into the single
- * spirit stone at 1:1 face value and stamps version 89; the result then
- * flows through the normal validateGameSaveShape/normalize path like
- * any current save.
- */
-function migrateSpiritStoneFlattenV88(
-  save: Record<string, unknown>,
-): Record<string, unknown> {
-  const FLATTEN_LEGACY_IDS = new Set([
-    'spirit_stone_trung_pham',
-    'spirit_stone_thuong_pham',
-  ])
-  const SPIRIT_STONE_ID = 'spirit_stone_ha_pham'
-
-  const materials = Array.isArray(save.materials) ? save.materials : []
-  let foldedAmount = 0
-  const kept: unknown[] = []
-
-  for (const entry of materials) {
-    if (
-      entry !== null &&
-      typeof entry === 'object' &&
-      FLATTEN_LEGACY_IDS.has((entry as { materialId?: unknown }).materialId as string)
-    ) {
-      const amount = (entry as { amount?: unknown }).amount
-      if (typeof amount === 'number' && Number.isFinite(amount) && amount > 0) {
-        foldedAmount += amount
-      }
-      continue
-    }
-    kept.push(entry)
-  }
-
-  const merged = [...kept]
-  const existing = merged.find(
-    (entry) =>
-      entry !== null &&
-      typeof entry === 'object' &&
-      (entry as { materialId?: unknown }).materialId === SPIRIT_STONE_ID,
-  ) as { amount?: unknown } | undefined
-
-  if (existing && typeof existing.amount === 'number' && Number.isFinite(existing.amount)) {
-    existing.amount += foldedAmount
-  } else if (foldedAmount > 0) {
-    merged.push({ materialId: SPIRIT_STONE_ID, amount: foldedAmount })
-  }
-
-  return { ...save, materials: merged, version: 89 }
-}
-
 export function inspectLocalSave(): InspectedSave {
   let raw: string | null
 
@@ -563,20 +511,12 @@ export function inspectLocalSave(): InspectedSave {
   // rejecting: its legacy tier stacks fold into the single stone at
   // 1:1 face value and the save continues through the normal shape
   // validation/normalize path as version 89.
-  if (foundVersion === 88) {
-    parsed = migrateSpiritStoneFlattenV88(parsed as Record<string, unknown>)
-  }
-
-  // v90 - anti-scum roll anchor: rollSeedBase joined the alchemy
-  // reservation digest fold mid-v89, so a post-fold v89 payload reads
-  // as a witness mismatch on pre-fold v89 builds. The bump gates that
-  // cleanly. v89 (and the v88 migration output above) MIGRATES by pure
-  // re-stamp - jobs without rollSeedBase still verify because the fold
-  // omits the absent key.
-  const stagedVersion = (parsed as { version?: unknown })?.version
-  if (stagedVersion === 89) {
-    parsed = { ...(parsed as Record<string, unknown>), version: CURRENT_SAVE_VERSION }
-  } else if (stagedVersion !== CURRENT_SAVE_VERSION) {
+  // The migration chain lives in saveVersion.ts so EVERY save gate
+  // (this boot path, cloud pull, pending-journal adopt, file import)
+  // accepts the same versions - a gate that rejects what another
+  // accepts is gate drift.
+  const migrated = migrateSaveToCurrentVersion(parsed as Record<string, unknown>)
+  if (migrated === null) {
     // Development-phase policy (dong-fu-command-wheel-inventory-spirit-
     // stone-plan.md sec"Chinh sach migration") - KHONG con auto-migration
     // nao: moi version cu hon CURRENT_SAVE_VERSION tra ve 'incompatible'
@@ -590,6 +530,7 @@ export function inspectLocalSave(): InspectedSave {
       raw,
     }
   }
+  parsed = migrated
 
   // save-shape-validation-plan.md sec3.4 - version khop CHUA du: save thieu
   // array/field bat buoc (vd player.nodeLevels thoi v47) tung gay crash

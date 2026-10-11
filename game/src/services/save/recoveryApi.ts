@@ -1,4 +1,4 @@
-import { CURRENT_SAVE_VERSION } from './saveVersion'
+import { migrateSaveToCurrentVersion } from './saveVersion'
 import type { GameSave } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { isSaveAcceptable, staticSaveAcceptanceCatalogs } from './saveAcceptance'
@@ -47,13 +47,21 @@ export function validateRecoveryData(raw: string): RecoveryDataValidation {
 
   const foundVersion = (parsed as { version?: unknown }).version
 
-  if (typeof foundVersion !== 'number' || foundVersion !== CURRENT_SAVE_VERSION) {
+  // Same version-acceptance as the boot load: a migratable export
+  // (v88 flatten chain, v89 re-stamp) is upgraded, never refused.
+  const migrated =
+    typeof foundVersion === 'number'
+      ? migrateSaveToCurrentVersion(parsed as Record<string, unknown>)
+      : null
+
+  if (migrated === null) {
     return {
       status: 'incompatible',
       raw,
       foundVersion: typeof foundVersion === 'number' ? foundVersion : undefined,
     }
   }
+  parsed = migrated
 
   const shape = validateGameSaveShape(parsed)
 
@@ -67,7 +75,7 @@ export function validateRecoveryData(raw: string): RecoveryDataValidation {
     return { status: 'invalid' }
   }
 
-  return { status: 'valid', normalizedRaw: JSON.stringify(normalized), version: foundVersion }
+  return { status: 'valid', normalizedRaw: JSON.stringify(normalized), version: normalized.version }
 }
 
 /** Provenance stamped onto the export filename so a downloaded artifact

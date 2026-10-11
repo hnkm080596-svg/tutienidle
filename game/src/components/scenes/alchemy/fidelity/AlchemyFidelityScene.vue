@@ -297,13 +297,11 @@ function jobSubline(job: AlchemyJobDisplay) {
 .job-card { display:flex; gap:9px; align-items:center; padding:8px 10px; border:1px solid #8f744066; border-radius:4px; background:#2e2c22cc; position:relative; }
 .job-card > img { width:36px; height:36px; object-fit:contain; }
 .job-card--brewing { border-color:#e6bd65aa; box-shadow:0 0 10px #f5cd6d33 inset, 0 0 8px #f5cd6d22; }
-.job-card--queued { opacity:.55; }
 .job-card__info { flex:1; min-width:0; }
 .job-card__title { display:flex; align-items:baseline; justify-content:space-between; gap:6px; margin:0 16px 6px 0; }
 .job-card__info h3 { font-size:13px; font-weight:500; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .job-card__qty { font-style:normal; color:#f5cd6d; margin-left:4px; font-size:11px; }
 .job-card__state { font-size:9px; letter-spacing:.5px; color:#c9ab6f; flex:0 0 auto; }
-.job-card--queued .job-card__state { color:#8b713f; }
 .job-card__bar { height:5px; background:#b5a07955; border:1px solid #a3884b55; border-radius:3px; overflow:hidden; }
 .job-card__bar span { display:block; height:100%; background:linear-gradient(90deg,#426b4e,#b59b58); }
 .job-card--brewing .job-card__bar span { background:linear-gradient(90deg,#5a8a66,#f5cd6d); }

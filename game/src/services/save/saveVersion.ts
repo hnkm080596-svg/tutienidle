@@ -236,3 +236,81 @@
 // into a clean version gate. v89 saves MIGRATE by pure re-stamp: jobs
 // without the field still verify (the fold omits the absent key).
 export const CURRENT_SAVE_VERSION = 90 as const
+
+// The version-acceptance migration chain, shared by EVERY save gate
+// (local boot inspectLocalSave, cloud SAVE_READY pull, pending-journal
+// adoptCommittedPending, file import validateRecoveryData). A gate
+// that rejects what another accepts is gate drift - e.g. a v89 row the
+// local boot happily re-stamps was still refused on the cloud path.
+
+/**
+ * v88->v89 migration (spirit-stone flatten): folds legacy trung/thuong
+ * pham tier stacks into the single stone at 1:1 face value and stamps
+ * version 89; the result flows through the normal validate/normalize
+ * path like any current save.
+ */
+export function migrateSpiritStoneFlattenV88(
+  save: Record<string, unknown>,
+): Record<string, unknown> {
+  const FLATTEN_LEGACY_IDS = new Set([
+    'spirit_stone_trung_pham',
+    'spirit_stone_thuong_pham',
+  ])
+  const SPIRIT_STONE_ID = 'spirit_stone_ha_pham'
+
+  const materials = Array.isArray(save.materials) ? save.materials : []
+  let foldedAmount = 0
+  const kept: unknown[] = []
+
+  for (const entry of materials) {
+    if (
+      entry !== null &&
+      typeof entry === 'object' &&
+      FLATTEN_LEGACY_IDS.has((entry as { materialId?: unknown }).materialId as string)
+    ) {
+      const amount = (entry as { amount?: unknown }).amount
+      if (typeof amount === 'number' && Number.isFinite(amount) && amount > 0) {
+        foldedAmount += amount
+      }
+      continue
+    }
+    kept.push(entry)
+  }
+
+  const merged = [...kept]
+  const existing = merged.find(
+    (entry) =>
+      entry !== null &&
+      typeof entry === 'object' &&
+      (entry as { materialId?: unknown }).materialId === SPIRIT_STONE_ID,
+  ) as { amount?: unknown } | undefined
+
+  if (existing && typeof existing.amount === 'number' && Number.isFinite(existing.amount)) {
+    existing.amount += foldedAmount
+  } else if (foldedAmount > 0) {
+    merged.push({ materialId: SPIRIT_STONE_ID, amount: foldedAmount })
+  }
+
+  return { ...save, materials: merged, version: 89 }
+}
+
+/**
+ * Applies the whole migration chain to a parsed save payload and
+ * returns the re-stamped record, or null when this build cannot
+ * consume that version. Chain today: 88 -> flatten -> 89 -> re-stamp
+ * -> 90. v89->v90 is a pure re-stamp because rollSeedBase joined the
+ * reservation digest as an OPTIONAL field - jobs lacking it still
+ * verify (the fold omits absent keys).
+ */
+export function migrateSaveToCurrentVersion(
+  parsed: Record<string, unknown>,
+): Record<string, unknown> | null {
+  let save = parsed
+  if (save.version === 88) {
+    save = migrateSpiritStoneFlattenV88(save)
+  }
+  if (save.version === 89) {
+    save = { ...save, version: CURRENT_SAVE_VERSION }
+  }
+  return save.version === CURRENT_SAVE_VERSION ? save : null
+}
