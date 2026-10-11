@@ -3797,16 +3797,21 @@ function validateAlchemyJobsSave(
       }
     }
 
-    // Anti-scum roll anchor: the writer stamps a non-negative integer
-    // base allocated from the persisted cursor; pre-anchor saves have
-    // no field. Anything else is crafted.
+    // Anti-scum roll anchor: the writer stamps a base allocated from
+    // the persisted cursor in ALCHEMY_MAX_BATCH_QUANTITY strides, so a
+    // legit base is always a multiple of MAX below 2**32 (mulberry32
+    // wraps its seed mod 2**32 - a larger crafted base would alias a
+    // smaller order's stream). Pre-anchor saves have no field.
     if (
       entry.rollSeedBase !== undefined &&
-      (!Number.isInteger(entry.rollSeedBase) || (entry.rollSeedBase as number) < 0)
+      (!Number.isInteger(entry.rollSeedBase) ||
+        (entry.rollSeedBase as number) < 0 ||
+        (entry.rollSeedBase as number) % ALCHEMY_MAX_BATCH_QUANTITY !== 0 ||
+        (entry.rollSeedBase as number) >= 2 ** 32)
     ) {
       issues.push({
         path: `${entryPath}.rollSeedBase`,
-        message: 'rollSeedBase phải là số nguyên >= 0 (writer stamp từ roll cursor)',
+        message: 'rollSeedBase phải là bội số của batch max, nguyên trong [0, 2^32) (writer stamp từ roll cursor)',
       })
     }
 

@@ -661,9 +661,14 @@ export class AlchemySystem {
       ]
     })
 
-    // Roll anchors restore with the queue: the cursor continues past
-    // every persisted base so an undo+re-enqueue replays the same
-    // allocation (anti-save-scum determinism, see rollSeedBase).
+    // Roll anchors restore with the queue: the cursor re-grounds to
+    // EXACTLY max(persisted bases) + MAX (0 when no seeded order) so a
+    // mid-session hot restore lands on the same cursor a cold boot
+    // would. max()-ing with the pre-restore cursor would leak inflated
+    // session state across the load - the same save then rolls a
+    // different "next order" stream depending on restore path,
+    // reopening the reroll channel this scheme exists to close.
+    this.rollSeedCursor = 0
     for (const job of this.jobs) {
       if (job.rollSeedBase !== undefined) {
         this.rollSeedCursor = Math.max(this.rollSeedCursor, job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY)
