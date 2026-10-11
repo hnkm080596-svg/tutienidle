@@ -25,6 +25,9 @@ import type { BagCell } from './BagCell'
 import type { GradedItemTooltipContent, TooltipSection } from '@/composables/useTooltip'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import { ITEM_GRADE_ORDER, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
+import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
+import type { ItemQuality } from '@/core/item/ItemQuality'
+import { BASE_PILL_QUALITY } from '@/core/pill/PillQuality'
 import { realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { gradeLabel, realmLabel } from '@/core/presentation/labels'
@@ -196,7 +199,7 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 // chi co tac dung khi dang co tran dang danh (ngoai tran player khong
 // co HP song de hoi, uong "Tieu Hoi Dan" luc do coi nhu khong co gi
 // de hoi - khong phai loi, chi la khong co dich).
-function drinkPill(pillId: string, pillName: string) {
+function drinkPill(pillId: string, pillName: string, quality: ItemQuality) {
   const target: PillTarget = {
     addCultivation: (amount) => addCultivation(player.$state, amount),
 
@@ -226,7 +229,13 @@ function drinkPill(pillId: string, pillName: string) {
     },
   }
 
-  const result = gameManager.pillOps.usePillDetailed(pillId, target, player.$state)
+  const result = gameManager.pillOps.usePillDetailed(
+    pillId,
+    target,
+    player.$state,
+    undefined,
+    quality,
+  )
 
   if (result.ok) {
     // audit M2: one-click consume had NO success feedback - push a loot
@@ -263,6 +272,9 @@ interface PillEntry {
 
   amount: number
 
+  /** Chat da roll cua stack nay (mac dinh hoang cho dan cu). */
+  quality: ItemQuality
+
   /** Composed "{Chat} - {Name}" display name - the search axis. */
   name: string
 }
@@ -272,6 +284,8 @@ interface PillEntry {
 // rare elixir. First click now ARMS the pill (selected ring + a short
 // disarm timeout); only the second click on the same pill calls the
 // consume path. Clicking a different cell re-arms onto it instead.
+// M-PILL-GRADE: khoa arm theo pillId+chat - hai stack cung vien dan
+// nhung khac chat la hai o rieng, arm o nay khong uong nham stack kia.
 const armedPillId = ref<string | null>(null)
 
 const ARM_TIMEOUT_MS = 4000
@@ -287,15 +301,21 @@ function disarmPill() {
   }
 }
 
-function onPillClick(pillId: string, name: string) {
-  if (armedPillId.value === pillId) {
+function pillCellKey(pillId: string, quality: ItemQuality): string {
+  return `${pillId}|${quality}`
+}
+
+function onPillClick(pillId: string, name: string, quality: ItemQuality) {
+  const cellKey = pillCellKey(pillId, quality)
+
+  if (armedPillId.value === cellKey) {
     disarmPill()
-    drinkPill(pillId, name)
+    drinkPill(pillId, name, quality)
 
     return
   }
 
-  armedPillId.value = pillId
+  armedPillId.value = cellKey
 
   if (armTimer !== undefined) {
     clearTimeout(armTimer)
@@ -350,7 +370,12 @@ const entries = computed<PillEntry[]>(() => {
     .getAll()
     .filter((stack) => scopeHiddenPillFamilyOfId(stack.pill.id) === null)
     .map((stack) => {
-    const displayName = composeItemGradeNameSegments(stack.pill.name, stack.pill.grade)
+    // M-PILL-GRADE: truc chat hien thi = chat DA ROLL cua stack (dan
+    // cu khong field = hoang) - khung mau + tien to ten theo chat do,
+    // khong theo grade authored cua recipe.
+    const quality = stack.quality ?? BASE_PILL_QUALITY
+
+    const displayName = composeItemGradeNameSegments(stack.pill.name, quality)
       .map((segment) => segment.text)
       .join(' ')
 
@@ -359,10 +384,12 @@ const entries = computed<PillEntry[]>(() => {
 
       amount: stack.amount,
 
+      quality,
+
       name: displayName,
 
       cell: {
-        key: stack.pill.id,
+        key: pillCellKey(stack.pill.id, quality),
 
         label: stack.pill.name,
 
@@ -375,7 +402,7 @@ const entries = computed<PillEntry[]>(() => {
 
         // "{Chat} - {Name}" - text structure only (item-info-card spec
         // 2026-09-14); display color lives on the tooltip payload.
-        nameSegments: composeItemGradeNameSegments(stack.pill.name, stack.pill.grade),
+        nameSegments: composeItemGradeNameSegments(stack.pill.name, quality),
 
         // Unified slot language: Pham -> seal, Chat (grade) -> frame/
         // aura. Pills now feed BOTH axes like equipment (rank >= dia gets
@@ -384,7 +411,8 @@ const entries = computed<PillEntry[]>(() => {
           ? professionGradeRank(stack.pill.professionGrade)
           : undefined,
 
-        rarityRank: ITEM_GRADE_ORDER.indexOf(stack.pill.grade) + 1,
+        // M-PILL-GRADE: frame/aura theo chat da roll cua stack.
+        rarityRank: ITEM_QUALITY_ORDER.indexOf(quality) + 1,
 
         description: stack.pill.description,
 
@@ -399,12 +427,14 @@ const entries = computed<PillEntry[]>(() => {
         onClick:
           stack.pill.type === 'material'
             ? undefined
-            : () => onPillClick(stack.pill.id, displayName),
+            : () => onPillClick(stack.pill.id, displayName, quality),
 
         // audit M2 two-click consume: the armed pill reads
         // interaction:'selected' so the ring shows WHICH pill the
         // second click will drink.
-        state: armedPillId.value === stack.pill.id ? { interaction: 'selected' } : undefined,
+        state: armedPillId.value === pillCellKey(stack.pill.id, quality)
+          ? { interaction: 'selected' }
+          : undefined,
       },
     }
   })
@@ -444,10 +474,13 @@ const GROUP_CHIPS = computed<Array<{ value: PillEffectGroup | 'all'; label: stri
 // Tieu chi Dan Duoc (plan Workstream E) - pham dan/loai hieu ung/so
 // luong/ten. "Loai hieu ung" so sanh effect type DAU TIEN cua recipe.
 const PILL_COMPARATORS: Record<Exclude<PillSortMode, 'default'>, (a: PillEntry, b: PillEntry) => number> = {
-  // QA fixpoint 2026-10-10: total order - Pham (professionGrade) rank
-  // first, pills without it sort lowest; ties use ITEM_GRADE_ORDER (was:
-  // mixed professionGrade vs alphabetic ItemGrade, non-transitive).
+  // QA fixpoint 2026-10-10 + truc chat: total order - Chat da roll
+  // (ITEM_QUALITY_ORDER) first, then Pham rank (missing=0), ties use
+  // ITEM_GRADE_ORDER (mixed-axis compare is non-transitive).
   grade: (a, b) => {
+    const qa = ITEM_QUALITY_ORDER.indexOf(a.quality)
+    const qb = ITEM_QUALITY_ORDER.indexOf(b.quality)
+    if (qa !== qb) return compareNumber(qa, qb)
     const ra = a.pill.professionGrade !== undefined ? professionGradeRank(a.pill.professionGrade) : 0
     const rb = b.pill.professionGrade !== undefined ? professionGradeRank(b.pill.professionGrade) : 0
     if (ra !== rb) return compareNumber(ra, rb)

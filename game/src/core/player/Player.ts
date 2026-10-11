@@ -643,7 +643,11 @@ export function resolvePlayerStatAssembly(
           sourceId: meridian.id,
           sourceType: 'realm' as const,
           stat,
-          percent,
+          // M-PILL-GRADE: phai khop voi emission o MeridianChapter -
+          // % milestone nhan he so chat da ghi, khong la claim forged.
+          percent:
+            percent *
+            (player.bodyProgression.meridian.openedQualityMultipliers?.[meridian.id] ?? 1),
         }))
         .find((candidate) => candidate.id === modifier.id)
       if (authored !== undefined && authored.percent > 0) {

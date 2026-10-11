@@ -361,8 +361,13 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
     manager.catalogOps.registerAlchemyRecipes([OVERFLOW_RECIPE])
     manager.setActivePlayer(player)
 
+    // M-PILL-GRADE: rng 0 + herb myriad_year (+1 bac) -> moi vien mint
+    // chat 'huyen'; stack day san cung 'huyen' de overflow theo stack
+    // giu nguyen nguyen y test (khac chat se la stack RIENG, +1 hop le).
+    manager.setSessionRng(() => 0)
+
     // One free slot left: job 1 delivers its pill, job 2 loses its pill.
-    manager.pillBag.add(OVERFLOW_PILL, MAX_STACK_AMOUNT - 1)
+    manager.pillBag.add(OVERFLOW_PILL, MAX_STACK_AMOUNT - 1, 'huyen')
 
     manager.alchemySystem.restoreJobs([
       makeJob('job_ok_1'),

@@ -19,12 +19,14 @@ import {
 import type { MeridianDefinition } from '../../../data/realm/Meridians'
 import type { PlayerData } from '../../player/Player'
 import type { StatModifier } from '../../stats/StatCalculator'
+import type { ItemQuality } from '../../item/ItemQuality'
 import type {
   BodyProgressionIssue,
   MeridianChapterState,
   ModifierBodyChapter,
 } from './BodyChapter'
 import { isMeridianPageUnlocked } from './MeridianPages'
+import { PILL_QUALITY_EFFECT_UPLIFT } from '../../pill/PillQuality'
 
 const MODIFIER_PREFIX = 'bat-mach:'
 export const MERIDIAN_FULL_PROGRESS = 100
@@ -115,6 +117,36 @@ function nextMeridianIndex(progress: Record<string, number>): number {
   )
 }
 
+// M-PILL-GRADE (ruling 4): % bat mach nhan theo chat Thong Mach Dan da
+// tieu - TRUNG BINH uplift cua sach vien (mixed-grade stack co the
+// tron). Ghi sparse theo meridian id (additive field, save cu giu
+// nguyen lo danh = he so 1). Goi SAU khi invest va debit da rut sach
+// vien - duong vua nhan invest la index CUOI co progress > 0 (strict
+// prefix => duy nhat): vua mo xong hoac dang tien trien.
+export function recordMeridianOpenQuality(
+  player: PlayerData,
+  spentQualities: readonly ItemQuality[],
+): void {
+  const progress = readMeridianProgress(player)
+  let meridianId: string | undefined
+  for (const meridian of MERIDIANS) {
+    if ((progress[meridian.id] ?? 0) > 0) {
+      meridianId = meridian.id
+    }
+  }
+
+  if (meridianId === undefined || spentQualities.length === 0) {
+    return
+  }
+
+  const mean =
+    spentQualities.reduce((sum, quality) => sum + PILL_QUALITY_EFFECT_UPLIFT[quality], 0) /
+    spentQualities.length
+
+  const state = player.bodyProgression.meridian
+  state.openedQualityMultipliers = { ...state.openedQualityMultipliers, [meridianId]: mean }
+}
+
 export const meridianChapter: ModifierBodyChapter = {
   kind: 'modifier',
   // M-F-BODY-CORE - the authored chapter classification (progressive
@@ -200,7 +232,11 @@ export const meridianChapter: ModifierBodyChapter = {
           sourceId: meridian.id,
           sourceType: 'realm',
           stat,
-          percent,
+          // M-PILL-GRADE: % milestone nhan he so chat da ghi luc mo
+          // (sach cu khong co field = 1, lo danh giu nguyen).
+          percent:
+            percent *
+            (player.bodyProgression.meridian.openedQualityMultipliers?.[meridian.id] ?? 1),
         })
       }
     }
@@ -234,6 +270,32 @@ export const meridianChapter: ModifierBodyChapter = {
     if (!isRecord(slice)) {
       emit({ path: basePath, message: 'meridian chapter phai la object' })
       return
+    }
+
+    // M-PILL-GRADE: additive optional field - absent = legacy save
+    // (he so 1), dien thi phai la record so huu han trong bien uplift.
+    // Shape-independent: check truoc nhanh legacy openedIds return som.
+    if (slice.openedQualityMultipliers !== undefined) {
+      if (!isRecord(slice.openedQualityMultipliers)) {
+        emit({
+          path: `${basePath}.openedQualityMultipliers`,
+          message: 'openedQualityMultipliers phai la object',
+        })
+      } else {
+        for (const [meridianId, multiplier] of Object.entries(slice.openedQualityMultipliers)) {
+          if (
+            typeof multiplier !== 'number' ||
+            !Number.isFinite(multiplier) ||
+            multiplier < 1 ||
+            multiplier > 2
+          ) {
+            emit({
+              path: `${basePath}.openedQualityMultipliers.${meridianId}`,
+              message: 'he so chat phai la so huu han trong [1,2]',
+            })
+          }
+        }
+      }
     }
 
     // v87 migration: the legacy { openedIds: string[] } shape stays
@@ -311,6 +373,20 @@ export const meridianChapter: ModifierBodyChapter = {
         issues.push(
           `meridian '${id}' co progress ${value} nhung '${blocker.id}' moi ${progress[blocker.id] ?? 0} (vi pham tuan tu)`,
         )
+      }
+    }
+
+    // M-PILL-GRADE: he so chat chi ton tai tren duong DA MO (progress
+    // >= 100) - mot multiplicand tren duong chua mo la ghi chep khong
+    // the phat sinh.
+    const multipliers = player.bodyProgression.meridian.openedQualityMultipliers
+    if (multipliers !== undefined) {
+      for (const meridianId of Object.keys(multipliers)) {
+        if ((progress[meridianId] ?? 0) < MERIDIAN_FULL_PROGRESS) {
+          issues.push(
+            `meridian.openedQualityMultipliers['${meridianId}'] ghi tren duong chua mo`,
+          )
+        }
       }
     }
 

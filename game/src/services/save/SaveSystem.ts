@@ -371,6 +371,10 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
       pillId: stack.pill.id,
 
       amount: stack.amount,
+
+      // M-PILL-GRADE: chat chi ghi khi stack mang field - stack gop tu
+      // dan cu giu nguyen lo danh (khong field = hoang o restore).
+      ...(stack.quality !== undefined ? { quality: stack.quality } : {}),
     }))),
 
     // Phu/Tran khai tu (sec10.1) - bag khong con; mang rong giu shape save.

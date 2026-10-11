@@ -88,6 +88,11 @@ export interface MeridianChapterState {
    * meridians are the ids whose progress reached 100.
    */
   progress: Record<string, number>
+
+  // M-PILL-GRADE (ruling 4): he so chat ghi theo meridian id - TRUNG
+  // BINH uplift cua sach Thong Mach Dan da tieu cho duong do (1..2).
+  // Additive optional: save cu khong co field = moi duong he so 1.
+  openedQualityMultipliers?: Record<string, number>
 }
 
 // HIDDEN-C - persisted slice is the DISCRETE step counter (0..36; design

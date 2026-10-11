@@ -102,10 +102,13 @@ export const HERB_AGE_WEIGHTS: Record<HerbAge, number> = {
 }
 
 /** Ty le thanh dan co so theo nien dai (sec6.2) - truoc bonus Dan Phong. */
+// M-PILL-GRADE (ruling 3, 2026-10-11): split moi 50/75/100/100/100 -
+// dot thao duoc con dieu khien TY LE THANH (bang nay), truc chat san
+// pham dieu khien rieng qua PILL_HERB_AGE_GRADE_STEPS.
 export const HERB_AGE_BASE_SUCCESS_PERCENT: Record<HerbAge, number> = {
-  decade: 30,
-  century: 50,
-  millennium: 75,
+  decade: 50,
+  century: 75,
+  millennium: 100,
   myriad_year: 100,
   thuong_co: 100,
 }
