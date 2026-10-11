@@ -35,6 +35,7 @@ import type {
   ExplorationPaperModel,
   ExplorationReward,
 } from './fidelity/explorationUi'
+import { stagePosition } from './fidelity/stagePositions'
 import { disabledReasonLabel } from './disabledReasonLabel'
 
 const TERRAIN_SRC = resolveAssetUrl('/assets/ui/huyen-kim/scene/exploration-v2/terrain-three-realms-v1.png')
@@ -290,47 +291,39 @@ function nodeState(stageId: string): ExplorationNode['state'] {
   }
 }
 
-// Zigzag trail inside each 720x140 chapter band: 10 nodes per row,
-// alternating y - the approved preview geometry.
-function nodePosition(index: number): { x: number; y: number } {
-  const row = Math.floor(index / 10)
-  const column = index % 10
-  return { x: 58 + column * 66, y: 60 + row * 50 + (column % 2 === 0 ? 0 : 17) }
-}
-
-const TONES = ['', 'blue', 'violet'] as const
-
-const paperChapters = computed<ExplorationChapter[]>(() =>
-  chapterOptions.value.map((option, chapterIndex) => {
-    const stages = stagesInZone.value.filter(stage => (stage.chapter ?? 1) === option.chapter)
-    const nodes: ExplorationNode[] = stages.map((stage, index) => {
-      const model = modelById.value.get(stage.id)
-      const { x, y } = nodePosition(index)
-      const state = nodeState(stage.id)
-      return {
-        id: stage.id,
-        label: String(model?.floor ?? stage.floor ?? stage.requiredRealmLevel ?? index + 1),
-        x,
-        y,
-        state,
-        boss: model?.isBossFloor ?? false,
-        perfect: model?.state === 'perfect',
-        enemy: model?.displayEnemy?.name,
-        // Locked nodes no longer select, so the unlock reason must live
-        // on the node itself (hover title) - otherwise disabledReason
-        // is unreachable for exactly the stages it describes.
-        lockedHint: state === 'locked' ? disabledReasonLabel(model?.disabledReason, t) : undefined,
-      }
-    })
+// Thanh Van map (Minh 2026-10-11): ONE vista shows all 30 ai across
+// the 3 authored chapters - the chapter rail is a single 'Thanh Van'
+// card. Node positions come from the shared design space
+// (stagePositions.ts); edges chain consecutive ai in roster order.
+const paperChapters = computed<ExplorationChapter[]>(() => {
+  const stages = stagesInZone.value
+  const nodes: ExplorationNode[] = stages.map((stage, index) => {
+    const model = modelById.value.get(stage.id)
+    const { x, y } = stagePosition(index)
+    const state = nodeState(stage.id)
     return {
-      id: String(option.chapter),
-      label: option.label,
-      tone: TONES[chapterIndex % TONES.length]!,
-      nodes,
-      edges: nodes.slice(1).map((node, index) => ({ from: nodes[index]!.id, to: node.id })),
+      id: stage.id,
+      label: String(model?.floor ?? stage.floor ?? stage.requiredRealmLevel ?? index + 1),
+      x,
+      y,
+      state,
+      boss: model?.isBossFloor ?? false,
+      perfect: model?.state === 'perfect',
+      enemy: model?.displayEnemy?.name,
+      // Locked nodes no longer select, so the unlock reason must live
+      // on the node itself (hover title) - otherwise disabledReason
+      // is unreachable for exactly the stages it describes.
+      lockedHint: state === 'locked' ? disabledReasonLabel(model?.disabledReason, t) : undefined,
     }
-  }),
-)
+  })
+  return [{
+    id: 'thanh_van',
+    label: t('exploration.thanhVan'),
+    tone: '',
+    nodes,
+    edges: nodes.slice(1).map((node, index) => ({ from: nodes[index]!.id, to: node.id })),
+  }]
+})
 
 // Reward cells render like bag cells - the item's own art in the slot
 // frame (registry icon; the equipment_any pool uses the shared gear

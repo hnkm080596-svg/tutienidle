@@ -1,33 +1,129 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import SlotView from '@/components/common/SlotView.vue'
+import { MAP_DESIGN_W, MAP_DESIGN_H } from './stagePositions'
 import type { ExplorationChapter } from './explorationUi'
 const props = defineProps<{ chapter: ExplorationChapter | null; terrain: string; selected: string; caption?: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
 const { t } = useI18n()
-const ring = resolveAssetUrl('/assets/ui/huyen-kim/scene/skill-v2/node-ring-v1.png')
-const lockIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/lock.svg')
+
+// Thanh Van map (Minh 2026-10-11): one vista, all ai as 'stage' variant
+// SlotViews (circle ring + cover landscape inside), routes drawn as
+// SVG lines in the SAME design space as the HTML node layer - one
+// coordinate system, so routes and nodes can never drift apart.
+
+// Random-but-stable inner painting per ai: realm landscape art picked
+// by stage-id hash (4 authored vistas).
+const LANDSCAPES = [
+  'realm/landscape-1-v1.png',
+  'realm/landscape-2-v1.png',
+  'realm/landscape-3-v1.png',
+  'realm/meditation-v1.png',
+].map(path => resolveAssetUrl(`/assets/ui/tien-hiep-2026-10/${path}`))
+function landscapeFor(id: string): string {
+  let hash = 0
+  for (const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+  return LANDSCAPES[hash % LANDSCAPES.length]!
+}
+
+// Runtime drag overrides (layout-tuner backquote mode): authored
+// positions in stagePositions.ts stay the base; dragging writes here,
+// and each drop logs {id,x,y} for baking back into the data file.
+const dragOffsets = ref<Record<string, { x: number; y: number }>>({})
+function nodePos(id: string, x: number, y: number) {
+  return dragOffsets.value[id] ?? { x, y }
+}
+
 const lines = computed(() => {
   const chapter = props.chapter
-  if (!chapter) {
-    return []
-  }
+  if (!chapter) return []
   return chapter.edges.flatMap(edge => {
     const from = chapter.nodes.find(node => node.id === edge.from)
     const to = chapter.nodes.find(node => node.id === edge.to)
-    return from && to ? [{ id: `${from.id}-${to.id}`, x1: from.x, y1: from.y, x2: to.x, y2: to.y }] : []
+    if (!from || !to) return []
+    const a = nodePos(from.id, from.x, from.y)
+    const b = nodePos(to.id, to.x, to.y)
+    // Lit once the destination ai is reachable - kinh-mach glow logic,
+    // one-shot (no loop): the lit <line> mounts and plays its dash
+    // reveal a single time.
+    return [{ id: `${from.id}-${to.id}`, x1: a.x, y1: a.y, x2: b.x, y2: b.y, lit: to.state !== 'locked' }]
   })
 })
+
+// Design-space scaling: measure the wrapper, scale the fixed 1000x480
+// space to fit, center horizontally. jsdom lacks ResizeObserver - the
+// typeof guard keeps tests mounting this component.
+const wrapRef = ref<HTMLElement | null>(null)
+const scale = ref(1)
+const offsetX = ref(0)
+const offsetY = ref(0)
+let observer: ResizeObserver | null = null
+onMounted(() => {
+  const wrap = wrapRef.value
+  if (!wrap) return
+  const measure = () => {
+    const s = Math.min(wrap.clientWidth / MAP_DESIGN_W, wrap.clientHeight / MAP_DESIGN_H)
+    scale.value = s
+    // Centering lives INSIDE the transform: translate runs in
+    // unscaled px of the wrapper, so the offset is arithmetic -
+    // immune to transform-origin / translate-% quirks.
+    offsetX.value = Math.max(0, (wrap.clientWidth - MAP_DESIGN_W * s) / 2)
+    offsetY.value = Math.max(0, (wrap.clientHeight - MAP_DESIGN_H * s) / 2)
+  }
+  measure()
+  if (typeof ResizeObserver === 'function') {
+    observer = new ResizeObserver(measure)
+    observer.observe(wrap)
+  }
+})
+onBeforeUnmount(() => { observer?.disconnect() })
+
+// Drag tuner: active only while the global layout-tuner (backquote) is
+// on. Pointer delta is divided by the live scale so the node lands in
+// design coords under any zoom; drop logs the baked value.
+function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number) {
+  if (!document.body.classList.contains('layout-tuner-on')) return
+  event.preventDefault()
+  event.stopPropagation()
+  const s = scale.value || 1
+  const startX = event.clientX
+  const startY = event.clientY
+  const base = nodePos(id, x, y)
+  const move = (e: PointerEvent) => {
+    dragOffsets.value = {
+      ...dragOffsets.value,
+      [id]: {
+        x: Math.round(base.x + (e.clientX - startX) / s),
+        y: Math.round(base.y + (e.clientY - startY) / s),
+      },
+    }
+  }
+  const up = () => {
+    window.removeEventListener('pointermove', move, true)
+    window.removeEventListener('pointerup', up, true)
+    const final = dragOffsets.value[id]
+    if (final) {
+      const text = JSON.stringify({ stageTuner: { id, x: final.x, y: final.y } })
+      console.log('[stage-tuner]', text)
+      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {})
+    }
+  }
+  window.addEventListener('pointermove', move, true)
+  window.addEventListener('pointerup', up, true)
+}
 </script>
 <template>
-  <div class="exploration-map">
-    <img class="terrain" :src="terrain" alt="">
-    <h2 v-if="chapter" class="map-name">{{ chapter.label }}</h2>
-    <div v-if="chapter" :class="['band', chapter.tone]">
-      <svg class="routes" viewBox="0 0 720 140" preserveAspectRatio="none" aria-hidden="true"><line v-for="line in lines" :key="line.id" :x1="line.x1" :y1="line.y1" :x2="line.x2" :y2="line.y2" /></svg>
-      <button v-for="node in chapter.nodes" :key="node.id" type="button" :class="['stage-node', node.state, { selected: selected === node.id, boss: node.boss, perfect: node.perfect }]" :style="{ left: `${node.x / 7.2}%`, top: `${node.y}px` }" :aria-label="t('exploration.stageLabel', { chapter: chapter.label, stage: node.label, state: t(`exploration.state.${node.state}`) })" :aria-pressed="selected === node.id" :aria-disabled="node.state === 'locked' ? 'true' : undefined" :title="node.state === 'locked' ? (node.lockedHint ?? t('exploration.state.locked')) : undefined" :data-stage-id="node.id" @click="node.state !== 'locked' && emit('select', node.id)">
-        <img class="node-ring" :src="ring" alt=""><span class="node-number">{{ node.label }}</span><small v-if="node.boss" class="boss-label">{{ t('exploration.boss') }}</small><small v-else-if="node.enemy" class="node-enemy">{{ node.enemy }}</small><span v-if="node.state === 'cleared'" class="clear-mark" aria-hidden="true">✓</span><span v-if="node.perfect" class="perfect-mark" aria-hidden="true">★</span><img v-if="node.state === 'locked'" class="lock-mark" :src="lockIcon" alt="" aria-hidden="true">
+  <div ref="wrapRef" class="exploration-map">
+    <div class="map-space" :style="{ width: `${MAP_DESIGN_W}px`, height: `${MAP_DESIGN_H}px`, transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})` }">
+      <img class="terrain" :src="terrain" alt="">
+      <h2 v-if="chapter" class="map-name">{{ chapter.label }}</h2>
+      <svg v-if="chapter" class="routes" :viewBox="`0 0 ${MAP_DESIGN_W} ${MAP_DESIGN_H}`" preserveAspectRatio="none" aria-hidden="true"><line v-for="line in lines" :key="line.id" :class="{ lit: line.lit }" :x1="line.x1" :y1="line.y1" :x2="line.x2" :y2="line.y2" /></svg>
+      <button v-for="node in chapter?.nodes ?? []" :key="node.id" type="button" :class="['stage-node', node.state, { selected: selected === node.id, boss: node.boss, perfect: node.perfect }]" :style="{ left: `${nodePos(node.id, node.x, node.y).x}px`, top: `${nodePos(node.id, node.x, node.y).y}px` }" :aria-label="t('exploration.stageLabel', { chapter: chapter!.label, stage: node.label, state: t(`exploration.state.${node.state}`) })" :aria-pressed="selected === node.id" :aria-disabled="node.state === 'locked' ? 'true' : undefined" :title="node.state === 'locked' ? (node.lockedHint ?? t('exploration.state.locked')) : undefined" :data-stage-id="node.id" @click="node.state !== 'locked' && emit('select', node.id)" @pointerdown="onNodePointerDown($event, node.id, node.x, node.y)">
+        <SlotView class="node-slot" variant="stage" :item="null" :icon="landscapeFor(node.id)" static />
+        <small v-if="node.boss" class="boss-label">{{ t('exploration.boss') }}</small><small v-else-if="node.enemy" class="node-enemy">{{ node.enemy }}</small>
+        <span class="node-stars" :class="{ lit: node.perfect }" aria-hidden="true">★★★</span>
       </button>
     </div>
     <p v-if="caption" class="map-caption">{{ caption }}</p>
@@ -35,34 +131,34 @@ const lines = computed(() => {
 </template>
 <style scoped>
 .exploration-map { position:relative; min-height:0; border:3px double #b28b46; overflow:hidden; background:#1d1f1c; }
+/* Centering computed in JS (offsetX/offsetY) and baked into the
+   transform itself - no CSS translate/percent/origin interplay, so
+   the space can never sit half-clipped under any outer rule. */
+.map-space { position:absolute; left:0; top:0; transform-origin:top left; }
 .terrain { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; }
 .map-name { position:absolute; left:8px; top:8px; z-index:2; margin:0; padding:5px 12px; background:#f1dfbbbe; color:#3a2d18; font-size:20px; font-weight:600; }
-.band { position:absolute; left:0; right:0; top:50%; height:140px; transform:translateY(-50%); --tone:#315f46; }
-.band.blue { --tone:#335875; }.band.violet { --tone:#665277; }
-.routes { position:absolute; inset:0; width:100%; height:140px; pointer-events:none; }
-.routes line { stroke:#81662e; stroke-width:2; stroke-dasharray:4 4; }
-/* Node art ported from the Son Ha Do mock: dark medallion, double gold
-   border, number inside, name tag below - canonical state marks
-   (ring/clear/perfect/lock/boss/enemy) stay. */
-.stage-node { position:absolute; width:46px; height:46px; transform:translate(-50%,-50%); border:3px double #b28b46; border-radius:50%; background:#2c2b21; color:#ebd5a2; cursor:pointer; font:16px var(--font-display,Georgia,serif); box-shadow:0 2px 5px #30281955; transition:box-shadow .15s ease; }
-.node-ring { position:absolute; inset:-6px; width:52px; height:52px; pointer-events:none; }
-.node-number { position:relative; }
-.stage-node.cleared { background:var(--tone); color:#fff1c9; }
-.stage-node.current { box-shadow:0 0 12px #efd08a99; }
-.stage-node.locked { background:#ece0c7; color:#675e51; cursor:not-allowed; }
-/* Lock badge mirrors .perfect-mark's corner stamp - locked nodes keep
-   aria-disabled + click-guard (not `disabled`) so focus/hover still
-   reach the state label, same convention as SlotView. */
-.lock-mark { position:absolute; right:-3px; top:-3px; width:15px; height:15px; padding:2px; background:#efe2c6; border:1px solid #8f7a52; border-radius:50%; box-shadow:0 1px 3px #30281966; pointer-events:none; }
-.stage-node.available { background:#4a4636; color:#f4ead0; }
-.stage-node.selected { background:#a47b2c; box-shadow:0 0 16px #ffd887; }
-.stage-node:hover { box-shadow:0 0 14px #f7d383; }
+.routes { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.routes line { stroke:#81662e80; stroke-width:3; stroke-dasharray:5 5; }
+/* Kinh-mach light reveal: a lit edge mounts with its glow already on
+   and plays the dash sweep once - it never re-loops (state stays lit). */
+.routes line.lit { stroke:#e9c46a; stroke-width:4; stroke-dasharray:200 200; stroke-dashoffset:0; filter:drop-shadow(0 0 5px #e9c46a99); animation:route-lit 0.9s ease-out 1; }
+@keyframes route-lit { from { stroke-dashoffset:200; } to { stroke-dashoffset:0; } }
+.stage-node { position:absolute; width:56px; height:56px; transform:translate(-50%,-50%); border:0; background:transparent; cursor:pointer; padding:0; }
+.node-slot { width:56px; height:56px; display:block; pointer-events:none; }
+/* Locked = grey + non-interactive (ruling 2026-10-11): no lock glyph,
+   the whole medallion desaturates and the cursor is gone. */
+.stage-node.locked { filter:grayscale(1) brightness(.8); cursor:default; pointer-events:none; }
+.stage-node.locked .node-stars { color:#8f8673; }
+.stage-node.current .node-slot { filter:drop-shadow(0 0 8px #efd08a99); }
+.stage-node.selected .node-slot { filter:drop-shadow(0 0 12px #ffd887) brightness(1.15); }
+.stage-node:hover:not(.locked) .node-slot { filter:drop-shadow(0 0 10px #f7d383); }
 .stage-node:focus-visible { outline:3px solid #245e4f; outline-offset:5px; }
-.stage-node.boss { border-radius:12px; background:#4a2a26; color:#ffebba; }
-.boss-label { position:absolute; left:50%; top:48px; transform:translateX(-50%); white-space:nowrap; color:#6b3827; font-size:11px; background:#f0e2c6d9; padding:1px 5px; z-index:1; }
-.node-enemy { position:absolute; left:50%; top:48px; transform:translateX(-50%); white-space:nowrap; color:#3f331f; font-size:10px; background:#f4e4caba; padding:2px 5px; z-index:1; }
-.clear-mark { position:absolute; right:-2px; bottom:-1px; background:#315f46; border-radius:50%; padding:0 3px; font-size:11px; color:#fff1c9; }
-.perfect-mark { position:absolute; left:-3px; top:-3px; color:#d4a017; text-shadow:0 0 3px #fff3cf; font-size:13px; }
+.boss-label { position:absolute; left:50%; top:58px; transform:translateX(-50%); white-space:nowrap; color:#6b3827; font-size:12px; background:#f0e2c6d9; padding:1px 5px; z-index:1; }
+.node-enemy { position:absolute; left:50%; top:58px; transform:translateX(-50%); white-space:nowrap; color:#3f331f; font-size:11px; background:#f4e4caba; padding:2px 5px; z-index:1; }
+/* 3 stars hugging the circle bottom - lit gold once the ai was
+   perfect-cleared (perfectClearStageIds / turn limit), dim otherwise. */
+.node-stars { position:absolute; left:50%; bottom:-4px; transform:translateX(-50%); z-index:2; font-size:13px; letter-spacing:1px; color:#4a4235; text-shadow:0 1px 2px #0008; pointer-events:none; }
+.node-stars.lit { color:#f4c94e; text-shadow:0 0 4px #f4c94e88, 0 1px 2px #0008; }
 .map-caption { position:absolute; bottom:0; inset-inline:0; z-index:2; margin:0; padding:8px; text-align:center; background:#f4e4cabd; font-size:13px; }
-@media (prefers-reduced-motion:reduce) { .stage-node { transition:none; } }
+@media (prefers-reduced-motion:reduce) { .routes line.lit { animation:none; } }
 </style>

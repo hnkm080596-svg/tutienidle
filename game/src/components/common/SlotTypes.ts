@@ -44,7 +44,7 @@ export interface SlotPresentationState {
 //               would sit on the art's top-left cloud, so the variant
 //               suppresses it; hover-frame + badges still render.
 //               Rank/badge data still flows to tooltip + aria-label.
-export type SlotVariant = 'item' | 'equipment' | 'bag' | 'circle' | 'socket'
+export type SlotVariant = 'item' | 'equipment' | 'bag' | 'circle' | 'socket' | 'stage'
 
 // Badge nho o layer 6 (muc 17.3) - thay cho cac span tu absolute-
 // position ben ngoai Slot (vd .paperdoll__enhance-badge cu).

@@ -10,6 +10,7 @@ const props = withDefaults(defineProps<{ model: ExplorationPaperModel; stage: Ex
 const emit = defineEmits<{ select: [id: string]; zone: [id: string]; back: []; mode: [id: string]; stopFarm: []; openBuild: []; start: []; chapter: [id: string] }>()
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
+const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 
 // Same dialog contract ImperialScrollScene carried: Escape closes,
 // focus and pointer interaction stay inside the open surface.
@@ -60,6 +61,7 @@ function pickChapter(id: string) {
     <div class="map-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
     <header class="map-head">
       <h1>{{ t('dongFu.nav.exploration') }}</h1>
+      <img class="map-divider" :src="titleDivider" alt="">
       <div v-if="model.zones.length > 1" class="exploration-zones" role="group" :aria-label="t('exploration.zones')">
         <button v-for="zone in model.zones" :key="zone.id" :class="{ active: model.zone === zone.id, 'is-locked': !zone.unlocked }" :aria-pressed="model.zone === zone.id" :disabled="!zone.unlocked" @click="emit('zone', zone.id)">{{ zone.label }}</button>
       </div>
@@ -67,8 +69,7 @@ function pickChapter(id: string) {
     </header>
     <div class="map-grid">
       <nav class="map-chapters" :aria-label="t('exploration.chapters')">
-        <h2>{{ t('exploration.chapters') }}</h2>
-        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" :class="{ selected: chapter.id === activeChapterId, 'is-locked': chapter.locked }" :aria-pressed="chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><small>{{ t('panels.stageSelect.labels.chapterPrefix', { chapter: chapter.id }) }}</small><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : chapter.progressLabel }}</span></button>
+        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapter.id === activeChapterId, 'is-locked': chapter.locked }" :aria-pressed="chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : chapter.progressLabel }}</span></button>
       </nav>
       <ExplorationPaperMap :chapter="activeChapter" :terrain="model.terrain" :selected="stage?.id ?? ''" :caption="t('exploration.empty')" @select="emit('select', $event)" />
       <ExplorationPaperDetails :model="model" :stage="stage" :notice="notice" @mode="emit('mode', $event)" @stop-farm="emit('stopFarm')" @open-build="emit('openBuild')" @start="emit('start')" />
@@ -81,6 +82,7 @@ function pickChapter(id: string) {
 .map-sheet { position:absolute; left:345px; top:101px; width:1065px; height:608px; background-color:#f2e4c8; background-size:cover; background-position:center; border:3px double #b28a43; box-sizing:border-box; }
 .map-head { position:absolute; left:369px; top:113px; width:1017px; height:52px; border-bottom:1px solid #b28b4680; display:flex; align-items:center; gap:16px; }
 .map-head h1 { margin:0; font:700 38px/1.2 var(--font-display,Georgia,serif); }
+.map-divider { display:block; height:22px; margin-top:2px; }
 .map-identity { margin:0 0 0 auto; font-size:13px; color:#785c31; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px; }
 .exploration-zones { display:flex; gap:6px; }
 .exploration-zones button { padding:3px 10px; border:1px solid #a98a4b; border-radius:12px; background:#f2e6c8; color:#5a4a28; font:inherit; font-size:12px; cursor:pointer; }
@@ -90,12 +92,13 @@ function pickChapter(id: string) {
 .map-chapters { min-height:0; overflow-y:auto; scrollbar-width:none; border-right:1px solid #b28b4650; padding-right:10px; }
 .map-chapters::-webkit-scrollbar { display:none; }
 .map-chapters h2 { margin:0 0 12px; font-size:21px; font-weight:600; }
-.map-chapters button { width:100%; display:grid; gap:4px; padding:10px 6px; border:0; border-bottom:1px solid #b28b4650; background:transparent; color:#30271b; font:15px var(--font-display,Georgia,serif); text-align:left; cursor:pointer; }
-.map-chapters button small { font-size:12px; color:#8a7448; }
-.map-chapters button b { font-size:16px; font-weight:600; }
-.map-chapters button span { font-size:13px; color:#6a5636; }
-.map-chapters button.selected { background:#dcb86450; border:3px double #b28b46; }
-.map-chapters button.is-locked { opacity:.6; }
+/* Thanh Van chapter card: styled like the realm card (dark forest
+   gradient, gold border, display font) - Minh 2026-10-11. */
+.chapter-card { width:100%; display:grid; gap:6px; padding:12px 10px; border:3px double #b28b46; border-radius:10px; background:linear-gradient(160deg,#1f3a2c,#12291e); color:#f3e4bc; font:15px var(--font-display,Georgia,serif); text-align:left; cursor:pointer; }
+.chapter-card b { font-size:18px; font-weight:700; letter-spacing:.04em; }
+.chapter-card span { font-size:13px; color:#cbb27f; }
+.chapter-card.selected { border-color:#d8ad55; box-shadow:0 0 14px #d8ad5540; }
+.chapter-card.is-locked { opacity:.6; }
 .map-chapters button:focus-visible { outline:2px solid #765324; outline-offset:2px; }
 .preview-label { position:absolute; left:369px; top:693px; margin:0; color:#806b43; font-size:9px; }
 </style>

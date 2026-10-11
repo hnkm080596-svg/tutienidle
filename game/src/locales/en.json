@@ -2186,6 +2186,7 @@
     "noEnemy": "No enemy intel.",
     "startFailed": "Unable to start. Check the requirements.",
     "armedFarm": "Auto-farming: {stage}",
+    "thanhVan": "Thanh Van",
     "chapters": "Chapters",
     "state": {
       "cleared": "Cleared",

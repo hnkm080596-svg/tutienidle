@@ -19,7 +19,13 @@ it('blocks locked stage selection while keeping the state label reachable', () =
     expect(button.disabled).toBe(false)
     expect(button.getAttribute('aria-disabled')).toBe('true')
     expect(button.title).toBe('Locked')
-    expect(button.querySelector('.lock-mark')).not.toBeNull()
+    expect(button.classList.contains('locked')).toBe(true)
+    // locked = grey + non-interactive (no lock glyph since 2026-10-11);
+    // the stars row is present but unlit until a perfect clear.
+    expect(button.querySelector('.lock-mark')).toBeNull()
+    const stars = button.querySelector('.node-stars')
+    expect(stars).not.toBeNull()
+    expect(stars!.classList.contains('lit')).toBe(false)
     button.click()
     expect(chosen).toEqual([])
     expect(JSON.stringify(chapters)).toBe(before)
@@ -35,7 +41,7 @@ it('emits select for unlocked stages', () => {
   try {
     const button = container.querySelector<HTMLButtonElement>('button')!
     expect(button.getAttribute('aria-disabled')).toBeNull()
-    expect(button.querySelector('.lock-mark')).toBeNull()
+    expect(button.querySelector('.node-stars')).not.toBeNull()
     button.click()
     expect(chosen).toEqual(['open-stage'])
   } finally { app.unmount() }

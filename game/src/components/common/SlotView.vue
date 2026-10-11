@@ -107,7 +107,11 @@ const emit = defineEmits<{
 // no seal/badge/hover-frame/square chrome on it, so `isCircle` turns
 // those render layers off. Data props (nameSegments, ranks, badges,
 // tooltip, aria) stay fully wired - only the painting is suppressed.
-const isCircle = computed(() => props.variant === 'circle')
+// 'stage' variant (Minh 2026-10-11): ban do node ai - same circle ring
+// chrome as 'circle', the inner art is a full-bleed landscape painting
+// (cover-clipped to the ring interior) instead of a contain icon.
+const isCircle = computed(() => props.variant === 'circle' || props.variant === 'stage')
+const isStage = computed(() => props.variant === 'stage')
 const CIRCLE_FRAME_SRC = resolveAssetUrl(
   '/assets/ui/tien-hiep-2026-10/controls/equipment-circle-frame-v1.png',
 )
@@ -295,6 +299,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     class="slot-view"
     :class="[
       `slot-view--${props.variant ?? 'item'}`,
+      { 'slot-view--stage': isStage },
       filled ? 'slot-view--filled' : 'slot-view--empty',
       showSelected ? 'slot-view--selected' : '',
       veil !== 'none' ? `slot-view--veil-${veil}` : '',
@@ -1168,3 +1173,16 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   }
 }
 </style>
+
+/* 'stage' variant: icon fills the ring interior as a cover-clipped
+   painting; ring chrome + states stay the 'circle' treatment. */
+.slot-view--stage .slot-view__icon-wrap {
+  inset: 7%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.slot-view--stage .slot-view__item-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

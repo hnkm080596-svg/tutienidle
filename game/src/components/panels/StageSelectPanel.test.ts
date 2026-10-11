@@ -75,9 +75,10 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     await nextTick()
     await nextTick()
 
-    // Son Ha Do home-panel: one chapter band at a time - the mortal
-    // chapter shows 10 nodes; nodes[9] is still mortal_dong_10.
-    expect(mounted.container.querySelectorAll('.stage-node')).toHaveLength(10)
+    // Thanh Van map (2026-10-11): ONE vista shows all 30 ai across the
+    // 3 chapters; the mortal chapter occupies the first 10 nodes, so
+    // nodes[9] is still mortal_dong_10.
+    expect(mounted.container.querySelectorAll('.stage-node')).toHaveLength(30)
     expect(mounted.container.textContent).toContain('Dã Trư')
     // Roster remap: one family per chapter - every mortal floor node
     // shows the boar family now.
@@ -190,10 +191,10 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="progress"]')!.classList.contains('active')).toBe(true)
 
-    // Cross-chapter pick now goes through the Chuong rail - it
-    // auto-picks the chapter's first unlocked stage
-    // (qi_refining_forest), so the selection change disarms the mode.
-    container.querySelector<HTMLElement>('[data-chapter-id="2"]')!.click()
+    // Cross-chapter pick now goes straight through the single-vista
+    // map - tapping the first qi_refining node (qi_refining_forest,
+    // unlocked by mortal_dong_10) changes the selection and disarms.
+    container.querySelector<HTMLElement>('[data-stage-id="qi_refining_forest"]')!.click()
     await nextTick()
 
     expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="manual"]')!.classList.contains('active')).toBe(true)
