@@ -3,7 +3,7 @@
 // Seam: QuestFidelityDetail.vue:41 renders
 // `QuestSectionPlaque :text="t('questPreview.progress')"` whenever the
 // selected quest carries `progressText`. The key is translated in the
-// ui-preview bundle (src/ui-preview/remainingMessages.ts -> 'Tiến Độ')
+// ui-preview bundle (src/ui-preview/remainingMessages.ts -> the VI label)
 // but was never added to the PRODUCTION catalogs - src/locales/en.json
 // and src/locales/vi.json questPreview blocks hold only
 // all/once/active/ready/claimed/empty/objectives/claim/follow.
