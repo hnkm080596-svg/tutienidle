@@ -1,11 +1,13 @@
 <script setup lang="ts">
-// Claim CTA: the audit's corrected verdict - the ref's "Tiep Tuc Nhiem
-// Vu" deep-link stays RESERVED; the only action the surface admits is
-// Nhan Thuong (claim) via questOps.claimQuest. Disabled reasons come
-// from the model's claim.disabledReason verbatim.
+// Claim CTA (Codex landscape port): gold EquipmentArtButton at the
+// bottom of the detail card + the status small, like the preview. The
+// ref's "Tiep Tuc Nhiem Vu" deep-link stays RESERVED; the only action
+// the surface admits is Nhan Thuong (claim) via questOps.claimQuest.
+// Disabled reasons come from the model's claim.disabledReason
+// verbatim.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import GameButton from '@/components/common/GameButton.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 
 const props = defineProps<{
@@ -38,37 +40,32 @@ const note = computed(() => {
 
 <template>
   <footer v-if="claim" class="quest-claim">
-    <p v-if="note" class="quest-claim__note">{{ note }}</p>
-    <GameButton
-      size="lg"
+    <EquipmentArtButton
+      gold
       class="quest-claim__button"
       :disabled="disabled"
       @click="!disabled && onClaim(row.id)"
     >
       {{ claimed ? t('panels.quest.actions.claimed') : t('panels.quest.actions.claim') }}
-    </GameButton>
+    </EquipmentArtButton>
+    <small v-if="note" class="quest-claim__note" role="status">{{ note }}</small>
   </footer>
 </template>
 
 <style scoped>
 .quest-claim {
   margin-top: auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--hk-border-muted, var(--paper-line));
+  gap: 4px;
 }
+
+.quest-claim__button { align-self: stretch; min-height: 38px; }
 
 .quest-claim__note {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--hk-text-muted, #b8ad97);
+  font-size: 10px;
+  color: #d9c69a;
   text-align: center;
-}
-
-.quest-claim__button {
-  align-self: stretch;
 }
 </style>

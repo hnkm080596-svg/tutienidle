@@ -68,6 +68,16 @@ export interface BetaQuestSurfaceModel {
   /** Beta admits once-quests only (isBetaQuestEnabled) - no daily
    *  grouping exists on this surface. */
   cadence: 'once'
+  /** Thematic group id for the Nhiem Vu rail (Codex landscape preview's
+   *  group axis). Derived from chainId today ('mainline'); quests with
+   *  no group yet emit undefined and the UI buckets them under its
+   *  fallback group. Real group assignment stays a domain decision
+   *  (owner) - the surface only renders what the field carries. */
+  group?: string
+  /** Per-quest vista/thumb art for the list row and detail banner.
+   *  Unassigned today - the UI falls back to the shared warm vista;
+   *  the owner assigns real art here later. */
+  image?: string
   /** Counted progress - may exceed target (kills keep counting); the
    *  UI clamps for display. */
   progress: number
@@ -250,5 +260,10 @@ export function betaQuestSurfaceFor(
           }
         : undefined,
     chainId: quest.chainId,
+    // Group axis (2026-10-11 landscape port): the only existing
+    // group-ish signal is chainId - mainline members land in the
+    // 'mainline' group; everything else stays unassigned until the
+    // owner writes real grouping rules.
+    group: quest.chainId === 'mainline' ? 'mainline' : undefined,
   }
 }

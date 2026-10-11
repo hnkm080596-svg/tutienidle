@@ -734,6 +734,13 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/tien-hiep-2026-10/realm/landscape-3-v1.png',
   '/assets/ui/tien-hiep-2026-10/icons/navigation-production-v2.png',
   '/assets/ui/tien-hiep-2026-10/icons/navigation-exploration-v2.png',
+  // Nhiem Vu landscape port (2026-10-11): group-rail medallion icons,
+  // component literals pinned by the domArtLiteralCoverage guard.
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-home-v2.png',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-portal-v2.png',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-quest-v2.png',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-alchemy-v2.png',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-feedback-v2.png',
 ] as const
 
 /**

@@ -6,6 +6,6 @@ import { remainingMessages } from './remainingMessages'
 // key paths.
 export const questMessages = { vi: {
   ...remainingMessages.vi,
-  panels: { quest: { title: 'Nhiệm Vụ' } },
+  panels: { quest: { title: 'Nhiệm Vụ', intro: 'Theo dõi tiến độ tu luyện qua từng nhiệm vụ.', scene: { list: 'Danh Sách' } } },
   paperNav: { navigation: 'Chức năng' },
 } } as const
