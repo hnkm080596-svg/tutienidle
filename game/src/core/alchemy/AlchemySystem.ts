@@ -533,7 +533,16 @@ export class AlchemySystem {
    * the payload is a value, so mutating it afterwards must not leak into
    * live state (A3).
    */
-  private allocRollSeedBase(): number {
+  private allocRollSeedBase(): number | undefined {
+    // Domain bound mirrors the save-shape gate: a stamped base must
+    // satisfy base + MAX <= 2^32 so its whole unit stream stays in the
+    // mulberry32 domain. A cursor pushed to the last stride (only via a
+    // crafted save - honest use needs ~4e9 orders) gets no base: the
+    // job falls back to the legacy per-job hash stream, which aliases
+    // nothing and self-bricks nothing.
+    if (this.rollSeedCursor + ALCHEMY_MAX_BATCH_QUANTITY > 2 ** 32) {
+      return undefined
+    }
     const base = this.rollSeedCursor
     this.rollSeedCursor += ALCHEMY_MAX_BATCH_QUANTITY
     return base
@@ -592,6 +601,22 @@ export class AlchemySystem {
           !Number.isInteger(job.unitsDone) ||
           (job.unitsDone ?? -1) < 0 ||
           (job.unitsDone ?? 0) >= (job.quantity ?? 0))
+      ) {
+        return []
+      }
+
+      // rollSeedBase: only an honest stride stamp is kept. An
+      // out-of-domain base (crafted - the load gate rejects it, so it
+      // arrives only via callers that skip validation) would otherwise
+      // serialize into every write and self-brick the save, and its
+      // wrapped late units alias a base-0 stream. Drop the record like
+      // any other malformed field, per the boundary rule above.
+      if (
+        job.rollSeedBase !== undefined &&
+        (!Number.isInteger(job.rollSeedBase) ||
+          job.rollSeedBase < 0 ||
+          job.rollSeedBase % ALCHEMY_MAX_BATCH_QUANTITY !== 0 ||
+          job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY > 2 ** 32)
       ) {
         return []
       }
