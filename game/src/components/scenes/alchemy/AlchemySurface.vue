@@ -569,7 +569,7 @@ const recipeDisplay = computed<AlchemyRecipeDisplay | null>(() => {
     variants,
     costs: costRows.value,
     duration: preview.value
-      ? `${Math.ceil(preview.value.durationSeconds / 60)} phút`
+      ? t('alchemy.durationShort', { minutes: Math.ceil(preview.value.durationSeconds / 60) })
       : '',
     outcome: outcomeLabel.value,
     brewDisabled: !canBrew.value,
