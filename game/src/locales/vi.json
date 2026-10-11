@@ -872,11 +872,7 @@
       "title": "Nhiệm Vụ",
       "groups": {
         "mainline": "Chính Tuyến",
-        "daily": "Nhiệm Vụ Hàng Ngày",
-        "once": "Nhiệm Vụ",
-        "weekly": "Nhiệm Vụ Tuần",
-        "achievement": "Thành Tựu",
-        "exploration": "Thám Hiểm"
+        "once": "Nhiệm Vụ"
       },
       "anyEnemy": "Bất kỳ quái",
       "rewards": {

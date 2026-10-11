@@ -93,6 +93,14 @@ export interface MeridianChapterState {
   // BINH uplift cua sach Thong Mach Dan da tieu cho duong do (1..2).
   // Additive optional: save cu khong co field = moi duong he so 1.
   openedQualityMultipliers?: Record<string, number>
+
+  // Accumulator while a meridian is mid-progress: sum of spent pill
+  // uplifts + pill count, so the recorded multiplier is the true mean
+  // over every pill invested - not only the completing invest. Moved
+  // into openedQualityMultipliers the moment the meridian hits 100.
+  // Additive optional; saves written before the field existed simply
+  // start accumulating from the next invest.
+  qualityAccum?: Record<string, { sum: number; count: number }>
 }
 
 // HIDDEN-C - persisted slice is the DISCRETE step counter (0..36; design

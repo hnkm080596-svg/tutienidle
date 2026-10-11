@@ -126,6 +126,17 @@ export interface ActiveAlchemyJob {
   roomLevelAtStart: number
 
   /**
+   * Roll anchor allocated at enqueue from a monotonic persisted cursor
+   * (restored from the jobs themselves). Unit i of the order rolls
+   * mulberry32(rollSeedBase + i), so a reload before the deadline
+   * replays identical rolls AND an undo+re-enqueue lands the same
+   * anchor (the cursor restores with the save) - the outcome cannot be
+   * re-rolled. Legacy records lack it and fall back to a
+   * jobId-derived stream (still reload-deterministic).
+   */
+  rollSeedBase?: number
+
+  /**
    * QUEUE REWORK (2026-10-11) - a queue entry is one ORDER of
    * `quantity` pills brewed sequentially, per-unit deadline
    * `startedAtMs + (index+1) * perUnitMs` where
@@ -204,10 +215,11 @@ export function alchemyJobReservationDigest(
   job: Pick<
     ActiveAlchemyJob,
     'jobId' | 'recipeId' | 'pillId' | 'herbMaterialId' | 'startedAtMs' | 'completesAtMs' | 'roomLevelAtStart'
-  > & { quantity?: number; unitsDone?: number },
+  > & { quantity?: number; unitsDone?: number; rollSeedBase?: number },
   reservation: Omit<AlchemyJobReservation, 'digest'>,
 ): number {
   const batchFields = job.quantity === undefined ? [] : [job.quantity, job.unitsDone ?? 0]
+  const seedField = job.rollSeedBase === undefined ? [] : [job.rollSeedBase]
 
   return witnessDigest([
     job.jobId,
@@ -218,6 +230,7 @@ export function alchemyJobReservationDigest(
     job.completesAtMs,
     job.roomLevelAtStart,
     ...batchFields,
+    ...seedField,
     reservation.woodId,
     reservation.fuelWoodAmount,
     reservation.spiritStoneCost,
@@ -241,7 +254,7 @@ export function verifyAlchemyJobReservation(
   job: Pick<
     ActiveAlchemyJob,
     'jobId' | 'recipeId' | 'pillId' | 'herbMaterialId' | 'startedAtMs' | 'completesAtMs' | 'roomLevelAtStart'
-  > & { reservation: unknown },
+  > & { reservation: unknown; rollSeedBase?: number },
   recipe: AlchemyRecipe | undefined,
   allowedCostScales?: ReadonlySet<number>,
 ): string | null {
@@ -478,6 +491,19 @@ function nextJobId(): string {
   return `alchemy_${Date.now().toString(36)}_${jobCounter}`
 }
 
+// FNV-1a fold for the legacy (no rollSeedBase) roll stream - a fixed
+// seed per job+unit so pre-anchor records still mint deterministically
+// across reloads.
+function hashAlchemyRollSeed(jobId: string, unitIndex: number): number {
+  let hash = 2166136261 >>> 0
+  const text = `${jobId}#${unitIndex}`
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i)
+    hash = Math.imul(hash, 16777619) >>> 0
+  }
+  return hash
+}
+
 /**
  * QUEUE REWORK - per-unit special-ingredient profile equality for the
  * enqueue merge check: same recipe means same specials in practice,
@@ -494,6 +520,12 @@ function sameSpecialIngredients(
 export class AlchemySystem {
   private jobs: ActiveAlchemyJob[] = []
 
+  // Monotonic roll anchor, allocated per order in strides of the batch
+  // cap so every unit of every order owns a unique seed index. Restored
+  // from the jobs themselves - an undo+re-enqueue replay allocates the
+  // same base, which is exactly the anti-scum property.
+  private rollSeedCursor = 0
+
   private pendingEvents: AlchemySettlementEvent[] = []
 
   /**
@@ -501,6 +533,12 @@ export class AlchemySystem {
    * the payload is a value, so mutating it afterwards must not leak into
    * live state (A3).
    */
+  private allocRollSeedBase(): number {
+    const base = this.rollSeedCursor
+    this.rollSeedCursor += ALCHEMY_MAX_BATCH_QUANTITY
+    return base
+  }
+
   restoreJobs(jobs: ActiveAlchemyJob[], restoreNowMs: number = Date.now()): void {
     // r29-COR-F1: the shift only fires under a sane restore clock -
     // a non-finite or exact-integer-domain-overflow restoreNowMs from
@@ -622,6 +660,15 @@ export class AlchemySystem {
         },
       ]
     })
+
+    // Roll anchors restore with the queue: the cursor continues past
+    // every persisted base so an undo+re-enqueue replays the same
+    // allocation (anti-save-scum determinism, see rollSeedBase).
+    for (const job of this.jobs) {
+      if (job.rollSeedBase !== undefined) {
+        this.rollSeedCursor = Math.max(this.rollSeedCursor, job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY)
+      }
+    }
   }
 
   getJobs(): ActiveAlchemyJob[] {
@@ -788,6 +835,7 @@ export class AlchemySystem {
 
     const jobId = nextJobId()
     const completesAtMs = nowMs + batchSeconds * 1000
+    const rollSeedBase = this.allocRollSeedBase()
     // Reservation keeps PER-UNIT amounts (single source the per-unit
     // settle and the partial-cancel refund both replay); quantity binds
     // the batch through the digest fold on the job side.
@@ -815,6 +863,7 @@ export class AlchemySystem {
           roomLevelAtStart: roomLevel,
           quantity,
           unitsDone: 0,
+          rollSeedBase,
         },
         {
           woodId: BUI_GO_ID,
@@ -838,6 +887,7 @@ export class AlchemySystem {
       roomLevelAtStart: roomLevel,
       quantity,
       unitsDone: 0,
+      rollSeedBase,
       reservation,
     })
 
@@ -1200,7 +1250,20 @@ export class AlchemySystem {
       for (let unit = 0; unit < unitsToRoll; unit += 1) {
         let unitPills = guaranteedPills
 
-        if (random() * 100 < extraPillChance) {
+        // Deterministic per-unit stream: orders minted under the roll
+        // anchor scheme replay from rollSeedBase + absolute unit index
+        // (undo+re-enqueue lands the same anchor = identical rolls);
+        // legacy records fall back to a jobId-derived seed (still
+        // reload-deterministic). The ambient `random` arg stays for
+        // the signature but the mint path no longer consults it.
+        const absUnit = (job.unitsDone ?? 0) + unit
+        const unitSeed =
+          job.rollSeedBase !== undefined
+            ? job.rollSeedBase + absUnit
+            : hashAlchemyRollSeed(job.jobId, absUnit)
+        const unitRandom = mulberry32(unitSeed)
+
+        if (unitRandom() * 100 < extraPillChance) {
           unitPills += 1
         }
 
@@ -1209,7 +1272,7 @@ export class AlchemySystem {
         if (unitPills > 0) {
           // Chat roll doc lap tung don vi (ruling 1) - chi tieu rng khi
           // don vi nay that su mint de giu thu tu tieu rng on dinh.
-          const quality = rollPillQualityWithHerb(random, herbAge)
+          const quality = rollPillQualityWithHerb(unitRandom, herbAge)
 
           mintedGrades.push(quality)
 

@@ -52,7 +52,7 @@ const lines = computed(() => {
   })
 })
 
-// Design-space scaling: measure the wrapper, scale the fixed 1000x480
+// Design-space scaling: measure the wrapper, scale the fixed 1000x800
 // space to fit, center horizontally. jsdom lacks ResizeObserver - the
 // typeof guard keeps tests mounting this component.
 const wrapRef = ref<HTMLElement | null>(null)
@@ -60,12 +60,15 @@ const scale = ref(1)
 const offsetX = ref(0)
 const offsetY = ref(0)
 let observer: ResizeObserver | null = null
+let activeDragCleanup: (() => void) | null = null
 onMounted(() => {
   const wrap = wrapRef.value
   if (!wrap) return
   const measure = () => {
     const s = Math.min(wrap.clientWidth / MAP_DESIGN_W, wrap.clientHeight / MAP_DESIGN_H)
-    scale.value = s
+    // A zero-size container (hidden mount, collapsed parent, jsdom) would
+    // otherwise collapse the whole vista via scale(0) - fall back to 1.
+    scale.value = s > 0 ? s : 1
     // Centering lives INSIDE the transform: translate runs in
     // unscaled px of the wrapper, so the offset is arithmetic -
     // immune to transform-origin / translate-% quirks.
@@ -78,7 +81,10 @@ onMounted(() => {
     observer.observe(wrap)
   }
 })
-onBeforeUnmount(() => { observer?.disconnect() })
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  activeDragCleanup?.()
+})
 
 // Drag tuner: active only while the global layout-tuner (backquote) is
 // on. Pointer delta is divided by the live scale so the node lands in
@@ -103,6 +109,8 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
   const up = () => {
     window.removeEventListener('pointermove', move, true)
     window.removeEventListener('pointerup', up, true)
+    window.removeEventListener('blur', up, true)
+    activeDragCleanup = null
     const final = dragOffsets.value[id]
     if (final) {
       const text = JSON.stringify({ stageTuner: { id, x: final.x, y: final.y } })
@@ -112,6 +120,8 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
   }
   window.addEventListener('pointermove', move, true)
   window.addEventListener('pointerup', up, true)
+  window.addEventListener('blur', up, true)
+  activeDragCleanup = up
 }
 </script>
 <template>
@@ -147,12 +157,14 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
 .node-slot { width:56px; height:56px; display:block; pointer-events:none; }
 /* Locked = grey + non-interactive (ruling 2026-10-11): no lock glyph,
    the whole medallion desaturates and the cursor is gone. */
-.stage-node.locked { filter:grayscale(1) brightness(.8); cursor:default; pointer-events:none; }
+/* Locked = grayscale + non-interactive click, but pointer events stay on:
+   the unlock reason lives on :title and the layout tuner must still be able
+   to drag locked nodes. */
+.stage-node.locked { filter:grayscale(1) brightness(.8); cursor:default; }
 .stage-node.locked .node-stars { color:#8f8673; }
 .stage-node.current .node-slot { filter:drop-shadow(0 0 8px #efd08a99); }
 .stage-node.selected .node-slot { filter:drop-shadow(0 0 12px #ffd887) brightness(1.15); }
 .stage-node:hover:not(.locked) .node-slot { filter:drop-shadow(0 0 10px #f7d383); }
-.stage-node:focus-visible { outline:3px solid #245e4f; outline-offset:5px; }
 .boss-label { position:absolute; left:50%; top:58px; transform:translateX(-50%); white-space:nowrap; color:#6b3827; font-size:12px; background:#f0e2c6d9; padding:1px 5px; z-index:1; }
 .node-enemy { position:absolute; left:50%; top:58px; transform:translateX(-50%); white-space:nowrap; color:#3f331f; font-size:11px; background:#f4e4caba; padding:2px 5px; z-index:1; }
 /* 3 stars hugging the circle bottom - lit gold once the ai was

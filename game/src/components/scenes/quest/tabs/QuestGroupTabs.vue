@@ -89,8 +89,4 @@ const tabSlice = computed(() => chromeSlice('seal-chip'))
 .quest-group-tabs__pill:hover { color: var(--hk-text-primary, #f2ead8); }
 .quest-group-tabs__pill.is-active { color: var(--hk-gold, #e3bd67); }
 
-.quest-group-tabs__pill:focus-visible {
-  outline: 2px solid var(--hk-gold, #d8b45a);
-  outline-offset: 2px;
-}
 </style>

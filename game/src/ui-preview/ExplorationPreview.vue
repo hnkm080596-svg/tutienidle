@@ -7,21 +7,24 @@ import Tooltip from '@/components/common/Tooltip.vue'
 import DongFuVista from '@/components/scenes/dong-fu/fidelity/DongFuVista.vue'
 import ExplorationFidelityScene from '@/components/scenes/exploration/fidelity/ExplorationFidelityScene.vue'
 import type { ExplorationPaperModel, ExplorationDetail, ExplorationChapter } from '@/components/scenes/exploration/fidelity/explorationUi'
+import { stagePosition } from '@/components/scenes/exploration/fidelity/stagePositions'
 const { t } = useI18n()
-const selected = shallowRef('1-4')
+const selected = shallowRef('4')
 const zoneId = shallowRef('zone-thanh-van')
 const mode = shallowRef('manual')
 const notice = shallowRef('')
 const pointer = shallowRef({ x: 0, y: 0 })
-const chapters = computed<ExplorationChapter[]>(() => ['mortal', 'qi', 'foundation'].map((realm, index) => {
-  const nodes = Array.from({ length: 10 }, (_, i) => ({
-    id: `${index + 1}-${i + 1}`, label: String(i + 1), x: 58 + i * 66, y: 60 + (i % 2 === 0 ? 0 : 17),
-    state: index === 0 && i < 3 ? 'cleared' as const : index === 0 && i === 3 ? 'current' as const : index === 0 && i === 4 ? 'available' as const : 'locked' as const,
-    boss: i === 9,
-    perfect: index === 0 && i === 1,
+const chapters = computed<ExplorationChapter[]>(() => {
+  // Mirrors the production merge: one Thanh Van chapter holds all 30 stages
+  // laid out through the shared design-space positions.
+  const nodes = Array.from({ length: 30 }, (_, i) => ({
+    id: `${i + 1}`, label: String(i + 1), ...stagePosition(i),
+    state: i < 3 ? 'cleared' as const : i === 3 ? 'current' as const : i === 4 ? 'available' as const : 'locked' as const,
+    boss: i % 10 === 9,
+    perfect: i === 1,
   }))
-  return { id: realm, label: t(`realm.${realm}`), tone: ['', 'blue', 'violet'][index]!, nodes, edges: nodes.slice(1).map((node, i) => ({ from: nodes[i]!.id, to: node.id })) }
-}))
+  return [{ id: 'thanh_van', label: t('exploration.thanhVan'), tone: '', nodes, edges: nodes.slice(1).map((node, i) => ({ from: nodes[i]!.id, to: node.id })) }]
+})
 const model = computed<ExplorationPaperModel>(() => ({
   title: t('zone'),
   subtitle: 'Hành vạn dặm sơn hà · Ngộ thiên địa kỳ duyên',

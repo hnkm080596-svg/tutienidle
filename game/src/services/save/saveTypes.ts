@@ -470,6 +470,12 @@ export interface AlchemyJobSave {
 
   unitsDone?: number
 
+  /**
+   * Anti-scum roll anchor stamped at enqueue (persisted cursor, see
+   * ActiveAlchemyJob.rollSeedBase). Absent on pre-anchor saves.
+   */
+  rollSeedBase?: number
+
   reservation: AlchemyJobReservationSave
 }
 

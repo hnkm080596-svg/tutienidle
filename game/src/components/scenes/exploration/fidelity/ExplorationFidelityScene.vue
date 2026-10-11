@@ -52,6 +52,8 @@ const chapterRail = computed<ChapterRailEntry[]>(() =>
   }),
 )
 function pickChapter(id: string) {
+  // A single merged card is informational - there is nothing to switch to.
+  if (chapterRail.value.length <= 1) return
   localChapter.value = id
   emit('chapter', id)
 }
@@ -69,7 +71,7 @@ function pickChapter(id: string) {
     </header>
     <div class="map-grid">
       <nav class="map-chapters" :aria-label="t('exploration.chapters')">
-        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapter.id === activeChapterId, 'is-locked': chapter.locked }" :aria-pressed="chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : chapter.progressLabel }}</span></button>
+        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapterRail.length === 1 || chapter.id === activeChapterId, 'is-locked': chapter.locked }" :aria-pressed="chapterRail.length === 1 || chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : chapter.progressLabel }}</span></button>
       </nav>
       <ExplorationPaperMap :chapter="activeChapter" :terrain="model.terrain" :selected="stage?.id ?? ''" :caption="t('exploration.empty')" @select="emit('select', $event)" />
       <ExplorationPaperDetails :model="model" :stage="stage" :notice="notice" @mode="emit('mode', $event)" @stop-farm="emit('stopFarm')" @open-build="emit('openBuild')" @start="emit('start')" />
@@ -99,6 +101,5 @@ function pickChapter(id: string) {
 .chapter-card span { font-size:13px; color:#cbb27f; }
 .chapter-card.selected { border-color:#d8ad55; box-shadow:0 0 14px #d8ad5540; }
 .chapter-card.is-locked { opacity:.6; }
-.map-chapters button:focus-visible { outline:2px solid #765324; outline-offset:2px; }
 .preview-label { position:absolute; left:369px; top:693px; margin:0; color:#806b43; font-size:9px; }
 </style>

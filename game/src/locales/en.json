@@ -872,11 +872,7 @@
       "title": "Quests",
       "groups": {
         "mainline": "Mainline",
-        "daily": "Daily Quests",
-        "once": "Quests",
-        "weekly": "Weekly Quests",
-        "achievement": "Achievements",
-        "exploration": "Exploration"
+        "once": "Quests"
       },
       "anyEnemy": "Any enemy",
       "rewards": {

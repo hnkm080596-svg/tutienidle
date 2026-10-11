@@ -635,6 +635,8 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
         startedAtMs: 1_000,
         completesAtMs: 601_000,
         roomLevelAtStart: 1,
+        // Fixture default seed anchor rides the persisted record too.
+        rollSeedBase: 0,
         // F-ALCH-JOB-FORGE: the reservation witness startJob stamps
         // rides the persisted record end to end.
         reservation: pinnedJob.reservation,

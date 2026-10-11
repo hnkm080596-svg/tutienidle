@@ -299,7 +299,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     class="slot-view"
     :class="[
       `slot-view--${props.variant ?? 'item'}`,
-      { 'slot-view--stage': isStage },
+      { 'slot-view--stage': isStage, 'slot-view--circle': isCircle },
       filled ? 'slot-view--filled' : 'slot-view--empty',
       showSelected ? 'slot-view--selected' : '',
       veil !== 'none' ? `slot-view--veil-${veil}` : '',
@@ -1172,7 +1172,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     transform: rotate(360deg);
   }
 }
-</style>
 
 /* 'stage' variant: icon fills the ring interior as a cover-clipped
    painting; ring chrome + states stay the 'circle' treatment. */
@@ -1186,3 +1185,4 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   height: 100%;
   object-fit: cover;
 }
+</style>

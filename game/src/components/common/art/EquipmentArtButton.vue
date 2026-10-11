@@ -52,7 +52,6 @@ const emit = defineEmits<{ click: [event: MouseEvent] }>()
   filter: none;
 }
 .equipment-art-button:disabled { opacity: 0.45; cursor: default; }
-.equipment-art-button:focus-visible { outline: 2px solid #e5bd65; outline-offset: 2px; }
 .equipment-art-button.filter-art { aspect-ratio: 1225 / 324; padding: 0 12px; min-height: 0; }
 .equipment-art-button.square-art { color: #f2e3c2; }
 .equipment-art-button.square-art::before,

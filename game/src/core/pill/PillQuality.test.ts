@@ -23,10 +23,12 @@ import {
 import { PillBag } from './PillBag'
 import { PillSystem } from './PillSystem'
 import type { Pill } from './Pill'
-import type { ItemQuality } from '../item/ItemQuality'
+import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
 import {
   AlchemySystem,
   alchemyJobReservationDigest,
+  alchemyMulberry32,
+  jobSuccessPercent,
   type ActiveAlchemyJob,
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
@@ -255,39 +257,85 @@ function makeSystem(
 }
 
 describe('AlchemySystem — truc chat dan tren mint path', () => {
-  it('moi don vi roll chat rieng: batch tron -> nhieu stack, event ghi mintedGrades', () => {
-    const recipe3: AlchemyRecipe = { ...RECIPE }
-    const job = makeJob({ quantity: 3, completesAtMs: 1_000 })
-    const { system, bag } = makeSystem(recipe3, job)
+  // Mint streams are deterministic per unit: mulberry32(rollSeedBase +
+  // absolute unit index), first draw = extra-pill roll, next draw =
+  // grade roll (only when the unit mints). This helper mirrors that
+  // loop so tests can pick a rollSeedBase and assert the exact output.
+  function simUnits(
+    job: ActiveAlchemyJob,
+    recipe: AlchemyRecipe,
+    bonus = 0,
+    yieldMult = 1,
+  ): { minted: boolean[]; grades: ItemQuality[]; pills: number } {
+    const total = jobSuccessPercent(job, recipe, bonus)
+    const guaranteed = Math.floor(total / 100)
+    const extra = total % 100
+    const herbAge =
+      recipe.herbVariants.find((variant) => variant.materialId === job.herbMaterialId)?.age ??
+      'decade'
+    const minted: boolean[] = []
+    const grades: ItemQuality[] = []
+    let pills = 0
+    for (let i = 0; i < (job.quantity ?? 1); i += 1) {
+      const rng = alchemyMulberry32((job.rollSeedBase ?? 0) + i)
+      let unitPills = guaranteed
+      if (rng() * 100 < extra) unitPills += 1
+      unitPills = Math.floor(unitPills * Math.max(0, yieldMult))
+      minted.push(unitPills > 0)
+      if (unitPills > 0) grades.push(rollPillQualityWithHerb(rng, herbAge))
+      pills += unitPills
+    }
+    return { minted, grades, pills }
+  }
 
-    // total 50%: moi vien roll A success roi B chat (chi khi mint).
-    // u1: A 0 trung + B 0 -> hoang; u2: A 0 trung + B 0.9 -> huyen;
-    // u3: A 0.6 truot -> khong tieu roll B.
-    const rolls = [0, 0, 0, 0.9, 0.6]
-    let index = 0
-    system.tick(999_000, bag, () => ({ id: RECIPE.pillId }), () => rolls[index++] ?? 0.9)
+  function baseWhere(
+    quantity: number,
+    want: (sim: ReturnType<typeof simUnits>) => boolean,
+    recipe: AlchemyRecipe = RECIPE,
+  ): number {
+    for (let base = 0; base < 4_000; base += 1) {
+      const job = makeJob({ quantity, rollSeedBase: base })
+      const sim = simUnits(job, recipe)
+      if (want(sim)) return base
+    }
+    throw new Error('no rollSeedBase satisfies the wanted unit outcome')
+  }
+
+  it('moi don vi roll chat rieng: batch tron -> nhieu stack, event ghi mintedGrades', () => {
+    const base = baseWhere(
+      3,
+      (sim) => sim.grades.length >= 2 && new Set(sim.grades).size >= 2,
+    )
+    const job = makeJob({ quantity: 3, completesAtMs: 1_000, rollSeedBase: base })
+    const { system, bag } = makeSystem(RECIPE, job)
+    const sim = simUnits(job, RECIPE)
+
+    system.tick(999_000, bag, () => ({ id: RECIPE.pillId }), () => 0.9)
 
     const stacks = bag.getStacks(RECIPE.pillId)
-    expect(bag.getAmount(RECIPE.pillId)).toBe(2)
-    expect(stacks.map((s) => s.quality)).toEqual(['hoang', 'huyen'])
+    expect(bag.getAmount(RECIPE.pillId)).toBe(sim.pills)
+    expect(stacks.map((s) => s.quality)).toEqual([...new Set(sim.grades)])
 
     const event = system.drainSettlementEvents()[0]!
-    expect(event.mintedGrades).toEqual(['hoang', 'huyen'])
-    expect(event.pills).toBe(2)
+    expect(event.mintedGrades).toEqual(sim.grades)
+    expect(event.pills).toBe(sim.pills)
     expect(event.unitsProcessed).toBe(3)
   })
 
   it('don vi khong mint khong tieu rng chat (thu tu roll on dinh)', () => {
-    const { system, bag } = makeSystem(RECIPE, makeJob({ quantity: 2 }))
+    const base = baseWhere(
+      2,
+      (sim) => sim.minted[0] === false && sim.minted[1] === true,
+    )
+    const job = makeJob({ quantity: 2, rollSeedBase: base })
+    const { system, bag } = makeSystem(RECIPE, job)
+    const sim = simUnits(job, RECIPE)
 
-    // u1 truot (0.6>=0.5) -> khong roll chat; u2 trung + chat = rolls[1].
-    const rolls = [0.6, 0, 0.98]
-    let index = 0
-    system.tick(999_000, bag, () => ({ id: RECIPE.pillId }), () => rolls[index++] ?? 0.9)
+    system.tick(999_000, bag, () => ({ id: RECIPE.pillId }), () => 0.9)
 
     const stacks = bag.getStacks(RECIPE.pillId)
     expect(stacks).toHaveLength(1)
-    expect(stacks[0]?.quality).toBe('dia')
+    expect(stacks[0]?.quality).toBe(sim.grades[0])
   })
 
   it('herb van_nien day +1 bac chat san pham', () => {
@@ -295,28 +343,46 @@ describe('AlchemySystem — truc chat dan tren mint path', () => {
       ...RECIPE,
       herbVariants: [{ materialId: 'herb_myriad', age: 'myriad_year', label: 'Van Nien' }],
     }
-    const job = makeJob({ herbMaterialId: 'herb_myriad' })
+    // Pick a base whose minted grade is below 'tien' so the +1 uplift
+    // cannot cap at the top rank (which would mask the shift).
+    const base = baseWhere(
+      1,
+      (sim) => sim.minted[0] === true && sim.grades[0] !== 'tien',
+      recipeMyriad,
+    )
+    const job = makeJob({ herbMaterialId: 'herb_myriad', rollSeedBase: base })
     const { system, bag } = makeSystem(recipeMyriad, job)
 
-    // roll tho hoang -> +1 -> huyen.
-    const rolls = [0, 0]
-    let index = 0
-    system.tick(999_000, bag, () => ({ id: RECIPE.pillId }), () => rolls[index++] ?? 0)
+    system.tick(999_000, bag, () => ({ id: RECIPE.pillId }), () => 0)
 
-    expect(bag.getStacks(RECIPE.pillId)[0]?.quality).toBe('huyen')
+    // Van Nien mints at 100% success and lifts the rolled grade by +1:
+    // the stack quality equals the raw roll shifted one step up, i.e.
+    // whatever the deterministic unit stream produces for this base.
+    const sim = simUnits(job, recipeMyriad)
+    expect(bag.getStacks(RECIPE.pillId)[0]?.quality).toBe(sim.grades[0])
+    // The raw (unshifted) roll would be one step lower - replay the
+    // same unit stream (extra-pill draw consumed first) with age
+    // 'decade' to read the raw grade the herb uplift shifted.
+    const rawStream = alchemyMulberry32(base)
+    rawStream()
+    const rawRoll = rollPillQualityWithHerb(rawStream, 'decade')
+    expect(
+      ITEM_QUALITY_ORDER.indexOf(sim.grades[0]!) - ITEM_QUALITY_ORDER.indexOf(rawRoll),
+    ).toBe(1)
   })
 
   it('unitPills>1 (yield x2) ghi 1 muc chat cho ca don vi', () => {
-    const { system, bag } = makeSystem(RECIPE, makeJob({ quantity: 1 }))
+    const base = baseWhere(1, (sim) => sim.minted[0] === true)
+    const job = makeJob({ quantity: 1, rollSeedBase: base })
+    const { system, bag } = makeSystem(RECIPE, job)
+    const sim = simUnits(job, RECIPE, 0, 2)
 
-    const rolls = [0, 0.98] // A trung extra, B dia
-    let index = 0
-    system.tick(999_000, bag, () => ({ id: RECIPE.pillId }), () => rolls[index++] ?? 0, 0, 2)
+    system.tick(999_000, bag, () => ({ id: RECIPE.pillId }), () => 0, 0, 2)
 
-    expect(bag.getAmount(RECIPE.pillId)).toBe(2)
-    expect(bag.getStacks(RECIPE.pillId)[0]?.quality).toBe('dia')
-    expect(bag.getStacks(RECIPE.pillId)[0]?.amount).toBe(2)
-    expect(system.drainSettlementEvents()[0]?.mintedGrades).toEqual(['dia'])
+    expect(bag.getAmount(RECIPE.pillId)).toBe(sim.pills)
+    expect(bag.getStacks(RECIPE.pillId)[0]?.quality).toBe(sim.grades[0])
+    expect(bag.getStacks(RECIPE.pillId)[0]?.amount).toBe(sim.pills)
+    expect(system.drainSettlementEvents()[0]?.mintedGrades).toEqual(sim.grades)
   })
 })
 

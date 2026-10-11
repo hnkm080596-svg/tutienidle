@@ -14,6 +14,7 @@ import {
   AlchemySystem,
   jobSuccessPercent,
   alchemyJobReservationDigest,
+  alchemyMulberry32,
   alchemyRoomSuccessBonus,
   alchemySecondsFor,
   ALCHEMY_MAX_BATCH_QUANTITY,
@@ -21,6 +22,8 @@ import {
   ALCHEMY_SPEED_MULTIPLIERS,
 } from './AlchemySystem'
 import type { ActiveAlchemyJob, AlchemyRecipe } from './AlchemySystem'
+import { rollPillQualityWithHerb } from '../pill/PillQuality'
+import type { ItemQuality } from '../item/ItemQuality'
 import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { PillBag } from '../pill/PillBag'
 import { MaterialBag } from '../material/MaterialBag'
@@ -72,6 +75,54 @@ function makeJob(overrides: Partial<ActiveAlchemyJob> = {}): ActiveAlchemyJob {
   return job
 }
 
+// Mint streams are deterministic per unit: mulberry32(rollSeedBase +
+// absolute unit index); first draw = extra-pill roll, next draw =
+// grade roll only when the unit mints. Mirrors the settle loop so a
+// test can assert the seeded outcome instead of scripting ambient rng.
+function simUnits(
+  job: ActiveAlchemyJob,
+  recipe: AlchemyRecipe,
+  bonus = 0,
+  yieldMult = 1,
+): { minted: boolean[]; grades: ItemQuality[]; unitPills: number[]; pills: number } {
+  const total = jobSuccessPercent(job, recipe, bonus)
+  const guaranteed = Math.floor(total / 100)
+  const extra = total % 100
+  const herbAge =
+    recipe.herbVariants.find((variant) => variant.materialId === job.herbMaterialId)?.age ??
+    'decade'
+  const minted: boolean[] = []
+  const grades: ItemQuality[] = []
+  const unitPills: number[] = []
+  let pills = 0
+  for (let i = 0; i < (job.quantity ?? 1); i += 1) {
+    const rng = alchemyMulberry32((job.rollSeedBase ?? 0) + i)
+    let count = guaranteed
+    if (rng() * 100 < extra) count += 1
+    count = Math.floor(count * Math.max(0, yieldMult))
+    minted.push(count > 0)
+    if (count > 0) grades.push(rollPillQualityWithHerb(rng, herbAge))
+    unitPills.push(count)
+    pills += count
+  }
+  return { minted, grades, unitPills, pills }
+}
+
+// Finds a rollSeedBase whose unit outcomes satisfy `want` - keeps
+// seeded-roll assertions explicit instead of guessing at hash values.
+function baseWhere(
+  quantity: number,
+  want: (sim: ReturnType<typeof simUnits>) => boolean,
+  recipe: AlchemyRecipe = RECIPE,
+  bonus = 0,
+): number {
+  for (let base = 0; base < 4_000; base += 1) {
+    const job = makeJob({ quantity, rollSeedBase: base })
+    if (want(simUnits(job, recipe, bonus))) return base
+  }
+  throw new Error('no rollSeedBase satisfies the wanted unit outcome')
+}
+
 function makeSystemWithJob(job: ActiveAlchemyJob = makeJob()): {
   system: AlchemySystem
   bag: PillBag
@@ -108,7 +159,10 @@ describe('AlchemySystem — jobSuccessPercent', () => {
 
 describe('AlchemySystem — tick với bonus thiên phú', () => {
   it('không bonus — roll 60% thất bại với total 50% (split moi)', () => {
-    const { system, bag } = makeSystemWithJob()
+    // Seeded stream: pick a base whose unit-0 extra-pill roll misses,
+    // so the settle deterministically mints nothing (the fail branch).
+    const base = baseWhere(1, (sim) => sim.minted[0] === false)
+    const { system, bag } = makeSystemWithJob(makeJob({ rollSeedBase: base }))
 
     system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.6)
 
@@ -594,7 +648,10 @@ describe('AlchemySystem — success rate với bonus Đan Phòng (pure math, kh�
 
 describe('AlchemySystem — cap stackLimit của PillBag khi settle (đan stack trần 1000)', () => {
   it('settle vượt trần PillBag — phần tràn bị chặn, đan stack giữ 1000', () => {
-    const { system, bag } = makeSystemWithJob(makeJob())
+    // Same-grade stack required for the cap to bite: pick a base whose
+    // unit mints a 'hoang' pill (merges into the pre-filled stack).
+    const base = baseWhere(1, (sim) => sim.grades[0] === 'hoang', RECIPE, 100)
+    const { system, bag } = makeSystemWithJob(makeJob({ rollSeedBase: base }))
 
     bag.add(pillWithId(RECIPE.pillId), 1000)
     system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0, 100)
@@ -707,7 +764,8 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
   })
 
   it('pillYieldMultiplier 2 — mẻ thất bại vẫn 0 viên (không sinh đan)', () => {
-    const { system, bag } = makeSystemWithJob()
+    const base = baseWhere(1, (sim) => sim.minted[0] === false)
+    const { system, bag } = makeSystemWithJob(makeJob({ rollSeedBase: base }))
 
     system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0.6, 0, 2)
 
@@ -941,24 +999,28 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
 
     system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 1, 1, 3)
 
-    // total 50% (decade, split moi) - rng 0 = luon trung extra (0 < 50).
-    // Moi vien mint +1 pill, kem 1 roll chat (rng 0 -> hoang).
-    const rng = () => 0
+    // total 50% (decade, split moi). Per-unit pill counts come from the
+    // seeded mint stream - mirror it instead of scripting ambient rng.
+    const sim = simUnits(system.getJobs()[0]!, recipe)
+    let expected = 0
 
-    system.tick(61_000, pillBag, () => ({ id: recipe.pillId }), rng)
+    system.tick(61_000, pillBag, () => ({ id: recipe.pillId }), () => 0)
     let job = system.getJobs()[0]!
     expect(job.unitsDone).toBe(1)
-    expect(pillBag.getAmount(recipe.pillId)).toBe(1)
+    expected += sim.unitPills[0]!
+    expect(pillBag.getAmount(recipe.pillId)).toBe(expected)
     expect(system.drainSettlementEvents()[0]).toMatchObject({ unitsProcessed: 1, jobDone: false })
 
-    system.tick(121_000, pillBag, () => ({ id: recipe.pillId }), rng)
+    system.tick(121_000, pillBag, () => ({ id: recipe.pillId }), () => 0)
     job = system.getJobs()[0]!
     expect(job.unitsDone).toBe(2)
-    expect(pillBag.getAmount(recipe.pillId)).toBe(2)
+    expected += sim.unitPills[1]!
+    expect(pillBag.getAmount(recipe.pillId)).toBe(expected)
 
-    system.tick(181_000, pillBag, () => ({ id: recipe.pillId }), rng)
+    system.tick(181_000, pillBag, () => ({ id: recipe.pillId }), () => 0)
     expect(system.getJobs()).toHaveLength(0)
-    expect(pillBag.getAmount(recipe.pillId)).toBe(3)
+    expected += sim.unitPills[2]!
+    expect(pillBag.getAmount(recipe.pillId)).toBe(expected)
     // drain gom event cua tick 2 + tick 3 - lay event cuoi (job xong).
     expect(system.drainSettlementEvents().at(-1)).toMatchObject({ unitsProcessed: 1, jobDone: true })
   })
@@ -969,19 +1031,18 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
 
     system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 1, 1, 3)
 
-    // 50% extra chance; moi vien roll rieng: vien 1 truot (0.5*100=50>=50),
-    // vien 2 trung (0.1*100=10<50, kem roll chat 0.5), vien 3 truot -> tong 1 pill.
-    const rolls = [0.5, 0.1, 0.5]
-    let index = 0
+    // All 3 units settle in one tick; per-unit outcomes come from the
+    // seeded stream (each unit its own mulberry32 roll).
+    const sim = simUnits(system.getJobs()[0]!, recipe)
 
-    system.tick(999_000, pillBag, () => ({ id: recipe.pillId }), () => rolls[index++] ?? 0.9)
+    system.tick(999_000, pillBag, () => ({ id: recipe.pillId }), () => 0.5)
 
-    expect(pillBag.getAmount(recipe.pillId)).toBe(1)
+    expect(pillBag.getAmount(recipe.pillId)).toBe(sim.pills)
     const event = system.drainSettlementEvents()[0]!
     expect(event.unitsProcessed).toBe(3)
     expect(event.jobDone).toBe(true)
-    expect(event.pills).toBe(1)
-    expect(event.success).toBe(true)
+    expect(event.pills).toBe(sim.pills)
+    expect(event.success).toBe(sim.pills > 0)
   })
 
   it('extraPillChance tren tung vien — total 125%: moi vien guaranteed 1 + roll 25% rieng', () => {
@@ -991,14 +1052,13 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
     // room 1 + bonus 75 -> 125%: guaranteed 1 + extra 25%.
     system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 1, 1, 3)
 
-    const rolls = [0.01, 0.5, 0.99]
-    let index = 0
+    // Each unit rolls its own extra-pill draw off the seeded stream.
+    const sim = simUnits(system.getJobs()[0]!, recipe, 75)
 
-    system.tick(999_000, pillBag, () => ({ id: recipe.pillId }), () => rolls[index++] ?? 0.9, 75)
+    system.tick(999_000, pillBag, () => ({ id: recipe.pillId }), () => 0.9, 75)
 
-    // vien1: 1 + trung (0.01*100<25) = 2, roll chat 0.5; vien2: 1 +
-    // 0.99*100>25 = 1; vien3: 1 (?? 0.9 truot).
-    expect(pillBag.getAmount(recipe.pillId)).toBe(4)
+    expect(pillBag.getAmount(recipe.pillId)).toBe(sim.pills)
+    expect(sim.unitPills.every((count) => count >= 1)).toBe(true)
   })
 
   it('vien da qua deadline nhung chua roll van bi mat lieu khi cancel (chong ne roll)', () => {
@@ -1023,6 +1083,7 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
     system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 1, 1, 3)
 
     // Roll 1 vien roi "save" (detach qua getJobs) + "restore" sang system moi.
+    const sim = simUnits(system.getJobs()[0]!, recipe)
     system.tick(61_000, pillBag, () => ({ id: recipe.pillId }), () => 0)
 
     const snapshot = system.getJobs().map((job) => ({ ...job }))
@@ -1035,7 +1096,7 @@ describe('AlchemySystem — queue order (batch tuần tự từng viên)', () =>
     // Hai vien con lai settle o cac deadline rieng, khong re-mint vien 0.
     restored.tick(181_000, pillBag, () => ({ id: recipe.pillId }), () => 0)
     expect(restored.getJobs()).toHaveLength(0)
-    expect(pillBag.getAmount(recipe.pillId)).toBe(3)
+    expect(pillBag.getAmount(recipe.pillId)).toBe(sim.pills)
   })
 
   it('job shape cu (khong quantity/unitsDone) — restore VERBATIM, settle nhu cu', () => {
@@ -1274,12 +1335,12 @@ describe('AlchemySystem — enqueueJob merge-into-last-order', () => {
     system.enqueueJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 5)
     system.enqueueJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 5)
 
-    const rng = () => 0
-    system.tick(61_000, pillBag, () => ({ id: recipe.pillId }), rng)
+    const sim = simUnits(system.getJobs()[0]!, recipe)
+    system.tick(61_000, pillBag, () => ({ id: recipe.pillId }), () => 0)
     expect(system.getJobs()[0]!.unitsDone).toBe(1)
-    system.tick(181_000, pillBag, () => ({ id: recipe.pillId }), rng)
+    system.tick(181_000, pillBag, () => ({ id: recipe.pillId }), () => 0)
     expect(system.getJobs()).toHaveLength(0)
-    expect(pillBag.getAmount(recipe.pillId)).toBe(3)
+    expect(pillBag.getAmount(recipe.pillId)).toBe(sim.pills)
   })
 
   it('cost profile lech giua 2 click (talent/double-pill) — khong merge, tao order moi', () => {

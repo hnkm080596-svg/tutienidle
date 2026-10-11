@@ -13,7 +13,7 @@ export interface StagePosition { x: number; y: number }
 export function stagePosition(index: number): StagePosition {
   const row = Math.floor(index / 10)
   const column = index % 10
-  const x = 80 + column * 95 + (row % 2 === 0 ? 0 : 47)
+  const x = 80 + column * 95 + (row % 2 === 0 ? 0 : 30)
   const y = 140 + row * 260
   return { x, y }
 }

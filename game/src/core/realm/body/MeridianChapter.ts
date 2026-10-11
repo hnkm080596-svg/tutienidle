@@ -122,7 +122,10 @@ function nextMeridianIndex(progress: Record<string, number>): number {
 // tron). Ghi sparse theo meridian id (additive field, save cu giu
 // nguyen lo danh = he so 1). Goi SAU khi invest va debit da rut sach
 // vien - duong vua nhan invest la index CUOI co progress > 0 (strict
-// prefix => duy nhat): vua mo xong hoac dang tien trien.
+// prefix => duy nhat).
+// Chi ghi he so KHI duong dat 100%: integrityIssues coi mot multiplier
+// tren duong chua mo la save khong hop le, nen tien trinh tam thoi song
+// trong qualityAccum (sum+count) cho toi luc hoan thanh.
 export function recordMeridianOpenQuality(
   player: PlayerData,
   spentQualities: readonly ItemQuality[],
@@ -139,12 +142,28 @@ export function recordMeridianOpenQuality(
     return
   }
 
-  const mean =
-    spentQualities.reduce((sum, quality) => sum + PILL_QUALITY_EFFECT_UPLIFT[quality], 0) /
-    spentQualities.length
-
   const state = player.bodyProgression.meridian
-  state.openedQualityMultipliers = { ...state.openedQualityMultipliers, [meridianId]: mean }
+  const invested = spentQualities.reduce(
+    (sum, quality) => sum + PILL_QUALITY_EFFECT_UPLIFT[quality], 0,
+  )
+  const accum = { ...(state.qualityAccum ?? {}) }
+  const entry = accum[meridianId] ?? { sum: 0, count: 0 }
+  entry.sum += invested
+  entry.count += spentQualities.length
+
+  if ((progress[meridianId] ?? 0) >= MERIDIAN_FULL_PROGRESS) {
+    // Meridian just completed - fold the running mean into the opened
+    // record and drop the accumulator.
+    delete accum[meridianId]
+    state.qualityAccum = Object.keys(accum).length ? accum : undefined
+    state.openedQualityMultipliers = {
+      ...state.openedQualityMultipliers,
+      [meridianId]: entry.sum / entry.count,
+    }
+  } else {
+    accum[meridianId] = entry
+    state.qualityAccum = accum
+  }
 }
 
 export const meridianChapter: ModifierBodyChapter = {
@@ -386,6 +405,18 @@ export const meridianChapter: ModifierBodyChapter = {
           issues.push(
             `meridian.openedQualityMultipliers['${meridianId}'] ghi tren duong chua mo`,
           )
+        }
+      }
+    }
+
+    // qualityAccum is transient by construction: entries only make sense
+    // on the single in-progress meridian (0 < progress < 100).
+    const accum = player.bodyProgression.meridian.qualityAccum
+    if (accum !== undefined) {
+      for (const meridianId of Object.keys(accum)) {
+        const p = progress[meridianId] ?? 0
+        if (p <= 0 || p >= MERIDIAN_FULL_PROGRESS) {
+          issues.push(`meridian.qualityAccum['${meridianId}'] tich luy ngoai duong dang mo`)
         }
       }
     }

@@ -191,8 +191,11 @@ watch(selectedStage, stage => {
 }, { immediate: true })
 
 function selectChapter(id: string) {
-  activeChapterId.value = id
   const chapterStages = stagesInZone.value.filter(stage => String(stage.chapter ?? 1) === id)
+  // Merged rail entries (e.g. the single 'thanh_van' card) do not map to a
+  // real stage.chapter - ignore them instead of clearing the selection.
+  if (!chapterStages.length) return
+  activeChapterId.value = id
   selectedStageId.value = chapterStages.find(stage => modelById.value.get(stage.id)?.state !== 'locked')?.id
     ?? chapterStages[0]?.id
     ?? null

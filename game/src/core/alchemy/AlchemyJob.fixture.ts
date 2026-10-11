@@ -36,6 +36,11 @@ export function alchemyJobFixture(
     // (one-unit) record, the digest folds whichever shape is given.
     quantity?: number
     unitsDone?: number
+    // Seeded mint stream anchor. Default 0 so fixtures mint
+    // deterministically (unit-0 draw 0.2664); pass an explicit
+    // value for a different stream, or delete the field on the
+    // returned literal to emulate a pre-anchor (legacy) save.
+    rollSeedBase?: number
   },
   reservation?: Partial<Omit<AlchemyJobReservation, 'digest'>>,
   recipe?: AlchemyRecipe,
@@ -51,12 +56,15 @@ export function alchemyJobFixture(
     costScale: 1,
   }
   const merged = { ...base, ...(reservation ?? {}) }
+  // Apply the default seed BEFORE the digest fold so the stored
+  // witness and the returned literal agree on the same bundle.
+  const seeded = { rollSeedBase: 0, ...job }
 
   return {
-    ...job,
+    ...seeded,
     reservation: {
       ...merged,
-      digest: alchemyJobReservationDigest(job, merged),
+      digest: alchemyJobReservationDigest(seeded, merged),
     },
   }
 }

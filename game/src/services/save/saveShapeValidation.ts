@@ -3797,6 +3797,19 @@ function validateAlchemyJobsSave(
       }
     }
 
+    // Anti-scum roll anchor: the writer stamps a non-negative integer
+    // base allocated from the persisted cursor; pre-anchor saves have
+    // no field. Anything else is crafted.
+    if (
+      entry.rollSeedBase !== undefined &&
+      (!Number.isInteger(entry.rollSeedBase) || (entry.rollSeedBase as number) < 0)
+    ) {
+      issues.push({
+        path: `${entryPath}.rollSeedBase`,
+        message: 'rollSeedBase phải là số nguyên >= 0 (writer stamp từ roll cursor)',
+      })
+    }
+
     // F-TC9-3: jobSuccessPercent reads roomLevelAtStart verbatim into
     // the authored success table, and building level never decreases -
     // a claim above the persisted pill_room level is a forged success
