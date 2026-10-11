@@ -317,6 +317,41 @@ export const meridianChapter: ModifierBodyChapter = {
       }
     }
 
+    // qualityAccum - additive optional transient: absent = legacy save,
+    // present entries must be { sum: finite >= 0, count: int >= 1 } or the
+    // completing fold could write NaN/Infinity into the multiplier.
+    if (slice.qualityAccum !== undefined) {
+      if (!isRecord(slice.qualityAccum)) {
+        emit({
+          path: `${basePath}.qualityAccum`,
+          message: 'qualityAccum phai la record meridian -> {sum,count}',
+        })
+      } else {
+        for (const [meridianId, entry] of Object.entries(slice.qualityAccum)) {
+          if (!isRecord(entry)) {
+            emit({
+              path: `${basePath}.qualityAccum.${meridianId}`,
+              message: 'muc tich luy phai la object {sum,count}',
+            })
+            continue
+          }
+          const { sum, count } = entry as { sum?: unknown; count?: unknown }
+          if (typeof sum !== 'number' || !Number.isFinite(sum) || sum < 0) {
+            emit({
+              path: `${basePath}.qualityAccum.${meridianId}.sum`,
+              message: 'sum phai la so huu han >= 0',
+            })
+          }
+          if (typeof count !== 'number' || !Number.isInteger(count) || count < 1) {
+            emit({
+              path: `${basePath}.qualityAccum.${meridianId}.count`,
+              message: 'count phai la so nguyen >= 1',
+            })
+          }
+        }
+      }
+    }
+
     // v87 migration: the legacy { openedIds: string[] } shape stays
     // loadable - restore normalizes it into the progress map.
     if (slice.progress === undefined && Array.isArray(slice.openedIds)) {
