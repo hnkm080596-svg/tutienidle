@@ -26,7 +26,9 @@ g.ResizeObserver ??= class {
   unobserve() {}
   disconnect() {}
 }
-SVGElement.prototype.getScreenCTM = () => null
+// getScreenCTM lives on SVGGraphicsElement - assign via Object.assign
+// so the stub type-checks on the base SVGElement prototype.
+Object.assign(SVGElement.prototype, { getScreenCTM: () => null })
 
 const TEST_RECIPE: AlchemyRecipe = {
   id: 'alchemy_tu_linh_dan_qi_refining',
