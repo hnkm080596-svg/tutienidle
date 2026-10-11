@@ -83,19 +83,21 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     // Roster remap: one family per chapter - every mortal floor node
     // shows the boar family now.
     expect(mounted.container.textContent).toContain('Heo Rừng')
-    expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
-
-    // Spec v3 D9 (2026-09-11): bossEnemyId only exists on floor 10 -
-    // floor 1 must NOT show the Boss badge.
-    expect(mounted.container.textContent).not.toContain(t('panels.stageSelect.labels.bossNamePrefix'))
-
-    const nodes = mounted.container.querySelectorAll('.stage-node')
-    ;(nodes[9] as HTMLElement).click()
-    await nextTick()
-
     const bossStage = STAGES.find((stage) => stage.id === 'mortal_dong_10')!
     const bossTemplate = ENEMIES.find((enemy) => enemy.id === bossStage.bossEnemyId)!
+    const nodes = mounted.container.querySelectorAll('.stage-node')
+
+    // Frontier pick (2026-10-11): the surface anchors on the first
+    // uncleared ai - dong_10 here - so the boss floor's detail (badge +
+    // roster) shows at open.
     expect(mounted.container.textContent).toContain(`${t('panels.stageSelect.labels.bossNamePrefix')} ${bossTemplate.name}`)
+
+    // Spec v3 D9 (2026-09-11): bossEnemyId only exists on floor 10 -
+    // picking floor 1 swaps the detail: badge gone, its roster shows.
+    ;(nodes[0] as HTMLElement).click()
+    await nextTick()
+    expect(mounted.container.textContent).not.toContain(t('panels.stageSelect.labels.bossNamePrefix'))
+    expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
 
     mounted.unmount()
   })
@@ -165,8 +167,10 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="repeat"]')!.classList.contains('active')).toBe(true)
 
+    // Frontier pick anchors on dong_2 at open (first uncleared) - so
+    // the disarm check must click a DIFFERENT node: back to dong_1.
     container
-      .querySelector<HTMLElement>('[data-stage-id="mortal_dong_2"]')!
+      .querySelector<HTMLElement>('[data-stage-id="mortal_dong_1"]')!
       .click()
     await nextTick()
 
