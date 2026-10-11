@@ -164,13 +164,22 @@ const selectedChapterLabel = computed(() => {
   return chapterOptions.value.find(option => option.chapter === chapter)?.label ?? ''
 })
 
-// Zone change re-picks the first unlocked stage of the new zone
-// (stageIds order = chapter order, so this lands in the earliest
-// incomplete chapter - same semantics the chapter-tab auto-pick had).
-function selectFirstStageInZone() {
-  selectedStageId.value = stagesInZone.value.find(stage => modelById.value.get(stage.id)?.state !== 'locked')?.id
-    ?? stagesInZone.value[0]?.id
+// Frontier pick: the first unlocked-UNCLEARED stage in roster order
+// (state 'current'/'available'), so the surface anchors where the run
+// continues rather than on ai 1 already farmed. Cleared states
+// ('completed'/'perfect') are skipped; fall back to first unlocked,
+// then first stage so a fully-cleared zone still shows something.
+function pickFrontierStageId(stages: ReadonlyArray<{ id: string }>): string | null {
+  const frontier = stages.find(stage => {
+    const state = modelById.value.get(stage.id)?.state
+    return state !== undefined && state !== 'locked' && state !== 'completed' && state !== 'perfect'
+  })
+  return (frontier ?? stages.find(stage => modelById.value.get(stage.id)?.state !== 'locked') ?? stages[0])?.id
     ?? null
+}
+
+function selectFirstStageInZone() {
+  selectedStageId.value = pickFrontierStageId(stagesInZone.value)
 }
 
 watch(selectedZoneId, selectFirstStageInZone, { immediate: true })
@@ -196,9 +205,7 @@ function selectChapter(id: string) {
   // real stage.chapter - ignore them instead of clearing the selection.
   if (!chapterStages.length) return
   activeChapterId.value = id
-  selectedStageId.value = chapterStages.find(stage => modelById.value.get(stage.id)?.state !== 'locked')?.id
-    ?? chapterStages[0]?.id
-    ?? null
+  selectedStageId.value = pickFrontierStageId(chapterStages)
 }
 
 const selectedModel = computed(() =>

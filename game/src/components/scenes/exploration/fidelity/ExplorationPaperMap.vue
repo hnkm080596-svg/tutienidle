@@ -98,19 +98,23 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
   const startY = event.clientY
   const base = nodePos(id, x, y)
   const move = (e: PointerEvent) => {
+    // Clamp into the design rect: overflow:hidden would otherwise
+    // hide a node dragged outside the 1000x800 space for the session.
     dragOffsets.value = {
       ...dragOffsets.value,
       [id]: {
-        x: Math.round(base.x + (e.clientX - startX) / s),
-        y: Math.round(base.y + (e.clientY - startY) / s),
+        x: Math.min(MAP_DESIGN_W, Math.max(0, Math.round(base.x + (e.clientX - startX) / s))),
+        y: Math.min(MAP_DESIGN_H, Math.max(0, Math.round(base.y + (e.clientY - startY) / s))),
       },
     }
   }
-  const up = () => {
+  const end = (logFinal: boolean) => {
     window.removeEventListener('pointermove', move, true)
     window.removeEventListener('pointerup', up, true)
+    window.removeEventListener('pointercancel', cancel, true)
     window.removeEventListener('blur', up, true)
     activeDragCleanup = null
+    if (!logFinal) return
     const final = dragOffsets.value[id]
     if (final) {
       const text = JSON.stringify({ stageTuner: { id, x: final.x, y: final.y } })
@@ -118,8 +122,13 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
       if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {})
     }
   }
+  const up = () => end(true)
+  // pointercancel (touch scroll-steal, OS gesture) must end the drag
+  // too - leaving listeners armed would keep tracking later motion.
+  const cancel = () => end(false)
   window.addEventListener('pointermove', move, true)
   window.addEventListener('pointerup', up, true)
+  window.addEventListener('pointercancel', cancel, true)
   window.addEventListener('blur', up, true)
   activeDragCleanup = up
 }
