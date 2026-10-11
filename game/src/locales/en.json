@@ -873,7 +873,10 @@
       "groups": {
         "mainline": "Mainline",
         "daily": "Daily Quests",
-        "once": "Quests"
+        "once": "Quests",
+        "weekly": "Weekly Quests",
+        "achievement": "Achievements",
+        "exploration": "Exploration"
       },
       "anyEnemy": "Any enemy",
       "rewards": {
@@ -905,7 +908,23 @@
         "rewardsTitle": "Quest Rewards",
         "turnIn": "Hand in {name}",
         "done": "Done",
-        "reasonIncomplete": "Objective incomplete."
+        "reasonIncomplete": "Objective incomplete.",
+        "list": "Quest List",
+        "progress": "Progress",
+        "status": {
+          "doing": "Doing",
+          "complete": "Complete",
+          "pending": "Locked"
+        }
+      },
+      "intro": "Track your cultivation progress one quest at a time.",
+      "groupHints": {
+        "mainline": "The main journey",
+        "once": "One-time quests",
+        "daily": "Refreshes each day",
+        "weekly": "Refreshes each week",
+        "achievement": "Cultivation milestones",
+        "exploration": "Explore the lands"
       }
     },
     "common": {
@@ -2336,5 +2355,4 @@
     "spawnEquipment": "+ Random equipment",
     "spawnMaterial": "+ Random material"
   }
-
 }

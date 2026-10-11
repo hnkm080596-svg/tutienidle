@@ -1,14 +1,23 @@
 <script setup lang="ts">
-// Scene 18 (Nhiem Vu / quest) paper surface: the approved fidelity
-// composition - cadence tabs | quest list rail | detail panel - now
-// owning the shared paper chrome (nine-slice sheet + nav rail + title)
-// exactly like the other migrated tabs. The fixture internals stay as
-// slot fallbacks for the preview; production mounts the real
-// QuestGroupTabs/QuestList/QuestDetailPanel through #tabs/#list/#detail.
+// Scene 18 (Nhiem Vu / quest) paper surface, Codex landscape port:
+// the sheet is the shared flat paper page at the common panel band
+// (24%/12.5%/74%/75% of the 1440x810 canvas, same as skill-sheet /
+// equipment-sheet). The element is renamed off `quest-paper` on
+// purpose - tien-hiep-ui.css globals pin every <scene>-paper class to
+// the legacy 156/1272 band. Inside the sheet the approved 3-column
+// composition mounts: thematic group medallion rail | EquipmentArtCard
+// list | EquipmentArtCard detail. The fixture internals stay slot
+// fallbacks for the preview; production mounts the real
+// QuestGroupRail/QuestList/QuestDetailPanel through
+// #groups/#list/#detail.
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
+import QuestCategoryArtButton from '@/components/common/art/QuestCategoryArtButton.vue'
+import { questGroupIcon } from '../groups/questGroupArt'
 import type { QuestDisplay } from './questUi'
 import type { VictoryRewardDisplay } from '@/components/scenes/victory/fidelity/victoryUi'
 import QuestFidelityDetail from './QuestFidelityDetail.vue'
@@ -26,7 +35,7 @@ const emit = defineEmits<{ select: [id: string]; filter: [id: string]; action: [
 const { t } = useI18n()
 const filters = ['all', 'once', 'active', 'ready', 'claimed']
 
-const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png')
+const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
 const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
 
 // Same dialog contract the imperial scroll carried: focus/pointer stay
@@ -37,13 +46,60 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
 <template>
   <section ref="rootRef" class="quest-scene" :aria-label="t('panels.quest.title')" @click.self="emit('back')">
-    <div class="quest-paper" :style="{ borderImageSource: `url('${paper}')` }" aria-hidden="true" />
-    <h1 class="quest-title">{{ t('panels.quest.title') }}</h1>
-    <img class="quest-divider" :src="titleDivider" alt="">
+    <div class="quest-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
+    <header class="quest-heading">
+      <h1 class="quest-title">{{ t('panels.quest.title') }}</h1>
+      <img class="quest-divider" :src="titleDivider" alt="">
+      <p class="quest-intro">{{ t('panels.quest.intro') }}</p>
+    </header>
 
-    <div class="quest-content">
-      <slot name="tabs"><nav class="tabs"><button v-for="id in filters" :key="id" :aria-pressed="filter===id" @click="emit('filter',id)">{{ t(`questPreview.${id}`) }}</button></nav></slot>
-      <div class="workspace"><slot name="list"><div class="quest-list"><button v-for="quest in quests" :key="quest.id" :class="{selected:selected?.id===quest.id}" @click="emit('select',quest.id)"><img :src="quest.image" alt=""><span><b>{{ quest.name }}</b><small :class="quest.status">{{ t(`questPreview.${quest.status}`) }}</small></span><i aria-hidden="true">›</i></button><p v-if="!quests.length">{{ t('questPreview.empty') }}</p></div></slot><slot name="detail"><QuestFidelityDetail v-if="selected" :quest="selected" :rewards="rewards" @action="emit('action',$event)"/></slot></div>
+    <div class="quest-columns">
+      <nav class="quest-groups">
+        <slot name="groups">
+          <QuestCategoryArtButton
+            v-for="id in filters"
+            :key="id"
+            :icon="questGroupIcon(id)"
+            :label="t(`questPreview.${id}`)"
+            hint=""
+            :selected="filter === id"
+            @click="emit('filter', id)"
+          />
+        </slot>
+      </nav>
+
+      <EquipmentArtCard class="quest-list-card">
+        <h2 class="quest-list-title">{{ t('panels.quest.scene.list') }}</h2>
+        <slot name="list">
+          <div class="quest-list-fallback">
+            <button
+              v-for="quest in quests"
+              :key="quest.id"
+              type="button"
+              :class="{ selected: selected?.id === quest.id }"
+              @click="emit('select', quest.id)"
+            >
+              <img :src="quest.image" alt="">
+              <span class="quest-list-fallback__body">
+                <b>{{ quest.name }}</b>
+                <small>{{ quest.description }}</small>
+                <span class="quest-list-fallback__meter">
+                  <EquipmentEnergyTube :fill="quest.progress ?? 0" color="#e7bb62" />
+                  <i>{{ quest.progressText ?? '' }}</i>
+                </span>
+              </span>
+              <em :class="quest.status">{{ t(`questPreview.${quest.status}`) }}</em>
+            </button>
+            <p v-if="!quests.length">{{ t('questPreview.empty') }}</p>
+          </div>
+        </slot>
+      </EquipmentArtCard>
+
+      <EquipmentArtCard class="quest-detail-card">
+        <slot name="detail">
+          <QuestFidelityDetail v-if="selected" :quest="selected" :rewards="rewards" @action="emit('action', $event)" />
+        </slot>
+      </EquipmentArtCard>
     </div>
 
     <p v-if="preview" class="quest-preview">{{ t('preview') }}</p>
@@ -54,26 +110,35 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 <style scoped>
 .quest-scene{position:absolute;inset:0;pointer-events:auto;font-family:var(--font-display,Georgia,serif)}
 .quest-scene :deep(*){box-sizing:border-box}
-.quest-paper{position:absolute;left:94px;top:123px;width:1334px;height:633px;border:0 solid transparent;border-image-slice:300 fill;border-image-width:83px;filter:drop-shadow(0 12px 15px #0009)}
-.quest-title{position:absolute;left:235px;top:165px;margin:0;font-size:32px;font-weight:700;color:#35250f;text-shadow:0 1px #fff7} .quest-divider{position:absolute;left:237px;top:179px;width:230px;object-fit:contain;opacity:.9}
-/* Interior region: clears the nav-rail column on the left and the
-   paper's decorative frame all around (same rect the preview surface
-   exposes). */
-.quest-content{position:absolute;left:234px;top:227px;width:1143px;height:465px;display:flex;flex-direction:column}
-.tabs{display:flex;gap:8px;height:42px;margin-bottom:17px;border-bottom:1px solid #81663a66;flex:0 0 auto}
-.tabs button{border:0;border-bottom:3px solid transparent;background:transparent;color:#665038;font:700 17px var(--font-display,Georgia,serif);padding:0 23px;cursor:pointer}
-.tabs button[aria-pressed=true]{border-color:#947133;color:#264934;background:#87733d13}
-.workspace{display:grid;grid-template-columns:404px 1fr;gap:31px;flex:1;min-height:0}
-.quest-list{overflow:auto;border-right:1px solid #866b3b55;padding-right:21px;min-height:0}
-.quest-list>button{display:flex;gap:13px;align-items:center;width:100%;height:76px;padding:9px 12px;margin-bottom:9px;border:1px solid #997f4c77;background:#7353220b;color:#4b3a26;text-align:left;cursor:pointer}
-.quest-list>button.selected{background:linear-gradient(110deg,#24452f,#12291e);color:#fae5b6;border-color:#c1a466;box-shadow:inset 0 0 0 3px #ccb47433}
-.quest-list img{width:57px;height:54px;object-fit:cover;border:1px solid #ae9564}
-.quest-list b{font-size:16px;display:block}
-.quest-list small{display:inline-block;margin-top:7px;font-size:11px;letter-spacing:1px;color:#786344}
-.quest-list .selected small{color:#c6cba6}
-.quest-list .ready{color:#2d7754}
-.quest-list i{margin-left:auto;font-size:25px;font-style:normal}
-.tabs button:focus-visible,.quest-list button:focus-visible{outline:2px solid #8f6a30;outline-offset:2px}
-.quest-preview{position:absolute;left:235px;top:713px;margin:0;font-size:10px;line-height:15px;color:#7d6a45}
-.quest-notice{position:absolute;left:700px;top:710px;width:675px;height:28px;margin:0;text-align:right;font-size:12px;color:#62512d}
+/* Sheet = .skill-sheet/.equipment-sheet verbatim: flat shared paper
+   page on the common band (345/101/1065/608) - renamed off
+   `quest-paper` to escape the global *-paper legacy pin. */
+.quest-sheet{position:absolute;left:345px;top:101px;width:1065px;height:608px;background-color:#f2e4c8;background-size:cover;background-position:center;background-repeat:no-repeat;border:3px double #b28a43}
+/* Heading block: preview header (bold title + italic intro) keeps the
+   canonical clouds divider under the title. */
+.quest-heading{position:absolute;left:367px;top:112px;width:1021px;height:79px;border-bottom:1px solid #b28a4370;box-sizing:border-box}
+.quest-title{margin:0;font:700 38px/1.15 var(--font-display,Georgia,serif);color:#30271b}
+.quest-divider{position:absolute;left:2px;top:40px;width:190px;height:12px;object-fit:cover;object-position:left center;opacity:.85;pointer-events:none}
+.quest-intro{position:absolute;right:0;bottom:6px;margin:0;max-width:640px;text-align:right;font-size:13px;font-style:italic;color:#715627}
+/* 3-column grid per the approved preview: rail | list | detail. */
+.quest-columns{position:absolute;left:367px;top:200px;width:1021px;height:490px;display:grid;grid-template-columns:19% 43% minmax(0,1fr);gap:12px}
+.quest-groups{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.quest-groups :deep(button){flex:0 0 auto}
+.quest-list-card,.quest-detail-card{display:flex;flex-direction:column;min-height:0;gap:6px}
+.quest-list-title{margin:0;flex:0 0 auto;font:700 18px var(--font-display,Georgia,serif);color:#f3e4c4}
+/* Slot fallback list (preview page) - same row shape as QuestRow. */
+.quest-list-fallback{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column}
+.quest-list-fallback::-webkit-scrollbar{display:none}
+.quest-list-fallback>button{width:100%;display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:7px;color:#efdfb9;border:1px solid #947444;background:#15171550;text-align:left;cursor:pointer;font-family:inherit}
+.quest-list-fallback>button.selected{border-color:#f5ce78;box-shadow:inset 0 0 8px #e1a94370,0 0 4px #e1a94380}
+.quest-list-fallback img{width:56px;height:56px;object-fit:cover;border:1px solid #ad8a46;flex:0 0 auto}
+.quest-list-fallback__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.quest-list-fallback__body b{font-size:15px}
+.quest-list-fallback__body small{font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.quest-list-fallback__meter{display:flex;align-items:center;gap:9px;font-size:11px}
+.quest-list-fallback__meter i{font-style:normal;white-space:nowrap}
+.quest-list-fallback>button>em{flex:0 0 auto;font-style:normal;font-size:10px;border:1px solid #947444;padding:4px;white-space:nowrap}
+.quest-list-fallback .ready{color:#9ccc82}
+.quest-preview{position:absolute;left:367px;top:693px;margin:0;font-size:10px;line-height:15px;color:#7d6a45}
+.quest-notice{position:absolute;left:750px;top:693px;width:640px;height:13px;margin:0;text-align:right;font-size:12px;color:#62512d}
 </style>

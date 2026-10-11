@@ -873,7 +873,10 @@
       "groups": {
         "mainline": "Chính Tuyến",
         "daily": "Nhiệm Vụ Hàng Ngày",
-        "once": "Nhiệm Vụ"
+        "once": "Nhiệm Vụ",
+        "weekly": "Nhiệm Vụ Tuần",
+        "achievement": "Thành Tựu",
+        "exploration": "Thám Hiểm"
       },
       "anyEnemy": "Bất kỳ quái",
       "rewards": {
@@ -905,7 +908,23 @@
         "rewardsTitle": "Thưởng Nhiệm Vụ",
         "turnIn": "Nộp {name}",
         "done": "Đã hoàn thành",
-        "reasonIncomplete": "Chưa đủ tiến độ mục tiêu."
+        "reasonIncomplete": "Chưa đủ tiến độ mục tiêu.",
+        "list": "Danh Sách",
+        "progress": "Tiến Độ",
+        "status": {
+          "doing": "Đang Làm",
+          "complete": "Hoàn Thành",
+          "pending": "Chưa Mở"
+        }
+      },
+      "intro": "Theo dõi tiến độ tu luyện qua từng nhiệm vụ.",
+      "groupHints": {
+        "mainline": "Hành trình chính tuyến",
+        "once": "Nhiệm vụ một lần",
+        "daily": "Làm mới mỗi ngày",
+        "weekly": "Làm mới mỗi tuần",
+        "achievement": "Cột mốc tu luyện",
+        "exploration": "Thám hiểm vùng đất"
       }
     },
     "common": {
@@ -2336,5 +2355,4 @@
     "spawnEquipment": "+ Trang bị random",
     "spawnMaterial": "+ Nguyên liệu random"
   }
-
 }

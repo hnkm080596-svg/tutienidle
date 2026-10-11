@@ -1,14 +1,16 @@
 <script setup lang="ts">
-// "Thuong Nhiem Vu" reward row: the ref's line of icon cells with xN
-// counts. Rewards arrive beta-admitted on the model - render verbatim
-// (contract: never re-filter). Material/pill lines get the
-// registry-resolved icon when one exists; currency lines get a label
-// chip.
+// Rewards section (Codex landscape port): plaque header + the
+// preview's 4-column grid of EquipmentArtSlot cells with the xN
+// amount overlaid bottom-right. Rewards arrive beta-admitted on the
+// model - render verbatim (contract: never re-filter). Material/pill
+// lines get the registry-resolved icon when one exists; icon-less
+// lines render their label on the frame.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import QuestSectionPlaque from './QuestSectionPlaque.vue'
+import EquipmentArtSlot from '@/components/common/art/EquipmentArtSlot.vue'
 import type { BetaQuestRewardEntry, BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 
 const props = defineProps<{ row: BetaQuestSurfaceModel }>()
@@ -61,13 +63,13 @@ function rewardLabel(reward: BetaQuestRewardEntry): string {
         class="quest-rewards__cell"
         :title="cell.label"
       >
-        <img
-          v-if="cell.icon"
-          class="quest-rewards__icon"
-          :src="cell.icon"
-          :alt="cell.label"
+        <EquipmentArtSlot
+          class="quest-rewards__slot"
+          :icon="cell.icon ?? undefined"
+          :label="cell.label"
+          :empty="!cell.icon"
         />
-        <span v-else class="quest-rewards__token" art-needed data-art-id="reward-icon">{{ cell.label }}</span>
+        <span v-if="!cell.icon" class="quest-rewards__token">{{ cell.label }}</span>
         <span class="quest-rewards__amount">x{{ formatNumber(cell.amount) }}</span>
       </li>
     </ul>
@@ -85,35 +87,30 @@ function rewardLabel(reward: BetaQuestRewardEntry): string {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 
 .quest-rewards__cell {
   position: relative;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--hk-border-muted, var(--paper-line));
-  border-radius: var(--hk-radius-sm, 5px);
-  background: color-mix(in srgb, var(--hk-ink, #101718) 30%, transparent);
+  aspect-ratio: 1;
 }
 
-.quest-rewards__icon {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-}
+.quest-rewards__slot { pointer-events: none; }
 
 .quest-rewards__token {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
   font-size: 9px;
   font-weight: 700;
   text-align: center;
   line-height: 1.2;
-  padding: 0 3px;
-  color: var(--hk-text-secondary, var(--paper-text-soft));
+  padding: 0 4px;
+  color: #efdfb9;
+  pointer-events: none;
 }
 
 .quest-rewards__amount {
@@ -123,7 +120,8 @@ function rewardLabel(reward: BetaQuestRewardEntry): string {
   font-size: 9px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--hk-gold, #e3bd67);
+  color: #ffd985;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
 }
 </style>
