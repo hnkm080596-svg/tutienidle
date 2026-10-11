@@ -149,10 +149,13 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
 .map-name { position:absolute; left:8px; top:8px; z-index:2; margin:0; padding:5px 12px; background:#f1dfbbbe; color:#3a2d18; font-size:20px; font-weight:600; }
 .routes { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .routes line { stroke:#81662e80; stroke-width:3; stroke-dasharray:5 5; }
-/* Kinh-mach light reveal: a lit edge mounts with its glow already on
-   and plays the dash sweep once - it never re-loops (state stays lit). */
-.routes line.lit { stroke:#e9c46a; stroke-width:4; stroke-dasharray:200 200; stroke-dashoffset:0; filter:drop-shadow(0 0 5px #e9c46a99); animation:route-lit 0.9s ease-out 1; }
-@keyframes route-lit { from { stroke-dashoffset:200; } to { stroke-dashoffset:0; } }
+/* Kinh-mach light reveal: the light switches on once (fade), then the
+   lit edge keeps marching dashes toward the opened ai - the energy
+   flow runs continuously like the meridian streams (ruling: the
+   reveal happens once; the flow does not stop). */
+.routes line.lit { stroke:#e9c46a; stroke-width:4; stroke-dasharray:9 7; filter:drop-shadow(0 0 5px #e9c46a99); animation:route-lit-in 0.9s ease-out 1, route-flow 1.4s linear infinite; }
+@keyframes route-lit-in { from { opacity:0; } to { opacity:1; } }
+@keyframes route-flow { to { stroke-dashoffset:-32px; } }
 .stage-node { position:absolute; width:56px; height:56px; transform:translate(-50%,-50%); border:0; background:transparent; cursor:pointer; padding:0; }
 .node-slot { width:56px; height:56px; display:block; pointer-events:none; }
 /* Locked = grey + non-interactive (ruling 2026-10-11): no lock glyph,
