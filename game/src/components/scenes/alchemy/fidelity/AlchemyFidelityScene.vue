@@ -135,7 +135,7 @@ onBeforeUnmount(() => {
 })
 
 
-// Card chon chat niên đại hien thuong truc tren nut Luyen Dan - khong can bam.
+// Card chon chat nien dai hien thuong truc tren nut Luyen Dan - khong can bam.
 function pickVariant(id: string) {
   emit('variant', id)
 }

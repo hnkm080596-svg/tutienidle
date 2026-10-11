@@ -121,10 +121,10 @@ export interface AlchemyJobDisplay {
 
   readonly name: string
 
-  /** Order quantity (viên trong order) — optional until queue domain lands. */
+  /** Order quantity (vien trong order) - optional until queue domain lands. */
   readonly quantity?: number
 
-  /** Viên already minted inside this order. */
+  /** Vien already minted inside this order. */
   readonly unitsDone?: number
 
   readonly icon: string
