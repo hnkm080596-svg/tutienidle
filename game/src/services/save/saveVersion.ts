@@ -305,12 +305,6 @@ export function migrateSpiritStoneFlattenV88(
 export function migrateSaveToCurrentVersion(
   parsed: Record<string, unknown>,
 ): Record<string, unknown> | null {
-  // A server row can carry a null/missing payload - classify it
-  // incompatible instead of throwing (the boot path has no catch and
-  // an exception wedges the loading screen forever).
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-    return null
-  }
   let save = parsed
   if (save.version === 88) {
     save = migrateSpiritStoneFlattenV88(save)

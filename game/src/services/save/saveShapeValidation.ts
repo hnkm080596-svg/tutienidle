@@ -3801,17 +3801,22 @@ function validateAlchemyJobsSave(
     // the persisted cursor in ALCHEMY_MAX_BATCH_QUANTITY strides, so a
     // legit base is always a multiple of MAX below 2**32 (mulberry32
     // wraps its seed mod 2**32 - a larger crafted base would alias a
-    // smaller order's stream). Pre-anchor saves have no field.
+    // smaller order's stream). The headroom term keeps the WHOLE unit
+    // stream in-domain: unit i rolls mulberry32(base + i), so the last
+    // stride slot (base + MAX > 2^32) would wrap its own late units
+    // onto the first bases - and would re-ground the restore cursor
+    // past 2^32, self-bricking the next save. Pre-anchor saves have no
+    // field.
     if (
       entry.rollSeedBase !== undefined &&
       (!Number.isInteger(entry.rollSeedBase) ||
         (entry.rollSeedBase as number) < 0 ||
         (entry.rollSeedBase as number) % ALCHEMY_MAX_BATCH_QUANTITY !== 0 ||
-        (entry.rollSeedBase as number) >= 2 ** 32)
+        (entry.rollSeedBase as number) + ALCHEMY_MAX_BATCH_QUANTITY > 2 ** 32)
     ) {
       issues.push({
         path: `${entryPath}.rollSeedBase`,
-        message: 'rollSeedBase phải là bội số của batch max, nguyên trong [0, 2^32) (writer stamp từ roll cursor)',
+        message: 'rollSeedBase phải là bội số của batch max, nguyên trong [0, 2^32 - batch] (writer stamp từ roll cursor)',
       })
     }
 

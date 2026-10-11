@@ -120,12 +120,12 @@ export function useThienCoEntries() {
           run: () => navigation.openBuilding(buildingId),
         })
       } else if (status === 'active' && buildingId === 'pill_room' && alchemyJobs.length > 0) {
-        // QUEUE REWORK - the first order is the one in the cauldron; its
-        // per-unit progress plus the waiting order count is what the
-        // player needs from the board.
-        const earliest = Math.min(...alchemyJobs.map((job) => job.completesAtMs))
-        const minutes = Math.max(1, Math.ceil((earliest - nowMs.value) / 60_000))
+        // QUEUE REWORK - the entry describes jobs[0] coherently: its
+        // per-unit progress AND its own countdown. Reading the cross-
+        // order minimum would attribute another (faster) order's
+        // deadline to the sentence narrating this one.
         const brewing = alchemyJobs[0]!
+        const minutes = Math.max(1, Math.ceil((brewing.completesAtMs - nowMs.value) / 60_000))
         const total = Math.max(1, brewing.quantity ?? 1)
         const done = Math.min(total, Math.max(0, brewing.unitsDone ?? 0))
         const waiting = Math.max(0, alchemyJobs.length - 1)

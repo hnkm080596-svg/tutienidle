@@ -670,7 +670,14 @@ export class AlchemySystem {
     // reopening the reroll channel this scheme exists to close.
     this.rollSeedCursor = 0
     for (const job of this.jobs) {
-      if (job.rollSeedBase !== undefined) {
+      // Out-of-domain bases (base + MAX > 2^32, the wrap-adjacent last
+      // stride the validator rejects) must not raise the cursor: the
+      // next honest alloc would stamp a base its own validator
+      // refuses, self-bricking the save this session writes.
+      if (
+        job.rollSeedBase !== undefined &&
+        job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY <= 2 ** 32
+      ) {
         this.rollSeedCursor = Math.max(this.rollSeedCursor, job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY)
       }
     }
