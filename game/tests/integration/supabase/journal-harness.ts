@@ -10,6 +10,7 @@ import { CloudSaveCoordinator } from '../../../src/services/cloudSave/CloudSaveC
 import { PendingSaveJournal } from '../../../src/services/cloudSave/PendingSaveJournal'
 import { AckedSaveCache } from '../../../src/services/cloudSave/AckedSaveCache'
 import { setSaveAccountId } from '../../../src/services/save/saveKeys'
+import { CURRENT_SAVE_VERSION } from '../../../src/services/save/saveVersion'
 import { withMortalCreationPick } from '../../../src/services/save/GameSave.fixture'
 import { createDefaultPlayer } from '../../../src/core/player/Player'
 import { saveRow } from './fixture'
@@ -45,7 +46,7 @@ export function integrationGameSave(character: CharacterMeta, marker = false): G
   player.selectedTalentIds = [...character.selectedTalentIds]
   player.hasSeenTutorial = marker
   const save: GameSave = {
-    version: 89,
+    version: CURRENT_SAVE_VERSION,
     player,
     techniques: [],
     skills: [],

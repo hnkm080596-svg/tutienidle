@@ -153,10 +153,10 @@ describe('loadGame — phân biệt empty/ok/incompatible/corrupted (Phase 5, m�
   it('incompatible at a non-migratable previous version (M-F-CHU-THIEN - derived pin)', () => {
     // The +1 bump contract rejects a previous save version - derived
     // from CURRENT_SAVE_VERSION so it stays correct across parallel
-    // version bumps. v88 is the sole migration exception (spirit-stone
-    // flatten folds its tier stacks into v89), so the rejected version
-    // is CURRENT - 2.
-    const previous = CURRENT_SAVE_VERSION - 2
+    // version bumps. v88 and v89 are the migration exceptions (spirit-
+    // stone flatten folds into v89; v89 re-stamps into v90), so the
+    // rejected version is CURRENT - 3.
+    const previous = CURRENT_SAVE_VERSION - 3
     const save = validSave()
     save.version = previous
     const raw = JSON.stringify(save)

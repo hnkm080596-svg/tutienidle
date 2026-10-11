@@ -158,7 +158,11 @@ export function recordMeridianOpenQuality(
     state.qualityAccum = Object.keys(accum).length ? accum : undefined
     state.openedQualityMultipliers = {
       ...state.openedQualityMultipliers,
-      [meridianId]: entry.sum / entry.count,
+      // Clamp into the authored uplift band [1,2]: honest accumulators
+      // always satisfy count <= sum <= 2*count (the load gate refuses
+      // anything else), but a corrupted in-memory state must never fold
+      // an out-of-band multiplier.
+      [meridianId]: Math.min(2, Math.max(1, entry.sum / entry.count)),
     }
   } else {
     accum[meridianId] = entry
@@ -346,6 +350,25 @@ export const meridianChapter: ModifierBodyChapter = {
             emit({
               path: `${basePath}.qualityAccum.${meridianId}.count`,
               message: 'count phai la so nguyen >= 1',
+            })
+          }
+          // Mean must stay inside the real uplift band: every
+          // PILL_QUALITY_EFFECT_UPLIFT value is in [1,2], so an honest
+          // accumulator satisfies count <= sum <= 2*count. A crafted
+          // {sum:0} or {sum:100,count:1} folds a ~0 or ~50 multiplier
+          // into openedQualityMultipliers - the self-brick class this
+          // gate exists to refuse.
+          if (
+            typeof sum === 'number' &&
+            Number.isFinite(sum) &&
+            typeof count === 'number' &&
+            Number.isInteger(count) &&
+            count >= 1 &&
+            (sum < count || sum > 2 * count)
+          ) {
+            emit({
+              path: `${basePath}.qualityAccum.${meridianId}`,
+              message: 'trung binh tich luy phai nam trong bien uplift [1,2]',
             })
           }
         }

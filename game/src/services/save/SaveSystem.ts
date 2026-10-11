@@ -565,7 +565,18 @@ export function inspectLocalSave(): InspectedSave {
   // validation/normalize path as version 89.
   if (foundVersion === 88) {
     parsed = migrateSpiritStoneFlattenV88(parsed as Record<string, unknown>)
-  } else if (foundVersion !== CURRENT_SAVE_VERSION) {
+  }
+
+  // v90 - anti-scum roll anchor: rollSeedBase joined the alchemy
+  // reservation digest fold mid-v89, so a post-fold v89 payload reads
+  // as a witness mismatch on pre-fold v89 builds. The bump gates that
+  // cleanly. v89 (and the v88 migration output above) MIGRATES by pure
+  // re-stamp - jobs without rollSeedBase still verify because the fold
+  // omits the absent key.
+  const stagedVersion = (parsed as { version?: unknown })?.version
+  if (stagedVersion === 89) {
+    parsed = { ...(parsed as Record<string, unknown>), version: CURRENT_SAVE_VERSION }
+  } else if (stagedVersion !== CURRENT_SAVE_VERSION) {
     // Development-phase policy (dong-fu-command-wheel-inventory-spirit-
     // stone-plan.md sec"Chinh sach migration") - KHONG con auto-migration
     // nao: moi version cu hon CURRENT_SAVE_VERSION tra ve 'incompatible'

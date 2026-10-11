@@ -98,13 +98,16 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
   const startY = event.clientY
   const base = nodePos(id, x, y)
   const move = (e: PointerEvent) => {
-    // Clamp into the design rect: overflow:hidden would otherwise
-    // hide a node dragged outside the 1000x800 space for the session.
+    // Clamp inside the design rect INSET by the node radius: pos is
+    // the node's center (translate(-50%,-50%) on a 56px node), so a
+    // center at the very edge leaves half the node clipped by
+    // overflow:hidden.
+    const R = 28
     dragOffsets.value = {
       ...dragOffsets.value,
       [id]: {
-        x: Math.min(MAP_DESIGN_W, Math.max(0, Math.round(base.x + (e.clientX - startX) / s))),
-        y: Math.min(MAP_DESIGN_H, Math.max(0, Math.round(base.y + (e.clientY - startY) / s))),
+        x: Math.min(MAP_DESIGN_W - R, Math.max(R, Math.round(base.x + (e.clientX - startX) / s))),
+        y: Math.min(MAP_DESIGN_H - R, Math.max(R, Math.round(base.y + (e.clientY - startY) / s))),
       },
     }
   }

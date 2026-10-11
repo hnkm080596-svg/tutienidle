@@ -228,4 +228,11 @@
 // v88 saves MIGRATE (exception to the no-migration rule): trung/thuong
 // stacks fold into spirit_stone_ha_pham at 1:1 face value via
 // migrateSpiritStoneFlattenV88 in SaveSystem.ts.
-export const CURRENT_SAVE_VERSION = 89 as const
+// v90 (2026-10-11, ANTI-SCUM ROLL ANCHOR): rollSeedBase joined the
+// alchemy job reservation digest fold mid-v89 (the first v89 writer
+// digested without it; 9c1ad6d8 folded it in without a bump). A v89
+// payload written by a post-fold build would be rejected on a pre-fold
+// v89 build as a reservation-witness mismatch - the bump converts that
+// into a clean version gate. v89 saves MIGRATE by pure re-stamp: jobs
+// without the field still verify (the fold omits the absent key).
+export const CURRENT_SAVE_VERSION = 90 as const

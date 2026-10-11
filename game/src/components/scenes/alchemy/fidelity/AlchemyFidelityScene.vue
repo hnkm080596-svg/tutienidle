@@ -207,10 +207,10 @@ function jobSubline(job: AlchemyJobDisplay) {
       <!-- Cot phai 30%: card chua cac job chong len nhau. -->
       <aside class="alchemy-jobs" :aria-label="t('alchemy.queueTitle')">
         <div class="alchemy-jobs__head"><h2>{{ t('alchemy.queueTitle') }}</h2><span>{{ jobs.length }} / {{ capacity }}</span></div>
-        <article v-for="(job, i) in jobs" :key="job.id" class="job-card" :class="{ 'job-card--brewing': i === 0, 'job-card--queued': i > 0 }">
+        <article v-for="job in jobs" :key="job.id" class="job-card job-card--brewing">
           <img :src="job.icon" alt="">
           <div class="job-card__info">
-            <div class="job-card__title"><h3>{{ job.name }}<em v-if="(job.quantity ?? 1) > 1" class="job-card__qty">×{{ job.quantity }}</em></h3><span class="job-card__state">{{ i === 0 ? t('alchemy.brewing') : `${t('alchemy.queued')} #${i + 1}` }}</span></div>
+            <div class="job-card__title"><h3>{{ job.name }}<em v-if="(job.quantity ?? 1) > 1" class="job-card__qty">×{{ job.quantity }}</em></h3><span class="job-card__state">{{ t('alchemy.brewing') }}</span></div>
             <div class="job-card__bar"><span :style="{ width: `${Math.max(0, Math.min(100, job.progress))}%` }" /></div>
             <small>{{ jobSubline(job) }}</small>
           </div>

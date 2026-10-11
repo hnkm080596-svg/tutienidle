@@ -73,9 +73,12 @@ describe('R3-ALCH-V1 - rollSeedBase digest-fold changed inside v89 (downgrade br
     void _stripped
     const legacyFoldDigest = alchemyJobReservationDigest(legacyJob, job.reservation)
 
-    // DEFECT: the digests differ -> the older v89 build reports
-    // 'digest' and refuses the entire save at IDENTICAL version.
-    expect(legacyFoldDigest).toBe(job.reservation.digest)
+    // Post-fix contract: the digests MUST differ (the fold legitimately
+    // changed) and the version gate below is what protects a downgraded
+    // v89 build from reporting a witness mismatch - identical-version
+    // rejection is exactly what the bump exists to prevent.
+    expect(legacyFoldDigest).not.toBe(job.reservation.digest)
+    expect(CURRENT_SAVE_VERSION).toBeGreaterThan(89)
   })
 
   it('CURRENT_SAVE_VERSION was bumped to cover the rollSeedBase fold change', () => {
