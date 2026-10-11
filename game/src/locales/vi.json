@@ -2204,6 +2204,7 @@
     "noEnemy": "Không có tin tức địch.",
     "startFailed": "Không thể bắt đầu. Kiểm tra lại điều kiện.",
     "armedFarm": "Đang tự động: {stage}",
+    "chapters": "Chương",
     "state": {
       "cleared": "Đã Phá",
       "current": "Tiền Tuyến",

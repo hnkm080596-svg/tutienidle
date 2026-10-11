@@ -75,10 +75,9 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     await nextTick()
     await nextTick()
 
-    // Son Ha Do fidelity (S10): all 3 chapter bands render at once -
-    // 30 nodes across the bands; nodes[9] is still mortal_dong_10
-    // (band order = chapter order).
-    expect(mounted.container.querySelectorAll('.stage-node')).toHaveLength(30)
+    // Son Ha Do home-panel: one chapter band at a time - the mortal
+    // chapter shows 10 nodes; nodes[9] is still mortal_dong_10.
+    expect(mounted.container.querySelectorAll('.stage-node')).toHaveLength(10)
     expect(mounted.container.textContent).toContain('Dã Trư')
     // Roster remap: one family per chapter - every mortal floor node
     // shows the boar family now.
@@ -191,8 +190,10 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="progress"]')!.classList.contains('active')).toBe(true)
 
-    // Chapter-2 band node (qi_refining_forest) -> mode resets to manual.
-    container.querySelector<HTMLElement>('[data-stage-id="qi_refining_forest"]')!.click()
+    // Cross-chapter pick now goes through the Chương rail - it
+    // auto-picks the chapter's first unlocked stage
+    // (qi_refining_forest), so the selection change disarms the mode.
+    container.querySelector<HTMLElement>('[data-chapter-id="2"]')!.click()
     await nextTick()
 
     expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="manual"]')!.classList.contains('active')).toBe(true)
