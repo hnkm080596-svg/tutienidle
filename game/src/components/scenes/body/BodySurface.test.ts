@@ -321,7 +321,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('mortal player: page locked - all chips locked + page gate', async () => {
+    it('mortal player: the sealed tab refuses to open below Luyện Khí', async () => {
       const view = mountBodyScene((player) => {
         player.$state.realmId = 'mortal'
         player.$state.realmLevel = 10
@@ -334,17 +334,13 @@ describe('BodySurface (scene 08 fidelity)', () => {
 
       await selectChapter(view, 'meridian')
 
-      // The page realm is out of reach: no meridian rows render at
-      // all - the card shows only the real unlock condition.
-      expect(view.container.textContent).toContain(
-        i18n.global.t('panels.realm.meridian.pageLocked', { realm: 'Luyện Khí' }),
-      )
-      const orbs = view.container.querySelectorAll('.body-orb')
-      expect(orbs.length).toBe(8)
-      expect(orbs[0]!.classList.contains('locked')).toBe(true)
-      expect(orbs[7]!.classList.contains('locked')).toBe(true)
-      // The CTA renders but stays disabled behind the page gate.
-      expect(investButton(view)?.disabled ?? false).toBe(true)
+      // Realm gate (2026-10-10): the chapter needs Luyện Khí - the tab
+      // itself is sealed so the click is refused and the card stays on
+      // the refinement chapter (no meridian content renders at all).
+      const seals = chapterButtons(view)
+      expect(seals[UI_CHAPTER_INDEX['meridian']!]!.classList.contains('is-locked')).toBe(true)
+      const title = view.container.querySelector('.body-paper-details h2')
+      expect(title?.textContent).toContain('Luyện Mạch')
 
       view.unmount()
     })
@@ -521,7 +517,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       view.unmount()
     })
 
-    it('realm_locked: unlocked sequentially but zero capacity outside Truc Co', async () => {
+    it('realm_locked: the sealed tab refuses to open outside Trúc Cơ even sequentially eligible', async () => {
       const view = mountBodyScene((player) => {
         player.$state.realmId = 'mortal'
         player.$state.realmLevel = 18
@@ -535,10 +531,13 @@ describe('BodySurface (scene 08 fidelity)', () => {
       await nextTick()
       await selectChapter(view, 'zhou_tian')
 
-      expect(view.container.textContent).toContain(
-        i18n.global.t('panels.realm.zhouTian.realmLocked', { realm: 'Trúc Cơ' }),
-      )
-      expect(investButton(view)?.disabled ?? true).toBe(true)
+      // Realm gate (2026-10-10): sequential gate satisfied but the
+      // chapter needs Trúc Cơ - the tab is sealed, the click is
+      // refused, and the card stays on the refinement chapter.
+      const seals = chapterButtons(view)
+      expect(seals[UI_CHAPTER_INDEX['zhou_tian']!]!.classList.contains('is-locked')).toBe(true)
+      const title = view.container.querySelector('.body-paper-details h2')
+      expect(title?.textContent).toContain('Luyện Mạch')
 
       view.unmount()
     })
@@ -548,8 +547,8 @@ describe('BodySurface (scene 08 fidelity)', () => {
       const view = mountBodyScene((player, manager) => {
         state = player.$state
         tcPlayer(player, 18, 0)
-        // Step 0 costs 100 essence (2026-10-05 curve) - seeding exactly
-        // 100 bounds the chapter's multi-step invest to one advancement.
+        // Step 0 costs 100 essence (2026-10-05 curve); one click commits
+        // exactly one step (owner ruling 2026-10-10).
         manager.materialBag.add(
           manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
           100,

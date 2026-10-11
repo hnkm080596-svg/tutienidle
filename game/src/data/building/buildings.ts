@@ -195,12 +195,12 @@ export const buildings: Building[] = [
     upgradeCost: [[{ materialId: 'mortal_wood_decade', amount: 3 }]],
   },
 
-  // Ky Bao Cac - building CHUYEN cho moi co che "doi/ban" (2026-08-30,
-  // bug report: exchange bi nhet nham vao Linh Tuyen/San Xuat - building
-  // khong chuyen). Gop Hoa Ban (VendorSystem) + quy doi pham Linh Thach +
-  // quy doi canh gioi nguyen lieu (xem VendorPanel.vue). Khong co tien
-  // trinh nang cap y nghia (vendor khong "manh hon" theo cap) nen
-  // maxLevel: 1, giong Truyen Tong Tran.
+  // Ky Bao Cac - DORMANT registry entry (2026-10-11 ruling: selling is
+  // gone entirely, decompose is the only material sink). Kept as data so
+  // saves carrying a vendor instance still reconcile against a template;
+  // every open path fails closed because 'vendor' is undeclared in
+  // BETA_BUILDING_FEATURES (betaScopeSurface.ts). No upgrade
+  // progression (vendor never scaled with level) -> maxLevel: 1.
   {
     id: 'vendor',
 

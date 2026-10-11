@@ -99,7 +99,6 @@ import { GameManagerRewardOps } from './GameManagerRewardOps'
 import { GameManagerProgressionOps } from './GameManagerProgressionOps'
 import { GameManagerRealmAdvanceOps } from './GameManagerRealmAdvanceOps'
 import { GameManagerPersistentEffectOps } from './GameManagerPersistentEffectOps'
-import { GameManagerEconomyOps } from './GameManagerEconomyOps'
 import { GameManagerPillOps } from './GameManagerPillOps'
 import { GameManagerTickOps } from './GameManagerTickOps'
 import { GameManagerStageOps } from './GameManagerStageOps'
@@ -364,9 +363,15 @@ export class GameManager {
   readonly equipmentSystem = new EquipmentSystem(createDefaultEquipmentOperationCostCatalog())
 
   // Task 14 (rework P4) - Decompose tab: ore -> refined essence.
-  // R7 (AR-08): capacity is dynamic - supplied per tick/restore via
-  // updateCapacity from the workforce authority (CHQ).
-  readonly decomposeSystem = new DecomposeSystem(this.materialBag)
+  // DIRECT REWORK (2026-10-11): worker-cycle retired - direct
+  // multi-select action (listDecomposableIds / previewDecompose /
+  // decompose). deliverOutput is a DEFERRED closure - tickOps is
+  // assigned later in this constructor (same pattern as the saveOps
+  // deferred callbacks below); it credits tinh hoa through the
+  // shared delivery path the worker cycle drained into.
+  readonly decomposeSystem = new DecomposeSystem(this.materialBag, {
+    deliverOutput: (entry) => this.tickOps.deliverDecomposeOutput(entry),
+  })
 
   // Core Loop Foundation checklist (Phase 3, Muc AFFIX) - thay the
   // hoan toan substatPool cu.
@@ -483,16 +488,12 @@ export class GameManager {
   // Public: callers use gameManager.effectOps.* directly (no facade).
   readonly effectOps: GameManagerPersistentEffectOps
 
-  // Vendor economy operations.
-  // Public: callers use gameManager.economyOps.* directly (no facade).
-  readonly economyOps: GameManagerEconomyOps
-
   // Pill consumption operations.
   // Public: callers use gameManager.pillOps.* directly (no facade).
   readonly pillOps: GameManagerPillOps
 
-  // Per-tick orchestration (update() settle loop, decompose delivery,
-  // quest lifecycle reconciliation).
+  // Per-tick orchestration (update() settle loop, decompose credit
+  // delivery path, quest lifecycle reconciliation).
   // Public: callers use gameManager.tickOps.* directly (no facade).
   readonly tickOps: GameManagerTickOps
 
@@ -669,15 +670,6 @@ export class GameManager {
       getActivePlayer: () => this.activePlayer,
     })
 
-    this.economyOps = new GameManagerEconomyOps({
-      materialRegistry: this.materialRegistry,
-      materialBag: this.materialBag,
-      // Deferred closures - alchemyOps/questOps assigned later.
-      getAlchemyRecipes: () => this.alchemyOps.getAlchemyRecipes(),
-      notifyMaterialGained: (materialId, amount) =>
-        this.questOps.notifyMaterialGained(materialId, amount),
-    })
-
     this.pillOps = new GameManagerPillOps({
       pillBag: this.pillBag,
       pillRegistry: this.pillRegistry,
@@ -761,7 +753,6 @@ export class GameManager {
       buildingManager: this.buildingManager,
       buildingSystem: this.buildingSystem,
       productionSystem: this.productionSystem,
-      decomposeSystem: this.decomposeSystem,
       materialBag: this.materialBag,
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
@@ -835,7 +826,6 @@ export class GameManager {
         this.turnBattleOps.autoFarmOps.reconcileAutoFarmRuntime(player),
       decomposeSystem: this.decomposeSystem,
       // Deferred closures - tickOps is assigned later in this constructor.
-      deliverDecomposeOutput: (entry) => this.tickOps.deliverDecomposeOutput(entry),
       reconcileQuestLifecycle: () => this.tickOps.reconcileQuestLifecycle(),
       reconcileRealmRewards: (player) =>
         this.realmAdvanceOps.reconcileCultivationPathRealmRewards(player),
@@ -918,7 +908,6 @@ export class GameManager {
       productionSystem: this.productionSystem,
       materialBag: this.materialBag,
       materialRegistry: this.materialRegistry,
-      decomposeSystem: this.decomposeSystem,
       getWorkerAssignments: () => this.buildingOps.getWorkerAssignments(),
       alchemySystem: this.alchemySystem,
       pillBag: this.pillBag,

@@ -24,6 +24,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
+import { useMasterAccess } from '@/services/master/masterAccess'
 import { ELEMENT_ORDER, ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/CastLeveling'
@@ -154,6 +155,7 @@ const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 const { purchaseNode, upgradeNode, respecNodeTree } = useProgressionActions()
+const { isMaster } = useMasterAccess()
 
 const notice = ref('')
 let noticeTimer: number | undefined
@@ -322,15 +324,24 @@ const layout = computed(() => {
       const authored = FIRE_DESIGN_POS[entry.node.id]
       positions.set(entry.node.id, authored ?? { x: PARKED_X, y: PARKED_TOP + parkIndex++ * PARKED_STEP })
     }
-    positions.set(DESIGN_BASIC_ID, { x: 290, y: 370 })
-    positions.set(ULTIMATE_NODE_ID, { x: 360, y: 175 })
+    // QA fixpoint 2026-10-10: seat positions only when `nodes` actually
+    // pushes the two seats - else phantom points inflate the extent.
+    if (seatNodesRendered.value) {
+      positions.set(DESIGN_BASIC_ID, { x: 290, y: 370 })
+      positions.set(ULTIMATE_NODE_ID, { x: 360, y: 175 })
+    }
   } else {
-    const parked = graph.value.entries.filter((entry) => entry.depth !== 0 && entry.node.id !== specialId)
+    // QA fixpoint 2026-10-10: park every entry that is not the trunk
+    // root/special - depth-0 extras (e.g. rewardOnly elementTag'd nodes
+    // with no node prereq) used to fall through to the (0,0) fallback.
+    const parked = graph.value.entries.filter((entry) => entry.node.id !== rootId && entry.node.id !== specialId)
     parked.forEach((entry, i) => positions.set(entry.node.id, { x: PARKED_X, y: PARKED_TOP + i * PARKED_STEP }))
     if (rootId !== undefined) positions.set(rootId, { x: MAIN_CX, y: MAIN_ROOT_Y })
     if (specialId !== undefined) positions.set(specialId, { x: MAIN_CX + CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
-    positions.set(DESIGN_BASIC_ID, { x: MAIN_CX - CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
-    positions.set(ULTIMATE_NODE_ID, { x: MAIN_CX, y: MAIN_ROOT_Y - CHILD_D })
+    if (seatNodesRendered.value) {
+      positions.set(DESIGN_BASIC_ID, { x: MAIN_CX - CHILD_DX, y: MAIN_ROOT_Y + CHILD_DY })
+      positions.set(ULTIMATE_NODE_ID, { x: MAIN_CX, y: MAIN_ROOT_Y - CHILD_D })
+    }
   }
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
@@ -758,9 +769,14 @@ function ultimateUiNode(): SkillUiNode {
     frameKind: 'main',
   }
 }
+// QA fixpoint 2026-10-10: single predicate for the two extra seats -
+// `nodes` pushes them and `layout` positions them under the same gate
+// (element-committed, non-mortal, more than the lone root).
+const seatNodesRendered = computed(() =>
+  !skillTree.value.mortal && committedElement.value !== undefined && graph.value.entries.length > 1)
 const nodes = computed<SkillUiNode[]>(() => {
   const list = graph.value.entries.map(toUiNode)
-  if (!skillTree.value.mortal && committedElement.value !== undefined && graph.value.entries.length > 1) {
+  if (seatNodesRendered.value) {
     list.push(basicUiNode(), ultimateUiNode())
   }
   return list
@@ -828,9 +844,18 @@ function clawbackDetailText(clawback: GrantClawback | undefined): string {
   return parts.length === 0 ? '' : t('panels.nodeTree.clawback.summary', { detail: parts.join(', ') })
 }
 const respecClawbackText = computed(() => clawbackDetailText(respecPreview.value?.clawback))
+// QA fixpoint 2026-10-10: gate on the op's admission itself, not the
+// rendered graph - scope-hidden/dormant holdings left the button dead
+// or the confirm silently missing. previewNodeRespec returns null only
+// for dormant-only holdings, and {resetCount:0} for an empty tree - so
+// enabled iff it finds at least one node to reset. isMaster short-circuit
+// first: the dry-run deep-clones the player, and only masters see the
+// button.
 const hasOwnedNodes = computed(() => {
   stateVersion.value
-  return graph.value.entries.some((entry) => entry.row.level >= 1)
+  if (!isMaster.value) return false
+
+  return (gameManager.progressionOps.previewNodeRespec(player.$state)?.resetCount ?? 0) > 0
 })
 const respecDisabled = computed(() => inBattle.value || !hasOwnedNodes.value)
 watch(inBattle, (engaged) => { if (engaged) pendingRespec.value = false })
@@ -838,7 +863,9 @@ function onRespec() { if (!respecDisabled.value) pendingRespec.value = true }
 function confirmRespec() {
   pendingRespec.value = false
   unlockingId.value = ''
-  if (!inBattle.value) respecNodeTree()
+  // QA fixpoint 2026-10-10: surface a refused commit instead of a
+  // silent close (respecNodeTree can fail closed).
+  if (!inBattle.value && respecNodeTree() === false) flashNotice(t('skill.actionFailed'))
 }
 </script>
 

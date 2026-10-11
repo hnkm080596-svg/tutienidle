@@ -355,8 +355,7 @@ describe('TrucCoJourney - ordered journey', () => {
       // leaves this pinned order nondeterministic whenever a marginal
       // fight meets gear variance (floor_10 intermittently observed
       // defeat). Pin the unseeded surface to its own stream for the
-      // run - the same substitution the benchmark drive uses
-      // (EssenceSubstitutionEconomy) via the sanctioned vi.spyOn seam.
+      // run via the sanctioned vi.spyOn seam.
       const unseededStream = new SeededCombatRng(0x5d1ce7)
       const randomSpy = vi
         .spyOn(Math, 'random')
@@ -600,8 +599,9 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(pillsAtReject)
       expect(s.player.bodyProgression.meridian.progress).toEqual({})
 
-      // Substitution probe inside D.1: drain the pham stack, hold ONLY
-      // phap, and let the real phap->bao->pham plan carry the chapter.
+      // Drain the pham stack into the open tier before the pham top-up
+      // arm below. Owner ruling 2026-10-10: the former phap->pham fill
+      // probe was removed with the mechanic.
       let drainGuard = 0
       while (
         s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID) > 0 &&
@@ -609,14 +609,6 @@ describe('TrucCoJourney - ordered journey', () => {
       ) {
         expect(s.investChapter('body_refinement')).toBeGreaterThan(0)
       }
-      s.holdMaterial(ZHOU_TIAN_CURRENCY_MATERIAL_ID, 200)
-      const phapBeforeProbe = s.materialAmount(
-        ZHOU_TIAN_CURRENCY_MATERIAL_ID,
-      )
-      expect(s.investChapter('body_refinement')).toBeGreaterThan(0)
-      expect(s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBeLessThan(
-        phapBeforeProbe,
-      )
       expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(0)
 
       // Tier 6 commits via pham top-up -> physique flips pham -> bao.
@@ -891,9 +883,8 @@ describe('TrucCoJourney - ordered journey', () => {
 
       // Exact-Phap debit (spec leg C pin), run BELOW capacity so the
       // arm is live: holding ONLY the lower-band essence commits
-      // nothing - substitution is downward only, pham cannot stand in
-      // for phap. Then supplying phap commits the remaining rungs with
-      // an exact debit (0-substitution, no surplus).
+      // nothing - pham cannot stand in for phap. Then supplying phap
+      // commits the remaining rungs with an exact debit (no surplus).
       {
         // Isolate the arm: drain the phap stack, hold ONLY pham.
         const heldPhap = s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
@@ -912,7 +903,7 @@ describe('TrucCoJourney - ordered journey', () => {
 
         // Supplying phap commits the remaining rungs with an exact
         // debit: debited == the op's reported consumed total (no
-        // surplus drawn, no substitution fill). Steps 34->36 cost
+        // surplus drawn). Steps 34->36 cost
         // zhouTianStepCost(34)+zhouTianStepCost(35) = 950+975 = 1925
         // (2026-10-05 curve). The essence stack caps at 1000, so each
         // step is supplied from its own full stack - like real play.
@@ -939,7 +930,7 @@ describe('TrucCoJourney - ordered journey', () => {
         expect(s.player.bodyProgression.zhou_tian.completed).toBe(36)
         expect(totalInvested).toBeGreaterThan(0)
         // Exact debit: everything supplied was invested, nothing drawn
-        // beyond it (no surplus drawn, no substitution fill).
+        // beyond it (no surplus drawn).
         expect(totalInvested).toBe(supplied)
         expect(s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBe(0)
         expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(

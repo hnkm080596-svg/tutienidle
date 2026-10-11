@@ -26,8 +26,7 @@ import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import { calculateStats } from '@/core/stats/StatCalculator'
 import type { Stats } from '@/core/stats/StatBlock'
 import { startAStage } from '@/core/game/__fixtures__/startAStage'
-import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
-import { getRealmTier } from '@/core/realm/RealmTierMap'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { AutoDissolveReward } from '@/core/equipment/EquipmentBag'
 import type { TurnBattle } from '@/core/battle/turn/TurnBattleSystem'
@@ -71,8 +70,8 @@ export interface Lab {
     /** Add a material by id. Returns { stored, overflow } - overflow is
      *  what the stack cap dropped (0 = everything fit). */
     addMaterial(materialId: string, amount: number): MaterialGrant
-    /** Spirit stones for the player's CURRENT realm tier. Works without
-     *  useRealData() - the harness registers the 3 tier materials itself. */
+    /** Spirit stones (single tier since the flatten). Works without
+     *  useRealData() as long as the stone material is registered. */
     addSpiritStones(amount: number): MaterialGrant
     /** Roll a real equipment instance from a registered template into the
      *  bag (grade follows player realm; needs useRealData or manual
@@ -201,11 +200,11 @@ export function createLab(): Lab {
       addMaterial: addToBag,
 
       addSpiritStones(amount: number): MaterialGrant {
-        const id = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
+        const id = SPIRIT_STONE_MATERIAL_ID
         if (!manager.materialRegistry.has(id)) {
           throw new Error(
             `spirit stone material '${id}' not registered - call lab.useRealData() ` +
-              `or register the SPIRIT_STONE_*_MATERIAL constants via catalogOps.registerMaterials()`,
+              `or register SPIRIT_STONE_MATERIAL via catalogOps.registerMaterials()`,
           )
         }
         return addToBag(id, amount)

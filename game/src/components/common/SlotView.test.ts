@@ -83,47 +83,49 @@ describe('SlotView — empty/filled + icon fallback', () => {
 })
 
 describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)', () => {
-  // The Pham axis renders as a corner seal stamp carrying the
-  // Han grade glyph (item-info-card spec 2026-09-14) -
-  // replaces the transparent underlay wash.
-  it('Pham renders as a corner seal with the Han grade glyph', () => {
-    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Kiếm', equipmentQualityRank: 5 })
-    const seal = button.querySelector('.slot-view__seal')
+  // Owner ruling 2026-10-11: the red corner seal stamp is OFF
+  // everywhere ('trang bi da mat stamp, sao bag van con' -> 'tat het
+  // di'). The Pham axis now only drives the cell tint color via
+  // --slot-quality-color; the stamp glyph never renders.
+  it('Pham never renders a corner seal (ruling 2026-10-11), it tints the cell art', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Kiếm', equipmentQualityRank: 5, variant: 'bag' })
 
-    expect(seal).not.toBeNull()
-    expect(seal?.textContent).toBe('五')
-    expect(seal?.getAttribute('aria-hidden')).toBe('true')
+    expect(button.querySelector('.slot-view__seal')).toBeNull()
+    expect(button.style.getPropertyValue('--slot-quality-color')).toBe('var(--rank-color-5)')
     unmount()
   })
 
-  it('seal glyph for rank 10 is the immortal mark', () => {
-    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Kiếm', equipmentQualityRank: 10 })
+  it('rank 10 feeds the rainbow gradient tint, still no seal', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Kiếm', equipmentQualityRank: 10, variant: 'bag' })
 
-    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('仙')
+    expect(button.querySelector('.slot-view__seal')).toBeNull()
+    expect(button.style.getPropertyValue('--slot-quality-color')).toBe('var(--rank-gradient-10)')
     unmount()
   })
 
-  it('material scale-10 rank feeds the seal through rarityRank', () => {
-    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Thảo', rarityRank: 3, rarityRankScale: 10 })
+  it('material scale-10 rank feeds the tint through rarityRank', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'Thảo', rarityRank: 3, rarityRankScale: 10, variant: 'bag' })
 
-    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('七')
+    expect(button.style.getPropertyValue('--slot-quality-color')).toBe('var(--rank-color-3)')
     unmount()
   })
 
-  it('equipment 2 axes: seal follows Pham (equipmentQualityRank), NOT Chat (rarityRank)', () => {
+  it('equipment 2 axes: tint follows Pham (equipmentQualityRank), NOT Chat (rarityRank)', () => {
     const { button, unmount } = mountSlot({
       item: { id: 1 },
       label: 'X',
       equipmentQualityRank: 2,
       rarityRank: 5,
+      variant: 'bag',
     })
 
-    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('八')
+    expect(button.style.getPropertyValue('--slot-quality-color')).toBe('var(--rank-color-2)')
+    expect(button.style.getPropertyValue('--slot-rarity-color')).toBe('var(--rank-color-10)')
     unmount()
   })
 
-  it('no rank anywhere => no seal; empty slot never seals', () => {
-    const filled = mountSlot({ item: { id: 1 }, label: 'X' })
+  it('the seal never renders - not on filled, not on empty cells', () => {
+    const filled = mountSlot({ item: { id: 1 }, label: 'X', equipmentQualityRank: 5 })
     expect(filled.button.querySelector('.slot-view__seal')).toBeNull()
     filled.unmount()
 
@@ -132,8 +134,8 @@ describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)',
     empty.unmount()
   })
 
-  it('rarityRank (Chat, 5-step scale) tints the frame via the --grade-* ramp: rank r -> --rank-color-(2r-1)', () => {
-    for (const [rank, ramp] of [[1, 1], [3, 5], [5, 9]] as const) {
+  it('rarityRank (Chat, 5-step scale) tints the frame via the --grade-* ramp: rank r -> --rank-color-(2r) - owner ruling 2026-10-11 (2/4/6/8/10 replaces 1/3/5/7/9)', () => {
+    for (const [rank, ramp] of [[1, 2], [3, 6], [5, 10]] as const) {
       const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: rank })
       expect(button.style.getPropertyValue('--slot-rarity-color')).toBe(`var(--rank-color-${ramp})`)
       unmount()
@@ -265,7 +267,7 @@ describe('SlotView — precedence (mục 17.2)', () => {
     button.click()
     expect(onClick).not.toHaveBeenCalled()
     expect(button.getAttribute('aria-busy')).toBe('true')
-    expect(button.querySelector('.slot-view__seal')?.textContent).toBe('五')
+    expect(button.querySelector('.slot-view__seal')).toBeNull()
     unmount()
   })
 
@@ -331,7 +333,7 @@ describe('SlotView - Chat meteors (equipment quality indicator, owner ruling 202
   // effect starts at Huyen (rank 2). Materials on the 10-step scale
   // are NOT equipment Chat. The old border-beam channel was removed.
   it('Chat >= 2 on art-frame variants renders the meteor layer tinted by the grade ramp', () => {
-    for (const [rank, ramp] of [[2, 3], [3, 5], [4, 7], [5, 9]] as const) {
+    for (const [rank, ramp] of [[2, 4], [3, 6], [4, 8], [5, 10]] as const) {
       const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', variant: 'equipment', rarityRank: rank })
 
       expect(button.querySelector('.slot-view__chat')).not.toBeNull()

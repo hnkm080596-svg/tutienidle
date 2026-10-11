@@ -14,7 +14,7 @@ import { affixes } from '../../data/equipment/affixes'
 import { equipment } from '../../data/equipment/equipment'
 import { materials } from '../../data/materials/materials'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
-import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY } from '../equipment/RefinementBalance'
 import { createDefaultPlayer } from '../player/Player'
@@ -56,6 +56,7 @@ describe('GameManager refine transaction', () => {
     expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({ ok: true })
 
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 5)
+    manager.materialBag.add(manager.materialRegistry.get(BUI_GO_ID), 5)
     manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[instance.quality])
     const identityBefore = structuredClone(instance.affixes)
     const modifiersBefore = structuredClone(manager.equipmentOps.getEquipmentModifiers())
@@ -142,6 +143,7 @@ describe('GameManager refine transaction', () => {
     manager.catalogOps.registerEquipment(equipment)
     manager.catalogOps.registerAffixes(affixes)
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 3)
+    manager.materialBag.add(manager.materialRegistry.get(BUI_GO_ID), 3)
     const firstValid = makeInstance({
       instanceId: 'valid-before-unknown-reference',
       itemId: 'base_kiem',
@@ -178,6 +180,7 @@ describe('GameManager refine transaction', () => {
     restored.catalogOps.registerEquipment(equipment)
     restored.catalogOps.registerAffixes(affixes)
     restored.materialBag.add(restored.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 11)
+    restored.materialBag.add(restored.materialRegistry.get(BUI_GO_ID), 11)
 
     expect(() => restored.saveOps.restoreFromSave(save)).toThrow(expectedError)
     expect(restored.equipmentBag.getAll()).toEqual([])

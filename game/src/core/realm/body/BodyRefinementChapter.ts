@@ -171,6 +171,25 @@ export const bodyRefinementChapter: BaseStatBodyChapter = {
     return consumed
   },
 
+  // Owner ruling 2026-10-10 - essence intake cap: remaining essence the
+  // track can still consume = sum over the open tiers of each tier's
+  // own ceil(remaining/multiplier) (same per-invest math invest()
+  // charges; talent multiplier snapshot, no realm/unlock clamp).
+  remainingCurrencyNeed(player: PlayerData): number {
+    const state = player.bodyProgression.body_refinement
+    const multiplier = getBodyRefinementProgressMultiplier(
+      player.selectedTalentIds,
+      player.talentLevels,
+    )
+    let need = 0
+    for (let i = state.completedTiers; i < TOTAL_TIERS; i++) {
+      const remaining =
+        getTierCap(i) - (i === state.completedTiers ? state.currentTierProgress : 0)
+      need += Math.ceil(remaining / multiplier)
+    }
+    return need
+  },
+
   collectBaseStatDeltas(player: PlayerData): Partial<Record<StatType, number>> {
     return collectTierBaseStatDeltas(player)
   },

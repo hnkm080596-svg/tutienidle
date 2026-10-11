@@ -868,10 +868,11 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       roomLevelAtStart: 1,
     }
     const witness: Omit<AlchemyJobReservation, 'digest'> = {
-      woodId: buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age),
+      woodId: 'bui_go',
       fuelWoodAmount: recipe.fuelWoodAmount,
       spiritStoneCost: recipe.spiritStoneCost,
       herbAmount: recipe.herbAmount,
+      luyenDanTinhHoaAmount: recipe.luyenDanTinhHoaAmount,
       specialIngredients: recipe.specialIngredients ?? [],
       costScale: 1,
     }

@@ -12,6 +12,13 @@ import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailabilit
 import { COMPANION_PULL_TOKEN_ID } from '@/core/game/GameManagerCompanionOps'
 import { isBetaFeature } from '@/core/betaScope'
 import { materialLabel } from '@/core/presentation/labels'
+import {
+  BUI_GO_ID,
+  LUYEN_DAN_TINH_HOA_ID,
+  LUYEN_KHI_TINH_HOA_ID,
+} from '@/core/equipment/TinhHoaMaterial'
+
+const MATERIAL_CHIP_IDS = [BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID, LUYEN_KHI_TINH_HOA_ID] as const
 
 export interface CurrencyChip {
   id: string
@@ -25,10 +32,9 @@ export function useCurrencyChips() {
   const gameManager = useGameManager()
   const { stateVersion } = useStateVersion()
 
-  // Linh Thach is a per-realm-tier MATERIAL family (ha/trung/thuong pham),
-  // not a scalar. Huyen Kim S03 (spec scene-03 top-bar): the strip shows
-  // exactly the three tiers - empty tiers read 0 so the pill geometry is
-  // stable and "I have no money at this tier" is always visible.
+  // Linh Thach is a MATERIAL, not a scalar. Flatten (2026-10-11, owner
+  // ruling): one spirit stone, no ha/trung/thuong tiers - the strip shows
+  // a single chip from SPIRIT_STONE_MATERIALS.
   const spiritStoneChips = computed<CurrencyChip[]>(() => {
     stateVersion.value
 
@@ -36,6 +42,19 @@ export function useCurrencyChips() {
       id: stone.id,
       label: stone.name,
       amount: gameManager.materialBag.getAmount(stone.id),
+    }))
+  })
+
+  // Materials-rework outputs (2026-10-11): the three universal
+  // by-products the closed loop produces - shown on the DongFu chrome
+  // next to Linh Thach so decompose/dissolve sinks are always visible.
+  const materialChips = computed<CurrencyChip[]>(() => {
+    stateVersion.value
+
+    return MATERIAL_CHIP_IDS.map((id) => ({
+      id,
+      label: materialLabel(id, gameManager.materialRegistry),
+      amount: gameManager.materialBag.getAmount(id),
     }))
   })
 
@@ -65,7 +84,11 @@ export function useCurrencyChips() {
     ]
   })
 
-  const chips = computed(() => [...spiritStoneChips.value, ...companionChips.value])
+  const chips = computed(() => [
+    ...spiritStoneChips.value,
+    ...materialChips.value,
+    ...companionChips.value,
+  ])
 
   return { chips }
 }

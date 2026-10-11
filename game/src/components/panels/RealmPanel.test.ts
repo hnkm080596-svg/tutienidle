@@ -11,6 +11,7 @@ import {
 } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
+import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { i18n } from '@/i18n'
 
 function mountRealmPanel() {
@@ -34,6 +35,7 @@ function mountRealmPanel() {
 
   return {
     container,
+    pinia,
     player: usePlayerStore(pinia),
     unmount() {
       app.unmount()
@@ -47,106 +49,145 @@ afterEach(() => {
 })
 
 describe('RealmPanel', () => {
-  it('chỉ còn nút đại cảnh giới — tiểu cảnh giới tự tăng khi đủ tu vi', async () => {
+  // 2026-10-11 ruling - buttons always render so the card layout stays
+  // fixed: an unmet gate leaves the slot reserved via .btn-hidden +
+  // disabled. The "Dot Pha" button is clickable only while the minor
+  // breakthrough could land (cultivation full, floor < realm max); the
+  // floor-12+ ritual only once canTriggerBreakthrough passes.
+  it('nút Đột Phá chỉ hiện khi tu vi đủ và click lên tầng thẳng', async () => {
     const mounted = mountRealmPanel()
+    const upgradeButton = () => mounted.container.querySelector<HTMLButtonElement>(
+      '[data-testid="realm-upgrade"]',
+    )
+    const hidden = () => upgradeButton()?.classList.contains('btn-hidden')
+
+    // Mortal floor 1, cultivation empty - the slot is reserved but the
+    // button is hidden and disabled.
+    expect(upgradeButton()).not.toBeNull()
+    expect(hidden()).toBe(true)
+    expect(upgradeButton()?.disabled).toBe(true)
+
+    // Filling cultivation to the cap reveals the button.
+    mounted.player.cultivation = mounted.player.cultivationRequired
+    await nextTick()
+    expect(hidden()).toBe(false)
+    expect(upgradeButton()?.textContent?.trim()).toBe('Đột Phá')
+    expect(upgradeButton()?.disabled).toBe(false)
+
+    // A plain click lands the minor breakthrough (realmLevel + 1). The
+    // cinematic resolves immediately in tests (no GameRoot layer).
+    const before = mounted.player.realmLevel
+    upgradeButton()!.click()
+    await nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(mounted.player.realmLevel).toBe(before + 1)
+    expect(mounted.player.cultivation).toBe(0)
+
+    // Auto-select: the focus card snapped to the new current floor.
+    expect(
+      mounted.container.querySelector<HTMLElement>('.realm-floor-line')?.textContent?.trim(),
+    ).toBe(`Tầng ${before + 1} / 18`)
+
+    // At the realm cap the floor cannot advance - the button hides again
+    // even with a full bar (the major transition is the ritual's job).
+    mounted.player.realmLevel = 18
+    mounted.player.cultivation = mounted.player.cultivationRequired
+    await nextTick()
+    expect(hidden()).toBe(true)
+    expect(upgradeButton()?.disabled).toBe(true)
+    mounted.unmount()
+  })
+
+  it('nút nghi lễ đổi tên theo cảnh giới và chỉ tồn tại khi đủ điều kiện', async () => {
+    const mounted = mountRealmPanel()
+    const requirement = useBreakthroughRequirementStore(mounted.pinia)
     const ritualButton = () => mounted.container.querySelector<HTMLButtonElement>(
-      '.realm-cta',
-    )!
-    const actionLabels = () => Array.from(
-      mounted.container.querySelectorAll<HTMLButtonElement>('.realm-cta'),
-      button => button.textContent?.trim(),
+      '[data-testid="realm-ritual"]',
     )
 
-    expect(actionLabels()).toEqual(['Quán Khí'])
-    expect(ritualButton().disabled).toBe(true)
+    // Mortal floor < 12: the ritual button keeps its slot but stays
+    // hidden and disabled until the gate passes.
+    expect(ritualButton()).not.toBeNull()
+    expect(ritualButton()?.classList.contains('btn-hidden')).toBe(true)
+    expect(ritualButton()?.disabled).toBe(true)
 
     mounted.player.realmLevel = 12
     await nextTick()
 
-    expect(ritualButton().disabled).toBe(false)
+    // Level gate met at floor 12 - Quan Khi exists and a plain click
+    // opens the breakthrough ceremony requirement store.
+    expect(ritualButton()?.classList.contains('btn-hidden')).toBe(false)
+    expect(ritualButton()?.textContent?.trim()).toBe('Quán Khí')
+    ritualButton()!.click()
+    await nextTick()
+    expect(requirement.isOpen).toBe(true)
+    requirement.close()
 
     mounted.player.realmId = 'qi_refining'
     mounted.player.realmLevel = 1
     await nextTick()
 
-    expect(actionLabels()).toEqual(['Trúc Cơ'])
-    expect(ritualButton().disabled).toBe(true)
+    expect(ritualButton()?.classList.contains('btn-hidden')).toBe(true)
 
     mounted.player.realmLevel = 12
     await nextTick()
 
     // M-QI-02 - Truc Co admission needs the chapter-final clear too.
-    expect(ritualButton().disabled).toBe(true)
+    expect(ritualButton()?.classList.contains('btn-hidden')).toBe(true)
 
     mounted.player.completedStageIds = ['qi_refining_abyssal_pool']
     await nextTick()
 
-    expect(ritualButton().disabled).toBe(false)
+    expect(ritualButton()?.textContent?.trim()).toBe('Dược')
 
     mounted.player.realmId = 'foundation_establishment'
+    mounted.player.cultivation = 0
     await nextTick()
 
     // BETA SCOPE LOCK v2 (Phase-6): Truc Co -> Kim Dan is beyond the
-    // release ceiling, so no major-breakthrough CTA renders at all.
-    expect(actionLabels()).toEqual([])
+    // release ceiling, so both buttons stay hidden.
+    expect(ritualButton()?.classList.contains('btn-hidden')).toBe(true)
+    expect(ritualButton()?.disabled).toBe(true)
+    const upgrade = mounted.container.querySelector<HTMLButtonElement>('[data-testid="realm-upgrade"]')
+    expect(upgrade?.classList.contains('btn-hidden')).toBe(true)
+    expect(upgrade?.disabled).toBe(true)
     mounted.unmount()
   })
 
-  // M-QI-03 - normal Truc Co read-model: exactly the two locked lines
-  // for qi_refining; hidden foundation inputs never surface. Ui-audit
-  // fix: mortal ALSO renders its Quan Khi level row - a permanently
-  // disabled button with no visible requirement read as a dead control.
-  it('hiển thị đúng 2 dòng điều kiện Trúc Cơ cho qi_refining, cập nhật trạng thái trực tiếp', async () => {
+  // 2026-10-11 ruling - the requirements block is gone: buttons appearing
+  // is the only eligibility signal, so the card never renders the
+  // "Dieu Kien Dot Pha" heading or its rows.
+  it('không còn khối điều kiện Đột Phá trong focus card ở mọi cảnh giới', async () => {
     const mounted = mountRealmPanel()
-    const reqRows = () => Array.from(
-      mounted.container.querySelectorAll<HTMLElement>('.realm-breakthrough .realm-values > div'),
-    )
-    const rowMet = (el: HTMLElement) => el.classList.contains('met')
-    const rowLabel = (el: HTMLElement) =>
-      (el.querySelector('dt')?.textContent ?? '').replace(/\s+/g, ' ').trim()
+    const card = () => mounted.container.querySelector<HTMLElement>('.realm-active-card')!
 
-    // Mortal surfaces the Quan Khi level gate (ui-audit progression fix).
-    expect(reqRows()).toHaveLength(1)
-    expect(rowLabel(reqRows()[0]!)).toBe('Phàm Nhân tầng 12')
-    expect(rowMet(reqRows()[0]!)).toBe(false)
+    // Mortal.
+    expect(card().querySelector('ul')).toBeNull()
+    expect(card().textContent ?? '').not.toContain('Điều Kiện')
 
     mounted.player.realmId = 'qi_refining'
     mounted.player.realmLevel = 12
     await nextTick()
 
-    expect(reqRows()).toHaveLength(2)
-    // QI-D6: the block renders EXACTLY the two mandatory normal inputs -
-    // row text = marker glyph + semantic label, nothing else appended.
-    expect(rowLabel(reqRows()[0]!)).toBe('Luyện Khí tầng 12')
-    expect(rowMet(reqRows()[0]!)).toBe(true)
-    expect(rowLabel(reqRows()[1]!)).toBe('Chương 10 hoàn thành')
-    expect(rowMet(reqRows()[1]!)).toBe(false)
-
-    // The requirements block lives INSIDE the detail rail above the CTA.
-    const block = mounted.container.querySelector<HTMLElement>('.realm-breakthrough')!
-    expect(block.parentElement?.classList.contains('realm-details')).toBe(true)
-
-    mounted.player.completedStageIds = ['qi_refining_abyssal_pool']
-    await nextTick()
-
-    expect(rowMet(reqRows()[1]!)).toBe(true)
+    expect(card().querySelector('ul')).toBeNull()
+    expect(card().textContent ?? '').not.toContain('Điều Kiện')
 
     mounted.player.realmId = 'foundation_establishment'
     await nextTick()
 
-    expect(reqRows()).toHaveLength(0)
+    expect(card().querySelector('ul')).toBeNull()
     mounted.unmount()
   })
 
-  it('khối điều kiện KHÔNG hiển thị input ẩn (đan/tầng luyện thể/kinh mạch/hoàn mỹ/talent)', async () => {
+  it('khối hành động KHÔNG hiển thị input ẩn (đan/tầng luyện thể/kinh mạch/hoàn mỹ/talent)', async () => {
     const mounted = mountRealmPanel()
     mounted.player.realmId = 'qi_refining'
     mounted.player.realmLevel = 12
     await nextTick()
 
-    const block = mounted.container.querySelector<HTMLElement>('.realm-breakthrough')!
-    expect(block).not.toBeNull()
-    const text = block.textContent ?? ''
+    const card = mounted.container.querySelector<HTMLElement>('.realm-active-card')!
+    expect(card).not.toBeNull()
+    const text = card.textContent ?? ''
     for (const hidden of [
       'Trúc Cơ Đan', 'truc_co_dan', 'Luyện Thể', 'Kinh Mạch',
       'Hoàn Mỹ', 'Pháp Bảo', 'pham_cot',

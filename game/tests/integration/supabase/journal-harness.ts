@@ -45,7 +45,7 @@ export function integrationGameSave(character: CharacterMeta, marker = false): G
   player.selectedTalentIds = [...character.selectedTalentIds]
   player.hasSeenTutorial = marker
   const save: GameSave = {
-    version: 87,
+    version: 89,
     player,
     techniques: [],
     skills: [],

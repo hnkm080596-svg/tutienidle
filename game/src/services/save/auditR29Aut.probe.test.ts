@@ -632,6 +632,7 @@ describe('r29-AUT - F4/F5: refuse-arm provenance + recovery pairing pins', () =>
       fuelWoodAmount: job.reservation!.fuelWoodAmount,
       spiritStoneCost: job.reservation!.spiritStoneCost,
       herbAmount: job.reservation!.herbAmount,
+      luyenDanTinhHoaAmount: job.reservation!.luyenDanTinhHoaAmount,
       specialIngredients: job.reservation!.specialIngredients,
       costScale: job.reservation!.costScale,
     })

@@ -186,11 +186,11 @@
      The
      5-tier ramp lands on 1-3-5-7-9 BY DESIGN so it never collides with
      any value on the adjacent 10-step --rank-color-1..10 scale. */
-  --grade-hoang: var(--rank-color-1);
-  --grade-huyen: var(--rank-color-3);
-  --grade-dia: var(--rank-color-5);
-  --grade-thien: var(--rank-color-7);
-  --grade-tien: var(--rank-color-9);
+  --grade-hoang: var(--rank-color-2);
+  --grade-huyen: var(--rank-color-4);
+  --grade-dia: var(--rank-color-6);
+  --grade-thien: var(--rank-color-8);
+  --grade-tien: var(--rank-color-10);
 
   /* Tier Affix: UI dùng màu thay cho việc lặp ký hiệu I–V ở từng dòng. */
   --affix-tier-1: var(--rank-color-1);

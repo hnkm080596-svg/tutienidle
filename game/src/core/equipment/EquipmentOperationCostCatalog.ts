@@ -6,10 +6,8 @@
 // Cuong Hoa (sec7.1): cost chuyen sang Quang CUNG canh gioi muc tieu +
 // Linh Thach. Baseline de playtest chinh tai day.
 import type { RecipeMaterialCost } from './Equipment'
-import {
-  SUPPORTED_PROFESSION_REALMS,
-  buildProfessionMaterialId,
-} from '../profession/ProfessionMaterial'
+import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
+import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { stoneCostRealmFactor } from '../economy/EconomyRealmPace'
 
 export type EquipmentOperation = 'enhance'
@@ -69,12 +67,13 @@ export function createDefaultEquipmentOperationCostCatalog(): EquipmentOperation
 
       realmId,
 
-      // Sink Quang Thap Nien (`ore_decade`, gp123 6E C2) + Linh Thach - scale theo enhance level.
-      // 2026-10-05 pace retune: stone fee scales with the item's realm
-      // income (50 mortal / 400 qi / 2500 foundation per attempt) so the
+      // 2026-10-11 materials rework: Cuong Hoa burns Luyen Khi Tinh Hoa
+      // (ore is now decompose-only per owner ruling) + Linh Thach.
+      // Stone fee still scales with the item's realm income
+      // (50 mortal / 400 qi / 2500 foundation per attempt) so the
       // per-floor upgrade grind still costs meaningful farming time.
       cost: {
-        materials: [{ materialId: buildProfessionMaterialId('ore', realmId, 'decade'), amount: 2 }],
+        materials: [{ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 2 }],
 
         spiritStone: 50 * stoneCostRealmFactor(realmId),
       },

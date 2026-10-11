@@ -323,6 +323,7 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
       herbAmount: 1,
       fuelWoodRealmId: 'mortal',
       fuelWoodAmount: 1,
+  luyenDanTinhHoaAmount: 1,
       spiritStoneCost: 0,
       baseDurationSeconds: 1,
     }
@@ -337,10 +338,11 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
         completesAtMs: 1, // already due on the first update tick
         roomLevelAtStart: 1,
         reservation: {
-          woodId: buildProfessionMaterialId('wood', OVERFLOW_RECIPE.fuelWoodRealmId, 'myriad_year'),
+          woodId: 'bui_go',
           fuelWoodAmount: OVERFLOW_RECIPE.fuelWoodAmount,
           spiritStoneCost: OVERFLOW_RECIPE.spiritStoneCost,
           herbAmount: OVERFLOW_RECIPE.herbAmount,
+          luyenDanTinhHoaAmount: OVERFLOW_RECIPE.luyenDanTinhHoaAmount,
           specialIngredients: [],
           costScale: 1,
           digest: 0,

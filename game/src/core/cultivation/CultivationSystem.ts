@@ -37,6 +37,11 @@ export function addCultivation(
 
   if (total > required && hasCultivationOverflowBank(player.selectedTalentIds, player.talentLevels)) {
     player.cultivationOvercharge += total - required
+    // Owner ruling 2026-10-10: the banked share is real gained
+    // cultivation - count it in the lifetime tally at the single write
+    // point so the save-integrity invariant (bank <= tally) holds for
+    // legitimate saves on every gain path (tick, offline, pill, reward).
+    player.totalCultivationGained += total - required
     player.cultivation = required
     return
   }

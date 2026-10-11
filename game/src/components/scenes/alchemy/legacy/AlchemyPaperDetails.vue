@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import type { AlchemyRecipeDisplay } from './alchemyUi'
+import type { AlchemyRecipeDisplay } from '../fidelity/alchemyUi'
 
 defineProps<{ recipe: AlchemyRecipeDisplay; variant: string; notice: string }>()
 

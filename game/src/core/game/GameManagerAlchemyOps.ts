@@ -10,11 +10,10 @@ import {
   type ActiveAlchemyJob,
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
-import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
-import { getRealmTier } from '../realm/RealmTierMap'
+import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
-import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
+import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { betaRecipeFamilyOfId, type BetaRecipeFamily } from '../betaScope'
 import type { PlayerData } from '../player/Player'
 
@@ -27,10 +26,11 @@ export interface BetaAlchemyVariantModel {
   herbMaterialId: string
   herbAmount: number
   herbOwned: number
+  /** Materials economy rework - the fuel row is always BUI_GO_ID. */
   fuelWoodMaterialId: string
   fuelWoodAmount: number
   fuelWoodOwned: number
-  /** Herb amount AND matched-age fuel wood are both in the bag. */
+  /** Herb amount AND fuel bui_go are both in the bag. */
   sufficient: boolean
 }
 
@@ -54,6 +54,10 @@ export interface BetaAlchemyRecipeModel {
   spiritStoneMaterialId: string
   spiritStoneCost: number
   spiritStoneOwned: number
+  /** Materials economy rework - required Luyen Dan Tinh Hoa row. */
+  luyenDanTinhHoaMaterialId: string
+  luyenDanTinhHoaAmount: number
+  luyenDanTinhHoaOwned: number
   specialIngredients: {
     materialId: string
     amount: number
@@ -118,6 +122,10 @@ export class GameManagerAlchemyOps {
   /**
    * Bat dau luyen dan - reserve nguyen lieu ATOMIC (S8.2); slot job theo
    * concurrent_job_slots effect cua pill_room (mac dinh 1).
+   * QUEUE REWORK (ruling 2, 2026-10-11) - KHONG co quantity selector:
+   * moi lan goi = +1 vien. Cung loai voi order cuoi hang cho thi merge
+   * vao order do (quantity + 1, khong ton slot moi); khac loai thi tao
+   * order o slot tiep theo. Domain enqueueJob lo phan merge.
    */
   startAlchemyJob(
     recipeId: string,
@@ -157,7 +165,7 @@ export class GameManagerAlchemyOps {
     }
 
     const template = this.deps.buildingRegistry.get('pill_room')
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(recipe.realmId))
+    const spiritStoneId = SPIRIT_STONE_MATERIAL_ID
 
     const maxSlots = this.deps.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
 
@@ -166,7 +174,7 @@ export class GameManagerAlchemyOps {
     // check inside startJob validates the scaled price.
     const costMultiplier = getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.costMultiplier ?? 1
 
-    const started = this.deps.alchemySystem.startJob(
+    const started = this.deps.alchemySystem.enqueueJob(
       recipe,
 
       herbMaterialId,
@@ -198,8 +206,44 @@ export class GameManagerAlchemyOps {
     return started
   }
 
+  /**
+   * QUEUE REWORK - huy order: domain refund herb/go/specials cua cac vien
+   * CHUA BAT DAU; ops mirror phan spirit stone (stone id khong nam trong
+   * reservation - cung split voi duong charge: domain dot lieu, ops tru
+   * stone). Recipe khong resolve duoc (data churn) thi khong suy ra
+   * stone id -> bo qua refund stone, lieu trong lo van hoan binh thuong.
+   */
   cancelAlchemyJob(jobId: string): boolean {
-    return this.deps.alchemySystem.cancelJob(jobId)
+    const job = this.deps.alchemySystem.getJobs().find((candidate) => candidate.jobId === jobId)
+
+    const cancelled = this.deps.alchemySystem.cancelJob(
+      jobId,
+      this.deps.materialBag,
+      this.deps.materialRegistry,
+      Date.now(),
+    )
+
+    if (!cancelled.ok || cancelled.unprocessedUnits <= 0 || !job) {
+      return cancelled.ok
+    }
+
+    const recipe = this.deps.alchemyRecipesById.get(job.recipeId)
+
+    if (!recipe) {
+      return true
+    }
+
+    // Spirit-stone flatten: single material id regardless of recipe realm.
+    const spiritStoneId = SPIRIT_STONE_MATERIAL_ID
+
+    if (this.deps.materialRegistry.has(spiritStoneId)) {
+      this.deps.materialBag.add(
+        this.deps.materialRegistry.get(spiritStoneId),
+        job.reservation.spiritStoneCost * cancelled.unprocessedUnits,
+      )
+    }
+
+    return true
   }
 
   /**
@@ -226,6 +270,9 @@ export class GameManagerAlchemyOps {
     costMultiplier: number
 
     fuelWoodAmount: number
+
+    /** Materials economy rework - required tinh hoa (not cost-scaled). */
+    luyenDanTinhHoaAmount: number
 
     spiritStoneCost: number
 
@@ -282,6 +329,8 @@ export class GameManagerAlchemyOps {
 
       fuelWoodAmount: Math.ceil(recipe.fuelWoodAmount * Math.max(1, costMultiplier)),
 
+      luyenDanTinhHoaAmount: recipe.luyenDanTinhHoaAmount,
+
       spiritStoneCost: Math.ceil(recipe.spiritStoneCost * Math.max(1, costMultiplier)),
 
       durationSeconds: alchemySecondsFor(recipe, roomLevel),
@@ -326,26 +375,20 @@ export class GameManagerAlchemyOps {
       const fuelWoodAmount = Math.ceil(recipe.fuelWoodAmount * costScale)
       const spiritStoneCost = Math.ceil(recipe.spiritStoneCost * costScale)
 
-      const spiritStoneMaterialId = getSpiritStoneMaterialIdForRealmTier(
-        getRealmTier(recipe.realmId),
-      )
+      const spiritStoneMaterialId = SPIRIT_STONE_MATERIAL_ID
       const spiritStoneOwned = bag.getAmount(spiritStoneMaterialId)
+
+      const fuelWoodOwned = bag.getAmount(BUI_GO_ID)
 
       const variants: BetaAlchemyVariantModel[] = recipe.herbVariants.map(
         (variant) => {
           const herbOwned = bag.getAmount(variant.materialId)
-          const fuelWoodMaterialId = buildProfessionMaterialId(
-            'wood',
-            recipe.fuelWoodRealmId,
-            variant.age,
-          )
-          const fuelWoodOwned = bag.getAmount(fuelWoodMaterialId)
 
           return {
             herbMaterialId: variant.materialId,
             herbAmount: recipe.herbAmount,
             herbOwned,
-            fuelWoodMaterialId,
+            fuelWoodMaterialId: BUI_GO_ID,
             fuelWoodAmount,
             fuelWoodOwned,
             sufficient:
@@ -354,6 +397,8 @@ export class GameManagerAlchemyOps {
           }
         },
       )
+
+      const luyenDanTinhHoaOwned = bag.getAmount(LUYEN_DAN_TINH_HOA_ID)
 
       const specialIngredients = (recipe.specialIngredients ?? []).map(
         (special) => {
@@ -375,6 +420,7 @@ export class GameManagerAlchemyOps {
       const craftable =
         breakthroughAvailable &&
         variants.some((variant) => variant.sufficient) &&
+        luyenDanTinhHoaOwned >= recipe.luyenDanTinhHoaAmount &&
         spiritStoneOwned >= spiritStoneCost &&
         specialIngredients.every((special) => special.sufficient)
 
@@ -389,6 +435,9 @@ export class GameManagerAlchemyOps {
         spiritStoneMaterialId,
         spiritStoneCost,
         spiritStoneOwned,
+        luyenDanTinhHoaMaterialId: LUYEN_DAN_TINH_HOA_ID,
+        luyenDanTinhHoaAmount: recipe.luyenDanTinhHoaAmount,
+        luyenDanTinhHoaOwned,
         specialIngredients,
         craftable,
         activeJob: activeJobs.find((job) => job.recipeId === recipe.id),

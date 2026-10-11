@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import type { AlchemyJobDisplay } from './alchemyUi'
+import type { AlchemyJobDisplay } from '../fidelity/alchemyUi'
 
 defineProps<{ jobs: readonly AlchemyJobDisplay[]; capacity: number }>()
 

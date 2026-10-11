@@ -19,9 +19,13 @@
 // dac nhu hinh 2"): cell ~80px (MAX 90 de luoi rong con trong khoang
 // in-range), giu MIN 55 cho khung hep - 80 cho grid rong 4+ hang vua
 // theo chieu cao that (84 khien row-4 roi xuong 3 o panel ~380px).
+// Dong bo (2026-10-11, owner ruling "slot view dung kich thuoc giong
+// trang bi"): TARGET 68px - tui trang bi (grid ~580px, 8 cot) da ra
+// 68.5px nen khong doi; grid rong hon (tru vat ~1011px) chon 14 cot
+// -> cung 68.5px, moi tui hien giong nhau ve kich thuoc o.
 export const MIN_SLOT_SIZE = 55
 export const MAX_SLOT_SIZE = 90
-export const TARGET_SLOT_SIZE = 80
+export const TARGET_SLOT_SIZE = 68
 
 export const MIN_COLUMNS = 5
 export const MAX_COLUMNS = 14

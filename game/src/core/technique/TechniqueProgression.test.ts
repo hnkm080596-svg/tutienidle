@@ -235,7 +235,7 @@ describe('getTechniqueGradeUpgradeCost', () => {
       amount: 300,
     })
     expect(getTechniqueGradeUpgradeCost(4, 'golden_core')).toEqual({
-      materialId: 'spirit_stone_trung_pham',
+      materialId: 'spirit_stone_ha_pham',
       amount: 400,
     })
   })

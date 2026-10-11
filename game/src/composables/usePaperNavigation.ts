@@ -32,10 +32,10 @@ export const PAPER_NAV_IDS = [
   'technique',
   'skill',
   'body',
-  'inventory',
   'exploration',
   'alchemy',
   'equipment',
+  'inventory',
   'quest',
   'settings',
 ] as const

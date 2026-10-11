@@ -1,277 +1,328 @@
-﻿<script setup lang="ts">
-// Task 14-UI (rework P4, 2026-09-01, spec S5.6) -- Tab Phan Giai:
-// settings phan giai Linh Khoang -> Luyen Khi Tinh Hoa.
-// - gradeFilter / ageFilter / worker slider -> DecomposeSystem
-// - Output estimate: base(grade all->Cuu 1.0) x tuoi x workers (uoc luong
-//   hien thi -- system tinh chinh xac theo ton kho luc tick)
-// gp123 6E (task C2): filter "chat" cu (hoang..tien) doi thanh filter
-// TUOI (decade..thuong_co) theo truc tuoi thong nhat.
-// Flexible rule (AGENTS.md): grid auto-fit, khong hardcode px.
+<script setup lang="ts">
+// Task 14-UI rework (owner ruling 2026-10-12) -- Tab Phan Giai doi tu
+// engine NHAN CONG chay theo tick sang hanh dong truc tiep kieu Hoa
+// Luyen: nhung nguyen tui nguyen lieu o mode 'pick', chon nhieu stack
+// khoang, bulk actions + nut vang mo ConfirmModal preview tinh hoa,
+// xac nhan la phan giai ngay. Khong con worker slider/capacity/estimate.
+//
+// Logic decompose truc tiep nam o DecomposeSystem (listDecomposableIds /
+// previewDecompose / decompose) - tab nay chi la UI + selection state,
+// khong tu implement filter hay cong thuc yield.
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import type { DecomposeSettings } from '@/core/production/DecomposeSystem'
-import {
-  isProfessionGrade,
-  PROFESSION_GRADE_ORDER,
-  PROFESSION_GRADE_NAMES,
-} from '@/core/profession/ProfessionGrade'
-import { professionGradeRank } from '@/core/profession/slotRank'
-import { HERB_AGES } from '@/core/production/ProductionTypes'
-import type { HerbAge } from '@/core/production/ProductionTypes'
-import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
 import { materialLabel } from '@/core/presentation/labels'
-import { formatNumber } from '@/core/format/NumberFormatter'
+import { classifyDecomposableMaterial } from '@/core/production/DecomposeSystem'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
+import MaterialBagSection from '@/components/panels/bag-sections/MaterialBagSection.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import {
+  bagGridPoint,
+  collectBagCellPoints,
+  playDecomposeFx,
+  type DecomposeFxStream,
+  type DecomposeFxPoint,
+} from '@/components/fx/decomposeFx'
 
 const { t } = useI18n()
+
 const gameManager = useGameManager()
 
-// DecomposeSystem nam tren GameManager (Task 14 wiring). System thuan TS
-// KHONG reactive -- local mirror ref dong bo sau moi setSetting de Vue
-// re-render (khong cho stateVersion bump tu tick loop).
+const { stateVersion, bumpState } = useStateVersion()
+
 const system = gameManager.decomposeSystem
 
-const settingsMirror = ref<DecomposeSettings>(system.getSettings())
+// =========================
+// Tab Phan Giai - filter + multi-select + preview + confirm
+// (khung DissolveTab - "mang nguyen UI cua Hoa Luyen qua")
+// =========================
 
-// R7 (AR-08): slider max derives from the LIVE workforce capacity -
-// no hardcoded ceiling. The capacity snapshot re-syncs on every
-// state-version bump (CHQ build/upgrade mid-session) so the max stays
-// truthful; the system itself is plain TS, not reactive.
-const { stateVersion } = useStateVersion()
+const decomposeSelected = ref<Set<string>>(new Set())
 
-const capacityMirror = ref(system.getCapacity())
+// Stack materialId phan giai duoc = ore/wood/herb trong tui
+// (DecomposeSystem classifyDecomposableMaterial). Stack khac mo (inert).
+const decomposeSelectableIds = computed(() => {
+  stateVersion.value
 
-// ui-audit economy M5: which bag ores the CURRENT filters match --
-// the tab used to render three controls and nothing else, so an
-// unstaffed/failed-match state read as a dead, unexplained widget.
-// listMatchingOres() is the domain query (reuses oreMatchesFilter --
-// the UI never re-derives the predicate).
-const matchingOres = ref(system.listMatchingOres())
-
-watch(
-  stateVersion,
-  () => {
-    settingsMirror.value = system.getSettings()
-    capacityMirror.value = system.getCapacity()
-    matchingOres.value = system.listMatchingOres()
-  },
-  { immediate: true },
-)
-
-function applySetting(patch: Partial<DecomposeSettings>) {
-  system.setSetting(patch)
-
-  settingsMirror.value = system.getSettings()
-  matchingOres.value = system.listMatchingOres()
-}
-
-function oreLabel(materialId: string): string {
-  return materialLabel(materialId, gameManager.materialRegistry)
-}
-
-// Empty-state priority: no capacity (Chieu Hien Quan not built yet) ->
-// no workers assigned -> no ore in the bag matching the filters. Only
-// one guidance line renders at a time.
-const emptyHintKey = computed(() => {
-  if (capacityMirror.value <= 0) return 'panels.decompose.hint.noCapacity'
-  if (settingsMirror.value.workers <= 0) return 'panels.decompose.hint.noWorkers'
-  if (matchingOres.value.length === 0) return 'panels.decompose.hint.noMatchingOres'
-
-  return null
+  // Hotfix 2026-10-12: logic direct-decompose chua deploy xong thi render
+  // rong thay vi crash tab (method co the vang mat luc hot-reload).
+  return typeof system.listDecomposableIds === 'function' ? system.listDecomposableIds() : []
 })
 
-// Uoc luong output/luot cho PREVIEW (grade 'all' -> Cuu 1.0 lam dai dien).
-const PREVIEW_BASE_BY_ALL = 1
+const decomposeInertIds = computed(() => {
+  stateVersion.value
 
-const estimate = computed(() => {
-  const { ageFilter, workers } = settingsMirror.value
+  const selectable = new Set(decomposeSelectableIds.value)
 
-  const ageIndex =
-    ageFilter === 'all' ? 0 : HERB_AGES.indexOf(ageFilter)
-
-  const ageFactor = 2 ** Math.max(0, ageIndex)
-
-  return PREVIEW_BASE_BY_ALL * ageFactor * workers
+  return gameManager.materialBag
+    .getAll()
+    .map((stack) => stack.material.id)
+    .filter((id) => !selectable.has(id))
 })
 
-function onGradeChange(event: Event) {
-  const value = (event.target as HTMLSelectElement).value
+// Ids hien tai TUI dang hien thi (sau filter Loai/Sap Xep cua chinh
+// tui) - 'filtered' emit scope Chon Tat Ca vao view thay vi toan tui.
+// Seed day du selectable: bag mount SAU row nay nen khong co seed thi
+// frame dau hien count 0 + disable Chon Tat Ca.
+const decomposeVisibleIds = ref<Set<string>>(new Set(decomposeSelectableIds.value))
 
-  if (value !== 'all' && !isProfessionGrade(value)) return
-
-  applySetting({ gradeFilter: value })
+function onBagFiltered(ids: string[]) {
+  decomposeVisibleIds.value = new Set(ids)
 }
 
-function onAgeChange(event: Event) {
-  const value = (event.target as HTMLSelectElement).value
+const decomposeVisibleSelectableIds = computed(() => {
+  const visible = decomposeVisibleIds.value
 
-  if (value !== 'all' && !(HERB_AGES as readonly string[]).includes(value)) return
+  return decomposeSelectableIds.value.filter((id) => visible.has(id))
+})
 
-  applySetting({ ageFilter: value as HerbAge | 'all' })
+const decomposePickedIds = computed(() => [...decomposeSelected.value])
+
+// Prune ghost ids khi tap selectable doi (filter, phan giai xong,
+// stack het hang) - giong watcher cua DissolveTab: id roi khoi tap
+// pickable ma con trong selection se lam sai count + preview.
+watch(decomposeSelectableIds, (ids) => {
+  if (decomposeSelected.value.size === 0) {
+    return
+  }
+
+  const live = new Set(ids)
+  const next = new Set([...decomposeSelected.value].filter((id) => live.has(id)))
+
+  if (next.size !== decomposeSelected.value.size) {
+    decomposeSelected.value = next
+  }
+})
+
+function toggleDecompose(materialId: string) {
+  const next = new Set(decomposeSelected.value)
+
+  if (next.has(materialId)) {
+    next.delete(materialId)
+  } else {
+    next.add(materialId)
+  }
+
+  decomposeSelected.value = next
 }
 
-function onWorkersInput(event: Event) {
-  applySetting({ workers: Number((event.target as HTMLInputElement).value) })
+function selectAllDecomposeByFilter() {
+  decomposeSelected.value = new Set(decomposeVisibleSelectableIds.value)
+}
+
+function clearDecomposeSelection() {
+  decomposeSelected.value = new Set()
+}
+
+const decomposePreview = computed(() => {
+  stateVersion.value
+
+  return typeof system.previewDecompose === 'function'
+    ? system.previewDecompose(Array.from(decomposeSelected.value))
+    : []
+})
+
+const decomposeDialogOpen = ref(false)
+
+// Dialog thuoc ve tap selection luc mo: moi thay doi selection (prune,
+// clear, toggle, select-all, reset sau decompose) lam tap da review
+// loi thoi - dong dialog, tap moi can review lai (parity DissolveTab).
+watch(decomposeSelected, () => {
+  decomposeDialogOpen.value = false
+})
+
+function doDecompose() {
+  if (decomposeSelected.value.size === 0) {
+    return
+  }
+
+  decomposeDialogOpen.value = true
+}
+
+// Dissolve FX (owner spec 2026-10-11): streams are captured BEFORE
+// decompose() removes the stacks - the consumed cells unmount with them.
+// One stream per output family (ore -> luyen_khi, wood -> bui_go, herb ->
+// luyen_dan tinh hoa), origins = that family's picked cell centers.
+const workspaceRef = ref<HTMLElement | null>(null)
+
+function collectDecomposeStreams(): DecomposeFxStream[] {
+  const root = workspaceRef.value
+  const originsByOutput = new Map<string, DecomposeFxPoint[]>()
+
+  for (const materialId of decomposeSelected.value) {
+    const material = gameManager.materialRegistry.has(materialId)
+      ? gameManager.materialRegistry.get(materialId)
+      : undefined
+    const family = material ? classifyDecomposableMaterial(material) : null
+
+    if (family === null) {
+      continue
+    }
+
+    const points = collectBagCellPoints(root, [materialId])
+    originsByOutput.set(
+      family.outputMaterialId,
+      [...(originsByOutput.get(family.outputMaterialId) ?? []), ...points],
+    )
+  }
+
+  const fallback = bagGridPoint(root)
+
+  return decomposePreview.value
+    .map((row): DecomposeFxStream => {
+      const origins = originsByOutput.get(row.materialId) ?? []
+
+      // A stack picked on another bag page/filter renders no cell - the
+      // grid center stands in so every output family still gets a stream.
+      if (origins.length === 0 && fallback !== null) {
+        origins.push(fallback)
+      }
+
+      return { materialId: row.materialId, amount: row.maxAmount, origins }
+    })
+    .filter((stream) => stream.origins.length > 0)
+}
+
+function confirmDecompose() {
+  const streams = collectDecomposeStreams()
+
+  if (
+    typeof system.decompose === 'function' &&
+    system.decompose(Array.from(decomposeSelected.value))
+  ) {
+    decomposeSelected.value = new Set()
+    bumpState()
+    playDecomposeFx(streams)
+  }
+
+  decomposeDialogOpen.value = false
 }
 </script>
 
 <template>
-  <div class="decompose-tab equipment-forge-workspace">
-    <h2>{{ t('panels.equipmentHall.tabs.decompose') }}</h2>
+  <!-- Chrome khop DissolveTab (owner ruling 2026-10-12): card toi,
+       tui nhung o pick mode, bulk actions + submit vang, ConfirmModal
+       danger preview phan thuong. -->
+  <div ref="workspaceRef" class="equipment-forge-workspace decompose-workspace">
+    <MaterialBagSection
+      class="decompose-bag"
+      mode="pick"
+      sort-key="decompose"
+      :picked-ids="decomposePickedIds"
+      :inert-ids="decomposeInertIds"
+      :show-count="false"
+      @pick="toggleDecompose"
+      @filtered="onBagFiltered"
+    />
 
-    <section class="decompose-tab__filters">
-      <label class="decompose-tab__filter">
-        <span>{{ t('panels.decompose.labels.gradeFilter') }}</span>
+    <div class="equipment-forge-actions">
+      <button
+        type="button"
+        class="decompose-filters__bulk"
+        :disabled="decomposeVisibleSelectableIds.length === 0"
+        @click="selectAllDecomposeByFilter"
+      >
+        {{ t('panels.equipmentHall.buttons.selectAll') }} ({{ decomposeVisibleSelectableIds.length }})
+      </button>
 
-        <select :value="settingsMirror.gradeFilter" @change="onGradeChange">
-          <option value="all">{{ t('panels.decompose.select.allGrades') }}</option>
+      <button
+        type="button"
+        class="decompose-filters__bulk"
+        :disabled="decomposeSelected.size === 0"
+        @click="clearDecomposeSelection"
+      >
+        {{ t('panels.equipmentHall.buttons.clearAll') }}
+      </button>
 
-          <option
-            v-for="grade in PROFESSION_GRADE_ORDER"
-            :key="grade"
-            :value="grade"
-            :style="{ color: `var(--rank-color-${professionGradeRank(grade)})` }"
-          >
-            {{ PROFESSION_GRADE_NAMES[grade] }}
-          </option>
-        </select>
-      </label>
-
-      <label class="decompose-tab__filter">
-        <span>{{ t('panels.decompose.labels.ageFilter') }}</span>
-
-        <select :value="settingsMirror.ageFilter" @change="onAgeChange">
-          <option value="all">{{ t('panels.decompose.select.allAges') }}</option>
-
-          <option v-for="age in HERB_AGES" :key="age" :value="age">
-            {{ MATERIAL_AGE_LABELS[age] }}
-          </option>
-        </select>
-      </label>
-
-      <label class="decompose-tab__filter">
-        <span>{{ t('panels.decompose.labels.workers') }}: {{ settingsMirror.workers }}</span>
-
-        <input
-          type="range"
-          min="0"
-          :max="capacityMirror"
-          step="1"
-          :value="settingsMirror.workers"
-          @input="onWorkersInput"
-        />
-      </label>
-    </section>
-
-    <p class="decompose-tab__estimate">
-      {{ t('panels.decompose.estimate', { amount: estimate }) }}
-    </p>
-
-    <!-- audit M5: guidance + a live list of which ores will be fed, so
-         an idle tab stops reading as a dead widget. -->
-    <p v-if="emptyHintKey" class="decompose-tab__hint" data-testid="decompose-hint">
-      {{ t(emptyHintKey) }}
-    </p>
-
-    <div v-else class="decompose-tab__matching">
-      <p class="decompose-tab__matching-title">
-        {{ t('panels.decompose.matching', { count: matchingOres.reduce((sum, ore) => sum + ore.amount, 0) }) }}
-      </p>
-
-      <ul class="decompose-tab__matching-list">
-        <li v-for="ore in matchingOres" :key="ore.materialId">
-          {{ oreLabel(ore.materialId) }} ×{{ formatNumber(ore.amount) }}
-        </li>
-      </ul>
+      <EquipmentArtButton
+        filter-art
+        :gold="decomposeSelected.size > 0"
+        class="equipment-forge-actions__submit"
+        :disabled="decomposeSelected.size === 0"
+        @click="doDecompose"
+      >
+        {{ t('panels.equipmentHall.tabs.decompose') }}
+      </EquipmentArtButton>
     </div>
+
+    <ConfirmModal
+      :open="decomposeDialogOpen"
+      danger
+      :title="t('panels.equipmentHall.tabs.decompose')"
+      :message="`${t('panels.equipmentHall.labels.dissolveReward')} (${t('panels.equipmentHall.labels.itemCount', { count: decomposeSelected.size })})`"
+      :confirm-label="t('panels.equipmentHall.buttons.decomposeConfirm')"
+      @confirm="confirmDecompose"
+      @cancel="decomposeDialogOpen = false"
+    >
+      <div class="decompose-dialog__detail">
+        <p v-for="entry in decomposePreview" :key="entry.materialId">
+          {{ materialLabel(entry.materialId, gameManager.materialRegistry) }}: {{ entry.minAmount === entry.maxAmount ? entry.minAmount : `${entry.minAmount}–${entry.maxAmount}` }}
+        </p>
+        <p class="decompose-warning">{{ t('panels.equipmentHall.warnings.irreversible') }}</p>
+      </div>
+    </ConfirmModal>
   </div>
 </template>
 
 <style scoped>
-/* Chrome khop card toi trong sheet moi (decompose khong co design
-   rieng trong preview - dung kieu select/footer tui). */
-.decompose-tab {
+.equipment-forge-workspace {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
+  min-height: 0;
 }
-.equipment-forge-workspace h2 {
-  font-size: 26px;
-  margin: 0;
-  border-bottom: 1px solid #9b7d4066;
-  padding-bottom: 7px;
-  line-height: 1.15;
+/* Bulk buttons = chip art cua dropdown tui (equipment-filter-*,
+   native 1225x324; disabled fades - khong co art disabled). */
+.decompose-filters__bulk {
+  flex: 0 0 auto;
+  height: 40px;
+  aspect-ratio: 1225 / 324;
+  border: 0;
+  background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / contain no-repeat;
+  color: #f2e3c2;
+  font: 700 12px var(--pc-font-body, var(--font-display, Georgia, serif));
+  padding: 0 12px;
+  cursor: pointer;
+  white-space: nowrap;
 }
-
-.decompose-tab__filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
+.decompose-filters__bulk:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
-
-.decompose-tab__filter {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: #c1b18d;
+.decompose-filters__bulk:not(:disabled):hover {
+  background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-hover-v2.png');
 }
-
-.decompose-tab__filter select {
-  height: 29px;
-  border: 1px solid #8e7440;
-  background: #23251e;
-  color: #eedfbf;
-  font: 13px var(--font-body, Georgia, serif);
-  padding: 0 8px;
+.decompose-filters__bulk:not(:disabled):active {
+  background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png');
 }
-
-.decompose-tab__filter input[type='range'] {
-  accent-color: #d6ad5d;
+.decompose-bag {
+  flex: 1 1 auto;
+  min-height: 0;
 }
-
-.decompose-tab__estimate {
-  margin: 0;
-  color: #f3e4c4;
-  font-size: 14px;
-}
-
-.decompose-tab__hint {
-  margin: 0;
-  padding: 10px 12px;
-  border: 1px dashed #8e744066;
-  border-radius: var(--radius-md, 6px);
-  color: #c1b18d;
-  font-size: 13px;
-}
-
-.decompose-tab__matching {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.decompose-tab__matching-title {
-  margin: 0;
-  color: #c1b18d;
+.decompose-dialog__detail p {
+  margin: 0 0 3px;
   font-size: 12px;
+  color: #2f5d33;
 }
-
-.decompose-tab__matching-list {
+.decompose-warning {
+  color: var(--crimson, #c05a4e) !important;
+}
+.equipment-forge-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
 }
-
-.decompose-tab__matching-list li {
-  padding: 3px 10px;
-  border: 1px solid #8e7440;
-  border-radius: var(--radius-sm, 4px);
-  background: #23251e;
-  color: #eedfbf;
-  font-size: 12px;
+/* Spacing deu tren hang (parity DissolveTab): select-all canh trai,
+   submit canh phai, clear o giua - hai gap bang nhau. */
+.equipment-forge-actions__submit {
+  min-width: 255px;
+  min-height: 48px;
+  font-family: var(--pc-font-body, var(--font-display, Georgia, serif));
+  font-weight: 700;
+  font-size: 24px;
+  padding: 8px 29px;
+  margin-right: 10px;
 }
 </style>

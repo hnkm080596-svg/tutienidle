@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { realmMapAnchors } from './realmUi'
+import { realmMapAnchors } from './realmUiLegacy'
 const props = defineProps<{ current: number; selected: number; max: number }>()
 const emit = defineEmits<{ select: [floor: number] }>()
 const { t } = useI18n()

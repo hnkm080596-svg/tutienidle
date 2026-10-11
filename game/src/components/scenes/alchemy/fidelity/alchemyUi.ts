@@ -27,6 +27,9 @@ export interface AlchemyHerbChoice {
   /** Display string, e.g. "12 / 2" (owned / needed). */
   readonly amount: string
 
+  /** Owned count for the slot amount corner (optional - amount string stays authoritative). */
+  readonly owned?: number
+
   /** Owned >= needed for this variant (drives the shortage tone). */
   readonly enough: boolean
 }
@@ -38,6 +41,12 @@ export interface AlchemyCostRow {
 
   /** Display string, e.g. "3 / 5" or "50". */
   readonly value: string
+
+  /** Slot icon (production fills from materialRegistry). */
+  readonly icon?: string
+
+  /** Owned count for the slot amount corner. */
+  readonly owned?: number
 
   /** false renders the shortage tone; undefined hides the flag. */
   readonly enough?: boolean
@@ -75,7 +84,15 @@ export interface AlchemyRecipeDisplay {
 export interface AlchemyJobDisplay {
   readonly id: string
 
+  readonly recipeId: string
+
   readonly name: string
+
+  /** Order quantity (viên trong order) — optional until queue domain lands. */
+  readonly quantity?: number
+
+  /** Viên already minted inside this order. */
+  readonly unitsDone?: number
 
   readonly icon: string
 
@@ -83,4 +100,10 @@ export interface AlchemyJobDisplay {
   readonly progress: number
 
   readonly remaining: string
+
+  /** QUEUE REWORK - units already rolled/delivered in this batch. */
+  readonly unitsDone?: number
+
+  /** QUEUE REWORK - total units in this batch (order size). */
+  readonly quantity?: number
 }

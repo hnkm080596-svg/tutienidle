@@ -15,6 +15,7 @@ import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { GameManager } from '@/core/game/GameManager'
 import { betaSkillTreeFor } from '@/core/betaScopeSkillDomain'
+import { recordSessionLoginId } from '@/services/master/masterAccess'
 import type { PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
@@ -37,7 +38,7 @@ function mockGameManager(overrides: {
   purchaseNode?: (nodeId: string) => boolean
   upgradeNode?: (nodeId: string) => boolean
   respecNodeTree?: () => number | false
-  respecPreview?: object
+  respecPreview?: object | null
 } = {}): Partial<GameManager> {
   return {
     skillManager: {
@@ -58,7 +59,9 @@ function mockGameManager(overrides: {
       purchaseNode: (nodeId: string) => overrides.purchaseNode?.(nodeId) ?? false,
       upgradeNode: (nodeId: string) => overrides.upgradeNode?.(nodeId) ?? false,
       respecNodeTree: () => overrides.respecNodeTree?.() ?? 0,
-      previewNodeRespec: () => overrides.respecPreview ?? { refund: 5, resetCount: 1 },
+      // QA fixpoint 2026-10-10: explicit null = nothing to reset (the
+      // disabled-respec gate is now the op's own admission).
+      previewNodeRespec: () => ('respecPreview' in overrides ? overrides.respecPreview : { refund: 5, resetCount: 1 }),
       allocateAttributePoint: () => false,
     } as unknown as GameManager['progressionOps'],
   }
@@ -70,6 +73,11 @@ function mountPanel(
 ) {
   const container = document.createElement('div')
   document.body.appendChild(container)
+
+  // QA fixpoint 2026-10-10: .skill-respec renders master-only by ruling
+  // (SkillFidelityScene v-if=isMaster) - mount as admin so the respec
+  // contract these tests pin is reachable.
+  recordSessionLoginId('admin')
 
   const app = createApp({ render: () => h(SkillPathPanel) })
   const pinia = createPinia()
@@ -104,7 +112,7 @@ function mountPanel(
 
 describe('SkillPathPanel (scene 07 fidelity)', () => {
   it('a way-less mortal sees the Phan Nhan identity, an empty graph and a disabled respec', async () => {
-    const view = mountPanel(() => {})
+    const view = mountPanel(() => {}, mockGameManager({ respecPreview: null }))
 
     await nextTick()
 

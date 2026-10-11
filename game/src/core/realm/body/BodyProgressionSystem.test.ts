@@ -100,12 +100,16 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     expect(player.bodyProgression.zhou_tian.completed).toBe(0)
 
     player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
-    // 225 essence buys steps 0+1 (100+125=225); the next step is 150.
-    expect(investBodyChapterState(player, 'zhou_tian', 225, 0)).toBe(225)
+    // Owner ruling 2026-10-10: one call commits exactly ONE step - the
+    // first call buys step 0 (100) and leaves the 125 surplus; the
+    // next call buys step 1 (125).
+    expect(investBodyChapterState(player, 'zhou_tian', 225, 0)).toBe(100)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(1)
+    expect(investBodyChapterState(player, 'zhou_tian', 125, 0)).toBe(125)
     expect(player.bodyProgression.zhou_tian.completed).toBe(2)
   })
 
-  it('isBodyChapterUnlocked mirrors the sequential gate exactly', () => {
+  it('isBodyChapterUnlocked mirrors the sequential + realm gate exactly', () => {
     const player = createDefaultPlayer()
 
     // Chapters with no authored prereqs are always unlocked.
@@ -114,11 +118,32 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(false)
 
     player.bodyProgression.body_refinement.completedTiers = 6
+    // Realm gate: chain alone does not open a higher-realm chapter.
+    expect(isBodyChapterUnlocked(player, 'meridian')).toBe(false)
+    expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(false)
+
+    player.realmId = 'qi_refining'
     expect(isBodyChapterUnlocked(player, 'meridian')).toBe(true)
     expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(false)
 
     player.bodyProgression.meridian.progress = Object.fromEntries(MERIDIANS.map((m) => [m.id, 100]))
+    // zhou_tian stays locked below foundation_establishment (capacity 0).
+    expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(false)
+
+    player.realmId = 'foundation_establishment'
     expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(true)
+
+    // Higher realms keep every lower chapter open (realm index is
+    // monotonic - the gate never re-locks post-advance).
+    player.realmId = 'golden_core'
+    expect(isBodyChapterUnlocked(player, 'body_refinement')).toBe(true)
+    expect(isBodyChapterUnlocked(player, 'meridian')).toBe(true)
+    expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(true)
+
+    // Unknown realm ids fail closed like the sibling gates.
+    player.realmId = 'not_a_realm'
+    expect(isBodyChapterUnlocked(player, 'meridian')).toBe(false)
+    expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(false)
   })
 })
 

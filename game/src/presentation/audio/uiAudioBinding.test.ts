@@ -44,7 +44,7 @@ describe('bindUiAudio', () => {
     ui.leftPanelMode = 'settings'
     playCue.mockClear()
 
-    ui.leftPanelMode = 'vendor'
+    ui.leftPanelMode = 'equipment_hall'
     expect(cues()).toEqual(['ui.panel.close', 'ui.panel.open'])
     unbind()
   })

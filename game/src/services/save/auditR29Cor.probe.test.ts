@@ -21,8 +21,6 @@ import {
 } from '../../core/alchemy/AlchemySystem'
 import { EventBus } from '../../core/events/EventBus'
 import { TribulationDirector } from '../../core/tribulation/TribulationDirector'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
 import { QuestManager } from '../../core/quest/QuestManager'
 import { PillBag } from '../../core/pill/PillBag'
 import { useSaveIssueStore } from '../../stores/saveIssue'
@@ -463,72 +461,6 @@ describe('r29 COR - claim 4: finite-clock guard edges on alchemy tick/settleOffl
 })
 
 describe('r29 COR - sibling ungated-clock seams (E) - finding F1', () => {
-  function decomposeWithOre() {
-    const bag = new MaterialBag()
-    const ore = materials.find((m) => /_ore_/.test(m.id))!
-    bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-    return { system, bag, oreId: ore.id }
-  }
-
-  it('E1 decompose.tick(NaN) zero-advances - no mint, nextCycleAt stays finite (r29-F1 guard)', () => {
-    const { system, bag, oreId } = decomposeWithOre()
-    const oreBefore = bag.getAll().find((s) => s.material.id === oreId)!.amount
-
-    system.tick(Number.NaN)
-    system.tick(1e300)
-
-    // deny-direction: nothing minted, nothing poisoned
-    expect(system.drainOutput()).toHaveLength(0)
-    expect(bag.getAll().find((s) => s.material.id === oreId)!.amount).toBe(oreBefore)
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs)
-
-    const save = validWireSave() as unknown as Record<string, unknown>
-    save['decompose'] = system.getSaveState()
-    const shape = validateGameSaveShape(save as never)
-    expect(shape.ok).toBe(true)
-  })
-
-  it('E2 decompose.restore(state, NaN) merges the deadline verbatim - no poison, no re-anchor (r29-F1)', () => {
-    const { system } = decomposeWithOre()
-
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 30_000,
-        started: true,
-      },
-      Number.NaN,
-    )
-
-    const state = system.getSaveState()
-    // verbatim merge under a broken clock: the restored stamp stands
-    // (max(live, restored)) - parked, deny direction, still write-clean
-    expect(state.nextCycleAt).toBe(currentMs + 30_000)
-    const save = validWireSave() as unknown as Record<string, unknown>
-    save['decompose'] = state
-    expect(validateGameSaveShape(save as never).ok).toBe(true)
-  })
-
-  it('E3 decompose.settleOffline(+Infinity, since) zero-settles under a broken clock (r29-F1)', () => {
-    const { system } = decomposeWithOre()
-
-    const settled = system.settleOffline(Number.POSITIVE_INFINITY, currentMs)
-
-    expect(settled).toBe(0)
-    expect(system.drainOutput().length).toBe(0)
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs)
-  })
-
   it('E4 questManager.restore(state, NaN) keeps the marker verbatim - finite, write-clean (r29-F1)', () => {
     const manager = new QuestManager()
 
@@ -595,28 +527,5 @@ describe('r29 COR - regression pins on honest shapes (F)', () => {
     const shape = validateGameSaveShape(validWireSave())
     expect(shape.ok).toBe(true)
     expect(shape.issues).toHaveLength(0)
-  })
-
-  it('F3 decompose.tick under honest clock mints exactly one cycle and re-anchors finite', () => {
-    const bag = new MaterialBag()
-    const ore = materials.find((m) => /_ore_/.test(m.id))!
-    bag.add(ore, 10)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(2)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-
-    system.tick(currentMs + 30_000)
-
-    expect(system.drainOutput().length).toBe(1)
-    const state = system.getSaveState()
-    expect(Number.isFinite(state.nextCycleAt)).toBe(true)
-    expect(state.nextCycleAt).toBe(currentMs + 60_000)
   })
 })

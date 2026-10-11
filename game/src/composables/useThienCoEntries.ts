@@ -120,8 +120,15 @@ export function useThienCoEntries() {
           run: () => navigation.openBuilding(buildingId),
         })
       } else if (status === 'active' && buildingId === 'pill_room' && alchemyJobs.length > 0) {
+        // QUEUE REWORK - the first order is the one in the cauldron; its
+        // per-unit progress plus the waiting order count is what the
+        // player needs from the board.
         const earliest = Math.min(...alchemyJobs.map((job) => job.completesAtMs))
         const minutes = Math.max(1, Math.ceil((earliest - nowMs.value) / 60_000))
+        const brewing = alchemyJobs[0]!
+        const total = Math.max(1, brewing.quantity ?? 1)
+        const done = Math.min(total, Math.max(0, brewing.unitsDone ?? 0))
+        const waiting = Math.max(0, alchemyJobs.length - 1)
 
         list.push({
           id: 'active:pill_room',
@@ -129,7 +136,7 @@ export function useThienCoEntries() {
           priority: PRIORITY.active,
           titleKey: 'home.thienCo.active.title',
           detailKey: 'home.thienCo.active.detail',
-          detailParams: { count: alchemyJobs.length, minutes },
+          detailParams: { done, total, waiting, minutes },
           ctaKey: 'home.thienCo.active.cta',
           run: () => navigation.openBuilding('pill_room'),
         })

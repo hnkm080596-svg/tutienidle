@@ -202,7 +202,7 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
     expect(anchor).toBeLessThanOrEqual(NOW)
   })
 
-  it('live-replacement with an armed farm re-anchors (settle(0)) without catch-up; decompose/alchemy stop at the snapshot', () => {
+  it('live-replacement with an armed farm re-anchors (settle(0)) without catch-up; alchemy stops at the snapshot', () => {
     const player = usePlayerStore()
     const manager = registeredManager()
     manager.setActivePlayer(player.$state)
@@ -212,7 +212,6 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
       autoFarmStage: { stageId: 'stage-live-replaced', lastCheckedMs: NOW - 900_000 },
     })
     const settleSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
-    const decomposeSpy = vi.spyOn(manager.decomposeSystem, 'settleOffline')
     const alchemySpy = vi.spyOn(manager.alchemySystem, 'settleOffline')
 
     const result = restoreGameSession(player, manager, save, {
@@ -224,7 +223,6 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
     // Queue restored, zero-accrual settle: re-anchor, never catch up the
     // paused window (r15-COR-E: the anchor is client-epoch now).
     expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 0)
-    expect(decomposeSpy).not.toHaveBeenCalled()
     // settleNowMs = lastSavedAt + 0 => jobs complete only at the snapshot.
     expect(alchemySpy).toHaveBeenCalledWith(
       expect.anything(),
@@ -243,11 +241,10 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
 
     // Client clock 300s ahead of the server: lastSavedAt lands past
     // untilMs even though the save is honest. Pre-fix the settle
-    // window collapsed to [until, until] -> production/decompose paid
+    // window collapsed to [until, until] -> production paid
     // 0 while auto-farm paid the same elapsed.
     const save = makeSave({ lastSavedAt: NOW + 300_000 })
     const productionSpy = vi.spyOn(manager.productionSystem, 'settleOffline')
-    const decomposeSpy = vi.spyOn(manager.decomposeSystem, 'settleOffline')
 
     const result = restoreGameSession(player, manager, save, {
       kind: 'cold-boot',
@@ -265,7 +262,6 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
       NOW,
       expect.objectContaining({ offlineSinceMs: NOW - 200_000 }),
     )
-    expect(decomposeSpy).toHaveBeenCalledWith(NOW, NOW - 200_000)
   })
 
   it('cold-boot window under the 60s gate runs no production/auto-farm catch-up', () => {
@@ -275,7 +271,6 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
 
     const save = makeSave({ lastSavedAt: NOW - 900_000 })
     const settleSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
-    const decomposeSpy = vi.spyOn(manager.decomposeSystem, 'settleOffline')
     const productionSpy = vi.spyOn(manager.productionSystem, 'settleOffline')
 
     const result = restoreGameSession(player, manager, save, {
@@ -286,7 +281,6 @@ describe('RestoreTimeAuthority — owner settle behavior through restoreGameSess
 
     expect(result.status).toBe('ok')
     expect(settleSpy).not.toHaveBeenCalled()
-    expect(decomposeSpy).not.toHaveBeenCalled()
     expect(productionSpy).not.toHaveBeenCalled()
   })
 })

@@ -53,7 +53,8 @@ export function cultivateTick(
   const gained = player.cultivation - before
 
   // Lifetime cultivation tally (not consumed by breakthroughs) - feeds
-  // technique tier.
+  // technique tier. The banked share is counted inside addCultivation
+  // itself (owner ruling 2026-10-10) so only the landed delta adds here.
   player.totalCultivationGained += gained
 
   // Ngo Dao talent (talent-direction-choice-plan sec.6) - converts

@@ -27,7 +27,7 @@ import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
-import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 
 function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInstance {
   return makeInstance({
@@ -100,7 +100,9 @@ describe('WashTab — Tẩy Luyện', () => {
   it('Tẩy Luyện đồ Hoàng không cần chọn hoặc sở hữu Quáng', async () => {
     const mounted = mountTab((manager) => {
       const essence = materials.find((m) => m.id === LUYEN_KHI_TINH_HOA_ID)!
+      const buiGo = materials.find((m) => m.id === BUI_GO_ID)!
       manager.materialBag.add(essence, 10)
+      manager.materialBag.add(buiGo, 10)
       manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
     })
 
@@ -151,7 +153,9 @@ describe('WashTab - preview honesty (T4-33)', () => {
     instance.affixes = [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }]
 
     const essence = materials.find((m) => m.id === LUYEN_KHI_TINH_HOA_ID)!
+    const buiGo = materials.find((m) => m.id === BUI_GO_ID)!
     manager.materialBag.add(essence, 100)
+    manager.materialBag.add(buiGo, 100)
     manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
   }
 

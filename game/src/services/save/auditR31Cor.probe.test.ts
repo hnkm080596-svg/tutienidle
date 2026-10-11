@@ -16,8 +16,6 @@ import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
 import { PillBag } from '../../core/pill/PillBag'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import {
@@ -269,24 +267,7 @@ describe('r31 COR - A: crafted negative persisted stamps denied (gate non-negati
 //     lastSavedAt < 0 -> offlineSinceMs < 0 feeds both seams differently.
 // ----------------------------------------------------------------------------
 
-describe('r31 COR - B: window-input asymmetry (decompose denies, production admits)', () => {
-  function decomposeWithOre() {
-    const bag = new MaterialBag()
-    const ore = materials.find((m) => /_ore_/.test(m.id))!
-    bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-    return { system, bag }
-  }
-
+describe('r31 COR - B: window-input guard (production denies)', () => {
   it('advanceWorkerLanes now DENIES emptyLaneStartMs = -1e6 (same [0, 2^52) domain as offlineSinceMs)', () => {
     const result = advanceWorkerLanes(
       laneParams({ emptyLaneStartMs: -1_000_000 }),
@@ -296,15 +277,7 @@ describe('r31 COR - B: window-input asymmetry (decompose denies, production admi
     expect(result.pending).toHaveLength(0)
   })
 
-  it('DecomposeSystem.settleOffline now DENIES the same -1e6 window start (returns 0)', () => {
-    const { system } = decomposeWithOre()
-    expect(system.settleOffline(currentMs, -1_000_000)).toBe(0)
-  })
 
-  it('DecomposeSystem.settleOffline denies the upper bound too: offlineSinceMs = 2^52 returns 0', () => {
-    const { system } = decomposeWithOre()
-    expect(system.settleOffline(currentMs, BOUND)).toBe(0)
-  })
 
   it('advanceWorkerLanes now DENIES the matching -1e6 pending head (lane parked verbatim, never settles)', () => {
     const span = 30_000
@@ -326,12 +299,13 @@ describe('r31 COR - C: headroom asymmetry - mint paths still stamp >= 2^52', () 
     const manager = registeredManager()
     const recipe = mortalRecipe()
     const variant = recipe.herbVariants[0]!
-    const woodId = buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age)
+    const woodId = 'bui_go'
     const bag = manager.materialBag
     const registry = manager.materialRegistry
     // stock the burn inputs so startJob reaches the mint arm
     bag.add(registry.get(variant.materialId), recipe.herbAmount)
     bag.add(registry.get(woodId), recipe.fuelWoodAmount)
+    bag.add(registry.get('luyen_dan_tinh_hoa'), recipe.luyenDanTinhHoaAmount)
     return { manager, recipe, variant, bag, registry }
   }
 
@@ -365,44 +339,7 @@ describe('r31 COR - C: headroom asymmetry - mint paths still stamp >= 2^52', () 
     ).toBe(true)
   })
 
-  it('DecomposeSystem.tick(nowMs = 2^52 - 1) denies the clock - nextCycleAt stays parked (fresh-start arm)', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: false,
-      },
-      currentMs,
-    )
 
-    system.tick(BOUND - 1)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('DecomposeSystem.tick(nowMs = 2^52 - 1) with a running cycle denies - nextCycleAt unchanged (advance arm)', () => {
-    const bag = new MaterialBag()
-    const ore = materials.find((m) => /_ore_/.test(m.id))!
-    bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: BOUND - 2,
-        started: true,
-      },
-      currentMs,
-    )
-    // restore merges min(restored, now + cycleMs) -> parked baseline.
-    const baseline = currentMs + 30_000
-    expect(system.getSaveState().nextCycleAt).toBe(baseline)
-
-    system.tick(BOUND - 1)
-    expect(system.getSaveState().nextCycleAt).toBe(baseline)
-  })
 
   it('the minted nextCycleAt >= 2^52 is refused by the persisted gate on the next write', () => {
     const save = validWireSave()
@@ -837,10 +774,11 @@ describe('r31 COR - H: [0, 2^52) seam domain truth table', () => {
     const manager = registeredManager()
     const recipe = mortalRecipe()
     const variant = recipe.herbVariants[0]!
-    const woodId = buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age)
+    const woodId = 'bui_go'
     const bag = manager.materialBag
     bag.add(manager.materialRegistry.get(variant.materialId), recipe.herbAmount)
     bag.add(manager.materialRegistry.get(woodId), recipe.fuelWoodAmount)
+    bag.add(manager.materialRegistry.get('luyen_dan_tinh_hoa'), recipe.luyenDanTinhHoaAmount)
     const result = manager.alchemySystem.startJob(
       recipe,
       variant.materialId,
@@ -873,27 +811,6 @@ describe('r31 COR - H: [0, 2^52) seam domain truth table', () => {
     expect(restored.startedAtMs).toBe(started) // verbatim, not re-anchored
   })
 
-  it('decompose tick/restore/settleOffline all deny -1/2^52/NaN', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-
-    const baseline = system.getSaveState().nextCycleAt
-    for (const edge of [-1, BOUND, Number.NaN]) {
-      system.tick(edge as number)
-      expect(system.getSaveState().nextCycleAt).toBe(baseline) // deny: unchanged
-    }
-    expect(system.settleOffline(-1, currentMs)).toBe(0)
-    expect(system.settleOffline(BOUND, currentMs)).toBe(0)
-  })
 
   it('quest/tribulation restore deny -1 (verbatim/parked arms)', () => {
     const manager = registeredManager()

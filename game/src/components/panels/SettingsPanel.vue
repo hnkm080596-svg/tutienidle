@@ -14,6 +14,7 @@ import { useActiveUpdates } from '@/composables/useUpdates'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
 import GuestAbandonDialog from '@/components/panels/GuestAbandonDialog.vue'
+import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
 import SettingsNavRail from '@/components/scenes/settings/SettingsNavRail.vue'
 import SettingsSaveSection from '@/components/scenes/settings/SettingsSaveSection.vue'
 import SettingsUiScaleSection from '@/components/scenes/settings/SettingsUiScaleSection.vue'
@@ -332,6 +333,8 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
     />
 
     <!-- Right workspace: the active category only. -->
+    <!-- Landscape preview: noi dung nam trong card EquipmentArtCard toi. -->
+    <EquipmentArtCard class="settings-panel__card">
     <div class="settings-panel__workspace scrollfade">
       <SettingsSaveSection
         v-if="activeSection === 'general'"
@@ -376,6 +379,7 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
 
       <SettingsBuildSection v-if="activeSection === 'support'" />
     </div>
+    </EquipmentArtCard>
 
     <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
 
@@ -429,8 +433,35 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
   font-size: var(--text-body);
 }
 
+/* Landscape preview: noi dung nam phang tren card toi - khung section
+   goc lam cho mat sang-giay, o day doi pale vars sang tan mau sang va
+   bo border/nen cua frame de ngang voi preview. */
+.settings-panel__card {
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  padding:14px 16px;
+  --paper-text: #f3e4c4;
+  --paper-text-soft: #d3bd92;
+  --paper-line: #b28a4355;
+}
+.settings-panel__card :deep(.settings-panel__section) {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+.settings-panel__card :deep(.settings-panel__section h4) {
+  font-size: 25px;
+  border-bottom: 1px solid #b28a4360;
+  padding-bottom: 12px;
+}
+.settings-panel__card :deep(.settings-panel__warning) {
+  background: transparent;
+  border-color: #b28a4366;
+}
 .settings-panel__workspace {
   min-height: 0;
+  flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

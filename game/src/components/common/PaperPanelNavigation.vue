@@ -41,6 +41,6 @@ const navSealUrl = hkChromeUrl('nav-seal-vertical')
 .paper-navigation-icon__seal { position:absolute; inset:0; width:100%; height:100%; }
 .paper-navigation-icon__glyph { position:relative; z-index:1; width:15px; height:15px; filter:invert(94%) sepia(24%) saturate(325%); }
 .active .paper-navigation-icon__seal { filter:drop-shadow(0 0 8px #e9c36c) brightness(1.35); }
-button:hover { color:#362407; }button:focus-visible { outline:2px solid #386b59; outline-offset:3px; }
+button:hover { color:#362407; }button:focus-visible { outline:none; }
 .is-locked { opacity:.45; cursor:default; }
 </style>

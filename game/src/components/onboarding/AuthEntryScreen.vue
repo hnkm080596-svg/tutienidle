@@ -13,6 +13,7 @@ import '@/assets/tien-hiep-entry.css'
 import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
 import { readResumeCandidate, consumeResetNotice, type ResumeCandidate } from '@/composables/resumeSession'
+import { isMasterSession, unlockMasterGate } from '@/services/master/masterAccess'
 
 // Scene 01 composition root: owns auth flow state and composes the
 // reference-led scene regions. Presentation lives in the children;
@@ -155,6 +156,24 @@ function playOrContinue() {
   if (resume.value) void continueSaved()
   else startGuest()
 }
+
+// Master gate (Minh 2026-10-10): the one-key "cửa sau". A correct key
+// unlocks every test privilege for this tab, then rides the stored
+// session straight into the game (the saved admin session resumes - no
+// credential re-entry). A wrong key is a quiet inline denial, no lockout.
+const gateKey = ref('')
+const gateDenied = ref(false)
+const gateUnlocked = computed(() => isMasterSession())
+
+function submitGate() {
+  if (!unlockMasterGate(gateKey.value)) {
+    gateDenied.value = true
+    return
+  }
+  gateDenied.value = false
+  gateKey.value = ''
+  if (resume.value) void continueSaved()
+}
 </script>
 
 <template>
@@ -180,6 +199,25 @@ function playOrContinue() {
       />
       <LoginUpgradeSection :resume-ready="resumeReady" :stored-guest-session="storedGuestSession" />
       <LoginLocaleChips />
+      <!-- Master gate: one discreet key row under the credential form. -->
+      <form class="master-gate" data-testid="master-gate" @submit.prevent="submitGate">
+        <label class="master-gate__label" for="master-gate-key">{{ t('onboarding.auth.masterGate.label') }}</label>
+        <input
+          id="master-gate-key"
+          v-model="gateKey"
+          class="master-gate__input"
+          type="password"
+          autocomplete="off"
+          :placeholder="t('onboarding.auth.masterGate.placeholder')"
+          data-testid="master-gate-input"
+          @input="gateDenied = false"
+        />
+        <button class="master-gate__button" type="submit" :disabled="!gateKey" data-testid="master-gate-submit">
+          {{ t('onboarding.auth.masterGate.submit') }}
+        </button>
+        <span v-if="gateUnlocked" class="master-gate__open" data-testid="master-gate-open">{{ t('onboarding.auth.masterGate.open') }}</span>
+        <span v-else-if="gateDenied" class="master-gate__denied" data-testid="master-gate-denied">{{ t('onboarding.auth.masterGate.denied') }}</span>
+      </form>
       </template>
       <LoginSettingsContent v-else-if="drawer === 'settings'" />
       <section v-else-if="drawer === 'exit'" class="auth-exit-confirm">
@@ -221,4 +259,14 @@ function playOrContinue() {
 .auth-exit-confirm p { font-size: 23px; margin: 0 0 18px; }
 .auth-exit-confirm__actions { display: flex; gap: 14px; }
 .auth-exit-confirm__actions .pc-paper-button { flex: 1; }
+/* Master gate: muted one-row form under the auth drawer, deliberately
+   understated - it is a back door, not a feature surface. */
+.master-gate { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; margin-top: 18px; opacity: 0.72; }
+.master-gate__label { font-size: 13px; letter-spacing: 0.08em; }
+.master-gate__input { min-width: 0; padding: 6px 10px; font-size: 13px; background: transparent; border: 1px solid #aa8645; border-radius: 3px; color: inherit; }
+.master-gate__input:focus { outline: 1px solid #aa8645; }
+.master-gate__button { padding: 6px 14px; font-size: 13px; background: transparent; border: 1px solid #aa8645; border-radius: 3px; color: inherit; cursor: pointer; }
+.master-gate__button:disabled { opacity: 0.4; cursor: default; }
+.master-gate__open { grid-column: 1 / -1; font-size: 12px; color: #3d7a3d; }
+.master-gate__denied { grid-column: 1 / -1; font-size: 12px; color: #8b2f2f; }
 </style>

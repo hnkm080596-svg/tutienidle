@@ -86,12 +86,15 @@ describe('ZhouTianChapter - invest', () => {
     expect(player.bodyProgression.zhou_tian.completed).toBe(1)
   })
 
-  it('consumes consecutive step costs while affordable within capacity', () => {
+  it('commits exactly one step per call - a surplus never multi-buys', () => {
     const player = tcPlayer(1) // capacity 2
 
-    // Steps 0+1 cost 100+125=225 (2026-10-05 curve); a surplus beyond
-    // that stays unspent.
-    expect(zhouTianChapter.invest(player, 225, 0)).toBe(225)
+    // Owner ruling 2026-10-10: one click = +1 step. 225 essence covers
+    // steps 0+1 (100+125, 2026-10-05 curve) but a single call buys
+    // step 0 only; the next call buys step 1.
+    expect(zhouTianChapter.invest(player, 225, 0)).toBe(100)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(1)
+    expect(zhouTianChapter.invest(player, 125, 0)).toBe(125)
     expect(player.bodyProgression.zhou_tian.completed).toBe(2)
   })
 

@@ -100,17 +100,18 @@ export function betaWheelSlots(): readonly CommandWheelSlot[] {
 /**
  * Building id -> the scope-hidden feature that owns it, for every
  * building a navigation surface can name. A null feature ships in
- * beta (`vendor`, the Ky Bao Cac sell sink, is hotspot-only yet
- * beta-live); `chi_hien_quan` (worker lodge / companion workforce)
- * is bound to 'manualWorkforce'. A building id absent from the map
- * fails closed - an id the domain never declared can never render.
+ * beta; `chi_hien_quan` (worker lodge / companion workforce) is bound
+ * to 'manualWorkforce'. 'vendor' (Ky Bao Cac) was removed entirely
+ * (2026-10-11 ruling: no more selling - decompose is the only material
+ * sink), so its id stays undeclared and fails closed like any id the
+ * domain never declared. A building id absent from the map fails
+ * closed - an id the domain never declared can never render.
  */
 const BETA_BUILDING_FEATURES: Readonly<Record<string, BetaFeatureName | null>> = {
   teleport_array: null,
   pill_room: null,
   gathering_outpost: null,
   equipment_hall: null,
-  vendor: null,
   chi_hien_quan: 'manualWorkforce',
 }
 
@@ -146,8 +147,9 @@ const BETA_STANDALONE_PANEL_FEATURES: Readonly<Record<string, BetaFeatureName | 
 /**
  * Left-panel mode id -> its owner feature. 'worker_lodge' (the
  * chi_hien_quan function panel) is bound to 'manualWorkforce'; every
- * other authored mode ships in beta. A mode absent from the map fails
- * closed.
+ * other authored mode ships in beta. 'vendor' went away with the sell
+ * feature (2026-10-11) and stays undeclared on purpose. A mode absent
+ * from the map fails closed.
  */
 const BETA_LEFT_PANEL_FEATURES: Readonly<Record<string, BetaFeatureName | null>> = {
   character: null,
@@ -159,7 +161,6 @@ const BETA_LEFT_PANEL_FEATURES: Readonly<Record<string, BetaFeatureName | null>>
   worker_lodge: 'manualWorkforce',
   scripture_pavilion: null,
   stage_select: null,
-  vendor: null,
 }
 
 export function isBetaStandalonePanel(panel: string): boolean {

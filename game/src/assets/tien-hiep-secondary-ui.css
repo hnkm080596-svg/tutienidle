@@ -64,10 +64,10 @@
 
 :is(#app, body) :is(.tab-bar,.equipment-hall__tabs,.worker-lodge__tabs) { gap: 4px; padding-bottom: 10px; border-bottom: 1px solid #ac8f5660; }
 :is(#app, body) .tab-bar .tab-bar__item { padding: 10px 18px; min-height: 40px; font-size: 16px; }
-:is(#app, body) :is(.site-card,.resource-card,.vendor-panel__card,.lin-mach__card,.companion-panel__detail,.artifact-overview,.technique-slot-card) { border: 1px solid #b39a6870; background: #f6edda80; border-radius: 0; padding: 18px; }
+:is(#app, body) :is(.site-card,.lin-mach__card,.companion-panel__detail,.artifact-overview,.technique-slot-card) { border: 1px solid #b39a6870; background: #f6edda80; border-radius: 0; padding: 18px; }
 :is(#app, body) .production-panel__grid { gap: 18px; }
 :is(#app, body) .site-card__name { font-size: 21px; color: #352a1b; }
-:is(#app, body) :is(.site-card__description,.production-panel__summary,.resource-card__rate,.vendor-panel__description) { color: #675637; font-size: 15px; line-height: 1.5; }
+:is(#app, body) :is(.site-card__description,.production-panel__summary) { color: #675637; font-size: 15px; line-height: 1.5; }
 :is(#app, body) .site-card__stats { padding: 12px 0; border-block: 1px solid #b39a6840; }
 :is(#app, body) .building-heading { gap: 20px; }
 :is(#app, body) .building-heading__name { color: #352a1b; font-size: 27px; }

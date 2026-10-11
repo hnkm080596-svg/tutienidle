@@ -46,7 +46,7 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
     :label="t('panels.settings.sections.audioAria')"
     data-hk-region="audio"
   >
-    <div class="settings-panel__audio-row">
+    <div class="settings-panel__audio-row settings-panel__audio-row--stack">
       <label class="settings-panel__audio-volume">
         {{ t('panels.settings.audio.volume') }}
         <input
@@ -62,7 +62,8 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
       </label>
     </div>
 
-    <div class="settings-panel__audio-row">
+    <!-- Landscape preview: moi slider mot hang rieng (label | slider | %) -->
+    <div class="settings-panel__audio-row settings-panel__audio-row--stack">
       <label
         v-for="channel in AUDIO_CHANNELS"
         :key="channel.field"
@@ -106,6 +107,24 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
   align-items: center;
   gap: var(--space-4);
   flex-wrap: wrap;
+}
+/* Landscape preview range-row: nhan | slider | tri so, moi slider mot
+   hang - truoc day 3 kenh nhet chung mot hang. */
+.settings-panel__audio-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+  max-width: 640px;
+}
+.settings-panel__audio-row--stack .settings-panel__audio-volume {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr) 48px;
+  gap: 20px;
+  align-items: center;
+  font-size: 18px;
+}
+.settings-panel__audio-row--stack .settings-panel__audio-volume input[type='range'] {
+  width: 100%;
 }
 .settings-panel__audio-toggle {
   padding: 0 var(--space-4);

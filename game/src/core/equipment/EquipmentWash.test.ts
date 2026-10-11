@@ -29,7 +29,8 @@ import type { EquipmentInstance } from './EquipmentInstance'
 import { makeInstance } from './EquipmentInstance.fixture'
 import { captureEquipmentInstanceSnapshot } from './EquipmentInstanceSnapshot'
 import { WASH_SPIRIT_STONE_COST_BY_QUALITY, WASH_TINH_HOA_COST_BY_QUALITY } from './RefinementBalance'
-import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
+import { BUI_GO_ID,
+  LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL, SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { materials } from '../../data/materials/materials'
 
@@ -43,6 +44,7 @@ const TEMPLATE: Equipment = {
   enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
 }
 
+const BUI_GO_MATERIAL = materials.find((material) => material.id === BUI_GO_ID)!
 const ESSENCE = materials.find((material) => material.id === LUYEN_KHI_TINH_HOA_ID)!
 
 const TIERS: Affix['tiers'] = [
@@ -99,6 +101,7 @@ function setup(affixList: readonly Affix[] = STANDARD_AFFIXES): WashContext {
     affixRegistry.register(affix)
   }
   materialBag.add(ESSENCE, 1_000)
+  materialBag.add(BUI_GO_MATERIAL, 1_000)
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 
   // Mirrors the EquipmentSystem.washDeps() bindings (tryGetTemplate
@@ -110,6 +113,7 @@ function setup(affixList: readonly Affix[] = STANDARD_AFFIXES): WashContext {
 
     getWashCost: (quality) => ({
       tinhHoa: WASH_TINH_HOA_COST_BY_QUALITY[quality],
+      buiGo: WASH_TINH_HOA_COST_BY_QUALITY[quality],
       spiritStone: WASH_SPIRIT_STONE_COST_BY_QUALITY[quality],
     }),
 

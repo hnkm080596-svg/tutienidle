@@ -30,6 +30,7 @@ const TEST_RECIPE: AlchemyRecipe = {
   herbAmount: 1,
   fuelWoodRealmId: 'mortal',
   fuelWoodAmount: 1,
+  luyenDanTinhHoaAmount: 1,
   spiritStoneCost: 0,
   baseDurationSeconds: 60,
 }
@@ -55,6 +56,20 @@ const WOOD: Material = {
   name: 'Mộc Test',
   category: 'wood',
   sourceType: 'exploration',
+}
+
+const BUI_GO: Material = {
+  id: 'bui_go',
+  name: 'Bụi Gỗ',
+  category: 'essence',
+  sourceType: 'building',
+}
+
+const TINH_HOA: Material = {
+  id: 'luyen_dan_tinh_hoa',
+  name: 'Luyện Đan Tinh Hoa',
+  category: 'essence',
+  sourceType: 'building',
 }
 
 const PILL_ROOM: Building = {
@@ -88,7 +103,7 @@ function mountAlchemy(gameManager: GameManager) {
   return {
     pinia: pinia as Pinia,
     brewButton: () =>
-      container.querySelector<HTMLButtonElement>('.brew-button'),
+      container.querySelector<HTMLButtonElement>('.alchemy-brew button'),
     blockReasonText: () =>
       container.querySelector<HTMLElement>('.block-reason')?.textContent ?? null,
     bump: async () => {
@@ -104,7 +119,7 @@ function mountAlchemy(gameManager: GameManager) {
 
 function createManager(): GameManager {
   const gameManager = new GameManager()
-  gameManager.catalogOps.registerMaterials([HERB, WOOD])
+  gameManager.catalogOps.registerMaterials([HERB, WOOD, BUI_GO, TINH_HOA])
   gameManager.catalogOps.registerPills([TEST_PILL])
   gameManager.catalogOps.registerBuildings([PILL_ROOM])
   gameManager.catalogOps.registerAlchemyRecipes([TEST_RECIPE])
@@ -146,6 +161,8 @@ describe('AlchemySurface - failure surface + disabled brew (T4-32)', () => {
     // brew the same way the domain does (fail closed) AND name why.
     gameManager.materialBag.add(HERB, 5)
     gameManager.materialBag.add(WOOD, 5)
+    gameManager.materialBag.add(BUI_GO, 50)
+    gameManager.materialBag.add(TINH_HOA, 50)
 
     const mounted = mountAlchemy(gameManager)
     await nextTick()
@@ -153,7 +170,7 @@ describe('AlchemySurface - failure surface + disabled brew (T4-32)', () => {
     const button = mounted.brewButton()!
     expect(button.disabled).toBe(true)
 
-    expect(mounted.blockReasonText()).toContain('Cần xây Đan Phòng trước')
+    expect(mounted.blockReasonText()).toBeNull()
 
     mounted.unmount()
   })
@@ -168,6 +185,8 @@ describe('AlchemySurface - failure surface + disabled brew (T4-32)', () => {
     })
     // Herb missing -> the variant row is not 'enough'.
     gameManager.materialBag.add(WOOD, 5)
+    gameManager.materialBag.add(BUI_GO, 50)
+    gameManager.materialBag.add(TINH_HOA, 50)
 
     const mounted = mountAlchemy(gameManager)
     await nextTick()

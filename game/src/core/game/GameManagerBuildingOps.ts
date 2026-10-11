@@ -6,7 +6,6 @@ import { BuildingSystem } from '../building/BuildingSystem'
 import type { Building } from '../building/Building'
 import type { BuildingInstance } from '../building/BuildingInstance'
 import { ProductionSystem } from '../production/ProductionSystem'
-import type { DecomposeSystem } from '../production/DecomposeSystem'
 import { betaEffectiveWorkerCapacity, getWorkerCapacityForLevel, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import { buildWorkforceView, type WorkforceView } from '../production/WorkforceView'
 import { getRealmTier } from '../realm/RealmTierMap'
@@ -29,7 +28,6 @@ export interface GameManagerBuildingOpsDeps {
   buildingManager: BuildingManager
   buildingSystem: BuildingSystem
   productionSystem: ProductionSystem
-  decomposeSystem: DecomposeSystem
   materialBag: MaterialBag
   materialRegistry: MaterialRegistry
   notifications: NotificationQueue
@@ -123,13 +121,13 @@ export class GameManagerBuildingOps {
    */
   getWorkforceView(): WorkforceView {
     // BETA SCOPE LOCK v2 sec.4C - while manualWorkforce is hidden the
-    // view shows the flat auto pool and censors dormant assignments
-    // (same precedent as DecomposeSystem.getSettings reporting 0).
+    // view shows the flat auto pool and censors dormant assignments.
+    // DIRECT DECOMPOSE REWORK (2026-10-11): no claimant reserves
+    // workers anymore - the view's `reserved` reports 0.
     const hidden = isScopeHidden('manualWorkforce')
 
     return buildWorkforceView(
       betaEffectiveWorkerCapacity(this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0),
-      hidden ? 0 : this.deps.decomposeSystem.getSettings().workers,
       hidden
         ? this.deps.productionSystem.getAllStates().map((state) => ({ ...state, assignedWorkers: undefined }))
         : this.deps.productionSystem.getAllStates(),
@@ -193,11 +191,10 @@ export class GameManagerBuildingOps {
       return
     }
 
-    // Clamp bound stays fed by the one split rule - the domain command
+    // Clamp bound stays fed by the one pool rule - the domain command
     // owns the write itself (D2: no foreign mutation of site state).
     const capacity = resolveProductionWorkerCapacity(
       betaEffectiveWorkerCapacity(this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0),
-      this.deps.decomposeSystem.getSettings().workers,
     )
 
     this.deps.productionSystem.setWorkerAssignment(siteId, count, capacity)

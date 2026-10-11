@@ -219,7 +219,7 @@ export function buildEquipmentTooltip(
     // Single title color on the Chat ramp: quality rank (1-5) spread
     // onto odd steps 1-3-5-7-9 of the 10-step --rank-color scale
     // (spec section 2); 'tien' upgrades to the rainbow tone.
-    nameColorVar: `--rank-color-${itemQualityRank(instance.quality) * 2 - 1}`,
+    nameColorVar: `--rank-color-${itemQualityRank(instance.quality) * 2}`,
 
     nameTone: instance.quality === 'tien' ? 'tien' : undefined,
 
@@ -230,6 +230,9 @@ export function buildEquipmentTooltip(
       icon: instance.icon ?? template.icon,
       label: displayName,
       accessibleLabel: `${displayName}, ${gradeLabel(instance.grade)}`,
+      // 'equipment' variant so the preview mirrors the bag cell's
+      // art-frame (Pham tint + Chat streaks) instead of the plain tile.
+      variant: 'equipment',
       equipmentQualityRank: professionGradeRank(instance.grade),
       rarityRank: itemQualityRank(instance.quality),
     },

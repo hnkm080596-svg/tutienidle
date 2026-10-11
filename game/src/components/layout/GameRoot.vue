@@ -25,6 +25,8 @@ import Tooltip from '../common/Tooltip.vue'
 import ToastContainer from '../common/ToastContainer.vue'
 import ActionFeedbackLog from '../common/ActionFeedbackLog.vue'
 import WorldAnnouncementOverlay from '../common/WorldAnnouncementOverlay.vue'
+import DecomposeFxLayer from '../fx/DecomposeFxLayer.vue'
+import BreakthroughFxLayer from '../fx/BreakthroughFxLayer.vue'
 import OfflineSummaryModal from '../common/OfflineSummaryModal.vue'
 import TalentEntitlementModal from '../common/TalentEntitlementModal.vue'
 import BreakthroughRequirementPanel from '../common/BreakthroughRequirementPanel.vue'
@@ -184,6 +186,9 @@ function closeSidePanels() {
       <ActionFeedbackLog />
 
       <WorldAnnouncementOverlay />
+
+      <DecomposeFxLayer />
+      <BreakthroughFxLayer />
 
       <OfflineSummaryModal
         v-if="offlineSummary.data"

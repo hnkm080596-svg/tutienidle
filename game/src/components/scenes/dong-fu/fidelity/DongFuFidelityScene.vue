@@ -42,7 +42,7 @@ function move(event: PointerEvent) {
 .df-scene { --df-gold: #c9a761; --df-gold-light: #ebd094; --df-ivory: #f1e6c5; position: relative; width: 100%; height: 100%; overflow: hidden; background: #101b24; color: var(--df-ivory); font-family: var(--font-display, Georgia, serif); }
 .df-scene :deep(*) { box-sizing: border-box; }
 .df-scene :deep(button) { font-family: inherit; font-weight: 400; }
-.df-scene :deep(button:focus-visible) { outline: 2px solid #fff1b8; outline-offset: 5px; }
+.df-scene :deep(button:focus-visible) { outline: none; }
 .df-scene :deep(button:hover) { filter: brightness(1.16); }
 .df-scene :deep(button:active) { filter: brightness(1.3); }
 .df-preview-stamp { position: absolute; bottom: 19px; left: 21px; display: grid; gap: 3px; text-shadow: 0 1px 3px #000; color: #dacda9; }

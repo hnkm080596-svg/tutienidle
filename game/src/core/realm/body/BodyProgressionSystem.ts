@@ -20,6 +20,16 @@ import {
   isPhysiqueGradeId,
   type PhysiqueGradeId,
 } from '../../../data/realm/PhysiqueLadder'
+import { ZHOU_TIAN_CURRENCY_MATERIAL_ID, ZHOU_TIAN_REALM_ID } from '../../../data/realm/ZhouTian'
+import { listMeridianPages } from './MeridianPages'
+import { getRealmIndex } from '../realmSystem'
+import { isBetaFeature } from '../../betaScope'
+import {
+  getNghichChuTianMechanic,
+  isNghichChuTianEligible,
+  NGHICH_CHU_TIAN_TOTAL_STEPS,
+  nghichChuTianEssenceCost,
+} from '../hidden/NghichChuTian'
 
 // P7-M-F (D1) - the post-invest "rebuild" is kind-aware: modifier
 // chapters re-emit their StatModifier slice; base-stat chapters own no
@@ -120,19 +130,43 @@ export function applyPhysiqueAdvancement(
 
 // M-F-CHU-THIEN (C2C-59) - the sequential-unlock read: a chapter is
 // unlocked iff every authored unlocksAfterChapters prerequisite is
-// complete on this player. Direct (non-recursive) evaluation -
-// prerequisites sit strictly earlier in canonical order, so
-// transitiveness is a property of the authored chain plus the persisted
-// coherence invariant, not of this read. The invest dispatch gates on
-// it before any other gate; the UI mirrors the same read.
+// complete on this player AND the chapter's own realm content is
+// reachable. Direct (non-recursive) prereq evaluation - prerequisites
+// sit strictly earlier in canonical order, so transitiveness is a
+// property of the authored chain plus the persisted coherence
+// invariant, not of this read. The realm half is a pure realm-tier
+// compare against each chapter's authored realm (one chapter per tier:
+// Rèn Thể = Phàm Nhân, Khai Mạch = Luyện Khí, Dẫn Linh = Trúc Cơ) -
+// meridian against the LOWEST meridian page realm, zhou_tian against
+// its authored ZHOU_TIAN_REALM_ID. Fails closed on an empty catalog or
+// an unknown realm, same as the sibling gates. The invest dispatch
+// gates on it before any other gate; the UI mirrors the same read.
 export function isBodyChapterUnlocked(
   player: PlayerData,
   chapterId: BodyChapterId,
 ): boolean {
   const chapter = getBodyChapterDefinition(chapterId)
-  return (chapter.unlocksAfterChapters ?? []).every(
+  const prereqsMet = (chapter.unlocksAfterChapters ?? []).every(
     prereq => getBodyChapterDefinition(prereq).isComplete(player),
   )
+  if (!prereqsMet) {
+    return false
+  }
+  if (chapterId === 'meridian') {
+    const pages = listMeridianPages()
+    if (pages.length === 0) {
+      return false
+    }
+    const lowestPageIndex = Math.min(...pages.map((page) => getRealmIndex(page.pageRealmId)))
+    const playerIndex = getRealmIndex(player.realmId)
+    return playerIndex !== -1 && lowestPageIndex !== -1 && playerIndex >= lowestPageIndex
+  }
+  if (chapterId === 'zhou_tian') {
+    const playerIndex = getRealmIndex(player.realmId)
+    const requiredIndex = getRealmIndex(ZHOU_TIAN_REALM_ID)
+    return playerIndex !== -1 && requiredIndex !== -1 && playerIndex >= requiredIndex
+  }
+  return true
 }
 
 // Unified invest: chapter-owned mutation, then the chapter's stat-effect
@@ -222,6 +256,45 @@ export function getBodyChapterProgress(
   chapterId: BodyChapterId,
 ): { completed: number; total: number } {
   return getBodyChapterDefinition(chapterId).progress(player)
+}
+
+// Owner ruling 2026-10-10 - essence intake cap: the total remaining
+// requirement of `materialId` across the chapter chain. Each consuming
+// chapter reports its own unclamped remainder (authored requirement
+// minus invested progress, not gated on current unlock/realm); the
+// award seam sums it. A material no chapter consumes needs 0 - its
+// drops cap out immediately and yield nothing.
+export function remainingEssenceNeed(player: PlayerData, materialId: string): number {
+  let need = 0
+
+  for (const chapter of BODY_CHAPTERS) {
+    const consumes = [chapter.currency, chapter.auxCurrency].some(
+      currency => currency?.bag === 'material' && currency.id === materialId,
+    )
+    if (consumes) {
+      need += chapter.remainingCurrencyNeed?.(player) ?? 0
+    }
+  }
+
+  // QA fixpoint 2026-10-10 - hidden-continuation allowance: the Nghich
+  // Chu Tian track spends phap essence past the normal 36/36 and is not
+  // a BODY_CHAPTERS member, so its remaining attempts must count toward
+  // the cap while that content is in beta scope - otherwise every phap
+  // drop would void exactly when the hidden track unlocks. Scope-hidden
+  // today (hiddenContent: false), so this arm is inert until the flag
+  // flips; it is wired now so the flip cannot silently starve the track.
+  if (
+    materialId === ZHOU_TIAN_CURRENCY_MATERIAL_ID &&
+    isBetaFeature('hiddenContent') &&
+    isNghichChuTianEligible(player)
+  ) {
+    const completed = getNghichChuTianMechanic(player)?.completed ?? 0
+    for (let level = completed; level < NGHICH_CHU_TIAN_TOTAL_STEPS; level += 1) {
+      need += nghichChuTianEssenceCost(level)
+    }
+  }
+
+  return need
 }
 
 // Derived body facts - the canonical reads consumers (ritual snapshot,

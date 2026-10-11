@@ -27,7 +27,25 @@ const { t } = useI18n()
 .auth-primary-action :deep(.game-button__label) { position: static; }
 .auth-primary-action__text { position: relative; z-index: 1; display: block; line-height: 1.2; }
 .auth-primary-action:disabled { opacity: .6; }
-.auth-primary-action:not(:disabled):hover { color: #fff4d6; filter: brightness(1.08); }
+/* Owner ruling 2026-10-10: art-only swap - the submit wears the in-game
+   enhance button's equipment-filter-* pill instead of the paper slice. */
+/* #app anchor (1,2,1): pc-paper-production.css re-arms border-image-source on
+   :is(#app,body) .game-button--ghost::before at (1,1,1) - class-only overrides
+   lose to it regardless of order. */
+#app .auth-primary-action.pc-paper-button::before { border: 0; border-image: none; background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / 100% 100% no-repeat; }
+/* QA fixpoint 2026-10-10: the ghost variant frames a 1px hairline around
+   the pill art (GameButton --ghost border) - zero it at the element. */
+#app .auth-primary-action.pc-paper-button { border: 0; }
+/* Hover takes the clean gold pill (equipment-filter-selected) - the
+   stock hover art bakes a black smoke fill over the label. .game-button
+   makes it (1,5,1): strictly above the entry recipe's hover ::before
+   filter recipe (1,4,1), and filter:none kills the leftover glow. */
+#app .auth-primary-action.pc-paper-button.game-button:not(:disabled):is(:hover, :focus-visible)::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png'); filter: none; }
+#app .auth-primary-action.pc-paper-button.game-button:not(:disabled):active::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png'); filter: none; }
+/* QA fixpoint 2026-10-10 (round-3): .pc-paper-button makes it (1,5,0) -
+   strictly above the entry recipe's (1,4,0) hover color; without it the
+   tie broke on bundle order only. */
+#app .auth-primary-action.pc-paper-button:not(:disabled):is(:hover, :focus-visible) { color: #30210e; }
 .auth-primary-action:focus-visible { outline: 2px solid #715923; outline-offset: 3px; box-shadow: none; }
 @media (prefers-reduced-motion: reduce) { .auth-primary-action { transition: none; } }
 </style>

@@ -16,7 +16,6 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { AlchemySystem, alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
 import { PillBag } from '../../core/pill/PillBag'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { MaterialBag } from '../../core/material/MaterialBag'
 import { MaterialRegistry } from '../../core/material/MaterialRegistry'
 import { EQUIPMENT_BAG_SOFT_CAP, EquipmentBag } from '../../core/equipment/EquipmentBag'
@@ -24,18 +23,6 @@ import { dissolveInstances } from '../../core/equipment/EquipmentDissolve'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
 import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 import type { Equipment } from '../../core/equipment/Equipment'
-
-// BETA SCOPE - only the decompose engine is force-visible for this suite
-// (it is scope-hidden in beta and audited as enabled, same convention as
-// auditR21Cor.probe.test.ts). Every other scope keeps real visibility.
-vi.mock('../../core/betaScope', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../../core/betaScope')>()
-  return {
-    ...original,
-    isScopeHidden: (feature: string) =>
-      feature === 'equipmentOreDecompose' ? false : original.isScopeHidden(feature),
-  }
-})
 
 // ============================================================================
 // QA probe - fixpoint r30 AUT wave. Adversarial audit of the r29 batch at
@@ -153,24 +140,6 @@ function craftedEquipmentEntry(instanceId: string, locked: unknown): Record<stri
   return base
 }
 
-function startedDecomposeSystem(): { system: DecomposeSystem; bag: MaterialBag } {
-  const bag = new MaterialBag()
-  const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-  system.updateCapacity(1)
-  // Validator-admitted restore payload: nextCycleAt is non-negative-
-  // finite-pinned only, started is boolean. Deep-past deadline = a long
-  // backlog the window arithmetic must bound.
-  system.restore(
-    {
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-      nextCycleAt: 0,
-      started: true,
-    },
-    currentMs,
-  )
-  return { system, bag }
-}
-
 function clockIsolated() {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -182,59 +151,6 @@ function clockIsolated() {
     vi.restoreAllMocks()
   })
 }
-
-// ============================================================================
-// F1 - DecomposeSystem.settleOffline: the offlineSinceMs sibling input the
-// r29 guard skipped. NaN skips the confiscation arm and pays the whole
-// backlog up to the 5000-cycle bound.
-// ============================================================================
-describe('r30-AUT F1 - DecomposeSystem.settleOffline offlineSinceMs parity', () => {
-  clockIsolated()
-
-  it('NaN offlineSinceMs zero-settles - the deadline stays parked verbatim', () => {
-    const { system, bag } = startedDecomposeSystem()
-    const ore = materials.find((material) => material.id.includes('_ore_'))!
-    bag.add(ore, 100_000)
-
-    const settled = system.settleOffline(currentMs, NaN)
-    const output = system.drainOutput()
-
-    // r30-AUT-1 pin: no payment AND no confiscation fast-forward - the
-    // deadline is preserved so a later honest settle still owns it.
-    expect(settled).toBe(0)
-    expect(output).toHaveLength(0)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('control: the same backlog under an honest 60s window settles exactly 2', () => {
-    const { system } = startedDecomposeSystem()
-
-    const settled = system.settleOffline(currentMs, currentMs - 60_000)
-
-    expect(settled).toBe(2)
-  })
-
-  it('control: a repeated settle over the same window settles 0 (idempotent)', () => {
-    const { system } = startedDecomposeSystem()
-
-    system.settleOffline(currentMs, currentMs - 60_000)
-    expect(system.settleOffline(currentMs, currentMs - 60_000)).toBe(0)
-  })
-
-  it('+Infinity offlineSinceMs denies - zero-settle, deadline parked verbatim', () => {
-    const { system } = startedDecomposeSystem()
-
-    expect(system.settleOffline(currentMs, Infinity)).toBe(0)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('-Infinity offlineSinceMs denies - zero-settle under an out-of-domain input', () => {
-    const { system } = startedDecomposeSystem()
-
-    expect(system.settleOffline(currentMs, -Infinity)).toBe(0)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-})
 
 // ============================================================================
 // F2 - locked/favorite have no type check: a crafted truthy non-boolean
@@ -464,25 +380,5 @@ describe('r30-AUT held - restoreJobs verbatim arm under bad clock', () => {
     const restored = reader.alchemySystem.getJobs()[0]!
     expect(restored.startedAtMs).toBe(job.startedAtMs)
     expect(restored.completesAtMs).toBe(job.completesAtMs)
-  })
-})
-
-describe('r30-AUT held - DecomposeSystem.restore verbatim merge under bad clock', () => {
-  clockIsolated()
-
-  it('NaN restoreNowMs parks a crafted-future deadline verbatim - settle pays 0', () => {
-    const { system } = startedDecomposeSystem()
-    const craftedFuture = currentMs + 3_600_000
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: craftedFuture,
-        started: true,
-      },
-      NaN,
-    )
-
-    expect(system.getSaveState().nextCycleAt).toBe(craftedFuture)
-    expect(system.settleOffline(currentMs, currentMs - 60_000)).toBe(0)
   })
 })

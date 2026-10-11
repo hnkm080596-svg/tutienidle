@@ -18,8 +18,6 @@ import { buildings } from '../../data/building/buildings'
 import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
@@ -563,90 +561,6 @@ describe('r33 COR - C: seeded-head re-stamp boundary (verified)', () => {
       expect(lane.completesAtMs).toBeLessThan(BOUND)
       expect(lane.completesAtMs).toBeGreaterThan(lane.startedAtMs)
     }
-  })
-})
-
-// ----------------------------------------------------------------------------
-// (D) cap clamps - claim VERIFIED at the bound; NaN arms noted.
-// ----------------------------------------------------------------------------
-
-describe('r33 COR - D: restore cap clamps at the domain edge', () => {
-  it('DecomposeSystem.restore with restoreNow = 2^52 - 1 keeps nextCycleAt <= 2^52 - 1', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: BOUND - 1,
-        started: true,
-      },
-      BOUND - 1,
-    )
-    // Cap = min(restoreNow + 30_000, 2^52-1) = 2^52-1; merged lands there.
-    expect(system.getSaveState().nextCycleAt).toBe(BOUND - 1)
-    expect(system.getSaveState().nextCycleAt).toBeLessThan(BOUND)
-  })
-
-  it('DecomposeSystem.restore deny-arm: restoreNow < 0 parks restoredDeadline verbatim', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: BOUND - 1,
-        started: true,
-      },
-      -1,
-    )
-    // !clockOk -> Math.max(0, restoredDeadline) - verbatim park.
-    expect(system.getSaveState().nextCycleAt).toBe(BOUND - 1)
-  })
-
-  it('Nit COR-F3: a NaN cycleMs (constructor-crafted option) propagates NaN into nextCycleAt', () => {
-    // min(restoreNow + NaN, 2^52-1) = NaN -> merged = NaN -> nextCycleAt
-    // NaN -> persisted NaN wedges the write gate. Reachable only through
-    // a bad DecomposeSystemOptions - GameManager constructs with defaults
-    // (30_000 constant), so this stays a code-defect note.
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: Number.NaN })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(Number.isNaN(system.getSaveState().nextCycleAt)).toBe(true)
-  })
-
-  it('TribulationDirector.restoreRuntime clamps cooldownUntil <= 2^52 - 1 at the bound', () => {
-    const manager = registeredManager()
-    manager.tribulationDirector.restoreRuntime(
-      { cooldownUntil: BOUND - 1 },
-      BOUND - 1,
-    )
-    const slice = manager.tribulationDirector.serializeRuntime()
-    // cap = min(BOUND-1 + 300_000, 2^52-1) = 2^52-1 -> merged 2^52-1.
-    expect(slice.cooldownUntil).toBe(BOUND - 1)
-    expect(slice.cooldownUntil!).toBeLessThan(BOUND)
-  })
-
-  it('Nit COR-F4: a NaN cooldownUntil slice parks in-memory but serializeRuntime drops it (> 0 gate)', () => {
-    const manager = registeredManager()
-    manager.tribulationDirector.restoreRuntime(
-      { cooldownUntil: Number.NaN },
-      currentMs,
-    )
-    // Never persisted: slice.cooldownUntil is omitted when !(x > 0) -
-    // no write-gate wedge. The live consequence is getCooldownSeconds
-    // returning NaN - the crafted NaN opens the retry gate.
-    const slice = manager.tribulationDirector.serializeRuntime()
-    expect('cooldownUntil' in slice).toBe(false)
-    expect(Number.isNaN(manager.tribulationDirector.getCooldownSeconds(currentMs))).toBe(true)
   })
 })
 

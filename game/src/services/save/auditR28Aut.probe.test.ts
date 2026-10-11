@@ -32,7 +32,6 @@ import {
 } from '../../core/tribulation/TribulationDirector'
 import { commitWitnessFor } from '../../core/tribulation/TribulationCommitWitness.fixture'
 import { getTribulationChapters } from '../../data/tribulation/TribulationChapters'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { ProductionSystem } from '../../core/production/ProductionSystem'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import { QuestManager } from '../../core/quest/QuestManager'
@@ -47,6 +46,7 @@ import {
   CYCLE_BASE_SECONDS_BY_REALM,
   computeCycleSeconds,
 } from '../../core/production/ProductionBalance'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { MaterialBag } from '../../core/material/MaterialBag'
 import type { ProductionCycle } from '../../core/production/ProductionTypes'
 
@@ -451,39 +451,30 @@ describe('r28-AUT - verified-held fix arms', () => {
     expect(nan.serializeRuntime().cooldownUntil).toBeUndefined()
   })
 
-  it('V4 decompose nextCycleAt: honest kept, beyond-cap clamps at restoreNow+cycleMs, NaN keeps live timer', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 10_000,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs + 10_000)
+  it('V4 decompose slice: honest/post-dated/NaN payloads all restore inertly (direct rework)', () => {
+    const system = new DecomposeSystem(new MaterialBag())
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: currentMs + 10_000,
+      started: true,
+    })
+    expect(system.getSaveState()).toEqual({})
 
-    const clamped = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    clamped.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 86_400_000,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(clamped.getSaveState().nextCycleAt).toBe(currentMs + 30_000)
+    const clamped = new DecomposeSystem(new MaterialBag())
+    clamped.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: currentMs + 86_400_000,
+      started: true,
+    })
+    expect(clamped.getSaveState()).toEqual({})
 
-    const nan = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    nan.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: NaN,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(Number.isNaN(nan.getSaveState().nextCycleAt)).toBe(false)
+    const nan = new DecomposeSystem(new MaterialBag())
+    nan.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: NaN,
+      started: true,
+    })
+    expect(nan.getSaveState()).toEqual({})
   })
 
   it('V5 validateGameSaveShape is fail-closed: a throwing property access inside the checked body returns a refused verdict', () => {

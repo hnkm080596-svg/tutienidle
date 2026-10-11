@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { provide, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import BodyPaperFigure from './BodyPaperFigure.vue'
 import BodyPaperDetails from './BodyPaperDetails.vue'
-import type { BodyPaperModel, BodyPaperPour, BodyPaperUnit } from './bodyUi'
+import { BODY_POUR_VISUAL, type BodyPaperModel, type BodyPaperPour, type BodyPaperUnit } from './bodyUi'
 
 withDefaults(defineProps<{
   model: BodyPaperModel
@@ -17,6 +17,10 @@ withDefaults(defineProps<{
 }>(), { preview: false, pour: null })
 const emit = defineEmits<{ back:[]; chapter:[id:string]; select:[id:string]; invest:[] }>()
 const { t } = useI18n()
+
+// Shared pour-visual channel between the details card (writer, owns the
+// rAF) and the figure (reader, reveals tiers riding the fill edge).
+provide(BODY_POUR_VISUAL, reactive({ spec: null, progressAbs: 0 }))
 
 const paper = {
   backgroundImage: `url('${resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')}')`,

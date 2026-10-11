@@ -19,7 +19,6 @@ import { lockBetaTalentsForTests } from '../../core/game/__fixtures__/betaTalent
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import { settleProductionOffline } from '../../core/production/ProductionOffline'
 import type { ProductionOfflineDeps } from '../../core/production/ProductionOffline'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
 import type {
   ProductionCycle,
@@ -28,19 +27,6 @@ import type {
 } from '../../core/production/ProductionTypes'
 import { MaterialBag } from '../../core/material/MaterialBag'
 import { MaterialRegistry } from '../../core/material/MaterialRegistry'
-
-// BETA SCOPE - only the decompose engine is force-visible for this
-// suite (it is scope-hidden in beta and audited as enabled). Every
-// other scope keeps its real visibility - workerCycles lane-ceiling
-// validation depends on the hidden manualWorkforce baseline.
-vi.mock('../../core/betaScope', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../../core/betaScope')>()
-  return {
-    ...original,
-    isScopeHidden: (feature: string) =>
-      feature === 'equipmentOreDecompose' ? false : original.isScopeHidden(feature),
-  }
-})
 
 // ============================================================================
 // QA repro - fixpoint r21 COR wave (blind audit of commit be30c152, the r20
@@ -396,37 +382,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
     }
   })
 
-  // --------------------------------------------------------------------
-  // Sibling sweep - DecomposeSystem.settleOffline shares the
-  // `stamp += cycle` fast-forward shape. Absorption cannot arm (the
-  // loop only runs below ~nowMs where ulp << cycleMs). WAS: the
-  // r12-INT bound capped only the loop END, so a validator-admitted
-  // restore of {started:true, nextCycleAt:0} walked ~57M no-op
-  // iterations per boot. r21 fix: the fast-forward is now O(1) jump
-  // arithmetic - this pins identical landing semantics (the deadline
-  // lands strictly past the window start) with no stepping cost.
-  // --------------------------------------------------------------------
-  it('decompose fast-forward: restored nextCycleAt=0 jumps O(1) past the window', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system.updateCapacity(1)
-    // Validator admits this exact payload (nextCycleAt is
-    // non-negative-finite-pinned only; started is boolean).
-    system.restore({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-      nextCycleAt: 0,
-      started: true,
-    })
-
-    const started = performance.now()
-    const settled = system.settleOffline(currentMs, currentMs - 60_000)
-    const elapsed = performance.now() - started
-
-    // The jump arm lands the timer exactly where the stepping loop
-    // did - the settle phase then pays the bounded window cycles
-    // (~1200 at 30s under the 10h cap, capped at 5000). Elapsed is
-    // measured for the report; no hard timing assertion.
-    expect(Number.isInteger(settled)).toBe(true)
-    expect(settled).toBeLessThanOrEqual(5000)
-    expect(elapsed).toBeLessThan(50)
-  })
+  // DIRECT DECOMPOSE REWORK (2026-10-11): the sibling sweep that used
+  // to pin DecomposeSystem.settleOffline's fast-forward shape is gone
+  // with the worker-cycle engine - decompose has no timer to jump.
 })

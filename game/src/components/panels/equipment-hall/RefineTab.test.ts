@@ -27,7 +27,7 @@ import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
-import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 
 function setLocale(locale: 'vi' | 'en'): void {
   const global = i18n.global as unknown as { locale: { value: 'vi' | 'en' } }
@@ -137,6 +137,7 @@ describe('RefineTab — Tinh Luyện', () => {
       const instance = manager.equipmentBag.get('equipped')!
       instance.affixes = [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }]
       manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 100)
+      manager.materialBag.add(manager.materialRegistry.get(BUI_GO_ID), 100)
       manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL.id), 1_000)
     })
 
@@ -172,6 +173,7 @@ describe('RefineTab — Tinh Luyện', () => {
       const instance = manager.equipmentBag.get('equipped')!
       instance.affixes = [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }]
       manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 100)
+      manager.materialBag.add(manager.materialRegistry.get(BUI_GO_ID), 100)
       manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL.id), 1_000)
     })
     mounted.selectedInstanceId.value = 'equipped'

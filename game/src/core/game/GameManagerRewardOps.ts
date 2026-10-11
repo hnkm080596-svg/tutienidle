@@ -1,11 +1,10 @@
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
-import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
+import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import type { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import type { PlayerData } from '../player/Player'
 import { createPlayerRewardReceiver } from '../player/Player'
-import { getRealmTier } from '../realm/RealmTierMap'
 import type { Reward } from '../reward/Reward'
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
 
@@ -44,10 +43,8 @@ export class GameManagerRewardOps {
         player.totalSkillInsightGained += amount
       },
       (amount) => {
-        // Award the spirit-stone tier matching the CURRENT realm (same tier
-        // breakthrough/enhance/building costs demand at that realm) - never a
-        // fixed low tier that would strand high-realm players.
-        const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
+        // Flatten (2026-10-11): one spirit stone id, no realm tier.
+        const spiritStoneId = SPIRIT_STONE_MATERIAL_ID
 
         if (amount > 0 && this.deps.materialRegistry.has(spiritStoneId)) {
           // 9.8 - bag overflow: quests count only delivered + toast.

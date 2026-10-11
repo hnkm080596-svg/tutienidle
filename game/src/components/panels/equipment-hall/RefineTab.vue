@@ -9,7 +9,7 @@ import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
-import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
 import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
@@ -52,8 +52,8 @@ const lockedIndices = ref<number[]>([])
 
 const pendingRefineValues = ref<RefineValueEntry[] | null>(null)
 
-function clearPendingRefinePreview() {
-  refineDiscard(selectedInstanceId.value ?? undefined)
+function clearPendingRefinePreview(instanceId?: string) {
+  refineDiscard(instanceId)
 
   pendingRefineValues.value = null
 }
@@ -61,12 +61,15 @@ function clearPendingRefinePreview() {
 // Item pick happens on the paperdoll (owner ruling 2026-10-08: same as
 // Enhance). Switching selection discards the armed preview + resets
 // locks - the old slot strip did both on click; keep that semantics.
-watch(selectedInstanceId, () => {
-  clearPendingRefinePreview()
+// QA fixpoint 2026-10-10: discard the preview armed for the OLD item -
+// the pending slot still holds the previous id, so passing the new id
+// (post-watch value) no-ops and the armed preview leaks.
+watch(selectedInstanceId, (_newId, oldId) => {
+  clearPendingRefinePreview(oldId ?? undefined)
   lockedIndices.value = []
 })
 
-onBeforeUnmount(clearPendingRefinePreview)
+onBeforeUnmount(() => clearPendingRefinePreview())
 
 const selectedAffixes = computed(() => {
   stateVersion.value
@@ -155,6 +158,12 @@ const refineEssenceOwned = computed(() => {
   return gameManager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)
 })
 
+const refineBuiGoOwned = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(BUI_GO_ID)
+})
+
 function canRefine(): boolean {
   const ren = itemRenState.value
 
@@ -162,6 +171,7 @@ function canRefine(): boolean {
     selectedAffixes.value.length > 0 &&
     lockedIndices.value.length < selectedAffixes.value.length &&
     refineEssenceOwned.value >= refineCost.value.essenceUnits &&
+    refineBuiGoOwned.value >= refineCost.value.buiGoUnits &&
     refineSpiritStoneOwned.value >= refineCost.value.spiritStone &&
     ren !== null &&
     ren.points >= refineCost.value.refinementPoints
@@ -303,6 +313,15 @@ const refineMaterials = computed(() => [
     icon: materialIcon(LUYEN_KHI_TINH_HOA_ID),
     owned: refineEssenceOwned.value,
     amount: refineCost.value.essenceUnits,
+  },
+  {
+    id: BUI_GO_ID,
+    label: gameManager.materialRegistry.has(BUI_GO_ID)
+      ? gameManager.materialRegistry.get(BUI_GO_ID).name
+      : BUI_GO_ID,
+    icon: materialIcon(BUI_GO_ID),
+    owned: refineBuiGoOwned.value,
+    amount: refineCost.value.buiGoUnits,
   },
   {
     id: refineSpiritStoneCostMaterialId.value,

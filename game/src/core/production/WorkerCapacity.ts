@@ -12,38 +12,20 @@ export function getWorkerCapacityForLevel(chiHienQuanLevel: number): number {
 }
 
 /**
- * Mission D (spec D5) - the ONE worker-pool split rule: decompose
- * claims `decomposeWorkers` from the CHQ pool FIRST; production
- * receives the remainder. Consumed by the online tick
- * (GameManagerTickOps), the offline restore settle
- * (GameManagerSaveRestore) and the UI read model (WorkforceView).
- * Callers never recompute `total - workers` inline (A9).
+ * Mission D (spec D5) - the ONE worker-pool read rule. DIRECT
+ * DECOMPOSE REWORK (2026-10-11): decompose no longer claims workers
+ * (the tab decomposes whole stacks instantly, no cycle), so the
+ * production pool is the whole CHQ capacity - the old two-input split
+ * rule is retired and `reserved` stays 0 in the read model.
+ * Consumed by the online tick (GameManagerTickOps), the offline
+ * restore settle (GameManagerSaveRestore) and the UI read model
+ * (WorkforceView). D3 normalization kept: finite, floored, clamped
+ * at 0 - a policy change cannot drift UI away from the engine.
  */
-export function resolveProductionWorkerCapacity(
-  totalWorkerCapacity: number,
-  decomposeWorkers: number,
-): number {
-  return sanitizeWorkerPoolInputs(totalWorkerCapacity, decomposeWorkers).available
-}
-
-/**
- * D3 - the ONE normalization for worker-pool inputs (finite, floored,
- * clamped at 0), shared by the split rule and the read model so a
- * policy change cannot drift UI away from the engine.
- */
-export function sanitizeWorkerPoolInputs(
-  totalWorkerCapacity: number,
-  decomposeWorkers: number,
-): { total: number; reserved: number; available: number } {
-  const total = Number.isFinite(totalWorkerCapacity)
+export function resolveProductionWorkerCapacity(totalWorkerCapacity: number): number {
+  return Number.isFinite(totalWorkerCapacity)
     ? Math.max(0, Math.floor(totalWorkerCapacity))
     : 0
-
-  const reserved = Number.isFinite(decomposeWorkers)
-    ? Math.max(0, Math.floor(decomposeWorkers))
-    : 0
-
-  return { total, reserved, available: Math.max(0, total - reserved) }
 }
 
 /**

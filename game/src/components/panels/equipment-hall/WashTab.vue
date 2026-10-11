@@ -7,7 +7,7 @@ import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
-import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import type { RolledAffix } from '@/core/equipment/RolledAffix'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
@@ -100,6 +100,12 @@ const washEssenceOwned = computed(() => {
   return gameManager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)
 })
 
+const washBuiGoOwned = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(BUI_GO_ID)
+})
+
 function canWash(): boolean {
   const ren = itemRenState.value
   const row = selectedRow.value
@@ -110,6 +116,7 @@ function canWash(): boolean {
     ren !== null &&
     ren.points > 0 &&
     washEssenceOwned.value >= washCost.value.tinhHoa &&
+    washBuiGoOwned.value >= washCost.value.buiGo &&
     washSpiritStoneOwned.value >= washCost.value.spiritStone
   )
 }
@@ -259,6 +266,15 @@ const washMaterials = computed(() => [
     icon: materialIcon(LUYEN_KHI_TINH_HOA_ID),
     owned: washEssenceOwned.value,
     amount: washCost.value.tinhHoa,
+  },
+  {
+    id: BUI_GO_ID,
+    label: gameManager.materialRegistry.has(BUI_GO_ID)
+      ? gameManager.materialRegistry.get(BUI_GO_ID).name
+      : BUI_GO_ID,
+    icon: materialIcon(BUI_GO_ID),
+    owned: washBuiGoOwned.value,
+    amount: washCost.value.buiGo,
   },
   {
     id: SPIRIT_STONE_MATERIAL_ID,

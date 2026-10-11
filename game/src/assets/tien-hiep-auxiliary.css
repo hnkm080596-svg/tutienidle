@@ -87,10 +87,6 @@
 :is(#app, body) .production-panel__grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: 24px; }
 :is(#app, body) .site-card { display: flex; flex-direction: column; gap: 10px; padding: 22px; background: #faf0dcb3; border-color: #ac854a70; }
 :is(#app, body) .site-card__stats { margin-top: auto; }
-:is(#app, body) .vendor-panel { display: grid; grid-template-columns: minmax(0,1fr); gap: 20px; overflow: auto; }
-:is(#app, body) .vendor-panel__card { padding: 24px; }
-:is(#app, body) .resource-card__row { display: grid; grid-template-columns: minmax(150px,1fr) auto; gap: 22px; align-items: center; padding-block: 12px; border-bottom: 1px solid #ac854a30; }
-:is(#app, body) .resource-card__sale { display: flex; align-items: center; gap: 12px; }
 :is(#app, body) .chieu-mo { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; padding: 16px 0; }
 :is(#app, body) .chieu-mo__status { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
 :is(#app, body) .chieu-mo__status-item { padding: 18px; background: #27251f; color: #f4e4c1; border: 1px solid #b89455; font: 17px/1.4 var(--font-display); }

@@ -17,7 +17,7 @@ const { t } = useI18n()
       <span class="df-identity__body"><strong>{{ model.name }}</strong><span>{{ model.realm }}</span><span class="df-progress"><i :style="{ width: `${Math.min(100, Math.max(0, model.progressPercent))}%` }" /></span><small>{{ model.progressLabel }}</small></span>
     </button>
     <div class="df-resources">
-      <div v-for="resource in model.resources" :key="resource.id" class="df-resource" :title="resource.label">
+      <div v-for="resource in model.resources" :key="resource.id" class="df-resource" :title="resource.label" :data-currency-id="resource.id">
         <InkNineSlice chrome-id="resource-pill" layer="surface" /><i class="df-gem" :class="`df-gem--${resource.id}`" aria-hidden="true" /><span>{{ resource.value }}</span>
       </div>
     </div>
@@ -46,8 +46,8 @@ const { t } = useI18n()
 .df-resource { position: relative; width: 139px; height: 34px; display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 15px; }
 .df-resource > span:not(.ink-nine-slice), .df-gem { position: relative; z-index: 2; }
 .df-gem { width: 18px; height: 22px; clip-path: polygon(50% 0,100% 28%,85% 80%,50% 100%,15% 80%,0 28%); background: conic-gradient(from 20deg,#e9ffe7,#137151,#a2f6d6,#195141,#efffed); filter: drop-shadow(0 0 4px #8ce8c8); }
-.df-gem--gold, .df-gem--spirit_stone_trung_pham { border-radius: 50%; clip-path: none; width: 21px; height: 21px; background: radial-gradient(circle,#302717 15%,#f6dc87 20%,#b27c25 60%,#ffecad 68%,#9b6e21); }
-.df-gem--crystal, .df-gem--spirit_stone_thuong_pham { background: conic-gradient(#e5f7ff,#3765aa,#c3ebff,#31578e,#d7f4ff); }
+.df-gem--gold { border-radius: 50%; clip-path: none; width: 21px; height: 21px; background: radial-gradient(circle,#302717 15%,#f6dc87 20%,#b27c25 60%,#ffecad 68%,#9b6e21); }
+.df-gem--crystal { background: conic-gradient(#e5f7ff,#3765aa,#c3ebff,#31578e,#d7f4ff); }
 .df-gem--companion_pull_token, .df-gem--duyen_phan { background: conic-gradient(#ffe3ef,#a93a6e,#ffc6dd,#7e2a55,#ffe9f2); border-radius: 50%; clip-path: none; width: 20px; height: 20px; }
 .df-utilities { display: flex; gap: 12px; align-items: flex-start; }
 .df-utility { border: 0; background: none; color: var(--df-ivory); width: 52px; padding: 0; cursor: pointer; display: grid; justify-items: center; gap: 3px; font-size: 12px; }

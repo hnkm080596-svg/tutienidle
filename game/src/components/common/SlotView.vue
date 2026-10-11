@@ -1,7 +1,6 @@
 <script setup lang="ts" generic="T">
 import { computed, ref, watch } from 'vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import { PROFESSION_GRADE_SEAL_ORDINALS } from '@/core/profession/ProfessionGrade'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
@@ -45,9 +44,9 @@ const props = defineProps<{
 
   /** Normalized rank 1-10 (professionGradeRank, see
    * core/profession/slotRank.ts) - SlotView does NOT know domain ids
-   * like 'cuu_pham'/'tien_pham'. The PHAM axis (realm grade) - renders
-   * as a corner seal stamp carrying the Han grade glyph
-   * (item-info-card spec 2026-09-14, replaces the underlay wash). */
+   * like 'cuu_pham'/'tien_pham'. The PHAM axis (realm grade) - feeds
+   * the cell's Pham tint color (owner ruling 2026-10-11: the corner
+   * seal stamp itself was removed everywhere). */
   equipmentQualityRank?: number
 
   /** Normalized rank 1-5 (itemQualityRank, the 5 Chat tiers Hoang->Tien
@@ -152,7 +151,7 @@ function clampRank(rank: number | undefined): number | undefined {
 const rarityColor = computed(() => {
   const rank = clampRank(props.rarityRank)
   if (!rank) return undefined
-  return `var(--rank-color-${(props.rarityRankScale ?? 5) === 5 ? rank * 2 - 1 : rank})`
+  return `var(--rank-color-${(props.rarityRankScale ?? 5) === 5 ? rank * 2 : rank})`
 })
 
 // Seal stamp (item-info-card spec 2026-09-14, seal art pass
@@ -167,7 +166,10 @@ const sealRank = computed(() => {
   if ((props.rarityRankScale ?? 5) === 10) return clampRank(props.rarityRank)
   return undefined
 })
-const sealOrdinal = computed(() => (sealRank.value ? PROFESSION_GRADE_SEAL_ORDINALS[sealRank.value - 1] : undefined))
+// Owner ruling 2026-10-11: the red seal stamp is OFF everywhere
+// (grid cells AND the info-card preview) - 'trang bi da mat stamp,
+// sao bag van con' -> 'tat het di'. sealRank stays: it still drives
+// the Pham tint color, only the stamp glyph is gone.
 // Tran itemQualityRank = 5 (Tien Chat) - KHONG con 9 (model cu rai
 // 1-3-5-7-9 da bo, xem normalizeSlotRank.ts). rarityRankScale cho phep
 // caller feed 1 thang rank KHAC (vd Material professionRankOf 1-10) vao
@@ -328,10 +330,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
          the art-frame cells. -->
     <span v-if="showMirrorGlint" class="slot-view__glint" aria-hidden="true"></span>
 
-    <!-- layer 1.5: Pham seal - carved seal-frame art + Han grade
-         glyph (replaces the underlay wash). -->
-    <span v-if="filled && sealOrdinal && !isCircle" class="slot-view__seal" aria-hidden="true">{{ sealOrdinal }}</span>
-
     <!-- layer 1.8 (variant 'circle' only): the ring art IS the socket
          chrome - one <img> like the preview's EquipmentArtSlot, hover
          brightens it via the filter rule below. -->
@@ -462,18 +460,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   box-shadow: var(--slot-shadow), 0 0 12px var(--slot-rarity-color, var(--rank-color-5));
 }
 
-/* Bac cao nhat (rarityRank = 5, Tien Chat) - gradient bay mau o vien
-   TREN (muc 17.4 "solid fallback + gradient"), border-color solid o
-   tren van la fallback chinh. */
-.slot-view--filled.slot-view--max-rank::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 2px;
-  z-index: 3;
-  background: var(--rank-gradient-10);
-  pointer-events: none;
-}
+/* Owner ruling 2026-10-11: the 2px rainbow bar on the cell's top edge
+   (muc 17.4) is REMOVED - it read as a broken line next to the art.
+   Chat max now shows only via the rainbow meteors in the groove. */
 
 /* ============================================================
    1. QUALITY TINT/AURA
@@ -672,9 +661,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      rim outside the chamfered art. */
   box-shadow: none;
 }
-.slot-view--socket .slot-view__seal {
-  display: none;
-}
 /* The art's cloud flourishes reach ~30% inward at both ornate corners;
    keep the icon inside the plain dark centre. */
 .slot-view--socket .slot-view__item-icon {
@@ -815,6 +801,30 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     10.8% 4.3%, 89.2% 4.3%, 95.7% 10.8%, 95.7% 89.2%, 89.2% 95.7%, 10.8% 95.7%, 4.3% 89.2%, 4.3% 10.8%,
     12.2% 7.7%, 87.8% 7.7%, 92.3% 12.2%, 92.3% 87.8%, 87.8% 92.3%, 12.2% 92.3%, 7.7% 87.8%, 7.7% 12.2%);
 }
+/* Chat trần (bậc 5, Tien Chat / Thuong Co - owner ruling 2026-10-11:
+   vi tri 10 cua ramp phai bay mau): the twin streaks turn rainbow -
+   same shape/cut as the single-colour meteors but the tail runs
+   cyan -> violet -> red -> gold into the white-hot head. Keeps the
+   flat --rank-color-10 border/edge (gradient can't paint a border). */
+.slot-view--max-rank .slot-view__chat {
+  background: conic-gradient(from var(--slot-meteor),
+    transparent 0deg,
+    transparent 30deg,
+    rgba(103, 216, 255, 0.45) 70deg,
+    rgba(158, 140, 255, 0.7) 110deg,
+    rgba(255, 107, 107, 0.85) 145deg,
+    rgba(255, 214, 107, 0.95) 165deg,
+    #fff8dc 172deg,
+    transparent 185deg,
+    transparent 210deg,
+    rgba(103, 216, 255, 0.45) 250deg,
+    rgba(158, 140, 255, 0.7) 290deg,
+    rgba(255, 107, 107, 0.85) 325deg,
+    rgba(255, 214, 107, 0.95) 345deg,
+    #fff8dc 352deg,
+    transparent 360deg);
+  filter: drop-shadow(0 0 3px rgba(255, 214, 107, 0.9));
+}
 
 /* 'gương' (owner ruling 2026-10-08): one soft white sheen pass - the
    occupied-state channel for the art-frame cells. Pure white, no tint;
@@ -855,38 +865,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   outline-offset: -2px;
 }
 
-/* ============================================================
-   5.5 PHAM SEAL - carved seal stamp (seal-frame.png art, user art
-   pass 2026-09-15) + Han grade glyph in seal-paste vermillion
-   (item-info-card spec 2026-09-14, replaces the transparent underlay
-   wash). Sized in cqw so it scales with the cell edge.
-   ============================================================ */
-
-.slot-view__seal {
-  position: absolute;
-  top: 3%;
-  left: 3%;
-  z-index: 5;
-  box-sizing: border-box;
-  width: 30cqw;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  background: url('/assets/ui/Slot/seal-frame.png') center / contain no-repeat;
-  /* Seal-paste vermillion, lifted one step from the frame ink
-     (#950100) so the thin strokes stay legible on the dark tile. */
-  color: #d13a24;
-  /* Ma Shan Zheng / Noto Serif SC are loaded webfonts that cover the Han
-     seal numerals - the local Kai stacks below only render where a KaiTi
-     font is installed, otherwise the ordinals render as tofu boxes. */
-  font-family: 'Ma Shan Zheng', 'Kaiti SC', 'KaiTi', 'STKaiti', 'TW-Kai', 'DFKai-SB',
-    'AR PL KaitiM GB', 'Noto Serif CJK SC', 'Noto Serif SC', var(--font-display);
-  font-weight: 700;
-  font-size: 15cqw;
-  line-height: 1;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.45);
-  pointer-events: none;
-}
 
 /* Crowding rule (spec section 1): under ~48px cells the glance signals
    that duplicate the compare card pair disappear first. Seal + amount

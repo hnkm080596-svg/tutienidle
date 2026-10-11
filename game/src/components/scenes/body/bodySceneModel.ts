@@ -57,11 +57,12 @@ export interface BodyUnitView {
 }
 
 /**
- * Manual Rèn Thể pour spec (owner ruling 2026-10-09): built by the
- * scene model AFTER the real invest commits - the fidelity card replays
- * it as a particle stream (material slot -> bar start) while the count
- * drains on each particle departure and the bar fills on each landing.
- * Display-only: the domain state is already final when this exists.
+ * Manual-invest pour spec (owner ruling 2026-10-09, generalized to all
+ * body chapters 2026-10-10): built by the scene model AFTER the real
+ * invest commits - the fidelity card replays it as a particle stream
+ * (currency slot -> bar start) while the count drains on each particle
+ * departure and the bar fills on each landing. Display-only: the domain
+ * state is already final when this exists.
  */
 export interface BodyPourSpec {
   // Currency units the invest actually consumed (spread across the
@@ -75,6 +76,10 @@ export interface BodyPourSpec {
   progressPerMaterial: number
   // Filled amount on the active tier at click time.
   tierProgress: number
+  // Completed tier count at click time - the figure replays lit state
+  // sequentially from here so crossed tiers light one-by-one riding
+  // the fill instead of all at once (owner ruling 2026-10-10).
+  tierStartIndex: number
   // Caps of the tiers from the click-time active tier onward - the
   // animated fill wraps through them when a tier completes mid-pour.
   caps: readonly number[]

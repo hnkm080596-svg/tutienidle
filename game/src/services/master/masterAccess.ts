@@ -2,11 +2,45 @@
 // the floating dev panel and the skill constellation design mode. This
 // is a client-side test convenience - NOT a security boundary; the
 // panel's mutations are test cheats applied to local save state only.
-import { computed, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, ref, type ComputedRef } from 'vue'
 import { BETA_MASTER_UNLOCKS } from '@/core/betaScope'
 import type { BetaFeatureName } from '@/core/betaFeatureFlags'
 
 const MASTER_LOGIN_IDS = new Set(['admin'])
+
+// Master gate (Minh 2026-10-10): one key string admits a session as
+// master without needing the 'admin' loginId - Minh's "cửa sau" for
+// test-edit privileges. The key value is NOT in the repo (owner ruling
+// 2026-10-10): it comes from VITE_MASTER_GATE_KEY (set it in .env.local,
+// which is gitignored); when unset the gate stays closed for everyone.
+// The flag persists in sessionStorage so a reload inside the same tab
+// keeps the session master but never leaks to another tab/profile.
+export const MASTER_GATE_KEY: string = import.meta.env.VITE_MASTER_GATE_KEY ?? ''
+const MASTER_GATE_STORAGE_KEY = 'master-gate-unlocked-v1'
+
+const gateStorage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> =
+  typeof sessionStorage === 'undefined'
+    ? { getItem: () => null, setItem: () => {}, removeItem: () => {} }
+    : sessionStorage
+
+const gateUnlocked = ref(gateStorage.getItem(MASTER_GATE_STORAGE_KEY) === '1')
+
+/** Returns true when the key admits the session through the master gate.
+ *  Fails closed when no VITE_MASTER_GATE_KEY is configured. */
+export function unlockMasterGate(key: string | undefined): boolean {
+  if (MASTER_GATE_KEY === '' || key !== MASTER_GATE_KEY) return false
+  gateUnlocked.value = true
+  gateStorage.setItem(MASTER_GATE_STORAGE_KEY, '1')
+  return true
+}
+
+/** Drops the gate flag - called on logout so a guest/later login in the
+ *  same tab does not inherit the previous session's test privileges
+ *  (QA fixpoint: sessionStorage survives logout otherwise). */
+export function clearMasterGateFlag() {
+  gateUnlocked.value = false
+  gateStorage.removeItem(MASTER_GATE_STORAGE_KEY)
+}
 
 // Scope-hidden features a master session opens for TESTING (Minh
 // 2026-10-08): tab gate + domain ops share the isBetaFeature channel -
@@ -15,6 +49,12 @@ const MASTER_LOGIN_IDS = new Set(['admin'])
 const MASTER_BETA_UNLOCKS: readonly BetaFeatureName[] = [
   'equipmentWash',
   'equipmentRefine',
+  // Owner ruling 2026-10-11: Phan Giai (ore decompose) opens for master
+  // so Minh can test the flow live - the tab itself already admits
+  // master via decomposeAdmitted; without this the domain layer fails
+  // closed (setSetting no-op, listMatchingOres empty) and the tab is a
+  // dead widget even for admin.
+  'equipmentOreDecompose',
 ]
 
 const sessionLoginId = ref<string | undefined>()
@@ -34,8 +74,24 @@ const SKILL_CONST_OVERRIDES_KEY = 'skill-tree-design-const-pos-v1'
 // the same record. Persisted like the paper tree's offsets so a reload
 // does not lose an arrangement mid-session.
 export interface SkillDesignOverride { x: number; y: number }
+// QA fixpoint 2026-10-10: corrupt/non-JSON localStorage would throw at
+// module init and break every import - parse defensively.
+function readOverridesJson(): Record<string, SkillDesignOverride> {
+  try {
+    const raw = ls.getItem(SKILL_CONST_OVERRIDES_KEY)
+    if (raw === null) return {}
+    const parsed: unknown = JSON.parse(raw)
+    // Reject arrays too (QA fixpoint 2026-10-10, round-3): '[]' in storage
+    // would pass the object check - same guard as the paper tree's.
+    return parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)
+      ? {}
+      : (parsed as Record<string, SkillDesignOverride>)
+  } catch {
+    return {}
+  }
+}
 export const skillDesignOverrides = ref<Record<string, SkillDesignOverride>>(
-  JSON.parse(ls.getItem(SKILL_CONST_OVERRIDES_KEY) ?? '{}'),
+  readOverridesJson(),
 )
 
 // Shared flag: the paper tree's local toggle and the dev panel drive the
@@ -54,7 +110,7 @@ export function persistSkillDesignOverrides() {
 
 export function recordSessionLoginId(loginId: string | undefined) {
   sessionLoginId.value = loginId?.toLowerCase()
-  if (!isMasterLoginId(sessionLoginId.value)) {
+  if (!isMasterSession()) {
     setSkillDesignMode(false)
     skillDesignOverrides.value = {}
     BETA_MASTER_UNLOCKS.clear()
@@ -69,6 +125,15 @@ function isMasterLoginId(loginId: string | undefined): boolean {
   return loginId !== undefined && MASTER_LOGIN_IDS.has(loginId)
 }
 
+/** Sync master check for non-component callers (save/lifecycle seams). A
+ *  session is master when the loginId is allowlisted OR the gate key
+ *  unlocked it - both are client-side test privileges, never authority. */
+export function isMasterSession(): boolean {
+  // Read-time kill switch: removing VITE_MASTER_GATE_KEY revokes the
+  // flag too, not just new mints (QA fixpoint round on the gate).
+  return (MASTER_GATE_KEY !== '' && gateUnlocked.value) || isMasterLoginId(sessionLoginId.value)
+}
+
 export function useMasterAccess(): { isMaster: ComputedRef<boolean> } {
-  return { isMaster: computed(() => isMasterLoginId(sessionLoginId.value)) }
+  return { isMaster: computed(() => isMasterSession()) }
 }

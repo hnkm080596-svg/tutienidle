@@ -3,17 +3,20 @@ export const realmMessages = { vi: {
   // `panels.wheel.slots.realm` + `dongFu.aria` keys the fidelity
   // components resolve through i18n.
   realm: {
-    title: 'ĐƯỜNG ĐĂNG TIÊN', subtitle: 'Mười tám tầng\nMột đường đăng tiên',
+    title: 'Đăng Tiên Lộ', subtitle: 'Mười tám tầng\nMột đường đăng tiên',
     floorLabel: 'Tầng {floor}', floorCount: 'Tầng {floor} / {total}',
     cultivation: 'Tu vi', breakthroughTitle: 'Đột Phá {target}',
-    viewing: 'Đang xem mốc tầng {floor}',
+    advance: 'Đột Phá',
+    noPassives: 'Chưa nhận thiên phú nào từ cảnh giới này.',
   },
   panels: {
     wheel: { slots: { realm: 'Cảnh Giới' } },
     realm: {
-      sections: { progress: 'Tiến Độ Tu Luyện', passives: 'Thiên Phú Cảnh Giới ({realm})' },
+      sections: { progress: 'Tiến Độ Tu Luyện', passives: 'Thiên Phú Cảnh Giới ({realm})', requirements: 'Điều Kiện Đột Phá {target}' },
       meta: { rateLabel: 'Tốc Độ Tu Luyện' },
       requirements: { met: 'Đã đạt', unmet: 'Chưa đạt' },
+      nodes: { current: 'Đang tu hành', unlocked: 'Đã đạt', locked: 'Chưa mở' },
+      labels: { quanKhi: 'Quán Khí', foundation: 'Dược', majorFallback: 'Đại Cảnh Giới' },
     },
   },
   dongFu: { aria: 'Về Động Phủ' },

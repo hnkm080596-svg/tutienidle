@@ -57,8 +57,8 @@ export class MaterialBag {
 
   /**
    * R9 (AR-22) - preflight how much of `amount` fits WITHOUT mutating.
-   * The exchange owner (e.g. VendorSystem) checks this BEFORE any
-   * debit/credit so a failed compound trade leaves all balances
+   * An exchange owner checks this BEFORE any debit/credit so a failed
+   * compound trade leaves all balances
    * unchanged (A9: failed exchanges preserve all involved balances).
    */
   canAcceptAmount(

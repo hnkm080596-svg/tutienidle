@@ -79,12 +79,11 @@
 
 /* Inventory: the toolbar spans the bag; item identity is a fixed inspector. */
 :is(#app, body) .th-collection.th-collection.th-collection .inventory-content {
-  left: 204px; top: 207px; width: 1186px; height: 494px;
+  /* Owner ruling 2026-10-11: same stage rect as the equipment bag card
+     (y215-691), only wider. */
+  left: 372px; top: 174px; width: 1011px; height: 517px;
 }
 :is(#app, body) .th-collection.th-collection.th-collection .inventory-content .toolbar { height: 46px; margin-bottom: 16px; }
-:is(#app, body) .th-collection.th-collection.th-collection .inventory-content .toolbar button[aria-pressed=true] {
-  background: #292d25; color: #ead8ad; border-color: #aa8c55;
-}
 :is(#app, body) .th-collection.th-collection.th-collection .cf-stat-list { gap: 5px; }
 :is(#app, body) .th-collection.th-collection.th-collection .cf-stat__seal { width: 30px; height: 30px; flex-basis: 30px; padding: 5px; }
 :is(#app, body) .th-collection.th-collection.th-collection .cf-stat__label { font-size: 16px; }
@@ -273,9 +272,4 @@
 :is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-rewards__cell{width:70px;height:70px;background:var(--pc-slot-art) center/100% 100%;border:0}
 :is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-rewards__token{font-size:13px}
 :is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-rewards__amount{font-size:14px}
-/* A measured logical grid maps to the approved twelve-column PC artwork
-   without replacing the canonical ResizeObserver/pagination algorithm. */
-:is(#app,body) .pc-collection.pc-collection.pc-collection.inventory-scene .bag-section__grid{width:832px;height:272px;flex:0 0 272px;transform:scale(1.45);transform-origin:top left;margin-bottom:122px}
-
 :is(#app,body) .pc-collection.pc-collection.pc-collection .quest-detail .quest-section-plaque__text{color:#eedbb4;font-size:21px}
-:is(#app,body) .pc-collection.pc-collection.pc-collection.inventory-scene .inventory-content{height:620px}

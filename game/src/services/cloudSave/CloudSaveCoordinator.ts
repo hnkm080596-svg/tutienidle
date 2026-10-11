@@ -1,6 +1,7 @@
 import type { GameSave } from '../save/SaveSystem'
 import type { CloudSaveCapability, CloudSaveLoadResult, CloudSaveResetResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
 import { validateGameSaveShape } from '../save/saveShapeValidation'
+import { isMasterSession } from '../master/masterAccess'
 
 interface QueuedSave {
   /** Callers that arrived while a write was in flight all resolve with
@@ -208,6 +209,23 @@ export class CloudSaveCoordinator {
     // branch below must never run - blindly overwriting the newer remote
     // revision is exactly the authority violation the spec forbids.
     if (this.service.capability === 'remote-authoritative') {
+      // Master-gate (2026-10-10): a master session tolerates refused
+      // writes (masterToleratedSaveResult), so it keeps playing instead
+      // of entering the conflict lifecycle. But with this.revision still
+      // stale, every subsequent write CASes against the same old head -
+      // guaranteed conflict forever, remote frozen at first refusal,
+      // and each refusal retains a durable journal record (silent
+      // write-loss, QA fixpoint round on the gate). Adopting the
+      // conflict's currentRevision re-bases the NEXT write on the true
+      // remote head: content-valid writes then actually land (repairing
+      // the row), content-invalid ones still refuse - same outcome the
+      // local-scope resync below already documents for local saves.
+      if (result.status === 'conflict' && isMasterSession() && generation === this.generation) {
+        console.warn(
+          `[cloudSave] master session: conflict tolerated - adopting remote revision ${result.currentRevision} (local head ${this.revision}), next write is last-writer-wins`,
+        )
+        this.revision = result.currentRevision
+      }
       return result
     }
 

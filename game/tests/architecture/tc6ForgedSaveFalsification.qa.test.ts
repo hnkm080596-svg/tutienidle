@@ -703,9 +703,11 @@ describe('TC6-C hostile slices', () => {
     )
     const { manager, result } = boot(save)
     expect(result.status).toBe('ok')
-    // Engine reports 0 claimed workers under scope-hidden: the forged
-    // slice cannot steal the shared pool or mint materials.
-    expect(manager.decomposeSystem.getSettings().workers).toBe(0)
+    // DIRECT DECOMPOSE REWORK: the forged slice is accept-and-ignore -
+    // restore owns nothing, so the live slice stays empty and the
+    // action cannot mint materials under scope-hidden.
+    expect(manager.decomposeSystem.getSaveState()).toEqual({})
+    expect(manager.decomposeSystem.decompose(['mortal_ore_decade'])).toBe(false)
   })
 
   it('C6 - pill-source timed effect admits ONLY manaRegenPerTurn modifiers', () => {

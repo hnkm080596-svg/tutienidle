@@ -216,4 +216,16 @@
 // loses its `route` key with the retired legacy route machinery -
 // saves carrying {element, route} pairs are legacy shape and rejected
 // wholesale (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 87 as const
+// v88 (2026-10-11, MATERIALS ECONOMY rework): alchemy fuel switches
+// from realm wood to universal bui_go and job reservations gain the
+// required luyenDanTinhHoaAmount witness field - a v87 save carrying
+// an in-flight alchemy job writes a legacy witness that can no longer
+// verify, so it is rejected wholesale (dev phase, no migration, no
+// compat translator).
+// v89 (2026-10-11, SPIRIT-STONE FLATTEN): owner ruling "linh thach gio
+// chi la linh thach, khong co pham cap nua" - the trung/thuong pham
+// materials are gone and every faucet/cost pays the single stone id.
+// v88 saves MIGRATE (exception to the no-migration rule): trung/thuong
+// stacks fold into spirit_stone_ha_pham at 1:1 face value via
+// migrateSpiritStoneFlattenV88 in SaveSystem.ts.
+export const CURRENT_SAVE_VERSION = 89 as const

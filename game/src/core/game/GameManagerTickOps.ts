@@ -6,7 +6,7 @@ import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { PillBag } from '../pill/PillBag'
 import type { PillRegistry } from '../pill/PillRegistry'
 import type { PlayerData } from '../player/Player'
-import type { DecomposeSystem, DecomposeOutputEntry } from '../production/DecomposeSystem'
+import type { DecomposeOutputEntry } from '../production/DecomposeSystem'
 import type { ProductionSystem } from '../production/ProductionSystem'
 import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import type { QuestManager } from '../quest/QuestManager'
@@ -28,9 +28,9 @@ import type { GameManagerTurnBattleOps } from './GameManagerTurnBattleOps'
  * Owns:
  * - the settle block driven each tick for the active player (timed
  *   effects, quest reconciliation/daily reset,
- *   production/alchemy/decompose settle + notifications);
- * - the shared decompose delivery path (online tick + offline restore
- *   both call deliverDecomposeOutput);
+ *   production/alchemy settle + notifications);
+ * - the shared decompose delivery path (direct decompose() calls
+ *   deliverDecomposeOutput through an injected callback);
  * - the quest realm-transition flag consumed by the next tick;
  * - the fixed-step battle/tribulation tail of the tick.
  *
@@ -49,7 +49,6 @@ export class GameManagerTickOps {
       productionSystem: ProductionSystem
       materialBag: MaterialBag
       materialRegistry: MaterialRegistry
-      decomposeSystem: DecomposeSystem
       getWorkerAssignments: () => Map<string, number>
       alchemySystem: AlchemySystem
       pillBag: PillBag
@@ -146,19 +145,16 @@ export class GameManagerTickOps {
         this.reconcileQuestLifecycle()
       }
 
-      // R7 (AR-08) shared worker pool - decompose claims its workers
-      // from the CHQ capacity FIRST; production receives the remainder via
-      // the ONE split rule (Mission D / spec D5) - the same helper the
-      // restore path uses (GameManagerSaveRestore). Capacity is
-      // re-supplied every tick so CHQ build/upgrade takes effect without
-      // a restart, and stale restored workers clamp down.
+      // R7 (AR-08) shared worker pool - production receives the CHQ
+      // capacity through the ONE read rule (Mission D / spec D5) - the
+      // same helper the restore path uses (GameManagerSaveRestore).
+      // DIRECT DECOMPOSE REWORK (2026-10-11): decompose no longer
+      // claims workers from the pool (direct action, no cycle).
       const effectiveWorkerCapacity = betaEffectiveWorkerCapacity(
         activePlayer.autoWorkerCapacity ?? 0,
       )
-      this.deps.decomposeSystem.updateCapacity(effectiveWorkerCapacity)
       const productionCapacity = resolveProductionWorkerCapacity(
         effectiveWorkerCapacity,
-        this.deps.decomposeSystem.getSettings().workers,
       )
 
       this.deps.productionSystem.tickWorkers(
@@ -254,14 +250,11 @@ export class GameManagerTickOps {
         }
       }
 
-      // Task 14 (rework P4) - Decompose cycle: ore -> refined essence.
-      // R7 (AR-08): online tick and offline restore share ONE delivery
-      // path (deliverDecomposeOutput) - no duplicated overflow rules.
-      this.deps.decomposeSystem.tick(Date.now())
-
-      for (const entry of this.deps.decomposeSystem.drainOutput()) {
-        this.deliverDecomposeOutput(entry)
-      }
+      // DIRECT DECOMPOSE REWORK (2026-10-11): the decompose cycle
+      // engine retired - Phan Giai is a direct action on
+      // decomposeSystem.decompose(), which credits through
+      // deliverDecomposeOutput() below via an injected callback. No
+      // per-tick work remains here.
     }
 
     // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiep Thuong debuff)
@@ -275,11 +268,12 @@ export class GameManagerTickOps {
   }
 
   /**
-   * R7 (AR-08) - single decompose delivery path shared by the online
-   * tick and the offline restore settle: toast shows the DELIVERED
-   * amount (minus overflow); overflow pushes a bag.overflow event;
-   * delivered === 0 skips the craft toast. Extracted verbatim from the
-   * old inline tick block.
+   * R7 (AR-08) - single decompose delivery path: toast shows the
+   * DELIVERED amount (minus overflow); overflow pushes a bag.overflow
+   * event; delivered === 0 skips the craft toast. The worker cycle
+   * used to drain pendingOutput into this path every tick + offline
+   * settle; DIRECT DECOMPOSE calls it synchronously through the
+   * deliverOutput callback injected into DecomposeSystem.
    */
   deliverDecomposeOutput(entry: DecomposeOutputEntry): void {
     // Registry miss -> typed fallback Material (decompose output is

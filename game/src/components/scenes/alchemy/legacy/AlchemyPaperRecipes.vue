@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AlchemyRecipeChoice } from './alchemyUi'
+import type { AlchemyRecipeChoice } from '../fidelity/alchemyUi'
 import { useI18n } from 'vue-i18n'
 defineProps<{ recipes: readonly AlchemyRecipeChoice[]; selected: string }>()
 const emit = defineEmits<{ select: [id: string] }>()

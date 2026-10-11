@@ -59,8 +59,8 @@ const surfaceOpen = computed(
 
 const feedbackOpen = ref(false)
 const boardOpen = ref(true)
-const railCollapsed = ref(false)
-const railIndicator = ref(false)
+const railCollapsed = ref(true)
+const railIndicator = ref(true)
 // The dialog and every other surface are mutually exclusive: any seam
 // (wheel, rail, building hotspot, board CTA) that opens a surface also
 // dismisses the dialog, whichever path opened it.
@@ -202,9 +202,9 @@ const navSeamUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/naviga
 // guild/sect/portal render grayscale like the design).
 const NAV_LOCKED: readonly PcPaperIcon[] = ['artifact', 'companion', 'guild', 'sect', 'portal']
 const NAV_ITEMS: readonly PcPaperIcon[] = [
-  'home', 'character', 'skill', 'equipment', 'body', 'technique', 'realm',
-  'inventory', 'alchemy', 'formation', 'exploration', 'quest', 'production',
-  'vendor', 'settings', 'feedback', ...NAV_LOCKED,
+  'home', 'character', 'skill', 'equipment', 'inventory', 'body', 'technique',
+  'realm', 'alchemy', 'formation', 'exploration', 'quest', 'production',
+  'settings', 'feedback', ...NAV_LOCKED,
 ]
 
 // A nav id renders locked when the surface behind it is scope-hidden:
@@ -236,7 +236,6 @@ const NAV_TARGET: Partial<Record<PcPaperIcon, () => void>> = {
   exploration: () => ui.openLeftPanel('stage_select'),
   quest: () => ui.openStandalonePanel('quest'),
   production: () => navigation.openBuilding('gathering_outpost'),
-  vendor: () => navigation.openBuilding('vendor'),
   settings: () => ui.openLeftPanel('settings'),
   feedback: () => {
     ui.closeHomeOverlays()
@@ -251,10 +250,9 @@ const NAV_ACTIVE_PANEL: Partial<Record<PcPaperIcon, LeftPanelModeMarker>> = {
   alchemy: 'pill_room',
   exploration: 'stage_select',
   production: 'exploration',
-  vendor: 'vendor',
   settings: 'settings',
 }
-type LeftPanelModeMarker = 'equipment_hall' | 'pill_room' | 'exploration' | 'stage_select' | 'worker_lodge' | 'vendor' | 'settings'
+type LeftPanelModeMarker = 'equipment_hall' | 'pill_room' | 'exploration' | 'stage_select' | 'worker_lodge' | 'settings'
 const NAV_ACTIVE_STANDALONE: Partial<Record<PcPaperIcon, 'skill' | 'realm' | 'quest' | 'tran_phap' | 'technique' | 'body'>> = {
   skill: 'skill',
   realm: 'realm',
@@ -295,13 +293,18 @@ function navAction(id: PcPaperIcon) {
 // ================= Profile / currencies / quest ========================
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
 
-const CHIP_ICON: Record<number, PcPaperResource> = { 0: 'crystal', 1: 'jade', 2: 'coin', 3: 'essence' }
+const CHIP_ICON_BY_ID: Record<string, PcPaperResource> = {
+  bui_go: 'coin',
+  luyen_dan_tinh_hoa: 'jade',
+  luyen_khi_tinh_hoa: 'essence',
+}
+const CHIP_ICON_BY_INDEX: Record<number, PcPaperResource> = { 0: 'crystal', 1: 'jade', 2: 'coin' }
 const currencyChips = computed(() => {
   stateVersion.value
   return chips.value.map((chip, index) => ({
     id: chip.id,
     label: chip.label,
-    icon: CHIP_ICON[index] ?? 'essence',
+    icon: CHIP_ICON_BY_ID[chip.id] ?? CHIP_ICON_BY_INDEX[index] ?? 'essence',
     value: formatNumber(chip.amount),
   }))
 })
@@ -365,6 +368,9 @@ const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [role="button"
 
 function onSceneClick(event: MouseEvent) {
   if ((event.target as HTMLElement | null)?.closest(INTERACTIVE_SELECTOR)) return
+  // Owner ruling 2026-10-11: open rail carries no collapse indicator -
+  // clicking empty scene ground closes it (the '>>' indicator then shows).
+  if (!railCollapsed.value) railCollapsed.value = true
   ui.closeHomeOverlays()
 }
 
@@ -379,6 +385,9 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
+    // Owner ruling 2026-10-11: Escape is the shared close key - when no
+    // surface is up it collapses the rail like clicking empty ground.
+    if (!surfaceOpen.value && !railCollapsed.value) railCollapsed.value = true
     ui.closeCommandWheel()
     return
   }
@@ -426,7 +435,7 @@ onBeforeUnmount(() => {
         </div>
       </header>
       <div class="home-design-currencies" data-df-ui>
-        <PcPaperButton v-for="chip in currencyChips" :key="chip.id" variant="secondary" :aria-label="chip.label">
+        <PcPaperButton v-for="chip in currencyChips" :key="chip.id" variant="secondary" :aria-label="chip.label" :data-material="chip.id" :data-currency-id="chip.id">
           <img :src="pcPaperResourceUrl(chip.icon)" alt=""><b>{{ chip.value }}</b><span>＋</span>
         </PcPaperButton>
       </div>
@@ -459,18 +468,10 @@ onBeforeUnmount(() => {
             <span>{{ t(`dongFu.nav.${id}`) }}</span>
           </button>
         </nav>
-        <button
-          v-if="!railCollapsed"
-          class="home-navigation-collapse"
-          type="button"
-          :aria-label="t('dongFu.railClose')"
-          :aria-expanded="true"
-          @click.stop="toggleRail()"
-        >«</button>
       </aside>
       <img v-if="surfaceOpen" class="home-navigation-landscape-seam" :src="navSeamUrl" alt="">
       <button
-        v-if="railCollapsed && railIndicator"
+        v-if="railCollapsed && railIndicator && !surfaceOpen && !feedbackOpen"
         class="home-navigation-toggle"
         type="button"
         :aria-label="t('dongFu.railOpen')"
@@ -503,7 +504,7 @@ onBeforeUnmount(() => {
 .df-scene { --df-gold: #c9a761; --df-gold-light: #ebd094; --df-ivory: #f1e6c5; position: relative; width: 100%; height: 100%; overflow: hidden; color: var(--df-ivory); font-family: var(--font-display, Georgia, serif); }
 .df-scene :deep(*) { box-sizing: border-box; }
 .df-scene :deep(button) { font-family: inherit; font-weight: 400; }
-.df-scene :deep(button:focus-visible) { outline: 2px solid #fff1b8; outline-offset: 5px; }
+.df-scene :deep(button:focus-visible) { outline: none; }
 
 .landscape-design { background-size: 100% 100%; }
 

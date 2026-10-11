@@ -708,6 +708,12 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/huyen-kim/nodes/dao-luan-node@2x.png',
   '/assets/ui/huyen-kim/nodes/dao-luan-center@2x.png',
   '/assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
+  // San Xuat landscape port (2026-10-11): mine card landscape and the
+  // linh-mach vein card's exploration icon - component literals pinned
+  // by the domArtLiteralCoverage guard.
+  '/assets/ui/tien-hiep-2026-10/realm/landscape-3-v1.png',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-production-v2.png',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-exploration-v2.png',
 ] as const
 
 /**

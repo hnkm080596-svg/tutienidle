@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
-import { getRealmTier } from '@/core/realm/RealmTierMap'
-import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
-import Bar from '@/components/common/primitives/Bar.vue'
-import GameButton from '@/components/common/GameButton.vue'
-import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
-import { formatStat } from '@/core/stats/StatLabels'
+import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
+import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
+import ProductionSiteCard from '@/components/panels/production/ProductionSiteCard.vue'
+import ProductionVeinCard from '@/components/panels/production/ProductionVeinCard.vue'
+import ProductionWorkerAllocation from '@/components/panels/production/ProductionWorkerAllocation.vue'
+import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
+import { useDialogFocus } from '@/composables/useDialogFocus'
+import { useUiStore } from '@/stores/ui'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { formatDuration } from '@/core/format/formatDuration'
-import { betaRecipeFamilyOfId, betaSurfaceVisible } from '@/core/betaScope'
 
 // San Xuat (2026-08-25, resource-professions-rework plan sec9.1) - thay
 // ExplorationPanel: moi Dia Gioi hien thi dung ba card Lam/Quang/
@@ -19,38 +19,21 @@ import { betaRecipeFamilyOfId, betaSurfaceVisible } from '@/core/betaScope'
 // cycle, normalized realm-tier weights, Auto toggle. Mission D
 // (spec D3): sites produce on worker lanes only - no Start button;
 // NO Claim button - completions go straight to Bag (sec 4.3).
+// 2026-10-11 landscape port: inner pieces (worker allocation, linh
+// mach vein card, per-source site cards) live in panels/production/*
+// and render the LANDSCAPE preview shapes; this file keeps the sheet
+// frame, the row projection and the 500ms tick clock.
 const { t } = useI18n()
 
-const KIND_META: Record<string, { labelKey: 'forest' | 'mine' | 'grotto'; sigil: string }> = {
-  forest: { labelKey: 'forest', sigil: '木' },
-  mine: { labelKey: 'mine', sigil: '礦' },
-  grotto: { labelKey: 'grotto', sigil: '藥' },
+const KIND_META: Record<string, { labelKey: 'forest' | 'mine' | 'grotto' }> = {
+  forest: { labelKey: 'forest' },
+  mine: { labelKey: 'mine' },
+  grotto: { labelKey: 'grotto' },
 }
-
-function rewardSummary(kind: string): string {
-  if (kind === 'forest') return t('panels.production.rewards.forest')
-
-  if (kind === 'mine') return t('panels.production.rewards.mine')
-
-  // CONSUMER-01: advertise only beta-admitted families - the grotto can
-  // never produce a scope-hidden recipe, so PILL_FAMILIES.length would
-  // overstate the card against the alchemy authority seam.
-  return t('panels.production.rewards.grotto', {
-    count: PILL_FAMILIES.filter((family) => betaRecipeFamilyOfId(family.id) !== null).length,
-  })
-}
-
-const player = usePlayerStore()
 
 const gameManager = useGameManager()
 
-const { stateVersion, bumpState } = useStateVersion()
-
-// FINAL POLICY (sec.4C): the manual workforce surface is entirely
-// scope-hidden under beta - the allocation block AND the workers stat
-// are governed by the ONE flag read. Automatic production keeps
-// running; nothing workforce-related renders.
-const workerSurfaceVisible = betaSurfaceVisible('manualWorkforce')
+const { stateVersion } = useStateVersion()
 
 const nowMs = ref(Date.now())
 
@@ -74,8 +57,6 @@ interface SiteRow {
   kind: string
 
   kindLabel: string
-
-  sigil: string
 
   name: string
 
@@ -131,8 +112,6 @@ const rows = computed<SiteRow[]>(() => {
 
       kindLabel,
 
-      sigil: KIND_META[view.definition.kind]?.sigil ?? '•',
-
       name: view.definition.name,
 
       description: view.definition.description,
@@ -161,584 +140,206 @@ const rows = computed<SiteRow[]>(() => {
   })
 })
 
-function toggleAuto(row: SiteRow) {
-  gameManager.buildingOps.setProductionAutoRestart(row.siteId, !row.autoRestart)
-
-  bumpState()
-}
-
-function upgradeCostRows(siteId: string, level: number) {
-  stateVersion.value
-
-  // R9 (AR-23): the domain quote owns costs + gate; the panel only
-  // renders it (old duplicated gate/cost logic removed).
-  const quote = gameManager.buildingOps.quoteProductionUpgrade(siteId, player.$state)
-
-  if (!quote.cost) {
-    return []
-  }
-
-  const spiritStoneId = quote.cost.spiritStoneId
-
-  return [
-    {
-      label: gameManager.materialRegistry.has(quote.cost.woodMaterialId)
-        ? gameManager.materialRegistry.get(quote.cost.woodMaterialId).name
-        : quote.cost.woodMaterialId,
-
-      owned: gameManager.materialBag.getAmount(quote.cost.woodMaterialId),
-
-      amount: quote.cost.woodAmount,
-    },
-    {
-      label: gameManager.materialRegistry.has(spiritStoneId)
-        ? gameManager.materialRegistry.get(spiritStoneId).name
-        : SPIRIT_STONE_LABEL,
-
-      // Plan Workstream F - Linh Thach doc tu MaterialBag.
-      owned: gameManager.materialBag.getAmount(spiritStoneId),
-
-      amount: quote.cost.spiritStone,
-    },
-  ]
-}
-
-function canUpgrade(siteId: string, level: number): boolean {
-  // R9 (AR-23): parity with the authoritative upgradeSite gate via the
-  // domain quote (level parameter kept for row wiring).
-  void level
-
-  return gameManager.buildingOps.quoteProductionUpgrade(siteId, player.$state).upgradable
-}
-
-function upgrade(siteId: string) {
-  if (gameManager.buildingOps.upgradeProductionSite(siteId, player.$state)) {
-    bumpState()
-  }
-}
-
-// ================= Chieu Hien Quan - phan bo nhan cong (2026-09-02) =================
-
-// FINAL POLICY (sec.4C): the manual workforce surface is scope-hidden
-// under beta - the allocation block AND the workers stat are governed
-// by the ONE flag read. Automatic production keeps running in the
-// background on the flat auto pool (betaEffectiveWorkerCapacity).
-
-// --- Workforce read model (Mission D / spec D1) ---
-// The panel renders the domain's WorkforceView verbatim - no local
-// capacity math, no local mode flag (audit T4-29/T4-30).
-const workforce = computed(() => {
-  stateVersion.value
-
-  // Track the same tick clock `rows` reads (:96) - reserved/available/
-  // effective totals and the slider :max must refresh every tick too,
-  // not only on bumpState() interactions (T4-30 reintroduction guard).
-  void nowMs.value
-
-  return gameManager.buildingOps.getWorkforceView()
-})
-
-const workerMode = computed(() =>
-  Object.keys(workforce.value.requested).length > 0 ? 'manual' : 'auto',
-)
-
-const assignedTotal = computed(() =>
-  Object.values(workforce.value.requested).reduce((sum, count) => sum + count, 0),
-)
-
-const effectiveTotal = computed(() =>
-  Object.values(workforce.value.effective).reduce((sum, count) => sum + count, 0),
-)
-
-function setWorkerMode(mode: 'auto' | 'manual') {
-  if (mode === 'auto') {
-    // Back to auto: clear every manual assignment.
-    for (const row of rows.value) {
-      gameManager.buildingOps.assignWorkers(row.siteId, undefined)
-    }
-  } else {
-    // Entering manual snapshots the CURRENT allocator grants so the
-    // sliders start from domain truth (mode is derived, so requested
-    // must be non-empty for 'manual' to show).
-    for (const row of rows.value) {
-      gameManager.buildingOps.assignWorkers(row.siteId, workforce.value.effective[row.siteId] ?? 0)
-    }
-  }
-
-  bumpState()
-}
-
-function assign(row: SiteRow, count: number) {
-  gameManager.buildingOps.assignWorkers(row.siteId, count)
-
-  bumpState()
-}
-
-// ================= Linh mach Khai Vat Duong (the Linh Tuyen, 2026-09-02) =================
+// ================= Panel chrome (landscape art port, 2026-10-11) =================
 
 const OUTPOST_ID = 'gathering_outpost'
 
-const outpostInstance = computed(() => {
-  stateVersion.value
+// Landscape art port (2026-10-11): panel gio tu chu chrome giay tren
+// SceneDesignCanvas overlay nhu cac paper surface anh em - khong con
+// nam trong imperial scroll. Close contract giong scene khac: click
+// ngoai sheet hoac Escape -> closeHomeOverlays.
+const ui = useUiStore()
 
-  return gameManager.buildingManager.getByBuildingId(OUTPOST_ID)
-})
+const sceneRef = ref<HTMLElement | null>(null)
 
-const linMachStored = computed(() => {
-  if (!outpostInstance.value) {
-    return 0
-  }
+useDialogFocus(sceneRef, () => true, { onEscape: () => ui.closeHomeOverlays() })
 
-  return Math.floor(
-    gameManager.buildingOps.getBuildingStoredAmount(outpostInstance.value.instanceId, nowMs.value / 1000),
-  )
-})
-
-const linMachCapacity = computed(() =>
-  outpostInstance.value ? gameManager.buildingOps.getBuildingCapacity(outpostInstance.value.instanceId) : 0,
-)
-
-const linMachRatePerMinute = computed(() =>
-  outpostInstance.value ? gameManager.buildingOps.getBuildingRatePerMinute(outpostInstance.value.instanceId) : 0,
-)
-
-const linMachOutputName = computed(() => {
-  const id = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
-
-  return gameManager.materialRegistry.has(id)
-    ? gameManager.materialRegistry.get(id).name
-    : SPIRIT_STONE_LABEL
-})
-
-function collectLinMach() {
-  if (!outpostInstance.value || linMachStored.value <= 0) {
-    return
-  }
-
-  gameManager.buildingOps.collectBuilding(outpostInstance.value.instanceId, player.$state, nowMs.value / 1000)
-
-  bumpState()
+function closeScene() {
+  ui.closeHomeOverlays()
 }
+
+// Building identity bom thang vao heading trong sheet (preview: icon +
+// ten 'Khai Vat Duong' + 'Cap x/9' + intro) thay dai #header cu cua
+// scroll - cung read-model useBuildingHeaderState.
+const outpostHeader = useBuildingHeaderState(ref(OUTPOST_ID))
+
+const paperSheet = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
+
+const productionIcon = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/icons/navigation-production-v2.png')
 
 </script>
 
 <template>
-  <div class="production-panel scrollfade">
-      <p class="production-panel__summary">
-        {{ t('panels.production.summary') }}
-      </p>
+  <!-- Landscape art port: panel tu chu chrome giay tren overlay canvas
+       (cung rect sheet 345/101/1065/608 voi cac paper surface anh em) -
+       FunctionOverlayPanel mount thang mode 'exploration' nhu paperMode. -->
+  <SceneDesignCanvas overlay>
+    <section
+      ref="sceneRef"
+      class="production-panel"
+      :aria-label="t('layout.functionOverlay.titles.exploration')"
+      tabindex="-1"
+      @click.self="closeScene"
+    >
+      <div
+        class="production-panel__sheet"
+        :style="{ backgroundImage: `url('${paperSheet}')` }"
+        aria-hidden="true"
+      />
 
-      <!-- Chieu Hien Quan - phan bo nhan cong (2026-09-02) -->
-      <!-- FINAL POLICY (sec.4C): the whole block is scope-hidden under
-           beta via manualWorkforce - hidden, not merely disabled. -->
-      <div v-if="workerSurfaceVisible" class="worker-allocation">
-        <header class="worker-allocation__header">
-          <strong>{{ t('panels.production.workersHeader', { used: workerMode === 'manual' ? assignedTotal : effectiveTotal, total: workforce.available }) }}</strong>
-
-          <small v-if="workforce.reserved > 0" class="worker-allocation__reserved">
-            {{ t('panels.production.workersReserved', { count: workforce.reserved }) }}
-          </small>
-
-          <div class="worker-allocation__mode">
-            <label>
-              <input
-                type="radio"
-                name="worker-mode"
-                :checked="workerMode === 'auto'"
-                @change="setWorkerMode('auto')"
-              />
-              {{ t('panels.production.workerModeAuto') }}
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="worker-mode"
-                :checked="workerMode === 'manual'"
-                @change="setWorkerMode('manual')"
-              />
-              {{ t('panels.production.workerModeManual') }}
-            </label>
-          </div>
+      <div class="production-panel__frame">
+        <header class="production-panel__title">
+          <h1>{{ t('layout.functionOverlay.titles.exploration') }}</h1>
         </header>
 
-        <div v-if="workerMode === 'manual'" class="worker-allocation__sliders">
-          <label v-for="row in rows" :key="row.siteId" class="worker-allocation__slider">
-            <span>{{ row.name }}</span>
+        <div class="production-heading">
+          <img class="production-heading__icon" :src="productionIcon" alt="" />
 
-            <input
-              type="range"
-              min="0"
-              :max="workforce.available"
-              :value="row.assignedWorkers ?? 0"
-              :aria-label="t('panels.production.workerAssignAria', { name: row.name })"
-              @input="assign(row, Number(($event.target as HTMLInputElement).value))"
-            />
+          <div class="production-heading__text">
+            <h2>{{ outpostHeader.template.value?.name }}</h2>
 
-            <span class="worker-allocation__count">
-              {{ row.assignedWorkers ?? 0 }}
-            </span>
-          </label>
+            <span>{{ t('layout.functionOverlay.levelRange', { level: outpostHeader.instance.value?.level ?? 0, max: outpostHeader.template.value?.maxLevel ?? 0 }) }}</span>
+          </div>
+
+          <p class="production-panel__summary">
+            {{ t('panels.production.summary') }}
+          </p>
+
+          <!-- Preview khong ve nut nang cap cong trinh - giu affordance
+               canonical neo cuoi hang heading, cho owner ruling. -->
+          <BuildingUpgradeButton :building-id="OUTPOST_ID" class="production-heading__upgrade" />
         </div>
 
-        <p v-else class="worker-allocation__auto-hint">
-          {{ t('panels.production.workerAutoHint') }}
-        </p>
+      <!-- Chieu Hien Quan - phan bo nhan cong (2026-09-02). FINAL
+           POLICY (sec.4C): component tu gate scope-hidden bang
+           manualWorkforce - hidden, not merely disabled. -->
+      <ProductionWorkerAllocation :rows="rows" :now-ms="nowMs" />
+
+      <!-- Linh mach Khai Vat Duong - claim Linh Thach (the Linh Tuyen),
+           preview .production-vein shape ben trong component. -->
+      <ProductionVeinCard :now-ms="nowMs" />
+
+      <div class="production-panel__grid production-sources">
+        <ProductionSiteCard v-for="row in rows" :key="row.siteId" :row="row" />
       </div>
 
-      <!-- Linh mach Khai Vat Duong - claim Linh Thach (the Linh Tuyen) -->
-      <div v-if="outpostInstance" class="lin-mach">
-        <h3 class="lin-mach__title">{{ t('panels.production.linMach.title') }}</h3>
-
-        <div class="lin-mach__card">
-          <Bar
-            class="lin-mach__progress"
-            :value="linMachStored"
-            :max="linMachCapacity"
-            :height="8"
-            pill
-          />
-
-          <strong>{{ linMachStored }} / {{ linMachCapacity }} {{ linMachOutputName }}</strong>
-
-          <small class="lin-mach__rate">+{{ linMachRatePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} {{ t('panels.production.linMach.rateSuffix') }}</small>
-
-          <GameButton
-            class="lin-mach__collect"
-            size="sm"
-            :disabled="linMachStored <= 0"
-            @click="collectLinMach"
-          >
-            {{ t('panels.production.linMach.collect') }}
-          </GameButton>
-        </div>
+        <!-- Preview khai bao dai status line; canonical chua co nguon
+             notice - element trong, owner wire feed sau. -->
+        <p class="production-notice" role="status"></p>
       </div>
-
-      <div class="production-panel__grid">
-        <article v-for="row in rows" :key="row.siteId" class="site-card">
-          <div class="site-card__art" :data-kind="row.kind" aria-hidden="true">
-            <span>{{ row.sigil }}</span>
-          </div>
-
-          <header class="site-card__header">
-            <h3 class="site-card__name">{{ row.name }}</h3>
-
-            <span class="site-card__kind">{{ row.kindLabel }}</span>
-          </header>
-
-          <p class="site-card__description">{{ row.description }}</p>
-
-          <div class="site-card__stats">
-            <span>{{ t('panels.production.level', { level: row.level, max: row.maxLevel }) }}</span>
-
-            <span>×{{ formatStat('productionSpeedMultiplier', row.productionSpeedMultiplier) }} {{ t('panels.production.speedSuffix') }}</span>
-
-            <span v-if="row.nextProductionSpeedMultiplier">
-              {{ t('panels.production.nextSpeedPrefix') }}{{ formatStat('productionSpeedMultiplier', row.nextProductionSpeedMultiplier) }}
-            </span>
-
-            <span v-if="workerSurfaceVisible">{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>
-          </div>
-
-          <!-- Bo dong "Trong so tier" (2026-08-30, bug report: thong tin
-               he thong - so trong so RNG noi bo, nguoi choi khong tac
-               dong duoc nen khong giup ra quyet dinh gi). -->
-          <p class="site-card__reward">{{ rewardSummary(row.kind) }}</p>
-
-          <template v-if="row.isProducing">
-            <Bar class="site-card__progress" :value="row.progress" :max="1" :height="8" />
-
-            <p class="site-card__status">{{ t('panels.production.statusProducing', { time: row.remainingLabel }) }}</p>
-          </template>
-
-          <label class="site-card__auto">
-            <input
-              type="checkbox"
-              :checked="row.autoRestart"
-              @change="toggleAuto(row)"
-            />
-
-            {{ t('panels.production.autoRepeat') }}
-          </label>
-
-          <div v-if="row.level < row.maxLevel" class="site-card__upgrade">
-            <ul>
-              <li
-                v-for="(cost, index) in upgradeCostRows(row.siteId, row.level)"
-                :key="index"
-                :class="{ 'is-missing': cost.owned < cost.amount }"
-              >
-                {{ cost.label }}: {{ cost.owned }}/{{ cost.amount }}
-              </li>
-            </ul>
-
-            <GameButton
-              class="site-card__upgrade-button"
-              variant="ghost"
-              size="sm"
-              :disabled="!canUpgrade(row.siteId, row.level)"
-              @click="upgrade(row.siteId)"
-            >
-              {{ t('panels.production.upgrade') }}
-            </GameButton>
-          </div>
-        </article>
-      </div>
-    </div>
+    </section>
+  </SceneDesignCanvas>
 </template>
 
 <style scoped>
+/* Landscape art port: scene root phu full overlay canvas (close bang
+   click-outside + Escape) - noi dung nam trong sheet + frame. */
 .production-panel {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  color: #30271b;
+  font-family: var(--font-display);
+}
+
+.production-panel :deep(*) {
+  box-sizing: border-box;
+}
+
+/* SHARED-PANEL-01: cung rect + nen giay voi cac fidelity scene anh em
+   (.equipment-sheet) - 24%/12.5%/74%/75% tren canvas 1440x810. */
+.production-panel__sheet {
+  position: absolute;
+  left: 345px;
+  top: 101px;
+  width: 1065px;
+  height: 608px;
+  background-color: #f2e4c8;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 3px double #b28a43;
+}
+
+.production-panel__frame {
+  position: absolute;
+  left: 345px;
+  top: 101px;
+  width: 1065px;
+  height: 608px;
+  box-sizing: border-box;
+  padding: 12px 24px 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  height: 100%;
-  min-height: 0;
-  padding: 12px;
-  overflow-y: auto;
-  color: var(--paper-text);
-  font-family: var(--font-body);
-  background:
-    var(--paper-grain) 0 0 / 160px 160px repeat,
-    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--jade) 8%, transparent), transparent 40%),
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
+}
+
+.production-panel__title {
+  flex: none;
+  height: 44px;
+  border-bottom: 1px solid #b28a4370;
+}
+
+.production-panel__title h1 {
+  margin: 0;
+  font-size: 35px;
+  line-height: 1.15;
+}
+
+.production-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  height: 55px;
+}
+
+.production-heading__icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.production-heading__text h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.production-heading__text span {
+  font-size: 13px;
 }
 
 .production-panel__summary {
-  margin: 0;
-  color: var(--paper-eyebrow);
-  font-size: var(--text-sm);
+  margin: 0 0 0 20px;
+  max-width: 470px;
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.5;
+  color: #5a4526;
 }
 
-/* Chieu Hien Quan - phan bo nhan cong */
-.worker-allocation {
+.production-heading__upgrade {
+  flex: none;
+  margin-left: auto;
+}
+
+.production-sources {
   display: grid;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--jade) 35%, var(--paper-line));
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--jade) 6%, var(--paper-50));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
 }
 
-.worker-allocation__header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-.worker-allocation__mode {
-  display: flex;
-  gap: 12px;
-  font-size: var(--text-xs);
-}
-
-.worker-allocation__mode label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.worker-allocation__sliders {
-  display: grid;
-  gap: 6px;
-}
-
-.worker-allocation__slider {
-  display: grid;
-  grid-template-columns: minmax(80px, auto) 1fr auto;
-  align-items: center;
-  gap: 10px;
-  font-size: var(--text-xs);
-}
-
-.worker-allocation__count {
-  min-width: 2ch;
-  text-align: right;
-  color: var(--jade);
-}
-
-.worker-allocation__auto-hint {
+.production-notice {
+  flex: none;
+  height: 12px;
   margin: 0;
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
+  font-size: 11px;
+  text-align: center;
+  color: #62512d;
 }
 
-.worker-allocation__reserved {
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-/* Linh mach Khai Vat Duong */
-.lin-mach__title {
-  margin: 0;
-  color: var(--paper-text-soft);
-  font: 700 var(--text-sm) var(--font-display);
-}
-
-.lin-mach__card {
-  display: grid;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 40%, var(--paper-line));
-  border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-water-accent) 12%, var(--paper-50)), color-mix(in srgb, var(--scene-water-accent) 5%, var(--paper-100)));
-}
-
-.lin-mach__rate {
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-.lin-mach__collect {
-  justify-self: start;
-  padding: 6px 12px;
-  background: var(--scene-water-accent);
-  border: 0;
-  color: var(--ink-950);
-}
-
-.lin-mach__collect:disabled {
-  background: var(--paper-200);
-  color: var(--paper-text-muted);
-}
-
-.lin-mach__progress {
-  --bar-from: var(--scene-water-accent);
-  --bar-to: var(--jade);
-}
-
-.production-panel__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-  gap: 10px;
-}
-
-.site-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-accent) 10%, var(--paper-50)), color-mix(in srgb, var(--scene-forest-accent) 4%, var(--paper-100)));
-  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 32%, var(--paper-line));
-  border-radius: var(--radius-md);
-}
-
-.site-card__art {
-  position: relative;
-  min-height: 92px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  margin: -12px -12px 2px;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  background:
-    radial-gradient(circle, color-mix(in srgb, var(--scene-forest-accent) 25%, transparent), transparent 48%),
-    linear-gradient(130deg, var(--scene-forest-deep), var(--scene-forest-deep-2));
-}
-
-.site-card__art[data-kind='mine'] { background: radial-gradient(circle, color-mix(in srgb, var(--scene-mine-accent) 24%, transparent), transparent 48%), linear-gradient(130deg, var(--scene-mine-deep), var(--scene-mine-deep-2)); }
-.site-card__art[data-kind='grotto'] { background: radial-gradient(circle, color-mix(in srgb, var(--scene-grotto-accent) 25%, transparent), transparent 48%), linear-gradient(130deg, var(--scene-grotto-deep), var(--scene-grotto-deep-2)); }
-.site-card__art span {
-  display: grid;
-  width: 56px;
-  height: 56px;
-  place-items: center;
-  color: color-mix(in srgb, var(--scene-forest-accent) 40%, var(--text-primary));
-  font: 700 var(--text-display) var(--font-display);
-  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 38%, transparent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--scene-forest-deep-2) 58%, transparent);
-  box-shadow: 0 0 24px color-mix(in srgb, var(--scene-forest-accent) 20%, transparent), inset 0 0 16px color-mix(in srgb, var(--scene-forest-accent) 8%, transparent);
-}
-
-.site-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.site-card__name {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-}
-
-.site-card__kind {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--ink-700);
-  font-size: var(--text-xs);
-  color: var(--chrome-500);
-}
-
-.site-card__description {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--paper-text-soft);
-}
-
-.site-card__stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: var(--text-xs);
-  color: var(--jade);
-}
-
-.site-card__reward {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--paper-text-soft);
-}
-
-.site-card__progress {
-  border-radius: 4px;
-}
-
-.site-card__progress :deep(.bar__fill) {
-  transition: width 0.5s linear;
-}
-
-.site-card__status {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--paper-text-soft);
-}
-
-.site-card__auto {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--text-xs);
-  color: var(--paper-text-soft);
-  cursor: pointer;
-}
-
-.site-card__upgrade ul {
-  list-style: none;
-  margin: 0 0 6px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--text-xs);
-}
-
-.site-card__upgrade li.is-missing {
-  color: var(--crimson);
-}
-
-.site-card__upgrade-button {
-  width: 100%;
-}
-
-.site-card__upgrade-button:disabled {
-  color: var(--paper-text-muted);
-  cursor: not-allowed;
-}
 
 </style>

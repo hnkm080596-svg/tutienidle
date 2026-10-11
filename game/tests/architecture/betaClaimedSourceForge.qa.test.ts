@@ -463,7 +463,7 @@ describe('F-TC5-1: accrual realm pin boundary', () => {
     manager.add(instance)
 
     const result = system.claim('i1', registry, manager, 100, 'mortal')
-    expect(result.materialId).not.toBe('spirit_stone_thuong_pham')
+    expect(result.materialId).toBe('spirit_stone')
     expect(result.amount).toBeLessThan(100)
   })
 

@@ -210,6 +210,40 @@ describe('Phap Tu Reimagined save cutover', () => {
     expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: PRE_M5_VERSION, raw })
   })
 
+  it('migrates a v88 save: trung/thuong stacks fold into the single stone 1:1', () => {
+    // v89 spirit-stone flatten (owner ruling 2026-10-11) - v88 is the
+    // one version that still migrates instead of rejecting: legacy tier
+    // stacks merge into spirit_stone_ha_pham at face value.
+    const save = {
+      version: 88,
+      player: createDefaultPlayer(),
+      techniques: [],
+      skills: [],
+      materials: [
+        { materialId: 'spirit_stone_trung_pham', amount: 5000 },
+        { materialId: 'spirit_stone_ha_pham', amount: 100 },
+        { materialId: 'spirit_stone_thuong_pham', amount: 7 },
+      ],
+      equipment: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      equipmentSlots: [],
+    }
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+
+    const outcome = loadGame()
+
+    expect(outcome.status).toBe('ok')
+
+    if (outcome.status === 'ok') {
+      const stacks = outcome.save.materials as { materialId: string; amount: number }[]
+      expect(stacks).toEqual([{ materialId: 'spirit_stone_ha_pham', amount: 5107 }])
+    }
+  })
+
   it('loads a save stamped with the current version', () => {
     const player = createDefaultPlayer()
     const save: GameSave = {

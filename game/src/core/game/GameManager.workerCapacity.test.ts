@@ -173,25 +173,21 @@ describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
     expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
   })
 
-  it('getWorkforceView: total from CHQ capacity, reserved from decompose, requested vs effective distinct', () => {
+  it('getWorkforceView: total from CHQ capacity, reserved 0 (no claimant), requested vs effective distinct', () => {
     const { manager, siteId } = managerWithChq(3) // total 7
-    manager.decomposeSystem.updateCapacity(7)
-    manager.decomposeSystem.setSetting({ workers: 2 })
     manager.buildingOps.assignWorkers(siteId, 4)
 
     const view = manager.buildingOps.getWorkforceView()
     expect(view.total).toBe(7)
-    expect(view.reserved).toBe(2)
-    expect(view.available).toBe(5)
+    expect(view.reserved).toBe(0)
+    expect(view.available).toBe(7)
     expect(view.requested[siteId]).toBe(4)
   })
 
-  it('assignWorkers clamps to the AVAILABLE pool (total minus decompose), not the total', () => {
+  it('assignWorkers clamps to the full pool (decompose reserves nothing since the direct rework)', () => {
     const { manager, siteId } = managerWithChq(3) // total 7
-    manager.decomposeSystem.updateCapacity(7)
-    manager.decomposeSystem.setSetting({ workers: 4 })
     manager.buildingOps.assignWorkers(siteId, 99)
-    expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(3)
+    expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(7)
   })
 })
 
@@ -200,7 +196,7 @@ describe('GameManager - R7 full-tick wiring guard (P13 class)', () => {
   // engine works while the REAL running instance stays unwired. This
   // guard drives the actual GameManager.update() and proves BOTH worker
   // consumers advance in the same tick, with no panel interaction.
-  it('full update advances decompose AND production workers together', () => {
+  it('full update advances production workers through the real tick', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
 
@@ -212,27 +208,17 @@ describe('GameManager - R7 full-tick wiring guard (P13 class)', () => {
     manager.buildingOps.refreshAutoWorkerCapacity(player, chq)
     expect(player.autoWorkerCapacity).toBe(7)
 
-    // Decompose claims 2 workers. In the real app the tick loop has
-    // already supplied capacity before the player can touch the slider
-    // (first update runs at boot); mirror that order here.
-    manager.tickOps.update(1)
-    manager.decomposeSystem.setSetting({ workers: 2 })
     for (const definition of manager.productionSystem.getSiteDefinitions()) {
       manager.buildingOps.setProductionAutoRestart(definition.siteId, true)
     }
 
     manager.tickOps.update(1)
 
-    // Decompose got the LIVE capacity (not the old constant 0) and
-    // its settings survived the tick's clamp pass.
-    expect(manager.decomposeSystem.getCapacity()).toBe(7)
-    expect(manager.decomposeSystem.getSettings().workers).toBe(2)
-
-    // Production received the remainder 5 - the real tickWorkers call,
-    // not a hand-invoked one.
+    // DIRECT DECOMPOSE REWORK: no claimant ahead of production - the
+    // real tickWorkers call receives the whole pool.
     const totalProductionSlots = manager
       .productionSystem.getAllStates()
       .reduce((sum, state) => sum + state.activeWorkerSlots, 0)
-    expect(totalProductionSlots).toBe(5)
+    expect(totalProductionSlots).toBe(7)
   })
 })

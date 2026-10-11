@@ -148,7 +148,8 @@
         "refinePreview": "Refine",
         "selectAll": "Select All",
         "clearAll": "Clear All",
-        "dissolveConfirm": "CONFIRM DISSOLUTION"
+        "dissolveConfirm": "CONFIRM DISSOLUTION",
+        "decomposeConfirm": "CONFIRM DECOMPOSITION"
       },
       "labels": {
         "rowLine": "Line",
@@ -632,23 +633,6 @@
       "pagePrev": "Previous page",
       "pageNext": "Next page"
     },
-    "vendor": {
-      "gateNotBelow": "Only items of a grade below your current realm can be sold",
-      "sellRejected": "This item cannot be sold.",
-      "sell": {
-        "title": "Liquidate",
-        "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
-        "unitPriceSuffix": "low-grade Spirit Stones/unit",
-        "quantityAria": "Amount to sell",
-        "totalPreview": "→ +{total} {stone}",
-        "tooSmall": "→ too little to convert at this realm",
-        "sold": "Sold {qty} {name} — received {gained} {stone}",
-        "confirmTitle": "Sell the whole stack?",
-        "confirmMessage": "Sell all {qty} {name} for {total} {stone}. This cannot be undone.",
-        "button": "Sell",
-        "empty": "Nothing can be sold right now."
-      }
-    },
     "production": {
       "summary": "Khai Vật Đường harvests materials for every realm — assign workers to a source, receive them straight into the Bag.",
       "kinds": {
@@ -706,7 +690,7 @@
       },
       "labels": {
         "quanKhi": "Quán Khí",
-        "foundation": "Foundation Establishment",
+        "foundation": "Elixir",
         "majorFallback": "Major Realm"
       },
       "nodes": {
@@ -755,7 +739,7 @@
         "cost": "{count} Meridian Pills",
         "realmGate": "{realm} floor {level}",
         "pageLocked": "Unlocks at {realm}",
-        "invest": "Open Meridian",
+        "invest": "Surge Meridian",
         "owned": "owned {count}",
         "seqGate": "requires Body Refining complete"
       },
@@ -933,24 +917,6 @@
       "aria": "Feature navigation",
       "body": "Dao Body",
       "techniqueLocked": "Technique unlocks at Qi Refining"
-    },
-    "decompose": {
-      "labels": {
-        "gradeFilter": "Ore grade",
-        "ageFilter": "Ore age",
-        "workers": "Workers"
-      },
-      "select": {
-        "allGrades": "All grades",
-        "allAges": "All ages"
-      },
-      "estimate": "≈ {amount} essence / cycle",
-      "matching": "Matching ore in bag: {count}",
-      "hint": {
-        "noCapacity": "No decompose capacity — upgrade the Worker Lodge to free up workers.",
-        "noWorkers": "No workers assigned — raise the Workers slider to start decomposing.",
-        "noMatchingOres": "No ore in the bag matches the filters — gather ore from mining/exploration or loosen the filters."
-      }
     },
     "scripture": {
       "empty": "No lore fragments found yet.",
@@ -1310,6 +1276,13 @@
         "confirm": "Exit",
         "exited": "Exited",
         "return": "Back"
+      },
+      "masterGate": {
+        "label": "Back Gate",
+        "placeholder": "Gate key",
+        "submit": "Open",
+        "denied": "Wrong key",
+        "open": "Back gate open"
       }
     },
     "creation": {
@@ -1522,6 +1495,7 @@
     "missing_refinement_points": "Not enough Refinement Points on this item.",
     "no_forge_uses": "This item has no Forge uses left.",
     "missing_tinh_hoa": "Not enough Qi Refining Essence.",
+    "missing_bui_go": "Not enough Wood Dust for fuel.",
     "missing_spirit_stone": "Not enough Spirit Stones.",
     "missing_material": "Not enough materials.",
     "template_not_found": "Equipment data is invalid.",
@@ -1575,7 +1549,7 @@
   },
   "alchemy": {
     "spiritStones": "Spirit Stones",
-    "startBrewing": "Start brewing",
+    "startBrewing": "Brew Pill",
     "currentCauldron": "Current cauldron",
     "recipe": "RECIPE",
     "herb": "Spirit Herb",
@@ -1587,7 +1561,7 @@
     "outcomeChanceOnly": "{chance}% chance of {extra}",
     "duration": "Duration: ~{minutes} min",
     "jobs": "Brewing",
-    "cancelJob": "Cancel (materials lost)",
+    "cancelJob": "Cancel (refund unbrewed materials)",
     "gradeUnknown": "Unknown",
     "reason": {
       "not_found": "Recipe not found",
@@ -1597,15 +1571,19 @@
       "job_slots_full": "The furnace is busy",
       "wrong_herb": "Wrong Spirit Herb — a recipe accepts exactly one herb type",
       "missing_herb": "Not enough Spirit Herb",
-      "missing_fuel_wood": "Not enough fuel wood matching the herb's realm and age",
+      "missing_bui_go": "Not enough Wood Dust for furnace fuel",
+      "missing_tinh_hoa": "Not enough Luyen Dan Tinh Hoa",
       "missing_spirit_stone": "Not enough Spirit Stones",
       "missing_special_ingredient": "Missing the recipe's special ingredient",
+      "invalid_quantity": "Invalid pill order quantity",
       "fallback": "Cannot start brewing",
       "scope_hidden": "This recipe is outside the beta scope",
       "invalid_clock": "The system clock is misbehaving — try again in a moment"
     },
     "outcomeNone": "This run yields no pills.",
     "queueTitle": "Brewing Queue",
+    "brewing": "Brewing",
+    "queued": "Queued",
     "queueEmpty": "No cauldron is brewing yet.",
     "placeIngredients": "Place ingredients into the cauldron",
     "bannerLeft": "Dao of Alchemy Reaches Heaven",
@@ -1618,7 +1596,10 @@
     "selectedHerb": "Selected herb",
     "emptyRecipes": "No recipes available.",
     "emptyDetail": "Select a recipe to view details.",
-    "emptySlot": "Empty cauldron",
+    "emptySlot": "Open slot",
+    "unitsProgress": "{done}/{total} pills",
+    "cycleHerbHint": "Click to choose herb age",
+    "variantPicker": "Choose herb quality",
     "durationLabel": "Brew time"
   },
   "layout": {
@@ -1630,8 +1611,7 @@
         "pill_room": "Pill Room",
         "worker_lodge": "Worker Lodge",
         "scripture_pavilion": "Scripture Pavilion",
-        "stage_select": "Zone",
-        "vendor": "Treasure Pavilion"
+        "stage_select": "Zone"
       },
       "levelRange": "Level {level} / {max}",
       "requiredRealm": "Requires {realm}",
@@ -1824,7 +1804,7 @@
       },
       "active": {
         "title": "Pill Room is refining",
-        "detail": "{count} batch(es) · soonest in {minutes} min.",
+        "detail": "{done}/{total} pills brewing · {waiting} order(s) queued · {minutes} min left.",
         "cta": "View furnace"
       },
       "upgradeable": {
@@ -2040,7 +2020,6 @@
       "exploration": "Map",
       "quest": "Quests",
       "production": "Production",
-      "vendor": "Vendor",
       "settings": "Settings",
       "feedback": "Help",
       "artifact": "Artifact",
@@ -2102,13 +2081,14 @@
     "daoUndecided": "Undecided Dao"
   },
   "realm": {
-    "title": "ASCENSION PATH",
+    "title": "Ascension Path",
     "subtitle": "Eighteen floors\nOne road to immortality",
     "floorLabel": "Floor {floor}",
     "floorCount": "Floor {floor} / {total}",
     "cultivation": "Cultivation",
     "breakthroughTitle": "Breakthrough to {target}",
-    "viewing": "Viewing floor {floor}"
+    "advance": "Breakthrough",
+    "noPassives": "No heaven's gifts earned from this realm yet."
   },
   "technique": {
     "title": "Technique",
@@ -2204,6 +2184,7 @@
     "noEnemy": "No enemy intel.",
     "startFailed": "Unable to start. Check the requirements.",
     "armedFarm": "Auto-farming: {stage}",
+    "chapters": "Chapters",
     "state": {
       "cleared": "Cleared",
       "current": "Frontier",
@@ -2347,6 +2328,9 @@
     "exportLayout": "Export layout",
     "realm": "Realm",
     "applyRealm": "Apply realm",
-    "respecTree": "Reset tree"
+    "respecTree": "Reset tree",
+    "spawnEquipment": "+ Random equipment",
+    "spawnMaterial": "+ Random material"
   }
+
 }

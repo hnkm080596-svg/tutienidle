@@ -32,11 +32,11 @@ describe('materialLabel', () => {
     const registry = new MaterialRegistry()
     registry.register({
       id: SPIRIT_STONE_MATERIAL_ID,
-      name: 'Hạ phẩm Linh Thạch',
+      name: 'Linh Thạch',
       category: 'spirit_stone',
       sourceType: 'building',
     })
 
-    expect(materialLabel(SPIRIT_STONE_MATERIAL_ID, registry)).toBe('Hạ phẩm Linh Thạch')
+    expect(materialLabel(SPIRIT_STONE_MATERIAL_ID, registry)).toBe('Linh Thạch')
   })
 })

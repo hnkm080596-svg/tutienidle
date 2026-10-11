@@ -247,7 +247,7 @@ describe('buildEquipmentTooltip', () => {
 
     const content = buildEquipmentTooltip(tienInstance, template, affixRegistry, null, new ZoneRegistry(), undefined, { min: 8, max: 12 })
 
-    expect(content.nameColorVar).toBe('--rank-color-9')
+    expect(content.nameColorVar).toBe('--rank-color-10')
     expect(content.nameTone).toBe('tien')
   })
 

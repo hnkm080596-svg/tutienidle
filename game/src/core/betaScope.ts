@@ -26,8 +26,6 @@ import type { Quest } from './quest/Quest'
 import { REALM_TIERS } from './realm/RealmTierMap'
 import {
   SPIRIT_STONE_MATERIAL_ID,
-  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
-  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
 } from './material/SpiritStoneMaterial'
 import { LUYEN_KHI_TINH_HOA_ID } from './equipment/TinhHoaMaterial'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
@@ -509,8 +507,6 @@ export const BETA_ECONOMY_EXEMPTIONS: ReadonlyMap<string, BetaEconomyClass> =
     // held as banked equipment value rather than suppressed outright.
     [LUYEN_KHI_TINH_HOA_ID, 'store_of_value'],
     [SPIRIT_STONE_MATERIAL_ID, 'base_currency'],
-    [SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID, 'base_currency'],
-    [SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID, 'base_currency'],
   ])
 
 /** Exemption lookup for the census test - fails closed (undefined). */

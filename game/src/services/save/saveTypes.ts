@@ -203,8 +203,10 @@ export interface GameSave {
    *  predating flag quests lack the slice. */
   quests?: QuestManagerState
 
-  /** R7 (AR-08): decompose settings + cycle timer. Optional - old
-   * development saves lack the slice (E8: no migration needed). */
+  /** R7 (AR-08): decompose slice. DIRECT REWORK (2026-10-11): direct
+   * decompose persists nothing (getSaveState returns {}); the slice
+   * stays optional so legacy worker-cycle payloads still type-check
+   * through the boundary and restore can accept-and-ignore them. */
   decompose?: DecomposeSaveState
 
   /** v82 (F-W-5): tribulation director runtime - committed outcome
@@ -428,6 +430,9 @@ export interface AlchemyJobReservationSave {
 
   herbAmount: number
 
+  /** Materials economy rework - tinh hoa burn witnessed at reserve. */
+  luyenDanTinhHoaAmount: number
+
   specialIngredients: readonly { materialId: string; amount: number }[]
 
   costScale: number
@@ -450,6 +455,15 @@ export interface AlchemyJobSave {
   completesAtMs: number
 
   roomLevelAtStart: number
+
+  /**
+   * QUEUE REWORK - one queue entry = a batch of `quantity` pills brewed
+   * sequentially; `unitsDone` = units already rolled/delivered. Absent
+   * on pre-rework saves = a one-unit batch (legacy record, still valid).
+   */
+  quantity?: number
+
+  unitsDone?: number
 
   reservation: AlchemyJobReservationSave
 }

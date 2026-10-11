@@ -12,7 +12,6 @@ import EquipmentHallPanel from '@/components/panels/EquipmentHallPanel.vue'
 import ScripturePavilionPanel from '@/components/panels/ScripturePavilionPanel.vue'
 import StageSelectPanel from '@/components/panels/StageSelectPanel.vue'
 import WorkerLodgePanel from '@/components/panels/WorkerLodgePanel.vue'
-import VendorPanel from '@/components/panels/VendorPanel.vue'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { isBetaLeftPanelMode } from '@/core/betaScopeSurface'
 
@@ -30,14 +29,13 @@ const TITLE_KEYS: Record<FunctionMode, string> = {
   worker_lodge: 'layout.functionOverlay.titles.worker_lodge',
   scripture_pavilion: 'layout.functionOverlay.titles.scripture_pavilion',
   stage_select: 'layout.functionOverlay.titles.stage_select',
-  vendor: 'layout.functionOverlay.titles.vendor',
 }
 
 // Huyen Kim rebuild: these left-panel modes are imperial-scroll scenes
 // (layout spec scenes 10/11/12/17) - except most now own their paper
-// chrome and mount outside the scroll (see PAPER_MODES). Vendor +
-// scripture pavilion stay on the legacy micro-overlay shell until
-// their own redesign lands.
+// chrome and mount outside the scroll (see PAPER_MODES). Scripture
+// pavilion stays on the legacy micro-overlay shell until its own
+// redesign lands.
 const IMPERIAL_MODES: ReadonlySet<FunctionMode> = new Set([
   'stage_select',
   'pill_room',
@@ -48,13 +46,15 @@ const IMPERIAL_MODES: ReadonlySet<FunctionMode> = new Set([
 
 // Modes whose fidelity surface owns the shared paper chrome on its own
 // overlay design canvas - mounted outside the scroll like the other
-// migrated tabs. 'exploration' is the last mode still on the scroll
-// (its production outpost has no approved paper surface yet).
+// migrated tabs. 'exploration' joined them 2026-10-11: the landscape
+// production preview gave the outpost an approved paper sheet
+// (ProductionPanel renders its own chrome now).
 const PAPER_MODES: ReadonlySet<FunctionMode> = new Set([
   'stage_select',
   'pill_room',
   'equipment_hall',
   'settings',
+  'exploration',
 ])
 
 const BUILDINGS: Partial<Record<FunctionMode, string>> = {
@@ -63,7 +63,6 @@ const BUILDINGS: Partial<Record<FunctionMode, string>> = {
   pill_room: 'pill_room',
   worker_lodge: 'chi_hien_quan',
   stage_select: 'teleport_array',
-  vendor: 'vendor',
 }
 
 const mode = computed<FunctionMode | null>(() => {
@@ -115,10 +114,12 @@ function close() {
     <PillRoomPanel v-else-if="paperMode === 'pill_room'" />
     <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
     <SettingsSurface v-else-if="paperMode === 'settings'" />
+    <ProductionPanel v-else-if="paperMode === 'exploration'" />
   </Transition>
 
-  <!-- Imperial scroll scenes: San Xuat (production outpost) is the
-       last surface still on the shared scroll shell. -->
+  <!-- Imperial scroll scenes: no current mode mounts here - the shell
+       stays for future scroll surfaces (San Xuat moved to paper chrome
+       2026-10-11). -->
   <ImperialScrollScene
     :open="scrollMode !== null"
     :title="scrollMode ? t(TITLE_KEYS[scrollMode]) : ''"
@@ -149,9 +150,7 @@ function close() {
       </div>
     </template>
 
-    <div v-if="scrollMode" class="function-overlay">
-      <ProductionPanel v-if="scrollMode === 'exploration'" />
-    </div>
+    <div v-if="scrollMode" class="function-overlay" />
   </ImperialScrollScene>
 
   <!-- Legacy micro-overlay surfaces (not part of the scene redesign). -->
@@ -190,7 +189,6 @@ function close() {
     <div v-if="legacyMode" class="function-overlay">
       <WorkerLodgePanel v-if="legacyMode === 'worker_lodge'" />
       <ScripturePavilionPanel v-else-if="legacyMode === 'scripture_pavilion'" />
-      <VendorPanel v-else-if="legacyMode === 'vendor'" />
     </div>
   </OverlayPanel>
 </template>

@@ -242,8 +242,9 @@ describe('arm A - post-dated deadline stamps restore verbatim; the write gate br
     const cycleSpan = head.completesAtMs - head.startedAtMs
     expect(head.startedAtMs).toBe(NOW)
     expect(cycleSpan).toBe(computeCycleSeconds(CYCLE_BASE_SECONDS_BY_REALM['mortal']!, 1) * 1000)
-    // nextCycleAt re-bases at restore-now + cycleMs like the tick does.
-    expect(manager.decomposeSystem.getSaveState().nextCycleAt).toBeLessThanOrEqual(NOW + 60_000)
+    // DIRECT DECOMPOSE REWORK: decompose no longer carries a deadline
+    // channel - getSaveState() is {} by contract.
+    expect(manager.decomposeSystem.getSaveState()).toEqual({})
   })
 
   it('A3 write N+1 self-bricks on the real repackaged payload, and the gate refuses before the service', async () => {
@@ -645,7 +646,7 @@ describe('arm E - rejected attacks and closed siblings', () => {
     expect(manager.questManager.getLastDailyResetAtMs()).toBeLessThanOrEqual(NOW)
   })
 
-  it('E4 decompose nextCycleAt re-anchors at restore (sibling-class): a post-dated deadline clamps to now + cycleMs', async () => {
+  it('E4 decompose slice is inert on restore (direct rework): a post-dated legacy payload neither fails admission nor revives worker state', async () => {
     const store = usePlayerStore()
     const manager = registeredManager()
     const save = forgedFutureSave()
@@ -653,23 +654,9 @@ describe('arm E - rejected attacks and closed siblings', () => {
     expect(result.status).toBe('ok')
     if (result.status !== 'ok') throw new Error(result.message)
 
+    // DIRECT DECOMPOSE REWORK: restore accepts the legacy slice and
+    // repackages {} - no deadline channel exists to re-anchor anymore.
     const repackaged = buildGameSave(store.$state, manager)
-    // FIX: nextCycleAt joins the autofarm.lastCheckedMs /
-    // quests.lastDailyResetAtMs sibling class - no marker pin, but the
-    // restore clamps it to restore-now + cycleMs (the authored max a
-    // live deadline can sit out), so the channel resumes instead of
-    // idling past every later marker.
-    expect(repackaged.decompose?.nextCycleAt).toBeLessThanOrEqual(NOW + 60_000)
-    // The slice alone does not fail admission - it is the OTHER verbatim
-    // channels that brick the write (A3); removing them makes the write
-    // pass while nextCycleAt stays post-dated.
-    const isolated = buildGameSave(store.$state, manager)
-    isolated.alchemyJobs = []
-    isolated.tribulation = undefined
-    isolated.productionSites = [
-      { siteId: 'thanh_van_lam', level: 1, autoRestart: true },
-    ]
-    const isolatedShape = validateGameSaveShape(isolated)
-    expect(isolatedShape.ok).toBe(true)
+    expect(repackaged.decompose).toEqual({})
   })
 })

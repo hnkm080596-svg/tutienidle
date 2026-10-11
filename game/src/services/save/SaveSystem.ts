@@ -471,6 +471,58 @@ export type InspectedSave =
   | { status: 'corrupted'; raw: string }
   | { status: 'storage_unavailable' }
 
+/**
+ * v88 -> v89 migration (spirit-stone flatten, owner ruling 2026-10-11:
+ * no pham tiers). Folds every legacy trung/thuong stack into the single
+ * spirit stone at 1:1 face value and stamps version 89; the result then
+ * flows through the normal validateGameSaveShape/normalize path like
+ * any current save.
+ */
+function migrateSpiritStoneFlattenV88(
+  save: Record<string, unknown>,
+): Record<string, unknown> {
+  const FLATTEN_LEGACY_IDS = new Set([
+    'spirit_stone_trung_pham',
+    'spirit_stone_thuong_pham',
+  ])
+  const SPIRIT_STONE_ID = 'spirit_stone_ha_pham'
+
+  const materials = Array.isArray(save.materials) ? save.materials : []
+  let foldedAmount = 0
+  const kept: unknown[] = []
+
+  for (const entry of materials) {
+    if (
+      entry !== null &&
+      typeof entry === 'object' &&
+      FLATTEN_LEGACY_IDS.has((entry as { materialId?: unknown }).materialId as string)
+    ) {
+      const amount = (entry as { amount?: unknown }).amount
+      if (typeof amount === 'number' && Number.isFinite(amount) && amount > 0) {
+        foldedAmount += amount
+      }
+      continue
+    }
+    kept.push(entry)
+  }
+
+  const merged = [...kept]
+  const existing = merged.find(
+    (entry) =>
+      entry !== null &&
+      typeof entry === 'object' &&
+      (entry as { materialId?: unknown }).materialId === SPIRIT_STONE_ID,
+  ) as { amount?: unknown } | undefined
+
+  if (existing && typeof existing.amount === 'number' && Number.isFinite(existing.amount)) {
+    existing.amount += foldedAmount
+  } else if (foldedAmount > 0) {
+    merged.push({ materialId: SPIRIT_STONE_ID, amount: foldedAmount })
+  }
+
+  return { ...save, materials: merged, version: 89 }
+}
+
 export function inspectLocalSave(): InspectedSave {
   let raw: string | null
 
@@ -502,14 +554,21 @@ export function inspectLocalSave(): InspectedSave {
     }
   }
 
-  // Development-phase policy (dong-fu-command-wheel-inventory-spirit-
-  // stone-plan.md sec"Chinh sach migration") - KHONG con auto-migration
-  // nao: moi version cu hon CURRENT_SAVE_VERSION tra ve 'incompatible'
-  // de SaveIncompatibleScreen cho phep Export/Xoa. Dieu nay bao dam
-  // khong bao gio co writeGameSave() phat sinh tu loadGame() (truoc day
-  // nhanh v42/v43 ghi de save goc ma khong backup va gan thang version
-  // hien hanh du thieu field cua schema moi).
-  if (foundVersion !== CURRENT_SAVE_VERSION) {
+  // v89 - spirit-stone flatten (owner ruling 2026-10-11): the trung/
+  // thuong pham materials are gone. A v88 save MIGRATES instead of
+  // rejecting: its legacy tier stacks fold into the single stone at
+  // 1:1 face value and the save continues through the normal shape
+  // validation/normalize path as version 89.
+  if (foundVersion === 88) {
+    parsed = migrateSpiritStoneFlattenV88(parsed as Record<string, unknown>)
+  } else if (foundVersion !== CURRENT_SAVE_VERSION) {
+    // Development-phase policy (dong-fu-command-wheel-inventory-spirit-
+    // stone-plan.md sec"Chinh sach migration") - KHONG con auto-migration
+    // nao: moi version cu hon CURRENT_SAVE_VERSION tra ve 'incompatible'
+    // de SaveIncompatibleScreen cho phep Export/Xoa. Dieu nay bao dam
+    // khong bao gio co writeGameSave() phat sinh tu loadGame() (truoc day
+    // nhanh v42/v43 ghi de save goc ma khong backup va gan thang version
+    // hien hanh du thieu field cua schema moi).
     return {
       status: 'incompatible',
       foundVersion,

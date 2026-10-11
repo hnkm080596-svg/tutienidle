@@ -94,7 +94,7 @@ export class GameManagerCompanionOps {
 
   /**
    * Spend 1 Chieu Hien Lenh and roll the companion pool. Token is removed
-   * BEFORE the roll (atomic convention, same as vendor): every post-filter
+   * BEFORE the roll (atomic convention): every post-filter
    * roll yields a result, so a consumed token always produces an outcome.
    */
   pullCompanion(): PullCompanionResult {

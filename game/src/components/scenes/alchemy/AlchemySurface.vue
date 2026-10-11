@@ -11,8 +11,8 @@ import { useUiStore } from '@/stores/ui'
 import { useNotificationStore } from '@/stores/notification'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
+import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
-import { buildProfessionMaterialId } from '@/core/profession/ProfessionMaterial'
 import { betaRecipeFamilyOfId } from '@/core/betaScope'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
@@ -174,34 +174,48 @@ const preview = computed(() => {
   )
 })
 
-// Go nhien lieu theo bien the thao da chon (gp123 6E):
-// `<realm>_wood_<age>` - CUNG realm recipe + CUNG tuoi thao.
+// Bui Go is the single universal fuel for every brew (materials economy
+// rework) - the row no longer depends on the selected herb variant.
 const fuelWoodRow = computed(() => {
   stateVersion.value
 
   const recipe = selectedRecipe.value
-  const herbId = selectedHerbId.value
 
-  if (!recipe || !herbId) {
+  if (!recipe || !selectedHerbId.value) {
     return null
   }
-
-  const variant = recipe.herbVariants.find((candidate) => candidate.materialId === herbId)
-
-  if (!variant) {
-    return null
-  }
-
-  const woodId = buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age)
 
   return {
-    label: gameManager.materialRegistry.has(woodId)
-      ? gameManager.materialRegistry.get(woodId).name
-      : woodId,
+    label: gameManager.materialRegistry.has(BUI_GO_ID)
+      ? gameManager.materialRegistry.get(BUI_GO_ID).name
+      : BUI_GO_ID,
 
-    owned: gameManager.materialBag.getAmount(woodId),
+    owned: gameManager.materialBag.getAmount(BUI_GO_ID),
 
     amount: preview.value?.fuelWoodAmount ?? recipe.fuelWoodAmount,
+  }
+})
+
+// Luyen Dan Tinh Hoa is mandatory for every recipe; the amount scales
+// with the recipe tier only (not cost-multiplied - the preview hands the
+// authoritative number).
+const tinhHoaRow = computed(() => {
+  stateVersion.value
+
+  const recipe = selectedRecipe.value
+
+  if (!recipe || !selectedHerbId.value) {
+    return null
+  }
+
+  return {
+    label: gameManager.materialRegistry.has(LUYEN_DAN_TINH_HOA_ID)
+      ? gameManager.materialRegistry.get(LUYEN_DAN_TINH_HOA_ID).name
+      : LUYEN_DAN_TINH_HOA_ID,
+
+    owned: gameManager.materialBag.getAmount(LUYEN_DAN_TINH_HOA_ID),
+
+    amount: preview.value?.luyenDanTinhHoaAmount ?? recipe.luyenDanTinhHoaAmount,
   }
 })
 
@@ -227,8 +241,27 @@ const jobs = computed(() => {
 
       const totalSeconds = Math.max(1, Math.ceil((job.completesAtMs - job.startedAtMs) / 1000))
 
+      // QUEUE REWORK - order progress: rolled units + the fraction of
+      // the unit currently in the cauldron, over the whole order.
+      const quantity = Math.max(1, job.quantity ?? 1)
+
+      const unitsDone = Math.min(quantity, Math.max(0, job.unitsDone ?? 0))
+
+      const perUnitMs = Math.max(1, totalSeconds * 1000) / quantity
+
+      const currentUnitStart = job.startedAtMs + unitsDone * perUnitMs
+
+      const currentUnitFraction =
+        unitsDone >= quantity
+          ? 1
+          : Math.min(1, Math.max(0, (nowMs.value - currentUnitStart) / perUnitMs))
+
+      const remainingMinutes = Math.ceil(remainingMs / 60000)
+
       return {
         id: job.jobId,
+
+        recipeId: job.recipeId,
 
         name: gameManager.pillRegistry.has(job.pillId)
           ? gameManager.pillRegistry.get(job.pillId).name
@@ -236,9 +269,13 @@ const jobs = computed(() => {
 
         icon: pillIconFor(job),
 
-        progress: Math.min(100, (1 - remainingMs / (totalSeconds * 1000)) * 100),
+        progress: Math.min(100, ((unitsDone + currentUnitFraction) / quantity) * 100),
 
-        remaining: `${Math.ceil(remainingMs / 60000)}p`,
+        remaining: quantity > 1 ? `${unitsDone}/${quantity} · ${remainingMinutes}p` : `${remainingMinutes}p`,
+
+        unitsDone,
+
+        quantity,
       }
     })
 })
@@ -295,6 +332,10 @@ const canBrew = computed(() => {
     return false
   }
 
+  if (tinhHoaRow.value && tinhHoaRow.value.owned < tinhHoaRow.value.amount) {
+    return false
+  }
+
   if (spiritStoneRow.value.owned < spiritStoneRow.value.amount) {
     return false
   }
@@ -320,16 +361,26 @@ const brewBlockReason = computed<string | null>(() => {
     return 'room_not_built'
   }
 
-  if (!selectedHerbId.value || !variantRows.value.find((row) => row.materialId === selectedHerbId.value)?.enough) {
-    return 'missing_herb'
-  }
-
+  // Mirror the domain startJob order: slots -> wrong herb -> bui_go ->
+  // missing herb amount -> tinh hoa -> spirit stone.
   if (jobs.value.length >= Math.max(1, maxJobSlots.value)) {
     return 'job_slots_full'
   }
 
+  if (!selectedHerbId.value) {
+    return 'missing_herb'
+  }
+
   if (fuelWoodRow.value && fuelWoodRow.value.owned < fuelWoodRow.value.amount) {
-    return 'missing_fuel_wood'
+    return 'missing_bui_go'
+  }
+
+  if (!variantRows.value.find((row) => row.materialId === selectedHerbId.value)?.enough) {
+    return 'missing_herb'
+  }
+
+  if (tinhHoaRow.value && tinhHoaRow.value.owned < tinhHoaRow.value.amount) {
+    return 'missing_tinh_hoa'
   }
 
   if (spiritStoneRow.value.owned < spiritStoneRow.value.amount) {
@@ -418,7 +469,20 @@ const costRows = computed<readonly AlchemyCostRow[]>(() => {
       id: 'fuel_wood',
       label: fuelWoodRow.value.label,
       value: `${fuelWoodRow.value.owned} / ${fuelWoodRow.value.amount}`,
+      icon: materialIcon(BUI_GO_ID),
+      owned: fuelWoodRow.value.owned,
       enough: fuelWoodRow.value.owned >= fuelWoodRow.value.amount,
+    })
+  }
+
+  if (tinhHoaRow.value && tinhHoaRow.value.amount > 0) {
+    rows.push({
+      id: 'tinh_hoa',
+      label: tinhHoaRow.value.label,
+      value: `${tinhHoaRow.value.owned} / ${tinhHoaRow.value.amount}`,
+      icon: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png'),
+      owned: tinhHoaRow.value.owned,
+      enough: tinhHoaRow.value.owned >= tinhHoaRow.value.amount,
     })
   }
 
@@ -427,6 +491,8 @@ const costRows = computed<readonly AlchemyCostRow[]>(() => {
       id: 'spirit_stone',
       label: t('alchemy.spiritStones'),
       value: `${spiritStoneRow.value.owned} / ${spiritStoneRow.value.amount}`,
+      icon: resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/resource-crystal-v1.png'),
+      owned: spiritStoneRow.value.owned,
       enough: spiritStoneRow.value.owned >= spiritStoneRow.value.amount,
     })
   }
@@ -446,6 +512,7 @@ const recipeDisplay = computed<AlchemyRecipeDisplay | null>(() => {
     name: row.label,
     icon: row.icon,
     amount: `${row.owned} / ${recipe.herbAmount}`,
+    owned: row.owned,
     enough: row.enough,
   }))
 
@@ -459,7 +526,7 @@ const recipeDisplay = computed<AlchemyRecipeDisplay | null>(() => {
     variants,
     costs: costRows.value,
     duration: preview.value
-      ? `${Math.ceil(preview.value.durationSeconds / 60)}p`
+      ? `${Math.ceil(preview.value.durationSeconds / 60)} phút`
       : '',
     outcome: outcomeLabel.value,
     brewDisabled: !canBrew.value,
@@ -481,8 +548,7 @@ function selectRecipeById(id: string) {
       :variant="selectedHerbId"
       :jobs="jobs"
       :capacity="maxJobSlots"
-     
-      notice=""
+
       @select="selectRecipeById"
       @variant="selectedHerbId = $event"
       @brew="startJob"

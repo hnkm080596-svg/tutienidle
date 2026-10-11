@@ -15,8 +15,6 @@
 //     cultivation banking / level writes downstream of eligibility;
 //   * alchemy dormant-family job settle (park, never deliver);
 //   * decompose carried started cycle (tick + offline settle inert);
-//   * vendor reads (sell/preview/rows) on dormant materials incl. the
-//     hidden-beast and zhou-tian currencies;
 //   * quest claim on a carried scope-hidden daily quest;
 //   * building write seam on chi_hien_quan (the manualWorkforce domain);
 //   * chooseCultivationPath on a dormant way;
@@ -380,47 +378,31 @@ describe('dormant production settle seams', () => {
     expect(system.drainSettlementEvents()).toEqual([])
   })
 
-  it('a carried started decompose cycle never runs (tick + offline settle)', () => {
+  it('a carried started decompose payload restores inert and mints nothing', () => {
     const registry = new MaterialRegistry()
     for (const material of materials) registry.register(material)
     const bag = new MaterialBag()
     bag.add(registry.get('mortal_ore_decade'), 100)
 
-    const system = new DecomposeSystem(bag, { cycleSeconds: 60 })
+    // DIRECT DECOMPOSE REWORK: no tick/settle channels exist anymore -
+    // the only seam is restore(), which accepts the legacy payload and
+    // owns nothing (deliverOutput never fires).
+    const delivered: unknown[] = []
+    const system = new DecomposeSystem(bag, {
+      deliverOutput: (entry) => delivered.push(entry),
+    })
     system.restore({
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 3 },
       nextCycleAt: 0,
       started: true,
     })
 
-    system.tick(9_999_999)
-    expect(system.drainOutput()).toEqual([])
-    expect(system.settleOffline(9_999_999, 0)).toBe(0)
-    expect(system.drainOutput()).toEqual([])
-    // No cycle ran: the carried ore is never consumed.
+    expect(system.getSaveState()).toEqual({})
+    expect(delivered).toEqual([])
+    // The carried ore is never consumed by restore alone; under the
+    // hidden scope the direct action stays closed too.
     expect(bag.getAmount('mortal_ore_decade')).toBe(100)
-  })
-})
-
-describe('vendor consumer reads on dormant materials', () => {
-  it.each([
-    'tinh_hoa_pham_the',
-    'tinh_hoa_phap_the',
-    'doan_bao_thach',
-    'chieu_hien_lenh',
-    'yeu_dan_hung_giao',
-  ])('sell/preview/rows reject %s', (materialId) => {
-    const gameManager = realGameManager()
-    const p = player({ realmId: 'foundation_establishment' })
-
-    const sale = gameManager.economyOps.sellMaterialToVendor(materialId, 1, p)
-    expect(sale.ok).toBe(false)
-
-    const preview = gameManager.economyOps.previewVendorSale(materialId, 1, p)
-    expect(preview).toBeNull()
-
-    const rows = gameManager.economyOps.getVendorSellableRows(p)
-    expect(rows.map((row) => row.materialId)).not.toContain(materialId)
+    expect(system.decompose(['mortal_ore_decade'])).toBe(false)
   })
 })
 

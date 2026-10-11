@@ -20,6 +20,7 @@ defineProps<{
     :class="[`currency-hud__chip--${chipId}`, { 'currency-hud__chip--sliced': sliced }]"
     :art-needed="!sliced"
     data-art-id="resource-pill"
+    :data-material="chipId"
   >
     <InkNineSlice v-if="sliced" chrome-id="resource-pill" layer="surface" />
     <span class="currency-hud__label">{{ label }}</span>

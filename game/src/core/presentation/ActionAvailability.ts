@@ -33,6 +33,7 @@ export const ACTION_FAILURE_KEYS: Record<string, string> = {
   missing_refinement_points: 'actionFailure.missing_refinement_points',
   no_forge_uses: 'actionFailure.no_forge_uses',
   missing_tinh_hoa: 'actionFailure.missing_tinh_hoa',
+  missing_bui_go: 'actionFailure.missing_bui_go',
   missing_spirit_stone: 'actionFailure.missing_spirit_stone',
   missing_material: 'actionFailure.missing_material',
   template_not_found: 'actionFailure.template_not_found',

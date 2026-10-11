@@ -15,8 +15,6 @@ import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
 import { PillBag } from '../../core/pill/PillBag'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import {
@@ -298,11 +296,12 @@ describe('r32 COR - B: headroom guards on clock + delta mints', () => {
     primeMortalCreationPick(player, manager.skillManager)
     const recipe = mortalRecipe()
     const variant = recipe.herbVariants[0]!
-    const woodId = buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age)
+    const woodId = 'bui_go'
     const bag = manager.materialBag
     const registry = manager.materialRegistry
     bag.add(registry.get(variant.materialId), recipe.herbAmount)
     bag.add(registry.get(woodId), recipe.fuelWoodAmount)
+    bag.add(registry.get('luyen_dan_tinh_hoa'), recipe.luyenDanTinhHoaAmount)
     return { manager, recipe, variant, bag, registry }
   }
 
@@ -323,49 +322,7 @@ describe('r32 COR - B: headroom guards on clock + delta mints', () => {
     expect(manager.alchemySystem.getJobs()[0]!.completesAtMs).toBe(BOUND - 1)
   })
 
-  it('DecomposeSystem.tick headroom: nowMs within cycleMs of the bound zero-advances', () => {
-    const bag = new MaterialBag()
-    const ore = materials.find((m) => /_ore_/.test(m.id))!
-    bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: false,
-      },
-      currentMs,
-    )
 
-    system.tick(BOUND - 1 - 30_000)
-    expect(system.getSaveState().nextCycleAt).toBeGreaterThan(0)
-    expect(system.getSaveState().nextCycleAt).toBeLessThan(BOUND)
-
-    const system2 = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system2.updateCapacity(4)
-    system2.restore(
-      { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: 0, started: false },
-      currentMs,
-    )
-    system2.tick(BOUND - 30_000)
-    expect(system2.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('DecomposeSystem.settleOffline headroom parity', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 1_000,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(system.settleOffline(BOUND - 30_000, 0)).toBe(0)
-  })
 })
 
 // ----------------------------------------------------------------------------

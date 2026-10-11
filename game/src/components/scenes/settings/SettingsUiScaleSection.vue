@@ -2,7 +2,7 @@
 // Scene 16/17 display section (ref's Hien Thi - CORRECTED to the real
 // ui-scale control only; ref's resolution/graphics rows are INVALID).
 import { useI18n } from 'vue-i18n'
-import Chip from '@/components/common/primitives/Chip.vue'
+import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import { UI_SCALE_OPTIONS } from '@/composables/uiScale'
 import SettingsSectionFrame from './SettingsSectionFrame.vue'
 
@@ -21,15 +21,16 @@ const { t } = useI18n()
     data-hk-region="ui-scale"
   >
     <div class="settings-panel__ui-scale-options">
-      <Chip
+      <EquipmentArtButton
         v-for="option in UI_SCALE_OPTIONS"
         :key="option"
         class="settings-panel__ui-scale-option"
-        :active="uiScale === option"
+        :gold="uiScale === option"
+        :aria-pressed="uiScale === option"
         @click="emit('select', option)"
       >
         {{ Math.round(option * 100) }}%
-      </Chip>
+      </EquipmentArtButton>
     </div>
   </SettingsSectionFrame>
 </template>
@@ -43,13 +44,8 @@ const { t } = useI18n()
   gap: var(--space-2);
 }
 .settings-panel__ui-scale-option {
-  padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
-  font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
-}
-.settings-panel__ui-scale-option:hover {
-  border-color: var(--chrome-500);
+  width: 140px;
+  height: 44px;
+  font-size: 17px;
 }
 </style>

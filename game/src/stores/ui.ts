@@ -115,6 +115,10 @@ export interface BagSortStateMap {
   // Minh ruling 2026-10-09: the Hoa Luyen card embeds the equipment bag
   // but sorts independently - the two surfaces must not share state.
   dissolve: BagSortState<EquipmentSortMode>
+
+  // Minh ruling 2026-10-12: the Phan Giai card embeds the material bag
+  // the same way - independent sort state from the Tru Vat tab.
+  decompose: BagSortState<MaterialSortMode>
 }
 
 export const useUiStore = defineStore('ui', {
@@ -149,6 +153,7 @@ export const useUiStore = defineStore('ui', {
       material: { mode: 'default', direction: 'asc' },
       pill: { mode: 'default', direction: 'asc' },
       dissolve: { mode: 'default', direction: 'asc' },
+      decompose: { mode: 'default', direction: 'asc' },
     } as BagSortStateMap,
 
     // Dong Phu quick nav - command wheel entries mo cac overlay DOC

@@ -4,7 +4,7 @@ import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
 import { OVERLAY_LAYERS } from './core/presentation/OverlayLayers'
-import { bindOnlineAuthority, observeAuthoritySaveResult, unbindOnlineAuthority } from './composables/useOnlineAuthority'
+import { bindOnlineAuthority, masterToleratedSaveResult, observeAuthoritySaveResult, unbindOnlineAuthority } from './composables/useOnlineAuthority'
 import { bindSessionTeardown, unbindSessionTeardown } from './composables/useSessionAccount'
 import { GameManager } from './core/game/GameManager'
 import {
@@ -40,7 +40,6 @@ import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { registerEnemySpawnDebug } from './core/dev/enemySpawnDebug'
 import type { ElementType } from './core/element/ElementType'
-import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
 import { bindUpdateSurface, unbindUpdateSurface, useUpdates } from './composables/useUpdates'
 import { useCombatPause } from './composables/useCombatPause'
@@ -58,7 +57,7 @@ import {
 } from './services/diagnostics/DiagnosticRecorder'
 import { recordSaveOutcome } from './services/diagnostics/recordSaveOutcome'
 import type { AuthSession } from './services/auth/AuthService'
-import { recordSessionLoginId } from './services/master/masterAccess'
+import { clearMasterGateFlag, isMasterSession, recordSessionLoginId, unlockMasterGate } from './services/master/masterAccess'
 import DevToolsPanel from './components/dev/DevToolsPanel.vue'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
@@ -482,8 +481,6 @@ gameManager.catalogOps.registerBuildings(buildings)
 gameManager.catalogOps.registerProgressionNodes(ALL_PROGRESSION_NODES)
 gameManager.catalogOps.registerQuests(QUESTS)
 
-const { breakthrough } = useBreakthrough(gameManager)
-
 // Task 8 (A11, spec sec.6.1) - an unwatched battle pauses visibly and resumes
 // only on Continue; returning to the tab is not consent to resume. Gated on
 // the 'game' entry stage plus a non-stopped combat clock so the overlay never
@@ -562,7 +559,9 @@ const lifecycle = useAppLifecycle({
     beginChecking: () => onlineAuthority.beginChecking(),
     markReady: () => onlineAuthority.markReady(),
     markFailed: (code) => onlineAuthority.markFailed(code),
-    observeSaveResult: (result) => onlineAuthority.observeSaveResult(result),
+    // Master-gate tolerance mirrors observeAuthoritySaveResult: a master
+    // session's refused writes renew admission instead of pausing it.
+    observeSaveResult: (result) => onlineAuthority.observeSaveResult(masterToleratedSaveResult(result)),
   },
   player,
   gameManager,
@@ -618,6 +617,11 @@ const lifecycle = useAppLifecycle({
       && !result.retryable
       && result.code !== undefined
       && DATA_REFUSE_CODES.has(result.code)
+      // Master-gate tolerance (Minh 2026-10-10): a master session keeps
+      // playing past a deterministic refuse - the write stays refused
+      // (recorded above, toasted below) but never mounts the corrupted
+      // surface or freezes the sim for a test session.
+      && !masterSession.value
     ) {
       let refusedPayload = ''
       try {
@@ -682,6 +686,9 @@ const lifecycle = useAppLifecycle({
 // probe+reconnect are bound to the supabase adapter and GoTrue refresh;
 // in local/mock mode the gate is uniform but the lease is unbounded.
 const authorityState = ref<AuthorityState>('signed-out')
+// Master-session flag (gate key or allowlisted loginId) - arms the
+// refuse-tolerance seams (persistPlayer arm below, lifecycle boot arms).
+const masterSession = computed(() => isMasterSession())
 const quitFlushOffer = ref<QuitFlushFailedNotice | null>(null)
 const remoteAuthority = cloudSaveCoordinator.capability === 'remote-authoritative'
 const supabaseConfig =
@@ -852,6 +859,11 @@ function teardownToAuth() {
   lifecycle.stopAll()
   onlineAuthority.stopAll()
   cloudSaveCoordinator.reset()
+  // Master gate: drop the flag on the way back to auth so a guest or a
+  // different login in this tab does not inherit the previous session's
+  // test privileges (QA fixpoint). The 'admin' allowlist re-earns master
+  // on its own login regardless.
+  clearMasterGateFlag()
   isBooted.value = false
   bootFlow.showAuth()
 }
@@ -961,13 +973,11 @@ function tick() {
 
     player.cultivate(simulatedDelta)
 
-    // Tieu canh gioi tu tang (2026-08-28) - tick() bam breakthrough()
-    // moi khi tu vi day, khong con checkbox bat/tat (dung tinh than
-    // idle game + chu game quyet dinh). Dai canh gioi van qua nghi le
-    // rieng (Quan Khi/Truc Co/Do Kiep), xem useTribulation.ts.
-    if (player.cultivation >= player.cultivationRequired) {
-      breakthrough()
-    }
+    // Ruling 2026-10-11 - tieu canh gioi KHONG tu tang nua: tu vi chan o
+    // required (addCultivation), tang chi len khi nguoi choi bam nut
+    // "Dot Pha" trong panel Canh Gioi (RealmSurface.onAdvance ->
+    // realmAdvanceOps.breakthroughWithConsequences). Dai canh gioi van
+    // qua nghi le rieng (Quan Khi/Truc Co/Do Kiep), xem useTribulation.ts.
 
     // R5 (AR-14) + F7 (QA-2026-09-09-RR7): Body refinement auto-invest is
     // owned by GameManager.update() (domain authority, exactly-once per
@@ -1161,6 +1171,18 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
 
 onMounted(() => {
   window.addEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
+
+  // Master gate (Minh 2026-10-10): a one-shot URL key admits the session
+  // as master - `?master_key=<key>` unlocks every test privilege for this
+  // tab (persisted in sessionStorage by unlockMasterGate). The param is
+  // stripped from the address bar so a shared link does not leak it.
+  const gateKey = new URLSearchParams(window.location.search).get('master_key')
+  if (gateKey !== null) {
+    unlockMasterGate(gateKey)
+    const cleaned = new URL(window.location.href)
+    cleaned.searchParams.delete('master_key')
+    window.history.replaceState(null, '', cleaned.toString())
+  }
 
   // B1.2 - a fatal backend composition (release build without an
   // explicit working VITE_BACKEND_MODE, mock in release, or supabase

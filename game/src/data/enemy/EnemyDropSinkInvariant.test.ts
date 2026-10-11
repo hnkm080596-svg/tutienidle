@@ -4,8 +4,8 @@ import { STAGE_DROP_TABLES } from '../drop/StageDropTables'
 import { FAMILY_DROP_TABLES } from '../drop/FamilyDropTables'
 import { QUESTS } from '../quest/quests'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../realm/BodyRefinement'
-import { PHYSIQUE_ESSENCES } from '../realm/PhysiqueEssence'
-import { essenceSubstitutionYield } from '../../core/realm/body/BodyChapterEssenceSubstitution'
+import { PHYSIQUE_ESSENCES, physiqueEssenceGradeOf } from '../realm/PhysiqueEssence'
+import { BODY_CHAPTERS } from '../../core/realm/body/BodyChapter'
 import { DOAN_BAO_THACH_MATERIAL_ID } from '../../core/artifact/ArtifactProgression'
 import { createDefaultEquipmentOperationCostCatalog } from '../../core/equipment/EquipmentOperationCostCatalog'
 import { SUPPORTED_PROFESSION_REALMS } from '../../core/profession/ProfessionMaterial'
@@ -65,14 +65,18 @@ function collectSinkMaterialIds(): Set<string> {
     }
   }
 
-  // Luyen The - pham essence is invested directly, and every higher
-  // essence drains through the M-QI-09 substitution seam
-  // (planEssenceSubstitution debits the bag at investBodyChapter). A
-  // grade only counts as a sink when its chain down to pham is
-  // unbroken (yield > 0).
-  for (const def of PHYSIQUE_ESSENCES) {
-    if (essenceSubstitutionYield('pham', def.grade) > 0) {
-      sinks.add(def.materialId)
+  // Luyen The - an essence drains at investBodyChapter through the
+  // chapter that declares it as material currency (body_refinement ->
+  // pham, zhou_tian -> phap). Owner ruling 2026-10-10: an essence no
+  // chapter consumes (tinh_hoa_bao_the today) has no sink, and the
+  // intake cap yields its drops nothing at the award seam, so it can
+  // never accumulate in the bag (exempted from the dead-drop rule
+  // below).
+  for (const chapter of BODY_CHAPTERS) {
+    for (const currency of [chapter.currency, chapter.auxCurrency]) {
+      if (currency?.bag === 'material' && physiqueEssenceGradeOf(currency.id) !== undefined) {
+        sinks.add(currency.id)
+      }
     }
   }
 
@@ -107,8 +111,15 @@ describe('Enemy drops — mọi material rơi đều có sink (economy T6)', () 
     const dropped = collectDroppedMaterialIds()
     const sinks = collectSinkMaterialIds()
 
+    // Owner ruling 2026-10-10 - intake-cap exemption: a physique
+    // essence with no consuming chapter can never reach the bag (the
+    // award seam skips its credit), so it is not a dead drop.
+    const capGatedEssence = new Set<string>(
+      PHYSIQUE_ESSENCES.map((def) => def.materialId).filter((id) => !sinks.has(id)),
+    )
+
     const deadDrops = [...dropped].filter(
-      (id) => !sinks.has(id) && !LORE_ALLOWLIST.has(id),
+      (id) => !sinks.has(id) && !LORE_ALLOWLIST.has(id) && !capGatedEssence.has(id),
     )
 
     expect(

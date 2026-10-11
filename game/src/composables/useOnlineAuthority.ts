@@ -1,5 +1,6 @@
 import type { OnlineSessionController } from '../services/session/OnlineSessionController'
 import type { CloudSaveWriteResult } from '../services/cloudSave/CloudSaveService'
+import { isMasterSession } from '../services/master/masterAccess'
 
 /**
  * The ONE online-admission authority, lazily bound by App.vue at startup.
@@ -27,8 +28,19 @@ export function unbindOnlineAuthority(authority: OnlineSessionController): void 
 /** Report a save outcome to the bound authority (no-op pre-bind / local
  *  teardown). The controller itself ignores failures when no remote
  *  authority is configured, so local-mode callers may report freely. */
+/** Master-gate tolerance (Minh 2026-10-10): a master session treats every
+ *  non-ok save outcome as 'ok' for ADMISSION purposes - a refused or
+ *  conflicted write stays a diagnostics event (recordSaveOutcome still
+ *  sees the real result), never a pause/terminal that would wedge the
+ *  test session. Non-master sessions are untouched. */
+export function masterToleratedSaveResult(result: CloudSaveWriteResult): CloudSaveWriteResult {
+  return isMasterSession() && result.status !== 'ok'
+    ? { status: 'ok', revision: result.status === 'conflict' ? result.currentRevision : 0 }
+    : result
+}
+
 export function observeAuthoritySaveResult(result: CloudSaveWriteResult): void {
-  bound?.observeSaveResult(result)
+  bound?.observeSaveResult(masterToleratedSaveResult(result))
 }
 
 /** The bound authority itself - B1.9's logout orchestration joins its ONE

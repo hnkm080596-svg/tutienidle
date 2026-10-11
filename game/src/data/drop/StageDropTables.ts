@@ -54,8 +54,7 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
     realmId: 'qi_refining',
     floors: { min: 1, max: 10 },
     currency: { spiritStone: { min: 8, max: 12 }, techniqueMastery: { min: 35, max: 45 } },
-    // Bao-grade essence per the QI-D4b band map (M-QI-10): a stranded
-    // pham-chapter player completes through the M-QI-09 substitution seam.
+    // Bao-grade essence per the QI-D4b band map (M-QI-10).
     guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.qi_refining],
     pool: [
       // Ore is the qi_refining realm's general-purpose crafting material,

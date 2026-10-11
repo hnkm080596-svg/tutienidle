@@ -5,8 +5,6 @@ import type { PlayerData } from '../player/Player'
 import {
   SPIRIT_STONE_MATERIAL,
   SPIRIT_STONE_MATERIAL_ID,
-  SPIRIT_STONE_TRUNG_PHAM_MATERIAL,
-  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
 } from '../material/SpiritStoneMaterial'
 import {
   TU_LINH_TRAN_BUFF_PERCENT,
@@ -18,7 +16,7 @@ import {
 function setup(playerOverrides: Partial<PlayerData> = {}) {
   const gameManager = new GameManager()
 
-  gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL, SPIRIT_STONE_TRUNG_PHAM_MATERIAL])
+  gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL])
 
   const player = createDefaultPlayer()
 
@@ -121,19 +119,19 @@ describe('GameManager.activateTuLinhTran — economy-fixes-sinks-plan §3.2 B1',
     )
   })
 
-  it('realm Trung Phẩm (Kim Đan+) → tiêu đúng vật liệu Linh Thạch phẩm đó', () => {
+  it('realm cao (Kim Đan+) → vẫn tiêu cùng MỘT loại Linh Thạch (flatten)', () => {
     const { gameManager, player } = setup({ realmId: 'golden_core' })
 
-    gameManager.materialBag.add(SPIRIT_STONE_TRUNG_PHAM_MATERIAL, 10_000)
+    gameManager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
 
     const cost = getTuLinhTranCost(player.realmId, 0)
 
-    expect(cost.materialId).toBe(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)
+    expect(cost.materialId).toBe(SPIRIT_STONE_MATERIAL_ID)
 
     const result = gameManager.effectOps.activateTuLinhTran(player)
 
     expect(result.ok).toBe(true)
-    expect(gameManager.materialBag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)).toBe(
+    expect(gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(
       10_000 - cost.amount,
     )
   })

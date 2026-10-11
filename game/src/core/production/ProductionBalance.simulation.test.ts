@@ -38,7 +38,6 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { PillBag } from '../pill/PillBag'
 import {
   AlchemySystem,
-  resolveFuelWood,
 } from '../alchemy/AlchemySystem'
 import { DecomposeSystem } from './DecomposeSystem'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
@@ -194,11 +193,10 @@ function runHerbChain(): HerbChainResult {
     const registry = createRegistry()
     const bag = new MaterialBag()
 
-    // Seed nhien lieu DU cho moi tuoi - thieu hut go la bai cua chain Go,
-    // khong duoc chan chain Thao (tach bien).
-    for (const age of HERB_AGES) {
-      bag.add(registry.get(`mortal_wood_${age}`), 1_000_000)
-    }
+    // Materials economy rework - seed Bui Go + Luyen Dan Tinh Hoa DU;
+    // thieu hut go->bui_go la bai cua chain Go (tach bien).
+    bag.add(registry.get('bui_go'), 1_000_000_000)
+    bag.add(registry.get('luyen_dan_tinh_hoa'), 1_000_000_000)
 
     const pillBag = new PillBag()
     const alchemy = new AlchemySystem()
@@ -224,7 +222,8 @@ function runHerbChain(): HerbChainResult {
 
         if (
           variant &&
-          resolveFuelWood(bag, HERB_RECIPE.fuelWoodRealmId, HERB_RECIPE.fuelWoodAmount, variant.age)
+          bag.getAmount('bui_go') >= HERB_RECIPE.fuelWoodAmount &&
+          bag.getAmount('luyen_dan_tinh_hoa') >= HERB_RECIPE.luyenDanTinhHoaAmount
         ) {
           const result = alchemy.startJob(
             HERB_RECIPE,
@@ -327,30 +326,35 @@ function runOreChain(): OreChainResult {
     const registry = createRegistry()
     const bag = new MaterialBag()
 
-    // R7 (AR-08): dynamic capacity replaces the constructor option.
-    const decompose = new DecomposeSystem(bag)
-    decompose.updateCapacity(1)
-
-    decompose.setSetting({ gradeFilter: 'all', ageFilter: 'all', workers: 1 })
+    // DIRECT DECOMPOSE REWORK (2026-10-11): the sink is a player
+    // action, not a worker cycle - model a player who decomposes the
+    // whole bag once per 30s cadence (same rhythm the retired cycle
+    // used) so the balance contract stays comparable.
+    const tinhHoa = { total: 0 }
+    const decompose = new DecomposeSystem(bag, {
+      deliverOutput: (entry) => {
+        if (entry.materialId === LUYEN_KHI_TINH_HOA_ID) {
+          tinhHoa.total += entry.amount
+        }
+      },
+    })
 
     const produced = new Map<string, number>()
     const overflow = new Map<string, number>()
 
-    let tinhHoaProduced = 0
+    const DECOMPOSE_CADENCE_MS = 30_000
 
     for (let nowMs = 0; nowMs <= SIM_END_MS; nowMs += STEP_MS) {
       system.tickWorkers(nowMs, bag, registry, 'mortal', 1)
 
       accumulateEvents(produced, overflow, system.drainSettlementEvents())
 
-      decompose.tick(nowMs)
-
-      for (const entry of decompose.drainOutput()) {
-        if (entry.materialId === LUYEN_KHI_TINH_HOA_ID) {
-          tinhHoaProduced += entry.amount
-        }
+      if (nowMs % DECOMPOSE_CADENCE_MS === 0) {
+        decompose.decompose(decompose.listDecomposableIds())
       }
     }
+
+    const tinhHoaProduced = tinhHoa.total
 
     let oreProduced = 0
     let oreOverflow = 0
@@ -473,9 +477,12 @@ describe('Simulation 24h × 1 worker — cân bằng từng chuỗi (gp123 6F)',
     )
 
     // Bat dang thuc SX >= TT tren la hang dang thuc bao toan (tran + ton >= 0
-    // luon dung) - khoa FALSIFIABLE nam o ton cuoi: Phan Giai phai theo kip
-    // Quang, khong de khoang ton dong cuoi 24h.
+    // luon dung) - khoa FALSIFIABLE nam o ton cuoi: Phan Giai (nguoi choi
+    // spam decompose) phai theo kip Quang, khong de khoang ton dong cuoi 24h.
     expect(chain.oreRemaining).toBe(0)
+
+    // Direct decompose van mint tinh hoa qua deliverOutput.
+    expect(chain.tinhHoaProduced).toBeGreaterThan(0)
 
     expect(chain.oreProduced).toBeGreaterThanOrEqual(chain.oreConsumed)
   })

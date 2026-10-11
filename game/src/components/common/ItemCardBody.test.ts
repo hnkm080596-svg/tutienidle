@@ -57,6 +57,7 @@ const equipmentContent: EquipmentTooltipContent = {
   slotPreview: {
     label: 'Hoàng - Thanh Vân Kiếm',
     accessibleLabel: 'Hoàng - Thanh Vân Kiếm, Ngũ Phẩm',
+    variant: 'equipment',
     equipmentQualityRank: 5,
     rarityRank: 3,
   },
@@ -86,8 +87,9 @@ const gradedContent: GradedItemTooltipContent = {
   slotPreview: {
     label: 'Linh Thảo',
     accessibleLabel: 'Linh Thảo, Luyện Khí',
-    rarityRank: 5,
-    rarityRankScale: 10,
+    variant: 'bag',
+    equipmentQualityRank: 5,
+    rarityRank: 3,
   },
   gradeRank: 5,
   sections: [{ label: 'Thông Tin', rows: [{ label: 'Phân Loại', value: 'Linh Thảo' }] }],
@@ -102,14 +104,17 @@ describe('ItemCardBody - static SlotView header (spec section 3)', () => {
     expect(slot.tagName).toBe('SPAN')
     expect(slot.getAttribute('role')).toBe('img')
     expect(slot.getAttribute('aria-label')).toBe('Hoàng - Thanh Vân Kiếm, Ngũ Phẩm')
-    // The seal + Chat edge ride along from the same props the cell binds.
-    expect(slot.querySelector('.slot-view__seal')?.textContent).toBe('五')
+    // Owner ruling 2026-10-11: the seal stamp is off everywhere -
+    // the info card renders the same un-sealed cell.
+    expect(slot.querySelector('.slot-view__seal')).toBeNull()
     expect(container.querySelector('button.slot-view')).toBeNull()
   })
 
-  it('material scale-10 slotPreview feeds the seal through rarityRank', () => {
+  it('material scale-10 slotPreview feeds the Pham tint, no seal (ruling 2026-10-11)', () => {
     const container = mountCard(gradedContent)
-    expect(container.querySelector('.slot-view__seal')?.textContent).toBe('五')
+    const slot = container.querySelector('.item-card__slot') as HTMLElement
+    expect(slot.style.getPropertyValue('--slot-quality-color')).toBe('var(--rank-color-5)')
+    expect(slot.querySelector('.slot-view__seal')).toBeNull()
   })
 
   it('falls back to the icon shell when slotPreview is absent', () => {

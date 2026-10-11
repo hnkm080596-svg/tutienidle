@@ -2,9 +2,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
-import InkNineSlice from '../../common/primitives/InkNineSlice.vue'
-import Chip from '../../common/primitives/Chip.vue'
-import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
+import BagChipSelect from './BagChipSelect.vue'
+import type { BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBagPagination } from '@/composables/useBagPagination'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
@@ -26,9 +25,17 @@ import type { BagCell } from './BagCell'
 import type { GradedItemTooltipContent, TooltipSection } from '@/composables/useTooltip'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import { ITEM_GRADE_ORDER, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
-import { compareProfessionGrades, realmFromGrade } from '@/core/profession/ProfessionGrade'
+import { realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { gradeLabel, realmLabel } from '@/core/presentation/labels'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+
+// Equipment item-slot chrome for the cells (owner ruling 2026-10-11:
+// Tru Vat cells wear the same ornate slot art as the Trang Bi bag).
+const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/item-slot-v1.png')
+// Design capacity label shared with the equipment bag - no real bag cap
+// exists yet; 100 is the designed display cap.
+const BAG_DISPLAY_CAPACITY = 100
 
 const { t } = useI18n()
 
@@ -222,8 +229,8 @@ function drinkPill(pillId: string, pillName: string) {
   const result = gameManager.pillOps.usePillDetailed(pillId, target, player.$state)
 
   if (result.ok) {
-    // audit M2: one-click consume had NO success feedback - mirror the
-    // vendor fix and push a loot toast with the pill name.
+    // audit M2: one-click consume had NO success feedback - push a loot
+    // toast with the pill name.
     useNotificationStore().push('loot', t('bag.pill.used', { name: pillName }))
 
     bumpState()
@@ -303,11 +310,35 @@ function onPillClick(pillId: string, name: string) {
 onUnmounted(disarmPill)
 
 const SORT_OPTIONS: Array<BagSortOption & { value: PillSortMode }> = [
+  { value: 'default', label: t('panels.bag.sort.default') },
   { value: 'grade', label: 'Phẩm đan' },
   { value: 'effect', label: 'Loại hiệu ứng' },
   { value: 'amount', label: 'Số lượng' },
   { value: 'name', label: 'Tên', ascLabel: 'Tên A–Z', descLabel: 'Tên Z–A' },
 ]
+
+// Sort dropdown (owner ruling 2026-10-11: Tru Vat toolbar matches the
+// equipment bag - filter chip + sort chip + pager + count). Picking
+// the ACTIVE mode toggles direction like the equipment select.
+const SORT_CHIP_OPTIONS = computed<Array<{ value: PillSortMode; label: string }>>(() =>
+  SORT_OPTIONS.map((option) => {
+    const active = option.value === ui.bagSorts.pill.mode && option.value !== 'default'
+    if (!active) return { value: option.value, label: option.label }
+    const directed =
+      option.ascLabel || option.descLabel
+        ? (ui.bagSorts.pill.direction === 'asc' ? option.ascLabel : option.descLabel)
+        : option.label + (ui.bagSorts.pill.direction === 'asc' ? ' ↑' : ' ↓')
+    return { value: option.value, label: directed ?? option.label }
+  }),
+)
+
+function onSortPick(mode: string) {
+  if (mode === ui.bagSorts.pill.mode) {
+    ui.toggleBagSortDirection('pill')
+  } else {
+    ui.setBagSortMode('pill', mode as PillSortMode)
+  }
+}
 
 const entries = computed<PillEntry[]>(() => {
   stateVersion.value
@@ -384,6 +415,8 @@ const entries = computed<PillEntry[]>(() => {
 // runs BEFORE sort + pagination. Group axis = first effect type (the
 // 'effect' sort comparator reads the same field); 'other' catches pills
 // with no effects.
+// Owner ruling 2026-10-11: search UI removed - the query stays
+// permanently empty, feeding the filter pipeline an inert input.
 const searchQuery = ref('')
 
 const activeGroup = ref<PillEffectGroup | 'all'>('all')
@@ -407,16 +440,19 @@ const GROUP_CHIPS = computed<Array<{ value: PillEffectGroup | 'all'; label: stri
   })),
 ])
 
-function toggleGroup(value: PillEffectGroup | 'all') {
-  activeGroup.value = activeGroup.value === value ? 'all' : value
-}
 
 // Tieu chi Dan Duoc (plan Workstream E) - pham dan/loai hieu ung/so
 // luong/ten. "Loai hieu ung" so sanh effect type DAU TIEN cua recipe.
 const PILL_COMPARATORS: Record<Exclude<PillSortMode, 'default'>, (a: PillEntry, b: PillEntry) => number> = {
-  grade: (a, b) => a.pill.professionGrade && b.pill.professionGrade
-    ? compareProfessionGrades(a.pill.professionGrade, b.pill.professionGrade)
-    : compareText(a.pill.grade, b.pill.grade),
+  // QA fixpoint 2026-10-10: total order - Pham (professionGrade) rank
+  // first, pills without it sort lowest; ties use ITEM_GRADE_ORDER (was:
+  // mixed professionGrade vs alphabetic ItemGrade, non-transitive).
+  grade: (a, b) => {
+    const ra = a.pill.professionGrade !== undefined ? professionGradeRank(a.pill.professionGrade) : 0
+    const rb = b.pill.professionGrade !== undefined ? professionGradeRank(b.pill.professionGrade) : 0
+    if (ra !== rb) return compareNumber(ra, rb)
+    return compareNumber(ITEM_GRADE_ORDER.indexOf(a.pill.grade), ITEM_GRADE_ORDER.indexOf(b.pill.grade))
+  },
 
   effect: (a, b) => compareText(a.pill.effects[0]?.type, b.pill.effects[0]?.type),
 
@@ -449,7 +485,7 @@ watch(
   () => resetPage(),
 )
 
-watch([searchQuery, activeGroup], () => resetPage())
+watch(activeGroup, () => resetPage())
 
 // Buff regen deadline (plan sec8): hien thi timed effect DANG hoat dong
 // voi thoi gian con lai THUC (Date.now vs expiresAtMs) - menu va combat
@@ -496,7 +532,7 @@ const activeTimedEffects = computed(() => {
 </script>
 
 <template>
-  <div class="bag-section">
+  <div class="bag-section" :style="{ '--equipment-item-slot': `url('${ITEM_SLOT_SRC}')` }">
     <!-- Buff regen dang hoat dong (plan S8) -- deadline thuc, cung nguon
          voi combat (player.persistentTimedEffects), khong tao timer thu hai. -->
     <div v-if="activeTimedEffects.length > 0" class="pill-active">
@@ -509,30 +545,44 @@ const activeTimedEffects = computed(() => {
       </div>
     </div>
 
-    <div class="bag-section__filters">
-      <span class="bag-section__search-wrap">
-        <InkNineSlice chrome-id="text-field" layer="surface" />
-        <input
-          v-model="searchQuery"
-          type="search"
-            class="bag-section__search"
-            :placeholder="t('panels.bag.search.pillPlaceholder')"
-            :aria-label="t('panels.bag.search.pillAria')"
-          >
-      </span>
-
-      <div class="bag-section__chips" role="group" :aria-label="t('panels.bag.filterAriaPill')">
-        <Chip
-          v-for="chip in GROUP_CHIPS"
-          :key="chip.value"
-          :active="activeGroup === chip.value"
-          @click="toggleGroup(chip.value)"
+    <div class="bag-section__toolbar">
+      <!-- Owner ruling 2026-10-11: no search field - toolbar matches
+           the equipment bag verbatim (filter + sort + pager + count). -->
+      <BagChipSelect
+        v-model="activeGroup"
+        :options="GROUP_CHIPS"
+        :label="t('panels.bag.filterAriaPill')"
+      />
+      <BagChipSelect
+        :model-value="ui.bagSorts.pill.mode"
+        :options="SORT_CHIP_OPTIONS"
+        :label="t('panels.bag.sort.button')"
+        @update:model-value="onSortPick"
+      />
+      <div v-if="totalPages > 1" class="bag-section__pager">
+        <button
+          type="button"
+          class="bag-section__page-btn"
+          :disabled="currentPage === 0"
+          :aria-label="t('panels.bag.pagePrev')"
+          @click="goToPage(currentPage - 1)"
         >
-          {{ chip.label }}
-        </Chip>
+‹
+</button>
+        <span class="bag-section__page-label">{{ currentPage + 1 }}/{{ totalPages }}</span>
+        <button
+          type="button"
+          class="bag-section__page-btn"
+          :disabled="currentPage >= totalPages - 1"
+          :aria-label="t('panels.bag.pageNext')"
+          @click="goToPage(currentPage + 1)"
+        >
+›
+</button>
       </div>
-
-      <span class="bag-section__count"><InkNineSlice chrome-id="resource-pill" layer="surface" /><span class="bag-section__count-label">{{ visibleCount }} {{ t('panels.bag.countUnitSuffix') }}</span></span>
+      <!-- Owner ruling 2026-10-11: "N loai" IS the slot count - render
+           it in the equipment bag's x/100 capacity format. -->
+      <span class="bag-section__count-label">{{ visibleCount }}/{{ BAG_DISPLAY_CAPACITY }}</span>
     </div>
 
     <div ref="gridRef" class="bag-section__grid" :style="gridStyle">
@@ -555,18 +605,6 @@ const activeTimedEffects = computed(() => {
         @click="cell?.onClick?.()"
       />
     </div>
-
-    <BagPaginationControls
-      :current-page="currentPage"
-      :total-pages="totalPages"
-      :sort-options="SORT_OPTIONS"
-      :active-mode="ui.bagSorts.pill.mode"
-      :active-direction="ui.bagSorts.pill.direction"
-      @go-to-page="goToPage"
-      @select-mode="(mode) => ui.setBagSortMode('pill', mode as PillSortMode)"
-      @toggle-direction="ui.toggleBagSortDirection('pill')"
-      @reset-sort="ui.resetBagSort('pill')"
-    />
   </div>
 </template>
 
@@ -616,51 +654,48 @@ const activeTimedEffects = computed(() => {
   gap: 6px;
 }
 
-.bag-section__filters {
+.bag-section__toolbar {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+  gap: 6px;
 }
 
-/* Drawn field chrome (owner ruling: search uses the text-field art,
-   not a CSS frame) - wrap carries the slice, input paints on top. */
-.bag-section__search-wrap {
-  position: relative;
-  flex: 1 1 120px;
-  min-width: 0;
-  height: 32px;
+.bag-section__pager {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.bag-section__search-wrap .ink-nine-slice {
-  inset: 0;
+.bag-section__page-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #8a7444;
+  background: #23251e;
+  color: #f3e4c4;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.bag-section__search-wrap:focus-within {
-  outline: 2px solid var(--chrome-300);
-  outline-offset: 1px;
+.bag-section__page-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
-.bag-section__search {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  padding: 0 var(--space-2);
-  background: transparent;
-  color: var(--text-primary);
-  border: 0;
-  font-family: var(--font-body);
+.bag-section__page-label {
   font-size: var(--text-xs);
+  color: #e8d9ae;
+  white-space: nowrap;
 }
 
-.bag-section__search::placeholder {
-  color: var(--text-secondary);
-}
-
-.bag-section__search:focus-visible {
-  outline: none;
+.bag-section__count-label {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: #e8d9ae;
+  white-space: nowrap;
 }
 
 .bag-section__chips {
@@ -670,38 +705,21 @@ const activeTimedEffects = computed(() => {
   flex-wrap: wrap;
 }
 
-/* "N mon" counter: resource-pill chrome capsule (owner ruling) - the
-   drawn capsule carries the count, text sits on the light pill face. */
-.bag-section__count {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 64px;
-  height: 28px;
-  padding: 0 10px;
-  color: #e8d9ae;
-  font-size: var(--text-xs);
-  white-space: nowrap;
-}
-
-.bag-section__count .ink-nine-slice {
-  inset: 0;
-}
-
-.bag-section__count-label {
-  position: relative;
-  z-index: 2;
-}
-
+/* Grid fills the card like the equipment bag: rows split the card
+   height evenly (minmax 0 so they may shrink) and pack to the BOTTOM
+   edge; columns/gap come from useBagGridLayout measuring the real
+   grid rect. */
 .bag-section__grid {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
-  align-content: start;
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: end;
   gap: var(--grid-gap);
-  overflow: hidden;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #8a7444 transparent;
 }
 
 .bag-section__slot {

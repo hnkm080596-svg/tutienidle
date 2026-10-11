@@ -36,14 +36,13 @@ import { getCurrentRealm } from '../realm/realmSystem'
 import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
 import { getTribulationVictoryStatPercent } from '../talent/TalentEffects'
 import { createTalentEntitlement } from '../talent/TalentEntitlement'
-import { getRealmTier } from '../realm/RealmTierMap'
 import { FOUNDATION_LABELS } from '../breakthrough/FoundationType'
 import {
   closeHiddenLineage,
   recordHiddenBreakthrough,
   type BreakthroughType,
 } from '../realm/hidden/HiddenLineage'
-import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
+import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { KIEP_THUONG_DEBUFF } from '../../data/buff/buffs'
 import {
   TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM,
@@ -439,7 +438,7 @@ export class TribulationOutcomeService {
     const stoneLoss =
       TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[facts.targetRealmId] ??
       TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(facts.targetRealmId))
+    const spiritStoneId = SPIRIT_STONE_MATERIAL_ID
     const owned = gameManager.materialBag.getAmount(spiritStoneId)
     gameManager.materialBag.remove(spiritStoneId, Math.min(owned, stoneLoss))
 

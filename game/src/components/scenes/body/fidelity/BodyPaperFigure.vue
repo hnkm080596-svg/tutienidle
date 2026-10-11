@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import type { BodyPaperModel, BodyPaperUnit } from './bodyUi'
+import { BODY_POUR_VISUAL, type BodyPaperModel, type BodyPaperUnit } from './bodyUi'
 
 const props = defineProps<{ model: BodyPaperModel; selected: string }>()
 const emit = defineEmits<{ select: [id: string] }>()
@@ -15,13 +15,49 @@ const bodyArt = (name: string) =>
 const SILHOUETTE_ART: Record<string, string> = {
   refinement: 'silhouette-seated',
   meridian: 'silhouette-stance',
-  zhou_tian: 'silhouette-seated',
+  cycle: 'silhouette-seated',
 }
 const silhouetteArt = computed(() => SILHOUETTE_ART[props.model.chapter] ?? 'silhouette-seated')
 
+// Luyen Nhuc overlay (Codex handoff 2026-10-10): aligned gold overlay
+// on the SAME 1312x1199 canvas as silhouette-seated - identical contain
+// box means identical scale, no pixel math. -v2 name kept verbatim.
+const nhucOverlayArt = resolveAssetUrl(
+  '/assets/ui/tien-hiep-2026-10/body/nhuc-gold-overlay-aligned-v2.png',
+)
+
+// Pour visual channel (owner ruling 2026-10-10): while the details
+// card's pour replays, units show the fill's position instead of the
+// already-committed domain state - crossed tiers and intra-tier pieces
+// light one-by-one riding the bar's leading edge.
+const pourVisual = inject(BODY_POUR_VISUAL, null)
+const visualUnits = computed<readonly BodyPaperUnit[]>(() => {
+  const spec = pourVisual?.spec
+  const units = props.model.units
+  if (!spec || spec.chapter !== props.model.chapter) return units
+  let p = pourVisual.progressAbs
+  let wrapIdx = 0
+  while (wrapIdx < spec.caps.length - 1 && p >= (spec.caps[wrapIdx] ?? Number.POSITIVE_INFINITY)) {
+    p -= spec.caps[wrapIdx] ?? 0
+    wrapIdx++
+  }
+  const edgeIdx = spec.tierStartIndex + wrapIdx
+  return units.map((unit, index) => {
+    if (index >= spec.tierStartIndex && index < edgeIdx) {
+      return { ...unit, state: 'done' as const, progressPct: 100 }
+    }
+    if (index === edgeIdx) {
+      const cap = spec.caps[wrapIdx] ?? 1
+      const pct = Math.min(100, (p / cap) * 100)
+      return { ...unit, state: pct >= 100 ? 'done' as const : 'current' as const, progressPct: pct }
+    }
+    return unit
+  })
+})
+
 const unitState = computed<Record<string, BodyPaperUnit['state']>>(() => {
   const map: Record<string, BodyPaperUnit['state']> = {}
-  for (const unit of props.model.units) map[unit.id] = unit.state
+  for (const unit of visualUnits.value) map[unit.id] = unit.state
   return map
 })
 const unitLit = (id: string) => unitState.value[id] === 'done'
@@ -42,7 +78,7 @@ const litLayer = (layer: string) =>
 
 // Luyen Cot (owner ruling 2026-10-09): the spine fills progressively -
 // every 10% of the current tier lights one vertebra, bottom to top.
-const vertebraUnit = computed(() => props.model.units.find((u) => u.id === 'luyen_cot'))
+const vertebraUnit = computed(() => visualUnits.value.find((u) => u.id === 'luyen_cot'))
 const vertebraLitCount = computed(() => {
   const unit = vertebraUnit.value
   if (!unit) return 0
@@ -77,20 +113,30 @@ const VESSEL_PATHS: readonly { w: number; d: string }[] = [
   { w: 2, d: 'M160,822 C152,842 146,860 142,876' },
   { w: 2, d: 'M1058,845 C1066,862 1072,876 1075,890' },
 ]
-const bloodUnit = computed(() => props.model.units.find((u) => u.id === 'luyen_huyet'))
+const bloodUnit = computed(() => visualUnits.value.find((u) => u.id === 'luyen_huyet'))
 const vesselVisible = computed(() => (bloodUnit.value?.state ?? 'locked') !== 'locked')
-const vesselLitCount = computed(() => {
+// Owner ruling 2026-10-10: strands grow FROM THE ROOT - each vessel
+// draws in from its heart end via dasharray instead of popping in
+// whole. strandProgress sweeps 0..24 across the tier; strand i draws
+// while the sweep crosses it, so trunks finish before fingertips start.
+const vesselProgress = computed(() => {
   const unit = bloodUnit.value
   if (!unit) return 0
-  return unit.state === 'done'
-    ? VESSEL_PATHS.length
-    : Math.floor(((unit.progressPct ?? 0) / 100) * VESSEL_PATHS.length)
+  return unit.state === 'done' ? 1 : (unit.progressPct ?? 0) / 100
 })
+// Only while the tier is being filled - once done the attribute MUST
+// drop off or it overrides .bv-flow's CSS dasharray and kills the
+// pulse (regression flagged 2026-10-10).
+const vesselGrowing = computed(() => bloodUnit.value?.state === 'current')
+const vesselFrac = (index: number) =>
+  vesselGrowing.value
+    ? `${Math.min(1, Math.max(0, vesselProgress.value * VESSEL_PATHS.length - index))} 1`
+    : undefined
 
 // Luyen Mach (owner ruling 2026-10-09): the ring shows as soon as the tier
 // unlocks; the lit nodes orbit it and each 30% of tier progress lights one
 // more node (0/1/2/3). At 100% the ring itself spins (owner ruling).
-const foreheadUnit = computed(() => props.model.units.find((u) => u.id === 'luyen_mach'))
+const foreheadUnit = computed(() => visualUnits.value.find((u) => u.id === 'luyen_mach'))
 const foreheadVisible = computed(() => (foreheadUnit.value?.state ?? 'locked') !== 'locked')
 const foreheadDone = computed(() => foreheadUnit.value?.state === 'done')
 const foreheadLitCount = computed(() => {
@@ -115,43 +161,11 @@ const MERIDIAN_POINTS = [
   [29.83, 61.97],
   [90.57, 85.31],
 ] as const
-// Node drag design mode (owner request 2026-10-09): each meridian dot is
-// draggable; on drop the coordinates persist to localStorage and log to the
-// console so they can be baked into MERIDIAN_POINTS.
-const dragPositions = ref<Record<number, [number, number]>>(
-  JSON.parse(localStorage.getItem('meridian-drag-points') ?? '{}'),
-)
-let dragIndex = -1
-let dragMoved = false
 function nodePosition(index: number): readonly [number, number] {
-  return dragPositions.value[index] ?? MERIDIAN_POINTS[index] ?? [50, 50]
-}
-function onNodePointerDown(e: PointerEvent, index: number) {
-  dragIndex = index
-  dragMoved = false
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-}
-function onNodePointerMove(e: PointerEvent) {
-  if (dragIndex < 0) return
-  const stage = (e.currentTarget as HTMLElement).closest('.body-stage')
-  if (!stage) return
-  const r = stage.getBoundingClientRect()
-  const x = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100))
-  const y = Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100))
-  dragMoved = true
-  dragPositions.value = { ...dragPositions.value, [dragIndex]: [x, y] }
-}
-function onNodePointerUp() {
-  if (dragIndex >= 0 && dragMoved) {
-    localStorage.setItem('meridian-drag-points', JSON.stringify(dragPositions.value))
-    const arr = props.model.units.map((_, i) => nodePosition(i))
-    console.log('MERIDIAN_POINTS =', JSON.stringify(arr))
-    syncMeridianAnims()
-  }
-  dragIndex = -1
+  return MERIDIAN_POINTS[index] ?? [50, 50]
 }
 const meridianNodes = computed(() =>
-  props.model.units.map((unit, index) => {
+  visualUnits.value.map((unit, index) => {
     const point = nodePosition(index)
     const progress = unit.progressPct ?? (unit.state === 'done' ? 100 : 0)
     return { unit, index, x: point[0], y: point[1], lit: progress >= 100, progress }
@@ -163,7 +177,11 @@ const visibleMeridianNodes = computed(() => meridianNodes.value)
 // Node glyphs (owner ruling 2026-10-10): each main node shows the Han
 // character of its meridian instead of the orb art; the four paired
 // yin/yang meridians stack two chars so  and  stay distinct.
-const NODE_GLYPH = ['任', '带', '阴跷', '冲', '阳维', '督', '阴维', '阳跷'] as const
+// Canonical MERIDIANS index order (QA fixpoint 2026-10-10): nham=Ren,
+// doi=Dai, am_kieu=YinQiao, am_duy=YinWei, duong_duy=YangWei,
+// duong_kieu=YangQiao, xung=Chong, doc=Du. Was authored in ring
+// MERIDIAN_ORDER - 4/8 nodes showed a different meridian's char.
+const NODE_GLYPH = ['任', '带', '阴跷', '阴维', '阳维', '阳跷', '冲', '督'] as const
 const nodeGlyph = (index: number) => NODE_GLYPH[index] ?? ''
 
 // Meridian channels (owner request 2026-10-09): irregular zigzag paths
@@ -186,8 +204,7 @@ const seededJitter = (seed: number, i: number) => {
   const v = Math.sin(seed * 97.31 + i * 53.77) * 43758.5453
   return (v - Math.floor(v)) * 2 - 1
 }
-// Bend-point drag mode (owner request 2026-10-09): each zigzag waypoint is
-// a draggable handle; positions persist to localStorage for baking.
+// Baked channel waypoints (owner-sculpted 2026-10-09).
 const BEND_DEFAULTS: Record<string, readonly [number, number]> = {
   '2-1:d1': [46.14, 36.51], '2-1:d2': [39.2, 37.95], '2-1:d3': [36.76, 32.65], '2-1:d4': [29.64, 31.77],
   '0-1:d1': [49.32, 24.51], '0-1:d2': [45.39, 29.93], '0-1:d3': [45.95, 33.55], '0-1:d4': [34.51, 28.49],
@@ -198,40 +215,12 @@ const BEND_DEFAULTS: Record<string, readonly [number, number]> = {
   '3-5:d1': [50.45, 45.3], '3-5:d2': [57.38, 37.64], '3-5:d3': [78.19, 38.89], '3-5:d4': [92.25, 33.78],
   '0-5:d1': [49.89, 32.06], '0-5:d2': [60.2, 35.44], '0-5:d3': [79.88, 35.99], '0-5:d4': [90.0, 33.46],
 }
-const bendPositions = ref<Record<string, [number, number]>>(
-  JSON.parse(localStorage.getItem('meridian-bend-points') ?? '{}'),
-)
-let bendKey: string | null = null
-function onBendPointerDown(e: PointerEvent, key: string) {
-  bendKey = key
-  dragMoved = false
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-}
-function onBendPointerMove(e: PointerEvent) {
-  if (!bendKey) return
-  const stage = (e.currentTarget as HTMLElement).closest('.body-stage')
-  if (!stage) return
-  const r = stage.getBoundingClientRect()
-  const x = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100))
-  const y = Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100))
-  dragMoved = true
-  bendPositions.value = { ...bendPositions.value, [bendKey]: [x, y] }
-}
-function onBendPointerUp() {
-  if (bendKey && dragMoved) {
-    localStorage.setItem('meridian-bend-points', JSON.stringify(bendPositions.value))
-    console.log('MERIDIAN_BENDS =', JSON.stringify(bendPositions.value))
-    syncMeridianAnims()
-  }
-  bendKey = null
-}
-// Dot drag mode (owner request 2026-10-09): every 10% dot on the channel
-// is itself a draggable handle; the path is straight segments dot-to-dot.
-// Interior dot i sits at t = i/10 with a jittered offset; stored drags win.
+// Interior dot i sits at t = i/5; the baked waypoint wins when authored,
+// else a quadratic-bezier-through-ctrl + jitter keeps the path irregular.
 const channelDot = (link: { from: number; to: number; seed: number; ctrl?: readonly [number, number] }, i: number, a: readonly [number, number], b: readonly [number, number]): [number, number] => {
   const key = `${link.from}-${link.to}:d${i}`
-  const stored = bendPositions.value[key] ?? BEND_DEFAULTS[key]
-  if (stored) return [stored[0], stored[1]]
+  const baked = BEND_DEFAULTS[key]
+  if (baked) return [baked[0], baked[1]]
   const t = i / 5 // 4 interior dots (owner ruling 2026-10-10)
   // Quadratic bezier through ctrl keeps the default path inside the body;
   // jitter on top keeps it irregular (owner rulings 2026-10-09).
@@ -258,7 +247,7 @@ const meridianPaths = computed(() =>
     dots.push([b[0], b[1]])
     // Owner ruling 2026-10-10: each 20% of the destination meridian's
     // progress lights one interior dot (4 dots = 20/40/60/80; 100% = node).
-    const dest = props.model.units[link.to]
+    const dest = visualUnits.value[link.to]
     const destPct = dest?.progressPct ?? (dest?.state === 'done' ? 100 : 0)
     const lit = Math.min(4, Math.floor(destPct / 20))
     return { key: `${link.from}-${link.to}`, dots, lit, link }
@@ -292,9 +281,15 @@ const circuit = computed(() => {
       if (prev) dists.push(dists[dists.length - 1]! + Math.hypot(d[0] - prev[0], d[1] - prev[1]))
       pts.push(d)
     }
-    // The spark reaches node b at this cumulative distance.
-    arrival[b] = dists[dists.length - 1]!
+    // The spark reaches node b at this cumulative distance. QA fixpoint
+    // 2026-10-10: the closing leg returns to the loop start - recording
+    // it stamped the START node with the full-loop delay, so any lit
+    // progress made litFrac=1 and the light ran the whole circuit
+    // (including unopened nodes). Keep arrivals for real arrivals only.
+    if (i + 1 < MERIDIAN_ORDER.length) arrival[b] = dists[dists.length - 1]!
   }
+  // The loop start is covered from t=0 the moment it has any progress.
+  arrival[MERIDIAN_ORDER[0]!] = 0
   const total = dists[dists.length - 1] || 1
   // Spark covers the loop in 8.5s (85% of the 10s cycle).
   const ringDelay = Object.fromEntries(
@@ -315,26 +310,49 @@ const litSeconds = computed(() => {
   }
   return best
 })
-const litFrac = computed(() => litSeconds.value / 8.5)
+const litFrac = computed(() => {
+  // Full-circuit extension (owner 2026-10-10): ringDelay records arrivals
+  // only - the closing leg back to node 0 has none, so a completed loop
+  // would leave the streak stopping one segment short of home. Once
+  // every node carries progress the light continues past the last node
+  // and runs the whole circuit back to its start.
+  const nodes = visibleMeridianNodes.value
+  if (nodes.length > 0 && nodes.every((n) => (n.progress ?? 0) > 0)) return 1
+  return litSeconds.value / 8.5
+})
 
 // One shared clock (owner ruling 2026-10-10): spark/fill/rings are driven
 // by Web Animations on the same startTime, so a ring can never ping before
 // the light actually reaches its node.
 const stageEl = ref<HTMLElement>()
 let meridianAnims: Animation[] = []
+// Shared cycle epoch: keeps the 20s loop's phase steady across resyncs.
+// Without it every invest (progress change) re-anchored the streak to 0,
+// so the light never visibly travelled far and the finale never landed
+// (owner flag 2026-10-10). Reset when the circuit goes dark.
+let meridianEpoch: number | null = null
 function syncMeridianAnims() {
-  meridianAnims.forEach((a) => a.cancel())
-  meridianAnims = []
   const root = stageEl.value
   if (!root || props.model.chapter !== 'meridian') return
   const spark = root.querySelector('.sweep-core')
   const fill = root.querySelector<HTMLElement>('.circuit-fill')
   const rings = root.querySelectorAll<HTMLElement>('.body-meridian-ring')
+  // Intermittent-streak fix (owner 2026-10-10): do NOT cancel the live
+  // anims until every element needed for the rebuild exists - a resync
+  // firing mid-render (chapter swap / progress change while nodes are
+  // unmounted) used to cancel everything then bail, leaving the circuit
+  // dead until some later watch happened to resync into a ready DOM.
   if (!spark || !fill || !rings.length) return
+  const hasProgress = visibleMeridianNodes.value.some((n) => (n.progress ?? 0) > 0)
+  meridianAnims.forEach((a) => a.cancel())
+  meridianAnims = []
   // No opened node yet -> the light has nowhere to run (owner ruling:
-  // it must never touch an unopened node).
-  if (litSeconds.value <= 0) return
-  const t = document.timeline.currentTime ?? 0
+  // it must never touch an unopened node). Gate on "any progress", not
+  // litSeconds: the loop-start node sits at arrival 0, so a first-only
+  // meridian state has litSeconds 0 yet its ring/glyph must still pulse.
+  if (!hasProgress) { meridianEpoch = null; return }
+  const t = Number(document.timeline.currentTime ?? 0)
+  if (meridianEpoch == null) meridianEpoch = t
   const travelF = Math.max(litFrac.value, 0.001)
   const litLen = travelF * 100
   const travelEnd = Math.min(travelF * 0.85, 0.999)
@@ -345,7 +363,7 @@ function syncMeridianAnims() {
   // assigning it on the returned Animation keeps the shared-clock semantics.
   const timedAnimate = (el: Element, frames: Keyframe[], options: KeyframeAnimationOptions) => {
     const anim = el.animate(frames, options)
-    anim.startTime = t
+    anim.startTime = meridianEpoch!
     return anim
   }
   meridianAnims.push(timedAnimate(fill,
@@ -368,40 +386,78 @@ function syncMeridianAnims() {
     { duration: 20000, iterations: Infinity },
   ))
   const litS = litFrac.value * 8.5 + 0.05
+  // Ping delay = the light's ARRIVAL at that node (owner 2026-10-10):
+  // node 0 is the circuit start - the streak leaves it at t=0 but only
+  // ARRIVES when the loop closes, so its ping is the full-loop delay
+  // (8.5s, last), not 0. Other nodes keep their first-arrival delays.
+  const nodePingDelay = (index: number) =>
+    index === MERIDIAN_ORDER[0] ? 8.5 : (circuit.value.ringDelay[index] ?? 99)
   rings.forEach((ring, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
-    if ((circuit.value.ringDelay[node.index] ?? 99) > litS) return
-    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 2000
-    meridianAnims.push(timedAnimate(ring,
-      [
-        { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 0 },
-        { opacity: 0.95, offset: 0.005 },
-        { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.035 },
-        { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 1 },
-      ],
-      { duration: 20000, iterations: Infinity, delay },
-    ))
+    // Ping/glyph/comets are done-node effects only (owner 2026-10-10):
+    // a node must be fully opened before the passing light pings it.
+    if (node.unit.state !== 'done') return
+    const pingDelays: number[] = []
+    if (nodePingDelay(node.index) <= litS) {
+      pingDelays.push(nodePingDelay(node.index) * 2000)
+    }
+    // Loop-close finale (owner 2026-10-10): the instant the streak
+    // arrives back at node 0, EVERY node pings at once - not only the
+    // start node. Non-start nodes keep their own arrival ping AND join
+    // the finale burst; the start node's only ping IS the finale.
+    if (litFrac.value >= 1 && node.index !== MERIDIAN_ORDER[0]) {
+      pingDelays.push(8.5 * 2000)
+    }
+    for (const delay of pingDelays) {
+      meridianAnims.push(timedAnimate(ring,
+        [
+          { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 0 },
+          { opacity: 0.95, offset: 0.005 },
+          { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0, offset: 0.035 },
+          { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0, offset: 1 },
+        ],
+        { duration: 20000, iterations: Infinity, delay },
+      ))
+    }
   })
   root.querySelectorAll<HTMLElement>('.glyph-lit').forEach((lit, i) => {
     const node = visibleMeridianNodes.value[i]
     if (!node) return
+    // Done nodes only (owner 2026-10-10): the glyph flashes as the light
+    // passes AND joins the all-at-once ping when the loop closes on
+    // node 0 - the start node's only flash is that finale.
     if (node.unit.state !== 'done') return
-    if ((circuit.value.ringDelay[node.index] ?? 99) > litS && litS > 0.2) return
-    const delay = (circuit.value.ringDelay[node.index] ?? 0) * 2000
-    meridianAnims.push(timedAnimate(lit,
-      [
-        { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.033 },
-        { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.08 },
-        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.11 },
-        { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
-      ],
-      { duration: 20000, iterations: Infinity, delay },
-    ))
+    const pingDelays: number[] = []
+    if (nodePingDelay(node.index) <= litS) {
+      pingDelays.push(nodePingDelay(node.index) * 2000)
+    }
+    if (litFrac.value >= 1 && node.index !== MERIDIAN_ORDER[0]) {
+      pingDelays.push(8.5 * 2000)
+    }
+    for (const delay of pingDelays) {
+      meridianAnims.push(timedAnimate(lit,
+        [
+          { clipPath: 'circle(0% at 50% 50%)', opacity: 1, offset: 0 },
+          { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.033 },
+          { clipPath: 'circle(140% at 50% 50%)', opacity: 1, offset: 0.08 },
+          { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 0.11 },
+          { clipPath: 'circle(0% at 50% 50%)', opacity: 0, offset: 1 },
+        ],
+        { duration: 20000, iterations: Infinity, delay },
+      ))
+    }
   })
 }
 watch(() => props.model.chapter, () => nextTick(syncMeridianAnims), { flush: 'post' })
+// QA fixpoint 2026-10-10: ring/glyph/spark spans are baked from the lit
+// state at sync time - an invest mid-chapter left them stale until a
+// chapter swap or remount. Resync on any unit progress/state change.
+watch(
+  () => visibleMeridianNodes.value.map((n) => `${n.index}:${n.progress}:${n.unit.state}`).join('|'),
+  () => nextTick(syncMeridianAnims),
+  { flush: 'post' },
+)
 onMounted(syncMeridianAnims)
 onBeforeUnmount(() => meridianAnims.forEach((a) => a.cancel()))
 
@@ -416,8 +472,14 @@ const GALAXY = [
   { id: 'orbit-circle', x: 50, y: 49, w: 39, angle: 65, duration: 43, reverse: true },
   { id: 'orbit-ellipse', x: 50, y: 49, w: 48, angle: -52, duration: 51, reverse: false },
 ] as const
-const galaxyLit = computed(() => Math.round((props.model.progress / 100) * GALAXY.length))
-const starsLit = computed(() => props.model.progress > 70)
+// 36 steps / 6 pieces: every 6 completed steps ignites one art piece
+// (owner ruling 2026-10-10) - core first, then the 5 orbit rings
+// inner-out. floor() so a partial 6-step block lights nothing yet.
+const galaxyLit = computed(() =>
+  Math.min(GALAXY.length, Math.floor(((props.model.progress / 100) * 36 + 1e-9) / 6)),
+)
+// Codex preview parity: the star field ignites past step 4/8 (62.5%).
+const starsLit = computed(() => props.model.progress > 62)
 const galaxyPieces = computed(() =>
   GALAXY.map((piece, index) => ({ ...piece, lit: index < galaxyLit.value })),
 )
@@ -434,15 +496,16 @@ const galaxyPieces = computed(() =>
           <img :src="bodyArt('silhouette-seated')" alt="">
         </div>
         <div v-if="litLayer('muscle')" class="body-layer body-muscle-layer">
-          <img v-for="side in ['left', 'right']" :key="side" :class="side"
-            :src="bodyArt(`biceps-${side}-lit`)" alt="">
+          <img class="body-muscle-overlay" :src="nhucOverlayArt" alt="">
         </div>
         <svg v-if="vesselVisible" class="body-blood" viewBox="0 0 1215 1295" aria-hidden="true"
           :style="{ maskImage: `url(${bodyArt('silhouette-seated')})`, WebkitMaskImage: `url(${bodyArt('silhouette-seated')})`, maskSize: '94% 94%', WebkitMaskSize: '94% 94%', maskPosition: 'center', WebkitMaskPosition: 'center', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }">
           <defs>
             <g id="bvessels">
-              <path v-for="(vessel, i) in VESSEL_PATHS" v-show="i < vesselLitCount" :key="i"
-                :stroke-width="vessel.w" :d="vessel.d"/>
+              <path v-for="(vessel, i) in VESSEL_PATHS" :key="i"
+                :stroke-width="vessel.w" :d="vessel.d"
+                :pathLength="vesselGrowing ? 1 : undefined"
+                :stroke-dasharray="vesselFrac(i)"/>
             </g>
           </defs>
           <use href="#bvessels" class="bv-base"/>
@@ -482,30 +545,15 @@ const galaxyPieces = computed(() =>
           <path :d="circuitD" class="circuit-fill" pathLength="100" fill="none"/>
           <path :d="circuitD" class="sweep-core" pathLength="100" fill="none"/>
         </svg>
-        <!-- Every channel dot is draggable - sculpt the irregularity
-             directly (owner request 2026-10-09). -->
-        <div class="body-meridian-handles">
-          <template v-for="path in meridianPaths" :key="`${path.key}-dots`">
-            <button v-for="(dot, di) in path.dots.slice(1, -1)" :key="`${path.key}-d${di + 1}`"
-              class="body-meridian-bend" :style="{ left: `${dot[0]}%`, top: `${dot[1]}%` }"
-              :aria-label="`Điểm mạch ${di + 1}`"
-              @pointerdown="onBendPointerDown($event, `${path.key}:d${di + 1}`)"
-              @pointermove="onBendPointerMove"
-              @pointerup="onBendPointerUp" />
-          </template>
-        </div>
         <button v-for="node in visibleMeridianNodes" :key="node.unit.id"
           class="body-meridian-node body-orb" :class="[node.unit.state, { selected: selected === node.unit.id }]"
           :style="{ left: `${node.x}%`, top: `${node.y}%` }"
           :aria-pressed="selected === node.unit.id" :aria-label="node.unit.title"
-          @pointerdown="onNodePointerDown($event, node.index)"
-          @pointermove="onNodePointerMove"
-          @pointerup="onNodePointerUp"
-          @click="dragMoved ? (dragMoved = false) : emit('select', node.unit.id)">
+          @click="emit('select', node.unit.id)">
           <span class="node-core" aria-hidden="true"></span>
           <span v-if="node.unit.state === 'done'" class="comet-orbit" aria-hidden="true"><i></i><i></i></span>
-          <span class="meridian-glyph" :class="{ two: nodeGlyph(node.index).length > 1 }">{{ nodeGlyph(node.index) }}</span>
-          <span class="meridian-glyph glyph-lit" :class="{ two: nodeGlyph(node.index).length > 1 }" aria-hidden="true">{{ nodeGlyph(node.index) }}</span>
+          <span class="meridian-glyph" :class="{ two: nodeGlyph(node.index).length > 1 }"><span v-for="(ch, ci) in nodeGlyph(node.index)" :key="ci">{{ ch }}</span></span>
+          <span class="meridian-glyph glyph-lit" :class="{ two: nodeGlyph(node.index).length > 1 }" aria-hidden="true"><span v-for="(ch, ci) in nodeGlyph(node.index)" :key="ci">{{ ch }}</span></span>
           <!-- Layout-review index badge (owner request 2026-10-09): 1-8 in data order. -->
           <span class="body-meridian-num" :class="{ 'num-left': node.index === 5 || node.index === 7 }">{{ node.index + 1 }}</span>
         </button>
@@ -514,17 +562,53 @@ const galaxyPieces = computed(() =>
         <span v-for="node in visibleMeridianNodes" :key="`ring-${node.unit.id}`"
           class="body-meridian-ring" :style="{ left: `${node.x}%`, top: `${node.y}%` }"/>
       </template>
-      <template v-else-if="model.chapter === 'zhou_tian'">
-        <img v-for="(piece, i) in galaxyPieces" :key="i"
-          class="body-galaxy-piece" :class="{ orbiting: piece.lit }"
-          :style="{
-            left: `${piece.x}%`, top: `${piece.y}%`, width: `${piece.w}%`,
-            '--orbit-angle': `${piece.angle}deg`,
-            animationDuration: `${piece.duration}s`,
-            animationDirection: piece.reverse ? 'reverse' : 'normal',
-            animationDelay: `${-i * 7}s`,
-          }"
-          :src="bodyArt(`galaxy-${piece.id}-${piece.lit ? 'lit' : 'unlit'}`)" alt="">
+      <template v-else-if="model.chapter === 'cycle'">
+        <template v-for="(piece, i) in galaxyPieces" :key="i">
+          <!-- Core is an SVG sphere (owner ruling 2026-10-10): radial
+               gradient + highlight reads as a glowing orb, not a flat
+               dot. Orbit rings stay PNG art. -->
+          <svg v-if="piece.id === 'core'"
+            class="body-galaxy-piece galaxy-core" :class="{ lit: piece.lit }"
+            :style="{ left: `${piece.x}%`, top: `${piece.y}%`, width: `${piece.w}%`, '--orbit-angle': '0deg' }"
+            viewBox="0 0 100 100" aria-hidden="true">
+            <defs>
+              <radialGradient id="ztCoreHalo" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(255,220,140,.85)"/>
+                <stop offset="55%" stop-color="rgba(255,200,110,.32)"/>
+                <stop offset="100%" stop-color="rgba(255,190,90,0)"/>
+              </radialGradient>
+              <radialGradient id="ztCoreBall" cx="38%" cy="34%" r="68%">
+                <stop offset="0%" stop-color="#fffbe8"/>
+                <stop offset="34%" stop-color="#ffe9a8"/>
+                <stop offset="72%" stop-color="#e2a03e"/>
+                <stop offset="100%" stop-color="#8a5510"/>
+              </radialGradient>
+              <clipPath id="ztCoreClip"><circle cx="50" cy="50" r="26"/></clipPath>
+            </defs>
+            <circle class="halo" cx="50" cy="50" r="48" fill="url(#ztCoreHalo)"/>
+            <circle class="ball" cx="50" cy="50" r="26" fill="url(#ztCoreBall)"/>
+            <!-- Meridian swirls clipped to the ball - they are what makes
+                 the spin read as a sphere rolling, not a flat disc
+                 (owner request 2026-10-10). -->
+            <g class="surface" clip-path="url(#ztCoreClip)">
+              <ellipse cx="50" cy="50" rx="26" ry="8" fill="none" stroke="rgba(122,72,10,.55)" stroke-width="4"/>
+              <ellipse cx="50" cy="50" rx="26" ry="8" fill="none" stroke="rgba(255,240,190,.65)" stroke-width="1.4"/>
+              <ellipse cx="50" cy="50" rx="10" ry="26" fill="none" stroke="rgba(122,72,10,.4)" stroke-width="3"/>
+              <ellipse cx="50" cy="50" rx="10" ry="26" fill="none" stroke="rgba(255,240,190,.5)" stroke-width="1.2"/>
+            </g>
+            <ellipse class="shine" cx="41" cy="37" rx="9" ry="6" fill="rgba(255,255,255,.75)"/>
+          </svg>
+          <img v-else
+            class="body-galaxy-piece" :class="{ orbiting: piece.lit && piece.id.startsWith('orbit') }"
+            :style="{
+              left: `${piece.x}%`, top: `${piece.y}%`, width: `${piece.w}%`,
+              '--orbit-angle': `${piece.angle}deg`,
+              animationDuration: `${piece.duration}s`,
+              animationDirection: piece.reverse ? 'reverse' : 'normal',
+              animationDelay: `${-i * 7}s`,
+            }"
+            :src="bodyArt(`galaxy-${piece.id}-${piece.lit ? 'lit' : 'unlit'}`)" alt="">
+        </template>
         <img class="body-galaxy-stars" :src="bodyArt(`galaxy-stars-${starsLit ? 'lit' : 'unlit'}`)" alt="">
       </template>
       </div>
@@ -568,6 +652,11 @@ const galaxyPieces = computed(() =>
 @media (prefers-reduced-motion: reduce) { .body-glow { animation:none; opacity:.4; } }
 /* Lit anatomy arts share the soft pulsing glow with the Luyen Bi aura
    (owner ruling 2026-10-09): a gentle golden halo that breathes on/off. */
+/* Luyen Nhuc overlay sits in the exact silhouette box (same canvas
+   size + object-fit:contain = Codex's "same scale as base" rule).
+   Must out-specific the retired biceps img rule below (top/width). */
+.body-muscle-layer img.body-muscle-overlay { position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+  animation:body-art-glow 4.6s ease-in-out infinite; }
 .body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart { animation:body-art-glow 4.6s ease-in-out infinite; }
 @keyframes body-art-glow { 0%,100% { filter:drop-shadow(0 0 2px rgba(238,196,108,.35)); } 50% { filter:drop-shadow(0 0 6px rgba(238,196,108,.8)) drop-shadow(0 0 10px rgba(238,196,108,.45)); } }
 @media (prefers-reduced-motion: reduce) { .body-muscle-layer img, .body-blood, .body-spine img.lit, .body-heart { animation:none; } }
@@ -620,8 +709,7 @@ const galaxyPieces = computed(() =>
 .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite, forehead-spin 14s linear infinite; }
 @keyframes forehead-spin { to { rotate:360deg; } }
 @media (prefers-reduced-motion: reduce) { .done .forehead-ring { animation:body-art-glow 4.6s ease-in-out infinite; } }
-.body-meridian-node { position:absolute; width:9%; height:9%; transform:translate(-50%,-50%); z-index:5; padding:0; border:0; background:transparent; cursor:grab; touch-action:none; }
-.body-meridian-node:active { cursor:grabbing; }
+.body-meridian-node { position:absolute; width:9%; height:9%; transform:translate(-50%,-50%); z-index:5; padding:0; border:0; background:transparent; cursor:pointer; }
 .body-meridian-node img { width:100%; height:100%; object-fit:contain; pointer-events:none; transform:scale(1.25); }
 /* Owner ruling 2026-10-10: main node = same small dot as the channel dots.
    Unopened shows the bare dim dot only; opened lights the dot, orbits twin
@@ -641,7 +729,11 @@ const galaxyPieces = computed(() =>
 /* Glyph ping requires the node opened AND the light passing (owner ruling)
    - nothing stays lit. */
 .glyph-lit { position:absolute; inset:0; color:#ffe9a0; text-shadow:0 0 6px rgba(255,205,95,.95), 0 0 2px rgba(120,70,0,.9), 0 1px 2px #000; clip-path:circle(0% at 50% 50%); opacity:0; }
-.meridian-glyph.two { writing-mode:vertical-rl; font-size:clamp(13px,3.2vmin,22px); letter-spacing:2px; }
+/* Two-char glyphs: one char per flex row (owner 2026-10-10) - per-char
+   spans stack vertically inside the base flex-column. writing-mode was
+   dropped: vertical-rl re-maps flex column to horizontal on this
+   toolchain, rendering the pair side-by-side in reverse order. */
+.meridian-glyph.two { font-size:clamp(13px,3.2vmin,22px); line-height:1.15; }
 /* Sonar-style ring ping as the spark passes each node (owner ruling
    2026-10-10) - WAAPI on the shared meridian clock lands it at arrival. */
 .body-meridian-ring { position:absolute; width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,235,170,.95); box-shadow:0 0 8px rgba(255,205,95,.8), inset 0 0 6px rgba(255,205,95,.5); transform:translate(-50%,-50%) scale(.3); opacity:0; pointer-events:none; z-index:3; }
@@ -653,7 +745,10 @@ const galaxyPieces = computed(() =>
 /* Light-fill cycle (owner 2026-10-10): the spark fills the loop behind it;
    on a full loop all 8 nodes flash, then the cycle restarts. */
 .circuit-fill { stroke:#ffd76a; stroke-width:0.2; stroke-linecap:round; stroke-dasharray:100 100; stroke-dashoffset:100; filter:drop-shadow(0 0 1.4px rgba(255,205,95,.85)); }
-.sweep-core { stroke:#fff6d8; stroke-width:0.175; stroke-linecap:round; stroke-dasharray:1.2 98.8; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
+/* opacity:0 default: without it the 1.2-unit dash draws a static bright
+   comet head at the path start whenever the sweep early-exits at 0
+   progress (owner flag 2026-10-10). WAAPI keyframes set opacity:1. */
+.sweep-core { stroke:#fff6d8; stroke-width:0.175; stroke-linecap:round; stroke-dasharray:1.2 98.8; opacity:0; filter:drop-shadow(0 0 1.2px #fff0b0) drop-shadow(0 0 3px rgba(255,205,95,.9)); }
 @keyframes circuit-run { to { stroke-dashoffset:-100; } }
 .body-meridian-path .dot-lit { fill:#ffd76a; animation:meridianTwinkle 5s ease-in-out infinite; }
 .body-meridian-path .dot-dim.twinkle { animation:meridianTwinkle 2.6s ease-in-out infinite; }
@@ -662,9 +757,6 @@ const galaxyPieces = computed(() =>
   50% { opacity:.95; filter:drop-shadow(0 0 .8px rgba(255,235,170,.9)) drop-shadow(0 0 1.6px rgba(255,205,95,.6)); }
 }
 .body-meridian-path .dot-dim { fill:#6b5a38; opacity:.6; }
-.body-meridian-handles { position:absolute; inset:0; z-index:4; pointer-events:none; }
-.body-meridian-bend { position:absolute; width:22px; height:22px; transform:translate(-50%,-50%); z-index:4; padding:0; border:0; border-radius:50%; background:transparent; cursor:grab; touch-action:none; pointer-events:auto; }
-.body-meridian-bend:active { cursor:grabbing; }
 .body-meridian-node.selected img { filter:drop-shadow(0 0 5px #ffd785); }
 .body-meridian-node:focus-visible { outline:2px solid #315d48; outline-offset:2px; }
 .body-meridian-line { position:absolute; height:12px; transform-origin:left center; z-index:2; pointer-events:none; }
@@ -672,7 +764,19 @@ const galaxyPieces = computed(() =>
 .meridian-flow { position:absolute; top:43%; left:8%; width:84%; height:14%; background:linear-gradient(90deg, transparent 20%, #fff3b2 45%, transparent 65%); background-size:200% 100%; animation:meridian-flow 2.4s linear infinite; }
 .body-galaxy-piece { position:absolute; height:auto; transform:translate(-50%,-50%) rotate(var(--orbit-angle)); pointer-events:none; }
 .body-galaxy-piece.orbiting { animation:orbit-drift 28s linear infinite; }
-.body-galaxy-stars { position:absolute; left:40%; top:42%; width:20%; height:14%; object-fit:contain; pointer-events:none; }
+.body-galaxy-stars { position:absolute; left:34%; top:46%; width:32%; height:20%; object-fit:contain; pointer-events:none; }
+/* SVG core orb (owner ruling 2026-10-10): unlit = dim ember, lit =
+   bright sphere with a breathing halo. */
+.galaxy-core { aspect-ratio:1; }
+.galaxy-core:not(.lit) .halo { opacity:.1; }
+.galaxy-core:not(.lit) .ball { fill:#5d4a26; }
+.galaxy-core:not(.lit) .shine { opacity:.12; }
+.galaxy-core.lit { animation:ztCorePulse 4.2s ease-in-out infinite; }
+.galaxy-core.lit .surface { transform-box:fill-box; transform-origin:center; animation:ztCoreSpin 7s linear infinite; }
+@keyframes ztCoreSpin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .galaxy-core.lit .surface { animation:none; } }
+@keyframes ztCorePulse { 0%,100% { filter:drop-shadow(0 0 6px rgba(255,205,95,.5)); } 50% { filter:drop-shadow(0 0 14px rgba(255,215,120,.85)); } }
+@media (prefers-reduced-motion: reduce) { .galaxy-core.lit { animation:none; } }
 @keyframes meridian-flow { to { background-position:-200% 0; } }
 @keyframes orbit-drift { to { transform:translate(-50%,-50%) rotate(calc(var(--orbit-angle) + 360deg)); } }
 @media (prefers-reduced-motion: reduce) {

@@ -73,29 +73,40 @@ export const zhouTianChapter: BaseStatBodyChapter = {
   legacyModifierPrefix: LEGACY_MODIFIER_PREFIX,
   currency: { bag: 'material', id: ZHOU_TIAN_CURRENCY_MATERIAL_ID },
 
-  // Dau tu Tinh Hoa Phap The vao cac nang cap Chu Thien - moi nang cap
-  // deterministic +1 buoc, tieu gia cua buoc ke tiep. Chi tieu duoc toi
-  // da `available` va KHONG vuot qua capacity hien tai. Tra ve tong Tinh
-  // Hoa THAT SU da tieu (0 khi locked/capped/complete/khong du gia buoc).
+  // Dau tu Tinh Hoa Phap The vao Chu Thien - moi lan goi commit DUNG 1
+  // buoc tiep theo (owner ruling 2026-10-10: mot click Van = +1 buoc),
+  // tieu gia cua buoc ke tiep va khong vuot capacity hien tai. Tra ve
+  // Tinh Hoa THAT SU da tieu (0 khi locked/capped/complete/khong du gia
+  // buoc). Callers muon tieu nhieu buoc thi loop theo return value.
   // No modifier rebuild here - the system dispatch owns that step.
   invest(player: PlayerData, available: number, _auxOwned: number): number {
     const state = player.bodyProgression.zhou_tian
     const capacity = getZhouTianCapacity(player)
 
-    let remaining = available
-    let consumed = 0
-
-    while (state.completed < capacity) {
-      const cost = zhouTianStepCost(state.completed)
-      if (remaining < cost) {
-        break
-      }
-      remaining -= cost
-      consumed += cost
-      state.completed += 1
+    if (state.completed >= capacity) {
+      return 0
     }
 
-    return consumed
+    const cost = zhouTianStepCost(state.completed)
+    if (available < cost) {
+      return 0
+    }
+
+    state.completed += 1
+    return cost
+  },
+
+  // Owner ruling 2026-10-10 - essence intake cap: remaining essence the
+  // track can still consume = sum of step costs from the current step
+  // to the last, unclamped by realm capacity (capacity gates timing,
+  // not what the track will consume).
+  remainingCurrencyNeed(player: PlayerData): number {
+    const state = player.bodyProgression.zhou_tian
+    let need = 0
+    for (let step = state.completed; step < ZHOU_TIAN_TOTAL_STEPS; step++) {
+      need += zhouTianStepCost(step)
+    }
+    return need
   },
 
   // Sec.11.3 - each completed step contributes its authored raw/base

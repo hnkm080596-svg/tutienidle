@@ -16,8 +16,6 @@ import type { StatModifier } from '../stats/StatCalculator'
 import { MaterialBag } from '../material/MaterialBag'
 import {
   SPIRIT_STONE_MATERIAL_ID,
-  getSpiritStoneMaterialIdForEnhanceLevel,
-  getSpiritStoneMaterialIdForRealmTier,
 } from '../material/SpiritStoneMaterial'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
@@ -401,18 +399,16 @@ export class EquipmentSystem {
   private hasSpiritStones(
     materialBag: MaterialBag,
     amount: number,
-    materialId = SPIRIT_STONE_MATERIAL_ID,
   ): boolean {
-    return amount <= 0 || materialBag.has(materialId, amount)
+    return amount <= 0 || materialBag.has(SPIRIT_STONE_MATERIAL_ID, amount)
   }
 
   private spendSpiritStones(
     materialBag: MaterialBag,
     amount: number,
-    materialId = SPIRIT_STONE_MATERIAL_ID,
   ): void {
     if (amount > 0) {
-      materialBag.remove(materialId, amount)
+      materialBag.remove(SPIRIT_STONE_MATERIAL_ID, amount)
     }
   }
 
@@ -457,9 +453,12 @@ export class EquipmentSystem {
   }
 
   /** Cost Tay Luyen sau discount Khi Duong; UI va transaction dung chung. */
-  getWashCost(quality: ItemQuality): { tinhHoa: number; spiritStone: number } {
+  getWashCost(quality: ItemQuality): { tinhHoa: number; spiritStone: number; buiGo: number } {
     return {
       tinhHoa: this.applyCostDiscount(WASH_TINH_HOA_COST_BY_QUALITY[quality]),
+      // Materials economy rework - buiGo mirrors the tinhHoa component
+      // (same number + same discount path; balance pass retunes later).
+      buiGo: this.applyCostDiscount(WASH_TINH_HOA_COST_BY_QUALITY[quality]),
       spiritStone: this.applyCostDiscount(WASH_SPIRIT_STONE_COST_BY_QUALITY[quality]),
     }
   }
@@ -471,6 +470,7 @@ export class EquipmentSystem {
     quality: ItemQuality = ITEM_QUALITY_ORDER[0]!,
   ): {
     essenceUnits: number
+    buiGoUnits: number
     spiritStone: number
     spiritStoneMaterialId: string
     refinementPoints: number
@@ -479,6 +479,8 @@ export class EquipmentSystem {
 
     return {
       essenceUnits: this.applyCostDiscount(REFINE_TINH_HOA_COST_BY_QUALITY[quality]),
+      // Materials economy rework - bui_go mirrors the essence amount.
+      buiGoUnits: this.applyCostDiscount(REFINE_TINH_HOA_COST_BY_QUALITY[quality]),
       spiritStone: this.applyCostDiscount(
         baseUnits * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[quality],
       ),
@@ -523,12 +525,11 @@ export class EquipmentSystem {
     const enhanceLevel = slotState.enhanceLevel
 
     const cost = this.resolveEnhanceCost(realmId, enhanceLevel, template)
-    const spiritStoneMaterialId = getSpiritStoneMaterialIdForEnhanceLevel(enhanceLevel)
 
     // Plan Workstream F - Linh Thach la MATERIAL: check/tru qua
     // MaterialBag (spiritStone trong cost chi con authoring sugar duoc
-    // normalize tai boundary nay).
-    if (!this.hasSpiritStones(materialBag, cost.spiritStone, spiritStoneMaterialId)) {
+    // normalize tai boundary nay). Flatten: one stone id, no level tier.
+    if (!this.hasSpiritStones(materialBag, cost.spiritStone)) {
       return { ok: false, reason: 'missing_spirit_stone' }
     }
 
@@ -538,7 +539,7 @@ export class EquipmentSystem {
       }
     }
 
-    this.spendSpiritStones(materialBag, cost.spiritStone, spiritStoneMaterialId)
+    this.spendSpiritStones(materialBag, cost.spiritStone)
 
     for (const entry of cost.materials) {
       materialBag.remove(entry.materialId, entry.amount)

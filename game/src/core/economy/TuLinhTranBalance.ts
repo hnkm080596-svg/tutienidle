@@ -1,7 +1,5 @@
-import { getRealmTier } from '../realm/RealmTierMap'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
-import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
-import { SPIRIT_STONE_CONVERSION_RATIO } from '../material/SpiritStoneMaterial'
+import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { stoneCostRealmFactor } from './EconomyRealmPace'
 
 // economy-fixes-sinks-plan sec3.2 B1 (2026-08-29) - Tu Linh Tran:
@@ -19,17 +17,19 @@ export function getTuLinhTranCost(
   realmId: string,
   activeStacks: number,
 ): { materialId: string; amount: number } {
-  const tier = getRealmTier(realmId)
-  const rawInHa = Math.round(
-    TU_LINH_TRAN_COST_BASE *
-      Math.pow(TU_LINH_TRAN_COST_ESCALATION, activeStacks) *
-      stoneCostRealmFactor(realmId),
+  // Flatten (2026-10-11): one spirit stone - the realm leg stays inside
+  // stoneCostRealmFactor; the x100 tier-conversion divisor is gone with
+  // the trung/thuong tiers.
+  const amount = Math.max(
+    1,
+    Math.round(
+      TU_LINH_TRAN_COST_BASE *
+        Math.pow(TU_LINH_TRAN_COST_ESCALATION, activeStacks) *
+        stoneCostRealmFactor(realmId),
+    ),
   )
-  const materialId = getSpiritStoneMaterialIdForRealmTier(tier)
-  const factor = Math.pow(SPIRIT_STONE_CONVERSION_RATIO, Math.max(0, tier - 4))
-  const amount = Math.max(1, Math.ceil(rawInHa / factor))
 
-  return { materialId, amount }
+  return { materialId: SPIRIT_STONE_MATERIAL_ID, amount }
 }
 
 /**

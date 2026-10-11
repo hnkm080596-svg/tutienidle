@@ -32,7 +32,7 @@ describe('ActionFeedbackLog — render key-form entry giống byte message cũ',
       label: 'actionFeedback.ops.refine.label',
       reason: 'actionFailure.missing_tinh_hoa',
     })
-    feedback.success('Hóa Luyện: Hạ phẩm Linh Thạch ×2')
+    feedback.success('Hóa Luyện: Linh Thạch ×2')
     await nextTick()
 
     const global = i18n.global as unknown as { locale: { value: 'vi' | 'en' } }
@@ -43,7 +43,7 @@ describe('ActionFeedbackLog — render key-form entry giống byte message cũ',
       (node) => node.textContent ?? '',
     )
     expect(texts).toContain('Cannot Refine: Not enough Qi Refining Essence.')
-    expect(texts).toContain('Hóa Luyện: Hạ phẩm Linh Thạch ×2')
+    expect(texts).toContain('Hóa Luyện: Linh Thạch ×2')
 
     global.locale.value = 'vi'
     app.unmount()
@@ -94,10 +94,10 @@ describe('ActionFeedbackLog — render key-form entry giống byte message cũ',
     const { root, app } = mountLog()
     const feedback = useActionFeedbackStore()
 
-    feedback.success('Hóa Luyện: Hạ phẩm Linh Thạch ×12')
+    feedback.success('Hóa Luyện: Linh Thạch ×12')
     await nextTick()
 
-    expect(messageText(root)).toBe('Hóa Luyện: Hạ phẩm Linh Thạch ×12')
+    expect(messageText(root)).toBe('Hóa Luyện: Linh Thạch ×12')
 
     app.unmount()
   })

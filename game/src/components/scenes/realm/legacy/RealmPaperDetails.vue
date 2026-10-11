@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import type { RealmUiModel } from './realmUi'
+import type { RealmUiModel } from './realmUiLegacy'
 const props = defineProps<{ model: RealmUiModel; selected: number; notice: string }>()
 const emit = defineEmits<{ breakthrough: []; quanKhi: [] }>()
 const { t } = useI18n()

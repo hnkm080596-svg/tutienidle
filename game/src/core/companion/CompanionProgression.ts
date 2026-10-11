@@ -275,7 +275,7 @@ function applySkillOverride(skill: TurnSkillDefinition, overrides: CompanionSkil
 // Feed scope (design spec section 5): only 'essence'/'other' materials
 // feed a companion - herb/wood/ore are profession inputs with their own
 // sinks. Two content ids are excluded even inside the allowed categories:
-// the spirit stone tiers (the currency, SpiritStoneMaterial.ts) and the
+// the spirit stone (the currency, SpiritStoneMaterial.ts) and the
 // gacha pull token 'chieu_hien_lenh' (COMPANION_PULL_TOKEN_ID in
 // GameManagerCompanionOps - kept as a literal so this domain module never
 // depends on the ops layer, A6).

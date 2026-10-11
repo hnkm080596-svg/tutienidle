@@ -18,6 +18,12 @@ import { materialLabel } from '@/core/presentation/labels'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentBagSection from '@/components/panels/bag-sections/EquipmentBagSection.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import {
+  bagGridPoint,
+  collectBagCellPoints,
+  playDecomposeFx,
+  type DecomposeFxStream,
+} from '@/components/fx/decomposeFx'
 
 const { t } = useI18n()
 
@@ -143,9 +149,37 @@ function doDissolve() {
   dissolveDialogOpen.value = true
 }
 
+// Dissolve FX (owner spec 2026-10-11): streams are captured BEFORE
+// dissolve() removes the items - the picked cells unmount with them.
+// Every origin streams to each output family the preview quotes.
+const workspaceRef = ref<HTMLElement | null>(null)
+
+function collectDissolveStreams(): DecomposeFxStream[] {
+  const origins = collectBagCellPoints(workspaceRef.value)
+
+  // Items picked on other bag pages render no cell - the grid center
+  // stands in so the stream volume still tracks the whole selection.
+  if (origins.length < dissolveSelected.value.size) {
+    const fallback = bagGridPoint(workspaceRef.value)
+
+    if (fallback !== null) {
+      origins.push(fallback)
+    }
+  }
+
+  return dissolvePreview.value.map((row) => ({
+    materialId: row.materialId,
+    amount: row.maxAmount,
+    origins,
+  }))
+}
+
 function confirmDissolve() {
+  const streams = collectDissolveStreams()
+
   if (dissolve(Array.from(dissolveSelected.value))) {
     dissolveSelected.value = new Set()
+    playDecomposeFx(streams)
   }
 
   dissolveDialogOpen.value = false
@@ -156,7 +190,7 @@ function confirmDissolve() {
   <!-- Reskin vao card toi cua sheet moi (preview khong co design Hoa
        Luyen -> dung chrome cua chinh card: select kieu footer tui,
        slot grid, nut vang). Giu nguyen chuc nang thuc. -->
-  <div class="equipment-forge-workspace dissolve-workspace">
+  <div ref="workspaceRef" class="equipment-forge-workspace dissolve-workspace">
     <!-- Header removed (owner ruling 2026-10-09): the active tab already
          labels the card; a second "Hóa Luyện" line is redundant. -->
     <!-- Owner ruling 2026-10-09: the grade/quality selects are gone -
@@ -221,7 +255,7 @@ function confirmDissolve() {
     >
       <div class="dissolve-dialog__detail">
         <p v-for="entry in dissolvePreview" :key="entry.materialId">
-          {{ materialLabel(entry.materialId, gameManager.materialRegistry) }}: {{ entry.minAmount }}–{{ entry.maxAmount }}
+          {{ materialLabel(entry.materialId, gameManager.materialRegistry) }}: {{ entry.minAmount === entry.maxAmount ? entry.minAmount : `${entry.minAmount}–${entry.maxAmount}` }}
         </p>
         <p class="dissolve-warning">{{ t('panels.equipmentHall.warnings.irreversible') }}</p>
       </div>

@@ -21,10 +21,10 @@ import {
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { MaterialBag } from '../../core/material/MaterialBag'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { MaterialRegistry } from '../../core/material/MaterialRegistry'
 import type { Material } from '../../core/material/Material'
 import { PillBag } from '../../core/pill/PillBag'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { materials } from '../../data/materials/materials'
 import { OnlineSessionController } from '../session/OnlineSessionController'
 import { useSaveIssueStore } from '../../stores/saveIssue'
@@ -123,11 +123,14 @@ function stockedBag() {
   const registry = new MaterialRegistry()
   const recipe = mortalRecipe()
   const herbId = recipe.herbVariants[0]!.materialId
-  const woodId = 'mortal_wood_decade'
+  const woodId = 'bui_go'
   registry.register(material(herbId))
   registry.register(material(woodId))
+  registry.register(material('luyen_dan_tinh_hoa'))
   bag.add(registry.get(herbId), recipe.herbAmount)
   bag.add(registry.get(woodId), recipe.fuelWoodAmount)
+  bag.add(registry.get('luyen_dan_tinh_hoa'), recipe.luyenDanTinhHoaAmount)
+  bag.add(registry.get('luyen_dan_tinh_hoa'), recipe.luyenDanTinhHoaAmount)
   return { bag, registry, herbId, recipe }
 }
 
@@ -196,38 +199,16 @@ describe('auditR29 INT probe - tick/settle nowMs guard parity (P)', () => {
     expect(fresh.settleOffline(bag, () => ({ id: j2.pillId }), currentMs)).toBe(1)
   })
 
-  it('P3 decompose channels zero-advance/zero-settle on hostile clocks - guard parity with alchemy (r29-INT-1 fixed)', () => {
+  it('P3 decompose has no clock-fed channel anymore (direct rework) - decompose() reads the bag, not nowMs', () => {
     const bag = new MaterialBag()
     const ore = materials.find((m) => m.id === 'mortal_ore_decade')!
     bag.add(ore, 100_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(1)
-    system.setSetting({ workers: 1 })
-    system.tick(1_000) // arms: first deadline at 31_000
+    const system = new DecomposeSystem(bag)
 
-    // settleOffline(1e300) - the SAME input the alchemy channel
-    // zero-advances - now zero-settles too.
-    const settled = system.settleOffline(1e300, 1_000)
-    expect(settled).toBe(0)
-    expect(system.drainOutput()).toHaveLength(0)
-    expect(system.getSaveState().nextCycleAt).toBe(31_000)
-
-    // tick(NaN) zero-advances: no mint, no poisoned deadline - a later
-    // finite tick re-anchors cleanly instead of minting on NaN.
-    const bag2 = new MaterialBag()
-    bag2.add(ore, 100_000)
-    const live = new DecomposeSystem(bag2, { cycleSeconds: 30 })
-    live.updateCapacity(1)
-    live.setSetting({ workers: 1 })
-    live.tick(1_000)
-
-    live.tick(Number.NaN)
-    expect(live.getSaveState().nextCycleAt).toBe(31_000)
-    live.tick(60_000)
-    // The armed deadline settled once - normal catch-up, no poison.
-    const drained = live.drainOutput()
-    expect(drained.length).toBe(1)
-    expect(live.getSaveState().nextCycleAt).toBe(90_000)
+    // The direct API takes ids, not timestamps - a hostile clock cannot
+    // reach the engine at all.
+    expect(system.decompose(['mortal_ore_decade'])).toBe(true)
+    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
   })
 })
 

@@ -188,10 +188,6 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     const chq = deps.gameManager.buildingManager.getByBuildingId('chi_hien_quan')!
     deps.gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, chq) // total 5
 
-    // Decompose holds 2 of the 5 -> production sliders max at 3.
-    deps.gameManager.decomposeSystem.updateCapacity(5)
-    deps.gameManager.decomposeSystem.setSetting({ workers: 2 })
-
     // A persisted assignment exists BEFORE mount -> the panel must derive
     // 'manual' from it (audit T4-29: the old local ref always reset to auto).
     const siteId = deps.gameManager.buildingOps.getProductionViews(Date.now())[0]!.definition.siteId
@@ -206,7 +202,7 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
 
     const slider = deps.container.querySelector<HTMLInputElement>('.worker-allocation__slider input[type=range]')
     expect(slider).not.toBeNull()
-    expect(slider!.max).toBe('3') // available = 5 - 2, not the total 5
+    expect(slider!.max).toBe('5') // available = 5 (no claimant ahead of production since the direct decompose rework)
 
     deps.app.unmount()
   })

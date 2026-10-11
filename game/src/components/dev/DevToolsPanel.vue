@@ -33,10 +33,8 @@ import {
   reconcileTalentEntitlement,
 } from '@/core/talent/TalentEntitlement'
 import { getRealmTier, PRODUCIBLE_REALM_TIER_LEAD } from '@/core/realm/RealmTierMap'
-import {
-  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
-  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
-} from '@/core/material/SpiritStoneMaterial'
+import { randomInt } from '@/core/reward/DropRoll'
+import { itemQualityCeilingForFloor } from '@/core/equipment/ItemQualityBalance'
 import { createDefaultPlayer } from '@/core/player/Player'
 import { CHARACTER_CREATION_TALENTS } from '@/data/talent/Talents'
 import {
@@ -56,20 +54,15 @@ const amount = ref(1000)
 
 // Rows offered = what the save boundary could actually mint: the
 // write gate refuses permanently-suppressed mint sources, domain
-// materials outside the release window, spirit stones/profession
-// materials above the player's realm tier. Adding one of those would
-// corrupt the save on the next autosave, so they stay unlisted.
+// materials outside the release window, profession materials above
+// the player's realm tier. Adding one of those would corrupt the save
+// on the next autosave, so they stay unlisted. (Flatten 2026-10-11:
+// spirit stones have no tier gate - the single stone lists at any
+// realm.)
 const materials = computed(() => {
   const claimedTier = getRealmTier(player.realmId)
   return gameManager.materialRegistry.getAll().filter((m) => {
     if (!betaMaterialStackVisible(m, player.realmId)) return false
-    const stoneTier =
-      m.id === SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
-        ? 7
-        : m.id === SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
-          ? 4
-          : 0
-    if (stoneTier > 0 && claimedTier < stoneTier) return false
     const professionTier = m.profession?.realmId
     if (
       professionTier !== undefined &&
@@ -85,6 +78,71 @@ function materialAmount(id: string): number {
 }
 function addMaterial(id: string) {
   gameManager.materialBag.add(gameManager.materialRegistry.get(id), amount.value)
+  bumpState()
+}
+// Minh (2026-10-12): random-spawn buttons mint through the REAL
+// pipelines, never a direct bag write - equipment rides the same
+// createInstance seam the monster-drop path uses (grade auto-follows
+// the player's realm, quality capped by the stage floor exactly like a
+// kill roll via itemQualityCeilingForFloor); materials ride
+// productionSystem.rollRewards (the worker-cycle mint, which already
+// enforces the F-MAT-REALM producible-tier cap). Both stay inside the
+// save boundary's producibility rules by construction.
+function spawnRandomEquipment() {
+  const pool = gameManager.equipmentRegistry.getAll()
+  const template = pool[randomInt(0, pool.length - 1, Math.random)]
+  if (template === undefined) {
+    lastResult.value = 'registry trống'
+    return
+  }
+  const activeStage = gameManager.stageManager.getActive()
+  const stageId = activeStage?.stageId ?? player.completedStageIds.at(-1)
+  const stage = stageId !== undefined ? gameManager.catalogOps.getStage(stageId) : undefined
+  const zoneId = activeStage
+    ? gameManager.zoneRegistry.getZoneForStage(activeStage.stageId)?.id
+    : undefined
+  const instance = gameManager.equipmentSystem.createInstance(
+    template,
+    player.$state,
+    gameManager.affixRegistry,
+    zoneId,
+    0,
+    Math.random,
+    itemQualityCeilingForFloor(stage?.floor),
+  )
+  const dissolved = gameManager.equipmentBag.add(instance)
+  lastResult.value =
+    dissolved.length > 0 ? `bag đầy - ${template.name} tự hóa luyện` : `+1 ${template.name}`
+  bumpState()
+}
+function spawnRandomMaterial() {
+  const states = gameManager.productionSystem.getAllStates()
+  const state = states[randomInt(0, states.length - 1, Math.random)]
+  if (state === undefined) {
+    lastResult.value = 'chưa có điểm sản xuất'
+    return
+  }
+  const rewards = gameManager.productionSystem.rollRewards({
+    cycleId: `dev-${Date.now()}`,
+    siteId: state.siteId,
+    collectionRealmId: player.realmId,
+    siteLevelAtStart: state.level,
+    rewardTableVersion: 1,
+    rollSeed: (Math.random() * 2 ** 31) | 0,
+    startedAtMs: Date.now(),
+    completesAtMs: Date.now(),
+  })
+  let granted = 0
+  for (const reward of rewards) {
+    if (gameManager.materialRegistry.has(reward.materialId)) {
+      gameManager.materialBag.add(
+        gameManager.materialRegistry.get(reward.materialId),
+        reward.amount,
+      )
+      granted += reward.amount
+    }
+  }
+  lastResult.value = granted > 0 ? `+${granted} nguyên liệu` : 'roll trống'
   bumpState()
 }
 function addPlayerField(field: 'cultivation' | 'duyenPhan' | 'skillInsight') {
@@ -296,6 +354,10 @@ function respecTree() {
         {{ t('devPanel.amount') }}
         <input v-model.number="amount" type="number" min="1" />
       </label>
+      <div class="dev-panel__actions" style="margin-bottom: 8px">
+        <button type="button" @click="spawnRandomEquipment">{{ t('devPanel.spawnEquipment') }}</button>
+        <button type="button" @click="spawnRandomMaterial">{{ t('devPanel.spawnMaterial') }}</button>
+      </div>
       <div class="dev-panel__rows">
         <div class="dev-panel__row">
           <span>{{ t('devPanel.cultivation') }}</span>

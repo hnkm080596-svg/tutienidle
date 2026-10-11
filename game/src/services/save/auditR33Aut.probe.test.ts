@@ -25,7 +25,6 @@ import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCata
 import type { ProductionCycle } from '../../core/production/ProductionTypes'
 import { CYCLE_BASE_SECONDS_BY_REALM, computeCycleSeconds } from '../../core/production/ProductionBalance'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { TribulationDirector } from '../../core/tribulation/TribulationDirector'
 import { EventBus } from '../../core/events/EventBus'
 
@@ -499,22 +498,6 @@ describe('r33 AUT - E: advanceWorkerLanes mintedSpanMs boundary', () => {
 // ----------------------------------------------------------------------------
 
 describe('r33 AUT - F: restore cap clamps stay in-domain at restoreNow = 2^52 - 1', () => {
-  it('DecomposeSystem.restore: merged deadline clamps to 2^52-1, never past it', () => {
-    const bag = new MaterialBag()
-    const decompose = new DecomposeSystem(bag, { cycleSeconds: 60 })
-
-    // Restored stamp above the domain: the clamp pulls it to the cap
-    // (min(restoreNow + cycleMs, 2^52 - 1)) instead of parking >= 2^52.
-    decompose.restore(
-      { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: DOMAIN_TOP + 1, started: true },
-      DOMAIN_TOP - 1,
-    )
-
-    const saved = decompose.getSaveState()
-    expect(saved.nextCycleAt).toBe(DOMAIN_TOP - 1)
-    expect(saved.nextCycleAt).toBeLessThan(DOMAIN_TOP)
-  })
-
   it('TribulationDirector.restoreRuntime: cooldownUntil clamps to 2^52-1, never past it', () => {
     const director = new TribulationDirector({ eventBus: new EventBus() })
 

@@ -136,7 +136,7 @@ describe('arm A - degraded zero-accrual authority reaches no paying channel', ()
     vi.restoreAllMocks()
   })
 
-  it('corrupt authority + armed farm + production site: cultivation/autofarm/production/decompose all silent; alchemy cursor = payload marker', () => {
+  it('corrupt authority + armed farm + production site: cultivation/autofarm/production all silent; alchemy cursor = payload marker', () => {
     const player = usePlayerStore()
     const manager = registeredManager()
     manager.setActivePlayer(player.$state)
@@ -148,7 +148,6 @@ describe('arm A - degraded zero-accrual authority reaches no paying channel', ()
     })
     const farmSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
     const productionSpy = vi.spyOn(manager.productionSystem, 'settleOffline')
-    const decomposeSpy = vi.spyOn(manager.decomposeSystem, 'settleOffline')
     const alchemySpy = vi.spyOn(manager.alchemySystem, 'settleOffline')
 
     const result = restoreGameSession(player, manager, save, {
@@ -161,9 +160,8 @@ describe('arm A - degraded zero-accrual authority reaches no paying channel', ()
     if (result.status !== 'ok') throw new Error(result.message)
     expect(result.offline.elapsedSeconds).toBe(0)
     expect(result.offline.cultivation).toBe(0)
-    // elapsed 0 <= 60 gate: production + decompose settles never run.
+    // elapsed 0 <= 60 gate: the production settle never runs.
     expect(productionSpy).not.toHaveBeenCalled()
-    expect(decomposeSpy).not.toHaveBeenCalled()
     // The armed farm is re-anchored with elapsed 0 (never a paying call).
     expect(farmSpy).toHaveBeenCalledWith(expect.objectContaining({}), 0)
     // Unconditional alchemy settle sees the payload marker as its cursor:

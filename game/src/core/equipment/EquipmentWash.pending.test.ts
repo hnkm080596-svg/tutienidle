@@ -30,7 +30,7 @@ import { makeInstance } from './EquipmentInstance.fixture'
 import { affixes } from '../../data/equipment/affixes'
 import { materials } from '../../data/materials/materials'
 import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
-import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
 const TEMPLATE: Equipment = {
   id: 'test_sword',
@@ -44,6 +44,7 @@ const TEMPLATE: Equipment = {
 
 const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_century')!
 const ESSENCE = materials.find((m) => m.id === LUYEN_KHI_TINH_HOA_ID)!
+const BUI_GO_MATERIAL = materials.find((m) => m.id === BUI_GO_ID)!
 
 function setup() {
   const system = new EquipmentSystem()
@@ -61,6 +62,7 @@ function setup() {
   materialBag.add(ENHANCE_ORE, 100_000)
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
   materialBag.add(ESSENCE, 100)
+  materialBag.add(BUI_GO_MATERIAL, 1_000_000)
 
   return { system, bag, registry, affixRegistry, slotManager, materialBag, player }
 }

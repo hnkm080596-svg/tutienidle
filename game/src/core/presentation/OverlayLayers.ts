@@ -25,10 +25,14 @@ export const OVERLAY_LAYERS = {
   panel: 1800,
   /** WorldAnnouncementOverlay - ambient/ephemeral banners; must never cover a blocking modal. */
   announcement: 1850,
+  /** DecomposeFxLayer - dissolve/decompose particle stream; above panels (the source cells live inside one), under blocking modals. */
+  decomposeFx: 1860,
   /** ToastContainer - transient notifications; above panels so in-panel action feedback stays visible. */
   toast: 1870,
   /** Blocking modals above panels (OfflineSummaryModal, LoreCodexModal, TutorialOverlay). */
   modal: 1900,
+  /** BreakthroughFxLayer - minor-floor breakthrough cinematic; locks the whole screen above panels/modals, stays under boot-level authority surfaces by contract. */
+  breakthroughFx: 1940,
   /** B1-D authority surfaces - reconnecting/terminal admission + the
       quit-flush offer. Above every gameplay input surface (their content
       is also inert while up); below appError/saveGate/curtain, which are

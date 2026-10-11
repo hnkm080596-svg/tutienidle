@@ -273,6 +273,16 @@ const style = { '--trial-panel': `url('${art.panel}')` }
 .trial-path-cell.locked .trial-path-cell__label { color: #8a7c56; }
 .trial-path-cell__lock { width: 18px; height: 18px; opacity: .8; }
 .trial-begin { position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 50%); display: block; width: 345px; min-height: 56px; margin: 9px auto 0; font-size: 27px; }
+/* Owner ruling 2026-10-10: art-only swap - same equipment-filter-* pill
+   the in-game enhance button wears, instead of the paper slice. */
+/* Two classes + #app anchor (1,2,1): .pc-paper-button--secondary::before
+   re-arms border-image-source at (0,1,1) and :is(#app,body) game-button
+   rules reach (1,1,1) - both must be beaten deterministically. */
+#app .trial-creation-art .trial-begin::before { border: 0; border-image: none; background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / 100% 100% no-repeat; }
+/* Hover takes the clean gold pill (equipment-filter-selected) - the
+   stock hover art bakes a black smoke fill over the label. */
+#app .trial-creation-art .trial-begin:not([aria-disabled="true"]):is(:hover, :focus-visible)::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png'); filter: none; }
+#app .trial-creation-art .trial-begin:not([aria-disabled="true"]):active::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png'); filter: none; }
 .trial-begin[aria-disabled="true"] { cursor: not-allowed; filter: grayscale(.8); }
 .trial-begin[aria-disabled="true"]:hover { filter: grayscale(.8); }
 /* Mock hover recipe for every paper-button in this scene (same as the

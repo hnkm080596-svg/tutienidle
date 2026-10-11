@@ -10,9 +10,8 @@ import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { CANONICAL_REALM_PASSIVE_LADDER } from '../../data/progression/RealmPassiveLadder'
 import {
   SPIRIT_STONE_MATERIAL,
-  getSpiritStoneMaterialIdForRealmTier,
+  SPIRIT_STONE_MATERIAL_ID,
 } from '../material/SpiritStoneMaterial'
-import { getRealmTier } from '../realm/RealmTierMap'
 
 // F-TT-CLEAN-A5-INT-1 - the isTurnBattleInProgress gates on
 // RealmAdvanceOps get the same rejection pins the ProgressionOps
@@ -76,7 +75,7 @@ describe('realmAdvanceOps in-battle rejection gates', () => {
     player.realmId = 'foundation_establishment'
     gameManager.techniqueManager.setActive({ ...structuredClone(TECHNIQUES[0]!), grade: 1 })
 
-    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
+    const stoneId = SPIRIT_STONE_MATERIAL_ID
     gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 1_000)
 
     inBattle(gameManager, player)

@@ -148,7 +148,8 @@
         "refinePreview": "Tinh Luyện",
         "selectAll": "Chọn tất cả",
         "clearAll": "Bỏ chọn hết",
-        "dissolveConfirm": "XÁC NHẬN HÓA LUYỆN"
+        "dissolveConfirm": "XÁC NHẬN HÓA LUYỆN",
+        "decomposeConfirm": "XÁC NHẬN PHÂN GIẢI"
       },
       "labels": {
         "rowLine": "Dòng",
@@ -536,7 +537,7 @@
       "roster": "Đồng Đội Chờ Bố Trận"
     },
     "bag": {
-      "title": "Kho Vật",
+      "title": "Trữ Vật",
       "countSuffix": "món",
       "countUnitSuffix": "loại",
       "tabs": {
@@ -632,23 +633,6 @@
       "pagePrev": "Trang trước",
       "pageNext": "Trang sau"
     },
-    "vendor": {
-      "gateNotBelow": "Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại",
-      "sellRejected": "Không bán được vật phẩm này.",
-      "sell": {
-        "title": "Hóa Bán",
-        "rate": "Bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm hiện hành.",
-        "unitPriceSuffix": "Linh Thạch hạ phẩm/đơn vị",
-        "quantityAria": "Số lượng bán",
-        "totalPreview": "→ +{total} {stone}",
-        "tooSmall": "→ quá ít để quy đổi ở cảnh giới này",
-        "sold": "Đã bán {qty} {name} — nhận {gained} {stone}",
-        "confirmTitle": "Bán hết toàn bộ?",
-        "confirmMessage": "Bán hết {qty} {name} nhận {total} {stone}. Không thể hoàn tác.",
-        "button": "Bán",
-        "empty": "Không có nguyên liệu nào bán được lúc này."
-      }
-    },
     "production": {
       "summary": "Khai Vật Đường khai thác nguyên liệu mọi cảnh giới — phân nhân công cho nguồn, nhận thẳng vào Túi.",
       "kinds": {
@@ -706,7 +690,7 @@
       },
       "labels": {
         "quanKhi": "Quán Khí",
-        "foundation": "Trúc Cơ",
+        "foundation": "Dược",
         "majorFallback": "Đại Cảnh Giới"
       },
       "nodes": {
@@ -755,7 +739,7 @@
         "cost": "{count} Thông Mạch Đan",
         "realmGate": "{realm} tầng {level}",
         "pageLocked": "Mở khóa ở {realm}",
-        "invest": "Mở Mạch",
+        "invest": "Xung Mạch",
         "owned": "sở hữu {count}",
         "seqGate": "cần hoàn thành Rèn Thể"
       },
@@ -771,7 +755,7 @@
         "capacity": "Dung lượng hiện tại: {capacity}",
         "tieuLabel": "Tiểu Chu Thiên · 18",
         "daiLabel": "Đại Chu Thiên · 36",
-        "invest": "Vận Chu Thiên",
+        "invest": "Vận",
         "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
         "stepCost": "Giá bước kế: {cost}",
         "complete": "Đại Chu Thiên đã viên mãn."
@@ -933,24 +917,6 @@
       "aria": "Điều hướng chức năng",
       "body": "Đạo Thể",
       "techniqueLocked": "Tâm Pháp mở khi vào Luyện Khí"
-    },
-    "decompose": {
-      "labels": {
-        "gradeFilter": "Phẩm khoáng",
-        "ageFilter": "Tuổi khoáng",
-        "workers": "Nhân công"
-      },
-      "select": {
-        "allGrades": "Mọi phẩm",
-        "allAges": "Mọi tuổi"
-      },
-      "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt",
-      "matching": "Khoáng phù hợp trong túi: {count}",
-      "hint": {
-        "noCapacity": "Chưa có chỗ phân giải — nâng cấp Chiêu Hiền Quán để có nhân công.",
-        "noWorkers": "Chưa phân công nhân công — kéo thanh Nhân công lên để bắt đầu phân giải.",
-        "noMatchingOres": "Không có Linh Khoáng nào trong túi khớp bộ lọc — thu thập khoáng từ khai thác/thám hiểm hoặc nới bộ lọc."
-      }
     },
     "scripture": {
       "empty": "Chưa tìm thấy manh mối nào.",
@@ -1310,6 +1276,13 @@
         "confirm": "Thoát",
         "exited": "Đã thoát",
         "return": "Quay Lại"
+      },
+      "masterGate": {
+        "label": "Cửa Sau",
+        "placeholder": "Khóa thông hành",
+        "submit": "Mở",
+        "denied": "Khóa không đúng",
+        "open": "Đã mở cửa sau"
       }
     },
     "creation": {
@@ -1522,6 +1495,7 @@
     "missing_refinement_points": "Không đủ Điểm Rèn của món đồ.",
     "no_forge_uses": "Món đồ đã hết lượt Rèn.",
     "missing_tinh_hoa": "Không đủ Luyện Khí Tinh Hoa.",
+    "missing_bui_go": "Không đủ Bụi Gỗ làm nhiên liệu.",
     "missing_spirit_stone": "Không đủ Linh Thạch.",
     "missing_material": "Không đủ nguyên liệu.",
     "template_not_found": "Dữ liệu trang bị không hợp lệ.",
@@ -1575,7 +1549,7 @@
   },
   "alchemy": {
     "spiritStones": "Linh Thạch",
-    "startBrewing": "Bắt đầu luyện",
+    "startBrewing": "Luyện Đan",
     "currentCauldron": "Đan lô hiện tại",
     "recipe": "ĐAN PHƯƠNG",
     "herb": "Linh Thảo",
@@ -1587,7 +1561,7 @@
     "outcomeChanceOnly": "{chance}% nhận {extra} viên",
     "duration": "Thời gian: ~{minutes} phút",
     "jobs": "Lò đang luyện",
-    "cancelJob": "Huỷ (mất nguyên liệu)",
+    "cancelJob": "Huỷ (hoàn liệu phần chưa luyện)",
     "gradeUnknown": "Chưa xác định",
     "reason": {
       "not_found": "Không tìm thấy đan phương",
@@ -1597,15 +1571,19 @@
       "job_slots_full": "Lò đang bận",
       "wrong_herb": "Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo",
       "missing_herb": "Không đủ Linh Thảo",
-      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu cùng cảnh giới và cùng tuổi với Linh Thảo đã chọn",
+      "missing_bui_go": "Không đủ Bụi Gỗ làm nhiên liệu lò",
+      "missing_tinh_hoa": "Không đủ Luyện Đan Tinh Hoa",
       "missing_spirit_stone": "Không đủ Linh Thạch",
       "missing_special_ingredient": "Thiếu nguyên liệu đặc biệt của đan phương",
+      "invalid_quantity": "Số lượng đan trong order không hợp lệ",
       "fallback": "Không thể bắt đầu luyện",
       "scope_hidden": "Đan phương này nằm ngoài phạm vi beta — chưa mở trong bản này",
       "invalid_clock": "Đồng hồ hệ thống chưa ổn định — thử lại sau một lúc"
     },
     "outcomeNone": "Lần này không nhận được đan nào.",
     "queueTitle": "Hàng Chờ Luyện Đan",
+    "brewing": "Đang luyện",
+    "queued": "Chờ",
     "queueEmpty": "Chưa có lò nào đang luyện.",
     "placeIngredients": "Đặt nguyên liệu vào đan lô",
     "bannerLeft": "Đan Đạo Thông Thiên",
@@ -1618,7 +1596,10 @@
     "selectedHerb": "Dược thảo đã chọn",
     "emptyRecipes": "Chưa có đan phương nào.",
     "emptyDetail": "Chọn đan phương để xem chi tiết.",
-    "emptySlot": "Lò trống",
+    "emptySlot": "Chỗ trống",
+    "unitsProgress": "{done}/{total} viên",
+    "cycleHerbHint": "Bấm để chọn niên đại dược thảo",
+    "variantPicker": "Chọn chất dược thảo",
     "durationLabel": "Thời gian luyện"
   },
   "layout": {
@@ -1630,8 +1611,7 @@
         "pill_room": "Đan Phòng",
         "worker_lodge": "Chiêu Hiền Quán",
         "scripture_pavilion": "Tàng Kinh Các",
-        "stage_select": "Địa Giới",
-        "vendor": "Ký Bảo Các"
+        "stage_select": "Địa Giới"
       },
       "levelRange": "Cấp {level} / {max}",
       "requiredRealm": "Cần đạt {realm}",
@@ -1824,7 +1804,7 @@
       },
       "active": {
         "title": "Đan phòng đang luyện",
-        "detail": "{count} mẻ · sớm nhất còn {minutes} phút.",
+        "detail": "{done}/{total} viên đang luyện · {waiting} order chờ · còn {minutes} phút.",
         "cta": "Xem lò đan"
       },
       "upgradeable": {
@@ -2040,7 +2020,6 @@
       "exploration": "Bản Đồ",
       "quest": "Nhiệm Vụ",
       "production": "Sản Xuất",
-      "vendor": "Thương Hội",
       "settings": "Cài Đặt",
       "feedback": "Trợ Giúp",
       "artifact": "Pháp Bảo",
@@ -2054,7 +2033,7 @@
     "navigation": "Chức năng",
     "realm": "Cảnh Giới",
     "character": "Tu Sĩ",
-    "inventory": "Kho Vật",
+    "inventory": "Trữ Vật",
     "skill": "Công Pháp",
     "technique": "Tâm Pháp",
     "body": "Luyện Thể",
@@ -2102,13 +2081,14 @@
     "daoUndecided": "Chưa Chọn Đạo"
   },
   "realm": {
-    "title": "ĐƯỜNG ĐĂNG TIÊN",
+    "title": "Đăng Tiên Lộ",
     "subtitle": "Mười tám tầng\nMột đường đăng tiên",
     "floorLabel": "Tầng {floor}",
     "floorCount": "Tầng {floor} / {total}",
     "cultivation": "Tu vi",
     "breakthroughTitle": "Đột Phá {target}",
-    "viewing": "Đang xem mốc tầng {floor}"
+    "advance": "Đột Phá",
+    "noPassives": "Chưa nhận thiên phú nào từ cảnh giới này."
   },
   "technique": {
     "title": "Tâm Pháp",
@@ -2204,6 +2184,7 @@
     "noEnemy": "Không có tin tức địch.",
     "startFailed": "Không thể bắt đầu. Kiểm tra lại điều kiện.",
     "armedFarm": "Đang tự động: {stage}",
+    "chapters": "Chương",
     "state": {
       "cleared": "Đã Phá",
       "current": "Tiền Tuyến",
@@ -2347,6 +2328,9 @@
     "exportLayout": "Xuất layout",
     "realm": "Cảnh Giới",
     "applyRealm": "Đổi cảnh giới",
-    "respecTree": "Đặt lại cây"
+    "respecTree": "Đặt lại cây",
+    "spawnEquipment": "+ Trang bị random",
+    "spawnMaterial": "+ Nguyên liệu random"
   }
+
 }

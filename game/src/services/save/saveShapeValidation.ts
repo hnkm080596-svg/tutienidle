@@ -73,6 +73,7 @@ import { CHARACTER_CREATION_TALENT_COUNT } from '../character/CharacterCreationS
 import {
   alchemySecondsFor,
   verifyAlchemyJobReservation,
+  ALCHEMY_MAX_BATCH_QUANTITY,
   type ActiveAlchemyJob,
 } from '../../core/alchemy/AlchemySystem'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
@@ -123,10 +124,6 @@ import {
   progressionCeilingRealmId,
 } from '../../core/realm/ReleasePolicy'
 import { isBetaStandalonePanel } from '../../core/betaScopeSurface'
-import {
-  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
-  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
-} from '../../core/material/SpiritStoneMaterial'
 import { materials as materialCatalog } from '../../data/materials/materials'
 import {
   getCultivationRampMultiplier,
@@ -3765,6 +3762,41 @@ function validateAlchemyJobsSave(
       seenJobIds.add(entry.jobId as string)
     }
 
+    // QUEUE REWORK - batch fields: an honest writer always persists
+    // BOTH (a pre-rework save has neither and reads as a one-unit
+    // batch). quantity must be an integer in [1,
+    // ALCHEMY_MAX_BATCH_QUANTITY], unitsDone an integer in
+    // [0, quantity) - a finished batch is never persisted, and a
+    // one-field-only record is malformed.
+    const entryQuantity = entry.quantity
+
+    const entryUnitsDone = entry.unitsDone
+
+    const batchFieldsAbsent = entryQuantity === undefined && entryUnitsDone === undefined
+
+    const effectiveQuantity = batchFieldsAbsent ? 1 : entryQuantity
+
+    let batchShapeOk = batchFieldsAbsent
+
+    if (!batchFieldsAbsent) {
+      batchShapeOk =
+        entryQuantity !== undefined &&
+        entryUnitsDone !== undefined &&
+        Number.isInteger(entryQuantity) &&
+        (entryQuantity as number) >= 1 &&
+        (entryQuantity as number) <= ALCHEMY_MAX_BATCH_QUANTITY &&
+        Number.isInteger(entryUnitsDone) &&
+        (entryUnitsDone as number) >= 0 &&
+        (entryUnitsDone as number) < (entryQuantity as number)
+
+      if (!batchShapeOk) {
+        issues.push({
+          path: `${entryPath}.quantity`,
+          message: 'quantity/unitsDone sai shape (writer luôn ghi cả cặp: 1 <= quantity <= max, 0 <= unitsDone < quantity)',
+        })
+      }
+    }
+
     // F-TC9-3: jobSuccessPercent reads roomLevelAtStart verbatim into
     // the authored success table, and building level never decreases -
     // a claim above the persisted pill_room level is a forged success
@@ -3813,16 +3845,21 @@ function validateAlchemyJobsSave(
 
     // F-A12-4: the span is the authored recipe - startJob stamps
     // completesAtMs = startedAtMs + alchemySecondsFor(recipe,
-    // roomLevelAtStart)*1000, so a mismatched span is a fabricated
-    // delivery window (shorter mints pills faster than authored).
+    // roomLevelAtStart)*1000 x quantity (QUEUE REWORK: sequential
+    // units each spend one authored duration), so a mismatched span is
+    // a fabricated delivery window (shorter mints pills faster than
+    // authored). A malformed batch shape falls back to quantity 1 -
+    // its own issue already flags it.
     if (recipe !== undefined) {
       const expectedSpanMs =
-        alchemySecondsFor(recipe, entry.roomLevelAtStart as number) * 1000
+        alchemySecondsFor(recipe, entry.roomLevelAtStart as number) *
+        1000 *
+        (batchShapeOk ? (effectiveQuantity as number) : 1)
 
       if ((entry.completesAtMs as number) - (entry.startedAtMs as number) !== expectedSpanMs) {
         issues.push({
           path: `${entryPath}.completesAtMs`,
-          message: `span không khớp authored duration (${expectedSpanMs}ms)`,
+          message: `span không khớp authored duration x batch (${expectedSpanMs}ms)`,
         })
       }
     }
@@ -4387,31 +4424,6 @@ function validateEquipmentSlotEntries(
       })
     }
 
-    // F-SCOPE-2: enhancing at level N pays the stone tier of
-    // getSpiritStoneMaterialIdForEnhanceLevel(N) - ha-only economies
-    // (realm tier < 4) reach at most level 30, trung economies
-    // (tier 4-6) reach 60, thuong (tier >= 7) reach the cap. A
-    // persisted level past the tier of the claimed realm is
-    // unproducible.
-    const maxProducibleEnhance =
-      claimedRealmTier === undefined
-        ? undefined
-        : claimedRealmTier >= 7
-          ? MAX_SLOT_ENHANCE_LEVEL
-          : claimedRealmTier >= 4
-            ? 60
-            : 30
-    if (
-      maxProducibleEnhance !== undefined &&
-      isNonNegativeFiniteNumber(entry.enhanceLevel) &&
-      (entry.enhanceLevel as number) > maxProducibleEnhance
-    ) {
-      issues.push({
-        path: `${path}[${i}].enhanceLevel`,
-        message: `vượt trần cường hóa producible theo realm tier (${maxProducibleEnhance})`,
-      })
-    }
-
     if (entry.enhanceFailStreak !== undefined) {
       requireNonNegativeNumber(entry, 'enhanceFailStreak', `${path}[${i}]`, issues)
       // F-ENHANCE-STREAK: the only writer increments on failure and
@@ -4612,10 +4624,12 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
   }
 
   // R7 (AR-08) - decompose slice is optional; when present it must be
-  // an object with a non-negative finite workers number (restore
-  // re-clamps; malformed input is rejected instead of crashing boot).
-  // Mission A1 extends it: nextCycleAt/started plus enum membership for
-  // the two filters (a bad deadline is a per-tick runaway).
+  // an object (malformed input is rejected instead of crashing boot).
+  // DIRECT DECOMPOSE REWORK (2026-10-11): the worker-cycle engine
+  // retired - nothing in the slice is REQUIRED anymore and restore
+  // ignores every field, but any legacy field that IS present still
+  // validates against its old rule so a corrupt payload cannot smuggle
+  // dead state past the boundary.
   if (parsed.decompose !== undefined) {
     if (!isObject(parsed.decompose)) {
       issues.push({ path: '.decompose', message: 'phải là object hoặc vắng mặt' })
@@ -4623,27 +4637,37 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
       const decompose = parsed.decompose as Record<string, unknown>
       const settings = decompose.settings
 
-      if (!isObject(settings)) {
-        issues.push({ path: '.decompose.settings', message: 'phải là object' })
-      } else {
-        if (!isNonNegativeFiniteNumber(settings.workers)) {
-          issues.push({ path: '.decompose.settings.workers', message: 'phải là số hữu hạn không âm' })
-        }
+      if (settings !== undefined) {
+        if (!isObject(settings)) {
+          issues.push({ path: '.decompose.settings', message: 'phải là object' })
+        } else {
+          if (settings.workers !== undefined && !isNonNegativeFiniteNumber(settings.workers)) {
+            issues.push({ path: '.decompose.settings.workers', message: 'phải là số hữu hạn không âm' })
+          }
 
-        if (settings.gradeFilter !== 'all' && !isProfessionGrade(settings.gradeFilter)) {
-          issues.push({ path: '.decompose.settings.gradeFilter', message: 'phải là ProfessionGrade hoặc all' })
-        }
+          if (
+            settings.gradeFilter !== undefined &&
+            settings.gradeFilter !== 'all' &&
+            !isProfessionGrade(settings.gradeFilter)
+          ) {
+            issues.push({ path: '.decompose.settings.gradeFilter', message: 'phải là ProfessionGrade hoặc all' })
+          }
 
-        if (settings.ageFilter !== 'all' && !isHerbAge(settings.ageFilter)) {
-          issues.push({ path: '.decompose.settings.ageFilter', message: 'phải là HerbAge hoặc all' })
+          if (
+            settings.ageFilter !== undefined &&
+            settings.ageFilter !== 'all' &&
+            !isHerbAge(settings.ageFilter)
+          ) {
+            issues.push({ path: '.decompose.settings.ageFilter', message: 'phải là HerbAge hoặc all' })
+          }
         }
       }
 
-      if (!isNonNegativeBoundedTimestamp(decompose.nextCycleAt)) {
+      if (decompose.nextCycleAt !== undefined && !isNonNegativeBoundedTimestamp(decompose.nextCycleAt)) {
         issues.push({ path: '.decompose.nextCycleAt', message: 'phải là timestamp không âm trong miền |x| < 2^52' })
       }
 
-      if (typeof decompose.started !== 'boolean') {
+      if (decompose.started !== undefined && typeof decompose.started !== 'boolean') {
         issues.push({ path: '.decompose.started', message: 'phải là boolean' })
       }
     }
@@ -5005,23 +5029,6 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
       }
 
       if (claimedRealmTier !== undefined) {
-        // F-SCOPE-1: every authored stone writer pays the tier keyed by
-        // getSpiritStoneMaterialIdForRealmTier(realmTier) - a trung stack
-        // needs a tier >= 4 realm claim, thuong needs tier >= 7; below
-        // that, the stack is unproducible.
-        const requiredTier =
-          entry.materialId === SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
-            ? 7
-            : entry.materialId === SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
-              ? 4
-              : 0
-        if (requiredTier > 0 && claimedRealmTier < requiredTier) {
-          issues.push({
-            path: `materials[${i}]`,
-            message: `linh thạch ${entry.materialId} vượt realm tier người chơi (${claimedRealmTier})`,
-          })
-        }
-
         // F-MAT-REALM: realm-keyed profession materials mint from
         // realm-bounded faucets only - a holding more than one tier
         // above the claimed realm (the lead authored no-gate collect

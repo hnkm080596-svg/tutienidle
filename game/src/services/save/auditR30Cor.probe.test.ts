@@ -22,8 +22,6 @@ import {
 } from '../../core/alchemy/AlchemySystem'
 import { EventBus } from '../../core/events/EventBus'
 import { TribulationDirector } from '../../core/tribulation/TribulationDirector'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
 import { QuestManager } from '../../core/quest/QuestManager'
 import { PillBag } from '../../core/pill/PillBag'
 import { useAppLifecycle } from '../../composables/useAppLifecycle'
@@ -295,83 +293,6 @@ describe('r30 COR - B: restoreStates workerCycle clockOk truth table', () => {
   })
 })
 
-// ----------------------------------------------------------------------------
-// (C) DecomposeSystem remaining clock edges
-// ----------------------------------------------------------------------------
-
-describe('r30 COR - C: decompose remaining clock edges', () => {
-  function decomposeWithOre() {
-    const bag = new MaterialBag()
-    const ore = materials.find((m) => /_ore_/.test(m.id))!
-    bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-    return { system, bag, oreId: ore.id }
-  }
-
-  it.each([2 ** 52, 2 ** 53, -(2 ** 53), -1, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
-    'tick(%j) zero-advances and preserves nextCycleAt',
-    (edge) => {
-      const { system, bag, oreId } = decomposeWithOre()
-      const oreBefore = bag.getAll().find((s) => s.material.id === oreId)!.amount
-
-      system.tick(edge)
-
-      expect(system.drainOutput()).toHaveLength(0)
-      expect(bag.getAll().find((s) => s.material.id === oreId)!.amount).toBe(oreBefore)
-      expect(system.getSaveState().nextCycleAt).toBe(currentMs)
-    },
-  )
-
-  it.each([Number.NEGATIVE_INFINITY, -1, 2 ** 52, 2 ** 53, -(2 ** 53)])(
-    'restore(state, %j) merges nextCycleAt verbatim - max(live, restored), no poison',
-    (edge) => {
-      const { system } = decomposeWithOre()
-
-      system.restore(
-        {
-          settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-          nextCycleAt: currentMs + 45_000,
-          started: true,
-        },
-        edge,
-      )
-
-      // verbatim merge: max(currentMs, currentMs + 45000) under bad clock
-      expect(system.getSaveState().nextCycleAt).toBe(currentMs + 45_000)
-    },
-  )
-
-  it.each([Number.NaN, Number.NEGATIVE_INFINITY, -1, 2 ** 52, 2 ** 53])(
-    'settleOffline(%j, since) returns 0 and preserves state',
-    (edge) => {
-      const { system } = decomposeWithOre()
-
-      expect(system.settleOffline(edge, currentMs)).toBe(0)
-      expect(system.drainOutput()).toHaveLength(0)
-      expect(system.getSaveState().nextCycleAt).toBe(currentMs)
-    },
-  )
-
-  it('deny edge: tick(2**52 - 1) zero-advances - the minted nextCycleAt would escape [0, 2^52)', () => {
-    const { system } = decomposeWithOre()
-
-    system.tick(2 ** 52 - 1)
-
-    // r31-HEADROOM: nowMs + cycleMs exceeds the persisted domain, so
-    // the tick denies verbatim rather than minting an unwritable stamp.
-    expect(system.drainOutput()).toHaveLength(0)
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs)
-  })
-})
 
 // ----------------------------------------------------------------------------
 // (D) QuestManager.restore lastDailyResetAtMs truth table
@@ -481,10 +402,11 @@ describe('r30 COR - F: startJob invalid_clock origination gate', () => {
     const manager = registeredManager()
     const recipe = mortalRecipe()
     const variant = recipe.herbVariants[0]!
-    const woodId = buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age)
+    const woodId = 'bui_go'
     const bag = manager.materialBag
     bag.add(manager.materialRegistry.get(variant.materialId), recipe.herbAmount)
     bag.add(manager.materialRegistry.get(woodId), recipe.fuelWoodAmount)
+    bag.add(manager.materialRegistry.get('luyen_dan_tinh_hoa'), recipe.luyenDanTinhHoaAmount)
     return { manager, recipe, variant, bag }
   }
 

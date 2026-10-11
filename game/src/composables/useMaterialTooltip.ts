@@ -8,6 +8,7 @@ import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
+import { materialChatRank } from '@/composables/useBagFilter'
 import type { Material, MaterialCategory } from '@/core/material/Material'
 import type { GradedItemTooltipContent, TooltipStatRow } from '@/composables/useTooltip'
 
@@ -127,14 +128,18 @@ export function createMaterialTooltipBuilder(t: Translate) {
       nameColorVar: rank !== undefined ? `--rank-color-${rank}` : undefined,
 
       // Static SlotView header (spec section 3): same signals the bag
-      // cell binds - Pham seal via the 10-step rarity scale, realm in
-      // aria.
+      // cell binds - Pham seal via equipmentQualityRank (grade), Chat
+      // streak via rarityRank (nien dai, thang 1-5 - owner ruling
+      // 2026-10-11: nguyen lieu co Pham + Chat giong trang bi).
       slotPreview: {
         icon: material.icon,
         label: material.name,
         accessibleLabel: realmText ? `${material.name}, ${realmText}` : material.name,
-        rarityRank: rank,
-        rarityRankScale: 10,
+        // 'bag' variant mirrors the Tru Vat cell's art-frame (Pham
+        // tint + Chat streaks) in the info-card header.
+        variant: 'bag',
+        equipmentQualityRank: rank,
+        rarityRank: materialChatRank(material),
       },
 
       imagePath: material.icon,

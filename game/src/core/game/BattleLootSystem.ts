@@ -35,6 +35,7 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
 import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
+import { remainingEssenceNeed } from '../realm/body/BodyProgressionSystem'
 import { isScopeHidden } from '../betaScope'
 import {
   isBreakthroughAcquisitionEnabled,
@@ -579,8 +580,9 @@ export class BattleLootSystem {
         icon: instance.icon ?? template.icon,
         name: composeEquipmentDisplayName(instance, template, this.deps.zoneRegistry),
         // Single-color name on the Chat ramp (spec section 2): quality rank
-        // spread onto odd steps of the 10-step --rank-color scale.
-        nameColorVar: `--rank-color-${itemQualityRank(instance.quality) * 2 - 1}`,
+        // spread onto even steps 2/4/6/8/10 of the --rank-color scale
+        // (owner ruling: rank 5 lands on step 10).
+        nameColorVar: `--rank-color-${itemQualityRank(instance.quality) * 2}`,
         nameTone: instance.quality === 'tien' ? 'tien' : undefined,
         gradeLabel: gradeLabel(instance.grade),
         amountLabel: '+1',
@@ -628,7 +630,24 @@ export class BattleLootSystem {
             // thong_mach_dan spend): beta-live progression, not the
             // scope-hidden The Tu way - the faucet stays open.
 
-            const amount = drop.amount
+            // Owner ruling 2026-10-10 - essence intake cap: once the bag
+            // holds enough of an essence to retire the whole remaining
+            // chapter requirement, the drop yields nothing (post-resolve
+            // filter, no conversion, rng order untouched). A partial
+            // fill is clamped so the bag never overshoots the need.
+            let amount = drop.amount
+            if (
+              this.player !== null &&
+              physiqueEssenceGradeOf(drop.itemId) !== undefined
+            ) {
+              const open =
+                remainingEssenceNeed(this.player, drop.itemId) -
+                this.deps.materialBag.getAmount(drop.itemId)
+              if (open <= 0) {
+                break
+              }
+              amount = Math.min(amount, open)
+            }
 
             const materialOverflow = this.deps.materialBag.add(material, amount)
 

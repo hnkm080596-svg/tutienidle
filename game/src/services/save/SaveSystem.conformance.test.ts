@@ -251,10 +251,10 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     }),
   ])
 
-  // Decompose - non-default filters, workers within capacity, live timer.
-  manager.decomposeSystem.updateCapacity(3)
-  manager.decomposeSystem.setSetting({ workers: 2, gradeFilter: 'cuu_pham', ageFilter: 'century' })
-  manager.decomposeSystem.tick(NOW)
+  // Decompose - DIRECT REWORK (2026-10-11): the slice persists {}
+  // (no worker state to prime); buildGameSave still emits it so the
+  // conformance chain covers the slice's serialize/validate/restore
+  // path end to end.
 
   // Quests - the registry stays empty so restore-time
   // reconcileQuestLifecycle is a no-op and the slice round-trips as-is.

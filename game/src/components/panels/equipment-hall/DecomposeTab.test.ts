@@ -1,12 +1,15 @@
 ﻿// @vitest-environment jsdom
-// Task 14-UI (rework P4) - DecomposeTab: settings UI (grade/age
-// select + worker slider) + output preview, mount qua createApp+provide
-// (project pattern, KHONG @vue/test-utils).
+// DecomposeTab rework (owner ruling 2026-10-12): UI kieu Hoa Luyen -
+// nhung tui nguyen lieu o pick mode, chon stack khoang, bulk actions
+// + submit vang mo ConfirmModal. KHONG con worker slider/settings.
+// Mount qua createApp+provide (project pattern, KHONG @vue/test-utils);
+// decomposeSystem stub theo contract listDecomposableIds/previewDecompose/
+// decompose (impl that o DecomposeSystem - test nay chi khoa UI wiring).
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
 
-// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
-// system's ENABLED implementation (sec.11-15: dormant, not deleted),
-// so the scope authority reports in-scope for this file.
+// BETA SCOPE LOCK v2 Phase-5 - suite nay exercise implementation ENABLE
+// (scope-hidden domains dormant, not deleted) nen scope authority
+// bao in-scope cho file nay.
 vi.mock('../../../core/betaScope', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../core/betaScope')>()),
   isBetaFeature: () => true,
@@ -16,34 +19,49 @@ vi.mock('../../../core/betaScope', async (importOriginal) => ({
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import DecomposeTab from './DecomposeTab.vue'
-import { DecomposeSystem } from '@/core/production/DecomposeSystem'
-import { MaterialBag } from '@/core/material/MaterialBag'
 import { MaterialRegistry } from '@/core/material/MaterialRegistry'
+import type { Material } from '@/core/material/Material'
 import { materials } from '@/data/materials/materials'
+import type { DecomposeSystem } from '@/core/production/DecomposeSystem'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 
+// Real generated ores + a real herb from the seed data (child rework
+// turned `<realm>_ore_<age>` into authored materials - fake fixtures
+// with the same ids would double-register).
+const ORE_A: Material = materials.find((m) => m.id === 'mortal_ore_decade')!
+const ORE_B: Material = materials.find((m) => m.id === 'mortal_ore_thuong_co')!
+
+// Stack khong phan giai duoc (thao -> inert cell).
+const HERB: Material = materials.find((m) => m.profession?.resourceKind === 'herb')!
+
 function makeGameManager() {
-  const bag = new MaterialBag()
+  const registry = new MaterialRegistry()
 
   for (const material of materials) {
-    bag.add(material, 100)
+    registry.register(material)
   }
 
-  // R7 (AR-08): dynamic capacity replaces the constructor option.
-  const decompose = new DecomposeSystem(bag)
-  decompose.updateCapacity(6)
+  const stacks = [
+    { material: ORE_A, amount: 40 },
+    { material: ORE_B, amount: 5 },
+    { material: HERB, amount: 12 },
+  ]
 
-  const materialRegistry = new MaterialRegistry()
-
-  for (const material of materials) {
-    materialRegistry.register(material)
+  const decomposeSystem = {
+    listDecomposableIds: () => [ORE_A.id, ORE_B.id],
+    previewDecompose: vi.fn((ids: string[]) =>
+      ids.length === 0
+        ? []
+        : [{ materialId: 'luyen_khi_tinh_hoa', minAmount: ids.length * 3, maxAmount: ids.length * 3 }],
+    ),
+    decompose: vi.fn(() => true),
   }
 
   return {
-    decomposeSystem: decompose,
-    materialBag: bag,
-    materialRegistry,
+    decomposeSystem: decomposeSystem as unknown as DecomposeSystem,
+    materialBag: { getAll: () => stacks } as never,
+    materialRegistry: registry,
   }
 }
 
@@ -66,18 +84,38 @@ function mountTab(gm: ReturnType<typeof makeGameManager>) {
   app.provide(BUMP_STATE_KEY, () => {
     version.value += 1
   })
+  // BagChipSelect/tooltip directives used by the embedded bag section.
+  window.ResizeObserver = window.ResizeObserver || (class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as never)
 
   app.mount(container)
+
+  const oreCells = () =>
+    Array.from(container.querySelectorAll<HTMLElement>('.bag-section__grid .bag-section__slot'))
+      .filter((el) => (el.getAttribute('aria-label') ?? '').includes('Linh Khoáng'))
 
   return {
     container,
     bump: () => {
       version.value += 1
     },
-    select: (index: number) =>
-      container.querySelectorAll<HTMLSelectElement>('.decompose-tab select')[index]!,
-    slider: () => container.querySelector<HTMLInputElement>('.decompose-tab input[type="range"]')!,
-    text: () => container.querySelector('.decompose-tab')?.textContent ?? '',
+    oreCells,
+    inertCells: () =>
+      container.querySelectorAll('.bag-section__slot--inert'),
+    pickedCells: () =>
+      container.querySelectorAll('.bag-section__slot--picked'),
+    submitButton: () =>
+      container.querySelector<HTMLButtonElement>('.equipment-forge-actions__submit'),
+    bulkButtons: () =>
+      Array.from(container.querySelectorAll<HTMLButtonElement>('.decompose-filters__bulk')),
+    click: async (el: HTMLElement | null | undefined) => {
+      if (!el) throw new Error('element not found')
+      el.dispatchEvent(new Event('click', { bubbles: true }))
+      await nextTick()
+    },
     unmount: () => {
       app.unmount()
       container.remove()
@@ -93,110 +131,90 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-describe('DecomposeTab — settings UI (Task 14-UI)', () => {
-  it('renders 2 selects (grade + quality) + worker slider', () => {
+describe('DecomposeTab — pick-mode UI (owner ruling 2026-10-12)', () => {
+  it('render tui nguyen lieu nhung + khong con slider/select nhan cong', () => {
     const gm = makeGameManager()
     const tab = mountTab(gm)
 
-    expect(tab.container.querySelectorAll('.decompose-tab select')).toHaveLength(2)
-    expect(tab.slider()).not.toBeNull()
+    expect(tab.container.querySelector('.bag-section__grid')).not.toBeNull()
+    expect(tab.container.querySelector('input[type="range"]')).toBeNull()
+    expect(tab.oreCells().length).toBe(2)
+    // Stack thao render mo (inert) - khong pick duoc.
+    expect(tab.inertCells().length).toBe(1)
 
     tab.unmount()
   })
 
-  it('worker slider input → system.setSetting({workers})', async () => {
+  it('click o khoang toggle selection (badge picked)', async () => {
     const gm = makeGameManager()
     const tab = mountTab(gm)
 
-    const slider = tab.slider()!
+    await tab.click(tab.oreCells()[0])
 
-    slider.value = '4'
-    slider.dispatchEvent(new Event('input'))
-    await nextTick()
+    expect(tab.pickedCells().length).toBe(1)
 
-    expect(gm.decomposeSystem.getSettings().workers).toBe(4)
+    // Click lai -> bo chon.
+    await tab.click(tab.oreCells()[0])
+
+    expect(tab.pickedCells().length).toBe(0)
 
     tab.unmount()
   })
 
-  it('grade select → system.setSetting({gradeFilter})', async () => {
+  it('Chon Tat Ca chon moi stack khoang dang hien; Xoa Chon reset', async () => {
     const gm = makeGameManager()
     const tab = mountTab(gm)
 
-    const gradeSelect = tab.select(0)
+    const [selectAll, clearAll] = tab.bulkButtons()
 
-    gradeSelect.value = 'luc_pham'
-    gradeSelect.dispatchEvent(new Event('change'))
-    await nextTick()
+    await tab.click(selectAll)
 
-    expect(gm.decomposeSystem.getSettings().gradeFilter).toBe('luc_pham')
+    expect(tab.pickedCells().length).toBe(2)
+
+    await tab.click(clearAll)
+
+    expect(tab.pickedCells().length).toBe(0)
 
     tab.unmount()
   })
 
-  it('age select → system.setSetting({ageFilter})', async () => {
+  it('submit vang disabled khi chua chon; click mo ConfirmModal', async () => {
     const gm = makeGameManager()
     const tab = mountTab(gm)
 
-    const ageSelect = tab.select(1)
+    expect(tab.submitButton()!.disabled).toBe(true)
 
-    ageSelect.value = 'myriad_year'
-    ageSelect.dispatchEvent(new Event('change'))
+    await tab.click(tab.oreCells()[0])
     await nextTick()
 
-    expect(gm.decomposeSystem.getSettings().ageFilter).toBe('myriad_year')
+    expect(tab.submitButton()!.disabled).toBe(false)
+
+    await tab.click(tab.submitButton())
+
+    expect(document.body.textContent).toContain('Phân Giải')
 
     tab.unmount()
   })
 
-  it('invalid select values are rejected — settings unchanged', async () => {
+  it('xac nhan modal goi system.decompose voi dung tap id da chon', async () => {
     const gm = makeGameManager()
     const tab = mountTab(gm)
 
-    const gradeSelect = tab.select(0)
-    const ageSelect = tab.select(1)
+    await tab.click(tab.oreCells()[0])
+    await tab.click(tab.submitButton())
 
-    gradeSelect.value = 'not_a_grade'
-    gradeSelect.dispatchEvent(new Event('change'))
-    ageSelect.value = 'not_an_age'
-    ageSelect.dispatchEvent(new Event('change'))
-    await nextTick()
+    const confirm = Array.from(document.body.querySelectorAll('button'))
+      .find((b) => (b.textContent ?? '').trim().length > 0 && /xác nhận|confirm/i.test(b.textContent!))
 
-    expect(gm.decomposeSystem.getSettings().gradeFilter).toBe('all')
-    expect(gm.decomposeSystem.getSettings().ageFilter).toBe('all')
+    if (confirm) {
+      await tab.click(confirm)
+    } else {
+      // ConfirmModal co the expose confirm rieng - fallback: goi truc tiep qua dialog.
+      const dialog = document.body.querySelector('[role="dialog"] button:last-child') as HTMLElement | null
+      await tab.click(dialog)
+    }
 
-    tab.unmount()
-  })
-
-  it('hiển thị pending output estimate (workers > 0 → dòng text có số)', async () => {
-    const gm = makeGameManager()
-    const tab = mountTab(gm)
-
-    const slider = tab.slider()!
-
-    slider.value = '2'
-    slider.dispatchEvent(new Event('input'))
-    await nextTick()
-
-    // Output estimate text: base 1 x Hoang 1 x 2 workers = 2/luot.
-    expect(tab.text()).toContain('2')
-
-    tab.unmount()
-  })
-
-  it('R7: slider max derives from live capacity, not a hardcoded 6 (AR-08)', async () => {
-    const gm = makeGameManager()
-    gm.decomposeSystem.updateCapacity(9)
-    const tab = mountTab(gm)
-
-    const slider = tab.slider()!
-    expect(slider.max).toBe('9')
-
-    // Live capacity change + state-version bump re-syncs the mirror.
-    gm.decomposeSystem.updateCapacity(3)
-    tab.bump()
-    await nextTick()
-    expect(tab.slider()!.max).toBe('3')
+    expect(gm.decomposeSystem.decompose).toHaveBeenCalledWith([ORE_A.id])
 
     tab.unmount()
   })

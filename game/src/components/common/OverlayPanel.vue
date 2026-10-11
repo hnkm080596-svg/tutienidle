@@ -100,7 +100,7 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
 /* The paper family only belongs on the paper variant - ink stays the
    dark surface-m-panel card and system is SysPanel chrome; both keep
    the light --hk-* inherited color their slotted content was authored
-   against (building/vendor/lodge panels use --surface-text). */
+   against (building/lodge panels use --surface-text). */
 .overlay-panel--paper .overlay-panel__card { color: var(--paper-text, #211f1a); }
 .overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: var(--hk-space-4); padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) var(--hk-space-4); border-bottom: 1px solid var(--hk-border-muted); }
 .overlay-panel--paper .overlay-panel__header { border-bottom-color: var(--paper-line-soft, rgba(42, 41, 36, 0.22)); }

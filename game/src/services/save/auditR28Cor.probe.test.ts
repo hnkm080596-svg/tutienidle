@@ -24,7 +24,6 @@ import {
   TribulationDirector,
   TRIBULATION_COOLDOWN_SECONDS,
 } from '../../core/tribulation/TribulationDirector'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { ProductionSystem } from '../../core/production/ProductionSystem'
 import {
   TERRITORY_THANH_VAN,
@@ -37,6 +36,7 @@ import {
   CYCLE_BASE_SECONDS_BY_REALM,
   computeCycleSeconds,
 } from '../../core/production/ProductionBalance'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { MaterialBag } from '../../core/material/MaterialBag'
 import type { ProductionCycle } from '../../core/production/ProductionTypes'
 
@@ -287,31 +287,24 @@ describe('auditR28 COR probe - restore-clock boundaries (B)', () => {
     expect(over.serializeRuntime().cooldownUntil).toBe(bound)
   })
 
-  it('B3 decompose: nextCycleAt == restoreNow + cycleMs kept; +1ms clamps to the bound', () => {
-    const cycleSeconds = 30
-    const bound = currentMs + cycleSeconds * 1000
+  it('B3 decompose: restore ignores nextCycleAt entirely (direct rework - no deadline channel)', () => {
+    const bound = currentMs + 30_000
 
-    const exact = new DecomposeSystem(new MaterialBag(), { cycleSeconds })
-    exact.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: bound,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(exact.getSaveState().nextCycleAt).toBe(bound)
+    const exact = new DecomposeSystem(new MaterialBag())
+    exact.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: bound,
+      started: true,
+    })
+    expect(exact.getSaveState()).toEqual({})
 
-    const over = new DecomposeSystem(new MaterialBag(), { cycleSeconds })
-    over.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: bound + 1,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(over.getSaveState().nextCycleAt).toBe(bound)
+    const over = new DecomposeSystem(new MaterialBag())
+    over.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: bound + 1,
+      started: true,
+    })
+    expect(over.getSaveState()).toEqual({})
   })
 })
 

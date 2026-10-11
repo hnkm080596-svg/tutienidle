@@ -97,7 +97,7 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(10)
   })
 
-  it('material channel: zhou_tian consumes tinh_hoa_phap_the exactly (no substitution)', () => {
+  it('material channel: zhou_tian consumes tinh_hoa_phap_the exactly', () => {
     // M-F-CHU-THIEN (C2C-64) - the authored currency contract:
     // ZHOU_TIAN_CURRENCY_MATERIAL_ID is the single source and IS the
     // Phap essence; the ops seam debits it 1:1 against capacity.
@@ -113,11 +113,11 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
 
     const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')
 
-    // Step costs 100 + 125 -> two steps for exactly 225 (sec.11,
-    // 2026-10-05 curve).
-    expect(consumed).toBe(225)
-    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(0)
-    expect(player.bodyProgression.zhou_tian.completed).toBe(2)
+    // Owner ruling 2026-10-10: one invest commits ONE step - only the
+    // step-0 cost (100) leaves the bag; the 125 surplus stays.
+    expect(consumed).toBe(100)
+    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(125)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(1)
   })
 
   it('zhou_tian invest is capacity-clamped, no-debit when empty, and locked under the sequential gate', () => {

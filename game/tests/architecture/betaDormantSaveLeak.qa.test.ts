@@ -35,8 +35,7 @@ import type { Skill } from '@/core/skill/Skill'
 import { freshSwordPathState, type OrbId } from '@/core/kiem-tu/KiemTuState'
 import { createSpellPathState } from '@/core/phap-tu/PhapTuState'
 import { getCultivationPathStatModifiers, hasStaticPathCapability, resolvePathCapabilities } from '@/core/player/CultivationPathSystem'
-import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
-import { getRealmTier } from '@/core/realm/RealmTierMap'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { BattleLootSystem, type BattleLootSystemDeps } from '@/core/game/BattleLootSystem'
 import { MaterialRegistry } from '@/core/material/MaterialRegistry'
 import type { Material } from '@/core/material/Material'
@@ -632,7 +631,7 @@ describe('dormancy: dormant way/technique/passive stat channels stay inert (F-TC
       grade: 1,
     })
 
-    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
+    const stoneId = SPIRIT_STONE_MATERIAL_ID
     gameManager.materialRegistry.register({
       id: stoneId,
       name: 'Stone',
@@ -681,9 +680,10 @@ describe('dormancy: manualWorkforce stays inert while auto production runs the f
     expect(p.autoWorkerCapacity).toBe(0)
     expect(betaEffectiveWorkerCapacity(0)).toBe(BETA_BASELINE_WORKER_CAPACITY)
 
+    // DIRECT DECOMPOSE REWORK: decompose claims no workers - the whole
+    // flat auto pool goes to production sites.
     const capacity = resolveProductionWorkerCapacity(
       betaEffectiveWorkerCapacity(p.autoWorkerCapacity ?? 0),
-      gameManager.decomposeSystem.getSettings().workers,
     )
     expect(capacity).toBe(BETA_BASELINE_WORKER_CAPACITY)
 
@@ -739,9 +739,9 @@ describe('dormancy: manualWorkforce stays inert while auto production runs the f
     expect(workforce.total).toBe(BETA_BASELINE_WORKER_CAPACITY)
     expect(workforce.requested).toEqual({})
 
+    // DIRECT DECOMPOSE REWORK: no claimant pool - flat capacity.
     const capacity = resolveProductionWorkerCapacity(
       betaEffectiveWorkerCapacity(p.autoWorkerCapacity),
-      gameManager.decomposeSystem.getSettings().workers,
     )
     gameManager.productionSystem.tickWorkers(
       0,
@@ -774,18 +774,20 @@ describe('dormancy: a hidden-family in-flight job cannot occupy the live alchemy
     herbAmount: 1,
     fuelWoodRealmId: 'mortal',
     fuelWoodAmount: 1,
+    luyenDanTinhHoaAmount: 1,
     spiritStoneCost: 0,
     baseDurationSeconds: 60,
   }
 
   function alchemyContext() {
     const registry = new MaterialRegistry()
-    for (const id of ['herb_decade', 'mortal_wood_decade']) {
+    for (const id of ['herb_decade', 'bui_go', 'luyen_dan_tinh_hoa']) {
       registry.register({ id, name: id, category: 'other', sourceType: 'monster', description: '' })
     }
     const bag = new MaterialBag()
     bag.add(registry.get('herb_decade'), 5)
-    bag.add(registry.get('mortal_wood_decade'), 5)
+    bag.add(registry.get('bui_go'), 5)
+    bag.add(registry.get('luyen_dan_tinh_hoa'), 5)
 
     const system = new AlchemySystem()
     system.setRecipeLookup((id) => (id === BETA_RECIPE.id ? BETA_RECIPE : undefined))

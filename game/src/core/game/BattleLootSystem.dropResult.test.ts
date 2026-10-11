@@ -216,14 +216,17 @@ describe('BattleLootSystem — DropResult consumer', () => {
 
   // M-QI-08 - the essence particle stream is family-wide: any authored
   // Tinh Hoa <Grade> material routes to 'essence', not by literal id.
+  // Owner ruling 2026-10-10: the fixture must use an essence with a
+  // live remaining chapter need (pham funds body_refinement) - bao has
+  // no consuming chapter today and the intake cap yields it nothing.
   it('routes every physique-essence family member to the essence particle stream', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, eventBus } = createLootTestSetup({
-      realmId: 'qi_refining',
+      realmId: 'mortal',
       signatureDrops: [
-        { kind: 'material', itemId: 'tinh_hoa_bao_the', chance: 1, amount: { min: 1, max: 1 } },
+        { kind: 'material', itemId: 'tinh_hoa_pham_the', chance: 1, amount: { min: 1, max: 1 } },
       ],
-      materialIds: ['tinh_hoa_bao_the'],
+      materialIds: ['tinh_hoa_pham_the'],
     })
 
     killEnemy()
@@ -233,8 +236,8 @@ describe('BattleLootSystem — DropResult consumer', () => {
         call[0] === 'reward_particle' &&
         (call[1].kind === 'essence' || call[1].kind === 'item'),
     )
-    // M-QI-10: the qi_refining band guaranteed line is live - rng 0
-    // passes its 0.7 chance, so the kill emits the band's bao essence
+    // M-QI-10: the mortal band guaranteed line is live - rng 0
+    // passes its 0.7 chance, so the kill emits the band's pham essence
     // AND the synthetic signature drop. Both route to 'essence'.
     expect(materialParticles).toEqual([
       ['reward_particle', expect.objectContaining({ kind: 'essence' })],

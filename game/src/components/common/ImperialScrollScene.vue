@@ -265,7 +265,7 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
 }
 .hk-scroll__close :deep(.hk-symbol) { width: 40%; height: 40%; }
 .hk-scroll__close:hover { filter: brightness(1.18); }
-.hk-scroll__close:focus-visible { outline: 2px solid var(--hk-gold, #d8b45a); outline-offset: 2px; }
+.hk-scroll__close:focus-visible { outline: none; }
 
 .hk-scroll__inner {
   position: absolute;

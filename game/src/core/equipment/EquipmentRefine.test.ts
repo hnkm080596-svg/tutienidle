@@ -34,7 +34,8 @@ import {
   SPIRIT_STONE_MATERIAL,
   SPIRIT_STONE_MATERIAL_ID,
 } from '../material/SpiritStoneMaterial'
-import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
+import { BUI_GO_ID,
+  LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
 const TEMPLATE: Equipment = {
   id: 'test_sword',
@@ -46,6 +47,7 @@ const TEMPLATE: Equipment = {
   enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
 }
 
+const BUI_GO_MATERIAL = materials.find((material) => material.id === BUI_GO_ID)!
 const ESSENCE = materials.find((material) => material.id === LUYEN_KHI_TINH_HOA_ID)!
 
 function setup() {
@@ -60,6 +62,7 @@ function setup() {
     affixRegistry.register(affix)
   }
   materialBag.add(ESSENCE, 1_000)
+  materialBag.add(BUI_GO_MATERIAL, 1_000)
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
 
   // Hand-bound RefineDeps - same wiring EquipmentSystem.refineDeps()
@@ -431,13 +434,18 @@ describe('RefineDeps call contract', () => {
     const result = preview(ctx, instance.instanceId, [0])
 
     expect(result.ok).toBe(true)
-    expect(ctx.applyCostDiscount).toHaveBeenCalledTimes(2)
+    expect(ctx.applyCostDiscount).toHaveBeenCalledTimes(3)
     expect(ctx.applyCostDiscount).toHaveBeenNthCalledWith(
       1,
       REFINE_TINH_HOA_COST_BY_QUALITY[instance.quality],
     )
+    // nth(2) is the bui_go mirror of the tinhHoa amount (materials rework).
     expect(ctx.applyCostDiscount).toHaveBeenNthCalledWith(
       2,
+      REFINE_TINH_HOA_COST_BY_QUALITY[instance.quality],
+    )
+    expect(ctx.applyCostDiscount).toHaveBeenNthCalledWith(
+      3,
       (instance.affixes.length + 1) * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[instance.quality],
     )
     expect(ctx.spendItemRefinementPoints).toHaveBeenCalledTimes(1)

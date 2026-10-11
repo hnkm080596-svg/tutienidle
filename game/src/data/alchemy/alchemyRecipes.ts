@@ -23,8 +23,15 @@ const generatedRecipes: AlchemyRecipe[] = REALM_TIERS.flatMap((realmId, tierInde
     realmId,
     herbVariants: grottoVariants(herbBaseId(family.herbId, realmId)),
     herbAmount: 2 + Math.floor(tierIndex / 3),
+    // @deprecated - UI display only until the parent UI pass swaps to
+    // bui_go; domain logic no longer reserves raw wood.
     fuelWoodRealmId: realmId,
-    fuelWoodAmount: 2 + Math.floor(tierIndex / 2),
+    // Balance pass 2026-10-11: bui_go fuel 6+tierIndex (was 2+tier/2 -
+    // decompose /2 rot qua nhieu, bay gio /6; xem balance-tuning report).
+    fuelWoodAmount: 6 + tierIndex,
+    // Materials economy rework - required Luyen Dan Tinh Hoa per job,
+    // same tier index the other amounts use (balance pass: 2+tierIndex).
+    luyenDanTinhHoaAmount: 2 + tierIndex,
     spiritStoneCost: 50 * stoneCostRealmFactor(realmId),
     baseDurationSeconds: Math.round(600 * Math.pow(1.45, tierIndex)),
     // M10 (ARCH-008) - retired families (Hoi Xuan Dan) keep their recipes
@@ -48,7 +55,9 @@ export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
     herbVariants: grottoVariants('tu_linh_thao_qi_refining'),
     herbAmount: 3,
     fuelWoodRealmId: 'qi_refining',
-    fuelWoodAmount: 3,
+    fuelWoodAmount: 6,
+    // qi_refining tier index = 1 -> 2 + 1 = 3 (same formula).
+    luyenDanTinhHoaAmount: 3,
     spiritStoneCost: 1500,
     baseDurationSeconds: 900,
     specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }],
@@ -63,7 +72,8 @@ export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
     herbVariants: grottoVariants('tu_linh_thao_qi_refining'),
     herbAmount: 4,
     fuelWoodRealmId: 'qi_refining',
-    fuelWoodAmount: 4,
+    fuelWoodAmount: 8,
+    luyenDanTinhHoaAmount: 3,
     spiritStoneCost: 5000,
     baseDurationSeconds: 1200,
     specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }],

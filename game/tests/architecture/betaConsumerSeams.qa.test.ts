@@ -340,16 +340,6 @@ describe('carried dormant records stay flagged/inert', () => {
     }
   })
 
-  it('dormant companion/artifact materials carry no vendor price (no live sink)', () => {
-    const gameManager = realGameManager()
-    const p = player({ realmId: 'foundation_establishment' })
-
-    for (const id of ['chieu_hien_lenh', 'doan_bao_thach', 'duyen_phan']) {
-      const result = gameManager.economyOps.sellMaterialToVendor(id, 1, p)
-      expect(result.ok).toBe(false)
-    }
-  })
-
   it('quest lifecycle deactivates progress on removed/non-beta quests at restore', () => {
     const gameManager = realGameManager()
     const p = player({ realmId: 'foundation_establishment' })

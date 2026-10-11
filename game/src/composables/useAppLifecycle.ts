@@ -13,6 +13,24 @@ import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import { i18n } from '@/i18n'
 import { recordSaveOutcome } from '../services/diagnostics/recordSaveOutcome'
 import { buildGameSave } from '../services/save/SaveSystem'
+import { validateGameSaveShape } from '../services/save/saveShapeValidation'
+import type { GameSave } from '../services/save/SaveSystem'
+import { isMasterSession } from '../services/master/masterAccess'
+import { masterToleratedSaveResult } from './useOnlineAuthority'
+
+/** Master-gate salvage (Minh 2026-10-10): a corrupted-shape payload on a
+ *  master session still boots - the validator's normalized copy stands in
+ *  for the save so fabricated test saves keep playing instead of wedging
+ *  on the recovery surface. Returns undefined when even normalization
+ *  cannot produce a consumable save (unparseable bytes). */
+function salvageNormalizedSave(raw: string): GameSave | undefined {
+  try {
+    const shape = validateGameSaveShape(JSON.parse(raw))
+    return shape.ok ? (shape.normalizedSave as GameSave | undefined) : undefined
+  } catch {
+    return undefined
+  }
+}
 
 /**
  * Remediation Task 5 (2026-09-05) - App boot/tick/listener lifecycle
@@ -407,7 +425,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       // load: after create_character it returns CHARACTER_UNINITIALIZED
       // carrying the canonical metadata + server checkpoint the
       // revision-0 write requires.
-      const loaded = createNewCharacter && !remoteAuthoritative
+      let loaded = createNewCharacter && !remoteAuthoritative
         ? (coordinator.reset(), await Promise.resolve({ status: 'empty' as const, revision: 0 as const }))
         : await coordinator.load()
 
@@ -437,6 +455,20 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         return { status: 'require-character' }
       }
 
+      // Master-gate salvage: corrupted-shape saves on a master session
+      // restore through the normalized copy (see salvageNormalizedSave) -
+      // revision 0 and no server authority, so the commit leg below may
+      // CAS-fail, which the master tolerance absorbs. Incompatible saves
+      // stay terminal for everyone: a version the client cannot read has
+      // no normalized copy to salvage.
+      if (loaded.status === 'corrupted' && isMasterSession()) {
+        const salvaged = salvageNormalizedSave(loaded.raw)
+        if (salvaged !== undefined) {
+          console.warn('[boot] master session: restoring corrupted-shape save via normalized copy')
+          loaded = { status: 'ok', save: salvaged, revision: 0, discardedEquipmentCount: 0, raw: loaded.raw }
+        }
+      }
+
       if (loaded.status === 'incompatible' || loaded.status === 'corrupted') {
         authority.markFailed('recovery')
         saveIssue.report(
@@ -446,6 +478,21 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         )
         boot.fail()
         return { status: 'failed' }
+      }
+
+      if (loaded.status === 'pending-conflict' && isMasterSession()) {
+        // Master-gate salvage: a durable pending write the remote refused
+        // is exactly the test-edit state a master session wants - restore
+        // the journal's own payload (revision 0, plays unsaved) instead of
+        // wedging on the recovery surface. Only a payload that normalizes
+        // salvages; otherwise the standard recovery arm stands. Quarantined
+        // stays fail-closed: reconcile already judged it uncommittable, a
+        // shape-pass alone must not promote it (QA fixpoint ruling).
+        const salvaged = salvageNormalizedSave(loaded.pendingRaw)
+        if (salvaged !== undefined) {
+          console.warn('[boot] master session: restoring pending-conflict payload via normalized copy')
+          loaded = { status: 'ok', save: salvaged, revision: 0, discardedEquipmentCount: 0, raw: loaded.pendingRaw }
+        }
       }
 
       if (loaded.status === 'pending-conflict' || loaded.status === 'pending-quarantined') {
@@ -566,9 +613,17 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
             return { status: 'skipped' }
           }
 
-          authority.observeSaveResult(commit)
+          // Master-gate tolerance applies to the AUTHORITY observation
+          // too: feeding the raw refused result would park the controller
+          // in recovery/terminal while the test session plays on.
+          authority.observeSaveResult(masterToleratedSaveResult(commit))
 
-          if (commit.status !== 'ok') {
+          if (commit.status !== 'ok' && isMasterSession()) {
+            // Master-gate tolerance: the refused commit never wedges a
+            // test session - the boot proceeds with the restored state
+            // and plays unsaved (recordSaveOutcome keeps the real result).
+            console.warn('[boot] master session: proceeding past refused boot commit', commit)
+          } else if (commit.status !== 'ok') {
             recordSaveOutcome(commit, 'boot-commit')
             // A permanent data-class refuse on a LIVE, loadable character
             // wedges identically to the firstSave arm (load 'ok' -> commit
@@ -692,7 +747,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           return { status: 'skipped' }
         }
 
-        if (firstSave.status !== 'ok') {
+        if (firstSave.status !== 'ok' && isMasterSession()) {
+          // Same master tolerance as the boot-commit arm: a refused
+          // first write still admits the test character (unsaved) - and
+          // the authority observes the tolerated result, not the refuse.
+          authority.observeSaveResult(masterToleratedSaveResult(firstSave))
+          console.warn('[boot] master session: proceeding past refused first save', firstSave)
+          recordSaveOutcome(firstSave, 'boot-first-save')
+        } else if (firstSave.status !== 'ok') {
           authority.observeSaveResult(firstSave)
           recordSaveOutcome(firstSave, 'boot-first-save')
           // A permanent first-write failure wedges the account whenever

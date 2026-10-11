@@ -170,27 +170,24 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
     expect(result.reason).not.toBe('scope_hidden')
   })
 
-  it('ore decompose freezes at every seam while raw settings persist', () => {
+  it('ore decompose freezes at every seam and owns no restored state', () => {
     const gm = new GameManager()
-    gm.decomposeSystem.updateCapacity(5)
 
-    // A stale save restoring workers must round-trip verbatim even
-    // though consumers see the domain as emptied.
+    // DIRECT DECOMPOSE REWORK: the worker-cycle engine retired - a stale
+    // save's workers/nextCycleAt/started payload is accepted-and-ignored,
+    // so nothing persists into the live slice.
     gm.decomposeSystem.restore({
       settings: { workers: 3, gradeFilter: 'all', ageFilter: 'all' },
       nextCycleAt: 0,
       started: true,
     })
-    expect(gm.decomposeSystem.getSaveState().settings.workers).toBe(3)
-    expect(gm.decomposeSystem.getSettings().workers).toBe(0)
+    expect(gm.decomposeSystem.getSaveState()).toEqual({})
 
-    // setSetting is a no-op under the gate; the saved shape stays put.
-    gm.decomposeSystem.setSetting({ workers: 4 })
-    expect(gm.decomposeSystem.getSaveState().settings.workers).toBe(3)
-    expect(gm.decomposeSystem.getSettings().workers).toBe(0)
-
-    expect(gm.decomposeSystem.listMatchingOres()).toEqual([])
-    expect(gm.decomposeSystem.settleOffline(1_000_000, 60_000)).toBe(0)
+    // The whole direct API fail-closes under scope-hidden: no listing,
+    // no preview, no decompose.
+    expect(gm.decomposeSystem.listDecomposableIds()).toEqual([])
+    expect(gm.decomposeSystem.previewDecompose(['mortal_ore_decade'])).toEqual([])
+    expect(gm.decomposeSystem.decompose(['mortal_ore_decade'])).toBe(false)
   })
 })
 

@@ -227,6 +227,7 @@ const BETA_RECIPE: AlchemyRecipe = {
   herbAmount: 1,
   fuelWoodRealmId: 'mortal',
   fuelWoodAmount: 1,
+    luyenDanTinhHoaAmount: 1,
   spiritStoneCost: 0,
   baseDurationSeconds: 60,
 }
@@ -240,6 +241,7 @@ const DORMANT_RECIPE: AlchemyRecipe = {
   herbAmount: 1,
   fuelWoodRealmId: 'mortal',
   fuelWoodAmount: 1,
+    luyenDanTinhHoaAmount: 1,
   spiritStoneCost: 0,
   baseDurationSeconds: 60,
 }

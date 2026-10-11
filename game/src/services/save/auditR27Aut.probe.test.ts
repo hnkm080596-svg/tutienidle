@@ -32,7 +32,6 @@ import {
   TribulationDirector,
   TRIBULATION_COOLDOWN_SECONDS,
 } from '../../core/tribulation/TribulationDirector'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { ProductionSystem } from '../../core/production/ProductionSystem'
 import {
   TERRITORY_THANH_VAN,
@@ -45,6 +44,7 @@ import {
   CYCLE_BASE_SECONDS_BY_REALM,
   computeCycleSeconds,
 } from '../../core/production/ProductionBalance'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { MaterialBag } from '../../core/material/MaterialBag'
 import type { ProductionCycle } from '../../core/production/ProductionTypes'
 import { calculateOfflineTime, DEFAULT_MAX_OFFLINE_SECONDS } from '../../core/idle/GameClock'
@@ -265,6 +265,7 @@ describe('auditR27 AUT - F-ALCH-THROW: element-class bypass of the r27 guard', (
       fuelWoodAmount: 1,
       spiritStoneCost: 1,
       herbAmount: 1,
+      luyenDanTinhHoaAmount: 1,
       specialIngredients: [{ materialId: 'ghost_material', amount: 1 }],
       costScale: 1,
     }
@@ -370,6 +371,7 @@ describe('auditR27 AUT - F-ALCH-THROW seam evidence (classified-refuse escapes)'
       fuelWoodAmount: 1,
       spiritStoneCost: 1,
       herbAmount: 1,
+      luyenDanTinhHoaAmount: 1,
       specialIngredients: [null],
       costScale: 1,
     }
@@ -468,29 +470,27 @@ describe('auditR27 AUT - rejected hypotheses (fix claims hold)', () => {
     expect(director.getCooldownSeconds(currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000)).toBe(0)
   })
 
-  it('R4 decompose: nextCycleAt clamps at restoreNow+cycleMs and stays monotonic', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
+  it('R4 decompose slice: restore accepts a legacy payload verbatim and stays inert (direct rework)', () => {
+    const system = new DecomposeSystem(new MaterialBag())
 
-    system.restore(
-      {
+    // A hostile legacy payload (post-dated deadline, armed workers)
+    // restores without throwing and without resurrecting any timer.
+    expect(() =>
+      system.restore({
         settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
         nextCycleAt: currentMs + 10 * 86_400_000,
         started: true,
-      },
-      currentMs,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs + 30_000)
+      }),
+    ).not.toThrow()
+    expect(system.getSaveState()).toEqual({})
 
-    // A second restore cannot drag the timer backwards (no mint via re-restore).
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: true,
-      },
-      currentMs - 86_400_000,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs + 30_000)
+    // A second restore is equally inert - no mint via re-restore.
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: 0,
+      started: true,
+    })
+    expect(system.getSaveState()).toEqual({})
   })
 
   it('R5 r27-COR-1: corrupt-LOW authority does NOT re-anchor began stamps (authority excluded)', () => {

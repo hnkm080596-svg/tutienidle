@@ -4,18 +4,17 @@
 // selectedInstanceId) - noi can bo song theo shared hall selection: doll
 // click (instanceId) -> resolve SLOT de cung cap cho enhance (owner
 // ruling 2026-10-08: 'đồ sẽ chọn trực tiếp từ cái doll').
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import { materialLabel, equipmentSlotLabel } from '@/core/presentation/labels'
+import { equipmentSlotArt } from '@/core/presentation/equipmentSlotArt'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import type { Stats } from '@/core/stats/StatBlock'
-import {
-  getSpiritStoneMaterialIdForEnhanceLevel,
-} from '@/core/material/SpiritStoneMaterial'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import SlotView from '@/components/common/SlotView.vue'
@@ -98,7 +97,7 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
     }))
 
     const spiritStone = gameManager.equipmentOps.getEnhanceSpiritStoneCost(slotState.slot, realmId)
-    const spiritStoneMaterialId = getSpiritStoneMaterialIdForEnhanceLevel(slotState.enhanceLevel)
+    const spiritStoneMaterialId = SPIRIT_STONE_MATERIAL_ID
 
     const maxLevel = MAX_SLOT_ENHANCE_LEVEL
 
@@ -168,7 +167,7 @@ function doEnhance(row: EnhanceSlotRow) {
 
   slotBurst.value = ''
 
-  requestAnimationFrame(() => {
+  lastRaf = requestAnimationFrame(() => {
     slotBurst.value = ok ? 'burst-success' : 'burst-fail'
   })
 
@@ -178,6 +177,12 @@ function doEnhance(row: EnhanceSlotRow) {
     slotBurst.value = ''
   }, 950)
 }
+
+// QA fixpoint 2026-10-10: drop the pending burst timer AND rAF on
+// unmount (both were writing into the dead component's ref;
+// RefineTab/WashTab already clear theirs).
+let lastRaf = 0
+onBeforeUnmount(() => { clearTimeout(burstTimer); cancelAnimationFrame(lastRaf) })
 
 // Stat glyph map - same set as SUMMARY_STATS in EquipmentSurface.
 const STAT_GLYPHS: Partial<Record<keyof Stats, string>> = {
@@ -312,17 +317,17 @@ const mainStatLabel = computed(() => enhancePreviewRows.value?.[0]?.label ?? '')
     <div v-if="selectedEnhanceRow" class="enhance-compare" :aria-label="t('panels.equipmentHall.aria.enhanceComparison')">
       <div class="enhance-slot-single" :class="slotBurst" :aria-label="t('panels.equipmentHall.aria.enhanceSlots')">
         <!-- Projection cell (owner ruling 2026-10-08): socket frame +
-             the SLOT NAME, not the item art - the cell answers "which
-             slot is selected", not "what does it hold". Per-slot art
-             replaces the text once Minh draws it. -->
+             per-slot art (Minh drew it 2026-10-11, replaces the text
+             fallback) - the cell answers "which slot is selected",
+             not "what does it hold". -->
         <SlotView
           class="enhance-slot__view"
           variant="socket"
           static
           :item="null"
+          :icon="equipmentSlotArt(selectedEnhanceRow.slot)"
           :label="equipmentSlotLabel(selectedEnhanceRow.slot)"
         />
-        <span class="enhance-slot__name">{{ equipmentSlotLabel(selectedEnhanceRow.slot) }}</span>
       </div>
       <span class="equipment-level-seal enhance-compare__seal"
         ><img :src="levelSealSrc" alt="" /><b>+{{ selectedEnhanceRow.enhanceLevel }}</b></span
@@ -678,15 +683,8 @@ const mainStatLabel = computed(() => enhancePreviewRows.value?.[0]?.label ?? '')
   pointer-events: none;
 }
 .enhance-slot__name {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none;
   font-size: 20px;
-  font-weight: 600;
-  color: #d8c9a3;
-  text-shadow: 0 1px 3px rgb(0 0 0 / 80%);
   text-align: center;
   padding: 10px;
   pointer-events: none;

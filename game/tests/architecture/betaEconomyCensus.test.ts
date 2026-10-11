@@ -17,10 +17,10 @@
  *
  * Sinks computed: beta-family recipe costs (herb variants, fuel wood
  * per age, spirit stone, special ingredients), the enhance cost
- * catalog, building upgrade costs, collect-quest turn-ins, and vendor
- * sellability (residue path for sellable categories). Decompose, wash/
- * refine, companion feed, and hidden-channel emissions are gated this
- * phase and do not count.
+ * catalog, building upgrade costs, and collect-quest turn-ins.
+ * Vendor selling was removed (2026-10-11 ruling) and contributes no
+ * sink; decompose, wash/refine, companion feed, and hidden-channel
+ * emissions are gated this phase and do not count.
  */
 import { describe, expect, it } from 'vitest'
 import { materials } from '@/data/materials/materials'
@@ -35,6 +35,7 @@ import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
 import { QUESTS } from '@/data/quest/quests'
 import { buildings as BUILDINGS } from '@/data/building/buildings'
 import { createDefaultEquipmentOperationCostCatalog } from '@/core/equipment/EquipmentOperationCostCatalog'
+import { classifyDecomposableMaterial } from '@/core/production/DecomposeSystem'
 import {
   SUPPORTED_PROFESSION_REALMS,
   buildProfessionMaterialId,
@@ -52,10 +53,8 @@ import {
   COMPANION_PULL_TOKEN_MATERIAL_IDS,
   isDomainScopedAcquisitionEnabled,
 } from '@/core/realm/ReleasePolicy'
-import { VENDOR_SELLABLE_CATEGORIES } from '@/core/economy/VendorBalance'
-import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
-import { getRealmTier } from '@/core/realm/RealmTierMap'
-import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
+import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID, LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 // The global setup admits every feature for legacy suites; this suite
@@ -181,6 +180,20 @@ function collectEconomy(): {
 
   // Equipment dissolve is a beta action and pays tinh hoa.
   addSource(LUYEN_KHI_TINH_HOA_ID, 'equipment:dissolve')
+  // Materials economy rework - decompose tab outputs (ore/wood/herb).
+  addSource(BUI_GO_ID, 'decompose:wood')
+  addSource(LUYEN_DAN_TINH_HOA_ID, 'decompose:herb')
+  addSource(LUYEN_KHI_TINH_HOA_ID, 'decompose:ore')
+  // Vendor ruling 2026-10-11: decompose is THE material sink - every
+  // stack the classifier accepts burns into its family output. Only
+  // materials that actually emit in beta count: dormant-family herbs
+  // (betaRecipeFamilyOfId null above) never drop, so their decompose
+  // sink is unreachable and must not enter the census.
+  for (const material of materials) {
+    if (!sources.has(material.id)) continue
+    const match = classifyDecomposableMaterial(material)
+    if (match) addSink(material.id, `decompose:${match.family}`)
+  }
 
   // --- sinks ---
   for (const recipe of alchemyRecipes) {
@@ -189,19 +202,17 @@ function collectEconomy(): {
     }
     for (const variant of recipe.herbVariants) {
       addSink(variant.materialId, `recipe:${recipe.id}:herb`)
-      // resolveFuelWood accepts wood of the recipe realm at the herb's
-      // age (6E) - every age variant is a live sink.
-      addSink(
-        buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age),
-        `recipe:${recipe.id}:fuel`,
-      )
     }
+    // Materials economy rework - fuel is the universal bui_go +
+    // required luyen_dan_tinh_hoa (one sink each per recipe).
+    addSink('bui_go', `recipe:${recipe.id}:fuel`)
+    addSink('luyen_dan_tinh_hoa', `recipe:${recipe.id}:tinh_hoa`)
     for (const special of recipe.specialIngredients ?? []) {
       addSink(special.materialId, `recipe:${recipe.id}:special`)
     }
     if (recipe.spiritStoneCost > 0) {
       addSink(
-        getSpiritStoneMaterialIdForRealmTier(getRealmTier(recipe.realmId)),
+        SPIRIT_STONE_MATERIAL_ID,
         `recipe:${recipe.id}:stone`,
       )
     }
@@ -215,7 +226,7 @@ function collectEconomy(): {
     }
     if ((cost?.spiritStone ?? 0) > 0) {
       addSink(
-        getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId)),
+        SPIRIT_STONE_MATERIAL_ID,
         `enhance:${realmId}:stone`,
       )
     }
@@ -233,15 +244,6 @@ function collectEconomy(): {
     if (!isBetaQuestEnabled(quest)) continue
     if (quest.condition.kind === 'collect') {
       addSink(quest.condition.materialId, `quest-turnin:${quest.id}`)
-    }
-  }
-
-  // Vendor: sellable categories always have the residue sink.
-  for (const material of materials) {
-    if (
-      (VENDOR_SELLABLE_CATEGORIES as readonly string[]).includes(material.category)
-    ) {
-      addSink(material.id, 'vendor')
     }
   }
 
@@ -275,11 +277,9 @@ describe('sec.17 beta economy census - no orphan source, no orphan sink', () => 
   it('every material consumed by a beta-realm purpose sink has a live beta source or an exemption', () => {
     const orphans: string[] = []
     for (const [materialId, labels] of sinks) {
-      // Vendor residue is a generic offramp, not a purpose: a
-      // dormant-family herb that only vendored is NOT a beta-enabled
-      // material, so vendor-only sinks impose no source requirement.
-      const purposeLabels = [...labels].filter((label) => label !== 'vendor')
-      if (purposeLabels.length === 0) continue
+      // Every recorded sink label is a purpose now - the generic
+      // vendor offramp is gone, so any sink imposes a source
+      // requirement.
 
       // Materials whose realm is outside beta scope (e.g. Kim Dan+ wood
       // in building upgrade placeholders) are dormant economy entries;
@@ -289,7 +289,7 @@ describe('sec.17 beta economy census - no orphan source, no orphan sink', () => 
 
       if (betaEconomyClassOf(materialId) !== undefined) continue
       if (!sources.has(materialId)) {
-        orphans.push(`${materialId} (sinks: ${purposeLabels.join(',')})`)
+        orphans.push(`${materialId} (sinks: ${[...labels].join(',')})`)
       }
     }
     expect(orphans).toEqual([])

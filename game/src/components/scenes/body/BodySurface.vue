@@ -17,6 +17,8 @@ import { BODY_CHAPTER_LABEL_KEYS } from './useBodySceneModel'
 import type { BodyChapterId } from '@/core/realm/body/BodyChapter'
 import type { BodyUnitView } from './bodySceneModel'
 import { getPhysiqueGrade } from '@/core/realm/body/BodyProgressionSystem'
+import { bodyRefinementChapter } from '@/core/realm/body/BodyRefinementChapter'
+import { statLabel } from '@/core/stats/StatLabels'
 import { betaHiddenRealmRecordFor } from '@/core/betaScopeSurface'
 import { getQuanTheMechanic } from '@/core/realm/hidden/QuanTheDiversion'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -135,10 +137,19 @@ function toUiUnit(unit: BodyUnitView): BodyPaperUnit {
 
 const units = computed(() => activeModel.value.units.map(toUiUnit))
 
-// Total chapter stats: sum the gains of every completed unit (owner
-// ruling 2026-10-09 - the details card lists aggregate stats, not the
-// viewed unit's rows alone). Values like '+1.5' / '+20%' sum by label.
+// Big-tier total stats (owner ruling 2026-10-10): Ren The is ONE big
+// tier - the card lists the chapter's accumulated grants, which the
+// domain computes as done tiers at full baseGains + the in-progress
+// tier scaled by progress/cap. Other chapters keep the done-unit sum.
 const totalRows = computed(() => {
+  if (activeDomainChapter.value === 'body_refinement') {
+    stateVersion.value
+    const deltas = bodyRefinementChapter.collectBaseStatDeltas(player.$state)
+    return Object.entries(deltas).map(([stat, value]) => ({
+      label: statLabel(stat as never),
+      value: `+${Number.parseFloat((value ?? 0).toFixed(2))}`,
+    }))
+  }
   const sums = new Map<string, { value: number; percent: boolean }>()
   for (const unit of units.value) {
     if (unit.state !== 'done') continue
@@ -222,6 +233,8 @@ const paperModel = computed<BodyPaperModel>(() => ({
   progress: activeModel.value.total > 0
     ? (activeModel.value.completed / activeModel.value.total) * 100
     : 0,
+  chapterComplete: activeModel.value.total > 0
+    && activeModel.value.completed >= activeModel.value.total,
   totalRows: totalRows.value,
 }))
 

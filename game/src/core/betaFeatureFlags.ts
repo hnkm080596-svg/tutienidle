@@ -38,7 +38,7 @@ export const BETA_FEATURES = {
   manualWorkforce: false,
   equipmentWash: true,
   equipmentRefine: true,
-  equipmentOreDecompose: false,
+  equipmentOreDecompose: true,
   dailyQuest: false,
 } as const
 

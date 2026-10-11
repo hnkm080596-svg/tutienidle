@@ -16,21 +16,23 @@ describe('getWorkerCapacityForLevel — công thức 1 + level×2 (user chốt)'
   })
 })
 
-describe('resolveProductionWorkerCapacity - ONE split rule (Mission D / spec D5)', () => {
-  it('decompose claims its workers first; production gets the remainder', () => {
-    expect(resolveProductionWorkerCapacity(7, 2)).toBe(5)
-    expect(resolveProductionWorkerCapacity(3, 3)).toBe(0)
-    expect(resolveProductionWorkerCapacity(0, 0)).toBe(0)
+describe('resolveProductionWorkerCapacity - ONE pool rule (Mission D / spec D5)', () => {
+  // DIRECT DECOMPOSE REWORK (2026-10-11): decompose retired its worker
+  // claim - the production pool IS the whole CHQ capacity, no split.
+  it('production gets the whole pool', () => {
+    expect(resolveProductionWorkerCapacity(7)).toBe(7)
+    expect(resolveProductionWorkerCapacity(3)).toBe(3)
+    expect(resolveProductionWorkerCapacity(0)).toBe(0)
   })
 
-  it('never negative: a stale decompose reservation above the pool yields 0, not debt', () => {
-    expect(resolveProductionWorkerCapacity(3, 10)).toBe(0)
-    expect(resolveProductionWorkerCapacity(0, 4)).toBe(0)
+  it('never negative: a stale pool below zero yields 0, not debt', () => {
+    expect(resolveProductionWorkerCapacity(-3)).toBe(0)
+    expect(resolveProductionWorkerCapacity(-10.5)).toBe(0)
   })
 
   it('non-finite / fractional inputs floor defensively', () => {
-    expect(resolveProductionWorkerCapacity(Number.NaN, 2)).toBe(0)
-    expect(resolveProductionWorkerCapacity(5.9, 1.9)).toBe(4)
-    expect(resolveProductionWorkerCapacity(5, Number.NaN)).toBe(5)
+    expect(resolveProductionWorkerCapacity(Number.NaN)).toBe(0)
+    expect(resolveProductionWorkerCapacity(Number.POSITIVE_INFINITY)).toBe(0)
+    expect(resolveProductionWorkerCapacity(5.9)).toBe(5)
   })
 })

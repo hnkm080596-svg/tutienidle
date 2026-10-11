@@ -28,7 +28,6 @@ import type {
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
 import { QuestManager } from '../../core/quest/QuestManager'
 import { BuildingManager } from '../../core/building/BuildingManager'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { defineEnemy } from '../../core/enemy/Enemy'
 import type { Stage } from '../../core/stage/Stage'
 import { pills } from '../../data/pill/pills'
@@ -398,19 +397,6 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
     const restored = buildingManager.get('r23_b1')!
     expect(restored.lastCollectedAt).toBeLessThanOrEqual(Date.now() / 1000)
     expect(restored.lastCollectedAt).toBeGreaterThan(Date.now() / 1000 - 60)
-  })
-
-  it('B6 decompose nextCycleAt: far-future deadline rebases to now + cycleMs on first tick', () => {
-    const decompose = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    decompose.updateCapacity(3)
-    decompose.restore({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-      nextCycleAt: TWO_POW_52 - 1,
-      started: true,
-    })
-    const now = Date.now()
-    decompose.tick(now)
-    expect(decompose.getSaveState().nextCycleAt).toBe(now + 30_000)
   })
 
   // ------------------------------------------------------------------

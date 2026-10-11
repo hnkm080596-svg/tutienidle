@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { getSpiritStoneMaterialIdForEnhanceLevel, getSpiritStoneMaterialIdForRealmTier } from './SpiritStoneMaterial'
+import {
+  SPIRIT_STONE_MATERIAL,
+  SPIRIT_STONE_MATERIAL_ID,
+  SPIRIT_STONE_MATERIALS,
+} from './SpiritStoneMaterial'
 
-describe('Linh Thạch phân phẩm', () => {
-  it('chọn phẩm theo ba bracket cảnh giới', () => {
-    expect(getSpiritStoneMaterialIdForRealmTier(1)).toBe('spirit_stone_ha_pham')
-    expect(getSpiritStoneMaterialIdForRealmTier(4)).toBe('spirit_stone_trung_pham')
-    expect(getSpiritStoneMaterialIdForRealmTier(7)).toBe('spirit_stone_thuong_pham')
+// Flatten (2026-10-11, owner ruling): one spirit stone, no pham tiers.
+describe('Linh Thạch', () => {
+  it('catalog holds exactly one stone material', () => {
+    expect(SPIRIT_STONE_MATERIALS).toEqual([SPIRIT_STONE_MATERIAL])
   })
 
-  it('Cường Hóa đổi phẩm sau mỗi 30 cấp', () => {
-    expect(getSpiritStoneMaterialIdForEnhanceLevel(29)).toBe('spirit_stone_ha_pham')
-    expect(getSpiritStoneMaterialIdForEnhanceLevel(30)).toBe('spirit_stone_trung_pham')
-    expect(getSpiritStoneMaterialIdForEnhanceLevel(60)).toBe('spirit_stone_thuong_pham')
+  it('stone id/name/stackLimit', () => {
+    expect(SPIRIT_STONE_MATERIAL.id).toBe('spirit_stone_ha_pham')
+    expect(SPIRIT_STONE_MATERIAL_ID).toBe(SPIRIT_STONE_MATERIAL.id)
+    expect(SPIRIT_STONE_MATERIAL.name).toBe('Linh Thạch')
+    expect(SPIRIT_STONE_MATERIAL.category).toBe('spirit_stone')
+    expect(SPIRIT_STONE_MATERIAL.stackLimit).toBe(Number.MAX_SAFE_INTEGER)
   })
 })

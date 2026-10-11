@@ -5,18 +5,13 @@ import { GameManager } from '../../core/game/GameManager'
 import { buildGameSave } from './SaveSystem'
 import { validateGameSaveShape } from './saveShapeValidation'
 
-// DecomposeSystem is scope-hidden in the current beta - same unlock
-// pattern as DecomposeSystem.test.ts so settleOffline runs its real arm.
+// Beta features unlocked for the whole suite (same pattern as the
+// scope-hidden system tests).
 vi.mock('../../core/betaScope', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../core/betaScope')>()),
   isBetaFeature: () => true,
   isScopeHidden: () => false,
 }))
-
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import type { DecomposeSaveState } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
-import { PRODUCTION_OFFLINE_CAP_SECONDS } from '../../core/production/ProductionBalance'
 
 // ============================================================================
 // QA probe - fixpoint r22 COR wave: WRITE-side ratchet vs the
@@ -176,125 +171,7 @@ describe('auditR22 COR probe - write-side ratchet vs 2^52 admission bound', () =
   })
 })
 
-// ============================================================================
-// Differential probe - DecomposeSystem.settleOffline O(1) jump (r21) vs
-// the r20 stepping loop it replaced. Faithful old-stepping replica over
-// the same window arithmetic; asserts identical landing + settled count
-// on every edge (exact divisor, n0==end, windowStart<nextCycleAt,
-// nextCycleAt already past end/now, crafted-future offlineSince, cap
-// window pin, sub-pin admitted n0).
-// ============================================================================
-
-const DECOMPOSE_CYCLE_MS = 30_000
-
-function simulateOldStepping(
-  n0: number,
-  cycleMs: number,
-  nowMs: number,
-  offlineSinceMs: number,
-): { landed: number; settled: number } {
-  const windowStartMs = Math.max(
-    n0 - cycleMs,
-    Math.floor(offlineSinceMs),
-    nowMs - PRODUCTION_OFFLINE_CAP_SECONDS * 1000,
-  )
-  const fastForwardEndMs = Math.min(windowStartMs, nowMs)
-  let n = n0
-  while (n <= fastForwardEndMs) {
-    n += cycleMs
-  }
-  let settled = 0
-  while (n <= nowMs && settled < 5000) {
-    settled += 1
-    n += cycleMs
-  }
-  return { landed: n, settled }
-}
-
-function runRealSettle(
-  nextCycleAt: number,
-  cycleSeconds: number,
-  nowMs: number,
-  offlineSinceMs: number,
-): { landed: number; settled: number } {
-  const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds })
-  system.updateCapacity(4)
-  const state: DecomposeSaveState = {
-    started: true,
-    settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-    nextCycleAt,
-  }
-  system.restore(state)
-  const settled = system.settleOffline(nowMs, offlineSinceMs)
-  return { landed: system.getSaveState().nextCycleAt, settled }
-}
-
-describe('auditR22 COR probe - decompose O(1) jump vs r20 stepping loop', () => {
-  const NOW = 1_725_160_000_000
-
-  it.each([
-    // [label, nextCycleAt, nowMs, offlineSinceMs]
-    // n0 = end - cycleMs exactly: quotient integer -> both take one step past end.
-    ['exact divisor: n0 sits one cycle below end', NOW - 30_030_000, NOW, NOW - 30_000_000],
-    ['n0 == fastForwardEnd: exactly one step', NOW - 36_000_000, NOW, 0],
-    ['windowStart < nextCycleAt: no fast-forward', NOW - 150_000, NOW, 0],
-    ['nextCycleAt already past now: zero settle', NOW + 9_000_000, NOW, 0],
-    ['crafted-future offlineSince forces end > n0', 1_000_000_000_000, 1_000_000_100_000, 1_000_000_000_005],
-    ['cap window pin (10h) dominates deep-past n0', 0, NOW, 0],
-    ['n0 inside settle window: all dues complete', NOW - 150_000, NOW, NOW - 600_000],
-    ['fractional remainder c-1 below boundary', 1, NOW, 0],
-    ['n0 one ms after cap edge', NOW - 36_000_001, NOW, NOW - 36_000_001],
-    ['n0 exactly at cap edge', NOW - 36_000_000, NOW, NOW - 36_000_000],
-    ['n0 mid-window non-divisor', NOW - 25_000_000, NOW, 0],
-    ['deep-past n0 with mid offlineSince', 10_000, NOW, NOW - 3_600_000],
-  ])('landing + settled identical: %s', (_label, n0, nowMs, offlineSince) => {
-    const real = runRealSettle(n0, DECOMPOSE_CYCLE_MS / 1000, nowMs, offlineSince)
-    // Restore clamps the injected cursor the same way both eras did.
-    const n0Clamped = Number.isFinite(Math.floor(n0)) ? Math.max(0, Math.floor(n0)) : 0
-    const old = simulateOldStepping(n0Clamped, DECOMPOSE_CYCLE_MS, nowMs, offlineSince)
-    expect(real.landed).toBe(old.landed)
-    expect(real.settled).toBe(old.settled)
-  })
-
-  it('r26: a sub-pin huge n0 re-anchors at restore-now + cycleMs instead of parking', () => {
-    // The 'stays parked' arm is closed: restore clamps a post-dated
-    // nextCycleAt at restore-now + cycleMs (authored max-remaining -
-    // a fire can never owe more than one cycle), so a 9e15 stamp
-    // resumes the channel at the authored deadline instead of idling
-    // it until Delta and self-bricking every write past it.
-    const system = new DecomposeSystem(new MaterialBag(), {
-      cycleSeconds: DECOMPOSE_CYCLE_MS / 1000,
-    })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        started: true,
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 9e15,
-      },
-      NOW,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(NOW + DECOMPOSE_CYCLE_MS)
-  })
-
-  it('cycleMs = 0: new arm exits bounded (old stepping hung forever)', () => {
-    // cycleSeconds=0 -> cycleMs=0. Old code: while(n<=end) n+=0 hangs.
-    // New code: cycleMs>0 guard skips the jump, bounded settle loop
-    // drains at most 5000 completions and exits.
-    const start = Date.now()
-    const real = runRealSettle(1_000_000, 0, NOW, 0)
-    expect(Date.now() - start).toBeLessThan(5_000)
-    expect(real.settled).toBeLessThanOrEqual(5000)
-    expect(real.landed).toBe(1_000_000)
-  })
-
-  it('cycleMs < 0: new arm exits bounded (old stepping ran away negative)', () => {
-    // cycleMs=-30_000: fast-forward guard skips (cycleMs>0 fails); the
-    // bounded settle loop walks nextCycleAt DOWN 30s per completion,
-    // exits at the 5000 cap. Old stepping decremented n forever inside
-    // the fast-forward loop (infinite hang).
-    const real = runRealSettle(1_000_000, -30, NOW, 0)
-    expect(real.settled).toBe(5000)
-    expect(real.landed).toBe(1_000_000 - 5000 * 30_000)
-  })
-})
+// DIRECT DECOMPOSE REWORK (2026-10-11): the differential probe that
+// pinned DecomposeSystem.settleOffline's O(1) jump vs the r20 stepping
+// loop is retired with the worker-cycle engine - decompose has no
+// offline settle to differential.

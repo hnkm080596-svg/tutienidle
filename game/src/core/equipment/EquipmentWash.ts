@@ -28,7 +28,7 @@ import {
 } from './EquipmentRollPrimitives'
 import { rollWeightedIndex } from '../production/ProductionBalance'
 import { WASH_TIER_WEIGHTS_BY_QUALITY } from './RefinementBalance'
-import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 
 /**
@@ -45,7 +45,7 @@ import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 export interface WashDeps {
   tryGetTemplate: (registry: EquipmentRegistry, itemId: string) => Equipment | undefined
 
-  getWashCost: (quality: ItemQuality) => { tinhHoa: number; spiritStone: number }
+  getWashCost: (quality: ItemQuality) => { tinhHoa: number; spiritStone: number; buiGo: number }
 
   spendItemRefinementPoints: (instance: EquipmentInstance, amount: number) => void
 
@@ -101,6 +101,11 @@ function rollWashAffixes(
 
   if (!materialBag.has(LUYEN_KHI_TINH_HOA_ID, cost.tinhHoa)) {
     return { ok: false, reason: 'missing_tinh_hoa' }
+  }
+
+  // Materials economy rework - Bui Go la cost bat buoc thu ba.
+  if (!materialBag.has(BUI_GO_ID, cost.buiGo)) {
+    return { ok: false, reason: 'missing_bui_go' }
   }
 
   if (!materialBag.has(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)) {
@@ -226,6 +231,8 @@ function rollWashAffixes(
   deps.spendItemRefinementPoints(instance, 1)
 
   materialBag.remove(LUYEN_KHI_TINH_HOA_ID, cost.tinhHoa)
+
+  materialBag.remove(BUI_GO_ID, cost.buiGo)
 
   materialBag.remove(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)
 

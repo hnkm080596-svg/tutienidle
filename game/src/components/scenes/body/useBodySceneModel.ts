@@ -30,7 +30,7 @@ import {
   listMeridianPages,
 } from '@/core/realm/body/MeridianPages'
 import { MERIDIANS, THONG_MACH_DAN_MATERIAL_ID } from '@/data/realm/Meridians'
-import { readMeridianProgress } from '@/core/realm/body/MeridianChapter'
+import { MERIDIAN_FULL_PROGRESS, readMeridianProgress } from '@/core/realm/body/MeridianChapter'
 import { REALMS } from '@/data/realms/realm'
 import {
   getZhouTianCapacity,
@@ -39,9 +39,7 @@ import {
 } from '@/core/realm/body/ZhouTianChapter'
 import {
   ZHOU_TIAN_CURRENCY_MATERIAL_ID,
-  ZHOU_TIAN_DAI_STEP,
   ZHOU_TIAN_REALM_ID,
-  ZHOU_TIAN_TIEU_STEP,
   zhouTianStepCost,
   zhouTianStepReward,
 } from '@/data/realm/ZhouTian'
@@ -87,6 +85,8 @@ function buildRefinementUnits(
   const currentTierProgress = getRefinementCurrentTierProgress(player)
   const have = manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
   const essenceName = materialName(manager, TINH_HOA_PHAM_THE_MATERIAL_ID)
+  // Owner ruling 2026-10-10: M-QI-09 substitution removed - the gate
+  // counts only the base physique-essence stack again.
 
   return BODY_REFINEMENT_TIERS.map((tier, index): BodyUnitView => {
     const cap = getTierCap(index)
@@ -443,7 +443,9 @@ export function useBodySceneModel() {
   }
 
   // Selection: remembered per chapter; defaults to the actionable unit
-  // (the "next" row), falling back to the first unit.
+  // (the "next" row). With nothing left to invest the card shows the
+  // highest achieved tier (owner ruling 2026-10-10: "dung canh gioi da
+  // dat duoc") - falling back to the first unit covers a fresh save.
   const selectedUnitId = ref<Record<BodyChapterId, string | null>>({
     body_refinement: null,
     meridian: null,
@@ -457,7 +459,15 @@ export function useBodySceneModel() {
   function viewedUnit(id: BodyChapterId): BodyUnitView | null {
     const model = chapter(id)
     const picked = model.units.find(unit => unit.id === selectedUnitId.value[id])
-    return picked ?? model.units.find(unit => unit.actionable) ?? model.units[0] ?? null
+    let lastDone: BodyUnitView | undefined
+    for (const unit of model.units) {
+      if (unit.status === 'done') lastDone = unit
+    }
+    return picked
+      ?? model.units.find(unit => unit.actionable)
+      ?? lastDone
+      ?? model.units[0]
+      ?? null
   }
 
   function selectUnit(chapterId: BodyChapterId, unitId: string): void {
@@ -476,35 +486,97 @@ export function useBodySceneModel() {
   }
 
   /**
-   * investActive + the pour replay spec (Rèn Thể only): captures the
-   * displayed material count and tier-fill around the real debit so
-   * the details card can animate slot->bar. Other chapters invest
-   * instantly (no pour spec).
+   * investActive + the pour replay spec: captures the displayed
+   * currency count and the bar fill around the real debit so the
+   * details card can animate slot->bar. One spec shape for every
+   * chapter - the branches differ only in WHERE the count and the
+   * fill live (essence bag + tier / phap bag + step count / pill bag
+   * + meridian percent).
    */
   function pourActive(chapterId: BodyChapterId): { consumed: number; pour: BodyPourSpec | null } {
-    if (chapterId !== 'body_refinement') {
-      return { consumed: investActive(chapterId), pour: null }
+    if (chapterId === 'body_refinement') {
+      const before = player.$state.bodyProgression.body_refinement
+      const haveBefore = gameManager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
+      const tierBefore = { completed: before.completedTiers, progress: before.currentTierProgress }
+      const consumed = investActive(chapterId)
+      if (consumed <= 0) {
+        return { consumed, pour: null }
+      }
+      return {
+        consumed,
+        pour: {
+          consumed,
+          haveFrom: haveBefore,
+          haveTo: gameManager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID),
+          progressPerMaterial: getBodyRefinementProgressMultiplier(
+            player.$state.selectedTalentIds,
+            player.$state.talentLevels,
+          ),
+          tierProgress: tierBefore.progress,
+          tierStartIndex: tierBefore.completed,
+          caps: BODY_REFINEMENT_TIERS.slice(tierBefore.completed).map(tier => tier.cap),
+        },
+      }
     }
-    const before = player.$state.bodyProgression.body_refinement
-    const haveBefore = gameManager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
-    const tierBefore = { completed: before.completedTiers, progress: before.currentTierProgress }
+
+    if (chapterId === 'zhou_tian') {
+      const haveBefore = gameManager.materialBag.getAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
+      const completedBefore = player.$state.bodyProgression.zhou_tian.completed
+      const capacity = getZhouTianCapacity(player.$state)
+      const consumed = investActive(chapterId)
+      if (consumed <= 0) {
+        return { consumed, pour: null }
+      }
+      return {
+        consumed,
+        pour: {
+          consumed,
+          haveFrom: haveBefore,
+          haveTo: gameManager.materialBag.getAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
+          // The fill counts STEPS - invest commits exactly one step,
+          // so each consumed essence buys 1/consumed of that step.
+          progressPerMaterial: 1 / consumed,
+          tierProgress: completedBefore,
+          tierStartIndex: 0,
+          caps: [capacity],
+        },
+      }
+    }
+
+    // meridian: one pill pours into the next unopened meridian's
+    // percent bar - the motes land on the same tube the viewed unit
+    // shows (the investable meridian IS the viewed one when the
+    // button is enabled). tierStartIndex must be the TARGET's unit
+    // index so the figure's sequential reveal rides that meridian -
+    // index 0 would flicker Nham Mach 'current' mid-pour.
+    const progressBefore = readMeridianProgress(player.$state)
+    const targetIndex = MERIDIANS.findIndex(
+      meridian => (progressBefore[meridian.id] ?? 0) < MERIDIAN_FULL_PROGRESS,
+    )
+    const targetId = targetIndex >= 0 ? MERIDIANS[targetIndex]!.id : undefined
+    const haveBefore = gameManager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID)
     const consumed = investActive(chapterId)
     if (consumed <= 0) {
       return { consumed, pour: null }
     }
+    const progressAfter = readMeridianProgress(player.$state)
+    const targetBefore = targetId !== undefined ? (progressBefore[targetId] ?? 0) : 0
+    const progressDelta = targetId !== undefined
+      ? (progressAfter[targetId] ?? 0) - targetBefore
+      : 0
     return {
       consumed,
-      pour: {
-        consumed,
-        haveFrom: haveBefore,
-        haveTo: gameManager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID),
-        progressPerMaterial: getBodyRefinementProgressMultiplier(
-          player.$state.selectedTalentIds,
-          player.$state.talentLevels,
-        ),
-        tierProgress: tierBefore.progress,
-        caps: BODY_REFINEMENT_TIERS.slice(tierBefore.completed).map(tier => tier.cap),
-      },
+      pour: targetId === undefined || progressDelta <= 0
+        ? null
+        : {
+          consumed,
+          haveFrom: haveBefore,
+          haveTo: gameManager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID),
+          progressPerMaterial: progressDelta / consumed,
+          tierProgress: targetBefore,
+          tierStartIndex: targetIndex,
+          caps: [MERIDIAN_FULL_PROGRESS],
+        },
     }
   }
 

@@ -99,11 +99,13 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     },
   },
   {
-    // Ky Bao Cac (2026-08-30) - building CHUYEN cho Hoa Ban/quy doi
-    // (VendorPanel.vue). Bounds/hitbox tam dung ti le trung binh giong
-    // Truyen Tong Tran cho toi khi co asset that (asset-drop convention,
-    // v2/vendor/*.png) - degrade an toan qua has-asset-error, hotspot
-    // van bam duoc nho hitbox %.
+    // Ky Bao Cac - dormant art entry kept for registry/pipeline
+    // completeness (the sell panel was removed 2026-10-11; decompose
+    // is now the only material sink, and every open path fails closed
+    // via BETA_BUILDING_FEATURES). Placeholder bounds/hitbox still
+    // borrow Truyen Tong Tran proportions until a real asset lands
+    // (asset-drop convention, v2/vendor/*.png) - degrade is safe via
+    // has-asset-error.
     buildingId: 'vendor',
     canvas: { width: 1254, height: 1254 },
     visualBounds: { x: 150, y: 200, width: 950, height: 850 },

@@ -7,8 +7,8 @@
  *   - bag forges (above-realm material, dormant-domain pill)
  *   - claim forges (dormant skill, dormant way pair, dormant kiem node,
  *     parked/above-realm talent, dormant timed effect, forged casts)
- *   - write-seam forges (vendor sale of unearned material, dormant
- *     pill use, way grant replay on dormant way)
+ *   - write-seam forges (dormant pill use, way grant replay on
+ *     dormant way)
  *
  * Beta flags are pinned by the lock fixtures - behavior asserted under
  * the canonical all-false table.
@@ -119,13 +119,12 @@ function noopTarget(): PillTarget {
   return { addCultivation: () => {}, heal: () => {}, applyBuff: () => {} } as PillTarget
 }
 
-describe('A18-1 bag forge: above-realm material cannot restore nor mint vendor value', () => {
+describe('A18-1 bag forge: above-realm material cannot restore', () => {
   // mortal (tier 1) player cannot produce a golden_core (tier 4) wood -
   // the claim is out of envelope. F-MAT-REALM closes this at the
   // boundary: a profession.realmId tier more than one above the claimed
   // realm tier is rejected outright (the +1 lead is what authored
-  // no-gate collect quests tolerate). The vendor's grade-below gate
-  // stays as the second layer for admitted one-tier-up holdings.
+  // no-gate collect quests tolerate).
   it('mortal save carrying golden_core wood is rejected at the shape boundary', () => {
     const { save } = validSave()
     save.materials = [{ materialId: 'golden_core_wood_thuong_co', amount: 5 }]
@@ -136,38 +135,14 @@ describe('A18-1 bag forge: above-realm material cannot restore nor mint vendor v
   })
 
   // The admitted edge: a mortal bag of qi_refining wood (tier +1)
-  // restores - and the vendor's grade gate still refuses to mint value.
-  it('mortal save carrying qi_refining wood restores but vendor refuses the sale', () => {
+  // restores with every forged unit intact.
+  it('mortal save carrying qi_refining wood restores intact', () => {
     const { save } = validSave()
     save.materials = [{ materialId: 'qi_refining_wood_decade', amount: 5 }]
 
-    const { manager, playerStore, result } = boot(save)
+    const { manager, result } = boot(save)
     expect(result.status).toBe('ok')
     expect(manager.materialBag.getAmount('qi_refining_wood_decade')).toBe(5)
-
-    const sale = manager.economyOps.sellMaterialToVendor(
-      'qi_refining_wood_decade',
-      5,
-      playerStore.$state as PlayerData,
-    )
-    expect(sale.ok).toBe(false)
-    // No spirit stone mint: the bag keeps every forged unit.
-    expect(manager.materialBag.getAmount('qi_refining_wood_decade')).toBe(5)
-  })
-
-  // Sibling check: non-profession ids also fail the grade gate closed
-  // (isGradeBelowPlayer returns false without profession meta).
-  it('essence with no profession meta sells nothing either', () => {
-    const { save } = validSave()
-    save.materials = [{ materialId: 'tinh_hoa_pham_the', amount: 9 }]
-
-    const { manager, playerStore } = boot(save)
-    const sale = manager.economyOps.sellMaterialToVendor(
-      'tinh_hoa_pham_the',
-      9,
-      playerStore.$state as PlayerData,
-    )
-    expect(sale.ok).toBe(false)
   })
 })
 

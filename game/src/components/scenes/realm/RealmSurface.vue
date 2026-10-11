@@ -2,18 +2,20 @@
 // Canh Gioi production adapter: mounts the approved realm-v2 fidelity
 // surface (Thien Lo ascension map on paper over the Dong Fu vista) fed
 // by the canonical read-models - getCurrentRealm floors, cultivation
-// progress/rate/ETA, BreakthroughGate requirement rows, realm passives.
-// The CTA keeps its owner: realmAdvanceOps.canTriggerBreakthrough gates
-// the button and the ceremony still opens through the
-// breakthroughRequirement store - nothing here advances the realm.
-import { computed, onBeforeUnmount, ref } from 'vue'
+// progress/rate/ETA, realm passives. Buttons carry the rules: "Dot Pha"
+// renders only while a minor floor advance can land (cultivation full,
+// floor < max) and commits it through breakthroughWithConsequences; the
+// floor-12+ ritual keeps its owner - canTriggerBreakthrough gates it and
+// the ceremony still opens through the breakthroughRequirement store.
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
-import { getCurrentRealm, CORE_REALM_LEVEL } from '@/core/realm/realmSystem'
+import { playBreakthroughFx } from '@/components/fx/breakthroughFx'
+import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { betaNextRealmSurfaceFor } from '@/core/betaScopeSurface'
 import { isActivePath } from '@/core/player/CultivationPathSystem'
 import { isScopeHidden } from '@/core/betaScope'
@@ -33,14 +35,6 @@ const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
 
 const selected = ref(0)
-const notice = ref('')
-let noticeTimer: ReturnType<typeof setTimeout> | undefined
-function flashNotice(text: string) {
-  notice.value = text
-  if (noticeTimer !== undefined) clearTimeout(noticeTimer)
-  noticeTimer = window.setTimeout(() => { noticeTimer = undefined; notice.value = '' }, 3200)
-}
-onBeforeUnmount(() => { if (noticeTimer !== undefined) clearTimeout(noticeTimer) })
 
 const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
 const nextRealmSurface = computed(() => betaNextRealmSurfaceFor(player.$state))
@@ -70,34 +64,52 @@ const model = computed<RealmUiModel>(() => {
     currentFloor: player.realmLevel,
     maxFloor: realm.maxLevel,
     progress: percent,
-    progressLabel: `${percent}%`,
     cultivation: `${formatNumber(player.cultivation)} / ${formatNumber(player.cultivationRequired)}`,
     rate: rate > 0
       ? (cultivationEta.value
           ? t('panels.realm.rateEta', { rate: formatNumber(rate), unit: t('panels.realm.cultivationUnit'), eta: cultivationEta.value })
           : t('panels.realm.meta.rateValue', { rate: formatNumber(rate), unit: t('panels.realm.cultivationUnit') }))
       : '',
-    requirements: gameManager.realmAdvanceOps.getBreakthroughRequirements(player.$state).map((row) => ({
-      id: row.key,
-      met: row.met,
-      label: row.key === 'level'
-        ? t('panels.realm.requirements.level', { realm: realm.name, level: CORE_REALM_LEVEL })
-        : t('panels.realm.requirements.chapterClear'),
-    })),
+    // 2026-10-11 ruling - auto floor-advance removed: a floor only
+    // moves on the player's button press, so the "Dot Pha" button
+    // renders exactly when the minor breakthrough could land
+    // (cultivation capped at required, a floor still left below the
+    // realm's max).
+    canAdvanceFloor:
+      player.realmLevel < realm.maxLevel &&
+      player.cultivation >= player.cultivationRequired,
     passives: realmStatPassiveRows.value,
     nextRealmName: nextRealmName.value,
     ctaLabel: majorLabel,
-    ctaVisible: Boolean(nextRealmSurface.value),
     ctaEnabled: canBreakthrough.value,
     // R13 ruling (2026-10-06): the sword-path Quan Khi re-entry moved
     // out of Nhan Vat into Canh Gioi - same gate it carried there.
-    quanKhiEntry: isActivePath(player, 'sword') && !isScopeHidden('swordPath'),
+    // Ruling (2026-10-11): the merged ritual button re-opens the Quan
+    // Khi panel when the sword re-entry applies, else rides the shared
+    // breakthrough ceremony like the old single CTA did.
+    ritualAction: isActivePath(player, 'sword') && !isScopeHidden('swordPath') ? 'quanKhi' : 'breakthrough',
   }
 })
 
 function onSelectFloor(floor: number) {
   selected.value = floor
-  flashNotice(t('realm.viewing', { floor }))
+}
+
+const advancing = ref(false)
+
+// Owner ruling (2026-10-11): a minor Dot Pha plays the qi cinematic
+// first (dim + lock, silhouette inhale, ring blast); the floor commits
+// at the burst peak while the flash still covers the swap. Major-realm
+// ceremonies keep their own do-kiep flow.
+async function onAdvanceFloor() {
+  if (!model.value.canAdvanceFloor || advancing.value) return
+  advancing.value = true
+  try {
+    await playBreakthroughFx()
+  } finally {
+    advancing.value = false
+  }
+  gameManager.realmAdvanceOps.breakthroughWithConsequences(player)
 }
 
 function onBreakthrough() {
@@ -108,6 +120,18 @@ function onBreakthrough() {
 function onQuanKhi() {
   ui.openStandalonePanel('quan_khi')
 }
+
+// After a breakthrough the surface stays mounted (the ceremony is a
+// sibling overlay): the remembered floor must follow the NEW realm or
+// the newly advanced floor, else the card keeps showing stale progress
+// (a floor N of the new realm as "Chua mo", or the pre-breakthrough
+// floor after "Dot Pha" landed).
+watch(
+  () => [player.realmId, player.realmLevel] as const,
+  () => {
+    selected.value = player.realmLevel
+  },
+)
 </script>
 
 <template>
@@ -115,9 +139,8 @@ function onQuanKhi() {
     <RealmFidelityScene
       :model="model"
       :selected="selected || model.currentFloor"
-      :notice="notice"
-     
       @select-floor="onSelectFloor"
+      @advance="onAdvanceFloor"
       @breakthrough="onBreakthrough"
       @quan-khi="onQuanKhi"
       @back="ui.closeHomeOverlays()"

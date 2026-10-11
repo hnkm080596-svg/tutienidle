@@ -14,15 +14,17 @@ function state(siteId: string, overrides: Partial<ProductionSiteState> = {}): Pr
 }
 
 describe('buildWorkforceView (Mission D / spec D1)', () => {
-  it('total/reserved/available come from the one split rule', () => {
-    const view = buildWorkforceView(7, 2, [])
+  // DIRECT DECOMPOSE REWORK (2026-10-11): no claimant reserves workers
+  // ahead of production - reserved is always 0, available = total.
+  it('total/reserved/available come from the one pool rule', () => {
+    const view = buildWorkforceView(7, [])
     expect(view.total).toBe(7)
-    expect(view.reserved).toBe(2)
-    expect(view.available).toBe(5)
+    expect(view.reserved).toBe(0)
+    expect(view.available).toBe(7)
   })
 
   it('requested (player intent) and effective (allocator grant) stay distinct; idle is the domain remainder', () => {
-    const view = buildWorkforceView(7, 2, [
+    const view = buildWorkforceView(7, [
       state('thanh_van_lam', { assignedWorkers: 4, activeWorkerSlots: 3 }),
       state('thanh_van_quang', { activeWorkerSlots: 2 }),
     ])
@@ -30,14 +32,14 @@ describe('buildWorkforceView (Mission D / spec D1)', () => {
     // conflate the two (slider shows requested, workers line shows effective).
     expect(view.requested).toEqual({ thanh_van_lam: 4 })
     expect(view.effective).toEqual({ thanh_van_lam: 3, thanh_van_quang: 2 })
-    expect(view.idle).toBe(0) // 5 available - 5 granted
+    expect(view.idle).toBe(2) // 7 available - 5 granted
   })
 
   it('no states -> everything idle; non-finite totals floor to 0', () => {
-    expect(buildWorkforceView(Number.NaN, 1, [])).toEqual({
-      total: 0, reserved: 1, available: 0, requested: {}, effective: {}, idle: 0,
+    expect(buildWorkforceView(Number.NaN, [])).toEqual({
+      total: 0, reserved: 0, available: 0, requested: {}, effective: {}, idle: 0,
     })
-    const view = buildWorkforceView(5, 0, [state('thanh_van_lam')])
+    const view = buildWorkforceView(5, [state('thanh_van_lam')])
     expect(view.idle).toBe(5)
   })
 })

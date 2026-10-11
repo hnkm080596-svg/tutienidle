@@ -38,17 +38,38 @@ const ls: Pick<Storage, 'getItem' | 'setItem'> =
     : localStorage
 // 2026-10-07: the mode flag moved into masterAccess (shared with the dev
 // panel toggle and the constellation panel); the whole design surface is
-// master-account only now.
+// master-account only now. Owner ruling 2026-10-10: sculpt artifacts
+// (offset overrides + spawn stamps) also render only for masters - every
+// other viewer sees the authored layout untouched.
 const { isMaster } = useMasterAccess()
 const designMode = computed(() => isMaster.value && skillDesignMode.value)
 function toggleDesign() {
   setSkillDesignMode(!skillDesignMode.value)
 }
+// QA fixpoint 2026-10-10: localStorage values can be corrupt/non-JSON -
+// an unconditional parse threw inside setup() and killed the whole
+// panel for every viewer. Parse defensively, fall back to empty.
+function readDesignJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = ls.getItem(key)
+    if (raw === null) return fallback
+    const parsed: unknown = JSON.parse(raw)
+    return parsed === null || typeof parsed !== 'object' ? fallback : (parsed as T)
+  } catch {
+    return fallback
+  }
+}
+const storedOffsets = readDesignJson<unknown>(DESIGN_KEY, {})
 const designOffsets = ref<Record<string, { x: number; y: number }>>(
-  JSON.parse(ls.getItem(DESIGN_KEY) ?? '{}'),
+  // QA fixpoint 2026-10-10 (round-2): reject arrays too - '[]' in storage
+  // would pass the object check and poison offset writes.
+  typeof storedOffsets === 'object' && storedOffsets !== null && !Array.isArray(storedOffsets)
+    ? storedOffsets as Record<string, { x: number; y: number }>
+    : {},
 )
 const exported = ref(false)
-const posOf = (node: SkillUiNode) => designOffsets.value[node.id] ?? { x: node.x, y: node.y }
+const posOf = (node: SkillUiNode) =>
+  (isMaster.value ? designOffsets.value[node.id] : undefined) ?? { x: node.x, y: node.y }
 function saveDesign() {
   ls.setItem(DESIGN_KEY, JSON.stringify(designOffsets.value))
 }
@@ -91,7 +112,11 @@ const DESIGN_NODE_TYPES = [
   { type: 'gate', label: 'Cổng CG', frame: 'parent' },
 ] as const
 interface DesignSpawn { id: string; type: string }
-const designSpawns = ref<DesignSpawn[]>(JSON.parse(ls.getItem(DESIGN_SPAWNS_KEY) ?? '[]'))
+// readDesignJson guards non-objects; an array slot additionally rejects
+// non-arrays - '{}' in storage would otherwise reach .push/.length as
+// an object (QA fixpoint 2026-10-10).
+const storedSpawns = readDesignJson<unknown>(DESIGN_SPAWNS_KEY, [])
+const designSpawns = ref<DesignSpawn[]>(Array.isArray(storedSpawns) ? storedSpawns as DesignSpawn[] : [])
 const spawnIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/skill.svg')
 function saveSpawns() {
   ls.setItem(DESIGN_SPAWNS_KEY, JSON.stringify(designSpawns.value))
@@ -122,7 +147,9 @@ function onContextMenu(event: MouseEvent) {
   saveSpawns()
   saveDesign()
 }
-const spawnNodes = computed<SkillUiNode[]>(() => designSpawns.value.map((s) => {
+const spawnNodes = computed<SkillUiNode[]>(() => {
+  if (!isMaster.value) return []
+  return designSpawns.value.map((s) => {
   const def = DESIGN_NODE_TYPES.find(d => d.type === s.type)
   const p = designOffsets.value[s.id] ?? { x: props.size / 2, y: props.size / 2 }
   return {
@@ -144,7 +171,8 @@ const spawnNodes = computed<SkillUiNode[]>(() => designSpawns.value.map((s) => {
     actionHint: '',
     frameKind: def?.frame ?? 'sub',
   }
-}))
+  })
+})
 
 const connections = computed(() => props.edges.flatMap(edge => {
   const from = props.nodes.find(node => node.id === edge.from)
@@ -467,8 +495,8 @@ const rootStyle = computed(() =>
       <SkillPaperNode v-for="node in paintNodes" :key="node.id" class="skill-positioned-node" :data-node-id="node.id" :node="node" :selected="selected === node.id" :style="{ left: `${node.x}px`, top: `${node.y}px` }" @select="onSelect" @activate="onActivate" />
     </div>
     </div>
-    <div class="design-tools" aria-hidden="false" @pointerdown.stop @pointermove.stop @pointerup.stop @wheel.stop @click.stop>
-      <button v-if="isMaster" type="button" class="design-toggle" :class="{ active: designMode }" @click="toggleDesign">Thiết Kế</button>
+    <div v-if="isMaster" class="design-tools" aria-hidden="false" @pointerdown.stop @pointermove.stop @pointerup.stop @wheel.stop @click.stop>
+      <button type="button" class="design-toggle" :class="{ active: designMode }" @click="toggleDesign">Thiết Kế</button>
       <template v-if="designMode">
         <select class="design-spawn" @change="spawnNode(($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value = ''">
           <option value="">+ Node…</option>

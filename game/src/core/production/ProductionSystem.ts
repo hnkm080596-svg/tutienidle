@@ -7,7 +7,7 @@
 
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
-import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
+import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import type {
   ForestRewardDefinition,
   GrottoHerbDefinition,
@@ -326,7 +326,7 @@ export class ProductionSystem {
 
     const targetLevel = state.level + 1
     if (currentRealmTier !== undefined && currentRealmTier < targetLevel) return false
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(targetLevel)
+    const spiritStoneId = SPIRIT_STONE_MATERIAL_ID
 
     if (
       !bag.has(cost.woodMaterialId, cost.woodAmount) ||
@@ -376,7 +376,7 @@ export class ProductionSystem {
 
     const targetLevel = state.level + 1
 
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(targetLevel)
+    const spiritStoneId = SPIRIT_STONE_MATERIAL_ID
 
     if (currentRealmTier !== undefined && currentRealmTier < targetLevel) {
       reasons.push('realm_gate')

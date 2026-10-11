@@ -178,7 +178,7 @@ describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
     tabs[TAB.dissolve]!.click()
     await nextTick()
 
-    expect(mounted.container.querySelector('.dissolve-filters')).not.toBeNull()
+    expect(mounted.container.querySelector('.dissolve-filters__bulk')).not.toBeNull()
 
     mounted.unmount()
   })

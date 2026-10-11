@@ -163,6 +163,12 @@ interface BodyChapterShared {
   // amount actually consumed. Does NOT rebuild stat effects - the system
   // dispatch owns the exactly-once rebuild after a successful mutation.
   invest(player: PlayerData, available: number, auxOwned: number): number
+  // Owner ruling 2026-10-10 - essence intake cap: the total remaining
+  // requirement of `currency` left in this track (authored requirement
+  // minus invested progress, unclamped by unlock/capacity gates - the
+  // need is what the track can still consume). Required on chapters
+  // spending a physique-essence currency; read at the award seam.
+  remainingCurrencyNeed?: (player: PlayerData) => number
   progress(player: PlayerData): { completed: number; total: number }
   isComplete(player: PlayerData): boolean
   // Chapter-owned persisted-shape validation for its own slice; emits
@@ -285,6 +291,19 @@ export function validateBodyChapterRegistry(
       issues.push({
         path: `${path}.kind`,
         message: `unknown emission kind '${String((chapter as { kind: unknown }).kind)}'`,
+      })
+    }
+
+    // Owner ruling 2026-10-10 - a chapter spending a physique-essence
+    // currency must expose its remaining requirement so the intake cap
+    // at the award seam can stop credit at full need.
+    const spendsEssence = [chapter.currency, chapter.auxCurrency].some(
+      (currency) => currency !== undefined && bodyChapterEssenceGrade(currency) !== undefined,
+    )
+    if (spendsEssence && typeof chapter.remainingCurrencyNeed !== 'function') {
+      issues.push({
+        path: `${path}.remainingCurrencyNeed`,
+        message: 'essence-currency chapter must implement remainingCurrencyNeed',
       })
     }
 

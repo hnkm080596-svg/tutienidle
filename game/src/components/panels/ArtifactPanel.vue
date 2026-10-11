@@ -83,7 +83,7 @@ const gradeLabel = computed(() => (artifact.value ? ARTIFACT_GRADE_LABELS[artifa
 // colors (user ruling: every Pham/Chat text carries its set color).
 const gradeColorVar = computed(() =>
   artifact.value
-    ? `var(--rank-color-${ARTIFACT_GRADE_ORDER.indexOf(artifact.value.grade) * 2 + 1})`
+    ? `var(--rank-color-${ARTIFACT_GRADE_ORDER.indexOf(artifact.value.grade) * 2 + 2})`
     : undefined,
 )
 
@@ -103,7 +103,7 @@ const nextGradeLabel = computed(() => (nextGrade.value ? ARTIFACT_GRADE_LABELS[n
 
 const nextGradeColorVar = computed(() =>
   nextGrade.value
-    ? `var(--rank-color-${ARTIFACT_GRADE_ORDER.indexOf(nextGrade.value) * 2 + 1})`
+    ? `var(--rank-color-${ARTIFACT_GRADE_ORDER.indexOf(nextGrade.value) * 2 + 2})`
     : undefined,
 )
 

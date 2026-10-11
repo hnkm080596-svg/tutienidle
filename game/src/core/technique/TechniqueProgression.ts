@@ -1,6 +1,5 @@
-import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
+import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { getRealmIndex } from '../realm/realmSystem'
-import { getRealmTier } from '../realm/RealmTierMap'
 import type {
   Technique,
   TechniqueCompletionState,
@@ -163,10 +162,10 @@ export function canAdvanceTechniqueGrade(technique: Technique | undefined, realm
 }
 
 // Extensible cost rule (spec sec. 4.4, locked): 100 x targetGrade paid in
-// the player's CURRENT-realm-tier spirit stone.
+// the single spirit stone (flatten 2026-10-11 - no realm tier).
 export function getTechniqueGradeUpgradeCost(targetGrade: number, realmId: string): { materialId: string; amount: number } {
   return {
-    materialId: getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId)),
+    materialId: SPIRIT_STONE_MATERIAL_ID,
     amount: 100 * targetGrade,
   }
 }

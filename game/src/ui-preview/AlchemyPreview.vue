@@ -35,5 +35,5 @@ function move(event: PointerEvent) {
   pointer.value = { x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) }
 }
 </script>
-<template><SceneDesignCanvas><div class="alchemy-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><AlchemyFidelityScene :recipes="recipes" :recipe="recipe" :variant="variant" :jobs="jobs" :capacity="3" :notice="notice" preview @select="choose" @variant="chooseVariant" @back="back" @brew="notice = t('notice')" @cancel="notice = t('cancelNotice')" /></div></SceneDesignCanvas></template>
+<template><SceneDesignCanvas><div class="alchemy-preview" :style="{ '--df-x': pointer.x, '--df-y': pointer.y }" @pointermove="move" @pointerleave="pointer = { x: 0, y: 0 }"><DongFuVista /><AlchemyFidelityScene :recipes="recipes" :recipe="recipe" :variant="variant" :jobs="jobs" :capacity="3" preview @select="choose" @variant="chooseVariant" @back="back" @brew="notice = t('notice')" @cancel="notice = t('cancelNotice')" /></div></SceneDesignCanvas></template>
 <style scoped>.alchemy-preview { position:relative; width:100%; height:100%; }</style>

@@ -257,9 +257,9 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
     expect(reader.tribulationDirector.serializeRuntime().cooldownUntil).toBe(
       currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000,
     )
-    expect(reader.decomposeSystem.getSaveState().nextCycleAt).toBe(
-      currentMs + DECOMPOSE_CYCLE_MS,
-    )
+    // DIRECT DECOMPOSE REWORK: the decompose slice restores inert - the
+    // legacy deadline is accepted by the gate but owns no live state.
+    expect(reader.decomposeSystem.getSaveState()).toEqual({})
 
     // Round-trip: the next write is judged by the SAME gate and now passes
     // - every persisted stamp sits at or below the new marker.
@@ -401,7 +401,7 @@ describe('auditR27 INT probe - authority-source matrix (A)', () => {
         cycle: [lane.startedAtMs, lane.completesAtMs],
         job: [restoredJob.startedAtMs, restoredJob.completesAtMs],
         cooldown: reader.tribulationDirector.serializeRuntime().cooldownUntil,
-        nextCycleAt: reader.decomposeSystem.getSaveState().nextCycleAt,
+        decompose: reader.decomposeSystem.getSaveState(),
       }
     })
 
@@ -410,14 +410,14 @@ describe('auditR27 INT probe - authority-source matrix (A)', () => {
       expect(entry.cycle, `${entry.label}: workerCycle stamps`).toEqual(baseline.cycle)
       expect(entry.job, `${entry.label}: alchemyJob stamps`).toEqual(baseline.job)
       expect(entry.cooldown, `${entry.label}: cooldownUntil`).toBe(baseline.cooldown)
-      expect(entry.nextCycleAt, `${entry.label}: nextCycleAt`).toBe(baseline.nextCycleAt)
+      expect(entry.decompose, `${entry.label}: decompose slice`).toEqual(baseline.decompose)
     }
     // And the baseline is the VERBATIM payload stamps - honest content is
     // never re-anchored by any authority class.
     expect(baseline.cycle).toEqual([marker - 1_000, marker - 1_000 + MORTAL_CYCLE_MS])
     expect(baseline.job).toEqual([marker - 1_000, marker - 1_000 + span])
     expect(baseline.cooldown).toBe(marker + TRIBULATION_COOLDOWN_SECONDS * 1000)
-    expect(baseline.nextCycleAt).toBe(marker + DECOMPOSE_CYCLE_MS)
+    expect(baseline.decompose).toEqual({})
   })
 
   it('A2 malformed authority forms degrade to the deny primitive WITHOUT touching the restore clock', () => {
@@ -634,60 +634,6 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     expect(validateGameSaveShape(rebuilt).ok).toBe(true)
   })
 
-  it('D2 decompose merge keeps the live (later) timer on a DIFFERENT payload while production lanes replace - documented asymmetry', () => {
-    const reader = registeredManager()
-    const readerPlayer = createDefaultPlayer()
-    reader.setActivePlayer(readerPlayer)
-
-    const wire1 = validWireSave()
-    wire1.player.lastSavedAt = currentMs - 10_000
-    grantWorkerCapacity(wire1)
-    wire1.productionSites = [
-      {
-        siteId: FOREST_SITE_ID,
-        level: 1,
-        autoRestart: false,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs - 5_000, 'lane-one')],
-      },
-    ] as never
-    wire1.decompose = {
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: currentMs + 20_000,
-      started: true,
-    }
-    reader.saveOps.restoreFromSave(wire1, undefined)
-
-    // Second payload: different content (quests slice present vs absent)
-    // forces a full re-restore; its decompose deadline is EARLIER.
-    const wire2 = validWireSave()
-    wire2.player.lastSavedAt = currentMs - 5_000
-    wire2.quests = { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 } as never
-    grantWorkerCapacity(wire2)
-    wire2.productionSites = [
-      {
-        siteId: FOREST_SITE_ID,
-        level: 1,
-        autoRestart: false,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs - 2_000, 'lane-two')],
-      },
-    ] as never
-    wire2.decompose = {
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-      nextCycleAt: currentMs + 5_000,
-      started: true,
-    }
-    reader.saveOps.restoreFromSave(wire2, undefined)
-
-    // Production: replacement - the second payload's lane is the only one.
-    const lanes = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles!
-    expect(lanes).toHaveLength(1)
-    expect(lanes[0]!.cycleId).toBe('lane-two')
-
-    // Decompose: merge - the live (later) timer wins over the older payload.
-    expect(reader.decomposeSystem.getSaveState().nextCycleAt).toBe(currentMs + 20_000)
-  })
 
   it('D3 payload-identity dedupe excludes only lastSavedAt - a marker-only delta converges, a content delta re-restores', () => {
     const reader = registeredManager()

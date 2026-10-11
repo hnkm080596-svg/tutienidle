@@ -375,10 +375,11 @@ describe('fixpoint r22 AUT - magnitude bound audit (bf3b44a1)', () => {
       roomLevelAtStart: 1,
     }
     const witness: Omit<AlchemyJobReservation, 'digest'> = {
-      woodId: buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age),
+      woodId: 'bui_go',
       fuelWoodAmount: recipe.fuelWoodAmount,
       spiritStoneCost: recipe.spiritStoneCost,
       herbAmount: recipe.herbAmount,
+      luyenDanTinhHoaAmount: recipe.luyenDanTinhHoaAmount,
       specialIngredients: recipe.specialIngredients ?? [],
       costScale: 1,
     }

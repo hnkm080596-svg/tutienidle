@@ -25,7 +25,7 @@ import { affixes } from '../../data/equipment/affixes'
 import { materials } from '../../data/materials/materials'
 import { SPIRIT_STONE_MATERIAL, SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { isValidEquipmentSubstat } from './EquipmentStatPolicy'
-import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { WASH_SPIRIT_STONE_COST_BY_QUALITY } from './RefinementBalance'
 
 // Task 8 (phase7-gamemanager-split) - tach nguyen ven khoi
@@ -45,6 +45,7 @@ const TEMPLATE: Equipment = {
 }
 
 const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_century')!
+const BUI_GO_MATERIAL = materials.find((m) => m.id === BUI_GO_ID)!
 
 function setup() {
   const system = new EquipmentSystem()
@@ -65,6 +66,7 @@ function setup() {
 
   // Plan Workstream F - Linh Thach la MATERIAL: nap san so du lon.
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
+  materialBag.add(BUI_GO_MATERIAL, 1_000_000)
 
   return { system, bag, registry, affixRegistry, slotManager, materialBag, player }
 }

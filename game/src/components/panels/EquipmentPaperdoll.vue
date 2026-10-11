@@ -10,6 +10,7 @@ import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { gradeLabel } from '@/core/presentation/labels'
+import { equipmentSlotArt } from '@/core/presentation/equipmentSlotArt'
 import {
   animatedArtFormFor,
   resolvePlayerEntityKey,
@@ -287,7 +288,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
           :rarity-rank="rarityRankBySlot[slot]"
           :enhance-level="equippedBySlot[slot] ? enhanceLevelBySlot[slot] : 0"
           :tooltip="tooltipBySlot[slot]"
-          :icon="equippedBySlot[slot] ? itemIcon(equippedBySlot[slot]!) : undefined"
+          :icon="equippedBySlot[slot] ? itemIcon(equippedBySlot[slot]!) : equipmentSlotArt(slot)"
           @click="onSlotClick(equippedBySlot[slot])"
         />
       </div>

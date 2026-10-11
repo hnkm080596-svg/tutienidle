@@ -3,6 +3,25 @@
 // progression predicates, costs, or invest semantics.
 export type { BodyPourSpec as BodyPaperPour } from '../bodySceneModel'
 
+import type { InjectionKey } from 'vue'
+
+// Pour visual channel (owner ruling 2026-10-10): the details card's pour
+// animation reports the fill's absolute progress through the tier caps so
+// the figure reveals art one tier at a time riding the bar's leading
+// edge instead of lighting every crossed tier at once (the domain state
+// is already final when a pour starts).
+export interface BodyPourVisualState {
+  spec: {
+    chapter: string
+    tierStartIndex: number
+    caps: readonly number[]
+  } | null
+  // tierProgress + filled units - measured into spec.caps the same way
+  // the bar's barPositionAt walks them.
+  progressAbs: number
+}
+export const BODY_POUR_VISUAL: InjectionKey<BodyPourVisualState> = Symbol('bodyPourVisual')
+
 export interface BodyPaperCost {
   id: string
   name: string
@@ -74,6 +93,9 @@ export interface BodyPaperModel {
   lockHint?: string
   progressLabel: string
   progress: number
+  /** Whole big tier done (owner ruling 2026-10-10): the invest CTA
+   *  hides once every unit of the chapter is complete. */
+  chapterComplete?: boolean
   /** Aggregated gains of every completed unit (Rèn Thể totals - owner
    *  ruling: the card shows total stats, not the viewed tier's alone). */
   totalRows: readonly { label: string; value: string }[]

@@ -65,8 +65,6 @@ import {
 } from '@/data/tribulation/TribulationChapters'
 import { getTuLinhTranCost } from '@/core/economy/TuLinhTranBalance'
 import { getTechniqueGradeUpgradeCost } from '@/core/technique/TechniqueProgression'
-import { getUnitSellPrice } from '@/core/economy/VendorBalance'
-import { materials } from '@/data/materials/materials'
 import { QUESTS } from '@/data/quest/quests'
 import { DEFAULT_MAX_OFFLINE_SECONDS } from '@/core/idle/GameClock'
 import type { Stage } from '@/core/stage/Stage'
@@ -334,7 +332,8 @@ function realmCostBasket(realmId: string): CostBasket[] {
   let herbUnits = 0
   for (const r of recipes) {
     alchStones += r.spiritStoneCost
-    alchMats[`${r.fuelWoodRealmId}_wood_decade`] = (alchMats[`${r.fuelWoodRealmId}_wood_decade`] ?? 0) + r.fuelWoodAmount
+    alchMats['bui_go'] = (alchMats['bui_go'] ?? 0) + r.fuelWoodAmount
+    alchMats['luyen_dan_tinh_hoa'] = (alchMats['luyen_dan_tinh_hoa'] ?? 0) + r.luyenDanTinhHoaAmount
     herbUnits += r.herbAmount
     for (const ing of r.specialIngredients ?? []) {
       alchMats[ing.materialId] = (alchMats[ing.materialId] ?? 0) + ing.amount
@@ -360,7 +359,8 @@ function realmCostBasket(realmId: string): CostBasket[] {
       essenceTinhHoa: 0,
       materials: {
         yeu_dan_hung_giao: pills,
-        [`qi_refining_wood_decade`]: (recipe?.fuelWoodAmount ?? 0) * pills,
+        bui_go: (recipe?.fuelWoodAmount ?? 0) * pills,
+        luyen_dan_tinh_hoa: (recipe?.luyenDanTinhHoaAmount ?? 0) * pills,
       },
       herbUnits: (recipe?.herbAmount ?? 0) * pills,
     })
@@ -476,10 +476,6 @@ describe('economy pace audit', () => {
         return sum + (r ?? 0)
       }, 0)
 
-      // vendor: selling mortal mats at LK+ (wood decade price)
-      const woodMat = materials.find((m) => m.id === 'mortal_wood_decade')
-      const vendorWoodPrice = woodMat ? getUnitSellPrice(woodMat, realmId) : undefined
-
       const enhanceLevels = [5, 10, 15, 20]
       const enhance = enhanceLevels.map((l) => enhanceCostToLevel(realmId, l))
 
@@ -497,7 +493,6 @@ describe('economy pace audit', () => {
         enhance,
         basket,
         questStonesTotalAllRealms: questStones,
-        vendorWoodDecadePrice: vendorWoodPrice,
         runs: allRuns,
       }
 

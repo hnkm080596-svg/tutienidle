@@ -18,7 +18,7 @@ import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
 import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
-import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
+import { DecomposeSystem } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
@@ -69,10 +69,9 @@ export interface GameManagerSaveRestoreDeps {
   // StageManager slot at restore; settle alone leaves the slot free while
   // persisted state stays armed.
   reconcileAutoFarmRuntime: (player: PlayerData) => void
-  // R7 (AR-08) - decompose restore + shared delivery closure (online
-  // tick and offline settle use the SAME delivery/overflow path).
+  // R7 (AR-08) - decompose restore (accept-and-ignore legacy slice -
+  // the DIRECT REWORK retired worker state).
   decomposeSystem: DecomposeSystem
-  deliverDecomposeOutput: (entry: DecomposeOutputEntry) => void
   // R8.1 (AR-09) - quest lifecycle reconciliation command (logic lives
   // on GameManager; restore triggers it at the right boundary).
   reconcileQuestLifecycle: () => void
@@ -234,8 +233,8 @@ export class GameManagerSaveRestore {
 
     // R10 (AR-12, S3) - restore is REPLACEMENT, not additive: clear the
     // live bags before applying the save's materials/pills/equipment,
-    // matching buildings/production sites/quests/decompose (already
-    // replace, see R7/R8.1). Without this, a live-session restore into a
+    // matching buildings/production sites/quests (already replace, see
+    // R7/R8.1). Without this, a live-session restore into a
     // nonempty bag (boot retry, reload race) would merge saved entries on
     // top of whatever was already there instead of replacing it.
     this.deps.materialBag.clear()
@@ -358,8 +357,8 @@ export class GameManagerSaveRestore {
     // valid but corrupt-LOW authority (e.g. seconds-for-millis
     // serverTimeUtc) must only deny accrual, never re-anchor honest
     // stamps downward into instant-completion grants. Feeds the
-    // deadline-channel clamps below (workerCycles, decompose,
-    // alchemyJobs, tribulation).
+    // deadline-channel clamps below (workerCycles, alchemyJobs,
+    // tribulation - the retired decompose cycle no longer reads it).
     const restoreClockMs = Math.min(
       Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : Date.now(),
       Date.now(),
@@ -391,13 +390,11 @@ export class GameManagerSaveRestore {
 
     const offlinePlayer = this.deps.getActivePlayer()
 
-    // R7 (AR-08) - decompose: re-supply live capacity FIRST (CHQ
-    // formula beats any stale saved value), THEN restore processing
-    // state so saved workers clamp against the real ceiling, settle
-    // the offline window under the shared cap concept, and deliver
-    // output through the SAME delivery/overflow path as the tick.
-    this.deps.decomposeSystem.updateCapacity(betaEffectiveWorkerCapacity(offlinePlayer?.autoWorkerCapacity ?? 0))
-    this.deps.decomposeSystem.restore(save.decompose, restoreClockMs)
+    // DIRECT DECOMPOSE REWORK (2026-10-11) - the worker-cycle slice
+    // retired: restore() accepts-and-ignores a legacy payload
+    // ({settings,nextCycleAt,started}); nothing is re-supplied,
+    // clamped, or settled - worker state never resurrects.
+    this.deps.decomposeSystem.restore(save.decompose)
 
     // B1-D - the settle window is the authorized context, never a
     // Date.now()/lastSavedAt read of our own: 'cold-boot' accrues the
@@ -449,8 +446,8 @@ export class GameManagerSaveRestore {
     )
     // r13-COR-4: clamp the window START as well - a
     // crafted/skewed-future lastSavedAt otherwise positions
-    // offlineSinceMs ahead of settleNowMs, confiscating every pending
-    // decompose cycle and parking worker lanes in the future.
+    // offlineSinceMs ahead of settleNowMs, parking worker lanes in
+    // the future (the decompose cycle it once confiscated is retired).
     // r14-COR-1: the start anchor is authorityNowMs - elapsed, not
     // authorityNowMs - the window is the authorized DURATION
     // positioned at the payload marker, so a client clock honestly
@@ -486,19 +483,12 @@ export class GameManagerSaveRestore {
           {
             workerCapacity: resolveProductionWorkerCapacity(
               betaEffectiveWorkerCapacity(offlinePlayer.autoWorkerCapacity ?? 0),
-              this.deps.decomposeSystem.getSettings().workers,
             ),
             offlineSinceMs,
             workerAssignments: this.deps.getWorkerAssignments(),
             rng: this.deps.sessionRng,
           },
         )
-
-        this.deps.decomposeSystem.settleOffline(settleNowMs, offlineSinceMs)
-
-        for (const entry of this.deps.decomposeSystem.drainOutput()) {
-          this.deps.deliverDecomposeOutput(entry)
-        }
 
         // Auto-farm Task 5 (2026-09-04) - NGOAI LE DUY NHAT combat nhan
         // reward offline: roll cac chu ky auto-farm da troi trong cua so

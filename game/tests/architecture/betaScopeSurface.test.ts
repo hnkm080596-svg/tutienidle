@@ -117,11 +117,13 @@ describe('betaScopeSurface - navigation allow-lists', () => {
       'pill_room',
       'gathering_outpost',
       'equipment_hall',
-      'vendor',
     ]) {
       expect(isBetaBuildingSurface(id), `expected ${id} beta-visible`).toBe(true)
     }
 
+    // vendor was removed entirely (2026-10-11 ruling: decompose is the
+    // only material sink) - its undeclared id fails closed too.
+    expect(isBetaBuildingSurface('vendor')).toBe(false)
     expect(isBetaBuildingSurface('chi_hien_quan')).toBe(false)
     expect(isBetaBuildingSurface('made_up_building')).toBe(false)
   })
@@ -153,10 +155,10 @@ describe('betaScopeSurface - navigation allow-lists', () => {
       'pill_room',
       'scripture_pavilion',
       'stage_select',
-      'vendor',
     ]) {
       expect(isBetaLeftPanelMode(mode), `expected ${mode}`).toBe(true)
     }
+    expect(isBetaLeftPanelMode('vendor')).toBe(false)
     expect(isBetaLeftPanelMode('worker_lodge')).toBe(false)
     expect(isBetaLeftPanelMode('made_up_mode')).toBe(false)
   })

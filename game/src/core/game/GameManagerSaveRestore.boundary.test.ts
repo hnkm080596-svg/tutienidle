@@ -219,6 +219,7 @@ const FUTURE_JOB: AlchemyJobSave = (() => {
     fuelWoodAmount: 1,
     spiritStoneCost: 0,
     herbAmount: 1,
+    luyenDanTinhHoaAmount: 1,
     specialIngredients: [] as { materialId: string; amount: number }[],
     costScale: 1,
     digest: 0,
@@ -438,23 +439,17 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     })
   })
 
-  it('decompose: an absent slice resets settings to defaults', () => {
+  it('decompose: an absent slice is a no-op (direct decompose persists nothing)', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.autoWorkerCapacity = 5
     manager.setActivePlayer(player)
-    manager.decomposeSystem.updateCapacity(5)
-    manager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
 
     const save = baseSave(player)
     save.decompose = undefined
-    manager.saveOps.restoreFromSave(save)
+    expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
 
-    expect(manager.decomposeSystem.getSettings()).toEqual({
-      gradeFilter: 'all',
-      ageFilter: 'all',
-      workers: 0,
-    })
+    // The direct-decompose surface still works after the no-op restore.
+    expect(manager.decomposeSystem.listDecomposableIds()).toEqual([])
   })
 
   it('restore settle receives the SAME pool the online tick computes (spec D5 - one rule, no second copy)', () => {
@@ -462,9 +457,6 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     const player = createDefaultPlayer()
     player.autoWorkerCapacity = 7
     manager.setActivePlayer(player)
-
-    // Prime live decompose capacity so the restored workers value survives its clamp.
-    manager.decomposeSystem.updateCapacity(7)
 
     const spy = vi.spyOn(manager.productionSystem, 'settleOffline')
 
@@ -484,15 +476,15 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
 
     expect(spy).toHaveBeenCalledTimes(1)
     // Asserting against the helper itself (not a literal) is the point:
-    // both paths MUST consume the same rule.
-    expect(spy.mock.calls[0]![4]?.workerCapacity).toBe(resolveProductionWorkerCapacity(7, 2))
+    // both paths MUST consume the same rule. No claimant reserves
+    // workers ahead of production since the direct decompose rework.
+    expect(spy.mock.calls[0]![4]?.workerCapacity).toBe(resolveProductionWorkerCapacity(7))
   })
 })
 
 describe('M1 (ARCH-001) — the input save is a value', () => {
   it('restore does not mutate the input save (template backfill writes hit clones, not the payload)', () => {
     const manager = makeManager()
-    const player = createDefaultPlayer()
 
     // A legacy-shaped skill (no `execution`) triggers the template
     // backfill path - the write must land on a detached copy.
@@ -521,7 +513,6 @@ describe('M1 (ARCH-001) — the input save is a value', () => {
 
   it('post-restore mutation of the input save does not leak into live state', () => {
     const manager = makeManager()
-    const player = createDefaultPlayer()
 
     const save = baseSave(swordCommittedPlayer(), {
       skills: [structuredClone(SAVED_SKILL)],
@@ -731,6 +722,7 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     const instance = savedItem('wash-boundary-item')
     manager.equipmentBag.add(instance)
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 9)
+    manager.materialBag.add(manager.materialRegistry.get('bui_go'), 9)
     manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 1500)
     return buildGameSave(player, manager)
   }
@@ -774,6 +766,7 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     const live = savedItem('wash-boundary-item')
     manager.equipmentBag.add(live)
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 9)
+    manager.materialBag.add(manager.materialRegistry.get('bui_go'), 9)
     manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 1500)
 
     const preview = manager.equipmentOps.previewWashItem('wash-boundary-item')

@@ -7,9 +7,8 @@ import { asBaseStats } from '../core/stats/StatBlock'
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import {
   SPIRIT_STONE_MATERIAL,
-  getSpiritStoneMaterialIdForRealmTier,
+  SPIRIT_STONE_MATERIAL_ID,
 } from '../core/material/SpiritStoneMaterial'
-import { getRealmTier } from '../core/realm/RealmTierMap'
 import {
   TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM,
   TRIBULATION_DEFEAT_CULTIVATION_LOSS_FALLBACK,
@@ -605,7 +604,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
     player.cultivation = 1_000
-    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
+    const stoneId = SPIRIT_STONE_MATERIAL_ID
     gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 350)
 
     gameManager.startTribulation(player, 'foundation_establishment')
@@ -683,7 +682,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
     player.cultivation = 1_000
-    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
+    const stoneId = SPIRIT_STONE_MATERIAL_ID
     gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 350)
 
     gameManager.startTribulation(player, 'foundation_establishment')

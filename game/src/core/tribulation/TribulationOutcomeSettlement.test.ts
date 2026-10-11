@@ -16,9 +16,8 @@ import { SKILLS } from '../../data/skill/Skills'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import {
   SPIRIT_STONE_MATERIAL,
-  getSpiritStoneMaterialIdForRealmTier,
+  SPIRIT_STONE_MATERIAL_ID,
 } from '../material/SpiritStoneMaterial'
-import { getRealmTier } from '../realm/RealmTierMap'
 import {
   TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM,
   TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM,
@@ -245,7 +244,7 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
     player.cultivation = 10_000
 
-    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
+    const stoneId = SPIRIT_STONE_MATERIAL_ID
     gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 1500)
 
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
@@ -337,7 +336,7 @@ describe('settleOutcome — mid-apply failure containment (M6 r1)', () => {
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
     player.cultivation = 10_000
 
-    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
+    const stoneId = SPIRIT_STONE_MATERIAL_ID
     gameManager.materialBag.add({ ...SPIRIT_STONE_MATERIAL, id: stoneId }, 1500)
 
     // Fault injection: the Kiep Thuong debuff write (LAST consequence of

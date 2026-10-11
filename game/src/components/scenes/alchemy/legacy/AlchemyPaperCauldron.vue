@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import type { AlchemyHerbChoice } from './alchemyUi'
+import type { AlchemyHerbChoice } from '../fidelity/alchemyUi'
 defineProps<{ herb?: AlchemyHerbChoice | null }>()
 const { t } = useI18n()
 const cauldron = resolveAssetUrl('/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png')

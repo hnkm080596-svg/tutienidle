@@ -6,7 +6,6 @@ import type { MaterialBag } from '../material/MaterialBag'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { CraftModifiers } from './BuildingLevelEffect'
 import { getRealmIdForTier, getRealmTier } from '../realm/RealmTierMap'
-import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { PRODUCTION_OFFLINE_CAP_SECONDS } from '../production/ProductionBalance'
 
 const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
@@ -387,15 +386,13 @@ export class BuildingSystem {
 
   /**
    * Resolve materialId ma claim() se tra - linh mach Khai Vat Duong cap
-   * Linh Thach dung PHAM theo realm thu thap, building khac dung template.
-   * Tach rieng de caller (GameManager.collectBuilding) pre-check registry
-   * TRUOC khi claim reset moc thoi gian - tranh mat san luong neu id khong
-   * resolve duoc (review 2026-08-28).
+   * Linh Thach (id duy nhat, khong pham - flatten 2026-10-11), building
+   * khac dung template. Tach rieng de caller (GameManager.collectBuilding)
+   * pre-check registry TRUOC khi claim reset moc thoi gian - tranh mat
+   * san luong neu id khong resolve duoc (review 2026-08-28).
    */
   resolveProducesMaterialId(template: Building, currentRealmId?: string): string | undefined {
-    return template.id === 'gathering_outpost' && currentRealmId
-      ? getSpiritStoneMaterialIdForRealmTier(getRealmTier(currentRealmId))
-      : template.producesMaterialId
+    return template.producesMaterialId
   }
 
   /**

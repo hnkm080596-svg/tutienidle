@@ -150,7 +150,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     }
   })
 
-  it('R7 (AR-08): decompose state survives save/load without double-settling', () => {
+  it('R7 (AR-08): decompose slice round-trips ({} since the direct rework) without reviving worker state', () => {
     vi.spyOn(Date, 'now').mockReturnValue(1_725_160_000_000)
 
     const gameManager = createBootedGameManager()
@@ -166,19 +166,15 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     })
     gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)
 
-    gameManager.decomposeSystem.updateCapacity(3)
-    gameManager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
-    gameManager.decomposeSystem.tick(Date.now()) // start the cycle timer
-
     primeMortalCreationPick(player, gameManager.skillManager)
 
     const save = buildGameSave(player, gameManager)
     const decomposeSnapshot = structuredClone(save.decompose)
 
-    // Mutating the live system after buildGameSave must not leak into
-    // the built save (same reason quests uses structuredClone).
-    gameManager.decomposeSystem.setSetting({ workers: 1 })
-    expect(save.decompose).toEqual(decomposeSnapshot)
+    // DIRECT REWORK (2026-10-11): the direct-decompose system persists
+    // nothing - the slice is emitted as {} and stays {} through
+    // write/load (legacy worker fields never reappear).
+    expect(save.decompose).toEqual({})
 
     const writeResult = writeGameSave(save)
     expect(writeResult).toEqual({ status: 'ok' })
@@ -190,25 +186,15 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     }
     expect(outcome.save.decompose).toEqual(decomposeSnapshot)
 
-    // Restore into a FRESH manager: settings + timer come back; the
-    // saved CHQ instance restores with the save (F-W-16 - capacity is
-    // derived, never trusted from the player slice), so workers land
-    // inside the restored capacity. Settling the same instant awards
-    // nothing new.
+    // Restore into a FRESH manager: the inert slice applies cleanly and
+    // the direct API keeps working afterwards.
     const fresh = createBootedGameManager()
     const freshPlayer = createDefaultPlayer()
     fresh.setActivePlayer(freshPlayer)
     const restoredModifiers = fresh.saveOps.restoreFromSave(outcome.save as ReturnType<typeof buildGameSave>)
     expect(Array.isArray(restoredModifiers)).toBe(true)
     expect(freshPlayer.autoWorkerCapacity).toBe(3)
-    expect(fresh.decomposeSystem.getSettings()).toEqual({
-      gradeFilter: 'all',
-      ageFilter: 'decade',
-      workers: 3,
-    })
-
-    // No offline window elapsed (same mocked instant) - no double award.
-    expect(fresh.decomposeSystem.drainOutput()).toEqual([])
+    expect(fresh.decomposeSystem.listDecomposableIds()).toEqual([])
   })
 
   it('Mission A2: assignedWorkers survives save -> load -> restore', () => {

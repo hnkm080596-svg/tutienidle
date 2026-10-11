@@ -14,7 +14,6 @@ import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { AlchemySystem, alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { ProductionSystem } from '../../core/production/ProductionSystem'
 import {
   TERRITORY_THANH_VAN,
@@ -296,24 +295,6 @@ describe('r32-AUT F2 - restore shift arms mint inverted pairs', () => {
 describe('r32-AUT F3 - DecomposeSystem.restore mergedDeadline over-bound mint', () => {
   clockIsolated()
 
-  it('crafted deadline + near-bound restoreNow: merged cap clamps to 2^52 - 1 (r32 fix)', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system.updateCapacity(1)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: BOUND + 1000,
-        started: true,
-      },
-      BOUND - 1,
-    )
-
-    // mergedDeadline = min(BOUND + 1000, min((BOUND - 1) + 30000,
-    // 2^52 - 1)) = BOUND - 1: the cap itself can no longer mint
-    // out-of-domain, so the next save write stays admissible.
-    expect(system.getSaveState().nextCycleAt).toBe(BOUND - 1)
-  })
-
   it('end-to-end: the minted stamp refuses the next save write', () => {
     const save = validWireSave()
     save.decompose = {
@@ -510,23 +491,6 @@ describe('r32-AUT controls - r31 guards held at exact boundaries', () => {
     expect(system.getJobs()).toHaveLength(0)
   })
 
-  it('DecomposeSystem.tick headroom: deny at the bound, mint stays in-domain below it', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system.updateCapacity(1)
-    system.setSetting({ workers: 1 })
-    system.restore(
-      { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: 1, started: true },
-      currentMs,
-    )
-
-    system.tick(BOUND - 30_000 + 1)
-    // Denied: nowMs + cycleMs > 2^52 - nextCycleAt untouched.
-    expect(system.getSaveState().nextCycleAt).toBe(1)
-
-    system.tick(BOUND - 30_000 - 1)
-    // Admitted: minted due lands exactly at BOUND - 1 < 2^52.
-    expect(system.getSaveState().nextCycleAt).toBe(BOUND - 1)
-  })
 
   it('AlchemySystem.startJob headroom: invalid_clock within a span of the bound', () => {
     const system = alchemyWithRecipe()

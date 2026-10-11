@@ -152,9 +152,8 @@ const chapterOptions = computed(() => {
 })
 
 // Detail header chapter label follows the SELECTED stage's chapter -
-// the Son Ha Do map renders every band at once and nodes across all
-// chapters are directly pickable, so there is no chapter-tab state to
-// keep in sync.
+// the rail's active chapter is derived from the same selection, so
+// inspector and map never disagree about which chapter is showing.
 const selectedChapterLabel = computed(() => {
   const stage = selectedStage.value
   if (!stage) {
@@ -178,6 +177,25 @@ watch(selectedZoneId, selectFirstStageInZone, { immediate: true })
 const selectedStage = computed(() =>
   stagesInZone.value.find(stage => stage.id === selectedStageId.value) ?? null,
 )
+
+// Son Ha Do rail: one chapter visible at a time. The active chapter
+// follows the selected stage; a rail click re-picks that chapter's
+// first unlocked stage (same semantics as selectFirstStageInZone).
+const activeChapterId = ref<string | null>(null)
+
+watch(selectedStage, stage => {
+  if (stage) {
+    activeChapterId.value = String(stage.chapter ?? 1)
+  }
+}, { immediate: true })
+
+function selectChapter(id: string) {
+  activeChapterId.value = id
+  const chapterStages = stagesInZone.value.filter(stage => String(stage.chapter ?? 1) === id)
+  selectedStageId.value = chapterStages.find(stage => modelById.value.get(stage.id)?.state !== 'locked')?.id
+    ?? chapterStages[0]?.id
+    ?? null
+}
 
 const selectedModel = computed(() =>
   selectedStageId.value ? modelById.value.get(selectedStageId.value) : undefined,
@@ -457,10 +475,11 @@ const paperModel = computed<ExplorationPaperModel>(() => ({
     <ExplorationFidelityScene
       :model="paperModel"
       :stage="paperStage"
-     
+      :chapter="activeChapterId ?? ''"
       :notice="notice"
       @select="selectStage"
       @zone="selectZone"
+      @chapter="selectChapter"
       @mode="pickMode"
       @stop-farm="stopAutoFarm"
       @open-build="openBuild"

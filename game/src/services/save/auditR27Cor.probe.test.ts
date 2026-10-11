@@ -27,9 +27,7 @@ import {
   TribulationDirector,
   TRIBULATION_COOLDOWN_SECONDS,
 } from '../../core/tribulation/TribulationDirector'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { ProductionSystem } from '../../core/production/ProductionSystem'
-import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import {
   TERRITORY_THANH_VAN,
   THANH_VAN_FOREST_REWARDS,
@@ -41,7 +39,6 @@ import {
   CYCLE_BASE_SECONDS_BY_REALM,
   computeCycleSeconds,
 } from '../../core/production/ProductionBalance'
-import { MaterialBag } from '../../core/material/MaterialBag'
 import type { ProductionCycle } from '../../core/production/ProductionTypes'
 
 // ============================================================================
@@ -313,46 +310,6 @@ describe('auditR27 COR probe - began-pair shift contract (W)', () => {
     )
   })
 
-  it('W6 decompose: honest nextCycleAt kept; beyond-cap clamps at restoreNow + cycleMs; merge keeps the later', () => {
-    const cycleSeconds = 30
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds })
-
-    // Fresh instance: deadline inside the cap kept verbatim.
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 10_000,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs + 10_000)
-
-    // Same instance, second restore over an already-advanced timer: merge
-    // keeps the LARGER deadline (repeat-settle protection) - still bounded
-    // by the cap.
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs + 10_000)
-
-    // Skewed stamp beyond restoreNow + cycleMs: re-anchored at the cap.
-    const skewed = new DecomposeSystem(new MaterialBag(), { cycleSeconds })
-    skewed.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 9_000_000,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(skewed.getSaveState().nextCycleAt).toBe(currentMs + cycleSeconds * 1000)
-  })
 
   it('W7 regression: absent authority keeps legacy client clock - honest saves restore verbatim', () => {
     const { job, span } = mortalJob(currentMs - 60_000, 'r27_w7')
@@ -461,22 +418,8 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
     expect(restored.cooldownUntil).toBe(currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000)
   })
 
-  it('F4 decompose: corrupt-low authority keeps nextCycleAt at its authored due', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 25_000,
-        started: true,
-      },
-      currentMs,
-    )
-    const next = system.getSaveState().nextCycleAt
-    expect(next).toBe(currentMs + 25_000)
-    expect(next).toBeGreaterThan(currentMs)
-  })
 
-  it('F5 integration: real saveOps.restoreFromSave under corrupt-low cold-boot restores all four channels verbatim', () => {
+  it('F5 integration: real saveOps.restoreFromSave under corrupt-low cold-boot restores the three live channels verbatim', () => {
     const writer = registeredManager()
     const writerPlayer = createDefaultPlayer()
     writer.setActivePlayer(writerPlayer)
@@ -533,8 +476,9 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
     const cooldown2 = reader.tribulationDirector.serializeRuntime().cooldownUntil
     expect(cooldown2).toBe(currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000)
 
-    const next2 = reader.decomposeSystem.getSaveState().nextCycleAt
-    expect(next2).toBe(currentMs + 25_000)
+    // The decompose slice restores inert (direct rework): the legacy
+    // deadline is admitted but owns no live state.
+    expect(reader.decomposeSystem.getSaveState()).toEqual({})
 
     // And the first tick pays NOTHING early - the corrupt authority only
     // shrunk the accrual window, never minted in-flight work.

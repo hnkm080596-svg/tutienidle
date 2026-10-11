@@ -1,8 +1,8 @@
-// R7 (AR-08) - shared worker pool wiring at the REAL GameManager tick
+// R7 (AR-08) - worker pool wiring at the REAL GameManager tick
 // boundary (P13 lesson: unit tests on hand-built systems do not prove
-// the running instance is wired). Decompose claims its workers from
-// the CHQ capacity FIRST; production tickWorkers receives the
-// remainder.
+// the running instance is wired). DIRECT DECOMPOSE REWORK (2026-10-11):
+// decompose retired its worker claim (direct multi-select action), so
+// production tickWorkers receives the WHOLE CHQ capacity.
 import { describe, expect, it, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
@@ -34,47 +34,47 @@ function enableAllProductionSites(manager: GameManager): void {
   }
 }
 
-describe('GameManager shared worker pool (AR-08 wiring)', () => {
-  it('decompose receives live capacity; production gets the remainder', () => {
+describe('GameManager worker pool (AR-08 wiring)', () => {
+  function totalProductionSlots(manager: GameManager): number {
+    return manager
+      .productionSystem.getAllStates()
+      .reduce((sum, state) => sum + state.activeWorkerSlots, 0)
+  }
+
+  it('production receives the whole CHQ pool (no decompose claim)', () => {
     const { manager, player } = makeManager()
 
     // CHQ level 3 -> capacity 7 (authority: getWorkerCapacityForLevel).
     player.autoWorkerCapacity = 7
 
-    manager.decomposeSystem.updateCapacity(7)
-    manager.decomposeSystem.setSetting({ workers: 2 })
-
     enableAllProductionSites(manager)
     manager.tickOps.update(1)
 
-    expect(manager.decomposeSystem.getCapacity()).toBe(7)
-    expect(manager.decomposeSystem.getSettings().workers).toBe(2)
-
-    const totalProductionSlots = manager
-      .productionSystem.getAllStates()
-      .reduce((sum, state) => sum + state.activeWorkerSlots, 0)
-    expect(totalProductionSlots).toBe(5) // 7 - 2 decompose
+    // Round-robin fills every capacity unit into a lane - the whole
+    // pool lands on production.
+    expect(totalProductionSlots(manager)).toBe(7)
   })
 
-  it('capacity 0 (no CHQ) starves both systems without errors', () => {
+  it('capacity 0 (no CHQ) starves production without errors', () => {
     const { manager } = makeManager()
 
     enableAllProductionSites(manager)
     manager.tickOps.update(1)
 
-    expect(manager.decomposeSystem.getCapacity()).toBe(0)
-    expect(manager.decomposeSystem.getSettings().workers).toBe(0)
+    expect(totalProductionSlots(manager)).toBe(0)
   })
 
-  it('tick keeps decompose capacity synced when CHQ capacity changes mid-session', () => {
+  it('tick keeps production capacity synced when CHQ capacity changes mid-session', () => {
     const { manager, player } = makeManager()
+
+    enableAllProductionSites(manager)
 
     player.autoWorkerCapacity = 4
     manager.tickOps.update(1)
-    expect(manager.decomposeSystem.getCapacity()).toBe(4)
+    expect(totalProductionSlots(manager)).toBe(4)
 
     player.autoWorkerCapacity = 9
     manager.tickOps.update(1)
-    expect(manager.decomposeSystem.getCapacity()).toBe(9)
+    expect(totalProductionSlots(manager)).toBe(9)
   })
 })

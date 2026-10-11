@@ -705,6 +705,7 @@ export const usePlayerStore = defineStore('player', {
       // Math.min was a copy of that rule), plus the M2 Hai Nap
       // overflow bank.
       const cultivationBefore = this.cultivation + this.cultivationOvercharge
+      const landedBefore = this.cultivation
 
       addCultivation(this, offline.cultivation)
 
@@ -716,6 +717,13 @@ export const usePlayerStore = defineStore('player', {
       // cultivationOvercharge), so the theoretical elapsed*rate figure is
       // wrong whenever the cap binds. Store and return the real delta.
       const offlineResult = { ...offline, cultivation: offlineGained }
+
+      // Owner ruling 2026-10-10: the lifetime tally must count every
+      // real gain so the save-integrity invariant bank <= tally holds
+      // for legitimate saves - offline grants previously skipped the
+      // tally entirely. Banked share is counted inside addCultivation,
+      // so only the landed delta adds here.
+      this.totalCultivationGained += this.cultivation - landedBefore
 
       // M2 - Ngo Dao (spec sec4.3 row 20): the insight_per_cultivation
       // accumulator settles the offline grant too, through the SAME

@@ -51,23 +51,6 @@
 :is(#app, body) .production-panel.pc-auxiliary :is(.site-card__description,.site-card__reward,.site-card__stats,.site-card__status,.site-card__auto) { font-size: 15px; line-height: 1.5; }
 :is(#app, body) .production-panel.pc-auxiliary .site-card__upgrade { margin-top: auto; border-top: 1px solid #af884655; padding-top: 12px; }
 :is(#app, body) .production-panel.pc-auxiliary .lin-mach__card { background: #e2cf9e44; border: 1px solid #af884666; padding: 14px 18px; }
-:is(#app, body) .vendor-panel.pc-auxiliary { padding: 20px 26px; gap: 20px; }
-:is(#app, body) .vendor-panel.pc-auxiliary .vendor-panel__description { font-size: 16px; line-height: 1.6; }
-:is(#app, body) .vendor-panel.pc-auxiliary .vendor-panel__card { border: 0; background: transparent; padding: 0; }
-:is(#app, body) .vendor-panel.pc-auxiliary h3 { font: 700 25px var(--pc-font-title, var(--font-display)); }
-:is(#app, body) .vendor-panel.pc-auxiliary .resource-card__rows { gap: 12px; }
-:is(#app, body) .vendor-panel.pc-auxiliary .resource-card__row {
-  padding: 16px 20px;
-  font-size: 16px;
-  border: 3px double #af8846;
-  border-radius: 0;
-  background: #272820;
-  color: #efdfb8;
-}
-:is(#app, body) .vendor-panel.pc-auxiliary .resource-card__name { color: #efdfb8; line-height: 1.6; }
-:is(#app, body) .vendor-panel.pc-auxiliary .resource-card__name strong { color: #b8cc91; }
-:is(#app, body) .vendor-panel.pc-auxiliary .resource-card__sale { gap: 15px; }
-:is(#app, body) .vendor-panel.pc-auxiliary .resource-card__total { color: #e2c386; font-size: 15px; }
 :is(#app, body) .companion-panel.pc-auxiliary .companion-panel__body { gap: 24px; }
 :is(#app, body) .companion-panel.pc-auxiliary .companion-panel__roster { flex-basis: 280px; }
 :is(#app, body) .companion-panel.pc-auxiliary .companion-panel__card {
@@ -111,7 +94,6 @@
 :is(#app, body) .lore-modal__panel.pc-auxiliary .lore-modal__close { color: #efdfb8; background: #272820; border: 1px solid #af8846; min-height: 44px; min-width: 120px; }
 @media (max-width: 900px) {
   :is(#app, body) .production-panel.pc-auxiliary .production-panel__grid { grid-template-columns: 1fr; }
-  :is(#app, body) .vendor-panel.pc-auxiliary .resource-card__sale { flex-wrap: wrap; width: 100%; }
   :is(#app, body) .companion-panel.pc-auxiliary .companion-panel__body { flex-direction: column; }
   :is(#app, body) .companion-panel.pc-auxiliary .companion-panel__roster { flex-basis: auto; max-height: 220px; }
 }

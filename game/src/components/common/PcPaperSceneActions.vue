@@ -45,5 +45,5 @@ function navigate(item: PaperNavigationItem) {
 .pc-paper-scene-actions__menu img { width:28px;height:28px;object-fit:contain; }
 .pc-paper-scene-actions__menu [aria-current=page] { background:#d3ae6038; }
 .pc-paper-scene-actions__menu [aria-disabled=true] { opacity:.55;cursor:default; }
-.pc-paper-scene-actions__menu button:focus-visible { outline:2px solid #765324;outline-offset:-3px; }
+.pc-paper-scene-actions__menu button:focus-visible { outline:none; }
 </style>

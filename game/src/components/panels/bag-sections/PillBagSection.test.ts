@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// Pill bag filter bar (presentation-debt): search narrows rendered
-// cells, effect chips filter by effects[0].type, and re-clicking the
-// active chip toggles back to 'all'. Mount harness mirrors
+// Pill bag toolbar (owner ruling 2026-10-11: equipment-bag layout, no
+// search field): effect dropdown filters by effects[0].type and the
+// 'all' option resets. Mount harness mirrors
 // EquipmentBagSection.test.ts (createApp + provide, no test-utils).
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
@@ -48,21 +48,28 @@ function filledSlots(container: HTMLElement): HTMLElement[] {
 }
 
 function countText(container: HTMLElement): string {
-  return container.querySelector<HTMLElement>('.bag-section__count')?.textContent?.trim() ?? ''
+  return container.querySelector<HTMLElement>('.bag-section__count-label')?.textContent?.trim() ?? ''
 }
 
-function chips(container: HTMLElement): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>('.bag-section__chips .chip'))
-}
+async function pickOption(container: HTMLElement, label: string) {
+  const select = container.querySelector<HTMLButtonElement>('.chip-select__button')
 
-function chipByLabel(container: HTMLElement, label: string): HTMLElement {
-  const chip = chips(container).find((el) => el.textContent?.trim() === label)
-
-  if (!chip) {
-    throw new Error(`Chip not found: ${label}`)
+  if (!select) {
+    throw new Error('family select not found')
   }
 
-  return chip
+  select.dispatchEvent(new Event('click', { bubbles: true }))
+  await nextTick()
+
+  const option = Array.from(
+    container.querySelectorAll<HTMLElement>('.chip-select__option'),
+  ).find((el) => el.textContent?.trim() === label)
+
+  if (!option) {
+    throw new Error(`Option not found: ${label}`)
+  }
+
+  option.dispatchEvent(new Event('click', { bubbles: true }))
 }
 
 // jsdom has no ResizeObserver - useBagGridLayout observes the grid on
@@ -78,66 +85,38 @@ beforeEach(() => {
 })
 
 describe('PillBagSection - filter bar', () => {
-  it('search narrows the rendered cells (diacritics-insensitive)', async () => {
+  it('effect select filters by effects[0].type', async () => {
     const mounted = mountSection((manager) => {
       manager.pillBag.add(makePill('heal-1', 'Tiểu Hồi Đan', 'heal'), 1)
       manager.pillBag.add(makePill('cult-1', 'Tụ Linh Đan', 'cultivation'), 1)
     })
 
-    expect(filledSlots(mounted.container)).toHaveLength(2)
-
-    const input = mounted.container.querySelector<HTMLInputElement>('.bag-section__search')
-    expect(input).not.toBeNull()
-
-    // Diacritic-free query must still match the composed display name
-    // ("Hoang - Tieu Hoi Dan" after NFD strip).
-    input!.value = 'tieu hoi'
-    input!.dispatchEvent(new Event('input', { bubbles: true }))
+    await pickOption(mounted.container, i18n.global.t('bag.filter.pillEffect.heal'))
     await nextTick()
 
     const filled = filledSlots(mounted.container)
     expect(filled).toHaveLength(1)
     expect(filled[0]!.getAttribute('aria-label')).toContain('Tiểu Hồi Đan')
-    expect(countText(mounted.container)).toBe(`1 ${i18n.global.t('panels.bag.countUnitSuffix')}`)
+    expect(countText(mounted.container)).toBe('1/100')
 
     mounted.unmount()
   })
 
-  it('effect chip filters by effects[0].type', async () => {
+  it('picking the all option resets the filter', async () => {
     const mounted = mountSection((manager) => {
       manager.pillBag.add(makePill('heal-1', 'Tiểu Hồi Đan', 'heal'), 1)
       manager.pillBag.add(makePill('cult-1', 'Tụ Linh Đan', 'cultivation'), 1)
     })
 
-    const healChip = chipByLabel(mounted.container, i18n.global.t('bag.filter.pillEffect.heal'))
-    healChip.dispatchEvent(new Event('click', { bubbles: true }))
-    await nextTick()
-
-    const filled = filledSlots(mounted.container)
-    expect(filled).toHaveLength(1)
-    expect(filled[0]!.getAttribute('aria-label')).toContain('Tiểu Hồi Đan')
-    expect(countText(mounted.container)).toBe(`1 ${i18n.global.t('panels.bag.countUnitSuffix')}`)
-
-    mounted.unmount()
-  })
-
-  it('re-clicking the active chip resets to all', async () => {
-    const mounted = mountSection((manager) => {
-      manager.pillBag.add(makePill('heal-1', 'Tiểu Hồi Đan', 'heal'), 1)
-      manager.pillBag.add(makePill('cult-1', 'Tụ Linh Đan', 'cultivation'), 1)
-    })
-
-    const healChip = chipByLabel(mounted.container, i18n.global.t('bag.filter.pillEffect.heal'))
-
-    healChip.dispatchEvent(new Event('click', { bubbles: true }))
+    await pickOption(mounted.container, i18n.global.t('bag.filter.pillEffect.heal'))
     await nextTick()
     expect(filledSlots(mounted.container)).toHaveLength(1)
 
-    healChip.dispatchEvent(new Event('click', { bubbles: true }))
+    await pickOption(mounted.container, i18n.global.t('panels.bag.groups.all'))
     await nextTick()
 
     expect(filledSlots(mounted.container)).toHaveLength(2)
-    expect(countText(mounted.container)).toBe(`2 ${i18n.global.t('panels.bag.countUnitSuffix')}`)
+    expect(countText(mounted.container)).toBe('2/100')
 
     mounted.unmount()
   })

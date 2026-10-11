@@ -16,7 +16,7 @@ import {
   REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY,
   REFINE_TINH_HOA_COST_BY_QUALITY,
 } from './RefinementBalance'
-import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 
 /**
@@ -352,6 +352,16 @@ function rollRefineValues(
     return { ok: false, reason: 'missing_essence' }
   }
 
+  // Materials economy rework - Bui Go la cost bat buoc thu ba, mirrors
+  // the essence amount qua cung discount path.
+  const buiGoUnits = deps.applyCostDiscount(
+    REFINE_TINH_HOA_COST_BY_QUALITY[instance.quality],
+  )
+
+  if (!materialBag.has(BUI_GO_ID, buiGoUnits)) {
+    return { ok: false, reason: 'missing_bui_go' }
+  }
+
   const spiritStoneCost = deps.applyCostDiscount(
     (lineCount + uniqueLocks.length) * REFINE_SPIRIT_STONE_PER_UNIT_BY_QUALITY[instance.quality],
   )
@@ -396,6 +406,8 @@ function rollRefineValues(
   materialBag.remove(SPIRIT_STONE_MATERIAL_ID, spiritStoneCost)
 
   materialBag.remove(LUYEN_KHI_TINH_HOA_ID, essenceUnits)
+
+  materialBag.remove(BUI_GO_ID, buiGoUnits)
 
   const values = Array.from(newValues, ([index, value]) => ({ index, value }))
 

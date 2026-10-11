@@ -12,7 +12,7 @@ import {
   type AlchemyJobReservation,
   type AlchemyRecipe,
 } from './AlchemySystem'
-import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
+import { BUI_GO_ID } from '../equipment/TinhHoaMaterial'
 import type { AlchemyJobSave } from '../../services/save/saveTypes'
 
 /**
@@ -32,21 +32,21 @@ export function alchemyJobFixture(
     startedAtMs: number
     completesAtMs: number
     roomLevelAtStart: number
+    // QUEUE REWORK - batch fields; omit both for a pre-rework
+    // (one-unit) record, the digest folds whichever shape is given.
+    quantity?: number
+    unitsDone?: number
   },
   reservation?: Partial<Omit<AlchemyJobReservation, 'digest'>>,
   recipe?: AlchemyRecipe,
 ): AlchemyJobSave {
-  const variant =
-    recipe?.herbVariants.find((candidate) => candidate.materialId === job.herbMaterialId) ??
-    recipe?.herbVariants[0]
   const base: Omit<AlchemyJobReservation, 'digest'> = {
-    woodId:
-      recipe === undefined
-        ? 'fixture_wood'
-        : buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant?.age ?? 'decade'),
+    // Materials economy rework - the reserved fuel id is always bui_go.
+    woodId: recipe === undefined ? 'fixture_wood' : BUI_GO_ID,
     fuelWoodAmount: recipe?.fuelWoodAmount ?? 1,
     spiritStoneCost: recipe?.spiritStoneCost ?? 0,
     herbAmount: recipe?.herbAmount ?? 1,
+    luyenDanTinhHoaAmount: recipe?.luyenDanTinhHoaAmount ?? 0,
     specialIngredients: (recipe?.specialIngredients ?? []).map((special) => ({ ...special })),
     costScale: 1,
   }

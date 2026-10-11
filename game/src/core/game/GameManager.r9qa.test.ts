@@ -1,5 +1,5 @@
-// QA (R9) - adversarial checks for the wash ticket + vendor atomicity +
-// receipt invariants. Written to PASS against correct behavior; failure
+// QA (R9) - adversarial checks for the wash ticket + receipt
+// invariants. Written to PASS against correct behavior; failure
 // = confirmed defect with intended-reason evidence.
 import { primeMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it, vi } from 'vitest'
@@ -21,7 +21,7 @@ import { makeInstance } from '../equipment/EquipmentInstance.fixture'
 import { materials } from '../../data/materials/materials'
 import { equipment } from '../../data/equipment/equipment'
 import { affixes } from '../../data/equipment/affixes'
-import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
+import { BUI_GO_ID, LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { WASH_SPIRIT_STONE_COST_BY_QUALITY } from '../equipment/RefinementBalance'
 import type { PlayerData } from '../player/Player'
@@ -59,6 +59,7 @@ describe('QA R9 - wash ticket save boundary', () => {
 
     const essence = manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID)
     manager.materialBag.add(essence, 9)
+    manager.materialBag.add(manager.materialRegistry.get(BUI_GO_ID), 9)
     manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), WASH_SPIRIT_STONE_COST_BY_QUALITY.dia)
 
     // Paid preview leaves a pending ticket in the session.

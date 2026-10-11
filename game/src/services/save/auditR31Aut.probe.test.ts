@@ -14,24 +14,10 @@ import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { AlchemySystem, alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import type { ProductionCycle } from '../../core/production/ProductionTypes'
 import type { Equipment } from '../../core/equipment/Equipment'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
-
-// BETA SCOPE - only the decompose engine is force-visible for this suite
-// (it is scope-hidden in beta and audited as enabled, same convention as
-// auditR30Aut.probe.test.ts). Every other scope keeps real visibility.
-vi.mock('../../core/betaScope', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../../core/betaScope')>()
-  return {
-    ...original,
-    isScopeHidden: (feature: string) =>
-      feature === 'equipmentOreDecompose' ? false : original.isScopeHidden(feature),
-  }
-})
 
 // ============================================================================
 // QA probe - fixpoint r31 AUT wave. Adversarial audit of the r30 batch at
@@ -77,15 +63,6 @@ let currentMs = 1_725_160_000_000
 
 const BOUND = 2 ** 52
 
-function registeredManager(): GameManager {
-  const manager = new GameManager()
-  manager.catalogOps.registerEquipment(equipment)
-  manager.catalogOps.registerAffixes(affixes)
-  manager.catalogOps.registerBuildings(buildings)
-  manager.catalogOps.registerPills(pills)
-  manager.catalogOps.registerAlchemyRecipes(alchemyRecipes)
-  return manager
-}
 
 const JOB_RECIPE = alchemyRecipes.find((recipe) => recipe.id === 'alchemy_thong_mach_dan')!
 
@@ -247,41 +224,6 @@ describe('r31-AUT F1b - AlchemySystem.restoreJobs shift-arm over-bound mint', ()
       expect(restored[0]!.startedAtMs).toBe(currentMs + 60_000)
       expect(restored[0]!.completesAtMs).toBe(job.completesAtMs)
     }
-  })
-})
-
-// ============================================================================
-// F1e - DecomposeSystem.tick: nowMs in (2^52 - cycleMs, 2^52) mints
-// nextCycleAt = nowMs + cycleMs >= 2^52 -> persisted -> write refuse.
-// ============================================================================
-describe('r31-AUT F1e - DecomposeSystem.tick nextCycleAt over-bound mint', () => {
-  clockIsolated()
-
-  function startedSystem() {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(1)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: true,
-      },
-      currentMs,
-    )
-    return system
-  }
-
-  it('tick(2^52 - 1) now denies (headroom) - nextCycleAt stays parked at 0', () => {
-    const system = startedSystem()
-    system.tick(BOUND - 1)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('control: tick(BOUND) zero-advances - the deadline stays parked', () => {
-    const system = startedSystem()
-    system.tick(BOUND)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
   })
 })
 

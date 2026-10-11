@@ -33,9 +33,7 @@ import { restoreGameSession } from '@/services/save/SaveSystem'
 import { validateGameSaveShape } from '@/services/save/saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from '@/services/save/SaveSystem'
 import type { GameSave } from '@/services/save/saveTypes'
-import {
-  getSpiritStoneMaterialIdForEnhanceLevel,
-} from '@/core/material/SpiritStoneMaterial'
+
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
   computeCycleSeconds,
@@ -135,93 +133,61 @@ afterEach(() => {
 })
 
 // ------------------------------------------------------------------
-// F-A: forged trung/thuong spirit-stone stacks. Every stone writer is
-// realm-tier-keyed (production rollRewards, vendor quoteStoneGrant,
-// reward receiver all route through
-// getSpiritStoneMaterialIdForRealmTier(player realm tier)); beta realms
-// are tiers 1-3 so only spirit_stone_ha_pham is earnable. The validator
-// checks registry membership + amount >= 0 only, and the stack limit is
-// MAX_SAFE_INTEGER, so a forged high-tier stack restores verbatim and
-// pays an enhance cost tier no beta session could ever unlock.
+// F-A: forged retired-tier spirit-stone stacks. Post-flatten
+// (2026-10-11) there is exactly one stone id - the trung/thuong ids
+// exist in no catalog, so a persisted stack is an unknown material id
+// like any other: shape validation admits the payload, then
+// restoreGameSession's registry preflight rejects it - the forged
+// stack can never reach the live bag or pay a cost.
 // ------------------------------------------------------------------
-describe('F-A: forged high-tier spirit stones mint impossible enhance costs', () => {
-  it('rejects a trung_pham stack no beta writer can produce', () => {
+describe('F-A: forged retired-tier spirit stones die at the registry preflight', () => {
+  it('a forged trung_pham stack is rejected on restore', () => {
     const save = mortalSave()
     save.materials = [{ materialId: 'spirit_stone_trung_pham', amount: 5000 } as never]
-    // slot already at 30 - the first enhance attempt from here pays
-    // trung_pham (getSpiritStoneMaterialIdForEnhanceLevel(30)).
-    save.equipmentSlots = [{ slot: 'weapon', enhanceLevel: 30, enhanceFailStreak: 0 } as never]
+    expect(validateGameSaveShape(save).ok).toBe(true)
 
-    // mint evidence: the forged tier lands in the live bag and pays a
-    // level-30 enhance - a cost tier unreachable in beta.
     const { manager, result } = restoreSave(save)
-    expect(result.status).toBe('ok')
-    const stack = manager.materialBag
-      .getAll()
-      .find((s) => s.material.id === 'spirit_stone_trung_pham')
-    expect(stack?.amount).toBe(5000)
-    expect(getSpiritStoneMaterialIdForEnhanceLevel(30)).toBe('spirit_stone_trung_pham')
-    expect(manager.equipmentSlotManager.get('weapon')?.enhanceLevel).toBe(30)
-
-    // stock the mundane material side of the cost (legal earnables) so
-    // the ONLY impossible input is the trung_pham tier itself.
-    for (const entry of manager.equipmentSystem.getEnhanceCost(
-      'weapon',
-      'mortal',
-      manager.equipmentBag,
-      manager.equipmentRegistry,
-      manager.equipmentSlotManager,
-    )) {
-      manager.materialBag.add(manager.materialRegistry.get(entry.materialId), entry.amount)
-    }
-    const enhanceResult = manager.equipmentSystem.enhance(
-      'weapon',
-      'mortal',
-      manager.equipmentBag,
-      manager.equipmentRegistry,
-      manager.materialBag,
-      manager.equipmentSlotManager,
-      manager.affixRegistry,
-      () => 0,
-    )
-    // the impossible-cost spend committed (success or fail, the forged
-    // tier was consumed):
-    expect(enhanceResult.reason).not.toBe('missing_spirit_stone')
+    expect(result.status).toBe('rejected')
     expect(
-      manager.materialBag.getAll().find((s) => s.material.id === 'spirit_stone_trung_pham')
-        ?.amount ?? 0,
-    ).toBeLessThan(5000)
-
-    expect(validateGameSaveShape(save).ok).toBe(false)
+      manager.materialBag.getAll().find((s) => s.material.id === 'spirit_stone_trung_pham'),
+    ).toBeUndefined()
   })
 
-  it('rejects a thuong_pham stack (tier >= 7 writer, beta ceiling 3)', () => {
+  it('a forged thuong_pham stack is rejected on restore', () => {
     const save = mortalSave()
     save.materials = [{ materialId: 'spirit_stone_thuong_pham', amount: 100 } as never]
-    expect(validateGameSaveShape(save).ok).toBe(false)
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    const { manager, result } = restoreSave(save)
+    expect(result.status).toBe('rejected')
+    expect(
+      manager.materialBag.getAll().find((s) => s.material.id === 'spirit_stone_thuong_pham'),
+    ).toBeUndefined()
   })
 })
 
 // ------------------------------------------------------------------
-// F-B: forged equipmentSlots[].enhanceLevel. Reaching level 31 requires
-// paying a trung_pham cost at enhanceLevel 30, and trung stones have no
-// beta writer (F-A), so any persisted enhanceLevel >= 31 is impossible.
-// The validator bounds only MAX_SLOT_ENHANCE_LEVEL (100). The level
-// feeds calculateEquipmentScale = 1 + level * 0.06 directly on every
-// equipped item in that slot.
+// F-B: equipmentSlots[].enhanceLevel. Post-flatten there is one stone
+// and every enhance level pays it, so a mortal save at any level up to
+// MAX_SLOT_ENHANCE_LEVEL (100) is producible - the validator's only
+// bound is the cap itself. The level feeds calculateEquipmentScale =
+// 1 + level * 0.06 directly on every equipped item in that slot.
 // ------------------------------------------------------------------
-describe('F-B: forged slot enhanceLevel mints equipment stat scale', () => {
-  it('rejects enhanceLevel 60 on a mortal save', () => {
+describe('F-B: slot enhanceLevel bound = MAX_SLOT_ENHANCE_LEVEL', () => {
+  it('accepts enhanceLevel 60 on a mortal save (single stone pays it)', () => {
     const save = mortalSave()
     save.equipmentSlots = [{ slot: 'weapon', enhanceLevel: 60, enhanceFailStreak: 0 } as never]
 
-    // mint evidence: restore admits the forged level verbatim.
     const { manager, result } = restoreSave(save)
     expect(result.status).toBe('ok')
     expect(manager.equipmentSlotManager.get('weapon')?.enhanceLevel).toBe(60)
-    // 1 + 60*0.06 = 4.6x vs the max beta-producible 1 + 30*0.06 = 2.8x.
-    expect(manager.equipmentSlotManager.get('weapon')!.enhanceLevel).toBeGreaterThan(30)
 
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('still rejects a level past MAX_SLOT_ENHANCE_LEVEL', () => {
+    const save = mortalSave()
+    save.equipmentSlots = [{ slot: 'weapon', enhanceLevel: 101, enhanceFailStreak: 0 } as never]
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 })
@@ -378,7 +344,7 @@ describe('F-D: forged workerCycle siteLevelAtStart mints a compressed settle', (
 // boundary now REJECTS it on player.realmId. This supersedes the old
 // F-SCOPE-5 "flagged but playable" contract: loading the claim used
 // to flag 'realm_beyond_release' while every realm-tier-keyed faucet
-// (spirit stones, site/building caps, vendor floor) minted at the
+// (spirit stones, site/building caps) minted at the
 // forged tier.
 // ------------------------------------------------------------------
 describe('F-E/F-REALM-CEILING: a beyond-ceiling realm claim is rejected at the save boundary', () => {

@@ -6,7 +6,11 @@ import {
   herbBaseId,
   herbMaterialId,
 } from '@/core/profession/ProfessionMaterial'
-import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+import {
+  BUI_GO_ID,
+  LUYEN_DAN_TINH_HOA_ID,
+  LUYEN_KHI_TINH_HOA_ID,
+} from '@/core/equipment/TinhHoaMaterial'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import { REALMS } from '@/data/realms/realm'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
@@ -40,6 +44,28 @@ const legacyMaterials: Material[] = [
     // Currency-like sink/source shared by every grade. Match Linh Thach's
     // effectively unbounded safe-integer convention so normal progression
     // cannot hit the former reachable 9,999 cap.
+    stackLimit: Number.MAX_SAFE_INTEGER,
+  },
+
+  // Materials economy rework (2026-10-11) - outputs of the 3-family
+  // decompose tab: wood stacks -> Bui Go, grotto herbs -> Luyen Dan
+  // Tinh Hoa. Same essence/building/unbounded-stack shape as Luyen Khi
+  // Tinh Hoa.
+  {
+    id: BUI_GO_ID,
+    name: 'Bụi Gỗ',
+    category: 'essence',
+    sourceType: 'building',
+    description: 'Bụi gỗ thu được từ phân giải linh mộc, dùng làm nhiên liệu lò đan và rèn luyện trang bị.',
+    stackLimit: Number.MAX_SAFE_INTEGER,
+  },
+
+  {
+    id: LUYEN_DAN_TINH_HOA_ID,
+    name: 'Luyện Đan Tinh Hoa',
+    category: 'essence',
+    sourceType: 'building',
+    description: 'Tinh hoa thu được từ phân giải linh thảo, bắt buộc cho mọi mẻ luyện đan.',
     stackLimit: Number.MAX_SAFE_INTEGER,
   },
 

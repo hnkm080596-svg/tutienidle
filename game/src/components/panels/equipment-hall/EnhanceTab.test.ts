@@ -180,12 +180,15 @@ describe('EnhanceTab — Cường Hóa', () => {
     mounted.version.value += 1
     await nextTick()
 
-    // Owner ruling 2026-10-08: ô chiếu hiện TÊN slot (không phải ảnh
-    // item) - slot phải resolve sang 'helmet' vừa chọn qua doll.
+    // Owner ruling 2026-10-08: ô chiếu hiện slot vừa chọn qua doll -
+    // art + aria-label tren SlotView (label text da bo khi chuyen sang
+    // per-slot art). Slot phải resolve sang 'helmet'.
     const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"]')
 
     expect(single).not.toBeNull()
-    expect(single!.querySelector('.enhance-slot__name')?.textContent).toBe(equipmentSlotLabel('helmet'))
+    expect(
+      single!.querySelector('.slot-view')?.getAttribute('aria-label'),
+    ).toBe(equipmentSlotLabel('helmet'))
 
     mounted.unmount()
   })

@@ -26,7 +26,6 @@ export type LeftPanelMode =
   | 'worker_lodge'
   | 'scripture_pavilion'
   | 'stage_select'
-  | 'vendor'
   | null
 
 /**

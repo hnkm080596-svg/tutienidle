@@ -1,20 +1,27 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import EquipmentArtCard from '@/components/common/art/EquipmentArtCard.vue'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import SlotView from '@/components/common/SlotView.vue'
-import { useGameManager } from '@/composables/useGameState'
+import { GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import type { BodyPaperModel, BodyPaperPour, BodyPaperUnit } from './bodyUi'
+import { BODY_POUR_VISUAL, type BodyPaperModel, type BodyPaperPour, type BodyPaperUnit } from './bodyUi'
 
 const props = defineProps<{ model: BodyPaperModel; unit: BodyPaperUnit | null; notice: string; pour?: BodyPaperPour | null }>()
 const emit = defineEmits<{ invest: [] }>()
 const { t } = useI18n()
-const gameManager = useGameManager()
+// Optional inject (owner ruling 2026-10-10): ui-body.html preview has no
+// GameManager - the card degrades to id names + no tooltip instead of
+// crashing. In-game the manager is always provided.
+const gameManager = inject(GAME_MANAGER_KEY, null)
+// Shared pour-visual channel (owner ruling 2026-10-10): reports the
+// fill's absolute progress so the figure reveals art tier-by-tier
+// riding the bar's edge instead of lighting everything at once.
+const pourVisual = inject(BODY_POUR_VISUAL, null)
 
 // Material rows follow the Trang Bi standard (owner ruling 2026-10-09):
 // icon + owned/need only, the name/info lives in the hover tooltip.
@@ -26,7 +33,7 @@ const MATERIAL_CATEGORY_ART: Record<string, string> = {
 }
 
 function materialIcon(materialId: string): string | undefined {
-  const material = gameManager.materialRegistry.has(materialId)
+  const material = gameManager?.materialRegistry.has(materialId)
     ? gameManager.materialRegistry.get(materialId)
     : undefined
   const art = material?.icon ?? (material?.category ? MATERIAL_CATEGORY_ART[material.category] : undefined)
@@ -36,7 +43,7 @@ function materialIcon(materialId: string): string | undefined {
 const buildMaterialTooltip = createMaterialTooltipBuilder(t)
 
 function materialTooltip(materialId: string, owned: number) {
-  return gameManager.materialRegistry.has(materialId)
+  return gameManager?.materialRegistry.has(materialId)
     ? buildMaterialTooltip(gameManager.materialRegistry.get(materialId), { owned })
     : undefined
 }
@@ -90,6 +97,7 @@ function clearPourFx() {
   pourHave.value = null
   pourFill.value = null
   pourLabel.value = null
+  if (pourVisual) pourVisual.spec = null
 }
 
 onBeforeUnmount(clearPourFx)
@@ -103,72 +111,125 @@ watch(
 
 function startPour(spec: BodyPaperPour) {
   clearPourFx()
+  if (pourVisual) {
+    // Rewind the figure to the click-time state first - the sequential
+    // reveal rides progressAbs as the fill advances.
+    pourVisual.spec = {
+      chapter: props.model.chapter,
+      tierStartIndex: spec.tierStartIndex,
+      caps: spec.caps,
+    }
+    pourVisual.progressAbs = spec.tierProgress
+  }
   if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
   const card = cardRef.value?.$el as HTMLElement | undefined
   const slotEl = card?.querySelector<HTMLElement>('.equipment-material-icon')
   const tubeEl = card?.querySelector<HTMLElement>('.equipment-energy-tube')
   if (card === undefined || !slotEl || !tubeEl) return
 
-  const cardRect = card.getBoundingClientRect()
+  // Viewport coordinates (owner ruling 2026-10-10): the motes render in a
+  // layer teleported to document.body - the card's clip-path would swallow
+  // the arc's leftward sweep if they stayed inside it.
   const from = slotEl.getBoundingClientRect()
   const to = tubeEl.getBoundingClientRect()
-  const x0 = from.left + from.width / 2 - cardRect.left
-  const y0 = from.top + from.height / 2 - cardRect.top
-  const x1 = to.left - cardRect.left // điểm đầu của bar (left end)
-  const y1 = to.top + to.height / 2 - cardRect.top
+  const x0 = from.left + from.width / 2
+  const y0 = from.top + from.height / 2
+  const x1 = to.left // điểm đầu của bar (left end)
+  const y1 = to.top + to.height / 2
   const span = Math.hypot(x1 - x0, y1 - y0) || 1
 
-  const count = Math.min(14, Math.max(8, Math.round(spec.consumed)))
+  // Fill pacing (owner ruling 2026-10-10): fixed 5s per click, cubic
+  // ease-in - the bar crawls at first and accelerates toward the end
+  // instead of jumping fast up front.
+  const FILL_MS = 5000
+  const capAt = (index: number) => spec.caps[index] ?? spec.caps[spec.caps.length - 1] ?? 1
+  const totalUnits = spec.consumed * spec.progressPerMaterial
+
+  const barPositionAt = (unitsFilled: number) => {
+    // Absolute progress since the click-time tier start -> walk the caps
+    // so multi-tier fills wrap onto the next bar.
+    let p = spec.tierProgress + unitsFilled
+    let idx = 0
+    while (idx < spec.caps.length - 1 && p >= capAt(idx)) {
+      p -= capAt(idx)
+      idx++
+    }
+    return { filled: Math.min(p, capAt(idx)), cap: capAt(idx) }
+  }
+  const fillCurve = (elapsedMs: number) => {
+    const f = Math.min(1, elapsedMs / FILL_MS)
+    return totalUnits * f * f * f
+  }
+
+  // Motes pour CONTINUOUSLY for the whole fill (owner ruling 2026-10-10):
+  // each one aims at where the bar's leading edge will be when it lands,
+  // so the stream reads as filling the bar, not a one-shot burst.
+  // Dense light stream (owner ruling 2026-10-10): many small motes read
+  // as one continuous ribbon of light instead of sparse flying dots.
+  const count = Math.min(120, Math.max(48, Math.round(spec.consumed * 1.5)))
   const weights = Array.from({ length: count }, () => 0.8 + Math.random() * 0.4)
   const weightSum = weights.reduce((a, b) => a + b, 0)
   const countDelta = spec.haveTo - spec.haveFrom
-  // Departure cadence: a steady ~40-55ms drip so the LAST mote lands
-  // inside the ~600-900ms window (flight ~330-420ms each).
-  const step = count > 1 ? Math.min(55, 430 / (count - 1)) : 0
+  // Departure window covers ~85% of the fill so the last motes still land
+  // before the bar completes.
+  const departWindow = FILL_MS * 0.85
+  const step = count > 1 ? departWindow / (count - 1) : 0
+  const tubeWidth = to.width
 
-  let animProgress = spec.tierProgress
-  let capIndex = 0
-  const capAt = (index: number) => spec.caps[index] ?? spec.caps[spec.caps.length - 1] ?? 1
-
+  const { filled, cap } = barPositionAt(0)
   pourHave.value = spec.haveFrom
-  pourFill.value = capAt(0) > 0 ? (animProgress / capAt(0)) * 100 : 0
-  pourLabel.value = `${formatNumber(Math.round(animProgress))} / ${formatNumber(capAt(0))}`
+  pourFill.value = cap > 0 ? (filled / cap) * 100 : 0
+  pourLabel.value = `${formatNumber(Math.round(filled))} / ${formatNumber(cap)}`
 
-  pourFlight = weights.map((w, index): PourMote => {
-    const share = (spec.consumed * w) / weightSum
-    // Quadratic arc control point: off the segment's perpendicular,
-    // biased upward so the stream reads as a rising arc.
-    const t = 0.35 + Math.random() * 0.3
-    const mx = x0 + (x1 - x0) * t
-    const my = y0 + (y1 - y0) * t
-    const nx = -(y1 - y0) / span
-    const ny = (x1 - x0) / span
-    const lift = span * (0.16 + Math.random() * 0.14)
-    return {
-      departAt: index * step + Math.random() * 12,
-      flightMs: 330 + Math.random() * 90,
-      countDelta: (countDelta * w) / weightSum,
-      progressUnits: share * spec.progressPerMaterial,
-      x0,
-      y0,
-      cx: mx + nx * lift * (Math.random() < 0.5 ? -1 : 1),
-      cy: my + ny * lift - span * 0.12,
-      x1,
-      y1,
-      size: 4 + Math.random() * 4,
-      departed: false,
-      landed: false,
-      x: x0,
-      y: y0,
-      opacity: 0,
-      scale: 1,
-    }
+  // Two staggered motes per slot (owner ruling 2026-10-10): doubles the
+  // stream density at the same cadence so it reads as one ribbon of
+  // light chasing the fill edge.
+  pourFlight = weights.flatMap((w, index): PourMote[] => {
+    const slot = index * step
+    const delta = (countDelta * w) / weightSum / 2
+    return [0, 1].map((sub) => {
+      const departAt = slot + sub * 14 + Math.random() * 18
+      const flightMs = 330 + Math.random() * 90
+      // Aim at the fill head when this mote will land (exact for the shared
+      // curve; a mid-flight cap wrap can leave it aiming a hair off - fine).
+      const landAt = departAt + flightMs
+      const pos = barPositionAt(fillCurve(landAt))
+      const edgeX = x1 + Math.min(1, pos.filled / pos.cap) * tubeWidth
+      // Quadratic arc control point: off the segment's perpendicular,
+      // biased upward so the stream reads as a rising arc.
+      const t = 0.35 + Math.random() * 0.3
+      const mx = x0 + (edgeX - x0) * t
+      const my = y0 + (y1 - y0) * t
+      const nx = -(y1 - y0) / span
+      const ny = (x1 - x0) / span
+      const lift = span * (0.16 + Math.random() * 0.14)
+      return {
+        departAt,
+        flightMs,
+        countDelta: delta,
+        progressUnits: 0,
+        x0: x0 + (Math.random() - 0.5) * 6,
+        y0: y0 + (Math.random() - 0.5) * 6,
+        cx: mx + nx * lift * (Math.random() < 0.5 ? -1 : 1),
+        cy: my + ny * lift - span * 0.12,
+        x1: edgeX,
+        y1: y1 + (Math.random() - 0.5) * 5,
+        size: 2 + Math.random() * 1.8,
+        departed: false,
+        landed: false,
+        x: x0,
+        y: y0,
+        opacity: 0,
+        scale: 1,
+      }
+    })
   })
   pourMotes.value = []
 
   const startedAt = performance.now()
   const tick = () => {
-    const elapsed = performance.now() - startedAt
+    const now = performance.now()
+    const elapsed = now - startedAt
     let alive = false
     for (const mote of pourFlight) {
       const t = (elapsed - mote.departAt) / mote.flightMs
@@ -182,18 +243,7 @@ function startPour(spec: BodyPaperPour) {
         if (pourHave.value !== null) pourHave.value += mote.countDelta
       }
       if (t >= 1) {
-        if (!mote.landed) {
-          // Landing: the bar fills by the share this mote carried.
-          mote.landed = true
-          animProgress += mote.progressUnits
-          while (capIndex < spec.caps.length - 1 && animProgress >= capAt(capIndex)) {
-            animProgress -= capAt(capIndex)
-            capIndex++
-          }
-          animProgress = Math.min(animProgress, capAt(capIndex))
-          pourFill.value = Math.min(100, (animProgress / capAt(capIndex)) * 100)
-          pourLabel.value = `${formatNumber(Math.round(animProgress))} / ${formatNumber(capAt(capIndex))}`
-        }
+        mote.landed = true
         continue
       }
       alive = true
@@ -204,21 +254,31 @@ function startPour(spec: BodyPaperPour) {
       mote.scale = 0.7 + 0.6 * Math.sin(t * Math.PI)
     }
     pourMotes.value = pourFlight.filter((mote) => mote.departed && !mote.landed)
+    // Eased bar fill: same 5s curve every click, accelerating over time
+    // (owner ruling: not fast right from the start).
+    const filledNow = fillCurve(elapsed)
+    if (pourVisual) pourVisual.progressAbs = spec.tierProgress + filledNow
+    if (filledNow < totalUnits) {
+      alive = true
+      const next = barPositionAt(filledNow)
+      pourFill.value = Math.min(100, (next.filled / next.cap) * 100)
+      pourLabel.value = `${formatNumber(Math.round(next.filled))} / ${formatNumber(next.cap)}`
+    } else if (pourFill.value !== null) {
+      const last = barPositionAt(totalUnits)
+      pourFill.value = Math.min(100, (last.filled / last.cap) * 100)
+      pourLabel.value = `${formatNumber(Math.round(last.filled))} / ${formatNumber(last.cap)}`
+    }
     if (alive) {
       pourRaf = requestAnimationFrame(tick)
     } else {
-      // Stream settled - the real unit/count takes over again.
+      // Stream settled and the bar reached its final fill - the real
+      // unit/count takes over again.
       clearPourFx()
     }
   }
   pourRaf = requestAnimationFrame(tick)
 }
 
-function costAmountLabel(cost: { need: number; amountLabel: string }): string {
-  return pourHave.value !== null && cost.need > 0
-    ? `${formatNumber(Math.round(pourHave.value))} / ${formatNumber(cost.need)}`
-    : cost.amountLabel
-}
 </script>
 <template>
   <EquipmentArtCard ref="cardRef" class="body-card body-paper-details">
@@ -232,6 +292,9 @@ function costAmountLabel(cost: { need: number; amountLabel: string }): string {
       </div>
       <EquipmentEnergyTube :fill="pourFill ?? unit.progressPct ?? model.progress" color="#eec76c" />
       <div class="body-scroll">
+        <!-- Big-tier total stats (owner ruling 2026-10-10): Ren The is
+             ONE big tier - model.totalRows is the chapter's accumulated
+             grants, domain-computed including the in-progress share. -->
         <dl class="body-stat-list">
           <div v-for="row in model.totalRows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
           <p v-if="!model.totalRows.length" class="body-empty-row">{{ t('body.noGains') }}</p>
@@ -258,10 +321,11 @@ function costAmountLabel(cost: { need: number; amountLabel: string }): string {
           :class="{ 'is-missing': !cost.met }"
         >
           <div class="equipment-material-icon">
-            <SlotView variant="equipment" static :item="null" :icon="cost.icon ?? materialIcon(cost.id)" :label="cost.name" />
-          </div>
-          <div>
-            <b>{{ costAmountLabel(cost) }}</b>
+            <SlotView
+variant="equipment" static :item="null"
+              :icon="cost.icon ?? materialIcon(cost.id)" :label="cost.name"
+              :amount="pourHave !== null && cost.need > 0 ? Math.max(0, Math.round(pourHave)) : cost.have"
+/>
           </div>
         </div>
         <p v-if="!unit.costs.length" class="body-empty-row">{{ t('body.noCost') }}</p>
@@ -269,24 +333,30 @@ function costAmountLabel(cost: { need: number; amountLabel: string }): string {
       <!-- Submit states = the Trang Bi machine (owner ruling 2026-10-09):
            dark filter-art pill while locked, gold selected art once the
            unit is investable. -->
-      <EquipmentArtButton v-if="unit.actionLabel" filter-art class="body-invest" :gold="!unit.actionDisabled" :disabled="unit.actionDisabled" @click="emit('invest')">{{ unit.actionLabel }}</EquipmentArtButton>
+      <EquipmentArtButton v-if="unit.actionLabel && !model.chapterComplete" filter-art class="body-invest" :gold="!unit.actionDisabled" :disabled="unit.actionDisabled" @click="emit('invest')">{{ unit.actionLabel }}</EquipmentArtButton>
     </template>
     <template v-else>
       <p class="body-empty-row">{{ model.lockHint ?? t('body.empty') }}</p>
     </template>
     <p class="body-notice" role="status" aria-live="polite">{{ notice }}</p>
-    <span
-      v-for="mote in pourMotes"
-      :key="mote.departAt"
-      class="body-pour-mote"
-      :style="{
-        width: `${mote.size}px`,
-        height: `${mote.size}px`,
-        opacity: mote.opacity,
-        transform: `translate(${mote.x - mote.size / 2}px, ${mote.y - mote.size / 2}px) scale(${mote.scale})`,
-      }"
-    />
   </EquipmentArtCard>
+  <!-- Motes live outside the card (owner ruling 2026-10-10): its
+       clip-path swallowed the leftward part of the arc. Viewport coords. -->
+  <Teleport to="body">
+    <div v-if="pourMotes.length" class="body-pour-layer">
+      <span
+        v-for="mote in pourMotes"
+        :key="mote.departAt"
+        class="body-pour-mote"
+        :style="{
+          width: `${mote.size}px`,
+          height: `${mote.size}px`,
+          opacity: mote.opacity,
+          transform: `translate(${mote.x - mote.size / 2}px, ${mote.y - mote.size / 2}px) scale(${mote.scale})`,
+        }"
+      />
+    </div>
+  </Teleport>
 </template>
 <style scoped>
 /* Grow the card into the free space around it (owner ruling
@@ -299,7 +369,7 @@ function costAmountLabel(cost: { need: number; amountLabel: string }): string {
 .body-card h3 { font-size:14px; margin:6px 0 4px; color:#ebd49e; flex:none; }
 .body-progress-value { display:flex; justify-content:flex-end; font-size:13px; margin-bottom:6px; color:#e8d8b8; flex:none; }
 .body-card :deep(.equipment-energy-tube) { flex:none; }
-.body-scroll { flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#8a7444 transparent; }
+.body-scroll { flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#8a7444 transparent; margin-top:12px; }
 .body-stat-list { margin:0; }
 .body-stat-list > div { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #b28a4333; font:700 13px/1.3 var(--pc-font-body, Georgia, serif); align-items:center; }
 .body-stat-list dd { margin:0; color:#a3d793; }
@@ -325,8 +395,9 @@ function costAmountLabel(cost: { need: number; amountLabel: string }): string {
    text - smaller size + centered per his live review. */
 .body-invest { width:220px; flex:none; font-size:18px; padding:0; margin:8px auto 0; }
 .body-notice { position:absolute; left:14px; right:14px; bottom:6px; margin:0; font-size:11px; color:#c9a95f; min-height:14px; text-align:center; }
-/* Pour stream motes (owner ruling 2026-10-09) - small warm-gold
-   glowing dots positioned absolutely inside the card; the rAF loop
-   drives transform/opacity, markup carries no layout weight. */
-.body-pour-mote { position:absolute; left:0; top:0; border-radius:50%; background:#eec76c; box-shadow:0 0 5px 2px #eec76c, 0 0 12px 4px #eec76c55; pointer-events:none; z-index:5; will-change:transform,opacity; }
+/* Pour stream motes (owner ruling 2026-10-09/10) - warm-gold glowing dots
+   teleported to document.body so the card clip-path cannot clip the arc.
+   The layer is fixed to the viewport and ignores pointer input. */
+.body-pour-layer { position:fixed; left:0; top:0; z-index:9999; pointer-events:none; }
+.body-pour-mote { position:absolute; left:0; top:0; border-radius:50%; background:#eec76c; box-shadow:0 0 5px 2px #eec76c, 0 0 12px 4px #eec76c55; will-change:transform,opacity; }
 </style>

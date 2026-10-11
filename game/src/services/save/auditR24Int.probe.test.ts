@@ -258,7 +258,6 @@ describe('seam (b) - fallback window vs calculateOfflineTime cap split', () => {
     // 48h stale save - beyond the default 24h offline cap.
     const save = makeSave({ lastSavedAt: NOW - 48 * HOUR_MS })
     const settleSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
-    const decomposeSpy = vi.spyOn(manager.decomposeSystem, 'settleOffline')
     const alchemySpy = vi.spyOn(manager.alchemySystem, 'settleOffline')
 
     const result = restoreGameSession(player, manager, save, {
@@ -272,7 +271,6 @@ describe('seam (b) - fallback window vs calculateOfflineTime cap split', () => {
     // Deny: zero accrual on a corrupt authority - no channel settle.
     expect(result.offline.elapsedSeconds).toBe(0)
     expect(settleSpy).not.toHaveBeenCalled()
-    expect(decomposeSpy).not.toHaveBeenCalled()
     // The unconditional alchemy pass anchors at the payload marker
     // (min(lastSavedAt + 0, NOW, NOW)) - deferred dues keep their times.
     expect(alchemySpy).toHaveBeenCalledWith(

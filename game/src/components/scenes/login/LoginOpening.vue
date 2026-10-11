@@ -27,8 +27,29 @@ const { t } = useI18n()
 /* z-index above .login-drawer-layer (10): nav buttons stay clickable while a
    drawer is open, so switching tabs swaps drawer content in place instead of
    hitting the scrim (close -> reopen). */
-.login-opening__actions { position: absolute; left: 566px; top: 295px; width: 310px; display: grid; gap: 17px; z-index: 11; }
-.login-opening__actions .pc-paper-button { width: 100%; min-height: 68px; color: #f5e6c6; font: 600 27px var(--font-display, Georgia, serif); box-shadow: 0 4px 12px #65522c40; }
+/* gap 17px -> 2px is part of the owner ruling (same 2026-10-10 message:
+   "cho các nút gần nhau h" - pull the menu buttons closer together); the
+   box-shadow on these buttons was dropped under the same ruling (no
+   transparent frame around the pill art). */
+.login-opening__actions { position: absolute; left: 566px; top: 295px; width: 310px; display: grid; gap: 2px; z-index: 11; }
+.login-opening__actions .pc-paper-button { width: 100%; min-height: 68px; color: #f5e6c6; font: 600 27px var(--font-display, Georgia, serif); }
+/* Owner ruling 2026-10-10: the menu buttons wear the in-game enhance
+   button's art (equipment-filter-* pill) - art-only swap, the paper
+   nine-slice border-image is replaced, logic untouched.
+   #app anchor (1,2,1): tien-hiep-entry.css re-arms border-image-source on
+   :is(#app,body) .th-entry-scene .pc-paper-button:hover::before at (1,1,1). */
+#app .login-opening__actions .pc-paper-button::before { border: 0; border-image: none; background: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png') center / 100% 100% no-repeat; }
+/* Hover takes the clean gold pill (equipment-filter-selected) - the
+   stock hover art bakes a black smoke fill over the label, which read
+   as a dark blob covering the text on this bright backdrop. */
+/* QA fixpoint 2026-10-10: #app anchor needed here too - the entry
+   recipe's (1,4,0) hover color would otherwise shadow this rule. */
+#app .login-opening__actions .pc-paper-button:not(:disabled):is(:hover, :focus-visible) { color: #30210e; }
+/* --secondary + filter:none: the entry recipe (1,4,1) still arms a
+   brightness/saturate/drop-shadow filter on hover - kill it so the art
+   reads identical to the in-game pill (QA fixpoint 2026-10-10). */
+#app .login-opening__actions .pc-paper-button--secondary:not(:disabled):is(:hover, :focus-visible)::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-selected-v2.png'); filter: none; }
+#app .login-opening__actions .pc-paper-button--secondary:not(:disabled):active::before { border-image: none; background-image: url('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-pressed-v2.png'); filter: none; }
 .login-opening__actions .pc-paper-button:focus-visible { outline: 3px solid #836126; outline-offset: 5px; }
 .login-opening__actions .pc-paper-button:disabled { opacity: .6; cursor: wait; }
 .login-opening__error { color: #983a23; background: #f5ead6e6; padding: 10px; margin: 0; font-size: 17px; }

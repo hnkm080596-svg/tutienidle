@@ -7,7 +7,7 @@ import type { PillBag } from '../pill/PillBag'
 import type { PlayerData } from '../player/Player'
 import { capturePlayerSnapshot, restorePlayerSnapshotInPlace } from '../player/PlayerSnapshot'
 import type { ElementType } from '../element/ElementType'
-import { isBetaElement, isBetaFeature, isBetaWay, isScopeHidden } from '../betaScope'
+import { isBetaElement, isBetaWay, isScopeHidden } from '../betaScope'
 import { betaTechniqueAdmitted } from '../betaScopeSkillDomain'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { canPurchaseNode as canPurchaseNodeSystem } from '../progression/NodeSystem'
@@ -29,21 +29,11 @@ import {
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import type { NotificationQueue } from './NotificationQueue'
 import {
-  bodyChapterEssenceGrade,
   getBodyChapterDefinition,
   type BodyChapterCurrency,
   type BodyChapterId,
 } from '../realm/body/BodyChapter'
-import {
-  essenceSubstitutionCoverage,
-  planEssenceSubstitution,
-} from '../realm/body/BodyChapterEssenceSubstitution'
 import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
-import {
-  physiqueEssenceMaterialId,
-} from '../../data/realm/PhysiqueEssence'
-import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
-import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { CORE_REALM_LEVEL, getCurrentRealm } from '../realm/realmSystem'
 import {
@@ -990,98 +980,23 @@ export class GameManagerRealmAdvanceOps {
         ? player.bodyProgression.body_refinement.completedTiers
         : 0
 
-    // M-QI-09 (QI-D4c) - downward-only essence substitution resolved at
-    // this cost check, no exchange UI: a material-bag physique-essence
-    // requirement counts higher-grade stacks at the locked adjacent
-    // ratio. C2C r10#3 + r17#1 - validate -> consume -> apply: the
-    // progression mutation is computed on a cloned probe FIRST, the
-    // debit plan is validated (every debit satisfiable AND the change
-    // credit committable) while the real player is untouched, bags
-    // commit, and only then does the real state apply. Any failure
-    // returns 0 with zero state change. The resolver owns the
-    // namespace gate (C2C 6) - a non-essence currency takes the
-    // legacy path where the single-currency debit cannot fail.
-    if (bodyChapterEssenceGrade(chapter.currency) === undefined) {
-      const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
-      if (consumed > 0) {
-        bag.remove(chapter.currency.id, consumed)
-        if (chapterId === 'zhou_tian') {
-          // HIDDEN-C - a completed 36/36 normal track is the discovery
-          // event for the Nghich continuation (sec.12.1); the check is
-          // itself gated on realm + lineage and stays a no-op otherwise.
-          maybeDiscoverNghichChuTian(player)
-        }
-        this.emitBodyChapterInvested(player, chapterId, consumed, tiersBefore)
+    // Owner ruling 2026-10-10: the cross-grade essence fill is
+    // retired - every currency takes the same direct path (exact
+    // debit of the chapter's own currency).
+    const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
+    if (consumed > 0) {
+      bag.remove(chapter.currency.id, consumed)
+      if (chapterId === 'zhou_tian') {
+        // HIDDEN-C - a completed 36/36 normal track is the discovery
+        // event for the Nghich continuation (sec.12.1); the check is
+        // itself gated on realm + lineage and stays a no-op otherwise.
+        maybeDiscoverNghichChuTian(player)
       }
-      return consumed
-    }
-
-    const ownedOf = (grade: PhysiqueGradeId): number => {
-      const materialId = physiqueEssenceMaterialId(grade)
-      return materialId === undefined
-        ? 0
-        : this.deps.materialBag.getAmount(materialId)
-    }
-    const coverage = essenceSubstitutionCoverage(chapter.currency, ownedOf)
-    const effectiveAvailable = available + coverage
-
-    // JSON round-trip, NOT structuredClone: the live callers hand in a
-    // Pinia store's reactive $state, and structuredClone throws
-    // DataCloneError on any nested Proxy (SaveSystem's detachSaveValue
-    // ruling). JSON stringify/parse reads through proxies at any depth.
-    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
-    const consumed = investBodyChapterState(probe, chapterId, effectiveAvailable, auxOwned)
-    if (consumed <= 0) {
+      this.emitBodyChapterInvested(player, chapterId, consumed, tiersBefore)
+    } else {
       this.maybeEmitBodyChapterLockHint(player, chapterId, available)
-      return 0
     }
-
-    const plan = planEssenceSubstitution(consumed, chapter.currency, ownedOf)
-    if (plan === undefined) {
-      return 0 // fail-closed: unreachable for an essence currency
-    }
-    const allSatisfiable = plan.debits.every((debit) =>
-      bag.has(debit.materialId, debit.amount),
-    )
-    // C2C r17#2 - the whole change credit must land or the invest
-    // fails closed: capacity is checked against the post-debit
-    // required balance before anything commits.
-    let changeCommittable = true
-    if (plan.change !== undefined) {
-      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
-      const requiredDebit = plan.debits.find(
-        (debit) => debit.materialId === plan.change?.materialId,
-      )
-      const postDebitBalance =
-        bag.getAmount(plan.change.materialId) - (requiredDebit?.amount ?? 0)
-      changeCommittable =
-        postDebitBalance + plan.change.amount <=
-        (changeMaterial.stackLimit ?? MAX_STACK_AMOUNT)
-    }
-    if (!allSatisfiable || !changeCommittable) {
-      return 0
-    }
-
-    for (const debit of plan.debits) {
-      bag.remove(debit.materialId, debit.amount)
-    }
-    if (plan.change !== undefined) {
-      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
-      this.deps.materialBag.add(changeMaterial, plan.change.amount)
-      // M-F-BODY-PERFECTION - the essence change credit is a live
-      // material landing; capacity was preflighted so delivered is
-      // the full amount.
-      this.deps.notifyMaterialGained(plan.change.materialId, plan.change.amount)
-    }
-    const applied = investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
-    if (applied > 0 && chapterId === 'zhou_tian') {
-      // HIDDEN-C - same post-invest discovery check as the legacy path.
-      maybeDiscoverNghichChuTian(player)
-    }
-    if (applied > 0) {
-      this.emitBodyChapterInvested(player, chapterId, applied, tiersBefore)
-    }
-    return applied
+    return consumed
   }
 
   // One-shot per tier per session - the invest seam runs every tick,
