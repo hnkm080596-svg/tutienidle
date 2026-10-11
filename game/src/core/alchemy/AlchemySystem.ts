@@ -755,7 +755,11 @@ export class AlchemySystem {
       return { ok: false, reason: 'missing_herb' }
     }
 
-    if (!bag.has(LUYEN_DAN_TINH_HOA_ID, recipe.luyenDanTinhHoaAmount)) {
+    // QA-A F3: tinh hoa burns per-unit like every other input - the
+    // batch path reserved x1 while the merge path reserves per click.
+    const tinhHoaAmount = recipe.luyenDanTinhHoaAmount * quantity
+
+    if (!bag.has(LUYEN_DAN_TINH_HOA_ID, tinhHoaAmount)) {
       return { ok: false, reason: 'missing_tinh_hoa' }
     }
 
@@ -776,7 +780,7 @@ export class AlchemySystem {
 
     bag.remove(BUI_GO_ID, fuelWoodAmount)
 
-    bag.remove(LUYEN_DAN_TINH_HOA_ID, recipe.luyenDanTinhHoaAmount)
+    bag.remove(LUYEN_DAN_TINH_HOA_ID, tinhHoaAmount)
 
     for (const special of recipe.specialIngredients ?? []) {
       bag.remove(special.materialId, special.amount * quantity)
@@ -1042,6 +1046,12 @@ export class AlchemySystem {
       refund(job.herbMaterialId, job.reservation.herbAmount)
 
       refund(job.reservation.woodId, job.reservation.fuelWoodAmount)
+
+      // QA-A F2: tinh hoa is a reserved input too - the un-brewed
+      // units refund it per unit like herb/fuel/specials. `?? 0`
+      // keeps a reservation restored from a pre-economy save (no
+      // field) from minting NaN into the bag.
+      refund(LUYEN_DAN_TINH_HOA_ID, job.reservation.luyenDanTinhHoaAmount ?? 0)
 
       for (const special of job.reservation.specialIngredients) {
         refund(special.materialId, special.amount)

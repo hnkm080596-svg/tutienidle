@@ -87,6 +87,9 @@ function measureFlow() {
   // nam sau hon ben trong .alchemy-slot va khong duoc bi tinh vao day.
   const slots = Array.from(mid.querySelectorAll<HTMLElement>('.alchemy-slot > .slot-view'))
   if (!svg || !pill || slots.length === 0) { flowPaths.value = []; return }
+  // jsdom SVGElement lacks getScreenCTM - tests measure nothing,
+  // production always has it.
+  if (typeof svg.getScreenCTM !== 'function') { flowPaths.value = []; return }
   const ctm = svg.getScreenCTM()
   if (!ctm) { flowPaths.value = []; return }
   // Stage bi scale de fit cua so - do viewport roi doi ve he toa do SVG
@@ -115,8 +118,12 @@ watch(() => [props.recipe?.id, props.recipe?.costs.length], () => {
 
 onMounted(() => {
   measureFlow()
-  flowObserver = new ResizeObserver(measureFlow)
-  if (midRef.value) flowObserver.observe(midRef.value)
+  // jsdom lacks ResizeObserver - the 100ms re-measure below still
+  // covers layout drift in tests.
+  if (typeof ResizeObserver === 'function') {
+    flowObserver = new ResizeObserver(measureFlow)
+    if (midRef.value) flowObserver.observe(midRef.value)
+  }
   // Layout tiep tuc troi sau mount (anh lo, font, so dem render) - do lai
   // dinh ky den khi toa do on dinh, chi ve lai khi co thay doi.
   flowTimer = window.setInterval(measureFlow, 100)

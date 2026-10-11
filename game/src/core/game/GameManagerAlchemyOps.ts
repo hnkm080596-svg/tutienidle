@@ -116,7 +116,12 @@ export class GameManagerAlchemyOps {
   }
 
   getAlchemyJobs(): ActiveAlchemyJob[] {
+    // QA-A F4: report the scope-filtered view, same predicate the state
+    // read-model applies - a parked dormant-family job (carried save)
+    // still settles in the domain but must not ghost a Thien Co Bang
+    // entry or building badge that can never resolve.
     return this.deps.alchemySystem.getJobs()
+      .filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
   }
 
   /**
@@ -227,13 +232,10 @@ export class GameManagerAlchemyOps {
       return cancelled.ok
     }
 
-    const recipe = this.deps.alchemyRecipesById.get(job.recipeId)
-
-    if (!recipe) {
-      return true
-    }
-
-    // Spirit-stone flatten: single material id regardless of recipe realm.
+    // Spirit-stone flatten (QA-A F5): the stone id is a constant and
+    // the per-unit cost is stamped on job.reservation - the refund does
+    // not need the recipe to resolve, so a recipe-lookup miss still
+    // refunds instead of silently voiding the player's stones.
     const spiritStoneId = SPIRIT_STONE_MATERIAL_ID
 
     if (this.deps.materialRegistry.has(spiritStoneId)) {

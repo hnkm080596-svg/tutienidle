@@ -13,6 +13,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
+import { ALCHEMY_MAX_BATCH_QUANTITY } from '@/core/alchemy/AlchemySystem'
 import { betaRecipeFamilyOfId } from '@/core/betaScope'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
@@ -263,6 +264,10 @@ const jobs = computed(() => {
 
         recipeId: job.recipeId,
 
+        herbMaterialId: job.herbMaterialId,
+
+        roomLevelAtStart: job.roomLevelAtStart,
+
         name: gameManager.pillRegistry.has(job.pillId)
           ? gameManager.pillRegistry.get(job.pillId).name
           : job.pillId,
@@ -271,7 +276,9 @@ const jobs = computed(() => {
 
         progress: Math.min(100, ((unitsDone + currentUnitFraction) / quantity) * 100),
 
-        remaining: quantity > 1 ? `${unitsDone}/${quantity} · ${remainingMinutes}p` : `${remainingMinutes}p`,
+        // QA-A F6: the scene subline already prints unitsProgress
+        // (done/total) - remaining stays the ETA only, no duplicate.
+        remaining: `${remainingMinutes}p`,
 
         unitsDone,
 
@@ -298,6 +305,34 @@ const maxJobSlots = computed(() => {
   return gameManager.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
 })
 
+const pillRoomLevel = computed(() => {
+  stateVersion.value
+
+  return gameManager.buildingManager.getByBuildingId('pill_room')?.level ?? 0
+})
+
+/**
+ * QUEUE REWORK tail-merge gate (QA-A F1): a full queue is only a
+ * blocker when this click would open a NEW order. When the last order
+ * is the same recipe + herb + room level and under the batch cap, the
+ * domain merges the click into it - capacity must not swallow that
+ * path, or the merge mechanic is unreachable for L1-2 pill rooms (1
+ * slot). Deeper reservation checks (cost profile) stay in the domain;
+ * a denied merge falls through to the new-order path which returns the
+ * slot-full reason.
+ */
+const tailMergeable = computed(() => {
+  const last = jobs.value[jobs.value.length - 1]
+
+  return (
+    last !== undefined &&
+    last.recipeId === selectedRecipe.value?.id &&
+    last.herbMaterialId === selectedHerbId.value &&
+    last.roomLevelAtStart === pillRoomLevel.value &&
+    (last.quantity ?? 1) < ALCHEMY_MAX_BATCH_QUANTITY
+  )
+})
+
 // Same admission the domain checks first (GameManagerAlchemyOps fails
 // closed with 'room_not_built'): without a pill-room instance there is
 // no furnace, so the surface must block brew the same way.
@@ -318,7 +353,7 @@ const canBrew = computed(() => {
     return false
   }
 
-  if (jobs.value.length >= Math.max(1, maxJobSlots.value)) {
+  if (jobs.value.length >= Math.max(1, maxJobSlots.value) && !tailMergeable.value) {
     return false
   }
 
@@ -362,8 +397,9 @@ const brewBlockReason = computed<string | null>(() => {
   }
 
   // Mirror the domain startJob order: slots -> wrong herb -> bui_go ->
-  // missing herb amount -> tinh hoa -> spirit stone.
-  if (jobs.value.length >= Math.max(1, maxJobSlots.value)) {
+  // missing herb amount -> tinh hoa -> spirit stone. Full queue does
+  // not block when the click would merge into the tail order instead.
+  if (jobs.value.length >= Math.max(1, maxJobSlots.value) && !tailMergeable.value) {
     return 'job_slots_full'
   }
 

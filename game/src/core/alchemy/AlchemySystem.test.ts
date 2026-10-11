@@ -476,6 +476,7 @@ describe('AlchemySystem — cancel job (QUEUE REWORK: refund chi phan vien chua 
     const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext({
       herbOnHand: 10,
       woodOnHand: 40,
+      tinhHoaOnHand: 4,
     })
 
     // quantity 4, perUnit 60s, started 1_000.
@@ -484,14 +485,16 @@ describe('AlchemySystem — cancel job (QUEUE REWORK: refund chi phan vien chua 
     ).toBe(true)
     expect(bag.getAmount('herb_decade')).toBe(10 - 4)
     expect(bag.getAmount(BUI_GO_ID)).toBe(40 - WOOD_AMOUNT * 4)
+    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(0)
 
     const jobId = system.getJobs()[0]!.jobId
 
     // now = 122_000 -> vien 0,1 xong deadline, vien 2 dang trong lo,
-    // chi vien 3 chua bat dau -> refund 1x herb + 1x wood.
+    // chi vien 3 chua bat dau -> refund 1x herb + 1x wood + 1x tinh hoa.
     expect(system.cancelJob(jobId, bag, registry, 122_000)).toEqual({ ok: true, unprocessedUnits: 1 })
     expect(bag.getAmount('herb_decade')).toBe(10 - 4 + 1)
     expect(bag.getAmount(BUI_GO_ID)).toBe(40 - WOOD_AMOUNT * 4 + WOOD_AMOUNT)
+    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(1)
     expect(system.getJobs()).toHaveLength(0)
   })
 
@@ -499,6 +502,7 @@ describe('AlchemySystem — cancel job (QUEUE REWORK: refund chi phan vien chua 
     const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext({
       herbOnHand: 6,
       woodOnHand: 40,
+      tinhHoaOnHand: 3,
     })
 
     expect(
@@ -511,6 +515,7 @@ describe('AlchemySystem — cancel job (QUEUE REWORK: refund chi phan vien chua 
     expect(system.cancelJob(jobId, bag, registry, 2_000)).toEqual({ ok: true, unprocessedUnits: 2 })
     expect(bag.getAmount('herb_decade')).toBe(6 - 3 + 2)
     expect(bag.getAmount(BUI_GO_ID)).toBe(40 - WOOD_AMOUNT * 3 + WOOD_AMOUNT * 2)
+    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(2)
   })
 
   it('cancel voi clock ngoai domain — ok:false, job con nguyen (deny)', () => {

@@ -113,6 +113,12 @@ export interface AlchemyJobDisplay {
 
   readonly recipeId: string
 
+  /** Herb variant the order was started with (tail-merge key). */
+  readonly herbMaterialId?: string
+
+  /** Pill room level at order start (tail-merge key). */
+  readonly roomLevelAtStart?: number
+
   readonly name: string
 
   /** Order quantity (viên trong order) — optional until queue domain lands. */
