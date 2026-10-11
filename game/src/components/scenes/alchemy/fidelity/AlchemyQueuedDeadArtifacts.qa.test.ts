@@ -23,19 +23,14 @@
 // the production catalogs must not carry 'alchemy.queued'.
 // Deterministic - static source/catalog check. FAIL on current HEAD.
 
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import en from '@/locales/en.json'
 import vi from '@/locales/vi.json'
+import sceneSource from './AlchemyFidelityScene.vue?raw'
 
 type Dict = Record<string, unknown>
 const alchemyEn = (en as Dict).alchemy as Dict
 const alchemyVi = (vi as Dict).alchemy as Dict
-
-const sceneSource = readFileSync(
-  new URL('./AlchemyFidelityScene.vue', import.meta.url),
-  'utf8',
-)
 
 describe('R4-ALCH-1 - no dead queued-state artifacts remain after all-cards-brewing', () => {
   it('AlchemyFidelityScene.vue carries no job-card--queued references', () => {

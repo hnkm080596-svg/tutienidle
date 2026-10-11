@@ -37,13 +37,13 @@ class MemoryStorage implements Storage {
   setItem(key: string, value: string): void { this.store.set(key, value) }
 }
 
-function validSaveAt(version: number): GameSave {
+function validGameSave(): GameSave {
   const player = createDefaultPlayer()
   player.mortalBasicSkillId = 'linh_bao'
   player.nodeLevels = { ...player.nodeLevels, core_linh_bao: 1 }
   player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_linh_bao']
   return {
-    version,
+    version: CURRENT_SAVE_VERSION,
     player,
     techniques: [],
     skills: [
@@ -77,7 +77,7 @@ describe('R4-SAVE-1 - a v89 payload migrates on every pipeline, not only inspect
   })
 
   it('local boot pipeline consumes a v89 save (intent witness - passes)', () => {
-    const raw = JSON.stringify(validSaveAt(89))
+    const raw = JSON.stringify({ ...validGameSave(), version: 89 })
     localStorage.setItem(resolveSaveKey(), raw)
 
     const inspected = inspectLocalSave()
@@ -89,7 +89,7 @@ describe('R4-SAVE-1 - a v89 payload migrates on every pipeline, not only inspect
   })
 
   it('recovery import accepts the SAME v89 bytes (currently incompatible)', () => {
-    const raw = JSON.stringify(validSaveAt(89))
+    const raw = JSON.stringify({ ...validGameSave(), version: 89 })
 
     const result = validateRecoveryData(raw)
 

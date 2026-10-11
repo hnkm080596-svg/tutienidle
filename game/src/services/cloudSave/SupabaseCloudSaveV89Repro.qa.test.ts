@@ -60,13 +60,13 @@ const REMOTE_CHARACTER = {
   createdAt: '2026-09-30T00:00:00Z',
 }
 
-function validSaveAt(version: number): GameSave {
+function validGameSave(): GameSave {
   const player = createDefaultPlayer()
   player.mortalBasicSkillId = 'linh_bao'
   player.nodeLevels = { ...player.nodeLevels, core_linh_bao: 1 }
   player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_linh_bao']
   return {
-    version,
+    version: CURRENT_SAVE_VERSION,
     player,
     techniques: [],
     skills: [
@@ -129,7 +129,7 @@ beforeEach(() => {
 
 describe('R4-SAVE-1 - cloud pull must migrate v89 rows like the local pipeline', () => {
   it('SAVE_READY carrying a v89 row loads ok (currently incompatible)', async () => {
-    const payload = validSaveAt(89)
+    const payload = { ...validGameSave(), version: 89 }
     stubFetch(() => json({
       status: 'SAVE_READY',
       character: REMOTE_CHARACTER,
