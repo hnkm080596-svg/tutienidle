@@ -9,9 +9,9 @@ const emit = defineEmits<{ select: [id: string] }>()
 const bodyArt = (name: string) =>
   resolveAssetUrl(`/assets/ui/tien-hiep-2026-10/body/${name}-v1.png`)
 
-// Per-chapter silhouette instances (owner rulings 2026-10-09): Khai Mạch
+// Per-chapter silhouette instances (owner rulings 2026-10-09): Khai Mach
 // shows the martial-stance figure for the eight extraordinary meridians;
-// Rèn Thể and Dẫn Linh keep the seated figure with their own treatments.
+// Ren The and Dan Linh keep the seated figure with their own treatments.
 const SILHOUETTE_ART: Record<string, string> = {
   refinement: 'silhouette-seated',
   meridian: 'silhouette-stance',
@@ -62,7 +62,7 @@ const unitState = computed<Record<string, BodyPaperUnit['state']>>(() => {
 })
 const unitLit = (id: string) => unitState.value[id] === 'done'
 
-// Rèn Thể: each completed step reveals its anatomy art on the
+// Ren The: each completed step reveals its anatomy art on the
 // silhouette (owner ruling 2026-10-09) - done units only, nothing is
 // drawn for steps not yet reached.
 const REFINEMENT_LAYER: Record<string, 'skin' | 'muscle' | 'vertebra' | 'blood' | 'heart' | 'forehead'> = {
@@ -625,8 +625,8 @@ const galaxyPieces = computed(() =>
 @keyframes body-float { 0%,100% { translate:0 0; } 50% { translate:0 -6px; } }
 @media (prefers-reduced-motion: reduce) { .body-stage { animation:none; } }
 .body-silhouette { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
-/* Chapter transition (owner ruling 2026-10-09): swapping Rèn Thể / Khai
-   Mạch / Dẫn Linh dissolves the chapter layer - the outgoing content blurs
+/* Chapter transition (owner ruling 2026-10-09): swapping Ren The / Khai
+   Mach / Dan Linh dissolves the chapter layer - the outgoing content blurs
    and sinks while the incoming fades up, the silhouette itself stays. */
 .chapter-layer { position:absolute; inset:0; }
 .chapter-swap-enter-active { transition:opacity .5s ease-out .08s, filter .5s ease-out .08s, transform .5s ease-out .08s; }
@@ -634,8 +634,8 @@ const galaxyPieces = computed(() =>
 .chapter-swap-enter-from { opacity:0; filter:blur(9px); transform:scale(1.06); }
 .chapter-swap-leave-to { opacity:0; filter:blur(9px); transform:scale(.94); }
 @media (prefers-reduced-motion: reduce) { .chapter-swap-enter-active, .chapter-swap-leave-active { transition:none; } }
-/* Per-chapter treatments (owner ruling 2026-10-09): Khai Mạch sits under a
-   jade edge, Dẫn Linh floats under a violet spirit aura. */
+/* Per-chapter treatments (owner ruling 2026-10-09): Khai Mach sits under a
+   jade edge, Dan Linh floats under a violet spirit aura. */
 .silhouette-meridian { filter:drop-shadow(0 0 14px rgba(120,190,150,.35)); }
 .silhouette-zhou_tian { filter:drop-shadow(0 0 18px rgba(150,120,255,.4)) drop-shadow(0 0 42px rgba(120,90,220,.22)); }
 .body-layer { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }

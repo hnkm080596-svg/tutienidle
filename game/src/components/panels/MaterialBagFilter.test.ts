@@ -102,7 +102,7 @@ function herb(id: string, age: HerbAge, years: number): Material {
 const HERB_DECADE = herb('tu_linh_thao_mortal_decade', 'decade', 10)
 const HERB_CENTURY = herb('tu_linh_thao_mortal_century', 'century', 100)
 
-// Ho khac (recipe khac) - cell rieng doc lap voi ho Tứ Linh Thảo.
+// Ho khac (recipe khac) - cell rieng doc lap voi ho Tu Linh Thao.
 // herbBaseId phai khop id conventions (validator: id = `${herbBaseId}_${age}`).
 const HERB_OTHER_FAMILY: Material = {
   id: 'hoi_xuan_thao_mortal_decade',
@@ -271,7 +271,7 @@ describe('MaterialBag — filter/search (plan §3.2 B4)', () => {
     expect(labels[2]).toContain('Thập Niên Hồi Xuân Thảo')
     expect(labels[3]).toContain('Linh Thảo Lạ')
 
-    // O Bách Niên mang tooltip dung nien dai cua chinh no (khong bi
+    // O Bach Nien mang tooltip dung nien dai cua chinh no (khong bi
     // tron vao ho nao).
     const slots = mounted.container.querySelectorAll<HTMLElement>('.bag-section__grid .bag-section__slot')
     slots[1]!.dispatchEvent(new Event('pointerenter', { bubbles: true }))
@@ -297,7 +297,7 @@ describe('MaterialBag — filter/search (plan §3.2 B4)', () => {
     expect(labels[0]).toContain('Thập Niên Linh Khoáng')
     expect(labels[1]).toContain('Bách Niên Linh Khoáng')
 
-    // Tooltip o Bách Niên hien dung bac cua no.
+    // Tooltip o Bach Nien hien dung bac cua no.
     const slots = mounted.container.querySelectorAll<HTMLElement>('.bag-section__grid .bag-section__slot')
     slots[1]!.dispatchEvent(new Event('pointerenter', { bubbles: true }))
     expect(JSON.stringify(useTooltip().content.value)).toContain('Bách Niên')

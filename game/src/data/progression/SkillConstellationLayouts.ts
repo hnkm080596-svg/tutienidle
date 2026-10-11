@@ -82,13 +82,16 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     { nodeId: 'the_diem_kinh', x: 34, y: 224 },
   ],
   strokes: [
-    // Left-falling sweep (pie): top extension through the junction down
-    // to the Tu Diem capstone at the leg's end.
-    { fromNodeId: 'hoa_linh_ngo', toNodeId: 'hoa_an_sau' },
+    // Left-falling sweep (pie): the An legs hang off the END of the
+    // Ly Hoa cast chain (Phe Diem), not the element root - Minh ruling
+    // 2026-10-07: the capstone legs continue the main branch, so a drawn
+    // edge never claims a node before its displayed parent is learned.
+    { fromNodeId: 'hoa_phe_diem', toNodeId: 'hoa_an_sau' },
     { fromNodeId: 'hoa_an_sau', toNodeId: 'hoa_nhiet_keo' },
     { fromNodeId: 'hoa_nhiet_keo', toNodeId: 'fire_basic_hoa_tu_diem' },
-    // Right-falling press (na): junction to the Tan Diem capstone.
-    { fromNodeId: 'hoa_linh_ngo', toNodeId: 'hoa_diem_chuan' },
+    // Right-falling press (na): same ruling - the second leg continues
+    // from the cast-chain end down to the Tan Diem capstone.
+    { fromNodeId: 'hoa_phe_diem', toNodeId: 'hoa_diem_chuan' },
     { fromNodeId: 'hoa_diem_chuan', toNodeId: 'hoa_diem_tham' },
     { fromNodeId: 'hoa_diem_tham', toNodeId: 'fire_basic_hoa_tan_diem' },
     // The two top marks.

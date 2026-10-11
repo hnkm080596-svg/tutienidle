@@ -190,7 +190,7 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="progress"]')!.classList.contains('active')).toBe(true)
 
-    // Cross-chapter pick now goes through the Chương rail - it
+    // Cross-chapter pick now goes through the Chuong rail - it
     // auto-picks the chapter's first unlocked stage
     // (qi_refining_forest), so the selection change disarms the mode.
     container.querySelector<HTMLElement>('[data-chapter-id="2"]')!.click()

@@ -138,8 +138,8 @@ describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
     await nextTick()
 
     expect(mounted.container.querySelector('.bag-section')).toBeNull()
-    // Chrome mới (owner ruling): một ô chiếu duy nhất hiện TÊN slot,
-    // chọn đồ trực tiếp trên doll - không còn picker 6 ô.
+    // Chrome moi (owner ruling): mot o chieu duy nhat hien TEN slot,
+    // chon do truc tiep tren doll - khong con picker 6 o.
     expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"].enhance-slot-single')).toHaveLength(1)
 
     mounted.unmount()
@@ -153,7 +153,7 @@ describe('EquipmentHallPanel - fidelity surface: rail tabs + switching', () => {
     await nextTick()
 
     expect(mounted.container.querySelector('[aria-label="Chọn slot cường hóa"]')).toBeNull()
-    // Chrome mới: grid affix trước->sau, không slot strip - mount bằng root.
+    // Chrome moi: grid affix truoc->sau, khong slot strip - mount bang root.
     expect(mounted.container.querySelector('.forge-wash')).not.toBeNull()
 
     mounted.unmount()

@@ -298,8 +298,8 @@ function rangePct(value: number, range: { min: number; max: number }): number {
   return Math.min(100, Math.max(0, pct))
 }
 
-/** Fixed 5-slot card (owner ruling 2026-10-08, same as Tẩy Luyện):
- *  an item can roll at most 5 affix lines (Tiên). The card always
+/** Fixed 5-slot card (owner ruling 2026-10-08, same as Tay Luyen):
+ *  an item can roll at most 5 affix lines (Tien). The card always
  *  renders all 5 slots so rows stay evenly spaced. */
 const refineSlots = computed(() => {
   const rows = refineRows.value
@@ -334,11 +334,11 @@ const refineMaterials = computed(() => [
 </script>
 
 <template>
-  <!-- Bố cục chung với Cường Hóa (owner ruling 2026-10-08): Tinh Luyện
-       cần area cho tối đa 5 dòng affix nên BỎ ô chiếu + 2 vòng tròn -
-       chỉ còn affix hiện tại -> kết quả tinh luyện (khóa từng dòng ở
-       mép trái), hàng nguyên liệu của Tinh Luyện và nút hành động ghim
-       đáy card. Chọn đồ trực tiếp trên doll. -->
+  <!-- Bo cuc chung voi Cuong Hoa (owner ruling 2026-10-08): Tinh Luyen
+       can area cho toi da 5 dong affix nen BO o chieu + 2 vong tron -
+       chi con affix hien tai -> ket qua tinh luyen (khoa tung dong o
+       mep trai), hang nguyen lieu cua Tinh Luyen va nut hanh dong ghim
+       day card. Chon do truc tiep tren doll. -->
   <div class="equipment-forge-workspace forge-refine">
     <h2>{{ t('panels.equipmentHall.tabs.refine') }}</h2>
 
@@ -392,7 +392,7 @@ const refineMaterials = computed(() => [
       </div>
       <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.noAffixesToRefine') }}</p>
 
-      <!-- Pinned bottom block (same as Cường Hóa). -->
+      <!-- Pinned bottom block (same as Cuong Hoa). -->
       <div class="equipment-forge-materials">
         <div
           v-for="material in refineMaterials"
@@ -572,7 +572,7 @@ const refineMaterials = computed(() => [
   border-color: #d9a94f88;
   background: #d9a94f1a;
 }
-/* Materials row: identical metrics to Cường Hóa. */
+/* Materials row: identical metrics to Cuong Hoa. */
 .equipment-forge-materials {
   display: flex;
   align-items: stretch;
@@ -623,9 +623,9 @@ const refineMaterials = computed(() => [
   gap: 18px;
   flex: none;
 }
-/* Submit pill = Cường Hóa size (owner ruling 2026-10-09: 300px).
-   While a roll is pending the row carries 3 pills (Tinh Luyện / Giữ
-   / Bỏ) - they shrink to fit the ~580px card. */
+/* Submit pill = Cuong Hoa size (owner ruling 2026-10-09: 300px).
+   While a roll is pending the row carries 3 pills (Tinh Luyen / Giu
+   / Bo) - they shrink to fit the ~580px card. */
 .equipment-forge-actions > button {
   width: 300px;
   font-size: 24px;

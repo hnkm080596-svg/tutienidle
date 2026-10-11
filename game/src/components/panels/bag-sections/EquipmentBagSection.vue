@@ -209,7 +209,7 @@ const entries = computed<EquipmentEntry[]>(() => {
 // Owner ruling 2026-10-08: chips + footer selects removed. Two dropdowns
 // - Loai item (7 options: Tat Ca + 6 socket types) filters first, then
 // Sap Xep sorts inside the filtered result. The quality-tone (Kim/Tu/
-// Lam) filter UI is dropped; sorting by chất lives in the sort select.
+// Lam) filter UI is dropped; sorting by chat lives in the sort select.
 type TypeFilter = 'all' | EquipmentSlot
 const typeFilter = ref<TypeFilter>('all')
 
@@ -615,7 +615,7 @@ const ITEM_SLOT_SRC = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/ite
   aspect-ratio: 1 / 1;
 }
 
-/* pick mode (Hóa Luyện): picked cells carry the same ✓ badge the old
+/* pick mode (Hoa Luyen): picked cells carry the same check badge the old
    dissolve grid drew; inert cells dim and keep the pointer quiet. */
 .bag-section__slot--picked {
   position: relative;

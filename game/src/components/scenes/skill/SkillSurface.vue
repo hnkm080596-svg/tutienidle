@@ -33,7 +33,6 @@ import { NODE_ICON_MANIFEST, SKILL_ICON_MANIFEST } from '@/data/skill/SkillIconM
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { SPELL_KIT_IDS } from '@/data/skill/Skills'
 import { betaMortalTreeViewTags } from '@/core/betaScopeSkillDomain'
-import { getNextLevelCost } from '@/core/progression/NodeSystem'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatStat, statLabel } from '@/core/stats/StatLabels'
@@ -702,8 +701,8 @@ function toUiNode(entry: GraphEntry): SkillUiNode {
     actionHint,
     // Cam Ngo for the NEXT authored level - row.nextLevelCost is null
     // whenever a level gate shrinks effectiveMaxLevel, but the Insight
-    // price still exists, so read the authored curve directly.
-    nextCost: row.level < row.maxLevel ? getNextLevelCost(node, row.level) : null,
+    // price still exists, so the model carries the authored price.
+    nextCost: row.authoredNextLevelCost,
     levelEffects: buildLevelEffects(node, row),
     frameKind: row.grantsSkillIds.some((id) => ELEMENT_SPECIAL_SKILL_IDS.has(id))
       ? 'parent'

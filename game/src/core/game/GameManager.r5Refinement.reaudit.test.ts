@@ -4,8 +4,8 @@ import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 
-// Owner ruling 2026-10-09: auto-nuốt removed - drops pool in the bag and
-// the player pours them manually from the Luyện Thể panel. The tick no
+// Owner ruling 2026-10-09: auto-nuot removed - drops pool in the bag and
+// the player pours them manually from the Luyen The panel. The tick no
 // longer owns body_refinement at all.
 describe('R5 headless body refinement ownership', () => {
   it('holds essence in the bag across updates until a manual pour, without App or Phaser', () => {

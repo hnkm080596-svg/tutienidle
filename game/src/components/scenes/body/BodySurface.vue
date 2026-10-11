@@ -49,7 +49,7 @@ function flashNotice(text: string) {
 }
 onBeforeUnmount(() => { if (noticeTimer !== undefined) clearTimeout(noticeTimer) })
 
-// Pour replay spec for the details card's particle stream (Rèn Thể
+// Pour replay spec for the details card's particle stream (Ren The
 // manual pour, owner ruling 2026-10-09) - a fresh object per invest.
 const pour = ref<BodyPaperPour | null>(null)
 

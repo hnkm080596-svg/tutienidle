@@ -196,10 +196,13 @@ describe('beta FE-contract read-models - import guards', () => {
       // The ban covers the whole component tree (panels + scenes), not
       // just panels/. DongFuStage is a NAVIGATION surface
       // (hotspot wheel): its isRealmAvailable deep-link check is not
-      // reward admission, so it is a recorded exception - every other
-      // file under components/ is not.
+      // reward admission, so it is a recorded exception. DevToolsPanel
+      // is a dev-only surface: its isBeyondReleaseCeiling call filters
+      // the dev realm-picker options, not reward admission - every
+      // other file under components/ is not excepted.
       const EXCEPTIONS = new Set([
         'components/scenes/dong-fu/DongFuStage.vue',
+        'components/dev/DevToolsPanel.vue',
       ])
       const offenders = srcCorpus(SRC_DIR)
         .filter(
@@ -253,10 +256,15 @@ describe('beta FE-contract read-models - import guards', () => {
   it(
     'manual workforce ops have no ungated UI caller - allocation lives behind manualWorkforce only',
     () => {
+      // A caller is GATED iff it references the manualWorkforce flag -
+      // ProductionPanel and the allocation block it extracted
+      // (production/ProductionWorkerAllocation.vue) both gate on
+      // betaSurfaceVisible('manualWorkforce'). An ops caller carrying
+      // no flag token is an ungated leak.
       const offenders = SHELL_FILES.filter(
         (file) =>
           /assignWorkers|getWorkforceView/.test(file.text) &&
-          file.fromSrc !== 'components/panels/ProductionPanel.vue',
+          !/manualWorkforce/.test(file.text),
       ).map((file) => file.fromSrc)
 
       expect(offenders).toEqual([])

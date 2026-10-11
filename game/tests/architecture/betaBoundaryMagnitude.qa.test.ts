@@ -244,11 +244,11 @@ describe('F-TC7-ENH: equipmentSlots enhanceLevel bounded by MAX_SLOT_ENHANCE_LEV
     expect(shape.ok).toBe(false)
   })
 
-  it('control: enhanceLevel at the beta-producible bound validates', () => {
-    // F-SCOPE-2 + F-REALM-CEILING: reaching MAX_SLOT_ENHANCE_LEVEL pays
-    // thuong stones (realm tier >= 7) - unproducible now that
-    // beyond-ceiling realm claims reject at the boundary. At every
-    // beta realm (tier < 4) the producible ceiling is 30.
+  it('control: an in-cap enhanceLevel validates at a beta realm', () => {
+    // Post spirit-stone flatten (scopeAuthorityBlind F-B is canonical):
+    // ONE stone id pays every enhance level, so any level up to
+    // MAX_SLOT_ENHANCE_LEVEL is producible on any beta save - the
+    // validator's only bound is the authored cap itself.
     const { save } = validSave({}, {
       equipmentSlots: [
         { slot: 'weapon', enhanceLevel: 30, enhanceFailStreak: 0 },
@@ -257,7 +257,7 @@ describe('F-TC7-ENH: equipmentSlots enhanceLevel bounded by MAX_SLOT_ENHANCE_LEV
     expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok).toBe(true)
   })
 
-  it('an enhanceLevel past the beta-producible bound is rejected even at the realm ceiling', () => {
+  it('an in-cap enhanceLevel still validates at the realm ceiling (post-flatten)', () => {
     const { save } = validSave(
       {
         realmId: 'foundation_establishment',
@@ -282,7 +282,9 @@ describe('F-TC7-ENH: equipmentSlots enhanceLevel bounded by MAX_SLOT_ENHANCE_LEV
         ],
       } as Partial<GameSave>,
     )
-    expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok).toBe(false)
+    // Pre-flatten this was a reject (thuong-stone bound). Post-flatten
+    // the single stone pays level 31 too - only > 100 rejects.
+    expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok).toBe(true)
   })
 })
 

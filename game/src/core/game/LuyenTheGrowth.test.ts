@@ -186,7 +186,7 @@ describe('Luyen The growth chain', () => {
       gameManager.tickOps.update(0.1)
     }
 
-    // No auto-nuốt: 20 kills landed one essence each and every tick
+    // No auto-nuot: 20 kills landed one essence each and every tick
     // left the bag untouched - zero growth toasts, zero progress.
     expect(bagAmount(gameManager)).toBe(20)
     expect(tierProgress(player)).toBe(0)

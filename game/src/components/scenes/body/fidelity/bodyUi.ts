@@ -96,7 +96,7 @@ export interface BodyPaperModel {
   /** Whole big tier done (owner ruling 2026-10-10): the invest CTA
    *  hides once every unit of the chapter is complete. */
   chapterComplete?: boolean
-  /** Aggregated gains of every completed unit (Rèn Thể totals - owner
+  /** Aggregated gains of every completed unit (Ren The totals - owner
    *  ruling: the card shows total stats, not the viewed tier's alone). */
   totalRows: readonly { label: string; value: string }[]
 }

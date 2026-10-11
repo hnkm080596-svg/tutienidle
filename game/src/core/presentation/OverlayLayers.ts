@@ -27,6 +27,8 @@ export const OVERLAY_LAYERS = {
   announcement: 1850,
   /** DecomposeFxLayer - dissolve/decompose particle stream; above panels (the source cells live inside one), under blocking modals. */
   decomposeFx: 1860,
+  /** BodyPaperDetails pour motes - teleported particle stream; same band as decomposeFx (above panels, under modals). */
+  bodyPour: 1861,
   /** ToastContainer - transient notifications; above panels so in-panel action feedback stays visible. */
   toast: 1870,
   /** Blocking modals above panels (OfflineSummaryModal, LoreCodexModal, TutorialOverlay). */
@@ -46,6 +48,8 @@ export const OVERLAY_LAYERS = {
   saveGate: 4000,
   /** Modals spawned BY the save gate (its ConfirmModal) - above the gate so the confirm is clickable; still under the curtain. */
   saveGateModal: 4100,
+  /** Dev-only layout tuner hint - floats above every shipped surface (it must stay usable over the save gate during layout work); still under the curtain, which is TOPMOST by contract. */
+  devHint: 4500,
   /** PresentationTransitionOverlay curtain - TOPMOST, covers everything while closed. */
   curtain: 5000,
 } as const

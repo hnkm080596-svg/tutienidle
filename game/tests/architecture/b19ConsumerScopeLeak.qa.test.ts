@@ -91,8 +91,9 @@ describe('b19 consumer scope honesty', () => {
     await Promise.resolve()
 
     // jsdom has no layout width so grid cells never mount; the count
-    // label reflects the unfiltered entries list directly.
-    const count = mounted.container.querySelector('.bag-section__count')?.textContent?.trim() ?? ''
+    // label reflects the unfiltered entries list directly. The spirit-
+    // stone flatten renamed the chrome to bag-section__count-label.
+    const count = mounted.container.querySelector('.bag-section__count-label')?.textContent?.trim() ?? ''
     expect(count.startsWith('0')).toBe(true)
 
     mounted.unmount()

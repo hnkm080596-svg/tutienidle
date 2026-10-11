@@ -7,6 +7,7 @@ import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
 import SlotView from '@/components/common/SlotView.vue'
 import { GAME_MANAGER_KEY } from '@/composables/useGameState'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BODY_POUR_VISUAL, type BodyPaperModel, type BodyPaperPour, type BodyPaperUnit } from './bodyUi'
@@ -54,7 +55,7 @@ const navIcon = resolveAssetUrl(
   `/assets/ui/tien-hiep-2026-10/body/navigation-${NAV_ART[props.model.chapter] ?? 'ren'}-lit-v1.png`,
 )
 
-// ---- Pour animation (Rèn Thể manual invest, owner ruling 2026-10-09):
+// ---- Pour animation (Ren The manual invest, owner ruling 2026-10-09):
 // a stream of gold motes arcs from the material slot to the LEFT END of
 // the energy tube on one shared rAF timeline (~600-900ms). The material
 // count drains as each mote DEPARTS the slot; the bar fills as each
@@ -134,7 +135,7 @@ function startPour(spec: BodyPaperPour) {
   const to = tubeEl.getBoundingClientRect()
   const x0 = from.left + from.width / 2
   const y0 = from.top + from.height / 2
-  const x1 = to.left // điểm đầu của bar (left end)
+  const x1 = to.left // diem dau cua bar (left end)
   const y1 = to.top + to.height / 2
   const span = Math.hypot(x1 - x0, y1 - y0) || 1
 
@@ -343,7 +344,7 @@ variant="equipment" static :item="null"
   <!-- Motes live outside the card (owner ruling 2026-10-10): its
        clip-path swallowed the leftward part of the arc. Viewport coords. -->
   <Teleport to="body">
-    <div v-if="pourMotes.length" class="body-pour-layer">
+    <div v-if="pourMotes.length" class="body-pour-layer" :style="{ zIndex: OVERLAY_LAYERS.bodyPour }">
       <span
         v-for="mote in pourMotes"
         :key="mote.departAt"
@@ -390,7 +391,7 @@ variant="equipment" static :item="null"
 .body-extra__bar span { display:block; height:100%; background:linear-gradient(90deg,#466c4b,#c6a047); }
 .body-extra__count { font-size:11px; color:#b6a87e; }
 .body-extra.done { border-color:#7fae62; }
-/* Same Cường Hóa submit (owner ruling 2026-10-09): fixed-width
+/* Same Cuong Hoa submit (owner ruling 2026-10-09): fixed-width
    filter-art pill, the 1225/324 ratio grows the frame with the
    text - smaller size + centered per his live review. */
 .body-invest { width:220px; flex:none; font-size:18px; padding:0; margin:8px auto 0; }
@@ -398,6 +399,7 @@ variant="equipment" static :item="null"
 /* Pour stream motes (owner ruling 2026-10-09/10) - warm-gold glowing dots
    teleported to document.body so the card clip-path cannot clip the arc.
    The layer is fixed to the viewport and ignores pointer input. */
-.body-pour-layer { position:fixed; left:0; top:0; z-index:9999; pointer-events:none; }
+/* z-index via OVERLAY_LAYERS.bodyPour (inline style). */
+.body-pour-layer { position:fixed; left:0; top:0; pointer-events:none; }
 .body-pour-mote { position:absolute; left:0; top:0; border-radius:50%; background:#eec76c; box-shadow:0 0 5px 2px #eec76c, 0 0 12px 4px #eec76c55; will-change:transform,opacity; }
 </style>

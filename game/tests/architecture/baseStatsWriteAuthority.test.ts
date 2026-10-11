@@ -306,6 +306,11 @@ const ALLOWED: AllowedFile[] = [
     contract:
       'Transactional rollback channel: restorePlayerSnapshotInPlace writes back the byte-equivalent snapshot capturePlayerSnapshot took inside the same op. It only ever reproduces state the player already had - no grant channel, and callers get rollback for free without a raw Object.assign lane in their own file.',
   },
+  {
+    path: 'src/components/dev/DevToolsPanel.vue',
+    contract:
+      'Dev-only debug surface (components/dev/): the panel deliberately writes save fields (realm/state grant, rollback, field pokes) for manual QA - a sanctioned bypass, not a hidden economy channel.',
+  },
 ]
 
 /** Replace `v-pre` element subtrees in a .vue template with blanks

@@ -251,22 +251,30 @@ const BOSSES: BossKey[] = ['croc', 'serpent', 'whelp']
 //     element-side burst gap, not an investment gap. The croc floor
 //     (mortal_dong_10, scale 3.6) was NOT softened.
 // Tracked in docs/balance/2026-10-05-stat-wall-ladder.md.
+//
+// RE-PIN (2026-10-08, d649b29a) - owner ruling: Cuong Hoa scales
+// mainStat only, affixes keep rolled value. The matrix build is
+// gearUp(dia, 20) => scale 2.2 => affix contribution drops ~55%
+// (-72 element power, -198 maxHp, -38 attack), so 7 more cells flip
+// to defeat. Intended power delta; QA doc
+// docs/qa/2026-10-08-enhance-mainstat-only-quick.md. fire/croc is the
+// only in-scope cell now pinned as defeat - balance call for owner.
 const EXPECTED_OUTCOME: Record<string, 'victory' | 'defeat'> = {
-  'fire/croc': 'victory',
+  'fire/croc': 'defeat',
   'fire/serpent': 'victory',
   'fire/whelp': 'victory',
-  'water/croc': 'victory',
+  'water/croc': 'defeat',
   'water/serpent': 'victory',
   'water/whelp': 'victory',
   'wood/croc': 'defeat',
-  'wood/serpent': 'victory',
-  'wood/whelp': 'victory',
-  'metal/croc': 'victory',
+  'wood/serpent': 'defeat',
+  'wood/whelp': 'defeat',
+  'metal/croc': 'defeat',
   'metal/serpent': 'victory',
   'metal/whelp': 'victory',
-  'earth/croc': 'victory',
+  'earth/croc': 'defeat',
   'earth/serpent': 'victory',
-  'earth/whelp': 'victory',
+  'earth/whelp': 'defeat',
 }
 
 beforeEach(() => setActivePinia(createPinia()))

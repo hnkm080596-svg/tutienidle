@@ -192,7 +192,7 @@ function confirmDissolve() {
        slot grid, nut vang). Giu nguyen chuc nang thuc. -->
   <div ref="workspaceRef" class="equipment-forge-workspace dissolve-workspace">
     <!-- Header removed (owner ruling 2026-10-09): the active tab already
-         labels the card; a second "Hóa Luyện" line is redundant. -->
+         labels the card; a second "Hoa Luyen" line is redundant. -->
     <!-- Owner ruling 2026-10-09: the grade/quality selects are gone -
          the embedded bag's own dropdowns (Loai item + Sap Xep) are the
          only filters; the bulk actions moved down to the submit row. -->
