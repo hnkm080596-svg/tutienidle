@@ -136,7 +136,7 @@ export function applyPhysiqueAdvancement(
 // property of the authored chain plus the persisted coherence
 // invariant, not of this read. The realm half is a pure realm-tier
 // compare against each chapter's authored realm (one chapter per tier:
-// Rèn Thể = Phàm Nhân, Khai Mạch = Luyện Khí, Dẫn Linh = Trúc Cơ) -
+// Ren The = Pham Nhan, Khai Mach = Luyen Khi, Dan Linh = Truc Co) -
 // meridian against the LOWEST meridian page realm, zhou_tian against
 // its authored ZHOU_TIAN_REALM_ID. Fails closed on an empty catalog or
 // an unknown realm, same as the sibling gates. The invest dispatch

@@ -27,6 +27,10 @@ describe('AuthEntryScreen opening', () => {
     expect(container.querySelector('[data-testid="opening-settings-button"]')).not.toBeNull()
     container.querySelector<HTMLButtonElement>('[data-testid="opening-register-button"]')!.click()
     await nextTick()
+    // The drawer's content swap is an out-in transition keyed on the
+    // title - in jsdom it only settles after Vue's computed fallback
+    // (~220ms), never on nextTick.
+    await new Promise((resolve) => setTimeout(resolve, 300))
     await nextTick()
     expect(container.querySelector('[data-testid="login-opening"]')).not.toBeNull()
     expect(container.querySelector('#auth-input-id')).not.toBeNull()
@@ -37,7 +41,9 @@ describe('AuthEntryScreen opening', () => {
       i18n.global.t('onboarding.auth.tabs.register'),
     )
     expect(container.querySelector('#auth-input-password')?.getAttribute('autocomplete')).toBe('new-password')
-    container.querySelector<HTMLButtonElement>('[data-testid="entry-drawer-close"]')!.click()
+    // The current drawer design has no close button - the scrim is the
+    // dismiss affordance.
+    container.querySelector<HTMLElement>('.login-drawer-scrim')!.click()
     await nextTick()
     await new Promise((resolve) => setTimeout(resolve, 450))
     expect(container.querySelector('#auth-input-id')).toBeNull()

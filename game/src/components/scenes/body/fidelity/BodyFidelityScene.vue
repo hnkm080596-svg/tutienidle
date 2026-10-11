@@ -76,7 +76,7 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .body-panel { position:absolute; left:24%; top:12.5%; width:74%; height:75%; padding:14px 26px 12px; border:3px double #b28a43; background-color:#f2e4c8; background-position:center; background-size:cover; background-repeat:no-repeat; box-shadow:0 12px 15px #0009; overflow:hidden; }
 .body-heading { border-bottom:1px solid #b28a43; }
 /* h1 = same treatment as equipment/skill titles (owner ruling 2026-10-09:
-   "giống các panel trên") — 56px UTM OngDoGia dark-gold gradient inside
+   "giong cac panel tren") - 56px UTM OngDoGia dark-gold gradient inside
    the 58px box; overrides the shared tien-hiep-ui 72px rule. */
 .body-heading__top { height:58px; display:flex; align-items:center; gap:24px; } .body-heading__col{display:flex;flex-direction:column}.body-heading__top .body-heading__col img{width:200px;margin-top:0;height:auto;object-fit:contain;opacity:.75}
 :is(#app,body) .body-scene .body-heading h1 { margin:0; padding:0; width:370px; height:58px; font-family:'UTM OngDoGia','Ma Shan Zheng','ZCOOL XiaoWei',var(--font-display,Georgia,serif); font-size:56px; font-style:normal; font-weight:400; line-height:58px; text-align:center; color:transparent; background:linear-gradient(100deg,#241a0c 20%,#6b5224 40%,#fff6d8 50%,#6b5224 60%,#241a0c 80%); background-size:220% 100%; background-position:0% 0; -webkit-background-clip:text; background-clip:text; animation:none; }

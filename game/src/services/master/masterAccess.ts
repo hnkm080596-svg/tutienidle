@@ -9,7 +9,7 @@ import type { BetaFeatureName } from '@/core/betaFeatureFlags'
 const MASTER_LOGIN_IDS = new Set(['admin'])
 
 // Master gate (Minh 2026-10-10): one key string admits a session as
-// master without needing the 'admin' loginId - Minh's "cửa sau" for
+// master without needing the 'admin' loginId - Minh's "cua sau" for
 // test-edit privileges. The key value is NOT in the repo (owner ruling
 // 2026-10-10): it comes from VITE_MASTER_GATE_KEY (set it in .env.local,
 // which is gitignored); when unset the gate stays closed for everyone.

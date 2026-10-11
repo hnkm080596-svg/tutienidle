@@ -30,6 +30,16 @@ lockBetaFeaturesForTests()
 lockBetaWaysForTests()
 lockBetaTalentsForTests()
 
+// jsdom lacks ResizeObserver (present in every real browser); a no-op
+// stub keeps child-scene mounted hooks honest under the DOM env.
+if (!('ResizeObserver' in globalThis)) {
+  ;(globalThis as Record<string, unknown>).ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}
+
 afterEach(() => {
   document.body.innerHTML = ''
 })

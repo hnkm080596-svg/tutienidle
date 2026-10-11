@@ -93,12 +93,16 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // names the role. Recorded exceptions are the live-combat carriers
       // whose role row predates the beta rail contract
       // (TurnCombatSkillBar's 'an-ultimate-emblem' surface id /
-      // useTurnCombatManual's slotList) and the dormant companion panel
-      // vocabulary - a new beta surface may not join the list.
+      // useTurnCombatManual's slotList), the dormant companion panel
+      // vocabulary, and SkillSurface's 'design_ultimate_placeholder' -
+      // the sealed design-mode canvas seat (36aaabe4), locked and
+      // placeholder-labelled, a progression-tree seat not the rail role
+      // - a new beta surface may not join the list.
       const list = offenders(/\bultimate\b/, [
         'components/game/combat/hud/TurnCombatSkillBar.vue',
         'components/panels/CompanionPanel.vue',
         'composables/useTurnCombatManual.ts',
+        'components/scenes/skill/SkillSurface.vue',
       ])
 
       expect(list).toEqual([])

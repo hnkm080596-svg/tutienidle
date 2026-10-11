@@ -225,7 +225,7 @@ const washAffixCompareRows = computed<AffixCompareRow[]>(() => {
 })
 
 /** Fixed 5-slot card (owner ruling 2026-10-08): an item can roll at
- *  most 5 affix lines (Tiên). The card always renders all 5 slots,
+ *  most 5 affix lines (Tien). The card always renders all 5 slots,
  *  empty slots keep their hairline so the rows stay evenly spaced
  *  no matter how many lines the item actually has. */
 const washCompareSlots = computed<(AffixCompareRow | null)[]>(() => {
@@ -287,11 +287,11 @@ const washMaterials = computed(() => [
 </script>
 
 <template>
-  <!-- Bố cục chung với Cường Hóa (owner ruling 2026-10-08): Tẩy Luyện
-       cần area cho tối đa 5 dòng affix nên BỎ ô chiếu + 2 vòng tròn -
-       chỉ còn danh sách affix trước -> sau (mỗi dòng tên trái, giá trị
-       phải, hairline), hàng nguyên liệu riêng của Tẩy Luyện và nút hành
-       động ghim đáy card. Chọn đồ trực tiếp trên doll. -->
+  <!-- Bo cuc chung voi Cuong Hoa (owner ruling 2026-10-08): Tay Luyen
+       can area cho toi da 5 dong affix nen BO o chieu + 2 vong tron -
+       chi con danh sach affix truoc -> sau (moi dong ten trai, gia tri
+       phai, hairline), hang nguyen lieu rieng cua Tay Luyen va nut hanh
+       dong ghim day card. Chon do truc tiep tren doll. -->
   <div class="equipment-forge-workspace forge-wash">
     <h2>{{ t('panels.equipmentHall.tabs.wash') }}</h2>
 
@@ -328,7 +328,7 @@ const washMaterials = computed(() => [
       </div>
       <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.noAffixes') }}</p>
 
-      <!-- Pinned bottom block (same as Cường Hóa): materials ride above
+      <!-- Pinned bottom block (same as Cuong Hoa): materials ride above
            the actions band, both anchored to the card's bottom edge via
            .equipment-workspace (positioned ancestor outside this flex
            column) - no scrollbar ever appears. -->
@@ -462,7 +462,7 @@ const washMaterials = computed(() => [
   font-size: 13px;
   margin: auto;
 }
-/* Materials row: identical metrics to Cường Hóa (icon 65px, label
+/* Materials row: identical metrics to Cuong Hoa (icon 65px, label
    column ~150px, owned/amount on one baseline). */
 .equipment-forge-materials {
   display: flex;
@@ -514,9 +514,9 @@ const washMaterials = computed(() => [
   gap: 18px;
   flex: none;
 }
-/* Submit pill = Cường Hóa size (owner ruling 2026-10-09: 300px).
-   While a roll is pending the row carries 3 pills (Tẩy Luyện / Giữ /
-   Bỏ) - they shrink to fit the ~580px card. */
+/* Submit pill = Cuong Hoa size (owner ruling 2026-10-09: 300px).
+   While a roll is pending the row carries 3 pills (Tay Luyen / Giu /
+   Bo) - they shrink to fit the ~580px card. */
 .equipment-forge-actions > button {
   width: 300px;
   min-width: 0;

@@ -157,7 +157,7 @@ function playOrContinue() {
   else startGuest()
 }
 
-// Master gate (Minh 2026-10-10): the one-key "cửa sau". A correct key
+// Master gate (Minh 2026-10-10): the one-key "cua sau". A correct key
 // unlocks every test privilege for this tab, then rides the stored
 // session straight into the game (the saved admin session resumes - no
 // credential re-entry). A wrong key is a quiet inline denial, no lockout.

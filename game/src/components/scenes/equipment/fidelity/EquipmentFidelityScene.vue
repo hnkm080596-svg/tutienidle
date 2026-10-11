@@ -7,6 +7,7 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import EquipmentPaperItem from './EquipmentPaperItem.vue'
+import EquipmentPaperTooltip from './EquipmentPaperTooltip.vue'
 import type { EquipmentDisplay, EquipmentSocket } from './equipmentUi'
 
 const props = withDefaults(defineProps<{
@@ -26,6 +27,7 @@ const rootRef = ref<HTMLElement | null>(null)
 useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 
 const mode = shallowRef('bag')
+const inspecting = shallowRef<EquipmentDisplay | null>(null)
 const selected = shallowRef<EquipmentDisplay | null>(null)
 const forgeItem = computed(() => selected.value ?? props.sockets.find(socket => socket.item)?.item ?? props.items[0])
 const modes = ['enhance', 'wash', 'refine', 'dissolve', 'decompose']
@@ -49,7 +51,7 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 </script>
 
 <template>
-  <section ref="rootRef" class="equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')">
+  <section ref="rootRef" class="equipment-scene" :aria-label="t('equipment.title')" @click.self="emit('back')" @keydown.esc="inspecting = null">
     <div class="equipment-sheet" :style="{ backgroundImage: `url('${paper}')` }" aria-hidden="true" />
     <header class="equipment-heading"><div class="equipment-heading__title"><h1 class="equipment-title">{{ t('equipment.title') }}</h1><img class="equipment-divider" :src="divider" alt=""></div></header>
     <!-- Scene-level tab strip per the Codex preview: under the heading,
@@ -67,7 +69,7 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
          through the #doll slot. -->
     <slot name="doll">
       <div class="character-stage" data-character-socket><img v-if="characterImage" class="character-image" :src="characterImage" alt=""></div>
-      <div class="equipment-sockets" :style="{ '--equipment-circle-frame': `url('${circleFrame}')` }"><div v-for="socket in sockets" :key="socket.id" class="equipment-socket"><EquipmentPaperItem :item="socket.item" :label="socket.label" @click="selected=socket.item??null" /><span>{{ socket.label }}</span></div></div>
+      <div class="equipment-sockets" :style="{ '--equipment-circle-frame': `url('${circleFrame}')` }"><div v-for="socket in sockets" :key="socket.id" class="equipment-socket"><EquipmentPaperItem :item="socket.item" :label="socket.label" @click="selected=socket.item??null" @inspect="inspecting = $event" @leave="inspecting = null" /><span>{{ socket.label }}</span></div></div>
     </slot>
 
     <!-- Stats card (owner ruling 2026-10-08): no title - the card only
@@ -79,11 +81,12 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
          carries the fixture bag/forge toggle; production mounts the real
          workspace (detail + beta op tabs + canonical BagGrid). -->
     <slot name="workspace">
-      <section v-if="mode==='bag'" class="equipment-bag" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }" :aria-label="t('equipment.bag')"><header><h2>{{ t('equipment.bag') }}</h2><button @click="mode='enhance'">{{t('equipment.forgeTitle')}}</button></header><div class="bag-tabs"><span class="active">{{ t('equipment.bagTabs.all') }}</span><span>{{ t('equipment.bagTabs.weapons') }}</span><span>{{ t('equipment.bagTabs.armor') }}</span><span>{{ t('equipment.bagTabs.accessories') }}</span></div><div class="bag-grid" ><EquipmentPaperItem v-for="item in items" :key="item.id" :item="item" :label="item.slot" @click="selected=item;mode='enhance'" /><div v-for="n in emptyBagCells" :key="`empty-${n}`" class="empty-bag-cell" aria-hidden="true" /></div><footer><button @click="emit('action', 'sort')">{{ t('equipment.sort') }}</button><button @click="emit('action', 'filter')">{{ t('equipment.filter') }}</button></footer></section>
-      <section v-if="mode!=='bag'" class="equipment-forge" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }"><header><h2>{{t('equipment.forgeTitle')}}</h2><button @click="mode='bag'">{{t('equipment.bag')}}</button></header><nav><button v-for="id in modes" :key="id" :aria-pressed="mode===id" @click="mode=id">{{t(`panels.equipmentHall.tabs.${id}`)}}</button></nav><ForgeBatchBag v-if="mode==='dissolve'||mode==='decompose'" :mode="mode" :items="items" @submit="emit('action',$event.mode+':'+$event.itemIds.join(',')+':submit')"/><ForgeFidelityWorkspace v-else-if="forgeItem" compact :mode="mode" :item="forgeItem" @action="emit('action',mode+':'+forgeItem.id+':'+$event)"/></section>
+      <section v-if="mode==='bag'" class="equipment-bag" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }" :aria-label="t('equipment.bag')"><header><h2>{{ t('equipment.bag') }}</h2><button @click="mode='enhance'">{{t('equipment.forgeTitle')}}</button></header><div class="bag-tabs"><span class="active">{{ t('equipment.bagTabs.all') }}</span><span>{{ t('equipment.bagTabs.weapons') }}</span><span>{{ t('equipment.bagTabs.armor') }}</span><span>{{ t('equipment.bagTabs.accessories') }}</span></div><div class="bag-grid" @scroll="inspecting = null"><EquipmentPaperItem v-for="item in items" :key="item.id" :item="item" :label="item.slot" @click="selected=item;mode='enhance'" @inspect="inspecting = $event" @leave="inspecting = null" /><div v-for="n in emptyBagCells" :key="`empty-${n}`" class="empty-bag-cell" aria-hidden="true" /></div><footer><button @click="emit('action', 'sort')">{{ t('equipment.sort') }}</button><button @click="emit('action', 'filter')">{{ t('equipment.filter') }}</button></footer></section>
+      <section v-if="mode!=='bag'" class="equipment-forge" :style="{ '--equipment-card-art': `url('${darkCard}')`, '--equipment-tab-brush': `url('${tabBrush}')` }"><header><h2>{{t('equipment.forgeTitle')}}</h2><button @click="mode='bag';inspecting=null">{{t('equipment.bag')}}</button></header><nav><button v-for="id in modes" :key="id" :aria-pressed="mode===id" @click="mode=id;inspecting=null">{{t(`panels.equipmentHall.tabs.${id}`)}}</button></nav><ForgeBatchBag v-if="mode==='dissolve'||mode==='decompose'" :mode="mode" :items="items" @submit="emit('action',$event.mode+':'+$event.itemIds.join(',')+':submit')"/><ForgeFidelityWorkspace v-else-if="forgeItem" compact :mode="mode" :item="forgeItem" @action="emit('action',mode+':'+forgeItem.id+':'+$event)"/></section>
     </slot>
 
 
+    <EquipmentPaperTooltip v-if="inspecting" :item="inspecting" />
     <p v-if="preview" class="equipment-preview">{{ t('equipment.previewStamp') }}</p><p class="equipment-notice" role="status">{{ notice }}</p>
   </section>
 </template>

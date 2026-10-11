@@ -107,7 +107,7 @@ describe('EnhanceTab — Cường Hóa', () => {
     const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"] .slot-view')
 
     expect(single).not.toBeNull()
-    // Ô chiếu dùng cùng frame 'socket' với doll.
+    // O chieu dung cung frame 'socket' voi doll.
     expect(single!.classList.contains('slot-view--socket')).toBe(true)
 
     mounted.unmount()
@@ -148,7 +148,7 @@ describe('EnhanceTab — Cường Hóa', () => {
       manager.equipmentBag.add(equipmentInstanceWithItemId('ghost-item', 'nonexistent_item', true))
     })
 
-    // Khong throw khi render - ô chiếu weapon van hien.
+    // Khong throw khi render - o chieu weapon van hien.
     const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"] .slot-view')
 
     expect(single).not.toBeNull()
@@ -162,8 +162,8 @@ describe('EnhanceTab — Cường Hóa', () => {
     // neu Task 4/5 pha reactivity, test nay do ngay.
     const mounted = mountTab()
 
-    // Chọn mũ qua hall selection (doll click) truoc khi co do - ô
-    // chiếu resolve SANG slot helmet trong.
+    // Chon mu qua hall selection (doll click) truoc khi co do - o
+    // chieu resolve SANG slot helmet trong.
     mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
@@ -175,14 +175,14 @@ describe('EnhanceTab — Cường Hóa', () => {
     mounted.manager.equipmentBag.get('new-helmet')!.slot = 'helmet'
     mounted.manager.equipmentBag.get('new-helmet')!.itemId = 'base_quan'
 
-    // Doll click vao mu moi -> ô chiếu doi sang slot helmet co do.
+    // Doll click vao mu moi -> o chieu doi sang slot helmet co do.
     mounted.selectedInstanceId.value = 'new-helmet'
     mounted.version.value += 1
     await nextTick()
 
-    // Owner ruling 2026-10-08: ô chiếu hiện slot vừa chọn qua doll -
+    // Owner ruling 2026-10-08: o chieu hien slot vua chon qua doll -
     // art + aria-label tren SlotView (label text da bo khi chuyen sang
-    // per-slot art). Slot phải resolve sang 'helmet'.
+    // per-slot art). Slot phai resolve sang 'helmet'.
     const single = mounted.container.querySelector('.enhance-slot-single[aria-label="Chọn slot cường hóa"]')
 
     expect(single).not.toBeNull()

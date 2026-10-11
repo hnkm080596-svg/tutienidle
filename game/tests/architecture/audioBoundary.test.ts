@@ -626,6 +626,10 @@ describe('audio boundary', () => {
         'presentation/assets/AssetBundleManager.ts',
         'components/common/GameButton.vue',
         'components/common/primitives/Chip.vue',
+        // OrnateButton is the same pinia-free leaf primitive as
+        // GameButton/Chip - it mounts in fidelity/preview hosts with no
+        // active store, so the click cue goes direct.
+        'components/common/art/OrnateButton.vue',
         'App.vue',
       ])
       const offenders: string[] = []

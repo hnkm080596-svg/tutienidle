@@ -140,7 +140,10 @@ describe('authored technique gate set (M-QI-06)', () => {
     player.spellPath.element = 'fire'
     player.techniqueProgress = { rank: 0, grade: 1 }
     player.nodeLevels['hoa_linh_ngo'] = 1
-    player.purchasedNodeIds.push('hoa_linh_ngo')
+    // hoa_diem_chuan's authored prereq is the cast-chain end hoa_phe_diem
+    // (Minh ruling 2026-10-07), not the element root - own it first.
+    player.nodeLevels['hoa_phe_diem'] = 4
+    player.purchasedNodeIds.push('hoa_linh_ngo', 'hoa_phe_diem')
 
     expect(purchaseNode(player, trunk)).toBe(true)
 

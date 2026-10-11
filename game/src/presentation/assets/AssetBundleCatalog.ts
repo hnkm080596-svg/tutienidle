@@ -559,8 +559,10 @@ const UI_SHARED_CHROME_URLS = [
   '/assets/ui/elements/banner-metal.png',
   '/assets/ui/elements/banner-water.png',
   '/assets/ui/elements/banner-primordial.png',
-  // theme.css divider strip + shared nine-slice papers.
+  // theme.css divider strip + shared nine-slice papers + the title
+  // divider the fidelity scenes share.
   '/assets/ui/divider-glow.png',
+  '/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png',
   '/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.png',
   '/assets/ui/huyen-kim/scene/character-v2/paper-nine-slice.png',
 ] as const
@@ -587,6 +589,22 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/tien-hiep-2026-10/controls/resource-coin-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/resource-crystal-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/resource-essence-v1.png',
+  // SlotView v2 slot/socket art + equipmentSlotArt socket icons (recent
+  // port diffs; raw-path constants inside the components).
+  '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2-ornament-mask.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2-ornament-mask.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-slot-weapon-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-slot-helmet-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-slot-armor-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-slot-boots-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-slot-ring-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-slot-necklace-v1.png',
+  // Body figure art (BreakthroughFxLayer seated silhouette +
+  // BodyPaperFigure nhuc gold overlay).
+  '/assets/ui/tien-hiep-2026-10/body/silhouette-seated-v1.png',
+  '/assets/ui/tien-hiep-2026-10/body/nhuc-gold-overlay-aligned-v2.png',
   // Ornate dialog chrome (whole-component slices from ornate-ui-sheet).
   '/assets/ui/tien-hiep-2026-10/dialog/dialog-frame-ornate-v1.png',
   '/assets/ui/tien-hiep-2026-10/dialog/title-banner-crest-v1.png',
@@ -632,6 +650,8 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/huyen-kim/scene/exploration-v2/terrain-three-realms-v1.png',
   '/assets/ui/huyen-kim/scene/technique-v2/temporary-manual-v1.png',
   '/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png',
+  // AlchemyFidelityScene cauldron - raw-path literal inside the scene.
+  '/assets/ui/huyen-kim/alchemy/alchemy-cauldron-v2.png',
   '/assets/ui/huyen-kim/ornaments/divider-ornament@2x.png',
   '/assets/ui/huyen-kim/scene/character-v2/figure.png',
   // CharacterFidelityFigure hand flame - Fire 9 sheet played on the

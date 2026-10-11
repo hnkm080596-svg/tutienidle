@@ -28,7 +28,7 @@ const { t } = useI18n()
    drawer is open, so switching tabs swaps drawer content in place instead of
    hitting the scrim (close -> reopen). */
 /* gap 17px -> 2px is part of the owner ruling (same 2026-10-10 message:
-   "cho các nút gần nhau h" - pull the menu buttons closer together); the
+   "cho cac nut gan nhau h" - pull the menu buttons closer together); the
    box-shadow on these buttons was dropped under the same ruling (no
    transparent frame around the pill art). */
 .login-opening__actions { position: absolute; left: 566px; top: 295px; width: 310px; display: grid; gap: 2px; z-index: 11; }

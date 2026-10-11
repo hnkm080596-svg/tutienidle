@@ -257,6 +257,11 @@ export interface BetaSkillTreeNode {
   effectiveMaxLevel: number
   /** Insight cost of the next level; null when the effective cap is reached. */
   nextLevelCost: number | null
+  /** Authored price of the next level; null only at the authored maxLevel.
+      nextLevelCost reports null once a level gate shrinks effectiveMaxLevel,
+      while the authored price still exists - surfaces that display the
+      next-level price read this field. */
+  authoredNextLevelCost: number | null
   affordable: boolean
   /** True when the owned node can level right now (canUpgradeNode). */
   canUpgrade: boolean
@@ -560,6 +565,8 @@ function treeNodeFor(
     maxLevel: getNodeMaxLevel(node),
     effectiveMaxLevel,
     nextLevelCost,
+    authoredNextLevelCost:
+      level >= getNodeMaxLevel(node) ? null : getNextLevelCost(node, level),
     affordable: nextLevelCost !== null && player.skillInsight >= nextLevelCost,
     canUpgrade: canUpgradeNode(player, node),
     prerequisites: [

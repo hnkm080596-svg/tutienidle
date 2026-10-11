@@ -205,7 +205,7 @@ describe('RefineTab — Tinh Luyện', () => {
     mounted.selectedInstanceId.value = 'equipped'
     await nextTick()
 
-    // Số dư Tinh Hoa in trong hàng nguyên liệu (owned/amount).
+    // So du Tinh Hoa in trong hang nguyen lieu (owned/amount).
     expect(mounted.container.querySelector('.equipment-forge-materials')?.textContent).toContain('37')
 
     mounted.unmount()

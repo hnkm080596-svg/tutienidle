@@ -45,6 +45,13 @@ describe('PhapTu basic lane — reimagined contract', () => {
     // node, so every chain resolves to the root.
     const laneIds = new Set(BASIC_LANE_IDS.map((n) => n.id))
 
+    // Fire An-leg exception (Minh ruling 2026-10-07): the two fire legs
+    // anchor on the END of the Ly Hoa cast chain (hoa_phe_diem), not the
+    // element root. The cast chain itself climbs hoa_diem_uy -> ... ->
+    // hoa_phe_diem off hoa_linh_ngo, so the chain still resolves to the
+    // root.
+    const CAST_CHAIN_ANCHORS = new Set(['hoa_phe_diem'])
+
     for (const node of BASIC_LANE_IDS) {
       expect(node.maxLevel ?? 1, node.id).toBeGreaterThanOrEqual(1)
 
@@ -53,7 +60,8 @@ describe('PhapTu basic lane — reimagined contract', () => {
       expect(target, node.id).toBeDefined()
       const onRoot = target!.endsWith('linh_ngo')
       const onLanePeer = laneIds.has(target!)
-      expect(onRoot || onLanePeer, `${node.id} -> ${target}`).toBe(true)
+      const onChainAnchor = CAST_CHAIN_ANCHORS.has(target!)
+      expect(onRoot || onLanePeer || onChainAnchor, `${node.id} -> ${target}`).toBe(true)
     }
   })
 

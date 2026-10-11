@@ -334,7 +334,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
 
       await selectChapter(view, 'meridian')
 
-      // Realm gate (2026-10-10): the chapter needs Luyện Khí - the tab
+      // Realm gate (2026-10-10): the chapter needs Luyen Khi - the tab
       // itself is sealed so the click is refused and the card stays on
       // the refinement chapter (no meridian content renders at all).
       const seals = chapterButtons(view)
@@ -532,7 +532,7 @@ describe('BodySurface (scene 08 fidelity)', () => {
       await selectChapter(view, 'zhou_tian')
 
       // Realm gate (2026-10-10): sequential gate satisfied but the
-      // chapter needs Trúc Cơ - the tab is sealed, the click is
+      // chapter needs Truc Co - the tab is sealed, the click is
       // refused, and the card stays on the refinement chapter.
       const seals = chapterButtons(view)
       expect(seals[UI_CHAPTER_INDEX['zhou_tian']!]!.classList.contains('is-locked')).toBe(true)

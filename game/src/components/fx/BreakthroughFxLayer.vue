@@ -191,7 +191,7 @@ function startRun(run: BreakthroughFxRun): void {
     const dimOut = elapsed <= FADE_OUT_MS ? 1 : Math.max(0, 1 - (elapsed - FADE_OUT_MS) / (END_MS - FADE_OUT_MS))
     /* Fully opaque: at 0.95 the realm card's meditation art still
        bled through and read as a second dark figure hanging off the
-       top edge of the screen ('giật lên giật xuống' report). */
+       top edge of the screen ('giat len giat xuong' report). */
     dimOpacity.value = dimIn * dimOut
 
     // Silhouette: manifests, trembles harder as the inhale builds; at the

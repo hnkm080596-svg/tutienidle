@@ -164,7 +164,9 @@ const MOUNT_GATES: MountGate[] = [
 
 const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: string }> = [
   {
-    file: 'components/scenes/realm/RealmAscentNode.vue',
+    // Path moved under legacy/ with the realm surface port - same
+    // verdict: the node renders props only.
+    file: 'components/scenes/realm/legacy/RealmAscentNode.vue',
     tokens: ['coming-soon'],
     reason:
       'the node renders props only; betaRealmLadderNodes() (betaScopeSurface) flattens comingSoon to false for every emitted node, so the comingSoon branch is unreachable - BetaJourney pins the guarantee',
