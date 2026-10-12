@@ -198,9 +198,9 @@ function onNodeClick(id: string, locked: boolean) {
 /* 3 stars hugging the circle bottom - the middle star dips lower so
    the trio arcs around the rim; lit gold once the ai was
    perfect-cleared (perfectClearStageIds / turn limit), dim otherwise. */
-.node-stars { position:absolute; left:50%; bottom:-6px; transform:translateX(-50%); z-index:2; font-style:normal; font-size:13px; color:#4a4235; text-shadow:0 1px 2px #0008; pointer-events:none; }
+.node-stars { position:absolute; left:50%; bottom:-6px; transform:translateX(-50%); z-index:2; font-style:normal; font-size:13px; white-space:nowrap; color:#4a4235; text-shadow:0 1px 2px #0008; pointer-events:none; }
 .node-stars i { font-style:normal; }
-.node-stars i.mid { display:inline-block; transform:translateY(4px); }
+.node-stars i.mid { vertical-align:-4px; }
 .node-stars.lit { color:#f4c94e; text-shadow:0 0 4px #f4c94e88, 0 1px 2px #0008; }
 @media (prefers-reduced-motion:reduce) { .routes line.lit { animation:none; } }
 </style>
