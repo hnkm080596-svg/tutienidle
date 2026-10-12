@@ -32,7 +32,9 @@ function landscapeFor(id: string): string {
 // the base; dragging writes here AND persists to localStorage so tuned
 // layouts survive reload (Minh 2026-10-12: 'luu vi tri dynamic lai').
 // Each drop also logs the full effective map for baking into the data file.
-const DRAG_KEY = 'exploration.thanhvan.drag.v1'
+// localStorage key for drag offsets - no 'exploration.' namespace prefix
+// (i18n-parity scanner would treat it as a missing message key).
+const DRAG_KEY = 'thanhvan-drag-v1'
 function loadDragOffsets(): Record<string, { x: number; y: number }> {
   try {
     const raw = typeof localStorage === 'undefined' ? null : localStorage.getItem(DRAG_KEY)

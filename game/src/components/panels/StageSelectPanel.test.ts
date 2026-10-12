@@ -87,7 +87,7 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
 
     // Frontier pick (2026-10-11): the surface anchors on the first
     // uncleared ai - dong_10 here. Minh 2026-10-12: the inspector head
-    // identifies the ai by its global 1-30 index ('Ải 1-10').
+    // identifies the ai by its global 1-30 index (Ai 1-10 label).
     expect(mounted.container.textContent).toContain('Ải 1-10')
 
     // Spec v3 D9 (2026-09-11): bossEnemyId only exists on floor 10 -
