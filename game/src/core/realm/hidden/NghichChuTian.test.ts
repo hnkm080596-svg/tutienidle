@@ -26,6 +26,12 @@ import {
 } from './NghichChuTian'
 import { HIDDEN_MECHANIC_FINISHED_READERS } from './HiddenLineage'
 import { HIDDEN_MECHANIC_STATE_VALIDATORS } from './HiddenPerfection'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 const REALM_ID = 'foundation_establishment'
 

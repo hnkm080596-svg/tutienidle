@@ -9,6 +9,12 @@ import {
 import { CHARACTER_RESKIN_MAP } from '@/game/support/CharacterArt'
 import { resolvePlayerEntityKey } from '@/presentation/art/CombatPresentationCatalogue'
 import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 // Player visual profile catalog (plan sec4.1 + sec9 unit tests):
 // - chon dung profile theo realmId/cultivationPath;

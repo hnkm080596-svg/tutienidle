@@ -15,6 +15,12 @@ import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
 import { PROFESSION_GRADE_BY_REALM } from '../core/profession/ProfessionGrade'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { commitSpellInitiationForTest } from '../core/game/__fixtures__/betaWaysUnlock'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 // Hidden Perfection Lineage (2026-09-23 design, master spec sec.3/sec.5) -
 // the lineage latch and the Dai Dao path, integration qua GameManager +

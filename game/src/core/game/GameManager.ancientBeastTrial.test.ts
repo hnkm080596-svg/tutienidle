@@ -25,6 +25,12 @@ import {
   ANCIENT_BEAST_ENEMY_ID,
   ANCIENT_BEAST_SURVIVAL_ROUNDS,
 } from '../realm/hidden/AncientBeastTrial'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 function makeManager(): GameManager {
   const manager = new GameManager()

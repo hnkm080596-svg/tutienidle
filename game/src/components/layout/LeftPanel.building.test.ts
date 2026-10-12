@@ -10,6 +10,12 @@ import { usePlayerStore } from '@/stores/player'
 import type { Building } from '@/core/building/Building'
 import type { Material } from '@/core/material/Material'
 import { i18n } from '@/i18n'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 // i18n (task 2.2 lo 3) - component render qua t() nen assertion qua
 // i18n.global.t(key) thay vi raw vi string (pattern HomeResourceStrip.test).

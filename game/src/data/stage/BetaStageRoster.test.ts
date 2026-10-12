@@ -22,6 +22,12 @@ import { EventBus } from '../../core/events/EventBus'
 import { TemplateRegistry } from '../../core/game/TemplateRegistry'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { Enemy } from '../../core/enemy/Enemy'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 /** The final 6-identity beta roster - one family per chapter. */
 const BETA_ROSTER = {

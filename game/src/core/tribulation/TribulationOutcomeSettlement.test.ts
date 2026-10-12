@@ -25,6 +25,12 @@ import {
 import { completeHiddenBody } from '../realm/hidden/HiddenLineage'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { commitSpellInitiationForTest } from '../game/__fixtures__/betaWaysUnlock'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 /** Drive a started tribulation to its real terminal via the director's
  * own tick/answer contract. */

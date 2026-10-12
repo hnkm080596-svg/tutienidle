@@ -8,10 +8,13 @@
 // canonical {spell_pathway} set. Vitest isolates modules per file, so
 // the unlock can never leak into a sibling suite or into production.
 //
-// Phase-6 extends the same contract to BETA_FEATURES: the historical
-// suite exercises hidden/companion/daily machinery the lock now gates,
-// so the feature table also starts fully admitted and lock suites call
-// lockBetaFeaturesForTests().
+// Phase-6 extended the same contract to BETA_FEATURES - but that table
+// is no longer uniformly closed: production ships a MIXED set
+// (equipmentWash/equipmentRefine/equipmentOreDecompose are admitted).
+// Starting every suite all-open hid that drift (GP-02/NEW-02), so the
+// default is now the authored production table itself - mirrored, never
+// hardcoded - while suites needing all-false or all-true pin them via
+// lockBetaFeaturesForTests()/unlockAllFeaturesForTests().
 //
 // The same contract applies to BETA_TALENT_IDS: pre-lock effect-table
 // suites resolve ids outside the beta roster (the Great Dao reward
@@ -23,11 +26,11 @@
 // also starts fully admitted and lock suites call
 // lockBetaElementsForTests().
 import { unlockAllWaysForTests } from '../src/core/game/__fixtures__/betaWaysUnlock'
-import { unlockAllFeaturesForTests } from '../src/core/game/__fixtures__/betaFeaturesUnlock'
+import { mirrorProductionFeaturesForTests } from '../src/core/game/__fixtures__/betaFeaturesUnlock'
 import { unlockAllTalentsForTests } from '../src/core/game/__fixtures__/betaTalentsUnlock'
 import { unlockAllElementsForTests } from '../src/core/game/__fixtures__/betaElementsUnlock'
 
 unlockAllWaysForTests()
-unlockAllFeaturesForTests()
+mirrorProductionFeaturesForTests()
 unlockAllTalentsForTests()
 unlockAllElementsForTests()

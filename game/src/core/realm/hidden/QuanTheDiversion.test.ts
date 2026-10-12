@@ -20,6 +20,12 @@ import {
   QUAN_THE_REQUIRED_CULTIVATION,
 } from './QuanTheDiversion'
 import { MERIDIANS } from '../../../data/realm/Meridians'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 function qiPlayerWithMortalBody(): PlayerData {
   const player = createDefaultPlayer()

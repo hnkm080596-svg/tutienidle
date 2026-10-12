@@ -9,6 +9,12 @@ import {
 } from './StatCap'
 import { createDefaultHiddenPerfection } from '../realm/hidden/HiddenPerfection'
 import type { HiddenPerfectionState } from '../realm/hidden/HiddenPerfection'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 function capWith(realmId: string, completedBodies: number): number {
   const hiddenPerfection: HiddenPerfectionState = {

@@ -21,6 +21,12 @@ import { completeHiddenBody } from '../realm/hidden/HiddenLineage'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import { MAIN_STAT_KEYS } from '../stats/StatTypes'
 import { commitSpellInitiationForTest } from '../game/__fixtures__/betaWaysUnlock'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 function driveToTerminal(gameManager: GameManager) {
   let guard = 0

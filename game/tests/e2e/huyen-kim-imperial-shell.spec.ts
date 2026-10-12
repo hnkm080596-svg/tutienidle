@@ -191,10 +191,11 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     // The fidelity surface mounts outside the imperial scroll - the old
     // chrome must not double-render.
     await expect(page.getByTestId('function-overlay-panel')).toHaveCount(0)
-    // Rail = Trang Bi gear grid + 5 op seals; the 3 scope-hidden ops
-    // render as disabled shells (all seals still match the selector).
-    const tabs = scene.locator('.equipment-workspace nav button')
-    await expect(tabs).toHaveCount(6)
+    // The scene-level .equipment-tabs rail (outside .equipment-workspace)
+    // mounts Trang Bi + the authored ops - all admitted in beta now
+    // (wash/refine/oreDecompose flags open; Phan Giai lives on Kho Vat).
+    const tabs = scene.locator('.equipment-tabs button')
+    await expect(tabs).toHaveCount(5)
     await expect(tabs.nth(0)).toHaveText(/Trang Bị|Gear/)
     // Default workspace is the Trang Bi unequipped-gear grid.
     await expect(scene.locator('.bag-section__grid')).toBeVisible({ timeout: 10_000 })
