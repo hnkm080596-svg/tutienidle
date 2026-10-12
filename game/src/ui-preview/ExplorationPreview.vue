@@ -28,7 +28,7 @@ const chapters = computed<ExplorationChapter[]>(() => {
 const model = computed<ExplorationPaperModel>(() => ({
   title: t('zone'),
   subtitle: 'Hành vạn dặm sơn hà · Ngộ thiên địa kỳ duyên',
-  terrain: resolveAssetUrl('/assets/ui/huyen-kim/scene/exploration-v2/terrain-three-realms-v1.png'),
+  terrain: resolveAssetUrl('/assets/ui/huyen-kim/scene/exploration-v2/terrain-thanh-van-v1.png'),
   zones: [{ id: 'zone-thanh-van', label: t('zone'), unlocked: true }, { id: 'zone-huyen-phong', label: 'Huyền Phong', unlocked: false }],
   zone: zoneId.value,
   chapters: chapters.value,

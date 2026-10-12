@@ -38,7 +38,7 @@ import type {
 import { stagePosition } from './fidelity/stagePositions'
 import { disabledReasonLabel } from './disabledReasonLabel'
 
-const TERRAIN_SRC = resolveAssetUrl('/assets/ui/huyen-kim/scene/exploration-v2/terrain-three-realms-v1.png')
+const TERRAIN_SRC = resolveAssetUrl('/assets/ui/huyen-kim/scene/exploration-v2/terrain-thanh-van-v1.png')
 const MODES: readonly BattleRunMode[] = ['manual', 'repeat', 'progress', 'perfect_farm']
 const MODE_LABEL_KEYS: Record<BattleRunMode, string> = {
   manual: 'panels.stageSelect.modes.manual',

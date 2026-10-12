@@ -647,7 +647,7 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/huyen-kim/scene/victory-v2/victory-title-v1.png',
   '/assets/ui/huyen-kim/scene/defeat-v2/defeat-title-v1.png',
   '/assets/ui/huyen-kim/scene/realm-v2/ascension-path-six-landings-v2.png',
-  '/assets/ui/huyen-kim/scene/exploration-v2/terrain-three-realms-v1.png',
+  '/assets/ui/huyen-kim/scene/exploration-v2/terrain-thanh-van-v1.png',
   '/assets/ui/huyen-kim/scene/technique-v2/temporary-manual-v1.png',
   '/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png',
   // AlchemyFidelityScene cauldron - raw-path literal inside the scene.

@@ -65,14 +65,17 @@ onMounted(() => {
   const wrap = wrapRef.value
   if (!wrap) return
   const measure = () => {
-    const s = Math.min(wrap.clientWidth / MAP_DESIGN_W, wrap.clientHeight / MAP_DESIGN_H)
+    // Minh 2026-10-12: fit by HEIGHT so the space (and the decorative art
+    // inside it) matches the detail card's height; width centers and the
+    // overflow crops symmetrically inside the frame.
+    const s = wrap.clientHeight / MAP_DESIGN_H
     // A zero-size container (hidden mount, collapsed parent, jsdom) would
     // otherwise collapse the whole vista via scale(0) - fall back to 1.
     scale.value = s > 0 ? s : 1
     // Centering lives INSIDE the transform: translate runs in
     // unscaled px of the wrapper, so the offset is arithmetic -
     // immune to transform-origin / translate-% quirks.
-    offsetX.value = Math.max(0, (wrap.clientWidth - MAP_DESIGN_W * s) / 2)
+    offsetX.value = (wrap.clientWidth - MAP_DESIGN_W * s) / 2
     offsetY.value = Math.max(0, (wrap.clientHeight - MAP_DESIGN_H * s) / 2)
   }
   measure()
@@ -152,12 +155,14 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
   </div>
 </template>
 <style scoped>
-.exploration-map { position:relative; min-height:0; border:3px double #b28b46; overflow:hidden; background:#1d1f1c; }
+/* Minh 2026-10-12: no dark fill - the art sits on the panel's parchment
+   backdrop as a decorative image. */
+.exploration-map { position:relative; min-height:0; border:3px double #b28b46; overflow:hidden; }
 /* Centering computed in JS (offsetX/offsetY) and baked into the
    transform itself - no CSS translate/percent/origin interplay, so
    the space can never sit half-clipped under any outer rule. */
 .map-space { position:absolute; left:0; top:0; transform-origin:top left; }
-.terrain { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; }
+.terrain { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
 .map-name { position:absolute; left:8px; top:8px; z-index:2; margin:0; padding:5px 12px; background:#f1dfbbbe; color:#3a2d18; font-size:20px; font-weight:600; }
 .routes { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .routes line { stroke:#81662e80; stroke-width:3; stroke-dasharray:5 5; }
