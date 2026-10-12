@@ -874,6 +874,13 @@
         "mainline": "Chính Tuyến",
         "once": "Nhiệm Vụ"
       },
+      "previewTabs": {
+        "daily": "Ngày",
+        "weekly": "Tuần",
+        "achievement": "Thành Tựu",
+        "expedition": "Thám Hiểm"
+      },
+      "lockedHint": "Chưa mở",
       "anyEnemy": "Bất kỳ quái",
       "rewards": {
         "spiritStone": "Linh Thạch +{amount}",

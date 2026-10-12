@@ -874,6 +874,13 @@
         "mainline": "Mainline",
         "once": "Quests"
       },
+      "previewTabs": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "achievement": "Achievement",
+        "expedition": "Expedition"
+      },
+      "lockedHint": "Locked",
       "anyEnemy": "Any enemy",
       "rewards": {
         "spiritStone": "Spirit Stones +{amount}",
