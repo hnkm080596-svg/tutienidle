@@ -76,10 +76,10 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
    button art like the Trang Bi tabs; open list options keep the same
    art (secondary idle / primary armed). */
 .mode-dropdown { position:relative; width:78%; margin-inline:auto; }
-.mode-toggle { position:relative; isolation:isolate; display:flex; justify-content:space-between; align-items:center; width:100%; padding:5px 12px 7px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; }
+.mode-toggle { position:relative; isolation:isolate; display:flex; justify-content:center; align-items:center; width:100%; padding:5px 12px 7px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; }
 .mode-toggle::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
 .mode-toggle:hover::before { filter:brightness(1.1); }
-.mode-caret { font-size:11px; opacity:.8; }
+.mode-caret { position:absolute; right:12px; font-size:11px; opacity:.8; }
 .mode-list { position:absolute; bottom:calc(100% + 2px); left:0; right:0; margin:0; padding:4px; list-style:none; display:grid; gap:4px; background:transparent; border:0; z-index:6; }
 /* Each option keeps the same 9-slice button art (Minh: 'giu art') -
    secondary idle, primary on the armed one. */
@@ -95,8 +95,9 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
 /* Start row anchors to the card's bottom edge (Minh: the button's box
    kisses the detail card's lower rim) - the rewards body above it
    absorbs the leftover height. */
-.start-row { display:flex; flex-direction:column; gap:6px; margin-top:auto; order:10; transform:translateY(23px); }
-.build-link { position:relative; isolation:isolate; align-self:center; padding:4px 14px 6px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; white-space:nowrap; }
+.start-row { display:flex; flex-direction:column; gap:6px; margin-top:auto; order:10; transform:translateY(13px); }
+/* Chinh Build matches the mode toggle's footprint (Minh: same size). */
+.build-link { position:relative; isolation:isolate; align-self:center; width:78%; padding:5px 12px 7px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); text-align:center; cursor:pointer; white-space:nowrap; }
 .build-link::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
 .build-link:hover::before { filter:brightness(1.1); }
 /* The global '.exploration-details .challenge' rule stamps dark text
