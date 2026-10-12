@@ -46,7 +46,7 @@ function refFreshness(ref, productRoot) {
   return cur === m[1] ? { fresh: true } : { fresh: false, reason: `content drift on ${ref.path}` };
 }
 
-export function routeLessons({ applicabilityKeys = [] }, lessons, { productRoot } = {}) {
+export function routeLessons({ applicabilityKeys = [] }, lessons, { productRoot, activePolicy } = {}) {
   // Deterministic routing record over lessons' guidance facets.
   // Matches on semantic keys (domain paths, operation/invariant ids); an
   // exclusion match wins over applicability. QUALIFIED facets apply; stale
@@ -54,14 +54,55 @@ export function routeLessons({ applicabilityKeys = [] }, lessons, { productRoot 
   // hypothesis only - never auto-applied).
   const keys = new Set(applicabilityKeys);
   const out = [];
+  // History is append-only; the active immutable policy selects governing
+  // revisions. Later unpublished revisions cannot retire a binding lesson.
+  const published = new Map();
+  for (const entry of activePolicy?.payload?.lessons ?? []) {
+    if (!entry.id || !Number.isSafeInteger(entry.version) || entry.version < 1 || published.has(entry.id)) {
+      throw new Error("invalid or duplicate active-policy lesson revision");
+    }
+    published.set(entry.id, entry.version);
+  }
+  const history = new Map();
+  const qualified = new Map();
   for (const lesson of lessons) {
+    const ref = `${lesson.id}@${lesson.version}`;
+    if (lesson.guidance?.status === "QUALIFIED") {
+      // Publication metadata may change; qualified guidance content may not
+      // change without a new revision. Candidate-to-qualified events remain legal.
+      const { policyRef, ...content } = lesson.guidance;
+      const hash = objectHash(content);
+      if (qualified.has(ref) && qualified.get(ref) !== hash) {
+        throw new Error(`conflicting qualified guidance for ${ref}`);
+      }
+      qualified.set(ref, hash);
+    }
+    history.set(ref, lesson);
+  }
+  for (const [id, version] of published) {
+    const selected = history.get(`${id}@${version}`);
+    if (!selected?.guidance || selected.guidance.status !== "QUALIFIED") {
+      out.push({ lessonRef: `${id}@${version}`, decision: "STALE", reason: "active-policy guidance missing or not qualified" });
+    }
+  }
+  for (const lesson of history.values()) {
     const g = lesson.guidance;
     if (!g) continue;
     const ref = `${lesson.id}@${lesson.version}`;
+    const selectedVersion = published.get(lesson.id);
+    if (selectedVersion !== undefined && lesson.version < selectedVersion) {
+      out.push({ lessonRef: ref, decision: "NOT_APPLICABLE", reason: `superseded by active-policy ${lesson.id}@${selectedVersion}` });
+      continue;
+    }
+    if (selectedVersion === lesson.version && g.status !== "QUALIFIED") continue;
     const excluded = g.exclusions.some((x) => keys.has(x));
     if (excluded) { out.push({ lessonRef: ref, decision: "NOT_APPLICABLE", reason: "exclusion matched" }); continue; }
     const matched = g.applicability.some((x) => keys.has(x));
     if (!matched) { out.push({ lessonRef: ref, decision: "NOT_APPLICABLE", reason: "no semantic trigger matched" }); continue; }
+    if (g.status === "QUALIFIED" && activePolicy && lesson.version !== selectedVersion) {
+      out.push({ lessonRef: ref, decision: "NEEDS_DISCOVERY", reason: "qualified revision is not published in the active policy" });
+      continue;
+    }
     if (g.status === "QUALIFIED" && productRoot) {
       const stale = g.sourceDependencies.map((r) => refFreshness(r, productRoot)).filter((r) => !r.fresh);
       if (stale.length) { out.push({ lessonRef: ref, decision: "STALE", reason: stale.map((s) => s.reason).join("; ") }); continue; }
