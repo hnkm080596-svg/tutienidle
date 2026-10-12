@@ -124,8 +124,7 @@ function siteStateWith(cycles: ProductionCycle[]) {
     siteId: SITE_ID,
     level: 1,
     autoRestart: true,
-    activeWorkerSlots: 1,
-    workerCycles: cycles,
+    productionCycles: cycles,
   }
 }
 
@@ -372,7 +371,7 @@ describe('r34 AUT - D: restoreStates drop/park arms under crafted pairs', () => 
 
     manager.productionSystem.restoreStates([siteStateWith([equal])], currentMs)
 
-    expect(manager.productionSystem.getState(SITE_ID)!.workerCycles!).toHaveLength(0)
+    expect(manager.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
   })
 
   it('a NaN pair parks verbatim, freezes the whole site via pending.some, and refuses the next write - but is unreachable through the admission gate', () => {
@@ -389,9 +388,9 @@ describe('r34 AUT - D: restoreStates drop/park arms under crafted pairs', () => 
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
     materials.forEach((m) => registry.register(m))
-    manager.productionSystem.tickWorkers(currentMs + 10_000_000, bag, registry, 'mortal', 1)
+    manager.productionSystem.tick(currentMs + 10_000_000, bag, registry, 'mortal')
 
-    const parked = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const parked = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(parked.map((c) => c.cycleId).sort()).toEqual(['due', 'nan'])
 
     // The poison persists onto the wire and trips the write gate: NaN
@@ -416,8 +415,7 @@ describe('r34 AUT - D: restoreStates drop/park arms under crafted pairs', () => 
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          assignedWorkers: 1,
-          workerCycles: [
+          productionCycles: [
             {
               cycleId: 'nan',
               siteId: SITE_ID,
@@ -457,25 +455,23 @@ describe('r34 AUT - D: restoreStates drop/park arms under crafted pairs', () => 
     expect(reader.alchemySystem.getJobs()).toHaveLength(0)
   })
 
-  it('dropping cycles does not corrupt lane accounting: capacity-derived slots re-seed on the next tick', () => {
+  it('dropping an invalid cycle lets the independent site clock start on the next tick', () => {
     const manager = registeredManager()
     const inverted = workerCycle('bad', currentMs - 30_000, currentMs - 60_000)
 
     manager.productionSystem.restoreStates([siteStateWith([inverted])], currentMs)
-    expect(manager.productionSystem.getState(SITE_ID)!.workerCycles!).toHaveLength(0)
+    expect(manager.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
 
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
     materials.forEach((m) => registry.register(m))
-    manager.productionSystem.tickWorkers(currentMs, bag, registry, 'mortal', 1)
+    manager.productionSystem.tick(currentMs, bag, registry, 'mortal')
 
-    // activeWorkerSlots is reallocated from capacity (not lane count); the
-    // freed lane re-seeds a fresh in-domain pair - no extra capacity, no
-    // permanent hole.
+    // The active site starts one fresh in-domain cycle after the invalid
+    // carried cycle is dropped.
     const seeded = manager.productionSystem.getState(SITE_ID)!
-    expect(seeded.activeWorkerSlots).toBe(1)
-    expect(seeded.workerCycles).toHaveLength(1)
-    const minted = seeded.workerCycles![0]!
+    expect(seeded.productionCycles).toHaveLength(1)
+    const minted = seeded.productionCycles![0]!
     expect(Number.isFinite(minted.startedAtMs)).toBe(true)
     expect(minted.completesAtMs).toBeGreaterThan(minted.startedAtMs)
     expect(minted.completesAtMs).toBeLessThan(2 ** 52)

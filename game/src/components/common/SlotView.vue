@@ -203,10 +203,10 @@ const enhanceAuraColor = computed(() => (enhanceAura.value ? `var(--rank-color-$
 // basic gray ("mau thap nhat neu khong co do"). Rendered by the
 // .slot-view__quality-tint layer masked to the art itself.
 const ART_FRAME_VARIANTS = new Set(['equipment', 'bag', 'socket'])
-// 'guong' = the 6 worn equipment sockets only (owner ruling
-// 2026-10-08): the ~100 bag cells render variant='equipment' (bag
-// grid shares the art) but get NO sheen - the rule is the WORN slot,
-// not the art.
+// The sheen ('guong' = mirror) is for the 6 worn equipment sockets
+// only (owner ruling 2026-10-08): the ~100 bag cells render
+// variant='equipment' (bag grid shares the art) but get NO sheen -
+// the rule is the WORN slot, not the art.
 const MIRROR_GLINT_VARIANTS = new Set(['socket'])
 const qualityTintColor = computed(() => {
   if (!ART_FRAME_VARIANTS.has(props.variant ?? 'item')) return undefined
@@ -218,13 +218,13 @@ const qualityTintColor = computed(() => {
   // Rank 1 (Cuu Pham, basic): steel gray, scoped to this tint only -
   // --rank-color-1 is shared by --grade-hoang / --affix-tier-1 /
   // talent-tier-pham so the token itself must not change (owner ruling
-  // 2026-10-08: 'doi di cho ro mau').
+  // 2026-10-08: swap in a clearer colour).
   if (rank <= 1) return '#7f8792'
   return `var(--rank-color-${rank})`
 })
 
 // Chat meteors (owner ruling 2026-10-08): the approved demo cell is
-// the groove 'sao bang' - twin bright streaks running the art's inner
+// the groove 'sao bang' (shooting star) - twin bright streaks running the art's inner
 // groove. Chat 1 (Hoang, lowest) gets NO streak at all - the effect
 // starts at Huyen (rank 2); tiers differ by COLOR only
 // (--slot-rarity-color already maps rank -> --grade-* ramp positions).

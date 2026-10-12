@@ -47,11 +47,9 @@ import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 //       into a fresh 'game' stage and silently disarms every later
 //       pauseSimulation (heartbeat pause, update admission, refuse arm).
 //   (W) window-input asymmetry: r30-AUT-1 tightened
-//       DecomposeSystem.settleOffline to offlineSinceMs in [0, 2^52), but
 //       the sibling production window input advanceWorkerLanes
 //       .emptyLaneStartMs still admits the full |x| < 2^52 domain - a
 //       crafted-negative window start (reachable: validator admits
-//       lastSavedAt = -1e12) zero-settles decompose while minting the
 //       deep-past backlog through worker lanes. No new ceiling vs the
 //       admitted 0-seed class (probed), so Low not Medium.
 //   (H) headroom guard boundary: the new
@@ -292,11 +290,11 @@ describe('auditR31 INT probe - offline window asymmetry between siblings (W)', (
     })
   }
 
-  it('W1 a negative emptyLaneStartMs now zero-advances too (fixed)', () => {
+  it('W1 a negative emptyLaneStartMs zero-advances', () => {
     const NEG = -1_000_000_000_000
 
-    // Production applies the [0, 2^52) domain to the window start - the
-    // crafted negative value denies outright.
+    // Production sibling now applies the same [0, 2^52) domain to the
+    // window start - the identical crafted value denies here too.
     const lanes = lanesFor(NEG)
     expect(lanes.completed).toHaveLength(0)
     expect(lanes.consumedBudgetMs).toBe(0)
@@ -309,7 +307,7 @@ describe('auditR31 INT probe - offline window asymmetry between siblings (W)', (
     expect(zeroSeed.completed.length).toBe(10)
   })
 
-  it('W1b a future window start seeds but pays 0', () => {
+  it('W1b a future window start seeds a parked production lane', () => {
     const FUTURE = currentMs + 60_000
     const lanes = lanesFor(FUTURE)
     // Admit + park: the seeded lane exists but is not due yet.

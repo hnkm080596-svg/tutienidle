@@ -74,8 +74,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -228,7 +227,7 @@ describe('fixpoint r19 INT - r18 batch integration probes', () => {
     vi.spyOn(Date, 'now').mockReturnValue(T0 + 500_000)
     const saved = makeCycle(LAM, T0 + 150_000, T0 + 250_000) // future saved deadline
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, workerCycles: [saved] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [saved] })],
     ])
     const deps = createDeps(states)
 
@@ -240,28 +239,21 @@ describe('fixpoint r19 INT - r18 batch integration probes', () => {
       REALM,
       T0 + 300_000,
       {
-        workerCapacity: 3,
         offlineSinceMs: T0,
-        workerAssignments: new Map([[LAM, 3]]),
       },
     )
 
-    const cycles = states.get(LAM)!.workerCycles!
-    // 1 saved lane + 2 seeds -> 3 pending heads. The saved head (due
-    // T0+250k <= settle-now) pays once, its successor continues the
-    // SAVED chain: head at T0+350k keeps the client-epoch stamp
-    // unshifted (the documented saved-chain residual - one owed grant
-    // settles at the next tick). The two seed-rooted heads (seeded at
-    // T0, dues at +100k..+400k) owe 100k remaining at settle -> field
-    // T0+600k.
+    const cycles = states.get(LAM)!.productionCycles!
+    // The saved cycle owns this site's single clock. Its successor keeps
+    // the saved-chain client stamp; no parallel seed is created.
     const completes = cycles.map((c) => c.completesAtMs).sort((a, b) => a - b)
-    expect(completes).toEqual([T0 + 350_000, T0 + 600_000, T0 + 600_000])
+    expect(completes).toEqual([T0 + 350_000])
   })
 
   // ------------------------------------------------------------------
   // D) Oversubscribed lanes under the jump arm: dying lanes count 1
   //    forfeit each (the head only); the surviving lane counts its whole
-  //    skipped tail. Also pins workerCycles convergence to slots.
+  //    skipped tail. Also pins productionCycles convergence to slots.
   // ------------------------------------------------------------------
   it('oversubscribed saved lanes: dead lanes forfeit 1 each, survivor counts skipped tail', () => {
     const dues = [T0 + 50_000, T0 + 60_000, T0 + 70_000] // all past-due vs now
@@ -270,7 +262,7 @@ describe('fixpoint r19 INT - r18 batch integration probes', () => {
         LAM,
         makeState(LAM, {
           autoRestart: true,
-          workerCycles: dues.map((d) => makeCycle(LAM, d - CYCLE_MS, d)),
+          productionCycles: dues.map((d) => makeCycle(LAM, d - CYCLE_MS, d)),
         }),
       ],
     ])
@@ -285,7 +277,7 @@ describe('fixpoint r19 INT - r18 batch integration probes', () => {
       siteLevel: 1,
       baseSeconds: CYCLE_BASE_SECONDS_BY_REALM[REALM]!,
       cycleMs: CYCLE_MS,
-      pending: states.get(LAM)!.workerCycles!,
+      pending: states.get(LAM)!.productionCycles!,
       slots: 1,
       nowMs: T0 + 400_000,
       emptyLaneStartMs: T0,

@@ -252,6 +252,7 @@ describe('auditR33 INT probe - eager resumeCombat vs unproven boot admission (R)
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -469,6 +470,7 @@ describe('auditR33 INT probe - drop-vs-park-vs-clamp policy trio (C2)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -513,9 +515,7 @@ describe('auditR33 INT probe - drop-vs-park-vs-clamp policy trio (C2)', () => {
           siteId: 'thanh_van_lam',
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          assignedWorkers: 1,
-          workerCycles: [
+          productionCycles: [
             honestCycle({ cycleId: 'cyc_inv', startedAtMs: currentMs, completesAtMs: currentMs - 1 }),
             honestCycle({ cycleId: 'cyc_ok' }),
           ],
@@ -525,8 +525,8 @@ describe('auditR33 INT probe - drop-vs-park-vs-clamp policy trio (C2)', () => {
     )
 
     const parked = gameManager.productionSystem.getState('thanh_van_lam')
-    expect(parked?.workerCycles).toHaveLength(1)
-    expect(parked?.workerCycles?.[0]?.cycleId).toBe('cyc_ok')
+    expect(parked?.productionCycles).toHaveLength(1)
+    expect(parked?.productionCycles?.[0]?.cycleId).toBe('cyc_ok')
 
     // The honest due lane advances normally - no site-wide freeze.
     const advanced = advanceWorkerLanes({
@@ -535,7 +535,7 @@ describe('auditR33 INT probe - drop-vs-park-vs-clamp policy trio (C2)', () => {
       siteLevel: 1,
       baseSeconds: 100,
       cycleMs: computeCycleSeconds(100, 1) * 1000,
-      pending: parked!.workerCycles!,
+      pending: parked!.productionCycles!,
       slots: 2,
       nowMs: currentMs,
       emptyLaneStartMs: currentMs,
@@ -553,7 +553,7 @@ describe('auditR33 INT probe - drop-vs-park-vs-clamp policy trio (C2)', () => {
     const save = buildGameSave(createDefaultPlayer(), gameManager)
     const wireCycles = (save.productionSites as ProductionSiteState[]).find(
       (site) => site.siteId === 'thanh_van_lam',
-    )!.workerCycles!
+    )!.productionCycles!
     expect(wireCycles.some((c) => c.cycleId === 'cyc_inv')).toBe(false)
     const shape = validateGameSaveShape(save)
     expect(
@@ -590,6 +590,7 @@ describe('auditR33 INT probe - expiresCeiling keys + consumer coherence (C3)', (
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -710,9 +711,7 @@ describe('auditR33 INT probe - seeded re-stamp ordering (C4)', () => {
     siteId: 'thanh_van_lam',
     level: 1,
     autoRestart: true,
-    activeWorkerSlots: 1,
-    assignedWorkers: 1,
-    workerCycles: [],
+    productionCycles: [],
   }
 
   function offlineDeps(states: Map<string, ProductionSiteState>) {
@@ -731,21 +730,20 @@ describe('auditR33 INT probe - seeded re-stamp ordering (C4)', () => {
 
   it('honest-skew shift: seeded head moves +delta as a PAIR, stays validator-admissible', () => {
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs + 50_000)
-    const state: ProductionSiteState = { ...SITE, workerCycles: [] }
+    vi.spyOn(performance, 'now').mockReturnValue(0)
+    const state: ProductionSiteState = { ...SITE, productionCycles: [] }
     const states = new Map([[state.siteId, state]])
     const deps = offlineDeps(states)
 
     const cycleMs = computeCycleSeconds(100, 1) * 1000 // 100_000
     settleProductionOffline(deps, new MaterialBag(), new MaterialRegistry(), REALM, currentMs, {
-      workerCapacity: 1,
       offlineSinceMs: currentMs - 5 * cycleMs, // 5 cycles in the window
-      workerAssignments: new Map([[state.siteId, 1]]),
       rng: () => 0.5,
     })
 
     // Window paid 5 cycles; the seeded pending head sits one span ahead.
-    expect(state.workerCycles).toHaveLength(1)
-    const head = state.workerCycles![0]!
+    expect(state.productionCycles).toHaveLength(1)
+    const head = state.productionCycles![0]!
     const expectedStart = currentMs - 5 * cycleMs + 5 * cycleMs // last due
     // Shifted by fieldEpochShift = Date.now() - nowMs = 50_000.
     expect(head.startedAtMs).toBe(expectedStart + 50_000)
@@ -759,20 +757,19 @@ describe('auditR33 INT probe - seeded re-stamp ordering (C4)', () => {
   it('crafted-far clock parks the head VERBATIM (deny) - ordering inside the pair never breaks', () => {
     const farNow = 2 ** 52 - 10_000
     vi.spyOn(Date, 'now').mockImplementation(() => farNow)
-    const state: ProductionSiteState = { ...SITE, workerCycles: [] }
+    vi.spyOn(performance, 'now').mockReturnValue(0)
+    const state: ProductionSiteState = { ...SITE, productionCycles: [] }
     const states = new Map([[state.siteId, state]])
     const deps = offlineDeps(states)
 
     const cycleMs = computeCycleSeconds(100, 1) * 1000
     settleProductionOffline(deps, new MaterialBag(), new MaterialRegistry(), REALM, currentMs, {
-      workerCapacity: 1,
       offlineSinceMs: currentMs - 5 * cycleMs,
-      workerAssignments: new Map([[state.siteId, 1]]),
       rng: () => 0.5,
     })
 
-    expect(state.workerCycles).toHaveLength(1)
-    const head = state.workerCycles![0]!
+    expect(state.productionCycles).toHaveLength(1)
+    const head = state.productionCycles![0]!
     const expectedStart = currentMs - 5 * cycleMs + 5 * cycleMs
     // completesAtMs + shift >= 2^52 -> the pair keeps settle-epoch
     // stamps verbatim (no partial pair, no out-of-order mint).

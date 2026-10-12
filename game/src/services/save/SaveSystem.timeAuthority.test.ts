@@ -8,6 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { usePlayerStore } from '../../stores/player'
 import { primeMortalCreationPick } from './GameSave.fixture'
@@ -26,7 +27,9 @@ import type { RestoreTimeAuthority } from './saveTypes'
 const NOW = 1_725_160_000_000
 
 function registeredManager(): GameManager {
-  const manager = new GameManager()
+  const manager = new GameManager({
+    time: new TimeAuthority({ wallNow: () => NOW, monotonicNow: () => 0 }),
+  })
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
@@ -43,7 +46,7 @@ function makeSave(overrides: { lastSavedAt?: number; autoFarmStage?: { stageId: 
     player.autoFarmStage = overrides.autoFarmStage
   }
   const save = buildGameSave(player, manager)
-  // buildGameSave stamps lastSavedAt = Date.now(); the test controls the
+  // buildGameSave stamps the shared authority; the test controls the
   // payload's persisted timestamp directly.
   save.player.lastSavedAt = overrides.lastSavedAt ?? NOW
   return save
@@ -319,7 +322,7 @@ describe('RestoreTimeAuthority — field-epoch stamps (r16)', () => {
 
   it('offline production settle writes spawned lane deadlines in the field epoch (r16-INT-03 pin)', () => {
     const states = new Map<string, ProductionSiteState>([
-      ['s1', { siteId: 's1', level: 1, autoRestart: true, activeWorkerSlots: 0, workerCycles: [] }],
+      ['s1', { siteId: 's1', level: 1, autoRestart: true, productionCycles: [] }],
     ])
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
@@ -336,14 +339,14 @@ describe('RestoreTimeAuthority — field-epoch stamps (r16)', () => {
       registry,
       'mortal',
       until,
-      { workerCapacity: 1, offlineSinceMs: until - 50_000 },
+      { offlineSinceMs: until - 50_000 },
     )
 
     // Mortal L1 cycle is ~100s, so the lane seeded at until-50s stays
     // pending 50s past the window end. Its settle-epoch stamp already
     // reads past-due against Date.now() - the online tick would have
     // paid it ~10d early. The field-epoch re-stamp keeps it ahead.
-    const pending = states.get('s1')!.workerCycles!
+    const pending = states.get('s1')!.productionCycles!
     expect(pending.length).toBe(1)
     expect(pending[0]!.completesAtMs).toBeGreaterThan(NOW)
   })

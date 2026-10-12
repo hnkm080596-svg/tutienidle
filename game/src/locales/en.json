@@ -164,7 +164,8 @@
         "essenceName": "Essence",
         "ownedPrefix": "owned",
         "emptySlotPlaceholder": "— empty (can still be enhanced) —",
-        "itemCount": "{count} item(s)"
+        "itemCount": "{count} item(s)",
+        "renSharedHint": "Forge uses are shared between Wash and Refine — once spent, this item's sub-lines are frozen permanently."
       },
       "status": {
         "notRolled": "not rolled",
@@ -928,6 +929,11 @@
         "weekly": "Refreshes each week",
         "achievement": "Cultivation milestones",
         "exploration": "Explore the lands"
+      },
+      "rewardShort": {
+        "spiritStone": "Spirit Stones",
+        "cultivation": "Cultivation",
+        "skillInsight": "Skill Insight"
       }
     },
     "common": {
@@ -939,6 +945,24 @@
       "aria": "Feature navigation",
       "body": "Dao Body",
       "techniqueLocked": "Technique unlocks at Qi Refining"
+    },
+    "decompose": {
+      "labels": {
+        "ore": "Ore",
+        "amount": "Amount"
+      },
+      "action": "Refine ore",
+      "preview": "Produces {amount} essence.",
+      "success": "Produced {amount} essence.",
+      "empty": "No ore is available to refine.",
+      "hint": {
+        "scope_hidden": "This feature is unavailable.",
+        "invalid_amount": "Choose a positive whole-number amount.",
+        "invalid_ore": "Choose a valid ore.",
+        "insufficient_ore": "You do not have enough of that ore.",
+        "insufficient_amount": "Choose more ore to produce at least one essence.",
+        "output_capacity": "Make room for the essence before refining."
+      }
     },
     "scripture": {
       "empty": "No lore fragments found yet.",
@@ -1568,9 +1592,19 @@
   },
   "autoFarm": {
     "running": "Auto-farming Perfect Clear: {stage}",
-    "stop": "Stop"
+    "stop": "Stop",
+    "perfectStage": "Perfect clear",
+    "visualReplay": "Expedition progress replay",
+    "cycle": "Cycle {seconds}s",
+    "nextCycle": "Next cycle: {seconds}s"
   },
   "alchemy": {
+    "activeKiln": "Brewing",
+    "waitingJob": "Waiting",
+    "waitingCount": "Waiting {count}/{capacity}",
+    "cancelFailed": "This job cannot be cancelled now. Cancelling a waiting job requires room for its reserved materials.",
+    "cancelRefund": "Cancel waiting: all materials are returned.",
+    "cancelActive": "Cancel brewing: materials are not returned.",
     "spiritStones": "Spirit Stones",
     "startBrewing": "Brew Pill",
     "currentCauldron": "Current cauldron",
@@ -2019,6 +2053,66 @@
     "body": "Hung Giao Sung has fallen — every piece of beta content has been conquered: Mortal, Qi Refining, Foundation Establishment. Thank you for playing.",
     "continue": "Continue Cultivating"
   },
+  "architecture": {
+    "title": "Sect Architecture",
+    "subtitle": "Sect buildings, spirit veins, and resources",
+    "back": "Back",
+    "close": "Close",
+    "resources": "Available resources",
+    "buildingCount": "Built: {built}/{total}",
+    "resourceCategories": {
+      "spirit_stone": "Spirit Stone",
+      "wood": "Wood",
+      "ore": "Ore",
+      "herb": "Herbs"
+    },
+    "level": "Level {level}/{max}",
+    "current": "Current",
+    "next": "After upgrade",
+    "costs": "Upgrade cost",
+    "costAmount": "{owned}/{required}",
+    "unknownMaterial": "Material",
+    "minuteShort": "min",
+    "effects": {
+      "spiritRate": "Spirit Stone condensation",
+      "spiritStorage": "Spirit Stone storage",
+      "equipmentDiscount": "Equipment Hall cost reduction",
+      "alchemySpeed": "Alchemy speed",
+      "queueSlots": "Queue capacity"
+    },
+    "units": {
+      "percent": "%",
+      "count": "",
+      "multiplier": "times",
+      "perMinute": "/min"
+    },
+    "details": "Details",
+    "upgrade": "Upgrade",
+    "upgradeSite": "Upgrade source",
+    "productionTitle": "Three raw-material sources · Costs use Wood and Spirit Stone",
+    "siteSpeed": "Current ×{current} · After upgrade ×{next}",
+    "maximum": "Maximum level reached",
+    "artOnly": "Building art is preserved for display; this building has no upgrade function.",
+    "artOnlyBrief": "Display only · No upgrades",
+    "noEffect": "No separate effect.",
+    "reasons": {
+      "maxLevel": "This building has reached its maximum level.",
+      "realmGate": "Your current realm is too low to upgrade.",
+      "missingMaterials": "You do not have enough materials to upgrade.",
+      "missingBuilding": "This building could not be found.",
+      "artOnly": "This building is display-only.",
+      "changed": "Upgrade conditions changed. Check them again before upgrading.",
+      "buildingSuccess": "Building upgraded.",
+      "siteSuccess": "Production source upgraded."
+    },
+    "productionReasons": {
+      "max_level": "This production source has reached its maximum level.",
+      "no_cost": "No upgrade cost is defined for the next level.",
+      "realm_gate": "Your current realm is too low to upgrade this source.",
+      "missing_wood": "You do not have enough Wood to upgrade this source.",
+      "missing_spirit_stone": "You do not have enough Spirit Stone to upgrade this source."
+    }
+  },
   "dongFu": {
     "aria": "Grotto-Heaven",
     "toggleWheel": "Show / hide the command wheel",
@@ -2043,12 +2137,13 @@
       "exploration": "Son Ha Map",
       "quest": "Quests",
       "production": "Production",
+      "vendor": "Treasury Pavilion",
       "settings": "Settings",
       "feedback": "Help",
       "artifact": "Artifact",
       "companion": "Companion",
       "guild": "Guild",
-      "sect": "Sect",
+      "sect": "Architecture",
       "portal": "Secret Realm"
     }
   },
@@ -2340,6 +2435,8 @@
     "resources": "Resources",
     "amount": "Amount",
     "add": "+ Add",
+    "spawnEquipment": "Spawn random equipment",
+    "spawnMaterial": "Spawn random material",
     "cultivation": "Cultivation",
     "duyenPhan": "Duyen Phan",
     "skillInsight": "Skill Insight",
@@ -2356,8 +2453,40 @@
     "exported": "Exported",
     "realm": "Realm",
     "applyRealm": "Apply realm",
-    "respecTree": "Reset tree",
-    "spawnEquipment": "+ Random equipment",
-    "spawnMaterial": "+ Random material"
+    "respecTree": "Reset tree"
+  },
+  "pp": {
+    "title": "Production",
+    "hall": "Prospecting Hall",
+    "level": "Level {level} / 9",
+    "intro": "Extract raw materials, assign workers to sources, accumulate yield.",
+    "vein": "Spirit Vein",
+    "stored": "{amount} / 1270 Low-grade Spirit Stones",
+    "rate": "+2.1 / min",
+    "harvest": "Harvest",
+    "names": [
+      "Azure Cloud Forest",
+      "Black Iron Quarry",
+      "Azure Cloud Grotto"
+    ],
+    "types": [
+      "Forest",
+      "Quarry",
+      "Grotto"
+    ],
+    "descriptions": [
+      "An azure spiritwood forest - supplies timber for construction and fuel for the alchemy furnace.",
+      "A deep ore vein in the mountains - yields spirit ore and artifact-crafting materials.",
+      "A grotto of rare wonders - where spirit herbs and medicinal ingredients are raised."
+    ],
+    "next": "Next speed x1.15",
+    "working": "Producing - 1m 37s left",
+    "paused": "Paused",
+    "auto": "Auto-repeat",
+    "costWood": "Ten-Year Spiritwood: 0 / 5",
+    "costStone": "Low-grade Spirit Stone: 0 / 800",
+    "upgrade": "Upgrade Source",
+    "upgradeNotice": "Preview source upgrade - no resources spent.",
+    "harvestNotice": "Preview harvest - no resources granted."
   }
 }

@@ -518,6 +518,20 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
       boot.startInitializing()
 
+      if (remoteAuthoritative) {
+        const serverNowMs = loaded.status === 'ok'
+          ? loaded.serverAuthority?.serverNowMs
+          : (loaded.status === 'empty' || loaded.status === 'uninitialized') && 'serverNowMs' in loaded
+            ? loaded.serverNowMs
+            : undefined
+        if (serverNowMs === undefined || !gameManager.time.anchorFromServer(serverNowMs)) {
+          authority.markFailed('SERVER_ERROR')
+          onError(i18n.global.t('panels.settings.notifications.saveFailed'))
+          boot.fail()
+          return { status: 'failed' }
+        }
+      }
+
       if (loaded.status === 'ok') {
         // B1-D cold boot: the SERVER-authorized window bounds every
         // offline-accrual owner - progression_cutoff_at -> serverNowUtc
@@ -543,7 +557,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
               // the resume seam at App.vue already fails closed the
               // same way). Degrade to zero-accrual live-replacement:
               // queues/jobs still load, nothing accrues, this boot.
-              { kind: 'live-replacement', nowMs: Date.now() }
+              { kind: 'live-replacement', nowMs: gameManager.time.now() }
 
         const restored = restoreGameSession(player, gameManager, loaded.save, timeAuthority)
 
@@ -562,6 +576,10 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         }
 
         const offline = restored.offline ?? { elapsedSeconds: 0, cultivation: 0 }
+
+        if (loaded.serverAuthority) {
+          gameManager.time.rebase(loaded.serverAuthority.serverNowMs)
+        }
 
         // Contract sec.H: an out-of-scope save still loads and plays -
         // the dormant records it carries are flagged with a notice, not

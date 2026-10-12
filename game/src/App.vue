@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
+import { TimeAuthority } from './core/idle/TimeAuthority'
 import { OVERLAY_LAYERS } from './core/presentation/OverlayLayers'
 import { bindOnlineAuthority, masterToleratedSaveResult, observeAuthoritySaveResult, unbindOnlineAuthority } from './composables/useOnlineAuthority'
 import { bindSessionTeardown, unbindSessionTeardown } from './composables/useSessionAccount'
@@ -179,8 +180,13 @@ function ackBetaCompletion() {
 // GameClock chi do thoi gian (pure clock). GameManager chi dieu
 // phoi cac system. Viec "moi giay thi lam gi" la trach nhiem cua
 // vong lap tick() duoi day - noi duy nhat biet ca 2 ben.
+// GP-01 - ONE authorized live-time owner: the TimeAuthority (server
+// anchor + monotonic elapsed). The GameClock instance stays the
+// pause/resume delta mechanism but is FED by the authority below -
+// a system-clock edit can no longer inject delta into the sim.
+const time = new TimeAuthority()
 const clock = new GameClock()
-const gameManager = new GameManager()
+const gameManager = new GameManager({ time })
 
 // Real app renders: every combat/tribulation session starts HELD and only
 // ticks after the coordinator has revealed it (READY -> attach -> curtain
@@ -531,7 +537,14 @@ watch(stateVersion, () => {
 // symmetric event-bus/DOM listener cleanup). App.vue giu phan tick co
 // phu thuoc UI (cultivate/bumpState/notification dedupe).
 const lifecycle = useAppLifecycle({
-  clock,
+  // GP-01 - facade: resume re-anchors the delta mechanism at the
+  // AUTHORIZED now, not the editable wall clock (paused time stays
+  // unpaid either way - start() discards the window).
+  clock: {
+    start: () => clock.start(time.now()),
+    stop: () => clock.stop(),
+    nowSeconds: () => time.nowSeconds(),
+  },
   scheduleInterval: (callback, timeoutMs) => window.setInterval(callback, timeoutMs),
   clearHandle: (handle) => window.clearInterval(handle),
   addEventListener: (type, handler) => {
@@ -748,7 +761,7 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
       // or was paused; nothing accrued).
       const restored = restoreGameSession(player, gameManager, save, {
         kind: 'live-replacement',
-        nowMs: serverAuthority?.serverNowMs ?? Date.now(),
+        nowMs: serverAuthority?.serverNowMs ?? time.now(),
       })
       if (restored.status === 'rejected') {
         // Boot routes a save the restore seams refuse to the recovery
@@ -775,6 +788,7 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
       // battle stays legitimately owned.
       gameManager.discardStaleBattle()
     }
+    if (serverAuthority) time.rebase(serverAuthority.serverNowMs)
     lifecycle.resumeSimulation()
   },
   onStateChange: (state) => {
@@ -925,7 +939,7 @@ function resetSaveFromSettings() {
 let wasFighting = false
 
 function tick() {
-  const { deltaSeconds } = clock.update()
+  const { deltaSeconds } = clock.update(time.now())
 
   if (deltaSeconds <= 0) {
     return
@@ -971,7 +985,7 @@ function tick() {
       wasFighting = isFighting
     }
 
-    player.cultivate(simulatedDelta)
+    player.cultivate(simulatedDelta, time.now())
 
     // Ruling 2026-10-11 - tieu canh gioi KHONG tu tang nua: tu vi chan o
     // required (addCultivation), tang chi len khi nguoi choi bam nut
@@ -1059,7 +1073,7 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       initializeCharacter(resolved, {
         gameManager,
         player: player.$state,
-        nowSeconds: () => clock.nowSeconds(),
+        nowSeconds: () => time.nowSeconds(),
       })
     },
   })

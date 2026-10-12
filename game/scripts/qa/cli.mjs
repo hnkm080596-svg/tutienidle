@@ -355,7 +355,7 @@ function cmdPrepare(args) {
   const lessons = loadLessonsJsonl(history);
   const active = fs.existsSync(activePolicy) ? loadActivePolicy(activePolicy, policyDir) : null;
   const product = args["product-root"] ? path.resolve(args["product-root"]) : GAME_ROOT;
-  const routing = routeLessons(task, lessons, { productRoot: product });
+  const routing = routeLessons(task, lessons, { productRoot: product, activePolicy: active });
   const brief = draftBrief(task, routing, {
     policyHash: active?.policyHash ?? objectHash("no-policy"),
     planningBaseline: task.planningBaseline ?? { productStateId: "", contractId: "", attackModelId: "", environmentId: "" },

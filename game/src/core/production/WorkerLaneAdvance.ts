@@ -2,25 +2,21 @@ import type { ProductionCycle } from './ProductionTypes'
 import { buildProductionCycle } from './ProductionCycles'
 import { computeCycleSeconds } from './ProductionBalance'
 
-// M11 (ARCH-007) - per-lane worker-cycle advancement, ONE mechanism with
-// two drivers (A9):
-//   - online  ProductionSystem.tickWorkers   -> advanceMode 'observe'
-//   - offline ProductionOffline worker settle -> advanceMode 'deadline'
+// Shared production-cycle advancement, ONE mechanism with two drivers:
+//   - online  ProductionSystem.tick -> advanceMode 'observe'
+//   - offline ProductionOffline settle -> advanceMode 'deadline'
 //
-// Lane model: a site's worker pool is `slots` parallel lanes; each lane
-// holds at most one in-flight cycle (state.workerCycles is the set of
-// in-flight lane heads). A lane completes ONLY when its own accumulated
-// time crosses its own completesAtMs - partial work across lanes never
-// pools into a completed cycle. Kept future cycles keep their reserved
-// lane capacity and their original deadlines.
+// Cycle model: persisted heads retain their own deadlines and identity.
+// New successors spawn only while the site's one-cycle allowance has
+// room. Legacy parallel heads remain queued and drain without new parallel
+// successors.
 //
 // Drivers differ only in the observation schedule:
-//   - 'observe'  = single tick at nowMs (tickWorkers): due heads grant
-//     once; freed lanes stay empty until the NEXT call refills them via
-//     emptyLaneStartMs (top-up-then-settle order preserved).
+//   - 'observe'  = single tick at nowMs: due heads grant once; the site
+//     starts one successor on a later tick after carried heads drain.
 //   - 'deadline' = continuous observation over [emptyLaneStartMs, nowMs]
-//     (settleOffline): a completed lane immediately starts its next cycle
-//     at the completion instant - the dense limit of the online tick.
+//     (settleOffline): a completed cycle starts its successor at the
+//     completion instant - the dense limit of online ticks.
 
 export type WorkerLaneAdvanceMode = 'observe' | 'deadline'
 
@@ -37,23 +33,20 @@ export interface WorkerLaneAdvanceParams {
   /** Current cycle duration in ms - successors/empty-lane seeds use it. */
   cycleMs: number
 
-  /** In-flight lane heads from state (saved or tick-carried). */
+  /** In-flight cycle records from state (saved or tick-carried). */
   pending: readonly ProductionCycle[]
 
   /**
-   * Lanes allocated to this site by allocateWorkerSlots. Contract: a
-   * non-negative integer, bounded - the defensive guard rejects
-   * non-integer/negative/>65536 values (a fractional count over-seeds
-   * a lane; a huge count makes the seed loop push lanes to OOM).
+   * Maximum concurrent cycle records that may be advanced. Production
+   * callers use 0 or 1; legacy saved heads are retained independently.
    */
   slots: number
 
   nowMs: number
 
   /**
-   * Start instant for lanes holding no in-flight cycle. Online passes
-   * nowMs (top-up at the tick); offline passes the authorized window
-   * start (offlineSinceMs). Undefined = empty lanes stay empty.
+   * Start instant for an empty site. Online passes nowMs; offline passes
+   * the authorized window start (offlineSinceMs). Undefined keeps it idle.
    */
   emptyLaneStartMs?: number
 
@@ -78,7 +71,7 @@ export interface WorkerLaneAdvanceResult {
   /** Cycles that completed and must be granted by the caller, in completion order. */
   completed: ProductionCycle[]
 
-  /** In-flight lane heads to persist as state.workerCycles. */
+  /** In-flight cycle records to persist as productionCycles. */
   pending: ProductionCycle[]
 
   /** Completed cycles dropped because the budget could not pay their duration. */
@@ -146,18 +139,17 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
   // r20-AUT: the ordering pin too - a reversed/zero span
   // (completesAtMs <= startedAtMs) computes headCost = 0 and would
   // grant a free completion per entry; the validator rejects the same
-  // shape upstream (F-A11-4). r20-COR-1/2: magnitude + slots pins -
+  // shape upstream (F-A11-4). r20-COR-1/2: magnitude + cycle allowance pins -
   // |stamp| >= 2^53 makes stamp + cycleMs absorb back into stamp in
   // float64 (ulp/2 > the delta: headCost = 0 forever, dues never reach
   // nowMs - an unbounded settle loop a crafted deep-past lastSavedAt
   // could reach through the window start, and the same absorb can sit
-  // inside a crafted pending pair at mechanism level), and a bad
-  // slots makes the seed loop push lanes without bound. r21-INT-01:
-  // slots must be a bounded non-negative integer - 1e9 finite still
-  // pushes to OOM, and a fractional count over-seeds a lane. Honest
+  // inside a crafted pending pair at mechanism level), and a bad cycle
+  // allowance makes the seed loop grow without bound. r21-INT-01
+  // requires a bounded non-negative integer. Honest
   // stamps are epoch-ms, orders of magnitude inside the exact-integer
-  // domain. Zero-advance result: the in-flight lanes are preserved
-  // untouched (no completions, no respawns, no empty-lane seeding).
+  // domain. Zero-advance result: pending cycles are preserved untouched
+  // (no completions, no successors, no empty-site seed).
   if (
     // r21-COR-2: nowMs is a timestamp too - a finite but huge clock
     // (1e300) puts every due in the past and runs the same unbounded
@@ -208,9 +200,8 @@ export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneA
 
   let budgetLeftMs = Math.max(0, params.budgetMs ?? 0)
 
-  // Lane cursors, sorted by deadline: every saved in-flight cycle keeps
-  // its own lane, deadline and identity - including lanes beyond the
-  // current slot budget (retained work is never killed early).
+  // Cycle cursors, sorted by deadline: every saved record keeps its own
+  // deadline and identity, including old heads beyond today's allowance.
   const lanes: LaneCursor[] = [...params.pending]
     .map<LaneCursor>((cycle) => ({
       dueMs: cycle.completesAtMs,

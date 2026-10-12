@@ -165,9 +165,22 @@ describe('beta FE-contract read-models - import guards', () => {
         'ownedNodeIds',
       ])
 
+      // Per-name exceptions (file -> names still legal there):
+      // SkillSurface reads getNextLevelCost purely to display the
+      // authored price curve for the NEXT level in the node inspector
+      // (row.nextLevelCost is gate-aware and nulls early) - a pure
+      // data read over authored upgradeCost fields, not a player-state
+      // admission decision; every real predicate stays banned.
+      const EXCEPTIONS: Record<string, ReadonlySet<string>> = {
+        'components/scenes/skill/SkillSurface.vue': new Set([
+          'getNextLevelCost',
+        ]),
+      }
+
       const offenders = SHELL_FILES.filter((file) =>
-        namedImports(file.text, '@/core/progression/NodeSystem').some((name) =>
-          BANNED.has(name),
+        namedImports(file.text, '@/core/progression/NodeSystem').some(
+          (name) =>
+            BANNED.has(name) && !EXCEPTIONS[file.fromSrc]?.has(name),
         ),
       ).map((file) => file.fromSrc)
 
@@ -196,10 +209,12 @@ describe('beta FE-contract read-models - import guards', () => {
       // The ban covers the whole component tree (panels + scenes), not
       // just panels/. DongFuStage is a NAVIGATION surface
       // (hotspot wheel): its isRealmAvailable deep-link check is not
-      // reward admission, so it is a recorded exception. DevToolsPanel
-      // is a dev-only surface: its isBeyondReleaseCeiling call filters
-      // the dev realm-picker options, not reward admission - every
-      // other file under components/ is not excepted.
+      // reward admission, so it is a recorded exception - every other
+      // file under components/ is not.
+      // DevToolsPanel is a recorded master-only channel (owner ruling
+      // 2026-10-09): it mounts only behind isMaster and reads
+      // isBeyondReleaseCeiling purely as a dev cheat guard, never to
+      // rebuild player-facing reward admission.
       const EXCEPTIONS = new Set([
         'components/scenes/dong-fu/DongFuStage.vue',
         'components/dev/DevToolsPanel.vue',
@@ -235,17 +250,19 @@ describe('beta FE-contract read-models - import guards', () => {
   )
 
   it(
-    'worker lodge stays scope-hidden: no visibility predicate reaches its panel',
+    'Chiêu Hiền Quán compatibility surface is art-only and has no workforce dependency',
     () => {
       const panel = SHELL_FILES.find(
         (file) => file.fromSrc === 'components/panels/WorkerLodgePanel.vue',
       )
 
       expect(panel, 'WorkerLodgePanel.vue missing from corpus').toBeDefined()
-      // The FINAL POLICY (sec.4C): the whole surface is scope-hidden -
-      // the panel must read the model tabs and never import
-      // CompanionAvailability domain gates itself.
-      expect(panel!.text).toContain('getWorkerLodgeSurfaceModel')
+      // The Architecture card is the owner; this compatibility shell
+      // renders only the landmark art and copy.
+      expect(panel!.text).toContain('chi-hien-quan-art-only')
+      expect(panel!.text).toContain('architecture.artOnly')
+      expect(panel!.text).not.toContain('getWorkerLodgeSurfaceModel')
+      expect(panel!.text).not.toMatch(/assignWorkers|workerCapacity|<button|<input/i)
       expect(
         /CompanionAvailability|isCompanionDomainUnlocked/.test(panel!.text),
       ).toBe(false)
@@ -254,30 +271,12 @@ describe('beta FE-contract read-models - import guards', () => {
   )
 
   it(
-    'manual workforce ops have no ungated UI caller - allocation lives behind manualWorkforce only',
+    'retired workforce controls are absent from every beta shell',
     () => {
-      // A caller is GATED iff it references the manualWorkforce flag -
-      // ProductionPanel and the allocation block it extracted
-      // (production/ProductionWorkerAllocation.vue) both gate on
-      // betaSurfaceVisible('manualWorkforce'). An ops caller carrying
-      // no flag token is an ungated leak.
-      const offenders = SHELL_FILES.filter(
-        (file) =>
-          /assignWorkers|getWorkforceView/.test(file.text) &&
-          !/manualWorkforce/.test(file.text),
+      const offenders = SHELL_FILES.filter((file) =>
+        /assignWorkers|getWorkforceView|getWorkerAssignments|worker-allocation|manualWorkforce/.test(file.text),
       ).map((file) => file.fromSrc)
-
       expect(offenders).toEqual([])
-
-      const panel = SHELL_FILES.find(
-        (file) => file.fromSrc === 'components/panels/ProductionPanel.vue',
-      )
-
-      // The allocation block renders ONLY behind the manualWorkforce
-      // verdict - a panel that calls assignWorkers without the flag is
-      // a leak, one that does neither is dead code.
-      expect(panel, 'ProductionPanel.vue missing from corpus').toBeDefined()
-      expect(panel!.text).toContain('manualWorkforce')
     },
     SCAN_TIMEOUT,
   )

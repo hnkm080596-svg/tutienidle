@@ -1,8 +1,4 @@
-// R7 (AR-08) - worker pool wiring at the REAL GameManager tick
-// boundary (P13 lesson: unit tests on hand-built systems do not prove
-// the running instance is wired). DIRECT DECOMPOSE REWORK (2026-10-11):
-// decompose retired its worker claim (direct multi-select action), so
-// production tickWorkers receives the WHOLE CHQ capacity.
+// Production sites progress independently at the REAL GameManager tick boundary.
 import { describe, expect, it, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
@@ -17,14 +13,12 @@ vi.mock('../betaScope', async (importOriginal) => ({
 import { GameManager } from './GameManager'
 import { buildings } from '../../data/building/buildings'
 import { createDefaultPlayer } from '../player/Player'
-import type { PlayerData } from '../player/Player'
 
-function makeManager(): { manager: GameManager; player: PlayerData } {
+function makeManager(): GameManager {
   const manager = new GameManager()
   manager.catalogOps.registerBuildings(buildings)
-  const player = createDefaultPlayer()
-  manager.setActivePlayer(player)
-  return { manager, player }
+  manager.setActivePlayer(createDefaultPlayer())
+  return manager
 }
 
 function enableAllProductionSites(manager: GameManager): void {
@@ -34,47 +28,34 @@ function enableAllProductionSites(manager: GameManager): void {
   }
 }
 
-describe('GameManager worker pool (AR-08 wiring)', () => {
-  function totalProductionSlots(manager: GameManager): number {
-    return manager
-      .productionSystem.getAllStates()
-      .reduce((sum, state) => sum + state.activeWorkerSlots, 0)
-  }
-
-  it('production receives the whole CHQ pool (no decompose claim)', () => {
-    const { manager, player } = makeManager()
-
-    // CHQ level 3 -> capacity 7 (authority: getWorkerCapacityForLevel).
-    player.autoWorkerCapacity = 7
-
+describe('GameManager independent production site ticks', () => {
+  it('each enabled site owns one pending cycle after the real manager tick', () => {
+    const manager = makeManager()
+    const definitions = manager.productionSystem.getSiteDefinitions()
     enableAllProductionSites(manager)
     manager.tickOps.update(1)
 
-    // Round-robin fills every capacity unit into a lane - the whole
-    // pool lands on production.
-    expect(totalProductionSlots(manager)).toBe(7)
+    for (const definition of definitions) {
+      expect(manager.productionSystem.getState(definition.siteId)?.productionCycles).toHaveLength(1)
+    }
   })
 
-  it('capacity 0 (no CHQ) starves production without errors', () => {
-    const { manager } = makeManager()
-
-    enableAllProductionSites(manager)
+  it('repeated ticks do not queue another cycle while a site cycle is pending', () => {
+    const manager = makeManager()
+    const definition = manager.productionSystem.getSiteDefinitions()[0]!
+    manager.buildingOps.setProductionAutoRestart(definition.siteId, true)
+    manager.tickOps.update(1)
     manager.tickOps.update(1)
 
-    expect(totalProductionSlots(manager)).toBe(0)
+    expect(manager.productionSystem.getState(definition.siteId)?.productionCycles).toHaveLength(1)
   })
 
-  it('tick keeps production capacity synced when CHQ capacity changes mid-session', () => {
-    const { manager, player } = makeManager()
-
+  it('negative and zero elapsed updates do not start cycles', () => {
+    const manager = makeManager()
     enableAllProductionSites(manager)
+    manager.tickOps.update(0)
+    manager.tickOps.update(-1)
 
-    player.autoWorkerCapacity = 4
-    manager.tickOps.update(1)
-    expect(totalProductionSlots(manager)).toBe(4)
-
-    player.autoWorkerCapacity = 9
-    manager.tickOps.update(1)
-    expect(totalProductionSlots(manager)).toBe(9)
+    expect(manager.productionSystem.getAllStates().every((state) => (state.productionCycles?.length ?? 0) === 0)).toBe(true)
   })
 })

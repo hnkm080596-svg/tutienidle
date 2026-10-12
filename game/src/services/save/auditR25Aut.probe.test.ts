@@ -78,9 +78,6 @@ function makeSave(
   if (overrides.autoFarmStage !== undefined) {
     player.autoFarmStage = overrides.autoFarmStage
   }
-  if (overrides.autoWorkerCapacity !== undefined) {
-    player.autoWorkerCapacity = overrides.autoWorkerCapacity
-  }
   const save = buildGameSave(player, manager)
   save.player.lastSavedAt = overrides.lastSavedAt ?? NOW
   if (overrides.productionSites !== undefined) {
@@ -92,23 +89,15 @@ function makeSave(
   if (overrides.quests !== undefined) {
     save.quests = overrides.quests
   }
-  if (overrides.autoWorkerCapacity !== undefined && overrides.autoWorkerCapacity > 0) {
-    // F-W-16: a non-zero persisted capacity requires the chi_hien_quan
-    // building witness in the same payload.
-    save.buildings = [
-      {
-        instanceId: 'r25_chq',
-        buildingId: 'chi_hien_quan',
-        level: 1,
-        lastCollectedAt: 0,
-      },
-    ]
+  if (overrides.autoWorkerCapacity !== undefined) {
+    ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity =
+      overrides.autoWorkerCapacity
   }
   return save
 }
 
 function workerCycleSave(startedAtMs: number): NonNullable<
-  NonNullable<GameSave['productionSites']>[number]['workerCycles']
+  NonNullable<GameSave['productionSites']>[number]['productionCycles']
 >[number] {
   const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM['mortal']
   if (baseSeconds === undefined) throw new Error('mortal cycle base missing')
@@ -130,6 +119,7 @@ describe('arm A - degraded zero-accrual authority reaches no paying channel', ()
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -143,7 +133,6 @@ describe('arm A - degraded zero-accrual authority reaches no paying channel', ()
     const save = makeSave({
       lastSavedAt: NOW - 48 * HOUR_MS,
       autoFarmStage: { stageId: 'thanh_van_farm_1', lastCheckedMs: NOW - 48 * HOUR_MS },
-      autoWorkerCapacity: 3,
       productionSites: [{ siteId: 'thanh_van_lam', level: 1, autoRestart: true }],
     })
     const farmSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
@@ -213,6 +202,7 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -248,7 +238,7 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
 
     const repackaged = buildGameSave(player.$state, manager)
     const heads = (repackaged.productionSites ?? []).flatMap(
-      (site) => site.workerCycles ?? [],
+      (site) => site.productionCycles ?? [],
     )
     expect(heads.length).toBeGreaterThan(0)
     // FIXED: offlineSinceMs clamps at Date.now() = NOW, so seeded heads
@@ -264,13 +254,13 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
     const FUTURE = NOW + DAY_MS
     const save = makeSave({
       lastSavedAt: FUTURE,
-      autoWorkerCapacity: 3, // lifts the authored lane ceiling so a crafted lane admits
+      autoWorkerCapacity: 3, // carried legacy metadata, ignored by the runtime
       productionSites: [
         {
           siteId: 'thanh_van_lam',
           level: 1,
           autoRestart: true,
-          workerCycles: [workerCycleSave(NOW + 60_000)], // future, but <= FUTURE marker
+          productionCycles: [workerCycleSave(NOW + 60_000)], // future, but <= FUTURE marker
         },
       ],
     })
@@ -291,7 +281,7 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
 
     const repackaged = buildGameSave(player.$state, manager)
     const heads = (repackaged.productionSites ?? []).flatMap(
-      (site) => site.workerCycles ?? [],
+      (site) => site.productionCycles ?? [],
     )
     // Re-anchored: the began-time lands at restore-now, inside the pin.
     expect(heads.every((cycle) => cycle.startedAtMs <= NOW)).toBe(true)
@@ -358,7 +348,7 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
 
     const repackaged = buildGameSave(player.$state, manager)
     const heads = (repackaged.productionSites ?? []).flatMap(
-      (site) => site.workerCycles ?? [],
+      (site) => site.productionCycles ?? [],
     )
     for (const cycle of heads) {
       expect(cycle.startedAtMs).toBeLessThanOrEqual(NOW)
@@ -373,6 +363,7 @@ describe('arm C - QUEST_LIST_CAP and sibling collections', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -450,6 +441,7 @@ describe('arm C - QUEST_LIST_CAP and sibling collections', () => {
 describe('stamp classes vs the |x| < 2^52 domain check', () => {
   beforeEach(() => {
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

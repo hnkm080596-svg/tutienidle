@@ -35,7 +35,7 @@ import { pcPaperControlStyles, pcPaperResourceUrl, type PcPaperResource } from '
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
-import AutoFarmIndicator from '@/components/game/AutoFarmIndicator.vue'
+import ExpeditionBattleStage from '@/components/game/ExpeditionBattleStage.vue'
 import DongFuWheel from './fidelity/DongFuWheel.vue'
 import DongFuBoard from './fidelity/DongFuBoard.vue'
 import type { DongFuUiAction } from './fidelity/dongFuUi'
@@ -200,11 +200,11 @@ const navSeamUrl = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/naviga
 // Rail order + lock set copied verbatim from the approved mock: the five
 // locked entries are domains with no beta surface yet (artifact/companion/
 // guild/sect/portal render grayscale like the design).
-const NAV_LOCKED: readonly PcPaperIcon[] = ['artifact', 'companion', 'guild', 'sect', 'portal']
+const NAV_LOCKED: readonly PcPaperIcon[] = ['artifact', 'companion', 'guild', 'portal']
 const NAV_ITEMS: readonly PcPaperIcon[] = [
-  'home', 'character', 'skill', 'equipment', 'inventory', 'body', 'technique',
-  'realm', 'alchemy', 'formation', 'exploration', 'quest', 'production',
-  'settings', 'feedback', ...NAV_LOCKED,
+  'home', 'character', 'skill', 'equipment', 'body', 'technique', 'realm',
+  'inventory', 'alchemy', 'formation', 'exploration', 'quest', 'production',
+  'vendor', 'sect', 'settings', 'feedback', ...NAV_LOCKED,
 ]
 
 // A nav id renders locked when the surface behind it is scope-hidden:
@@ -236,6 +236,8 @@ const NAV_TARGET: Partial<Record<PcPaperIcon, () => void>> = {
   exploration: () => ui.openLeftPanel('stage_select'),
   quest: () => ui.openStandalonePanel('quest'),
   production: () => navigation.openBuilding('gathering_outpost'),
+  vendor: () => ui.openArchitecture('vendor'),
+  sect: () => ui.openArchitecture(),
   settings: () => ui.openLeftPanel('settings'),
   feedback: () => {
     ui.closeHomeOverlays()
@@ -250,9 +252,10 @@ const NAV_ACTIVE_PANEL: Partial<Record<PcPaperIcon, LeftPanelModeMarker>> = {
   alchemy: 'pill_room',
   exploration: 'stage_select',
   production: 'exploration',
+  sect: 'architecture',
   settings: 'settings',
 }
-type LeftPanelModeMarker = 'equipment_hall' | 'pill_room' | 'exploration' | 'stage_select' | 'worker_lodge' | 'settings'
+type LeftPanelModeMarker = 'equipment_hall' | 'pill_room' | 'exploration' | 'architecture' | 'stage_select' | 'worker_lodge' | 'settings'
 const NAV_ACTIVE_STANDALONE: Partial<Record<PcPaperIcon, 'skill' | 'realm' | 'quest' | 'tran_phap' | 'technique' | 'body'>> = {
   skill: 'skill',
   realm: 'realm',
@@ -272,6 +275,7 @@ function navActive(id: PcPaperIcon): boolean {
   const standalone = NAV_ACTIVE_STANDALONE[id]
   if (standalone && ui.standalonePanel === standalone) return true
   if (id === 'feedback' && feedbackOpen.value) return true
+  if (id === 'vendor') return ui.leftPanelMode === 'architecture' && ui.architectureFocusBuildingId === 'vendor'
   return false
 }
 
@@ -501,7 +505,7 @@ onBeforeUnmount(() => {
         @toggle="boardOpen = !boardOpen"
         @action="onWheelAction"
       />
-      <AutoFarmIndicator />
+      <ExpeditionBattleStage v-if="!surfaceOpen" />
       <div class="df-notice" role="status" aria-live="polite" data-df-ui>{{ notice }}</div>
       <div class="pc-paper-scene__frame" aria-hidden="true" />
     </main>

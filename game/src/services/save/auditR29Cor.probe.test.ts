@@ -2,6 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer } from '../../core/player/Player'
+import { MaterialBag } from '../../core/material/MaterialBag'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { GameManager } from '../../core/game/GameManager'
 import type { GameSave } from './saveTypes'
 import { buildGameSave } from './SaveSystem'
@@ -460,7 +462,23 @@ describe('r29 COR - claim 4: finite-clock guard edges on alchemy tick/settleOffl
   })
 })
 
-describe('r29 COR - sibling ungated-clock seams (E) - finding F1', () => {
+describe('r29 COR - sibling retired Decompose state (E)', () => {
+  it('legacy worker and timer state is ignored even with invalid clock values', () => {
+    const system = new DecomposeSystem(new MaterialBag())
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: Number.NaN,
+      started: true,
+    }, Number.NaN)
+
+    const state = system.getSaveState()
+    expect(state.nextCycleAt).toBe(0)
+    expect(state.started).toBe(false)
+    const save = validWireSave() as unknown as Record<string, unknown>
+    save['decompose'] = state
+    expect(validateGameSaveShape(save as never).ok).toBe(true)
+  })
+
   it('E4 questManager.restore(state, NaN) keeps the marker verbatim - finite, write-clean (r29-F1)', () => {
     const manager = new QuestManager()
 
@@ -486,8 +504,6 @@ describe('r29 COR - sibling ungated-clock seams (E) - finding F1', () => {
 
     director.restoreRuntime({ cooldownUntil: currentMs + 5000 }, Number.NaN)
 
-    // verbatim under a broken clock: the cooldown stands (deny - no
-    // free retry), and it persists normally
     expect(director.getCooldownSeconds(currentMs)).toBeCloseTo(5, 0)
     expect(director.getCooldownSeconds(currentMs) > 0).toBe(true)
     expect(director.serializeRuntime().cooldownUntil).toBe(currentMs + 5000)
@@ -499,11 +515,9 @@ describe('r29 COR - sibling ungated-clock seams (E) - finding F1', () => {
 
     reader.alchemySystem.restoreJobs([job], Number.NEGATIVE_INFINITY)
     const restored = reader.alchemySystem.getJobs()[0]!
-    // no re-anchor under a broken clock - the pair keeps its stamps
     expect(restored.startedAtMs).toBe(currentMs + 60_000)
     expect(restored.completesAtMs).toBe(currentMs + 60_000 + span)
 
-    // and it is NOT due on the next honest tick (parked - deny)
     reader.alchemySystem.tick(currentMs, ANY_PILL(), RESOLVE_ANY)
     expect(reader.alchemySystem.getJobs()).toHaveLength(1)
   })
@@ -528,4 +542,6 @@ describe('r29 COR - regression pins on honest shapes (F)', () => {
     expect(shape.ok).toBe(true)
     expect(shape.issues).toHaveLength(0)
   })
+
 })
+

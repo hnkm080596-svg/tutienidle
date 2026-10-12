@@ -183,8 +183,7 @@ describe('auditR27 COR probe - began-pair shift contract (W)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 4,
-          workerCycles: [
+          productionCycles: [
             workerCycle(currentMs + 60_000, 'post'), // post-dated: shifts to [now, now+span]
             workerCycle(currentMs - 5_000, 'flight'), // honest in-flight: untouched
             workerCycle(currentMs, 'edge'), // boundary: started==restoreNow untouched
@@ -195,7 +194,7 @@ describe('auditR27 COR probe - began-pair shift contract (W)', () => {
       currentMs,
     )
 
-    const cycles = system.getState(FOREST_SITE_ID)!.workerCycles!
+    const cycles = system.getState(FOREST_SITE_ID)!.productionCycles!
     const byId = new Map(cycles.map((c) => [c.cycleId, c]))
 
     const post = byId.get('post')!
@@ -310,6 +309,29 @@ describe('auditR27 COR probe - began-pair shift contract (W)', () => {
     )
   })
 
+  it('W6 legacy decompose timer cannot re-arm across repeated restore', () => {
+    const manager = registeredManager()
+    const player = createDefaultPlayer()
+    manager.setActivePlayer(player)
+    primeMortalCreationPick(player, manager.skillManager)
+    const wire = JSON.parse(JSON.stringify(buildGameSave(player, manager))) as GameSave
+    wire.decompose = {
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: currentMs + 9_000_000,
+      started: true,
+    }
+
+    manager.saveOps.restoreFromSave(wire, undefined)
+    const first = manager.decomposeSystem.getSaveState()
+    manager.saveOps.restoreFromSave(wire, undefined)
+
+    expect(first).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(manager.decomposeSystem.getSaveState()).toEqual(first)
+  })
 
   it('W7 regression: absent authority keeps legacy client clock - honest saves restore verbatim', () => {
     const { job, span } = mortalJob(currentMs - 60_000, 'r27_w7')
@@ -357,8 +379,7 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs - 60_000, 'honest')],
+        productionCycles: [workerCycle(currentMs - 60_000, 'honest')],
       },
     ] as never
 
@@ -371,7 +392,7 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
       untilMs: 1_700_000_000, // seconds-for-millis corrupt stamp - reads as 1970
     })
 
-    const cycle = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const cycle = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(currentMs - 60_000)
     expect(cycle.completesAtMs).toBe(currentMs - 60_000 + MORTAL_CYCLE_MS)
   })
@@ -418,8 +439,7 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
     expect(restored.cooldownUntil).toBe(currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000)
   })
 
-
-  it('F5 integration: real saveOps.restoreFromSave under corrupt-low cold-boot restores the three live channels verbatim', () => {
+  it('F5 integration: real saveOps.restoreFromSave under corrupt-low cold-boot restores all four channels verbatim', () => {
     const writer = registeredManager()
     const writerPlayer = createDefaultPlayer()
     writer.setActivePlayer(writerPlayer)
@@ -433,8 +453,7 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs - 60_000, 'honest')],
+        productionCycles: [workerCycle(currentMs - 60_000, 'honest')],
       },
     ] as never
     wire.tribulation = {
@@ -461,24 +480,25 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
     reader.saveOps.restoreFromSave(wire, authority)
 
     // r27-COR-1 fixed: restoreClockMs = min(lastSavedAt, Date.now()) =
-    // currentMs - the corrupt 1.7e9 authority stamp only denies the
-    // accrual window; it can no longer re-anchor honest stamps. Every
-    // channel restores verbatim.
+    // currentMs - the corrupt authority stamp only denies the accrual
+    // window; production, alchemy, and tribulation retain their own stamps.
     const job2 = reader.alchemySystem.getJobs()[0]!
     expect(job2.startedAtMs).toBe(currentMs - 60_000)
     expect(job2.completesAtMs).toBe(currentMs - 60_000 + span)
     expect(job2.completesAtMs).toBeGreaterThan(currentMs)
 
-    const cycle2 = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const cycle2 = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(cycle2.startedAtMs).toBe(currentMs - 60_000)
     expect(cycle2.completesAtMs).toBe(currentMs - 60_000 + MORTAL_CYCLE_MS)
 
     const cooldown2 = reader.tribulationDirector.serializeRuntime().cooldownUntil
     expect(cooldown2).toBe(currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000)
 
-    // The decompose slice restores inert (direct rework): the legacy
-    // deadline is admitted but owns no live state.
-    expect(reader.decomposeSystem.getSaveState()).toEqual({})
+    expect(reader.decomposeSystem.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
 
     // And the first tick pays NOTHING early - the corrupt authority only
     // shrunk the accrual window, never minted in-flight work.
@@ -501,13 +521,12 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(currentMs + skew, 'skewed')],
+          productionCycles: [workerCycle(currentMs + skew, 'skewed')],
         },
       ],
       currentMs, // restoreClockMs = min(marker, now) = device now
     )
-    const shifted = system.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const shifted = system.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(shifted.startedAtMs).toBe(currentMs)
     // Pays `skew` earlier than authored - bounded by the skew itself.
     expect(shifted.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
@@ -524,13 +543,12 @@ describe('auditR27 COR probe - restoreClock floor / corrupt-low authority (F)', 
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(currentMs - 60_000, 'honest')],
+          productionCycles: [workerCycle(currentMs - 60_000, 'honest')],
         },
       ],
       Math.min(4_000_000_000_000_000, Date.now()),
     )
-    const restored = system.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const restored = system.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(restored.startedAtMs).toBe(currentMs - 60_000)
   })
 })
@@ -667,7 +685,6 @@ describe('auditR27 COR probe - collection-cap sibling sweep (C)', () => {
               siteId: FOREST_SITE_ID,
               level: 1,
               autoRestart: true,
-              activeWorkerSlots: 0,
               hiddenChannelCycles: bigMap(),
             },
           ] as never

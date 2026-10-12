@@ -226,12 +226,10 @@ describe('carried chi_hien_quan instance is inert', () => {
     expect(manager.buildingManager.get('b1')?.level).toBe(1)
   })
 
-  it('assignWorkers no-ops at both seams (ops + domain)', () => {
+  it('retired worker assignment APIs are absent', () => {
     const { manager } = managerWithCarriedQuan()
-    manager.buildingOps.assignWorkers('thanh_van_go_s1', 2)
-    expect(
-      manager.productionSystem.setWorkerAssignment('thanh_van_go_s1', 2, 3),
-    ).toBe(false)
+    expect(manager.buildingOps).not.toHaveProperty('assignWorkers')
+    expect(manager.productionSystem).not.toHaveProperty('setWorkerAssignment')
   })
 
   it('the building id admits no surface (icon, standalone panel)', () => {

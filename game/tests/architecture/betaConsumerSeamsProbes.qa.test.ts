@@ -14,7 +14,9 @@
 //   * carried Quan The diverter and Nghich Chu Tian mechanics minting
 //     cultivation banking / level writes downstream of eligibility;
 //   * alchemy dormant-family job settle (park, never deliver);
-//   * decompose carried started cycle (tick + offline settle inert);
+//   * legacy decompose state restores inertly and instant exchange stays gated;
+//   * vendor reads (sell/preview/rows) on dormant materials incl. the
+//     hidden-beast and zhou-tian currencies;
 //   * quest claim on a carried scope-hidden daily quest;
 //   * building write seam on chi_hien_quan (the manualWorkforce domain);
 //   * chooseCultivationPath on a dormant way;
@@ -378,29 +380,26 @@ describe('dormant production settle seams', () => {
     expect(system.drainSettlementEvents()).toEqual([])
   })
 
-  it('a carried started decompose payload restores inert and mints nothing', () => {
+  it('legacy decompose timer restores inertly and the hidden instant exchange consumes nothing', () => {
     const registry = new MaterialRegistry()
     for (const material of materials) registry.register(material)
     const bag = new MaterialBag()
     bag.add(registry.get('mortal_ore_decade'), 100)
 
-    // DIRECT DECOMPOSE REWORK: no tick/settle channels exist anymore -
-    // the only seam is restore(), which accepts the legacy payload and
-    // owns nothing (deliverOutput never fires).
-    const delivered: unknown[] = []
-    const system = new DecomposeSystem(bag, {
-      deliverOutput: (entry) => delivered.push(entry),
-    })
+    const system = new DecomposeSystem(bag)
     system.restore({
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 3 },
       nextCycleAt: 0,
       started: true,
     })
 
-    expect(system.getSaveState()).toEqual({})
-    expect(delivered).toEqual([])
-    // The carried ore is never consumed by restore alone; under the
-    // hidden scope the direct action stays closed too.
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(system.previewDecomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
+    expect(system.decomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
     expect(bag.getAmount('mortal_ore_decade')).toBe(100)
     expect(system.decompose(['mortal_ore_decade'])).toBe(false)
   })

@@ -131,7 +131,7 @@ describe('SupabaseCloudSaveService - load_game_state mapping (B1.3)', () => {
 
     const result = await makeService().load()
 
-    expect(result).toEqual({ status: 'empty', revision: 0 })
+    expect(result).toEqual({ status: 'empty', revision: 0, serverNowMs: Date.parse('2026-09-30T00:00:00Z') })
     expect(localStorage.getItem(resolveSaveKey())).toBeNull()
     expect(ackedEnvelope()).toBeNull()
   })
@@ -147,7 +147,7 @@ describe('SupabaseCloudSaveService - load_game_state mapping (B1.3)', () => {
     const service = makeService()
     const result = await service.load()
 
-    expect(result).toEqual({ status: 'uninitialized', character: REMOTE_CHARACTER, revision: 0 })
+    expect(result).toEqual({ status: 'uninitialized', character: REMOTE_CHARACTER, revision: 0, serverNowMs: Date.parse('2026-09-30T00:00:00Z') })
   })
 
   it('CHARACTER_UNINITIALIZED with malformed metadata → SERVER_ERROR', async () => {

@@ -91,8 +91,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -216,9 +215,9 @@ describe('fixpoint r20 INT - r19 batch integration probes', () => {
     const states = new Map<string, ProductionSiteState>([
       [
         LAM,
-        makeState(LAM, { autoRestart: true, workerCycles: [poison, siblingSaved] }),
+        makeState(LAM, { autoRestart: true, productionCycles: [poison, siblingSaved] }),
       ],
-      [QUANG, makeState(QUANG, { autoRestart: true, workerCycles: [cleanSaved] })],
+      [QUANG, makeState(QUANG, { autoRestart: true, productionCycles: [cleanSaved] })],
     ])
     const { deps, grants } = createDeps(states)
 
@@ -228,12 +227,12 @@ describe('fixpoint r20 INT - r19 batch integration probes', () => {
       new MaterialRegistry(),
       REALM,
       T0 + 400_000,
-      { workerCapacity: 4, offlineSinceMs: T0 },
+      { offlineSinceMs: T0 },
     )
 
     // Poisoned site: zero-advance - the exact refs params.pending carried
     // persist through the seededHeads re-stamp map untouched, in order.
-    const lamCycles = states.get(LAM)!.workerCycles!
+    const lamCycles = states.get(LAM)!.productionCycles!
     expect(lamCycles).toHaveLength(2)
     expect(lamCycles[0]).toBe(poison)
     expect(lamCycles[1]).toBe(siblingSaved)
@@ -242,15 +241,10 @@ describe('fixpoint r20 INT - r19 batch integration probes', () => {
     // per-site-atomic: one non-finite entry wedges the whole pending set.
     expect(grants.every((g) => g.siteId === QUANG)).toBe(true)
     // consumedBudgetMs 0 for the poisoned site - the sibling still owns
-    // the full cap: its two lanes each settle their whole due chain
-    // (dues at 50k/100k then 100k steps up to now=400k -> 8 completions).
-    expect(settled).toBe(8)
-    expect(grants).toHaveLength(8)
-    // Allocator runs BEFORE the advance call in both callers - the
-    // poisoned site still shows its assigned slots (round-robin 4 over
-    // 2 active sites), zero accounting lost to the guard.
-    expect(states.get(LAM)!.activeWorkerSlots).toBe(2)
-    expect(states.get(QUANG)!.activeWorkerSlots).toBe(2)
+    // the full cap: its single chain settles four completions.
+    expect(settled).toBe(4)
+    expect(grants).toHaveLength(4)
+    expect(states.get(QUANG)!.productionCycles).toHaveLength(1)
   })
 
   // ------------------------------------------------------------------
@@ -258,18 +252,18 @@ describe('fixpoint r20 INT - r19 batch integration probes', () => {
   //    no grant/event emissions, slots already assigned upstream. A
   //    second tick stays wedged - preserve semantics, never mint.
   // ------------------------------------------------------------------
-  it('tickWorkers: NaN-due cycle persists verbatim, no grant, slots intact, next tick still wedged', () => {
+  it('tick: NaN-due cycle persists verbatim, no grant, next tick still wedged', () => {
     const system = createSystem()
     const poison = makeCycle(LAM, T0, Number.NaN)
     const sibling = makeCycle(LAM, T0, T0 + 50_000)
     system.restoreStates([
-      makeState(LAM, { autoRestart: true, workerCycles: [poison, sibling] }),
+      makeState(LAM, { autoRestart: true, productionCycles: [poison, sibling] }),
     ])
     const { bag, registry } = createBag()
 
-    system.tickWorkers(T0 + 400_000, bag, registry, REALM, 4)
+    system.tick(T0 + 400_000, bag, registry, REALM)
 
-    const cycles = system.getState(LAM)!.workerCycles!
+    const cycles = system.getState(LAM)!.productionCycles!
     expect(cycles).toHaveLength(2)
     // restoreStates detached the payload - pin values, not refs.
     expect(cycles.map((c) => c.cycleId)).toEqual([poison.cycleId, sibling.cycleId])
@@ -278,13 +272,11 @@ describe('fixpoint r20 INT - r19 batch integration probes', () => {
     // No completion -> no grant: empty bag AND empty event queue.
     expect(bag.getAll()).toHaveLength(0)
     expect(system.drainSettlementEvents()).toHaveLength(0)
-    // Sole active site took the whole capacity before the guard ran.
-    expect(system.getState(LAM)!.activeWorkerSlots).toBe(4)
 
     // The wedge is deterministic: a later tick replays the guard and
     // still preserves (the finite sibling never mints under poison).
-    system.tickWorkers(T0 + 500_000, bag, registry, REALM, 4)
-    const cycles2 = system.getState(LAM)!.workerCycles!
+    system.tick(T0 + 500_000, bag, registry, REALM)
+    const cycles2 = system.getState(LAM)!.productionCycles!
     expect(cycles2.map((c) => c.cycleId)).toEqual([poison.cycleId, sibling.cycleId])
     expect(Number.isNaN(cycles2[0]!.completesAtMs)).toBe(true)
     expect(system.drainSettlementEvents()).toHaveLength(0)

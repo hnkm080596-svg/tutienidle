@@ -112,7 +112,10 @@ function canWash(): boolean {
   if (!row) {
     return false
   }
+  // Owner ruling 2026-10-09 - wash reroll tung dong hien co, item khong
+  // co dong phu nao thi khong co gi de roll (domain tra no_affixes).
   return (
+    row.affixCount > 0 &&
     ren !== null &&
     ren.points > 0 &&
     washEssenceOwned.value >= washCost.value.tinhHoa &&
@@ -287,11 +290,11 @@ const washMaterials = computed(() => [
 </script>
 
 <template>
-  <!-- Bo cuc chung voi Cuong Hoa (owner ruling 2026-10-08): Tay Luyen
-       can area cho toi da 5 dong affix nen BO o chieu + 2 vong tron -
-       chi con danh sach affix truoc -> sau (moi dong ten trai, gia tri
-       phai, hairline), hang nguyen lieu rieng cua Tay Luyen va nut hanh
-       dong ghim day card. Chon do truc tiep tren doll. -->
+  <!-- Shared layout with Enhance (owner ruling 2026-10-08): Tay Luyen
+       needs room for up to 5 affix lines so the preview cell + the 2
+       circles are dropped - only the before/after affix list (name
+       left, value right, hairline), the wash materials row, and the
+       action buttons pinned to the card bottom. Pick gear off the doll. -->
   <div class="equipment-forge-workspace forge-wash">
     <h2>{{ t('panels.equipmentHall.tabs.wash') }}</h2>
 
@@ -328,7 +331,7 @@ const washMaterials = computed(() => [
       </div>
       <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.noAffixes') }}</p>
 
-      <!-- Pinned bottom block (same as Cuong Hoa): materials ride above
+      <!-- Pinned bottom block (same as Enhance): materials ride above
            the actions band, both anchored to the card's bottom edge via
            .equipment-workspace (positioned ancestor outside this flex
            column) - no scrollbar ever appears. -->
@@ -348,7 +351,11 @@ const washMaterials = computed(() => [
           </div>
         </div>
       </div>
-      <div class="equipment-forge-actions" :class="{ 'is-pending': pendingWashTicket }">
+      <!-- Owner ruling 2026-10-09: forge uses are a shared wallet between
+           Wash and Refine; a spent wallet freezes the item's sub-lines
+           forever. One small hint line, no layout change. -->
+      <p class="forge-ren-hint">{{ t('panels.equipmentHall.labels.renSharedHint') }}</p>
+      <div class="equipment-forge-actions">
         <EquipmentArtButton filter-art :gold="canWash()" :disabled="!canWash()" @click="doWashPreview">
           {{ t('panels.equipmentHall.buttons.washPreview') }}
         </EquipmentArtButton>
@@ -390,6 +397,20 @@ const washMaterials = computed(() => [
   left: 16px;
   right: 16px;
   bottom: -2px;
+}
+/* Shared-wallet hint sits in the strip between the pinned materials
+   row and the actions band - text only, no layout change. */
+.forge-ren-hint {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 62px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  color: #cbb27a;
+  opacity: 0.9;
 }
 .equipment-forge-workspace h2 {
   font-size: 26px;
@@ -462,7 +483,7 @@ const washMaterials = computed(() => [
   font-size: 13px;
   margin: auto;
 }
-/* Materials row: identical metrics to Cuong Hoa (icon 65px, label
+/* Materials row: identical metrics to Enhance (icon 65px, label
    column ~150px, owned/amount on one baseline). */
 .equipment-forge-materials {
   display: flex;
@@ -477,6 +498,15 @@ const washMaterials = computed(() => [
   align-items: center;
   gap: 10px;
   min-width: 0;
+}
+/* Material name stays on ONE line in both columns - a wrapped name
+   pushed the count into the middle and looked asymmetric (owner
+   callout 2026-10-08). */
+.equipment-material > div:last-child > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
 }
 .equipment-material-icon {
   width: 65px;
@@ -514,9 +544,9 @@ const washMaterials = computed(() => [
   gap: 18px;
   flex: none;
 }
-/* Submit pill = Cuong Hoa size (owner ruling 2026-10-09: 300px).
-   While a roll is pending the row carries 3 pills (Tay Luyen / Giu /
-   Bo) - they shrink to fit the ~580px card. */
+/* Same filter-art pill as Enhance's submit (owner ruling 2026-10-08). */
+/* Three short-label pills share the row when a roll is pending
+   (Wash / Keep / Discard) - same shrink-to-fit as RefineTab. */
 .equipment-forge-actions > button {
   width: 300px;
   min-width: 0;

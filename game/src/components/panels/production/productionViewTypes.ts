@@ -23,7 +23,7 @@ export interface ProductionSiteRow {
 
   autoRestart: boolean
 
-  activeWorkerSlots: number
+  activeWorkerSlots?: number
 
   assignedWorkers?: number
 

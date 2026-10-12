@@ -2,17 +2,25 @@
 // buildGameSave() that -> JSON.stringify -> JSON.parse -> validateGameSaveShape()
 // phai luon ok. Bat ky field bat buoc moi nao thieu trong save (hoac
 // validator qua chat voi field that) deu lam test nay do.
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, expect, it } from 'vitest'
-import { buildGameSave } from './SaveSystem'
+import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
+import { usePlayerStore } from '../../stores/player'
 import { TECHNIQUES } from '../../data/technique/Techniques'
+import { SKILLS } from '../../data/skill/Skills'
 import { zones } from '../../data/stage/Zones'
-import { getRealmIndex } from '../../core/realm/realmSystem'
+import { CORE_REALM_LEVEL, getRealmIndex } from '../../core/realm/realmSystem'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import type { Material } from '../../core/material/Material'
 import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
+import { asBaseStats } from '../../core/stats/StatBlock'
+import { TribulationOutcomeService } from '../../core/tribulation/TribulationOutcomeService'
+import { resolveTalentEntitlement } from '../../core/talent/TalentEntitlement'
+import { unlockAllTalentsForTests, lockBetaTalentsForTests } from '../../core/game/__fixtures__/betaTalentsUnlock'
+import { primeMortalCreationPick } from './GameSave.fixture'
 
 const TEST_MATERIAL: Material = {
   id: 'round_trip_test_material',
@@ -26,6 +34,12 @@ function createBootedGameManager(): GameManager {
 
   gameManager.catalogOps.registerMaterials([TEST_MATERIAL])
 
+  return gameManager
+}
+
+function createQuanKhiGameManager(): GameManager {
+  const gameManager = new GameManager()
+  gameManager.catalogOps.registerSkillTemplates(SKILLS)
   return gameManager
 }
 
@@ -63,6 +77,93 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', () => {
+  it('real Quan Khi victory stays mortal and round-trips its receipt-bound qi_refining entitlement before and after choice', () => {
+    unlockAllTalentsForTests()
+    try {
+      setActivePinia(createPinia())
+      const gameManager = createQuanKhiGameManager()
+      const player = usePlayerStore()
+      player.realmId = 'mortal'
+      player.realmLevel = CORE_REALM_LEVEL
+      primeMortalCreationPick(player, gameManager.skillManager)
+      player.baseStats = asBaseStats({
+        ...player.baseStats,
+        maxHp: 5_000_000,
+        defense: 50_000,
+        hpRegenPerTurn: 0,
+      })
+      gameManager.setActivePlayer(player)
+
+      expect(gameManager.startTribulation(player, 'qi_refining')).toBe(true)
+      let guard = 0
+      while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 5_000) {
+        gameManager.tickOps.update(1)
+        const question = gameManager.tribulationDirector.getState()?.currentQuestion
+        if (question) {
+          expect(gameManager.tribulationDirector.answerQuestion(question.correctAnswerIndex)).toBe(true)
+        }
+      }
+      expect(gameManager.tribulationDirector.getState()?.state).toBe('victory')
+
+      const outcome = new TribulationOutcomeService().settleOutcome(
+        player,
+        gameManager,
+        gameManager.tribulationDirector,
+      )
+      expect(outcome).toMatchObject({ kind: 'victory', realmEntered: null, standalonePanel: 'quan_khi' })
+      expect(player.realmId).toBe('mortal')
+      expect(player.pendingTalentEntitlement?.realmId).toBe('qi_refining')
+
+      const beforeChoice = JSON.parse(JSON.stringify(buildGameSave(player.$state, gameManager))) as GameSave
+      const committed = (beforeChoice.tribulation as { committedOutcome: Record<string, unknown> }).committedOutcome
+      expect(committed.receipt).toMatchObject({ kind: 'victory', realmEntered: null, standalonePanel: 'quan_khi' })
+      expect(validateGameSaveShape(beforeChoice)).toMatchObject({ ok: true, issues: [] })
+
+      const unbound = structuredClone(beforeChoice)
+      delete unbound.tribulation
+      const unboundResult = validateGameSaveShape(unbound)
+      expect(unboundResult.ok).toBe(false)
+      expect(unboundResult.issues.map((issue) => issue.path)).toContain(
+        'player.pendingTalentEntitlement.realmId',
+      )
+
+      setActivePinia(createPinia())
+      const reloadedManager = createQuanKhiGameManager()
+      const reloadedPlayer = usePlayerStore()
+      const firstRestore = restoreGameSession(reloadedPlayer, reloadedManager, beforeChoice)
+      expect(firstRestore.status, firstRestore.status === 'rejected' ? firstRestore.message : '').toBe('ok')
+      expect(reloadedPlayer.realmId).toBe('mortal')
+      expect(reloadedPlayer.pendingTalentEntitlement).toEqual(player.pendingTalentEntitlement)
+      expect(reloadedManager.tribulationDirector.serializeRuntime().committedOutcome?.receipt).toEqual(
+        committed.receipt,
+      )
+
+      const decisionTalent = reloadedPlayer.pendingTalentEntitlement!.offeredTalentIds[0]!
+      expect(resolveTalentEntitlement(reloadedPlayer, { kind: 'new', talentId: decisionTalent })).toBe(true)
+      expect(reloadedPlayer.pendingTalentEntitlement).toBeUndefined()
+      const afterChoice = JSON.parse(JSON.stringify(buildGameSave(reloadedPlayer.$state, reloadedManager))) as GameSave
+      expect(validateGameSaveShape(afterChoice)).toMatchObject({ ok: true, issues: [] })
+      const unboundChoice = structuredClone(afterChoice)
+      delete unboundChoice.tribulation
+      const unboundChoiceResult = validateGameSaveShape(unboundChoice)
+      expect(unboundChoiceResult.ok).toBe(false)
+      expect(
+        unboundChoiceResult.issues.some((issue) => issue.path.startsWith('player.selectedTalentIds[')),
+      ).toBe(true)
+
+      setActivePinia(createPinia())
+      const finalManager = createQuanKhiGameManager()
+      const finalPlayer = usePlayerStore()
+      const finalRestore = restoreGameSession(finalPlayer, finalManager, afterChoice)
+      expect(finalRestore.status, finalRestore.status === 'rejected' ? finalRestore.message : '').toBe('ok')
+      expect(finalPlayer.realmId).toBe('mortal')
+      expect(finalPlayer.pendingTalentEntitlement).toBeUndefined()
+      expect(finalPlayer.selectedTalentIds).toContain(decisionTalent)
+    } finally {
+      lockBetaTalentsForTests()
+    }
+  })
+
   it('save mới khởi tạo (chưa có gì) vẫn nguyên shape', () => {
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()

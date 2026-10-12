@@ -151,16 +151,13 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
     manager.tickOps.reconcileQuestLifecycle()
 
     const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
-    player.autoWorkerCapacity = 1 // one CHQ worker -> the due lane is eligible
-
-    // Backdated worker lane: already complete on the next update tick.
+    // Backdated site cycle: already complete on the next update tick.
     manager.productionSystem.restoreStates([
       {
         siteId,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'due_lane',
             siteId,
@@ -175,7 +172,7 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
       },
     ])
 
-    const cycle = manager.productionSystem.getState(siteId)!.workerCycles![0]!
+    const cycle = manager.productionSystem.getState(siteId)!.productionCycles![0]!
     const rewards = manager.productionSystem.rollRewards(cycle)
 
     expect(rewards.length).toBeGreaterThan(0)
@@ -243,15 +240,12 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
     manager.tickOps.reconcileQuestLifecycle()
 
     const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
-    player.autoWorkerCapacity = 1 // one CHQ worker -> the due lane is eligible
-
     manager.productionSystem.restoreStates([
       {
         siteId,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'due_lane',
             siteId,
@@ -266,7 +260,7 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
       },
     ])
 
-    const cycle = manager.productionSystem.getState(siteId)!.workerCycles![0]!
+    const cycle = manager.productionSystem.getState(siteId)!.productionCycles![0]!
     const rewards = manager.productionSystem.rollRewards(cycle)
 
     expect(rewards.length).toBeGreaterThan(0)

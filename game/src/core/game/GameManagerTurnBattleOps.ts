@@ -109,6 +109,7 @@ import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import type { RewardReceiver } from '../reward/RewardSystem'
 
 import type { TemplateRegistry } from './TemplateRegistry'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 
 /**
@@ -383,6 +384,11 @@ export class GameManagerTurnBattleOps {
     // to turnBattle.players[0] so companion/enemy casts never write into
     // the player's skillCastCounts mirror or core_<id> node level).
     recordPrimaryPlayerCast?: (skillId: string) => void
+    // GP-01 - authorized live-time owner for the battle start stamp and
+    // the auto-farm cycle clock (forwarded to rewardOps/autoFarmOps).
+    // Optional for B1: direct constructor fixtures keep wall-clock
+    // behavior; GameManager always injects the shared TimeAuthority.
+    time?: TimeAuthority
    }) {
     this.liveStatModifiers = bindLiveModifiersProvider(deps)
     this.turnBattleSystem = new TurnBattleSystem(
@@ -426,6 +432,7 @@ export class GameManagerTurnBattleOps {
       stageWaves: deps.stageWaves,
       eventBus: deps.eventBus,
       bankPassiveCarry: deps.bankPassiveCarry,
+      time: deps.time,
     })
 
     this.autoFarmOps = new GameManagerAutoFarmOps({
@@ -436,6 +443,7 @@ export class GameManagerTurnBattleOps {
       enemySystem: deps.enemySystem,
       buildPlayerRewardReceiver: deps.buildPlayerRewardReceiver,
       eventBus: deps.eventBus,
+      time: deps.time,
     })
 
     this.detachClockStep = this.combatClock.onStep((steps) => this.advanceCombat(steps))
@@ -2593,7 +2601,8 @@ export class GameManagerTurnBattleOps {
       this.presentationOps.session.end(activeSession)
     }
 
-    this.turnBattleStartedAtMs = Date.now()
+    // GP-01 - same clock the rewardOps clearSeconds read uses.
+    this.turnBattleStartedAtMs = this.deps.time?.now() ?? Date.now()
 
     const session: SessionRef = {
       kind: 'combat',

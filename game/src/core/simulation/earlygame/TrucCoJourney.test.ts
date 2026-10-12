@@ -86,7 +86,7 @@ import { isCompanionPullPoolEnabled } from '../../realm/ReleasePolicy'
 import { makeInstance } from '../../equipment/EquipmentInstance.fixture'
 import { EQUIPMENT_SLOTS } from '../../equipment/EquipmentSlotState'
 import { usePlayerStore } from '../../../stores/player'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
 // system's ENABLED implementation (sec.11-15: dormant, not deleted),
@@ -104,7 +104,6 @@ import {
 } from '../../realm/body/ZhouTianChapter'
 import { EarlyGameSession } from './EarlyGameSession'
 import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
-import { getWorkerCapacityForLevel } from '../../production/WorkerCapacity'
 
 const PINNED_PROFILE = {
   name: 'journey',
@@ -281,9 +280,6 @@ function assertRestoredSaveParity(before: GameSave, after: GameSave): void {
   const actual = normalizeVolatileSaveFields(after)
   // Default-built (2026-10-03): the session restore grants any missing
   // registered building at lv1 - a carried row must round-trip verbatim.
-  const actualChq = (actual.buildings ?? []).find(
-    (entry) => entry.buildingId === 'chi_hien_quan',
-  )
   if (expected.buildings !== undefined || actual.buildings !== undefined) {
     expect(actual.buildings ?? []).toEqual(
       expect.arrayContaining(
@@ -291,16 +287,6 @@ function assertRestoredSaveParity(before: GameSave, after: GameSave): void {
       ),
     )
     actual.buildings = expected.buildings
-  }
-  // autoWorkerCapacity is re-derived from the carried chi_hien_quan
-  // instance at restore (formula over the persisted field): a carried
-  // 0 becomes the lv1 baseline 3. Verify the restored value against the
-  // ACTUAL instance level, then exclude the field from byte-parity.
-  if (actualChq !== undefined) {
-    expect(actual.player.autoWorkerCapacity).toBe(
-      getWorkerCapacityForLevel(actualChq.level),
-    )
-    actual.player.autoWorkerCapacity = expected.player.autoWorkerCapacity
   }
   if (expected.productionSites !== undefined || actual.productionSites !== undefined) {
     expect(actual.productionSites ?? []).toEqual(
@@ -344,12 +330,19 @@ beforeEach(() => {
   setActivePinia(createPinia())
 })
 
+afterEach(() => {
+  vi.restoreAllMocks()
+  vi.useRealTimers()
+})
+
 describe('TrucCoJourney - ordered journey', () => {
   it(
     'drives the pinned leg order A->B->E.1->D.1+D.2->C/E.2->G->F->I->K->L on real seams',
     { timeout: 300_000 },
     () => {
-      vi.useFakeTimers()
+      vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
       // Economy/equipment draws ride unseeded Math.random BY DESIGN
       // (a seeded battle must not pin drops - EarlyGameSession), which
       // leaves this pinned order nondeterministic whenever a marginal
@@ -1081,7 +1074,9 @@ describe('TrucCoJourney - ordered journey', () => {
 // ===== Leg J - determinism =====
 describe('TrucCoJourney - determinism', () => {
   const driveJourneyCore = (): GameSave => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     // Each run owns an independent store - otherwise run two's seeded
     // driver would inherit run one's persisted state.
     setActivePinia(createPinia())
@@ -1142,7 +1137,9 @@ describe('TrucCoJourney - grade ladder', () => {
     seed: (s: EarlyGameSession) => void,
     realmLevel: number,
   ): string | undefined => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()
     s.player.realmLevel = 12
     expect(s.performRitual('spell', 'spell_pathway')).toBe(true)
@@ -1208,7 +1205,9 @@ describe('TrucCoJourney - grade ladder', () => {
     // The lineage survives only when the MORTAL exit also committed
     // hidden: mortal hidden body complete + Lv18 + all-5 at the
     // mortal effective cap (floor(10 x 1.1) = 11) BEFORE the ritual.
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()
     s.player.realmLevel = 18
     s.player.completedStageIds = [...MORTAL_STAGE_IDS]
@@ -1256,7 +1255,9 @@ describe('TrucCoJourney - grade ladder', () => {
 // incoherent persisted state (C2C-64 coherence path, real validator).
 describe('TrucCoJourney - save integrity', () => {
   it('rejects a save whose zhou_tian progressed past the meridian gate', () => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()
     const save = buildGameSave(s.player, s.gameManager)
     save.player.realmId = 'foundation_establishment'

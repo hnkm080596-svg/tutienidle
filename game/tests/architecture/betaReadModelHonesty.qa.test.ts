@@ -335,15 +335,12 @@ describe('QA read-model honesty: production workforce surface (contract sec.4C)'
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [],
-        assignedWorkers: 5,
+        productionCycles: [],
       },
     ])
 
     const view = mountPanel(ProductionPanel, gameManager, (player) => {
       player.$state.realmId = 'mortal'
-      player.$state.autoWorkerCapacity = 5
     })
 
     await nextTick()

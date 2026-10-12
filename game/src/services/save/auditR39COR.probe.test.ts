@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../../core/battle/turn/CombatClock'
 import { defineEnemy } from '../../core/enemy/Enemy'
 import { createDefaultPlayer, type PlayerData } from '../../core/player/Player'
@@ -63,8 +64,8 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 // ASCII only (P15).
 // ============================================================================
 
-function registeredManager(): GameManager {
-  const manager = new GameManager()
+function registeredManager(time?: TimeAuthority): GameManager {
+  const manager = new GameManager(time ? { time } : undefined)
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
@@ -283,8 +284,8 @@ describe('r39 COR - B: recordPerfectClearIfEligible keeps the pre-emit startedAt
     rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 
-  function pcHarness() {
-    const manager = registeredManager()
+  function pcHarness(time: TimeAuthority) {
+    const manager = registeredManager(time)
     const clock = new ManualClockSource()
     manager.setCombatClockSource(clock)
     const player: PlayerData = createDefaultPlayer()
@@ -307,12 +308,13 @@ describe('r39 COR - B: recordPerfectClearIfEligible keeps the pre-emit startedAt
 
   it('a fresh mint inside battle_end cannot poison the ended stage clear - the pre-emit snapshot lands', () => {
     let now = 1_000_000
-    vi.spyOn(Date, 'now').mockImplementation(() => now)
-    const { manager, player, clock } = pcHarness()
+    let monotonic = 0
+    const time = new TimeAuthority({ wallNow: () => now, monotonicNow: () => monotonic })
+    const { manager, player, clock } = pcHarness(time)
 
     manager.turnBattleOps.startStage(player, PC_STAGE, false)
-    // Wall-clock advances while the battle runs (the honest measurement).
-    now += 5000
+    // The authoritative clock advances while the battle runs.
+    monotonic += 5000
 
     let minted = false
     manager.eventBus.on('battle_end', () => {
@@ -335,11 +337,12 @@ describe('r39 COR - B: recordPerfectClearIfEligible keeps the pre-emit startedAt
 
   it('control: without a mid-emit mint the same battle records the honest elapsed seconds', () => {
     let now = 1_000_000
-    vi.spyOn(Date, 'now').mockImplementation(() => now)
-    const { manager, player, clock } = pcHarness()
+    let monotonic = 0
+    const time = new TimeAuthority({ wallNow: () => now, monotonicNow: () => monotonic })
+    const { manager, player, clock } = pcHarness(time)
 
     manager.turnBattleOps.startStage(player, PC_STAGE, false)
-    now += 5000
+    monotonic += 5000
 
     driveToVictory(manager, clock)
 
@@ -351,8 +354,9 @@ describe('r39 COR - B: recordPerfectClearIfEligible keeps the pre-emit startedAt
 
   it('a stage mint inside battle_end cannot poison the ended stage clear either', () => {
     let now = 1_000_000
-    vi.spyOn(Date, 'now').mockImplementation(() => now)
-    const { manager, player, clock } = pcHarness()
+    let monotonic = 0
+    const time = new TimeAuthority({ wallNow: () => now, monotonicNow: () => monotonic })
+    const { manager, player, clock } = pcHarness(time)
 
     const stage2: Stage = {
       id: 'pc_stage_2',
@@ -367,7 +371,7 @@ describe('r39 COR - B: recordPerfectClearIfEligible keeps the pre-emit startedAt
     manager.catalogOps.registerStages([stage2])
 
     manager.turnBattleOps.startStage(player, PC_STAGE, false)
-    now += 5000
+    monotonic += 5000
 
     let minted = false
     manager.eventBus.on('battle_end', () => {

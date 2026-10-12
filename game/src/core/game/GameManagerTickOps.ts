@@ -7,8 +7,8 @@ import type { PillBag } from '../pill/PillBag'
 import type { PillRegistry } from '../pill/PillRegistry'
 import type { PlayerData } from '../player/Player'
 import type { DecomposeOutputEntry } from '../production/DecomposeSystem'
+import type { DecomposeSystem } from '../production/DecomposeSystem'
 import type { ProductionSystem } from '../production/ProductionSystem'
-import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import type { QuestManager } from '../quest/QuestManager'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
@@ -20,6 +20,7 @@ import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { isBetaFeature } from '../betaScope'
 import type { NotificationQueue } from './NotificationQueue'
 import type { GameManagerTurnBattleOps } from './GameManagerTurnBattleOps'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 /**
  * Per-tick orchestration (App.vue game loop -> GameManager.update).
@@ -49,7 +50,7 @@ export class GameManagerTickOps {
       productionSystem: ProductionSystem
       materialBag: MaterialBag
       materialRegistry: MaterialRegistry
-      getWorkerAssignments: () => Map<string, number>
+      decomposeSystem: DecomposeSystem
       alchemySystem: AlchemySystem
       pillBag: PillBag
       pillRegistry: PillRegistry
@@ -57,6 +58,10 @@ export class GameManagerTickOps {
       passiveSystem: PassiveSystem
       turnBattleOps: GameManagerTurnBattleOps
       tribulationDirector: TribulationDirector
+      // GP-01 - authorized live-time owner. Optional for B1: direct
+      // constructor fixtures keep wall-clock behavior; GameManager
+      // always injects the shared TimeAuthority.
+      time?: TimeAuthority
       // Session rng seam (F-W-7) - GameManager-owned injectable stream.
       sessionRng: () => number
     },
@@ -135,6 +140,7 @@ export class GameManagerTickOps {
           this.deps.questRegistry,
           this.deps.questManager,
           activePlayer,
+          this.deps.time?.now() ?? Date.now(),
         )
       ) {
         this.deps.notifications.push({ kind: 'craft', message: 'Nhiệm vụ hằng ngày đã làm mới' })
@@ -145,25 +151,11 @@ export class GameManagerTickOps {
         this.reconcileQuestLifecycle()
       }
 
-      // R7 (AR-08) shared worker pool - production receives the CHQ
-      // capacity through the ONE read rule (Mission D / spec D5) - the
-      // same helper the restore path uses (GameManagerSaveRestore).
-      // DIRECT DECOMPOSE REWORK (2026-10-11): decompose no longer
-      // claims workers from the pool (direct action, no cycle).
-      const effectiveWorkerCapacity = betaEffectiveWorkerCapacity(
-        activePlayer.autoWorkerCapacity ?? 0,
-      )
-      const productionCapacity = resolveProductionWorkerCapacity(
-        effectiveWorkerCapacity,
-      )
-
-      this.deps.productionSystem.tickWorkers(
-        Date.now(),
+      this.deps.productionSystem.tick(
+        this.deps.time?.now() ?? Date.now(),
         this.deps.materialBag,
         this.deps.materialRegistry,
         activePlayer.realmId,
-        productionCapacity,
-        this.deps.getWorkerAssignments(),
         this.deps.sessionRng,
       )
 
@@ -202,7 +194,7 @@ export class GameManagerTickOps {
       // Dan Phong settle (S8.3). M3 - Hoa Hau Thong Than: x2 pill yield
       // per successful job - read from activePlayer each tick.
       this.deps.alchemySystem.tick(
-        Date.now(),
+        this.deps.time?.now() ?? Date.now(),
         this.deps.pillBag,
         (pillId) =>
           this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
@@ -250,11 +242,6 @@ export class GameManagerTickOps {
         }
       }
 
-      // DIRECT DECOMPOSE REWORK (2026-10-11): the decompose cycle
-      // engine retired - Phan Giai is a direct action on
-      // decomposeSystem.decompose(), which credits through
-      // deliverDecomposeOutput() below via an injected callback. No
-      // per-tick work remains here.
     }
 
     // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiep Thuong debuff)

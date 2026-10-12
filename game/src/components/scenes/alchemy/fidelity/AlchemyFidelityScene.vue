@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import EquipmentArtButton from '@/components/common/art/EquipmentArtButton.vue'
 import SlotView from '@/components/common/SlotView.vue'
 import type { AlchemyRecipeChoice, AlchemyRecipeDisplay, AlchemyJobDisplay } from './alchemyUi'
@@ -142,7 +141,7 @@ function pickVariant(id: string) {
 
 // Dang luyen = co job trong hang cho cua dan dang chon -> sao bang quet qua
 // cac o nguyen lieu + vien dan, day nang luong chay sang lien tuc.
-const brewing = computed(() => props.jobs.some(j => j.recipeId === props.recipe?.id))
+const brewing = computed(() => props.jobs.some(j => j.state === 'active' && j.recipeId === props.recipe?.id))
 
 const emptyJobSlots = computed(() => Math.max(0, props.capacity - props.jobs.length))
 
@@ -161,7 +160,6 @@ function jobSubline(job: AlchemyJobDisplay) {
     <header class="alchemy-head">
       <div class="alchemy-head__title"><h1>{{ t('alchemy.title') }}</h1><img class="alchemy-divider" :src="titleDivider" alt=""></div>
       <span class="alchemy-subtitle">{{ t('alchemy.subtitle') }}</span>
-      <BuildingUpgradeButton building-id="pill_room" class="alchemy-upgrade" />
     </header>
 
     <div class="alchemy-cols">
@@ -207,14 +205,14 @@ function jobSubline(job: AlchemyJobDisplay) {
       <!-- Cot phai 30%: card chua cac job chong len nhau. -->
       <aside class="alchemy-jobs" :aria-label="t('alchemy.queueTitle')">
         <div class="alchemy-jobs__head"><h2>{{ t('alchemy.queueTitle') }}</h2><span>{{ jobs.length }} / {{ capacity }}</span></div>
-        <article v-for="job in jobs" :key="job.id" class="job-card job-card--brewing">
+        <article v-for="job in jobs" :key="job.id" :class="['job-card', job.state === 'waiting' ? 'job-card--waiting' : 'job-card--brewing']">
           <img :src="job.icon" alt="">
           <div class="job-card__info">
-            <div class="job-card__title"><h3>{{ job.name }}<em v-if="(job.quantity ?? 1) > 1" class="job-card__qty">×{{ job.quantity }}</em></h3><span class="job-card__state">{{ t('alchemy.brewing') }}</span></div>
+            <div class="job-card__title"><h3>{{ job.name }}<em v-if="(job.quantity ?? 1) > 1" class="job-card__qty">×{{ job.quantity }}</em></h3><span class="job-card__state">{{ t(job.state === 'waiting' ? 'alchemy.waitingJob' : 'alchemy.activeKiln') }}</span></div>
             <div class="job-card__bar"><span :style="{ width: `${Math.max(0, Math.min(100, job.progress))}%` }" /></div>
             <small>{{ jobSubline(job) }}</small>
           </div>
-          <button class="job-card__cancel" :aria-label="t('alchemy.cancelJob')" @click="emit('cancel', job.id)">×</button>
+          <button class="job-card__cancel" :aria-label="t('alchemy.cancelJob')" :title="t('alchemy.cancelJob')" @click="emit('cancel', job.id)">×</button>
         </article>
         <div v-for="index in emptyJobSlots" :key="`empty-${index}`" class="job-card job-card--empty"><span>◇</span><small>{{ t('alchemy.emptySlot') }}</small></div>
       </aside>
@@ -234,8 +232,6 @@ function jobSubline(job: AlchemyJobDisplay) {
 :is(#app,body) .alchemy-head h1 { margin:0; padding:0; font-family:'UTM OngDoGia','Ma Shan Zheng','ZCOOL XiaoWei',var(--font-display,Georgia,serif); font-size:56px; font-style:normal; font-weight:400; line-height:58px; color:transparent; background:linear-gradient(100deg,#241a0c 20%,#6b5224 40%,#fff6d8 50%,#6b5224 60%,#241a0c 80%); background-size:220% 100%; background-position:0% 0; -webkit-background-clip:text; background-clip:text; }
 .alchemy-divider { width:300px; object-fit:contain; opacity:.9; position:relative; top:-39px; pointer-events:none; }
 .alchemy-subtitle { position:absolute; right:230px; top:50%; transform:translateY(-50%); margin:0; color:#88703e; font-size:15px; width:180px; text-align:right; }
-.alchemy-upgrade { position:absolute; right:0; top:50%; transform:translateY(-50%); width:210px; }
-.alchemy-upgrade :deep(.building-heading__cost) { color:#8b7042; font-size:11px; }
 
 /* Ba cot 20 / 50 / 30 trong vung noi dung cua sheet. */
 .alchemy-cols { position:absolute; left:372px; top:192px; width:1011px; height:500px; display:flex; gap:14px; }

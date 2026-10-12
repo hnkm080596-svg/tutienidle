@@ -68,14 +68,15 @@ import {
   unsupportedReleaseReason,
 } from '@/core/betaScopeSurface'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
+import { restoreAuthoredFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import type { ElementType } from '@/core/element/ElementType'
 
-// The global test setup unlocks every catalog way for suites written
-// pre-lock and mirrors the production BETA_FEATURES table; the
-// canonical beta journey re-pins the beta way set and rides the real
-// production feature scope (wash/refine/decompose admitted).
+// The global test setup unlocks every catalog way + feature for suites
+// written pre-lock; the canonical beta journey runs under the shipped
+// feature table (wash/refine live, everything else still locked).
 lockBetaWaysForTests()
+restoreAuthoredFeaturesForTests()
 
 const SEED = 20260930
 const COMMIT_ELEMENT: ElementType = 'fire'
@@ -109,15 +110,7 @@ const SCOPE_HIDDEN_WHEEL_SLOTS = [
 const SCOPE_HIDDEN_BUILDINGS = ['chi_hien_quan'] as const
 const SCOPE_HIDDEN_STANDALONE_PANELS = ['artifact', 'tran_phap', 'companion'] as const
 const SCOPE_HIDDEN_LEFT_MODES = ['worker_lodge'] as const
-// Equipment ops follow the production feature table: flag-bound tabs
-// admit iff their BETA_FEATURES flag is on (wash/refine/decompose are
-// all open today); an unlisted tab id always fails closed.
-const FLAG_BOUND_EQUIPMENT_TABS = {
-  wash: 'equipmentWash',
-  refine: 'equipmentRefine',
-  decompose: 'equipmentOreDecompose',
-} as const
-const UNLISTED_EQUIPMENT_TAB_IDS = ['ore_decompose'] as const
+const SCOPE_HIDDEN_EQUIPMENT_TABS = ['decompose', 'ore_decompose'] as const
 // Every tier above the beta ceiling (foundation_establishment) is a
 // scope-hidden realm: derived from the authoritative tier list, so a
 // realm added post-ceiling is covered without touching this test.
@@ -260,36 +253,21 @@ function assertScopeSanity(label: string): void {
     expect(isBetaLeftPanelMode(mode), `${label}: left mode ${mode}`).toBe(false)
   }
 
-  // Economy surfaces: equipment tabs mirror the production feature
-  // table - the always-on pair (enhance/dissolve) plus every flag-bound
-  // op whose feature is on; unlisted ids fail closed.
-  for (const tab of BETA_EQUIPMENT_TABS) {
-    expect(isBetaEquipmentTab(tab), `${label}: equipment tab ${tab}`).toBe(true)
-  }
-  for (const [tab, feature] of Object.entries(FLAG_BOUND_EQUIPMENT_TABS)) {
-    expect(
-      isBetaEquipmentTab(tab),
-      `${label}: equipment tab ${tab} must mirror BETA_FEATURES.${feature}`,
-    ).toBe(BETA_FEATURES[feature])
-  }
-  for (const tab of UNLISTED_EQUIPMENT_TAB_IDS) {
-    expect(isBetaEquipmentTab(tab), `${label}: unlisted equipment tab ${tab}`).toBe(false)
+  // Economy surfaces: equipment hall admits enhance/wash/refine/
+  // dissolve; decompose stays scope_hidden at the domain seam.
+  for (const tab of SCOPE_HIDDEN_EQUIPMENT_TABS) {
+    expect(isBetaEquipmentTab(tab), `${label}: equipment tab ${tab}`).toBe(false)
   }
   expect([...BETA_EQUIPMENT_TABS].sort(), `${label}: beta equipment tabs`).toEqual([
     'dissolve',
     'enhance',
+    'refine',
+    'wash',
   ])
 
-  // Worker Lodge FINAL POLICY: every authored tab scope-hidden,
-  // nhan_cong included - manual workforce has no UI.
-  const lodge = gm.buildingOps.getWorkerLodgeSurfaceModel(player)
-  expect(lodge.tabs.length, `${label}: worker lodge tab census`).toBeGreaterThan(0)
-  for (const tab of lodge.tabs) {
-    expect(tab.verdict, `${label}: worker lodge tab ${tab.id}`).toBe('scope-hidden')
-    if (tab.id === 'nhan_cong') {
-      expect(tab.manualAssignOffered, `${label}: nhan_cong manual assign`).not.toBe(true)
-    }
-  }
+  // The worker lodge is retained only as art; no workforce read model exists.
+  expect(gm.buildingOps).not.toHaveProperty('getWorkerLodgeSurfaceModel')
+  expect(gm.buildingOps).not.toHaveProperty('assignWorkers')
 
   // Quests: once-cadence only; no daily cadence exists in beta.
   for (const quest of gm.questOps.getBetaQuestSurfaceModels()) {

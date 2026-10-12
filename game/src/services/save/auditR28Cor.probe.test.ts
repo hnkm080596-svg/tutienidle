@@ -36,8 +36,6 @@ import {
   CYCLE_BASE_SECONDS_BY_REALM,
   computeCycleSeconds,
 } from '../../core/production/ProductionBalance'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
 import type { ProductionCycle } from '../../core/production/ProductionTypes'
 
 // ============================================================================
@@ -251,8 +249,7 @@ describe('auditR28 COR probe - restore-clock boundaries (B)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 3,
-          workerCycles: [
+          productionCycles: [
             workerCycle(marker - 5_000, 'deep'),
             workerCycle(marker, 'edge'),
             workerCycle(marker + 60_000, 'post'),
@@ -263,7 +260,7 @@ describe('auditR28 COR probe - restore-clock boundaries (B)', () => {
     )
 
     const byId = new Map(
-      system.getState(FOREST_SITE_ID)!.workerCycles!.map((c) => [c.cycleId, c]),
+      system.getState(FOREST_SITE_ID)!.productionCycles!.map((c) => [c.cycleId, c]),
     )
     // r30-AUT-3: a negative restore clock is outside the persisted
     // domain - the shift arm no longer fires; every pair keeps its own
@@ -287,24 +284,25 @@ describe('auditR28 COR probe - restore-clock boundaries (B)', () => {
     expect(over.serializeRuntime().cooldownUntil).toBe(bound)
   })
 
-  it('B3 decompose: restore ignores nextCycleAt entirely (direct rework - no deadline channel)', () => {
-    const bound = currentMs + 30_000
-
-    const exact = new DecomposeSystem(new MaterialBag())
-    exact.restore({
+  it('B3 legacy decompose timer fields normalize to an inert save state', () => {
+    const manager = registeredManager()
+    const player = createDefaultPlayer()
+    manager.setActivePlayer(player)
+    primeMortalCreationPick(player, manager.skillManager)
+    const wire = JSON.parse(JSON.stringify(buildGameSave(player, manager))) as GameSave
+    wire.decompose = {
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-      nextCycleAt: bound,
+      nextCycleAt: currentMs + 30_001,
       started: true,
-    })
-    expect(exact.getSaveState()).toEqual({})
+    }
 
-    const over = new DecomposeSystem(new MaterialBag())
-    over.restore({
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-      nextCycleAt: bound + 1,
-      started: true,
+    expect(validateGameSaveShape(wire).ok).toBe(true)
+    manager.saveOps.restoreFromSave(wire)
+    expect(manager.decomposeSystem.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
     })
-    expect(over.getSaveState()).toEqual({})
   })
 })
 
@@ -491,8 +489,7 @@ describe('auditR28 COR probe - negative marker end-to-end (D)', () => {
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 2,
-        workerCycles: [
+        productionCycles: [
           workerCycle(marker - 5_000, 'pre'), // began before the marker: stays
           workerCycle(marker + 60_000, 'post'), // began past the marker: shifts
         ],
@@ -514,7 +511,7 @@ describe('auditR28 COR probe - negative marker end-to-end (D)', () => {
     const byId = new Map(
       reader.productionSystem
         .getState(FOREST_SITE_ID)!
-        .workerCycles!.map((c) => [c.cycleId, c]),
+        .productionCycles!.map((c) => [c.cycleId, c]),
     )
     // r30-AUT-3: restoreClock = min(marker, Date.now()) is negative ->
     // outside [0, 2^52), so every began pair restores VERBATIM - no

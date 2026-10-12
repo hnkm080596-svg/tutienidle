@@ -300,22 +300,11 @@ describe('auditR23 COR probe - 2^52 admission band (attack c)', () => {
 
   it('player.autoWorkerCapacity > 65536 rejects; 65536 admits', () => {
     const over = cleanSave()
-    over.player.autoWorkerCapacity = 65_537
+    ;(over.player as unknown as Record<string, unknown>).autoWorkerCapacity = 65_537
     expect(validateGameSaveShape(over).ok).toBe(false)
 
-    // F-W-16 sibling pin: capacity > 0 requires a chi_hien_quan
-    // instance in buildings - include one so ONLY the 65536 bound is
-    // under test here.
     const atBound = cleanSave()
-    atBound.player.autoWorkerCapacity = 65_536
-    atBound.buildings = [
-      {
-        instanceId: 'inst_r23_chq',
-        buildingId: 'chi_hien_quan',
-        level: 1,
-        lastCollectedAt: Date.now(),
-      },
-    ] as unknown as typeof atBound.buildings
+    ;(atBound.player as unknown as Record<string, unknown>).autoWorkerCapacity = 65_536
     const result = validateGameSaveShape(atBound)
     expect(result.ok, JSON.stringify(result.issues)).toBe(true)
   })
@@ -441,3 +430,4 @@ describe('auditR23 COR probe - O(1) insight drain vs loop (attack d)', () => {
     expect(divergenceFound).toBe(true)
   })
 })
+

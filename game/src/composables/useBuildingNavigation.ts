@@ -88,7 +88,7 @@ export function useBuildingNavigation() {
     }
 
     if (template.producesMaterialId) {
-      if (gameManager.buildingOps.isBuildingStorageFull(instance.instanceId, Date.now() / 1000)) {
+      if (gameManager.buildingOps.isBuildingStorageFull(instance.instanceId)) {
         return 'ready'
       }
     }

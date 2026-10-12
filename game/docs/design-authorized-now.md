@@ -1,8 +1,10 @@
 # Design Note — Authorized Now cho toàn bộ tick chain (GP-01)
 
 Ngày: 2026-10-12 · Branch: `devin/dot1-authorized-now-design` (tách từ `devin/khai-mach`)
-Trạng thái: DESIGN ONLY — chưa đụng production code. Câu trả lời cho "ai own authorized now"
-phải chốt trước khi ai code.
+Trạng thái: IMPLEMENTATION IN PROGRESS — B0/B1 tại 8530e5b; B2/B3/B4 đang
+hoàn thiện local. Ruling bổ sung: anchor server đầu tiên thay epoch tạm trước
+restore/tạo nhân vật và trước gameplay online; thiếu stamp thì boot thất bại.
+Sau initialization, rebase chỉ tiến. Inject qua GameManager; chưa có chứng nhận QA hoàn tất.
 
 ## 0. Vấn đề (GP-01 — wall-clock exploit)
 
@@ -165,8 +167,10 @@ export interface TimeAuthorityDeps {
 export class TimeAuthority {
   constructor(deps?: TimeAuthorityDeps)
 
-  /** Authorized wall-clock ms epoch. Không bao giờ giảm. */
+  /** Authorized epoch; không giảm sau anchor server đầu tiên. */
   now(): number
+  /** Thay epoch tạm trước gameplay remote; lần sau chỉ rebase tiến. */
+  anchorFromServer(serverWallMs: number): boolean
   /** now()/1000 — cho các field seconds-domain (buildings). */
   nowSeconds(): number
   /** Đồng hồ monotonic thô — elapsed thuần (lease, debounce). */
@@ -184,6 +188,10 @@ Ngữ nghĩa `now()` — "server-anchored khi online, monotonic-rebase khi offli
   kẹp non-decreasing (track `lastNow` — `max(lastNow, computed)`).
 - **Không đọc `Date.now()` trên đường nóng.** Chỉnh đồng hồ hệ thống sau khi anchor
   → `now()` không hề nhúc nhích. Exploit GP-01 chết tại gốc, không cần vá từng callsite.
+- Ruling mới: boot remote phải gọi `anchorFromServer` bằng stamp hợp lệ trước
+  restore hoặc tạo gameplay state. Lần đầu thay epoch tạm kể cả khi giờ máy đi
+  trước server; thiếu stamp thì boot thất bại. Không rewind các deadline đã tạo
+  trong một phiên gameplay: các stamp sau initialization vẫn dùng rebase chỉ tiến.
 - `rebase(serverWallMs)`: chỉ gọi từ các surface authenticated (xem §4). Anchor mới
   = `max(now(), serverWallMs)` tại monotonic hiện tại → clock chỉ tiến bằng real
   elapsed hoặc nhảy tới server-bound, KHÔNG BAO GIỜ lùi. Lùi sẽ để các stamp đã ghi
@@ -257,7 +265,7 @@ bound (xem §4).
 
 | Sự kiện | Stamp | Điểm gọi `rebase` |
 |---|---|---|
-| Boot cold-boot | `RestoreTimeAuthority.untilMs` (= `serverNowUtc`) | sau `restoreGameSession` trong `useAppLifecycle` |
+| Boot cold-boot / nhân vật chưa khởi tạo | `serverAuthority.serverNowMs` hoặc `serverNowMs` của load response | `anchorFromServer` trước restore/tạo nhân vật trong `useAppLifecycle` |
 | Reconnect resume | `serverAuthority.serverNowMs` (onResume 'replaced'/'same') | `App.vue` onResume |
 | Write ACK | `serverTimeUtc` response `write_character_save` | save queue success path |
 | Heartbeat | `checkpoint.anchorAt` (đã parse sẵn) | `storeCheckpoint` — optional, tham gia sau |
@@ -272,14 +280,14 @@ input của `RestoreTimeAuthority`, không phải authority).
 | Server = local (honest) | `now()` ≈ `Date.now()` | parity hoàn toàn |
 | Server TRƯỚC local (+skew) | rebase nhảy tới server bound; `now()` chạy nhanh hơn local wall đúng skew | Stamps + `lastSavedAt` cùng epoch → admission pin giữ; exploit không sinh ra vì mọi đọc cùng một đồng hồ |
 | Server SAU local (−skew) | `max(now(), server)` giữ anchor hiện tại, clock tiếp bằng real elapsed | Không lùi → không freeze deny-direction |
-| Device chỉnh tiến TRƯỚC boot | anchor khởi tạo = wall giả; dưới remote-authority cold-boot `untilMs` rebase về server — nhưng `max()` giữ anchor giả | Residual: `dayBucket` có thể sớm ≤ skew → tối đa 1 quota reset sớm/phiên. Chấp nhận được, ghi rõ; nếu muốn triệt để, remote mode cho `rebase` override không-max (trade-off: stamps trong phiên có thể future-dated) |
+| Device chỉnh tiến TRƯỚC boot remote | stamp server đầu tiên thay epoch tạm trước mọi restore/grant/tick | Giờ máy giả không làm epoch gameplay đi trước; thiếu stamp không được admission |
 | `fieldEpochShiftMs` (`ProductionOffline:184`) | `settleNow ≤ time.now()` cùng epoch → shift ≡ 0 | Cơ chế collapse thành no-op invariant — giữ code làm guard, simplify ở phase cleanup cuối |
 
 ### 4.3 Quan hệ với `RestoreTimeAuthority`
 
 Cold-boot vẫn cần `cold-boot{sinceMs,untilMs}` để bound offline accrual (server
-duyệt cửa sổ, không phải đồng hồ duyệt). `TimeAuthority` chỉ own "now sống" SAU
-khi window đó settle xong: `time.rebase(untilMs)` → `now()` tiếp tục từ
+duyệt cửa sổ, không phải đồng hồ duyệt). `TimeAuthority` nhận anchor server TRƯỚC
+khi window settle để các clamp/re-stamp đọc đúng epoch. Sau đó `now()` tiếp tục từ
 server-approved bound + real elapsed. Hai concept một chuỗi: server duyệt quá
 khứ (RestoreTimeAuthority), authority nuôi tương lai (TimeAuthority).
 
@@ -330,7 +338,12 @@ Convention: theo probe-test hiện có (`auditR*.probe.test.ts` / `*.qa.test.ts`
    phần sau bound; `live-replacement` → zero-accrual giữ nguyên.
 5. **Parity:** toàn bộ suite hiện hữu xanh sau B0 (bắt buộc trước khi B1).
 
-## 6. Câu hỏi cần Minh chốt (trước khi code)
+## 6. Historical design questions (resolved by the locked implementation)
+
+The production contract at TimeAuthority.ts locks a separate owner, forward-only
+rebase and GameManager dependency injection. Player cultivation accepts the
+authorized timestamp; save and restore receive the same owner's timestamp.
+The questions below are retained as design history, not pending approval gates.
 
 1. Owner: **`TimeAuthority` mới** (đề xuất) hay mở rộng `GameClock`? (§2.1 đã
    phân tích; đề xuất TimeAuthority vì GameClock bị pause/re-anchor theo

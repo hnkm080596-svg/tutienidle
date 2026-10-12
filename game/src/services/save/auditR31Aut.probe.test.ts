@@ -15,6 +15,8 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { AlchemySystem, alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
+import { MaterialBag } from '../../core/material/MaterialBag'
 import type { ProductionCycle } from '../../core/production/ProductionTypes'
 import type { Equipment } from '../../core/equipment/Equipment'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
@@ -37,7 +39,7 @@ import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
 //     span, (c) ProductionSystem.restoreStates' shifted completesAtMs
 //     (same arithmetic), (d) AlchemySystem.startJob's nowMs + duration,
 //     (e) DecomposeSystem.tick / settleOffline's nowMs + cycleMs mints.
-//     Each lands in this.jobs / state.workerCycles / this.nextCycleAt and
+//     Each lands in this.jobs / state.productionCycles / this.nextCycleAt and
 //     self-refuses the next save write (isBoundedTimestamp / write-gate
 //     refuse -> coded 'SAVE_INVALID' -> corrupted + terminal arm). Ungated
 //     caller only: every production clock is min-clamped at Date.now() so
@@ -228,6 +230,27 @@ describe('r31-AUT F1b - AlchemySystem.restoreJobs shift-arm over-bound mint', ()
 })
 
 // ============================================================================
+// F1e - retired Decompose clock fields cannot resume work.
+// ============================================================================
+describe('r31-AUT F1e - legacy Decompose state remains inert', () => {
+  clockIsolated()
+
+  it('ignores hostile legacy deadline and worker values', () => {
+    const system = new DecomposeSystem(new MaterialBag())
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: BOUND - 1,
+      started: true,
+    }, BOUND - 1)
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+  })
+})
+
+// ============================================================================
 // F1 end-to-end: stamps minted over the bound self-refuse the next write
 // (the corrupted-card arm the r30 batch wired). Asserts the shape layer
 // refuses every over-bound mint produced above.
@@ -235,22 +258,21 @@ describe('r31-AUT F1b - AlchemySystem.restoreJobs shift-arm over-bound mint', ()
 describe('r31-AUT F1 - minted over-bound stamps refuse at the write gate', () => {
   clockIsolated()
 
-  it('workerCycles / alchemyJobs / decompose.nextCycleAt >= 2^52 each refuse', () => {
+  it('productionCycles / alchemyJobs / decompose.nextCycleAt >= 2^52 each refuse', () => {
     const sitesSave = validWireSave()
     ;(sitesSave as unknown as Record<string, unknown>).productionSites = [
       {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [cycleAt(BOUND - 1, BOUND + 30_000 - 1)],
+        productionCycles: [cycleAt(BOUND - 1, BOUND + 30_000 - 1)],
       },
     ]
     const sitesResult = validateGameSaveShape(sitesSave)
     expect(sitesResult.ok).toBe(false)
     // The bound check collapses into the generic entry-shape refuse.
     expect(
-      sitesResult.issues.some((issue) => issue.path === 'productionSites[0].workerCycles[0]'),
+      sitesResult.issues.some((issue) => issue.path === 'productionSites[0].productionCycles[0]'),
     ).toBe(true)
 
     const jobsSave = validWireSave()

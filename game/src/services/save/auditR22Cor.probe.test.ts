@@ -5,13 +5,15 @@ import { GameManager } from '../../core/game/GameManager'
 import { buildGameSave } from './SaveSystem'
 import { validateGameSaveShape } from './saveShapeValidation'
 
-// Beta features unlocked for the whole suite (same pattern as the
-// scope-hidden system tests).
+// Legacy decompose timers remain accepted as inert save data.
 vi.mock('../../core/betaScope', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../core/betaScope')>()),
   isBetaFeature: () => true,
   isScopeHidden: () => false,
 }))
+
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
+import { MaterialBag } from '../../core/material/MaterialBag'
 
 // ============================================================================
 // QA probe - fixpoint r22 COR wave: WRITE-side ratchet vs the
@@ -171,7 +173,21 @@ describe('auditR22 COR probe - write-side ratchet vs 2^52 admission bound', () =
   })
 })
 
-// DIRECT DECOMPOSE REWORK (2026-10-11): the differential probe that
-// pinned DecomposeSystem.settleOffline's O(1) jump vs the r20 stepping
-// loop is retired with the worker-cycle engine - decompose has no
-// offline settle to differential.
+describe('auditR22 COR probe - legacy decompose timer is inert', () => {
+  it('restore accepts old worker fields without settling or mutating inventory', () => {
+    const bag = new MaterialBag()
+    const system = new DecomposeSystem(bag)
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: 0,
+      started: true,
+    })
+
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(bag.getAll()).toHaveLength(0)
+  })
+})

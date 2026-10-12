@@ -164,7 +164,8 @@
         "essenceName": "Tinh Hoa",
         "ownedPrefix": "đang có",
         "emptySlotPlaceholder": "— trống (vẫn cường hóa được) —",
-        "itemCount": "{count} món"
+        "itemCount": "{count} món",
+        "renSharedHint": "Lượt rèn dùng chung Tẩy và Tinh Luyện — hết lượt món đóng băng dòng phụ vĩnh viễn."
       },
       "status": {
         "notRolled": "chưa roll",
@@ -928,6 +929,11 @@
         "weekly": "Làm mới mỗi tuần",
         "achievement": "Cột mốc tu luyện",
         "exploration": "Thám hiểm vùng đất"
+      },
+      "rewardShort": {
+        "spiritStone": "Linh Thạch",
+        "cultivation": "Tu Vi",
+        "skillInsight": "Cảm Ngộ Kỹ Năng"
       }
     },
     "common": {
@@ -939,6 +945,24 @@
       "aria": "Điều hướng chức năng",
       "body": "Đạo Thể",
       "techniqueLocked": "Tâm Pháp mở khi vào Luyện Khí"
+    },
+    "decompose": {
+      "labels": {
+        "ore": "Linh khoáng",
+        "amount": "Số lượng"
+      },
+      "action": "Tinh luyện khoáng",
+      "preview": "Nhận {amount} Luyện Khí Tinh Hoa.",
+      "success": "Đã nhận {amount} Luyện Khí Tinh Hoa.",
+      "empty": "Không có linh khoáng để tinh luyện.",
+      "hint": {
+        "scope_hidden": "Tính năng này hiện không khả dụng.",
+        "invalid_amount": "Hãy chọn số lượng nguyên dương.",
+        "invalid_ore": "Hãy chọn linh khoáng hợp lệ.",
+        "insufficient_ore": "Không đủ linh khoáng đã chọn.",
+        "insufficient_amount": "Hãy chọn thêm khoáng để tạo ít nhất một tinh hoa.",
+        "output_capacity": "Hãy chừa chỗ trong túi trước khi tinh luyện."
+      }
     },
     "scripture": {
       "empty": "Chưa tìm thấy manh mối nào.",
@@ -1568,9 +1592,19 @@
   },
   "autoFarm": {
     "running": "Đang Tự Động Hoàn Mỹ: {stage}",
-    "stop": "Dừng"
+    "stop": "Dừng",
+    "perfectStage": "Hoàn Mỹ",
+    "visualReplay": "Diễn cảnh theo tiến độ Viễn Chinh",
+    "cycle": "Chu kỳ {seconds}s",
+    "nextCycle": "Chu kỳ tiếp theo: {seconds}s"
   },
   "alchemy": {
+    "activeKiln": "Đang luyện",
+    "waitingJob": "Chờ luyện",
+    "waitingCount": "Chờ {count}/{capacity}",
+    "cancelFailed": "Chưa thể hủy lượt luyện này. Nếu hủy hàng chờ, túi phải đủ chỗ để hoàn nguyên liệu.",
+    "cancelRefund": "Hủy hàng chờ: hoàn đủ nguyên liệu.",
+    "cancelActive": "Hủy lượt đang luyện: nguyên liệu không được hoàn.",
     "spiritStones": "Linh Thạch",
     "startBrewing": "Luyện Đan",
     "currentCauldron": "Đan lô hiện tại",
@@ -2019,6 +2053,66 @@
     "body": "Hung Giao Sung đã ngã xuống — đạo hữu đã chinh phục toàn bộ nội dung beta: Phàm Nhân, Luyện Khí, Trúc Cơ. Cảm ơn đã đồng hành.",
     "continue": "Tiếp Tục Tu Luyện"
   },
+  "architecture": {
+    "title": "Kiến Trúc Tông Môn",
+    "subtitle": "Công trình, linh mạch và tài nguyên của tông môn",
+    "back": "Quay Lại",
+    "close": "Đóng",
+    "resources": "Tài nguyên hiện có",
+    "buildingCount": "Đã dựng: {built}/{total}",
+    "resourceCategories": {
+      "spirit_stone": "Linh Thạch",
+      "wood": "Gỗ",
+      "ore": "Quáng",
+      "herb": "Linh Thảo"
+    },
+    "level": "Cấp {level}/{max}",
+    "current": "Hiện tại",
+    "next": "Sau nâng cấp",
+    "costs": "Chi phí nâng cấp",
+    "costAmount": "{owned}/{required}",
+    "unknownMaterial": "Vật liệu",
+    "minuteShort": "phút",
+    "effects": {
+      "spiritRate": "Ngưng tụ Linh Thạch",
+      "spiritStorage": "Sức chứa Linh Thạch",
+      "equipmentDiscount": "Giảm chi phí Khí Đường",
+      "alchemySpeed": "Tốc độ luyện đan",
+      "queueSlots": "Sức chứa hàng đợi"
+    },
+    "units": {
+      "percent": "%",
+      "count": "",
+      "multiplier": "lần",
+      "perMinute": "/phút"
+    },
+    "details": "Chi Tiết",
+    "upgrade": "Nâng Cấp",
+    "upgradeSite": "Nâng cấp nguồn",
+    "productionTitle": "Ba nguồn nguyên liệu · Chi phí gồm Gỗ và Linh Thạch",
+    "siteSpeed": "Tốc độ hiện tại ×{current} · Sau nâng cấp ×{next}",
+    "maximum": "Đã đạt cấp tối đa",
+    "artOnly": "Chỉ lưu giữ công trình và nghệ thuật trưng bày; không có chức năng nâng cấp.",
+    "artOnlyBrief": "Chỉ trưng bày · Không nâng cấp",
+    "noEffect": "Chưa có hiệu quả riêng.",
+    "reasons": {
+      "maxLevel": "Công trình đã đạt cấp tối đa.",
+      "realmGate": "Cảnh giới hiện tại chưa đủ để nâng cấp.",
+      "missingMaterials": "Không đủ vật liệu để nâng cấp.",
+      "missingBuilding": "Chưa tìm thấy công trình này.",
+      "artOnly": "Công trình này chỉ dùng để trưng bày.",
+      "changed": "Điều kiện đã thay đổi. Hãy kiểm tra lại trước khi nâng cấp.",
+      "buildingSuccess": "Đã nâng cấp công trình.",
+      "siteSuccess": "Đã nâng cấp nguồn sản xuất."
+    },
+    "productionReasons": {
+      "max_level": "Nguồn sản xuất đã đạt cấp tối đa.",
+      "no_cost": "Không có chi phí nâng cấp cho cấp tiếp theo.",
+      "realm_gate": "Cảnh giới hiện tại chưa đủ để nâng cấp nguồn.",
+      "missing_wood": "Không đủ Gỗ để nâng cấp nguồn.",
+      "missing_spirit_stone": "Không đủ Linh Thạch để nâng cấp nguồn."
+    }
+  },
   "dongFu": {
     "aria": "Động Phủ",
     "toggleWheel": "Ẩn / hiện vòng chức năng",
@@ -2043,12 +2137,13 @@
       "exploration": "Sơn Hà Đồ",
       "quest": "Nhiệm Vụ",
       "production": "Sản Xuất",
+      "vendor": "Ký Bảo Các",
       "settings": "Cài Đặt",
       "feedback": "Trợ Giúp",
       "artifact": "Pháp Bảo",
       "companion": "Đồng Hành",
       "guild": "Bang Hội",
-      "sect": "Tông Môn",
+      "sect": "Kiến Trúc",
       "portal": "Bí Cảnh"
     }
   },
@@ -2340,6 +2435,8 @@
     "resources": "Tài Nguyên",
     "amount": "Số lượng",
     "add": "+ Thêm",
+    "spawnEquipment": "Tạo trang bị ngẫu nhiên",
+    "spawnMaterial": "Tạo nguyên liệu ngẫu nhiên",
     "cultivation": "Tu Vi",
     "duyenPhan": "Duyên Phân",
     "skillInsight": "Cảm Ngộ",
@@ -2356,8 +2453,40 @@
     "exported": "Đã xuất",
     "realm": "Cảnh Giới",
     "applyRealm": "Đổi cảnh giới",
-    "respecTree": "Đặt lại cây",
-    "spawnEquipment": "+ Trang bị random",
-    "spawnMaterial": "+ Nguyên liệu random"
+    "respecTree": "Đặt lại cây"
+  },
+  "pp": {
+    "title": "Sản Xuất",
+    "hall": "Khai Vật Đường",
+    "level": "Cấp {level} / 9",
+    "intro": "Khai thác nguyên liệu, phân nhân công cho nguồn, tích lũy sản lượng.",
+    "vein": "Linh Mạch",
+    "stored": "{amount} / 1270 Hạ phẩm Linh Thạch",
+    "rate": "+2,1 / phút",
+    "harvest": "Thu Hoạch",
+    "names": [
+      "Thanh Vân Lâm",
+      "Huyền Thiết Quặng",
+      "Thanh Vân Động Thiên"
+    ],
+    "types": [
+      "Lâm",
+      "Quặng",
+      "Động Thiên"
+    ],
+    "descriptions": [
+      "Rừng linh mộc Thanh Vân — cung cấp gỗ xây công trình và nhiên liệu đan lô.",
+      "Mạch quặng sâu trong núi — khai thác linh khoáng và nguyên liệu luyện khí.",
+      "Động thiên kỳ trân dị thảo — nơi nuôi dưỡng linh thảo và dược liệu."
+    ],
+    "next": "Tốc độ kế tiếp ×1.15",
+    "working": "Đang sản xuất — còn 1p 37s",
+    "paused": "Đã tạm dừng",
+    "auto": "Tự động lặp lại",
+    "costWood": "Thập Niên Linh Mộc: 0 / 5",
+    "costStone": "Hạ phẩm Linh Thạch: 0 / 800",
+    "upgrade": "Nâng Cấp Nguồn",
+    "upgradeNotice": "Preview nâng cấp nguồn · không tiêu hao tài nguyên.",
+    "harvestNotice": "Preview thu hoạch · không trao tài nguyên."
   }
 }

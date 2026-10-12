@@ -53,7 +53,9 @@ function buildContext() {
   bag.add(registry.get(BUI_GO_ID), 60)
   bag.add(registry.get(LUYEN_DAN_TINH_HOA_ID), 20)
 
-  return { recipe: RECIPE, bag, registry, system: new AlchemySystem() }
+  const system = new AlchemySystem()
+  system.setRecipeLookup((id) => (id === RECIPE.id ? RECIPE : undefined))
+  return { recipe: RECIPE, bag, registry, system }
 }
 
 describe('QA-A review - tinh hoa consistency across order construction paths', () => {
@@ -88,16 +90,15 @@ describe('QA-A review - tinh hoa consistency across order construction paths', (
     const jobId = system.getJobs()[0]!.jobId
     const tinhHoaBefore = bag.getAmount(LUYEN_DAN_TINH_HOA_ID)
 
-    // now = startedAt + 500ms: unit 0 sits in the cauldron, units 1-2
-    // never started -> unprocessed = 2, each reserved per-unit line
-    // refunds x2.
+    // No unit has been delivered, including the unit currently brewing.
+    // All three unfinished units are refunded.
     const cancelled = system.cancelJob(jobId, bag, registry, 1_500)
-    expect(cancelled).toMatchObject({ ok: true, unprocessedUnits: 2 })
-    expect(bag.getAmount('herb_decade')).toBe(20 - 3 + 2)
-    expect(bag.getAmount(BUI_GO_ID)).toBe(60 - 6 + 4)
+    expect(cancelled).toMatchObject({ ok: true, unprocessedUnits: 3 })
+    expect(bag.getAmount('herb_decade')).toBe(20 - 3 + 3)
+    expect(bag.getAmount(BUI_GO_ID)).toBe(60 - 6 + 6)
     // tinh hoa is a digest-bound per-unit reserved input like the rest;
     // unstarted units must get theirs back.
-    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(tinhHoaBefore + 2)
+    expect(bag.getAmount(LUYEN_DAN_TINH_HOA_ID)).toBe(tinhHoaBefore + 3)
   })
 })
 
@@ -153,7 +154,7 @@ describe('QA-A review - evidence passes', () => {
 
     expect(system.cancelJob(jobId, bag, registry, 1_500)).toMatchObject({
       ok: true,
-      unprocessedUnits: 2,
+      unprocessedUnits: 3,
     })
     const herbAfter = bag.getAmount('herb_decade')
 

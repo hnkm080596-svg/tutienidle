@@ -1,0 +1,305 @@
+{
+  "files": [
+    {
+      "path": "game/src/App.vue",
+      "normalizedSha256": "ae1d9c30fd1f3be0c9e4a07f4c1f8021725012b97cd7913f2d2fafd94c70a86c"
+    },
+    {
+      "path": "game/src/components/panels/ProductionPanel.vue",
+      "normalizedSha256": "2ab9699c92e31175ddd702df679fda134450fb85a5c33da7548c0a5782dec1af"
+    },
+    {
+      "path": "game/src/components/panels/bag-sections/PillBagSection.vue",
+      "normalizedSha256": "f2ed37b90b7355349b57c0a39436bc2ee0dc9a08b17ce94627c78dbd632481fe"
+    },
+    {
+      "path": "game/src/components/scenes/alchemy/AlchemySurface.vue",
+      "normalizedSha256": "e504d13b0b082b304252c3341f6ebe4c9716765d7d84962b2fdd25c0aa8b0127"
+    },
+    {
+      "path": "game/src/composables/useAppLifecycle.test.ts",
+      "normalizedSha256": "1cdc35f4bff85ce009671e85cea9765aba9dc5657d9a48d184bf5760115ec15b"
+    },
+    {
+      "path": "game/src/composables/useAppLifecycle.ts",
+      "normalizedSha256": "452870912680dde5b59d775a5bea60c63030d02394e7e679e9248929806d3317"
+    },
+    {
+      "path": "game/src/composables/useBuildingNavigation.ts",
+      "normalizedSha256": "df38488310fd636f5cea71d21ed6aad5885486543457551bbe2095e2cf313f9b"
+    },
+    {
+      "path": "game/src/composables/useThienCoEntries.ts",
+      "normalizedSha256": "85ebf8fc63684c7bc60e8cdddb5c8a280896f03eaa32c3bb53a7c588c683d87d"
+    },
+    {
+      "path": "game/src/composables/useTribulation.dotPha.test.ts",
+      "normalizedSha256": "465f43ed0d27baa3e7bb00a57e68f29efcbb9237b67c64342f5520e38cadb9fd"
+    },
+    {
+      "path": "game/src/core/alchemy/AlchemySystem.ts",
+      "normalizedSha256": "21b69827ff67c34ae91a9145e9d9123a8cb6d9b158fef97797f21dccab70bec9"
+    },
+    {
+      "path": "game/src/core/building/BuildingManager.ts",
+      "normalizedSha256": "a4bcc2242d15565028f1351cb0ce88241645f8893ed6f5918a44cdbc87a2aa5b"
+    },
+    {
+      "path": "game/src/core/game/BattleLootSystem.ts",
+      "normalizedSha256": "53b87e27a1b63b3dec5901dc6f5adba64521da90133a10d346ac27245e9c4c3b"
+    },
+    {
+      "path": "game/src/core/game/GameManager.autoFarm.test.ts",
+      "normalizedSha256": "4dc751f8a248c8df10ed2b617ac02fc8c9edda43769a707c442dbfdefcf454ad"
+    },
+    {
+      "path": "game/src/core/game/GameManager.autoFarmAdversarial.test.ts",
+      "normalizedSha256": "b075f8d3d76a5dd5835fd401131abdaa0d7112a0dea0138ebe483d4af1429027"
+    },
+    {
+      "path": "game/src/core/game/GameManager.autoFarmOffline.test.ts",
+      "normalizedSha256": "f0a5211d42c8c623a4d03dfdf227f9f322c475f3c10919f204219062c0983f8e"
+    },
+    {
+      "path": "game/src/core/game/GameManager.autoFarmRestore.test.ts",
+      "normalizedSha256": "4daeb653ddff9e08df95968f920a11d67302cf85e526b7015d5cfb36306f3eda"
+    },
+    {
+      "path": "game/src/core/game/GameManager.hiddenChannel.test.ts",
+      "normalizedSha256": "c4ddd153f8adeb8ab9c49f707a7adaebea5b46352422f8330c4c77c4b0aa1911"
+    },
+    {
+      "path": "game/src/core/game/GameManager.timedEffect.test.ts",
+      "normalizedSha256": "ac35a4928d68d863bc7dd80a3b8a2e039bf2f34222e2cb4127a841594f6efaa6"
+    },
+    {
+      "path": "game/src/core/game/GameManager.ts",
+      "normalizedSha256": "f7410c27b3c4cf33138627e3ad9ddf73b41e0147d3654f4e7ea538b473761f1b"
+    },
+    {
+      "path": "game/src/core/game/GameManagerAlchemyOps.ts",
+      "normalizedSha256": "ed1ca80f7eda391996459f5fa7cdbf27e4fdbfabf247ea90a1ea34b53970ebb1"
+    },
+    {
+      "path": "game/src/core/game/GameManagerAutoFarmOps.ts",
+      "normalizedSha256": "b77ba2ed298c38ed5bd73f35db4683ed8b5ab6b3db33dbb7004382438422dc7b"
+    },
+    {
+      "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
+      "normalizedSha256": "4acaff040880c151806a1efe067dcba2464c6e95fba309bf359e08c2829bb799"
+    },
+    {
+      "path": "game/src/core/game/GameManagerBuildingOps.ts",
+      "normalizedSha256": "71c717e47a38fb31f39545835c7e48dff83f3be9bb9d79eb87f405e333387447"
+    },
+    {
+      "path": "game/src/core/game/GameManagerPersistentEffectOps.ts",
+      "normalizedSha256": "9bf62b8a38009b6884a3639d023e10a89ca6d06eccad1c6b3eac13ce18f1bac5"
+    },
+    {
+      "path": "game/src/core/game/GameManagerSaveRestore.ts",
+      "normalizedSha256": "2e6a686a1150bbf4dadf9c40a951d1ee12711f4d52c7c104992d6f39254163a8"
+    },
+    {
+      "path": "game/src/core/game/GameManagerTickOps.ts",
+      "normalizedSha256": "1dc4a69190e44a4c2b58537354a8f683832e5793d0abd3edac29ee1e6bb643b4"
+    },
+    {
+      "path": "game/src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts",
+      "normalizedSha256": "f93472f42ffbb03fe1acbf0d05ed4d08a9da8a463b2f61a42135ecf66d4eee1b"
+    },
+    {
+      "path": "game/src/core/game/GameManagerTurnBattleOps.ts",
+      "normalizedSha256": "efdd49f462da993f6045c2c96504aba20c5bbd1e621671bd1a920ccf8e7e70a3"
+    },
+    {
+      "path": "game/src/core/idle/TimeAuthority.mintExploit.test.ts",
+      "normalizedSha256": "5d8205d546686d508135c093b569b8b2e48a94cdf09a92c820c8dc7706c8326c"
+    },
+    {
+      "path": "game/src/core/idle/TimeAuthority.persistence.test.ts",
+      "normalizedSha256": "33569ab4dac5c48c960bdba97f4a4ab7d555a14f1b3d3d86202a3b66525024ee"
+    },
+    {
+      "path": "game/src/core/idle/TimeAuthority.sequence.test.ts",
+      "normalizedSha256": "4bf700b60c52dccf8097e57bac0d097d28b35d142d8e0b1c42a1bd73623e152c"
+    },
+    {
+      "path": "game/src/core/idle/TimeAuthority.test.ts",
+      "normalizedSha256": "8124f23f621157bc34547b8b2d0ece0a8c1b18e7554cc24a14839bc3b7655834"
+    },
+    {
+      "path": "game/src/core/idle/TimeAuthority.ts",
+      "normalizedSha256": "e0e301b92c186167f89058df4f087697cac241f1b2c1911ca05c2321c105c0c8"
+    },
+    {
+      "path": "game/src/core/pill/PillSystem.ts",
+      "normalizedSha256": "408a22d4205b01f832a776f00e9f96edb68843cdb3617c34b0cbcfb4f849a44e"
+    },
+    {
+      "path": "game/src/core/production/ProductionOffline.ts",
+      "normalizedSha256": "14b8b3e5f84cb1a33f4d40c75beb867a39ddb5ac005587a1c15721be823d8c48"
+    },
+    {
+      "path": "game/src/core/production/ProductionSystem.ts",
+      "normalizedSha256": "3aab1e4341513beb83ada2ba1671a87581b2f83efd5955b9d7680979a4c51c74"
+    },
+    {
+      "path": "game/src/core/reward/SkillInsightBalance.ts",
+      "normalizedSha256": "da75f3dbc43d4314e4329902561eba11704676fff3b374a439fbe2a8bd063bb1"
+    },
+    {
+      "path": "game/src/core/simulation/earlygame/MortalChapterJourney.test.ts",
+      "normalizedSha256": "63deef65cf5ee2c304ee42f4ca6729147d61d06fdd7efc19cc86d92a53cfa08b"
+    },
+    {
+      "path": "game/src/core/simulation/earlygame/TrucCoJourney.test.ts",
+      "normalizedSha256": "f8b2ec39e061546c92acbb897085f35a0943163645d3bd2bc0179fcef431d0b4"
+    },
+    {
+      "path": "game/src/core/tribulation/TribulationDirector.ts",
+      "normalizedSha256": "137f64d5511ce65bad75dec81d7ceb564bc55c2a8fd665511a1851d75d7f8ee0"
+    },
+    {
+      "path": "game/src/services/cloudSave/CloudSaveCoordinator.ts",
+      "normalizedSha256": "04932673a5e312f4fd50cf3e6703be80389f6ded1ffbc183250b85856469a916"
+    },
+    {
+      "path": "game/src/services/cloudSave/CloudSaveService.ts",
+      "normalizedSha256": "bf26a976fbbe82e8973f38ed9436dbaa150be63fceb5e76e5e22dd48d7c850fa"
+    },
+    {
+      "path": "game/src/services/cloudSave/SupabaseCloudSaveService.test.ts",
+      "normalizedSha256": "4dd0ea10430760ce415f53c54afd5ffc17a9b34305a53ec1fc4b13be9e47aa78"
+    },
+    {
+      "path": "game/src/services/cloudSave/SupabaseCloudSaveService.ts",
+      "normalizedSha256": "0941aec5f0e0ca771ea95cfa0d036cc04086016df04ffbfda1dd55cec9fc3d8f"
+    },
+    {
+      "path": "game/src/services/cloudSave/durableJournal.test.ts",
+      "normalizedSha256": "f3d907e4e5bc990cdc9280fe35a40e816a43510232664bc34ec0d1f1b28d7c1c"
+    },
+    {
+      "path": "game/src/services/save/SaveSystem.bootRestore.test.ts",
+      "normalizedSha256": "a07deb0f185d79da8e3936358e8dcc597e6b64c306274a9ee03246e8c7eaadee"
+    },
+    {
+      "path": "game/src/services/save/SaveSystem.timeAuthority.test.ts",
+      "normalizedSha256": "ba29ee61c7653fcd18b8875c1672a652ac8e4791cecbe9fb57a8ee635aba866d"
+    },
+    {
+      "path": "game/src/services/save/SaveSystem.ts",
+      "normalizedSha256": "1966c1b764cac83f95bc3f78d90631623481ad588a9204aa5a45108922185503"
+    },
+    {
+      "path": "game/src/services/save/auditR21Cor.probe.test.ts",
+      "normalizedSha256": "d9efa1f571fad1ed230118d5500b31c1413e0c634a14fd012040c794999fb420"
+    },
+    {
+      "path": "game/src/services/save/auditR21Int.probe.test.ts",
+      "normalizedSha256": "e8a0d64264accd89f1d01c89376fdee43d02923ae2565dee8b6fafecce34529f"
+    },
+    {
+      "path": "game/src/services/save/auditR22Aut.probe.test.ts",
+      "normalizedSha256": "0e31a96b818c60e8dbe6588e044e5a8deb0405320fb82b3b77cc6eb6f841a845"
+    },
+    {
+      "path": "game/src/services/save/auditR23Aut.probe.test.ts",
+      "normalizedSha256": "5644a4c604eecb01291ca7ba5cd31684f5f45bdd1d42c562abb873821edafaf6"
+    },
+    {
+      "path": "game/src/services/save/auditR23Int.probe.test.ts",
+      "normalizedSha256": "e9d24d2c699b541827e7085a409a5d8deafa579ffd0b8458d34e61b63773d6e1"
+    },
+    {
+      "path": "game/src/services/save/auditR24Int.probe.test.ts",
+      "normalizedSha256": "dbf2b31b697b8cfc98fd7704dc1d40ee0891900d2787db65e13c583bd7e3ffa9"
+    },
+    {
+      "path": "game/src/services/save/auditR25Aut.probe.test.ts",
+      "normalizedSha256": "d74e65b2771507702f128fd82e7a5bf8bf91eae613dce8dd9aed404a2f84bedc"
+    },
+    {
+      "path": "game/src/services/save/auditR25Int.probe.test.ts",
+      "normalizedSha256": "b5dc1c3bc4e1f2e90fe3b31d9fc60473fa2ea62fb0c36ba99aa0b6df0b544444"
+    },
+    {
+      "path": "game/src/services/save/auditR26Aut.probe.test.ts",
+      "normalizedSha256": "ae17774d3f4bf8aee71b426f1a71de3524239c69c3a9992d4bde3f351f601906"
+    },
+    {
+      "path": "game/src/services/save/auditR26Cor.probe.test.ts",
+      "normalizedSha256": "c113734c9d6caed914fdae03f63c042bacfb7e8c98648d76482f068a7d6b6655"
+    },
+    {
+      "path": "game/src/services/save/auditR26Int.probe.test.ts",
+      "normalizedSha256": "37addaa079b21011dfc7e8326be6d81b47082cded1719a35136951471977fbbc"
+    },
+    {
+      "path": "game/src/services/save/auditR27Int.probe.test.ts",
+      "normalizedSha256": "b8774b334e0c54a90e69c1a62eb4b285162f45c7bc3c9c980e7d52a174b72634"
+    },
+    {
+      "path": "game/src/services/save/auditR28Int.probe.test.ts",
+      "normalizedSha256": "d33820dabc980f5bc6abc5146a1b262c55ba4d443e4653f1d2730d811776d8f6"
+    },
+    {
+      "path": "game/src/services/save/auditR31Cor.probe.test.ts",
+      "normalizedSha256": "07faf304957c7cfb8ec58e369f15dafc0f5178196b6abcae12a2b87493efa062"
+    },
+    {
+      "path": "game/src/services/save/auditR32Cor.probe.test.ts",
+      "normalizedSha256": "129dac6cd67eb119b2752a8c73274da7ffbb8d4eed32811b458a1094ce57db2e"
+    },
+    {
+      "path": "game/src/services/save/auditR32Int.probe.test.ts",
+      "normalizedSha256": "5655a39ac41f73e95e6b5380aff7920016c7a72ad546a0628dcd71e27a643ed6"
+    },
+    {
+      "path": "game/src/services/save/auditR33Cor.probe.test.ts",
+      "normalizedSha256": "e73f8b71ac052a1302852bb23efc9e2e5e1f218c686879598857a992e3d1dcc2"
+    },
+    {
+      "path": "game/src/services/save/auditR33Int.probe.test.ts",
+      "normalizedSha256": "ef0aebb24c4be522e8a316e5b41007a8a9e3840a2d9bd4053fc83d32735d9c49"
+    },
+    {
+      "path": "game/src/services/save/auditR34Cor.probe.test.ts",
+      "normalizedSha256": "2e639e08c9beb237fa46db772993938bf0074003d2de0c7bbf578379fe200aa2"
+    },
+    {
+      "path": "game/src/services/save/auditR35AUT.probe.test.ts",
+      "normalizedSha256": "4c0e96bd558a960341992b1ee8caa67c61aaf7882d8a95a58f16989d9ee48244"
+    },
+    {
+      "path": "game/src/services/save/auditR39COR.probe.test.ts",
+      "normalizedSha256": "4f5918ee6b5f04f737fab06fdd258327a128458643cec4d80f5883ed5749ff97"
+    },
+    {
+      "path": "game/src/services/save/fixpointR20Cor.qa.test.ts",
+      "normalizedSha256": "a4bee066cfcb4787cd0dac138535d18b05ced829695e91be4035c0d7c74ccb11"
+    },
+    {
+      "path": "game/src/services/save/saveTypes.ts",
+      "normalizedSha256": "e2a411566b6fecfe12c55918f5ed46abd17ab1669b253dc5a7880c13a5d73128"
+    },
+    {
+      "path": "game/src/services/save/w5aut.repro.test.ts",
+      "normalizedSha256": "b2ad07cde2a557ada4f8ff6464ad27c329d3ffeb9b77d6259e4b27a99def225b"
+    },
+    {
+      "path": "game/src/stores/player.ts",
+      "normalizedSha256": "527967374919a504f3d5be1786e02ba2f0b9b9fd24b7b341a2a3f599deb7f44b"
+    },
+    {
+      "path": "game/tests/architecture/fixpointR10IntEvidence.qa.test.ts",
+      "normalizedSha256": "41878bb43e70f5e4dea4de384b78ac5eafc472f329194da3c73410d3977a1a6c"
+    },
+    {
+      "path": "game/tests/e2e/time-authority.spec.ts",
+      "normalizedSha256": "4d85b2a01654ee31178f9d307c0609f87828256f23c569acb4b2272606f23fa0"
+    }
+  ],
+  "normalization": "UTF8 text with CRLF -> LF; Git checkout line-ending differences only"
+}

@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
-import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { restoreAuthoredFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 import { lockBetaElementsForTests } from '@/core/game/__fixtures__/betaElementsUnlock'
 import {
   BETA_ACT_COUNT,
@@ -46,10 +46,10 @@ import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
 import { QUESTS } from '@/data/quest/quests'
 
 // The global test setup unlocks every catalog way + feature for
-// suites written pre-lock; this suite asserts the canonical beta
+// suites written pre-lock; this suite asserts the shipped beta
 // allow-lists, so re-pin them.
 lockBetaWaysForTests()
-lockBetaFeaturesForTests()
+restoreAuthoredFeaturesForTests()
 lockBetaElementsForTests()
 
 describe('beta scope v2 - way and element allow-lists', () => {
@@ -98,8 +98,6 @@ describe('beta scope v2 - feature flags and lock classes', () => {
       'formation',
       'artifact',
       'manualWorkforce',
-      'equipmentWash',
-      'equipmentRefine',
       'equipmentOreDecompose',
       'dailyQuest',
     ]) {
@@ -107,8 +105,15 @@ describe('beta scope v2 - feature flags and lock classes', () => {
     }
   })
 
-  it('keeps the feature table exhaustively off (no enabled toggle path)', () => {
-    expect(Object.values(BETA_FEATURES).every((v) => v === false)).toBe(true)
+  it('admits exactly the authored live set (wash/refine only)', () => {
+    expect(
+      Object.entries(BETA_FEATURES)
+        .filter(([, enabled]) => enabled)
+        .map(([name]) => name)
+        .sort(),
+    ).toEqual(['equipmentRefine', 'equipmentWash'])
+    expect(isBetaFeature('equipmentWash')).toBe(true)
+    expect(isBetaFeature('equipmentRefine')).toBe(true)
   })
 
   it('classifies gated and unknown features as scope-hidden', () => {
@@ -120,8 +125,6 @@ describe('beta scope v2 - feature flags and lock classes', () => {
       'dailyQuest',
       'swordPath',
       'bodyPath',
-      'equipmentWash',
-      'equipmentRefine',
       'equipmentOreDecompose',
       'manualWorkforce',
       '',
@@ -295,27 +298,28 @@ describe('beta scope v2 - recipe family allow-list', () => {
 })
 
 describe('beta scope v2 - equipment tabs and quest policy', () => {
-  it('exposes only enhance + dissolve equipment tabs', () => {
-    expect([...BETA_EQUIPMENT_TABS]).toEqual(['enhance', 'dissolve'])
-    expect(isBetaEquipmentTab('enhance')).toBe(true)
-    expect(isBetaEquipmentTab('dissolve')).toBe(true)
-    for (const tab of ['wash', 'refine', 'decompose', '', 'ENHANCE']) {
+  it('exposes enhance + wash + refine + dissolve equipment tabs', () => {
+    expect([...BETA_EQUIPMENT_TABS]).toEqual(['enhance', 'wash', 'refine', 'dissolve'])
+    for (const tab of ['enhance', 'wash', 'refine', 'dissolve']) {
+      expect(isBetaEquipmentTab(tab)).toBe(true)
+    }
+    for (const tab of ['decompose', '', 'ENHANCE']) {
       expect(isBetaEquipmentTab(tab)).toBe(false)
     }
   })
 
   it('keeps the tab list consistent with the equipment feature flags', () => {
-    // Two tables describe the same surface: a tab hidden by its feature
-    // flag must never appear in BETA_EQUIPMENT_TABS, and vice versa.
-    const flagByTab = {
-      wash: 'equipmentWash',
-      refine: 'equipmentRefine',
-      decompose: 'equipmentOreDecompose',
+    // Two tables describe the same surface: a flag-bound tab sits in
+    // BETA_EQUIPMENT_TABS exactly while its feature flag is on.
+    const expectedByTab = {
+      wash: { flag: 'equipmentWash', admitted: true },
+      refine: { flag: 'equipmentRefine', admitted: true },
+      decompose: { flag: 'equipmentOreDecompose', admitted: false },
     } as const
-    for (const [tab, flag] of Object.entries(flagByTab)) {
-      expect(BETA_FEATURES[flag]).toBe(false)
-      expect(BETA_EQUIPMENT_TABS).not.toContain(tab)
-      expect(isBetaEquipmentTab(tab)).toBe(false)
+    for (const [tab, expected] of Object.entries(expectedByTab)) {
+      expect(BETA_FEATURES[expected.flag]).toBe(expected.admitted)
+      expect(BETA_EQUIPMENT_TABS.includes(tab as never)).toBe(expected.admitted)
+      expect(isBetaEquipmentTab(tab)).toBe(expected.admitted)
     }
   })
 

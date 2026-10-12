@@ -12,13 +12,11 @@ import { EquipmentSystem } from '../equipment/EquipmentSystem'
 import { EquipmentSlotManager } from '../equipment/EquipmentSlotManager'
 import { AffixRegistry } from '../equipment/AffixRegistry'
 import { BuildingManager } from '../building/BuildingManager'
-import type { BuildingInstance } from '../building/BuildingInstance'
 import { BuildingRegistry } from '../building/BuildingRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
-import type { ProductionSiteState } from '../production/ProductionTypes'
-import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
-import { DecomposeSystem } from '../production/DecomposeSystem'
+import type { ProductionSiteStateInput } from '../production/ProductionTypes'
+import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
@@ -31,8 +29,10 @@ import { calculateOfflineTime } from '../idle/GameClock'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
 import type { TribulationDirector } from '../tribulation/TribulationDirector'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 export interface GameManagerSaveRestoreDeps {
+  time?: TimeAuthority
   skillManager: SkillManager
   skillTemplates: TemplateRegistry<Skill>
   // P7-M6 - restore routes through the single writer so the
@@ -60,8 +60,6 @@ export interface GameManagerSaveRestoreDeps {
   getActivePlayer: () => PlayerData | undefined
   // Hai hook duoi thuoc BUILDING section (da tach o task 3) - restore chi
   // goi lai chung, khong so huu logic, nen nhan qua closure.
-  refreshAutoWorkerCapacity: (player: PlayerData, instance: BuildingInstance) => void
-  getWorkerAssignments: () => Map<string, number>
   // Auto-farm Task 5 (2026-09-04) - offline catch-up closure (logic song
   // tren GameManager, SaveRestore chi goi lai - cung pattern tren).
   settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
@@ -154,7 +152,8 @@ export class GameManagerSaveRestore {
     // r23-AUT: authority stamps bypass the save gate - an out-of-domain
     // server stamp falls back to client-clock semantics (bounded deny)
     // instead of feeding derivations.
-    const authority = sanitizeRestoreAuthority(timeAuthority)
+    const liveNowMs = this.deps.time?.now() ?? Date.now()
+    const authority = sanitizeRestoreAuthority(timeAuthority, liveNowMs)
 
     if (payloadIdentity === this.lastAppliedPayloadHash) {
       return this.deps.equipmentSystem.getModifiers()
@@ -332,22 +331,15 @@ export class GameManagerSaveRestore {
       this.deps.affixRegistry,
     )
 
-    this.deps.buildingManager.restore(save.buildings)
+    // Chi Hien Quan is retained as art-only. Normalize historical levels
+    // without rejecting saves created before its upgrade path was retired.
+    this.deps.buildingManager.restore(
+      save.buildings.map((building) =>
+        building.buildingId === 'chi_hien_quan' ? { ...building, level: 1 } : building,
+      ),
+    )
 
-    // Chi Hien Quan (chi-hien-quan spec) - re-apply worker capacity tu
-    // instance CHQ trong save (autoWorkerCapacity trong save co the stale
-    // - cong thuc la source of truth, khong tin field da luu).
-    const chqPlayer = this.deps.getActivePlayer()
-
-    if (chqPlayer) {
-      const chiHienQuan = this.deps.buildingManager.getByBuildingId('chi_hien_quan')
-
-      if (chiHienQuan) {
-        this.deps.refreshAutoWorkerCapacity(chqPlayer, chiHienQuan)
-      }
-    }
-
-    const authorityNowMs = restoreAuthorityNowMs(authority)
+    const authorityNowMs = restoreAuthorityNowMs(authority, liveNowMs)
 
     // r26 (COR-1/AUT-1) + r27-COR-1 - persisted deadline stamps live in
     // the SAVE's own epoch (every began-time is pinned <= lastSavedAt at
@@ -359,30 +351,30 @@ export class GameManagerSaveRestore {
     // valid but corrupt-LOW authority (e.g. seconds-for-millis
     // serverTimeUtc) must only deny accrual, never re-anchor honest
     // stamps downward into instant-completion grants. Feeds the
-    // deadline-channel clamps below (workerCycles, alchemyJobs,
-    // tribulation - the retired decompose cycle no longer reads it).
+    // deadline-channel clamps below (productionCycles, decompose,
+    // alchemyJobs, tribulation).
     const restoreClockMs = Math.min(
-      Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : Date.now(),
-      Date.now(),
+      Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : liveNowMs,
+      liveNowMs,
     )
 
     // r16-INT-04: the reset marker lives in the FIELD's epoch -
     // checkAndResetDaily/resetDaily read and write it against
-    // Date.now(). A server-epoch clamp stamp on a fast clock lands a
+    // liveNowMs. A server-epoch clamp stamp on a fast clock lands a
     // day behind the client's bucket, so the daily reset refires right
     // after restore: unclaimed progress is wiped and claimed dailies
-    // re-arm (one replay per boot). Clamping against Date.now() keeps
+    // re-arm (one replay per boot). Clamping against liveNowMs keeps
     // the r11-AUT freeze guard (future stamps still die) in the epoch
     // the field's readers use.
     this.deps.questManager.restore(
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
-      Date.now(),
+      liveNowMs,
     )
 
     // Production (plan S4.3) - restore state + offline settle tuan tu
     // trong cap; MOI auto-cycle mot seed/roll rieng.
     this.deps.productionSystem.restoreStates(
-      (save.productionSites ?? []) as ProductionSiteState[],
+      (save.productionSites ?? []) as ProductionSiteStateInput[],
       restoreClockMs,
     )
 
@@ -392,14 +384,10 @@ export class GameManagerSaveRestore {
 
     const offlinePlayer = this.deps.getActivePlayer()
 
-    // DIRECT DECOMPOSE REWORK (2026-10-11) - the worker-cycle slice
-    // retired: restore() accepts-and-ignores a legacy payload
-    // ({settings,nextCycleAt,started}); nothing is re-supplied,
-    // clamped, or settled - worker state never resurrects.
-    this.deps.decomposeSystem.restore(save.decompose)
+    this.deps.decomposeSystem.restore(save.decompose, restoreClockMs)
 
     // B1-D - the settle window is the authorized context, never a
-    // Date.now()/lastSavedAt read of our own: 'cold-boot' accrues the
+    // liveNowMs/lastSavedAt read of our own: 'cold-boot' accrues the
     // SERVER-authorized duration (progression_cutoff_at -> serverNowUtc)
     // positioned inside the payload's own epoch (lastSavedAt + elapsed),
     // 'live-replacement' accrues zero, undefined keeps legacy local
@@ -417,14 +405,14 @@ export class GameManagerSaveRestore {
               Number.POSITIVE_INFINITY,
             ).offlineSeconds
           : calculateOfflineTime(
-              { lastOnlineAt: save.player.lastSavedAt ?? Date.now() },
-              Date.now(),
+              { lastOnlineAt: save.player.lastSavedAt ?? liveNowMs },
+              liveNowMs,
               Number.POSITIVE_INFINITY,
             ).offlineSeconds
 
     // End of the authorized window expressed in the payload's epoch -
-    // identical to Date.now() for honest saves (lastSavedAt + elapsed).
-    // r11-COR: clamp at Date.now() - a finite FUTURE lastSavedAt passes
+    // identical to liveNowMs for honest saves (lastSavedAt + elapsed).
+    // r11-COR: clamp at liveNowMs - a finite FUTURE lastSavedAt passes
     // shape validation, yields elapsed=0, but would leave settleNowMs
     // future-dated and feed every unconditional settle below (alchemy
     // tick(future) minting pending jobs early - save-edit cheat).
@@ -433,63 +421,41 @@ export class GameManagerSaveRestore {
     // slow local clock would otherwise underpay the offline span the
     // server already granted (and a fast one must not pay past it).
     // r24-INT-01: ...but persisted stamps live in the CLIENT epoch
-    // (next write stamps lastSavedAt = Date.now()). A forward-skewed
+    // (next write stamps lastSavedAt = liveNowMs). A forward-skewed
     // authority (untilMs > now, honest server-clock skew) would settle
-    // dues inside (now, untilMs] and seed lane heads/payouts stamped
+    // dues inside (now, untilMs] and seed production cycles stamped
     // past the next save's own marker -> the admission pin
     // (startedAtMs <= lastSavedAt) rejects the game's own save. Clamp
-    // the settle cursor at Date.now() too: dues in the skew window
+    // the settle cursor at liveNowMs too: dues in the skew window
     // defer to the next live tick at their real times (no loss), while
     // elapsed-driven channels still pay the full approved span.
     const settleNowMs = Math.min(
-      (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
+      (save.player.lastSavedAt ?? liveNowMs) + elapsedOfflineSeconds * 1000,
       authorityNowMs,
-      Date.now(),
+      liveNowMs,
     )
-    // r13-COR-4: clamp the window START as well - a
-    // crafted/skewed-future lastSavedAt otherwise positions
-    // offlineSinceMs ahead of settleNowMs, parking worker lanes in
-    // the future (the decompose cycle it once confiscated is retired).
-    // r14-COR-1: the start anchor is authorityNowMs - elapsed, not
-    // authorityNowMs - the window is the authorized DURATION
-    // positioned at the payload marker, so a client clock honestly
-    // ahead of the server (lastSavedAt > untilMs) still settles the
-    // full approved span instead of collapsing to a zero-width
-    // window while auto-farm pays the same elapsed (asymmetry was
-    // the r14 regression); settleNowMs still clamps the end at
-    // authorityNowMs.
-    // r25-AUT-1: the start must clamp at Date.now() too - persisted
-    // lane heads are stamped FROM this cursor, so a future-positioned
-    // pair (crafted-future lastSavedAt + a sinceMs still ahead of the
-    // client clock) seeds workerCycles[].startedAtMs past the next
-    // save's own lastSavedAt and the admission pin then rejects the
-    // game's own write (same self-brick class as r24-INT-01). Dues in
-    // the future window defer to live ticks at their real times; an
-    // honest start is never past now, so the clamp only fires on the
-    // crafted arm.
+    // Clamp the window start too; a crafted future lastSavedAt must not
+    // move offlineSinceMs past settleNowMs or extend the offline window.
+    // Anchor the start at authorityNowMs - elapsed. This preserves the
+    // approved duration when the client clock is ahead of the server;
+    // settleNowMs still clamps the end at authorityNowMs. Also clamp the
+    // start at liveNowMs so newly seeded production cycles cannot begin
+    // after the timestamp of the save being restored.
     const offlineSinceMs = Math.min(
       save.player.lastSavedAt ?? settleNowMs,
       authorityNowMs - elapsedOfflineSeconds * 1000,
-      Date.now(),
+      liveNowMs,
     )
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {
-        // T3 (economy-ecosystem-plan) - worker chay offline nhu slot tay
-        // trong cap: truyen capacity + moc bat dau vang mat de settle
-        // dung cua so.
+        // Production cycles use the same authoritative time window as
+        // other offline systems and remain bounded by the production cap.
         this.deps.productionSystem.settleOffline(
           this.deps.materialBag,
           this.deps.materialRegistry,
           offlinePlayer.realmId,
           settleNowMs,
-          {
-            workerCapacity: resolveProductionWorkerCapacity(
-              betaEffectiveWorkerCapacity(offlinePlayer.autoWorkerCapacity ?? 0),
-            ),
-            offlineSinceMs,
-            workerAssignments: this.deps.getWorkerAssignments(),
-            rng: this.deps.sessionRng,
-          },
+          { offlineSinceMs, rng: this.deps.sessionRng },
         )
 
         // Auto-farm Task 5 (2026-09-04) - NGOAI LE DUY NHAT combat nhan

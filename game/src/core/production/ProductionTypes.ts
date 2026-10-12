@@ -7,6 +7,10 @@
 // (mortal/qi_refining/foundation_establishment cho Thanh Van). Trong so
 // profile theo "collectionRealmId" snapshot luc bat dau cycle.
 
+// Legacy Beta saves legally carried at most three pending heads per site.
+// New production starts one; migrated saves may retain the old entitlement.
+export const MAX_PERSISTED_PRODUCTION_CYCLES_PER_SITE = 3
+
 export type ProductionSiteKind = 'forest' | 'mine' | 'grotto'
 
 export const PRODUCTION_SITE_KINDS: readonly ProductionSiteKind[] = ['forest', 'mine', 'grotto']
@@ -71,20 +75,22 @@ export interface ProductionSiteState {
 
   autoRestart: boolean
 
-  /** Parallel lanes the shared worker pool currently grants this site. */
-  activeWorkerSlots: number
-
-  /** In-flight worker lane heads - the ONLY cycle kind (Mission D / spec D3). */
-  workerCycles?: ProductionCycle[]
-
-  /** Player-requested assignment; undefined = AUTO (round-robin share). */
-  assignedWorkers?: number
+  /** In-flight site-owned production cycles, including carried legacy work. */
+  productionCycles?: ProductionCycle[]
 
   /** M-F-BODY-HIDDEN (spec sec.4) - per-grotto-channel settle-cycle
       counters on THIS site (channelId -> eligible cycles since the
       last emission). Grotto sites only; production-side state because
       ProductionSystem never sees PlayerData (A3). */
   hiddenChannelCycles?: Record<string, number>
+}
+
+/** Legacy save adapter accepted only at restore boundaries. */
+export type ProductionSiteStateInput = Omit<ProductionSiteState, 'productionCycles'> & {
+  productionCycles?: ProductionCycle[]
+  workerCycles?: ProductionCycle[]
+  activeWorkerSlots?: number
+  assignedWorkers?: number
 }
 
 /** Mot Lam/Quang/Dong Thien cua Dia Gioi (sec3.1). */

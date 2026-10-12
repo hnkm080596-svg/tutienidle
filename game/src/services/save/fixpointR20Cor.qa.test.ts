@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-declare const process: { env: Record<string, string | undefined> }
+declare const process: { env: Record<string, string | undefined>; execPath: string }
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { PlayerData } from '../../core/player/Player'
@@ -87,8 +87,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -135,8 +134,7 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [],
+        productionCycles: [],
       },
     ]
 
@@ -168,8 +166,7 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [],
+        productionCycles: [],
       },
     ]
     expect(validateGameSaveShape(admitted).ok).toBe(true)
@@ -219,7 +216,7 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       settleNowMs,
-      { workerCapacity: 1, offlineSinceMs, rng },
+      { offlineSinceMs, rng },
     )
     expect(settled).toBe(0)
     expect(completions).toBe(0)
@@ -273,14 +270,14 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
   // --------------------------------------------------------------------
   it('slots = +Infinity returns normally (child-process probe, r20 fix)', { timeout: 45_000 }, () => {
     const spec = fileURLToPath(new URL('./fixpointR20CorSlotsHang.probe.test.ts', import.meta.url))
-    const vitestBin = fileURLToPath(new URL('../../../node_modules/.bin/vitest', import.meta.url))
+    const vitestBin = fileURLToPath(new URL('../../../node_modules/vitest/vitest.mjs', import.meta.url))
     // --pool=threads: a regressed hang would live in a worker THREAD of
     // the spawned vitest process, so the timeout kill (SIGTERM to the
     // process) takes the looping thread down with it - no pkill sweep
     // needed (R22-COR-2: any spec-name pkill pattern can also match a
     // parent vitest cmdline when both spec files are listed together).
     // NODE_OPTIONS caps the child heap so an OOM-class hang dies fast.
-    const result = spawnSync(vitestBin, ['run', spec, '--reporter=dot', '--pool=threads'], {
+    const result = spawnSync(process.execPath, [vitestBin, 'run', spec, '--reporter=dot', '--pool=threads'], {
       cwd: fileURLToPath(new URL('../../../', import.meta.url)),
       env: {
         ...process.env,

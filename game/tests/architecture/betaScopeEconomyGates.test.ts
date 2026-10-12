@@ -1,16 +1,18 @@
 /**
  * BETA SCOPE LOCK v2 Phase-5 - pins the sec.11-sec.15 domain-level gates
- * and the new read-models against the REAL flag table (BETA_FEATURES all
- * false in beta). Every gate fails closed on a DIRECT domain call, so a
- * caller bypassing the frontend never reaches dormant behavior:
+ * and the new read-models against the REAL flag table (authored
+ * BETA_FEATURES). Every dormant gate fails closed on a DIRECT domain
+ * call, so a caller bypassing the frontend never reaches dormant
+ * behavior:
  *
- *   sec.11 equipment - wash/refine mutating + preview entry points all
- *                      reject 'scope_hidden'; decompose freezes at every
- *                      public seam while persisted settings round-trip;
+ *   sec.11 equipment - wash/refine (live since 2026-10-09) reach real
+ *                      validation instead of the scope gate; decompose
+ *                      accepts legacy timer data as inert while instant
+ *                      conversion remains fail-closed;
  *   sec.12 alchemy   - dormant families cannot startJob or preview; the
  *                      canonical read-model only carries beta families;
- *   sec.13 workforce - manual assignment is off; the Worker Lodge
- *                      read-model resolves tab verdicts itself;
+ *   sec.13 production - each site advances its own cycle; Chiêu Hiền Quán
+ *                      remains an art-only Architecture card;
  *   sec.14 domains   - companion/formation/artifact acquisition and
  *                      mutation seams are closed; the hidden-beast kill
  *                      counter freezes (no hidden_window_opened cue);
@@ -23,6 +25,9 @@
  */
 import { describe, expect, it } from 'vitest'
 import { GameManager } from '@/core/game/GameManager'
+import { getArchitectureBuildingModels } from '@/core/game/ArchitectureReadModel'
+import { buildings } from '@/data/building/buildings'
+import { materials } from '@/data/materials/materials'
 import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { isArtifactDomainUnlocked } from '@/core/artifact/ArtifactProgression'
@@ -47,18 +52,17 @@ import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import {
   BETA_ENABLED_RECIPE_FAMILIES,
   BETA_EQUIPMENT_TABS,
-  BETA_WORKER_LODGE_TABS,
   betaRecipeFamilyOfId,
   isBetaEnemyId,
   isBetaQuestEnabled,
 } from '@/core/betaScope'
 import type { Quest } from '@/core/quest/Quest'
-import { lockBetaFeaturesForTests, unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { restoreAuthoredFeaturesForTests, unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 // The global setup admits every feature for legacy suites; this suite
-// asserts the canonical beta lock itself, so re-pin the all-false
+// asserts the shipped beta lock itself, so re-pin the authored
 // feature table before any expectation runs.
-lockBetaFeaturesForTests()
+restoreAuthoredFeaturesForTests()
 
 function foundationPlayer(): PlayerData {
   const player = createDefaultPlayer()
@@ -74,10 +78,12 @@ const DORMANT_RECIPE: AlchemyRecipe = alchemyRecipes.find(
   (recipe) => recipe.id === 'alchemy_phi_van_dan_qi_refining',
 )!
 
-describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domain level', () => {
-  it('wash entry points all reject scope_hidden on a direct call', () => {
+describe('sec.11 equipment hall - wash/refine live, ore-decompose fails closed at domain level', () => {
+  it('wash entry points reach real validation (gate open)', () => {
     const gm = new GameManager()
 
+    // equipmentWash ships in beta: a direct call passes the scope gate
+    // and hits the impl's own validation (unknown instance).
     expect(
       gm.equipmentSystem.washAffixes(
         'instance-1',
@@ -87,7 +93,7 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.equipmentSlotManager,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
     expect(
       gm.equipmentSystem.previewWashAffixes(
@@ -97,7 +103,7 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.materialBag,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
     expect(
       gm.equipmentSystem.commitWashAffixes(
@@ -107,14 +113,13 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.equipmentSlotManager,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
-    // Query side fails closed too - a lingering pre-flag ticket never
-    // renders through the domain API.
+    // Query side stays empty - no ticket was ever minted.
     expect(gm.equipmentSystem.getWashPreviewAffixes('ticket-1')).toBeUndefined()
   })
 
-  it('refine entry points all reject scope_hidden on a direct call', () => {
+  it('refine entry points reach real validation (gate open)', () => {
     const gm = new GameManager()
 
     expect(
@@ -127,7 +132,7 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.equipmentSlotManager,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
     expect(
       gm.equipmentSystem.previewRefineValues(
@@ -138,7 +143,7 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.materialBag,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
 
     expect(
       gm.equipmentSystem.commitRefineValues(
@@ -148,11 +153,11 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
         gm.equipmentSlotManager,
         gm.affixRegistry,
       ),
-    ).toEqual({ ok: false, reason: 'scope_hidden' })
+    ).toEqual({ ok: false, reason: 'not_found' })
   })
 
-  it('the beta equipment surface stays exactly Enhance + Dissolve', () => {
-    expect(BETA_EQUIPMENT_TABS).toEqual(['enhance', 'dissolve'])
+  it('the beta equipment surface admits Enhance + Wash + Refine + Dissolve', () => {
+    expect(BETA_EQUIPMENT_TABS).toEqual(['enhance', 'wash', 'refine', 'dissolve'])
 
     // Positive control: enhance reaches its normal validation (missing
     // instance), never the scope gate.
@@ -170,24 +175,23 @@ describe('sec.11 equipment hall - wash/refine/ore-decompose fail closed at domai
     expect(result.reason).not.toBe('scope_hidden')
   })
 
-  it('ore decompose freezes at every seam and owns no restored state', () => {
+  it('legacy decompose timers normalize inertly and instant exchange fails closed under beta', () => {
     const gm = new GameManager()
-
-    // DIRECT DECOMPOSE REWORK: the worker-cycle engine retired - a stale
-    // save's workers/nextCycleAt/started payload is accepted-and-ignored,
-    // so nothing persists into the live slice.
+    gm.catalogOps.registerMaterials(materials)
+    gm.materialBag.add(gm.materialRegistry.get('mortal_ore_decade'), 10)
     gm.decomposeSystem.restore({
       settings: { workers: 3, gradeFilter: 'all', ageFilter: 'all' },
       nextCycleAt: 0,
       started: true,
     })
-    expect(gm.decomposeSystem.getSaveState()).toEqual({})
-
-    // The whole direct API fail-closes under scope-hidden: no listing,
-    // no preview, no decompose.
-    expect(gm.decomposeSystem.listDecomposableIds()).toEqual([])
-    expect(gm.decomposeSystem.previewDecompose(['mortal_ore_decade'])).toEqual([])
-    expect(gm.decomposeSystem.decompose(['mortal_ore_decade'])).toBe(false)
+    expect(gm.decomposeSystem.getSaveState()).toEqual({
+      settings: { workers: 0, gradeFilter: 'all', ageFilter: 'all' },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(gm.decomposeSystem.previewDecomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
+    expect(gm.decomposeSystem.decomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
+    expect(gm.materialBag.getAmount('mortal_ore_decade')).toBe(10)
   })
 })
 
@@ -278,30 +282,31 @@ describe('sec.12 alchemy - dormant families stay unreachable and off the read-mo
 })
 
 describe('sec.13 workforce - automatic allocation is the only beta path', () => {
-  it('manual worker assignment fails closed at the domain level', () => {
+  it('production sites progress independently and expose no workforce assignment API', () => {
     const gm = new GameManager()
-    expect(gm.productionSystem.setWorkerAssignment('thanh_van_lam', 2, 5)).toBe(false)
-    expect(gm.productionSystem.setWorkerAssignment('thanh_van_lam', undefined, 5)).toBe(false)
+    gm.catalogOps.registerBuildings(buildings)
+    gm.catalogOps.registerMaterials(materials)
+    gm.setActivePlayer(foundationPlayer())
+    const defs = gm.productionSystem.getSiteDefinitions()
+    for (const def of defs) gm.buildingOps.setProductionAutoRestart(def.siteId, true)
+    gm.tickOps.update(1)
+    for (const def of defs) {
+      expect(gm.productionSystem.getState(def.siteId)?.productionCycles).toHaveLength(1)
+      expect(gm.productionSystem.getState(def.siteId)).not.toHaveProperty('assignedWorkers')
+    }
+    expect('assignWorkers' in gm.buildingOps).toBe(false)
+    expect('setWorkerAssignment' in gm.productionSystem).toBe(false)
   })
 
-  it('worker lodge read-model resolves EVERY tab scope-hidden (final hide-completely policy)', () => {
+  it('Chiêu Hiền Quán remains an art-only Architecture card', () => {
     const gm = new GameManager()
-    const surface = gm.buildingOps.getWorkerLodgeSurfaceModel(foundationPlayer())
-
-    expect(surface.tabs.map((tab) => tab.id)).toEqual([...BETA_WORKER_LODGE_TABS])
-
-    // FINAL POLICY (sec.4C): the whole Worker Lodge surface is out of
-    // beta scope - nhan_cong is bound to manualWorkforce like the
-    // building surface/wheel/left-panel mode; companion tabs resolve
-    // scope-hidden as before. Automatic production keeps running with
-    // no UI.
-    const workforce = surface.tabs.find((tab) => tab.id === 'nhan_cong')
-    expect(workforce?.verdict).toBe('scope-hidden')
-    expect(workforce?.manualAssignOffered).toBe(false)
-
-    for (const tab of surface.tabs) {
-      expect(tab.verdict).toBe('scope-hidden')
-    }
+    gm.catalogOps.registerBuildings(buildings)
+    const card = getArchitectureBuildingModels(gm, foundationPlayer())
+      .find((building) => building.id === 'chi_hien_quan')
+    expect(card?.artOnly).toBe(true)
+    expect(card?.maxed).toBe(true)
+    expect(card?.canUpgrade).toBe(false)
+    expect(card?.costs).toEqual([])
   })
 })
 
@@ -421,7 +426,7 @@ describe('sec.14 companion/formation/artifact - all faucets shut', () => {
     try {
       expect(system.maybeReplaceSpawn(player, 'qi_refining', () => 0)?.id).toBe('huyet_mong')
     } finally {
-      lockBetaFeaturesForTests()
+      restoreAuthoredFeaturesForTests()
     }
   })
 })

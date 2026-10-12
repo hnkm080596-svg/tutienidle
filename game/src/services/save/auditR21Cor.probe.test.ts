@@ -7,7 +7,7 @@ import { existsSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-declare const process: { env: Record<string, string | undefined> }
+declare const process: { env: Record<string, string | undefined>; execPath: string }
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { PlayerData } from '../../core/player/Player'
@@ -17,6 +17,7 @@ import { lockBetaFeaturesForTests } from '../../core/game/__fixtures__/betaFeatu
 import { lockBetaWaysForTests } from '../../core/game/__fixtures__/betaWaysUnlock'
 import { lockBetaTalentsForTests } from '../../core/game/__fixtures__/betaTalentsUnlock'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { settleProductionOffline } from '../../core/production/ProductionOffline'
 import type { ProductionOfflineDeps } from '../../core/production/ProductionOffline'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
@@ -27,6 +28,19 @@ import type {
 } from '../../core/production/ProductionTypes'
 import { MaterialBag } from '../../core/material/MaterialBag'
 import { MaterialRegistry } from '../../core/material/MaterialRegistry'
+
+// BETA SCOPE - only the decompose engine is force-visible for this
+// suite (it is scope-hidden in beta and audited as enabled). Every
+// other scope keeps its real visibility - productionCycles lane-ceiling
+// validation depends on the hidden manualWorkforce baseline.
+vi.mock('../../core/betaScope', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../core/betaScope')>()
+  return {
+    ...original,
+    isScopeHidden: (feature: string) =>
+      feature === 'equipmentOreDecompose' ? false : original.isScopeHidden(feature),
+  }
+})
 
 // ============================================================================
 // QA repro - fixpoint r21 COR wave (blind audit of commit be30c152, the r20
@@ -54,7 +68,7 @@ import { MaterialRegistry } from '../../core/material/MaterialRegistry'
 //   -9.1e15+100000, span exactly 100000ms). The save loads, then every
 //   advanceWorkerLanes call zero-advances: the site produces NOTHING
 //   offline AND online (observe mode shares the guard) and no code
-//   path ever removes a workerCycles entry - permanent silent freeze.
+//   path ever removes a productionCycles entry - permanent silent freeze.
 //   Rejected-by-validator (recovery surface) or per-lane drop would be
 //   gentler; preserve-verbatim was the accepted deny direction.
 // ============================================================================
@@ -91,8 +105,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -183,8 +196,8 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
     const frozen = makeCycle(LAM, -9.1e15, -9.1e15 + 100_000)
     const honest = makeCycle(QUANG, T0 - 100_000, T0)
 
-    const stateA = makeState(LAM, { autoRestart: true, workerCycles: [frozen] })
-    const stateB = makeState(QUANG, { autoRestart: true, workerCycles: [honest] })
+    const stateA = makeState(LAM, { autoRestart: true, productionCycles: [frozen] })
+    const stateB = makeState(QUANG, { autoRestart: true, productionCycles: [honest] })
     const deps = createDeps(
       new Map<string, ProductionSiteState>([
         [LAM, stateA],
@@ -198,14 +211,14 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
       new MaterialRegistry(),
       REALM,
       T0,
-      { workerCapacity: 2, offlineSinceMs: T0 - 200_000, rng: () => 0.5 },
+      { offlineSinceMs: T0 - 200_000, rng: () => 0.5 },
     )
 
     // The frozen site preserves its crafted lane verbatim; the honest
     // site still settles its due head and respawns its successor.
-    expect(stateA.workerCycles).toEqual([frozen])
+    expect(stateA.productionCycles).toEqual([frozen])
     expect(settled).toBe(1)
-    expect(stateB.workerCycles?.length).toBe(1)
+    expect(stateB.productionCycles?.length).toBe(1)
   })
 
   // --------------------------------------------------------------------
@@ -222,8 +235,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
         siteId: LAM,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'crafted',
             siteId: LAM,
@@ -277,7 +289,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
 
     // Persisted verbatim through settleProductionOffline - the same
     // object refs round-trip, so the freeze survives every later save.
-    const state = makeState(LAM, { autoRestart: true, workerCycles: [crafted] })
+    const state = makeState(LAM, { autoRestart: true, productionCycles: [crafted] })
     const deps = createDeps(new Map([[LAM, state]]))
     const settled = settleProductionOffline(
       deps,
@@ -285,11 +297,11 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
       new MaterialRegistry(),
       REALM,
       T0,
-      { workerCapacity: 1, offlineSinceMs: T0 - 200_000, rng: () => 0.5 },
+      { offlineSinceMs: T0 - 200_000, rng: () => 0.5 },
     )
     expect(settled).toBe(0)
-    expect(state.workerCycles).toEqual([crafted])
-    expect(state.workerCycles?.[0]).toBe(crafted)
+    expect(state.productionCycles).toEqual([crafted])
+    expect(state.productionCycles?.[0]).toBe(crafted)
   })
 
   // --------------------------------------------------------------------
@@ -335,7 +347,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
   // --------------------------------------------------------------------
   it('nowMs = 1e300 trips the magnitude pin - child exits 0 (r21 fix)', { timeout: 60_000 }, () => {
     const spec = fileURLToPath(new URL('./auditR21CorNowMsHang.probe.test.ts', import.meta.url))
-    const vitestBin = fileURLToPath(new URL('../../../node_modules/.bin/vitest', import.meta.url))
+    const vitestBin = fileURLToPath(new URL('../../../node_modules/vitest/vitest.mjs', import.meta.url))
     const marker = fileURLToPath(new URL('./.r21-hang-armed', import.meta.url))
     try {
       rmSync(marker, { force: true })
@@ -351,7 +363,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
       // NODE_OPTIONS caps the child heap: the unbounded completed.push
       // OOMs in a few seconds instead of growing ~200MB/s for the
       // whole timeout window (observed ~4.4GB at kill).
-      const result = spawnSync(vitestBin, ['run', spec, '--reporter=dot', '--pool=threads'], {
+      const result = spawnSync(process.execPath, [vitestBin, 'run', spec, '--reporter=dot', '--pool=threads'], {
         cwd: fileURLToPath(new URL('../../../', import.meta.url)),
         env: {
           ...process.env,
@@ -382,7 +394,20 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
     }
   })
 
-  // DIRECT DECOMPOSE REWORK (2026-10-11): the sibling sweep that used
-  // to pin DecomposeSystem.settleOffline's fast-forward shape is gone
-  // with the worker-cycle engine - decompose has no timer to jump.
+  it('legacy decompose timer payload restores inertly without advancing a settlement loop', () => {
+    const bag = new MaterialBag()
+    const system = new DecomposeSystem(bag)
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: 0,
+      started: true,
+    })
+
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(bag.getAll()).toHaveLength(0)
+  })
 })

@@ -334,11 +334,12 @@ const refineMaterials = computed(() => [
 </script>
 
 <template>
-  <!-- Bo cuc chung voi Cuong Hoa (owner ruling 2026-10-08): Tinh Luyen
-       can area cho toi da 5 dong affix nen BO o chieu + 2 vong tron -
-       chi con affix hien tai -> ket qua tinh luyen (khoa tung dong o
-       mep trai), hang nguyen lieu cua Tinh Luyen va nut hanh dong ghim
-       day card. Chon do truc tiep tren doll. -->
+  <!-- Shared layout with Enhance (owner ruling 2026-10-08): Tinh Luyen
+       needs room for up to 5 affix lines so the preview cell + the 2
+       circles are dropped - only the current affix -> refine result
+       rows (per-line lock at the left edge), the refine materials row,
+       and the action buttons pinned to the card bottom. Pick gear off
+       the doll. -->
   <div class="equipment-forge-workspace forge-refine">
     <h2>{{ t('panels.equipmentHall.tabs.refine') }}</h2>
 
@@ -392,7 +393,7 @@ const refineMaterials = computed(() => [
       </div>
       <p v-else class="forge-empty">{{ t('panels.equipmentHall.empty.noAffixesToRefine') }}</p>
 
-      <!-- Pinned bottom block (same as Cuong Hoa). -->
+      <!-- Pinned bottom block (same as Enhance). -->
       <div class="equipment-forge-materials">
         <div
           v-for="material in refineMaterials"
@@ -409,7 +410,11 @@ const refineMaterials = computed(() => [
           </div>
         </div>
       </div>
-      <div class="equipment-forge-actions" :class="{ 'is-pending': pendingRefineValues }">
+      <!-- Owner ruling 2026-10-09: forge uses are a shared wallet between
+           Wash and Refine; a spent wallet freezes the item's sub-lines
+           forever. One small hint line, no layout change. -->
+      <p class="forge-ren-hint">{{ t('panels.equipmentHall.labels.renSharedHint') }}</p>
+      <div class="equipment-forge-actions">
         <EquipmentArtButton filter-art :gold="canRefine()" :disabled="!canRefine()" @click="doRefinePreview">
           {{ t('panels.equipmentHall.buttons.refinePreview') }}
         </EquipmentArtButton>
@@ -451,6 +456,20 @@ const refineMaterials = computed(() => [
   left: 16px;
   right: 16px;
   bottom: -2px;
+}
+/* Shared-wallet hint sits in the strip between the pinned materials
+   row and the actions band - text only, no layout change. */
+.forge-ren-hint {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 62px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  color: #cbb27a;
+  opacity: 0.9;
 }
 .equipment-forge-workspace h2 {
   font-size: 26px;
@@ -572,7 +591,7 @@ const refineMaterials = computed(() => [
   border-color: #d9a94f88;
   background: #d9a94f1a;
 }
-/* Materials row: identical metrics to Cuong Hoa. */
+/* Materials row: identical metrics to Enhance. */
 .equipment-forge-materials {
   display: flex;
   align-items: stretch;
@@ -586,6 +605,15 @@ const refineMaterials = computed(() => [
   align-items: center;
   gap: 10px;
   min-width: 0;
+}
+/* Material name stays on ONE line in both columns - a wrapped name
+   pushed the count into the middle and looked asymmetric (owner
+   callout 2026-10-08). */
+.equipment-material > div:last-child > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
 }
 .equipment-material-icon {
   width: 65px;

@@ -199,16 +199,24 @@ describe('auditR29 INT probe - tick/settle nowMs guard parity (P)', () => {
     expect(fresh.settleOffline(bag, () => ({ id: j2.pillId }), currentMs)).toBe(1)
   })
 
-  it('P3 decompose has no clock-fed channel anymore (direct rework) - decompose() reads the bag, not nowMs', () => {
+  it('P3 legacy decompose deadlines are inert after restore (r29-INT-1 superseded)', () => {
     const bag = new MaterialBag()
     const ore = materials.find((m) => m.id === 'mortal_ore_decade')!
     bag.add(ore, 100_000)
+    const oreAmountBefore = bag.get(ore.id)?.amount
     const system = new DecomposeSystem(bag)
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: Number.NaN,
+      started: true,
+    }, Number.NaN)
 
-    // The direct API takes ids, not timestamps - a hostile clock cannot
-    // reach the engine at all.
-    expect(system.decompose(['mortal_ore_decade'])).toBe(true)
-    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(bag.get(ore.id)?.amount).toBe(oreAmountBefore)
   })
 })
 

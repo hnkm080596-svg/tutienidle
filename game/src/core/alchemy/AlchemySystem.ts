@@ -13,7 +13,7 @@
 // guaranteedPills = floor(total/100); extraPillChance = total % 100.
 
 import type { PillBag } from '../pill/PillBag'
-import type { MaterialBag } from '../material/MaterialBag'
+import { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { HerbAge } from '../production/ProductionTypes'
 import type { ItemQuality } from '../item/ItemQuality'
@@ -394,29 +394,9 @@ export function jobSuccessPercent(
 
   const base = HERB_AGE_BASE_SUCCESS_PERCENT[variant?.age ?? 'decade']
 
-  const bonus = alchemyRoomSuccessBonus(job.roomLevelAtStart)
-
   // Optional flat percent-point bonus (content sources may pass one) -
   // added before the guaranteed/extra split, cap 300 preserved (plan sec6).
-  return Math.min(base + bonus + successBonusPercentPoints, 300)
-}
-
-/** Bang bonus ty le thanh dan theo level Dan Phong - TACH BIET bang speed (sec8.3).
- * Dan Phong maxLevel 9 (buildings.ts) - bang phai du 9 entry; truoc day
- * chi 5 entry khien level 6-9 ket o gia tri level 5 (review 2026-08-28,
- * economy-ecosystem-plan T5). */
-export const ALCHEMY_SUCCESS_BONUS_PERCENT: readonly number[] = [0, 5, 10, 15, 20, 25, 30, 35, 40]
-
-/**
- * Bonus % thanh dan theo level Dan Phong - index clamp 1..length. Nguon
- * su that DUY NHAT cho ca settle (jobSuccessPercent) lan preview
- * (GameManager.previewAlchemyOutcome) de hai duong khong bao gio lech
- * (review 2026-08-28: preview dung `?? 0` khong clamp, settle clamp).
- */
-export function alchemyRoomSuccessBonus(roomLevel: number): number {
-  const index = Math.min(Math.max(roomLevel, 1), ALCHEMY_SUCCESS_BONUS_PERCENT.length) - 1
-
-  return ALCHEMY_SUCCESS_BONUS_PERCENT[index] ?? 0
+  return Math.min(base + successBonusPercentPoints, 300)
 }
 
 /** He so toc do luyen theo level Dan Phong (sec8.2) - du 9 level (T5). */
@@ -425,9 +405,35 @@ export const ALCHEMY_SPEED_MULTIPLIERS: readonly number[] = [
 ]
 
 export function alchemySecondsFor(recipe: AlchemyRecipe, roomLevel: number): number {
-  const multiplier = ALCHEMY_SPEED_MULTIPLIERS[Math.min(Math.max(roomLevel, 1), ALCHEMY_SPEED_MULTIPLIERS.length) - 1] ?? 1
+  return Math.ceil(recipe.baseDurationSeconds / alchemyRoomSpeedMultiplier(roomLevel))
+}
 
-  return Math.ceil(recipe.baseDurationSeconds / multiplier)
+export function alchemyRoomSpeedMultiplier(roomLevel: number): number {
+  return ALCHEMY_SPEED_MULTIPLIERS[Math.min(Math.max(roomLevel, 1), ALCHEMY_SPEED_MULTIPLIERS.length) - 1] ?? 1
+}
+
+function isQueueEligible(job: ActiveAlchemyJob): boolean {
+  return betaRecipeFamilyOfId(job.recipeId) !== null
+}
+
+function rescheduleJob(job: ActiveAlchemyJob, startedAtMs: number): ActiveAlchemyJob | null {
+  const spanMs = job.completesAtMs - job.startedAtMs
+  const completesAtMs = startedAtMs + spanMs
+
+  if (!Number.isFinite(spanMs) || spanMs <= 0 || !(completesAtMs < 2 ** 52)) return null
+
+  const scheduled = { ...job, startedAtMs, completesAtMs }
+  const specials = job.reservation?.specialIngredients
+  const foldable = Array.isArray(specials) && specials.every((special) => typeof special === 'object' && special !== null)
+  if (!foldable) return scheduled
+
+  return {
+    ...scheduled,
+    reservation: {
+      ...job.reservation,
+      digest: alchemyJobReservationDigest(scheduled, job.reservation),
+    },
+  }
 }
 
 /**
@@ -518,6 +524,18 @@ function sameSpecialIngredients(
 }
 
 export class AlchemySystem {
+  /**
+   * GP-01 - authorized live-time owner. GameManager injects the shared
+   * TimeAuthority (`now: () => time.now()`); direct-construction
+   * fixtures fall back to the wall clock, preserving pre-migration
+   * behavior. Explicit `nowMs` params still win - callers pass them.
+   */
+  constructor(private readonly deps: { now?: () => number } = {}) {}
+
+  private nowMs(): number {
+    return this.deps.now?.() ?? Date.now()
+  }
+
   private jobs: ActiveAlchemyJob[] = []
 
   // Monotonic roll anchor, allocated per order in strides of the batch
@@ -528,27 +546,19 @@ export class AlchemySystem {
 
   private pendingEvents: AlchemySettlementEvent[] = []
 
-  /**
-   * M1 (ARCH-001) - restore REPLACES the job list with detached copies:
-   * the payload is a value, so mutating it afterwards must not leak into
-   * live state (A3).
-   */
   private allocRollSeedBase(): number | undefined {
-    // Domain bound mirrors the save-shape gate: a stamped base must
-    // satisfy base + MAX <= 2^32 so its whole unit stream stays in the
-    // mulberry32 domain. A cursor pushed to the last stride (only via a
-    // crafted save - honest use needs ~4e9 orders) gets no base: the
-    // job falls back to the legacy per-job hash stream, which aliases
-    // nothing and self-bricks nothing.
-    if (this.rollSeedCursor + ALCHEMY_MAX_BATCH_QUANTITY > 2 ** 32) {
-      return undefined
-    }
+    if (this.rollSeedCursor + ALCHEMY_MAX_BATCH_QUANTITY > 2 ** 32) return undefined
     const base = this.rollSeedCursor
     this.rollSeedCursor += ALCHEMY_MAX_BATCH_QUANTITY
     return base
   }
 
-  restoreJobs(jobs: ActiveAlchemyJob[], restoreNowMs: number = Date.now()): void {
+  /**
+   * M1 (ARCH-001) - restore REPLACES the job list with detached copies:
+   * the payload is a value, so mutating it afterwards must not leak into
+   * live state (A3).
+   */
+  restoreJobs(jobs: ActiveAlchemyJob[], restoreNowMs: number = this.nowMs()): void {
     // r29-COR-F1: the shift only fires under a sane restore clock -
     // a non-finite or exact-integer-domain-overflow restoreNowMs from
     // an ungated caller must not re-anchor every began-pair
@@ -561,7 +571,7 @@ export class AlchemySystem {
     // at >= 2^52 exceeds the persisted timestamp domain so the next
     // save write self-refuses. Both read as bad clock -> verbatim.
     const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
-    this.jobs = jobs.flatMap((job) => {
+    const restored = jobs.flatMap((job) => {
       // r31-COR-F-NEG-MINT: persisted stamps live in [0, 2^52) - a
       // crafted negative pair would verbatim-restore as already-due and
       // settle on the next honest tick (mint); a >= 2^52 stamp wedges
@@ -686,24 +696,34 @@ export class AlchemySystem {
       ]
     })
 
-    // Roll anchors restore with the queue: the cursor re-grounds to
-    // EXACTLY max(persisted bases) + MAX (0 when no seeded order) so a
-    // mid-session hot restore lands on the same cursor a cold boot
-    // would. max()-ing with the pre-restore cursor would leak inflated
-    // session state across the load - the same save then rolls a
-    // different "next order" stream depending on restore path,
-    // reopening the reroll channel this scheme exists to close.
+    // Persisted queue order is authoritative. Repair old parallel schedules and
+    // naturally staged jobs into a contiguous serial timeline on restore.
+    let previousCompletion: number | null = null
+    this.jobs = restored.flatMap((job) => {
+      // Earned legacy outcomes retain their deadlines; settlement delivers them once.
+      if (clockOk && job.completesAtMs <= restoreNowMs) return [job]
+      if (!isQueueEligible(job)) return [job]
+
+      const startedAtMs = previousCompletion === null
+        ? job.startedAtMs
+        : Math.max(job.startedAtMs, previousCompletion)
+      const scheduled = startedAtMs === job.startedAtMs ? job : rescheduleJob(job, startedAtMs)
+      if (!scheduled) return []
+
+      previousCompletion = scheduled.completesAtMs
+      return [scheduled]
+    })
+
     this.rollSeedCursor = 0
     for (const job of this.jobs) {
-      // Out-of-domain bases (base + MAX > 2^32, the wrap-adjacent last
-      // stride the validator rejects) must not raise the cursor: the
-      // next honest alloc would stamp a base its own validator
-      // refuses, self-bricking the save this session writes.
       if (
         job.rollSeedBase !== undefined &&
         job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY <= 2 ** 32
       ) {
-        this.rollSeedCursor = Math.max(this.rollSeedCursor, job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY)
+        this.rollSeedCursor = Math.max(
+          this.rollSeedCursor,
+          job.rollSeedBase + ALCHEMY_MAX_BATCH_QUANTITY,
+        )
       }
     }
   }
@@ -721,7 +741,7 @@ export class AlchemySystem {
   }
 
   hasActiveJob(): boolean {
-    return this.jobs.length > 0
+    return this.jobs.some(isQueueEligible)
   }
 
   /**
@@ -736,7 +756,7 @@ export class AlchemySystem {
     spiritStone: number,
     roomLevel: number,
     nowMs: number,
-    maxConcurrentJobs: number,
+    maxQueueSlots: number,
     // M3 (talent v4 sec4.2) - Hoa Hau Thong Than counter-cost: multiplies
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
@@ -800,9 +820,10 @@ export class AlchemySystem {
     // budget - a restored dormant job rendered nowhere would otherwise
     // reject every beta recipe job_slots_full with no visible cause or
     // cancel path.
-    const liveJobs = this.jobs.filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
+    const liveJobs = this.jobs.filter(isQueueEligible)
 
-    if (liveJobs.length >= Math.max(1, maxConcurrentJobs)) {
+    const queueCapacity = Number.isFinite(maxQueueSlots) ? Math.max(0, Math.floor(maxQueueSlots)) : 0
+    if (liveJobs.length >= queueCapacity) {
       return { ok: false, reason: 'job_slots_full' }
     }
 
@@ -859,6 +880,14 @@ export class AlchemySystem {
       }
     }
 
+    const jobId = nextJobId()
+    const previousCompletion = liveJobs.at(-1)?.completesAtMs
+    const startedAtMs = previousCompletion === undefined ? nowMs : Math.max(nowMs, previousCompletion)
+    const completesAtMs = startedAtMs + batchSeconds * 1000
+    if (!(startedAtMs >= 0 && completesAtMs < 2 ** 52)) {
+      return { ok: false, reason: 'invalid_clock' }
+    }
+
     // Reserve atomic - tru toan bo sau khi moi check pass.
     bag.remove(herbMaterialId, herbAmount)
 
@@ -870,12 +899,7 @@ export class AlchemySystem {
       bag.remove(special.materialId, special.amount * quantity)
     }
 
-    const jobId = nextJobId()
-    const completesAtMs = nowMs + batchSeconds * 1000
     const rollSeedBase = this.allocRollSeedBase()
-    // Reservation keeps PER-UNIT amounts (single source the per-unit
-    // settle and the partial-cancel refund both replay); quantity binds
-    // the batch through the digest fold on the job side.
     const specialIngredients = (recipe.specialIngredients ?? []).map((special) => ({ ...special }))
 
     // F-ALCH-JOB-FORGE - stamp the reservation witness at the same
@@ -895,7 +919,7 @@ export class AlchemySystem {
           recipeId: recipe.id,
           pillId: recipe.pillId,
           herbMaterialId,
-          startedAtMs: nowMs,
+          startedAtMs,
           completesAtMs,
           roomLevelAtStart: roomLevel,
           quantity,
@@ -919,7 +943,7 @@ export class AlchemySystem {
       recipeId: recipe.id,
       pillId: recipe.pillId,
       herbMaterialId,
-      startedAtMs: nowMs,
+      startedAtMs,
       completesAtMs,
       roomLevelAtStart: roomLevel,
       quantity,
@@ -933,27 +957,6 @@ export class AlchemySystem {
     return { ok: true, spiritStoneCost }
   }
 
-  /**
-   * QUEUE REWORK (owner ruling 2026-10-11) - the player-facing enqueue
-   * path: every "Luyen Dan" click reserves ONE unit immediately. If the
-   * LAST queue entry is the same order (same recipe + herb variant +
-   * room level + identical per-unit cost profile) the click merges into
-   * it (+1 quantity, deadline span extends by one per-unit) instead of
-   * occupying a new slot - A B A queues three entries because the last
-   * entry before the third click is B. A merge is denied only by an
-   * exhausted batch cap or timestamp headroom, in which case the click
-   * falls through to a fresh order.
-   *
-   * Merge safety: the order's reservation stores PER-UNIT amounts, so
-   * refund/settle replay is unchanged by quantity growth; the digest
-   * is re-folded over the extended record. Merge requires the same
-   * resolved inputs - a room upgrade or talent change between clicks
-   * produces a different cost profile and lands as a NEW order (the
-   * new unit can never inherit stale pricing/timing).
-   *
-   * Returns the same contract as startJob plus `merged` so callers can
-   * distinguish extend-from-create if they ever need to.
-   */
   enqueueJob(
     recipe: AlchemyRecipe,
     herbMaterialId: string,
@@ -962,110 +965,73 @@ export class AlchemySystem {
     spiritStone: number,
     roomLevel: number,
     nowMs: number,
-    maxConcurrentJobs: number,
+    maxQueueSlots: number,
     costMultiplier = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number; merged?: boolean } {
-    // Same origination denials as startJob BEFORE any merge - a parked
-    // dormant-family order at the tail must not absorb clicks (the
-    // domain fails closed at every origination path), and a bad clock
-    // never reaches the amount arithmetic below.
     if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
       return { ok: false, reason: 'invalid_clock' }
     }
+    if (betaRecipeFamilyOfId(recipe.id) === null) return { ok: false, reason: 'scope_hidden' }
+    if (recipe.retired === true) return { ok: false, reason: 'retired' }
 
-    if (betaRecipeFamilyOfId(recipe.id) === null) {
-      return { ok: false, reason: 'scope_hidden' }
-    }
-
-    if (recipe.retired === true) {
-      return { ok: false, reason: 'retired' }
-    }
-
-    const variant = recipe.herbVariants.find((candidate) => candidate.materialId === herbMaterialId)
-
-    if (!variant || !registry.has(herbMaterialId)) {
-      return { ok: false, reason: 'wrong_herb' }
-    }
-
-    const last = this.jobs[this.jobs.length - 1]
-
-    const mergeCandidate =
+    const liveJobs = this.jobs.filter(isQueueEligible)
+    const last = liveJobs.at(-1)
+    const canExtendLastOrder =
       last !== undefined &&
+      (last === liveJobs[0] || nowMs < last.startedAtMs) &&
       last.recipeId === recipe.id &&
       last.herbMaterialId === herbMaterialId &&
       last.roomLevelAtStart === roomLevel &&
-      (last.quantity ?? 1) < ALCHEMY_MAX_BATCH_QUANTITY
+      (last.quantity ?? 1) < ALCHEMY_MAX_BATCH_QUANTITY &&
+      verifyAlchemyJobReservation(last, recipe) === null
 
-    if (mergeCandidate) {
-      // Compute this click's per-unit cost profile the same way
-      // startJob derives it - merge only when the order's reservation
-      // already describes exactly these inputs.
-      const perUnitSeconds = alchemySecondsFor(recipe, roomLevel)
-      const costScale = Math.max(1, costMultiplier)
-      const perUnitFuelWoodAmount = Math.ceil(recipe.fuelWoodAmount * costScale)
-      const perUnitSpiritStoneCost = Math.ceil(recipe.spiritStoneCost * costScale)
-      const perUnitMs = perUnitSeconds * 1000
-
-      const mergeable =
-        perUnitFuelWoodAmount === last.reservation.fuelWoodAmount &&
-        perUnitSpiritStoneCost === last.reservation.spiritStoneCost &&
+    if (canExtendLastOrder) {
+      const perUnitFuel = Math.ceil(recipe.fuelWoodAmount * Math.max(1, costMultiplier))
+      const perUnitStone = Math.ceil(recipe.spiritStoneCost * Math.max(1, costMultiplier))
+      const sameSpecials = sameSpecialIngredients(
+        recipe.specialIngredients ?? [],
+        last.reservation.specialIngredients,
+      )
+      const compatible =
+        perUnitFuel === last.reservation.fuelWoodAmount &&
+        perUnitStone === last.reservation.spiritStoneCost &&
         recipe.herbAmount === last.reservation.herbAmount &&
         recipe.luyenDanTinhHoaAmount === last.reservation.luyenDanTinhHoaAmount &&
-        costScale === last.reservation.costScale &&
-        sameSpecialIngredients(recipe.specialIngredients ?? [], last.reservation.specialIngredients) &&
-        last.completesAtMs + perUnitMs < 2 ** 52
+        Math.max(1, costMultiplier) === last.reservation.costScale &&
+        sameSpecials
 
-      if (mergeable) {
-        // Burn this click's single-unit inputs atomically before the
-        // record grows - same all-checks-then-remove order as startJob.
-        // Materials economy rework: fuel is BUI_GO_ID + Luyen Dan Tinh
-        // Hoa, no realm/age wood resolution.
-        if (!bag.has(BUI_GO_ID, perUnitFuelWoodAmount)) {
-          return { ok: false, reason: 'missing_bui_go' }
+      if (compatible) {
+        const durationMs = alchemySecondsFor(recipe, roomLevel) * 1000
+        if (last.completesAtMs + durationMs >= 2 ** 52) {
+          return { ok: false, reason: 'invalid_clock' }
         }
-
-        if (!bag.has(herbMaterialId, recipe.herbAmount)) {
-          return { ok: false, reason: 'missing_herb' }
-        }
-
+        if (!bag.has(BUI_GO_ID, perUnitFuel)) return { ok: false, reason: 'missing_bui_go' }
+        if (!bag.has(herbMaterialId, recipe.herbAmount)) return { ok: false, reason: 'missing_herb' }
         if (!bag.has(LUYEN_DAN_TINH_HOA_ID, recipe.luyenDanTinhHoaAmount)) {
           return { ok: false, reason: 'missing_tinh_hoa' }
         }
-
-        if (spiritStone < perUnitSpiritStoneCost) {
-          return { ok: false, reason: 'missing_spirit_stone' }
+        if (spiritStone < perUnitStone) return { ok: false, reason: 'missing_spirit_stone' }
+        if ((recipe.specialIngredients ?? []).some((special) => !bag.has(special.materialId, special.amount))) {
+          return { ok: false, reason: 'missing_special_ingredient' }
         }
 
-        for (const special of recipe.specialIngredients ?? []) {
-          if (!bag.has(special.materialId, special.amount)) {
-            return { ok: false, reason: 'missing_special_ingredient' }
-          }
-        }
-
+        bag.remove(BUI_GO_ID, perUnitFuel)
         bag.remove(herbMaterialId, recipe.herbAmount)
-        bag.remove(BUI_GO_ID, perUnitFuelWoodAmount)
         bag.remove(LUYEN_DAN_TINH_HOA_ID, recipe.luyenDanTinhHoaAmount)
+        for (const special of recipe.specialIngredients ?? []) bag.remove(special.materialId, special.amount)
 
-        for (const special of recipe.specialIngredients ?? []) {
-          bag.remove(special.materialId, special.amount)
-        }
-
-        const quantity = (last.quantity ?? 1) + 1
         const extended: ActiveAlchemyJob = {
           ...last,
-          quantity,
+          quantity: (last.quantity ?? 1) + 1,
           unitsDone: last.unitsDone ?? 0,
-          completesAtMs: last.completesAtMs + perUnitMs,
+          completesAtMs: last.completesAtMs + durationMs,
         }
-
         extended.reservation = {
           ...last.reservation,
           digest: alchemyJobReservationDigest(extended, last.reservation),
         }
-
-        this.jobs[this.jobs.length - 1] = extended
-
-        return { ok: true, spiritStoneCost: perUnitSpiritStoneCost, merged: true }
+        this.jobs[this.jobs.indexOf(last)] = extended
+        return { ok: true, spiritStoneCost: perUnitStone, merged: true }
       }
     }
 
@@ -1077,77 +1043,110 @@ export class AlchemySystem {
       spiritStone,
       roomLevel,
       nowMs,
-      maxConcurrentJobs,
+      maxQueueSlots,
       costMultiplier,
       1,
     )
-
     return { ...created, merged: false }
   }
 
-  /**
-   * QUEUE REWORK - huy mot batch: refund chi cac vien CHUA DOT
-   * (deadline chua den luc huy); vien da qua deadline coi nhu lo da
-   * dot - ke ca chua toi tick roll - nen khong hoan (chong exploit ne
-   * roll). Spirit stone khong nam trong reservation ids -> caller
-   * (ops layer) tu refund phan stone cua so unprocessed.
-   * Returns unprocessedUnits so the caller mirrors the stone refund.
-   */
+  cancelJob(
+    jobId: string,
+    refund: (job: ActiveAlchemyJob, recipe: AlchemyRecipe, unfinishedUnits: number) => boolean,
+    nowMs?: number,
+  ): boolean
   cancelJob(
     jobId: string,
     bag: MaterialBag,
     registry: MaterialRegistry,
-    nowMs: number = Date.now(),
-  ): { ok: true; unprocessedUnits: number } | { ok: false } {
-    const job = this.jobs.find((candidate) => candidate.jobId === jobId)
+    nowMs?: number,
+  ): { ok: true; unprocessedUnits: number } | { ok: false }
+  cancelJob(
+    jobId: string,
+    refundOrBag:
+      | ((job: ActiveAlchemyJob, recipe: AlchemyRecipe, unfinishedUnits: number) => boolean)
+      | MaterialBag
+      | undefined,
+    registryOrNow?: MaterialRegistry | number,
+    explicitNowMs?: number,
+  ): boolean | { ok: true; unprocessedUnits: number } | { ok: false } {
+    const directBag = refundOrBag instanceof MaterialBag ? refundOrBag : undefined
+    const registry = directBag && typeof registryOrNow === 'object' ? registryOrNow : undefined
+    const refund = typeof refundOrBag === 'function' ? refundOrBag : undefined
+    const nowMs = directBag
+      ? explicitNowMs ?? this.nowMs()
+      : typeof registryOrNow === 'number'
+        ? registryOrNow
+        : this.nowMs()
+    const index = this.jobs.findIndex((job) => job.jobId === jobId)
+    if (index < 0) return directBag ? { ok: false } : false
 
-    if (!job) {
-      return { ok: false }
-    }
-
-    // Clock out of the persisted domain cannot count deadlines - deny
-    // the whole cancel rather than refund under a bogus timestamp
-    // (refund is mint-adjacent: bad clock = deny direction).
+    const job = this.jobs[index]!
+    const activeIndex = this.jobs.findIndex(isQueueEligible)
+    const queueEligible = isQueueEligible(job)
+    const cancelingActive = queueEligible && index === activeIndex
     if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) {
-      return { ok: false }
+      return directBag ? { ok: false } : false
+    }
+    const unfinishedUnits = Math.max(0, (job.quantity ?? 1) - (job.unitsDone ?? 0))
+    const recipe = queueEligible ? this.recipeLookup?.(job.recipeId) : undefined
+    if (queueEligible && (!recipe || verifyAlchemyJobReservation(job, recipe) !== null)) {
+      return directBag ? { ok: false } : false
+    }
+    if (queueEligible && unfinishedUnits > 0 && !refund && !(directBag && registry)) {
+      return false
     }
 
-    const unprocessedUnits = (job.quantity ?? 1) - unitsStartedAt(job, nowMs)
-
-    if (unprocessedUnits > 0) {
-      const refund = (materialId: string, amount: number) => {
-        if (amount <= 0) {
-          return
-        }
-
-        // The reservation already proved these ids were reservable at
-        // start; a registry miss mid-session can only come from data
-        // churn - skip that line (same deny direction as settle).
-        if (!registry.has(materialId)) {
-          return
-        }
-
-        bag.add(registry.get(materialId), amount * unprocessedUnits)
+    let previousCompletion: number | null = null
+    const nextJobs: ActiveAlchemyJob[] = []
+    for (const [remainingIndex, remaining] of this.jobs.entries()) {
+      if (remainingIndex === index) continue
+      if (!isQueueEligible(remaining)) {
+        nextJobs.push(remaining)
+        continue
       }
 
-      refund(job.herbMaterialId, job.reservation.herbAmount)
+      const startedAtMs: number = previousCompletion === null
+        ? (cancelingActive ? nowMs : remaining.startedAtMs)
+        : previousCompletion
+      const scheduled: ActiveAlchemyJob | null = startedAtMs === remaining.startedAtMs
+        ? remaining
+        : rescheduleJob(remaining, startedAtMs)
+      if (!scheduled) return false
 
-      refund(job.reservation.woodId, job.reservation.fuelWoodAmount)
-
-      // QA-A F2: tinh hoa is a reserved input too - the un-brewed
-      // units refund it per unit like herb/fuel/specials. `?? 0`
-      // keeps a reservation restored from a pre-economy save (no
-      // field) from minting NaN into the bag.
-      refund(LUYEN_DAN_TINH_HOA_ID, job.reservation.luyenDanTinhHoaAmount ?? 0)
-
-      for (const special of job.reservation.specialIngredients) {
-        refund(special.materialId, special.amount)
-      }
+      previousCompletion = scheduled.completesAtMs
+      nextJobs.push(scheduled)
     }
 
-    this.jobs = this.jobs.filter((candidate) => candidate.jobId !== jobId)
+    if (queueEligible && unfinishedUnits > 0) {
+      if (refund && recipe) {
+        if (!refund(job, recipe, unfinishedUnits)) return false
+      } else if (directBag && registry) {
+        const amounts = new Map<string, number>()
+        const add = (id: string, perUnit: number) => {
+          if (perUnit > 0) amounts.set(id, (amounts.get(id) ?? 0) + perUnit * unfinishedUnits)
+        }
+        add(job.herbMaterialId, job.reservation.herbAmount)
+        add(job.reservation.woodId, job.reservation.fuelWoodAmount)
+        add(LUYEN_DAN_TINH_HOA_ID, job.reservation.luyenDanTinhHoaAmount ?? 0)
+        for (const special of job.reservation.specialIngredients) add(special.materialId, special.amount)
+        const materialsToRefund = []
+        try {
+          for (const [materialId, amount] of amounts) {
+            if (!registry.has(materialId)) return { ok: false }
+            const material = registry.get(materialId)
+            if (directBag.canAcceptAmount(material, amount) < amount) return { ok: false }
+            materialsToRefund.push({ material, amount })
+          }
+        } catch {
+          return { ok: false }
+        }
+        for (const entry of materialsToRefund) directBag.add(entry.material, entry.amount)
+      }
+    }
+    this.jobs = nextJobs
 
-    return { ok: true, unprocessedUnits }
+    return directBag ? { ok: true, unprocessedUnits: queueEligible ? unfinishedUnits : 0 } : true
   }
 
   /**
@@ -1369,7 +1368,7 @@ export class AlchemySystem {
   settleOffline(
     pillBag: PillBag,
     resolvePill: (pillId: string) => { id: string } | undefined,
-    nowMs: number = Date.now(),
+    nowMs: number = this.nowMs(),
     successBonusPercentPoints = 0,
     pillYieldMultiplier = 1,
     rng: () => number = Math.random,

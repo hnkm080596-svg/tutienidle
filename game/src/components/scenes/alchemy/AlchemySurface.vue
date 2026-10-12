@@ -38,13 +38,13 @@ const gameManager = useGameManager()
 
 const { stateVersion, bumpState } = useStateVersion()
 
-const nowMs = ref(Date.now())
+const nowMs = ref(gameManager.time.now())
 
 let timer: ReturnType<typeof setInterval> | undefined
 
 onMounted(() => {
   timer = setInterval(() => {
-    nowMs.value = Date.now()
+    nowMs.value = gameManager.time.now()
   }, 500)
 })
 
@@ -227,103 +227,51 @@ const spiritStoneRow = computed(() => ({
   amount: preview.value?.spiritStoneCost ?? selectedRecipe.value?.spiritStoneCost ?? 0,
 }))
 
-const jobs = computed(() => {
+const queueState = computed(() => {
   stateVersion.value
-
   void nowMs.value
-
-  // Scope-hidden recipe families never render - a carried save's
-  // dormant in-flight job still settles in the domain but stays off
-  // the surface (contract sec.F).
-  return gameManager.alchemyOps.getAlchemyJobs()
-    .filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
-    .map((job): AlchemyJobDisplay => {
-      const remainingMs = Math.max(0, job.completesAtMs - nowMs.value)
-
-      const totalSeconds = Math.max(1, Math.ceil((job.completesAtMs - job.startedAtMs) / 1000))
-
-      // QUEUE REWORK - order progress: rolled units + the fraction of
-      // the unit currently in the cauldron, over the whole order.
-      const quantity = Math.max(1, job.quantity ?? 1)
-
-      const unitsDone = Math.min(quantity, Math.max(0, job.unitsDone ?? 0))
-
-      const perUnitMs = Math.max(1, totalSeconds * 1000) / quantity
-
-      const currentUnitStart = job.startedAtMs + unitsDone * perUnitMs
-
-      const currentUnitFraction =
-        unitsDone >= quantity
-          ? 1
-          : Math.min(1, Math.max(0, (nowMs.value - currentUnitStart) / perUnitMs))
-
-      const remainingMinutes = Math.ceil(remainingMs / 60000)
-
-      return {
-        id: job.jobId,
-
-        recipeId: job.recipeId,
-
-        herbMaterialId: job.herbMaterialId,
-
-        roomLevelAtStart: job.roomLevelAtStart,
-
-        name: gameManager.pillRegistry.has(job.pillId)
-          ? gameManager.pillRegistry.get(job.pillId).name
-          : job.pillId,
-
-        icon: pillIconFor(job),
-
-        progress: Math.min(100, ((unitsDone + currentUnitFraction) / quantity) * 100),
-
-        // QA-A F6: the scene subline already prints unitsProgress
-        // (done/total) - remaining stays the ETA only, no duplicate.
-        remaining: `${remainingMinutes}p`,
-
-        unitsDone,
-
-        quantity,
-      }
-    })
+  return gameManager.alchemyOps.getAlchemyQueueState()
 })
 
-/**
- * Job-slot cap read the same way GameManagerAlchemyOps does - the domain
- * owns the concurrent_job_slots rule; the view only consumes it.
- */
-const maxJobSlots = computed(() => {
-  stateVersion.value
-
-  const instance = gameManager.buildingManager.getByBuildingId('pill_room')
-
-  if (!instance) {
-    return 0
-  }
-
-  const template = gameManager.buildingRegistry.get('pill_room')
-
-  return gameManager.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
+const jobs = computed(() => {
+  const queue = queueState.value
+  const ordered = queue.activeJob ? [queue.activeJob, ...queue.waitingJobs] : queue.waitingJobs
+  return ordered.map((job): AlchemyJobDisplay => {
+    const active = job.jobId === queue.activeJob?.jobId
+    const remainingMs = Math.max(0, job.completesAtMs - nowMs.value)
+    const totalMs = Math.max(1, job.completesAtMs - job.startedAtMs)
+    const quantity = Math.max(1, job.quantity ?? 1)
+    const unitsDone = Math.min(quantity, Math.max(0, job.unitsDone ?? 0))
+    const perUnitMs = totalMs / quantity
+    const currentUnitStart = job.startedAtMs + unitsDone * perUnitMs
+    const currentUnitFraction = unitsDone >= quantity
+      ? 1
+      : Math.min(1, Math.max(0, (nowMs.value - currentUnitStart) / perUnitMs))
+    return {
+      id: job.jobId,
+      recipeId: job.recipeId,
+      herbMaterialId: job.herbMaterialId,
+      roomLevelAtStart: job.roomLevelAtStart,
+      name: gameManager.pillRegistry.has(job.pillId) ? gameManager.pillRegistry.get(job.pillId).name : job.pillId,
+      icon: pillIconFor(job),
+      state: active ? 'active' : 'waiting',
+      progress: active ? Math.min(100, ((unitsDone + currentUnitFraction) / quantity) * 100) : 0,
+      remaining: active ? `${Math.ceil(remainingMs / 60000)}p` : t('alchemy.waitingJob'),
+      unitsDone,
+      quantity,
+    }
+  })
 })
+
+const maxJobSlots = computed(() => queueState.value.maxTotalJobs)
 
 const pillRoomLevel = computed(() => {
   stateVersion.value
-
   return gameManager.buildingManager.getByBuildingId('pill_room')?.level ?? 0
 })
 
-/**
- * QUEUE REWORK tail-merge gate (QA-A F1): a full queue is only a
- * blocker when this click would open a NEW order. When the last order
- * is the same recipe + herb + room level and under the batch cap, the
- * domain merges the click into it - capacity must not swallow that
- * path, or the merge mechanic is unreachable for L1-2 pill rooms (1
- * slot). Deeper reservation checks (cost profile) stay in the domain;
- * a denied merge falls through to the new-order path which returns the
- * slot-full reason.
- */
 const tailMergeable = computed(() => {
   const last = jobs.value[jobs.value.length - 1]
-
   return (
     last !== undefined &&
     last.recipeId === selectedRecipe.value?.id &&
@@ -353,7 +301,7 @@ const canBrew = computed(() => {
     return false
   }
 
-  if (jobs.value.length >= Math.max(1, maxJobSlots.value) && !tailMergeable.value) {
+  if (jobs.value.length >= queueState.value.maxTotalJobs && !tailMergeable.value) {
     return false
   }
 
@@ -396,10 +344,11 @@ const brewBlockReason = computed<string | null>(() => {
     return 'room_not_built'
   }
 
-  // Mirror the domain startJob order: slots -> wrong herb -> bui_go ->
-  // missing herb amount -> tinh hoa -> spirit stone. Full queue does
-  // not block when the click would merge into the tail order instead.
-  if (jobs.value.length >= Math.max(1, maxJobSlots.value) && !tailMergeable.value) {
+  if (!selectedHerbId.value || !variantRows.value.find((row) => row.materialId === selectedHerbId.value)?.enough) {
+    return 'missing_herb'
+  }
+
+  if (jobs.value.length >= queueState.value.maxTotalJobs && !tailMergeable.value) {
     return 'job_slots_full'
   }
 
@@ -477,8 +426,13 @@ function startJob() {
 }
 
 function cancelJob(jobId: string) {
-  gameManager.alchemyOps.cancelAlchemyJob(jobId)
-  useAudioStore().cue('ui.cancel')
+  const cancelled = gameManager.alchemyOps.cancelAlchemyJob(jobId)
+  if (!cancelled) {
+    useNotificationStore().push('warning', t('alchemy.cancelFailed'))
+    useAudioStore().cue('ui.error')
+  } else {
+    useAudioStore().cue('ui.cancel')
+  }
 
   bumpState()
 }

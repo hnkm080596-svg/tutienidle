@@ -73,7 +73,6 @@ import { DATA_REFUSE_CODES } from '../session/BackendStatus'
 
 const FOREST_SITE_ID = TERRITORY_THANH_VAN.productionSiteIds.forest
 const MORTAL_CYCLE_MS = computeCycleSeconds(CYCLE_BASE_SECONDS_BY_REALM['mortal'] ?? 100, 1) * 1000
-const DECOMPOSE_CYCLE_MS = 30_000
 
 let currentMs = 1_725_160_000_000
 
@@ -180,20 +179,9 @@ function pillRoomEntry() {
   }
 }
 
-/** A save carrying workerCycles must also claim capacity: autoWorkerCapacity
- *  >0 requires a chi_hien_quan instance (F-W-16), and the lane ceiling reads
- *  betaEffectiveWorkerCapacity(player.autoWorkerCapacity). */
-function grantWorkerCapacity(wire: GameSave): void {
-  wire.player.autoWorkerCapacity = 1
-  wire.buildings = [
-    ...wire.buildings,
-    {
-      instanceId: 'inst_chq_1',
-      buildingId: 'chi_hien_quan',
-      level: 1,
-      lastCollectedAt: Math.floor(currentMs / 1000),
-    } as never,
-  ]
+/** Attach inert legacy metadata to exercise old-save compatibility. */
+function attachLegacyWorkerMetadata(wire: GameSave): void {
+  ;(wire.player as unknown as Record<string, unknown>).autoWorkerCapacity = 1
 }
 
 describe('auditR27 INT probe - round-trip agreement (R)', () => {
@@ -201,6 +189,7 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -214,14 +203,13 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
     const wire = validWireSave()
     wire.player.lastSavedAt = currentMs + DELTA
     wire.buildings = [...wire.buildings, pillRoomEntry() as never]
-    grantWorkerCapacity(wire)
+    attachLegacyWorkerMetadata(wire)
     wire.productionSites = [
       {
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs + 25_000, 'shift-me')],
+        productionCycles: [workerCycle(currentMs + 25_000, 'shift-me')],
       },
     ] as never
     wire.alchemyJobs = [job as never]
@@ -241,8 +229,8 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
 
     const { reader, readerPlayer } = restoreIntoReader(wire, undefined)
 
-    // restoreClock = min(marker, now) = now - all four channels ground at it.
-    const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    // restoreClock = min(marker, now) = now; active channels re-ground while legacy decompose stays inert.
+    const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(lane.startedAtMs).toBe(currentMs)
     expect(lane.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
 
@@ -257,9 +245,11 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
     expect(reader.tribulationDirector.serializeRuntime().cooldownUntil).toBe(
       currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000,
     )
-    // DIRECT DECOMPOSE REWORK: the decompose slice restores inert - the
-    // legacy deadline is accepted by the gate but owns no live state.
-    expect(reader.decomposeSystem.getSaveState()).toEqual({})
+    expect(reader.decomposeSystem.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
 
     // Round-trip: the next write is judged by the SAME gate and now passes
     // - every persisted stamp sits at or below the new marker.
@@ -279,7 +269,7 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
       const coordinator = new CloudSaveCoordinator(service)
 
       const snapshot = validWireSave()
-      grantWorkerCapacity(snapshot)
+      attachLegacyWorkerMetadata(snapshot)
       // The classic self-brick shape: a lane head past the payload's own
       // marker can never have been written by a legal writer.
       snapshot.productionSites = [
@@ -287,8 +277,7 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(currentMs + 60_000, 'post-dated')],
+          productionCycles: [workerCycle(currentMs + 60_000, 'post-dated')],
         },
       ] as never
       snapshot.player.lastSavedAt = currentMs
@@ -320,13 +309,12 @@ describe('auditR27 INT probe - round-trip agreement (R)', () => {
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs + 60_000, 'post-dated')],
+        productionCycles: [workerCycle(currentMs + 60_000, 'post-dated')],
       },
     ] as never
 
     const { reader } = restoreIntoReader(wire, undefined)
-    const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(lane.startedAtMs).toBe(currentMs)
   })
 })
@@ -336,6 +324,7 @@ describe('auditR27 INT probe - authority-source matrix (A)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -353,21 +342,20 @@ describe('auditR27 INT probe - authority-source matrix (A)', () => {
       const wire = validWireSave()
       wire.player.lastSavedAt = marker
       wire.buildings = [...wire.buildings, pillRoomEntry() as never]
-      grantWorkerCapacity(wire)
+      attachLegacyWorkerMetadata(wire)
       wire.productionSites = [
         {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(marker - 1_000, 'honest')],
+          productionCycles: [workerCycle(marker - 1_000, 'honest')],
         },
       ] as never
       wire.alchemyJobs = [job as never]
       wire.tribulation = { cooldownUntil: marker + TRIBULATION_COOLDOWN_SECONDS * 1000 }
       wire.decompose = {
         settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
-        nextCycleAt: marker + DECOMPOSE_CYCLE_MS,
+        nextCycleAt: marker + 30_000,
         started: true,
       }
       return wire
@@ -394,7 +382,7 @@ describe('auditR27 INT probe - authority-source matrix (A)', () => {
 
     const observed = sources.map(({ label, authority }) => {
       const { reader } = restoreIntoReader(makeWire(), authority)
-      const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+      const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
       const restoredJob = reader.alchemySystem.getJobs()[0]!
       return {
         label,
@@ -417,6 +405,7 @@ describe('auditR27 INT probe - authority-source matrix (A)', () => {
     expect(baseline.cycle).toEqual([marker - 1_000, marker - 1_000 + MORTAL_CYCLE_MS])
     expect(baseline.job).toEqual([marker - 1_000, marker - 1_000 + span])
     expect(baseline.cooldown).toBe(marker + TRIBULATION_COOLDOWN_SECONDS * 1000)
+    // Decompose cycles are retired; every restore writes only inert defaults.
     expect(baseline.decompose).toEqual({})
   })
 
@@ -430,8 +419,7 @@ describe('auditR27 INT probe - authority-source matrix (A)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(marker - 1_000, 'honest')],
+          productionCycles: [workerCycle(marker - 1_000, 'honest')],
         },
       ] as never
       return wire
@@ -447,7 +435,7 @@ describe('auditR27 INT probe - authority-source matrix (A)', () => {
 
     for (const authority of corruptForms) {
       const { reader } = restoreIntoReader(makeWire(), authority as never)
-      const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+      const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
       // Deadline channel is authority-independent: verbatim restore.
       expect(lane.startedAtMs).toBe(marker - 1_000)
       expect(lane.completesAtMs).toBe(marker - 1_000 + MORTAL_CYCLE_MS)
@@ -460,6 +448,7 @@ describe('auditR27 INT probe - envelope codes vs authority arms (C)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -509,8 +498,7 @@ describe('auditR27 INT probe - envelope codes vs authority arms (C)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(currentMs + 60_000, 'post-dated')],
+          productionCycles: [workerCycle(currentMs + 60_000, 'post-dated')],
         },
       ] as never
       snapshot.player.lastSavedAt = currentMs
@@ -595,6 +583,7 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -605,15 +594,14 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     const REMOTE_SKEW = 120_000 // other device ran +2min
     const wire = validWireSave()
     wire.player.lastSavedAt = currentMs + REMOTE_SKEW
-    grantWorkerCapacity(wire)
+    attachLegacyWorkerMetadata(wire)
     wire.productionSites = [
       {
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 1,
         // Legal on the writer's clock (<= its marker), post-dated on ours.
-        workerCycles: [workerCycle(currentMs + 115_000, 'cross-device')],
+        productionCycles: [workerCycle(currentMs + 115_000, 'cross-device')],
       },
     ] as never
 
@@ -624,7 +612,7 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
       kind: 'live-replacement',
       nowMs: currentMs,
     })
-    const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(lane.startedAtMs).toBe(currentMs)
     expect(lane.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
 
@@ -634,6 +622,61 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     expect(validateGameSaveShape(rebuilt).ok).toBe(true)
   })
 
+  it('D2 production lanes replace while legacy decompose timers stay inert across different payloads', () => {
+    const reader = registeredManager()
+    const readerPlayer = createDefaultPlayer()
+    reader.setActivePlayer(readerPlayer)
+
+    const wire1 = validWireSave()
+    wire1.player.lastSavedAt = currentMs - 10_000
+    attachLegacyWorkerMetadata(wire1)
+    wire1.productionSites = [
+      {
+        siteId: FOREST_SITE_ID,
+        level: 1,
+        autoRestart: false,
+        productionCycles: [workerCycle(currentMs - 5_000, 'lane-one')],
+      },
+    ] as never
+    wire1.decompose = {
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: currentMs + 20_000,
+      started: true,
+    }
+    reader.saveOps.restoreFromSave(wire1, undefined)
+
+    // Second payload: different content (quests slice present vs absent)
+    // forces a full re-restore and carries an earlier legacy deadline.
+    const wire2 = validWireSave()
+    wire2.player.lastSavedAt = currentMs - 5_000
+    wire2.quests = { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 } as never
+    attachLegacyWorkerMetadata(wire2)
+    wire2.productionSites = [
+      {
+        siteId: FOREST_SITE_ID,
+        level: 1,
+        autoRestart: false,
+        productionCycles: [workerCycle(currentMs - 2_000, 'lane-two')],
+      },
+    ] as never
+    wire2.decompose = {
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: currentMs + 5_000,
+      started: true,
+    }
+    reader.saveOps.restoreFromSave(wire2, undefined)
+
+    // Production: replacement - the second payload's lane is the only one.
+    const lanes = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles!
+    expect(lanes).toHaveLength(1)
+    expect(lanes[0]!.cycleId).toBe('lane-two')
+
+    expect(reader.decomposeSystem.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+  })
 
   it('D3 payload-identity dedupe excludes only lastSavedAt - a marker-only delta converges, a content delta re-restores', () => {
     const reader = registeredManager()
@@ -646,14 +689,13 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     const makeWire = (marker: number): GameSave => {
       const wire = validWireSave()
       wire.player.lastSavedAt = marker
-      grantWorkerCapacity(wire)
+      attachLegacyWorkerMetadata(wire)
       wire.productionSites = [
         {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(currentMs - 61_000, 'lane-same')],
+          productionCycles: [workerCycle(currentMs - 61_000, 'lane-same')],
         },
       ] as never
       return wire
@@ -661,7 +703,7 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
 
     reader.saveOps.restoreFromSave(makeWire(currentMs - 30_000), undefined)
     expect(
-      reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!.cycleId,
+      reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!.cycleId,
     ).toBe('lane-same')
 
     // Tamper with live lanes: a deduped second restore leaves them alone.
@@ -671,8 +713,7 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(currentMs - 2_000, 'tampered')],
+          productionCycles: [workerCycle(currentMs - 2_000, 'tampered')],
         },
       ],
       currentMs,
@@ -683,25 +724,24 @@ describe('auditR27 INT probe - divergent clocks + replace/merge (D)', () => {
     reader.saveOps.restoreFromSave(makeWire(currentMs - 10_000), undefined)
     expect(spy).not.toHaveBeenCalled()
     expect(
-      reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!.cycleId,
+      reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!.cycleId,
     ).toBe('tampered')
 
     // Content delta (different lane ids -> different identity): full restore.
     const wire3 = validWireSave()
     wire3.player.lastSavedAt = currentMs - 5_000
-    grantWorkerCapacity(wire3)
+    attachLegacyWorkerMetadata(wire3)
     wire3.productionSites = [
       {
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs - 4_000, 'lane-three')],
+        productionCycles: [workerCycle(currentMs - 4_000, 'lane-three')],
       },
     ] as never
     reader.saveOps.restoreFromSave(wire3, undefined)
     expect(
-      reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!.cycleId,
+      reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!.cycleId,
     ).toBe('lane-three')
   })
 })
@@ -711,6 +751,7 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -726,7 +767,6 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
       siteId: i === 0 ? FOREST_SITE_ID : `bogus_site_${i}`,
       level: 0,
       autoRestart: false,
-      activeWorkerSlots: 0,
     })) as never
     const shapeArray = validateGameSaveShape(JSON.parse(JSON.stringify(wireArray)) as GameSave)
     expect(
@@ -758,7 +798,7 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
     ).toBe(false)
   })
 
-  it('E2 admission asymmetry: far-future decompose.nextCycleAt is ADMITTED (restore clamp owns it); far-future tribulation.cooldownUntil is REFUSED at the gate', () => {
+  it('E2 legacy far-future decompose timer is inert; far-future tribulation cooldown is refused', () => {
     const wireDecompose = validWireSave()
     wireDecompose.decompose = {
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
@@ -769,6 +809,12 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
       JSON.parse(JSON.stringify(wireDecompose)) as GameSave,
     )
     expect(shapeDecompose.ok).toBe(true)
+    const { reader } = restoreIntoReader(wireDecompose, undefined)
+    expect(reader.decomposeSystem.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
 
     const wireTrib = validWireSave()
     wireTrib.tribulation = { cooldownUntil: currentMs + 9_000_000_000 }
@@ -808,8 +854,7 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 0,
-          workerCycles: [],
+          productionCycles: [],
         },
       ],
       currentMs,
@@ -821,13 +866,12 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
       'mortal',
       settleNow,
       {
-        workerCapacity: 3,
         offlineSinceMs: offlineSince,
         rng: () => 0,
       },
     )
 
-    const pending = system.getState(FOREST_SITE_ID)!.workerCycles!
+    const pending = system.getState(FOREST_SITE_ID)!.productionCycles!
     expect(pending.length).toBeGreaterThan(0)
     for (const head of pending) {
       // Seeded at offlineSince, re-stamped forward by Date.now()-settleNow
@@ -846,3 +890,5 @@ describe('auditR27 INT probe - documented asymmetries (E)', () => {
     ).toHaveLength(0)
   })
 })
+
+

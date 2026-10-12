@@ -198,7 +198,10 @@ export class CloudSaveCoordinator {
     const result = await this.service.save(snapshot, this.revision)
 
     if (result.status === 'ok') {
-      if (generation === this.generation) this.revision = result.revision
+      if (generation !== this.generation) {
+        return { status: 'ok', revision: result.revision, storageWarning: 'stale-generation' }
+      }
+      this.revision = result.revision
       return result
     }
 

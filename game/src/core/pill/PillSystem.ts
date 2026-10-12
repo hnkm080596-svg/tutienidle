@@ -34,6 +34,14 @@ export type PillUseReason = 'ok' | 'wrong_realm' | 'all_main_stats_capped' | 're
 
 export class PillSystem {
   /**
+   * GP-01 - authorized live-time owner for the regen timed-effect
+   * deadline. GameManager injects `() => time.now()`; direct-
+   * construction fixtures fall back to the wall clock, preserving
+   * pre-migration behavior.
+   */
+  constructor(private readonly deps: { now?: () => number } = {}) {}
+
+  /**
    * permanent_stat pills now write baseStats directly (ruling
    * 2026-09-29: only level-up allocation and pills may write baseStats,
    * so the hidden-lineage predicate - which reads baseStats only - can
@@ -267,7 +275,7 @@ export class PillSystem {
       }
 
       if (effect.type === 'regen') {
-        const now = Date.now()
+        const now = this.deps.now?.() ?? Date.now()
 
         timedEffect = {
           id: `pill-regen:${pill.id}:${now}`,

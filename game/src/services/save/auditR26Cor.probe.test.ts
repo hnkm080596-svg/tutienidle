@@ -137,6 +137,7 @@ describe('auditR26 COR probe - driveSave write gate (D)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -306,6 +307,7 @@ describe('auditR26 COR probe - verbatim-stamp self-brick residual (W)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -419,6 +421,7 @@ describe('auditR26 COR probe - ID cap coverage (C)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -484,6 +487,7 @@ describe('auditR26 COR probe - authority seam + Date.now() clamps (G)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

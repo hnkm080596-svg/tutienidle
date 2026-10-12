@@ -1033,7 +1033,7 @@ describe('F-A11-3: skillInsight never exceeds totalSkillInsightGained', () => {
   })
 })
 
-describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
+describe('F-A11-4: productionCycles hard count and per-cycle bounds', () => {
   // F-CYC-1: the span replays the authored duration
   // (mortal base 100s at site level-1 speed 1.0 -> 100_000ms).
   const cycle = (id: string) => ({
@@ -1047,14 +1047,14 @@ describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
     completesAtMs: 100_001,
   })
 
-  it('more cycles than the effective worker pool are rejected', () => {
+  it('more cycles than the legal legacy entitlement cap are rejected', () => {
     const save = validSave()
     save.productionSites = [
       {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        workerCycles: Array.from({ length: 20 }, (_, i) => cycle(`c${i}`)),
+        productionCycles: Array.from({ length: 4 }, (_, i) => cycle(`c${i}`)),
       },
     ]
 
@@ -1068,7 +1068,7 @@ describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        workerCycles: [{ ...cycle('c1'), startedAtMs: 100, completesAtMs: 1 }],
+        productionCycles: [{ ...cycle('c1'), startedAtMs: 100, completesAtMs: 1 }],
       },
     ]
 
@@ -1082,7 +1082,7 @@ describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        workerCycles: [{ ...cycle('c1'), siteLevelAtStart: 10 }],
+        productionCycles: [{ ...cycle('c1'), siteLevelAtStart: 10 }],
       },
     ]
 
@@ -1096,7 +1096,7 @@ describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        workerCycles: [cycle('c1')],
+        productionCycles: [cycle('c1')],
       },
     ]
 
@@ -1129,10 +1129,10 @@ describe('F-A11-5: alchemyJobs slot-count, span and herb bounds', () => {
       trucCoRecipe,
     )
 
-  it('two running jobs on a level-1 room (one slot) are rejected', () => {
+  it('more running and queued jobs than the level-1 room capacity are rejected', () => {
     const save = validSave()
     save.buildings = [pillRoom]
-    save.alchemyJobs = [job('j1'), job('j2')]
+    save.alchemyJobs = [job('j1'), job('j2'), job('j3'), job('j4'), job('j5')]
 
     expect(validateGameSaveShape(save).ok).toBe(false)
   })

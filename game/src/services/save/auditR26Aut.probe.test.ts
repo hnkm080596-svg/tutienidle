@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { usePlayerStore } from '../../stores/player'
 import { primeMortalCreationPick } from './GameSave.fixture'
@@ -44,7 +45,7 @@ import { useAppLifecycle } from '../../composables/useAppLifecycle'
 //   A. Self-brick residual: the admission pins compare stamps to the
 //      payload's OWN lastSavedAt. A shape-valid payload stamped under a
 //      skewed (or crafted) clock carries post-dated deadline records;
-//      restore loads workerCycles / alchemyJobs / tribulation.cooldownUntil
+//      restore loads productionCycles / alchemyJobs / tribulation.cooldownUntil
 //      VERBATIM and the next write stamps a real now under them -> the
 //      write gate refuses every save until the wall clock catches up
 //      (up to |x|<2^52 ms). The r25 "bounded deny" claim is audited here.
@@ -92,9 +93,6 @@ function makeSave(
   primeMortalCreationPick(player, manager.skillManager)
   player.cultivation = 0
   player.cultivationPerSecond = 1
-  if (overrides.autoWorkerCapacity !== undefined) {
-    player.autoWorkerCapacity = overrides.autoWorkerCapacity
-  }
   const save = buildGameSave(player, manager)
   save.player.lastSavedAt = overrides.lastSavedAt ?? NOW
   if (overrides.productionSites !== undefined) {
@@ -103,12 +101,9 @@ function makeSave(
   if (overrides.quests !== undefined) {
     save.quests = overrides.quests
   }
-  if (overrides.autoWorkerCapacity !== undefined && overrides.autoWorkerCapacity > 0) {
-    // F-W-16: a non-zero persisted capacity requires the chi_hien_quan
-    // building witness in the same payload.
-    save.buildings = [
-      { instanceId: 'r26_chq', buildingId: 'chi_hien_quan', level: 1, lastCollectedAt: 0 },
-    ]
+  if (overrides.autoWorkerCapacity !== undefined) {
+    ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity =
+      overrides.autoWorkerCapacity
   }
   return save
 }
@@ -155,18 +150,17 @@ function jobAt(startedAtMs: number) {
 function forgedFutureSave(): GameSave {
   const save = makeSave({
     lastSavedAt: FUTURE,
-    autoWorkerCapacity: 3, // authored lane ceiling so a cycle admits
+    autoWorkerCapacity: 3, // carried legacy metadata, ignored by the runtime
     productionSites: [
       {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        workerCycles: [workerCycleSave(FUTURE - 60_000)],
+        productionCycles: [workerCycleSave(FUTURE - 60_000)],
       },
     ],
   })
-  // chi_hien_quan is already the autoWorkerCapacity witness; pill_room
-  // level 1 covers the job's roomLevelAtStart coherence bound (mortal
+  // pill_room level 1 covers the job's roomLevelAtStart coherence bound (mortal
   // realm tier caps building level at 1).
   save.buildings!.push(
     { instanceId: 'r26-pill', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 },
@@ -204,6 +198,7 @@ describe('arm A - post-dated deadline stamps restore verbatim; the write gate br
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -219,7 +214,7 @@ describe('arm A - post-dated deadline stamps restore verbatim; the write gate br
     expect(isSaveAcceptable(save, staticSaveAcceptanceCatalogs())).toBe(true)
   })
 
-  it('A2 restore re-anchors post-dated stamps to the restore clock (workerCycles / alchemyJobs / cooldownUntil / nextCycleAt)', () => {
+  it('A2 restore re-anchors post-dated stamps to the restore clock (productionCycles / alchemyJobs / cooldownUntil / nextCycleAt)', () => {
     const player = usePlayerStore()
     const manager = registeredManager()
     const result = restoreGameSession(player, manager, forgedFutureSave(), undefined)
@@ -237,7 +232,7 @@ describe('arm A - post-dated deadline stamps restore verbatim; the write gate br
     expect(manager.tribulationDirector.serializeRuntime().cooldownUntil).toBe(
       NOW + TRIBULATION_COOLDOWN_SECONDS * 1000,
     )
-    const heads = manager.productionSystem.getAllStates().flatMap((s) => s.workerCycles ?? [])
+    const heads = manager.productionSystem.getAllStates().flatMap((s) => s.productionCycles ?? [])
     const head = heads.find((c) => c.cycleId === 'r26-forged-head')!
     const cycleSpan = head.completesAtMs - head.startedAtMs
     expect(head.startedAtMs).toBe(NOW)
@@ -324,6 +319,7 @@ describe('arm B - remote-authoritative boot wedges at the post-accrual commit', 
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -393,6 +389,7 @@ describe('arm B - remote-authoritative boot wedges at the post-accrual commit', 
       decomposeSystem: { getSaveState: () => ({}) },
       tribulationDirector: { serializeRuntime: () => ({}) },
       productionSystem: { getSiteDefinitions: () => [], getAllStates: () => [] },
+      time: new TimeAuthority({ wallNow: () => NOW, monotonicNow: () => 0 }),
       setProductionAutoRestart: vi.fn(),
       setActivePlayer: vi.fn(),
       buildingManager: { add: vi.fn(), getAll: () => [] },
@@ -462,6 +459,7 @@ describe('arm C - ID_COLLECTION_CAP coverage gap: Record channels + never-valida
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -537,6 +535,7 @@ describe('arm D - wire-form gate (8f3cb237) edge cases', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -583,6 +582,7 @@ describe('arm E - rejected attacks and closed siblings', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -660,3 +660,4 @@ describe('arm E - rejected attacks and closed siblings', () => {
     expect(repackaged.decompose).toEqual({})
   })
 })
+

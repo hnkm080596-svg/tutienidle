@@ -380,10 +380,15 @@ describe('economy/building/companion/artifact seams fail closed', () => {
     expect(manager.buildingOps.upgradeBuilding(instance.instanceId)).toBe(false)
   })
 
-  it('manual worker assignment is a no-op while manualWorkforce is hidden', () => {
+  it('production sites progress independently and no worker assignment API is exposed', () => {
     const manager = makeManager()
-    manager.buildingOps.assignWorkers('tinh_thach_mo', 5)
-    expect(manager.buildingOps.getWorkerAssignments().size).toBe(0)
+    const p = player({ realmId: 'mortal' })
+    manager.setActivePlayer(p)
+    manager.buildingOps.setProductionAutoRestart('thanh_van_lam', true)
+    manager.tickOps.update(1)
+    expect(manager.productionSystem.getState('thanh_van_lam')?.productionCycles).toHaveLength(1)
+    expect('assignWorkers' in manager.buildingOps).toBe(false)
+    expect('getWorkerAssignments' in manager.buildingOps).toBe(false)
   })
 
   it('alchemy start refuses a dormant-family recipe id at the ops seam', () => {

@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { parseOrchestratorCounts, qualifyGaps } from "../qualify.mjs";
 import fs from "node:fs";
 import os from "node:os";
+import { objectHash, fileHashHex } from "../state.mjs";
 
 const TESTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const GAME_ROOT = path.resolve(TESTS_DIR, "..", "..", "..");
@@ -93,4 +94,31 @@ test("record write path rejects schema-invalid records before commit (F-PU31-01)
   fs.writeFileSync(path.join(dir, "good.json"), JSON.stringify({ records: [{ kind: "attack", body: { id: "ATK-OK", invariantIds: [], taxonomyIds: [], challengedAssumption: "x", sequenceOrInput: "x", oracle: "o", noveltyReason: "x", evidenceIds: [] } }] }));
   const good = run(["record", "--run", runId, "--input", path.join(dir, "good.json"), "--lease", "t"]);
   assert.equal(good.code, 0, good.out);
+});
+
+
+test("prepare consumes the active policy revision instead of stale historical guidance", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "qa-routing-cli-"));
+  const scriptDir = path.join(root, "scripts", "qa");
+  fs.cpSync(path.join(GAME_ROOT, "scripts", "qa"), scriptDir, { recursive: true });
+  fs.symlinkSync(path.join(GAME_ROOT, "node_modules"), path.join(root, "node_modules"), "junction");
+  const learning = path.join(root, "docs", "qa", "learning");
+  fs.mkdirSync(path.join(learning, "policies"), { recursive: true });
+  fs.mkdirSync(path.join(learning, "history"), { recursive: true });
+  fs.writeFileSync(path.join(root, "dep.txt"), "current");
+  const guidance = { status: "QUALIFIED", applicability: ["routing-test"], exclusions: [],
+    sourceDependencies: [{ path: "dep.txt", revision: `sha256:${fileHashHex(path.join(root, "dep.txt"))}` }] };
+  const old = { id: "L-CLI", version: 1, guidance: { ...guidance,
+    sourceDependencies: [{ path: "dep.txt", revision: `sha256:${"0".repeat(64)}` }] } };
+  const current = { id: "L-CLI", version: 2, guidance };
+  fs.writeFileSync(path.join(learning, "history", "lessons.jsonl"), [old, current].map(x => JSON.stringify(x)).join("\n"));
+  const payload = { lessons: [{ id: "L-CLI", version: 2 }] };
+  const policyHash = objectHash(payload);
+  fs.writeFileSync(path.join(learning, "policies", `${policyHash}.json`), JSON.stringify(payload));
+  fs.writeFileSync(path.join(learning, "active-policy.json"), JSON.stringify({ policyHash }));
+  fs.writeFileSync(path.join(root, "task.json"), JSON.stringify({ taskId: "routing", applicabilityKeys: ["routing-test"] }));
+  const result = JSON.parse(execFileSync(process.execPath, [path.join(scriptDir, "cli.mjs"), "prepare",
+    "--task", path.join(root, "task.json")], { encoding: "utf8" }));
+  assert.equal(result.policyHash, policyHash);
+  assert.deepEqual(result.routing.map(x => x.decision), ["NOT_APPLICABLE", "APPLY"]);
 });

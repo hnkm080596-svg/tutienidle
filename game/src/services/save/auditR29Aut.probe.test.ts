@@ -491,7 +491,7 @@ describe('r29-AUT - F2: hostile restoreNowMs clocks restore verbatim now (fixed)
     expect(bag.getAmount(JOB_RECIPE.pillId)).toBe(0)
   })
 
-  it('restoreStates(states, -Infinity) restores workerCycles verbatim (r29-F1 deny - no re-anchor)', () => {
+  it('restoreStates(states, -Infinity) restores productionCycles verbatim (r29-F1 deny - no re-anchor)', () => {
     const system = createProductionSystem()
     const cycle = workerCycle(currentMs + 60_000, 'r29_f2_lane')
     system.restoreStates(
@@ -500,13 +500,12 @@ describe('r29-AUT - F2: hostile restoreNowMs clocks restore verbatim now (fixed)
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [cycle],
+          productionCycles: [cycle],
         },
       ],
       -Infinity,
     )
-    const restored = system.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const restored = system.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(restored.startedAtMs).toBe(cycle.startedAtMs)
     expect(restored.completesAtMs).toBe(cycle.completesAtMs)
   })

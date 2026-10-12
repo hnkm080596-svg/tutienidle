@@ -1,26 +1,13 @@
-// @vitest-environment node
-// Task 14 (rework P4, spec sec5.6) - DecomposeSystem: tab Phan Giai -
-// phan giai Linh Khoang thanh Luyen Khi Tinh Hoa.
-//
-// DIRECT REWORK (2026-10-11): worker-cycle engine retired - direct
-// multi-select action mirror Hoa Luyen trang bi. Suite nay pin:
-//   yield(stack) = ceil(amount/6 x base(grade) x 2^ageIndex) (balance pass 2026-10-11)
-//   base(grade) = 1 + gradeIndex x 0.5 (Cuu 1.0 -> Tien 5.5)
-//   he so tuoi = 2^ageIndex (decade 1 -> thuong_co 16)
-import { describe, expect, it, beforeEach, vi } from 'vitest'
-
-// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
-// system's ENABLED implementation (sec.11-15: dormant, not deleted).
-// The flag is toggleable so the fail-closed arm is covered too.
-const scope = vi.hoisted(() => ({ hidden: false }))
+// Instant Decompose tests cover atomic conversion, persisted legacy inertness, and the visible read model.
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../betaScope', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../betaScope')>()),
   isBetaFeature: () => true,
-  isScopeHidden: () => scope.hidden,
+  isScopeHidden: () => false,
 }))
 
-import { DecomposeSystem } from './DecomposeSystem'
+import { DECOMPOSE_OUTPUT_BY_FAMILY, DecomposeSystem, parseOre } from './DecomposeSystem'
 import { MaterialBag } from '../material/MaterialBag'
 import { materials } from '../../data/materials/materials'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
@@ -28,311 +15,179 @@ import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 let bag: MaterialBag
 let delivered: Array<{ materialId: string; amount: number }>
 
-function createSystem(): DecomposeSystem {
-  return new DecomposeSystem(bag, {
-    deliverOutput: (entry) => {
-      delivered.push(entry)
-    },
-  })
-}
-
 function addOre(id: string, amount: number): void {
   const material = materials.find((entry) => entry.id === id)
-
-  if (!material) {
-    throw new Error(`materials fixture thiếu ${id}`)
-  }
-
+  if (!material) throw new Error(`materials fixture missing ${id}`)
   bag.add(material, amount)
 }
 
-beforeEach(() => {
-  bag = new MaterialBag()
-  delivered = []
-  scope.hidden = false
-})
+beforeEach(() => { bag = new MaterialBag() })
 
-describe('DecomposeSystem — listDecomposableIds (direct rework)', () => {
-  it('liet ke moi stack phan giai duoc con stock; bo qua stack ngoai', () => {
-    addOre('mortal_ore_decade', 40)
-    addOre('qi_refining_ore_century', 5)
-    addOre('luyen_khi_tinh_hoa', 10) // output id khong tu phan giai
+describe('DecomposeSystem — immediate ore command', () => {
+  it('converts the selected amount with authored grade/age rate and notifies only after commit', () => {
+    addOre('mortal_ore_decade', 12)
+    const onEssenceProduced = vi.fn()
+    const system = new DecomposeSystem(bag, { onEssenceProduced })
 
-    const system = createSystem()
+    expect(system.previewDecomposeOre('mortal_ore_decade', 12)).toEqual({
+      ok: true,
+      materialId: LUYEN_KHI_TINH_HOA_ID,
+      consumed: 12,
+      produced: 2,
+    })
+    expect(system.decomposeOre('mortal_ore_decade', 12)).toEqual({
+      ok: true,
+      materialId: LUYEN_KHI_TINH_HOA_ID,
+      consumed: 12,
+      produced: 2,
+    })
+    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
+    expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(2)
+    expect(onEssenceProduced).toHaveBeenCalledTimes(1)
+    expect(onEssenceProduced).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2)
+  })
+  it('uses floor conversion so splitting requests cannot increase output', () => {
+    const batchedBag = new MaterialBag()
+    const splitBag = new MaterialBag()
+    const oreId = 'qi_refining_ore_decade'
+    const ore = materials.find((entry) => entry.id === oreId)!
+    batchedBag.add(ore, 12)
+    splitBag.add(ore, 12)
 
-    expect(system.listDecomposableIds()).toEqual(
-      expect.arrayContaining(['mortal_ore_decade', 'qi_refining_ore_century']),
+    const batched = new DecomposeSystem(batchedBag).decomposeOre(oreId, 12)
+    const splitSystem = new DecomposeSystem(splitBag)
+    const splitFirst = splitSystem.decomposeOre(oreId, 6)
+    const splitSecond = splitSystem.decomposeOre(oreId, 6)
+
+    expect(batched).toMatchObject({ ok: true, produced: 3 })
+    expect(splitFirst).toMatchObject({ ok: true, produced: 1 })
+    expect(splitSecond).toMatchObject({ ok: true, produced: 1 })
+    expect(splitBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBeLessThanOrEqual(
+      batchedBag.getAmount(LUYEN_KHI_TINH_HOA_ID),
     )
-    expect(system.listDecomposableIds()).not.toContain('luyen_khi_tinh_hoa')
-    expect(system.listDecomposableIds()).toHaveLength(2)
   })
 
-  it('tui rong -> []', () => {
-    expect(createSystem().listDecomposableIds()).toEqual([])
-  })
-
-  it('scope-hidden -> [] (fail closed)', () => {
-    addOre('mortal_ore_decade', 10)
-    scope.hidden = true
-
-    expect(createSystem().listDecomposableIds()).toEqual([])
-  })
-})
-
-describe('DecomposeSystem — previewDecompose (direct rework)', () => {
-  it('quote tong tinh hoa theo cong thuc; khong dot khoang, khong mutate', () => {
-    addOre('mortal_ore_decade', 100) // base 1 x ageFactor 1 -> ceil(100/6) = 17
-
-    const system = createSystem()
-
-    expect(system.previewDecompose(['mortal_ore_decade'])).toEqual([
-      { materialId: LUYEN_KHI_TINH_HOA_ID, minAmount: 17, maxAmount: 17 },
-    ])
-    expect(bag.getAmount('mortal_ore_decade')).toBe(100)
-  })
-
-  it('cong don nhieu stack; bo qua id ngoai/het hang', () => {
-    addOre('mortal_ore_decade', 10) // ceil(10/6 x 1 x 1) = 2
-    addOre('tribulation_ore_decade', 4) // ceil(4/6 x 5.5 x 1) = 4
-
-    const system = createSystem()
-
-    expect(
-      system.previewDecompose(['mortal_ore_decade', 'tribulation_ore_decade', 'luyen_khi_tinh_hoa', 'ghost_id']),
-    ).toEqual([{ materialId: LUYEN_KHI_TINH_HOA_ID, minAmount: 6, maxAmount: 6 }])
-  })
-
-  it('grade/age factor: mortal millennium (base 1 x 4) 100 -> 67', () => {
-    addOre('mortal_ore_millennium', 100)
-
-    expect(createSystem().previewDecompose(['mortal_ore_millennium'])).toEqual([
-      { materialId: LUYEN_KHI_TINH_HOA_ID, minAmount: 67, maxAmount: 67 },
-    ])
-  })
-
-  it('ids rong / toan id ngoai -> []', () => {
-    addOre('mortal_ore_decade', 10)
-
-    const system = createSystem()
-
-    expect(system.previewDecompose([])).toEqual([])
-    expect(system.previewDecompose(['luyen_khi_tinh_hoa'])).toEqual([])
-  })
-
-  it('scope-hidden -> [] (fail closed)', () => {
-    addOre('mortal_ore_decade', 10)
-    scope.hidden = true
-
-    expect(createSystem().previewDecompose(['mortal_ore_decade'])).toEqual([])
-  })
-})
-
-describe('DecomposeSystem — decompose (direct rework)', () => {
-  it('dot nguyen stack, credit tinh hoa qua deliverOutput, tra true', () => {
-    addOre('mortal_ore_decade', 100)
-
-    const system = createSystem()
-
-    expect(system.decompose(['mortal_ore_decade'])).toBe(true)
-    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
-    expect(delivered).toEqual([{ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 17 }])
-  })
-
-  it('preview khop commit: cung mot cong thuc cho quote va dot', () => {
-    addOre('qi_refining_ore_century', 7) // base 1.5 x af 2 -> ceil(7/6 x 3) = ceil(3.5) = 4
-
-    const system = createSystem()
-    const preview = system.previewDecompose(['qi_refining_ore_century'])
-
-    expect(system.decompose(['qi_refining_ore_century'])).toBe(true)
-    expect(delivered).toEqual([
-      { materialId: LUYEN_KHI_TINH_HOA_ID, amount: preview[0]!.minAmount },
-    ])
-    expect(preview[0]!.minAmount).toBe(4)
-  })
-
-  it('nhieu stack mot lan: dot het, tinh hoa cong don 1 delivery', () => {
-    addOre('mortal_ore_decade', 10) // 2
-    addOre('tribulation_ore_decade', 4) // 4
-
-    const system = createSystem()
-
-    expect(system.decompose(['mortal_ore_decade', 'tribulation_ore_decade'])).toBe(true)
-    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
-    expect(bag.getAmount('tribulation_ore_decade')).toBe(0)
-    expect(delivered).toEqual([{ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 6 }])
-  })
-
-  it('id trung lap chi dot mot lan (dedupe)', () => {
-    addOre('mortal_ore_decade', 10)
-
-    const system = createSystem()
-
-    expect(system.decompose(['mortal_ore_decade', 'mortal_ore_decade'])).toBe(true)
-    expect(delivered).toEqual([{ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 2 }])
-  })
-
-  it('ids rong / toan id ngoai -> false, khong mutate, khong delivery', () => {
-    addOre('mortal_ore_decade', 10)
-
-    const system = createSystem()
-
-    expect(system.decompose([])).toBe(false)
-    expect(system.decompose(['luyen_khi_tinh_hoa', 'ghost_id'])).toBe(false)
-    expect(bag.getAmount('mortal_ore_decade')).toBe(10)
-    expect(delivered).toEqual([])
-  })
-
-  it('stack da bi lay het -> false (foreign ids khong lot qua)', () => {
-    addOre('mortal_ore_decade', 10)
-
-    const system = createSystem()
-
-    expect(system.decompose(['mortal_ore_decade'])).toBe(true)
-    // Lan hai: stack da het -> khong con gi de phan giai.
-    expect(system.decompose(['mortal_ore_decade'])).toBe(false)
-    expect(delivered).toHaveLength(1)
-  })
-
-  it('scope-hidden -> false, khong dot khoang (fail closed)', () => {
-    addOre('mortal_ore_decade', 10)
-    scope.hidden = true
-
-    const system = createSystem()
-
-    expect(system.decompose(['mortal_ore_decade'])).toBe(false)
-    expect(bag.getAmount('mortal_ore_decade')).toBe(10)
-    expect(delivered).toEqual([])
-  })
-
-  it('khong deliverOutput callback (standalone) van dot stack, tra true', () => {
-    addOre('mortal_ore_decade', 10)
-
+  it('refuses a sub-unit yield without consuming ore', () => {
+    addOre('mortal_ore_decade', 1)
     const system = new DecomposeSystem(bag)
 
-    expect(system.decompose(['mortal_ore_decade'])).toBe(true)
-    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
-  })
-})
-
-describe('DecomposeSystem — save slice (direct rework)', () => {
-  it('getSaveState tra {} - direct decompose khong persist gi', () => {
-    expect(createSystem().getSaveState()).toEqual({})
+    expect(system.decomposeOre('mortal_ore_decade', 1)).toEqual({ ok: false, reason: 'insufficient_amount' })
+    expect(bag.getAmount('mortal_ore_decade')).toBe(1)
+    expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
   })
 
-  it('restore(payload legacy) accept-and-ignore: khong crash, khong revive worker state', () => {
-    addOre('mortal_ore_decade', 10)
+  it('refuses output overflow before consuming any ore', () => {
+    addOre('mortal_ore_decade', 12)
+    const essence = materials.find((entry) => entry.id === LUYEN_KHI_TINH_HOA_ID)!
+    bag.add(essence, (essence.stackLimit ?? 999_999) - 1)
+    const system = new DecomposeSystem(bag)
 
-    const system = createSystem()
-
-    expect(() =>
-      system.restore({
-        settings: { workers: 5, gradeFilter: 'cuu_pham', ageFilter: 'decade' },
-        nextCycleAt: 123_456,
-        started: true,
-      }),
-    ).not.toThrow()
-
-    // Worker state khong hoi sinh: direct action hoat dong binh thuong,
-    // khong co cycle nao chay ngam sau restore.
-    expect(system.decompose(['mortal_ore_decade'])).toBe(true)
-    expect(delivered).toEqual([{ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 2 }])
+    expect(system.decomposeOre('mortal_ore_decade', 12)).toEqual({ ok: false, reason: 'output_capacity' })
+    expect(bag.getAmount('mortal_ore_decade')).toBe(12)
+    expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe((essence.stackLimit ?? 999_999) - 1)
   })
 
-  it('restore(undefined) khong crash (slice vang)', () => {
-    expect(() => createSystem().restore(undefined)).not.toThrow()
-  })
-})
+  it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects invalid amount %s without mutation',
+    (amount) => {
+      addOre('mortal_ore_decade', 12)
+      const system = new DecomposeSystem(bag)
+      expect(system.decomposeOre('mortal_ore_decade', amount)).toEqual({ ok: false, reason: 'invalid_amount' })
+      expect(bag.getAmount('mortal_ore_decade')).toBe(12)
+      expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
+    },
+  )
 
-// Materials economy rework (2026-10-11, owner-locked spec) - 3 nhanh
-// output: ore -> luyen_khi_tinh_hoa, wood -> bui_go, herb ->
-// luyen_dan_tinh_hoa. Moi output mot id duy nhat (khong variant
-// realm/age); yield van = ceil(amount/6 x base x ageFactor).
-describe('DecomposeSystem — rework vat lieu 3 nhanh (ore/wood/herb)', () => {
-  it('listDecomposableIds tra ve ore + wood + herb, loai output id', () => {
-    addOre('mortal_ore_decade', 10)
-    addOre('mortal_wood_decade', 10)
-    addOre('tu_linh_thao_mortal_decade', 8)
-    addOre('bui_go', 99)
-    addOre('luyen_dan_tinh_hoa', 99)
-    addOre('luyen_khi_tinh_hoa', 99)
-
-    const ids = createSystem().listDecomposableIds()
-
-    expect(ids).toContain('mortal_ore_decade')
-    expect(ids).toContain('mortal_wood_decade')
-    expect(ids).toContain('tu_linh_thao_mortal_decade')
-    // Output materials (va vat lieu khong theo grammar) khong tu phan giai.
-    expect(ids).not.toContain('bui_go')
-    expect(ids).not.toContain('luyen_dan_tinh_hoa')
-    expect(ids).not.toContain('luyen_khi_tinh_hoa')
+  it('rejects invalid ore and insufficient stock without producing essence', () => {
+    addOre('mortal_ore_decade', 1)
+    const system = new DecomposeSystem(bag)
+    expect(system.decomposeOre(LUYEN_KHI_TINH_HOA_ID, 1)).toEqual({ ok: false, reason: 'invalid_ore' })
+    expect(system.decomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'insufficient_ore' })
+    expect(bag.getAmount('mortal_ore_decade')).toBe(1)
+    expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
   })
 
-  it('previewDecompose gom output theo dung id tung nhanh (mortal/decade: base 1, factor 1)', () => {
-    addOre('mortal_ore_decade', 10)
-    addOre('mortal_wood_decade', 10)
-    addOre('tu_linh_thao_mortal_decade', 8)
-
-    const preview = createSystem().previewDecompose([
+  it('applies the same /6 floor to authored ore, wood, and herb families', () => {
+    const ids = [
       'mortal_ore_decade',
       'mortal_wood_decade',
-      'tu_linh_thao_mortal_decade',
-    ])
-
-    expect(preview).toEqual([
-      { materialId: 'luyen_khi_tinh_hoa', minAmount: 2, maxAmount: 2 },
-      { materialId: 'bui_go', minAmount: 2, maxAmount: 2 },
-      { materialId: 'luyen_dan_tinh_hoa', minAmount: 2, maxAmount: 2 },
-    ])
-
-    // Preview read-only - tui khong doi.
-    expect(bag.getAmount('mortal_wood_decade')).toBe(10)
-  })
-
-  it('decompose tieu thu stack va deliver mot entry moi nhanh output', () => {
-    addOre('mortal_ore_decade', 10)
-    addOre('mortal_wood_decade', 10)
-    addOre('tu_linh_thao_mortal_decade', 8)
-
-    const system = createSystem()
-
-    expect(system.decompose(['mortal_ore_decade', 'mortal_wood_decade', 'tu_linh_thao_mortal_decade'])).toBe(true)
-
-    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
-    expect(bag.getAmount('mortal_wood_decade')).toBe(0)
-    expect(bag.getAmount('tu_linh_thao_mortal_decade')).toBe(0)
-    expect(delivered).toEqual([
-      { materialId: 'luyen_khi_tinh_hoa', amount: 2 },
-      { materialId: 'bui_go', amount: 2 },
-      { materialId: 'luyen_dan_tinh_hoa', amount: 2 },
-    ])
-  })
-
-  it('decompose(ids) chi dot stack duoc chon', () => {
-    addOre('mortal_wood_decade', 10)
-    addOre('tu_linh_thao_mortal_decade', 8)
-
-    const system = createSystem()
-
-    expect(system.decompose(['mortal_wood_decade'])).toBe(true)
-
-    expect(delivered).toEqual([{ materialId: 'bui_go', amount: 2 }])
-    expect(bag.getAmount('tu_linh_thao_mortal_decade')).toBe(8)
-  })
-
-  it('herb thieu realm/age hop le trong metadata -> khong phan giai duoc', () => {
-    const orphanHerb = materials.find((entry) => entry.id === 'tu_linh_thao_mortal_decade')
-
-    if (!orphanHerb) {
-      throw new Error('materials fixture thieu herb')
+      materials.find((entry) => entry.profession?.resourceKind === 'herb' && entry.profession.realmId === 'mortal' && entry.profession.age === 'decade')!.id,
+    ]
+    for (const id of ids) {
+      const material = materials.find((entry) => entry.id === id)!
+      bag.add(material, 12)
     }
+    const system = new DecomposeSystem(bag)
 
-    // Metadata thieu realm -> classify fail-closed (spec: khong suy doan).
-    bag.add({ ...orphanHerb, profession: { ...orphanHerb.profession!, realmId: 'khong_ton_tai' } }, 10)
+    expect(system.previewDecompose(ids)).toEqual([
+      { materialId: DECOMPOSE_OUTPUT_BY_FAMILY.ore, minAmount: 2, maxAmount: 2 },
+      { materialId: DECOMPOSE_OUTPUT_BY_FAMILY.wood, minAmount: 2, maxAmount: 2 },
+      { materialId: DECOMPOSE_OUTPUT_BY_FAMILY.herb, minAmount: 2, maxAmount: 2 },
+    ])
+    expect(system.decompose(ids)).toBe(true)
+    for (const id of ids) expect(bag.getAmount(id)).toBe(0)
+    for (const output of Object.values(DECOMPOSE_OUTPUT_BY_FAMILY)) expect(bag.getAmount(output)).toBe(2)
+  })
 
-    const system = createSystem()
+  it('generic decomposition credits outputs through the production bag path', () => {
+    addOre('mortal_ore_decade', 12)
+    const onEssenceProduced = vi.fn()
+    const system = new DecomposeSystem(bag, { onEssenceProduced })
 
-    expect(system.listDecomposableIds()).toEqual([])
-    expect(system.decompose(['tu_linh_thao_mortal_decade'])).toBe(false)
+    expect(system.previewDecompose(['mortal_ore_decade'])).toEqual([
+      { materialId: LUYEN_KHI_TINH_HOA_ID, minAmount: 2, maxAmount: 2 },
+    ])
+    expect(system.decompose(['mortal_ore_decade'])).toBe(true)
+    expect(bag.getAmount('mortal_ore_decade')).toBe(0)
+    expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(2)
+    expect(onEssenceProduced).toHaveBeenCalledTimes(1)
+    expect(onEssenceProduced).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2)
+  })
+
+  it('generic output adapter receives credit once and capacity failure preserves inputs', () => {
+    addOre('mortal_ore_decade', 12)
+    const adapter = vi.fn()
+    const adaptedSystem = new DecomposeSystem(bag, { deliverOutput: adapter })
+    expect(adaptedSystem.decompose(['mortal_ore_decade'])).toBe(true)
+    expect(adapter).toHaveBeenCalledTimes(1)
+    expect(adapter).toHaveBeenCalledWith({ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 2 })
+    expect(bag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
+
+    const capacityBag = new MaterialBag()
+    const ore = materials.find((entry) => entry.id === 'mortal_ore_decade')!
+    const essence = materials.find((entry) => entry.id === LUYEN_KHI_TINH_HOA_ID)!
+    capacityBag.add(ore, 12)
+    capacityBag.add(essence, (essence.stackLimit ?? 999_999) - 1)
+    const capacitySystem = new DecomposeSystem(capacityBag)
+    expect(capacitySystem.decompose(['mortal_ore_decade'])).toBe(false)
+    expect(capacityBag.getAmount('mortal_ore_decade')).toBe(12)
+  })
+
+  it('lists detached ore-only snapshots', () => {
+    addOre('mortal_ore_decade', 3)
+    bag.add(materials.find((entry) => entry.id === LUYEN_KHI_TINH_HOA_ID)!, 8)
+    const system = new DecomposeSystem(bag)
+    const rows = system.getAvailableOres()
+    rows[0]!.amount = 100
+    expect(rows).toEqual([{ materialId: 'mortal_ore_decade', amount: 100 }])
+    expect(system.getAvailableOres()).toEqual([{ materialId: 'mortal_ore_decade', amount: 3 }])
+  })
+
+  it('keeps old save settings/timers inert across restore and serialization', () => {
+    const system = new DecomposeSystem(bag)
+    system.restore({
+      settings: { gradeFilter: 'tien_pham', ageFilter: 'myriad_year', workers: 99 },
+      nextCycleAt: 123_456,
+      started: true,
+    })
+    expect(system.getSaveState()).toEqual({})
+  })
+})
+
+describe('parseOre', () => {
+  it('parses authored ore IDs only', () => {
+    expect(parseOre('mortal_ore_decade')).toEqual({ grade: 'cuu_pham', age: 'decade' })
+    expect(parseOre('unregistered_ore_decade')).toBeNull()
+    expect(parseOre('mortal_wood_decade')).toBeNull()
   })
 })

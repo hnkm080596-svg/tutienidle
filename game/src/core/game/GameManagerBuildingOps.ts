@@ -6,22 +6,12 @@ import { BuildingSystem } from '../building/BuildingSystem'
 import type { Building } from '../building/Building'
 import type { BuildingInstance } from '../building/BuildingInstance'
 import { ProductionSystem } from '../production/ProductionSystem'
-import { betaEffectiveWorkerCapacity, getWorkerCapacityForLevel, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
-import { buildWorkforceView, type WorkforceView } from '../production/WorkforceView'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
-import { isCompanionDomainUnlocked } from '../companion/CompanionAvailability'
-import {
-  betaSurfaceVerdict,
-  isScopeHidden,
-  BETA_WORKER_LODGE_TABS,
-  WORKER_LODGE_TAB_FEATURE,
-  type BetaScopeVerdict,
-  type BetaWorkerLodgeTabId,
-} from '../betaScope'
 import { isBetaBuildingSurface } from '../betaScopeSurface'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 export interface GameManagerBuildingOpsDeps {
   buildingRegistry: BuildingRegistry
@@ -38,18 +28,33 @@ export interface GameManagerBuildingOpsDeps {
   // GameManager supplies a closure because the real hook needs
   // questSystem/questRegistry/questManager, states outside building/production scope.
   notifyMaterialGained: (materialId: string, amount: number) => void
+  // GP-01 - authorized live-time owner for the building accrual clock
+  // (seconds domain) and production previews (ms domain). Optional for
+  // B1: direct constructor fixtures keep wall-clock behavior;
+  // GameManager always injects the shared TimeAuthority.
+  time?: TimeAuthority
 }
 
 /**
- * Tach khoi GameManager (2026-09-03, task 2 - GameManager split) - toan bo
- * thao tac Building (xay/nang cap/thu hoach/query) va Production
- * (cycle/upgrade/query), gop 1 file vi Production nho va share worker
- * capacity state voi Building (Chieu Hien Quan). Cung pattern DI voi
- * EquipmentOpsSystem: constructor nhan dependency tuong minh qua object
- * `deps`, KHONG tu import nguoc GameManager.
+ * Extracted from GameManager (2026-09-03, task 2). This module coordinates
+ * building operations and production-site commands at one manager boundary.
+ * Dependencies are explicit through `deps`; it does not import GameManager.
  */
 export class GameManagerBuildingOps {
   constructor(private readonly deps: GameManagerBuildingOpsDeps) {}
+
+  /**
+   * Building accrual runs in SECONDS (lastAccrualAtSec) - the authority's
+   * nowSeconds() is the same instant as now()/1000, so the default
+   * argument preserves the pre-migration wall-clock contract.
+   */
+  private nowSeconds(): number {
+    return this.deps.time?.nowSeconds() ?? Date.now() / 1000
+  }
+
+  private nowMs(): number {
+    return this.deps.time?.now() ?? Date.now()
+  }
 
   getBuildingDefinitions(): Building[] {
     return this.deps.buildingRegistry.getAll()
@@ -70,134 +75,6 @@ export class GameManagerBuildingOps {
       player.realmId,
     )
 
-    for (const instance of added) {
-      this.refreshAutoWorkerCapacity(player, instance)
-    }
-  }
-
-  /**
-   * Chieu Hien Quan (chi-hien-quan spec 2026-09-02) - NGUON NHAN CONG
-   * DUY NHAT: capacity = 1 + level*2 (getWorkerCapacityForLevel). Goi
-   * lai sau moi lan build/upgrade CHQ. gathering_outpost KHONG con cap
-   * capacity (nguon cu da go - outpost chi con gate San Xuat + linh mach).
-   */
-  refreshAutoWorkerCapacity(player: PlayerData, instance: BuildingInstance): void {
-    if (instance.buildingId !== 'chi_hien_quan') {
-      return
-    }
-
-    player.autoWorkerCapacity = getWorkerCapacityForLevel(instance.level)
-  }
-
-  /**
-   * Chi-hien-quan (2026-09-02) - assignments snapshot tu production states
-   * (assignedWorkers persist trong save) - truyen vao tickWorkers/
-   * settleOffline de OFFLINE KHOP ONLINE.
-   */
-  getWorkerAssignments(): Map<string, number> {
-    const assignments = new Map<string, number>()
-
-    // BETA SCOPE LOCK v2 sec.4C - manualWorkforce is scope-hidden:
-    // persisted assignedWorkers stay inert; the allocator round-robins
-    // every site so dormant manual choices cannot starve a live site.
-    if (isScopeHidden('manualWorkforce')) {
-      return assignments
-    }
-
-    for (const state of this.deps.productionSystem.getAllStates()) {
-      if (state.assignedWorkers !== undefined) {
-        assignments.set(state.siteId, state.assignedWorkers)
-      }
-    }
-
-    return assignments
-  }
-
-  /**
-   * Mission D (spec D1) - the ONE workforce read model for the panel:
-   * total/reserved/available/requested/effective/idle, all derived from
-   * the same split rule the tick uses. The panel renders this verbatim;
-   * it does not recompute the split (A7).
-   */
-  getWorkforceView(): WorkforceView {
-    // BETA SCOPE LOCK v2 sec.4C - while manualWorkforce is hidden the
-    // view shows the flat auto pool and censors dormant assignments.
-    // DIRECT DECOMPOSE REWORK (2026-10-11): no claimant reserves
-    // workers anymore - the view's `reserved` reports 0.
-    const hidden = isScopeHidden('manualWorkforce')
-
-    return buildWorkforceView(
-      betaEffectiveWorkerCapacity(this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0),
-      hidden
-        ? this.deps.productionSystem.getAllStates().map((state) => ({ ...state, assignedWorkers: undefined }))
-        : this.deps.productionSystem.getAllStates(),
-    )
-  }
-
-  /**
-   * BETA SCOPE LOCK v2 sec.13 + FINAL POLICY (sec.4C) - the Worker
-   * Lodge tab read-model. Each authored tab resolves through the scope
-   * authority so the frontend renders verdicts directly and never
-   * imports CompanionAvailability to decide which tabs exist. Under
-   * beta every tab - nhan_cong included - resolves 'scope-hidden':
-   * the lodge is entirely out of scope while automatic production
-   * keeps running in the background. manualAssignOffered reports
-   * whether the manual split write is live on the workforce tab.
-   * Post-beta the companion tabs keep their Tru Co realm gate via
-   * ctx.progressionMet - CompanionAvailability feeds the verdict here,
-   * never in the frontend.
-   */
-  getWorkerLodgeSurfaceModel(player: PlayerData): {
-    tabs: {
-      id: BetaWorkerLodgeTabId
-      verdict: BetaScopeVerdict
-      manualAssignOffered?: boolean
-    }[]
-  } {
-    return {
-      tabs: BETA_WORKER_LODGE_TABS.map((tabId) => {
-        const feature = WORKER_LODGE_TAB_FEATURE[tabId]
-        const verdict = betaSurfaceVerdict(feature, {
-          progressionMet:
-            feature === 'companion' ? isCompanionDomainUnlocked(player.realmId) : true,
-        })
-
-        if (tabId === 'nhan_cong') {
-          return {
-            id: tabId,
-            verdict,
-            manualAssignOffered: verdict === 'available',
-          }
-        }
-
-        return {
-          id: tabId,
-          verdict,
-        }
-      }),
-    }
-  }
-
-  /**
-   * Chi-hien-quan (2026-09-02) - UI phan bo: gan/xoa so slot manual cua
-   * 1 site. `count === undefined` = ve AUTO (xoa assignedWorkers).
-   * Clamp [0, capacity] phong UI gui sai; khong doi neu site khong ton tai.
-   */
-  assignWorkers(siteId: string, count: number | undefined): void {
-    // BETA SCOPE LOCK v2 sec.13 - manualWorkforce is scope-hidden:
-    // automatic allocation is the normal beta path, so the manual write
-    // is a no-op (the domain command repeats the check for direct calls).
-    if (isScopeHidden('manualWorkforce')) {
-      return
-    }
-
-    // Clamp bound stays fed by the one pool rule - the domain command
-    // owns the write itself (D2: no foreign mutation of site state).
-    const capacity = resolveProductionWorkerCapacity(
-      betaEffectiveWorkerCapacity(this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0),
-    )
-
-    this.deps.productionSystem.setWorkerAssignment(siteId, count, capacity)
   }
 
   /**
@@ -232,16 +109,13 @@ export class GameManagerBuildingOps {
     )
     const instance = this.deps.buildingManager.get(instanceId)
     const activePlayer = this.deps.getActivePlayer()
-    if (upgraded && instance && activePlayer) {
-      this.refreshAutoWorkerCapacity(activePlayer, instance)
-    }
     return upgraded
   }
 
   // Linh Tuyen (producesMaterialId) - thu hoach do vao MaterialBag nhu
   // material binh thuong (plan Workstream F); claim() tra amount +
   // materialId, GameManager resolve template va cong bag.
-  collectBuilding(instanceId: string, player: PlayerData, currentTime = Date.now() / 1000): number {
+  collectBuilding(instanceId: string, player: PlayerData, currentTime = this.nowSeconds()): number {
     // Pre-check registry TRUOC khi claim reset moc thoi gian (review
     // 2026-08-28): neu materialId khong resolve duoc ma van claim, san
     // luong bi mat trang (moc da reset, bag khong duoc cong).
@@ -282,7 +156,7 @@ export class GameManagerBuildingOps {
     return claimed.amount
   }
 
-  getBuildingStoredAmount(instanceId: string, currentTime = Date.now() / 1000): number {
+  getBuildingStoredAmount(instanceId: string, currentTime = this.nowSeconds()): number {
     const instance = this.deps.buildingManager.get(instanceId)
 
     if (!instance) {
@@ -325,7 +199,7 @@ export class GameManagerBuildingOps {
     )
   }
 
-  isBuildingStorageFull(instanceId: string, currentTime = Date.now() / 1000): boolean {
+  isBuildingStorageFull(instanceId: string, currentTime = this.nowSeconds()): boolean {
     const instance = this.deps.buildingManager.get(instanceId)
 
     if (!instance) {
@@ -344,7 +218,7 @@ export class GameManagerBuildingOps {
   // PRODUCTION (2026-08-25 - Lam/Quang/Dong Thien, plan sec4/sec9)
   // =========================
 
-  getProductionViews(nowMs = Date.now()) {
+  getProductionViews(nowMs = this.nowMs()) {
     return this.deps.productionSystem.getSiteDefinitions().map((definition) => {
       const view = this.deps.productionSystem.getSiteView(definition.siteId, nowMs)!
 

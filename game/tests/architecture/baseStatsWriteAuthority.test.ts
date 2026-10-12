@@ -309,7 +309,7 @@ const ALLOWED: AllowedFile[] = [
   {
     path: 'src/components/dev/DevToolsPanel.vue',
     contract:
-      'Dev-only debug surface (components/dev/): the panel deliberately writes save fields (realm/state grant, rollback, field pokes) for manual QA - a sanctioned bypass, not a hidden economy channel.',
+      'Master-only dev channel (owner ruling 2026-10-09): the panel mounts only behind isMaster (allowlisted loginIds in services/master/masterAccess) and its writes are test cheats applied to local save state, never a player-reachable income channel - the hidden predicate contract is unaffected.',
   },
 ]
 

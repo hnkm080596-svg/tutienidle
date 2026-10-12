@@ -5,7 +5,6 @@ import ForgeBatchBag from './ForgeBatchBag.vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import EquipmentPaperItem from './EquipmentPaperItem.vue'
 import EquipmentPaperTooltip from './EquipmentPaperTooltip.vue'
 import type { EquipmentDisplay, EquipmentSocket } from './equipmentUi'
@@ -62,7 +61,6 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
     <p class="equipment-subtitle">{{ t('equipment.subtitle') }}</p>
     <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -
          neo o khe trong giua subtitle va cot bag/forge (design px). -->
-    <BuildingUpgradeButton building-id="equipment_hall" class="equipment-upgrade" />
 
     <!-- The doll region (character stage + 2x3 socket grid) carries the
          fixture stand-in; production mounts the real EquipmentPaperdoll
@@ -105,14 +103,6 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 .equipment-heading { position:absolute; left:365px; top:117px; height:61px; display:flex; align-items:flex-start; border-bottom:0; width:1025px; padding-left:54px; box-sizing:border-box; background:linear-gradient(#b28a43,#b28a43) left bottom/64px 1px no-repeat, linear-gradient(#b28a43,#b28a43) right bottom/calc(100% - 448px) 1px no-repeat; } .equipment-heading__title{display:flex;flex-direction:column}.equipment-divider{width:388px;margin-top:0;object-fit:contain;opacity:.9;position:relative;top:-39px;left:8px;pointer-events:none}
 :is(#app,body) .equipment-scene .equipment-heading h1 { margin:0; padding:0; width:370px; height:58px; font-family:'UTM OngDoGia','Ma Shan Zheng','ZCOOL XiaoWei',var(--font-display,Georgia,serif); font-size:56px; font-style:normal; font-weight:400; line-height:58px; text-align:center; color:transparent; background:linear-gradient(100deg,#241a0c 20%,#6b5224 40%,#fff6d8 50%,#6b5224 60%,#241a0c 80%); background-size:220% 100%; background-position:0% 0; -webkit-background-clip:text; background-clip:text; animation:none; }
 .equipment-subtitle { position:absolute; left:365px; top:117px; width:860px; height:61px; margin:0; display:flex; align-items:center; justify-content:flex-end; font-size:13px; color:#715627; }
-.equipment-upgrade { position:absolute; left:1260px; top:110px; width:110px; }
-/* Owner ruling 2026-10-09: the hall-upgrade button joins the same
-   calligraphic face as the op-tab buttons (function controls in Trang
-   Bi all read alike). */
-.equipment-upgrade { font-family: var(--pc-font-body, var(--font-display, Georgia, serif)); font-weight: 700; }
-/* Single-line cost: the row is bounded so it keeps its own lane and
-   never spills onto the socket grid below (y=240). */
-.equipment-upgrade :deep(.building-heading__cost) { color:#8b7246; font-size:10px; line-height:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Columns start below the scene-level tab strip (heading 120-168,
    tabs ~178-220) - same stacking as the Codex preview. */
 .character-stage { position:absolute; left:424px; top:215px; width:264px; height:340px; pointer-events:none; }

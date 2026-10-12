@@ -43,19 +43,11 @@ export function clearMasterGateFlag() {
 }
 
 // Scope-hidden features a master session opens for TESTING (Minh
-// 2026-10-08): tab gate + domain ops share the isBetaFeature channel -
-// wash/refine tabs render AND their EquipmentSystem guards pass for
-// admin while every other player still fails closed.
-const MASTER_BETA_UNLOCKS: readonly BetaFeatureName[] = [
-  'equipmentWash',
-  'equipmentRefine',
-  // Owner ruling 2026-10-11: Phan Giai (ore decompose) opens for master
-  // so Minh can test the flow live - the tab itself already admits
-  // master via decomposeAdmitted; without this the domain layer fails
-  // closed (setSetting no-op, listMatchingOres empty) and the tab is a
-  // dead widget even for admin.
-  'equipmentOreDecompose',
-]
+// 2026-10-08): tab gate + domain ops share the isBetaFeature channel.
+// Empty since 2026-10-09 - wash/refine shipped to every beta player, so
+// no feature remains for the master account to preview. Keep the
+// channel: the next scope-hidden feature can re-list its name here.
+const MASTER_BETA_UNLOCKS: readonly BetaFeatureName[] = []
 
 const sessionLoginId = ref<string | undefined>()
 

@@ -277,12 +277,12 @@ export type RestoreTimeAuthority =
  * union's contract (cold-boot => server-approved window end,
  * live-replacement => snapshot now, undefined => legacy client clock).
  */
-export function restoreAuthorityNowMs(timeAuthority?: RestoreTimeAuthority): number {
+export function restoreAuthorityNowMs(timeAuthority?: RestoreTimeAuthority, fallbackNowMs = Date.now()): number {
   return timeAuthority?.kind === 'cold-boot'
     ? timeAuthority.untilMs
     : timeAuthority?.kind === 'live-replacement'
       ? timeAuthority.nowMs
-      : Date.now()
+      : fallbackNowMs
 }
 
 /**
@@ -304,6 +304,7 @@ export function restoreAuthorityNowMs(timeAuthority?: RestoreTimeAuthority): num
  */
 export function sanitizeRestoreAuthority(
   timeAuthority?: RestoreTimeAuthority,
+  fallbackNowMs = Date.now(),
 ): RestoreTimeAuthority | undefined {
   // r26-COR-N1: null is not in the declared type but a JS caller can
   // still hand it in - `null.kind` throws, so guard before the kind
@@ -314,7 +315,7 @@ export function sanitizeRestoreAuthority(
     return undefined
   }
   if (timeAuthority === null) {
-    return { kind: 'live-replacement', nowMs: Date.now() }
+    return { kind: 'live-replacement', nowMs: fallbackNowMs }
   }
   // r25-AUT-4: whitelist the kind explicitly - an unrecognized kind
   // (runtime-crafted authority, future kind added without updating
@@ -328,13 +329,13 @@ export function sanitizeRestoreAuthority(
         : [Number.NaN]
   return stamps.every((stamp) => Number.isFinite(stamp) && Math.abs(stamp) < 2 ** 52)
     ? timeAuthority
-    : { kind: 'live-replacement', nowMs: Date.now() }
+    : { kind: 'live-replacement', nowMs: fallbackNowMs }
 }
 
 export interface GameSessionPlayerOwner {
   readonly $state: PlayerData
 
-  restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority): OfflineResult
+  restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority, liveNowMs?: number): OfflineResult
 
   setEquipmentModifiers(modifiers: StatModifier[]): void
 }
@@ -408,15 +409,8 @@ export interface ProductionSiteStateSave {
 
   autoRestart: boolean
 
-  // 2026-08-28 (economy-ecosystem-plan T3) - worker cycle do dang truoc
-  // day KHONG duoc persist: mat trang tien trinh moi lan reload va worker
-  // khong san xuat offline. Gio luu lai de settleOffline chay tiep trong cap.
-  workerCycles?: ProductionCycleSave[]
-
-  // Mission A2 - manual worker allocation declared at v55 but dropped by
-  // the serializer until now; undefined = AUTO (round-robin) per
-  // ProductionSiteState.
-  assignedWorkers?: number
+  /** Active and carried cycle records; carried legacy records drain before new cycles. */
+  productionCycles?: ProductionCycleSave[]
 
   // M-F-BODY-HIDDEN (v81) - grotto per-channel settle-cycle counters;
   // mirrors ProductionSiteState.hiddenChannelCycles.

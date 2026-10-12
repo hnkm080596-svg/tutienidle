@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from '../../stores/player'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { PlayerData } from '../../core/player/Player'
 import type { PersistentTimedEffect } from '../../core/player/PersistentTimedEffect'
@@ -55,6 +56,7 @@ const authoredRegen = authored?.effects.find((effect) => effect.type === 'regen'
 const AUTHORED_DURATION_S = authoredRegen?.durationSeconds ?? 75
 const AUTHORED_MAX_FLAT = (authoredRegen?.mpPerSecond ?? 0) * 1.5
 const TWO_POW_52 = 2 ** 52
+const INITIAL_NOW = 1_760_000_000_000
 
 function validSave(): Record<string, unknown> {
   const p = createDefaultPlayer()
@@ -115,7 +117,7 @@ function saveWithEffect(
   return save
 }
 
-const gameManager = new GameManager()
+let gameManager: GameManager
 
 describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)', () => {
   beforeEach(() => {
@@ -123,6 +125,11 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     lockBetaFeaturesForTests()
     lockBetaWaysForTests()
     lockBetaTalentsForTests()
+    vi.spyOn(Date, 'now').mockReturnValue(INITIAL_NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
+    gameManager = new GameManager({
+      time: new TimeAuthority({ wallNow: () => INITIAL_NOW, monotonicNow: () => 0 }),
+    })
   })
 
   afterEach(() => {
@@ -143,6 +150,9 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     // clamp passed through verbatim).
     player.persistentTimedEffects = [craftedStackableEffect(-(TWO_POW_52 - 1), -(TWO_POW_52 - 1))]
 
+    gameManager = new GameManager({
+      time: new TimeAuthority({ wallNow: () => now, monotonicNow: () => 0 }),
+    })
     vi.spyOn(Date, 'now').mockReturnValue(now)
     gameManager.effectOps.applyTimedEffect(player, {
       id: `pill-regen:${PILL_ID}:${now}`,
@@ -165,6 +175,9 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     const now = 1_760_000_000_000
     player.persistentTimedEffects = [craftedStackableEffect(now + 5_000, 1_000)]
 
+    gameManager = new GameManager({
+      time: new TimeAuthority({ wallNow: () => now, monotonicNow: () => 0 }),
+    })
     vi.spyOn(Date, 'now').mockReturnValue(now)
     // Crafted incoming pair where expires < appliedAt (duration arm
     // floors at 0) - the write can never drag the expiry below now.
@@ -187,6 +200,9 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     const now = 1_760_000_000_000
     player.persistentTimedEffects = [craftedStackableEffect(now + 5_000, 1_000)]
 
+    gameManager = new GameManager({
+      time: new TimeAuthority({ wallNow: () => now, monotonicNow: () => 0 }),
+    })
     vi.spyOn(Date, 'now').mockReturnValue(now)
     // A NaN incoming stamp is unproducible by every caller (PillSystem
     // stamps Date.now() + authored durationSeconds, TLT/Kiep Thuong the
@@ -224,6 +240,9 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
       },
     ]
 
+    gameManager = new GameManager({
+      time: new TimeAuthority({ wallNow: () => now, monotonicNow: () => 0 }),
+    })
     vi.spyOn(Date, 'now').mockReturnValue(now)
     gameManager.effectOps.applyTimedEffect(player, {
       id: 'tu_linh_tran',
@@ -336,6 +355,9 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     expect(validateGameSaveShape(save).ok).toBe(true)
 
     const now = 1_760_000_000_000
+    gameManager = new GameManager({
+      time: new TimeAuthority({ wallNow: () => now, monotonicNow: () => 0 }),
+    })
     vi.spyOn(Date, 'now').mockReturnValue(now)
 
     // Legacy (undefined) authority: provenance = min(4e15, now) = now.
@@ -406,11 +428,8 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
   it('C3 capacity + pity/kill counter pins: capacity bounded, honest-shape counters unbounded (documented residual)', () => {
     const withCapacity = (capacity: number) => {
       const save = validSave()
-      ;(save.player as PlayerData).autoWorkerCapacity = capacity
-      // F-W-16: capacity > 0 requires the chi_hien_quan witness.
-      save.buildings = [
-        { instanceId: 'r23_b1', buildingId: 'chi_hien_quan', level: 1, lastCollectedAt: 0 },
-      ]
+      ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity = capacity
+      // Legacy capacity is shape-bounded only and has no building authority.
       return validateGameSaveShape(save).ok
     }
     expect(withCapacity(65_537)).toBe(false)
@@ -497,3 +516,4 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 })
+

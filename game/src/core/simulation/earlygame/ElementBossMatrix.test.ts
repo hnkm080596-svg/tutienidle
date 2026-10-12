@@ -252,13 +252,11 @@ const BOSSES: BossKey[] = ['croc', 'serpent', 'whelp']
 //     (mortal_dong_10, scale 3.6) was NOT softened.
 // Tracked in docs/balance/2026-10-05-stat-wall-ladder.md.
 //
-// RE-PIN (2026-10-08, d649b29a) - owner ruling: Cuong Hoa scales
-// mainStat only, affixes keep rolled value. The matrix build is
-// gearUp(dia, 20) => scale 2.2 => affix contribution drops ~55%
-// (-72 element power, -198 maxHp, -38 attack), so 7 more cells flip
-// to defeat. Intended power delta; QA doc
-// docs/qa/2026-10-08-enhance-mainstat-only-quick.md. fire/croc is the
-// only in-scope cell now pinned as defeat - balance call for owner.
+// Owner ruling 2026-10-09: nerf intentional - keep defeat expectation.
+// The equipment rework cut enhance scaling to mainStat only (affixes
+// keep their rolled value), so the +20 slot enhance below yields less
+// power than when these cells were pinned; the 7 cells that now lose
+// stay 'defeat' by ruling, not by regression.
 const EXPECTED_OUTCOME: Record<string, 'victory' | 'defeat'> = {
   'fire/croc': 'defeat',
   'fire/serpent': 'victory',

@@ -277,3 +277,43 @@ test("observe rejects illegal transitions, missing release evidence, corrupt his
   l2.assignments[0].history = [{ at: "t", from: "X", to: "Y", reason: "z" }];
   assert.throws(() => observeAssignment(l2, "a1", { observedStatus: "started" }), /non-contiguous/);
 });
+
+
+test("routing selects only the published revision, preserving stale and candidate guards", () => {
+  const root = tmpDir();
+  fs.writeFileSync(path.join(root, "dep.txt"), "old");
+  const old = mkLesson({ guidance: mkFacet(root) });
+  fs.writeFileSync(path.join(root, "dep.txt"), "new");
+  const current = mkLesson({ version: 2, guidance: mkFacet(root) });
+  const candidate = mkLesson({ version: 3, guidance: mkFacet(root, { status: "CANDIDATE" }) });
+  const task = { applicabilityKeys: ["src/save/**"] };
+  const activePolicy = { payload: { lessons: [{ id: old.id, version: 2 }] } };
+  const route = (history, policy = activePolicy) => routeLessons(task, history, { productRoot: root, activePolicy: policy });
+  const result = route([old, current, candidate]);
+  assert.equal(result.find(x => x.lessonRef === "L-TEST@1").decision, "NOT_APPLICABLE");
+  assert.match(result.find(x => x.lessonRef === "L-TEST@1").reason, /superseded/);
+  assert.equal(result.find(x => x.lessonRef === "L-TEST@2").decision, "APPLY");
+  assert.equal(result.find(x => x.lessonRef === "L-TEST@3").decision, "NEEDS_DISCOVERY");
+  assert.equal(route([old, current], { payload: { lessons: [{ id: old.id, version: 1 }] } })[0].decision, "STALE");
+  assert.equal(route([old, current], { payload: { lessons: [{ id: old.id, version: 1 }] } })[1].decision, "NEEDS_DISCOVERY");
+  assert.ok(route([old]).some(x => x.decision === "STALE" && /missing/.test(x.reason)));
+  assert.ok(route([old, { ...current, guidance: null }]).some(x => x.decision === "STALE"));
+  assert.ok(route([old, { ...current, guidance: { ...current.guidance, status: "CANDIDATE" } }]).some(x => x.decision === "STALE"));
+  fs.writeFileSync(path.join(root, "dep.txt"), "drift");
+  assert.equal(route([old, current]).find(x => x.lessonRef === "L-TEST@2").decision, "STALE");
+});
+
+
+test("active policy omission cannot apply history; conflicting qualified revisions fail closed", () => {
+  const root = tmpDir();
+  fs.writeFileSync(path.join(root, "dep.txt"), "old");
+  const old = mkLesson({ guidance: mkFacet(root) });
+  fs.writeFileSync(path.join(root, "dep.txt"), "new");
+  const updated = mkLesson({ guidance: mkFacet(root) });
+  const task = { applicabilityKeys: ["src/save/**"] };
+  const activePolicy = { payload: { lessons: [{ id: old.id, version: 1 }] } };
+  assert.equal(routeLessons(task, [updated], { productRoot: root, activePolicy: { payload: { lessons: [] } } })[0].decision, "NEEDS_DISCOVERY");
+  assert.throws(() => routeLessons(task, [old, updated], { productRoot: root, activePolicy }), /conflicting qualified/);
+  const candidate = { ...updated, guidance: { ...updated.guidance, status: "CANDIDATE" } };
+  assert.equal(routeLessons(task, [candidate, updated], { productRoot: root, activePolicy })[0].decision, "APPLY");
+});

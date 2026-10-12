@@ -7,13 +7,11 @@
 // gated by the same quoteProductionUpgrade read, then bumpState.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import ProductionSourceArtCard from '@/components/common/art/ProductionSourceArtCard.vue'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
-import { betaRecipeFamilyOfId, betaSurfaceVisible } from '@/core/betaScope'
+import { betaRecipeFamilyOfId } from '@/core/betaScope'
 import { formatStat } from '@/core/stats/StatLabels'
 import type { ProductionSiteRow } from './productionViewTypes'
 
@@ -21,11 +19,9 @@ const props = defineProps<{ row: ProductionSiteRow }>()
 
 const { t } = useI18n()
 
-const player = usePlayerStore()
-
 const gameManager = useGameManager()
 
-const { stateVersion, bumpState } = useStateVersion()
+const { bumpState } = useStateVersion()
 
 // Kind -> preview art pair (same picks the preview indexed by slot:
 // forest/mine/grotto in catalog order). Unknown kinds keep the forest
@@ -51,10 +47,6 @@ const iconUrl = computed(() => resolveAssetUrl(art.value.icon))
 
 const landscapeUrl = computed(() => resolveAssetUrl(art.value.landscape))
 
-// FINAL POLICY (sec.4C): the manual workforce surface is entirely
-// scope-hidden under beta - the workers stat reads the ONE flag.
-const workerSurfaceVisible = betaSurfaceVisible('manualWorkforce')
-
 const statLines = computed(() => {
   const speed = `×${formatStat('productionSpeedMultiplier', props.row.productionSpeedMultiplier)} ${t('panels.production.speedSuffix')}`
 
@@ -65,10 +57,6 @@ const statLines = computed(() => {
   const lines = [
     `${t('panels.production.level', { level: props.row.level, max: props.row.maxLevel })} · ${speed}${next}`,
   ]
-
-  if (workerSurfaceVisible) {
-    lines.push(t('panels.production.workers', { count: props.row.activeWorkerSlots }))
-  }
 
   return lines
 })
@@ -99,55 +87,12 @@ const statusLabel = computed(() =>
 
 const fill = computed(() => (props.row.isProducing ? props.row.progress * 100 : 0))
 
-// R9 (AR-23): the domain quote owns costs + gate; the card only renders
-// it (same read the panel ran before the port).
-const upgradeQuote = computed(() => {
-  stateVersion.value
-
-  return gameManager.buildingOps.quoteProductionUpgrade(props.row.siteId, player.$state)
-})
-
-const costLines = computed(() => {
-  const cost = upgradeQuote.value.cost
-
-  if (!cost) {
-    return []
-  }
-
-  const woodLabel = gameManager.materialRegistry.has(cost.woodMaterialId)
-    ? gameManager.materialRegistry.get(cost.woodMaterialId).name
-    : cost.woodMaterialId
-
-  const spiritStoneId = cost.spiritStoneId
-
-  const stoneLabel = gameManager.materialRegistry.has(spiritStoneId)
-    ? gameManager.materialRegistry.get(spiritStoneId).name
-    : SPIRIT_STONE_LABEL
-
-  return [
-    { label: woodLabel, owned: gameManager.materialBag.getAmount(cost.woodMaterialId), amount: cost.woodAmount },
-    { label: stoneLabel, owned: gameManager.materialBag.getAmount(spiritStoneId), amount: cost.spiritStone },
-  ].map((entry) => ({
-    text: `${entry.label}: ${entry.owned}/${entry.amount}`,
-    missing: entry.owned < entry.amount,
-  }))
-})
-
-const upgradable = computed(() => upgradeQuote.value.upgradable)
-
-const showUpgrade = computed(() => props.row.level < props.row.maxLevel)
-
 function toggleAuto() {
   gameManager.buildingOps.setProductionAutoRestart(props.row.siteId, !props.row.autoRestart)
 
   bumpState()
 }
 
-function upgrade() {
-  if (gameManager.buildingOps.upgradeProductionSite(props.row.siteId, player.$state)) {
-    bumpState()
-  }
-}
 </script>
 
 <template>
@@ -165,11 +110,8 @@ function upgrade() {
     :status-label="statusLabel"
     :auto-label="t('panels.production.autoRepeat')"
     :auto-checked="row.autoRestart"
-    :cost-lines="costLines"
-    :upgrade-label="t('panels.production.upgrade')"
-    :upgrade-disabled="!upgradable"
-    :show-upgrade="showUpgrade"
+    upgrade-label=""
+    :show-upgrade="false"
     @toggle="toggleAuto"
-    @upgrade="upgrade"
   />
 </template>

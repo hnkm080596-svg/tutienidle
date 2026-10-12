@@ -122,8 +122,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -159,7 +158,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
   // --------------------------------------------------------------------
   // A1 (surface 1) - preserve-then-persist leak: when the widened guard
   // trips, settleProductionOffline re-persists `result.pending` verbatim
-  // into state.workerCycles (ProductionOffline.ts:186-194). A crafted
+  // into state.productionCycles (ProductionOffline.ts:186-194). A crafted
   // NaN-stamped pending entry would be re-saved verbatim - AND the whole
   // early return freezes every honest sibling lane (its due was past).
   // Mechanism-level repro: the shape gate rejects this array upstream
@@ -174,7 +173,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
     }
     const state = makeState(FOREST, {
       autoRestart: true,
-      workerCycles: [honest, crafted],
+      productionCycles: [honest, crafted],
     })
     const deps = createDeps(new Map([[state.siteId, state]]))
 
@@ -184,7 +183,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       900_000,
-      { workerCapacity: 3, offlineSinceMs: 500_000, rng: () => 0.5 },
+      { offlineSinceMs: 500_000, rng: () => 0.5 },
     )
 
     // The honest head was due at 200_000 << settleNow - without the
@@ -193,7 +192,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
     expect(settled).toBe(0)
     // Preserve-then-persist: the crafted record survives verbatim into
     // the re-persisted state (a NaN stamp would be re-saved).
-    const persisted = state.workerCycles ?? []
+    const persisted = state.productionCycles ?? []
     expect(persisted).toHaveLength(2)
     expect(persisted[1]!.cycleId).toBe(crafted.cycleId)
     expect(Number.isNaN(persisted[1]!.completesAtMs)).toBe(true)
@@ -236,7 +235,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
   })
 
   // --------------------------------------------------------------------
-  // A3 (surface 1) - seam-level reachability: every crafted workerCycles
+  // A3 (surface 1) - seam-level reachability: every crafted productionCycles
   // shape that could reach the guard is rejected by
   // validateGameSaveShape before any restore/settle runs. All feeds
   // (LocalCloudSaveService.load/inspectLocalSave, Supabase load/import,
@@ -247,16 +246,16 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
       siteId: FOREST,
       level: 1,
       autoRestart: true,
-      workerCycles: [makeCycle(FOREST, 100_000, 200_000)],
+      productionCycles: [makeCycle(FOREST, 100_000, 200_000)],
     }
 
     const variants: Array<[string, unknown]> = [
-      ['completesAtMs null', { ...siteEntry, workerCycles: [{ ...siteEntry.workerCycles[0], completesAtMs: null }] }],
-      ['completesAtMs string', { ...siteEntry, workerCycles: [{ ...siteEntry.workerCycles[0], completesAtMs: 'x' }] }],
-      ['startedAtMs missing', { ...siteEntry, workerCycles: [{ cycleId: 'c', siteId: FOREST, collectionRealmId: 'mortal', siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 1, completesAtMs: 200_000 }] }],
-      ['reversed span', { ...siteEntry, workerCycles: [{ ...siteEntry.workerCycles[0], startedAtMs: 200_000, completesAtMs: 100_000 }] }],
-      ['span mismatch', { ...siteEntry, workerCycles: [{ ...siteEntry.workerCycles[0], completesAtMs: 250_000 }] }],
-      ['non-object entry', { ...siteEntry, workerCycles: [null] }],
+      ['completesAtMs null', { ...siteEntry, productionCycles: [{ ...siteEntry.productionCycles[0], completesAtMs: null }] }],
+      ['completesAtMs string', { ...siteEntry, productionCycles: [{ ...siteEntry.productionCycles[0], completesAtMs: 'x' }] }],
+      ['startedAtMs missing', { ...siteEntry, productionCycles: [{ cycleId: 'c', siteId: FOREST, collectionRealmId: 'mortal', siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 1, completesAtMs: 200_000 }] }],
+      ['reversed span', { ...siteEntry, productionCycles: [{ ...siteEntry.productionCycles[0], startedAtMs: 200_000, completesAtMs: 100_000 }] }],
+      ['span mismatch', { ...siteEntry, productionCycles: [{ ...siteEntry.productionCycles[0], completesAtMs: 250_000 }] }],
+      ['non-object entry', { ...siteEntry, productionCycles: [null] }],
     ]
 
     for (const [label, site] of variants) {
@@ -514,10 +513,10 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
         new MaterialRegistry(),
         'mortal',
         settleNow,
-        { workerCapacity: 1, offlineSinceMs: since, rng: () => 0.5 },
+        { offlineSinceMs: since, rng: () => 0.5 },
       )
 
-      const heads = state.workerCycles ?? []
+      const heads = state.productionCycles ?? []
       const bound = Math.max(settleNow, fieldNow)
       expect(heads.length, label).toBe(1)
       for (const head of heads) {
@@ -546,11 +545,11 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       1_000_000,
-      { workerCapacity: 1, offlineSinceMs: 990_000, rng: () => 0.5 },
+      { offlineSinceMs: 990_000, rng: () => 0.5 },
     )
 
     expect(settled).toBe(0)
-    const heads = state.workerCycles ?? []
+    const heads = state.productionCycles ?? []
     expect(heads).toHaveLength(1)
     expect(heads[0]!.completesAtMs).toBe(1_090_000) // since + cycleMs
     expect(heads[0]!.completesAtMs).toBeGreaterThan(1_000_000)
@@ -577,10 +576,10 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       Date.now(),
-      { workerCapacity: 1, offlineSinceMs: 400_000, rng: () => 0.5 },
+      { offlineSinceMs: 400_000, rng: () => 0.5 },
     )
 
-    const heads = state.workerCycles ?? []
+    const heads = state.productionCycles ?? []
     expect(heads).toHaveLength(1)
     expect(heads[0]!.completesAtMs).toBe(1_100_000) // Date.now() + cycleMs
     expect(heads[0]!.startedAtMs).toBe(1_000_000)
@@ -589,7 +588,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
   // --------------------------------------------------------------------
   // C4 (surface 3) - saved-lane heads are NEVER seed-rooted: a crafted
   // past-due head in payload stamps pays once at settle (bounded <= 1
-  // cycle per saved lane, workerCycles.length <= 3 under beta) and the
+  // cycle per saved lane, productionCycles.length <= 3 under beta) and the
   // successor keeps the lane's own deadline - the re-stamp does not
   // rescue it. Saved-chain successors settle against nowMs, not
   // Date.now(): under positive skew their pending head carries a
@@ -600,7 +599,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
     const crafted = makeCycle(FOREST, 300_000, 450_000) // due in payload epoch
     const state = makeState(FOREST, {
       autoRestart: true,
-      workerCycles: [crafted],
+      productionCycles: [crafted],
     })
     const deps = createDeps(new Map([[state.siteId, state]]))
 
@@ -610,7 +609,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       800_000,
-      { workerCapacity: 1, offlineSinceMs: 500_000, rng: () => 0.5 },
+      { offlineSinceMs: 500_000, rng: () => 0.5 },
     )
 
     // head due 450k -> completes; successors at 550k,650k,750k due <=
@@ -618,7 +617,7 @@ describe('fixpoint r20 AUT - r19 adjudication batch repros', () => {
     // SAVED head's due -> NOT seeded -> keeps raw stamp 850k (ahead of
     // settleNow, behind Date.now() -> next tick pays it once, bounded).
     expect(settled).toBe(4)
-    const heads = state.workerCycles ?? []
+    const heads = state.productionCycles ?? []
     expect(heads).toHaveLength(1)
     expect(heads[0]!.completesAtMs).toBe(850_000) // raw - unshifted
     expect(heads[0]!.completesAtMs).toBeLessThan(1_000_000)

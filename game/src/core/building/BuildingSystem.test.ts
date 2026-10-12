@@ -37,6 +37,7 @@ describe('BuildingSystem.getCraftModifiers (BUILDing spec má»¥c 15-16)', () =
       timeReductionPercent: 0,
       qualityBonusPercent: 0,
       concurrentJobSlots: 1,
+      alchemyQueueSlots: 0,
       equipmentCostDiscountPercent: 0,
     })
   })
@@ -46,6 +47,7 @@ describe('BuildingSystem.getCraftModifiers (BUILDing spec má»¥c 15-16)', () =
       timeReductionPercent: 0,
       qualityBonusPercent: 0,
       concurrentJobSlots: 1,
+      alchemyQueueSlots: 0,
       equipmentCostDiscountPercent: 0,
     })
   })

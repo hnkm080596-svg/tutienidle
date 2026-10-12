@@ -112,12 +112,11 @@ export interface BagSortStateMap {
 
   pill: BagSortState<PillSortMode>
 
-  // Minh ruling 2026-10-09: the Hoa Luyen card embeds the equipment bag
-  // but sorts independently - the two surfaces must not share state.
+  // The embedded dissolve equipment grid owns its independent sort.
   dissolve: BagSortState<EquipmentSortMode>
 
-  // Minh ruling 2026-10-12: the Phan Giai card embeds the material bag
-  // the same way - independent sort state from the Tru Vat tab.
+  // Phan Giai lists ore/material stacks - material modes apply (no
+  // sort UI calls this today; the key exists because BagTab includes it).
   decompose: BagSortState<MaterialSortMode>
 }
 
@@ -131,6 +130,8 @@ export const useUiStore = defineStore('ui', {
 
     return {
     leftPanelMode: null as LeftPanelMode,
+
+    architectureFocusBuildingId: null as string | null,
 
     characterOverlayOpen: false,
 
@@ -253,6 +254,12 @@ export const useUiStore = defineStore('ui', {
       this.leftPanelMode = mode
     },
 
+    openArchitecture(focusBuildingId: string | null = null) {
+      this.closeHomeOverlays()
+      this.architectureFocusBuildingId = focusBuildingId
+      this.leftPanelMode = 'architecture'
+    },
+
     openStandalonePanel(panel: Exclude<StandalonePanel, null>) {
       // BETA SCOPE LOCK v2 (Phase-6): scope-hidden panels
       // (artifact / tran_phap / companion) fail closed - no caller can
@@ -269,6 +276,7 @@ export const useUiStore = defineStore('ui', {
     /** Dong toan bo chrome/overlay cua Dong Phu khi click nen chinh. */
     closeHomeOverlays() {
       this.leftPanelMode = null
+      this.architectureFocusBuildingId = null
       this.characterOverlayOpen = false
       this.standalonePanel = null
       this.isCommandWheelOpen = false

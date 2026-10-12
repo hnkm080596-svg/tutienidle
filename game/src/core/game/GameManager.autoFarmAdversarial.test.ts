@@ -55,7 +55,8 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
     // full rate (undo ca AUTO_FARM_OFFLINE_EFFICIENCY lan double-pay risk T1-12).
     const anchor = player.autoFarmStage!.lastCheckedMs
     expect(anchor).toBeGreaterThanOrEqual(lastCheckedMs + 9_000)
-    expect(anchor).toBeLessThanOrEqual(Date.now())
+    // Compare the field stamp with the authority its live readers use.
+    expect(anchor).toBeLessThanOrEqual(gameManager.time.now())
   })
 
   it('cycleSeconds NaN → no-op (boundedness)', () => {

@@ -17,6 +17,7 @@ import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { AlchemySystem, alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
 import { PillBag } from '../../core/pill/PillBag'
 import { MaterialBag } from '../../core/material/MaterialBag'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { MaterialRegistry } from '../../core/material/MaterialRegistry'
 import { EQUIPMENT_BAG_SOFT_CAP, EquipmentBag } from '../../core/equipment/EquipmentBag'
 import { dissolveInstances } from '../../core/equipment/EquipmentDissolve'
@@ -140,6 +141,20 @@ function craftedEquipmentEntry(instanceId: string, locked: unknown): Record<stri
   return base
 }
 
+function startedDecomposeSystem(): { system: DecomposeSystem; bag: MaterialBag } {
+  const bag = new MaterialBag()
+  const system = new DecomposeSystem(bag)
+  system.restore(
+    {
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: Number.NaN,
+      started: true,
+    },
+    currentMs,
+  )
+  return { system, bag }
+}
+
 function clockIsolated() {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -151,6 +166,27 @@ function clockIsolated() {
     vi.restoreAllMocks()
   })
 }
+
+// ============================================================================
+// F1 - legacy decompose settings/deadlines cannot resume the retired worker
+// processor or mutate ore during restore.
+// ============================================================================
+describe('r30-AUT F1 - legacy Decompose state remains inert', () => {
+  clockIsolated()
+
+  it('restoring hostile legacy settings and deadline emits only canonical defaults', () => {
+    const { system, bag } = startedDecomposeSystem()
+    const ore = materials.find((material) => material.id.includes('_ore_'))!
+    bag.add(ore, 100_000)
+    const oreAmountBefore = bag.get(ore.id)?.amount
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(bag.get(ore.id)?.amount).toBe(oreAmountBefore)
+  })
+})
 
 // ============================================================================
 // F2 - locked/favorite have no type check: a crafted truthy non-boolean
@@ -380,5 +416,25 @@ describe('r30-AUT held - restoreJobs verbatim arm under bad clock', () => {
     const restored = reader.alchemySystem.getJobs()[0]!
     expect(restored.startedAtMs).toBe(job.startedAtMs)
     expect(restored.completesAtMs).toBe(job.completesAtMs)
+  })
+})
+
+describe('r30-AUT held - DecomposeSystem.restore ignores legacy timer authority', () => {
+  clockIsolated()
+
+  it('NaN restoreNowMs cannot resume a crafted-future deadline', () => {
+    const { system } = startedDecomposeSystem()
+    const craftedFuture = currentMs + 3_600_000
+    system.restore(
+      {
+        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+        nextCycleAt: craftedFuture,
+        started: true,
+      },
+      NaN,
+    )
+
+    expect(system.getSaveState().nextCycleAt).toBe(0)
+    expect(system.getSaveState().started).toBe(false)
   })
 })

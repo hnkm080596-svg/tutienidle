@@ -634,7 +634,7 @@ export class SupabaseCloudSaveService implements CloudSaveService {
               pending.mutationId,
             )
           }
-          return { status: 'empty', revision: 0 }
+          return { status: 'empty', revision: 0, serverNowMs: parseTimestampMs(response.serverTimeUtc) }
         }
 
         case 'CHARACTER_UNINITIALIZED': {
@@ -672,7 +672,7 @@ export class SupabaseCloudSaveService implements CloudSaveService {
             }
           }
 
-          return { status: 'uninitialized', character, revision: 0 }
+          return { status: 'uninitialized', character, revision: 0, serverNowMs: parseTimestampMs(response.serverTimeUtc) }
         }
 
         case 'CHARACTER_DELETED': {
@@ -966,6 +966,7 @@ export class SupabaseCloudSaveService implements CloudSaveService {
         return {
           status: 'ok',
           revision: current,
+          serverNowMs: parseTimestampMs(response.serverTimeUtc),
           storageWarning: warnings.length ? warnings.join(';') : undefined,
         }
       }

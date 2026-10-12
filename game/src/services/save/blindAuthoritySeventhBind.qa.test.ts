@@ -334,30 +334,27 @@ describe('R7-AUTH-REBUILD: forged extra StatModifier fields on realm-sourced cha
   })
 })
 
-describe('R7-LANES-BETA-BOUND: forged autoWorkerCapacity cannot inflate the beta lane ceiling', () => {
-  it('autoWorkerCapacity=999 with 4 in-flight lanes still rejects (effective pool is 3)', () => {
+describe('R7-LANES-BETA-BOUND: legacy capacity metadata cannot control pending production', () => {
+  it('forged capacity metadata cannot admit a fourth carried production cycle', () => {
     const save = validSave()
-    const player = committedPlayer('qi_refining')
-    player.autoWorkerCapacity = 999
-    save.player = player
+    ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity = 999
 
     const cycle = {
       cycleId: 'c1',
-      siteId: 'thanh_van_quang',
-      collectionRealmId: 'qi_refining',
+      siteId: 'thanh_van_lam',
+      collectionRealmId: 'mortal',
       siteLevelAtStart: 1,
       rewardTableVersion: 1,
       rollSeed: 1,
       startedAtMs: 1,
-      completesAtMs: 2,
+      completesAtMs: 100_001,
     }
 
     ;(save as Record<string, unknown>).productionSites = [
       {
-        siteId: 'thanh_van_quang',
+        siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 4,
         workerCycles: [
           { ...cycle, cycleId: 'c1' },
           { ...cycle, cycleId: 'c2' },
@@ -571,3 +568,4 @@ describe('R7-ACCEPT-ROOT: the atomic element commit is replayed at acceptance', 
     expect(isSaveAcceptable(save as never, staticSaveAcceptanceCatalogs())).toBe(false)
   })
 })
+

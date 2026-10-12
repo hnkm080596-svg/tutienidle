@@ -10,6 +10,7 @@ import type { StageLease, StageManager } from '../stage/StageManager'
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { BattleLootSystem, RewardPendingEnemy } from './BattleLootSystem'
 import type { StageWaveSystem } from './StageWaveSystem'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 /**
  * Shared cycleSeconds guard (F2): a persisted perfectClearSeconds entry is
@@ -57,8 +58,21 @@ export class GameManagerAutoFarmOps {
       enemySystem: EnemySystem
       buildPlayerRewardReceiver: (player: PlayerData) => RewardReceiver
       eventBus: EventBus
+      // GP-01 - authorized live-time owner for the farm cycle clock.
+      // Optional for B1: direct constructor fixtures keep wall-clock
+      // behavior; GameManager always injects the shared TimeAuthority.
+      time?: TimeAuthority
     },
   ) {}
+
+  /**
+   * The ONE clock every lastCheckedMs writer/reader shares (r15-COR-E):
+   * the authority when injected (production), wall time otherwise
+   * (direct-construction fixtures).
+   */
+  private nowMs(): number {
+    return this.deps.time?.now() ?? Date.now()
+  }
 
   /**
    * The ONE eligibility contract for an armed farm - shared by
@@ -89,6 +103,33 @@ export class GameManagerAutoFarmOps {
     return this.resolveValidAutoFarmStage(player, stageId) !== null
   }
 
+  // Observational projection: lifecycle ticks alone settle cycles and loot.
+  getAutoFarmView(player: PlayerData): {
+    stageId: string
+    stageName: string
+    cycleSeconds: number
+    progress: number
+    remainingSeconds: number
+    enemyIds: string[]
+  } | null {
+    const marker = player.autoFarmStage
+    if (!marker) return null
+    const stage = this.resolveValidAutoFarmStage(player, marker.stageId)
+    const cycleSeconds = player.perfectClearSeconds[marker.stageId]
+    if (!stage || !isValidCycleSeconds(cycleSeconds) || !Number.isFinite(marker.lastCheckedMs)) return null
+    const cycleMs = cycleSeconds * 1000
+    const elapsed = Math.max(0, this.nowMs() - marker.lastCheckedMs)
+    const remainder = elapsed % cycleMs
+    return {
+      stageId: stage.id,
+      stageName: stage.name,
+      cycleSeconds,
+      progress: remainder / cycleMs,
+      remainingSeconds: (cycleMs - remainder) / 1000,
+      enemyIds: [...new Set(stage.enemyPool.map(entry => entry.enemyId).concat(stage.bossEnemyId ? [stage.bossEnemyId] : []))],
+    }
+  }
+
   /**
    * Enable auto-farm for a stage that reached Hoan My. Shares the SAME
    * single-slot StageManager with manual/repeat/progress (exclusivity
@@ -108,7 +149,7 @@ export class GameManagerAutoFarmOps {
     }
 
     this.farmLease = lease
-    player.autoFarmStage = { stageId, lastCheckedMs: Date.now() }
+    player.autoFarmStage = { stageId, lastCheckedMs: this.nowMs() }
 
     return true
   }
@@ -258,7 +299,8 @@ export class GameManagerAutoFarmOps {
     // windows are unaffected: a running farm's anchor tracks now.
     // r15-COR-E: the anchor must live in the FIELD's own epoch - every
     // other lastCheckedMs writer (start/reconcile/tickAutoFarm) stamps
-    // Date.now(), and the live tick reads it back against Date.now().
+    // nowMs() (the authority when injected), and the live tick reads it
+    // back against the same clock.
     // r13's authority anchor wrote a server-epoch stamp here: on a
     // fast-clock device the gap went negative (settle paid ~0) and the
     // written stamp then made the next tick mint the whole skew at
@@ -266,7 +308,7 @@ export class GameManagerAutoFarmOps {
     // tail in the anchor for the tick to pay. The authorized bound is
     // elapsedOfflineSeconds (server-derived) - measuring the anchor gap
     // against the same clock the field uses keeps the cap binding.
-    const now = Date.now()
+    const now = this.nowMs()
     if (
       !Number.isFinite(autoFarm.lastCheckedMs) ||
       autoFarm.lastCheckedMs < 0 ||
@@ -338,7 +380,7 @@ export class GameManagerAutoFarmOps {
       return
     }
 
-    const now = Date.now()
+    const now = this.nowMs()
 
     // A non-finite/negative persisted lastCheckedMs must recover, not
     // freeze the feature silently: NaN makes every later elapsedMs NaN.

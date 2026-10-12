@@ -61,7 +61,7 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 //       - every fail arm above the tail - 'authority-pause' must stay
 //         latched on the clock behind the terminal surface.
 //   (D) r33-COR-F1/AUT-2 - restoreStates .map -> .flatMap drops
-//       completesAtMs <= startedAtMs. Consumers read workerCycles.length
+//       completesAtMs <= startedAtMs. Consumers read productionCycles.length
 //       / activeWorkerSlots independently; nothing indexes cycles
 //       positionally against assignedWorkers; flatMap preserves survivor
 //       order; hiddenChannelCycles clone unchanged. Out-of-domain stamps
@@ -515,9 +515,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 3,
-          assignedWorkers: 3,
-          workerCycles: [
+          productionCycles: [
             cycleAt({ cycleId: 'cyc_a' }),
             cycleAt({
               cycleId: 'cyc_inv',
@@ -531,7 +529,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
       currentMs,
     )
 
-    const cycles = system.getState(FOREST_SITE_ID)!.workerCycles!
+    const cycles = system.getState(FOREST_SITE_ID)!.productionCycles!
     expect(cycles.map((cycle) => cycle.cycleId)).toEqual(['cyc_a', 'cyc_b'])
   })
 
@@ -544,9 +542,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          assignedWorkers: 1,
-          workerCycles: [nanPair],
+          productionCycles: [nanPair],
         },
       ],
       currentMs,
@@ -554,7 +550,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
 
     // completesAtMs <= NaN is false -> falls past the drop arm, past the
     // shift arm (NaN > restoreNowMs false), parked verbatim.
-    const parked = gameManager.productionSystem.getState(FOREST_SITE_ID)!.workerCycles!
+    const parked = gameManager.productionSystem.getState(FOREST_SITE_ID)!.productionCycles!
     expect(parked).toHaveLength(1)
     expect(Number.isNaN(parked[0]!.startedAtMs)).toBe(true)
 
@@ -578,23 +574,21 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
     // JSON.stringify writes NaN as null -> the next save write refuses
     // on the startedAtMs type pin (documented deny residual,
     // unreachable for honest saves: buildProductionCycle only mints
-    // finite stamps). autoWorkerCapacity=3 keeps the lane ceiling out
-    // of the assertion so the TYPE pin is what must fire.
+    // finite stamps). The cycle type pin is the only expected rejection.
     const player = createDefaultPlayer()
-    player.autoWorkerCapacity = 3
     const save = buildGameSave(player, gameManager)
     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save)))
     expect(shape.ok).toBe(false)
     expect(
       shape.issues.some(
         (issue) =>
-          issue.path.includes('workerCycles[0]') &&
+          issue.path.includes('productionCycles[0]') &&
           issue.message.includes('sai shape'),
       ),
     ).toBe(true)
   })
 
-  it('D3 the drop touches only workerCycles entries - hiddenChannelCycles and worker counters pass through verbatim', () => {
+  it('D3 the drop touches only productionCycles entries - hiddenChannelCycles and worker counters pass through verbatim', () => {
     const system = productionSystem()
     system.restoreStates(
       [
@@ -602,9 +596,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
           siteId: FOREST_SITE_ID,
           level: 2,
           autoRestart: true,
-          activeWorkerSlots: 2,
-          assignedWorkers: 2,
-          workerCycles: [
+          productionCycles: [
             cycleAt({
               cycleId: 'cyc_inv',
               startedAtMs: currentMs,
@@ -618,11 +610,10 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
     )
 
     const state = system.getState(FOREST_SITE_ID)!
-    expect(state.workerCycles).toHaveLength(0)
+    expect(state.productionCycles).toHaveLength(0)
     expect(state.hiddenChannelCycles).toEqual({ chan_x: 3 })
-    expect(state.assignedWorkers).toBe(2)
-    // Restore-verbatim: tickWorkers reallocates this on the next tick.
-    expect(state.activeWorkerSlots).toBe(2)
+    expect(state).not.toHaveProperty('assignedWorkers')
+    expect(state).not.toHaveProperty('activeWorkerSlots')
   })
 
   it('D4 boundary map: {Inf,Inf} drops (Inf<=Inf is true); {-Inf, t} parks verbatim (ordered but out-of-domain)', () => {
@@ -633,8 +624,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 0,
-          workerCycles: [
+          productionCycles: [
             cycleAt({
               cycleId: 'cyc_inf',
               startedAtMs: Infinity,
@@ -651,7 +641,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
       currentMs,
     )
 
-    const cycles = system.getState(FOREST_SITE_ID)!.workerCycles!
+    const cycles = system.getState(FOREST_SITE_ID)!.productionCycles!
     expect(cycles.map((cycle) => cycle.cycleId)).toEqual(['cyc_neginf'])
     expect(cycles[0]!.startedAtMs).toBe(-Infinity)
   })
@@ -664,9 +654,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          assignedWorkers: 1,
-          workerCycles: [
+          productionCycles: [
             cycleAt({
               cycleId: 'cyc_inv',
               startedAtMs: currentMs,
@@ -677,22 +665,20 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
       ],
       currentMs,
     )
-    expect(system.getState(FOREST_SITE_ID)!.workerCycles).toHaveLength(0)
+    expect(system.getState(FOREST_SITE_ID)!.productionCycles).toHaveLength(0)
 
     const authoredSpanMs = computeCycleSeconds(CYCLE_BASE_SECONDS_BY_REALM[REALM]!, 1) * 1000
-    system.tickWorkers(
+    system.tick(
       currentMs,
       new MaterialBag(),
       new MaterialRegistry(),
       REALM,
-      1,
-      new Map([[FOREST_SITE_ID, 1]]),
       () => 0.5,
     )
 
     const state = system.getState(FOREST_SITE_ID)!
-    expect(state.workerCycles).toHaveLength(1)
-    const seeded = state.workerCycles![0]!
+    expect(state.productionCycles).toHaveLength(1)
+    const seeded = state.productionCycles![0]!
     expect(seeded.startedAtMs).toBe(currentMs)
     expect(seeded.completesAtMs).toBe(currentMs + authoredSpanMs)
     // The seeded lane itself is ordering-clean - the write it will sit
@@ -712,9 +698,7 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          assignedWorkers: 1,
-          workerCycles: [
+          productionCycles: [
             cycleAt({
               cycleId: 'cyc_shift',
               startedAtMs: currentMs + 60_000,
@@ -726,17 +710,15 @@ describe('auditR34 INT probe - flatMap drop parity consumers (D)', () => {
       currentMs,
     )
 
-    const cycle = gameManager.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const cycle = gameManager.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(currentMs)
     expect(cycle.completesAtMs).toBe(currentMs + authoredSpanMs)
 
-    // autoWorkerCapacity=3 - the authored lane ceiling admits the lane.
     const player = createDefaultPlayer()
-    player.autoWorkerCapacity = 3
     const save = buildGameSave(player, gameManager)
     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save)))
     expect(
-      shape.issues.some((issue) => issue.path.includes('workerCycles')),
+      shape.issues.some((issue) => issue.path.includes('productionCycles')),
     ).toBe(false)
   })
 })
@@ -769,9 +751,7 @@ describe('auditR34 INT probe - mechanism deny vs bypass feeds (P)', () => {
       siteId: FOREST_SITE_ID,
       level: 1,
       autoRestart: true,
-      activeWorkerSlots: 1,
-      assignedWorkers: 1,
-      workerCycles: [inverted],
+      productionCycles: [inverted],
     }
     const states = new Map([[state.siteId, state]])
     const deps = {
@@ -782,9 +762,7 @@ describe('auditR34 INT probe - mechanism deny vs bypass feeds (P)', () => {
     }
 
     settleProductionOffline(deps, new MaterialBag(), new MaterialRegistry(), REALM, currentMs, {
-      workerCapacity: 1,
       offlineSinceMs: currentMs - 5_000,
-      workerAssignments: new Map([[FOREST_SITE_ID, 1]]),
       rng: () => 0.5,
     })
 
@@ -792,6 +770,7 @@ describe('auditR34 INT probe - mechanism deny vs bypass feeds (P)', () => {
     // restoreStates on this feed): pending.some deny -> no completions,
     // no grants, pending preserved verbatim (deny doctrine).
     expect(deps.grantCycleRewards).not.toHaveBeenCalled()
-    expect(state.workerCycles).toEqual([inverted])
+    expect(state.productionCycles).toEqual([inverted])
   })
 })
+

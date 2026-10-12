@@ -4,6 +4,7 @@ import { affixes } from '../../data/equipment/affixes'
 import { equipment } from '../../data/equipment/equipment'
 import { materials } from '../../data/materials/materials'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
 import { LUYEN_KHI_TINH_HOA_ID } from '../../core/equipment/TinhHoaMaterial'
 import { createDefaultPlayer } from '../../core/player/Player'
@@ -13,7 +14,9 @@ import { primeMortalCreationPick } from './GameSave.fixture'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
 
 function createRegisteredManager(): GameManager {
-  const manager = new GameManager()
+  const manager = new GameManager({
+    time: new TimeAuthority({ wallNow: () => Date.now(), monotonicNow: () => 0 }),
+  })
 
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)

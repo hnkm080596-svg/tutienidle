@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer, type PlayerData } from '../../core/player/Player'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import type { GameSave } from './saveTypes'
 import { buildGameSave } from './SaveSystem'
 import { validateGameSaveShape } from './saveShapeValidation'
@@ -18,6 +19,8 @@ import { buildings } from '../../data/building/buildings'
 import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
+import { MaterialBag } from '../../core/material/MaterialBag'
+import { DecomposeSystem } from '../../core/production/DecomposeSystem'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
@@ -92,8 +95,8 @@ const SITE_ID = THANH_VAN_PRODUCTION_SITES[0]!.siteId
 const MORTAL_BASE_SECONDS = CYCLE_BASE_SECONDS_BY_REALM.mortal!
 const MORTAL_CYCLE_MS = computeCycleSeconds(MORTAL_BASE_SECONDS, 1) * 1000
 
-function registeredManager(): GameManager {
-  const manager = new GameManager()
+function registeredManager(time?: TimeAuthority): GameManager {
+  const manager = new GameManager(time ? { time } : undefined)
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
@@ -123,8 +126,7 @@ function productionSiteWire(save: GameSave, cycles: ProductionCycle[]): GameSave
       siteId: SITE_ID,
       level: 1,
       autoRestart: true,
-      activeWorkerSlots: 1,
-      workerCycles: cycles,
+      productionCycles: cycles,
     },
   ] as never
   return save
@@ -201,6 +203,7 @@ beforeEach(() => {
   setActivePinia(createPinia())
   currentMs = 1_725_160_000_000
   vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+  vi.spyOn(performance, 'now').mockReturnValue(0)
 })
 
 afterEach(() => {
@@ -224,8 +227,7 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [inverted, healthy],
+          productionCycles: [inverted, healthy],
         },
       ] as never,
       currentMs,
@@ -233,20 +235,20 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
 
     // r33 drop arm: the impossible-authored pair never reaches live
     // state - only the honest sibling survives.
-    const parked = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const parked = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(parked).toHaveLength(1)
     expect(parked[0]!.cycleId).toBe('cyc_healthy')
 
     // tickWorkers -> the site advances freely: the healthy past-due lane
     // settles and is discharged (refill lands on the next tick).
-    manager.productionSystem.tickWorkers(
+    manager.productionSystem.tick(
       currentMs + 1_000,
       manager.materialBag,
       manager.materialRegistry,
       'mortal',
-      4,
+      () => 0.4,
     )
-    const afterTick = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const afterTick = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(afterTick.some((c) => c.cycleId === 'cyc_healthy')).toBe(false)
   })
 
@@ -259,13 +261,12 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [inverted],
+          productionCycles: [inverted],
         },
       ] as never,
       currentMs,
     )
-    const persisted = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const persisted = manager.productionSystem.getState(SITE_ID)!.productionCycles!
 
     // The impossible-authored pair is gone from live state, so nothing
     // ordering-invalid can reach the outgoing-shape gate - the save
@@ -325,13 +326,12 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [zeroSpanCycle],
+          productionCycles: [zeroSpanCycle],
         },
       ] as never,
       currentMs,
     )
-    expect(manager2.productionSystem.getState(SITE_ID)!.workerCycles!).toHaveLength(0)
+    expect(manager2.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
   })
 
   it('control: an in-domain post-dated ordered pair still shifts (park is inverted-only)', () => {
@@ -343,13 +343,12 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [shifted],
+          productionCycles: [shifted],
         },
       ] as never,
       currentMs,
     )
-    const cycle = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const cycle = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(currentMs)
     expect(cycle.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
   })
@@ -499,29 +498,29 @@ describe('r33 COR - B: mintedSpanMs bounds every minted stamp (verified)', () =>
 
 describe('r33 COR - C: seeded-head re-stamp boundary (verified)', () => {
   function settleWithClock(deviceNow: number) {
-    const manager = registeredManager()
     const settleNow = 1_000_000_000_000 // authorized window end (past epoch)
+    const time = new TimeAuthority({ wallNow: () => settleNow, monotonicNow: () => 0 })
+    const manager = registeredManager(time)
     manager.productionSystem.restoreStates(
       [
         {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [],
+          productionCycles: [],
         },
       ] as never,
       settleNow,
     )
-    vi.spyOn(Date, 'now').mockImplementation(() => deviceNow)
+    time.rebase(deviceNow)
     manager.productionSystem.settleOffline(
       manager.materialBag,
       manager.materialRegistry,
       'mortal',
       settleNow,
-      { workerCapacity: 1, offlineSinceMs: settleNow - 120_000, rng: () => 0.5 },
+      { offlineSinceMs: settleNow - 120_000, rng: () => 0.5 },
     )
-    return manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    return manager.productionSystem.getState(SITE_ID)!.productionCycles!
   }
 
   it('completes + shift = 2^52 - 1: the seeded head shifts cleanly in-domain', () => {
@@ -561,6 +560,62 @@ describe('r33 COR - C: seeded-head re-stamp boundary (verified)', () => {
       expect(lane.completesAtMs).toBeLessThan(BOUND)
       expect(lane.completesAtMs).toBeGreaterThan(lane.startedAtMs)
     }
+  })
+})
+
+// ----------------------------------------------------------------------------
+// (D) cap clamps - claim VERIFIED at the bound; NaN arms noted.
+// ----------------------------------------------------------------------------
+
+describe('r33 COR - D: legacy Decompose timing state is inert', () => {
+  it('ignores legacy deadlines at, below, and beyond the persisted clock bound', () => {
+    for (const deadline of [BOUND - 1, BOUND + 1, Number.NaN]) {
+      const system = new DecomposeSystem(new MaterialBag())
+      system.restore(
+        { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 4 }, nextCycleAt: deadline, started: true },
+        BOUND - 1,
+      )
+      expect(system.getSaveState().nextCycleAt).toBe(0)
+      expect(system.getSaveState().started).toBe(false)
+    }
+  })
+
+  it('validator continues rejecting malformed legacy deadline fields', () => {
+    const save = validWireSave()
+    save.decompose = {
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: BOUND + 1,
+      started: true,
+    } as never
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(result.issues.some((issue) => issue.path.endsWith('decompose.nextCycleAt'))).toBe(true)
+  })
+
+  it('TribulationDirector.restoreRuntime clamps cooldownUntil <= 2^52 - 1 at the bound', () => {
+    const manager = registeredManager()
+    manager.tribulationDirector.restoreRuntime(
+      { cooldownUntil: BOUND - 1 },
+      BOUND - 1,
+    )
+    const slice = manager.tribulationDirector.serializeRuntime()
+    // cap = min(BOUND-1 + 300_000, 2^52-1) = 2^52-1 -> merged 2^52-1.
+    expect(slice.cooldownUntil).toBe(BOUND - 1)
+    expect(slice.cooldownUntil!).toBeLessThan(BOUND)
+  })
+
+  it('Nit COR-F4: a NaN cooldownUntil slice parks in-memory but serializeRuntime drops it (> 0 gate)', () => {
+    const manager = registeredManager()
+    manager.tribulationDirector.restoreRuntime(
+      { cooldownUntil: Number.NaN },
+      currentMs,
+    )
+    // Never persisted: slice.cooldownUntil is omitted when !(x > 0) -
+    // no write-gate wedge. The live consequence is getCooldownSeconds
+    // returning NaN - the crafted NaN opens the retry gate.
+    const slice = manager.tribulationDirector.serializeRuntime()
+    expect('cooldownUntil' in slice).toBe(false)
+    expect(Number.isNaN(manager.tribulationDirector.getCooldownSeconds(currentMs))).toBe(true)
   })
 })
 
@@ -883,13 +938,12 @@ describe('r33 COR - G: boundary rows', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(BOUND - 2, BOUND - 1)],
+          productionCycles: [workerCycle(BOUND - 2, BOUND - 1)],
         },
       ] as never,
       currentMs,
     )
-    const cycle = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const cycle = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(currentMs)
     expect(cycle.completesAtMs).toBe(currentMs + 1)
   })
@@ -903,3 +957,4 @@ describe('r33 COR - G: boundary rows', () => {
     expect(result.pending[1]!.completesAtMs).toBe(60_000)
   })
 })
+

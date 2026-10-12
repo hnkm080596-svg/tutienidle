@@ -20,6 +20,7 @@ export type LeftPanelMode =
   | 'character'
   | 'inventory'
   | 'exploration'
+  | 'architecture'
   | 'settings'
   | 'equipment_hall'
   | 'pill_room'

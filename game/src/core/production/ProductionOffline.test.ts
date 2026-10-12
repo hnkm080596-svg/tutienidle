@@ -3,13 +3,12 @@
 // Scope: edges the system-level suites do NOT isolate.
 // ProductionSystem.test.ts covers the happy sequential path and the
 // backlog forfeit through ProductionSystem.settleOffline;
-// ProductionSystem.offlineParity.test.ts covers worker-lane parity with
-// tickWorkers. This file drives the exported function with a stub
+// ProductionSystem.offlineParity.test.ts covers cycle-advance parity with
+// the online tick. This file drives the exported function with a stub
 // ProductionOfflineDeps harness to pin:
-//   - worker phase: capacity <= 0 / non-autoRestart freezes, fractional
-//     capacity, missing offlineSinceMs seeding rule, cycleMs-0 sites,
-//     the FULL-cap budget (no manual consumer ahead), and the shared
-//     budget ordering across sites in states-map order.
+//   - cycle phase: disabled sites freeze, the fixed one-cycle allowance,
+//     missing offlineSinceMs seeding rule, cycleMs-0 sites,
+//     the full independent cap for every site and map-order invariance.
 //   - Mission D (spec D3): the manual activeCycle phase is deleted;
 //     this file drives the worker phase only.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -65,8 +64,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -77,7 +75,7 @@ interface Harness {
   grants: ProductionCycle[]
 }
 
-/** Stub deps mirroring ProductionSystem semantics (worker lanes only). */
+/** Stub deps mirroring ProductionSystem semantics. */
 function createHarness(states: Map<string, ProductionSiteState>): Harness {
   const siteDefinitions = new Map<string, ProductionSiteDefinition>(
     THANH_VAN_PRODUCTION_SITES.map((site) => [site.siteId, site]),
@@ -106,7 +104,7 @@ function settle(
   return settleProductionOffline(deps, new MaterialBag(), new MaterialRegistry(), REALM, nowMs, options)
 }
 
-describe('settleProductionOffline — worker settle phase', () => {
+describe('settleProductionOffline — site cycle settle phase', () => {
   beforeEach(() => {
     // r16-INT-03: spawned lanes re-stamp into the field epoch
     // (+max(0, Date.now()-settleNowMs)). Pin the device clock at the
@@ -122,19 +120,18 @@ describe('settleProductionOffline — worker settle phase', () => {
   // D1 (INV-D-03): a saved in-flight lane is retained work - it keeps
   // its own deadline and settles once under the cap budget even when
   // the pool is zero. Slots still zero out; no successor spawns.
-  it('capacity <= 0 still settles a due saved lane once and zeroes activeWorkerSlots', () => {
+  it('settles a due saved cycle once and keeps the site clock independent', () => {
     const saved = makeCycle(LAM, T0, T0 + CYCLE_MS)
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 3, workerCycles: [saved] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [saved] })],
     ])
     const { deps, grants } = createHarness(states)
 
     expect(
-      settle(deps, T0 + 150_000, { workerCapacity: -3, offlineSinceMs: T0 }),
+      settle(deps, T0 + 150_000, { offlineSinceMs: T0 }),
     ).toBe(1)
     expect(grants).toEqual([saved])
-    expect(states.get(LAM)!.workerCycles).toEqual([])
-    expect(states.get(LAM)!.activeWorkerSlots).toBe(0)
+    expect(states.get(LAM)!.productionCycles).toHaveLength(1)
   })
 
   // D1 (INV-D-03): leaving the auto set is an allocation drop to zero -
@@ -142,19 +139,18 @@ describe('settleProductionOffline — worker settle phase', () => {
   it('settles a saved worker lane on a non-autoRestart site once, without respawning', () => {
     const saved = makeCycle(LAM, T0, T0 + CYCLE_MS)
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: false, activeWorkerSlots: 2, workerCycles: [saved] })],
+      [LAM, makeState(LAM, { autoRestart: false, productionCycles: [saved] })],
     ])
     const { deps, grants } = createHarness(states)
 
     expect(
-      settle(deps, T0 + 150_000, { workerCapacity: 4, offlineSinceMs: T0 }),
+      settle(deps, T0 + 150_000, { offlineSinceMs: T0 }),
     ).toBe(1)
     expect(grants).toEqual([saved])
-    expect(states.get(LAM)!.workerCycles).toEqual([])
-    expect(states.get(LAM)!.activeWorkerSlots).toBe(0)
+    expect(states.get(LAM)!.productionCycles).toEqual([])
   })
 
-  it('treats fractional workerCapacity as its floor (1.9 -> a single lane chain)', () => {
+  it('runs one site cycle chain through the offline budget', () => {
     const states = new Map<string, ProductionSiteState>([
       [LAM, makeState(LAM, { autoRestart: true })],
     ])
@@ -162,128 +158,110 @@ describe('settleProductionOffline — worker settle phase', () => {
 
     const now = T0 + 250_000
     const settled = settle(deps, now, {
-      workerCapacity: 1.9,
       offlineSinceMs: T0,
-      workerAssignments: new Map([[LAM, 2]]),
     })
 
-    // Exactly one lane ran: completions at +100s and +200s only.
+    // One cycle chain completes at +100s and +200s only.
     expect(settled).toBe(2)
-    expect(states.get(LAM)!.activeWorkerSlots).toBe(1)
-    expect(states.get(LAM)!.workerCycles).toHaveLength(1)
-    expect(states.get(LAM)!.workerCycles![0]!.completesAtMs).toBe(T0 + 300_000)
+    expect(states.get(LAM)!.productionCycles).toHaveLength(1)
+    expect(states.get(LAM)!.productionCycles![0]!.completesAtMs).toBe(T0 + 300_000)
   })
 
   it('never seeds empty lanes without offlineSinceMs — only saved lanes keep chaining', () => {
     const saved = makeCycle(LAM, T0, T0 + CYCLE_MS)
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, workerCycles: [saved] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [saved] })],
     ])
     const { deps, grants } = createHarness(states)
 
     const now = T0 + 250_000
     const settled = settle(deps, now, {
-      workerCapacity: 2,
-      workerAssignments: new Map([[LAM, 2]]),
-      // offlineSinceMs absent: the second (empty) lane has no window start.
+      // Without an authorized window start, the idle site does not seed.
     })
 
-    // Saved lane completes at +100s and +200s; lane B never spawns.
+    // Saved work completes at +100s and +200s; no successor is seeded.
     expect(settled).toBe(2)
     expect(grants).toHaveLength(2)
-    expect(states.get(LAM)!.workerCycles).toHaveLength(1)
-    expect(states.get(LAM)!.workerCycles![0]!.completesAtMs).toBe(T0 + 300_000)
+    expect(states.get(LAM)!.productionCycles).toHaveLength(1)
+    expect(states.get(LAM)!.productionCycles![0]!.completesAtMs).toBe(T0 + 300_000)
   })
 
   it('drains a saved due lane once on sites with no definition (cycleMs 0 cannot spawn chains)', () => {
     const saved = makeCycle('ghost_site', T0, T0 + CYCLE_MS)
     const states = new Map<string, ProductionSiteState>([
-      ['ghost_site', makeState('ghost_site', { autoRestart: true, workerCycles: [saved] })],
+      ['ghost_site', makeState('ghost_site', { autoRestart: true, productionCycles: [saved] })],
     ])
     const { deps, grants } = createHarness(states)
 
     const settled = settle(deps, T0 + 250_000, {
-      workerCapacity: 1,
       offlineSinceMs: T0,
-      workerAssignments: new Map([['ghost_site', 1]]),
     })
 
     expect(settled).toBe(1)
     expect(grants).toEqual([saved])
-    expect(states.get('ghost_site')!.workerCycles).toEqual([])
+    expect(states.get('ghost_site')!.productionCycles).toEqual([])
   })
 
   it('worker phase now receives the FULL cap budget (no manual consumer ahead of it)', () => {
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, workerCycles: [] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [] })],
     ])
     const { deps, grants } = createHarness(states)
 
     // Window = exactly the cap: floor(CAP_MS / CYCLE_MS) completions all
     // paid - previously a manual cycle could consume budget first.
     const settled = settle(deps, T0 + CAP_MS, {
-      workerCapacity: 1,
       offlineSinceMs: T0,
-      workerAssignments: new Map([[LAM, 1]]),
     })
 
     expect(settled).toBe(Math.floor(CAP_MS / CYCLE_MS))
     expect(grants).toHaveLength(settled)
   })
 
-  it('feeds the remaining worker budget to sites in states order — an earlier site can starve later ones', () => {
-    // r31-NEG-MINT: persisted stamps live in [0, 2^52) - the CAP_MS
-    // span that starves the later site must sit at the domain edge to
-    // stay admitted (a negative start now denies verbatim).
+  it('applies the full cap independently to each site in either map order', () => {
+    // Valid persisted timestamps also exercise the upper domain boundary.
     const BOUND = 2 ** 52
     const now = BOUND - 150_000
-    const options: ProductionOfflineOptions = {
-      workerCapacity: 2,
-      offlineSinceMs: T0,
-      workerAssignments: new Map([
-        [LAM, 1],
-        [QUANG, 1],
-      ]),
-    }
+    const options: ProductionOfflineOptions = { offlineSinceMs: T0 }
 
-    // LAM first: its saved lane eats the whole cap; QUANG's lane forfeits.
+    // One site consuming its full allowance cannot consume its sibling allowance.
     const expensive = makeCycle(LAM, BOUND - 200_000 - CAP_MS, BOUND - 200_000) // duration CAP_MS
     const cheap = makeCycle(QUANG, BOUND - 250_000, BOUND - 150_000)
     const lamFirst = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, workerCycles: [expensive] })],
-      [QUANG, makeState(QUANG, { autoRestart: true, workerCycles: [cheap] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [expensive] })],
+      [QUANG, makeState(QUANG, { autoRestart: true, productionCycles: [cheap] })],
     ])
     const harnessA = createHarness(lamFirst)
 
-    expect(settle(harnessA.deps, now, options)).toBe(1)
-    expect(harnessA.grants).toEqual([expensive])
-    // QUANG's saved lane was dropped unpaid; only a live tail remains.
-    expect(lamFirst.get(QUANG)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+    expect(settle(harnessA.deps, now, options)).toBe(2)
+    expect(harnessA.grants).toEqual([expensive, cheap])
+    // Both sites retain only their future successor after settlement.
+    expect(lamFirst.get(QUANG)!.productionCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
       BOUND - 50_000,
     ])
 
-    // QUANG first: the cheap lane fits; the expensive lane no longer does.
+    // Reversing map order preserves the same entitlement for both sites.
     const quangFirst = new Map<string, ProductionSiteState>([
       [
         QUANG,
         makeState(QUANG, {
           autoRestart: true,
-          workerCycles: [makeCycle(QUANG, BOUND - 250_000, BOUND - 150_000)],
+          productionCycles: [makeCycle(QUANG, BOUND - 250_000, BOUND - 150_000)],
         }),
       ],
       [
         LAM,
         makeState(LAM, {
           autoRestart: true,
-          workerCycles: [makeCycle(LAM, BOUND - 200_000 - CAP_MS, BOUND - 200_000)],
+          productionCycles: [makeCycle(LAM, BOUND - 200_000 - CAP_MS, BOUND - 200_000)],
         }),
       ],
     ])
     const harnessB = createHarness(quangFirst)
 
-    expect(settle(harnessB.deps, now, options)).toBe(1)
-    expect(harnessB.grants).toHaveLength(1)
-    expect(harnessB.grants[0]!.siteId).toBe(QUANG)
+    expect(settle(harnessB.deps, now, options)).toBe(2)
+    expect(harnessB.grants).toHaveLength(2)
+    expect(harnessB.grants.map(cycle => cycle.siteId)).toEqual([QUANG, LAM])
   })
 })
 
@@ -301,12 +279,11 @@ describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17
     vi.spyOn(Date, 'now').mockReturnValue(T0 + 500_000)
     const saved = makeCycle(LAM, T0, T0 + 100_000)
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [saved] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [saved] })],
     ])
     const { deps, grants } = createHarness(states)
 
     const settled = settle(deps, T0 + 300_000, {
-      workerCapacity: 1,
       offlineSinceMs: T0 + 100_000,
     })
 
@@ -314,10 +291,10 @@ describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17
     // successor keeps its client-epoch deadline T0+400k.
     expect(settled).toBe(3)
     expect(grants).toHaveLength(3)
-    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+    expect(states.get(LAM)!.productionCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
       T0 + 400_000,
     ])
-    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.startedAtMs)).toEqual([
+    expect(states.get(LAM)!.productionCycles!.map((cycle) => cycle.startedAtMs)).toEqual([
       T0 + 300_000,
     ])
   })
@@ -331,21 +308,19 @@ describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17
     // T0+500k while the settle window ended at T0+300k.
     vi.spyOn(Date, 'now').mockReturnValue(T0 + 500_000)
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 2, workerCycles: [] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [] })],
     ])
     const { deps } = createHarness(states)
 
     const settled = settle(deps, T0 + 300_000, {
-      workerCapacity: 2,
       offlineSinceMs: T0,
     })
 
     // Two lanes seeded at T0 complete at 100k/200k/300k each; pending
     // heads owe (T0+400k - T0+300k) = 100k of remaining work at settle
     // -> field-epoch deadline T0+500k + 100k = T0+600k.
-    expect(settled).toBe(6)
-    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
-      T0 + 600_000,
+    expect(settled).toBe(3)
+    expect(states.get(LAM)!.productionCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
       T0 + 600_000,
     ])
   })
@@ -355,19 +330,18 @@ describe('settleProductionOffline — spawned-lane epoch shift (r16-INT-03 / r17
   it('still re-stamps server-seeded pending lanes into the field epoch', () => {
     vi.spyOn(Date, 'now').mockReturnValue(T0 + 500_000)
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [] })],
     ])
     const { deps } = createHarness(states)
 
     const settled = settle(deps, T0 + 300_000, {
-      workerCapacity: 1,
       offlineSinceMs: T0 + 100_000,
     })
 
     // Seed at T0+100k (server): dues 200k/300k complete, pending
     // T0+400k shifted +200k -> T0+600k in the field epoch.
     expect(settled).toBe(2)
-    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+    expect(states.get(LAM)!.productionCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
       T0 + 600_000,
     ])
   })
@@ -387,7 +361,7 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
     // deterministic (it owes 1.1M of remaining work past the settle).
     vi.spyOn(Date, 'now').mockReturnValue(T0 + 50_000_000)
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [] })],
     ])
     const { deps, grants } = createHarness(states)
 
@@ -396,7 +370,6 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
     // of cycle time -> 360 completions, the rest forfeit in O(1).
     const now = T0 + 40_000_000
     const settled = settle(deps, now, {
-      workerCapacity: 1,
       offlineSinceMs: 0,
     })
 
@@ -404,10 +377,10 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
     expect(grants).toHaveLength(360)
     // The pending head is the first due past nowMs; seed-rooted, so it
     // re-stamps to the field epoch: Date.now + (41.1M - 40M) = 51.1M.
-    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+    expect(states.get(LAM)!.productionCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
       51_100_000,
     ])
-    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.startedAtMs)).toEqual([
+    expect(states.get(LAM)!.productionCycles!.map((cycle) => cycle.startedAtMs)).toEqual([
       51_000_000,
     ])
   })
@@ -419,13 +392,12 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
     vi.spyOn(Date, 'now').mockReturnValue(T0 + 50_000_000)
     const saved = makeCycle(LAM, 0, 100_000)
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { autoRestart: true, activeWorkerSlots: 1, workerCycles: [saved] })],
+      [LAM, makeState(LAM, { autoRestart: true, productionCycles: [saved] })],
     ])
     const { deps } = createHarness(states)
 
     const now = T0 + 40_000_000
     const settled = settle(deps, now, {
-      workerCapacity: 1,
       offlineSinceMs: 0,
     })
 
@@ -435,7 +407,7 @@ describe('settleProductionOffline — settle-loop depth bound (r17-AUT-1)', () =
     // Saved-rooted chain: the head is the lane's own deadline and
     // keeps its stamp (r18-COR-4 residual - an ancient saved-chain
     // head pays ~1 cycle early at the next tick, bounded one-time).
-    expect(states.get(LAM)!.workerCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
+    expect(states.get(LAM)!.productionCycles!.map((cycle) => cycle.completesAtMs)).toEqual([
       41_100_000,
     ])
   })

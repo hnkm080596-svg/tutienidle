@@ -135,7 +135,7 @@ describe('INT-04 — stale/crafted lastCheckedMs bypasses OFFLINE_EFFICIENCY', (
     // overwritten to a stale/crafted value - save validation only
     // requires a non-negative number (no bound vs lastSavedAt/now).
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, 'r10_evidence_stage')).toBe(true)
-    player.autoFarmStage!.lastCheckedMs = Date.now() - 24 * 60 * 60 * 1000
+    player.autoFarmStage!.lastCheckedMs = gameManager.time.now() - 24 * 60 * 60 * 1000
 
     const mintedBefore = player.idleSkillInsightDaily?.minted ?? 0
     gameManager.turnBattleOps.autoFarmOps.tickAutoFarm(player)

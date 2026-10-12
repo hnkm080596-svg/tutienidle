@@ -321,11 +321,11 @@ function resetPath() {
   // Does the 3-channel pick itself: precursors + mortalBasicSkillId +
   // each learned skill's core node.
   bootstrapEarlyGamePlayer(gameManager, player.$state)
-  // In-flight worker cycles carry collectionRealmId pinned at the realm
+  // In-flight production cycles carry collectionRealmId pinned at the realm
   // they started under - kept cycles would mint realm claims a mortal
   // cannot produce. Sites stay; only the pinned lanes drop.
   gameManager.productionSystem.restoreStates(
-    gameManager.productionSystem.getAllStates().map((s) => ({ ...s, workerCycles: [] })),
+    gameManager.productionSystem.getAllStates().map((s) => ({ ...s, productionCycles: [] })),
   )
   clampRealmCoherence()
   lastResult.value = 'ok'

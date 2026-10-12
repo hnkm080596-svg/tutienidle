@@ -202,7 +202,7 @@ export class TribulationDirector {
   private readonly presentationSession: PresentationSession
   private presentationMode: PresentationMode = 'headless'
 
-  constructor(private readonly deps: { eventBus: EventBus; sessionAllocator?: { allocate(): number }; rng?: () => number }) {
+  constructor(private readonly deps: { eventBus: EventBus; sessionAllocator?: { allocate(): number }; rng?: () => number; now?: () => number }) {
     this.vitals = new EntityVitalsSystem(deps.eventBus)
     this.presentationSession = new PresentationSession(deps.sessionAllocator)
   }
@@ -667,7 +667,7 @@ export class TribulationDirector {
     }
 
     if (outcome === 'defeat') {
-      this.cooldownUntil = Date.now() + TRIBULATION_COOLDOWN_SECONDS * 1000
+      this.cooldownUntil = (this.deps.now?.() ?? Date.now()) + TRIBULATION_COOLDOWN_SECONDS * 1000
     }
 
     this.deps.eventBus.emit('tribulation_outcome', { state: outcome })
@@ -799,7 +799,7 @@ export class TribulationDirector {
     this.committedOutcome = null
   }
 
-  getCooldownSeconds(now = Date.now()): number {
+  getCooldownSeconds(now = this.deps.now?.() ?? Date.now()): number {
     return Math.max(0, Math.ceil((this.cooldownUntil - now) / 1000))
   }
 
@@ -840,7 +840,7 @@ export class TribulationDirector {
    * entitlement resolve nhu run moi. settlementError=true dung lai
    * marker Error de terminal-after-first-attempt semantics giu nguyen.
    */
-  restoreRuntime(slice: TribulationRuntimeSave | undefined, restoreNowMs: number = Date.now()): void {
+  restoreRuntime(slice: TribulationRuntimeSave | undefined, restoreNowMs: number = this.deps.now?.() ?? Date.now()): void {
     // Save la authoritative - restore phai replacement-complete: xoa toan
     // bo run-state khong persist (run dang chay + outcome cu cua timeline
     // truoc) truoc khi nap slice, khong de gi sot lai tu timeline cu.

@@ -13,13 +13,9 @@
 //     scope-hidden left-panel mode can never render, because
 //     downstream commands (upgradeBuilding) are live
 //     economy writes.
-//   * Upgrade of the scope-hidden building (chi_hien_quan) is a
-//     live-material spend plus a dormant-field write - the domain
-//     command must fail closed the same way consumePill/assignWorkers
-//     do.
-//   * Contract sec.F: the worker lodge surface must render the
-//     getWorkerLodgeSurfaceModel() verdicts and NEVER import
-//     CompanionAvailability (explicit contract ban).
+//   * Chiêu Hiền Quán is an art-only landmark with no upgrade effect.
+//   * Its compatibility surface renders art only and never imports
+//     companion/workforce domain APIs.
 //   * Carried dormant records (armed auto-farm on an ineligible stage,
 //     active progress on removed quests, hidden-realm records,
 //     dormant-family materials) must deserialize inert.
@@ -36,6 +32,7 @@ import { createPinia } from 'pinia'
 import { readFileSync } from 'node:fs'
 import { i18n } from '@/i18n'
 import { GameManager } from '@/core/game/GameManager'
+import { getArchitectureBuildingModels } from '@/core/game/ArchitectureReadModel'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
@@ -139,7 +136,6 @@ describe('consumer seam: worker_lodge left-panel mode (contract sec.G + sec.F)',
       level: 3,
       lastCollectedAt: 0,
     })
-    p.autoWorkerCapacity = 7
 
     const view = mountPanel(FunctionOverlayPanel, undefined, gameManager, (_player, pinia) => {
       const ui = useUiStore(pinia)
@@ -177,30 +173,24 @@ describe('consumer seam: worker_lodge left-panel mode (contract sec.G + sec.F)',
     const oreBefore = gameManager.materialBag.getAmount('mortal_ore_decade')
     const upgraded = gameManager.buildingOps.upgradeBuilding('chq_1')
 
-    // DEFECT evidence: the domain command is ungated - materials are
-    // spent and the dormant autoWorkerCapacity field is written.
+    // The art-only landmark has no upgrade path and must not spend materials.
     expect(upgraded).toBe(false)
     expect(gameManager.materialBag.getAmount('mortal_ore_decade')).toBe(oreBefore)
   })
 })
 
 // ---------------------------------------------------------------------------
-// F-B-CONS-3: contract sec.F line-item - "Never import
-// CompanionAvailability" on the worker lodge surface. The panel
-// rederives tab verdicts from a realm predicate instead of consuming
-// getWorkerLodgeSurfaceModel(), so the authored read model is dead code
-// and the tab surface drifts from the verdict authority.
+// F-B-CONS-3: Chiêu Hiền Quán compatibility surface stays art-only.
 // ---------------------------------------------------------------------------
 describe('consumer seam: worker lodge read-model consumption (contract sec.F)', () => {
-  // F-B-CONS-3 - Low, deferred per Medium+-only ruling (human exception).
-  // Skipped, not deleted: the pin stays dormant until the exception closes.
-  it.skip('WorkerLodgePanel never imports CompanionAvailability and consumes the tab read model', () => {
+  it('WorkerLodgePanel is an art-only compatibility surface with no workforce controls', () => {
     const source = readFileSync('src/components/panels/WorkerLodgePanel.vue', 'utf8')
-
-    // DEFECT evidence: both assertions fail - the banned import is
-    // present and the authored read model is never consulted.
-    expect(source.includes('CompanionAvailability')).toBe(false)
-    expect(source.includes('getWorkerLodgeSurfaceModel')).toBe(true)
+    const template = source.split('<template>')[1]?.split('</template>')[0] ?? ''
+    expect(template).toContain('chi-hien-quan-art-only')
+    expect(template).toContain('architecture.artOnly')
+    expect(template).not.toMatch(/<button|<input|@click|upgradeBuilding|assignWorkers|capacity|companion/i)
+    expect(source).not.toContain('getWorkerLodgeSurfaceModel')
+    expect(source).not.toContain('CompanionAvailability')
   })
 })
 
@@ -325,19 +315,14 @@ describe('carried dormant records stay flagged/inert', () => {
     expect(betaHiddenRealmRecordFor(p, 'qi_refining')).toBeUndefined()
   })
 
-  it('worker lodge tab verdicts: every tab scope-hidden under beta, manual split never offered', () => {
+  it('Chiêu Hiền Quán is an art-only Architecture card with no upgrade quote', () => {
     const gameManager = realGameManager()
-    const model = gameManager.buildingOps.getWorkerLodgeSurfaceModel(player())
-
-    const byId = Object.fromEntries(model.tabs.map((tab) => [tab.id, tab]))
-    // FE contract sec.4C: the whole lodge is out of scope - even the
-    // workforce tab stays scope-hidden so no consumer renders it, and
-    // the manual split write is never offered.
-    expect(byId.nhan_cong?.verdict).toBe('scope-hidden')
-    expect(byId.nhan_cong?.manualAssignOffered).toBe(false)
-    for (const tab of ['qua_tang', 'chieu_mo', 'duyen_phan'] as const) {
-      expect(byId[tab]?.verdict).toBe('scope-hidden')
-    }
+    const card = getArchitectureBuildingModels(gameManager, player())
+      .find((building) => building.id === 'chi_hien_quan')
+    expect(card?.artOnly).toBe(true)
+    expect(card?.maxed).toBe(true)
+    expect(card?.canUpgrade).toBe(false)
+    expect(card?.costs).toEqual([])
   })
 
   it('quest lifecycle deactivates progress on removed/non-beta quests at restore', () => {
