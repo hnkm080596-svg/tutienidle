@@ -21,7 +21,7 @@ describe('GameManager current realm progression scope', () => {
     expect(gameManager.realmAdvanceOps.canTriggerBreakthrough(player)).toBe(false)
   })
 
-  it('qi_refining tầng 12 + Quật 10 clear → canTriggerBreakthrough true', () => {
+  it('qi_refining tầng 12 + Thanh Vân 1-20 clear → canTriggerBreakthrough true', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
@@ -31,7 +31,7 @@ describe('GameManager current realm progression scope', () => {
     expect(gameManager.realmAdvanceOps.canTriggerBreakthrough(player)).toBe(true)
   })
 
-  it('qi_refining tầng 12 chưa clear Quật 10 → canTriggerBreakthrough false', () => {
+  it('qi_refining tầng 12 chưa clear Thanh Vân 1-20 → canTriggerBreakthrough false', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
@@ -51,7 +51,7 @@ describe('GameManager current realm progression scope', () => {
     expect(gameManager.realmAdvanceOps.canTriggerBreakthrough(player)).toBe(false)
   })
 
-  it('qi_refining tầng 11 đã clear Quật 10 → canTriggerBreakthrough false (cả 2 điều kiện bắt buộc)', () => {
+  it('qi_refining tầng 11 đã clear Thanh Vân 1-20 → canTriggerBreakthrough false (cả 2 điều kiện bắt buộc)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'

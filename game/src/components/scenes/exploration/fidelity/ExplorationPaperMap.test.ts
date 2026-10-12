@@ -13,7 +13,7 @@ it('blocks locked stage selection while keeping the state label reachable', () =
   const chosen: string[] = []
   const container = document.createElement('div')
   const app = createApp({ render: () => h(ExplorationPaperMap, { chapter: chapters[0] ?? null, terrain: '/terrain.png', selected: 'locked-stage', onSelect: (id: string) => chosen.push(id) }) })
-  app.use(createI18n({ legacy: false, locale: 'vi', messages: { vi: { exploration: { stageLabel: '{chapter} · {stage} · {state}', state: { locked: 'Locked' }, boss: 'Boss' } } } })).mount(container)
+  app.use(createI18n({ legacy: false, locale: 'vi', messages: { vi: { exploration: { stageLabel: '{stage} · {state}', state: { locked: 'Locked' }, boss: 'Boss' } } } })).mount(container)
   try {
     const button = container.querySelector<HTMLButtonElement>('button')!
     expect(button.disabled).toBe(false)
@@ -37,7 +37,7 @@ it('emits select for unlocked stages', () => {
   const chosen: string[] = []
   const container = document.createElement('div')
   const app = createApp({ render: () => h(ExplorationPaperMap, { chapter: chapters[0] ?? null, terrain: '/terrain.png', selected: 'open-stage', onSelect: (id: string) => chosen.push(id) }) })
-  app.use(createI18n({ legacy: false, locale: 'vi', messages: { vi: { exploration: { stageLabel: '{chapter} · {stage} · {state}', state: { available: 'Open' }, boss: 'Boss' } } } })).mount(container)
+  app.use(createI18n({ legacy: false, locale: 'vi', messages: { vi: { exploration: { stageLabel: '{stage} · {state}', state: { available: 'Open' }, boss: 'Boss' } } } })).mount(container)
   try {
     const button = container.querySelector<HTMLButtonElement>('button')!
     expect(button.getAttribute('aria-disabled')).toBeNull()

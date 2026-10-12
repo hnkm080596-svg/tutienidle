@@ -18,7 +18,9 @@ const chapters = computed<ExplorationChapter[]>(() => {
   // Mirrors the production merge: one Thanh Van chapter holds all 30 stages
   // laid out through the shared design-space positions.
   const nodes = Array.from({ length: 30 }, (_, i) => ({
-    id: `${i + 1}`, label: String(i + 1), ...stagePosition(`${i + 1}`, i),
+    // Mirrors the production node label: the ai's canonical display
+    // name 'Thanh Van 1-N' (unified naming 2026-10-12).
+    id: `${i + 1}`, label: `Thanh Vân 1-${i + 1}`, ...stagePosition(`${i + 1}`, i),
     state: i < 3 ? 'cleared' as const : i === 3 ? 'current' as const : i === 4 ? 'available' as const : 'locked' as const,
     boss: i % 10 === 9,
     perfect: i === 1,

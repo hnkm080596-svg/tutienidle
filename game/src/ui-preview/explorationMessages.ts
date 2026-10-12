@@ -4,7 +4,7 @@
 // fidelity surface resolves so the preview stays honest.
 export const explorationMessages = { vi: {
   zone: 'Thanh Vân', realm: { mortal: 'Phàm Nhân', qi: 'Luyện Khí', foundation: 'Trúc Cơ' },
-  stageTitle: '{code} · Sườn Thanh Vân', bossTitle: '{code} · Đỉnh Thanh Vân',
+  stageTitle: 'Thanh Vân 1-{code}', bossTitle: 'Thanh Vân 1-{code}',
   description: 'Mây phủ triền núi, linh khí vấn vít bên rừng tùng. Một đoạn đường trong hành trình khám phá Thanh Vân.',
   enemySummary: '10 quái', bossEnemySummary: 'Boss: Thủ Lĩnh Sơn Lâm',
   enemyLabel: 'Sói Linh · Lv.3 · Cận chiến', bossEnemyLabel: 'Thủ Lĩnh Sơn Lâm · Lv.10 · Cận chiến',
@@ -18,7 +18,7 @@ export const explorationMessages = { vi: {
     zones: 'Địa Giới',
     progress: 'Tiến Độ Thám Hiểm',
     preview: 'BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay',
-    stageLabel: '{chapter} · Tầng {stage} · {state}',
+    stageLabel: '{stage} · {state}',
     boss: 'BOSS',
     enemies: 'Địch Nhân',
     rewards: 'Phần Thưởng',

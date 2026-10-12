@@ -22,7 +22,9 @@ export function disabledReasonLabel(
   }
 
   if (reason.kind === 'floor') {
-    return t('panels.stageSelect.locked.clearFloor', { floor: reason.floor })
+    // The reason carries the previous ai's canonical display name
+    // ('Thanh Van 1-N') - the lock hint names the stage to clear.
+    return t('panels.stageSelect.locked.clearFloor', { stage: reason.stageName })
   }
 
   return t('panels.stageSelect.locked.progress')

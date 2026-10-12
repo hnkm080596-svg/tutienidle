@@ -469,8 +469,8 @@
       },
       "locked": {
         "requireRealm": "Requires {realm} floor {level}",
-        "clearFloor": "Clear Floor {floor} first",
-        "progress": "Clear the previous floor to unlock"
+        "clearFloor": "Clear {stage} first",
+        "progress": "Clear the previous stage to unlock"
       },
       "modes": {
         "manual": "Manual",
@@ -703,7 +703,7 @@
       },
       "requirements": {
         "level": "{realm} floor {level}",
-        "chapterClear": "Chapter 10 complete",
+        "chapterClear": "Clear Thanh Van 1-20",
         "met": "Met",
         "unmet": "Not met"
       },
@@ -2191,7 +2191,7 @@
     "zones": "Regions",
     "progress": "Expedition Progress",
     "preview": "UI PREVIEW · Sample data, not wired to gameplay",
-    "stageLabel": "{chapter} · Floor {stage} · {state}",
+    "stageLabel": "{stage} · {state}",
     "boss": "BOSS",
     "enemies": "Enemies",
     "rewards": "Rewards",

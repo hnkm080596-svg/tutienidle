@@ -33,7 +33,10 @@ const QI_CHAPTER: ChapterConfig = {
     'qi_refining_mystic_marsh',
     'qi_refining_abyssal_pool',
   ],
-  names: (floor) => `Quật ${floor}`,
+  // Unified naming (Minh 2026-10-12): every ai's display name is
+  // 'Thanh Van 1-N' with N the global index in the merged zone roster
+  // (mortal 1-10, qi 11-20, foundation 21-30) - no per-chapter floors.
+  names: (floor) => `Thanh Vân 1-${floor + 10}`,
   descriptions: [
     'Khu rừng đầu núi, Sơn Tặc lập đồn chặn đường thu mãi lộ — thử thách đầu tiên cho tu sĩ mới nhập môn.',
     'Rừng sâu hơn hẳn Thanh Vân Cốc, Sơn Tặc nơi đây phục kích thành bọn và hung hãn hơn.',
@@ -78,7 +81,7 @@ const MORTAL_CHAPTER: ChapterConfig = {
     'mortal_dong_9',
     'mortal_dong_10',
   ],
-  names: (floor) => `Động ${floor}`,
+  names: (floor) => `Thanh Vân 1-${floor}`,
   descriptions: [
     'Cửa hang đầu tiên nơi chân núi, bầy Heo Rừng cào đất kiếm mồi — thử thách đầu đời của một phàm nhân.',
     'Hang sâu hơn, Heo Rừng ở đây đã dữ tợn hơn hẳn cửa hang ngoài.',
@@ -119,7 +122,7 @@ const FOUNDATION_CHAPTER: ChapterConfig = {
     'foundation_floor_9',
     'foundation_floor_10',
   ],
-  names: (floor) => `Màn 3.${floor}`,
+  names: (floor) => `Thanh Vân 1-${floor + 20}`,
   descriptions: [
     'Hậu sơn Thanh Vân, bóng trắng Linh Lang lướt qua tán cổ thụ — chặng thử thách đầu tiên cho tu sĩ Trúc Cơ.',
     'Sườn núi khói mỏ, Linh Lang nơi đây đã học cách săn theo mùi linh khí.',

@@ -323,7 +323,7 @@ export class GameManagerCatalogOps {
     player: PlayerData,
   ):
     | { kind: 'realm'; realmId: string; realmLevel: number }
-    | { kind: 'floor'; floor: number }
+    | { kind: 'floor'; floor: number; stageName: string }
     | { kind: 'progress' }
     | null {
     if (this.isStageUnlocked(stageId, player)) {
@@ -356,7 +356,7 @@ export class GameManagerCatalogOps {
       if (index > 0) {
         const previous = this.deps.stageTemplates.get(zone.stageIds[index - 1]!)
         if (previous) {
-          return { kind: 'floor', floor: previous.floor ?? previous.requiredRealmLevel ?? 1 }
+          return { kind: 'floor', floor: previous.floor ?? previous.requiredRealmLevel ?? 1, stageName: previous.name }
         }
       }
 
@@ -364,7 +364,7 @@ export class GameManagerCatalogOps {
         const previousFinalId = zones[zoneIndex - 1]!.stageIds.at(-1)
         const previousFinal = previousFinalId ? this.deps.stageTemplates.get(previousFinalId) : undefined
         if (previousFinal) {
-          return { kind: 'floor', floor: previousFinal.floor ?? previousFinal.requiredRealmLevel ?? 1 }
+          return { kind: 'floor', floor: previousFinal.floor ?? previousFinal.requiredRealmLevel ?? 1, stageName: previousFinal.name }
         }
       }
     }
