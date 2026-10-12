@@ -11,17 +11,16 @@ import { utcDayBucket } from './GameClock'
  * being patched per callsite.
  *
  * Contract (rulings, locked 2026-10-12):
- * - `now()` is non-decreasing for the lifetime of the instance.
+ * - `now()` is non-decreasing after the first authenticated anchor.
  * - `rebase(serverWallMs)` only moves the clock FORWARD
  *   (`max(now(), server)`): a backward rebase would leave session-stamped
  *   deadlines future-dated, freezing deny-direction guards (the r10-INT
  *   `lastCheckedMs > now` class). Never go backward.
- * - The game is online-only: the authority always has (or will receive)
- *   a server anchor. Before the first server rebase, the cold-boot
- *   anchor is `wallNow()` read ONCE at construction plus monotonic
- *   elapsed - documented residual: a device clock fast-forwarded BEFORE
- *   boot anchors the session at the fake wall (deny direction, bounded
- *   by the first server stamp once rebase feeds land).
+ * - Before remote gameplay admission, anchorFromServer replaces the
+ *   provisional wall epoch with the first authenticated server stamp.
+ *   Restore and character creation run only after this initialization.
+ *   Later server stamps only advance the epoch; local test mode keeps
+ *   the single wall read plus monotonic elapsed.
  *
  * Injection: `new GameManager({ time })` - GameManager holds the one
  * authority and feeds it into every Ops `deps.time`; domain systems get
@@ -53,6 +52,8 @@ export class TimeAuthority {
 
   private lastNowMs: number
 
+  private serverAnchored = false
+
   constructor(deps: TimeAuthorityDeps = {}) {
     this.wallNow = deps.wallNow ?? (() => Date.now())
     this.monotonicNow = deps.monotonicNow ?? (() => performance.now())
@@ -72,7 +73,13 @@ export class TimeAuthority {
    * decreases (a backward monotonic step is clamped at the last value).
    */
   now(): number {
-    const computed = this.anchorWallMs + (this.monotonicNow() - this.anchorMonoMs)
+    const mono = this.monotonicNow()
+    if (!Number.isFinite(this.anchorMonoMs) && Number.isFinite(mono)) {
+      // Unknown elapsed before the first usable sample is not payable.
+      this.anchorWallMs = this.lastNowMs
+      this.anchorMonoMs = mono
+    }
+    const computed = this.anchorWallMs + (mono - this.anchorMonoMs)
 
     // A non-finite monotonic read must not poison lastNowMs for the
     // rest of the session - hold the last good value (deny direction).
@@ -84,6 +91,20 @@ export class TimeAuthority {
   /** `now()` in seconds - for the building accrual seconds-domain. */
   nowSeconds(): number {
     return this.now() / 1000
+  }
+
+  /** Establish the first authenticated epoch before any gameplay state is created. */
+  anchorFromServer(serverWallMs: number): boolean {
+    if (!Number.isFinite(serverWallMs) || serverWallMs < 0) return false
+    if (this.serverAnchored) {
+      this.rebase(serverWallMs)
+      return true
+    }
+    this.anchorWallMs = serverWallMs
+    this.anchorMonoMs = this.monotonicNow()
+    this.lastNowMs = serverWallMs
+    this.serverAnchored = true
+    return true
   }
 
   /** Raw monotonic clock - pure elapsed reads (leases, debounce). */
@@ -116,6 +137,8 @@ export class TimeAuthority {
     const nowMs = this.now()
 
     this.anchorWallMs = Math.max(nowMs, serverWallMs)
+    // The authenticated epoch survives an unavailable monotonic sample.
+    this.lastNowMs = this.anchorWallMs
     this.anchorMonoMs = this.monotonicNow()
   }
 }

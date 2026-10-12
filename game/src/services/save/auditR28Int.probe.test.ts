@@ -179,6 +179,7 @@ describe('auditR28 INT probe - restoreJobs shift arm vs clone arm (I)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -291,6 +292,7 @@ describe('auditR28 INT probe - refuse escalation vs mount contract (M)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -402,6 +404,7 @@ describe('auditR28 INT probe - fail-closed wrapper + controls (F)', () => {
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

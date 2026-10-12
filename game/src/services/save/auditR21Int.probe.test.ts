@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-declare const process: { env: Record<string, string | undefined> }
+declare const process: { env: Record<string, string | undefined>; execPath: string }
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { PlayerData } from '../../core/player/Player'
@@ -333,17 +333,17 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
   // --------------------------------------------------------------------
   it('slots = 1e9 (finite) trips the bound pin - child exits 0 (r21 fix)', { timeout: 90_000 }, () => {
     const spec = fileURLToPath(new URL('./auditR21IntSlotsHuge.probe.test.ts', import.meta.url))
-    const vitestBin = fileURLToPath(new URL('../../../node_modules/.bin/vitest', import.meta.url))
+    const vitestBin = fileURLToPath(new URL('../../../node_modules/vitest/vitest.mjs', import.meta.url))
     const cwd = fileURLToPath(new URL('../../../', import.meta.url))
     try {
-      const control = spawnSync(vitestBin, ['run', spec, '--reporter=dot'], {
+      const control = spawnSync(process.execPath, [vitestBin, 'run', spec, '--reporter=dot'], {
         cwd,
         env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=768' },
         timeout: 30_000,
       })
       expect(control.status).toBe(0)
 
-      const result = spawnSync(vitestBin, ['run', spec, '--reporter=dot'], {
+      const result = spawnSync(process.execPath, [vitestBin, 'run', spec, '--reporter=dot'], {
         cwd,
         env: {
           ...process.env,

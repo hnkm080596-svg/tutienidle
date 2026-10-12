@@ -234,11 +234,12 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     expect(player.selectedTalentIds).toContain('pham_cot') // KHONG doi
     expect(player.realmId).toBe('qi_refining') // KHONG len Truc Co
 
-    // Lan xet sau: eligibility con nguyen -> hidden lai. Bo qua
-    // cooldown 5 phut bang cach day system time.
+    // A wall edit cannot bypass cooldown; honest elapsed permits retry.
     vi.setSystemTime(Date.now() + 6 * 60 * 1000)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(false)
+    vi.advanceTimersByTime(6 * 60 * 1000)
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.breakthroughType).toBe('hidden')
   })

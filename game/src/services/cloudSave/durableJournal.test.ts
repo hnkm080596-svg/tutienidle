@@ -829,7 +829,7 @@ describe('checkbox 5 - generation fence + quarantine surface', () => {
     )
 
     const reload = await service.load()
-    expect(reload).toEqual({ status: 'empty', revision: 0 })
+    expect(reload).toEqual({ status: 'empty', revision: 0, serverNowMs: Date.parse('2026-09-30T00:00:00Z') })
     expect(remote.writeCalls).toHaveLength(0)
     expect(pendingEnvelope()).toBeNull()
     expect(quarantineEntries().at(-1)?.reason).toBe('character-missing')

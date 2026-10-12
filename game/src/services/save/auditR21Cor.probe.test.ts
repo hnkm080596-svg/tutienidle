@@ -7,7 +7,7 @@ import { existsSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-declare const process: { env: Record<string, string | undefined> }
+declare const process: { env: Record<string, string | undefined>; execPath: string }
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { PlayerData } from '../../core/player/Player'
@@ -349,7 +349,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
   // --------------------------------------------------------------------
   it('nowMs = 1e300 trips the magnitude pin - child exits 0 (r21 fix)', { timeout: 60_000 }, () => {
     const spec = fileURLToPath(new URL('./auditR21CorNowMsHang.probe.test.ts', import.meta.url))
-    const vitestBin = fileURLToPath(new URL('../../../node_modules/.bin/vitest', import.meta.url))
+    const vitestBin = fileURLToPath(new URL('../../../node_modules/vitest/vitest.mjs', import.meta.url))
     const marker = fileURLToPath(new URL('./.r21-hang-armed', import.meta.url))
     try {
       rmSync(marker, { force: true })
@@ -365,7 +365,7 @@ describe('fixpoint r21 COR - r20 adjudication batch audit probes', () => {
       // NODE_OPTIONS caps the child heap: the unbounded completed.push
       // OOMs in a few seconds instead of growing ~200MB/s for the
       // whole timeout window (observed ~4.4GB at kill).
-      const result = spawnSync(vitestBin, ['run', spec, '--reporter=dot', '--pool=threads'], {
+      const result = spawnSync(process.execPath, [vitestBin, 'run', spec, '--reporter=dot', '--pool=threads'], {
         cwd: fileURLToPath(new URL('../../../', import.meta.url)),
         env: {
           ...process.env,

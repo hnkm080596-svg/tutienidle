@@ -207,6 +207,7 @@ describe('seam (a) - every write path funnels through the driveSave gate', () =>
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -344,6 +345,7 @@ describe('seam (b) - the gate judges the wire form, unserializable refused non-r
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -407,6 +409,7 @@ describe('seam (c) - the gate refusal cannot arm the DATA_REFUSE recovery surfac
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -456,6 +459,7 @@ describe('seam (d) - consistent +Delta epoch passes admission, wedges the writer
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -540,6 +544,7 @@ describe('seam (e) - uncapped record walks remain after the ID_COLLECTION_CAP ba
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -644,6 +649,7 @@ describe('seam (f) - authority degrade arms share the deny-direction vocabulary'
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

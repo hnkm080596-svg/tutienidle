@@ -17,6 +17,7 @@ vi.mock('../../core/betaScope', async (importOriginal) => ({
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { primeMortalCreationPick } from './GameSave.fixture'
 import { buildGameSave } from './SaveSystem'
 import { validateGameSaveShape } from './saveShapeValidation'
@@ -86,7 +87,9 @@ const MORTAL_BASE_SECONDS = CYCLE_BASE_SECONDS_BY_REALM.mortal!
 const MORTAL_CYCLE_MS = computeCycleSeconds(MORTAL_BASE_SECONDS, 1) * 1000
 
 function registeredManager(): GameManager {
-  const manager = new GameManager()
+  const manager = new GameManager({
+    time: new TimeAuthority({ wallNow: () => currentMs, monotonicNow: () => 0 }),
+  })
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
@@ -182,6 +185,7 @@ function okLoad(): CloudSaveLoadResult {
     discardedEquipmentCount: 0,
     raw: '{}',
     revision: 1,
+    serverAuthority: { serverNowMs: currentMs },
   }
 }
 
@@ -404,7 +408,7 @@ describe('r34 COR - A: every boot exit arm keeps the authority-pause latch', () 
   it('A7 load empty + no create flag -> require-character', async () => {
     const h = lifecycleHarness()
     await latchAuthorityPause(h)
-    setLoad(h, () => ({ status: 'empty', revision: 0 }) as never)
+    setLoad(h, () => ({ status: 'empty', revision: 0, serverNowMs: currentMs }) as never)
     h.boot.showAuth()
     expect((await h.lifecycle.bootGame({ createNewCharacter: false })).status).toBe('require-character')
     assertLatchHeld(h)
@@ -462,6 +466,7 @@ describe('r34 COR - A: every boot exit arm keeps the authority-pause latch', () 
       status: 'uninitialized',
       character: { characterId: 'c1', name: 'n' },
       revision: 0,
+      serverNowMs: currentMs,
     }) as never)
     setSave(h, async () => ({
       status: 'unavailable',
@@ -481,6 +486,7 @@ describe('r34 COR - A: every boot exit arm keeps the authority-pause latch', () 
       status: 'uninitialized',
       character: { characterId: 'c1', name: 'n' },
       revision: 0,
+      serverNowMs: currentMs,
     }) as never)
     h.boot.showAuth()
     expect(
@@ -503,6 +509,7 @@ describe('r34 COR - A: every boot exit arm keeps the authority-pause latch', () 
       status: 'uninitialized',
       character: { characterId: 'c1', name: 'n' },
       revision: 0,
+      serverNowMs: currentMs,
     }) as never)
     setSave(h, async () => {
       throw new Error('save injected fault')
@@ -551,6 +558,7 @@ describe('r34 COR - A: every boot exit arm keeps the authority-pause latch', () 
       status: 'uninitialized',
       character: { characterId: 'c1', name: 'n' },
       revision: 0,
+      serverNowMs: currentMs,
     }) as never)
     setSave(h, async () => ({ status: 'unavailable', message: 'flaky', retryable: true }) as never)
     h.boot.showAuth()

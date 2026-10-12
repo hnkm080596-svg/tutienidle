@@ -27,6 +27,29 @@ function harness(wallStart = T0, monoStart = 0) {
 }
 
 describe('TimeAuthority (GP-01)', () => {
+  it('replaces a forged preboot epoch with the first server anchor, then never rewinds', () => {
+    const { authority, advanceMono } = harness(T0 + 86_400_000)
+    expect(authority.anchorFromServer(T0)).toBe(true)
+    expect(authority.now()).toBe(T0)
+    advanceMono(1_000)
+    expect(authority.anchorFromServer(T0 - 86_400_000)).toBe(true)
+    expect(authority.now()).toBe(T0 + 1_000)
+  })
+  it('rejects invalid first server stamps without consuming the initialization', () => {
+    const { authority } = harness(T0 + 86_400_000)
+    expect(authority.anchorFromServer(Number.NaN)).toBe(false)
+    expect(authority.anchorFromServer(T0)).toBe(true)
+    expect(authority.now()).toBe(T0)
+  })
+  it('recovers from an unavailable monotonic source at construction without granting unknown elapsed', () => {
+    let mono = Number.NaN
+    const time = new TimeAuthority({ wallNow: () => T0, monotonicNow: () => mono })
+    expect(time.now()).toBe(T0)
+    mono = 5_000
+    expect(time.now()).toBe(T0)
+    mono = 6_000
+    expect(time.now()).toBe(T0 + 1_000)
+  })
   it('reads the wall clock exactly once - later system-clock edits cannot move now()', () => {
     let wallReads = 0
     const authority = new TimeAuthority({
@@ -150,6 +173,19 @@ describe('TimeAuthority (GP-01)', () => {
     authority.rebase(Number.POSITIVE_INFINITY)
 
     expect(authority.now()).toBe(T0 + 1_000)
+  })
+
+  it('retains an authenticated forward rebase while monotonic samples are unavailable', () => {
+    let mono = 0
+    const authority = new TimeAuthority({ wallNow: () => T0, monotonicNow: () => mono })
+    expect(authority.anchorFromServer(T0)).toBe(true)
+    mono = Number.NaN
+    authority.rebase(T0 + 60_000)
+    expect(authority.now()).toBe(T0 + 60_000)
+    mono = 1_000
+    expect(authority.now()).toBe(T0 + 60_000)
+    mono = 2_000
+    expect(authority.now()).toBe(T0 + 61_000)
   })
 
   it('monotonic() exposes the raw elapsed source, unaffected by wall edits', () => {

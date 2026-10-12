@@ -210,6 +210,7 @@ describe('auditR32 INT probe - orphaned authority-pause freeze across re-entry (
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -386,6 +387,7 @@ describe('auditR32 INT probe - applyTimedEffect clamp vs write-gate pins (C2)', 
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

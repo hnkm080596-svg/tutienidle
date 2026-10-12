@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
+import { TimeAuthority } from '../idle/TimeAuthority'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
 
@@ -70,8 +71,8 @@ const QI_STAGE = {
   spawnIntervalSeconds: 0,
 }
 
-function harnessWithFarm() {
-  const gameManager = new GameManager()
+function harnessWithFarm(time?: TimeAuthority) {
+  const gameManager = new GameManager({ time })
   const player = createDefaultPlayer()
 
   gameManager.catalogOps.registerEnemyTemplates([OFFLINE_DUMMY, QI_DUMMY])
@@ -103,8 +104,9 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
 
     // Anchor = now - 20s: phan du cua window HIEU LUC (da x0.5) carry
     // sang tick live, khong phai 120s raw remainder.
-    expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThanOrEqual(Date.now() - 21_000)
-    expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(Date.now())
+    const settledNow = gameManager.time.now()
+    expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThanOrEqual(settledNow - 21_000)
+    expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(settledNow)
   })
 
   it('KHÔNG có autoFarmStage → no-op an toàn', () => {
@@ -152,13 +154,16 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
   })
 
   it('offline tra DUNG 50%: 400s offline -> 2 cycles insight (full rate = 4)', () => {
-    const { gameManager, player } = harnessWithFarm()
+    const authorizedNow = Date.UTC(2026, 9, 12)
+    const { gameManager, player } = harnessWithFarm(new TimeAuthority({
+      wallNow: () => authorizedNow, monotonicNow: () => 0,
+    }))
 
     player.perfectClearStageIds.push('qi_farm_stage')
     player.perfectClearSeconds['qi_farm_stage'] = 100 // cycle = 100s
     player.autoFarmStage = {
       stageId: 'qi_farm_stage',
-      lastCheckedMs: Date.now() - 400_000,
+      lastCheckedMs: authorizedNow - 400_000,
     }
 
     gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 400)
@@ -194,18 +199,21 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       // remainder - the whole capped window settled, so the anchor sits
       // at ~now, NOT startMs + cap (the old encoding left it days stale
       // and let the next online tick re-pay the same window).
-      expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThan(Date.now() - 50_000)
-      expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(Date.now())
+      const settledNow = gameManager.time.now()
+      expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThan(settledNow - 50_000)
+      expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(settledNow)
     })
 
     it('cycleSeconds cực nhỏ (1s) → vẫn bounded, không roll 100k+ cycles', () => {
-      const { gameManager, player } = harnessWithFarm()
+      const authorizedNow = Date.UTC(2026, 9, 12)
+      const time = new TimeAuthority({ wallNow: () => authorizedNow, monotonicNow: () => 0 })
+      const { gameManager, player } = harnessWithFarm(time)
 
       player.perfectClearStageIds.push('farm_stage')
       player.perfectClearSeconds['farm_stage'] = 1 // cycle = 1s
 
-      // Bat moc 1 LAN - tranh race Date.now() giua setup va assert.
-      const startMs = Date.now() - 24 * 60 * 60 * 1000 // dung 24h truoc
+      // A three-day-old anchor makes the legacy start + cap encoding distinct.
+      const startMs = authorizedNow - 3 * 24 * 60 * 60 * 1000
       player.autoFarmStage = {
         stageId: 'farm_stage',
         lastCheckedMs: startMs,
@@ -213,16 +221,10 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
 
       gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 24 * 60 * 60)
 
-      // 24h x 0.5 = 12h / 1s = 43_200 cycles van roll. B5 (T1-12): anchor
-      // rebase ve now - remainder (remainder = 0 vi 12h chia het 1s) nen
-      // moc nam ~now - khong phai startMs + 24h nhu encoding cu.
-      // The `now` stamp is captured BEFORE the 43_200-iteration roll
-      // loop (r11-INT ordering), so the assert-vs-stamp gap includes the
-      // loop itself - keep the bound loose; it only needs to rule out
-      // the stale startMs + 24h encoding.
-      const assertNow = Date.now()
-      expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThan(assertNow - 30_000)
-      expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(assertNow)
+      // 24h at half rate leaves no remainder for a one-second cycle.
+      // The injected epoch is independent of device time and loop duration.
+      expect(player.autoFarmStage?.lastCheckedMs).toBe(authorizedNow)
+      expect(player.autoFarmStage?.lastCheckedMs).not.toBe(startMs + 24 * 60 * 60 * 1000)
     })
 
     it('cycleSeconds <= 0 / non-finite → no-op an toàn, không loop vô hạn', () => {

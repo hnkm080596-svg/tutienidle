@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from '../../stores/player'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { PlayerData } from '../../core/player/Player'
 import type { PersistentTimedEffect } from '../../core/player/PersistentTimedEffect'
@@ -355,7 +356,9 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
       waves: [2],
       spawnIntervalSeconds: 0,
     }
-    const manager = new GameManager()
+    const manager = new GameManager({
+      time: new TimeAuthority({ wallNow: () => L, monotonicNow: () => 0 }),
+    })
     const player = createDefaultPlayer()
     player.perfectClearStageIds.push(FARM_STAGE.id)
     player.perfectClearSeconds[FARM_STAGE.id] = 100
@@ -371,8 +374,7 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
     // >now clamp re-anchors before any remainder math.
     manager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 0)
     expect(player.autoFarmStage!.lastCheckedMs).toBeGreaterThan(0)
-    expect(player.autoFarmStage!.lastCheckedMs).toBeLessThanOrEqual(Date.now())
-    expect(player.autoFarmStage!.lastCheckedMs).toBeGreaterThan(Date.now() - 60_000)
+    expect(player.autoFarmStage!.lastCheckedMs).toBe(L)
   })
 
   it('B4 quest lastDailyResetAtMs: far-future stamp clamps to the field epoch at restore', () => {

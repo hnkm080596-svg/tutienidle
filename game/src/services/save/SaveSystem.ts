@@ -290,7 +290,7 @@ export function restoreGameSession(
   // finished applying, so retrying the same payload re-applies the
   // un-committed slices instead of skipping them.
   try {
-    const offline = player.restoreFromSave(save, timeAuthority)
+    const offline = player.restoreFromSave(save, timeAuthority, gameManager.time.now())
 
     gameManager.setActivePlayer(player.$state)
 
@@ -309,7 +309,7 @@ export function restoreGameSession(
     // min(skew, 10h) of accrual it never produced. Same class as
     // r15-COR-E: authority bounds the offline window, field stamps
     // stay on the clock their readers use.
-    gameManager.buildingOps.reconcileBuildings(player.$state, Date.now() / 1000)
+    gameManager.buildingOps.reconcileBuildings(player.$state, gameManager.time.nowSeconds())
 
     player.setEquipmentModifiers(equipmentModifiers)
 
@@ -349,7 +349,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     player: {
       ...detachSaveValue(player),
 
-      lastSavedAt: Date.now(),
+      lastSavedAt: gameManager.time.now(),
     },
 
     // Manager getters intentionally return LIVE domain objects for

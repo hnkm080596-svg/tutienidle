@@ -2,7 +2,7 @@ import type { GameSave, LoadOutcome } from '../save/SaveSystem'
 import type { BackendErrorCode, RemoteCharacterMetadata } from '../session/BackendStatus'
 
 export type CloudSaveLoadResult =
-  | { status: 'empty'; revision: 0 }
+  | { status: 'empty'; revision: 0; serverNowMs?: number }
   | {
       status: 'ok'
       save: GameSave
@@ -37,6 +37,7 @@ export type CloudSaveLoadResult =
       status: 'uninitialized'
       character: RemoteCharacterMetadata
       revision: 0
+      serverNowMs?: number
     }
   | {
       /** remote-authoritative only: the character row is deleted
@@ -79,6 +80,8 @@ export type CloudSaveWriteResult =
       status: 'ok'
       revision: number
       recoveredFromConflict?: boolean
+      /** Authenticated ACK time; absent for local or stale-generation results. */
+      serverNowMs?: number
       /** B1-C: the server ACK committed but a durable mirror step
        *  (cache write / journal clear) reported a storage or quota
        *  failure - the server ACK remains the authority. */

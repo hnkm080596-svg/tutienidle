@@ -40,13 +40,13 @@ const { stateVersion, bumpState } = useStateVersion()
 
 // Dong ho 1 giay -- deadline timed effect hien thi theo thoi gian thuc
 // (Date.now), khong phu thuoc game pause (plan S5.4).
-const nowMs = ref(Date.now())
+const nowMs = ref(gameManager.time.now())
 
 let effectTimer: ReturnType<typeof setInterval> | undefined
 
 onMounted(() => {
   effectTimer = setInterval(() => {
-    nowMs.value = Date.now()
+    nowMs.value = gameManager.time.now()
   }, 1000)
 })
 

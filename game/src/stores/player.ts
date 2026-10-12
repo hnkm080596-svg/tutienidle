@@ -121,6 +121,7 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
   nowMs: number,
   provenanceMs: number,
   saveLastSavedAtMs: number,
+  liveNowMs = Date.now(),
 ): T {
   // appliedAtMs is write-only after persistence (refresh merges read
   // expiresAtMs only), so its clamp epoch is cosmetic - nowMs keeps it
@@ -134,7 +135,7 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
   // admission (self-brick class). The extra clamp only fires when both
   // inputs are already future-dated.
   const appliedAtMs = Number.isFinite(effect.appliedAtMs)
-    ? Math.min(effect.appliedAtMs, nowMs, Date.now())
+    ? Math.min(effect.appliedAtMs, nowMs, liveNowMs)
     : effect.appliedAtMs
   // r15-COR-A: a record dead at save time (expires <= lastSavedAt in
   // the payload's own epoch) can never honestly revive - expires only
@@ -156,7 +157,7 @@ function boundTimedEffectClocks<T extends { appliedAtMs: number; expiresAtMs: nu
       ? Math.min(
           effect.expiresAtMs,
           Number.isFinite(saveLastSavedAtMs) && effect.expiresAtMs <= saveLastSavedAtMs
-            ? Math.min(nowMs, Date.now())
+            ? Math.min(nowMs, liveNowMs)
             : provenanceMs + TU_LINH_TRAN_DURATION_MS,
         )
       : effect.expiresAtMs
@@ -290,12 +291,12 @@ export const usePlayerStore = defineStore('player', {
     // Returns the ACTUAL tu vi just granted (after clamping at
     // "required", see
     // addCultivation()).
-    cultivate(deltaSeconds: number): number {
+    cultivate(deltaSeconds: number, nowMs = Date.now()): number {
    // P6-M1 - the shared production cultivation tick owns the whole
       // step (speed composition, timed modifiers, clamped write, lifetime
       // accrual, insight conversion). The store only supplies the
       // wall-clock now.
-      return cultivateTick(this, deltaSeconds, Date.now())
+      return cultivateTick(this, deltaSeconds, nowMs)
     },
 
     breakthrough(): boolean {
@@ -352,21 +353,25 @@ export const usePlayerStore = defineStore('player', {
     // Nhan gameManager tu App.vue thay vi tu giu instance trong
     // store - GameManager khong phai reactive state cua Vue (xem
     // ghi chu trong GameManager.ts/App.vue), store chi pass-through.
-    save(gameManager: GameManager) {
+    async save(gameManager: GameManager) {
       // lastSavedAt phai duoc cap nhat TRUOC khi ghi file,
       // neu khong offline progress lan sau se bi tinh du
       // (vi file luu moc thoi gian cu hon thoi diem save that).
-      this.lastSavedAt = Date.now()
+      this.lastSavedAt = gameManager.time.now()
 
    // R10 (AR-12): this.$state is a live reactive Pinia proxy -
       // buildGameSave() owns making a detached-value snapshot safe from
       // that (JSON round-trip, not structuredClone, since structuredClone
       // cannot handle Proxy objects at any nesting depth). Callers just
       // pass the state through.
-      return cloudSaveCoordinator.save(buildGameSave(this.$state, gameManager))
+      const result = await cloudSaveCoordinator.save(buildGameSave(this.$state, gameManager))
+      if (result.status === 'ok' && result.serverNowMs !== undefined) {
+        gameManager.time.rebase(result.serverNowMs)
+      }
+      return result
     },
 
-    restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority) {
+    restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority, liveNowMs = Date.now()) {
       // R10 (AR-12) - payload-identity guard: WHOLE-payload hash (qua
       // computeRestoreIdentity - exclude lastSavedAt), khong con
       // fingerprint 2-field. Cung save goi lai = no-op; save KHAC (du
@@ -375,7 +380,7 @@ export const usePlayerStore = defineStore('player', {
       // r23-AUT: authority stamps bypass the save gate - an
       // out-of-domain server stamp falls back to client-clock
       // semantics (bounded deny) instead of feeding derivations.
-      const authority = sanitizeRestoreAuthority(timeAuthority)
+      const authority = sanitizeRestoreAuthority(timeAuthority, liveNowMs)
       const previousRestore = lastRestoredPayloads.get(this)
 
       if (previousRestore !== undefined && previousRestore.identity === payloadIdentity) {
@@ -399,13 +404,13 @@ export const usePlayerStore = defineStore('player', {
             ? 0
             : calculateOfflineTime({
                 lastOnlineAt: save.player.lastSavedAt,
-              }).offlineSeconds
+              }, liveNowMs).offlineSeconds
 
       // r13-AUT-5: under remote authority the "now" every forward
       // clamp anchors at is the server-approved window end, not the
       // client clock - a slow local clock would underpay an approved
       // span, a fast one must not pay past approval.
-      const authorityNowMs = restoreAuthorityNowMs(authority)
+      const authorityNowMs = restoreAuthorityNowMs(authority, liveNowMs)
       // r14-AUT-2: timed-effect provenance is the payload's own stamp
       // bounded by the approved now - a save cannot claim a deadline
       // past lastSavedAt + duration, and a forged-future lastSavedAt
@@ -417,8 +422,8 @@ export const usePlayerStore = defineStore('player', {
       // otherwise persist expires > next-lastSavedAt + duration and the
       // admission pin rejects the game's own write (self-brick class).
       const effectProvenanceMs = Number.isFinite(save.player.lastSavedAt)
-        ? Math.min(save.player.lastSavedAt, authorityNowMs, Date.now())
-        : Math.min(authorityNowMs, Date.now())
+        ? Math.min(save.player.lastSavedAt, authorityNowMs, liveNowMs)
+        : Math.min(authorityNowMs, liveNowMs)
 
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x
@@ -658,6 +663,7 @@ export const usePlayerStore = defineStore('player', {
             authorityNowMs,
             effectProvenanceMs,
             save.player.lastSavedAt,
+            liveNowMs,
           ),
           modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
         }),

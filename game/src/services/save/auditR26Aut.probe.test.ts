@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { usePlayerStore } from '../../stores/player'
 import { primeMortalCreationPick } from './GameSave.fixture'
@@ -204,6 +205,7 @@ describe('arm A - post-dated deadline stamps restore verbatim; the write gate br
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -323,6 +325,7 @@ describe('arm B - remote-authoritative boot wedges at the post-accrual commit', 
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -392,6 +395,7 @@ describe('arm B - remote-authoritative boot wedges at the post-accrual commit', 
       decomposeSystem: { getSaveState: () => ({}) },
       tribulationDirector: { serializeRuntime: () => ({}) },
       productionSystem: { getSiteDefinitions: () => [], getAllStates: () => [] },
+      time: new TimeAuthority({ wallNow: () => NOW, monotonicNow: () => 0 }),
       setProductionAutoRestart: vi.fn(),
       setActivePlayer: vi.fn(),
       buildingManager: { add: vi.fn(), getAll: () => [] },
@@ -461,6 +465,7 @@ describe('arm C - ID_COLLECTION_CAP coverage gap: Record channels + never-valida
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -536,6 +541,7 @@ describe('arm D - wire-form gate (8f3cb237) edge cases', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -582,6 +588,7 @@ describe('arm E - rejected attacks and closed siblings', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

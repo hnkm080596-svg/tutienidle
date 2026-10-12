@@ -252,6 +252,7 @@ describe('auditR33 INT probe - eager resumeCombat vs unproven boot admission (R)
     setActivePinia(createPinia())
     currentMs = 1_725_160_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -469,6 +470,7 @@ describe('auditR33 INT probe - drop-vs-park-vs-clamp policy trio (C2)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -590,6 +592,7 @@ describe('auditR33 INT probe - expiresCeiling keys + consumer coherence (C3)', (
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -731,6 +734,7 @@ describe('auditR33 INT probe - seeded re-stamp ordering (C4)', () => {
 
   it('honest-skew shift: seeded head moves +delta as a PAIR, stays validator-admissible', () => {
     vi.spyOn(Date, 'now').mockImplementation(() => currentMs + 50_000)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
     const state: ProductionSiteState = { ...SITE, workerCycles: [] }
     const states = new Map([[state.siteId, state]])
     const deps = offlineDeps(states)
@@ -759,6 +763,7 @@ describe('auditR33 INT probe - seeded re-stamp ordering (C4)', () => {
   it('crafted-far clock parks the head VERBATIM (deny) - ordering inside the pair never breaks', () => {
     const farNow = 2 ** 52 - 10_000
     vi.spyOn(Date, 'now').mockImplementation(() => farNow)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
     const state: ProductionSiteState = { ...SITE, workerCycles: [] }
     const states = new Map([[state.siteId, state]])
     const deps = offlineDeps(states)

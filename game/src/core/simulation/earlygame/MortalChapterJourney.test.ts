@@ -9,7 +9,7 @@
 // Wall note: mortal_dong_5 stays a characterized balance wall
 // (post-P7-M3 power loss, compensation owned by the balance phase) -
 // legs never assert floor-5+ victories.
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { EarlyGameSession, type EarlyGameSnapshot } from './EarlyGameSession'
 import { usePlayerStore } from '../../../stores/player'
@@ -57,6 +57,8 @@ function initiateAndClearFloorOne(s: EarlyGameSession): void {
 beforeEach(() => {
   setActivePinia(createPinia())
 })
+
+afterEach(() => vi.useRealTimers())
 
 describe('MortalChapterJourney', () => {
   describe('leg A - combat economy (mortal floors)', () => {
@@ -201,6 +203,9 @@ describe('MortalChapterJourney', () => {
 
   describe('leg D - save/restore checkpoint mid-journey', () => {
     it('fresh manager+owner restored through restoreGameSession keeps progressing', { timeout: 90000 }, () => {
+      // Freeze both clocks before either authority is constructed.
+      vi.useFakeTimers()
+      vi.setSystemTime(Date.UTC(2026, 9, 12))
       const s = makeSession()
 
       // Drive past the ritual with a node purchase so every persisted
@@ -215,12 +220,10 @@ describe('MortalChapterJourney', () => {
 
       const checkpoint: EarlyGameSnapshot = s.snapshot()
 
-      // Pin wall-clock across build+restore so the offline-progress
+      // Pin both clocks across build+restore so the offline-progress
       // term is exactly 0 - parity then means byte-level equality, not
       // a timing-dependent tolerance.
-      vi.useFakeTimers()
       try {
-        vi.setSystemTime(Date.now())
         const save = buildGameSave(s.player, s.gameManager)
 
         // Production restore semantics: a FRESH catalog-registered

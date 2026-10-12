@@ -1,0 +1,18 @@
+# Time Authority integration into master
+
+User ruling (2026-10-12): merge locally, run QA, repair High/Critical; retain visible Medium/Low. This is acceptance with exceptions, not QA_FIXED_POINT_REACHED. No remote push is requested by this task.
+
+Base: master 24c59a2dc7a4fcfa5d15e8e77398cb6e968efbf9. Port starts with isolated Time Authority commit 9cc40e2ec; no broad Beta/UI parent is merged. Existing master single-job alchemy behavior is preserved. ProductionPanel harvest now calls the owner's clock rather than passing presentation time. No tracked file deletion is included.
+
+Pre-integration evidence: type-check/build passed. Core clock/server-admission/persistence suite: six files, 84 tests passed. Own-worktree browser at localhost:5814: one scenario passed (33.9s), progression under +/-24h device edits, bounded save epoch, retained character/progression after reload. Screenshot inspected. Full first attempt: 992 suites passed, 42 collection failures because native canvas binary was missing in the fresh dependency installation; baseline source reproduces this environment fault. Native canvas3.2.3 cache copied from the previously verified worktree, 45 files SHA256 matched. Full verification after environment correction is in progress; no all-green claim yet.
+
+Sequential Review Pass 1: independent Luna correctness review of live source, server-first boot sound; proposed High decompose mint bypass rejected by real release gates (equipmentOreDecompose false, empty MASTER_BETA_UNLOCKS, domain tick returns before mint). Medium live-replacement clock/clamp ordering confirmed; no production fix under user ruling.
+Sequential Review Pass 2: independent fresh Luna authority review after Pass1, no production changes between; clock DI and harvest ownership coherent. Proposed admin decompose counterexample rejected after distinguishing visible UI from domain admission; the empty unlock list keeps domain settlement closed.
+Sequential Review Pass 3: root integration review after Pass2 (self-review, not a third independent context). Actual browser evidence, snapshot/receipt generation regression tests, forward/backward clock attacks and real boot/restore consumers checked. Exact 400-second offline fixture repaired to use a fixed injected clock; expected four insight unchanged. Core verification repeated: 84 passed. No confirmed reachable High/Critical remains in this reviewed surface.
+
+Deferred Medium: App.vue live replacement restores before rebasing the shared clock. GameManagerSaveRestore captures old liveNowMs for QuestManager.restore. Across UTC midnight or suspend skew, a current-day marker may clamp to the previous day and reset again on next tick. User's High-only ruling accepts leaving this visible; not claimed fixed.
+Dormant note: GameManagerTickOps decompose tick still reads Date.now. It cannot mint under current release domain gates; re-audit before enabling the feature.
+
+Remaining protocol limits: no independent access-isolated CleanA/B terminal proof, no repaired QA lesson router/readiness qualification, no live Supabase/staging certification. Earlier router scope question is not construed as authorization to change QA tooling. Do not infer beta/release readiness from this integration.
+
+Failed and final verification logs remain in the integration worktree at game/docs/qa/timeauthority-master-integration/. Branches, stashes, worktrees, prior reports and screenshot bytes are preserved.

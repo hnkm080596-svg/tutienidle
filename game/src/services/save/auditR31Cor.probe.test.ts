@@ -161,6 +161,7 @@ beforeEach(() => {
   setActivePinia(createPinia())
   currentMs = 1_725_160_000_000
   vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+  vi.spyOn(performance, 'now').mockReturnValue(0)
 })
 
 afterEach(() => {

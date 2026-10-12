@@ -848,6 +848,7 @@ export class GameManager {
     })
 
     this.saveOps = new GameManagerSaveRestore({
+      time: this.time,
       skillManager: this.skillManager,
       skillTemplates: this.skillTemplates,
       techniqueSystem: this.techniqueSystem,

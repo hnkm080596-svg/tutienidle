@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import type { GameManager as GameManagerType } from '../../core/game/GameManager'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../../core/battle/turn/CombatClock'
 import { ANIMATION_FALLBACK_MS } from '../../core/game/GameManagerTurnBattleOps'
@@ -49,7 +50,9 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 let currentMs = 1_725_160_000_000
 
 function registeredManager(): GameManager {
-  const manager = new GameManager()
+  const manager = new GameManager({
+    time: new TimeAuthority({ wallNow: () => currentMs, monotonicNow: () => 0 }),
+  })
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
@@ -443,6 +446,7 @@ describe('r35 AUT - C: bootGame contract and sibling seams', () => {
       status: 'ok' as const,
       save: loadableSave(),
       revision: 1,
+      serverAuthority: { serverNowMs: currentMs },
     }))
     stubs.boot.enterGame = vi.fn(() => {
       stubs.entryStage.value = 'game'
@@ -484,6 +488,7 @@ describe('r35 AUT - C: bootGame contract and sibling seams', () => {
       status: 'ok' as const,
       save: loadableSave(),
       revision: 1,
+      serverAuthority: { serverNowMs: currentMs },
     }))
 
     const lifecycle = useAppLifecycle({ ...stubs, gameManager: manager } as never)
@@ -513,6 +518,7 @@ describe('r35 AUT - C: bootGame contract and sibling seams', () => {
       status: 'ok' as const,
       save: loadableSave(),
       revision: 1,
+      serverAuthority: { serverNowMs: currentMs },
     }))
     // Model the restoreGameSession in-place rebind: the ghost's bound
     // player object becomes the loaded character's live $state.
@@ -569,6 +575,7 @@ describe('r35 AUT - C: bootGame contract and sibling seams', () => {
       status: 'ok' as const,
       save: loadableSave(),
       revision: 1,
+      serverAuthority: { serverNowMs: currentMs },
     }))
     let resolveSave: ((v: { status: 'ok'; revision: number }) => void) | undefined
     stubs.player.save = vi.fn(
@@ -605,6 +612,7 @@ describe('r35 AUT - C: bootGame contract and sibling seams', () => {
       status: 'ok' as const,
       save: loadableSave(),
       revision: 1,
+      serverAuthority: { serverNowMs: currentMs },
     }))
     let resolveSave: ((v: { status: 'ok'; revision: number }) => void) | undefined
     stubs.player.save = vi.fn(
@@ -656,6 +664,7 @@ describe('r35 AUT - C: bootGame contract and sibling seams', () => {
       status: 'ok' as const,
       save: loadableSave(),
       revision: 1,
+      serverAuthority: { serverNowMs: currentMs },
     }))
     stubs.restoreGameSession = vi.fn(() => {
       Object.assign(player, JSON.parse(JSON.stringify(createDefaultPlayer())))

@@ -8,6 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { usePlayerStore } from '../../stores/player'
 import { primeMortalCreationPick } from './GameSave.fixture'
@@ -26,7 +27,9 @@ import type { RestoreTimeAuthority } from './saveTypes'
 const NOW = 1_725_160_000_000
 
 function registeredManager(): GameManager {
-  const manager = new GameManager()
+  const manager = new GameManager({
+    time: new TimeAuthority({ wallNow: () => NOW, monotonicNow: () => 0 }),
+  })
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
@@ -43,7 +46,7 @@ function makeSave(overrides: { lastSavedAt?: number; autoFarmStage?: { stageId: 
     player.autoFarmStage = overrides.autoFarmStage
   }
   const save = buildGameSave(player, manager)
-  // buildGameSave stamps lastSavedAt = Date.now(); the test controls the
+  // buildGameSave stamps the shared authority; the test controls the
   // payload's persisted timestamp directly.
   save.player.lastSavedAt = overrides.lastSavedAt ?? NOW
   return save

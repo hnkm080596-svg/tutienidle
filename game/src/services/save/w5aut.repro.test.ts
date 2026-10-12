@@ -32,6 +32,7 @@ import { isValidCharacterName } from '../character/CharacterCreationService'
 import { useAppLifecycle } from '../../composables/useAppLifecycle'
 
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { lockBetaFeaturesForTests } from '../../core/game/__fixtures__/betaFeaturesUnlock'
 import { commitSpellInitiationForTest, lockBetaWaysForTests } from '../../core/game/__fixtures__/betaWaysUnlock'
@@ -62,6 +63,7 @@ lockBetaElementsForTests()
 // ---------------------------------------------------------------------------
 
 const CONFIG: SupabaseConfig = { url: 'https://test.supabase.co', anonKey: 'anon' }
+const SERVER_NOW_MS = 1_760_000_000_000
 const BUILD: ClientBuildInfo = {
   buildId: 'w5-aut',
   appVersion: '0.0.0',
@@ -79,7 +81,9 @@ function mockFetchResponse(body: unknown, status = 200) {
 }
 
 function committedSave(): GameSave {
-  const gameManager = new GameManager()
+  const gameManager = new GameManager({
+    time: new TimeAuthority({ wallNow: () => 1_760_000_000_000, monotonicNow: () => 0 }),
+  })
   const player = createDefaultPlayer()
   player.mortalBasicSkillId = BETA_MORTAL_STARTER_SKILL_ID
   player.nodeLevels = { ...player.nodeLevels, core_linh_bao: 1 }
@@ -238,7 +242,7 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
         showAuth: vi.fn(),
       },
       coordinator: {
-        load: vi.fn(async () => ({ status: 'uninitialized' as const, revision: 0 as const, character: {
+        load: vi.fn(async () => ({ status: 'uninitialized' as const, revision: 0 as const, serverNowMs: SERVER_NOW_MS, character: {
           id: 'char-1', name: 'tester', selectedTalentIds: [], baseAttributes: {},
           mortalBasicSkillId: 'linh_bao', realmId: 'mortal', realmLevel: 0,
           createdAt: '2026-01-01T00:00:00Z',
@@ -265,6 +269,7 @@ describe('W5-AUT: first-save rejection arms the recovery surface only on permane
         observeSaveResult: vi.fn(),
       },
       gameManager: {
+        time: new TimeAuthority({ wallNow: () => 1_760_000_000_000, monotonicNow: () => 0 }),
         eventBus: { on: vi.fn(), off: vi.fn() },
         materialRegistry: { has: () => false },
         materialBag: { add: vi.fn(), getAll: () => [] },

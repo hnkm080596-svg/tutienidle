@@ -130,6 +130,7 @@ describe('arm A - degraded zero-accrual authority reaches no paying channel', ()
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -215,6 +216,7 @@ describe('arm B - window START is not Date.now()-clamped (R24-INT-01 residual)',
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -375,6 +377,7 @@ describe('arm C - QUEST_LIST_CAP and sibling collections', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -452,6 +455,7 @@ describe('arm C - QUEST_LIST_CAP and sibling collections', () => {
 describe('stamp classes vs the |x| < 2^52 domain check', () => {
   beforeEach(() => {
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

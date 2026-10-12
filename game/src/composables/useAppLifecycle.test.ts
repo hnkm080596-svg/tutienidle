@@ -19,6 +19,7 @@ import { useAppLifecycle } from './useAppLifecycle'
 import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import type { GameSave } from '../services/save/SaveSystem'
 import type { GameManager } from '../core/game/GameManager'
+import { TimeAuthority } from '../core/idle/TimeAuthority'
 
 // --- Stub dependency surface cua useAppLifecycle (constructor injection) ---
 
@@ -79,6 +80,7 @@ function makeStubs() {
       observeSaveResult: vi.fn(),
     },
     gameManager: {
+      time: new TimeAuthority(),
       eventBus: {
         on: vi.fn(),
         off: vi.fn(),
@@ -489,6 +491,33 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
 })
 
 describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
+  it('remote boot without a server stamp cannot restore, grant or start gameplay', async () => {
+    const stubs = makeStubs()
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ status: 'uninitialized', revision: 0, character: {} })
+    const onNewCharacter = vi.fn()
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true, onNewCharacter })
+    expect(outcome.status).toBe('failed')
+    expect(onNewCharacter).not.toHaveBeenCalled()
+    expect(stubs.restoreGameSession).not.toHaveBeenCalled()
+    expect(stubs.clock.start).not.toHaveBeenCalled()
+    expect(stubs.authority.markReady).not.toHaveBeenCalled()
+    lifecycle.stopAll()
+  })
+  it('server time replaces a forged preboot epoch before character creation', async () => {
+    const stubs = makeStubs()
+    const serverNowMs = Date.UTC(2026, 0, 1)
+    stubs.gameManager = { ...stubs.gameManager, time: new TimeAuthority({ wallNow: () => serverNowMs + 86_400_000, monotonicNow: () => 0 }) } as GameManager
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ status: 'uninitialized', revision: 0, character: {}, serverNowMs })
+    const onNewCharacter = vi.fn(() => { expect(stubs.gameManager.time.now()).toBe(serverNowMs) })
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true, onNewCharacter })
+    expect(outcome.status).toBe('entered')
+    expect(onNewCharacter).toHaveBeenCalledOnce()
+    lifecycle.stopAll()
+  })
   const remoteCharacter = {
     id: 'char-1',
     name: 'Vo Danh',
@@ -517,6 +546,7 @@ describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
     stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
     ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       status: 'uninitialized',
+      serverNowMs: Date.UTC(2026, 0, 1),
       revision: 0,
       character: remoteCharacter,
     })
@@ -543,6 +573,7 @@ describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
     stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
     ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       status: 'uninitialized',
+      serverNowMs: Date.UTC(2026, 0, 1),
       revision: 0,
       character: remoteCharacter,
     })
@@ -576,6 +607,7 @@ describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
     stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
     ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
       status: 'uninitialized',
+      serverNowMs: Date.UTC(2026, 0, 1),
       revision: 0,
       character: remoteCharacter,
     })

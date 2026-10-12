@@ -52,13 +52,13 @@ const { stateVersion, bumpState } = useStateVersion()
 // running; nothing workforce-related renders.
 const workerSurfaceVisible = betaSurfaceVisible('manualWorkforce')
 
-const nowMs = ref(Date.now())
+const nowMs = ref(gameManager.time.now())
 
 let timer: ReturnType<typeof setInterval> | undefined
 
 onMounted(() => {
   timer = setInterval(() => {
-    nowMs.value = Date.now()
+    nowMs.value = gameManager.time.now()
   }, 500)
 })
 
@@ -315,7 +315,7 @@ function collectLinMach() {
     return
   }
 
-  gameManager.buildingOps.collectBuilding(outpostInstance.value.instanceId, player.$state, nowMs.value / 1000)
+  gameManager.buildingOps.collectBuilding(outpostInstance.value.instanceId, player.$state)
 
   bumpState()
 }

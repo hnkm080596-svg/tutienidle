@@ -61,7 +61,7 @@ import {
 //     unparkable.
 // ============================================================================
 
-declare const process: { env: Record<string, string | undefined> }
+declare const process: { env: Record<string, string | undefined>; execPath: string }
 
 
 
@@ -266,7 +266,7 @@ describe('fixpoint r22 AUT - magnitude bound audit (bf3b44a1)', () => {
 
   it('C2 mechanism hardening note - the accrue loop itself is unbounded IF reached (child probe dies by timeout)', { timeout: 60_000 }, () => {
     const spec = fileURLToPath(new URL('./auditR22InsightHang.probe.test.ts', import.meta.url))
-    const vitestBin = fileURLToPath(new URL('../../../node_modules/.bin/vitest', import.meta.url))
+    const vitestBin = fileURLToPath(new URL('../../../node_modules/vitest/vitest.mjs', import.meta.url))
     const marker = fileURLToPath(new URL('./.r22-hang-armed', import.meta.url))
     try {
       rmSync(marker, { force: true })
@@ -276,7 +276,7 @@ describe('fixpoint r22 AUT - magnitude bound audit (bf3b44a1)', () => {
     try {
       // --pool=threads so the kill takes the looping worker down with
       // the process (same harness as the r21 nowMs hang probe).
-      const result = spawnSync(vitestBin, ['run', spec, '--reporter=dot', '--pool=threads'], {
+      const result = spawnSync(process.execPath, [vitestBin, 'run', spec, '--reporter=dot', '--pool=threads'], {
         cwd: fileURLToPath(new URL('../../../', import.meta.url)),
         env: { ...process.env, R22_INSIGHT_HANG_PROBE: '1', R22_HANG_MARKER_FILE: marker },
         timeout: 25_000,

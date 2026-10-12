@@ -153,6 +153,7 @@ beforeEach(() => {
   setActivePinia(createPinia())
   currentMs = 1_725_160_000_000
   vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+  vi.spyOn(performance, 'now').mockReturnValue(0)
 })
 
 afterEach(() => {
@@ -613,6 +614,7 @@ describe('r32 COR - F: COR-F3 - seeded-head re-stamp has no < 2^52 headroom', ()
     // completes <= settleNow + cycleMs, then += (Date.now() - settleNow)
     // lands past the bound.
     vi.spyOn(Date, 'now').mockImplementation(() => BOUND - 1 - 15_000)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
 
     manager.productionSystem.settleOffline(
       manager.materialBag,

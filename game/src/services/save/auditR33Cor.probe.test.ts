@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { createDefaultPlayer, type PlayerData } from '../../core/player/Player'
 import { GameManager } from '../../core/game/GameManager'
+import { TimeAuthority } from '../../core/idle/TimeAuthority'
 import type { GameSave } from './saveTypes'
 import { buildGameSave } from './SaveSystem'
 import { validateGameSaveShape } from './saveShapeValidation'
@@ -94,8 +95,8 @@ const SITE_ID = THANH_VAN_PRODUCTION_SITES[0]!.siteId
 const MORTAL_BASE_SECONDS = CYCLE_BASE_SECONDS_BY_REALM.mortal!
 const MORTAL_CYCLE_MS = computeCycleSeconds(MORTAL_BASE_SECONDS, 1) * 1000
 
-function registeredManager(): GameManager {
-  const manager = new GameManager()
+function registeredManager(time?: TimeAuthority): GameManager {
+  const manager = new GameManager(time ? { time } : undefined)
   manager.catalogOps.registerMaterials(materials)
   manager.catalogOps.registerEquipment(equipment)
   manager.catalogOps.registerAffixes(affixes)
@@ -203,6 +204,7 @@ beforeEach(() => {
   setActivePinia(createPinia())
   currentMs = 1_725_160_000_000
   vi.spyOn(Date, 'now').mockImplementation(() => currentMs)
+  vi.spyOn(performance, 'now').mockReturnValue(0)
 })
 
 afterEach(() => {
@@ -501,8 +503,9 @@ describe('r33 COR - B: mintedSpanMs bounds every minted stamp (verified)', () =>
 
 describe('r33 COR - C: seeded-head re-stamp boundary (verified)', () => {
   function settleWithClock(deviceNow: number) {
-    const manager = registeredManager()
     const settleNow = 1_000_000_000_000 // authorized window end (past epoch)
+    const time = new TimeAuthority({ wallNow: () => settleNow, monotonicNow: () => 0 })
+    const manager = registeredManager(time)
     manager.productionSystem.restoreStates(
       [
         {
@@ -515,7 +518,7 @@ describe('r33 COR - C: seeded-head re-stamp boundary (verified)', () => {
       ] as never,
       settleNow,
     )
-    vi.spyOn(Date, 'now').mockImplementation(() => deviceNow)
+    time.rebase(deviceNow)
     manager.productionSystem.settleOffline(
       manager.materialBag,
       manager.materialRegistry,

@@ -76,7 +76,8 @@ export function settleIdleSkillInsightMint(
   const today = utcDayBucket(nowMs)
   const ledger = (player.idleSkillInsightDaily ??= { dayBucket: today, minted: 0 })
 
-  if (ledger.dayBucket !== today) {
+  // A previous day cannot reopen quota that has already been consumed.
+  if (today > ledger.dayBucket) {
     ledger.dayBucket = today
     ledger.minted = 0
   }

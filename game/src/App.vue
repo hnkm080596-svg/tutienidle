@@ -546,7 +546,7 @@ const lifecycle = useAppLifecycle({
   clock: {
     start: () => clock.start(time.now()),
     stop: () => clock.stop(),
-    nowSeconds: () => clock.nowSeconds(),
+    nowSeconds: () => time.nowSeconds(),
   },
   scheduleInterval: (callback, timeoutMs) => window.setInterval(callback, timeoutMs),
   clearHandle: (handle) => window.clearInterval(handle),
@@ -781,6 +781,7 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
       // battle stays legitimately owned.
       gameManager.discardStaleBattle()
     }
+    if (serverAuthority) time.rebase(serverAuthority.serverNowMs)
     lifecycle.resumeSimulation()
   },
   onStateChange: (state) => {
@@ -972,7 +973,7 @@ function tick() {
       wasFighting = isFighting
     }
 
-    player.cultivate(simulatedDelta)
+    player.cultivate(simulatedDelta, time.now())
 
     // Tieu canh gioi tu tang (2026-08-28) - tick() bam breakthrough()
     // moi khi tu vi day, khong con checkbox bat/tat (dung tinh than
@@ -1062,7 +1063,7 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       initializeCharacter(resolved, {
         gameManager,
         player: player.$state,
-        nowSeconds: () => clock.nowSeconds(),
+        nowSeconds: () => time.nowSeconds(),
       })
     },
   })

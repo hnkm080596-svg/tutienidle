@@ -98,6 +98,7 @@ describe('seam (a) - both restore bodies sanitize the same authority identically
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -245,6 +246,7 @@ describe('seam (b) - fallback window vs calculateOfflineTime cap split', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -310,6 +312,7 @@ describe('seam (d) - round-trip after a sanitized restore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -433,6 +436,7 @@ describe('seam (d) - round-trip after a sanitized restore', () => {
 describe('unit pins - sanitizeRestoreAuthority contract', () => {
   beforeEach(() => {
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

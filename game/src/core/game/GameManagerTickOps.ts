@@ -145,6 +145,7 @@ export class GameManagerTickOps {
           this.deps.questRegistry,
           this.deps.questManager,
           activePlayer,
+          this.deps.time?.now() ?? Date.now(),
         )
       ) {
         this.deps.notifications.push({ kind: 'craft', message: 'Nhiệm vụ hằng ngày đã làm mới' })

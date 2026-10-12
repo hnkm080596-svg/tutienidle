@@ -43,12 +43,12 @@ export function useThienCoEntries() {
   const navigation = useBuildingNavigation()
   const { stateVersion } = useStateVersion()
 
-  const nowMs = ref(Date.now())
+  const nowMs = ref(gameManager.time.now())
   let timer: ReturnType<typeof setInterval> | undefined
 
   onMounted(() => {
     timer = setInterval(() => {
-      nowMs.value = Date.now()
+      nowMs.value = gameManager.time.now()
     }, TICKER_MS)
   })
 

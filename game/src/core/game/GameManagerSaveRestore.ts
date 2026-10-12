@@ -31,8 +31,10 @@ import { calculateOfflineTime } from '../idle/GameClock'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
 import type { TribulationDirector } from '../tribulation/TribulationDirector'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 export interface GameManagerSaveRestoreDeps {
+  time?: TimeAuthority
   skillManager: SkillManager
   skillTemplates: TemplateRegistry<Skill>
   // P7-M6 - restore routes through the single writer so the
@@ -155,7 +157,8 @@ export class GameManagerSaveRestore {
     // r23-AUT: authority stamps bypass the save gate - an out-of-domain
     // server stamp falls back to client-clock semantics (bounded deny)
     // instead of feeding derivations.
-    const authority = sanitizeRestoreAuthority(timeAuthority)
+    const liveNowMs = this.deps.time?.now() ?? Date.now()
+    const authority = sanitizeRestoreAuthority(timeAuthority, liveNowMs)
 
     if (payloadIdentity === this.lastAppliedPayloadHash) {
       return this.deps.equipmentSystem.getModifiers()
@@ -346,7 +349,7 @@ export class GameManagerSaveRestore {
       }
     }
 
-    const authorityNowMs = restoreAuthorityNowMs(authority)
+    const authorityNowMs = restoreAuthorityNowMs(authority, liveNowMs)
 
     // r26 (COR-1/AUT-1) + r27-COR-1 - persisted deadline stamps live in
     // the SAVE's own epoch (every began-time is pinned <= lastSavedAt at
@@ -361,21 +364,21 @@ export class GameManagerSaveRestore {
     // deadline-channel clamps below (workerCycles, decompose,
     // alchemyJobs, tribulation).
     const restoreClockMs = Math.min(
-      Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : Date.now(),
-      Date.now(),
+      Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : liveNowMs,
+      liveNowMs,
     )
 
     // r16-INT-04: the reset marker lives in the FIELD's epoch -
     // checkAndResetDaily/resetDaily read and write it against
-    // Date.now(). A server-epoch clamp stamp on a fast clock lands a
+    // liveNowMs. A server-epoch clamp stamp on a fast clock lands a
     // day behind the client's bucket, so the daily reset refires right
     // after restore: unclaimed progress is wiped and claimed dailies
-    // re-arm (one replay per boot). Clamping against Date.now() keeps
+    // re-arm (one replay per boot). Clamping against liveNowMs keeps
     // the r11-AUT freeze guard (future stamps still die) in the epoch
     // the field's readers use.
     this.deps.questManager.restore(
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
-      Date.now(),
+      liveNowMs,
     )
 
     // Production (plan S4.3) - restore state + offline settle tuan tu
@@ -400,7 +403,7 @@ export class GameManagerSaveRestore {
     this.deps.decomposeSystem.restore(save.decompose, restoreClockMs)
 
     // B1-D - the settle window is the authorized context, never a
-    // Date.now()/lastSavedAt read of our own: 'cold-boot' accrues the
+    // liveNowMs/lastSavedAt read of our own: 'cold-boot' accrues the
     // SERVER-authorized duration (progression_cutoff_at -> serverNowUtc)
     // positioned inside the payload's own epoch (lastSavedAt + elapsed),
     // 'live-replacement' accrues zero, undefined keeps legacy local
@@ -418,14 +421,14 @@ export class GameManagerSaveRestore {
               Number.POSITIVE_INFINITY,
             ).offlineSeconds
           : calculateOfflineTime(
-              { lastOnlineAt: save.player.lastSavedAt ?? Date.now() },
-              Date.now(),
+              { lastOnlineAt: save.player.lastSavedAt ?? liveNowMs },
+              liveNowMs,
               Number.POSITIVE_INFINITY,
             ).offlineSeconds
 
     // End of the authorized window expressed in the payload's epoch -
-    // identical to Date.now() for honest saves (lastSavedAt + elapsed).
-    // r11-COR: clamp at Date.now() - a finite FUTURE lastSavedAt passes
+    // identical to liveNowMs for honest saves (lastSavedAt + elapsed).
+    // r11-COR: clamp at liveNowMs - a finite FUTURE lastSavedAt passes
     // shape validation, yields elapsed=0, but would leave settleNowMs
     // future-dated and feed every unconditional settle below (alchemy
     // tick(future) minting pending jobs early - save-edit cheat).
@@ -434,18 +437,18 @@ export class GameManagerSaveRestore {
     // slow local clock would otherwise underpay the offline span the
     // server already granted (and a fast one must not pay past it).
     // r24-INT-01: ...but persisted stamps live in the CLIENT epoch
-    // (next write stamps lastSavedAt = Date.now()). A forward-skewed
+    // (next write stamps lastSavedAt = liveNowMs). A forward-skewed
     // authority (untilMs > now, honest server-clock skew) would settle
     // dues inside (now, untilMs] and seed lane heads/payouts stamped
     // past the next save's own marker -> the admission pin
     // (startedAtMs <= lastSavedAt) rejects the game's own save. Clamp
-    // the settle cursor at Date.now() too: dues in the skew window
+    // the settle cursor at liveNowMs too: dues in the skew window
     // defer to the next live tick at their real times (no loss), while
     // elapsed-driven channels still pay the full approved span.
     const settleNowMs = Math.min(
-      (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000,
+      (save.player.lastSavedAt ?? liveNowMs) + elapsedOfflineSeconds * 1000,
       authorityNowMs,
-      Date.now(),
+      liveNowMs,
     )
     // r13-COR-4: clamp the window START as well - a
     // crafted/skewed-future lastSavedAt otherwise positions
@@ -459,7 +462,7 @@ export class GameManagerSaveRestore {
     // window while auto-farm pays the same elapsed (asymmetry was
     // the r14 regression); settleNowMs still clamps the end at
     // authorityNowMs.
-    // r25-AUT-1: the start must clamp at Date.now() too - persisted
+    // r25-AUT-1: the start must clamp at liveNowMs too - persisted
     // lane heads are stamped FROM this cursor, so a future-positioned
     // pair (crafted-future lastSavedAt + a sinceMs still ahead of the
     // client clock) seeds workerCycles[].startedAtMs past the next
@@ -471,7 +474,7 @@ export class GameManagerSaveRestore {
     const offlineSinceMs = Math.min(
       save.player.lastSavedAt ?? settleNowMs,
       authorityNowMs - elapsedOfflineSeconds * 1000,
-      Date.now(),
+      liveNowMs,
     )
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {

@@ -86,7 +86,7 @@ import { isCompanionPullPoolEnabled } from '../../realm/ReleasePolicy'
 import { makeInstance } from '../../equipment/EquipmentInstance.fixture'
 import { EQUIPMENT_SLOTS } from '../../equipment/EquipmentSlotState'
 import { usePlayerStore } from '../../../stores/player'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
 // system's ENABLED implementation (sec.11-15: dormant, not deleted),
@@ -344,12 +344,19 @@ beforeEach(() => {
   setActivePinia(createPinia())
 })
 
+afterEach(() => {
+  vi.restoreAllMocks()
+  vi.useRealTimers()
+})
+
 describe('TrucCoJourney - ordered journey', () => {
   it(
     'drives the pinned leg order A->B->E.1->D.1+D.2->C/E.2->G->F->I->K->L on real seams',
     { timeout: 300_000 },
     () => {
-      vi.useFakeTimers()
+      vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
       // Economy/equipment draws ride unseeded Math.random BY DESIGN
       // (a seeded battle must not pin drops - EarlyGameSession), which
       // leaves this pinned order nondeterministic whenever a marginal
@@ -1073,7 +1080,9 @@ describe('TrucCoJourney - ordered journey', () => {
 // ===== Leg J - determinism =====
 describe('TrucCoJourney - determinism', () => {
   const driveJourneyCore = (): GameSave => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     // Each run owns an independent store - otherwise run two's seeded
     // driver would inherit run one's persisted state.
     setActivePinia(createPinia())
@@ -1126,7 +1135,9 @@ describe('TrucCoJourney - grade ladder', () => {
     seed: (s: EarlyGameSession) => void,
     realmLevel: number,
   ): string | undefined => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()
     s.player.realmLevel = 12
     expect(s.performRitual('spell', 'spell_pathway')).toBe(true)
@@ -1185,7 +1196,9 @@ describe('TrucCoJourney - grade ladder', () => {
     // The lineage survives only when the MORTAL exit also committed
     // hidden: mortal hidden body complete + Lv18 + all-5 at the
     // mortal effective cap (floor(10 x 1.1) = 11) BEFORE the ritual.
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()
     s.player.realmLevel = 18
     s.player.completedStageIds = [...MORTAL_STAGE_IDS]
@@ -1233,7 +1246,9 @@ describe('TrucCoJourney - grade ladder', () => {
 // incoherent persisted state (C2C-64 coherence path, real validator).
 describe('TrucCoJourney - save integrity', () => {
   it('rejects a save whose zhou_tian progressed past the meridian gate', () => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    // Honest journey steps advance both clock domains, unlike exploit probes.
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now())
     const s = makeJourneySession()
     const save = buildGameSave(s.player, s.gameManager)
     save.player.realmId = 'foundation_establishment'
