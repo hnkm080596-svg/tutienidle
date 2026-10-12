@@ -65,6 +65,10 @@ function onCancel() {
 
 const confirmLabel = computed(() => props.confirmLabel ?? i18n.global.t('panels.common.confirm'))
 const cancelLabel = computed(() => props.cancelLabel ?? i18n.global.t('panels.common.cancel'))
+// The diamond X stays a cancel action but carries its own accessible
+// name: an aria-label identical to a visible action button collides in
+// strict-mode role queries (e2e getByRole button 'Huy' matched twice).
+const closeLabel = computed(() => i18n.global.t('panels.common.close'))
 
 const titleId = useId()
 const messageId = useId()
@@ -94,7 +98,7 @@ useDialogFocus(panelEl, computed(() => props.open), {
           :title-id="titleId"
           :badge="danger ? 'alert' : 'info'"
           show-close
-          :close-label="cancelLabel"
+          :close-label="closeLabel"
           @close="onCancel"
         >
           <p :id="messageId" class="confirm-modal__message">{{ message }}</p>

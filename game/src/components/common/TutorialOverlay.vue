@@ -57,7 +57,7 @@ function next() {
       :title-id="titleId"
       badge="info"
       show-close
-      :close-label="t('tutorial.skip')"
+      :close-label="t('panels.common.close')"
       @close="finish"
     >
       <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>

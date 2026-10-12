@@ -48,7 +48,7 @@ const titleId = useId()
       :title-id="titleId"
       badge="info"
       show-close
-      :close-label="t('betaComplete.continue')"
+      :close-label="t('panels.common.close')"
       width="min(500px, 94vw)"
       @close="onContinue"
     >

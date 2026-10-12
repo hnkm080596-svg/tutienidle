@@ -47,7 +47,7 @@ useDialogFocus(panelEl, computed(() => props.open), {
           :title-id="titleId"
           badge="alert"
           show-close
-          :close-label="i18n.global.t('panels.common.cancel')"
+          :close-label="i18n.global.t('panels.common.close')"
           width="min(600px, 94vw)"
           @close="pick('cancel')"
         >
