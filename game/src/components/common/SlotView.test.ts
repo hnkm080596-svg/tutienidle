@@ -325,7 +325,7 @@ describe('SlotView — badge/marker/comparison/amount/caption', () => {
 })
 
 describe('SlotView - Chat meteors (equipment quality indicator, owner ruling 2026-10-08)', () => {
-  // Owner ruling: the Chat channel is the groove 'sao băng' meteor
+  // Owner ruling: the Chat channel is the groove 'sao bang' meteor
   // layer (slot-view__chat), twin streaks in the art groove tinted by
   // --slot-rarity-color. Chat 1 (Hoang, lowest) gets NO streak; the
   // effect starts at Huyen (rank 2). Materials on the 10-step scale

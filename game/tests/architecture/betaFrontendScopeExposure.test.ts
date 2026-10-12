@@ -99,6 +99,11 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
         'components/game/combat/hud/TurnCombatSkillBar.vue',
         'components/panels/CompanionPanel.vue',
         'composables/useTurnCombatManual.ts',
+        // SkillSurface's design_ultimate_placeholder is the skill
+        // design-mode seat in Minh's design tree (owner ruling
+        // 2026-10-09: master design-mode intent) - a locked placeholder
+        // stub, never a live-combat ultimate role row.
+        'components/scenes/skill/SkillSurface.vue',
       ])
 
       expect(list).toEqual([])

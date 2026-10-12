@@ -173,7 +173,7 @@ const entries = computed<EquipmentEntry[]>(() => {
 // Owner ruling 2026-10-08: chips + footer selects removed. Two dropdowns
 // - Loai item (7 options: Tat Ca + 6 socket types) filters first, then
 // Sap Xep sorts inside the filtered result. The quality-tone (Kim/Tu/
-// Lam) filter UI is dropped; sorting by chất lives in the sort select.
+// Lam) filter UI is dropped; sorting by quality lives in the sort select.
 type TypeFilter = 'all' | EquipmentSlot
 const typeFilter = ref<TypeFilter>('all')
 

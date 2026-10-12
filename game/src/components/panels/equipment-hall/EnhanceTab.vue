@@ -3,7 +3,7 @@
 // extracted from EquipmentHallPanel.vue shell. Cuong Hoa gan SLOT (not
 // selectedInstanceId) - noi can bo song theo shared hall selection: doll
 // click (instanceId) -> resolve SLOT de cung cap cho enhance (owner
-// ruling 2026-10-08: 'đồ sẽ chọn trực tiếp từ cái doll').
+// ruling 2026-10-08: gear is picked straight off the doll).
 import { computed, inject, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -130,7 +130,7 @@ const selectedEnhanceRow = computed(() =>
 )
 
 // Item pick happens on the paperdoll directly (owner ruling 2026-10-08:
-// 'đồ sẽ chọn trực tiếp từ cái doll') - the shared hall selection
+// gear is picked straight off the doll) - the shared hall selection
 // carries the clicked instance; Enhance still resolves to its SLOT.
 // Optional inject: the preview mounts this tab without the provider.
 const hallSelection = inject(HALL_SELECTION_KEY, null)

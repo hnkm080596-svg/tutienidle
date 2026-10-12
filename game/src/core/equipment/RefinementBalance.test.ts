@@ -45,6 +45,12 @@ describe('RefinementBalance — five-quality wash contract', () => {
       tien: [10, 35, 55],
     })
   })
+
+  it('caps wash at tier 3 - tiers 4-5 only come from drops (owner ruling 2026-10-09)', () => {
+    for (const [quality, weights] of Object.entries(WASH_TIER_WEIGHTS_BY_QUALITY)) {
+      expect(weights.length, quality).toBeLessThanOrEqual(3)
+    }
+  })
 })
 
 describe('RefinementBalance — five-quality refine contract', () => {

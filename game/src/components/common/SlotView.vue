@@ -197,10 +197,10 @@ const enhanceAuraColor = computed(() => (enhanceAura.value ? `var(--rank-color-$
 // basic gray ("mau thap nhat neu khong co do"). Rendered by the
 // .slot-view__quality-tint layer masked to the art itself.
 const ART_FRAME_VARIANTS = new Set(['equipment', 'bag', 'socket'])
-// 'gương' = the 6 worn equipment sockets only (owner ruling
-// 2026-10-08): the ~100 bag cells render variant='equipment' (bag
-// grid shares the art) but get NO sheen - the rule is the WORN slot,
-// not the art.
+// The sheen ('guong' = mirror) is for the 6 worn equipment sockets
+// only (owner ruling 2026-10-08): the ~100 bag cells render
+// variant='equipment' (bag grid shares the art) but get NO sheen -
+// the rule is the WORN slot, not the art.
 const MIRROR_GLINT_VARIANTS = new Set(['socket'])
 const qualityTintColor = computed(() => {
   if (!ART_FRAME_VARIANTS.has(props.variant ?? 'item')) return undefined
@@ -212,13 +212,13 @@ const qualityTintColor = computed(() => {
   // Rank 1 (Cuu Pham, basic): steel gray, scoped to this tint only -
   // --rank-color-1 is shared by --grade-hoang / --affix-tier-1 /
   // talent-tier-pham so the token itself must not change (owner ruling
-  // 2026-10-08: 'đổi đi cho rõ màu').
+  // 2026-10-08: swap in a clearer colour).
   if (rank <= 1) return '#7f8792'
   return `var(--rank-color-${rank})`
 })
 
 // Chat meteors (owner ruling 2026-10-08): the approved demo cell is
-// the groove 'sao băng' - twin bright streaks running the art's inner
+// the groove 'sao bang' (shooting star) - twin bright streaks running the art's inner
 // groove. Chat 1 (Hoang, lowest) gets NO streak at all - the effect
 // starts at Huyen (rank 2); tiers differ by COLOR only
 // (--slot-rarity-color already maps rank -> --grade-* ramp positions).
@@ -230,7 +230,7 @@ const chatMeteorTier = computed(() => {
   return Math.min(rank, 5)
 })
 
-// Mirror glint (owner ruling 2026-10-08): 'gương' = the white sheen
+// Mirror glint (owner ruling 2026-10-08): 'guong' = the white sheen
 // pass - the occupied marker on the worn sockets only; bag cells share
 // the art but skip it. Empty cells get no sheen either way.
 const showMirrorGlint = computed(
@@ -324,7 +324,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
          groove, colored by the Chat tier (--slot-rarity-color). -->
     <span v-if="chatMeteorTier > 0" class="slot-view__chat" aria-hidden="true"></span>
 
-    <!-- layer 1.46: 'gương' white sheen pass - the occupied marker for
+    <!-- layer 1.46: 'guong' white sheen pass - the occupied marker for
          the art-frame cells. -->
     <span v-if="showMirrorGlint" class="slot-view__glint" aria-hidden="true"></span>
 
@@ -768,7 +768,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   }
 }
 
-/* Chat meteors (owner ruling 2026-10-08): twin 'sao băng' streaks
+/* Chat meteors (owner ruling 2026-10-08): twin 'sao bang' streaks
    chasing each other through the art's inner groove - the groove band
    was pixel-measured on item-slot-v2.png (dark channel ~3.4%-5% of the
    cell, between the bright outer frame and the inner filigree), so the
@@ -816,7 +816,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     12.2% 7.7%, 87.8% 7.7%, 92.3% 12.2%, 92.3% 87.8%, 87.8% 92.3%, 12.2% 92.3%, 7.7% 87.8%, 7.7% 12.2%);
 }
 
-/* 'gương' (owner ruling 2026-10-08): one soft white sheen pass - the
+/* 'guong' (owner ruling 2026-10-08): one soft white sheen pass - the
    occupied-state channel for the art-frame cells. Pure white, no tint;
    clip follows the octagon silhouette. */
 .slot-view__glint {

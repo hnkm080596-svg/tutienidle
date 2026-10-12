@@ -251,22 +251,28 @@ const BOSSES: BossKey[] = ['croc', 'serpent', 'whelp']
 //     element-side burst gap, not an investment gap. The croc floor
 //     (mortal_dong_10, scale 3.6) was NOT softened.
 // Tracked in docs/balance/2026-10-05-stat-wall-ladder.md.
+//
+// Owner ruling 2026-10-09: nerf intentional - keep defeat expectation.
+// The equipment rework cut enhance scaling to mainStat only (affixes
+// keep their rolled value), so the +20 slot enhance below yields less
+// power than when these cells were pinned; the 7 cells that now lose
+// stay 'defeat' by ruling, not by regression.
 const EXPECTED_OUTCOME: Record<string, 'victory' | 'defeat'> = {
-  'fire/croc': 'victory',
+  'fire/croc': 'defeat',
   'fire/serpent': 'victory',
   'fire/whelp': 'victory',
-  'water/croc': 'victory',
+  'water/croc': 'defeat',
   'water/serpent': 'victory',
   'water/whelp': 'victory',
   'wood/croc': 'defeat',
-  'wood/serpent': 'victory',
-  'wood/whelp': 'victory',
-  'metal/croc': 'victory',
+  'wood/serpent': 'defeat',
+  'wood/whelp': 'defeat',
+  'metal/croc': 'defeat',
   'metal/serpent': 'victory',
   'metal/whelp': 'victory',
-  'earth/croc': 'victory',
+  'earth/croc': 'defeat',
   'earth/serpent': 'victory',
-  'earth/whelp': 'victory',
+  'earth/whelp': 'defeat',
 }
 
 beforeEach(() => setActivePinia(createPinia()))

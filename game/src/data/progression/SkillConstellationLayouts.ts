@@ -101,6 +101,11 @@ const FIRE_CONSTELLATION: SkillConstellationLayout = {
     { fromNodeId: 'hoa_hoa_nhan', toNodeId: 'hoa_pha_giap_diem' },
     { fromNodeId: 'hoa_pha_giap_diem', toNodeId: 'hoa_bao_diem' },
     { fromNodeId: 'hoa_bao_diem', toNodeId: 'hoa_phe_diem' },
+    // Minh ruling 2026-10-07: Dan Hoa / An Sau hang off the END of the
+    // cast chain (Phe Diem) - draw the real prereq edges from the chain
+    // head in addition to the glyph strokes off the junction above.
+    { fromNodeId: 'hoa_phe_diem', toNodeId: 'hoa_an_sau' },
+    { fromNodeId: 'hoa_phe_diem', toNodeId: 'hoa_diem_chuan' },
     // Tam Muoi lane - three parallel children of the Trang mark.
     { fromNodeId: 'linh_ngo_tam_muoi_chan_hoa', toNodeId: 'ngu_hoa' },
     { fromNodeId: 'linh_ngo_tam_muoi_chan_hoa', toNodeId: 'ngu_viem_tam' },

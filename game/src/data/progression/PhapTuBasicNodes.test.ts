@@ -43,6 +43,17 @@ describe('PhapTu basic lane — reimagined contract', () => {
     // Glyph shape: trunk nodes prereq the element root (*_linh_ngo)
     // directly; ring/capstone nodes hang off a same-element basic-lane
     // node, so every chain resolves to the root.
+    // Minh ruling 2026-10-07: the fire leg's An-capstone parents
+    // (hoa_diem_chuan / hoa_an_sau) hang off the END of the Ly Hoa cast
+    // chain (hoa_phe_diem), not the element root - so a prereq may also
+    // land on the cast-chain leg between hoa_diem_uy and hoa_phe_diem.
+    const HOA_CAST_CHAIN_IDS = new Set([
+      'hoa_diem_uy',
+      'hoa_hoa_nhan',
+      'hoa_pha_giap_diem',
+      'hoa_bao_diem',
+      'hoa_phe_diem',
+    ])
     const laneIds = new Set(BASIC_LANE_IDS.map((n) => n.id))
 
     for (const node of BASIC_LANE_IDS) {
@@ -53,7 +64,8 @@ describe('PhapTu basic lane — reimagined contract', () => {
       expect(target, node.id).toBeDefined()
       const onRoot = target!.endsWith('linh_ngo')
       const onLanePeer = laneIds.has(target!)
-      expect(onRoot || onLanePeer, `${node.id} -> ${target}`).toBe(true)
+      const onCastChain = HOA_CAST_CHAIN_IDS.has(target!)
+      expect(onRoot || onLanePeer || onCastChain, `${node.id} -> ${target}`).toBe(true)
     }
   })
 

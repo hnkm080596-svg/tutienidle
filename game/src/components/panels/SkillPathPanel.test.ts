@@ -15,6 +15,7 @@ import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { GameManager } from '@/core/game/GameManager'
 import { betaSkillTreeFor } from '@/core/betaScopeSkillDomain'
+import { recordSessionLoginId } from '@/services/master/masterAccess'
 import type { PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
@@ -103,7 +104,10 @@ function mountPanel(
 }
 
 describe('SkillPathPanel (scene 07 fidelity)', () => {
-  it('a way-less mortal sees the Phan Nhan identity, an empty graph and a disabled respec', async () => {
+  it('a way-less mortal sees the Phan Nhan identity, an empty graph and no respec entry', async () => {
+    // Minh ruling (2026-10-07): respec is a master-only dev tool - the
+    // button is v-if=isMaster, so a non-master mortal sees no entry at
+    // all (there is no disabled state to pin).
     const view = mountPanel(() => {})
 
     await nextTick()
@@ -111,7 +115,7 @@ describe('SkillPathPanel (scene 07 fidelity)', () => {
     expect(view.scene()).not.toBeNull()
     expect(view.heading()).toBe(i18n.global.t('panels.skillPath.mortalName'))
     expect(view.nodes().length).toBe(0)
-    expect(view.respecButton()!.disabled).toBe(true)
+    expect(view.respecButton()).toBeNull()
     expect(view.container.textContent).toContain(i18n.global.t('panels.skillPath.nodeInspector.empty'))
 
     view.unmount()
@@ -179,6 +183,10 @@ describe('SkillPathPanel (scene 07 fidelity)', () => {
   })
 
   it('respec opens the canonical confirm and commits respecNodeTree', async () => {
+    // The respec button exists for master accounts only - mount with an
+    // allowlisted loginId, then release the session id afterwards so it
+    // cannot leak into sibling tests.
+    recordSessionLoginId('admin')
     const respecNodeTree = vi.fn(() => 5)
     const view = mountPanel((player) => {
       player.$state.cultivationPath = 'sword'
@@ -205,5 +213,6 @@ describe('SkillPathPanel (scene 07 fidelity)', () => {
     expect(respecNodeTree).toHaveBeenCalledTimes(1)
 
     view.unmount()
+    recordSessionLoginId(undefined)
   })
 })

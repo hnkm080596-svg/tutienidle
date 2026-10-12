@@ -663,6 +663,15 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/tien-hiep-2026-10/controls/skill-connection-pipe-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/skill-connection-pipe-v2.png',
   '/assets/ui/tien-hiep-2026-10/controls/skill-node-passive-v1.png',
+  // Item slot + equipment socket chrome quoted as literals by
+  // SlotView.vue after the 2026-10-09 reskin merge, and the fidelity
+  // title divider quoted by the scene headers - pinned by the
+  // domArtLiteralCoverage guard.
+  '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/item-slot-v2-ornament-mask.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2.png',
+  '/assets/ui/tien-hiep-2026-10/controls/equipment-socket-v2-ornament-mask.png',
+  '/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png',
   // Minh's hand-drawn fire node set (SkillIconManifest NODE_ICON_MANIFEST)
   '/assets/skills/nodes/ngo-hoa-v1.png',
   '/assets/skills/nodes/tich-diem-v1.png',

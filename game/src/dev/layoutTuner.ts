@@ -3,6 +3,8 @@
 // top/left is logged to the console and copied to the clipboard so the
 // values can be baked into CSS afterwards.
 
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+
 const DRAGGABLE_SELECTORS = [
   '.cf-head-title h1',
   '.skill-head h1',
@@ -87,7 +89,7 @@ function toggle(): void {
       hintEl = document.createElement('div')
       hintEl.textContent = 'LAYOUT MODE — kéo title/divider, ` để tắt'
       hintEl.style.cssText =
-        'position:fixed;top:8px;right:12px;z-index:99999;background:#241c10;color:#f0d28a;' +
+        `position:fixed;top:8px;right:12px;z-index:${OVERLAY_LAYERS.tooltip};background:#241c10;color:#f0d28a;` +
         'font:12px monospace;padding:6px 10px;border:1px solid #a9884c;border-radius:3px;pointer-events:none'
       document.body.appendChild(hintEl)
     }
