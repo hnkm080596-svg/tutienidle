@@ -105,6 +105,13 @@ test.describe('beta update journey (signed candidates)', () => {
       const window = await app.firstWindow()
       characterBeforeUpdate = await readCharacterIdentity(window, env.accountId)
 
+      // The continuity oracle below is vacuous when the pre-update read
+      // came back empty (null === null still passes): prove the seeded
+      // save actually carried an identity before trusting the compare.
+      expect(characterBeforeUpdate?.name).toBeTruthy()
+      expect(characterBeforeUpdate?.realmId).toBeTruthy()
+      expect(characterBeforeUpdate?.realmLevel).not.toBeNull()
+
       // The boot check runs at did-finish-load; a verified beta candidate
       // surfaces as the update banner.
       const banner = window.getByTestId('update-banner')
