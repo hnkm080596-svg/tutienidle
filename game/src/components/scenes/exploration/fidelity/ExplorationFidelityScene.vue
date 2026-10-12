@@ -40,15 +40,20 @@ interface ChapterRailEntry {
   label: string
   locked: boolean
   progressLabel: string
+  starsLabel: string
 }
 const chapterRail = computed<ChapterRailEntry[]>(() =>
   props.model.chapters.map(chapter => {
     const cleared = chapter.nodes.filter(node => node.state === 'cleared').length
+    // Perfect clears are binary records (perfectClearStageIds: party
+    // alive + under the turn limit) - each lit stage counts as 3 stars.
+    const perfect = chapter.nodes.filter(node => node.perfect).length
     return {
       id: chapter.id,
       label: chapter.label,
       locked: chapter.nodes.length > 0 && chapter.nodes.every(node => node.state === 'locked'),
-      progressLabel: `${cleared} / ${chapter.nodes.length}`,
+      progressLabel: `${cleared}/${chapter.nodes.length}`,
+      starsLabel: `${perfect * 3}/${chapter.nodes.length * 3}★`,
     }
   }),
 )
@@ -72,7 +77,7 @@ function pickChapter(id: string) {
     </header>
     <div class="map-grid">
       <nav class="map-chapters" :aria-label="t('exploration.chapters')">
-        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapterRail.length === 1 || chapter.id === activeChapterId, 'is-locked': chapter.locked }" :style="{ borderImageSource: `url('${card}')` }" :aria-pressed="chapterRail.length === 1 || chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : chapter.progressLabel }}</span></button>
+        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapterRail.length === 1 || chapter.id === activeChapterId, 'is-locked': chapter.locked }" :style="{ borderImageSource: `url('${card}')` }" :aria-pressed="chapterRail.length === 1 || chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : `${chapter.progressLabel} · ${chapter.starsLabel}` }}</span></button>
       </nav>
       <ExplorationPaperMap :chapter="activeChapter" :terrain="model.terrain" :selected="stage?.id ?? ''" :caption="t('exploration.empty')" @select="emit('select', $event)" />
       <ExplorationPaperDetails :model="model" :stage="stage" :notice="notice" @mode="emit('mode', $event)" @stop-farm="emit('stopFarm')" @open-build="emit('openBuild')" @start="emit('start')" />
@@ -99,7 +104,7 @@ function pickChapter(id: string) {
    same frame the right inspector uses (Minh 2026-10-12). */
 .chapter-card { width:100%; display:grid; gap:6px; padding:14px 12px; border:14px solid transparent; border-image-slice:160; border-image-width:14px; border-image-repeat:stretch; clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px); box-sizing:border-box; color:#f3e4bc; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 10px) no-repeat; font:15px var(--font-display,Georgia,serif); text-align:left; cursor:pointer; }
 .chapter-card b { font-size:15px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
-.chapter-card span { font-size:13px; color:#cbb27f; }
+.chapter-card span { font-size:12px; color:#cbb27f; white-space:nowrap; }
 .chapter-card.selected { filter:drop-shadow(0 0 10px #d8ad5566); }
 .chapter-card.is-locked { opacity:.6; }
 .preview-label { position:absolute; left:369px; top:693px; margin:0; color:#806b43; font-size:9px; }
