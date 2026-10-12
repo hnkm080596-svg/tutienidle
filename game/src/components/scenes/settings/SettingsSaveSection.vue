@@ -2,7 +2,9 @@
 // Scene 16/17 save section ("general" group - ref's Luu Tru block):
 // warning note + save/reload/export/import/reset actions.
 import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
+import PcPaperButton from '@/components/common/PcPaperButton.vue'
 import SettingsSectionFrame from './SettingsSectionFrame.vue'
 
 defineProps<{
@@ -16,7 +18,8 @@ const emit = defineEmits<{
   reset: []
 }>()
 const { t } = useI18n()
-</script>
+
+const importInput = ref<HTMLInputElement>()</script>
 
 <template>
   <p class="settings-panel__warning">
@@ -31,10 +34,16 @@ const { t } = useI18n()
 
       <GameButton variant="secondary" @click="emit('export')">{{ t('panels.settings.actions.export') }}</GameButton>
 
-      <label class="settings-panel__import">
+      <PcPaperButton variant="secondary" @click="importInput?.click()">
         {{ t('panels.settings.actions.import') }}
-        <input type="file" accept="application/json" @change="(e) => emit('importFile', e)" />
-      </label>
+      </PcPaperButton>
+      <input
+        ref="importInput"
+        class="settings-panel__import-input"
+        type="file"
+        accept="application/json"
+        @change="(e) => emit('importFile', e)"
+      />
 
       <GameButton class="settings-panel__danger" variant="danger" @click="emit('reset')">
         {{ remoteAuthoritative ? t('panels.settings.actions.resetCloud') : t('panels.settings.actions.reset') }}
@@ -59,28 +68,10 @@ const { t } = useI18n()
   gap: 10px;
 }
 .settings-panel__actions > .game-button,
-.settings-panel__actions > .settings-panel__import {
+.settings-panel__actions > .pc-paper-button {
   width: 100%;
 }
-.settings-panel__import {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap-min);
-  padding: 8px 14px;
-  overflow: hidden;
-  text-align: center;
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  background: var(--ink-800);
-  color: var(--text-primary);
-}
-.settings-panel__import input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+.settings-panel__import-input {
+  display: none;
 }
 </style>
