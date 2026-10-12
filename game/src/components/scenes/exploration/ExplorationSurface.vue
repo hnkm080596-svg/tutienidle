@@ -138,32 +138,15 @@ function stopAutoFarm() {
   useAudioStore().cue('farm.stop')
 }
 
-const chapterOptions = computed(() => {
-  const chapters = new Map<number, { chapter: number; label: string }>()
-
-  for (const stage of stagesInZone.value) {
-    const chapter = stage.chapter ?? 1
-    if (!chapters.has(chapter)) {
-      chapters.set(chapter, {
-        chapter,
-        label: stage.requiredRealmId ? getCurrentRealm(stage.requiredRealmId).name : t('panels.stageSelect.labels.chapterPrefix', { chapter }),
-      })
-    }
-  }
-
-  return [...chapters.values()]
-})
-
-// Detail header chapter label follows the SELECTED stage's chapter -
-// the rail's active chapter is derived from the same selection, so
-// inspector and map never disagree about which chapter is showing.
-const selectedChapterLabel = computed(() => {
+// Detail header context line: the unified chapter name ('Thanh Van')
+// plus the stage's realm, when one is authored - the merged map has
+// one chapter, so the realm is the only per-stage context left.
+const selectedStageRealmLabel = computed(() => {
   const stage = selectedStage.value
-  if (!stage) {
+  if (!stage?.requiredRealmId) {
     return ''
   }
-  const chapter = stage.chapter ?? 1
-  return chapterOptions.value.find(option => option.chapter === chapter)?.label ?? ''
+  return getCurrentRealm(stage.requiredRealmId).name
 })
 
 // Frontier pick: the first unlocked-UNCLEARED stage in roster order
@@ -315,7 +298,9 @@ const paperChapters = computed<ExplorationChapter[]>(() => {
     const state = nodeState(stage.id)
     return {
       id: stage.id,
-      label: String(model?.floor ?? stage.floor ?? stage.requiredRealmLevel ?? index + 1),
+      // The node's readout is the ai's canonical display name
+      // ('Thanh Van 1-N') - the aria-label templates it verbatim.
+      label: stage.name,
       x,
       y,
       state,
@@ -427,18 +412,20 @@ const paperStage = computed<ExplorationDetail | null>(() => {
   }
 
   // Minh 2026-10-12: the inspector head identifies the ai by its
-  // global 1-30 index in the merged Thanh Van roster (not chapter-floor)
-  // and the small line above keeps stage name + realm.
+  // global 1-30 index in the merged Thanh Van roster; the small line
+  // keeps Thanh Van + realm context.
   const index = stagesInZone.value.findIndex(entry => entry.id === stage.id) + 1
-  const chapterLabel = selectedChapterLabel.value
   // Same pair the old detail rail carried: the encounter count line is
   // always visible; the Boss name line is ADDITIONAL on boss floors.
   const enemySummary = `${stage.totalEnemyCount} ${t('panels.stageSelect.labels.enemiesSuffix')}`
   const bossLine = model?.isBossFloor && enemy ? `${t('panels.stageSelect.labels.bossNamePrefix')} ${enemy.name}` : ''
+  const realmLabel = selectedStageRealmLabel.value
   return {
     id: stage.id,
     title: t('exploration.stageIndex', { index }),
-    chapter: chapterLabel ? `${stage.name} · ${chapterLabel}` : stage.name,
+    chapter: realmLabel
+      ? `${t('exploration.thanhVan')} · ${realmLabel}`
+      : t('exploration.thanhVan'),
     description: stage.description,
     state: nodeState(stage.id),
     stateLabel: t(`exploration.state.${nodeState(stage.id)}`),

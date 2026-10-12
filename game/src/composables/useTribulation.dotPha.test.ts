@@ -321,7 +321,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     expect(slotState.enhanceFailStreak).toBe(2)
   })
 
-  it('qi_refining tầng 12 chưa clear Quật 10 → triggerBreakthroughAction trả false, không tạo kiếp', () => {
+  it('qi_refining tầng 12 chưa clear Thanh Vân 1-20 → triggerBreakthroughAction trả false, không tạo kiếp', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)

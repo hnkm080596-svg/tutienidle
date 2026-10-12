@@ -20,7 +20,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_01_da_san_dau_tien',
     name: 'Săn Mồi Đầu Tiên',
-    description: 'Vào Thanh Vân Động 1, đánh bại 3 Dã Trư.',
+    description: 'Vào Thanh Vân 1-1, đánh bại 3 Dã Trư.',
     condition: { kind: 'kill', enemyId: 'mortal_wild_boar', amount: 3 },
     reward: { reward: { spiritStone: 10 } },
     cadence: 'once',
@@ -39,7 +39,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_03_ho_khieu_lam_trung',
     name: 'Bầy Trư Trỗi Dậy',
-    description: 'Heo Rừng chiếm giữ Động 4–6 — đánh bại 5 con.',
+    description: 'Heo Rừng chiếm giữ Thanh Vân 1-4 đến 1-6 — đánh bại 5 con.',
     condition: { kind: 'kill', enemyId: 'mortal_wild_boar', amount: 5 },
     reward: { reward: { spiritStone: 15, cultivation: 50 } },
     cadence: 'once',
@@ -69,7 +69,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_06_vuong_gia_da_de',
     name: 'Vương Giả Đá Đề',
-    description: 'Heo Rừng Vương ngự trị đáy Động 10 — diệt 5 con, dọn đường tới Luyện Khí.',
+    description: 'Heo Rừng Vương ngự trị đáy Thanh Vân 1-10 — diệt 5 con, dọn đường tới Luyện Khí.',
     condition: { kind: 'kill', enemyId: 'mortal_ferocious_wild_boar', amount: 5 },
     reward: { reward: { spiritStone: 40, cultivation: 120 } },
     cadence: 'once',
@@ -79,7 +79,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_07_ngu_hanh_nhap_mon',
     name: 'Ngũ Hành Nhập Môn',
-    description: 'Đạt Phàm Nhân tầng 12 rồi làm lễ Quán Khí chọn một hành. Sau khi nhập môn, săn 5 Sơn Tặc nơi Quật 1–3.',
+    description: 'Đạt Phàm Nhân tầng 12 rồi làm lễ Quán Khí chọn một hành. Sau khi nhập môn, săn 5 Sơn Tặc nơi Thanh Vân 1-11 đến 1-13.',
     condition: { kind: 'kill', enemyId: 'bandit', amount: 5 },
     reward: { reward: { spiritStone: 30, cultivation: 150, skillInsight: 400 } },
     cadence: 'once',
@@ -90,7 +90,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_08_viem_ho_coc',
     name: 'Sơn Tặc Giáp Khẩu',
-    description: 'Quật 4–6 là đồn Sơn Tặc chặn đường — diệt 5 con.',
+    description: 'Thanh Vân 1-14 đến 1-16 là đồn Sơn Tặc chặn đường — diệt 5 con.',
     condition: { kind: 'kill', enemyId: 'bandit', amount: 5 },
     reward: { reward: { spiritStone: 40, skillInsight: 800 } },
     cadence: 'once',
@@ -141,7 +141,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_12_trun_don_khoang',
     name: 'Sơn Tặc Trại Lớn',
-    description: 'Sơn Tặc ngầm Quật 7–9 — diệt 5 con.',
+    description: 'Sơn Tặc ngầm Thanh Vân 1-17 đến 1-19 — diệt 5 con.',
     condition: { kind: 'kill', enemyId: 'bandit', amount: 5 },
     reward: { reward: { spiritStone: 45, cultivation: 200 } },
     cadence: 'once',
@@ -151,7 +151,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_13_giao_xa_uyen_dam',
     name: 'Sơn Tặc Vương Đàm',
-    description: 'Sơn Tặc Vương trấn Quật 10 — diệt 5 con. Đây là điều kiện độ kiếp Trúc Cơ.',
+    description: 'Sơn Tặc Vương trấn Thanh Vân 1-20 — diệt 5 con. Đây là điều kiện độ kiếp Trúc Cơ.',
     condition: { kind: 'kill', enemyId: 'ferocious_bandit', amount: 5 },
     reward: { reward: { spiritStone: 60, skillInsight: 800 } },
     cadence: 'once',
@@ -161,7 +161,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'main_14_do_kiep_truc_co',
     name: 'Độ Kiếp Trúc Cơ',
-    description: 'Tầng 12 + vượt Quật 10 mở lôi kiếp — độ kiếp thành công, bước chân đầu vào hậu sơn: diệt 5 Linh Lang.',
+    description: 'Tầng 12 + vượt Thanh Vân 1-20 mở lôi kiếp — độ kiếp thành công, bước chân đầu vào hậu sơn: diệt 5 Linh Lang.',
     condition: { kind: 'kill', enemyId: 'foundation_spirit_wolf', amount: 5 },
     reward: { reward: { spiritStone: 100, cultivation: 500 } },
     cadence: 'once',

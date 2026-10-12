@@ -469,8 +469,8 @@
       },
       "locked": {
         "requireRealm": "Cần {realm} tầng {level}",
-        "clearFloor": "Hoàn thành Tầng {floor} trước",
-        "progress": "Hoàn thành tầng trước để mở khóa"
+        "clearFloor": "Hoàn thành {stage} trước",
+        "progress": "Hoàn thành ải trước để mở khóa"
       },
       "modes": {
         "manual": "Thủ Công",
@@ -703,7 +703,7 @@
       },
       "requirements": {
         "level": "{realm} tầng {level}",
-        "chapterClear": "Chương 10 hoàn thành",
+        "chapterClear": "Hoàn thành Thanh Vân 1-20",
         "met": "Đã đạt",
         "unmet": "Chưa đạt"
       },
@@ -1162,6 +1162,7 @@
     "rewards": {
       "techniqueMastery": "Cảm Ngộ Tâm Pháp",
       "skillInsight": "Cảm Ngộ Kỹ Năng",
+      "attributePoints": "Điểm Thuộc Tính",
       "artifactInsight": "Kinh Nghiệm Pháp Bảo",
       "spiritStone": "Linh Thạch"
     },
@@ -2191,7 +2192,7 @@
     "zones": "Địa Giới",
     "progress": "Tiến Độ Thám Hiểm",
     "preview": "BẢN DUYỆT UI · Dữ liệu mẫu, chưa nối gameplay",
-    "stageLabel": "{chapter} · Tầng {stage} · {state}",
+    "stageLabel": "{stage} · {state}",
     "boss": "BOSS",
     "enemies": "Địch Nhân",
     "rewards": "Phần Thưởng",

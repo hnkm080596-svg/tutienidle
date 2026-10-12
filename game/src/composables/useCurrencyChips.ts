@@ -17,8 +17,9 @@ import {
   LUYEN_DAN_TINH_HOA_ID,
   LUYEN_KHI_TINH_HOA_ID,
 } from '@/core/equipment/TinhHoaMaterial'
+import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '@/data/realm/BodyRefinement'
 
-const MATERIAL_CHIP_IDS = [BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID, LUYEN_KHI_TINH_HOA_ID] as const
+const MATERIAL_CHIP_IDS = [BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID, LUYEN_KHI_TINH_HOA_ID, TINH_HOA_PHAM_THE_MATERIAL_ID] as const
 
 export interface CurrencyChip {
   id: string
@@ -94,6 +95,11 @@ export function useCurrencyChips() {
         id: 'skill_insight',
         label: t('combat.rewards.skillInsight'),
         amount: player.skillInsight,
+      },
+      {
+        id: 'attribute_points',
+        label: t('combat.rewards.attributePoints'),
+        amount: player.attributePoints,
       },
     ]
   })

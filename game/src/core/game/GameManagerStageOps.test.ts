@@ -45,7 +45,9 @@ describe('GameManagerStageOps - stage surface read-model', () => {
     // stage reports the sequential-progress floor reason.
     player.realmLevel = 10
     const secondAtCap = manager.stageOps.getStageSurfaceModel('mortal_dong_2', player)!
-    expect(secondAtCap.disabledReason).toEqual({ kind: 'floor', floor: 1 })
+    // The floor reason now carries the blocking ai's canonical display
+    // name ('Thanh Van 1-1' = mortal_dong_1, unified naming 2026-10-12).
+    expect(secondAtCap.disabledReason).toEqual({ kind: 'floor', floor: 1, stageName: 'Thanh Vân 1-1' })
   })
 
   it('realm-locked acts report a realm reason, not a floor one', () => {

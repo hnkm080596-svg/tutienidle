@@ -31,7 +31,9 @@ export type StageSurfaceState =
  */
 export type StageSurfaceDisabledReason =
   | { kind: 'realm'; realmId: string; realmLevel: number }
-  | { kind: 'floor'; floor: number }
+  // stageName = the blocking ai's canonical display name ('Thanh Van
+  // 1-N') so the UI can name it without re-deriving the chain.
+  | { kind: 'floor'; floor: number; stageName: string }
   | { kind: 'progress' }
   | { kind: 'busy' }
 
@@ -80,7 +82,7 @@ export interface GameManagerStageOpsDeps {
   stageLockReasonCode: (
     stageId: string,
     player: PlayerData,
-  ) => { kind: 'realm'; realmId: string; realmLevel: number } | { kind: 'floor'; floor: number } | { kind: 'progress' } | null
+  ) => { kind: 'realm'; realmId: string; realmLevel: number } | { kind: 'floor'; floor: number; stageName: string } | { kind: 'progress' } | null
   // The real admission probe (stageWaves.canStart) - the model never
   // re-derives start gates.
   canStart: (player: PlayerData, stage: Stage) => boolean

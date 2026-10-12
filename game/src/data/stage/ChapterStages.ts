@@ -23,7 +23,9 @@ export interface ChapterConfig {
   /** Exactly 10 stage ids in floor order (zone.stageIds order is kept). */
   ids: string[]
 
-  /** Display name per floor (e.g. floor 3 -> 'Dong 3' / 'Quat 3' / 'Man 3.3'). */
+  /** Display name per floor (unified naming 2026-10-12: 'Thanh Van 1-N',
+   * N = the ai's global index in the merged zone roster, so the config
+   * stamps its chapter's offset into the literal). */
   names: (floor: number) => string
 
   /** Flavor text per floor (1-indexed by floor). */
