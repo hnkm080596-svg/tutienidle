@@ -496,8 +496,16 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view__item-icon {
-  width: 84%;
-  height: 84%;
+  /* Icon box, % of the cell edge - every variant's frame art keeps
+     ornament inside the outer rim, so the icon must sit INSIDE that
+     rim or its (opaque, full-bleed) square covers the filigree:
+     76% default clears the ~12% inner edge of the global
+     slot-frame.png border (item/preview cells); the v2 art-frame
+     variants (equipment/bag/socket) tighten to 72% below. Ring
+     variants (circle/stage) own their own icon rules further down.
+     contain = no crop, no distortion for non-square sources. */
+  width: var(--slot-icon-size, 76%);
+  height: var(--slot-icon-size, 76%);
   object-fit: contain;
   user-select: none;
 }
@@ -676,11 +684,17 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      rim outside the chamfered art. */
   box-shadow: none;
 }
-/* The art's cloud flourishes reach ~30% inward at both ornate corners;
-   keep the icon inside the plain dark centre. */
-.slot-view--socket .slot-view__item-icon {
-  width: 72%;
-  height: 72%;
+/* Art-frame cells (item-slot-v2 for equipment/bag, equipment-socket-v2
+   for socket): golden filigree + the chamfered edge live inside the
+   outer ~12-14% of the cell - the socket art's cloud flourishes reach
+   ~30% inward diagonally at the ornate corners. At the default 76% the
+   icon's opaque square still paints over that ornament band; 72% (14%
+   inset) keeps it inside the plain dark centre, the size the socket
+   cells already used. */
+.slot-view--equipment,
+.slot-view--bag,
+.slot-view--socket {
+  --slot-icon-size: 72%;
 }
 
 /* Pham recolor (owner ruling 2026-10-08, "Phuong an D"): mask PNG
