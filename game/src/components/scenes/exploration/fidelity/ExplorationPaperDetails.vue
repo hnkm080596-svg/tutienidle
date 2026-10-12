@@ -13,18 +13,11 @@ const ctaArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-
   <aside class="exploration-details" :style="{ borderImageSource: `url('${card}')` }">
     <div v-if="model.armedFarm" class="exploration-armed"><span>{{ t('exploration.armedFarm', { stage: model.armedFarm.stageName }) }}</span><button type="button" class="exploration-stop" data-testid="autofarm-stop" @click="emit('stopFarm')">{{ model.stopLabel }}</button></div>
     <template v-if="stage">
-      <p class="chapter-name">{{ stage.chapter }}</p>
       <h2 class="stage-title">{{ stage.title }}</h2>
       <div class="details-body">
-        <div class="stage-vista" aria-hidden="true" :style="{ backgroundImage: `url('${model.terrain}')`, backgroundSize: '100% 300%' }" />
-        <p class="description">{{ stage.description }}</p>
-        <p class="state-line">{{ stage.stateLabel }}</p>
         <p v-if="stage.disabledLabel" class="disabled-line">{{ stage.disabledLabel }}</p>
-        <h3 class="section-heading">{{ t('exploration.enemies') }}</h3>
-        <p v-if="stage.enemySummary" class="enemy-summary">{{ stage.enemySummary }}</p>
-        <p class="enemy-name">{{ stage.enemyLabel }}</p>
         <h3 class="section-heading">{{ t('exploration.rewards') }}</h3>
-        <div class="rewards"><div v-for="(reward, index) in stage.rewards" :key="index" class="reward"><SlotView :item="reward" :icon="reward.icon" :label="reward.label" :accessible-label="[reward.label, reward.amount].filter(Boolean).join(' ')" :tooltip="reward.tooltip" show-label /><strong>{{ reward.amount }}</strong></div></div>
+        <div class="rewards"><div v-for="(reward, index) in stage.rewards" :key="index" class="reward"><SlotView :item="reward" :icon="reward.icon" :label="reward.label" :variant="reward.variant ?? 'item'" :accessible-label="[reward.label, reward.amount].filter(Boolean).join(' ')" :tooltip="reward.tooltip" show-label /><strong>{{ reward.amount }}</strong></div></div>
       </div>
       <!-- Mode chips stay OUT of the scrollable body - arming a mode is
            part of the primary start flow and must never clip behind
@@ -48,16 +41,10 @@ const ctaArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-
 :is(#app,body) .exploration-details.exploration-details::after { display:none; content:none; }
 .exploration-armed { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:5px 8px; border:1px solid #a98a4b; border-radius:6px; background:#e8d5a822; font-size:11px; color:#d9b87c; }
 .exploration-stop { padding:3px 8px; border:1px solid #7d3b2b; border-radius:5px; background:#8f4632; color:#ffedd0; font:inherit; font-size:11px; cursor:pointer; }
-.chapter-name { margin:0; text-align:center; color:#b99f6d; font-size:12px; }
-.stage-title { margin:0; padding-bottom:8px; text-align:center; font-size:21px; font-weight:500; color:#f4e4c0; border-bottom:1px solid #b3996355; }
+.stage-title { margin:0; text-align:center; font-size:21px; font-weight:500; color:#f4e4c0; }
 .details-body { flex:1; min-height:0; overflow:auto; scrollbar-width:thin; }
-.stage-vista { height:52px; margin:8px 0 4px; background-size:cover; background-position:center; border-radius:3px; border:1px solid #ab8a4b44; }
-.description { font-size:13px; line-height:1.4; margin:6px 0; text-align:center; }
-.state-line { font-size:12px; color:#a8c9a4; margin:5px 0; text-align:center; }
 .disabled-line { font-size:12px; color:#d98d6a; margin:5px 0; text-align:center; }
 .section-heading { margin:12px 0 6px; border-block:1px solid #ab8a4b66; padding:6px 0; font-size:15px; font-weight:600; text-align:center; color:#f0dcae; }
-.enemy-summary { margin:0 0 3px; font-size:12px; color:#d9b87c; text-align:center; }
-.enemy-name { margin:0; font-size:13px; text-align:center; }
 .rewards { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding-top:4px; }
 .reward { flex:0 0 auto; width:52px; text-align:center; font-size:10px; }
 .reward .slot-view { width:100%; }

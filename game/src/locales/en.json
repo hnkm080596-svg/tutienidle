@@ -2201,6 +2201,7 @@
     "startFailed": "Unable to start. Check the requirements.",
     "armedFarm": "Auto-farming: {stage}",
     "thanhVan": "Thanh Van",
+    "stageIndex": "Stage 1-{index}",
     "chapters": "Chapters",
     "state": {
       "cleared": "Cleared",

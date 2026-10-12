@@ -39,6 +39,9 @@ export interface ExplorationReward {
   amount: string
   icon?: string
   tooltip?: import('@/composables/useTooltip').TooltipContent
+  // SlotView variant picked by drop kind (Minh 2026-10-12): equipment
+  // drops render the equipment cell art, everything else the item tile.
+  variant?: import('@/components/common/SlotTypes').SlotVariant
 }
 export interface ExplorationDetail {
   id: string

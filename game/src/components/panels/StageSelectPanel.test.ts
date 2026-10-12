@@ -79,27 +79,25 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     // 3 chapters; the mortal chapter occupies the first 10 nodes, so
     // nodes[9] is still mortal_dong_10.
     expect(mounted.container.querySelectorAll('.stage-node')).toHaveLength(30)
-    // Minh 2026-10-12: node enemy name tags removed from the vista -
-    // enemy names only render in the inspector for the selected ai.
+    // Minh 2026-10-12: node enemy name tags removed from the vista and
+    // the inspector no longer carries enemy intel at all.
     expect(mounted.container.querySelectorAll('.node-enemy')).toHaveLength(0)
-    // Roster remap: one family per chapter - the boss floor detail
-    // shows the boar family via the inspector summary/enemy line.
-    expect(mounted.container.textContent).toContain('Heo Rừng')
-    const bossStage = STAGES.find((stage) => stage.id === 'mortal_dong_10')!
-    const bossTemplate = ENEMIES.find((enemy) => enemy.id === bossStage.bossEnemyId)!
+    expect(mounted.container.textContent).not.toContain('Heo Rừng')
     const nodes = mounted.container.querySelectorAll('.stage-node')
 
     // Frontier pick (2026-10-11): the surface anchors on the first
-    // uncleared ai - dong_10 here - so the boss floor's detail (badge +
-    // roster) shows at open.
-    expect(mounted.container.textContent).toContain(`${t('panels.stageSelect.labels.bossNamePrefix')} ${bossTemplate.name}`)
+    // uncleared ai - dong_10 here. Minh 2026-10-12: the inspector head
+    // identifies the ai by its global 1-30 index ('Ải 1-10').
+    expect(mounted.container.textContent).toContain('Ải 1-10')
 
     // Spec v3 D9 (2026-09-11): bossEnemyId only exists on floor 10 -
-    // picking floor 1 swaps the detail: badge gone, its roster shows.
+    // picking floor 1 swaps the detail to that ai.
     ;(nodes[0] as HTMLElement).click()
     await nextTick()
-    expect(mounted.container.textContent).not.toContain(t('panels.stageSelect.labels.bossNamePrefix'))
-    expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
+    expect(mounted.container.textContent).toContain('Ải 1-1')
+    // Enemy intel no longer renders in the inspector (Minh 2026-10-12).
+    expect(mounted.container.querySelector('.enemy-summary')).toBeNull()
+    expect(mounted.container.querySelector('.enemy-name')).toBeNull()
 
     mounted.unmount()
   })

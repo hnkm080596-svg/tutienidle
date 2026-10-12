@@ -2201,6 +2201,7 @@
     "startFailed": "Không thể bắt đầu. Kiểm tra lại điều kiện.",
     "armedFarm": "Đang tự động: {stage}",
     "thanhVan": "Thanh Vân",
+    "stageIndex": "Ải 1-{index}",
     "chapters": "Chương",
     "state": {
       "cleared": "Đã Phá",

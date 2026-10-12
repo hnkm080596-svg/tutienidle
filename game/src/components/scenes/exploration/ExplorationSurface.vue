@@ -17,6 +17,7 @@ import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { useAudioStore } from '@/stores/audio'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { DropEntry } from '@/core/drop/DropTable'
+import type { SlotVariant } from '@/components/common/SlotTypes'
 import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
 import {
   EQUIPMENT_ANY_ICON,
@@ -341,8 +342,16 @@ const paperChapters = computed<ExplorationChapter[]>(() => {
 // card on hover (graded card for materials, plain card elsewhere).
 const buildMaterialTooltip = createMaterialTooltipBuilder(t)
 
+// Minh 2026-10-12: the reward cell's SlotView variant follows the drop
+// kind - equipment drops render the equipment cell art, materials and
+// pills the plain item tile.
+function rewardVariant(kind: DropEntry['kind']): SlotVariant {
+  return kind === 'equipment' || kind === 'equipment_any' ? 'equipment' : 'item'
+}
+
 function dropEntryReward(entry: DropEntry, chance: number | undefined): ExplorationReward {
   const rows = extraDropRows(entry, chance, t)
+  const variant = rewardVariant(entry.kind)
   if (entry.kind === 'equipment_any') {
     const label = dropKindLabel(entry, t)
     return {
@@ -350,6 +359,7 @@ function dropEntryReward(entry: DropEntry, chance: number | undefined): Explorat
       amount: dropAmountText(entry),
       icon: EQUIPMENT_ANY_ICON,
       tooltip: plainRewardTooltip(label, undefined, rows),
+      variant,
     }
   }
   const id = entry.itemId
@@ -362,6 +372,7 @@ function dropEntryReward(entry: DropEntry, chance: number | undefined): Explorat
       amount: dropAmountText(entry),
       icon: material.icon,
       tooltip: buildMaterialTooltip(material, { extraRows: rows }),
+      variant,
     }
   }
   if (id && entry.kind === 'equipment' && gameManager.equipmentRegistry.has(id)) {
@@ -371,6 +382,7 @@ function dropEntryReward(entry: DropEntry, chance: number | undefined): Explorat
       amount: dropAmountText(entry),
       icon: item.icon,
       tooltip: plainRewardTooltip(item.name, item.description, rows),
+      variant,
     }
   }
   if (id && entry.kind === 'pill' && gameManager.pillRegistry.has(id)) {
@@ -380,10 +392,11 @@ function dropEntryReward(entry: DropEntry, chance: number | undefined): Explorat
       amount: dropAmountText(entry),
       icon: pill.icon,
       tooltip: plainRewardTooltip(pill.name, pill.description, rows),
+      variant,
     }
   }
   // Unknown/unresolvable id - generic kind label, no icon (monogram).
-  return { label: dropKindLabel(entry, t), amount: dropAmountText(entry) }
+  return { label: dropKindLabel(entry, t), amount: dropAmountText(entry), variant }
 }
 
 const paperStage = computed<ExplorationDetail | null>(() => {
@@ -398,8 +411,8 @@ const paperStage = computed<ExplorationDetail | null>(() => {
   const rewards: ExplorationReward[] = []
   if (preview) {
     rewards.push(
-      { label: t('combat.rewards.spiritStone'), amount: `×${rangeLabel(preview.spiritStone)}`, tooltip: plainRewardTooltip(t('combat.rewards.spiritStone'), undefined, []) },
-      { label: t('combat.rewards.techniqueMastery'), amount: `×${rangeLabel(preview.techniqueMastery)}`, tooltip: plainRewardTooltip(t('combat.rewards.techniqueMastery'), undefined, []) },
+      { label: t('combat.rewards.spiritStone'), amount: `×${rangeLabel(preview.spiritStone)}`, tooltip: plainRewardTooltip(t('combat.rewards.spiritStone'), undefined, []), variant: 'item' },
+      { label: t('combat.rewards.techniqueMastery'), amount: `×${rangeLabel(preview.techniqueMastery)}`, tooltip: plainRewardTooltip(t('combat.rewards.techniqueMastery'), undefined, []), variant: 'item' },
     )
     for (const entry of preview.guaranteed) {
       rewards.push(dropEntryReward(entry, entry.chance))
@@ -409,19 +422,19 @@ const paperStage = computed<ExplorationDetail | null>(() => {
     }
   }
 
-  const floor = model?.floor ?? stage.floor ?? stage.requiredRealmLevel ?? 1
-  const chapter = stage.chapter ?? 1
+  // Minh 2026-10-12: the inspector head identifies the ai by its
+  // global 1-30 index in the merged Thanh Van roster (not chapter-floor)
+  // and the small line above keeps stage name + realm.
+  const index = stagesInZone.value.findIndex(entry => entry.id === stage.id) + 1
+  const chapterLabel = selectedChapterLabel.value
   // Same pair the old detail rail carried: the encounter count line is
   // always visible; the Boss name line is ADDITIONAL on boss floors.
   const enemySummary = `${stage.totalEnemyCount} ${t('panels.stageSelect.labels.enemiesSuffix')}`
   const bossLine = model?.isBossFloor && enemy ? `${t('panels.stageSelect.labels.bossNamePrefix')} ${enemy.name}` : ''
-  const chapterLabel = selectedChapterLabel.value
   return {
     id: stage.id,
-    title: `${chapter}-${floor} ${stage.name}`,
-    chapter: chapterLabel
-      ? `${t('panels.stageSelect.labels.chapterPrefix', { chapter })} · ${chapterLabel}`
-      : chapterLabel,
+    title: t('exploration.stageIndex', { index }),
+    chapter: chapterLabel ? `${stage.name} · ${chapterLabel}` : stage.name,
     description: stage.description,
     state: nodeState(stage.id),
     stateLabel: t(`exploration.state.${nodeState(stage.id)}`),
