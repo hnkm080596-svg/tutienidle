@@ -364,6 +364,18 @@ export function resolveFuelWood(
 }
 
 export class AlchemySystem {
+  /**
+   * GP-01 - authorized live-time owner. GameManager injects the shared
+   * TimeAuthority (`now: () => time.now()`); direct-construction
+   * fixtures fall back to the wall clock, preserving pre-migration
+   * behavior. Explicit `nowMs` params still win - callers pass them.
+   */
+  constructor(private readonly deps: { now?: () => number } = {}) {}
+
+  private nowMs(): number {
+    return this.deps.now?.() ?? Date.now()
+  }
+
   private jobs: ActiveAlchemyJob[] = []
 
   private pendingEvents: AlchemySettlementEvent[] = []
@@ -373,7 +385,7 @@ export class AlchemySystem {
    * the payload is a value, so mutating it afterwards must not leak into
    * live state (A3).
    */
-  restoreJobs(jobs: ActiveAlchemyJob[], restoreNowMs: number = Date.now()): void {
+  restoreJobs(jobs: ActiveAlchemyJob[], restoreNowMs: number = this.nowMs()): void {
     // r29-COR-F1: the shift only fires under a sane restore clock -
     // a non-finite or exact-integer-domain-overflow restoreNowMs from
     // an ungated caller must not re-anchor every began-pair
@@ -800,7 +812,7 @@ export class AlchemySystem {
   settleOffline(
     pillBag: PillBag,
     resolvePill: (pillId: string) => { id: string } | undefined,
-    nowMs: number = Date.now(),
+    nowMs: number = this.nowMs(),
     successBonusPercentPoints = 0,
     pillYieldMultiplier = 1,
     rng: () => number = Math.random,

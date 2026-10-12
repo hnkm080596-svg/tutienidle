@@ -216,8 +216,13 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       // 24h x 0.5 = 12h / 1s = 43_200 cycles van roll. B5 (T1-12): anchor
       // rebase ve now - remainder (remainder = 0 vi 12h chia het 1s) nen
       // moc nam ~now - khong phai startMs + 24h nhu encoding cu.
-      expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThan(Date.now() - 1000)
-      expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(Date.now())
+      // The `now` stamp is captured BEFORE the 43_200-iteration roll
+      // loop (r11-INT ordering), so the assert-vs-stamp gap includes the
+      // loop itself - keep the bound loose; it only needs to rule out
+      // the stale startMs + 24h encoding.
+      const assertNow = Date.now()
+      expect(player.autoFarmStage?.lastCheckedMs).toBeGreaterThan(assertNow - 30_000)
+      expect(player.autoFarmStage?.lastCheckedMs).toBeLessThanOrEqual(assertNow)
     })
 
     it('cycleSeconds <= 0 / non-finite → no-op an toàn, không loop vô hạn', () => {

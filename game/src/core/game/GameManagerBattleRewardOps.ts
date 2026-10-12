@@ -5,6 +5,7 @@ import type { Stage } from '../stage/Stage'
 import { issueCompanionGifts } from '../companion/CompanionGifts'
 import type { BattleLootSystem } from './BattleLootSystem'
 import type { StageWaveSystem } from './StageWaveSystem'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 /**
  * Per-kill reward grant + victory/defeat terminal for the live turn battle.
@@ -35,6 +36,10 @@ export class GameManagerBattleRewardOps {
       stageWaves: StageWaveSystem
       eventBus: EventBus
       bankPassiveCarry: (player: PlayerData) => void
+      // GP-01 - authorized live-time owner for the perfect-clear timer.
+      // Optional for B1: direct constructor fixtures keep wall-clock
+      // behavior; TurnBattleOps forwards the shared TimeAuthority.
+      time?: TimeAuthority
     },
   ) {}
 
@@ -234,7 +239,10 @@ export class GameManagerBattleRewardOps {
       return
     }
 
-    const clearSeconds = Math.max(0, (Date.now() - (startedAtMs ?? Date.now())) / 1000)
+    // GP-01: reads the same clock mintCombatSessionForLaunch stamped
+    // turnBattleStartedAtMs with (the authority when injected).
+    const endNowMs = this.deps.time?.now() ?? Date.now()
+    const clearSeconds = Math.max(0, (endNowMs - (startedAtMs ?? endNowMs)) / 1000)
 
     player.perfectClearStageIds.push(stage.id)
     player.perfectClearSeconds[stage.id] = clearSeconds

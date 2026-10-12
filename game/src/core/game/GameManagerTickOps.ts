@@ -20,6 +20,7 @@ import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { isBetaFeature } from '../betaScope'
 import type { NotificationQueue } from './NotificationQueue'
 import type { GameManagerTurnBattleOps } from './GameManagerTurnBattleOps'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 /**
  * Per-tick orchestration (App.vue game loop -> GameManager.update).
@@ -61,6 +62,10 @@ export class GameManagerTickOps {
       passiveSystem: PassiveSystem
       turnBattleOps: GameManagerTurnBattleOps
       tribulationDirector: TribulationDirector
+      // GP-01 - authorized live-time owner. Optional for B1: direct
+      // constructor fixtures keep wall-clock behavior; GameManager
+      // always injects the shared TimeAuthority.
+      time?: TimeAuthority
       // Session rng seam (F-W-7) - GameManager-owned injectable stream.
       sessionRng: () => number
     },
@@ -166,7 +171,7 @@ export class GameManagerTickOps {
       )
 
       this.deps.productionSystem.tickWorkers(
-        Date.now(),
+        this.deps.time?.now() ?? Date.now(),
         this.deps.materialBag,
         this.deps.materialRegistry,
         activePlayer.realmId,
@@ -210,7 +215,7 @@ export class GameManagerTickOps {
       // Dan Phong settle (S8.3). M3 - Hoa Hau Thong Than: x2 pill yield
       // per successful job - read from activePlayer each tick.
       this.deps.alchemySystem.tick(
-        Date.now(),
+        this.deps.time?.now() ?? Date.now(),
         this.deps.pillBag,
         (pillId) =>
           this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,

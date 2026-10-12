@@ -112,6 +112,8 @@ import { QuestRegistry } from '../quest/QuestRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { QuestSystem } from '../quest/QuestSystem'
 
+import { TimeAuthority } from '../idle/TimeAuthority'
+
 
 
 // Re-export for legacy import compatibility (useTribulation.ts imports
@@ -212,7 +214,26 @@ import { TRUC_CO_DAN_PILL_ID } from '../../data/breakthrough/BreakthroughScopedR
 // imports (TurnActionPresentationEvents, intro-phase tests). The battle
 // fixed-step pacing constants moved with the driving loop.
 
+/**
+ * GP-01 (design-authorized-now.md) - injectable clock authority. A bare
+ * `new GameManager()` constructs its own TimeAuthority so tests and
+ * headless sessions keep working unchanged; the composition root
+ * (App.vue) injects the shared instance.
+ */
+export interface GameManagerDeps {
+  time?: TimeAuthority
+}
+
 export class GameManager {
+  /**
+   * The ONE authorized wall clock for the whole tick chain
+   * (design-authorized-now.md sec.2). Ops classes receive it via
+   * `deps.time`; domain systems receive `now: () => this.time.now()`.
+   * `clock.update()` in App.vue is fed by it, so the tick's
+   * `deltaSeconds` is also authorized.
+   */
+  readonly time: TimeAuthority
+
   readonly eventBus = new EventBus()
 
 
@@ -378,7 +399,10 @@ export class GameManager {
 
   readonly pillRegistry = new PillRegistry()
   readonly pillBag = new PillBag()
-  readonly pillSystem = new PillSystem()
+  // GP-01: the regen timed-effect deadline reads the authority clock
+  // (deferred closure - `time` is assigned at the top of the
+  // constructor before any now() call can fire).
+  readonly pillSystem = new PillSystem({ now: () => this.time.now() })
 
   // Phu/Tran legacy (2026-08-25, plan sec.10.1.4) - registry giu lai CHI
   // DOC nhu tombstone de save cu khong crash vi registry lookup; KHONG
@@ -405,15 +429,20 @@ export class GameManager {
     mineRewards: THANH_VAN_MINE_REWARDS,
     grottoHerbs: THANH_VAN_GROTTO_HERBS,
     hiddenGrottoChannels: hiddenGrottoChannels(),
+    // GP-01: domain-level now defaults (restoreStates/settleOffline/
+    // fieldEpochShiftMs) follow the authority clock.
+    now: () => this.time.now(),
   })
 
   // Dan Phong (plan sec.8) - job luyen dan voi reserve atomic.
-  readonly alchemySystem = new AlchemySystem()
+  readonly alchemySystem = new AlchemySystem({ now: () => this.time.now() })
 
   private alchemyRecipesById = new Map<string, AlchemyRecipe>()
 
   readonly buildingRegistry = new BuildingRegistry()
-  readonly buildingManager = new BuildingManager()
+  // GP-01: restore()'s future-stamp clamp reads the same clock the
+  // accrual readers use (authorized now, seconds domain).
+  readonly buildingManager = new BuildingManager({ now: () => this.time.now() })
   readonly buildingSystem = new BuildingSystem()
 
   readonly questRegistry = new QuestRegistry()
@@ -507,7 +536,11 @@ export class GameManager {
   // Qi Refining window.
   readonly hiddenBeastSystem: HiddenBeastSystem
 
-  constructor() {
+  constructor(deps: GameManagerDeps = {}) {
+    // Assigned first: every deps literal below feeds `this.time` into
+    // the Ops/domain now reads (GP-01).
+    this.time = deps.time ?? new TimeAuthority()
+
     // Kiem Tu (2026-08-28) - mirror player.skillCastCounts moi lan
     // cast, phuc vu NodeSystem prerequisite `skillCastCount`
     // (NodeSystem chi nhan PlayerData, khong co SkillManager). Ghi vao
@@ -667,6 +700,8 @@ export class GameManager {
       materialBag: this.materialBag,
       // Deferred closure - activePlayer assigned later.
       getActivePlayer: () => this.activePlayer,
+      // GP-01: timed-effect deadlines/expiry read the authority clock.
+      time: this.time,
     })
 
     this.economyOps = new GameManagerEconomyOps({
@@ -716,6 +751,8 @@ export class GameManager {
       notifyMaterialGained: (materialId, amount) =>
         this.questOps.notifyMaterialGained(materialId, amount),
       hiddenBeast: this.hiddenBeastSystem,
+      // GP-01: the idle insight quota mint reads the authority clock.
+      now: () => this.time.now(),
     })
 
     this.stageWaves = new StageWaveSystem({
@@ -736,6 +773,8 @@ export class GameManager {
       eventBus: this.eventBus,
       sessionAllocator: this.sessionAllocator,
       rng: () => this.sessionRng(),
+      // GP-01: retry cooldown writes/reads follow the authority clock.
+      now: () => this.time.now(),
     })
 
     this.equipmentOps = new EquipmentOpsSystem({
@@ -768,6 +807,8 @@ export class GameManager {
       getActivePlayer: () => this.activePlayer,
       notifyMaterialGained: (materialId, amount) =>
         this.questOps.notifyMaterialGained(materialId, amount),
+      // GP-01: building accrual claim/previews read the authority clock.
+      time: this.time,
     })
 
     this.alchemyOps = new GameManagerAlchemyOps({
@@ -778,6 +819,8 @@ export class GameManager {
       buildingSystem: this.buildingSystem,
       materialBag: this.materialBag,
       materialRegistry: this.materialRegistry,
+      // GP-01: job start/cancel deadlines read the authority clock.
+      time: this.time,
     })
 
     this.questOps = new GameManagerQuestOps({
@@ -900,6 +943,9 @@ export class GameManager {
       // accessor consumes the identical resolution.
       resolvePathRuntime: this.pathRuntimeResolver,
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
+      // GP-01: perfect-clear timer + auto-farm cycle clock read the
+      // authority (forwarded into rewardOps/autoFarmOps inside).
+      time: this.time,
     })
 
     // Tick orchestration (C3 split) - constructed LAST because it reads
@@ -929,6 +975,8 @@ export class GameManager {
       turnBattleOps: this.turnBattleOps,
       tribulationDirector: this.tribulationDirector,
       sessionRng: () => this.sessionRng(),
+      // GP-01: worker-lane and alchemy deadlines read the authority clock.
+      time: this.time,
     })
 
     // Stage surface read-model - constructed LAST: it only delegates to

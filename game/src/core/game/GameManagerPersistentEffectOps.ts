@@ -24,6 +24,7 @@ import type { SkillSystem } from '../skill/SkillSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { TechniqueManager } from '../technique/TechniqueManager'
 import { getTechniqueEffects } from '../technique/TechniqueProgression'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 /**
  * Persistent/live modifier authority: static aggregation (buff +
@@ -45,8 +46,22 @@ export class GameManagerPersistentEffectOps {
       materialRegistry: MaterialRegistry
       materialBag: MaterialBag
       getActivePlayer: () => PlayerData | undefined
+      // GP-01 - authorized live-time owner for timed-effect deadlines
+      // and expiry reads. Optional for B1: direct constructor fixtures
+      // keep wall-clock behavior; GameManager always injects the shared
+      // TimeAuthority.
+      time?: TimeAuthority
     },
   ) {}
+
+  /**
+   * The ONE clock this ops' writers/readers share: the authority when
+   * injected (production), wall time otherwise (direct-construction
+   * fixtures). Explicit `now` params still win - callers pass them.
+   */
+  private nowMs(): number {
+    return this.deps.time?.now() ?? Date.now()
+  }
 
   /**
    * Aggregated modifiers from Buff + way-owned Technique + learned passive
@@ -276,7 +291,7 @@ export class GameManagerPersistentEffectOps {
     return modifiers
   }
 
-  getActiveTimedModifiers(player: PlayerData, now = Date.now()): StatModifier[] {
+  getActiveTimedModifiers(player: PlayerData, now = this.nowMs()): StatModifier[] {
     return player.persistentTimedEffects
       .filter((effect) => effect.expiresAtMs > now)
       .flatMap((effect) => effect.modifiers)
@@ -287,7 +302,7 @@ export class GameManagerPersistentEffectOps {
    * calls this via the provider each tick - an effect expiring mid-fight
    * simply drops out of the next recompute.
    */
-  getActiveRuntimeModifiers(player: PlayerData, now = Date.now()): StatModifier[] {
+  getActiveRuntimeModifiers(player: PlayerData, now = this.nowMs()): StatModifier[] {
     return this.getActiveTimedModifiers(player, now)
   }
 
@@ -314,7 +329,7 @@ export class GameManagerPersistentEffectOps {
     // stamps now + 24h, far below it.
     const expiresCeiling =
       group === TU_LINH_TRAN_EFFECT_GROUP
-        ? Math.min(2 ** 52 - 1, Date.now() + TU_LINH_TRAN_DURATION_MS + 7 * 86_400_000)
+        ? Math.min(2 ** 52 - 1, this.nowMs() + TU_LINH_TRAN_DURATION_MS + 7 * 86_400_000)
         : 2 ** 52 - 1
 
     if (group) {
@@ -341,7 +356,7 @@ export class GameManagerPersistentEffectOps {
           // (boundTimedEffectClocks - r22-AUT-1).
           existing.expiresAtMs = Math.min(
             expiresCeiling,
-            Math.max(Date.now(), existing.expiresAtMs) + duration,
+            Math.max(this.nowMs(), existing.expiresAtMs) + duration,
           )
         } else {
           // r30-COR-Low-3: same |x| < 2^52 clamp as the stackable arm -
@@ -398,8 +413,9 @@ export class GameManagerPersistentEffectOps {
     // non-finite stamp would persist verbatim as NaN and self-refuse
     // every later write. Coerce before clamping: applied falls back to
     // now (just applied), expires falls back to the applied stamp
-    // (dead on arrival - deny). Every real writer stamps Date.now().
-    const appliedCeiling = Math.min(2 ** 52 - 1, Date.now())
+    // (dead on arrival - deny). Every real writer stamps nowMs() (the
+    // authority when injected).
+    const appliedCeiling = Math.min(2 ** 52 - 1, this.nowMs())
     const appliedAtMs = Number.isFinite(effect.appliedAtMs)
       ? Math.min(appliedCeiling, Math.max(-(2 ** 52 - 1), effect.appliedAtMs as number))
       : appliedCeiling
@@ -413,7 +429,7 @@ export class GameManagerPersistentEffectOps {
   }
 
   /** Drops expired effects - returns the count dropped (debug/test). */
-  tickTimedEffects(player: PlayerData, now = Date.now()): number {
+  tickTimedEffects(player: PlayerData, now = this.nowMs()): number {
     const before = player.persistentTimedEffects.length
 
     player.persistentTimedEffects = player.persistentTimedEffects.filter(
@@ -431,7 +447,7 @@ export class GameManagerPersistentEffectOps {
    * (applyTimedEffect's MVP stack policy refreshes the deadline). Atomic
    * transaction: insufficient spirit stones -> nothing is deducted.
    */
-  activateTuLinhTran(player: PlayerData, now = Date.now()): { ok: boolean; reason?: string } {
+  activateTuLinhTran(player: PlayerData, now = this.nowMs()): { ok: boolean; reason?: string } {
     const activeStacks = player.persistentTimedEffects.filter(
       (effect) => effect.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && effect.expiresAtMs > now,
     ).length

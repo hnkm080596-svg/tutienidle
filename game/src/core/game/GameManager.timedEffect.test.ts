@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
+import { TimeAuthority } from '../idle/TimeAuthority'
 import { createDefaultPlayer } from '../player/Player'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import type { StatModifier } from '../stats/StatCalculator'
@@ -225,9 +226,13 @@ describe('GameManager.applyTimedEffect — stack policy cùng effectGroup', () =
     })
 
     it('normal stacking still adds the full authored duration', () => {
-      const gameManager = new GameManager()
-      const player = createDefaultPlayer()
+      // GP-01: effectOps reads the injected TimeAuthority, not Date.now
+      // - pin the authority's anchor at the fake far-future instant and
+      // freeze its monotonic source so now() == `now` exactly.
       const now = 1_800_000_000_000
+      const time = new TimeAuthority({ wallNow: () => now, monotonicNow: () => 0 })
+      const gameManager = new GameManager({ time })
+      const player = createDefaultPlayer()
       vi.spyOn(Date, 'now').mockReturnValue(now)
 
       player.persistentTimedEffects = [stackable('seed', 0, 500_000)]

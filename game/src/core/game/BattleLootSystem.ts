@@ -115,6 +115,11 @@ export interface BattleLootSystemDeps {
   // funnel (collect-quest + canonical discovery) instead of calling
   // onMaterialCollected directly; quest deps stay for the kill hook.
   notifyMaterialGained: (materialId: string, amount: number) => void
+  // GP-01 - authorized live-time owner for the idle insight quota
+  // clock. GameManager injects `() => time.now()`; direct-construction
+  // fixtures fall back to the wall clock, preserving pre-migration
+  // behavior.
+  now?: () => number
   // Quai an (spec dot-pha-loi-kiep S4.1c) - dem kill Luyen Khi/reset
   // khi giet quai an.
   hiddenBeast: HiddenBeastSystem
@@ -350,15 +355,16 @@ export class BattleLootSystem {
 
           // Idle channel only (2026-10-05, Minh ruling): auto-farm
           // insight accrues against a daily realm-band quota on the
-          // player - clamped mints read Date.now() lazily for the
-          // UTC day-bucket. The active channel skips the gate entirely
-          // (manual combat stays unbounded and reads no wall clock).
+          // player - clamped mints read the injected authority clock
+          // lazily for the UTC day-bucket. The active channel skips the
+          // gate entirely (manual combat stays unbounded and reads no
+          // wall clock).
           if (skillInsightGained > 0 && this.player && this.channel === 'idle') {
             skillInsightGained = settleIdleSkillInsightMint(
               this.player,
               enemy.realmId,
               skillInsightGained,
-              Date.now(),
+              this.deps.now?.() ?? Date.now(),
             )
           }
 

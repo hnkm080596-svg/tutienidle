@@ -34,6 +34,14 @@ export interface ProductionOfflineDeps {
     bag: MaterialBag,
     registry: MaterialRegistry,
   ) => void
+
+  /**
+   * GP-01 - the FIELD epoch clock (what the live tickWorkers reads the
+   * persisted completesAtMs stamps against). ProductionSystem forwards
+   * the shared TimeAuthority; absent = wall clock (pre-migration
+   * behavior for direct-construction fixtures).
+   */
+  fieldNow?: () => number
 }
 
 export interface ProductionOfflineOptions {
@@ -179,9 +187,10 @@ function settleWorkersOffline(
     // ~1 cycle instantly for deep-past windows). Re-stamp exactly the
     // seed-rooted heads into the field epoch; successors of SAVED
     // lanes keep the lane's own client-epoch deadline. One-way shift
-    // only: a slow clock leaves deadlines ahead of Date.now(), the
-    // bounded underpay direction.
-    const fieldEpochShiftMs = Math.max(0, Date.now() - nowMs)
+    // only: a slow field clock leaves deadlines ahead of fieldNow, the
+    // bounded underpay direction. GP-01: fieldNow is the authority the
+    // live tick reads - NOT the raw wall clock, which a user can move.
+    const fieldEpochShiftMs = Math.max(0, (deps.fieldNow?.() ?? Date.now()) - nowMs)
     const seededHeads = new Set(result.seededPending)
     state.workerCycles = result.pending.map((cycle) =>
       // r32-AUT-4: the re-stamp must not mint out-of-domain either - a

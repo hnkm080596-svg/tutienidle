@@ -17,6 +17,7 @@ import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { betaRecipeFamilyOfId, type BetaRecipeFamily } from '../betaScope'
 import type { PlayerData } from '../player/Player'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 /**
  * BETA SCOPE LOCK v2 sec.12 - one herb variant's craft sufficiency. Fuel
@@ -86,6 +87,10 @@ export interface GameManagerAlchemyOpsDeps {
   buildingSystem: BuildingSystem
   materialBag: MaterialBag
   materialRegistry: MaterialRegistry
+  // GP-01 - authorized live-time owner for job start/cancel deadlines.
+  // Optional for B1: direct constructor fixtures keep wall-clock
+  // behavior; GameManager always injects the shared TimeAuthority.
+  time?: TimeAuthority
 }
 
 /**
@@ -179,7 +184,7 @@ export class GameManagerAlchemyOps {
 
       instance.level,
 
-      Date.now(),
+      this.deps.time?.now() ?? Date.now(),
 
       maxSlots,
 

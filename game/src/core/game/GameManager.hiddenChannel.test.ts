@@ -221,7 +221,10 @@ describe('idle-path invariants (r97-LOW): auto-farm kills count, idle picks neve
 
     // Two completed wall-clock cycles through the real tick path: each
     // cycle picks then kills 2 banded FRAGILEs via processDefeatedEnemies.
-    player.autoFarmStage!.lastCheckedMs = Date.now() - 2000
+    // GP-01: the authority clock can sit a sub-ms tick BEHIND Date.now()
+    // (anchor reads mono before wall), so an exact cycleMs-boundary
+    // window is flaky - leave margin, the assertion needs >=1 cycle.
+    player.autoFarmStage!.lastCheckedMs = Date.now() - 2100
     manager.turnBattleOps.autoFarmOps.tickAutoFarm(player)
 
     // (a) idle/auto-farm kills do NOT count (F-W-19): the hidden

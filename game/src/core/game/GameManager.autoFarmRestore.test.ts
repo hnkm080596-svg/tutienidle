@@ -137,7 +137,9 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     const restored = restoreGameSession(playerStore, gameManager, save)
     expect(restored.status).toBe('ok')
 
-    vi.setSystemTime(new Date('2026-09-04T10:02:00Z'))
+    // GP-01: 120s of REAL elapsed - the farm's authority clock reads
+    // monotonic time, so setSystemTime alone no longer simulates it.
+    vi.advanceTimersByTime(120_000)
     gameManager.tickOps.update(0.1)
 
     // 120s elapsed vs 100s cycle -> exactly 1 cycle rolled.

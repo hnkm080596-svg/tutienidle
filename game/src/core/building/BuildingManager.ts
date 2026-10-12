@@ -2,6 +2,19 @@ import type { BuildingInstance } from './BuildingInstance'
 
 // Mang phang cac building da xay - 1:1 pattern voi EquipmentBag.
 export class BuildingManager {
+  /**
+   * GP-01 - authorized live-time owner for the future-stamp clamp.
+   * GameManager injects `() => time.now()`; direct-construction
+   * fixtures fall back to the wall clock, preserving pre-migration
+   * behavior.
+   */
+  constructor(private readonly deps: { now?: () => number } = {}) {}
+
+  /** lastCollectedAt is a SECONDS-domain stamp - see restore() below. */
+  private nowSeconds(): number {
+    return (this.deps.now?.() ?? Date.now()) / 1000
+  }
+
   private instances: BuildingInstance[] = []
 
   add(instance: BuildingInstance) {
@@ -38,9 +51,9 @@ export class BuildingManager {
    */
   restore(entries: BuildingInstance[]) {
     // lastCollectedAt is a SECONDS-domain stamp - BuildingSystem accrual
-    // math subtracts it from `Date.now() / 1000` callers - so the bound
-    // compares seconds to seconds (r13-INT-01).
-    const nowSeconds = Date.now() / 1000
+    // math subtracts it from the injected field clock's seconds - so the
+    // bound compares seconds to seconds (r13-INT-01).
+    const nowSeconds = this.nowSeconds()
     this.instances = entries.map((entry) => {
       const instance = structuredClone(entry)
       // r12-AUT: a crafted FUTURE lastCollectedAt freezes production

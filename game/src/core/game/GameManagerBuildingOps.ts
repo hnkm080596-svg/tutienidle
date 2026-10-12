@@ -23,6 +23,7 @@ import {
   type BetaWorkerLodgeTabId,
 } from '../betaScope'
 import { isBetaBuildingSurface } from '../betaScopeSurface'
+import type { TimeAuthority } from '../idle/TimeAuthority'
 
 export interface GameManagerBuildingOpsDeps {
   buildingRegistry: BuildingRegistry
@@ -40,6 +41,11 @@ export interface GameManagerBuildingOpsDeps {
   // GameManager supplies a closure because the real hook needs
   // questSystem/questRegistry/questManager, states outside building/production scope.
   notifyMaterialGained: (materialId: string, amount: number) => void
+  // GP-01 - authorized live-time owner for the building accrual clock
+  // (seconds domain) and production previews (ms domain). Optional for
+  // B1: direct constructor fixtures keep wall-clock behavior;
+  // GameManager always injects the shared TimeAuthority.
+  time?: TimeAuthority
 }
 
 /**
@@ -52,6 +58,19 @@ export interface GameManagerBuildingOpsDeps {
  */
 export class GameManagerBuildingOps {
   constructor(private readonly deps: GameManagerBuildingOpsDeps) {}
+
+  /**
+   * Building accrual runs in SECONDS (lastAccrualAtSec) - the authority's
+   * nowSeconds() is the same instant as now()/1000, so the default
+   * argument preserves the pre-migration wall-clock contract.
+   */
+  private nowSeconds(): number {
+    return this.deps.time?.nowSeconds() ?? Date.now() / 1000
+  }
+
+  private nowMs(): number {
+    return this.deps.time?.now() ?? Date.now()
+  }
 
   getBuildingDefinitions(): Building[] {
     return this.deps.buildingRegistry.getAll()
@@ -244,7 +263,7 @@ export class GameManagerBuildingOps {
   // Linh Tuyen (producesMaterialId) - thu hoach do vao MaterialBag nhu
   // material binh thuong (plan Workstream F); claim() tra amount +
   // materialId, GameManager resolve template va cong bag.
-  collectBuilding(instanceId: string, player: PlayerData, currentTime = Date.now() / 1000): number {
+  collectBuilding(instanceId: string, player: PlayerData, currentTime = this.nowSeconds()): number {
     // Pre-check registry TRUOC khi claim reset moc thoi gian (review
     // 2026-08-28): neu materialId khong resolve duoc ma van claim, san
     // luong bi mat trang (moc da reset, bag khong duoc cong).
@@ -285,7 +304,7 @@ export class GameManagerBuildingOps {
     return claimed.amount
   }
 
-  getBuildingStoredAmount(instanceId: string, currentTime = Date.now() / 1000): number {
+  getBuildingStoredAmount(instanceId: string, currentTime = this.nowSeconds()): number {
     const instance = this.deps.buildingManager.get(instanceId)
 
     if (!instance) {
@@ -328,7 +347,7 @@ export class GameManagerBuildingOps {
     )
   }
 
-  isBuildingStorageFull(instanceId: string, currentTime = Date.now() / 1000): boolean {
+  isBuildingStorageFull(instanceId: string, currentTime = this.nowSeconds()): boolean {
     const instance = this.deps.buildingManager.get(instanceId)
 
     if (!instance) {
@@ -347,7 +366,7 @@ export class GameManagerBuildingOps {
   // PRODUCTION (2026-08-25 - Lam/Quang/Dong Thien, plan sec4/sec9)
   // =========================
 
-  getProductionViews(nowMs = Date.now()) {
+  getProductionViews(nowMs = this.nowMs()) {
     return this.deps.productionSystem.getSiteDefinitions().map((definition) => {
       const view = this.deps.productionSystem.getSiteView(definition.siteId, nowMs)!
 

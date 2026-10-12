@@ -105,7 +105,7 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
-    vi.setSystemTime(new Date('2026-09-04T10:01:40Z')) // 100s -> 1 cycle
+    vi.advanceTimersByTime(100_000) // GP-01: 100s real elapsed -> 1 cycle
     gameManager.tickOps.update(0.1)
 
     const calls = setChannel.mock.calls.map((call) => call[0])
@@ -132,7 +132,7 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
-    vi.setSystemTime(new Date('2026-09-04T10:01:40Z')) // 100s -> 1 cycle
+    vi.advanceTimersByTime(100_000) // GP-01: 100s real elapsed -> 1 cycle
     try {
       gameManager.tickOps.update(0.1)
     } catch {
@@ -173,7 +173,7 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
-    vi.setSystemTime(new Date('2026-09-04T10:01:40Z')) // 100s -> 1 cycle
+    vi.advanceTimersByTime(100_000) // GP-01: 100s real elapsed -> 1 cycle
     gameManager.tickOps.update(0.1)
 
     expect(observed).not.toBeNull()
@@ -227,7 +227,7 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
 
-    vi.setSystemTime(new Date('2026-09-04T10:01:40Z')) // 100s -> 1 cycle
+    vi.advanceTimersByTime(100_000) // GP-01: 100s real elapsed -> 1 cycle
     gameManager.tickOps.update(0.1)
 
     // 1 cycle x totalEnemyCount 2 kills; FARM_STAGE has no requiredRealmId,

@@ -55,7 +55,10 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
     // full rate (undo ca AUTO_FARM_OFFLINE_EFFICIENCY lan double-pay risk T1-12).
     const anchor = player.autoFarmStage!.lastCheckedMs
     expect(anchor).toBeGreaterThanOrEqual(lastCheckedMs + 9_000)
-    expect(anchor).toBeLessThanOrEqual(Date.now())
+    // GP-01: the anchor stamps the authority clock - anchored at boot
+    // wall + monotonic elapsed, it can sit a sub-ms tick ahead of the
+    // Date.now() read on the next line. 2ms tolerance, not a drift hole.
+    expect(anchor).toBeLessThanOrEqual(Date.now() + 2)
   })
 
   it('cycleSeconds NaN → no-op (boundedness)', () => {

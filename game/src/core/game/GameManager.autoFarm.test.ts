@@ -123,7 +123,10 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     // Troi 150s = 1 full cycle + 50s du (cycle = perfectClearSeconds =
     // 100s sau retune 2026-10-05 - idle mints at live clear rate).
-    vi.setSystemTime(new Date('2026-09-04T10:02:30Z'))
+    // GP-01: advanceTimersByTime moves BOTH fake clocks (Date.now +
+    // performance.now); the farm's authority clock reads monotonic
+    // elapsed, so setSystemTime alone no longer simulates time passing.
+    vi.advanceTimersByTime(150_000)
 
     gameManager.tickOps.update(0.1)
 
@@ -143,7 +146,8 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
 
     gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)
 
-    vi.setSystemTime(new Date('2026-09-04T10:05:00Z'))
+    // GP-01: 300s of REAL elapsed (both fake clocks advance).
+    vi.advanceTimersByTime(300_000)
 
     gameManager.tickOps.update(0.1)
 
@@ -165,7 +169,8 @@ describe('GameManager — auto-farm cycle reward rolling', () => {
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, TAGGED_FARM_STAGE.id)).toBe(true)
 
     // 100s elapsed = 1 full cycle (cycle = perfectClearSeconds = 100s).
-    vi.setSystemTime(new Date('2026-09-04T10:01:40Z'))
+    // GP-01: real elapsed via the monotonic clock.
+    vi.advanceTimersByTime(100_000)
     gameManager.tickOps.update(0.1)
 
     expect(pickSpy).toHaveBeenCalled()

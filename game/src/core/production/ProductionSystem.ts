@@ -83,6 +83,14 @@ export interface ProductionSystemDeps {
       defaults to the canonical registry (empty today = zero channel
       draws, behavior identical). */
   hiddenGrottoChannels?: readonly GrottoChannel[]
+
+  /**
+   * GP-01 - authorized live-time owner for restore/settle deadlines.
+   * GameManager injects `() => time.now()`; direct-construction
+   * fixtures fall back to the wall clock, preserving pre-migration
+   * behavior. Explicit `nowMs` params still win - callers pass them.
+   */
+  now?: () => number
 }
 
 
@@ -100,6 +108,10 @@ export class ProductionSystem {
   constructor(deps: ProductionSystemDeps) {
     this.deps = deps
     this.siteDefinitionsById = new Map(deps.sites.map((site) => [site.siteId, site]))
+  }
+
+  private nowMs(): number {
+    return this.deps.now?.() ?? Date.now()
   }
 
   // =========================
@@ -126,7 +138,7 @@ export class ProductionSystem {
    * live state (A3). Whitelisted fields only - legacy keys (e.g. the
    * removed `activeCycle`) are dropped here, not migrated.
    */
-  restoreStates(states: ProductionSiteState[], restoreNowMs: number = Date.now()): void {
+  restoreStates(states: ProductionSiteState[], restoreNowMs: number = this.nowMs()): void {
     // r29-COR-F1: the shift only fires under a sane restore clock -
     // a non-finite or exact-integer-domain-overflow restoreNowMs from
     // an ungated caller must not re-anchor every began-pair
@@ -509,7 +521,7 @@ export class ProductionSystem {
     bag: MaterialBag,
     registry: MaterialRegistry,
     currentRealmId: string,
-    nowMs: number = Date.now(),
+    nowMs: number = this.nowMs(),
     options: {
       workerCapacity?: number
       offlineSinceMs?: number
@@ -539,6 +551,10 @@ export class ProductionSystem {
 
       grantCycleRewards: (cycle, bag, registry) =>
         this.grantCycleRewards(cycle, bag, registry),
+
+      // GP-01 - persisted completesAtMs stamps live in the epoch the
+      // live tickWorkers reads (the authority when injected).
+      fieldNow: () => this.nowMs(),
     }
   }
 
