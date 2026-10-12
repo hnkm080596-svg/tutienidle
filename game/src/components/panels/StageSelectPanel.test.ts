@@ -169,9 +169,9 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
 
     container.querySelector<HTMLElement>('.mode-option[data-mode="repeat"]')!.click()
     await nextTick()
-    container.querySelector<HTMLElement>('.mode-toggle')!.click()
-    await nextTick()
-    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="repeat"]')!.classList.contains('active')).toBe(true)
+    // The armed mode leaves the option list - it becomes the toggle
+    // face itself (Minh's one-row saving rule).
+    expect(container.querySelector<HTMLElement>('.mode-toggle')!.textContent).toContain('Lặp Lại')
 
     // Frontier pick anchors on dong_2 at open (first uncleared) - so
     // the disarm check must click a DIFFERENT node: back to dong_1.
@@ -180,8 +180,7 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
       .click()
     await nextTick()
 
-    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="manual"]')!.classList.contains('active')).toBe(true)
-    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="repeat"]')!.classList.contains('active')).toBe(false)
+    expect(container.querySelector<HTMLElement>('.mode-toggle')!.textContent).toContain('Mặc Định')
 
     unmount()
   })
@@ -201,9 +200,7 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     container.querySelector<HTMLElement>('.mode-option[data-mode="progress"]')!.click()
     await nextTick()
-    container.querySelector<HTMLElement>('.mode-toggle')!.click()
-    await nextTick()
-    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="progress"]')!.classList.contains('active')).toBe(true)
+    expect(container.querySelector<HTMLElement>('.mode-toggle')!.textContent).toContain('Tiến Ải')
 
     // Cross-chapter pick now goes straight through the single-vista
     // map - tapping the first qi_refining node (qi_refining_forest,
@@ -211,9 +208,7 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     container.querySelector<HTMLElement>('[data-stage-id="qi_refining_forest"]')!.click()
     await nextTick()
 
-    // jsdom click() emits no pointerdown, so the list stays open after
-    // the node pick - assert directly without re-toggling.
-    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="manual"]')!.classList.contains('active')).toBe(true)
+    expect(container.querySelector<HTMLElement>('.mode-toggle')!.textContent).toContain('Mặc Định')
 
     unmount()
   })

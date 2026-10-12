@@ -19,6 +19,9 @@ const btnPrimary = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button
 // card skin. Closes on pick or outside pointerdown.
 const modeOpen = ref(false)
 const currentModeLabel = computed(() => props.stage?.modes.find((chip) => chip.active)?.label ?? '')
+// Minh: the list only offers the OTHER modes - the armed one is the
+// toggle face itself, saving a row.
+const otherModes = computed(() => props.stage?.modes.filter((chip) => !chip.active) ?? [])
 function pickMode(id: string, disabled: boolean) {
   if (disabled) return
   emit('mode', id)
@@ -43,7 +46,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
            list opens UPWARD over the rewards body so it never
            overflows the card bottom. The armed-farm banner is gone on
            his call - the Dong Fu AutoFarmIndicator keeps stop duty. -->
-      <div class="mode-block"><div class="mode-dropdown" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')`, '--equipment-btn-primary': `url('${btnPrimary}')` }"><button type="button" class="mode-toggle" :aria-expanded="modeOpen" aria-haspopup="listbox" :aria-label="t('exploration.modes')" @click="modeOpen = !modeOpen"><span>{{ currentModeLabel }}</span><span class="mode-caret" aria-hidden="true">▴</span></button><ul v-if="modeOpen" class="mode-list" role="listbox"><li v-for="chip in stage.modes" :key="chip.id" role="option" :aria-selected="chip.active" :aria-disabled="chip.disabled"><button type="button" class="mode-option" :class="{ active: chip.active }" :disabled="chip.disabled" :data-mode="chip.id" @click="pickMode(chip.id, chip.disabled)">{{ chip.label }}</button></li></ul></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
+      <div class="mode-block"><div class="mode-dropdown" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')`, '--equipment-btn-primary': `url('${btnPrimary}')` }"><button type="button" class="mode-toggle" :aria-expanded="modeOpen" aria-haspopup="listbox" :aria-label="t('exploration.modes')" @click="modeOpen = !modeOpen"><span>{{ currentModeLabel }}</span><span class="mode-caret" aria-hidden="true">▴</span></button><ul v-if="modeOpen" class="mode-list" role="listbox"><li v-for="chip in otherModes" :key="chip.id" role="option" :aria-selected="chip.active" :aria-disabled="chip.disabled"><button type="button" class="mode-option" :class="{ active: chip.active }" :disabled="chip.disabled" :data-mode="chip.id" @click="pickMode(chip.id, chip.disabled)">{{ chip.label }}</button></li></ul></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
       <div class="start-row" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')` }"><button type="button" class="build-link" @click="emit('openBuild')">{{ stage.buildLabel }}</button><button class="challenge" type="button" :disabled="stage.startDisabled" data-testid="stage-start-button" :style="{ backgroundImage: `url('${ctaArt}')` }" @click="emit('start')">{{ stage.startLabel }}</button></div>
     </template>
     <template v-else><h2 class="stage-title">{{ model.title }}</h2><p class="empty-line">{{ t('exploration.empty') }}</p></template>
