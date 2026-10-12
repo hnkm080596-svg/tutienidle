@@ -19,6 +19,7 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import type { DropEntry } from '@/core/drop/DropTable'
 import type { SlotVariant } from '@/components/common/SlotTypes'
 import { createMaterialTooltipBuilder } from '@/composables/useMaterialTooltip'
+import { SKILL_INSIGHT_PER_TECHNIQUE_MASTERY } from '@/core/reward/SkillInsightBalance'
 import {
   EQUIPMENT_ANY_ICON,
   dropAmountText,
@@ -413,6 +414,9 @@ const paperStage = computed<ExplorationDetail | null>(() => {
     rewards.push(
       { label: t('combat.rewards.spiritStone'), amount: `×${rangeLabel(preview.spiritStone)}`, tooltip: plainRewardTooltip(t('combat.rewards.spiritStone'), undefined, []), variant: 'item' },
       { label: t('combat.rewards.techniqueMastery'), amount: `×${rangeLabel(preview.techniqueMastery)}`, tooltip: plainRewardTooltip(t('combat.rewards.techniqueMastery'), undefined, []), variant: 'item' },
+      // Cam Ngo Ky Nang derives from the same mastery band (x0.018) -
+      // shown so a stage advertises its skill-upgrade yield.
+      { label: t('combat.rewards.skillInsight'), amount: `×${rangeLabel({ min: Math.round(preview.techniqueMastery.min * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY), max: Math.round(preview.techniqueMastery.max * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY) })}`, tooltip: plainRewardTooltip(t('combat.rewards.skillInsight'), undefined, []), variant: 'item' },
     )
     for (const entry of preview.guaranteed) {
       rewards.push(dropEntryReward(entry, entry.chance))

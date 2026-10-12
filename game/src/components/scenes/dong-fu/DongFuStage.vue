@@ -297,6 +297,7 @@ const CHIP_ICON_BY_ID: Record<string, PcPaperResource> = {
   bui_go: 'coin',
   luyen_dan_tinh_hoa: 'jade',
   luyen_khi_tinh_hoa: 'essence',
+  skill_insight: 'jade',
 }
 const CHIP_ICON_BY_INDEX: Record<number, PcPaperResource> = { 0: 'crystal', 1: 'jade', 2: 'coin' }
 const currencyChips = computed(() => {

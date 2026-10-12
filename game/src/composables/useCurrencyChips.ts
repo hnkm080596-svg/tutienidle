@@ -84,9 +84,24 @@ export function useCurrencyChips() {
     ]
   })
 
+  // Cam Ngo Ky Nang (2026-10-12, Minh ruling): skill-upgrade currency is a
+  // player scalar, not a material - minted from combat only. Shown so the
+  // strip advertises where skill nodes get paid.
+  const insightChips = computed<CurrencyChip[]>(() => {
+    stateVersion.value
+    return [
+      {
+        id: 'skill_insight',
+        label: t('combat.rewards.skillInsight'),
+        amount: player.skillInsight,
+      },
+    ]
+  })
+
   const chips = computed(() => [
     ...spiritStoneChips.value,
     ...materialChips.value,
+    ...insightChips.value,
     ...companionChips.value,
   ])
 
