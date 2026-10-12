@@ -44,7 +44,11 @@ export interface SlotPresentationState {
 //               would sit on the art's top-left cloud, so the variant
 //               suppresses it; hover-frame + badges still render.
 //               Rank/badge data still flows to tooltip + aria-label.
-export type SlotVariant = 'item' | 'equipment' | 'bag' | 'circle' | 'socket' | 'stage'
+//   preview   = reward-preview cells (Minh 2026-10-12): the inspector's
+//               Phan Thuong currency rows (Linh Thach, Cam Ngo ...) are
+//               not items - they get their own flat tile + always-visible
+//               thin gold edge instead of borrowing the item look.
+export type SlotVariant = 'item' | 'equipment' | 'bag' | 'circle' | 'socket' | 'stage' | 'preview'
 
 // Badge nho o layer 6 (muc 17.3) - thay cho cac span tu absolute-
 // position ben ngoai Slot (vd .paperdoll__enhance-badge cu).

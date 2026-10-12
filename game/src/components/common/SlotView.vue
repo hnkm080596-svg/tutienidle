@@ -648,6 +648,16 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   display: none;
 }
 
+/* 'preview' variant (Minh 2026-10-12): Phan Thuong reward cells - flat
+   dark tile like 'item' but a thin gold edge stays ON (the cell is a
+   display piece for a reward preview, not a hover-only cell). */
+.slot-view--preview,
+.slot-view--preview.slot-view--filled {
+  border-color: #b89a5a;
+  --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
+  --slot-hover-inset: -4%;
+}
+
 /* 'socket' variant (owner ruling 2026-10-08): the 6 worn sockets on the
    paperdoll use equipment-socket-v2.png - chamfered square with ornate
    cloud corners. Seal stamp is suppressed: it would sit on the art's
