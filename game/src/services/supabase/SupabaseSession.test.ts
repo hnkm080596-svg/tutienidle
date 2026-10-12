@@ -139,6 +139,31 @@ describe('resolveSupabaseSession - B1-D/R8 single-flight + transient retention',
     vi.unstubAllGlobals()
   })
 
+  it('a 429 rate-limit rejection retains the credential for a later retry', async () => {
+    storeSupabaseSession({
+      accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
+      expiresAtMs: Date.now() - 1000,
+    })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"rate_limit"}', { status: 429 })))
+
+    expect(await resolveSupabaseSession(config)).toBeNull()
+    // SEC-SAVE-01: rate limiting is transient - the credential survives.
+    expect(readSupabaseSession()?.refreshToken).toBe('rt')
+    vi.unstubAllGlobals()
+  })
+
+  it('a 401 rejection is terminal and clears the dead credential', async () => {
+    storeSupabaseSession({
+      accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
+      expiresAtMs: Date.now() - 1000,
+    })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"invalid_grant"}', { status: 401 })))
+
+    expect(await resolveSupabaseSession(config)).toBeNull()
+    expect(readSupabaseSession()).toBeNull()
+    vi.unstubAllGlobals()
+  })
+
   it('a transport failure (fetch rejection) retains the credential too', async () => {
     storeSupabaseSession({
       accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
@@ -174,6 +199,31 @@ describe('resolveSupabaseSession - B1-D/R8 single-flight + transient retention',
     expect(await pending).toBeNull()
     // Storage stays empty - the in-flight write was fenced by generation.
     expect(readSupabaseSession()).toBeNull()
+    vi.unstubAllGlobals()
+  })
+
+  it('a stale in-flight terminal rejection cannot clear a NEWER session (generation fence)', async () => {
+    storeSupabaseSession({
+      accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
+      expiresAtMs: Date.now() - 1000,
+    })
+    let releaseFetch: (response: Response) => void = () => undefined
+    vi.stubGlobal('fetch', vi.fn(async () => new Promise<Response>((resolve) => {
+      releaseFetch = resolve
+    })))
+
+    const pending = resolveSupabaseSession(config)
+    // A fresh login lands mid-refresh, replacing the credential binding.
+    storeSupabaseSession({
+      accessToken: 'live-new', refreshToken: 'rt-new', sessionId: 's2',
+      mode: 'login', expiresAtMs: Date.now() + 3_600_000,
+    })
+    // The OLD refresh fails terminally - it must not touch s2.
+    releaseFetch(new Response('{"error":"invalid_grant"}', { status: 401 }))
+
+    expect(await pending).toBeNull()
+    expect(readSupabaseSession()?.sessionId).toBe('s2')
+    expect(readSupabaseSession()?.accessToken).toBe('live-new')
     vi.unstubAllGlobals()
   })
 })
@@ -298,6 +348,23 @@ describe('durable guest credential seam (B1.8)', () => {
     clearDurableGuestCredential()
     await vi.waitFor(() => expect(clears).toBe(1))
     expect(readSupabaseSession()?.sessionId).toBe('s1')
+    vi.unstubAllGlobals()
+  })
+
+  it('a 429 on guest refresh keeps BOTH the slot and the durable record', async () => {
+    storeSupabaseSession({
+      accessToken: 'old', refreshToken: 'rt', sessionId: 'gs-1',
+      mode: 'guest', expiresAtMs: Date.now() - 1000,
+    })
+    await vi.waitFor(() => expect(saved).toHaveLength(1))
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"rate_limit"}', { status: 429 })))
+
+    expect(await resolveSupabaseSession(config)).toBeNull()
+    // SEC-SAVE-01: the guest credential stays retryable - no durable clear.
+    expect(readSupabaseSession()?.refreshToken).toBe('rt')
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(clears).toBe(0)
     vi.unstubAllGlobals()
   })
 
