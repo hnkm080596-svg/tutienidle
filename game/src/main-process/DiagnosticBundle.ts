@@ -190,7 +190,7 @@ export class DiagnosticBundle {
     try {
       const line = `${JSON.stringify(event)}\n`
       await this.fs.mkdir(this.directory, { recursive: true })
-      await this.rotateIfNeeded(line.length)
+      await this.rotateIfNeeded(byteLength(line))
       await this.fs.appendFile(this.livePath(), line)
       return true
     } catch {
