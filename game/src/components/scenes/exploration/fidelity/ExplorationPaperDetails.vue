@@ -8,6 +8,8 @@ const emit = defineEmits<{ mode: [id: string]; stopFarm: []; openBuild: []; star
 const { t } = useI18n()
 const card = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 const ctaArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png')
+// Mode chips wear the Trang Bi op-tab art (Minh 2026-10-12).
+const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-tab-brush-v1.png')
 </script>
 <template>
   <aside class="exploration-details" :style="{ borderImageSource: `url('${card}')` }">
@@ -22,7 +24,7 @@ const ctaArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-
       <!-- Mode chips stay OUT of the scrollable body - arming a mode is
            part of the primary start flow and must never clip behind
            the CTA on shorter viewports. -->
-      <div class="mode-block"><div class="mode-chips" role="group" :aria-label="t('exploration.modes')"><button v-for="chip in stage.modes" :key="chip.id" type="button" :class="['mode-chip', { active: chip.active }]" :disabled="chip.disabled" :aria-pressed="chip.active" :data-mode="chip.id" @click="emit('mode', chip.id)">{{ chip.label }}</button></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
+      <div class="mode-block"><div class="mode-chips" role="group" :aria-label="t('exploration.modes')" :style="{ '--tab-brush': `url('${tabBrush}')` }"><button v-for="chip in stage.modes" :key="chip.id" type="button" :class="['mode-chip', { active: chip.active }]" :disabled="chip.disabled" :aria-pressed="chip.active" :data-mode="chip.id" @click="emit('mode', chip.id)">{{ chip.label }}</button></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
       <div class="start-row"><button type="button" class="build-link" @click="emit('openBuild')">{{ stage.buildLabel }}</button><button class="challenge" type="button" :disabled="stage.startDisabled" data-testid="stage-start-button" :style="{ backgroundImage: `url('${ctaArt}')` }" @click="emit('start')">{{ stage.startLabel }}</button></div>
     </template>
     <template v-else><h2 class="stage-title">{{ model.title }}</h2><p class="empty-line">{{ t('exploration.empty') }}</p></template>
@@ -50,9 +52,11 @@ const ctaArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-
 .reward .slot-view { width:100%; }
 .reward strong { display:block; margin-top:2px; font-weight:500; font-size:12px; color:#c4d9a8; }
 .mode-block { flex:0 0 auto; margin-top:6px; }
-.mode-chips { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
-.mode-chip { padding:5px 4px; border:1px solid #a98a4b; border-radius:11px; background:#f2e6c814; color:#e8d5a8; font:inherit; font-size:12px; cursor:pointer; }
-.mode-chip.active { background:#315f46; border-color:#6fae8a; color:#f4ead0; }
+.mode-chips { display:grid; grid-template-columns:1fr 1fr; gap:5px; border-bottom:1px solid #95734266; padding-bottom:4px; }
+/* Equipment op-tab look (Minh 2026-10-12): transparent buttons, gold
+   text; the active one wears the brush-stroke art like Trang Bi tabs. */
+.mode-chip { padding:5px 4px; border:0; border-bottom:3px solid transparent; background:transparent; color:#c9b184; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+.mode-chip.active { color:#f7e4b5; border-bottom-color:transparent; background:var(--tab-brush) center/contain no-repeat; }
 .mode-chip:disabled { opacity:.45; cursor:default; }
 .mode-hint { margin:4px 0 0; font-size:10px; color:#b99f6d; line-height:1.3; max-height:26px; overflow:hidden; text-align:center; }
 .start-row { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
