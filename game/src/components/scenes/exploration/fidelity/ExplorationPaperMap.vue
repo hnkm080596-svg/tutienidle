@@ -28,10 +28,23 @@ function landscapeFor(id: string): string {
   return LANDSCAPES[hash % LANDSCAPES.length]!
 }
 
-// Runtime drag overrides (layout-tuner backquote mode): authored
-// positions in stagePositions.ts stay the base; dragging writes here,
-// and each drop logs {id,x,y} for baking back into the data file.
-const dragOffsets = ref<Record<string, { x: number; y: number }>>({})
+// Runtime drag overrides: authored positions in stagePositions.ts stay
+// the base; dragging writes here AND persists to localStorage so tuned
+// layouts survive reload (Minh 2026-10-12: 'luu vi tri dynamic lai').
+// Each drop also logs the full effective map for baking into the data file.
+const DRAG_KEY = 'exploration.thanhvan.drag.v1'
+function loadDragOffsets(): Record<string, { x: number; y: number }> {
+  try {
+    const raw = typeof localStorage === 'undefined' ? null : localStorage.getItem(DRAG_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw) as Record<string, { x: number; y: number }>
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch { return {} }
+}
+const dragOffsets = ref<Record<string, { x: number; y: number }>>(loadDragOffsets())
+function persistDragOffsets() {
+  try { localStorage.setItem(DRAG_KEY, JSON.stringify(dragOffsets.value)) } catch { /* private mode */ }
+}
 function nodePos(id: string, x: number, y: number) {
   return dragOffsets.value[id] ?? { x, y }
 }
@@ -130,9 +143,14 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
     if (!logFinal || !dragging) return
     const final = dragOffsets.value[id]
     if (final) {
+      persistDragOffsets()
       const text = JSON.stringify({ stageTuner: { id, x: final.x, y: final.y } })
       console.log('[stage-tuner]', text)
-      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {})
+      // Full effective map (authored + every drag) - paste-ready when
+      // baking the tuned layout into stagePositions.ts.
+      const full = Object.fromEntries((props.chapter?.nodes ?? []).map(n => [n.id, nodePos(n.id, n.x, n.y)]))
+      console.log('[stage-positions]', JSON.stringify(full))
+      if (navigator.clipboard) navigator.clipboard.writeText(JSON.stringify(full)).catch(() => {})
     }
   }
   const up = () => end(true)
