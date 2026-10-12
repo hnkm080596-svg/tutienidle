@@ -1,0 +1,17 @@
+# Button nine-slice repair, 2026-10-13
+
+G0/G1 task: repair the image slicing contract of existing primary/secondary paper buttons; preserve art, typography, dimensions, inputs and gameplay. Base 5737e1a61662ddcd9e2a1eb7a4021209ab29becc. Worktree C:/Users/hnkm0/.codex/worktrees/devin-current-ui-reconcile/tutienidle. Current owner: pc-paper-scene.css and component button pseudo-elements. No mutable domain state or persistence is involved.
+
+Root evidence: asset resize commit 4bc992734 reduced primary 1863x281 to 768x116, secondary 1863x280 to 768x115; source slice remained 60 fill. Vertical cuts now overlap (120 > 115), leaving no center. Fix the shared art geometry and migrate the real CSS consumers, including Equipment, Alchemy, Inventory, Exploration, settings/common controls and outcome surfaces. Percentage slices preserve original 60/source dimensions under uniform resizing. Non-goals: new art, layout redesign, gameplay changes, full QA.
+
+First proof before write: real browser computed slices against the loaded image must leave a nonzero center for primary/secondary in home currency chips, alchemy recipes and equipment tabs. Relevant component tests and type-check follow; visual runtime is required. Existing user instruction bounds QA through Medium and excludes full QA; no fixed-point claim.
+
+G2/G3 evidence: pre-fix Playwright failed on actual loaded source geometry (vertical cuts 120, image height115). Post-fix Playwright passed at1600x900 and1366x768, covering home currency values, selected/unselected alchemy recipe art, equipment operation tabs, switching to Hoa Luyen and hover. Screenshots visually confirm full borders, center fill and labels. Type-check passed; scoped component tests45/45 passed. No source asset was modified or removed.
+
+G4 review: all consumers of the original 60px button cut now use the single root percentage contract. Entry main.ts imports pc-paper-production.css -> pc-paper-scene.css; previews using these controls also import pc-paper-scene.css. No320/360px inspector/frame slices were changed. No state ownership, timers, persistence, dependencies or gameplay changed. OCR delegation preview9files/reviewed9/skipped0/coverage100%; no confirmed Medium+ from the reviewed resulting diff. The geometry test consumes actual computed CSS and loaded images rather than mirroring a fixed expected slice number.
+
+G5 bounded result: targeted runtime and regression proof PASS; full QA not run per user instruction. Outcome overlays/common settings controls share the corrected contract but their full gameplay journeys were not exercised. No fixed-point certification claimed. Independent focused review pending at report write.
+
+Independent focused reviewer: no confirmed actionable Medium+; read-only source review, with runtime evidence supplied by the primary agent. Geometry at current size is approximately24.6px vertically and24.7px horizontally per cut, preserving the old60px inset relative to original1863x280 assets. Other secondary consumer journeys remain untested individually, as stated above.
+
+Sequential resulting-state checks: (1) local correctness reviewed source cuts vs image dimensions and RED/GREEN oracle; (2) ownership/caller review verified one root token and production/preview import chains, no state changes; (3) integration attacks used1600/1366 browser states, tab switch and hover, plus the independent reviewer. No production fixes were needed after the initial slice repair. This is bounded validation, not full QA protocol sealing.

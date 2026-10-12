@@ -3,7 +3,7 @@
 /* Shared presentation only. Existing command and lifecycle owners stay intact. */
 :root { --font-display:var(--pc-font-title);--font-body:var(--pc-font-body);--hk-font-display:var(--pc-font-title);--hk-font-ui:var(--pc-font-body); }
 :is(#app,body) .game-button.game-button { background:transparent;border-radius:0;font-family:var(--pc-font-body);overflow:visible;isolation:isolate; }
-:is(#app,body) .game-button::before { content:'';position:absolute;inset:0;z-index:-1;border:12px solid transparent;border-image-source:var(--pc-primary-button);border-image-slice:60 fill;border-image-repeat:stretch;pointer-events:none; }
+:is(#app,body) .game-button::before { content:'';position:absolute;inset:0;z-index:-1;border:12px solid transparent;border-image-source:var(--pc-primary-button);border-image-slice:var(--pc-button-slice);border-image-repeat:stretch;pointer-events:none; }
 :is(#app,body) .game-button--primary { color:#302718; }
 :is(#app,body) :is(.game-button--secondary,.game-button--danger) { color:#f2e1ba; }
 :is(#app,body) :is(.game-button--secondary,.game-button--danger)::before { border-image-source:var(--pc-secondary-button); }
@@ -23,7 +23,7 @@
 /* Settings retains its live section and form owners inside the approved workspace. */
 :is(#app,body) .pc-settings-content .settings-panel { grid-template-columns:230px minmax(0,1fr);gap:28px;padding:12px 0;--paper-text:#f0dfb7;--paper-text-soft:#ceb98f;--paper-line:#b28a4366;font-size:18px; }
 :is(#app,body) .pc-settings-content .settings-panel__nav { gap:14px;padding:4px 0;mask-image:none; }
-:is(#app,body) .pc-settings-content .settings-panel__nav-seal { min-height:62px;padding:14px 20px;border:12px solid transparent;border-image:var(--pc-secondary-button) 60 fill / 12px stretch;background:transparent;border-radius:0;color:#f2e1ba;font:700 21px var(--pc-font-body);letter-spacing:0;box-shadow:none; }
+:is(#app,body) .pc-settings-content .settings-panel__nav-seal { min-height:62px;padding:14px 20px;border:12px solid transparent;border-image:var(--pc-secondary-button) var(--pc-button-slice) / 12px stretch;background:transparent;border-radius:0;color:#f2e1ba;font:700 21px var(--pc-font-body);letter-spacing:0;box-shadow:none; }
 :is(#app,body) .pc-settings-content .settings-panel__nav-seal.is-active { border-image-source:var(--pc-primary-button);color:#302718;box-shadow:none; }
 :is(#app,body) .pc-settings-content .settings-panel__nav-glyph { width:30px;height:30px;object-fit:contain;filter:brightness(0) invert(.88) sepia(.3); }
 :is(#app,body) .pc-settings-content .settings-panel__nav-seal.is-active .settings-panel__nav-glyph { filter:none; }
@@ -34,7 +34,7 @@
 :is(#app,body) .pc-settings-content .settings-panel__warning { margin:0;padding:0 0 20px;border:0;border-bottom:1px solid #b28a4366;background:none;line-height:1.7; }
 :is(#app,body) .pc-settings-content .settings-panel__actions { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px; }
 :is(#app,body) .pc-settings-content .settings-panel__actions .game-button,.pc-settings-content .settings-panel__import { min-height:52px;padding:12px 20px;font-size:19px; }
-:is(#app,body) .pc-settings-content .settings-panel__import { border:12px solid transparent;border-image:var(--pc-secondary-button) 60 fill / 12px stretch;background:none;border-radius:0;color:#f2e1ba; }
+:is(#app,body) .pc-settings-content .settings-panel__import { border:12px solid transparent;border-image:var(--pc-secondary-button) var(--pc-button-slice) / 12px stretch;background:none;border-radius:0;color:#f2e1ba; }
 :is(#app,body) .pc-settings-content .settings-panel__import:focus-within { outline:2px solid #ddbc76;outline-offset:3px; }
 :is(#app,body) .pc-settings-content .settings-panel__audio-row { padding:14px 0;border-bottom:1px solid #b28a4333;gap:14px;flex-direction:column;align-items:stretch; }
 :is(#app,body) .pc-settings-content .settings-panel__audio-volume { width:100%;min-width:0;display:grid;grid-template-columns:180px minmax(0,1fr) 55px;gap:20px;font-size:18px; }
@@ -42,7 +42,7 @@
 :is(#app,body) .pc-settings-content .settings-panel__audio-toggle { align-self:flex-start; }
 :is(#app,body) .pc-settings-content :is(.chip,.settings-panel__ui-scale-option,.settings-panel__language-option) { color:#f2e1ba;border-color:#b28a43;border-radius:0;font-family:var(--pc-font-body); }
 :is(#app,body) .pc-settings-content :is(.chip.is-active,.settings-panel__ui-scale-option.is-active,.settings-panel__language-option.is-active) { color:#302718;background:#dab46a; }
-:is(#app,body) .pc-settings-content .chip { background:none;border:12px solid transparent;border-image:var(--pc-secondary-button) 60 fill / 12px stretch;min-height:44px;font-size:18px; }
+:is(#app,body) .pc-settings-content .chip { background:none;border:12px solid transparent;border-image:var(--pc-secondary-button) var(--pc-button-slice) / 12px stretch;min-height:44px;font-size:18px; }
 :is(#app,body) .pc-settings-content .chip.is-active { border-image-source:var(--pc-primary-button);background:none;color:#302718; }
 :is(#app,body) .pc-settings-content .chip>.ink-nine-slice { display:none; }
 :is(#app,body) .pc-settings-content .settings-panel__hint { color:#47735d;grid-column:2; }
@@ -56,7 +56,7 @@
 :is(#app,body) .feedback-dialog { height:100%;flex:1; }
 :is(#app,body) .feedback-dialog form { min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px; }
 :is(#app,body) .feedback-dialog__actions { position:sticky;bottom:0;background:#f5e8cd;padding:14px 0 4px;z-index:4; }
-:is(#app,body) .feedback-dialog .chip { border:10px solid transparent;border-image:var(--pc-secondary-button) 60 fill / 10px stretch;border-radius:0;background:none;color:#f2e1ba;box-shadow:none; }
+:is(#app,body) .feedback-dialog .chip { border:10px solid transparent;border-image:var(--pc-secondary-button) var(--pc-button-slice) / 10px stretch;border-radius:0;background:none;color:#f2e1ba;box-shadow:none; }
 :is(#app,body) .feedback-dialog .chip.is-active { border-image-source:var(--pc-primary-button);color:#302718; }
 :is(#app,body) .feedback-dialog .chip>.ink-nine-slice { display:none; }
 

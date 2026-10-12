@@ -240,7 +240,7 @@ function jobSubline(job: AlchemyJobDisplay) {
 /* Nut chon dan phuoc - art tab Trang Bi: pill nine-slice secondary,
    tab dang chon doi sang primary + chu toi. Chi con ten dan. */
 .recipe-row { position:relative; isolation:isolate; display:flex; align-items:center; justify-content:center; width:100%; padding:4px 12px; border:0; color:#f4e4c0; background:transparent; text-align:center; font:700 17px var(--font-display,Georgia,serif); cursor:pointer; }
-.recipe-row::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--alchemy-btn-secondary) 60 fill stretch; pointer-events:none; }
+.recipe-row::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--alchemy-btn-secondary) var(--pc-button-slice) stretch; pointer-events:none; }
 .recipe-row.selected { color:#2f2415; text-shadow:0 1px #fff7; }
 .recipe-row.selected::before { border-image-source:var(--alchemy-btn-primary); }
 .recipe-row:not(.selected):hover { color:#fff3d6; }

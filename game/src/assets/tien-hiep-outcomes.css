@@ -136,7 +136,7 @@
 :is(#app,body) .pc-outcome-live.pc-outcome-live :is(.victory-actions button,.combat-defeat-panel__actions button) { min-height:48px; font-size:17px; }
 :is(#app,body) .pc-outcome-live.pc-outcome-live .combat-defeat-panel__reward-header { color:#493820; font-size:20px; }
 :is(#app,body) .combat-scene-overlay.pc-outcome-live.pc-outcome-live :is(.combat-top-bar,.combat-ai-panel,.combat-skill-dock-panel,.battle-log-panel,.combat-turn-rail__band) { isolation:isolate; background:transparent; border:0; border-radius:0; box-shadow:none; color:#f2e2ba; }
-:is(#app,body) .combat-scene-overlay.pc-outcome-live.pc-outcome-live :is(.combat-top-bar,.combat-ai-panel,.combat-skill-dock-panel,.battle-log-panel,.combat-turn-rail__band)::before { content:''; position:absolute; inset:0; z-index:-1; border:12px solid transparent; border-image-source:var(--pc-secondary-button); border-image-slice:60 fill; border-image-repeat:stretch; pointer-events:none; }
+:is(#app,body) .combat-scene-overlay.pc-outcome-live.pc-outcome-live :is(.combat-top-bar,.combat-ai-panel,.combat-skill-dock-panel,.battle-log-panel,.combat-turn-rail__band)::before { content:''; position:absolute; inset:0; z-index:-1; border:12px solid transparent; border-image-source:var(--pc-secondary-button); border-image-slice:var(--pc-button-slice); border-image-repeat:stretch; pointer-events:none; }
 :is(#app,body) .combat-scene-overlay.pc-outcome-live.pc-outcome-live .combat-top-bar__plaque { display:none; }
 :is(#app,body) .combat-scene-overlay.pc-outcome-live.pc-outcome-live :is(.combat-top-bar__title,.combat-ai-panel__title) { color:#f2e2ba; font-family:var(--pc-font-body); }
 :is(#app,body) .combat-scene-overlay.pc-outcome-live.pc-outcome-live .combat-ai-panel__option { color:#dccba5; }
@@ -145,7 +145,7 @@
 :is(#app,body) .combat-scene-overlay.pc-outcome-live.pc-outcome-live .battle-log-panel { padding:10px; box-sizing:border-box; }
 :is(#app,body) .combat-scene-overlay.pc-outcome-live.pc-outcome-live .battle-log-panel__line { color:#dfd1b0; line-height:1.5; }
 :is(#app,body) .tribulation-ui.pc-outcome-live.pc-outcome-live :is(.tribulation-ui__status,.tribulation-ui__mind,.tribulation-realm-card) { isolation:isolate; background:none; border:0; box-shadow:none; }
-:is(#app,body) .tribulation-ui.pc-outcome-live.pc-outcome-live :is(.tribulation-ui__status,.tribulation-ui__mind,.tribulation-realm-card)::before { content:''; position:absolute; inset:0; z-index:-1; border:18px solid transparent; border-image-source:var(--pc-secondary-button); border-image-slice:60 fill; border-image-repeat:stretch; pointer-events:none; }
+:is(#app,body) .tribulation-ui.pc-outcome-live.pc-outcome-live :is(.tribulation-ui__status,.tribulation-ui__mind,.tribulation-realm-card)::before { content:''; position:absolute; inset:0; z-index:-1; border:18px solid transparent; border-image-source:var(--pc-secondary-button); border-image-slice:var(--pc-button-slice); border-image-repeat:stretch; pointer-events:none; }
 :is(#app,body) .tribulation-ui.pc-outcome-live.pc-outcome-live :is(.tribulation-realm-card__title,.tribulation-ui__chapter) { font-family:var(--pc-font-body); color:#f2e2ba; }
 :is(#app,body) .tribulation-ui.pc-outcome-live.pc-outcome-live .tribulation-ui__progress { margin-top:12px; }
 :is(#app,body) .tribulation-ui.pc-outcome-live.pc-outcome-live .tribulation-ui__result { color:#302719; background:none; border-radius:0; }

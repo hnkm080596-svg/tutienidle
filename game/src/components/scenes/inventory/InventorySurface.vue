@@ -146,7 +146,7 @@ function selectTab(id: InventoryTab) {
   inset: 0 -2px;
   z-index: -1;
   border: 9px solid transparent;
-  border-image: var(--inventory-btn-secondary) 60 fill stretch;
+  border-image: var(--inventory-btn-secondary) var(--pc-button-slice) stretch;
   pointer-events: none;
 }
 /* Owner ruling 2026-10-11: no divider-brush under the active tab - the

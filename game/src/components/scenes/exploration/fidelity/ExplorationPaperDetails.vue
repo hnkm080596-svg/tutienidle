@@ -77,14 +77,14 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
    art (secondary idle / primary armed). */
 .mode-dropdown { position:relative; width:78%; margin-inline:auto; }
 .mode-toggle { position:relative; isolation:isolate; display:flex; justify-content:center; align-items:center; width:100%; padding:5px 12px 7px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; }
-.mode-toggle::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
+.mode-toggle::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) var(--pc-button-slice) stretch; pointer-events:none; }
 .mode-toggle:hover::before { filter:brightness(1.1); }
 .mode-caret { position:absolute; right:12px; font-size:11px; opacity:.8; }
 .mode-list { position:absolute; bottom:calc(100% + 2px); left:0; right:0; margin:0; padding:4px; list-style:none; display:grid; gap:4px; background:transparent; border:0; z-index:6; }
 /* Each option keeps the same 9-slice button art (Minh: 'giu art') -
    secondary idle, primary on the armed one. */
 .mode-option { position:relative; isolation:isolate; display:block; width:100%; padding:4px 10px 6px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); text-align:center; cursor:pointer; white-space:nowrap; }
-.mode-option::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
+.mode-option::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) var(--pc-button-slice) stretch; pointer-events:none; }
 .mode-option.active { color:#2f2415; text-shadow:0 1px #fff7; }
 .mode-option.active::before { border-image-source:var(--equipment-btn-primary); }
 .mode-option:not(:disabled):hover::before { filter:brightness(1.1); }
@@ -98,7 +98,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
 .start-row { display:flex; flex-direction:column; gap:6px; margin-top:auto; order:10; transform:translateY(13px); }
 /* Chinh Build matches the mode toggle's footprint (Minh: same size). */
 .build-link { position:relative; isolation:isolate; align-self:center; width:78%; padding:5px 12px 7px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); text-align:center; cursor:pointer; white-space:nowrap; }
-.build-link::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
+.build-link::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) var(--pc-button-slice) stretch; pointer-events:none; }
 .build-link:hover::before { filter:brightness(1.1); }
 /* The global '.exploration-details .challenge' rule stamps dark text
    for the pale --th-art-button-primary art; this surface mounts the

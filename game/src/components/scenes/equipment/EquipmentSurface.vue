@@ -292,7 +292,7 @@ const summaryRows = computed(() => {
   inset: 0 -2px;
   z-index: -1;
   border: 9px solid transparent;
-  border-image: var(--equipment-btn-secondary) 60 fill stretch;
+  border-image: var(--equipment-btn-secondary) var(--pc-button-slice) stretch;
   pointer-events: none;
 }
 .equipment-tabs button > img {
