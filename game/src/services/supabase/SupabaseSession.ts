@@ -210,13 +210,17 @@ interface GoTrueRefreshResponse {
  *  (the second caller would otherwise race an already-rotated token). */
 let inflightRefresh: Promise<StoredSupabaseSession | null> | null = null
 
-/** A 4xx from GoTrue's refresh endpoint is the ONLY proof a refresh token
- *  is dead (invalid_grant / expired). 5xx, timeouts and transport errors
- *  are transient - the stored credential is RETAINED and the caller sees
+/** Only 400/401/403 from GoTrue's refresh endpoint prove a refresh token
+ *  is dead (invalid_grant / expired / forbidden). 429 (rate limit) and
+ *  every other 4xx are treated like 5xx, timeouts and transport errors:
+ *  transient - the stored credential is RETAINED and the caller sees
  *  'no session' so the authority controller can retry through the
  *  reconnect pipeline instead of destroying the auth identity. */
 function isTerminalRefreshRejection(error: unknown): boolean {
-  return error instanceof SupabaseHttpError && error.status >= 400 && error.status < 500
+  return (
+    error instanceof SupabaseHttpError &&
+    (error.status === 400 || error.status === 401 || error.status === 403)
+  )
 }
 
 async function performRefresh(
@@ -249,7 +253,10 @@ async function performRefresh(
     storeSupabaseSession(next)
     return next
   } catch (error: unknown) {
-    if (isTerminalRefreshRejection(error)) {
+    // The generation fence guards the failure path too: a rejection of
+    // the OLD in-flight refresh must never clear the newer binding a
+    // sign-out/sign-in stored underneath it.
+    if (generation === sessionGeneration && isTerminalRefreshRejection(error)) {
       clearSupabaseSession()
     }
     // Transient failure retains the credential (R8): a network blip must
