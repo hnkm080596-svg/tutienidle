@@ -10,7 +10,7 @@ const QUEST_GROUP_ICONS: Record<string, string> = {
   mainline: '/assets/ui/tien-hiep-2026-10/icons/navigation-quest-v2.png',
   once: '/assets/ui/tien-hiep-2026-10/icons/navigation-portal-v2.png',
   // Preview cadence tabs (locked placeholders until the cadence ships).
-  daily: '/assets/ui/tien-hiep-2026-10/icons/navigation-quest-v2.png',
+  day: '/assets/ui/tien-hiep-2026-10/icons/navigation-quest-v2.png',
   weekly: '/assets/ui/tien-hiep-2026-10/icons/navigation-guild-v2.png',
   achievement: '/assets/ui/tien-hiep-2026-10/icons/navigation-realm-v2.png',
   expedition: '/assets/ui/tien-hiep-2026-10/icons/navigation-exploration-v2.png',

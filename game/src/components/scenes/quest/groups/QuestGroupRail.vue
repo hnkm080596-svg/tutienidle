@@ -11,7 +11,7 @@ import { questGroupIcon } from './questGroupArt'
 
 // Preview cadence tabs shown locked until the cadence ships (beta has
 // 'once' only); order matches the Codex landscape rail.
-const PREVIEW_LOCKED = ['daily', 'weekly', 'achievement', 'expedition'] as const
+const PREVIEW_LOCKED = ['day', 'weekly', 'achievement', 'expedition'] as const
 
 defineProps<{
   groups: readonly string[]

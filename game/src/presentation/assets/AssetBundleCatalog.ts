@@ -741,6 +741,13 @@ const UI_SCENE_SINGLE_URLS = [
   '/assets/ui/tien-hiep-2026-10/icons/navigation-quest-v2.png',
   '/assets/ui/tien-hiep-2026-10/icons/navigation-alchemy-v2.png',
   '/assets/ui/tien-hiep-2026-10/icons/navigation-feedback-v2.png',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-guild-v2.png',
+  '/assets/ui/tien-hiep-2026-10/icons/navigation-realm-v2.png',
+  // Minh-commissioned currency art (2026-10-12): chip strip and map
+  // reward-cell literals pinned by the domArtLiteralCoverage guard.
+  '/assets/currency/skill_insight.png',
+  '/assets/currency/duyen_phan.png',
+  '/assets/currency/technique_mastery.png',
 ] as const
 
 /**

@@ -875,7 +875,7 @@
         "once": "Quests"
       },
       "previewTabs": {
-        "daily": "Daily",
+        "day": "Daily",
         "weekly": "Weekly",
         "achievement": "Achievement",
         "expedition": "Expedition"
