@@ -30,7 +30,7 @@ const EXPECTED = {
  *  builder yaml's publish section is flat scalars only - anything richer
  *  fails loudly here rather than being silently ignored. */
 function publishBlock(text) {
-  const lines = text.split('\n')
+  const lines = text.split(/\r?\n/)
   const start = lines.findIndex((l) => /^publish:\s*$/.test(l))
   assert.notStrictEqual(start, -1, 'electron-builder.yml must declare a top-level publish: block')
   const block = {}
