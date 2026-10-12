@@ -7,6 +7,12 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 // Kiem Tu Reimagined Task 7 - the setKiemPhoPreset op contract:
 // realm-gated orb unlocks, 1..9 length, out-of-combat only, writes

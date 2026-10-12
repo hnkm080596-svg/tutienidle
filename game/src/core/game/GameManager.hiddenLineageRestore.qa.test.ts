@@ -20,6 +20,12 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { commitSpellInitiationForTest } from './__fixtures__/betaWaysUnlock'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 const NHAP_DAO_ENHANCED_PERCENT = 0.3 // spec sec.4.4 authored value
 

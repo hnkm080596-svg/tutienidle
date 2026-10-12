@@ -49,6 +49,7 @@ import { STAGES } from '@/data/stage/Stages'
 import {
   BETA_ENEMY_ROSTER,
   BETA_EQUIPMENT_TABS,
+  BETA_FEATURES,
   BETA_MORTAL_STARTER_SKILL_ID,
   BETA_PLAYABLE_ELEMENTS,
   isBetaEquipmentTab,
@@ -67,14 +68,14 @@ import {
   unsupportedReleaseReason,
 } from '@/core/betaScopeSurface'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
-import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import type { ElementType } from '@/core/element/ElementType'
 
-// The global test setup unlocks every catalog way + feature for suites
-// written pre-lock; the canonical beta journey runs under the real lock.
+// The global test setup unlocks every catalog way for suites written
+// pre-lock and mirrors the production BETA_FEATURES table; the
+// canonical beta journey re-pins the beta way set and rides the real
+// production feature scope (wash/refine/decompose admitted).
 lockBetaWaysForTests()
-lockBetaFeaturesForTests()
 
 const SEED = 20260930
 const COMMIT_ELEMENT: ElementType = 'fire'
@@ -108,7 +109,15 @@ const SCOPE_HIDDEN_WHEEL_SLOTS = [
 const SCOPE_HIDDEN_BUILDINGS = ['chi_hien_quan'] as const
 const SCOPE_HIDDEN_STANDALONE_PANELS = ['artifact', 'tran_phap', 'companion'] as const
 const SCOPE_HIDDEN_LEFT_MODES = ['worker_lodge'] as const
-const SCOPE_HIDDEN_EQUIPMENT_TABS = ['wash', 'refine', 'decompose', 'ore_decompose'] as const
+// Equipment ops follow the production feature table: flag-bound tabs
+// admit iff their BETA_FEATURES flag is on (wash/refine/decompose are
+// all open today); an unlisted tab id always fails closed.
+const FLAG_BOUND_EQUIPMENT_TABS = {
+  wash: 'equipmentWash',
+  refine: 'equipmentRefine',
+  decompose: 'equipmentOreDecompose',
+} as const
+const UNLISTED_EQUIPMENT_TAB_IDS = ['ore_decompose'] as const
 // Every tier above the beta ceiling (foundation_establishment) is a
 // scope-hidden realm: derived from the authoritative tier list, so a
 // realm added post-ceiling is covered without touching this test.
@@ -251,10 +260,20 @@ function assertScopeSanity(label: string): void {
     expect(isBetaLeftPanelMode(mode), `${label}: left mode ${mode}`).toBe(false)
   }
 
-  // Economy surfaces: equipment hall admits only enhance + dissolve;
-  // wash/refine/decompose return scope_hidden at the domain seam.
-  for (const tab of SCOPE_HIDDEN_EQUIPMENT_TABS) {
-    expect(isBetaEquipmentTab(tab), `${label}: equipment tab ${tab}`).toBe(false)
+  // Economy surfaces: equipment tabs mirror the production feature
+  // table - the always-on pair (enhance/dissolve) plus every flag-bound
+  // op whose feature is on; unlisted ids fail closed.
+  for (const tab of BETA_EQUIPMENT_TABS) {
+    expect(isBetaEquipmentTab(tab), `${label}: equipment tab ${tab}`).toBe(true)
+  }
+  for (const [tab, feature] of Object.entries(FLAG_BOUND_EQUIPMENT_TABS)) {
+    expect(
+      isBetaEquipmentTab(tab),
+      `${label}: equipment tab ${tab} must mirror BETA_FEATURES.${feature}`,
+    ).toBe(BETA_FEATURES[feature])
+  }
+  for (const tab of UNLISTED_EQUIPMENT_TAB_IDS) {
+    expect(isBetaEquipmentTab(tab), `${label}: unlisted equipment tab ${tab}`).toBe(false)
   }
   expect([...BETA_EQUIPMENT_TABS].sort(), `${label}: beta equipment tabs`).toEqual([
     'dissolve',

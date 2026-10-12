@@ -35,6 +35,12 @@ import { ITEM_GRADE_LABELS } from '@/core/item/ItemGrade'
 import type { CompanionDefinition } from '@/data/companion/Companions'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 // M-F-COMPANION-GIFT: the Beta pull pool is closed - inject
 // companionAcquirablePool() so the live-pull success paths stay

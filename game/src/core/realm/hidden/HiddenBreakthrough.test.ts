@@ -24,6 +24,12 @@ import {
   EXTENDED_REALM_LEVEL,
   QI_REFINING_BREAKTHROUGH_STAGE_ID,
 } from '../realmSystem'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 function gatePlayer(overrides: Partial<BreakthroughGatePlayer> = {}): BreakthroughGatePlayer {
   return { realmId: 'mortal', realmLevel: 1, completedStageIds: [], ...overrides }

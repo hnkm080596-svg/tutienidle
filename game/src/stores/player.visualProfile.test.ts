@@ -2,6 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
 import type { CultivationPathId } from '../core/player/CultivationPathKit'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 // visualProfileId is the entity-derived visual form - the single source every
 // surface (CombatScene gate, MainScene, Tran Phap preview payload) reads.

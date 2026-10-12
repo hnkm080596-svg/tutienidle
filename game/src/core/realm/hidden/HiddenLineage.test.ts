@@ -23,6 +23,12 @@ import {
   HIDDEN_MECHANIC_QUAN_THE,
 } from '../../../data/realm/HiddenBodyRealms'
 import { getEffectiveMainStatCap } from '../../stats/StatCap'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 function makePlayer(overrides: Partial<HiddenLineagePlayer> = {}): HiddenLineagePlayer {
   return {

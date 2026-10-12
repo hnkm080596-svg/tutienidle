@@ -29,9 +29,14 @@ const SCOPE_HIDDEN_WHEEL_SLOTS = [
 ]
 const SCOPE_HIDDEN_BUILDINGS = ['chi_hien_quan']
 
-// Equipment hall admits exactly enhance + dissolve in beta.
-const BETA_EQUIPMENT_TAB_LABELS = ['Cường Hóa', 'Hóa Luyện']
-const SCOPE_HIDDEN_EQUIPMENT_TAB_LABELS = ['Tẩy Luyện', 'Tinh Luyện', 'Phân Giải']
+// Production rail (EquipmentSurface TABS + the Trang Bi equip mode):
+// equip + enhance/wash/refine/dissolve - wash/refine/oreDecompose are
+// admitted by the production BETA_FEATURES table, so every rail tab
+// renders enabled. 'Phan Giai' (ore decompose) left the rail for the
+// Kho Vat surface (owner ruling 2026-10-08) - it must never appear
+// inside the equipment scene.
+const BETA_EQUIPMENT_TAB_LABELS = ['Trang Bị', 'Cường Hóa', 'Tẩy Luyện', 'Tinh Luyện', 'Hóa Luyện']
+const EQUIPMENT_SCENE_FORBIDDEN_LABELS = ['Phân Giải']
 
 // Realm ladder in beta shows only the in-window rungs (Nhap Dao /
 // Kien Co / Truc Co); Kim Dan+ and any coming-soon chip are forbidden.
@@ -166,29 +171,31 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     }
   })
 
-  test('equipment hall renders only enhance + dissolve tabs', async ({ page }) => {
+  test('equipment hall renders the production tab rail, no decompose', async ({ page }) => {
     await bootFreshMortal(page)
     await openLeftMode(page, 'equipment_hall')
     const scene = page.locator('.equipment-scene')
     await expect(scene).toBeVisible({ timeout: 10_000 })
-    // Fidelity workspace rail: Trang Bi + 5 op seals. Beta admits only
-    // enhance + dissolve - wash/refine/decompose render as disabled
-    // shells (never mount their component).
-    const tabs = scene.locator('.equipment-workspace nav button')
-    await expect(tabs).toHaveCount(6, { timeout: 10_000 })
-    const tabIds = ['equip', 'enhance', 'wash', 'refine', 'dissolve', 'decompose']
+    // The tab strip is the scene-level .equipment-tabs nav, mounted in
+    // the fidelity scene's #tabs slot OUTSIDE the .equipment-workspace
+    // card (EquipmentSurface.vue). Production beta scope admits every
+    // rail op - wash/refine/decompose flags are open - so all five
+    // tabs render enabled and none renders as a disabled shell.
+    const tabs = scene.locator('.equipment-tabs button')
+    await expect(tabs).toHaveCount(5, { timeout: 10_000 })
+    const rendered = await tabs.allTextContents()
+    expect(
+      rendered,
+      `equipment rail rendered ${JSON.stringify(rendered)} - expected the production tab order`,
+    ).toEqual(BETA_EQUIPMENT_TAB_LABELS)
+    const tabIds = ['equip', 'enhance', 'wash', 'refine', 'dissolve']
     for (const [index, id] of tabIds.entries()) {
-      const betaAdmits = ['equip', 'enhance', 'dissolve'].includes(id)
-      if (betaAdmits) {
-        await expect(tabs.nth(index), `workspace tab "${id}"`).toBeEnabled()
-      } else {
-        await expect(tabs.nth(index), `workspace tab "${id}"`).toBeDisabled()
-      }
+      await expect(tabs.nth(index), `equipment tab "${id}"`).toBeEnabled()
     }
-    for (const label of SCOPE_HIDDEN_EQUIPMENT_TAB_LABELS) {
+    for (const label of EQUIPMENT_SCENE_FORBIDDEN_LABELS) {
       expect(
-        await scene.locator('.equipment-workspace__body').getByText(label, { exact: true }).count(),
-        `equipment tab "${label}" must not mount`,
+        await scene.getByText(label, { exact: true }).count(),
+        `equipment scene must never render "${label}" - it lives on the Kho Vat surface`,
       ).toBe(0)
     }
   })

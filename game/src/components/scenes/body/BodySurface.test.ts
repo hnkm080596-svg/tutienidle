@@ -21,6 +21,12 @@ import { MERIDIANS } from '@/data/realm/Meridians'
 import { ZHOU_TIAN_CURRENCY_MATERIAL_ID } from '@/data/realm/ZhouTian'
 import type { Component } from 'vue'
 import type { BodyProgressionState } from '@/core/realm/body/BodyChapter'
+import { unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// This suite exercises machinery the production feature table gates
+// (hidden lineage / companion / workforce / sword-body ways) - it rides
+// the full catalog like the pre-lock suite default did.
+unlockAllFeaturesForTests()
 
 function mountScene(
   component: Component,
