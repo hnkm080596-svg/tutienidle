@@ -89,18 +89,24 @@ onBeforeUnmount(() => {
   activeDragCleanup?.()
 })
 
-// Drag tuner: active only while the global layout-tuner (backquote) is
-// on. Pointer delta is divided by the live scale so the node lands in
-// design coords under any zoom; drop logs the baked value.
+// Direct drag (Minh 2026-10-12): hold+move >=4px drags the node -
+// the layout-tuner gate is gone so dragging always works; a plain
+// click still selects the ai. Drop logs {id,x,y} for baking into
+// stagePositions.ts. Pointer delta is divided by the live scale so
+// the node lands in design coords under any zoom.
+const justDragged = new Set<string>()
 function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number) {
-  if (!document.body.classList.contains('layout-tuner-on')) return
-  event.preventDefault()
-  event.stopPropagation()
   const s = scale.value || 1
   const startX = event.clientX
   const startY = event.clientY
   const base = nodePos(id, x, y)
+  let dragging = false
   const move = (e: PointerEvent) => {
+    if (!dragging) {
+      if (Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY) < 4) return
+      dragging = true
+      event.preventDefault()
+    }
     // Clamp inside the design rect INSET by the node radius: pos is
     // the node's center (translate(-50%,-50%) on a 56px node), so a
     // center at the very edge leaves half the node clipped by
@@ -120,7 +126,8 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
     window.removeEventListener('pointercancel', cancel, true)
     window.removeEventListener('blur', up, true)
     activeDragCleanup = null
-    if (!logFinal) return
+    if (dragging) justDragged.add(id)
+    if (!logFinal || !dragging) return
     const final = dragOffsets.value[id]
     if (final) {
       const text = JSON.stringify({ stageTuner: { id, x: final.x, y: final.y } })
@@ -138,16 +145,21 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
   window.addEventListener('blur', up, true)
   activeDragCleanup = up
 }
+// Click handler guard: a real drag ends with a click on the node -
+// swallow that one so releasing the drag does not also select it.
+function onNodeClick(id: string, locked: boolean) {
+  if (justDragged.delete(id)) return
+  if (!locked) emit('select', id)
+}
 </script>
 <template>
   <div ref="wrapRef" class="exploration-map">
     <div class="map-space" :style="{ width: `${MAP_DESIGN_W}px`, height: `${MAP_DESIGN_H}px`, transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})` }">
       <img class="terrain" :src="terrain" alt="">
       <svg v-if="chapter" class="routes" :viewBox="`0 0 ${MAP_DESIGN_W} ${MAP_DESIGN_H}`" preserveAspectRatio="none" aria-hidden="true"><line v-for="line in lines" :key="line.id" :class="{ lit: line.lit }" :x1="line.x1" :y1="line.y1" :x2="line.x2" :y2="line.y2" /></svg>
-      <button v-for="node in chapter?.nodes ?? []" :key="node.id" type="button" :class="['stage-node', node.state, { selected: selected === node.id, boss: node.boss, perfect: node.perfect }]" :style="{ left: `${nodePos(node.id, node.x, node.y).x}px`, top: `${nodePos(node.id, node.x, node.y).y}px` }" :aria-label="t('exploration.stageLabel', { chapter: chapter!.label, stage: node.label, state: t(`exploration.state.${node.state}`) })" :aria-pressed="selected === node.id" :aria-disabled="node.state === 'locked' ? 'true' : undefined" :title="node.state === 'locked' ? (node.lockedHint ?? t('exploration.state.locked')) : undefined" :data-stage-id="node.id" @click="node.state !== 'locked' && emit('select', node.id)" @pointerdown="onNodePointerDown($event, node.id, node.x, node.y)">
+      <button v-for="node in chapter?.nodes ?? []" :key="node.id" type="button" :class="['stage-node', node.state, { selected: selected === node.id, boss: node.boss, perfect: node.perfect }]" :style="{ left: `${nodePos(node.id, node.x, node.y).x}px`, top: `${nodePos(node.id, node.x, node.y).y}px` }" :aria-label="t('exploration.stageLabel', { chapter: chapter!.label, stage: node.label, state: t(`exploration.state.${node.state}`) })" :aria-pressed="selected === node.id" :aria-disabled="node.state === 'locked' ? 'true' : undefined" :title="node.state === 'locked' ? (node.lockedHint ?? t('exploration.state.locked')) : undefined" :data-stage-id="node.id" @click="onNodeClick(node.id, node.state === 'locked')" @pointerdown="onNodePointerDown($event, node.id, node.x, node.y)">
         <SlotView class="node-slot" variant="stage" :item="null" :icon="landscapeFor(node.id)" static />
-        <small v-if="node.boss" class="boss-label">{{ t('exploration.boss') }}</small><small v-else-if="node.enemy" class="node-enemy">{{ node.enemy }}</small>
-        <span class="node-stars" :class="{ lit: node.perfect }" aria-hidden="true">★★★</span>
+        <span class="node-stars" :class="{ lit: node.perfect }" aria-hidden="true"><i>★</i><i class="mid">★</i><i>★</i></span>
       </button>
     </div>
   </div>
@@ -183,11 +195,12 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
 .stage-node.current .node-slot { filter:drop-shadow(0 0 8px #efd08a99); }
 .stage-node.selected .node-slot { filter:drop-shadow(0 0 12px #ffd887) brightness(1.15); }
 .stage-node:hover:not(.locked) .node-slot { filter:drop-shadow(0 0 10px #f7d383); }
-.boss-label { position:absolute; left:50%; top:58px; transform:translateX(-50%); white-space:nowrap; color:#6b3827; font-size:12px; background:#f0e2c6d9; padding:1px 5px; z-index:1; }
-.node-enemy { position:absolute; left:50%; top:58px; transform:translateX(-50%); white-space:nowrap; color:#3f331f; font-size:11px; background:#f4e4caba; padding:2px 5px; z-index:1; }
-/* 3 stars hugging the circle bottom - lit gold once the ai was
+/* 3 stars hugging the circle bottom - the middle star dips lower so
+   the trio arcs around the rim; lit gold once the ai was
    perfect-cleared (perfectClearStageIds / turn limit), dim otherwise. */
-.node-stars { position:absolute; left:50%; bottom:-4px; transform:translateX(-50%); z-index:2; font-size:13px; letter-spacing:1px; color:#4a4235; text-shadow:0 1px 2px #0008; pointer-events:none; }
+.node-stars { position:absolute; left:50%; bottom:-6px; transform:translateX(-50%); z-index:2; font-style:normal; font-size:13px; color:#4a4235; text-shadow:0 1px 2px #0008; pointer-events:none; }
+.node-stars i { font-style:normal; }
+.node-stars i.mid { display:inline-block; transform:translateY(4px); }
 .node-stars.lit { color:#f4c94e; text-shadow:0 0 4px #f4c94e88, 0 1px 2px #0008; }
 @media (prefers-reduced-motion:reduce) { .routes line.lit { animation:none; } }
 </style>
