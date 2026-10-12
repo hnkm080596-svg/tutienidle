@@ -98,7 +98,7 @@ function pickChapter(id: string) {
 /* Thanh Van chapter card: the shared dark character-card nine-slice,
    same frame the right inspector uses (Minh 2026-10-12). */
 .chapter-card { width:100%; display:grid; gap:6px; padding:14px 12px; border:14px solid transparent; border-image-slice:160; border-image-width:14px; border-image-repeat:stretch; clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px); box-sizing:border-box; color:#f3e4bc; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 10px) no-repeat; font:15px var(--font-display,Georgia,serif); text-align:left; cursor:pointer; }
-.chapter-card b { font-size:18px; font-weight:700; letter-spacing:.04em; }
+.chapter-card b { font-size:15px; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
 .chapter-card span { font-size:13px; color:#cbb27f; }
 .chapter-card.selected { filter:drop-shadow(0 0 10px #d8ad5566); }
 .chapter-card.is-locked { opacity:.6; }
