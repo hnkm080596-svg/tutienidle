@@ -143,7 +143,6 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
   <div ref="wrapRef" class="exploration-map">
     <div class="map-space" :style="{ width: `${MAP_DESIGN_W}px`, height: `${MAP_DESIGN_H}px`, transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})` }">
       <img class="terrain" :src="terrain" alt="">
-      <h2 v-if="chapter" class="map-name">{{ chapter.label }}</h2>
       <svg v-if="chapter" class="routes" :viewBox="`0 0 ${MAP_DESIGN_W} ${MAP_DESIGN_H}`" preserveAspectRatio="none" aria-hidden="true"><line v-for="line in lines" :key="line.id" :class="{ lit: line.lit }" :x1="line.x1" :y1="line.y1" :x2="line.x2" :y2="line.y2" /></svg>
       <button v-for="node in chapter?.nodes ?? []" :key="node.id" type="button" :class="['stage-node', node.state, { selected: selected === node.id, boss: node.boss, perfect: node.perfect }]" :style="{ left: `${nodePos(node.id, node.x, node.y).x}px`, top: `${nodePos(node.id, node.x, node.y).y}px` }" :aria-label="t('exploration.stageLabel', { chapter: chapter!.label, stage: node.label, state: t(`exploration.state.${node.state}`) })" :aria-pressed="selected === node.id" :aria-disabled="node.state === 'locked' ? 'true' : undefined" :title="node.state === 'locked' ? (node.lockedHint ?? t('exploration.state.locked')) : undefined" :data-stage-id="node.id" @click="node.state !== 'locked' && emit('select', node.id)" @pointerdown="onNodePointerDown($event, node.id, node.x, node.y)">
         <SlotView class="node-slot" variant="stage" :item="null" :icon="landscapeFor(node.id)" static />
@@ -151,19 +150,18 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
         <span class="node-stars" :class="{ lit: node.perfect }" aria-hidden="true">★★★</span>
       </button>
     </div>
-    <p v-if="caption" class="map-caption">{{ caption }}</p>
   </div>
 </template>
 <style scoped>
-/* Minh 2026-10-12: no dark fill - the art sits on the panel's parchment
-   backdrop as a decorative image. */
-.exploration-map { position:relative; min-height:0; border:3px double #b28b46; overflow:hidden; }
+/* Minh 2026-10-12: no frame at all - the art sits on the panel's
+   parchment backdrop as a decorative image; overflow stays hidden so
+   the height-fit space crops cleanly at the edges. */
+.exploration-map { position:relative; min-height:0; overflow:hidden; }
 /* Centering computed in JS (offsetX/offsetY) and baked into the
    transform itself - no CSS translate/percent/origin interplay, so
    the space can never sit half-clipped under any outer rule. */
 .map-space { position:absolute; left:0; top:0; transform-origin:top left; }
-.terrain { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
-.map-name { position:absolute; left:8px; top:8px; z-index:2; margin:0; padding:5px 12px; background:#f1dfbbbe; color:#3a2d18; font-size:20px; font-weight:600; }
+.terrain { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; transform:scale(1.1); transform-origin:center; pointer-events:none; }
 .routes { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .routes line { stroke:#81662e80; stroke-width:3; stroke-dasharray:5 5; }
 /* Kinh-mach light reveal: the light switches on once (fade), then the
@@ -191,6 +189,5 @@ function onNodePointerDown(event: PointerEvent, id: string, x: number, y: number
    perfect-cleared (perfectClearStageIds / turn limit), dim otherwise. */
 .node-stars { position:absolute; left:50%; bottom:-4px; transform:translateX(-50%); z-index:2; font-size:13px; letter-spacing:1px; color:#4a4235; text-shadow:0 1px 2px #0008; pointer-events:none; }
 .node-stars.lit { color:#f4c94e; text-shadow:0 0 4px #f4c94e88, 0 1px 2px #0008; }
-.map-caption { position:absolute; bottom:0; inset-inline:0; z-index:2; margin:0; padding:8px; text-align:center; background:#f4e4cabd; font-size:13px; }
 @media (prefers-reduced-motion:reduce) { .routes line.lit { animation:none; } }
 </style>
