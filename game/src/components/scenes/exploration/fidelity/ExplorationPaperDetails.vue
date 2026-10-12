@@ -46,7 +46,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
            list opens UPWARD over the rewards body so it never
            overflows the card bottom. The armed-farm banner is gone on
            his call - the Dong Fu AutoFarmIndicator keeps stop duty. -->
-      <div class="mode-block"><div class="mode-dropdown" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')`, '--equipment-btn-primary': `url('${btnPrimary}')` }"><button type="button" class="mode-toggle" :aria-expanded="modeOpen" aria-haspopup="listbox" :aria-label="t('exploration.modes')" @click="modeOpen = !modeOpen"><span>{{ currentModeLabel }}</span><span class="mode-caret" aria-hidden="true">▴</span></button><ul v-if="modeOpen" class="mode-list" role="listbox"><li v-for="chip in otherModes" :key="chip.id" role="option" :aria-selected="chip.active" :aria-disabled="chip.disabled"><button type="button" class="mode-option" :class="{ active: chip.active }" :disabled="chip.disabled" :data-mode="chip.id" @click="pickMode(chip.id, chip.disabled)">{{ chip.label }}</button></li></ul></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
+      <div class="mode-block"><div class="mode-dropdown" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')`, '--equipment-btn-primary': `url('${btnPrimary}')` }"><button type="button" class="mode-toggle" :aria-expanded="modeOpen" aria-haspopup="listbox" :aria-label="t('exploration.modes')" @click="modeOpen = !modeOpen"><span>{{ currentModeLabel }}</span><span class="mode-caret" aria-hidden="true">▴</span></button><ul v-if="modeOpen" class="mode-list" role="listbox"><li v-for="chip in otherModes" :key="chip.id" role="option" :aria-selected="chip.active" :aria-disabled="chip.disabled"><button type="button" class="mode-option" :class="{ active: chip.active }" :disabled="chip.disabled" :data-mode="chip.id" @click="pickMode(chip.id, chip.disabled)">{{ chip.label }}</button></li></ul></div></div>
       <div class="start-row" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')` }"><button type="button" class="build-link" @click="emit('openBuild')">{{ stage.buildLabel }}</button><button class="challenge" type="button" :disabled="stage.startDisabled" data-testid="stage-start-button" :style="{ backgroundImage: `url('${ctaArt}')` }" @click="emit('start')">{{ stage.startLabel }}</button></div>
     </template>
     <template v-else><h2 class="stage-title">{{ model.title }}</h2><p class="empty-line">{{ t('exploration.empty') }}</p></template>
@@ -91,8 +91,11 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
 .mode-option.active:not(:disabled):hover { color:#1d1408; }
 .mode-option.active:not(:disabled):hover::before { filter:brightness(1.06); }
 .mode-option:disabled { opacity:.45; cursor:default; }
-.mode-hint { margin:4px 0 0; font-size:10px; color:#b99f6d; line-height:1.3; max-height:26px; overflow:hidden; text-align:center; }
-.start-row { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+
+/* Start row anchors to the card's bottom edge (Minh: the button's box
+   kisses the detail card's lower rim) - the rewards body above it
+   absorbs the leftover height. */
+.start-row { display:flex; flex-direction:column; gap:6px; margin-top:auto; order:10; transform:translateY(23px); }
 .build-link { position:relative; isolation:isolate; align-self:center; padding:4px 14px 6px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; white-space:nowrap; }
 .build-link::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
 .build-link:hover::before { filter:brightness(1.1); }
