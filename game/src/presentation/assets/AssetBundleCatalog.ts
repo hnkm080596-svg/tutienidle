@@ -680,6 +680,8 @@ const UI_SCENE_SINGLE_URLS = [
   // guard.
   '/assets/ui/tien-hiep-2026-10/controls/trial-creation-panel-v2.png',
   '/assets/ui/tien-hiep-2026-10/controls/navigation-medallion-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/navigation-medallion-disc-v1.png',
+  '/assets/ui/tien-hiep-2026-10/controls/navigation-medallion-banner-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/navigation-backing-dark-v3.png',
   '/assets/ui/tien-hiep-2026-10/controls/navigation-landscape-seam-v1.png',
   '/assets/ui/tien-hiep-2026-10/controls/navigation-connector-v1.png',
