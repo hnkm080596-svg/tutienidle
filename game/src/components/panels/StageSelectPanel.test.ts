@@ -79,9 +79,11 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     // 3 chapters; the mortal chapter occupies the first 10 nodes, so
     // nodes[9] is still mortal_dong_10.
     expect(mounted.container.querySelectorAll('.stage-node')).toHaveLength(30)
-    expect(mounted.container.textContent).toContain('Dã Trư')
-    // Roster remap: one family per chapter - every mortal floor node
-    // shows the boar family now.
+    // Minh 2026-10-12: node enemy name tags removed from the vista -
+    // enemy names only render in the inspector for the selected ai.
+    expect(mounted.container.querySelectorAll('.node-enemy')).toHaveLength(0)
+    // Roster remap: one family per chapter - the boss floor detail
+    // shows the boar family via the inspector summary/enemy line.
     expect(mounted.container.textContent).toContain('Heo Rừng')
     const bossStage = STAGES.find((stage) => stage.id === 'mortal_dong_10')!
     const bossTemplate = ENEMIES.find((enemy) => enemy.id === bossStage.bossEnemyId)!
