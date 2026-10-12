@@ -99,6 +99,9 @@ describe('WashTab — Tẩy Luyện', () => {
 
   it('Tẩy Luyện đồ Hoàng không cần chọn hoặc sở hữu Quáng', async () => {
     const mounted = mountTab((manager) => {
+      manager.equipmentBag.get('equipped')!.affixes = [
+        { affixId: 'suffix_accuracy', tier: 1, value: 3 },
+      ]
       const essence = materials.find((m) => m.id === LUYEN_KHI_TINH_HOA_ID)!
       manager.materialBag.add(essence, 10)
       manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
@@ -136,6 +139,26 @@ describe('WashTab — Tẩy Luyện', () => {
 
     mounted.unmount()
   })
+
+  // Owner ruling 2026-10-09 - item 0 dong phu khong co gi de reroll:
+  // nut Tay Luyen disabled (domain tra no_affixes neu goi tay).
+  it('item không có dòng phụ → nút Tẩy Luyện bị disabled dù đủ nguyên liệu', async () => {
+    const mounted = mountTab((manager) => {
+      const essence = materials.find((m) => m.id === LUYEN_KHI_TINH_HOA_ID)!
+      manager.materialBag.add(essence, 10)
+      manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
+    })
+
+    mounted.selectedInstanceId.value = 'equipped'
+    await nextTick()
+
+    const washBtn = Array.from(mounted.container.querySelectorAll<HTMLButtonElement>('button'))
+      .find((b) => b.textContent?.trim() === 'Tẩy Luyện')
+    expect(washBtn).toBeDefined()
+    expect(washBtn!.disabled).toBe(true)
+
+    mounted.unmount()
+  })
 })
 
 // T4-33 - paid-preview honesty: the compare table hid rolled lines that
@@ -165,8 +188,10 @@ describe('WashTab - preview honesty (T4-33)', () => {
     await nextTick()
   }
 
-  it('pending roll with MORE lines than current renders the extra row (no hidden rolled line)', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.99) // huyen max = 2 lines
+  // Owner ruling 2026-10-09 - count bao toan: moi dong hien co co dung
+  // mot cap cell before/after (khong con dong moi/mat do count doi).
+  it('pending roll renders one before/after pair per preserved line', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
     const mounted = mountTab((manager) => prepareWashable(manager, 'huyen'))
     await selectAndPreview(mounted)
 
@@ -175,24 +200,10 @@ describe('WashTab - preview honesty (T4-33)', () => {
     const beforeRows = mounted.container.querySelectorAll(
       '.forge-compare > .forge-compare__cell:not(.forge-compare__cell--next):not(.forge-compare__cell--empty)',
     )
-    expect(beforeRows).toHaveLength(2)
-
-    // Row 2 has no current line - its "before" cell marks the line as new,
-    // not blank.
-    expect(beforeRows[1]!.textContent).toContain('dòng mới')
-
-    mounted.unmount()
-  })
-
-  it('zero-line roll shows a removed marker, not "not rolled"', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0) // min = 0 lines today
-    const mounted = mountTab((manager) => prepareWashable(manager, 'huyen'))
-    await selectAndPreview(mounted)
+    expect(beforeRows).toHaveLength(1)
 
     const afterRows = mounted.container.querySelectorAll('.forge-compare__cell--next')
     expect(afterRows).toHaveLength(1)
-    expect(afterRows[0]!.textContent).toContain('đã mất')
-    expect(afterRows[0]!.textContent).not.toContain('chưa roll')
 
     mounted.unmount()
   })

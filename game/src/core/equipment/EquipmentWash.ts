@@ -17,11 +17,9 @@ import {
 import {
   ITEM_QUALITY_AFFIX_TIER,
   ITEM_QUALITY_EXALTED_AFFIX_CHANCE,
-  ITEM_QUALITY_SUBSTATS_RANGE,
   ITEM_QUALITY_UNLOCKED_POOLS,
 } from './ItemQualityBalance'
 import {
-  GLOBAL_MAX_AFFIXES,
   filterEligibleAffixes,
   rollAffixRange,
   rollEligibleAffixAtTier,
@@ -32,10 +30,16 @@ import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 
 /**
- * TAY LUYEN (plan sec7.3) - reroll TOAN BO identity substat: so dong
- * trong tran Chat, identity tu pool hop le, tier weighted theo Chat.
+ * TAY LUYEN (plan sec7.3) - reroll identity substat cua TUNG dong hien
+ * co: so dong BAO TOAN (item N dong -> van N dong), moi dong roll affix
+ * id moi trong cung kind qua pipeline weight/fallback cu, tier cap theo
+ * Chat (T3), Exalted cua Tien chiem slot dong cuoi thay vi cong them.
  * Tach khoi EquipmentSystem (Task 8, phase7-gamemanager-split), hanh vi
  * giu NGUYEN 1:1, chi doi cho o.
+ *
+ * Owner ruling 2026-10-09: wash chi doi LOAI dong phu + chi so tung
+ * dong, KHONG doi so dong (truoc day roll so dong theo range -> co the
+ * ra 0 dong, trang do). Item 0 dong bi chan o validation.
  *
  * Wash van can vai manh state/API cua EquipmentSystem (cost discount,
  * ModifierSystem rieng) - nhan qua `WashDeps` do EquipmentSystem tu
@@ -87,6 +91,15 @@ function rollWashAffixes(
     return { ok: false, reason: 'favorite' }
   }
 
+  // Owner ruling 2026-10-09 - wash reroll TUNG dong hien co; item khong
+  // co dong nao thi khong co gi de reroll. Chan truoc moi chi phi
+  // (khop thu tu no_affixes cua Tinh Luyen trong EquipmentRefine).
+  const lineCount = instance.affixes.length
+
+  if (lineCount === 0) {
+    return { ok: false, reason: 'no_affixes' }
+  }
+
   if (instance.forgeUsesRemaining <= 0) {
     return { ok: false, reason: 'no_forge_uses' }
   }
@@ -107,36 +120,35 @@ function rollWashAffixes(
     return { ok: false, reason: 'missing_spirit_stone' }
   }
 
-  // T4-33 - honor BOTH ends of the quality's affix range. Every quality
-  // has min 0 today, so this is contract-correctness, not a balance change.
-  const range = ITEM_QUALITY_SUBSTATS_RANGE[instance.quality]
-  const maxLines = Math.min(GLOBAL_MAX_AFFIXES - 1, range.max)
-  const lineCount = range.min + Math.floor(random() * (maxLines - range.min + 1))
   const maxTier = Math.min(
     ITEM_QUALITY_AFFIX_TIER[instance.quality],
     WASH_TIER_WEIGHTS_BY_QUALITY[instance.quality].length,
   )
   const unlockedPools = ITEM_QUALITY_UNLOCKED_POOLS[instance.quality]
-  const prefixCount = Math.ceil(lineCount / 2)
-  const suffixCount = Math.floor(lineCount / 2)
-  const requestedKinds: AffixKind[] = [
-    ...Array<AffixKind>(prefixCount).fill('prefix'),
-    ...Array<AffixKind>(suffixCount).fill('suffix'),
-  ]
 
   const excludeStats: StatType[] = [instance.mainStat.stat]
 
   const rolled: RolledAffix[] = []
 
   // Reserve a compatible Tien Chat Exalted line before base rolls so
-  // another affix cannot consume its stat.
+  // another affix cannot consume its stat. Count preservation: the
+  // exalted occupies the LAST line's slot instead of appending a bonus
+  // line; the replaced line's own stat stays excluded so the exalted
+  // can never restate the line it replaces.
   let exalted: RolledAffix | null = null
   if (instance.quality === 'tien' && random() < ITEM_QUALITY_EXALTED_AFFIX_CHANCE) {
+    const replacedLine = instance.affixes[lineCount - 1]!
+    const exaltedExcludeStats = [...excludeStats]
+
+    if (affixRegistry.has(replacedLine.affixId)) {
+      exaltedExcludeStats.push(affixRegistry.get(replacedLine.affixId).stat)
+    }
+
     exalted = rollEligibleAffixAtTier(
       template,
       ITEM_QUALITY_AFFIX_TIER.tien,
       ['supreme'],
-      excludeStats,
+      exaltedExcludeStats,
       affixRegistry,
       random,
     )
@@ -146,16 +158,28 @@ function rollWashAffixes(
     }
   }
 
-  for (const kind of requestedKinds) {
+  const normalLineCount = lineCount - (exalted ? 1 : 0)
+
+  // Reroll TUNG dong: moi dong hien co roll lai trong CUNG kind cua no
+  // (fallback kind doi dien nhu pipeline cu), loai affixId hien tai khoi
+  // candidate de moi dong luon doi thanh affix khac. AffixId chet (save
+  // cu) khong tra kind duoc -> mac dinh 'prefix', fallback van lap dong.
+  for (const current of instance.affixes.slice(0, normalLineCount)) {
+    const kind: AffixKind = affixRegistry.has(current.affixId)
+      ? affixRegistry.get(current.affixId).kind
+      : 'prefix'
+
     const hasEligibleTier = (candidate: Affix) =>
       candidate.tiers.some((tierDef) => tierDef.tier <= maxTier)
+
+    const isNewAffix = (candidate: Affix) => candidate.id !== current.affixId
 
     const candidates = filterEligibleAffixes(
       affixRegistry.getByKind(kind),
       template,
       unlockedPools,
       excludeStats,
-    ).filter(hasEligibleTier)
+    ).filter((candidate) => isNewAffix(candidate) && hasEligibleTier(candidate))
 
     const fallbackCandidates =
       candidates.length > 0
@@ -165,7 +189,7 @@ function rollWashAffixes(
             template,
             unlockedPools,
             excludeStats,
-          ).filter(hasEligibleTier)
+          ).filter((candidate) => isNewAffix(candidate) && hasEligibleTier(candidate))
 
     if (fallbackCandidates.length === 0) {
       break
@@ -203,7 +227,7 @@ function rollWashAffixes(
     excludeStats.push(affix.stat)
   }
 
-  if (rolled.length !== lineCount) {
+  if (rolled.length !== normalLineCount) {
     return { ok: false, reason: 'no_eligible_affix' }
   }
 

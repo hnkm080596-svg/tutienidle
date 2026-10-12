@@ -342,8 +342,8 @@ describe('previewWashAffixes — roll-time guards', () => {
     const instance = washable()
     ctx.bag.add(instance)
 
-    // Line roll 0.75 -> floor(0.75 * 2) = 1 requested line, always a
-    // prefix first; no prefix exists, so the suffix pool fills the line.
+    // The item's 1 line is a dead affixId -> defaults to 'prefix'; no
+    // prefix exists, so the suffix pool fills the line.
     const ticketId = previewOk(ctx, instance.instanceId, [0.75])
     expect(commit(ctx, instance.instanceId, ticketId).ok).toBe(true)
     expect(instance.affixes).toEqual([{ affixId: suffixSpeed.id, tier: 1, value: 5 }])
@@ -354,10 +354,10 @@ describe('previewWashAffixes — roll-time guards', () => {
     const instance = washable({ quality: 'tien' })
     ctx.bag.add(instance)
 
-    // Rolls: lineCount -> 1 line; exalted chance 0.1 < 0.15 hits but the
-    // registry holds no 'supreme' affix, so the reservation is null and
-    // the result keeps exactly the base line count.
-    const ticketId = previewOk(ctx, instance.instanceId, [0.2, 0.1])
+    // Roll 0.1 < 0.15 hits the exalted chance but the registry holds no
+    // 'supreme' affix, so the reservation is null and the item's own
+    // line count (1) is rerolled normally.
+    const ticketId = previewOk(ctx, instance.instanceId, [0.1])
 
     const display = getWashPreviewAffixes(ctx.slot, ticketId)!
     expect(display.affixes).toEqual([{ affixId: PREFIX_CRIT.id, tier: 1, value: 5 }])
@@ -392,19 +392,100 @@ describe('previewWashAffixes — roll-time guards', () => {
       tiers: TIERS,
     }
     const ctx = setup([supremeCrit, basicCrit, basicSpeed])
-    const instance = washable({ quality: 'tien' })
+    // 2 lines so the exalted occupies the last slot and leaves one
+    // normal line to reroll.
+    const instance = washable({
+      quality: 'tien',
+      affixes: [
+        { affixId: 'pre-existing-affix', tier: 1, value: 3 },
+        { affixId: 'pre-existing-affix-2', tier: 1, value: 3 },
+      ],
+    })
     ctx.bag.add(instance)
 
-    // Rolls: lineCount -> 1 prefix line; exalted chance hits and the
-    // supreme criticalRate line is reserved FIRST, so the base roll
-    // cannot consume criticalRate and must land on speed. Without the
+    // Roll 0.1 < 0.15 hits the exalted chance: the supreme criticalRate
+    // line is reserved FIRST, so the remaining normal line cannot
+    // consume criticalRate and must land on speed. Without the
     // reservation the pick roll (0) would take mod-basic-crit.
-    const ticketId = previewOk(ctx, instance.instanceId, [0.2, 0.1])
+    const ticketId = previewOk(ctx, instance.instanceId, [0.1])
 
     expect(getWashPreviewAffixes(ctx.slot, ticketId)!.affixes).toEqual([
       { affixId: basicSpeed.id, tier: 1, value: 5 },
       { affixId: supremeCrit.id, tier: 5, value: 50 },
     ])
+  })
+
+  // Owner ruling 2026-10-09: N dong vao -> N dong ra; moi dong reroll
+  // affix id moi (id cu bi loai khoi candidates cua dong do).
+  it('preserves the line count and rerolls each line onto a new affix id', () => {
+    const suffixSpeed: Affix = {
+      id: 'mod-suffix-speed',
+      name: 'Module suffix speed',
+      stat: 'speed',
+      kind: 'suffix',
+      pool: 'basic',
+      slots: ['weapon'],
+      tiers: TIERS,
+    }
+    const ctx = setup([PREFIX_CRIT, SUFFIX_ACCURACY, suffixSpeed])
+    const instance = washable({
+      affixes: [
+        { affixId: 'old-line-1', tier: 1, value: 3 },
+        { affixId: 'old-line-2', tier: 1, value: 3 },
+        { affixId: 'old-line-3', tier: 1, value: 3 },
+      ],
+    })
+    ctx.bag.add(instance)
+
+    const ticketId = previewOk(ctx, instance.instanceId)
+    const display = getWashPreviewAffixes(ctx.slot, ticketId)!
+
+    expect(display.affixes).toHaveLength(3)
+    expect(display.affixes.map((rolled) => rolled.affixId)).not.toContain('old-line-1')
+    // Stat-uniqueness still holds across rerolled lines.
+    const stats = display.affixes.map((rolled) => ctx.affixRegistry.get(rolled.affixId).stat)
+    expect(new Set(stats).size).toBe(3)
+  })
+
+  it('a line bearing a registered affix id cannot reroll back onto itself', () => {
+    const ctx = setup()
+    const instance = washable({
+      affixes: [{ affixId: PREFIX_CRIT.id, tier: 1, value: 5 }],
+    })
+    ctx.bag.add(instance)
+
+    const ticketId = previewOk(ctx, instance.instanceId)
+
+    // PREFIX_CRIT is excluded for this line, so the opposite kind fills
+    // it - the only other candidate.
+    expect(getWashPreviewAffixes(ctx.slot, ticketId)!.affixes).toEqual([
+      { affixId: SUFFIX_ACCURACY.id, tier: 1, value: 5 },
+    ])
+  })
+
+  it('rejects no_affixes when the item has no affixes - nothing is charged', () => {
+    const ctx = setup()
+    const instance = washable({ affixes: [] })
+    ctx.bag.add(instance)
+    const usesBefore = instance.forgeUsesRemaining
+    const essenceBefore = ctx.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)
+    const stonesBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+
+    expect(preview(ctx, instance.instanceId)).toEqual({ ok: false, reason: 'no_affixes' })
+    expect(ctx.slot.get()).toBeNull()
+    expect(instance.forgeUsesRemaining).toBe(usesBefore)
+    expect(ctx.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(essenceBefore)
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stonesBefore)
+  })
+
+  it('locked/favorite wins over no_affixes for an empty item', () => {
+    for (const key of ['locked', 'favorite'] as const) {
+      const ctx = setup()
+      const instance = washable({ affixes: [], [key]: true })
+      ctx.bag.add(instance)
+
+      expect(preview(ctx, instance.instanceId)).toEqual({ ok: false, reason: key })
+    }
   })
 })
 
