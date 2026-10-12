@@ -558,9 +558,9 @@ onBeforeUnmount(() => {
 .home-design-profile p { margin:0;font-size:17px;display:flex;align-items:center;gap:15px;color:#4c3a21; }
 .home-design-progress { display:inline-block;width:145px;height:8px;background:#2b2a20;border:1px solid #aa8040;border-radius:8px;overflow:hidden; }
 .home-design-progress i { display:block;height:100%;background:#d6a852; }
-.home-design-currencies { position:absolute;left:682px;top:14px;display:flex;gap:12px; }
-.home-design-currencies .pc-paper-button { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 10px;min-height:38px;font-size:17px;min-width:148px; }
-.home-design-currencies img { width:28px;height:28px;object-fit:contain; }
+.home-design-currencies { position:absolute;right:30px;top:14px;display:flex;gap:8px; }
+.home-design-currencies .pc-paper-button { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;min-height:38px;font-size:15px;min-width:122px; }
+.home-design-currencies img { width:24px;height:24px;object-fit:contain; }
 .home-design-quest { position:absolute;right:30px;top:85px;width:245px;padding:14px 18px 20px;background:#f9edd5df;border:3px double #a67c34;color:#2b2113;font-family:inherit;text-align:left;cursor:pointer; }
 .home-design-quest h3 { margin:-14px -18px 17px;padding:10px 16px;background:#28271f;color:#f1dfb9;font-size:22px; }
 .home-design-quest h3 span { float:right; }
