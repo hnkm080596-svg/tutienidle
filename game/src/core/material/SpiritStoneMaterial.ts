@@ -22,6 +22,8 @@ export const SPIRIT_STONE_MATERIAL: Material = {
 
   sourceType: 'building',
 
+  icon: '/assets/materials/spirit_stone_ha_pham.png',
+
   description: 'Tinh thể linh khí dùng làm vật liệu và đơn vị trao đổi.',
 
   // Tran stack chung (MAX_STACK_AMOUNT = 1000) KHONG phu hop Linh Thach

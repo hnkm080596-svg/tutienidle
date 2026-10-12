@@ -294,12 +294,19 @@ function navAction(id: PcPaperIcon) {
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
 
 const CHIP_ICON_BY_ID: Record<string, PcPaperResource> = {
-  bui_go: 'coin',
-  luyen_dan_tinh_hoa: 'jade',
-  luyen_khi_tinh_hoa: 'essence',
-  skill_insight: 'jade',
   attribute_points: 'crystal',
-  tinh_hoa_pham_the: 'essence',
+}
+// Dedicated icon art (2026-10-12 commission) overrides the generic
+// resource glyphs per chip id.
+const CHIP_ICON_FILE_BY_ID: Record<string, string> = {
+  spirit_stone_ha_pham: '/assets/materials/spirit_stone_ha_pham.png',
+  bui_go: '/assets/materials/bui_go.png',
+  luyen_dan_tinh_hoa: '/assets/materials/luyen_dan_tinh_hoa.png',
+  luyen_khi_tinh_hoa: '/assets/materials/luyen_khi_tinh_hoa.png',
+  tinh_hoa_pham_the: '/assets/materials/tinh_hoa_pham_the.png',
+  skill_insight: '/assets/currency/skill_insight.png',
+  duyen_phan: '/assets/currency/duyen_phan.png',
+  chieu_hien_lenh: '/assets/materials/chieu_hien_lenh.png',
 }
 const CHIP_ICON_BY_INDEX: Record<number, PcPaperResource> = { 0: 'crystal', 1: 'jade', 2: 'coin' }
 const currencyChips = computed(() => {
@@ -308,6 +315,7 @@ const currencyChips = computed(() => {
     id: chip.id,
     label: chip.label,
     icon: CHIP_ICON_BY_ID[chip.id] ?? CHIP_ICON_BY_INDEX[index] ?? 'essence',
+    iconFile: CHIP_ICON_FILE_BY_ID[chip.id],
     value: formatNumber(chip.amount),
   }))
 })
@@ -439,7 +447,7 @@ onBeforeUnmount(() => {
       </header>
       <div class="home-design-currencies" data-df-ui>
         <PcPaperButton v-for="chip in currencyChips" :key="chip.id" variant="secondary" :aria-label="chip.label" :data-material="chip.id" :data-currency-id="chip.id">
-          <img :src="pcPaperResourceUrl(chip.icon)" alt=""><b>{{ chip.value }}</b><span>＋</span>
+          <img :src="chip.iconFile ? resolveAssetUrl(chip.iconFile) : pcPaperResourceUrl(chip.icon)" alt=""><b>{{ chip.value }}</b><span>＋</span>
         </PcPaperButton>
       </div>
       <button

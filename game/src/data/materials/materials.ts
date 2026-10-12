@@ -32,6 +32,7 @@ const legacyMaterials: Material[] = [
     name: 'Tinh Hoa Phàm Thể',
     category: 'essence',
     sourceType: 'monster',
+    icon: '/assets/materials/tinh_hoa_pham_the.png',
     description: 'Tinh hoa ngưng tụ từ thể phách phàm thú, dùng để rèn luyện 6 tầng thân thể.',
   },
 
@@ -40,6 +41,7 @@ const legacyMaterials: Material[] = [
     name: 'Luyện Khí Tinh Hoa',
     category: 'essence',
     sourceType: 'building',
+    icon: '/assets/materials/luyen_khi_tinh_hoa.png',
     description: 'Tinh hoa thu được từ phân giải trang bị, dùng cho các thao tác luyện khí.',
     // Currency-like sink/source shared by every grade. Match Linh Thach's
     // effectively unbounded safe-integer convention so normal progression
@@ -56,6 +58,7 @@ const legacyMaterials: Material[] = [
     name: 'Bụi Gỗ',
     category: 'essence',
     sourceType: 'building',
+    icon: '/assets/materials/bui_go.png',
     description: 'Bụi gỗ thu được từ phân giải linh mộc, dùng làm nhiên liệu lò đan và rèn luyện trang bị.',
     stackLimit: Number.MAX_SAFE_INTEGER,
   },
@@ -65,6 +68,7 @@ const legacyMaterials: Material[] = [
     name: 'Luyện Đan Tinh Hoa',
     category: 'essence',
     sourceType: 'building',
+    icon: '/assets/materials/luyen_dan_tinh_hoa.png',
     description: 'Tinh hoa thu được từ phân giải linh thảo, bắt buộc cho mọi mẻ luyện đan.',
     stackLimit: Number.MAX_SAFE_INTEGER,
   },
@@ -81,6 +85,7 @@ const legacyMaterials: Material[] = [
     name: 'Yêu Đan',
     category: 'other',
     sourceType: 'boss',
+    icon: '/assets/materials/yeu_dan_hung_giao.png',
     description: 'Đan hạch ngưng tụ trong thân Hung Giao Xà — nguyên liệu chính luyện Thông Mạch Đan.',
     stackLimit: 100,
   },
@@ -95,6 +100,7 @@ const legacyMaterials: Material[] = [
     name: 'Chiêu Hiền Lệnh',
     category: 'other',
     sourceType: 'boss',
+    icon: '/assets/materials/chieu_hien_lenh.png',
     description: 'Lệnh bài khắc phù văn chiêu mộ — dùng tại Chiêu Hiền Quán để chiêu mộ đồng đội.',
     stackLimit: 999,
   },
@@ -113,6 +119,7 @@ const legacyMaterials: Material[] = [
     name: 'Đoán Bảo Thạch',
     category: 'other',
     sourceType: 'monster',
+    icon: '/assets/materials/doan_bao_thach.png',
     description: 'Đá dị chất kết tinh từ khí tức yêu thú Trúc Cơ trở lên, dùng để nâng phẩm bản mệnh pháp bảo.',
     domainUnlockRealmId: ARTIFACT_UNLOCK_REALM_ID,
   },
@@ -126,6 +133,7 @@ const legacyMaterials: Material[] = [
     name: 'Tàn Quyển Trúc Cơ',
     category: 'other',
     sourceType: 'exploration',
+    icon: '/assets/materials/broken_foundation_scroll.png',
     description: 'Chín tầng đã đủ để bước vào con đường của người thường.',
   },
 
@@ -134,6 +142,7 @@ const legacyMaterials: Material[] = [
     name: 'Ngọc Giản Cũ',
     category: 'other',
     sourceType: 'exploration',
+    icon: '/assets/materials/old_jade_slip.png',
     description: 'Có người dừng lại ở tầng thứ chín. Có người không.',
   },
 
@@ -142,6 +151,7 @@ const legacyMaterials: Material[] = [
     name: 'Nhật Ký Tu Sĩ',
     category: 'other',
     sourceType: 'monster',
+    icon: '/assets/materials/cultivator_diary.png',
     description: 'Ta đã vượt qua tầng thứ mười hai.',
   },
 
@@ -150,6 +160,7 @@ const legacyMaterials: Material[] = [
     name: 'Mảnh Bia',
     category: 'other',
     sourceType: 'monster',
+    icon: '/assets/materials/stele_fragment.png',
     description: 'Mười hai...',
   },
 ]
@@ -295,6 +306,7 @@ const physiqueEssenceMaterials: Material[] = [
     name: 'Tinh Hoa Bảo Thể',
     category: 'essence',
     sourceType: 'monster',
+    icon: '/assets/materials/tinh_hoa_bao_the.png',
     description: 'Tinh hoa ngưng tụ từ thể phách bảo thú, dùng để rèn luyện thân thể cấp Bảo.',
   },
   {
@@ -302,6 +314,7 @@ const physiqueEssenceMaterials: Material[] = [
     name: 'Tinh Hoa Pháp Thể',
     category: 'essence',
     sourceType: 'monster',
+    icon: '/assets/materials/tinh_hoa_phap_the.png',
     description: 'Tinh hoa ngưng tụ từ thể phách pháp thú, dùng để rèn luyện thân thể cấp Pháp.',
   },
 ]
