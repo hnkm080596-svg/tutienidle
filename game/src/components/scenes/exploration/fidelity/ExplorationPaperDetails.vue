@@ -43,7 +43,7 @@ const ctaArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-
 /* #app ancestor + doubled class beats the global tien-hiep-ui
    paper-skin overrides (:is(#app,body) .exploration-details +
    ::before/::after cream fill + frame). */
-:is(#app,body) .exploration-details.exploration-details { position:relative; min-height:0; border:14px solid transparent; border-image-slice:160; border-image-width:14px; border-image-repeat:stretch; clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px); box-sizing:border-box; padding:10px 12px 8px; display:flex; flex-direction:column; gap:4px; color:#efdfb9; background-color:transparent; background-image:linear-gradient(#000000d9,#000000d9); background-position:2px 5px; background-size:calc(100% - 4px) calc(100% - 10px); background-repeat:no-repeat; }
+:is(#app,body) .exploration-details.exploration-details { position:relative; min-height:0; border:14px solid transparent; border-image-slice:160; border-image-width:14px; border-image-repeat:stretch; clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px); box-sizing:border-box; padding:10px 12px 8px; display:flex; flex-direction:column; gap:4px; color:#efdfb9; background:linear-gradient(#000000d9,#000000d9) padding-box; }
 :is(#app,body) .exploration-details.exploration-details::before,
 :is(#app,body) .exploration-details.exploration-details::after { display:none; content:none; }
 .exploration-armed { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:5px 8px; border:1px solid #a98a4b; border-radius:6px; background:#e8d5a822; font-size:11px; color:#d9b87c; }
