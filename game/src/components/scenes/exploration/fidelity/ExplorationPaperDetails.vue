@@ -95,7 +95,11 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
 .build-link { position:relative; isolation:isolate; align-self:center; padding:4px 14px 6px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; white-space:nowrap; }
 .build-link::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
 .build-link:hover::before { filter:brightness(1.1); }
-.challenge { min-height:58px; border:0; background:transparent center/100% 100% no-repeat; color:#efdcb6; font:700 24px var(--font-display,Georgia,serif); cursor:pointer; }
+/* The global '.exploration-details .challenge' rule stamps dark text
+   for the pale --th-art-button-primary art; this surface mounts the
+   dark equipment-filter plaque instead, so the label returns to cream
+   (doubled class + :is(#app,body) matches that rule's specificity). */
+:is(#app,body) .exploration-details.exploration-details .challenge { min-height:58px; border:0; background:transparent center/100% 100% no-repeat; color:#efdcb6; font:700 24px var(--font-display,Georgia,serif); cursor:pointer; }
 .challenge:hover:not(:disabled) { filter:brightness(1.12); }
 .challenge:disabled { opacity:.55; cursor:default; }
 .challenge:focus-visible { outline:2px solid #d8b56a; outline-offset:2px; }
