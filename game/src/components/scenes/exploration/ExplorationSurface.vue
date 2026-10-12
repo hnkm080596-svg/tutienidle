@@ -309,7 +309,7 @@ const paperChapters = computed<ExplorationChapter[]>(() => {
   const stages = stagesInZone.value
   const nodes: ExplorationNode[] = stages.map((stage, index) => {
     const model = modelById.value.get(stage.id)
-    const { x, y } = stagePosition(index)
+    const { x, y } = stagePosition(stage.id, index)
     const state = nodeState(stage.id)
     return {
       id: stage.id,
