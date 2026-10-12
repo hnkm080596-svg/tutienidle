@@ -4,9 +4,9 @@
 // (shared with WashTab) - test harness provides it like the shell does.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
-// system's ENABLED implementation (sec.11-15: dormant, not deleted),
-// so the scope authority reports in-scope for this file.
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the op's ENABLED
+// implementation (wash/refine ship live in beta since 2026-10-09), so
+// the scope authority reports in-scope for this file.
 vi.mock('../../../core/betaScope', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../core/betaScope')>()),
   isBetaFeature: () => true,

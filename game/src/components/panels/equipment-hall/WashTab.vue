@@ -390,12 +390,6 @@ const washMaterials = computed(() => [
   background: #f4e9cf0d;
   overflow-y: auto;
   scrollbar-width: none;
-  /* Owner request 2026-10-08: the card is resizable by drag
-     (native bottom-right grip) so row spacing can be tuned live. */
-  resize: both;
-  /* DEBUG outlines while aligning (remove when layout is settled). */
-  outline: 2px dashed #37e6f0cc;
-  outline-offset: 1px;
 }
 .forge-compare::-webkit-scrollbar {
   display: none;
@@ -420,13 +414,9 @@ const washMaterials = computed(() => [
   border-bottom: 1px solid #96764440;
   font-size: 17px;
   min-height: 0;
-  /* DEBUG (owner asked for outlines while aligning the 5-row card). */
-  outline: 1px solid #ff6fb366;
 }
 .forge-compare__cell--empty {
   visibility: hidden;
-  /* DEBUG: keep the empty slot's outline visible while aligning. */
-  visibility: visible;
 }
 /* tierClass() emits qi-hall__tier-N - owned solely by qi-hall.css
    (owner ruling 2026-10-08: keep the sheet's designed tier colors). */
@@ -453,20 +443,12 @@ const washMaterials = computed(() => [
   gap: 28px;
   flex: none;
   min-height: 80px;
-  /* DEBUG */
-  outline: 2px dashed #8effa0aa;
 }
 .equipment-material {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
-  /* DEBUG */
-  outline: 1px solid #ffbf47aa;
-}
-.equipment-material > div:last-child {
-  /* DEBUG */
-  outline: 1px solid #37e6f0aa;
 }
 /* Material name stays on ONE line in both columns - a wrapped name
    pushed the count into the middle and looked asymmetric (owner
@@ -476,14 +458,6 @@ const washMaterials = computed(() => [
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 16px;
-}
-.equipment-forge-actions {
-  /* DEBUG */
-  outline: 2px dashed #37e6f0aa;
-}
-.equipment-forge-actions :deep(button) {
-  /* DEBUG */
-  outline: 1px solid #ffbf47aa;
 }
 .equipment-material-icon {
   width: 65px;

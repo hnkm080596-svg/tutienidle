@@ -9,13 +9,11 @@ import type { BetaFeatureName } from '@/core/betaFeatureFlags'
 const MASTER_LOGIN_IDS = new Set(['admin'])
 
 // Scope-hidden features a master session opens for TESTING (Minh
-// 2026-10-08): tab gate + domain ops share the isBetaFeature channel -
-// wash/refine tabs render AND their EquipmentSystem guards pass for
-// admin while every other player still fails closed.
-const MASTER_BETA_UNLOCKS: readonly BetaFeatureName[] = [
-  'equipmentWash',
-  'equipmentRefine',
-]
+// 2026-10-08): tab gate + domain ops share the isBetaFeature channel.
+// Empty since 2026-10-09 - wash/refine shipped to every beta player, so
+// no feature remains for the master account to preview. Keep the
+// channel: the next scope-hidden feature can re-list its name here.
+const MASTER_BETA_UNLOCKS: readonly BetaFeatureName[] = []
 
 const sessionLoginId = ref<string | undefined>()
 

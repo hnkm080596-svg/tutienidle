@@ -67,14 +67,15 @@ import {
   unsupportedReleaseReason,
 } from '@/core/betaScopeSurface'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
-import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { restoreAuthoredFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import type { ElementType } from '@/core/element/ElementType'
 
 // The global test setup unlocks every catalog way + feature for suites
-// written pre-lock; the canonical beta journey runs under the real lock.
+// written pre-lock; the canonical beta journey runs under the shipped
+// feature table (wash/refine live, everything else still locked).
 lockBetaWaysForTests()
-lockBetaFeaturesForTests()
+restoreAuthoredFeaturesForTests()
 
 const SEED = 20260930
 const COMMIT_ELEMENT: ElementType = 'fire'
@@ -108,7 +109,7 @@ const SCOPE_HIDDEN_WHEEL_SLOTS = [
 const SCOPE_HIDDEN_BUILDINGS = ['chi_hien_quan'] as const
 const SCOPE_HIDDEN_STANDALONE_PANELS = ['artifact', 'tran_phap', 'companion'] as const
 const SCOPE_HIDDEN_LEFT_MODES = ['worker_lodge'] as const
-const SCOPE_HIDDEN_EQUIPMENT_TABS = ['wash', 'refine', 'decompose', 'ore_decompose'] as const
+const SCOPE_HIDDEN_EQUIPMENT_TABS = ['decompose', 'ore_decompose'] as const
 // Every tier above the beta ceiling (foundation_establishment) is a
 // scope-hidden realm: derived from the authoritative tier list, so a
 // realm added post-ceiling is covered without touching this test.
@@ -251,14 +252,16 @@ function assertScopeSanity(label: string): void {
     expect(isBetaLeftPanelMode(mode), `${label}: left mode ${mode}`).toBe(false)
   }
 
-  // Economy surfaces: equipment hall admits only enhance + dissolve;
-  // wash/refine/decompose return scope_hidden at the domain seam.
+  // Economy surfaces: equipment hall admits enhance/wash/refine/
+  // dissolve; decompose stays scope_hidden at the domain seam.
   for (const tab of SCOPE_HIDDEN_EQUIPMENT_TABS) {
     expect(isBetaEquipmentTab(tab), `${label}: equipment tab ${tab}`).toBe(false)
   }
   expect([...BETA_EQUIPMENT_TABS].sort(), `${label}: beta equipment tabs`).toEqual([
     'dissolve',
     'enhance',
+    'refine',
+    'wash',
   ])
 
   // Worker Lodge FINAL POLICY: every authored tab scope-hidden,

@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 // Scene-12 rail rework (2026-10-04 owner ruling): the right region is
-// [Trang Bi gear grid | Cuong Hoa | Tay Luyen | Tinh Luyen | Hoa Luyen |
-// Phan Giai] - no Tui Do workspace mode, no item detail card; the gear
-// grid is the canonical EquipmentBagSection (equip-on-click, sockets
-// stay in the doll region). Scope-hidden ops keep a DISABLED shell in
-// the nav (tab shown, op locked) - this file verifies: the rail renders
-// all 6 seals, switching swaps the mounted child, locked ops are
-// disabled + refuse activation, and the equip tab mounts the gear grid.
+// [Trang Bi gear grid | Cuong Hoa | Tay Luyen | Tinh Luyen | Hoa Luyen] -
+// no Tui Do workspace mode, no item detail card; the gear grid is the
+// canonical EquipmentBagSection (equip-on-click, sockets stay in the
+// doll region). Phan Giai left the rail for Kho Vat (2026-10-08). Wash/
+// Refine ship in beta (2026-10-09) so their seals mount the live ops.
+// Scope-hidden ops keep a DISABLED shell in the nav (tab shown, op
+// locked) - this file verifies: the rail renders all 5 seals, switching
+// swaps the mounted child, locked ops are disabled + refuse activation,
+// and the equip tab mounts the gear grid.
 // Per-tab behavior tests stay in
 // src/components/panels/equipment-hall/*Tab.test.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

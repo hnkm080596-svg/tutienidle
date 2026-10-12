@@ -18,9 +18,11 @@
  * Sinks computed: beta-family recipe costs (herb variants, fuel wood
  * per age, spirit stone, special ingredients), the enhance cost
  * catalog, building upgrade costs, collect-quest turn-ins, and vendor
- * sellability (residue path for sellable categories). Decompose, wash/
- * refine, companion feed, and hidden-channel emissions are gated this
- * phase and do not count.
+ * sellability (residue path for sellable categories). Decompose,
+ * companion feed, and hidden-channel emissions are gated this phase
+ * and do not count. Wash/refine op costs ship live (2026-10-09) but
+ * are deliberately unenumerated: they consume only Luyen Khi Tinh Hoa
+ * (a classified store_of_value) plus spirit stone (base_currency).
  */
 import { describe, expect, it } from 'vitest'
 import { materials } from '@/data/materials/materials'
@@ -56,12 +58,13 @@ import { VENDOR_SELLABLE_CATEGORIES } from '@/core/economy/VendorBalance'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
-import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { restoreAuthoredFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 // The global setup admits every feature for legacy suites; this suite
-// asserts the canonical beta lock itself, so re-pin the all-false
-// feature table before any expectation runs.
-lockBetaFeaturesForTests()
+// asserts the canonical shipped scope, so re-pin the authored feature
+// table (wash/refine live, everything else hidden) before any
+// expectation runs.
+restoreAuthoredFeaturesForTests()
 
 const BETA_REALM_IDS = new Set(SUPPORTED_PROFESSION_REALMS)
 
