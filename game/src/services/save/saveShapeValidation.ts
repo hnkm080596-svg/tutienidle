@@ -3733,6 +3733,15 @@ function validateAlchemyJobsSave(
   // settle would deliver the same pill twice for one burned input set.
   const seenJobIds = new Set<string>()
 
+  // R6-D3: same dedupe for the roll anchor - allocRollSeedBase hands
+  // out disjoint ALCHEMY_MAX_BATCH_QUANTITY strides and the merge path
+  // never mints a second record, so two LIVE jobs sharing one
+  // rollSeedBase can only be a crafted save: on tick both orders roll
+  // unit i off seed (base + i), one stream window serving two
+  // deliveries. Parked dormant records never roll and legacy records
+  // carry no base - both are excluded.
+  const seenSeedBases = new Set<number>()
+
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
     const entryPath = `${path}[${i}]`
@@ -3818,6 +3827,20 @@ function validateAlchemyJobsSave(
         path: `${entryPath}.rollSeedBase`,
         message: 'rollSeedBase phải là bội số của batch max, nguyên trong [0, 2^32 - batch] (writer stamp từ roll cursor)',
       })
+    }
+
+    if (
+      entry.rollSeedBase !== undefined &&
+      scopeHiddenPillFamilyOfId(entry.recipeId as string) === null
+    ) {
+      if (seenSeedBases.has(entry.rollSeedBase as number)) {
+        issues.push({
+          path: `${entryPath}.rollSeedBase`,
+          message: 'rollSeedBase trùng - allocator cấp stride rời nhau, hai live job cùng stream window là bất khả thi',
+        })
+      } else {
+        seenSeedBases.add(entry.rollSeedBase as number)
+      }
     }
 
     // F-TC9-3: jobSuccessPercent reads roomLevelAtStart verbatim into
@@ -4622,7 +4645,20 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
           (pillRoomLevel >= 6 ? 1 : 0) +
           (pillRoomLevel >= 9 ? 1 : 0)
 
-    if (alchemyJobs.length > maxJobs) {
+    // R6-D1: the writer emits the UNFILTERED feed - parked
+    // dormant-family records ride it but never settle (the tick parks
+    // them) and startJob does not charge them a live slot either, so
+    // the gate counts only records that can occupy a live slot.
+    // Malformed entries still count (deny direction - a crafted record
+    // cannot launder itself out of the slot law).
+    const liveJobCount = alchemyJobs.filter(
+      (entry) =>
+        !isObject(entry) ||
+        typeof entry.recipeId !== 'string' ||
+        scopeHiddenPillFamilyOfId(entry.recipeId) === null,
+    ).length
+
+    if (liveJobCount > maxJobs) {
       issues.push({
         path: 'alchemyJobs',
         message: `vượt concurrent slot authored (${maxJobs})`,

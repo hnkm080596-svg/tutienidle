@@ -35,7 +35,7 @@ import { createDefaultPlayer } from '../../core/player/Player'
 import { getRequiredCultivation } from '../../core/realm/realmSystem'
 import { ITEM_QUALITY_FORGE_USES } from '../../core/equipment/ItemQualityBalance'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
-import { alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
+import { alchemySecondsFor, ALCHEMY_MAX_BATCH_QUANTITY } from '../../core/alchemy/AlchemySystem'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 
 function validSave(): Record<string, unknown> {
@@ -160,7 +160,7 @@ function alchemySave(): Record<string, unknown> {
 
 const JOB_RECIPE = alchemyRecipes.find((r) => r.id === 'alchemy_thong_mach_dan')!
 
-function jobAt(jobId: string, startedAtMs: number) {
+function jobAt(jobId: string, startedAtMs: number, rollSeedBase = 0) {
   return alchemyJobFixture(
     {
       jobId,
@@ -170,6 +170,7 @@ function jobAt(jobId: string, startedAtMs: number) {
       startedAtMs,
       completesAtMs: startedAtMs + alchemySecondsFor(JOB_RECIPE, 3) * 1000,
       roomLevelAtStart: 3,
+      rollSeedBase,
     },
     undefined,
     JOB_RECIPE,
@@ -181,7 +182,7 @@ describe('F-ALCH-JOBID-DUP: alchemyJobs dedupes by jobId like startJob mints', (
     const save = alchemySave()
     ;(save as Record<string, unknown>).alchemyJobs = [
       jobAt('job-dup', 1_000),
-      jobAt('job-dup', 2_000),
+      jobAt('job-dup', 2_000, ALCHEMY_MAX_BATCH_QUANTITY),
     ]
 
     const result = validateGameSaveShape(save)
@@ -192,9 +193,12 @@ describe('F-ALCH-JOBID-DUP: alchemyJobs dedupes by jobId like startJob mints', (
 
   it('distinct jobIds validate', () => {
     const save = alchemySave()
+    // Disjoint rollSeedBase strides - the allocator hands out one
+    // window per order, so the pair mirrors honest writer output
+    // (the R6-D3 dedupe refuses a shared base on live jobs).
     ;(save as Record<string, unknown>).alchemyJobs = [
       jobAt('job-a', 1_000),
-      jobAt('job-b', 2_000),
+      jobAt('job-b', 2_000, ALCHEMY_MAX_BATCH_QUANTITY),
     ]
 
     expect(validateGameSaveShape(save).ok).toBe(true)

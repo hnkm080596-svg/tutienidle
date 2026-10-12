@@ -14,7 +14,11 @@ import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import { BUI_GO_ID, LUYEN_DAN_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
-import { betaRecipeFamilyOfId, type BetaRecipeFamily } from '../betaScope'
+import {
+  betaRecipeFamilyOfId,
+  scopeHiddenPillFamilyOfId,
+  type BetaRecipeFamily,
+} from '../betaScope'
 import type { PlayerData } from '../player/Player'
 
 /**
@@ -116,12 +120,14 @@ export class GameManagerAlchemyOps {
   }
 
   getAlchemyJobs(): ActiveAlchemyJob[] {
-    // QA-A F4: report the scope-filtered view, same predicate the state
-    // read-model applies - a parked dormant-family job (carried save)
-    // still settles in the domain but must not ghost a Thien Co Bang
-    // entry or building badge that can never resolve.
+    // QA-A F4 + R6-D2: report only records that can still settle -
+    // the same predicate the tick's park seam uses
+    // (scopeHiddenPillFamilyOfId), not the start-allowed one. A parked
+    // dormant-family job (carried save) rides the unfiltered feed but
+    // can never resolve, so it must not ghost a Thien Co Bang entry, a
+    // building badge, or a queue card with no cancel path.
     return this.deps.alchemySystem.getJobs()
-      .filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
+      .filter((job) => scopeHiddenPillFamilyOfId(job.recipeId) === null)
   }
 
   /**
@@ -450,7 +456,7 @@ export class GameManagerAlchemyOps {
       roomLevel,
       maxConcurrentJobs,
       activeJobs: activeJobs.filter(
-        (job) => betaRecipeFamilyOfId(job.recipeId) !== null,
+        (job) => scopeHiddenPillFamilyOfId(job.recipeId) === null,
       ),
       recipes,
     }

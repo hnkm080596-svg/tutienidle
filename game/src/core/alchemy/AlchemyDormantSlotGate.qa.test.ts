@@ -37,24 +37,32 @@ import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 function dormantRecord(): Record<string, unknown> {
   // Scope-hidden family restored from a pre-scope-lock save; parks at
   // the tick seam but stays in the unfiltered feed the writer emits.
+  // The record is stamped the way the only writer (startJob against
+  // CURRENT recipe data - a version bump would have rejected the save
+  // wholesale upstream) would have minted it while the family was still
+  // craftable: real herb variant, authored span, replayable witness.
+  const recipe = alchemyRecipes.find((r) => r.id === 'alchemy_to_cot_dan_qi_refining')!
+  const herbMaterialId = recipe.herbVariants[0]!.materialId
+  const startedAtMs = 1_000
+  const completesAtMs = startedAtMs + alchemySecondsFor(recipe, 1) * 1000
   const job = {
     jobId: 'dormant_old_save',
-    recipeId: 'alchemy_to_cot_dan_qi_refining',
-    pillId: 'to_cot_dan_qi_refining',
-    herbMaterialId: 'herb_decade',
-    startedAtMs: 1_000,
-    completesAtMs: 61_000,
+    recipeId: recipe.id,
+    pillId: recipe.pillId,
+    herbMaterialId,
+    startedAtMs,
+    completesAtMs,
     roomLevelAtStart: 1,
     quantity: 1,
     unitsDone: 0,
   }
   const witness = {
     woodId: BUI_GO_ID,
-    fuelWoodAmount: 1,
-    spiritStoneCost: 0,
-    herbAmount: 1,
-    luyenDanTinhHoaAmount: 1,
-    specialIngredients: [],
+    fuelWoodAmount: Math.ceil(recipe.fuelWoodAmount),
+    spiritStoneCost: Math.ceil(recipe.spiritStoneCost),
+    herbAmount: recipe.herbAmount,
+    luyenDanTinhHoaAmount: recipe.luyenDanTinhHoaAmount,
+    specialIngredients: (recipe.specialIngredients ?? []).map((s) => ({ ...s })),
     costScale: 1,
   }
   return { ...job, reservation: { ...witness, digest: alchemyJobReservationDigest(job, witness) } }
