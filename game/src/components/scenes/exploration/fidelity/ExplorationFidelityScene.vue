@@ -11,6 +11,7 @@ const emit = defineEmits<{ select: [id: string]; zone: [id: string]; back: []; m
 const { t } = useI18n()
 const paper = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/shared-paper-page-v1.png')
 const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/title-divider-clouds-v1.png')
+const card = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 
 // Same dialog contract ImperialScrollScene carried: Escape closes,
 // focus and pointer interaction stay inside the open surface.
@@ -71,7 +72,7 @@ function pickChapter(id: string) {
     </header>
     <div class="map-grid">
       <nav class="map-chapters" :aria-label="t('exploration.chapters')">
-        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapterRail.length === 1 || chapter.id === activeChapterId, 'is-locked': chapter.locked }" :aria-pressed="chapterRail.length === 1 || chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : chapter.progressLabel }}</span></button>
+        <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapterRail.length === 1 || chapter.id === activeChapterId, 'is-locked': chapter.locked }" :style="{ borderImageSource: `url('${card}')` }" :aria-pressed="chapterRail.length === 1 || chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : chapter.progressLabel }}</span></button>
       </nav>
       <ExplorationPaperMap :chapter="activeChapter" :terrain="model.terrain" :selected="stage?.id ?? ''" :caption="t('exploration.empty')" @select="emit('select', $event)" />
       <ExplorationPaperDetails :model="model" :stage="stage" :notice="notice" @mode="emit('mode', $event)" @stop-farm="emit('stopFarm')" @open-build="emit('openBuild')" @start="emit('start')" />
@@ -94,12 +95,12 @@ function pickChapter(id: string) {
 .map-chapters { min-height:0; overflow-y:auto; scrollbar-width:none; border-right:1px solid #b28b4650; padding-right:10px; }
 .map-chapters::-webkit-scrollbar { display:none; }
 .map-chapters h2 { margin:0 0 12px; font-size:21px; font-weight:600; }
-/* Thanh Van chapter card: styled like the realm card (dark forest
-   gradient, gold border, display font) - Minh 2026-10-11. */
-.chapter-card { width:100%; display:grid; gap:6px; padding:12px 10px; border:3px double #b28b46; border-radius:10px; background:linear-gradient(160deg,#1f3a2c,#12291e); color:#f3e4bc; font:15px var(--font-display,Georgia,serif); text-align:left; cursor:pointer; }
+/* Thanh Van chapter card: the shared dark character-card nine-slice,
+   same frame the right inspector uses (Minh 2026-10-12). */
+.chapter-card { width:100%; display:grid; gap:6px; padding:14px 12px; border:14px solid transparent; border-image-slice:160; border-image-width:14px; border-image-repeat:stretch; clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px); box-sizing:border-box; color:#f3e4bc; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 10px) no-repeat; font:15px var(--font-display,Georgia,serif); text-align:left; cursor:pointer; }
 .chapter-card b { font-size:18px; font-weight:700; letter-spacing:.04em; }
 .chapter-card span { font-size:13px; color:#cbb27f; }
-.chapter-card.selected { border-color:#d8ad55; box-shadow:0 0 14px #d8ad5540; }
+.chapter-card.selected { filter:drop-shadow(0 0 10px #d8ad5566); }
 .chapter-card.is-locked { opacity:.6; }
 .preview-label { position:absolute; left:369px; top:693px; margin:0; color:#806b43; font-size:9px; }
 </style>
