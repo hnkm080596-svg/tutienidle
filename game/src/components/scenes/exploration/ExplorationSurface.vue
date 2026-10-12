@@ -397,11 +397,14 @@ const paperStage = computed<ExplorationDetail | null>(() => {
   const rewards: ExplorationReward[] = []
   if (preview) {
     rewards.push(
-      { label: t('combat.rewards.spiritStone'), amount: `×${rangeLabel(preview.spiritStone)}`, tooltip: plainRewardTooltip(t('combat.rewards.spiritStone'), undefined, []), variant: 'item' },
-      { label: t('combat.rewards.techniqueMastery'), amount: `×${rangeLabel(preview.techniqueMastery)}`, tooltip: plainRewardTooltip(t('combat.rewards.techniqueMastery'), undefined, []), variant: 'item' },
+      // Currency cells get slot art too (Minh 2026-10-12): gem ore for
+      // Linh Thach, scroll for Cam Ngo Tam Phap, orb for Cam Ngo Ky Nang -
+      // placeholders until dedicated currency icons exist.
+      { label: t('combat.rewards.spiritStone'), amount: `×${rangeLabel(preview.spiritStone)}`, icon: '/assets/materials/linh_khoang.png', tooltip: plainRewardTooltip(t('combat.rewards.spiritStone'), undefined, []), variant: 'item' },
+      { label: t('combat.rewards.techniqueMastery'), amount: `×${rangeLabel(preview.techniqueMastery)}`, icon: '/assets/techniques/ngu_kiem.png', tooltip: plainRewardTooltip(t('combat.rewards.techniqueMastery'), undefined, []), variant: 'item' },
       // Cam Ngo Ky Nang derives from the same mastery band (x0.018) -
       // shown so a stage advertises its skill-upgrade yield.
-      { label: t('combat.rewards.skillInsight'), amount: `×${rangeLabel({ min: Math.round(preview.techniqueMastery.min * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY), max: Math.round(preview.techniqueMastery.max * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY) })}`, tooltip: plainRewardTooltip(t('combat.rewards.skillInsight'), undefined, []), variant: 'item' },
+      { label: t('combat.rewards.skillInsight'), amount: `×${rangeLabel({ min: Math.round(preview.techniqueMastery.min * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY), max: Math.round(preview.techniqueMastery.max * SKILL_INSIGHT_PER_TECHNIQUE_MASTERY) })}`, icon: '/assets/skills/linh_bao.png', tooltip: plainRewardTooltip(t('combat.rewards.skillInsight'), undefined, []), variant: 'item' },
     )
     for (const entry of preview.guaranteed) {
       rewards.push(dropEntryReward(entry, entry.chance))
