@@ -135,7 +135,10 @@ describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (a
     await nextTick()
 
     // Select perfect_farm on the already-selected first stage, then Start.
-    const farmChip = container.querySelector<HTMLElement>('.mode-chip[data-mode="perfect_farm"]')!
+    // Modes live in the dropdown now - open it, then pick the option.
+    container.querySelector<HTMLElement>('.mode-toggle')!.click()
+    await nextTick()
+    const farmChip = container.querySelector<HTMLElement>('.mode-option[data-mode="perfect_farm"]')!
     farmChip.click()
     await nextTick()
     container.querySelector<HTMLButtonElement>('[data-testid="stage-start-button"]')!.click()
@@ -160,12 +163,17 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     await nextTick()
 
-    const chips = Array.from(container.querySelectorAll<HTMLElement>('.mode-chip'))
+    // Modes live in the dropdown now - open it, then pick the option.
+    container.querySelector<HTMLElement>('.mode-toggle')!.click()
+    await nextTick()
+    const chips = Array.from(container.querySelectorAll<HTMLElement>('.mode-option'))
     expect(chips.length).toBeGreaterThanOrEqual(3)
 
-    container.querySelector<HTMLElement>('.mode-chip[data-mode="repeat"]')!.click()
+    container.querySelector<HTMLElement>('.mode-option[data-mode="repeat"]')!.click()
     await nextTick()
-    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="repeat"]')!.classList.contains('active')).toBe(true)
+    container.querySelector<HTMLElement>('.mode-toggle')!.click()
+    await nextTick()
+    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="repeat"]')!.classList.contains('active')).toBe(true)
 
     // Frontier pick anchors on dong_2 at open (first uncleared) - so
     // the disarm check must click a DIFFERENT node: back to dong_1.
@@ -174,8 +182,8 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
       .click()
     await nextTick()
 
-    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="manual"]')!.classList.contains('active')).toBe(true)
-    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="repeat"]')!.classList.contains('active')).toBe(false)
+    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="manual"]')!.classList.contains('active')).toBe(true)
+    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="repeat"]')!.classList.contains('active')).toBe(false)
 
     unmount()
   })
@@ -191,9 +199,13 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     await nextTick()
 
-    container.querySelector<HTMLElement>('.mode-chip[data-mode="progress"]')!.click()
+    container.querySelector<HTMLElement>('.mode-toggle')!.click()
     await nextTick()
-    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="progress"]')!.classList.contains('active')).toBe(true)
+    container.querySelector<HTMLElement>('.mode-option[data-mode="progress"]')!.click()
+    await nextTick()
+    container.querySelector<HTMLElement>('.mode-toggle')!.click()
+    await nextTick()
+    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="progress"]')!.classList.contains('active')).toBe(true)
 
     // Cross-chapter pick now goes straight through the single-vista
     // map - tapping the first qi_refining node (qi_refining_forest,
@@ -201,7 +213,9 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     container.querySelector<HTMLElement>('[data-stage-id="qi_refining_forest"]')!.click()
     await nextTick()
 
-    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="manual"]')!.classList.contains('active')).toBe(true)
+    // jsdom click() emits no pointerdown, so the list stays open after
+    // the node pick - assert directly without re-toggling.
+    expect(container.querySelector<HTMLElement>('.mode-option[data-mode="manual"]')!.classList.contains('active')).toBe(true)
 
     unmount()
   })

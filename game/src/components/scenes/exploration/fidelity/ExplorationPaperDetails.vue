@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import SlotView from '@/components/common/SlotView.vue'
 import type { ExplorationPaperModel, ExplorationDetail } from './explorationUi'
-defineProps<{ model: ExplorationPaperModel; stage: ExplorationDetail | null; notice: string }>()
+const props = defineProps<{ model: ExplorationPaperModel; stage: ExplorationDetail | null; notice: string }>()
 const emit = defineEmits<{ mode: [id: string]; stopFarm: []; openBuild: []; start: [] }>()
 const { t } = useI18n()
 const card = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
@@ -12,10 +13,26 @@ const ctaArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-
 // 2026-10-12): secondary art idle, primary art on the armed chip.
 const btnSecondary = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-secondary-v1.png')
 const btnPrimary = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button-primary-v1.png')
+
+// Minh 2026-10-12: the 4 battle modes collapse into one dropdown -
+// closed face is the nine-slice button, open list sits on the dark
+// card skin. Closes on pick or outside pointerdown.
+const modeOpen = ref(false)
+const currentModeLabel = computed(() => props.stage?.modes.find((chip) => chip.active)?.label ?? '')
+function pickMode(id: string, disabled: boolean) {
+  if (disabled) return
+  emit('mode', id)
+  modeOpen.value = false
+}
+function onDocPointerDown(event: PointerEvent) {
+  if (!(event.target as HTMLElement | null)?.closest?.('.mode-dropdown')) modeOpen.value = false
+}
+if (typeof document !== 'undefined') document.addEventListener('pointerdown', onDocPointerDown)
+onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDown))
 </script>
 <template>
   <aside class="exploration-details" :style="{ borderImageSource: `url('${card}')` }">
-    <div v-if="model.armedFarm" class="exploration-armed"><span>{{ t('exploration.armedFarm', { stage: model.armedFarm.stageName }) }}</span><button type="button" class="exploration-stop" data-testid="autofarm-stop" @click="emit('stopFarm')">{{ model.stopLabel }}</button></div>
+    <div v-if="model.armedFarm" class="exploration-armed"><button type="button" class="exploration-stop" data-testid="autofarm-stop" @click="emit('stopFarm')">{{ model.stopLabel }}</button></div>
     <template v-if="stage">
       <h2 class="stage-title">{{ stage.title }}</h2>
       <div class="details-body">
@@ -26,8 +43,8 @@ const btnPrimary = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button
       <!-- Mode chips stay OUT of the scrollable body - arming a mode is
            part of the primary start flow and must never clip behind
            the CTA on shorter viewports. -->
-      <div class="mode-block"><div class="mode-chips" role="group" :aria-label="t('exploration.modes')" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')`, '--equipment-btn-primary': `url('${btnPrimary}')` }"><button v-for="chip in stage.modes" :key="chip.id" type="button" :class="['mode-chip', { active: chip.active }]" :disabled="chip.disabled" :aria-pressed="chip.active" :data-mode="chip.id" @click="emit('mode', chip.id)">{{ chip.label }}</button></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
-      <div class="start-row"><button type="button" class="build-link" @click="emit('openBuild')">{{ stage.buildLabel }}</button><button class="challenge" type="button" :disabled="stage.startDisabled" data-testid="stage-start-button" :style="{ backgroundImage: `url('${ctaArt}')` }" @click="emit('start')">{{ stage.startLabel }}</button></div>
+      <div class="mode-block"><div class="mode-dropdown" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')`, '--equipment-btn-primary': `url('${btnPrimary}')` }"><button type="button" class="mode-toggle" :aria-expanded="modeOpen" aria-haspopup="listbox" :aria-label="t('exploration.modes')" @click="modeOpen = !modeOpen"><span>{{ currentModeLabel }}</span><span class="mode-caret" aria-hidden="true">▾</span></button><ul v-if="modeOpen" class="mode-list" role="listbox"><li v-for="chip in stage.modes" :key="chip.id" role="option" :aria-selected="chip.active" :aria-disabled="chip.disabled"><button type="button" class="mode-option" :class="{ active: chip.active }" :disabled="chip.disabled" :data-mode="chip.id" @click="pickMode(chip.id, chip.disabled)">{{ chip.label }}</button></li></ul></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
+      <div class="start-row" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')` }"><button type="button" class="build-link" @click="emit('openBuild')">{{ stage.buildLabel }}</button><button class="challenge" type="button" :disabled="stage.startDisabled" data-testid="stage-start-button" :style="{ backgroundImage: `url('${ctaArt}')` }" @click="emit('start')">{{ stage.startLabel }}</button></div>
     </template>
     <template v-else><h2 class="stage-title">{{ model.title }}</h2><p class="empty-line">{{ t('exploration.empty') }}</p></template>
     <p class="notice" role="status">{{ notice }}</p>
@@ -43,7 +60,7 @@ const btnPrimary = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button
 :is(#app,body) .exploration-details.exploration-details { position:relative; min-height:0; border:14px solid transparent; border-image-slice:160; border-image-width:14px; border-image-repeat:stretch; clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px); box-sizing:border-box; padding:10px 12px 8px; display:flex; flex-direction:column; gap:4px; color:#efdfb9; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 10px) no-repeat; }
 :is(#app,body) .exploration-details.exploration-details::before,
 :is(#app,body) .exploration-details.exploration-details::after { display:none; content:none; }
-.exploration-armed { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:5px 8px; border:1px solid #a98a4b; border-radius:6px; background:#e8d5a822; font-size:11px; color:#d9b87c; }
+.exploration-armed { display:flex; justify-content:center; padding:4px; }
 .exploration-stop { padding:3px 8px; border:1px solid #7d3b2b; border-radius:5px; background:#8f4632; color:#ffedd0; font:inherit; font-size:11px; cursor:pointer; }
 .stage-title { margin:0; text-align:center; font-size:21px; font-weight:500; color:#f4e4c0; }
 .details-body { flex:1; min-height:0; overflow:auto; scrollbar-width:thin; }
@@ -54,23 +71,31 @@ const btnPrimary = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/button
 .reward .slot-view { width:100%; }
 .reward strong { display:block; margin-top:2px; font-weight:500; font-size:12px; color:#c4d9a8; }
 .mode-block { flex:0 0 auto; margin-top:6px; }
-.mode-chips { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
-/* Trang Bi op-tab look (Minh 2026-10-12): every chip mounts the dark
-   parchment nine-slice secondary button art; the armed chip swaps to
-   the primary art with dark text, same as the equipment tabs. */
-.mode-chip { position:relative; isolation:isolate; padding:4px 8px 6px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; white-space:nowrap; }
-.mode-chip::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
-.mode-chip.active { color:#2f2415; text-shadow:0 1px #fff7; }
-.mode-chip.active::before { border-image-source:var(--equipment-btn-primary); }
-.mode-chip:not(:disabled):hover { color:#fff3d6; }
-.mode-chip:not(:disabled):hover::before { filter:brightness(1.1); }
-.mode-chip.active:not(:disabled):hover { color:#1d1408; }
-.mode-chip.active:not(:disabled):hover::before { filter:brightness(1.06); }
-.mode-chip:disabled { opacity:.45; cursor:default; }
+/* Mode dropdown (Minh 2026-10-12): closed face = nine-slice secondary
+   button art like the Trang Bi tabs; open list options keep the same
+   art (secondary idle / primary armed). */
+.mode-dropdown { position:relative; width:78%; margin-inline:auto; }
+.mode-toggle { position:relative; isolation:isolate; display:flex; justify-content:space-between; align-items:center; width:100%; padding:5px 12px 7px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; }
+.mode-toggle::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
+.mode-toggle:hover::before { filter:brightness(1.1); }
+.mode-caret { font-size:11px; opacity:.8; }
+.mode-list { position:absolute; top:calc(100% + 2px); left:0; right:0; margin:0; padding:4px; list-style:none; display:grid; gap:4px; background:transparent; border:0; z-index:6; }
+/* Each option keeps the same 9-slice button art (Minh: 'giu art') -
+   secondary idle, primary on the armed one. */
+.mode-option { position:relative; isolation:isolate; display:block; width:100%; padding:4px 10px 6px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); text-align:center; cursor:pointer; white-space:nowrap; }
+.mode-option::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
+.mode-option.active { color:#2f2415; text-shadow:0 1px #fff7; }
+.mode-option.active::before { border-image-source:var(--equipment-btn-primary); }
+.mode-option:not(:disabled):hover::before { filter:brightness(1.1); }
+.mode-option.active:not(:disabled):hover { color:#1d1408; }
+.mode-option.active:not(:disabled):hover::before { filter:brightness(1.06); }
+.mode-option:disabled { opacity:.45; cursor:default; }
 .mode-hint { margin:4px 0 0; font-size:10px; color:#b99f6d; line-height:1.3; max-height:26px; overflow:hidden; text-align:center; }
 .start-row { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-.build-link { align-self:center; padding:2px 10px; border:1px solid #a98a4b; border-radius:8px; background:#ece0c41a; color:#d9b87c; font:inherit; font-size:12px; cursor:pointer; }
-.challenge { min-height:42px; border:0; background:transparent center/100% 100% no-repeat; color:#efdcb6; font:700 19px var(--font-display,Georgia,serif); cursor:pointer; }
+.build-link { position:relative; isolation:isolate; align-self:center; padding:4px 14px 6px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); cursor:pointer; white-space:nowrap; }
+.build-link::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
+.build-link:hover::before { filter:brightness(1.1); }
+.challenge { min-height:58px; border:0; background:transparent center/100% 100% no-repeat; color:#efdcb6; font:700 24px var(--font-display,Georgia,serif); cursor:pointer; }
 .challenge:hover:not(:disabled) { filter:brightness(1.12); }
 .challenge:disabled { opacity:.55; cursor:default; }
 .challenge:focus-visible { outline:2px solid #d8b56a; outline-offset:2px; }
