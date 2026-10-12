@@ -5,7 +5,7 @@ import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import SlotView from '@/components/common/SlotView.vue'
 import type { ExplorationPaperModel, ExplorationDetail } from './explorationUi'
 const props = defineProps<{ model: ExplorationPaperModel; stage: ExplorationDetail | null; notice: string }>()
-const emit = defineEmits<{ mode: [id: string]; stopFarm: []; openBuild: []; start: [] }>()
+const emit = defineEmits<{ mode: [id: string]; openBuild: []; start: [] }>()
 const { t } = useI18n()
 const card = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/character-card-nine-slice-v2.png')
 const ctaArt = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipment-filter-normal-v2.png')
@@ -32,7 +32,6 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
 </script>
 <template>
   <aside class="exploration-details" :style="{ borderImageSource: `url('${card}')` }">
-    <div v-if="model.armedFarm" class="exploration-armed"><button type="button" class="exploration-stop" data-testid="autofarm-stop" @click="emit('stopFarm')">{{ model.stopLabel }}</button></div>
     <template v-if="stage">
       <h2 class="stage-title">{{ stage.title }}</h2>
       <div class="details-body">
@@ -40,10 +39,11 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
         <h3 class="section-heading">{{ t('exploration.rewards') }}</h3>
         <div class="rewards"><div v-for="(reward, index) in stage.rewards" :key="index" class="reward"><SlotView :item="reward" :icon="reward.icon" :label="reward.label" :variant="reward.variant ?? 'item'" :accessible-label="[reward.label, reward.amount].filter(Boolean).join(' ')" :tooltip="reward.tooltip" show-label /><strong>{{ reward.amount }}</strong></div></div>
       </div>
-      <!-- Mode chips stay OUT of the scrollable body - arming a mode is
-           part of the primary start flow and must never clip behind
-           the CTA on shorter viewports. -->
-      <div class="mode-block"><div class="mode-dropdown" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')`, '--equipment-btn-primary': `url('${btnPrimary}')` }"><button type="button" class="mode-toggle" :aria-expanded="modeOpen" aria-haspopup="listbox" :aria-label="t('exploration.modes')" @click="modeOpen = !modeOpen"><span>{{ currentModeLabel }}</span><span class="mode-caret" aria-hidden="true">▾</span></button><ul v-if="modeOpen" class="mode-list" role="listbox"><li v-for="chip in stage.modes" :key="chip.id" role="option" :aria-selected="chip.active" :aria-disabled="chip.disabled"><button type="button" class="mode-option" :class="{ active: chip.active }" :disabled="chip.disabled" :data-mode="chip.id" @click="pickMode(chip.id, chip.disabled)">{{ chip.label }}</button></li></ul></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
+      <!-- Mode picker stays under the rewards (Minh 2026-10-12); the
+           list opens UPWARD over the rewards body so it never
+           overflows the card bottom. The armed-farm banner is gone on
+           his call - the Dong Fu AutoFarmIndicator keeps stop duty. -->
+      <div class="mode-block"><div class="mode-dropdown" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')`, '--equipment-btn-primary': `url('${btnPrimary}')` }"><button type="button" class="mode-toggle" :aria-expanded="modeOpen" aria-haspopup="listbox" :aria-label="t('exploration.modes')" @click="modeOpen = !modeOpen"><span>{{ currentModeLabel }}</span><span class="mode-caret" aria-hidden="true">▴</span></button><ul v-if="modeOpen" class="mode-list" role="listbox"><li v-for="chip in stage.modes" :key="chip.id" role="option" :aria-selected="chip.active" :aria-disabled="chip.disabled"><button type="button" class="mode-option" :class="{ active: chip.active }" :disabled="chip.disabled" :data-mode="chip.id" @click="pickMode(chip.id, chip.disabled)">{{ chip.label }}</button></li></ul></div><p class="mode-hint">{{ stage.modeHint }}</p></div>
       <div class="start-row" :style="{ '--equipment-btn-secondary': `url('${btnSecondary}')` }"><button type="button" class="build-link" @click="emit('openBuild')">{{ stage.buildLabel }}</button><button class="challenge" type="button" :disabled="stage.startDisabled" data-testid="stage-start-button" :style="{ backgroundImage: `url('${ctaArt}')` }" @click="emit('start')">{{ stage.startLabel }}</button></div>
     </template>
     <template v-else><h2 class="stage-title">{{ model.title }}</h2><p class="empty-line">{{ t('exploration.empty') }}</p></template>
@@ -60,8 +60,6 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
 :is(#app,body) .exploration-details.exploration-details { position:relative; min-height:0; border:14px solid transparent; border-image-slice:160; border-image-width:14px; border-image-repeat:stretch; clip-path:inset(4.7px 1.8px 5.3px 1.9px round 5px); box-sizing:border-box; padding:10px 12px 8px; display:flex; flex-direction:column; gap:4px; color:#efdfb9; background:linear-gradient(#000000d9,#000000d9) border-box 2px 5px/calc(100% - 4px) calc(100% - 10px) no-repeat; }
 :is(#app,body) .exploration-details.exploration-details::before,
 :is(#app,body) .exploration-details.exploration-details::after { display:none; content:none; }
-.exploration-armed { display:flex; justify-content:center; padding:4px; }
-.exploration-stop { padding:3px 8px; border:1px solid #7d3b2b; border-radius:5px; background:#8f4632; color:#ffedd0; font:inherit; font-size:11px; cursor:pointer; }
 .stage-title { margin:0; text-align:center; font-size:21px; font-weight:500; color:#f4e4c0; }
 .details-body { flex:1; min-height:0; overflow:auto; scrollbar-width:thin; }
 .disabled-line { font-size:12px; color:#d98d6a; margin:5px 0; text-align:center; }
@@ -79,7 +77,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDo
 .mode-toggle::before { content:''; position:absolute; inset:0 -2px; z-index:-1; border:9px solid transparent; border-image:var(--equipment-btn-secondary) 60 fill stretch; pointer-events:none; }
 .mode-toggle:hover::before { filter:brightness(1.1); }
 .mode-caret { font-size:11px; opacity:.8; }
-.mode-list { position:absolute; top:calc(100% + 2px); left:0; right:0; margin:0; padding:4px; list-style:none; display:grid; gap:4px; background:transparent; border:0; z-index:6; }
+.mode-list { position:absolute; bottom:calc(100% + 2px); left:0; right:0; margin:0; padding:4px; list-style:none; display:grid; gap:4px; background:transparent; border:0; z-index:6; }
 /* Each option keeps the same 9-slice button art (Minh: 'giu art') -
    secondary idle, primary on the armed one. */
 .mode-option { position:relative; isolation:isolate; display:block; width:100%; padding:4px 10px 6px; border:0; background:transparent; color:#f4e4c0; font:700 13px var(--pc-font-body, var(--font-display, Georgia, serif)); text-align:center; cursor:pointer; white-space:nowrap; }

@@ -104,19 +104,17 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
 })
 
 describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (audit T1-6 / partial T4-38)', () => {
-  it('auto-farm armed → panel shows running state + stop control; stop releases the farm', async () => {
+  it('auto-farm armed → panel shows no in-card stop row (stop lives in DongFuStage AutoFarmIndicator)', async () => {
+    // Minh 2026-10-12: the inspector's armed-farm banner was removed;
+    // stopping the farm is the home-chrome indicator's job, covered by
+    // AutoFarmIndicator.test.ts.
     const { container, pinia, unmount } = mountStageSelect()
     const player = usePlayerStore(pinia)
 
     player.autoFarmStage = { stageId: 'mortal_dong_1', lastCheckedMs: Date.now() }
     await nextTick()
 
-    const stopButton = container.querySelector<HTMLButtonElement>('[data-testid="autofarm-stop"]')
-    expect(stopButton).not.toBeNull()
-
-    stopButton!.click()
-    await nextTick()
-    expect(player.autoFarmStage).toBeNull()
+    expect(container.querySelector('[data-testid="autofarm-stop"]')).toBeNull()
     unmount()
   })
 

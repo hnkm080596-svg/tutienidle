@@ -473,10 +473,10 @@
         "progress": "Clear the previous stage to unlock"
       },
       "modes": {
-        "manual": "Manual",
+        "manual": "Default",
         "repeat": "Repeat",
-        "progress": "Auto Advance",
-        "perfectFarm": "Perfect Clear Farm"
+        "progress": "Advance",
+        "perfectFarm": "Expedition"
       },
       "modeHints": {
         "manual": "End the battle and wait for your decision.",

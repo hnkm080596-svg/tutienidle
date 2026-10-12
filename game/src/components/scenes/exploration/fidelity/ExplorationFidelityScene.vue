@@ -80,7 +80,7 @@ function pickChapter(id: string) {
         <button v-for="chapter in chapterRail" :key="chapter.id" type="button" class="chapter-card" :class="{ selected: chapterRail.length === 1 || chapter.id === activeChapterId, 'is-locked': chapter.locked }" :style="{ borderImageSource: `url('${card}')` }" :aria-pressed="chapterRail.length === 1 || chapter.id === activeChapterId" :data-chapter-id="chapter.id" @click="pickChapter(chapter.id)"><b>{{ chapter.label }}</b><span>{{ chapter.locked ? t('exploration.state.locked') : `${chapter.progressLabel} · ${chapter.starsLabel}` }}</span></button>
       </nav>
       <ExplorationPaperMap :chapter="activeChapter" :terrain="model.terrain" :selected="stage?.id ?? ''" :caption="t('exploration.empty')" @select="emit('select', $event)" />
-      <ExplorationPaperDetails :model="model" :stage="stage" :notice="notice" @mode="emit('mode', $event)" @stop-farm="emit('stopFarm')" @open-build="emit('openBuild')" @start="emit('start')" />
+      <ExplorationPaperDetails :model="model" :stage="stage" :notice="notice" @mode="emit('mode', $event)" @open-build="emit('openBuild')" @start="emit('start')" />
     </div>
     <p v-if="preview" class="preview-label">{{ t('exploration.preview') }}</p>
   </section>

@@ -473,10 +473,10 @@
         "progress": "Hoàn thành ải trước để mở khóa"
       },
       "modes": {
-        "manual": "Thủ Công",
+        "manual": "Mặc Định",
         "repeat": "Lặp Lại",
-        "progress": "Tự Động Tiến Ải",
-        "perfectFarm": "Tự Động Hoàn Mỹ"
+        "progress": "Tiến Ải",
+        "perfectFarm": "Viễn Chinh"
       },
       "modeHints": {
         "manual": "Kết thúc trận và chờ bạn quyết định.",
