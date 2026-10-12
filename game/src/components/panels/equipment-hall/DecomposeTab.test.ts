@@ -1,18 +1,6 @@
-﻿// @vitest-environment jsdom
-// Task 14-UI (rework P4) - DecomposeTab: settings UI (grade/age
-// select + worker slider) + output preview, mount qua createApp+provide
-// (project pattern, KHONG @vue/test-utils).
+// @vitest-environment jsdom
+// DecomposeTab submits explicit ore and quantity through the domain owner.
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
-
-// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
-// system's ENABLED implementation (sec.11-15: dormant, not deleted),
-// so the scope authority reports in-scope for this file.
-vi.mock('../../../core/betaScope', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../../core/betaScope')>()),
-  isBetaFeature: () => true,
-  isScopeHidden: () => false,
-}))
-
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import DecomposeTab from './DecomposeTab.vue'
@@ -22,182 +10,90 @@ import { MaterialRegistry } from '@/core/material/MaterialRegistry'
 import { materials } from '@/data/materials/materials'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
+import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 
 function makeGameManager() {
   const bag = new MaterialBag()
-
-  for (const material of materials) {
-    bag.add(material, 100)
-  }
-
-  // R7 (AR-08): dynamic capacity replaces the constructor option.
-  const decompose = new DecomposeSystem(bag)
-  decompose.updateCapacity(6)
-
+  for (const material of materials) bag.add(material, 100)
+  const callbacks = { notifyMaterialGained: vi.fn() }
+  const decompose = new DecomposeSystem(bag, {
+    onEssenceProduced: callbacks.notifyMaterialGained,
+  })
   const materialRegistry = new MaterialRegistry()
-
-  for (const material of materials) {
-    materialRegistry.register(material)
-  }
-
-  return {
-    decomposeSystem: decompose,
-    materialBag: bag,
-    materialRegistry,
-  }
+  for (const material of materials) materialRegistry.register(material)
+  return { decomposeSystem: decompose, materialBag: bag, materialRegistry, callbacks }
 }
 
 function mountTab(gm: ReturnType<typeof makeGameManager>) {
   const pinia = createPinia()
-
   setActivePinia(pinia)
-
   const container = document.createElement('div')
-
   document.body.appendChild(container)
-
   const version = ref(0)
   const app = createApp({ render: () => h(DecomposeTab) })
-
   app.use(pinia)
   app.use(i18n)
   app.provide(GAME_MANAGER_KEY, gm as unknown as import('@/core/game/GameManager').GameManager)
   app.provide(STATE_VERSION_KEY, version)
-  app.provide(BUMP_STATE_KEY, () => {
-    version.value += 1
-  })
-
+  app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
-
   return {
     container,
-    bump: () => {
-      version.value += 1
-    },
-    select: (index: number) =>
-      container.querySelectorAll<HTMLSelectElement>('.decompose-tab select')[index]!,
-    slider: () => container.querySelector<HTMLInputElement>('.decompose-tab input[type="range"]')!,
+    ore: () => container.querySelector<HTMLSelectElement>('.decompose-tab select')!,
+    amount: () => container.querySelector<HTMLInputElement>('.decompose-tab input[type="number"]')!,
+    button: () => container.querySelector<HTMLButtonElement>('.decompose-tab button')!,
     text: () => container.querySelector('.decompose-tab')?.textContent ?? '',
-    unmount: () => {
-      app.unmount()
-      container.remove()
-    },
+    unmount: () => { app.unmount(); container.remove() },
   }
 }
 
-beforeEach(() => {
-  vi.clearAllMocks()
-})
+beforeEach(() => vi.clearAllMocks())
+afterEach(() => { document.body.innerHTML = '' })
 
-afterEach(() => {
-  document.body.innerHTML = ''
-})
-
-describe('DecomposeTab — settings UI (Task 14-UI)', () => {
-  it('renders 2 selects (grade + quality) + worker slider', () => {
+describe('DecomposeTab — explicit instant command', () => {
+  it('lists only ore stacks and previews the selected amount', async () => {
     const gm = makeGameManager()
     const tab = mountTab(gm)
-
-    expect(tab.container.querySelectorAll('.decompose-tab select')).toHaveLength(2)
-    expect(tab.slider()).not.toBeNull()
-
-    tab.unmount()
-  })
-
-  it('worker slider input → system.setSetting({workers})', async () => {
-    const gm = makeGameManager()
-    const tab = mountTab(gm)
-
-    const slider = tab.slider()!
-
-    slider.value = '4'
-    slider.dispatchEvent(new Event('input'))
     await nextTick()
-
-    expect(gm.decomposeSystem.getSettings().workers).toBe(4)
-
-    tab.unmount()
-  })
-
-  it('grade select → system.setSetting({gradeFilter})', async () => {
-    const gm = makeGameManager()
-    const tab = mountTab(gm)
-
-    const gradeSelect = tab.select(0)
-
-    gradeSelect.value = 'luc_pham'
-    gradeSelect.dispatchEvent(new Event('change'))
+    expect([...tab.ore().options].some((option) => option.value === 'mortal_ore_decade')).toBe(true)
+    expect([...tab.ore().options].some((option) => option.value === LUYEN_KHI_TINH_HOA_ID)).toBe(false)
+    tab.amount().value = '4'
+    tab.amount().dispatchEvent(new Event('input'))
     await nextTick()
-
-    expect(gm.decomposeSystem.getSettings().gradeFilter).toBe('luc_pham')
-
-    tab.unmount()
-  })
-
-  it('age select → system.setSetting({ageFilter})', async () => {
-    const gm = makeGameManager()
-    const tab = mountTab(gm)
-
-    const ageSelect = tab.select(1)
-
-    ageSelect.value = 'myriad_year'
-    ageSelect.dispatchEvent(new Event('change'))
-    await nextTick()
-
-    expect(gm.decomposeSystem.getSettings().ageFilter).toBe('myriad_year')
-
-    tab.unmount()
-  })
-
-  it('invalid select values are rejected — settings unchanged', async () => {
-    const gm = makeGameManager()
-    const tab = mountTab(gm)
-
-    const gradeSelect = tab.select(0)
-    const ageSelect = tab.select(1)
-
-    gradeSelect.value = 'not_a_grade'
-    gradeSelect.dispatchEvent(new Event('change'))
-    ageSelect.value = 'not_an_age'
-    ageSelect.dispatchEvent(new Event('change'))
-    await nextTick()
-
-    expect(gm.decomposeSystem.getSettings().gradeFilter).toBe('all')
-    expect(gm.decomposeSystem.getSettings().ageFilter).toBe('all')
-
-    tab.unmount()
-  })
-
-  it('hiển thị pending output estimate (workers > 0 → dòng text có số)', async () => {
-    const gm = makeGameManager()
-    const tab = mountTab(gm)
-
-    const slider = tab.slider()!
-
-    slider.value = '2'
-    slider.dispatchEvent(new Event('input'))
-    await nextTick()
-
-    // Output estimate text: base 1 x Hoang 1 x 2 workers = 2/luot.
     expect(tab.text()).toContain('2')
-
     tab.unmount()
   })
 
-  it('R7: slider max derives from live capacity, not a hardcoded 6 (AR-08)', async () => {
+  it('button commits selected ore atomically and refreshes the visible stock', async () => {
     const gm = makeGameManager()
-    gm.decomposeSystem.updateCapacity(9)
     const tab = mountTab(gm)
-
-    const slider = tab.slider()!
-    expect(slider.max).toBe('9')
-
-    // Live capacity change + state-version bump re-syncs the mirror.
-    gm.decomposeSystem.updateCapacity(3)
-    tab.bump()
     await nextTick()
-    expect(tab.slider()!.max).toBe('3')
+    tab.ore().value = 'mortal_ore_decade'
+    tab.ore().dispatchEvent(new Event('change'))
+    tab.amount().value = '4'
+    tab.amount().dispatchEvent(new Event('input'))
+    await nextTick()
+    tab.button().click()
+    await nextTick()
+    expect(gm.materialBag.getAmount('mortal_ore_decade')).toBe(96)
+    expect(gm.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(102)
+    expect(gm.callbacks.notifyMaterialGained).toHaveBeenCalledWith(LUYEN_KHI_TINH_HOA_ID, 2)
+    expect(tab.text()).toContain('96')
+    tab.unmount()
+  })
 
+  it('keeps the action clickable and reports invalid input without mutating either balance', async () => {
+    const gm = makeGameManager()
+    const tab = mountTab(gm)
+    await nextTick()
+    tab.amount().value = '0'
+    tab.amount().dispatchEvent(new Event('input'))
+    await nextTick()
+    tab.button().click()
+    await nextTick()
+    expect(gm.materialBag.getAmount('mortal_ore_decade')).toBe(100)
+    expect(gm.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(100)
+    expect(tab.text()).not.toContain('disabled')
     tab.unmount()
   })
 })

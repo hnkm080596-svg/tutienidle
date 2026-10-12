@@ -92,7 +92,7 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
 
     const siteId = gameManager.productionSystem.getSiteDefinitions()[0]!.siteId
     const liveSite = gameManager.productionSystem.ensureSiteState(siteId)
-    liveSite.workerCycles = [{ cycleId: 'w1', siteId, collectionRealmId: 'mortal', siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 2, startedAtMs: 0, completesAtMs: 1000 }]
+    liveSite.productionCycles = [{ cycleId: 'w1', siteId, collectionRealmId: 'mortal', siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 2, startedAtMs: 0, completesAtMs: 1000 }]
 
     gameManager.alchemySystem.restoreJobs([alchemyJobFixture({
       jobId: 'iso-job',
@@ -114,7 +114,7 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     liveItem.forgeUsesRemaining = 0
     gameManager.buildingManager.get('iso-building')!.level = 9
     gameManager.equipmentSlotManager.get('weapon').enhanceLevel = 99
-    liveSite.workerCycles![0]!.rollSeed = -1
+    liveSite.productionCycles![0]!.rollSeed = -1
     liveSite.level = 9
     gameManager.alchemySystem.getJobs()[0]!.completesAtMs = -1
 

@@ -774,6 +774,12 @@ describe('validateGameSaveShape — buildings slice (Mission A1)', () => {
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
+  it('accepts a carried Chi Hien Quan level for art-only restore normalization', () => {
+    const save = validSave()
+    save.buildings = [{ ...validBuilding(), level: 5 }]
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
   it.each([
     [{ ...validBuilding(), level: 'bad' }, 'level string'],
     [{ ...validBuilding(), level: 0 }, 'level 0'],
@@ -824,6 +830,19 @@ describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
     }
   }
 
+  it.each(['workerCycles', 'productionCycles'] as const)('retains three legitimate carried heads and rejects a fourth via %s', field => {
+    const save = validSave()
+    const site = validSite()
+    const heads = Array.from({ length: 3 }, (_, i) => ({ ...validCycle(), cycleId: `retained-${i}` }))
+    delete site.workerCycles
+    site[field] = heads
+    save.productionSites = [site]
+    expect(validateGameSaveShape(save).ok).toBe(true)
+    site[field] = [...heads, { ...validCycle(), cycleId: 'forged-fourth' }]
+    const rejected = validateGameSaveShape(save)
+    expect(rejected.ok).toBe(false)
+    expect(pathsOf(rejected)).toContain(`productionSites[0].${field}`)
+  })
   it('chấp nhận productionSites đầy đủ hợp lệ', () => {
     const save = validSave()
 
@@ -946,6 +965,49 @@ describe('validateGameSaveShape — alchemyJobs slice (Mission A1)', () => {
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
+  it('accepts active plus three future FIFO reservations and permits legacy parallel snapshots', () => {
+    const save = validSave()
+    const recipe = alchemyRecipes.find((r) => r.id === 'alchemy_thong_mach_dan')!
+    const duration = alchemySecondsFor(recipe, 1) * 1000
+    const base = 1_725_000_000_000
+    const makeJob = (jobId: string, startedAtMs: number) => ({
+      ...alchemyJobFixture(
+        {
+          jobId,
+          recipeId: recipe.id,
+          pillId: recipe.pillId,
+          herbMaterialId: recipe.herbVariants[0]!.materialId,
+          startedAtMs,
+          completesAtMs: startedAtMs + duration,
+          roomLevelAtStart: 1,
+        },
+        undefined,
+        recipe,
+      ),
+    })
+    save.buildings = [
+      { instanceId: 'b-pill', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 },
+    ]
+    ;(save.player as Record<string, unknown>).lastSavedAt = base
+    save.alchemyJobs = [
+      makeJob('active', base),
+      makeJob('waiting-1', base + duration),
+      makeJob('waiting-2', base + 2 * duration),
+      makeJob('waiting-3', base + 3 * duration),
+    ]
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    // Before the FIFO migration, all reserved jobs could have started in
+    // parallel. Preserve these witnesses for AlchemySystem restore to requeue.
+    save.alchemyJobs = [
+      makeJob('legacy-active', base),
+      makeJob('legacy-parallel-1', base),
+      makeJob('legacy-parallel-2', base),
+      makeJob('legacy-parallel-3', base),
+    ]
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
   it.each([
     [{ ...validJob(), jobId: 5 }],
     [{ ...validJob(), recipeId: undefined }],
@@ -971,85 +1033,35 @@ describe('validateGameSaveShape — alchemyJobs slice (Mission A1)', () => {
   })
 })
 
-describe('validateGameSaveShape — decompose slice (Mission A1 extension)', () => {
-  function validDecompose(): Record<string, unknown> {
-    return {
-      settings: { gradeFilter: 'all', ageFilter: 'decade', workers: 2 },
-      nextCycleAt: 1_725_000_030_000,
-      started: true,
-    }
-  }
-
-  it('chấp nhận decompose slice hợp lệ', () => {
+describe('validateGameSaveShape — legacy decompose slice', () => {
+  it('rejects malformed historical settings and timer even though restore ignores their authority', () => {
     const save = validSave()
-
-    save.decompose = validDecompose()
-
-    expect(validateGameSaveShape(save).ok).toBe(true)
-  })
-
-  it.each([['bad'], [Number.NaN], [-5]])(
-    'từ chối decompose.nextCycleAt = %s (timer poison — runaway tick)',
-    (value) => {
-      const save = validSave()
-
-      save.decompose = { ...validDecompose(), nextCycleAt: value }
-
-      const result = validateGameSaveShape(save)
-
-      expect(result.ok).toBe(false)
-      expect(pathsOf(result)).toContain('.decompose.nextCycleAt')
-    },
-  )
-
-  it('từ chối decompose.started non-boolean', () => {
-    const save = validSave()
-
-    save.decompose = { ...validDecompose(), started: 'yes' }
-
-    const result = validateGameSaveShape(save)
-
-    expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('.decompose.started')
-  })
-
-  it('từ chối decompose.settings.gradeFilter ngoài enum', () => {
-    const save = validSave()
-
     save.decompose = {
-      ...validDecompose(),
-      settings: { gradeFilter: 'bogus', ageFilter: 'all', workers: 1 },
+      settings: { gradeFilter: 'bogus', ageFilter: 'bogus', workers: Number.NaN },
+      nextCycleAt: Number.NaN,
+      started: 'yes',
     }
 
     const result = validateGameSaveShape(save)
-
     expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('.decompose.settings.gradeFilter')
+    expect(pathsOf(result)).toEqual(
+      expect.arrayContaining([
+        '.decompose.settings.workers',
+        '.decompose.settings.gradeFilter',
+        '.decompose.settings.ageFilter',
+        '.decompose.nextCycleAt',
+        '.decompose.started',
+      ]),
+    )
   })
 
-  it('từ chối decompose.settings.ageFilter ngoài enum', () => {
+  it('rejects a non-object legacy slice', () => {
     const save = validSave()
-
-    save.decompose = {
-      ...validDecompose(),
-      settings: { gradeFilter: 'all', ageFilter: 'bogus', workers: 1 },
-    }
+    save.decompose = 'not-a-slice' as never
 
     const result = validateGameSaveShape(save)
-
     expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('.decompose.settings.ageFilter')
-  })
-
-  it('từ chối decompose.settings không phải object', () => {
-    const save = validSave()
-
-    save.decompose = { ...validDecompose(), settings: 'x' }
-
-    const result = validateGameSaveShape(save)
-
-    expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('.decompose.settings')
+    expect(pathsOf(result)).toContain('.decompose')
   })
 })
 
@@ -3125,15 +3137,14 @@ describe('validateGameSaveShape — v82 seam repair cross-checks', () => {
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
-  it('F-W-16: từ chối autoWorkerCapacity > 0 khi không có chi_hien_quan', () => {
+  it('legacy autoWorkerCapacity is accepted as inert metadata without a worker building', () => {
     const save = validSave()
 
     playerOf(save).autoWorkerCapacity = 5
 
     const result = validateGameSaveShape(save)
 
-    expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('player.autoWorkerCapacity')
+    expect(result.ok).toBe(true)
   })
 
   it('F-W-16: chấp nhận autoWorkerCapacity > 0 khi có chi_hien_quan instance', () => {

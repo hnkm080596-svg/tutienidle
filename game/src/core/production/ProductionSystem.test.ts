@@ -132,38 +132,37 @@ describe('ProductionBalance', () => {
   })
 })
 
-describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
+describe('ProductionSystem - autonomous site cycles', () => {
   it('state has no activeCycle field at all - the manual lane does not exist', () => {
     const system = createSystem()
     const state = system.ensureSiteState('thanh_van_lam')
     expect('activeCycle' in state).toBe(false)
   })
 
-  it('capacity 0 produces NOTHING online even with autoRestart on - workers are required fuel', () => {
+  it('starts one autonomous site cycle regardless of worker capacity', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', true)
 
-    system.tickWorkers(60_000, bag, registry, 'mortal', 0)
+    system.tick(60_000, bag, registry, 'mortal')
 
-    expect(system.getState('thanh_van_lam')!.workerCycles ?? []).toHaveLength(0)
+    expect(system.getState('thanh_van_lam')!.productionCycles ?? []).toHaveLength(1)
     expect(bag.getAll()).toHaveLength(0)
   })
 
-  it('capacity 0 produces NOTHING offline - no manual fallback phase', () => {
+  it('offline settlement is independent of worker capacity', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.restoreStates([
-      { siteId: 'thanh_van_lam', level: 1, autoRestart: true, activeWorkerSlots: 0, workerCycles: [] },
+      { siteId: 'thanh_van_lam', level: 1, autoRestart: true, productionCycles: [] },
     ])
 
     const settled = system.settleOffline(bag, registry, 'mortal', 10_000_000, {
-      workerCapacity: 0,
       offlineSinceMs: 0,
     })
 
-    expect(settled).toBe(0)
-    expect(bag.getAll()).toHaveLength(0)
+    expect(settled).toBe(100)
+    expect(bag.getAll().length).toBeGreaterThan(0)
   })
 
   it('lane count equals activeWorkerSlots exactly - 1 worker -> 1 lane, no implicit extra lane', () => {
@@ -171,11 +170,10 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', true)
 
-    system.tickWorkers(1_000, bag, registry, 'mortal', 1)
+    system.tick(1_000, bag, registry, 'mortal')
 
     const state = system.getState('thanh_van_lam')!
-    expect(state.activeWorkerSlots).toBe(1)
-    expect(state.workerCycles).toHaveLength(1)
+    expect(state.productionCycles).toHaveLength(1)
   })
 
   it('snapshot deadline from collectionRealmId + levelAtStart (worker lane)', () => {
@@ -183,9 +181,9 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', true)
 
-    system.tickWorkers(1_000_000, bag, registry, 'qi_refining', 1)
+    system.tick(1_000_000, bag, registry, 'qi_refining')
 
-    const cycle = system.getState('thanh_van_lam')!.workerCycles![0]!
+    const cycle = system.getState('thanh_van_lam')!.productionCycles![0]!
     expect(cycle.collectionRealmId).toBe('qi_refining')
     expect(cycle.completesAtMs - cycle.startedAtMs).toBe(300 * 1000)
   })
@@ -195,19 +193,19 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', true)
 
-    system.tickWorkers(0, bag, registry, 'mortal', 1)
+    system.tick(0, bag, registry, 'mortal')
     // getState() returns a detached snapshot (spec D2): identical fields,
     // so rollRewards on the copy predicts the domain grant exactly.
-    const cycle = system.getState('thanh_van_lam')!.workerCycles![0]!
+    const cycle = system.getState('thanh_van_lam')!.productionCycles![0]!
     const expected = system.rollRewards(cycle).reduce((total, reward) => total + reward.amount, 0)
 
-    system.tickWorkers(100_000, bag, registry, 'mortal', 1)
+    system.tick(100_000, bag, registry, 'mortal')
     const afterGrant = bag.getAll().reduce((total, stack) => total + stack.amount, 0)
     expect(afterGrant).toBe(expected)
 
     // Same instant re-tick: no second grant; the freed lane refills on
     // the NEXT observation (top-up-then-settle order).
-    system.tickWorkers(100_000, bag, registry, 'mortal', 1)
+    system.tick(100_000, bag, registry, 'mortal')
     expect(bag.getAll().reduce((total, stack) => total + stack.amount, 0)).toBe(afterGrant)
   })
 
@@ -216,10 +214,9 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', false)
 
-    system.tickWorkers(1_000, bag, registry, 'mortal', 5)
+    system.tick(1_000, bag, registry, 'mortal')
 
-    expect(system.getState('thanh_van_lam')!.activeWorkerSlots).toBe(0)
-    expect(system.getState('thanh_van_lam')!.workerCycles ?? []).toHaveLength(0)
+    expect(system.getState('thanh_van_lam')!.productionCycles ?? []).toHaveLength(0)
   })
 
   it('getSiteView reports progress from the earliest worker lane (not a manual cycle)', () => {
@@ -227,7 +224,7 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', true)
 
-    system.tickWorkers(1_000, bag, registry, 'mortal', 1)
+    system.tick(1_000, bag, registry, 'mortal')
 
     const view = system.getSiteView('thanh_van_lam', 1_000)!
     expect(view.cycleTotalMs).toBe(100_000)
@@ -242,8 +239,7 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
       siteId: 'thanh_van_lam',
       level: 2,
       autoRestart: true,
-      activeWorkerSlots: 0,
-      workerCycles: [],
+      productionCycles: [],
       // Pre-removal payload residue: must NOT round-trip into live state.
       activeCycle: {
         cycleId: 'old', siteId: 'thanh_van_lam', collectionRealmId: 'mortal',
@@ -265,9 +261,9 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
     system.setAutoRestart('thanh_van_quang', true)
 
     for (let seedRun = 0; seedRun < 20; seedRun++) {
-      system.tickWorkers(0, bag, registry, 'mortal', 3)
+      system.tick(0, bag, registry, 'mortal')
 
-      const cycle = system.getState('thanh_van_quang')!.workerCycles![0]!
+      const cycle = system.getState('thanh_van_quang')!.productionCycles![0]!
       cycle.rollSeed = seedRun * 7919
 
       const rewards = system.rollRewards(cycle)
@@ -292,8 +288,7 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 1,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'worker_saved_1',
             siteId: 'thanh_van_lam',
@@ -310,7 +305,6 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
 
     // Vang 1 gio voi 1 worker capacity.
     const settled = system.settleOffline(bag, registry, 'mortal', startMs + 3600_000, {
-      workerCapacity: 1,
       offlineSinceMs: startMs,
     })
 
@@ -336,13 +330,11 @@ describe('ProductionSystem - workers-as-fuel (Mission D / spec D3)', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 1,
-        workerCycles: [],
+        productionCycles: [],
       },
     ])
 
     const settled = system.settleOffline(bag, registry, 'mortal', startMs + 100 * 3600_000, {
-      workerCapacity: 1,
       offlineSinceMs: startMs,
     })
 
@@ -441,8 +433,8 @@ describe('ProductionSystem.restoreStates — unknown siteId (Mission A review, M
     const system = createSystem()
 
     system.restoreStates([
-      { siteId: 'ghost_site', level: 1, autoRestart: true, activeWorkerSlots: 0 },
-      { siteId: 'thanh_van_lam', level: 1, autoRestart: false, activeWorkerSlots: 0 },
+      { siteId: 'ghost_site', level: 1, autoRestart: true, },
+      { siteId: 'thanh_van_lam', level: 1, autoRestart: false, },
     ])
 
     expect(system.getState('ghost_site')).toBeUndefined()
@@ -518,9 +510,8 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
         siteId: GROTTO,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 0,
         hiddenChannelCycles: grotto?.hiddenChannelCycles,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: `cycle_${rollSeed}_${prior.length}`,
             siteId: GROTTO,
@@ -535,7 +526,7 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
       },
     ])
 
-    system.tickWorkers(1, bag, registry, collectionRealmId, 0)
+    system.tick(1, bag, registry, collectionRealmId)
   }
 
   function bagAmount(bag: MaterialBag, materialId: string): number {
@@ -712,8 +703,7 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
         siteId: GROTTO,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [],
+        productionCycles: [],
         hiddenChannelCycles: { fixture_channel: 7 },
       },
     ])
@@ -726,7 +716,6 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
     // Offline settle is the operation that MAY emit - it goes through
     // grantCycleRewards and leaves discovery pending on the event drain.
     const settled = system.settleOffline(bag, registry, 'mortal', 300_000, {
-      workerCapacity: 1,
       offlineSinceMs: 0,
     })
     expect(settled).toBeGreaterThan(0)
@@ -746,8 +735,7 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 0,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'forest_cycle',
             siteId: 'thanh_van_lam',
@@ -761,7 +749,7 @@ describe('ProductionSystem - hidden grotto channels (m-f-body-hidden sec.4)', ()
         ],
       },
     ])
-    system.tickWorkers(1, bag, registry, 'mortal', 0)
+    system.tick(1, bag, registry, 'mortal')
 
     expect(bagAmount(bag, CHANNEL_MATERIAL)).toBe(0)
   })

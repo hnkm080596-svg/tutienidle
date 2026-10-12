@@ -402,15 +402,8 @@ export interface ProductionSiteStateSave {
 
   autoRestart: boolean
 
-  // 2026-08-28 (economy-ecosystem-plan T3) - worker cycle do dang truoc
-  // day KHONG duoc persist: mat trang tien trinh moi lan reload va worker
-  // khong san xuat offline. Gio luu lai de settleOffline chay tiep trong cap.
-  workerCycles?: ProductionCycleSave[]
-
-  // Mission A2 - manual worker allocation declared at v55 but dropped by
-  // the serializer until now; undefined = AUTO (round-robin) per
-  // ProductionSiteState.
-  assignedWorkers?: number
+  /** Active and carried cycle records; carried legacy records drain before new cycles. */
+  productionCycles?: ProductionCycleSave[]
 
   // M-F-BODY-HIDDEN (v81) - grotto per-channel settle-cycle counters;
   // mirrors ProductionSiteState.hiddenChannelCycles.

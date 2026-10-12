@@ -196,38 +196,24 @@ describe('auditR29 INT probe - tick/settle nowMs guard parity (P)', () => {
     expect(fresh.settleOffline(bag, () => ({ id: j2.pillId }), currentMs)).toBe(1)
   })
 
-  it('P3 decompose channels zero-advance/zero-settle on hostile clocks - guard parity with alchemy (r29-INT-1 fixed)', () => {
+  it('P3 legacy decompose deadlines are inert after restore (r29-INT-1 superseded)', () => {
     const bag = new MaterialBag()
     const ore = materials.find((m) => m.id === 'mortal_ore_decade')!
     bag.add(ore, 100_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(1)
-    system.setSetting({ workers: 1 })
-    system.tick(1_000) // arms: first deadline at 31_000
+    const oreAmountBefore = bag.get(ore.id)?.amount
+    const system = new DecomposeSystem(bag)
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: Number.NaN,
+      started: true,
+    }, Number.NaN)
 
-    // settleOffline(1e300) - the SAME input the alchemy channel
-    // zero-advances - now zero-settles too.
-    const settled = system.settleOffline(1e300, 1_000)
-    expect(settled).toBe(0)
-    expect(system.drainOutput()).toHaveLength(0)
-    expect(system.getSaveState().nextCycleAt).toBe(31_000)
-
-    // tick(NaN) zero-advances: no mint, no poisoned deadline - a later
-    // finite tick re-anchors cleanly instead of minting on NaN.
-    const bag2 = new MaterialBag()
-    bag2.add(ore, 100_000)
-    const live = new DecomposeSystem(bag2, { cycleSeconds: 30 })
-    live.updateCapacity(1)
-    live.setSetting({ workers: 1 })
-    live.tick(1_000)
-
-    live.tick(Number.NaN)
-    expect(live.getSaveState().nextCycleAt).toBe(31_000)
-    live.tick(60_000)
-    // The armed deadline settled once - normal catch-up, no poison.
-    const drained = live.drainOutput()
-    expect(drained.length).toBe(1)
-    expect(live.getSaveState().nextCycleAt).toBe(90_000)
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(bag.get(ore.id)?.amount).toBe(oreAmountBefore)
   })
 })
 

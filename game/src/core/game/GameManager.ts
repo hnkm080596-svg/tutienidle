@@ -384,10 +384,11 @@ export class GameManager {
   readonly equipmentBag = new EquipmentBag()
   readonly equipmentSystem = new EquipmentSystem(createDefaultEquipmentOperationCostCatalog())
 
-  // Task 14 (rework P4) - Decompose tab: ore -> refined essence.
-  // R7 (AR-08): capacity is dynamic - supplied per tick/restore via
-  // updateCapacity from the workforce authority (CHQ).
-  readonly decomposeSystem = new DecomposeSystem(this.materialBag)
+  // Instant ore exchange remains domain-owned; defer the acquisition hook
+  // until a successful bag transaction has committed.
+  readonly decomposeSystem = new DecomposeSystem(this.materialBag, {
+    onEssenceProduced: (materialId, amount) => this.questOps.notifyMaterialGained(materialId, amount),
+  })
 
   // Core Loop Foundation checklist (Phase 3, Muc AFFIX) - thay the
   // hoan toan substatPool cu.
@@ -800,7 +801,6 @@ export class GameManager {
       buildingManager: this.buildingManager,
       buildingSystem: this.buildingSystem,
       productionSystem: this.productionSystem,
-      decomposeSystem: this.decomposeSystem,
       materialBag: this.materialBag,
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
@@ -870,9 +870,6 @@ export class GameManager {
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
       sessionRng: () => this.sessionRng(),
-      refreshAutoWorkerCapacity: (player, instance) =>
-        this.buildingOps.refreshAutoWorkerCapacity(player, instance),
-      getWorkerAssignments: () => this.buildingOps.getWorkerAssignments(),
       settleAutoFarmOffline: (player, elapsedSeconds) =>
         this.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, elapsedSeconds),
       reconcileAutoFarmRuntime: (player) =>
@@ -967,7 +964,6 @@ export class GameManager {
       materialBag: this.materialBag,
       materialRegistry: this.materialRegistry,
       decomposeSystem: this.decomposeSystem,
-      getWorkerAssignments: () => this.buildingOps.getWorkerAssignments(),
       alchemySystem: this.alchemySystem,
       pillBag: this.pillBag,
       pillRegistry: this.pillRegistry,

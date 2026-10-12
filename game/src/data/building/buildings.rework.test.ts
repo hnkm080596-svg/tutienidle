@@ -10,7 +10,7 @@ describe('building 9-tier scaffold', () => {
     expect(buildings.find(entry => entry.id === 'gathering_outpost')?.name).toBe('Khai Vật Đường')
   })
 
-  it.each(['chi_hien_quan', 'equipment_hall', 'pill_room', 'gathering_outpost'])('%s có đủ 9 cấp và 9 cost bands', (id) => {
+  it.each(['equipment_hall', 'pill_room', 'gathering_outpost'])('%s có đủ 9 cấp và 9 cost bands', (id) => {
     const building = buildings.find(entry => entry.id === id)!
     expect(building.maxLevel).toBe(9)
     expect(building.upgradeCost).toHaveLength(9)
@@ -26,12 +26,12 @@ describe('building 9-tier scaffold', () => {
 
 // Chieu Hien Quan (2026-09-02, spec 2026-09-02-chi-hien-quan-design.md)
 describe('chi_hien_quan + linh mạch Khai Vật Đường', () => {
-  it('chi_hien_quan tồn tại — maxLevel 9 + 9 cost bands + functionType worker_lodge', () => {
+  it('chi_hien_quan tồn tại — art-only and max level one', () => {
     const chq = buildings.find((entry) => entry.id === 'chi_hien_quan')!
 
-    expect(chq.maxLevel).toBe(9)
-    expect(chq.upgradeCost).toHaveLength(9)
-    expect(chq.functionType).toBe('worker_lodge')
+    expect(chq.maxLevel).toBe(1)
+    expect(chq.upgradeCost).toHaveLength(1)
+    expect(chq.functionType).toBeUndefined()
   })
 
   it('spirit_spring đã bị XÓA khỏi buildings data', () => {
@@ -58,7 +58,7 @@ describe('W5 — building level effects mới', () => {
     expect(modifiers.equipmentCostDiscountPercent).toBe(24)
   })
 
-  it('Đan Phòng level 9 có 4 slot luyện đan đồng thời', () => {
+  it('Đan Phòng level 9 có một lò và 27 slot chờ', () => {
     const room = buildings.find(entry => entry.id === 'pill_room')!
 
     const modifiers = buildingSystem.getCraftModifiers(
@@ -66,6 +66,7 @@ describe('W5 — building level effects mới', () => {
       room,
     )
 
-    expect(modifiers.concurrentJobSlots).toBe(4)
+    expect(modifiers.concurrentJobSlots).toBe(1)
+    expect(modifiers.alchemyQueueSlots).toBe(27)
   })
 })

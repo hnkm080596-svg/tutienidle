@@ -317,7 +317,6 @@ describe('fixpoint r24 AUT - sanitizeRestoreAuthority fail-open audit (f50fdaf9)
     const { save, manager } = makeArmedFarmSave(NOW - 900_000)
     manager.setActivePlayer(player.$state)
     const settleSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
-    const decomposeSpy = vi.spyOn(manager.decomposeSystem, 'settleOffline')
 
     const honest = restoreGameSession(player, manager, save, {
       kind: 'live-replacement',
@@ -326,7 +325,6 @@ describe('fixpoint r24 AUT - sanitizeRestoreAuthority fail-open audit (f50fdaf9)
     expect(honest.status).toBe('ok')
     // Server replaced the head -> every consumer re-anchors on zero.
     expect(settleSpy).toHaveBeenCalledWith(expect.objectContaining({}), 0)
-    expect(decomposeSpy).not.toHaveBeenCalled()
 
     // Fresh state, same payload, one corrupt stamp (Date.now stays
     // mocked - restoreAllMocks would drop the epoch for both blocks).
@@ -335,7 +333,6 @@ describe('fixpoint r24 AUT - sanitizeRestoreAuthority fail-open audit (f50fdaf9)
     const { save: save2, manager: manager2 } = makeArmedFarmSave(NOW - 900_000)
     manager2.setActivePlayer(player2.$state)
     const settleSpy2 = vi.spyOn(manager2.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
-    const decomposeSpy2 = vi.spyOn(manager2.decomposeSystem, 'settleOffline')
     const productionSpy2 = vi.spyOn(manager2.productionSystem, 'settleOffline')
 
     const poisoned = restoreGameSession(player2, manager2, save2, {
@@ -346,7 +343,6 @@ describe('fixpoint r24 AUT - sanitizeRestoreAuthority fail-open audit (f50fdaf9)
     // r24-AUT-2 fixed: the zero-accrual settle survives - the farm gets
     // (_, 0) and production/decompose catch-up stays suppressed.
     expect(settleSpy2).toHaveBeenCalledWith(expect.objectContaining({}), 0)
-    expect(decomposeSpy2).not.toHaveBeenCalled()
     expect(productionSpy2).not.toHaveBeenCalled()
   })
 

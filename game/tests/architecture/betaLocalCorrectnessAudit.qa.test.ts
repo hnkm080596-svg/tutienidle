@@ -76,7 +76,6 @@ import {
   getCultivationPathStatModifiers,
 } from '../../src/core/player/CultivationPathSystem'
 import { HiddenBeastSystem } from '../../src/core/game/HiddenBeastSystem'
-import { betaEffectiveWorkerCapacity } from '../../src/core/production/WorkerCapacity'
 import { getEffectiveMainStatCap } from '../../src/core/stats/StatCap'
 import {
   investBodyChapterState,
@@ -449,11 +448,11 @@ describe('beta scope - dormancy gates', () => {
     expect(getEffectiveMainStatCap(p)).toBe(pristine)
   })
 
-  it('worker capacity is pinned to the beta baseline while manualWorkforce is hidden', () => {
+  it('legacy worker-capacity save data is ignored by the current player contract', () => {
     const p = mortalPlayer()
-    p.autoWorkerCapacity = 9
-    expect(betaEffectiveWorkerCapacity(p.autoWorkerCapacity)).toBe(3)
-    expect(unsupportedReleaseReason(p)).toBe('manual_workforce_state')
+    const legacy = Object.assign(p, { autoWorkerCapacity: 9 })
+    expect('autoWorkerCapacity' in createDefaultPlayer()).toBe(false)
+    expect(unsupportedReleaseReason(legacy)).toBeNull()
   })
 
   it('quest surface: daily off, off-roster kill off, roster kill on', () => {

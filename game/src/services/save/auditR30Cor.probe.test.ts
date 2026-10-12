@@ -217,8 +217,7 @@ describe('r30 COR - B: restoreStates workerCycle clockOk truth table', () => {
       siteId: SITE_ID,
       level: 1,
       autoRestart: true,
-      activeWorkerSlots: 1,
-      workerCycles: [
+      productionCycles: [
         {
           cycleId: 'cyc_probe',
           siteId: SITE_ID,
@@ -242,7 +241,7 @@ describe('r30 COR - B: restoreStates workerCycle clockOk truth table', () => {
 
       manager.productionSystem.restoreStates([siteState(started, completes)], edge)
 
-      const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+      const restored = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
       expect(restored.startedAtMs).toBe(started)
       expect(restored.completesAtMs).toBe(completes)
     },
@@ -257,7 +256,7 @@ describe('r30 COR - B: restoreStates workerCycle clockOk truth table', () => {
 
       manager.productionSystem.restoreStates([siteState(started, completes)], edge)
 
-      const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+      const restored = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
       expect(Math.abs(restored.startedAtMs - edge)).toBeLessThanOrEqual(4)
       expect(restored.completesAtMs - restored.startedAtMs).toBe(30_000)
     },
@@ -274,7 +273,7 @@ describe('r30 COR - B: restoreStates workerCycle clockOk truth table', () => {
         edge,
       )
 
-      const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+      const restored = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
       expect(restored.startedAtMs).toBe(started)
       expect(restored.completesAtMs).toBe(started + 30_000)
     },
@@ -289,23 +288,22 @@ describe('r30 COR - B: restoreStates workerCycle clockOk truth table', () => {
       currentMs,
     )
 
-    const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const restored = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(restored.startedAtMs).toBe(started)
     expect(restored.completesAtMs).toBe(started + 30_000)
   })
 })
 
 // ----------------------------------------------------------------------------
-// (C) DecomposeSystem remaining clock edges
+// (C) DecomposeSystem legacy clock fields are inert
 // ----------------------------------------------------------------------------
 
-describe('r30 COR - C: decompose remaining clock edges', () => {
+describe('r30 COR - C: decompose legacy clock fields stay inert', () => {
   function decomposeWithOre() {
     const bag = new MaterialBag()
     const ore = materials.find((m) => /_ore_/.test(m.id))!
     bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
+    const system = new DecomposeSystem(bag)
     system.restore(
       {
         settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
@@ -318,21 +316,23 @@ describe('r30 COR - C: decompose remaining clock edges', () => {
   }
 
   it.each([2 ** 52, 2 ** 53, -(2 ** 53), -1, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
-    'tick(%j) zero-advances and preserves nextCycleAt',
+    'restore with clock edge %j cannot reactivate a legacy deadline',
     (edge) => {
       const { system, bag, oreId } = decomposeWithOre()
       const oreBefore = bag.getAll().find((s) => s.material.id === oreId)!.amount
-
-      system.tick(edge)
-
-      expect(system.drainOutput()).toHaveLength(0)
+      system.restore({
+        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 99 },
+        nextCycleAt: edge,
+        started: true,
+      }, edge)
       expect(bag.getAll().find((s) => s.material.id === oreId)!.amount).toBe(oreBefore)
-      expect(system.getSaveState().nextCycleAt).toBe(currentMs)
+      expect(system.getSaveState().started).toBe(false)
+      expect(system.getSaveState().nextCycleAt).toBe(0)
     },
   )
 
   it.each([Number.NEGATIVE_INFINITY, -1, 2 ** 52, 2 ** 53, -(2 ** 53)])(
-    'restore(state, %j) merges nextCycleAt verbatim - max(live, restored), no poison',
+    'restore(state, %j) still normalizes the legacy record',
     (edge) => {
       const { system } = decomposeWithOre()
 
@@ -345,31 +345,35 @@ describe('r30 COR - C: decompose remaining clock edges', () => {
         edge,
       )
 
-      // verbatim merge: max(currentMs, currentMs + 45000) under bad clock
-      expect(system.getSaveState().nextCycleAt).toBe(currentMs + 45_000)
+      expect(system.getSaveState().nextCycleAt).toBe(0)
+      expect(system.getSaveState().started).toBe(false)
     },
   )
 
   it.each([Number.NaN, Number.NEGATIVE_INFINITY, -1, 2 ** 52, 2 ** 53])(
-    'settleOffline(%j, since) returns 0 and preserves state',
+    'legacy deadline %j cannot create a timed output',
     (edge) => {
       const { system } = decomposeWithOre()
 
-      expect(system.settleOffline(edge, currentMs)).toBe(0)
-      expect(system.drainOutput()).toHaveLength(0)
-      expect(system.getSaveState().nextCycleAt).toBe(currentMs)
+      system.restore({
+        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+        nextCycleAt: edge,
+        started: true,
+      }, currentMs)
+      expect(system.getSaveState().nextCycleAt).toBe(0)
+      expect(system.getSaveState().started).toBe(false)
     },
   )
 
-  it('deny edge: tick(2**52 - 1) zero-advances - the minted nextCycleAt would escape [0, 2^52)', () => {
+  it('deny edge: out-of-domain timer is never resumed or written', () => {
     const { system } = decomposeWithOre()
-
-    system.tick(2 ** 52 - 1)
-
-    // r31-HEADROOM: nowMs + cycleMs exceeds the persisted domain, so
-    // the tick denies verbatim rather than minting an unwritable stamp.
-    expect(system.drainOutput()).toHaveLength(0)
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs)
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: 2 ** 52 - 1,
+      started: true,
+    }, 2 ** 52 - 1)
+    expect(system.getSaveState().nextCycleAt).toBe(0)
+    expect(system.getSaveState().started).toBe(false)
   })
 })
 
@@ -1173,8 +1177,7 @@ describe('r30 COR - L: honest-shape regressions', () => {
           siteId,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [
+          productionCycles: [
             {
               cycleId: 'cyc_honest',
               siteId,
@@ -1191,7 +1194,7 @@ describe('r30 COR - L: honest-shape regressions', () => {
       currentMs,
     )
 
-    const cycle = manager.productionSystem.getState(siteId)!.workerCycles![0]!
+    const cycle = manager.productionSystem.getState(siteId)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(currentMs - 120_000)
     expect(cycle.completesAtMs).toBe(currentMs - 60_000)
   })

@@ -35,8 +35,7 @@ function extendCosts(firstThree: Building['upgradeCost'], baseAmount: number): B
 // W5 (2026-08-27) - repurpose building levels:
 // - Khi Duong: moi cap tu 2 tro di giam 3% chi phi Cuong Hoa/Tay
 //   Luyen/Tinh Luyen (tran 24% o level 9).
-// - Dan Phong: level 3/6/9 mo them 1 slot luyen dan dong thoi
-//   (baseline 1 slot, tran 4 slot).
+// - Alchemy has one kiln and three additional waiting slots per level.
 function equipmentHallLevels(): BuildingLevelDef[] {
   return Array.from({ length: 9 }, (_, index) => {
     const level = index + 1
@@ -50,16 +49,10 @@ function equipmentHallLevels(): BuildingLevelDef[] {
 }
 
 function pillRoomLevels(): BuildingLevelDef[] {
-  return Array.from({ length: 9 }, (_, index) => {
-    const level = index + 1
-    const grantsSlot = level === 3 || level === 6 || level === 9
-
-    return {
-      level,
-      effects: grantsSlot ? [{ kind: 'concurrent_job_slots', amount: 1 }] : [],
-      description: grantsSlot ? '+1 slot luyện đan đồng thời' : undefined,
-    }
-  })
+  return Array.from({ length: 9 }, (_, index) => ({
+    level: index + 1,
+    effects: [{ kind: 'alchemy_queue_slots', amount: 3 }],
+  }))
 }
 
 // Buildings (2026-08-25, resource-professions-rework plan sec2) - vong
@@ -83,7 +76,7 @@ export const buildings: Building[] = [
     name: 'Khai Vật Đường',
 
     description:
-      'Quản lý nhân công khai thác Lâm, Quáng và Động Thiên trên mọi địa giới. Dưới nền chảy linh mạch ngầm, âm thầm ngưng tụ Linh Thạch.',
+      'Quản lý khai thác Gỗ, Linh Quáng và Linh Thảo tại các địa giới. Dưới nền chảy linh mạch ngầm, âm thầm ngưng tụ Linh Thạch.',
 
     category: 'crafting_station',
 
@@ -141,8 +134,7 @@ export const buildings: Building[] = [
     levels: equipmentHallLevels(),
   },
 
-  // Dan Phong - gate luyen dan (alchemy jobs, plan sec8); level quyet
-  // dinh speed/success bonus rieng (xem core/alchemy/AlchemyBalance.ts).
+  // Alchemy room levels increase brewing speed and waiting capacity.
   {
     id: 'pill_room',
 
@@ -180,7 +172,7 @@ export const buildings: Building[] = [
 
     name: 'Truyền Tống Trận',
 
-    description: 'Trận pháp truyền tống dẫn hero đến các Địa Giới xa xôi để khiêu chiến.',
+    description: 'Trận pháp truyền tống dẫn tu sĩ đến các Địa Giới xa xôi để khiêu chiến.',
 
     category: 'crafting_station',
 
@@ -209,7 +201,7 @@ export const buildings: Building[] = [
     // gp123 6G removed the quy-doi (conversion) cards but left this copy
     // promising them - audit M8. Sell-only wording matches what the
     // panel actually renders.
-    description: 'Nơi bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm cảnh giới hiện hành.',
+    description: 'Lầu các lưu giữ kỳ vật và dấu tích của tông môn.',
 
     category: 'crafting_station',
 
@@ -219,37 +211,30 @@ export const buildings: Building[] = [
 
     baseStorageCapacity: 0,
 
-    functionType: 'vendor',
+    // Art-only landmark; commerce is retired by the current ruling.
 
     upgradeCost: [[{ materialId: 'mortal_wood_decade', amount: 3 }]],
   },
 
-  // Chieu Hien Quan (chi-hien-quan spec 2026-09-02) - NGUON NHAN CONG
-  // DUY NHAT: capacity = 1 + level x 2 (getWorkerCapacityForLevel trong
-  // core/production/WorkerCapacity.ts). Cost bands khoi diem - tuning
-  // sau playtest.
+  // Art-only Chieu Hien Quan landmark.
   {
     id: 'chi_hien_quan',
 
     name: 'Chiêu Hiền Quán',
 
     description:
-      'Nơi chiêu nạp và quản lý nhân công khai thác toàn cục. Cấp càng cao, càng nhiều hiền sĩ theo về.',
+      'Hiên quán đón khách và lưu giữ nét cổ kính của tông môn.',
 
     category: 'crafting_station',
 
     tier: 1,
 
-    maxLevel: 9,
+    maxLevel: 1,
 
     baseStorageCapacity: 0,
 
-    functionType: 'worker_lodge',
+    // Art-only landmark; no workforce or upgrade command.
 
-    upgradeCost: extendCosts([
-      [],
-      [{ materialId: 'mortal_ore_decade', amount: 4 }],
-      [{ materialId: 'qi_refining_wood_decade', amount: 6 }],
-    ], 4),
+    upgradeCost: [[]],
   },
 ]

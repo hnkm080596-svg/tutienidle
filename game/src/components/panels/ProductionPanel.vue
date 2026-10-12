@@ -11,14 +11,13 @@ import GameButton from '@/components/common/GameButton.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import { formatStat } from '@/core/stats/StatLabels'
 import { formatDuration } from '@/core/format/formatDuration'
-import { betaRecipeFamilyOfId, betaSurfaceVisible } from '@/core/betaScope'
+import { betaRecipeFamilyOfId } from '@/core/betaScope'
 
 // San Xuat (2026-08-25, resource-professions-rework plan sec9.1) - thay
 // ExplorationPanel: moi Dia Gioi hien thi dung ba card Lam/Quang/
 // Dong Thien voi level + speed, trang thai idle/producing, dong ho
-// cycle, normalized realm-tier weights, Auto toggle. Mission D
-// (spec D3): sites produce on worker lanes only - no Start button;
-// NO Claim button - completions go straight to Bag (sec 4.3).
+// cycle, normalized realm-tier weights and Auto toggle. Production runs
+// independently for each enabled site; completions go straight to Bag.
 const { t } = useI18n()
 
 const KIND_META: Record<string, { labelKey: 'forest' | 'mine' | 'grotto'; sigil: string }> = {
@@ -45,12 +44,6 @@ const player = usePlayerStore()
 const gameManager = useGameManager()
 
 const { stateVersion, bumpState } = useStateVersion()
-
-// FINAL POLICY (sec.4C): the manual workforce surface is entirely
-// scope-hidden under beta - the allocation block AND the workers stat
-// are governed by the ONE flag read. Automatic production keeps
-// running; nothing workforce-related renders.
-const workerSurfaceVisible = betaSurfaceVisible('manualWorkforce')
 
 const nowMs = ref(gameManager.time.now())
 
@@ -90,10 +83,6 @@ interface SiteRow {
   nextProductionSpeedMultiplier?: number
 
   autoRestart: boolean
-
-  activeWorkerSlots: number
-
-  assignedWorkers?: number
 
   isProducing: boolean
 
@@ -147,11 +136,7 @@ const rows = computed<SiteRow[]>(() => {
 
       autoRestart: view.state.autoRestart,
 
-      activeWorkerSlots: view.state.activeWorkerSlots,
-
-      assignedWorkers: view.state.assignedWorkers,
-
-      isProducing: (view.state.workerCycles?.length ?? 0) > 0 || view.state.activeWorkerSlots > 0,
+      isProducing: view.state.autoRestart || (view.state.productionCycles?.length ?? 0) > 0,
 
       progress: Math.min(1, Math.max(0, 1 - cycleRemainingMs / totalMs)),
 
@@ -163,113 +148,6 @@ const rows = computed<SiteRow[]>(() => {
 
 function toggleAuto(row: SiteRow) {
   gameManager.buildingOps.setProductionAutoRestart(row.siteId, !row.autoRestart)
-
-  bumpState()
-}
-
-function upgradeCostRows(siteId: string, level: number) {
-  stateVersion.value
-
-  // R9 (AR-23): the domain quote owns costs + gate; the panel only
-  // renders it (old duplicated gate/cost logic removed).
-  const quote = gameManager.buildingOps.quoteProductionUpgrade(siteId, player.$state)
-
-  if (!quote.cost) {
-    return []
-  }
-
-  const spiritStoneId = quote.cost.spiritStoneId
-
-  return [
-    {
-      label: gameManager.materialRegistry.has(quote.cost.woodMaterialId)
-        ? gameManager.materialRegistry.get(quote.cost.woodMaterialId).name
-        : quote.cost.woodMaterialId,
-
-      owned: gameManager.materialBag.getAmount(quote.cost.woodMaterialId),
-
-      amount: quote.cost.woodAmount,
-    },
-    {
-      label: gameManager.materialRegistry.has(spiritStoneId)
-        ? gameManager.materialRegistry.get(spiritStoneId).name
-        : SPIRIT_STONE_LABEL,
-
-      // Plan Workstream F - Linh Thach doc tu MaterialBag.
-      owned: gameManager.materialBag.getAmount(spiritStoneId),
-
-      amount: quote.cost.spiritStone,
-    },
-  ]
-}
-
-function canUpgrade(siteId: string, level: number): boolean {
-  // R9 (AR-23): parity with the authoritative upgradeSite gate via the
-  // domain quote (level parameter kept for row wiring).
-  void level
-
-  return gameManager.buildingOps.quoteProductionUpgrade(siteId, player.$state).upgradable
-}
-
-function upgrade(siteId: string) {
-  if (gameManager.buildingOps.upgradeProductionSite(siteId, player.$state)) {
-    bumpState()
-  }
-}
-
-// ================= Chieu Hien Quan - phan bo nhan cong (2026-09-02) =================
-
-// FINAL POLICY (sec.4C): the manual workforce surface is scope-hidden
-// under beta - the allocation block AND the workers stat are governed
-// by the ONE flag read. Automatic production keeps running in the
-// background on the flat auto pool (betaEffectiveWorkerCapacity).
-
-// --- Workforce read model (Mission D / spec D1) ---
-// The panel renders the domain's WorkforceView verbatim - no local
-// capacity math, no local mode flag (audit T4-29/T4-30).
-const workforce = computed(() => {
-  stateVersion.value
-
-  // Track the same tick clock `rows` reads (:96) - reserved/available/
-  // effective totals and the slider :max must refresh every tick too,
-  // not only on bumpState() interactions (T4-30 reintroduction guard).
-  void nowMs.value
-
-  return gameManager.buildingOps.getWorkforceView()
-})
-
-const workerMode = computed(() =>
-  Object.keys(workforce.value.requested).length > 0 ? 'manual' : 'auto',
-)
-
-const assignedTotal = computed(() =>
-  Object.values(workforce.value.requested).reduce((sum, count) => sum + count, 0),
-)
-
-const effectiveTotal = computed(() =>
-  Object.values(workforce.value.effective).reduce((sum, count) => sum + count, 0),
-)
-
-function setWorkerMode(mode: 'auto' | 'manual') {
-  if (mode === 'auto') {
-    // Back to auto: clear every manual assignment.
-    for (const row of rows.value) {
-      gameManager.buildingOps.assignWorkers(row.siteId, undefined)
-    }
-  } else {
-    // Entering manual snapshots the CURRENT allocator grants so the
-    // sliders start from domain truth (mode is derived, so requested
-    // must be non-empty for 'manual' to show).
-    for (const row of rows.value) {
-      gameManager.buildingOps.assignWorkers(row.siteId, workforce.value.effective[row.siteId] ?? 0)
-    }
-  }
-
-  bumpState()
-}
-
-function assign(row: SiteRow, count: number) {
-  gameManager.buildingOps.assignWorkers(row.siteId, count)
 
   bumpState()
 }
@@ -328,64 +206,6 @@ function collectLinMach() {
         {{ t('panels.production.summary') }}
       </p>
 
-      <!-- Chieu Hien Quan - phan bo nhan cong (2026-09-02) -->
-      <!-- FINAL POLICY (sec.4C): the whole block is scope-hidden under
-           beta via manualWorkforce - hidden, not merely disabled. -->
-      <div v-if="workerSurfaceVisible" class="worker-allocation">
-        <header class="worker-allocation__header">
-          <strong>{{ t('panels.production.workersHeader', { used: workerMode === 'manual' ? assignedTotal : effectiveTotal, total: workforce.available }) }}</strong>
-
-          <small v-if="workforce.reserved > 0" class="worker-allocation__reserved">
-            {{ t('panels.production.workersReserved', { count: workforce.reserved }) }}
-          </small>
-
-          <div class="worker-allocation__mode">
-            <label>
-              <input
-                type="radio"
-                name="worker-mode"
-                :checked="workerMode === 'auto'"
-                @change="setWorkerMode('auto')"
-              />
-              {{ t('panels.production.workerModeAuto') }}
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="worker-mode"
-                :checked="workerMode === 'manual'"
-                @change="setWorkerMode('manual')"
-              />
-              {{ t('panels.production.workerModeManual') }}
-            </label>
-          </div>
-        </header>
-
-        <div v-if="workerMode === 'manual'" class="worker-allocation__sliders">
-          <label v-for="row in rows" :key="row.siteId" class="worker-allocation__slider">
-            <span>{{ row.name }}</span>
-
-            <input
-              type="range"
-              min="0"
-              :max="workforce.available"
-              :value="row.assignedWorkers ?? 0"
-              :aria-label="t('panels.production.workerAssignAria', { name: row.name })"
-              @input="assign(row, Number(($event.target as HTMLInputElement).value))"
-            />
-
-            <span class="worker-allocation__count">
-              {{ row.assignedWorkers ?? 0 }}
-            </span>
-          </label>
-        </div>
-
-        <p v-else class="worker-allocation__auto-hint">
-          {{ t('panels.production.workerAutoHint') }}
-        </p>
-      </div>
-
       <!-- Linh mach Khai Vat Duong - claim Linh Thach (the Linh Tuyen) -->
       <div v-if="outpostInstance" class="lin-mach">
         <h3 class="lin-mach__title">{{ t('panels.production.linMach.title') }}</h3>
@@ -437,7 +257,6 @@ function collectLinMach() {
               {{ t('panels.production.nextSpeedPrefix') }}{{ formatStat('productionSpeedMultiplier', row.nextProductionSpeedMultiplier) }}
             </span>
 
-            <span v-if="workerSurfaceVisible">{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>
           </div>
 
           <!-- Bo dong "Trong so tier" (2026-08-30, bug report: thong tin
@@ -461,27 +280,6 @@ function collectLinMach() {
             {{ t('panels.production.autoRepeat') }}
           </label>
 
-          <div v-if="row.level < row.maxLevel" class="site-card__upgrade">
-            <ul>
-              <li
-                v-for="(cost, index) in upgradeCostRows(row.siteId, row.level)"
-                :key="index"
-                :class="{ 'is-missing': cost.owned < cost.amount }"
-              >
-                {{ cost.label }}: {{ cost.owned }}/{{ cost.amount }}
-              </li>
-            </ul>
-
-            <GameButton
-              class="site-card__upgrade-button"
-              variant="ghost"
-              size="sm"
-              :disabled="!canUpgrade(row.siteId, row.level)"
-              @click="upgrade(row.siteId)"
-            >
-              {{ t('panels.production.upgrade') }}
-            </GameButton>
-          </div>
         </article>
       </div>
     </div>
@@ -508,67 +306,6 @@ function collectLinMach() {
   margin: 0;
   color: var(--paper-eyebrow);
   font-size: var(--text-sm);
-}
-
-/* Chieu Hien Quan - phan bo nhan cong */
-.worker-allocation {
-  display: grid;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--jade) 35%, var(--paper-line));
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--jade) 6%, var(--paper-50));
-}
-
-.worker-allocation__header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-.worker-allocation__mode {
-  display: flex;
-  gap: 12px;
-  font-size: var(--text-xs);
-}
-
-.worker-allocation__mode label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.worker-allocation__sliders {
-  display: grid;
-  gap: 6px;
-}
-
-.worker-allocation__slider {
-  display: grid;
-  grid-template-columns: minmax(80px, auto) 1fr auto;
-  align-items: center;
-  gap: 10px;
-  font-size: var(--text-xs);
-}
-
-.worker-allocation__count {
-  min-width: 2ch;
-  text-align: right;
-  color: var(--jade);
-}
-
-.worker-allocation__auto-hint {
-  margin: 0;
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-.worker-allocation__reserved {
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
 }
 
 /* Linh mach Khai Vat Duong */
@@ -716,29 +453,6 @@ function collectLinMach() {
   font-size: var(--text-xs);
   color: var(--paper-text-soft);
   cursor: pointer;
-}
-
-.site-card__upgrade ul {
-  list-style: none;
-  margin: 0 0 6px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--text-xs);
-}
-
-.site-card__upgrade li.is-missing {
-  color: var(--crimson);
-}
-
-.site-card__upgrade-button {
-  width: 100%;
-}
-
-.site-card__upgrade-button:disabled {
-  color: var(--paper-text-muted);
-  cursor: not-allowed;
 }
 
 </style>

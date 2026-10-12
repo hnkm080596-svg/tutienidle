@@ -126,8 +126,7 @@ function productionSiteWire(save: GameSave, cycles: ProductionCycle[]): GameSave
       siteId: SITE_ID,
       level: 1,
       autoRestart: true,
-      activeWorkerSlots: 1,
-      workerCycles: cycles,
+      productionCycles: cycles,
     },
   ] as never
   return save
@@ -228,8 +227,7 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [inverted, healthy],
+          productionCycles: [inverted, healthy],
         },
       ] as never,
       currentMs,
@@ -237,20 +235,20 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
 
     // r33 drop arm: the impossible-authored pair never reaches live
     // state - only the honest sibling survives.
-    const parked = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const parked = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(parked).toHaveLength(1)
     expect(parked[0]!.cycleId).toBe('cyc_healthy')
 
     // tickWorkers -> the site advances freely: the healthy past-due lane
     // settles and is discharged (refill lands on the next tick).
-    manager.productionSystem.tickWorkers(
+    manager.productionSystem.tick(
       currentMs + 1_000,
       manager.materialBag,
       manager.materialRegistry,
       'mortal',
-      4,
+      () => 0.4,
     )
-    const afterTick = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const afterTick = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(afterTick.some((c) => c.cycleId === 'cyc_healthy')).toBe(false)
   })
 
@@ -263,13 +261,12 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [inverted],
+          productionCycles: [inverted],
         },
       ] as never,
       currentMs,
     )
-    const persisted = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const persisted = manager.productionSystem.getState(SITE_ID)!.productionCycles!
 
     // The impossible-authored pair is gone from live state, so nothing
     // ordering-invalid can reach the outgoing-shape gate - the save
@@ -329,13 +326,12 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [zeroSpanCycle],
+          productionCycles: [zeroSpanCycle],
         },
       ] as never,
       currentMs,
     )
-    expect(manager2.productionSystem.getState(SITE_ID)!.workerCycles!).toHaveLength(0)
+    expect(manager2.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
   })
 
   it('control: an in-domain post-dated ordered pair still shifts (park is inverted-only)', () => {
@@ -347,13 +343,12 @@ describe('r33 COR - A: inverted-pair drop parity (COR-F1)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [shifted],
+          productionCycles: [shifted],
         },
       ] as never,
       currentMs,
     )
-    const cycle = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const cycle = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(currentMs)
     expect(cycle.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
   })
@@ -512,8 +507,7 @@ describe('r33 COR - C: seeded-head re-stamp boundary (verified)', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [],
+          productionCycles: [],
         },
       ] as never,
       settleNow,
@@ -524,9 +518,9 @@ describe('r33 COR - C: seeded-head re-stamp boundary (verified)', () => {
       manager.materialRegistry,
       'mortal',
       settleNow,
-      { workerCapacity: 1, offlineSinceMs: settleNow - 120_000, rng: () => 0.5 },
+      { offlineSinceMs: settleNow - 120_000, rng: () => 0.5 },
     )
-    return manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    return manager.productionSystem.getState(SITE_ID)!.productionCycles!
   }
 
   it('completes + shift = 2^52 - 1: the seeded head shifts cleanly in-domain', () => {
@@ -573,57 +567,29 @@ describe('r33 COR - C: seeded-head re-stamp boundary (verified)', () => {
 // (D) cap clamps - claim VERIFIED at the bound; NaN arms noted.
 // ----------------------------------------------------------------------------
 
-describe('r33 COR - D: restore cap clamps at the domain edge', () => {
-  it('DecomposeSystem.restore with restoreNow = 2^52 - 1 keeps nextCycleAt <= 2^52 - 1', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: BOUND - 1,
-        started: true,
-      },
-      BOUND - 1,
-    )
-    // Cap = min(restoreNow + 30_000, 2^52-1) = 2^52-1; merged lands there.
-    expect(system.getSaveState().nextCycleAt).toBe(BOUND - 1)
-    expect(system.getSaveState().nextCycleAt).toBeLessThan(BOUND)
+describe('r33 COR - D: legacy Decompose timing state is inert', () => {
+  it('ignores legacy deadlines at, below, and beyond the persisted clock bound', () => {
+    for (const deadline of [BOUND - 1, BOUND + 1, Number.NaN]) {
+      const system = new DecomposeSystem(new MaterialBag())
+      system.restore(
+        { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 4 }, nextCycleAt: deadline, started: true },
+        BOUND - 1,
+      )
+      expect(system.getSaveState().nextCycleAt).toBe(0)
+      expect(system.getSaveState().started).toBe(false)
+    }
   })
 
-  it('DecomposeSystem.restore deny-arm: restoreNow < 0 parks restoredDeadline verbatim', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: BOUND - 1,
-        started: true,
-      },
-      -1,
-    )
-    // !clockOk -> Math.max(0, restoredDeadline) - verbatim park.
-    expect(system.getSaveState().nextCycleAt).toBe(BOUND - 1)
-  })
-
-  it('Nit COR-F3: a NaN cycleMs (constructor-crafted option) propagates NaN into nextCycleAt', () => {
-    // min(restoreNow + NaN, 2^52-1) = NaN -> merged = NaN -> nextCycleAt
-    // NaN -> persisted NaN wedges the write gate. Reachable only through
-    // a bad DecomposeSystemOptions - GameManager constructs with defaults
-    // (30_000 constant), so this stays a code-defect note.
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: Number.NaN })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(Number.isNaN(system.getSaveState().nextCycleAt)).toBe(true)
+  it('validator continues rejecting malformed legacy deadline fields', () => {
+    const save = validWireSave()
+    save.decompose = {
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: BOUND + 1,
+      started: true,
+    } as never
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(result.issues.some((issue) => issue.path.endsWith('decompose.nextCycleAt'))).toBe(true)
   })
 
   it('TribulationDirector.restoreRuntime clamps cooldownUntil <= 2^52 - 1 at the bound', () => {
@@ -972,13 +938,12 @@ describe('r33 COR - G: boundary rows', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(BOUND - 2, BOUND - 1)],
+          productionCycles: [workerCycle(BOUND - 2, BOUND - 1)],
         },
       ] as never,
       currentMs,
     )
-    const cycle = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const cycle = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(currentMs)
     expect(cycle.completesAtMs).toBe(currentMs + 1)
   })
@@ -992,3 +957,4 @@ describe('r33 COR - G: boundary rows', () => {
     expect(result.pending[1]!.completesAtMs).toBe(60_000)
   })
 })
+

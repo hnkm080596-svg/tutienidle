@@ -15,9 +15,9 @@ import {
   resolveFuelWood,
   jobSuccessPercent,
   alchemyJobReservationDigest,
-  alchemyRoomSuccessBonus,
   alchemySecondsFor,
-  ALCHEMY_SUCCESS_BONUS_PERCENT,
+  alchemyRoomSpeedMultiplier,
+  verifyAlchemyJobReservation,
   ALCHEMY_SPEED_MULTIPLIERS,
 } from './AlchemySystem'
 import type { ActiveAlchemyJob, AlchemyRecipe } from './AlchemySystem'
@@ -82,6 +82,19 @@ function makeSystemWithJob(job: ActiveAlchemyJob = makeJob()): {
 }
 
 describe('AlchemySystem — jobSuccessPercent', () => {
+  it('preserves already-due legacy parallel jobs when migrating to the serial queue', () => {
+    const system = new AlchemySystem()
+    const bag = new PillBag()
+    system.setRecipeLookup(id => id === RECIPE.id ? RECIPE : undefined)
+    const first = makeJob({ jobId: 'legacy_first', startedAtMs: 1_000, completesAtMs: 61_000 })
+    const second = makeJob({ jobId: 'legacy_second', startedAtMs: 1_000, completesAtMs: 61_000 })
+    system.restoreJobs([first, second], 61_000)
+    system.tick(61_000, bag, id => ({ id }), () => 0, 100)
+    expect(system.getJobs()).toHaveLength(0)
+    expect(system.drainSettlementEvents()).toHaveLength(2)
+    expect(bag.getAmount(RECIPE.pillId)).toBeGreaterThanOrEqual(2)
+  })
+
   it('không bonus — base decade 30 + room 1 bonus 0', () => {
     expect(jobSuccessPercent(makeJob(), RECIPE)).toBe(30)
   })
@@ -143,22 +156,12 @@ describe('AlchemySystem — settleOffline với bonus thiên phú', () => {
 })
 
 describe('AlchemySystem — Đan Phòng level 6-9 (economy-ecosystem-plan T5)', () => {
-  it('bảng bonus/speed đủ 9 entry theo maxLevel Đan Phòng', () => {
-    expect(ALCHEMY_SUCCESS_BONUS_PERCENT).toHaveLength(9)
+  it('speed table has all nine authored room levels', () => {
     expect(ALCHEMY_SPEED_MULTIPLIERS).toHaveLength(9)
   })
 
-  it('level 6-9 có giá trị thật, không kẹt ở level 5', () => {
-    expect(alchemyRoomSuccessBonus(6)).toBeGreaterThan(alchemyRoomSuccessBonus(5))
-    expect(alchemyRoomSuccessBonus(9)).toBeGreaterThan(alchemyRoomSuccessBonus(8))
-
+  it('level 6-9 retains its authored speed improvement', () => {
     expect(alchemySecondsFor(RECIPE, 9)).toBeLessThan(alchemySecondsFor(RECIPE, 5))
-  })
-
-  it('bonus clamp với level ngoài khoảng (0/âm/vượt 9)', () => {
-    expect(alchemyRoomSuccessBonus(0)).toBe(ALCHEMY_SUCCESS_BONUS_PERCENT[0])
-    expect(alchemyRoomSuccessBonus(-3)).toBe(ALCHEMY_SUCCESS_BONUS_PERCENT[0])
-    expect(alchemyRoomSuccessBonus(99)).toBe(ALCHEMY_SUCCESS_BONUS_PERCENT[8])
   })
 })
 
@@ -460,19 +463,202 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
     expect(system.getJobs()).toHaveLength(1)
   })
 
-  it('maxConcurrentJobs <= 0 vẫn cho tối thiểu 1 slot (Math.max 1)', () => {
+  it('queue capacity zero rejects without reserving inputs', () => {
     const { recipe, bag, registry, system } = buildContext()
 
-    const first = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 0)
-    expect(first.ok).toBe(true)
+    const result = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 0)
+    expect(result).toEqual({ ok: false, reason: 'job_slots_full' })
+    expect(bag.getAmount('herb_decade')).toBe(1)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
+    expect(system.getJobs()).toHaveLength(0)
+  })
 
-    const second = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 2_000, 0)
-    expect(second.ok).toBe(false)
-    expect(second.reason).toBe('job_slots_full')
+  it('rebases remaining waiting work to now when the active job is cancelled', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 2, woodOnHand: 2 * WOOD_AMOUNT })
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 4).ok).toBe(true)
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 2_000, 4).ok).toBe(true)
+    const [active, waiting] = system.getJobs()
+
+    expect(system.cancelJob(active!.jobId, undefined, 5_000)).toBe(true)
+    expect(system.getJobs()[0]?.jobId).toBe(waiting!.jobId)
+    expect(system.getJobs()[0]?.startedAtMs).toBe(5_000)
+    expect(system.getJobs()[0]?.completesAtMs).toBe(5_000 + alchemySecondsFor(recipe, 1) * 1000)
+  })
+
+  it('does not allow cancelling an active job whose completion deadline has passed before tick settles it', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 2, woodOnHand: 2 * WOOD_AMOUNT })
+    system.setRecipeLookup((id) => (id === recipe.id ? recipe : undefined))
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 4).ok).toBe(true)
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 2_000, 4).ok).toBe(true)
+    const [active] = system.getJobs()
+
+    expect(system.cancelJob(active!.jobId, undefined, active!.completesAtMs)).toBe(false)
+    expect(system.getJobs()[0]?.jobId).toBe(active!.jobId)
+  })
+
+  it('does not refund waiting work whose brewing began before the settlement tick', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 2, woodOnHand: 2 * WOOD_AMOUNT })
+    system.setRecipeLookup((id) => (id === recipe.id ? recipe : undefined))
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 4).ok).toBe(true)
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 2_000, 4).ok).toBe(true)
+    const [, waiting] = system.getJobs()
+    const refund = vi.fn(() => true)
+    expect(system.cancelJob(waiting!.jobId, refund, waiting!.startedAtMs)).toBe(false)
+    expect(refund).not.toHaveBeenCalled()
+    expect(system.getJobs()).toHaveLength(2)
+  })
+
+  it('compacts later reservations when a middle waiting job is cancelled', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 3, woodOnHand: 3 * WOOD_AMOUNT })
+    system.setRecipeLookup((id) => (id === recipe.id ? recipe : undefined))
+    for (const now of [1_000, 2_000, 3_000]) {
+      expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, now, 4).ok).toBe(true)
+    }
+    const [active, middle, last] = system.getJobs()
+    expect(system.cancelJob(middle!.jobId, () => true, 4_000)).toBe(true)
+    const remaining = system.getJobs()
+    expect(remaining.map(job => job.jobId)).toEqual([active!.jobId, last!.jobId])
+    expect(remaining[1]?.startedAtMs).toBe(active!.completesAtMs)
+    expect(verifyAlchemyJobReservation(remaining[1]!, recipe)).toBeNull()
+  })
+  it('restores serial order when a waiting timestamp is reanchored to the current clock', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 2, woodOnHand: 2 * WOOD_AMOUNT })
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 4).ok).toBe(true)
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 2_000, 4).ok).toBe(true)
+    const [active, waiting] = system.getJobs()
+    const restored = new AlchemySystem()
+
+    restored.setRecipeLookup((id) => (id === recipe.id ? recipe : undefined))
+    restored.restoreJobs([active!, waiting!], 2_000)
+
+    const [restoredActive, restoredWaiting] = restored.getJobs()
+    expect(restoredWaiting?.startedAtMs).toBe(restoredActive?.completesAtMs)
+    expect(verifyAlchemyJobReservation(restoredWaiting!, recipe)).toBeNull()
+  })
+
+  it('refuses a waiting refund when its reservation witness is forged', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 2, woodOnHand: 2 * WOOD_AMOUNT })
+    system.setRecipeLookup((id) => (id === recipe.id ? recipe : undefined))
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 4).ok).toBe(true)
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 2_000, 4).ok).toBe(true)
+    const [active, waiting] = system.getJobs()
+    const forged = { ...waiting!, reservation: { ...waiting!.reservation, herbAmount: 99 } }
+    system.restoreJobs([active!, forged])
+    const beforeRefund = {
+      herb: bag.getAmount('herb_decade'),
+      wood: bag.getAmount('mortal_wood_decade'),
+    }
+    const refund = vi.fn(() => true)
+
+    expect(system.cancelJob(waiting!.jobId, refund)).toBe(false)
+    expect(refund).not.toHaveBeenCalled()
+    expect(bag.getAmount('herb_decade')).toBe(beforeRefund.herb)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(beforeRefund.wood)
+    expect(system.getJobs()).toHaveLength(2)
   })
 })
 
 describe('AlchemySystem — cancel job (lò đã khởi động, không hoàn trả)', () => {
+  it('queues jobs serially and starts the next job only after the active completion time', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 3, woodOnHand: 3 * WOOD_AMOUNT })
+
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 4).ok).toBe(true)
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 2_000, 4).ok).toBe(true)
+
+    const [active, waiting] = system.getJobs()
+    const durationMs = alchemySecondsFor(recipe, 1) * 1000
+    expect(active?.startedAtMs).toBe(1_000)
+    expect(active?.completesAtMs).toBe(1_000 + durationMs)
+    expect(waiting?.startedAtMs).toBe(active?.completesAtMs)
+    expect(waiting?.completesAtMs).toBe(1_000 + 2 * durationMs)
+  })
+
+  it('settles queued jobs one at a time across successive completion deadlines', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 2, woodOnHand: 2 * WOOD_AMOUNT })
+    system.setRecipeLookup((id) => (id === recipe.id ? recipe : undefined))
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, 4).ok).toBe(true)
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 2_000, 4).ok).toBe(true)
+    const pillBag = new PillBag()
+    const activeCompletion = 1_000 + alchemySecondsFor(recipe, 1) * 1000
+    const waitingCompletion = activeCompletion + alchemySecondsFor(recipe, 1) * 1000
+
+    system.tick(activeCompletion - 1, pillBag, (id) => ({ id }), () => 0)
+    expect(system.drainSettlementEvents()).toHaveLength(0)
+    expect(system.getJobs()).toHaveLength(2)
+
+    system.tick(activeCompletion, pillBag, (id) => ({ id }), () => 0)
+    expect(system.drainSettlementEvents()).toHaveLength(1)
+    expect(system.getJobs()).toHaveLength(1)
+    expect(system.getJobs()[0]?.startedAtMs).toBe(activeCompletion)
+
+    system.tick(waitingCompletion, pillBag, (id) => ({ id }), () => 0)
+    expect(system.drainSettlementEvents()).toHaveLength(1)
+    expect(system.getJobs()).toHaveLength(0)
+  })
+
+  it('admits one active job plus the full waiting capacity, then refuses without burning more inputs', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 5, woodOnHand: 5 * WOOD_AMOUNT })
+
+    for (let index = 0; index < 4; index += 1) {
+      expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000 + index * 1_000, 4).ok).toBe(true)
+    }
+    expect(system.getJobs()).toHaveLength(4)
+    expect(system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 10_000, 4)).toEqual({
+      ok: false,
+      reason: 'job_slots_full',
+    })
+    expect(bag.getAmount('herb_decade')).toBe(1)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
+  })
+
+  it('refunds every reserved input when cancelling a waiting job, but does not refund the active job', () => {
+    const { recipe, bag, registry, system } = buildContext({ herbOnHand: 3, woodOnHand: 3 * WOOD_AMOUNT })
+    const spiritStoneId = 'spirit_stone_ha_pham'
+    const specialId = 'special_core'
+    registry.register(material(spiritStoneId))
+    registry.register(material(specialId))
+    bag.add(registry.get(spiritStoneId), 6)
+    bag.add(registry.get(specialId), 4)
+    const recipeWithCost = {
+      ...recipe,
+      spiritStoneCost: 3,
+      specialIngredients: [{ materialId: specialId, amount: 2 }],
+    }
+    system.setRecipeLookup((id) => (id === recipeWithCost.id ? recipeWithCost : undefined))
+
+    expect(system.startJob(recipeWithCost, 'herb_decade', bag, registry, 6, 1, 1_000, 4).ok).toBe(true)
+    expect(bag.remove(spiritStoneId, 3)).toBe(true)
+    expect(system.startJob(recipeWithCost, 'herb_decade', bag, registry, 3, 1, 2_000, 4).ok).toBe(true)
+    expect(bag.remove(spiritStoneId, 3)).toBe(true)
+    const [active, waiting] = system.getJobs()
+    expect(active).toBeDefined()
+    expect(waiting).toBeDefined()
+
+    const refunded = system.cancelJob(waiting!.jobId, (job) => {
+      expect(job.reservation.spiritStoneCost).toBe(3)
+      for (const special of job.reservation.specialIngredients) {
+        bag.add(registry.get(special.materialId), special.amount)
+      }
+      bag.add(registry.get(job.herbMaterialId), job.reservation.herbAmount)
+      bag.add(registry.get(job.reservation.woodId), job.reservation.fuelWoodAmount)
+      bag.add(registry.get(spiritStoneId), job.reservation.spiritStoneCost)
+      return true
+    }, 2_000)
+
+    expect(refunded).toBe(true)
+    expect(system.getJobs().map((job) => job.jobId)).toEqual([active!.jobId])
+    expect(bag.getAmount('herb_decade')).toBe(2)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(2 * WOOD_AMOUNT)
+    expect(bag.getAmount(spiritStoneId)).toBe(3)
+    expect(bag.getAmount(specialId)).toBe(2)
+
+    expect(system.cancelJob(active!.jobId, undefined, 2_000)).toBe(true)
+    expect(bag.getAmount('herb_decade')).toBe(2)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(2 * WOOD_AMOUNT)
+    expect(bag.getAmount(spiritStoneId)).toBe(3)
+    expect(bag.getAmount(specialId)).toBe(2)
+  })
+
   it('cancel job đang chạy — xoá job, nguyên liệu đã reserve không hoàn trả', () => {
     const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext({ herbOnHand: 3 })
 
@@ -483,7 +669,7 @@ describe('AlchemySystem — cancel job (lò đã khởi động, không hoàn tr
 
     const jobId = jobs[0]!.jobId
 
-    expect(system.cancelJob(jobId)).toBe(true)
+    expect(system.cancelJob(jobId, undefined, 1_000)).toBe(true)
     expect(system.getJobs()).toHaveLength(0)
     expect(bag.getAmount('herb_decade')).toBe(3 - 1)
     expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT - WOOD_AMOUNT)
@@ -528,17 +714,19 @@ describe('AlchemySystem — settle đúng thời lượng job (alchemySecondsFor
   it('alchemySecondsFor nhân theo speed — base 60s, level 9 rút còn ~20s', () => {
     expect(alchemySecondsFor(RECIPE, 1)).toBe(60)
     expect(alchemySecondsFor(RECIPE, 9)).toBe(Math.ceil(60 / ALCHEMY_SPEED_MULTIPLIERS[8]!))
+    expect(alchemyRoomSpeedMultiplier(9)).toBe(ALCHEMY_SPEED_MULTIPLIERS[8])
+    expect(alchemyRoomSpeedMultiplier(0)).toBe(ALCHEMY_SPEED_MULTIPLIERS[0])
   })
 })
 
-describe('AlchemySystem — success rate với bonus Đan Phòng (pure math, không RNG)', () => {
-  it('jobSuccessPercent = base niên đại + bonus room + bonus điểm thiên phú', () => {
+describe('AlchemySystem — success rate ignores room level but preserves talent bonus', () => {
+  it('jobSuccessPercent = base niên đại + bonus điểm thiên phú at every room level', () => {
     const baseDecade = jobSuccessPercent(makeJob(), RECIPE, 0)
     const withRoom = jobSuccessPercent(makeJob({ roomLevelAtStart: 3 }), RECIPE, 0)
 
-    expect(withRoom).toBe(baseDecade + alchemyRoomSuccessBonus(3))
+    expect(withRoom).toBe(baseDecade)
     expect(jobSuccessPercent(makeJob({ roomLevelAtStart: 3 }), RECIPE, 10)).toBe(
-      baseDecade + alchemyRoomSuccessBonus(3) + 10,
+      baseDecade + 10,
     )
   })
 
@@ -584,6 +772,105 @@ function pillWithId(id: string): Pill {
 import { GameManagerAlchemyOps } from '../game/GameManagerAlchemyOps'
 import { BuildingRegistry } from '../building/BuildingRegistry'
 import { BuildingManager } from '../building/BuildingManager'
+
+describe('GameManagerAlchemyOps — FIFO queue read model', () => {
+  it('projects one active job, ordered waiting jobs, and modifier-based capacity', () => {
+    const system = new AlchemySystem()
+    system.restoreJobs([
+      makeJob(),
+      makeJob({ jobId: 'waiting_job', startedAtMs: 1_000, completesAtMs: 2_000 }),
+    ])
+    const buildingRegistry = new BuildingRegistry()
+    buildingRegistry.register({
+      id: 'pill_room',
+      name: 'Dan Phong',
+      levels: [
+        { level: 1, effects: [{ kind: 'alchemy_queue_slots', amount: 3 }] },
+        { level: 2, effects: [{ kind: 'alchemy_queue_slots', amount: 3 }] },
+      ],
+    } as never)
+    const buildingManager = new BuildingManager()
+    buildingManager.add({ instanceId: 'pill-room-1', buildingId: 'pill_room', level: 2, lastCollectedAt: 0 })
+    const ops = new GameManagerAlchemyOps({
+      alchemySystem: system,
+      alchemyRecipesById: new Map([[RECIPE.id, RECIPE]]),
+      buildingRegistry,
+      buildingManager,
+      buildingSystem: new BuildingSystem(),
+      materialBag: new MaterialBag(),
+      materialRegistry: new MaterialRegistry(),
+    })
+
+    expect(ops.getAlchemyQueueState()).toEqual({
+      activeJob: expect.objectContaining({ jobId: 'job_test' }),
+      waitingJobs: [expect.objectContaining({ jobId: 'waiting_job' })],
+      maxQueueSlots: 6,
+      maxTotalJobs: 7,
+      usedQueueSlots: 1,
+      remainingQueueSlots: 5,
+    })
+  })
+
+  it('Ops refunds a cancelled waiting reservation and keeps the active reserve burned', () => {
+    const materialBag = new MaterialBag()
+    const materialRegistry = new MaterialRegistry()
+    const buildingRegistry = new BuildingRegistry()
+    const buildingManager = new BuildingManager()
+    const recipe: AlchemyRecipe = {
+      ...RECIPE,
+      fuelWoodAmount: WOOD_AMOUNT,
+      spiritStoneCost: 3,
+      specialIngredients: [{ materialId: 'special_core', amount: 2 }],
+    }
+    const spiritStoneId = 'spirit_stone_ha_pham'
+    for (const id of ['herb_decade', 'mortal_wood_decade', 'special_core', spiritStoneId]) {
+      materialRegistry.register(material(id))
+    }
+    materialBag.add(materialRegistry.get('herb_decade'), 2)
+    materialBag.add(materialRegistry.get('mortal_wood_decade'), 4)
+    materialBag.add(materialRegistry.get('special_core'), 4)
+    materialBag.add(materialRegistry.get(spiritStoneId), 6)
+    buildingRegistry.register({
+      id: 'pill_room',
+      name: 'Dan Phong',
+      levels: [{ level: 1, effects: [{ kind: 'alchemy_queue_slots', amount: 3 }] }],
+    } as never)
+    buildingManager.add({ instanceId: 'pill-room-1', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 })
+    const system = new AlchemySystem()
+    system.setRecipeLookup((id) => (id === recipe.id ? recipe : undefined))
+    let nowMs = 1_000
+    const ops = new GameManagerAlchemyOps({
+      alchemySystem: system,
+      alchemyRecipesById: new Map([[recipe.id, recipe]]),
+      buildingRegistry,
+      buildingManager,
+      buildingSystem: new BuildingSystem(),
+      materialBag,
+      materialRegistry,
+      time: { now: () => nowMs } as never,
+    })
+    const player = { selectedTalentIds: [], talentLevels: {} } as never
+
+    expect(ops.startAlchemyJob(recipe.id, 'herb_decade', player).ok).toBe(true)
+    nowMs = 2_000
+    expect(ops.startAlchemyJob(recipe.id, 'herb_decade', player).ok).toBe(true)
+    const [active, waiting] = system.getJobs()
+    expect(ops.getAlchemyQueueState()).toMatchObject({ maxQueueSlots: 3, maxTotalJobs: 4, usedQueueSlots: 1 })
+
+    expect(ops.cancelAlchemyJob(waiting!.jobId)).toBe(true)
+    expect(materialBag.getAmount('herb_decade')).toBe(1)
+    expect(materialBag.getAmount('mortal_wood_decade')).toBe(2)
+    expect(materialBag.getAmount('special_core')).toBe(2)
+    expect(materialBag.getAmount(spiritStoneId)).toBe(3)
+    expect(system.drainSettlementEvents()).toEqual([])
+
+    expect(ops.cancelAlchemyJob(active!.jobId)).toBe(true)
+    expect(materialBag.getAmount('herb_decade')).toBe(1)
+    expect(materialBag.getAmount('mortal_wood_decade')).toBe(2)
+    expect(materialBag.getAmount('special_core')).toBe(2)
+    expect(materialBag.getAmount(spiritStoneId)).toBe(3)
+  })
+})
 import { BuildingSystem } from '../building/BuildingSystem'
 
 describe('alchemy success split - preview uses the authority (AR-23 4b)', () => {
@@ -712,6 +999,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
       id: 'pill_room',
       name: 'Dan Phong',
       functionType: 'pill_room',
+      levels: [{ level: 1, effects: [{ kind: 'alchemy_queue_slots', amount: 3 }] }],
     } as never)
 
     buildingManager.add({ instanceId: 'pr-1', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 })
@@ -758,6 +1046,7 @@ describe('AlchemySystem — Hoa Hau Thong Than (M3 spec §4.2)', () => {
       id: 'pill_room',
       name: 'Dan Phong',
       functionType: 'pill_room',
+      levels: [{ level: 1, effects: [{ kind: 'alchemy_queue_slots', amount: 3 }] }],
     } as never)
 
     buildingManager.add({ instanceId: 'pr-1', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 })

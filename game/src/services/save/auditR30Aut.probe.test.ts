@@ -155,15 +155,11 @@ function craftedEquipmentEntry(instanceId: string, locked: unknown): Record<stri
 
 function startedDecomposeSystem(): { system: DecomposeSystem; bag: MaterialBag } {
   const bag = new MaterialBag()
-  const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-  system.updateCapacity(1)
-  // Validator-admitted restore payload: nextCycleAt is non-negative-
-  // finite-pinned only, started is boolean. Deep-past deadline = a long
-  // backlog the window arithmetic must bound.
+  const system = new DecomposeSystem(bag)
   system.restore(
     {
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-      nextCycleAt: 0,
+      nextCycleAt: Number.NaN,
       started: true,
     },
     currentMs,
@@ -184,55 +180,23 @@ function clockIsolated() {
 }
 
 // ============================================================================
-// F1 - DecomposeSystem.settleOffline: the offlineSinceMs sibling input the
-// r29 guard skipped. NaN skips the confiscation arm and pays the whole
-// backlog up to the 5000-cycle bound.
+// F1 - legacy decompose settings/deadlines cannot resume the retired worker
+// processor or mutate ore during restore.
 // ============================================================================
-describe('r30-AUT F1 - DecomposeSystem.settleOffline offlineSinceMs parity', () => {
+describe('r30-AUT F1 - legacy Decompose state remains inert', () => {
   clockIsolated()
 
-  it('NaN offlineSinceMs zero-settles - the deadline stays parked verbatim', () => {
+  it('restoring hostile legacy settings and deadline emits only canonical defaults', () => {
     const { system, bag } = startedDecomposeSystem()
     const ore = materials.find((material) => material.id.includes('_ore_'))!
     bag.add(ore, 100_000)
-
-    const settled = system.settleOffline(currentMs, NaN)
-    const output = system.drainOutput()
-
-    // r30-AUT-1 pin: no payment AND no confiscation fast-forward - the
-    // deadline is preserved so a later honest settle still owns it.
-    expect(settled).toBe(0)
-    expect(output).toHaveLength(0)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('control: the same backlog under an honest 60s window settles exactly 2', () => {
-    const { system } = startedDecomposeSystem()
-
-    const settled = system.settleOffline(currentMs, currentMs - 60_000)
-
-    expect(settled).toBe(2)
-  })
-
-  it('control: a repeated settle over the same window settles 0 (idempotent)', () => {
-    const { system } = startedDecomposeSystem()
-
-    system.settleOffline(currentMs, currentMs - 60_000)
-    expect(system.settleOffline(currentMs, currentMs - 60_000)).toBe(0)
-  })
-
-  it('+Infinity offlineSinceMs denies - zero-settle, deadline parked verbatim', () => {
-    const { system } = startedDecomposeSystem()
-
-    expect(system.settleOffline(currentMs, Infinity)).toBe(0)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('-Infinity offlineSinceMs denies - zero-settle under an out-of-domain input', () => {
-    const { system } = startedDecomposeSystem()
-
-    expect(system.settleOffline(currentMs, -Infinity)).toBe(0)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
+    const oreAmountBefore = bag.get(ore.id)?.amount
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(bag.get(ore.id)?.amount).toBe(oreAmountBefore)
   })
 })
 
@@ -467,10 +431,10 @@ describe('r30-AUT held - restoreJobs verbatim arm under bad clock', () => {
   })
 })
 
-describe('r30-AUT held - DecomposeSystem.restore verbatim merge under bad clock', () => {
+describe('r30-AUT held - DecomposeSystem.restore ignores legacy timer authority', () => {
   clockIsolated()
 
-  it('NaN restoreNowMs parks a crafted-future deadline verbatim - settle pays 0', () => {
+  it('NaN restoreNowMs cannot resume a crafted-future deadline', () => {
     const { system } = startedDecomposeSystem()
     const craftedFuture = currentMs + 3_600_000
     system.restore(
@@ -482,7 +446,7 @@ describe('r30-AUT held - DecomposeSystem.restore verbatim merge under bad clock'
       NaN,
     )
 
-    expect(system.getSaveState().nextCycleAt).toBe(craftedFuture)
-    expect(system.settleOffline(currentMs, currentMs - 60_000)).toBe(0)
+    expect(system.getSaveState().nextCycleAt).toBe(0)
+    expect(system.getSaveState().started).toBe(false)
   })
 })

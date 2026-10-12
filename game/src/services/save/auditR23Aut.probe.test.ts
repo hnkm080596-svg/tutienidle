@@ -428,11 +428,8 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
   it('C3 capacity + pity/kill counter pins: capacity bounded, honest-shape counters unbounded (documented residual)', () => {
     const withCapacity = (capacity: number) => {
       const save = validSave()
-      ;(save.player as PlayerData).autoWorkerCapacity = capacity
-      // F-W-16: capacity > 0 requires the chi_hien_quan witness.
-      save.buildings = [
-        { instanceId: 'r23_b1', buildingId: 'chi_hien_quan', level: 1, lastCollectedAt: 0 },
-      ]
+      ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity = capacity
+      // Legacy capacity is shape-bounded only and has no building authority.
       return validateGameSaveShape(save).ok
     }
     expect(withCapacity(65_537)).toBe(false)
@@ -519,3 +516,4 @@ describe('fixpoint r23 AUT - stackable/bound/insight residual audit (da0d553d)',
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 })
+

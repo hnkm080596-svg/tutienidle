@@ -212,7 +212,7 @@ function runHerbChain(): HerbChainResult {
 
     for (let nowMs = 0; nowMs <= SIM_END_MS; nowMs += STEP_MS) {
       // 1 worker Dong Thien - pool capacity 1, khong assignment (round-robin).
-      system.tickWorkers(nowMs, bag, registry, 'mortal', 1)
+      system.tick(nowMs, bag, registry, 'mortal')
 
       accumulateEvents(herbsProduced, new Map(), system.drainSettlementEvents())
 
@@ -245,7 +245,7 @@ function runHerbChain(): HerbChainResult {
       }
 
       // Settle job theo lich - roll extra pill dung cung stream seeded.
-      alchemy.tick(nowMs, pillBag, (pillId) => ({ id: pillId }), random, 0)
+      alchemy.tick(nowMs, pillBag, (pillId) => ({ id: pillId }), random)
     }
 
     return {
@@ -286,7 +286,7 @@ function runWoodChain(): WoodChainResult {
     const overflow = new Map<string, number>()
 
     for (let nowMs = 0; nowMs <= SIM_END_MS; nowMs += STEP_MS) {
-      system.tickWorkers(nowMs, bag, registry, 'mortal', 1)
+      system.tick(nowMs, bag, registry, 'mortal')
 
       accumulateEvents(produced, overflow, system.drainSettlementEvents())
     }
@@ -327,29 +327,28 @@ function runOreChain(): OreChainResult {
     const registry = createRegistry()
     const bag = new MaterialBag()
 
-    // R7 (AR-08): dynamic capacity replaces the constructor option.
-    const decompose = new DecomposeSystem(bag)
-    decompose.updateCapacity(1)
-
-    decompose.setSetting({ gradeFilter: 'all', ageFilter: 'all', workers: 1 })
+    let tinhHoaProduced = 0
+    const decompose = new DecomposeSystem(bag, {
+      onEssenceProduced: (materialId, amount) => {
+        if (materialId === LUYEN_KHI_TINH_HOA_ID) tinhHoaProduced += amount
+      },
+    })
 
     const produced = new Map<string, number>()
     const overflow = new Map<string, number>()
 
-    let tinhHoaProduced = 0
-
     for (let nowMs = 0; nowMs <= SIM_END_MS; nowMs += STEP_MS) {
-      system.tickWorkers(nowMs, bag, registry, 'mortal', 1)
+      system.tick(nowMs, bag, registry, 'mortal')
 
       accumulateEvents(produced, overflow, system.drainSettlementEvents())
 
-      decompose.tick(nowMs)
+    }
 
-      for (const entry of decompose.drainOutput()) {
-        if (entry.materialId === LUYEN_KHI_TINH_HOA_ID) {
-          tinhHoaProduced += entry.amount
-        }
-      }
+    // Decompose is now an explicit player command. The balance simulation
+    // applies one batch conversion after the production window, rather than
+    // advancing a retired background worker on every simulated second.
+    for (const ore of decompose.getAvailableOres()) {
+      decompose.decomposeOre(ore.materialId, ore.amount)
     }
 
     let oreProduced = 0

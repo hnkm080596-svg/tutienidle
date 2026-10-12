@@ -7,15 +7,9 @@ import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
-import type { Building } from '@/core/building/Building'
+import { buildings } from '@/data/building/buildings'
 import type { Material } from '@/core/material/Material'
 import { i18n } from '@/i18n'
-
-// i18n (task 2.2 lo 3) - component render qua t() nen assertion qua
-// i18n.global.t(key) thay vi raw vi string (pattern HomeResourceStrip.test).
-function t(key: string, params?: Record<string, unknown>): string {
-  return (i18n.global as unknown as { t: (k: string, p?: Record<string, unknown>) => string }).t(key, params)
-}
 
 const WOOD: Material = {
   id: 'test_wood',
@@ -24,23 +18,7 @@ const WOOD: Material = {
   sourceType: 'building',
 }
 
-const SPRING: Building = {
-  id: 'chi_hien_quan',
-  name: 'Chiêu Hiền Quán',
-  description: 'Quản lý nhân công toàn cục.',
-  category: 'crafting_station',
-  tier: 1,
-  maxLevel: 3,
-  baseStorageCapacity: 0,
-  functionType: 'worker_lodge',
-  upgradeCost: [
-    [{ materialId: WOOD.id, amount: 1 }],
-    [{ materialId: WOOD.id, amount: 2 }],
-    [{ materialId: WOOD.id, amount: 3 }],
-  ],
-}
-
-function mountSpringPanel(realmId = 'qi_refining') {
+function mountSpringPanel(realmId = 'qi_refining', mode: 'worker_lodge' | 'architecture' = 'worker_lodge') {
   const container = document.createElement('div')
   const pinia = createPinia()
   const gameManager = new GameManager()
@@ -48,10 +26,10 @@ function mountSpringPanel(realmId = 'qi_refining') {
 
   document.body.appendChild(container)
   gameManager.catalogOps.registerMaterials([WOOD])
-  gameManager.catalogOps.registerBuildings([SPRING])
+  gameManager.catalogOps.registerBuildings(buildings)
   gameManager.buildingManager.add({
     instanceId: 'spring_instance',
-    buildingId: SPRING.id,
+    buildingId: 'chi_hien_quan',
     level: 1,
     lastCollectedAt: Date.now() / 1000,
   })
@@ -67,7 +45,7 @@ function mountSpringPanel(realmId = 'qi_refining') {
     stateVersion.value += 1
   })
 
-  useUiStore(pinia).leftPanelMode = 'worker_lodge'
+  useUiStore(pinia).leftPanelMode = mode
   const playerStore = usePlayerStore(pinia)
   playerStore.realmId = realmId
   // Production wiring (App.vue): the domain quote reads the ACTIVE player,
@@ -89,49 +67,30 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () => {
-  it('render Chiêu Hiền Quán trong overlay: ảnh + Tên + Cấp CÙNG MỘT dải title bar, nút Nâng cấp neo góc phải (2026-08-30: gộp 2 dải trùng tên/cấp làm 1)', async () => {
+describe('FunctionOverlayPanel — legacy Chiêu Hiền Quán route is closed', () => {
+  it('does not mount the obsolete worker panel or expose a decentralized upgrade', async () => {
     const mounted = mountSpringPanel()
-    const heading = mounted.container.querySelector<HTMLElement>('.overlay-panel__heading')!
-    const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
-
-    // Ten cong trinh CHI hien MOT LAN DUY NHAT, trong chinh title bar -
-    // khong con dai header con rieng ben duoi (BuildingPanelHeader.vue
-    // da bi xoa han, thay bang slot #heading/#header-actions cua
-    // OverlayPanel qua useBuildingHeaderState).
-    expect(mounted.container.querySelector('.building-panel-header')).toBeNull()
-    expect(heading.querySelector('.building-heading__art')).not.toBeNull()
-    expect(heading.querySelector('.building-heading__name')?.textContent).toBe('Chiêu Hiền Quán')
-    expect(heading.textContent).toContain(t('layout.functionOverlay.levelRange', { level: 1, max: 3 }))
-    expect((mounted.container.textContent!.match(/Chiêu Hiền Quán/g) ?? []).length).toBe(1)
-
-    const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
-    expect(upgradeButton).not.toBeNull()
-    expect(actions.textContent).toContain(t('layout.functionOverlay.upgrade'))
-    expect(mounted.container.querySelectorAll('.building-heading__upgrade')).toHaveLength(1)
-
-    expect(mounted.container.querySelector('.worker-lodge-panel')).not.toBeNull()
-
-    upgradeButton.click()
     await nextTick()
-
-    expect(mounted.gameManager.buildingManager.getByBuildingId(SPRING.id)?.level).toBe(2)
-    expect(heading.textContent).toContain(t('layout.functionOverlay.levelRange', { level: 2, max: 3 }))
+    expect(mounted.container.querySelector('.overlay-panel')).toBeNull()
+    expect(mounted.container.querySelector('.worker-lodge-panel')).toBeNull()
+    expect(mounted.container.querySelector('.building-heading__upgrade')).toBeNull()
 
     mounted.unmount()
   })
 
-  it('header mirrors the buildingOps quote — realm-gated next level ẨN HẲN nút nâng cấp (không còn disabled)', async () => {
-    // Owner scope 2026-10-03: "nang cap hien khi du dieu kien" - mot
-    // building bi realm-gate (mortal tier 1 < lv2) khong render nut
-    // disabled nua ma AN HAN, giong chip tren plaque chi xuat hien khi
-    // status === 'upgradeable' (quoteBuildingUpgrade la authority chung).
+  it('raw legacy mode stays rejected regardless of realm', async () => {
     const mounted = mountSpringPanel('mortal')
-    const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
+    expect(mounted.container.querySelector('.overlay-panel')).toBeNull()
+    expect(mounted.container.querySelector('.worker-lodge-panel')).toBeNull()
 
-    expect(actions.querySelector('.building-heading__upgrade')).toBeNull()
-    expect(actions.querySelector('.building-upgrade')).toBeNull()
+    mounted.unmount()
+  })
 
+  it('Architecture mounts its paper scene without also mounting the legacy overlay', async () => {
+    const mounted = mountSpringPanel('qi_refining', 'architecture')
+    await nextTick()
+    expect(mounted.container.querySelector('[data-testid="architecture-building-card"]')).not.toBeNull()
+    expect(mounted.container.querySelector('.overlay-panel')).toBeNull()
     mounted.unmount()
   })
 })

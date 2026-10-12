@@ -55,17 +55,16 @@ describe('resolveTerritoryTier (Mission D / spec D2)', () => {
 })
 
 describe('clamp applied at every production entry point (T3-17)', () => {
-  it('tickWorkers: a golden_core player spawns foundation-tier lanes at 900s, not 2700s ghost lanes', () => {
+  it('online production uses the clamped realm tier for its one site cycle', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.setAutoRestart('thanh_van_lam', true)
 
-    system.tickWorkers(1_000, bag, registry, 'golden_core', 2)
+    system.tick(1_000, bag, registry, 'golden_core')
 
     const state = system.getState('thanh_van_lam')!
-    expect(state.activeWorkerSlots).toBe(2)
-    expect(state.workerCycles).toHaveLength(2)
-    for (const cycle of state.workerCycles!) {
+    expect(state.productionCycles).toHaveLength(1)
+    for (const cycle of state.productionCycles!) {
       expect(cycle.collectionRealmId).toBe('foundation_establishment')
       expect(cycle.completesAtMs - cycle.startedAtMs).toBe(900_000)
     }
@@ -75,11 +74,10 @@ describe('clamp applied at every production entry point (T3-17)', () => {
     const { bag, registry } = createBag()
     const system = createSystem()
     system.restoreStates([
-      { siteId: 'thanh_van_lam', level: 1, autoRestart: true, activeWorkerSlots: 0, workerCycles: [] },
+      { siteId: 'thanh_van_lam', level: 1, autoRestart: true, productionCycles: [] },
     ])
 
     const settled = system.settleOffline(bag, registry, 'golden_core', 1_000_000 + 3_600_000, {
-      workerCapacity: 1,
       offlineSinceMs: 1_000_000,
     })
 

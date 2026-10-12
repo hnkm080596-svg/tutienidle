@@ -128,6 +128,8 @@ export const useUiStore = defineStore('ui', {
     return {
     leftPanelMode: null as LeftPanelMode,
 
+    architectureFocusBuildingId: null as string | null,
+
     characterOverlayOpen: false,
 
     // Which imperial scroll the home overlay currently shows:
@@ -248,6 +250,12 @@ export const useUiStore = defineStore('ui', {
       this.leftPanelMode = mode
     },
 
+    openArchitecture(focusBuildingId: string | null = null) {
+      this.closeHomeOverlays()
+      this.architectureFocusBuildingId = focusBuildingId
+      this.leftPanelMode = 'architecture'
+    },
+
     openStandalonePanel(panel: Exclude<StandalonePanel, null>) {
       // BETA SCOPE LOCK v2 (Phase-6): scope-hidden panels
       // (artifact / tran_phap / companion) fail closed - no caller can
@@ -264,6 +272,7 @@ export const useUiStore = defineStore('ui', {
     /** Dong toan bo chrome/overlay cua Dong Phu khi click nen chinh. */
     closeHomeOverlays() {
       this.leftPanelMode = null
+      this.architectureFocusBuildingId = null
       this.characterOverlayOpen = false
       this.standalonePanel = null
       this.isCommandWheelOpen = false

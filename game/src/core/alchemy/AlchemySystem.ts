@@ -301,29 +301,9 @@ export function jobSuccessPercent(
 
   const base = HERB_AGE_BASE_SUCCESS_PERCENT[variant?.age ?? 'decade']
 
-  const bonus = alchemyRoomSuccessBonus(job.roomLevelAtStart)
-
   // Optional flat percent-point bonus (content sources may pass one) -
   // added before the guaranteed/extra split, cap 300 preserved (plan sec6).
-  return Math.min(base + bonus + successBonusPercentPoints, 300)
-}
-
-/** Bang bonus ty le thanh dan theo level Dan Phong - TACH BIET bang speed (sec8.3).
- * Dan Phong maxLevel 9 (buildings.ts) - bang phai du 9 entry; truoc day
- * chi 5 entry khien level 6-9 ket o gia tri level 5 (review 2026-08-28,
- * economy-ecosystem-plan T5). */
-export const ALCHEMY_SUCCESS_BONUS_PERCENT: readonly number[] = [0, 5, 10, 15, 20, 25, 30, 35, 40]
-
-/**
- * Bonus % thanh dan theo level Dan Phong - index clamp 1..length. Nguon
- * su that DUY NHAT cho ca settle (jobSuccessPercent) lan preview
- * (GameManager.previewAlchemyOutcome) de hai duong khong bao gio lech
- * (review 2026-08-28: preview dung `?? 0` khong clamp, settle clamp).
- */
-export function alchemyRoomSuccessBonus(roomLevel: number): number {
-  const index = Math.min(Math.max(roomLevel, 1), ALCHEMY_SUCCESS_BONUS_PERCENT.length) - 1
-
-  return ALCHEMY_SUCCESS_BONUS_PERCENT[index] ?? 0
+  return Math.min(base + successBonusPercentPoints, 300)
 }
 
 /** He so toc do luyen theo level Dan Phong (sec8.2) - du 9 level (T5). */
@@ -332,9 +312,35 @@ export const ALCHEMY_SPEED_MULTIPLIERS: readonly number[] = [
 ]
 
 export function alchemySecondsFor(recipe: AlchemyRecipe, roomLevel: number): number {
-  const multiplier = ALCHEMY_SPEED_MULTIPLIERS[Math.min(Math.max(roomLevel, 1), ALCHEMY_SPEED_MULTIPLIERS.length) - 1] ?? 1
+  return Math.ceil(recipe.baseDurationSeconds / alchemyRoomSpeedMultiplier(roomLevel))
+}
 
-  return Math.ceil(recipe.baseDurationSeconds / multiplier)
+export function alchemyRoomSpeedMultiplier(roomLevel: number): number {
+  return ALCHEMY_SPEED_MULTIPLIERS[Math.min(Math.max(roomLevel, 1), ALCHEMY_SPEED_MULTIPLIERS.length) - 1] ?? 1
+}
+
+function isQueueEligible(job: ActiveAlchemyJob): boolean {
+  return betaRecipeFamilyOfId(job.recipeId) !== null
+}
+
+function rescheduleJob(job: ActiveAlchemyJob, startedAtMs: number): ActiveAlchemyJob | null {
+  const spanMs = job.completesAtMs - job.startedAtMs
+  const completesAtMs = startedAtMs + spanMs
+
+  if (!Number.isFinite(spanMs) || spanMs <= 0 || !(completesAtMs < 2 ** 52)) return null
+
+  const scheduled = { ...job, startedAtMs, completesAtMs }
+  const specials = job.reservation?.specialIngredients
+  const foldable = Array.isArray(specials) && specials.every((special) => typeof special === 'object' && special !== null)
+  if (!foldable) return scheduled
+
+  return {
+    ...scheduled,
+    reservation: {
+      ...job.reservation,
+      digest: alchemyJobReservationDigest(scheduled, job.reservation),
+    },
+  }
 }
 
 let jobCounter = 0
@@ -398,7 +404,7 @@ export class AlchemySystem {
     // at >= 2^52 exceeds the persisted timestamp domain so the next
     // save write self-refuses. Both read as bad clock -> verbatim.
     const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
-    this.jobs = jobs.flatMap((job) => {
+    const restored = jobs.flatMap((job) => {
       // r31-COR-F-NEG-MINT: persisted stamps live in [0, 2^52) - a
       // crafted negative pair would verbatim-restore as already-due and
       // settle on the next honest tick (mint); a >= 2^52 stamp wedges
@@ -480,6 +486,24 @@ export class AlchemySystem {
         },
       ]
     })
+
+    // Persisted queue order is authoritative. Repair old parallel schedules and
+    // naturally staged jobs into a contiguous serial timeline on restore.
+    let previousCompletion: number | null = null
+    this.jobs = restored.flatMap((job) => {
+      // Earned legacy outcomes retain their deadlines; settlement delivers them once.
+      if (clockOk && job.completesAtMs <= restoreNowMs) return [job]
+      if (!isQueueEligible(job)) return [job]
+
+      const startedAtMs = previousCompletion === null
+        ? job.startedAtMs
+        : Math.max(job.startedAtMs, previousCompletion)
+      const scheduled = startedAtMs === job.startedAtMs ? job : rescheduleJob(job, startedAtMs)
+      if (!scheduled) return []
+
+      previousCompletion = scheduled.completesAtMs
+      return [scheduled]
+    })
   }
 
   getJobs(): ActiveAlchemyJob[] {
@@ -495,7 +519,7 @@ export class AlchemySystem {
   }
 
   hasActiveJob(): boolean {
-    return this.jobs.length > 0
+    return this.jobs.some(isQueueEligible)
   }
 
   /**
@@ -510,7 +534,7 @@ export class AlchemySystem {
     spiritStone: number,
     roomLevel: number,
     nowMs: number,
-    maxConcurrentJobs: number,
+    maxQueueSlots: number,
     // M3 (talent v4 sec4.2) - Hoa Hau Thong Than counter-cost: multiplies
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
@@ -557,9 +581,10 @@ export class AlchemySystem {
     // budget - a restored dormant job rendered nowhere would otherwise
     // reject every beta recipe job_slots_full with no visible cause or
     // cancel path.
-    const liveJobs = this.jobs.filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
+    const liveJobs = this.jobs.filter(isQueueEligible)
 
-    if (liveJobs.length >= Math.max(1, maxConcurrentJobs)) {
+    const queueCapacity = Number.isFinite(maxQueueSlots) ? Math.max(0, Math.floor(maxQueueSlots)) : 0
+    if (liveJobs.length >= queueCapacity) {
       return { ok: false, reason: 'job_slots_full' }
     }
 
@@ -603,6 +628,14 @@ export class AlchemySystem {
       }
     }
 
+    const jobId = nextJobId()
+    const previousCompletion = liveJobs.at(-1)?.completesAtMs
+    const startedAtMs = previousCompletion === undefined ? nowMs : Math.max(nowMs, previousCompletion)
+    const completesAtMs = startedAtMs + alchemySecondsFor(recipe, roomLevel) * 1000
+    if (!(startedAtMs >= 0 && completesAtMs < 2 ** 52)) {
+      return { ok: false, reason: 'invalid_clock' }
+    }
+
     // Reserve atomic - tru toan bo sau khi moi check pass.
     bag.remove(herbMaterialId, recipe.herbAmount)
 
@@ -612,8 +645,6 @@ export class AlchemySystem {
       bag.remove(special.materialId, special.amount)
     }
 
-    const jobId = nextJobId()
-    const completesAtMs = nowMs + alchemySecondsFor(recipe, roomLevel) * 1000
     const specialIngredients = (recipe.specialIngredients ?? []).map((special) => ({ ...special }))
 
     // F-ALCH-JOB-FORGE - stamp the reservation witness at the same
@@ -632,7 +663,7 @@ export class AlchemySystem {
           recipeId: recipe.id,
           pillId: recipe.pillId,
           herbMaterialId,
-          startedAtMs: nowMs,
+          startedAtMs,
           completesAtMs,
           roomLevelAtStart: roomLevel,
         },
@@ -652,7 +683,7 @@ export class AlchemySystem {
       recipeId: recipe.id,
       pillId: recipe.pillId,
       herbMaterialId,
-      startedAtMs: nowMs,
+      startedAtMs,
       completesAtMs,
       roomLevelAtStart: roomLevel,
       reservation,
@@ -662,13 +693,58 @@ export class AlchemySystem {
     return { ok: true, spiritStoneCost }
   }
 
-  /** Huy job - nguyen lieu da dot khong hoan tra (lo da khoi dong). */
-  cancelJob(jobId: string): boolean {
-    const before = this.jobs.length
+  /** Waiting jobs refund their witnessed reserve; cancelling the active job burns it. */
+  cancelJob(
+    jobId: string,
+    refundWaiting?: (job: ActiveAlchemyJob, recipe: AlchemyRecipe) => boolean,
+    nowMs: number = this.nowMs(),
+  ): boolean {
+    const index = this.jobs.findIndex((job) => job.jobId === jobId)
+    if (index < 0) return false
 
-    this.jobs = this.jobs.filter((job) => job.jobId !== jobId)
+    const job = this.jobs[index]!
+    const activeIndex = this.jobs.findIndex(isQueueEligible)
+    const isWaiting = isQueueEligible(job) && index > activeIndex
+    const cancelingActive = index === activeIndex
+    if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) return false
+    // Settlement owns earned outcomes; cancellation cannot erase due work or
+    // refund a queued job whose scheduled brewing has already begun.
+    if (isQueueEligible(job) && (nowMs >= job.completesAtMs || (isWaiting && nowMs >= job.startedAtMs))) return false
+    const recipe = isWaiting ? this.recipeLookup?.(job.recipeId) : undefined
 
-    return this.jobs.length < before
+    if (isWaiting) {
+      if (!recipe || verifyAlchemyJobReservation(job, recipe) !== null || !refundWaiting) return false
+    }
+
+    if (cancelingActive && this.jobs.some((remaining, remainingIndex) => remainingIndex !== index && isQueueEligible(remaining))) {
+      if (!Number.isFinite(nowMs) || nowMs < 0 || nowMs >= 2 ** 52) return false
+    }
+
+    let previousCompletion: number | null = null
+    const nextJobs: ActiveAlchemyJob[] = []
+    for (const [remainingIndex, remaining] of this.jobs.entries()) {
+      if (remainingIndex === index) continue
+      if (!isQueueEligible(remaining)) {
+        nextJobs.push(remaining)
+        continue
+      }
+
+      const startedAtMs: number = previousCompletion === null
+        ? (cancelingActive ? nowMs : remaining.startedAtMs)
+        : previousCompletion
+      const scheduled: ActiveAlchemyJob | null = startedAtMs === remaining.startedAtMs
+        ? remaining
+        : rescheduleJob(remaining, startedAtMs)
+      if (!scheduled) return false
+
+      previousCompletion = scheduled.completesAtMs
+      nextJobs.push(scheduled)
+    }
+
+    if (isWaiting && !refundWaiting!(job, recipe!)) return false
+    this.jobs = nextJobs
+
+    return true
   }
 
   /**

@@ -16,6 +16,8 @@ const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
 
   concurrentJobSlots: 1,
 
+  alchemyQueueSlots: 0,
+
   equipmentCostDiscountPercent: 0,
 }
 
@@ -262,6 +264,8 @@ export class BuildingSystem {
           result.qualityBonusPercent += effect.percent
         } else if (effect.kind === 'concurrent_job_slots') {
           result.concurrentJobSlots += effect.amount
+        } else if (effect.kind === 'alchemy_queue_slots') {
+          result.alchemyQueueSlots += effect.amount
         } else if (effect.kind === 'equipment_cost_discount') {
           result.equipmentCostDiscountPercent += effect.percent
         }

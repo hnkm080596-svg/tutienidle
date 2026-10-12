@@ -129,8 +129,7 @@ function siteStateWith(cycles: ProductionCycle[]) {
     siteId: SITE_ID,
     level: 1,
     autoRestart: true,
-    activeWorkerSlots: 1,
-    workerCycles: cycles,
+    productionCycles: cycles,
   }
 }
 
@@ -304,7 +303,7 @@ describe('r33 AUT - D: restoreStates drops the inverted pair at the boundary', (
       currentMs,
     )
 
-    const parked = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const parked = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(parked.map((c) => c.cycleId)).toEqual(['good'])
 
     const bag = new MaterialBag()
@@ -313,15 +312,15 @@ describe('r33 AUT - D: restoreStates drops the inverted pair at the boundary', (
 
     // With the poison gone the advance runs free: the honest DUE lane
     // settles (observe mode discharges it; the refill lands next tick).
-    manager.productionSystem.tickWorkers(
+    manager.productionSystem.tick(
       currentMs + 10_000_000,
       bag,
       registry,
       'mortal',
-      1,
+      () => 0.5,
     )
 
-    const after = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const after = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(after.some((c) => c.cycleId === 'good')).toBe(false)
   })
 
@@ -335,18 +334,18 @@ describe('r33 AUT - D: restoreStates drops the inverted pair at the boundary', (
     const registry = new MaterialRegistry()
     materials.forEach((m) => registry.register(m))
 
-    manager.productionSystem.tickWorkers(
+    manager.productionSystem.tick(
       currentMs + 10_000_000,
       bag,
       registry,
       'mortal',
-      1,
+      () => 0.5,
     )
 
     // The due lane completed and was removed from pending (refill lands on
     // the next tick - observe mode).
     expect(
-      manager.productionSystem.getState(SITE_ID)!.workerCycles!.some((c) => c.cycleId === 'good'),
+      manager.productionSystem.getState(SITE_ID)!.productionCycles!.some((c) => c.cycleId === 'good'),
     ).toBe(false)
   })
 
@@ -360,7 +359,7 @@ describe('r33 AUT - D: restoreStates drops the inverted pair at the boundary', (
     )
 
     // Gone from live state -> nothing ordering-invalid can persist.
-    expect(manager.productionSystem.getState(SITE_ID)!.workerCycles!).toHaveLength(0)
+    expect(manager.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
 
     const player = createDefaultPlayer()
     manager.setActivePlayer(player)
@@ -499,20 +498,14 @@ describe('r33 AUT - E: advanceWorkerLanes mintedSpanMs boundary', () => {
 // ----------------------------------------------------------------------------
 
 describe('r33 AUT - F: restore cap clamps stay in-domain at restoreNow = 2^52 - 1', () => {
-  it('DecomposeSystem.restore: merged deadline clamps to 2^52-1, never past it', () => {
-    const bag = new MaterialBag()
-    const decompose = new DecomposeSystem(bag, { cycleSeconds: 60 })
-
-    // Restored stamp above the domain: the clamp pulls it to the cap
-    // (min(restoreNow + cycleMs, 2^52 - 1)) instead of parking >= 2^52.
+  it('DecomposeSystem.restore ignores retired timer state', () => {
+    const decompose = new DecomposeSystem(new MaterialBag())
     decompose.restore(
       { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: DOMAIN_TOP + 1, started: true },
       DOMAIN_TOP - 1,
     )
-
-    const saved = decompose.getSaveState()
-    expect(saved.nextCycleAt).toBe(DOMAIN_TOP - 1)
-    expect(saved.nextCycleAt).toBeLessThan(DOMAIN_TOP)
+    expect(decompose.getSaveState().nextCycleAt).toBe(0)
+    expect(decompose.getSaveState().started).toBe(false)
   })
 
   it('TribulationDirector.restoreRuntime: cooldownUntil clamps to 2^52-1, never past it', () => {
@@ -555,3 +548,4 @@ describe('r33 AUT - G: ProductionOffline re-stamp skip arm is unreachable', () =
     expect(result.pending).toHaveLength(0)
   })
 })
+

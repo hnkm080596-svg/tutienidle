@@ -531,8 +531,7 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
           siteId: 'forge_site',
           level: 9,
           autoRestart: true,
-          activeWorkerSlots: 0,
-          workerCycles: [],
+          productionCycles: [],
         },
       ],
     ])
@@ -554,13 +553,12 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
       'mortal',
       settleNowMs,
       {
-        workerCapacity: 1,
         offlineSinceMs: 0, // crafted deep-past anchor (forged lastSavedAt)
         rng: () => 0.5,
       },
     )
 
-    const persisted = states.get('forge_site')!.workerCycles!
+    const persisted = states.get('forge_site')!.productionCycles!
     expect(persisted.length).toBeGreaterThan(0)
     for (const head of persisted) {
       // Every seed-rooted pending head was re-stamped into the field
@@ -589,8 +587,7 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
           siteId: 'forge_site',
           level: 9,
           autoRestart: true,
-          activeWorkerSlots: 0,
-          workerCycles: [],
+          productionCycles: [],
         },
       ],
     ])
@@ -607,13 +604,12 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
       'mortal',
       settleNowMs,
       {
-        workerCapacity: 1,
         offlineSinceMs: settleNowMs - HOUR_MS,
         rng: () => 0.5,
       },
     )
 
-    const persisted = states.get('forge_site')!.workerCycles!
+    const persisted = states.get('forge_site')!.productionCycles!
     for (const head of persisted) {
       // Unshifted: the stamp stays in the settle epoch - strictly
       // greater than field-now, so it cannot pay early either.
@@ -642,8 +638,7 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
           siteId: 'forge_site',
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 0,
-          workerCycles: [savedHead],
+          productionCycles: [savedHead],
         },
       ],
     ])
@@ -659,10 +654,10 @@ describe('fixpoint r19 AUT - r18 adjudication batch attack probes', () => {
       {} as MaterialRegistry,
       'mortal',
       settleNowMs,
-      { workerCapacity: 1, offlineSinceMs: settleNowMs - HOUR_MS, rng: () => 0.5 },
+      { offlineSinceMs: settleNowMs - HOUR_MS, rng: () => 0.5 },
     )
 
-    const persisted = states.get('forge_site')!.workerCycles!
+    const persisted = states.get('forge_site')!.productionCycles!
     // The saved head survived pending and was NOT re-stamped - its own
     // client-epoch deadline is preserved verbatim.
     const kept = persisted.find((c) => c.cycleId === 'c-saved')

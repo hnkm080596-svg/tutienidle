@@ -103,8 +103,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -199,9 +198,9 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
     const states = new Map<string, ProductionSiteState>([
       [
         LAM,
-        makeState(LAM, { autoRestart: true, workerCycles: [poison, siblingSaved] }),
+        makeState(LAM, { autoRestart: true, productionCycles: [poison, siblingSaved] }),
       ],
-      [QUANG, makeState(QUANG, { autoRestart: true, workerCycles: [cleanSaved] })],
+      [QUANG, makeState(QUANG, { autoRestart: true, productionCycles: [cleanSaved] })],
     ])
     const { deps, grants } = createDeps(states)
 
@@ -211,23 +210,21 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
       new MaterialRegistry(),
       REALM,
       T0 + 400_000,
-      { workerCapacity: 4, offlineSinceMs: T0 },
+      { offlineSinceMs: T0 },
     )
 
     // Poisoned site: zero-advance - identical refs persist through the
     // seededHeads re-stamp map, in order, including the honest lane.
-    const lamCycles = states.get(LAM)!.workerCycles!
+    const lamCycles = states.get(LAM)!.productionCycles!
     expect(lamCycles).toHaveLength(2)
     expect(lamCycles[0]).toBe(poison)
     expect(lamCycles[1]).toBe(siblingSaved)
     // Sibling site: budget untouched (consumedBudgetMs = 0 upstream) -
-    // it settles its whole window alone: saved lane 4 completions plus
-    // its seed lane 4 = 8 grants, all QUANG.
-    expect(settled).toBe(8)
-    expect(grants).toHaveLength(8)
+    // it settles its single chain through the window: four grants.
+    expect(settled).toBe(4)
+    expect(grants).toHaveLength(4)
     expect(grants.every((g) => g.siteId === QUANG)).toBe(true)
-    expect(states.get(LAM)!.activeWorkerSlots).toBe(2)
-    expect(states.get(QUANG)!.activeWorkerSlots).toBe(2)
+    expect(states.get(QUANG)!.productionCycles).toHaveLength(1)
 
     // Idempotent wedge: a second settle over the same state still trips
     // LAM (the crafted entry persists verbatim) and QUANG has nothing
@@ -238,10 +235,10 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
       new MaterialRegistry(),
       REALM,
       T0 + 400_000,
-      { workerCapacity: 4, offlineSinceMs: T0 },
+      { offlineSinceMs: T0 },
     )
     expect(settled2).toBe(0)
-    expect(states.get(LAM)!.workerCycles![0]).toBe(poison)
+    expect(states.get(LAM)!.productionCycles![0]).toBe(poison)
   })
 
   // --------------------------------------------------------------------
@@ -264,8 +261,7 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
         siteId: LAM,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [crafted],
+        productionCycles: [crafted],
       },
     ]
 
@@ -279,21 +275,20 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
     const system = createSystem()
     const { bag, registry } = createBag()
     system.restoreStates([
-      makeState(LAM, { autoRestart: true, workerCycles: [crafted] }),
+      makeState(LAM, { autoRestart: true, productionCycles: [crafted] }),
     ])
 
     const settled = system.settleOffline(bag, registry, REALM, T0 + 400_000, {
-      workerCapacity: 4,
       offlineSinceMs: T0,
     })
     expect(settled).toBe(0)
     expect(system.drainSettlementEvents()).toHaveLength(0)
-    expect(system.getState(LAM)!.workerCycles).toHaveLength(1)
-    expect(system.getState(LAM)!.workerCycles![0]!.startedAtMs).toBe(-1e16)
+    expect(system.getState(LAM)!.productionCycles).toHaveLength(1)
+    expect(system.getState(LAM)!.productionCycles![0]!.startedAtMs).toBe(-1e16)
 
-    system.tickWorkers(T0 + 500_000, bag, registry, REALM, 4)
-    expect(system.getState(LAM)!.workerCycles).toHaveLength(1)
-    expect(system.getState(LAM)!.workerCycles![0]!.completesAtMs).toBe(-1e16 + 100_000)
+    system.tick(T0 + 500_000, bag, registry, REALM)
+    expect(system.getState(LAM)!.productionCycles).toHaveLength(1)
+    expect(system.getState(LAM)!.productionCycles![0]!.completesAtMs).toBe(-1e16 + 100_000)
     expect(system.drainSettlementEvents()).toHaveLength(0)
   })
 
@@ -302,24 +297,23 @@ describe('fixpoint r21 INT - r20 batch integration probes', () => {
   //    zero-advances one settle; with pending left EMPTY the site has
   //    no persistent wedge - the next honest tick seeds lanes normally.
   // --------------------------------------------------------------------
-  it('seed-arm trip leaves no residue: next honest tickWorkers resumes the site', () => {
+  it('seed-arm trip leaves no residue: next honest tick resumes the site', () => {
     const system = createSystem()
     const { bag, registry } = createBag()
     system.restoreStates([makeState(LAM, { autoRestart: true })])
 
     // Crafted deep-past window start: settle trips, persists nothing.
     const settled = system.settleOffline(bag, registry, REALM, T0 + 400_000, {
-      workerCapacity: 4,
       offlineSinceMs: -1e308,
     })
     expect(settled).toBe(0)
-    expect(system.getState(LAM)!.workerCycles).toHaveLength(0)
+    expect(system.getState(LAM)!.productionCycles).toHaveLength(0)
 
-    // Honest tick: the site seeds both allocated lanes at nowMs - the
+    // Honest tick: the site starts its single cycle at nowMs - the
     // trip was one call, not a poisoned record.
-    system.tickWorkers(T0 + 500_000, bag, registry, REALM, 4)
-    const cycles = system.getState(LAM)!.workerCycles!
-    expect(cycles).toHaveLength(4)
+    system.tick(T0 + 500_000, bag, registry, REALM)
+    const cycles = system.getState(LAM)!.productionCycles!
+    expect(cycles).toHaveLength(1)
     expect(cycles.every((c) => c.startedAtMs === T0 + 500_000)).toBe(true)
     expect(cycles.every((c) => c.completesAtMs === T0 + 500_000 + CYCLE_MS)).toBe(true)
   })

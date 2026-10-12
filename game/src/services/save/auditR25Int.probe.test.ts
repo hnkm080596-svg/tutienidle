@@ -85,9 +85,6 @@ function makeSave(
   if (overrides.autoFarmStage !== undefined) {
     player.autoFarmStage = overrides.autoFarmStage
   }
-  if (overrides.autoWorkerCapacity !== undefined) {
-    player.autoWorkerCapacity = overrides.autoWorkerCapacity
-  }
   const save = buildGameSave(player, manager)
   save.player.lastSavedAt = overrides.lastSavedAt ?? NOW
   if (overrides.productionSites !== undefined) {
@@ -99,17 +96,9 @@ function makeSave(
   if (overrides.quests !== undefined) {
     save.quests = overrides.quests
   }
-  if (overrides.autoWorkerCapacity !== undefined && overrides.autoWorkerCapacity > 0) {
-    // F-W-16: a non-zero persisted capacity requires the chi_hien_quan
-    // building witness in the same payload.
-    save.buildings = [
-      {
-        instanceId: 'r25_chq',
-        buildingId: 'chi_hien_quan',
-        level: 1,
-        lastCollectedAt: 0,
-      },
-    ]
+  if (overrides.autoWorkerCapacity !== undefined) {
+    ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity =
+      overrides.autoWorkerCapacity
   }
   return save
 }
@@ -254,7 +243,7 @@ describe('seam (c) - payload-seeded future stamps self-brick the next write', ()
           siteId: 'thanh_van_lam',
           level: 1,
           autoRestart: true,
-          workerCycles: [
+          productionCycles: [
             {
               cycleId: 'r25_wc1',
               siteId: 'thanh_van_lam',
@@ -289,8 +278,8 @@ describe('seam (c) - payload-seeded future stamps self-brick the next write', ()
     const site = manager.productionSystem
       .getAllStates()
       .find((state) => state.siteId === 'thanh_van_lam')
-    expect(site?.workerCycles?.[0]?.startedAtMs).toBe(NOW)
-    expect(site?.workerCycles?.[0]?.completesAtMs).toBe(NOW + MORTAL_CYCLE_MS)
+    expect(site?.productionCycles?.[0]?.startedAtMs).toBe(NOW)
+    expect(site?.productionCycles?.[0]?.completesAtMs).toBe(NOW + MORTAL_CYCLE_MS)
     expect(manager.tribulationDirector.serializeRuntime()?.cooldownUntil).toBe(
       NOW + 300_000,
     )
@@ -321,7 +310,7 @@ describe('seam (c) - payload-seeded future stamps self-brick the next write', ()
           siteId: 'thanh_van_lam',
           level: 1,
           autoRestart: true,
-          workerCycles: [
+          productionCycles: [
             {
               cycleId: 'r25_wc_gate',
               siteId: 'thanh_van_lam',
@@ -411,7 +400,7 @@ describe('seam (d) - forward-skew settle split: paid span wide, stamps clamped',
     const site = manager.productionSystem
       .getAllStates()
       .find((state) => state.siteId === 'thanh_van_lam')
-    const heads = site?.workerCycles ?? []
+    const heads = site?.productionCycles ?? []
     expect(heads.length).toBeGreaterThan(0)
     for (const cycle of heads) {
       expect(cycle.startedAtMs).toBeLessThanOrEqual(NOW)
@@ -425,19 +414,17 @@ describe('seam (d) - forward-skew settle split: paid span wide, stamps clamped',
     // approved span. Mortal cycle = 100s: one extra tick at NOW+101s
     // turns the pending heads over.
     const beforeIds = heads.map((cycle) => cycle.cycleId)
-    manager.productionSystem.tickWorkers(
+    manager.productionSystem.tick(
       NOW + 101_000,
       manager.materialBag,
       manager.materialRegistry,
       'mortal',
-      3,
-      undefined,
       () => 0.5,
     )
     const afterIds = manager.productionSystem
       .getAllStates()
       .find((state) => state.siteId === 'thanh_van_lam')
-      ?.workerCycles?.map((cycle) => cycle.cycleId) ?? []
+      ?.productionCycles?.map((cycle) => cycle.cycleId) ?? []
     expect(afterIds).not.toEqual(beforeIds)
   })
 })
@@ -668,3 +655,4 @@ describe('round-trip - degrade -> save -> honest re-restore', () => {
     }
   })
 })
+

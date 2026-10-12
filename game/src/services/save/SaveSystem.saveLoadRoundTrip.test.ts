@@ -150,35 +150,27 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     }
   })
 
-  it('R7 (AR-08): decompose state survives save/load without double-settling', () => {
+  it('legacy Decompose worker/timer data stays inert across save/load', () => {
     vi.spyOn(Date, 'now').mockReturnValue(1_725_160_000_000)
 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
-    // F-W-16: capacity derives from the CHQ instance - level 1 -> 3.
-    gameManager.buildingManager.add({
-      instanceId: 'b-chq',
-      buildingId: 'chi_hien_quan',
-      // F-SCOPE-3: level 2 needs realm tier 2 (qi_refining) - the
-      // default mortal player only carries level 1 (capacity 3).
-      level: 1,
-      lastCollectedAt: Date.now(),
+    gameManager.decomposeSystem.restore({
+      settings: { gradeFilter: 'tien_pham', ageFilter: 'myriad_year', workers: 3 },
+      nextCycleAt: Date.now() + 30_000,
+      started: true,
     })
-    gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)
-
-    gameManager.decomposeSystem.updateCapacity(3)
-    gameManager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
-    gameManager.decomposeSystem.tick(Date.now()) // start the cycle timer
 
     primeMortalCreationPick(player, gameManager.skillManager)
 
     const save = buildGameSave(player, gameManager)
     const decomposeSnapshot = structuredClone(save.decompose)
 
-    // Mutating the live system after buildGameSave must not leak into
-    // the built save (same reason quests uses structuredClone).
-    gameManager.decomposeSystem.setSetting({ workers: 1 })
-    expect(save.decompose).toEqual(decomposeSnapshot)
+    expect(decomposeSnapshot).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
 
     const writeResult = writeGameSave(save)
     expect(writeResult).toEqual({ status: 'ok' })
@@ -190,71 +182,64 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     }
     expect(outcome.save.decompose).toEqual(decomposeSnapshot)
 
-    // Restore into a FRESH manager: settings + timer come back; the
-    // saved CHQ instance restores with the save (F-W-16 - capacity is
-    // derived, never trusted from the player slice), so workers land
-    // inside the restored capacity. Settling the same instant awards
-    // nothing new.
+    // Restore into a FRESH manager: historical automation does not resume.
     const fresh = createBootedGameManager()
     const freshPlayer = createDefaultPlayer()
     fresh.setActivePlayer(freshPlayer)
     const restoredModifiers = fresh.saveOps.restoreFromSave(outcome.save as ReturnType<typeof buildGameSave>)
     expect(Array.isArray(restoredModifiers)).toBe(true)
-    expect(freshPlayer.autoWorkerCapacity).toBe(3)
-    expect(fresh.decomposeSystem.getSettings()).toEqual({
-      gradeFilter: 'all',
-      ageFilter: 'decade',
-      workers: 3,
-    })
-
-    // No offline window elapsed (same mocked instant) - no double award.
-    expect(fresh.decomposeSystem.drainOutput()).toEqual([])
+    expect(fresh.decomposeSystem.getSaveState()).toEqual(decomposeSnapshot)
   })
 
-  it('Mission A2: assignedWorkers survives save -> load -> restore', () => {
-    vi.spyOn(Date, 'now').mockReturnValue(1_725_160_000_000)
+  it('production cycles round-trip under a neutral save field and restore idempotently', () => {
+    const nowMs = 1_725_160_000_000
+    vi.spyOn(Date, 'now').mockReturnValue(nowMs)
 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
-    // F-W-16: capacity derives from the CHQ instance - level 1 -> 3.
-    gameManager.buildingManager.add({
-      instanceId: 'b-chq',
-      buildingId: 'chi_hien_quan',
-      // F-SCOPE-3: level 2 needs realm tier 2 (qi_refining) - the
-      // default mortal player only carries level 1 (capacity 3).
-      level: 1,
-      lastCollectedAt: Date.now(),
-    })
-    gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)
     gameManager.setActivePlayer(player)
 
     const siteId = gameManager.productionSystem.getSiteDefinitions()[0]!.siteId
-    gameManager.productionSystem.ensureSiteState(siteId)
-    gameManager.buildingOps.assignWorkers(siteId, 2)
+    gameManager.productionSystem.restoreStates([{
+      siteId,
+      level: 1,
+      autoRestart: false,
+      productionCycles: [{
+        cycleId: 'round-trip-cycle',
+        siteId,
+        collectionRealmId: 'mortal',
+        siteLevelAtStart: 1,
+        rewardTableVersion: 1,
+        rollSeed: 0x12345678,
+        startedAtMs: nowMs,
+        completesAtMs: nowMs + 100_000,
+      }],
+    }], nowMs)
 
     primeMortalCreationPick(player, gameManager.skillManager)
-
     const save = buildGameSave(player, gameManager)
+    const savedSite = save.productionSites?.find((state) => state.siteId === siteId)
 
-    // The serializer must not drop the declared field.
-    expect(
-      save.productionSites?.find((state) => state.siteId === siteId)?.assignedWorkers,
-    ).toBe(2)
-
-    const writeResult = writeGameSave(save)
-    expect(writeResult).toEqual({ status: 'ok' })
+    expect(savedSite?.productionCycles?.[0]?.rollSeed).toBe(0x12345678)
+    expect(savedSite).not.toHaveProperty('workerCycles')
+    expect(savedSite).not.toHaveProperty('assignedWorkers')
+    expect(save.player).not.toHaveProperty('autoWorkerCapacity')
+    expect(writeGameSave(save)).toEqual({ status: 'ok' })
 
     const outcome = loadGame()
     expect(outcome.status).toBe('ok')
-    if (outcome.status !== 'ok') {
-      return
-    }
+    if (outcome.status !== 'ok') return
 
     const fresh = createBootedGameManager()
     const freshPlayer = createDefaultPlayer()
     fresh.setActivePlayer(freshPlayer)
-    fresh.saveOps.restoreFromSave(outcome.save)
+    const typedSave = outcome.save as ReturnType<typeof buildGameSave>
+    fresh.saveOps.restoreFromSave(typedSave)
+    const firstRestore = fresh.productionSystem.getState(siteId)?.productionCycles
+    fresh.saveOps.restoreFromSave(typedSave)
 
-    expect(fresh.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
+    expect(firstRestore?.map((cycle) => cycle.rollSeed)).toEqual([0x12345678])
+    expect(fresh.productionSystem.getState(siteId)?.productionCycles?.map((cycle) => cycle.rollSeed))
+      .toEqual([0x12345678])
   })
 })

@@ -7,12 +7,12 @@
  *
  *   sec.11 equipment - wash/refine (live since 2026-10-09) reach real
  *                      validation instead of the scope gate; decompose
- *                      freezes at every public seam while persisted
- *                      settings round-trip;
+ *                      accepts legacy timer data as inert while instant
+ *                      conversion remains fail-closed;
  *   sec.12 alchemy   - dormant families cannot startJob or preview; the
  *                      canonical read-model only carries beta families;
- *   sec.13 workforce - manual assignment is off; the Worker Lodge
- *                      read-model resolves tab verdicts itself;
+ *   sec.13 production - each site advances its own cycle; Chiêu Hiền Quán
+ *                      remains an art-only Architecture card;
  *   sec.14 domains   - companion/formation/artifact acquisition and
  *                      mutation seams are closed; the hidden-beast kill
  *                      counter freezes (no hidden_window_opened cue);
@@ -25,6 +25,9 @@
  */
 import { describe, expect, it } from 'vitest'
 import { GameManager } from '@/core/game/GameManager'
+import { getArchitectureBuildingModels } from '@/core/game/ArchitectureReadModel'
+import { buildings } from '@/data/building/buildings'
+import { materials } from '@/data/materials/materials'
 import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { isArtifactDomainUnlocked } from '@/core/artifact/ArtifactProgression'
@@ -49,7 +52,6 @@ import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import {
   BETA_ENABLED_RECIPE_FAMILIES,
   BETA_EQUIPMENT_TABS,
-  BETA_WORKER_LODGE_TABS,
   betaRecipeFamilyOfId,
   isBetaEnemyId,
   isBetaQuestEnabled,
@@ -173,27 +175,23 @@ describe('sec.11 equipment hall - wash/refine live, ore-decompose fails closed a
     expect(result.reason).not.toBe('scope_hidden')
   })
 
-  it('ore decompose freezes at every seam while raw settings persist', () => {
+  it('legacy decompose timers normalize inertly and instant exchange fails closed under beta', () => {
     const gm = new GameManager()
-    gm.decomposeSystem.updateCapacity(5)
-
-    // A stale save restoring workers must round-trip verbatim even
-    // though consumers see the domain as emptied.
+    gm.catalogOps.registerMaterials(materials)
+    gm.materialBag.add(gm.materialRegistry.get('mortal_ore_decade'), 10)
     gm.decomposeSystem.restore({
       settings: { workers: 3, gradeFilter: 'all', ageFilter: 'all' },
       nextCycleAt: 0,
       started: true,
     })
-    expect(gm.decomposeSystem.getSaveState().settings.workers).toBe(3)
-    expect(gm.decomposeSystem.getSettings().workers).toBe(0)
-
-    // setSetting is a no-op under the gate; the saved shape stays put.
-    gm.decomposeSystem.setSetting({ workers: 4 })
-    expect(gm.decomposeSystem.getSaveState().settings.workers).toBe(3)
-    expect(gm.decomposeSystem.getSettings().workers).toBe(0)
-
-    expect(gm.decomposeSystem.listMatchingOres()).toEqual([])
-    expect(gm.decomposeSystem.settleOffline(1_000_000, 60_000)).toBe(0)
+    expect(gm.decomposeSystem.getSaveState()).toEqual({
+      settings: { workers: 0, gradeFilter: 'all', ageFilter: 'all' },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(gm.decomposeSystem.previewDecomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
+    expect(gm.decomposeSystem.decomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
+    expect(gm.materialBag.getAmount('mortal_ore_decade')).toBe(10)
   })
 })
 
@@ -284,30 +282,31 @@ describe('sec.12 alchemy - dormant families stay unreachable and off the read-mo
 })
 
 describe('sec.13 workforce - automatic allocation is the only beta path', () => {
-  it('manual worker assignment fails closed at the domain level', () => {
+  it('production sites progress independently and expose no workforce assignment API', () => {
     const gm = new GameManager()
-    expect(gm.productionSystem.setWorkerAssignment('thanh_van_lam', 2, 5)).toBe(false)
-    expect(gm.productionSystem.setWorkerAssignment('thanh_van_lam', undefined, 5)).toBe(false)
+    gm.catalogOps.registerBuildings(buildings)
+    gm.catalogOps.registerMaterials(materials)
+    gm.setActivePlayer(foundationPlayer())
+    const defs = gm.productionSystem.getSiteDefinitions()
+    for (const def of defs) gm.buildingOps.setProductionAutoRestart(def.siteId, true)
+    gm.tickOps.update(1)
+    for (const def of defs) {
+      expect(gm.productionSystem.getState(def.siteId)?.productionCycles).toHaveLength(1)
+      expect(gm.productionSystem.getState(def.siteId)).not.toHaveProperty('assignedWorkers')
+    }
+    expect('assignWorkers' in gm.buildingOps).toBe(false)
+    expect('setWorkerAssignment' in gm.productionSystem).toBe(false)
   })
 
-  it('worker lodge read-model resolves EVERY tab scope-hidden (final hide-completely policy)', () => {
+  it('Chiêu Hiền Quán remains an art-only Architecture card', () => {
     const gm = new GameManager()
-    const surface = gm.buildingOps.getWorkerLodgeSurfaceModel(foundationPlayer())
-
-    expect(surface.tabs.map((tab) => tab.id)).toEqual([...BETA_WORKER_LODGE_TABS])
-
-    // FINAL POLICY (sec.4C): the whole Worker Lodge surface is out of
-    // beta scope - nhan_cong is bound to manualWorkforce like the
-    // building surface/wheel/left-panel mode; companion tabs resolve
-    // scope-hidden as before. Automatic production keeps running with
-    // no UI.
-    const workforce = surface.tabs.find((tab) => tab.id === 'nhan_cong')
-    expect(workforce?.verdict).toBe('scope-hidden')
-    expect(workforce?.manualAssignOffered).toBe(false)
-
-    for (const tab of surface.tabs) {
-      expect(tab.verdict).toBe('scope-hidden')
-    }
+    gm.catalogOps.registerBuildings(buildings)
+    const card = getArchitectureBuildingModels(gm, foundationPlayer())
+      .find((building) => building.id === 'chi_hien_quan')
+    expect(card?.artOnly).toBe(true)
+    expect(card?.maxed).toBe(true)
+    expect(card?.canUpgrade).toBe(false)
+    expect(card?.costs).toEqual([])
   })
 })
 

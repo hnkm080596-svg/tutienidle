@@ -144,7 +144,7 @@ describe('betaScopeSurface - navigation allow-lists', () => {
     }
   })
 
-  it('isBetaLeftPanelMode hides only worker_lodge', () => {
+  it('isBetaLeftPanelMode admits current panels and rejects vendor/retired worker lodge', () => {
     for (const mode of [
       'character',
       'inventory',
@@ -154,10 +154,10 @@ describe('betaScopeSurface - navigation allow-lists', () => {
       'pill_room',
       'scripture_pavilion',
       'stage_select',
-      'vendor',
     ]) {
       expect(isBetaLeftPanelMode(mode), `expected ${mode}`).toBe(true)
     }
+    expect(isBetaLeftPanelMode('vendor')).toBe(false)
     expect(isBetaLeftPanelMode('worker_lodge')).toBe(false)
     expect(isBetaLeftPanelMode('made_up_mode')).toBe(false)
   })

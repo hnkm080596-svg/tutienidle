@@ -53,9 +53,6 @@ export interface PlayerData {
   // next tier on breakthrough. Owned by CultivationSystem.
   cultivationOvercharge: number
 
-  /** Pool nhan cong tu dong dung chung cho moi ProductionSite. */
-  autoWorkerCapacity: number
-
   baseStats: BaseStats
 
   // Modifier "tinh", gan truc tiep voi nhan vat: equipment, talent,
@@ -397,7 +394,6 @@ export function createDefaultPlayer(): PlayerData {
 
     cultivation: 0,
     cultivationPerSecond: 10,
-    autoWorkerCapacity: 0,
 
     baseStats: createBaseStats(),
     modifiers: [],

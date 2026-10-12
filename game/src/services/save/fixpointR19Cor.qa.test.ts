@@ -115,8 +115,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -322,7 +321,7 @@ describe('fixpoint r19 COR - r18 adjudication batch repros', () => {
     vi.mocked(Date.now).mockReturnValue(1_000_000)
     const state = makeState('thanh_van_lam', {
       autoRestart: true,
-      workerCycles: [makeCycle('thanh_van_lam', 350_000, 450_000)],
+      productionCycles: [makeCycle('thanh_van_lam', 350_000, 450_000)],
     })
     const deps = createDeps(new Map([[state.siteId, state]]))
 
@@ -332,18 +331,15 @@ describe('fixpoint r19 COR - r18 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       800_000,
-      { workerCapacity: 2, offlineSinceMs: 400_000, rng: () => 0.5 },
+      { offlineSinceMs: 400_000, rng: () => 0.5 },
     )
 
-    expect(settled).toBe(8) // 4 saved-chain + 4 seeded dues
-    const cycles = state.workerCycles ?? []
-    expect(cycles).toHaveLength(2)
+    expect(settled).toBe(4) // one saved-chain cycle clock
+    const cycles = state.productionCycles ?? []
+    expect(cycles).toHaveLength(1)
     const savedChain = cycles.find((c) => c.startedAtMs === 750_000)
-    const seeded = cycles.find((c) => c.startedAtMs === 1_000_000)
     expect(savedChain).toBeDefined()
     expect(savedChain!.completesAtMs).toBe(850_000) // unshifted
-    expect(seeded).toBeDefined()
-    expect(seeded!.completesAtMs).toBe(1_100_000) // 900k + 200k shift
   })
 
   // --------------------------------------------------------------------

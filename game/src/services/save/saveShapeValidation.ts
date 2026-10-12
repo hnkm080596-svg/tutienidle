@@ -18,7 +18,7 @@ import {
 } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { getRealmIdForProfessionGrade, isProfessionGrade } from '../../core/profession/ProfessionGrade'
-import { isHerbAge } from '../../core/production/ProductionTypes'
+import { isHerbAge, MAX_PERSISTED_PRODUCTION_CYCLES_PER_SITE } from '../../core/production/ProductionTypes'
 import { isAuthoredRealmId, producibleEquippedGrades } from '../../core/equipment/canUseItem'
 import { createBaseStats } from '../../core/stats/StatBlock'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
@@ -103,7 +103,6 @@ import { affixes } from '../../data/equipment/affixes'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { buildings } from '../../data/building/buildings'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
-import { scopeHiddenPillFamilyOfId } from '../../core/betaScope'
 import {
   BASE_CULTIVATION_PER_SECOND,
   getGlobalCultivationLevel,
@@ -119,6 +118,7 @@ import {
   progressionCeilingRealmId,
 } from '../../core/realm/ReleasePolicy'
 import { isBetaStandalonePanel } from '../../core/betaScopeSurface'
+import { scopeHiddenPillFamilyOfId } from '../../core/betaScope'
 import {
   SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
   SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
@@ -130,7 +130,6 @@ import {
   getInsightPerCultivation,
   hasCultivationOverflowBank,
 } from '../../core/talent/TalentEffects'
-import { betaEffectiveWorkerCapacity } from '../../core/production/WorkerCapacity'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
@@ -1084,18 +1083,14 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNorma
   }
 
   requireBoolean(player, 'hasSeenTutorial', 'player', issues)
-  requireNonNegativeNumber(player, 'autoWorkerCapacity', 'player', issues)
-  // F-R22-03: capacity feeds WorkerLaneAdvance slots, whose mechanism
-  // guard pins 0..65536 - a larger persisted value re-trips the r21
-  // per-site freeze the moment a scope-hidden feature consumes it.
-  if (
-    isNonNegativeFiniteNumber(player.autoWorkerCapacity) &&
-    (player.autoWorkerCapacity as number) > 65_536
-  ) {
-    issues.push({
-      path: 'player.autoWorkerCapacity',
-      message: 'vượt trần slot cơ chế 65536',
-    })
+  // Legacy-only save metadata: accepted for compatibility but never
+  // restored as production authority or emitted by new saves.
+  if (player.autoWorkerCapacity !== undefined) {
+    if (!isNonNegativeFiniteNumber(player.autoWorkerCapacity)) {
+      issues.push({ path: 'player.autoWorkerCapacity', message: 'phải là number hữu hạn >= 0' })
+    } else if (player.autoWorkerCapacity > 65_536) {
+      issues.push({ path: 'player.autoWorkerCapacity', message: 'vượt trần legacy 65536' })
+    }
   }
   requireNonNegativeNumber(player, 'totalCultivationGained', 'player', issues)
   requireNonNegativeNumber(player, 'bossKillCount', 'player', issues)
@@ -3433,7 +3428,7 @@ function validateBuildingsSave(
         seenSingleInstanceBuildingIds.add(entry.buildingId)
       }
     }
-    if (template !== undefined && (entry.level as number) > template.maxLevel) {
+    if (template !== undefined && (entry.level as number) > (entry.buildingId === 'chi_hien_quan' ? 9 : template.maxLevel)) {
       issues.push({
         path: `${entryPath}.level`,
         message: `level vượt maxLevel authored (${template.maxLevel})`,
@@ -3444,7 +3439,11 @@ function validateBuildingsSave(
     // realm tier (getRealmTier(currentRealmId) < level + 1) - a
     // persisted level beyond the tier of the claimed realm is
     // unproducible.
-    if (claimedRealmTier !== undefined && (entry.level as number) > claimedRealmTier) {
+    if (
+      entry.buildingId !== 'chi_hien_quan' &&
+      claimedRealmTier !== undefined &&
+      (entry.level as number) > claimedRealmTier
+    ) {
       issues.push({
         path: `${entryPath}.level`,
         message: `level vượt realm tier người chơi (${claimedRealmTier})`,
@@ -3593,7 +3592,6 @@ function validateProductionSitesSave(
   playerRealmIndex?: number,
   playerLastSavedAt?: number,
   claimedRealmTier?: number,
-  claimedWorkerCapacity?: number,
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -3633,6 +3631,8 @@ function validateProductionSitesSave(
       })
     }
 
+    // Legacy-only save metadata remains shape-checked but has no live
+    // assignment effect and is omitted from all new state snapshots.
     if (
       entry.assignedWorkers !== undefined &&
       (!Number.isInteger(entry.assignedWorkers) || (entry.assignedWorkers as number) < 0)
@@ -3650,56 +3650,42 @@ function validateProductionSitesSave(
       )
     }
 
-    // Mission D (spec D3): `activeCycle` was removed from the state
-    // shape (workers-as-fuel; workerCycles is the only cycle kind).
-    // A stale `activeCycle` key in an old-shaped payload is tolerated
-    // here and whitelisted out at restoreStates - it is NOT validated or
-    // rejected (dev phase, no migration).
-
-    if (entry.workerCycles !== undefined) {
-      if (!Array.isArray(entry.workerCycles)) {
-        issues.push({ path: `${entryPath}.workerCycles`, message: 'phải là array' })
+    // `workerCycles` is accepted only as the legacy save field. New saves
+    // write worker-neutral `productionCycles`; all carried records remain
+    // individually validated so their reward seeds and progress survive.
+    const cycles = entry.productionCycles ?? entry.workerCycles
+    const cycleField = entry.productionCycles !== undefined ? 'productionCycles' : 'workerCycles'
+    if (cycles !== undefined) {
+      if (!Array.isArray(cycles)) {
+        issues.push({ path: `${entryPath}.${cycleField}`, message: 'phải là array' })
       } else {
-        // F-WC-LANES (rebounds F-A11-4): lane count can never exceed the
-        // producible worker pool. While manualWorkforce is scope-hidden
-        // every capacity consumer reads the flat auto pool via
-        // betaEffectiveWorkerCapacity (BETA_BASELINE_WORKER_CAPACITY =
-        // one lane per Thanh Van site) - the authored chi_hien_quan
-        // ceiling is unreachable, so a site holding more in-flight lanes
-        // than the effective pool mints free settles.
-        const maxLanes = betaEffectiveWorkerCapacity(claimedWorkerCapacity ?? 0)
-
-        if (entry.workerCycles.length > maxLanes) {
-          issues.push({
-            path: `${entryPath}.workerCycles`,
-            message: `vượt authored lane ceiling (${maxLanes})`,
-          })
+        if (cycles.length > MAX_PERSISTED_PRODUCTION_CYCLES_PER_SITE) {
+          issues.push({ path: `${entryPath}.${cycleField}`, message: 'vượt giới hạn chu kỳ legacy hợp lệ (3)' })
         }
-
-        for (let j = 0; j < entry.workerCycles.length; j += 1) {
+        for (let j = 0; j < Math.min(cycles.length, MAX_PERSISTED_PRODUCTION_CYCLES_PER_SITE); j += 1) {
           validateProductionCycleSave(
-            entry.workerCycles[j],
-            `${entryPath}.workerCycles[${j}]`,
+            cycles[j],
+            `${entryPath}.${cycleField}[${j}]`,
             issues,
             playerRealmIndex,
             siteDefinition?.maxLevel,
             playerLastSavedAt,
             entry.level as number,
           )
-
           if (
-            isObject(entry.workerCycles[j]) &&
-            (entry.workerCycles[j] as Record<string, unknown>).siteId !== undefined &&
-            (entry.workerCycles[j] as Record<string, unknown>).siteId !== entry.siteId
+            isObject(cycles[j]) &&
+            (cycles[j] as Record<string, unknown>).siteId !== undefined &&
+            (cycles[j] as Record<string, unknown>).siteId !== entry.siteId
           ) {
             issues.push({
-              path: `${entryPath}.workerCycles[${j}].siteId`,
+              path: `${entryPath}.${cycleField}[${j}].siteId`,
               message: 'phải khớp siteId của site cha',
             })
           }
         }
       }
     }
+
   }
 }
 
@@ -3716,6 +3702,8 @@ function validateAlchemyJobsSave(
   // two persisted jobs sharing one id can only be a replayed record -
   // settle would deliver the same pill twice for one burned input set.
   const seenJobIds = new Set<string>()
+  let previousVisibleCompletion: number | undefined
+  let firstVisible = true
 
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -3808,13 +3796,41 @@ function validateAlchemyJobsSave(
       }
     }
 
-    // F-A12-4 (sibling): a job started after the save timestamp could
-    // not have been persisted by a legal path.
-    if (playerLastSavedAt !== undefined && (entry.startedAtMs as number) > playerLastSavedAt) {
-      issues.push({
-        path: `${entryPath}.startedAtMs`,
-        message: 'startedAtMs vượt lastSavedAt (job bắt đầu sau save là bất khả thi)',
-      })
+    const visible = scopeHiddenPillFamilyOfId(entry.recipeId as string) === null
+    if (visible) {
+      // The active visible job began before this snapshot. Waiting starts
+      // may be future-dated because their reservation already occupies a
+      // FIFO slot; only the active head is bounded by lastSavedAt.
+      if (
+        firstVisible &&
+        playerLastSavedAt !== undefined &&
+        (entry.startedAtMs as number) > playerLastSavedAt
+      ) {
+        issues.push({
+          path: `${entryPath}.startedAtMs`,
+          message: 'active job bắt đầu sau lastSavedAt là bất khả thi',
+        })
+      }
+
+      if (previousVisibleCompletion !== undefined) {
+        const overlapsPrevious = (entry.startedAtMs as number) < previousVisibleCompletion
+        const isFutureQueuedStart =
+          playerLastSavedAt !== undefined && (entry.startedAtMs as number) > playerLastSavedAt
+        // Old parallel jobs all began before the save marker and remain
+        // valid migration input. A future-dated waiting job is unambiguously
+        // a new FIFO record and must start after its predecessor.
+        if (overlapsPrevious && isFutureQueuedStart) {
+          issues.push({
+            path: `${entryPath}.startedAtMs`,
+            message: 'waiting job phải bắt đầu sau prior visible completion',
+          })
+        }
+      }
+      previousVisibleCompletion = Math.max(
+        previousVisibleCompletion ?? 0,
+        entry.completesAtMs as number,
+      )
+      firstVisible = false
     }
 
     // F-ALCH-JOB-FORGE: a persisted job must carry the reservation
@@ -4492,23 +4508,8 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
     }
   }
 
-  // F-W-16 (v82): restore recomputes autoWorkerCapacity from the chi_hien_quan
-  // instance, so a persisted non-zero capacity without that building is
-  // always corrupt - fail loud instead of silently clamping on restore.
-  if (
-    isObject(parsed.player) &&
-    isNonNegativeFiniteNumber(parsed.player.autoWorkerCapacity) &&
-    (parsed.player.autoWorkerCapacity as number) > 0 &&
-    Array.isArray(buildings) &&
-    !buildings.some(
-      (entry) => isObject(entry) && entry.buildingId === 'chi_hien_quan',
-    )
-  ) {
-    issues.push({
-      path: 'player.autoWorkerCapacity',
-      message: '> 0 yêu cầu tồn tại instance chi_hien_quan trong buildings',
-    })
-  }
+  // Legacy worker metadata is bounded above but inert. It no longer
+  // requires the art-only Chi Hien Quan building.
 
   const equipmentSlots = requireArray(parsed, 'equipmentSlots', '', issues)
 
@@ -4537,9 +4538,6 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
         ? (parsed.player.lastSavedAt as number)
         : undefined,
       claimedRealmTier,
-      isObject(parsed.player) && isNonNegativeFiniteNumber(parsed.player.autoWorkerCapacity)
-        ? (parsed.player.autoWorkerCapacity as number)
-        : undefined,
     )
   }
 
@@ -4557,21 +4555,21 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
         )
       : 0
 
-    // F-A11-5: the authored slot ladder grants +1 concurrent job at
-    // pill_room levels 3/6/9 on top of the base slot - a job count the
-    // persisted level cannot host is a forged settle window.
-    const maxJobs =
-      pillRoomLevel <= 0
-        ? 0
-        : 1 +
-          (pillRoomLevel >= 3 ? 1 : 0) +
-          (pillRoomLevel >= 6 ? 1 : 0) +
-          (pillRoomLevel >= 9 ? 1 : 0)
+    // The fixed active kiln plus three FIFO waiting slots per room
+    // level bounds visible reserved jobs. Scope-hidden rows are retained
+    // and validated but do not consume the player's queue capacity.
+    const maxJobs = pillRoomLevel <= 0 ? 0 : 1 + 3 * pillRoomLevel
+    const visibleJobCount = alchemyJobs.filter(
+      (entry) =>
+        isObject(entry) &&
+        typeof entry.recipeId === 'string' &&
+        scopeHiddenPillFamilyOfId(entry.recipeId) === null,
+    ).length
 
-    if (alchemyJobs.length > maxJobs) {
+    if (visibleJobCount > maxJobs) {
       issues.push({
         path: 'alchemyJobs',
-        message: `vượt concurrent slot authored (${maxJobs})`,
+        message: `vượt FIFO slot authored (${maxJobs})`,
       })
     }
 
@@ -4592,11 +4590,8 @@ function validateGameSaveShapeChecked(parsed: unknown): ShapeValidationResult {
     validateQuestSave(parsed.quests, '.quests', issues)
   }
 
-  // R7 (AR-08) - decompose slice is optional; when present it must be
-  // an object with a non-negative finite workers number (restore
-  // re-clamps; malformed input is rejected instead of crashing boot).
-  // Mission A1 extends it: nextCycleAt/started plus enum membership for
-  // the two filters (a bad deadline is a per-tick runaway).
+  // The old slice remains shape-validated for save compatibility, but its
+  // worker settings and deadline no longer authorize live processing.
   if (parsed.decompose !== undefined) {
     if (!isObject(parsed.decompose)) {
       issues.push({ path: '.decompose', message: 'phải là object hoặc vắng mặt' })

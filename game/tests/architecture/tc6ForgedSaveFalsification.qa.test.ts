@@ -660,7 +660,7 @@ describe('TC6-C hostile slices', () => {
     expect(classify(save).acceptable).toBe(false)
   })
 
-  it('C4 - forged workerCycles: collectionRealmId above player realm rejected at shape', () => {
+  it('C4 - forged production cycle: collectionRealmId above player realm rejected at shape', () => {
     const { save } = committedSave(
       'qi_refining',
       {},
@@ -670,7 +670,7 @@ describe('TC6-C hostile slices', () => {
             siteId: 'thanh_van_grotto',
             level: 1,
             autoRestart: true,
-            workerCycles: [
+            productionCycles: [
               {
                 cycleId: 'c1',
                 siteId: 'thanh_van_grotto',
@@ -689,7 +689,7 @@ describe('TC6-C hostile slices', () => {
     expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok).toBe(false)
   })
 
-  it('C5 - forged decompose settings (workers 3, started) restore inert under scope-hidden', () => {
+  it('C5 - forged decompose settings normalize to an inert legacy save state', () => {
     const { save } = committedSave(
       'qi_refining',
       {},
@@ -703,9 +703,13 @@ describe('TC6-C hostile slices', () => {
     )
     const { manager, result } = boot(save)
     expect(result.status).toBe('ok')
-    // Engine reports 0 claimed workers under scope-hidden: the forged
-    // slice cannot steal the shared pool or mint materials.
-    expect(manager.decomposeSystem.getSettings().workers).toBe(0)
+    // The legacy timer is accepted for compatibility but cannot reactivate
+    // a worker loop or produce a resource.
+    expect(manager.decomposeSystem.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
   })
 
   it('C6 - pill-source timed effect admits ONLY manaRegenPerTurn modifiers', () => {

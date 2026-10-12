@@ -264,16 +264,9 @@ function assertScopeSanity(label: string): void {
     'wash',
   ])
 
-  // Worker Lodge FINAL POLICY: every authored tab scope-hidden,
-  // nhan_cong included - manual workforce has no UI.
-  const lodge = gm.buildingOps.getWorkerLodgeSurfaceModel(player)
-  expect(lodge.tabs.length, `${label}: worker lodge tab census`).toBeGreaterThan(0)
-  for (const tab of lodge.tabs) {
-    expect(tab.verdict, `${label}: worker lodge tab ${tab.id}`).toBe('scope-hidden')
-    if (tab.id === 'nhan_cong') {
-      expect(tab.manualAssignOffered, `${label}: nhan_cong manual assign`).not.toBe(true)
-    }
-  }
+  // The worker lodge is retained only as art; no workforce read model exists.
+  expect(gm.buildingOps).not.toHaveProperty('getWorkerLodgeSurfaceModel')
+  expect(gm.buildingOps).not.toHaveProperty('assignWorkers')
 
   // Quests: once-cadence only; no daily cadence exists in beta.
   for (const quest of gm.questOps.getBetaQuestSurfaceModels()) {

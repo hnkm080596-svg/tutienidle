@@ -12,12 +12,10 @@ import { EquipmentSystem } from '../equipment/EquipmentSystem'
 import { EquipmentSlotManager } from '../equipment/EquipmentSlotManager'
 import { AffixRegistry } from '../equipment/AffixRegistry'
 import { BuildingManager } from '../building/BuildingManager'
-import type { BuildingInstance } from '../building/BuildingInstance'
 import { BuildingRegistry } from '../building/BuildingRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
-import type { ProductionSiteState } from '../production/ProductionTypes'
-import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import type { ProductionSiteStateInput } from '../production/ProductionTypes'
 import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
@@ -62,8 +60,6 @@ export interface GameManagerSaveRestoreDeps {
   getActivePlayer: () => PlayerData | undefined
   // Hai hook duoi thuoc BUILDING section (da tach o task 3) - restore chi
   // goi lai chung, khong so huu logic, nen nhan qua closure.
-  refreshAutoWorkerCapacity: (player: PlayerData, instance: BuildingInstance) => void
-  getWorkerAssignments: () => Map<string, number>
   // Auto-farm Task 5 (2026-09-04) - offline catch-up closure (logic song
   // tren GameManager, SaveRestore chi goi lai - cung pattern tren).
   settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
@@ -334,20 +330,13 @@ export class GameManagerSaveRestore {
       this.deps.affixRegistry,
     )
 
-    this.deps.buildingManager.restore(save.buildings)
-
-    // Chi Hien Quan (chi-hien-quan spec) - re-apply worker capacity tu
-    // instance CHQ trong save (autoWorkerCapacity trong save co the stale
-    // - cong thuc la source of truth, khong tin field da luu).
-    const chqPlayer = this.deps.getActivePlayer()
-
-    if (chqPlayer) {
-      const chiHienQuan = this.deps.buildingManager.getByBuildingId('chi_hien_quan')
-
-      if (chiHienQuan) {
-        this.deps.refreshAutoWorkerCapacity(chqPlayer, chiHienQuan)
-      }
-    }
+    // Chi Hien Quan is retained as art-only. Normalize historical levels
+    // without rejecting saves created before its upgrade path was retired.
+    this.deps.buildingManager.restore(
+      save.buildings.map((building) =>
+        building.buildingId === 'chi_hien_quan' ? { ...building, level: 1 } : building,
+      ),
+    )
 
     const authorityNowMs = restoreAuthorityNowMs(authority, liveNowMs)
 
@@ -361,7 +350,7 @@ export class GameManagerSaveRestore {
     // valid but corrupt-LOW authority (e.g. seconds-for-millis
     // serverTimeUtc) must only deny accrual, never re-anchor honest
     // stamps downward into instant-completion grants. Feeds the
-    // deadline-channel clamps below (workerCycles, decompose,
+    // deadline-channel clamps below (productionCycles, decompose,
     // alchemyJobs, tribulation).
     const restoreClockMs = Math.min(
       Number.isFinite(save.player.lastSavedAt) ? save.player.lastSavedAt : liveNowMs,
@@ -384,7 +373,7 @@ export class GameManagerSaveRestore {
     // Production (plan S4.3) - restore state + offline settle tuan tu
     // trong cap; MOI auto-cycle mot seed/roll rieng.
     this.deps.productionSystem.restoreStates(
-      (save.productionSites ?? []) as ProductionSiteState[],
+      (save.productionSites ?? []) as ProductionSiteStateInput[],
       restoreClockMs,
     )
 
@@ -394,12 +383,6 @@ export class GameManagerSaveRestore {
 
     const offlinePlayer = this.deps.getActivePlayer()
 
-    // R7 (AR-08) - decompose: re-supply live capacity FIRST (CHQ
-    // formula beats any stale saved value), THEN restore processing
-    // state so saved workers clamp against the real ceiling, settle
-    // the offline window under the shared cap concept, and deliver
-    // output through the SAME delivery/overflow path as the tick.
-    this.deps.decomposeSystem.updateCapacity(betaEffectiveWorkerCapacity(offlinePlayer?.autoWorkerCapacity ?? 0))
     this.deps.decomposeSystem.restore(save.decompose, restoreClockMs)
 
     // B1-D - the settle window is the authorized context, never a
@@ -439,7 +422,7 @@ export class GameManagerSaveRestore {
     // r24-INT-01: ...but persisted stamps live in the CLIENT epoch
     // (next write stamps lastSavedAt = liveNowMs). A forward-skewed
     // authority (untilMs > now, honest server-clock skew) would settle
-    // dues inside (now, untilMs] and seed lane heads/payouts stamped
+    // dues inside (now, untilMs] and seed production cycles stamped
     // past the next save's own marker -> the admission pin
     // (startedAtMs <= lastSavedAt) rejects the game's own save. Clamp
     // the settle cursor at liveNowMs too: dues in the skew window
@@ -450,27 +433,13 @@ export class GameManagerSaveRestore {
       authorityNowMs,
       liveNowMs,
     )
-    // r13-COR-4: clamp the window START as well - a
-    // crafted/skewed-future lastSavedAt otherwise positions
-    // offlineSinceMs ahead of settleNowMs, confiscating every pending
-    // decompose cycle and parking worker lanes in the future.
-    // r14-COR-1: the start anchor is authorityNowMs - elapsed, not
-    // authorityNowMs - the window is the authorized DURATION
-    // positioned at the payload marker, so a client clock honestly
-    // ahead of the server (lastSavedAt > untilMs) still settles the
-    // full approved span instead of collapsing to a zero-width
-    // window while auto-farm pays the same elapsed (asymmetry was
-    // the r14 regression); settleNowMs still clamps the end at
-    // authorityNowMs.
-    // r25-AUT-1: the start must clamp at liveNowMs too - persisted
-    // lane heads are stamped FROM this cursor, so a future-positioned
-    // pair (crafted-future lastSavedAt + a sinceMs still ahead of the
-    // client clock) seeds workerCycles[].startedAtMs past the next
-    // save's own lastSavedAt and the admission pin then rejects the
-    // game's own write (same self-brick class as r24-INT-01). Dues in
-    // the future window defer to live ticks at their real times; an
-    // honest start is never past now, so the clamp only fires on the
-    // crafted arm.
+    // Clamp the window start too; a crafted future lastSavedAt must not
+    // move offlineSinceMs past settleNowMs or extend the offline window.
+    // Anchor the start at authorityNowMs - elapsed. This preserves the
+    // approved duration when the client clock is ahead of the server;
+    // settleNowMs still clamps the end at authorityNowMs. Also clamp the
+    // start at liveNowMs so newly seeded production cycles cannot begin
+    // after the timestamp of the save being restored.
     const offlineSinceMs = Math.min(
       save.player.lastSavedAt ?? settleNowMs,
       authorityNowMs - elapsedOfflineSeconds * 1000,
@@ -478,30 +447,15 @@ export class GameManagerSaveRestore {
     )
     if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {
-        // T3 (economy-ecosystem-plan) - worker chay offline nhu slot tay
-        // trong cap: truyen capacity + moc bat dau vang mat de settle
-        // dung cua so.
+        // Production cycles use the same authoritative time window as
+        // other offline systems and remain bounded by the production cap.
         this.deps.productionSystem.settleOffline(
           this.deps.materialBag,
           this.deps.materialRegistry,
           offlinePlayer.realmId,
           settleNowMs,
-          {
-            workerCapacity: resolveProductionWorkerCapacity(
-              betaEffectiveWorkerCapacity(offlinePlayer.autoWorkerCapacity ?? 0),
-              this.deps.decomposeSystem.getSettings().workers,
-            ),
-            offlineSinceMs,
-            workerAssignments: this.deps.getWorkerAssignments(),
-            rng: this.deps.sessionRng,
-          },
+          { offlineSinceMs, rng: this.deps.sessionRng },
         )
-
-        this.deps.decomposeSystem.settleOffline(settleNowMs, offlineSinceMs)
-
-        for (const entry of this.deps.decomposeSystem.drainOutput()) {
-          this.deps.deliverDecomposeOutput(entry)
-        }
 
         // Auto-farm Task 5 (2026-09-04) - NGOAI LE DUY NHAT combat nhan
         // reward offline: roll cac chu ky auto-farm da troi trong cua so

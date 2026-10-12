@@ -32,7 +32,7 @@ import { TU_LINH_TRAN_DURATION_MS } from '../../core/economy/TuLinhTranBalance'
 // QA probe - fixpoint r32 COR wave. Audits the r31 adjudication at 1d27aee4:
 //
 //   (A) Boundary truth table on the new [0, 2^52) persisted-stamp gates:
-//       -1/-0/+0/2^52-1/2^52/NaN on workerCycles + alchemyJobs, validator
+//       -1/-0/+0/2^52-1/2^52/NaN on productionCycles + alchemyJobs, validator
 //       and both restore seams (drop vs park).
 //   (B) Mint-headroom arithmetic at every guarded site: advanceWorkerLanes
 //       nowMs/emptyLaneStartMs, AlchemySystem.startJob, DecomposeSystem
@@ -208,7 +208,7 @@ describe('r32 COR - A: [0, 2^52) stamp gates - validator + mechanism parity', ()
     expect(result.completed).toHaveLength(0)
   })
 
-  it('validator pins both stamps non-negative on workerCycles', () => {
+  it('validator pins both stamps non-negative on productionCycles', () => {
     const save = validWireSave()
     save.buildings = [
       { instanceId: 'bld_chq', buildingId: 'chi_hien_quan', level: 1, lastCollectedAt: 0 },
@@ -219,13 +219,12 @@ describe('r32 COR - A: [0, 2^52) stamp gates - validator + mechanism parity', ()
         siteId: SITE_ID,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(-2_000_000, 10)],
+        productionCycles: [workerCycle(-2_000_000, 10)],
       },
     ] as never
     const shape = validateGameSaveShape(save)
     expect(shape.ok).toBe(false)
-    expect(shape.issues.some((i) => i.path.includes('workerCycles'))).toBe(true)
+    expect(shape.issues.some((i) => i.path.includes('productionCycles'))).toBe(true)
   })
 
   it('validator pins both stamps non-negative on alchemyJobs', () => {
@@ -324,48 +323,14 @@ describe('r32 COR - B: headroom guards on clock + delta mints', () => {
     expect(manager.alchemySystem.getJobs()[0]!.completesAtMs).toBe(BOUND - 1)
   })
 
-  it('DecomposeSystem.tick headroom: nowMs within cycleMs of the bound zero-advances', () => {
-    const bag = new MaterialBag()
-    const ore = materials.find((m) => /_ore_/.test(m.id))!
-    bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
+  it('legacy Decompose timing fields are inert at clock boundaries', () => {
+    const system = new DecomposeSystem(new MaterialBag())
     system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: false,
-      },
-      currentMs,
+      { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 4 }, nextCycleAt: BOUND - 1, started: true },
+      BOUND - 1,
     )
-
-    system.tick(BOUND - 1 - 30_000)
-    expect(system.getSaveState().nextCycleAt).toBeGreaterThan(0)
-    expect(system.getSaveState().nextCycleAt).toBeLessThan(BOUND)
-
-    const system2 = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system2.updateCapacity(4)
-    system2.restore(
-      { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: 0, started: false },
-      currentMs,
-    )
-    system2.tick(BOUND - 30_000)
-    expect(system2.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('DecomposeSystem.settleOffline headroom parity', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 1_000,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(system.settleOffline(BOUND - 30_000, 0)).toBe(0)
+    expect(system.getSaveState().nextCycleAt).toBe(0)
+    expect(system.getSaveState().started).toBe(false)
   })
 })
 
@@ -393,13 +358,12 @@ describe('r32 COR - C: restore seams - alchemy drops, production parks', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(1, BOUND)],
+          productionCycles: [workerCycle(1, BOUND)],
         },
       ] as never,
       currentMs,
     )
-    const parked = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const parked = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(parked).toHaveLength(1)
     expect(parked[0]!.completesAtMs).toBe(BOUND)
 
@@ -436,13 +400,12 @@ describe('r32 COR - C: restore seams - alchemy drops, production parks', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(currentMs + 10_000, currentMs + 10_000 + span)],
+          productionCycles: [workerCycle(currentMs + 10_000, currentMs + 10_000 + span)],
         },
       ] as never,
       currentMs,
     )
-    const shifted = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const shifted = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(shifted.startedAtMs).toBe(currentMs)
     expect(shifted.completesAtMs).toBe(currentMs + span)
 
@@ -456,13 +419,12 @@ describe('r32 COR - C: restore seams - alchemy drops, production parks', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(BOUND - 500, BOUND - 500 + span)],
+          productionCycles: [workerCycle(BOUND - 500, BOUND - 500 + span)],
         },
       ] as never,
       BOUND - 100_000,
     )
-    const parked = manager2.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const parked = manager2.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(parked.startedAtMs).toBe(BOUND - 500)
     expect(parked.completesAtMs).toBe(BOUND - 500 + span)
   })
@@ -603,8 +565,7 @@ describe('r32 COR - F: COR-F3 - seeded-head re-stamp has no < 2^52 headroom', ()
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [],
+          productionCycles: [],
         },
       ] as never,
       settleNow,
@@ -622,13 +583,12 @@ describe('r32 COR - F: COR-F3 - seeded-head re-stamp has no < 2^52 headroom', ()
       'mortal',
       settleNow,
       {
-        workerCapacity: 4,
         offlineSinceMs: settleNow - 120_000,
         rng: () => 0.5,
       },
     )
 
-    const lanes = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const lanes = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(lanes.length).toBeGreaterThan(0)
     // r32-AUT-4/COR-F3: the re-stamp is skipped when it would push the
     // head past 2^52 - the seeded head keeps its settle-epoch stamps
@@ -645,8 +605,7 @@ describe('r32 COR - F: COR-F3 - seeded-head re-stamp has no < 2^52 headroom', ()
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [],
+          productionCycles: [],
         },
       ] as never,
       settleNow,
@@ -657,12 +616,11 @@ describe('r32 COR - F: COR-F3 - seeded-head re-stamp has no < 2^52 headroom', ()
       'mortal',
       settleNow,
       {
-        workerCapacity: 4,
         offlineSinceMs: settleNow - 120_000,
         rng: () => 0.5,
       },
     )
-    const lanes = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const lanes = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     for (const lane of lanes) {
       expect(lane.startedAtMs).toBeGreaterThanOrEqual(0)
       expect(lane.startedAtMs).toBeLessThan(BOUND)
@@ -732,7 +690,7 @@ describe('r32 COR - G: applyTimedEffect appliedAtMs clamp', () => {
 // ----------------------------------------------------------------------------
 
 describe('r32 COR - H: honest flow still works end to end', () => {
-  it('an honest in-flight workerCycles pair restores + settles under budget', () => {
+  it('an honest in-flight productionCycles pair restores + settles under budget', () => {
     const manager = registeredManager()
     const started = currentMs - MORTAL_CYCLE_MS - 1_000
     manager.productionSystem.restoreStates(
@@ -741,8 +699,7 @@ describe('r32 COR - H: honest flow still works end to end', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(started, started + MORTAL_CYCLE_MS)],
+          productionCycles: [workerCycle(started, started + MORTAL_CYCLE_MS)],
         },
       ] as never,
       currentMs,
@@ -753,7 +710,7 @@ describe('r32 COR - H: honest flow still works end to end', () => {
       manager.materialRegistry,
       'mortal',
       currentMs,
-      { workerCapacity: 4, offlineSinceMs: started, rng: () => 0.5 },
+      { offlineSinceMs: started, rng: () => 0.5 },
     )
     expect(settled).toBeGreaterThanOrEqual(1)
   })

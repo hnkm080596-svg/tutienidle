@@ -118,8 +118,7 @@ function productionSiteWire(save: GameSave, cycles: ProductionCycle[]): GameSave
       siteId: SITE_ID,
       level: 1,
       autoRestart: true,
-      activeWorkerSlots: 1,
-      workerCycles: cycles,
+      productionCycles: cycles,
     },
   ] as never
   return save
@@ -787,13 +786,12 @@ function restoreCycles(cycles: ProductionCycle[], restoreNow = currentMs): Produ
         siteId: SITE_ID,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 1,
-        workerCycles: cycles,
+        productionCycles: cycles,
       },
     ] as never,
     restoreNow,
   )
-  return manager.productionSystem.getState(SITE_ID)!.workerCycles!
+  return manager.productionSystem.getState(SITE_ID)!.productionCycles!
 }
 
 describe('r34 COR - F: flatMap arm boundary matrix', () => {
@@ -877,7 +875,7 @@ describe('r34 COR - F: flatMap arm boundary matrix', () => {
 // ----------------------------------------------------------------------------
 
 describe('r34 COR - G: slot accounting after the drop', () => {
-  it('a dropped lane frees a slot the SAME tick re-seeds; the healthy sibling settles', () => {
+  it('drops an inverted legacy head, settles its healthy sibling, then starts one successor', () => {
     const manager = registeredManager()
     manager.productionSystem.restoreStates(
       [
@@ -885,8 +883,7 @@ describe('r34 COR - G: slot accounting after the drop', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 2,
-          workerCycles: [
+          productionCycles: [
             workerCycle(currentMs - 10_000, currentMs - 20_000, 'inv'),
             workerCycle(currentMs - 200_000, currentMs - 100_000, 'healthy'),
           ],
@@ -894,19 +891,15 @@ describe('r34 COR - G: slot accounting after the drop', () => {
       ] as never,
       currentMs,
     )
-    expect(manager.productionSystem.getState(SITE_ID)!.workerCycles!).toHaveLength(1)
+    expect(manager.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(1)
 
-    manager.productionSystem.tickWorkers(
-      currentMs,
-      manager.materialBag,
-      manager.materialRegistry,
-      'mortal',
-      2,
-    )
-    const cycles = manager.productionSystem.getState(SITE_ID)!.workerCycles!
-    // The healthy due head settled (drain confirms the grant); the freed
-    // second lane was re-seeded at this tick (observe mode seeds first).
+    manager.productionSystem.tick(currentMs, manager.materialBag, manager.materialRegistry, 'mortal')
+    // The surviving head owns the only cycle until this observation settles it.
     expect(manager.productionSystem.drainSettlementEvents().length).toBeGreaterThan(0)
+    expect(manager.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
+    manager.productionSystem.tick(currentMs, manager.materialBag, manager.materialRegistry, 'mortal')
+    expect(manager.productionSystem.drainSettlementEvents()).toEqual([])
+    const cycles = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     expect(cycles).toHaveLength(1)
     expect(cycles[0]!.startedAtMs).toBe(currentMs)
     expect(cycles[0]!.completesAtMs).toBeGreaterThan(cycles[0]!.startedAtMs)
@@ -923,8 +916,7 @@ describe('r34 COR - G: slot accounting after the drop', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 2,
-          workerCycles: [
+          productionCycles: [
             workerCycle(100, 50, 'inv1'),
             workerCycle(200, 100, 'inv2'),
           ],
@@ -932,17 +924,11 @@ describe('r34 COR - G: slot accounting after the drop', () => {
       ] as never,
       currentMs,
     )
-    expect(manager.productionSystem.getState(SITE_ID)!.workerCycles!).toHaveLength(0)
+    expect(manager.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
 
-    manager.productionSystem.tickWorkers(
-      currentMs,
-      manager.materialBag,
-      manager.materialRegistry,
-      'mortal',
-      2,
-    )
-    const cycles = manager.productionSystem.getState(SITE_ID)!.workerCycles!
-    expect(cycles).toHaveLength(2)
+    manager.productionSystem.tick(currentMs, manager.materialBag, manager.materialRegistry, 'mortal')
+    const cycles = manager.productionSystem.getState(SITE_ID)!.productionCycles!
+    expect(cycles).toHaveLength(1)
     for (const c of cycles) {
       expect(c.completesAtMs).toBeGreaterThan(c.startedAtMs)
     }
@@ -956,23 +942,16 @@ describe('r34 COR - G: slot accounting after the drop', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 2,
-          workerCycles: [workerCycle(100, 50, 'inv')],
+          productionCycles: [workerCycle(100, 50, 'inv')],
         },
       ] as never,
       currentMs,
     )
-    manager.productionSystem.tickWorkers(
-      currentMs,
-      manager.materialBag,
-      manager.materialRegistry,
-      'mortal',
-      2,
-    )
-    expect(manager.productionSystem.getState(SITE_ID)!.workerCycles!).toHaveLength(0)
+    manager.productionSystem.tick(currentMs, manager.materialBag, manager.materialRegistry, 'mortal')
+    expect(manager.productionSystem.getState(SITE_ID)!.productionCycles!).toHaveLength(0)
   })
 
-  it('scalar fields are untouched by the drop: assignedWorkers/activeWorkerSlots ride verbatim', () => {
+  it('restore drops obsolete worker scalars and retains valid production progress', () => {
     const manager = registeredManager()
     manager.productionSystem.restoreStates(
       [
@@ -980,9 +959,7 @@ describe('r34 COR - G: slot accounting after the drop', () => {
           siteId: SITE_ID,
           level: 2,
           autoRestart: true,
-          activeWorkerSlots: 2,
-          assignedWorkers: 5,
-          workerCycles: [
+          productionCycles: [
             workerCycle(100, 50, 'inv'),
             workerCycle(currentMs - 50, currentMs + 500, 'ok'),
           ],
@@ -991,11 +968,9 @@ describe('r34 COR - G: slot accounting after the drop', () => {
       currentMs,
     )
     const state = manager.productionSystem.getState(SITE_ID)!
-    // Pre-tick snapshot keeps the persisted counts (cosmetic stale until
-    // the allocator recomputes next tick - same as the .map arm).
-    expect(state.assignedWorkers).toBe(5)
-    expect(state.activeWorkerSlots).toBe(2)
-    expect(state.workerCycles).toHaveLength(1)
+    expect(state).not.toHaveProperty('assignedWorkers')
+    expect(state).not.toHaveProperty('activeWorkerSlots')
+    expect(state.productionCycles).toHaveLength(1)
   })
 
   it('a dropped lane cannot poison the next write: wire shape validates', () => {
@@ -1006,13 +981,12 @@ describe('r34 COR - G: slot accounting after the drop', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(100, 50, 'inv')],
+          productionCycles: [workerCycle(100, 50, 'inv')],
         },
       ] as never,
       currentMs,
     )
-    const persisted = manager.productionSystem.getState(SITE_ID)!.workerCycles!
+    const persisted = manager.productionSystem.getState(SITE_ID)!.productionCycles!
     const shape = validateGameSaveShape(productionSiteWire(validWireSave(), persisted as never))
     expect(shape.ok).toBe(true)
   })

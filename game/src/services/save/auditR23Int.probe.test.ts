@@ -49,7 +49,7 @@ import { pills } from '../../data/pill/pills'
 //      bounded, and the paid width still sits inside the approved
 //      window - pinned as intended semantics, never the reverse.
 //   B) every derived cursor downstream of an admitted stamp: the
-//      far-future offlineSinceMs seed, the workerCycles far-future
+//      far-future offlineSinceMs seed, the productionCycles far-future
 //      deadline (gate-closed by the startedAtMs<=lastSavedAt + span
 //      pins, deny-parked by the mechanism if injected), the autoFarm
 //      lastCheckedMs re-anchor on every restore branch, the quest
@@ -117,8 +117,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: true,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -250,7 +249,7 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
     p.lastSavedAt = L
     save.productionSites = [
       makeState(LAM, {
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'r23_probe_1',
             siteId: LAM,
@@ -283,7 +282,7 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
       completesAtMs: TWO_POW_52 - 1,
     }
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { workerCycles: [pending] })],
+      [LAM, makeState(LAM, { productionCycles: [pending] })],
     ])
     const deps = createDeps(states)
     const nowMs = Date.now()
@@ -295,10 +294,10 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
       nowMs,
       // 1 slot, 1 pending lane -> no empty lane seeds normal completions;
       // the crafted far-future deadline is the only occupant.
-      { workerCapacity: 1, offlineSinceMs: nowMs - 3_600_000 },
+      { offlineSinceMs: nowMs - 3_600_000 },
     )
     expect(settled).toBe(0)
-    const kept = states.get(LAM)!.workerCycles![0]!
+    const kept = states.get(LAM)!.productionCycles![0]!
     expect(kept.completesAtMs).toBe(TWO_POW_52 - 1) // deny-parked, still in-domain
   })
 
@@ -402,17 +401,15 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
     expect(restored.lastCollectedAt).toBeGreaterThan(Date.now() / 1000 - 60)
   })
 
-  it('B6 decompose nextCycleAt: far-future deadline rebases to now + cycleMs on first tick', () => {
-    const decompose = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    decompose.updateCapacity(3)
+  it('B6 legacy decompose timer is ignored rather than rebased into live work', () => {
+    const decompose = new DecomposeSystem(new MaterialBag())
     decompose.restore({
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
       nextCycleAt: TWO_POW_52 - 1,
       started: true,
     })
-    const now = Date.now()
-    decompose.tick(now)
-    expect(decompose.getSaveState().nextCycleAt).toBe(now + 30_000)
+    expect(decompose.getSaveState().nextCycleAt).toBe(0)
+    expect(decompose.getSaveState().started).toBe(false)
   })
 
   // ------------------------------------------------------------------
@@ -490,36 +487,27 @@ describe('fixpoint r23 INT - integration coherence probes (da0d553d)', () => {
   // ------------------------------------------------------------------
   // D) capacity pin interplay (seam d)
   // ------------------------------------------------------------------
-  it('D1 capacity>65536 AND no chi_hien_quan -> two distinct issues on the same path', () => {
+  it('D1 inert capacity metadata retains the safety cap without requiring an art building', () => {
     const capacityIssues = (capacity: number, buildings: unknown[]) => {
       const save = validSave()
-      ;(save.player as PlayerData).autoWorkerCapacity = capacity
+      ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity = capacity
       save.buildings = buildings
       return validateGameSaveShape(save).issues.filter(
         (issue) => issue.path === 'player.autoWorkerCapacity',
       )
     }
 
-    // Both pins fire: the mechanism cap and the CHQ-existence pin are
-    // independent contract statements on the same field.
-    const both = capacityIssues(70_000, [])
-    expect(both).toHaveLength(2)
-    expect(both.some((issue) => issue.message.includes('65536'))).toBe(true)
-    expect(both.some((issue) => issue.message.includes('chi_hien_quan'))).toBe(true)
-
-    // Under the cap, only the F-W-16 existence pin fires.
-    const underCap = capacityIssues(5, [])
-    expect(underCap).toHaveLength(1)
-    expect(underCap[0]!.message).toContain('chi_hien_quan')
-
-    // capacity 0 is the only honest no-CHQ shape.
+    const overCap = capacityIssues(70_000, [])
+    expect(overCap).toHaveLength(1)
+    expect(overCap[0]!.message).toContain('65536')
+    expect(capacityIssues(5, [])).toHaveLength(0)
     expect(capacityIssues(0, [])).toHaveLength(0)
-
-    // A CHQ instance discharges F-W-16; stale capacity values are
-    // admitted because restore recomputes from the formula.
+    // Art-only CHQ presence does not affect legacy metadata admission; values are
+    // accepted but never restore a production capacity.
     const withChq = capacityIssues(5, [
       { instanceId: 'r23_c1', buildingId: 'chi_hien_quan', level: 1, lastCollectedAt: 0 },
     ])
     expect(withChq).toHaveLength(0)
   })
 })
+

@@ -24,7 +24,6 @@ import { getNextRealm } from './realm/realmSystem'
 import { getRealmHiddenState } from './realm/hidden/HiddenLineage'
 import type { RealmHiddenState } from './realm/hidden/HiddenPerfection'
 import { getActiveWay } from './player/CultivationPathSystem'
-import { BETA_BASELINE_WORKER_CAPACITY } from './production/WorkerCapacity'
 import { COMMAND_WHEEL_SLOTS, type CommandWheelSlot } from '../data/ui/commandWheelCatalog'
 import { REALM_PASSIVE_NODES, type RealmPassiveNode } from '../data/realm/RealmPassiveNodes'
 import { STAGES } from '../data/stage/Stages'
@@ -153,13 +152,13 @@ const BETA_LEFT_PANEL_FEATURES: Readonly<Record<string, BetaFeatureName | null>>
   character: null,
   inventory: null,
   exploration: null,
+  architecture: null,
   settings: null,
   equipment_hall: null,
   pill_room: null,
   worker_lodge: 'manualWorkforce',
   scripture_pavilion: null,
   stage_select: null,
-  vendor: null,
 }
 
 export function isBetaStandalonePanel(panel: string): boolean {
@@ -287,7 +286,6 @@ export type BetaUnsupportedReason =
   /** A Tran Phap loadout is persisted. */
   | 'formation_loadout'
   /** Dormant workforce state exists (chi_hien_quan capacity). */
-  | 'manual_workforce_state'
   /** An in-flight alchemy job belongs to a dormant recipe family. */
   | 'dormant_alchemy_job'
   /** The Decompose station carries live state (running or staffed). */
@@ -354,20 +352,6 @@ export function unsupportedReleaseReason(
 
   if (player.formationLoadout !== null && player.formationLoadout !== undefined) {
     return 'formation_loadout'
-  }
-
-  // Restore recomputes autoWorkerCapacity from the carried chi_hien_quan
-  // instance before this read-model runs. Default-built (2026-10-03):
-  // every save carries a lv1 CHQ -> capacity 3 is the new baseline
-  // floor, NOT dormant state. A value above the baseline means a
-  // dormant upgrade happened on the save - that is the scope-hidden
-  // record this reason flags.
-  if (
-    typeof player.autoWorkerCapacity === 'number' &&
-    Number.isFinite(player.autoWorkerCapacity) &&
-    player.autoWorkerCapacity > BETA_BASELINE_WORKER_CAPACITY
-  ) {
-    return 'manual_workforce_state'
   }
 
   // A carried job of an authored dormant recipe parks at the settle

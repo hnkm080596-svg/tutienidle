@@ -23,9 +23,6 @@ import { validateGameSaveShape } from './saveShapeValidation'
 import type { GameSave } from './saveTypes'
 import { useAppLifecycle } from '../../composables/useAppLifecycle'
 import { advanceWorkerLanes } from '../../core/production/WorkerLaneAdvance'
-import { DecomposeSystem } from '../../core/production/DecomposeSystem'
-import { MaterialBag } from '../../core/material/MaterialBag'
-import { materials } from '../../data/materials/materials'
 import { TribulationDirector } from '../../core/tribulation/TribulationDirector'
 import { EventBus } from '../../core/events/EventBus'
 import { equipment } from '../../data/equipment/equipment'
@@ -50,11 +47,9 @@ import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 //       into a fresh 'game' stage and silently disarms every later
 //       pauseSimulation (heartbeat pause, update admission, refuse arm).
 //   (W) window-input asymmetry: r30-AUT-1 tightened
-//       DecomposeSystem.settleOffline to offlineSinceMs in [0, 2^52), but
 //       the sibling production window input advanceWorkerLanes
 //       .emptyLaneStartMs still admits the full |x| < 2^52 domain - a
 //       crafted-negative window start (reachable: validator admits
-//       lastSavedAt = -1e12) zero-settles decompose while minting the
 //       deep-past backlog through worker lanes. No new ceiling vs the
 //       admitted 0-seed class (probed), so Low not Medium.
 //   (H) headroom guard boundary: the new
@@ -88,23 +83,6 @@ function validWireSave(): GameSave {
   writer.setActivePlayer(player)
   primeMortalCreationPick(player, writer.skillManager)
   return JSON.parse(JSON.stringify(buildGameSave(player, writer))) as GameSave
-}
-
-function startedDecomposeSystem(): { system: DecomposeSystem; bag: MaterialBag } {
-  const bag = new MaterialBag()
-  const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-  system.updateCapacity(1)
-  system.restore(
-    {
-      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-      nextCycleAt: 0,
-      started: true,
-    },
-    currentMs,
-  )
-  const ore = materials.find((material) => material.id.includes('_ore_'))!
-  bag.add(ore, 100_000)
-  return { system, bag }
 }
 
 // ----------------------------------------------------------------------------
@@ -312,13 +290,8 @@ describe('auditR31 INT probe - offline window asymmetry between siblings (W)', (
     })
   }
 
-  it('W1 a negative emptyLaneStartMs now zero-advances too - parity with decompose (fixed)', () => {
+  it('W1 a negative emptyLaneStartMs zero-advances', () => {
     const NEG = -1_000_000_000_000
-
-    // Decompose sibling: r30-AUT-1 guard denies the negative window.
-    const { system } = startedDecomposeSystem()
-    expect(system.settleOffline(currentMs, NEG)).toBe(0)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
 
     // Production sibling now applies the same [0, 2^52) domain to the
     // window start - the identical crafted value denies here too.
@@ -333,19 +306,15 @@ describe('auditR31 INT probe - offline window asymmetry between siblings (W)', (
     // unchanged; only the sign-asymmetry closed.
     const zeroSeed = lanesFor(0)
     expect(zeroSeed.completed.length).toBe(10)
-    const { system: decomposeZero } = startedDecomposeSystem()
-    expect(decomposeZero.settleOffline(currentMs, 0)).toBeGreaterThan(0)
   })
 
-  it('W1b a future window start agrees across siblings - production seeds but pays 0, decompose confiscates', () => {
+  it('W1b a future window start seeds a parked production lane', () => {
     const FUTURE = currentMs + 60_000
     const lanes = lanesFor(FUTURE)
     // Admit + park: the seeded lane exists but is not due yet.
     expect(lanes.completed.length).toBe(0)
     expect(lanes.pending.length).toBe(1)
     expect(lanes.seededPending.length).toBe(1)
-    const { system } = startedDecomposeSystem()
-    expect(system.settleOffline(currentMs, FUTURE)).toBe(0)
   })
 
   it('W2 headroom boundary: nowMs + cycleMs must stay < 2^52 or the seam denies outright', () => {

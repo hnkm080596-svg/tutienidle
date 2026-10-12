@@ -73,6 +73,8 @@ export interface AlchemyRecipeDisplay {
 }
 
 export interface AlchemyJobDisplay {
+  readonly state?: 'active' | 'waiting'
+
   readonly id: string
 
   readonly name: string

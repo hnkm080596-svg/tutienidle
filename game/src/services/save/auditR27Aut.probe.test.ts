@@ -407,9 +407,7 @@ describe('auditR27 AUT - rejected hypotheses (fix claims hold)', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          assignedWorkers: 1,
-          workerCycles: [
+          productionCycles: [
             {
               cycleId: 'crafted_huge',
               siteId: FOREST_SITE_ID,
@@ -426,7 +424,7 @@ describe('auditR27 AUT - rejected hypotheses (fix claims hold)', () => {
       currentMs,
     )
 
-    const cycle = system.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const cycle = system.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(currentMs)
     expect(cycle.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
     // The next write stamps lastSavedAt ~ now: shifted pair sits BELOW it -
@@ -468,29 +466,18 @@ describe('auditR27 AUT - rejected hypotheses (fix claims hold)', () => {
     expect(director.getCooldownSeconds(currentMs + TRIBULATION_COOLDOWN_SECONDS * 1000)).toBe(0)
   })
 
-  it('R4 decompose: nextCycleAt clamps at restoreNow+cycleMs and stays monotonic', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 10 * 86_400_000,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs + 30_000)
-
-    // A second restore cannot drag the timer backwards (no mint via re-restore).
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: true,
-      },
-      currentMs - 86_400_000,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs + 30_000)
+  it('R4 decompose: hostile legacy deadline cannot resume timed work', () => {
+    const system = new DecomposeSystem(new MaterialBag())
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 65_536 },
+      nextCycleAt: currentMs + 10 * 86_400_000,
+      started: true,
+    }, currentMs)
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
   })
 
   it('R5 r27-COR-1: corrupt-LOW authority does NOT re-anchor began stamps (authority excluded)', () => {
@@ -517,7 +504,7 @@ describe('auditR27 AUT - rejected hypotheses (fix claims hold)', () => {
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: true,
-        workerCycles: [workerCycle(lastSavedAt - 1_000, 'r5_cycle')],
+        productionCycles: [workerCycle(lastSavedAt - 1_000, 'r5_cycle')],
       },
     ]
 
@@ -535,7 +522,7 @@ describe('auditR27 AUT - rejected hypotheses (fix claims hold)', () => {
     const restoredJob = reader.alchemySystem.getJobs()[0]!
     expect(restoredJob.startedAtMs).toBe(lastSavedAt - 1_000)
     expect(restoredJob.completesAtMs).toBe(lastSavedAt - 1_000 + span)
-    const restoredCycle = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const restoredCycle = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(restoredCycle.startedAtMs).toBe(lastSavedAt - 1_000)
     expect(restoredCycle.completesAtMs).toBe(lastSavedAt - 1_000 + MORTAL_CYCLE_MS)
     expect(reader.alchemySystem.getJobs()).toHaveLength(1)

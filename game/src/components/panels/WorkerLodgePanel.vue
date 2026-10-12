@@ -1,135 +1,18 @@
 <script setup lang="ts">
-// Chieu Hien Quan panel (chi-hien-quan spec 2026-09-02, functionType
-// 'worker_lodge'). Building upgrade goes through the shared
-// FunctionOverlayPanel header (useBuildingHeaderState) - this panel is
-// read-only display + the gacha surface added by companion-gacha Task 9
-// (2026-09-12): TabBar with nhan_cong (worker capacity, the original
-// body) / chieu_mo (ChieuMoTab - token pull) / duyen_phan
-// (DuyenPhanTab - pick-your-own exchange). Pattern copied from
-// EquipmentHallPanel.vue.
-import { computed, ref, watch } from 'vue'
+// Retained as an inert compatibility surface for old imports. Chiêu Hiền
+// Quán is represented as an art-only landmark in Architecture; it owns no
+// worker, companion, or upgrade controls.
 import { useI18n } from 'vue-i18n'
-import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { usePlayerStore } from '@/stores/player'
-import { getWorkerCapacityForLevel } from '@/core/production/WorkerCapacity'
-import TabBar from '@/components/common/TabBar.vue'
-import QuaTangTab from './worker-lodge/QuaTangTab.vue'
-import ChieuMoTab from './worker-lodge/ChieuMoTab.vue'
-import DuyenPhanTab from './worker-lodge/DuyenPhanTab.vue'
-
-const BUILDING_ID = 'chi_hien_quan'
 
 const { t } = useI18n()
-
-const gameManager = useGameManager()
-
-const player = usePlayerStore()
-
-const { stateVersion } = useStateVersion()
-
-// BETA FE-CONTRACT (sec.4C FINAL POLICY): tab visibility resolves
-// through getWorkerLodgeSurfaceModel - the panel never imports a
-// companion-domain predicate. Under beta every tab is scope-hidden
-// (the whole lodge is out of scope) so this panel renders no tabbed
-// content at all; a progression-locked tab also stays off the bar
-// (below Tru Co the companion tabs keep their old hidden treatment).
-const TABS = [
-  { id: 'nhan_cong', label: t('workerLodge.tabs.nhanCong') },
-  { id: 'qua_tang', label: t('workerLodge.tabs.quaTang') },
-  { id: 'chieu_mo', label: t('workerLodge.tabs.chieuMo') },
-  { id: 'duyen_phan', label: t('workerLodge.tabs.duyenPhan') },
-] as const
-
-type TabId = (typeof TABS)[number]['id']
-
-const visibleTabs = computed(() => {
-  stateVersion.value
-
-  const offered = new Set(
-    gameManager.buildingOps
-      .getWorkerLodgeSurfaceModel(player.$state)
-      .tabs.filter((tab) => tab.verdict === 'available')
-      .map((tab) => tab.id),
-  )
-
-  return TABS.filter((tab) => offered.has(tab.id))
-})
-
-const activeTab = ref<TabId>('nhan_cong')
-
-function switchTab(tab: TabId) {
-  activeTab.value = tab
-}
-
-// Close the invariant: if realm state ever changes below Tru Co while a
-// gacha tab is selected (state replacement/restore mid-session), fall
-// back to nhan_cong so no hidden tab keeps rendering.
-watch(visibleTabs, (tabs) => {
-  if (!tabs.some((tab) => tab.id === activeTab.value)) {
-    activeTab.value = 'nhan_cong'
-  }
-})
-
-const instance = computed(() => {
-  stateVersion.value
-
-  return gameManager.buildingManager.getByBuildingId(BUILDING_ID)
-})
-
-const template = computed(() => {
-  stateVersion.value
-
-  return gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === BUILDING_ID)
-})
-
-const capacity = computed(() => getWorkerCapacityForLevel(instance.value?.level ?? 0))
-
-const nextCapacity = computed(() => {
-  const level = instance.value?.level ?? 0
-
-  return instance.value && level < (template.value?.maxLevel ?? 0)
-    ? getWorkerCapacityForLevel(level + 1)
-    : undefined
-})
+const artUrl = '/assets/buildings/dong-fu/v2/chi_hien_quan/base.png'
 </script>
 
 <template>
-  <section class="worker-lodge-panel">
-    <!-- FINAL POLICY (sec.4C): under beta the scope model offers zero
-         tabs, so nothing renders - the lodge is fully hidden. -->
-    <template v-if="visibleTabs.length > 0">
-      <p class="worker-lodge-panel__description">{{ template?.description }}</p>
-
-      <TabBar
-        class="worker-lodge-panel__tabs"
-        :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
-        :model-value="activeTab"
-        @update:model-value="switchTab($event as TabId)"
-      />
-
-      <div v-if="activeTab === 'nhan_cong'" class="worker-lodge-panel__card">
-        <h3>{{ t('workerLodge.nhanCong.title') }}</h3>
-
-        <p class="worker-lodge-panel__capacity">
-          <strong>{{ capacity }}</strong> {{ t('workerLodge.nhanCong.capacitySuffix') }}
-        </p>
-
-        <small v-if="nextCapacity !== undefined" class="worker-lodge-panel__next">
-          {{ t('workerLodge.nhanCong.nextLevel', { level: (instance?.level ?? 0) + 1, count: nextCapacity }) }}
-        </small>
-        <small v-else class="worker-lodge-panel__next">{{ t('workerLodge.nhanCong.maxLevel') }}</small>
-
-        <p class="worker-lodge-panel__hint">
-          {{ t('workerLodge.nhanCong.hint') }}
-        </p>
-      </div>
-
-      <QuaTangTab v-else-if="activeTab === 'qua_tang'" />
-
-      <ChieuMoTab v-else-if="activeTab === 'chieu_mo'" />
-
-      <DuyenPhanTab v-else-if="activeTab === 'duyen_phan'" />
-    </template>
+  <section class="worker-lodge-panel" data-testid="chi-hien-quan-art-only">
+    <img :src="artUrl" alt="" class="worker-lodge-panel__art" />
+    <h2>{{ t('panels.wheel.slots.chi_hien_quan') }}</h2>
+    <p>{{ t('architecture.artOnly') }}</p>
   </section>
 </template>
 
@@ -137,7 +20,11 @@ const nextCapacity = computed(() => {
 .worker-lodge-panel {
   height: 100%;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
   padding: 18px;
   color: var(--paper-text);
   background:
@@ -145,45 +32,11 @@ const nextCapacity = computed(() => {
     radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--jade) 8%, transparent), transparent 40%),
     linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
 }
-
-.worker-lodge-panel__description {
-  margin: 0 0 16px;
-  color: var(--paper-text-soft);
-  line-height: var(--lh-relaxed);
+.worker-lodge-panel__art {
+  width: min(42vh, 280px);
+  max-height: 42vh;
+  object-fit: contain;
 }
-
-.worker-lodge-panel__tabs {
-  margin: 0 0 12px;
-}
-
-.worker-lodge-panel__card {
-  display: grid;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--jade) 40%, var(--paper-line));
-  border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--jade) 12%, var(--paper-50)), color-mix(in srgb, var(--jade) 5%, var(--paper-100)));
-}
-
-.worker-lodge-panel__card h3 {
-  margin: 0;
-  color: var(--jade);
-  font: 700 var(--text-lg) var(--font-display);
-}
-
-.worker-lodge-panel__capacity {
-  margin: 0;
-  font-size: var(--text-lg);
-}
-
-.worker-lodge-panel__next {
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-.worker-lodge-panel__hint {
-  margin: 0;
-  color: var(--paper-text-muted);
-  font-size: var(--text-sm);
-}
+.worker-lodge-panel h2, .worker-lodge-panel p { margin: 0; text-align: center; }
+.worker-lodge-panel p { color: var(--paper-text-muted); }
 </style>

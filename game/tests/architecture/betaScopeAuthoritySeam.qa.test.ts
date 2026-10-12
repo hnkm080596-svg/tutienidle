@@ -14,6 +14,7 @@ import { collectTalentEffects } from '@/core/talent/TalentEffects'
 import { isBetaTalentId } from '@/core/betaScope'
 import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import { GameManager } from '@/core/game/GameManager'
+import { getArchitectureBuildingModels } from '@/core/game/ArchitectureReadModel'
 import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
 import { lockBetaTalentsForTests } from '@/core/game/__fixtures__/betaTalentsUnlock'
@@ -112,21 +113,22 @@ describe('talent roster: dormant golden_core pool must stay out of beta admissio
  })
 })
 
-describe('building write seam: scope-hidden chi_hien_quan stays dormant (carried, never writable)', () => {
- it('reconcileBuildings grants chi_hien_quan lv1 dormant - instance exists, surfaces stay hidden', () => {
+describe('building write seam: chi_hien_quan is an art-only Architecture landmark', () => {
+ it('reconcile preserves the instance and the Architecture model offers no upgrade', () => {
  const gameManager = new GameManager()
  gameManager.catalogOps.registerBuildings(buildings)
  const p = player({ realmId: 'qi_refining' })
 
- // Default-built (2026-10-03): the reconcile grants EVERY registered
- // building at lv1 - the scope rule hides chi_hien_quan's surfaces, it
- // never strips a carried instance (same treatment as a carried save).
+ // Reconciliation preserves the authored landmark instance.
  gameManager.buildingOps.reconcileBuildings(p, 1_000)
 
  const instance = gameManager.buildingManager.getByBuildingId('chi_hien_quan')
 
  expect(instance?.level).toBe(1)
- expect(p.autoWorkerCapacity).toBe(3)
+ expect('autoWorkerCapacity' in p).toBe(false)
+ const card = getArchitectureBuildingModels(gameManager, p).find((building) => building.id === 'chi_hien_quan')
+ expect(card?.artOnly).toBe(true)
+ expect(card?.canUpgrade).toBe(false)
  })
 
  it('control: reconcile is idempotent and leaves carried levels untouched', () => {
@@ -172,7 +174,7 @@ describe('building write seam: scope-hidden chi_hien_quan stays dormant (carried
  expect(gameManager.buildingOps.upgradeBuilding('inst_chq')).toBe(false)
  expect(gameManager.materialBag.getAmount('mortal_ore_decade')).toBe(10)
  expect(gameManager.buildingManager.get('inst_chq')?.level).toBe(1)
- expect(p.autoWorkerCapacity).toBe(0)
+ expect('autoWorkerCapacity' in p).toBe(false)
  })
 })
 

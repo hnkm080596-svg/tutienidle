@@ -38,7 +38,7 @@ import { TribulationDirector } from '../../core/tribulation/TribulationDirector'
 //
 //   (A) F-NEG-MINT: the new [0, 2^52) clock-input domain does NOT reach the
 //       persisted stamp gate - isBoundedTimestamp admits |x| < 2^52 incl. ALL
-//       negative stamps, so a crafted negative-due workerCycles/alchemyJobs
+//       negative stamps, so a crafted negative-due productionCycles/alchemyJobs
 //       pair validates clean, restores verbatim, and mints on the next honest
 //       tick. Full chain probes: gate -> restore -> tick -> grant/pill.
 //   (B) F-WIN-ASYM: DecomposeSystem.settleOffline now denies offlineSinceMs
@@ -177,7 +177,7 @@ afterEach(() => {
 // ----------------------------------------------------------------------------
 
 describe('r31 COR - A: crafted negative persisted stamps denied (gate non-negative domain)', () => {
-  it('full chain: workerCycles {startedAtMs<0, completesAtMs<0} refuses the gate; mechanism parks the lane verbatim (zero settle)', () => {
+  it('full chain: productionCycles {startedAtMs<0, completesAtMs<0} refuses the gate; mechanism parks the lane verbatim (zero settle)', () => {
     const save = validWireSave()
     // Test scope unlocks every beta feature, so the lane ceiling reads the
     // claimed pool: chi_hien_quan + autoWorkerCapacity must be present.
@@ -192,8 +192,7 @@ describe('r31 COR - A: crafted negative persisted stamps denied (gate non-negati
         siteId: SITE_ID,
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 1,
-        workerCycles: [forged],
+        productionCycles: [forged],
       },
     ] as never
 
@@ -202,28 +201,28 @@ describe('r31 COR - A: crafted negative persisted stamps denied (gate non-negati
     const shape = validateGameSaveShape(save)
     expect(shape.ok).toBe(false)
     expect(
-      shape.issues.some((i) => i.path.includes('workerCycles')),
+      shape.issues.some((i) => i.path.includes('productionCycles')),
     ).toBe(true)
 
     // Mechanism layer (ungated-caller path): restore keeps the pair
     // verbatim-parked and the advance guard denies the settle - no mint.
     const manager = registeredManager()
     manager.productionSystem.restoreStates(save.productionSites as never, currentMs)
-    const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const restored = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(restored.startedAtMs).toBe(-2_000_000)
     expect(restored.completesAtMs).toBe(-2_000_000 + span)
 
-    manager.productionSystem.tickWorkers(
+    manager.productionSystem.tick(
       currentMs,
       manager.materialBag,
       manager.materialRegistry,
       'mortal',
-      3,
+      () => 0.3,
     )
     expect(manager.productionSystem.drainSettlementEvents()).toHaveLength(0)
     // Parked, not settled: the lane is still there.
     expect(
-      manager.productionSystem.getState(SITE_ID)!.workerCycles,
+      manager.productionSystem.getState(SITE_ID)!.productionCycles,
     ).toHaveLength(1)
   })
 
@@ -265,56 +264,29 @@ describe('r31 COR - A: crafted negative persisted stamps denied (gate non-negati
 })
 
 // ----------------------------------------------------------------------------
-// (B) F-WIN-ASYM - decompose settleOffline denies the negative window start
-//     that the sibling production settle still admits via |x|. Same crafted
-//     lastSavedAt < 0 -> offlineSinceMs < 0 feeds both seams differently.
+// (B) Decompose no longer owns an offline window; legacy clock fields are inert.
 // ----------------------------------------------------------------------------
-
-describe('r31 COR - B: window-input asymmetry (decompose denies, production admits)', () => {
-  function decomposeWithOre() {
+describe('r31 COR - B: retired Decompose window state stays inert', () => {
+  it('legacy deadlines do not settle or consume ore', () => {
     const bag = new MaterialBag()
     const ore = materials.find((m) => /_ore_/.test(m.id))!
     bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-    return { system, bag }
-  }
+    const oreAmountBefore = bag.get(ore.id)?.amount
+    const system = new DecomposeSystem(bag)
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: currentMs,
+      started: true,
+    }, currentMs)
+    expect(system.getSaveState().started).toBe(false)
+    expect(system.getSaveState().nextCycleAt).toBe(0)
+    expect(bag.get(ore.id)?.amount).toBe(oreAmountBefore)
+  })
 
-  it('advanceWorkerLanes now DENIES emptyLaneStartMs = -1e6 (same [0, 2^52) domain as offlineSinceMs)', () => {
-    const result = advanceWorkerLanes(
-      laneParams({ emptyLaneStartMs: -1_000_000 }),
-    )
-    // Deny = zero-advance: no seeds, no settles.
+  it('worker lane still rejects the negative epoch input', () => {
+    const result = advanceWorkerLanes(laneParams({ emptyLaneStartMs: -1_000_000 }))
     expect(result.completed).toHaveLength(0)
     expect(result.pending).toHaveLength(0)
-  })
-
-  it('DecomposeSystem.settleOffline now DENIES the same -1e6 window start (returns 0)', () => {
-    const { system } = decomposeWithOre()
-    expect(system.settleOffline(currentMs, -1_000_000)).toBe(0)
-  })
-
-  it('DecomposeSystem.settleOffline denies the upper bound too: offlineSinceMs = 2^52 returns 0', () => {
-    const { system } = decomposeWithOre()
-    expect(system.settleOffline(currentMs, BOUND)).toBe(0)
-  })
-
-  it('advanceWorkerLanes now DENIES the matching -1e6 pending head (lane parked verbatim, never settles)', () => {
-    const span = 30_000
-    const result = advanceWorkerLanes(
-      laneParams({ pending: [workerCycle(-2_000_000, -2_000_000 + span)] }),
-    )
-    expect(result.completed).toHaveLength(0)
-    expect(result.pending).toHaveLength(1)
-    expect(result.pending[0]!.completesAtMs).toBe(-2_000_000 + span)
   })
 })
 
@@ -366,58 +338,16 @@ describe('r31 COR - C: headroom asymmetry - mint paths still stamp >= 2^52', () 
     ).toBe(true)
   })
 
-  it('DecomposeSystem.tick(nowMs = 2^52 - 1) denies the clock - nextCycleAt stays parked (fresh-start arm)', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: false,
-      },
-      currentMs,
-    )
-
-    system.tick(BOUND - 1)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('DecomposeSystem.tick(nowMs = 2^52 - 1) with a running cycle denies - nextCycleAt unchanged (advance arm)', () => {
-    const bag = new MaterialBag()
-    const ore = materials.find((m) => /_ore_/.test(m.id))!
-    bag.add(ore, 10_000)
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: BOUND - 2,
-        started: true,
-      },
-      currentMs,
-    )
-    // restore merges min(restored, now + cycleMs) -> parked baseline.
-    const baseline = currentMs + 30_000
-    expect(system.getSaveState().nextCycleAt).toBe(baseline)
-
-    system.tick(BOUND - 1)
-    expect(system.getSaveState().nextCycleAt).toBe(baseline)
-  })
-
-  it('the minted nextCycleAt >= 2^52 is refused by the persisted gate on the next write', () => {
+  it('legacy decompose save fields outside the allowed range remain rejected', () => {
     const save = validWireSave()
     save.decompose = {
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
       nextCycleAt: BOUND + 30_000,
       started: true,
     } as never
-
     const shape = validateGameSaveShape(save)
     expect(shape.ok).toBe(false)
-    expect(
-      shape.issues.some((i) => i.path.endsWith('decompose.nextCycleAt')),
-    ).toBe(true)
+    expect(shape.issues.some((issue) => issue.path.endsWith('decompose.nextCycleAt'))).toBe(true)
   })
 
   it('advanceWorkerLanes denies emptyLaneStartMs within cycleMs of the bound (seed headroom)', () => {
@@ -864,36 +794,26 @@ describe('r31 COR - H: [0, 2^52) seam domain truth table', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(started, started + 30_000)],
+          productionCycles: [workerCycle(started, started + 30_000)],
         },
       ],
       -1,
     )
-    const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const restored = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(restored.startedAtMs).toBe(started) // verbatim, not re-anchored
   })
 
-  it('decompose tick/restore/settleOffline all deny -1/2^52/NaN', () => {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(4)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs,
-        started: true,
-      },
-      currentMs,
-    )
-
-    const baseline = system.getSaveState().nextCycleAt
+  it('legacy Decompose timing fields remain inert even at hostile clock values', () => {
+    const system = new DecomposeSystem(new MaterialBag())
     for (const edge of [-1, BOUND, Number.NaN]) {
-      system.tick(edge as number)
-      expect(system.getSaveState().nextCycleAt).toBe(baseline) // deny: unchanged
+      system.restore({
+        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+        nextCycleAt: edge,
+        started: true,
+      }, edge)
+      expect(system.getSaveState().nextCycleAt).toBe(0)
+      expect(system.getSaveState().started).toBe(false)
     }
-    expect(system.settleOffline(-1, currentMs)).toBe(0)
-    expect(system.settleOffline(BOUND, currentMs)).toBe(0)
   })
 
   it('quest/tribulation restore deny -1 (verbatim/parked arms)', () => {
@@ -927,13 +847,12 @@ describe('r31 COR - H: [0, 2^52) seam domain truth table', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(started, started + 30_000)],
+          productionCycles: [workerCycle(started, started + 30_000)],
         },
       ],
       -0,
     )
-    const restored = manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!
+    const restored = manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!
     expect(Math.abs(restored.startedAtMs)).toBeLessThanOrEqual(4)
     expect(restored.completesAtMs - restored.startedAtMs).toBe(30_000)
 
@@ -992,14 +911,14 @@ describe('r31 COR - I: honest-shape regression', () => {
           siteId: SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(started, started + 30_000)],
+          productionCycles: [workerCycle(started, started + 30_000)],
         },
       ],
       currentMs,
     )
     expect(
-      manager.productionSystem.getState(SITE_ID)!.workerCycles![0]!.completesAtMs,
+      manager.productionSystem.getState(SITE_ID)!.productionCycles![0]!.completesAtMs,
     ).toBe(started + 30_000)
   })
 })
+

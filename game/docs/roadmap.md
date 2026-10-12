@@ -902,6 +902,16 @@ automatic remainder
 
 Production and decomposition consume the same workforce authority where product intent says they share workers.
 
+### Current contract migration — Architecture, 2026-10-12
+
+IN PROGRESS in `codex/architecture-production-panel` (baseline `f2729f0bf`). The user explicitly superseded the old workforce contract: remove workers; each enabled production site owns one independent cycle, disabling siblings never increases speed. `ProductionSystem` and `ProductionOffline` retain the common advancement primitive, preserve carried pending work, and project new saves through `productionCycles` with legacy worker fields accepted only at the restore boundary.
+
+Decomposition is an immediate atomic command, with integer output rounded down and no debit when output is below one. It uses no workforce, timer or offline progression. Existing Beta hidden admission remains authoritative. Old decomposition settings/deadline saves are inert compatibility data, not authority to consume material on restore.
+
+All building and raw-site upgrade controls move to Architecture; domain rule owners remain BuildingSystem and ProductionSystem. Khai Vat Duong groups raw-site detail and spirit stone accrual. Vendor and Chieu Hien Quan retain building/art at max level one without commerce or worker upgrades. Alchemy owns one kiln plus `3 * roomLevel` waiting jobs, reserves at enqueue, refunds waiting cancellation in full, and burns active cancellation; building level changes speed and queue capacity only. Expedition presentation reads the AutoFarm owner and creates no combat/reward authority.
+
+The historical R7 completion below describes its original contract. Aggregate type-check, build, runtime progression, review and QA evidence for this replacement are pending; this note does not mark the new migration complete.
+
 ### Repair
 
 - online empty-auto-site crash;
@@ -3351,3 +3361,5 @@ Sau mỗi lần khảo sát/brainstorm/viết plan/merge cho một hạng mục:
 3. Nếu quyết định mới làm lệch mô tả, cập nhật luôn dòng đó — không để roadmap nói khác plan chi tiết.
 4. Việc đang bay ở branch khác ghi rõ **branch + fork-point + trạng thái commit/uncommitted** (mẫu ở mục 8.6) — khi merge xong chuyển vào bảng lịch sử.
 5. Lịch sử merge trong mục 8.5/9.x chỉ để tra cứu — không dùng để theo dõi việc đang chạy.
+
+- 2026-10-13 accepted ruling: each production site owns up to ten hours of offline cycle work. The allowance is not shared or transferable; map order and sibling toggles cannot starve or accelerate a site. Legal legacy heads share their own site allowance.

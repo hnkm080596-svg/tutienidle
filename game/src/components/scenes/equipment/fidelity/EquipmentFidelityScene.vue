@@ -5,7 +5,6 @@ import ForgeBatchBag from './ForgeBatchBag.vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import EquipmentPaperItem from './EquipmentPaperItem.vue'
 import EquipmentPaperTooltip from './EquipmentPaperTooltip.vue'
 import type { EquipmentDisplay, EquipmentSocket } from './equipmentUi'
@@ -62,7 +61,6 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
     <p class="equipment-subtitle">{{ t('equipment.subtitle') }}</p>
     <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -
          neo o khe trong giua subtitle va cot bag/forge (design px). -->
-    <BuildingUpgradeButton building-id="equipment_hall" class="equipment-upgrade" />
 
     <!-- The doll region (character stage + 2x3 socket grid) carries the
          fixture stand-in; production mounts the real EquipmentPaperdoll
@@ -105,10 +103,6 @@ const tabBrush = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/equipmen
 .equipment-heading { position:absolute; left:365px; top:117px; height:48px; display:flex; align-items:center; gap:30px; border-bottom:1px solid #b28a43; width:1025px; } .equipment-heading{height:auto;min-height:48px}.equipment-heading__title{display:flex;flex-direction:column;position:relative}.equipment-divider{position:absolute;left:5px;top:25px;width:200px;height:auto;object-fit:contain;opacity:.75;pointer-events:none}
 .equipment-heading h1 { margin:0; font-size:38px; line-height:1.15; font-weight:700; color:#35250f; text-shadow:0 1px #fff7; }
 .equipment-subtitle { position:absolute; left:365px; top:117px; width:860px; height:48px; margin:0; display:flex; align-items:center; justify-content:flex-end; font-size:13px; color:#715627; }
-.equipment-upgrade { position:absolute; left:1260px; top:110px; width:110px; }
-/* Single-line cost: the row is bounded so it keeps its own lane and
-   never spills onto the socket grid below (y=240). */
-.equipment-upgrade :deep(.building-heading__cost) { color:#8b7246; font-size:10px; line-height:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Columns start below the scene-level tab strip (heading 120-168,
    tabs ~178-220) - same stacking as the Codex preview. */
 .character-stage { position:absolute; left:424px; top:215px; width:264px; height:340px; pointer-events:none; }

@@ -125,8 +125,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -147,18 +146,18 @@ const FOREST = THANH_VAN_PRODUCTION_SITES[0]!.siteId
 const MINE = THANH_VAN_PRODUCTION_SITES[1]!.siteId
 const GROTTO = THANH_VAN_PRODUCTION_SITES[2]!.siteId
 
-// Save entry carrying one site with the given workerCycles; marker is
+// Save entry carrying one site with the given productionCycles; marker is
 // the crafted player.lastSavedAt the stamps must survive against.
 function saveWithSite(
   lastSavedAt: number,
   siteId: string,
-  workerCycles: ProductionCycle[],
+  productionCycles: ProductionCycle[],
 ): Record<string, unknown> {
   const save = validSave()
   const p = save.player as PlayerData
   p.lastSavedAt = lastSavedAt
   save.productionSites = [
-    { siteId, level: 1, autoRestart: true, workerCycles },
+    { siteId, level: 1, autoRestart: true, productionCycles },
   ]
   return save
 }
@@ -264,7 +263,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     const crafted = makeCycle(FOREST, TWO_POW_53 - MORTAL_L1_CYCLE_MS, TWO_POW_53)
     const state = makeState(FOREST, {
       autoRestart: true,
-      workerCycles: [honest, crafted],
+      productionCycles: [honest, crafted],
     })
     const deps = createDeps(new Map([[state.siteId, state]]))
 
@@ -275,12 +274,12 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       900_000,
-      { workerCapacity: 2, offlineSinceMs: 500_000, rng: () => 0.5 },
+      { offlineSinceMs: 500_000, rng: () => 0.5 },
     )
     expect(settled1).toBe(0)
-    expect(state.workerCycles).toHaveLength(2)
+    expect(state.productionCycles).toHaveLength(2)
     // Crafted record re-persisted verbatim - self-perpetuating.
-    const persisted1 = state.workerCycles!.find((c) => c.cycleId === crafted.cycleId)
+    const persisted1 = state.productionCycles!.find((c) => c.cycleId === crafted.cycleId)
     expect(persisted1).toBeDefined()
     expect(persisted1!.completesAtMs).toBe(TWO_POW_53)
 
@@ -292,7 +291,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       9_000_000_000,
-      { workerCapacity: 2, offlineSinceMs: 500_000, rng: () => 0.5 },
+      { offlineSinceMs: 500_000, rng: () => 0.5 },
     )
     expect(settled2).toBe(0)
 
@@ -304,7 +303,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       siteLevel: 1,
       baseSeconds: 100,
       cycleMs: MORTAL_L1_CYCLE_MS,
-      pending: state.workerCycles!,
+      pending: state.productionCycles!,
       slots: 2,
       nowMs: 10_000_000_000,
       emptyLaneStartMs: 10_000_000_000,
@@ -331,7 +330,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     const honest = makeCycle(FOREST, 100_000, 200_000)
     const state = makeState(FOREST, {
       autoRestart: true,
-      workerCycles: [stuck, honest],
+      productionCycles: [stuck, honest],
     })
     const deps = createDeps(new Map([[state.siteId, state]]))
 
@@ -341,13 +340,13 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       900_000,
-      { workerCapacity: 2, offlineSinceMs: 500_000, rng: () => 0.5 },
+      { offlineSinceMs: 500_000, rng: () => 0.5 },
     )
 
     // Honest lane settles its due + successor inside the window.
     expect(settled).toBeGreaterThanOrEqual(1)
     // The crafted lane re-persists untouched - forever parked.
-    const parked = state.workerCycles!.find((c) => c.cycleId === stuck.cycleId)
+    const parked = state.productionCycles!.find((c) => c.cycleId === stuck.cycleId)
     expect(parked).toBeDefined()
     expect(parked!.completesAtMs).toBe(4e15)
     // It never advances: observe tick at any honest nowMs keeps it.
@@ -397,14 +396,14 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       currentMs,
-      { workerCapacity: 3, offlineSinceMs: -1e300, rng: () => 0.5 },
+      { offlineSinceMs: -1e300, rng: () => 0.5 },
     )
 
     // Every site tripped the emptyLaneStartMs guard: zero completions,
     // zero seeding anywhere - a whole-economy freeze for this boot.
     expect(settled).toBe(0)
     for (const state of states.values()) {
-      expect(state.workerCycles).toHaveLength(0)
+      expect(state.productionCycles).toHaveLength(0)
     }
 
     // Self-heal evidence: the same states under an honest window
@@ -415,16 +414,16 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       currentMs,
-      { workerCapacity: 3, offlineSinceMs: currentMs - 300_000, rng: () => 0.5 },
+      { offlineSinceMs: currentMs - 300_000, rng: () => 0.5 },
     )
     expect(healed).toBeGreaterThanOrEqual(3)
   })
 
   // ------------------------------------------------------------------
   // B4 (surface 2) - freeze reach extends past autoRestart: a site
-  // with autoRestart=false but in-flight workerCycles still goes
+  // with autoRestart=false but in-flight productionCycles still goes
   // through the advance pass (advanceableStates includes
-  // workerCycles.length > 0, ProductionOffline.ts:116-118) - a
+  // productionCycles.length > 0, ProductionOffline.ts:116-118) - a
   // crafted pending there freezes its retained lanes too.
   // ------------------------------------------------------------------
   it('B4 crafted pending freezes a non-autoRestart site with in-flight lanes', () => {
@@ -432,7 +431,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     const crafted = makeCycle(FOREST, TWO_POW_53 - MORTAL_L1_CYCLE_MS, TWO_POW_53)
     const state = makeState(FOREST, {
       autoRestart: false,
-      workerCycles: [honest, crafted],
+      productionCycles: [honest, crafted],
     })
     const deps = createDeps(new Map([[state.siteId, state]]))
 
@@ -442,11 +441,11 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       900_000,
-      { workerCapacity: 0, offlineSinceMs: 500_000, rng: () => 0.5 },
+      { offlineSinceMs: 500_000, rng: () => 0.5 },
     )
 
     expect(settled).toBe(0)
-    expect(state.workerCycles).toHaveLength(2)
+    expect(state.productionCycles).toHaveLength(2)
   })
 
   // ------------------------------------------------------------------
@@ -710,7 +709,7 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
     const crafted = makeCycle(FOREST, -1e12, -1e12 + MORTAL_L1_CYCLE_MS)
     const state = makeState(FOREST, {
       autoRestart: true,
-      workerCycles: [crafted],
+      productionCycles: [crafted],
     })
     const deps = createDeps(new Map([[state.siteId, state]]))
 
@@ -722,14 +721,14 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       settleNow,
-      { workerCapacity: 1, offlineSinceMs: -1e12, rng: () => 0.5 },
+      { offlineSinceMs: -1e12, rng: () => 0.5 },
     )
 
     // r31-WIN-ASYM/NEG-MINT: both the offlineSinceMs window start and
     // the saved lane's stamps are negative -> the whole feed denies
     // verbatim; the lane parks untouched.
     expect(settled).toBe(0)
-    const heads = state.workerCycles ?? []
+    const heads = state.productionCycles ?? []
     expect(heads).toHaveLength(1)
     expect(heads[0]).toBe(crafted)
     expect(heads[0]!.completesAtMs).toBe(-1e12 + MORTAL_L1_CYCLE_MS)
@@ -824,10 +823,10 @@ describe('fixpoint r21 AUT - r20 adjudication batch repros', () => {
         new MaterialRegistry(),
         'mortal',
         settleNow,
-        { workerCapacity: 1, offlineSinceMs: since, rng: () => 0.5 },
+        { offlineSinceMs: since, rng: () => 0.5 },
       )
 
-      const heads = state.workerCycles ?? []
+      const heads = state.productionCycles ?? []
       expect(heads.length, label).toBe(1)
       const bound = Math.max(settleNow, fieldNow)
       expect(heads[0]!.completesAtMs, label).toBeGreaterThan(bound)

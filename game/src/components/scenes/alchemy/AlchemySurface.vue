@@ -212,54 +212,31 @@ const spiritStoneRow = computed(() => ({
   amount: preview.value?.spiritStoneCost ?? selectedRecipe.value?.spiritStoneCost ?? 0,
 }))
 
-const jobs = computed(() => {
+const queueState = computed(() => {
   stateVersion.value
-
   void nowMs.value
-
-  // Scope-hidden recipe families never render - a carried save's
-  // dormant in-flight job still settles in the domain but stays off
-  // the surface (contract sec.F).
-  return gameManager.alchemyOps.getAlchemyJobs()
-    .filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
-    .map((job): AlchemyJobDisplay => {
-      const remainingMs = Math.max(0, job.completesAtMs - nowMs.value)
-
-      const totalSeconds = Math.max(1, Math.ceil((job.completesAtMs - job.startedAtMs) / 1000))
-
-      return {
-        id: job.jobId,
-
-        name: gameManager.pillRegistry.has(job.pillId)
-          ? gameManager.pillRegistry.get(job.pillId).name
-          : job.pillId,
-
-        icon: pillIconFor(job),
-
-        progress: Math.min(100, (1 - remainingMs / (totalSeconds * 1000)) * 100),
-
-        remaining: `${Math.ceil(remainingMs / 60000)}p`,
-      }
-    })
+  return gameManager.alchemyOps.getAlchemyQueueState()
 })
 
-/**
- * Job-slot cap read the same way GameManagerAlchemyOps does - the domain
- * owns the concurrent_job_slots rule; the view only consumes it.
- */
-const maxJobSlots = computed(() => {
-  stateVersion.value
-
-  const instance = gameManager.buildingManager.getByBuildingId('pill_room')
-
-  if (!instance) {
-    return 0
-  }
-
-  const template = gameManager.buildingRegistry.get('pill_room')
-
-  return gameManager.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
+const jobs = computed(() => {
+  const queue = queueState.value
+  const ordered = queue.activeJob ? [queue.activeJob, ...queue.waitingJobs] : queue.waitingJobs
+  return ordered.map((job): AlchemyJobDisplay => {
+    const active = job.jobId === queue.activeJob?.jobId
+    const remainingMs = Math.max(0, job.completesAtMs - nowMs.value)
+    const duration = Math.max(1, job.completesAtMs - job.startedAtMs)
+    return {
+      id: job.jobId,
+      name: gameManager.pillRegistry.has(job.pillId) ? gameManager.pillRegistry.get(job.pillId).name : job.pillId,
+      icon: pillIconFor(job),
+      state: active ? 'active' : 'waiting',
+      progress: active ? Math.max(0, Math.min(100, (1 - remainingMs / duration) * 100)) : 0,
+      remaining: active ? `${Math.ceil(remainingMs / 1000)}s` : t('alchemy.waitingJob'),
+    }
+  })
 })
+
+const maxJobSlots = computed(() => queueState.value.maxQueueSlots)
 
 // Same admission the domain checks first (GameManagerAlchemyOps fails
 // closed with 'room_not_built'): without a pill-room instance there is
@@ -281,7 +258,7 @@ const canBrew = computed(() => {
     return false
   }
 
-  if (jobs.value.length >= Math.max(1, maxJobSlots.value)) {
+  if (jobs.value.length >= queueState.value.maxTotalJobs) {
     return false
   }
 
@@ -324,7 +301,7 @@ const brewBlockReason = computed<string | null>(() => {
     return 'missing_herb'
   }
 
-  if (jobs.value.length >= Math.max(1, maxJobSlots.value)) {
+  if (jobs.value.length >= queueState.value.maxTotalJobs) {
     return 'job_slots_full'
   }
 
@@ -390,8 +367,13 @@ function startJob() {
 }
 
 function cancelJob(jobId: string) {
-  gameManager.alchemyOps.cancelAlchemyJob(jobId)
-  useAudioStore().cue('ui.cancel')
+  const cancelled = gameManager.alchemyOps.cancelAlchemyJob(jobId)
+  if (!cancelled) {
+    useNotificationStore().push('warning', t('alchemy.cancelFailed'))
+    useAudioStore().cue('ui.error')
+  } else {
+    useAudioStore().cue('ui.cancel')
+  }
 
   bumpState()
 }

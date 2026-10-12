@@ -14,7 +14,7 @@
 //   * carried Quan The diverter and Nghich Chu Tian mechanics minting
 //     cultivation banking / level writes downstream of eligibility;
 //   * alchemy dormant-family job settle (park, never deliver);
-//   * decompose carried started cycle (tick + offline settle inert);
+//   * legacy decompose state restores inertly and instant exchange stays gated;
 //   * vendor reads (sell/preview/rows) on dormant materials incl. the
 //     hidden-beast and zhou-tian currencies;
 //   * quest claim on a carried scope-hidden daily quest;
@@ -380,24 +380,26 @@ describe('dormant production settle seams', () => {
     expect(system.drainSettlementEvents()).toEqual([])
   })
 
-  it('a carried started decompose cycle never runs (tick + offline settle)', () => {
+  it('legacy decompose timer restores inertly and the hidden instant exchange consumes nothing', () => {
     const registry = new MaterialRegistry()
     for (const material of materials) registry.register(material)
     const bag = new MaterialBag()
     bag.add(registry.get('mortal_ore_decade'), 100)
 
-    const system = new DecomposeSystem(bag, { cycleSeconds: 60 })
+    const system = new DecomposeSystem(bag)
     system.restore({
       settings: { gradeFilter: 'all', ageFilter: 'all', workers: 3 },
       nextCycleAt: 0,
       started: true,
     })
 
-    system.tick(9_999_999)
-    expect(system.drainOutput()).toEqual([])
-    expect(system.settleOffline(9_999_999, 0)).toBe(0)
-    expect(system.drainOutput()).toEqual([])
-    // No cycle ran: the carried ore is never consumed.
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
+    expect(system.previewDecomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
+    expect(system.decomposeOre('mortal_ore_decade', 2)).toEqual({ ok: false, reason: 'scope_hidden' })
     expect(bag.getAmount('mortal_ore_decade')).toBe(100)
   })
 })

@@ -312,7 +312,7 @@ describe('auditR32 INT probe - orphaned authority-pause freeze across re-entry (
 
 // ----------------------------------------------------------------------------
 // (C1) Deny-return shape: the r31 negative-window deny must preserve pending
-// verbatim - callers assign result.pending back to state.workerCycles, so a
+// verbatim - callers assign result.pending back to state.productionCycles, so a
 // deny that truncated the array would delete honest in-flight lanes.
 // ----------------------------------------------------------------------------
 

@@ -1,8 +1,5 @@
 // @vitest-environment jsdom
-// gp123 6G fix round 1 (2026-09-06) -- gate toast CHI cho reason
-// 'grade_not_below'; reason khac (sole_recipe_ingredient, bag_full...)
-// phai nhan message generic thay vi message gate (sai su that: herb pham
-// thap hon bi chan vi la thao DUY NHAT cua dan phuong khong phai do pham).
+// Retired sales remain inaccessible even when the legacy panel is mounted.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -110,67 +107,39 @@ function sellButtons(mounted: ReturnType<typeof mountVendorPanel>) {
   )
 }
 
-// ui-audit economy H2 -- selling the whole stack (the qty default) now
-// routes through ConfirmModal; the helper walks that extra step so the
-// toast-reason assertions below keep exercising the same domain path.
-async function confirmSellAll() {
-  await nextTick()
-
-  const confirm = document.body.querySelector<HTMLButtonElement>('.confirm-modal__confirm')
-
-  confirm?.click()
-
-  await nextTick()
-}
-
 afterEach(() => {
   document.body.innerHTML = ''
   vi.restoreAllMocks()
 })
 
-describe('VendorPanel — toast lý do từ chối (gp123 6G fix round 1)', () => {
-  it('reason sole_recipe_ingredient → message GENERIC, KHÔNG phải message gate', async () => {
+describe('VendorPanel retired sales boundary', () => {
+  it('does not expose sales or consume a sole recipe ingredient', async () => {
     const mounted = mountVendorPanel([SOLE_HERB_RECIPE])
-
     mounted.player.realmId = 'qi_refining'
     mounted.gameManager.materialBag.add(VENDOR_HERB, 10)
     mounted.bumpState()
     await nextTick()
 
-    // Row render duoc (pham thap hon) nhung ban HET stack cham sole-ingredient.
-    expect(sellButtons(mounted).length).toBe(1)
-
-    sellButtons(mounted)[0]!.click()
-    await confirmSellAll()
-
-    const messages = mounted.notifications.toasts.map((toast) => toast.message)
-
-    expect(messages).toContain('Không bán được vật phẩm này.')
-    expect(messages).not.toContain('Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại')
-    // Nguyen lieu khong mat -- sole guard chan.
+    expect(sellButtons(mounted)).toHaveLength(0)
+    expect(mounted.gameManager.economyOps.previewVendorSale(VENDOR_HERB.id, 10, mounted.player.$state)).toBeNull()
+    expect(mounted.gameManager.economyOps.sellMaterialToVendor(VENDOR_HERB.id, 10, mounted.player.$state).ok).toBe(false)
     expect(mounted.gameManager.materialBag.getAmount(VENDOR_HERB.id)).toBe(10)
     mounted.unmount()
   })
 
-  it('reason grade_not_below → message gate hiển thị đúng', async () => {
+  it('keeps sales absent after state refresh and remount', async () => {
     const mounted = mountVendorPanel()
-
     mounted.player.realmId = 'qi_refining'
     mounted.gameManager.materialBag.add(VENDOR_HERB, 10)
     mounted.bumpState()
     await nextTick()
-
-    vi.spyOn(mounted.gameManager.economyOps, 'sellMaterialToVendor').mockReturnValue({
-      ok: false,
-      reason: 'grade_not_below',
-    })
-
-    sellButtons(mounted)[0]!.click()
-    await confirmSellAll()
-
-    expect(mounted.notifications.toasts.map((toast) => toast.message)).toContain(
-      'Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại',
-    )
+    expect(sellButtons(mounted)).toHaveLength(0)
+    expect(mounted.notifications.toasts).toHaveLength(0)
     mounted.unmount()
+
+    const reopened = mountVendorPanel()
+    await nextTick()
+    expect(sellButtons(reopened)).toHaveLength(0)
+    reopened.unmount()
   })
 })

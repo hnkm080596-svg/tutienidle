@@ -20,10 +20,13 @@ vi.mock('../../core/betaScope', async (importOriginal) => ({
   isScopeHidden: () => false,
 }))
 
-import { createApp, h, nextTick, ref } from 'vue'
+import { createApp, defineComponent, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import ProductionPanel from './ProductionPanel.vue'
 import WorkerLodgePanel from './WorkerLodgePanel.vue'
+import QuaTangTab from './worker-lodge/QuaTangTab.vue'
+import ChieuMoTab from './worker-lodge/ChieuMoTab.vue'
+import DuyenPhanTab from './worker-lodge/DuyenPhanTab.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
@@ -87,7 +90,7 @@ afterEach(() => {
 })
 
 describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
-  it('WorkerLodgePanel: capacity 3 ở cấp 1 — panel text render', () => {
+  it('WorkerLodgePanel remains an art-only landmark with no worker or upgrade controls', () => {
     const deps = makeDeps(WorkerLodgePanel)
 
     deps.gameManager.buildingManager.add({
@@ -103,19 +106,16 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     deps.app.mount(deps.container)
     deps.gameManager.setActivePlayer(player.$state)
 
-    const chq = deps.gameManager.buildingManager.getByBuildingId('chi_hien_quan')!
-
-    deps.gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, chq)
-
-    const text = deps.container.textContent ?? ''
-
-    expect(text).toContain('Nhân công')
-    expect(text).toContain('3')
+    expect(deps.container.querySelector('[data-testid="chi-hien-quan-art-only"]')).not.toBeNull()
+    expect(deps.container.querySelector('.worker-lodge-panel__art')?.getAttribute('src')).toContain('chi_hien_quan/base.png')
+    expect(deps.container.textContent ?? '').toContain('không có chức năng nâng cấp')
+    expect(deps.container.textContent ?? '').not.toContain('Nhân công')
+    expect(deps.container.querySelector('button')).toBeNull()
 
     deps.app.unmount()
   })
 
-  it('ProductionPanel: allocation block + linh mạch + assignWorkers persist', async () => {
+  it('ProductionPanel keeps Linh Mạch collection and autonomous site controls without workforce UI', async () => {
     const deps = makeDeps(ProductionPanel)
 
     deps.gameManager.buildingManager.add({
@@ -125,88 +125,42 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
       lastCollectedAt: 0,
     })
 
-    deps.gameManager.buildingManager.add({
-      instanceId: 'chq_inst',
-      buildingId: 'chi_hien_quan',
-      level: 2,
-      lastCollectedAt: 0,
-    })
-
     const player = usePlayerStore(deps.pinia)
 
     player.realmId = 'mortal'
     deps.app.mount(deps.container)
     deps.gameManager.setActivePlayer(player.$state)
-
-    const chq = deps.gameManager.buildingManager.getByBuildingId('chi_hien_quan')!
-
-    deps.gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, chq)
 
     await nextTick()
 
     const text = deps.container.textContent ?? ''
 
-    // Allocation header + mode labels render.
-    expect(text).toContain('Nhân công:')
-    expect(text).toContain('Tự động')
-    expect(text).toContain('Phân thủ công')
-
-    // Workers-as-fuel (spec D3): no Start-cycle control exists; the panel
-    // is pure worker allocation + auto-repeat gating.
-    expect(deps.container.querySelector('.site-card__action')).toBeNull()
+    expect(text).not.toContain('Nhân công')
+    expect(text).not.toContain('Phân thủ công')
+    expect(deps.container.querySelector('.worker-allocation__slider')).toBeNull()
 
     // Linh mach card render (outpost da xay - sau khi xoa spirit_spring).
     expect(text).toContain('Linh Mạch')
 
-    // Manual: assign qua GameManager (nhu handler slider) -> state persist.
-    const siteId = deps.gameManager.buildingOps.getProductionViews(Date.now())[0]!.definition.siteId
-
-    deps.gameManager.buildingOps.assignWorkers(siteId, 2)
-
-    expect(deps.gameManager.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
-
-    // Quay auto: undefined.
-    deps.gameManager.buildingOps.assignWorkers(siteId, undefined)
-
-    expect(deps.gameManager.productionSystem.getState(siteId)?.assignedWorkers).toBeUndefined()
+    expect(deps.container.querySelectorAll('[data-testid="production-upgrade"]')).toHaveLength(0)
+    expect(deps.container.querySelector('.site-card__auto')).not.toBeNull()
 
     deps.app.unmount()
   })
 
-  it('ProductionPanel: workerMode derives from persisted assignments (no local ref); slider max = available pool', async () => {
+  it('ProductionPanel no longer mounts worker assignment controls', async () => {
     const deps = makeDeps(ProductionPanel)
     deps.gameManager.buildingManager.add({
       instanceId: 'outpost_inst', buildingId: 'gathering_outpost', level: 1, lastCollectedAt: 0,
     })
-    deps.gameManager.buildingManager.add({
-      instanceId: 'chq_inst', buildingId: 'chi_hien_quan', level: 2, lastCollectedAt: 0,
-    })
-
     const player = usePlayerStore(deps.pinia)
     player.realmId = 'mortal'
     deps.gameManager.setActivePlayer(player.$state)
-    const chq = deps.gameManager.buildingManager.getByBuildingId('chi_hien_quan')!
-    deps.gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, chq) // total 5
-
-    // Decompose holds 2 of the 5 -> production sliders max at 3.
-    deps.gameManager.decomposeSystem.updateCapacity(5)
-    deps.gameManager.decomposeSystem.setSetting({ workers: 2 })
-
-    // A persisted assignment exists BEFORE mount -> the panel must derive
-    // 'manual' from it (audit T4-29: the old local ref always reset to auto).
-    const siteId = deps.gameManager.buildingOps.getProductionViews(Date.now())[0]!.definition.siteId
-    deps.gameManager.buildingOps.assignWorkers(siteId, 2)
-
     deps.app.mount(deps.container)
     await nextTick()
 
-    const radios = deps.container.querySelectorAll<HTMLInputElement>('input[name="worker-mode"]')
-    expect(radios[0]!.checked).toBe(false) // auto
-    expect(radios[1]!.checked).toBe(true)  // manual
-
-    const slider = deps.container.querySelector<HTMLInputElement>('.worker-allocation__slider input[type=range]')
-    expect(slider).not.toBeNull()
-    expect(slider!.max).toBe('3') // available = 5 - 2, not the total 5
+    expect(deps.container.querySelector('input[name="worker-mode"]')).toBeNull()
+    expect(deps.container.querySelector('.worker-allocation__slider')).toBeNull()
 
     deps.app.unmount()
   })
@@ -245,7 +199,22 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
 const PULL_TOKEN = materials.find((material) => material.id === 'chieu_hien_lenh')!
 
 function mountWorkerLodge(prepare?: (deps: ReturnType<typeof makeDeps> & { player: ReturnType<typeof usePlayerStore> }) => void) {
-  const deps = makeDeps(WorkerLodgePanel)
+  const selected = ref(1)
+  const testHarness = defineComponent({
+    setup: () => () => h('div', [
+      h('nav', { class: 'companion-test-tabs' }, [0, 1, 2, 3].map(index => h('button', {
+        type: 'button', onClick: () => { selected.value = index },
+      }, String(index)))),
+      selected.value === 0
+        ? h('p', 'Chiêu Hiền Quán là công trình trưng bày.')
+        : selected.value === 1
+          ? h(QuaTangTab)
+          : selected.value === 2
+            ? h(ChieuMoTab)
+            : h(DuyenPhanTab),
+    ]),
+  })
+  const deps = makeDeps(testHarness)
 
   // Real material catalog so the Chieu Hien Lenh registry entry resolves
   // (token name label) and the v-tooltip directive used by DuyenPhanTab
@@ -273,7 +242,7 @@ function mountWorkerLodge(prepare?: (deps: ReturnType<typeof makeDeps> & { playe
 }
 
 async function openTab(container: HTMLElement, index: number) {
-  const tabs = container.querySelectorAll<HTMLButtonElement>('.worker-lodge-panel__tabs button')
+  const tabs = container.querySelectorAll<HTMLButtonElement>('.companion-test-tabs button')
 
   tabs[index]!.click()
 
@@ -289,44 +258,10 @@ function exchangeButtons(container: HTMLElement) {
 }
 
 describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
-  it('tab bar renders nhan_cong / chieu_mo / duyen_phan; default tab keeps worker capacity body', async () => {
-    const deps = mountWorkerLodge((prepared) => {
-      prepared.gameManager.buildingManager.add({
-        instanceId: 'chq_inst',
-        buildingId: 'chi_hien_quan',
-        level: 1,
-        lastCollectedAt: 0,
-      })
-    })
-
-    await nextTick()
-
-    const tabs = Array.from(
-      deps.container.querySelectorAll<HTMLButtonElement>('.worker-lodge-panel__tabs button'),
-    ).map((tab) => tab.textContent?.trim())
-
-    expect(tabs).toEqual(['Nhân Công', 'Quà Tặng', 'Chiêu Mộ', 'Đổi Duyên Phận'])
-
-    const text = deps.container.textContent ?? ''
-
-    expect(text).toContain('Nhân công')
-    expect(text).toContain('3')
-
-    deps.app.unmount()
-  })
-
-  it('mortal player only sees the nhan_cong tab (gacha tabs hidden below Tru Co)', async () => {
+  it('companion surfaces remain testable independently after leaving Worker Lodge ownership', async () => {
     const deps = mountWorkerLodge()
-
-    deps.player.realmId = 'mortal'
-    await nextTick()
-
-    const tabs = Array.from(
-      deps.container.querySelectorAll<HTMLButtonElement>('.worker-lodge-panel__tabs button'),
-    ).map((tab) => tab.textContent?.trim())
-
-    expect(tabs).toEqual(['Nhân Công'])
-
+    expect(deps.container.querySelector('.qua-tang__empty')).not.toBeNull()
+    expect(deps.container.querySelector('.worker-lodge-panel')).toBeNull()
     deps.app.unmount()
   })
 

@@ -87,8 +87,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: false,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -135,8 +134,7 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [],
+        productionCycles: [],
       },
     ]
 
@@ -168,8 +166,7 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [],
+        productionCycles: [],
       },
     ]
     expect(validateGameSaveShape(admitted).ok).toBe(true)
@@ -219,7 +216,7 @@ describe('fixpoint r20 COR - r19 adjudication batch repros', () => {
       new MaterialRegistry(),
       'mortal',
       settleNowMs,
-      { workerCapacity: 1, offlineSinceMs, rng },
+      { offlineSinceMs, rng },
     )
     expect(settled).toBe(0)
     expect(completions).toBe(0)

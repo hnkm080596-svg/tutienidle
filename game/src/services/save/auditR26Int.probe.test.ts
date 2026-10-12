@@ -87,9 +87,6 @@ function makeSave(
   if (overrides.autoFarmStage !== undefined) {
     player.autoFarmStage = overrides.autoFarmStage
   }
-  if (overrides.autoWorkerCapacity !== undefined) {
-    player.autoWorkerCapacity = overrides.autoWorkerCapacity
-  }
   const save = buildGameSave(player, manager)
   save.player.lastSavedAt = overrides.lastSavedAt ?? NOW
   if (overrides.productionSites !== undefined) {
@@ -101,17 +98,9 @@ function makeSave(
   if (overrides.quests !== undefined) {
     save.quests = overrides.quests
   }
-  if (overrides.autoWorkerCapacity !== undefined && overrides.autoWorkerCapacity > 0) {
-    // A non-zero persisted capacity requires the chi_hien_quan building
-    // witness in the same payload.
-    save.buildings = [
-      {
-        instanceId: 'r26_chq',
-        buildingId: 'chi_hien_quan',
-        level: 1,
-        lastCollectedAt: 0,
-      },
-    ]
+  if (overrides.autoWorkerCapacity !== undefined) {
+    ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity =
+      overrides.autoWorkerCapacity
   }
   return save
 }
@@ -176,7 +165,7 @@ function plusDeltaSave(delta = HOUR_MS): GameSave {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'r26_wc1',
             siteId: 'thanh_van_lam',
@@ -497,8 +486,8 @@ describe('seam (d) - consistent +Delta epoch passes admission, wedges the writer
     const site = manager.productionSystem
       .getAllStates()
       .find((s) => s.siteId === 'thanh_van_lam')
-    expect(site?.workerCycles?.[0]?.startedAtMs).toBe(NOW)
-    expect(site?.workerCycles?.[0]?.completesAtMs).toBe(NOW + MORTAL_CYCLE_MS)
+    expect(site?.productionCycles?.[0]?.startedAtMs).toBe(NOW)
+    expect(site?.productionCycles?.[0]?.completesAtMs).toBe(NOW + MORTAL_CYCLE_MS)
     expect(manager.tribulationDirector.serializeRuntime()?.cooldownUntil).toBe(
       NOW + TRIBULATION_COOLDOWN_SECONDS * 1000,
     )
@@ -676,3 +665,4 @@ describe('seam (f) - authority degrade arms share the deny-direction vocabulary'
     }
   })
 })
+

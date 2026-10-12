@@ -10,20 +10,9 @@ import {
   PRODUCTION_OFFLINE_CAP_SECONDS,
   computeCycleSeconds,
 } from './ProductionBalance'
-import { allocateWorkerSlots } from './WorkerAllocator'
 import { advanceWorkerLanes } from './WorkerLaneAdvance'
 
-/**
- * Offline settle (plan sec4.3) - tach khoi ProductionSystem
- * (large-file-split): policy catch-up (ngan sach PRODUCTION_OFFLINE_CAP,
- * forfeit backlog, worker-cycle window) song hanh voi tickWorkers
- * online qua CUNG allocateWorkerSlots + grantCycleRewards - online va
- * offline dung mot quy tac phan bo/settle.
- *
- * M11 (ARCH-007): worker-cycle advancement shares the SAME mechanism
- * advanceWorkerLanes (WorkerLaneAdvance.ts) with tickWorkers - per-lane
- * deadline chaining replaces the pooled floor(windowMs * slots / cycleMs).
- */
+/** Offline catch-up shares cycle grants with the online production owner. */
 export interface ProductionOfflineDeps {
   states: Map<string, ProductionSiteState>
 
@@ -36,7 +25,7 @@ export interface ProductionOfflineDeps {
   ) => void
 
   /**
-   * GP-01 - the FIELD epoch clock (what the live tickWorkers reads the
+   * GP-01 - the FIELD epoch clock (what the live tick reads the
    * persisted completesAtMs stamps against). ProductionSystem forwards
    * the shared TimeAuthority; absent = wall clock (pre-migration
    * behavior for direct-construction fixtures).
@@ -45,13 +34,7 @@ export interface ProductionOfflineDeps {
 }
 
 export interface ProductionOfflineOptions {
-  workerCapacity?: number
   offlineSinceMs?: number
-  /** Chi-hien-quan - assignments snapshot (tu states truoc settle) de
-   *  offline khop online. */
-  workerAssignments?: Map<string, number>
-
-  /** Seeded stream for rollSeed mints on spawned cycles. */
   rng?: () => number
 }
 
@@ -63,87 +46,44 @@ export function settleProductionOffline(
   nowMs: number = Date.now(),
   options: ProductionOfflineOptions = {},
 ): number {
-  // Mission D (spec D3) - workers-as-fuel: the manual activeCycle path
-  // is gone; offline settle is exactly the worker-lane phase under the
-  // full PRODUCTION_OFFLINE_CAP budget.
-  return settleWorkersOffline(
+  // Offline production uses the full configured cap for pending cycles.
+  return settleProductionCyclesOffline(
     deps,
     bag,
     registry,
     currentRealmId,
     nowMs,
     PRODUCTION_OFFLINE_CAP_SECONDS * 1000,
-    Math.floor(options.workerCapacity ?? 0),
     options.offlineSinceMs,
-    options.workerAssignments,
     options.rng,
   )
 }
 
-/**
- * Offline settle for worker cycles (T3) - the whole cap budget
- * (Mission D: no manual phase eats budget first anymore).
- *
- * M11 (ARCH-007): each site runs `slots` parallel worker LANES inside the
- * [offlineSinceMs, nowMs] window - one sequential cycle chain per lane on
- * its OWN deadline, via the same advanceWorkerLanes mechanism as
- * tickWorkers (driver 'deadline'). Pending cycles past nowMs keep their
- * original lane/deadline for the online tickWorkers; completions over the
- * remaining budget are forfeited. Fractional lane time is never pooled
- * into a synthetic cycle.
- *
- * Chi-hien-quan (2026-09-02): `workerAssignments` - cung phan bo manual
- * cua tickWorkers de OFFLINE KHOP ONLINE (spec sec6).
- */
-function settleWorkersOffline(
+/** Settle retained cycles and one active cycle per site within the offline window. */
+function settleProductionCyclesOffline(
   deps: ProductionOfflineDeps,
   bag: MaterialBag,
   registry: MaterialRegistry,
   currentRealmId: string,
   nowMs: number,
   budgetRemainingMs: number,
-  workerCapacity: number,
   offlineSinceMs?: number,
-  workerAssignments?: Map<string, number>,
   rng?: () => number,
 ): number {
-  // R7 (AR-07): the SAME pure allocator as tickWorkers - online and
-  // offline settlement share one distribution rule (manual first,
-  // remainder round-robins unassigned sites, leftover idle).
-  const activeStates = [...deps.states.values()].filter((state) => state.autoRestart)
-
-  // Same order as tickWorkers: slots zero out on every state first.
-  for (const state of deps.states.values()) {
-    state.activeWorkerSlots = 0
-  }
-
-  // D1 (INV-D-03) - same retained-lane contract as tickWorkers: saved
-  // in-flight lanes keep their own deadlines and settle under the cap
-  // budget even when the pool is zero or the site left the auto set.
-  // Only a total absence of advanceable work skips the pass.
+  // Retained cycles keep their deadlines even after a site is disabled.
+  // Only a total absence of work skips the pass.
   const advanceableStates = [...deps.states.values()].filter(
-    (state) => state.autoRestart || (state.workerCycles?.length ?? 0) > 0,
+    (state) => state.autoRestart || (state.productionCycles?.length ?? 0) > 0,
   )
   if (advanceableStates.length === 0) {
     return 0
   }
 
-  const slotsBySite = allocateWorkerSlots(
-    activeStates.map((state) => state.siteId),
-    workerAssignments ?? new Map<string, number>(),
-    workerCapacity,
-  )
-
-  for (const state of activeStates) {
-    state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
-  }
 
   let settled = 0
 
-  let budgetMs = budgetRemainingMs
-
   for (const state of advanceableStates) {
-    const slots = slotsBySite.get(state.siteId) ?? 0
+    const slots = state.autoRestart ? 1 : 0
 
     const definition = deps.getSiteDefinition(state.siteId)
 
@@ -152,28 +92,24 @@ function settleWorkersOffline(
     const cycleMs =
       definition && baseSeconds ? computeCycleSeconds(baseSeconds, state.level) * 1000 : 0
 
-    state.workerCycles ??= []
+    state.productionCycles ??= []
 
-    // M11 (ARCH-007) - per-lane advancement via the SAME mechanism as
-    // tickWorkers (advanceWorkerLanes): each lane completes on its OWN
-    // deadline; pending cycles keep their lane + original deadline;
-    // empty lanes produce only from the authorized window start
-    // (offlineSinceMs).
-    // No floor(windowMs * slots / cycleMs) pooling across lanes.
-    // Completions over the budget are forfeited - past-due backlog is
-    // never left behind for a free online grant outside the cap.
+    // Advance the site's single cycle chain through the authorized
+    // offline window. Over-budget completions are forfeited so backlog
+    // cannot be granted later outside the cap.
     const result = advanceWorkerLanes({
       siteId: state.siteId,
       collectionRealmId: currentRealmId,
       siteLevel: state.level,
       baseSeconds: baseSeconds ?? 0,
       cycleMs,
-      pending: state.workerCycles,
+      pending: state.productionCycles,
       slots,
       nowMs,
       emptyLaneStartMs: offlineSinceMs,
       advanceMode: 'deadline',
-      budgetMs,
+      // Each site owns its full allowance; sibling order cannot spend it.
+      budgetMs: budgetRemainingMs,
       rng,
     })
 
@@ -182,7 +118,7 @@ function settleWorkersOffline(
     // settle" - their pending head owes its next completion relative
     // to the settle's nowMs, whatever epoch anchored the seed (server
     // bound, recent marker, or crafted deep-past). Persisting those
-    // stamps raw into workerCycles - which tickWorkers reads against
+    // stamps raw into productionCycles - which online ticks reads against
     // Date.now() - paid them early under any positive skew (and paid
     // ~1 cycle instantly for deep-past windows). Re-stamp exactly the
     // seed-rooted heads into the field epoch; successors of SAVED
@@ -192,7 +128,7 @@ function settleWorkersOffline(
     // live tick reads - NOT the raw wall clock, which a user can move.
     const fieldEpochShiftMs = Math.max(0, (deps.fieldNow?.() ?? Date.now()) - nowMs)
     const seededHeads = new Set(result.seededPending)
-    state.workerCycles = result.pending.map((cycle) =>
+    state.productionCycles = result.pending.map((cycle) =>
       // r32-AUT-4: the re-stamp must not mint out-of-domain either - a
       // crafted wall clock far ahead of the settle epoch would push the
       // shifted stamps >= 2^52 and self-refuse the next save write.
@@ -207,8 +143,6 @@ function settleWorkersOffline(
           }
         : cycle,
     )
-
-    budgetMs -= result.consumedBudgetMs
 
     for (const cycle of result.completed) {
       deps.grantCycleRewards(cycle, bag, registry)

@@ -44,7 +44,7 @@ vi.mock('../../core/betaScope', async (importOriginal) => {
 // ============================================================================
 // QA probe - fixpoint r32 AUT wave. Adversarial audit of the r31 batch at
 // 1d27aee4: the [0, 2^52) non-negative persisted-clock domain on
-// workerCycles + alchemyJobs, the mint-headroom guards
+// productionCycles + alchemyJobs, the mint-headroom guards
 // (!(clock + max(0, span) < 2^52)), the restoreJobs drop-vs-park asymmetry,
 // the bootGame simPaused=false re-baseline, and the TLT-shaped appliedAtMs
 // push-arm clamp (min(2^52 - 1, Date.now())).
@@ -258,8 +258,7 @@ describe('r32-AUT F2 - restore shift arms mint inverted pairs', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 1,
-          workerCycles: [inverted],
+          productionCycles: [inverted],
         },
       ],
       currentMs,
@@ -269,7 +268,7 @@ describe('r32-AUT F2 - restore shift arms mint inverted pairs', () => {
     // restore boundary - parity with restoreJobs - instead of parking
     // verbatim and wedging every later write. The pure mechanism keeps
     // its ordering deny for any feed that bypasses restore.
-    expect(system.getState(FOREST_SITE_ID)!.workerCycles!).toHaveLength(0)
+    expect(system.getState(FOREST_SITE_ID)!.productionCycles!).toHaveLength(0)
 
     const result = advanceWorkerLanes({
       siteId: FOREST_SITE_ID,
@@ -296,9 +295,8 @@ describe('r32-AUT F2 - restore shift arms mint inverted pairs', () => {
 describe('r32-AUT F3 - DecomposeSystem.restore mergedDeadline over-bound mint', () => {
   clockIsolated()
 
-  it('crafted deadline + near-bound restoreNow: merged cap clamps to 2^52 - 1 (r32 fix)', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system.updateCapacity(1)
+  it('legacy deadline and worker settings normalize to inert defaults', () => {
+    const system = new DecomposeSystem(new MaterialBag())
     system.restore(
       {
         settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
@@ -307,11 +305,11 @@ describe('r32-AUT F3 - DecomposeSystem.restore mergedDeadline over-bound mint', 
       },
       BOUND - 1,
     )
-
-    // mergedDeadline = min(BOUND + 1000, min((BOUND - 1) + 30000,
-    // 2^52 - 1)) = BOUND - 1: the cap itself can no longer mint
-    // out-of-domain, so the next save write stays admissible.
-    expect(system.getSaveState().nextCycleAt).toBe(BOUND - 1)
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
   })
 
   it('end-to-end: the minted stamp refuses the next save write', () => {
@@ -344,8 +342,7 @@ describe('r32-AUT F4 - fieldEpochShiftMs over-bound re-stamp', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 0,
-          workerCycles: [],
+          productionCycles: [],
         },
       ],
     ])
@@ -367,15 +364,13 @@ describe('r32-AUT F4 - fieldEpochShiftMs over-bound re-stamp', () => {
       'mortal',
       1_725_160_000_000,
       {
-        workerCapacity: 1,
         offlineSinceMs: 1_725_160_000_000 - 1,
-        workerAssignments: new Map(),
         rng: () => 0.5,
       },
     )
 
     expect(settled).toBe(0)
-    const seeded = states.get(FOREST_SITE_ID)!.workerCycles!
+    const seeded = states.get(FOREST_SITE_ID)!.productionCycles!
     expect(seeded).toHaveLength(1)
     // r32-AUT-4: the re-stamp arm now checks shift headroom - a
     // +Date.now() delta that would push the head past 2^52 is skipped
@@ -510,22 +505,11 @@ describe('r32-AUT controls - r31 guards held at exact boundaries', () => {
     expect(system.getJobs()).toHaveLength(0)
   })
 
-  it('DecomposeSystem.tick headroom: deny at the bound, mint stays in-domain below it', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system.updateCapacity(1)
-    system.setSetting({ workers: 1 })
-    system.restore(
-      { settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: 1, started: true },
-      currentMs,
-    )
-
-    system.tick(BOUND - 30_000 + 1)
-    // Denied: nowMs + cycleMs > 2^52 - nextCycleAt untouched.
-    expect(system.getSaveState().nextCycleAt).toBe(1)
-
-    system.tick(BOUND - 30_000 - 1)
-    // Admitted: minted due lands exactly at BOUND - 1 < 2^52.
-    expect(system.getSaveState().nextCycleAt).toBe(BOUND - 1)
+  it('legacy deadline near the bound remains inert on restore', () => {
+    const system = new DecomposeSystem(new MaterialBag())
+    system.restore({ settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 }, nextCycleAt: BOUND - 1, started: true }, currentMs)
+    expect(system.getSaveState().nextCycleAt).toBe(0)
+    expect(system.getSaveState().started).toBe(false)
   })
 
   it('AlchemySystem.startJob headroom: invalid_clock within a span of the bound', () => {

@@ -103,6 +103,33 @@ export class GameManagerAutoFarmOps {
     return this.resolveValidAutoFarmStage(player, stageId) !== null
   }
 
+  // Observational projection: lifecycle ticks alone settle cycles and loot.
+  getAutoFarmView(player: PlayerData): {
+    stageId: string
+    stageName: string
+    cycleSeconds: number
+    progress: number
+    remainingSeconds: number
+    enemyIds: string[]
+  } | null {
+    const marker = player.autoFarmStage
+    if (!marker) return null
+    const stage = this.resolveValidAutoFarmStage(player, marker.stageId)
+    const cycleSeconds = player.perfectClearSeconds[marker.stageId]
+    if (!stage || !isValidCycleSeconds(cycleSeconds) || !Number.isFinite(marker.lastCheckedMs)) return null
+    const cycleMs = cycleSeconds * 1000
+    const elapsed = Math.max(0, this.nowMs() - marker.lastCheckedMs)
+    const remainder = elapsed % cycleMs
+    return {
+      stageId: stage.id,
+      stageName: stage.name,
+      cycleSeconds,
+      progress: remainder / cycleMs,
+      remainingSeconds: (cycleMs - remainder) / 1000,
+      enemyIds: [...new Set(stage.enemyPool.map(entry => entry.enemyId).concat(stage.bossEnemyId ? [stage.bossEnemyId] : []))],
+    }
+  }
+
   /**
    * Enable auto-farm for a stage that reached Hoan My. Shares the SAME
    * single-slot StageManager with manual/repeat/progress (exclusivity

@@ -51,7 +51,7 @@ vi.mock('../../core/betaScope', async (importOriginal) => {
 //     span, (c) ProductionSystem.restoreStates' shifted completesAtMs
 //     (same arithmetic), (d) AlchemySystem.startJob's nowMs + duration,
 //     (e) DecomposeSystem.tick / settleOffline's nowMs + cycleMs mints.
-//     Each lands in this.jobs / state.workerCycles / this.nextCycleAt and
+//     Each lands in this.jobs / state.productionCycles / this.nextCycleAt and
 //     self-refuses the next save write (isBoundedTimestamp / write-gate
 //     refuse -> coded 'SAVE_INVALID' -> corrupted + terminal arm). Ungated
 //     caller only: every production clock is min-clamped at Date.now() so
@@ -251,37 +251,23 @@ describe('r31-AUT F1b - AlchemySystem.restoreJobs shift-arm over-bound mint', ()
 })
 
 // ============================================================================
-// F1e - DecomposeSystem.tick: nowMs in (2^52 - cycleMs, 2^52) mints
-// nextCycleAt = nowMs + cycleMs >= 2^52 -> persisted -> write refuse.
+// F1e - retired Decompose clock fields cannot resume work.
 // ============================================================================
-describe('r31-AUT F1e - DecomposeSystem.tick nextCycleAt over-bound mint', () => {
+describe('r31-AUT F1e - legacy Decompose state remains inert', () => {
   clockIsolated()
 
-  function startedSystem() {
-    const bag = new MaterialBag()
-    const system = new DecomposeSystem(bag, { cycleSeconds: 30 })
-    system.updateCapacity(1)
-    system.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: 0,
-        started: true,
-      },
-      currentMs,
-    )
-    return system
-  }
-
-  it('tick(2^52 - 1) now denies (headroom) - nextCycleAt stays parked at 0', () => {
-    const system = startedSystem()
-    system.tick(BOUND - 1)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
-  })
-
-  it('control: tick(BOUND) zero-advances - the deadline stays parked', () => {
-    const system = startedSystem()
-    system.tick(BOUND)
-    expect(system.getSaveState().nextCycleAt).toBe(0)
+  it('ignores hostile legacy deadline and worker values', () => {
+    const system = new DecomposeSystem(new MaterialBag())
+    system.restore({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
+      nextCycleAt: BOUND - 1,
+      started: true,
+    }, BOUND - 1)
+    expect(system.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
   })
 })
 
@@ -293,22 +279,21 @@ describe('r31-AUT F1e - DecomposeSystem.tick nextCycleAt over-bound mint', () =>
 describe('r31-AUT F1 - minted over-bound stamps refuse at the write gate', () => {
   clockIsolated()
 
-  it('workerCycles / alchemyJobs / decompose.nextCycleAt >= 2^52 each refuse', () => {
+  it('productionCycles / alchemyJobs / decompose.nextCycleAt >= 2^52 each refuse', () => {
     const sitesSave = validWireSave()
     ;(sitesSave as unknown as Record<string, unknown>).productionSites = [
       {
         siteId: 'thanh_van_lam',
         level: 1,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [cycleAt(BOUND - 1, BOUND + 30_000 - 1)],
+        productionCycles: [cycleAt(BOUND - 1, BOUND + 30_000 - 1)],
       },
     ]
     const sitesResult = validateGameSaveShape(sitesSave)
     expect(sitesResult.ok).toBe(false)
     // The bound check collapses into the generic entry-shape refuse.
     expect(
-      sitesResult.issues.some((issue) => issue.path === 'productionSites[0].workerCycles[0]'),
+      sitesResult.issues.some((issue) => issue.path === 'productionSites[0].productionCycles[0]'),
     ).toBe(true)
 
     const jobsSave = validWireSave()

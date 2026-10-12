@@ -50,12 +50,6 @@ import { witnessedAlchemyJob } from './helpers/witnessFixtures'
 import { MaterialBag } from '@/core/material/MaterialBag'
 import { materials } from '@/data/materials/materials'
 import { buildings } from '@/data/building/buildings'
-import {
-  betaEffectiveWorkerCapacity,
-  resolveProductionWorkerCapacity,
-  BETA_BASELINE_WORKER_CAPACITY,
-} from '@/core/production/WorkerCapacity'
-import type { ProductionSiteState } from '@/core/production/ProductionTypes'
 import { buildRealmRewardNodes, TINH_THONG_NODE_IDS } from '@/data/progression/PhapTuRealmRewardNodes'
 import { collectTalentEffects, getCultivationSpeedPercent } from '@/core/talent/TalentEffects'
 
@@ -94,23 +88,19 @@ describe('save-safety: unsupportedReleaseReason robustness', () => {
     expect(reason === null || typeof reason === 'string').toBe(true)
   })
 
-  it('flags a save carrying dormant chi_hien_quan workforce capacity (F-B5-1)', () => {
-    const p = player()
-    p.autoWorkerCapacity = 5
-    expect(unsupportedReleaseReason(p)).toBe('manual_workforce_state')
+  it('ignores legacy worker-capacity properties absent from the current player contract', () => {
+    expect('autoWorkerCapacity' in player()).toBe(false)
+    for (const hostile of [null, undefined, 'x', NaN, -3]) {
+      const legacy = Object.assign(player(), { autoWorkerCapacity: hostile })
+      expect(() => unsupportedReleaseReason(legacy)).not.toThrow()
+      expect(unsupportedReleaseReason(legacy)).toBeNull()
+    }
   })
 
   it('control: a clean beta save carries no unsupported reason', () => {
     expect(unsupportedReleaseReason(player())).toBeNull()
   })
 
-  it('never throws on hostile autoWorkerCapacity shapes', () => {
-    for (const hostile of [null, undefined, 'x', NaN, -3]) {
-      const p = player()
-      ;(p as { autoWorkerCapacity?: unknown }).autoWorkerCapacity = hostile
-      expect(() => unsupportedReleaseReason(p)).not.toThrow()
-    }
-  })
 })
 
 describe('dormancy: hidden progression on a loaded save must not affect visible play', () => {
@@ -649,118 +639,47 @@ describe('dormancy: dormant way/technique/passive stat channels stay inert (F-TC
 })
 
 
-describe('dormancy: manualWorkforce stays inert while auto production runs the flat pool (F-B3-01 / F-B3-02)', () => {
+describe('dormancy: production sites progress independently without worker allocation', () => {
   const SITES = ['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien'] as const
 
-  function managerWithStates(states: ProductionSiteState[], p: PlayerData) {
+  function managerForProduction(p: PlayerData) {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerBuildings(buildings)
     gameManager.catalogOps.registerMaterials(materials)
-    gameManager.productionSystem.restoreStates([...states])
     gameManager.setActivePlayer(p)
     return gameManager
   }
 
-  function siteState(siteId: string, assignedWorkers?: number): ProductionSiteState {
-    return {
-      siteId,
-      level: 1,
-      autoRestart: true,
-      activeWorkerSlots: 0,
-      workerCycles: [],
-      assignedWorkers,
-    }
-  }
-
-  it('a fresh beta save runs production on the flat auto pool - workers never zero out (F-B3-01)', () => {
+  it('each enabled site owns one pending production cycle after the real manager tick', () => {
     const p = player()
-    const gameManager = managerWithStates(SITES.map((siteId) => siteState(siteId)), p)
+    const gameManager = managerForProduction(p)
+    for (const siteId of SITES) gameManager.buildingOps.setProductionAutoRestart(siteId, true)
+    gameManager.tickOps.update(1)
 
-    // No CHQ exists on a fresh save - the CHQ-sourced field is 0, but
-    // the scope-hidden workforce seam resolves the live auto pool.
-    expect(p.autoWorkerCapacity).toBe(0)
-    expect(betaEffectiveWorkerCapacity(0)).toBe(BETA_BASELINE_WORKER_CAPACITY)
-
-    const capacity = resolveProductionWorkerCapacity(
-      betaEffectiveWorkerCapacity(p.autoWorkerCapacity ?? 0),
-      gameManager.decomposeSystem.getSettings().workers,
-    )
-    expect(capacity).toBe(BETA_BASELINE_WORKER_CAPACITY)
-
-    // Round-robin: every auto site gets a lane, then a due lane
-    // delivers through the real bag - the herb chain stays alive.
-    gameManager.productionSystem.tickWorkers(
-      0,
-      gameManager.materialBag,
-      gameManager.materialRegistry,
-      'mortal',
-      capacity,
-      gameManager.buildingOps.getWorkerAssignments(),
-    )
     for (const siteId of SITES) {
-      expect(gameManager.productionSystem.getState(siteId)!.activeWorkerSlots).toBe(1)
+      expect(gameManager.productionSystem.getState(siteId)?.productionCycles).toHaveLength(1)
     }
-
-    const due = gameManager.productionSystem.getState('thanh_van_lam')!.workerCycles![0]!.completesAtMs
-    gameManager.productionSystem.tickWorkers(
-      due,
-      gameManager.materialBag,
-      gameManager.materialRegistry,
-      'mortal',
-      capacity,
-      gameManager.buildingOps.getWorkerAssignments(),
-    )
-    expect(gameManager.materialBag.getAll().length).toBeGreaterThan(0)
   })
 
-  it('a carried CHQ save keeps persisted assignments inert - they cannot starve a live site (F-B3-02)', () => {
+  it('legacy assignment fields do not become live state or prevent autonomous progress', () => {
     const p = player()
-    // Carried save: CHQ level 2 persisted capacity 5 + a manual choice
-    // concentrating every worker on the forest site.
-    p.autoWorkerCapacity = 5
-    const gameManager = managerWithStates(
-      [siteState('thanh_van_lam', 5), siteState('thanh_van_quang'), siteState('thanh_van_dong_thien')],
-      p,
-    )
+    const gameManager = managerForProduction(p)
+    gameManager.productionSystem.restoreStates([
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        workerCycles: [],
+        assignedWorkers: 5,
+        activeWorkerSlots: 5,
+      } as never,
+    ])
+    gameManager.tickOps.update(1)
 
-    // Flag coverage (F-B5-1): a save carrying dormant workforce state
-    // must surface the unsupported notice - capacity>0 always implies
-    // a chi_hien_quan record since CHQ is the only capacity source.
-    expect(unsupportedReleaseReason(p)).toBe('manual_workforce_state')
-
-    // The manual allocator input is inert - a dormant choice may not
-    // starve the other sites.
-    expect(gameManager.buildingOps.getWorkerAssignments().size).toBe(0)
-
-    // The read model shows the flat auto pool and censors the dormant
-    // assignment instead of advertising a CHQ pool the player cannot
-    // reach.
-    const workforce = gameManager.buildingOps.getWorkforceView()
-    expect(workforce.total).toBe(BETA_BASELINE_WORKER_CAPACITY)
-    expect(workforce.requested).toEqual({})
-
-    const capacity = resolveProductionWorkerCapacity(
-      betaEffectiveWorkerCapacity(p.autoWorkerCapacity),
-      gameManager.decomposeSystem.getSettings().workers,
-    )
-    gameManager.productionSystem.tickWorkers(
-      0,
-      gameManager.materialBag,
-      gameManager.materialRegistry,
-      'mortal',
-      capacity,
-      gameManager.buildingOps.getWorkerAssignments(),
-    )
-    expect(gameManager.productionSystem.getState('thanh_van_quang')!.activeWorkerSlots).toBe(1)
-    expect(gameManager.productionSystem.getState('thanh_van_dong_thien')!.activeWorkerSlots).toBe(1)
-  })
-
-  it('the unhidden path still honors CHQ capacity and manual assignments (positive controls)', () => {
-    // betaEffectiveWorkerCapacity is the only behavioral seam - when the
-    // scope authority reports in-scope (unlocked test table would), the
-    // raw CHQ field flows through unchanged. Assert the pure seam
-    // contract directly: hidden -> baseline, visible -> raw.
-    expect(betaEffectiveWorkerCapacity(7)).toBe(BETA_BASELINE_WORKER_CAPACITY)
+    const state = gameManager.productionSystem.getState('thanh_van_lam')!
+    expect(state.productionCycles).toHaveLength(1)
+    expect(state).not.toHaveProperty('assignedWorkers')
+    expect(state).not.toHaveProperty('activeWorkerSlots')
   })
 })
 

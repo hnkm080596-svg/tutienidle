@@ -389,11 +389,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
       autoRestart: state.autoRestart,
 
-      workerCycles: state.workerCycles?.length ? state.workerCycles : undefined,
-
-      // Mission A2 - manual allocation must persist; runtime-only
-      // activeWorkerSlots stays derived from live capacity (not saved).
-      assignedWorkers: state.assignedWorkers,
+      productionCycles: state.productionCycles?.length ? state.productionCycles : undefined,
 
       // M-F-BODY-HIDDEN (v81) - grotto hidden-channel settle counters.
       hiddenChannelCycles: state.hiddenChannelCycles,

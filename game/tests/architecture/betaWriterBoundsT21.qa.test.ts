@@ -443,8 +443,8 @@ describe('F-CYC-1: workerCycle span replays the authored window', () => {
     startedAtMs: completesAtMs - computeCycleSeconds(CYCLE_BASE_SECONDS_BY_REALM.mortal ?? 0, 1) * 1000,
     completesAtMs,
   })
-  const site = (workerCycles: ProductionCycleSave[]) => [
-    { siteId: 'thanh_van_lam', level: 1, autoRestart: true, workerCycles },
+  const site = (productionCycles: ProductionCycleSave[]) => [
+    { siteId: 'thanh_van_lam', level: 1, autoRestart: true, productionCycles },
   ]
 
   it('a span that does not replay the authored window is rejected', () => {

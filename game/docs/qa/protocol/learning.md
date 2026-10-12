@@ -567,3 +567,38 @@ Each candidate must pass the promotion predicate during Devin adoption before be
 - Incident: prepare routed every historical guidance version, so an obsolete STALE revision blocked a newer published version. Root class: publication authority was not supplied to the routing owner. Detector escape: tests covered freshness/status separately but omitted multi-version policy/history integration.
 - Repair and pins: route active-policy revisions; keep missing/stale/unpublished guards; reject conflicting qualified content under one revision. Unit and real CLI regressions added. Independent Luna review discovered policy omission and conflicting-history edges before integration; repaired and reverified (61 qualification passes, 1 designed skip; 22 focused passes).
 - Existing immutable learning policies and history are preserved. This incident is not an automatic promotion or a claim of prevention effectiveness. See `../2026-10-12-qa-lesson-routing.md`.
+
+
+### 2026-10-12 Architecture migration incident intake
+
+These are task discoveries, not published guidance or a qualification claim. Evidence/report: `docs/qa/2026-10-12-architecture-balance-check.md` and pending aggregate run.
+
+| Incident | Root class / detector escape | Detector or attack proposal | Qualification status |
+| --- | --- | --- | --- |
+| Architecture mounted both paper scene and empty legacy overlay | Mount category sets overlapped; DOM-only card assertion could pass behind foreground | `LeftPanel.building.test.ts` asserts no legacy overlay for Architecture; real-browser screenshot and upgrade interaction exercise the assembled mount | Local regression and browser reproduction; independent qualification pending |
+| Cancelling a due alchemy job erased earned work | Cancellation classified queue position without deadline ownership; unit fixtures used unrelated current wall time | `AlchemySystem.test.ts` deadline-before-tick rejection pin, explicit clock fixtures, boundary attacks on waiting starts and cancellation | Local RED/GREEN; independent resulting-state qualification pending |
+| Instant ceil conversion rewards input splitting | Reused batched rounding at player-command boundary; positive-only atomic test missed split strategy | Floor output under accepted ruling; test batch versus split conservation and reject zero-output without debit | Independent detector qualification pending |
+| Historical worker save rejection weakened by proposed test edit | Contract removal confused ignoring a valid legacy field with accepting malformed legacy data | Retain optional legacy type/range validation, malformed legacy fixture pins, canonical worker-free save roundtrip | Unsafe proposal rejected; preserved guards re-verification pending |
+| Browser acceptance interrupted by live source changes | HMR navigation invalidated an in-flight scenario; partial screenshots do not establish final-state acceptance | Freeze source candidate before final Playwright run, bind evidence to candidate identity; use isolated CLI sessions | Final frozen rerun pending |
+
+### Architecture integration follow-up, 2026-10-13
+
+- DevTools realm reset still supplied `workerCycles: []` after neutral `productionCycles` migration. Root consumer census found that the new field retained old-realm cycles. Repaired the actual reset caller to supply `productionCycles: []`; aggregate verification and resulting-state review still required. Escape class: incomplete field migration in a dev-only lifecycle consumer.
+- Independent preliminary UI review found Vietnamese number punctuation hardcoded on Architecture cards when English was selected. Card now formats using the active i18n locale. Focused Architecture/audio tests: 2 files, 10 tests passed. Escape class: presentation locale bypass.
+- Browser queue proof passed with one active kiln and three waiting jobs, a rejected fifth request without debit, and waiting cancellation refund through the real UI. Final combined browser exercise passed both scenarios (2 tests, 37.5s), including Architecture details and expedition hide/remount/stop. Evidence is copied into the task run; this is runtime evidence, not aggregate fixed-point certification.
+- Intake runner was reconstructed after initial implementation, with chronology explicitly recorded rather than backdated. Prepare routes candidate L-019 as NEEDS_DISCOVERY. Readiness remains unqualified until discovery and chronology handling are resolved; no prevention qualification or policy promotion is asserted.
+- Further aggregate reasoning found a migration defect: two legacy parallel alchemy jobs already due at restore were serialized before settlement, delaying the second earned outcome. A new deterministic regression failed (one job incorrectly remained), then passed after restore preserved already-due deadlines and serialized only remaining work. Alchemy scope: 62 tests passed. Root class: migration changed earned progression entitlement; escape reason: queue-order tests covered future jobs but not simultaneous due legacy heads. Proposal: pin completed-head preservation separately from future FIFO normalization; independent resulting-state review is still required.
+### 2026-10-13 Architecture migration: preserved entitlement bounds
+
+- Incident: migration changed the production pending-head save cap from the legal legacy maximum 3 to 65,536; old adversarial tests were adjusted to accept four forged heads.
+- Root class: validation weakening during semantic migration. Detector escape: tests followed implementation rather than preserving admitted entitlements.
+- Repair: one shared persisted-cycle cap of 3 applies to both legacy workerCycles and current productionCycles; new live production still starts one cycle per site.
+- Detection proposal: migration reviews must pair malformed/over-entitlement rejection with a legal compatibility control. Regression: both field names admit three valid heads and reject four; the forged-capacity adversarial case rejects four valid-looking heads. The old implementation failed the adversarial control before repair.
+- Independent qualification: a fresh Luna source challenge confirmed the cap regression and legal maximum; sibling test audit found no other confirmed weakened guard. This is incident evidence, not a promoted policy or fixed-point verdict.
+
+### 2026-10-13 Autonomous production: offline sibling starvation
+
+- Incident/root class: online independent sites retained an offline shared budget, so map order let the first site consume all ten hours and starve siblings. Short-window tests escaped this because their total work remained below the cap.
+- Product ruling: user approved ten hours per site, with no transfer between sites.
+- Regression: valid legacy pending heads settle in either map order; a 100-hour absence grants 360 cycles per enabled site (1080 across three), and repeated settlement grants zero. Both controls failed before repair.
+- Repair: each site passes the full bounded allowance into the existing deadline-advance primitive; no timing or reward implementation duplicated. Independent Luna resulting-state source review confirmed the repair semantics with no Medium+ findings; the focused 10-file/554-test run passed. User waived the remaining full QA campaign and requested a stop after Medium closure; no policy promotion or fixed-point claim is made.

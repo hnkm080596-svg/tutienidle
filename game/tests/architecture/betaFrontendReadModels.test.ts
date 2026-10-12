@@ -250,17 +250,19 @@ describe('beta FE-contract read-models - import guards', () => {
   )
 
   it(
-    'worker lodge stays scope-hidden: no visibility predicate reaches its panel',
+    'Chiêu Hiền Quán compatibility surface is art-only and has no workforce dependency',
     () => {
       const panel = SHELL_FILES.find(
         (file) => file.fromSrc === 'components/panels/WorkerLodgePanel.vue',
       )
 
       expect(panel, 'WorkerLodgePanel.vue missing from corpus').toBeDefined()
-      // The FINAL POLICY (sec.4C): the whole surface is scope-hidden -
-      // the panel must read the model tabs and never import
-      // CompanionAvailability domain gates itself.
-      expect(panel!.text).toContain('getWorkerLodgeSurfaceModel')
+      // The Architecture card is the owner; this compatibility shell
+      // renders only the landmark art and copy.
+      expect(panel!.text).toContain('chi-hien-quan-art-only')
+      expect(panel!.text).toContain('architecture.artOnly')
+      expect(panel!.text).not.toContain('getWorkerLodgeSurfaceModel')
+      expect(panel!.text).not.toMatch(/assignWorkers|workerCapacity|<button|<input/i)
       expect(
         /CompanionAvailability|isCompanionDomainUnlocked/.test(panel!.text),
       ).toBe(false)
@@ -269,25 +271,12 @@ describe('beta FE-contract read-models - import guards', () => {
   )
 
   it(
-    'manual workforce ops have no ungated UI caller - allocation lives behind manualWorkforce only',
+    'retired workforce controls are absent from every beta shell',
     () => {
-      const offenders = SHELL_FILES.filter(
-        (file) =>
-          /assignWorkers|getWorkforceView/.test(file.text) &&
-          file.fromSrc !== 'components/panels/ProductionPanel.vue',
+      const offenders = SHELL_FILES.filter((file) =>
+        /assignWorkers|getWorkforceView|getWorkerAssignments|worker-allocation|manualWorkforce/.test(file.text),
       ).map((file) => file.fromSrc)
-
       expect(offenders).toEqual([])
-
-      const panel = SHELL_FILES.find(
-        (file) => file.fromSrc === 'components/panels/ProductionPanel.vue',
-      )
-
-      // The allocation block renders ONLY behind the manualWorkforce
-      // verdict - a panel that calls assignWorkers without the flag is
-      // a leak, one that does neither is dead code.
-      expect(panel, 'ProductionPanel.vue missing from corpus').toBeDefined()
-      expect(panel!.text).toContain('manualWorkforce')
     },
     SCAN_TIMEOUT,
   )

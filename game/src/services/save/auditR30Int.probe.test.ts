@@ -131,8 +131,7 @@ function makeState(siteId: string, cycles: ProductionCycle[]): ProductionSiteSta
     siteId,
     level: 1,
     autoRestart: true,
-    activeWorkerSlots: 0,
-    workerCycles: cycles,
+    productionCycles: cycles,
   }
 }
 
@@ -354,7 +353,7 @@ describe('auditR30 INT probe - negative-anchor marker equivalence (R)', () => {
       [makeState(LAM, [makeCycle(LAM, anchor - CYCLE_MS, anchor)])],
       anchor,
     )
-    const restored = system.getState(LAM)!.workerCycles!
+    const restored = system.getState(LAM)!.productionCycles!
     expect(restored).toHaveLength(1)
     expect(restored[0]!.startedAtMs).toBe(anchor - CYCLE_MS)
     expect(restored[0]!.completesAtMs).toBe(anchor)
@@ -367,7 +366,7 @@ describe('auditR30 INT probe - negative-anchor marker equivalence (R)', () => {
       [makeState(LAM, [makeCycle(LAM, 1_000_000 - CYCLE_MS, 1_000_000)])],
       1_000_000,
     )
-    expect(control.getState(LAM)!.workerCycles![0]!.startedAtMs).toBe(1_000_000 - CYCLE_MS)
+    expect(control.getState(LAM)!.productionCycles![0]!.startedAtMs).toBe(1_000_000 - CYCLE_MS)
   })
 
   it('R2 a negative anchor can never carry a tribulation cooldown - cooldownUntil <= lastSavedAt + 300s collapses (leg is strictly weaker than crafted-past)', () => {
@@ -512,7 +511,7 @@ describe('auditR30 INT probe - verbatim restore parity (E)', () => {
     const postDated = makeCycle(LAM, 2_000_000, 2_000_000 + CYCLE_MS)
     system.restoreStates([makeState(LAM, [postDated])], 1_000_000)
 
-    const cycle = system.getState(LAM)!.workerCycles![0]!
+    const cycle = system.getState(LAM)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(1_000_000)
     expect(cycle.completesAtMs).toBe(1_000_000 + CYCLE_MS)
   })
@@ -522,7 +521,7 @@ describe('auditR30 INT probe - verbatim restore parity (E)', () => {
     const postDated = makeCycle(LAM, 2_000_000, 2_000_000 + CYCLE_MS)
     system.restoreStates([makeState(LAM, [postDated])], Number.NaN)
 
-    const cycle = system.getState(LAM)!.workerCycles![0]!
+    const cycle = system.getState(LAM)!.productionCycles![0]!
     expect(cycle.startedAtMs).toBe(2_000_000)
     expect(cycle.completesAtMs).toBe(2_000_000 + CYCLE_MS)
   })

@@ -6,22 +6,10 @@ import { BuildingSystem } from '../building/BuildingSystem'
 import type { Building } from '../building/Building'
 import type { BuildingInstance } from '../building/BuildingInstance'
 import { ProductionSystem } from '../production/ProductionSystem'
-import type { DecomposeSystem } from '../production/DecomposeSystem'
-import { betaEffectiveWorkerCapacity, getWorkerCapacityForLevel, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
-import { buildWorkforceView, type WorkforceView } from '../production/WorkforceView'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
-import { isCompanionDomainUnlocked } from '../companion/CompanionAvailability'
-import {
-  betaSurfaceVerdict,
-  isScopeHidden,
-  BETA_WORKER_LODGE_TABS,
-  WORKER_LODGE_TAB_FEATURE,
-  type BetaScopeVerdict,
-  type BetaWorkerLodgeTabId,
-} from '../betaScope'
 import { isBetaBuildingSurface } from '../betaScopeSurface'
 import type { TimeAuthority } from '../idle/TimeAuthority'
 
@@ -30,7 +18,6 @@ export interface GameManagerBuildingOpsDeps {
   buildingManager: BuildingManager
   buildingSystem: BuildingSystem
   productionSystem: ProductionSystem
-  decomposeSystem: DecomposeSystem
   materialBag: MaterialBag
   materialRegistry: MaterialRegistry
   notifications: NotificationQueue
@@ -49,12 +36,9 @@ export interface GameManagerBuildingOpsDeps {
 }
 
 /**
- * Tach khoi GameManager (2026-09-03, task 2 - GameManager split) - toan bo
- * thao tac Building (xay/nang cap/thu hoach/query) va Production
- * (cycle/upgrade/query), gop 1 file vi Production nho va share worker
- * capacity state voi Building (Chieu Hien Quan). Cung pattern DI voi
- * EquipmentOpsSystem: constructor nhan dependency tuong minh qua object
- * `deps`, KHONG tu import nguoc GameManager.
+ * Extracted from GameManager (2026-09-03, task 2). This module coordinates
+ * building operations and production-site commands at one manager boundary.
+ * Dependencies are explicit through `deps`; it does not import GameManager.
  */
 export class GameManagerBuildingOps {
   constructor(private readonly deps: GameManagerBuildingOpsDeps) {}
@@ -91,135 +75,6 @@ export class GameManagerBuildingOps {
       player.realmId,
     )
 
-    for (const instance of added) {
-      this.refreshAutoWorkerCapacity(player, instance)
-    }
-  }
-
-  /**
-   * Chieu Hien Quan (chi-hien-quan spec 2026-09-02) - NGUON NHAN CONG
-   * DUY NHAT: capacity = 1 + level*2 (getWorkerCapacityForLevel). Goi
-   * lai sau moi lan build/upgrade CHQ. gathering_outpost KHONG con cap
-   * capacity (nguon cu da go - outpost chi con gate San Xuat + linh mach).
-   */
-  refreshAutoWorkerCapacity(player: PlayerData, instance: BuildingInstance): void {
-    if (instance.buildingId !== 'chi_hien_quan') {
-      return
-    }
-
-    player.autoWorkerCapacity = getWorkerCapacityForLevel(instance.level)
-  }
-
-  /**
-   * Chi-hien-quan (2026-09-02) - assignments snapshot tu production states
-   * (assignedWorkers persist trong save) - truyen vao tickWorkers/
-   * settleOffline de OFFLINE KHOP ONLINE.
-   */
-  getWorkerAssignments(): Map<string, number> {
-    const assignments = new Map<string, number>()
-
-    // BETA SCOPE LOCK v2 sec.4C - manualWorkforce is scope-hidden:
-    // persisted assignedWorkers stay inert; the allocator round-robins
-    // every site so dormant manual choices cannot starve a live site.
-    if (isScopeHidden('manualWorkforce')) {
-      return assignments
-    }
-
-    for (const state of this.deps.productionSystem.getAllStates()) {
-      if (state.assignedWorkers !== undefined) {
-        assignments.set(state.siteId, state.assignedWorkers)
-      }
-    }
-
-    return assignments
-  }
-
-  /**
-   * Mission D (spec D1) - the ONE workforce read model for the panel:
-   * total/reserved/available/requested/effective/idle, all derived from
-   * the same split rule the tick uses. The panel renders this verbatim;
-   * it does not recompute the split (A7).
-   */
-  getWorkforceView(): WorkforceView {
-    // BETA SCOPE LOCK v2 sec.4C - while manualWorkforce is hidden the
-    // view shows the flat auto pool and censors dormant assignments
-    // (same precedent as DecomposeSystem.getSettings reporting 0).
-    const hidden = isScopeHidden('manualWorkforce')
-
-    return buildWorkforceView(
-      betaEffectiveWorkerCapacity(this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0),
-      hidden ? 0 : this.deps.decomposeSystem.getSettings().workers,
-      hidden
-        ? this.deps.productionSystem.getAllStates().map((state) => ({ ...state, assignedWorkers: undefined }))
-        : this.deps.productionSystem.getAllStates(),
-    )
-  }
-
-  /**
-   * BETA SCOPE LOCK v2 sec.13 + FINAL POLICY (sec.4C) - the Worker
-   * Lodge tab read-model. Each authored tab resolves through the scope
-   * authority so the frontend renders verdicts directly and never
-   * imports CompanionAvailability to decide which tabs exist. Under
-   * beta every tab - nhan_cong included - resolves 'scope-hidden':
-   * the lodge is entirely out of scope while automatic production
-   * keeps running in the background. manualAssignOffered reports
-   * whether the manual split write is live on the workforce tab.
-   * Post-beta the companion tabs keep their Tru Co realm gate via
-   * ctx.progressionMet - CompanionAvailability feeds the verdict here,
-   * never in the frontend.
-   */
-  getWorkerLodgeSurfaceModel(player: PlayerData): {
-    tabs: {
-      id: BetaWorkerLodgeTabId
-      verdict: BetaScopeVerdict
-      manualAssignOffered?: boolean
-    }[]
-  } {
-    return {
-      tabs: BETA_WORKER_LODGE_TABS.map((tabId) => {
-        const feature = WORKER_LODGE_TAB_FEATURE[tabId]
-        const verdict = betaSurfaceVerdict(feature, {
-          progressionMet:
-            feature === 'companion' ? isCompanionDomainUnlocked(player.realmId) : true,
-        })
-
-        if (tabId === 'nhan_cong') {
-          return {
-            id: tabId,
-            verdict,
-            manualAssignOffered: verdict === 'available',
-          }
-        }
-
-        return {
-          id: tabId,
-          verdict,
-        }
-      }),
-    }
-  }
-
-  /**
-   * Chi-hien-quan (2026-09-02) - UI phan bo: gan/xoa so slot manual cua
-   * 1 site. `count === undefined` = ve AUTO (xoa assignedWorkers).
-   * Clamp [0, capacity] phong UI gui sai; khong doi neu site khong ton tai.
-   */
-  assignWorkers(siteId: string, count: number | undefined): void {
-    // BETA SCOPE LOCK v2 sec.13 - manualWorkforce is scope-hidden:
-    // automatic allocation is the normal beta path, so the manual write
-    // is a no-op (the domain command repeats the check for direct calls).
-    if (isScopeHidden('manualWorkforce')) {
-      return
-    }
-
-    // Clamp bound stays fed by the one split rule - the domain command
-    // owns the write itself (D2: no foreign mutation of site state).
-    const capacity = resolveProductionWorkerCapacity(
-      betaEffectiveWorkerCapacity(this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0),
-      this.deps.decomposeSystem.getSettings().workers,
-    )
-
-    this.deps.productionSystem.setWorkerAssignment(siteId, count, capacity)
   }
 
   /**
@@ -254,9 +109,6 @@ export class GameManagerBuildingOps {
     )
     const instance = this.deps.buildingManager.get(instanceId)
     const activePlayer = this.deps.getActivePlayer()
-    if (upgraded && instance && activePlayer) {
-      this.refreshAutoWorkerCapacity(activePlayer, instance)
-    }
     return upgraded
   }
 

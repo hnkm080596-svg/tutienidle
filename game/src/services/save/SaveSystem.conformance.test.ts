@@ -205,31 +205,24 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     level: 1,
     lastCollectedAt: Math.floor(NOW / 1000) - 2_000, // SECONDS domain (accrual subtracts from Date.now()/1000)
   })
-  manager.buildingOps.refreshAutoWorkerCapacity(
-    player,
-    manager.buildingManager.get('b-chq')!,
-  )
 
   // Default-built (2026-10-03): every real manager carries ALL registered
   // buildings - grant the rest at lv1 through the same ops seam so the
   // source payload is a conforming post-change save.
   manager.buildingOps.reconcileBuildings(player, NOW / 1000)
 
-  // Production - one populated site (worker cycles + manual
-  // assignment); the other definitions get default ensured states.
+  // Production - one populated site (worker-neutral cycle snapshot); the other definitions get default ensured states.
   const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
   const siteState: ProductionSiteState = {
     siteId,
     level: 2,
     autoRestart: true,
-    activeWorkerSlots: 1,
-    workerCycles: [
+    productionCycles: [
       productionCycle('cycle-active', siteId, NOW + 60_000),
       // F-CYC-1: a writer-spawned cycle never completes later than the
       // authored span out - an 87s window can end at most NOW + 87s.
-      productionCycle('cycle-worker-1', siteId, NOW + 80_000),
+      productionCycle('cycle-carried-1', siteId, NOW + 80_000),
     ],
-    assignedWorkers: 2,
   }
 
   manager.productionSystem.restoreStates([siteState])
@@ -251,10 +244,12 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     }),
   ])
 
-  // Decompose - non-default filters, workers within capacity, live timer.
-  manager.decomposeSystem.updateCapacity(3)
-  manager.decomposeSystem.setSetting({ workers: 2, gradeFilter: 'cuu_pham', ageFilter: 'century' })
-  manager.decomposeSystem.tick(NOW)
+  // Decompose - historical worker/timer settings are deliberately inert.
+  manager.decomposeSystem.restore({
+    settings: { workers: 2, gradeFilter: 'cuu_pham', ageFilter: 'century' },
+    nextCycleAt: NOW + 30_000,
+    started: true,
+  })
 
   // Quests - the registry stays empty so restore-time
   // reconcileQuestLifecycle is a no-op and the slice round-trips as-is.

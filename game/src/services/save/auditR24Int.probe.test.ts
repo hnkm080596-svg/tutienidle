@@ -69,9 +69,6 @@ function makeSave(
   if (overrides.autoFarmStage !== undefined) {
     player.autoFarmStage = overrides.autoFarmStage
   }
-  if (overrides.autoWorkerCapacity !== undefined) {
-    player.autoWorkerCapacity = overrides.autoWorkerCapacity
-  }
   const save = buildGameSave(player, manager)
   // buildGameSave stamps lastSavedAt = Date.now(); the test controls the
   // payload's persisted timestamp directly.
@@ -79,17 +76,9 @@ function makeSave(
   if (overrides.productionSites !== undefined) {
     save.productionSites = overrides.productionSites
   }
-  if (overrides.autoWorkerCapacity !== undefined && overrides.autoWorkerCapacity > 0) {
-    // F-W-16: a non-zero persisted capacity requires the chi_hien_quan
-    // building witness in the same payload.
-    save.buildings = [
-      {
-        instanceId: 'r24_chq',
-        buildingId: 'chi_hien_quan',
-        level: 1,
-        lastCollectedAt: 0,
-      },
-    ]
+  if (overrides.autoWorkerCapacity !== undefined) {
+    ;(save.player as unknown as Record<string, unknown>).autoWorkerCapacity =
+      overrides.autoWorkerCapacity
   }
   return save
 }
@@ -259,8 +248,12 @@ describe('seam (b) - fallback window vs calculateOfflineTime cap split', () => {
     manager.setActivePlayer(player.$state)
     // 48h stale save - beyond the default 24h offline cap.
     const save = makeSave({ lastSavedAt: NOW - 48 * HOUR_MS })
+    save.decompose = {
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 4 },
+      nextCycleAt: 0,
+      started: true,
+    }
     const settleSpy = vi.spyOn(manager.turnBattleOps.autoFarmOps, 'settleAutoFarmOffline')
-    const decomposeSpy = vi.spyOn(manager.decomposeSystem, 'settleOffline')
     const alchemySpy = vi.spyOn(manager.alchemySystem, 'settleOffline')
 
     const result = restoreGameSession(player, manager, save, {
@@ -274,7 +267,11 @@ describe('seam (b) - fallback window vs calculateOfflineTime cap split', () => {
     // Deny: zero accrual on a corrupt authority - no channel settle.
     expect(result.offline.elapsedSeconds).toBe(0)
     expect(settleSpy).not.toHaveBeenCalled()
-    expect(decomposeSpy).not.toHaveBeenCalled()
+    expect(manager.decomposeSystem.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
+    })
     // The unconditional alchemy pass anchors at the payload marker
     // (min(lastSavedAt + 0, NOW, NOW)) - deferred dues keep their times.
     expect(alchemySpy).toHaveBeenCalledWith(
@@ -348,7 +345,7 @@ describe('seam (d) - round-trip after a sanitized restore', () => {
     // heads are input-carried only; whatever exists must still satisfy
     // the startedAtMs <= lastSavedAt pin.
     const heads = (repackaged.productionSites ?? []).flatMap(
-      (site) => site.workerCycles ?? [],
+      (site) => site.productionCycles ?? [],
     )
     for (const cycle of heads) {
       expect(cycle.startedAtMs).toBeLessThanOrEqual(NOW)
@@ -389,7 +386,7 @@ describe('seam (d) - round-trip after a sanitized restore', () => {
     // inside the client epoch -> the next save validates.
     const repackaged = buildGameSave(player.$state, manager)
     const heads = (repackaged.productionSites ?? []).flatMap(
-      (site) => site.workerCycles ?? [],
+      (site) => site.productionCycles ?? [],
     )
     expect(heads.length).toBeGreaterThan(0)
     expect(heads.every((cycle) => cycle.startedAtMs <= NOW)).toBe(true)
@@ -421,7 +418,7 @@ describe('seam (d) - round-trip after a sanitized restore', () => {
 
     const repackaged = buildGameSave(player.$state, manager)
     const heads = (repackaged.productionSites ?? []).flatMap(
-      (site) => site.workerCycles ?? [],
+      (site) => site.productionCycles ?? [],
     )
     expect(heads.length).toBeGreaterThan(0)
     // Seeded heads stay inside the client epoch - no server-epoch
@@ -487,3 +484,4 @@ describe('unit pins - sanitizeRestoreAuthority contract', () => {
     ).toEqual({ kind: 'live-replacement', nowMs: NOW })
   })
 })
+

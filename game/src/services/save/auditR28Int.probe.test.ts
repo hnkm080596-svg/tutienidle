@@ -144,20 +144,9 @@ function mortalJob(startedAtMs: number, jobId: string) {
   return { job, recipe, span }
 }
 
-/** A save carrying workerCycles must also claim capacity: autoWorkerCapacity
- *  >0 requires a chi_hien_quan instance (F-W-16), and the lane ceiling reads
- *  betaEffectiveWorkerCapacity(player.autoWorkerCapacity). */
-function grantWorkerCapacity(wire: GameSave): void {
-  wire.player.autoWorkerCapacity = 1
-  wire.buildings = [
-    ...wire.buildings,
-    {
-      instanceId: 'inst_chq_1',
-      buildingId: 'chi_hien_quan',
-      level: 1,
-      lastCollectedAt: Math.floor(currentMs / 1000),
-    } as never,
-  ]
+/** Attach inert legacy metadata to exercise old-save compatibility. */
+function attachLegacyWorkerMetadata(wire: GameSave): void {
+  ;(wire.player as unknown as Record<string, unknown>).autoWorkerCapacity = 1
 }
 
 function controller(remote: boolean): OnlineSessionController {
@@ -308,14 +297,13 @@ describe('auditR28 INT probe - refuse escalation vs mount contract (M)', () => {
     const coordinator = new CloudSaveCoordinator(service)
 
     const snapshot = validWireSave()
-    grantWorkerCapacity(snapshot)
+    attachLegacyWorkerMetadata(snapshot)
     snapshot.productionSites = [
       {
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs + 60_000, 'post-dated')],
+        productionCycles: [workerCycle(currentMs + 60_000, 'post-dated')],
       },
     ] as never
     snapshot.player.lastSavedAt = currentMs
@@ -445,14 +433,13 @@ describe('auditR28 INT probe - fail-closed wrapper + controls (F)', () => {
         lastCollectedAt: Math.floor(currentMs / 1000),
       } as never,
     ]
-    grantWorkerCapacity(wire)
+    attachLegacyWorkerMetadata(wire)
     wire.productionSites = [
       {
         siteId: FOREST_SITE_ID,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 1,
-        workerCycles: [workerCycle(currentMs + 25_000, 'shift-me')],
+        productionCycles: [workerCycle(currentMs + 25_000, 'shift-me')],
       },
     ] as never
     wire.alchemyJobs = [job as never]
@@ -469,7 +456,7 @@ describe('auditR28 INT probe - fail-closed wrapper + controls (F)', () => {
     reader.setActivePlayer(readerPlayer)
     reader.saveOps.restoreFromSave(wire, undefined)
 
-    const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+    const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
     expect(lane.startedAtMs).toBe(currentMs)
     expect(lane.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
     const restoredJob = reader.alchemySystem.getJobs()[0]!
@@ -491,14 +478,13 @@ describe('auditR28 INT probe - fail-closed wrapper + controls (F)', () => {
     const makeWire = (): GameSave => {
       const wire = validWireSave()
       wire.player.lastSavedAt = marker
-      grantWorkerCapacity(wire)
+      attachLegacyWorkerMetadata(wire)
       wire.productionSites = [
         {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: false,
-          activeWorkerSlots: 1,
-          workerCycles: [workerCycle(marker - 1_000, 'honest')],
+          productionCycles: [workerCycle(marker - 1_000, 'honest')],
         },
       ] as never
       wire.alchemyJobs = [job as never]
@@ -517,7 +503,7 @@ describe('auditR28 INT probe - fail-closed wrapper + controls (F)', () => {
       const reader = registeredManager()
       reader.setActivePlayer(createDefaultPlayer())
       reader.saveOps.restoreFromSave(makeWire(), authority)
-      const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.workerCycles![0]!
+      const lane = reader.productionSystem.getState(FOREST_SITE_ID)!.productionCycles![0]!
       const restoredJob = reader.alchemySystem.getJobs()[0]!
       return {
         cycle: [lane.startedAtMs, lane.completesAtMs],
@@ -533,3 +519,5 @@ describe('auditR28 INT probe - fail-closed wrapper + controls (F)', () => {
     expect(baseline.cycle).toEqual([marker - 1_000, marker - 1_000 + MORTAL_CYCLE_MS])
   })
 })
+
+

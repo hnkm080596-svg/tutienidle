@@ -61,8 +61,7 @@ function makeState(
     siteId,
     level: 1,
     autoRestart: true,
-    activeWorkerSlots: 0,
-    workerCycles: [],
+    productionCycles: [],
     ...overrides,
   }
 }
@@ -207,7 +206,7 @@ describe('fixpoint r22 INT - timestamp pin integration probes', () => {
       completesAtMs: pendingStamp + CYCLE_MS,
     }
     const states = new Map<string, ProductionSiteState>([
-      [LAM, makeState(LAM, { workerCycles: [pending] })],
+      [LAM, makeState(LAM, { productionCycles: [pending] })],
     ])
     const deps = createDeps(states)
 
@@ -217,10 +216,10 @@ describe('fixpoint r22 INT - timestamp pin integration probes', () => {
       new MaterialRegistry(),
       REALM,
       pendingStamp + 400_000,
-      { workerCapacity: 2, offlineSinceMs: -(2 ** 53) },
+      { offlineSinceMs: -(2 ** 53) },
     )
     expect(settled).toBe(0)
     // Lanes preserved verbatim through the wedge.
-    expect(states.get(LAM)!.workerCycles![0]).toBe(pending)
+    expect(states.get(LAM)!.productionCycles![0]).toBe(pending)
   })
 })

@@ -1,9 +1,7 @@
-// ProductionSystem (plan sec4) - engine production dung chung cho Lam,
-// Mine, Grotto. Mission D (spec D3): production runs on worker
-// lanes ONLY - workers are required fuel; the manual activeCycle path
-// is deleted. Start-time conditions snapshot (realm/level/table
-// version/seed), CHI roll reward khi cycle hoan thanh, delivery vao Bag
-// idempotent, offline settle runs sequentially within the cap (sec 4.3).
+// ProductionSystem owns Lam, Mine, and Grotto production. Each active
+// site owns one independent cycle. Start-time realm, level, reward-table
+// version, and seed are snapshotted; rewards are granted once at
+// completion, and offline settlement stays within the configured cap.
 
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
@@ -15,6 +13,7 @@ import type {
   ProductionCycle,
   ProductionSiteDefinition,
   ProductionSiteState,
+  ProductionSiteStateInput,
   TerritoryDefinition,
 } from './ProductionTypes'
 import {
@@ -31,7 +30,6 @@ import {
 } from './ProductionBalance'
 import { HERB_AGES } from './ProductionTypes'
 import { resolveTerritoryTier } from './ProductionCatalog'
-import { allocateWorkerSlots } from './WorkerAllocator'
 import { advanceWorkerLanes } from './WorkerLaneAdvance'
 import {
   settleProductionOffline,
@@ -123,7 +121,7 @@ export class ProductionSystem {
     let state = this.states.get(siteId)
 
     if (!state) {
-      state = { siteId, level: 1, autoRestart: false, activeWorkerSlots: 0, workerCycles: [] }
+      state = { siteId, level: 1, autoRestart: false, productionCycles: [] }
 
       this.states.set(siteId, state)
     }
@@ -133,12 +131,12 @@ export class ProductionSystem {
 
   /**
    * M1 (ARCH-001) - restore REPLACES the whole site-state map, and every
-   * restored entry is a detached copy (workerCycles included): the
+   * restored entry is a detached copy (productionCycles included): the
    * payload is a value, so mutating it afterwards must not leak into
    * live state (A3). Whitelisted fields only - legacy keys (e.g. the
    * removed `activeCycle`) are dropped here, not migrated.
    */
-  restoreStates(states: ProductionSiteState[], restoreNowMs: number = this.nowMs()): void {
+  restoreStates(states: ProductionSiteStateInput[], restoreNowMs: number = this.nowMs()): void {
     // r29-COR-F1: the shift only fires under a sane restore clock -
     // a non-finite or exact-integer-domain-overflow restoreNowMs from
     // an ungated caller must not re-anchor every began-pair
@@ -147,7 +145,7 @@ export class ProductionSystem {
     // verbatim restore: post-dated cycles stay parked (deny), honest
     // pairs were never shifted anyway.
     // r30-AUT-3: tightened to [0, 2^52) - a negative re-anchor
-    // deep-pasts the lane (next tick mints), and a stamp re-grounded
+    // deep-pasts the cycle (next tick mints), and a stamp re-grounded
     // at >= 2^52 self-refuses the next save write.
     const clockOk = Number.isFinite(restoreNowMs) && restoreNowMs >= 0 && restoreNowMs < 2 ** 52
     this.states.clear()
@@ -155,7 +153,7 @@ export class ProductionSystem {
     for (const state of states) {
       // Mission A review (MA-R1-04) defense-in-depth: a payload that
       // bypassed preflight can carry an unknown siteId - such a site
-      // holds allocated worker slots but never produces (no definition
+      // cannot produce without a definition
       // -> cycleMs 0), draining capacity. Drop at the boundary.
       if (!this.siteDefinitionsById.has(state.siteId)) {
         continue
@@ -165,14 +163,12 @@ export class ProductionSystem {
         siteId: state.siteId,
         level: state.level,
         autoRestart: state.autoRestart,
-        activeWorkerSlots: state.activeWorkerSlots ?? 0,
-        assignedWorkers: state.assignedWorkers,
-        workerCycles: (state.workerCycles ?? []).flatMap((cycle) => {
+        productionCycles: (state.productionCycles ?? state.workerCycles ?? []).flatMap((cycle) => {
           // r33-COR-F1/AUT-2: ordering parity with restoreJobs and the
           // validator's ordering pin - an INVERTED pair
           // (completesAtMs <= startedAtMs) is impossible-authored.
           // Parking it verbatim denied the whole site's advance
-          // (pending.some freezes every healthy sibling lane) AND
+          // (pending.some freezes every healthy sibling cycle) AND
           // refused every later save write on the ordering pin - a
           // whole-save wedge for content that can never be authored.
           // Drop at the boundary, same as the sibling arm. The drop test
@@ -188,7 +184,7 @@ export class ProductionSystem {
           // <= lastSavedAt at admission, so only a uniformly-shifted
           // (skewed-clock/crafted) pair reaches here. Re-ground it at the
           // restore clock, shifting completesAtMs by the same delta so
-          // the authored span stays exact: the lane resumes as a live
+          // the authored span stays exact: the cycle resumes as a live
           // in-flight cycle instead of idling past the next save marker
           // and self-bricking every write. Honest stamps are untouched.
           // r31-COR-F-HEADROOM (sibling): minted completesAtMs =
@@ -197,7 +193,7 @@ export class ProductionSystem {
           // r32-AUT-2: an inverted pair (completes <= started) has a
           // negative span, so the headroom holds trivially and the shift
           // mints a FRESH inverted pair - ordering-denied by
-          // advanceWorkerLanes yet refusing the persisted ordering pin
+          // the cycle advance yet refusing the persisted ordering pin
           // on every later write. (Handled above: inverted pairs drop.)
           if (
             clockOk &&
@@ -220,13 +216,13 @@ export class ProductionSystem {
     }
   }
 
-  // D2 - query surfaces hand out detached snapshots (workerCycles
+  // D2 - query surfaces hand out detached snapshots (cycle values
   // copied too): callers observe, they never mutate the live domain
   // record (A3). Writes go through the domain commands.
   private snapshotState(state: ProductionSiteState): ProductionSiteState {
     return {
       ...state,
-      workerCycles: state.workerCycles?.map((cycle) => ({ ...cycle })),
+      productionCycles: state.productionCycles?.map((cycle) => ({ ...cycle })),
       hiddenChannelCycles: state.hiddenChannelCycles
         ? { ...state.hiddenChannelCycles }
         : undefined,
@@ -240,50 +236,6 @@ export class ProductionSystem {
   getState(siteId: string): ProductionSiteState | undefined {
     const state = this.states.get(siteId)
     return state ? this.snapshotState(state) : undefined
-  }
-
-  /**
-   * D2 - the ONE command for the manual worker request: clamps the raw
-   * count into [0, productionCapacity] (the caller feeds the already-
-   * split pool), a non-finite count acts as 0, and undefined clears the
-   * request back to auto. False for an unknown site.
-   */
-  setWorkerAssignment(
-    siteId: string,
-    count: number | undefined,
-    productionCapacity: number,
-  ): boolean {
-    // BETA SCOPE LOCK v2 sec.13 - manualWorkforce is scope-hidden: the
-    // domain fails closed so a stored request cannot be rewritten through
-    // a direct call; persisted assignedWorkers keep their values and the
-    // allocator's automatic path covers the site (restored data is not
-    // re-checked per the single-check invariant).
-    if (isScopeHidden('manualWorkforce')) {
-      return false
-    }
-
-    if (!this.getSiteDefinition(siteId)) {
-      return false
-    }
-
-    // Assignment is a write command - materializing the level-1 default
-    // on a defined site is part of the write (D4: queries no longer
-    // create state, so the command path owns materialization).
-    const state = this.ensureSiteState(siteId)
-
-    if (count === undefined) {
-      delete state.assignedWorkers
-      return true
-    }
-
-    const capacity = Number.isFinite(productionCapacity)
-      ? Math.max(0, Math.floor(productionCapacity))
-      : 0
-    const safeCount = Number.isFinite(count) ? count : 0
-
-    state.assignedWorkers = Math.max(0, Math.min(Math.floor(safeCount), capacity))
-
-    return true
   }
 
   getSiteDefinition(siteId: string): ProductionSiteDefinition | undefined {
@@ -414,59 +366,34 @@ export class ProductionSystem {
   // =========================
 
   /**
-   * Mission D (spec D3) - every lane comes from the shared worker pool;
-   * lane count = activeWorkerSlots (no manual slot, no activeCycle).
-   *
-   * Chi-hien-quan spec (2026-09-02): `assignments` tuy chon - Map
-   * siteId -> so slot MANUAL. Sites co assignment (va autoRestart) nhan
-   * dung min(assigned, capacity con lai) theo thu tu Map; phan du
-   * capacity -> round-robin cho sites auto KHONG co assignment. Khong
-   * truyen (hoac Map rong) = auto hoan toan - hanh vi cu giu nguyen.
+   * Each active site advances exactly one independent production cycle.
+   * Carried legacy cycles remain eligible to settle, but do not create
+   * additional parallel production capacity.
    */
-  tickWorkers(
+  tick(
     nowMs: number,
     bag: MaterialBag,
     registry: MaterialRegistry,
     currentRealmId: string,
-    capacity: number,
-    assignments?: Map<string, number>,
     rng?: () => number,
   ): void {
-    const activeStates = [...this.states.values()].filter(state => state.autoRestart)
-
-    // D1 (INV-D-03): in-flight lanes are retained work - they keep
-    // their own deadlines and settle once even when the pool drops to
-    // zero or the site left the auto set. Only a total absence of
-    // advanceable work skips the pass.
+    // Retained cycles keep their deadlines and settle once even when a
+    // site is no longer active. Only a total absence of work skips the pass.
     const advanceableStates = [...this.states.values()].filter(
-      state => state.autoRestart || (state.workerCycles?.length ?? 0) > 0,
+      state => state.autoRestart || (state.productionCycles?.length ?? 0) > 0,
     )
-    for (const state of this.states.values()) state.activeWorkerSlots = 0
     if (advanceableStates.length === 0) return
 
-    const assignmentMap = assignments ?? new Map<string, number>()
-
-    // R7 (AR-07): one allocation rule - the shared pure allocator.
-    // Manual sites first (min(assigned, remaining)); remainder
-    // round-robins UNASSIGNED sites; leftover capacity stays idle
-    // instead of crashing (no zero-eligible-site exception).
-    const slotsBySite = allocateWorkerSlots(
-      activeStates.map(state => state.siteId),
-      assignmentMap,
-      capacity,
-    )
-
-    for (const state of activeStates) {
-      state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
-    }
+    // Each enabled production site owns one cycle clock. Capacity and
+    // legacy assignments are intentionally ignored.
 
     // Mission D (spec D2) - resolve the player's realm to a supported
-    // territory tier ONCE at the boundary; every spawned lane snapshots
+    // territory tier ONCE at the boundary; every spawned cycle snapshots
     // the clamped id.
     const collectionRealmId = resolveTerritoryTier(this.deps.territory, currentRealmId)
 
     for (const state of advanceableStates) {
-      state.workerCycles ??= []
+      state.productionCycles ??= []
 
       const definition = this.getSiteDefinition(state.siteId)
 
@@ -475,25 +402,23 @@ export class ProductionSystem {
       const cycleMs =
         definition && baseSeconds ? computeCycleSeconds(baseSeconds, state.level) * 1000 : 0
 
-      // M11 (ARCH-007) - same per-lane advancement mechanism as
-      // settleWorkersOffline (A9): 'observe' = single tick - due heads
-      // grant once, freed lanes refill on the NEXT tick via
-      // emptyLaneStartMs (top-up-then-settle order preserved).
+      // Online advancement observes each deadline once. A completed
+      // cycle can be followed by at most one new cycle on a later tick.
       const result = advanceWorkerLanes({
         siteId: state.siteId,
         collectionRealmId,
         siteLevel: state.level,
         baseSeconds: baseSeconds ?? 0,
         cycleMs,
-        pending: state.workerCycles,
-        slots: state.activeWorkerSlots,
+        pending: state.productionCycles,
+        slots: state.autoRestart ? 1 : 0,
         nowMs,
         emptyLaneStartMs: nowMs,
         advanceMode: 'observe',
         rng,
       })
 
-      state.workerCycles = result.pending
+      state.productionCycles = result.pending
 
       for (const cycle of result.completed) {
         this.grantCycleRewards(cycle, bag, registry)
@@ -512,10 +437,10 @@ export class ProductionSystem {
    * lai tu nowMs - neu de nguyen, tick() online se tra dan toan bo
    * backlog nhieu ngay va cap mat tac dung (review 2026-08-28).
    *
-   * Worker (T3 economy-ecosystem-plan): cycle do dang cua worker duoc
+   * Pending production cycles are saved and settle offline under the
    * persisted to the save and settles offline under the whole cap
-   * budget (Mission D - no manual phase eats budget first anymore).
-   * Returns the number of worker cycles settled.
+   * configured offline cap budget.
+   * Returns the number of completed cycles granted.
    */
   settleOffline(
     bag: MaterialBag,
@@ -523,12 +448,7 @@ export class ProductionSystem {
     currentRealmId: string,
     nowMs: number = this.nowMs(),
     options: {
-      workerCapacity?: number
       offlineSinceMs?: number
-      /** Chi-hien-quan - assignments snapshot (tu states truoc settle) de
-       *  offline khop online. */
-      workerAssignments?: Map<string, number>
-      /** Seeded stream for rollSeed mints on spawned cycles. */
       rng?: () => number
     } = {},
   ): number {
@@ -553,7 +473,7 @@ export class ProductionSystem {
         this.grantCycleRewards(cycle, bag, registry),
 
       // GP-01 - persisted completesAtMs stamps live in the epoch the
-      // live tickWorkers reads (the authority when injected).
+      // live production tick reads (the authority when injected).
       fieldNow: () => this.nowMs(),
     }
   }
@@ -860,7 +780,7 @@ export class ProductionSystem {
 
     const state: ProductionSiteState = existing
       ? this.snapshotState(existing)
-      : { siteId, level: 1, autoRestart: false, activeWorkerSlots: 0, workerCycles: [] }
+      : { siteId, level: 1, autoRestart: false, productionCycles: [] }
 
     const view = {
       definition,
@@ -872,7 +792,7 @@ export class ProductionSystem {
       cycleTotalMs: undefined as number | undefined,
     }
 
-    const lanes = state.workerCycles ?? []
+    const lanes = state.productionCycles ?? []
 
     let earliest: ProductionCycle | undefined
 

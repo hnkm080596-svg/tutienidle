@@ -244,8 +244,7 @@ describe('F-C: forged site/building levels mint impossible production', () => {
         siteId: FOREST,
         level: 9,
         autoRestart: true,
-        activeWorkerSlots: 0,
-        workerCycles: [],
+        productionCycles: [],
       } as never,
     ]
 
@@ -255,8 +254,8 @@ describe('F-C: forged site/building levels mint impossible production', () => {
     expect(result.status).toBe('ok')
     expect(manager.productionSystem.getState(FOREST)?.level).toBe(9)
 
-    manager.productionSystem.tickWorkers(T0, manager.materialBag, manager.materialRegistry, 'mortal', 4)
-    const spawned = manager.productionSystem.getState(FOREST)?.workerCycles?.[0]
+    manager.productionSystem.tick(T0, manager.materialBag, manager.materialRegistry, 'mortal', () => 0.5)
+    const spawned = manager.productionSystem.getState(FOREST)?.productionCycles?.[0]
     expect(spawned).toBeDefined()
     const spanMs = (spawned!.completesAtMs as number) - (spawned!.startedAtMs as number)
     expect(spanMs).toBe(computeCycleSeconds(CYCLE_BASE_SECONDS_BY_REALM['mortal']!, 9) * 1000)
@@ -314,7 +313,7 @@ describe('F-C: forged site/building levels mint impossible production', () => {
 })
 
 // ------------------------------------------------------------------
-// F-D: forged workerCycles[].siteLevelAtStart above the parent site's
+// F-D: forged productionCycles[].siteLevelAtStart above the parent site's
 // level. The span check only verifies completesAtMs-startedAtMs matches
 // computeCycleSeconds(base, siteLevelAtStart), and siteLevelAtStart is
 // bounded by siteMaxLevel - never by entry.level (level is monotonic,
@@ -331,8 +330,7 @@ describe('F-D: forged workerCycle siteLevelAtStart mints a compressed settle', (
         siteId: FOREST,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 0,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'probe-cycle-1',
             siteId: FOREST,
@@ -352,19 +350,19 @@ describe('F-D: forged workerCycle siteLevelAtStart mints a compressed settle', (
     const { manager, result } = restoreSave(save)
     expect(result.status).toBe('ok')
     const restored = manager.productionSystem.getState(FOREST)
-    expect(restored?.workerCycles?.[0]?.siteLevelAtStart).toBe(9)
+    expect(restored?.productionCycles?.[0]?.siteLevelAtStart).toBe(9)
 
     const before = manager.materialBag.getAll().reduce((sum, s) => sum + s.amount, 0)
-    manager.productionSystem.tickWorkers(
+    manager.productionSystem.tick(
       T0 - 5000 + spanMs + 1000,
       manager.materialBag,
       manager.materialRegistry,
       'mortal',
-      0,
+      () => 0.5,
     )
     const after = manager.materialBag.getAll().reduce((sum, s) => sum + s.amount, 0)
     expect(after).toBeGreaterThan(before)
-    expect(manager.productionSystem.getState(FOREST)?.workerCycles?.length ?? 0).toBe(0)
+    expect(manager.productionSystem.getState(FOREST)?.productionCycles?.length ?? 0).toBe(0)
 
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
@@ -421,8 +419,7 @@ describe('HOLDS: forged claims that stay rejected or inert', () => {
         siteId: FOREST,
         level: 1,
         autoRestart: false,
-        activeWorkerSlots: 0,
-        workerCycles: [
+        productionCycles: [
           {
             cycleId: 'probe-cycle-hold',
             siteId: FOREST,

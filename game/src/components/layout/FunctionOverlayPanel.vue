@@ -3,7 +3,6 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
-import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
 import ProductionPanel from '@/components/panels/ProductionPanel.vue'
 import SettingsSurface from '@/components/scenes/settings/SettingsSurface.vue'
@@ -12,7 +11,7 @@ import EquipmentHallPanel from '@/components/panels/EquipmentHallPanel.vue'
 import ScripturePavilionPanel from '@/components/panels/ScripturePavilionPanel.vue'
 import StageSelectPanel from '@/components/panels/StageSelectPanel.vue'
 import WorkerLodgePanel from '@/components/panels/WorkerLodgePanel.vue'
-import VendorPanel from '@/components/panels/VendorPanel.vue'
+import ArchitectureSurface from '@/components/scenes/architecture/ArchitectureSurface.vue'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { isBetaLeftPanelMode } from '@/core/betaScopeSurface'
 
@@ -24,13 +23,13 @@ type FunctionMode = Exclude<LeftPanelMode, 'character' | 'inventory' | null>
 
 const TITLE_KEYS: Record<FunctionMode, string> = {
   exploration: 'layout.functionOverlay.titles.exploration',
+  architecture: 'architecture.title',
   settings: 'layout.functionOverlay.titles.settings',
   equipment_hall: 'layout.functionOverlay.titles.equipment_hall',
   pill_room: 'layout.functionOverlay.titles.pill_room',
   worker_lodge: 'layout.functionOverlay.titles.worker_lodge',
   scripture_pavilion: 'layout.functionOverlay.titles.scripture_pavilion',
   stage_select: 'layout.functionOverlay.titles.stage_select',
-  vendor: 'layout.functionOverlay.titles.vendor',
 }
 
 // Huyen Kim rebuild: these left-panel modes are imperial-scroll scenes
@@ -51,6 +50,7 @@ const IMPERIAL_MODES: ReadonlySet<FunctionMode> = new Set([
 // migrated tabs. 'exploration' is the last mode still on the scroll
 // (its production outpost has no approved paper surface yet).
 const PAPER_MODES: ReadonlySet<FunctionMode> = new Set([
+  'architecture',
   'stage_select',
   'pill_room',
   'equipment_hall',
@@ -63,7 +63,6 @@ const BUILDINGS: Partial<Record<FunctionMode, string>> = {
   pill_room: 'pill_room',
   worker_lodge: 'chi_hien_quan',
   stage_select: 'teleport_array',
-  vendor: 'vendor',
 }
 
 const mode = computed<FunctionMode | null>(() => {
@@ -71,7 +70,7 @@ const mode = computed<FunctionMode | null>(() => {
   // BETA SCOPE LOCK: mount-seam chokepoint - a scope-hidden mode never
   // mounts even when a caller bypasses ui.openLeftPanel and writes the
   // raw field (same defense the standalone-panel watcher carries).
-  return value && isBetaLeftPanelMode(value) && value !== 'character' && value !== 'inventory'
+  return value && value !== 'worker_lodge' && isBetaLeftPanelMode(value) && value !== 'character' && value !== 'inventory'
     ? value
     : null
 })
@@ -83,7 +82,7 @@ const scrollMode = computed<FunctionMode | null>(() =>
   mode.value && IMPERIAL_MODES.has(mode.value) && !PAPER_MODES.has(mode.value) ? mode.value : null,
 )
 const legacyMode = computed<FunctionMode | null>(() =>
-  mode.value && !IMPERIAL_MODES.has(mode.value) ? mode.value : null,
+  mode.value && !IMPERIAL_MODES.has(mode.value) && !PAPER_MODES.has(mode.value) ? mode.value : null,
 )
 
 const buildingId = computed(() => (mode.value ? BUILDINGS[mode.value] : undefined))
@@ -115,6 +114,7 @@ function close() {
     <PillRoomPanel v-else-if="paperMode === 'pill_room'" />
     <EquipmentHallPanel v-else-if="paperMode === 'equipment_hall'" />
     <SettingsSurface v-else-if="paperMode === 'settings'" />
+    <ArchitectureSurface v-else-if="paperMode === 'architecture'" />
   </Transition>
 
   <!-- Imperial scroll scenes: San Xuat (production outpost) is the
@@ -141,11 +141,6 @@ function close() {
           <p class="building-heading__name">{{ header.template.value.name }}</p>
           <small class="building-heading__level">{{ t('layout.functionOverlay.levelRange', { level: header.instance.value?.level ?? 0, max: header.template.value.maxLevel }) }}</small>
         </div>
-        <BuildingUpgradeButton
-          v-if="buildingId"
-          :building-id="buildingId"
-          class="building-heading__upgrade-area"
-        />
       </div>
     </template>
 
@@ -183,14 +178,9 @@ function close() {
       </div>
     </template>
 
-    <template v-if="header.template.value && buildingId" #header-actions>
-      <BuildingUpgradeButton :building-id="buildingId" class="building-heading__upgrade-area" />
-    </template>
-
     <div v-if="legacyMode" class="function-overlay">
       <WorkerLodgePanel v-if="legacyMode === 'worker_lodge'" />
       <ScripturePavilionPanel v-else-if="legacyMode === 'scripture_pavilion'" />
-      <VendorPanel v-else-if="legacyMode === 'vendor'" />
     </div>
   </OverlayPanel>
 </template>

@@ -126,7 +126,7 @@ function panelReset(gameManager: GameManager, player: ReturnType<typeof usePlaye
   }
   bootstrapEarlyGamePlayer(gameManager, player.$state)
   gameManager.productionSystem.restoreStates(
-    gameManager.productionSystem.getAllStates().map((s) => ({ ...s, workerCycles: [] })),
+    gameManager.productionSystem.getAllStates().map((s) => ({ ...s, productionCycles: [] })),
   )
   // clampRealmCoherence
   const realm = REALMS.find((r) => r.id === player.realmId)
@@ -173,8 +173,23 @@ describe('DevToolsPanel save-boundary preflight', () => {
     panelPromote(gameManager, player, 'foundation_establishment')
     expect(getRealmIndex(player.realmId)).toBeGreaterThan(getRealmIndex('mortal'))
 
+    gameManager.productionSystem.ensureSiteState('thanh_van_lam')
+    const now = Date.now()
+    gameManager.productionSystem.restoreStates(
+      gameManager.productionSystem.getAllStates().map(state => ({
+        ...state,
+        productionCycles: [{
+          cycleId: `reset_${state.siteId}`, siteId: state.siteId,
+          collectionRealmId: player.realmId, siteLevelAtStart: state.level,
+          rewardTableVersion: 1, rollSeed: 1,
+          startedAtMs: now, completesAtMs: now + 100_000,
+        }],
+      })),
+    )
+    expect(gameManager.productionSystem.getAllStates().some(state => (state.productionCycles?.length ?? 0) > 0)).toBe(true)
     panelReset(gameManager, player)
 
+    expect(gameManager.productionSystem.getAllStates().every(state => (state.productionCycles?.length ?? 0) === 0)).toBe(true)
     expect(player.realmId).toBe('mortal')
     expect(player.cultivationPath).toBeUndefined()
     expect(gameManager.techniqueManager.getActive?.() ?? null).toBeNull()

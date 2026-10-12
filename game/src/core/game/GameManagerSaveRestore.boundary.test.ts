@@ -43,7 +43,6 @@ import { buildGameSave, restoreGameSession, type GameSave } from '../../services
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import { usePlayerStore } from '../../stores/player'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
-import { resolveProductionWorkerCapacity, getWorkerCapacityForLevel } from '../production/WorkerCapacity'
 import { getRealmIndex } from '../realm/realmSystem'
 
 function makeManager(): GameManager {
@@ -401,7 +400,6 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     const restored = manager.productionSystem.getState(siteId)!
     expect(restored.level).toBe(1)
     expect(restored.autoRestart).toBe(false)
-    expect(restored.activeWorkerSlots).toBe(0)
   })
 
   it('alchemyJobs: empty clears live jobs; an absent slice also resets', () => {
@@ -438,33 +436,31 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     })
   })
 
-  it('decompose: an absent slice resets settings to defaults', () => {
+  it('decompose restore ignores legacy worker settings and timers', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.autoWorkerCapacity = 5
     manager.setActivePlayer(player)
-    manager.decomposeSystem.updateCapacity(5)
-    manager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
 
-    const save = baseSave(player)
-    save.decompose = undefined
+    const save = baseSave(player, {
+      decompose: {
+        settings: { gradeFilter: 'tien_pham', ageFilter: 'myriad_year', workers: 99 },
+        nextCycleAt: 1_725_000_030_000,
+        started: true,
+      },
+    })
     manager.saveOps.restoreFromSave(save)
 
-    expect(manager.decomposeSystem.getSettings()).toEqual({
-      gradeFilter: 'all',
-      ageFilter: 'all',
-      workers: 0,
+    expect(manager.decomposeSystem.getSaveState()).toEqual({
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
     })
   })
 
-  it('restore settle receives the SAME pool the online tick computes (spec D5 - one rule, no second copy)', () => {
+  it('restore settles production without reading worker capacity or assignments', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.autoWorkerCapacity = 7
     manager.setActivePlayer(player)
-
-    // Prime live decompose capacity so the restored workers value survives its clamp.
-    manager.decomposeSystem.updateCapacity(7)
 
     const spy = vi.spyOn(manager.productionSystem, 'settleOffline')
 
@@ -472,7 +468,7 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
       baseSave(player, {
         player: { ...player, lastSavedAt: Date.now() - 7_200_000 }, // >60s gate -> offline settle runs
         productionSites: [
-          { siteId: 'thanh_van_lam', level: 1, autoRestart: true, assignedWorkers: 5 },
+          { siteId: 'thanh_van_lam', level: 1, autoRestart: true },
         ],
         decompose: {
           settings: { gradeFilter: 'all', ageFilter: 'all', workers: 2 },
@@ -483,9 +479,8 @@ describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
     )
 
     expect(spy).toHaveBeenCalledTimes(1)
-    // Asserting against the helper itself (not a literal) is the point:
-    // both paths MUST consume the same rule.
-    expect(spy.mock.calls[0]![4]?.workerCapacity).toBe(resolveProductionWorkerCapacity(7, 2))
+    expect(spy.mock.calls[0]![4]).toEqual(expect.objectContaining({ offlineSinceMs: expect.any(Number) }))
+    expect(spy.mock.calls[0]![4]).not.toHaveProperty('workerCapacity')
   })
 })
 
@@ -721,8 +716,7 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     const save2 = populatedSave(manager, player)
     save2.buildings = [{ instanceId: 'chq-2', buildingId: 'chi_hien_quan', level: 5, lastCollectedAt: 0 }]
     expect(restoreGameSession(playerStore, manager, save2).status).toBe('ok')
-    expect(manager.buildingManager.getByBuildingId('chi_hien_quan')!.level).toBe(5)
-    expect(playerStore.autoWorkerCapacity).toBe(getWorkerCapacityForLevel(5))
+    expect(manager.buildingManager.getByBuildingId('chi_hien_quan')!.level).toBe(1)
   })
 })
 

@@ -8,7 +8,6 @@ import type { PillRegistry } from '../pill/PillRegistry'
 import type { PlayerData } from '../player/Player'
 import type { DecomposeSystem, DecomposeOutputEntry } from '../production/DecomposeSystem'
 import type { ProductionSystem } from '../production/ProductionSystem'
-import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import type { QuestManager } from '../quest/QuestManager'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
@@ -54,7 +53,6 @@ export class GameManagerTickOps {
       materialBag: MaterialBag
       materialRegistry: MaterialRegistry
       decomposeSystem: DecomposeSystem
-      getWorkerAssignments: () => Map<string, number>
       alchemySystem: AlchemySystem
       pillBag: PillBag
       pillRegistry: PillRegistry
@@ -156,28 +154,11 @@ export class GameManagerTickOps {
         this.reconcileQuestLifecycle()
       }
 
-      // R7 (AR-08) shared worker pool - decompose claims its workers
-      // from the CHQ capacity FIRST; production receives the remainder via
-      // the ONE split rule (Mission D / spec D5) - the same helper the
-      // restore path uses (GameManagerSaveRestore). Capacity is
-      // re-supplied every tick so CHQ build/upgrade takes effect without
-      // a restart, and stale restored workers clamp down.
-      const effectiveWorkerCapacity = betaEffectiveWorkerCapacity(
-        activePlayer.autoWorkerCapacity ?? 0,
-      )
-      this.deps.decomposeSystem.updateCapacity(effectiveWorkerCapacity)
-      const productionCapacity = resolveProductionWorkerCapacity(
-        effectiveWorkerCapacity,
-        this.deps.decomposeSystem.getSettings().workers,
-      )
-
-      this.deps.productionSystem.tickWorkers(
+      this.deps.productionSystem.tick(
         this.deps.time?.now() ?? Date.now(),
         this.deps.materialBag,
         this.deps.materialRegistry,
         activePlayer.realmId,
-        productionCapacity,
-        this.deps.getWorkerAssignments(),
         this.deps.sessionRng,
       )
 
@@ -264,14 +245,6 @@ export class GameManagerTickOps {
         }
       }
 
-      // Task 14 (rework P4) - Decompose cycle: ore -> refined essence.
-      // R7 (AR-08): online tick and offline restore share ONE delivery
-      // path (deliverDecomposeOutput) - no duplicated overflow rules.
-      this.deps.decomposeSystem.tick(Date.now())
-
-      for (const entry of this.deps.decomposeSystem.drainOutput()) {
-        this.deliverDecomposeOutput(entry)
-      }
     }
 
     // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiep Thuong debuff)

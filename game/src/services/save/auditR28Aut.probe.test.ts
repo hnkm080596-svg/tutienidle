@@ -386,8 +386,7 @@ describe('r28-AUT - verified-held fix arms', () => {
           siteId: FOREST_SITE_ID,
           level: 1,
           autoRestart: true,
-          activeWorkerSlots: 4,
-          workerCycles: [
+          productionCycles: [
             workerCycle(currentMs + 60_000, 'post'),
             workerCycle(currentMs - 5_000, 'flight'),
             workerCycle(currentMs, 'edge'),
@@ -397,7 +396,7 @@ describe('r28-AUT - verified-held fix arms', () => {
       currentMs,
     )
     const byId = new Map(
-      system.getState(FOREST_SITE_ID)!.workerCycles!.map((c) => [c.cycleId, c]),
+      system.getState(FOREST_SITE_ID)!.productionCycles!.map((c) => [c.cycleId, c]),
     )
     expect(byId.get('post')!.startedAtMs).toBe(currentMs)
     expect(byId.get('post')!.completesAtMs).toBe(currentMs + MORTAL_CYCLE_MS)
@@ -451,39 +450,21 @@ describe('r28-AUT - verified-held fix arms', () => {
     expect(nan.serializeRuntime().cooldownUntil).toBeUndefined()
   })
 
-  it('V4 decompose nextCycleAt: honest kept, beyond-cap clamps at restoreNow+cycleMs, NaN keeps live timer', () => {
-    const system = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    system.restore(
-      {
+  it('V4 decompose legacy deadline shapes normalize to inert defaults', () => {
+    const values = [currentMs + 10_000, currentMs + 86_400_000, NaN]
+    for (const nextCycleAt of values) {
+      const system = new DecomposeSystem(new MaterialBag())
+      system.restore({
         settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 10_000,
+        nextCycleAt,
         started: true,
-      },
-      currentMs,
-    )
-    expect(system.getSaveState().nextCycleAt).toBe(currentMs + 10_000)
-
-    const clamped = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    clamped.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: currentMs + 86_400_000,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(clamped.getSaveState().nextCycleAt).toBe(currentMs + 30_000)
-
-    const nan = new DecomposeSystem(new MaterialBag(), { cycleSeconds: 30 })
-    nan.restore(
-      {
-        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 1 },
-        nextCycleAt: NaN,
-        started: true,
-      },
-      currentMs,
-    )
-    expect(Number.isNaN(nan.getSaveState().nextCycleAt)).toBe(false)
+      }, currentMs)
+      expect(system.getSaveState()).toEqual({
+        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+        nextCycleAt: 0,
+        started: false,
+      })
+    }
   })
 
   it('V5 validateGameSaveShape is fail-closed: a throwing property access inside the checked body returns a refused verdict', () => {

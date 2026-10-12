@@ -71,9 +71,24 @@ export interface BetaAlchemyRecipeModel {
 export interface BetaAlchemySurfaceModel {
   roomLevel: number
   maxConcurrentJobs: number
+  /** Waiting-job capacity from the building modifier. */
+  maxQueueSlots: number
+  maxTotalJobs: number
   /** In-flight jobs restricted to beta-family recipes. */
   activeJobs: ActiveAlchemyJob[]
+  waitingJobs: ActiveAlchemyJob[]
   recipes: BetaAlchemyRecipeModel[]
+}
+
+export interface AlchemyQueueState {
+  activeJob: ActiveAlchemyJob | null
+  waitingJobs: ActiveAlchemyJob[]
+  /** Waiting-job capacity from the building modifier; active job excluded. */
+  maxQueueSlots: number
+  /** Total jobs accepted, including the single active kiln job. */
+  maxTotalJobs: number
+  usedQueueSlots: number
+  remainingQueueSlots: number
 }
 
 export interface GameManagerAlchemyOpsDeps {
@@ -120,6 +135,26 @@ export class GameManagerAlchemyOps {
     return this.deps.alchemySystem.getJobs()
   }
 
+  getAlchemyQueueState(): AlchemyQueueState {
+    const jobs = this.deps.alchemySystem.getJobs().filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
+    const room = this.deps.buildingManager.getByBuildingId('pill_room')
+    const maxQueueSlots = room
+      ? this.deps.buildingSystem.getCraftModifiers(room, this.deps.buildingRegistry.get('pill_room')).alchemyQueueSlots
+      : 0
+    const maxTotalJobs = room ? 1 + maxQueueSlots : 0
+
+    const waitingJobs = jobs.slice(1)
+
+    return {
+      activeJob: jobs[0] ?? null,
+      waitingJobs,
+      maxQueueSlots,
+      maxTotalJobs,
+      usedQueueSlots: waitingJobs.length,
+      remainingQueueSlots: Math.max(0, maxQueueSlots - waitingJobs.length),
+    }
+  }
+
   /**
    * Bat dau luyen dan - reserve nguyen lieu ATOMIC (S8.2); slot job theo
    * concurrent_job_slots effect cua pill_room (mac dinh 1).
@@ -164,7 +199,7 @@ export class GameManagerAlchemyOps {
     const template = this.deps.buildingRegistry.get('pill_room')
     const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(recipe.realmId))
 
-    const maxSlots = this.deps.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
+    const maxSlots = 1 + this.deps.buildingSystem.getCraftModifiers(instance, template).alchemyQueueSlots
 
     // M3 (spec S4.2) - Hoa Hau Thong Than counter-cost: x2 fuel wood +
     // spirit stone per job. The multiplier is forwarded so the reserve
@@ -204,7 +239,38 @@ export class GameManagerAlchemyOps {
   }
 
   cancelAlchemyJob(jobId: string): boolean {
-    return this.deps.alchemySystem.cancelJob(jobId)
+    const nowMs = this.deps.time?.now() ?? Date.now()
+
+    return this.deps.alchemySystem.cancelJob(jobId, (job, recipe) => {
+      const refundAmounts = new Map<string, number>()
+      const addRefund = (materialId: string, amount: number) => {
+        refundAmounts.set(materialId, (refundAmounts.get(materialId) ?? 0) + amount)
+      }
+
+      addRefund(job.herbMaterialId, job.reservation.herbAmount)
+      addRefund(job.reservation.woodId, job.reservation.fuelWoodAmount)
+      for (const special of job.reservation.specialIngredients) addRefund(special.materialId, special.amount)
+      if (job.reservation.spiritStoneCost > 0) {
+        addRefund(
+          getSpiritStoneMaterialIdForRealmTier(getRealmTier(recipe.realmId)),
+          job.reservation.spiritStoneCost,
+        )
+      }
+
+      const materials = []
+      try {
+        for (const [materialId, amount] of refundAmounts) {
+          const material = this.deps.materialRegistry.get(materialId)
+          if (this.deps.materialBag.canAcceptAmount(material, amount) < amount) return false
+          materials.push({ material, amount })
+        }
+      } catch {
+        return false
+      }
+
+      for (const { material, amount } of materials) this.deps.materialBag.add(material, amount)
+      return true
+    }, nowMs)
   }
 
   /**
@@ -305,19 +371,12 @@ export class GameManagerAlchemyOps {
     const roomInstance = this.deps.buildingManager.getByBuildingId('pill_room')
     const roomLevel = roomInstance?.level ?? 0
 
-    const maxConcurrentJobs = roomInstance
-      ? this.deps.buildingSystem.getCraftModifiers(
-          roomInstance,
-          this.deps.buildingRegistry.get('pill_room'),
-        ).concurrentJobSlots
-      : 0
-
     const costMultiplier =
       getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)
         ?.costMultiplier ?? 1
     const costScale = Math.max(1, costMultiplier)
 
-    const activeJobs = this.deps.alchemySystem.getJobs()
+    const queueState = this.getAlchemyQueueState()
 
     const recipes: BetaAlchemyRecipeModel[] = []
 
@@ -396,16 +455,17 @@ export class GameManagerAlchemyOps {
         spiritStoneOwned,
         specialIngredients,
         craftable,
-        activeJob: activeJobs.find((job) => job.recipeId === recipe.id),
+        activeJob: queueState.activeJob?.recipeId === recipe.id ? queueState.activeJob : undefined,
       })
     }
 
     return {
       roomLevel,
-      maxConcurrentJobs,
-      activeJobs: activeJobs.filter(
-        (job) => betaRecipeFamilyOfId(job.recipeId) !== null,
-      ),
+      maxConcurrentJobs: 1,
+      maxQueueSlots: queueState.maxQueueSlots,
+      maxTotalJobs: queueState.maxTotalJobs,
+      activeJobs: queueState.activeJob ? [queueState.activeJob] : [],
+      waitingJobs: queueState.waitingJobs,
       recipes,
     }
   }

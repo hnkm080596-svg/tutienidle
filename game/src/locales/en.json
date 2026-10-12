@@ -937,20 +937,20 @@
     },
     "decompose": {
       "labels": {
-        "gradeFilter": "Ore grade",
-        "ageFilter": "Ore age",
-        "workers": "Workers"
+        "ore": "Ore",
+        "amount": "Amount"
       },
-      "select": {
-        "allGrades": "All grades",
-        "allAges": "All ages"
-      },
-      "estimate": "≈ {amount} essence / cycle",
-      "matching": "Matching ore in bag: {count}",
+      "action": "Refine ore",
+      "preview": "Produces {amount} essence.",
+      "success": "Produced {amount} essence.",
+      "empty": "No ore is available to refine.",
       "hint": {
-        "noCapacity": "No decompose capacity — upgrade the Worker Lodge to free up workers.",
-        "noWorkers": "No workers assigned — raise the Workers slider to start decomposing.",
-        "noMatchingOres": "No ore in the bag matches the filters — gather ore from mining/exploration or loosen the filters."
+        "scope_hidden": "This feature is unavailable.",
+        "invalid_amount": "Choose a positive whole-number amount.",
+        "invalid_ore": "Choose a valid ore.",
+        "insufficient_ore": "You do not have enough of that ore.",
+        "insufficient_amount": "Choose more ore to produce at least one essence.",
+        "output_capacity": "Make room for the essence before refining."
       }
     },
     "scripture": {
@@ -1572,9 +1572,19 @@
   },
   "autoFarm": {
     "running": "Auto-farming Perfect Clear: {stage}",
-    "stop": "Stop"
+    "stop": "Stop",
+    "perfectStage": "Perfect clear",
+    "visualReplay": "Expedition progress replay",
+    "cycle": "Cycle {seconds}s",
+    "nextCycle": "Next cycle: {seconds}s"
   },
   "alchemy": {
+    "activeKiln": "Brewing",
+    "waitingJob": "Waiting",
+    "waitingCount": "Waiting {count}/{capacity}",
+    "cancelFailed": "This job cannot be cancelled now. Cancelling a waiting job requires room for its reserved materials.",
+    "cancelRefund": "Cancel waiting: all materials are returned.",
+    "cancelActive": "Cancel brewing: materials are not returned.",
     "spiritStones": "Spirit Stones",
     "startBrewing": "Start brewing",
     "currentCauldron": "Current cauldron",
@@ -2017,7 +2027,35 @@
     "body": "Hung Giao Sung has fallen — every piece of beta content has been conquered: Mortal, Qi Refining, Foundation Establishment. Thank you for playing.",
     "continue": "Continue Cultivating"
   },
-  "dongFu": {
+  "architecture": {
+    "title": "Sect Architecture",
+    "subtitle": "Sect buildings, spirit veins, and resources",
+    "back": "Back",
+    "close": "Close",
+    "resources": "Available resources",
+    "buildingCount": "Built: {built}/{total}",
+    "resourceCategories": { "spirit_stone": "Spirit Stone", "wood": "Wood", "ore": "Ore", "herb": "Herbs" },
+    "level": "Level {level}/{max}",
+    "current": "Current",
+    "next": "After upgrade",
+    "costs": "Upgrade cost",
+    "costAmount": "{owned}/{required}",
+    "unknownMaterial": "Material",
+    "minuteShort": "min",
+    "effects": { "spiritRate": "Spirit Stone condensation", "spiritStorage": "Spirit Stone storage", "equipmentDiscount": "Equipment Hall cost reduction", "alchemySpeed": "Alchemy speed", "queueSlots": "Queue capacity" },
+    "units": { "percent": "%", "count": "", "multiplier": "times", "perMinute": "/min" },
+    "details": "Details",
+    "upgrade": "Upgrade",
+    "upgradeSite": "Upgrade source",
+    "productionTitle": "Three raw-material sources · Costs use Wood and Spirit Stone",
+    "siteSpeed": "Current ×{current} · After upgrade ×{next}",
+    "maximum": "Maximum level reached",
+    "artOnly": "Building art is preserved for display; this building has no upgrade function.",
+    "artOnlyBrief": "Display only · No upgrades",
+    "noEffect": "No separate effect.",
+    "reasons": { "maxLevel": "This building has reached its maximum level.", "realmGate": "Your current realm is too low to upgrade.", "missingMaterials": "You do not have enough materials to upgrade.", "missingBuilding": "This building could not be found.", "artOnly": "This building is display-only.", "changed": "Upgrade conditions changed. Check them again before upgrading.", "buildingSuccess": "Building upgraded.", "siteSuccess": "Production source upgraded." },
+    "productionReasons": { "max_level": "This production source has reached its maximum level.", "no_cost": "No upgrade cost is defined for the next level.", "realm_gate": "Your current realm is too low to upgrade this source.", "missing_wood": "You do not have enough Wood to upgrade this source.", "missing_spirit_stone": "You do not have enough Spirit Stone to upgrade this source." }
+  },  "dongFu": {
     "aria": "Grotto-Heaven",
     "toggleWheel": "Show / hide the command wheel",
     "railOpen": "Open the navigation rail",
@@ -2041,13 +2079,13 @@
       "exploration": "Map",
       "quest": "Quests",
       "production": "Production",
-      "vendor": "Vendor",
+      "vendor": "Treasury Pavilion",
       "settings": "Settings",
       "feedback": "Help",
       "artifact": "Artifact",
       "companion": "Companion",
       "guild": "Guild",
-      "sect": "Sect",
+      "sect": "Architecture",
       "portal": "Secret Realm"
     }
   },

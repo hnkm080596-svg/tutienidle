@@ -104,7 +104,6 @@ import {
 } from '../../realm/body/ZhouTianChapter'
 import { EarlyGameSession } from './EarlyGameSession'
 import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
-import { getWorkerCapacityForLevel } from '../../production/WorkerCapacity'
 
 const PINNED_PROFILE = {
   name: 'journey',
@@ -281,9 +280,6 @@ function assertRestoredSaveParity(before: GameSave, after: GameSave): void {
   const actual = normalizeVolatileSaveFields(after)
   // Default-built (2026-10-03): the session restore grants any missing
   // registered building at lv1 - a carried row must round-trip verbatim.
-  const actualChq = (actual.buildings ?? []).find(
-    (entry) => entry.buildingId === 'chi_hien_quan',
-  )
   if (expected.buildings !== undefined || actual.buildings !== undefined) {
     expect(actual.buildings ?? []).toEqual(
       expect.arrayContaining(
@@ -291,16 +287,6 @@ function assertRestoredSaveParity(before: GameSave, after: GameSave): void {
       ),
     )
     actual.buildings = expected.buildings
-  }
-  // autoWorkerCapacity is re-derived from the carried chi_hien_quan
-  // instance at restore (formula over the persisted field): a carried
-  // 0 becomes the lv1 baseline 3. Verify the restored value against the
-  // ACTUAL instance level, then exclude the field from byte-parity.
-  if (actualChq !== undefined) {
-    expect(actual.player.autoWorkerCapacity).toBe(
-      getWorkerCapacityForLevel(actualChq.level),
-    )
-    actual.player.autoWorkerCapacity = expected.player.autoWorkerCapacity
   }
   if (expected.productionSites !== undefined || actual.productionSites !== undefined) {
     expect(actual.productionSites ?? []).toEqual(

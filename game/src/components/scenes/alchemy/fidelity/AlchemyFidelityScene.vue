@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { useDialogFocus } from '@/composables/useDialogFocus'
-import BuildingUpgradeButton from '@/components/common/BuildingUpgradeButton.vue'
 import AlchemyPaperRecipes from './AlchemyPaperRecipes.vue'
 import AlchemyPaperCauldron from './AlchemyPaperCauldron.vue'
 import AlchemyPaperDetails from './AlchemyPaperDetails.vue'
@@ -46,9 +45,6 @@ const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/titl
     <h1 class="title">{{ t('alchemy.title') }}</h1>
     <img class="alchemy-divider" :src="titleDivider" alt="">
     <span class="subtitle">{{ t('alchemy.subtitle') }}</span>
-    <!-- Cong 2 nang cap: cung nut/predicate voi chip ngoai plaque -
-         neo o khe trong giua subtitle va details card (design px). -->
-    <BuildingUpgradeButton building-id="pill_room" class="alchemy-upgrade" />
     <AlchemyPaperRecipes :recipes="recipes" :selected="recipe?.id ?? ''" @select="emit('select', $event)" />
     <AlchemyPaperCauldron :herb="herb" />
     <AlchemyPaperDetails v-if="recipe" :recipe="recipe" :variant="variant ?? ''" :notice="notice" @variant="emit('variant', $event)" @brew="emit('brew')" />
@@ -67,8 +63,6 @@ const titleDivider = resolveAssetUrl('/assets/ui/tien-hiep-2026-10/controls/titl
 .paper { position:absolute; left:94px; top:123px; width:1334px; height:633px; border:0 solid transparent; border-image-slice:300 fill; border-image-width:83px; filter:drop-shadow(0 12px 15px #0009); }
 .title { position:absolute; left:231px; top:174px; margin:0; font-size:34px; font-weight:500; font-style:italic; } .alchemy-divider{position:absolute;left:233px;top:191px;width:230px;object-fit:contain;opacity:.9}
 .subtitle { position:absolute; left:519px; top:192px; color:#8b7042; font-size:13px; letter-spacing:2px; }
-.alchemy-upgrade { position:absolute; left:792px; top:184px; width:170px; }
-.alchemy-upgrade :deep(.building-heading__cost) { color:#8b7042; font-size:11px; }
 .preview-label { position:absolute; left:235px; top:724px; margin:0; color:#806b43; font-size:9px; }
 .alchemy-details-empty { position:absolute; left:970px; top:154px; width:418px; height:575px; border:0 solid transparent; border-image-slice:300 fill; border-image-width:35px; padding:24px 28px; display:flex; align-items:center; justify-content:center; }
 .empty-copy { color:#8b7042; font-size:15px; text-align:center; }
