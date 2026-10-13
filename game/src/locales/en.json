@@ -903,6 +903,7 @@
         "claim": "Claim Reward"
       },
       "empty": "No quests available yet.",
+      "lockedDetail": "These quests are locked. See the unlock requirements in the list on the left.",
       "lockedAfter": "Complete: {name}",
       "lockedRealm": "Reach realm: {realm}",
       "flags": {
@@ -921,7 +922,29 @@
         "rewardsTitle": "Quest Rewards",
         "turnIn": "Hand in {name}",
         "done": "Done",
-        "reasonIncomplete": "Objective incomplete."
+        "reasonIncomplete": "Objective incomplete.",
+        "list": "Quest List",
+        "progress": "Progress",
+        "status": {
+          "doing": "Doing",
+          "complete": "Complete",
+          "ready": "Ready to Claim",
+          "pending": "Locked"
+        }
+      },
+      "intro": "Track your cultivation progress one quest at a time.",
+      "groupHints": {
+        "mainline": "The main journey",
+        "once": "One-time quests",
+        "daily": "Refreshes each day",
+        "weekly": "Refreshes each week",
+        "achievement": "Cultivation milestones",
+        "exploration": "Explore the lands"
+      },
+      "rewardShort": {
+        "spiritStone": "Spirit Stones",
+        "cultivation": "Cultivation",
+        "skillInsight": "Skill Insight"
       }
     },
     "common": {

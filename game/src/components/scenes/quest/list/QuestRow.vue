@@ -1,16 +1,17 @@
 <script setup lang="ts">
-// One quest row inside the list: thumb tile (art-needed - no per-quest
-// vista art exists), name + cadence chip + one-line description, and a
-// right-side state read: green check when complete/claimed, progress
-// n/m otherwise. list-row chrome per spec; selected = jade border +
-// gold name like the ref's picked row.
+// One quest row inside the EquipmentArtCard list (Codex landscape
+// port): thumb (shared warm vista; per-quest art is
+// unassigned), name + one-line summary, EnergyTube + 'x / y' amount
+// and a status badge. Locked preview rows stay rendered as 'pending'
+// (grayscale, unselectable) with their unlock reasons as the summary,
+// same semantics as before - only the shape changed.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
-import { chromeSlice } from '@/ui/huyenKimChrome'
+import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
+import { questRowStatus } from '@/presentation/questUi'
 
 const props = defineProps<{
   row: BetaQuestSurfaceModel
@@ -20,18 +21,22 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-const rowSlice = computed(() => chromeSlice('list-row'))
-const chipSlice = computed(() => chromeSlice('seal-chip'))
-
-const complete = computed(
-  () => props.row.claim.claimed || props.row.progress >= props.row.target,
-)
-const claimable = computed(() => props.row.claim.available && !props.row.claim.claimed)
 const locked = computed(() => props.row.lockedPreview !== undefined)
+
+const status = computed(() => questRowStatus(props.row))
+
+const fill = computed(() =>
+  props.row.target > 0 ? Math.min(props.row.progress, props.row.target) / props.row.target : 0,
+)
+const amountText = computed(() => `${Math.min(props.row.progress, props.row.target)} / ${props.row.target}`)
+
+const thumb = computed(() =>
+  resolveAssetUrl('/assets/ui/tien-hiep-2026-10/source/world-vista-warm-v1.png'),
+)
 
 const lockReasons = computed(() => {
   const preview = props.row.lockedPreview
-  if (!preview) return []
+  if (!preview) return ''
   const reasons: string[] = []
   if (preview.afterQuestName) {
     reasons.push(t('panels.quest.lockedAfter', { name: preview.afterQuestName }))
@@ -43,7 +48,7 @@ const lockReasons = computed(() => {
     } catch { /* unknown realm id renders raw, same as the old panel */ }
     reasons.push(t('panels.quest.lockedRealm', { realm: realmName }))
   }
-  return reasons
+  return reasons.join(' ')
 })
 </script>
 
@@ -51,210 +56,95 @@ const lockReasons = computed(() => {
   <button
     type="button"
     class="quest-row"
-    :class="{ 'is-selected': selected, 'is-claimable': claimable, 'is-claimed': row.claim.claimed, 'is-locked': locked }"
+    :class="{ 'is-selected': selected, 'is-locked': locked }"
     :aria-pressed="selected"
     :aria-disabled="locked || undefined"
     :tabindex="locked ? -1 : 0"
     @click="locked ? undefined : onSelect()"
   >
-    <InkNineSlice
-      chrome-id="list-row"
-      layer="surface"
-      class="quest-row__surface"
-      :art-needed="!rowSlice || undefined"
-      data-art-id="list-row"
-    />
-
-    <!-- Scenic thumb per row in the ref; per-quest art is unassigned, so
-         a jade ink tile with the stable quest glyph stands in (the tile
-         itself is still art-needed). -->
-    <span
-      class="quest-row__thumb"
-      art-needed
-      data-art-id="quest-row-thumb"
-      aria-hidden="true"
-    ><HuyenKimSymbol name="quest" class="quest-row__thumb-mark" /></span>
+    <img class="quest-row__thumb" :src="thumb" alt="" aria-hidden="true">
 
     <span class="quest-row__body">
-      <span class="quest-row__topline">
-        <span class="quest-row__name">{{ row.name }}</span>
-        <span class="quest-row__cadence">
-          <InkNineSlice
-            chrome-id="seal-chip"
-            layer="surface"
-            class="quest-row__cadence-chrome"
-            :art-needed="!chipSlice || undefined"
-            data-art-id="seal-chip"
-          />
-          <span class="quest-row__cadence-text">{{ t(`panels.quest.cadence.${row.cadence}`) }}</span>
-        </span>
-        <span v-if="row.chainId === 'mainline'" class="quest-row__chain">{{ t('panels.quest.groups.mainline') }}</span>
-        <span v-if="row.claim.claimed" class="quest-row__done">{{ t('panels.quest.scene.done') }}</span>
+      <span class="quest-row__name">{{ row.name }}</span>
+      <span class="quest-row__desc">{{ locked ? lockReasons : row.description }}</span>
+      <span class="quest-row__meter">
+        <EquipmentEnergyTube class="quest-row__tube" :fill="fill" color="#e7bb62" />
+        <i>{{ amountText }}</i>
       </span>
-      <span v-if="locked" class="quest-row__desc">
-        <template v-for="reason in lockReasons" :key="reason">{{ reason }}<br v-if="reason !== lockReasons[lockReasons.length - 1]"></template>
-      </span>
-      <span v-else class="quest-row__desc">{{ row.description }}</span>
     </span>
 
-    <span class="quest-row__state">
-      <span v-if="locked" class="quest-row__lock" aria-hidden="true">✕</span>
-      <span v-else-if="complete" class="quest-row__check" aria-hidden="true">✓</span>
-      <span v-else class="quest-row__progress">{{ Math.min(row.progress, row.target) }}/{{ row.target }}</span>
-    </span>
+    <em class="quest-row__badge" :class="status">{{ t(`panels.quest.scene.status.${status}`) }}</em>
   </button>
 </template>
 
 <style scoped>
 .quest-row {
-  position: relative;
-  isolation: isolate;
   width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px 8px 8px;
-  border: 1px solid var(--hk-border-muted, var(--paper-line));
-  border-radius: var(--hk-radius-md, 8px);
-  background: transparent;
-  color: var(--hk-text-secondary, var(--paper-text-soft));
-  font: inherit;
+  gap: 8px;
+  padding: 7px;
+  color: #efdfb9;
+  border: 1px solid #947444;
+  background: #15171550;
+  font-family: inherit;
   text-align: start;
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
 }
-.quest-row > :not(.ink-nine-slice) { position: relative; z-index: 1; }
-
-.quest-row:hover { border-color: var(--hk-border-active, var(--paper-line)); }
 .quest-row.is-selected {
-  border-color: var(--hk-jade, #315f55);
-  color: var(--hk-text-primary, var(--paper-text));
+  border-color: #f5ce78;
+  box-shadow: inset 0 0 8px #e1a94370, 0 0 4px #e1a94380;
 }
-.quest-row.is-selected .quest-row__name { color: var(--hk-gold, #e3bd67); }
-.quest-row.is-claimable .quest-row__check { color: var(--hk-gold, #e3bd67); }
-.quest-row.is-claimed { opacity: 0.75; }
-.quest-row.is-locked { opacity: 0.5; filter: grayscale(0.9); cursor: default; }
-.quest-row.is-locked:hover { border-color: var(--hk-border-muted, var(--paper-line)); }
+.quest-row.is-locked { opacity: 0.55; filter: grayscale(0.9); cursor: default; }
+.quest-row.is-locked:hover { border-color: #947444; }
 
 .quest-row__thumb {
-  width: 58px;
-  height: 44px;
-  border-radius: var(--hk-radius-sm, 5px);
-  border: 1px solid color-mix(in srgb, var(--hk-gold-muted, #b99a55) 45%, transparent);
-  background:
-    radial-gradient(ellipse at 30% 75%, color-mix(in srgb, var(--hk-jade, #315f55) 70%, transparent) 20%, transparent 65%),
-    linear-gradient(160deg, color-mix(in srgb, var(--hk-jade, #315f55) 45%, var(--ink-900, #101718)), var(--ink-900, #101718));
-  display: grid;
-  place-items: center;
-  color: color-mix(in srgb, var(--hk-gold-bright, #e3bd67) 65%, transparent);
-  font-size: 16px;
-}
-
-.quest-row__thumb-mark {
-  width: 20px;
-  height: 20px;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border: 1px solid #ad8a46;
 }
 
 .quest-row__body {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
-  min-width: 0;
 }
-
-.quest-row__topline {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
 .quest-row__name {
-  font: 700 var(--text-sm) var(--hk-font-display, var(--font-display));
-  letter-spacing: 0.02em;
+  font-size: 15px;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.quest-row__cadence {
-  position: relative;
-  isolation: isolate;
-  flex: 0 0 auto;
-  padding: 0 10px;
-  /* The seal-chip slice's 14+14px border art is taller than this
-     topline box (18px): the abs nine-slice renders ~28px and paints
-     over the description line. Clip it to the slot. */
-  overflow: hidden;
-  border-radius: 7px;
-}
-.quest-row__cadence > :not(.ink-nine-slice) { position: relative; z-index: 1; }
-
-.quest-row__cadence-text {
-  font-size: var(--text-xs, 10px);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--hk-gold, #e3bd67);
-}
-
-.quest-row__done {
-  flex: 0 0 auto;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--hk-jade-soft, #8fb8a8);
-}
-
 .quest-row__desc {
-  font-size: var(--text-xs);
-  color: var(--hk-text-muted, #b8ad97);
+  font-size: 11px;
+  opacity: 0.85;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.quest-row__meter {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+}
+.quest-row__tube { flex: 1; min-width: 0; }
+.quest-row__meter i { font-style: normal; white-space: nowrap; }
 
-.quest-row__state { display: flex; align-items: center; }
-
-.quest-row__chain {
+.quest-row__badge {
   flex: 0 0 auto;
-  padding: 0 8px;
-  border: 1px solid var(--hk-gold-muted, #b99a55);
-  border-radius: 7px;
-  font-size: var(--text-xs, 10px);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--hk-gold, #e3bd67);
-  background: color-mix(in srgb, var(--hk-gold, #e3bd67) 12%, transparent);
+  font-style: normal;
+  font-size: 10px;
+  border: 1px solid #947444;
+  padding: 4px;
+  white-space: nowrap;
 }
-
-.quest-row__lock {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--hk-border-muted, var(--paper-line));
-  color: var(--hk-text-muted, #b8ad97);
-  font-size: var(--text-xs);
-  font-weight: 700;
-}
-
-.quest-row__check {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--hk-jade, #315f55);
-  color: var(--hk-jade-soft, #8fb8a8);
-  font-weight: 700;
-  font-size: var(--text-xs);
-  background: color-mix(in srgb, var(--hk-jade, #315f55) 30%, transparent);
-}
-
-.quest-row__progress {
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-  color: var(--hk-text-muted, #b8ad97);
-}
+.quest-row__badge.complete { color: #9ccc82; border-color: #9ccc8280; }
+.quest-row__badge.ready { color: #f5ce78; border-color: #f5ce7880; }
+.quest-row__badge.pending { color: #b8ad97; }
 </style>

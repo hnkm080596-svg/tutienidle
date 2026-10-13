@@ -29,6 +29,7 @@ import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { useAudioStore } from '@/stores/audio'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import { trackedHomeQuest } from '@/presentation/questUi'
 import { pcPaperIconUrl, type PcPaperIcon } from '@/presentation/assets/PcPaperIcons'
 import '@/assets/pc-paper-scene.css'
 import { pcPaperControlStyles, pcPaperResourceUrl, type PcPaperResource } from '@/presentation/assets/PcPaperControls'
@@ -309,7 +310,7 @@ const currencyChips = computed(() => {
 const trackedQuest = computed(() => {
   stateVersion.value
   const models = gameManager.questOps.getBetaQuestSurfaceModels()
-  return models.find((model) => model.claim.available) ?? models[0]
+  return trackedHomeQuest(models)
 })
 
 const questCard = computed(() => {

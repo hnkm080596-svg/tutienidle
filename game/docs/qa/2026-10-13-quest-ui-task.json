@@ -1,0 +1,27 @@
+{
+  "taskId": "quest-ui-review-20261013",
+  "applicabilityKeys": ["quest", "ui", "progression", "game/src/components/scenes/quest", "game/src/components/scenes/dong-fu"],
+  "planningBaseline": {
+    "productStateId": "e36ccec9324f404c798b2d8906d5f431dd4dcc50",
+    "contractId": "R8-quest-lifecycle-ui-projection",
+    "attackModelId": "quest-ui-locked-ready-tracker-v1",
+    "environmentId": "Windows-Vue3-Vitest-2026-10-13"
+  },
+  "requirementRefs": ["User-approved Quest panel and DongFu tracker repair", "AGENTS.md P14/P16/P17", "docs/roadmap.md R8.1"],
+  "invariantIds": ["QUEST-UI-LOCKED-UNSELECTABLE", "QUEST-UI-READY-LABEL", "QUEST-UI-ACTIVE-TRACKER"],
+  "dependencyRefs": ["src/core/betaScopeQuestDomain.ts:BetaQuestSurfaceModel", "docs/roadmap.md:R8.1"],
+  "sourceDependencyHashes": [
+    {"path": "src/core/betaScopeQuestDomain.ts", "revision": "sha256:9c01c9de29546bad023a78f7ee9a29f0cae48842006d3238f9e26722ff02177e"},
+    {"path": "docs/roadmap.md", "revision": "sha256:8b0f585d078fedd8ab8018b6bcbf7c83c58b5ab1bcf453db292f9185e2fbecfe"}
+  ],
+  "expectedChangeSet": ["src/presentation/questUi.ts", "src/components/scenes/quest/QuestScene.vue", "src/components/scenes/quest/list/QuestRow.vue", "src/components/scenes/quest/detail/QuestDetailPanel.vue", "src/components/scenes/dong-fu/DongFuStage.vue", "src/locales/vi.json", "src/locales/en.json", "src/presentation/questUi.test.ts", "src/components/scenes/quest/list/QuestRow.test.ts"],
+  "slices": [
+    {"id": "quest-ui-state", "objective": "Keep locked previews unselectable, display accurate claim statuses and localize empty state"},
+    {"id": "quest-home-tracker", "objective": "Track claimable or active unlocked quest, hide empty-only locked list"},
+    {"id": "quest-ui-qa", "objective": "Verify same-model transitions, i18n, runtime and aggregate gates"}
+  ],
+  "firstProofObligations": [
+    {"admittedSlice": "quest-ui-state", "stage": "BEFORE_WRITE", "oracle": "BetaQuestSurfaceModel.lockedPreview marks read-only locked rows; QuestRow.vue already suppresses their clicks; selection must honor it"}
+  ],
+  "unresolvedAssumptions": []
+}

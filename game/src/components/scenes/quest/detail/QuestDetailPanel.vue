@@ -18,6 +18,7 @@ import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 
 defineProps<{
   row: BetaQuestSurfaceModel | null
+  onlyLocked?: boolean
   onClaim: (questId: string) => void
 }>()
 
@@ -61,7 +62,7 @@ const headSlice = computed(() => chromeSlice('entity-bar'))
     </template>
 
     <EmptyState v-else class="quest-detail__empty" size="lg" framed data-hk-region="empty-state">
-      {{ t('panels.quest.empty') }}
+      {{ t(onlyLocked ? 'panels.quest.lockedDetail' : 'panels.quest.empty') }}
     </EmptyState>
   </section>
 </template>

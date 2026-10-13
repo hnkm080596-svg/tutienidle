@@ -16,6 +16,7 @@ import QuestGroupTabs from './tabs/QuestGroupTabs.vue'
 import QuestList from './list/QuestList.vue'
 import QuestDetailPanel from './detail/QuestDetailPanel.vue'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
+import { selectVisibleQuestId } from '@/presentation/questUi'
 
 const props = defineProps<{
   rows: readonly BetaQuestSurfaceModel[]
@@ -49,7 +50,10 @@ const visibleRows = computed(() =>
 
 const selectedQuestId = ref<string | null>(null)
 const selectedRow = computed(
-  () => visibleRows.value.find((row) => row.id === selectedQuestId.value) ?? null,
+  () => visibleRows.value.find((row) => row.id === selectedQuestId.value && !row.lockedPreview) ?? null,
+)
+const onlyLockedRows = computed(() =>
+  visibleRows.value.length > 0 && visibleRows.value.every((row) => !!row.lockedPreview),
 )
 
 // Tabs emit plain strings; the scene owns the filter union and ignores
@@ -62,9 +66,7 @@ function selectCadence(id: string) {
 watch(
   visibleRows,
   (list) => {
-    if (!list.some((row) => row.id === selectedQuestId.value)) {
-      selectedQuestId.value = list[0]?.id ?? null
-    }
+    selectedQuestId.value = selectVisibleQuestId(list, selectedQuestId.value)
   },
   { immediate: true },
 )
@@ -96,7 +98,7 @@ function onClaim(questId: string) {
       />
     </template>
     <template #detail>
-      <QuestDetailPanel :row="selectedRow" :on-claim="onClaim" />
+      <QuestDetailPanel :row="selectedRow" :only-locked="onlyLockedRows" :on-claim="onClaim" />
     </template>
   </QuestFidelityScene>
   </SceneDesignCanvas>

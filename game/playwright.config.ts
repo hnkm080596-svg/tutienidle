@@ -54,7 +54,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'node node_modules/vite/bin/vite.js',
+    // Resolve Vite through the project's npm script. Isolated worktrees can
+    // resolve dependencies from a parent checkout without a local Vite binary.
+    command: 'npm run dev',
     url: `http://localhost:${DEV_PORT}`,
     // Never reuse a foreign server on CI - a stale worktree server is the
     // T7-62 false-green. Local reuse stays for the manual-server workflow.

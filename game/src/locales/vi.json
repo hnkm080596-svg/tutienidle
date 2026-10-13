@@ -903,6 +903,7 @@
         "claim": "Nhận Thưởng"
       },
       "empty": "Chưa có nhiệm vụ nào khả dụng.",
+      "lockedDetail": "Các nhiệm vụ đang khóa. Xem điều kiện mở trong danh sách bên trái.",
       "lockedAfter": "Hoàn thành: {name}",
       "lockedRealm": "Đạt cảnh giới: {realm}",
       "flags": {
@@ -921,7 +922,29 @@
         "rewardsTitle": "Thưởng Nhiệm Vụ",
         "turnIn": "Nộp {name}",
         "done": "Đã hoàn thành",
-        "reasonIncomplete": "Chưa đủ tiến độ mục tiêu."
+        "reasonIncomplete": "Chưa đủ tiến độ mục tiêu.",
+        "list": "Danh Sách",
+        "progress": "Tiến Độ",
+        "status": {
+          "doing": "Đang Làm",
+          "complete": "Hoàn Thành",
+          "ready": "Có Thể Nhận",
+          "pending": "Chưa Mở"
+        }
+      },
+      "intro": "Theo dõi tiến độ tu luyện qua từng nhiệm vụ.",
+      "groupHints": {
+        "mainline": "Hành trình chính tuyến",
+        "once": "Nhiệm vụ một lần",
+        "daily": "Làm mới mỗi ngày",
+        "weekly": "Làm mới mỗi tuần",
+        "achievement": "Cột mốc tu luyện",
+        "exploration": "Thám hiểm vùng đất"
+      },
+      "rewardShort": {
+        "spiritStone": "Linh Thạch",
+        "cultivation": "Tu Vi",
+        "skillInsight": "Cảm Ngộ Kỹ Năng"
       }
     },
     "common": {
