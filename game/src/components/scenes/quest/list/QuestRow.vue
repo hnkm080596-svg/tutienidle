@@ -11,6 +11,7 @@ import EquipmentEnergyTube from '@/components/common/art/EquipmentEnergyTube.vue
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
+import { questRowStatus } from '@/presentation/questUi'
 
 const props = defineProps<{
   row: BetaQuestSurfaceModel
@@ -22,10 +23,7 @@ const { t } = useI18n()
 
 const locked = computed(() => props.row.lockedPreview !== undefined)
 
-const status = computed<'doing' | 'complete' | 'pending'>(() => {
-  if (locked.value) return 'pending'
-  return props.row.claim.claimed ? 'complete' : 'doing'
-})
+const status = computed(() => questRowStatus(props.row))
 
 const fill = computed(() =>
   props.row.target > 0 ? Math.min(props.row.progress, props.row.target) / props.row.target : 0,
@@ -147,5 +145,6 @@ const lockReasons = computed(() => {
   white-space: nowrap;
 }
 .quest-row__badge.complete { color: #9ccc82; border-color: #9ccc8280; }
+.quest-row__badge.ready { color: #f5ce78; border-color: #f5ce7880; }
 .quest-row__badge.pending { color: #b8ad97; }
 </style>

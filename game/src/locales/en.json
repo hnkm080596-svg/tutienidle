@@ -918,7 +918,8 @@
         "status": {
           "doing": "Doing",
           "complete": "Complete",
-          "pending": "Locked"
+          "pending": "Locked",
+          "ready": "Ready to Claim"
         }
       },
       "intro": "Track your cultivation progress one quest at a time.",
@@ -934,7 +935,8 @@
         "spiritStone": "Spirit Stones",
         "cultivation": "Cultivation",
         "skillInsight": "Skill Insight"
-      }
+      },
+      "lockedDetail": "These quests are locked. See the unlock requirements in the list on the left."
     },
     "common": {
       "close": "Close",

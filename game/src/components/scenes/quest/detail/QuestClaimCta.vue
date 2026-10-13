@@ -36,6 +36,17 @@ const note = computed(() => {
   }
   return null
 })
+
+function claimWithFocus(event: MouseEvent) {
+  if (disabled.value) return
+  const action = event.currentTarget
+  if (action instanceof HTMLElement && document.activeElement === action) {
+    // The claim button becomes disabled after success. Keep keyboard focus
+    // inside the quest dialog so its Escape handler remains reachable.
+    action.closest('.quest-scene')?.querySelector<HTMLElement>('.quest-row.is-selected')?.focus()
+  }
+  props.onClaim(props.row.id)
+}
 </script>
 
 <template>
@@ -44,7 +55,7 @@ const note = computed(() => {
       gold
       class="quest-claim__button"
       :disabled="disabled"
-      @click="!disabled && onClaim(row.id)"
+      @click="claimWithFocus"
     >
       {{ claimed ? t('panels.quest.actions.claimed') : t('panels.quest.actions.claim') }}
     </EquipmentArtButton>

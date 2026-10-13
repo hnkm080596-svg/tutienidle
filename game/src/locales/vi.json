@@ -918,7 +918,8 @@
         "status": {
           "doing": "Đang Làm",
           "complete": "Hoàn Thành",
-          "pending": "Chưa Mở"
+          "pending": "Chưa Mở",
+          "ready": "Có Thể Nhận"
         }
       },
       "intro": "Theo dõi tiến độ tu luyện qua từng nhiệm vụ.",
@@ -934,7 +935,8 @@
         "spiritStone": "Linh Thạch",
         "cultivation": "Tu Vi",
         "skillInsight": "Cảm Ngộ Kỹ Năng"
-      }
+      },
+      "lockedDetail": "Các nhiệm vụ đang khóa. Xem điều kiện mở trong danh sách bên trái."
     },
     "common": {
       "close": "Đóng",

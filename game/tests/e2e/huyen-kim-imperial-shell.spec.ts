@@ -231,6 +231,107 @@ test.describe('Huyen Kim imperial scroll scenes', () => {
     assertNoBrowserErrors(errors)
   })
 
+  test('scene 18 quest tracker opens its unlocked target and locked previews cannot be selected', async ({ page }) => {
+    const errors = collectBrowserErrors(page)
+    await bootFreshMortal(page)
+    const tracker = page.locator('.home-design-quest')
+    await expect(tracker).toBeVisible({ timeout: 15_000 })
+    const trackedName = (await tracker.locator('p').textContent())?.trim()
+    expect(trackedName).toBeTruthy()
+
+    await tracker.click()
+    const scene = page.locator('.quest-scene')
+    await expect(scene).toBeVisible({ timeout: 15_000 })
+    const selected = scene.locator('.quest-row.is-selected')
+    await expect(selected).toHaveCount(1)
+    await expect(selected.locator('.quest-row__name')).toHaveText(trackedName!)
+    await expect(scene.locator('[data-hk-region="detail-panel"]')).toBeVisible()
+
+    const locked = scene.locator('.quest-row.is-locked').first()
+    await expect(locked).toBeVisible()
+    await expect(locked).toHaveAttribute('aria-disabled', 'true')
+    await expect(locked).toHaveAttribute('tabindex', '-1')
+    // Playwright blocks regular clicks on aria-disabled controls; dispatch a
+    // synthetic event to verify the component still guards the handler.
+    await locked.dispatchEvent('click')
+    await expect(selected.locator('.quest-row__name')).toHaveText(trackedName!)
+
+    await page.setViewportSize({ width: 1024, height: 768 })
+    await expect(scene.locator('[data-hk-region="quest-list"]')).toBeVisible()
+    await expect(scene.locator('[data-hk-region="detail-panel"]')).toBeVisible()
+    await page.screenshot({ path: `${SHOT_DIR}/18-quest-tracker-1024.png` })
+    assertNoBrowserErrors(errors)
+  })
+
+  test('scene 18 quest claim unlocks the next task and refreshes the home tracker', async ({ page }) => {
+    const errors = collectBrowserErrors(page)
+    await bootFreshMortal(page)
+    const tracker = page.locator('.home-design-quest')
+    const initialName = (await tracker.locator('p').textContent())?.trim()
+    expect(initialName).toBeTruthy()
+
+    // Inject three authoritative domain kill events as a test fixture. This
+    // checks the UI/claim wiring without claiming to exercise real combat.
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        __tutienPhaserGame?: { registry: { get(key: string): unknown } }
+      }
+      const manager = runtime.__tutienPhaserGame?.registry.get('gameManager') as {
+        questSystem: {
+          onEnemyDefeated: (
+            registry: unknown, manager: unknown, enemyId: string, stageId: undefined,
+          ) => void
+        }
+        questRegistry: unknown
+        questManager: unknown
+      } | undefined
+      if (!manager) throw new Error('GameManager missing from the Phaser registry')
+      for (let i = 0; i < 3; i++) {
+        manager.questSystem.onEnemyDefeated(
+          manager.questRegistry, manager.questManager, 'mortal_wild_boar', undefined,
+        )
+      }
+    })
+
+    await expect(tracker).toHaveClass(/is-claimable/, { timeout: 15_000 })
+    await tracker.click()
+    const scene = page.locator('.quest-scene')
+    await expect(scene).toBeVisible()
+    const selected = scene.locator('.quest-row.is-selected')
+    await expect(selected.locator('.quest-row__name')).toHaveText(initialName!)
+    await expect(selected.locator('.quest-row__badge')).toHaveClass(/ready/)
+    await expect(scene.locator('.quest-claim__button')).toBeEnabled()
+    await scene.locator('.quest-claim__button').click()
+
+    await expect(selected.locator('.quest-row__badge')).toHaveClass(/complete/)
+    await expect(scene.locator('.quest-claim__button')).toBeDisabled()
+    const nextName = await page.evaluate(() => {
+      const runtime = window as unknown as {
+        __tutienPhaserGame?: { registry: { get(key: string): unknown } }
+      }
+      const manager = runtime.__tutienPhaserGame?.registry.get('gameManager') as {
+        questOps: { getBetaQuestSurfaceModels: () => { id: string; name: string }[] }
+      } | undefined
+      return manager?.questOps.getBetaQuestSurfaceModels()
+        .find((row) => row.id === 'main_02_lam_chi_san')?.name ?? null
+    })
+    expect(nextName).toBeTruthy()
+    expect(nextName).not.toBe(initialName)
+    await expect(scene.locator('.quest-row:not(.is-locked) .quest-row__name').filter({ hasText: nextName! })).toHaveCount(1)
+
+    await page.keyboard.press('Escape')
+    await expect(scene).toHaveCount(0)
+    await expect(tracker.locator('p')).toHaveText(nextName!, { timeout: 15_000 })
+    await tracker.click()
+    await expect(scene.locator('.quest-row.is-selected .quest-row__name')).toHaveText(nextName!)
+
+    await page.setViewportSize({ width: 1024, height: 768 })
+    await expect(scene.locator('[data-hk-region="quest-list"]')).toBeVisible()
+    await expect(scene.locator('[data-hk-region="detail-panel"]')).toBeVisible()
+    await shot(page, '18-quest-after-claim-1024')
+    assertNoBrowserErrors(errors)
+  })
+
   test('scenes 13+15 combat: HUD chrome + victory ceremony', async ({ page }) => {
     test.setTimeout(240_000)
     const errors = collectBrowserErrors(page)
