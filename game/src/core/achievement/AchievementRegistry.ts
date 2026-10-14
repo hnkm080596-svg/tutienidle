@@ -8,7 +8,7 @@ export const ACHIEVEMENT_COUNTERS = [
 
 export const nonempty = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0
 export const natural = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
-export const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every(nonempty) && new Set(value).size === value.length
+export const strings = (value: unknown): value is string[] => Array.isArray(value) && Array.from(value).every(nonempty) && new Set(value).size === value.length
 
 function validObjective(objective: AchievementObjective): boolean {
   switch (objective?.kind) {

@@ -176,6 +176,21 @@ describe('achievement supported boundaries (owner-contract fixtures, no runtime 
     expect(system.get('ach_meta_week_4')?.ready).toBe(false)
   })
 
+  it('rejects nested unknown weekly save fields before they can retain aliases in snapshots', () => {
+    const system = make()
+    const before = system.snapshot()
+    const extra = { hidden: ['mutable'] }
+    expect(system.restore({ ...before, revision: 1, receiptIds: ['e'], operationIds: ['weekly:w'],
+      weeklyClaims: [{ claimId: 'w', period: 10, extra }] })).toBe(false)
+    extra.hidden.push('changed')
+    expect(system.snapshot()).toEqual(before)
+    expect(system.restore({ ...before, revision: 1, receiptIds: ['e'], operationIds: ['weekly:w'],
+      weeklyClaims: [{ claimId: 'w', period: 10 }] })).toBe(true)
+    const detached = system.snapshot()
+    detached.weeklyClaims[0]!.period = 99
+    expect(system.snapshot().weeklyClaims[0]!.period).toBe(10)
+  })
+
   it('registry rejects duplicate/unsupported definitions and freezes detached nested contracts', () => {
     expect(() => new AchievementRegistry([ACHIEVEMENTS[0]!, ACHIEVEMENTS[0]!])).toThrow()
     expect(() => new AchievementRegistry([{ ...ACHIEVEMENTS[0]!, objective: { kind: 'counter', counter: 'mortal_wood', target: 0 } }])).toThrow()
@@ -186,5 +201,22 @@ describe('achievement supported boundaries (owner-contract fixtures, no runtime 
     expect(registry.get(input.id)?.reward.spiritStone).toBe(14)
     expect(registry.get(input.id)?.objective).toEqual({ kind: 'facts', keys: ['stage:mortal_dong_10'] })
     expect(Object.isFrozen(registry.get(input.id)?.reward)).toBe(true)
+  })
+
+  it('rejects sparse owner witnesses without inventing entitlement or assignment IDs', () => {
+    const system = make()
+    const before = system.snapshot()
+    expect(system.reconcile({ playerId, completedStageIds: [], completedOnceIds: [], reachedRealmIds: [],
+      attainedElementIds: [], entitledCompanionIds: Array<string>(1), assignedCompanionIds: Array<string>(1) })).toBe(false)
+    expect(system.get('ach_f04_dong_hanh')?.ready).toBe(false)
+    expect(system.snapshot()).toEqual(before)
+    expect(() => new AchievementRegistry([{ ...ACHIEVEMENTS[6]!, objective: { kind: 'facts', keys: Array<string>(1) } }])).toThrow()
+  })
+
+  it.each(['receiptIds', 'dailyClaimDays', 'weeklyClaims'] as const)('rejects sparse persisted %s atomically', (field) => {
+    const system = make()
+    const before = system.snapshot()
+    expect(system.restore({ ...before, revision: 1, [field]: Array(1) })).toBe(false)
+    expect(system.snapshot()).toEqual(before)
   })
 })

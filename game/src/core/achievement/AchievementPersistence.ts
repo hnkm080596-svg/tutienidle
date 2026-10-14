@@ -14,7 +14,7 @@ export function cloneAchievementLedger(state: AchievementLedgerState): Achieveme
     receiptIds: [...state.receiptIds], operationIds: [...state.operationIds],
     counters: { ...state.counters }, equipmentInstanceIds: [...state.equipmentInstanceIds],
     facts: [...state.facts], claimedIds: [...state.claimedIds], dailyClaimDays: [...state.dailyClaimDays],
-    weeklyClaims: state.weeklyClaims.map((entry) => ({ ...entry })),
+    weeklyClaims: state.weeklyClaims.map((entry) => ({ claimId: entry.claimId, period: entry.period })),
     entitledCompanionIds: [...state.entitledCompanionIds], assignedCompanionIds: [...state.assignedCompanionIds] }
 }
 
@@ -38,11 +38,12 @@ export function parseAchievementLedger(input: unknown, playerId: string, enabled
   if (Object.keys(input).some((key) => !Object.hasOwn(emptyAchievementLedger(playerId, enabledAt), key))) return
   const arrays = ['receiptIds', 'operationIds', 'equipmentInstanceIds', 'facts', 'claimedIds', 'entitledCompanionIds', 'assignedCompanionIds'] as const
   if (arrays.some((key) => !strings(input[key])) || !object(input.counters)
-    || !Array.isArray(input.dailyClaimDays) || !input.dailyClaimDays.every(natural)
+    || !Array.isArray(input.dailyClaimDays) || !Array.from(input.dailyClaimDays).every(natural)
     || new Set(input.dailyClaimDays).size !== input.dailyClaimDays.length
     || !Array.isArray(input.weeklyClaims)) return
   if (Object.entries(input.counters).some(([key, value]) => !ACHIEVEMENT_COUNTERS.includes(key as AchievementCounter) || !natural(value))) return
-  if (input.weeklyClaims.some((entry: unknown) => !object(entry) || typeof entry.claimId !== 'string' || !entry.claimId.trim() || !natural(entry.period))) return
+  if (Array.from(input.weeklyClaims).some((entry: unknown) => !object(entry) || typeof entry.claimId !== 'string' || !entry.claimId.trim()
+    || !natural(entry.period) || Object.keys(entry).some((key) => key !== 'claimId' && key !== 'period'))) return
   // The guards above establish the full versioned shape before copying it.
   const state = input as unknown as AchievementLedgerState
   if ((state.counters.unique_equipment ?? 0) !== state.equipmentInstanceIds.length

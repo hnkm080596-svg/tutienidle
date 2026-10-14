@@ -159,3 +159,112 @@ No balance tuning was performed.
 - Source/test/report files are selected for the user-authorized local commit. Generated QA run, logs,
   construction drafts and isolated mutant copies remain local and preserved. Nothing is push/merge-ready
   by virtue of this report. No push, master edit, integration or cleanup is authorized or performed.
+
+## Post-review supported-boundary repair / resulting-state cycle
+
+A final malformed-but-cross-field-valid weekly payload exposed Medium nested-shape acceptance/alias
+retention (recorded RED in qa/nested-shape-red.log against the pre-fix compiled control). Root class:
+strict top-level validation with permissive nested records plus spread-copy retaining unknown references.
+Escape: prior malformed weekly fixture failed for missing operation identity; legal roundtrips contained
+only declared fields. The new regression pairs unknown nested data with a matching receipt/operation
+identity, rejection atomicity, a legal control, and post-snapshot mutation of the declared period field.
+
+Repair: reject unknown weekly keys before restore; copy only claimId/period. Semantic sibling search
+covered all achievement nested arrays/objects and core/quest/services/save spread/weekly paths. All other
+achievement persisted lists are primitive values; reward/definition nested fields have their own detached
+copy/freeze rules. External equipment save normalization spread is a different, unqualified boundary;
+no proven sibling defect is asserted and no out-of-scope source is repaired. Canonical learning intake
+remains scoped here under the current user boundary; no policy promotion.
+
+The original local commit is retained; a followup commit is required, without reset/amend. Old source
+review/evidence is invalidated for this persistence surface. Latest quick P3: type-check exit 0;
+5 files / 151 tests pass, including a valid mutation control + 6 semantic mutants killed. Every one of
+7 compiled source inputs is now compared byte-for-byte before/after each mutation job.
+
+Sequential Review Pass 4 (2026-10-14T10:02:02.2962735+07:00)
+  Reviewed state: post-nested-shape repair, complete resulting achievement owner/registry/catalogue/tests,
+  after composed base-to-head + workspace OCR selection and fresh quick P3.
+  Findings: zero confirmed actionable findings. Legal populated weekly state still restores; unknown
+  fields reject without state mutation; declared nested fields detach; revision/identity rules remain intact.
+  Fixes: none during this pass.
+  Verification: 151 focused tests + type-check green; no whole-repository green/full claim.
+
+Sequential Review Pass 5 (2026-10-14T10:05:40.6398559+07:00)
+  Reviewed state after Pass 4 fixes: YES (none; repaired source unchanged).
+  Findings: zero confirmed actionable findings. Persistence validation and copy remain in the ledger
+  boundary; no source authority, counter rule, reward band, import direction or real consumer changed.
+  Unknown keys cannot create stored aliases, and legitimate current-schema weekly records remain admitted.
+  Fixes: none.
+  Verification: unchanged-state type-check/151-test evidence reused; independent context still unavailable.
+
+Sequential Review Pass 6 (2026-10-14T10:30:05.1950740+07:00)
+  Reviewed state after Pass 5 fixes: YES. Production repair unchanged; test-only artifact storage further
+  hardened before sealing this resulting-state review: every job now has a fresh directory and write-once
+  source/provenance files; only a mutable latest index is updated. Earlier fixed-directory artifacts are
+  retained as historical and must not be reused as immutable evidence.
+  Findings: zero confirmed actionable source/test findings after current host OCR. Complete source set,
+  legal and malformed restore paths, six mutant operators, reward retry/reentry and all catalogue objectives
+  rechecked. No new production consumer, timing owner or gameplay rule introduced.
+  Fixes: artifact isolation change completed before this pass; none during review.
+  Verification: latest type-check exit 0; 5 files / 151 tests green, 100x100 campaign,
+  valid control plus six killed mutants; post-repair five novel headless attacks passed.
+
+Latest outcome: QA_UNVERIFIED remains binding. Full suite failures, unavailable isolated reviewer,
+missing complete aggregate census/clean pair/terminal/golden-bug and registered readiness evidence
+are not waived. No unqualified completion or merge-ready claim. The current source/test changes and
+this chronological followup are selected for a second user-authorized local commit; original commit
+126e53442a9efaef3e35db3129be20a075b20942 is preserved. Source scope still exactly the original two dirs.
+
+## Dense-array boundary repair / final resulting-state cycle
+
+A supported owner-snapshot attack proved that Array.every skipped sparse slots: two one-hole companion
+ID arrays were accepted and generated entitlement/assignment facts without any valid ID. RED retained
+in qa/sparse-owner-red.log. Medium boundary defect, root class sparse-array validation bypass; escape:
+previous invalid-value tests used dense arrays and JSON roundtrips normalize holes to explicit nulls.
+
+Repair: string arrays validate Array.from(value), numeric day arrays validate every materialized slot,
+weekly object arrays validate every materialized slot before dereferencing. Sibling census of every
+achievement every/some boundary found those three ingress paths. Remaining iterations consume arrays
+created by dense validated ingress or by the owner; no outside production code was changed. Pins cover
+sparse owner witnesses, registry fact keys and three persisted-array categories, with atomicity checks.
+A seventh semantic mutant restores the original string-array bypass and is killed by an API-level oracle.
+
+Latest quick P3: type-check exit 0; 5 files / 156 tests green; 100x100 stateful campaign,
+valid control plus seven semantic mutants killed. All seven compiled source files are compared before/after.
+Composed OCR selection: base c516dab9c to committed HEAD plus current workspace changes (not just
+uncommitted followup files); all 51 previewed entries accounted for, complete source/contract/test review,
+generated QA metadata explicitly skipped. No unresolved confirmed Medium+ in the current host review.
+
+Sequential Review Pass 7 (2026-10-14T10:46:33.9111621+07:00)
+  Reviewed state: complete post-dense-array repair owner/registry/evaluator/persistence/catalogue/tests,
+  after fresh quick P3 and current composed OCR. Old states are not reused as current acceptance.
+  Findings: zero confirmed actionable findings. Dense valid arrays retain normal semantics; holes reject
+  before private-state writes; unknown nested weekly keys reject; declared fields detach; snapshot/retry
+  and same-revision canonical identity remain coherent.
+  Fixes: none during this pass.
+  Verification: 156 focused tests and type-check green; full aggregate remains unverified.
+
+Sequential Review Pass 8 (2026-10-14T10:48:03.2587229+07:00)
+  Reviewed state after Pass 7 fixes: YES (none; same repaired source).
+  Findings: zero confirmed actionable findings. Dense ingress belongs to the schema/registry boundary,
+  consumers receive dense detached state; no second rule owner or new caller/dependency introduced.
+  String/fact/identity arrays, numeric days and nested weekly records checked; remaining every/some
+  operations consume owner-built or validated dense arrays. Excluded real producer/settlement/save
+  integration remains an explicit gap, with no receipt/authenticity claim.
+  Fixes: none.
+  Verification: unchanged-state 156-test and type-check evidence; no redundant deterministic rerun.
+
+Sequential Review Pass 9 (2026-10-14T10:49:18.0183797+07:00)
+  Reviewed state after Pass 8 fixes: YES (none; complete resulting source unchanged).
+  Findings: zero confirmed actionable findings in executed supported boundaries. Same/different claim
+  reentry, delivery failure, malformed/reordered/changed-revision restore, sparse/missing identities,
+  detached nested values, UTC boundaries, catalogue completion and JSON reopen checked as an assembled
+  headless API. No independent-context or production-runtime proof is inferred from these checks.
+  Fixes: none during this pass; no deferred Low/Nit source findings.
+  Verification: 156 tests / 5 files, 100x100 campaign, valid control + 7 killed mutants,
+  all 7 source inputs unchanged across each job, type-check exit 0, five post-repair novel attacks pass.
+
+Final source summary supersedes earlier counts: 156 focused tests and seven killed semantic mutants.
+Original three inherited files preserved; total committed task paths remain the same 14, all under
+core/achievement and data/achievement. Aggregate QA_UNVERIFIED and integration/readiness/independence
+blockers remain. Source repairs and this report will be the followup local commit; no push/master/deletion.
