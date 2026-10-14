@@ -1,0 +1,20 @@
+{
+  "taskId": "S4-MAINLINE-CONTENT",
+  "applicabilityKeys": ["quests", "economy-and-progression", "content", "catalog", "CRS-02", "CON-08"],
+  "requirementRefs": ["user:S4-MAINLINE-CONTENT", "docs/design/thanh-van-di-mach-v2/ACT-I-MORTAL.md", "docs/design/thanh-van-di-mach-v2/ACT-II-QI.md", "docs/design/thanh-van-di-mach-v2/ACT-III-FOUNDATION.md", "docs/design/thanh-van-di-mach-v2/IMPLEMENTATION.md:S4"],
+  "invariantIds": ["S4-21-IDS", "S4-44-OBJECTIVES", "S4-BASE-REWARDS", "S4-CATALOG-TARGETS", "S4-NO-RUNTIME-CUTOVER"],
+  "expectedChangeSet": [
+    {"path": "src/data/quest/questV2Types.ts", "reason": "authored intent discriminated union, not runtime contract"},
+    {"path": "src/data/quest/questV2Mainline.ts", "reason": "21 unregistered definitions from the three Acts"},
+    {"path": "src/data/quest/questV2Mainline.test.ts", "reason": "source-derived content, economy and catalog assertions"},
+    {"path": "src/data/quest/questV2Evidence.md", "reason": "G5 worker evidence and explicit release gaps"}
+  ],
+  "slices": [{"id": "S4", "scope": "new src/data/quest/questV2* only", "status": "authored-content-handoff-only"}],
+  "firstProofObligations": [{"admittedSlice": "S4", "oracle": "Real ENEMIES/STAGES/materials/pills/REALMS/QUEST_FLAG_IDS membership; no reference outside questV2*; engine QuestCondition remains single leaf"}],
+  "unresolvedAssumptions": [
+    "Aggregate coordinator product/contract/attack/environment identities are outside this worker write scope",
+    "Producer semantics and durable receipt acceptance pending S1-S3",
+    "V1/V2 cutover and entitlement/economy playthrough pending coordinator acceptance"
+  ],
+  "note": "Captured during handoff after source G0/G1 and content verification. This does not retroactively satisfy prevention-before-implementation readiness. Full run/scheduling/learning paths are outside authorized questV2* write scope."
+}
