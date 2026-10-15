@@ -3,48 +3,64 @@
 @scope (:root) to (:is(.game-panel, .combat-panel__content, .game-card, .game-action-button, .game-tab-button, .game-dropdown-button, .chip-select, .slot-view)) {
 /* PC workspaces use their actual read models and existing command controls. */
 :is(#app, body) .tran-phap-panel {
+  display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, .85fr);
   grid-template-rows: minmax(0, 1fr) 138px;
   gap: 18px 28px;
+  overflow: hidden;
 }
+:is(#app, body) .tran-phap-panel__body { display: contents; }
 :is(#app, body) .tran-phap-panel__grid-stack {
-  grid-column: 1; grid-row: 1; justify-self: center;
+  grid-column: 1; grid-row: 1; align-self: center; justify-self: center;
   width: auto; height: 100%; max-height: 480px; max-width: 100%;
   background: radial-gradient(ellipse, #d9b56a30, transparent 70%);
   border: 0;
 }
 :is(#app, body) .tran-phap-panel__formation-list {
   grid-column: 2; grid-row: 1; min-height: 0; overflow: auto;
-  padding: 20px; background: #27251ff2; border: 1px solid #b89455;
-  color: #f4e4c1;
+  gap: 10px; padding: 20px; background: #27251ff2; border: 1px solid #b89455;
+  color: #f4e4c1; scrollbar-width: thin; scrollbar-color: #a18547 transparent;
 }
 :is(#app, body) .tran-phap-panel__section-title {
   margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid #b8945560;
   font: 700 24px/1.3 var(--font-display);
 }
 :is(#app, body) .tran-phap-panel__formation-button {
-  flex: none; background: #ffffff08; color: #f1e2c2; border-color: #b8945545;
-  padding: 16px; min-height: 92px;
+  display: flex; align-items: center; gap: 16px; flex: none;
+  min-height: 92px; padding: 16px; border: 1px solid #b8945545;
+  background: #ffffff08; color: #f1e2c2;
+  font: 17px/1.4 var(--font-display); box-shadow: inset 0 0 0 3px #f9efda80;
 }
-:is(#app, body) .tran-phap-panel__formation-copy small { color: #cebf9f; }
+:is(#app, body) .tran-phap-panel__formation-pattern { display: grid; grid-template-columns: repeat(3, 10px); gap: 3px; flex: 0 0 36px; }
+:is(#app, body) .tran-phap-panel__formation-pattern i { width: 10px; height: 10px; border: 1px solid #977943; background: #ccb98e55; }
+:is(#app, body) .tran-phap-panel__formation-pattern .is-lit { background: #bd954e; box-shadow: inset 0 0 0 2px #f5e4b8; }
+:is(#app, body) .tran-phap-panel__formation-copy { display: grid; gap: 5px; min-width: 0; }
+:is(#app, body) .tran-phap-panel__formation-copy strong { font-size: 18px; font-weight: 600; }
+:is(#app, body) .tran-phap-panel__formation-copy small { font-size: 13px; line-height: 1.5; color: #cebf9f; }
 :is(#app, body) .tran-phap-panel__formation-button.is-selected {
-  background: #a777292e; border-color: #e0b868; box-shadow: inset 3px 0 #e0b868;
+  background: #a777292e; border-color: #e0b868; color: #f2dfb1; box-shadow: inset 3px 0 #e0b868;
 }
+:is(#app, body) .tran-phap-panel__formation-button.is-selected small { color: #d5c6a6; }
 :is(#app, body) .tran-phap-panel__queue {
-  grid-column: 1; grid-row: 2; position: relative; flex-direction: row;
-  justify-content: flex-start; gap: 12px; padding: 25px 12px 2px;
-  border: 1px solid #ae8a5045; overflow-x: auto; overflow-y: hidden;
+  grid-column: 1; grid-row: 2; position: relative;
+  flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: flex-start;
+  gap: 12px; padding: 25px 12px 2px; border: 1px solid #ae8a5045;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: thin;
   background: #40382c0c;
 }
 :is(#app, body) .tran-phap-panel__queue-title {
   position: absolute; top: 5px; left: 14px; margin: 0;
   font: 600 13px/1.4 var(--font-display); color: #71522c;
 }
-:is(#app, body) .tran-phap-panel__card.queue-stand { flex: 0 0 98px; width: 98px; }
-:is(#app, body) .tran-phap-panel__card.queue-stand { height: 104px; }
+:is(#app, body) .tran-phap-panel__card.queue-stand { flex: 0 0 98px; width: 98px; height: 104px; }
+:is(#app, body) .queue-stand__label { color: #3b2c19; font-size: 13px; }
 :is(#app, body) .tran-phap-panel__confirm {
-  grid-column: 2; grid-row: 2; align-self: center; justify-self: stretch; margin: 0;
+  grid-column: 2; grid-row: 2; align-self: center; justify-self: stretch;
+  min-height: 44px; min-width: 180px; margin: 0; padding: 10px 28px; border: 0;
+  background: var(--th-art-button-primary) center/100% 100% no-repeat;
+  color: #352713; font: 700 17px/1.4 var(--font-display);
 }
+:is(#app, body) .tran-phap-panel__confirm:disabled { filter: grayscale(.8); }
 :is(#app, body) .companion-panel__body {
   display: grid; grid-template-columns: minmax(220px, .75fr) minmax(0, 1.7fr);
   gap: 24px; height: 100%; min-height: 0;
@@ -54,6 +70,7 @@
   min-width: 0; overflow: auto; background: #27251ff2; border-color: #b89455;
   padding: 24px; color: #f4e4c1;
   --paper-text: #f4e4c1; --paper-text-soft: #d5c6a6; --paper-text-muted: #bcad8e;
+  --jade: #92c9a4; --hk-jade: #92c9a4;
 }
 :is(#app, body) .companion-panel__detail :is(.companion-panel__realm,.companion-panel__exp-text,.companion-panel__formation-hint,.companion-panel__feed-note) { color: #d5c6a6; }
 :is(#app, body) .companion-panel__stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; }
@@ -67,7 +84,6 @@
 }
 :is(#app, body) .artifact-path-cards__name { color: #f4dfb6; }
 :is(#app, body) .companion-panel__detail :is(.companion-panel__constellation,.companion-panel__skills,.companion-panel__feed) h4 { color: #dfbd77; }
-:is(#app, body) .companion-panel__detail { --jade: #92c9a4; --hk-jade: #92c9a4; }
 :is(#app, body) .companion-panel__detail :is(select,input) {
   background: #f3e5c8; color: #30291d; border-color: #ae8a50;
 }

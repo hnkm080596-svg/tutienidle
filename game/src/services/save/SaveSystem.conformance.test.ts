@@ -282,6 +282,7 @@ describe('Mission A7 — whole-payload save conformance', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.spyOn(Date, 'now').mockReturnValue(NOW)
+    vi.spyOn(performance, 'now').mockReturnValue(0)
   })
 
   afterEach(() => {

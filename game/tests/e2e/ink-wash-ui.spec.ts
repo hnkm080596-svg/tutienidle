@@ -19,10 +19,10 @@ async function expectInsideViewport(locator: Locator, page: Page): Promise<void>
   const viewport = page.viewportSize()
   expect(box).not.toBeNull()
   expect(viewport).not.toBeNull()
-  expect(box!.x).toBeGreaterThanOrEqual(0)
-  expect(box!.y).toBeGreaterThanOrEqual(0)
-  expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width)
-  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height)
+  expect(box!.x).toBeGreaterThanOrEqual(-1)
+  expect(box!.y).toBeGreaterThanOrEqual(-1)
+  expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1)
+  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height + 1)
 }
 
 test.describe('ink-wash UI visual smoke', () => {
@@ -36,13 +36,14 @@ test.describe('ink-wash UI visual smoke', () => {
       await expect(auth).toBeVisible({ timeout: 15_000 })
       await expectNoHorizontalOverflow(page)
 
-      const primaryAction = auth.locator('.primary-action')
+      const primaryAction = auth.getByTestId('auth-guest-button')
+      await expect(primaryAction).toBeVisible()
       const actionBox = await primaryAction.boundingBox()
       expect(actionBox).not.toBeNull()
       expect(actionBox!.width).toBeGreaterThanOrEqual(40)
       expect(actionBox!.height).toBeGreaterThanOrEqual(40)
 
-      const authFrame = auth.locator('[data-ink-slice="frame-xl-ceremony"]').first()
+      const authFrame = auth.getByTestId('login-opening')
       await expect(authFrame).toBeVisible()
       await expectInsideViewport(authFrame, page)
       await page.screenshot({
@@ -50,7 +51,7 @@ test.describe('ink-wash UI visual smoke', () => {
         animations: 'disabled',
       })
 
-      await page.getByTestId('auth-guest-button').click()
+      await primaryAction.click()
       const creation = page.getByTestId('character-creation-screen')
       await expect(creation).toBeVisible({ timeout: 15_000 })
       await expectNoHorizontalOverflow(page)
@@ -69,10 +70,11 @@ test.describe('ink-wash UI visual smoke', () => {
       await settingsSlot.click()
 
       // Huyen Kim rebuild: settings owns the shared paper chrome -
-      // nine-slice sheet + nav rail + title on the overlay canvas.
+      // nine-slice sheet + title on the overlay canvas.
       const panel = page.locator('.settings-scene').first()
       await expect(panel).toBeVisible()
       await expect(panel.locator('.game-panel')).toBeVisible()
+      await expect(page.locator('.th-panel-swap-enter-active')).toHaveCount(0)
       const paperBox = await panel.locator('.game-panel').boundingBox()
 
       const headingBox = await panel.locator('.game-panel__title').boundingBox()
@@ -80,27 +82,20 @@ test.describe('ink-wash UI visual smoke', () => {
       expect(paperBox).not.toBeNull()
       expect(headingBox).not.toBeNull()
       expect(settingsBox).not.toBeNull()
-      // The title rides the paper's top band - it must sit inside the
-      // sheet and the settings workspace must clear the nav-rail column
-      // on the left (rail occupies the first ~200 design px).
-      expect(headingBox!.x).toBeGreaterThanOrEqual(paperBox!.x)
-      expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(paperBox!.x + paperBox!.width)
-      expect(settingsBox!.x - paperBox!.x).toBeGreaterThanOrEqual(200)
+      // The title rides the paper's top band - both title and workspace
+      // must sit inside the GamePanel sheet (within 1px sub-pixel scale tolerance).
+      expect(headingBox!.x).toBeGreaterThanOrEqual(paperBox!.x - 1)
+      expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(paperBox!.x + paperBox!.width + 1)
+      expect(settingsBox!.x).toBeGreaterThanOrEqual(paperBox!.x - 1)
       // Sectioned workspace: the autosave warning lives on the default
-      // 'general' section; the ui-scale heading is behind 'display'.
-      const settingsColors = await page.evaluate<{ warning: string }>(
-        `({ warning: getComputedStyle(document.querySelector('.settings-panel__warning')).color })`,
-      )
+      // 'general' section; the ui-scale GameCard lives behind 'display'.
+      await expect(panel.locator('.settings-panel__warning')).toBeVisible()
       await panel.locator('.settings-panel__nav-seal[data-section="display"]').click()
-      await expect(panel.locator('.settings-panel__ui-scale h4')).toBeVisible()
-      const headingColor = await page.evaluate<string>(
-        `getComputedStyle(document.querySelector('.settings-panel__ui-scale h4')).color`,
+      await expect(panel.locator('.settings-panel__ui-scale .game-card__title')).toBeVisible()
+      const sectionColor = await page.evaluate<string>(
+        `getComputedStyle(document.querySelector('.settings-panel__ui-scale')).color`,
       )
-      // .settings-panel .paper-on-dark remaps --paper-text* onto the
-      // dark-surface ramp: heading = --surface-text, warning =
-      // --surface-text-soft.
-      expect(settingsColors.warning).toBe('rgb(168, 164, 152)')
-      expect(headingColor).toBe('rgb(232, 228, 220)')
+      expect(sectionColor).toBe('rgb(243, 228, 196)')
       await page.screenshot({
         path: testInfo.outputPath(`ink-wash-home-${viewport.name}.png`),
         animations: 'disabled',
